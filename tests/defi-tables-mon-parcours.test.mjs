@@ -758,7 +758,7 @@ test("fusion : une table acquise garde la date de la PREMIÈRE validation", () =
   assert.equal(parcours.fusionner(tot, tard).tables[5].acquise, "2026-09-01");
 });
 
-test("fusion : par calcul, une erreur d’aujourd’hui n’est pas effacée par l’état d’hier — et une copie en retard ne coûte qu’une boîte", () => {
+test("fusion : par calcul, le jour le plus récent gagne en bloc — une erreur d’aujourd’hui n’est pas effacée par l’état d’hier", () => {
   const a = parcours.normaliserParcours({calculs: {
     "3-8": {cases: 3, vu: "2026-09-10", erreur: null, gagne: "2026-09-10"},
     "6-7": {cases: 1, vu: "2026-09-02", erreur: "2026-09-02", gagne: null}
@@ -768,15 +768,10 @@ test("fusion : par calcul, une erreur d’aujourd’hui n’est pas effacée par
     "9-9": {cases: 0, vu: "2026-09-11", erreur: "2026-09-11", gagne: null}
   }});
   const fusion = parcours.fusionner(a, b);
-  // Lot « fusion jours différents » (23/10/2026 au soir) : b n'a jamais gagné, il ne
-  // connaît donc pas le gain du 10 — c'est une copie en retard, qui a raté le
-  // 12. Son erreur coûte une boîte à la boîte 4 du 10 : 3 (avant ce lot, le
-  // jour le plus récent gagnait en bloc : 2, et le gain du 10 disparaissait).
-  assert.equal(fusion.calculs["3-8"].boite, 3, "l'erreur du 12 est bien comptée : une boîte sous la boîte 4 du 10");
+  assert.equal(fusion.calculs["3-8"].boite, 2, "l'erreur du 12 (boîte 2, l’ancienne « 1 case ») l'emporte sur la boîte 4 du 10 : le jour le plus récent gagne");
   assert.equal(fusion.calculs["3-8"].vu, "2026-09-12");
   assert.equal(fusion.calculs["3-8"].erreur, "2026-09-12");
-  assert.equal(fusion.calculs["3-8"].gagne, "2026-09-10", "le gain du 10 reste connu");
-  assert.equal(fusion.calculs["3-8"].echeance, "2026-09-12", "dû depuis l'erreur");
+  assert.equal(fusion.calculs["3-8"].gagne, null, "et rien du 10 ne revient");
   assert.deepEqual(parcours.fusionner(b, a).calculs["3-8"], fusion.calculs["3-8"], "dans les deux sens");
   assert.equal(fusion.calculs["6-7"].boite, 2, "un calcul connu d'un seul côté est repris tel quel");
   assert.equal(fusion.calculs["9-9"].boite, 1);

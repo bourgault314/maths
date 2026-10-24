@@ -73,14 +73,9 @@ test("le miroir « cases » : un appareil resté sur l’appli d’avant lit la 
   const renvoye = {version: 2, calculs: {"7-8": {cases: 3, vu: "2026-09-27", erreur: null, gagne: "2026-09-27"}}};
   const relu = P.normaliserParcours(renvoye);
   assert.equal(relu.calculs["7-8"].boite, 4, "au pire, boîte 5 → 4 : toujours su, jamais une grille vide");
-  // Lot « fusion jours différents » (23/10/2026 au soir) : le gain du 27 sur
-  // l'ancien appareil est une nouvelle pour p (dernier gain le 26) → une boîte
-  // au-dessus de ce que p sait, plafonnée : 5. La boîte perdue par le miroir
-  // (5 → 4) est ainsi rendue par la fusion (avant ce lot : le jour le plus
-  // récent gagnait en bloc, 4).
   const fusion = P.fusionner(p, renvoye);
-  assert.equal(fusion.calculs["7-8"].boite, 5, "à la fusion, le gain de l'ancien appareil compte une boîte au-dessus de la 5 connue : 5, en vert");
-  assert.equal(P.fusionner(renvoye, p).calculs["7-8"].boite, 5);
+  assert.equal(fusion.calculs["7-8"].boite, 4, "à la fusion, le jour le plus récent (l’ancien appareil) gagne — en vert");
+  assert.equal(P.fusionner(renvoye, p).calculs["7-8"].boite, 4);
 });
 
 test("un calcul raté aujourd’hui n’est plus « dû » aujourd’hui : la révision ne tourne pas en rond, il revient demain", () => {
@@ -233,7 +228,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-3/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {

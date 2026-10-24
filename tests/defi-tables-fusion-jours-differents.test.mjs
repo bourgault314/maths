@@ -1,24 +1,26 @@
 // Lot « fusion jours différents : l'appareil ancien ne doit plus écraser
-// l'appareil à jour » (23/10/2026 au soir, suite des PR #1040 et #1043).
+// l'appareil à jour » (PR #1046), avec son CORRECTIF du 23/10/2026 au soir,
+// écrit après la relecture de Codex.
 //
 // Le défaut (réserve n° 1 de Codex sur la #1043) : par calcul, quand les deux
-// côtés n'ont pas le même « vu », le jour le plus récent gagnait EN BLOC. Juste
-// sur un seul appareil (l'état d'aujourd'hui descend de celui d'hier), faux dès
-// qu'un côté est une COPIE ANCIENNE : un appareil resté hors ligne un mois en
-// boîte 2 qui ratait 2 × 8 écrasait la boîte 5 de l'appareil du jour (→ 1,
-// vérité 4) ; sa bonne réponse aussi (→ 2, vérité 5).
+// côtés n'ont pas le même « vu », le jour le plus récent gagne EN BLOC. Juste
+// sur un seul appareil, faux dès que le côté le plus récent est une COPIE
+// ANCIENNE qui a joué depuis : un appareil resté hors ligne un mois en boîte 2
+// qui rate 2 × 8 écrasait la boîte 5 de l'appareil du jour (→ 1, vérité 4).
 //
-// La règle : un gain (une erreur) d'un côté est une NOUVELLE pour l'autre s'il
-// est plus récent que le dernier gain (la dernière erreur) de l'autre. R = le
-// côté vu en dernier, A = l'autre :
-//  1. R a une erreur nouvelle sans être en retard sur les gains → R gagne (en
-//     bloc avec un gain nouveau aussi ; sinon jamais plus haut que A − 1) ;
-//  2. R a un gain nouveau (sans erreur nouvelle) → max(R, A + 1), moins une
-//     boîte si A porte une erreur que R ignore ;
-//  3. R a une erreur nouvelle mais est en retard sur les gains → max(R, A − 1) ;
-//  4. rien de neuf → l'état de A, le « vu » de R.
-// Les trois entrées de fusionner — sauverCase, le 409 du serveur, la lecture à
-// l'ouverture — sont jouées en bas avec le vrai code de la page.
+// Premier essai (c6d5147f) : une règle « par dates » dans fusionner. Codex a
+// montré qu'elle cassait d'autres cas (vieille copie en 5 → 1 puis 4 à la
+// sauvegarde ; copie migrée qui remonte de 1 à 3 ; deux réussites rapprochées
+// → 5 au lieu de 4 ; l'ordre des fusions qui change la boîte). Une case (une
+// boîte et trois dates) ne dit pas d'où elle vient.
+//
+// Le correctif : fusionner revient à la règle de main (exacte sur un seul
+// appareil, même boîte quel que soit l'ordre des fusions). Sous un code,
+// l'appareil note chaque réponse de la grille que le serveur n'a pas encore
+// confirmée ; quand l'état du serveur arrive (409, lecture à l'ouverture), il
+// REJOUE ces réponses avec appliquerReponse sur l'état du serveur (rebaser).
+// Les vérités ci-dessous sont toutes calculées en rejouant les réponses avec
+// le vrai moteur, jamais écrites à la main.
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
@@ -27,15 +29,19 @@ import {PARCOURS, html, fauxStockage, fauxServeur, fauxTemps, demarrerAppli, tic
 const P = PARCOURS;
 const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
 const J = "2026-10-23";
+const CODE = "AXKQ7T";
 
 const fait = (champs) => P.normaliserParcours({calculs: {"2-8": champs}});
 const calcul = (parcours) => parcours.calculs["2-8"];
-const repondre = (etat, correcte, date) => P.appliquerReponse(etat, "2-8", {correcte, date}).parcours;
-// La fusion dans les deux sens doit donner le même calcul.
-function fusionDesDeuxCotes(x, y, message) {
-  const un = calcul(P.fusionner(x, y));
-  assert.deepEqual(calcul(P.fusionner(y, x)), un, `${message} — dans les deux sens`);
-  return un;
+const boite = (parcours) => calcul(parcours).boite;
+const repondre = (etat, correcte, date, cle = "2-8") => P.appliquerReponse(etat, cle, {correcte, date}).parcours;
+// Rejouer une file [numéro, calcul, jour, juste] sur un parcours : la vérité.
+const jouer = (etat, file) => file.reduce((p, [, cle, jour, ok]) => repondre(p, Boolean(ok), jour, cle), etat);
+// La même chose qu'en JSON, sans tenir compte de l'ordre des clés.
+function memesCalculs(x, y) {
+  const cles = Object.keys(x.calculs).sort();
+  return JSON.stringify(cles) === JSON.stringify(Object.keys(y.calculs).sort())
+    && cles.every(cle => JSON.stringify(x.calculs[cle]) === JSON.stringify(y.calculs[cle]));
 }
 
 // L'appareil du jour : 2 × 8 en boîte 5 depuis le 12/10, revu le 20/10.
@@ -43,156 +49,198 @@ const A_JOUR = fait({boite: 5, vu: "2026-10-20", erreur: null, gagne: "2026-10-1
 // La copie restée hors ligne depuis un mois : boîte 2, dernier gain le 20/09.
 const ANCIEN = fait({boite: 2, vu: "2026-09-20", erreur: null, gagne: "2026-09-20", echeance: "2026-09-23"});
 
-// -------------------------------------------------- les deux cas de Codex
+// ------------------------------------------- rebaser : les cas de Codex
 
-test("la copie ancienne rate aujourd'hui (2 → 1) : une erreur connue coûte une boîte à l'appareil du jour, pas quatre", () => {
-  const rate = repondre(ANCIEN, false, J);
-  assert.equal(calcul(rate).boite, 1, "sur la copie seule : boîte 1");
-  const fusion = fusionDesDeuxCotes(A_JOUR, rate, "copie ancienne ratée");
-  assert.deepEqual(fusion, {boite: 4, cases: 3, vu: J, erreur: J, gagne: "2026-10-12", echeance: J},
-    "boîte 4 (avant ce lot : 1), l'erreur du jour, dû aujourd'hui, et le gain du 12/10 n'est pas perdu");
-});
-
-test("la copie ancienne répond juste aujourd'hui, pas dû (reste en 2) : rien de neuf, la boîte 5 reste", () => {
-  const tranquille = fait({...calcul(ANCIEN), echeance: "2026-10-30"});
-  const juste = repondre(tranquille, true, J);
-  assert.deepEqual([calcul(juste).boite, calcul(juste).gagne], [2, "2026-09-20"], "pas dû : seul « vu » bouge");
-  const fusion = fusionDesDeuxCotes(A_JOUR, juste, "copie ancienne, bonne réponse non due");
-  assert.deepEqual(fusion, {boite: 5, cases: 3, vu: J, erreur: null, gagne: "2026-10-12", echeance: "2026-10-26"},
-    "l'état de l'appareil du jour, vu aujourd'hui (avant ce lot : boîte 2)");
-});
-
-test("la copie ancienne répond juste et dû (2 → 3) : un gain nouveau vaut une boîte au-dessus de ce que l'autre sait → 5", () => {
-  const gagne = repondre(ANCIEN, true, J);
-  assert.equal(calcul(gagne).boite, 3);
-  const fusion = fusionDesDeuxCotes(A_JOUR, gagne, "copie ancienne, bonne réponse due");
-  assert.deepEqual(fusion, {boite: 5, cases: 3, vu: J, erreur: null, gagne: J, echeance: P.echeanceDeBoite(5, J)},
-    "boîte 5 (6 plafonnée ; avant ce lot : 3), gain du jour, retour « délai de la boîte 5 »");
-  // Et si l'appareil du jour n'était qu'en boîte 3 : 3 + 1 = 4.
-  const jour3 = fait({boite: 3, vu: "2026-10-20", erreur: null, gagne: "2026-10-12", echeance: "2026-10-23"});
-  assert.equal(fusionDesDeuxCotes(jour3, gagne, "A en 3").boite, 4);
-});
-
-// ------------------------------------------- une vieille copie restée haute
-
-test("une vieille copie restée PLUS HAUTE (5 d'il y a un mois) rouverte en ligne ne remonte pas le parcours du jour", () => {
-  const vieille = fait({boite: 5, vu: "2026-09-20", erreur: null, gagne: "2026-09-12", echeance: "2026-10-12"});
-  // Le parcours du jour, descendu par de vraies erreurs sur trois jours, puis une encore aujourd'hui.
-  let jour = vieille;
-  ["2026-10-10", "2026-10-12", "2026-10-14"].forEach(d => { jour = repondre(jour, false, d); });
-  assert.equal(calcul(jour).boite, 2);
-  // Simple passage aujourd'hui (règle 4) : la boîte du jour.
-  const passage = repondre(fait({...calcul(jour), echeance: "2026-10-30"}), true, J);
-  assert.equal(fusionDesDeuxCotes(vieille, passage, "vieille copie haute, passage").boite, 2, "la boîte 2 du jour (règle « en bloc » : 2 aussi ; la règle « max(R, A − 1) » du premier projet aurait donné 4)");
-  // Erreur aujourd'hui (règle 1) : 2 → 1, et la vieille copie n'y change rien.
-  const erreur = repondre(jour, false, J);
-  assert.deepEqual(fusionDesDeuxCotes(vieille, erreur, "vieille copie haute, erreur"), {boite: 1, cases: 0, vu: J, erreur: J, gagne: "2026-09-12", echeance: J});
-  // Et la vieille copie utilisée HORS LIGNE aujourd'hui avec une erreur (5 → 4) :
-  // à gain égal, jamais plus haut qu'une boîte sous le parcours du jour.
-  const horsLigne = repondre(fait({...calcul(vieille), echeance: J}), false, J);
-  assert.equal(calcul(horsLigne).boite, 4);
-  assert.equal(fusionDesDeuxCotes(jour, horsLigne, "vieille copie haute, erreur hors ligne").boite, 1, "min(4, 2 − 1) = 1 (avant ce lot : 4)");
-});
-
-// ------------------------------------------- un seul appareil : rien ne change
-
-test("un seul appareil, jours différents : gain, erreur, simple passage, et plusieurs jours de suite — l'état d'aujourd'hui, à l'identique", () => {
-  const hier = fait({boite: 3, vu: "2026-10-22", erreur: "2026-10-15", gagne: "2026-10-20", echeance: "2026-10-23"});
-  const hierPasDu = fait({...calcul(hier), echeance: "2026-10-30"});
-  const cas = {
-    gain: [hier, repondre(hier, true, J)],
-    erreur: [hier, repondre(hier, false, J)],
-    passage: [hierPasDu, repondre(hierPasDu, true, J)]
-  };
-  assert.deepEqual(calcul(cas.gain[1]), {boite: 4, cases: 3, vu: J, erreur: "2026-10-15", gagne: J, echeance: P.echeanceDeBoite(4, J)});
-  assert.deepEqual(calcul(cas.erreur[1]), {boite: 2, cases: 1, vu: J, erreur: J, gagne: "2026-10-20", echeance: J});
-  assert.deepEqual(calcul(cas.passage[1]), {boite: 3, cases: 2, vu: J, erreur: "2026-10-15", gagne: "2026-10-20", echeance: "2026-10-30"});
-  Object.entries(cas).forEach(([nom, [avant, apres]]) => {
-    assert.deepEqual(fusionDesDeuxCotes(avant, apres, nom), calcul(apres), `${nom} : la fusion rend l'état d'aujourd'hui tel quel`);
+test("rebaser — la copie ancienne (boîte 2) rate, répond juste, répond juste et dû : 4, 5, 5 sur la boîte 5 du serveur", () => {
+  [[false, 4, "rate"], [true, 5, "répond juste"]].forEach(([ok, attendu, nom]) => {
+    const file = [[1, "2-8", J, ok ? 1 : 0]];
+    const local = jouer(ANCIEN, file);
+    const resultat = P.rebaser(local, A_JOUR, file);
+    assert.equal(boite(resultat), attendu, nom);
+    assert.ok(memesCalculs(resultat, jouer(A_JOUR, file)), `${nom} : exactement la réponse rejouée sur l'appareil du jour`);
   });
-  // Une copie d'il y a une semaine (la case d'un autre appareil du même élève, rouverte) :
-  // erreur, erreur, gain, puis erreur, erreur → la vérité, pas « une boîte sous la copie ».
-  const copie = fait({boite: 4, vu: "2026-10-15", erreur: null, gagne: "2026-10-15", echeance: "2026-10-22"});
-  let etat = copie;
-  [["2026-10-16", false], ["2026-10-17", false], ["2026-10-18", true], ["2026-10-19", false], ["2026-10-20", false]]
-    .forEach(([d, ok]) => { etat = repondre(fait({...calcul(etat), echeance: d}), ok, d); });
-  assert.equal(calcul(etat).boite, 1, "4 → 3 → 2 → 3 → 2 → 1");
-  assert.deepEqual(fusionDesDeuxCotes(copie, etat, "copie d'il y a une semaine"), calcul(etat), "la copie rouverte ne ressuscite rien");
-  // Deux gains sur deux jours depuis la copie : 5, pas « copie + 1 ».
-  let gains = copie;
-  [["2026-10-22", true], ["2026-10-23", true]].forEach(([d, ok]) => { gains = repondre(fait({...calcul(gains), echeance: d}), ok, d); });
-  assert.equal(calcul(gains).boite, 5);
-  assert.equal(fusionDesDeuxCotes(copie, gains, "deux gains").boite, 5);
+  // « Juste et dû » sur la copie (échéance passée là-bas) : sur l'état du serveur
+  // le calcul n'est pas dû (échéance le 26) → il reste en 5, gain du 12 gardé.
+  const du = P.rebaser(repondre(ANCIEN, true, J), A_JOUR, [[1, "2-8", J, 1]]);
+  assert.deepEqual(calcul(du), {...calcul(A_JOUR), vu: J});
+  // La fusion des états (main), pour mémoire : 1, 2 et 3.
+  assert.equal(boite(P.fusionner(A_JOUR, repondre(ANCIEN, false, J))), 1);
 });
 
-// ------------------------------------- deux appareils connectés qui divergent
-
-test("deux appareils connectés qui divergent : une erreur d'un côté et un gain de l'autre, à des jours différents, comptent chacun une fois", () => {
-  const commun = fait({boite: 3, vu: "2026-10-01", erreur: null, gagne: "2026-10-01", echeance: "2026-10-05"});
-  // L'un rate le 5, l'autre gagne le 7 : 3 − 1 + 1 = 3.
-  const rate5 = repondre(commun, false, "2026-10-05");
-  const gagne7 = repondre(commun, true, "2026-10-07");
-  assert.deepEqual([calcul(rate5).boite, calcul(gagne7).boite], [2, 4]);
-  assert.deepEqual(fusionDesDeuxCotes(rate5, gagne7, "erreur le 5, gain le 7"), {boite: 3, cases: 2, vu: "2026-10-07", erreur: "2026-10-05", gagne: "2026-10-07", echeance: P.echeanceDeBoite(3, "2026-10-07")},
-    "boîte 3 (avant ce lot : 4, le gain du 7 gagnait en bloc)");
-  // L'un gagne le 5, l'autre rate le 7, le premier repasse le 9 : 3 aussi, dû depuis l'erreur.
-  const gagne5 = repondre(fait({...calcul(repondre(commun, true, "2026-10-05")), echeance: "2026-10-20"}), true, "2026-10-09");
-  const rate7 = repondre(commun, false, "2026-10-07");
-  assert.deepEqual(fusionDesDeuxCotes(gagne5, rate7, "gain le 5, erreur le 7, passage le 9"), {boite: 3, cases: 2, vu: "2026-10-09", erreur: "2026-10-07", gagne: "2026-10-05", echeance: "2026-10-07"});
-  // Deux gains à deux jours différents : 5 (avant ce lot : 4).
-  assert.equal(fusionDesDeuxCotes(repondre(commun, true, "2026-10-05"), repondre(commun, true, "2026-10-07"), "deux gains").boite, 5);
-  // Deux erreurs à deux jours différents : 1 (avant ce lot : 2).
-  assert.equal(fusionDesDeuxCotes(repondre(commun, false, "2026-10-05"), repondre(commun, false, "2026-10-07"), "deux erreurs").boite, 1);
-  // Un instantané pris le matin (simple passage), l'autre appareil gagne l'après-midi du même jour puis repasse le lendemain :
-  // le gain est une nouvelle pour l'instantané (rien ici ne regarde « vu »).
-  const matin = repondre(fait({...calcul(commun), echeance: "2026-10-20"}), true, "2026-10-05");
-  const apresMidi = repondre(fait({...calcul(repondre(commun, true, "2026-10-05")), echeance: "2026-10-20"}), true, "2026-10-06");
-  assert.equal(fusionDesDeuxCotes(matin, apresMidi, "instantané du matin, gain l'après-midi").boite, 4);
-  const apresMidiRate = repondre(fait({...calcul(repondre(commun, false, "2026-10-05")), echeance: "2026-10-20"}), true, "2026-10-06");
-  assert.equal(calcul(apresMidiRate).boite, 2);
-  assert.equal(fusionDesDeuxCotes(matin, apresMidiRate, "instantané du matin, erreur l'après-midi").boite, 2, "l'erreur du 5 est une nouvelle pour l'instantané, même pris ce jour-là");
+test("rebaser — réserve 2.A : la vieille copie en 5 rate sur un serveur descendu en 2 → 1", () => {
+  const base5 = fait({boite: 5, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-26"});
+  const serveur = jouer(base5, [[1, "2-8", "2026-10-10", 0], [2, "2-8", "2026-10-12", 0], [3, "2-8", "2026-10-14", 0]]);
+  assert.equal(boite(serveur), 2);
+  const file = [[1, "2-8", J, 0]];
+  const local = jouer(base5, file);
+  assert.equal(boite(local), 4);
+  assert.equal(boite(P.rebaser(local, serveur, file)), 1);
+  // Et le même résultat rejoué une seconde fois (doublon, refusion) : 1, pas 4.
+  const une = P.rebaser(local, serveur, file);
+  assert.ok(memesCalculs(P.rebaser(local, une, file), une), "rejouer sur un état qui a déjà la réponse ne change rien");
 });
 
-// --------------------------------------------------- bords : null, boîte 1, v2
-
-test("gain ou erreur absents (null = jamais), boîte 1, plafond 5 : rien ne casse, rien ne sort des boîtes", () => {
-  // Jamais gagné nulle part : la copie ancienne (boîte 2 migrée) rate → une boîte sous l'autre côté.
-  const sansGainJour = fait({boite: 4, vu: "2026-10-20", erreur: null, gagne: null, echeance: "2026-10-20"});
-  const sansGainAncien = repondre(fait({boite: 2, vu: "2026-09-20", erreur: null, gagne: null, echeance: "2026-09-20"}), false, J);
-  assert.deepEqual(fusionDesDeuxCotes(sansGainJour, sansGainAncien, "sans aucun gain"), {boite: 3, cases: 2, vu: J, erreur: J, gagne: null, echeance: J});
-  // Jamais gagné d'un seul côté : le gain de l'autre est bien une nouvelle.
-  const jamais = fait({boite: 1, vu: "2026-10-01", erreur: null, gagne: null, echeance: "2026-10-01"});
-  const unGain = repondre(jamais, true, "2026-10-05");
-  assert.equal(fusionDesDeuxCotes(jamais, unGain, "premier gain").boite, 2);
-  // Erreur en boîte 1 des deux côtés, jours différents : boîte 1, jamais 0.
-  const b1 = repondre(jamais, false, "2026-10-05");
-  const b1bis = repondre(jamais, false, "2026-10-07");
-  assert.equal(fusionDesDeuxCotes(b1, b1bis, "deux erreurs en boîte 1").boite, 1);
-  // Erreur nouvelle sur une copie en retard, l'autre côté en boîte 1 : max(1, 0) = 1.
-  assert.equal(fusionDesDeuxCotes(fait({boite: 1, vu: "2026-10-20", erreur: "2026-10-20", gagne: "2026-10-10", echeance: "2026-10-20"}), repondre(ANCIEN, false, J), "A en boîte 1").boite, 1);
-  // Gain nouveau quand l'autre côté est déjà en 5 : 5, pas 6.
-  assert.equal(fusionDesDeuxCotes(A_JOUR, repondre(ANCIEN, true, J), "plafond").boite, 5);
-  // Une copie ancienne qui a gagné le 2/10 (gain déjà dépassé par celui du 12/10 de l'appareil du jour),
-  // puis ne fait que passer aujourd'hui : rien de neuf → l'état du jour, erreur du 21 comprise, dû depuis.
-  const gainAncien = repondre(fait({...calcul(ANCIEN), echeance: "2026-10-02"}), true, "2026-10-02");
-  const erreurJour = repondre(A_JOUR, false, "2026-10-21");
-  const gainPuisTouche = repondre(fait({...calcul(gainAncien), echeance: "2026-10-30"}), true, J);
-  assert.deepEqual(fusionDesDeuxCotes(erreurJour, gainPuisTouche, "gain ancien le 2, erreur du jour le 21, passage"), {boite: 4, cases: 3, vu: J, erreur: "2026-10-21", gagne: "2026-10-12", echeance: "2026-10-21"});
+test("rebaser — réserve 2.B : une copie migrée (version 2, sans date de gain) rouverte sans jouer ne remonte rien", () => {
+  const v2 = P.normaliserParcours({version: 2, calculs: {"2-8": {cases: 3, vu: "2026-10-01", erreur: null, gagne: null}}});
+  assert.equal(boite(v2), 4);
+  const serveur = jouer(v2, [[1, "2-8", "2026-10-05", 0], [2, "2-8", "2026-10-06", 0], [3, "2-8", "2026-10-07", 0]]);
+  assert.equal(boite(serveur), 1);
+  // File sûre et vide (rien joué) ou file pas sûre (fusion des états) : 1 dans les deux sens.
+  assert.equal(boite(P.rebaser(v2, serveur, [])), 1);
+  assert.equal(boite(P.fusionner(v2, serveur)), 1);
+  assert.equal(boite(P.fusionner(serveur, v2)), 1);
 });
 
-test("un parcours de version 2 (« cases » sans boîte) passe par normaliserParcours avant la fusion, puis suit la règle", () => {
-  const v2 = {version: 2, calculs: {"2-8": {cases: 1, vu: "2026-09-20", erreur: null, gagne: "2026-09-20"}}};
-  const brutRate = {...v2, calculs: {"2-8": {cases: 0, vu: J, erreur: J, gagne: "2026-09-20"}}};
-  const fusion = P.fusionner(A_JOUR, brutRate);
-  assert.equal(calcul(fusion).boite, 4, "cases 0 → boîte 1, copie ancienne ratée → 5 − 1");
-  assert.deepEqual(calcul(P.fusionner(brutRate, A_JOUR)), calcul(fusion));
-  assert.equal(calcul(P.fusionner(A_JOUR, v2)).boite, 5, "cases 1 → boîte 2, pas de nouvelle (vu plus ancien) → l'état du jour");
-  assert.equal(calcul(P.fusionner(v2, A_JOUR)).vu, "2026-10-20");
+test("rebaser — réserve 2.C : deux bonnes réponses rapprochées ne font qu'un gain ; espacées, deux", () => {
+  const commun = jouer(P.creerParcours(), [[1, "2-8", "2026-10-01", 1], [2, "2-8", "2026-10-02", 1]]);
+  assert.equal(boite(commun), 3);
+  const serveur = repondre(commun, true, "2026-10-05");
+  assert.equal(boite(serveur), 4);
+  [["2026-10-07", 4], ["2026-10-12", 5]].forEach(([jour, attendu]) => {
+    const file = [[1, "2-8", jour, 1]];
+    const resultat = P.rebaser(jouer(commun, file), serveur, file);
+    assert.equal(boite(resultat), attendu, `juste le 5 (serveur), juste le ${jour.slice(-2)} (page restée sur la boîte 3)`);
+    assert.ok(memesCalculs(resultat, jouer(serveur, file)), "la vérité rejouée, échéance comprise");
+  });
 });
 
-// --------------------------------- les trois entrées, avec le code de la page
+test("rebaser — les historiques de la table de Codex (2.E) : la vérité rejouée", () => {
+  const commun = fait({boite: 3, vu: "2026-10-02", erreur: null, gagne: "2026-10-02", echeance: "2026-10-05"});
+  // [ce que le serveur a reçu de l'autre appareil, ce que cet appareil rejoue]
+  const cas = {
+    "erreur 05 (serveur), réussite 07": [[[1, "2-8", "2026-10-05", 0]], [[1, "2-8", "2026-10-07", 1]], 3],
+    "deux erreurs, 05 et 07": [[[1, "2-8", "2026-10-05", 0]], [[1, "2-8", "2026-10-07", 0]], 1],
+    "réussite 05 (serveur), erreur 07, bonne réponse 09": [[[1, "2-8", "2026-10-05", 1]], [[1, "2-8", "2026-10-07", 0], [2, "2-8", "2026-10-09", 1]], 4]
+  };
+  Object.entries(cas).forEach(([nom, [autre, file, attendu]]) => {
+    const serveur = jouer(commun, autre);
+    const resultat = P.rebaser(jouer(commun, file), serveur, file);
+    assert.equal(boite(resultat), attendu, nom);
+    assert.ok(memesCalculs(resultat, jouer(serveur, file)), nom);
+  });
+  // L'ancienne limite acceptée de la #1046 : copie en 2 qui rate le 22 PUIS gagne le 23, serveur à jour en 5.
+  const file = [[1, "2-8", "2026-10-22", 0], [2, "2-8", "2026-10-23", 1]];
+  assert.equal(boite(P.rebaser(jouer(ANCIEN, file), A_JOUR, file)), 5, "5 − 1 + 1 (la #1046 donnait 2)");
+});
 
-const CODE = "AXKQ7T";
+// --------------------------------- fusionner : la règle de main, revenue
+
+test("fusionner — revenu à la règle de main : la même boîte quel que soit l'ordre des fusions (réserve 2.D)", () => {
+  const depart = jouer(P.creerParcours(), [[1, "2-8", "2026-10-01", 1], [2, "2-8", "2026-10-02", 1]]);
+  const a = repondre(depart, true, "2026-10-05");
+  const b = repondre(depart, true, "2026-10-07");
+  const c = repondre(depart, false, "2026-10-06");
+  assert.equal(boite(P.fusionner(P.fusionner(a, b), c)), 4);
+  assert.equal(boite(P.fusionner(a, P.fusionner(b, c))), 4);
+  // Un petit corpus d'états issus du vrai moteur : toutes les permutations et
+  // les deux parenthésages donnent la même boîte, et une fusion répétée ne
+  // change rien.
+  const corpus = [depart, a, b, c, repondre(depart, false, "2026-10-05"), repondre(a, false, "2026-10-05"),
+    repondre(c, true, "2026-10-07"), repondre(repondre(depart, false, "2026-10-05"), true, "2026-10-06")];
+  let ecarts = 0;
+  corpus.forEach(x => corpus.forEach(y => corpus.forEach(z => {
+    if (boite(P.fusionner(P.fusionner(x, y), z)) !== boite(P.fusionner(x, P.fusionner(y, z)))) ecarts += 1;
+    if (boite(P.fusionner(x, y)) !== boite(P.fusionner(y, x))) ecarts += 1;
+    const xy = P.fusionner(x, y);
+    if (boite(P.fusionner(x, xy)) !== boite(xy)) ecarts += 1;
+  })));
+  assert.equal(ecarts, 0);
+  assert.match(moteur, /if \(faitA\.vu !== faitB\.vu\) \{\s*fusion\.calculs\[cle\] = cloner\(faitA\.vu > faitB\.vu \? faitA : faitB\);/, "le jour le plus récent en bloc, comme sur main");
+});
+
+// --------------------------- rebaser : les deux propriétés qui le rendent sûr
+
+// Un tirage reproductible (pas de Math.random : le même test à chaque fois).
+function tirage(graine) {
+  let etat = graine;
+  return () => (etat = (etat * 1103515245 + 12345) % 2147483648) / 2147483648;
+}
+const JOURS = ["2026-10-01", "2026-10-02", "2026-10-03", "2026-10-05", "2026-10-08", "2026-10-12", "2026-10-20"];
+const CLES = ["2-8", "3-7", "6-9"];
+function historique(hasard) {
+  let numero = 0;
+  let jour = 0;
+  const suite = longueur => Array.from({length: longueur}, () => {
+    jour = Math.min(JOURS.length - 1, jour + (hasard() < 0.45 ? 1 : 0));
+    return [++numero, CLES[Math.floor(hasard() * CLES.length)], JOURS[jour], hasard() < 0.6 ? 1 : 0];
+  });
+  const avant = suite(Math.floor(hasard() * 6));
+  return {avant, apres: suite(1 + Math.floor(hasard() * 8))};
+}
+
+test("rebaser — un seul appareil : le serveur a l'état d'avant, la file les réponses d'après → exactement l'état d'après (2 000 historiques)", () => {
+  const hasard = tirage(20261023);
+  for (let n = 0; n < 2000; n += 1) {
+    const {avant, apres} = historique(hasard);
+    const base = jouer(P.creerParcours(), avant);
+    const verite = jouer(base, apres);
+    assert.ok(memesCalculs(P.rebaser(verite, base, apres), verite), JSON.stringify({avant, apres}));
+  }
+});
+
+test("rebaser — un envoi parti sans réponse lue (fermeture de la page) : rejouer ce que le serveur a déjà ne compte pas deux fois (2 000 historiques)", () => {
+  const hasard = tirage(1046);
+  for (let n = 0; n < 2000; n += 1) {
+    const {avant, apres} = historique(hasard);
+    const base = jouer(P.creerParcours(), avant);
+    const verite = jouer(base, apres);
+    // Le serveur a déjà reçu les k premières réponses de la file, ou toutes.
+    const k = Math.floor(hasard() * (apres.length + 1));
+    const serveur = jouer(base, apres.slice(0, k));
+    assert.ok(memesCalculs(P.rebaser(verite, serveur, apres), verite), JSON.stringify({avant, apres, k}));
+  }
+});
+
+test("rebaser — bords : file vide, remise à zéro d'un côté, réponse plus ancienne que ce que le serveur a vu", () => {
+  // File vide : la fusion des états.
+  assert.deepEqual(P.rebaser(ANCIEN, A_JOUR, []), P.fusionner(ANCIEN, A_JOUR));
+  // Époques différentes (remise à zéro) : fusionner décide seul, rien ne se rejoue.
+  const remis = P.remettreAZero(A_JOUR);
+  assert.deepEqual(P.rebaser(repondre(ANCIEN, false, J), remis, [[1, "2-8", J, 0]]), P.fusionner(repondre(ANCIEN, false, J), remis));
+  // Une réponse d'un jour plus ancien que le dernier jour où le serveur a vu ce calcul :
+  // passée (l'autre appareil a joué ce calcul après elle — comme la fusion des états).
+  const serveur = repondre(A_JOUR, true, J);
+  const file = [[1, "2-8", "2026-10-21", 0]];
+  assert.deepEqual(calcul(P.rebaser(jouer(ANCIEN, file), serveur, file)), calcul(serveur));
+  // Un calcul que le serveur n'a jamais vu : rejoué depuis la boîte 1.
+  const neuf = [[1, "3-7", J, 1]];
+  assert.equal(P.rebaser(jouer(A_JOUR, neuf), A_JOUR, neuf).calculs["3-7"].boite, 2);
+  // Les autres calculs et le reste du parcours : la fusion des états, comme avant.
+  const local = jouer(fait({...calcul(A_JOUR)}), neuf);
+  local.tables[7].acquise = "2026-10-22";
+  assert.equal(P.rebaser(local, A_JOUR, neuf).tables[7].acquise, "2026-10-22");
+});
+
+// --------------------------------------------------- la file des réponses
+
+test("la file : notée sous un code seulement, rangée à côté de la case, jamais effacée par l'état d'un onglet", () => {
+  const local = fauxStockage();
+  assert.deepEqual(P.chargerReponses(local, CODE), {sure: false, dernier: 0, liste: []});
+  P.noterReponse(local, "", "2-8", {correcte: true, date: J});
+  P.noterReponse(local, CODE, "1-8", {correcte: true, date: J});
+  P.noterReponse(local, CODE, "2-8", {correcte: true, date: "pas une date"});
+  assert.equal(P.chargerReponses(local, CODE).dernier, 0, "sans code, hors grille, ou sans jour : rien");
+  P.noterReponse(local, CODE, "8-2", {correcte: false, date: J});
+  P.noterReponse(local, CODE, "3-7", {correcte: true, date: J});
+  assert.deepEqual(P.chargerReponses(local, CODE), {sure: false, dernier: 2, liste: [[1, "2-8", J, 0], [2, "3-7", J, 1]]});
+  // Un onglet réécrit son état d'envoi (sans la file) : la file reste.
+  P.sauverSync(local, CODE, {revision: 4, dirty: true, detache: false, maj: 1});
+  assert.equal(P.chargerReponses(local, CODE).liste.length, 2);
+  assert.equal(P.chargerSync(local, CODE).revision, 4);
+  assert.equal("reponses" in P.chargerSync(local, CODE), false, "l'état tenu par la page ne porte pas la file");
+  // Le 200 d'un envoi qui couvrait la réponse n° 1 : elle sort, la file devient sûre.
+  assert.deepEqual(P.reponsesParties(local, CODE, 1), {sure: true, dernier: 2, liste: [[2, "3-7", J, 1]]});
+  assert.deepEqual(P.oublierReponses(local, CODE), {sure: true, dernier: 2, liste: []});
+  // Une file forgée ou abîmée se lit sans rien casser ; trop longue, elle n'est plus sûre.
+  assert.deepEqual(P.normaliserReponses({sure: 1, dernier: 3, liste: [[1, "2-8", J, 1], [1, "3-7", J, 0], [2, "1-1", J, 1], [3, "2-8", "hier", 1], "x", [9, "2-8", J, 1]]}),
+    {sure: true, dernier: 3, liste: [[1, "2-8", J, 1]]});
+  const longue = {sure: true, dernier: P.REPONSES_MAX + 1, liste: Array.from({length: P.REPONSES_MAX + 1}, (_, i) => [i + 1, "2-8", J, 1])};
+  const lue = P.normaliserReponses(longue);
+  assert.equal(lue.liste.length, P.REPONSES_MAX);
+  assert.equal(lue.sure, false);
+});
+
+// --------------------------------------- avec le vrai code de la page
 
 function appli(serveur, {local, session} = {}) {
   const temps = fauxTemps();
@@ -205,81 +253,169 @@ async function demarrer(a) {
   await tic();
   await a.temps.avancer(1000);
 }
-
-test("sauverCase : la mémoire de l'onglet est restée sur la copie ancienne, la case de l'appareil est à jour → la case lit 4", async () => {
-  const serveur = fauxServeur();
-  serveur.mode = "coupe";
-  const local = fauxStockage();
-  P.sauver(local, A_JOUR, CODE);
-  const a = appli(serveur, {local});
-  await demarrer(a);
-  assert.equal(a.api.parcours.calculs["2-8"].boite, 5, "la page a lu la case");
-  // L'onglet a gardé en mémoire la copie ancienne et y applique l'erreur du jour.
-  a.api.parcours = repondre(ANCIEN, false, P.jourLocal());
+// Répondre comme la page : appliquerReponse, la file, puis sauverParcours.
+function repondreDansLaPage(a, correcte, cle = "2-8") {
+  const resultat = P.appliquerReponse(a.api.parcours, cle, {correcte});
+  a.api.parcours = resultat.parcours;
+  a.api.noterReponseAEnvoyer(resultat, correcte);
   a.api.sauverParcours();
-  const dansLaCase = P.charger(local, CODE).calculs["2-8"];
-  assert.deepEqual([dansLaCase.boite, dansLaCase.erreur, dansLaCase.gagne], [4, P.jourLocal(), "2026-10-12"], "la case : boîte 4, l'erreur du jour, le gain du 12/10 gardé");
-  assert.equal(a.api.parcours.calculs["2-8"].boite, 4, "et la mémoire de l'onglet aussi");
-});
+}
+const auServeur = serveur => calcul(P.normaliserParcours(serveur.etat(CODE).parcours));
 
-test("le 409 du serveur : l'appareil resté hors ligne un mois rate 2 × 8, envoie, reçoit 409 avec la boîte 5 du jour → le serveur finit à 4", async () => {
-  const serveur = fauxServeur();
-  serveur.poser(CODE, A_JOUR, 3);
-  // L'appareil ancien : sa case porte la copie d'il y a un mois, il démarre hors ligne.
-  serveur.mode = "coupe";
+// La vieille copie en 5 de septembre, sûre (elle a été confirmée par le serveur ce jour-là).
+async function vieilleCopieSure(serveur, copie) {
   const local = fauxStockage();
-  P.sauver(local, ANCIEN, CODE);
+  P.sauver(local, copie, CODE);
+  P.sauverSync(local, CODE, {revision: 1, dirty: false, detache: false, maj: 1});
+  P.reponsesParties(local, CODE, 0);
+  return local;
+}
+
+test("page — réserve 2.A : la vieille copie en 5 rate hors ligne, le réseau revient, 409 avec le serveur en 2 → 1 au serveur, dans la case et à l'écran", async () => {
+  const jour = P.jourLocal();
+  const base5 = fait({boite: 5, vu: "2026-09-12", erreur: null, gagne: "2026-09-12", echeance: "2026-09-26"});
+  const serveur = fauxServeur();
+  serveur.poser(CODE, jouer(base5, [[1, "2-8", "2026-10-10", 0], [2, "2-8", "2026-10-12", 0], [3, "2-8", "2026-10-14", 0]]), 5);
+  serveur.mode = "coupe";
+  const local = await vieilleCopieSure(serveur, base5);
   const b = appli(serveur, {local});
   await demarrer(b);
-  assert.equal(b.api.parcours.calculs["2-8"].boite, 2, "hors ligne : la copie ancienne");
-  b.api.parcours = repondre(b.api.parcours, false, P.jourLocal());
-  b.api.sauverParcours();
+  repondreDansLaPage(b, false);
   await b.temps.avancer(1000);
-  assert.equal(b.api.sync.dirty, true);
-  // Le réseau revient : l'envoi part avec une révision périmée → 409 → fusion → renvoi.
+  assert.equal(b.api.parcours.calculs["2-8"].boite, 4, "hors ligne : la copie seule");
   serveur.mode = "ok";
   b.declencher("online");
   await tic(20);
   await b.temps.avancer(3000);
-  const envois = serveur.appels.filter(x => x.parcours);
-  assert.ok(envois.length >= 2, `envoi, 409, renvoi (${envois.length} envois)`);
-  const final = P.normaliserParcours(serveur.etat(CODE).parcours).calculs["2-8"];
-  assert.deepEqual([final.boite, final.erreur, final.gagne], [4, P.jourLocal(), "2026-10-12"], "le serveur : boîte 4 (avant ce lot : 1)");
-  assert.equal(b.api.parcours.calculs["2-8"].boite, 4, "l'appareil ancien se range à 4");
+  assert.deepEqual([auServeur(serveur).boite, auServeur(serveur).erreur], [1, jour], "le serveur : 2 − 1 (avant : 4)");
+  assert.equal(b.api.parcours.calculs["2-8"].boite, 1);
+  assert.equal(P.charger(local, CODE).calculs["2-8"].boite, 1, "la case n'est pas refusionnée avec la boîte périmée");
+  const envois = serveur.appels.filter(x => x.parcours).map(x => P.normaliserParcours(x.parcours).calculs["2-8"].boite);
+  assert.deepEqual(envois.slice(-2), [4, 1], "l'envoi refusé (409) portait la boîte périmée, le renvoi porte 1");
+  assert.deepEqual(P.chargerReponses(local, CODE).liste, [], "le 200 a vidé la file");
   assert.equal(b.api.sync.dirty, false);
 });
 
-test("la lecture à l'ouverture : une vieille copie à 5 rouverte en ligne prend le parcours du jour descendu à 1 — et ne le remonte pas", async () => {
+test("page — la copie restée un mois en boîte 2 rate hors ligne, 409 avec la boîte 5 du serveur → 4 ; la même chose à l'ouverture suivante", async () => {
+  const jour = P.jourLocal();
   const serveur = fauxServeur();
-  const descendu = fait({boite: 1, vu: "2026-10-22", erreur: "2026-10-22", gagne: "2026-09-12", echeance: "2026-10-22"});
-  serveur.poser(CODE, descendu, 7);
-  const local = fauxStockage();
-  P.sauver(local, fait({boite: 5, vu: "2026-09-20", erreur: null, gagne: "2026-09-12", echeance: "2026-10-12"}), CODE);
-  const a = appli(serveur, {local});
-  await demarrer(a);
-  assert.equal(a.api.parcours.calculs["2-8"].boite, 1, "à l'ouverture : la boîte 1 du jour (la règle « max(R, A − 1) » du premier projet aurait donné 4)");
-  assert.equal(P.charger(local, CODE).calculs["2-8"].boite, 1, "la case est remise à jour");
-  const auServeur = P.normaliserParcours(serveur.etat(CODE).parcours).calculs["2-8"];
-  assert.deepEqual([auServeur.boite, auServeur.erreur], [1, "2026-10-22"], "et le serveur garde la boîte 1 (rien envoyé, ou le même état)");
-  assert.equal(serveur.appels.filter(x => x.parcours && P.normaliserParcours(x.parcours).calculs["2-8"].boite > 1).length, 0, "aucun envoi n'a jamais porté une boîte remontée");
-  // Et dans l'autre sens : la case ancienne en 2, le serveur du jour en 5.
-  const local2 = fauxStockage();
-  P.sauver(local2, ANCIEN, CODE);
+  serveur.poser(CODE, A_JOUR, 3);
+  serveur.mode = "coupe";
+  const local = await vieilleCopieSure(serveur, ANCIEN);
+  const b = appli(serveur, {local});
+  await demarrer(b);
+  repondreDansLaPage(b, false);
+  await b.temps.avancer(1000);
+  serveur.mode = "ok";
+  b.declencher("online");
+  await tic(20);
+  await b.temps.avancer(3000);
+  assert.deepEqual([auServeur(serveur).boite, auServeur(serveur).erreur, auServeur(serveur).gagne], [4, jour, "2026-10-12"], "4 (avant : 1)");
+  // Même histoire, mais l'appareil est fermé hors ligne et rouvert en ligne : la lecture à l'ouverture rejoue.
   const serveur2 = fauxServeur();
-  serveur2.poser(CODE, A_JOUR, 2);
+  serveur2.poser(CODE, A_JOUR, 3);
+  serveur2.mode = "coupe";
+  const local2 = await vieilleCopieSure(serveur2, ANCIEN);
   const c = appli(serveur2, {local: local2});
   await demarrer(c);
-  assert.equal(c.api.parcours.calculs["2-8"].boite, 5, "la copie ancienne prend la boîte 5");
+  repondreDansLaPage(c, false);
+  await c.temps.avancer(1000);
+  serveur2.mode = "ok";
+  const rouverte = appli(serveur2, {local: local2});
+  await demarrer(rouverte);
+  await rouverte.temps.avancer(1000);
+  assert.equal(rouverte.api.parcours.calculs["2-8"].boite, 4);
+  assert.equal(auServeur(serveur2).boite, 4);
+});
+
+test("page — l'envoi parti à la fermeture sans réponse lue : à l'ouverture suivante, la réponse n'est pas comptée deux fois", async () => {
+  const serveur = fauxServeur();
+  const depart = fait({boite: 3, vu: "2026-10-02", erreur: null, gagne: "2026-10-02", echeance: "2026-10-05"});
+  serveur.poser(CODE, depart, 2);
+  const local = await vieilleCopieSure(serveur, depart);
+  P.sauverSync(local, CODE, {revision: 2, dirty: false, detache: false, maj: 1});
+  const a = appli(serveur, {local});
+  await demarrer(a);
+  repondreDansLaPage(a, true);
+  assert.equal(a.api.parcours.calculs["2-8"].boite, 4);
+  // Le serveur reçoit le paquet (comme un sendBeacon) mais la page ne lit pas la réponse.
+  serveur.poser(CODE, a.api.parcours, 3);
+  assert.equal(P.chargerReponses(local, CODE).liste.length, 1, "la réponse est encore dans la file");
+  const b = appli(serveur, {local});
+  await demarrer(b);
+  await b.temps.avancer(2000);
+  assert.equal(b.api.parcours.calculs["2-8"].boite, 4, "une seule montée");
+  assert.equal(auServeur(serveur).boite, 4);
+  assert.deepEqual(P.chargerReponses(local, CODE).liste, [], "la file est vidée");
+});
+
+test("page — un appareil d'avant ce lot (file pas sûre) : la fusion des états, comme avant, jusqu'à son premier envoi confirmé", async () => {
+  const serveur = fauxServeur();
+  serveur.poser(CODE, A_JOUR, 3);
+  const local = fauxStockage();
+  P.sauver(local, ANCIEN, CODE);
+  const a = appli(serveur, {local});
+  await demarrer(a);
+  assert.equal(a.api.parcours.calculs["2-8"].boite, 5, "la copie ancienne prend l'état du serveur");
+  assert.equal(P.chargerReponses(local, CODE).sure, true, "le serveur savait tout : la file est sûre à partir d'ici");
+  // La file pas sûre au moment d'un 409 : rejoindreServeur fusionne les états.
+  const local2 = fauxStockage();
+  const b = appli(fauxServeur(), {local: local2});
+  b.api.parcours = repondre(ANCIEN, false, J);
+  assert.equal(b.api.rejoindreServeur(A_JOUR).calculs["2-8"].boite, 1, "la règle de main, connue (réserve n° 1 de la #1043)");
+});
+
+test("page — à l'ouverture, un serveur qui sait déjà tout : la file devient sûre sans rien envoyer", async () => {
+  const serveur = fauxServeur();
+  serveur.poser(CODE, A_JOUR, 3);
+  const local = fauxStockage();
+  P.sauver(local, A_JOUR, CODE);
+  P.sauverSync(local, CODE, {revision: 3, dirty: false, detache: false, maj: 1});
+  assert.equal(P.chargerReponses(local, CODE).sure, false, "appareil d'avant ce lot : pas de file");
+  const a = appli(serveur, {local});
+  await demarrer(a);
+  await a.temps.avancer(2000);
+  assert.equal(serveur.appels.filter(x => x.parcours).length, 0, "rien à envoyer");
+  assert.deepEqual(P.chargerReponses(local, CODE), {sure: true, dernier: 0, liste: []}, "la lecture a montré que le serveur savait tout");
+});
+
+test("page — deux pages ouvertes en ligne : juste le 5 sur l'une, juste plus tard sur l'autre restée sur la boîte 3 → un seul gain (réserve 2.C)", async () => {
+  const serveur = fauxServeur();
+  const commun = jouer(P.creerParcours(), [[1, "2-8", "2026-10-01", 1], [2, "2-8", "2026-10-02", 1]]);
+  const jour = P.jourLocal();
+  // L'autre page a gagné aujourd'hui : le serveur est en 4, échéance dans 7 jours.
+  serveur.poser(CODE, repondre(commun, true, jour), 4);
+  const local = await vieilleCopieSure(serveur, commun);
+  P.sauverSync(local, CODE, {revision: 3, dirty: false, detache: false, maj: 1});
+  const b = appli(serveur, {local});
+  serveur.mode = "coupe";
+  await demarrer(b);
+  serveur.mode = "ok";
+  repondreDansLaPage(b, true);
+  assert.equal(b.api.parcours.calculs["2-8"].boite, 4, "la page restée sur la boîte 3 croit monter");
+  await b.temps.avancer(3000);
+  assert.equal(auServeur(serveur).boite, 4, "4, pas 5 : le calcul n'était plus dû");
+});
+
+test("page — « Recommencer à zéro » vide la file : rien d'avant ne se rejoue", () => {
+  const local = fauxStockage();
+  const a = appli(fauxServeur(), {local});
+  repondreDansLaPage(a, false);
+  assert.equal(P.chargerReponses(local, CODE).liste.length, 1);
+  a.api.oublierReponsesAEnvoyer();
+  assert.deepEqual(P.chargerReponses(local, CODE).liste, []);
 });
 
 // ---------------------------------------------------------- les épingles
 
-test("le moteur porte la règle, et la page charge le moteur du jour", () => {
-  assert.match(moteur, /const \[R, A\] = faitA\.vu > faitB\.vu \? \[faitA, faitB\] : \[faitB, faitA\];\s*const gainNouveau = plusRecente\(R\.gagne, A\.gagne\);\s*const erreurNouvelle = plusRecente\(R\.erreur, A\.erreur\);\s*const gainManque = plusRecente\(A\.gagne, R\.gagne\);\s*const erreurManquee = plusRecente\(A\.erreur, R\.erreur\);/, "les quatre nouvelles, comparées aux dates de l'autre côté");
-  assert.match(moteur, /if \(erreurNouvelle && !gainManque && R\.gagne\) \{\s*boite = gainNouveau \? R\.boite : Math\.min\(R\.boite, Math\.max\(1, A\.boite - 1\)\);/, "règle 1 : R gagne, à gain égal jamais plus haut que A − 1");
-  assert.match(moteur, /if \(gainNouveau\) \{\s*boite = Math\.max\(R\.boite - \(erreurManquee \? 1 : 0\), Math\.min\(SEUILS\.revision\.boites, A\.boite \+ 1\)\);/, "règle 2 : un gain nouveau = une boîte au-dessus de A");
-  assert.match(moteur, /\} else if \(erreurNouvelle\) \{\s*boite = Math\.max\(R\.boite, A\.boite - 1\);/, "règle 3 : une erreur connue coûte une boîte, jamais plus");
-  assert.match(moteur, /fusion\.calculs\[cle\] = \{\.\.\.cloner\(A\), vu: R\.vu\};/, "règle 4 : rien de neuf → A, vu de R");
-  assert.doesNotMatch(moteur, /fusion\.calculs\[cle\] = cloner\(faitA\.vu > faitB\.vu \? faitA : faitB\);/, "l'ancienne règle « le plus récent en bloc » a disparu");
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-2/, "cache-buster du moteur bumpé");
+test("la page note les réponses, les rejoue au 409 et à l'ouverture, et charge le moteur du jour", () => {
+  assert.equal((html.match(/noterReponseAEnvoyer\(resultat, correcte\);/g) || []).length, 2, "Mes calculs et l'évaluation notent leurs réponses");
+  assert.match(html, /parcours = PARCOURS\.remettreAZero\(parcours\);\s*oublierReponsesAEnvoyer\(\);/);
+  assert.match(html, /if \(reponse\.statut === 409 && donnees && donnees\.parcours !== undefined\) \{\s*rejoindreServeur\(PARCOURS\.normaliserParcours\(donnees\.parcours\)\);/);
+  assert.match(html, /const fusion = rejoindreServeur\(distant\);/);
+  assert.match(html, /parcours = PARCOURS\.rebaser\(local, distant, file\.liste\);\s*PARCOURS\.sauver\(storage\(\), parcours, codeSuivi\);/, "la case est réécrite telle quelle, pas refusionnée");
+  assert.match(html, /PARCOURS\.reponsesParties\(storage\(\), codeSuivi, jusqua\);/);
+  assert.match(moteur, /if \(connu && connu\.vu && connu\.vu > jour\) return;\s*rejoue = appliquerReponse\(rejoue, cle, \{correcte: Boolean\(entree\[3\]\), date: jour\}\)\.parcours;/);
+  assert.doesNotMatch(moteur, /plusRecente\(R\.gagne, A\.gagne\)/, "la règle « par dates » du premier essai a disparu");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-3/, "cache-buster du moteur bumpé");
 });

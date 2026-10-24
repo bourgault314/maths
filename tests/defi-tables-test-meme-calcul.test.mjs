@@ -182,6 +182,6 @@ test("l'écran dit « 18 sur 20 — mais 7 × 8 raté deux fois », la table du 
 });
 
 test("le moteur a changé : son numéro monte, et la copie du serveur reste identique", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261023-2"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261023-3"><\/script>/);
   assert.equal(copieServeur, moteur, "_serveur/public/prof/defi_tables_mon_parcours.js = outils/calcul_mental/defi_tables_mon_parcours.js");
 });
