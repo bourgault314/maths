@@ -28,6 +28,10 @@ html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,BlinkMacS
 .brand-link{display:block;line-height:0;text-decoration:none;flex:0 0 auto}
 .brand-logo{width:160px;max-width:92%;height:auto;display:block;filter:drop-shadow(0 2px 3px rgba(68,45,22,.10))}
 .brand-text h1{font-size:1.22rem;line-height:1.03;margin:2px 0 0;letter-spacing:-.045em;font-weight:1000}
+/* Flèche retour posée à gauche du titre, sur sa ligne (tool-parent-navigation.js) */
+.brand-text{align-self:stretch}
+.brand-text .mathsgo-back-row{justify-content:center}
+.brand .brand-text a.mathsgo-back[data-mathsgo-place]{margin:0;align-self:center}
 .subtitle{font-size:.84rem;color:var(--muted);margin-top:2px;line-height:1.15;font-weight:500}
 .block{border-top:1px solid #eee4d9;margin-top:7px;padding-top:7px}
 .block-title{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#8a7462;font-weight:950;margin-bottom:5px}
@@ -137,7 +141,7 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 <script defer src="../../assets/js/tool-parent-navigation.js?v=2"></script>
 <script defer src="../../assets/js/mention-licence-impression.js"></script>
 </head>
-<body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;collection=tuiles-algebriques" data-mathsgo-parent-label="Tuiles algébriques">
+<body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;collection=tuiles-algebriques" data-mathsgo-parent-label="Tuiles algébriques" data-mathsgo-parent-place=".brand-text h1">
 <div class="app">
   <aside class="controls">
     <div class="brand">
