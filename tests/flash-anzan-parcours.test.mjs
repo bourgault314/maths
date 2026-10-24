@@ -208,18 +208,73 @@ test("fusion : à époque différente la plus haute gagne en bloc ; les réglage
   assert.deepEqual(PARCOURS.fusionner(ra, PARCOURS.creer()).reglages, ra.reglages, "un parcours vide n'efface pas des réglages");
 });
 
+// Le jour n° i d'une suite de jours qui avancent (deux séances par jour).
+const jourDe = i => { const d = new Date(Date.UTC(2024, 0, 1 + Math.floor(i / 2))); return d.toISOString().slice(0, 10); };
+
 test("la borne : les 500 dernières séances restent, les plus anciennes partent", () => {
   let p = PARCOURS.creer();
-  for (let i = 0; i < 503; i += 1) {
-    const jour = `2026-${String(1 + (i % 12)).padStart(2, "0")}-${String(1 + (i % 28)).padStart(2, "0")}`;
-    p = note(p, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, 1000 + i, jour).parcours;
-  }
+  for (let i = 0; i < 503; i += 1) p = note(p, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, 1000 + i, jourDe(i)).parcours;
   const numeros = Object.keys(p.seances).map(Number);
   assert.equal(numeros.length, PARCOURS.SEANCES_MAX);
   assert.equal(Math.min(...numeros), 4);
   assert.equal(Math.max(...numeros), 503);
   assert.ok(JSON.stringify(PARCOURS.pourServeur(p)).length < 40000, "500 séances tiennent sous la borne du serveur (40 ko)");
   assert.equal(PARCOURS.numeroSuivant(p), 504);
+  // La borne garde les plus RÉCENTES (le jour), pas les plus hauts numéros : une séance d'hier
+  // rangée sous un petit numéro (après une renumérotation) reste, c'est la plus ancienne qui part.
+  const melange = {...p, seances: {...p.seances, "1": [jourDe(600), "flash", "plus", 2, 3, 10, 8, 10, 10, 10, 777]}};
+  const b = PARCOURS.normaliser(melange);
+  assert.equal(Object.keys(b.seances).length, PARCOURS.SEANCES_MAX);
+  assert.ok(b.seances["1"], "la séance récente au numéro 1 reste");
+  assert.equal(b.seances["4"], undefined, "la plus ancienne (numéro 4, premier jour) est partie");
+});
+
+test("2e relecture Codex (24/10) : un historique plein renuméroté ne perd pas ses séances neuves quand une vieille copie fusionne", () => {
+  // 500 séances aux places 9500–9999 (A et B ont la même copie).
+  let vieille = PARCOURS.creer();
+  for (let i = 0; i < 500; i += 1) vieille.seances[String(9500 + i)] = [jourDe(i), "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 5000 + i];
+  vieille = PARCOURS.normaliser(vieille);
+  assert.equal(Object.keys(vieille.seances).length, 500);
+  // A ajoute dix séances : renumérotation (place 9999 prise), puis dix de plus, borne à 500.
+  let a = vieille;
+  for (let k = 0; k < 10; k += 1) a = note(a, {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 9000 + k, jourDe(500 + k)).parcours;
+  const numerosA = Object.keys(a.seances).map(Number);
+  assert.equal(numerosA.length, 500);
+  assert.ok(Math.max(...numerosA) <= 510, "renumérotées de 1 en 1");
+  const idsA = numerosA.map(n => a.seances[String(n)][10]);
+  for (let k = 0; k < 10; k += 1) assert.ok(idsA.includes(9000 + k), "les dix séances neuves sont là");
+  for (let i = 0; i < 10; i += 1) assert.ok(!idsA.includes(5000 + i), "les dix plus anciennes sont parties");
+  // B rouvre sa vieille copie (places 9500–9999) et fusionne avec le serveur (= a) : les dix neuves restent.
+  const f = PARCOURS.fusionner(vieille, a);
+  const idsF = Object.values(f.seances).map(s => s[10]);
+  assert.equal(idsF.length, 500);
+  for (let k = 0; k < 10; k += 1) assert.ok(idsF.includes(9000 + k), `la séance neuve ${9000 + k} survit à la fusion`);
+  const sansNumeros = p => PARCOURS.historique(p).map(({numero, ...reste}) => reste); // les numéros ne sont que des places
+  assert.deepEqual(sansNumeros(PARCOURS.fusionner(a, vieille)), sansNumeros(f), "les mêmes séances dans les deux sens");
+  assert.equal(PARCOURS.resume(f).calculs, 490 * 10 + 10 * 5);
+  // Et la renumérotation suit l'ordre du temps (le jour), pas l'ancien numéro : l'historique reste juste.
+  const h = PARCOURS.historique(f);
+  assert.equal(h[0].id, 9009, "la plus récente en haut");
+  assert.equal(h[h.length - 1].id, 5010, "la plus ancienne gardée en bas");
+});
+
+test("2e relecture Codex (24/10) : à rang égal et séances égales, deux appareils tombent d'accord sur les mêmes réglages (plus d'oscillation)", () => {
+  const base = PARCOURS.sauverReglages(note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 10, score: 9}, 51, "2026-10-22").parcours,
+    {mode: "flash", flash: FLASH, colonne: COLONNE});
+  const a = PARCOURS.sauverReglages(base, {mode: "flash", flash: {...FLASH, nombres: 18}, colonne: COLONNE}); // rang 2
+  const b = PARCOURS.sauverReglages(base, {mode: "flash", flash: {...FLASH, nombres: 12}, colonne: COLONNE}); // rang 2 aussi
+  const f1 = PARCOURS.fusionner(a, b);
+  const f2 = PARCOURS.fusionner(b, a);
+  assert.deepEqual(f1.reglages, f2.reglages, "le même gagnant dans les deux sens");
+  assert.ok([12, 18].includes(f1.reglages.flash.nombres));
+  // Une fois d'accord, plus rien ne bouge : rouvrir A ou B ne renvoie rien de nouveau.
+  assert.deepEqual(PARCOURS.pourServeur(PARCOURS.fusionner(a, f1)), PARCOURS.pourServeur(f1));
+  assert.deepEqual(PARCOURS.pourServeur(PARCOURS.fusionner(b, f1)), PARCOURS.pourServeur(f1));
+  assert.deepEqual(PARCOURS.pourServeur(PARCOURS.fusionner(f1, a)), PARCOURS.pourServeur(f1));
+  // Un vrai changement de plus (rang 3) l'emporte toujours.
+  const c = PARCOURS.sauverReglages(f1, {mode: "colonne", flash: FLASH, colonne: COLONNE});
+  assert.equal(PARCOURS.fusionner(a, c).reglages.mode, "colonne");
+  assert.equal(PARCOURS.fusionner(c, b).reglages.rang, 3);
 });
 
 // ------------------------------------------------------------- ce qu'on en lit

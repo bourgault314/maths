@@ -256,9 +256,22 @@
     return Object.keys(p.seances).map(Number).filter(numeroValide).sort((a, b) => a - b);
   }
 
-  // Les SEANCES_MAX dernières séances (les plus hauts numéros) : les autres partent.
+  // Les numéros d'un parcours dans l'ordre du temps : le jour de la séance,
+  // puis le numéro. C'est l'ordre de l'historique, de la borne et de la
+  // renumérotation — jamais le numéro seul : après une renumérotation (place
+  // 9999), les séances les plus récentes ont les plus PETITS numéros, et une
+  // vieille copie fusionnée les aurait fait partir (2e relecture Codex, 24/10/2026).
+  function numerosChronologiques(p) {
+    return numeros(p).sort((x, y) => {
+      const jx = p.seances[String(x)][0];
+      const jy = p.seances[String(y)][0];
+      return jx === jy ? x - y : (jx < jy ? -1 : 1);
+    });
+  }
+
+  // Les SEANCES_MAX dernières séances (les plus récentes) : les autres partent.
   function borner(p) {
-    const liste = numeros(p);
+    const liste = numerosChronologiques(p);
     if (liste.length <= SEANCES_MAX) return p;
     liste.slice(0, liste.length - SEANCES_MAX).forEach(n => { delete p.seances[String(n)]; });
     return p;
@@ -324,7 +337,7 @@
   function faireDeLaPlace(p) {
     const liste = numeros(p);
     if (!liste.length || liste[liste.length - 1] < NUMERO_MAX) return p;
-    const seances = liste.map(n => p.seances[String(n)]);
+    const seances = numerosChronologiques(p).map(n => p.seances[String(n)]);
     p.seances = {};
     seances.forEach((s, i) => { p.seances[String(i + 1)] = s; });
     return p;
@@ -369,12 +382,21 @@
     });
     // Les réglages : ceux du rang le plus haut (le dernier changement) ; à
     // rang égal, ceux du parcours dont la séance est la plus récente ; à
-    // égalité (ou sans séance), ceux qui existent, le premier d'abord.
+    // égalité encore, un ordre FIXE sur le texte des réglages — le même
+    // résultat dans les deux sens, pour que deux appareils qui ont chacun
+    // changé une fois depuis le même rang tombent d'accord au lieu de se
+    // réécrire l'un l'autre à chaque ouverture (2e relecture Codex, 24/10/2026).
     const ra = rangDesReglages(a.reglages);
     const rb = rangDesReglages(b.reglages);
     const da = derniereSeance(a);
     const db = derniereSeance(b);
-    const bGagne = rb !== ra ? rb > ra : Boolean(db && (!da || db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero)));
+    const ta = JSON.stringify(a.reglages);
+    const tb = JSON.stringify(b.reglages);
+    let bGagne;
+    if (rb !== ra) bGagne = rb > ra;
+    else if (da && db && (da.jour !== db.jour || da.numero !== db.numero)) bGagne = db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero);
+    else if (!da !== !db) bGagne = Boolean(db);
+    else bGagne = tb > ta;
     const prioritaire = bGagne ? b : a;
     const autre = bGagne ? a : b;
     fusion.reglages = Object.keys(prioritaire.reglages).length ? cloner(prioritaire.reglages) : cloner(autre.reglages);
