@@ -733,8 +733,8 @@ test("qui voit quoi — la fenêtre : la classe cochée et grisée « par la cla
   assert.equal(r.$("voit-sous").textContent,
     "Sa classe (405) décide, et tu peux lui ouvrir des choses en plus. Rien ne lui est retiré : ce que la classe a, Lucas l’a.");
   assert.equal(r.$("voit-sous").premier(n => n.tag === "b").textContent, "en plus");
-  assert.deepEqual(r.liste.children.map(bloc => bloc.premier(n => n.tag === "strong").textContent), ["Défi tables", "Coffres magiques", "SPLAT!"],
-    "toutes les applis que la page sait montrer, dans l'ordre");
+  assert.deepEqual(r.liste.children.map(bloc => bloc.premier(n => n.tag === "strong").textContent), ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"],
+    "toutes les applis que la page sait montrer, dans l'ordre (Anzan depuis le lot 4b)");
   for (const cle of ["defi-tables", "splat"]) {
     assert.deepEqual([r.caseAppli(cle).checked, r.caseAppli(cle).disabled], [true, true], `${cle} : par la classe, non cliquable`);
     assert.ok(aClasse(r.ligne(cle), "par-classe"));
@@ -866,16 +866,30 @@ test("qui voit quoi — après un enregistrement : l'élève est mis à jour dan
   const tables = [{id: 16, prenom: "Lucas"}, {id: 2, prenom: "Zoé"}];
   const splat = [{id: 16, prenom: "Lucas", parcours: {p: 1}}, {id: 2, prenom: "Zoé"}];
   const lus = [], suites = [];
-  new Function("tableaux", "lireSplat", "redessin", "poserEnPlusPour",
+  new Function("tableaux", "lireSplat", "redessin", "poserEnPlusPour", "poserOnglets", "appliAffichee", "afficherAppli",
     `${fonction("reporterAcces")}\nreporterAcces(tableaux.splat[0], {splat: {mondes: [3, 4]}}, {applis: ["splat"], reglages: {}});`)(
     {"defi-tables": tables, splat}, (brut, eleve) => { lus.push([brut, eleve.acces.applis]); return {relu: true}; },
-    {demander: () => suites.push("redessin")}, () => suites.push("en plus pour"));
+    {demander: () => suites.push("redessin")}, () => suites.push("en plus pour"),
+    () => { suites.push("onglets"); return ["defi-tables", "splat"]; }, "splat", cle => suites.push(`afficher ${cle}`));
   assert.deepEqual(tables[0].ajouts, {splat: {mondes: [3, 4]}});
   assert.deepEqual(splat[0].acces, {applis: ["splat"], reglages: {}});
   assert.deepEqual(splat[0].lu, {relu: true});
   assert.deepEqual(lus, [[{p: 1}, ["splat"]]]);
   assert.equal(tables[1].ajouts, undefined, "les autres élèves ne bougent pas");
-  assert.deepEqual(suites, ["redessin", "en plus pour"]);
+  assert.deepEqual(suites, ["redessin", "en plus pour", "onglets"], "lot 4b : les onglets suivent ; l'onglet affiché est toujours là, on y reste");
+});
+
+test("lot 4b — une appli donnée ou retirée en plus fait apparaître ou disparaître son onglet ; si c'était l'onglet affiché, on passe au premier qui reste", () => {
+  const rejouer = (affichee, restants) => {
+    const suites = [];
+    new Function("tableaux", "lireSplat", "redessin", "poserEnPlusPour", "poserOnglets", "appliAffichee", "afficherAppli",
+      `${fonction("reporterAcces")}\nreporterAcces(tableaux["flash-anzan"][0], {}, {applis: ["defi-tables"], reglages: {}});`)(
+      {"flash-anzan": [{id: 7, prenom: "Rania"}]}, () => ({}), {demander: () => {}}, () => {},
+      () => restants, affichee, cle => suites.push(cle));
+    return suites;
+  };
+  assert.deepEqual(rejouer("flash-anzan", ["defi-tables", "splat"]), ["defi-tables"], "Anzan retiré à Rania pendant qu'on regardait son onglet");
+  assert.deepEqual(rejouer("splat", ["defi-tables", "splat"]), [], "un autre onglet : on ne bouge pas");
 });
 
 test("qui voit quoi — aucun code d'élève hors de l'onglet Élèves (règle du 18/10), les prénoms en textContent", () => {
@@ -901,7 +915,7 @@ test("qui voit quoi — le HTML : la colonne, la fenêtre, les lignes des Régla
     assert.ok(vider.ZONES_TEXTE.includes(id), `${id} vidé à la déconnexion`);
   }
   assert.ok(vider.ZONES_MESSAGE.includes("voit-message"));
-  assert.match(fonction("viderZones"), /\["boite", "secret", "eval-modele", "eval-ouvrir", "voit"\]\.forEach/, "la fenêtre se ferme à la déconnexion");
+  assert.match(fonction("viderZones"), /\["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "parcours-anzan"\]\.forEach/, "les fenêtres se ferment à la déconnexion (lot 4b : le parcours Anzan aussi)");
   assert.match(fonction("oublierEtat"), /voitEleve = null;/);
   assert.match(script, /\$\("voit-fermer"\)\.addEventListener\("click", \(\) => \{ \$\("voit"\)\.close\(\); \}\);/, "« Fermer » ne fait que fermer");
   assert.match(script, /\$\("voit"\)\.addEventListener\("close", fermerCeQueVoit\);/, "fermée (bouton ou Échap)…");
@@ -1173,9 +1187,9 @@ test("qui voit quoi 3c — une réponse arrivée après « Se déconnecter » (o
     const tableaux = {splat: [{...lucas, parcours: null}]};
     const dessins = [];
     let classeCourante = () => null;
-    const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat",
+    const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat", "poserOnglets", "appliAffichee", "afficherAppli",
       `${fonction("reporterAcces")}\nreturn reporterAcces;`)(
-      tableaux, {demander: () => { dessins.push(classeCourante().libelle); return true; }}, () => {}, () => ({}));
+      tableaux, {demander: () => { dessins.push(classeCourante().libelle); return true; }}, () => {}, () => ({}), () => ["splat"], "splat", () => {});
     const r = fenetreRejouee(lucas, {retenir: true, accesDe: accesLucas, reporterAcces: vraie});
     classeCourante = r.f.classe;
     const quatre = r.caseNumero("mondes", 4);
@@ -1199,8 +1213,8 @@ test("qui voit quoi 3c — une réponse arrivée après « Se déconnecter » (o
   const lucas = lucasQuiCroit([3]);
   const tableaux = {splat: [{...lucas, parcours: null}]};
   const dessins = [];
-  const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat",
-    `${fonction("reporterAcces")}\nreturn reporterAcces;`)(tableaux, {demander: () => { dessins.push(1); return true; }}, () => {}, () => ({}));
+  const vraie = new Function("tableaux", "redessin", "poserEnPlusPour", "lireSplat", "poserOnglets", "appliAffichee", "afficherAppli",
+    `${fonction("reporterAcces")}\nreturn reporterAcces;`)(tableaux, {demander: () => { dessins.push(1); return true; }}, () => {}, () => ({}), () => ["splat"], "splat", () => {});
   const r = fenetreRejouee(lucas, {accesDe: accesLucas, reporterAcces: vraie});
   const quatre = r.caseNumero("mondes", 4);
   quatre.checked = true;

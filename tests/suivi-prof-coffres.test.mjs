@@ -274,13 +274,14 @@ test("le tri « Trésors » : les trésors, puis les parfaits, puis une partie e
 test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiques entre Défi tables et SPLAT!", () => {
   const APPLIS = new Function(`${constante("APPLIS")}\nreturn APPLIS;`)();
   assert.deepEqual(APPLIS[1], {cle: "coffres", nom: "Coffres magiques", unite: ["niveau commencé", "niveaux commencés"]});
-  assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
+  // Anzan se glisse entre Coffres et SPLAT! (lot « Qui voit quoi », lot 4b).
+  assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-coffres" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-coffres"')));
   assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
     ["Élève:prenom", "Niveau 1", "Niveau 2", "Niveau 3", "Dernier trésor:date", ""]);
   assert.match(page, /<p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée\.<\/p>/);
-  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres;/);
-  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture\); return; \}/);
+  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan;/);
+  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); finirOnglet\(lignes\); return; \}/);
   assert.match(fonction("elevesLus"), /cle === "coffres" \? lireCoffres/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "coffres"\) return chargerMoteurCoffres\(\);/);
   assert.match(script, /const MOTEUR_COFFRES = "coffres-parcours\.js\?v=<\?= htmlspecialchars\(\$versionCoffres, ENT_QUOTES\) \?>";/);

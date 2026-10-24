@@ -80,8 +80,9 @@ test("fiche vierge : aucun lien dans l'appli élève ; la feuille des tables, un
   assert.match(prof, /foreach \(range\(2, 10\) as \$table\)/);
   assert.match(prof, /cartes_tables\.pdf" target="_blank" rel="noopener">toutes les tables<\/a>/);
   // Rien de tout ça ne part à l'imprimante : le bloc n'est ni .fiche, ni
-  // .bandelettes, ni .note-impression (seuls survivants de @media print).
-  assert.match(prof, /#ecran-classe > \*:not\(\.fiche\):not\(\.bandelettes\):not\(\.note-impression\) \{ display: none !important; \}/);
+  // .bandelettes, ni .note-impression, ni .fiche-anzan (lot « Qui voit quoi »,
+  // lot 4b : la feuille du parcours Anzan) — seuls survivants de @media print.
+  assert.match(prof, /#ecran-classe > \*:not\(\.fiche\):not\(\.bandelettes\):not\(\.note-impression\):not\(\.fiche-anzan\) \{ display: none !important; \}/);
 });
 
 // Lot « un seul système » (05/10/2026) : Mon mélange est libre. La fiche ne

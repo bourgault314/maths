@@ -19,6 +19,11 @@ $versionSplat = is_file($moteurSplat) ? substr(md5_file($moteurSplat), 0, 10) : 
 // l'onglet Coffres magiques d'une classe.
 $moteurCoffres = __DIR__ . '/coffres-parcours.js';
 $versionCoffres = is_file($moteurCoffres) ? substr(md5_file($moteurCoffres), 0, 10) : '0';
+// Lot « Qui voit quoi », lot 4b (24/10/2026) : le moteur d'Anzan (copie de
+// outils/calcul_mental/flash_anzan_parcours.js, déposée au lot 4a), chargé
+// seulement quand on ouvre l'onglet Anzan d'une classe.
+$moteurAnzan = __DIR__ . '/flash_anzan_parcours.js';
+$versionAnzan = is_file($moteurAnzan) ? substr(md5_file($moteurAnzan), 0, 10) : '0';
 // Lot E1 « les évaluations en classe » (15/10/2026) : le NOYAU de Défi tables
 // (copie de outils/calcul_mental/defi_tables_core.js, identité vérifiée par un
 // test), pour refaire le tirage d'une évaluation et la corriger ici.
@@ -321,6 +326,27 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .voit-pied { display: flex; align-items: center; gap: 12px; padding: 12px 20px 16px; border-top: 1px solid #e6ecf3; }
   .voit-pied .message { margin: 0; padding: 0; background: none; font-size: .88rem; }
   .voit-pied button { margin-left: auto; }
+  /* Lot « Qui voit quoi », lot 4b (24/10/2026) : « Le parcours de Rania » pour
+     Anzan — l'écran « Mon historique » de l'élève, en lecture seule (planche 3
+     du lot 4a) : le jour, le mode et ses réglages, le score sur les calculs
+     faits, « arrêtée » dessous quand la séance s'est arrêtée en route. */
+  dialog.parcours-anzan { max-width: 520px; }
+  .pa-appli { margin: 0 0 2px; color: #0b7f7b; font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .voit-tete .pa-compte { margin-top: 2px; color: var(--ink); font-weight: 700; }
+  .pa-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; }
+  .pa-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+                 min-height: 54px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
+  .pa-liste li:last-child { border-bottom: 0; }
+  .pa-jour { font-weight: 800; font-size: .88rem; font-variant-numeric: tabular-nums; }
+  .pa-mode { font-weight: 800; font-size: .93rem; }
+  .pa-reglages { display: block; color: var(--muted); font-weight: 600; font-size: .78rem; line-height: 1.35; }
+  .pa-score { text-align: right; font-weight: 900; font-size: 1.08rem; font-variant-numeric: tabular-nums; }
+  .pa-score small { display: block; font-size: .7rem; font-weight: 800; color: #8a4c0a; }
+  .pa-note { margin: 8px 2px 0; color: var(--muted); font-size: .84rem; }
+  .pa-vide { margin: 4px 0 8px; color: var(--muted); }
+  .pa-plus { display: block; width: 100%; margin: 10px 0 4px; }
+  .pa-plus[hidden] { display: none; }
+  .parcours-anzan .voit-pied button + button { margin-left: 0; }
   /* ⚙ Réglages (planche 4) : sous chaque appli, en lecture seule, à qui on a
      ouvert quelque chose en plus ; chaque prénom mène à sa ligne d'Élèves. */
   .en-plus-pour { margin: 0 0 6px 30px; color: var(--muted); font-size: .84rem; line-height: 1.5; }
@@ -395,6 +421,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
      par élève, d'un seul tenant) et la FEUILLE prénom ↔ code, que le
      professeur garde. À l'écran, ni l'une ni l'autre ne s'affiche. */
   .fiche, .bandelettes, .note-impression { display: none; }
+  /* Lot 4b : la feuille « Le parcours de Rania » (Anzan), seulement imprimée. */
+  .fiche-anzan { display: none; }
   .fiche h2 { margin-top: 0; }
   .fiche table { font-size: 1rem; }
   .fiche td.code { font-size: 1.15rem; }
@@ -618,7 +646,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   @media print {
     @page { margin: 12mm; }
     .barre, header, footer, .barre-outils, .actions, .rec-plein,
-    #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression) { display: none !important; }
+    #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression):not(.fiche-anzan) { display: none !important; }
     body { background: #fff; }
     main { max-width: none; padding: 0; }
     /* Le bouton pose la classe sur <body> juste avant window.print() et
@@ -627,8 +655,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
        pas les codes de la classe par surprise : on imprime le mode d'emploi. */
     body.imprime-recap .fiche { display: block; }
     body.imprime-bandelettes .bandelettes { display: block; }
-    body:not(.imprime-recap):not(.imprime-bandelettes) .note-impression { display: block; }
+    body:not(.imprime-recap):not(.imprime-bandelettes):not(.imprime-anzan) .note-impression { display: block; }
     .fiche th, .fiche td { border-bottom: 1px solid #999; }
+    /* Lot 4b : « Imprimer » du parcours Anzan. La fenêtre ouverte ne sort pas
+       (une fenêtre modale s'imprimerait par-dessus) : la feuille, seule. */
+    body.imprime-anzan .fiche-anzan { display: block; }
+    body.imprime-anzan dialog { display: none !important; }
+    .fiche-anzan h2 { margin: 0 0 2px; }
+    .fiche-anzan .fa-compte { margin: 0 0 12px; font-weight: 700; }
+    .fiche-anzan table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    .fiche-anzan th { text-align: left; font-size: .8rem; color: #333; }
+    .fiche-anzan th, .fiche-anzan td { padding: 6px 6px; border-bottom: 1px solid #999; }
+    .fiche-anzan td.fa-score { text-align: right; font-weight: 800; white-space: nowrap; }
+    .fiche-anzan .fa-note { margin: 8px 0 0; font-size: .85rem; color: #333; }
+    .fiche-anzan .fa-pied { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; font-size: .78rem; color: #444; }
     .pied-impression { margin-top: 18px; display: flex; align-items: center;
                        justify-content: space-between; font-size: .78rem; color: #444; }
   }
@@ -729,6 +769,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">
         <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
         <button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>
+        <button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
       </div>
       <div class="onglets-classe">
@@ -814,6 +855,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
             <th>Niveau 2</th>
             <th>Niveau 3</th>
             <th><button type="button" data-tri="date">Dernier trésor</button></th>
+            <th></th>
+          </tr>
+          <!-- L'onglet Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026) : le
+               compte en calculs et en jours (on compte des calculs, pas des
+               séances : une séance en fait 5, 10 ou 20), le jour de la
+               dernière séance, et « Parcours » (ses dix dernières séances). -->
+          <tr id="entete-anzan" hidden>
+            <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th><button type="button" data-tri="calculs">Calculs</button></th>
+            <th>Jours</th>
+            <th><button type="button" data-tri="date">Dernière séance</button></th>
             <th></th>
           </tr>
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
@@ -948,6 +1000,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
               <div class="en-plus-pour" id="en-plus-coffres-listes" hidden></div>
             </div>
           </div>
+          <!-- Lot « Qui voit quoi », lot 4b (24/10/2026) : Anzan, fermé par
+               défaut (la case suit la liste de la classe, comme les autres) ;
+               pas de réglage de classe. Dessous, « En plus pour : Rania ». -->
+          <div class="activite">
+            <label class="activite-tete"><input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong></label>
+            <div class="en-plus-pour" id="en-plus-flash-anzan" hidden></div>
+          </div>
           <div class="activite">
             <label class="activite-tete"><input type="checkbox" data-appli="splat"> <strong>SPLAT!</strong></label>
             <div class="en-plus-pour" id="en-plus-splat" hidden></div>
@@ -1046,6 +1105,24 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <div class="pied-impression">
         <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
         <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+      </div>
+    </div>
+
+    <!-- Lot « Qui voit quoi », lot 4b (24/10/2026) : « Imprimer » du parcours
+         Anzan d'un élève. Remplie au moment d'imprimer, vidée après : jamais de
+         code, rien d'autre que ce que montre la fenêtre. -->
+    <div class="fiche-anzan" id="fiche-anzan">
+      <h2 id="fa-titre"></h2>
+      <p class="fa-compte" id="fa-compte"></p>
+      <table>
+        <thead><tr><th>Jour</th><th>Séance</th><th>Réglages</th><th>Réussis</th></tr></thead>
+        <tbody id="fa-corps"></tbody>
+      </table>
+      <p class="fa-note" id="fa-note"></p>
+      <div class="fa-pied">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+        <span></span>
       </div>
     </div>
 
@@ -1179,6 +1256,28 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   </div>
 </dialog>
 
+<!-- Lot « Qui voit quoi », lot 4b (24/10/2026) : « Le parcours de Rania »
+     pour Anzan, ouvert par le bouton « Parcours » de sa ligne. Lecture seule :
+     aucun bouton qui lance une activité ni qui change quoi que ce soit (choix
+     de Gwenaël du 21/10). Tout est lu dans le tableau déjà chargé, par le
+     moteur (resumeProf), et posé par createElement et textContent. -->
+<dialog id="parcours-anzan" class="voit parcours-anzan" aria-labelledby="pa-titre">
+  <div class="voit-tete">
+    <p class="pa-appli">Anzan · soroban</p>
+    <h2 id="pa-titre"></h2>
+    <p class="pa-compte" id="pa-compte"></p>
+  </div>
+  <div class="voit-liste">
+    <ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"></ol>
+    <p class="pa-note" id="pa-note"></p>
+    <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
+  </div>
+  <div class="voit-pied">
+    <button type="button" class="secondaire" id="pa-imprimer">Imprimer</button>
+    <button type="button" class="secondaire" id="pa-fermer">Fermer</button>
+  </div>
+</dialog>
+
 <!-- Lot E1 : « Ouvrir pour la classe » — la durée, et c'est tout. -->
 <dialog id="eval-ouvrir">
   <h2 id="eo-titre" style="margin:0 0 6px"></h2>
@@ -1252,6 +1351,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Coffres magiques (21/10/2026) : le serveur ne sait compter que des
     // entrées — ici les niveaux commencés (1 à 3).
     {cle: "coffres", nom: "Coffres magiques", unite: ["niveau commencé", "niveaux commencés"]},
+    // Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026) : après Coffres,
+    // comme au catalogue. Le serveur compte les séances (son compteur).
+    {cle: "flash-anzan", nom: "Anzan", unite: ["séance", "séances"]},
     {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]}
   ];
   // Le dernier choix, retenu le temps de l'onglet.
@@ -1263,16 +1365,27 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Le moteur de Coffres magiques, de même (lot « Coffres magiques sur le
   // suivi », 21/10/2026) : chargé à la première ouverture de son onglet.
   const MOTEUR_COFFRES = "coffres-parcours.js?v=<?= htmlspecialchars($versionCoffres, ENT_QUOTES) ?>";
+  // Le moteur d'Anzan, de même (lot 4b) : chargé à la première ouverture de
+  // son onglet.
+  const MOTEUR_ANZAN = "flash_anzan_parcours.js?v=<?= htmlspecialchars($versionAnzan, ENT_QUOTES) ?>";
   // Les tris de chaque activité : ceux de Défi tables sont lus dans la page.
   const TRIS = {
     "defi-tables": [...document.getElementById("tri").options].map(option => [option.value, option.textContent]),
     "coffres": [["prenom", "Prénom"], ["tresors", "Trésors"], ["date", "Dernier trésor"]],
+    "flash-anzan": [["prenom", "Prénom"], ["calculs", "Calculs"], ["date", "Dernière séance"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]
   };
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
   let COFFRES = window.MathsGoCoffresParcours || null;
   let chargementCoffres = null;
+  let ANZAN = window.MathsGoFlashAnzanParcours || null;
+  let chargementAnzan = null;
+  // Lot 4b : l'élève dont « Le parcours de… » (Anzan) est ouvert, et combien
+  // de séances on y montre (10, puis 10 de plus à chaque « Voir les séances
+  // précédentes », comme l'écran « Mon historique » de l'élève).
+  let parcoursAnzanEleve = null;
+  let parcoursAnzanAffiches = 10;
   let appliAffichee = "defi-tables";
   // La vue sous les onglets : "appli" (le tableau de l'activité), "eleves"
   // (lot « Ma classe : élèves », 18/10/2026 : propriétaire et collègues en
@@ -1445,7 +1558,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Lot « Qui voit quoi » : la fenêtre « Ce que voit Léa » et les lignes
     // « En plus pour » des Réglages (des prénoms).
     "voit-titre", "voit-sous", "voit-liste", "en-plus-defi-tables", "en-plus-coffres", "en-plus-coffres-listes",
-    "en-plus-splat", "en-plus-splat-listes"];
+    "en-plus-splat", "en-plus-splat-listes",
+    // Lot 4b : Anzan — « En plus pour », la fenêtre du parcours et sa feuille.
+    "en-plus-flash-anzan", "pa-titre", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
@@ -1461,7 +1576,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
     BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
-    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit"].forEach(id => {
+    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "parcours-anzan"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
@@ -1491,6 +1606,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     tableaux = {};
     detailsOuverts.clear();
     voitEleve = null;
+    parcoursAnzanEleve = null;
     // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
     // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
     // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
@@ -1687,10 +1803,27 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } catch (_) { return vide; }
   }
 
+  // Lot « Qui voit quoi », lot 4b (24/10/2026) : la ligne Anzan d'un élève,
+  // lue par le moteur (prof/flash_anzan_parcours.js) et par lui seul — la page
+  // ne touche jamais aux séances du parcours. resumeProf rend le compte (les
+  // calculs faits, les jours d'entraînement), le jour de la dernière séance et
+  // les dix dernières séances ; il relit et borne tout (une séance trafiquée
+  // ne se lit pas). Un élève sans parcours : rien de commencé.
+  function lireAnzan(brut) {
+    const vide = {calculs: 0, justes: 0, jours: 0, seances: 0, premier: null, dernier: null, texte: "", dernieres: [],
+      historique: [], commence: false, lisible: false};
+    if (!ANZAN) return vide;
+    try {
+      // « historique » : toutes les séances gardées (500 au plus), la plus
+      // récente en haut — pour « Voir les séances précédentes » du Parcours.
+      return Object.assign({}, ANZAN.resumeProf(brut || null), {historique: ANZAN.historique(brut || null), lisible: true});
+    } catch (_) { return vide; }
+  }
+
   // L'élève est passé aussi : SPLAT! compte sur SES mondes (lot « Qui voit
   // quoi » : classe + ajouts, eleve.acces), les autres lecteurs l'ignorent.
   function elevesLus(cle, liste) {
-    const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : lireProgression;
+    const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : cle === "flash-anzan" ? lireAnzan : lireProgression;
     return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours, eleve)}));
   }
 
@@ -1757,6 +1890,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       if (tri.colonne === "tresors") return (eleve.lu.tresors || 0) * 10000 + (eleve.lu.parfaits || 0) * 10 + (eleve.lu.partie ? 1 : 0);
       // « Dernier trésor » : le jour du dernier trésor, pas la dernière activité.
       if (tri.colonne === "date" && appliAffichee === "coffres") return eleve.lu.dernier || "";
+      // Anzan (lot 4b) : les calculs faits, puis les jours d'entraînement ;
+      // « Dernière séance » : le jour de la dernière séance.
+      if (tri.colonne === "calculs") return (eleve.lu.calculs || 0) * 1000 + (eleve.lu.jours || 0);
+      if (tri.colonne === "date" && appliAffichee === "flash-anzan") return eleve.lu.dernier || "";
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
       if (tri.colonne === "semaine") return eleve.lu.seances;
@@ -2427,6 +2564,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     });
     redessin.demander();
     poserEnPlusPour();
+    // Lot 4b : une appli donnée (ou retirée) en plus fait apparaître (ou
+    // disparaître) son onglet ; si c'était l'onglet affiché, on passe au
+    // premier qui reste.
+    const presentes = poserOnglets();
+    if (presentes.length && !presentes.includes(appliAffichee)) afficherAppli(presentes[0]);
   }
 
   // ⚙ Réglages (planche 4) : sous chaque appli, en LECTURE SEULE, à qui elle
@@ -2514,12 +2656,18 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     dessinerOngletEleves(ecriture);
     const corps = $("corps");
     corps.textContent = "";
+    // Lot « Qui voit quoi », lot 4b : les lignes de l'onglet — toute la
+    // classe, ou, pour une appli que la classe n'a pas, les élèves qui l'ont
+    // en plus (elevesDeLOnglet).
+    const lignes = elevesDeLOnglet();
     // Lot « splat-suivi-4 » : l'onglet SPLAT! a ses colonnes et sa carte.
-    if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture); return; }
+    if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture, lignes); finirOnglet(lignes); return; }
     // Lot « Coffres magiques sur le suivi » : l'onglet Coffres, ses niveaux et son Détail.
-    if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture); return; }
+    if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture, lignes); finirOnglet(lignes); return; }
+    // Lot 4b : l'onglet Anzan, le compte et « Parcours ».
+    if (appliAffichee === "flash-anzan") { dessinerTableauAnzan(corps, ecriture, lignes); finirOnglet(lignes); return; }
 
-    eleves.forEach(eleve => {
+    lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
 
       const cNom = celluleNomTexte(eleve);
@@ -2637,12 +2785,42 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     dessinerFragiles();
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
+    finirOnglet(lignes);
     if (!PARCOURS) {
       messager("message-appli",
         "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // Lot « Qui voit quoi », lot 4b (24/10/2026) : une appli ouverte EN PLUS à
+  // un élève a son onglet même quand la classe ne l'a pas (Anzan, donné à
+  // Rania seule : sans ça, son travail ne se voyait nulle part). Dans cet
+  // onglet, la classe ne compte pas : seulement les élèves qui voient l'appli
+  // (eleve.acces, calculé par le serveur), et ceux qui y ont déjà du travail
+  // enregistré (un ajout retiré n'efface rien : on continue de le voir).
+  function parLaClasse(cle) {
+    return ((classe && classe.applis) || []).includes(cle);
+  }
+
+  function elevesDeLOnglet() {
+    if (parLaClasse(appliAffichee)) return eleves;
+    return eleves.filter(eleve => accesDe(eleve).applis.includes(appliAffichee) || Boolean(eleve.maj_le));
+  }
+
+  // Après le dessin d'un onglet d'appli que la classe n'a pas : la ligne
+  // au-dessus du tableau le dit, et les cartes « de la classe » (Notre classe,
+  // ensemble ; les calculs qui coincent) se taisent — elles parlent de toute
+  // la classe, qui n'a pas cette activité.
+  function finirOnglet(lignes) {
+    if (parLaClasse(appliAffichee)) return;
+    $("objectif").hidden = true;
+    $("fragiles").hidden = true;
+    const n = lignes.length;
+    $("resume-classe").textContent = n
+      ? `${n} élève${n > 1 ? "s" : ""} · en plus de la classe, qui n’a pas cette activité`
+      : "Personne ne l’a en plus pour l’instant · la classe n’a pas cette activité";
   }
 
   // La ligne au-dessus du tableau : combien d'élèves, et combien n'ont encore
@@ -2863,9 +3041,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return ligne;
   }
 
-  function dessinerTableauSplat(corps, ecriture) {
+  function dessinerTableauSplat(corps, ecriture, lignes = eleves) {
     $("fragiles").hidden = true;
-    eleves.forEach(eleve => {
+    lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
       const cNom = celluleNomTexte(eleve);
 
@@ -3096,10 +3274,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return ligne;
   }
 
-  function dessinerTableauCoffres(corps, ecriture) {
+  function dessinerTableauCoffres(corps, ecriture, lignes = eleves) {
     $("fragiles").hidden = true;
     $("objectif").hidden = true;
-    eleves.forEach(eleve => {
+    lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
       const cNom = celluleNomTexte(eleve);
       const niveaux = eleve.lu.niveaux || [];
@@ -3156,6 +3334,231 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // ------------------------------------------------------------ l'onglet Anzan
+  //
+  // Lot « Qui voit quoi », lot 4b (24/10/2026, décisions de Gwenaël des 22 et
+  // 23/10) : une ligne par élève — le compte en CALCULS (une séance en fait 5,
+  // 10 ou 20 : compter les séances ne disait rien), les jours d'entraînement,
+  // le jour de la dernière séance — et « Parcours », qui ouvre ses dix
+  // dernières séances : l'écran « Mon historique » de l'élève, en lecture
+  // seule. Pas de carte de classe (pas d'objectif commun à Anzan), aucun
+  // bouton qui lance une activité. Tout est lu par le moteur (lireAnzan) et
+  // posé par createElement et textContent : rien de ce que renvoie le serveur
+  // ne devient du HTML, et aucun code d'élève n'est écrit ici.
+
+  function dessinerTableauAnzan(corps, ecriture, lignes = eleves) {
+    $("fragiles").hidden = true;
+    $("objectif").hidden = true;
+    lignes.forEach(eleve => {
+      const ligne = document.createElement("tr");
+      const cNom = celluleNomTexte(eleve);
+      const lu = eleve.lu || {};
+      const cCalculs = document.createElement("td");
+      const cJours = document.createElement("td");
+      if (lu.commence) {
+        const compte = document.createElement("b");
+        compte.textContent = `${lu.calculs} calcul${lu.calculs > 1 ? "s" : ""}`;
+        cCalculs.append(compte);
+        cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
+      } else {
+        cCalculs.textContent = "—";
+        cCalculs.className = "sans";
+        cJours.textContent = "—";
+        cJours.className = "sans";
+      }
+      const cDate = document.createElement("td");
+      const quand = jourCourt(lu.dernier);
+      cDate.textContent = quand || "—";
+      if (!quand) cDate.className = "sans";
+
+      const cActions = document.createElement("td");
+      if (lu.lisible) {
+        // Même nom, même place que « Parcours » de Défi tables (lot du
+        // 21/10) ; ici la fenêtre est dans la page : tout est déjà chargé.
+        const parcours = document.createElement("button");
+        parcours.type = "button";
+        parcours.className = "secondaire petit";
+        parcours.textContent = "Parcours";
+        parcours.title = "Voir ses dernières séances";
+        parcours.addEventListener("click", () => ouvrirParcoursAnzan(eleve));
+        cActions.append(parcours);
+      }
+      poserGestes(eleve, ecriture, cActions);
+
+      cNom.dataset.libelle = "";
+      cCalculs.dataset.libelle = "Calculs";
+      cJours.dataset.libelle = "Jours";
+      cDate.dataset.libelle = "Dernière séance";
+      cActions.dataset.libelle = "";
+      cActions.className = "actions-eleve";
+
+      ligne.append(cNom, cCalculs, cJours, cDate, cActions);
+      corps.appendChild(ligne);
+    });
+
+    $("resume-classe").textContent = resumeDeLaClasse(eleves);
+    if (!ANZAN) {
+      messager("message-appli",
+        "La progression Anzan ne peut pas être détaillée : le moteur (prof/flash_anzan_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
+        "erreur");
+    }
+    dessinerPapier();
+  }
+
+  // « 23 oct. » — l'année en plus quand ce n'est pas celle d'aujourd'hui :
+  // comme « Mon historique » de l'élève. Le jour est une date du parcours
+  // (jamais une heure), lue à l'heure de La Réunion.
+  function jourAnzan(jour, aujourdhui = new Date()) {
+    const date = new Date(String(jour) + "T12:00:00Z");
+    if (!jour || isNaN(date)) return "";
+    const fuseau = {timeZone: "Indian/Reunion"};
+    const annee = d => d.toLocaleDateString("fr-FR", Object.assign({year: "numeric"}, fuseau));
+    const options = Object.assign({day: "numeric", month: "short"}, fuseau);
+    if (annee(date) !== annee(aujourdhui)) options.year = "numeric";
+    return date.toLocaleDateString("fr-FR", options);
+  }
+
+  // « + et − · 3 chiffres · 8 nombres · 20 s » : les réglages d'une séance,
+  // les mots de MATHSGO_FLASH_ANZAN_CORE.resume(mode, reglages, {avecMode:
+  // false}) — le noyau n'est pas servi par le suivi, la petite fonction est
+  // recopiée ici ; un test la compare au noyau sur tous les réglages.
+  function reglagesAnzan(mode, r) {
+    const morceaux = [];
+    if (r.operations === "plusmoins") morceaux.push("+ et −");
+    // Les espaces insécables du noyau (\u00a0) : « 10 nombres » ne se coupe pas.
+    morceaux.push(r.chiffresMin === r.chiffresMax
+      ? `${r.chiffresMin}\u00a0chiffre${r.chiffresMin > 1 ? "s" : ""}`
+      : `${r.chiffresMin} à ${r.chiffresMax}\u00a0chiffres`);
+    morceaux.push(`${r.nombres}\u00a0nombres`);
+    if (mode === "flash") morceaux.push(`${String(Math.round(r.temps) / 10).replace(".", ",")}\u00a0s`);
+    else if (r.limite) morceaux.push(`${r.limite}\u00a0s`);
+    return morceaux.join(" · ");
+  }
+
+  // Ce que disent la fenêtre et sa feuille, lu une fois : le titre, le
+  // compte (« 106 calculs · 10 jours d'entraînement », la phrase de la tuile
+  // de l'élève, rendue par le moteur), les `combien` dernières séances (10 au
+  // départ), combien il y en a en tout quand il y en a plus, et combien il en
+  // reste à montrer.
+  function parcoursAnzanDe(eleve, aujourdhui, combien = 10) {
+    const lu = (eleve && eleve.lu) || {};
+    const prenom = prenomCourt(eleve);
+    const toutes = lu.historique || lu.dernieres || [];
+    const seances = toutes.slice(0, combien).map(s => ({
+      jour: jourAnzan(s.jour, aujourdhui),
+      mode: s.mode === "flash" ? "⚡ Flash" : "📝 Colonne",
+      reglages: reglagesAnzan(s.mode, s.reglages || {}),
+      score: `${s.score}/${s.faits}`,
+      arretee: Boolean(s.arretee)
+    }));
+    return {
+      titre: `Le parcours ${deNom(prenom)}`,
+      compte: lu.texte || `${prenom[0].toUpperCase()}${prenom.slice(1)} n’a pas encore fait de séance.`,
+      seances,
+      note: lu.seances > seances.length ? `Les ${seances.length} dernières séances, sur ${lu.seances}.` : "",
+      reste: Math.max(0, toutes.length - seances.length)
+    };
+  }
+
+  function ouvrirParcoursAnzan(eleve) {
+    if (!classe || !eleve || !ANZAN) return;
+    parcoursAnzanEleve = eleve;
+    parcoursAnzanAffiches = 10;
+    dessinerParcoursAnzan();
+    const boite = $("parcours-anzan");
+    if (!boite.open) boite.showModal();
+  }
+
+  // « Voir les séances précédentes » : 10 de plus, la fenêtre redessinée.
+  function plusDeSeancesAnzan() {
+    if (!parcoursAnzanEleve) return;
+    parcoursAnzanAffiches += 10;
+    dessinerParcoursAnzan();
+  }
+
+  function dessinerParcoursAnzan() {
+    const eleve = parcoursAnzanEleve;
+    if (!eleve) return;
+    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
+    $("pa-titre").textContent = vu.titre;
+    $("pa-compte").textContent = vu.compte;
+    const liste = $("pa-liste");
+    liste.textContent = "";
+    liste.hidden = !vu.seances.length;
+    vu.seances.forEach(s => {
+      const item = document.createElement("li");
+      const jour = document.createElement("span");
+      jour.className = "pa-jour";
+      jour.textContent = s.jour;
+      const milieu = document.createElement("span");
+      const mode = document.createElement("span");
+      mode.className = "pa-mode";
+      mode.textContent = s.mode;
+      const reglages = document.createElement("span");
+      reglages.className = "pa-reglages";
+      reglages.textContent = s.reglages;
+      milieu.append(mode, reglages);
+      const score = document.createElement("span");
+      score.className = "pa-score";
+      score.textContent = s.score;
+      if (s.arretee) {
+        const arretee = document.createElement("small");
+        arretee.textContent = "arrêtée";
+        score.append(arretee);
+      }
+      item.append(jour, milieu, score);
+      liste.append(item);
+    });
+    $("pa-note").textContent = vu.note;
+    $("pa-plus").hidden = !vu.reste;
+    $("pa-imprimer").hidden = !vu.seances.length;
+  }
+
+  // Fermée (bouton ou Échap), la fenêtre oublie l'élève.
+  function fermerParcoursAnzan() {
+    parcoursAnzanEleve = null;
+    parcoursAnzanAffiches = 10;
+    ["pa-titre", "pa-compte", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
+  }
+
+  // « Imprimer » : la feuille, seule (la fenêtre ne sort pas), remplie le
+  // temps de l'impression puis vidée. Rien d'autre que ce que montre la
+  // fenêtre, aucun code : un collègue « voir seulement » peut l'imprimer.
+  function imprimerParcoursAnzan() {
+    const eleve = parcoursAnzanEleve;
+    if (!eleve) return false;
+    // Les séances que montre la fenêtre (10, ou plus après « Voir les séances précédentes »).
+    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
+    $("fa-titre").textContent = vu.titre;
+    $("fa-compte").textContent = vu.compte;
+    const corps = $("fa-corps");
+    corps.textContent = "";
+    vu.seances.forEach(s => {
+      const ligne = document.createElement("tr");
+      [s.jour, s.mode, s.reglages, s.arretee ? `${s.score} · arrêtée` : s.score].forEach((valeur, i) => {
+        const cellule = document.createElement("td");
+        cellule.textContent = valeur;
+        if (i === 3) cellule.className = "fa-score";
+        ligne.append(cellule);
+      });
+      corps.append(ligne);
+    });
+    $("fa-note").textContent = vu.note;
+    document.body.classList.add("imprime-anzan");
+    let fait = false;
+    const nettoyer = () => {
+      if (fait) return;
+      fait = true;
+      document.body.classList.remove("imprime-anzan");
+      window.removeEventListener("afterprint", nettoyer);
+      ["fa-titre", "fa-compte", "fa-corps", "fa-note"].forEach(id => { $(id).textContent = ""; });
+    };
+    window.addEventListener("afterprint", nettoyer);
+    setTimeout(nettoyer, 60000);
+    window.print();
+    return true;
   }
 
   // ---------------------------------------------------------------- feuille imprimée
@@ -3476,7 +3879,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       demandeAppli += 1;
       const memeClasse = Boolean(classe) && classe.id === id;
       const connue = classes.find(uneClasse => uneClasse.id === id);
-      const voulue = appliAMontrer(lesApplisConnues(connue ? connue.applis : ["defi-tables"]),
+      // La même classe, rouverte (un élève ajouté, une activité changée) :
+      // un onglet qu'un élève a en plus (lot 4b) reste un choix possible.
+      const voulue = appliAMontrer(lesApplisConnues((connue ? connue.applis : ["defi-tables"]).concat(memeClasse ? applisAMontrer() : [])),
         memeClasse ? appliAffichee : lireChoixAppli());
       const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
       classe = donnees.classe;
@@ -3502,7 +3907,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       appliquerDroits();
       // La liste des classes était en retard (activités changées ailleurs) :
       // on passe à une activité que la classe a vraiment.
-      const presentes = applisDeLaClasse();
+      const presentes = applisAMontrer();
       if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return; }
       poserAppli();
       dessinerTableau();
@@ -3518,6 +3923,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Les activités de la classe ouverte que la page sait montrer.
   function applisDeLaClasse() {
     return lesApplisConnues(classe && classe.applis);
+  }
+
+  // Les onglets d'activité (lot « Qui voit quoi », lot 4b, 24/10/2026) :
+  // celles de la classe, PLUS celles qu'un élève a en plus (eleve.acces,
+  // calculé par le serveur — le même pour toutes les listes lues). Anzan
+  // donné à Rania seule a ainsi son onglet ; la règle vaut pour toutes les
+  // applis, une seule règle.
+  function applisAMontrer() {
+    const enPlus = [];
+    (eleves || []).forEach(eleve => {
+      const acces = eleve && eleve.acces;
+      if (acces && Array.isArray(acces.applis)) acces.applis.forEach(cle => { if (!enPlus.includes(cle)) enPlus.push(cle); });
+    });
+    return lesApplisConnues(applisDeLaClasse().concat(enPlus));
   }
 
   // L'activité à montrer : celle qu'on voulait si la classe l'a, sinon la
@@ -3569,10 +3988,28 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return chargementCoffres;
   }
 
+  // Le moteur d'Anzan, de même (lot 4b) : chargé une fois, à la première
+  // ouverture de son onglet. Introuvable : null, et l'onglet le dit.
+  function chargerMoteurAnzan() {
+    if (!ANZAN && window.MathsGoFlashAnzanParcours) ANZAN = window.MathsGoFlashAnzanParcours;
+    if (ANZAN) return Promise.resolve(ANZAN);
+    if (!chargementAnzan) {
+      chargementAnzan = new Promise(resolve => {
+        const script = document.createElement("script");
+        script.src = MOTEUR_ANZAN;
+        script.addEventListener("load", () => { ANZAN = window.MathsGoFlashAnzanParcours || null; resolve(ANZAN); });
+        script.addEventListener("error", () => { chargementAnzan = null; resolve(null); });
+        document.head.appendChild(script);
+      });
+    }
+    return chargementAnzan;
+  }
+
   // Le moteur qu'il faut à une activité (Défi tables : déjà dans la page).
   function chargerMoteurDe(cle) {
     if (cle === "splat") return chargerMoteurSplat();
     if (cle === "coffres") return chargerMoteurCoffres();
+    if (cle === "flash-anzan") return chargerMoteurAnzan();
     return Promise.resolve(null);
   }
 
@@ -3583,20 +4020,18 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // coincent », « À imprimer »).
   function poserAppli() {
     poserVue();
-    const presentes = applisDeLaClasse();
-    document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
-      bouton.hidden = !presentes.includes(bouton.dataset.appli);
-      bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
-    });
+    poserOnglets();
     const splat = appliAffichee === "splat";
     const coffres = appliAffichee === "coffres";
-    $("entete-defi-tables").hidden = splat || coffres;
+    const anzan = appliAffichee === "flash-anzan";
+    $("entete-defi-tables").hidden = splat || coffres || anzan;
     $("entete-splat").hidden = !splat;
     $("entete-coffres").hidden = !coffres;
+    $("entete-anzan").hidden = !anzan;
     $("note-coffres").hidden = !coffres;
-    $("bloc-imprimer").hidden = splat || coffres;
-    if (splat || coffres) $("fragiles").hidden = true;
-    if (coffres) $("objectif").hidden = true;
+    $("bloc-imprimer").hidden = splat || coffres || anzan;
+    if (splat || coffres || anzan) $("fragiles").hidden = true;
+    if (coffres || anzan) $("objectif").hidden = true;
     poserTris();
     poserActivites();
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
@@ -3605,6 +4040,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Lot E1 : la carte « Évaluations », Défi tables seulement, en écriture.
     // Dans les Réglages, ni lecture ni veille (evalVisible).
     poserEvaluations();
+  }
+
+  // Un onglet par activité à montrer (applisAMontrer) ; celui qu'on regarde
+  // est souligné, aucun hors de la vue de l'activité. Rend la liste.
+  function poserOnglets() {
+    const presentes = applisAMontrer();
+    document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
+      bouton.hidden = !presentes.includes(bouton.dataset.appli);
+      bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
+    });
+    return presentes;
   }
 
   // La vue sous les onglets : l'activité, les Élèves (lot « Ma classe :
@@ -3657,7 +4103,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // après un changement d'activités dans les Réglages, on y reste ; c'est le
   // clic sur un onglet d'activité qui en sort.
   async function afficherAppli(cle) {
-    if (!classe || !applisDeLaClasse().includes(cle)) return;
+    if (!classe || !applisAMontrer().includes(cle)) return;
     const numero = ++demandeAppli;
     try {
       await chargerMoteurDe(cle);
@@ -3732,7 +4178,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Lot « Ma classe : réglages » : ni dans les Réglages, ni dans une classe
   // sans élève (elle commence par « Ajouter des élèves », juste dessous).
   function evalVisible() {
-    return Boolean(classe) && vue === "appli" && eleves.length > 0 && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE);
+    return Boolean(classe) && vue === "appli" && eleves.length > 0 && appliAffichee === "defi-tables" && droitClasse !== "lecture" && Boolean(CORE)
+      // Lot 4b : un onglet Défi tables ouvert pour un élève en plus n'évalue pas la classe.
+      && ((classe.applis || []).includes("defi-tables"));
   }
 
   function arreterVeilleEvaluation() {
@@ -5224,6 +5672,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // ses prénoms.
   $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
   $("voit").addEventListener("close", fermerCeQueVoit);
+  // Lot 4b : « Le parcours de… » (Anzan).
+  $("pa-fermer").addEventListener("click", () => { $("parcours-anzan").close(); });
+  $("pa-imprimer").addEventListener("click", imprimerParcoursAnzan);
+  $("pa-plus").addEventListener("click", plusDeSeancesAnzan);
+  $("parcours-anzan").addEventListener("close", fermerParcoursAnzan);
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));

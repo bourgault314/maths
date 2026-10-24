@@ -214,7 +214,8 @@ test("en lecture seule, aucune des deux feuilles n'est construite", () => {
 test("la feuille des codes ne sort que par un bouton : Ctrl+P imprime le mode d'emploi", () => {
   assert.match(page, /body\.imprime-recap \.fiche \{ display: block; \}/);
   assert.match(page, /body\.imprime-bandelettes \.bandelettes \{ display: block; \}/);
-  assert.match(page, /body:not\(\.imprime-recap\):not\(\.imprime-bandelettes\) \.note-impression \{ display: block; \}/);
+  // Lot 4b : « Imprimer » du parcours Anzan a sa classe à lui (imprime-anzan).
+  assert.match(page, /body:not\(\.imprime-recap\):not\(\.imprime-bandelettes\):not\(\.imprime-anzan\) \.note-impression \{ display: block; \}/);
   const source = fonction("imprimer");
   assert.match(source, /droitClasse === "lecture"/, "un collègue en lecture seule n'imprime rien");
   assert.match(source, /classList\.add\(classeCss\)/);
