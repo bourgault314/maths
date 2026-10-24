@@ -1602,11 +1602,14 @@
 
     /* ---------- l'élève à code (lot « Coffres magiques sur le suivi », 21/10/2026) ----------
        Le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en référence, maquettes
-       validées par Gwenaël : en haut, la flèche de retour (ronde, en haut à gauche du cadre)
-       puis le bloc « Suivi par ton professeur · Léa · CM1 · Se déconnecter » (dessiné et stylé
-       par assets/js/coffres-suivi.js) ; sur l'écran de jeu, la pastille « ● Léa » et Plein
-       écran ; plus de logo en haut, plus de lien « Calcul mental », plus de « Réglages » (la
-       flèche y mène) ; en bas, le petit logo et « Mon espace ». L'écran de choix (niveau,
+       validées par Gwenaël, remis au dessin de Défi tables le 24/10/2026 (lot 2 « pieds des
+       applis ») : la barre du haut porte « ← Mon espace » (sur l'accueil de l'appli
+       seulement), le bloc « Suivi par ton professeur · Léa · CM1 · Se déconnecter » au milieu
+       (dessiné et stylé par assets/js/coffres-suivi.js) et « Plein écran » à droite ; sur le
+       mémo et le jeu, le retour vers le choix du niveau est en haut à gauche du CADRE BLANC
+       (décision du 14/10). Au téléphone, l'écran de jeu garde la pastille « ● Léa » (la place
+       manque) ; plus de logo en haut, plus de lien « Calcul mental », plus de « Réglages » (la
+       flèche y mène) ; plus rien en bas (24/10/2026). L'écran de choix (niveau,
        opérations) et le mémo ne sont plus des fenêtres par-dessus le plateau : ce sont des
        pages, sur le fond de l'appli. La classe « suivi-eleve » est posée dès le <head> pour
        l'élève venu de son espace ; sans code, rien ne change. */
@@ -1614,33 +1617,85 @@
     html.suivi-eleve .topbar .back-link[data-origin-link],
     html.suivi-eleve .mode-switch-button,
     html.suivi-eleve .mode-options { display: none; }
-    html.suivi-eleve .topbar { align-items: flex-start; }
-    html.suivi-eleve .topbar-actions { align-self: center; }
+    html.suivi-eleve .topbar { flex-wrap: nowrap; gap: 8px; }
+    html.suivi-eleve .topbar-actions { order: 3; flex: 0 0 auto; }
+    /* « ← Mon espace » : le lien du haut de Défi tables (flèche + texte), sur l'accueil de
+       l'appli seulement — le choix du niveau, ou le mémo quand il n'y a rien à choisir */
     .retour-espace {
       display: none;
-      width: 44px;
+      order: 1;
+      min-height: 44px;
       min-width: 44px;
-      height: 44px;
       align-items: center;
       justify-content: center;
+      gap: 4px;
+      padding: 0 13px;
       border: 1px solid #c8d9e5;
-      border-radius: 50%;
+      border-radius: 999px;
       color: #17405e;
-      background: rgba(255, 255, 255, .96);
-      box-shadow: 0 4px 12px rgba(28, 69, 101, .12);
+      background: #fff;
+      font-size: .8rem;
+      font-weight: 900;
       text-decoration: none;
       flex: none;
     }
-    .retour-espace svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .retour-espace svg, .retour-cadre svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
     /* sans pastille, l'emplacement ne prend aucune place (sinon un écart de 7 px dans la barre) */
     #suivi-pastille-slot:empty { display: none; }
-    html.suivi-eleve .retour-espace { display: inline-flex; }
-    /* le bloc, à droite de la flèche ; au téléphone, il prend la largeur qui reste */
-    .topbar .suivi-repere { flex: 0 1 auto; max-width: 640px; margin-left: auto; }
-    @media (max-width: 620px) { .topbar .suivi-repere { flex: 1 1 auto; margin-left: 0; } }
-    /* l'écran de jeu : la pastille et Plein écran, pas le bloc ; les autres écrans : le bloc seul */
-    html.suivi-eleve body:not(.ecran-jeu) .topbar-actions { display: none; }
-    html.suivi-eleve body.ecran-jeu .suivi-repere { display: none; }
+    html.suivi-eleve body.accueil-appli .retour-espace { display: inline-flex; }
+    /* le bloc, au milieu de la barre (il prend la place qui reste, son texte centré) */
+    .topbar .suivi-repere { order: 2; flex: 1 1 auto; min-width: 0; margin: 0; }
+    /* le retour vers le choix du niveau, en haut à gauche du cadre blanc (mémo, jeu) :
+       le bouton de Défi tables (« ← Ma table ») */
+    .retour-cadre {
+      display: none;
+      position: absolute;
+      z-index: 2;
+      top: 14px;
+      left: 14px;
+      min-height: 44px;
+      min-width: 44px;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 12px;
+      border: 1px solid #c8d9e5;
+      border-radius: 999px;
+      color: #17405e;
+      background: #fff;
+      font: inherit;
+      font-size: .8rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    html.suivi-eleve body.retour-dans-cadre .retour-cadre { display: inline-flex; }
+    html.suivi-eleve .solo-page, html.suivi-eleve #lesson .learn-card { position: relative; }
+    @media (max-width: 899px) {
+      html.suivi-eleve body.retour-dans-cadre .solo-heading { padding-left: 52px; }
+      html.suivi-eleve body.retour-dans-cadre #lesson .learn-card { padding-top: 66px; }
+    }
+    @media (max-width: 620px) {
+      .retour-espace { width: 44px; padding: 0; }
+      .retour-espace-texte, .retour-cadre-texte { display: none; }
+      .retour-cadre { width: 44px; padding: 0; }
+    }
+    /* Plein écran à droite sur tous les écrans de l'ordinateur ; au téléphone, sur le jeu
+       seulement, avec la pastille à la place du bloc */
+    @media (max-width: 620px) {
+      html.suivi-eleve body:not(.ecran-jeu) .topbar-actions { display: none; }
+      html.suivi-eleve body.ecran-jeu .suivi-repere { display: none; }
+      html.suivi-eleve body.ecran-jeu .topbar-actions { margin-left: auto; }
+    }
+    @media (min-width: 621px) {
+      html.suivi-eleve #suivi-pastille-slot { display: none; }
+    }
+    /* le mémo tient dans l'écran de l'ordinateur, sous la barre, comme celui du visiteur :
+       le cours défile dedans, « J'ai compris, jouer » reste en vue */
+    @media (min-width: 900px) {
+      /* le titre du jeu laisse la place au bouton « ← Niveaux » au-dessus de lui */
+      html.suivi-eleve body.retour-dans-cadre .solo-heading { padding-top: 46px; }
+      html.suivi-eleve #lesson .dialog-card.learn-card { max-height: calc(100svh - 76px); overflow: hidden; }
+    }
     /* le choix et le mémo sont des pages : le cadre du jeu disparaît sous eux */
     html.suivi-eleve body.sur-choix .solo-page,
     html.suivi-eleve.suivi-attente .solo-page,
@@ -1660,7 +1715,7 @@
     html.suivi-eleve #mode-dialog .dialog-card,
     html.suivi-eleve #lesson .dialog-card { max-height: none; box-shadow: 0 16px 45px rgba(28, 69, 101, .12); }
     html.suivi-eleve #mode-dialog .mode-settings-scroll { max-height: none; overflow: visible; }
-    html.suivi-eleve #lesson .learn-card { overflow: visible; }
+    @media (max-width: 899px) { html.suivi-eleve #lesson .learn-card { overflow: visible; } }
     /* le sous-titre du mémo (maquette 05) : « Coffres magiques · niveau 2 · addition » */
     .lesson-subline { display: none; margin: -4px 0 8px; color: #49677b; font-size: .9rem; font-weight: 800; }
     html.suivi-eleve .lesson-subline { display: block; grid-column: 1 / -1; }
@@ -1704,10 +1759,9 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
-    <!-- l'élève à code (modèle commun) : la flèche de retour — vers le choix du niveau depuis le
-         jeu ou le mémo, vers Mon espace depuis le choix —, puis le bloc de suivi ; cachés pour
-         tous les autres -->
-    <a class="retour-espace" id="lien-retour" href="https://suivi.mathsgo.re/" aria-label="Retour à mon espace" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></a>
+    <!-- l'élève à code (modèle commun, dessin de Défi tables) : « ← Mon espace » sur l'accueil de
+         l'appli, puis le bloc de suivi au milieu ; cachés pour tous les autres -->
+    <a class="retour-espace" id="lien-retour" href="https://suivi.mathsgo.re/" aria-label="Retour à mon espace" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span class="retour-espace-texte">Mon espace</span></a>
     <p id="suivi-repere" class="suivi-repere" hidden></p>
     <div class="topbar-actions">
       <a class="back-link" data-origin-link href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span aria-hidden="true">←</span> <span class="back-link-copy" data-origin-copy>Calcul mental</span></a>
@@ -1717,6 +1771,7 @@
   </header>
 
   <main class="solo-page">
+    <button class="retour-cadre" type="button" data-retour-choix aria-label="Retour au choix du niveau"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span class="retour-cadre-texte">Niveaux</span></button>
     <section class="solo-heading">
       <div>
         <p class="eyebrow">Calcul mental</p>
@@ -1783,6 +1838,7 @@
 
   <section id="lesson" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="lesson-title">
     <div class="dialog-card learn-card">
+      <button class="retour-cadre" type="button" data-retour-choix aria-label="Retour au choix du niveau"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span class="retour-cadre-texte">Niveaux</span></button>
       <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
       <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
       <p id="lesson-subline" class="lesson-subline"></p>
@@ -2195,6 +2251,7 @@
         SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
         poserPastille();
         majLiensRetour();
+        majEcran();
       }
 
       // Quel écran l'élève a sous les yeux : le choix ou le mémo (des pages, le
@@ -2204,6 +2261,13 @@
         const surChoix = !modeDialog.hidden || !lesson.hidden || !confirmZero.hidden;
         document.body.classList.toggle("sur-choix", eleve && surChoix);
         document.body.classList.toggle("ecran-jeu", eleve && !surChoix);
+        // L'accueil de l'appli (le choix du niveau, ou tout quand il n'y a rien à
+        // choisir) : « ← Mon espace » en haut. Ailleurs (le mémo, le jeu) : le retour
+        // vers le choix, en haut à gauche du cadre blanc (modèle commun, 14/10).
+        const choixPossible = eleve && aUnChoix();
+        const surLeChoix = !modeDialog.hidden || !confirmZero.hidden;
+        document.body.classList.toggle("accueil-appli", eleve && (!choixPossible || surLeChoix));
+        document.body.classList.toggle("retour-dans-cadre", choixPossible && !surLeChoix);
         if (eleve) poserPastille();
       }
       [modeDialog, lesson, confirmZero].forEach(dialog => {
@@ -2271,14 +2335,15 @@
         modeDialog.hidden = false;
       }
 
-      // La flèche de retour de l'élève : depuis le jeu ou le mémo, le choix du
-      // niveau et des opérations (s'il y a un choix) ; depuis le choix — ou
-      // quand il n'y a rien à choisir —, Mon espace (le lien lui-même).
-      lienRetour.addEventListener("click", event => {
-        if (!modeEleve() || !modeDialog.hidden || !aUnChoix()) return;
-        event.preventDefault();
-        dialogs.close(lesson, { restoreFocus: false });
-        openModeDialog({ mandatory: !gameStarted });
+      // Le retour de l'élève vers le choix du niveau et des opérations, en haut à
+      // gauche du cadre blanc du mémo et du jeu. « ← Mon espace », en haut, est un
+      // simple lien : il n'est montré que sur l'accueil de l'appli.
+      document.querySelectorAll("[data-retour-choix]").forEach(bouton => {
+        bouton.addEventListener("click", () => {
+          if (!modeEleve() || !aUnChoix()) return;
+          dialogs.close(lesson, { restoreFocus: false });
+          openModeDialog({ mandatory: !gameStarted });
+        });
       });
 
       // Au démarrage sous un code : une partie en cours compatible avec les

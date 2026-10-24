@@ -71,7 +71,7 @@ test("la page charge le moteur et l'habillage du suivi, avec une version, après
   assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
 });
 
-test("l'en-tête du modèle commun : la flèche, le bloc, la pastille ; le logo, « Calcul mental » et « Réglages » cachés pour l'élève", () => {
+test("l'en-tête du modèle commun : le lien, le bloc, la pastille ; le logo, « Calcul mental » et « Réglages » cachés pour l'élève", () => {
   assert.match(PAGE, /<a class="retour-espace" id="lien-retour" href="https:\/\/suivi\.mathsgo\.re\/" aria-label="Retour à mon espace" hidden>/);
   assert.match(PAGE, /<p id="suivi-repere" class="suivi-repere" hidden><\/p>/);
   assert.match(PAGE, /<span id="suivi-pastille-slot"><\/span>/);
@@ -79,6 +79,34 @@ test("l'en-tête du modèle commun : la flèche, le bloc, la pastille ; le logo,
   assert.match(PAGE, /html\.suivi-eleve body:not\(\.ecran-jeu\) \.topbar-actions \{ display: none; \}/, "Plein écran et la pastille : sur l'écran de jeu seulement");
   assert.match(PAGE, /html\.suivi-eleve body\.ecran-jeu \.suivi-repere \{ display: none; \}/, "le bloc : pas sur l'écran de jeu");
   assert.match(PAGE, /#suivi-pastille-slot:empty \{ display: none; \}/, "sans pastille, aucun écart dans la barre du visiteur");
+});
+
+// Lot 2 « pieds des applis » (24/10/2026) : l'en-tête remis au dessin de Défi
+// tables — « ← Mon espace » avec son texte sur l'accueil de l'appli, le bloc au
+// milieu, « Plein écran » à droite ; dans l'appli, « ← Niveaux » en haut à
+// gauche du cadre blanc (mémo et jeu). Au téléphone, l'écran de jeu garde la
+// pastille. Le comportement est mesuré au navigateur dans la notice du lot.
+test("l'en-tête de Défi tables : « ← Mon espace » sur l'accueil, le bloc au milieu, Plein écran à droite, « ← Niveaux » dans le cadre", () => {
+  assert.match(PAGE, /<a class="retour-espace" id="lien-retour" href="https:\/\/suivi\.mathsgo\.re\/" aria-label="Retour à mon espace" hidden><svg[^>]*>[\s\S]*?<\/svg><span class="retour-espace-texte">Mon espace<\/span><\/a>/);
+  assert.match(PAGE, /html\.suivi-eleve body\.accueil-appli \.retour-espace \{ display: inline-flex; \}/, "« ← Mon espace » : sur l'accueil de l'appli seulement");
+  assert.match(PAGE, /\.topbar \.suivi-repere \{ order: 2; flex: 1 1 auto; min-width: 0; margin: 0; \}/, "le bloc au milieu de la barre");
+  assert.match(PAGE, /html\.suivi-eleve \.topbar-actions \{ order: 3; flex: 0 0 auto; \}/, "Plein écran à droite");
+  // les deux boutons « ← Niveaux » : dans le cadre du jeu et dans la carte du mémo
+  const boutons = PAGE.match(/<button class="retour-cadre" type="button" data-retour-choix aria-label="Retour au choix du niveau"><svg[^>]*>[\s\S]*?<\/svg><span class="retour-cadre-texte">Niveaux<\/span><\/button>/g) || [];
+  assert.equal(boutons.length, 2);
+  assert.match(PAGE, /<main class="solo-page">\s*<button class="retour-cadre"/);
+  assert.match(PAGE, /<div class="dialog-card learn-card">\s*<button class="retour-cadre"/);
+  assert.match(PAGE, /html\.suivi-eleve body\.retour-dans-cadre \.retour-cadre \{ display: inline-flex; \}/);
+  // au téléphone seulement : le bloc cède la place à la pastille sur le jeu
+  assert.match(PAGE, /@media \(max-width: 620px\) \{\s*html\.suivi-eleve body:not\(\.ecran-jeu\) \.topbar-actions \{ display: none; \}\s*html\.suivi-eleve body\.ecran-jeu \.suivi-repere \{ display: none; \}/);
+  assert.match(PAGE, /@media \(min-width: 621px\) \{\s*html\.suivi-eleve #suivi-pastille-slot \{ display: none; \}/);
+  // qui est où : l'accueil (le choix, ou tout quand il n'y a rien à choisir), le cadre ailleurs
+  const ecran = source("majEcran");
+  assert.match(ecran, /classList\.toggle\("accueil-appli", eleve && \(!choixPossible \|\| surLeChoix\)\)/);
+  assert.match(ecran, /classList\.toggle\("retour-dans-cadre", choixPossible && !surLeChoix\)/);
+  // « ← Mon espace » est un simple lien : plus aucun clic intercepté dessus
+  assert.doesNotMatch(PAGE, /lienRetour\.addEventListener\("click"/);
+  assert.match(PAGE, /document\.querySelectorAll\("\[data-retour-choix\]"\)\.forEach\(bouton => \{\s*bouton\.addEventListener\("click", \(\) => \{\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;/);
 });
 
 test("les textes validés par Gwenaël : le choix, le mémo, les réglages changés, la confirmation", () => {
@@ -115,8 +143,9 @@ test("la reprise reprend la partie telle quelle (série, familles, clés) sur un
   assert.match(s, /makeChallenge\(\);/, "un plateau neuf");
 });
 
-test("la flèche : vers le choix depuis le jeu ou le mémo (s'il y a un choix), vers Mon espace sinon", () => {
-  assert.match(PAGE, /lienRetour\.addEventListener\("click", event => \{\s*if \(!modeEleve\(\) \|\| !modeDialog\.hidden \|\| !aUnChoix\(\)\) return;\s*event\.preventDefault\(\);\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*openModeDialog\(\{ mandatory: !gameStarted \}\);/);
+test("« ← Niveaux » ramène au choix (s'il y a un choix) ; « ← Mon espace » mène à Mon espace", () => {
+  assert.match(PAGE, /bouton\.addEventListener\("click", \(\) => \{\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*openModeDialog\(\{ mandatory: !gameStarted \}\);/);
+  assert.doesNotMatch(PAGE, /lienRetour\.addEventListener/, "le lien du haut n'est jamais détourné");
 });
 
 // ------------------------------------------------- le démarrage de l'élève, exécuté

@@ -137,10 +137,15 @@ Toute appli branchée sur le serveur de suivi (Défi tables, SPLAT!, Défi calcu
 puis les suivantes) suit ce modèle quand l'élève est connecté par son code.
 Défi tables est la référence.
 
-- En-tête : la flèche de retour à gauche (niveau parent dans l'appli ; depuis
-  l'accueil de l'appli, Mon espace), puis le bloc « Suivi par ton professeur »,
-  prénom, classe, avec « Se déconnecter » dans le bloc. Pas de logo en haut ;
-  pas de lien « Mon espace » en texte.
+- En-tête (le dessin de Défi tables, décision du 14/10/2026) : une barre fine
+  au-dessus du cadre blanc, avec « ← Mon espace » à gauche (flèche et texte ;
+  la flèche seule au téléphone) sur l'ACCUEIL de l'appli seulement, le bloc
+  « Suivi par ton professeur » au milieu (prénom, classe, avec
+  « Se déconnecter » dans le bloc), « Plein écran » à droite. Dans l'appli, le
+  retour au niveau parent est un bouton en haut à gauche du CADRE BLANC
+  (« ← Ma table » dans Défi tables, « ← Niveaux » dans Coffres magiques) ; la
+  barre du haut n'est jamais cassée pour y loger une flèche.
+  Pas de logo en haut.
 - Écrans de jeu où la place manque (les étapes de SPLAT!) : la pastille
   « ● prénom » au bout de la barre du jeu suffit. On ne déplace pas une mise en
   page de jeu pour y loger le bloc ; « Se déconnecter » reste à une flèche, sur
