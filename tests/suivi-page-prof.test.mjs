@@ -436,8 +436,10 @@ test("viderZones() vide toutes les zones annoncées, referme les boîtes", () =>
     noeud.open = true;
     noeud.close = () => { noeud.open = false; };
   });
-  new Function("$", "ZONES_TEXTE", "ZONES_MESSAGE", "CHAMPS_A_VIDER", "BLOCS_A_CACHER",
-    `${fonction("viderZones")}\nviderZones();`)(faux.$, ZONES_TEXTE, ZONES_MESSAGE, CHAMPS_A_VIDER, BLOCS_A_CACHER);
+  let impressionsQuittees = 0;
+  new Function("$", "ZONES_TEXTE", "ZONES_MESSAGE", "CHAMPS_A_VIDER", "BLOCS_A_CACHER", "quitterImpressions",
+    `${fonction("viderZones")}\nviderZones();`)(faux.$, ZONES_TEXTE, ZONES_MESSAGE, CHAMPS_A_VIDER, BLOCS_A_CACHER, () => { impressionsQuittees += 1; });
+  assert.equal(impressionsQuittees, 1, "lot 4b-bis : plus aucune feuille prête à sortir à l'imprimante après la déconnexion");
   ZONES_TEXTE.forEach(id => assert.equal(faux.$(id).textContent, "", `${id} vidé`));
   ZONES_MESSAGE.forEach(id => {
     assert.equal(faux.$(id).textContent, "", `${id} vidé`);
@@ -836,7 +838,7 @@ test("la barre de classe est remplie à la mesure des tables acquises", () => {
 // page. C'est elle qui reste quand la carte de classe se tait : elle doit
 // dire juste, surtout ce jour-là.
 function resumeDeLaClasse() {
-  const debut = page.indexOf("  function resumeDeLaClasse(liste) {");
+  const debut = page.indexOf("  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le)) {");
   assert.ok(debut > 0, "la page doit avoir sa ligne de résumé de classe");
   const fin = page.indexOf("\n  }", debut) + "\n  }".length;
   return new Function(page.slice(debut, fin) + "\n  return resumeDeLaClasse;")();

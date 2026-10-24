@@ -137,8 +137,8 @@ const AUJOURDHUI = new Date("2026-10-24T08:00:00Z");
 // ------------------------------------------------------------ la page, exécutée
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "boutonGeste", "menuGestes", "poserGestes",
-  "jourCourt", "dessinerTableauAnzan", "resumeDeLaClasse", "lireAnzan", "parLaClasse", "elevesDeLOnglet", "finirOnglet",
-  "accesDe"].map(n => fonction(n)).join("\n");
+  "jourCourt", "dessinerTableauAnzan", "resumeDeLaClasse", "lireAnzan", "parLaClasse", "elevesDeLOnglet", "voitLOnglet", "aDuTravail",
+  "finirOnglet", "accesDe"].map(n => fonction(n)).join("\n");
 
 function ongletAnzan(liste, options = {}) {
   const {zones, $} = creerZones();
@@ -209,17 +209,25 @@ test("un élève qui n'a plus Anzan en plus mais y a du travail reste dans l'ong
 });
 
 test("la même règle pour toutes les applis : l'onglet SPLAT! d'un élève qui l'a en plus (classe sans SPLAT!) tait les cartes de la classe ; une classe qui a l'appli les garde", () => {
-  const rejouer = applis => {
+  const AVEC = {applis: ["defi-tables", "splat"], reglages: {}};
+  const SANS = {applis: ["defi-tables"], reglages: {}};
+  const rejouer = (applis, lignes = [{id: 1, acces: AVEC}, {id: 2, acces: AVEC}]) => {
     const {$} = creerZones();
     $("objectif").hidden = false;
     $("fragiles").hidden = false;
     $("resume-classe").textContent = "5 élèves · tout le monde a commencé";
-    new Function("$", "classe", "appliAffichee", `${fonction("parLaClasse")}\n${fonction("finirOnglet")}\nfinirOnglet([{id: 1}, {id: 2}]);`)(
-      $, {applis}, "splat");
+    new Function("$", "classe", "appliAffichee", "lignes",
+      `${["parLaClasse", "accesDe", "voitLOnglet", "finirOnglet"].map(n => fonction(n)).join("\n")}\nfinirOnglet(lignes);`)(
+      $, {applis, reglages: {}}, "splat", lignes);
     return [$("objectif").hidden, $("fragiles").hidden, $("resume-classe").textContent];
   };
   assert.deepEqual(rejouer(["defi-tables"]), [true, true, "2 élèves · en plus de la classe, qui n’a pas cette activité"]);
   assert.deepEqual(rejouer(["defi-tables", "splat"]), [false, false, "5 élèves · tout le monde a commencé"], "la classe a SPLAT! : rien ne change");
+  // Lot 4b-bis (remarque de Codex) : ceux qui ne l'ont plus mais dont le travail reste sont comptés à part.
+  assert.equal(rejouer(["defi-tables"], [{id: 1, acces: AVEC}, {id: 2, acces: SANS}])[2],
+    "1 élève · en plus de la classe, qui n’a pas cette activité · 1 n’y a plus accès (son travail reste)");
+  assert.equal(rejouer(["defi-tables"], [{id: 1, acces: AVEC}, {id: 2, acces: SANS}, {id: 3, acces: SANS}])[2],
+    "1 élève · en plus de la classe, qui n’a pas cette activité · 2 n’y ont plus accès (leur travail reste)");
 });
 
 test("sans moteur : l'onglet le dit, les lignes restent lisibles, pas de « Parcours »", () => {
@@ -250,7 +258,7 @@ test("c'est le moteur qui lit le parcours : la page ne touche jamais aux séance
 // ------------------------------------------------------------ « Le parcours de Rania »
 
 const SOURCES_FENETRE = ["prenomCourt", "seElide", "deNom", "jourAnzan", "reglagesAnzan", "parcoursAnzanDe",
-  "ouvrirParcoursAnzan", "plusDeSeancesAnzan", "dessinerParcoursAnzan", "fermerParcoursAnzan", "imprimerParcoursAnzan"].map(n => fonction(n)).join("\n");
+  "ouvrirParcoursAnzan", "plusDeSeancesAnzan", "dessinerParcoursAnzan", "fermerParcoursAnzan", "quitterImpressions", "imprimerParcoursAnzan"].map(n => fonction(n)).join("\n");
 
 function fenetre(eleve, options = {}) {
   const {zones, $} = creerZones();
@@ -265,7 +273,7 @@ function fenetre(eleve, options = {}) {
   };
   const doc = Object.assign({}, document, {body: {classList: {add: c => classes.add(c), remove: c => classes.delete(c)}}});
   const f = new Function("document", "$", "ANZAN", "classe", "window", "setTimeout", "maintenant",
-    `let parcoursAnzanEleve = null;\nlet parcoursAnzanAffiches = 10;\n${SOURCES_FENETRE.replace(/aujourdhui = new Date\(\)/, "aujourdhui = maintenant")}\n`
+    `let parcoursAnzanEleve = null;\nlet parcoursAnzanAffiches = 10;\nlet numeroImpression = 0;\n${constante("MODES_IMPRESSION")}\n${SOURCES_FENETRE.replace(/aujourdhui = new Date\(\)/, "aujourdhui = maintenant")}\n`
     + "return {ouvrirParcoursAnzan, plusDeSeancesAnzan, fermerParcoursAnzan, imprimerParcoursAnzan, parcoursAnzanDe, reglagesAnzan, jourAnzan, eleve: () => parcoursAnzanEleve};")(
     doc, $, options.sansMoteur ? null : ANZAN, {id: 7}, fenetreNav, () => 0, options.aujourdhui || AUJOURDHUI);
   // Le lecteur de la page (lireAnzan), le vrai : resumeProf + historique.
@@ -463,4 +471,170 @@ test("la fenêtre et la feuille : le HTML, le logo et la signature en pied ; à 
   assert.match(page, /\.fiche-anzan \{ display: none; \}/, "jamais à l'écran");
   assert.match(page, /body\.imprime-anzan \.fiche-anzan \{ display: block; \}/);
   assert.match(page, /body\.imprime-anzan dialog \{ display: none !important; \}/, "la fenêtre ouverte ne s'imprime pas par-dessus");
+});
+
+// ------------------------------------------------------------ lot 4b-bis : la relecture de Codex (24/10/2026)
+
+const tic = () => new Promise(r => setTimeout(r, 0));
+
+// ouvrirClasse et afficherAppli, exécutées telles qu'écrites, avec un serveur
+// dont on tient la réponse : on la rend APRÈS « Se déconnecter ».
+function classeRejouee() {
+  const attentes = [];
+  const poses = [];
+  const etat = {jeton: "jeton-de-test"};
+  const api = (action, corps) => new Promise(resolve => attentes.push(() => resolve({
+    classe: {id: corps.classe_id, libelle: "405", applis: ["defi-tables", "splat"], droit: "proprietaire"},
+    eleves: [{id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}}]
+  })));
+  const f = new Function("api", "etat", "poses", "APPLIS", "ANZAN",
+    `let classe = null, droitClasse = "proprietaire", eleves = [], tableaux = {}, appliAffichee = "defi-tables", vue = "appli", demandeAppli = 0, voitEleve = null, parcoursAnzanEleve = null;
+     const classes = [{id: 7, applis: ["defi-tables", "splat"]}];
+     const detailsOuverts = new Set();
+     const $ = () => ({textContent: "", hidden: false});
+     let jeton = etat.jeton;
+     function chargerMoteurDe() { return Promise.resolve(null); }
+     function elevesLus(cle, liste) { return (liste || []).map(e => Object.assign({}, e, {lu: {}})); }
+     function messager() {} function surErreur(e) { poses.push("erreur " + e.message); }
+     function montrer(ecran) { poses.push("montrer " + ecran); }
+     function appliquerDroits() {} function poserAppli() { poses.push("onglets"); } function dessinerTableau() { poses.push("tableau"); }
+     function lireChoixAppli() { return ""; } function retenirChoixAppli() {} function lireSplat() { return {}; } function poserOnglets() { poses.push("onglets"); return []; }
+     const redessin = {demander() { poses.push("tableau"); }};
+     ${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "appliAMontrer", "reporterAccesDeLaListe", "ouvrirClasse", "afficherAppli"].map(n => fonction(n)).join("\n")}
+     // « Se déconnecter », pour ce qui compte ici (la vraie oublierEtat le fait : un test le vérifie).
+     function deconnecter() { jeton = ""; classe = null; eleves = []; tableaux = {}; demandeAppli += 1; }
+     return {ouvrirClasse, afficherAppli, deconnecter, etat: () => ({classe, eleves, appliAffichee}),
+       poserClasse: c => { classe = c; }, poserEleves: l => { eleves = l; tableaux = {"defi-tables": l}; }};`)(
+    api, etat, poses, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}], ANZAN);
+  return {f, attentes, poses};
+}
+
+test("lot 4b-bis — une classe qui arrive APRÈS « Se déconnecter » n'est pas posée dans la page (ni l'écran, ni « Rania »)", async () => {
+  const r = classeRejouee();
+  const ouverture = r.f.ouvrirClasse(7);
+  await tic();
+  r.f.deconnecter();
+  r.attentes[0]();
+  await ouverture;
+  assert.equal(r.f.etat().classe, null, "la classe n'est pas reposée");
+  assert.deepEqual(r.f.etat().eleves, [], "aucun prénom");
+  assert.deepEqual(r.poses, [], "ni l'écran de la classe, ni le tableau");
+  assert.match(fonction("oublierEtat"), /demandeAppli \+= 1;/, "la vraie déconnexion périme les lectures en cours");
+  // Deux classes rapprochées : la première réponse, arrivée après la seconde demande, ne passe pas devant.
+  const s = classeRejouee();
+  const premiere = s.f.ouvrirClasse(7);
+  const seconde = s.f.ouvrirClasse(8);
+  await tic();
+  s.attentes[1]();
+  await seconde;
+  s.attentes[0]();
+  await premiere;
+  assert.equal(s.f.etat().classe.id, 8, "la classe ouverte en dernier reste");
+});
+
+test("lot 4b-bis — un onglet qui arrive APRÈS « Se déconnecter » n'est pas posé", async () => {
+  const r = classeRejouee();
+  r.f.poserClasse({id: 7, libelle: "405", applis: ["defi-tables", "splat"]});
+  r.f.poserEleves([{id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}, lu: {}}]);
+  const lecture = r.f.afficherAppli("flash-anzan");
+  await tic();
+  r.f.deconnecter();
+  r.attentes[0]();
+  await lecture;
+  assert.deepEqual(r.f.etat().eleves, [], "« Rania : 101 calculs » ne revient pas dans le document");
+  assert.equal(r.f.etat().appliAffichee, "defi-tables");
+});
+
+test("lot 4b-bis — afficherAppli : la liste fraîche sans personne pour Anzan → l'activité affichée ne change pas, l'accès est reporté, l'onglet part, un message le dit", async () => {
+  const poses = [];
+  const messages = [];
+  const tableaux = {"defi-tables": [{id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan"], reglages: {}}, lu: {}}]};
+  const f = new Function("tableaux", "poses", "messages", "APPLIS",
+    `let classe = {id: 7, applis: ["defi-tables"]}, eleves = tableaux["defi-tables"], appliAffichee = "defi-tables", demandeAppli = 0, jeton = "x";
+     function chargerMoteurDe() { return Promise.resolve(null); }
+     async function api() { return {eleves: [{id: 1, prenom: "Rania", acces: {applis: ["defi-tables"], reglages: {}}}]}; }
+     function elevesLus(cle, liste) { return liste.map(e => Object.assign({}, e, {lu: {}})); }
+     function messager(id, t, type) { messages.push([id, t, type]); } function surErreur(e) { throw e; }
+     function poserAppli() { poses.push("poserAppli"); } function poserOnglets() { poses.push("onglets " + applisAMontrer().join(",")); return applisAMontrer(); }
+     function retenirChoixAppli() {} function lireSplat() { return {}; } const redessin = {demander() { poses.push("tableau"); }};
+     ${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "reporterAccesDeLaListe", "afficherAppli"].map(n => fonction(n)).join("\n")}
+     return {afficherAppli, etat: () => ({appliAffichee, eleves})};`)(
+    tableaux, poses, messages, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "flash-anzan", nom: "Anzan"}]);
+  await f.afficherAppli("flash-anzan");
+  assert.equal(f.etat().appliAffichee, "defi-tables", "on reste sur Défi tables");
+  assert.deepEqual(tableaux["defi-tables"][0].acces.applis, ["defi-tables"], "l'accès frais est reporté sur la liste déjà lue");
+  assert.deepEqual(poses, ["onglets defi-tables"], "l'onglet Anzan part ; rien d'autre n'est redessiné");
+  assert.deepEqual(messages.at(-1), ["message-appli", "Anzan n’est plus ouvert à aucun élève de cette classe.", "info"]);
+});
+
+test("lot 4b-bis — supprimer le dernier élève qui avait Anzan : son onglet part, et on quitte l'onglet s'il était affiché", async () => {
+  const appels = [];
+  const f = new Function("appels",
+    `let eleves = [{id: 1, prenom: "Rania"}], appliAffichee = "flash-anzan";
+     async function demander() { return true; } async function api(a) { appels.push(a); return {ok: true}; }
+     function nomAffiche(e) { return e.prenom; } function reporterEleve() {} const redessin = {demander() {}};
+     function messager() {} function surErreur(e) { throw e; }
+     function poserOnglets() { appels.push("onglets"); return ["defi-tables"]; } function afficherAppli(cle) { appels.push("afficher " + cle); }
+     ${fonction("supprimerEleve")}
+     return supprimerEleve;`)(appels);
+  await f({id: 1, prenom: "Rania"});
+  assert.deepEqual(appels, ["eleves.supprimer", "onglets", "afficher defi-tables"]);
+});
+
+test("lot 4b-bis — des réglages Anzan enregistrés sans un calcul ne comptent pas comme du travail (onglet « en plus » et « tout le monde a commencé »)", () => {
+  const reglagesSeuls = {version: 1, epoque: 0, reglages: {mode: "flash", rang: 1}, seances: {}};
+  // Lucas : plus d'accès, des réglages seulement → pas dans l'onglet ; Rania : son accès et ses séances.
+  const liste = [
+    {prenom: "Lucas", parcours: reglagesSeuls, maj_le: "2026-10-22T07:00:00Z", acces: ACCES_CLASSE},
+    {prenom: "Rania", parcours: RANIA, maj_le: "2026-10-23T09:00:00Z", acces: ACCES_RANIA}
+  ];
+  const {lignes, zones} = ongletAnzan(liste);
+  assert.deepEqual(lignes.map(tr => cellules(tr)[0].textContent), ["Rania"]);
+  assert.equal(zones.get("resume-classe").textContent, "1 élève · en plus de la classe, qui n’a pas cette activité");
+  // Anzan ouvert à toute la classe : Lucas n'a « encore rien fait ».
+  const tous = ongletAnzan(liste.map(e => Object.assign({}, e, {acces: ACCES_RANIA})),
+    {classe: {id: 7, libelle: "405", applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}});
+  assert.equal(tous.zones.get("resume-classe").textContent, "2 élèves · 1 n’a encore rien fait");
+});
+
+test("lot 4b-bis — une impression à la fois : la feuille des codes, sans « afterprint », ne sort pas avec le parcours Anzan ; son filet de 60 s ne touche pas l'impression suivante", () => {
+  const {$} = creerZones();
+  const classes = new Set();
+  const minuteurs = [];
+  const sorties = [];
+  const fenetreNav = {addEventListener() {}, removeEventListener() {}, print: () => sorties.push([...classes].sort())};
+  const doc = Object.assign({}, document, {body: {classList: {add: c => classes.add(c), remove: c => classes.delete(c)}}});
+  const r = new Function("document", "$", "window", "setTimeout", "ANZAN",
+    `let droitClasse = "proprietaire", classe = {id: 7}, parcoursAnzanEleve = null, parcoursAnzanAffiches = 10, numeroImpression = 0;
+     ${constante("MODES_IMPRESSION")}
+     function dessinerBandelettes() {} function dessinerPapier() {}
+     ${["prenomCourt", "seElide", "deNom", "jourAnzan", "reglagesAnzan", "parcoursAnzanDe", "quitterImpressions", "imprimer", "imprimerParcoursAnzan"].map(n => fonction(n)).join("\n")}
+     return {imprimer, imprimerParcoursAnzan, poserEleve: e => { parcoursAnzanEleve = e; }};`)(
+    doc, $, fenetreNav, (g, ms) => { minuteurs.push(g); return minuteurs.length; }, ANZAN);
+  r.imprimer("recap");
+  assert.deepEqual(sorties[0], ["imprime-recap"]);
+  // « afterprint » ne vient pas ; on imprime le parcours de Rania.
+  r.poserEleve({id: 3, prenom: "Rania", lu: Object.assign({}, ANZAN.resumeProf(RANIA), {historique: ANZAN.historique(RANIA), lisible: true})});
+  r.imprimerParcoursAnzan();
+  assert.deepEqual(sorties[1], ["imprime-anzan"], "seule la feuille Anzan sort — pas les codes de la classe");
+  // Le filet de 60 s de la feuille des codes passe : il ne retire pas la classe de l'impression en cours.
+  minuteurs[0]();
+  assert.deepEqual([...classes], ["imprime-anzan"]);
+  assert.notEqual($("fa-titre").textContent, "", "la feuille Anzan reste remplie");
+  // Et dans l'autre sens : le parcours Anzan sans « afterprint », puis les bandelettes.
+  r.imprimer("bandelettes");
+  assert.deepEqual(sorties[2], ["imprime-bandelettes"]);
+  assert.equal($("fa-titre").textContent, "", "la feuille Anzan est vidée : rien d'elle ne sort avec les bandelettes");
+  assert.match(fonction("viderZones"), /quitterImpressions\(\);/, "la déconnexion retire toute impression en attente");
+  // Deux fois la même feuille, sans « afterprint » : le filet de la PREMIÈRE ne défait pas la seconde.
+  const avant = minuteurs.length;
+  r.imprimer("recap");
+  r.imprimer("recap");
+  minuteurs[avant]();
+  assert.deepEqual([...classes], ["imprime-recap"], "la feuille des codes en cours garde sa classe");
+  r.imprimerParcoursAnzan();
+  r.imprimerParcoursAnzan();
+  minuteurs[avant + 2]();
+  assert.deepEqual([...classes], ["imprime-anzan"], "le parcours en cours garde sa classe");
+  assert.equal($("fa-titre").textContent, "Le parcours de Rania", "et sa feuille n'est pas vidée par le vieux filet");
 });

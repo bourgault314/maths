@@ -558,12 +558,13 @@ test("passer d'un onglet à l'autre : une liste déjà lue est reprise, sinon un
   // Depuis le lot « Coffres magiques sur le suivi » (21/10/2026), afficherAppli
   // passe par chargerMoteurDe(cle), qui choisit le moteur à charger.
   const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "chargerMoteurCoffres", "chargerMoteurAnzan", "elevesLus",
-    "messager", "poserAppli", "surErreur", "APPLIS",
+    "messager", "poserAppli", "surErreur", "APPLIS", "jeton", "lireSplat", "poserOnglets",
     `let appliAffichee = "defi-tables", eleves = [], tableaux = {"defi-tables": [{id: 1, prenom: "cache"}]}, demandeAppli = 0;\n`
-    + `${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "chargerMoteurDe", "afficherAppli"].map(fonction).join("\n")}\n`
+    + `${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "chargerMoteurDe", "reporterAccesDeLaListe", "afficherAppli"].map(fonction).join("\n")}\n`
     + "return {afficherAppli, etat: () => ({appliAffichee, eleves, tableaux})};")(
     api, cle => retenus.push(cle), {demander: () => { dessins += 1; }}, {id: 7, applis: ["defi-tables", "splat"]},
-    async () => SPLAT, async () => null, async () => null, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}]);
+    async () => SPLAT, async () => null, async () => null, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}],
+    "jeton-de-test", () => ({}), () => []);
   const p1 = monde.afficherAppli("splat");
   await new Promise(r => setTimeout(r, 0));
   const p2 = monde.afficherAppli("defi-tables");

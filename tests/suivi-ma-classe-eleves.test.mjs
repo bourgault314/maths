@@ -355,7 +355,8 @@ function impressionRejouee(liste) {
   let papiers = 0;
   const doc = Object.assign({}, document, {body: {classList: {add: c => corps.classes.add(c), remove: c => corps.classes.delete(c)}}});
   const f = new Function("document", "$", "window", "setTimeout", "droitClasse", "classe", "eleves", "dessinerPapierCompte",
-    `${["nomAffiche", "ordreDeLaFeuille", "dessinerBandelettes", "imprimer"].map(fonction).join("\n")}\n`
+    `${["nomAffiche", "ordreDeLaFeuille", "dessinerBandelettes", "quitterImpressions", "imprimer"].map(fonction).join("\n")}\n`
+    + `${constante("MODES_IMPRESSION")}\nlet numeroImpression = 0;\n`
     + "const CONSIGNE_BANDELETTE = 'Ton code est personnel : ne le prête à personne.'; const ADRESSE_ELEVE = 'suivi.mathsgo.re';\n"
     + "function dessinerPapier() { dessinerPapierCompte(); dessinerBandelettes(); }\n"
     + "return {imprimer, dessinerBandelettes};")(
@@ -682,6 +683,7 @@ function fenetreRejouee(eleve, options = {}) {
       "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "voitEnAttenteDe", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}
 // La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
 let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
+let demandeAppli = 0, parcoursAnzanEleve = null;
 const detailsOuverts = new Set(); const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
 ${fonction("oublierEtat")}
 return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, deconnecter: () => { oublierEtat(); voitEleve = null; },

@@ -1580,6 +1580,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
+    // Lot 4b-bis : plus aucune feuille prête à sortir à l'imprimante.
+    quitterImpressions();
     // Lot E1 : le plein écran de la répartition, s'il est ouvert.
     const plein = $("evaluation-plein");
     if (plein && plein.parentNode) plein.parentNode.removeChild(plein);
@@ -1607,6 +1609,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     detailsOuverts.clear();
     voitEleve = null;
     parcoursAnzanEleve = null;
+    // Lot 4b-bis (relecture Codex) : une classe ou un onglet encore en route
+    // ne sera pas posé dans la page après la déconnexion.
+    demandeAppli += 1;
     // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
     // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
     // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
@@ -2806,7 +2811,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   function elevesDeLOnglet() {
     if (parLaClasse(appliAffichee)) return eleves;
-    return eleves.filter(eleve => accesDe(eleve).applis.includes(appliAffichee) || Boolean(eleve.maj_le));
+    return eleves.filter(eleve => voitLOnglet(eleve) || aDuTravail(eleve));
+  }
+
+  function voitLOnglet(eleve) {
+    return accesDe(eleve).applis.includes(appliAffichee);
+  }
+
+  // Lot 4b-bis (relecture Codex) : « du travail », c'est ce que le moteur de
+  // l'appli dit quand il en a l'idée (Anzan, Coffres : lu.commence — des
+  // réglages enregistrés sans un calcul ne comptent pas) ; sinon, une
+  // progression enregistrée.
+  function aDuTravail(eleve) {
+    const lu = eleve && eleve.lu;
+    if (lu && typeof lu.commence === "boolean") return lu.commence;
+    return Boolean(eleve && eleve.maj_le);
   }
 
   // Après le dessin d'un onglet d'appli que la classe n'a pas : la ligne
@@ -2817,10 +2836,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     if (parLaClasse(appliAffichee)) return;
     $("objectif").hidden = true;
     $("fragiles").hidden = true;
-    const n = lignes.length;
-    $("resume-classe").textContent = n
+    // Lot 4b-bis (remarque de Codex) : ceux qui l'ont encore, et ceux qui ne
+    // l'ont plus mais dont le travail reste — comptés à part.
+    const n = lignes.filter(voitLOnglet).length;
+    const anciens = lignes.length - n;
+    const debut = n
       ? `${n} élève${n > 1 ? "s" : ""} · en plus de la classe, qui n’a pas cette activité`
       : "Personne ne l’a en plus pour l’instant · la classe n’a pas cette activité";
+    const fin = anciens
+      ? ` · ${anciens} n’y ${anciens > 1 ? "ont" : "a"} plus accès (${anciens > 1 ? "leur" : "son"} travail reste)`
+      : "";
+    $("resume-classe").textContent = debut + fin;
   }
 
   // La ligne au-dessus du tableau : combien d'élèves, et combien n'ont encore
@@ -2829,9 +2855,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // où la carte de classe se tait (toute la classe a ouvert l'appli, personne
   // n'a encore acquis de table), alors que cette ligne est ce qui reste pour
   // le dire. Trouvé par Claude Code le 09/09/2026.
-  function resumeDeLaClasse(liste) {
+  // `aCommence` (lot 4b-bis) : ce qui compte comme « a commencé » — par
+  // défaut une progression enregistrée ; pour Anzan, au moins un calcul.
+  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le)) {
     if (!liste.length) return "Aucun élève. Commence par en ajouter.";
-    const sans = liste.filter(e => !e.maj_le).length;
+    const sans = liste.filter(e => !aCommence(e)).length;
     const reste = sans === 0
       ? "tout le monde a commencé"
       : `${sans} n’${sans > 1 ? "ont" : "a"} encore rien fait`;
@@ -3398,7 +3426,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       corps.appendChild(ligne);
     });
 
-    $("resume-classe").textContent = resumeDeLaClasse(eleves);
+    $("resume-classe").textContent = resumeDeLaClasse(eleves, aDuTravail);
     if (!ANZAN) {
       messager("message-appli",
         "La progression Anzan ne peut pas être détaillée : le moteur (prof/flash_anzan_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
@@ -3529,6 +3557,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   function imprimerParcoursAnzan() {
     const eleve = parcoursAnzanEleve;
     if (!eleve) return false;
+    quitterImpressions();
+    const numero = ++numeroImpression;
     // Les séances que montre la fenêtre (10, ou plus après « Voir les séances précédentes »).
     const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
     $("fa-titre").textContent = vu.titre;
@@ -3551,8 +3581,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const nettoyer = () => {
       if (fait) return;
       fait = true;
-      document.body.classList.remove("imprime-anzan");
       window.removeEventListener("afterprint", nettoyer);
+      if (numero !== numeroImpression) return;
+      document.body.classList.remove("imprime-anzan");
       ["fa-titre", "fa-compte", "fa-corps", "fa-note"].forEach(id => { $(id).textContent = ""; });
     };
     window.addEventListener("afterprint", nettoyer);
@@ -3699,17 +3730,34 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Une impression à la fois, et seulement celle qu'on a demandée. `seul`
   // (lot « Ma classe : élèves », 18/10/2026) : la bandelette de cet élève
   // seulement ; la liste entière revient après l'impression.
+  // Lot 4b-bis (relecture Codex du 24/10) : UNE impression à la fois. Si
+  // « afterprint » n'est jamais venu (le filet de 60 s n'est pas passé), la
+  // feuille précédente gardait sa classe : la feuille des codes sortait avec
+  // le parcours Anzan. Chaque impression commence donc par retirer toutes les
+  // autres et vider la feuille Anzan ; son nettoyage ne touche à rien si une
+  // impression plus récente a commencé (numeroImpression). La déconnexion les
+  // retire aussi (viderZones).
+  const MODES_IMPRESSION = ["imprime-recap", "imprime-bandelettes", "imprime-anzan"];
+  let numeroImpression = 0;
+  function quitterImpressions() {
+    MODES_IMPRESSION.forEach(mode => document.body.classList.remove(mode));
+    ["fa-titre", "fa-compte", "fa-corps", "fa-note"].forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
+  }
+
   function imprimer(quoi, seul) {
     if (droitClasse === "lecture") return false;
     const classeCss = quoi === "bandelettes" ? "imprime-bandelettes" : "imprime-recap";
+    quitterImpressions();
+    const numero = ++numeroImpression;
     if (seul && quoi === "bandelettes") dessinerBandelettes(seul.id);
     document.body.classList.add(classeCss);
     let fait = false;
     const nettoyer = () => {
       if (fait) return;
       fait = true;
-      document.body.classList.remove(classeCss);
       window.removeEventListener("afterprint", nettoyer);
+      if (numero !== numeroImpression) return;
+      document.body.classList.remove(classeCss);
       if (seul && classe) dessinerPapier();
     };
     window.addEventListener("afterprint", nettoyer);
@@ -3874,9 +3922,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // classe), et les listes des autres activités sont oubliées : elles seront
   // relues quand on les choisira.
   async function ouvrirClasse(id) {
+    // Un changement d'onglet encore en route ne vaut plus : on relit tout.
+    // Lot 4b-bis (relecture Codex du 24/10) : le numéro de CETTE ouverture —
+    // une autre classe ouverte, ou « Se déconnecter » (oublierEtat), pendant
+    // l'attente le rend périmé, et sa réponse n'est plus posée dans la page.
+    demandeAppli += 1;
+    const numero = demandeAppli;
     try {
-      // Un changement d'onglet encore en route ne vaut plus : on relit tout.
-      demandeAppli += 1;
       const memeClasse = Boolean(classe) && classe.id === id;
       const connue = classes.find(uneClasse => uneClasse.id === id);
       // La même classe, rouverte (un élève ajouté, une activité changée) :
@@ -3884,6 +3936,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const voulue = appliAMontrer(lesApplisConnues((connue ? connue.applis : ["defi-tables"]).concat(memeClasse ? applisAMontrer() : [])),
         memeClasse ? appliAffichee : lireChoixAppli());
       const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
+      if (numero !== demandeAppli || !jeton) return;
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
       if (connue) connue.applis = classe.applis;
@@ -3911,7 +3964,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return; }
       poserAppli();
       dessinerTableau();
-    } catch (erreur) { surErreur(erreur, "message-classes"); }
+    } catch (erreur) {
+      if (numero === demandeAppli && jeton) surErreur(erreur, "message-classes");
+    }
   }
 
   // ------------------------------------------- l'activité affichée (lot « splat-suivi-4 »)
@@ -3930,9 +3985,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // calculé par le serveur — le même pour toutes les listes lues). Anzan
   // donné à Rania seule a ainsi son onglet ; la règle vaut pour toutes les
   // applis, une seule règle.
-  function applisAMontrer() {
+  function applisAMontrer(liste = eleves) {
     const enPlus = [];
-    (eleves || []).forEach(eleve => {
+    (liste || []).forEach(eleve => {
       const acces = eleve && eleve.acces;
       if (acces && Array.isArray(acces.applis)) acces.applis.forEach(cle => { if (!enPlus.includes(cle)) enPlus.push(cle); });
     });
@@ -4107,9 +4162,22 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const numero = ++demandeAppli;
     try {
       await chargerMoteurDe(cle);
+      const fraiche = !tableaux[cle];
       const liste = tableaux[cle]
         || elevesLus(cle, (await api("tableau", {classe_id: classe.id, appli: cle})).eleves);
-      if (numero !== demandeAppli) return;
+      if (numero !== demandeAppli || !jeton) return;
+      // Lot 4b-bis (relecture Codex) : une liste fraîche dit ce que voit
+      // chaque élève MAINTENANT (un autre onglet du navigateur a pu retirer
+      // Anzan à Rania) — on le reporte sur les listes déjà lues, et une
+      // activité que plus personne n'a ne s'affiche pas : son onglet part.
+      if (fraiche) reporterAccesDeLaListe(liste);
+      if (!applisAMontrer(liste).includes(cle)) {
+        tableaux[cle] = liste;
+        poserOnglets();
+        const nom = (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
+        messager("message-appli", `${nom} n’est plus ouvert à aucun élève de cette classe.`, "info");
+        return;
+      }
       tableaux[cle] = liste;
       appliAffichee = cle;
       eleves = liste;
@@ -4120,6 +4188,22 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } catch (erreur) {
       if (numero === demandeAppli) surErreur(erreur, "message-appli");
     }
+  }
+
+  // Lot 4b-bis : ce que voit chaque élève (acces, ajouts), lu dans une liste
+  // fraîche, vaut pour toutes les listes déjà lues (SPLAT! recompte ses
+  // mondes).
+  function reporterAccesDeLaListe(liste) {
+    (liste || []).forEach(frais => {
+      Object.keys(tableaux).forEach(cle => {
+        (tableaux[cle] || []).forEach(autre => {
+          if (autre.id !== frais.id || autre === frais) return;
+          autre.ajouts = frais.ajouts;
+          autre.acces = frais.acces;
+          if (cle === "splat") autre.lu = lireSplat(autre.parcours, autre);
+        });
+      });
+    });
   }
 
   // Un élève est le même dans toutes les activités : un prénom, un code
@@ -5588,6 +5672,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       reporterEleve(eleve, true);
       redessin.demander();
       messager("message-classe", "Élève supprimé.", "ok");
+      // Lot 4b-bis (relecture Codex) : le dernier élève qui avait une appli
+      // en plus est parti — son onglet aussi ; si c'était l'onglet affiché,
+      // on passe au premier qui reste.
+      const presentes = poserOnglets();
+      if (presentes.length && !presentes.includes(appliAffichee)) afficherAppli(presentes[0]);
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
