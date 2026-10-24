@@ -3252,7 +3252,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261023-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261024-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3688,6 +3688,13 @@
         renvoiDemande = false;
         const code = codeSuivi;
         const base = sync.revision;
+        // Inclure la case partagée avant de figer le paquet et son numéro :
+        // un autre onglet peut avoir répondu depuis notre dernière sauvegarde.
+        sauverCase();
+        const epoque = parcours.epoque;
+        // Les réponses que ce paquet emporte : celles notées jusqu'ici (voir
+        // noterReponseAEnvoyer). Son 200 les retirera de la file.
+        const jusqua = PARCOURS.chargerReponses(storage(), code).dernier;
         appelSuivi("/api/parcours.php", {
           method: "POST",
           headers: {"Content-Type": "text/plain;charset=UTF-8"},
@@ -3697,7 +3704,7 @@
           // Réponse tardive d'un élève qui n'est plus là (« Ce n'est pas
           // moi » entre-temps) : elle ne touche à rien, ni case, ni révision.
           if (code !== codeSuivi) return;
-          traiterReponseEnvoi(reponse, base);
+          traiterReponseEnvoi(reponse, base, jusqua, epoque);
         });
       }
 
@@ -3721,10 +3728,12 @@
       //  429  trop de demandes — on attend ce que le serveur demande ;
       //  5xx/0  panne ou coupure — on garde tout ici, relances à 2 s, 10 s,
       //       60 s, puis au retour du réseau et au prochain démarrage.
-      function traiterReponseEnvoi(reponse, base) {
+      function traiterReponseEnvoi(reponse, base, jusqua, epoque) {
         const donnees = reponse.donnees;
         if (reponse.statut === 200 && donnees && donnees.ok) {
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
+          // Le serveur a ces réponses-là : elles ne se rejoueront plus.
+          PARCOURS.reponsesParties(storage(), codeSuivi, jusqua, epoque);
           // Du nouveau pendant le vol : un envoi direct demandé (renvoiDemande)
           // OU un envoi groupé encore en attente — dans les deux cas « dirty »
           // reste levé. Sans le second cas (relecture de Code, lot 1 SPLAT!,
@@ -3747,10 +3756,9 @@
           return;
         }
         if (reponse.statut === 409 && donnees && donnees.parcours !== undefined) {
-          parcours = PARCOURS.fusionner(parcours, PARCOURS.normaliserParcours(donnees.parcours));
+          rejoindreServeur(PARCOURS.normaliserParcours(donnees.parcours));
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
           sync.dirty = true;
-          sauverCase();
           sauverSync();
           if (!state.running) renderParcours();
           fusionsSuccessives++;
@@ -3819,6 +3827,53 @@
         }
         ecrirePrenomOnglet(parcours.prenom);
         PARCOURS.sauver(storage(), PARCOURS.definirPrenom(parcours, ""), "");
+      }
+
+      // Correctif du lot « fusion jours différents » (23/10/2026, après la
+      // relecture de Codex de la PR #1046). Sous un code, chaque réponse de la
+      // grille est notée dans la file de l'appareil tant que le serveur ne l'a
+      // pas confirmée (PARCOURS.noterReponse). Appelé juste après
+      // appliquerReponse, avant sauverParcours.
+      function noterReponseAEnvoyer(resultat, correcte) {
+        if (VUE_PROF || !suiviActif() || !resultat || !resultat.fait) return;
+        const fait = resultat.parcours.calculs[resultat.fait.cle];
+        PARCOURS.noterReponse(storage(), codeSuivi, resultat.fait.cle, {correcte, date: fait && fait.vu, epoque: resultat.parcours.epoque});
+      }
+
+      // « Recommencer à zéro » : rien d'avant ne se rejoue.
+      function oublierReponsesAEnvoyer() {
+        if (VUE_PROF || !suiviActif()) return;
+        PARCOURS.oublierReponses(storage(), codeSuivi, parcours.epoque);
+      }
+
+      // L'état du serveur arrive (409, lecture à l'ouverture). File sûre :
+      // les calculs que cet appareil a joués depuis le dernier envoi confirmé
+      // sont REJOUÉS sur l'état du serveur (PARCOURS.rebaser), et la case est
+      // réécrite telle quelle — la refusionner avec la case d'avant ferait
+      // revenir la boîte périmée (relecture Codex de la #1046, réserve 2.A :
+      // la vieille copie en 5 qui rate sur un serveur en 2 donnait 1, puis 4
+      // à la sauvegarde). Ce que l'appareil sait d'autre (tables, mélanges,
+      // un autre onglet) passe par la case : on part de case + mémoire.
+      // File pas sûre (appareil d'avant ce lot, jusqu'à son premier envoi
+      // confirmé ; file débordée) : la fusion des états, comme avant.
+      // Rend le parcours obtenu, déjà rangé dans la case.
+      function rejoindreServeur(distant) {
+        const local = PARCOURS.fusionner(PARCOURS.charger(storage(), codeSuivi), parcours);
+        const epoque = Math.max(local.epoque, distant.epoque);
+        // Invalider durablement la file AVANT de ranger la nouvelle époque.
+        // Une fermeture ou un envoi raté ne doit pas ressusciter l'ancien jeu.
+        if (PARCOURS.chargerReponses(storage(), codeSuivi).epoque < epoque) {
+          PARCOURS.oublierReponses(storage(), codeSuivi, epoque);
+        }
+        const file = PARCOURS.chargerReponses(storage(), codeSuivi);
+        if (!file.sure || file.epoque !== local.epoque) {
+          parcours = PARCOURS.fusionner(parcours, distant);
+          sauverCase();
+          return parcours;
+        }
+        parcours = PARCOURS.rebaser(local, distant, file.liste);
+        PARCOURS.sauver(storage(), parcours, codeSuivi);
+        return parcours;
       }
 
       function sauverParcours() {
@@ -4385,13 +4440,15 @@
           suiviHorsLigne = reponse.statut !== 200 || !reponse.donnees || !reponse.donnees.ok;
           if (!suiviHorsLigne && reponse.donnees.existe) {
             const distant = PARCOURS.normaliserParcours(reponse.donnees.parcours);
-            const fusion = PARCOURS.fusionner(parcours, distant);
+            const jusqua = PARCOURS.chargerReponses(storage(), code).dernier;
+            const fusion = rejoindreServeur(distant);
             sync.revision = Number.isInteger(reponse.donnees.revision) ? reponse.donnees.revision : 0;
             // On ne renvoie que si cet appareil apporte quelque chose : sinon
             // chaque ouverture ferait monter la révision pour rien.
             const apporte = sync.dirty || JSON.stringify(paquetParcours("", fusion)) !== JSON.stringify(paquetParcours("", distant));
-            parcours = fusion;
-            sauverCase();
+            // Rien à apporter : le serveur sait déjà tout ce que sait
+            // l'appareil — la file est vidée, et sûre à partir d'ici.
+            if (!apporte) PARCOURS.reponsesParties(storage(), code, jusqua, fusion.epoque);
             sync.dirty = apporte;
             sauverSync();
             if (apporte) envoyerParcours();
@@ -5182,6 +5239,7 @@
         ecrireAppliques(evalSerie.graines, evalSerie.appliques);
         const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte});
         parcours = resultat.parcours;
+        noterReponseAEnvoyer(resultat, correcte);
         if (!correcte) {
           const premier = Number(question.first);
           const second = Number(question.second);
@@ -8359,6 +8417,7 @@
         }
         if (!resultat.fait) return;
         parcours = resultat.parcours;
+        noterReponseAEnvoyer(resultat, correcte);
         // Pour le bilan de la révision : ce qui monte, ce qui redescend.
         if (resultat.fait.monte) state.revisionMontes = (state.revisionMontes || 0) + 1;
         if (resultat.fait.descend) state.revisionDescendus = (state.revisionDescendus || 0) + 1;
@@ -11556,6 +11615,7 @@
       $("parcours-confirm-yes").addEventListener("click", () => {
         if (VUE_PROF) return;
         parcours = PARCOURS.remettreAZero(parcours);
+        oublierReponsesAEnvoyer();
         // « Recommencer à zéro » efface aussi ce que le professeur voit :
         // on renvoie le parcours vide avant de tout oublier.
         sauverParcours();
