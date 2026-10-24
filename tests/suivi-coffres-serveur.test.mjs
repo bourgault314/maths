@@ -12,8 +12,8 @@ const lire = chemin => readFileSync(new URL(`../${chemin}`, import.meta.url), "u
 const catalogue = lire("_serveur/public/lib/applis.php");
 
 test("l'API élève accepte « coffres », et le professeur peut le proposer à une classe (sinon la création la retire en silence)", () => {
-  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'automatismes', 'splat'\];/);
-  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'automatismes', 'splat'\];/);
+  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/);
+  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/);
 });
 
 test("les réglages « liste de numéros ouverts » sont généraux : mondes de SPLAT!, niveaux et opérations de Coffres, chacun avec ses mots", () => {

@@ -20,6 +20,7 @@ function version_moteur(string $fichier): string
 $versionMoteur = version_moteur('defi_tables_mon_parcours.js');
 $versionSplat = version_moteur('splat-parcours.js');
 $versionCoffres = version_moteur('coffres-parcours.js');
+$versionAnzan = version_moteur('flash_anzan_parcours.js');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -406,6 +407,18 @@ $versionCoffres = version_moteur('coffres-parcours.js');
       + '<rect x="9" y="18.5" width="28" height="4" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.4"/>'
       + '<rect x="19.5" y="20.5" width="7" height="9" rx="1.6" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.4"/>'
       + '<path d="M23 23.4v3.2" stroke="#62412d" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026, idée de Gwenaël) : le
+    // soroban de la vignette du site — le cadre et la barre bleu nuit, les
+    // perles vert d'eau quand elles comptent (3 tiges, 1 + 3 perles : à 40 px,
+    // les 4 perles du bas se touchent). Il affiche 2, 7, 4.
+    "flash-anzan":
+      '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
+      + '<rect width="46" height="46" rx="12" fill="#eaf1fa"/>'
+      + '<rect x="7.5" y="9.5" width="31" height="27" rx="3.5" fill="#fff" stroke="#10294a" stroke-width="2.4"/>'
+      + '<g stroke="#9fb4c4" stroke-width="1.4"><path d="M15 11v24M23 11v24M31 11v24"/></g>'
+      + '<rect x="12" y="11.6" width="6" height="3" rx="1.5" fill="#c9d8e4"/><rect x="12" y="31.8" width="6" height="3" rx="1.5" fill="#c9d8e4"/><rect x="12" y="28.4" width="6" height="3" rx="1.5" fill="#c9d8e4"/><rect x="20" y="31.8" width="6" height="3" rx="1.5" fill="#c9d8e4"/><rect x="20" y="28.4" width="6" height="3" rx="1.5" fill="#c9d8e4"/><rect x="28" y="11.6" width="6" height="3" rx="1.5" fill="#c9d8e4"/>'
+      + '<rect x="12" y="20.4" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="12" y="23.8" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="20" y="14.6" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="20" y="20.4" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="20" y="23.8" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="28" y="20.4" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="28" y="23.8" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="28" y="27.2" width="6" height="3" rx="1.5" fill="#087a71"/><rect x="28" y="30.6" width="6" height="3" rx="1.5" fill="#087a71"/>'
+      + '<rect x="7.5" y="18" width="31" height="2" fill="#10294a"/></svg>',
     // Automatismes : LE MÉTRONOME de la bibliothèque d'icônes du site
     // (assets/js/mathsgo-icon-library.js, clé « automatismes »), repris tel
     // quel — c'est le dessin déjà utilisé partout ailleurs sur mathsgo.re.
@@ -614,6 +627,20 @@ $versionCoffres = version_moteur('coffres-parcours.js');
             bonus: ligne.cles !== null ? `\u{1F511} ${ligne.cles} / ${ligne.total}` : ""
           }))
         };
+      }
+    },
+    // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026, choix de Gwenaël) :
+    // une seule ligne, « 230 calculs · 5 jours d'entraînement » — on compte
+    // des calculs, pas des séances (une séance fait 5, 10 ou 20 calculs), et
+    // des jours distincts. Rien tant qu'aucun calcul n'est fait. Les mots
+    // sont ceux du moteur (texteResume) : les mêmes dans « Mon historique ».
+    "flash-anzan": {
+      url: "prof/flash_anzan_parcours.js?v=<?= htmlspecialchars($versionAnzan, ENT_QUOTES) ?>",
+      global: "MathsGoFlashAnzanParcours",
+      lecteur: (P, brut) => {
+        const resume = P.resumeTuile(brut);
+        if (resume.vide) return null;
+        return {lignes: [{texte: resume.texte, bonus: ""}]};
       }
     }
   };

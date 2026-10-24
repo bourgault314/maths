@@ -19,7 +19,9 @@ const TAILLE_MAX_PROGRESSION = 40000; // octets
 // SPLAT! (lot « splat-suivi-3 », 07/10/2026) : la carte des mondes et ses trois
 // outils enregistrent sous « splat » (assets/js/splat-parcours.js). Coffres
 // magiques solo (21/10/2026) sous « coffres » (assets/js/coffres-parcours.js).
-const APPLIS_CONNUES = ['defi-tables', 'coffres', 'automatismes', 'splat'];
+// Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026) sous « flash-anzan »
+// (outils/calcul_mental/flash_anzan_parcours.js).
+const APPLIS_CONNUES = ['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'];
 
 function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 {

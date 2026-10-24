@@ -436,7 +436,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // 61 au manifeste (avant : defi-tables-fusion-appareil-ancien).
   // Puis « Défi tables : fusion jours différents » (23/10/2026 au soir) : le moteur copié
   // pour Ma classe change, 61 au manifeste (avant : elision-prenoms).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-fusion-jours-differents$/m);
+  // Puis « Qui voit quoi », lot 4a « Anzan » (23/10/2026) : lib/applis.php,
+  // api/prof.php, api/parcours.php, index.php, verifier.php et la copie du
+  // moteur prof/flash_anzan_parcours.js, 62 au manifeste (avant :
+  // defi-tables-fusion-jours-differents).
+  assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-anzan$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

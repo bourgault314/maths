@@ -56,17 +56,18 @@ test("les clés de « splat » sont exactement CLES_SERVEUR du moteur ; ni mots,
 
 test("« splat » remplace « splat-equations », à la même place du catalogue", () => {
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
-  // Coffres magiques juste après Défi tables (lot « Coffres magiques sur le suivi », 21/10/2026).
-  assert.deepEqual(cles, ["defi-tables", "coffres", "defi-calcul", "automatismes", "splat", "soley"]);
+  // Coffres magiques juste après Défi tables (lot « Coffres magiques sur le suivi », 21/10/2026),
+  // puis Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026).
+  assert.deepEqual(cles, ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "automatismes", "splat", "soley"]);
   for (const chemin of ["_serveur/public/lib/applis.php", "_serveur/public/api/parcours.php", "_serveur/public/api/prof.php"]) {
     assert.doesNotMatch(lire(chemin).replace(/\/\/[^\n]*/g, ""), /'splat-equations'/, `${chemin} : plus de « splat-equations » dans le code`);
   }
 });
 
 test("l'API élève accepte « splat », et le professeur peut le proposer à une classe", () => {
-  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
     "sans « splat » ici, le premier envoi du site répondrait « 400 Application inconnue »");
-  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
     "« Ma classe » et « Activités de la classe » (lot 4) passent par cette liste");
 });
 

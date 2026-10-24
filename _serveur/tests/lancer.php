@@ -592,11 +592,12 @@ verifier("le manifeste connaît la page Infos", function () {
     // 60 depuis les évaluations en classe (lot E1, 15/10/2026) : lib/evaluation.php
     // et la copie du noyau de Défi tables, prof/defi_tables_core.js.
     // 61 depuis Coffres magiques sur le suivi (21/10/2026) : la copie du moteur
-    // de parcours, prof/coffres-parcours.js.
-    vrai((bool)preg_match('/^fichiers 61$/m', $manifeste),
-        'le serveur compte 61 fichiers depuis Coffres magiques sur le suivi');
+    // de parcours, prof/coffres-parcours.js. 62 depuis Anzan (lot « Qui voit
+    // quoi », lot 4a, 23/10/2026) : prof/flash_anzan_parcours.js.
+    vrai((bool)preg_match('/^fichiers 62$/m', $manifeste),
+        'le serveur compte 62 fichiers depuis Anzan sur le suivi');
     foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
-              'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js',
+              'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
               'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
               'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
@@ -4612,7 +4613,7 @@ verifier("coffres-suivi — le catalogue déclare exactement ce que le moteur ex
     vrai((bool)preg_match('#const NOMBRE_NIVEAUX = (\d);#', $moteur, $mn) && (int)$mn[1] === CATALOGUE_APPLIS['coffres']['reglages']['niveaux'], 'autant de niveaux que le moteur');
     vrai((bool)preg_match('#const NOMBRE_OPERATIONS = (\d);#', $moteur, $mo) && (int)$mo[1] === CATALOGUE_APPLIS['coffres']['reglages']['operations'], 'autant d’opérations que le moteur');
     egal([], CATALOGUE_APPLIS['coffres']['mots'], 'aucun mot : le parcours n’a que des nombres, des booléens et des dates');
-    egal(['defi-tables', 'coffres', 'defi-calcul', 'automatismes', 'splat', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables : l’ordre des tuiles');
+    egal(['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables, puis Anzan (lot 4a, 23/10/2026) : l’ordre des tuiles');
 });
 
 // ------------------------------------------------ lot « Qui voit quoi » (22/10/2026)
@@ -6665,6 +6666,142 @@ verifier("évaluations — Ma classe porte la carte, ses deux boîtes, et charge
     $fin = strpos($r['texte'], 'Les records (lot du 09/10/2026)');
     vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de la carte est là');
     vrai(!str_contains(substr($r['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans la carte');
+});
+
+// -------------------------------- lot « Qui voit quoi », lot 4a : Anzan (23/10/2026)
+//
+// Le serveur apprend Anzan : la clé « flash-anzan », juste après Coffres au
+// catalogue, ses clés déclarées (les réglages de l'élève par mode, les séances
+// — des listes de douze scalaires sous un numéro), ses mots (les modes, les
+// opérations, le son), la copie du moteur dans prof/, et aucun réglage de
+// classe. Rien ne change chez l'élève ni chez le professeur tant qu'aucune
+// classe ni aucun élève (eleves.acces) n'a « flash-anzan ».
+
+verifier("anzan-suivi — le parcours de référence d'Anzan ressort identique du filtre du serveur", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $chemin = __DIR__ . '/parcours-reference-anzan.json';
+    vrai(is_file($chemin), "tests/parcours-reference-anzan.json manque : node scripts/generer-parcours-reference-anzan.mjs");
+    $texte = (string)file_get_contents($chemin);
+    $attendu = json_encode(json_decode($texte, false), JSON_UNESCAPED_UNICODE);
+    $obtenu = json_encode(filtrer_progression('flash-anzan', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
+    egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Anzan produit : compléter 'cles'/'mots'/'motifs' de « flash-anzan » dans lib/applis.php");
+    $reference = json_decode($texte, false);
+    egal(10, count(get_object_vars($reference->seances)), 'dix séances');
+    egal('colonne', $reference->reglages->mode, 'le mode choisi');
+    egal(12, count($reference->seances->{'7'}), 'une séance = douze scalaires (les deux derniers : son identifiant et son ordre)');
+    vrai($reference->seances->{'7'}[8] < $reference->seances->{'7'}[7], 'la séance 7 est arrêtée : moins de calculs faits (7) que prévus (10)');
+    egal(10, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
+    vrai(strlen($attendu) < 2000, 'dix séances pèsent moins de 2 ko : 500 tiennent sous la borne de 40 ko');
+});
+
+verifier("anzan-suivi — un texte, une clé étrangère, un numéro de séance hors motif, une liste de listes sont retirés", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $propre = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-anzan.json'), false);
+    $attendu = json_encode($propre, JSON_UNESCAPED_UNICODE);
+    $sale = json_decode($attendu, false);
+    $sale->prenom = 'Rania';
+    $sale->reglages->flash->note = 'super';
+    $sale->reglages->flash->son = 'trompette';
+    $sale->seances->{'0'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 1];
+    $sale->seances->{'12345'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 1];
+    $sale->seances->{'abc'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 1];
+    $sale->seances->{'11'} = ['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 11, 'mardi', [1, 2], 'Rania'];
+    $sale->calculs = ['347+28', '512-99'];
+    $sale->reponses = [375, 413];
+    $obtenu = filtrer_progression('flash-anzan', $sale);
+    vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
+    vrai(!isset($obtenu->reglages->flash->note), 'un texte dans les réglages saute');
+    vrai(!isset($obtenu->reglages->flash->son), 'un son hors de la liste saute');
+    vrai(!isset($obtenu->seances->{'0'}) && !isset($obtenu->seances->{'12345'}) && !isset($obtenu->seances->{'abc'}), 'un numéro hors motif saute');
+    egal(['2026-10-22', 'flash', 'plus', 2, 3, 10, 8, 10, 10, 10, 4242, 11], $obtenu->seances->{'11'}, 'dans une séance, un texte libre et une liste imbriquée sont retirés ; le moteur, lui, ne garde que les douze premiers champs');
+    vrai(!isset($obtenu->reponses), 'les réponses de l’élève ne sont jamais gardées');
+    vrai(isset($obtenu->calculs) && $obtenu->calculs === [], 'la clé « calculs » existe (le nombre de calculs d’un réglage) mais aucun texte n’y entre');
+    $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
+    vrai(!str_contains($texte, 'Rania') && !str_contains($texte, 'super') && !str_contains($texte, '347') && !str_contains($texte, 'mardi'), 'aucun texte libre ne ressort');
+    // Le filtre est propre à chaque appli : un parcours Anzan envoyé sous
+    // « coffres » ne laisse passer ni séance ni mode.
+    $sousCoffres = json_encode(filtrer_progression('coffres', $propre));
+    vrai(!str_contains($sousCoffres, 'seances') && !str_contains($sousCoffres, 'flash'), 'les séances d’Anzan ne sont pas des clés de Coffres');
+});
+
+$classeAnzan = null;
+verifier("anzan-suivi — Anzan s'enregistre et se relit par l'API élève, à sa place du catalogue, et se donne à un seul élève", function () use (&$jetonS1, &$classeAnzan) {
+    vider_compteurs();
+    // Une classe qui a Anzan en entier (un professeur peut l'ouvrir à toute une classe).
+    $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-anzan', 'applis' => ['splat', 'flash-anzan', 'defi-tables', 'coffres']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'classe créée avec Anzan');
+    $classe = $r['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classeAnzan = ['id' => $classe, 'eleves' => $eleves];
+    $code = $eleves[0]['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-anzan.json'), true);
+    egal(false, lire($code, 'flash-anzan')['json']['existe'], 'rien avant le premier envoi');
+    $w = ecrire($code, $reference, 0, 'flash-anzan');
+    egal(200, $w['code'], 'premier envoi accepté (révision 0) : ' . $w['texte']);
+    egal(1, $w['json']['revision']);
+    $r = lire($code, 'flash-anzan');
+    egal(true, $r['json']['existe']);
+    egal($reference, $r['json']['parcours'], 'relu exactement tel que le moteur l’a envoyé');
+    egal(false, lire($code, 'coffres')['json']['existe'], 'Coffres du même élève n’a pas bougé');
+    $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'flash-anzan'");
+    $ligne->execute([(int)$eleves[0]['id']]);
+    $compte = (int)$ligne->fetchColumn();
+    $ligne->closeCursor();
+    egal(10, $compte, 'la version du jour est comptée en séances');
+    $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'flash-anzan'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le tableau de la classe se demande pour Anzan');
+    $lu = null;
+    foreach ($r['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['seances'] ?? []) === 10,
+        'le tableau rend le parcours Anzan de l’élève, ses séances comprises');
+    // L'ordre de la liste de la classe est celui du catalogue : Anzan juste après Coffres.
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];
+    $trouvee = null;
+    foreach ($classes as $c) if ((int)$c['id'] === (int)$classe) $trouvee = $c;
+    egal(['defi-tables', 'coffres', 'flash-anzan', 'splat'], $trouvee['applis'], 'Anzan entre Coffres et SPLAT!, quel que soit l’ordre envoyé');
+    $e = identite($code);
+    egal(200, $e['code'], 'l’identité par le code : ' . $e['texte'] . ' ' . $e['erreur_curl']);
+    $applis = $e['json']['applis'] ?? [];
+    egal(['defi-tables', 'coffres', 'flash-anzan', 'splat'], array_column($applis, 'cle'), 'l’espace élève reçoit les quatre tuiles dans cet ordre');
+    egal(['cle' => 'flash-anzan', 'nom' => 'Anzan', 'description' => 'Le calcul mental du soroban, en Flash ou en Colonne.',
+        'url' => 'https://mathsgo.re/outils/calcul_mental/flash_anzan.html', 'ancre' => null, 'disponible' => true], $applis[2],
+        'la tuile : le nom « Anzan » (choix du 22/10), la phrase convenue, l’adresse ; pas de « cles » ni de « motifs »');
+    vrai(!str_contains($e['texte'], 'flash-anzan":{'), 'aucun réglage de classe pour Anzan : rien dans « reglages »');
+    // Décochée pour la classe : la tuile disparaît, le parcours reste.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe, 'applis' => ['defi-tables', 'coffres', 'splat']], ['jeton' => $jetonS1]);
+    egal(['defi-tables', 'coffres', 'splat'], array_column(identite($code)['json']['applis'], 'cle'), 'décochée : la tuile disparaît de l’espace élève');
+    egal(true, lire($code, 'flash-anzan')['json']['existe'], 'et son parcours reste en base');
+    // Donnée à un seul élève (« Ce que voit Rania », lot 2) : lui seul la voit.
+    $r = donner((int)$eleves[0]['id'], ['flash-anzan' => new stdClass()], $jetonS1);
+    egal(200, $r['code'], 'eleves.acces accepte « flash-anzan » : ' . $r['texte']);
+    egal(['flash-anzan' => []], $r['json']['ajouts'], 'le rangé');
+    egal(['applis' => ['defi-tables', 'coffres', 'flash-anzan', 'splat'], 'reglages' => []], $r['json']['acces'], 'le calculé : la classe + Anzan');
+    egal(['defi-tables', 'coffres', 'flash-anzan', 'splat'], array_column(identite($code)['json']['applis'], 'cle'), 'Rania voit Anzan, à sa place du catalogue');
+    egal(['defi-tables', 'coffres', 'splat'], array_column(identite($eleves[1]['code'])['json']['applis'], 'cle'), 'sa camarade ne voit rien de plus');
+    // Un réglage « liste » pour Anzan n'existe pas : refusé.
+    $r = donner((int)$eleves[0]['id'], ['flash-anzan' => ['mondes' => [1]]], $jetonS1);
+    egal(400, $r['code'], 'Anzan n’a pas de réglage à donner par morceaux');
+    vrai(str_contains($r['texte'], 'Réglage inconnu.'), $r['texte']);
+    // L'onglet Anzan de la classe s'ouvre, même si la classe n'a plus Anzan : Rania y est.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'flash-anzan'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'le tableau Anzan d’une classe sans Anzan');
+    egal(2, count($t['json']['eleves']), 'la classe entière y est listée');
+});
+
+verifier("anzan-suivi — le billet d'entrée s'échange pour « flash-anzan », et le moteur est servi d'ici", function () use (&$classeAnzan) {
+    $code = $classeAnzan['eleves'][0]['code'];
+    $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+    $b = echanger($billet, ['appli' => 'flash-anzan']);
+    egal(200, $b['code'], 'l’échange : ' . $b['texte']);
+    egal('entree', $b['json']['type']);
+    egal($code, $b['json']['code'], 'le code revient à l’appli, dans le corps');
+    $r = page('/prof/flash_anzan_parcours.js');
+    egal(200, $r['code'], 'prof/flash_anzan_parcours.js est servi');
+    vrai(str_contains($r['texte'], 'MathsGoFlashAnzanParcours'), 'et c’est bien le moteur');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur Anzan servi localement#u', $v['texte']), 'verifier.php a sa ligne « Moteur Anzan servi localement », verte');
 });
 
 // ---------------------------------------------------------------------- résultat

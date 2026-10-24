@@ -73,6 +73,16 @@ class El {
     }
   }
   get id() { return this.attrs.id || ""; }
+  set id(v) { this.attrs.id = String(v); }
+  get href() { return this.attrs.href || ""; }
+  set href(v) { this.attrs.href = String(v); }
+  get type() { return this.attrs.type || ""; }
+  set type(v) { this.attrs.type = String(v); }
+  get src() { return this.attrs.src || ""; }
+  set src(v) { this.attrs.src = String(v); }
+  set alt(v) { this.attrs.alt = String(v); }
+  set width(v) { this.attrs.width = String(v); }
+  set height(v) { this.attrs.height = String(v); }
   get className() { return this.classList.toString(); }
   set className(v) { this.classList = new Classes(v); }
   get textContent() { return this._texte; }
@@ -89,6 +99,13 @@ class El {
   addEventListener(type, fn) { (this.ecouteurs[type] ||= []).push(fn); }
   appendChild(e) { e.parent = this; this.children.push(e); return e; }
   removeChild(e) { this.children = this.children.filter(x => x !== e); e.parent = null; return e; }
+  // L'habillage du suivi (flash_anzan_suivi.js) construit le bloc, le pied et
+  // la garde élément par élément : append, replaceChildren, remove, des nœuds texte.
+  append(...nodes) { nodes.forEach(n => { if (typeof n === "string") n = this.ecran.document.createTextNode(n); n.parent = this; this.children.push(n); }); }
+  replaceChildren(...nodes) { this.children.forEach(c => { c.parent = null; }); this.children = []; this.append(...nodes); }
+  remove() { if (this.parent) this.parent.removeChild(this); }
+  // Le texte lu, enfants compris (ce que l'élève lit dans le bloc de suivi).
+  get texteLu() { return this._html !== null ? this._texte : this._texte + this.children.map(c => (c.texteLu !== undefined ? c.texteLu : c.textContent || "")).join(""); }
   getBoundingClientRect() { return {width: 60, height: 60, top: 0, left: 0, right: 60, bottom: 60}; }
   get clientWidth() { return 360; }
   get clientHeight() { return 420; }
@@ -99,7 +116,7 @@ class El {
     for (let e = this; e; e = e.parent) if (e.correspond(selecteur)) return e;
     return null;
   }
-  *descendants() { for (const c of this.children) { yield c; yield* c.descendants(); } }
+  *descendants() { for (const c of this.children) { if (!c.descendants) continue; yield c; yield* c.descendants(); } }
   querySelectorAll(selecteur) { return [...this.descendants()].filter(e => e.correspond(selecteur)); }
   querySelector(selecteur) { return this.querySelectorAll(selecteur)[0] || null; }
   click() {
@@ -166,7 +183,9 @@ function construireEcran(html) {
     querySelectorAll: s => body.querySelectorAll(s),
     querySelector: s => body.querySelector(s),
     createElement: tag => new El(ecran, tag),
-    addEventListener(type, fn) { (this.ecouteurs[type] ||= []).push(fn); }
+    createTextNode: texte => ({textContent: String(texte), parent: null}),
+    addEventListener(type, fn) { (this.ecouteurs[type] ||= []).push(fn); },
+    get visibilityState() { return this.hidden ? "hidden" : "visible"; }
   };
   ecran.diffuser = (cible, type, donnees) => {
     const ev = {type, target: cible, defaultPrevented: false, repeat: false, ...donnees};
@@ -184,11 +203,52 @@ function construireEcran(html) {
 // ---------------------------------------------------------------------------
 const IMAGE = 1000 / 60;
 
-function ouvrir(memoire, {largeur = 390} = {}) {
+// Le suivi de classe (lot « Qui voit quoi », lot 4a, 23/10/2026) : le moteur
+// et l'habillage, chargés dans la fenêtre simulée quand le test le demande
+// (`suivi: {}` — sans code ; `suivi: {code, serveur}` — l'élève venu de son
+// espace, son code déjà dans l'onglet, un faux serveur qui répond).
+const PARCOURS = require("../outils/calcul_mental/flash_anzan_parcours.js");
+const HABILLAGE = require("../outils/calcul_mental/flash_anzan_suivi.js");
+const RANIA = {prenom: "Rania", classe: "405"};
+
+// Un faux serveur de suivi : l'identité, l'échange d'un billet (rendu tout de
+// suite, ou RETENU jusqu'à livrerBillet() — un serveur qui tarde), la lecture
+// du parcours (celui qu'on lui donne), et il garde tout ce qu'on lui envoie.
+function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
+  const envois = [];
+  const billets = [];
+  let revision = parcoursDistant ? 1 : 0;
+  const reponse = (status, donnees) => Promise.resolve({status, json: () => Promise.resolve(donnees), headers: {get: () => null}});
+  const fetch = (url, options) => {
+    const corps = options && options.body ? JSON.parse(options.body) : {};
+    if (/\/api\/eleve\.php$/.test(url) && corps.billet) {
+      const entree = {ok: true, type: "entree", code: "ABCDEF", ...RANIA};
+      if (!billetRetenu) return reponse(200, entree);
+      return new Promise(resolve => billets.push(() => reponse(200, entree).then(resolve)));
+    }
+    if (/\/api\/eleve\.php$/.test(url)) return reponse(200, {ok: true, ...RANIA, applis: [], reglages: {}});
+    if (/\/api\/parcours\.php$/.test(url)) {
+      if (corps.lire) return reponse(200, parcoursDistant ? {ok: true, existe: true, parcours: parcoursDistant, revision} : {ok: true, existe: false});
+      envois.push(corps);
+      revision += 1;
+      return reponse(200, {ok: true, revision});
+    }
+    return reponse(404, {});
+  };
+  return {fetch, envois, dernier: () => (envois.length ? envois[envois.length - 1] : null),
+    billetsRetenus: () => billets.length, livrerBillet: () => { const b = billets.shift(); if (b) b(); }};
+}
+
+// `suivi: {billet, serveur}` — l'élève arrive de son espace avec un billet
+// dans l'adresse (lu par l'amorce du <head>, ici donné tel quel), pas encore
+// de code dans l'onglet.
+function ouvrir(memoire, {largeur = 390, suivi = null} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
   const stockage = new Map(memoire ? [["mathsgo-flash-anzan-v1", JSON.stringify(memoire)]] : []);
+  const onglet = new Map(suivi && suivi.code ? [["mathsgo-suivi-code", suivi.code]] : []);
+  const serveur = suivi && (suivi.code || suivi.billet) ? (suivi.serveur || fauxServeur()) : null;
   class Audio {
     constructor() { this.state = "running"; this.destination = {}; }
     get currentTime() { return horloge.t / 1000; }
@@ -211,8 +271,16 @@ function ouvrir(memoire, {largeur = 390} = {}) {
     localStorage: {
       getItem: k => (stockage.has(k) ? stockage.get(k) : null),
       setItem: (k, v) => stockage.set(k, String(v)),
-      removeItem: k => stockage.delete(k)
+      removeItem: k => stockage.delete(k),
+      get length() { return stockage.size; },
+      key: i => [...stockage.keys()][i]
     },
+    sessionStorage: {
+      getItem: k => (onglet.has(k) ? onglet.get(k) : null),
+      setItem: (k, v) => onglet.set(k, String(v)),
+      removeItem: k => onglet.delete(k)
+    },
+    location: {hash: "", pathname: "/outils/calcul_mental/flash_anzan.html", search: "", assign() {}, reload() {}},
     setTimeout: (fn, ms) => { const id = horloge.prochain++; horloge.minuteries.push({id, a: horloge.t + ms, fn}); return id; },
     clearTimeout: id => { horloge.minuteries = horloge.minuteries.filter(x => x.id !== id); },
     requestAnimationFrame: fn => { const id = horloge.prochain++; horloge.images.push({id, fn}); return id; },
@@ -226,6 +294,15 @@ function ouvrir(memoire, {largeur = 390} = {}) {
     console
   };
   ctx.window = ctx;
+  if (suivi && suivi.billet) ctx.MATHSGO_ENTREE = {billet: suivi.billet};
+  if (suivi) {
+    ctx.MathsGoFlashAnzanParcours = PARCOURS;
+    // L'habillage prend la fenêtre de la page (ici la simulée), et le faux serveur.
+    ctx.MathsGoFlashAnzanSuivi = {
+      ADRESSE_ESPACE: HABILLAGE.ADRESSE_ESPACE,
+      creer: options => HABILLAGE.creer({...options, moteur: PARCOURS, fenetre: ctx, document: ecran.document, navigator: ctx.navigator, fetch: serveur ? serveur.fetch : null})
+    };
+  }
   vm.createContext(ctx);
   vm.runInContext("Math.random = () => 0.5;", ctx);
   const script = PAGE.slice(PAGE.lastIndexOf("<script>") + "<script>".length, PAGE.lastIndexOf("</script>"));
@@ -237,6 +314,10 @@ function ouvrir(memoire, {largeur = 390} = {}) {
     horloge,
     oscillateurs,
     stockage,
+    onglet,
+    serveur,
+    // Laisse passer les promesses (le faux serveur répond en asynchrone).
+    async souffler(n = 6) { for (let i = 0; i < n; i += 1) await new Promise(resolve => setImmediate(resolve)); },
     // Avance le temps : les minuteries tombent à leur heure, les images à
     // chaque 1/60 s (sauf si images:false — un affichage figé).
     avancer(ms, {images = true} = {}) {
@@ -684,4 +765,192 @@ test("chaque mode garde ses réglages ; une mémoire abîmée ne casse rien", ()
   assert.equal(garde.mode, "flash");
   assert.equal(garde.colonne.nombres, 9);
   assert.equal(garde.flash.nombres, 30);
+});
+
+// ---------------------------------------------------------------------------
+// Le suivi de classe (lot « Qui voit quoi », lot 4a, 23/10/2026)
+// ---------------------------------------------------------------------------
+const texte = el => el.texteLu.replace(/\s+/g, " ").trim();
+
+test("sans code, rien ne change : moteur chargé ou pas, pas de bloc, pas d'historique, les réglages sur l'appareil, rien n'est envoyé", () => {
+  const p = ouvrir(memoireFlash, {suivi: {}});
+  assert.equal(p.$("suivi-repere").hidden, true);
+  assert.equal(p.$("vers-historique").hidden, true);
+  assert.equal(p.$("suivi-pastille-slot").innerHTML, "");
+  assert.equal(p.$("lien-retour").getAttribute("href"), "../index.html?domain=nombres-calculs&amp;notion=calcul-mental", "la flèche mène au calcul mental");
+  p.$("partir").click();
+  p.avancer(DUREE_FLASH);
+  p.taper(calculsAttendus("flash", FLASH)[0].total);
+  p.$("valider").click();
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("envoi-fin").hidden, true, "pas de « Envoyé à ton professeur »");
+  assert.ok(![...p.stockage.keys()].some(k => k.startsWith("mathsgo-anzan-")), "aucune case de suivi : la séance sans code n'est pas gardée");
+  p.$("vers-reglages").click();
+  p.$("ecran-reglages").querySelector("[data-mode=colonne]").click();
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).mode, "colonne", "les réglages restent sur l'appareil");
+});
+
+test("sous un code : le bloc de suivi, la flèche vers Mon espace, les réglages du compte (pas ceux de l'appareil)", async () => {
+  const distant = PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "colonne", flash: {...FLASH, nombres: 7}, colonne: COLONNE});
+  const serveur = fauxServeur(distant);
+  // L'appareil garde d'autres réglages (un autre élève, sans code) : ils ne comptent pas.
+  const p = ouvrir({mode: "flash", flash: {...FLASH, nombres: 12}}, {suivi: {code: "ABCDEF", serveur}});
+  await p.souffler();
+  assert.equal(p.$("suivi-repere").hidden, false, "le bloc de suivi est là");
+  assert.match(texte(p.$("suivi-repere")), /Suivi par ton professeur.*Rania.*405.*Se déconnecter/, "le modèle commun");
+  assert.equal(p.$("lien-retour").getAttribute("href"), "https://suivi.mathsgo.re/", "la flèche du cadre mène à Mon espace");
+  assert.equal(p.$("lien-retour").getAttribute("aria-label"), "Retour à mon espace");
+  assert.equal(p.$("ecran-reglages").querySelector("[data-mode=colonne]").getAttribute("aria-pressed"), "true", "le mode du compte");
+  p.$("ecran-reglages").querySelector("[data-mode=flash]").click();
+  assert.equal(p.$("val-nombres").textContent, "7", "les nombres du compte, pas les 12 de l'appareil");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.nombres, 12, "la mémoire de l'appareil n'a pas bougé");
+  // Un réglage changé part sur le compte (envoi groupé 700 ms).
+  p.$("ecran-reglages").querySelector("[data-pas=nombres][data-sens='1']").click();
+  p.avancer(800);
+  await p.souffler();
+  const envoye = serveur.dernier();
+  assert.ok(envoye && envoye.appli === "flash-anzan" && envoye.code === "ABCDEF", "envoyé sous « flash-anzan »");
+  assert.equal(envoye.parcours.reglages.flash.nombres, 8, "le compte a le nouveau réglage");
+  assert.equal(envoye.parcours.reglages.mode, "flash");
+  assert.deepEqual(envoye.parcours.seances, {}, "aucune séance encore");
+  assert.equal(p.$("vers-historique").hidden, true, "pas d'historique sans calcul fait");
+  assert.equal(PARCOURS.clesRevelentUnCode({length: p.stockage.size, key: i => [...p.stockage.keys()][i]}), false, "aucune clé ne laisse lire le code");
+});
+
+test("sous un code : chaque calcul validé note la séance (jamais les calculs), la flèche la laisse « arrêtée », « Envoyé à ton professeur », puis Mon historique", async () => {
+  const serveur = fauxServeur(PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "flash", flash: FLASH}));
+  const p = ouvrir(null, {suivi: {code: "ABCDEF", serveur}});
+  await p.souffler();
+  const attendus = calculsAttendus("flash", FLASH);
+  p.$("partir").click();
+  assert.equal(p.$("suivi-repere").hidden, false, "le bloc reste dans la page…");
+  assert.match(p.$("suivi-pastille-slot").innerHTML, /suivi-pastille[\s\S]*Rania/, "…et la pastille « ● Rania » est posée dans la barre de la séance (le bloc est caché par le style en séance)");
+  // Calcul 1 : juste. Calcul 2 : faux.
+  p.avancer(DUREE_FLASH);
+  p.taper(attendus[0].total);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  let envoye = serveur.dernier();
+  const jour = PARCOURS.jourLocal(Date.now());
+  const id = envoye.parcours.seances["1"][10];
+  assert.ok(Number.isInteger(id) && id >= 1 && id <= PARCOURS.ID_MAX, "la séance a son identifiant");
+  assert.deepEqual(envoye.parcours.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1, id, 1]}, "après un calcul : 1 fait, 1 juste, 5 prévus, ordre 1");
+  assert.doesNotMatch(JSON.stringify(envoye), new RegExp(String(attendus[0].total)), "le résultat du calcul ne part pas");
+  p.$("suivant").click();
+  p.avancer(DUREE_FLASH);
+  p.taper(attendus[1].total + 1);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  envoye = serveur.dernier();
+  assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "2 faits, 1 juste, la MÊME séance (même identifiant, numéro 1, ordre 1)");
+  assert.equal(Object.keys(envoye.parcours.seances).length, 1);
+  // La flèche : la séance s'arrête à 2 sur 5, et c'est ce qui est gardé.
+  p.$("suivant").click();
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("compte").textContent, "Séance arrêtée");
+  // « Envoyé » attend la CONFIRMATION du serveur (relecture Codex, 23/10) : la note de la fin est en route (700 ms).
+  assert.equal(p.$("envoi-fin").hidden, true, "pas encore : rien n'est confirmé");
+  p.avancer(800);
+  await p.souffler();
+  assert.equal(p.$("envoi-fin").hidden, false);
+  assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "rien de plus que ce qui était déjà noté");
+  // Mon historique : le compte, une ligne « 1/2 · arrêtée ».
+  p.$("vers-reglages").click();
+  assert.equal(p.$("vers-historique").hidden, false, "le bouton apparaît dès la première séance");
+  p.$("vers-historique").click();
+  assert.equal(p.$("ecran-historique").hidden, false);
+  assert.equal(p.$("ecran-reglages").hidden, true);
+  assert.equal(p.$("historique-compte").textContent, "2 calculs · 1 jour d’entraînement");
+  const lignes = p.$("historique-liste").children;
+  assert.equal(lignes.length, 1);
+  assert.match(texte(lignes[0]), /⚡ Flash/);
+  assert.match(texte(lignes[0]), /\+ et − · 2 à 3 chiffres · 4 nombres · 0,5 s/);
+  assert.match(texte(lignes[0]), /1\/2 ?arrêtée/, "le score sur les calculs faits, et « arrêtée »");
+  assert.equal(p.$("historique-plus").hidden, true, "pas de « séances précédentes » pour une seule séance");
+  p.$("historique-retour").click();
+  assert.equal(p.$("ecran-reglages").hidden, false);
+  // Rejouer : une NOUVELLE séance, sous le numéro 2.
+  p.$("partir").click();
+  p.avancer(DUREE_FLASH);
+  p.taper(attendus[0].total);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  assert.deepEqual(Object.keys(serveur.dernier().parcours.seances), ["1", "2"]);
+  assert.notEqual(serveur.dernier().parcours.seances["2"][10], id, "un autre identifiant (le hasard de la page est figé : idLibre prend le suivant)");
+});
+
+test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'appareil, la séance partie avant son arrivée est notée quand même, « Envoyé » une fois confirmé, puis les réglages du compte", async () => {
+  const serveur = fauxServeur(PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "flash", flash: {...FLASH, nombres: 7}}), {billetRetenu: true});
+  // L'appareil garde les réglages d'un autre élève (12 nombres) ; le serveur ne répond pas au billet.
+  const p = ouvrir({mode: "flash", flash: {...FLASH, nombres: 12}}, {suivi: {billet: "B-TARDIF", serveur}});
+  await p.souffler();
+  assert.equal(serveur.billetsRetenus(), 1, "le billet est parti, le serveur garde la réponse");
+  assert.equal(p.$("suivi-repere").hidden, true, "on ne sait pas encore qui entre : pas de bloc");
+  // Six secondes : la page part sans attendre — avec les valeurs de départ, PAS les 12 nombres de l'appareil.
+  p.avancer(6000);
+  await p.souffler();
+  assert.equal(p.$("val-nombres").textContent, "10", "les valeurs de départ, pas celles de l'appareil");
+  // Un réglage changé pendant l'attente ne s'écrit nulle part sur l'appareil.
+  p.$("ecran-reglages").querySelector("[data-pas=nombres][data-sens='1']").click();
+  assert.equal(p.$("val-nombres").textContent, "11");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.nombres, 12, "l'appareil n'a pas bougé");
+  assert.ok(![...p.stockage.keys()].some(k => k.startsWith("mathsgo-anzan-")), "et aucune case de suivi sans code connu");
+  // Elle part (11 nombres, 0,8 s, 10 calculs : les valeurs de départ), le billet arrive pendant le décompte.
+  const regl = {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 11, temps: 8, calculs: 10, son: "bip"};
+  const attendus = calculsAttendus("flash", regl);
+  p.$("partir").click();
+  p.avancer(1000);
+  serveur.livrerBillet();
+  await p.souffler(12);
+  assert.match(p.$("suivi-pastille-slot").innerHTML, /Rania/, "le billet échangé : Rania est là, la séance continue");
+  assert.equal(p.$("suivi-repere").hidden, false, "le bloc est posé (caché par le style en séance)");
+  assert.equal(p.$("val-nombres").textContent, "11", "la mémoire n'est pas relue en pleine séance");
+  p.avancer(3 * 800 + regl.nombres * regl.temps * 100 + 100 - 1000);
+  p.taper(attendus[0].total);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  const envoye = serveur.dernier();
+  assert.ok(envoye, "la séance partie avant le billet est notée dès son premier calcul validé");
+  const id = envoye.parcours.seances["1"][10];
+  assert.ok(Number.isInteger(id) && id >= 1, "elle a reçu son identifiant à ce moment-là");
+  assert.deepEqual(envoye.parcours.seances, {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 2, 3, 11, 8, 10, 1, 1, id, 1]});
+  assert.equal(envoye.parcours.reglages.flash.nombres, 7, "les réglages du compte n'ont pas été touchés par ceux de l'attente");
+  // La flèche : « Envoyé » n'apparaît qu'une fois la note de la fin confirmée.
+  p.$("suivant").click();
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("envoi-fin").hidden, true, "en route, pas encore confirmé");
+  p.avancer(800);
+  await p.souffler();
+  assert.equal(p.$("envoi-fin").hidden, false);
+  assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 1, 1, id, 1], "la même séance, 1 fait sur 10");
+  // Retour aux réglages : ceux du compte, enfin (7 nombres) — ni les 11 de l'attente, ni les 12 de l'appareil.
+  p.$("vers-reglages").click();
+  assert.equal(p.$("val-nombres").textContent, "7", "les réglages du compte");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.nombres, 12, "l'appareil n'a toujours pas bougé");
+});
+
+test("Mon historique : les séances du compte, dix par dix, la plus récente en haut", async () => {
+  const {parcoursComplet} = await import("../scripts/generer-parcours-reference-anzan.mjs");
+  let distant = parcoursComplet();
+  for (let i = 0; i < 5; i += 1) distant = PARCOURS.noterSeance(distant, {id: 200 + i, mode: "colonne", reglages: COLONNE, faits: 5, score: 4}, "2026-10-23").parcours;
+  const p = ouvrir(null, {suivi: {code: "ABCDEF", serveur: fauxServeur(distant)}});
+  await p.souffler();
+  p.$("vers-historique").click();
+  assert.equal(p.$("historique-compte").textContent, "127 calculs · 10 jours d’entraînement");
+  assert.equal(p.$("historique-liste").children.length, 10, "dix d'abord");
+  assert.match(texte(p.$("historique-liste").children[0]), /23 oct\./, "la plus récente en haut");
+  assert.equal(p.$("historique-plus").hidden, false);
+  p.$("historique-plus").click();
+  assert.equal(p.$("historique-liste").children.length, 15, "puis les suivantes");
+  assert.equal(p.$("historique-plus").hidden, true);
+  assert.match(texte(p.$("historique-liste").children[14]), /13 oct\./, "la plus ancienne en bas");
 });

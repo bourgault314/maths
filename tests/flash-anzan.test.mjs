@@ -165,10 +165,22 @@ test("jamais le clavier du téléphone : aucune case de saisie dans la page", ()
   assert.doesNotMatch(PAGE, /data-key="(?:minus|-|\.|,)"/, "pas de touche moins ni virgule");
 });
 
-test("lot 1 : pas d'historique, rien n'est envoyé, rien ne part au serveur", () => {
-  assert.doesNotMatch(PAGE, /Mon historique/);
-  assert.doesNotMatch(PAGE, /Envoyé à ton professeur/);
-  assert.doesNotMatch(PAGE, /fetch\(|XMLHttpRequest|sendBeacon|suivi\.mathsgo\.re/);
+test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du suivi le fait, et seulement sous un code", () => {
+  const script = PAGE.slice(PAGE.lastIndexOf("<script>"), PAGE.lastIndexOf("</script>"));
+  assert.doesNotMatch(script, /fetch\(|XMLHttpRequest|sendBeacon/, "aucun appel réseau dans le script de la page");
+  assert.match(PAGE, /<script src="\.\/flash_anzan_parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\/flash_anzan_suivi\.js\?v=\d{8}-\d+"><\/script>/,
+    "le moteur du parcours et l'habillage du suivi, avec une version, après le moteur des calculs");
+  assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
+  assert.match(script, /function suiviActif\(\) \{\s*return Boolean\(SUIVI && SUIVI\.actif\(\)\);/);
+  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\) \|\| !seance\.resultats\.length\) return;\s*if \(!seance\.idSuivi\) seance\.idSuivi = PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\);/,
+    "rien sans code, rien sans calcul fait ; une séance partie avant le billet reçoit son identifiant à sa première note");
+  assert.match(script, /if \(e\.etat === "ok" && SUIVI\.client\.sync\.dirty\) \{ envoi\.hidden = true; return; \}/, "« Envoyé » attend la confirmation du serveur");
+  assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
+  assert.match(script, /if \(modeEleve\(\)\) return; \/\/ billet en route ou refusé : rien à l'appareil/);
+  // Ce qui part : le mode, les réglages, les calculs faits, le score — jamais les calculs ni les réponses.
+  assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*id: seance\.idSuivi,\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}\);/);
+  assert.match(script, /seance\.idSuivi = suiviActif\(\) \? PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\) : 0;/, "l'identifiant est tiré au début de chaque séance, libre dans la case");
+  assert.doesNotMatch(script, /noterUneSeance\([^)]*(calculs|resultats\[|ecrit|termes)/, "jamais les nombres ni les réponses");
 });
 
 test("la mémoire des réglages passe par un try/catch (navigation privée)", () => {
@@ -180,7 +192,7 @@ test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans 
   assert.doesNotMatch(PAGE, /class="topbar"/);
   const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
   assert.match(cadre, /<a class="rond" id="lien-retour" href="\.\.\/index\.html\?domain=nombres-calculs&amp;notion=calcul-mental"/);
-  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 2, "un plein écran sur les réglages, un pendant la séance");
+  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 3, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique");
   const pied = PAGE.slice(PAGE.indexOf('<footer class="site-footer">'), PAGE.indexOf("</footer>"));
   assert.match(pied, /<a class="pied-logo" href="\/"/);
   // le pied garde ses liens, sans « Sans cookie ni traceur » (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)

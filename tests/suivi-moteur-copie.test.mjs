@@ -68,6 +68,25 @@ test("le moteur Coffres magiques servi par suivi.mathsgo.re est la copie exacte 
   );
 });
 
+// Lot « Qui voit quoi », lot 4a (23/10/2026) : même règle pour le moteur
+// d'Anzan. La tuile de l'espace élève le charge pour sa ligne « N calculs ·
+// M jours », « Ma classe » pour son onglet (lot 4b). Tout lot qui touche
+// outils/calcul_mental/flash_anzan_parcours.js recopie le fichier dans
+// _serveur/public/prof/ ET le met dans son dossier à déposer.
+const ORIGINAL_ANZAN = "outils/calcul_mental/flash_anzan_parcours.js";
+const COPIE_ANZAN = "_serveur/public/prof/flash_anzan_parcours.js";
+
+test("le moteur Anzan servi par suivi.mathsgo.re est la copie exacte de celui de l'appli", () => {
+  const original = readFileSync(join(racine, ORIGINAL_ANZAN));
+  const copie = readFileSync(join(racine, COPIE_ANZAN));
+  assert.ok(original.length > 1000, `${ORIGINAL_ANZAN} doit être le vrai moteur`);
+  assert.ok(
+    original.equals(copie),
+    `${COPIE_ANZAN} diffère de ${ORIGINAL_ANZAN} (${copie.length} contre ${original.length} octets) : `
+      + `recopie le fichier (cp ${ORIGINAL_ANZAN} ${COPIE_ANZAN}) et ajoute-le au dossier à déposer.`
+  );
+});
+
 test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur contenu", () => {
   const page = readFileSync(join(racine, "_serveur/public/index.php"), "utf8");
   assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=<\?= htmlspecialchars\(\$versionMoteur, ENT_QUOTES\) \?>"/);
@@ -76,6 +95,8 @@ test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur 
     "la version dans l'adresse est l'empreinte du fichier déposé : un nouveau dépôt n'est jamais masqué par le cache");
   assert.match(page, /url: "prof\/coffres-parcours\.js\?v=<\?= htmlspecialchars\(\$versionCoffres, ENT_QUOTES\) \?>"/);
   assert.match(page, /\$versionCoffres = version_moteur\('coffres-parcours\.js'\);/);
+  assert.match(page, /url: "prof\/flash_anzan_parcours\.js\?v=<\?= htmlspecialchars\(\$versionAnzan, ENT_QUOTES\) \?>"/);
+  assert.match(page, /\$versionAnzan = version_moteur\('flash_anzan_parcours\.js'\);/);
   assert.doesNotMatch(page, /https?:\/\/[^"']*\.js/, "aucun script d'un autre domaine");
 });
 

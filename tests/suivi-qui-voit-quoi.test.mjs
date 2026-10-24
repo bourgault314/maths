@@ -51,9 +51,9 @@ test("la règle « classe + ajouts » est à un seul endroit, et les deux API y 
 test("les droits, le journal, le catalogue et parcours.php", () => {
   assert.match(prof, /'eleves\.acces' => 'proprietaire',/, "propriétaire seulement (Q2)");
   assert.match(journal, /'eleves\.acces',/, "dans la liste fermée du journal");
-  assert.match(prof, /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'automatismes', 'splat'\];/,
-    "pas de « flash-anzan » tant que le lot 4 n'a pas mis l'appli au catalogue du serveur");
-  assert.doesNotMatch(applis, /'flash-anzan'/, "l'appli n'est pas encore au catalogue");
+  assert.match(prof, /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
+    "« flash-anzan » est proposable depuis le lot 4a (23/10/2026)");
+  assert.match(applis, /'flash-anzan' => \[\s*'nom' => 'Anzan',/, "l'appli est au catalogue, sous le nom « Anzan »");
   assert.doesNotMatch(lire("_serveur/public/api/parcours.php"), /ajouts|acces_de_l_eleve/, "api/parcours.php : inchangé (Q1 = non — ouvrir guide, ça ne verrouille pas)");
   assert.match(lire("_serveur/public/verifier.php"), /verif\(\$lignes, "Ajouts par élève", function \(\) \{/, "verifier.php a sa ligne");
 });
