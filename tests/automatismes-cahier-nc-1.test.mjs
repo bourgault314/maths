@@ -315,3 +315,31 @@ test("correctif NC-1 : ponctuation collée, verbe « a » droit, q en italique, 
   );
   assert.match(html, /resultat-reponse">[^<]*<span class="math-expression"[^>]*>33 = 7 × 4 \+ 5/);
 });
+
+// Correctif 2 (retour de Code, 24/10) : les formes pas encore réécrites gardent l'aide de main avec
+// « Encore un indice » — le dessin de l'aide puis la phrase de l'indice, jamais leur petit dessin d'indice.
+test("anciennes questions : « Encore un indice » comme sur main", async () => {
+  const { generateurs, formesDisponibles } = await import("../automatismes/moteur.js");
+  const { mathHtml } = await import("../automatismes/math-format.js");
+  for (const famille of Object.keys(generateurs))
+    for (const forme of formesDisponibles(famille)) {
+      if (formesCahier.has(`${famille}-${forme}`)) continue;
+      for (const graine of [1, 2]) {
+        const q = genererQuestion(famille, forme, graine);
+        const html = aideHTML(q, { aideOuverte: true, etape: true });
+        const { surFigure } = await import("../automatismes/vues.js");
+        const dessin = q.hints[0].svg && q.hints[0].svg !== q.visual && !surFigure(q);
+        const nombre = (html.match(/class="dessin"/g) || []).length;
+        assert.equal(nombre, dessin ? 1 : 0, `${q.id} : ${nombre} dessin(s)`);
+        if (q.hints[1].svg && q.hints[1].svg !== q.hints[0].svg)
+          assert.ok(
+            !html.includes(q.hints[1].svg),
+            `${q.id} : le petit dessin d'indice n'apparaît pas`,
+          );
+        assert.ok(
+          html.includes(`<div class="etape">${mathHtml(q.hints[1].text || "")}</div>`),
+          q.id,
+        );
+      }
+    }
+});

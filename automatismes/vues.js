@@ -181,7 +181,8 @@ export function enonceHTML(question, pastille = "") {
    bulle posée sur la figure n'existe que si la forme a un champ coinAide (rempli par les cahiers une
    fois le coin vérifié vide pour tous les tirages). */
 function boutonIndice(question, etat) {
-  if (!question.hints?.[1]?.text && !question.hints?.[1]?.svg) return "";
+  // Un indice des cahiers peut n'être qu'un dessin ; les autres formes, comme sur main, sur leur phrase.
+  if (!question.hints?.[1]?.text && !(question.cahier && question.hints?.[1]?.svg)) return "";
   return bouton("Encore un indice", "etape", "indice", etat.etape ? "disabled" : "");
 }
 
@@ -216,8 +217,12 @@ export function aideHTML(question, etat, projection = false, reglages = {}) {
   // Empilés, les deux dessins cachaient le pavé au téléphone (NC18-g, retour de Code du 24/10).
   const remplace = Boolean(etat.etape && indice.svg && question.cahier);
   const image = montrer && !remplace ? `<div class="dessin">${dessin}</div>` : "";
+  // Les formes pas encore réécrites gardent l'indice de main : sa phrase seule (leur petit dessin
+  // d'indice hérité n'a jamais été montré ; retour de Code du 24/10).
+  const dessinIndice =
+    question.cahier && indice.svg ? `<div class="dessin">${indice.svg}</div>` : "";
   const etape = etat.etape
-    ? `<div class="etape${remplace ? " a-la-place" : ""}">${indice.svg ? `<div class="dessin">${indice.svg}</div>` : ""}${lignesHTML(indice.text)}</div>`
+    ? `<div class="etape${remplace ? " a-la-place" : ""}">${dessinIndice}${question.cahier ? lignesHTML(indice.text) : mathHtml(indice.text || "")}</div>`
     : "";
   // Les cahiers : le dessin d'abord, la phrase dessous (comme sur leurs pages).
   return `<section class="aide${projection ? " aide-projetee" : ""}" aria-label="Aide">

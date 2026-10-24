@@ -1876,6 +1876,7 @@ input.case {
   line-height: 1;
 }
 .clavier-symboles button.exposant .case-touche {
+  margin-right: -0.12em;
   color: var(--attenue);
   font-size: 0.85em;
 }
