@@ -38,10 +38,11 @@
   //                     réglages (relecture de Code, 23/10/2026) — et son
   //                     ORDRE : le plus grand ordre que le parcours connaît,
   //                     plus un, donné quand la séance y entre et qui ne change
-  //                     plus. C'est lui qui range les séances d'un même jour, sur
-  //                     tous les appareils de la même façon (3e relecture Codex,
-  //                     24/10/2026) — sans heure : ni horloge ni minute ne
-  //                     partent au serveur.
+  //                     plus (ni son jour : celui où elle a commencé). C'est lui
+  //                     qui range les séances, sur tous les appareils de la même
+  //                     façon (relectures Codex du 24/10/2026) — sans heure et
+  //                     sans l'horloge : une tablette à la mauvaise date ou une
+  //                     séance qui passe minuit ne dérangent rien.
   //                     Une séance arrêtée en route (la flèche, l'onglet fermé)
   //                     a moins de calculs faits que prévus : c'est ce que
   //                     l'historique écrit « 6/7 · arrêtée » — pas de booléen
@@ -54,8 +55,8 @@
   //                     réponses, ni temps de réponse. }
   //     Les SEANCES_MAX dernières séances sont gardées (≈ deux années de
   //     classe à une séance par jour) ; au-delà, la plus ancienne part.
-  //     UN SEUL ORDRE pour tout (historique, borne, numéros, fusion) : le
-  //     jour, puis l'ordre, puis l'identifiant. Les numéros ne sont que des
+  //     UN SEUL ORDRE pour tout (historique, borne, numéros, fusion) :
+  //     l'ordre, puis l'identifiant — jamais le jour. Les numéros ne sont que des
   //     places, toujours 1, 2, 3… dans cet ordre : deux appareils qui ont les
   //     mêmes séances ont exactement le même parcours, octet pour octet.
   //     Fusion entre deux appareils (et avec le serveur) : à époque différente
@@ -276,26 +277,27 @@
     return Object.keys(p.seances).map(Number).filter(numeroValide).sort((a, b) => a - b);
   }
 
-  // L'ORDRE DU TEMPS, le seul du moteur : le jour de la séance, puis son
-  // ordre, puis son identifiant. Trois relectures de Codex (23-24/10/2026)
-  // tournaient autour de la même faiblesse : le même jour, les séances
-  // n'avaient pour se ranger que leur NUMÉRO, une place qui ne se compare pas
-  // d'un appareil à l'autre après une renumérotation ou une fusion — une
-  // vieille copie fusionnée faisait partir les séances neuves, ou mélangeait
-  // l'historique. L'ordre, lui, voyage avec la séance.
+  // L'ORDRE DU TEMPS, le seul du moteur : l'ordre de la séance, puis son
+  // identifiant (deux appareils hors ligne qui ont pris le même ordre). Le
+  // JOUR n'y entre pas : il vient de l'horloge de l'appareil, et une tablette
+  // à la mauvaise date faisait sortir une séance neuve des 500 dès son entrée
+  // (4e relecture Codex, 24/10/2026). Le numéro non plus : une place, qui ne
+  // se compare pas d'un appareil à l'autre (3e relecture). L'ordre, lui,
+  // voyage avec la séance et ne change jamais.
   function avant(x, y) {
-    if (x[I_JOUR] !== y[I_JOUR]) return x[I_JOUR] < y[I_JOUR] ? -1 : 1;
     if (x[I_ORDRE] !== y[I_ORDRE]) return x[I_ORDRE] - y[I_ORDRE];
     return x[I_ID] - y[I_ID];
   }
 
   // La plus avancée de deux vues d'une même séance : le plus de calculs
-  // faits, puis le meilleur score ; à égalité (deux vues qui ne diffèrent que
-  // par un champ abîmé), un choix FIXE sur le texte — le même dans les deux
+  // faits, puis le meilleur score ; à égalité, le plus PETIT ordre (une copie
+  // dont les ordres ont été resserrés, voir ordreSuivant, l'emporte sur une
+  // copie ancienne), puis un choix FIXE sur le texte — le même dans les deux
   // sens de la fusion.
   function plusAvancee(a, b) {
     if (a[I_FAITS] !== b[I_FAITS]) return b[I_FAITS] > a[I_FAITS] ? b : a;
     if (a[I_SCORE] !== b[I_SCORE]) return b[I_SCORE] > a[I_SCORE] ? b : a;
+    if (a[I_ORDRE] !== b[I_ORDRE]) return b[I_ORDRE] < a[I_ORDRE] ? b : a;
     return JSON.stringify(b) > JSON.stringify(a) ? b : a;
   }
 
@@ -361,11 +363,27 @@
 
   // L'ordre d'une séance qui entre dans ce parcours : le plus grand qu'il
   // connaît, plus un. Après une fusion, le parcours connaît les séances des
-  // deux appareils : la suivante passe après toutes.
+  // deux appareils : la suivante passe après toutes. Si la borne ORDRE_MAX est
+  // atteinte (une seule séance trafiquée à 1 000 000 suffisait : toutes les
+  // suivantes prenaient le même ordre et la borne les jetait à l'entrée — 4e
+  // relecture Codex), les ordres sont d'abord RESSERRÉS 1, 2, 3… dans le même
+  // ordre : la suivante a de nouveau sa place, après toutes. Modifie p.
   function ordreSuivant(p) {
     let plusGrand = 0;
     listes(p).forEach(s => { if (s[I_ORDRE] > plusGrand) plusGrand = s[I_ORDRE]; });
-    return Math.min(ORDRE_MAX, plusGrand + 1);
+    if (plusGrand < ORDRE_MAX) return plusGrand + 1;
+    const rangees = listes(p).slice().sort(avant);
+    rangees.forEach((s, i) => { s[I_ORDRE] = i + 1; });
+    ranger(p, rangees);
+    return rangees.length + 1;
+  }
+
+  // L'ordre de la séance qui porte cet identifiant, ou null (la page le garde
+  // pour le redonner à la note suivante, voir noterSeance).
+  function ordreDeId(parcours, id) {
+    const p = normaliser(parcours);
+    const n = numeroDeId(p, id);
+    return n === null ? null : p.seances[String(n)][I_ORDRE];
   }
 
   // La séance la plus récente d'un parcours (la dernière place), ou null.
@@ -421,10 +439,16 @@
   // faits, score}, `jour` le jour local de la page (les tests le donnent).
   // `id` : l'identifiant tiré par la page au début de la séance (idLibre) ;
   // si une séance du parcours le porte déjà — à n'importe quel numéro, une
-  // fusion a pu la déplacer —, elle est mise à jour et garde son ORDRE ;
-  // sinon elle entre avec l'ordre suivant (ordreSuivant), après toutes les
-  // séances que le parcours connaît. Rend {parcours, numero}. Une séance
-  // sans calcul fait, ou sans identifiant, n'est pas notée.
+  // fusion a pu la déplacer —, elle est mise à jour et garde son ORDRE et son
+  // JOUR (celui où elle a commencé : une séance qui passe minuit ne change pas
+  // de jour). Sinon, `seance.ordre` et `seance.jour` — l'ordre et le jour que
+  // la page a gardés depuis la première note — s'il y en a : une séance sortie du parcours (une fusion
+  // a apporté 500 séances pendant qu'elle se jouait) revient avec SON ordre,
+  // quel que soit le chemin (4e relecture Codex) ; sinon l'ordre suivant
+  // (ordreSuivant), après toutes les séances que le parcours connaît. Rend
+  // {parcours, numero} — numero null si la séance n'y est pas (rien noté, ou
+  // plus ancienne que les 500 gardées). Une séance sans calcul fait, ou sans
+  // identifiant, n'est pas notée.
   function noterSeance(parcours, seance, jour) {
     const p = normaliser(parcours);
     const s = seance && typeof seance === "object" ? seance : {};
@@ -446,7 +470,15 @@
     });
     if (!propre) return {parcours: p, numero: null};
     const deja = numeroDeId(p, propre.id);
-    propre.ordre = deja === null ? ordreSuivant(p) : p.seances[String(deja)][I_ORDRE];
+    if (deja !== null) {
+      propre.ordre = p.seances[String(deja)][I_ORDRE];
+      propre.jour = p.seances[String(deja)][I_JOUR];
+    } else if (Number.isInteger(s.ordre) && s.ordre >= 1 && s.ordre <= ORDRE_MAX) {
+      propre.ordre = s.ordre;
+      if (dateOuNull(s.jour)) propre.jour = s.jour;
+    } else {
+      propre.ordre = ordreSuivant(p);
+    }
     const autres = listes(p).filter(l => l[I_ID] !== propre.id);
     ranger(p, autres.concat([seanceEnListe(propre)]));
     return {parcours: p, numero: numeroDeId(p, propre.id)};
@@ -474,7 +506,7 @@
   // d'un parcours, lu ici et nulle part ailleurs.
 
   // Les séances, de la plus récente à la plus ancienne (l'ordre du temps :
-  // le jour, l'ordre, l'identifiant), chacune dans l'objet de la page :
+  // l'ordre, puis l'identifiant), chacune dans l'objet de la page :
   // {numero, jour, mode, reglages,
   // calculs (prévus), faits, score, arretee}.
   function historique(parcours) {
@@ -1196,9 +1228,12 @@
     // (seance.id, tiré par la page au départ) qui la retrouve d'un calcul au
     // suivant (voir noterSeance).
     function noterUneSeance(seance) {
+      const avantNote = JSON.stringify(parcours);
       const resultat = noterSeance(parcours, seance, jourLocal(maintenant()));
       parcours = resultat.parcours;
-      noterChangement();
+      // Rien de nouveau (la séance finie sans autre calcul) : rien à envoyer
+      // (4e relecture Codex : le même parcours partait deux fois).
+      if (JSON.stringify(parcours) !== avantNote) noterChangement();
       return resultat.numero;
     }
     function sauverLesReglages(reglages) {
@@ -1576,6 +1611,7 @@
     fusionner,
     numeroSuivant,
     idLibre,
+    ordreDeId,
     noterSeance,
     sauverReglages,
     pourServeur,

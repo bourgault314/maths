@@ -625,7 +625,7 @@
   <script src="./flash_anzan_core.js?v=20261022-1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, pied, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261024-2"></script>
+  <script src="./flash_anzan_parcours.js?v=20261024-3"></script>
   <script src="./flash_anzan_suivi.js?v=20261023-1"></script>
   <script>
     (function () {
@@ -886,6 +886,8 @@
         // appareil. Si le billet n'est pas encore échangé, il sera tiré à la
         // première note (noterSeanceSuivi) : la séance n'est pas perdue.
         seance.idSuivi = suiviActif() ? PARCOURS.idLibre(SUIVI.lire(), 0) : 0;
+        seance.ordreSuivi = 0; // donnés à la première note, gardés ensuite (voir noterSeanceSuivi)
+        seance.jourSuivi = "";
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = true;
         $("ecran-seance").hidden = false;
@@ -1313,11 +1315,21 @@
         const justes = seance.resultats.filter(r => r.juste).length;
         SUIVI.client.noterUneSeance({
           id: seance.idSuivi,
+          ordre: seance.ordreSuivi || 0,
+          jour: seance.jourSuivi || "",
           mode: seance.mode,
           reglages: seance.reglages,
           faits: seance.resultats.length,
           score: justes
         });
+        // L'ordre que la séance a reçu : redonné à chaque note, pour qu'elle le
+        // garde même si une fusion l'a fait sortir du parcours entre-temps.
+        const ordre = PARCOURS.ordreDeId(SUIVI.client.parcours, seance.idSuivi);
+        if (ordre) {
+          seance.ordreSuivi = ordre;
+          const vue = PARCOURS.historique(SUIVI.client.parcours).find(s => s.id === seance.idSuivi);
+          if (vue) seance.jourSuivi = vue.jour;
+        }
       }
 
       // « ● Envoyé à ton professeur » sous le résumé de la séance finie — quand
@@ -1328,6 +1340,9 @@
       function majEnvoi() {
         const envoi = $("envoi-fin");
         if (!suiviActif() || seance.phase !== "fin" || !seance.resultats.length || !seance.idSuivi) { envoi.hidden = true; return; }
+        // La séance doit être DANS le parcours envoyé, sinon on ne dit pas
+        // « Envoyé » (4e relecture Codex, 24/10/2026).
+        if (PARCOURS.ordreDeId(SUIVI.client.parcours, seance.idSuivi) === null) { envoi.hidden = true; return; }
         const e = SUIVI.client.etatRepere();
         if (e.etat === "ok" && SUIVI.client.sync.dirty) { envoi.hidden = true; return; } // en route : on attend la réponse
         envoi.className = "envoi" + (e.etat === "detache" ? " detache" : (e.etat === "hors-ligne" || e.etat === "erreur" ? " hors-ligne" : ""));

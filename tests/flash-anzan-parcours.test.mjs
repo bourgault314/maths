@@ -75,9 +75,9 @@ test("la même séance (même identifiant) se met à jour là où elle est ; une
   const deplace = {...r.parcours, seances: {"1": ["2026-10-21", "colonne", "plusmoins", 3, 3, 8, 20, 5, 5, 5, 777, 9], "4": r.parcours.seances["1"]}};
   const s = note(deplace, {mode: "flash", reglages: FLASH, faits: 10, score: 10}, 901, "2026-10-22");
   assert.deepEqual(Object.keys(s.parcours.seances), ["1", "2"], "aucun doublon ; les numéros ne sont que des places, 1, 2, 3…");
-  assert.equal(s.numero, 2, "à sa place dans l'ordre du temps (après la séance du 21)");
-  assert.deepEqual(s.parcours.seances["2"].slice(8), [10, 10, 901, 1], "mise à jour, avec son ordre d'origine");
-  assert.deepEqual(s.parcours.seances["1"], deplace.seances["1"], "la séance de l'autre appareil n'a pas bougé");
+  assert.equal(s.numero, 1, "à sa place dans l'ordre (le sien, 1, avant le 9 de l'autre séance)");
+  assert.deepEqual(s.parcours.seances["1"].slice(8), [10, 10, 901, 1], "mise à jour, avec son ordre d'origine");
+  assert.deepEqual(s.parcours.seances["2"], deplace.seances["1"], "la séance de l'autre appareil n'a pas bougé");
   // Le score ne dépasse jamais les calculs faits, les calculs faits jamais les prévus.
   const u = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 12, score: 15}, 903, "2026-10-22");
   assert.deepEqual(u.parcours.seances["1"].slice(7), [10, 10, 10, 903, 1]);
@@ -456,7 +456,71 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
   assert.deepEqual(envois[0].parcours.seances["1"].slice(8, 10), [10, 8]);
 });
 
-test("la page charge le moteur à jour (4a-quinquies : l'ordre des séances) — son numéro de version a monté", () => {
+test("la page charge le moteur à jour (4a-sexies : l'ordre seul, sans le jour) — son numéro de version a monté", () => {
   const html = lire("outils/calcul_mental/flash_anzan.html");
-  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261024-2"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
+  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261024-3"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
+});
+
+test("4e relecture Codex (24/10) : ni l'horloge ni minuit ne dérangent — une tablette à la mauvaise date ne perd pas sa séance, une séance qui passe minuit garde son jour", () => {
+  // 500 séances du 24 octobre ; la tablette se croit le 23.
+  let plein = PARCOURS.creer();
+  for (let i = 0; i < 500; i += 1) plein.seances[String(i + 1)] = ["2026-10-24", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 5000 - i, i + 1];
+  plein = PARCOURS.normaliser(plein);
+  const r = note(plein, {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 42, "2026-10-23");
+  assert.equal(r.numero, 500, "la séance neuve est gardée, à la dernière place (avant : sortie des 500 dès son entrée)");
+  assert.equal(r.parcours.seances["500"][10], 42);
+  assert.equal(PARCOURS.ordreDeId(r.parcours, 42), 501);
+  assert.equal(PARCOURS.historique(r.parcours)[0].id, 42, "en haut de l'historique : c'est la dernière jouée");
+  // Minuit : un calcul le 23 à 23 h 59, la suite le 24 — la séance garde le jour où elle a commencé, et son ordre.
+  const avant = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 7, "2026-10-23").parcours;
+  const apres = note(avant, {mode: "flash", reglages: FLASH, faits: 2, score: 2}, 7, "2026-10-24").parcours;
+  assert.deepEqual([apres.seances["1"][0], apres.seances["1"][8], apres.seances["1"][11]], ["2026-10-23", 2, 1]);
+  // Une séance vraiment ancienne (petit ordre) sort toujours à la borne, quelle que soit sa date affichée.
+  const vieille = {...plein, seances: {...plein.seances, "9999": ["2026-12-31", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 77, 1]}};
+  const v = PARCOURS.normaliser(vieille);
+  assert.equal(Object.keys(v.seances).length, 500);
+  assert.ok(Object.values(v.seances).some(s => s[10] === 77) !== Object.values(v.seances).some(s => s[10] === 5000), "à ordre égal (1), l'identifiant départage : l'une des deux part, toujours la même");
+});
+
+test("4e relecture Codex (24/10) : un ordre à 1 000 000 (copie trafiquée) ne bloque plus les séances suivantes — les ordres sont resserrés", () => {
+  const trafique = PARCOURS.normaliser({seances: {"1": ["2026-10-22", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 999999, 1000000], "2": ["2026-10-21", "flash", "plus", 2, 3, 10, 8, 10, 10, 9, 500, 3]}});
+  let p = note(trafique, {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 999998, "2026-10-22").parcours;
+  assert.deepEqual(Object.values(p.seances).map(s => [s[10], s[11]]), [[500, 1], [999999, 2], [999998, 3]], "resserrés 1, 2, puis la neuve à 3, après toutes");
+  // La copie trafiquée (ordre 1 000 000) fusionnée avec la copie resserrée : le plus petit ordre l'emporte, rien ne re-sature.
+  const f = PARCOURS.fusionner(trafique, p);
+  assert.deepEqual(f, PARCOURS.fusionner(p, trafique), "le même parcours dans les deux sens");
+  assert.deepEqual(f, p, "la copie resserrée");
+  assert.ok(Object.values(f.seances).every(s => s[11] < PARCOURS.ORDRE_MAX));
+  // 499 créations de suite, identifiants qui DESCENDENT : toutes gardées, dans l'ordre où elles ont été jouées.
+  for (let k = 1; k <= 499; k += 1) p = note(p, {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 900000 - k, "2026-10-22").parcours;
+  const ids = PARCOURS.historique(p).map(s => s.id);
+  assert.equal(ids.length, 500);
+  assert.equal(ids[0], 900000 - 499, "la dernière jouée en haut");
+  assert.equal(ids[1], 900000 - 498);
+  const neuve = note(p, {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 1, "2026-10-22");
+  assert.equal(neuve.numero, 500, "l'identifiant 1 n'est plus jeté à l'entrée");
+});
+
+test("4e relecture Codex (24/10) : une séance sortie du parcours pendant qu'elle se jouait garde SON ordre quand la page la note encore — le même résultat par les deux chemins", () => {
+  // La séance 11 entre avec l'ordre 1 ; un autre appareil apporte 500 séances (ordres 2 à 501) : elle sort.
+  const debut = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 11, "2026-10-22").parcours;
+  const ordre = PARCOURS.ordreDeId(debut, 11);
+  assert.equal(ordre, 1);
+  let autre = debut;
+  for (let k = 0; k < 500; k += 1) autre = note(autre, {mode: "colonne", reglages: COLONNE, faits: 5, score: 5}, 2000 - k, "2026-10-22").parcours;
+  assert.equal(PARCOURS.ordreDeId(autre, 11), null, "sortie des 500");
+  // Chemin 1 : la page note encore la séance sur la copie fusionnée, en redonnant l'ordre qu'elle a gardé.
+  const chemin1 = PARCOURS.noterSeance(autre, {id: 11, ordre, mode: "flash", reglages: FLASH, faits: 2, score: 2}, "2026-10-22");
+  assert.equal(chemin1.numero, null, "elle reste la plus ancienne : elle ne revient pas en évincer une autre");
+  assert.deepEqual(chemin1.parcours, autre, "rien n'a bougé");
+  // Chemin 2 : la séance avance sur l'ancienne copie, puis fusionne.
+  const chemin2 = PARCOURS.fusionner(note(debut, {mode: "flash", reglages: FLASH, faits: 2, score: 2}, 11, "2026-10-22").parcours, autre);
+  assert.deepEqual(chemin2, chemin1.parcours, "le même résultat par les deux chemins");
+  // Le jour gardé par la page revient aussi : sortie puis notée après minuit, elle garde son jour de départ.
+  const minuit = PARCOURS.noterSeance(debut, {id: 11, ordre, jour: "2026-10-22", mode: "flash", reglages: FLASH, faits: 3, score: 3}, "2026-10-23");
+  assert.equal(minuit.parcours.seances["1"][0], "2026-10-22");
+  const sortieMinuit = PARCOURS.noterSeance({...PARCOURS.creer(), seances: {}}, {id: 11, ordre, jour: "2026-10-22", mode: "flash", reglages: FLASH, faits: 3, score: 3}, "2026-10-23");
+  assert.deepEqual([sortieMinuit.parcours.seances["1"][0], sortieMinuit.parcours.seances["1"][11]], ["2026-10-22", 1], "absente du parcours : elle revient avec son jour ET son ordre");
+  // Sans ordre gardé (une page plus ancienne), elle entre après toutes, comme une séance neuve.
+  assert.equal(PARCOURS.noterSeance(autre, {id: 11, mode: "flash", reglages: FLASH, faits: 2, score: 2}, "2026-10-22").numero, 500);
 });

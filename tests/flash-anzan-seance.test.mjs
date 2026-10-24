@@ -848,14 +848,18 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "2 faits, 1 juste, la MÊME séance (même identifiant, numéro 1, ordre 1)");
   assert.equal(Object.keys(envoye.parcours.seances).length, 1);
   // La flèche : la séance s'arrête à 2 sur 5, et c'est ce qui est gardé.
+  // Les deux calculs sont déjà confirmés : la fin n'apporte rien, donc rien ne
+  // repart (4e relecture Codex, 24/10 : le même parcours partait deux fois) et
+  // « Envoyé » s'affiche tout de suite.
+  const avantFin = serveur.envois.length;
   p.$("suivant").click();
   p.$("retour").click();
   assert.equal(p.vue(), "vue-fin");
   assert.equal(p.$("compte").textContent, "Séance arrêtée");
-  // « Envoyé » attend la CONFIRMATION du serveur (relecture Codex, 23/10) : la note de la fin est en route (700 ms).
-  assert.equal(p.$("envoi-fin").hidden, true, "pas encore : rien n'est confirmé");
+  assert.equal(p.$("envoi-fin").hidden, false, "déjà confirmé");
   p.avancer(800);
   await p.souffler();
+  assert.equal(serveur.envois.length, avantFin, "aucun envoi en double");
   assert.equal(p.$("envoi-fin").hidden, false);
   assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
   assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "rien de plus que ce qui était déjà noté");
@@ -922,7 +926,11 @@ test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'a
   assert.ok(Number.isInteger(id) && id >= 1, "elle a reçu son identifiant à ce moment-là");
   assert.deepEqual(envoye.parcours.seances, {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 2, 3, 11, 8, 10, 1, 1, id, 1]});
   assert.equal(envoye.parcours.reglages.flash.nombres, 7, "les réglages du compte n'ont pas été touchés par ceux de l'attente");
-  // La flèche : « Envoyé » n'apparaît qu'une fois la note de la fin confirmée.
+  // Un 2e calcul validé, puis la flèche AUSSITÔT : sa note est en route, « Envoyé » attend qu'elle soit confirmée.
+  p.$("suivant").click();
+  p.avancer(3 * 800 + regl.nombres * regl.temps * 100 + 100);
+  p.taper(attendus[1].total);
+  p.$("valider").click();
   p.$("suivant").click();
   p.$("retour").click();
   assert.equal(p.vue(), "vue-fin");
@@ -931,7 +939,7 @@ test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'a
   await p.souffler();
   assert.equal(p.$("envoi-fin").hidden, false);
   assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
-  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 1, 1, id, 1], "la même séance, 1 fait sur 10");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 2, 2, id, 1], "la même séance, 2 faits sur 10");
   // Retour aux réglages : ceux du compte, enfin (7 nombres) — ni les 11 de l'attente, ni les 12 de l'appareil.
   p.$("vers-reglages").click();
   assert.equal(p.$("val-nombres").textContent, "7", "les réglages du compte");
