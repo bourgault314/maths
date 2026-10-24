@@ -24,8 +24,8 @@
   //                     (sans code, ils restent dans le localStorage de la
   //                     page, comme au lot 1) ;
   //         seances:  { "1": [jour, mode, operations, chiffresMin, chiffresMax,
-  //                     nombres, temps, calculs, faits, score, id], "2": … }
-  //                     — une SÉANCE = une liste de onze scalaires dans un
+  //                     nombres, temps, calculs, faits, score, id, ordre], "2": … }
+  //                     — une SÉANCE = une liste de douze scalaires dans un
   //                     ordre fixe (SEANCE_CHAMPS) : le jour (« AAAA-MM-JJ »),
   //                     le mode, les réglages joués (« temps » est le temps par
   //                     nombre en dixièmes de seconde en Flash, la limite en
@@ -35,7 +35,13 @@
   //                     quand la séance commence) : c'est lui qui dit « c'est
   //                     la même séance » — pas les réglages, puisqu'une élève
   //                     fait souvent plusieurs séances de suite aux mêmes
-  //                     réglages (relecture de Code, 23/10/2026).
+  //                     réglages (relecture de Code, 23/10/2026) — et son
+  //                     ORDRE : le plus grand ordre que le parcours connaît,
+  //                     plus un, donné quand la séance y entre et qui ne change
+  //                     plus. C'est lui qui range les séances d'un même jour, sur
+  //                     tous les appareils de la même façon (3e relecture Codex,
+  //                     24/10/2026) — sans heure : ni horloge ni minute ne
+  //                     partent au serveur.
   //                     Une séance arrêtée en route (la flèche, l'onglet fermé)
   //                     a moins de calculs faits que prévus : c'est ce que
   //                     l'historique écrit « 6/7 · arrêtée » — pas de booléen
@@ -48,13 +54,15 @@
   //                     réponses, ni temps de réponse. }
   //     Les SEANCES_MAX dernières séances sont gardées (≈ deux années de
   //     classe à une séance par jour) ; au-delà, la plus ancienne part.
+  //     UN SEUL ORDRE pour tout (historique, borne, numéros, fusion) : le
+  //     jour, puis l'ordre, puis l'identifiant. Les numéros ne sont que des
+  //     places, toujours 1, 2, 3… dans cet ordre : deux appareils qui ont les
+  //     mêmes séances ont exactement le même parcours, octet pour octet.
   //     Fusion entre deux appareils (et avec le serveur) : à époque différente
   //     la plus haute gagne en bloc (restauration par le professeur, lib/
   //     progression.php) ; sinon union des séances par IDENTIFIANT — la même
-  //     séance vue deux fois garde le plus de calculs faits ; deux séances
-  //     différentes sous un même numéro (deux appareils hors ligne le même
-  //     jour) gardent toutes les deux leur place, la seconde renumérotée —
-  //     et réglages = ceux du parcours qui a la séance la plus récente.
+  //     séance vue deux fois garde le plus de calculs faits — et réglages =
+  //     ceux du rang le plus haut (voir fusionner).
   //
   //  2. LE RANGEMENT LOCAL PAR CODE, repris de Coffres, SPLAT! et Défi tables :
   //     la clé sans code « mathsgo-anzan-parcours » est celle de l'appareil ;
@@ -107,11 +115,14 @@
     colonne: Object.freeze({operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 0, calculs: 10})
   });
 
-  // Une séance : les onze champs, dans cet ordre, et rien d'autre.
-  const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score", "id"]);
+  // Une séance : les douze champs, dans cet ordre, et rien d'autre.
+  const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score", "id", "ordre"]);
   // L'identifiant d'une séance : un entier de 1 à ID_MAX (sous la borne des
   // entiers du serveur), tiré par la page au début de la séance.
   const ID_MAX = 999999;
+  // L'ordre d'une séance : un entier de 1 à ORDRE_MAX (la borne des entiers du
+  // serveur, lib/progression.php) — un million de séances, jamais atteint.
+  const ORDRE_MAX = 1000000;
   // D8 (conception du 22/10/2026) : 500 séances ≈ 30 ko, sous la borne du serveur.
   const SEANCES_MAX = 500;
   const NUMERO_MAX = 9999;
@@ -140,7 +151,9 @@
   function dateOuNull(valeur) {
     if (typeof valeur !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(valeur)) return null;
     const [annee, mois, jour] = valeur.split("-").map(Number);
-    if (mois < 1 || mois > 12 || jour < 1) return null;
+    // L'année 0000 n'existe pas pour le serveur (checkdate) : il retirerait la
+    // date, et la séance disparaîtrait au retour (3e relecture Codex, 24/10/2026).
+    if (annee < 1 || mois < 1 || mois > 12 || jour < 1) return null;
     const dernier = new Date(Date.UTC(annee, mois, 0)).getUTCDate();
     return jour <= dernier ? valeur : null;
   }
@@ -236,6 +249,7 @@
     if (!s.faits) return null;
     s.score = entier(s.score, 0, s.faits, 0);
     if (!Number.isInteger(s.id) || s.id < 1 || s.id > ID_MAX) return null;
+    if (!Number.isInteger(s.ordre) || s.ordre < 1 || s.ordre > ORDRE_MAX) return null;
     return s;
   }
 
@@ -251,30 +265,60 @@
     return r;
   }
 
+  const I_JOUR = SEANCE_CHAMPS.indexOf("jour");
+  const I_FAITS = SEANCE_CHAMPS.indexOf("faits");
+  const I_SCORE = SEANCE_CHAMPS.indexOf("score");
+  const I_ID = SEANCE_CHAMPS.indexOf("id");
+  const I_ORDRE = SEANCE_CHAMPS.indexOf("ordre");
+
   // Les numéros d'un parcours, en ordre croissant.
   function numeros(p) {
     return Object.keys(p.seances).map(Number).filter(numeroValide).sort((a, b) => a - b);
   }
 
-  // Les numéros d'un parcours dans l'ordre du temps : le jour de la séance,
-  // puis le numéro. C'est l'ordre de l'historique, de la borne et de la
-  // renumérotation — jamais le numéro seul : après une renumérotation (place
-  // 9999), les séances les plus récentes ont les plus PETITS numéros, et une
-  // vieille copie fusionnée les aurait fait partir (2e relecture Codex, 24/10/2026).
-  function numerosChronologiques(p) {
-    return numeros(p).sort((x, y) => {
-      const jx = p.seances[String(x)][0];
-      const jy = p.seances[String(y)][0];
-      return jx === jy ? x - y : (jx < jy ? -1 : 1);
-    });
+  // L'ORDRE DU TEMPS, le seul du moteur : le jour de la séance, puis son
+  // ordre, puis son identifiant. Trois relectures de Codex (23-24/10/2026)
+  // tournaient autour de la même faiblesse : le même jour, les séances
+  // n'avaient pour se ranger que leur NUMÉRO, une place qui ne se compare pas
+  // d'un appareil à l'autre après une renumérotation ou une fusion — une
+  // vieille copie fusionnée faisait partir les séances neuves, ou mélangeait
+  // l'historique. L'ordre, lui, voyage avec la séance.
+  function avant(x, y) {
+    if (x[I_JOUR] !== y[I_JOUR]) return x[I_JOUR] < y[I_JOUR] ? -1 : 1;
+    if (x[I_ORDRE] !== y[I_ORDRE]) return x[I_ORDRE] - y[I_ORDRE];
+    return x[I_ID] - y[I_ID];
   }
 
-  // Les SEANCES_MAX dernières séances (les plus récentes) : les autres partent.
-  function borner(p) {
-    const liste = numerosChronologiques(p);
-    if (liste.length <= SEANCES_MAX) return p;
-    liste.slice(0, liste.length - SEANCES_MAX).forEach(n => { delete p.seances[String(n)]; });
+  // La plus avancée de deux vues d'une même séance : le plus de calculs
+  // faits, puis le meilleur score ; à égalité (deux vues qui ne diffèrent que
+  // par un champ abîmé), un choix FIXE sur le texte — le même dans les deux
+  // sens de la fusion.
+  function plusAvancee(a, b) {
+    if (a[I_FAITS] !== b[I_FAITS]) return b[I_FAITS] > a[I_FAITS] ? b : a;
+    if (a[I_SCORE] !== b[I_SCORE]) return b[I_SCORE] > a[I_SCORE] ? b : a;
+    return JSON.stringify(b) > JSON.stringify(a) ? b : a;
+  }
+
+  // Range des séances (des listes propres) dans p : une seule par
+  // identifiant (la plus avancée), dans l'ordre du temps, les SEANCES_MAX
+  // plus récentes, aux places 1, 2, 3… Les numéros ne sont que des places :
+  // les mêmes séances donnent toujours le même parcours, sur tous les
+  // appareils — rien à renvoyer au serveur quand rien n'a changé (3e
+  // relecture Codex, 24/10/2026). Modifie p, le rend.
+  function ranger(p, listes) {
+    const parId = new Map();
+    listes.forEach(s => {
+      const deja = parId.get(s[I_ID]);
+      parId.set(s[I_ID], deja ? plusAvancee(deja, s) : s);
+    });
+    const triees = [...parId.values()].sort(avant);
+    p.seances = {};
+    triees.slice(Math.max(0, triees.length - SEANCES_MAX)).forEach((s, i) => { p.seances[String(i + 1)] = s.slice(); });
     return p;
+  }
+
+  function listes(p) {
+    return numeros(p).map(n => p.seances[String(n)]);
   }
 
   function normaliser(brut) {
@@ -283,34 +327,19 @@
     p.epoque = entier(brut.epoque, 0, COMPTE_MAX, 0);
     p.reglages = normaliserReglages(brut.reglages);
     const seances = brut.seances && typeof brut.seances === "object" && !Array.isArray(brut.seances) ? brut.seances : {};
+    const propres = [];
     Object.keys(seances).forEach(cle => {
       if (!/^[1-9]\d{0,3}$/.test(cle)) return;
       const s = normaliserSeance(seances[cle]);
-      if (s) p.seances[cle] = seanceEnListe(s);
+      if (s) propres.push(seanceEnListe(s));
     });
-    return borner(p);
+    return ranger(p, propres);
   }
 
   // Vide : aucune séance et aucun réglage choisi.
   function estVide(parcours) {
     const p = normaliser(parcours);
     return !Object.keys(p.seances).length && !Object.keys(p.reglages).length;
-  }
-
-  const I_FAITS = SEANCE_CHAMPS.indexOf("faits");
-  const I_SCORE = SEANCE_CHAMPS.indexOf("score");
-  const I_ID = SEANCE_CHAMPS.indexOf("id");
-
-  // Deux listes désignent-elles la même séance ? Même identifiant. Le nombre
-  // de calculs faits et le score peuvent différer : c'est la même séance vue
-  // à deux moments.
-  function memeSeance(a, b) {
-    return a[I_ID] === b[I_ID];
-  }
-
-  // La plus avancée des deux vues d'une même séance.
-  function plusAvancee(a, b) {
-    return b[I_FAITS] > a[I_FAITS] || (b[I_FAITS] === a[I_FAITS] && b[I_SCORE] > a[I_SCORE]) ? b : a;
   }
 
   // Le numéro de la séance qui porte cet identifiant, ou null.
@@ -330,28 +359,19 @@
     return id;
   }
 
-  // Les numéros ne sont que des places (la séance, c'est son identifiant) :
-  // quand la dernière place est prise (9999), les séances sont renumérotées
-  // de 1 en 1 dans leur ordre — rien ne s'écrase, rien ne se perd (relecture
-  // Codex, 23/10/2026). Modifie p, le rend.
-  function faireDeLaPlace(p) {
-    const liste = numeros(p);
-    if (!liste.length || liste[liste.length - 1] < NUMERO_MAX) return p;
-    const seances = numerosChronologiques(p).map(n => p.seances[String(n)]);
-    p.seances = {};
-    seances.forEach((s, i) => { p.seances[String(i + 1)] = s; });
-    return p;
+  // L'ordre d'une séance qui entre dans ce parcours : le plus grand qu'il
+  // connaît, plus un. Après une fusion, le parcours connaît les séances des
+  // deux appareils : la suivante passe après toutes.
+  function ordreSuivant(p) {
+    let plusGrand = 0;
+    listes(p).forEach(s => { if (s[I_ORDRE] > plusGrand) plusGrand = s[I_ORDRE]; });
+    return Math.min(ORDRE_MAX, plusGrand + 1);
   }
 
-  // Le jour de la séance la plus récente d'un parcours (et son numéro), pour
-  // choisir les réglages à garder en fusion.
+  // La séance la plus récente d'un parcours (la dernière place), ou null.
   function derniereSeance(p) {
-    let meilleure = null;
-    numeros(p).forEach(n => {
-      const s = p.seances[String(n)];
-      if (!meilleure || s[0] > meilleure.jour || (s[0] === meilleure.jour && n > meilleure.numero)) meilleure = {jour: s[0], numero: n};
-    });
-    return meilleure;
+    const liste = listes(p);
+    return liste.length ? liste[liste.length - 1] : null;
   }
 
   // Deux parcours du même élève (deux appareils, ou le serveur et la case).
@@ -361,25 +381,9 @@
     if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
     const fusion = creer();
     fusion.epoque = a.epoque;
-    numeros(a).forEach(n => { fusion.seances[String(n)] = a.seances[String(n)].slice(); });
-    const aPlacer = [];
-    numeros(b).forEach(n => {
-      const sb = b.seances[String(n)];
-      // La même séance (même identifiant), à ce numéro ou à un autre : la
-      // plus avancée des deux vues, à la place qu'elle a déjà dans a.
-      const deja = numeroDeId(fusion, sb[I_ID]);
-      if (deja !== null) { fusion.seances[String(deja)] = plusAvancee(fusion.seances[String(deja)], sb).slice(); return; }
-      const sa = fusion.seances[String(n)];
-      if (!sa) { fusion.seances[String(n)] = sb.slice(); return; }
-      aPlacer.push(sb);
-    });
-    // Deux séances différentes sous un même numéro : la seconde prend le
-    // numéro libre suivant (de la place est faite s'il le faut), aucune ne se perd.
-    aPlacer.forEach(sb => {
-      faireDeLaPlace(fusion);
-      const liste = numeros(fusion);
-      fusion.seances[String(liste.length ? liste[liste.length - 1] + 1 : 1)] = sb.slice();
-    });
+    // L'union par identifiant, rangée dans l'ordre du temps : aucune séance
+    // ne dépend de la place qu'elle avait dans l'une ou l'autre copie.
+    ranger(fusion, listes(a).concat(listes(b)));
     // Les réglages : ceux du rang le plus haut (le dernier changement) ; à
     // rang égal, ceux du parcours dont la séance est la plus récente ; à
     // égalité encore, un ordre FIXE sur le texte des réglages — le même
@@ -394,7 +398,7 @@
     const tb = JSON.stringify(b.reglages);
     let bGagne;
     if (rb !== ra) bGagne = rb > ra;
-    else if (da && db && (da.jour !== db.jour || da.numero !== db.numero)) bGagne = db.jour > da.jour || (db.jour === da.jour && db.numero > da.numero);
+    else if (da && db && avant(da, db) !== 0) bGagne = avant(db, da) > 0;
     else if (!da !== !db) bGagne = Boolean(db);
     else bGagne = tb > ta;
     const prioritaire = bGagne ? b : a;
@@ -407,19 +411,19 @@
   //
   // Chacun rend un parcours NEUF (le reçu n'est pas modifié).
 
-  // Le numéro que prendrait une séance nouvelle (après renumérotation si la
-  // dernière place est prise : toujours un numéro libre).
+  // Le numéro que prendrait une séance nouvelle du jour le plus récent : la
+  // place après la dernière (la dernière, quand la borne est atteinte).
   function numeroSuivant(parcours) {
-    const liste = numeros(faireDeLaPlace(normaliser(parcours)));
-    return liste.length ? liste[liste.length - 1] + 1 : 1;
+    return Math.min(SEANCES_MAX, Object.keys(normaliser(parcours).seances).length + 1);
   }
 
   // La séance en cours (ou finie) est notée : `seance` = {id, mode, reglages,
   // faits, score}, `jour` le jour local de la page (les tests le donnent).
   // `id` : l'identifiant tiré par la page au début de la séance (idLibre) ;
   // si une séance du parcours le porte déjà — à n'importe quel numéro, une
-  // fusion a pu la déplacer —, elle est mise à jour là où elle est ; sinon la
-  // séance prend le numéro libre suivant. Rend {parcours, numero}. Une séance
+  // fusion a pu la déplacer —, elle est mise à jour et garde son ORDRE ;
+  // sinon elle entre avec l'ordre suivant (ordreSuivant), après toutes les
+  // séances que le parcours connaît. Rend {parcours, numero}. Une séance
   // sans calcul fait, ou sans identifiant, n'est pas notée.
   function noterSeance(parcours, seance, jour) {
     const p = normaliser(parcours);
@@ -437,14 +441,15 @@
       calculs: r.calculs,
       faits: s.faits,
       score: s.score,
-      id: s.id
+      id: s.id,
+      ordre: 1
     });
     if (!propre) return {parcours: p, numero: null};
-    const liste = seanceEnListe(propre);
-    let n = numeroDeId(p, propre.id);
-    if (n === null) { faireDeLaPlace(p); n = numeroSuivant(p); }
-    p.seances[String(n)] = liste;
-    return {parcours: borner(p), numero: n};
+    const deja = numeroDeId(p, propre.id);
+    propre.ordre = deja === null ? ordreSuivant(p) : p.seances[String(deja)][I_ORDRE];
+    const autres = listes(p).filter(l => l[I_ID] !== propre.id);
+    ranger(p, autres.concat([seanceEnListe(propre)]));
+    return {parcours: p, numero: numeroDeId(p, propre.id)};
   }
 
   // Les réglages de l'élève changent (un mode, un pas, un choix) : le parcours
@@ -468,18 +473,19 @@
   // Tout ce que la page, la tuile de Mon espace et « Ma classe » affichent
   // d'un parcours, lu ici et nulle part ailleurs.
 
-  // Les séances, de la plus récente à la plus ancienne (le jour, puis le
-  // numéro), chacune dans l'objet de la page : {numero, jour, mode, reglages,
+  // Les séances, de la plus récente à la plus ancienne (l'ordre du temps :
+  // le jour, l'ordre, l'identifiant), chacune dans l'objet de la page :
+  // {numero, jour, mode, reglages,
   // calculs (prévus), faits, score, arretee}.
   function historique(parcours) {
     const p = normaliser(parcours);
     return numeros(p)
+      .sort((x, y) => avant(p.seances[String(y)], p.seances[String(x)]))
       .map(n => {
         const s = normaliserSeance(p.seances[String(n)]);
         return {numero: n, id: s.id, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
           calculs: s.calculs, faits: s.faits, score: s.score, arretee: s.faits < s.calculs};
-      })
-      .sort((x, y) => (x.jour === y.jour ? y.numero - x.numero : (x.jour > y.jour ? -1 : 1)));
+      });
   }
 
   // Le compte : les calculs faits, les jours d'entraînement (des jours
@@ -1548,6 +1554,7 @@
     SEANCES_MAX,
     NUMERO_MAX,
     ID_MAX,
+    ORDRE_MAX,
     CLES_SERVEUR,
     MOTS_SERVEUR,
     MOTIF_SEANCES_PHP,

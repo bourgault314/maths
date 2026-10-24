@@ -836,7 +836,7 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   const jour = PARCOURS.jourLocal(Date.now());
   const id = envoye.parcours.seances["1"][10];
   assert.ok(Number.isInteger(id) && id >= 1 && id <= PARCOURS.ID_MAX, "la séance a son identifiant");
-  assert.deepEqual(envoye.parcours.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1, id]}, "après un calcul : 1 fait, 1 juste, 5 prévus");
+  assert.deepEqual(envoye.parcours.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1, id, 1]}, "après un calcul : 1 fait, 1 juste, 5 prévus, ordre 1");
   assert.doesNotMatch(JSON.stringify(envoye), new RegExp(String(attendus[0].total)), "le résultat du calcul ne part pas");
   p.$("suivant").click();
   p.avancer(DUREE_FLASH);
@@ -845,7 +845,7 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   p.avancer(800);
   await p.souffler();
   envoye = serveur.dernier();
-  assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1, id], "2 faits, 1 juste, la MÊME séance (même identifiant, numéro 1)");
+  assert.deepEqual(envoye.parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "2 faits, 1 juste, la MÊME séance (même identifiant, numéro 1, ordre 1)");
   assert.equal(Object.keys(envoye.parcours.seances).length, 1);
   // La flèche : la séance s'arrête à 2 sur 5, et c'est ce qui est gardé.
   p.$("suivant").click();
@@ -858,7 +858,7 @@ test("sous un code : chaque calcul validé note la séance (jamais les calculs),
   await p.souffler();
   assert.equal(p.$("envoi-fin").hidden, false);
   assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
-  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id], "rien de plus que ce qui était déjà noté");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [5, 2, 1, id, 1], "rien de plus que ce qui était déjà noté");
   // Mon historique : le compte, une ligne « 1/2 · arrêtée ».
   p.$("vers-reglages").click();
   assert.equal(p.$("vers-historique").hidden, false, "le bouton apparaît dès la première séance");
@@ -920,7 +920,7 @@ test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'a
   assert.ok(envoye, "la séance partie avant le billet est notée dès son premier calcul validé");
   const id = envoye.parcours.seances["1"][10];
   assert.ok(Number.isInteger(id) && id >= 1, "elle a reçu son identifiant à ce moment-là");
-  assert.deepEqual(envoye.parcours.seances, {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 2, 3, 11, 8, 10, 1, 1, id]});
+  assert.deepEqual(envoye.parcours.seances, {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 2, 3, 11, 8, 10, 1, 1, id, 1]});
   assert.equal(envoye.parcours.reglages.flash.nombres, 7, "les réglages du compte n'ont pas été touchés par ceux de l'attente");
   // La flèche : « Envoyé » n'apparaît qu'une fois la note de la fin confirmée.
   p.$("suivant").click();
@@ -931,7 +931,7 @@ test("un billet qui tarde (relecture Codex, 23/10) : jamais les réglages de l'a
   await p.souffler();
   assert.equal(p.$("envoi-fin").hidden, false);
   assert.equal(p.$("envoi-fin").textContent, "Envoyé à ton professeur");
-  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 1, 1, id], "la même séance, 1 fait sur 10");
+  assert.deepEqual(serveur.dernier().parcours.seances["1"].slice(7), [10, 1, 1, id, 1], "la même séance, 1 fait sur 10");
   // Retour aux réglages : ceux du compte, enfin (7 nombres) — ni les 11 de l'attente, ni les 12 de l'appareil.
   p.$("vers-reglages").click();
   assert.equal(p.$("val-nombres").textContent, "7", "les réglages du compte");
