@@ -1230,32 +1230,6 @@
 
     .result-score { color: #143e62 !important; font-size: 1.2rem; font-weight: 950; }
 
-    .site-footer {
-      width: min(100%, 960px);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 5px 9px;
-      margin: 0 auto;
-      padding: 13px 12px calc(13px + env(safe-area-inset-bottom));
-      color: #5b7283;
-      font-size: .78rem;
-      text-align: center;
-    }
-
-    .site-footer a,
-    .site-footer button {
-      padding: 2px;
-      border: 0;
-      color: #315d7a;
-      background: none;
-      font: inherit;
-      font-weight: 850;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
     html.fullscreen-fallback {
       width: 100%;
       height: 100%;
@@ -1272,8 +1246,6 @@
       overflow: auto;
       overscroll-behavior: none;
     }
-
-    body.fullscreen-active .site-footer { display: none; }
 
     body.fullscreen-active .fullscreen-toggle {
       position: fixed;
@@ -1962,19 +1934,12 @@
     </div>
   </section>
 
-  <footer class="site-footer">
-    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-    <a href="../../licence.html">Licence</a>
-  </footer>
-
   <script src="../../assets/js/coffres-settings.js?v=4"></script>
   <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
-       classe (bloc, pastille, pied, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
+       classe (bloc, pastille, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
   <script src="../../assets/js/coffres-parcours.js?v=20261021-1"></script>
-  <script src="../../assets/js/coffres-suivi.js?v=20261021-1"></script>
+  <script src="../../assets/js/coffres-suivi.js?v=20261024-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2151,8 +2116,8 @@
       // (assets/js/coffres-parcours.js) et l'habillage du suivi (coffres-suivi.js)
       // ne font rien sans code dans l'onglet : la page joue comme avant, sans rien
       // enregistrer. Sous un code (l'élève venu de son espace, par un billet) :
-      //   - l'en-tête du modèle commun (la flèche, le bloc, la pastille), le pied
-      //     « Mon espace », et le choix du niveau et des opérations devient une page ;
+      //   - l'en-tête du modèle commun (la flèche, le bloc, la pastille), rien en
+      //     bas, et le choix du niveau et des opérations devient une page ;
       //   - seuls les niveaux et les opérations ouverts à sa classe sont proposés ;
       //     un seul choix possible = sélectionné d'office ; plus aucun choix = le mémo ;
       //   - la partie en cours (clés, série) est reprise telle quelle, sur un plateau
@@ -2209,7 +2174,7 @@
 
       // Les liens de retour de l'élève (le lien « Retour au calcul mental » de
       // « Trésor ouvert ! ») mènent à son espace, et le disent (choix de
-      // Gwenaël, 21/10/2026) ; le petit logo du pied aussi (dessinerPied).
+      // Gwenaël, 21/10/2026).
       function majLiensRetour() {
         if (!modeEleve()) return;
         document.querySelectorAll("[data-origin-link]").forEach(link => {
@@ -2228,7 +2193,6 @@
         lienRetour.hidden = !eleve;
         if (!SUIVI) return;
         SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
-        SUIVI.dessinerPied(document.querySelector("footer.site-footer"));
         poserPastille();
         majLiensRetour();
       }

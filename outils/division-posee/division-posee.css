@@ -29,6 +29,8 @@ button, a, .rank-control { touch-action: manipulation; }
 .skip-link:focus { top: 12px; }
 .page-shell { --stage-min-height: clamp(380px, calc(100svh - 477px), 535px); width: min(1480px, calc(100% - 28px)); min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; }
 .page-shell > main { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+/* Plus de pied de page (24/10/2026) : l'espace sous le cadre, égal à celui des côtés. */
+.page-shell { padding-bottom: 14px; }
 .site-header { min-height: 96px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; padding: 12px 4px 8px; }
 .brand-nav { justify-self: start; display: grid; justify-items: start; gap: 3px; }
 .brand { width: 148px; }
@@ -165,11 +167,10 @@ button, a, .rank-control { touch-action: manipulation; }
 .table-target-badge { grid-column: 2; align-self: start; justify-self: end; z-index: 2; min-width: 38px; max-width: 48px; overflow: hidden; margin-top: -7px; padding: 3px 6px; border: 1px solid #9fc4e4; border-radius: 999px; color: var(--navy); background: #fff; box-shadow: 0 3px 8px rgba(16,41,74,.14); font-size: .7rem; font-weight: 900; line-height: 1.15; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .multiple.is-target-after .table-target-badge { align-self: end; margin-top: 0; margin-bottom: -7px; }
 .table-card:not(.is-revealed) .multiple strong { color: #9aa7b6; }
-.site-footer { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; padding: 19px 10px 24px; color: #718096; font-size: .8rem; text-align: center; }
-.site-footer a, .site-footer button { padding: 0; border: 0; color: #526d8d; background: transparent; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 
 body.is-projection { height: 100svh; overflow: hidden; }
 body.is-projection .page-shell { --stage-min-height: 0px; width: min(1600px, calc(100% - 18px)); height: 100svh; min-height: 0; overflow: hidden; }
+body.is-projection .page-shell { padding-bottom: 9px; }
 body.is-projection .site-header { min-height: 68px; padding-block: 6px 4px; }
 body.is-projection .brand { width: 118px; }
 body.is-projection .title-lockup p { display: none; }
@@ -189,7 +190,6 @@ body.is-projection .step-controls .button { min-height: 38px; padding-block: 6px
 body.is-projection .table-card { padding: 11px; }
 body.is-projection .table-heading { padding-bottom: 6px; }
 body.is-projection .multiple { min-height: 28px; padding-block: 3px; font-size: 1.02rem; }
-body.is-projection .site-footer { flex: none; gap: 5px; padding: 5px 8px 6px; font-size: .68rem; }
 
 body.is-projection.is-projection-editing .workspace { margin-top: 8px; }
 body.is-projection.is-projection-editing .instruction { min-height: 0; }

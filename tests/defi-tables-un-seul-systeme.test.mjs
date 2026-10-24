@@ -493,9 +493,8 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /if \(validation && !validation\.reussi && !validation\.dejaAcquise\) return phraseTestRate\(\);/);
   // « Tu as choisi » : seulement depuis les réglages.
   assert.match(html, /\$\("launch-eyebrow"\)\.hidden = state\.origin !== "reglages";/);
-  // Le pied de l'élève : « Mon espace » seul, et il porte la marque.
-  assert.match(html, /espace\.setAttribute\("data-mathsgo-confidentialite", ""\);/);
-  assert.match(html, /pied\.replaceChildren\(logo, espace\);/);
+  // Le pied de l'élève : il n'y en a plus (24/10/2026), le retour est en haut.
+  assert.doesNotMatch(html, /pied\.replaceChildren|majPiedDePage/);
   assert.doesNotMatch(html, /Infos et confidentialité"\)/);
   // « 10 / 11 » sur une ligne à 320 px.
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);

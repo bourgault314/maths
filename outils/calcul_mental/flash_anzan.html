@@ -114,11 +114,11 @@
     .shell { width: min(850px, calc(100% - 28px)); margin: 0 auto; padding: 16px 0 30px; display: flex; flex-direction: column; }
     @media screen { .shell { zoom: var(--echelle, 1); } }
     body.mesure-cadre { min-height: 0 !important; }
-    body.mesure-cadre .site-footer { display: none !important; }
     /* Pas de barre du site au-dessus du cadre (choix de Gwenaël, 22/10/2026 :
        « des boutons tout seuls là-haut, on perd de la place ») : la flèche
        vers Calcul mental et le plein écran vivent DANS le cadre, aux places
-       des boutons de la séance ; le logo descend dans le pied de page. */
+       des boutons de la séance ; pas de logo (plus de pied dans les applis,
+       24/10/2026). */
     .rond { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #c5d9e6; background: #fff; color: var(--ink);
       display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0; cursor: pointer; text-decoration: none; }
     .rond svg { width: 20px; height: 20px; }
@@ -153,7 +153,6 @@
        jamais : ce qui est trop long défile à l'intérieur. */
     body.en-seance .shell { height: 100vh; height: 100dvh; padding-bottom: 16px; }
     body.en-seance .panel { flex: 1 1 auto; }
-    body.en-seance .site-footer { display: none; }
 
     .eyebrow { margin: 0 0 4px; color: var(--teal); font-size: .74rem; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
     h1 { margin: 0; font-size: 2.3rem; line-height: 1.05; font-weight: 900; }
@@ -323,8 +322,8 @@
        flash_anzan_suivi.js) ; la flèche du cadre mène à Mon espace, sans
        « ← Mon espace » en texte (la flèche y mène déjà) ; pendant la séance,
        la pastille « ● Rania » à droite de la barre, à la place du plein écran
-       sur téléphone ; en bas, le petit logo et « Mon espace ». La classe
-       « suivi-eleve » est posée dès le <head> pour ne pas clignoter. */
+       sur téléphone ; rien en bas (24/10/2026 : plus de pied dans les
+       applis). La classe « suivi-eleve » est posée dès le <head> pour ne pas clignoter. */
     .shell > .suivi-repere { margin: 0 0 12px; }
     body.en-seance .suivi-repere { display: none; }
     #suivi-pastille-slot:empty { display: none; }
@@ -362,13 +361,6 @@
       .hist-item { grid-template-columns: 54px minmax(0, 1fr) auto; padding: 6px 10px; }
       .hist-jour { font-size: .82rem; }
     }
-
-    /* ---- Le pied du site (Défi tables) ---- */
-    .site-footer { width: min(100%, 960px); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px 9px;
-      margin: 0 auto; padding: 13px 12px calc(13px + env(safe-area-inset-bottom)); color: #5b7283; font-size: .78rem; text-align: center; }
-    .site-footer .pied-logo { display: inline-flex; align-items: center; padding: 0 4px 0 0; text-decoration: none; }
-    .site-footer .pied-logo img { display: block; height: 26px; width: auto; }
-    .site-footer a { padding: 2px; color: #315d7a; font-weight: 850; text-decoration: underline; text-underline-offset: 2px; }
 
     /* ---- Ordinateur et tablette en largeur : la réponse à droite ---- */
     @media (min-width: 900px) {
@@ -457,7 +449,7 @@
     }
 
     @media print {
-      .site-footer, .rond { display: none; }
+      .rond { display: none; }
       .panel { box-shadow: none; }
     }
   </style>
@@ -614,19 +606,12 @@
       </div>
     </section>
   </main>
-  <footer class="site-footer">
-    <a class="pied-logo" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
-    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-    <a href="../../licence.html">Licence</a>
-  </footer>
 
   <script src="./flash_anzan_core.js?v=20261022-1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
-       classe (bloc, pastille, pied, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
+       classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
   <script src="./flash_anzan_parcours.js?v=20261024-2"></script>
-  <script src="./flash_anzan_suivi.js?v=20261023-1"></script>
+  <script src="./flash_anzan_suivi.js?v=20261024-1"></script>
   <script>
     (function () {
       "use strict";
@@ -643,8 +628,7 @@
       // rien ne change »). Sous un code (l'élève venu de son espace, par un
       // billet) :
       //   - le bloc de suivi au-dessus du cadre, la pastille « ● Rania »
-      //     pendant la séance, la flèche vers Mon espace, le pied « Mon
-      //     espace » ;
+      //     pendant la séance, la flèche vers Mon espace ; rien en bas ;
       //   - ses réglages vivent sur son compte et le suivent d'un appareil à
       //     l'autre (jamais ceux de l'appareil : une tablette partagée garde
       //     les siens pour les élèves sans code) ;
@@ -1348,7 +1332,7 @@
 
       // Tout ce que l'élève à code voit de son suivi : la classe sur <html>,
       // le bloc au-dessus du cadre, la flèche vers Mon espace, la pastille, le
-      // pied, le bouton de l'historique, la ligne « Envoyé ».
+      // bouton de l'historique, la ligne « Envoyé ».
       function majSuivi() {
         const eleve = modeEleve();
         racine.classList.toggle("suivi-eleve", eleve);
@@ -1359,7 +1343,6 @@
         }
         if (!SUIVI) return;
         SUIVI.dessinerBloc($("suivi-repere"));
-        SUIVI.dessinerPied(document.querySelector("footer.site-footer"));
         poserPastille();
         $("vers-historique").hidden = !aUnHistorique();
         majEnvoi();

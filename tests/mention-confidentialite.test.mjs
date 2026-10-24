@@ -103,6 +103,9 @@ const PAGES_AVEC_MENTION = [
   "outils/division-posee/index.html",
   "outils/index.html",
   "outils/multiplication-posee/index.html",
+  // les fiches du Moulin de Pythagore : une page du site (une liste de PDF), pas une
+  // appli — rangée par erreur parmi les applis le 23/10, remise le 24/10 (Gwenaël)
+  "outils/plateaux_manipulation/moulin_pythagore_fiches.html",
   "outils/soustraction-posee/index.html",
   "outils/toutes-les-ressources.html",
 ];
@@ -119,7 +122,8 @@ test("la mention n'est chargée que par l'accueil, le catalogue, les pages léga
         `${rel(chemin)} : balise inattendue ${balises[0]}`);
     }
   }
-  // 153 pages au lot 10b, 167 au 22/10/2026, 150 après la PR #1047 ; 13 depuis ce lot. Une nouvelle
+  // 153 pages au lot 10b, 167 au 22/10/2026, 150 après la PR #1047 ; 13 depuis ce lot, 14 avec les
+  // fiches du Moulin de Pythagore (24/10/2026). Une nouvelle
   // appli ne charge PAS le script ; une nouvelle page de navigation l'ajoute ici.
   assert.deepEqual(chargeuses, PAGES_AVEC_MENTION);
 });
@@ -240,8 +244,9 @@ test("la mention écrite dans un pied de page respecte la règle « un seul lien
       }
     }
   }
-  // 26 au lot 10b ; 12 depuis le 23/10/2026 (les applis ne l'écrivent plus, les anciens index sont des redirections).
-  assert.equal(mentions, 12, `${mentions} mentions écrites`);
+  // 26 au lot 10b ; 12 depuis le 23/10/2026 (les applis ne l'écrivent plus, les anciens index sont des redirections) ;
+  // 13 depuis le 24/10/2026 (les fiches du Moulin de Pythagore, une page du site, la retrouvent).
+  assert.equal(mentions, 13, `${mentions} mentions écrites`);
 });
 
 test("les trois pages légales et l'annuaire écrivent la mention dans leur pied", () => {
