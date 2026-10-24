@@ -262,9 +262,10 @@ test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », s
   // Le bandeau : morceaux insécables, « lecture seule » en gras.
   assert.match(html, /\.suivi-repere\.lecture-seule \.repere-lecture > span \{ display: inline-block; white-space: nowrap; \}/);
   assert.match(html, /\.suivi-repere\.lecture-seule b \{ font-weight: 800; \}/);
-  // Le pied du site reste dans la page (caché) : mention-confidentialite.js y
-  // trouve sa marque et n'ajoute rien.
-  assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>\s*\n\s*<\/footer>/);
+  // Le pied du site reste dans la page (caché) ; depuis le 23/10/2026, il finit sur « Licence »
+  // et la page ne charge plus mention-confidentialite.js (plus rien ne s'ajoute en bas).
+  assert.match(html, /<a href="\.\.\/\.\.\/licence\.html">Licence<\/a>\s*\n\s*<\/footer>/);
+  assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/);
 });
 
 test("la page : « Pour le professeur » dans une seconde carte sous le parcours — le même rendu que la page 2, le tableau défile de côté, colonne fixe, pas de hauteur mini ; hors de la mesure de l'échelle", () => {

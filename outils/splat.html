@@ -992,11 +992,6 @@
      la grille du pavé, et les touches en héritaient : le pavé reprend la
      police arrondie qu'il a dans Petit Splat et Défi tables. */
   body.eleve-pave .mg-pave__grille{font-family:inherit}
-  /* La mention « Sans cookie ni traceur » (assets/js/mention-confidentialite.js)
-     se pose sous la page, au-dessus de tout : elle se dessinait par-dessus la
-     rangée Effacer / Valider du pavé. Elle attend la fin de la série, comme dans
-     la vue élève de Petit Splat, qui ne la montre pas. */
-  body.eleve-pave .mg-mention-slot{display:none}
   /* Place serrée (téléphone : moins de 700 px au-dessus du pavé) : les blancs
      du HAUT de la carte maigrissent, et les pixels gagnés reviennent au
      plateau. Ceux du bas restent : c'est là que viennent le message et
@@ -1005,7 +1000,6 @@
   body.eleve-pave-serre #eleveTeteHaut{margin-top:2px}
   body.eleve-pave-serre .eleveConsigne{margin-bottom:6px}
 </style>
-<script defer src="../assets/js/mention-confidentialite.js"></script>
 <!-- Sans « defer » : la page dessine sa première carte pendant le chargement,
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20261015-1"></script>

@@ -321,7 +321,8 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
   assert.doesNotMatch(sansCommentaires, /\bconst\b|\blet\b|=>|\?\.|URLSearchParams/, "pas de syntaxe récente : il doit tourner partout");
   const vieux = bootstrap("#code=2F4FUL", {sansHistorique: true});
   assert.deepEqual(vieux.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: ""}, "même sans pouvoir nettoyer l’adresse, aucun code n’est adopté");
-  assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf('src="../../assets/js/mention-confidentialite.js"'),
+  const premierScriptCharge = html.search(/<script\b[^>]*\bsrc=/);
+  assert.ok(premierScriptCharge > 0 && html.indexOf("MATHSGO_ENTREE") < premierScriptCharge,
     "il précède les scripts de la page");
   assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf("<body>"), "et il est dans le <head>");
 });

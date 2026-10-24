@@ -445,7 +445,8 @@ test("le pavé s'efface quand il n'y a plus rien à saisir, mais la place reste 
 });
 
 test("rien de tout cela ne s'applique sur ordinateur : chaque règle neuve est sous body.eleve-pave", () => {
-  const bloc = petit.slice(petit.indexOf("Appareil tactile : le pavé de chiffres de la page"), petit.indexOf(".menuConsent {"));
+  const debutBloc = petit.indexOf("Appareil tactile : le pavé de chiffres de la page");
+  const bloc = petit.slice(debutBloc, petit.indexOf("</style>", debutBloc));
   const selecteurs = [...bloc.matchAll(/^\s{4}([^\s@/][^{]*)\{/gm)].map((m) => m[1].trim());
   assert.ok(selecteurs.length >= 8, `${selecteurs.length} règles trouvées dans le bloc tactile`);
   const dehors = selecteurs.filter((sel) => !/^body\.eleve-pave/.test(sel));
@@ -457,7 +458,8 @@ test("la génération, la correction et les étoiles ne sont pas touchées", () 
   // l'étoile s'écrit par le moteur partagé depuis le lot 2 du suivi (08/10/2026)
   assert.match(petit, /P\.enregistrerSerie\(p, parcoursId, \{ fait: true, etoiles: sansFaute, cartes: total, vues: eleveVues \}\)/);
   assert.match(petit, /function eleveDevoilerTache\(\) \{\s*const part = document\.querySelector\('\.eleve-scene \.part-splat'\);/);
-  assert.match(petit, /<a data-mathsgo-confidentialite href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
+  // la mention « Sans cookie ni traceur » a quitté le menu (23/10/2026, retirée des applis)
+  assert.doesNotMatch(petit, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
 });
 
 // ---------------------------------------------------------------------------

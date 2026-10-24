@@ -19,7 +19,6 @@ const racine = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Ces tests interdisent le retour en arrière et vérifient que la mention est là.
 
 const MENTION = "Sans cookie ni traceur";
-const PAGES_AVEC_MENTION = 150; // 167 depuis Flash Anzan (22/10/2026) ; 150 depuis que les 17 anciens index sont des redirections (23/10/2026)
 const SCRIPT = "assets/js/mention-confidentialite.js";
 const source = readFileSync(join(racine, SCRIPT), "utf8");
 
@@ -83,24 +82,133 @@ test("aucun fichier publié ni aucun fichier du serveur ne cite Google Analytics
 });
 
 // ---------------------------------------------------------------------------
-// 2. Les pages chargent le script commun, une fois, et lui seul.
+// 2. Où la mention vit (décision de Gwenaël du 23/10/2026) : « tant que je suis
+//    dans ce qui ressemble à l'accueil, on laisse ; dès que je rentre dans une
+//    appli, on enlève ». Elle reste sur l'accueil, le catalogue, l'annuaire, les
+//    pages légales et les pages d'entrée encore servies (les 17 anciens index
+//    devenus des redirections le 23/10, PR #1047, n'ont plus de pied) ; elle quitte les applis,
+//    les jeux et les fiches à jouer — sauf les deux menus des Automatismes, qu'il
+//    garde exprès (ils avaient l'ancien lien « Gérer mes cookies » : la voir
+//    disparaître là ferait croire que les cookies sont arrivés).
 // ---------------------------------------------------------------------------
-test("chaque page qui portait la bannière charge maintenant mention-confidentialite.js, une seule fois", () => {
-  let chargeuses = 0;
+const PAGES_AVEC_MENTION = [
+  "auto/index.html",
+  "automatismes-v2/index.html",
+  "confidentialite.html",
+  "index.html",
+  "licence.html",
+  "mentions-legales.html",
+  "outils/addition-posee/index.html",
+  "outils/chat/index.html",
+  "outils/division-posee/index.html",
+  "outils/index.html",
+  "outils/multiplication-posee/index.html",
+  "outils/soustraction-posee/index.html",
+  "outils/toutes-les-ressources.html",
+];
+
+test("la mention n'est chargée que par l'accueil, le catalogue, les pages légales, les pages de famille et les deux menus des Automatismes", () => {
+  const chargeuses = [];
   for (const chemin of pages) {
     const page = readFileSync(chemin, "utf8");
     const balises = page.match(/<script\b[^>]*mention-confidentialite\.js[^>]*>/g) ?? [];
     assert.ok(balises.length <= 1, `${rel(chemin)} charge ${balises.length} fois le script`);
     if (balises.length === 1) {
-      chargeuses += 1;
+      chargeuses.push(rel(chemin));
       assert.match(balises[0], /^<script defer src="(?:\.\.\/)*assets\/js\/mention-confidentialite\.js">$/,
         `${rel(chemin)} : balise inattendue ${balises[0]}`);
     }
   }
-  // 153 pages au lot 10b : exactement celles qui chargeaient l'ancienne bannière.
-  // Une page nouvelle qui veut la mention charge le script, et ce nombre suit.
-  assert.equal(chargeuses, PAGES_AVEC_MENTION,
-    `${chargeuses} pages chargent le script (${PAGES_AVEC_MENTION} attendues) : mets à jour PAGES_AVEC_MENTION si c'est voulu`);
+  // 153 pages au lot 10b, 167 au 22/10/2026, 150 après la PR #1047 ; 13 depuis ce lot. Une nouvelle
+  // appli ne charge PAS le script ; une nouvelle page de navigation l'ajoute ici.
+  assert.deepEqual(chargeuses, PAGES_AVEC_MENTION);
+});
+
+// Ce qu'une page peut AFFICHER : son texte hors commentaires, balises et styles (espaces
+// et retours à la ligne ramenés à un seul espace), plus le code de ses scripts sans leurs
+// commentaires (un script peut écrire la mention). Les commentaires qui racontent
+// l'histoire de la mention ne comptent pas. Relecture Codex du 24/10 : l'ancienne
+// recherche exigeait « > » ou « " » collé devant la phrase, et laissait passer
+// « <p>⏎  Sans cookie ni traceur⏎</p> ».
+const MENTION_SOUPLE = /Sans\s+cookie\s+ni\s+traceur/;
+// Retire les commentaires d'un code JavaScript en lisant caractère par caractère : ce
+// qui est entre guillemets (', ", `) est une chaîne et reste ; « // » ou « /* » hors
+// chaîne ouvre un commentaire (contre-relecture Codex du 24/10 : `"exemple"// …`).
+function sansCommentairesJs(code) {
+  let sortie = "";
+  let chaine = "";
+  for (let i = 0; i < code.length; i += 1) {
+    const c = code[i];
+    if (chaine) {
+      sortie += c;
+      if (c === "\\") { sortie += code[i + 1] ?? ""; i += 1; }
+      else if (c === chaine) chaine = "";
+      continue;
+    }
+    if (c === "/" && code[i + 1] === "/") {
+      while (i < code.length && code[i] !== "\n") i += 1;
+      sortie += "\n";
+      continue;
+    }
+    if (c === "/" && code[i + 1] === "*") {
+      const fin = code.indexOf("*/", i + 2);
+      i = fin < 0 ? code.length : fin + 1;
+      sortie += " ";
+      continue;
+    }
+    if (c === "'" || c === '"' || c === "`") chaine = c;
+    sortie += c;
+  }
+  return sortie;
+}
+// Les espaces que le navigateur affiche comme des espaces : entités nommées, décimales
+// et hexadécimales (contre-relecture Codex du 24/10 : `&#xA0;`).
+function decoderEntites(texte) {
+  return texte
+    .replace(/&#x([0-9a-f]+);?/gi, (_m, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);?/g, (_m, d) => String.fromCodePoint(Number(d)))
+    .replace(/&(nbsp|ensp|emsp|thinsp|NonBreakingSpace);/g, " ");
+}
+function afficheLaMention(source, estHtml) {
+  if (!estHtml) return MENTION_SOUPLE.test(sansCommentairesJs(source));
+  const sansCommentaires = source.replace(/<!--[\s\S]*?-->/g, " ");
+  const scripts = [...sansCommentaires.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)].map((m) => m[1]);
+  if (scripts.some((code) => MENTION_SOUPLE.test(sansCommentairesJs(code)))) return true;
+  const texte = sansCommentaires
+    .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
+  return MENTION_SOUPLE.test(decoderEntites(texte).replace(/[\s\u00a0\u202f\u2007]+/g, " "));
+}
+
+test("le détecteur voit la mention écrite sur plusieurs lignes ou par un script, pas dans un commentaire", () => {
+  assert.ok(afficheLaMention("<p>\n  Sans cookie ni traceur\n</p>", true), "sabotage de Codex : texte seul sur sa ligne");
+  assert.ok(afficheLaMention("<span>Sans&nbsp;cookie ni traceur</span>", true));
+  assert.ok(afficheLaMention("<script>el.textContent = 'Sans cookie ni traceur';</script>", true), "écrite par un script de la page");
+  assert.ok(afficheLaMention("const t = `Sans cookie\n ni traceur`;", false), "dans un fichier .js");
+  assert.ok(!afficheLaMention("<!-- la mention « Sans cookie ni traceur » est partie -->", true));
+  assert.ok(!afficheLaMention("<style>/* Sans cookie ni traceur */</style>", true));
+  assert.ok(!afficheLaMention("<script>// page, « Sans cookie ni traceur · Confidentialité »\nvar a = 1;</script>", true));
+  assert.ok(!afficheLaMention("/* Sans cookie ni traceur */ var a = 1; // Sans cookie ni traceur", false));
+  // contre-relecture Codex du 24/10
+  assert.ok(afficheLaMention("<p>Sans&#xA0;cookie ni traceur</p>", true), "espace insécable en hexadécimal");
+  assert.ok(afficheLaMention("<p>Sans&#160;cookie&#x20;ni traceur</p>", true), "entités décimale et hexadécimale");
+  assert.ok(afficheLaMention("<p>Sans <strong>cookie</strong>\n ni\ttraceur</p>", true));
+  assert.ok(!afficheLaMention('<script>const note = "exemple"// Sans cookie ni traceur\nvar b = 2;</script>', true), "commentaire collé à une chaîne");
+  assert.ok(afficheLaMention('<script>const url = "https://mathsgo.re"; el.textContent = "Sans cookie ni traceur";</script>', true), "« // » dans une chaîne n'ouvre pas de commentaire");
+  assert.ok(!afficheLaMention("const s = 'a'; /* Sans cookie\n ni traceur */", false));
+});
+
+test("aucune appli, aucun jeu, aucune fiche à jouer n'affiche « Sans cookie ni traceur »", () => {
+  // scripts/ : outils de construction et de contrôle (aucune page ne les charge) ;
+  // seo-publication.mjs y fabrique le pied de « Toutes les ressources », qui garde la mention.
+  const permises = new Set([...PAGES_AVEC_MENTION, "automatismes-v2/app.js", SCRIPT]);
+  const fautives = fichiersPublies([".html", ".js", ".mjs"])
+    .filter((c) => !c.startsWith(join(racine, "tests") + sep) && !c.startsWith(join(racine, "scripts") + sep))
+    .filter((c) => !c.includes(`${sep}vendor${sep}`) && !/\.test\.m?js$/.test(c))
+    .filter((c) => !permises.has(rel(c)))
+    .filter((c) => afficheLaMention(readFileSync(c, "utf8"), c.endsWith(".html")))
+    .map(rel);
+  assert.deepEqual(fautives, []);
 });
 
 // ---------------------------------------------------------------------------
@@ -132,8 +240,8 @@ test("la mention écrite dans un pied de page respecte la règle « un seul lien
       }
     }
   }
-  // 26 au lot 10b ; ÉquaSplat pose l'attribut en JavaScript, en mode réception seulement.
-  assert.ok(mentions >= 26, `${mentions} mentions écrites seulement`);
+  // 26 au lot 10b ; 12 depuis le 23/10/2026 (les applis ne l'écrivent plus, les anciens index sont des redirections).
+  assert.equal(mentions, 12, `${mentions} mentions écrites`);
 });
 
 test("les trois pages légales et l'annuaire écrivent la mention dans leur pied", () => {

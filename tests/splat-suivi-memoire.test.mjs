@@ -260,11 +260,11 @@ test("étapes : la pastille « ● Léa » reste, rien du bloc ; la mention du s
   // SPLAT! classique (et l'Enquête, le Système) : la mention posée par mention-confidentialite.js
   // est SOUS le cadre du jeu — retirée, rien ne bouge (mesuré au banc du lot 6)
   assert.match(SOURCE_SUIVI, /"html\.suivi-eleve \.mg-mention-slot\{display:none !important\}"/);
-  // ÉquaSplat : son pied (ordinateur, sous le cadre) part ; au téléphone, son lien est dans les
-  // commandes du bas — invisible, mais sa place reste (le retirer faisait descendre les boutons)
-  assert.match(PAGES.equa, /html\.suivi-eleve \.equasplatConsentFooter\{\s*display:none !important;\s*\}/);
-  assert.match(PAGES.equa, /html\.suivi-eleve \.mobileConsentLink\{\s*visibility:hidden !important;\s*\}/);
-  assert.doesNotMatch(PAGES.equa, /html\.suivi-eleve \.mobileConsentLink\{\s*display:none/);
+  // Depuis le 23/10/2026, plus aucune de ces pages ne porte la mention, élève à code ou non :
+  // ÉquaSplat a perdu ses deux liens de réception (pied et commandes du bas)
+  for (const nom of ["classique", "petit", "equa"]) {
+    assert.doesNotMatch(PAGES[nom], /<script[^>]*mention-confidentialite\.js|Sans cookie ni traceur · Confidentialité|ConsentLink|ConsentFooter/, nom);
+  }
 });
 
 test("habillage : la page de l'élève venu de son espace est marquée « suivi-eleve » — sous un code, pendant un billet, billet refusé ; jamais sans code", async () => {

@@ -239,7 +239,8 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /Mentions légales/);
   assert.match(interfaceHtml, /Confidentialité/);
   assert.match(interfaceHtml, /Licence/);
-  assert.match(interfaceHtml, /Sans cookie ni traceur/);
+  // « Sans cookie ni traceur » n'est plus dans le pied des applis (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
+  assert.doesNotMatch(interfaceHtml, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
   assert.match(interfaceHtml, /Gabarit entier/);
   assert.doesNotMatch(interfaceHtml, /Vérifier l’étape|score|indice/i);
 
