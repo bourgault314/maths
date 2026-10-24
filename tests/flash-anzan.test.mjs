@@ -178,7 +178,7 @@ test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du
   assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
   assert.match(script, /if \(modeEleve\(\)\) return; \/\/ billet en route ou refusé : rien à l'appareil/);
   // Ce qui part : le mode, les réglages, les calculs faits, le score — jamais les calculs ni les réponses.
-  assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*id: seance\.idSuivi,\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}\);/);
+  assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*id: seance\.idSuivi,\s*ordre: seance\.ordreSuivi \|\| 0,\s*jour: seance\.jourSuivi \|\| "",\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}\);/);
   assert.match(script, /seance\.idSuivi = suiviActif\(\) \? PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\) : 0;/, "l'identifiant est tiré au début de chaque séance, libre dans la case");
   assert.doesNotMatch(script, /noterUneSeance\([^)]*(calculs|resultats\[|ecrit|termes)/, "jamais les nombres ni les réponses");
 });
@@ -242,4 +242,13 @@ test("le titre « Soroban / Flash Anzan » est centré, et la place du plein éc
   assert.match(style, /\.cadre-haut \.titre-bloc \{[^}]*text-align: center;/);
   const regle = /@media \(max-width: 620px\), \(max-width: 899px\) and \(max-height: 500px\) and \(pointer: coarse\) \{\s*\.cadre-haut::after \{ content: ""; flex: 0 0 44px; \}/.exec(style);
   assert.ok(regle, "une place de 44 px à droite, là où le plein écran est caché et la flèche dans la ligne");
+});
+
+test("4e relecture Codex (24/10) : « Envoyé à ton professeur » seulement si la séance est DANS le parcours envoyé, et la page redonne l'ordre de sa séance à chaque note", () => {
+  const html = readFileSync(new URL("../outils/calcul_mental/flash_anzan.html", import.meta.url), "utf8");
+  assert.match(html, /if \(PARCOURS\.ordreDeId\(SUIVI\.client\.parcours, seance\.idSuivi\) === null\) \{ envoi\.hidden = true; return; \}/);
+  assert.match(html, /seance\.ordreSuivi = 0;/, "remis à zéro à chaque séance");
+  assert.match(html, /ordre: seance\.ordreSuivi \|\| 0,\s*jour: seance\.jourSuivi \|\| "",/, "l'ordre et le jour gardés repartent avec chaque note");
+  assert.match(html, /const ordre = PARCOURS\.ordreDeId\(SUIVI\.client\.parcours, seance\.idSuivi\);\s*if \(ordre\) \{\s*seance\.ordreSuivi = ordre;/);
+  assert.match(html, /if \(vue\) seance\.jourSuivi = vue\.jour;/, "et son jour de départ");
 });
