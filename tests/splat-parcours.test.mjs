@@ -19,7 +19,7 @@ const {ETAPES} = ETAPES_CARTE;
 test("échauffement : É1-É3 sont dans splat-etapes.js, juste avant la 38, avec leurs titres", () => {
   assert.deepEqual(ETAPES.slice(31, 35).map(e => e[0]), ["ech1", "ech2", "ech3", "m4e1"], "les trois étapes juste avant la 38");
   assert.deepEqual(ETAPES.slice(31, 34).map(e => [e[1], e[2]]),
-    [["É1", "Des billes vertes et rouges"], ["É2", "Je partage les billes"], ["É3", "Un jeton, un nombre"]]);
+    [["É1", "Des jetons verts et rouges"], ["É2", "Je partage les jetons"], ["É3", "Un jeton, un nombre"]]);
 });
 const serie = (fait, etoiles, cartes, vues) => ({fait, etoiles, cartes, vues});
 

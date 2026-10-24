@@ -1,5 +1,8 @@
 # Livret « SPLAT! Relatifs — Échauffement » (monde 6) — 8 pages, à plier
 
+« Jetons » et plus « billes » partout où l'élève lit (23/10/2026, choix de Gwenaël) : les « billes »
+1 et −1 sont des **jetons 1 et −1** (verts et rouges), sur la carte, dans le livret et dans ÉquaSplat.
+
 Trois fiches **avant la fiche 38**, pour les élèves pas encore à l'aise avec les nombres négatifs
 (décisions de Gwenaël du 14/10/2026). Elles sont dans le monde 6 et dans ses étoiles (« ⭐ 0 / 9 »
 sur la carte des mondes, « sur 40 » sur la tuile du suivi) ; elles portent un **code**, pas un
@@ -7,8 +10,8 @@ numéro : la 38 reste la 38.
 
 | Fiche | Titre | Ce qu'on y fait | Étoile |
 |---|---|---|---|
-| É1 | Des billes vertes et rouges | 𝑥 + b = c avec des billes 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent | `ech1` |
-| É2 | Je partage les billes | a × 𝑥 = c, puis a × 𝑥 + b = c, avec des billes : je regroupe, puis je partage | `ech2` |
+| É1 | Des jetons verts et rouges | 𝑥 + b = c avec des jetons 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent | `ech1` |
+| É2 | Je partage les jetons | a × 𝑥 = c, puis a × 𝑥 + b = c, avec des jetons 1 et −1 : je regroupe, puis je partage | `ech2` |
 | É3 | Un jeton, un nombre | les mêmes formes avec **un** jeton numéroté par plateau : le pont vers la fiche 38 | `ech3` |
 
 Deux plateaux, comme tout le monde 6. **Aucune tache « opposé »** (la grande tache de la couverture
