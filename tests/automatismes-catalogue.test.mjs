@@ -52,7 +52,7 @@ test("84 cartes uniques, cinq domaines et une identité stable par forme", () =>
       assert.equal(forme.champs.length, question.fields.length, forme.identifiant);
     }
   }
-  assert.equal(formes.size, 435);
+  assert.equal(formes.size, 437);
 });
 
 test("le classement des grandeurs est explicite et les trois familles réservées sont cachées", () => {
@@ -76,6 +76,8 @@ test("435 alias relient les trois anciennes notations aux lettres canoniques", (
   const cibles = new Set();
   for (const carte of catalogue) {
     for (const forme of carte.formes) {
+      // Les formes ajoutées par un cahier (NC17-f, NC18-g) n'ont pas d'ancien identifiant.
+      if (forme.cahier && !forme.ancienId) continue;
       const correspondance = alias[forme.ancienId];
       assert.ok(correspondance, forme.ancienId);
       assert.equal(correspondance.id, forme.identifiant);

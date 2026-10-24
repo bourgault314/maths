@@ -1,4 +1,5 @@
-export const VERSION = "0.1.0";
+// 0.2.0 (lot NC-1, 24/10/2026) : NC17 et NC18 suivent le cahier ; une même graine y donne une autre question.
+export const VERSION = "0.2.0";
 export function rng(seed) {
   let a = Number(seed) >>> 0;
   const next = () => {
@@ -229,6 +230,29 @@ function factorForm(input, expected) {
   return wanted === null || got === wanted;
 }
 
+const enListe = (liste) =>
+  liste.length < 2 ? liste.join("") : `${liste.slice(0, -1).join(", ")} et ${liste.at(-1)}`;
+function estPremier(n) {
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+  return true;
+}
+// « 2 × 3 × 5 × 13 », « 2² × 3 », « 2^2*3 », « 390 = 2 × 195 » : la liste des facteurs.
+function lireProduit(texte, nombre) {
+  // Les exposants (2², 2³…) d'abord : normalize les changerait en chiffres ordinaires (NFKC).
+  const exposants = String(texte).replace(
+    /[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g,
+    (e) => `^${[...e].map((c) => "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c)).join("")}`,
+  );
+  const s = normalize(exposants).replace(new RegExp(`^${nombre}=`), "");
+  const morceaux = s.split(/[*x]/);
+  if (!morceaux.every((m) => /^\d{1,6}(\^\d{1,2})?$/.test(m))) throw Error("Écriture non reconnue");
+  return morceaux.flatMap((m) => {
+    const [base, exposant = "1"] = m.split("^");
+    return Array(Math.min(Number(exposant), 12)).fill(Number(base));
+  });
+}
+
 export function checkAnswer(q, answers) {
   if (answers.some((a) => String(a).trim() === "" || String(a) === "/"))
     return { ok: false, syntax: true, message: "Complète ta réponse." };
@@ -253,15 +277,59 @@ export function checkAnswer(q, answers) {
       let unique = [...new Set(got)].sort((a, b) => a - b);
       let expected = [...new Set(vals.map(numeric))].sort((a, b) => a - b);
       ok = unique.length === expected.length && unique.every((a, i) => near(a, expected[i]));
+      // Cahier NC18-a : des diviseurs justes, mais pas tous → la phrase dit lesquels manquent.
+      if (!ok && c.manquants && unique.every((a) => expected.some((e) => near(a, e)))) {
+        const manque = expected.filter((e) => !unique.some((a) => near(a, e)));
+        const paires = c.number && manque.every((m) => unique.some((a) => near(a * m, c.number)));
+        return {
+          ok: false,
+          syntax: false,
+          message: `Il manque des diviseurs\u00a0: ${enListe(manque)}${paires ? " (l’autre nombre de chaque paire)" : ""}.`,
+        };
+      }
     } else if (c.type === "property") {
-      const a = numeric(answers[0]);
-      if (c.rule === "divisor")
-        ok =
-          Number.isInteger(a) &&
-          a > 0 &&
-          (c.number ?? c.n) % a === 0 &&
-          (!c.exclude || !c.exclude.includes(a));
-      else if (c.rule === "multiple")
+      const a = c.rule === "primeFactors" ? NaN : numeric(answers[0]);
+      if (c.rule === "divisor") {
+        const n = c.number ?? c.n;
+        ok = Number.isInteger(a) && a > 0 && n % a === 0 && (!c.exclude || !c.exclude.includes(a));
+        // Cahier NC18-b : « 363 ÷ 7 ne tombe pas juste. »
+        if (!ok && c.reste && Number.isInteger(a) && a > 1 && a < n && n % a !== 0)
+          return { ok: false, syntax: false, message: `${n} ÷ ${a} ne tombe pas juste.` };
+      } else if (c.rule === "digitFill") {
+        // Cahier NC17-c : un seul chiffre, qui fait tomber la somme dans la table.
+        ok = /^\d$/.test(normalize(answers[0])) && (c.known + a) % c.divisor === 0;
+      } else if (c.rule === "digitSum") {
+        // Cahier NC17-d : le nombre de chiffres, le chiffre des unités (ou « par 2 », « par 5 »), et
+        // la somme des chiffres dans la table de 3 ou de 9 ; seule la somme ratée a sa phrase.
+        const texte = normalize(answers[0]);
+        const chiffres = /^[1-9]\d*$/.test(texte) ? [...texte].map(Number) : null;
+        const forme =
+          chiffres &&
+          chiffres.length === c.digits &&
+          (c.lastDigit == null || chiffres.at(-1) === c.lastDigit) &&
+          (c.alsoDivisor == null || Number(texte) % c.alsoDivisor === 0);
+        const total = chiffres ? chiffres.reduce((s, d) => s + d, 0) : 0;
+        ok = Boolean(forme) && total % c.sumDivisor === 0;
+        if (forme && !ok)
+          return {
+            ok: false,
+            syntax: false,
+            message: `${chiffres.join(" + ")} = ${total}\u00a0: pas dans la table de ${c.sumDivisor}.`,
+          };
+      } else if (c.rule === "primeFactors") {
+        // Cahier NC18-c : un produit de facteurs premiers égal au nombre, dans n'importe quel ordre,
+        // puissances permises (2² × 3). Un facteur juste mais pas premier a sa phrase.
+        const liste = lireProduit(answers[0], c.number);
+        const produit = liste.reduce((p, f) => p * f, 1);
+        const compose = liste.find((f) => f > 1 && !estPremier(f));
+        ok = produit === c.number && liste.every(estPremier);
+        if (!ok && produit === c.number && compose)
+          return {
+            ok: false,
+            syntax: false,
+            message: `${compose} n’est pas premier\u00a0: continue la décomposition.`,
+          };
+      } else if (c.rule === "multiple")
         ok =
           Number.isInteger(a) &&
           a % (c.number ?? c.n) === 0 &&

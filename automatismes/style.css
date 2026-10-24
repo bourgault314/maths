@@ -1181,8 +1181,11 @@ body[data-ecran="question"] .progression {
   padding: 0 8px;
   border: 0;
   border-radius: 12px;
-  background: color-mix(in srgb, var(--ligne) 70%, var(--papier));
-  color: var(--encre);
+  background: var(--papier);
+  color: var(--bleu-identite);
+  box-shadow:
+    0 1px 0 var(--ligne),
+    inset 0 0 0 1.5px color-mix(in srgb, var(--bleu-identite) 35%, var(--papier));
   font-size: 1.25rem;
   font-weight: 800;
   white-space: nowrap;
@@ -1207,9 +1210,15 @@ body[data-ecran="question"] .progression {
   font-weight: 800;
   box-shadow: 0 1px 0 var(--ligne);
 }
+/* Les touches de fonction (− / ⌫) : blanches comme les chiffres, le signe en bleu — en gris clair sur
+   le fond gris clair des commandes, on ne les voyait pas (retour de Gwenaël, 24/10). */
 .touches .symbole,
 .touches .effacer {
-  background: color-mix(in srgb, var(--ligne) 70%, var(--papier));
+  background: var(--papier);
+  color: var(--bleu-identite);
+  box-shadow:
+    0 1px 0 var(--ligne),
+    inset 0 0 0 1.5px color-mix(in srgb, var(--bleu-identite) 35%, var(--papier));
 }
 .touches .effacer {
   grid-column: span 2;
@@ -1794,6 +1803,85 @@ input.case {
   border-radius: 10px;
   background: var(--fond-doux);
   font-weight: 800;
+}
+/* Les cahiers de domaine (lot NC-1, 24/10/2026). */
+/* Des phrases à choisir (NC17-e) : l'une sous l'autre, en texte courant. */
+.carte .choix.une-colonne {
+  grid-template-columns: minmax(0, 1fr);
+}
+.carte .choix.une-colonne .choix-bouton {
+  display: block;
+  min-height: 52px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: left;
+}
+/* Cases à cocher (NC17-a) : une case vide devant chaque choix, une croix quand il est coché. */
+.carte .choix.coches .choix-bouton::before {
+  content: "☐\00a0";
+  font-weight: 400;
+}
+.carte .choix.coches .choix-bouton.selectionne::before {
+  content: "☒\00a0";
+}
+/* Une réponse longue (liste de diviseurs, produit de facteurs) : la case s'élargit avec ce qu'on écrit. */
+.carte .calcul input.case.large,
+.carte .calcul span.case.large {
+  width: auto;
+  min-width: 5em;
+  max-width: 100%;
+  font-size: 0.72em;
+  field-sizing: content;
+}
+/* L'explication d'un cahier : les calculs les uns sous les autres, les « = » alignés, puis les étapes. */
+.explication table.calculs {
+  margin: 2px auto 6px;
+  border-collapse: collapse;
+  color: var(--encre);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.explication table.calculs td {
+  padding: 1px 3px;
+  white-space: nowrap;
+}
+.explication table.calculs td.gauche {
+  text-align: right;
+}
+.explication table.calculs td.droite {
+  text-align: left;
+}
+.explication ol.etapes {
+  margin: 4px 0 8px;
+  padding-left: 1.4em;
+  color: var(--encre);
+  font-size: 1rem;
+}
+.explication ol.etapes li {
+  margin: 3px 0;
+}
+.espace-question .etape .dessin {
+  margin-bottom: 6px;
+}
+/* L'indice dessiné à la place de l'aide : pas de trait de séparation, il n'y a rien au-dessus. */
+.espace-question .etape.a-la-place {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+/* La touche « ² » (NC18-c) : l'exposant seul est minuscule sur une grande touche ; il s'écrit en grand. */
+.clavier-symboles button.exposant {
+  font-size: 1.625rem;
+  line-height: 1;
+}
+.clavier-symboles button.exposant .case-touche {
+  margin-right: -0.12em;
+  color: var(--attenue);
+  font-size: 0.85em;
+}
+.morceau .dessin {
+  margin: 4px 0 8px;
 }
 /* Téléphone : la carte resserre ses côtés, un calcul long garde sa case sur la même ligne (K10). */
 @media (max-width: 480px) {

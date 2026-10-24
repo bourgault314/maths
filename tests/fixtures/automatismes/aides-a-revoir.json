@@ -1,7 +1,7 @@
 {
   "origine": "8feecca64107ee9cdbd3dc5cb9963db38e25bfc0",
   "grainesParForme": 50,
-  "tirages": 21750,
+  "tirages": 21200,
   "methode": "Inclusion littérale de String(fields[].answer) dans hints[0].svg ; les valeurs dans les attributs SVG comptent aussi.",
   "avertissement": "Ce sont des occurrences à revoir, pas toutes des réponses affichées : les nombres courts rencontrent souvent des coordonnées SVG.",
   "formes": [
@@ -555,62 +555,6 @@
       "premierExemple": {
         "graine": 1,
         "reponses": ["<"]
-      }
-    },
-    {
-      "id": "NC17-a",
-      "occurrences": 42,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["5"]
-      }
-    },
-    {
-      "id": "NC17-c",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["4"]
-      }
-    },
-    {
-      "id": "NC18-b",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["3"]
-      }
-    },
-    {
-      "id": "NC18-c",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["1", "1", "1", "1"]
-      }
-    },
-    {
-      "id": "NC18-d",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["5", "1"]
-      }
-    },
-    {
-      "id": "NC18-e",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["11"]
-      }
-    },
-    {
-      "id": "NC18-f",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["6"]
       }
     },
     {
@@ -2365,5 +2309,6 @@
         "reponses": ["8"]
       }
     }
-  ]
+  ],
+  "cahiers": "Les formes réécrites d'après un cahier de domaine (NC17, NC18 : lot NC-1) sont retirées de cette comparaison ; leur aide est contrôlée par tests/automatismes-cahier-nc-1.test.mjs."
 }

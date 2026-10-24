@@ -22,14 +22,15 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
       const { cas: nom } = modeleQuestion(genererQuestion(famille, forme, 12), null);
       cas[nom] = (cas[nom] || 0) + 1;
     }
+  // Lot NC-1 : NC17 et NC18 suivent le cahier (sans leur gabarit, comme ici) ; NC17-f et NC18-g ajoutées.
   assert.deepEqual(cas, {
-    seule: 213,
-    carres: 11,
+    seule: 210,
+    carres: 9,
     comparaison: 9,
     ranger: 2,
-    qcm: 67,
+    qcm: 69,
     calcule: 67,
-    etiquette: 59,
+    etiquette: 64,
     coordonnees: 7,
   });
 });
@@ -54,8 +55,11 @@ test("C3 : les □ deviennent les cases, dans l'ordre, fractions et puissances c
       .map((m) => m.fraction[1].texte),
     ["10", "100"],
   );
-  const nc18 = modeleQuestion(question("NC18-c"), null);
-  assert.equal(morceauxModele(nc18.modele).filter((m) => m.puissance).length, 4);
+  // Les puissances à compléter (l'ancienne NC18-c de GPT, réécrite au lot NC-1) : « 2^[0] × 3^[1] ».
+  assert.equal(
+    morceauxModele("2^[0] × 3^[1] × 5^[2] × 7^[3]").filter((m) => m.puissance).length,
+    4,
+  );
   // La précision après la virgule passe dans la consigne.
   const nc08 = modeleQuestion(question("NC08-c"), null);
   assert.match(nc08.consigne, /^Complète, avec la dernière fraction inférieure à 1\.$/);
@@ -81,7 +85,9 @@ test("C6 : la bonne réponse est l'égalité entière, ou les valeurs attendues"
   const nc04 = question("NC04-e");
   assert.equal(bonneReponseTexte(nc04, modeleQuestion(nc04, null)), "0,4 × 2 = 0,8");
   const nc18 = question("NC18-d");
-  assert.equal(bonneReponseTexte(nc18, modeleQuestion(nc18, null)), "Quotient : 6 · Reste : 1");
+  assert.equal(bonneReponseTexte(nc18, modeleQuestion(nc18, null)), "Quotient : 2 · Reste : 3");
+  // Avec le gabarit du cahier (lot NC-1) : l'égalité entière.
+  assert.equal(bonneReponseTexte(nc18, modeleQuestion(nc18)), "11 = 4 × 2 + 3");
   assert.equal(ecrireReponse("-2.5"), "−2,5");
 });
 
