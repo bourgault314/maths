@@ -279,6 +279,7 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       get recordsEtat() { return recordsEtat; }, get recordsReglage() { return recordsReglage; },
       get profEtat() { return profEtat; }, VUE_PROF, storage, stockageSession, // lot « Ma classe : le parcours de Léa »
       ENTREE, suiviActif, demarrerSuivi, quitterSuivi, sauverParcours, envoyerAvantDeFermer, envoyerMaintenant,
+      noterReponseAEnvoyer, oublierReponsesAEnvoyer, rejoindreServeur, // correctif « fusion jours différents » (23/10/2026)
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
       verifierGarde, repondreGarde, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
       CLE_PRENOM_ONGLET, CLE_DERNIER_GESTE, lirePrenomOnglet,

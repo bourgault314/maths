@@ -4,6 +4,10 @@ import vm from "node:vm";
 
 export const SITE_ORIGIN = "https://mathsgo.re/";
 
+// Les anciens index de rubrique (angles/, bouliers/, splat/, calcul_litteral/…)
+// ne figurent plus ici : ce sont des redirections vers le catalogue, que l'on
+// n'atteint plus depuis l'accueil. Les déclarer au plan du site faisait indexer
+// par les moteurs de recherche des pages que les visiteurs ne voient jamais.
 export const CURATED_PAGES = [
   {
     path: "index.html",
@@ -36,26 +40,6 @@ export const CURATED_PAGES = [
     description: "La liste complète des outils interactifs, générateurs, exercices et documents à imprimer proposés par maths&go."
   },
   {
-    path: "outils/angles/index.html",
-    title: "Angles : outils de manipulation et matériel à imprimer | maths&go",
-    description: "Manipulez, mesurez et construisez des angles avec les outils interactifs, générateurs et documents à imprimer de maths&go."
-  },
-  {
-    path: "outils/automatismes/index.html",
-    title: "Calcul mental et automatismes au collège | maths&go",
-    description: "Ressources de calcul mental et d’automatismes pour s’entraîner au collège et préparer le DNB."
-  },
-  {
-    path: "outils/bouliers/index.html",
-    title: "Bouliers, abaques et Rekenrek | maths&go",
-    description: "Découvrez les outils maths&go pour manipuler les nombres avec le Rekenrek, le boulier Montessori, le Soroban et l’abaque de Gerbert."
-  },
-  {
-    path: "outils/calcul_litteral/index.html",
-    title: "Calcul littéral et algèbre | maths&go",
-    description: "Outils de manipulation, exercices et ressources pour comprendre le calcul littéral, les expressions et les équations."
-  },
-  {
     path: "outils/chat-cest-toi-le-chat-en-ligne.html",
     title: "Chat, c’est toi le chat ! — Jouer en ligne | maths&go",
     description: "Le jeu de repérage spatial à jouer en famille : lis les quatre cartes, place les chats dans les cercles, puis vérifie. 48 séries en 4 niveaux, de la maternelle au collège."
@@ -64,51 +48,6 @@ export const CURATED_PAGES = [
     path: "outils/chat-cest-toi-le-chat-projection.html",
     title: "Chat, c’est toi le chat ! — À projeter | maths&go",
     description: "Une activité collective de repérage spatial à projeter, de la maternelle au collège : toute la classe observe un placement, argumente puis vérifie les quatre cartes pas à pas."
-  },
-  {
-    path: "outils/club_maths/index.html",
-    title: "Jeux et explorations pour le club maths | maths&go",
-    description: "Jeux de stratégie et explorations mathématiques pour chercher, conjecturer et raisonner en club maths ou en classe."
-  },
-  {
-    path: "outils/conversions/index.html",
-    title: "Conversions et grandeurs | maths&go",
-    description: "Manipulations et exercices pour comprendre les conversions de longueurs, d’aires, de volumes et d’autres grandeurs."
-  },
-  {
-    path: "outils/engrenages/index.html",
-    title: "Engrenages : laboratoire et exercices | maths&go",
-    description: "Explorez les rapports de transmission avec un plateau d’engrenages interactif et des exercices guidés."
-  },
-  {
-    path: "outils/fabrication_materiel/index.html",
-    title: "Fabrication de matériel pédagogique | maths&go",
-    description: "Générez et imprimez du matériel de mathématiques personnalisable pour la classe."
-  },
-  {
-    path: "outils/fractions/index_fractions.html",
-    title: "Fractions : manipulations et générateurs | maths&go",
-    description: "Manipulez les fractions avec des bandes, disques et murs, puis créez du matériel et des exercices personnalisés."
-  },
-  {
-    path: "outils/nombres_relatifs/index.html",
-    title: "Nombres relatifs : matériel et activités | maths&go",
-    description: "Ressources et matériel à imprimer pour représenter, additionner et soustraire les nombres relatifs."
-  },
-  {
-    path: "outils/plateaux_manipulation/index.html",
-    title: "Plateaux de manipulation mathématique | maths&go",
-    description: "Plateaux interactifs pour manipuler les nombres, les grandeurs, la géométrie, les statistiques et la résolution de problèmes."
-  },
-  {
-    path: "outils/splat/index.html",
-    title: "Splat et schémas en barres | maths&go",
-    description: "Collection d’outils Splat, équaSplat et schémas en barres pour représenter les inconnues, manipuler et créer des problèmes."
-  },
-  {
-    path: "outils/tuiles_algebriques/index.html",
-    title: "Tuiles algébriques et calcul littéral | maths&go",
-    description: "Manipulez des tuiles algébriques pour construire, réduire et développer des expressions, puis résoudre des équations."
   }
 ];
 
@@ -161,6 +100,19 @@ export function publicUrlForPath(filePath) {
   return new URL(relative, SITE_ORIGIN).href;
 }
 
+// Seules les collections qui ouvrent réellement leur propre page (les quatre
+// opérations posées, `navigation: "hub"`) ont une page à publier. Les autres
+// s'affichent dans le catalogue : leur ancien `hub` n'est plus qu'une redirection.
+export function collectionHasOwnPage(collection) {
+  return collection.navigation === "hub" && Boolean(collection.hub);
+}
+
+export function collectionPublicHref(collection) {
+  if (collectionHasOwnPage(collection)) return publicUrlForPath(`outils/${collection.hub}`);
+  const params = new URLSearchParams({ domain: collection.domain, collection: collection.id });
+  return `${SITE_ORIGIN}outils/?${params.toString()}`;
+}
+
 export function relativeHref(fromFilePath, toFilePath) {
   const relative = path.posix.relative(path.posix.dirname(fromFilePath), toFilePath);
   return relative.split("/").map((segment) => encodeURIComponent(segment)).join("/");
@@ -174,7 +126,7 @@ export function metadataPages(catalogue) {
   const pages = new Map(CURATED_PAGES.map((page) => [page.path, { ...page, source: "curated" }]));
 
   for (const collection of catalogue.collections || []) {
-    if (!collection.hub || pages.has(`outils/${collection.hub}`)) continue;
+    if (!collectionHasOwnPage(collection) || pages.has(`outils/${collection.hub}`)) continue;
     const filePath = `outils/${collection.hub}`;
     pages.set(filePath, {
       path: filePath,
@@ -206,7 +158,7 @@ export function publicEntries(catalogue) {
 
   for (const page of CURATED_PAGES) add(page.path, "page");
   for (const collection of catalogue.collections || []) {
-    if (collection.hub) add(`outils/${collection.hub}`, "collection");
+    if (collectionHasOwnPage(collection)) add(`outils/${collection.hub}`, "collection");
   }
   for (const resource of catalogue.resources.filter(({ status }) => status === "published")) {
     // Les références extérieures (vidéo, article) ne sont pas des pages du site :
@@ -433,7 +385,7 @@ export function buildDirectoryHtml(catalogue) {
   const activeDomains = catalogue.domains.filter((domain) => (groups.get(domain.id)?.size || 0) > 0);
   const notionById = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
   const collectionCards = (catalogue.collections || []).map((collection) => {
-    const href = publicUrlForPath(`outils/${collection.hub}`);
+    const href = collectionPublicHref(collection);
     const description = COLLECTION_DESCRIPTIONS[collection.id] || `Découvrez les outils et activités de la collection ${collection.title}.`;
     return `          <li><a href="${escapeHtml(href)}"><strong>${escapeHtml(collection.title)}</strong><span>${escapeHtml(description)}</span></a></li>`;
   }).join("\n");

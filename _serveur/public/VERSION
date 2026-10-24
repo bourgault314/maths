@@ -2,9 +2,9 @@
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
 lot qui-voit-quoi-anzan
-genere_le 2026-10-23
+genere_le 2026-10-24
 fichiers 62
-manifeste c108394af3c39c83f9a64996dd33ab138e1eb2da0762b3f2d0843c37e00d4ba9
+manifeste 62a85a4d0c543db9a705873282e2591a5805f1e92d88ca06f09241060be1e4d2
 61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -38,10 +38,10 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 68fe1b8a564999c54ee7b5979dab4284c4b5d2d37320ef57d22e24796c4824fb  menage.php
 6174503e150e83f4fd4bf7fd70b6184cb74ff7a55e25698f2abab4538eb71175  prof/coffres-parcours.js
 a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tables_core.js
-d9c3de2d436c43f8f1ae37994d8c351f82d3530536da555175565894d6df5743  prof/defi_tables_mon_parcours.js
+d2a89f8e47128e737e2e70635458fe4e8dd6d884dc3e518d54a9409e9b9ceb4e  prof/defi_tables_mon_parcours.js
 0feabf2e885f013a5a84b14086b7f5968384e4b3856c38f7597f3783a3c80c16  prof/direct.php
 558d23321687a816fb125b8cea91807883f867ed11df4cb8fcef4d0ffe82dc85  prof/flash_anzan_parcours.js
-86e2ac29cadb285b524102aae8031f797e1b3673d5ee34cc6251b2840e356bb5  prof/index.php
+69a6c6bb3373ca5c2cfb8e5cdab20b3af52760d4f0b10450167a72f7ab70702f  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
 0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308  vendor/katex-0.16.47/fonts/KaTeX_AMS-Regular.woff2

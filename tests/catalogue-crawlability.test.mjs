@@ -43,9 +43,11 @@ test("l’annuaire expose les ressources publiées et aucune ressource non publi
   }
 });
 
-test("chaque hub de collection est présent dans le sitemap", () => {
+test("seules les collections qui ont leur propre page sont au sitemap", () => {
   for (const collection of catalogue.collections) {
     const url = publicUrlForPath(`outils/${collection.hub}`);
-    assert.ok(sitemap.includes(`<loc>${url}</loc>`), collection.id);
+    const declared = sitemap.includes(`<loc>${url}</loc>`);
+    if (collection.navigation === "hub") assert.ok(declared, collection.id);
+    else assert.ok(!declared, `${collection.id} : ancien index (redirection) déclaré au sitemap`);
   }
 });

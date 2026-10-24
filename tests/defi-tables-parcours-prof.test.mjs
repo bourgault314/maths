@@ -252,7 +252,7 @@ test("verrou 3 — launchFromParcours, start et startRevision sortent en premier
 
 test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », sans flèche, ⋯, ▶, « Comment ça marche ? », plein écran ni pied ; Mon mélange sur une colonne", () => {
   assert.match(html, /if \(VUE_PROF && document\.body\) document\.body\.classList\.add\("mode-prof"\);/);
-  assert.match(html, /if \(VUE_PROF\) return `Le parcours de \$\{\(parcours && parcours\.prenom\) \|\| "l’élève"\}`;/);
+  assert.match(html, /if \(VUE_PROF\) return `Le parcours \$\{deNom\(\(parcours && parcours\.prenom\) \|\| "l’élève"\)\}`;/);
   assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/);
   assert.match(html, /classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee \|\| VUE_PROF\)\)/, "la même barre fine que l'élève");
   const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof footer\.site-footer, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-name, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;
@@ -262,9 +262,10 @@ test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », s
   // Le bandeau : morceaux insécables, « lecture seule » en gras.
   assert.match(html, /\.suivi-repere\.lecture-seule \.repere-lecture > span \{ display: inline-block; white-space: nowrap; \}/);
   assert.match(html, /\.suivi-repere\.lecture-seule b \{ font-weight: 800; \}/);
-  // Le pied du site reste dans la page (caché) : mention-confidentialite.js y
-  // trouve sa marque et n'ajoute rien.
-  assert.match(html, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>\s*\n\s*<\/footer>/);
+  // Le pied du site reste dans la page (caché) ; depuis le 23/10/2026, il finit sur « Licence »
+  // et la page ne charge plus mention-confidentialite.js (plus rien ne s'ajoute en bas).
+  assert.match(html, /<a href="\.\.\/\.\.\/licence\.html">Licence<\/a>\s*\n\s*<\/footer>/);
+  assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/);
 });
 
 test("la page : « Pour le professeur » dans une seconde carte sous le parcours — le même rendu que la page 2, le tableau défile de côté, colonne fixe, pas de hauteur mini ; hors de la mesure de l'échelle", () => {

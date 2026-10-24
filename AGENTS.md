@@ -77,6 +77,32 @@ là-haut, on perd de la place »). Ne pas la « corriger » vers la règle commu
   la place du plein écran pendant la séance, le pied « Mon espace ». Sans
   code, rien ne change.
 
+### Mention « Sans cookie ni traceur » : navigation oui, applis non
+
+Décision de Gwenaël du 23/10/2026 : « tant que je suis dans ce qui ressemble à
+l'accueil, on laisse ; dès que je rentre dans une appli, on enlève ».
+
+- Seules chargent `assets/js/mention-confidentialite.js` : l'accueil, le
+  catalogue (`outils/index.html`), `outils/toutes-les-ressources.html`, les
+  trois pages légales, les pages d'entrée encore servies (Addition, Soustraction,
+  Multiplication et Division posées, Chat, c'est toi le chat ! — les 17 anciens
+  index devenus des redirections le 23/10, PR #1047, n'ont ni pied ni mention)
+  et, par exception voulue, les deux
+  menus des Automatismes (`auto/index.html`, `automatismes-v2/index.html` : ils
+  portaient l'ancien lien « Gérer mes cookies », la voir disparaître ferait
+  croire que les cookies sont arrivés).
+- Exception voulue sur l'accueil (`index.html`, décision de Gwenaël du
+  04/09/2026, gardée le 23/10) : il charge le script (qui efface les anciens
+  cookies de mesure) mais n'affiche que le lien « Confidentialité » de son pied
+  d'une ligne, marqué `data-mathsgo-confidentialite`, sans la phrase.
+- `automatismes-v2/menu.css` cache `.mg-mention-slot` : le menu écrit sa propre
+  mention, la règle évite un doublon. Elle sert encore, ne pas la retirer.
+- Une nouvelle appli, un nouveau jeu ou une nouvelle fiche à jouer ne charge PAS
+  ce script et n'écrit pas « Sans cookie ni traceur » dans son pied ; le pied du
+  site garde ses liens (dont « Confidentialité »).
+- `tests/mention-confidentialite.test.mjs` tient la liste exacte des pages
+  autorisées et rougit si une appli affiche la mention.
+
 ## Applis suivies — modèle commun
 
 Toute appli branchée sur le serveur de suivi (Défi tables, SPLAT!, Défi calcul,

@@ -321,7 +321,8 @@ test("le script du <head> est en JavaScript ancien et survit à un navigateur sa
   assert.doesNotMatch(sansCommentaires, /\bconst\b|\blet\b|=>|\?\.|URLSearchParams/, "pas de syntaxe récente : il doit tourner partout");
   const vieux = bootstrap("#code=2F4FUL", {sansHistorique: true});
   assert.deepEqual(vieux.MATHSGO_ENTREE, {billet: "", vue: "", ouvrir: ""}, "même sans pouvoir nettoyer l’adresse, aucun code n’est adopté");
-  assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf('src="../../assets/js/mention-confidentialite.js"'),
+  const premierScriptCharge = html.search(/<script\b[^>]*\bsrc=/);
+  assert.ok(premierScriptCharge > 0 && html.indexOf("MATHSGO_ENTREE") < premierScriptCharge,
     "il précède les scripts de la page");
   assert.ok(html.indexOf("MATHSGO_ENTREE") < html.indexOf("<body>"), "et il est dans le <head>");
 });
@@ -407,7 +408,7 @@ test("après trois élèves, aucune clé du stockage durable ne contient un code
   for (const code of [A, B, C]) assert.equal(PARCOURS.charger(local, code).tables[4].apprends.construct, 2, "chaque case se relit par son code");
   assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/, "sous un code (et dans la vue du professeur), la page ne demande pas de prénom");
   assert.match(html, /\$\("parcours-rename"\)\.hidden = suiviActif\(\);/, "ni ne propose de le modifier");
-  assert.match(html, /const prenom = prenomAffiche\(\);\s*return prenom \? `Le parcours de \$\{prenom\}` : "Mon parcours";/, "le titre affiche le prénom du professeur");
+  assert.match(html, /const prenom = prenomAffiche\(\);\s*return prenom \? `Le parcours \$\{deNom\(prenom\)\}` : "Mon parcours";/, "le titre affiche le prénom du professeur");
 });
 
 test("l’identité donnée par le serveur vit dans l’onglet, avec le code : rechargée hors ligne, elle est encore là ; sous un autre code, non", async () => {

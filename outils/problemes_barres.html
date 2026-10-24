@@ -3896,7 +3896,6 @@ body.printOnlyWorksheet .worksheetSheet{
 }
 
 </style>
-<script defer src="../assets/js/mention-confidentialite.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
 <script defer src="../assets/js/mention-licence-impression.js"></script>
 </head>
@@ -4297,6 +4296,11 @@ body.printOnlyWorksheet .worksheetSheet{
     const vowel = "[aeiouyAEIOUYàâäÀÂÄéèêëÉÈÊËîïÎÏôöÔÖùûüÙÛÜœŒhH]";
     s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])de\\s+(" + vowel + ")", "g"), "$1d’$2");
     s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])De\\s+(" + vowel + ")", "g"), "$1D’$2");
+    // « de plus que Inès » → « de plus qu’Inès » (prénoms et mots à voyelle ;
+    // pas devant un h : « que Hugo » reste).
+    const vowelQue = "[aeiouAEIOUàâäÀÂÄéèêëÉÈÊËîïÎÏôöÔÖùûüÙÛÜœŒ]";
+    s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])que\\s+(" + vowelQue + ")", "g"), "$1qu’$2");
+    s = s.replace(new RegExp("(^|[\\s>\\(\\[\\{«])Que\\s+(" + vowelQue + ")", "g"), "$1Qu’$2");
     return s;
   }
 
@@ -4304,7 +4308,8 @@ body.printOnlyWorksheet .worksheetSheet{
     if(!problem) return problem;
     [
       "rawStatement", "highlightedStatement", "question", "answerText",
-      "relationSentence", "relationRaw", "relationshipText"
+      "relationSentence", "relationRaw", "relationshipText",
+      "answer", "fillText", "reformulation"
     ].forEach(key => {
       if(typeof problem[key] === "string") problem[key] = cleanFrenchText(problem[key]);
     });
@@ -4341,8 +4346,8 @@ body.printOnlyWorksheet .worksheetSheet{
   }
 
   function ratioMeaningText(names, parts){
-    return "Le ratio " + ratioNameText(names) + " = " + ratioValueText(parts) + " signifie que " +
-      listNamesForSentence(names.map((name, i) => name + " a " + partLabel(parts[i]))) + ".";
+    return cleanFrenchText("Le ratio " + ratioNameText(names) + " = " + ratioValueText(parts) + " signifie que " +
+      listNamesForSentence(names.map((name, i) => name + " a " + partLabel(parts[i]))) + ".");
   }
 
   function coloredObjectList(obj, colors){

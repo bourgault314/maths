@@ -195,7 +195,9 @@ test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans 
   assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 3, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique");
   const pied = PAGE.slice(PAGE.indexOf('<footer class="site-footer">'), PAGE.indexOf("</footer>"));
   assert.match(pied, /<a class="pied-logo" href="\/"/);
-  assert.match(pied, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
+  // le pied garde ses liens, sans « Sans cookie ni traceur » (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
+  assert.match(pied, /<a href="\.\.\/\.\.\/confidentialite\.html">Confidentialité<\/a>/);
+  assert.doesNotMatch(PAGE, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
 });
 
 test("pas de plein écran sur téléphone, tenu en hauteur comme en largeur (relecture Codex A4)", () => {
@@ -228,7 +230,7 @@ test("au catalogue (22/10) : dans Calcul mental « S'entraîner » et dans la co
   assert.match(classement[1], /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/flash-anzan\.svg\?v=1"/);
   assert.doesNotMatch(PAGE, /noindex/);
   const hubSoroban = readFileSync(new URL("../outils/bouliers/soroban/index.html", import.meta.url), "utf8");
-  assert.match(hubSoroban, /href="\.\.\/\.\.\/calcul_mental\/flash_anzan\.html"/, "la page Soroban (annuaire, Google) y mène aussi");
+  assert.match(hubSoroban, /url=\/outils\/\?domain=nombres-calculs&amp;collection=soroban"/, "l’ancienne page Soroban renvoie vers la collection, qui contient la fiche");
 });
 
 test("AGENTS.md garde l'exception du haut de page de Flash Anzan, pour qu'on ne la « corrige » pas", () => {

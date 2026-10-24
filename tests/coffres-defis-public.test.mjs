@@ -232,20 +232,20 @@ test("les cinq pages restent accessibles par le sitemap et Toutes les ressources
   assert.ok(directory.includes('href="https://mathsgo.re/auto/"'));
 });
 
-test("les cinq pages suivent le socle légal et la mention de confidentialité des outils publics", () => {
+test("les cinq pages suivent le socle légal ; la mention « Sans cookie ni traceur » n'est plus dans les applis (23/10/2026)", () => {
   for (const definition of pageDefinitions) {
     const html = pages[definition.path];
     assert.doesNotMatch(html, /consentement\.(css|js)/, definition.path);
-    assert.match(html, /<script(?=[^>]*\bdefer\b)(?=[^>]*\bsrc="\.\.\/\.\.\/assets\/js\/mention-confidentialite\.js(?:\?[^"#]*)?")[^>]*><\/script>/, definition.path);
+    assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/, definition.path);
 
     const legalFooter = [...html.matchAll(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi)]
       .map(match => match[0])
-      .find(footer => /data-mathsgo-confidentialite/.test(footer));
+      .find(footer => /mentions-legales\.html/.test(footer));
     assert.ok(legalFooter, `${definition.path} : pied de page légal absent`);
     assert.match(legalFooter, /href="mailto:gwenael@mathsgo\.re\?subject=Contact%20depuis%20mathsgo\.re"/, definition.path);
     assert.match(legalFooter, /href="(?:\.\.\/\.\.\/|\/)mentions-legales\.html"/, definition.path);
     assert.match(legalFooter, /href="(?:\.\.\/\.\.\/|\/)confidentialite\.html"/, definition.path);
-    assert.match(legalFooter, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/, definition.path);
+    assert.doesNotMatch(legalFooter, /Sans cookie ni traceur/, definition.path);
   }
 });
 
@@ -256,11 +256,10 @@ test("la politique de confidentialité explique les meilleurs scores locaux des 
   assert.match(privacy, /supprimant les données du site dans les réglages de votre navigateur/);
 });
 
-test("le hub Club Math relie Coffres magiques et garde une grille équilibrée", () => {
-  assert.match(clubHub, /href="coffres_magiques\.html" class="card coffres"/);
-  assert.match(clubHub, /Choisissez le duel à deux[\s\S]*l’entraînement solo guidé sur les quatre opérations/);
-  assert.match(clubHub, />Choisir solo ou duo</);
-  assert.match(clubHub, /@media \(min-width: 1100px\)[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
+test("l’ancien index Club maths renvoie vers le domaine Jeux du catalogue", () => {
+  // Coffres magiques est trouvé par le catalogue ; l’ancien index n’est plus qu’une redirection.
+  assert.match(clubHub, /url=\/outils\/\?domain=jeux-recherches"/);
+  assert.match(clubHub, /<meta name="robots" content="noindex, follow">/);
 });
 
 test("les cinq miniatures sont des SVG 720 × 320", async () => {

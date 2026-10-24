@@ -28,6 +28,10 @@ html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,BlinkMacS
 .brand-link{display:block;line-height:0;text-decoration:none;flex:0 0 auto}
 .brand-logo{width:160px;max-width:92%;height:auto;display:block;filter:drop-shadow(0 2px 3px rgba(68,45,22,.10))}
 .brand-text h1{font-size:1.22rem;line-height:1.03;margin:2px 0 0;letter-spacing:-.045em;font-weight:1000}
+/* Flèche retour posée à gauche du titre, sur sa ligne (tool-parent-navigation.js) */
+.brand-text{align-self:stretch}
+.brand-text .mathsgo-back-row{justify-content:center}
+.brand .brand-text a.mathsgo-back[data-mathsgo-place]{margin:0;align-self:center}
 .subtitle{font-size:.84rem;color:var(--muted);margin-top:2px;line-height:1.15;font-weight:500}
 .block{border-top:1px solid #eee4d9;margin-top:7px;padding-top:7px}
 .block-title{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:#8a7462;font-weight:950;margin-bottom:5px}
@@ -133,11 +137,10 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 @page a4-portrait{size:A4 portrait;margin:0}
 @media print{html,body{width:210mm!important;min-height:0!important;background:white!important;margin:0!important;padding:0!important;overflow:visible!important}.app{display:block!important;min-height:0!important;padding:0!important}.controls{display:none!important}.preview-wrap{overflow:visible!important;padding:0!important;height:auto!important}.page-stack{display:block!important;gap:0!important}.page{zoom:1!important;width:210mm!important;height:297mm!important;box-shadow:none!important;border:0!important;margin:0!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:auto;page-break-after:auto}.page:not(:last-child){break-after:page!important;page-break-after:always!important}.sheet-header{display:none!important}.tile{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
 </style>
-<script defer src="../../assets/js/mention-confidentialite.js"></script>
 <script defer src="../../assets/js/tool-parent-navigation.js?v=2"></script>
 <script defer src="../../assets/js/mention-licence-impression.js"></script>
 </head>
-<body data-mathsgo-parent-href="/outils/tuiles_algebriques/index.html" data-mathsgo-parent-label="Tuiles algébriques">
+<body data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;collection=tuiles-algebriques" data-mathsgo-parent-label="Tuiles algébriques" data-mathsgo-parent-place=".brand-text h1">
 <div class="app">
   <aside class="controls">
     <div class="brand">

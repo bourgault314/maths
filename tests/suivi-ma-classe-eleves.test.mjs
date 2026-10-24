@@ -115,7 +115,7 @@ const classe4 = () => [
 const sourcesEleves = () => ["nomAffiche", "ordreDeLaFeuille", "celluleNom", "celluleCode", "boutonGeste", "menuGestes",
   "poserGestesEleve", "dessinerOngletEleves",
   // Lot « Qui voit quoi » : la colonne « En plus » et ses pastilles.
-  "prenomCourt", "motDe", "motDeMonde", "numerosOuverts", "enPlusDe", "pastillesEnPlus", "celluleEnPlus"].map(fonction).join("\n");
+  "prenomCourt", "seElide", "deNom", "motDe", "motDeMonde", "numerosOuverts", "enPlusDe", "pastillesEnPlus", "celluleEnPlus"].map(fonction).join("\n");
 const constantesEleves = () => ["APPLIS", "COULEURS_MONDES", "LISTES_PAR_ELEVE"].map(constante).join("\n");
 
 // La 405 du banc : Défi tables et SPLAT! (mondes 1 et 2), pas Coffres.
@@ -678,7 +678,7 @@ function fenetreRejouee(eleve, options = {}) {
   boite.close = () => { boite.open = false; fermer(); };
   const canonique = a => JSON.stringify(Object.keys(a || {}).sort().map(cle => [cle, Object.keys(a[cle]).sort().map(nom => [nom, a[cle][nom]])]));
   const f = new Function("document", "$", "classe", "droitClasse", "api", "messager", "surErreur", "reporterAcces",
-    `${constantesEleves()}\nlet voitEleve = null;\nconst voitFiles = new Map();\nconst voitAttentes = new Map();\nlet voitOuverture = 0;\nconst DELAI_ACCES_MS = ${options.delai || 15000};\n${["prenomCourt", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
+    `${constantesEleves()}\nlet voitEleve = null;\nconst voitFiles = new Map();\nconst voitAttentes = new Map();\nlet voitOuverture = 0;\nconst DELAI_ACCES_MS = ${options.delai || 15000};\n${["prenomCourt", "seElide", "deNom", "motDe", "numerosOuverts", "accesDe", "ajoutsApres", "texteEnregistre",
       "ouvrirCeQueVoit", "fermerCeQueVoit", "dessinerCeQueVoit", "voitEnAttenteDe", "changerCeQueVoit", "envoyerCeQueVoit"].map(fonction).join("\n")}
 // La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
 let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
@@ -802,7 +802,7 @@ test("qui voit quoi — chaque clic enregistre l'état complet (eleves.acces) et
 });
 
 test("qui voit quoi — les mots du pied de la fenêtre", () => {
-  const dire = new Function(`${constantesEleves()}\n${["prenomCourt", "motDe", "texteEnregistre"].map(fonction).join("\n")}\nreturn texteEnregistre;`)();
+  const dire = new Function(`${constantesEleves()}\n${["prenomCourt", "seElide", "deNom", "motDe", "texteEnregistre"].map(fonction).join("\n")}\nreturn texteEnregistre;`)();
   assert.equal(dire({prenom: "Rania"}, {cle: "coffres", ouvre: true}), "Enregistré : Rania voit Coffres magiques.");
   assert.equal(dire({prenom: "Rania"}, {cle: "coffres", ouvre: false}), "Enregistré : Rania ne voit plus Coffres magiques.");
   assert.equal(dire({prenom: "Lucas"}, {cle: "splat", liste: "mondes", numero: 3, ouvre: true}), "Enregistré : le monde 3 est ouvert à Lucas.");

@@ -392,7 +392,6 @@ test("la feuille Tailwind construite contient bien les classes des pages", () =>
 // ---------------------------------------------------------------------------
 test("les icônes des plateaux sont écrites dans la page, pas chargées depuis unpkg", () => {
   for (const [relatif, minimum] of [
-    ["outils/plateaux_manipulation/index.html", 14],
     ["outils/plateaux_manipulation/cubes_construction.html", 6],
   ]) {
     const page = readFileSync(join(racine, relatif), "utf8");

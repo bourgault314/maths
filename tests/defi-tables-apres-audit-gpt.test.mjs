@@ -311,9 +311,9 @@ test("D4 · la page prof : « Retirer » au bout de chaque ligne de la carte (pa
   assert.match(pageProf, /if \(retirable && ligne\.eleve\) \{\s*const retirer = document\.createElement\("button"\);\s*retirer\.type = "button";\s*retirer\.className = "rec-retirer";\s*retirer\.textContent = "Retirer";\s*retirer\.title = "Retirer ce temps";/);
   assert.match(pageProf, /liste\.append\(ligneDeRecord\(ligne, true\)\)/, "la carte : retirable");
   assert.match(pageProf, /\(ligueRecords\[cle\] \|\| \[\]\)\.forEach\(ligne => liste\.append\(ligneDeRecord\(ligne\)\)\);/, "le plein écran : sans bouton");
-  assert.match(pageProf, /const reponse = await demander\(`Retirer le temps de \$\{qui\} \(\$\{formatTempsRecord\(ligne\.temps\)\}\) \? Son record et son temps de la semaine s’effacent\. Sa prochaine course compte à nouveau\.`\);\s*if \(!reponse\) return;/);
+  assert.match(pageProf, /const reponse = await demander\(`Retirer le temps \$\{deNom\(qui\)\} \(\$\{formatTempsRecord\(ligne\.temps\)\}\) \? Son record et son temps de la semaine s’effacent\. Sa prochaine course compte à nouveau\.`\);\s*if \(!reponse\) return;/);
   assert.match(pageProf, /const qui = `\$\{ligne\.eleve\.prenom\} · \$\{ligne\.eleve\.classe\}`;/, "le vrai prénom, même pour une ligne « Mystère »");
-  assert.match(pageProf, /const donnees = await api\("records\.retirer", \{eleve_id: ligne\.eleve\.id\}\);\s*ligueRecords = donnees;\s*dessinerRecords\(\);\s*messager\("message-records", `Le temps de \$\{qui\} est retiré\.`, "ok"\);/);
+  assert.match(pageProf, /const donnees = await api\("records\.retirer", \{eleve_id: ligne\.eleve\.id\}\);\s*ligueRecords = donnees;\s*dessinerRecords\(\);\s*messager\("message-records", `Le temps \$\{deNom\(qui\)\} est retiré\.`, "ok"\);/);
   assert.match(pageProf, /if \(classe\) await ouvrirClasse\(classe\.id\);/, "le temps à côté de la couronne, dans le tableau, est relu");
   assert.match(pageProf, /<p class="message" id="message-records" hidden><\/p>/);
   assert.match(pageProf, /\.rec-carte \.rec-liste li \{ grid-template-columns: 30px minmax\(0, 1fr\) auto auto; \}/);
@@ -339,7 +339,7 @@ test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et ci
 // ------------------------------------------------------------- l'hygiène du lot
 
 test("le moteur a changé : son numéro de cache monte, et la copie de la page prof est identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(copie.equals(original));

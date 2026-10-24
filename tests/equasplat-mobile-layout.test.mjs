@@ -231,23 +231,34 @@ test("un partage qui ne conclut pas reste écrit comme un produit", () => {
   assert.match(html, /applySharedTokenSplit\(side, id, count, answer\)/);
 });
 
-test("les billes unitaires s’écrivent comme un seul nombre et se partagent en paquets", () => {
+test("les billes unitaires s’écrivent comme un seul nombre et se partagent équitablement", () => {
   assert.match(html, /const unitSum = pieces\s*\.filter\(p => p\.type === "token" && p\.unit\)/);
   assert.match(html, /if\(useUnits && piece\.type === "token" && !piece\.unit\)\{/);
   assert.match(html, /out\.push\(makeToken\(1, \{unit:true\}\)\)/);
   assert.match(html, /const TOKEN_UNIT_R = 18;/);
-  assert.match(html, /<button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets<\/button>/);
+  // 23/10/2026 (choix de Gwenaël) : « Faire des paquets » disparaît, même nom que pour les jetons numérotés
+  assert.match(html, /<button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button"><span class="desktopLabel">Partager équitablement<\/span><span class="mobileLabel">Partager<\/span><\/button>/);
+  assert.doesNotMatch(html, />Faire des paquets</);
   assert.match(html, /#toolShareUnits\{\s*display:none;\s*\}/);
   assert.match(html, /body\.importUnitMode #toolDecompose,\s*body\.importUnitMode #toolGroup,\s*body\.importUnitMode #toolShare\{\s*display:none;\s*\}/);
   assert.match(html, /body\.importUnitMode #toolShareUnits\{\s*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;/s);
-  for (const nom of ["isImportedUnitMode", "getUnitShareSituation", "getUnitShareOpportunity", "applyUnitPacketChoice", "applyUnitShareTokens", "clearUnitPacketConclusion", "addUnitPacketConclusion", "drawUnitPacketBoxes", "applyUnitPacketPositions", "packetGridForTray", "positionsInPacketBox"]) {
+  for (const nom of ["isImportedUnitMode", "getUnitShareSituation", "getUnitShareOpportunity", "applyUnitPacketChoice", "applyUnitShareTokens", "openUnitShareDialog", "groupeJetonsDialogueHtml", "clearUnitPacketConclusion", "addUnitPacketConclusion", "drawUnitPacketBoxes", "applyUnitPacketPositions", "packetGridForTray", "positionsInPacketBox"]) {
     assert.match(html, new RegExp(`function ${nom}\\(`), `${nom} est portée`);
   }
   assert.match(html, /if\(toolShareUnits\) toolShareUnits\.addEventListener\("click", applyUnitShareTokens\);/);
   assert.match(html, /\.packetBox\.matchXCount\{/);
-  assert.match(html, /\.unitPacketChoice\{/);
-  assert.match(html, /btn\.textContent = `\$\{choice\.packetCount\} paquet\$\{choice\.packetCount > 1 \? "s" : ""\} de \$\{choice\.each\}`;/);
-  // « Il reste n taches et m jetons : on peut faire des paquets. » ne doit pas être
+  // on partage le groupe : la fenêtre Partager s'ouvre tout de suite (aucun jeton à toucher), avec le groupe dessiné,
+  // toutes les parts entières (2 parts… jusqu'au nombre de jetons), puis l'élève TAPE ce que vaut une part
+  assert.match(html, /\.dialogGroupeJetons\{/);
+  assert.match(html, /parts:divisorsOf\(tokenCount\)\.filter\(n => n >= 2\)/);
+  assert.match(html, /setActionMode\("unitShare"\);\s*openUnitShareDialog\(situation\);/);
+  assert.match(html, /shareDialogText\.innerHTML = groupeJetonsDialogueHtml\(situation\.tokenCount\);/);
+  assert.match(html, /if\(pendingShare\.unit\)\{[\s\S]{0,400}?shareDialog\.close\(\);\s*applyUnitPacketChoice\(parts\);/);
+  // la bonne part est vérifiée AVANT (« Ce n’est pas encore la bonne part. »), comme pour un jeton numéroté
+  assert.match(html, /if\(answer !== pendingShare\.value \/ pendingShare\.count\)\{[\s\S]{0,300}?if\(pendingShare\.unit\)\{/);
+  // plus de boutons « 3 paquets de 2 » qui donnaient la réponse
+  assert.doesNotMatch(html, /unitPacketChoice"|paquet\$\{/);
+  // « Il reste n taches et m jetons : on peut partager. » ne doit pas être
   // recouverte par la consigne générique du mode « Enlever » : c'est la seule aide
   // qui reste depuis que le raccourci « 4𝑛 = 4 × 1 » a disparu.
   assert.match(html, /const selection = selectedDeletePiecesBySide\(\);\s*if\(actionMode === "delete" && !selection\.left\.length && !selection\.right\.length\) return;/);
@@ -307,21 +318,12 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
-test("la mention de confidentialité reste accessible en réception, sans toucher à l’usage libre", () => {
-  assert.doesNotMatch(html, /body\.importMode \.mg-mention-slot\{\s*display:none !important;/);
-  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<a class="mobileConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
-  assert.match(html, /<footer class="equasplatConsentFooter">\s*<a class="equasplatConsentLink" href="\.\.\/confidentialite\.html">Sans cookie ni traceur · Confidentialité<\/a>/);
-  assert.match(html, /\.mobileConsentLink\{\s*display:none;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileConsentLink\{\s*display:inline-flex;[^}]*min-height:32px;/s);
-  assert.match(html, /\.equasplatConsentFooter\{\s*display:none;/);
-  assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:flex;/);
-  assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:none;/);
+test("plus de mention « Sans cookie ni traceur » dans ÉquaSplat, ni en réception ni en usage libre (23/10/2026)", () => {
+  // Décision de Gwenaël : la mention reste sur l'accueil, le catalogue et les pages légales,
+  // elle quitte les applis. En réception, la zone d'action finit les commandes du bas.
+  assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js|Sans cookie ni traceur · Confidentialité|data-mathsgo-confidentialite/);
+  assert.doesNotMatch(html, /mobileConsentLink|equasplatConsentFooter|equasplatConsentLink|bindReceptionConsentLinks|mg-mention-slot/);
+  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<\/div>\s*<div class="solution" id="solution"><\/div>/);
   assert.match(html, /@media \(max-width:760px\) and \(max-height:680px\)[\s\S]*?\.board\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
-  // En usage libre, aucun lien ne porte l'attribut : mention-confidentialite.js
-  // garde sa mention automatique. En réception, l'attribut est posé et la mention
-  // automatique (flottante sur écran verrouillé) s'efface.
-  assert.ok(!/<a[^>]*data-mathsgo-confidentialite/.test(html), "pas d’attribut dans le HTML statique");
-  assert.match(html, /function bindReceptionConsentLinks\(\)\{[\s\S]*?lien\.setAttribute\("data-mathsgo-confidentialite", ""\);/);
-  assert.match(html, /if\(reception\) bindReceptionConsentLinks\(\);/);
   assert.doesNotMatch(html, /mathsgoConsentement|consent-open|Gérer mes cookies/, "plus rien de l’ancienne bannière");
 });

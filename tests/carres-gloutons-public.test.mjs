@@ -25,7 +25,8 @@ test("Les Carrés gloutons est une ressource publique autonome", () => {
   assert.doesNotMatch(page, /WINS_TO_TAKE_MATCH|playerWins|aiWins|Premier à 2/);
   assert.match(page, /Tracer ce segment entre deux points voisins/);
   assert.doesNotMatch(page, /\btrait(?:s)?\b/i);
-  assert.match(hub, /href="carres_gloutons\.html" class="card gloutons"/);
+  // L’ancien index Club maths renvoie désormais vers le catalogue (lot plan du site, 23/10).
+  assert.match(hub, /url=\/outils\/\?domain=jeux-recherches"/);
 });
 
 test("le match aller-retour donne exactement un départ à chacun et tranche au cumul", () => {
@@ -89,9 +90,11 @@ test("le plein écran et le socle public restent disponibles", () => {
   assert.match(script, /root\.classList\.add\("fullscreen-fallback"\)/);
   assert.match(script, /event\.key !== "Escape" \|\| !root\.classList\.contains\("fullscreen-fallback"\)/);
   assert.doesNotMatch(page, /consentement\.(css|js)/);
-  assert.match(page, /src="\.\.\/\.\.\/assets\/js\/mention-confidentialite\.js"/);
+  // ni script ni texte de la mention dans une appli (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
+  assert.doesNotMatch(page, /<script[^>]*mention-confidentialite\.js/);
   assert.doesNotMatch(page, /Gwenaël Bourgault/);
-  assert.match(page, /<span data-mathsgo-confidentialite>Sans cookie ni traceur<\/span>/);
+  assert.doesNotMatch(page, /Sans cookie ni traceur|data-mathsgo-confidentialite/);
+  assert.match(page, /<a href="\.\.\/\.\.\/confidentialite\.html">Confidentialité<\/a>/, "le pied du site garde son lien Confidentialité");
   assert.match(page, /body\.game-fullscreen \.site-footer \{ display: none; \}/);
 });
 

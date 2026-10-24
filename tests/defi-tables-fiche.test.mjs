@@ -36,7 +36,7 @@ test("« Imprimer ma fiche » : un seul chemin, depuis Mon parcours, vers un éc
   // affichée par body.voir-fiche — la même que celle du professeur.
   assert.match(html, /<div id="fiche" class="fiche-screen" hidden>[\s\S]*id="fiche-back" class="settings-back"[\s\S]*<h1 id="fiche-title" class="settings-heading" tabindex="-1">Ma fiche<\/h1>[\s\S]*<button id="fiche-imprimer" class="primary" type="button">Imprimer ma fiche<\/button>/);
   assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]\.forEach/, "lot « un seul tableau » : plus d’écran « calculs »");
-  assert.match(html, /document\.body\.classList\.toggle\("voir-fiche", name === "fiche"\);\s*\n\s*if \(name === "fiche"\) \{\s*\n\s*\$\("fiche-title"\)\.textContent = prenomAffiche\(\) \? `La fiche de \$\{prenomAffiche\(\)\}` : "Ma fiche";\s*\n\s*renderFiche\(\);\s*\n\s*ajusterFiche\(\);/);
+  assert.match(html, /document\.body\.classList\.toggle\("voir-fiche", name === "fiche"\);\s*\n\s*if \(name === "fiche"\) \{\s*\n\s*\$\("fiche-title"\)\.textContent = prenomAffiche\(\) \? `La fiche \$\{deNom\(prenomAffiche\(\)\)\}` : "Ma fiche";\s*\n\s*renderFiche\(\);\s*\n\s*ajusterFiche\(\);/);
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ display: block;/);
   assert.match(html, /body\.mode-fiche #fiche-print, body\.voir-fiche #fiche-print \{ zoom: var\(--fiche-zoom, 1\); \}/);
   assert.match(html, /document\.body\.classList\.contains\("mode-fiche"\) \|\| document\.body\.classList\.contains\("voir-fiche"\)/, "ajusterFiche réduit la feuille sur les deux écrans");

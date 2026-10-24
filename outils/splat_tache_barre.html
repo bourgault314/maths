@@ -594,21 +594,11 @@
     body.eleve-pave-serre.eleve-lien #mainArea { padding-top: 10px; }
     body.eleve-pave-serre .eleve-scene { padding: 10px 12px 12px; }
     body.eleve-pave-serre .eleve-consigne { margin: 2px 0 6px; }
-
-    .menuConsent { margin: 14px 2px 4px; text-align: center; }
-  .menuConsent a {
-    display: inline-block; padding: 4px 6px;
-    font: inherit; font-size: 12px; color: #7a8798;
-    text-decoration: underline; text-underline-offset: 2px;
-  }
-  .menuConsent a:hover, .menuConsent a:focus-visible { color: #063f86; }
-  @media print { .menuConsent { display: none !important; } }
   </style>
-<script defer src="../assets/js/mention-confidentialite.js"></script>
 <script defer src="../assets/js/tool-parent-navigation.js?v=1"></script>
 <script defer src="../assets/js/mathsgo-pave-chiffres.js?v=20261015-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261014-3"></script>
+<script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
@@ -806,13 +796,6 @@
     <div class="section print-title-control">
       <label for="activityLabel">Titre imprimé</label>
       <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
-    </div>
-
-    <!-- La mention « Sans cookie ni traceur » est écrite ici, tout en bas de la partie
-         qui défile (26/09/2026) : la présence de [data-mathsgo-confidentialite] suffit
-         à retirer celle que mention-confidentialite.js pose sinon en bas à droite. -->
-    <div class="menuConsent">
-      <a data-mathsgo-confidentialite href="../confidentialite.html">Sans cookie ni traceur · Confidentialité</a>
     </div>
 
   </div>

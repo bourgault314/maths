@@ -78,7 +78,7 @@
   })(window);
 </script>
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
-<script src="../assets/js/splat-etapes.js?v=20261014-3"></script>
+<script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
@@ -958,18 +958,18 @@ const MONDES=[
   /* l'échauffement (lot 3, 14/10/2026) : une partie à lui, « Échauffement » (ech), avant la Partie 1 ;
      la Partie 1 et la Partie 2 gardent leurs noms et leurs ancres (e3-partie-1, e3-partie-2) */
   volets:[
-   {de:0,a:3,ech:true,nom:"Pour commencer en douceur",o:"Des billes vertes et rouges, puis un jeton par plateau."},
+   {de:0,a:3,ech:true,nom:"Pour commencer en douceur",o:"Des jetons verts et rouges, puis un seul jeton par plateau."},
    {de:3,a:6,nom:"Les taches sur un seul plateau",o:"Les jetons rouges, puis la tache opposée : les taches restent sur un seul plateau."},
    {de:6,a:9,nom:"Les taches sur les deux plateaux",o:"Des taches à gauche et à droite, normales ou opposées : enlève-les d’abord, puis résous."}],
   etapes:[
-   {t:"Des billes vertes et rouges",fo:"x + b = c",
+   {t:"Des jetons verts et rouges",fo:"x + b = c",
     o:"Une couleur par plateau, puis un vert et un rouge qui s’annulent.",
     p:"ech1",code:"É1",id:"e3-ech1",
     eqs:["𝑡 + 1 + 1 = 1 + 1 + 1 + 1 + 1", "𝑎 + 1 + 1 + 1 + 1 + 1 = 1 + 1 + 1", "1 + 1 + 1 = 𝑡 + 1 + 1 + 1 + 1 + 1 + 1", "𝑎 − 1 − 1 − 1 = −1", "−1 − 1 − 1 − 1 − 1 = 𝑛 − 1", "−1 = 𝑥 − 1 − 1 − 1 − 1 − 1 − 1", "𝑏 + 1 + 1 = −1 − 1", "−1 − 1 = 𝑛 + 1 + 1 + 1", "𝑐 − 1 − 1 = 1 + 1 + 1", "1 + 1 + 1 + 1 = 𝑚 − 1 − 1", "𝑐 − 1 − 1 + 1 = 1 + 1", "−1 + 1 + 1 = 𝑚 + 1"],
     q:ECH_F1[0],suite:ECH_F1.slice(1),vp:"equation",
     j:"/outils/equasplat.html?eleve=1&parcours=ech1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJlY2gxIiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RoSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MywibGVmdCI6WyJ4IiwxLDFdLCJyaWdodCI6WzEsMSwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotMiwibGVmdCI6WyJ4IiwxLDEsMSwxLDFdLCJyaWdodCI6WzEsMSwxXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaEiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicmVsYXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOi0zLCJsZWZ0IjpbMSwxLDFdLCJyaWdodCI6WyJ4IiwxLDEsMSwxLDEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGOIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoyLCJsZWZ0IjpbIngiLC0xLC0xLC0xXSwicmlnaHQiOlstMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotNCwibGVmdCI6Wy0xLC0xLC0xLC0xLC0xXSwicmlnaHQiOlsieCIsLTFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NSwibGVmdCI6Wy0xXSwicmlnaHQiOlsieCIsLTEsLTEsLTEsLTEsLTEsLTFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6LTQsImxlZnQiOlsieCIsMSwxXSwicmlnaHQiOlstMSwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjotNSwibGVmdCI6Wy0xLC0xXSwicmlnaHQiOlsieCIsMSwxLDFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RkCIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NSwibGVmdCI6WyJ4IiwtMSwtMV0sInJpZ2h0IjpbMSwxLDFdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJyZWxhdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NiwibGVmdCI6WzEsMSwxLDFdLCJyaWdodCI6WyJ4IiwtMSwtMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGQIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjozLCJsZWZ0IjpbIngiLC0xLC0xLDFdLCJyaWdodCI6WzEsMV19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGaIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InJlbGF0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjowLCJsZWZ0IjpbLTEsMSwxXSwicmlnaHQiOlsieCIsMV19XX0"},
-   {t:"Je partage les billes",fo:"a × x = c · a × x + b = c",
-    o:"Deux ou trois taches\u00a0: je regroupe les billes, puis je partage.",
+   {t:"Je partage les jetons",fo:"a × x = c · a × x + b = c",
+    o:"Deux ou trois taches\u00a0: je regroupe les jetons, puis je partage.",
     p:"ech2",code:"É2",id:"e3-ech2",
     eqs:["2𝑚 = 1 + 1 + 1 + 1", "1 + 1 + 1 + 1 + 1 + 1 = 2𝑐", "2𝑛 = −1 − 1 − 1 − 1 − 1 − 1", "−1 − 1 − 1 = 3𝑏", "2𝑚 = −1 + 1", "2𝑐 = −1 − 1 − 1 + 1 − 1 − 1", "2𝑏 + 1 + 1 = 1 + 1 + 1 + 1 + 1 + 1", "−1 − 1 − 1 = 2𝑥 + 1", "2𝑡 − 1 − 1 = 1 + 1 + 1 + 1", "1 + 1 = 3𝑎 + 1 + 1 + 1 + 1 + 1", "2𝑥 + 1 + 1 = −1 − 1 − 1 − 1", "3𝑎 − 1 + 1 = −1 + 1 + 1 + 1 + 1"],
     q:ECH_F2[0],suite:ECH_F2.slice(1),vp:"equation",
@@ -1178,7 +1178,7 @@ const NOTES_MONDE = [
  "<tr><td>l'inconnue dans les deux membres (2x + 4 = 3x + 3)</td><td>mondes 5 et 6</td><td>4e-3e</td></tr>"+
  "<tr><td>recopier les deux plateaux (2N + 3V ; 3N + 5V)</td><td><b>volontairement hors SPLAT!</b></td><td>lycée</td></tr></table>",
  "Deux plateaux, la même quantité : l'élève dessine le schéma ou écrit l'équation. Une nouveauté à la fois, tout mélangé à la fin.",
- "Les relatifs : le jeton rouge est négatif, la tache «\u00a0opposé\u00a0» prend l’opposé de ce qu’elle cache (−𝑥). L'élève écrit l'équation. L'échauffement (É1 à É3) : des billes 1 et −1, puis un jeton par plateau. Après le monde 5."
+ "Les relatifs : le jeton rouge est négatif, la tache «\u00a0opposé\u00a0» prend l’opposé de ce qu’elle cache (−𝑥). L'élève écrit l'équation. L'échauffement (É1 à É3) : des jetons 1 et −1, puis un seul jeton par plateau. Après le monde 5."
 ];
 const NOTES_PROF = [
  ["Compléter un schéma déjà tracé.",
@@ -1212,8 +1212,8 @@ const NOTES_PROF = [
  ["x + b = c, puis a × x = c : un par un, puis en paquets.",
   "Enlever, puis partager : 2 ou 3 taches, puis 4 à 6.",
   "Des taches sur les deux plateaux, puis le grand mélange."],
- ["Billes 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent.",
-  "Avec des billes : a × x = c, puis a × x + b = c. Regrouper, puis partager.",
+ ["Jetons 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent.",
+  "Avec des jetons 1 et −1 : a × x = c, puis a × x + b = c. Regrouper, puis partager.",
   "Un jeton numéroté par plateau, les mêmes formes : le pont vers la fiche 38.",
   "Les jetons rouges : x + b = c, a × x = c, a × x + b = c.",
   "Jetons verts et rouges à regrouper ; deux solutions nulles.",

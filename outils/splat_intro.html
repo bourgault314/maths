@@ -850,7 +850,7 @@ const BASE={
   paysage:{W:1600,H:900,s:.93,ox:130.4,oy:134,w:1440,h:815,
     cap:{x:800,y:76,size:38,max:1500,gap:0},
     barre:{h:44,pil:{x:14,y:11,w:150,h:22},retour:'Carte des mondes',note:true},
-    /* bandeau « Bravo » : outil à 1440 × 900, « Faire des paquets » en y 722 → 632 dans le film (−90) ; centré sur les
+    /* bandeau « Bravo » : outil à 1440 × 900, le bouton Partager (ex-« Faire des paquets ») en y 722 → 632 dans le film (−90) ; centré sur les
        boutons ET la zone d'action en dessous, comme l'outil (21/10/2026 : 766,5 → 676,5) */
     bravo:{cx:720,y:676.5,h:68,r:34,pg:24,pd:10,gap:18,fs:24,lg:330.1,bw:269.3,bh:48,bfs:21.6},
     carte:{x:15,y:52,w:1410,h:753,r:16},
@@ -861,7 +861,7 @@ const BASE={
   portrait:{W:900,H:1600,s:2,ox:60,oy:150,w:390,h:660,
     cap:{x:450,y:62,size:36,max:840,gap:44},
     barre:{h:34,pil:{x:10,y:6,w:30,h:22},retour:'',note:false},
-    /* bandeau « Bravo » en colonne : outil à 390 × 844, « Faire des paquets » en y 596,5 → 439 dans le film (−157,5) */
+    /* bandeau « Bravo » en colonne : outil à 390 × 844, le bouton Partager (ex-« Faire des paquets ») en y 596,5 → 439 dans le film (−157,5) */
     bravo:{col:true,cx:195,y:462.2,h:103,r:22,pad:14,fs:18,ty:485.7,lg:247.6,bw:213.9,bh:48,by:505.2,bfs:16.2},
     carte:{x:5,y:39,w:380,h:617,r:18},
     eq:{x:195,g:19,d:19,fs:24,fleche:'bords',lab:13,sw:2.1},
@@ -869,16 +869,80 @@ const BASE={
     titre:{tx:450,ty:470,tr:150,y:830,size:150,ligne2:{y:950,size:96},sy:1040,ssize:40,logo:{h:120,y:30,xr:870}},
     fin:{x:450,ty:520,tr:70,my:770,size:84,sy:860,ssize:34,jy:1080,jw:360,jh:100,js:48}}
 };
+/* construit une fenêtre de l'outil (Regrouper, Décomposer, Partager équitablement) ; rend {g, champ (texte tapé), ok (centre
+   du bouton de validation), cles {chiffre: centre}, fondsCles} en pixels de l'outil, et les rectangles à toucher (okR, clesR,
+   pucesR, champR) pour « À toi de faire ». Passée du film des jetons numérotés à l'écran commun le 23/10/2026 : le film des
+   billes ouvre lui aussi la fenêtre Partager. */
+function fenetre(Y,p,spec,port){
+  const g=E('g',{},p),s=port?Math.min(1,620/spec.h):1,x0=Y.w/2-spec.w*s/2,y0=Y.h/2-spec.h*s/2;
+  const g2=E('g',{transform:`translate(${x0},${y0}) scale(${s})`},g);
+  const res={g,cles:{},fondsCles:{},ok:null,champ:null,puces:{},clesR:{},pucesR:{},okR:null,champR:null};
+  const abs=(x,y)=>[x0+x*s,y0+y*s],rect=(x,y,w,h)=>({x:x0+x*s,y:y0+y*s,w:w*s,h:h*s});
+  E('rect',{x:0,y:0,width:spec.w,height:spec.h,rx:spec.r,fill:'#ffffff',filter:'url(#fsOmbre)'},g2);
+  const T_=(x,y,fs,a)=>txt(g2,x,y,fs,Object.assign({'text-anchor':'middle'},a));
+  const btn=(lab,x,y,w,h,fs,genre)=>{const st={vert:['url(#fsVert)','#ffffff','none'],bleu:['url(#fsBleu)','#ffffff','none'],bleuClair:['url(#fsBleuClair)','#ffffff','none'],
+      blanc:['#ffffff',C.encre,'rgba(15,23,42,.11)'],cle:['#f8fafc',C.encre,'rgba(15,23,42,.1)'],action:['#eef2ff','#3730a3','rgba(15,23,42,.1)']}[genre];
+    const r=E('rect',{x,y,width:w,height:h,rx:genre==='cle'||genre==='action'||h<45?12:18,fill:st[0],stroke:st[2],'stroke-width':1},g2);
+    T_(x+w/2,y+h/2-fs*.08,fs,{'font-weight':900,'font-family':ARIAL,fill:st[1]}).textContent=lab;return {r,c:abs(x+w/2,y+h/2),R:rect(x,y,w,h)};};
+  for(const el of spec.el){const k=el[0];
+    if(k==='titre')T_(el[2],el[3],el[4],{'font-weight':900,fill:'#000000','letter-spacing':-el[4]*.04}).textContent=el[1];
+    else if(k==='texte')T_(el[2],el[3],el[4],Object.assign({'font-weight':el[5]||750,fill:el[6]||'#64748b'},el[7]?{'letter-spacing':el[7]}:{})).textContent=el[1];
+    else if(k==='texteB'){const t=T_(el[2],el[3],el[4],{'font-weight':750,fill:'#64748b'});el[1].forEach((m,i)=>{E('tspan',i%2?{'font-weight':900}:{},t).textContent=m;});}
+    else if(k==='jeton'){/* le jeton dessiné de Décomposer et Partager (18/10/2026), couleurs du plateau */
+      const c=couleurJeton(el[1]);E('circle',{cx:el[2],cy:el[3],r:el[4],fill:c.fill,stroke:c.stroke,'stroke-width':3*el[4]/35},g2);
+      T_(el[2],el[3],el[5],{'font-weight':900,fill:C.encre}).textContent=String(el[1]);}
+    else if(k==='groupe'){/* le groupe de petits jetons bleus de Partager (23/10/2026), en rangées comme dans l'outil
+         (groupeJetonsDialogueHtml : un pas de 34, des ronds de 13) : ['groupe', nombre, cx, cy] */
+      const n=el[1],cols=n<=6?n:Math.ceil(Math.sqrt(n*2)),rows=Math.ceil(n/cols),pas=34;
+      for(let i=0;i<n;i++){const li=Math.floor(i/cols),dl=Math.min(cols,n-li*cols);
+        E('circle',{cx:el[2]+((i%cols)-(dl-1)/2)*pas,cy:el[3]+(li-(rows-1)/2)*pas,r:13,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':2.4},g2);}}
+    else if(k==='label')T_(el[2],el[3],el[4],{'font-weight':el[5]||900,fill:'#64748b','letter-spacing':el[4]*.04}).textContent=el[1].toUpperCase();
+    else if(k==='champ'){E('rect',{x:el[1],y:el[2],width:el[3],height:el[4],rx:el[5],fill:'#ffffff',stroke:'rgba(59,130,246,.5)','stroke-width':1.5},g2);
+      res.champ=T_(el[1]+el[3]/2,el[2]+el[4]/2+1,el[6],{'font-weight':900,fill:C.encre});
+      res.champR=rect(el[1],el[2],el[3],el[4]);
+      res.curseur=E('rect',{x:el[1]+el[3]/2-1,y:el[2]+el[4]*.25,width:2,height:el[4]*.5,fill:C.encre},g2);res.champC=el[1]+el[3]/2;res.champFs=el[6];}
+    else if(k==='btn'){const b=btn(el[1],el[2],el[3],el[4],el[5],el[6],el[7]);if(el[8]==='ok'){res.ok=b.c;res.okR=b.R;}}
+    else if(k==='puce'){const ch=el[6]==='choisie';
+      const r=E('rect',{x:el[2],y:el[3],width:el[4],height:el[5],rx:el[5]/2,fill:ch?'#dbeafe':'#f1f5f9',stroke:ch?'#2563eb':'rgba(15,23,42,.08)','stroke-width':ch?1.5:1},g2);
+      T_(el[2]+el[4]/2,el[3]+el[5]/2-18*.08,18,{'font-weight':900,fill:ch?'#1e3a8a':C.encre}).textContent=el[1];
+      if(el[6]==='p3'){res.puces.p3=abs(el[2]+el[4]/2,el[3]+el[5]/2);res.pucesR.p3=rect(el[2],el[3],el[4],el[5]);}}
+    else if(k==='pave'){/* le pavé de chiffres du téléphone : 1-9, (+) 0, Effacer ⌫, puis le bouton d'action seul sur sa ligne (18/10/2026) */
+      const [x,y,w,h,px,py,lab,plus]=el.slice(1);
+      const chiffres=[['1','2','3'],['4','5','6'],['7','8','9'],[plus?'+':null,'0',null]];
+      chiffres.forEach((ligne,li)=>ligne.forEach((c,ci)=>{if(!c)return;const b=btn(c,x+ci*px,y+li*py,w,h,20,'cle');res.cles[c]=b.c;res.clesR[c]=b.R;res.fondsCles[c]=b.r;}));
+      const W=2*px+w,ecart=px-w,demi=(W-ecart)/2;
+      btn('Effacer',x,y+4*py,demi,h,14,'action');btn('⌫',x+demi+ecart,y+4*py,demi,h,14,'action');const ok=btn(lab,x,y+5*py,W,h,18,'bleuClair');res.ok=ok.c;res.okR=ok.R;}
+  }
+  return res;
+}
+/* les fenêtres ouvertes à l'instant t, au-dessus du voile (l'écran derrière est flouté, comme dans l'outil) :
+   liste de [fenêtre, ouverture, fermeture, instants des touches, ce qui est tapé, sans fondu (une fenêtre qui en remplace
+   une autre)], puis les instants où « ok » ferme la dernière (le voile s'en va) — repris du film des jetons, 23/10/2026 */
+function fenetres(o,Y,t,liste,oks,port){
+  let voile=0;
+  for(const [d,a,b,cles,tape,sansFondu] of liste){const ouvert=t>=a&&t<b;const v=ouvert?(sansFondu?1:P(t,a,.15,F.out)):0;
+    op(d.g,v);if(v>0){const sc=sansFondu?1:L(.97,1,P(t,a,.18,F.out)),cx=Y.w/2,cy=Y.h/2;
+      d.g.setAttribute('transform',`translate(${cx},${cy}) scale(${sc}) translate(${-cx},${-cy})`);}
+    if(ouvert)voile=Math.max(voile,sansFondu?1:P(t,a,.15,F.lin));
+    if(d.champ){let n=0;if(cles)for(const c of cles)if(t>=c)n++;
+      const val=n?tape[n-1]:'';d.champ.textContent=val;
+      if(d.curseur){const w=val?(d.champ.getComputedTextLength?d.champ.getComputedTextLength():0):0;d.curseur.setAttribute('x',d.champC+w/2+3);op(d.curseur,(Math.floor(t*2)%2===0)?1:0);}
+      if(port&&cles)cles.forEach((c,i)=>{const k=tape[i].slice(-1),f=d.fondsCles[k];if(f)f.setAttribute('fill',t>=c-.05&&t<c+.2?'#dbeafe':'#f8fafc');});}}
+  for(const ok of oks)if(t>=ok&&t<ok+.1)voile=1-P(t,ok,.1,F.lin);
+  op(o.voile,voile);
+  if(voile>.02)o.fond.setAttribute('filter','url(#fsFlou)');else o.fond.removeAttribute('filter');
+}
 function mise(mode,ajout){const b=BASE[mode]||BASE.paysage,a=(ajout&&ajout[mode])||{},Y=Object.assign({},b,a);
   for(const k of ['eq','barre','titre','fin','cap'])if(a[k])Y[k]=Object.assign({},b[k],a[k]);return Y;}
 return {C,POLICE,ARIAL,blob,couleurJeton,txt,defs,bouton,ecran,equation,placerFleches,plateau,tache,piece,cartes,doigt,cartons,
-  legende,sousTitres,titre,barre,grouperOutils,bandeau,bravo,ecrire,consigne,appui,rendreDoigt,fin,evenements,apresPolice,mise};
+  legende,sousTitres,titre,barre,grouperOutils,bandeau,bravo,ecrire,consigne,appui,rendreDoigt,fin,evenements,apresPolice,mise,fenetre,fenetres};
 })();
 </script>
 <script>
 /* ===== Film « Comment on joue ? » d'ÉquaSplat, avec des billes — SPLAT! Équations, étape 35 « Premières équations » =====
    ?film=equasplat. Deux exemples HORS de la série de l'étape (décidé le 10/10/2026 : le film ne donne aucune réponse
-   de la série) : 𝑡 + 3 = 7 (« Enlever des deux côtés »), puis 3𝑦 = 9 (« Faire des paquets »). Avant chaque geste, le
+   de la série) : 𝑡 + 3 = 7 (« Enlever des deux côtés »), puis 3𝑦 = 9 (« Partager équitablement » : la fenêtre de l'outil, les
+   9 jetons dessinés, « 3 parts », l'élève tape 3 — depuis le 23/10/2026, plus de « Faire des paquets »). Avant chaque geste, le
    doigt RANGE les jetons en face (un vrai geste de l'outil : on glisse les pièces) pour qu'on voie ce qui se correspond :
    3 jetons en face de 3, puis un paquet en face de chaque tache. Ranger n'est pas obligatoire dans l'outil : le film
    le fait pour qu'on voie bien, SANS LE DIRE (16/10/2026, choix de Gwenaël : plus de phrase « Range les jetons… »). Les jetons se posent à côté les uns des autres, jamais
@@ -893,22 +957,22 @@ const PAS_RANGE=.8,PAS_TOUCHE=.45;
    suite. Il touche maintenant le bouton d'abord (on peut le faire dans l'outil : le mode reste le même), une phrase le
    dit, puis il touche les jetons. Tout ce qui suit est décalé de 1,5 s.
    Rien d'allumé au départ (lot « tout revoir » du 15/10/2026, choix de Gwenaël) : l'outil n'allume plus « Enlever »
-   tout seul ; le bouton devient bleu quand le doigt le touche (modeE), jusqu'à l'équation suivante. « Faire des
-   paquets » touché s'allume à son tour, le temps de choisir les paquets. */
+   tout seul ; le bouton devient bleu quand le doigt le touche (modeE), jusqu'à l'équation suivante. « Partager
+   équitablement » touché s'allume à son tour, le temps de la fenêtre (dlg → ok : « 3 parts », puis on tape 3). */
 const T={ecran:2.7,rangeA:5.2,modeE:10.6,toucheA:11.9,valider:15.1,ecrit:15.3,resolu:16.7,suivant:19.1,
-  b:19.4,rangeB:21.6,fp:26.2,choix:27.2,groupes:27.35,carte:29.5,replie:30.0,resoluB:30.7,fin:33.5};
+  b:19.4,rangeB:21.6,fp:26.2,dlg:26.3,chip:27.1,cle:27.8,ok:28.5,groupes:28.65,carte:30.8,replie:31.3,resoluB:32.0,fin:34.8};
 const SOUS_TITRES=[[3.2,'Trouve ce que cache la tache 𝑡.'],
   [9.9,'Touche «\u00a0Enlever des deux côtés\u00a0».'],[11.4,'Puis touche les 3 jetons de chaque côté…'],[14.5,'Valide.'],[16.1,'Une ligne s’écrit : 𝑡 = 4.'],
   [17.9,'La tache est seule : c’est résolu !'],[19.7,'Ici, 3 taches et 9 jetons.'],
-  [25.6,'Touche «\u00a0Faire des paquets\u00a0» : 3 paquets de 3.'],
-  [28.4,'Touche un des groupes.'],[30.8,'Une tache cache 3 jetons : 𝑦 = 3.'],[33.5,'']];
+  [25.6,'Partage les 9 jetons en 3 parts égales.'],
+  [29.7,'Touche un des groupes.'],[32.1,'Une tache cache 3 jetons : 𝑦 = 3.'],[34.8,'']];
 /* sélection de l'exemple A : les 3 jetons rangés à gauche, puis les 3 rangés à droite */
 const TA=[0,1,2,3,4,5].map(k=>T.toucheA+k*PAS_TOUCHE);
 const I0='Il y a la même quantité à gauche qu’à droite.';
 /* après le bouton : la consigne de l'outil en mode « Enlever » sans sélection (equasplat.html, renderActions) */
 const CONSIGNES=[[0,I0],[T.modeE,'Sélectionne la même quantité des deux côtés.'],[TA[0],'Sélectionne maintenant l’autre côté.'],[TA[3],'Les jetons sélectionnés ne font pas la même somme.'],
   [TA[5],'Même quantité sélectionnée : 3.'],[T.valider,''],   /* résolue : l'outil efface la phrase (15/10/2026), comme les deux autres films */
-  [T.b,I0],[T.fp,'Choisis comment ranger les 9 jetons en paquets.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
+  [T.b,I0],[T.fp,'Il reste 3 taches et 9 jetons : on peut partager.'],[T.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[T.replie,'']];
 /* trois jetons en paquet autour d'un point (assez écartés : aucun n'est posé sur un autre) */
 const paquet=(c,dx,dy,dz)=>[[c[0]-dx,c[1]-dy],[c[0]+dx,c[1]-dy],[c[0],c[1]+dz]];
 function exemples(port){
@@ -931,29 +995,49 @@ function exemples(port){
 const AJOUT={
   paysage:{eq:{ys:[[94],[76,116]]},consigne:{x:720,y:162,fs:17},
     pan:{x:30,y:180,w:1380,h:440,r:18},plat:{x:116,y:200,w:1208,h:400,rx:29,sw:2.56},
-    fp:{x:635,y:632,w:170,h:48,r:15},
+    fp:{x:614,y:632,w:212,h:48,r:15},
     rangs:[{id:'enl',x:372,y:689,w:212,h:48},{id:'ajo',x:592,y:689,w:210,h:48},{id:'ann',x:822,y:689,w:94,h:48},{id:'rec',x:924,y:689,w:144,h:48}],
-    act:{y:746,h:46,effacer:{x:676,w:88},effSel:{x:630,w:180},valider:{x:525,w:202},effSel2:{x:735,w:180},choix:[{x:501,w:134},{x:643,w:144},{x:795,w:144}]},
-    fin:{lignes:['Enlève la même quantité des deux côtés, ou fais des paquets.']}},
+    act:{y:746,h:46,effacer:{x:676,w:88},effSel:{x:630,w:180},valider:{x:525,w:202},effSel2:{x:735,w:180}},
+    fin:{lignes:['Enlève la même quantité des deux côtés, ou partage.']}},
   portrait:{eq:{ys:[[73],[73,125]],boite:{x:12,y:48,w:366,h:108,r:14}},consigne:{x:195,y:414,fs:13},
     pan:{x:5,y:164,w:380,h:230,r:18},plat:{x:10,y:172,w:370,h:214,rx:8,sw:.7},
     fp:{x:17,y:439,w:356,h:42,r:12,boite:{x:11,y:432,w:368,h:56}},grille:{x:11,y:494,w:368,h:104},
     rangs:[{id:'enl',x:17,y:500,w:175.5,h:42},{id:'ajo',x:197.5,y:500,w:175.5,h:42},{id:'ann',x:17,y:547,w:175.5,h:42},{id:'rec',x:197.5,y:547,w:175.5,h:42}],
-    act:{y:606,h:40,x:11,w:368,choix:[{x:11,w:116.7},{x:136.7,w:116.7},{x:262.3,w:116.7}]},
-    fin:{lignes:['Enlève la même quantité des deux côtés,','ou fais des paquets.']}}
+    act:{y:606,h:40,x:11,w:368},
+    fin:{lignes:['Enlève la même quantité des deux côtés,','ou partage.']}}
 };
 const BOUTONS={enl:'Enlever des deux côtés',ajo:'Ajouter des deux côtés',ann:'Annuler',rec:'Recommencer'};
+/* le bouton Partager des petits jetons (ex-« Faire des paquets », 23/10/2026) : son nom long à l'ordinateur, court au téléphone */
+const PARTAGER=['Partager équitablement','Partager'];
+/* la fenêtre Partager équitablement de l'outil avec les 9 petits jetons de 3𝑦 = 9, relevée le 23/10/2026 (lot « partager les
+   ronds bleus ») : le groupe dessiné à la place du jeton, « 3 parts » et « 9 parts » (tous les partages entiers), puis
+   « Chaque part vaut » et la case où l'on tape ; au téléphone, le pavé de chiffres. Mêmes conventions que les fenêtres du
+   film des jetons numérotés (Q.fenetre). */
+const DLG_PARTAGE={
+  paysage:{
+    P1:{w:620,h:313,r:24,el:[['titre','Partager équitablement',310,53.5,34],['groupe',9,310,123],
+      ['puce','3 parts',209,178,95,49,'p3'],['puce','9 parts',316,178,95,49],['btn','Annuler',271.5,245,77,37,13.5,'blanc']]},
+    P2:{w:620,h:491,r:24,el:[['titre','Partager équitablement',310,53.5,34],['groupe',9,310,123],
+      ['puce','3 parts',209,178,95,49,'choisie'],['puce','9 parts',316,178,95,49],['label','Chaque part vaut',310,255,16],
+      ['champ',37,273,546,100,18,54,'P'],['btn','Partager',228.6,423,79,37,13.5,'bleu','ok'],['btn','Annuler',314.4,423,77,37,13.5,'blanc']]}},
+  portrait:{
+    P1:{w:352,h:334,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['groupe',9,176,154],
+      ['puce','3 parts',75,209,95,49,'p3'],['puce','9 parts',182,209,95,49],['btn','Annuler',137.5,276,77,37,13.5,'blanc']]},
+    P2:{w:352,h:781,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['groupe',9,176,154],
+      ['puce','3 parts',75,209,95,49,'choisie'],['puce','9 parts',182,209,95,49],['label','Chaque part vaut',176,286,16],
+      ['champ',19,304,314,77,18,34,'P'],['pave',19,391,101,42,106.5,48,'Partager',false],['btn','Annuler',137.5,723,77,37,13.5,'blanc']]}}
+};
 /* position d'un jeton qu'on glisse : il suit le doigt (même mouvement) */
 const posBille=(b,t)=>{if(!b.p1||t<=b.tg)return b.p0;const u=F.io(F.clamp((t-b.tg)/.45));return [L(b.p0[0],b.p1[0],u),L(b.p0[1],b.p1[1],u)];};
 
 const film={
-  duration:36.9, poster:2.4, stops:[],
+  duration:38.2, poster:2.4, stops:[],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
-  aria:'Film : comment on joue dans ÉquaSplat avec des billes, enlever la même quantité des deux côtés puis faire des paquets',
+  aria:'Film : comment on joue dans ÉquaSplat avec des petits jetons, enlever la même quantité des deux côtés puis partager équitablement',
   titre:'Comment on joue ? ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'},{t:2.7,name:'Le plateau'},{t:4.7,name:'Ranger les jetons'},{t:9.9,name:'Enlever des deux côtés'},
-    {t:15.3,name:'La ligne s’écrit'},{t:19.4,name:'Ranger en paquets'},{t:25.6,name:'Faire des paquets'},{t:33.5,name:'À toi de jouer'}],
+    {t:15.3,name:'La ligne s’écrit'},{t:19.4,name:'Ranger en face des taches'},{t:25.6,name:'Partager équitablement'},{t:34.8,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=Q.mise(mode,AJOUT),o=this.o={port},X=this.X=exemples(port);
     svg.style.fontFamily=Q.POLICE;
@@ -979,7 +1063,7 @@ const film={
     /* les boutons */
     if(Y.fp.boite){const b=Y.fp.boite;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
     if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
-    o.fp=Q.bouton(Y,S,Y.fp,'Faire des paquets',port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
+    o.fp=Q.bouton(Y,S,Y.fp,PARTAGER[port?1:0],port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
     /* Enlever n'est plus allumé au départ : sa couleur de repos (blanc à l'ordinateur, orange au téléphone) */
     const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'},
       ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
@@ -991,21 +1075,21 @@ const film={
     /* zone d'action (sous les boutons) */
     const A=Y.act;o.act={};
     const ghost={fond:'#ffffff',bord:'rgba(15,23,42,.13)',encre:'#111827'},orange={fond:'url(#fsOrange)',bord:'rgba(234,88,12,.3)',encre:'#ffffff'};
-    const choix=['1 paquet de 9','3 paquets de 3','9 paquets de 1'];
     if(port){
       o.act.attente=Q.bouton(Y,S,{x:A.x,y:A.y,w:A.w,h:A.h,r:15},'Valider',{fond:'#f8fafc',bord:'rgba(71,85,105,.16)',encre:'#c3cad4'});
       o.act.valider=Q.bouton(Y,S,{x:A.x,y:A.y,w:A.w,h:A.h,r:15},'Valider la suppression',orange);
-      o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h,r:12},l,ghost));
     }else{
       o.act.effacer=Q.bouton(Y,S,{x:A.effacer.x,y:A.y,w:A.effacer.w,h:A.h},'Effacer',ghost);
       o.act.effSel=Q.bouton(Y,S,{x:A.effSel.x,y:A.y,w:A.effSel.w,h:A.h},'Effacer la sélection',ghost);
       o.act.valider=Q.bouton(Y,S,{x:A.valider.x,y:A.y,w:A.valider.w,h:A.h},'Valider la suppression',orange);
       o.act.effSel2=Q.bouton(Y,S,{x:A.effSel2.x,y:A.y,w:A.effSel2.w,h:A.h},'Effacer la sélection',ghost);
-      o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h},l,ghost));
     }
     /* la barre d'outils et, à sa place quand c'est résolu, le bandeau « Bravo » de l'outil (21/10/2026) */
     Q.grouperOutils(o,S,[o.boite,o.grille,o.fp.g].concat(Y.rangs.map(b=>o.rangs[b.id].g)));
     o.bravoA=Q.bandeau(o,Y,S,'𝑡 = 4');o.bravoB=Q.bandeau(o,Y,S,'𝑦 = 3');o.cSuivant=o.bravoA.btn.c;
+    /* la fenêtre Partager équitablement, au-dessus d'un voile (23/10/2026) */
+    o.voile=E('rect',{x:0,y:0,width:Y.w,height:Y.h,rx:port?22:14,fill:'rgba(15,23,42,.35)'},o.ecran);
+    {const DD=DLG_PARTAGE[mode]||DLG_PARTAGE.paysage;o.dP1=Q.fenetre(Y,o.ecran,DD.P1,port);o.dP2=Q.fenetre(Y,o.ecran,DD.P2,port);}
     /* ---- le doigt : ce qu'il fait, dans l'ordre ---- */
     const D=Q.evenements(port);o.ev=D.ev;
     const sA=o.glisses.filter(b=>b.tg<T.b),sB=o.glisses.filter(b=>b.tg>T.b);
@@ -1017,7 +1101,9 @@ const film={
     D.entre(T.suivant-.8,o.cSuivant);D.touche(T.suivant,o.cSuivant);D.fin(T.suivant+.3);
     D.entre(T.rangeB-.55,sB[0].p0);
     for(const b of sB){D.va(b.tg,b.p0);D.glisse(b.tg+.45,b.p1);}
-    D.touche(T.fp,o.fp.c);D.touche(T.choix,o.act.choix[1].c);D.fin(T.choix+.35);
+    D.touche(T.fp,o.fp.c);D.touche(T.chip,o.dP1.puces.p3);
+    if(port)D.touche(T.cle,o.dP2.cles['3']);else D.va(T.cle,o.dP2.ok);
+    D.touche(T.ok,o.dP2.ok);D.fin(T.ok+.3);
     const cible=[K.tx+(port?40:150),K.ys[1]+K.h/2];D.entre(T.carte-.75,cible);D.touche(T.carte,cible);D.fin(T.carte+.4);
     Q.doigt(o,Y,o.ecran,port);
     Q.cartons(o,Y,svg,'Comment on joue ?');
@@ -1055,24 +1141,24 @@ const film={
       c.r.setAttribute('stroke-width',ok?this.X.B.cartes.swOk:this.X.B.cartes.sw);});
     /* boutons */
     const grise=t>=T.groupes&&t<T.replie;
-    /* le bouton touché est bleu, comme dans l'outil : Enlever de modeE à l'équation suivante, Faire des paquets
-       le temps de choisir (le choix fait, l'outil revient à « aucun bouton ») */
+    /* le bouton touché est bleu, comme dans l'outil : Enlever de modeE à l'équation suivante, Partager le temps
+       de la fenêtre (le partage fait, l'outil revient à « aucun bouton ») */
     const allume=(b,on)=>{const r=b.st;b.r.setAttribute('fill',on?'url(#fsBleu)':r.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':r.bord);b.t[0].setAttribute('fill',on?'#ffffff':r.encre);};
     allume(o.rangs.enl,t>=T.modeE&&t<T.b);allume(o.fp,t>=T.fp&&t<T.groupes);
     for(const id of ['enl','ajo'])o.rangs[id].g.setAttribute('opacity',grise?.45:1);
     o.fp.g.setAttribute('opacity',grise?.45:1);
     Q.appui(o.fp,t,T.fp);Q.appui(o.rangs.enl,t,T.modeE);
     const entre=(a,b)=>t>=a&&t<b?1:0,ac=o.act;
-    if(port){const vv=entre(TA[5],T.valider+.15),ch=entre(T.fp,T.groupes);
-      op(ac.attente.g,(!vv&&!ch)?1:0);op(ac.valider.g,vv);ac.choix.forEach(b=>op(b.g,ch));
+    if(port){const vv=entre(TA[5],T.valider+.15);
+      op(ac.attente.g,vv?0:1);op(ac.valider.g,vv);
     }else{op(ac.effacer.g,entre(TA[0],TA[3]));op(ac.effSel.g,entre(TA[3],TA[5]));
-      op(ac.valider.g,entre(TA[5],T.valider+.15));op(ac.effSel2.g,entre(TA[5],T.valider+.15));
-      ac.choix.forEach(b=>op(b.g,entre(T.fp,T.groupes)));}
-    Q.appui(ac.valider,t,T.valider);Q.appui(ac.choix[1],t,T.choix);
-    ac.choix[1].r.setAttribute('fill',t>=T.choix-.05?'#eff6ff':'#ffffff');
+      op(ac.valider.g,entre(TA[5],T.valider+.15));op(ac.effSel2.g,entre(TA[5],T.valider+.15));}
+    Q.appui(ac.valider,t,T.valider);
     /* résolu : boutons figés, puis le bandeau à leur place ; la zone d'action disparaît avec eux */
     const bv=enA?Q.bravo(o,t,o.bravoA,T.resolu,T.b-.05,T.suivant):Q.bravo(o,t,o.bravoB,T.resoluB,1e9,null);
     if(bv)for(const k in ac)(Array.isArray(ac[k])?ac[k]:[ac[k]]).forEach(b=>op(b.g,0));
+    /* la fenêtre Partager : les 9 jetons, « 3 parts », on tape 3, Partager */
+    Q.fenetres(o,Y,t,[[o.dP1,T.dlg,T.chip+.02,null,null,false],[o.dP2,T.chip+.02,T.ok+.1,[T.cle],['3'],true]],[T.ok],port);
     Q.rendreDoigt(o,t,port);
     Q.sousTitres(o,Y,t,SOUS_TITRES);
     Q.fin(o,Y,t,T.fin);
@@ -1085,30 +1171,33 @@ const film={
    Le lecteur s'arrête à chaque attente (un toucher chacune) et ne repart que sur le bon toucher (aToi.toucher).
    Exemples hors de la série : 𝑡 + 2 = 5, puis 3𝑦 = 9, comme le film. Les jetons de 𝑡 + 2 = 5 sont posés EN MIROIR
    (après l'essai de Gwenaël, 16/10) : à droite, trois jetons à la place de la tache et deux en face des deux jetons de
-   gauche ; on voit ce qui se correspond, et qu'on peut enlever deux jetons d'un coup. Pour 3𝑦 = 9, le choix « 3 paquets
-   de 3 » montre le passage (demande de Gwenaël, 16/10) : chaque tache va se placer sur une ligne, l'une sous l'autre, en
+   gauche ; on voit ce qui se correspond, et qu'on peut enlever deux jetons d'un coup. Pour 3𝑦 = 9, le partage en 3 parts
+   (la fenêtre de l'outil depuis le 23/10/2026 : « 3 parts », on écrit 3, Partager ; à l'ordinateur, toucher la case écrit le
+   3, au téléphone c'est la touche 3 du pavé) montre le passage (demande de Gwenaël, 16/10) : chaque tache va se placer sur une ligne, l'une sous l'autre, en
    face de trois jetons ; puis deux traits coupent les deux plateaux en trois, et chaque bande devient un groupe, à la
    même place (l'outil, lui, montre les groupes tout de suite). Les phrases sous l'équation sont celles de
    l'outil à chaque geste (relevées dans ÉquaSplat le 16/10/2026) ; on ne touche pas à equasplat.html. Au téléphone, les
    zones à toucher font au moins 44 px à l'écran. */
 const TT=(()=>{const a1=5,a2=a1+1,a2b=a2+.5,a3=a2b+1,a3b=a3+.5,a4=a3b+1,resolu=a4+1.6,a5=resolu+1.3,b=a5+.3,a6=b+2,a7=a6+1,
-    range=a7+.15,coupe=range+1.25,groupes=range+1.9,a8=groupes+.9,fin=a8+3.8;
-  return {ecran:2.7,a1,a2,a2b,a3,a3b,a4,ecrit:a4+.2,resolu,a5,b,a6,a7,range,coupe,groupes,a8,replie:a8+.9,resoluB:a8+1.6,fin};})();
+    a7b=a7+1,a7c=a7b+1,range=a7c+.15,coupe=range+1.25,groupes=range+1.9,a8=groupes+.9,fin=a8+3.8;
+  return {ecran:2.7,a1,a2,a2b,a3,a3b,a4,ecrit:a4+.2,resolu,a5,b,a6,a7,a7b,a7c,range,coupe,groupes,a8,replie:a8+.9,resoluB:a8+1.6,fin};})();
 /* les attentes, une par toucher : Enlever, les 2 jetons de gauche, 2 jetons de droite, Valider, Équation suivante,
-   Faire des paquets, « 3 paquets de 3 », un des groupes */
-const ATT=[TT.a1,TT.a2,TT.a2b,TT.a3,TT.a3b,TT.a4,TT.a5,TT.a6,TT.a7,TT.a8];
-/* les consignes ; la troisième case dit après quelle attente le geste est fait : la consigne passe alors en vert avec ✓ */
+   Partager équitablement, « 3 parts », écrire 3, Partager, un des groupes */
+const ATT=[TT.a1,TT.a2,TT.a2b,TT.a3,TT.a3b,TT.a4,TT.a5,TT.a6,TT.a7,TT.a7b,TT.a7c,TT.a8];
+/* les consignes ; la troisième case dit après quelle attente le geste est fait : la consigne passe alors en vert avec ✓ ;
+   une consigne en deux textes : [ordinateur, téléphone] (le bouton Partager n'a pas le même nom, et on n'écrit pas 3 pareil) */
 const GUIDE=[[3.2,'Trouve ce que cache la tache 𝑡.'],[TT.a1-.3,'Touche «\u00a0Enlever des deux côtés\u00a0».',TT.a1],
   [TT.a1+.75,'Touche les 2 jetons à gauche.',TT.a2b],[TT.a2b+.75,'Touche 2 jetons à droite.',TT.a3b],
   [TT.a3b+.75,'Touche «\u00a0Valider la suppression\u00a0».',TT.a4],[TT.a4+1,'La tache est seule : 𝑡 = 3.'],
   [TT.a5-.3,'Touche «\u00a0Équation suivante\u00a0».',TT.a5],[TT.b+.3,'Ici, 3 taches et 9 jetons.'],
-  [TT.a6-.3,'Touche «\u00a0Faire des paquets\u00a0».',TT.a6],[TT.a6+.75,'Choisis «\u00a03 paquets de 3\u00a0».',TT.a7],
+  [TT.a6-.3,['Touche «\u00a0Partager équitablement\u00a0».','Touche «\u00a0Partager\u00a0».'],TT.a6],[TT.a6+.75,'Choisis «\u00a03 parts\u00a0».',TT.a7],
+  [TT.a7+.75,['Touche la case pour écrire 3.','Touche le 3 du pavé.'],TT.a7b],[TT.a7b+.75,'Touche «\u00a0Partager\u00a0».',TT.a7c],
   [TT.a8-.3,'Touche un des groupes.',TT.a8],[TT.a8+1,'Bravo ! Une tache cache 3 jetons : 𝑦 = 3.'],[TT.fin,'']];
 /* sous l'équation : ce qu'ÉquaSplat écrit après chaque geste (relevé dans l'outil le 16/10/2026, ordinateur et téléphone) ;
    la phrase change juste APRÈS le geste (+ 1 ms) : pendant l'attente, c'est encore celle d'avant qu'on lit */
 const CONS_T=[[0,I0],[TT.a1+.001,'Sélectionne la même quantité des deux côtés.'],[TT.a2+.001,'Sélectionne maintenant l’autre côté.'],
   [TT.a3+.001,'Les jetons sélectionnés ne font pas la même somme.'],[TT.a3b+.001,'Même quantité sélectionnée : 2.'],[TT.a4+.001,''],
-  [TT.b,I0],[TT.a6+.001,'Choisis comment ranger les 9 jetons en paquets.'],[TT.a7+.001,''],
+  [TT.b,I0],[TT.a6+.001,'Il reste 3 taches et 9 jetons : on peut partager.'],[TT.a7c+.001,''],
   [TT.groupes,'3 groupes identiques — touche-en un.',C.orangeC],[TT.replie,'']];
 /* 𝑡 + 2 = 5 (pixels de l'outil) : la tache et ses deux jetons ; à droite, en miroir, trois jetons à la place de la tache,
    puis deux en face des deux jetons de gauche */
@@ -1119,7 +1208,7 @@ const appuiT=(bt,t,tt)=>{const s=1-.05*Math.sin(Math.PI*F.clamp((t-tt)/.2)),c=bt
 const aToi={
   duration:TT.fin+3.4, poster:2.4, stops:[], attentes:ATT.map(t=>({t})),
   modes:film.modes, passer:SUITE, passerTexte:'Passer ›', credit:film.credit,
-  aria:'À toi de faire : le tutoriel d’ÉquaSplat avec des billes. Enlever deux jetons de chaque côté, puis faire des paquets',
+  aria:'À toi de faire : le tutoriel d’ÉquaSplat avec des petits jetons. Enlever deux jetons de chaque côté, puis partager équitablement',
   titre:'À toi de faire — ÉquaSplat — maths&go',
   chapters:[{t:0,name:'SPLAT! Équations'}],
   choix:{g:[],d:[],groupe:null,touches:{}}, indice:null,
@@ -1149,7 +1238,7 @@ const aToi={
     /* les boutons, comme dans le film */
     if(Y.fp.boite){const b=Y.fp.boite;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
     if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
-    o.fp=Q.bouton(Y,S,Y.fp,'Faire des paquets',port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
+    o.fp=Q.bouton(Y,S,Y.fp,PARTAGER[port?1:0],port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'});
     const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'},
       ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
       rec:{fond:'#eef2ff',bord:'rgba(99,102,241,.22)',encre:'#3730a3'}};
@@ -1158,33 +1247,34 @@ const aToi={
       E('path',{d:`M${cx-30},${cy+2}l-5,-5l5,-5 M${cx-35},${cy-3}h9a5.5,5.5 0 0 1 0,11h-3`,fill:'none',stroke:'#9a3412','stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'},o.rangs.ann.g);}
     const A=Y.act;o.act={};
     const ghost={fond:'#ffffff',bord:'rgba(15,23,42,.13)',encre:'#111827'},orange={fond:'url(#fsOrange)',bord:'rgba(234,88,12,.3)',encre:'#ffffff'};
-    const choix=['1 paquet de 9','3 paquets de 3','9 paquets de 1'];
     if(port){
       o.act.attente=Q.bouton(Y,S,{x:A.x,y:A.y,w:A.w,h:A.h,r:15},'Valider',{fond:'#f8fafc',bord:'rgba(71,85,105,.16)',encre:'#c3cad4'});
       o.act.valider=Q.bouton(Y,S,{x:A.x,y:A.y,w:A.w,h:A.h,r:15},'Valider la suppression',orange);
-      o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h,r:12},l,ghost));
     }else{
       o.act.effacer=Q.bouton(Y,S,{x:A.effacer.x,y:A.y,w:A.effacer.w,h:A.h},'Effacer',ghost);
       o.act.effSel=Q.bouton(Y,S,{x:A.effSel.x,y:A.y,w:A.effSel.w,h:A.h},'Effacer la sélection',ghost);
       o.act.valider=Q.bouton(Y,S,{x:A.valider.x,y:A.y,w:A.valider.w,h:A.h},'Valider la suppression',orange);
       o.act.effSel2=Q.bouton(Y,S,{x:A.effSel2.x,y:A.y,w:A.effSel2.w,h:A.h},'Effacer la sélection',ghost);
-      o.act.choix=choix.map((l,k)=>Q.bouton(Y,S,{x:A.choix[k].x,y:A.y,w:A.choix[k].w,h:A.h},l,ghost));
     }
     Q.grouperOutils(o,S,[o.boite,o.grille,o.fp.g].concat(Y.rangs.map(b=>o.rangs[b.id].g)));
     o.bravoA=Q.bandeau(o,Y,S,'𝑡 = 3');o.bravoB=Q.bandeau(o,Y,S,'𝑦 = 3');
+    o.voile=E('rect',{x:0,y:0,width:Y.w,height:Y.h,rx:port?22:14,fill:'rgba(15,23,42,.35)'},o.ecran);
+    {const DD=DLG_PARTAGE[mode]||DLG_PARTAGE.paysage;o.dP1=Q.fenetre(Y,o.ecran,DD.P1,port);o.dP2=Q.fenetre(Y,o.ecran,DD.P2,port);}
     Q.doigt(o,Y,o.ecran,port);
     Y.fin=Object.assign({},Y.fin,{revoir:'↺ Recommencer'});
     Q.cartons(o,Y,svg,'Comment on joue ?');
     Q.placerFleches(Y,o.eqA);Q.placerFleches(Y,o.eqB);Q.apresPolice(this,o,[o.eqA,o.eqB]);
   },
   /* ce qu'on peut toucher à l'attente k : des zones en pixels de l'outil, agrandies pour le doigt (44 px à l'écran au moins) ;
-     un jeton déjà touché ne compte plus ; « Équation suivante » (k = 6) est dans le bandeau sous le plateau depuis le 21/10/2026 */
+     un jeton déjà touché ne compte plus ; « Équation suivante » (k = 6) est dans le bandeau sous le plateau depuis le 21/10/2026 ;
+     de 7 à 10, la fenêtre Partager (23/10/2026) : le bouton, « 3 parts », la case (ordinateur) ou la touche 3 (téléphone), Partager */
   zones(k){
     const o=this.o,Y=this.Y,ch=this.choix,K=this.X.B.cartes;
     let px=1;try{px=this.svg.getScreenCTM().a*Y.s||1;}catch(e){}
     const rect=(x,y,w,h,faire)=>{const pv=Math.max(4/px,(44/px-h)/2),ph=Math.max(4/px,(44/px-w)/2);
       return {c:[x+w/2,y+h/2],d:q=>q[0]>=x-ph&&q[0]<=x+w+ph&&q[1]>=y-pv&&q[1]<=y+h+pv?Math.hypot(q[0]-x-w/2,q[1]-y-h/2):null,faire};};
     const bt=(b,faire)=>{const r=b.r,n=a=>+r.getAttribute(a);return rect(n('x'),n('y'),n('width'),n('height'),faire);};
+    const zr=(R,faire)=>rect(R.x,R.y,R.w,R.h,faire);
     const rond=(c,faire)=>{const R=Math.max(Y.bR+Y.anG,22/px);return {c,d:q=>{const e=Math.hypot(q[0]-c[0],q[1]-c[1]);return e<=R?e:null;},faire};};
     const libres=(liste,pris,ta)=>liste.map((b,i)=>pris.some(x=>x.i===i)?null:rond(b.c,()=>{pris.push({i,t:ta});})).filter(Boolean);
     const a=ATT[k];
@@ -1195,8 +1285,10 @@ const aToi={
       case 5:return [bt(o.act.valider)];
       case 6:return [bt(o.bravoA.btn)];
       case 7:return [bt(o.fp)];
-      case 8:return [bt(o.act.choix[1])];
-      case 9:return K.ys.map((y,i)=>rect(K.x,y,K.w,K.h,()=>{ch.groupe=i;}));
+      case 8:return [zr(o.dP1.pucesR.p3)];
+      case 9:return [zr(o.port?o.dP2.clesR['3']:o.dP2.champR)];
+      case 10:return [zr(o.dP2.okR)];
+      case 11:return K.ys.map((y,i)=>rect(K.x,y,K.w,K.h,()=>{ch.groupe=i;}));
     }
     return [];
   },
@@ -1230,7 +1322,7 @@ const aToi={
       op(b.an,ok&&t<TT.a4+.02?1:0);if(ok)b.an.setAttribute('r',(Y.bR+Y.anG)*L(1.25,1,P(t,s.t,.18,F.out)));
       const k=ok?part:0;op(b.g,1-k);b.g.setAttribute('transform',`translate(${b.c[0]},${b.c[1]}) scale(${L(1,.3,k).toFixed(3)})`);});
     jetons(o.Ag,ch.g);jetons(o.Ad,ch.d);
-    /* 3𝑦 = 9 : « 3 paquets de 3 » choisi, chaque tache va sur sa ligne et trois jetons en face d'elle ; les deux traits
+    /* 3𝑦 = 9 : partagé en 3 parts, chaque tache va sur sa ligne et trois jetons en face d'elle ; les deux traits
        coupent les plateaux en trois ; les bandes deviennent les groupes, sans bouger (fondu enchaîné) */
     /* taches et jetons restent pleins jusqu'à ce que les groupes, dessinés pile au même endroit, soient là */
     op(o.B,t<TT.b?0:(t<TT.groupes+.3?vB:0));
@@ -1255,15 +1347,16 @@ const aToi={
     o.fp.g.setAttribute('opacity',grise?.45:1);
     appuiT(o.rangs.enl,t,TT.a1);appuiT(o.fp,t,TT.a6);
     const ac=o.act;
-    if(port){const vv=entre(TT.a3b,TT.a4+.15),chx=entre(TT.a6,TT.range);
-      op(ac.attente.g,(!vv&&!chx)?1:0);op(ac.valider.g,vv);ac.choix.forEach(b=>op(b.g,chx));
+    if(port){const vv=entre(TT.a3b,TT.a4+.15);
+      op(ac.attente.g,vv?0:1);op(ac.valider.g,vv);
     }else{op(ac.effacer.g,entre(TT.a2,TT.a3));op(ac.effSel.g,entre(TT.a3,TT.a3b));
-      op(ac.valider.g,entre(TT.a3b,TT.a4+.15));op(ac.effSel2.g,entre(TT.a3b,TT.a4+.15));
-      ac.choix.forEach(b=>op(b.g,entre(TT.a6,TT.range)));}
-    appuiT(ac.valider,t,TT.a4);appuiT(ac.choix[1],t,TT.a7);
-    ac.choix[1].r.setAttribute('fill',apres(TT.a7)?'#eff6ff':'#ffffff');
+      op(ac.valider.g,entre(TT.a3b,TT.a4+.15));op(ac.effSel2.g,entre(TT.a3b,TT.a4+.15));}
+    appuiT(ac.valider,t,TT.a4);
     const bv=enA?Q.bravo(o,t,o.bravoA,TT.resolu,TT.b-.05,TT.a5,appuiT):Q.bravo(o,t,o.bravoB,TT.resoluB,1e9,null);
     if(bv)for(const k in ac)(Array.isArray(ac[k])?ac[k]:[ac[k]]).forEach(b=>op(b.g,0));
+    /* la fenêtre Partager (23/10/2026) : elle s'ouvre juste APRÈS le toucher (pendant l'attente, on voit encore l'écran d'avant) */
+    const e=.001;
+    Q.fenetres(o,Y,t,[[o.dP1,TT.a6+e,TT.a7+e,null,null,false],[o.dP2,TT.a7+e,TT.a7c+e+.1,[TT.a7b+e],['3'],true]],[TT.a7c+e],port);
     /* le rond bleu sous le doigt de l'élève, quand le geste est bon */
     let rip=null;for(const k in ch.touches){const v=ch.touches[k];if(t>v.t+1e-6&&t<v.t+.45)rip=v;}
     if(rip){const u=F.clamp((t-rip.t)/.45);o.ripple.setAttribute('cx',rip.p[0]);o.ripple.setAttribute('cy',rip.p[1]);
@@ -1277,7 +1370,7 @@ const aToi={
     /* la consigne en haut : en vert avec ✓ quand le geste est fait */
     let i=-1;for(let k=0;k<GUIDE.length;k++)if(GUIDE[k][0]<=t)i=k;
     if(i<0)op(o.st,0);else{const cur=GUIDE[i],nx=GUIDE[i+1],fait=cur[2]!=null&&apres(cur[2]);
-      Q.legende(o,Y,(fait?'✓\u00a0':'')+cur[1]);o.st.setAttribute('fill',fait?'#15803d':'#1e293b');
+      Q.legende(o,Y,(fait?'✓\u00a0':'')+(Array.isArray(cur[1])?cur[1][port?1:0]:cur[1]));o.st.setAttribute('fill',fait?'#15803d':'#1e293b');
       let a=P(t,cur[0],.3,F.out);if(nx)a=Math.min(a,1-P(t,nx[0]-.22,.22,F.lin));op(o.st,a);}
     Q.fin(o,Y,t,TT.fin);
   }
@@ -1372,43 +1465,8 @@ const DLG={
     F:{w:352,h:664,r:20,el:[['titre','Regrouper',176,53,30],['texte','12 + 9 = ?',176,99,23,900,C.encre],['label','Somme des deux jetons',176,141,16],
       ['champ',39,159,274,77,18,34,'F'],['pave',39,246,87,42,93,48,'Regrouper',false],['btn','Annuler',119,578,114,53,18,'blanc']]}}
 };
-/* construit une fenêtre ; rend {g, champ (texte tapé), ok (centre du bouton de validation), cles {chiffre: centre}, fondsCles} en pixels de l'outil */
-function fenetre(Y,p,spec,port){
-  const g=E('g',{},p),s=port?Math.min(1,620/spec.h):1,x0=Y.w/2-spec.w*s/2,y0=Y.h/2-spec.h*s/2;
-  const g2=E('g',{transform:`translate(${x0},${y0}) scale(${s})`},g);
-  const res={g,cles:{},fondsCles:{},ok:null,champ:null,puces:{}};
-  const abs=(x,y)=>[x0+x*s,y0+y*s];
-  E('rect',{x:0,y:0,width:spec.w,height:spec.h,rx:spec.r,fill:'#ffffff',filter:'url(#fsOmbre)'},g2);
-  const T_=(x,y,fs,a)=>Q.txt(g2,x,y,fs,Object.assign({'text-anchor':'middle'},a));
-  const btn=(lab,x,y,w,h,fs,genre)=>{const st={vert:['url(#fsVert)','#ffffff','none'],bleu:['url(#fsBleu)','#ffffff','none'],bleuClair:['url(#fsBleuClair)','#ffffff','none'],
-      blanc:['#ffffff',C.encre,'rgba(15,23,42,.11)'],cle:['#f8fafc',C.encre,'rgba(15,23,42,.1)'],action:['#eef2ff','#3730a3','rgba(15,23,42,.1)']}[genre];
-    const r=E('rect',{x,y,width:w,height:h,rx:genre==='cle'||genre==='action'||h<45?12:18,fill:st[0],stroke:st[2],'stroke-width':1},g2);
-    T_(x+w/2,y+h/2-fs*.08,fs,{'font-weight':900,'font-family':Q.ARIAL,fill:st[1]}).textContent=lab;return {r,c:abs(x+w/2,y+h/2)};};
-  for(const el of spec.el){const k=el[0];
-    if(k==='titre')T_(el[2],el[3],el[4],{'font-weight':900,fill:'#000000','letter-spacing':-el[4]*.04}).textContent=el[1];
-    else if(k==='texte')T_(el[2],el[3],el[4],Object.assign({'font-weight':el[5]||750,fill:el[6]||'#64748b'},el[7]?{'letter-spacing':el[7]}:{})).textContent=el[1];
-    else if(k==='texteB'){const t=T_(el[2],el[3],el[4],{'font-weight':750,fill:'#64748b'});el[1].forEach((m,i)=>{E('tspan',i%2?{'font-weight':900}:{},t).textContent=m;});}
-    else if(k==='jeton'){/* le jeton dessiné de Décomposer et Partager (18/10/2026), couleurs du plateau */
-      const c=Q.couleurJeton(el[1]);E('circle',{cx:el[2],cy:el[3],r:el[4],fill:c.fill,stroke:c.stroke,'stroke-width':3*el[4]/35},g2);
-      T_(el[2],el[3],el[5],{'font-weight':900,fill:C.encre}).textContent=String(el[1]);}
-    else if(k==='label')T_(el[2],el[3],el[4],{'font-weight':el[5]||900,fill:'#64748b','letter-spacing':el[4]*.04}).textContent=el[1].toUpperCase();
-    else if(k==='champ'){E('rect',{x:el[1],y:el[2],width:el[3],height:el[4],rx:el[5],fill:'#ffffff',stroke:'rgba(59,130,246,.5)','stroke-width':1.5},g2);
-      res.champ=T_(el[1]+el[3]/2,el[2]+el[4]/2+1,el[6],{'font-weight':900,fill:C.encre});
-      res.curseur=E('rect',{x:el[1]+el[3]/2-1,y:el[2]+el[4]*.25,width:2,height:el[4]*.5,fill:C.encre},g2);res.champC=el[1]+el[3]/2;res.champFs=el[6];}
-    else if(k==='btn'){const b=btn(el[1],el[2],el[3],el[4],el[5],el[6],el[7]);if(el[8]==='ok')res.ok=b.c;}
-    else if(k==='puce'){const ch=el[6]==='choisie';
-      const r=E('rect',{x:el[2],y:el[3],width:el[4],height:el[5],rx:el[5]/2,fill:ch?'#dbeafe':'#f1f5f9',stroke:ch?'#2563eb':'rgba(15,23,42,.08)','stroke-width':ch?1.5:1},g2);
-      T_(el[2]+el[4]/2,el[3]+el[5]/2-18*.08,18,{'font-weight':900,fill:ch?'#1e3a8a':C.encre}).textContent=el[1];
-      if(el[6]==='p3')res.puces.p3=abs(el[2]+el[4]/2,el[3]+el[5]/2);}
-    else if(k==='pave'){/* le pavé de chiffres du téléphone : 1-9, (+) 0, Effacer ⌫, puis le bouton d'action seul sur sa ligne (18/10/2026) */
-      const [x,y,w,h,px,py,lab,plus]=el.slice(1);
-      const chiffres=[['1','2','3'],['4','5','6'],['7','8','9'],[plus?'+':null,'0',null]];
-      chiffres.forEach((ligne,li)=>ligne.forEach((c,ci)=>{if(!c)return;const b=btn(c,x+ci*px,y+li*py,w,h,20,'cle');res.cles[c]=b.c;res.fondsCles[c]=b.r;}));
-      const W=2*px+w,ecart=px-w,demi=(W-ecart)/2;
-      btn('Effacer',x,y+4*py,demi,h,14,'action');btn('⌫',x+demi+ecart,y+4*py,demi,h,14,'action');res.ok=btn(lab,x,y+5*py,W,h,18,'bleuClair').c;}
-  }
-  return res;
-}
+/* les fenêtres de l'outil : Q.fenetre (écran commun, au-dessus), partagée avec le film des billes depuis le 23/10/2026 */
+const fenetre=Q.fenetre;
 
 const film={
   duration:39.7, poster:2.4, stops:[],

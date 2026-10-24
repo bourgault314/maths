@@ -7,7 +7,7 @@ const catalogueScript = await readFile(new URL("../assets/js/catalogue-refonte.j
 const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const automatismesPage = await readFile(new URL("../auto/index.html", import.meta.url), "utf8");
 const parentNavigationScript = await readFile(new URL("../assets/js/tool-parent-navigation.js", import.meta.url), "utf8");
-const hubBoulier = await readFile(new URL("../outils/bouliers/abaque_de_gerbert/index.html", import.meta.url), "utf8");
+const hubBoulier = await readFile(new URL("../outils/inconnues-en-barres/index.html", import.meta.url), "utf8");
 const restoredPrinterPages = Object.fromEntries(await Promise.all([
   "outils/automatismes/CM_Livret_A5.html",
   "outils/fabrication_materiel/cartes_premiers_1_100.html",
@@ -163,9 +163,9 @@ test("les deux retours écrits à la main se prennent au pouce sans manger le ti
 });
 
 test("la couche commune n'épingle rien par-dessus la page et ne fabrique un retour que s'il est déclaré", () => {
-  // Le chemin « retour déclaré » reste exercé par les pages de rubrique boulier,
+  // Le chemin « retour déclaré » reste exercé par Inconnues en barres,
   // dont la flèche existe déjà dans le HTML et n'est que recâblée.
-  assert.match(hubBoulier, /data-mathsgo-parent-link="\.back-link"/);
+  assert.match(hubBoulier, /data-mathsgo-parent-link="#retour"/);
   assert.match(parentNavigationScript, /function installDeclaredNavigation\(\)/);
   assert.match(parentNavigationScript, /if \(!declaredLink\) return;/);
 

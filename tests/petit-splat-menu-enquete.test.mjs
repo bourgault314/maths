@@ -88,12 +88,11 @@ test("le menu : 🔗 à côté du dé, « Lien copié » à la place de « grain
   assert.match(morceau("function showShareFeedback(", "async function copyShareLink"), /getElementById\('seedStatus'\)[\s\S]*\}, 2000\);/);
 });
 
-test("le menu : la mention de confidentialité est tout en bas de la partie qui défile", () => {
+test("le menu : plus de mention « Sans cookie ni traceur » (retirée des applis le 23/10/2026), le titre imprimé finit la partie qui défile", () => {
   const titre = petit.indexOf('id="activityLabel"');
-  const mention = petit.indexOf('<div class="menuConsent">');
   const boutons = petit.indexOf('<div class="actions">');
-  assert.ok(titre > 0 && mention > titre && boutons > mention);
-  assert.equal((petit.match(/<a data-mathsgo-confidentialite /g) || []).length, 1);
+  assert.ok(titre > 0 && boutons > titre);
+  assert.doesNotMatch(petit, /menuConsent|data-mathsgo-confidentialite|Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
 });
 
 test("phrases de SPLAT! : « Sous la tache …, il y a … » et le vocabulaire double / moitié", () => {

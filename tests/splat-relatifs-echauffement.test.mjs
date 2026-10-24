@@ -68,10 +68,12 @@ const CODES = ["E1", "E2", "E3"];
 test("carte : trois étapes à code devant la 38 — É1 · É2 · É3, parcours ech1 … ech3, les titres décidés", () => {
   assert.deepEqual(M6.etapes.map((e) => e.p), ["ech1", "ech2", "ech3", "m4e1", "m4e2", "m4e3", "m4e4", "m4e5", "m4e6"]);
   assert.deepEqual(ECH.map((e) => [e.code, e.t]),
-    [["É1", "Des billes vertes et rouges"], ["É2", "Je partage les billes"], ["É3", "Un jeton, un nombre"]]);
+    [["É1", "Des jetons verts et rouges"], ["É2", "Je partage les jetons"], ["É3", "Un jeton, un nombre"]]);
+  // « jetons » et plus « billes » partout où l'élève lit (23/10/2026, choix de Gwenaël)
+  assert.ok(!ECH.some((e) => /bille/i.test(e.t + e.o)));
   // les phrases de l'élève (maquette A ; É2 choisi par Gwenaël le 14/10 : « je regroupe, puis je partage »)
   assert.deepEqual(ECH.map((e) => e.o), ["Une couleur par plateau, puis un vert et un rouge qui s’annulent.",
-    "Deux ou trois taches : je regroupe les billes, puis je partage.",
+    "Deux ou trois taches : je regroupe les jetons, puis je partage.",
     "Un seul jeton par plateau, avec son nombre : prêt pour la fiche 38."]);
   assert.ok(!ECH.some((e) => /nourrir/.test(e.o)));
   // dans le total du monde : 9 étapes (« ⭐ n / 9 »), 40 dans l'univers
@@ -96,7 +98,7 @@ test("étoiles : les identifiants des fiches 38 à 43 sont ceux d'avant (e3-0 �
 test("carte : la partie « Échauffement » avant la Partie 1 — pointillés, phrase, la Partie 1 garde son nom et son ancre", () => {
   assert.deepEqual(M6.volets.map((v) => [v.de, v.a, !!v.ech]), [[0, 3, true], [3, 6, false], [6, 9, false]]);
   assert.equal(M6.volets[0].nom, "Pour commencer en douceur");
-  assert.equal(M6.volets[0].o, "Des billes vertes et rouges, puis un jeton par plateau.");
+  assert.equal(M6.volets[0].o, "Des jetons verts et rouges, puis un seul jeton par plateau.");
   const v = M6.volets;
   assert.deepEqual(v.map((x, i) => ctx.partieRang(M6, x, i)), ["Échauffement", "Partie 1", "Partie 2"]);
   assert.deepEqual(v.map((x, i) => ctx.partieId(M6, x, i)), ["e3-echauffement", "e3-partie-1", "e3-partie-2"]);
@@ -134,7 +136,7 @@ test("carte : les liens de la vue prof — Projeter, Fiche « Fiche É1 — … 
     assert.deepEqual(e.eqs, LISTE[CODES[k]].map((c) => c[2]), `${e.code} : les équations de la liste`);
   });
   // les notes du professeur, une par étape, courtes
-  assert.match(univers, /"Billes 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent\."/);
+  assert.match(univers, /"Jetons 1 et −1 : une couleur par plateau, puis un vert et un rouge qui s'annulent\."/);
 });
 
 test("graines : la carte, render.py et la liste annotée ont les mêmes 36 cartes (réglage + graine), xMax=6 pour les billes", () => {
@@ -214,16 +216,16 @@ test("page courte : ?f=E1 (et e1, É1) → le jeu de la carte ; ?s=e1 … e3 →
 });
 
 // ------------------------------------------------ « Étape suivante » (splat-etapes.js, exécuté)
-test("Étape suivante : 37 → É1 → É2 → É3 → 38, « Étape É2 · Je partage les billes »", () => {
+test("Étape suivante : 37 → É1 → É2 → É3 → 38, « Étape É2 · Je partage les jetons »", () => {
   const w = {};
   new Function("window", moduleEtapes)(w);
   const E = w.MathsGoSplatEtapes;
-  assert.deepEqual(J(E.ETAPES.slice(31, 35)), [["ech1", "É1", "Des billes vertes et rouges", "SPLAT! Relatifs", 6],
-    ["ech2", "É2", "Je partage les billes", "SPLAT! Relatifs", 6], ["ech3", "É3", "Un jeton, un nombre", "SPLAT! Relatifs", 6],
+  assert.deepEqual(J(E.ETAPES.slice(31, 35)), [["ech1", "É1", "Des jetons verts et rouges", "SPLAT! Relatifs", 6],
+    ["ech2", "É2", "Je partage les jetons", "SPLAT! Relatifs", 6], ["ech3", "É3", "Un jeton, un nombre", "SPLAT! Relatifs", 6],
     ["m4e1", 38, "Les jetons rouges arrivent", "SPLAT! Relatifs", 6]]);
   assert.equal(E.suivante("m3e4", true).parcours, "ech1");
   assert.equal(E.sousTitre("m3e4", true), "🌍 Nouveau monde : SPLAT! Relatifs");
-  assert.equal(E.sousTitre("ech1", true), "Étape É2 · Je partage les billes");
+  assert.equal(E.sousTitre("ech1", true), "Étape É2 · Je partage les jetons");
   assert.equal(E.sousTitre("ech2", true), "Étape É3 · Un jeton, un nombre");
   assert.equal(E.sousTitre("ech3", true), "Étape 38 · Les jetons rouges arrivent");
   assert.equal(E.bouton("ech3", "/outils/splat_univers.html", true).href, "/outils/splat_univers.html?apres=ech3");
@@ -333,10 +335,10 @@ test("livret : 4 PDF (8 pages A4, 4 feuilles A3), légers, les QR, la miniature,
   const m6 = pageLivrets.slice(pageLivrets.indexOf('<section class="panneau" data-m="6"'), pageLivrets.indexOf("</section>", pageLivrets.indexOf('<section class="panneau" data-m="6"')));
   const tous = m6.slice(m6.indexOf('<div class="serie" data-serie="tous">'), m6.indexOf('<div class="serie" data-serie="defi">'));
   assert.match(tous, /<div class="grille">\s*<article class="liv">\s*<a class="couv-lien" href="\/outils\/livret_splat_relatifs_echauffement\.pdf"/);
-  assert.ok(tous.includes(`src="/${png}?v=1"`));
+  assert.ok(tous.includes(`src="/${png}?v=2"`));   // la couverture dit « jetons » depuis le 23/10/2026
   assert.ok(tous.includes('<div class="titre"><h3>Échauffement</h3><span class="plage">fiches É1, É2 et É3</span></div>'));
   assert.equal((tous.match(/<article class="liv">/g) || []).length, 3);
-  assert.match(m6, /<p class="chapo">[^<]*Pour commencer en douceur, l’échauffement&nbsp;: des billes 1 et −1, puis un jeton par plateau\.<\/p>/);
+  assert.match(m6, /<p class="chapo">[^<]*Pour commencer en douceur, l’échauffement&nbsp;: des jetons 1 et −1, puis un seul jeton par plateau\.<\/p>/);
 });
 
 test("livret : render.py — DejaVu (rendu Linux, vrai Chromium), les contrôles, l'exemple hors des fiches, un seul logo", () => {
@@ -363,7 +365,12 @@ test("livret : render.py — DejaVu (rendu Linux, vrai Chromium), les contrôles
   assert.match(couv, /<text class="lettre"[^>]*>𝑥<\/text>/);
   assert.doesNotMatch(couv, /opposé<\/text>|−𝑥<\/text>/);
   assert.match(couv, /Mon livret · Monde 6 · Échauffement/);
-  assert.match(couv, /Une bille <b>verte<\/b> vaut 1, une bille <b>rouge<\/b> vaut –1&nbsp;: une verte et une rouge <b>s'annulent<\/b>\./);
+  assert.match(couv, /Un jeton <b>vert<\/b> vaut 1, un jeton <b>rouge<\/b> vaut –1&nbsp;: un vert et un rouge <b>s'annulent<\/b>\./);
+  assert.match(dos, /Un jeton <b>vert<\/b> vaut 1, un jeton <b>rouge<\/b> vaut –1\. Un vert et un rouge <b>s'annulent<\/b>&nbsp;: ensemble, ils valent 0\./);
+  // plus aucune « bille » que l'élève lise : couverture, dos, titres et textes du livret (23/10/2026)
+  const sansCommentaires = (t) => t.replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/class="[^"]*"/g, "");
+  assert.doesNotMatch(sansCommentaires(couv) + sansCommentaires(dos), /bille/i);
+  assert.match(render, /m\.append\(f"un jeton\{NB\}vert" if verts == 1 else f"\{MOTS\[verts\]\} jetons\{NB\}verts"\)/);
   assert.match(dos, /Tu es prêt pour la <b>fiche&nbsp;38<\/b>&nbsp;: les jetons rouges arrivent, avec le <b>livret&nbsp;1<\/b> du monde&nbsp;6&nbsp;!/);
   assert.match(dos, /Toutes les taches cachent le <b>même nombre<\/b>\./, "« sans mot » retiré (choix de Gwenaël du 14/10)");
   assert.doesNotMatch(dos, /sans mot|tache <b>«&nbsp;opposé/);
