@@ -339,7 +339,7 @@ test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et ci
 // ------------------------------------------------------------- l'hygiène du lot
 
 test("le moteur a changé : son numéro de cache monte, et la copie de la page prof est identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261023-3/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(copie.equals(original));

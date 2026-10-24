@@ -2879,12 +2879,15 @@
   //    débordée), la page garde la fusion des états, comme avant.
   //  - « dernier » : le numéro de la dernière réponse notée. Un envoi retient
   //    le numéro qu'il couvre ; son 200 retire les réponses jusqu'à ce numéro.
+  //  - « epoque » : la remise à zéro à laquelle appartiennent ces réponses.
+  //  - « perduJusqua » : dernier numéro perdu ; seul un accusé qui le couvre
+  //    peut rendre sûre une file débordée. Un vieux 200 ne suffit pas.
   // Rien de cette file ne part au serveur : elle reste sur l'appareil, à côté
   // de la case, et disparaît avec elle (purge des 90 jours).
   const REPONSES_MAX = 500;
 
   function reponsesNeutres() {
-    return {sure: false, dernier: 0, liste: []};
+    return {sure: false, dernier: 0, liste: [], epoque: 0, perduJusqua: 0};
   }
 
   function normaliserReponses(brut) {
@@ -2892,6 +2895,8 @@
     if (!brut || typeof brut !== "object") return file;
     file.sure = Boolean(brut.sure);
     file.dernier = entier(brut.dernier, 0, Number.MAX_SAFE_INTEGER);
+    file.epoque = entier(brut.epoque, 0, 1000000);
+    file.perduJusqua = entier(brut.perduJusqua, 0, file.dernier);
     let precedent = 0;
     (Array.isArray(brut.liste) ? brut.liste : []).forEach(entree => {
       if (!Array.isArray(entree)) return;
@@ -2904,9 +2909,10 @@
     });
     // Une file trop longue n'est plus sûre (on a dû en perdre le début).
     if (file.liste.length > REPONSES_MAX) {
+      file.perduJusqua = Math.max(file.perduJusqua, file.liste[file.liste.length - REPONSES_MAX - 1][0]);
       file.liste = file.liste.slice(-REPONSES_MAX);
-      file.sure = false;
     }
+    if (file.perduJusqua) file.sure = false;
     return file;
   }
 
@@ -2922,7 +2928,17 @@
 
   function chargerReponses(stockage, code) {
     try {
-      return normaliserReponses(lireReponsesBrutes(stockage, cleSync(code, stockage)));
+      const file = normaliserReponses(lireReponsesBrutes(stockage, cleSync(code, stockage)));
+      const epoque = normaliserParcours(charger(stockage, code)).epoque;
+      // Une case remise à zéro ne récupère jamais les réponses de sa vie
+      // précédente, même si la page s'est fermée avant de ranger sa file.
+      if (file.epoque < epoque) {
+        file.epoque = epoque;
+        file.liste = [];
+        file.sure = false;
+        file.perduJusqua = file.dernier;
+      }
+      return file;
     } catch (_) {
       return reponsesNeutres();
     }
@@ -2947,11 +2963,21 @@
 
   // Une réponse de la grille vient d'être appliquée sous ce code : on la note.
   // Hors grille (× 1, × 10) : rien — la fusion des bouts suffit.
-  function noterReponse(stockage, code, cleBrute, {correcte = false, date = null} = {}) {
+  function noterReponse(stockage, code, cleBrute, {correcte = false, date = null, epoque = null} = {}) {
     const cle = cleFait(cleBrute);
     const jour = dateOuNull(date);
     if (!codeValide(normaliserCode(code || "")) || !cle || !jour) return chargerReponses(stockage, code);
     const file = chargerReponses(stockage, code);
+    const vie = epoque === null ? file.epoque : entier(epoque, 0, 1000000);
+    // Un onglet antérieur au reset ne peut pas réintroduire son ancienne
+    // réponse dans la file du parcours neuf partagé par les autres onglets.
+    if (vie < file.epoque) return file;
+    if (vie > file.epoque) {
+      file.epoque = vie;
+      file.liste = [];
+      file.sure = false;
+      file.perduJusqua = file.dernier;
+    }
     file.dernier += 1;
     file.liste.push([file.dernier, cle, jour, correcte ? 1 : 0]);
     ecrireReponses(stockage, code, file);
@@ -2959,20 +2985,32 @@
   }
 
   // Le serveur a ce que couvrait l'envoi (ou la lecture) : les réponses
-  // jusqu'au numéro « jusqua » sortent de la file, et elle devient sûre — ce
-  // qui reste est exactement ce que l'appareil a joué depuis.
-  function reponsesParties(stockage, code, jusqua) {
+  // jusqu'au numéro « jusqua » sortent de la file. Elle devient sûre seulement
+  // si l'accusé appartient à la même époque et couvre aussi les réponses perdues.
+  function reponsesParties(stockage, code, jusqua, epoque = null) {
     const file = chargerReponses(stockage, code);
+    if (epoque !== null && epoque !== file.epoque) return file;
     const limite = entier(jusqua, 0, Number.MAX_SAFE_INTEGER);
     file.liste = file.liste.filter(entree => entree[0] > limite);
-    file.sure = true;
+    // Un vieux 200 ne répare pas une perte postérieure à son paquet.
+    // Seul un paquet qui couvre aussi cette perte rétablit la confiance.
+    if (limite >= file.perduJusqua) file.perduJusqua = 0;
+    file.sure = file.perduJusqua === 0;
     ecrireReponses(stockage, code, file);
     return chargerReponses(stockage, code);
   }
 
   // « Recommencer à zéro » : les réponses d'avant ne se rejouent plus jamais.
-  function oublierReponses(stockage, code) {
+  function oublierReponses(stockage, code, epoque = null) {
     const file = chargerReponses(stockage, code);
+    if (epoque !== null) {
+      if (epoque < file.epoque) return file;
+      if (epoque > file.epoque) {
+        file.epoque = epoque;
+        file.sure = false;
+        file.perduJusqua = file.dernier;
+      }
+    }
     file.liste = [];
     ecrireReponses(stockage, code, file);
     return chargerReponses(stockage, code);
@@ -3408,12 +3446,13 @@
   // restée un mois hors ligne en boîte 2 qui rate 2 × 8 donne donc 4 sur la
   // boîte 5 du serveur, sa bonne réponse 5, et la vieille copie en 5 qui rate
   // sur un serveur descendu en 2 donne 1.
-  // Une réponse est passée quand le serveur a déjà vu ce calcul un jour PLUS
-  // RÉCENT : soit elle y est déjà (envoi parti à la fermeture, sans réponse
-  // lue), soit un autre appareil a joué ce calcul après elle — et alors, comme
-  // la fusion des états, le jour le plus récent l'emporte. Rejouée le même
-  // jour, une réponse déjà comptée ne change rien (une montée et une
-  // descente par jour au plus) : rejouer deux fois ne compte pas deux fois.
+  // Rejeu seulement si TOUTES les réponses de ce calcul viennent APRÈS le
+  // dernier jour vu au serveur. Sinon, on ne sait pas lesquelles il contient
+  // déjà, ni l'ordre des réponses concurrentes : fusionner garde exactement
+  // le comportement de main pour ce calcul. Ne jamais supprimer une réponse
+  // ancienne puis rejouer la suite : on perdrait un gain (réserve A, 24/10).
+  // Le même jour est ambigu aussi : aucun accusé de réception ne se déduit
+  // d'une date. La page garde le résultat du rejeu en mémoire ET dans la case.
   // Une remise à zéro d'un côté (époques différentes) : fusionner décide seul.
   function rebaser(local, distant, reponses) {
     const fusion = fusionner(local, distant);
@@ -3423,13 +3462,21 @@
     if (!liste.length) return fusion;
     let rejoue = serveur;
     const touches = new Set();
+    const ambigus = new Set();
+    const derniers = new Map();
     liste.forEach(entree => {
       const cle = cleFait(entree && entree[1]);
       const jour = dateOuNull(entree && entree[2]);
       if (!cle || !jour) return;
+      const connu = serveur.calculs[cle];
+      if ((connu && connu.vu && jour <= connu.vu) || (derniers.has(cle) && jour < derniers.get(cle))) ambigus.add(cle);
+      derniers.set(cle, jour);
+    });
+    liste.forEach(entree => {
+      const cle = cleFait(entree && entree[1]);
+      const jour = dateOuNull(entree && entree[2]);
+      if (!cle || !jour || ambigus.has(cle)) return;
       touches.add(cle);
-      const connu = rejoue.calculs[cle];
-      if (connu && connu.vu && connu.vu > jour) return;
       rejoue = appliquerReponse(rejoue, cle, {correcte: Boolean(entree[3]), date: jour}).parcours;
     });
     const resultat = cloner(fusion);

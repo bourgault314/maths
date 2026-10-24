@@ -3254,7 +3254,7 @@
   </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261023-3"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261024-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3690,6 +3690,10 @@
         renvoiDemande = false;
         const code = codeSuivi;
         const base = sync.revision;
+        // Inclure la case partagée avant de figer le paquet et son numéro :
+        // un autre onglet peut avoir répondu depuis notre dernière sauvegarde.
+        sauverCase();
+        const epoque = parcours.epoque;
         // Les réponses que ce paquet emporte : celles notées jusqu'ici (voir
         // noterReponseAEnvoyer). Son 200 les retirera de la file.
         const jusqua = PARCOURS.chargerReponses(storage(), code).dernier;
@@ -3702,7 +3706,7 @@
           // Réponse tardive d'un élève qui n'est plus là (« Ce n'est pas
           // moi » entre-temps) : elle ne touche à rien, ni case, ni révision.
           if (code !== codeSuivi) return;
-          traiterReponseEnvoi(reponse, base, jusqua);
+          traiterReponseEnvoi(reponse, base, jusqua, epoque);
         });
       }
 
@@ -3726,12 +3730,12 @@
       //  429  trop de demandes — on attend ce que le serveur demande ;
       //  5xx/0  panne ou coupure — on garde tout ici, relances à 2 s, 10 s,
       //       60 s, puis au retour du réseau et au prochain démarrage.
-      function traiterReponseEnvoi(reponse, base, jusqua) {
+      function traiterReponseEnvoi(reponse, base, jusqua, epoque) {
         const donnees = reponse.donnees;
         if (reponse.statut === 200 && donnees && donnees.ok) {
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base + 1;
           // Le serveur a ces réponses-là : elles ne se rejoueront plus.
-          PARCOURS.reponsesParties(storage(), codeSuivi, jusqua);
+          PARCOURS.reponsesParties(storage(), codeSuivi, jusqua, epoque);
           // Du nouveau pendant le vol : un envoi direct demandé (renvoiDemande)
           // OU un envoi groupé encore en attente — dans les deux cas « dirty »
           // reste levé. Sans le second cas (relecture de Code, lot 1 SPLAT!,
@@ -3835,13 +3839,13 @@
       function noterReponseAEnvoyer(resultat, correcte) {
         if (VUE_PROF || !suiviActif() || !resultat || !resultat.fait) return;
         const fait = resultat.parcours.calculs[resultat.fait.cle];
-        PARCOURS.noterReponse(storage(), codeSuivi, resultat.fait.cle, {correcte, date: fait && fait.vu});
+        PARCOURS.noterReponse(storage(), codeSuivi, resultat.fait.cle, {correcte, date: fait && fait.vu, epoque: resultat.parcours.epoque});
       }
 
       // « Recommencer à zéro » : rien d'avant ne se rejoue.
       function oublierReponsesAEnvoyer() {
         if (VUE_PROF || !suiviActif()) return;
-        PARCOURS.oublierReponses(storage(), codeSuivi);
+        PARCOURS.oublierReponses(storage(), codeSuivi, parcours.epoque);
       }
 
       // L'état du serveur arrive (409, lecture à l'ouverture). File sûre :
@@ -3856,13 +3860,19 @@
       // confirmé ; file débordée) : la fusion des états, comme avant.
       // Rend le parcours obtenu, déjà rangé dans la case.
       function rejoindreServeur(distant) {
+        const local = PARCOURS.fusionner(PARCOURS.charger(storage(), codeSuivi), parcours);
+        const epoque = Math.max(local.epoque, distant.epoque);
+        // Invalider durablement la file AVANT de ranger la nouvelle époque.
+        // Une fermeture ou un envoi raté ne doit pas ressusciter l'ancien jeu.
+        if (PARCOURS.chargerReponses(storage(), codeSuivi).epoque < epoque) {
+          PARCOURS.oublierReponses(storage(), codeSuivi, epoque);
+        }
         const file = PARCOURS.chargerReponses(storage(), codeSuivi);
-        if (!file.sure) {
+        if (!file.sure || file.epoque !== local.epoque) {
           parcours = PARCOURS.fusionner(parcours, distant);
           sauverCase();
           return parcours;
         }
-        const local = PARCOURS.fusionner(PARCOURS.charger(storage(), codeSuivi), parcours);
         parcours = PARCOURS.rebaser(local, distant, file.liste);
         PARCOURS.sauver(storage(), parcours, codeSuivi);
         return parcours;
@@ -4440,7 +4450,7 @@
             const apporte = sync.dirty || JSON.stringify(paquetParcours("", fusion)) !== JSON.stringify(paquetParcours("", distant));
             // Rien à apporter : le serveur sait déjà tout ce que sait
             // l'appareil — la file est vidée, et sûre à partir d'ici.
-            if (!apporte) PARCOURS.reponsesParties(storage(), code, jusqua);
+            if (!apporte) PARCOURS.reponsesParties(storage(), code, jusqua, fusion.epoque);
             sync.dirty = apporte;
             sauverSync();
             if (apporte) envoyerParcours();
