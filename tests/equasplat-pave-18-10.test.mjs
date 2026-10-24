@@ -148,7 +148,8 @@ test("Décomposer et Partager montrent le jeton ; une erreur s'écrit dessous, l
   assert.equal((appliquer.match(/decomposeMessage\(piece, /g) || []).length, 4);
   assert.match(source("decomposeMessage"), /jetonDialogueHtml\(piece\) \+ `<span class="dialogMessage">\$\{html\}<\/span>`/);
   assert.match(source("openShareDialog"), /shareDialogText\.innerHTML = jetonDialogueHtml\(piece\);/);
-  assert.match(source("chooseShareCount"), /shareDialogText\.innerHTML = jetonDialogueHtml\(pendingShare\.piece\);/);
+  // le jeton reste dessiné quand on choisit le nombre de parts ; avec les petits jetons du monde 5, c'est le groupe (23/10/2026)
+  assert.match(source("chooseShareCount"), /shareDialogText\.innerHTML = pendingShare\.unit \? groupeJetonsDialogueHtml\(pendingShare\.value\) : jetonDialogueHtml\(pendingShare\.piece\);/);
   assert.doesNotMatch(html, /Décomposer le jeton <strong>|Partager le jeton <strong>/, "plus de phrase grise");
 });
 
@@ -190,5 +191,30 @@ test("le film « jetons numérotés » dessine les fenêtres comme l'outil", () 
       assert.ok(f.h >= annuler[3] + annuler[5], `${mode} ${nom} : la fenêtre contient Annuler`);
     }
   }
-  assert.match(intro, /res\.ok=btn\(lab,x,y\+5\*py,W,h,18,'bleuClair'\)\.c;/, "le bouton d'action du pavé, seul sur sa ligne");
+  assert.match(intro, /const ok=btn\(lab,x,y\+5\*py,W,h,18,'bleuClair'\);res\.ok=ok\.c;res\.okR=ok\.R;/, "le bouton d'action du pavé, seul sur sa ligne");
+});
+
+/* 23/10/2026 : le film des billes (petits jetons bleus du monde 5) ouvre lui aussi la fenêtre Partager équitablement de
+   l'outil (plus de « Faire des paquets ») ; fenetre() est passée dans l'écran commun (Q.fenetre). */
+test("le film des billes dessine la fenêtre Partager comme l'outil : le groupe de 9 jetons, 3 parts, 9 parts", () => {
+  const debut = intro.indexOf("const DLG_PARTAGE={"), fin = intro.indexOf("\n};", debut);
+  assert.ok(debut > 0 && debut < intro.indexOf("FILMS['equasplat-jetons']="), "dans le bloc du film des billes");
+  const DLG = vm.runInNewContext(`(${intro.slice(debut + "const DLG_PARTAGE=".length, fin + 2)})`, {});
+  for(const mode of ["paysage", "portrait"]){
+    for(const nom of ["P1", "P2"]){
+      const f = DLG[mode][nom], el = f.el;
+      assert.equal(JSON.stringify(el.find(e => e[0] === "groupe").slice(0, 2)), '["groupe",9]', `${mode} ${nom} : les 9 jetons dessinés`);
+      assert.ok(!el.some(e => e[0] === "jeton"), `${mode} ${nom} : pas de jeton numéroté`);
+      assert.equal(JSON.stringify(el.filter(e => e[0] === "puce").map(e => e[1])), '["3 parts","9 parts"]', `${mode} ${nom} : toutes les parts entières`);
+      const annuler = el.find(e => e[0] === "btn" && e[1] === "Annuler");
+      assert.ok(f.h >= annuler[3] + annuler[5], `${mode} ${nom} : la fenêtre contient Annuler`);
+      const pave = el.find(e => e[0] === "pave");
+      if(pave){const [, , y, , h, , py] = pave; assert.ok(annuler[3] >= y + 5 * py + h, `${mode} ${nom} : Annuler sous le bouton d'action`);}
+    }
+  }
+  // l'outil dessine le même groupe : un pas de 34, des ronds de 13, cinq par rangée pour 9
+  assert.match(html, /const cols = n <= 6 \? n : Math\.ceil\(Math\.sqrt\(n \* 2\)\);/);
+  assert.match(html, /const pas = 34, r = 13, marge = 3;/);
+  assert.match(intro, /const n=el\[1\],cols=n<=6\?n:Math\.ceil\(Math\.sqrt\(n\*2\)\),rows=Math\.ceil\(n\/cols\),pas=34;/);
+  assert.match(intro, /const fenetre=Q\.fenetre;/);
 });

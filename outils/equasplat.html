@@ -719,6 +719,17 @@
     overflow:visible;
   }
 
+  /* LES PETITS JETONS BLEUS (monde 5, 23/10/2026, choix de Gwenaël après sa capture de la fiche 36) :
+     « on partage le groupe ». Partager ouvre la fenêtre tout de suite, sans toucher de jeton, et
+     dessine le groupe entier à la place du jeton. */
+  .dialogGroupeJetons{
+    display:block;
+    max-width:100%;
+    height:auto;
+    margin:0 auto;
+    overflow:visible;
+  }
+
   .dialogJeton text{
     font-weight:950;
     fill:#0f172a;
@@ -3445,16 +3456,6 @@
     min-height:0;
   }
 
-  .unitPacketChoice{
-    background:#ffffff;
-    border:1px solid rgba(15,23,42,.13);
-  }
-
-  .unitPacketChoice.matchXCount{
-    background:#ffffff;
-    color:var(--ink);
-  }
-
   .packetBox{
     fill:rgba(255,255,255,.42);
     stroke:rgba(59,130,246,.42);
@@ -5102,7 +5103,7 @@
           <button class="toolBtn" id="toolDecompose" type="button">Décomposer</button>
           <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
           <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
-          <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
+          <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
         </div>
 
         <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
@@ -5859,6 +5860,24 @@
     return `<svg class="dialogJeton" viewBox="0 0 76 76" role="img" aria-label="le jeton ${t}">` +
       `<circle class="${cls}"${style} cx="38" cy="38" r="35"></circle>` +
       `<text x="38" y="39" font-size="${taille}">${t}</text></svg>`;
+  }
+
+  /* Le groupe de petits jetons bleus, pour la fenêtre Partager (23/10/2026) : tous les jetons du
+     côté à partager, mêmes couleurs que sur le plateau, en rangées régulières. */
+  function groupeJetonsDialogueHtml(n){
+    n = Math.max(1, Math.round(Number(n) || 1));
+    const cols = n <= 6 ? n : Math.ceil(Math.sqrt(n * 2));
+    const rows = Math.ceil(n / cols);
+    const pas = 34, r = 13, marge = 3;
+    const w = cols * pas + marge * 2, h = rows * pas + marge * 2;
+    let ronds = "";
+    for(let k=0; k<n; k++){
+      const ligne = Math.floor(k / cols), dansLigne = Math.min(cols, n - ligne * cols);
+      const cx = marge + pas/2 + (k % cols) * pas + (cols - dansLigne) * pas / 2;
+      const cy = marge + pas/2 + ligne * pas;
+      ronds += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(27,102,255,0.18)" stroke="rgba(27,102,255,0.58)" stroke-width="2.4"></circle>`;
+    }
+    return `<svg class="dialogGroupeJetons" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="les ${n} jetons">${ronds}</svg>`;
   }
 
   function formatSignedNumber(n){
@@ -7983,11 +8002,40 @@
     return {allowMinus:isRelativeUniverse(), submitLabel:"Partager", onSubmit:applyShareInput};
   }
 
+  /* LES PETITS JETONS BLEUS (monde 5, 23/10/2026, choix de Gwenaël) : « Faire des paquets » disparaît.
+     Le bouton s'appelle Partager équitablement, comme pour les jetons numérotés, et on ne touche aucun
+     jeton : on partage le groupe. La fenêtre s'ouvre tout de suite, l'élève choisit le nombre de parts
+     puis TAPE ce que vaut une part (les boutons « 3 paquets de 2 » donnaient la réponse). Toutes les
+     parts entières sont proposées (2 parts, 3 parts… jusqu'au nombre de jetons), sans mettre la bonne
+     en avant. */
+  function openUnitShareDialog(situation){
+    if(!situation) return;
+    selectedPieceRef = null;
+    pendingShare = {unit:true, value:situation.tokenCount, count:null};
+    shareDialogText.innerHTML = groupeJetonsDialogueHtml(situation.tokenCount);
+    sharePartStep.hidden = true;
+    btnApplyShare.hidden = true;
+    sharePartInput.value = "";
+    shareFeedback.textContent = "";
+    const counts = situation.parts;
+    if(!counts.length){
+      shareChoices.innerHTML = `<div class="dialogText">Aucun partage entier simple proposé.</div>`;
+    }else{
+      shareChoices.innerHTML = counts.map(n => `<button class="chip" type="button" data-n="${n}">${n} parts</button>`).join("");
+      shareChoices.querySelectorAll(".chip").forEach(btn => {
+        btn.addEventListener("click", () => chooseShareCount(Number(btn.dataset.n)));
+      });
+    }
+    openAppDialog(shareDialog);
+    const shareTitle = document.getElementById("shareDialogTitle");
+    if(shareTitle) shareTitle.focus({preventScroll:true});
+  }
+
   function chooseShareCount(count){
     if(!pendingShare) return;
     pendingShare.count = count;
     shareChoices.querySelectorAll(".chip").forEach(btn => btn.classList.toggle("selected", Number(btn.dataset.n) === count));
-    shareDialogText.innerHTML = jetonDialogueHtml(pendingShare.piece); /* la puce choisie dit le nombre de parts */
+    shareDialogText.innerHTML = pendingShare.unit ? groupeJetonsDialogueHtml(pendingShare.value) : jetonDialogueHtml(pendingShare.piece); /* la puce choisie dit le nombre de parts */
     sharePartStep.hidden = false;
     btnApplyShare.hidden = false;
     sharePartInput.value = "";
@@ -8008,6 +8056,15 @@
     if(answer !== pendingShare.value / pendingShare.count){
       shareFeedback.textContent = "Ce n’est pas encore la bonne part.";
       if(typeof sharePartInput.select === "function") sharePartInput.select();
+      return;
+    }
+    if(pendingShare.unit){
+      /* les petits jetons : le plateau se range en parts, comme le faisait « Faire des paquets » ; si
+         le nombre de parts est celui des taches, les mini-plateaux apparaissent (« touche-en un ») */
+      const parts = pendingShare.count;
+      pendingShare = null;
+      shareDialog.close();
+      applyUnitPacketChoice(parts);
       return;
     }
     const {side, id, count} = pendingShare;
@@ -9102,7 +9159,7 @@
     });
   }
 
-  /* MODE RÉCEPTION — paquets de billes (« Faire des paquets »). */
+  /* MODE RÉCEPTION — les billes rangées en parts (« Partager équitablement », ex-« Faire des paquets »). */
   function clearUnitPacketChoiceIfInvalid(){
     if(!unitPacketChoice || !state) return;
     const pieces = activePieces(unitPacketChoice.side || "right");
@@ -9489,7 +9546,8 @@
     render();
   }
 
-  /* MODE RÉCEPTION — billes unitaires de Splat Équations : « Faire des paquets ». */
+  /* MODE RÉCEPTION — billes unitaires de Splat Équations : « Partager équitablement » (« Faire des
+     paquets » jusqu'au 23/10/2026). */
   function isImportedUnitMode(){
     return importedNumberMode === "unit" || document.body.classList.contains("importUnitMode");
   }
@@ -9525,7 +9583,7 @@
         tokenSide,
         xCount,
         tokenCount,
-        choices:divisorsOf(tokenCount).map(packetCount => ({packetCount, each: tokenCount / packetCount}))
+        parts:divisorsOf(tokenCount).filter(n => n >= 2)
       };
     }
 
@@ -9611,11 +9669,13 @@
     dismissInitialEqualityInstruction();
     const situation = getUnitShareSituation();
     if(!situation){
-      setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
+      setInstruction("On peut partager quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
       return;
     }
-    /* le bouton touché s'allume, comme les autres (Enlever restait allumé pendant le choix des paquets) */
+    /* le bouton touché s'allume, comme les autres, le temps de la fenêtre ; elle s'ouvre tout de suite
+       (23/10/2026 : on partage le groupe, on ne touche aucun jeton) */
     setActionMode("unitShare");
+    openUnitShareDialog(situation);
   }
 
   function renderActions(){
@@ -9636,7 +9696,7 @@
         // Les espaces autour des nombres sont insécables : la zone de consigne est
         // une boîte flex, et l'espace ordinaire entre deux éléments y disparaît
         // (« Il reste4taches et4jetons »).
-        setInstruction(`Il reste&nbsp;<strong>${situation.xCount}</strong>&nbsp;taches et&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons : on peut faire des paquets.`);
+        setInstruction(`Il reste&nbsp;<strong>${situation.xCount}</strong>&nbsp;taches et&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons : on peut partager.`);
         // Cette consigne doit rester : sans elle, le message générique du mode
         // « Enlever » (« Sélectionne la même quantité dans les deux membres »)
         // reprend la main alors qu'il ne reste que des taches d'un côté et des
@@ -9645,7 +9705,7 @@
         const selection = selectedDeletePiecesBySide();
         if(actionMode === "delete" && !selection.left.length && !selection.right.length) return;
       }else if(actionMode !== "delete"){
-        setInstruction("Avec les petites billes, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong>Faire des paquets</strong>&nbsp;quand il ne reste que des taches d’un côté.");
+        setInstruction("Avec les petits jetons, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong>Partager équitablement</strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
     }
 
@@ -9678,23 +9738,10 @@
       return;
     }
 
+    /* Partager équitablement (petits jetons) : tout se passe dans la fenêtre ; plus de rangée de
+       boutons « 3 paquets de 2 » sous le plateau (23/10/2026) */
     if(actionMode === "unitShare"){
-      const situation = getUnitShareSituation();
-      if(!situation){
-        setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
-        return;
-      }
-      setInstruction(`Choisis comment ranger les&nbsp;<strong>${situation.tokenCount}</strong>&nbsp;jetons en paquets.`);
-      const row = document.createElement("div");
-      row.className = "btnrow";
-      for(const choice of situation.choices){
-        const btn = document.createElement("button");
-        btn.className = "unitPacketChoice";
-        btn.textContent = `${choice.packetCount} paquet${choice.packetCount > 1 ? "s" : ""} de ${choice.each}`;
-        btn.addEventListener("click", () => applyUnitPacketChoice(choice.packetCount));
-        row.appendChild(btn);
-      }
-      actionZone.appendChild(row);
+      if(!getUnitShareSituation()) setInstruction("On peut partager quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
       return;
     }
 
@@ -10096,7 +10143,11 @@
   sharePartInput.addEventListener("keydown", (e) => {
     if(e.key === "Enter"){ e.preventDefault(); applyShareInput(); }
   });
-  shareDialog.addEventListener("close", () => { pendingShare = null; });
+  shareDialog.addEventListener("close", () => {
+    pendingShare = null;
+    /* Annuler (ou Échap) avec les petits jetons : le bouton Partager s'éteint, rien n'a bougé */
+    if(actionMode === "unitShare") setActionMode(null);
+  });
   document.getElementById("btnApplyGroup").addEventListener("click", applyGroup);
   document.getElementById("btnCancelGroup").addEventListener("click", () => groupDialog.close());
   groupInput.addEventListener("keydown", (e) => {
