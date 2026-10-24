@@ -17,9 +17,9 @@ Produit, à la racine du dépôt :
 L'ÉCHAUFFEMENT DU MONDE 6 (lot 3 de l'échauffement, 14/10/2026, décisions de Gwenaël) — trois
 fiches AVANT la fiche 38, dans le monde 6 et dans ses étoiles, pour les élèves pas encore à l'aise
 avec les négatifs ; deux plateaux, comme tout le monde 6 ; aucune tache « opposé » :
-  - É1 « Des billes vertes et rouges » : 𝑥 + b = c avec des billes 1 et −1 (une couleur par
+  - É1 « Des jetons verts et rouges » : 𝑥 + b = c avec des jetons 1 et −1 (une couleur par
     plateau, puis un vert et un rouge qui s'annulent) ;
-  - É2 « Je partage les billes » : a × 𝑥 = c, puis a × 𝑥 + b = c, avec des billes ;
+  - É2 « Je partage les jetons » : a × 𝑥 = c, puis a × 𝑥 + b = c, avec des jetons 1 et −1 ;
   - É3 « Un jeton, un nombre » : les mêmes formes avec UN jeton numéroté par plateau, le pont
     vers la fiche 38.
 Ces fiches portent un CODE (« É1 ») et pas de numéro : la 38 reste la 38. Leur étoile : parcours
@@ -82,10 +82,10 @@ def fiche(cartes):
     return [f"{REGLAGES[r]}&cards=1&seed={g}&unknown=letter" for r, g in cartes]
 
 FICHES = [
-    dict(code="É1", qr="E1", parcours="ech1", t="Des billes vertes et rouges", resume="Une couleur par plateau, puis les deux.",
+    dict(code="É1", qr="E1", parcours="ech1", t="Des jetons verts et rouges", resume="Une couleur par plateau, puis les deux.",
          parties=fiche([("e1", 5529), ("e1", 2832), ("e1", 2479), ("e1", 62), ("e1", 4969), ("e1", 426),
                         ("e1", 2843), ("e1", 4560), ("e1", 2788), ("e1", 810), ("e1", 1229), ("e1z", 411)])),
-    dict(code="É2", qr="E2", parcours="ech2", t="Je partage les billes", resume="Je regroupe, puis je partage.",
+    dict(code="É2", qr="E2", parcours="ech2", t="Je partage les jetons", resume="Je regroupe, puis je partage.",
          parties=fiche([("e2a", 2460), ("e2a", 2476), ("e2a", 690), ("e2a", 427), ("e2az", 1831), ("e2a", 1573),
                         ("e2b", 5585), ("e2b", 6823), ("e2b", 6460), ("e2b", 7305), ("e2b", 5799), ("e2b", 844)])),
     dict(code="É3", qr="E3", parcours="ech3", t="Un jeton, un nombre", resume="Un seul jeton par plateau, avec son nombre.",
@@ -144,10 +144,10 @@ VUES = {
     "echauffement": dict(
         sortie="livret_splat_relatifs_echauffement",
         sur="Mon livret · Monde 6 · Échauffement",
-        accroche="Des billes vertes et rouges, puis un jeton par plateau&nbsp;:<br>les premiers nombres négatifs, en douceur&nbsp;!",
+        accroche="Des jetons verts et rouges, puis un seul jeton par plateau&nbsp;:<br>les premiers nombres négatifs, en douceur&nbsp;!",
         fiches=FICHES, exemple=EXEMPLE,
-        dos=[("Des billes", "Des billes vertes et rouges, comme la fiche&nbsp;É1.", "e1"),
-             ("Je partage", "Des taches et des billes, comme la fiche&nbsp;É2.", "e2"),
+        dos=[("Des jetons", "Des jetons verts et rouges, comme la fiche&nbsp;É1.", "e1"),
+             ("Je partage", "Des taches et des jetons, comme la fiche&nbsp;É2.", "e2"),
              ("Un jeton, un nombre", "Un jeton par plateau, comme la fiche&nbsp;É3.", "e3")],
         suite=("La suite du voyage", "Tu es prêt pour la <b>fiche&nbsp;38</b>&nbsp;: les jetons rouges arrivent, avec le <b>livret&nbsp;1</b> du monde&nbsp;6&nbsp;!"),
     ),
@@ -407,8 +407,9 @@ def ecrit(ligne):
 
 
 def decrit(cote):
-    """« une tache et trois billes vertes » ; « deux billes rouges » ; « deux taches, une bille
-    verte et une bille rouge » ; un jeton numéroté (fiche É3) : « un jeton –3 »."""
+    """« une tache et trois jetons verts » ; « deux jetons rouges » ; « deux taches, un jeton
+    vert et un jeton rouge » ; un jeton numéroté (fiche É3) : « un jeton –3 » (« jetons » et plus
+    « billes » depuis le 23/10/2026, choix de Gwenaël)."""
     m = []
     t = cote["taches"]
     if t:
@@ -417,9 +418,9 @@ def decrit(cote):
     if jetons and all(abs(j) == 1 for j in jetons):
         verts, rouges = sum(1 for j in jetons if j > 0), sum(1 for j in jetons if j < 0)
         if verts:
-            m.append(f"une bille{NB}verte" if verts == 1 else f"{MOTS[verts]} billes{NB}vertes")
+            m.append(f"un jeton{NB}vert" if verts == 1 else f"{MOTS[verts]} jetons{NB}verts")
         if rouges:
-            m.append(f"une bille{NB}rouge" if rouges == 1 else f"{MOTS[rouges]} billes{NB}rouges")
+            m.append(f"un jeton{NB}rouge" if rouges == 1 else f"{MOTS[rouges]} jetons{NB}rouges")
     else:
         m += [f"un jeton{NB}{signe(j)}" for j in jetons]
     return ", ".join(m[:-1]) + " et " + m[-1] if len(m) > 1 else m[0]
@@ -427,7 +428,7 @@ def decrit(cote):
 def textes_exemple(ex):
     """Le texte « Comment ça marche ? », écrit à partir de la carte que l'outil vient de dessiner
     et de sa résolution : il ne peut pas mentir sur ses nombres. Repris du livret 1 du monde 6, dit
-    avec les billes (« trois billes vertes », pas « un jeton 1, un jeton 1 et un jeton 1 »), sans
+    avec les jetons 1 et −1 (« trois jetons verts », pas « un jeton 1, un jeton 1 et un jeton 1 »), sans
     tache « opposé » (il n'y en a pas dans l'échauffement)."""
     g, d, x, v = ex["gauche"], ex["droite"], ex["x"], ex["variable"]
     let = f'<span class="x">{v}</span>'
