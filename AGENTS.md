@@ -167,10 +167,48 @@ Défi tables est la référence.
   papiers imprimés), pour qu'une page projetée ne les montre jamais à la
   classe (lot « Ma classe : élèves », 18/10/2026 ; gardé par
   `tests/suivi-ma-classe-eleves.test.mjs`).
+- Dans Ma classe, une appli a son onglet quand la classe l'a OU qu'un élève
+  l'a en plus (« Ce que voit… ») ; dans l'onglet d'une appli que la classe n'a
+  pas, seuls les élèves qui la voient (ou qui y ont déjà du travail) sont
+  listés, sans carte de classe (lot « Qui voit quoi », lot 4b, 24/10/2026).
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
 - Sans code, rien ne change : en-tête et fil d'Ariane du site (et pas de pied,
   comme pour toutes les applis).
+
+## Fusion des données : modèle commun
+
+Quand une appli suivie garde une LISTE d'événements (des séances, des parties),
+ces événements arrivent de plusieurs appareils (téléphone, tablette du collège,
+le serveur), parfois hors ligne, parfois d'une vieille copie. Le modèle est
+celui d'Anzan (`outils/calcul_mental/flash_anzan_parcours.js`, lot 4a, quatre
+relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
+
+- Chaque événement porte un **identifiant** tiré par la page au début (entier,
+  au hasard, sous la borne des entiers du serveur) et un **ordre** : le plus
+  grand ordre connu du parcours, plus un. L'identifiant dit « c'est le même
+  événement » ; l'ordre dit « il vient après ».
+- **Un seul ordre du temps** : l'ordre, puis l'identifiant (deux appareils hors
+  ligne qui ont pris le même ordre). Jamais le jour (l'horloge d'un appareil
+  peut mentir), jamais l'heure (on n'en garde pas), jamais le numéro.
+- Les **numéros** (les clés « 1 », « 2 »… envoyées au serveur) ne sont que des
+  places, refaites à chaque rangement : 1, 2, 3… dans l'ordre du temps. Les
+  mêmes événements donnent toujours le même parcours, sur tous les appareils :
+  rien à renvoyer quand rien n'a changé.
+- **Fusion = union par identifiant** : deux vues du même événement → la plus
+  avancée (le plus de travail fait, puis le meilleur score, puis le plus petit
+  ordre, puis un choix fixe sur le texte : le même dans les deux sens). Jamais « une copie entière
+  remplace l'autre ».
+- La **borne** (les N derniers gardés) se prend APRÈS le tri dans l'ordre du
+  temps ; un ordre arrivé à la borne des entiers fait d'abord resserrer les
+  ordres 1, 2, 3… (sinon tout ce qui suit est jeté à l'entrée).
+- Un événement en cours garde son identifiant, son ordre et son jour du début
+  à la fin, même s'il sort du parcours entre deux notes (une fusion qui en
+  apporte 500 pendant qu'il se joue) : il revient avec SON ordre.
+- Avant de livrer, jouer soi-même : deux appareils, une vieille copie, la
+  borne, une donnée abîmée, la fusion dans les deux sens, une réouverture qui
+  ne doit rien renvoyer, et des identifiants qui ne montent pas dans le sens du
+  temps.
 
 ## Automatismes V2
 

@@ -375,15 +375,16 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   const api = lire("_serveur/public/api/prof.php");
   const proposables = JSON.parse(api.match(/const APPLIS_PROPOSABLES = (\[[^\]]+\]);/)[1].replace(/'/g, '"'));
   const ordre = [...catalogue.matchAll(/^ {4}'([a-z-]+)' => \[/gm)].map(m => m[1]);
-  // Coffres magiques entre les deux (lot « Coffres magiques sur le suivi », 21/10/2026).
-  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "splat"]);
+  // Coffres magiques entre les deux (lot « Coffres magiques sur le suivi », 21/10/2026),
+  // puis Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026), comme au catalogue.
+  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "flash-anzan", "splat"]);
   APPLIS.forEach(appli => {
     const entree = catalogue.slice(catalogue.indexOf(`'${appli.cle}' => [`));
     const bloc = entree.slice(0, entree.indexOf("\n    ],"));
     assert.match(bloc, /'disponible' => true,/, `${appli.cle} disponible au catalogue`);
     assert.ok(proposables.includes(appli.cle), `${appli.cle} proposée par l'API`);
     const compteur = bloc.match(/'compteur' => '(\w+)'/)[1];
-    assert.equal({calculs: "calculs", etapes: "étapes", niveaux: "niveaux commencés"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
+    assert.equal({calculs: "calculs", etapes: "étapes", niveaux: "niveaux commencés", seances: "séances"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
   });
   assert.deepEqual(APPLIS.map(a => a.cle), ordre.filter(c => APPLIS.some(a => a.cle === c)));
   // Le HTML suit la même liste : les boutons du choix, les cases des activités.
@@ -438,10 +439,10 @@ function casesMondes() {
   });
 }
 
-function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli") {
+function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli", eleves = []) {
   const {$} = creerZones();
-  const boutons = ["defi-tables", "coffres", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
-  const cases = ["defi-tables", "coffres", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
+  const boutons = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
+  const cases = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
   const mondes = casesMondes();
   // Les cases de Coffres magiques (niveaux, opérations) : à part, elles ne comptent pas ici.
   const casesCoffres = s => (s.includes("data-niveau") ? [1, 2, 3] : [1, 2, 3, 4]).map(n => Object.assign(new Noeud("input"), {dataset: {niveau: String(n), operation: String(n)}}));
@@ -450,23 +451,23 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const TRIS = {"defi-tables": [["prenom", "Prénom"], ["acquises", "Tables passées"], ["date", "Dernière activité"]],
     "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]};
   const lus = {records: 0, evaluations: 0};
-  const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus",
-    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "poserAppli", "poserVue", "poserTris", "poserActivites",
+  const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
+    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris", "poserActivites",
       "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction poserEnPlusPour() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
-    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus);
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "flash-anzan"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
   return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
 
 test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
   const seule = poserAppliRejoue(["defi-tables"], "defi-tables");
   assert.notEqual(seule.$("choix-appli").hidden, true, "une seule activité : son onglet est là quand même");
-  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"], [true, "false"]],
-    "l'onglet Défi tables, souligné ; ni onglet Coffres ni onglet SPLAT!");
+  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"], [true, "false"], [true, "false"]],
+    "l'onglet Défi tables, souligné ; ni onglet Coffres, ni Anzan, ni SPLAT!");
   assert.equal(seule.$("entete-splat").hidden, true);
   assert.equal(seule.$("bloc-imprimer").hidden, false);
   const deux = poserAppliRejoue(["defi-tables", "splat"], "splat");
   assert.equal(deux.$("choix-appli").hidden, false);
-  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [false, "true"]]);
+  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [true, "false"], [false, "true"]]);
   assert.equal(deux.$("entete-defi-tables").hidden, true);
   assert.equal(deux.$("entete-splat").hidden, false);
   assert.equal(deux.$("bloc-imprimer").hidden, true, "« À imprimer » (papiers de Défi tables) caché");
@@ -476,8 +477,8 @@ test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change
   assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", {colonne: "date", sens: -1}).tri.colonne, "date",
     "« Dernière activité » existe des deux côtés : il reste");
   // Les activités de la classe : cases à l'état du serveur.
-  assert.deepEqual(deux.cases.map(c => c.checked), [true, false, true]);
-  assert.deepEqual(seule.cases.map(c => c.checked), [true, false, false]);
+  assert.deepEqual(deux.cases.map(c => c.checked), [true, false, false, true]);
+  assert.deepEqual(seule.cases.map(c => c.checked), [true, false, false, false]);
   // Hors Réglages : la vue de l'activité, ses cartes lues.
   assert.equal(deux.$("vue-appli").hidden, false);
   assert.equal(deux.$("vue-reglages").hidden, true);
@@ -487,14 +488,37 @@ test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change
   assert.deepEqual(deux.lus, {records: 1, evaluations: 1});
 });
 
+test("lot 4b : une appli qu'un élève a EN PLUS a son onglet, même quand la classe ne l'a pas (Anzan donné à Rania seule) ; l'onglet Anzan a son en-tête", () => {
+  const rania = {id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}};
+  const lucas = {id: 2, prenom: "Lucas", acces: {applis: ["defi-tables", "splat"], reglages: {}}};
+  const sans = poserAppliRejoue(["defi-tables", "splat"], "defi-tables", "proprietaire", undefined, {}, "appli", [lucas]);
+  assert.deepEqual(sans.boutons.map(b => b.hidden), [false, true, true, false], "personne n'a Anzan : pas d'onglet");
+  const avec = poserAppliRejoue(["defi-tables", "splat"], "flash-anzan", "proprietaire", undefined, {}, "appli", [lucas, rania]);
+  assert.deepEqual(avec.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [false, "true"], [false, "false"]],
+    "l'onglet Anzan, entre Coffres et SPLAT!, souligné");
+  assert.deepEqual(avec.cases.map(c => c.checked), [true, false, false, true], "la case de la classe, elle, reste décochée : c'est Rania qui l'a");
+  assert.equal(avec.$("entete-anzan").hidden, false);
+  assert.equal(avec.$("entete-defi-tables").hidden, true);
+  assert.equal(avec.$("entete-coffres").hidden, true);
+  assert.equal(avec.$("bloc-imprimer").hidden, true, "« À imprimer » est à Défi tables");
+  assert.equal(avec.$("objectif").hidden, true, "pas de carte de classe pour Anzan");
+  assert.equal(avec.$("fragiles").hidden, true);
+  assert.deepEqual(avec.lus, {records: 1, evaluations: 1});
+  // Sans « acces » (un serveur d'avant le lot 2 de Qui voit quoi) : les onglets de la classe, rien de plus.
+  assert.deepEqual(poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli", [{id: 3}]).boutons.map(b => b.hidden), [false, true, true, true]);
+  // Une appli inconnue de la page (« defi-calcul ») ne fait pas d'onglet.
+  assert.deepEqual(poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli",
+    [{id: 4, acces: {applis: ["defi-tables", "defi-calcul"], reglages: {}}}]).boutons.map(b => b.hidden), [false, true, true, true]);
+});
+
 test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'activité, propriétaire seulement", () => {
   const reglages = poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", undefined, {}, true);
   assert.equal(reglages.vueReglages, true);
   assert.equal(reglages.$("vue-appli").hidden, true, "le tableau n'est plus à l'écran");
   assert.equal(reglages.$("vue-reglages").hidden, false);
   assert.equal(reglages.$("onglet-reglages").attributs["aria-pressed"], "true");
-  assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false", "false"], "aucun onglet d'activité souligné");
-  assert.deepEqual(reglages.cases.map(c => c.checked), [true, false, true], "les cases sont posées");
+  assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false", "false", "false"], "aucun onglet d'activité souligné");
+  assert.deepEqual(reglages.cases.map(c => c.checked), [true, false, false, true], "les cases sont posées");
   // Un collègue n'a jamais la vue Réglages, même si l'état le demandait.
   for (const droit of ["ecriture", "lecture"]) {
     const collegue = poserAppliRejoue(["defi-tables", "splat"], "splat", droit, undefined, {}, true);
@@ -533,13 +557,14 @@ test("passer d'un onglet à l'autre : une liste déjà lue est reprise, sinon un
   let dessins = 0;
   // Depuis le lot « Coffres magiques sur le suivi » (21/10/2026), afficherAppli
   // passe par chargerMoteurDe(cle), qui choisit le moteur à charger.
-  const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "chargerMoteurCoffres", "elevesLus",
-    "messager", "poserAppli", "surErreur", "APPLIS",
+  const monde = new Function("api", "retenirChoixAppli", "redessin", "classe", "chargerMoteurSplat", "chargerMoteurCoffres", "chargerMoteurAnzan", "elevesLus",
+    "messager", "poserAppli", "surErreur", "APPLIS", "jeton", "lireSplat", "poserOnglets",
     `let appliAffichee = "defi-tables", eleves = [], tableaux = {"defi-tables": [{id: 1, prenom: "cache"}]}, demandeAppli = 0;\n`
-    + `${["lesApplisConnues", "applisDeLaClasse", "chargerMoteurDe", "afficherAppli"].map(fonction).join("\n")}\n`
+    + `${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "chargerMoteurDe", "reporterAccesDeLaListe", "afficherAppli"].map(fonction).join("\n")}\n`
     + "return {afficherAppli, etat: () => ({appliAffichee, eleves, tableaux})};")(
     api, cle => retenus.push(cle), {demander: () => { dessins += 1; }}, {id: 7, applis: ["defi-tables", "splat"]},
-    async () => SPLAT, async () => null, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}]);
+    async () => SPLAT, async () => null, async () => null, (cle, liste) => liste, () => {}, () => {}, e => { throw e; }, [{cle: "defi-tables"}, {cle: "splat"}],
+    "jeton-de-test", () => ({}), () => []);
   const p1 = monde.afficherAppli("splat");
   await new Promise(r => setTimeout(r, 0));
   const p2 = monde.afficherAppli("defi-tables");

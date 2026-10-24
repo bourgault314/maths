@@ -6804,6 +6804,33 @@ verifier("anzan-suivi — le billet d'entrée s'échange pour « flash-anzan »,
     vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur Anzan servi localement#u', $v['texte']), 'verifier.php a sa ligne « Moteur Anzan servi localement », verte');
 });
 
+// -------------------------------- lot « Qui voit quoi », lot 4b : Anzan dans « Ma classe » (24/10/2026)
+//
+// La page prof seule change : l'onglet Anzan, sa case dans ⚙ Réglages, la
+// fenêtre « Le parcours de… », et le moteur chargé d'ici à la première
+// ouverture de l'onglet, avec la version de son contenu dans l'adresse. Le
+// serveur accepte déjà « flash-anzan » (lot 4a) : rien n'y change.
+
+verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionné par son contenu, seulement à l'ouverture de l'onglet ; l'onglet, la case des Réglages, la fenêtre", function () use ($racine) {
+    $moteur = page('/prof/flash_anzan_parcours.js');
+    egal(200, $moteur['code'], 'le moteur est servi');
+    $p = page('/prof/');
+    egal(200, $p['code']);
+    vrai((bool)preg_match('#const MOTEUR_ANZAN = "flash_anzan_parcours\.js\?v=([0-9a-f]{10})";#', $p['texte'], $m), '« Ma classe » : l’adresse du moteur, relative, avec une version');
+    egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
+    vrai(!str_contains($p['texte'], '<script src="flash_anzan_parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Anzan');
+    vrai(str_contains($p['texte'], '<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>'), 'l’onglet Anzan');
+    vrai(str_contains($p['texte'], '<input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong>'), 'sa case dans ⚙ Réglages → Activités');
+    vrai(!str_contains($p['texte'], 'data-appli="flash-anzan" checked'), 'décochée par défaut');
+    vrai(str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'sa ligne « En plus pour »');
+    vrai(str_contains($p['texte'], '<dialog id="parcours-anzan"'), 'la fenêtre « Le parcours de… »');
+    // Le script de l'onglet (de son titre à la feuille imprimée) ne pose rien par innerHTML.
+    $debut = strpos($p['texte'], "l'onglet Anzan\n");
+    $fin = strpos($p['texte'], 'feuille imprimée', (int)$debut);
+    vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de l’onglet est là');
+    vrai(!str_contains(substr($p['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans l’onglet Anzan');
+});
+
 // ---------------------------------------------------------------------- résultat
 
 echo "\n";
