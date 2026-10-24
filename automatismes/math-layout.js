@@ -1,4 +1,9 @@
-import { mathHtml as mathText, mathSegments } from "./math-format.js";
+import {
+  mathHtml as mathText,
+  mathSegments,
+  collerPonctuation,
+  collerDans,
+} from "./math-format.js";
 export function questionPrompt(q) {
   const instruction =
     /^(Calcule|Factorise|Développe|Réduis|Écris|Complète|Résous|Simplifie|Détermine)/.test(
@@ -11,11 +16,13 @@ export function questionPrompt(q) {
       parts[i + 1].prefix = "pour ";
     }
   }
-  return parts
-    .map((part, i) => {
-      if (i === parts.length - 1 && part.value === "." && parts[i - 1]?.math && instruction)
-        return "";
-      const html = mathText(part.value);
+  // « Calcule 3 + 4. » : le point final après le calcul ne s'écrit pas.
+  const dernier = parts.length - 1;
+  if (parts[dernier]?.value === "." && parts[dernier - 1]?.math && instruction) parts.pop();
+  // La ponctuation qui suit un calcul lui reste collée (« … divisible par 9 ? » sans « ? » seul à la ligne).
+  return collerPonctuation(parts)
+    .map((part) => {
+      const html = part.math ? collerDans(mathText(part.value), part.colle) : mathText(part.value);
       const formula =
         part.math && (/[+×÷=²³^/()]/.test(part.value) || /\S\s*[−-]\s*\S/.test(part.value));
       return instruction && formula && (!/^Écris/.test(q.prompt) || q.prompt.includes(":"))

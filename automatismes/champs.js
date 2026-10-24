@@ -654,6 +654,11 @@ export function monterSymboles(parent, question, inserer, liste = symbolesQuesti
   liste.forEach((symbole) => {
     const bouton = element("button", "bouton petit", parent);
     bouton.innerHTML = mathHtml(symbole);
+    // « ² » seul est minuscule et se confond avec 2 : la touche montre « □² », un exposant posé sur une case.
+    if (/^[²³]$/.test(symbole)) {
+      bouton.classList.add("exposant");
+      bouton.innerHTML = `<span class="case-touche" aria-hidden="true">□</span>${symbole}`;
+    }
     bouton.setAttribute("aria-label", `Insérer ${symbole}`);
     bouton.onpointerdown = (evenement) => evenement.preventDefault();
     bouton.onclick = () => inserer(symbole);

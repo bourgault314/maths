@@ -1864,6 +1864,21 @@ input.case {
 .espace-question .etape .dessin {
   margin-bottom: 6px;
 }
+/* L'indice dessiné à la place de l'aide : pas de trait de séparation, il n'y a rien au-dessus. */
+.espace-question .etape.a-la-place {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+/* La touche « ² » (NC18-c) : l'exposant seul est minuscule sur une grande touche ; il s'écrit en grand. */
+.clavier-symboles button.exposant {
+  font-size: 1.625rem;
+  line-height: 1;
+}
+.clavier-symboles button.exposant .case-touche {
+  color: var(--attenue);
+  font-size: 0.85em;
+}
 .morceau .dessin {
   margin: 4px 0 8px;
 }

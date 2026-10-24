@@ -81,13 +81,16 @@ function lexMath(value) {
     if (
       (/^[a-z]$/.test(t) || /^(?:ab|ac|ax|bx|cx|xy|xyz|mn|ka|kb)$/.test(t)) &&
       !wordsNotMath.has(t) &&
-      /^[abcfghkmnprtuvxyz]+$/.test(t)
+      /^[abcfghkmnpqrtuvxyz]+$/.test(t)
     )
       variable = true;
     if (t === "a")
       variable =
-        !/(?:\bil y |\bon |\bn’|\bn')$/i.test(before) &&
-        !/^\s+(?:pour|une?|été|besoin|des|le|la)\b/.test(after);
+        !/(?:\bil y |\by en |\ben |\bon |\bn’|\bn')$/i.test(before) &&
+        // Le verbe « avoir » (« un nombre premier a exactement… », « il y en a beaucoup ») reste droit.
+        !/^\s+(?:pour|une?|été|besoin|des|le|la|les|exactement|beaucoup|toujours|aussi|plus|moins|deux|trois|quatre|autant|déjà)\b/.test(
+          after,
+        );
     if (t === "y") variable = !/(?:\bil\s+|\bn['’])$/i.test(before);
     // Les unités restent droites après un nombre.
     if (/^[hmsgLl]$/.test(t) && /\d\s*$/.test(before) && !/^\s*[=+−×÷*/^]/.test(after))
@@ -311,20 +314,57 @@ function inlineHtml(value) {
     })
     .join("");
 }
+/* La ponctuation qui suit un calcul (« 9 ? », « 4. », « 5, », « 516 : ») reste collée à lui : sinon
+   elle peut partir seule au début de la ligne suivante (le calcul est insécable, pas ce qui le suit).
+   Rend la liste des morceaux, chaque calcul avec sa ponctuation collée (colle). */
+export function collerPonctuation(parts) {
+  const sortie = [];
+  for (let i = 0; i < parts.length; i++) {
+    const part = { ...parts[i], colle: "" };
+    const suivant = parts[i + 1];
+    const apres = parts[i + 2];
+    if (part.math && suivant && !suivant.math) {
+      if (
+        /^[\u00a0\u202f]+$/.test(suivant.value) &&
+        apres &&
+        !apres.math &&
+        /^[?!:;»]$/.test(apres.value)
+      ) {
+        part.colle = suivant.value + apres.value;
+        i += 2;
+      } else if (/^[.,;:?!…»]$/.test(suivant.value)) {
+        part.colle = suivant.value;
+        i += 1;
+      }
+    }
+    sortie.push(part);
+  }
+  return sortie;
+}
+// Un calcul en HTML, sa ponctuation collée glissée dans le dernier bloc insécable.
+export function collerDans(html, colle) {
+  return colle ? html.replace(/<\/span>$/, `${escapeMathText(colle)}</span>`) : html;
+}
 export function mathHtml(value) {
-  return mathSegments(value)
+  return collerPonctuation(mathSegments(value))
     .map((part) => {
       if (!part.math) return escapeMathText(part.value);
       // Les membres restent entiers ; les égalités peuvent se séparer entre étapes.
       const members = part.value.split(/\s*=\s*/);
       if (members.length > 2 || (members.length === 2 && part.value.length > 30))
-        return members
-          .map(
-            (m, i) =>
-              `<span class="math-expression" style="white-space:nowrap">${i ? "= " : ""}${inlineHtml(m)}</span>`,
-          )
-          .join(" ");
-      return `<span class="math-expression" style="white-space:nowrap">${inlineHtml(part.value.replace(/\s*=\s*/g, " = "))}</span>`;
+        return collerDans(
+          members
+            .map(
+              (m, i) =>
+                `<span class="math-expression" style="white-space:nowrap">${i ? "= " : ""}${inlineHtml(m)}</span>`,
+            )
+            .join(" "),
+          part.colle,
+        );
+      return collerDans(
+        `<span class="math-expression" style="white-space:nowrap">${inlineHtml(part.value.replace(/\s*=\s*/g, " = "))}</span>`,
+        part.colle,
+      );
     })
     .join("");
 }

@@ -120,7 +120,7 @@ test("NC17-d : nombre de chiffres, chiffre des unités, somme ; la phrase quand 
   );
   const resultat = checkAnswer(q, ["1234"]);
   assert.equal(resultat.ok, false);
-  assert.equal(resultat.message, "1 + 2 + 3 + 4 = 10 : pas dans la table de 3.");
+  assert.equal(resultat.message, "1 + 2 + 3 + 4 = 10\u00a0: pas dans la table de 3.");
   assert.equal(checkAnswer(q, ["1 014"]).ok, true);
   assert.equal(checkAnswer(q, ["9 984"]).ok, true);
   assert.equal(checkAnswer(q, ["0114"]).ok, false, "un nombre ne commence pas par 0");
@@ -163,7 +163,7 @@ test("NC18-a : la liste, la touche « ; », les diviseurs qui manquent", () => {
   assert.equal(checkAnswer(q, ["1;2;4;5;8;10;20;40"]).ok, true);
   assert.equal(
     checkAnswer(q, ["1 ; 2 ; 4 ; 5 ; 8"]).message,
-    "Il manque des diviseurs : 10, 20 et 40 (l’autre nombre de chaque paire).",
+    "Il manque des diviseurs\u00a0: 10, 20 et 40 (l’autre nombre de chaque paire).",
   );
 });
 
@@ -200,7 +200,7 @@ test("NC18-c : produit de facteurs premiers, ordre libre, puissances permises", 
   assert.equal(checkAnswer(q, ["390 = 2 × 3 × 5 × 13"]).ok, true);
   assert.equal(
     checkAnswer(q, ["2 × 195"]).message,
-    "195 n’est pas premier : continue la décomposition.",
+    "195 n’est pas premier\u00a0: continue la décomposition.",
   );
   assert.equal(checkAnswer(q, ["2 × 3 × 5 × 11"]).ok, false);
   const q60 = { ...q, check: { ...q.check, number: 60 } };
@@ -256,11 +256,24 @@ test("la coque lit le cahier : dessin puis phrase, indice dessiné, calculs alig
   const q = genererQuestion("NC18", "a", 5);
   const aide = aideHTML(q, { aideOuverte: true, etape: true });
   assert.ok(aide.indexOf('<div class="dessin">') < aide.indexOf("Continue jusqu"), aide);
+  // NC18-c : avec l'indice, le dessin d'abord, la phrase dessous, plus la phrase de l'aide au-dessus.
+  const arbre = aideHTML(genererQuestion("NC18", "c", 74), { aideOuverte: true, etape: true });
+  assert.ok(
+    arbre.indexOf('class="dessin"') < arbre.indexOf("n’est pas premier") ||
+      arbre.indexOf('class="dessin"') < arbre.indexOf("n'est pas premier"),
+  );
+  assert.doesNotMatch(arbre, /L'arbre/);
   // L'indice dessiné de NC18-a est le même tableau, une ligne barrée : il remplace celui de l'aide.
   assert.equal((aide.match(/class="dessin"/g) || []).length, 1, "l'indice remplace l'aide");
   const g = genererQuestion("NC18", "g", 5);
   const aideG = aideHTML(g, { aideOuverte: true, etape: true });
-  assert.equal((aideG.match(/class="dessin"/g) || []).length, 2, "la droite, puis les ovales");
+  // Correctif NC-1 : les ovales prennent aussi la place de la droite (le pavé restait caché).
+  assert.equal(
+    (aideG.match(/class="dessin"/g) || []).length,
+    1,
+    "les ovales à la place de la droite",
+  );
+  assert.doesNotMatch(aideG, /Bonds de/, "la phrase de l'aide laisse la place à celle de l'indice");
   const c = genererQuestion("NC18", "c", 5);
   const explication = explicationHTML(c);
   assert.match(explication, /<table class="calculs">/);
@@ -271,4 +284,34 @@ test("la coque lit le cahier : dessin puis phrase, indice dessiné, calculs alig
   assert.match(coursHTML({}, a, ""), /<b>et<\/b>/);
   assert.equal(bonneReponseTexte(a, modeleQuestion(a)), a.bonne);
   assert.equal(bonneReponseTexte(a, modeleQuestion(a), true), a.fields[0].answer);
+});
+
+test("correctif NC-1 : ponctuation collée, verbe « a » droit, q en italique, bilan entier", async () => {
+  const { mathHtml } = await import("../automatismes/math-format.js");
+  const { questionPrompt } = await import("../automatismes/math-layout.js");
+  // Aucun signe ne peut partir seul au début de la ligne suivante après un nombre.
+  for (const id of formesCahier)
+    for (const q of tirages(id, 40)) {
+      const textes = [
+        questionPrompt(q),
+        mathHtml(q.hints[1].text),
+        ...q.explication.etapes.map(mathHtml),
+      ];
+      for (const html of textes)
+        assert.doesNotMatch(
+          html,
+          /<\/span>(?:[\u00a0\u202f]?[?!:;»]|[.,…])/,
+          `${q.id} : ${html.slice(0, 120)}`,
+        );
+    }
+  assert.doesNotMatch(mathHtml("Un nombre premier a exactement deux diviseurs."), /math-variable/);
+  assert.doesNotMatch(mathHtml("il y en a beaucoup d'autres"), /math-variable/);
+  assert.match(mathHtml("a = b × q + r"), />q<\/span>/);
+  const d = genererQuestion("NC18", "d", 583);
+  const { bilanHTML } = await import("../automatismes/vues.js");
+  const html = bilanHTML(
+    { mode: "train", questions: [d], etats: [{ juste: false, erreurs: 1, aide: 0 }] },
+    { NC18: {} },
+  );
+  assert.match(html, /resultat-reponse">[^<]*<span class="math-expression"[^>]*>33 = 7 × 4 \+ 5/);
 });

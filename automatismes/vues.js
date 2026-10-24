@@ -212,19 +212,18 @@ export function aideHTML(question, etat, projection = false, reglages = {}) {
       : "<p></p>";
   // « Encore un indice » : sa phrase, et son dessin quand le cahier en donne un (la ligne barrée…).
   const indice = question.hints?.[1] || {};
-  // Le dessin de l'indice est l'étape suivante du MÊME dessin (paires, arbre, ovales) : il prend sa
-  // place au lieu de s'empiler dessous. Un dessin d'une autre sorte (les ovales après la droite) s'ajoute.
-  const sorte = (svg) => String(svg).match(/aria-label="([^"]*)"/)?.[1];
-  const remplace = etat.etape && indice.svg && sorte(indice.svg) === sorte(dessin);
+  // Un indice dessiné (cahiers) prend la place de l'aide : son dessin, puis sa phrase, comme l'aide.
+  // Empilés, les deux dessins cachaient le pavé au téléphone (NC18-g, retour de Code du 24/10).
+  const remplace = Boolean(etat.etape && indice.svg && question.cahier);
   const image = montrer && !remplace ? `<div class="dessin">${dessin}</div>` : "";
   const etape = etat.etape
-    ? `<div class="etape">${indice.svg ? `<div class="dessin">${indice.svg}</div>` : ""}${lignesHTML(indice.text)}</div>`
+    ? `<div class="etape${remplace ? " a-la-place" : ""}">${indice.svg ? `<div class="dessin">${indice.svg}</div>` : ""}${lignesHTML(indice.text)}</div>`
     : "";
   // Les cahiers : le dessin d'abord, la phrase dessous (comme sur leurs pages).
   return `<section class="aide${projection ? " aide-projetee" : ""}" aria-label="Aide">
     <div class="aide-entete"><strong>${ICONES.aide}Aide</strong>
       <span class="aide-boutons">${boutonIndice(question, etat)}${fermer}</span></div>
-    ${question.cahier ? image + phrase : phrase + image}
+    ${remplace ? "" : question.cahier ? image + phrase : phrase + image}
     ${etape}
   </section>`;
 }
@@ -514,6 +513,13 @@ function reglageHTML(nom, libelle, valeur, min, max) {
   return `<label>${libelle}<input id="${nom}" type="number" min="${min}" max="${max}" value="${valeur}"></label>`;
 }
 
+// La réponse résumée d'une ligne du bilan : la valeur après le dernier « = » ; avec un gabarit de
+// cahier, l'égalité entière (« 33 = 7 × 4 + 5 », pas « 7 × 4 + 5 »).
+function resumeReponse(question, modele) {
+  const texte = bonneReponseTexte(question, modele, true);
+  return question.gabarit ? texte : texte.replace(/^.* = /, "");
+}
+
 /* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
    (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
 export function bilanHTML(seance, parId) {
@@ -546,7 +552,7 @@ export function bilanHTML(seance, parId) {
           : `<span class="etat-ligne ${classe}" aria-label="${mot}">${signe}</span>`
       }
         <span class="resultat-nom">${questionPrompt(question)}</span>
-        <em class="resultat-reponse">${mathHtml(bonneReponseTexte(question, modele, true).replace(/^.* = /, ""))}</em>
+        <em class="resultat-reponse">${mathHtml(resumeReponse(question, modele))}</em>
         <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
     })

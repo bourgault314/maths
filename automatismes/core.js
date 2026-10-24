@@ -284,7 +284,7 @@ export function checkAnswer(q, answers) {
         return {
           ok: false,
           syntax: false,
-          message: `Il manque des diviseurs : ${enListe(manque)}${paires ? " (l’autre nombre de chaque paire)" : ""}.`,
+          message: `Il manque des diviseurs\u00a0: ${enListe(manque)}${paires ? " (l’autre nombre de chaque paire)" : ""}.`,
         };
       }
     } else if (c.type === "property") {
@@ -314,7 +314,7 @@ export function checkAnswer(q, answers) {
           return {
             ok: false,
             syntax: false,
-            message: `${chiffres.join(" + ")} = ${total} : pas dans la table de ${c.sumDivisor}.`,
+            message: `${chiffres.join(" + ")} = ${total}\u00a0: pas dans la table de ${c.sumDivisor}.`,
           };
       } else if (c.rule === "primeFactors") {
         // Cahier NC18-c : un produit de facteurs premiers égal au nombre, dans n'importe quel ordre,
@@ -327,7 +327,7 @@ export function checkAnswer(q, answers) {
           return {
             ok: false,
             syntax: false,
-            message: `${compose} n’est pas premier : continue la décomposition.`,
+            message: `${compose} n’est pas premier\u00a0: continue la décomposition.`,
           };
       } else if (c.rule === "multiple")
         ok =
