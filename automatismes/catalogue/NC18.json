@@ -6,7 +6,7 @@
   "prerequis": ["Tables de multiplication", "Entiers et division"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "Un diviseur partage sans reste. Un nombre premier a exactement deux diviseurs positifs : 1 et lui-même.",
+    "regle": "Un diviseur partage sans reste. Un nombre premier a exactement deux diviseurs : 1 et lui-même.",
     "exemple": "Les diviseurs positifs de 40 sont 1 ; 2 ; 4 ; 5 ; 8 ; 10 ; 20 ; 40.",
     "visuel": "Paires de facteurs, divisions par nombres premiers et écriture N = d×q + r ; aucun code couleur indispensable.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -48,9 +48,9 @@
   ],
   "limites": "1 n’est pas premier. La décomposition vérifie les exposants de chaque premier ; une simple égalité numérique ne suffit pas.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
-    "variantes": 6,
+    "module": "automatismes/generateurs/divisibilite.js",
+    "tests": "tests/automatismes-cahier-nc-1.test.mjs",
+    "variantes": 7,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
     "aide1_visuelle": true
@@ -100,38 +100,41 @@
   "formes": [
     {
       "id": "a",
-      "objectif": "Lister tous les diviseurs positifs",
+      "objectif": "Écrire tous les diviseurs (les paires)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Donne tous les diviseurs positifs de 40, séparés par ;.",
-      "reponse": "1;2;4;5;8;10;20;40",
-      "donnees": "Entier choisi parmi 12, 18, 20, 24, 28, 30, 36, 40, 42, 48 et 60 ; tous les diviseurs positifs attendus.",
-      "saisie": "Diviseurs, séparés par ; : texte ou liste",
-      "acceptation": "Ensemble exact des valeurs attendues ; ordre indifférent ; aucun élément manquant ou ajouté.",
-      "aide1": "Cherche les paires de facteurs dont le produit vaut 40.",
-      "aide2": "Lis les deux nombres de chaque paire.",
-      "correction": "Les diviseurs positifs de 40 sont 1 ; 2 ; 4 ; 5 ; 8 ; 10 ; 20 ; 40.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Écris tous les diviseurs de 28. □",
+      "reponse": "1 ; 2 ; 4 ; 7 ; 14 ; 28",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
+      "aide1": "(dessin du cahier)",
+      "aide2": "Continue jusqu'à ce que les paires se répètent.",
+      "correction": "28 = 1 × 28 = 2 × 14 = 4 × 7. 3, 5, 6 : la division ne tombe pas juste. Après 4 × 7, la paire suivante serait 7 × 4 : j'ai fini.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
       "controle_math": {
         "type": "set",
-        "values": [1, 2, 4, 5, 8, 10, 20, 40]
+        "values": ["1", "2", "4", "7", "14", "28"],
+        "number": 28,
+        "manquants": true
       },
       "exemple_champs": [
         {
           "label": "Diviseurs, séparés par ;",
-          "answer": "1;2;4;5;8;10;20;40",
+          "answer": "1 ; 2 ; 4 ; 7 ; 14 ; 28",
           "kind": "text",
           "unit": "",
-          "placeholder": ""
+          "placeholder": "",
+          "large": true
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-a).",
       "identifiant": "NC18-a",
       "ancienId": "NC18-a",
       "ancienIdGenerateur": "NC18-A",
       "indiceGenerateur": 0,
-      "nom": "Lister tous les diviseurs positifs",
+      "nom": "Écrire tous les diviseurs (les paires)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -144,7 +147,7 @@
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
       "referencesBrevet": [
         {
@@ -161,44 +164,46 @@
           "document": "Métropole professionnelle, 30 juin 2026",
           "url": "https://www.apmep.fr/IMG/pdf/Brevet_pro_Metropole_30_juin_2026_DV.pdf"
         }
-      ]
+      ],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Donner un diviseur non trivial",
+      "objectif": "Donner un diviseur avec un critère",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Donne un diviseur de 363 autre que 1 et 363.",
+      "enonce": "Donne un diviseur de 441, autre que 1 et 441. □",
       "reponse": "3",
-      "donnees": "Multiple de 3 de 105 à 450 ; accepter tout diviseur autre que 1 et le nombre lui-même.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Tout entier positif divisant le nombre, sauf 1 et le nombre lui-même.",
-      "aide1": "Additionne les chiffres : un critère de divisibilité peut aider.",
-      "aide2": "Additionne les chiffres du nombre.",
-      "correction": "Par exemple 3, car 363 = 3 × 121.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
+      "aide1": "Les critères de divisibilité aident à trouver un diviseur. (dessin du cahier)",
+      "aide2": "4 + 4 + 1 = 9 : regarde la table de 3.",
+      "correction": "4 + 4 + 1 = 9, dans la table de 3. 441 = 3 × 147. 3 est un diviseur de 441 (147 aussi).",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
       "controle_math": {
         "type": "property",
         "rule": "divisor",
-        "number": 363,
-        "exclude": [1, 363]
+        "number": 441,
+        "exclude": [1, 441],
+        "reste": true
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
+          "label": "Diviseur",
           "answer": "3",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-b).",
       "identifiant": "NC18-b",
       "ancienId": "NC18-b",
       "ancienIdGenerateur": "NC18-B",
       "indiceGenerateur": 1,
-      "nom": "Donner un diviseur non trivial",
+      "nom": "Donner un diviseur avec un critère",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
       "brevet": true,
@@ -206,12 +211,12 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Diviseur",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
       "referencesBrevet": [
         {
@@ -228,135 +233,103 @@
           "document": "Amérique du Nord, 3 juin 2026",
           "url": "https://www.apmep.fr/IMG/pdf/Brevet_Ameri_Nord_3_06_2026_DV.pdf"
         }
-      ]
+      ],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
-      "objectif": "Décomposer en facteurs premiers",
+      "objectif": "Décomposer en produit de facteurs premiers",
       "niveau": "3e",
       "dnb2027": true,
-      "enonce": "Décompose 12 : 12 = 2^□ × 3^□ × 5^□ × 7^□. Mets 0 lorsqu’un facteur est absent.",
-      "reponse": "2 ; 1 ; 0 ; 0",
-      "donnees": "Produit de deux à cinq facteurs premiers parmi 2, 3, 5, 7, limité à 210 ; quatre exposants à compléter, 0 si absent.",
-      "saisie": "Exposant de 2 : nombre ; Exposant de 3 : nombre ; Exposant de 5 : nombre ; Exposant de 7 : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Divise par un petit nombre premier : 2, 3, 5 ou 7.",
-      "aide2": "Compte combien de fois apparaît chaque facteur premier.",
-      "correction": "12 = 2 × 2 × 3 = 2² × 3¹.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Décompose 18 en produit de facteurs premiers. 18 = □",
+      "reponse": "2 × 3 × 3",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
+      "aide1": "L'arbre : 18 = □ × □, puis je continue. (dessin du cahier)",
+      "aide2": "9 n'est pas premier : continue.",
+      "correction": "18 = 2 × 9 = 2 × 3 × 3 = 2 × 3² 2 et 3 sont premiers : c'est fini.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
       "controle_math": {
-        "type": "fields",
-        "values": ["2", "1", "0", "0"]
+        "type": "property",
+        "rule": "primeFactors",
+        "number": 18
       },
       "exemple_champs": [
         {
-          "label": "Exposant de 2",
-          "answer": "2",
-          "kind": "number",
+          "label": "Produit de facteurs premiers",
+          "answer": "2 × 3 × 3",
+          "kind": "text",
           "unit": "",
-          "placeholder": ""
-        },
-        {
-          "label": "Exposant de 3",
-          "answer": "1",
-          "kind": "number",
-          "unit": "",
-          "placeholder": ""
-        },
-        {
-          "label": "Exposant de 5",
-          "answer": "0",
-          "kind": "number",
-          "unit": "",
-          "placeholder": ""
-        },
-        {
-          "label": "Exposant de 7",
-          "answer": "0",
-          "kind": "number",
-          "unit": "",
-          "placeholder": ""
+          "placeholder": "",
+          "large": true
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-c).",
       "identifiant": "NC18-c",
       "ancienId": "NC18-c",
       "ancienIdGenerateur": "NC18-C",
       "indiceGenerateur": 2,
-      "nom": "Décomposer en facteurs premiers",
+      "nom": "Décomposer en produit de facteurs premiers",
       "niveauDescription": "3e ; entretien dans les classes suivantes.",
       "niveaux": ["3e"],
       "brevet": true,
-      "reponseType": "nombre",
+      "reponseType": "texte-court",
       "champs": [
         {
-          "type": "nombre",
-          "libelle": "Exposant de 2",
-          "unite": ""
-        },
-        {
-          "type": "nombre",
-          "libelle": "Exposant de 3",
-          "unite": ""
-        },
-        {
-          "type": "nombre",
-          "libelle": "Exposant de 5",
-          "unite": ""
-        },
-        {
-          "type": "nombre",
-          "libelle": "Exposant de 7",
+          "type": "texte-court",
+          "libelle": "Produit de facteurs premiers",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Calculer quotient et reste",
+      "objectif": "Division euclidienne : quotient et reste",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Dans la division euclidienne de 33 par 7, donne le quotient et le reste.",
-      "reponse": "4 ; 5",
-      "donnees": "Diviseur 2–9 ; quotient 1–9 ; reste entre 0 inclus et diviseur exclu ; dividende construit exactement.",
-      "saisie": "Quotient : nombre ; Reste : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Cherche le plus grand multiple de 7 qui ne dépasse pas 33.",
-      "aide2": "7 × 4 = 28 ; le reste vaut 33 − 28.",
-      "correction": "33 = 7 × 4 + 5 : quotient 4, reste 5.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Division euclidienne de 61 par 9. 61 = 9 × □ + □",
+      "reponse": "6 · 7",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
+      "aide1": "61 cases rangées par lignes de 9 : les lignes pleines, puis ce qui reste. (dessin du cahier)",
+      "aide2": "9 × 6 = 54. Combien de cases après 54 ?",
+      "correction": "9 × 6 = 54 et 9 × 7 = 63 dépasse 61. 61 − 54 = 7, et 7 < 9. Quotient 6, reste 7.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
       "controle_math": {
         "type": "fields",
-        "values": ["4", "5"]
+        "values": ["6", "7"]
       },
       "exemple_champs": [
         {
           "label": "Quotient",
-          "answer": "4",
+          "answer": "6",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         },
         {
           "label": "Reste",
-          "answer": "5",
+          "answer": "7",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-d).",
       "identifiant": "NC18-d",
       "ancienId": "NC18-d",
       "ancienIdGenerateur": "NC18-D",
       "indiceGenerateur": 3,
-      "nom": "Calculer quotient et reste",
+      "nom": "Division euclidienne : quotient et reste",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -374,40 +347,41 @@
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "e",
       "objectif": "Reconnaître un nombre premier",
       "niveau": "3e",
       "dnb2027": true,
-      "enonce": "Quel nombre est premier ?",
-      "reponse": "41",
-      "donnees": "Un nombre premier 11–47, le nombre 1 et deux composés faciles ; ordre variable ; exactement une bonne réponse.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Il faut exactement deux diviseurs positifs.",
-      "aide2": "1 n’est pas premier ; élimine les nombres qui ont un autre diviseur.",
-      "correction": "41 est premier. 1 n’a qu’un diviseur ; 25 et 16 sont composés.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Lequel de ces nombres est premier ?",
+      "reponse": "13",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
+      "aide1": "Je teste 2, 3, 5, 7 pour chaque nombre. (dessin du cahier)",
+      "aide2": "1 n'a qu'un seul diviseur : il n'est pas premier.",
+      "correction": "1 : un seul diviseur. 51 = 3 × 17. 49 = 7 × 7. 13 : ni par 2, ni par 3, ni par 5, ni par 7. Je m'arrête à 7 : 11 × 11 = 121 dépasse 13. 13 est premier.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
       "controle_math": {
         "type": "text",
-        "values": ["41"]
+        "values": ["13"]
       },
       "exemple_champs": [
         {
           "label": "Choisis une réponse",
-          "answer": "41",
+          "answer": "13",
           "kind": "text",
           "unit": "",
           "placeholder": "",
-          "options": ["1", "25", "41", "16"]
+          "options": ["51", "13", "1", "49"]
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-e).",
       "identifiant": "NC18-e",
       "ancienId": "NC18-e",
       "ancienIdGenerateur": "NC18-E",
@@ -415,7 +389,7 @@
       "nom": "Reconnaître un nombre premier",
       "niveauDescription": "3e ; entretien dans les classes suivantes.",
       "niveaux": ["3e"],
-      "brevet": true,
+      "brevet": false,
       "reponseType": "qcm",
       "champs": [
         {
@@ -425,44 +399,45 @@
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "f",
-      "objectif": "Trouver le plus grand diviseur commun de petits entiers",
+      "objectif": "Plus grand diviseur commun (les ovales)",
       "niveau": "3e",
       "dnb2027": true,
-      "enonce": "Quel est le plus grand diviseur commun à 35 et 20 ?",
-      "reponse": "5",
-      "donnees": "Deux entiers 2–48 construits avec un facteur commun ; le plus grand diviseur commun est calculé et vérifié.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Cherche les diviseurs des deux nombres.",
-      "aide2": "Repère ceux qui figurent dans les deux listes.",
-      "correction": "Les diviseurs communs sont 1, 5. Le plus grand est 5.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Quel est le plus grand diviseur commun à 91 et 26 ? □",
+      "reponse": "13",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
+      "aide1": "Les facteurs communs vont au milieu. (dessin du cahier)",
+      "aide2": "Multiplie ceux du milieu.",
+      "correction": "91 = 7 × 13 ; 26 = 2 × 13. En commun : 13.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
       "controle_math": {
         "type": "numeric",
-        "values": ["5"]
+        "values": ["13"]
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "5",
+          "label": "Plus grand diviseur commun",
+          "answer": "13",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangles de cases, arbre de facteurs, groupements ou diagramme de diviseurs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC18-f).",
       "identifiant": "NC18-f",
       "ancienId": "NC18-f",
       "ancienIdGenerateur": "NC18-F",
       "indiceGenerateur": 5,
-      "nom": "Trouver le plus grand diviseur commun de petits entiers",
+      "nom": "Plus grand diviseur commun (les ovales)",
       "niveauDescription": "3e ; entretien dans les classes suivantes.",
       "niveaux": ["3e"],
       "brevet": true,
@@ -470,13 +445,57 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Plus grand diviseur commun",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
+    },
+    {
+      "id": "g",
+      "objectif": "Plus petit multiple commun (les bonds)",
+      "niveau": "4e",
+      "enonce": "Quel est le plus petit multiple commun à 3 et 13 ? □",
+      "reponse": "39",
+      "aide1": "Bonds de 3 au-dessus, bonds de 13 au-dessous : où tombent-ils ensemble ? (dessin du cahier)",
+      "aide2": "Je prends tous les facteurs, une seule fois ceux du milieu.",
+      "correction": "Multiples de 3 : 3, 6, 9, …, 36, 39. Multiples de 13 : 13, 26, 39. Le premier qui est dans les deux : 39.",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["39"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Plus petit multiple commun",
+          "answer": "39",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "identifiant": "NC18-g",
+      "indiceGenerateur": 6,
+      "nom": "Plus petit multiple commun (les bonds)",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Plus petit multiple commun",
+          "unite": ""
+        }
+      ],
+      "origine": "cahier NC partie 1 (24/10/2026)",
+      "valide": true,
+      "cahier": "nombres-et-calculs/partie1",
+      "dnb2027": true,
+      "typeTache": "calculer",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
       "referencesBrevet": []
     }
   ]

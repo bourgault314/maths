@@ -88,10 +88,12 @@ function lexMath(value) {
       variable =
         !/(?:\bil y |\bon |\bn’|\bn')$/i.test(before) &&
         !/^\s+(?:pour|une?|été|besoin|des|le|la)\b/.test(after);
-    if (t === "y") variable = !/\bil\s+$/i.test(before);
+    if (t === "y") variable = !/(?:\bil\s+|\bn['’])$/i.test(before);
     // Les unités restent droites après un nombre.
     if (/^[hmsgLl]$/.test(t) && /\d\s*$/.test(before) && !/^\s*[=+−×÷*/^]/.test(after))
       variable = false;
+    // Une lettre suivie d'une apostrophe est une élision (c’est, n’est, l’autre), pas une variable.
+    if (variable && /^[a-z]$/.test(t) && /^['’]/.test(after)) variable = false;
     if (t === "ℓ") variable = true;
     if (t === "L" && /\(/.test(before) && /[+−×÷]/.test(after)) variable = true;
     if (/^[A-Z]$/.test(t))

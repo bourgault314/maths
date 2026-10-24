@@ -160,9 +160,17 @@ export function domaineHTML(domaine, familles, filtre, selection) {
     </div></section>`;
 }
 
+// Le calcul d'un gabarit de cahier, ses cases en □ (bilan : « 6 □ 7 », « 33 = 7 × □ + □ »).
+function gabaritTexte(question) {
+  // Une case seule (« [0] ») n'apprend rien : pas de calcul à montrer.
+  if (!question.gabarit || /^\s*\[0\]\s*$/.test(question.gabarit)) return "";
+  return String(question.gabarit).replace(/\[\d+\]/g, "□");
+}
+
 export function enonceHTML(question, pastille = "") {
+  const calcul = question.math || gabaritTexte(question);
   return `<div class="enonce">${pastille}<h1>${questionPrompt(question)}</h1>
-    ${question.math ? `<div class="calcul">${mathHtml(question.math)}</div>` : ""}
+    ${calcul ? `<div class="calcul">${mathHtml(calcul)}</div>` : ""}
     ${question.visual ? `<div class="figure">${question.visual}</div>` : ""}
   </div>`;
 }
@@ -173,7 +181,7 @@ export function enonceHTML(question, pastille = "") {
    bulle posée sur la figure n'existe que si la forme a un champ coinAide (rempli par les cahiers une
    fois le coin vérifié vide pour tous les tirages). */
 function boutonIndice(question, etat) {
-  if (!question.hints?.[1]?.text) return "";
+  if (!question.hints?.[1]?.text && !question.hints?.[1]?.svg) return "";
   return bouton("Encore un indice", "etape", "indice", etat.etape ? "disabled" : "");
 }
 
@@ -181,6 +189,13 @@ const COINS = ["haut-gauche", "haut-droite", "bas-gauche", "bas-droite"];
 function enBulle(question, reglages) {
   return Boolean(question.visual && COINS.includes(reglages?.coinAide));
 }
+
+// Un texte d'aide sur plusieurs lignes (cahier NC17-a : une question par diviseur).
+const lignesHTML = (texte) =>
+  String(texte || "")
+    .split("\n")
+    .map((ligne) => mathHtml(ligne))
+    .join("<br>");
 
 export function aideHTML(question, etat, projection = false, reglages = {}) {
   if (!etat.aideOuverte || enBulle(question, reglages)) return "";
@@ -190,12 +205,27 @@ export function aideHTML(question, etat, projection = false, reglages = {}) {
   const fermer = projection
     ? ""
     : bouton("×", "fermer-aide", "fermer", 'aria-label="Fermer l’aide"');
+  const phrase = question.hints?.[0]?.text
+    ? `<p>${mathHtml(question.hints[0].text)}</p>`
+    : question.cahier
+      ? ""
+      : "<p></p>";
+  // « Encore un indice » : sa phrase, et son dessin quand le cahier en donne un (la ligne barrée…).
+  const indice = question.hints?.[1] || {};
+  // Le dessin de l'indice est l'étape suivante du MÊME dessin (paires, arbre, ovales) : il prend sa
+  // place au lieu de s'empiler dessous. Un dessin d'une autre sorte (les ovales après la droite) s'ajoute.
+  const sorte = (svg) => String(svg).match(/aria-label="([^"]*)"/)?.[1];
+  const remplace = etat.etape && indice.svg && sorte(indice.svg) === sorte(dessin);
+  const image = montrer && !remplace ? `<div class="dessin">${dessin}</div>` : "";
+  const etape = etat.etape
+    ? `<div class="etape">${indice.svg ? `<div class="dessin">${indice.svg}</div>` : ""}${lignesHTML(indice.text)}</div>`
+    : "";
+  // Les cahiers : le dessin d'abord, la phrase dessous (comme sur leurs pages).
   return `<section class="aide${projection ? " aide-projetee" : ""}" aria-label="Aide">
     <div class="aide-entete"><strong>${ICONES.aide}Aide</strong>
       <span class="aide-boutons">${boutonIndice(question, etat)}${fermer}</span></div>
-    <p>${mathHtml(question.hints?.[0]?.text || "")}</p>
-    ${montrer ? `<div class="dessin">${dessin}</div>` : ""}
-    ${etat.etape ? `<div class="etape">${mathHtml(question.hints?.[1]?.text || "")}</div>` : ""}
+    ${question.cahier ? image + phrase : phrase + image}
+    ${etape}
   </section>`;
 }
 
@@ -237,11 +267,27 @@ export function figureHTML(question, etat, reglages = {}) {
 /* « Voir l'explication » (C7) : sous la question, au même endroit que l'aide, pas de fenêtre ; la
    solution de la question et son dessin (celui de l'aide, sauf s'il n'est que la figure). */
 export function explicationHTML(question, fermer = true) {
+  const entete = `<div class="aide-entete"><strong>L’explication</strong>
+      ${fermer ? bouton("×", "explication", "fermer", 'aria-label="Cacher l’explication"') : ""}</div>`;
+  // Les cahiers : les calculs les uns sous les autres, les « = » alignés, puis les étapes, puis le
+  // dessin complété (choix de Gwenaël du 21/10).
+  if (question.explication) {
+    const { calc = [], etapes = [], svg = "" } = question.explication;
+    const lignes = calc
+      .map(
+        ([gauche, droite]) =>
+          `<tr><td class="gauche">${mathHtml(gauche)}</td><td class="droite">${mathHtml(droite)}</td></tr>`,
+      )
+      .join("");
+    return `<section class="explication" aria-label="L’explication">${entete}
+      ${lignes ? `<table class="calculs">${lignes}</table>` : ""}
+      ${etapes.length ? `<ol class="etapes">${etapes.map((e) => `<li>${mathHtml(e)}</li>`).join("")}</ol>` : ""}
+      ${svg ? `<div class="dessin">${svg}</div>` : ""}
+    </section>`;
+  }
   const dessin = question.hints?.[0]?.svg || "";
   const montrer = dessin && dessin !== question.visual;
-  return `<section class="explication" aria-label="L’explication">
-    <div class="aide-entete"><strong>L’explication</strong>
-      ${fermer ? bouton("×", "explication", "fermer", 'aria-label="Cacher l’explication"') : ""}</div>
+  return `<section class="explication" aria-label="L’explication">${entete}
     <p class="solution">${mathHtml(question.solution || "")}</p>
     ${montrer ? `<div class="dessin">${dessin}</div>` : ""}
   </section>`;
@@ -348,7 +394,10 @@ export function barreQuestionHTML(seance, clavier) {
 
 /* La pastille en tête de la carte : le nom de la notion, ou « Entraînement brevet ». */
 export function pastilleNotionHTML(seance, famille) {
-  const nom = seance.mode === "exam" ? "Entraînement brevet" : famille?.nom || "";
+  // Un cahier peut nommer la question plus précisément que sa famille (« Diviseurs », « Multiple commun »).
+  const question = seance.questions?.[seance.index];
+  const nom =
+    seance.mode === "exam" ? "Entraînement brevet" : question?.pastille || famille?.nom || "";
   return `<span class="pastille-notion">${esc(nom)}</span>`;
 }
 
@@ -410,7 +459,9 @@ function consigneHTML(question, modele) {
    Seules exceptions : la phrase courte d'une ERREUR CONNUE de la forme (champ erreurs), ou le message
    précis du moteur (« La valeur est juste. Écris-la sous forme irréductible. »). Puis « Bonne
    réponse » : l'égalité entière quand la question a un calcul, sinon les valeurs attendues. */
-export function bonneReponseTexte(question, modele) {
+export function bonneReponseTexte(question, modele, court = false) {
+  // Un cahier écrit sa bonne réponse (« Non : 6 + 9 + 0 + 4 = 19 ») ; le bilan garde la forme courte.
+  if (question.bonne && !court) return question.bonne;
   const valeurs = question.fields.map((champ) => ecrireReponse(champ.answer));
   if (modele?.modele) return modele.modele.replace(/\[(\d+)\]/g, (_, rang) => valeurs[rang] ?? "");
   if (question.fields.length === 1) {
@@ -495,7 +546,7 @@ export function bilanHTML(seance, parId) {
           : `<span class="etat-ligne ${classe}" aria-label="${mot}">${signe}</span>`
       }
         <span class="resultat-nom">${questionPrompt(question)}</span>
-        <em class="resultat-reponse">${mathHtml(bonneReponseTexte(question, modele).replace(/^.* = /, ""))}</em>
+        <em class="resultat-reponse">${mathHtml(bonneReponseTexte(question, modele, true).replace(/^.* = /, ""))}</em>
         <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
     })
@@ -515,12 +566,23 @@ export function bilanHTML(seance, parId) {
    cours.morceaux du catalogue : [{ titre, texte, exemple, formes: ["e", …] }], rempli par les
    cahiers), en haut « Pour cette question » et le morceau du type de question en cours, encadré ;
    dessous « Le reste du cours ↓ ». Sinon, le cours entier, comme avant. */
+// Le texte d'un morceau de cours : les mots en <b>…</b> des cahiers restent en gras, rien d'autre.
+const texteCours = (texte) =>
+  String(texte)
+    .split(/(<b>.*?<\/b>)/)
+    .map((morceau) =>
+      /^<b>.*<\/b>$/.test(morceau) ? `<b>${mathHtml(morceau.slice(3, -4))}</b>` : mathHtml(morceau),
+    )
+    .join("");
+
 export function coursHTML(famille, question, entier) {
-  const morceaux = famille.cours?.morceaux;
+  // Les morceaux viennent de la question quand un cahier les écrit (avec leurs dessins), sinon du catalogue.
+  const morceaux = question.course?.morceaux || famille.cours?.morceaux;
   if (!Array.isArray(morceaux) || !morceaux.length) return entier;
   const actif = morceaux.find((morceau) => morceau.formes?.includes(question.forme));
   const morceauHTML = (morceau) => `<div class="morceau${morceau === actif ? " actif" : ""}">
-    <h3>${esc(morceau.titre || "")}</h3><p>${mathHtml(morceau.texte || "")}</p>
+    <h3>${esc(morceau.titre || "")}</h3><p>${texteCours(morceau.texte || "")}</p>
+    ${morceau.svg ? `<div class="dessin">${morceau.svg}</div>` : ""}
     ${morceau.exemple ? `<div class="exemple">${mathHtml(morceau.exemple)}</div>` : ""}</div>`;
   const reste = morceaux
     .filter((morceau) => morceau !== actif)

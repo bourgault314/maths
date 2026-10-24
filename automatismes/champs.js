@@ -3,6 +3,8 @@ import { polynomial } from "./core.js";
 
 export function symbolesQuestion(question) {
   if (question.fields.every((champ) => champ.options)) return [];
+  // Les cahiers disent quelles touches la question ajoute au pavé (« ; », « × », « ² »…).
+  if (Array.isArray(question.touches)) return ["−", "/", ...question.touches];
   if (question.fields.every((champ) => champ.kind === "fraction")) return ["−"];
   const symboles = ["−", "/"];
   if (question.fields.some((champ) => champ.kind === "expression")) {
@@ -74,8 +76,55 @@ function ajouterSaisie(parent, champ, valeur, etiquette, options) {
   return saisie;
 }
 
+/* Cases à cocher (cahier NC17-a : « 2 · 5 · 10 · Aucun ») : on touche tous les bons, puis Valider.
+   La valeur est la liste des choix cochés, dans l'ordre des propositions, séparés par « ; » ; le choix
+   exclusif (« Aucun ») décoche les autres, et inversement. */
+const cochesDe = (valeur) =>
+  String(valeur || "")
+    .split(";")
+    .map((morceau) => morceau.trim())
+    .filter(Boolean);
+
+function ajouterCoches(parent, champ, valeur, rang, options) {
+  const choix = element("div", "choix coches", parent);
+  choix.setAttribute("role", "group");
+  choix.setAttribute("aria-label", libelleAccessible(champ.label));
+  let cochees = cochesDe(valeur);
+  const bonnes = cochesDe(champ.answer);
+  const boutons = champ.options.map((proposition) => {
+    const bouton = element("button", "choix-bouton", choix);
+    bouton.type = "button";
+    bouton.innerHTML = mathHtml(proposition);
+    bouton.disabled = options.terminee;
+    if (options.corriger) {
+      const bon = bonnes.includes(String(proposition));
+      bouton.classList.toggle("bon", bon);
+      bouton.classList.toggle("faux", !bon && cochees.includes(String(proposition)));
+    }
+    bouton.onclick = () => {
+      const texte = String(proposition);
+      if (cochees.includes(texte)) cochees = cochees.filter((c) => c !== texte);
+      else if (texte === champ.exclusif) cochees = [texte];
+      else cochees = [...cochees.filter((c) => c !== champ.exclusif), texte];
+      cochees = champ.options.map(String).filter((c) => cochees.includes(c));
+      options.choisir(rang, cochees.join(" ; "));
+      afficher();
+    };
+    return bouton;
+  });
+  const afficher = () =>
+    boutons.forEach((bouton, indice) => {
+      const coche = cochees.includes(String(champ.options[indice]));
+      bouton.classList.toggle("selectionne", coche);
+      bouton.setAttribute("aria-pressed", String(coche));
+    });
+  afficher();
+}
+
 function ajouterChoix(parent, champ, valeur, rang, options) {
-  const choix = element("div", "choix", parent);
+  if (champ.multiple) return ajouterCoches(parent, champ, valeur, rang, options);
+  // Des phrases (cahier NC17-e) : les boutons l'un sous l'autre.
+  const choix = element("div", champ.colonne ? "choix une-colonne" : "choix", parent);
   choix.setAttribute("role", "group");
   choix.setAttribute("aria-label", libelleAccessible(champ.label));
   champ.options.forEach((proposition, indice) => {
@@ -382,6 +431,7 @@ function creerCase(parent, question, rang, valeurs, options, contexte) {
     } else if (contexte.cas === "ranger") cadre.textContent = "…";
     else cadre.textContent = ecrireReponse(valeurAffichee(champ, valeurs[rang]));
     if (champ.kind === "expression") cadre.classList.add("expression");
+    if (champ.large) cadre.classList.add("large");
     return;
   }
   if (champ.kind === "fraction") {
@@ -398,6 +448,8 @@ function creerCase(parent, question, rang, valeurs, options, contexte) {
   const saisie = ajouterSaisie(parent, champ, valeurs[rang] || "", champ.label, options);
   saisie.dataset.champ = rang;
   if (contexte.plusieurs) saisie.classList.add("petite");
+  // Une réponse longue (une liste de diviseurs, un produit) : une case large dès le départ.
+  if (champ.large) saisie.classList.add("large");
   // K12 : la case d'une réponse-expression sera assez large pour la réponse attendue entière
   // (largeurCasesExpression) ; la réponse reste en mémoire, jamais dans la page.
   if (reponseExpression(champ)) {

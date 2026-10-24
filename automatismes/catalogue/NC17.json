@@ -6,7 +6,7 @@
   "prerequis": ["Tables de multiplication", "Entiers et division"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "Par 2, 5 ou 10 : regarde le chiffre des unités. Par 3 ou 9 : additionne les chiffres.",
+    "regle": "Par 2, 5 et 10 : je regarde le chiffre des unités. Par 3 et 9 : j'additionne tous les chiffres.",
     "exemple": "7414 est divisible par 2 parmi ces trois nombres.",
     "visuel": "Chiffre des unités isolé ou somme de tous les chiffres ; cases pour l’exemple à construire.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -41,9 +41,9 @@
   ],
   "limites": "Plusieurs entiers satisfaisant les contraintes sont acceptés ; une réponse valable différente de l’exemple ne doit pas être refusée.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
-    "variantes": 5,
+    "module": "automatismes/generateurs/divisibilite.js",
+    "tests": "tests/automatismes-cahier-nc-1.test.mjs",
+    "variantes": 6,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
     "aide1_visuelle": true
@@ -121,92 +121,96 @@
   "formes": [
     {
       "id": "a",
-      "objectif": "Utiliser le chiffre des unités : 2, 5 et 10",
+      "objectif": "Cocher les diviseurs parmi 2, 5 et 10",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Parmi 2, 5 et 10, quels nombres divisent 7414 ? Écris tous les nombres convenables, séparés par ;.",
+      "enonce": "Par quels nombres est-il divisible ? 23 116",
       "reponse": "2",
-      "donnees": "Entier 10–9 998 terminant par 0, 2, 4, 5, 6 ou 8 ; ensemble non vide parmi 2, 5 et 10.",
-      "saisie": "Diviseurs, séparés par ; : texte ou liste",
-      "acceptation": "Ensemble exact des valeurs attendues ; ordre indifférent ; aucun élément manquant ou ajouté.",
-      "aide1": "Observe le chiffre des unités : 4.",
-      "aide2": "Par 2 : chiffre des unités pair. Par 5 : 0 ou 5. Par 10 : 0.",
-      "correction": "7414 est divisible par 2 parmi ces trois nombres.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
+      "aide1": "(dessin du cahier)",
+      "aide2": "6 est-il 0, 2, 4, 6 ou 8 ?\n6 est-il 0 ou 5 ?\n6 est-il 0 ?",
+      "correction": "Le chiffre des unités est 6. 6 est pair : divisible par 2. 6 n'est ni 0 ni 5 : ni par 5, ni par 10.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
       "controle_math": {
-        "type": "set",
-        "values": [2]
+        "type": "text",
+        "values": ["2"]
       },
       "exemple_champs": [
         {
-          "label": "Diviseurs, séparés par ;",
+          "label": "Par quels nombres ?",
           "answer": "2",
           "kind": "text",
           "unit": "",
-          "placeholder": ""
+          "placeholder": "",
+          "options": ["2", "5", "10", "Aucun"],
+          "multiple": true,
+          "exclusif": "Aucun"
         }
       ],
-      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC17-a).",
       "identifiant": "NC17-a",
       "ancienId": "NC17-a",
       "ancienIdGenerateur": "NC17-A",
       "indiceGenerateur": 0,
-      "nom": "Utiliser le chiffre des unités : 2, 5 et 10",
+      "nom": "Cocher les diviseurs parmi 2, 5 et 10",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
-      "brevet": true,
-      "reponseType": "ensemble",
+      "brevet": false,
+      "reponseType": "qcm",
       "champs": [
         {
-          "type": "texte-court",
-          "libelle": "Diviseurs, séparés par ;",
+          "type": "qcm",
+          "libelle": "Par quels nombres ?",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Somme des chiffres : 3 ou 9",
+      "objectif": "Divisible par 3 ou par 9 ? (somme des chiffres)",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "6904 est-il divisible par 9 ?",
-      "reponse": "Non",
-      "donnees": "Entier 10–9 999 ; diviseur 3 ou 9 ; cas positifs et négatifs.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Additionne les chiffres.",
-      "aide2": "La somme vaut 19. Est-elle divisible par 9 ?",
-      "correction": "6 + 9 + 0 + 4 = 19 : non.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Ce nombre est-il divisible par 9 ? 2 376",
+      "reponse": "Oui",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
+      "aide1": "Si la somme des chiffres est dans la table de 9, le nombre aussi. (dessin du cahier)",
+      "aide2": "La somme vaut 18. 18 est-il dans la table de 9 ? (9, 18, 27…)",
+      "correction": "2 + 3 + 7 + 6 = 18. Table de 9 : 9, 18, 27… 18 y est. 2 376 est divisible par 9.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
       "controle_math": {
         "type": "text",
-        "values": ["Non"]
+        "values": ["Oui"]
       },
       "exemple_champs": [
         {
           "label": "Choisis une réponse",
-          "answer": "Non",
+          "answer": "Oui",
           "kind": "text",
           "unit": "",
           "placeholder": "",
           "options": ["Oui", "Non"]
         }
       ],
-      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Étape de calcul explicite.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC17-b).",
       "identifiant": "NC17-b",
       "ancienId": "NC17-b",
       "ancienIdGenerateur": "NC17-B",
       "indiceGenerateur": 1,
-      "nom": "Somme des chiffres : 3 ou 9",
+      "nom": "Divisible par 3 ou par 9 ? (somme des chiffres)",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
-      "brevet": true,
+      "brevet": false,
       "reponseType": "qcm",
       "champs": [
         {
@@ -216,7 +220,7 @@
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
       "referencesBrevet": [
         {
@@ -247,43 +251,45 @@
           "document": "Métropole-Antilles-Guyane, 10 septembre 2026",
           "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-10_Metropole_FB.pdf"
         }
-      ]
+      ],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
-      "objectif": "Compléter un chiffre pour la divisibilité",
+      "objectif": "Le chiffre qui manque pour être divisible par 3 ou 9",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Quel chiffre faut-il mettre dans 6□7 pour obtenir un nombre divisible par 9 ?",
-      "reponse": "5",
-      "donnees": "Gabarit à trois chiffres avec trou central ; somme des chiffres connus non multiple de 9 pour assurer un chiffre unique.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "La somme des trois chiffres doit être un multiple de 9.",
-      "aide2": "6 + □ + 7 : complète 13 jusqu’au prochain multiple de 9.",
-      "correction": "6 + 5 + 7 = 18 : 657 convient.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Quel chiffre écrire pour que le nombre soit divisible par 3 ? 3□5",
+      "reponse": "1",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
+      "aide1": "3 + □ + 5 doit tomber dans la table de 3. (dessin du cahier)",
+      "aide2": "3 + 5 = 8. Quel est le nombre de la table de 3 juste après 8 ?",
+      "correction": "3 + 5 = 8. Juste après 8 dans la table de 3 : 9. 9 − 8 = 1 : j'écris 1 → 315.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
       "controle_math": {
-        "type": "numeric",
-        "values": ["5"],
-        "form": "integer"
+        "type": "property",
+        "rule": "digitFill",
+        "known": 8,
+        "divisor": 3
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "5",
+          "label": "Chiffre",
+          "answer": "1",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC17-c).",
       "identifiant": "NC17-c",
       "ancienId": "NC17-c",
       "ancienIdGenerateur": "NC17-C",
       "indiceGenerateur": 2,
-      "nom": "Compléter un chiffre pour la divisibilité",
+      "nom": "Le chiffre qui manque pour être divisible par 3 ou 9",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
       "brevet": true,
@@ -291,52 +297,55 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Chiffre",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Produire un entier sous plusieurs contraintes",
+      "objectif": "Écrire un nombre qui respecte des critères",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Donne un entier à 5 chiffres, divisible par 9 et se terminant par 4.",
-      "reponse": "10044",
-      "donnees": "Entier à 3, 4 ou 5 chiffres ; divisible par 9 ; chiffre des unités imposé de 1 à 9 ; toutes les solutions validées.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Tout entier satisfaisant simultanément le nombre de chiffres, le chiffre des unités et la divisibilité.",
-      "aide1": "Respecte les trois conditions : 5 chiffres, somme multiple de 9, chiffre des unités 4.",
-      "aide2": "Choisis le premier chiffre non nul, puis ajuste un autre chiffre pour la somme.",
-      "correction": "Par exemple 10044 : 5 chiffres, chiffre des unités 4, somme 9.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Écris un nombre de 5 chiffres, divisible par 3, dont le chiffre des unités est 8. □",
+      "reponse": "10008",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
+      "aide1": "Le 8 est déjà à sa place ; il reste quatre chiffres à choisir. (dessin du cahier)",
+      "aide2": "Commence par 1. Il reste trois chiffres pour que la somme tombe dans la table de 3.",
+      "correction": "5 chiffres, le chiffre des unités est 8 : □ □ □ □ 8. 1 + 0 + 0 + 0 + 8 = 9, dans la table de 3. 10 008 convient (il y en a beaucoup d'autres).",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
       "controle_math": {
         "type": "property",
-        "rule": "digitMultiple",
+        "rule": "digitSum",
         "digits": 5,
-        "divisor": 9,
-        "lastDigit": 4
+        "sumDivisor": 3,
+        "lastDigit": 8,
+        "alsoDivisor": null
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "10044",
+          "label": "Nombre",
+          "answer": "10008",
           "kind": "number",
           "unit": "",
-          "placeholder": ""
+          "placeholder": "",
+          "large": true
         }
       ],
-      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Étape de calcul explicite.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC17-d).",
       "identifiant": "NC17-d",
       "ancienId": "NC17-d",
       "ancienIdGenerateur": "NC17-D",
       "indiceGenerateur": 3,
-      "nom": "Produire un entier sous plusieurs contraintes",
+      "nom": "Écrire un nombre qui respecte des critères",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
       "brevet": true,
@@ -344,12 +353,12 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Nombre",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
       "referencesBrevet": [
         {
@@ -366,60 +375,62 @@
           "document": "Sujet de référence mathématiques n°2",
           "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n02-129661.pdf"
         }
-      ]
+      ],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "e",
-      "objectif": "Reconnaître une justification de divisibilité",
+      "objectif": "La phrase qui prouve la divisibilité",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Quelle justification prouve que 768 est divisible par 3 ?",
-      "reponse": "La somme des chiffres vaut 21, multiple de 3.",
-      "donnees": "Multiple de 3 entre 102 et 999 ; trois justifications ; seul le critère de somme des chiffres est suffisant.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Le critère de divisibilité par 3 utilise tous les chiffres.",
-      "aide2": "7 + 6 + 8 = 21.",
-      "correction": "7 + 6 + 8 = 21, multiple de 3 : 768 est divisible par 3.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Quelle phrase prouve que 603 est divisible par 3 ?",
+      "reponse": "6 + 0 + 3 = 9, et 9 est dans la table de 3.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
+      "aide1": "Pour 3, on utilise tous les chiffres. (dessin du cahier)",
+      "aide2": "Quelle phrase parle de la somme des chiffres ?",
+      "correction": "Pour 3, le critère est la somme des chiffres. 6 + 0 + 3 = 9 = 3 × 3. Le chiffre des unités ne décide que pour 2, 5 et 10.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
       "controle_math": {
         "type": "text",
-        "values": ["La somme des chiffres vaut 21, multiple de 3."]
+        "values": ["6 + 0 + 3 = 9, et 9 est dans la table de 3."]
       },
       "exemple_champs": [
         {
-          "label": "Choisis une réponse",
-          "answer": "La somme des chiffres vaut 21, multiple de 3.",
+          "label": "Choisis une phrase",
+          "answer": "6 + 0 + 3 = 9, et 9 est dans la table de 3.",
           "kind": "text",
           "unit": "",
           "placeholder": "",
           "options": [
-            "Le chiffre des unités suffit.",
-            "La somme des chiffres vaut 21, multiple de 3.",
-            "Tous les nombres impairs sont divisibles par 3."
-          ]
+            "6 + 0 + 3 = 9, et 9 est dans la table de 3.",
+            "Son premier chiffre, 6, est dans la table de 3.",
+            "Son chiffre des unités, 3, est dans la table de 3."
+          ],
+          "colonne": true
         }
       ],
-      "visuel_aide1": "Cases des chiffres et schéma de leur somme. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC17-e).",
       "identifiant": "NC17-e",
       "ancienId": "NC17-e",
       "ancienIdGenerateur": "NC17-E",
       "indiceGenerateur": 4,
-      "nom": "Reconnaître une justification de divisibilité",
+      "nom": "La phrase qui prouve la divisibilité",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
-      "brevet": true,
+      "brevet": false,
       "reponseType": "qcm",
       "champs": [
         {
           "type": "qcm",
-          "libelle": "Choisis une réponse",
+          "libelle": "Choisis une phrase",
           "unite": ""
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
       "referencesBrevet": [
         {
@@ -436,7 +447,52 @@
           "document": "Polynésie, 7 septembre 2026",
           "url": "https://www.apmep.fr/IMG/pdf/DNB_generale_Sujet_2026-09-07_polynesie-FB.pdf"
         }
-      ]
+      ],
+      "cahier": "nombres-et-calculs/partie1"
+    },
+    {
+      "id": "f",
+      "objectif": "Lequel est divisible par 3 ?",
+      "niveau": "5e",
+      "enonce": "Lequel de ces nombres est divisible par 3 ?",
+      "reponse": "504",
+      "aide1": "Pour chaque nombre : la somme de ses chiffres. (dessin du cahier)",
+      "aide2": "6 + 5 + 9 = 20 : pas dans la table de 3. Fais pareil pour les autres.",
+      "correction": "752 : 7 + 5 + 2 = 14 · 504 : 5 + 0 + 4 = 9 · 865 : 8 + 6 + 5 = 19 · 659 : 6 + 5 + 9 = 20. Seul 9 est dans la table de 3. 504 est divisible par 3.",
+      "controle_math": {
+        "type": "text",
+        "values": ["504"]
+      },
+      "exemple_champs": [
+        {
+          "label": "Choisis une réponse",
+          "answer": "504",
+          "kind": "text",
+          "unit": "",
+          "placeholder": "",
+          "options": ["752", "504", "865", "659"]
+        }
+      ],
+      "identifiant": "NC17-f",
+      "indiceGenerateur": 5,
+      "nom": "Lequel est divisible par 3 ?",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": false,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis une réponse",
+          "unite": ""
+        }
+      ],
+      "origine": "cahier NC partie 1 (24/10/2026)",
+      "valide": true,
+      "cahier": "nombres-et-calculs/partie1",
+      "dnb2027": true,
+      "typeTache": "reconnaître",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "referencesBrevet": []
     }
   ]
 }
