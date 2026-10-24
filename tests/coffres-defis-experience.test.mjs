@@ -26,7 +26,8 @@ test("les quatre jeux proposent un plein écran accessible avec repli iPhone qui
     assert.match(html, /class="fullscreen-collapse"/, path);
     assert.doesNotMatch(html, />⛶</, path);
     assert.match(html, /event\.key[^\n]+"Escape"[\s\S]*fullscreen-fallback/, path);
-    assert.match(html, /body\.fullscreen-active \.site-footer[\s\S]{0,80}display:\s*none;?/, path);
+    // plus de pied de page dans les applis (24/10/2026) : rien à cacher en plein écran
+    assert.doesNotMatch(html, /<footer class="site-footer"|\.site-footer/, path);
   }
 });
 
@@ -177,13 +178,13 @@ test("la victoire du duo nomme clairement le gagnant et les deux scores", () => 
   assert.match(duel, /Joueur bleu : \$\{scores\[0\]\}[\s\S]*Joueur corail : \$\{scores\[1\]\}/);
 });
 
-test("le pied public disparaît pendant chaque défi chronométré", () => {
+test("pendant chaque défi chronométré, aucun pied de page (il n'y en a plus dans les applis, 24/10/2026)", () => {
   for (const path of [
     "outils/calcul_mental/defi_tables.html",
     "outils/calcul_mental/defi_calcul.html"
   ]) {
     const html = pages[path];
     assert.match(html, /document\.body\.classList\.toggle\("challenge-playing", name === "play"(?: \|\| name === "launch")?\)/, path);
-    assert.match(html, /body\.challenge-playing \.site-footer[\s\S]*display:\s*none/, path);
+    assert.doesNotMatch(html, /<footer class="site-footer"/, path);
   }
 });

@@ -75,7 +75,6 @@ h1[tabindex="-1"]:focus { outline: none; }
 /* Le temps d'une mesure : sans le pied de page ni la hauteur minimale du
    corps, la hauteur de la page est celle du cadre. */
 body.mesure-cadre { min-height: 0 !important; }
-body.mesure-cadre .site-footer { display: none !important; }
 .topbar {
   min-height: 70px;
   display: flex;
@@ -484,35 +483,6 @@ body.challenge-playing .question { touch-action: manipulation; }
 .given-answer { color: var(--red); font-size: .95rem; font-weight: 800; text-decoration: line-through; }
 /* Un calcul passé n'a pas de réponse à barrer (relecture du lot R2). */
 .given-answer.is-passe { text-decoration: none; }
-.site-footer {
-  width: min(100%, 960px);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 5px 9px;
-  margin: 0 auto;
-  padding: 13px 12px calc(13px + env(safe-area-inset-bottom));
-  color: #5b7283;
-  font-size: .78rem;
-  text-align: center;
-}
-
-.site-footer a,
-.site-footer button {
-  padding: 2px;
-  border: 0;
-  color: #315d7a;
-  background: none;
-  font: inherit;
-  font-weight: 850;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.site-footer button { cursor: pointer; }
-
-.site-footer.pied-espace a { padding: 15px 10px; }
 
 html.fullscreen-fallback { width: 100%; height: 100%; overflow: hidden; }
 html.fullscreen-fallback body {
@@ -527,8 +497,6 @@ html.fullscreen-fallback body {
 }
 
 
-body.challenge-playing .site-footer,
-body.fullscreen-active .site-footer { display: none; }
 body.fullscreen-active .fullscreen-toggle { border-color: #7899ae; background: #fff; }
 body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)) / var(--echelle, 1)); padding-bottom: 0; }
 
@@ -1020,11 +988,8 @@ body.mode-eleve .topbar-actions { display: contents; }
 body.mode-eleve #lien-retour { order: 1; flex: 0 0 auto; }
 body.mode-eleve .suivi-repere { order: 2; flex: 1 1 auto; min-width: 0; margin: 0; }
 body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
-.site-footer .pied-logo { display: inline-flex; padding: 6px 8px; text-decoration: none; }
-.site-footer .pied-logo img { display: block; width: 64px; height: auto; }
 @media (max-width: 620px) {
   body.mode-eleve .topbar { padding: 6px 10px; gap: 6px; }
   body.mode-eleve #lien-retour { width: 40px; min-width: 40px; min-height: 40px; padding: 0; }
   body.mode-eleve #lien-retour .catalogue-link-label { display: none; }
-  .site-footer .pied-logo img { width: 56px; }
 }

@@ -127,10 +127,7 @@ test("habillage : sans code, rien ne se voit et rien ne part ; la case sans code
   const bloc = o.document.createElement("p");
   s.dessinerBloc(bloc);
   assert.equal(bloc.hidden, true);
-  const pied = o.document.createElement("footer");
-  pied.append("Jeu SPLAT! créé par Steve Wyborney…");
-  assert.equal(s.dessinerPied(pied), false, "sans code, le pied du site reste");
-  assert.equal(pied.texte, "Jeu SPLAT! créé par Steve Wyborney…");
+  assert.equal(s.dessinerPied, undefined, "plus de pied dessiné par l'habillage (24/10/2026)");
   assert.equal(o.document.documentElement.classList.contains("suivi-eleve"), false);
   assert.equal(s.attente(), false);
   assert.equal(s.lire().etapes.m1e1.fait, true, "l'ancien contenu se lit tel quel");

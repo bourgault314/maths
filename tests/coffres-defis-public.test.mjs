@@ -232,20 +232,17 @@ test("les cinq pages restent accessibles par le sitemap et Toutes les ressources
   assert.ok(directory.includes('href="https://mathsgo.re/auto/"'));
 });
 
-test("les cinq pages suivent le socle légal ; la mention « Sans cookie ni traceur » n'est plus dans les applis (23/10/2026)", () => {
+test("les cinq pages n'ont plus de pied de page (24/10/2026) ni la mention « Sans cookie ni traceur » (23/10/2026)", () => {
   for (const definition of pageDefinitions) {
     const html = pages[definition.path];
     assert.doesNotMatch(html, /consentement\.(css|js)/, definition.path);
     assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/, definition.path);
 
-    const legalFooter = [...html.matchAll(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi)]
-      .map(match => match[0])
-      .find(footer => /mentions-legales\.html/.test(footer));
-    assert.ok(legalFooter, `${definition.path} : pied de page légal absent`);
-    assert.match(legalFooter, /href="mailto:gwenael@mathsgo\.re\?subject=Contact%20depuis%20mathsgo\.re"/, definition.path);
-    assert.match(legalFooter, /href="(?:\.\.\/\.\.\/|\/)mentions-legales\.html"/, definition.path);
-    assert.match(legalFooter, /href="(?:\.\.\/\.\.\/|\/)confidentialite\.html"/, definition.path);
-    assert.doesNotMatch(legalFooter, /Sans cookie ni traceur/, definition.path);
+    // Plus de pied de page dans les applis (24/10/2026, choix de Gwenaël) : les
+    // liens légaux et « Me contacter » restent sur l'accueil et les pages de navigation.
+    assert.doesNotMatch(html, /<footer class="site-footer"/, definition.path);
+    assert.doesNotMatch(html, /href="[^"]*mentions-legales\.html"|href="mailto:gwenael@mathsgo\.re/, definition.path);
+    assert.doesNotMatch(html, /Sans cookie ni traceur/, definition.path);
   }
 });
 

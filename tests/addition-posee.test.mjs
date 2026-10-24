@@ -233,12 +233,9 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceHtml, /rekenrek-20\.css\?v=2/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
-  assert.doesNotMatch(interfaceHtml.match(/<footer[\s\S]*?<\/footer>/)[0], /Gwenaël Bourgault/);
-  assert.match(interfaceHtml, /Me contacter/);
-  assert.match(interfaceHtml, /Toutes les ressources/);
-  assert.match(interfaceHtml, /Mentions légales/);
-  assert.match(interfaceHtml, /Confidentialité/);
-  assert.match(interfaceHtml, /Licence/);
+  // Plus de pied de page dans les applis (24/10/2026) : ni « Me contacter », ni
+  // les liens légaux — ils restent sur l'accueil et les pages de navigation.
+  assert.doesNotMatch(interfaceHtml, /<footer\b|Me contacter|mentions-legales\.html/);
   // « Sans cookie ni traceur » n'est plus dans le pied des applis (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
   assert.doesNotMatch(interfaceHtml, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
   assert.match(interfaceHtml, /Gabarit entier/);
@@ -258,7 +255,7 @@ test("l’interface est professorale, projetable et conforme à l’identité ma
   assert.match(interfaceJs, /window\.addEventListener\("resize"/);
   assert.match(interfaceJs, /\["INPUT", "SELECT", "TEXTAREA"\]/);
   assert.match(interfaceJs, /addition-engine\.mjs\?v=1/);
-  assert.match(interfaceHtml, /addition-posee\.css\?v=5/);
+  assert.match(interfaceHtml, /addition-posee\.css\?v=6/);
   assert.match(interfaceHtml, /addition-posee\.js\?v=6/);
   assert.match(interfaceJs, /addition-steps\.mjs\?v=3/);
   assert.match(interfaceJs, /addition-view\.mjs\?v=4/);

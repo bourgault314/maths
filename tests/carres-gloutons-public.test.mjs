@@ -94,8 +94,9 @@ test("le plein écran et le socle public restent disponibles", () => {
   assert.doesNotMatch(page, /<script[^>]*mention-confidentialite\.js/);
   assert.doesNotMatch(page, /Gwenaël Bourgault/);
   assert.doesNotMatch(page, /Sans cookie ni traceur|data-mathsgo-confidentialite/);
-  assert.match(page, /<a href="\.\.\/\.\.\/confidentialite\.html">Confidentialité<\/a>/, "le pied du site garde son lien Confidentialité");
-  assert.match(page, /body\.game-fullscreen \.site-footer \{ display: none; \}/);
+  // plus de pied de page dans les applis (24/10/2026) : les liens légaux restent sur l'accueil
+  assert.doesNotMatch(page, /<footer\b|site-footer|confidentialite\.html/, "plus de pied du site dans l'appli");
+  assert.match(page, /body\.game-fullscreen \.site-header \{ display: none; \}/);
 });
 
 test("le moteur intégré reste syntaxiquement valide et protège la stabilité mobile", () => {

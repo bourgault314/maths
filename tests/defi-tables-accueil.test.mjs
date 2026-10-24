@@ -337,7 +337,7 @@ test("avec un code, les liens Réglages libres et Évaluation CM1 n’existent p
 // centrées au téléphone — avec « Se déconnecter » à droite DANS le bloc, et
 // « Plein écran » sur ordinateur. Le logo passe en petit dans le pied de page.
 // Le visiteur sans code garde l'en-tête du site.
-test("élève à code : une seule barre fine — ← Mon espace, le bloc de suivi avec « Se déconnecter » dedans ; le logo dans le pied", async () => {
+test("élève à code : une seule barre fine — ← Mon espace, le bloc de suivi avec « Se déconnecter » dedans ; plus de pied (24/10/2026)", async () => {
   assert.doesNotMatch(html, /id="suivi-sortie"|suivi-sortie|renderSortieBarre/, "plus de pilule « Se déconnecter » dans l’en-tête : la sortie est dans le bloc");
   const eleve = html.slice(html.indexOf("/* Lot « Mon parcours » (point 6, dessin de Gwenaël) : l'élève à code"), html.indexOf("</style>", html.indexOf("/* Lot « Mon parcours » (point 6, dessin de Gwenaël) : l'élève à code")));
   assert.match(eleve, /body\.mode-eleve \.topbar \{ flex-wrap: nowrap; min-height: 0;/, "une barre, pas deux étages");
@@ -355,7 +355,7 @@ test("élève à code : une seule barre fine — ← Mon espace, le bloc de suiv
   assert.doesNotMatch(mobile, /\.suivi-repere \.sortie-bloc \{ display: none; \}/);
   assert.doesNotMatch(mobile, /text-overflow: ellipsis; \}/, "un prénom long passe à la ligne, il n’est plus coupé");
   assert.match(html, /bloc\.className = "sortie-bloc";/);
-  assert.match(html, /logo\.className = "pied-logo";/, "le logo en petit dans le pied de l’élève");
+  assert.doesNotMatch(html, /pied-logo|<footer class="site-footer"/, "plus de pied de page dans l’appli (24/10/2026)");
 
   // Exécuté (l'identité arrive du serveur simulé : Léa, 405) : le texte lu
   // du bloc ne change pas ; ses trois morceaux sont là ; la sortie est dans le bloc.

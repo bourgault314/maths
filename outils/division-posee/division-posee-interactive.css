@@ -168,7 +168,6 @@ body[data-task="finish"] .practice-instruction { align-items: center; }
   .practice-actions .button { min-height: 44px; padding-inline: 7px; font-size: .79rem; }
   .practice-table { padding: 12px; border-radius: 18px; }
   .practice-table .practice-multiples { grid-template-columns: 1fr; grid-template-rows: none; }
-  .practice-page .site-footer { padding-top: 15px; }
 }
 
 @media (max-width: 350px) {

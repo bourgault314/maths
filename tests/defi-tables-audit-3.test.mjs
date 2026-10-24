@@ -54,7 +54,7 @@ test("la recherche : la plus grande échelle qui tient, jamais une échelle qui 
   assert.equal(chercherEchelle({min: 1, max: 1, longue: 1}, () => false), 1, "téléphone : aucune mesure");
 });
 
-test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne défile pas", () => {
+test("la mesure : le repère compris ; la carte du jeu ne défile pas", () => {
   assert.match(ajuster, /const pleinEcran = corps\.classList\.contains\("fullscreen-active"\);\s*const bornes = bornesEchelle\(window\.innerWidth, pleinEcran\);/);
   assert.match(ajuster, /if \(!fige && corps\.offsetHeight > limite\) return false;\s*return !\(enJeu && carte && carte\.scrollHeight > carte\.clientHeight \+ 1\);/);
   assert.match(ajuster, /corps\.classList\.add\("mesure-cadre"\);[\s\S]*corps\.classList\.remove\("mesure-cadre"\);/);
@@ -63,7 +63,9 @@ test("la mesure : sans le pied de page, le repère compris ; la carte du jeu ne 
   assert.match(ajuster, /const resultat = document\.getElementById\("result"\)\?\.hidden === false;/, "lot « le cadre qui dépasse »");
   assert.match(ajuster, /const parcoursOuvert = !document\.getElementById\("parcours"\)\.hidden;/, "lot « Mon parcours »");
   assert.match(ajuster, /classList\.contains\("mode-fiche"\) \|\| corps\.classList\.contains\("voir-fiche"\)/, "la fiche a sa propre échelle");
-  assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}\s*body\.mesure-cadre \.site-footer \{ display: none !important; \}/);
+  // il n'y a plus de pied de page à retirer le temps de la mesure (24/10/2026)
+  assert.match(html, /body\.mesure-cadre \{ min-height: 0 !important; \}/);
+  assert.doesNotMatch(html, /<footer class="site-footer"/);
 });
 
 test("l’échelle est remesurée à chaque écran, à la première question, au plein écran et au redimensionnement", () => {

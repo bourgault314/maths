@@ -167,8 +167,8 @@ test("toutes les étapes attendues conduisent à la réussite complète", () => 
 });
 
 test("l’interface élève réutilise le moteur, reste tactile et ne contient pas de solution initiale", () => {
-  assert.match(html, /addition-posee\.css\?v=5/);
-  assert.match(html, /addition-posee-interactive\.css\?v=5/);
+  assert.match(html, /addition-posee\.css\?v=6/);
+  assert.match(html, /addition-posee-interactive\.css\?v=6/);
   assert.match(html, /addition-posee-interactive\.js\?v=6/);
   assert.match(html, /rekenrek-20\.css\?v=2/);
   assert.doesNotMatch(html, /data-mode="(?:integer|decimal)"/);

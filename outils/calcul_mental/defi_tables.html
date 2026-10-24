@@ -167,10 +167,9 @@
     @media screen {
       .shell { zoom: var(--echelle, 1); }
     }
-    /* Le temps d'une mesure : sans le pied de page ni la hauteur minimale du
-       corps, la hauteur de la page est celle du cadre. */
+    /* Le temps d'une mesure : sans la hauteur minimale du corps, la hauteur
+       de la page est celle du cadre. */
     body.mesure-cadre { min-height: 0 !important; }
-    body.mesure-cadre .site-footer { display: none !important; }
     .topbar {
       min-height: 70px;
       display: flex;
@@ -1890,39 +1889,6 @@
       .result.avec-erreurs.avec-entraine .result-actions > #result-open-parcours { grid-column: 1 / -1; }
       .result.avec-erreurs .result-actions > #retry[hidden] + #result-open-parcours { grid-column: 1 / -1; }
     }
-    .site-footer {
-      width: min(100%, 960px);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 5px 9px;
-      margin: 0 auto;
-      padding: 13px 12px calc(13px + env(safe-area-inset-bottom));
-      color: #5b7283;
-      font-size: .78rem;
-      text-align: center;
-    }
-
-    .site-footer a,
-    .site-footer button {
-      padding: 2px;
-      border: 0;
-      color: #315d7a;
-      background: none;
-      font: inherit;
-      font-weight: 850;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    .site-footer button { cursor: pointer; }
-
-    /* Le pied d'un élève suivi (08/09/2026) : deux liens au lieu de cinq
-       éléments, et des cibles qu'un doigt trouve sur une tablette. Le pied du
-       site garde sa mise en page serrée — cette règle ne s'applique qu'au pied
-       reconstruit pour l'espace élève. */
-    .site-footer.pied-espace a { padding: 15px 10px; }
 
     html.fullscreen-fallback { width: 100%; height: 100%; overflow: hidden; }
     html.fullscreen-fallback body {
@@ -1936,9 +1902,6 @@
       overscroll-behavior: none;
     }
 
-    body.settings-open .site-footer,
-    body.challenge-playing .site-footer,
-    body.fullscreen-active .site-footer { display: none; }
     /* Audit 3 : « Quitter le plein écran » reste à la place du bouton
        « Plein écran », dans la barre du haut, aligné avec le logo. Fixé dans
        le coin de l'écran, il flottait hors de la colonne. */
@@ -2669,13 +2632,10 @@
     body.mode-eleve #lien-retour { order: 1; flex: 0 0 auto; }
     body.mode-eleve .suivi-repere { order: 2; flex: 1 1 auto; min-width: 0; margin: 0; }
     body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
-    .site-footer .pied-logo { display: inline-flex; padding: 6px 8px; text-decoration: none; }
-    .site-footer .pied-logo img { display: block; width: 64px; height: auto; }
     @media (max-width: 620px) {
       body.mode-eleve .topbar { padding: 6px 10px; gap: 6px; }
       body.mode-eleve #lien-retour { width: 40px; min-width: 40px; min-height: 40px; padding: 0; }
       body.mode-eleve #lien-retour .catalogue-link-label { display: none; }
-      .site-footer .pied-logo img { width: 56px; }
     }
     /* Lot « Ma classe : le parcours de Léa » (21/10/2026) : la vue du
        professeur (body.mode-prof, ouverte par « Ma classe » avec
@@ -2692,7 +2652,7 @@
        gauche ; pas de hauteur minimale. Elle est retirée le temps de la
        mesure de l'échelle (body.mesure-cadre) : le cadre du parcours seul
        doit tenir dans l'écran, à la même échelle que chez l'élève. */
-    body.mode-prof .fullscreen-toggle, body.mode-prof footer.site-footer, body.mode-prof #intro,
+    body.mode-prof .fullscreen-toggle, body.mode-prof #intro,
     body.mode-prof #parcours-options, body.mode-prof #parcours-name, body.mode-prof #parcours-confirm,
     body.mode-prof .parcours-notice-action .saut, body.mode-prof #parcours-notice-bouton, body.mode-prof #parcours-notice,
     body.mode-prof #parcours-melange .mp-melange > .cell { display: none !important; }
@@ -3244,12 +3204,6 @@
     <p><b>Mon mélange.</b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe.</p>
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
-  <footer class="site-footer">
-    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-    <a href="../../licence.html">Licence</a>
-  </footer>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20261024-1"></script>
@@ -3484,59 +3438,10 @@
         logoHref: SUIVI_URL + "/",
         logoAria: "Retour à mon espace"
       };
-      // Le pied de page (08/09/2026). Celui du site propose « Me contacter »,
-      // « Mentions légales », « Confidentialité » et « Licence » : quatre
-      // portes de plus par lesquelles un élève sort de son espace, vers des
-      // pages écrites pour un visiteur du site. Pour lui — et pour lui seul —
-      // le pied devient deux liens qui restent chez lui. Rien ne change pour
-      // les autres visiteurs : sans code, cette fonction ne touche à rien.
-      //
-      // Le remplacement ne se défait pas : un élève arrivé de son espace en
-      // vient toujours, même si son billet a été refusé ou si son code a été
-      // détaché en cours de route — c'est justement là qu'il faut un chemin de
-      // retour. Et il ne se fait qu'une fois (majLienRetour est appelée à
-      // chaque redessin).
-      let piedRefait = false;
-      function majPiedDePage(versEspace) {
-        if (!versEspace || piedRefait) return;
-        const pied = document.querySelector("footer.site-footer");
-        if (!pied) return;
-        const lien = (adresse, texte) => {
-          const a = document.createElement("a");
-          a.href = adresse;
-          a.textContent = texte;
-          return a;
-        };
-        // Lot « un seul système » (05/10/2026) : « Infos et confidentialité »
-        // n'est plus qu'à un endroit, la page Mon espace — ici, le pied de
-        // l'élève n'a plus que le logo et « Mon espace », qui y mène.
-        const espace = lien(SUIVI_URL + "/", "Mon espace");
-        // PIÈGE, trouvé en relisant l'ordre d'exécution. mention-confidentialite.js
-        // (chargé en « defer », donc APRÈS ce script) pose de lui-même, en bas de
-        // page, « Sans cookie ni traceur · Confidentialité » — un lien de plus vers
-        // le site — SAUF si la page porte déjà un élément marqué
-        // « data-mathsgo-confidentialite ». Le pied d'origine en portait un ; en le
-        // remplaçant sans le remarquer, on rouvrait la porte qu'on venait de fermer.
-        // « Mon espace » porte donc la marque : c'est par lui que l'élève
-        // rejoint la page où la confidentialité est expliquée.
-        espace.setAttribute("data-mathsgo-confidentialite", "");
-        // Lot « Mon parcours » (point 6) : le logo quitte la barre du haut de
-        // l'élève à code ; il est ici, en petit, et ramène à son espace comme
-        // celui du haut.
-        const logo = document.createElement("a");
-        logo.className = "pied-logo";
-        logo.href = RETOUR_ESPACE.logoHref;
-        logo.setAttribute("aria-label", "maths&go — " + RETOUR_ESPACE.logoAria);
-        const image = document.createElement("img");
-        image.src = "/assets/img/mathsgo-logo.png";
-        image.alt = "";
-        image.width = 1338;
-        image.height = 622;
-        logo.append(image);
-        pied.replaceChildren(logo, espace);
-        pied.classList.add("pied-espace");
-        piedRefait = true;
-      }
+      // Plus de pied de page dans les applis (24/10/2026, choix de Gwenaël) :
+      // ni celui du site pour le visiteur, ni « Mon espace » pour l'élève à
+      // code — son chemin de retour est en haut (« ← Mon espace »), et
+      // l'information sur la confidentialité est sur sa page Mon espace.
 
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
@@ -3548,7 +3453,6 @@
         // La vue du professeur (lot « Ma classe : le parcours de Léa ») a la
         // même barre fine que l'élève : son bandeau y tient seul.
         if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee || VUE_PROF));
-        majPiedDePage(vers === RETOUR_ESPACE);
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les

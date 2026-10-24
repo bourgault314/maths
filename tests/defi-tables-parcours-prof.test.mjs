@@ -255,16 +255,16 @@ test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », s
   assert.match(html, /if \(VUE_PROF\) return `Le parcours \$\{deNom\(\(parcours && parcours\.prenom\) \|\| "l’élève"\)\}`;/);
   assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/);
   assert.match(html, /classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee \|\| VUE_PROF\)\)/, "la même barre fine que l'élève");
-  const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof footer\.site-footer, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-name, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;
+  const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-name, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;
   assert.match(html, regle);
   assert.match(html, /body\.mode-prof #parcours-back, body\.mode-prof #parcours-more \{ visibility: hidden; pointer-events: none; \}/, "leur place reste : le titre ne bouge pas");
   assert.match(html, /body\.mode-prof #parcours-melange \.mp-melange \{ grid-template-columns: minmax\(0, 1fr\); \}/, "sans le ▶, les coupes ne chevauchent plus « Mon mélange »");
   // Le bandeau : morceaux insécables, « lecture seule » en gras.
   assert.match(html, /\.suivi-repere\.lecture-seule \.repere-lecture > span \{ display: inline-block; white-space: nowrap; \}/);
   assert.match(html, /\.suivi-repere\.lecture-seule b \{ font-weight: 800; \}/);
-  // Le pied du site reste dans la page (caché) ; depuis le 23/10/2026, il finit sur « Licence »
-  // et la page ne charge plus mention-confidentialite.js (plus rien ne s'ajoute en bas).
-  assert.match(html, /<a href="\.\.\/\.\.\/licence\.html">Licence<\/a>\s*\n\s*<\/footer>/);
+  // Plus de pied de page dans l'appli (24/10/2026) : rien à cacher en bas pour le
+  // professeur, et la page ne charge plus mention-confidentialite.js (23/10/2026).
+  assert.doesNotMatch(html, /<footer class="site-footer"/);
   assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/);
 });
 

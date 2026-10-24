@@ -185,16 +185,6 @@
       box-shadow: 0 9px 22px rgba(15, 40, 72, .08);
     }
     .page-preview img { display: block; width: 100%; height: auto; }
-    .site-footer {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 7px;
-      padding: 16px 10px 24px;
-      color: #66788d;
-      font-size: .82rem;
-    }
-    .site-footer a, .site-footer button { padding: 0; border: 0; color: #526d8d; background: transparent; text-decoration: underline; }
 
     @media (max-width: 900px) {
       .guide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -219,7 +209,7 @@
     @media print {
       @page { size: A3 landscape; margin: 0; }
       body { background: #fff; }
-      .site-header, .hero, .guide, .usage-note, .preview-heading, .site-footer { display: none !important; }
+      .site-header, .hero, .guide, .usage-note, .preview-heading { display: none !important; }
       .site-shell { width: auto; margin: 0; }
       main { margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
       .pages { display: block; }
@@ -288,12 +278,6 @@
       </section>
     </main>
 
-    <footer class="site-footer">
-      <a href="mailto:gwenael@mathsgo.re?subject=Ressource%20CPS%20sur%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
-      <a href="../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-      <a href="../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-      <a href="../licence.html">Licence</a>
-    </footer>
   </div>
 </body>
 </html>
