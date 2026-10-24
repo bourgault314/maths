@@ -91,7 +91,7 @@ test("les zéros du quotient et le cas dividende inférieur au diviseur sont con
 });
 
 test("l’interface propose validation par bloc, table facultative et adaptation mobile", () => {
-  assert.match(html, /division-posee-interactive\.css\?v=8/);
+  assert.match(html, /division-posee-interactive\.css\?v=9/);
   assert.match(html, /division-posee-interactive\.js\?v=10/);
   assert.match(html, /id="rank-guides" type="checkbox"/);
   assert.match(html, /id="table-bracket"[^>]*hidden/);

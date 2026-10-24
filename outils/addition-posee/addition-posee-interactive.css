@@ -212,7 +212,6 @@
   .practice-help-actions { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .practice-actions .validate-button { grid-column: 1 / -1; grid-row: 3; }
   .practice-actions .button { min-height: 44px; padding-inline: 7px; font-size: .79rem; }
-  body.is-projection .site-footer { display: none; }
 }
 
 @media (max-width: 350px) {

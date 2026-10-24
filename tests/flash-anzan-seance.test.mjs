@@ -99,7 +99,7 @@ class El {
   addEventListener(type, fn) { (this.ecouteurs[type] ||= []).push(fn); }
   appendChild(e) { e.parent = this; this.children.push(e); return e; }
   removeChild(e) { this.children = this.children.filter(x => x !== e); e.parent = null; return e; }
-  // L'habillage du suivi (flash_anzan_suivi.js) construit le bloc, le pied et
+  // L'habillage du suivi (flash_anzan_suivi.js) construit le bloc et
   // la garde élément par élément : append, replaceChildren, remove, des nœuds texte.
   append(...nodes) { nodes.forEach(n => { if (typeof n === "string") n = this.ecran.document.createTextNode(n); n.parent = this; this.children.push(n); }); }
   replaceChildren(...nodes) { this.children.forEach(c => { c.parent = null; }); this.children = []; this.append(...nodes); }

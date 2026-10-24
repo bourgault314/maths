@@ -139,7 +139,7 @@ test("la question précède la révélation du chiffre", () => {
 });
 
 test("la navigation mobile aligne précédente et suivante puis centre tout afficher", () => {
-  assert.match(interfaceHtml, /division-posee\.css\?v=12/);
+  assert.match(interfaceHtml, /division-posee\.css\?v=13/);
   assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #previous \{ grid-column: 1; grid-row: 1; \}/);
   assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #next \{ grid-column: 2; grid-row: 1; \}/);
   assert.match(interfaceCss, /@media \(max-width: 780px\)[\s\S]*\.step-controls #show-all \{ grid-column: 1 \/ -1; grid-row: 2; justify-self: center; \}/);

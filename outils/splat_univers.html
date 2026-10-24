@@ -80,9 +80,9 @@
 <!-- La liste des mondes « en préparation » et la clé de Gwenaël (?essai=1) : en tête de assets/js/splat-etapes.js -->
 <script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
-     l'habillage du suivi de classe (bloc de suivi, pied, garde) : lots 2 et 6, 08/10/2026 -->
+     l'habillage du suivi de classe (bloc de suivi, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
-<script src="../assets/js/splat-suivi.js?v=20261008-3"></script>
+<script src="../assets/js/splat-suivi.js?v=20261024-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -120,6 +120,7 @@ header .modeOpt:not(.actif):hover{color:var(--ink)}
    contient toutes les corrections (demande de Gwenaël, 08/10/2026). Classe posée dès le
    <head> pour l'élève venu de son espace ; sans code, rien ne change. */
 html.suivi-eleve header .brand,html.suivi-eleve header .modeBar{display:none}
+html.suivi-eleve body>footer{display:none}
 header .suivi-repere{flex:1 1 auto;min-width:0;max-width:760px;margin:0 auto}
 
 /* ---------- bandeau titre ---------- */
@@ -593,7 +594,10 @@ body.prof .volet p{font-size:14.5px}
 <main id="univers"></main>
 
 <!-- Pied (relecture du monde 1, 25/09/2026) : le même que la page des livrets —
-     crédits puis licence. La vue professeur a son bouton en haut, pas de doublon ici. -->
+     crédits puis licence. La vue professeur a son bouton en haut, pas de doublon ici.
+     Le visiteur le garde en entier (24/10/2026, choix de Gwenaël : page très visitée,
+     « libre d'être imprimé, partagé » est utile) ; l'élève venu de son espace n'a rien
+     en bas (html.suivi-eleve) : son retour est la flèche du haut. -->
 <footer>
   <span class="credits">Jeu <strong>SPLAT!</strong> créé par Steve Wyborney ·
   outils <strong>SPLAT!</strong> de maths&amp;go, avec l'IREMI de La Réunion.</span><br>
@@ -1852,8 +1856,6 @@ function majSuivi(){
   document.documentElement.classList.toggle("suivi-eleve",!!(SUIVI&&(SUIVI.actif()||SUIVI.attente()||SUIVI.client.entreeRefusee)));
   if(SUIVI){
     SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
-    /* lot 6 : le pied de l'élève à code — le petit logo et « Mon espace », rien d'autre */
-    SUIVI.dessinerPied(document.querySelector("body>footer"));
   }
 }
 /* la case de l'élève est arrivée (billet échangé, serveur lu) : les étoiles, et — tant que

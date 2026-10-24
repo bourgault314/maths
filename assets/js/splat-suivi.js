@@ -18,8 +18,7 @@
   //     même onglet (la carte, un autre outil) a pu l'enrichir depuis que
   //     celle-ci s'est ouverte ;
   //   - il dessine ce que l'élève voit, et rien d'autre : le bloc de suivi, la
-  //     question « C'est toujours toi ? » de la garde, aux mots de Défi tables,
-  //     et le pied de la carte ;
+  //     question « C'est toujours toi ? » de la garde, aux mots de Défi tables ;
   //   - il range la mémoire des pages (le monde ouvert sur la carte…) au nom de
   //     l'élève, pas de l'appareil.
   //
@@ -27,14 +26,16 @@
   // le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en référence.
   // Sur la carte des mondes (l'accueil de l'appli), la flèche puis le bloc
   // « Suivi par ton professeur », prénom, classe, avec « Se déconnecter » DANS
-  // le bloc (le bandeau du lot 2 s'en va) ; en bas, le petit logo et « Mon
-  // espace », rien d'autre. Dans les étapes, où la place manque, la pastille
+  // le bloc (le bandeau du lot 2 s'en va) ; en bas, rien (24/10/2026 : plus de
+  // pied dans les applis pour l'élève, le retour à Mon espace est en haut ; le
+  // visiteur garde le pied de la carte, crédits et licence). Dans les étapes, où la
+  // place manque, la pastille
   // « ● Léa » du lot 2 reste (choix de Gwenaël : aucune mise en page de jeu ne
   // bouge) ; la mention « Confidentialité » du site n'y est plus. Aucun lien ne
   // sort l'élève de son espace.
   //
   // Sans code dans l'onglet, rien ne se voit et rien ne part : la case sans code
-  // d'aujourd'hui reste celle de l'élève (D6), l'en-tête et le pied du site ne
+  // d'aujourd'hui reste celle de l'élève (D6), l'en-tête et les crédits ne
   // changent pas. Sans le moteur (fichier non chargé), creer() rend null et les
   // pages jouent comme avant, sans rien enregistrer.
 
@@ -80,13 +81,6 @@
     ".suivi-pastille.hors-ligne i{background:#d9822b}",
     ".suivi-pastille.detache{background:#eceff3;color:#3d4a5a;border-color:#d6dce4}",
     ".suivi-pastille.detache i{background:#8793a3}",
-    // Le pied de la carte (Défi tables, lot « un seul système ») : le petit logo et
-    // « Mon espace », des cibles qu'un doigt trouve sur une tablette.
-    ".pied-espace{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 9px}",
-    ".pied-espace a{color:#315d7a;font-weight:800;text-decoration:underline;text-underline-offset:2px;padding:15px 10px}",
-    ".pied-espace a.pied-logo{display:inline-flex;padding:6px 8px;text-decoration:none}",
-    ".pied-espace .pied-logo img{display:block;width:64px;height:auto}",
-    "@media(max-width:620px){.pied-espace .pied-logo img{width:56px}}",
     // La mention « Sans cookie ni traceur · Confidentialité » que pose
     // assets/js/mention-confidentialite.js sous les étapes mène au site : pas pour
     // l'élève à code (l'information est sur Mon espace, comme dans Défi tables).
@@ -266,42 +260,12 @@
     // La page de l'élève venu de son espace porte « suivi-eleve » sur <html> :
     // sous un code, pendant l'échange de son billet, ou quand ce billet a été
     // refusé (il vient quand même de son espace). Les pages s'en servent pour
-    // leur en-tête et leur pied ; le style ci-dessus, pour la mention du site.
+    // leur en-tête (la carte, pour cacher ses crédits) ; le style ci-dessus,
+    // pour la mention du site.
     function marquerPage() {
       const racineDoc = doc && doc.documentElement;
       if (!racineDoc || !racineDoc.classList) return;
       racineDoc.classList.toggle("suivi-eleve", Boolean(client.suiviActif() || attente() || client.entreeRefusee));
-    }
-
-    // ------------------------------------------------------ le pied de la carte
-    // Le petit logo et « Mon espace », qui y mènent tous deux — rien d'autre :
-    // ni crédits, ni licence, ni « Confidentialité » (l'information est sur Mon
-    // espace). « Mon espace » porte la marque data-mathsgo-confidentialite, sans
-    // quoi assets/js/mention-confidentialite.js (chargé en defer, donc après)
-    // reposerait sa mention, avec son lien vers le site. Une fois faite, la
-    // bascule ne se défait pas : un élève dont le code a été détaché vient
-    // toujours de son espace, c'est là qu'il lui faut un chemin de retour.
-    let piedRefait = false;
-    function dessinerPied(pied) {
-      if (!pied || !doc || piedRefait) return false;
-      if (!(client.suiviActif() || client.entreeRefusee)) return false;
-      poserStyle();
-      const logo = creerEl("a", "pied-logo");
-      logo.href = ADRESSE_ESPACE;
-      logo.setAttribute("aria-label", "maths&go — Retour à mon espace");
-      const image = doc.createElement("img");
-      image.src = "/assets/img/mathsgo-logo-390.png";
-      image.alt = "";
-      image.width = 390;
-      image.height = 181;
-      logo.append(image);
-      const espace = creerEl("a", "", client.TEXTES.espace);
-      espace.href = ADRESSE_ESPACE;
-      espace.setAttribute("data-mathsgo-confidentialite", "");
-      pied.replaceChildren(logo, espace);
-      pied.classList.add("pied-espace");
-      piedRefait = true;
-      return true;
     }
 
     // -------------------------------------------------- la mémoire de l'élève
@@ -478,7 +442,6 @@
       pastilleHtml,
       majPastilles,
       dessinerBloc,
-      dessinerPied,
       cleEleve,
       nettoyerMemoires,
       elementsGarde: () => garde,

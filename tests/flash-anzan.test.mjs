@@ -188,15 +188,14 @@ test("la mémoire des réglages passe par un try/catch (navigation privée)", ()
   assert.match(PAGE, /try \{ window\.localStorage\.setItem\(CLE/);
 });
 
-test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans le cadre, le logo dans le pied", () => {
+test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans le cadre ; rien en bas", () => {
   assert.doesNotMatch(PAGE, /class="topbar"/);
   const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
   assert.match(cadre, /<a class="rond" id="lien-retour" href="\.\.\/index\.html\?domain=nombres-calculs&amp;notion=calcul-mental"/);
   assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 3, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique");
-  const pied = PAGE.slice(PAGE.indexOf('<footer class="site-footer">'), PAGE.indexOf("</footer>"));
-  assert.match(pied, /<a class="pied-logo" href="\/"/);
-  // le pied garde ses liens, sans « Sans cookie ni traceur » (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
-  assert.match(pied, /<a href="\.\.\/\.\.\/confidentialite\.html">Confidentialité<\/a>/);
+  // Plus de pied du tout, logo compris (24/10/2026, choix de Gwenaël) ; ni
+  // « Sans cookie ni traceur » (retirée des applis le 23/10/2026).
+  assert.doesNotMatch(PAGE, /<footer\b|site-footer|pied-logo|confidentialite\.html|dessinerPied/);
   assert.doesNotMatch(PAGE, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
 });
 

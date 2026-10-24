@@ -196,32 +196,17 @@ test("mémoire : la mémoire d'un élève part avec sa case (purge des 90 jours)
 
 // ------------------------------------------------------- le pied de la carte
 
-test("pied : sous un code, le petit logo et « Mon espace », rien d'autre — marqué pour la mention du site", async () => {
-  const {o, s} = await suiviDe(A, LEA);
-  const pied = o.document.createElement("footer");
-  pied.append("Jeu SPLAT! créé par Steve Wyborney · …", o.document.createElement("br"));
-  assert.equal(s.dessinerPied(pied), true);
-  const liens = pied.descendants().filter(n => n.tagName === "A");
-  assert.equal(liens.length, 2);
-  liens.forEach(a => assert.equal(a.href, "https://suivi.mathsgo.re/", "les deux mènent à Mon espace"));
-  assert.equal(liens[0].className, "pied-logo");
-  assert.equal(liens[0].getAttribute("aria-label"), "maths&go — Retour à mon espace");
-  assert.equal(liens[0].descendants()[0].src, "/assets/img/mathsgo-logo-390.png");
-  assert.equal(liens[1].textContent, "Mon espace");
-  assert.equal(liens[1].getAttribute("data-mathsgo-confidentialite"), "", "sinon mention-confidentialite.js reposerait son lien vers le site");
-  assert.equal(pied.texte, "Mon espace", "ni crédits, ni licence, ni « Confidentialité »");
-  assert.ok(pied.classList.contains("pied-espace"));
-  assert.equal(s.dessinerPied(pied), false, "une seule fois");
-});
-
-test("pied : un billet refusé vient quand même de l'espace — le pied y ramène ; sans code, le pied du site reste", async () => {
+// 24/10/2026 (choix de Gwenaël) : plus de pied dans les applis pour l'élève à
+// code — ni « logo + Mon espace », ni crédits ; son retour est la flèche du haut.
+// L'habillage ne dessine plus de pied ; la carte cache sa ligne de crédits par
+// son style (html.suivi-eleve), y compris quand le billet a été refusé.
+test("pied : l'habillage n'en dessine plus ; un billet refusé marque quand même la page « suivi-eleve »", async () => {
+  const {s} = await suiviDe(A, LEA);
+  assert.equal(s.dessinerPied, undefined);
   const refuse = fauxOnglet({entree: {billet: "d".repeat(32)}, fetch: fauxReseau().fetch});
   const r = refuse.fenetre.MathsGoSplatSuivi.creer({});
   await r.lancer();
   await tic();
-  const pied = refuse.document.createElement("footer");
-  assert.equal(r.dessinerPied(pied), true);
-  assert.equal(pied.texte, "Mon espace");
   assert.equal(refuse.document.documentElement.classList.contains("suivi-eleve"), true);
 });
 
@@ -234,7 +219,9 @@ test("carte : sous un code, plus de logo en haut ni de choix « Élève | Profes
   // l'ancien bandeau (sa feuille de style dans la page) est parti : le bloc est stylé par l'habillage
   assert.doesNotMatch(f, /\.suivi-repere \.liens|\.suivi-repere \.espace/);
   assert.match(f, /SUIVI\.dessinerBloc\(document\.getElementById\("suivi-repere"\)\);/);
-  assert.match(f, /SUIVI\.dessinerPied\(document\.querySelector\("body>footer"\)\);/);
+  // plus de pied pour l'élève (24/10/2026) : la ligne de crédits est cachée par le style
+  assert.match(f, /html\.suivi-eleve body>footer\{display:none\}/);
+  assert.doesNotMatch(f, /dessinerPied/);
   assert.doesNotMatch(f, /dessinerBandeau/);
 });
 
@@ -247,9 +234,9 @@ test("habillage : chaque fonction que la carte et les outils appellent existe �
   const s = o.fenetre.MathsGoSplatSuivi.creer({});
   appels.forEach(nom => assert.equal(typeof s[nom], "function", nom));
   // une page neuve avec l'ancien habillage en cache (sans dessinerBloc) casserait la carte :
-  // la version bouge avec le fichier (lot 6 : 20261008-3)
+  // la version bouge avec le fichier (lot 6 : 20261008-3 ; plus de pied : 20261024-1)
   const versions = Object.values(PAGES).map(p => (p.match(/assets\/js\/splat-suivi\.js\?v=([0-9-]+)/) || [])[1]);
-  assert.deepEqual(versions, ["20261008-3", "20261008-3", "20261008-3", "20261008-3"]);
+  assert.deepEqual(versions, ["20261024-1", "20261024-1", "20261024-1", "20261024-1"]);
 });
 
 test("étapes : la pastille « ● Léa » reste, rien du bloc ; la mention du site ne s'affiche plus pour l'élève à code", () => {
@@ -288,7 +275,7 @@ test("AGENTS.md : le modèle commun des applis suivies est écrit, après la rè
   assert.ok(nav > 0 && modele > nav, "après « Navigation du site — règle commune »");
   const section = agents.slice(modele, agents.indexOf("\n## ", modele + 5));
   for (const morceau of ["Défi tables est la référence", "« Se déconnecter » dans le bloc", "Pas de logo en haut",
-    "la pastille\n  « ● prénom »", "`data-mathsgo-confidentialite`", "celle de l'élève, pas\n  celle de l'appareil",
+    "la pastille\n  « ● prénom »", "Pas de pied (24/10/2026)", "celle de l'élève, pas\n  celle de l'appareil",
     "il retrouve tout fermé", "onglet « ⚙ Réglages », carte\n  « Activités »", "Le cadre de l'appli tient entier", "Sans code, rien ne change"]) {
     assert.ok(section.includes(morceau), morceau);
   }

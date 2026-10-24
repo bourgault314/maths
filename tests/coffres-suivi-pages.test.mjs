@@ -193,7 +193,7 @@ test("habillage : sans moteur, rien — la page joue comme avant", () => {
   assert.equal(o.fenetre.MathsGoCoffresSuivi.creer({}), null);
 });
 
-test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi par ton professeur / Léa / CM1 » avec « Se déconnecter », la pastille, le pied « Mon espace »", async () => {
+test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi par ton professeur / Léa / CM1 » avec « Se déconnecter », la pastille ; plus de pied (24/10/2026)", async () => {
   const sans = fauxOnglet();
   const s = sans.fenetre.MathsGoCoffresSuivi.creer({});
   assert.equal(s.actif(), false);
@@ -201,7 +201,8 @@ test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi pa
   const bloc = sans.document.createElement("p");
   s.dessinerBloc(bloc);
   assert.equal(bloc.hidden, true);
-  assert.equal(s.dessinerPied(sans.document.createElement("footer")), false);
+  // Plus de pied de page dans les applis (24/10/2026) : l'habillage ne sait plus en dessiner.
+  assert.equal(s.dessinerPied, undefined);
   assert.equal(sans.document.documentElement.className.includes("suivi-eleve"), false);
 
   const serveur = fauxServeur({identite: Object.assign({reglages: {}}, LEA)});
@@ -218,12 +219,6 @@ test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi pa
   const sortie = b.descendants().find(n => n.tagName === "BUTTON");
   assert.equal(sortie.textContent, "Se déconnecter");
   assert.match(h.pastilleHtml(), /class="suivi-pastille" title="Suivi par ton professeur · Léa · CM1"[^>]*><i aria-hidden="true"><\/i><span class="nom">Léa<\/span>/);
-  const pied = avec.document.createElement("footer");
-  assert.equal(h.dessinerPied(pied), true);
-  const liens = pied.descendants().filter(n => n.tagName === "A");
-  assert.deepEqual(liens.map(l => l.href), ["https://suivi.mathsgo.re/", "https://suivi.mathsgo.re/"], "le logo et « Mon espace », qui y mènent tous deux");
-  assert.equal(liens[1].textContent, "Mon espace");
-  assert.equal(liens[1].getAttribute("data-mathsgo-confidentialite"), "", "la marque qui retient la mention du site");
   assert.ok(avec.document.head.descendants().some(n => n.id === "suivi-coffres-style"), "le style de l'habillage est posé");
   // « Se déconnecter » : ce qui restait part, l'onglet oublie le code, retour à l'espace.
   sortie.declencher("click");

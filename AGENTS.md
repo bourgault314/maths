@@ -64,7 +64,8 @@ cadre, et c'est voulu (choix de Gwenaël, 22/10/2026 : « des boutons tout seuls
 là-haut, on perd de la place »). Ne pas la « corriger » vers la règle commune :
 
 - la flèche de retour vers Calcul mental et le bouton plein écran sont DANS le
-  cadre blanc, aux places des boutons de la séance ; le logo est dans le pied ;
+  cadre blanc, aux places des boutons de la séance ; il n'y a pas de logo (plus
+  de pied depuis le 24/10/2026, voir « Pas de pied de page dans les applis ») ;
 - le titre « Soroban / Flash Anzan » est centré dans le cadre ; quand le plein
   écran est caché (téléphone), une place vide de 44 px à droite équilibre la
   flèche ;
@@ -85,7 +86,8 @@ l'accueil, on laisse ; dès que je rentre dans une appli, on enlève ».
 - Seules chargent `assets/js/mention-confidentialite.js` : l'accueil, le
   catalogue (`outils/index.html`), `outils/toutes-les-ressources.html`, les
   trois pages légales, les pages d'entrée encore servies (Addition, Soustraction,
-  Multiplication et Division posées, Chat, c'est toi le chat ! — les 17 anciens
+  Multiplication et Division posées, Chat, c'est toi le chat !, et la page des
+  fiches du Moulin de Pythagore, remise le 24/10 — les 17 anciens
   index devenus des redirections le 23/10, PR #1047, n'ont ni pied ni mention)
   et, par exception voulue, les deux
   menus des Automatismes (`auto/index.html`, `automatismes-v2/index.html` : ils
@@ -98,10 +100,36 @@ l'accueil, on laisse ; dès que je rentre dans une appli, on enlève ».
 - `automatismes-v2/menu.css` cache `.mg-mention-slot` : le menu écrit sa propre
   mention, la règle évite un doublon. Elle sert encore, ne pas la retirer.
 - Une nouvelle appli, un nouveau jeu ou une nouvelle fiche à jouer ne charge PAS
-  ce script et n'écrit pas « Sans cookie ni traceur » dans son pied ; le pied du
-  site garde ses liens (dont « Confidentialité »).
+  ce script et n'écrit pas « Sans cookie ni traceur ».
 - `tests/mention-confidentialite.test.mjs` tient la liste exacte des pages
   autorisées et rougit si une appli affiche la mention.
+
+### Pas de pied de page dans les applis
+
+Décision de Gwenaël du 24/10/2026 (« Oui, tout enlever ») : les applis, les
+jeux et les fiches à jouer n'ont plus de pied de page du tout, ni pour le
+visiteur ni pour l'élève connecté par code.
+
+- « Me contacter · Mentions légales · Confidentialité · Licence » restent sur
+  l'accueil, le catalogue, `outils/toutes-les-ressources.html`, les pages
+  légales et les pages d'entrée (les pages de navigation). L'élève trouve
+  « Infos et confidentialité » sur sa page Mon espace (`suivi.mathsgo.re`).
+- La carte des mondes et la page des livrets SPLAT!, très visitées, gardent
+  pour le visiteur leur pied entier : crédits et « mathsgo.re · CC BY-NC-SA 4.0
+  — libre d'être imprimé, partagé et adapté ». Solèy garde sa ligne de crédits
+  et son bouton « D'où vient Solèy ? », sans les liens du site. L'élève à code
+  n'a rien en bas, crédits compris.
+- Les fiches du Moulin de Pythagore (`moulin_pythagore_fiches.html`) sont une
+  page du site (une liste de PDF), pas une appli : elles gardent leur pied.
+- Flash Anzan : rien du tout, pas même le logo.
+- Une nouvelle appli n'a pas de `<footer class="site-footer">`. Ne pas confondre
+  avec la signature imprimée des fiches (« mathsgo.re · CC BY-NC-SA 4.0 »), qui
+  reste : c'est la règle des documents.
+- Pages hors catalogue (espace d'Axelle, Jacquie, baguette, 405, studio,
+  fichiers de travail) : leur petite phrase en bas n'est pas le pied du site,
+  on n'y touche pas.
+- `tests/pieds-applis.test.mjs` tient la liste des pages et rougit si un pied
+  revient.
 
 ## Applis suivies — modèle commun
 
@@ -117,10 +145,10 @@ Défi tables est la référence.
   « ● prénom » au bout de la barre du jeu suffit. On ne déplace pas une mise en
   page de jeu pour y loger le bloc ; « Se déconnecter » reste à une flèche, sur
   l'accueil de l'appli.
-- Pied : le petit logo et « Mon espace » (marqué `data-mathsgo-confidentialite`),
-  rien d'autre — aucun lien vers mathsgo.re ni vers la licence, ni crédits, ni
-  « Sans cookie ni traceur · Confidentialité » (l'information est sur Mon
-  espace). Pendant le jeu, rien.
+- Pas de pied (24/10/2026) : ni « logo + Mon espace », ni crédits, ni liens du
+  site. Le retour vers Mon espace est la flèche du haut ; l'information sur la
+  confidentialité est sur la page Mon espace. (Avant le 24/10 : le petit logo et
+  « Mon espace » en bas.)
 - Mémoire de l'appli (monde ouvert, table choisie…) : celle de l'élève, pas
   celle de l'appareil (clé portant l'empreinte du code, jamais le code en
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
@@ -136,7 +164,8 @@ Défi tables est la référence.
   `tests/suivi-ma-classe-eleves.test.mjs`).
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
-- Sans code, rien ne change : en-tête, fil d'Ariane et pied du site.
+- Sans code, rien ne change : en-tête et fil d'Ariane du site (et pas de pied,
+  comme pour toutes les applis).
 
 ## Automatismes V2
 

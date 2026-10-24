@@ -3,7 +3,6 @@ html.carres-integres,
 .carres-integres body { min-height: 0; background: transparent; }
 .carres-integres .shell { width: 100%; padding: 0 4px 8px; }
 .carres-integres .shell > .site-header,
-.carres-integres .shell > .site-footer,
 .carres-integres .title-row h1,
 .carres-integres .title-row .eyebrow { display: none; }
 .carres-integres .game:not(.is-fullscreen) {

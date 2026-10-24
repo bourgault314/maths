@@ -458,7 +458,8 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceHtml, /class="instruction" aria-live="polite" aria-atomic="true"/);
   assert.match(interfaceHtml, /id="projection-recap"[^>]*hidden/);
   assert.match(interfaceHtml, /fullscreen-collapse[^>]*hidden/);
-  assert.doesNotMatch(interfaceHtml.match(/<footer[\s\S]*?<\/footer>/)[0], /Gwenaël Bourgault/);
+  // Plus de pied de page dans les applis (24/10/2026).
+  assert.doesNotMatch(interfaceHtml, /<footer\b|Me contacter|mentions-legales\.html/);
   // « Sans cookie ni traceur » n'est plus dans le pied des applis (retirée des applis le 23/10/2026 : elle reste sur l'accueil, le catalogue et les pages légales)
   assert.doesNotMatch(interfaceHtml, /Sans cookie ni traceur|<script[^>]*mention-confidentialite\.js/);
   assert.doesNotMatch(interfaceHtml, /data-mode="(?:integer|decimal)"/);
@@ -483,7 +484,7 @@ test("l’interface est professorale, responsive, projetable et sans version él
   assert.match(interfaceJs, /multiplication-engine\.mjs\?v=3/);
   assert.match(interfaceJs, /multiplication-steps\.mjs\?v=3/);
   assert.match(interfaceJs, /multiplication-view\.mjs\?v=4/);
-  assert.match(interfaceHtml, /multiplication-posee\.css\?v=3/);
+  assert.match(interfaceHtml, /multiplication-posee\.css\?v=4/);
   assert.match(interfaceHtml, /multiplication-posee\.js\?v=4/);
   assert.doesNotMatch(interfaceJs, /gabaritForValues|syncGabaritLink/);
 });

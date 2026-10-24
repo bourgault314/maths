@@ -18,18 +18,19 @@
   //   - il dessine ce que l'élève voit, et rien d'autre : le bloc de suivi
   //     (« Suivi par ton professeur », prénom, classe, « Se déconnecter »), la
   //     pastille « ● Léa » de l'écran de jeu, la question « C'est toujours
-  //     toi ? » de la garde, aux mots de Défi tables, et le pied « Mon espace » ;
+  //     toi ? » de la garde, aux mots de Défi tables ;
   //   - il range la mémoire de la page au nom de l'élève, pas de l'appareil.
   //
   // C'est le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en
   // référence : sur l'accueil de l'appli (le choix du niveau et des
   // opérations, le mémo), la flèche puis le bloc ; sur l'écran de jeu, où la
-  // place manque, la pastille « ● Léa » ; en bas, le petit logo et « Mon
-  // espace », rien d'autre. Aucun lien ne sort l'élève de son espace.
+  // place manque, la pastille « ● Léa » ; en bas, rien (24/10/2026 : plus de
+  // pied dans les applis, le retour à Mon espace est en haut). Aucun lien ne
+  // sort l'élève de son espace.
   //
   // Sans code dans l'onglet, rien ne se voit et rien ne part : la case sans
-  // code de l'appareil reste celle d'aujourd'hui, l'en-tête et le pied du site
-  // ne changent pas. Sans le moteur (fichier non chargé), creer() rend null et
+  // code de l'appareil reste celle d'aujourd'hui, l'en-tête du site ne change
+  // pas. Sans le moteur (fichier non chargé), creer() rend null et
   // l'appli joue comme avant, sans rien enregistrer.
 
   const ADRESSE_ESPACE = "https://suivi.mathsgo.re/";
@@ -74,18 +75,11 @@
     ".suivi-pastille.hors-ligne i{background:#d9822b}",
     ".suivi-pastille.detache{background:#eceff3;color:#3d4a5a;border-color:#d6dce4}",
     ".suivi-pastille.detache i{background:#8793a3}",
-    // Le pied de la carte (Défi tables, lot « un seul système ») : le petit logo et
-    // « Mon espace », des cibles qu'un doigt trouve sur une tablette.
-    ".pied-espace{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 9px}",
-    ".pied-espace a{color:#315d7a;font-weight:800;text-decoration:underline;text-underline-offset:2px;padding:15px 10px}",
-    ".pied-espace a.pied-logo{display:inline-flex;padding:6px 8px;text-decoration:none}",
-    ".pied-espace .pied-logo img{display:block;width:64px;height:auto}",
-    "@media(max-width:620px){.pied-espace .pied-logo img{width:56px}}",
     // La mention « Sans cookie ni traceur · Confidentialité » que pose
     // assets/js/mention-confidentialite.js mène au site : pas pour l'élève à
-    // code (l'information est sur Mon espace, comme dans Défi tables). Le pied
-    // refait porte la marque data-mathsgo-confidentialite, qui la retient ; ce
-    // style est la ceinture, posée par marquerPage() (« suivi-eleve »).
+    // code (l'information est sur Mon espace, comme dans Défi tables). Depuis
+    // le 24/10/2026, les applis ne chargent plus ce script ; ce style reste la
+    // ceinture, posée par marquerPage() (« suivi-eleve »).
     "html.suivi-eleve .mg-mention-slot{display:none !important}",
     // au-dessus de tout, y compris la mention « Sans cookie ni traceur » des outils (z-index 2147482999)
     ".suivi-garde{position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;",
@@ -258,42 +252,11 @@
     // La page de l'élève venu de son espace porte « suivi-eleve » sur <html> :
     // sous un code, pendant l'échange de son billet, ou quand ce billet a été
     // refusé (il vient quand même de son espace). La page s'en sert pour son
-    // en-tête et son pied ; le style ci-dessus, pour la mention du site.
+    // en-tête ; le style ci-dessus, pour la mention du site.
     function marquerPage() {
       const racineDoc = doc && doc.documentElement;
       if (!racineDoc || !racineDoc.classList) return;
       racineDoc.classList.toggle("suivi-eleve", Boolean(client.suiviActif() || attente() || client.entreeRefusee));
-    }
-
-    // ------------------------------------------------------ le pied de la page
-    // Le petit logo et « Mon espace », qui y mènent tous deux — rien d'autre :
-    // ni crédits, ni licence, ni « Confidentialité » (l'information est sur Mon
-    // espace). « Mon espace » porte la marque data-mathsgo-confidentialite, sans
-    // quoi assets/js/mention-confidentialite.js (chargé en defer, donc après)
-    // reposerait sa mention, avec son lien vers le site. Une fois faite, la
-    // bascule ne se défait pas : un élève dont le code a été détaché vient
-    // toujours de son espace, c'est là qu'il lui faut un chemin de retour.
-    let piedRefait = false;
-    function dessinerPied(pied) {
-      if (!pied || !doc || piedRefait) return false;
-      if (!(client.suiviActif() || client.entreeRefusee)) return false;
-      poserStyle();
-      const logo = creerEl("a", "pied-logo");
-      logo.href = ADRESSE_ESPACE;
-      logo.setAttribute("aria-label", "maths&go — Retour à mon espace");
-      const image = doc.createElement("img");
-      image.src = "/assets/img/mathsgo-logo-390.png";
-      image.alt = "";
-      image.width = 390;
-      image.height = 181;
-      logo.append(image);
-      const espace = creerEl("a", "", client.TEXTES.espace);
-      espace.href = ADRESSE_ESPACE;
-      espace.setAttribute("data-mathsgo-confidentialite", "");
-      pied.replaceChildren(logo, espace);
-      pied.classList.add("pied-espace");
-      piedRefait = true;
-      return true;
     }
 
     // -------------------------------------------------- la mémoire de l'élève
@@ -470,7 +433,6 @@
       pastilleHtml,
       majPastilles,
       dessinerBloc,
-      dessinerPied,
       cleEleve,
       nettoyerMemoires,
       elementsGarde: () => garde,
