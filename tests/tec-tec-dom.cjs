@@ -241,3 +241,38 @@ test('le quota cadeau reste limité même avec reprises et changement de mode',a
  c.d.getElementById('choose-mode').click();assert.equal(c.d.getElementById('intro').hidden,true);
  assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:discovery'),'1');assert.deepEqual(c.errors,[]);c.dom.window.close();
 });
+
+test('quitter depuis la pause ramène aux modes sans démarrer ni consommer une partie',async()=>{
+ const c=await setup({playMode:'discovery',width:320,height:568,query:'?mode=cadeau&parties=2&ticket=quit'});
+ await c.start();c.advance(.5);c.key('keydown');c.tick(1000/120);
+ c.d.getElementById('pause').click();c.d.getElementById('quit-run').click();
+ assert.equal(c.d.getElementById('intro').hidden,false);assert.equal(c.d.getElementById('pause-veil').hidden,true);
+ assert.equal(c.d.getElementById('veil').hidden,true);assert.equal(c.d.getElementById('hud').hidden,true);
+ assert.equal(c.d.activeElement,c.d.getElementById('start'));assert.equal(c.run.time,0);assert.equal(c.run.held,false);
+ assert.equal(c.d.getElementById('jump').disabled,true);assert.equal(c.d.getElementById('app').classList.contains('paused'),false);
+ c.advance(5);assert.equal(c.run.time,0);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit'),'1');
+ c.d.getElementById('mode-challenge').click();await c.start();c.advance(.5);
+ assert.ok(Math.abs(c.run.time-.5)<.02);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit'),'2');
+ assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('quitter le dernier cadeau ferme la pause et propose le retour au parcours',async()=>{
+ const c=await setup({query:'?mode=cadeau&parties=1&ticket=quit-last&retour=/outils/'});
+ await c.start();c.advance(.5);c.d.getElementById('pause').click();c.d.getElementById('quit-run').click();
+ assert.equal(c.d.getElementById('pause-veil').hidden,true);assert.equal(c.d.getElementById('intro').hidden,true);
+ assert.equal(c.d.getElementById('veil').hidden,false);assert.equal(c.d.getElementById('gift-finish').hidden,false);
+ assert.equal(c.d.activeElement,c.d.getElementById('gift-finish'));assert.equal(c.d.getElementById('start').disabled,true);
+ const stoppedAt=c.run.time;c.advance(5);assert.equal(c.run.time,stoppedAt);
+ assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit-last'),'1');assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('les consignes d’apprentissage restent visibles pendant les annonces de point de reprise',async()=>{
+ const c=await setup({playMode:'discovery'});await c.start();let held=false;
+ const checks=[{at:5.5,text:'Sous le plafond : un appui court'},{at:10.5,text:'Maintiens pour monter les marches'}];
+ for(let i=0;i<2000&&c.run.time<10.6;i++){
+  const down=fixture.some(j=>c.run.tick>=j.down&&c.run.tick<j.up);
+  if(down!==held){c.key(down?'keydown':'keyup');held=down;}c.tick(1000/120);
+  if(checks.length&&c.run.time>=checks[0].at){const check=checks.shift();assert.equal(c.d.getElementById('cue').hidden,false);assert.equal(c.d.getElementById('cue').textContent,check.text);}
+ }
+ assert.equal(c.run.status,'running');assert.equal(checks.length,0);assert.deepEqual(c.errors,[]);c.dom.window.close();
+});

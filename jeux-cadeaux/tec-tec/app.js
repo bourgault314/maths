@@ -24,7 +24,8 @@
     if(gift.enabled)$('gift-status').textContent=gift.remaining>0?'Ton coffre · '+gift.remaining+' partie'+(gift.remaining>1?'s':'')+' disponible'+(gift.remaining>1?'s':''):'Ton coffre · dernière partie';
   }
   function exhausted(){
-    mode='result';clearInput();$('intro').hidden=true;$('veil').hidden=false;$('hud').hidden=true;
+    mode='result';paused=false;clearInput();$('intro').hidden=true;$('veil').hidden=false;$('hud').hidden=true;$('pause-veil').hidden=true;
+    $('app').classList.remove('playing','paused','flying');
     $('jump').disabled=true;$('pause').disabled=true;$('start').disabled=true;$('retry').hidden=true;$('choose-mode').hidden=true;
     $('result-kicker').textContent='PAUSE TERMINÉE';$('result-title').textContent='Bien joué !';
     $('result-score').textContent='';$('record').textContent='';
@@ -83,7 +84,7 @@
     const showZone=zone>0&&run.time>=z.t+.1&&run.time<z.t+2.65;
     const checkpoint=playMode==='discovery'&&realTime<checkpointUntil;
     $('cue').hidden=(!cue&&!checkpoint)||showZone;
-    if(checkpoint)$('cue').textContent='Point de reprise · '+Math.floor(practice.progress)+' %';else if(cue)$('cue').textContent=cue.text;
+    if(cue)$('cue').textContent=cue.text;else if(checkpoint)$('cue').textContent='Point de reprise · '+Math.floor(practice.progress)+' %';
     $('zone-title').hidden=!showZone;if(showZone){$('zone-kicker').textContent=z.subtitle;$('zone-name').textContent=z.name;}
   }
   // One simulation clock. Background-tab time is never caught up on return.
@@ -117,12 +118,15 @@
   }
   $('mode-discovery').addEventListener('click',()=>selectMode('discovery'));
   $('mode-challenge').addEventListener('click',()=>selectMode('challenge'));
-  $('choose-mode').addEventListener('click',()=>{
+  function chooseMode(){
     if(gift.enabled&&gift.remaining===0){exhausted();return;}
     clearInput();run.reset();practice.saved=null;mode='intro';paused=false;previous=null;accumulator=0;
-    $('app').classList.remove('playing','paused','flying');$('intro').hidden=false;$('veil').hidden=true;$('hud').hidden=true;$('cue').hidden=true;$('zone-title').hidden=true;
+    $('app').classList.remove('playing','paused','flying');$('intro').hidden=false;$('veil').hidden=true;$('pause-veil').hidden=true;$('hud').hidden=true;$('cue').hidden=true;$('zone-title').hidden=true;
+    $('jump').disabled=true;$('pause').disabled=true;
     $('start').focus({preventScroll:true});
-  });
+  }
+  $('choose-mode').addEventListener('click',chooseMode);
+  $('quit-run').addEventListener('click',()=>{if(paused)chooseMode();});
   $('gift-finish').addEventListener('click',()=>{if(gift.back)location.assign(gift.back);});
   function down(e){
     if(mode!=='play'||paused||e.button>0)return;
