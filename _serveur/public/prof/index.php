@@ -555,8 +555,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .eval-tete p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
   .eval-tete .fin { margin-left: auto; display: flex; gap: 8px; }
   .eval-modeles { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
-  .eval-modeles li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
-                     min-height: 44px; padding: 6px 8px 6px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; }
+  /* Correctif 5c-bis (25/10/2026) : depuis le lot 5c la carte est le tiers
+     de la page (≈ 350 px) ; les deux boutons à droite ne laissaient plus que
+     13 px au texte (un mot par ligne). Le texte prend la ligne ; les boutons
+     passent dessous, à droite, dès qu'ils ne tiennent plus à côté. */
+  .eval-modeles li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+                     min-height: 44px; padding: 8px 8px 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; }
+  .eval-modeles li > .texte { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+  .eval-modeles .gestes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
+  .eval-modeles .gestes button { padding: 0 12px; }
   .eval-modeles b { display: block; color: var(--ink); }
   .eval-modeles span { display: block; color: var(--muted); font-size: .84rem; }
   .eval-modeles li.vide { display: block; color: var(--muted); font-style: italic; border-style: dashed; padding: 10px 12px; }
@@ -578,7 +585,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      fini », dépliée, avec « Faire repasser » par élève. */
   .eval-liste { margin-top: 12px; }
   .eval-liste summary { cursor: pointer; color: var(--blue); font-weight: 700; font-size: .93rem; }
-  .eval-eleves { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 4px 10px; }
+  .eval-eleves { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); gap: 4px 10px; }
   .eval-eleves li { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 32px; padding: 3px 6px 3px 8px; border-radius: 8px; background: #fff; border: 1px solid var(--line); font-size: .92rem; }
   .eval-eleves li b { font-weight: 700; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .eval-eleves li .e { margin-left: auto; font-size: .8rem; font-weight: 700; white-space: nowrap; }
@@ -614,7 +621,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .eval-plein .eval-repartition .l { font-size: 1.3rem; }
   .eval-plein p { text-align: center; font-size: 1.6rem; font-weight: 700; color: var(--blue-dark); margin-top: 30px; }
   @media (max-width: 700px) {
-    .eval-modeles li { grid-template-columns: 1fr; }
+    .eval-modeles .gestes { flex: 1 1 100%; }
+    .eval-modeles .gestes button { flex: 1 1 auto; }
     .eval-repartition { grid-template-columns: 1fr 1fr; }
     .eval-eleves { grid-template-columns: minmax(0, 1fr); }
     /* Téléphone : le bouton passe sous le prénom, rien ne déborde. */
@@ -4913,7 +4921,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     }
     (modeles || []).forEach(modele => {
       const ligne = el("li");
-      const texte = el("div");
+      const texte = el("div", "texte");
       texte.append(el("b", "", modele.nom), el("span", "", CORE.descriptionEvaluation(modele.reglage) || "modèle à revoir"));
       const modifier = el("button", "secondaire", "Modifier");
       modifier.type = "button";
@@ -4922,7 +4930,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       ouvrir.type = "button";
       ouvrir.disabled = evalEclair;
       ouvrir.addEventListener("click", () => ouvrirBoiteOuvrir(modele));
-      ligne.append(texte, modifier, ouvrir);
+      const gestes = el("div", "gestes");
+      gestes.append(modifier, ouvrir);
+      ligne.append(texte, gestes);
       liste.appendChild(ligne);
     });
     zone.appendChild(liste);
