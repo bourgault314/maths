@@ -3844,11 +3844,16 @@
       transform:none;
     }
 
+    /* hauteur MINIMALE seulement (25/10/2026, vu sur iPhone) : une consigne de trois lignes (« Avec les
+       petits jetons, utilise surtout Enlever des deux côtés, puis… ») débordait d'une boîte de deux
+       lignes centrée en hauteur — le haut passait sous le plateau. La boîte grandit maintenant avec sa
+       phrase ; la place est prise au cadre de l'équation (son vide), le plateau garde sa taille et les
+       boutons ne bougent pas (mesuré de 360 à 414 px). */
     body.importMode .stage:not(:fullscreen) .instructionZone{
       order:3;
-      height:42px;
+      height:auto;
       min-height:42px;
-      max-height:42px;
+      max-height:none;
       margin:1px auto 4px;
       padding:0 4px;
       font-size:13px;
@@ -4033,9 +4038,9 @@
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
-      height:34px;
+      height:auto;
       min-height:34px;
-      max-height:34px;
+      max-height:none;
       margin:1px auto 3px;
       font-size:12px;
     }
@@ -4755,8 +4760,13 @@
   #eleveBarre a.eleveMondes:hover{background:rgba(255,255,255,.26)}
   /* marges négatives (21/10/2026) : le bouton garde sa taille au doigt, mais ne fait plus grandir la
      barre quand il apparaît (avant : 40 → 48 px au bout de 90 s, et tout le jeu descendait d'autant) */
-  #eleveBarre #elevePasser{font:inherit;font-weight:900;border:none;border-radius:999px;padding:6px 14px;cursor:pointer;
-    background:#fde68a;color:#78350f;margin:-4px 0 -4px auto;min-height:32px;font-size:13px}
+  /* « Passer ▶ » DISCRET (25/10/2026, choix de Gwenaël) : il est là dès le début, donc plus de gros
+     bouton jaune qui attire l'œil — un simple contour clair sur la barre sombre, du même bleu pâle que
+     « ◀ Carte des mondes ». Le contour est une ombre intérieure : la barre ne grandit pas. Il garde
+     sa taille au doigt. */
+  #eleveBarre #elevePasser{font:inherit;font-weight:800;border:none;box-shadow:inset 0 0 0 1.5px rgba(219,234,254,.38);border-radius:999px;padding:6px 14px;cursor:pointer;
+    background:transparent;color:#bfd3ef;margin:-4px 0 -4px auto;min-height:32px;font-size:13px}
+  #eleveBarre #elevePasser:hover{background:rgba(255,255,255,.12);color:#fff}
   #eleveBarre #elevePasser:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
   .eleveCarton .eleveCartonBoutons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
   .eleveCarton button.secondaire{background:#fde68a;color:#78350f}
@@ -9609,7 +9619,8 @@
         const selection = selectedDeletePiecesBySide();
         if(actionMode === "delete" && !selection.left.length && !selection.right.length) return;
       }else if(actionMode !== "delete"){
-        setInstruction("Avec les petits jetons, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong>Partager équitablement</strong>&nbsp;quand il ne reste que des taches d’un côté.");
+        /* le nom du bouton tel que l'élève le voit : « Partager » au téléphone (25/10/2026, choix de Gwenaël) */
+        setInstruction("Avec les petits jetons, utilise surtout&nbsp;<strong>Enlever des deux côtés</strong>, puis&nbsp;<strong><span class=\"desktopLabel\">Partager équitablement</span><span class=\"mobileLabel\">Partager</span></strong>&nbsp;quand il ne reste que des taches d’un côté.");
       }
     }
 
@@ -10362,9 +10373,11 @@
      au milieu et reprendre plus tard là où on en était. ══════════════ */
   let eleveMode = false, eleveParcours = "", eleveEqs = [], eleveIdx = 0, eleveResolues = 0, eleveCompteeCourante = false, eleveAttenteSuivante = false;
   /* eleveRes[i] : true = résolue, "ko" = passée (rouge, à rejouer) ; eleveRejeu : file des rouges à rejouer ;
-     elevePasserVisible : le bouton « Passer » n'apparaît qu'après un moment sur la même équation. */
-  let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, elevePasserTimer = null, eleveBravoTimer = null;
-  const ELEVE_PASSER_DELAI = 90000, ELEVE_URL_MONDES = "/outils/splat_univers.html";
+     elevePasserVisible : le bouton « Passer » est là tant que l'équation est en jeu. Depuis le 25/10/2026
+     (choix de Gwenaël), il est visible DÈS LE DÉBUT, en discret : avant, il surgissait en jaune au bout
+     de 1 min 30 sur la même équation, et cette apparition stressait les élèves. */
+  let eleveRes = [], eleveRejeu = null, elevePasserVisible = false, eleveBravoTimer = null;
+  const ELEVE_URL_MONDES = "/outils/splat_univers.html";
   /* équations de la série passées (« Passer ») : rejouées et résolues, elles redeviennent vertes —
      on les compte donc à part, c'est ce que le professeur voit (lot 2 du suivi) ; et la série
      est-elle déjà notée (sa fin s'écrit à la dernière équation, puis l'écran de fin la redemande) */
@@ -10581,18 +10594,12 @@
   function eleveChargerEquation(){
     eleveCompteeCourante = false;
     elevePasserVisible = false;
-    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
     if(eleveBravoTimer){ window.clearTimeout(eleveBravoTimer); eleveBravoTimer = null; }
     eleveEtatResolue("");
     const ok = createImportedEquationState(eleveEqs[eleveIdx]);
     if(ok){
+      elevePasserVisible = true; /* « Passer » discret, là dès le début (25/10/2026) */
       eleveMajBarre();
-      /* après un moment sur la même équation, on propose de passer */
-      elevePasserTimer = window.setTimeout(() => {
-        if(eleveCompteeCourante || eleveAttenteSuivante) return;
-        elevePasserVisible = true;
-        eleveMajBarre();
-      }, ELEVE_PASSER_DELAI);
     }
     return ok;
   }
@@ -10645,7 +10652,7 @@
   function elevePasser(){
     if(eleveCompteeCourante) return;
     eleveCompteeCourante = true;
-    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+    elevePasserVisible = false;
     if(eleveRes[eleveIdx] !== "ko") eleveVues++; /* une rouge repassée ne compte pas deux fois */
     eleveRes[eleveIdx] = "ko";
     eleveSauverEnCours();
@@ -10671,7 +10678,7 @@
       eleveIdx = eleveEqs.length - 1; /* la dernière équation reste dessous, comme en fin de série */
       const okFin = eleveChargerEquation();
       eleveCompteeCourante = true; /* rien à surveiller ni à passer sous l'écran de fin */
-      if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+      elevePasserVisible = false;
       window.setInterval(eleveSurveillerResolution, 400);
       eleveFinDeSerie();
       return okFin;
@@ -10714,7 +10721,7 @@
     if(!eleveMode || eleveCompteeCourante || !state) return;
     if(!eleveEquationResolue()) return;
     eleveCompteeCourante = true;
-    if(elevePasserTimer) window.clearTimeout(elevePasserTimer);
+    elevePasserVisible = false;
     eleveResolues++;
     eleveRes[eleveIdx] = true;
     eleveSauverEnCours();
@@ -10751,6 +10758,7 @@
     eleveRejeu = null;
     eleveIdx = eleveEqs.length;
     eleveAttenteSuivante = false;
+    elevePasserVisible = false; /* rien à passer sous l'écran de fin */
     const rouges = [];
     for(let i = 0; i < eleveEqs.length; i++) if(eleveRes[i] !== true) rouges.push(i);
     const vertes = eleveEqs.length - rouges.length;
