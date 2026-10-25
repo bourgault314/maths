@@ -462,7 +462,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « serveur pro, correctif des lots 5 après la relecture Codex »
   // (25/10/2026) : prof/index.php seul change, 63 au manifeste
   // (avant : serveur-pro-sans-mes-classes).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-correctif-lots-5$/m);
+  // Puis le lot 5e « la séance en direct pour l'administrateur seul » (25/10/2026) :
+  // lib/direct.php, api/prof.php, prof/index.php, prof/direct.php
+  // (avant : serveur-pro-correctif-lots-5).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-direct-reserve$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

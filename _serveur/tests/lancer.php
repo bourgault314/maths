@@ -3030,6 +3030,10 @@ const MATRICE_ATTENDUE = [
     'evaluation.terminer' => 'ecriture',
 ];
 
+// Lot 5e (25/10/2026) : la séance en direct réservée à l'administrateur. À
+// passer à false le jour où Gwenaël la rouvre (lib/direct.php).
+const DIRECT_RESERVE_ATTENDUE = true;
+
 // Les actions qui EFFACENT ne sont pas jouées dans les boucles de la matrice :
 // elles sont éprouvées à part, pour de bon.
 const ACTIONS_QUI_EFFACENT = ['classes.supprimer', 'eleves.supprimer', 'classes.supprimer_echues'];
@@ -3170,6 +3174,10 @@ verifier("lot 11 — matrice : en ÉCRITURE, on prépare et on dépanne, on n'ef
         if (in_array($action, ACTIONS_QUI_EFFACENT, true)) continue;
         $obtenu = jouer_action_lot11($action, $lot11, $lot11['jetonPartage']);
         if ($droit === 'proprietaire') egal(403, $obtenu, "en écriture, « $action » doit rester au propriétaire");
+        // Lot 5e : la séance en direct est réservée à l'administrateur tant
+        // que DIRECT_RESERVE_A_L_ADMINISTRATEUR le dit — le collègue en
+        // écriture est refusé, les évaluations lui restent ouvertes.
+        elseif (str_starts_with($action, 'direct.') && DIRECT_RESERVE_ATTENDUE) egal(403, $obtenu, "en écriture, « $action » est réservé à l’administrateur");
         else egal(200, $obtenu, "en écriture, « $action » doit passer");
     }
     // Les deux qui effacent, joués pour de bon : refusés, et rien n'a bougé.
@@ -5891,7 +5899,12 @@ verifier("direct — la pastille : « Mes classes » et la classe disent qu'une 
     vrai(array_key_exists('direct', $tableau['classe']) && $tableau['classe']['direct'] === null, 'ni dans la classe');
     appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $direct['classe'], 'prof_id' => $nouveau['id'], 'droit' => 'ecriture'], ['jeton' => $jeton]);
     $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonCollegue])['json']['classes'];
-    egal('eclair', $modeDans($liste, (int)$direct['classe']), 'en écriture : la pastille, il peut la reprendre');
+    // Lot 5e : tant que la séance en direct est réservée à l'administrateur,
+    // le collègue en écriture ne voit pas la pastille d'une question éclair
+    // (« Reprendre » le mènerait à un refus). Le jour où elle rouvre : la pastille.
+    egal(DIRECT_RESERVE_ATTENDUE ? null : 'eclair', $modeDans($liste, (int)$direct['classe']), 'en écriture : la pastille seulement s’il peut la reprendre');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $direct['classe'], 'appli' => 'defi-tables'], ['jeton' => $jetonCollegue])['json'];
+    egal(DIRECT_RESERVE_ATTENDUE ? null : 'eclair', array_key_exists('direct', $tableau['classe']) ? $tableau['classe']['direct'] : 'absent', 'ni « Reprendre » dans la classe');
     appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $nouveau['id']], ['jeton' => $jeton]);
     vider_compteurs();
 });
@@ -6832,6 +6845,132 @@ verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionn
     $fin = strpos($p['texte'], 'feuille imprimée', (int)$debut);
     vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de l’onglet est là');
     vrai(!str_contains(substr($p['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans l’onglet Anzan');
+});
+
+// -------------------------------- serveur pro, lot 5e : la séance en direct pour l'administrateur seul (25/10/2026)
+//
+// Décision de Gwenaël : la séance en direct est réservée à son compte
+// (l'administrateur) tant que lib/direct.php le dit ; les évaluations restent
+// ouvertes à tous. Le serveur refuse lui-même (prof/direct.php s'ouvre par son
+// adresse) : chaque action direct.*, pour un collègue, sur une classe
+// partagée en écriture comme sur la sienne, comme sur une classe qui
+// n'existe pas — le même refus, sans rien apprendre d'aucune classe.
+//
+// Rougit si l'on :
+//  a) retire garder_direct_reserve() de l'aiguillage ;
+//  b) n'y garde qu'une partie des actions direct.* ;
+//  c) laisse la pastille « ● En direct » (classes.liste, tableau) au collègue ;
+//  d) fait passer evaluation.* par la garde ;
+//  e) oublie « direct » dans la réponse de « moi ».
+
+$l5e = ['admin' => null, 'collegue' => null, 'jetonCollegue' => null, 'partagee' => null, 'sienne' => null];
+
+verifier("lot 5e — mise en place : un collègue, une classe de Gwenaël partagée en écriture, une classe à lui", function () use (&$l5e) {
+    vider_compteurs();
+    foreach (['phrase-de-secours-2026', 'motdepasse-de-test-2026'] as $essai) {
+        $r = connexion('gwenael', $essai);
+        if (($r['json']['jeton'] ?? null) !== null) { $l5e['admin'] = $r['json']['jeton']; break; }
+    }
+    vrai(is_string($l5e['admin']), 'la session de l’administrateur est ouverte');
+    $cree = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'lot5e-collegue'], ['jeton' => $l5e['admin']])['json'];
+    $l5e['collegue'] = (int)$cree['id'];
+    $temporaire = connexion('lot5e-collegue', $cree['motdepasse'])['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $cree['motdepasse'],
+        'nouveau' => 'une phrase pour le lot 5e 2026'], ['jeton' => $temporaire])['code'], 'il choisit son mot de passe');
+    $l5e['jetonCollegue'] = connexion('lot5e-collegue', 'une phrase pour le lot 5e 2026')['json']['jeton'];
+    $l5e['partagee'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot5e-5B'], ['jeton' => $l5e['admin']])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $l5e['partagee'], 'nombre' => 2], ['jeton' => $l5e['admin']]);
+    egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $l5e['partagee'],
+        'prof_id' => $l5e['collegue'], 'droit' => 'ecriture'], ['jeton' => $l5e['admin']])['code'], 'partagée « modifiable »');
+    $l5e['sienne'] = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot5e-4C'], ['jeton' => $l5e['jetonCollegue']])['json']['id'];
+    appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $l5e['sienne'], 'nombre' => 1], ['jeton' => $l5e['jetonCollegue']]);
+    vrai(is_int($l5e['partagee']) && is_int($l5e['sienne']), 'les deux classes sont créées');
+});
+
+verifier("lot 5e — « moi » dit à la page si ce compte peut mener une séance en direct", function () use (&$l5e) {
+    egal(true, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $l5e['admin']])['json']['direct'] ?? 'absent', 'l’administrateur : oui');
+    egal(false, appel('/api/prof.php', ['action' => 'moi'], ['jeton' => $l5e['jetonCollegue']])['json']['direct'] ?? 'absent', 'le collègue : non');
+});
+
+verifier("lot 5e — le serveur refuse chaque action direct.* au collègue, sur la classe partagée, la sienne, et une classe qui n'existe pas", function () use (&$l5e) {
+    $actions = ['direct.etat', 'direct.ouvrir', 'direct.question', 'direct.devoiler', 'direct.bonne', 'direct.fichier', 'direct.terminer'];
+    $avantJournal = (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE resultat = 'refus' AND cible_type = 'compte' AND prof_id = " . (int)$l5e['collegue'])->fetchColumn();
+    foreach ([['partagée', $l5e['partagee']], ['la sienne', $l5e['sienne']], ['inexistante', 987654]] as [$quelle, $classeId]) {
+        foreach ($actions as $action) {
+            $r = appel('/api/prof.php', ['action' => $action, 'classe_id' => $classeId, 'type' => 'choix'], ['jeton' => $l5e['jetonCollegue']]);
+            egal(403, $r['code'], "« $action » sur la classe $quelle : refusé");
+            egal('direct_reserve', $r['json']['raison'] ?? null, "« $action » ($quelle) : la raison, pour que le tableau la dise");
+            egal("La séance en direct n’est pas encore ouverte aux collègues.", $r['json']['erreur'] ?? null, "« $action » ($quelle) : la phrase");
+        }
+    }
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM directs WHERE classe_id IN (' . (int)$l5e['partagee'] . ', ' . (int)$l5e['sienne'] . ')')->fetchColumn(),
+        'aucune séance ouverte');
+    // Journalisé comme les refus d'administration : les gestes (ouvrir,
+    // fichier, terminer) ; l'interrogation en boucle (direct.etat), jamais.
+    $apres = (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE resultat = 'refus' AND cible_type = 'compte' AND prof_id = " . (int)$l5e['collegue'])->fetchColumn();
+    egal(9, $apres - $avantJournal, 'trois gestes journalisés × trois classes');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'direct.etat'")->fetchColumn(), 'direct.etat n’écrit rien au journal');
+});
+
+verifier("lot 5e — l'administrateur mène sa séance ; le collègue en écriture ne voit pas la pastille « ● En direct »", function () use (&$l5e) {
+    $modeDans = function (array $liste, int $id) {
+        foreach ($liste as $classe) if ((int)$classe['id'] === $id) return array_key_exists('direct', $classe) ? $classe['direct'] : 'absent';
+        return 'classe absente';
+    };
+    egal(200, appel('/api/prof.php', ['action' => 'direct.ouvrir', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code'], 'l’administrateur ouvre');
+    egal(200, appel('/api/prof.php', ['action' => 'direct.question', 'classe_id' => $l5e['partagee'], 'type' => 'choix'], ['jeton' => $l5e['admin']])['code'], 'il pose une question');
+    egal(200, appel('/api/prof.php', ['action' => 'direct.etat', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code'], 'le tableau interroge');
+    egal('eclair', $modeDans(appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $l5e['admin']])['json']['classes'], (int)$l5e['partagee']), 'lui voit « ● En direct »');
+    egal(null, $modeDans(appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $l5e['jetonCollegue']])['json']['classes'], (int)$l5e['partagee']), 'le collègue, non (menu « 405 ▾ »)');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $l5e['partagee'], 'appli' => 'defi-tables'], ['jeton' => $l5e['jetonCollegue']])['json'];
+    vrai(array_key_exists('direct', $tableau['classe']) && $tableau['classe']['direct'] === null, 'ni « Reprendre » dans la classe');
+    egal(403, appel('/api/prof.php', ['action' => 'direct.terminer', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['jetonCollegue']])['code'], 'il ne peut pas la terminer');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM directs WHERE classe_id = ' . (int)$l5e['partagee'])->fetchColumn(), 'la séance de Gwenaël est intacte');
+    egal(200, appel('/api/prof.php', ['action' => 'direct.terminer', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code'], 'l’administrateur la termine');
+});
+
+verifier("lot 5e — les évaluations restent ouvertes au collègue, sur la classe partagée comme sur la sienne, et leur pastille se voit", function () use (&$l5e) {
+    $modele = appel('/api/prof.php', ['action' => 'evaluation.enregistrer_modele', 'id' => null, 'nom' => 'lot 5e',
+        'reglage' => ['tables' => [7], 'types' => ['direct'], 'n' => 10, 'chrono' => 'sans', 'tirage' => 'memes']], ['jeton' => $l5e['jetonCollegue']]);
+    egal(200, $modele['code'], 'il enregistre un modèle');
+    // Une séance de Gwenaël en cours sur la classe partagée : l'évaluation
+    // attend, et on ne demande pas au collègue de terminer ce qu'il ne peut pas.
+    egal(200, appel('/api/prof.php', ['action' => 'direct.ouvrir', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code']);
+    $r = appel('/api/prof.php', ['action' => 'evaluation.ouvrir', 'classe_id' => $l5e['partagee'], 'modele_id' => $modele['json']['id'], 'duree' => 1800],
+        ['jeton' => $l5e['jetonCollegue']]);
+    egal(409, $r['code'], 'pas d’évaluation pendant la séance de Gwenaël');
+    egal("Une séance en direct est en cours pour cette classe : l'évaluation pourra s'ouvrir quand elle sera terminée.", $r['json']['erreur'] ?? null,
+        'la phrase ne lui demande pas de la terminer');
+    egal(200, appel('/api/prof.php', ['action' => 'direct.terminer', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code']);
+    foreach ([['partagée', $l5e['partagee']], ['la sienne', $l5e['sienne']]] as [$quelle, $classeId]) {
+        $corps = ['classe_id' => $classeId];
+        egal(200, appel('/api/prof.php', ['action' => 'evaluation.ouvrir', 'modele_id' => $modele['json']['id'], 'duree' => 1800] + $corps,
+            ['jeton' => $l5e['jetonCollegue']])['code'], "il ouvre une évaluation ($quelle)");
+        $liste = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $l5e['jetonCollegue']])['json']['classes'];
+        $mode = 'classe absente';
+        foreach ($liste as $classe) if ((int)$classe['id'] === $classeId) $mode = $classe['direct'] ?? null;
+        egal('evaluation', $mode, "la pastille « 📝 Évaluation » ($quelle)");
+        egal(200, appel('/api/prof.php', ['action' => 'evaluation.etat'] + $corps, ['jeton' => $l5e['jetonCollegue']])['code'], "il la suit ($quelle)");
+        egal(200, appel('/api/prof.php', ['action' => 'evaluation.fermer'] + $corps, ['jeton' => $l5e['jetonCollegue']])['code'], "il la ferme ($quelle)");
+        egal(200, appel('/api/prof.php', ['action' => 'evaluation.fichier'] + $corps, ['jeton' => $l5e['jetonCollegue']])['code'], "il prend le fichier ($quelle)");
+        egal(200, appel('/api/prof.php', ['action' => 'evaluation.terminer'] + $corps, ['jeton' => $l5e['jetonCollegue']])['code'], "il la termine ($quelle)");
+    }
+});
+
+verifier("lot 5e — les pages : « Séance en direct » suit « moi », le tableau dit la phrase", function () {
+    $prof = page('/prof/');
+    vrai(str_contains($prof['texte'], 'directPermis = donnees.direct === true;'), 'Ma classe lit « direct » dans « moi »');
+    vrai(str_contains($prof['texte'], '$("seance-direct").hidden = !ecriture || !directPermis;'), 'et cache le bouton');
+    $tableau = page('/prof/direct.php');
+    vrai(str_contains($tableau['texte'], 'erreur.raison === "direct_reserve"'), 'le tableau reconnaît le refus');
+    vrai(str_contains($tableau['texte'], 'scene.append(titre("Séance en direct"), ligne("sous", reserve));'), 'et le dit dans la page');
+});
+
+verifier("lot 5e — rangement : le collègue et ses classes partent", function () use (&$l5e) {
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $l5e['partagee']], ['jeton' => $l5e['admin']])['code']);
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $l5e['sienne']], ['jeton' => $l5e['jetonCollegue']])['code']);
+    egal(200, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $l5e['collegue']], ['jeton' => $l5e['admin']])['code']);
+    vider_compteurs();
 });
 
 // ---------------------------------------------------------------------- résultat

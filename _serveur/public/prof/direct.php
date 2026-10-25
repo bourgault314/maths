@@ -435,6 +435,10 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
   let dernierAppel = 0;     // numéro du dernier appel dont la réponse a été retenue
   let compteurAppels = 0;
   let pannes = 0;
+  // Lot 5e : le serveur a répondu que la séance en direct n'est pas ouverte à
+  // ce compte (réservée à l'administrateur pour l'instant). On le dit, on
+  // n'interroge plus, et « Ma classe » ramène dans la classe.
+  let reserve = "";
 
   async function api(action, corps = {}) {
     // Le jeton voyage dans le corps ET dans l'en-tête, comme dans « Ma classe ».
@@ -448,6 +452,7 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
     if (!reponse.ok || !donnees || !donnees.ok) {
       const erreur = new Error((donnees && donnees.erreur) || "Le serveur ne répond pas.");
       erreur.statut = reponse.status;
+      erreur.raison = (donnees && donnees.raison) || "";
       throw erreur;
     }
     return donnees;
@@ -459,6 +464,13 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
   }
 
   function surErreur(erreur) {
+    if (erreur.raison === "direct_reserve") {
+      reserve = erreur.message;
+      window.clearTimeout(minuteur);
+      messager("");
+      dessiner();
+      return;
+    }
     // Session terminée, ou classe hors de portée : « Ma classe » saura dire quoi.
     if (erreur.statut === 401 || erreur.statut === 403 || erreur.statut === 404) { versMaClasse(); return; }
     messager(erreur.message);
@@ -968,7 +980,7 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
         qzEmpreinte, liens[String(direct.numero)]]);
     }
     const vue = direct ? Object.assign({}, direct, {reste: null, expire_dans: null}) : null;
-    return JSON.stringify([connu, vue, qzEmpreinte, Boolean(qzAttendu), qzErreurs, prochaine]);
+    return JSON.stringify([connu, vue, qzEmpreinte, Boolean(qzAttendu), qzErreurs, prochaine, reserve]);
   }
 
   let derniereCle = "";
@@ -989,6 +1001,10 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
     $("terminer").hidden = !direct;
     $("qz-titre").hidden = !(qz && direct);
     $("qz-titre").textContent = qz ? "· " + qz.titre : "";
+    if (reserve) {
+      scene.append(titre("Séance en direct"), ligne("sous", reserve));
+      return;
+    }
     if (!connu) return;
 
     if (!direct) {
@@ -1377,7 +1393,7 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
   // ------------------------------------------------------------ interrogation
 
   async function interroger() {
-    if (enAction) return;
+    if (enAction || reserve) return;
     const numeroAppel = ++compteurAppels;
     try {
       retenir(numeroAppel, await api("direct.etat"));
@@ -1399,6 +1415,7 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
   const RYTHME_CACHE = 60000;
   function planifier() {
     window.clearTimeout(minuteur);
+    if (reserve) return;
     const attente = document.visibilityState === "hidden" ? RYTHME_CACHE
       : (pannes >= 2 ? Math.min(rythme * 3, 10000) : rythme);
     minuteur = window.setTimeout(async () => { await interroger(); planifier(); }, attente);

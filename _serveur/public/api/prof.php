@@ -209,6 +209,35 @@ function garder_actions_admin(PDO $pdo, array $prof, string $action): void
     exiger_admin($prof);
 }
 
+// Serveur pro, lot 5e (25/10/2026, décision de Gwenaël) : la séance en direct
+// est réservée au compte administrateur tant que lib/direct.php le dit
+// (DIRECT_RESERVE_A_L_ADMINISTRATEUR). C'est ICI que ça se décide, pas dans la
+// page : prof/direct.php s'ouvre par son adresse, et un appel peut se faire à
+// la main. Toutes les actions direct.* passent par ici AVANT leur cas, avant
+// même de lire la classe — un collègue n'apprend rien sur aucune classe. Le
+// droit sur la classe (DROIT_PAR_ACTION, écriture) s'ajoute ensuite, sans
+// changement. Les évaluations (evaluation.*) ne sont pas concernées.
+// « raison » laisse le tableau dire la phrase au lieu de repartir sans un mot.
+const MESSAGE_DIRECT_RESERVE = "La séance en direct n’est pas encore ouverte aux collègues.";
+function garder_direct_reserve(PDO $pdo, array $prof, string $action): void
+{
+    if (!str_starts_with($action, 'direct.')) return;
+    if (direct_ouvert_au_compte($prof['admin'])) return;
+    // Journalisé comme garder_actions_admin (direct.etat, l'interrogation en
+    // boucle, n'est jamais journalisée : lib/journal.php l'ignore).
+    journaliser($pdo, $prof['id'], $action, 'compte', 0, 'refus');
+    repondre(['ok' => false, 'erreur' => MESSAGE_DIRECT_RESERVE, 'raison' => 'direct_reserve'], 403);
+}
+
+// Le mode de la séance ouverte d'une classe, tel que CE compte doit le voir :
+// une question éclair qu'il ne peut pas mener ne s'affiche pas (« ● En
+// direct », « Reprendre » le mèneraient à un refus) ; une évaluation, si.
+function mode_direct_visible(?string $mode, array $prof): ?string
+{
+    if ($mode === 'eclair' && !direct_ouvert_au_compte($prof['admin'])) return null;
+    return $mode;
+}
+
 // Un autre compte que le sien, pour les actions d'administration : on ne se
 // réinitialise pas, on ne se désactive pas soi-même (l'administrateur unique
 // se retrouverait dehors, sans personne pour le faire rentrer).
@@ -415,6 +444,7 @@ try {
     // compte administrateur, les actions de classe au droit que la table exige
     // (droit_requis(), appelé dans chaque cas au moment où la classe est lue).
     garder_actions_admin($pdo, $prof, $action);
+    garder_direct_reserve($pdo, $prof, $action);
 
     switch ($action) {
         case 'deconnexion':
@@ -424,7 +454,9 @@ try {
 
         case 'moi':
             repondre(['ok' => true, 'identifiant' => $prof['identifiant'], 'admin' => $prof['admin'],
-                'mdp_temporaire' => $prof['mdp_temporaire']]);
+                'mdp_temporaire' => $prof['mdp_temporaire'],
+                // Lot 5e : la page cache « Séance en direct » quand c'est faux.
+                'direct' => direct_ouvert_au_compte($prof['admin'])]);
 
         // ------------------------------------------------------------ comptes profs
 
@@ -586,7 +618,7 @@ try {
                     'eleves' => (int)$ligne['eleves'],
                     'droit' => $droit,
                     'proprietaire' => $mien ? null : (string)$ligne['proprietaire'],
-                    'direct' => $droit === 'lecture' ? null : ($modesDirects[(int)$ligne['id']] ?? null),
+                    'direct' => $droit === 'lecture' ? null : mode_direct_visible($modesDirects[(int)$ligne['id']] ?? null, $prof),
                 ];
             }
             repondre([
@@ -1071,7 +1103,7 @@ try {
                     // 17/10/2026 : « ● Reprendre la séance en direct » quand
                     // une séance de la classe est restée ouverte.
                     'direct' => $avecCodes && table_existe($pdo, 'directs')
-                        ? (modes_des_directs_ouverts($pdo, [(int)$classe['id']])[(int)$classe['id']] ?? null) : null,
+                        ? mode_direct_visible(modes_des_directs_ouverts($pdo, [(int)$classe['id']])[(int)$classe['id']] ?? null, $prof) : null,
                 ],
                 'eleves' => $lignes,
             ]);
@@ -1294,7 +1326,10 @@ try {
             if (!in_array($duree, DUREES_OUVERTURE_EVALUATION, true)) erreur("Durée d'ouverture inconnue.", 400);
             $evaluation = ouvrir_evaluation($pdo, (int)$classe['id'], $profId, $modele, $duree);
             if ($evaluation === 'eclair') {
-                erreur("Une question éclair est en cours pour cette classe : termine la séance en direct d'abord.", 409);
+                // Lot 5e : un collègue ne peut pas la terminer, on ne le lui demande pas.
+                erreur(direct_ouvert_au_compte($prof['admin'])
+                    ? "Une question éclair est en cours pour cette classe : termine la séance en direct d'abord."
+                    : "Une séance en direct est en cours pour cette classe : l'évaluation pourra s'ouvrir quand elle sera terminée.", 409);
             }
             // Une ligne au journal pour l'appel qui a ÉCRIT la séance, et lui seul.
             if ($evaluation['creee']) journaliser($pdo, $profId, 'evaluation.ouvrir', 'classe', (int)$classe['id']);
