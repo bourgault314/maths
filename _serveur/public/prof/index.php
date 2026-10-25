@@ -490,6 +490,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .rec-liste .rg { text-align: center; font-weight: 800; color: #3f5a6c; }
   .rec-liste li:nth-child(-n+3) .rg { font-size: 1.2rem; }
   .rec-liste .nom { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Lot « qui est Mystère » (25/10/2026) : dans la carte seulement, le vrai
+     prénom et la classe derrière « Mystère », en gris, toujours sur la ligne
+     du dessous (jamais coupés par les points de suite, jamais sur le temps). */
+  .rec-liste .nom.avec-qui { white-space: normal; overflow: visible; }
+  .rec-qui { display: block; color: var(--muted); font-weight: 600; font-size: .86em; line-height: 1.25; overflow-wrap: anywhere; }
   .rec-liste .tps { font-variant-numeric: tabular-nums; font-weight: 800; white-space: nowrap; }
   /* Lot « après l'audit GPT » (D4, 14/10/2026) : « Retirer ce temps » au bout
      de chaque ligne de la carte (pas du plein écran, qu'on projette). */
@@ -886,12 +891,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     peut la modifier.</p>
 
     <!-- Lot « Les records » (09/10/2026, planche R5) : la ligue du professeur
-         — toutes ses classes, exactement ce que voient les élèves (un
-         « Mystère » reste un Mystère). Propriétaire seulement, Défi tables
-         seulement, et seulement quand une Légende a un temps. -->
+         — toutes ses classes. Depuis le lot « qui est Mystère » (25/10/2026),
+         la carte montre au professeur qui est derrière un « Mystère »
+         (« Mystère (Léa · 405) ») ; le plein écran, qu'on projette, montre
+         exactement ce que voient les élèves. Propriétaire seulement, Défi
+         tables seulement, et seulement quand une Légende a un temps. -->
     <div class="carte rec-carte" id="bloc-records" hidden>
       <div class="rec-tete">
-        <div><strong>🏆 Les records</strong><p>Toutes tes classes · ce que voient les élèves</p></div>
+        <div><strong>🏆 Les records</strong><p>Toutes tes classes · le plein écran montre ce que voient les élèves</p></div>
         <button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran</button>
       </div>
       <div class="rec-deux">
@@ -4775,6 +4782,18 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const nom = document.createElement("span");
     nom.className = "nom";
     nom.textContent = ligne.nom;
+    // Lot « qui est Mystère » (25/10/2026, demande de Gwenaël) : dans la carte
+    // (retirable), le professeur voit qui est derrière « Mystère » —
+    // « Mystère (Léa · 405) ». Le serveur rend déjà « eleve » au seul
+    // professeur (records.ligue, D4) ; le plein écran, qu'on projette, et
+    // l'appli des élèves gardent « Mystère » seul.
+    if (retirable && ligne.eleve && ligne.nom === "Mystère") {
+      const qui = document.createElement("span");
+      qui.className = "rec-qui";
+      qui.textContent = ligne.eleve.prenom === "Élève" ? `(${ligne.eleve.classe})` : `(${ligne.eleve.prenom} · ${ligne.eleve.classe})`;
+      nom.classList.add("avec-qui");
+      nom.append(" ", qui);
+    }
     const temps = document.createElement("span");
     temps.className = "tps";
     temps.textContent = formatTempsRecord(ligne.temps);

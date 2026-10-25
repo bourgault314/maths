@@ -477,7 +477,7 @@ test("les bornes du serveur sont celles du moteur (SEUILS.course)", () => {
 });
 
 test("la page prof : le temps à côté de la couronne, la carte des records avec « Plein écran », la case par classe (planche R5)", () => {
-  assert.match(pageProf, /<div class="carte rec-carte" id="bloc-records" hidden>[\s\S]*<strong>🏆 Les records<\/strong><p>Toutes tes classes · ce que voient les élèves<\/p>[\s\S]*<button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran<\/button>/);
+  assert.match(pageProf, /<div class="carte rec-carte" id="bloc-records" hidden>[\s\S]*<strong>🏆 Les records<\/strong><p>Toutes tes classes · le plein écran montre ce que voient les élèves<\/p>[\s\S]*<button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran<\/button>/);
   assert.match(pageProf, /<ol class="rec-liste" id="records-semaine"><\/ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant\.<\/p>/);
   assert.match(pageProf, /<ol class="rec-liste" id="records-toujours"><\/ol>/);
   assert.match(pageProf, /<label><input type="checkbox" id="case-records"> 🏆 Les records<\/label>\s*<small>Le concours de temps des Légendes des tables\. Décoché : cette classe ne le voit pas et n’y apparaît pas\.<\/small>/);
