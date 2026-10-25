@@ -1126,12 +1126,17 @@ svg{display:block;max-width:100%;height:auto}
 /* Lot T2 — ordinateur (fenêtre d'au moins 1100 × 501 px) : l'aide se pose à droite de la question, entre l'en-tête et le pied ; la question se range à gauche (réduite si besoin, voir fitSlideForAide) et le pied reste visible. */
 @media(min-width:1100px) and (min-height:501px){
 .diapo.interactive-mode{--aide-w:clamp(340px,30vw,440px)}
-.diapo.interactive-mode.aide-ouverte .stage{padding-right:calc(var(--aide-w) + 18px)}
-.diapo.interactive-mode .aide-panel{top:var(--entete-h,64px);bottom:var(--pied-h,164px);left:auto;right:0;width:var(--aide-w);min-height:0;max-height:none;padding:14px 16px 12px;border-top:0;border-left:2px solid #6f97c6;border-radius:20px 0 0 20px;box-shadow:-12px 0 30px rgba(11,33,71,.12)}
+.diapo.interactive-mode.aide-ouverte:not(.aide-outil) .stage{padding-right:calc(var(--aide-w) + 18px)}
+.diapo.interactive-mode:not(.aide-outil) .aide-panel{top:var(--entete-h,64px);bottom:var(--pied-h,164px);left:auto;right:0;width:var(--aide-w);min-height:0;max-height:none;padding:14px 16px 12px;border-top:0;border-left:2px solid #6f97c6;border-radius:20px 0 0 20px;box-shadow:-12px 0 30px rgba(11,33,71,.12)}
 .diapo.interactive-mode .aide-scroll{display:block;width:100%}
 .diapo.interactive-mode .aide-dessin{width:auto;margin-top:10px}
 .diapo.interactive-mode .aide-dessin svg{max-height:min(30vh,300px)!important;max-height:min(30dvh,300px)!important}
 .diapo.interactive-mode .aide-back{width:100%;height:48px}
+.diapo.interactive-mode.aide-outil .aide-panel{max-height:calc(100vh - var(--entete-h,64px) - 70px);max-height:calc(100dvh - var(--entete-h,64px) - 70px)}
+.diapo.interactive-mode.aide-outil .aide-dessin{padding-bottom:18px}
+.diapo.interactive-mode.aide-outil .aide-scroll{display:block;width:min(100%,1240px)}
+.diapo.interactive-mode.aide-outil .aide-dessin{width:100%}
+.diapo.interactive-mode.aide-outil .aide-dessin .place-value-tool{width:min(98%,1180px)}
 }
 /* 17/10 : au diaporama « Avec aide », le dessin d'aide sous la question. */
 .diapo-aide{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 28px;width:min(100%,1100px);margin:clamp(10px,2vh,22px) auto 0}
@@ -1253,7 +1258,8 @@ const tniMedia=window.matchMedia('(any-pointer: coarse) and (min-width: 1100px)'
 // Lot T2 : assez large pour poser l'aide à droite de la question (même
 // condition que le CSS du panneau).
 const aideCoteMedia=window.matchMedia('(min-width: 1100px) and (min-height: 501px)');
-function aideACote(){return interactiveMode&&aideCoteMedia.matches;}
+const AIDE_OUTILS_EN_BAS='.place-value-tool,.conversion-tool';
+function aideACote(){const diapo=document.getElementById('diapo');return interactiveMode&&aideCoteMedia.matches&&!(diapo&&diapo.classList.contains('aide-outil'));}
 let keypadVisible=coarsePointerMedia.matches||tniMedia.matches;
 let lockedAt=0;
 const LECTURE_MIN_MS=700;
@@ -2037,7 +2043,10 @@ function updateStageOverflow(){
    getBoundingClientRect (droite graduée, curseur des conversions, axes du
    produit de fractions) ne sont réduits nulle part : Safari et les anciens
    Chrome ne corrigent pas ces mesures du zoom CSS, le point tomberait à côté. */
-const ZOOM_OUTILS_POINTEUR='.conversion-tool,.fraction-product-manipulator';
+// Glisse-nombre (.place-value-tool) : la bande suit le pointeur en px d'écran ;
+// dans une question agrandie (diaporama, jusqu'à × 1,6), elle courait 1,6 fois
+// plus vite que le doigt ou le stylet. Jamais agrandi, comme avant le 17/10.
+const ZOOM_OUTILS_POINTEUR='.conversion-tool,.fraction-product-manipulator,.place-value-tool';
 function zoomBounds(current){
  const spec=current&&current.interactiveSpec;
  if(spec&&spec.kind==='numberline-point') return {min:1,max:1};
@@ -3428,6 +3437,10 @@ function renderAide(){
  // quand on ferme puis rouvre l'aide ; ses gestes sont branchés ici.
  if(drawing&&drawing.__aideDe!==current){
    drawing.innerHTML=current.aideHtml||'';drawing.__aideDe=current;
+   // Outil à manipuler dans l'aide (glisse-nombre, tableau de conversion) :
+   // à l'ordinateur, l'aide s'ouvre en bas, sur toute la largeur, comme au
+   // téléphone, au lieu du panneau étroit de droite où l'outil était coupé.
+   if(diapo) diapo.classList.toggle('aide-outil',!!drawing.querySelector(AIDE_OUTILS_EN_BAS));
    if(current.aideHtml){
      if(typeof setupPlaceValueTools==='function') setupPlaceValueTools(drawing);
      if(typeof setupConversionTools==='function') setupConversionTools();
