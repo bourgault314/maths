@@ -172,12 +172,18 @@ test("la page annonce la fin d'année : ce qu'elle propose de supprimer, ou le p
   assert.ok(annonce.includes("1er août"), "la date est dite en toutes lettres");
   assert.ok(annonce.includes("il n’en reste rien") || annonce.includes("il n’en restera rien"),
     "et le fait qu'il ne reste rien");
-  assert.ok(annonce.includes("sauvegarde"), "avec le rappel de la sauvegarde, seul recours");
+  // Lot « textes justes » (24/10/2026) : « Fais ta sauvegarde avant » était
+  // faux — le professeur n'a aucun bouton de sauvegarde (elle est réservée à
+  // l'exploitation). Ce qu'il peut faire, c'est imprimer.
+  assert.ok(!annonce.includes("sauvegarde"), "plus de sauvegarde que le professeur n'a pas");
+  assert.ok(annonce.includes("Imprime avant ce que tu veux garder"), "ce qu'il peut faire, lui : imprimer");
   // Le préavis ne s'affiche pas s'il n'y a aucune classe en cours à prévenir.
   assert.match(annonce, /donnees\.preavis_fin_annee && combienEnCours/);
-  // Le bandeau nomme les classes, dit ce qui disparaît, et rappelle la sauvegarde.
+  // Le bandeau nomme les classes, dit ce qui disparaît, et que le ménage de
+  // l'été n'attend pas « Me le rappeler plus tard » (menage.php).
   const texte = recolle(fonction("texteDesEchues"));
-  for (const mot of ["libelle", "Prénoms", "codes", "progressions", "sauvegarde"]) {
+  assert.ok(!texte.includes("sauvegarde"), "pas de sauvegarde que le professeur n'a pas");
+  for (const mot of ["libelle", "Prénoms", "codes", "progressions", "le ménage automatique de l’été peut"]) {
     assert.ok(texte.includes(mot), `le bandeau doit parler de « ${mot} »`);
   }
 });

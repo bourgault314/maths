@@ -287,7 +287,7 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
     </a>
     <a class="appli direct-lien" id="evaluation-lien" href="#" hidden>
       <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="11" y="8" width="21" height="29" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M16 16h11M16 22h11M16 28h6" stroke="#063f86" stroke-width="2.2" stroke-linecap="round"/><path d="M27.5 35.5l1.2-5.2 9.4-9.4 4 4-9.4 9.4z" fill="#f58220" stroke="#9a4b00" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      <div class="texte"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Clique pour commencer.</span></div>
+      <div class="texte"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Commencer l’évaluation.</span></div>
       <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
     <ul id="applis"></ul>
@@ -961,7 +961,7 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
   function poserTuileEvaluation(etat) {
     const ouverte = Boolean(appliEvaluation && etat && etat.etat === "ouverte" && !etat.fini && !etat.close);
     $("evaluation-lien").hidden = !ouverte;
-    if (ouverte) $("evaluation-lien-texte").textContent = etat.commence ? "Clique pour continuer." : "Clique pour commencer.";
+    if (ouverte) $("evaluation-lien-texte").textContent = etat.commence ? "Continuer l’évaluation." : "Commencer l’évaluation.";
   }
 
   async function demanderDirect(code) {

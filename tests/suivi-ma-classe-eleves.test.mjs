@@ -332,7 +332,8 @@ test("les textes suivent : la légende du partage, le bandeau du collègue, la n
   assert.match(page, /<li><b>Voir et modifier<\/b> : aussi l’onglet Élèves, avec les codes — avec un code, on entre dans l’appli comme l’élève et on peut changer sa progression\./);
   assert.match(fonction("appliquerDroits"), /partagée avec toi \(voir et modifier\) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente\. Supprimer un élève ou la classe reste à \$\{qui\}\./);
   assert.match(fonction("appliquerDroits"), /\(voir seulement\) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien\./, "inchangé");
-  assert.match(page, /Reviens à la page et choisis un bouton de l’onglet Élèves : <strong>« Imprimer les bandelettes »<\/strong>/);
+  assert.match(page, /Reviens à la page et choisis un bouton\. Onglet Élèves : <strong>« Imprimer les bandelettes »<\/strong>/);
+  assert.match(page, /Onglet Anzan : <strong>« Parcours »<\/strong> d’un élève, puis\s*<strong>« Imprimer »<\/strong> dans sa fenêtre\./, "la feuille Anzan aussi (lot « textes justes »)");
   assert.match(script, /Nouveau code : \$\{donnees\.code\}\. Imprime sa bandelette \(menu ⋯\)/);
 });
 

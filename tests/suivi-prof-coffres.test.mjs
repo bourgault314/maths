@@ -200,7 +200,7 @@ test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » s
   assert.deepEqual(niveauLu(cellules(zoe)[C_N2]), {b: "1 trésor", small: "dont 1 parfait", texte: "1 trésordont 1 parfait"});
   // Les libellés des cellules au téléphone, et le résumé.
   assert.deepEqual(cellules(lea).map(td => td.dataset.libelle), ["", "Niveau 1", "Niveau 2", "Niveau 3", "Dernier trésor", ""]);
-  assert.equal(zones.get("resume-classe").textContent, "5 élèves · 1 n’a encore rien fait");
+  assert.equal(zones.get("resume-classe").textContent, "5 élèves · rien reçu pour 1");
   assert.equal(zones.get("objectif").hidden, true, "pas de carte de classe pour Coffres");
   assert.equal(zones.get("fragiles").hidden, true);
   // Chaque ligne a « Détail » ; aucun code nulle part.
