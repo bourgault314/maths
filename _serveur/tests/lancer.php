@@ -594,9 +594,10 @@ verifier("le manifeste connaît la page Infos", function () {
     // 61 depuis Coffres magiques sur le suivi (21/10/2026) : la copie du moteur
     // de parcours, prof/coffres-parcours.js. 62 depuis Anzan (lot « Qui voit
     // quoi », lot 4a, 23/10/2026) : prof/flash_anzan_parcours.js.
-    vrai((bool)preg_match('/^fichiers 62$/m', $manifeste),
-        'le serveur compte 62 fichiers depuis Anzan sur le suivi');
-    foreach (['direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
+    // 63 depuis la charte commune (serveur pro, lot 5a, 25/10/2026) : suivi.css.
+    vrai((bool)preg_match('/^fichiers 63$/m', $manifeste),
+        'le serveur compte 63 fichiers depuis la charte suivi.css');
+    foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
               'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
               'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {

@@ -269,7 +269,8 @@ test("une classe s'ouvre sur son tableau, jamais sur ses codes — sauf une clas
   assert.doesNotMatch(script, /sessionStorage\.setItem\([^)]*vue/i, "la vue ne se retient pas d'une ouverture à l'autre");
   // « Toutes mes classes » puis la MÊME classe : ouvrirClasse la croit « même
   // classe » (elle garde son onglet d'activité) — le retour remet donc la vue.
-  assert.match(script, /\$\("retour"\)\.addEventListener\("click", \(\) => \{ vue = "appli"; chargerClasses\(\); \}\);/,
+  // Serveur pro, lot 5a : « Toutes mes classes » est au bout du menu « 405 ▾ », qu'il ferme.
+  assert.match(script, /\$\("retour"\)\.addEventListener\("click", \(\) => \{ fermerMenuClasses\(\); vue = "appli"; chargerClasses\(\); \}\);/,
     "quittée sur Élèves, la classe se rouvre sur son tableau");
   assert.match(fonction("oublierEtat"), /vue = "appli";/);
 });
@@ -289,7 +290,7 @@ test("les messages : ceux des élèves sous les boutons d'Élèves, ceux de l'ac
   }
   assert.match(script, /const ZONES_MESSAGE = \[[^\]]*"message-appli"/, "vidé à la déconnexion");
   assert.match(script, /const ZONES_TEXTE = \[[^\]]*"corps-eleves"/, "la liste des codes est vidée à la déconnexion");
-  assert.match(script, /const BLOCS_A_CACHER = \[[^\]]*"vue-eleves", "onglet-eleves"\]/);
+  assert.match(script, /const BLOCS_A_CACHER = \[[^\]]*"vue-eleves", "onglet-eleves", "menu-classes"\]/);
 });
 
 // ------------------------------------------------------------ le HTML
@@ -325,7 +326,8 @@ test("le HTML : les quatre boutons, le message et la liste sont dans la vue Él�
   assert.match(page, /<button type="button" class="onglet-eleves" id="onglet-eleves" aria-pressed="false" aria-label="Élèves" title="[^"]+" hidden><svg [^>]+>[\s\S]*?<\/svg><span class="mot">Élèves<\/span><\/button>/);
   assert.match(page, /<span class="mot">Réglages<\/span><\/button>/);
   assert.ok(page.indexOf('id="onglet-eleves"') < page.indexOf('id="onglet-reglages"'), "Élèves avant Réglages");
-  assert.match(page, /@media \(max-width: 520px\) \{[^}]*\{[^}]*\}\s*\.onglet-eleves \.mot, \.onglet-reglages \.mot \{ display: none; \}/);
+  // Serveur pro, lot 5a : le dessin seul jusqu'à 600 px (la largeur « téléphone » de la charte).
+  assert.match(page, /@media \(max-width: 600px\) \{[^}]*\{[^}]*\}[^}]*\{[^}]*\}\s*\.onglets-classe \.mot \{ display: none; \}/);
 });
 
 test("les textes suivent : la légende du partage, le bandeau du collègue, la note du Ctrl+P", () => {
@@ -432,13 +434,15 @@ test("« Les calculs qui coincent » : un calcul n'y est qu'à partir de 3 élè
 
 // ------------------------------------------------------------ « + Nouvelle classe »
 
-test("Mes classes : plus de formulaire toujours affiché, une carte « + Nouvelle classe » au bout de la liste", () => {
+test("Mes classes : plus de formulaire toujours affiché, « + Nouvelle classe » en simple bouton sous les tuiles", () => {
   assert.doesNotMatch(page, /<h2>Nouvelle classe<\/h2>|id="form-classe"|id="creer-classe"|id="libelle"/);
-  const charger = fonction("chargerClasses");
-  assert.match(charger, /nouvelle\.className = "nouvelle-classe";[\s\S]*nouvelle\.addEventListener\("click", creerClasse\);\s*li\.appendChild\(nouvelle\);\s*liste\.appendChild\(li\);\s*annoncerFinAnnee/,
-    "la dernière carte de la liste, après les classes");
+  // Serveur pro, lot 5a (choix de Gwenaël, planche 7 du 25/10/2026) : un
+  // bouton secondaire juste sous la liste, plus une carte en pointillés.
+  const apresListe = page.slice(page.indexOf('<ul class="tuiles" id="liste-classes"></ul>'));
+  assert.match(apresListe, /^<ul class="tuiles" id="liste-classes"><\/ul>\s*<div class="actions">\s*<button type="button" class="secondaire" id="nouvelle-classe"><svg [^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>Nouvelle classe<\/button>/);
+  assert.match(script, /\$\("nouvelle-classe"\)\.addEventListener\("click", creerClasse\);/);
+  assert.doesNotMatch(fonction("chargerClasses"), /nouvelle-classe|creerClasse/, "la liste ne fabrique plus de carte « Nouvelle classe »");
   assert.ok(page.indexOf('id="bloc-profs"') > page.indexOf('id="liste-classes"'), "la partie Professeurs ne bouge pas");
-  assert.match(page, /\.classes button\.nouvelle-classe \{[^}]*border: 2px dashed/);
 });
 
 test("« + Nouvelle classe » : la petite fenêtre, un nom, une seule création, puis la classe s'ouvre", async () => {

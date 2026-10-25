@@ -241,7 +241,6 @@ test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de 
     ".apercu {",
     "dialog {",
     "dialog::backdrop {",
-    "footer {",
     ".fragiles {",
     ".barre-outils {"
   ].forEach(regle => assert.ok(ecran.includes(regle), `règle perdue : ${regle}`));

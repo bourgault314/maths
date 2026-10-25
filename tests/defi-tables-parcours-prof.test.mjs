@@ -298,7 +298,7 @@ test("l'adresse reste #b=…&vue=fiche : la page prof et le site se mettent à j
 // ------------------------------------------------- Ma classe
 
 test("Ma classe : « Parcours » à la place de « Fiche », même bouton, même place, même classe — pour le propriétaire et pour un collègue « voir seulement »", () => {
-  assert.match(maClasse, /const fiche = document\.createElement\("button"\);\s*\n\s*fiche\.type = "button";\s*\n\s*fiche\.className = "secondaire petit";\s*\n\s*fiche\.textContent = "Parcours";\s*\n\s*fiche\.title = "Voir son parcours";\s*\n\s*fiche\.addEventListener\("click", \(\) => voirFiche\(eleve, fiche\)\);\s*\n\s*cActions\.append\(fiche\);/);
+  assert.match(maClasse, /const fiche = document\.createElement\("button"\);\s*\n\s*fiche\.type = "button";\s*\n\s*fiche\.className = "secondaire";\s*\n\s*fiche\.textContent = "Parcours";\s*\n\s*fiche\.title = "Voir son parcours";\s*\n\s*fiche\.addEventListener\("click", \(\) => voirFiche\(eleve, fiche\)\);\s*\n\s*cActions\.append\(fiche\);/);
   assert.doesNotMatch(maClasse, /textContent = "Fiche"|"Voir sa fiche"/);
   // Le bouton est posé AVANT poserGestes(eleve, ecriture, …) : il ne dépend pas
   // du droit d'écriture — un collègue en lecture seule l'a aussi.

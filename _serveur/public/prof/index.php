@@ -29,6 +29,12 @@ $versionAnzan = is_file($moteurAnzan) ? substr(md5_file($moteurAnzan), 0, 10) : 
 // test), pour refaire le tirage d'une évaluation et la corriger ici.
 $moteurCore = __DIR__ . '/defi_tables_core.js';
 $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0';
+// Serveur pro, lot 5a (25/10/2026) : la charte commune du serveur de suivi
+// (suivi.css), chargée AVANT le style propre de la page. Son adresse porte son
+// empreinte : une nouvelle charte déposée n'est jamais masquée par le cache,
+// et une ancienne ne se mélange pas à une nouvelle page.
+$charte = __DIR__ . '/../suivi.css';
+$versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -45,84 +51,97 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <title>Ma classe | maths&amp;go</title>
+<link rel="stylesheet" href="../suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <style>
-  :root {
-    --blue: #063f86; --blue-dark: #052f67; --teal: #08aaa5; --orange: #f58220;
-    --ink: #10294a; --muted: #5c6c82; --paper: #fff; --line: #d9e2ec; --page: #f6f8fb;
-    --vert: #1a7f37; --rouge: #b42318;
-    --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; display: flex; flex-direction: column;
-         background: var(--page); color: var(--ink);
-         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .barre { height: 5px; background: var(--brand-gradient); }
-  header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-           padding: 12px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
-  header img { display: block; height: 30px; width: auto; }
-  header .titre { font-family: Georgia, serif; font-size: 1.15rem; color: var(--blue-dark); }
-  header .droite { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  main { flex: 1; width: 100%; max-width: 1220px; margin: 0 auto; padding: 20px 16px 32px; }
-  h1 { margin: 0 0 6px; font-family: Georgia, serif; font-size: clamp(1.4rem, 4vw, 1.9rem);
-       color: var(--blue-dark); }
-  h2 { margin: 26px 0 10px; font-family: Georgia, serif; font-size: 1.2rem; color: var(--blue-dark); }
-  p.sous { margin: 0 0 18px; color: var(--muted); }
-  .carte { background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-           padding: 16px; box-shadow: 0 10px 26px rgba(22,47,82,.06); }
+  /* Serveur pro, lot 5a « la charte et la tête » (25/10/2026) : la charte
+     commune (../suivi.css, chargée juste au-dessus) donne les couleurs, le
+     texte, les titres, les trois boutons, les champs, la carte, la tuile, le
+     message, les onglets, la pastille et le tableau. Ce style-ci ne garde que
+     ce qui est propre à Ma classe. Avant, il recopiait tout cela à sa façon
+     (22 tailles de texte, 21 sortes de boutons). */
   .carte.imprimer { max-width: 720px; margin-top: 18px; }
   .carte.imprimer .sous { margin: 4px 0 10px; }
   .liens-imprimer { margin: 0; padding-left: 20px; }
   .liens-imprimer li { margin: 6px 0; line-height: 1.5; }
   .cartes-tables { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; margin-left: 4px; }
   .cartes-tables a { white-space: nowrap; }
-  label { display: block; margin: 12px 0 6px; font-weight: 700; font-size: .93rem; }
-  input[type=text], input[type=password], input[type=number], select {
-    width: 100%; min-height: 44px; padding: 8px 12px; font: inherit; color: var(--ink);
-    border: 2px solid var(--line); border-radius: 10px; background: #fff; }
   /* Le prénom se saisit directement dans la liste de l'onglet Élèves : discret
      tant qu'on n'y touche pas. Dans les tableaux des applis, c'est du texte. */
   #tableau-eleves td input { min-height: 40px; padding: 6px 8px; font-weight: 600; border-color: transparent; background: transparent; }
   #tableau-eleves td input:hover { border-color: var(--line); background: #fff; }
-  #tableau-eleves td input::placeholder { font-weight: 400; font-style: italic; color: #9aa9bb; }
+  #tableau-eleves td input::placeholder { font-weight: 400; font-style: italic; color: var(--indice); }
   #tableau td.nom { font-weight: 600; }
-  input:focus, select:focus { outline: 3px solid rgba(11,103,178,.3); border-color: var(--blue); }
-  button { min-height: 44px; padding: 0 16px; font: inherit; font-weight: 700;
-           color: #fff; background: var(--blue); border: 0; border-radius: 10px; cursor: pointer; }
-  button:hover { background: var(--blue-dark); }
-  button.secondaire { color: var(--blue); background: #fff; border: 2px solid var(--line); }
-  button.secondaire:hover { border-color: var(--blue); background: #f3f8fc; }
-  button.danger { color: var(--rouge); background: #fff; border: 2px solid #f3d3d0; }
-  button.danger:hover { background: #fdecec; }
-  button.petit, .bouton-lien { min-height: 44px; padding: 0 9px; font-size: .8rem; font-weight: 600; }
-  /* Un lien qui doit se voir comme un bouton : la fiche s'ouvre dans le site. */
-  .bouton-lien { display: inline-flex; align-items: center; justify-content: center;
-                 color: var(--blue); background: #fff; border: 2px solid var(--line);
-                 border-radius: 10px; text-decoration: none; }
-  .bouton-lien:hover { border-color: var(--blue); background: #f3f8fc; }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-  .message { margin: 14px 0 0; padding: 10px 12px; border-radius: 10px; font-weight: 600; }
-  .message.erreur { background: #fdecec; color: var(--rouge); }
-  .message.ok { background: #e6f6ea; color: var(--vert); }
-  .classes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
-             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-  .classes button { width: 100%; text-align: left; color: inherit; background: var(--paper);
-                    border: 1px solid var(--line); border-left: 5px solid var(--teal);
-                    border-radius: 12px; padding: 14px; font-weight: 400; min-height: 66px; }
-  .classes button:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
-  .classes strong { display: block; font-size: 1.1rem; color: var(--blue-dark); }
-  .classes span { color: var(--muted); font-size: .88rem; }
-  /* Lot « Ma classe : élèves » (18/10/2026) : « + Nouvelle classe » ne sert
-     qu'en septembre — une carte en pointillés au bout de la liste, qui ouvre
-     la petite fenêtre, au lieu d'un formulaire toujours affiché. */
-  .classes button.nouvelle-classe { display: flex; align-items: center; justify-content: center; gap: 8px;
-                                    height: 100%; text-align: center; color: var(--blue); background: transparent;
-                                    border: 2px dashed #c4d2e2; font-weight: 800; }
-  .classes button.nouvelle-classe:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
-  .classes button.nouvelle-classe svg { display: block; flex: 0 0 auto; }
-  .tableau-enveloppe { overflow-x: auto; margin-top: 12px; }
-  table { width: 100%; border-collapse: collapse; background: var(--paper); font-size: .92rem; }
-  th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line);
-           white-space: nowrap; }
+  /* L'en-tête (charte : .entete) : le nom de l'écran au milieu (titre-page). */
+  .entete .qui { white-space: nowrap; }
+  /* Mes classes : une tuile par classe (charte : .tuile), « + Nouvelle
+     classe » en simple bouton dessous (choix de Gwenaël, maquettes du 25/10). */
+  .tuiles .tuile .badge { margin-top: 2px; }
+  .tuile.partagee { border-left-color: var(--orange); }
+  .tuile.partagee:hover { border-left-color: var(--blue); }
+  .tuile em.en-direct { margin-left: 8px; padding: 2px 9px; border-radius: 999px; background: var(--orange-pale);
+                        color: var(--orange-texte); font-size: var(--texte-secondaire); font-style: normal; font-weight: 700;
+                        white-space: nowrap; }
+  li.vide { color: var(--muted); }
+  #nouvelle-classe svg { display: block; flex: none; }
+  /* La tête d'une classe (choix de Gwenaël, planche 1, 25/10/2026) : « 405 ▾ »
+     ouvre la liste de ses classes, « Toutes mes classes » au bout ; « Séance
+     en direct » à droite. Le menu se ferme par Échap, par un clic ailleurs ou
+     au choix d'une classe. */
+  .tete-classe { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .tete-classe h1 { margin: 0; }
+  .tete-classe #seance-direct { margin-left: auto; }
+  #resume-classe { margin: 2px 0 16px; }
+  .choix-classe { position: relative; min-width: 0; }
+  .choix-classe h1 button {
+    min-height: var(--cible); max-width: 100%; padding: 0 8px 0 0; gap: 10px;
+    color: var(--blue-dark); background: none; border: 0; border-radius: var(--arrondi);
+    font: 400 var(--titre-page)/1.2 var(--serif); white-space: normal; text-align: left; }
+  .choix-classe h1 button:hover { color: var(--blue); background: none; border: 0; }
+  .choix-classe .rond { display: inline-grid; place-items: center; flex: none; width: 30px; height: 30px;
+                        border-radius: 50%; background: var(--bleu-pale); color: var(--blue); }
+  .choix-classe .rond svg { display: block; transition: transform .15s; }
+  .choix-classe h1 button[aria-expanded="true"] .rond svg { transform: rotate(180deg); }
+  .menu-classes { position: absolute; top: calc(100% + 6px); left: 0; z-index: 6; width: 300px;
+                  max-height: min(70vh, 480px); overflow-y: auto; padding: 6px;
+                  background: var(--paper); border: 1px solid var(--line); border-radius: var(--arrondi-carte);
+                  box-shadow: var(--ombre-fenetre); }
+  .menu-classes ul { margin: 0; padding: 0; list-style: none; }
+  .menu-classes button { width: 100%; justify-content: flex-start; gap: 12px; padding: 0 12px;
+                         color: var(--ink); background: none; border: 0; font-weight: 400; text-align: left; }
+  .menu-classes button:hover { color: var(--ink); background: var(--survol); border: 0; }
+  .menu-classes button strong { min-width: 48px; color: var(--blue-dark); }
+  .menu-classes button span { color: var(--muted); font-size: var(--texte-secondaire); }
+  .menu-classes button[aria-current="true"] { background: var(--bleu-pale); }
+  .menu-classes button[aria-current="true"]::after { content: "✓"; margin-left: auto; color: var(--blue); font-weight: 700; }
+  .menu-classes #retour { margin-top: 6px; color: var(--blue); font-weight: 700; border-top: 1px solid var(--filet-doux);
+                          border-radius: 0 0 var(--arrondi) var(--arrondi); }
+  /* Le « 405 ▾ » en petit, au début de la barre collée (téléphone). */
+  .classe-collee { flex: none; align-self: center; margin-right: 4px; padding: 0 8px 0 0; gap: 4px;
+                   color: var(--blue-dark); background: none; border: 0; font: 400 var(--titre-carte)/1.2 var(--serif); }
+  .classe-collee:hover { color: var(--blue); background: none; border: 0; }
+  .classe-collee svg { display: block; flex: none; color: var(--blue); }
+  /* Ouvert depuis la barre collée : le menu suit la barre, pas le haut de la page. */
+  .menu-classes.depuis-barre { position: fixed; }
+  /* La barre collée (choix de Gwenaël, 25/10/2026 : au téléphone, puis « à
+     l'ordinateur aussi ») : 46 px, toute la largeur de la page, sur le fond de
+     la page pour que rien ne se lise au travers. */
+  .barre-onglets { position: sticky; top: 0; z-index: 5; margin-left: -16px; margin-right: -16px;
+                   padding: 0 16px; background: var(--page); }
+  .barre-onglets.collee { box-shadow: 0 8px 12px -10px rgba(16, 41, 74, .45); }
+  /* Le sélecteur d'appli, quand les onglets ne tiennent plus : il a l'air de
+     l'onglet choisi (trait bleu), avec la flèche du menu. */
+  .barre-onglets.mode-selecteur > #choix-appli { display: none; }
+  .choix-appli-menu { position: relative; display: flex; flex: 1 1 auto; min-width: 0; }
+  .appli-selecteur { min-width: 0; max-width: 100%; margin-bottom: -2px; padding: 0 12px; gap: 6px; justify-content: flex-start;
+                     color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent;
+                     border-radius: var(--arrondi) var(--arrondi) 0 0; }
+  .appli-selecteur:hover { color: var(--blue-dark); background: var(--bleu-pale); border: 0; border-bottom: 3px solid transparent; }
+  .appli-selecteur.actif, .appli-selecteur.actif:hover { color: var(--blue-dark); border-bottom-color: var(--blue); }
+  .appli-selecteur span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .appli-selecteur svg { display: block; flex: none; color: var(--blue); }
+  .menu-applis { left: 0; width: 260px; }
+  .tableau-enveloppe { margin-top: 12px; }
+  th, td { white-space: nowrap; }
   /* « Parcours » (ou « Détail ») au même endroit sur chaque ligne, que la ligne
      ait un « ⋯ » ou non (lot « Ma classe : élèves » : il n'y reste que
      « Revenir à… », pour les élèves qui ont une version à restaurer). */
@@ -157,27 +176,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
                       background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
                       box-shadow: 0 8px 24px rgba(16, 42, 67, .16); }
   .plus > div button { width: 100%; text-align: left; }
-  th { background: #eef3f9; color: var(--blue-dark); font-size: .82rem;
-       text-transform: uppercase; letter-spacing: .04em; }
-  th button { min-height: 44px; padding: 0; color: var(--blue-dark); background: none;
-              font: inherit; font-weight: 700; text-transform: inherit; letter-spacing: inherit; }
-  th button:hover { background: none; text-decoration: underline; }
   td.code { font-family: ui-monospace, Consolas, monospace; font-weight: 700;
             letter-spacing: .08em; color: var(--blue-dark); }
   td.sans { color: var(--muted); font-style: italic; }
-  .pastille { display: inline-block; padding: 2px 9px; border-radius: 999px;
-              font-size: .8rem; font-weight: 800; }
   .p-vert { background: #e6f6ea; color: var(--vert); }
   .p-orange { background: #fdf0e3; color: #a15c11; }
   .p-gris { background: #eef1f5; color: var(--muted); }
-  .message.info { background: #eef3f9; color: var(--blue-dark); }
-  .classes .badge { display: block; margin-top: 4px; color: var(--muted); font-size: .82rem; }
-  /* 17/10/2026 : une séance restée ouverte se voit sur la carte de sa classe. */
-  .classes strong .en-direct { float: right; font-style: normal; margin-left: 8px; padding: 2px 9px; border-radius: 999px;
-                               background: #fdf0e3; color: #a15c11; font-size: .78rem; font-weight: 800;
-                               line-height: 1.5; white-space: nowrap; }
   #seance-direct .point { color: #f9bf3b; }
-  .classes button.partagee { border-left-color: var(--orange); }
   .profs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
   .profs li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px;
               background: #fbfcfe; border: 1px solid var(--line); border-radius: 10px; }
@@ -185,10 +190,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .profs li .fin { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
   .profs li.vide { color: var(--muted); font-style: italic; border-style: dashed; }
   .profs .role { color: var(--muted); font-size: .86rem; }
-  .retour-icone { display: inline-flex; align-items: center; gap: 6px; }
-  .ligne-retour { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-  .ligne-retour #seance-direct { margin-left: auto; }
   .retour-icone svg { display: block; }
+  #retour-compte { margin-bottom: 12px; }
   .note-tableau { margin: 10px 0 0; font-size: .88rem; }
   /* L'objectif de la classe : UN nombre, celui de tout le monde. Jamais un
      classement, jamais un prenom : c'est le seul tableau de la page ou aucun
@@ -223,20 +226,19 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
      l'écran. Les boutons des élèves sont juste au-dessus du tableau, « Trier
      par » à droite. */
   #vue-appli > .barre-outils { margin-top: 16px; }
-  .onglets { display: flex; align-items: flex-end; gap: 4px; margin: 2px 0 18px;
-             border-bottom: 2px solid var(--line); }
-  #bandeau-droit + .onglets { margin-top: 14px; }
-  .choix-appli { display: flex; gap: 4px; flex-wrap: wrap; }
-  .onglets button { min-height: 44px; margin-bottom: -2px; padding: 0 16px; border-radius: 10px 10px 0 0;
-                    border-bottom: 3px solid transparent; color: var(--muted); background: none; font-weight: 800; }
-  .onglets button:hover { color: var(--blue-dark); background: #eaf0f7; }
-  .onglets button[aria-pressed="true"] { color: var(--blue-dark); border-bottom-color: var(--blue); background: none; }
-  /* Lot « Ma classe : élèves » (18/10/2026) : au bout à droite, ce qui
-     concerne la classe elle-même — « Élèves » (propriétaire et collègue en
-     écriture), puis « Réglages » (propriétaire). */
-  .onglets-classe { margin-left: auto; display: flex; gap: 4px; }
-  .onglets .onglet-eleves, .onglets .onglet-reglages { display: inline-flex; align-items: center; gap: 7px; }
-  .onglet-eleves svg, .onglet-reglages svg { display: block; }
+  /* Serveur pro, lot 5a (planches 1 et 6 du 25/10/2026) : UNE ligne
+     d'onglets. Les applis à gauche (charte : .onglets, elles défilent au
+     téléphone et s'effacent vers la droite quand il y a une suite) ; au bout,
+     « Élèves » et « Réglages », qui ne défilent jamais : toujours à portée de
+     doigt, en dessin seul au téléphone (choix du 18/10, gardé). */
+  .barre-onglets { display: flex; align-items: flex-end; margin: 4px 0 20px; border-bottom: 2px solid var(--line); }
+  #bandeau-droit + #repere-onglets + .barre-onglets { margin-top: 14px; }
+  .barre-onglets > .onglets { flex: 1 1 auto; min-width: 0; margin: 0; border-bottom: 0; }
+  .barre-onglets > .onglets-classe { flex: none; overflow: visible; margin-left: 8px; }
+  .onglets-classe > button { display: inline-flex; align-items: center; gap: 8px; }
+  .onglets-classe > button svg { display: block; flex: none; }
+  .barre-onglets > .onglets.suite { -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent);
+                                    mask-image: linear-gradient(90deg, #000 80%, transparent); }
   .ligne-tri { display: flex; align-items: center; gap: 10px; }
   .ligne-tri label { margin: 0; font-size: .88rem; color: var(--muted); font-weight: 600; }
   .ligne-tri select { width: auto; min-width: 170px; }
@@ -463,12 +465,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   .apercu li .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .06em; }
   .apercu li.vide { color: var(--muted); font-style: italic; }
   .apercu li.alerte { color: var(--rouge); font-weight: 700; }
-  dialog { border: 0; border-radius: 14px; padding: 18px; max-width: 420px; width: calc(100% - 32px);
-           box-shadow: 0 20px 50px rgba(16,41,74,.28); }
+  dialog { border: 0; border-radius: var(--arrondi-carte); padding: 18px; max-width: 420px; width: calc(100% - 32px);
+           color: var(--ink); box-shadow: var(--ombre-fenetre); }
   dialog::backdrop { background: rgba(16,41,74,.45); }
-  footer { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--paper);
-           color: var(--muted); font-size: .82rem; text-align: center; }
-  footer a { display: inline-block; padding: 12px 8px; color: var(--muted); }
+  /* Redit ici, même si la charte le dit : sans suivi.css (un dépôt FTP
+     oublié), une règle d'affichage de la page ne doit jamais faire réapparaître
+     ce qui est caché — la vue Élèves et ses codes, par exemple. */
   [hidden] { display: none !important; }
   /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
      tout se lit d'un coup d'œil sur un téléphone. */
@@ -589,12 +591,16 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     .eval-plein { padding: 16px; }
   }
   @media (max-width: 700px) { .rec-deux { grid-template-columns: 1fr; } .rec-plein { padding: 16px; } }
-  /* Téléphone (choix de Gwenaël, 18/10/2026) : quatre onglets ne tiennent pas
-     sur une ligne (430 px pour 358 à 390 de large) — Élèves et Réglages n'y
-     gardent que leur dessin ; les mots reviennent dès la largeur d'une tablette. */
-  @media (max-width: 520px) {
-    .onglets .onglet-eleves, .onglets .onglet-reglages { padding: 0 13px; }
-    .onglet-eleves .mot, .onglet-reglages .mot { display: none; }
+  /* Téléphone (choix de Gwenaël, 18/10/2026, gardé le 25/10) : Élèves et
+     Réglages n'y gardent que leur dessin, collés au bout de la ligne ; les
+     mots reviennent dès la largeur d'une tablette. La tête de la classe : le
+     nom et « Séance en direct » sur une ligne. */
+  @media (max-width: 600px) {
+    .barre-onglets > .onglets-classe { margin-left: 0; }
+    .onglets-classe > button { padding: 0 12px; }
+    .onglets-classe .mot { display: none; }
+    .tete-classe #seance-direct { padding: 0 14px; }
+    .menu-classes { width: min(300px, calc(100vw - 32px)); }
   }
   /* Lot « Qui voit quoi » (planche 3) : sur téléphone, pas de colonne « En
      plus » — les pastilles passent sous le prénom ; dans la fenêtre, les
@@ -609,6 +615,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
   @media (max-width: 700px) {
     .tableau-enveloppe { overflow-x: visible; }
+    #vue-appli .tableau-enveloppe { background: none; border: 0; border-radius: 0; }
     #tableau, #tableau tbody, #tableau tr, #tableau td { display: block; width: 100%; }
     #tableau thead { display: none; }
     #tableau tr { margin-bottom: 12px; padding: 8px 6px 12px; background: var(--paper);
@@ -681,13 +688,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 </head>
 <body>
 <div class="barre"></div>
-<header>
+<header class="entete">
   <img src="../mathsgo-logo.png" alt="maths&go">
-  <span class="titre">Ma classe</span>
+  <span class="titre" id="titre-page">Suivi des élèves</span>
   <span class="droite">
-    <span id="qui" hidden></span>
-    <button type="button" class="secondaire petit" id="mon-compte" hidden>Mon compte</button>
-    <button type="button" class="secondaire petit" id="deconnexion" hidden>Se déconnecter</button>
+    <span class="qui" id="qui" hidden></span>
+    <button type="button" class="secondaire" id="mon-compte" hidden>Mon compte</button>
+    <button type="button" class="secondaire" id="deconnexion" hidden>Se déconnecter</button>
   </span>
 </header>
 
@@ -724,9 +731,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <button type="button" class="secondaire" id="echues-plus-tard">Me le rappeler plus tard</button>
       </div>
     </div>
-    <!-- La dernière carte de la liste est « + Nouvelle classe » (chargerClasses) :
-         elle ouvre la petite fenêtre (lot « Ma classe : élèves », 18/10/2026). -->
-    <ul class="classes" id="liste-classes"></ul>
+    <!-- Une tuile par classe (chargerClasses). « + Nouvelle classe » ne sert
+         qu'en septembre : un simple bouton sous les tuiles, qui ouvre la petite
+         fenêtre (serveur pro, lot 5a, 25/10/2026 ; avant, une carte en
+         pointillés au bout de la liste). -->
+    <ul class="tuiles" id="liste-classes"></ul>
+    <div class="actions">
+      <button type="button" class="secondaire" id="nouvelle-classe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle classe</button>
+    </div>
     <p class="message" id="message-classes" hidden></p>
 
     <!-- Visible seulement pour le compte administrateur. -->
@@ -749,11 +761,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     <!-- Séance en direct (07/10/2026) : le bouton ouvre l'écran du tableau
          (prof/direct.php) pour cette classe, dans le même onglet. Il est sur
          la ligne du retour, à droite : la barre d'outils est déjà pleine. -->
-    <div class="ligne-retour">
-      <button type="button" class="secondaire petit retour-icone" id="retour"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <!-- Serveur pro, lot 5a (choix de Gwenaël, planche 1, 25/10/2026) : le nom
+         de la classe ouvre la liste de ses classes ; « Toutes mes classes » au
+         bout de la liste ramène aux tuiles. Les classes sont celles de
+         classes.liste, déjà lue : le menu n'appelle pas le serveur. -->
+    <div class="tete-classe">
+      <div class="choix-classe">
+        <h1><button type="button" id="bouton-classes" aria-haspopup="true" aria-expanded="false" aria-controls="menu-classes"><span id="titre-classe"></span><span class="rond" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button></h1>
+        <div class="menu-classes" id="menu-classes" hidden>
+          <ul id="menu-classes-liste" aria-label="Mes classes"></ul>
+          <button type="button" id="retour">Toutes mes classes</button>
+        </div>
+      </div>
       <button type="button" id="seance-direct">Séance en direct</button>
     </div>
-    <h1 id="titre-classe"></h1>
     <p class="sous" id="resume-classe"></p>
     <p class="message" id="bandeau-droit" hidden></p>
     <!-- Lot « Ma classe : réglages » (17/10/2026) : les onglets, toujours là.
@@ -770,14 +791,28 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
          pas non plus : ouvrir une classe devant les élèves ne montre jamais
          les codes. Les deux silhouettes sont le dessin « users » de Feather
          Icons (licence MIT). -->
-    <div class="onglets" id="onglets">
-      <div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">
+    <!-- Serveur pro, lot 5a (choix de Gwenaël, 25/10/2026) : au téléphone, la
+         ligne d'onglets reste collée en haut quand on descend, avec « 405 ▾ »
+         en petit au début (caché tant que la barre n'est pas collée : le grand
+         titre est alors à l'écran). Le repère dit où la barre se colle. -->
+    <div id="repere-onglets"></div>
+    <div class="barre-onglets" id="onglets">
+      <button type="button" class="classe-collee" id="bouton-classes-colle" aria-haspopup="true" aria-expanded="false" aria-controls="menu-classes" hidden><span id="titre-classe-colle"></span><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <!-- Le sélecteur d'appli (choix de Gwenaël, 25/10/2026) : quand les onglets
+           des applis ne tiennent plus sur la ligne (téléphone aujourd'hui, et
+           un jour l'ordinateur avec dix applis), « Défi tables ▾ » les remplace
+           et ouvre leur liste. Sinon, caché : les onglets. -->
+      <div class="choix-appli-menu" id="choix-appli-menu" hidden>
+        <button type="button" class="appli-selecteur" id="bouton-applis" aria-haspopup="true" aria-expanded="false" aria-controls="menu-applis"><span id="nom-appli"></span><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="menu-classes menu-applis" id="menu-applis" hidden><ul id="menu-applis-liste" aria-label="Applis"></ul></div>
+      </div>
+      <div class="onglets" id="choix-appli" role="group" aria-label="Activité affichée">
         <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
         <button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>
         <button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
       </div>
-      <div class="onglets-classe">
+      <div class="onglets onglets-classe" role="group" aria-label="La classe">
       <button type="button" class="onglet-eleves" id="onglet-eleves" aria-pressed="false" aria-label="Élèves" title="Élèves : prénoms, codes, papiers" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="mot">Élèves</span></button>
       <button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" aria-label="Réglages" title="Réglages de la classe" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="mot">Réglages</span></button>
       </div>
@@ -813,8 +848,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <div class="eval-tete">
         <div><strong>📝 Évaluations</strong><p>En classe · un passage par élève · réponses effacées au plus tard le lendemain</p></div>
         <div class="fin">
-          <button type="button" class="secondaire petit" id="evaluations-plein-ecran" hidden>Plein écran</button>
-          <button type="button" class="secondaire petit" id="nouveau-modele">Nouveau modèle</button>
+          <button type="button" class="secondaire" id="evaluations-plein-ecran" hidden>Plein écran</button>
+          <button type="button" class="secondaire" id="nouveau-modele">Nouveau modèle</button>
         </div>
       </div>
       <div id="evaluations-zone"></div>
@@ -899,7 +934,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     <div class="carte rec-carte" id="bloc-records" hidden>
       <div class="rec-tete">
         <div><strong>🏆 Les records</strong><p>Toutes tes classes · le plein écran montre ce que voient les élèves</p></div>
-        <button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran</button>
+        <button type="button" class="secondaire" id="records-plein-ecran">Plein écran</button>
       </div>
       <div class="rec-deux">
         <div><h3>Cette semaine</h3><ol class="rec-liste" id="records-semaine"></ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant.</p></div>
@@ -1155,7 +1190,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
        (donné par l'administrateur), c'est le seul écran possible tant qu'un
        nouveau n'a pas été choisi — le serveur refuse tout le reste. -->
   <section id="ecran-compte" hidden>
-    <button type="button" class="secondaire petit retour-icone" id="retour-compte"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <button type="button" class="secondaire retour-icone" id="retour-compte"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
     <h1>Mon compte</h1>
     <p class="sous" id="compte-qui"></p>
     <p class="message info" id="bandeau-temporaire" hidden>Ton mot de passe est temporaire : choisis-en un nouveau
@@ -1176,7 +1211,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   </section>
 </main>
 
-<footer>
+<footer class="pied">
   <a href="https://mathsgo.re/">mathsgo.re</a> · CC BY-NC-SA 4.0
 </footer>
 
@@ -1540,8 +1575,16 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     bloc.hidden = !texte;
   }
 
+  // Le nom de l'écran, dans l'en-tête (serveur pro, lot 5a) : avant, il
+  // disait « Ma classe » sur toutes les pages, connexion comprise.
+  const TITRES_ECRANS = {"ecran-connexion": "Suivi des élèves", "ecran-classes": "Mes classes",
+    "ecran-classe": "Ma classe", "ecran-compte": "Mon compte"};
+
   function montrer(ecran) {
     ["ecran-connexion", "ecran-classes", "ecran-classe", "ecran-compte"].forEach(id => { $(id).hidden = id !== ecran; });
+    $("titre-page").textContent = TITRES_ECRANS[ecran] || "Suivi des élèves";
+    fermerMenuClasses();
+    fermerMenuApplis();
     // Lot E1 : hors de la classe, plus de lecture en boucle de l'évaluation.
     if (ecran !== "ecran-classe") arreterVeilleEvaluation();
     const connecte = ecran !== "ecran-connexion";
@@ -1562,7 +1605,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   const ZONES_TEXTE = ["corps", "corps-eleves", "fiche-corps", "fiche-titre", "bandelettes-liste",
     "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
-    "qui", "compte-qui", "boite-texte",
+    "qui", "compte-qui", "boite-texte", "menu-classes-liste", "titre-classe-colle", "nom-appli", "menu-applis-liste",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
     // Lot E1 : la carte « Évaluations » et ses deux boîtes.
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees",
@@ -1580,7 +1623,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
     "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
-    "vue-eleves", "onglet-eleves"];
+    "vue-eleves", "onglet-eleves", "menu-classes"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
@@ -2023,7 +2066,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // fin de chacune des sept dernières journées : un écrasement (par
       // quelqu'un qui avait le code, ou un « Recommencer à zéro »
       // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
-      boutons.push(boutonGeste("Revenir à…", "secondaire petit", () => revenirA(eleve),
+      boutons.push(boutonGeste("Revenir à…", "secondaire", () => revenirA(eleve),
         "Revenir à une version précédente de sa progression"));
     }
     menuGestes(cActions, boutons);
@@ -2035,21 +2078,21 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // Lot « Qui voit quoi » (D5, Q2) : « Ce que voit Léa… » en premier —
     // propriétaire seulement, comme le serveur (eleves.acces).
     if (droitClasse === "proprietaire") {
-      boutons.push(boutonGeste(`Ce que voit ${prenomCourt(eleve)}…`, "secondaire petit", () => ouvrirCeQueVoit(eleve),
+      boutons.push(boutonGeste(`Ce que voit ${prenomCourt(eleve)}…`, "secondaire", () => ouvrirCeQueVoit(eleve),
         "Ce qu’il voit dans son espace, et ce que tu peux lui ouvrir en plus"));
     }
     boutons.push(
       // Choix de Gwenaël (18/10/2026) : l'élève qui a perdu son code, ou qui
       // en a un nouveau, repart avec SA bandelette, et rien à l'écran.
-      boutonGeste("Imprimer sa bandelette", "secondaire petit", () => imprimer("bandelettes", eleve),
+      boutonGeste("Imprimer sa bandelette", "secondaire", () => imprimer("bandelettes", eleve),
         "Sa bandelette seule, avec son numéro de la feuille"),
-      boutonGeste("Nouveau code", "secondaire petit", () => regenerer(eleve))
+      boutonGeste("Nouveau code", "secondaire", () => regenerer(eleve))
     );
     // Supprimer un élève efface sa progression pour de bon : depuis le lot 11,
     // c'est au propriétaire de la classe, comme la supprimer. Un collègue en
     // écriture prépare et dépanne, il n'efface pas.
     if (droitClasse === "proprietaire") {
-      boutons.push(boutonGeste("Supprimer", "danger petit", () => supprimerEleve(eleve)));
+      boutons.push(boutonGeste("Supprimer", "danger", () => supprimerEleve(eleve)));
     }
     menuGestes(cActions, boutons);
   }
@@ -2776,7 +2819,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       // bouton, même place, même classe.
       const fiche = document.createElement("button");
       fiche.type = "button";
-      fiche.className = "secondaire petit";
+      fiche.className = "secondaire";
       fiche.textContent = "Parcours";
       fiche.title = "Voir son parcours";
       fiche.addEventListener("click", () => voirFiche(eleve, fiche));
@@ -3120,7 +3163,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         // reste déplié quand on trie.
         const detail = document.createElement("button");
         detail.type = "button";
-        detail.className = "secondaire petit";
+        detail.className = "secondaire";
         let ligneDetail = null;
         const poser = () => {
           const ouvert = detailsOuverts.has(eleve.id);
@@ -3338,7 +3381,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         // reste déplié quand on trie (comme l'onglet SPLAT!).
         const detail = document.createElement("button");
         detail.type = "button";
-        detail.className = "secondaire petit";
+        detail.className = "secondaire";
         let ligneDetail = null;
         const poser = () => {
           const ouvert = detailsOuverts.has(eleve.id);
@@ -3423,7 +3466,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         // 21/10) ; ici la fenêtre est dans la page : tout est déjà chargé.
         const parcours = document.createElement("button");
         parcours.type = "button";
-        parcours.className = "secondaire petit";
+        parcours.className = "secondaire";
         parcours.textContent = "Parcours";
         parcours.title = "Voir ses dernières séances";
         parcours.addEventListener("click", () => ouvrirParcoursAnzan(eleve));
@@ -3878,6 +3921,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // La pastille d'une classe dont une séance est ouverte (classes.liste, « direct »).
   const LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};
 
+  // Ce que la classe a d'ouvert, en mots, sur sa tuile (les applis que la
+  // page sait montrer, dans l'ordre du catalogue).
+  function applisEnMots(liste) {
+    return APPLIS.filter(appli => (liste || []).includes(appli.cle)).map(appli => appli.nom).join(", ");
+  }
+
   async function chargerClasses() {
     try {
       const donnees = await api("classes.liste");
@@ -3886,56 +3935,32 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       liste.textContent = "";
       classes.forEach(uneClasse => {
         const li = document.createElement("li");
-        const bouton = document.createElement("button");
+        // Une tuile de la charte : le nom, puis « 10 élèves · Défi tables,
+        // SPLAT! », et la flèche. Tout est posé par textContent.
+        const bouton = el("button", "tuile");
         bouton.type = "button";
-        bouton.innerHTML = "<strong></strong><span></span>";
-        bouton.querySelector("strong").textContent = uneClasse.libelle;
+        const texte = el("div");
+        const nom = el("strong", "", uneClasse.libelle);
         // Une séance de la classe est restée ouverte (17/10/2026) : on la
         // voit ici, on la reprend depuis la classe.
         const enCours = LIBELLES_DIRECT[uneClasse.direct];
-        if (enCours) {
-          // Un <em>, pas un <span> : la ligne suivante cherche LE span de la
-          // carte pour y écrire le nombre d'élèves.
-          const pastille = document.createElement("em");
-          pastille.className = "en-direct";
-          pastille.textContent = enCours;
-          bouton.querySelector("strong").appendChild(pastille);
-        }
-        bouton.querySelector("span").textContent =
-          `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`;
+        if (enCours) nom.appendChild(el("em", "en-direct", enCours));
+        const nombre = `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`;
+        const applis = applisEnMots(uneClasse.applis);
+        texte.append(nom, el("span", "", applis ? `${nombre} · ${applis}` : nombre));
         if (uneClasse.droit !== "proprietaire") {
           bouton.classList.add("partagee");
-          const badge = document.createElement("span");
-          badge.className = "badge";
-          badge.textContent = `partagée par ${uneClasse.proprietaire || "un collègue"} · `
-            + (uneClasse.droit === "ecriture" ? "modifiable" : "lecture seule");
-          bouton.appendChild(badge);
+          texte.appendChild(el("span", "badge", `partagée par ${uneClasse.proprietaire || "un collègue"} · `
+            + (uneClasse.droit === "ecriture" ? "modifiable" : "lecture seule")));
         }
+        const fleche = el("span", "fleche", "→");
+        fleche.setAttribute("aria-hidden", "true");
+        bouton.append(texte, fleche);
         bouton.addEventListener("click", () => ouvrirClasse(uneClasse.id));
         li.appendChild(bouton);
         liste.appendChild(li);
       });
-      if (!classes.length) {
-        const li = document.createElement("li");
-        li.style.color = "var(--muted)";
-        li.textContent = "Aucune classe pour l’instant.";
-        liste.appendChild(li);
-      }
-      // Lot « Ma classe : élèves » (18/10/2026) : la dernière carte, en
-      // pointillés, ouvre la petite fenêtre « Nouvelle classe ».
-      const li = document.createElement("li");
-      const nouvelle = document.createElement("button");
-      nouvelle.type = "button";
-      nouvelle.className = "nouvelle-classe";
-      nouvelle.id = "nouvelle-classe";
-      // Le « + » dessiné (createElementNS, comme les pastilles de SPLAT!), puis le texte.
-      const plus = elementSvg("svg", {viewBox: "0 0 24 24", width: "20", height: "20", "aria-hidden": "true", fill: "none",
-        stroke: "currentColor", "stroke-width": "2.4", "stroke-linecap": "round"});
-      plus.append(elementSvg("path", {d: "M12 5v14M5 12h14"}));
-      nouvelle.append(plus, "Nouvelle classe");
-      nouvelle.addEventListener("click", creerClasse);
-      li.appendChild(nouvelle);
-      liste.appendChild(li);
+      if (!classes.length) liste.appendChild(el("li", "vide", "Aucune classe pour l’instant."));
       annoncerFinAnnee(donnees, classes.length);
       montrer("ecran-classes");
       $("bloc-profs").hidden = !estAdmin;
@@ -3975,10 +4000,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         detailsOuverts.clear();
         vue = (donnees.eleves || []).length === 0 && droitClasse !== "lecture" ? "eleves" : "appli";
       }
+      // Une autre classe s'ouvre en haut de la page — son nom et son résumé —,
+      // pas au milieu, là où on en était dans la précédente (lot 5a).
+      if (!memeClasse) window.scrollTo(0, 0);
       appliAffichee = voulue;
       eleves = elevesLus(voulue, donnees.eleves);
       tableaux = {[voulue]: eleves};
       $("titre-classe").textContent = classe.libelle;
+      $("titre-classe-colle").textContent = classe.libelle;
+      retenirDerniereClasse(classe.id);
       messager("message-classe", "", "");
       messager("message-appli", "", "");
       messager("message-activites", "", "");
@@ -3995,6 +4025,129 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } catch (erreur) {
       if (numero === demandeAppli && jeton) surErreur(erreur, "message-classes");
     }
+  }
+
+  // --------------------------------------- le menu des classes (serveur pro, lot 5a)
+  //
+  // Choix de Gwenaël (planche 1, 25/10/2026) : le nom de la classe ouvre la
+  // liste de ses classes — celles de classes.liste, déjà lue ; la classe
+  // ouverte est cochée ; « Toutes mes classes » au bout ramène aux tuiles.
+
+  function poserMenuClasses() {
+    const liste = $("menu-classes-liste");
+    liste.textContent = "";
+    classes.forEach(uneClasse => {
+      const li = document.createElement("li");
+      const bouton = el("button");
+      bouton.type = "button";
+      bouton.append(el("strong", "", uneClasse.libelle),
+        el("span", "", `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`));
+      const ouverte = Boolean(classe) && classe.id === uneClasse.id;
+      if (ouverte) bouton.setAttribute("aria-current", "true");
+      bouton.addEventListener("click", () => {
+        fermerMenuClasses();
+        if (!ouverte) ouvrirClasse(uneClasse.id);
+      });
+      li.appendChild(bouton);
+      liste.appendChild(li);
+    });
+  }
+
+  // Le bouton qui a ouvert le menu : le grand titre, ou « 405 ▾ » de la barre
+  // collée (téléphone) — le menu s'ouvre alors sous la barre, en position fixe.
+  let menuOuvertPar = null;
+
+  function ouvrirMenuClasses(bouton) {
+    if (!classe) return;
+    const depuis = bouton || $("bouton-classes");
+    poserMenuClasses();
+    const menu = $("menu-classes");
+    menu.hidden = false;
+    menuOuvertPar = depuis;
+    depuis.setAttribute("aria-expanded", "true");
+    if (depuis !== $("bouton-classes")) {
+      const r = depuis.getBoundingClientRect();
+      menu.classList.add("depuis-barre");
+      menu.style.top = Math.round(r.bottom + 6) + "px";
+      menu.style.left = Math.round(Math.max(16, r.left)) + "px";
+    }
+    const choisie = menu.querySelector('[aria-current="true"]') || $("retour");
+    choisie.focus();
+  }
+
+  function fermerMenuClasses(rendreLaMain) {
+    const menu = $("menu-classes");
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    menu.classList.remove("depuis-barre");
+    menu.style.top = "";
+    menu.style.left = "";
+    const depuis = menuOuvertPar || $("bouton-classes");
+    menuOuvertPar = null;
+    depuis.setAttribute("aria-expanded", "false");
+    if (rendreLaMain) depuis.focus();
+  }
+
+  // --------------------------------------- la barre collée (serveur pro, lot 5a)
+  //
+  // Choix de Gwenaël (25/10/2026, au téléphone puis à l'ordinateur aussi) :
+  // la ligne d'onglets reste collée en haut quand on descend (CSS : position
+  // sticky). Collée, elle montre « 405 ▾ » en petit au début : changer de
+  // classe ou d'appli d'un geste, où qu'on soit dans la page.
+  function barreCollee() {
+    return Boolean(classe) && !$("ecran-classe").hidden
+      && $("repere-onglets").getBoundingClientRect().top < 0;
+  }
+
+  function marquerBarreCollee() {
+    const collee = barreCollee();
+    const barre = $("onglets");
+    if (barre.classList.contains("collee") === collee) return;
+    barre.classList.toggle("collee", collee);
+    $("bouton-classes-colle").hidden = !collee;
+    // Le menu ouvert depuis la barre ne reste pas suspendu quand elle se décolle.
+    if (!collee && menuOuvertPar === $("bouton-classes-colle")) fermerMenuClasses();
+    // La place a changé (« 405 ▾ » est apparu ou parti) : onglets ou sélecteur ?
+    montrerOngletChoisi();
+  }
+
+  // Changer d'appli depuis la barre collée : on arrive au DÉBUT de l'appli,
+  // juste sous la barre — pas au milieu de son tableau. La barre reste collée
+  // (les 6 px passent sa marge du haut) : « 405 ▾ » ne disparaît pas.
+  function remonterALaBarre() {
+    if (!barreCollee()) return;
+    window.scrollTo(0, Math.max(0, $("repere-onglets").getBoundingClientRect().top + window.scrollY + 6));
+  }
+
+  // ---------------------------------------- la dernière classe (serveur pro, lot 5a)
+  //
+  // À la connexion, la dernière classe ouverte s'ouvre directement (choix de
+  // Gwenaël, 25/10/2026). Seul son NUMÉRO est gardé, sur l'appareil
+  // (localStorage) : un numéro de classe n'est pas un secret (il est déjà dans
+  // l'ancre « #classe= » de la séance en direct) et le serveur revérifie le
+  // droit à chaque appel. Une classe qui n'est plus dans la liste du
+  // professeur connecté (supprimée, partage retiré, autre professeur sur ce
+  // poste) n'ouvre rien : on reste sur Mes classes, et le numéro est oublié.
+  const CLE_DERNIERE_CLASSE = "mathsgo-suivi-prof-derniere-classe";
+
+  function lireDerniereClasse() {
+    try { return Number(localStorage.getItem(CLE_DERNIERE_CLASSE)) || 0; } catch (_) { return 0; }
+  }
+
+  function retenirDerniereClasse(id) {
+    try { localStorage.setItem(CLE_DERNIERE_CLASSE, String(id)); } catch (_) {}
+  }
+
+  function oublierDerniereClasse() {
+    try { localStorage.removeItem(CLE_DERNIERE_CLASSE); } catch (_) {}
+  }
+
+  function rouvrirDerniereClasse() {
+    const id = lireDerniereClasse();
+    if (!id) return undefined;
+    if (classes.some(uneClasse => uneClasse.id === id)) return ouvrirClasse(id);
+    oublierDerniereClasse();
+    return undefined;
   }
 
   // ------------------------------------------- l'activité affichée (lot « splat-suivi-4 »)
@@ -4133,7 +4286,80 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       bouton.hidden = !presentes.includes(bouton.dataset.appli);
       bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
     });
+    montrerOngletChoisi();
     return presentes;
+  }
+
+  // Serveur pro, lot 5a : au téléphone, la rangée des applis défile. L'onglet
+  // choisi y est toujours ramené en vue (sans faire bouger la page), et la
+  // rangée s'efface vers la droite tant qu'il reste des onglets à droite.
+  function marquerSuiteOnglets() {
+    const rangee = $("choix-appli");
+    rangee.classList.toggle("suite", rangee.scrollLeft + rangee.clientWidth < rangee.scrollWidth - 2);
+  }
+
+  // Onglets ou sélecteur (choix de Gwenaël, 25/10/2026) : les onglets tant
+  // qu'ils tiennent sur la ligne ; sinon « Défi tables ▾ ». La page mesure
+  // elle-même : rien à régler quand une appli s'ajoute.
+  function poserModeApplis() {
+    const barre = $("onglets");
+    const rangee = $("choix-appli");
+    barre.classList.remove("mode-selecteur");
+    const deborde = rangee.scrollWidth > rangee.clientWidth + 1;
+    barre.classList.toggle("mode-selecteur", deborde);
+    $("choix-appli-menu").hidden = !deborde;
+    if (deborde) {
+      const appli = APPLIS.find(une => une.cle === appliAffichee) || APPLIS[0];
+      $("nom-appli").textContent = appli.nom;
+      $("bouton-applis").classList.toggle("actif", vue === "appli");
+    } else {
+      fermerMenuApplis();
+    }
+    return deborde;
+  }
+
+  // La liste du sélecteur : les onglets qui seraient visibles, dans leur
+  // ordre ; choisir une appli, c'est toucher son onglet (même chemin, mêmes
+  // vérifications). L'appli regardée est cochée.
+  function ouvrirMenuApplis() {
+    if (!classe) return;
+    const liste = $("menu-applis-liste");
+    liste.textContent = "";
+    document.querySelectorAll("#choix-appli button[data-appli]").forEach(onglet => {
+      if (onglet.hidden) return;
+      const li = document.createElement("li");
+      const bouton = el("button", "", onglet.textContent);
+      bouton.type = "button";
+      if (vue === "appli" && onglet.dataset.appli === appliAffichee) bouton.setAttribute("aria-current", "true");
+      bouton.addEventListener("click", () => { fermerMenuApplis(); onglet.click(); });
+      li.appendChild(bouton);
+      liste.appendChild(li);
+    });
+    $("menu-applis").hidden = false;
+    $("bouton-applis").setAttribute("aria-expanded", "true");
+    const choisie = liste.querySelector('[aria-current="true"]') || liste.querySelector("button");
+    if (choisie) choisie.focus();
+  }
+
+  function fermerMenuApplis(rendreLaMain) {
+    const menu = $("menu-applis");
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    $("bouton-applis").setAttribute("aria-expanded", "false");
+    if (rendreLaMain) $("bouton-applis").focus();
+  }
+
+  function montrerOngletChoisi() {
+    if (poserModeApplis()) return;
+    const rangee = $("choix-appli");
+    const actif = rangee.querySelector('button[aria-pressed="true"]:not([hidden])');
+    if (actif && rangee.scrollWidth > rangee.clientWidth) {
+      const r = rangee.getBoundingClientRect();
+      const a = actif.getBoundingClientRect();
+      if (a.right > r.right - 24) rangee.scrollLeft += a.right - r.right + 40;
+      else if (a.left < r.left) rangee.scrollLeft -= r.left - a.left + 8;
+    }
+    marquerSuiteOnglets();
   }
 
   // La vue sous les onglets : l'activité, les Élèves (lot « Ma classe :
@@ -4435,10 +4661,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const ligne = el("li");
       const texte = el("div");
       texte.append(el("b", "", modele.nom), el("span", "", CORE.descriptionEvaluation(modele.reglage) || "modèle à revoir"));
-      const modifier = el("button", "secondaire petit", "Modifier");
+      const modifier = el("button", "secondaire", "Modifier");
       modifier.type = "button";
       modifier.addEventListener("click", () => ouvrirBoiteModele(modele));
-      const ouvrir = el("button", "petit", `Ouvrir pour la ${classe.libelle}`);
+      const ouvrir = el("button", "", `Ouvrir pour la ${classe.libelle}`);
       ouvrir.type = "button";
       ouvrir.disabled = evalEclair;
       ouvrir.addEventListener("click", () => ouvrirBoiteOuvrir(modele));
@@ -5141,13 +5367,13 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         fin.className = "fin";
         const changer = document.createElement("button");
         changer.type = "button";
-        changer.className = "secondaire petit";
+        changer.className = "secondaire";
         changer.textContent = partage.droit === "ecriture" ? "Passer en lecture" : "Autoriser à modifier";
         changer.addEventListener("click", () => demanderPuisPartager(partage,
           partage.droit === "ecriture" ? "lecture" : "ecriture"));
         const retirer = document.createElement("button");
         retirer.type = "button";
-        retirer.className = "danger petit";
+        retirer.className = "danger";
         retirer.textContent = "Retirer";
         retirer.addEventListener("click", () => retirerPartage(partage));
         fin.append(changer, retirer);
@@ -5256,18 +5482,18 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
           fin.className = "fin";
           const reinit = document.createElement("button");
           reinit.type = "button";
-          reinit.className = "secondaire petit";
+          reinit.className = "secondaire";
           reinit.textContent = "Nouveau mot de passe";
           reinit.title = "Lui donner un mot de passe temporaire, qu'il devra changer";
           reinit.addEventListener("click", () => reinitialiserProf(prof));
           const etat = document.createElement("button");
           etat.type = "button";
-          etat.className = prof.actif === false ? "secondaire petit" : "danger petit";
+          etat.className = prof.actif === false ? "secondaire" : "danger";
           etat.textContent = prof.actif === false ? "Réactiver" : "Désactiver";
           etat.addEventListener("click", () => (prof.actif === false ? reactiverProf(prof) : desactiverProf(prof)));
           const sup = document.createElement("button");
           sup.type = "button";
-          sup.className = "danger petit";
+          sup.className = "danger";
           sup.textContent = "Supprimer";
           sup.title = prof.classes ? "Supprimer le compte et ses classes" : "Supprimer le compte";
           sup.addEventListener("click", () => supprimerProf(prof));
@@ -5836,7 +6062,37 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // élèves ») — rouvrir la même classe ne retombe ni sur ses codes ni sur ses
   // Réglages. Trouvé en essayant les boutons au navigateur (18/10/2026) :
   // `ouvrirClasse` la prenait pour la « même classe » et gardait la vue.
-  $("retour").addEventListener("click", () => { vue = "appli"; chargerClasses(); });
+  $("retour").addEventListener("click", () => { fermerMenuClasses(); vue = "appli"; chargerClasses(); });
+  // Le menu des classes (serveur pro, lot 5a) : le nom l'ouvre et le ferme ;
+  // Échap le ferme et rend la main au nom ; un clic ailleurs le ferme.
+  $("bouton-classes").addEventListener("click", () => {
+    if ($("menu-classes").hidden) ouvrirMenuClasses(); else fermerMenuClasses(true);
+  });
+  $("bouton-classes-colle").addEventListener("click", () => {
+    if ($("menu-classes").hidden) ouvrirMenuClasses($("bouton-classes-colle")); else fermerMenuClasses(true);
+  });
+  window.addEventListener("scroll", () => {
+    if (menuOuvertPar === $("bouton-classes-colle")) fermerMenuClasses();
+    marquerBarreCollee();
+  }, {passive: true});
+  $("choix-appli").addEventListener("click", evenement => {
+    if (evenement.target.closest && evenement.target.closest("button[data-appli]")) remonterALaBarre();
+  });
+  document.querySelectorAll(".onglets-classe > button").forEach(bouton => bouton.addEventListener("click", remonterALaBarre));
+  document.addEventListener("keydown", evenement => {
+    if (evenement.key === "Escape" && !$("menu-classes").hidden) { evenement.preventDefault(); fermerMenuClasses(true); }
+    if (evenement.key === "Escape" && !$("menu-applis").hidden) { evenement.preventDefault(); fermerMenuApplis(true); }
+  });
+  document.addEventListener("click", evenement => {
+    if (!evenement.target.closest || !evenement.target.closest(".choix-classe, #bouton-classes-colle")) fermerMenuClasses();
+    if (!evenement.target.closest || !evenement.target.closest(".choix-appli-menu")) fermerMenuApplis();
+  });
+  $("bouton-applis").addEventListener("click", () => {
+    if ($("menu-applis").hidden) ouvrirMenuApplis(); else fermerMenuApplis(true);
+  });
+  $("choix-appli").addEventListener("scroll", marquerSuiteOnglets, {passive: true});
+  window.addEventListener("resize", () => { if (classe) { marquerBarreCollee(); montrerOngletChoisi(); } });
+  $("nouvelle-classe").addEventListener("click", creerClasse);
   $("onglet-eleves").addEventListener("click", ouvrirEleves);
   $("onglet-reglages").addEventListener("click", ouvrirReglages);
   // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
@@ -6029,7 +6285,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       estAdmin = Boolean(donnees.admin);
       mdpTemporaire = Boolean(donnees.mdp_temporaire);
       if (mdpTemporaire) { ouvrirCompte(); return undefined; }
-      return chargerClasses().then(rouvrirClasseDemandee);
+      return chargerClasses().then(() => rouvrirClasseDemandee() || rouvrirDerniereClasse());
     }).catch(erreur => {
       deconnecter({silencieux: true});
       if (!erreur) return;

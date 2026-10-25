@@ -477,7 +477,7 @@ test("les bornes du serveur sont celles du moteur (SEUILS.course)", () => {
 });
 
 test("la page prof : le temps à côté de la couronne, la carte des records avec « Plein écran », la case par classe (planche R5)", () => {
-  assert.match(pageProf, /<div class="carte rec-carte" id="bloc-records" hidden>[\s\S]*<strong>🏆 Les records<\/strong><p>Toutes tes classes · le plein écran montre ce que voient les élèves<\/p>[\s\S]*<button type="button" class="secondaire petit" id="records-plein-ecran">Plein écran<\/button>/);
+  assert.match(pageProf, /<div class="carte rec-carte" id="bloc-records" hidden>[\s\S]*<strong>🏆 Les records<\/strong><p>Toutes tes classes · le plein écran montre ce que voient les élèves<\/p>[\s\S]*<button type="button" class="secondaire" id="records-plein-ecran">Plein écran<\/button>/);
   assert.match(pageProf, /<ol class="rec-liste" id="records-semaine"><\/ol><p class="rec-vide" id="records-semaine-vide" hidden>Personne cette semaine, pour l’instant\.<\/p>/);
   assert.match(pageProf, /<ol class="rec-liste" id="records-toujours"><\/ol>/);
   assert.match(pageProf, /<label><input type="checkbox" id="case-records"> 🏆 Les records<\/label>\s*<small>Le concours de temps des Légendes des tables\. Décoché : cette classe ne le voit pas et n’y apparaît pas\.<\/small>/);
@@ -488,7 +488,7 @@ test("la page prof : le temps à côté de la couronne, la carte des records ave
   assert.match(pageProf, /fermer\.textContent = "✕ Fermer";/);
   // Lot « Ma classe : réglages » : la case est dans la vue Réglages, cachée avec elle à la déconnexion
   // (et, depuis le lot « Ma classe : élèves », la vue Élèves et son onglet aussi).
-  assert.match(pageProf, /"bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",\s*"vue-eleves", "onglet-eleves"\];/);
+  assert.match(pageProf, /"bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",\s*"vue-eleves", "onglet-eleves", "menu-classes"\];/);
   assert.match(pageProf, /<div class="reglages" id="vue-reglages" hidden>[\s\S]*<strong>Défi tables<\/strong><\/label>\s*<!--[\s\S]*?-->\s*<div class="sous-reglage" id="rec-reglage" hidden>\s*<label><input type="checkbox" id="case-records">/,
     "la case des records est rangée SOUS Défi tables, dans les Réglages");
   // Le plein écran (posé sur <body>) ne s'imprime pas avec les bandelettes ; la carte est dans #ecran-classe, déjà cachée à l'impression.

@@ -447,7 +447,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // qui-voit-quoi-anzan-page-prof).
   // Puis « serveur pro : qui est Mystère » (25/10/2026) : prof/index.php seul
   // change, 62 au manifeste (avant : serveur-pro-textes-justes).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-qui-est-mystere$/m);
+  // Puis « serveur pro, lot 5a : Ma classe, la charte et la tête » (25/10/2026) :
+  // suivi.css arrive, prof/index.php et .htaccess changent, 63 au manifeste
+  // (avant : serveur-pro-qui-est-mystere).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-ma-classe-charte-tete$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

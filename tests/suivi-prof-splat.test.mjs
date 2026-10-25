@@ -395,7 +395,8 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   // Lot « Ma classe : réglages » : les onglets sont TOUJOURS là (avant, le
   // choix n'apparaissait qu'avec deux activités, et rien ne disait de quelle
   // appli était le tableau).
-  assert.match(page, /<div class="choix-appli" id="choix-appli" role="group" aria-label="Activité affichée">/,
+  // Serveur pro, lot 5a : la rangée des applis est un .onglets de la charte (une ligne qui défile).
+  assert.match(page, /<div class="onglets" id="choix-appli" role="group" aria-label="Activité affichée">/,
     "toujours là, même avec une seule activité");
   assert.match(page, /<button type="button" class="onglet-reglages" id="onglet-reglages" aria-pressed="false" aria-label="Réglages" title="[^"]+" hidden>/,
     "« Réglages » : caché tant que le droit n'est pas connu");
@@ -453,7 +454,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const lus = {records: 0, evaluations: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
     `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris", "poserActivites",
-      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction poserEnPlusPour() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction poserEnPlusPour() {}\nfunction montrerOngletChoisi() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "flash-anzan"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
   return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
