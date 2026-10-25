@@ -391,7 +391,7 @@ window.MATHSGO_CATALOGUE = {
       ],
       "shortGame": "dodo",
       "thumbnail": "assets/img/thumbnails/jeux/dodo.svg?v=tec-tec-1",
-      "cardDescription": "Un parcours de 2 min 30 à travers La Réunion : dose tes sauts, enchaîne les rebonds et vole entre les obstacles. Une seule vie."
+      "cardDescription": "Traverse La Réunion en sautant, rebondissant et volant. Découverte avec points de reprise ou Défi en une seule vie."
     },
     "jeux-cadeaux/galets.html": {
       "primaryNotion": "jeux-courts",
@@ -7092,7 +7092,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "jeux-courts-dodo",
       "title": "Tec-tec bondissant",
-      "description": "Un parcours de 2 min 30 à travers La Réunion : dose tes sauts, enchaîne les rebonds et vole entre les obstacles. Une seule vie.",
+      "description": "Traverse La Réunion en sautant, rebondissant et volant. Découverte avec points de reprise ou Défi en une seule vie.",
       "path": "jeux-cadeaux/dodo.html",
       "domains": [
         "jeux-recherches"

@@ -35,3 +35,38 @@ html.tec-site,.tec-site body{min-height:0;background:transparent}
  .screen-toggle svg{width:18px;height:18px}
  .tec-site.screen-side .jump{flex:none;padding:8px}
 }
+
+/* Choix du rythme et apprentissage, sans masquer le paysage. */
+.tec-site .intro-copy{max-width:70%;padding:18px 5.3%}
+.tec-site .intro h1{font-size:clamp(30px,5.8cqw,61px);margin-bottom:14px}
+.tec-site .intro .eyebrow{margin-bottom:12px}
+.tec-site .intro-desc{font-size:clamp(10px,1.6cqw,14px);margin-bottom:14px;line-height:1.5}
+.mode-choice{display:inline-flex;padding:3px;border:1px solid #b9cbb17a;border-radius:10px;gap:3px;background:#203e36}
+.mode-choice button{border:0;border-radius:7px;padding:10px 14px;min-height:40px;font-size:12px;font-weight:700;font-family:inherit;color:#f2f2dc;background:transparent;cursor:pointer}
+.mode-choice button[aria-pressed=true]{background:#f3c969;color:#253f37}
+.mode-description{font-size:11px;line-height:1.5;max-width:250px;margin:8px 0 14px;color:#e2e5cc}
+.tec-site .intro .contract{margin-top:12px}
+.choose-mode{display:block;margin:12px auto 0;min-height:38px;padding:6px 12px;border:0;border-radius:8px;background:transparent;color:#39594e;text-decoration:underline;font:inherit;font-size:12px;cursor:pointer}
+@media(max-width:680px){
+ .tec-site .intro-copy{max-width:96%;padding:12px 6%}
+ .tec-site .intro h1{font-size:33px;line-height:.98;margin-bottom:10px}
+ .tec-site .intro .eyebrow{font-size:7px;margin-bottom:9px}
+ .tec-site .intro-desc{font-size:10px;margin-bottom:9px}
+ .mode-choice button{font-size:11px;padding:8px 12px;min-height:36px}
+ .mode-description{font-size:9px;max-width:210px;margin:6px 0 10px}
+ .tec-site .intro .start{min-height:42px;padding:9px 17px;font-size:12px}
+ .tec-site .intro .contract{font-size:8px;margin-top:9px}
+ .choose-mode{margin-top:7px;min-height:34px;font-size:11px}
+}
+@media(max-height:550px) and (orientation:landscape){
+ .tec-site .intro-copy{max-width:75%;padding:9px 5%}
+ .tec-site .intro h1{font-size:30px;margin-bottom:7px}
+ .tec-site .intro .eyebrow,.tec-site .intro .contract{display:none}
+ .tec-site .intro-desc{display:block;font-size:9px;margin-bottom:7px}
+ .mode-choice button{padding:6px 10px;min-height:32px;font-size:10px}
+ .mode-description{font-size:9px;margin:5px 0 8px}
+ .tec-site .intro .start{min-height:36px;padding:7px 15px;font-size:11px}
+ .tec-site .result{padding:14px 18px}
+ .tec-site .result-score{font-size:38px}
+ .choose-mode{margin-top:5px;min-height:30px}
+}

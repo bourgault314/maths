@@ -10,6 +10,10 @@
   // et ramène la vitesse à 150 px/s, donc le sommet suit la durée de l'appui
   // (65 px pour un appui de 30 ms, 108 px pour 150 ms, 127 px pour 250 ms).
   const P = Object.freeze({ width: 24, height: 42, jump: 520, gravity: 1550, cut: 150, minHold: .03, buffer: .075, coyote: .05 });
+  // Le bord se prend avec les pieds, pas avec le centre de l'oiseau. Une
+  // arrivée descendante jusqu'à 3 px sous le dessus est rattrapée : les pattes
+  // touchent encore le bord, sans permettre de traverser une vraie paroi.
+  const FOOT = P.width / 2 - 1, CORNER = 3;
   const FLIGHT = Object.freeze({ lift: 720, gravity: 590, drag: 2.65, launch: 245 });
   const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
   // The timeline is authored in seconds; speed is integrated, never sampled
@@ -42,6 +46,14 @@
   class Run {
     constructor(course) {
       this.course=course;
+      // Fusionner les trous évite un faux appui entre deux vides qui se
+      // chevauchent (notamment à l'entrée du vol).
+      this.floorGaps=[];
+      for(const h of course.holes.slice().sort((a,b)=>a.x-b.x)) {
+        const last=this.floorGaps[this.floorGaps.length-1],end=h.x+h.w;
+        if(last && h.x<=last.end)last.end=Math.max(last.end,end);
+        else this.floorGaps.push({x:h.x,end});
+      }
       this.geometry=course.hazards.map(object=>({object,parts:object.polys.map(poly=>({poly,box:{
         left:Math.min(...poly.map(p=>p[0])),right:Math.max(...poly.map(p=>p[0])),
         bottom:Math.min(...poly.map(p=>p[1])),top:Math.max(...poly.map(p=>p[1]))
@@ -70,7 +82,7 @@
     box(x=this.x,y=this.y) { return {left:x-P.width/2,right:x+P.width/2,bottom:y+3,top:y+P.height}; }
     die(kind,object) { if(this.status!=='running')return; this.status='dead'; this.death={kind,id:object?.id||null,time:this.time,x:this.x,y:this.y}; this.lastEvent='death'; }
     floorAt(x) {
-      return !this.course.holes.some(h=>x>h.x+2 && x<h.x+h.w-2);
+      return !this.floorGaps.some(h=>x-FOOT>=h.x && x+FOOT<=h.end);
     }
     // A crumbling platform stays solid for `crumble` seconds after the landing.
     solidAt(s) { return !s.crumble || this.crumbs[s.id]===undefined || this.time<this.crumbs[s.id]+s.crumble; }
@@ -103,11 +115,11 @@
       this.y+=this.vy*DT;
       this.grounded=false;
       let surface=-Infinity;
-      if(this.floorAt(this.x) && oldY>=-.05 && this.y<=0 && this.vy<=0) surface=0;
+      if(this.floorAt(this.x) && oldY>=-CORNER && this.y<=0 && this.vy<=0) surface=0;
       const solids=this.course.solids.filter(o=>o.x<Math.max(oldX,this.x)+40 && o.x+o.w>Math.min(oldX,this.x)-40 && this.solidAt(o));
       let landedOn=null;
       for(const s of solids) {
-        if(this.x+P.width/2>s.x+1 && this.x-P.width/2<s.x+s.w-1 && oldY>=s.y-.5 && this.y<=s.y && this.vy<=0 && s.y>=surface) {surface=s.y;landedOn=s;}
+        if(this.x+FOOT>s.x && this.x-FOOT<s.x+s.w && oldY>=s.y-CORNER && this.y<=s.y && this.vy<=0 && s.y>=surface) {surface=s.y;landedOn=s;}
       }
       if(surface>-Infinity) {
         this.y=surface; this.vy=0; this.grounded=true; this.air=0;

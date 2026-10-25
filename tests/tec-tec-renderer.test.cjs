@@ -6,7 +6,7 @@ function setup(width,height,dpr=2){
  const bounds={width,height},canvas={getContext:()=>context,getBoundingClientRect:()=>bounds,get width(){return w;},set width(v){writes++;w=v;},get height(){return h;},set height(v){writes++;h=v;}};
  const env={window:{devicePixelRatio:dpr},Path2D:class{constructor(){allocations++;}},matchMedia:()=>({matches:true})};
  vm.runInNewContext(source,env);const renderer=new env.window.TecRenderer.Renderer(canvas,{zones:[]});
- return {renderer,canvas,bounds,bird:env.window.TecRenderer.bird,context,get writes(){return writes;},get allocations(){return allocations;}};
+ return {renderer,canvas,bounds,bird:env.window.TecRenderer.bird,supportBelow:env.window.TecRenderer.supportBelow,context,get writes(){return writes;},get allocations(){return allocations;}};
 }
 test('des notifications de taille identiques ne réinitialisent pas le dessin',()=>{
  const c=setup(600,350),writes=c.writes;for(let i=0;i<100;i++)c.renderer.resize();assert.equal(c.writes,writes);
@@ -23,4 +23,23 @@ test('le grand écran plafonne la résolution sans changer les proportions ni le
 test('les contours de l’oiseau sont réutilisés au lieu d’être recréés à chaque image',()=>{
  const c=setup(600,350);for(let i=0;i<600;i++)c.bird(c.context,132,344,1,i/60,i%2?'run':'fly',0,0);
  assert.ok(c.allocations<30,'le nombre de tracés reste borné sur dix secondes de dessin');
+});
+test('aucune ombre ne fait croire à un sol dans un trou ; le bord réel découpe l’ombre',()=>{
+ const {supportBelow}=setup(600,350),course={holes:[{x:100,w:100}],solids:[]};
+ assert.equal(supportBelow(course,{x:150,y:20,time:0,crumbs:{}}).length,0);
+ const edge=supportBelow(course,{x:105,y:0,time:0,crumbs:{}});
+ assert.equal(edge.length,1);assert.equal(edge[0].left,87);assert.equal(edge[0].right,100);
+ assert.equal(supportBelow(course,{x:202,y:-5,time:0,crumbs:{}}).length,0,'pas d’ombre au-dessus des pieds après la chute');
+});
+test('l’ombre suit le dessus d’une plateforme et disparaît quand celle-ci se dérobe',()=>{
+ const {supportBelow}=setup(600,350),course={holes:[{x:0,w:1000}],solids:[{id:4,x:90,w:30,y:48,crumble:.1}]};
+ const run={x:105,y:70,time:1,crumbs:{}};
+ assert.equal(supportBelow(course,run)[0].y,48);
+ run.crumbs[4]=1;run.time=1.05;assert.equal(supportBelow(course,run).length,1);
+ run.time=1.1;assert.equal(supportBelow(course,run).length,0);
+});
+test('la réduction des animations ne conserve aucune particule invisible',()=>{
+ const {renderer}=setup(600,350),run={tick:20,y:0,time:0};
+ for(let i=0;i<1000;i++)for(const event of ['land','crack','jump','death','win'])renderer.emit(event,run);
+ assert.equal(renderer.particles.length,0);assert.equal(renderer.flash,0);
 });

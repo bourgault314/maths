@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#f4f3e9">
 <title>Tec-tec bondissant | maths&amp;go</title>
 <meta name="robots" content="noindex, follow">
-<meta name="description" content="Un parcours de 2 min 30 à travers La Réunion. Une seule vie : saute, rebondis et vole.">
+<meta name="description" content="Traverse La Réunion en sautant, rebondissant et volant. Découverte avec points de reprise ou Défi en une seule vie.">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="canonical" href="https://mathsgo.re/jeux-cadeaux/dodo.html">
 <link rel="stylesheet" href="style.css?v=1">
-<link rel="stylesheet" href="site.css?v=4">
+<link rel="stylesheet" href="site.css?v=5">
 </head>
 <body>
 <div class="app" id="app">
@@ -24,7 +24,7 @@
         <button class="pause-button" id="pause" aria-label="Mettre en pause"><span aria-hidden="true">Ⅱ</span></button>
       </div>
       <div class="intro" id="intro">
-        <div class="intro-copy"><p class="eyebrow">UNE ÎLE. UN PARCOURS.</p><h1>Tec-tec<br><em>bondissant</em></h1><p class="intro-desc">Des Hauts au lagon.<br>Chaque bond compte.</p><button class="start primary" id="start" disabled>Préparation du paysage…</button><p class="contract">2 min 30 <span>·</span> 4 paysages <span>·</span> 1 vie</p></div>
+        <div class="intro-copy"><p class="eyebrow">UNE ÎLE. UN PARCOURS.</p><h1>Tec-tec<br><em>bondissant</em></h1><p class="intro-desc">Un appui bref : petit saut.<br>Un appui maintenu : grand saut et rebonds.</p><div class="mode-choice" role="group" aria-label="Mode de jeu"><button id="mode-discovery" type="button" aria-pressed="true">Découverte</button><button id="mode-challenge" type="button" aria-pressed="false">Défi</button></div><p id="mode-description" class="mode-description">Rythme doux · reprises après une erreur</p><button class="start primary" id="start" disabled>Préparation du paysage…</button><p class="contract">Écran tactile <span>·</span> Espace ou ↑</p></div>
       </div>
       <div class="cue" id="cue" hidden></div>
       <div class="zone-title" id="zone-title" hidden><span id="zone-kicker"></span><strong id="zone-name"></strong></div>
@@ -37,13 +37,14 @@
           <p class="record" id="record"></p>
           <button class="primary" id="gift-finish" hidden>Reprendre le parcours</button>
           <button class="primary" id="retry">Repartir du début <span aria-hidden="true">↗</span></button>
+          <button class="choose-mode" id="choose-mode" type="button">Choisir le mode</button>
         </section>
       </div>
       <div class="veil pause-veil" id="pause-veil" hidden><section class="result"><p class="eyebrow">ON REPREND SON SOUFFLE</p><h2>Pause.</h2><p class="result-detail">Le parcours t’attend.</p><button class="primary" id="resume">Continuer <span aria-hidden="true">→</span></button></section></div>
     </div>
     <div class="control-deck">
       <button id="screen-toggle" class="screen-toggle" type="button" aria-label="Agrandir" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6m12-6h6v6M3 15v6h6m12-6v6h-6"/></svg><span>Agrandir</span></button>
-      <button class="jump" id="jump" disabled><span class="jump-symbol" aria-hidden="true">↗</span><span id="jump-label">SAUTER</span><small id="jump-help">MAINTENIR POUR REBONDIR</small></button>
+      <button class="jump" id="jump" disabled><span class="jump-symbol" aria-hidden="true">↗</span><span id="jump-label">SAUTER</span><small id="jump-help">APPUI BREF OU MAINTENU</small></button>
     </div>
     </div>
     <p id="gift-status" class="gift-status" hidden></p>
@@ -51,13 +52,15 @@
   </main>
 </div>
 <p class="sr-only" id="announcement" aria-live="polite"></p>
-<script defer src="engine.js?v=2"></script>
-<script defer src="course.js?v=2"></script>
-<script defer src="landscapes.js?v=1"></script>
-<script defer src="renderer.js?v=3"></script>
+<script defer src="engine.js?v=4"></script>
+<script defer src="course.js?v=4"></script>
+<script defer src="landscapes.js?v=2"></script>
+<script defer src="renderer.js?v=4"></script>
 <script defer src="../core.js?v=luciole-7"></script>
 <script defer src="site.js?v=1"></script>
-<script defer src="app.js?v=5"></script>
+<script defer src="practice.js?v=1"></script>
+<script defer src="input-clock.js?v=1"></script>
+<script defer src="app.js?v=6"></script>
 <script defer src="screen.js?v=3"></script>
 </body>
 </html>
