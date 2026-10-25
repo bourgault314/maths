@@ -54,6 +54,21 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bd.php';
 
+// Serveur pro, lot 5e (25/10/2026, décision de Gwenaël) : la séance en direct
+// est réservée au compte ADMINISTRATEUR pour l'instant — il la teste avant que
+// les collègues s'en servent. Les ÉVALUATIONS, elles, restent ouvertes à tous
+// (elles ne passent pas par les actions direct.*). Pour la rouvrir aux
+// collègues : mettre false ici, et c'est tout — api/prof.php refuse d'après
+// cette constante, et la page du professeur la lit dans « moi ».
+const DIRECT_RESERVE_A_L_ADMINISTRATEUR = true;
+
+// Ce compte peut-il mener une séance en direct ? (Le droit sur la classe —
+// écriture au moins — se vérifie ensuite, comme avant.)
+function direct_ouvert_au_compte(bool $admin): bool
+{
+    return $admin || !DIRECT_RESERVE_A_L_ADMINISTRATEUR;
+}
+
 // La VEILLE (17/10/2026, demande de Gwenaël : « c'est généralement un prof qui
 // oublie »). Jusque-là, une séance vivait une heure et demie après le dernier
 // geste du professeur, même tableau fermé. Désormais elle vit tant que

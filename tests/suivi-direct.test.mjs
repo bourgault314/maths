@@ -259,7 +259,8 @@ test("le tableau caché continue d'appeler une fois par minute, sinon la veille 
 
 test("la pastille : le mode de la séance, rien d'autre, et pas pour un collègue en lecture seule", () => {
   const liste = apiProf.slice(apiProf.indexOf("case 'classes.liste':"), apiProf.indexOf("case 'classes.creer':"));
-  assert.match(liste, /'direct' => \$droit === 'lecture' \? null : \(\$modesDirects\[\(int\)\$ligne\['id'\]\] \?\? null\),/);
+  // Serveur pro, lot 5e : et pas une question éclair pour qui ne peut pas la mener (mode_direct_visible).
+  assert.match(liste, /'direct' => \$droit === 'lecture' \? null : mode_direct_visible\(\$modesDirects\[\(int\)\$ligne\['id'\]\] \?\? null, \$prof\),/);
   const tableau = apiProf.slice(apiProf.indexOf("case 'tableau':"), apiProf.indexOf("case 'records.ligue':"));
   assert.match(tableau, /'direct' => \$avecCodes && table_existe\(\$pdo, 'directs'\)/, "dans la classe aussi, à qui peut la mener");
   const modes = lib.slice(lib.indexOf("function modes_des_directs_ouverts("), lib.indexOf("function question_du_direct("));

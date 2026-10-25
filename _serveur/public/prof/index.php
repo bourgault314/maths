@@ -1478,6 +1478,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let tri = {colonne: "prenom", sens: 1};
   let venaitDeSeConnecter = false;
   let estAdmin = false;
+  // Lot 5e : la séance en direct est réservée à l'administrateur pour
+  // l'instant — c'est le serveur qui le dit (« moi », lib/direct.php) et qui
+  // refuse ; la page ne fait que cacher le bouton.
+  let directPermis = false;
   let mdpTemporaire = false;
   let identifiant = "";
   let droitClasse = "proprietaire";
@@ -1821,6 +1825,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     classe = null;
     eleves = [];
     estAdmin = false;
+    directPermis = false;
     mdpTemporaire = false;
     identifiant = "";
     droitClasse = "proprietaire";
@@ -5209,7 +5214,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function dessinerModeles(zone) {
     const liste = el("ul", "eval-modeles");
     if (evalEclair) {
-      zone.appendChild(el("p", "message info", "Une question éclair est en cours pour cette classe : termine la séance en direct avant d’ouvrir une évaluation."));
+      // Lot 5e : un collègue ne peut pas terminer la séance (réservée à
+      // l'administrateur) — on ne lui demande pas de le faire.
+      zone.appendChild(el("p", "message info", directPermis
+        ? "Une question éclair est en cours pour cette classe : termine la séance en direct avant d’ouvrir une évaluation."
+        : "Une séance en direct est en cours pour cette classe : l’évaluation pourra s’ouvrir quand elle sera terminée."));
     }
     if (!modeles || !modeles.length) {
       liste.appendChild(el("li", "vide", "Aucun modèle pour l’instant. Un modèle, c’est les tables, les types de questions, le nombre et le chrono : tu le prépares une fois, tu l’ouvres quand tu veux."));
@@ -5865,8 +5874,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const proprietaire = droitClasse === "proprietaire";
     const ecriture = droitClasse !== "lecture";
     // Mener une séance en direct, c'est recevoir les réponses avec les
-    // prénoms : pas en lecture seule (même règle que le serveur).
-    $("seance-direct").hidden = !ecriture;
+    // prénoms : pas en lecture seule (même règle que le serveur). Lot 5e :
+    // et seulement si le serveur l'ouvre à ce compte (l'administrateur pour
+    // l'instant).
+    $("seance-direct").hidden = !ecriture || !directPermis;
     // Une séance restée ouverte se reprend d'ici (17/10/2026).
     $("seance-direct").textContent = "";
     if (classe && classe.direct === "eclair") {
@@ -6909,6 +6920,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       identifiant = donnees.identifiant;
       $("qui").textContent = donnees.identifiant;
       estAdmin = Boolean(donnees.admin);
+      directPermis = donnees.direct === true;
       mdpTemporaire = Boolean(donnees.mdp_temporaire);
       // Correctif des lots 5 (point 10) : l'ancre est lue (et effacée) AVANT
       // le mot de passe temporaire — elle sert une fois, après son changement.

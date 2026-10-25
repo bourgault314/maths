@@ -190,6 +190,15 @@ peut cliquer sur une barre pour désigner la bonne réponse. À la fin,
 une colonne par question, CSV lisible par Excel) — fabriqué dans son
 navigateur — puis efface tout.
 
+**Pour l'administrateur seul, pour l'instant** (lot 5e, 25/10/2026, décision
+de Gwenaël). Tant que `DIRECT_RESERVE_A_L_ADMINISTRATEUR` vaut `true`
+(`lib/direct.php`), `api/prof.php` refuse toute action `direct.*` à un autre
+compte (403, « La séance en direct n’est pas encore ouverte aux collègues. »,
+refus journalisé), avant même de lire la classe ; « Ma classe » cache le
+bouton et la pastille « ● En direct ». Les **évaluations** restent ouvertes à
+tous. Pour rouvrir la séance aux collègues : `false` à cette constante (et à
+`DIRECT_RESERVE_ATTENDUE` dans `tests/lancer.php`), rien d'autre.
+
 **Ce que le serveur garde, et combien de temps.** Trois tables temporaires :
 la séance, ses questions (un type et un réglage pris dans une liste fermée —
 jamais d'énoncé), et une réponse courte par élève et par question, dont la
