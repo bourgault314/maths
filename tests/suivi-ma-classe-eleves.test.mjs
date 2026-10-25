@@ -266,11 +266,12 @@ test("une classe s'ouvre sur son tableau, jamais sur ses codes — sauf une clas
   assert.equal(regle(0, "lecture"), "appli");
   assert.equal(regle(26, "proprietaire"), "appli");
   assert.doesNotMatch(script, /sessionStorage\.setItem\([^)]*vue/i, "la vue ne se retient pas d'une ouverture à l'autre");
-  // « Toutes mes classes » puis la MÊME classe : ouvrirClasse la croit « même
-  // classe » (elle garde son onglet d'activité) — le retour remet donc la vue.
-  // Serveur pro, lot 5a : « Toutes mes classes » est au bout du menu « 405 ▾ », qu'il ferme.
-  assert.match(script, /\$\("retour"\)\.addEventListener\("click", \(\) => \{ fermerMenuClasses\(\); vue = "appli"; chargerClasses\(\); \}\);/,
+  // Revenir à la MÊME classe : ouvrirClasse la croit « même classe » (elle
+  // garde sa vue) — le retour remet donc la vue. Serveur pro, lot 5d : plus de
+  // « Toutes mes classes » ; le retour est « ‹ Ma classe », dans Mon compte.
+  assert.match(script, /\$\("retour-compte"\)\.addEventListener\("click", \(\) => \{ vue = "appli"; allerSansPerdre\("", classe && classe\.id\); \}\);/,
     "quittée sur Élèves, la classe se rouvre sur son tableau");
+  assert.doesNotMatch(page, /id="retour"/, "plus de « Toutes mes classes »");
   assert.match(fonction("oublierEtat"), /vue = "appli";/);
 });
 
@@ -433,15 +434,16 @@ test("« Les calculs qui coincent » : un calcul n'y est qu'à partir de 3 élè
 
 // ------------------------------------------------------------ « + Nouvelle classe »
 
-test("Mes classes : plus de formulaire toujours affiché, « + Nouvelle classe » en simple bouton sous les tuiles", () => {
+test("« + Nouvelle classe » : au bout du menu « 405 ▾ », et sur l'écran « Crée ta première classe » (lot 5d)", () => {
   assert.doesNotMatch(page, /<h2>Nouvelle classe<\/h2>|id="form-classe"|id="creer-classe"|id="libelle"/);
-  // Serveur pro, lot 5a (choix de Gwenaël, planche 7 du 25/10/2026) : un
-  // bouton secondaire juste sous la liste, plus une carte en pointillés.
-  const apresListe = page.slice(page.indexOf('<ul class="tuiles" id="liste-classes"></ul>'));
-  assert.match(apresListe, /^<ul class="tuiles" id="liste-classes"><\/ul>\s*<div class="actions">\s*<button type="button" class="secondaire" id="nouvelle-classe"><svg [^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>Nouvelle classe<\/button>/);
-  assert.match(script, /\$\("nouvelle-classe"\)\.addEventListener\("click", creerClasse\);/);
-  assert.doesNotMatch(fonction("chargerClasses"), /nouvelle-classe|creerClasse/, "la liste ne fabrique plus de carte « Nouvelle classe »");
-  assert.ok(page.indexOf('id="bloc-profs"') > page.indexOf('id="liste-classes"'), "la partie Professeurs ne bouge pas");
+  // Serveur pro, lot 5d (choix de Gwenaël, 25/10/2026) : plus d'écran « Mes
+  // classes » ; « + Nouvelle classe » remplace « Toutes mes classes » au bout du menu.
+  assert.match(page, /<ul id="menu-classes-liste" aria-label="Mes classes"><\/ul>\s*<button type="button" id="nouvelle-classe"><svg [^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>Nouvelle classe<\/button>\s*<\/div>/);
+  assert.match(script, /\$\("nouvelle-classe"\)\.addEventListener\("click", \(\) => \{ fermerMenuClasses\(\); creerClasse\(\); \}\);/, "le menu se ferme avant la petite fenêtre");
+  assert.match(script, /\$\("premiere-classe"\)\.addEventListener\("click", creerClasse\);/);
+  assert.doesNotMatch(fonction("chargerClasses"), /nouvelle-classe|creerClasse|montrer/, "la liste ne fabrique ni bouton ni écran");
+  const compte = page.slice(page.indexOf('<section id="ecran-compte"'), page.indexOf("</section>", page.indexOf('<section id="ecran-compte"')));
+  assert.ok(compte.includes('id="bloc-profs"'), "Professeurs est dans Mon compte");
 });
 
 test("« + Nouvelle classe » : la petite fenêtre, un nom, une seule création, puis la classe s'ouvre", async () => {
@@ -452,11 +454,14 @@ test("« + Nouvelle classe » : la petite fenêtre, un nom, une seule création,
     // sur le compte des créations au lieu de rester bloqué (vu par Code le
     // 18/10 sur Windows : le sabotage faisait pendre le test 600 s).
     const enAttente = [];
-    const f = new Function("demander", "api", "chargerClasses", "ouvrirClasse", "messager", "surErreur",
-      `let creationEnCours = false;\n${fonction("creerClasse")}\nreturn creerClasse;`)(
+    // Correctif des lots 5 : la nouvelle classe s'ouvre par le chemin commun
+    // (allerSansPerdre : la liste relue, une réponse périmée sans effet, une
+    // panne dite avec « La classe 307 est créée. »).
+    const f = new Function("demander", "api", "allerSansPerdre", "messager", "surErreur",
+      `let creationEnCours = false;\nconst zoneClasses = () => "message-classes";\n${fonction("creerClasse")}\nreturn creerClasse;`)(
       async (texte, champs) => { appels.push(["demander", texte, champs]); return reponse; },
       (action, corps) => { appels.push([action, corps]); return new Promise(r => { enAttente.push(() => r({id: 42})); }); },
-      async () => { appels.push(["chargerClasses"]); }, async id => { appels.push(["ouvrir", id]); },
+      async (avant, ...demandees) => { appels.push(["aller", avant, ...demandees]); return true; },
       (id, t, type) => messages.push([id, t, type]), e => { throw e; });
     const p1 = f();
     await new Promise(r => setTimeout(r, 0));
@@ -470,7 +475,7 @@ test("« + Nouvelle classe » : la petite fenêtre, un nom, une seule création,
   assert.deepEqual(ok.appels[0][2], [{nom: "libelle", libelle: "Nom de la classe", maxlength: 40, placeholder: "405"}]);
   assert.deepEqual(ok.appels.filter(a => a[0] === "classes.creer"), [["classes.creer", {libelle: "307", applis: ["defi-tables"]}]],
     "une seule classe, même avec un second clic pendant l'envoi");
-  assert.deepEqual(ok.appels.slice(-2), [["chargerClasses"], ["ouvrir", 42]], "puis la nouvelle classe s'ouvre (sur Élèves : elle est vide)");
+  assert.deepEqual(ok.appels.slice(-1), [["aller", "La classe 307 est créée.", 42]], "puis la nouvelle classe s'ouvre (sur Élèves : elle est vide)");
   const vide = await rejoue({libelle: "   "});
   assert.deepEqual(vide.appels.filter(a => a[0] === "classes.creer"), []);
   assert.deepEqual(vide.messages[0], ["message-classes", "Donne un nom à la classe.", "erreur"]);
@@ -688,6 +693,7 @@ function fenetreRejouee(eleve, options = {}) {
 // La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
 let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
 let demandeAppli = 0, parcoursAnzanEleve = null;
+let generation = 0, demandeProfs = 0, anneeCourante = "", classeApresMotDePasse = 0, ligueRecords = null;
 let recherche = "", fenetreEleveId = null, idsAffiches = []; const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
 ${fonction("oublierEtat")}
 return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, deconnecter: () => { oublierEtat(); voitEleve = null; },

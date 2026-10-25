@@ -456,7 +456,13 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « serveur pro, correctif 5c-bis : la carte Évaluations trop étroite »
   // (25/10/2026) : prof/index.php seul change, 63 au manifeste
   // (avant : serveur-pro-ma-classe-tableaux).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-evaluations-carte-etroite$/m);
+  // Puis « serveur pro, lot 5d : plus d'écran Mes classes » (25/10/2026) :
+  // prof/index.php seul change, 63 au manifeste
+  // (avant : serveur-pro-evaluations-carte-etroite).
+  // Puis « serveur pro, correctif des lots 5 après la relecture Codex »
+  // (25/10/2026) : prof/index.php seul change, 63 au manifeste
+  // (avant : serveur-pro-sans-mes-classes).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-correctif-lots-5$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

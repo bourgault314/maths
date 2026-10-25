@@ -73,16 +73,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   #tableau td.nom { font-weight: 600; }
   /* L'en-tête (charte : .entete) : le nom de l'écran au milieu (titre-page). */
   .entete .qui { white-space: nowrap; }
-  /* Mes classes : une tuile par classe (charte : .tuile), « + Nouvelle
-     classe » en simple bouton dessous (choix de Gwenaël, maquettes du 25/10). */
-  .tuiles .tuile .badge { margin-top: 2px; }
-  .tuile.partagee { border-left-color: var(--orange); }
-  .tuile.partagee:hover { border-left-color: var(--blue); }
-  .tuile em.en-direct { margin-left: 8px; padding: 2px 9px; border-radius: 999px; background: var(--orange-pale);
-                        color: var(--orange-texte); font-size: var(--texte-secondaire); font-style: normal; font-weight: 700;
-                        white-space: nowrap; }
+  /* Serveur pro, lot 5d : plus d'écran « Mes classes ». Un professeur sans
+     aucune classe voit une seule carte, « Crée ta première classe ». */
+  .premiere-classe { max-width: 520px; margin: 24px auto 0; }
+  .premiere-classe h1 { margin: 0 0 8px; }
+  .premiere-classe .actions { margin: 16px 0 0; }
+  .premiere-classe .note { margin: 16px 0 0; }
+  #message-premiere-classe { max-width: 520px; margin: 12px auto 0; }
+  #premiere-classe svg, #nouvelle-classe svg { display: block; flex: none; }
   li.vide { color: var(--muted); }
-  #nouvelle-classe svg { display: block; flex: none; }
   /* La tête d'une classe (choix de Gwenaël, planche 1, 25/10/2026) : « 405 ▾ »
      ouvre la liste de ses classes, « Toutes mes classes » au bout ; « Séance
      en direct » à droite. Le menu se ferme par Échap, par un clic ailleurs ou
@@ -101,23 +100,38 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                         border-radius: 50%; background: var(--bleu-pale); color: var(--blue); }
   .choix-classe .rond svg { display: block; transition: transform .15s; }
   .choix-classe h1 button[aria-expanded="true"] .rond svg { transform: rotate(180deg); }
-  .menu-classes { position: absolute; top: calc(100% + 6px); left: 0; z-index: 6; width: 300px;
+  .menu-classes { position: absolute; top: calc(100% + 6px); left: 0; z-index: 6; width: 340px;
                   max-height: min(70vh, 480px); overflow-y: auto; padding: 6px;
                   background: var(--paper); border: 1px solid var(--line); border-radius: var(--arrondi-carte);
                   box-shadow: var(--ombre-fenetre); }
   .menu-classes ul { margin: 0; padding: 0; list-style: none; }
   .menu-classes button { width: 100%; justify-content: flex-start; gap: 12px; padding: 0 12px;
                          color: var(--ink); background: none; border: 0; font-weight: 400; text-align: left; }
+  /* Lot 5d : ce que disait la tuile d'une classe — « partagée par … » et la
+     séance restée ouverte — est dans sa ligne du menu (340 px de large pour
+     que « partagée par … · modifiable » tienne sur une ligne). */
+  .menu-classes li button { align-items: center; padding: 8px 12px; white-space: normal; }
+  .menu-classes .infos { display: flex; flex-direction: column; min-width: 0; }
+  .menu-classes .infos .ligne-1 { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+  .menu-classes em.en-direct { padding: 1px 8px; border-radius: 999px; background: var(--orange-pale);
+                               color: var(--orange-texte); font-size: var(--texte-secondaire); font-style: normal; font-weight: 700;
+                               white-space: nowrap; }
+  .menu-classes .infos .partage { color: var(--orange-texte); }
   .menu-classes button:hover { color: var(--ink); background: var(--survol); border: 0; }
   .menu-classes button strong { min-width: 48px; color: var(--blue-dark); }
   .menu-classes button span { color: var(--muted); font-size: var(--texte-secondaire); }
   .menu-classes button[aria-current="true"] { background: var(--bleu-pale); }
   .menu-classes button[aria-current="true"]::after { content: "✓"; margin-left: auto; color: var(--blue); font-weight: 700; }
-  .menu-classes #retour { margin-top: 6px; color: var(--blue); font-weight: 700; border-top: 1px solid var(--filet-doux);
-                          border-radius: 0 0 var(--arrondi) var(--arrondi); }
+  .menu-classes #nouvelle-classe { margin-top: 6px; gap: 8px; color: var(--blue); font-weight: 700; border-top: 1px solid var(--filet-doux);
+                                   border-radius: 0 0 var(--arrondi) var(--arrondi); }
   /* Le « 405 ▾ » en petit, au début de la barre collée (téléphone). */
-  .classe-collee { flex: none; align-self: center; margin-right: 4px; padding: 0 8px 0 0; gap: 4px;
+  /* Correctif des lots 5 (point 6) : un nom long (« Troisième groupe de
+     remédiation ») ne pousse plus Élèves et Réglages hors de l'écran — il
+     rétrécit et finit par « … » — plus vite que le nom de l'appli à côté
+     (rétrécissement 4 contre 1), qui reste lisible. */
+  .classe-collee { flex: 0 4 auto; min-width: 0; max-width: 45%; align-self: center; margin-right: 4px; padding: 0 8px 0 0; gap: 4px;
                    color: var(--blue-dark); background: none; border: 0; font: 400 var(--titre-carte)/1.2 var(--serif); }
+  .classe-collee span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .classe-collee:hover { color: var(--blue); background: none; border: 0; }
   .classe-collee svg { display: block; flex: none; color: var(--blue); }
   /* Ouvert depuis la barre collée : le menu suit la barre, pas le haut de la page. */
@@ -235,6 +249,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .profs li .fin { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
   .profs li.vide { color: var(--muted); font-style: italic; border-style: dashed; }
   .profs .role { color: var(--muted); font-size: .86rem; }
+  /* Lot 5d : Professeurs, dans Mon compte — une ligne par professeur, ses
+     gestes derrière « ⋯ ». */
+  .profs.comptes li { flex-wrap: nowrap; gap: 12px; padding: 8px 8px 8px 12px; }
+  .profs.comptes .qui-prof { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+  .profs.comptes .qui-prof strong { overflow-wrap: anywhere; }
+  .profs.comptes li.eteint strong, .profs.comptes li.eteint .role { color: var(--muted); }
+  .profs.comptes .plus { flex: none; }
+  .carte-compte { max-width: 640px; }
+  #ecran-compte h2 { margin-top: 24px; }
   .retour-icone svg { display: block; }
   #retour-compte { margin-bottom: 12px; }
   .note-tableau { margin: 10px 0 0; font-size: .88rem; }
@@ -563,7 +586,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                      min-height: 44px; padding: 8px 8px 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fbfcfe; }
   .eval-modeles li > .texte { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
   .eval-modeles .gestes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
-  .eval-modeles .gestes button { padding: 0 12px; }
+  /* Correctif des lots 5 (point 6) : « Ouvrir pour la Troisième groupe de
+     remédiation » passe à la ligne dans son bouton au lieu d'élargir la page. */
+  .eval-modeles .gestes { min-width: 0; max-width: 100%; }
+  .eval-modeles .gestes button { max-width: 100%; padding: 0 12px; white-space: normal; text-align: center; }
   .eval-modeles b { display: block; color: var(--ink); }
   .eval-modeles span { display: block; color: var(--muted); font-size: .84rem; }
   .eval-modeles li.vide { display: block; color: var(--muted); font-style: italic; border-style: dashed; padding: 10px 12px; }
@@ -641,7 +667,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .onglets-classe > button { padding: 0 12px; }
     .onglets-classe .mot { display: none; }
     .tete-classe #seance-direct { padding: 0 14px; }
-    .menu-classes { width: min(300px, calc(100vw - 32px)); }
+    .menu-classes { width: min(340px, calc(100vw - 32px)); }
+    .menu-classes.menu-applis { width: min(300px, calc(100vw - 32px)); }
   }
   /* Lot « Qui voit quoi » (planche 3) : sur téléphone, pas de colonne « En
      plus » — les pastilles passent sous le prénom ; dans la fenêtre, les
@@ -746,45 +773,35 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     </div>
   </section>
 
-  <!-- Liste des classes -->
-  <section id="ecran-classes" hidden>
-    <h1>Mes classes</h1>
-    <p class="sous">Choisis une classe, ou crée-en une nouvelle.</p>
-    <p class="message" id="bandeau-annee" hidden></p>
-    <!-- Fin d'année (lot serveur A, 06/09/2026). Le serveur ne supprime plus
-         rien à l'ouverture de cette page : il dit ce qui ne sert plus, et le
-         professeur décide. Une suppression définitive ne doit jamais être le
-         prix d'un clic sur « Mes classes ». -->
-    <div class="message info" id="bandeau-echues" hidden>
-      <p id="echues-texte" style="margin:0 0 10px"></p>
+  <!-- Serveur pro, lot 5d (choix de Gwenaël, 25/10/2026) : plus d'écran
+       « Mes classes ». À la connexion, une classe s'ouvre toujours (l'ancre de
+       la séance en direct, sinon la dernière ouverte sur ce poste, sinon la
+       première des siennes) ; on change de classe par « 405 ▾ », qui se termine
+       par « + Nouvelle classe ». Professeurs est dans Mon compte. Il ne reste
+       ici que l'écran d'un professeur qui n'a AUCUNE classe (un collègue au
+       premier jour). -->
+  <section id="ecran-premiere-classe" hidden>
+    <div class="carte premiere-classe" id="carte-premiere-classe">
+      <h1>Crée ta première classe</h1>
+      <p class="sous">Donne-lui un nom (405, 6e B…), puis ajoute tes élèves : chacun reçoit un code pour entrer dans les applis.</p>
       <div class="actions">
-        <button type="button" class="danger" id="supprimer-echues"></button>
-        <button type="button" class="secondaire" id="echues-plus-tard">Me le rappeler plus tard</button>
+        <button type="button" id="premiere-classe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle classe</button>
+      </div>
+      <p class="sous note">Si un collègue partage une de ses classes avec toi, elle s’ouvrira ici à ta prochaine connexion.</p>
+    </div>
+    <!-- Correctif des lots 5 (relecture Codex, point 3) : la liste des classes
+         ou le tableau de la classe à ouvrir n'ont pas pu être lus (une classe
+         vient d'être supprimée, le réseau a lâché). Ni la classe partie, ni
+         « Crée ta première classe » : de quoi réessayer. Le message dessous
+         dit ce qui a réussi et ce qui a échoué. -->
+    <div class="carte premiere-classe" id="carte-reessayer" hidden>
+      <h1>Ta classe n’a pas pu s’ouvrir</h1>
+      <p class="sous">Le détail est juste en dessous. Réessaie dans un instant.</p>
+      <div class="actions">
+        <button type="button" id="reessayer-classe">Réessayer</button>
       </div>
     </div>
-    <!-- Une tuile par classe (chargerClasses). « + Nouvelle classe » ne sert
-         qu'en septembre : un simple bouton sous les tuiles, qui ouvre la petite
-         fenêtre (serveur pro, lot 5a, 25/10/2026 ; avant, une carte en
-         pointillés au bout de la liste). -->
-    <ul class="tuiles" id="liste-classes"></ul>
-    <div class="actions">
-      <button type="button" class="secondaire" id="nouvelle-classe"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle classe</button>
-    </div>
-    <p class="message" id="message-classes" hidden></p>
-
-    <!-- Visible seulement pour le compte administrateur. -->
-    <div id="bloc-profs" hidden>
-      <h2>Professeurs</h2>
-      <div class="carte" style="max-width:520px">
-        <p class="sous" style="margin-bottom:12px">Chaque professeur ne voit que ses propres classes.
-        Pour qu’un collègue voie une de tes classes, ouvre-la et partage-la.</p>
-        <ul class="profs" id="liste-profs"></ul>
-        <div class="actions">
-          <button type="button" class="secondaire" id="ajouter-prof">Ajouter un professeur</button>
-        </div>
-        <p class="message" id="message-profs" hidden></p>
-      </div>
-    </div>
+    <p class="message" id="message-premiere-classe" hidden></p>
   </section>
 
   <!-- Une classe -->
@@ -793,21 +810,38 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
          (prof/direct.php) pour cette classe, dans le même onglet. Il est sur
          la ligne du retour, à droite : la barre d'outils est déjà pleine. -->
     <!-- Serveur pro, lot 5a (choix de Gwenaël, planche 1, 25/10/2026) : le nom
-         de la classe ouvre la liste de ses classes ; « Toutes mes classes » au
-         bout de la liste ramène aux tuiles. Les classes sont celles de
-         classes.liste, déjà lue : le menu n'appelle pas le serveur. -->
+         de la classe ouvre la liste de ses classes. Lot 5d : « + Nouvelle
+         classe » au bout de la liste (avant, « Toutes mes classes », qui
+         ramenait aux tuiles). Les classes sont celles de classes.liste, déjà
+         lue : le menu n'appelle pas le serveur. -->
     <div class="tete-classe">
       <div class="choix-classe">
         <h1><button type="button" id="bouton-classes" aria-haspopup="true" aria-expanded="false" aria-controls="menu-classes"><span id="titre-classe"></span><span class="rond" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button></h1>
         <div class="menu-classes" id="menu-classes" hidden>
           <ul id="menu-classes-liste" aria-label="Mes classes"></ul>
-          <button type="button" id="retour">Toutes mes classes</button>
+          <button type="button" id="nouvelle-classe"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nouvelle classe</button>
         </div>
       </div>
       <button type="button" id="seance-direct">Séance en direct</button>
     </div>
     <p class="sous" id="resume-classe"></p>
     <p class="message" id="bandeau-droit" hidden></p>
+    <!-- Lot 5d : ce que disait l'écran « Mes classes », en haut de la classe
+         ouverte — le message des classes (créée, supprimée, mot de passe
+         changé) et les deux bandeaux de l'année. Fin d'année (lot serveur A,
+         06/09/2026) : le serveur ne supprime plus rien à l'ouverture de la
+         liste des classes ; il dit ce qui ne sert plus, et le professeur
+         décide. Une suppression définitive ne doit jamais être le prix d'un
+         clic. -->
+    <p class="message" id="message-classes" hidden></p>
+    <p class="message" id="bandeau-annee" hidden></p>
+    <div class="message info" id="bandeau-echues" hidden>
+      <p id="echues-texte" style="margin:0 0 10px"></p>
+      <div class="actions">
+        <button type="button" class="danger" id="supprimer-echues"></button>
+        <button type="button" class="secondaire" id="echues-plus-tard">Me le rappeler plus tard</button>
+      </div>
+    </div>
     <!-- Lot « Ma classe : réglages » (17/10/2026) : les onglets, toujours là.
          À gauche, les activités de la classe (un bouton caché pour celle
          qu'elle n'a pas) : on voit toujours de quelle appli est le tableau.
@@ -925,7 +959,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                jour du dernier trésor. -->
           <tr id="entete-coffres" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th class="seul-telephone"><button type="button" data-tri="tresors">Trésors</button></th>
+            <th><button type="button" data-tri="tresors">Trésors</button></th>
             <th class="large"><button type="button" data-tri="niveau1">Niveau 1</button></th>
             <th class="large"><button type="button" data-tri="niveau2">Niveau 2</button></th>
             <th class="large"><button type="button" data-tri="niveau3">Niveau 3</button></th>
@@ -1223,14 +1257,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   <!-- Mon compte : changer son mot de passe. Avec un mot de passe temporaire
        (donné par l'administrateur), c'est le seul écran possible tant qu'un
-       nouveau n'a pas été choisi — le serveur refuse tout le reste. -->
+       nouveau n'a pas été choisi — le serveur refuse tout le reste.
+       Lot 5d : « ‹ Ma classe » ramène à la classe ouverte, et Professeurs
+       (administrateur seulement) est ici, sous le mot de passe : ce sont des
+       réglages du compte, pas ceux d'une classe. -->
   <section id="ecran-compte" hidden>
-    <button type="button" class="secondaire retour-icone" id="retour-compte"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Toutes mes classes</button>
+    <button type="button" class="secondaire retour-icone" id="retour-compte"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Ma classe</button>
     <h1>Mon compte</h1>
     <p class="sous" id="compte-qui"></p>
     <p class="message info" id="bandeau-temporaire" hidden>Ton mot de passe est temporaire : choisis-en un nouveau
     pour continuer. Il doit faire 12 à 72 caractères.</p>
-    <div class="carte" style="max-width:420px">
+    <h2>Mon mot de passe</h2>
+    <div class="carte carte-compte">
       <form id="form-motdepasse" autocomplete="on">
         <label for="mdp-ancien">Mot de passe actuel</label>
         <input id="mdp-ancien" name="password" type="password" autocomplete="current-password" required>
@@ -1243,6 +1281,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <p class="message" id="message-compte" hidden></p>
     </div>
     <p class="sous" style="margin-top:14px">Après le changement, tes autres appareils seront déconnectés ; celui-ci reste connecté.</p>
+
+    <!-- Visible seulement pour le compte administrateur (le serveur revérifie).
+         Lot 5d : une ligne par professeur, ses gestes derrière « ⋯ » (comme
+         l'onglet Élèves) — avant, trois boutons de 44 px par collègue, dont
+         deux rouges, qui passaient à la ligne. -->
+    <div id="bloc-profs" hidden>
+      <h2>Professeurs</h2>
+      <div class="carte carte-compte">
+        <p class="sous" style="margin-bottom:12px">Chaque professeur ne voit que ses propres classes.
+        Pour qu’un collègue voie une de tes classes : ouvre-la, puis Réglages, « Partager cette classe ».</p>
+        <ul class="profs comptes" id="liste-profs"></ul>
+        <div class="actions">
+          <button type="button" class="secondaire" id="ajouter-prof">Ajouter un professeur</button>
+        </div>
+        <p class="message" id="message-profs" hidden></p>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -1364,6 +1419,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <p class="pa-note" id="pa-note"></p>
       <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
     </div>
+    <!-- Correctif des lots 5 (point 5) : « Voir son parcours » refusé se lit ici,
+         pas derrière la fenêtre. -->
+    <p class="message" id="fe-message" hidden></p>
     <p class="fe-gestes" id="fe-gestes" hidden><button type="button" class="secondaire" id="fe-revenir" title="Revenir à une version précédente de sa progression">Revenir à…</button></p>
   </div>
   <div class="fenetre-pied">
@@ -1516,6 +1574,20 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let fenetreEleveId = null;
   let idsAffiches = [];
   let demandeAppli = 0;
+  // Correctif des lots 5 (relecture Codex du 25/10/2026, point 1) : le numéro
+  // de la session de la page. « Se déconnecter » (oublierEtat) l'avance : une
+  // réponse demandée avant (la liste des classes, celle des professeurs, « moi »)
+  // n'est plus posée dans la page — même si elle arrive après, réseau lent.
+  let generation = 0;
+  let demandeProfs = 0;
+  // L'année scolaire en cours, dite par classes.liste (« annee_courante ») :
+  // c'est elle, avec l'année de chaque classe, qui dit « de cette année »
+  // (point 9) — pas la liste « echues », qui ne compte que les vieilles
+  // classes mûres pour le ménage.
+  let anneeCourante = "";
+  // Arrivé par « #classe=… » avec un mot de passe temporaire : la classe du
+  // lien, gardée le temps du changement obligatoire (point 10).
+  let classeApresMotDePasse = 0;
 
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
 
@@ -1634,11 +1706,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Le nom de l'écran, dans l'en-tête (serveur pro, lot 5a) : avant, il
   // disait « Ma classe » sur toutes les pages, connexion comprise.
-  const TITRES_ECRANS = {"ecran-connexion": "Suivi des élèves", "ecran-classes": "Mes classes",
+  // Lot 5d : plus d'écran « Mes classes » ; à sa place, celui d'un professeur
+  // qui n'a encore aucune classe.
+  const TITRES_ECRANS = {"ecran-connexion": "Suivi des élèves", "ecran-premiere-classe": "Ma classe",
     "ecran-classe": "Ma classe", "ecran-compte": "Mon compte"};
 
   function montrer(ecran) {
-    ["ecran-connexion", "ecran-classes", "ecran-classe", "ecran-compte"].forEach(id => { $(id).hidden = id !== ecran; });
+    ["ecran-connexion", "ecran-premiere-classe", "ecran-classe", "ecran-compte"].forEach(id => { $(id).hidden = id !== ecran; });
     $("titre-page").textContent = TITRES_ECRANS[ecran] || "Suivi des élèves";
     fermerMenuClasses();
     fermerMenuApplis();
@@ -1660,7 +1734,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // mais les 28 prénoms et les 28 codes étaient toujours dans le document :
   // Ctrl+U, Ctrl+S, l'inspecteur ou une extension les lisaient encore.
   const ZONES_TEXTE = ["corps", "corps-eleves", "fiche-corps", "fiche-titre", "bandelettes-liste",
-    "bandelettes-titre", "liste-classes", "liste-profs", "liste-partages", "fragiles-liste",
+    "bandelettes-titre", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
     "qui", "compte-qui", "boite-texte", "menu-classes-liste", "titre-classe-colle", "nom-appli", "menu-applis-liste",
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
@@ -1673,13 +1747,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Lot 4b : Anzan — « En plus pour », ses séances et sa feuille.
     "en-plus-flash-anzan", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note",
     // Lot 5c : la fenêtre de l’élève (un prénom).
-    "fe-titre", "fe-sous", "fe-contenu"];
-  const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe", "message-appli",
+    "fe-titre", "fe-sous", "fe-contenu",
+    // Correctif des lots 5 : les records (des prénoms et des temps) — la
+    // carte était cachée à la déconnexion, ses deux listes restaient.
+    "records-semaine", "records-toujours"];
+  const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-premiere-classe", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
-    "voit-message"];
+    "voit-message", "fe-message"];
+  // Correctif des lots 5 (point 12) : le nom de la classe, dans ses Réglages.
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
-    "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom", "chercher-eleve"];
+    "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom", "chercher-eleve", "nom-classe"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
     "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
     "vue-eleves", "onglet-eleves", "menu-classes"];
@@ -1695,9 +1773,42 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     });
     // Lot 4b-bis : plus aucune feuille prête à sortir à l'imprimante.
     quitterImpressions();
-    // Lot E1 : le plein écran de la répartition, s'il est ouvert.
-    const plein = $("evaluation-plein");
-    if (plein && plein.parentNode) plein.parentNode.removeChild(plein);
+    // Lot E1 : le plein écran de la répartition, s'il est ouvert — et celui
+    // des records (correctif des lots 5).
+    ["evaluation-plein", "records-plein"].forEach(id => {
+      const plein = $(id);
+      if (plein && plein.parentNode) plein.parentNode.removeChild(plein);
+    });
+  }
+
+  // Correctif des lots 5 (relecture Codex du 25/10/2026, point 2) : ce que la
+  // page garde d'UNE classe — ses prénoms, ses codes, ses tableaux, son nom,
+  // ses fenêtres et ses feuilles prêtes à imprimer. Vidé dès que la classe
+  // n'est plus là (supprimée, partage retiré), pas seulement à la
+  // déconnexion : avant, après la dernière classe supprimée, « Crée ta
+  // première classe » s'affichait mais les prénoms et les codes restaient
+  // dans le document. Ce qui n'est pas à la classe reste : Professeurs, son
+  // identifiant, le bandeau des classes de l'an dernier, la petite fenêtre.
+  const ZONES_HORS_CLASSE = ["liste-profs", "qui", "compte-qui", "boite-texte", "boite-champs", "secret-texte",
+    "secret-valeur", "echues-texte", "supprimer-echues"];
+  const ZONES_DE_LA_CLASSE = ZONES_TEXTE.filter(id => !ZONES_HORS_CLASSE.includes(id));
+  const MESSAGES_DE_LA_CLASSE = ["message-classe", "message-appli", "message-partage", "bandeau-droit",
+    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
+    "voit-message", "fe-message"];
+
+  function viderLaClasse() {
+    ["eval-modele", "eval-ouvrir", "voit", "fenetre-eleve"].forEach(id => {
+      const boite = $(id);
+      if (boite && boite.open) { try { boite.close(); } catch (_) {} }
+    });
+    ZONES_DE_LA_CLASSE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
+    MESSAGES_DE_LA_CLASSE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
+    ["nom-classe", "chercher-eleve", "em-nom"].forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
+    quitterImpressions();
+    ["evaluation-plein", "records-plein"].forEach(id => {
+      const plein = $(id);
+      if (plein && plein.parentNode) plein.parentNode.removeChild(plein);
+    });
   }
 
   function oublierEtat() {
@@ -1724,9 +1835,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     idsAffiches = [];
     voitEleve = null;
     parcoursAnzanEleve = null;
+    anneeCourante = "";
+    classeApresMotDePasse = 0;
+    ligueRecords = null;
     // Lot 4b-bis (relecture Codex) : une classe ou un onglet encore en route
     // ne sera pas posé dans la page après la déconnexion.
     demandeAppli += 1;
+    // Correctif des lots 5 (point 1) : ni une liste de classes, ni une liste de
+    // professeurs, ni « moi » demandées avant.
+    generation += 1;
+    demandeProfs += 1;
     // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
     // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
     // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
@@ -1796,9 +1914,28 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return Boolean(bloc) && (!ecran || !ecran.hidden);
   }
 
+  // Correctif des lots 5 (relecture Codex, point 4) : le repli va dans l'écran
+  // AFFICHÉ. Avant, toujours dans la connexion — cachée, elle aussi, quand
+  // l'erreur arrivait sur Mon compte : la panne n'était lue par personne.
+  const ZONE_DE_L_ECRAN = {"ecran-connexion": "erreur-connexion", "ecran-premiere-classe": "message-premiere-classe",
+    "ecran-classe": "message-classes", "ecran-compte": "message-compte"};
+
+  function zoneDeLEcranAffiche() {
+    const ecran = Object.keys(ZONE_DE_L_ECRAN).find(id => $(id) && !$(id).hidden);
+    return ecran ? ZONE_DE_L_ECRAN[ecran] : "erreur-connexion";
+  }
+
   function surErreur(erreur, zone) {
     if (erreur.statut === 401) { deconnecter({message: "Session terminée, reconnecte-toi."}); return; }
-    messager(zoneVisible(zone) ? zone : "erreur-connexion", erreur.message, "erreur");
+    messager(zoneVisible(zone) ? zone : zoneDeLEcranAffiche(), erreur.message, "erreur");
+  }
+
+  // La raison d'une panne, dite au professeur : le message du serveur, ou —
+  // le réseau coupé, sans réponse du tout — « Le serveur ne répond pas. »
+  // (avant : « Failed to fetch », le texte anglais du navigateur).
+  function raisonDe(erreur) {
+    const texte = erreur && erreur.statut ? String(erreur.message || "") : "";
+    return texte || "Le serveur ne répond pas.";
   }
 
   // ---------------------------------------------------------------- lecture d'une progression
@@ -2981,6 +3118,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function ouvrirFenetreEleve(eleve) {
     if (!classe || !eleve) return;
     fenetreEleveId = eleve.id;
+    messager("fe-message", "", "");
     dessinerFenetreEleve();
     const boite = $("fenetre-eleve");
     if (fenetreEleveId !== null && !boite.open) boite.showModal();
@@ -2998,6 +3136,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     fenetreEleveId = null;
     fermerParcoursAnzan();
     ["fe-titre", "fe-sous", "fe-contenu"].forEach(id => { const zone = $(id); if (zone) zone.textContent = ""; });
+    messager("fe-message", "", "");
   }
 
   function eleveDeLaFenetre() {
@@ -3017,6 +3156,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!autre) return;
     const touche = document.activeElement;
     fenetreEleveId = autre.id;
+    messager("fe-message", "", "");
     dessinerFenetreEleve();
     // Au bout du tableau, la flèche qui a le focus se désactive : le focus
     // passe à l'autre flèche, sinon il sort de la fenêtre et le clavier
@@ -3053,7 +3193,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       else if (appliAffichee === "flash-anzan") zone.append(paragrapheVide("Le moteur d’Anzan n’a pas pu être chargé."));
       else {
         zone.append(contenuDefiTables(eleve));
-        $("fe-parcours").hidden = !(eleve.lu && eleve.lu.parcours);
+        // Correctif des lots 5 (point 8) : même sans rien reçu — Mon parcours
+        // s'ouvre alors vierge, avec son prénom et sa classe, et sa fiche
+        // s'imprime (comme l'ancien bouton « Parcours » de la ligne).
+        $("fe-parcours").hidden = false;
       }
     }
     $("fe-gestes").hidden = !peutRevenir(eleve);
@@ -3677,12 +3820,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
       // Lot 5c : plus de « Détail » — la ligne ouvre la fenêtre de l'élève
       // (contenuCoffres). Au téléphone, les trois niveaux laissent la place à
-      // leur total, « Trésors » (colonne du téléphone seulement).
+      // leur total, « Trésors ». Correctif des lots 5 (point 7) : « Trésors »
+      // aussi à l'ordinateur — c'était le seul tri de l'ancien « Trier par »
+      // que plus aucun titre ne donnait (le total, devant les trois niveaux).
       const cTresors = document.createElement("td");
-      cTresors.className = "seul-telephone";
       const tresors = eleve.lu.tresors || 0;
       if (eleve.lu.lisible && tresors) cTresors.textContent = `${tresors} trésor${tresors > 1 ? "s" : ""}`;
-      else { cTresors.textContent = "—"; cTresors.className = "seul-telephone sans"; }
+      else { cTresors.textContent = "—"; cTresors.className = "sans"; }
       cNiveaux.forEach(large);
       ligne.append(cNom, cTresors, ...cNiveaux, cDate);
       finirLigne(ligne, eleve, cNom);
@@ -4164,69 +4308,180 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       null, {oui: liste.length > 1 ? `Supprimer ces ${liste.length} classes` : "Supprimer cette classe", danger: true});
     if (!reponse) return;
     bouton.disabled = true;
+    const ouverte = classe ? classe.id : 0;
     try {
-      const faits = await api("classes.supprimer_echues", {classes: liste.map(classe => classe.id)});
+      let faits;
+      try { faits = await api("classes.supprimer_echues", {classes: liste.map(classe => classe.id)}); }
+      catch (erreur) {
+        // Rien n'est sûr : la liste relue dit ce qui reste (la classe
+        // ouverte, si elle n'y est plus, est oubliée tout de suite).
+        surErreur(erreur, zoneClasses());
+        await allerSansPerdre("", ouverte);
+        return;
+      }
       const partis = faits.supprimees || [];
-      await chargerClasses();
-      messager("message-classes",
-        `${partis.length} classe${partis.length > 1 ? "s" : ""} supprimée${partis.length > 1 ? "s" : ""} `
-        + `(${partis.join(", ")}). Il n’en reste rien.`, "ok");
-    } catch (erreur) {
-      surErreur(erreur, "message-classes");
-      await chargerClasses();
+      const dit = `${partis.length} classe${partis.length > 1 ? "s" : ""} supprimée${partis.length > 1 ? "s" : ""} `
+        + `(${partis.join(", ")}). Il n’en reste rien.`;
+      // Lot 5d : on reste dans la classe ouverte — sauf si elle était du lot.
+      // Correctif des lots 5 (point 3) : elle était du lot — la page l'oublie
+      // TOUT DE SUITE, avant de relire la liste ; si la liste ne vient pas,
+      // elle ne reste pas à l'écran.
+      if (ouverte && liste.some(uneClasse => uneClasse.id === ouverte)) quitterLaClasse();
+      if (await allerSansPerdre(dit, ouverte)) messager(zoneClasses(), dit, "ok");
     } finally {
       bouton.disabled = false;
     }
   });
 
-  // La pastille d'une classe dont une séance est ouverte (classes.liste, « direct »).
+  // La pastille d'une classe dont une séance est ouverte (classes.liste,
+  // « direct ») : dans sa ligne du menu « 405 ▾ » (lot 5d ; avant, sur sa tuile).
   const LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};
 
-  // Ce que la classe a d'ouvert, en mots, sur sa tuile (les applis que la
-  // page sait montrer, dans l'ordre du catalogue).
-  function applisEnMots(liste) {
-    return APPLIS.filter(appli => (liste || []).includes(appli.cle)).map(appli => appli.nom).join(", ");
+  // Lire la liste des classes (classes.liste) : celles du menu « 405 ▾ », et
+  // ce que le serveur dit de l'année (les deux bandeaux, en haut de la classe).
+  // Lot 5d : elle n'affiche plus aucun écran — allerDansUneClasse le fait. Une
+  // erreur remonte à l'appelant.
+  // Correctif des lots 5 (relecture Codex, point 1) : une réponse périmée —
+  // demandée avant « Se déconnecter », ou avant une navigation plus récente
+  // (estAJour) — n'est pas posée : ni la liste, ni les bandeaux. Rien : null.
+  async function chargerClasses(estAJour = () => true) {
+    const depart = generation;
+    const donnees = await api("classes.liste");
+    if (depart !== generation || !jeton || !estAJour()) return null;
+    classes = donnees.classes || [];
+    anneeCourante = String(donnees.annee_courante || "");
+    annoncerFinAnnee(donnees, classes.length);
+    return classes;
   }
 
-  async function chargerClasses() {
-    try {
-      const donnees = await api("classes.liste");
-      classes = donnees.classes || [];
-      const liste = $("liste-classes");
-      liste.textContent = "";
-      classes.forEach(uneClasse => {
-        const li = document.createElement("li");
-        // Une tuile de la charte : le nom, puis « 10 élèves · Défi tables,
-        // SPLAT! », et la flèche. Tout est posé par textContent.
-        const bouton = el("button", "tuile");
-        bouton.type = "button";
-        const texte = el("div");
-        const nom = el("strong", "", uneClasse.libelle);
-        // Une séance de la classe est restée ouverte (17/10/2026) : on la
-        // voit ici, on la reprend depuis la classe.
-        const enCours = LIBELLES_DIRECT[uneClasse.direct];
-        if (enCours) nom.appendChild(el("em", "en-direct", enCours));
-        const nombre = `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`;
-        const applis = applisEnMots(uneClasse.applis);
-        texte.append(nom, el("span", "", applis ? `${nombre} · ${applis}` : nombre));
-        if (uneClasse.droit !== "proprietaire") {
-          bouton.classList.add("partagee");
-          texte.appendChild(el("span", "badge", `partagée par ${uneClasse.proprietaire || "un collègue"} · `
-            + (uneClasse.droit === "ecriture" ? "modifiable" : "lecture seule")));
-        }
-        const fleche = el("span", "fleche", "→");
-        fleche.setAttribute("aria-hidden", "true");
-        bouton.append(texte, fleche);
-        bouton.addEventListener("click", () => ouvrirClasse(uneClasse.id));
-        li.appendChild(bouton);
-        liste.appendChild(li);
-      });
-      if (!classes.length) liste.appendChild(el("li", "vide", "Aucune classe pour l’instant."));
-      annoncerFinAnnee(donnees, classes.length);
-      montrer("ecran-classes");
-      $("bloc-profs").hidden = !estAdmin;
-      if (estAdmin) chargerProfs();
-    } catch (erreur) { surErreur(erreur, "message-classes"); }
+  // La classe à ouvrir (lot 5d) : la première des demandées (l'ancre de la
+  // séance en direct, la dernière ouverte sur ce poste, la classe déjà
+  // ouverte) qui est encore dans la liste du professeur connecté ; sinon la
+  // première des siennes de cette année, sinon la première de cette année
+  // (une classe partagée), sinon la première des siennes, sinon la première.
+  // 0 : il n'a aucune classe.
+  // Correctif des lots 5 (point 9) : « de cette année », c'est l'année de la
+  // classe (« annee ») égale à l'année en cours (« annee_courante »), toutes
+  // deux dites par classes.liste. Avant, « pas dans echues » : or « echues » ne
+  // recense que les vieilles classes sans activité depuis 21 jours — une 301
+  // de l'an dernier encore utilisée passait avant la 405 de cette année.
+  function classeAOuvrir(liste, demandees, annee) {
+    const toutes = liste || [];
+    const ids = new Set(toutes.map(uneClasse => uneClasse.id));
+    const voulue = (demandees || []).find(id => id && ids.has(id));
+    if (voulue) return voulue;
+    const deLAnnee = annee ? toutes.filter(uneClasse => uneClasse.annee === annee) : toutes;
+    const choisie = deLAnnee.find(uneClasse => uneClasse.droit === "proprietaire") || deLAnnee[0]
+      || toutes.find(uneClasse => uneClasse.droit === "proprietaire") || toutes[0];
+    return choisie ? choisie.id : 0;
+  }
+
+  // Aller dans une classe (lot 5d) : c'est ce qui remplace « Mes classes » à
+  // la connexion, après une classe supprimée, au retour de Mon compte et après
+  // un mot de passe changé. La liste est relue ; une classe demandée qui n'y
+  // est plus (supprimée, partage retiré, autre professeur sur ce poste)
+  // n'ouvre rien, on passe à la suivante. Aucune classe : l'écran « Crée ta
+  // première classe ». Déjà dans la bonne classe : rien n'est relu.
+  //
+  // Correctif des lots 5 (relecture Codex du 25/10/2026, points 1 à 4) :
+  // - chaque aller porte un numéro (demandeAppli, celui des ouvertures de
+  //   classe et des onglets) : un aller plus récent, une classe ouverte depuis
+  //   le menu ou « Se déconnecter » le rendent périmé, et sa réponse ne change
+  //   plus rien — ni la page, ni l'écran, et elle n'ouvre plus de classe ;
+  // - la classe ouverte qui n'est plus dans la liste est oubliée TOUT DE SUITE
+  //   (quitterLaClasse), avant même d'ouvrir la suivante ;
+  // - une panne (la liste, ou le tableau de la classe à ouvrir) REMONTE à
+  //   l'appelant, qui dit ensemble ce qui a réussi et ce qui a échoué
+  //   (echecDeLaTransition). Vrai : arrivé ; faux : périmé.
+  async function allerDansUneClasse(...demandees) {
+    const numero = ++demandeAppli;
+    const depart = generation;
+    const aJour = () => numero === demandeAppli && depart === generation && Boolean(jeton);
+    let lues = null;
+    try { lues = await chargerClasses(aJour); }
+    catch (erreur) { if (!aJour()) return false; throw erreur; }
+    if (!lues || !aJour()) return false;
+    if (classe && !classes.some(uneClasse => uneClasse.id === classe.id)) quitterLaClasse();
+    const id = classeAOuvrir(classes, demandees, anneeCourante);
+    if (!id) {
+      if (classe) quitterLaClasse();
+      oublierDerniereClasse();
+      montrerSansClasse(false);
+      return true;
+    }
+    if (classe && classe.id === id && !$("ecran-classe").hidden) return true;
+    return ouvrirClasse(id, {remonter: true});
+  }
+
+  // Une transition ratée (correctif des lots 5, points 3 et 4) : la liste des
+  // classes ou le tableau de la classe à ouvrir n'ont pas pu être lus. Le
+  // message va dans l'écran AFFICHÉ et dit d'abord ce qui a déjà réussi
+  // (« Classe 306 supprimée… », « Mot de passe changé… ») ; le geste pour
+  // réessayer reste à portée : « Ma classe » sur Mon compte, « Réessayer »
+  // quand plus aucune classe n'est ouverte. Rien d'une classe qui n'est plus
+  // autorisée ne revient à l'écran.
+  function echecDeLaTransition(erreur, avant) {
+    if (erreur && erreur.statut === 401) { deconnecter({message: "Session terminée, reconnecte-toi."}); return; }
+    const debut = avant ? avant + " " : "";
+    if (!$("ecran-compte").hidden) {
+      // Après un mot de passe temporaire changé, « Ma classe » revient.
+      montrer("ecran-compte");
+      messager("message-compte", `${debut}Ta classe n’a pas pu s’ouvrir. ${raisonDe(erreur)} Réessaie avec « Ma classe ».`, "erreur");
+      return;
+    }
+    if (classe && !$("ecran-classe").hidden) {
+      messager("message-classes", `${debut}La liste de tes classes n’a pas pu être relue. ${raisonDe(erreur)}`, "erreur");
+      return;
+    }
+    montrerSansClasse(true);
+    messager("message-premiere-classe", `${debut}Ta classe n’a pas pu s’ouvrir. ${raisonDe(erreur)}`, "erreur");
+  }
+
+  // Aller dans une classe, et dire la panne s'il y en a une (« avant » : ce qui
+  // a déjà réussi). Vrai seulement si la classe (ou l'écran sans classe) est
+  // à l'écran : l'appelant pose alors son message de réussite.
+  async function allerSansPerdre(avant, ...demandees) {
+    try { return await allerDansUneClasse(...demandees); }
+    catch (erreur) { echecDeLaTransition(erreur, avant); return false; }
+  }
+
+  // L'écran sans classe ouverte : « Crée ta première classe » (il n'en a
+  // aucune), ou — correctif des lots 5, point 3 — « Ta classe n'a pas pu
+  // s'ouvrir » avec « Réessayer » (la liste ou le tableau en panne).
+  function montrerSansClasse(enPanne) {
+    $("carte-premiere-classe").hidden = enPanne;
+    $("carte-reessayer").hidden = !enPanne;
+    montrer("ecran-premiere-classe");
+  }
+
+  // Plus de classe ouverte (elle vient d'être supprimée, ou n'est plus
+  // partagée) : la page n'en garde rien qui puisse resservir — ni dans ses
+  // variables, ni dans le document (correctif des lots 5, point 2 :
+  // viderLaClasse).
+  function quitterLaClasse() {
+    demandeAppli += 1;
+    fermerFenetreEleve();
+    oublierRecherche();
+    arreterVeilleEvaluation();
+    evaluation = null;
+    evalContenu = null;
+    ligueRecords = null;
+    voitEleve = null;
+    classe = null;
+    droitClasse = "proprietaire";
+    eleves = [];
+    tableaux = {};
+    idsAffiches = [];
+    vue = "appli";
+    viderLaClasse();
+  }
+
+  // Où dire ce qui arrive aux classes : en haut de la classe ouverte, ou sur
+  // l'écran « Crée ta première classe » — ou sur Mon compte quand c'est lui
+  // qui est à l'écran (correctif des lots 5, point 4).
+  function zoneClasses() {
+    if (!$("ecran-compte").hidden) return "message-compte";
+    return $("ecran-premiere-classe").hidden ? "message-classes" : "message-premiere-classe";
   }
 
   // Ouvrir une classe — ou la relire, après un ajout d'élèves, un collage, une
@@ -4235,7 +4490,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // classe, sinon le dernier choix de l'onglet, sinon la première de la
   // classe), et les listes des autres activités sont oubliées : elles seront
   // relues quand on les choisira.
-  async function ouvrirClasse(id) {
+  // Correctif des lots 5 : vrai si la classe est à l'écran, faux si
+  // l'ouverture est périmée ; avec {remonter: true} (allerDansUneClasse), une
+  // panne remonte au lieu d'être dite ici.
+  async function ouvrirClasse(id, options) {
     // Un changement d'onglet encore en route ne vaut plus : on relit tout.
     // Lot 4b-bis (relecture Codex du 24/10) : le numéro de CETTE ouverture —
     // une autre classe ouverte, ou « Se déconnecter » (oublierEtat), pendant
@@ -4250,10 +4508,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const voulue = appliAMontrer(lesApplisConnues((connue ? connue.applis : ["defi-tables"]).concat(memeClasse ? applisAMontrer() : [])),
         memeClasse ? appliAffichee : lireChoixAppli());
       const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
-      if (numero !== demandeAppli || !jeton) return;
+      if (numero !== demandeAppli || !jeton) return false;
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
-      if (connue) connue.applis = classe.applis;
+      // Correctif des lots 5 (point 11) : le menu « 405 ▾ » relit cette ligne —
+      // le nom (renommée dans Réglages) et le nombre d'élèves (ajoutés,
+      // supprimés) suivent, pas seulement les activités.
+      if (connue) {
+        connue.applis = classe.applis;
+        connue.libelle = classe.libelle;
+        connue.eleves = (donnees.eleves || []).length;
+      }
       // Une autre classe s'ouvre toujours sur son tableau, jamais sur ses
       // Réglages ni sur ses codes — sauf une classe sans aucun élève, qui
       // s'ouvre sur Élèves : c'est la seule chose utile à y faire.
@@ -4272,6 +4537,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       $("titre-classe").textContent = classe.libelle;
       $("titre-classe-colle").textContent = classe.libelle;
       retenirDerniereClasse(classe.id);
+      messager("message-classes", "", "");
       messager("message-classe", "", "");
       messager("message-appli", "", "");
       messager("message-activites", "", "");
@@ -4282,19 +4548,38 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       // La liste des classes était en retard (activités changées ailleurs) :
       // on passe à une activité que la classe a vraiment.
       const presentes = applisAMontrer();
-      if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return; }
+      if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return true; }
       poserAppli();
       dessinerTableau();
+      return true;
     } catch (erreur) {
-      if (numero === demandeAppli && jeton) surErreur(erreur, "message-classes");
+      if (numero !== demandeAppli || !jeton) return false;
+      if (options && options.remonter) throw erreur;
+      surErreur(erreur, zoneClasses());
+      return false;
     }
+  }
+
+  // Un menu ouvert reste dans l'écran (correctif des lots 5, point 6) : au
+  // téléphone, la barre collée commence par « 405 ▾ » — le menu des applis,
+  // accroché à son sélecteur, finissait au-delà du bord droit et la page
+  // défilait de côté. Il recule (marge négative) jusqu'à 16 px du bord, sans
+  // jamais passer à gauche des 16 px de l'autre bord.
+  function garderDansLEcran(menu) {
+    menu.style.marginLeft = "";
+    const r = menu.getBoundingClientRect();
+    const trop = r.right - (document.documentElement.clientWidth - 16);
+    if (trop > 0) menu.style.marginLeft = -Math.round(Math.min(trop, Math.max(0, r.left - 16))) + "px";
   }
 
   // --------------------------------------- le menu des classes (serveur pro, lot 5a)
   //
   // Choix de Gwenaël (planche 1, 25/10/2026) : le nom de la classe ouvre la
   // liste de ses classes — celles de classes.liste, déjà lue ; la classe
-  // ouverte est cochée ; « Toutes mes classes » au bout ramène aux tuiles.
+  // ouverte est cochée. Lot 5d (choix de Gwenaël, 25/10/2026) : plus d'écran
+  // « Mes classes » ; « + Nouvelle classe » au bout du menu, et chaque ligne
+  // dit ce que disait la tuile : la classe partagée par un collègue (et ce
+  // qu'on peut y faire), la séance restée ouverte. Tout par textContent.
 
   function poserMenuClasses() {
     const liste = $("menu-classes-liste");
@@ -4303,9 +4588,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const li = document.createElement("li");
       const bouton = el("button");
       bouton.type = "button";
-      bouton.append(el("strong", "", uneClasse.libelle),
-        el("span", "", `${uneClasse.eleves} élève${uneClasse.eleves > 1 ? "s" : ""}`));
       const ouverte = Boolean(classe) && classe.id === uneClasse.id;
+      // Correctif des lots 5 (point 11) : la classe ouverte se lit telle
+      // qu'elle est maintenant — renommée, des élèves ajoutés ou supprimés —
+      // et pas telle que classes.liste l'a rendue à la connexion.
+      const libelle = ouverte ? classe.libelle : uneClasse.libelle;
+      const nombre = ouverte ? eleves.length : uneClasse.eleves;
+      const infos = el("span", "infos");
+      const ligne = el("span", "ligne-1");
+      ligne.appendChild(el("span", "", `${nombre} élève${nombre > 1 ? "s" : ""}`));
+      const enCours = LIBELLES_DIRECT[uneClasse.direct];
+      if (enCours) ligne.appendChild(el("em", "en-direct", enCours));
+      infos.appendChild(ligne);
+      if (uneClasse.droit !== "proprietaire") {
+        infos.appendChild(el("span", "partage", `partagée par ${uneClasse.proprietaire || "un collègue"} · `
+          + (uneClasse.droit === "ecriture" ? "modifiable" : "lecture seule")));
+      }
+      bouton.append(el("strong", "", libelle), infos);
       if (ouverte) bouton.setAttribute("aria-current", "true");
       bouton.addEventListener("click", () => {
         fermerMenuClasses();
@@ -4334,7 +4633,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       menu.style.top = Math.round(r.bottom + 6) + "px";
       menu.style.left = Math.round(Math.max(16, r.left)) + "px";
     }
-    const choisie = menu.querySelector('[aria-current="true"]') || $("retour");
+    garderDansLEcran(menu);
+    const choisie = menu.querySelector('[aria-current="true"]') || $("nouvelle-classe");
     choisie.focus();
   }
 
@@ -4345,6 +4645,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     menu.classList.remove("depuis-barre");
     menu.style.top = "";
     menu.style.left = "";
+    menu.style.marginLeft = "";
     const depuis = menuOuvertPar || $("bouton-classes");
     menuOuvertPar = null;
     depuis.setAttribute("aria-expanded", "false");
@@ -4390,7 +4691,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // l'ancre « #classe= » de la séance en direct) et le serveur revérifie le
   // droit à chaque appel. Une classe qui n'est plus dans la liste du
   // professeur connecté (supprimée, partage retiré, autre professeur sur ce
-  // poste) n'ouvre rien : on reste sur Mes classes, et le numéro est oublié.
+  // poste) n'ouvre rien : allerDansUneClasse passe à une autre (lot 5d).
   const CLE_DERNIERE_CLASSE = "mathsgo-suivi-prof-derniere-classe";
 
   function lireDerniereClasse() {
@@ -4403,14 +4704,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   function oublierDerniereClasse() {
     try { localStorage.removeItem(CLE_DERNIERE_CLASSE); } catch (_) {}
-  }
-
-  function rouvrirDerniereClasse() {
-    const id = lireDerniereClasse();
-    if (!id) return undefined;
-    if (classes.some(uneClasse => uneClasse.id === id)) return ouvrirClasse(id);
-    oublierDerniereClasse();
-    return undefined;
   }
 
   // ------------------------------------------- l'activité affichée (lot « splat-suivi-4 »)
@@ -4599,6 +4892,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       liste.appendChild(li);
     });
     $("menu-applis").hidden = false;
+    garderDansLEcran($("menu-applis"));
     $("bouton-applis").setAttribute("aria-expanded", "true");
     const choisie = liste.querySelector('[aria-current="true"]') || liste.querySelector("button");
     if (choisie) choisie.focus();
@@ -4608,6 +4902,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const menu = $("menu-applis");
     if (!menu || menu.hidden) return;
     menu.hidden = true;
+    menu.style.marginLeft = "";
     $("bouton-applis").setAttribute("aria-expanded", "false");
     if (rendreLaMain) $("bouton-applis").focus();
   }
@@ -5693,7 +5988,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     } catch (erreur) { surErreur(erreur, "message-partage"); return; }
     if (!annuaire.length) {
       messager("message-partage",
-        estAdmin ? "Aucun autre professeur pour l’instant : crée d’abord un compte depuis « Mes classes »."
+        estAdmin ? "Aucun autre professeur pour l’instant : crée d’abord son compte dans « Mon compte », partie Professeurs."
                  : "Aucun autre professeur pour l’instant.", "erreur");
       return;
     }
@@ -5716,11 +6011,21 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // ------------------------------------------------------------- comptes professeurs
 
   async function chargerProfs() {
+    // Correctif des lots 5 (point 1) : la liste demandée avant « Se
+    // déconnecter », ou avant une lecture plus récente (après un geste sur un
+    // collègue), n'est plus posée dans la page.
+    const numero = ++demandeProfs;
+    const depart = generation;
+    const aJour = () => numero === demandeProfs && depart === generation && Boolean(jeton);
     const liste = $("liste-profs");
     liste.textContent = "";
     try {
       const donnees = await api("profs.liste");
-      (donnees.profs || []).forEach(prof => {
+      if (!aJour()) return;
+      // Lot 5d : son propre compte en premier, les collègues ensuite.
+      const profs = (donnees.profs || []).slice()
+        .sort((a, b) => Number(b.identifiant === identifiant) - Number(a.identifiant === identifiant));
+      profs.forEach(prof => {
         const li = document.createElement("li");
         const nom = document.createElement("strong");
         nom.textContent = prof.identifiant;
@@ -5738,36 +6043,32 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         // l'auteur du partage, et ce compte pourra un jour en recevoir d'ailleurs.
         if (prof.partagees) morceaux.push(`${prof.partagees} reçue${prof.partagees > 1 ? "s" : ""} en partage`);
         role.textContent = morceaux.join(" · ");
-        li.append(nom, role);
+        // Lot 5d : une ligne par professeur — qui il est à gauche, ses gestes
+        // derrière « ⋯ » à droite (le menu de l'onglet Élèves, menuGestes).
+        // Avant : trois boutons de 44 px, dont deux rouges, qui passaient à
+        // la ligne dans une carte de 520 px.
+        const quiProf = document.createElement("span");
+        quiProf.className = "qui-prof";
+        quiProf.append(nom, role);
+        li.append(quiProf);
         if (prof.identifiant !== identifiant) {
           // Sur les autres comptes seulement : on ne se réinitialise pas, on ne
           // se désactive pas soi-même (le serveur le refuse aussi).
-          const fin = document.createElement("span");
-          fin.className = "fin";
-          const reinit = document.createElement("button");
-          reinit.type = "button";
-          reinit.className = "secondaire";
-          reinit.textContent = "Nouveau mot de passe";
-          reinit.title = "Lui donner un mot de passe temporaire, qu'il devra changer";
-          reinit.addEventListener("click", () => reinitialiserProf(prof));
-          const etat = document.createElement("button");
-          etat.type = "button";
-          etat.className = prof.actif === false ? "secondaire" : "danger";
-          etat.textContent = prof.actif === false ? "Réactiver" : "Désactiver";
-          etat.addEventListener("click", () => (prof.actif === false ? reactiverProf(prof) : desactiverProf(prof)));
-          const sup = document.createElement("button");
-          sup.type = "button";
-          sup.className = "danger";
-          sup.textContent = "Supprimer";
-          sup.title = prof.classes ? "Supprimer le compte et ses classes" : "Supprimer le compte";
-          sup.addEventListener("click", () => supprimerProf(prof));
-          fin.append(reinit, etat, sup);
-          li.append(fin);
+          menuGestes(li, [
+            boutonGeste("Nouveau mot de passe", "secondaire", () => reinitialiserProf(prof),
+              "Lui donner un mot de passe temporaire, qu'il devra changer"),
+            prof.actif === false
+              ? boutonGeste("Réactiver", "secondaire", () => reactiverProf(prof))
+              : boutonGeste("Désactiver", "secondaire", () => desactiverProf(prof),
+                "Il ne pourra plus se connecter ; ses classes sont gardées"),
+            boutonGeste("Supprimer", "danger", () => supprimerProf(prof),
+              prof.classes ? "Supprimer le compte et ses classes" : "Supprimer le compte")
+          ]);
         }
-        if (prof.actif === false) li.style.opacity = ".7";
+        if (prof.actif === false) li.classList.add("eteint");
         liste.appendChild(li);
       });
-    } catch (erreur) { surErreur(erreur, "message-profs"); }
+    } catch (erreur) { if (aJour()) surErreur(erreur, "message-profs"); }
   }
 
   async function reinitialiserProf(prof) {
@@ -6134,7 +6435,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       else window.location.assign(adresse);
     } catch (erreur) {
       if (fenetre) { try { fenetre.close(); } catch (_) {} }
-      surErreur(erreur, "message-appli");
+      // Correctif des lots 5 (point 5) : la fenêtre de l'élève est encore
+      // ouverte — le message s'y lit (avant, dans le tableau, derrière elle).
+      if ($("fenetre-eleve").open && erreur.statut !== 401) {
+        messager("fe-message", `Le parcours ${deNom(nomAffiche(eleve) || "cet élève")} n’a pas pu s’ouvrir. ${raisonDe(erreur)}`, "erreur");
+        // Au téléphone, la fenêtre défile : le message vient sous les yeux.
+        try { $("fe-message").scrollIntoView({block: "nearest"}); } catch (_) {}
+      } else {
+        surErreur(erreur, "message-appli");
+      }
     } finally {
       if (bouton) bouton.disabled = false;
     }
@@ -6296,12 +6605,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       null, {oui: "Supprimer la classe", danger: true});
     if (!reponse) return;
     bouton.disabled = true;
-    try {
-      await api("classes.supprimer", {classe_id: classe.id});
-      await chargerClasses();
-      messager("message-classes", `Classe ${classe.libelle} supprimée : il n’en reste rien.`, "ok");
-    } catch (erreur) { surErreur(erreur, "message-supprimer"); }
-    finally { bouton.disabled = false; }
+    const partie = classe.libelle;
+    try { await api("classes.supprimer", {classe_id: classe.id}); }
+    catch (erreur) { surErreur(erreur, "message-supprimer"); bouton.disabled = false; return; }
+    bouton.disabled = false;
+    // Correctif des lots 5 (relecture Codex, point 3) : la classe n'existe
+    // plus — la page l'oublie TOUT DE SUITE (prénoms, codes, tableaux), même
+    // si la suite ne peut pas être lue. Avant, une panne de la liste laissait
+    // la classe supprimée à l'écran, utilisable, et « supprimée » effaçait le
+    // message de la panne.
+    quitterLaClasse();
+    // Lot 5d : une autre classe s'ouvre (ou « Crée ta première classe »).
+    const dit = `Classe ${partie} supprimée : il n’en reste rien.`;
+    if (await allerSansPerdre(dit)) messager(zoneClasses(), dit, "ok");
   });
 
   // Un menu « ⋯ » se referme au clic ailleurs et dès que la page défile
@@ -6350,11 +6666,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
-  // « Toutes mes classes » : la vue ne se retient pas (lot « Ma classe :
-  // élèves ») — rouvrir la même classe ne retombe ni sur ses codes ni sur ses
-  // Réglages. Trouvé en essayant les boutons au navigateur (18/10/2026) :
-  // `ouvrirClasse` la prenait pour la « même classe » et gardait la vue.
-  $("retour").addEventListener("click", () => { fermerMenuClasses(); vue = "appli"; chargerClasses(); });
+  // Lot 5d : « + Nouvelle classe », au bout du menu « 405 ▾ » (avant,
+  // « Toutes mes classes »). Le menu se ferme avant la petite fenêtre.
+  $("nouvelle-classe").addEventListener("click", () => { fermerMenuClasses(); creerClasse(); });
+  $("premiere-classe").addEventListener("click", creerClasse);
+  // Correctif des lots 5 (point 3) : « Réessayer », quand la liste ou la
+  // classe à ouvrir n'ont pas pu être lues.
+  $("reessayer-classe").addEventListener("click", () => { vue = "appli"; allerSansPerdre("", lireDerniereClasse()); });
   // Le menu des classes (serveur pro, lot 5a) : le nom l'ouvre et le ferme ;
   // Échap le ferme et rend la main au nom ; un clic ailleurs le ferme.
   $("bouton-classes").addEventListener("click", () => {
@@ -6384,7 +6702,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   });
   $("choix-appli").addEventListener("scroll", marquerSuiteOnglets, {passive: true});
   window.addEventListener("resize", () => { if (classe) { marquerBarreCollee(); montrerOngletChoisi(); } });
-  $("nouvelle-classe").addEventListener("click", creerClasse);
   $("onglet-eleves").addEventListener("click", ouvrirEleves);
   $("onglet-reglages").addEventListener("click", ouvrirReglages);
   // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
@@ -6447,16 +6764,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       {oui: "Créer la classe"});
     if (!reponse) return;
     const libelle = String(reponse.libelle || "").trim();
-    if (!libelle) { messager("message-classes", "Donne un nom à la classe.", "erreur"); return; }
+    if (!libelle) { messager(zoneClasses(), "Donne un nom à la classe.", "erreur"); return; }
     // Une création à la fois : deux clics faisaient deux classes du même nom,
     // impossibles à distinguer dans la liste.
     creationEnCours = true;
     try {
-      const donnees = await api("classes.creer", {libelle, applis: ["defi-tables"]});
-      await chargerClasses();
-      await ouvrirClasse(donnees.id);
-    } catch (erreur) { surErreur(erreur, "message-classes"); }
-    finally { creationEnCours = false; }
+      let donnees;
+      try { donnees = await api("classes.creer", {libelle, applis: ["defi-tables"]}); }
+      catch (erreur) { surErreur(erreur, zoneClasses()); return; }
+      // Correctif des lots 5 : le même chemin que les autres (une réponse
+      // périmée ne change rien ; une panne se dit avec ce qui a réussi).
+      await allerSansPerdre(`La classe ${libelle} est créée.`, donnees.id);
+    } finally { creationEnCours = false; }
   }
 
   $("form-connexion").addEventListener("submit", async event => {
@@ -6520,11 +6839,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     messager("message-compte", "", "");
     ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });
     montrer("ecran-compte");
+    // Lot 5d : Professeurs est ici (avant, sous les tuiles de « Mes classes »).
+    // Administrateur seulement — et pas tant que son mot de passe est
+    // temporaire : le serveur refuse alors tout le reste.
+    const avecProfs = estAdmin && !mdpTemporaire;
+    $("bloc-profs").hidden = !avecProfs;
+    messager("message-profs", "", "");
+    if (avecProfs) chargerProfs();
     $("mdp-ancien").focus();
   }
 
   $("mon-compte").addEventListener("click", ouvrirCompte);
-  $("retour-compte").addEventListener("click", () => { chargerClasses(); });
+  // « ‹ Ma classe » : la classe qu'on avait ouverte (lot 5d), sur son tableau
+  // — jamais sur ses codes ni ses Réglages : la vue ne se retient pas (lot
+  // « Ma classe : élèves »), et ouvrirClasse prendrait la classe pour la
+  // « même » et garderait la vue.
+  // Correctif des lots 5 (point 4) : une panne se lit sur Mon compte, et
+  // « Ma classe » reste là pour réessayer.
+  $("retour-compte").addEventListener("click", () => { vue = "appli"; allerSansPerdre("", classe && classe.id); });
 
   $("form-motdepasse").addEventListener("submit", async event => {
     event.preventDefault();
@@ -6538,40 +6870,55 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (octets < 12) { messager("message-compte", "Le nouveau mot de passe doit faire 12 à 72 caractères : celui-ci est trop court.", "erreur"); return; }
     if (octets > 72) { messager("message-compte", "Le nouveau mot de passe doit faire 12 à 72 caractères : celui-ci est trop long (les lettres accentuées comptent double).", "erreur"); return; }
     if (nouveau !== $("mdp-confirme").value) { messager("message-compte", "Les deux saisies du nouveau mot de passe ne sont pas identiques.", "erreur"); return; }
-    try {
-      await api("profs.motdepasse", {ancien, nouveau});
-      mdpTemporaire = false;
-      ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });
-      await chargerClasses();
-      messager("message-classes", "Mot de passe changé. Tes autres appareils sont déconnectés.", "ok");
-    } catch (erreur) { surErreur(erreur, "message-compte"); }
+    try { await api("profs.motdepasse", {ancien, nouveau}); }
+    catch (erreur) { surErreur(erreur, "message-compte"); return; }
+    mdpTemporaire = false;
+    ["mdp-ancien", "mdp-nouveau", "mdp-confirme"].forEach(id => { $(id).value = ""; });
+    vue = "appli";
+    // Correctif des lots 5 (point 10) : la classe du lien « #classe=… » par
+    // lequel il est arrivé, gardée pendant le changement obligatoire, passe
+    // d'abord (si elle est dans SA liste) ; elle ne sert qu'une fois.
+    const duLien = classeApresMotDePasse;
+    classeApresMotDePasse = 0;
+    const dit = "Mot de passe changé. Tes autres appareils sont déconnectés.";
+    if (await allerSansPerdre(dit, duLien, classe && classe.id, lireDerniereClasse())) messager(zoneClasses(), dit, "ok");
   });
 
   // Retour du tableau de la séance en direct (17/10/2026) : « Ma classe » y
   // ramène dans LA classe (direct.php#classe=… → ./#classe=…). L'ancre est
   // effacée aussitôt : un rechargement ne la rejoue pas. Une classe absente
-  // de la liste (supprimée, partage retiré) laisse simplement « Mes classes ».
-  function rouvrirClasseDemandee() {
+  // de la liste (supprimée, partage retiré) n'ouvre rien : allerDansUneClasse
+  // passe à la suivante (lot 5d).
+  function classeDemandee() {
     const demandee = Number((/(?:^|[#&])classe=(\d+)/.exec(window.location.hash) || [])[1]) || 0;
     if (window.location.hash) {
       try { history.replaceState(null, "", window.location.pathname + window.location.search); } catch (_) {}
     }
-    if (demandee && classes.some(uneClasse => uneClasse.id === demandee)) return ouvrirClasse(demandee);
-    return undefined;
+    return demandee;
   }
 
   // Une seule porte d'entrée : on demande qui on est (et si on est administrateur),
-  // puis on affiche les classes.
+  // puis une classe s'ouvre (lot 5d : plus d'écran « Mes classes »).
   function demarrer() {
     veille.reprendre(Date.now());
+    // Correctif des lots 5 (point 1) : « moi » demandé avant une déconnexion
+    // ne touche plus à la page.
+    const depart = generation;
     return api("moi").then(donnees => {
+      if (depart !== generation) return undefined;
       identifiant = donnees.identifiant;
       $("qui").textContent = donnees.identifiant;
       estAdmin = Boolean(donnees.admin);
       mdpTemporaire = Boolean(donnees.mdp_temporaire);
-      if (mdpTemporaire) { ouvrirCompte(); return undefined; }
-      return chargerClasses().then(() => rouvrirClasseDemandee() || rouvrirDerniereClasse());
+      // Correctif des lots 5 (point 10) : l'ancre est lue (et effacée) AVANT
+      // le mot de passe temporaire — elle sert une fois, après son changement.
+      const duLien = classeDemandee();
+      if (mdpTemporaire) { classeApresMotDePasse = duLien; ouvrirCompte(); return undefined; }
+      // Une panne de la liste ou du tableau n'est pas une session finie :
+      // « Ta classe n'a pas pu s'ouvrir », avec « Réessayer » (point 3).
+      return allerSansPerdre("", duLien, lireDerniereClasse());
     }).catch(erreur => {
+      if (depart !== generation) return;
       deconnecter({silencieux: true});
       if (!erreur) return;
       // Un refus juste après avoir tapé son mot de passe n'est PAS une session
