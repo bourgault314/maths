@@ -494,7 +494,7 @@ function classeRejouee() {
   const f = new Function("api", "etat", "poses", "APPLIS", "ANZAN",
     `let classe = null, droitClasse = "proprietaire", eleves = [], tableaux = {}, appliAffichee = "defi-tables", vue = "appli", demandeAppli = 0, voitEleve = null, parcoursAnzanEleve = null;
      const classes = [{id: 7, applis: ["defi-tables", "splat"]}];
-     function oublierRecherche() {} function fermerFenetreEleve() {}
+     function oublierRecherche() {} function fermerFenetreEleve() {} function zoneClasses() { return "message-classes"; }
      const $ = () => ({textContent: "", hidden: false});
      let jeton = etat.jeton;
      function chargerMoteurDe() { return Promise.resolve(null); }

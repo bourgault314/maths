@@ -265,8 +265,8 @@ test("la pastille : le mode de la séance, rien d'autre, et pas pour un collègu
   const modes = lib.slice(lib.indexOf("function modes_des_directs_ouverts("), lib.indexOf("function question_du_direct("));
   assert.match(modes, /SELECT classe_id, mode FROM directs WHERE expire_le >= \?/, "une séance périmée n'a pas de pastille");
   assert.match(maClasse, /const LIBELLES_DIRECT = \{eclair: "● En direct", evaluation: "📝 Évaluation"\};/);
-  // Serveur pro, lot 5a : la pastille est un <em> dans le nom de la tuile.
-  assert.match(maClasse, /if \(enCours\) nom\.appendChild\(el\("em", "en-direct", enCours\)\);/, "un <em> dans le nom de la tuile");
+  // Serveur pro, lot 5d : plus de tuiles — la pastille est un <em> dans la ligne de la classe, au menu « 405 ▾ ».
+  assert.match(maClasse, /if \(enCours\) ligne\.appendChild\(el\("em", "en-direct", enCours\)\);/, "un <em> dans la ligne du menu");
   assert.match(maClasse, /\$\("seance-direct"\)\.append\(point, "Reprendre la séance en direct"\);/, "dans la classe, « Reprendre »");
 });
 
@@ -278,10 +278,10 @@ test("« Ma classe » ramène dans la classe ; pendant une séance, on demande a
   // Correctif 1 (PR #1010) : Échap sur « Terminer la séance ? » oublie aussi le départ.
   assert.match(scriptTableau, /\$\("fin"\)\.addEventListener\("cancel", \(\) => \{ partirApresFin = false; \}\);/,
     "Échap ne laisse pas un départ en attente");
-  // Serveur pro, lot 5a : l'ancre d'abord, sinon la dernière classe ouverte.
-  assert.match(maClasse, /return chargerClasses\(\)\.then\(\(\) => rouvrirClasseDemandee\(\) \|\| rouvrirDerniereClasse\(\)\);/, "Ma classe lit l'ancre au démarrage");
+  // Serveur pro, lot 5a puis 5d : l'ancre d'abord, sinon la dernière classe ouverte.
+  assert.match(maClasse, /return allerDansUneClasse\(classeDemandee\(\), lireDerniereClasse\(\)\);/, "Ma classe lit l'ancre au démarrage");
   assert.match(maClasse, /history\.replaceState\(null, "", window\.location\.pathname \+ window\.location\.search\)/, "puis l'efface");
-  assert.match(maClasse, /if \(demandee && classes\.some\(uneClasse => uneClasse\.id === demandee\)\) return ouvrirClasse\(demandee\);/,
+  assert.match(maClasse, /const voulue = \(demandees \|\| \[\]\)\.find\(id => id && ids\.has\(id\)\);/,
     "seulement une classe de SA liste");
 });
 

@@ -90,7 +90,7 @@ function menuRejoue(classes, classe) {
   $("menu-classes").hidden = true;
   $("menu-classes").appendChild($("menu-classes-liste"));
   const f = new Function("$", "el", "document", "classes", "classe", "ouvrirClasse",
-    `let menuOuvertPar = null;\n${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses"].map(fonction).join("\n")}
+    `let menuOuvertPar = null;\nconst LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};\n${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses"].map(fonction).join("\n")}
      return {poserMenuClasses, ouvrirMenuClasses, fermerMenuClasses};`)(
     $, el, doc, classes, classe, id => ouvertes.push(id));
   return {$, f, ouvertes};
@@ -138,36 +138,32 @@ test("l'en-tête : la classe de la charte, et le nom de l'écran ouvert (plus «
   assert.match(page, /<span class="qui" id="qui" hidden><\/span>\s*<button type="button" class="secondaire" id="mon-compte" hidden>Mon compte<\/button>\s*<button type="button" class="secondaire" id="deconnexion" hidden>Se déconnecter<\/button>/);
   const {$} = document();
   const montrer = new Function("$", "arreterVeilleEvaluation", "fermerMenuClasses", "fermerMenuApplis", "mdpTemporaire",
-    `const TITRES_ECRANS = {"ecran-connexion": "Suivi des élèves", "ecran-classes": "Mes classes", "ecran-classe": "Ma classe", "ecran-compte": "Mon compte"};
+    `const TITRES_ECRANS = {"ecran-connexion": "Suivi des élèves", "ecran-premiere-classe": "Ma classe", "ecran-classe": "Ma classe", "ecran-compte": "Mon compte"};
      ${fonction("montrer")}\nreturn montrer;`)($, () => {}, () => {}, () => {}, false);
-  for (const [ecran, titre] of [["ecran-connexion", "Suivi des élèves"], ["ecran-classes", "Mes classes"], ["ecran-classe", "Ma classe"], ["ecran-compte", "Mon compte"]]) {
+  for (const [ecran, titre] of [["ecran-connexion", "Suivi des élèves"], ["ecran-premiere-classe", "Ma classe"], ["ecran-classe", "Ma classe"], ["ecran-compte", "Mon compte"]]) {
     montrer(ecran);
     assert.equal($("titre-page").textContent, titre, ecran);
   }
-  assert.match(script, /const TITRES_ECRANS = \{"ecran-connexion": "Suivi des élèves", "ecran-classes": "Mes classes",\s*"ecran-classe": "Ma classe", "ecran-compte": "Mon compte"\};/);
+  assert.match(script, /const TITRES_ECRANS = \{"ecran-connexion": "Suivi des élèves", "ecran-premiere-classe": "Ma classe",\s*"ecran-classe": "Ma classe", "ecran-compte": "Mon compte"\};/);
   assert.match(page, /<footer class="pied">/);
 });
 
-// ------------------------------------------------------------ Mes classes
+// ------------------------------------------------------------ plus d'écran « Mes classes » (lot 5d)
 
-test("Mes classes : une tuile par classe, posée par textContent ; les applis de la classe en mots", () => {
-  assert.match(page, /<ul class="tuiles" id="liste-classes"><\/ul>/);
+test("lot 5d : plus d'écran « Mes classes » ni de tuiles ; chargerClasses lit la liste et n'affiche rien", () => {
+  assert.doesNotMatch(page, /id="ecran-classes"|id="liste-classes"|class="tuiles"/);
+  assert.doesNotMatch(script, /"ecran-classes"|"liste-classes"/);
   const charger = fonction("chargerClasses");
-  assert.doesNotMatch(charger, /innerHTML/, "un nom de classe n'est jamais du HTML");
-  assert.match(charger, /const bouton = el\("button", "tuile"\);/);
-  assert.match(charger, /bouton\.classList\.add\("partagee"\);/);
-  const applisEnMots = new Function("APPLIS", `${fonction("applisEnMots")}\nreturn applisEnMots;`)(
-    [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}]);
-  assert.equal(applisEnMots(["splat", "defi-tables", "coffres"]), "Défi tables, Coffres magiques, SPLAT!", "dans l'ordre du catalogue");
-  assert.equal(applisEnMots(["inconnue"]), "");
-  assert.equal(applisEnMots(undefined), "");
+  assert.match(charger, /const donnees = await api\("classes\.liste"\);/);
+  assert.match(charger, /annoncerFinAnnee\(donnees, classes\.length\);/);
+  assert.doesNotMatch(charger, /montrer\(|ouvrirClasse|innerHTML|catch/, "ni écran, ni ouverture ; une erreur remonte à l'appelant");
 });
 
 // ------------------------------------------------------------ le menu « 405 ▾ »
 
-test("le menu des classes : le HTML — le nom de la classe est le bouton, « Toutes mes classes » au bout", () => {
+test("le menu des classes : le HTML — le nom de la classe est le bouton, « + Nouvelle classe » au bout (lot 5d)", () => {
   assert.match(page, /<h1><button type="button" id="bouton-classes" aria-haspopup="true" aria-expanded="false" aria-controls="menu-classes"><span id="titre-classe"><\/span><span class="rond" aria-hidden="true">/);
-  assert.match(page, /<div class="menu-classes" id="menu-classes" hidden>\s*<ul id="menu-classes-liste" aria-label="Mes classes"><\/ul>\s*<button type="button" id="retour">Toutes mes classes<\/button>\s*<\/div>/);
+  assert.match(page, /<div class="menu-classes" id="menu-classes" hidden>\s*<ul id="menu-classes-liste" aria-label="Mes classes"><\/ul>\s*<button type="button" id="nouvelle-classe"><svg [^>]*aria-hidden="true"[^>]*>[\s\S]*?<\/svg>Nouvelle classe<\/button>\s*<\/div>/);
   assert.match(page, /<\/div>\s*<button type="button" id="seance-direct">Séance en direct<\/button>\s*<\/div>\s*<p class="sous" id="resume-classe"><\/p>/, "« Séance en direct » sur la ligne du nom");
   assert.doesNotMatch(page, /class="ligne-retour"/, "plus de ligne de retour au-dessus du titre");
   // Se déconnecter : les noms des classes partent avec le reste, le menu se cache.
@@ -176,13 +172,15 @@ test("le menu des classes : le HTML — le nom de la classe est le bouton, « To
 });
 
 test("le menu des classes : toutes les classes, l'ouverte cochée ; choisir une autre classe l'ouvre, la même ne fait que fermer", () => {
-  const classes = [{id: 3, libelle: "306", eleves: 24}, {id: 5, libelle: "405", eleves: 1}, {id: 9, libelle: "<b>x</b>", eleves: 2}];
+  const classes = [{id: 3, libelle: "306", eleves: 24, droit: "proprietaire"}, {id: 5, libelle: "405", eleves: 1, droit: "proprietaire"},
+    {id: 9, libelle: "<b>x</b>", eleves: 2, droit: "proprietaire"}];
   const {$, f, ouvertes} = menuRejoue(classes, {id: 5});
   f.ouvrirMenuClasses();
   assert.equal($("menu-classes").hidden, false);
   assert.equal($("bouton-classes").attributs["aria-expanded"], "true");
   const boutons = $("menu-classes-liste").enfants.map(li => li.enfants[0]);
   assert.deepEqual(boutons.map(b => b.texte), ["30624 élèves", "4051 élève", "<b>x</b>2 élèves"], "le nom en texte, jamais en HTML");
+  assert.deepEqual(boutons.map(b => b.enfants[0].balise), ["strong", "strong", "strong"], "le nom d'abord, en gras");
   assert.deepEqual(boutons.map(b => b.attributs["aria-current"] || ""), ["", "true", ""]);
   assert.equal(boutons[1].focalise, true, "la main va sur la classe ouverte");
   boutons[1].ecouteurs.click();
@@ -192,6 +190,26 @@ test("le menu des classes : toutes les classes, l'ouverte cochée ; choisir une 
   $("menu-classes-liste").enfants[0].enfants[0].ecouteurs.click();
   assert.deepEqual(ouvertes, [3]);
   assert.equal($("bouton-classes").attributs["aria-expanded"], "false");
+});
+
+test("lot 5d : la ligne du menu dit ce que disait la tuile — partagée par qui, ce qu'on peut y faire, la séance restée ouverte", () => {
+  const classes = [
+    {id: 3, libelle: "306", eleves: 24, droit: "proprietaire", direct: "eclair"},
+    {id: 4, libelle: "5e B", eleves: 4, droit: "ecriture", proprietaire: "<i>collegue</i>"},
+    {id: 6, libelle: "4e A", eleves: 26, droit: "lecture", proprietaire: null, direct: "evaluation"},
+    {id: 7, libelle: "306", eleves: 1, droit: "proprietaire", direct: "inconnu"}];
+  const {$, f} = menuRejoue(classes, {id: 3});
+  f.ouvrirMenuClasses();
+  const boutons = $("menu-classes-liste").enfants.map(li => li.enfants[0]);
+  assert.deepEqual(boutons.map(b => b.texte), [
+    "30624 élèves● En direct",
+    "5e B4 élèvespartagée par <i>collegue</i> · modifiable",
+    "4e A26 élèves📝 Évaluationpartagée par un collègue · lecture seule",
+    "3061 élève"], "tout en texte : un identifiant de collègue n'est jamais du HTML ; un mode inconnu n'a pas de pastille");
+  const pastille = boutons[0].enfants[1].enfants[0].enfants[1];
+  assert.equal(pastille.balise, "em");
+  assert.equal(pastille.className, "en-direct");
+  assert.equal(boutons[1].enfants[1].enfants[1].className, "partage");
 });
 
 test("le menu des classes : rien sans classe ouverte ; Échap et un clic ailleurs le ferment", () => {
@@ -210,56 +228,39 @@ test("le menu des classes : rien sans classe ouverte ; Échap et un clic ailleur
 
 // ------------------------------------------------------------ la dernière classe
 
-function derniereRejouee(classes, rangee) {
+function derniereRejouee(rangee) {
   const magasin = new Map(rangee === undefined ? [] : [["mathsgo-suivi-prof-derniere-classe", rangee]]);
   const localStorage = {
     getItem: k => (magasin.has(k) ? magasin.get(k) : null),
     setItem: (k, v) => magasin.set(k, String(v)),
     removeItem: k => magasin.delete(k)
   };
-  const ouvertes = [];
-  const f = new Function("localStorage", "classes", "ouvrirClasse",
+  const f = new Function("localStorage",
     `const CLE_DERNIERE_CLASSE = "mathsgo-suivi-prof-derniere-classe";
-     ${["lireDerniereClasse", "retenirDerniereClasse", "oublierDerniereClasse", "rouvrirDerniereClasse"].map(fonction).join("\n")}
-     return {lireDerniereClasse, retenirDerniereClasse, rouvrirDerniereClasse};`)(localStorage, classes, id => { ouvertes.push(id); return Promise.resolve(); });
-  return {f, magasin, ouvertes};
+     ${["lireDerniereClasse", "retenirDerniereClasse", "oublierDerniereClasse"].map(fonction).join("\n")}
+     return {lireDerniereClasse, retenirDerniereClasse, oublierDerniereClasse};`)(localStorage);
+  return {f, magasin};
 }
 
-test("la dernière classe : elle s'ouvre à la connexion si elle est dans la liste du professeur connecté", () => {
-  const {f, ouvertes} = derniereRejouee([{id: 3}, {id: 5}], "5");
-  assert.ok(f.rouvrirDerniereClasse() instanceof Promise);
-  assert.deepEqual(ouvertes, [5]);
-});
-
-test("la dernière classe : supprimée, partage retiré, autre professeur sur le poste — rien ne s'ouvre, et le numéro est oublié", () => {
-  for (const rangee of ["12", "abc", "", "-1x"]) {
-    const {f, magasin, ouvertes} = derniereRejouee([{id: 3}, {id: 5}], rangee);
-    assert.equal(f.rouvrirDerniereClasse(), undefined, `« ${rangee} »`);
-    assert.deepEqual(ouvertes, []);
-    if (rangee === "12") assert.equal(magasin.size, 0, "un numéro qui n'est plus à lui est oublié");
-  }
-  const rien = derniereRejouee([{id: 3}], undefined);
-  assert.equal(rien.f.rouvrirDerniereClasse(), undefined, "première connexion sur ce poste : Mes classes");
-});
-
 test("la dernière classe : seul son numéro est gardé, à chaque ouverture réussie ; l'ancre de la séance en direct passe d'abord", () => {
-  const {f, magasin} = derniereRejouee([], undefined);
+  const {f, magasin} = derniereRejouee(undefined);
   f.retenirDerniereClasse(42);
   assert.deepEqual([...magasin.entries()], [["mathsgo-suivi-prof-derniere-classe", "42"]], "un numéro, rien d'autre (ni nom, ni élève, ni identifiant)");
   assert.equal(f.lireDerniereClasse(), 42);
+  for (const rangee of ["abc", "", "-1x"]) assert.equal(derniereRejouee(rangee).f.lireDerniereClasse(), 0, `« ${rangee} »`);
   const ouvrir = fonction("ouvrirClasse");
   assert.ok(ouvrir.indexOf("retenirDerniereClasse(classe.id);") > ouvrir.indexOf("if (numero !== demandeAppli || !jeton) return;"),
     "retenue seulement quand le serveur a répondu pour CETTE ouverture");
-  assert.match(script, /return chargerClasses\(\)\.then\(\(\) => rouvrirClasseDemandee\(\) \|\| rouvrirDerniereClasse\(\)\);/);
+  assert.match(script, /return allerDansUneClasse\(classeDemandee\(\), lireDerniereClasse\(\)\);/);
   assert.doesNotMatch(fonction("deconnecter"), /CLE_DERNIERE_CLASSE|oublierDerniereClasse/, "se déconnecter la garde : c'est pour la prochaine connexion");
   // Un accès au stockage refusé (navigation privée stricte) ne casse rien.
-  const refuse = new Function("localStorage", "classes", "ouvrirClasse",
-    `const CLE_DERNIERE_CLASSE = "x";\n${["lireDerniereClasse", "retenirDerniereClasse", "oublierDerniereClasse", "rouvrirDerniereClasse"].map(fonction).join("\n")}
-     return {lireDerniereClasse, retenirDerniereClasse, rouvrirDerniereClasse};`)(
-    {getItem() { throw new Error("refusé"); }, setItem() { throw new Error("refusé"); }, removeItem() { throw new Error("refusé"); }}, [], () => {});
+  const refuse = new Function("localStorage",
+    `const CLE_DERNIERE_CLASSE = "x";\n${["lireDerniereClasse", "retenirDerniereClasse", "oublierDerniereClasse"].map(fonction).join("\n")}
+     return {lireDerniereClasse, retenirDerniereClasse, oublierDerniereClasse};`)(
+    {getItem() { throw new Error("refusé"); }, setItem() { throw new Error("refusé"); }, removeItem() { throw new Error("refusé"); }});
   assert.equal(refuse.lireDerniereClasse(), 0);
   assert.doesNotThrow(() => refuse.retenirDerniereClasse(3));
-  assert.equal(refuse.rouvrirDerniereClasse(), undefined);
+  assert.doesNotThrow(() => refuse.oublierDerniereClasse());
 });
 
 // ------------------------------------------------------------ les onglets
@@ -301,7 +302,7 @@ test("la barre collée : « 405 ▾ » n'apparaît que collée, dans une classe 
   $("menu-classes").appendChild($("menu-classes-liste"));
   const etat = {classe: {id: 5}, suite: 0};
   const f = new Function("$", "el", "document", "window", "classes", "etat", "montrerOngletChoisi",
-    `let menuOuvertPar = null;\nlet classe = etat.classe;
+    `let menuOuvertPar = null;\nlet classe = etat.classe;\nconst LIBELLES_DIRECT = {};
      ${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses", "barreCollee", "marquerBarreCollee", "remonterALaBarre"].map(fonction).join("\n")}
      return {ouvrirMenuClasses, marquerBarreCollee, remonterALaBarre, ouvertPar: () => menuOuvertPar};`)(
     $, el, doc, {scrollY: 900, scrollTo: (x, y) => { etat.vers = y; }}, [{id: 5, libelle: "405", eleves: 10}], etat, () => { etat.suite += 1; });
