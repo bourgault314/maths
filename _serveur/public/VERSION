@@ -1,11 +1,11 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot serveur-pro-qui-est-mystere
+lot serveur-pro-ma-classe-charte-tete
 genere_le 2026-10-25
-fichiers 62
-manifeste 38ad0d157e0f70a299cede6cdc3e790bd14f8f6463a85ed53a45cfe3f4ca5dd1
-61b230d36219b3c4515e56c1ff59afb1a85ffa12343956bd73b16ba04867cdca  .htaccess
+fichiers 63
+manifeste e4156e4b3809ad1d1c9ab1bb6ce3364bc1cc0f82bf022672b3fb1ba6b7e29397
+673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
 eeb0f7793e65232e8ee4fa04881204240d6c9466ddcec5c1d9dd2b71d7484212  api/parcours.php
@@ -41,9 +41,10 @@ a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tabl
 d2a89f8e47128e737e2e70635458fe4e8dd6d884dc3e518d54a9409e9b9ceb4e  prof/defi_tables_mon_parcours.js
 0feabf2e885f013a5a84b14086b7f5968384e4b3856c38f7597f3783a3c80c16  prof/direct.php
 b459300c3294781f4e68137b2f7eedbe909cf0f9deda8bd5b2b559e5b1cb0fd6  prof/flash_anzan_parcours.js
-1d5ea8a8a0b7ff52eba7797b536c4db0605dce3dde3a553816518ccadccd7460  prof/index.php
+e94974ddb25cef2920576b6dce80a6deeb22a64721ed503a2cbaff29434952f7  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
+1323ccb3e51d88de0edff3fbcec539bba68c6582b27c011f9e6b8c141325283c  suivi.css
 0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308  vendor/katex-0.16.47/fonts/KaTeX_AMS-Regular.woff2
 de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c  vendor/katex-0.16.47/fonts/KaTeX_Caligraphic-Bold.woff2
 5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b  vendor/katex-0.16.47/fonts/KaTeX_Caligraphic-Regular.woff2
