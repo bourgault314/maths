@@ -305,8 +305,12 @@ test("Ma classe : « Voir son parcours » dans la fenêtre de l'élève (serveur
   assert.match(maClasse, /\$\("fe-parcours"\)\.addEventListener\("click", \(\) => \{\s*const eleve = eleveDeLaFenetre\(\);\s*if \(eleve\) voirFiche\(eleve, \$\("fe-parcours"\)\);\s*\}\);/);
   assert.doesNotMatch(maClasse, /textContent = "Fiche"|"Voir sa fiche"|fiche\.textContent = "Parcours"/);
   // Il ne dépend pas du droit d'écriture — un collègue en lecture seule l'a
-  // aussi : seule une progression reçue le montre.
-  assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = !\(eleve\.lu && eleve\.lu\.parcours\);/);
+  // aussi. Correctif des lots 5 (relecture Codex, point 8) : il ne dépend pas
+  // non plus d'une progression reçue — l'appli ouvre alors Mon parcours
+  // vierge, avec le prénom et la classe, et sa fiche s'imprime (l'ancien
+  // bouton « Parcours » de la ligne existait pour tous les élèves).
+  assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = false;/);
+  assert.doesNotMatch(maClasse, /\$\("fe-parcours"\)\.hidden = !\(eleve\.lu && eleve\.lu\.parcours\);/);
   // Plus de « Détail ▾ » : SPLAT! a la même fenêtre.
   assert.doesNotMatch(maClasse, /"Détail ▾"/);
 });

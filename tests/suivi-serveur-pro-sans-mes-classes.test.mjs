@@ -65,11 +65,14 @@ class Noeud {
 // ------------------------------------------------------------ la classe à ouvrir
 
 const classeAOuvrir = new Function(`${fonction("classeAOuvrir")}\nreturn classeAOuvrir;`)();
+// Correctif des lots 5 (point 9) : « de cette année » se lit dans l'année
+// de chaque classe et dans « annee_courante », toutes deux de classes.liste.
 const LISTE = [
-  {id: 2, libelle: "306", droit: "proprietaire"},
-  {id: 1, libelle: "405", droit: "proprietaire"},
-  {id: 3, libelle: "5e B", droit: "ecriture"},
-  {id: 4, libelle: "605", droit: "proprietaire"}];
+  {id: 2, libelle: "306", droit: "proprietaire", annee: "2026-2027"},
+  {id: 1, libelle: "405", droit: "proprietaire", annee: "2026-2027"},
+  {id: 3, libelle: "5e B", droit: "ecriture", annee: "2026-2027"},
+  {id: 4, libelle: "605", droit: "proprietaire", annee: "2025-2026"}];
+const ANNEE = "2026-2027";
 
 test("la classe à ouvrir : la première des demandées encore dans SA liste (l'ancre, puis la dernière ouverte)", () => {
   assert.equal(classeAOuvrir(LISTE, [3, 1]), 3, "l'ancre de la séance en direct passe d'abord");
@@ -79,44 +82,61 @@ test("la classe à ouvrir : la première des demandées encore dans SA liste (l'
 });
 
 test("la classe à ouvrir : sinon la première des SIENNES de cette année ; une classe partagée seulement après ; aucune : 0", () => {
-  const echues = [{id: 4}];
-  assert.equal(classeAOuvrir(LISTE, [], echues), 2, "la première des siennes (306), dans l'ordre de la liste");
-  assert.equal(classeAOuvrir([{id: 4, droit: "proprietaire"}, {id: 3, droit: "ecriture"}], [0, 0], echues), 3,
+  assert.equal(classeAOuvrir(LISTE, [], ANNEE), 2, "la première des siennes (306), dans l'ordre de la liste");
+  const vieille = {id: 4, droit: "proprietaire", annee: "2025-2026"};
+  assert.equal(classeAOuvrir([vieille, {id: 3, droit: "ecriture", annee: ANNEE}], [0, 0], ANNEE), 3,
     "jamais une classe de l'an dernier quand il y en a une de cette année");
-  assert.equal(classeAOuvrir([{id: 4, droit: "proprietaire"}], [], echues), 4, "seulement celle de l'an dernier : elle s'ouvre");
-  assert.equal(classeAOuvrir([{id: 8, droit: "lecture"}, {id: 9, droit: "ecriture"}], [12], []), 8, "seulement des classes partagées : la première");
-  assert.equal(classeAOuvrir([], [5, 1], []), 0, "aucune classe : « Crée ta première classe »");
+  assert.equal(classeAOuvrir([vieille], [], ANNEE), 4, "seulement celle de l'an dernier : elle s'ouvre");
+  assert.equal(classeAOuvrir([vieille, {id: 3, droit: "ecriture", annee: "2025-2026"}], [], ANNEE), 4,
+    "rien de cette année : la sienne avant la partagée");
+  assert.equal(classeAOuvrir([{id: 8, droit: "lecture", annee: ANNEE}, {id: 9, droit: "ecriture", annee: ANNEE}], [12], ANNEE), 8,
+    "seulement des classes partagées : la première");
+  assert.equal(classeAOuvrir([], [5, 1], ANNEE), 0, "aucune classe : « Crée ta première classe »");
   assert.equal(classeAOuvrir(undefined, undefined, undefined), 0);
+  assert.equal(classeAOuvrir(LISTE, [], ""), 2, "l'année pas dite (vieux serveur) : la première des siennes");
+});
+
+test("correctif des lots 5, point 9 — une vieille classe encore utilisée (pas « échue ») ne passe pas avant celle de cette année", () => {
+  // Le scénario de Codex : une 301 de l'an dernier, utilisée il y a moins de
+  // 21 jours (donc absente de « echues »), et la 405 de cette année.
+  const liste = [{id: 7, libelle: "301", droit: "proprietaire", annee: "2025-2026"}, {id: 1, libelle: "405", droit: "proprietaire", annee: ANNEE}];
+  assert.equal(classeAOuvrir(liste, [0, 0], ANNEE), 1, "la 405");
+  assert.doesNotMatch(fonction("classeAOuvrir"), /echues/, "« echues » ne sert plus qu'au bandeau");
+  assert.match(fonction("chargerClasses"), /anneeCourante = String\(donnees\.annee_courante \|\| ""\);/);
+  assert.match(fonction("allerDansUneClasse"), /classeAOuvrir\(classes, demandees, anneeCourante\)/);
 });
 
 // ------------------------------------------------------------ aller dans une classe
 
-function allerRejoue({liste, echues = [], erreur = null, ouverte = null, ecranClasse = false}) {
+function allerRejoue({liste, erreur = null, ouverte = null, ecranClasse = false}) {
   const journal = [];
-  const zones = {"ecran-classe": {hidden: !ecranClasse}, "ecran-premiere-classe": {hidden: true}};
+  const zones = {"ecran-classe": {hidden: !ecranClasse}, "ecran-premiere-classe": {hidden: true}, "ecran-compte": {hidden: true},
+    "carte-premiere-classe": {hidden: false}, "carte-reessayer": {hidden: true}};
   const etat = {classe: ouverte};
-  const f = new Function("journal", "zones", "etat", "liste", "echuesDuServeur", "erreurServeur",
-    `let classes = [], echues = [], classe = etat.classe, eleves = [{id: 1}], tableaux = {x: 1}, vue = "eleves", demandeAppli = 0;
+  const f = new Function("journal", "zones", "etat", "liste", "erreurServeur",
+    `let classes = [], classe = etat.classe, eleves = [{id: 1}], tableaux = {x: 1}, vue = "eleves", demandeAppli = 0;
+     let generation = 0, anneeCourante = "", droitClasse = "lecture", idsAffiches = [1], evaluation = {}, evalContenu = {}, ligueRecords = {}, voitEleve = {};
+     const jeton = "jeton";
      const $ = id => zones[id];
-     async function chargerClasses() { journal.push("classes.liste"); if (erreurServeur) throw erreurServeur; classes = liste; echues = echuesDuServeur; return classes; }
-     function surErreur(e, zone) { journal.push("erreur " + zone + " " + e.message); }
+     async function chargerClasses(estAJour) { journal.push("classes.liste"); if (erreurServeur) throw erreurServeur; if (!estAJour()) return null; classes = liste; anneeCourante = "2026-2027"; return classes; }
      function montrer(ecran) { journal.push("montrer " + ecran); zones["ecran-premiere-classe"].hidden = ecran !== "ecran-premiere-classe"; }
      function oublierDerniereClasse() { journal.push("oublier la dernière"); }
      function fermerFenetreEleve() { journal.push("fenêtre fermée"); } function oublierRecherche() {}
-     async function ouvrirClasse(id) { journal.push("ouvrir " + id); }
-     ${["classeAOuvrir", "zoneClasses", "quitterLaClasse", "allerDansUneClasse"].map(fonction).join("\n")}
+     function arreterVeilleEvaluation() {} function viderLaClasse() { journal.push("document vidé"); }
+     async function ouvrirClasse(id, options) { journal.push("ouvrir " + id + (options && options.remonter ? " (une panne remonte)" : "")); return true; }
+     ${["classeAOuvrir", "zoneClasses", "quitterLaClasse", "montrerSansClasse", "allerDansUneClasse"].map(fonction).join("\n")}
      return {allerDansUneClasse, zoneClasses, etat: () => ({classe, eleves, tableaux, vue})};`)(
-    journal, zones, etat, liste, echues, erreur);
-  return {f, journal};
+    journal, zones, etat, liste, erreur);
+  return {f, journal, zones};
 }
 
 test("aller dans une classe : la liste relue, puis la classe choisie s'ouvre", async () => {
   const r = allerRejoue({liste: LISTE, echues: [{id: 4}]});
-  await r.f.allerDansUneClasse(0, 99);
-  assert.deepEqual(r.journal, ["classes.liste", "ouvrir 2"]);
+  assert.equal(await r.f.allerDansUneClasse(0, 99), true);
+  assert.deepEqual(r.journal, ["classes.liste", "ouvrir 2 (une panne remonte)"]);
   const voulue = allerRejoue({liste: LISTE});
   await voulue.f.allerDansUneClasse(3);
-  assert.deepEqual(voulue.journal, ["classes.liste", "ouvrir 3"]);
+  assert.deepEqual(voulue.journal, ["classes.liste", "ouvrir 3 (une panne remonte)"]);
 });
 
 test("aller dans une classe : déjà dedans, à l'écran — rien n'est relu ; cachée (retour de Mon compte) — elle est relue", async () => {
@@ -125,38 +145,47 @@ test("aller dans une classe : déjà dedans, à l'écran — rien n'est relu ; c
   assert.deepEqual(dedans.journal, ["classes.liste"], "la 405 reste ouverte (bandeau des classes échues traité, par exemple)");
   const cachee = allerRejoue({liste: LISTE, ouverte: {id: 1}, ecranClasse: false});
   await cachee.f.allerDansUneClasse(1);
-  assert.deepEqual(cachee.journal, ["classes.liste", "ouvrir 1"]);
+  assert.deepEqual(cachee.journal, ["classes.liste", "ouvrir 1 (une panne remonte)"]);
   const partie = allerRejoue({liste: LISTE.filter(c => c.id !== 1), ouverte: {id: 1}, ecranClasse: true});
   await partie.f.allerDansUneClasse(1);
-  assert.deepEqual(partie.journal, ["classes.liste", "ouvrir 2"], "la classe ouverte vient d'être supprimée : une autre s'ouvre");
+  // Correctif des lots 5 (point 2) : elle est oubliée TOUT DE SUITE — dans la
+  // page et dans le document —, avant même d'ouvrir la suivante.
+  assert.deepEqual(partie.journal, ["classes.liste", "fenêtre fermée", "document vidé", "ouvrir 2 (une panne remonte)"],
+    "la classe ouverte vient d'être supprimée : elle est oubliée, puis une autre s'ouvre");
 });
 
 test("aller dans une classe : aucune classe — la page oublie la classe, puis « Crée ta première classe »", async () => {
   const r = allerRejoue({liste: [], ouverte: {id: 1, libelle: "405"}, ecranClasse: true});
   await r.f.allerDansUneClasse(1);
-  assert.deepEqual(r.journal, ["classes.liste", "fenêtre fermée", "oublier la dernière", "montrer ecran-premiere-classe"]);
+  assert.deepEqual(r.journal, ["classes.liste", "fenêtre fermée", "document vidé", "oublier la dernière", "montrer ecran-premiere-classe"]);
   assert.deepEqual(r.f.etat(), {classe: null, eleves: [], tableaux: {}, vue: "appli"}, "plus rien de la classe supprimée");
   assert.equal(r.f.zoneClasses(), "message-premiere-classe", "le message va sur l'écran à l'écran");
+  assert.deepEqual([r.zones["carte-premiere-classe"].hidden, r.zones["carte-reessayer"].hidden], [false, true],
+    "« Crée ta première classe », pas « Réessayer »");
 });
 
-test("aller dans une classe : la liste refusée — le message, et rien ne s'ouvre", async () => {
+test("aller dans une classe : la liste refusée — rien ne s'ouvre, et la panne REMONTE à l'appelant (correctif des lots 5)", async () => {
   const r = allerRejoue({liste: LISTE, erreur: new Error("Le serveur ne répond pas.")});
-  await r.f.allerDansUneClasse(1);
-  assert.deepEqual(r.journal, ["classes.liste", "erreur message-classes Le serveur ne répond pas."]);
+  await assert.rejects(r.f.allerDansUneClasse(1), /Le serveur ne répond pas\./,
+    "c'est l'appelant qui la dit, avec ce qui a déjà réussi (« Classe 306 supprimée… »)");
+  assert.deepEqual(r.journal, ["classes.liste"]);
 });
 
 test("aller dans une classe : c'est le chemin de la connexion, d'une classe supprimée, du retour de Mon compte, du mot de passe changé", () => {
-  assert.match(fonction("demarrer"), /return allerDansUneClasse\(classeDemandee\(\), lireDerniereClasse\(\)\);/);
+  // Correctif des lots 5 : chacun passe par allerSansPerdre, qui dit une
+  // panne avec ce qui a déjà réussi, dans l'écran affiché.
+  assert.match(fonction("demarrer"), /return allerSansPerdre\("", duLien, lireDerniereClasse\(\)\);/);
   const supprimer = blocDepuis(script, script.indexOf('$("supprimer-classe").addEventListener'));
-  assert.match(supprimer, /const partie = classe\.libelle;\s*await api\("classes\.supprimer", \{classe_id: classe\.id\}\);\s*\/\/[^\n]*\n\s*await allerDansUneClasse\(\);\s*messager\(zoneClasses\(\), `Classe \$\{partie\} supprimée : il n’en reste rien\.`, "ok"\);/,
+  assert.match(supprimer, /const partie = classe\.libelle;\s*try \{ await api\("classes\.supprimer", \{classe_id: classe\.id\}\); \}/,
     "le nom de la classe partie est gardé AVANT : une autre classe s'est ouverte depuis");
+  assert.match(supprimer, /quitterLaClasse\(\);[\s\S]*?const dit = `Classe \$\{partie\} supprimée : il n’en reste rien\.`;\s*if \(await allerSansPerdre\(dit\)\) messager\(zoneClasses\(\), dit, "ok"\);/);
   const echues = blocDepuis(script, script.indexOf('$("supprimer-echues").addEventListener'));
-  assert.equal((echues.match(/await allerDansUneClasse\(classe && classe\.id\);/g) || []).length, 2, "après la suppression, et après un refus");
-  assert.match(script, /\$\("retour-compte"\)\.addEventListener\("click", \(\) => \{ vue = "appli"; allerDansUneClasse\(classe && classe\.id\); \}\);/);
+  assert.equal((echues.match(/await allerSansPerdre\((?:"", |dit, )ouverte\)/g) || []).length, 2, "après la suppression, et après un refus");
+  assert.match(script, /\$\("retour-compte"\)\.addEventListener\("click", \(\) => \{ vue = "appli"; allerSansPerdre\("", classe && classe\.id\); \}\);/);
   const mdp = blocDepuis(script, script.indexOf('$("form-motdepasse").addEventListener'));
-  assert.match(mdp, /vue = "appli";\s*await allerDansUneClasse\(classe && classe\.id, lireDerniereClasse\(\)\);\s*messager\(zoneClasses\(\), "Mot de passe changé\./);
+  assert.match(mdp, /if \(await allerSansPerdre\(dit, duLien, classe && classe\.id, lireDerniereClasse\(\)\)\) messager\(zoneClasses\(\), dit, "ok"\);/);
   assert.match(fonction("creerClasse"), /messager\(zoneClasses\(\), "Donne un nom à la classe\.", "erreur"\)/);
-  assert.match(fonction("ouvrirClasse"), /if \(numero === demandeAppli && jeton\) surErreur\(erreur, zoneClasses\(\)\);/);
+  assert.match(fonction("ouvrirClasse"), /if \(numero !== demandeAppli \|\| !jeton\) return false;\s*if \(options && options\.remonter\) throw erreur;\s*surErreur\(erreur, zoneClasses\(\)\);/);
   assert.doesNotMatch(script, /rouvrirDerniereClasse|rouvrirClasseDemandee|chargerClasses\(\)\.then/);
 });
 
@@ -201,7 +230,7 @@ function profsRejoues(profs) {
   const zones = {"liste-profs": new Noeud("ul")};
   const gestes = [];
   const f = new Function("$", "document", "api", "gestes", "surErreur",
-    `const identifiant = "gwenael";
+    `const identifiant = "gwenael"; let demandeProfs = 0, generation = 0; const jeton = "jeton";
      function reinitialiserProf() {} function desactiverProf() {} function reactiverProf() {} function supprimerProf() {}
      function boutonGeste(texte, classeCss) { return {texte, classeCss}; }
      function menuGestes(li, boutons) { gestes.push({li, boutons}); li.appendChild(Object.assign(new (li.constructor)("details"), {className: "plus"})); }

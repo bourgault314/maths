@@ -279,7 +279,9 @@ test("« Ma classe » ramène dans la classe ; pendant une séance, on demande a
   assert.match(scriptTableau, /\$\("fin"\)\.addEventListener\("cancel", \(\) => \{ partirApresFin = false; \}\);/,
     "Échap ne laisse pas un départ en attente");
   // Serveur pro, lot 5a puis 5d : l'ancre d'abord, sinon la dernière classe ouverte.
-  assert.match(maClasse, /return allerDansUneClasse\(classeDemandee\(\), lireDerniereClasse\(\)\);/, "Ma classe lit l'ancre au démarrage");
+  // Correctif des lots 5 : l'ancre est lue avant le mot de passe temporaire.
+  assert.match(maClasse, /const duLien = classeDemandee\(\);/, "Ma classe lit l'ancre au démarrage");
+  assert.match(maClasse, /return allerSansPerdre\("", duLien, lireDerniereClasse\(\)\);/, "elle passe d'abord");
   assert.match(maClasse, /history\.replaceState\(null, "", window\.location\.pathname \+ window\.location\.search\)/, "puis l'efface");
   assert.match(maClasse, /const voulue = \(demandees \|\| \[\]\)\.find\(id => id && ids\.has\(id\)\);/,
     "seulement une classe de SA liste");

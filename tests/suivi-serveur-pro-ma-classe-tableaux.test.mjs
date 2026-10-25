@@ -119,7 +119,7 @@ test("la recherche passe par la file de redessin, se vide à une autre classe et
   assert.match(page, /<input type="search" id="chercher-eleve" placeholder="Chercher un élève" aria-label="Chercher un élève" autocomplete="off" spellcheck="false" maxlength="40">/);
   const ecoute = blocDepuis(script, script.indexOf('$("chercher-eleve").addEventListener("input"'));
   assert.match(ecoute, /recherche = String\(evenement\.target\.value \|\| ""\)\.slice\(0, 40\);\s*redessin\.demander\(\);/);
-  assert.match(script, /const CHAMPS_A_VIDER = \[[^\]]*"chercher-eleve"\]/);
+  assert.match(script, /const CHAMPS_A_VIDER = \[[^\]]*"chercher-eleve"[^\]]*\]/);
   assert.match(fonction("oublierEtat"), /recherche = "";\s*fenetreEleveId = null;\s*idsAffiches = \[\];/);
   assert.match(fonction("oublierRecherche"), /recherche = "";\s*const champ = \$\("chercher-eleve"\);\s*if \(champ\) champ\.value = "";/);
   const dessin = fonction("dessinerTableau");
@@ -187,6 +187,7 @@ function fenetre({eleves, ids, appli = "defi-tables", droit = "proprietaire", an
      function ouvrirParcoursAnzan(e) { journal.push("anzan " + e.id); parcoursAnzanEleve = e; }
      function dessinerParcoursAnzan() { journal.push("anzan redessin"); }
      function fermerParcoursAnzan() { parcoursAnzanEleve = null; }
+     function messager(id, texte, type) { const bloc = $(id); bloc.textContent = texte || ""; bloc.className = "message " + (type || ""); bloc.hidden = !texte; }
      ${FENETRE}
      boite_ = $("fenetre-eleve"); boite_.addEventListener("close", surFermetureFenetre);
      return {ouvrirFenetreEleve, changerEleveDeLaFenetre, fermerFenetreEleve, dessinerFenetreEleve, id: () => fenetreEleveId, poserIds: l => { idsAffiches = l; }, poserEleves: l => { eleves = l; }};`)(
@@ -242,14 +243,20 @@ test("la fenêtre : au bout du tableau, la flèche touchée se désactive et le 
   } finally { delete document.activeElement; }
 });
 
-test("la fenêtre : ce que montre chaque appli ; « Voir son parcours » pour Défi tables quand une progression est reçue ; « Revenir à… » en écriture seulement", () => {
+test("la fenêtre : ce que montre chaque appli ; « Voir son parcours » pour Défi tables, même sans rien reçu (correctif des lots 5) ; « Revenir à… » en écriture seulement", () => {
   const r = fenetre({eleves: TROIS(), ids: [1, 2, 3]});
   r.f.ouvrirFenetreEleve({id: 1});
   assert.equal(r.$("fe-contenu").textContent, "DT 1");
   assert.deepEqual([r.$("fe-parcours").hidden, r.$("pa-imprimer").hidden, r.$("fe-anzan").hidden], [false, true, true]);
   assert.equal(r.$("fe-gestes").hidden, false, "Léa a une version à restaurer");
+  r.$("fe-message").textContent = "Le parcours de Léa n’a pas pu s’ouvrir.";
+  r.$("fe-message").hidden = false;
   r.f.changerEleveDeLaFenetre(1);
-  assert.equal(r.$("fe-parcours").hidden, true, "rien reçu de Lucas : pas de « Voir son parcours »");
+  // Correctif des lots 5 (relecture Codex, point 8) : rien reçu de Lucas —
+  // « Voir son parcours » quand même : Mon parcours s'ouvre vierge, avec son
+  // prénom, et sa fiche s'imprime (l'ancien « Parcours » de la ligne aussi).
+  assert.equal(r.$("fe-parcours").hidden, false, "rien reçu de Lucas : « Voir son parcours » quand même");
+  assert.deepEqual([r.$("fe-message").hidden, r.$("fe-message").textContent], [true, ""], "le message de Léa ne suit pas chez Lucas");
   assert.equal(r.$("fe-gestes").hidden, true, "rien à restaurer");
   r.f.changerEleveDeLaFenetre(1);
   assert.equal(r.$("fe-gestes").hidden, false, "une journée gardée suffit");
@@ -281,7 +288,7 @@ test("la fenêtre se ferme et oublie l'élève : Fermer, Échap, son élève par
   r.f.ouvrirFenetreEleve({id: 2});
   r.boite.close();
   assert.equal(r.f.id(), null, "Échap (événement close)");
-  assert.deepEqual(["fe-titre", "fe-sous", "fe-contenu"].map(id => r.$(id).textContent), ["", "", ""], "plus aucun prénom dans la fenêtre");
+  assert.deepEqual(["fe-titre", "fe-sous", "fe-contenu", "fe-message"].map(id => r.$(id).textContent), ["", "", "", ""], "plus aucun prénom dans la fenêtre");
   r.f.ouvrirFenetreEleve({id: 2});
   r.f.poserEleves(TROIS().filter(e => e.id !== 2));
   r.f.dessinerFenetreEleve();

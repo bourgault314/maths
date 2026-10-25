@@ -80,19 +80,24 @@ function document() {
     if (texte !== undefined) n.textContent = texte;
     return n;
   };
-  const doc = {createElement: b => new Noeud(b)};
+  const doc = {createElement: b => new Noeud(b), documentElement: {clientWidth: 1440}};
   return {$, el, doc};
 }
 
-function menuRejoue(classes, classe) {
+// La classe ouverte est celle que la page a lue (son nom, ses élèves) ; par
+// défaut, telle que la liste la donne.
+function menuRejoue(classes, classe, eleves) {
   const {$, el, doc} = document();
   const ouvertes = [];
   $("menu-classes").hidden = true;
   $("menu-classes").appendChild($("menu-classes-liste"));
-  const f = new Function("$", "el", "document", "classes", "classe", "ouvrirClasse",
-    `let menuOuvertPar = null;\nconst LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};\n${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses"].map(fonction).join("\n")}
+  const dansLaListe = classe ? classes.find(c => c.id === classe.id) : null;
+  const ouverte = classe ? Object.assign({libelle: dansLaListe ? dansLaListe.libelle : ""}, classe) : null;
+  const sesEleves = eleves || new Array(dansLaListe ? dansLaListe.eleves : 0).fill({});
+  const f = new Function("$", "el", "document", "classes", "classe", "eleves", "ouvrirClasse",
+    `let menuOuvertPar = null;\nconst LIBELLES_DIRECT = {eclair: "● En direct", evaluation: "📝 Évaluation"};\n${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses", "garderDansLEcran"].map(fonction).join("\n")}
      return {poserMenuClasses, ouvrirMenuClasses, fermerMenuClasses};`)(
-    $, el, doc, classes, classe, id => ouvertes.push(id));
+    $, el, doc, classes, ouverte, sesEleves, id => ouvertes.push(id));
   return {$, f, ouvertes};
 }
 
@@ -249,9 +254,10 @@ test("la dernière classe : seul son numéro est gardé, à chaque ouverture ré
   assert.equal(f.lireDerniereClasse(), 42);
   for (const rangee of ["abc", "", "-1x"]) assert.equal(derniereRejouee(rangee).f.lireDerniereClasse(), 0, `« ${rangee} »`);
   const ouvrir = fonction("ouvrirClasse");
-  assert.ok(ouvrir.indexOf("retenirDerniereClasse(classe.id);") > ouvrir.indexOf("if (numero !== demandeAppli || !jeton) return;"),
+  assert.ok(ouvrir.indexOf("retenirDerniereClasse(classe.id);") > ouvrir.indexOf("if (numero !== demandeAppli || !jeton) return false;"),
     "retenue seulement quand le serveur a répondu pour CETTE ouverture");
-  assert.match(script, /return allerDansUneClasse\(classeDemandee\(\), lireDerniereClasse\(\)\);/);
+  // Correctif des lots 5 : l'ancre (lue avant un mot de passe temporaire), puis la dernière classe.
+  assert.match(script, /const duLien = classeDemandee\(\);[\s\S]*?return allerSansPerdre\("", duLien, lireDerniereClasse\(\)\);/);
   assert.doesNotMatch(fonction("deconnecter"), /CLE_DERNIERE_CLASSE|oublierDerniereClasse/, "se déconnecter la garde : c'est pour la prochaine connexion");
   // Un accès au stockage refusé (navigation privée stricte) ne casse rien.
   const refuse = new Function("localStorage",
@@ -302,8 +308,8 @@ test("la barre collée : « 405 ▾ » n'apparaît que collée, dans une classe 
   $("menu-classes").appendChild($("menu-classes-liste"));
   const etat = {classe: {id: 5}, suite: 0};
   const f = new Function("$", "el", "document", "window", "classes", "etat", "montrerOngletChoisi",
-    `let menuOuvertPar = null;\nlet classe = etat.classe;\nconst LIBELLES_DIRECT = {};
-     ${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses", "barreCollee", "marquerBarreCollee", "remonterALaBarre"].map(fonction).join("\n")}
+    `let menuOuvertPar = null;\nlet classe = etat.classe;\nconst eleves = [];\nconst LIBELLES_DIRECT = {};
+     ${["poserMenuClasses", "ouvrirMenuClasses", "fermerMenuClasses", "garderDansLEcran", "barreCollee", "marquerBarreCollee", "remonterALaBarre"].map(fonction).join("\n")}
      return {ouvrirMenuClasses, marquerBarreCollee, remonterALaBarre, ouvertPar: () => menuOuvertPar};`)(
     $, el, doc, {scrollY: 900, scrollTo: (x, y) => { etat.vers = y; }}, [{id: 5, libelle: "405", eleves: 10}], etat, () => { etat.suite += 1; });
   $("repere-onglets").rect = {top: 120, bottom: 120, left: 0, right: 0};
@@ -368,13 +374,13 @@ test("le sélecteur d'appli : la liste des onglets visibles, l'appli regardée c
   const onglets = ["defi-tables", "coffres", "flash-anzan", "splat"].map((cle, i) => Object.assign(new Noeud("button"),
     {dataset: {appli: cle}, textContent: ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"][i], hidden: cle === "flash-anzan",
      touche: 0, click() { this.touche += 1; }}));
-  const doc = {createElement: b => new Noeud(b), querySelectorAll: () => onglets};
+  const doc = {createElement: b => new Noeud(b), querySelectorAll: () => onglets, documentElement: {clientWidth: 1440}};
   $("menu-applis").hidden = true;
   $("menu-applis-liste").querySelector = function (sel) {
     const tous = this.enfants.map(li => li.enfants[0]);
     return sel.includes("aria-current") ? tous.find(b => b.attributs["aria-current"] === "true") || null : tous[0] || null;
   };
-  const f = new Function("$", "el", "document", "classe", `let vue = "appli"; let appliAffichee = "splat";\n${["ouvrirMenuApplis", "fermerMenuApplis"].map(fonction).join("\n")}\nreturn {ouvrirMenuApplis};`)(
+  const f = new Function("$", "el", "document", "classe", `let vue = "appli"; let appliAffichee = "splat";\n${["ouvrirMenuApplis", "fermerMenuApplis", "garderDansLEcran"].map(fonction).join("\n")}\nreturn {ouvrirMenuApplis};`)(
     $, el, doc, {id: 5});
   f.ouvrirMenuApplis();
   const boutons = $("menu-applis-liste").enfants.map(li => li.enfants[0]);
