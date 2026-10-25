@@ -320,6 +320,22 @@ test("D4 · la page prof : « Retirer » au bout de chaque ligne de la carte (pa
   assert.match(pageProf, /\.rec-retirer \{ min-height: 32px;/);
 });
 
+test("qui est Mystère (serveur pro, 25/10/2026) · dans la carte seulement, le professeur voit « Mystère (Léa · 405) » ; le plein écran et l'appli gardent « Mystère »", () => {
+  // Dans la carte (retirable), sous « Mystère », le prénom et la classe que
+  // le serveur rend au seul professeur (records.ligue, D4).
+  assert.match(pageProf, /if \(retirable && ligne\.eleve && ligne\.nom === "Mystère"\) \{\s*const qui = document\.createElement\("span"\);\s*qui\.className = "rec-qui";\s*qui\.textContent = ligne\.eleve\.prenom === "Élève" \? `\(\$\{ligne\.eleve\.classe\}\)` : `\(\$\{ligne\.eleve\.prenom\} · \$\{ligne\.eleve\.classe\}\)`;\s*nom\.classList\.add\("avec-qui"\);\s*nom\.append\(" ", qui\);\s*\}/);
+  // Écrit par textContent : un prénom n'est jamais lu comme du HTML.
+  assert.doesNotMatch(pageProf, /qui\.innerHTML/);
+  // Le plein écran (qu'on projette) appelle ligneDeRecord sans « retirable » :
+  // jamais de parenthèse.
+  assert.match(pageProf, /\(ligueRecords\[cle\] \|\| \[\]\)\.forEach\(ligne => liste\.append\(ligneDeRecord\(ligne\)\)\);/);
+  // Toujours sur la ligne du dessous, jamais coupée ni posée sur le temps.
+  assert.match(pageProf, /\.rec-liste \.nom\.avec-qui \{ white-space: normal; overflow: visible; \}/);
+  assert.match(pageProf, /\.rec-qui \{ display: block; color: var\(--muted\);/);
+  // L'appli des élèves ne reçoit toujours aucune identité.
+  assert.match(apiRecords, /\+ ligue\(\$pdo, \$contexte\['prof_id'\], \$eleveId\) \+ \$enPlus/);
+});
+
 // ------------------------------------------------ point 8 : « Lire la table »
 
 test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et cinq lignes, les deux liens côte à côte, la note sous le premier ; rien ne change en dessous de 1024 px", () => {
