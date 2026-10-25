@@ -297,12 +297,16 @@ test("l'adresse reste #b=…&vue=fiche : la page prof et le site se mettent à j
 
 // ------------------------------------------------- Ma classe
 
-test("Ma classe : « Parcours » à la place de « Fiche », même bouton, même place, même classe — pour le propriétaire et pour un collègue « voir seulement »", () => {
-  assert.match(maClasse, /const fiche = document\.createElement\("button"\);\s*\n\s*fiche\.type = "button";\s*\n\s*fiche\.className = "secondaire";\s*\n\s*fiche\.textContent = "Parcours";\s*\n\s*fiche\.title = "Voir son parcours";\s*\n\s*fiche\.addEventListener\("click", \(\) => voirFiche\(eleve, fiche\)\);\s*\n\s*cActions\.append\(fiche\);/);
-  assert.doesNotMatch(maClasse, /textContent = "Fiche"|"Voir sa fiche"/);
-  // Le bouton est posé AVANT poserGestes(eleve, ecriture, …) : il ne dépend pas
-  // du droit d'écriture — un collègue en lecture seule l'a aussi.
-  assert.match(maClasse, /cActions\.append\(fiche\);\s*\n\s*\/\/[^\n]*\n\s*poserGestes\(eleve, ecriture, cActions\);/);
-  // Le « Détail » de SPLAT! ne bouge pas.
-  assert.match(maClasse, /detail\.textContent = ouvert \? "Replier ▴" : "Détail ▾";/, "le bouton « Détail » de SPLAT! est toujours là");
+test("Ma classe : « Voir son parcours » dans la fenêtre de l'élève (serveur pro, lot 5c) — pour le propriétaire et pour un collègue « voir seulement »", () => {
+  // La ligne entière ouvre la fenêtre ; « Voir son parcours » y ouvre l'écran
+  // Mon parcours par un billet de lecture (voirFiche), comme l'ancien bouton
+  // « Parcours » de la ligne.
+  assert.match(maClasse, /<button type="button" id="fe-parcours" title="Son écran Mon parcours, sur mathsgo\.re, dans un nouvel onglet" hidden>Voir son parcours<\/button>/);
+  assert.match(maClasse, /\$\("fe-parcours"\)\.addEventListener\("click", \(\) => \{\s*const eleve = eleveDeLaFenetre\(\);\s*if \(eleve\) voirFiche\(eleve, \$\("fe-parcours"\)\);\s*\}\);/);
+  assert.doesNotMatch(maClasse, /textContent = "Fiche"|"Voir sa fiche"|fiche\.textContent = "Parcours"/);
+  // Il ne dépend pas du droit d'écriture — un collègue en lecture seule l'a
+  // aussi : seule une progression reçue le montre.
+  assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = !\(eleve\.lu && eleve\.lu\.parcours\);/);
+  // Plus de « Détail ▾ » : SPLAT! a la même fenêtre.
+  assert.doesNotMatch(maClasse, /"Détail ▾"/);
 });

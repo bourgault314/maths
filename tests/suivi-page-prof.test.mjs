@@ -241,7 +241,7 @@ test("à l'écran, les deux feuilles restent cachées et [hidden] cache pour de 
     ".apercu {",
     "dialog {",
     "dialog::backdrop {",
-    ".fragiles {",
+    ".fragiles strong {",
     ".barre-outils {"
   ].forEach(regle => assert.ok(ecran.includes(regle), `règle perdue : ${regle}`));
   assert.ok(!style.includes(".rang {") && !style.includes(".expert-case"), "les styles de la colonne Expert, eux, sont partis");
@@ -276,14 +276,12 @@ test("tri « Prénom » de Z à A : l'inverse, et les sans-prénom restent en ba
   assert.deepEqual(trie.slice(-2).map(e => e.code), feuille, "les sans-prénom dans l'ordre de la feuille");
 });
 
-test("le clic sur « Élève » et le menu « Trier par » passent tous deux par trierEleves", () => {
+test("le clic sur un titre de colonne passe par trierEleves ; plus de menu « Trier par » (serveur pro, lot 5c)", () => {
   assert.match(fonction("dessinerTableau"), /^\s*function dessinerTableau\(\) \{\s*trierEleves\(\);/);
   const clic = blocDepuis(script, script.indexOf('document.querySelectorAll("th button[data-tri]")'));
   assert.match(clic, /tri = \{colonne, sens: tri\.colonne === colonne \? -tri\.sens : \(colonne === "prenom" \? 1 : -1\)\};/);
   assert.match(clic, /redessin\.demander\(\)/);
-  const menu = blocDepuis(script, script.indexOf('$("tri").addEventListener("change"'));
-  assert.match(menu, /tri = \{colonne, sens: colonne === "prenom" \? 1 : -1\};/);
-  assert.match(menu, /redessin\.demander\(\)/);
+  assert.doesNotMatch(page, /id="tri"|Trier&nbsp;par|\$\("tri"\)/, "le menu « Trier par » est parti");
 });
 
 // ------------------------------------------------- tri pendant une saisie de prénom
@@ -329,9 +327,10 @@ test("les deux commandes de tri et les redessins d'action passent par la file", 
   const gestionnaireEntete = blocDepuis(script, script.indexOf('document.querySelectorAll("th button[data-tri]")'));
   assert.match(gestionnaireEntete, /redessin\.demander\(\)/);
   assert.ok(!/dessinerTableau\(\)/.test(gestionnaireEntete), "l'en-tête ne redessine plus directement");
-  const gestionnaireMenu = blocDepuis(script, script.indexOf('$("tri").addEventListener("change"'));
-  assert.match(gestionnaireMenu, /redessin\.demander\(\)/);
-  assert.ok(!/dessinerTableau\(\)/.test(gestionnaireMenu));
+  // Lot 5c : la recherche aussi passe par la file.
+  const gestionnaireRecherche = blocDepuis(script, script.indexOf('$("chercher-eleve").addEventListener("input"'));
+  assert.match(gestionnaireRecherche, /redessin\.demander\(\)/);
+  assert.ok(!/dessinerTableau\(\)/.test(gestionnaireRecherche));
   const source = fonction("nommer");
   assert.match(source, /redessin\.debut\(\)/);
   assert.match(source, /redessin\.fin\(\)/);
@@ -671,35 +670,28 @@ test("« rien depuis N jours » : compté depuis la dernière activité, à l'he
   assert.equal(compter("2026-10-03")({maj_le: "2026-09-25T20:30:00Z"}), 7, "le jour est celui de La Réunion, comme les journées du serveur");
 });
 
-test("le tableau : sept colonnes, la liste des tables écrite, les gestes rares derrière « ⋯ »", () => {
+test("le tableau : six colonnes et la flèche, la liste des tables écrite, la ligne entière qui s'ouvre (serveur pro, lot 5c)", () => {
   // Lot « splat-suivi-4 » : l'en-tête de Défi tables est la rangée
   // « entete-defi-tables » (celle de SPLAT! est testée dans suivi-prof-splat).
   const debutEntete = page.indexOf('<tr id="entete-defi-tables">');
   const entete = page.slice(debutEntete, page.indexOf("</tr>", debutEntete));
-  assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Tables passées:acquises", "En cours:encours", "Cette semaine:semaine", "En retard:retard", "Dernière activité:date", ""]);
+  assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
+    ["Élève:prenom", "Tables passées:acquises", "En cours:encours (large)", "Cette semaine:semaine (large)", "En retard:retard (large)", "Dernière activité:date", ""]);
   // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
-  assert.match(page, /<option value="acquises">Tables passées<\/option>/);
-  assert.match(page, /cAcquises\.dataset\.libelle = "Passées";/);
   assert.doesNotMatch(page, /Tables acquises|"Acquises"/);
   assert.doesNotMatch(page, /À travailler|cMelange|cExpert|caseExpert|badgeRang|calculsATravailler\(/, "les trois colonnes d'avant sont retirées, et leur code avec");
   assert.match(page, /if \(tri\.colonne === "encours"\) return eleve\.lu\.enCours\.ordre;\s*if \(tri\.colonne === "semaine"\) return eleve\.lu\.seances;/);
-  assert.match(page, /<option value="encours">En cours<\/option>\s*<option value="semaine">Séances cette semaine<\/option>/);
+  assert.match(script, /"defi-tables": \["prenom", "acquises", "encours", "semaine", "retard", "date"\]/);
   // La liste des tables se LIT (une info-bulle ne s'imprime pas).
   assert.match(page, /liste\.textContent = reste\.length <= 3 \? `reste \$\{reste\.join\(", "\)\}` : eleve\.lu\.acquises\.join\(", "\);\s*cAcquises\.append\(liste\);/);
-  // « Parcours » (« Fiche » jusqu'au lot « Ma classe : le parcours de Léa »,
-  // 21/10/2026) reste visible ; « Revenir à… » dans le menu de la ligne. Depuis
-  // le lot « Ma classe : élèves », « Nouveau code » et « Supprimer » sont dans
-  // le menu de l'onglet Élèves (testé dans suivi-ma-classe-eleves).
-  assert.match(page, /fiche\.textContent = "Parcours";\s*\n\s*fiche\.title = "Voir son parcours";/);
-  assert.match(fonction("poserGestes"), /boutonGeste\("Revenir à…"/);
-  assert.doesNotMatch(fonction("poserGestes"), /Nouveau code|Supprimer/);
-  assert.match(fonction("menuGestes"), /if \(!boutons\.length\) return;[\s\S]*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide pour un collègue en lecture seule");
-  // Le menu est en position fixe (l'enveloppe du tableau le couperait sur les dernières lignes).
+  // Plus de bouton sur la ligne : la ligne entière ouvre la fenêtre de
+  // l'élève, où sont « Voir son parcours » et « Revenir à… ». Le menu « ⋯ »
+  // reste celui de l'onglet Élèves (testé dans suivi-ma-classe-eleves).
+  assert.doesNotMatch(page, /fiche\.textContent = "Parcours"/);
+  assert.match(page, /\[cEnCours, cSemaine, cRetard\]\.forEach\(large\);\s*ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate\);\s*finirLigne\(ligne, eleve, cNom\);/);
+  assert.match(fonction("menuGestes"), /if \(!boutons\.length\) return;[\s\S]*menu\.addEventListener\("click", \(\) => \{ plus\.open = false; \}\);\s*plus\.addEventListener\("toggle", \(\) => placerMenu\(plus, poignee, menu\)\);\s*cActions\.append\(plus\);/, "pas de menu vide");
   assert.match(page, /\.plus\[open\] > div \{ position: fixed; z-index: 5;/);
-  assert.match(page, /menu\.style\.top = `\$\{dessous \? cadre\.bottom \+ 4 : Math\.max\(4, cadre\.top - 4 - hauteur\)\}px`;/);
   assert.match(page, /document\.addEventListener\("click", fermerMenus\);\s*window\.addEventListener\("scroll", \(\) => fermerMenus\(null\), true\);/);
-  assert.match(page, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
 });
 
 test("« lireProgression » demande tout au moteur, et un parcours illisible donne une ligne vide complète", () => {

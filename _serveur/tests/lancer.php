@@ -6824,7 +6824,9 @@ verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionn
     vrai(str_contains($p['texte'], '<input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong>'), 'sa case dans ⚙ Réglages → Activités');
     vrai(!str_contains($p['texte'], 'data-appli="flash-anzan" checked'), 'décochée par défaut');
     vrai(str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'sa ligne « En plus pour »');
-    vrai(str_contains($p['texte'], '<dialog id="parcours-anzan"'), 'la fenêtre « Le parcours de… »');
+    // Serveur pro, lot 5c : les séances d'Anzan vivent dans la fenêtre de l'élève (la même pour les quatre applis).
+    vrai(str_contains($p['texte'], '<dialog id="fenetre-eleve" class="fenetre fenetre-eleve"'), 'la fenêtre de l’élève');
+    vrai(str_contains($p['texte'], '<div id="fe-anzan" hidden>'), 'avec la place des séances d’Anzan');
     // Le script de l'onglet (de son titre à la feuille imprimée) ne pose rien par innerHTML.
     $debut = strpos($p['texte'], "l'onglet Anzan\n");
     $fin = strpos($p['texte'], 'feuille imprimée', (int)$debut);

@@ -151,25 +151,25 @@ const TOM = COFFRES.commencerPartie(COFFRES.creer(), {niveau: 1, ops: [1], serie
 
 // ------------------------------------------------------------ la page, exécutée
 
-const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "boutonGeste", "menuGestes", "poserGestes",
-  "jourCourt", "celluleNiveau", "ligneDetailCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres"].map(n => fonction(n)).join("\n");
+const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
+  "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres"].map(n => fonction(n)).join("\n");
 
 function ongletCoffres(liste, options = {}) {
   const {zones, $} = creerZones();
   const corps = new Noeud("tbody");
   const messages = [];
-  const detailsOuverts = options.detailsOuverts || new Set();
+  const ouverts = [];
   const moteur = options.sansMoteur ? null : COFFRES;
-  const fabrique = new Function("document", "$", "COFFRES", "droitClasse", "detailsOuverts", "messager",
-    "dessinerPapier", "revenirA", "placerMenu", "classe",
-    `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres};`);
-  const f = fabrique(document, $, moteur, options.droit || "proprietaire", detailsOuverts,
-    (id, t, type) => messages.push({id, t, type}), () => {}, () => {}, () => {}, {id: 7, libelle: "CM1", reglages: {}});
+  const fabrique = new Function("document", "$", "COFFRES", "droitClasse", "messager",
+    "dessinerPapier", "classe", "ouvrirFenetreEleve",
+    `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
+  const f = fabrique(document, $, moteur, options.droit || "proprietaire",
+    (id, t, type) => messages.push({id, t, type}), () => {}, {id: 7, libelle: "CM1", reglages: {}}, eleve => ouverts.push(eleve.prenom));
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []}, e, {lu: f.lireCoffres(e.parcours)}));
   f.poser(eleves);
   f.dessinerTableauCoffres(corps, (options.droit || "proprietaire") !== "lecture");
-  const lignes = corps.children.filter(tr => !aClasse(tr, "detail"));
-  return {zones, corps, lignes, messages, eleves, f, detailsOuverts};
+  const lignes = corps.children;
+  return {zones, corps, lignes, messages, eleves, f, ouverts};
 }
 
 const classe5 = () => [
@@ -180,7 +180,8 @@ const classe5 = () => [
   {prenom: "Zoé", parcours: ZOE, maj_le: "2026-10-21T08:00:00Z"},
 ];
 const cellules = tr => tr.children;
-const C_N1 = 1, C_N2 = 2, C_N3 = 3, C_DATE = 4, C_GESTES = 5;
+// Lot 5c : « Trésors » (colonne du téléphone) après l'élève ; la flèche au bout.
+const C_TRESORS = 1, C_N1 = 2, C_N2 = 3, C_N3 = 4, C_DATE = 5, C_VA = 6;
 const niveauLu = td => ({b: td.premier(n => n.tag === "b")?.textContent || null, small: td.premier(n => n.tag === "small")?.textContent || null, texte: td.textContent});
 
 test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » seulement au-dessus de zéro, « — » sinon, le jour du dernier trésor", () => {
@@ -198,27 +199,26 @@ test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » s
   assert.deepEqual(cellules(tom).slice(C_N1, C_DATE + 1).map(td => td.textContent), ["—", "—", "—", "—"], "une partie à 0 clé : rien à montrer");
   assert.deepEqual(niveauLu(cellules(zoe)[C_N3]), {b: "1 trésor", small: null, texte: "1 trésor"});
   assert.deepEqual(niveauLu(cellules(zoe)[C_N2]), {b: "1 trésor", small: "dont 1 parfait", texte: "1 trésordont 1 parfait"});
-  // Les libellés des cellules au téléphone, et le résumé.
-  assert.deepEqual(cellules(lea).map(td => td.dataset.libelle), ["", "Niveau 1", "Niveau 2", "Niveau 3", "Dernier trésor", ""]);
+  // Au téléphone : « Trésors » (le total) à la place des trois niveaux.
+  assert.deepEqual(cellules(lea).map(td => td.className), ["nom", "seul-telephone", "tresors large", "tresors large", "tresors sans large", "", "va"]);
+  assert.deepEqual(lignes.map(tr => cellules(tr)[C_TRESORS].textContent), ["7 trésors", "1 trésor", "—", "—", "5 trésors"]);
   assert.equal(zones.get("resume-classe").textContent, "5 élèves · rien reçu pour 1");
   assert.equal(zones.get("objectif").hidden, true, "pas de carte de classe pour Coffres");
   assert.equal(zones.get("fragiles").hidden, true);
-  // Chaque ligne a « Détail » ; aucun code nulle part.
-  lignes.forEach(tr => assert.equal(cellules(tr)[C_GESTES].premier(n => n.tag === "button")?.textContent, "Détail"));
+  // Lot 5c : plus de « Détail » — la ligne entière ouvre la fenêtre de l'élève ; aucun code nulle part.
+  lignes.forEach(tr => { assert.equal(aClasse(tr, "cliquable"), true); assert.equal(cellules(tr)[C_VA].textContent, "›"); });
+  assert.equal(lignes.some(tr => tr.tous(n => n.tag === "button").some(b => b.textContent !== cellules(tr)[0].textContent)), false, "un seul bouton : le prénom");
   assert.equal(lignes.some(tr => tr.textContent.includes("CODE0")), false);
 });
 
-test("le Détail : la partie en cours (à partir d'une clé), puis les quatre opérations — clés gagnées, aides, solutions, erreurs ; il se replie", () => {
-  const {lignes, corps, detailsOuverts} = ongletCoffres(classe5());
-  const lea = lignes[0];
-  const bouton = cellules(lea)[C_GESTES].premier(n => n.tag === "button");
-  bouton.cliquer();
-  assert.equal(bouton.textContent, "Masquer le détail");
-  assert.ok(detailsOuverts.has(1));
-  const detail = corps.children[corps.children.indexOf(lea) + 1];
-  assert.ok(aClasse(detail, "detail"), "la rangée du Détail suit la ligne");
-  const cellule = detail.children[0];
-  assert.equal(cellule.attributs.colSpan ?? cellule.colSpan, 6);
+test("la fenêtre de l'élève (lot 5c) : ses trésors et ses niveaux, la partie en cours (à partir d'une clé), puis les quatre opérations — clés gagnées, aides, solutions, erreurs", () => {
+  const {lignes, eleves, f, ouverts} = ongletCoffres(classe5());
+  lignes[0].cliquer();
+  assert.deepEqual(ouverts, ["Léa"], "la ligne ouvre la fenêtre");
+  const cellule = f.contenuCoffres(eleves[0]);
+  const chiffres = cellule.premier(n => n.tag === "dl").children.map(div => div.children.map(x => x.textContent));
+  assert.deepEqual(chiffres, [["Trésors", "7 trésorsdont 4 parfaits"], ["Niveau 1", "5 trésorsdont 3 parfaits"], ["Niveau 2", "2 trésorsdont 1 parfait"],
+    ["Niveau 3", "—"], ["Dernier trésor", "20 oct. 2026"]]);
   const partie = cellule.premier(n => aClasse(n, "partie-en-cours"));
   assert.equal(partie.textContent, "Partie en cours : niveau 2 · addition et multiplication · 6 clés sur 10");
   const table = cellule.premier(n => n.tag === "table");
@@ -227,28 +227,20 @@ test("le Détail : la partie en cours (à partir d'une clé), puis les quatre op
   const rangees = table.premier(n => n.tag === "tbody").children.map(tr => tr.children.map(td => td.textContent));
   assert.deepEqual(rangees, [["Addition", "28", "1", "0", "1"], ["Soustraction", "15", "0", "0", "1"], ["Multiplication", "23", "2", "1", "1"], ["Division", "10", "0", "0", "1"]],
     "les chiffres de la maquette 01 ; pas de trésors par opération");
-  bouton.cliquer();
-  assert.equal(bouton.textContent, "Détail");
-  assert.equal(corps.children.includes(detail), false);
+  assert.equal(cellule.premier(n => aClasse(n, "aide"))?.textContent, "Parfait : sans erreur ni solution montrée.");
   // Lucas : pas de partie en cours → pas de ligne « Partie en cours ».
-  const lucas = lignes[1];
-  cellules(lucas)[C_GESTES].premier(n => n.tag === "button").cliquer();
-  const detailLucas = corps.children[corps.children.indexOf(lucas) + 1];
-  assert.equal(detailLucas.premier(n => aClasse(n, "partie-en-cours")), null);
-  assert.equal(detailLucas.premier(n => n.tag === "tbody").children.length, 4, "les quatre opérations, même à zéro");
+  const lucas = f.contenuCoffres(eleves[1]);
+  assert.equal(lucas.premier(n => aClasse(n, "partie-en-cours")), null);
+  assert.equal(lucas.premier(n => n.tag === "tbody").children.length, 4, "les quatre opérations, même à zéro");
+  // Malo : rien reçu.
+  assert.equal(f.contenuCoffres(eleves[2]).textContent, "Rien reçu pour l’instant.");
+  assert.equal(cellule.textContent.includes("CODE0"), false);
 });
 
-test("un Détail déplié le reste quand le tableau est redessiné (tri, saisie)", () => {
-  const ouverts = new Set([1]);
-  const {corps, lignes} = ongletCoffres(classe5(), {detailsOuverts: ouverts});
-  assert.ok(aClasse(corps.children[corps.children.indexOf(lignes[0]) + 1], "detail"));
-});
-
-test("sans moteur : l'onglet le dit, chaque ligne reste lisible, pas de Détail", () => {
+test("sans moteur : l'onglet le dit, chaque ligne reste lisible", () => {
   const {lignes, messages} = ongletCoffres(classe5(), {sansMoteur: true});
   assert.equal(lignes.length, 5);
   assert.deepEqual(cellules(lignes[0]).slice(C_N1, C_DATE + 1).map(td => td.textContent), ["—", "—", "—", "—"]);
-  assert.equal(cellules(lignes[0])[C_GESTES].premier(n => n.tag === "button"), null);
   assert.ok(messages.some(m => m.id === "message-appli" && m.type === "erreur" && m.t.includes("prof/coffres-parcours.js")));
 });
 
@@ -268,7 +260,10 @@ test("le tri « Trésors » : les trésors, puis les parfaits, puis une partie e
   const lus = classe5().map((e, i) => Object.assign({id: i + 1, code: `C${i}`}, e, {lu: COFFRES.resumeProf(e.parcours)}));
   assert.deepEqual(trier(lus.slice(), {colonne: "tresors", sens: -1}, "coffres", l => l), ["Léa", "Zoé", "Lucas", "Malo", "Tom"]);
   assert.deepEqual(trier(lus.slice(), {colonne: "date", sens: -1}, "coffres", l => l).slice(0, 2), ["Zoé", "Léa"], "Zoé (21 oct.) avant Léa (20 oct.) même si Léa a joué après");
-  assert.match(constante("TRIS"), /"coffres": \[\["prenom", "Prénom"\], \["tresors", "Trésors"\], \["date", "Dernier trésor"\]\]/);
+  assert.match(constante("TRIS"), /"coffres": \["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date"\]/);
+  // Lot 5c : chaque niveau trie sur ses trésors, puis ses parfaits ; un niveau jamais joué en bas.
+  assert.deepEqual(trier(lus.slice(), {colonne: "niveau2", sens: -1}, "coffres", l => l).slice(0, 2), ["Léa", "Zoé"], "Léa : 2 trésors au niveau 2, Zoé : 1");
+  assert.deepEqual(trier(lus.slice(), {colonne: "niveau3", sens: -1}, "coffres", l => l)[0], "Zoé");
 });
 
 test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiques entre Défi tables et SPLAT!", () => {
@@ -277,11 +272,11 @@ test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiqu
   // Anzan se glisse entre Coffres et SPLAT! (lot « Qui voit quoi », lot 4b).
   assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-coffres" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-coffres"')));
-  assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Niveau 1", "Niveau 2", "Niveau 3", "Dernier trésor:date", ""]);
+  assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
+    ["Élève:prenom", "Trésors:tresors (seul-telephone)", "Niveau 1:niveau1 (large)", "Niveau 2:niveau2 (large)", "Niveau 3:niveau3 (large)", "Dernier trésor:date", ""]);
   assert.match(page, /<p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée\.<\/p>/);
   assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan;/);
-  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); finirOnglet\(lignes\); return; \}/);
+  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("elevesLus"), /cle === "coffres" \? lireCoffres/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "coffres"\) return chargerMoteurCoffres\(\);/);
   assert.match(script, /const MOTEUR_COFFRES = "coffres-parcours\.js\?v=<\?= htmlspecialchars\(\$versionCoffres, ENT_QUOTES\) \?>";/);

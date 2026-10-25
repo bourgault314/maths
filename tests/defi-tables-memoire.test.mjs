@@ -237,13 +237,14 @@ test("le serveur : « boite » et « echeance » acceptés, « cases » toujours
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "la copie serveur du moteur est identique");
-  assert.match(prof, /<option value="retard">Calculs en retard<\/option>/);
-  assert.match(prof, /<th><button type="button" data-tri="retard">En retard<\/button><\/th>/);
+  // Serveur pro, lot 5c : plus de menu « Trier par » — le titre de la colonne
+  // trie ; la colonne se cache au téléphone (la fenêtre de l'élève la redit).
+  assert.match(prof, /<th class="large"><button type="button" data-tri="retard">En retard<\/button><\/th>/);
   assert.match(prof, /retard: PARCOURS\.calculsEnRetard \? PARCOURS\.calculsEnRetard\(parcours\) : null,/);
   assert.match(prof, /if \(tri\.colonne === "retard"\) return eleve\.lu\.retard \? eleve\.lu\.retard\.length : -1;/);
-  assert.match(prof, /cRetard\.dataset\.libelle = "En retard";/);
+  assert.match(prof, /\["En retard", retard === null \? "—" : `\$\{retard\} calcul\$\{retard > 1 \? "s" : ""\}`\]/);
   // (Sans la colonne Code depuis le lot « Ma classe : élèves » : les codes sont dans l'onglet Élèves.)
-  assert.match(prof, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions\);/);
+  assert.match(prof, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate\);/);
   // Le compteur est bien celui du moteur : dus AVANT aujourd'hui.
   // Lot « un seul système » : parmi les calculs que Mes calculs du jour prend
   // (ceux des tables passées avant aujourd'hui).

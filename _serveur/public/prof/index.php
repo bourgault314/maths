@@ -142,10 +142,55 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .menu-applis { left: 0; width: 260px; }
   .tableau-enveloppe { margin-top: 12px; }
   th, td { white-space: nowrap; }
-  /* « Parcours » (ou « Détail ») au même endroit sur chaque ligne, que la ligne
-     ait un « ⋯ » ou non (lot « Ma classe : élèves » : il n'y reste que
-     « Revenir à… », pour les élèves qui ont une version à restaurer). */
-  #tableau td.actions-eleve { display: flex; gap: 6px; justify-content: flex-start; }
+  /* Serveur pro, lot 5c « les tableaux et la fenêtre de l'élève » (choix de
+     Gwenaël, maquettes 8 et 9 du 25/10/2026). Au-dessus du tableau : la
+     recherche d'un prénom. Plus de « Trier par » : les titres de colonnes
+     trient, la flèche dit laquelle et dans quel sens. */
+  .outils-tableau { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 0; }
+  .outils-tableau .chercher { position: relative; flex: 0 1 300px; }
+  .outils-tableau .chercher input { padding-left: 40px; }
+  .outils-tableau .chercher svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  #tableau th[aria-sort="ascending"] button::after { content: " ▲"; font-size: .8em; }
+  #tableau th[aria-sort="descending"] button::after { content: " ▼"; font-size: .8em; }
+  /* La ligne entière ouvre la fenêtre de l'élève : plus de bouton par ligne.
+     Le prénom est un bouton (le clavier y arrive), la flèche dit qu'on peut
+     entrer. */
+  #tableau tbody tr.cliquable { cursor: pointer; }
+  #tableau tbody tr.cliquable:hover td { background: var(--survol); }
+  .lien-eleve { min-height: 0; padding: 0; gap: 0; justify-content: flex-start; color: var(--blue-dark); background: none;
+                border: 0; border-radius: 4px; font: inherit; font-weight: 600; text-align: left; white-space: nowrap; }
+  .lien-eleve:hover, tr.cliquable:hover .lien-eleve { color: var(--blue); background: none; border: 0; text-decoration: underline; }
+  td.nom.sans .lien-eleve { color: var(--muted); font-style: italic; font-weight: 400; }
+  #tableau td.va { width: 36px; padding-left: 0; color: var(--blue); font-size: var(--titre-carte); text-align: right; }
+  #tableau .seul-telephone { display: none; }
+  #tableau td.aucun { color: var(--muted); font-style: italic; white-space: normal; }
+  /* Les trois cartes du haut de Défi tables, côte à côte, de la même largeur
+     (charte : .grille-cartes), sans filet de couleur. */
+  /* La fenêtre de l'élève : la même dans les quatre applis (charte :
+     .fenetre). ‹ › en haut à droite pour passer au précédent, au suivant. */
+  dialog.fenetre-eleve { max-width: 640px; }
+  .fenetre-eleve .fenetre-tete { position: relative; padding-right: 116px; }
+  .fenetre-eleve .naviguer { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
+  .fenetre-eleve .naviguer button { width: 44px; padding: 0; font-size: 22px; line-height: 1; }
+  .fenetre-eleve .fenetre-tete h2 { overflow-wrap: anywhere; }
+  .fiche-chiffres { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); margin: 4px 0 16px; }
+  .fiche-chiffres > div { min-width: 0; padding: 10px 12px; background: var(--page); border: 1px solid var(--filet-doux); border-radius: var(--arrondi); }
+  .fiche-chiffres dt { color: var(--muted); font-size: var(--texte-secondaire); }
+  .fiche-chiffres dd { margin: 2px 0 0; font-weight: 700; }
+  .fiche-chiffres dd small { display: block; font-weight: 400; }
+  .fenetre-eleve h3 { margin: 16px 0 6px; font-size: 16px; color: var(--ink); }
+  .fenetre-eleve h3:first-child { margin-top: 0; }
+  .fe-vide { margin: 4px 0 8px; color: var(--muted); }
+  .fe-alertes { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 12px; }
+  .fe-alertes .alerte { margin-left: 0; }
+  .cases-tables { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; padding: 0; list-style: none; }
+  .cases-tables li { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px;
+                     font-weight: 700; background: var(--gris-pale); color: var(--muted); }
+  .cases-tables li.passee { background: var(--vert-pale); color: var(--vert); }
+  .cases-tables li.encours { background: var(--paper); color: var(--blue); border: 2px solid var(--blue); }
+  .fe-retard { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .fe-gestes { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--filet-doux); }
+  .fenetre-eleve .partie-en-cours { margin: 0 0 12px; }
   /* Lot 2b (03/10/2026) : la ligne d'un élève se lit sans survol et
      s'imprime en noir et blanc — du texte, pas des cases de couleur. */
   .acquises-liste { margin-left: 7px; color: var(--muted); font-size: .86rem; }
@@ -197,7 +242,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      classement, jamais un prenom : c'est le seul tableau de la page ou aucun
      eleve n'est designe. Calcule ici, a partir des progressions deja chargees
      — aucune donnee de plus n'est demandee au serveur. */
-  .objectif { margin-top: 14px; border-left: 5px solid var(--teal); }
+  /* Lot 5c : les trois cartes du haut côte à côte (.grille-cartes), sans
+     filet de couleur — la charte. */
   .objectif strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .objectif .jauge-barre { height: 10px; margin-top: 10px; border-radius: 999px;
                            background: #e6ecf3; overflow: hidden; }
@@ -209,7 +255,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                       margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
   .objectif .lignes b { color: var(--ink); }
   .objectif .lignes .insecable { white-space: nowrap; }
-  .fragiles { margin-top: 14px; border-left: 5px solid var(--orange); }
   .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
   .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
@@ -217,15 +262,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                  background: #fdf0e3; color: #8a4c0a; font-weight: 800; }
   .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
-  .barre-outils .espace { margin-left: auto; }
   /* Lot « Ma classe : réglages » (17/10/2026, planches 1 à 5 validées par
      Gwenaël) : sous le nom de la classe, une rangée d'onglets TOUJOURS
      visible — les activités de la classe à gauche, « Réglages » au bout à
      droite (propriétaire seulement). Avant, le choix de l'activité n'existait
      qu'à partir de deux activités, et rien ne disait « Défi tables » à
-     l'écran. Les boutons des élèves sont juste au-dessus du tableau, « Trier
-     par » à droite. */
-  #vue-appli > .barre-outils { margin-top: 16px; }
+     l'écran. */
   /* Serveur pro, lot 5a (planches 1 et 6 du 25/10/2026) : UNE ligne
      d'onglets. Les applis à gauche (charte : .onglets, elles défilent au
      téléphone et s'effacent vers la droite quand il y a une suite) ; au bout,
@@ -239,9 +281,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .onglets-classe > button svg { display: block; flex: none; }
   .barre-onglets > .onglets.suite { -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent);
                                     mask-image: linear-gradient(90deg, #000 80%, transparent); }
-  .ligne-tri { display: flex; align-items: center; gap: 10px; }
-  .ligne-tri label { margin: 0; font-size: .88rem; color: var(--muted); font-weight: 600; }
-  .ligne-tri select { width: auto; min-width: 170px; }
   /* La vue « Réglages » : une colonne de cartes, la plus utile en haut —
      Activités (chaque appli, ses réglages en retrait dessous), Partager, Nom
      de la classe, Supprimer la classe. */
@@ -332,9 +371,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      Anzan — l'écran « Mon historique » de l'élève, en lecture seule (planche 3
      du lot 4a) : le jour, le mode et ses réglages, le score sur les calculs
      faits, « arrêtée » dessous quand la séance s'est arrêtée en route. */
-  dialog.parcours-anzan { max-width: 520px; }
-  .pa-appli { margin: 0 0 2px; color: #0b7f7b; font-size: .74rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-  .voit-tete .pa-compte { margin-top: 2px; color: var(--ink); font-weight: 700; }
+  .pa-compte { margin: 0 0 12px; color: var(--ink); font-weight: 700; }
   .pa-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; }
   .pa-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
                  min-height: 54px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
@@ -348,7 +385,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .pa-vide { margin: 4px 0 8px; color: var(--muted); }
   .pa-plus { display: block; width: 100%; margin: 10px 0 4px; }
   .pa-plus[hidden] { display: none; }
-  .parcours-anzan .voit-pied button + button { margin-left: 0; }
   /* ⚙ Réglages (planche 4) : sous chaque appli, en lecture seule, à qui on a
      ouvert quelque chose en plus ; chaque prénom mène à sa ligne d'Élèves. */
   .en-plus-pour { margin: 0 0 6px 30px; color: var(--muted); font-size: .84rem; line-height: 1.5; }
@@ -362,8 +398,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
   .mondes svg { display: block; }
   .bonus-compte { margin-left: 8px; color: #8a5a00; font-size: .84rem; font-weight: 800; white-space: nowrap; }
-  /* Le « Détail » d'un élève : une rangée de cases par monde, puis les Bonus. */
-  #tableau tr.detail td { padding: 10px 14px 14px; background: #f7f9fc; white-space: normal; }
+  /* SPLAT! dans la fenêtre de l'élève : une rangée de cases par monde, puis
+     les Bonus (l'ancien « Détail » déplié sous la ligne). */
   .detail-monde { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
   .detail-monde b { flex: 0 0 210px; color: var(--ink); font-size: .84rem; }
   .et { display: inline-grid; place-items: center; min-width: 28px; height: 26px; padding: 0 3px;
@@ -409,7 +445,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .tableau-operations th, .tableau-operations td { padding: 7px 12px; font-size: .88rem; white-space: nowrap; }
   .tableau-operations th { background: #eef2f7; color: var(--ink); font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; }
   .tableau-operations td.nombre { font-variant-numeric: tabular-nums; }
-  #tableau tr.detail td .tableau-operations td { padding: 7px 12px; }
   p.sous.note-coffres { margin: 10px 0 0; font-size: .88rem; }
   /* Les réglages de Coffres (⚙ Réglages) : deux rangées de cases, comme les
      mondes de SPLAT! mais en cases simples (choix de Gwenaël, 21/10/2026). */
@@ -472,8 +507,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      oublié), une règle d'affichage de la page ne doit jamais faire réapparaître
      ce qui est caché — la vue Élèves et ses codes, par exemple. */
   [hidden] { display: none !important; }
-  /* Sous 700 px, le tableau devient une carte par élève : rien ne déborde,
-     tout se lit d'un coup d'œil sur un téléphone. */
   /* Lot « 🏆 Les records » (09/10/2026, planche R5 validée par Gwenaël) : le
      temps d'une Légende à côté de sa couronne ; la carte sous le tableau (la
      ligue du professeur, toutes ses classes, ce que voient les élèves) ; le
@@ -516,7 +549,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      validées par Gwenaël) : la carte « 📝 Évaluations » de l'onglet Défi
      tables — la liste des modèles, le compteur pendant, la répartition sans
      nom après ; les deux boîtes (modèle, ouvrir) ; le plein écran. */
-  .eval-carte { max-width: 820px; margin-top: 14px; border-left: 5px solid var(--blue); }
+  .eval-carte { min-width: 0; }
   .eval-tete { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
   .eval-tete strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .eval-tete p { margin: 2px 0 0; color: var(--muted); font-size: .88rem; }
@@ -613,47 +646,37 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .voit-liste .tag { display: none; }
     .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after { content: none; }
   }
+  /* Serveur pro, lot 5c (choix de Gwenaël, planche 5 du 25/10/2026) : au
+     téléphone, le tableau reste un tableau — compact, une ligne par élève,
+     trois colonnes (l'élève, le compte, le dernier jour). Le reste est dans
+     la fenêtre de l'élève : on touche la ligne. Avant, une carte par élève
+     (≈ 230 px chacune). */
   @media (max-width: 700px) {
-    .tableau-enveloppe { overflow-x: visible; }
-    #vue-appli .tableau-enveloppe { background: none; border: 0; border-radius: 0; }
-    #tableau, #tableau tbody, #tableau tr, #tableau td { display: block; width: 100%; }
-    #tableau thead { display: none; }
-    #tableau tr { margin-bottom: 12px; padding: 8px 6px 12px; background: var(--paper);
-                  border: 1px solid var(--line); border-left: 5px solid var(--teal); border-radius: 12px; }
-    #tableau td { display: flex; align-items: center; gap: 10px; padding: 6px 10px;
-                  border: 0; white-space: normal; }
-    #tableau td::before { content: attr(data-libelle); flex: 0 0 104px; color: var(--muted);
-                          font-size: .74rem; font-weight: 800; text-transform: uppercase;
-                          letter-spacing: .04em; }
-    #tableau td[data-libelle=""]::before { display: none; }
-    #tableau td.nom { padding-top: 10px; font-size: 1rem; font-weight: 700; }
+    #tableau th.large, #tableau td.large { display: none; }
+    #tableau th.seul-telephone, #tableau td.seul-telephone { display: table-cell; }
+    #tableau th, #tableau td { padding: 10px 4px; }
+    #tableau th { white-space: normal; line-height: 1.25; }
+    #tableau th:first-child, #tableau td:first-child { padding-left: 10px; }
+    #tableau .bonus-compte { display: none; }
+    #tableau th:last-child:empty, #tableau td.va { display: none; }
+    #tableau td.nom { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
+    .acquises-liste { display: none; }
+    /* « Parfait : … » explique les niveaux de Coffres : cachés ici, ils sont
+       (avec la même phrase) dans la fenêtre. */
+    p.sous.note-coffres { display: none; }
+    .outils-tableau .chercher { flex: 1 1 100%; }
     /* La liste de l'onglet Élèves reste un tableau : quatre colonnes courtes. */
     #tableau-eleves th, #tableau-eleves td { padding: 6px 4px; }
     #tableau-eleves td input { width: 100%; min-width: 0; min-height: 44px; }
     #tableau-eleves td.numero { width: 2em; padding-right: 6px; }
-    #tableau td.actions-eleve { flex-wrap: wrap; gap: 8px; justify-content: flex-start; }
-    #tableau td.actions-eleve > button { flex: 1 1 auto; margin-left: 0 !important; }
-    /* Le tableau par opération du Détail Coffres (lot « Coffres magiques sur le
-       suivi ») reste un tableau dans la carte : les règles ci-dessus, faites
-       pour les lignes d'élèves, ne le mettent pas en pile. */
-    #tableau .tableau-operations { display: table; width: 100%; min-width: 0; }
-    #tableau .tableau-operations thead { display: table-header-group; }
-    #tableau .tableau-operations tbody { display: table-row-group; }
-    #tableau .tableau-operations tr { display: table-row; margin: 0; padding: 0; border: 0; border-radius: 0; background: none; }
-    #tableau .tableau-operations th, #tableau .tableau-operations td { display: table-cell; width: auto; padding: 5px 4px;
-                                                                      font-size: .78rem; white-space: normal; vertical-align: middle; }
-    #tableau .tableau-operations th { font-size: .66rem; line-height: 1.2; }
-    #tableau .tableau-operations td::before { display: none; }
-    #tableau td { flex-wrap: wrap; }
     .alerte { margin-left: 0; }
-    /* Le Détail : la carte de l'élève se prolonge, le nom du monde au-dessus
-       de ses cases. */
-    #tableau tr.detail { margin-top: -10px; border-top-left-radius: 0; border-top-right-radius: 0; }
-    #tableau tr.detail td { display: block; padding: 6px 10px; background: none; }
+    /* Dans la fenêtre : deux chiffres par ligne, le nom du monde au-dessus
+       de ses cases, le tableau par opération de Coffres resserré. */
+    .fiche-chiffres { grid-template-columns: 1fr 1fr; }
     .detail-monde b { flex-basis: 100%; }
-    /* …sauf les cellules du tableau par opération de Coffres (règle écrite plus
-       haut, à redire ici : la cellule du Détail est aussi un « tr.detail td »). */
-    #tableau tr.detail td .tableau-operations td { display: table-cell; padding: 5px 4px; }
+    .fenetre-eleve .tableau-operations { width: 100%; min-width: 0; }
+    .fenetre-eleve .tableau-operations th, .fenetre-eleve .tableau-operations td { padding: 5px 3px; font-size: .76rem; white-space: normal; }
+    .fenetre-eleve .tableau-operations th { font-size: .68rem; line-height: 1.2; letter-spacing: 0; text-transform: none; }
   }
   @media print {
     @page { margin: 12mm; }
@@ -821,6 +844,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <!-- La vue de l'activité : ce qu'on regarde et ce qu'on fait avec l'appli. -->
     <div id="vue-appli">
 
+    <!-- Serveur pro, lot 5c (choix de Gwenaël, maquette 8 du 25/10/2026) : les
+         trois cartes du haut de Défi tables côte à côte, de la même largeur
+         (charte : .grille-cartes), sans filet de couleur. -->
+    <div class="grille-cartes cartes-haut">
+
     <!-- L'objectif commun de la classe. Aucun nom, aucun chiffre par élève :
          c'est ce qu'on peut montrer au tableau sans désigner personne. -->
     <div class="carte objectif" id="objectif" hidden>
@@ -856,20 +884,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <p class="message" id="message-evaluations" hidden></p>
     </div>
 
+    </div>
+
     <!-- Lot « Ma classe : élèves » (18/10/2026) : les boutons des élèves sont
-         partis dans l'onglet Élèves ; ici, la progression seulement. -->
-    <div class="barre-outils">
-      <div class="ligne-tri espace">
-        <label for="tri">Trier&nbsp;par</label>
-        <select id="tri">
-          <option value="prenom">Prénom</option>
-          <option value="acquises">Tables passées</option>
-          <option value="encours">En cours</option>
-          <option value="semaine">Séances cette semaine</option>
-          <option value="retard">Calculs en retard</option>
-          <option value="date">Dernière activité</option>
-        </select>
-      </div>
+         partis dans l'onglet Élèves ; ici, la progression seulement.
+         Serveur pro, lot 5c : chercher un prénom au-dessus du tableau ; plus de
+         « Trier par » — les titres de colonnes trient. La loupe est le dessin
+         « search » de Feather Icons (licence MIT). -->
+    <div class="outils-tableau" id="outils-tableau">
+      <div class="chercher"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="chercher-eleve" placeholder="Chercher un élève" aria-label="Chercher un élève" autocomplete="off" spellcheck="false" maxlength="40"></div>
     </div>
     <!-- Le message de l'activité (fiche, version restaurée, moteur absent) :
          au-dessus du tableau, pas sous trente lignes. -->
@@ -877,12 +900,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <div class="tableau-enveloppe">
       <table id="tableau">
         <thead>
+          <!-- Serveur pro, lot 5c : « large » = caché au téléphone (le tableau
+               compact garde trois colonnes) ; « seul-telephone » = l'inverse.
+               La dernière colonne, sans titre, porte la flèche « › ». -->
           <tr id="entete-defi-tables">
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
-            <th><button type="button" data-tri="encours">En cours</button></th>
-            <th><button type="button" data-tri="semaine">Cette semaine</button></th>
-            <th><button type="button" data-tri="retard">En retard</button></th>
+            <th class="large"><button type="button" data-tri="encours">En cours</button></th>
+            <th class="large"><button type="button" data-tri="semaine">Cette semaine</button></th>
+            <th class="large"><button type="button" data-tri="retard">En retard</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
           </tr>
@@ -891,9 +917,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                jour du dernier trésor. -->
           <tr id="entete-coffres" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th>Niveau 1</th>
-            <th>Niveau 2</th>
-            <th>Niveau 3</th>
+            <th class="seul-telephone"><button type="button" data-tri="tresors">Trésors</button></th>
+            <th class="large"><button type="button" data-tri="niveau1">Niveau 1</button></th>
+            <th class="large"><button type="button" data-tri="niveau2">Niveau 2</button></th>
+            <th class="large"><button type="button" data-tri="niveau3">Niveau 3</button></th>
             <th><button type="button" data-tri="date">Dernier trésor</button></th>
             <th></th>
           </tr>
@@ -904,14 +931,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
           <tr id="entete-anzan" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th><button type="button" data-tri="calculs">Calculs</button></th>
-            <th>Jours</th>
+            <th class="large"><button type="button" data-tri="jours">Jours</button></th>
             <th><button type="button" data-tri="date">Dernière séance</button></th>
             <th></th>
           </tr>
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
           <tr id="entete-splat" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th>Mondes</th>
+            <th class="large">Mondes</th>
             <th><button type="button" data-tri="etapes">Étapes réussies</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
@@ -950,7 +977,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <div class="carte imprimer" id="bloc-imprimer">
       <strong>À imprimer pour la classe</strong>
       <p class="sous">Les papiers de Défi tables, sur mathsgo.re (nouvel onglet). La fiche de suivi
-      d’un élève, remplie, s’imprime depuis sa ligne du tableau.</p>
+      d’un élève, remplie : touche sa ligne, puis « Voir son parcours ».</p>
       <ul class="liens-imprimer">
         <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche « Mon parcours des tables » vierge</a> — à remplir à la main, une page.</li>
         <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_tables_multiplication.pdf" target="_blank" rel="noopener">Les tables de 2 à 10 sur une page</a> — à coller dans le cahier.</li>
@@ -1177,7 +1204,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <h2>Que veux-tu imprimer ?</h2>
       <p>Reviens à la page et choisis un bouton. Onglet Élèves : <strong>« Imprimer les bandelettes »</strong>
       (une par élève, à découper et à distribuer) ou <strong>« Imprimer la feuille prénom ↔ code »</strong>
-      (celle que tu gardes). Onglet Anzan : <strong>« Parcours »</strong> d’un élève, puis
+      (celle que tu gardes). Onglet Anzan : touche la ligne d’un élève, puis
       <strong>« Imprimer »</strong> dans sa fenêtre. Chaque bouton n’imprime que sa feuille.</p>
       <div class="pied-impression">
         <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
@@ -1302,25 +1329,39 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   </div>
 </dialog>
 
-<!-- Lot « Qui voit quoi », lot 4b (24/10/2026) : « Le parcours de Rania »
-     pour Anzan, ouvert par le bouton « Parcours » de sa ligne. Lecture seule :
-     aucun bouton qui lance une activité ni qui change quoi que ce soit (choix
-     de Gwenaël du 21/10). Tout est lu dans le tableau déjà chargé, par le
-     moteur (resumeProf), et posé par createElement et textContent. -->
-<dialog id="parcours-anzan" class="voit parcours-anzan" aria-labelledby="pa-titre">
-  <div class="voit-tete">
-    <p class="pa-appli">Anzan · soroban</p>
-    <h2 id="pa-titre"></h2>
-    <p class="pa-compte" id="pa-compte"></p>
+<!-- Serveur pro, lot 5c (choix de Gwenaël, maquette 8 du 25/10/2026) : UNE
+     fenêtre pour voir un élève, la même dans les quatre applis. On touche sa
+     ligne du tableau ; ‹ › passent au précédent, au suivant, dans l'ordre du
+     tableau à l'écran (tri et recherche compris). Lecture seule : tout est lu
+     dans le tableau déjà chargé, par le moteur de l'appli, et posé par
+     createElement et textContent. Elle remplace « Parcours » (Défi tables,
+     qui garde « Voir son parcours » dans un nouvel onglet), « Détail ▾ »
+     (SPLAT!, Coffres) et la fenêtre « Le parcours de… » d'Anzan.
+     « Revenir à… » (le « ⋯ » de la ligne) est en bas de la fenêtre. -->
+<dialog id="fenetre-eleve" class="fenetre fenetre-eleve" aria-labelledby="fe-titre">
+  <div class="fenetre-tete">
+    <div class="naviguer">
+      <button type="button" class="secondaire" id="fe-precedent" aria-label="Élève précédent" title="Élève précédent">‹</button>
+      <button type="button" class="secondaire" id="fe-suivant" aria-label="Élève suivant" title="Élève suivant">›</button>
+    </div>
+    <h2 id="fe-titre"></h2>
+    <p id="fe-sous"></p>
   </div>
-  <div class="voit-liste">
-    <ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"></ol>
-    <p class="pa-note" id="pa-note"></p>
-    <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
+  <div class="fenetre-corps">
+    <div id="fe-contenu"></div>
+    <!-- Anzan : ses dernières séances (l'écran « Mon historique » de l'élève). -->
+    <div id="fe-anzan" hidden>
+      <p class="pa-compte" id="pa-compte"></p>
+      <ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"></ol>
+      <p class="pa-note" id="pa-note"></p>
+      <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
+    </div>
+    <p class="fe-gestes" id="fe-gestes" hidden><button type="button" class="secondaire" id="fe-revenir" title="Revenir à une version précédente de sa progression">Revenir à…</button></p>
   </div>
-  <div class="voit-pied">
-    <button type="button" class="secondaire" id="pa-imprimer">Imprimer ces séances</button>
-    <button type="button" class="secondaire" id="pa-fermer">Fermer</button>
+  <div class="fenetre-pied">
+    <button type="button" class="secondaire" id="fe-fermer">Fermer</button>
+    <button type="button" id="fe-parcours" title="Son écran Mon parcours, sur mathsgo.re, dans un nouvel onglet" hidden>Voir son parcours</button>
+    <button type="button" id="pa-imprimer" hidden>Imprimer ces séances</button>
   </div>
 </dialog>
 
@@ -1415,11 +1456,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // son onglet.
   const MOTEUR_ANZAN = "flash_anzan_parcours.js?v=<?= htmlspecialchars($versionAnzan, ENT_QUOTES) ?>";
   // Les tris de chaque activité : ceux de Défi tables sont lus dans la page.
+  // Les colonnes qui trient, par appli : celles dont le titre est un bouton
+  // (serveur pro, lot 5c : plus de menu « Trier par »). Coffres : « Trésors »
+  // (le total, colonne du téléphone) et chaque niveau ; Anzan : les jours.
   const TRIS = {
-    "defi-tables": [...document.getElementById("tri").options].map(option => [option.value, option.textContent]),
-    "coffres": [["prenom", "Prénom"], ["tresors", "Trésors"], ["date", "Dernier trésor"]],
-    "flash-anzan": [["prenom", "Prénom"], ["calculs", "Calculs"], ["date", "Dernière séance"]],
-    "splat": [["prenom", "Prénom"], ["etapes", "Étapes réussies"], ["date", "Dernière activité"]]
+    "defi-tables": ["prenom", "acquises", "encours", "semaine", "retard", "date"],
+    "coffres": ["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date"],
+    "flash-anzan": ["prenom", "calculs", "jours", "date"],
+    "splat": ["prenom", "etapes", "date"]
   };
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
@@ -1457,7 +1501,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // « tableau » par activité, refait seulement quand la classe change).
   let tableaux = {};
   // Les élèves dont le Détail SPLAT! est déplié.
-  const detailsOuverts = new Set();
+  // Serveur pro, lot 5c : le prénom cherché au-dessus du tableau ; l'élève
+  // montré dans la fenêtre ; l'ordre des élèves du tableau à l'écran (tri et
+  // recherche compris), que ‹ › suivent.
+  let recherche = "";
+  let fenetreEleveId = null;
+  let idsAffiches = [];
   let demandeAppli = 0;
 
   try { jeton = sessionStorage.getItem(CLE_JETON) || ""; } catch (_) {}
@@ -1613,14 +1662,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // « En plus pour » des Réglages (des prénoms).
     "voit-titre", "voit-sous", "voit-liste", "en-plus-defi-tables", "en-plus-coffres", "en-plus-coffres-listes",
     "en-plus-splat", "en-plus-splat-listes",
-    // Lot 4b : Anzan — « En plus pour », la fenêtre du parcours et sa feuille.
-    "en-plus-flash-anzan", "pa-titre", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note"];
+    // Lot 4b : Anzan — « En plus pour », ses séances et sa feuille.
+    "en-plus-flash-anzan", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note",
+    // Lot 5c : la fenêtre de l’élève (un prénom).
+    "fe-titre", "fe-sous", "fe-contenu"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
     "voit-message"];
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
-    "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom"];
+    "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom", "chercher-eleve"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
     "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
     "vue-eleves", "onglet-eleves", "menu-classes"];
@@ -1630,7 +1681,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
     BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
-    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "parcours-anzan"].forEach(id => {
+    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
@@ -1660,7 +1711,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     appliAffichee = "defi-tables";
     vue = "appli";
     tableaux = {};
-    detailsOuverts.clear();
+    recherche = "";
+    fenetreEleveId = null;
+    idsAffiches = [];
     voitEleve = null;
     parcoursAnzanEleve = null;
     // Lot 4b-bis (relecture Codex) : une classe ou un onglet encore en route
@@ -1947,6 +2000,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (tri.colonne === "etapes") return (eleve.lu.faits || 0) * 10000 + (eleve.lu.bonus || 0) * 10 + (eleve.lu.cours ? 1 : 0);
       // Coffres magiques : les trésors, puis les parfaits, puis une partie en cours.
       if (tri.colonne === "tresors") return (eleve.lu.tresors || 0) * 10000 + (eleve.lu.parfaits || 0) * 10 + (eleve.lu.partie ? 1 : 0);
+      // Lot 5c : chaque niveau trie sur ses trésors, puis ses parfaits.
+      if (/^niveau[123]$/.test(tri.colonne)) {
+        const niveau = (eleve.lu.niveaux || []).find(n => n.numero === Number(tri.colonne.slice(-1)));
+        return niveau ? (niveau.tresors || 0) * 10000 + (niveau.parfaits || 0) : -1;
+      }
+      // Anzan, « Jours » : les jours d'entraînement, puis les calculs.
+      if (tri.colonne === "jours") return (eleve.lu.jours || 0) * 100000 + (eleve.lu.calculs || 0);
       // « Dernier trésor » : le jour du dernier trésor, pas la dernière activité.
       if (tri.colonne === "date" && appliAffichee === "coffres") return eleve.lu.dernier || "";
       // Anzan (lot 4b) : les calculs faits, puis les jours d'entraînement ;
@@ -2059,17 +2119,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Dans le tableau d'une appli : « Revenir à… », qui revient dans l'activité
   // affichée — il concerne sa progression, pas l'élève lui-même.
-  function poserGestes(eleve, ecriture, cActions) {
-    const boutons = [];
-    if (ecriture && (eleve.restaurable || (eleve.journees || []).length)) {
-      // Le serveur garde la version d'avant le dernier enregistrement ET la
-      // fin de chacune des sept dernières journées : un écrasement (par
-      // quelqu'un qui avait le code, ou un « Recommencer à zéro »
-      // malheureux) se répare même si on ne s'en aperçoit que le lendemain.
-      boutons.push(boutonGeste("Revenir à…", "secondaire", () => revenirA(eleve),
-        "Revenir à une version précédente de sa progression"));
-    }
-    menuGestes(cActions, boutons);
+  // « Revenir à… » (serveur pro, lot 5c : en bas de la fenêtre de l'élève,
+  // avant derrière le « ⋯ » de sa ligne). Le serveur garde la version d'avant
+  // le dernier enregistrement ET la fin de chacune des sept dernières
+  // journées : un écrasement (par quelqu'un qui avait le code, ou un
+  // « Recommencer à zéro » malheureux) se répare même si on ne s'en aperçoit
+  // que le lendemain. Pas en lecture seule.
+  function peutRevenir(eleve) {
+    return droitClasse !== "lecture" && Boolean(eleve && (eleve.restaurable || (eleve.journees || []).length));
   }
 
   // Dans la liste de l'onglet Élèves : ce qui concerne l'élève lui-même.
@@ -2718,13 +2775,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Lot « Qui voit quoi », lot 4b : les lignes de l'onglet — toute la
     // classe, ou, pour une appli que la classe n'a pas, les élèves qui l'ont
     // en plus (elevesDeLOnglet).
-    const lignes = elevesDeLOnglet();
+    const toutes = elevesDeLOnglet();
+    // Serveur pro, lot 5c : la recherche ne garde que les prénoms cherchés ;
+    // la ligne du haut et les cartes parlent toujours de toute la classe.
+    const lignes = filtrerRecherche(toutes);
+    idsAffiches = lignes.map(eleve => eleve.id);
+    poserTris();
+    $("outils-tableau").hidden = !toutes.length;
+    const fin = () => {
+      finirOnglet(toutes);
+      direAucun(corps, toutes, lignes);
+      // Une fenêtre ouverte suit le nouveau dessin (un prénom changé, un
+      // élève parti) ; elle se ferme si son élève n'est plus là.
+      if (fenetreEleveId !== null) dessinerFenetreEleve();
+    };
     // Lot « splat-suivi-4 » : l'onglet SPLAT! a ses colonnes et sa carte.
-    if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture, lignes); finirOnglet(lignes); return; }
-    // Lot « Coffres magiques sur le suivi » : l'onglet Coffres, ses niveaux et son Détail.
-    if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture, lignes); finirOnglet(lignes); return; }
-    // Lot 4b : l'onglet Anzan, le compte et « Parcours ».
-    if (appliAffichee === "flash-anzan") { dessinerTableauAnzan(corps, ecriture, lignes); finirOnglet(lignes); return; }
+    if (appliAffichee === "splat") { dessinerTableauSplat(corps, ecriture, lignes); fin(); return; }
+    // Lot « Coffres magiques sur le suivi » : l'onglet Coffres et ses niveaux.
+    if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture, lignes); fin(); return; }
+    // Lot 4b : l'onglet Anzan et son compte.
+    if (appliAffichee === "flash-anzan") { dessinerTableauAnzan(corps, ecriture, lignes); fin(); return; }
 
     lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
@@ -2808,35 +2878,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
       const cDate = celluleDate(eleve);
 
-      const cActions = document.createElement("td");
-      // Le parcours vit dans l'appli du site : un seul gabarit, une seule
-      // vérité. Depuis le lot 3, il s'ouvre par un BILLET de lecture demandé
-      // au serveur au moment du clic (voirFiche), jamais par le code dans
-      // l'adresse : un collègue en lecture seule y a donc droit lui aussi.
-      // Lot « Ma classe : le parcours de Léa » (21/10/2026) : « Parcours » à
-      // la place de « Fiche » — l'appli montre l'écran Mon parcours de
-      // l'élève, en lecture seule, avec « Imprimer sa fiche » dessous. Même
-      // bouton, même place, même classe.
-      const fiche = document.createElement("button");
-      fiche.type = "button";
-      fiche.className = "secondaire";
-      fiche.textContent = "Parcours";
-      fiche.title = "Voir son parcours";
-      fiche.addEventListener("click", () => voirFiche(eleve, fiche));
-      cActions.append(fiche);
-      // Les gestes rares, derrière « ⋯ » (lot 2b).
-      poserGestes(eleve, ecriture, cActions);
-
-      cNom.dataset.libelle = "";
-      cAcquises.dataset.libelle = "Passées";
-      cEnCours.dataset.libelle = "En cours";
-      cSemaine.dataset.libelle = "Cette semaine";
-      cRetard.dataset.libelle = "En retard";
-      cDate.dataset.libelle = "Dernière activité";
-      cActions.dataset.libelle = "";
-      cActions.className = "actions-eleve";
-
-      ligne.append(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate, cActions);
+      // Serveur pro, lot 5c : plus de bouton « Parcours » sur la ligne — la
+      // ligne entière ouvre la fenêtre de l'élève, où « Voir son parcours »
+      // ouvre l'écran Mon parcours (voirFiche, billet de lecture). Au
+      // téléphone, trois colonnes : l'élève, les tables passées, le jour.
+      [cEnCours, cSemaine, cRetard].forEach(large);
+      ligne.append(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate);
+      finirLigne(ligne, eleve, cNom);
       corps.appendChild(ligne);
     });
 
@@ -2844,13 +2892,269 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     dessinerFragiles();
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
-    finirOnglet(lignes);
+    fin();
     if (!PARCOURS) {
       messager("message-appli",
         "La progression ne peut pas être détaillée : le moteur de Défi tables (prof/defi_tables_mon_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // ------------------------------------------------ lot 5c : lignes, recherche
+
+  // Une cellule cachée au téléphone (le tableau compact garde trois colonnes).
+  function large(cellule) {
+    cellule.className = cellule.className ? `${cellule.className} large` : "large";
+  }
+
+  // La fin de chaque ligne d'élève, dans les quatre applis : la ligne entière
+  // ouvre la fenêtre de l'élève (choix de Gwenaël, planche 4 du 25/10/2026).
+  // Le prénom devient un bouton — le clavier y arrive, Entrée l'ouvre — et une
+  // flèche « › » dit qu'on peut entrer (cachée au téléphone). Le prénom reste
+  // posé par textContent.
+  function finirLigne(ligne, eleve, cNom) {
+    ligne.className = "cliquable";
+    ligne.dataset.eleve = String(eleve.id);
+    const bouton = document.createElement("button");
+    bouton.type = "button";
+    bouton.className = "lien-eleve";
+    bouton.textContent = cNom.textContent;
+    cNom.textContent = "";
+    cNom.append(bouton);
+    const va = document.createElement("td");
+    va.className = "va";
+    va.setAttribute("aria-hidden", "true");
+    va.textContent = "›";
+    ligne.append(va);
+    ligne.addEventListener("click", () => ouvrirFenetreEleve(eleve));
+  }
+
+  // La recherche (lot 5c) : sans majuscules ni accents — « lea » trouve Léa,
+  // « mae » Maëlys. Un élève sans prénom se trouve par « sans prénom ».
+  function sansAccents(texte) {
+    return String(texte || "").toLocaleLowerCase("fr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function filtrerRecherche(liste) {
+    const voulu = sansAccents(recherche).trim();
+    if (!voulu) return liste;
+    return liste.filter(eleve => sansAccents(nomAffiche(eleve) || "sans prénom").includes(voulu));
+  }
+
+  function oublierRecherche() {
+    recherche = "";
+    const champ = $("chercher-eleve");
+    if (champ) champ.value = "";
+  }
+
+  // Personne ne correspond : une ligne le dit, sous les titres de colonnes.
+  function direAucun(corps, toutes, lignes) {
+    if (lignes.length || !toutes.length) return;
+    const ligne = document.createElement("tr");
+    const cellule = document.createElement("td");
+    cellule.className = "aucun";
+    const entete = document.querySelector("#tableau thead tr:not([hidden])");
+    cellule.colSpan = entete ? entete.children.length : 7;
+    cellule.textContent = `Aucun élève ne correspond à « ${recherche.trim()} ».`;
+    ligne.append(cellule);
+    corps.append(ligne);
+  }
+
+  // ------------------------------------------------ lot 5c : la fenêtre de l'élève
+  //
+  // Choix de Gwenaël (planche 4 du 25/10/2026) : UNE fenêtre, la même dans les
+  // quatre applis, ‹ › pour l'élève précédent ou suivant dans l'ordre du
+  // tableau à l'écran. Tout est lu dans le tableau déjà chargé : aucun appel
+  // au serveur pour l'ouvrir (« Voir son parcours » de Défi tables demande son
+  // billet de lecture, comme avant, au moment du clic). Rien de ce que
+  // renvoie le serveur ne devient du HTML ; aucun code d'élève.
+
+  function ouvrirFenetreEleve(eleve) {
+    if (!classe || !eleve) return;
+    fenetreEleveId = eleve.id;
+    dessinerFenetreEleve();
+    const boite = $("fenetre-eleve");
+    if (fenetreEleveId !== null && !boite.open) boite.showModal();
+  }
+
+  // Fermée (bouton, Échap, une autre classe, la déconnexion), elle oublie
+  // l'élève.
+  function fermerFenetreEleve() {
+    const boite = $("fenetre-eleve");
+    if (boite && boite.open) { try { boite.close(); } catch (_) {} }
+    surFermetureFenetre();
+  }
+
+  function surFermetureFenetre() {
+    fenetreEleveId = null;
+    fermerParcoursAnzan();
+    ["fe-titre", "fe-sous", "fe-contenu"].forEach(id => { const zone = $(id); if (zone) zone.textContent = ""; });
+  }
+
+  function eleveDeLaFenetre() {
+    return eleves.find(eleve => eleve.id === fenetreEleveId) || null;
+  }
+
+  // ‹ (pas = -1) et › (pas = +1) : l'élève voisin dans le tableau à l'écran.
+  function voisinDeLaFenetre(pas) {
+    const rang = idsAffiches.indexOf(fenetreEleveId);
+    if (rang < 0) return null;
+    const id = idsAffiches[rang + pas];
+    return id === undefined ? null : eleves.find(eleve => eleve.id === id) || null;
+  }
+
+  function changerEleveDeLaFenetre(pas) {
+    const autre = voisinDeLaFenetre(pas);
+    if (!autre) return;
+    const touche = document.activeElement;
+    fenetreEleveId = autre.id;
+    dessinerFenetreEleve();
+    // Au bout du tableau, la flèche qui a le focus se désactive : le focus
+    // passe à l'autre flèche, sinon il sort de la fenêtre et le clavier
+    // ne la fait plus défiler.
+    if (touche && touche.disabled && (touche.id === "fe-precedent" || touche.id === "fe-suivant")) {
+      $(touche.id === "fe-precedent" ? "fe-suivant" : "fe-precedent").focus();
+    }
+  }
+
+  function dessinerFenetreEleve() {
+    const eleve = eleveDeLaFenetre();
+    if (!eleve || !classe) { fermerFenetreEleve(); return; }
+    const appli = APPLIS.find(a => a.cle === appliAffichee) || APPLIS[0];
+    $("fe-titre").textContent = nomAffiche(eleve) || "Élève sans prénom";
+    const rang = idsAffiches.indexOf(eleve.id);
+    $("fe-sous").textContent = `${appli.nom} · ${classe.libelle}`
+      + (rang >= 0 && idsAffiches.length > 1 ? ` · ${rang + 1} sur ${idsAffiches.length}` : "");
+    $("fe-precedent").disabled = !voisinDeLaFenetre(-1);
+    $("fe-suivant").disabled = !voisinDeLaFenetre(1);
+    const zone = $("fe-contenu");
+    zone.textContent = "";
+    const anzan = appliAffichee === "flash-anzan" && Boolean(ANZAN);
+    $("fe-anzan").hidden = !anzan;
+    $("fe-parcours").hidden = true;
+    $("pa-imprimer").hidden = true;
+    if (anzan) {
+      // Un autre élève : sa liste repart à 10 séances.
+      if (!parcoursAnzanEleve || parcoursAnzanEleve.id !== eleve.id) ouvrirParcoursAnzan(eleve);
+      else { parcoursAnzanEleve = eleve; dessinerParcoursAnzan(); }
+    } else {
+      fermerParcoursAnzan();
+      if (appliAffichee === "splat") zone.append(contenuSplat(eleve));
+      else if (appliAffichee === "coffres") zone.append(contenuCoffres(eleve));
+      else if (appliAffichee === "flash-anzan") zone.append(paragrapheVide("Le moteur d’Anzan n’a pas pu être chargé."));
+      else {
+        zone.append(contenuDefiTables(eleve));
+        $("fe-parcours").hidden = !(eleve.lu && eleve.lu.parcours);
+      }
+    }
+    $("fe-gestes").hidden = !peutRevenir(eleve);
+  }
+
+  // Les chiffres d'un élève : [libellé, valeur, précision dessous (facultative)].
+  function ficheChiffres(lignes) {
+    const liste = document.createElement("dl");
+    liste.className = "fiche-chiffres";
+    lignes.forEach(([libelle, valeur, precision]) => {
+      const bloc = document.createElement("div");
+      const terme = document.createElement("dt");
+      terme.textContent = libelle;
+      const donnee = document.createElement("dd");
+      donnee.append(document.createTextNode(valeur));
+      if (precision) {
+        const petit = document.createElement("small");
+        petit.textContent = precision;
+        donnee.append(petit);
+      }
+      bloc.append(terme, donnee);
+      liste.append(bloc);
+    });
+    return liste;
+  }
+
+  function paragrapheVide(texte) {
+    const p = document.createElement("p");
+    p.className = "fe-vide";
+    p.textContent = texte;
+    return p;
+  }
+
+  // Défi tables dans la fenêtre (maquette 8) : les cinq chiffres de la ligne,
+  // les alertes, ses neuf tables (passées en vert, en cours encadrée), et ses
+  // calculs en retard — écrits : au téléphone, pas d'info-bulle.
+  function contenuDefiTables(eleve) {
+    const bloc = document.createElement("div");
+    const lu = eleve.lu || {};
+    if (!PARCOURS) { bloc.append(paragrapheVide("Le moteur de Défi tables n’a pas pu être chargé.")); return bloc; }
+    if (!lu.parcours) { bloc.append(paragrapheVide("Rien reçu pour l’instant.")); return bloc; }
+    const enCours = lu.enCours || {type: "rien", texte: "—"};
+    let texteEnCours = enCours.texte;
+    let precision = "";
+    if (enCours.type === "table") {
+      texteEnCours = `table de ${enCours.tables[0]}`;
+      precision = `${enCours.pleines} sur ${enCours.total}`;
+    } else if (enCours.type === "expert" && lu.couronne) {
+      precision = "Légende des tables";
+    }
+    if (eleve.record && Number.isInteger(eleve.record.meilleur) && PARCOURS.formatTemps) {
+      precision = [precision, `record : ${PARCOURS.formatTemps(eleve.record.meilleur)}`].filter(Boolean).join(" · ");
+    }
+    const retard = lu.retard ? lu.retard.length : null;
+    bloc.append(ficheChiffres([
+      ["Tables passées", `${lu.acquises.length} / ${PARCOURS.TABLES.length}`],
+      ["En cours", texteEnCours, precision],
+      ["Cette semaine", `${lu.seances} séance${lu.seances > 1 ? "s" : ""}`],
+      ["En retard", retard === null ? "—" : `${retard} calcul${retard > 1 ? "s" : ""}`],
+      ["Dernière activité", dateLisible(eleve.maj_le) || "rien reçu"]
+    ]));
+    const alertes = [];
+    if (lu.longue) alertes.push(`${lu.longue.seances} séances sur la table de ${lu.longue.table}`);
+    const absence = joursSansRien(eleve);
+    if (absence !== null) alertes.push(`rien depuis ${absence} jours`);
+    if (alertes.length) {
+      const ligne = document.createElement("p");
+      ligne.className = "fe-alertes";
+      alertes.forEach(texte => {
+        const alerte = document.createElement("span");
+        alerte.className = "alerte";
+        alerte.textContent = texte;
+        ligne.append(alerte);
+      });
+      bloc.append(ligne);
+    }
+    const titre = document.createElement("h3");
+    titre.textContent = "Ses tables";
+    const cases = document.createElement("ul");
+    cases.className = "cases-tables";
+    const enCoursTables = enCours.type === "table" ? [enCours.tables[0]]
+      : enCours.type === "tables" ? (enCours.tables || []) : [];
+    PARCOURS.TABLES.forEach(table => {
+      const caseTable = document.createElement("li");
+      const passee = lu.acquises.includes(table);
+      const encours = !passee && enCoursTables.includes(table);
+      caseTable.className = passee ? "passee" : encours ? "encours" : "";
+      caseTable.textContent = String(table);
+      caseTable.setAttribute("aria-label", `table de ${table} : ${passee ? "passée" : encours ? "en cours" : "pas encore passée"}`);
+      cases.append(caseTable);
+    });
+    const legende = document.createElement("p");
+    legende.className = "aide";
+    legende.textContent = "En vert : passée · encadrée : en cours.";
+    bloc.append(titre, cases, legende);
+    if (retard) {
+      const titreRetard = document.createElement("h3");
+      titreRetard.textContent = `Ses calculs en retard (${retard})`;
+      const liste = document.createElement("ul");
+      liste.className = "fe-retard";
+      lu.retard.forEach(cle => {
+        const item = document.createElement("li");
+        item.className = "pastille orange";
+        item.textContent = PARCOURS.libelleFait(cle);
+        liste.append(item);
+      });
+      bloc.append(titreRetard, liste);
+    }
+    return bloc;
   }
 
   // Lot « Qui voit quoi », lot 4b (24/10/2026) : une appli ouverte EN PLUS à
@@ -3080,13 +3384,22 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Les cases du Détail : une rangée par monde (numéros de la carte), puis une
   // rangée de Bonus par monde qui en a, puis la légende.
-  function ligneDetailSplat(eleve, colonnes) {
-    const ligne = document.createElement("tr");
-    ligne.className = "detail";
-    const cellule = document.createElement("td");
-    cellule.colSpan = colonnes;
-    cellule.dataset.libelle = "";
-    const etats = eleve.lu.etats || {};
+  // SPLAT! dans la fenêtre de l'élève (serveur pro, lot 5c ; avant, le
+  // « Détail ▾ » déplié sous la ligne) : ses chiffres, puis une rangée de
+  // cases par monde, les Bonus, la légende.
+  function contenuSplat(eleve) {
+    const cellule = document.createElement("div");
+    const lu = eleve.lu || {};
+    if (!lu.lisible || !eleve.maj_le) { cellule.append(paragrapheVide("Rien reçu pour l’instant.")); return cellule; }
+    cellule.append(ficheChiffres([
+      ["Étapes réussies", `${lu.faits} / ${lu.total}`],
+      ["Bonus", lu.bonus ? `✨ ${lu.bonus}` : "—"],
+      ["Dernière activité", dateLisible(eleve.maj_le) || "rien reçu"]
+    ]));
+    const titre = document.createElement("h3");
+    titre.textContent = "Ses étapes";
+    cellule.append(titre);
+    const etats = lu.etats || {};
     // Les mondes de L'ÉLÈVE (lot « Qui voit quoi ») : un monde ouvert à lui
     // seul n'a ni cadenas ni pâleur.
     const ouverts = mondesDeLEleve(eleve);
@@ -3124,8 +3437,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       legende.append(morceau);
     });
     cellule.append(legende);
-    ligne.append(cellule);
-    return ligne;
+    return cellule;
   }
 
   function dessinerTableauSplat(corps, ecriture, lignes = eleves) {
@@ -3157,46 +3469,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
       const cDate = celluleDate(eleve);
 
-      const cActions = document.createElement("td");
-      if (eleve.lu.lisible) {
-        // Le Détail se déplie sous la ligne, sans redessiner le tableau ; il
-        // reste déplié quand on trie.
-        const detail = document.createElement("button");
-        detail.type = "button";
-        detail.className = "secondaire";
-        let ligneDetail = null;
-        const poser = () => {
-          const ouvert = detailsOuverts.has(eleve.id);
-          detail.textContent = ouvert ? "Replier ▴" : "Détail ▾";
-          detail.setAttribute("aria-expanded", String(ouvert));
-          if (ouvert) {
-            if (!ligneDetail) ligneDetail = ligneDetailSplat(eleve, ligne.children.length);
-            ligne.after(ligneDetail);
-          } else if (ligneDetail) ligneDetail.remove();
-        };
-        detail.addEventListener("click", () => {
-          if (detailsOuverts.has(eleve.id)) detailsOuverts.delete(eleve.id);
-          else detailsOuverts.add(eleve.id);
-          poser();
-        });
-        cActions.append(detail);
-        // Le libellé tout de suite ; la rangée du Détail une fois la ligne
-        // posée dans le tableau (plus bas).
-        poser();
-        ligne.poserDetail = poser;
-      }
-      poserGestes(eleve, ecriture, cActions);
-
-      cNom.dataset.libelle = "";
-      cMondes.dataset.libelle = "Mondes";
-      cEtapes.dataset.libelle = "Réussies";
-      cDate.dataset.libelle = "Dernière activité";
-      cActions.dataset.libelle = "";
-      cActions.className = "actions-eleve";
-
-      ligne.append(cNom, cMondes, cEtapes, cDate, cActions);
+      // Lot 5c : plus de « Détail ▾ » — la ligne ouvre la fenêtre de l'élève
+      // (contenuSplat). Au téléphone, les mondes se cachent.
+      large(cMondes);
+      ligne.append(cNom, cMondes, cEtapes, cDate);
+      finirLigne(ligne, eleve, cNom);
       corps.appendChild(ligne);
-      if (ligne.poserDetail && detailsOuverts.has(eleve.id)) ligne.poserDetail();
     });
 
     dessinerObjectifSplat();
@@ -3312,15 +3590,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return cellule;
   }
 
-  // Le Détail : la partie en cours (à partir d'une clé), puis les quatre
-  // opérations, dans l'ordre de l'appli, même à zéro.
-  function ligneDetailCoffres(eleve, colonnes) {
-    const ligne = document.createElement("tr");
-    ligne.className = "detail";
-    const cellule = document.createElement("td");
-    cellule.colSpan = colonnes;
-    cellule.dataset.libelle = "";
-    const lu = eleve.lu;
+  // Coffres dans la fenêtre de l'élève (serveur pro, lot 5c ; avant, le
+  // Détail déplié sous la ligne) : ses trésors et ses trois niveaux, la partie
+  // en cours (à partir d'une clé), puis les quatre opérations, dans l'ordre de
+  // l'appli, même à zéro.
+  function contenuCoffres(eleve) {
+    const cellule = document.createElement("div");
+    const lu = eleve.lu || {};
+    if (!lu.lisible || !eleve.maj_le) { cellule.append(paragrapheVide("Rien reçu pour l’instant.")); return cellule; }
+    const niveaux = lu.niveaux || [];
+    const tresors = lu.tresors || 0;
+    cellule.append(ficheChiffres([
+      ["Trésors", `${tresors} trésor${tresors > 1 ? "s" : ""}`, lu.parfaits ? `dont ${lu.parfaits} parfait${lu.parfaits > 1 ? "s" : ""}` : ""],
+      ...[1, 2, 3].map(numero => {
+        const niveau = niveaux.find(n => n.numero === numero);
+        if (!niveau || !niveau.tresors) return [`Niveau ${numero}`, "—"];
+        return [`Niveau ${numero}`, `${niveau.tresors} trésor${niveau.tresors > 1 ? "s" : ""}`,
+          niveau.parfaits > 0 ? `dont ${niveau.parfaits} parfait${niveau.parfaits > 1 ? "s" : ""}` : ""];
+      }),
+      ["Dernier trésor", jourCourt(lu.dernier) || "—"]
+    ]));
     if (lu.partie) {
       const partie = document.createElement("p");
       partie.className = "partie-en-cours";
@@ -3357,8 +3646,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     });
     table.append(thead, tbody);
     cellule.append(table);
-    ligne.append(cellule);
-    return ligne;
+    const note = document.createElement("p");
+    note.className = "aide";
+    note.textContent = "Parfait : sans erreur ni solution montrée.";
+    if (lu.parfaits) cellule.append(note);
+    return cellule;
   }
 
   function dessinerTableauCoffres(corps, ecriture, lignes = eleves) {
@@ -3375,43 +3667,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       cDate.textContent = quand || "—";
       if (!quand) cDate.className = "sans";
 
-      const cActions = document.createElement("td");
-      if (eleve.lu.lisible) {
-        // Le Détail se déplie sous la ligne, sans redessiner le tableau ; il
-        // reste déplié quand on trie (comme l'onglet SPLAT!).
-        const detail = document.createElement("button");
-        detail.type = "button";
-        detail.className = "secondaire";
-        let ligneDetail = null;
-        const poser = () => {
-          const ouvert = detailsOuverts.has(eleve.id);
-          detail.textContent = ouvert ? "Masquer le détail" : "Détail";
-          detail.setAttribute("aria-expanded", String(ouvert));
-          if (ouvert) {
-            if (!ligneDetail) ligneDetail = ligneDetailCoffres(eleve, ligne.children.length);
-            ligne.after(ligneDetail);
-          } else if (ligneDetail) ligneDetail.remove();
-        };
-        detail.addEventListener("click", () => {
-          if (detailsOuverts.has(eleve.id)) detailsOuverts.delete(eleve.id);
-          else detailsOuverts.add(eleve.id);
-          poser();
-        });
-        cActions.append(detail);
-        poser();
-        ligne.poserDetail = poser;
-      }
-      poserGestes(eleve, ecriture, cActions);
-
-      cNom.dataset.libelle = "";
-      cNiveaux.forEach((cellule, index) => { cellule.dataset.libelle = `Niveau ${index + 1}`; });
-      cDate.dataset.libelle = "Dernier trésor";
-      cActions.dataset.libelle = "";
-      cActions.className = "actions-eleve";
-
-      ligne.append(cNom, ...cNiveaux, cDate, cActions);
+      // Lot 5c : plus de « Détail » — la ligne ouvre la fenêtre de l'élève
+      // (contenuCoffres). Au téléphone, les trois niveaux laissent la place à
+      // leur total, « Trésors » (colonne du téléphone seulement).
+      const cTresors = document.createElement("td");
+      cTresors.className = "seul-telephone";
+      const tresors = eleve.lu.tresors || 0;
+      if (eleve.lu.lisible && tresors) cTresors.textContent = `${tresors} trésor${tresors > 1 ? "s" : ""}`;
+      else { cTresors.textContent = "—"; cTresors.className = "seul-telephone sans"; }
+      cNiveaux.forEach(large);
+      ligne.append(cNom, cTresors, ...cNiveaux, cDate);
+      finirLigne(ligne, eleve, cNom);
       corps.appendChild(ligne);
-      if (ligne.poserDetail && detailsOuverts.has(eleve.id)) ligne.poserDetail();
     });
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
@@ -3460,28 +3727,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       cDate.textContent = quand || "—";
       if (!quand) cDate.className = "sans";
 
-      const cActions = document.createElement("td");
-      if (lu.lisible) {
-        // Même nom, même place que « Parcours » de Défi tables (lot du
-        // 21/10) ; ici la fenêtre est dans la page : tout est déjà chargé.
-        const parcours = document.createElement("button");
-        parcours.type = "button";
-        parcours.className = "secondaire";
-        parcours.textContent = "Parcours";
-        parcours.title = "Voir ses dernières séances";
-        parcours.addEventListener("click", () => ouvrirParcoursAnzan(eleve));
-        cActions.append(parcours);
-      }
-      poserGestes(eleve, ecriture, cActions);
-
-      cNom.dataset.libelle = "";
-      cCalculs.dataset.libelle = "Calculs";
-      cJours.dataset.libelle = "Jours";
-      cDate.dataset.libelle = "Dernière séance";
-      cActions.dataset.libelle = "";
-      cActions.className = "actions-eleve";
-
-      ligne.append(cNom, cCalculs, cJours, cDate, cActions);
+      // Lot 5c : plus de « Parcours » — la ligne ouvre la fenêtre de l'élève,
+      // avec ses dernières séances. Au téléphone, les jours se cachent.
+      large(cJours);
+      ligne.append(cNom, cCalculs, cJours, cDate);
+      finirLigne(ligne, eleve, cNom);
       corps.appendChild(ligne);
     });
 
@@ -3549,13 +3799,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     };
   }
 
+  // Serveur pro, lot 5c : les séances vivent dans la fenêtre de l'élève (le
+  // bloc « fe-anzan ») ; ouvrir le parcours d'un élève, c'est repartir à ses
+  // dix dernières séances. La fenêtre elle-même s'ouvre par sa ligne.
   function ouvrirParcoursAnzan(eleve) {
     if (!classe || !eleve || !ANZAN) return;
     parcoursAnzanEleve = eleve;
     parcoursAnzanAffiches = 10;
     dessinerParcoursAnzan();
-    const boite = $("parcours-anzan");
-    if (!boite.open) boite.showModal();
   }
 
   // « Voir les séances précédentes » : 10 de plus, la fenêtre redessinée.
@@ -3569,7 +3820,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const eleve = parcoursAnzanEleve;
     if (!eleve) return;
     const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
-    $("pa-titre").textContent = vu.titre;
     $("pa-compte").textContent = vu.compte;
     const liste = $("pa-liste");
     liste.textContent = "";
@@ -3609,11 +3859,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       : `Imprimer ces ${vu.seances.length} séances`;
   }
 
-  // Fermée (bouton ou Échap), la fenêtre oublie l'élève.
+  // Fermée (bouton ou Échap), ou passée à une autre appli, la fenêtre
+  // oublie l'élève.
   function fermerParcoursAnzan() {
     parcoursAnzanEleve = null;
     parcoursAnzanAffiches = 10;
-    ["pa-titre", "pa-compte", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
+    ["pa-compte", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
+    $("pa-plus").hidden = true;
+    $("pa-imprimer").hidden = true;
   }
 
   // « Imprimer » : la feuille, seule (la fenêtre ne sort pas), remplie le
@@ -3997,7 +4250,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       // Réglages ni sur ses codes — sauf une classe sans aucun élève, qui
       // s'ouvre sur Élèves : c'est la seule chose utile à y faire.
       if (!memeClasse) {
-        detailsOuverts.clear();
+        // Lot 5c : une autre classe repart sans prénom cherché, fenêtre fermée.
+        oublierRecherche();
+        fermerFenetreEleve();
         vue = (donnees.eleves || []).length === 0 && droitClasse !== "lecture" ? "eleves" : "appli";
       }
       // Une autre classe s'ouvre en haut de la page — son nom et son résumé —,
@@ -4392,18 +4647,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     poserAppli();
   }
 
+  // Serveur pro, lot 5c : plus de menu « Trier par ». Une colonne que l'appli
+  // ne connaît pas repart au prénom ; le titre de la colonne triée porte
+  // aria-sort, que la flèche ▲ ▼ dessine (de A à Z = croissant).
   function poserTris() {
-    const options = TRIS[appliAffichee] || TRIS["defi-tables"];
-    if (!options.some(option => option[0] === tri.colonne)) tri = {colonne: "prenom", sens: 1};
-    const choix = $("tri");
-    choix.textContent = "";
-    options.forEach(([valeur, libelle]) => {
-      const option = document.createElement("option");
-      option.value = valeur;
-      option.textContent = libelle;
-      choix.appendChild(option);
+    const colonnes = TRIS[appliAffichee] || TRIS["defi-tables"];
+    if (!colonnes.includes(tri.colonne)) tri = {colonne: "prenom", sens: 1};
+    document.querySelectorAll("#tableau thead th").forEach(th => {
+      const bouton = th.querySelector("button[data-tri]");
+      if (bouton && bouton.dataset.tri === tri.colonne) th.setAttribute("aria-sort", tri.sens === 1 ? "ascending" : "descending");
+      else th.removeAttribute("aria-sort");
     });
-    choix.value = tri.colonne;
   }
 
   // Passer d'une activité à l'autre. La liste d'une activité déjà lue pour
@@ -6050,11 +6304,39 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // ses prénoms.
   $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
   $("voit").addEventListener("close", fermerCeQueVoit);
-  // Lot 4b : « Le parcours de… » (Anzan).
-  $("pa-fermer").addEventListener("click", () => { $("parcours-anzan").close(); });
+  // Serveur pro, lot 5c : la fenêtre de l'élève. ‹ › (et les flèches du
+  // clavier) passent au voisin dans le tableau ; « Fermer » ou Échap la
+  // ferment, et elle oublie l'élève. « Voir son parcours » (Défi tables)
+  // ouvre l'écran Mon parcours par un billet de lecture (voirFiche) ;
+  // « Revenir à… » ferme la fenêtre avant ses deux questions.
+  $("fe-precedent").addEventListener("click", () => changerEleveDeLaFenetre(-1));
+  $("fe-suivant").addEventListener("click", () => changerEleveDeLaFenetre(1));
+  $("fe-fermer").addEventListener("click", fermerFenetreEleve);
+  $("fenetre-eleve").addEventListener("close", surFermetureFenetre);
+  $("fenetre-eleve").addEventListener("keydown", evenement => {
+    if (evenement.altKey || evenement.ctrlKey || evenement.metaKey) return;
+    if (evenement.key === "ArrowLeft") { evenement.preventDefault(); changerEleveDeLaFenetre(-1); }
+    else if (evenement.key === "ArrowRight") { evenement.preventDefault(); changerEleveDeLaFenetre(1); }
+  });
+  $("fe-parcours").addEventListener("click", () => {
+    const eleve = eleveDeLaFenetre();
+    if (eleve) voirFiche(eleve, $("fe-parcours"));
+  });
+  $("fe-revenir").addEventListener("click", () => {
+    const eleve = eleveDeLaFenetre();
+    if (!eleve) return;
+    fermerFenetreEleve();
+    revenirA(eleve);
+  });
+  // Anzan : « Voir les séances précédentes » et « Imprimer ».
   $("pa-imprimer").addEventListener("click", imprimerParcoursAnzan);
   $("pa-plus").addEventListener("click", plusDeSeancesAnzan);
-  $("parcours-anzan").addEventListener("close", fermerParcoursAnzan);
+  // La recherche : chaque lettre redessine le tableau (la file de redessin :
+  // jamais par-dessus un prénom en cours d'enregistrement).
+  $("chercher-eleve").addEventListener("input", evenement => {
+    recherche = String(evenement.target.value || "").slice(0, 40);
+    redessin.demander();
+  });
 
   $("imprimer-bandelettes").addEventListener("click", () => imprimer("bandelettes"));
   $("imprimer-recap").addEventListener("click", () => imprimer("recap"));
@@ -6139,17 +6421,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     bouton.addEventListener("click", () => {
       const colonne = bouton.dataset.tri;
       tri = {colonne, sens: tri.colonne === colonne ? -tri.sens : (colonne === "prenom" ? 1 : -1)};
-      $("tri").value = colonne;
       // Passe par la file : un tri déclenché juste après une saisie de prénom
       // attend la réponse du serveur au lieu d'effacer la correction à l'écran.
       redessin.demander();
     });
-  });
-
-  $("tri").addEventListener("change", event => {
-    const colonne = event.target.value;
-    tri = {colonne, sens: colonne === "prenom" ? 1 : -1};
-    redessin.demander();
   });
 
   // « + Nouvelle classe » (lot « Ma classe : élèves », 18/10/2026) : la petite
