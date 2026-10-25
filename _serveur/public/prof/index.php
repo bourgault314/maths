@@ -716,7 +716,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       <p id="echues-texte" style="margin:0 0 10px"></p>
       <div class="actions">
         <button type="button" class="danger" id="supprimer-echues"></button>
-        <button type="button" class="secondaire" id="echues-plus-tard">Plus tard</button>
+        <button type="button" class="secondaire" id="echues-plus-tard">Me le rappeler plus tard</button>
       </div>
     </div>
     <!-- La dernière carte de la liste est « + Nouvelle classe » (chargerClasses) :
@@ -806,7 +806,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
          graines et des réponses, jamais une note. -->
     <div class="carte eval-carte" id="bloc-evaluations" hidden>
       <div class="eval-tete">
-        <div><strong>📝 Évaluations</strong><p>En classe · un passage par élève · rien n’est gardé sur le serveur</p></div>
+        <div><strong>📝 Évaluations</strong><p>En classe · un passage par élève · réponses effacées au plus tard le lendemain</p></div>
         <div class="fin">
           <button type="button" class="secondaire petit" id="evaluations-plein-ecran" hidden>Plein écran</button>
           <button type="button" class="secondaire petit" id="nouveau-modele">Nouveau modèle</button>
@@ -931,7 +931,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         <button type="button" class="secondaire" id="ajouter">Ajouter des élèves</button>
         <button type="button" class="secondaire" id="coller-prenoms">Coller la liste des prénoms</button>
         <button type="button" class="secondaire" id="imprimer-bandelettes" title="À découper et à distribuer : une par élève, avec son prénom et son code">Imprimer les bandelettes</button>
-        <button type="button" class="secondaire" id="imprimer-recap" title="À garder : le seul papier qui relie chaque prénom à son code">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
+        <button type="button" class="secondaire" id="imprimer-recap" title="À garder : la liste de toute la classe, avec les prénoms et les codes">Imprimer la feuille prénom&nbsp;↔&nbsp;code</button>
       </div>
       <!-- Le message des boutons ci-dessus (ajout, collage, nouveau code) :
            juste sous eux, pas sous une liste de trente lignes. -->
@@ -1080,9 +1080,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
             et taperait le code — l'espace élève affiche de toute façon le
             prénom et la classe. Une bandelette perdue se règle par « Nouveau
             code » (menu ⋯ de l'onglet Élèves).
-         2. LA FEUILLE PRÉNOM ↔ CODE, imprimée à part. C'est le seul papier qui
-            associe les deux ; il est fait pour rester dans le classeur du
-            professeur, et il le dit en haut. -->
+         2. LA FEUILLE PRÉNOM ↔ CODE, imprimée à part : la liste de toute la
+            classe, prénoms et codes. Elle est faite pour rester dans le
+            classeur du professeur, et elle le dit en haut. (Depuis la
+            bandelette d'un seul tenant, 21/10/2026, ce n'est plus le SEUL
+            papier qui associe un prénom à un code : lot « textes justes »,
+            24/10/2026.) -->
     <div class="bandelettes" id="bandelettes">
       <h2 id="bandelettes-titre"></h2>
       <p class="avertissement-papier" id="bandelettes-consigne"></p>
@@ -1095,8 +1098,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
     <div class="fiche" id="fiche">
       <h2 id="fiche-titre"></h2>
-      <p class="avertissement-papier">Feuille à garder : c’est le seul papier qui associe un prénom
-      à un code. Ne la laisse pas sur l’imprimante ni sur ton bureau ; jette-la à la déchiqueteuse
+      <p class="avertissement-papier">Feuille à garder : la liste de toute la classe, prénoms et codes.
+      Ne la laisse pas sur l’imprimante ni sur ton bureau ; jette-la à la déchiqueteuse
       quand elle ne sert plus.</p>
       <table>
         <thead><tr><th>N°</th><th>Élève</th><th>Code</th></tr></thead>
@@ -1130,9 +1133,10 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
          surprise, on explique quel bouton appuyer. -->
     <div class="note-impression">
       <h2>Que veux-tu imprimer ?</h2>
-      <p>Reviens à la page et choisis un bouton de l’onglet Élèves : <strong>« Imprimer les bandelettes »</strong>
+      <p>Reviens à la page et choisis un bouton. Onglet Élèves : <strong>« Imprimer les bandelettes »</strong>
       (une par élève, à découper et à distribuer) ou <strong>« Imprimer la feuille prénom ↔ code »</strong>
-      (celle que tu gardes). Chaque bouton n’imprime que sa feuille.</p>
+      (celle que tu gardes). Onglet Anzan : <strong>« Parcours »</strong> d’un élève, puis
+      <strong>« Imprimer »</strong> dans sa fenêtre. Chaque bouton n’imprime que sa feuille.</p>
       <div class="pied-impression">
         <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
         <span>mathsgo.re · CC BY-NC-SA 4.0</span>
@@ -1273,7 +1277,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
   </div>
   <div class="voit-pied">
-    <button type="button" class="secondaire" id="pa-imprimer">Imprimer</button>
+    <button type="button" class="secondaire" id="pa-imprimer">Imprimer ces séances</button>
     <button type="button" class="secondaire" id="pa-fermer">Fermer</button>
   </div>
 </dialog>
@@ -1970,7 +1974,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   function celluleDate(eleve) {
     const cDate = document.createElement("td");
     const quand = dateLisible(eleve.maj_le);
-    cDate.textContent = quand || "rien fait";
+    cDate.textContent = quand || "rien reçu";
     if (!quand) cDate.className = "sans";
     return cDate;
   }
@@ -2776,9 +2780,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       cNom.dataset.libelle = "";
       cAcquises.dataset.libelle = "Passées";
       cEnCours.dataset.libelle = "En cours";
-      cSemaine.dataset.libelle = "Séances";
+      cSemaine.dataset.libelle = "Cette semaine";
       cRetard.dataset.libelle = "En retard";
-      cDate.dataset.libelle = "Activité";
+      cDate.dataset.libelle = "Dernière activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
@@ -2857,12 +2861,17 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // le dire. Trouvé par Claude Code le 09/09/2026.
   // `aCommence` (lot 4b-bis) : ce qui compte comme « a commencé » — par
   // défaut une progression enregistrée ; pour Anzan, au moins un calcul.
-  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le)) {
+  //
+  // Lot « textes justes » (24/10/2026) : le serveur ne sait pas qui n'a « rien
+  // fait » — il sait de qui il n'a RIEN REÇU (l'élève a pu travailler hors
+  // ligne). La phrase dit donc ce que le serveur sait. `quoi` : « rien reçu »
+  // par défaut, « aucun calcul reçu » pour Anzan.
+  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le), quoi = "rien reçu") {
     if (!liste.length) return "Aucun élève. Commence par en ajouter.";
     const sans = liste.filter(e => !aCommence(e)).length;
     const reste = sans === 0
       ? "tout le monde a commencé"
-      : `${sans} n’${sans > 1 ? "ont" : "a"} encore rien fait`;
+      : `${quoi} pour ${sans}`;
     return `${liste.length} élève${liste.length > 1 ? "s" : ""} · ${reste}`;
   }
 
@@ -3131,7 +3140,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       cNom.dataset.libelle = "";
       cMondes.dataset.libelle = "Mondes";
       cEtapes.dataset.libelle = "Réussies";
-      cDate.dataset.libelle = "Activité";
+      cDate.dataset.libelle = "Dernière activité";
       cActions.dataset.libelle = "";
       cActions.className = "actions-eleve";
 
@@ -3426,7 +3435,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       corps.appendChild(ligne);
     });
 
-    $("resume-classe").textContent = resumeDeLaClasse(eleves, aDuTravail);
+    $("resume-classe").textContent = resumeDeLaClasse(eleves, aDuTravail, "aucun calcul reçu");
     if (!ANZAN) {
       messager("message-appli",
         "La progression Anzan ne peut pas être détaillée : le moteur (prof/flash_anzan_parcours.js) n’a pas pu être chargé — vérifie qu’il est bien déposé sur le serveur.",
@@ -3542,6 +3551,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     $("pa-note").textContent = vu.note;
     $("pa-plus").hidden = !vu.reste;
     $("pa-imprimer").hidden = !vu.seances.length;
+    // Lot « textes justes » (24/10/2026) : le bouton dit ce qu'il imprime —
+    // les séances affichées, 10 puis plus après « Voir les séances précédentes ».
+    // Court : « Imprimer les 10 séances affichées » passait sur deux lignes en 390.
+    $("pa-imprimer").textContent = vu.seances.length === 1
+      ? "Imprimer cette séance"
+      : `Imprimer ces ${vu.seances.length} séances`;
   }
 
   // Fermée (bouton ou Échap), la fenêtre oublie l'élève.
@@ -3783,8 +3798,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       messager("bandeau-annee",
         `L’année scolaire ${donnees.annee_courante} se termine. Les classes de cette année seront `
         + `supprimées automatiquement à partir du 1er août : prénoms, codes et progressions, il n’en `
-        + `restera rien. Fais ta sauvegarde avant, et supprime toi-même les classes que tu ne veux `
-        + `plus voir.`, "info");
+        + `restera rien. Imprime avant ce que tu veux garder, et supprime toi-même les classes que tu `
+        + `ne veux plus voir.`, "info");
       return;
     }
     messager("bandeau-annee", "", "");
@@ -3797,7 +3812,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     return `${liste.length} classe${plusieurs ? "s" : ""} de l’année ${annees} `
       + `ne ${plusieurs ? "servent" : "sert"} plus (${noms}). `
       + `${plusieurs ? "Les" : "La"} supprimer maintenant ? Prénoms, codes et progressions : `
-      + `il n’en restera rien. Fais ta sauvegarde avant.`;
+      + `il n’en restera rien. Si tu attends, le ménage automatique de l’été peut `
+      + `${plusieurs ? "les" : "la"} supprimer sans prévenir.`;
   }
 
   function montrerEchues() {
@@ -3814,8 +3830,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     bloc.hidden = false;
   }
 
-  // « Plus tard » : le bandeau disparaît pour cette visite, et revient à la
-  // prochaine ouverture. Rien n'est enregistré, rien n'est supprimé.
+  // « Me le rappeler plus tard » : le bandeau disparaît pour cette visite, et
+  // revient à la prochaine ouverture. Rien n'est enregistré, rien n'est
+  // supprimé — et rien n'est REPORTÉ : menage.php (tâche planifiée d'OVH, 2 août
+  // et 2 septembre) supprime quand même ces classes. Le texte du bandeau le dit
+  // (lot « textes justes », 24/10/2026 ; avant, « Plus tard » laissait croire
+  // à un report).
   $("echues-plus-tard").addEventListener("click", () => {
     echues = [];
     montrerEchues();
@@ -3829,7 +3849,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       `Supprimer définitivement ${liste.length > 1 ? "ces " + liste.length + " classes" : "cette classe"} `
       + `(${liste.map(classe => classe.libelle).join(", ")}) ? `
       + `Prénoms, codes et progressions seront effacés : il n’en restera rien. `
-      + `Cette action est définitive — seule la sauvegarde du mois les contiendrait encore.`);
+      + `Cette action est définitive — seule la sauvegarde du mois les contiendrait encore.`,
+      null, {oui: liste.length > 1 ? `Supprimer ces ${liste.length} classes` : "Supprimer cette classe", danger: true});
     if (!reponse) return;
     bouton.disabled = true;
     try {
@@ -4331,7 +4352,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       finis.appendChild(el("small", "", "ont fini"));
       compte.append(commences, finis);
       const actions = el("div", "actions");
-      const fermer = el("button", "danger", "Fermer l’évaluation");
+      const fermer = el("button", "danger", "Fermer maintenant");
       fermer.type = "button";
       fermer.addEventListener("click", fermerEvaluation);
       actions.appendChild(fermer);
@@ -4339,15 +4360,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     } else {
       cours.appendChild(dessinerRepartition(false));
       const actions = el("div", "actions");
-      const telecharger = el("button", "", "Télécharger le fichier");
+      const telecharger = el("button", "", "Télécharger les résultats");
       telecharger.type = "button";
       telecharger.addEventListener("click", telechargerEvaluation);
-      const terminer = el("button", "danger", "Terminer");
+      const terminer = el("button", "danger", "Terminer et effacer");
       terminer.type = "button";
       terminer.addEventListener("click", terminerEvaluation);
       actions.append(telecharger, terminer);
       cours.append(actions, el("p", "eval-garde",
-        `Le fichier : une ligne par élève — note sur 20, score, temps, heure de début, calculs ratés. Les réponses restent sur le serveur jusqu’à ${instantLisible(evaluation.expire_le)}, puis sont effacées ; « Terminer » les efface tout de suite.`));
+        `Les résultats : une ligne par élève — note sur 20, score, temps, heure de début, calculs ratés. Les réponses restent sur le serveur jusqu’à ${instantLisible(evaluation.expire_le)}, puis sont effacées ; « Terminer et effacer » les efface tout de suite.`));
       if (!evalContenu) chargerContenuEvaluation().catch(erreur => surErreur(erreur, "message-evaluations"));
     }
     zone.appendChild(cours);
@@ -4387,7 +4408,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
 
   async function faireRepasser(eleve, nom) {
-    if (!await demander(`Faire repasser ${nom} ? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs.`)) return;
+    if (!await demander(`Faire repasser ${nom} ? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs.`,
+      null, {oui: "Faire repasser", danger: true})) return;
     try {
       recevoirEvaluation(await api("evaluation.repasser", {classe_id: classe.id, eleve_id: eleve.id}));
       messager("message-evaluations", `${nom} peut repasser l’évaluation.`, "ok");
@@ -4526,14 +4548,15 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       const charge = await chargerContenuEvaluation();
       if (!charge) return;
       telechargerTexte(nomDuFichierEvaluation(charge.contenu), fabriquerFichierEvaluation(charge.copies));
-      messager("message-evaluations", "Fichier téléchargé. Pense à « Terminer » quand tu l’as bien reçu.", "ok");
+      messager("message-evaluations", "Résultats téléchargés. Quand tu as bien le fichier, clique sur « Terminer et effacer ».", "ok");
     } catch (erreur) { surErreur(erreur, "message-evaluations"); }
   }
 
   // ---- les gestes
 
   async function fermerEvaluation() {
-    if (!await demander("Fermer l’évaluation maintenant ? Les élèves qui n’ont pas fini s’arrêtent là.")) return;
+    if (!await demander("Fermer l’évaluation maintenant ? Les élèves qui n’ont pas fini s’arrêtent là. Leurs réponses restent : tu pourras télécharger les résultats.",
+      null, {oui: "Fermer maintenant", danger: true})) return;
     try {
       recevoirEvaluation(await api("evaluation.fermer", {classe_id: classe.id}));
       messager("message-evaluations", "Évaluation fermée : plus aucune réponse n’entre.", "ok");
@@ -4541,7 +4564,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
 
   async function terminerEvaluation() {
-    if (!await demander("Terminer ? Les réponses de l’évaluation sont effacées du serveur. Le fichier est le seul endroit où elles restent.")) return;
+    if (!await demander("Terminer et effacer ? Les réponses de l’évaluation sont effacées du serveur. Le fichier des résultats est le seul endroit où elles restent.",
+      null, {oui: "Terminer et effacer", danger: true})) return;
     try {
       await api("evaluation.terminer", {classe_id: classe.id});
       evaluation = null;
@@ -4698,7 +4722,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   $("em-supprimer").addEventListener("click", async () => {
     if (!evalModele || evalModele.id === null) return;
     $("eval-modele").close();
-    if (!await demander(`Supprimer le modèle « ${$("em-nom").value.trim() || "sans nom"} » ?`)) return;
+    if (!await demander(`Supprimer le modèle « ${$("em-nom").value.trim() || "sans nom"} » ?`,
+      null, {oui: "Supprimer ce modèle", danger: true})) return;
     try {
       modeles = (await api("evaluation.supprimer_modele", {id: evalModele.id})).modeles || [];
       dessinerEvaluations();
@@ -4773,7 +4798,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   // Le serveur n'accepte que le propriétaire de la classe de l'élève.
   async function retirerTemps(ligne) {
     const qui = `${ligne.eleve.prenom} · ${ligne.eleve.classe}`;
-    const reponse = await demander(`Retirer le temps ${deNom(qui)} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`);
+    const reponse = await demander(`Retirer le temps ${deNom(qui)} (${formatTempsRecord(ligne.temps)}) ? Son record et son temps de la semaine s’effacent. Sa prochaine course compte à nouveau.`,
+      null, {oui: "Retirer ce temps", danger: true});
     if (!reponse) return;
     try {
       const donnees = await api("records.retirer", {eleve_id: ligne.eleve.id});
@@ -5008,7 +5034,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     }
     if (!ajout && !await demander(
       `Retirer ${nom} de la classe ${classe.libelle} ? La tuile disparaît de l’espace des élèves. `
-      + `Leur travail reste enregistré : rien n’est effacé.`)) {
+      + `Leur travail reste enregistré : rien n’est effacé.`,
+      null, {oui: "Retirer de la classe"})) {
       caseActivite.checked = true;
       return;
     }
@@ -5128,7 +5155,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function demanderPuisPartager(partage, droit) {
     const question = texteConfirmationPartage(partage.identifiant, droit, eleves.length);
-    if (question && !await demander(question)) return;
+    if (question && !await demander(question, null, {oui: "Autoriser"})) return;
     partager(partage.prof_id, droit);
   }
 
@@ -5141,7 +5168,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
 
   async function retirerPartage(partage) {
-    const reponse = await demander(`Retirer ${partage.identifiant} de cette classe ? Il ne la verra plus.`);
+    const reponse = await demander(`Retirer ${partage.identifiant} de cette classe ? Il ne la verra plus.`,
+      null, {oui: "Retirer le partage", danger: true});
     if (!reponse) return;
     try {
       await api("partages.supprimer", {classe_id: classe.id, prof_id: partage.prof_id});
@@ -5167,12 +5195,12 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         {valeur: "lecture", libelle: "Voir seulement"},
         {valeur: "ecriture", libelle: "Voir et modifier"}
       ]}
-    ]);
+    ], {oui: "Partager"});
     if (!reponse) return;
     const droit = reponse.droit === "ecriture" ? "ecriture" : "lecture";
     const choisi = annuaire.find(prof => String(prof.id) === String(reponse.prof));
     const question = texteConfirmationPartage(choisi ? choisi.identifiant : "ce collègue", droit, eleves.length);
-    if (question && !await demander(question)) return;
+    if (question && !await demander(question, null, {oui: "Autoriser"})) return;
     partager(parseInt(reponse.prof, 10), droit);
   });
 
@@ -5235,7 +5263,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function reinitialiserProf(prof) {
     const reponse = await demander(
-      `Donner un nouveau mot de passe à ${prof.identifiant} ? Ses sessions ouvertes seront fermées. Tu lui transmets le mot de passe temporaire de vive voix ; il devra en choisir un nouveau à sa prochaine connexion.`);
+      `Donner un nouveau mot de passe à ${prof.identifiant} ? Ses sessions ouvertes seront fermées. Tu lui transmets le mot de passe temporaire de vive voix ; il devra en choisir un nouveau à sa prochaine connexion.`,
+      null, {oui: "Donner un nouveau mot de passe"});
     if (!reponse) return;
     try {
       const donnees = await api("profs.reinitialiser", {prof_id: prof.id});
@@ -5250,7 +5279,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function desactiverProf(prof) {
     const reponse = await demander(
-      `Désactiver le compte ${deNom(prof.identifiant)} ? Il ne pourra plus se connecter. Ses classes, ses élèves et leurs progressions sont conservés ; tu pourras le réactiver.`);
+      `Désactiver le compte ${deNom(prof.identifiant)} ? Il ne pourra plus se connecter. Ses classes, ses élèves et leurs progressions sont conservés ; tu pourras le réactiver.`,
+      null, {oui: "Désactiver le compte", danger: true});
     if (!reponse) return;
     try {
       await api("profs.desactiver", {prof_id: prof.id});
@@ -5273,7 +5303,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // d'autre que lui ne connaît son vrai mot de passe.
     const reponse = await demander(
       "Nouveau professeur. Choisis-lui un identifiant ; tu recevras un mot de passe temporaire à lui transmettre de vive voix, qu'il changera à sa première connexion.",
-      [{nom: "identifiant", libelle: "Identifiant", maxlength: 40}]);
+      [{nom: "identifiant", libelle: "Identifiant", maxlength: 40}], {oui: "Créer le compte"});
     if (!reponse) return;
     try {
       const donnees = await api("profs.ajouter", {identifiant: reponse.identifiant});
@@ -5294,7 +5324,7 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     const question = prof.classes
       ? `Supprimer le compte ${deNom(prof.identifiant)} ET ${classes} (${eleves}, avec leurs codes et leurs progressions) ? Cette action est définitive. Pour garder ${prof.classes > 1 ? "ses classes" : "sa classe"}, désactive plutôt le compte.`
       : `Supprimer le compte ${deNom(prof.identifiant)} ? Cette action est définitive.`;
-    const reponse = await demander(question);
+    const reponse = await demander(question, null, {oui: "Supprimer le compte", danger: true});
     if (!reponse) return;
     try {
       await api("profs.supprimer", {prof_id: prof.id, avec_classes: Boolean(prof.classes)});
@@ -5337,11 +5367,20 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   }
 
   // options.apercu(valeurs) → liste de {numero, code, texte, classe} affichée
-  // sous les champs et recalculée à chaque frappe : ce que « Confirmer » va faire,
+  // sous les champs et recalculée à chaque frappe : ce que le bouton va faire,
   // montré AVANT qu'on le fasse.
+  //
+  // options.oui : le VERBE du geste sur le bouton (« Supprimer cet élève »,
+  // « Restaurer cette version »…) ; options.danger : le bouton en rouge, comme
+  // la commande qui a ouvert la fenêtre. Lot « textes justes » (24/10/2026) :
+  // avant, toutes les fenêtres disaient « Confirmer ». Un test vérifie que
+  // chaque appel nomme son geste.
   function demander(texte, champs, options) {
     return new Promise(resolve => {
       $("boite-texte").textContent = texte;
+      const oui = $("boite-oui");
+      oui.textContent = (options && options.oui) || "Confirmer";
+      oui.className = options && options.danger ? "danger" : "";
       const zone = $("boite-champs");
       zone.textContent = "";
       const lireValeurs = () => {
@@ -5474,7 +5513,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     // une classe vide (on crée la classe entière), 1 pour une classe qui a
     // déjà ses élèves (on ajoute un élève arrivé en cours d'année).
     const reponse = await demander("Combien d’élèves ajouter à cette classe ?",
-      [{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: eleves.length ? "1" : "25", min: 1, max: 60}]);
+      [{nom: "nombre", libelle: "Nombre d’élèves", type: "number", valeur: eleves.length ? "1" : "25", min: 1, max: 60}],
+      {oui: "Ajouter"});
     if (!reponse) return;
     const nombre = parseInt(reponse.nombre, 10);
     if (!nombre || nombre < 1 || nombre > 60) {
@@ -5538,9 +5578,9 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
         return;
       }
       const reponse = await demander(
-        `Colle les prénoms, un par ligne, dans l’ordre de la feuille imprimée (numéros 1, 2, 3…). Ils iront ${sansNom.length > 1 ? `aux ${sansNom.length} élèves qui n’ont` : "à l’élève qui n’a"} pas encore de nom. Vérifie l’aperçu avant de confirmer.`,
+        `Colle les prénoms, un par ligne, dans l’ordre de la feuille imprimée (numéros 1, 2, 3…). Ils iront ${sansNom.length > 1 ? `aux ${sansNom.length} élèves qui n’ont` : "à l’élève qui n’a"} pas encore de nom. Vérifie l’aperçu avant d’enregistrer.`,
         [{nom: "liste", libelle: "Un prénom par ligne (tu peux ajouter l’initiale : « Léa B »)", multiligne: true}],
-        {apercu: valeurs => apercuCollage(decouperPrenoms(valeurs.liste), sansNom)});
+        {apercu: valeurs => apercuCollage(decouperPrenoms(valeurs.liste), sansNom), oui: "Enregistrer les prénoms"});
       if (!reponse) return;
       const prenoms = decouperPrenoms(reponse.liste);
       if (!prenoms.length) {
@@ -5593,7 +5633,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function regenerer(eleve) {
     const reponse = await demander(
-      `Donner un nouveau code à ${nomAffiche(eleve) || "cet élève"} ? L’ancien (${eleve.code}) ne marchera plus. La progression est conservée.`);
+      `Donner un nouveau code à ${nomAffiche(eleve) || "cet élève"} ? L’ancien (${eleve.code}) ne marchera plus. La progression est conservée.`,
+      null, {oui: "Donner un nouveau code"});
     if (!reponse) return;
     try {
       const donnees = await api("eleves.regenerer", {eleve_id: eleve.id});
@@ -5639,13 +5680,14 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
     }
     const choix = await demander(
       `À quelle version revenir pour ${nomAffiche(eleve) || "cet élève"} ? Le serveur garde la fin de chacune des sept dernières journées.`,
-      [{nom: "version", libelle: "Revenir à", options}]);
+      [{nom: "version", libelle: "Revenir à", options}], {oui: "Suivant"});
     if (!choix) return;
     const choisie = options.find(option => option.valeur === choix.version);
     if (!choisie) return;
     const reponse = await demander(
       `Revenir à « ${choisie.libelle} » pour ${nomAffiche(eleve) || "cet élève"} ? `
-      + `La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`);
+      + `La version actuelle devient la « précédente » : tu pourras refaire l’inverse.`,
+      null, {oui: "Restaurer cette version"});
     if (!reponse) return;
     try {
       const corps = {eleve_id: eleve.id, appli: appliAffichee};
@@ -5664,7 +5706,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 
   async function supprimerEleve(eleve) {
     const reponse = await demander(
-      `Supprimer ${nomAffiche(eleve) || "cet élève"} et toute sa progression ? Cette action est définitive.`);
+      `Supprimer ${nomAffiche(eleve) || "cet élève"} et toute sa progression ? Cette action est définitive.`,
+      null, {oui: "Supprimer cet élève", danger: true});
     if (!reponse) return;
     try {
       await api("eleves.supprimer", {eleve_id: eleve.id});
@@ -5740,7 +5783,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
       + `garder : rien n’en sera conservé.\n\n`
       + (nommes === 0 ? "Aucun prénom n’a été saisi. " : (nommes === 1 ? "Le prénom saisi, " : `Les ${nommes} prénoms saisis, `))
       + `${nommes === 0 ? "Les" : "les"} ${eleves.length} code${eleves.length > 1 ? "s" : ""} et toutes les progressions seront `
-      + `supprimés. Cette action est définitive — seule la sauvegarde du mois les contient encore.`);
+      + `supprimés. Cette action est définitive — seule la sauvegarde du mois les contient encore.`,
+      null, {oui: "Supprimer la classe", danger: true});
     if (!reponse) return;
     bouton.disabled = true;
     try {
@@ -5839,7 +5883,8 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
   async function creerClasse() {
     if (creationEnCours) return;
     const reponse = await demander("Nouvelle classe",
-      [{nom: "libelle", libelle: "Nom de la classe", maxlength: 40, placeholder: "405"}]);
+      [{nom: "libelle", libelle: "Nom de la classe", maxlength: 40, placeholder: "405"}],
+      {oui: "Créer la classe"});
     if (!reponse) return;
     const libelle = String(reponse.libelle || "").trim();
     if (!libelle) { messager("message-classes", "Donne un nom à la classe.", "erreur"); return; }

@@ -205,7 +205,7 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus, �
   assert.equal(bonus(tom), "", "pas de ✨ 0");
   assert.equal(compte(yanis), "0 / 40");
   assert.ok(aClasse(cellules(lea)[C_ETAPES].children[0], "p-vert") && aClasse(cellules(yanis)[C_ETAPES].children[0], "p-gris"));
-  assert.equal(cellules(yanis)[C_DATE].textContent, "rien fait");
+  assert.equal(cellules(yanis)[C_DATE].textContent, "rien reçu");
   lignes.forEach(tr => {
     const boutons = cellules(tr)[C_GESTES].children.filter(n => n.tag === "button").map(b => b.textContent);
     assert.deepEqual(boutons, ["Détail ▾"], "« Détail » à la place de « Fiche »");

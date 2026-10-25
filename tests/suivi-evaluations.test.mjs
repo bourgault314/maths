@@ -123,7 +123,7 @@ test("Ma classe : la carte, ses boîtes, le noyau chargé d'ici, rien par innerH
   assert.ok(carte.includes('api("evaluation.fichier"') && carte.includes("CORE.genererEvaluationDeClasse(contenu.modele, {seance: contenu.graine, eleve: eleve.graine})"),
     "la correction refait le tirage avec les graines reçues");
   assert.ok(carte.includes("CORE.corrigerEvaluationDeClasse(questions, eleve.reponses || {})"));
-  assert.ok(carte.indexOf('await demander("Fermer l’évaluation') > 0 && carte.indexOf('await demander("Terminer ?') > 0, "fermer et terminer demandent confirmation");
+  assert.ok(carte.indexOf('await demander("Fermer l’évaluation') > 0 && carte.indexOf('await demander("Terminer et effacer ?') > 0, "fermer et terminer demandent confirmation");
   assert.ok(carte.includes('droitClasse !== "lecture"'), "la carte n'existe pas en lecture seule");
   // Le plein écran ne nomme personne.
   const plein = carte.slice(carte.indexOf("function ouvrirEvaluationPleinEcran"), carte.indexOf('$("evaluations-plein-ecran").addEventListener'));
@@ -249,7 +249,7 @@ test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmat
   assert.match(page, /function dessinerListeEleves\(\) \{\s*const bloc = el\("details", "eval-liste"\);\s*bloc\.open = !evalListeRepliee;/, "dépliée par défaut (choix de Gwenaël), le pli gardé d'un redessin à l'autre");
   assert.match(page, /cours\.append\(compte, dessinerListeEleves\(\), actions\);/, "dans la carte ouverte, entre le compteur et « Fermer »");
   assert.match(page, /if \(eleve\.etat !== "rien"\) \{\s*const repasser = el\("button", "secondaire", "↺ Faire repasser"\);/, "pas de bouton pour qui n'a pas commencé");
-  assert.match(page, /if \(!await demander\(`Faire repasser \$\{nom\} \? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs\.`\)\) return;/);
+  assert.match(page, /if \(!await demander\(`Faire repasser \$\{nom\} \? Ses réponses sont effacées, l’évaluation lui est proposée de nouveau, avec d’autres calculs\.`,\s*null, \{oui: "Faire repasser", danger: true\}\)\) return;/);
   assert.match(page, /recevoirEvaluation\(await api\("evaluation\.repasser", \{classe_id: classe\.id, eleve_id: eleve\.id\}\)\);/);
   const script = page.slice(page.indexOf("Les évaluations (lot E1"), page.indexOf("Les records (lot du 09/10/2026)"));
   assert.ok(!script.includes("innerHTML"), "rien par innerHTML dans la carte");
@@ -258,8 +258,8 @@ test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmat
   const espace = lire("_serveur/public/index.php");
   assert.ok(!espace.includes("pastille-evaluation") && !espace.includes("poserPastilleEvaluation") && !espace.includes("a-evaluation"), "plus de pastille");
   assert.match(espace, /<a class="appli direct-lien" id="direct-lien" href="direct\.php" hidden>[\s\S]*?<\/a>\s*<a class="appli direct-lien" id="evaluation-lien" href="#" hidden>/, "juste sous la tuile de la séance en direct, même dessin, cachée par défaut");
-  assert.match(espace, /<strong>Évaluation de tables<\/strong><span id="evaluation-lien-texte">Clique pour commencer\.<\/span>/);
-  assert.match(espace, /function poserTuileEvaluation\(etat\) \{\s*const ouverte = Boolean\(appliEvaluation && etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);\s*\$\("evaluation-lien"\)\.hidden = !ouverte;\s*if \(ouverte\) \$\("evaluation-lien-texte"\)\.textContent = etat\.commence \? "Clique pour continuer\." : "Clique pour commencer\.";/, "ouverte et pas finie ; « continuer » s'il a commencé ; textContent");
+  assert.match(espace, /<strong>Évaluation de tables<\/strong><span id="evaluation-lien-texte">Commencer l’évaluation\.<\/span>/);
+  assert.match(espace, /function poserTuileEvaluation\(etat\) \{\s*const ouverte = Boolean\(appliEvaluation && etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);\s*\$\("evaluation-lien"\)\.hidden = !ouverte;\s*if \(ouverte\) \$\("evaluation-lien-texte"\)\.textContent = etat\.commence \? "Continuer l’évaluation\." : "Commencer l’évaluation\.";/, "ouverte et pas finie ; « continuer » s'il a commencé ; textContent");
   assert.match(espace, /poserTuileEvaluation\(donnees\.evaluation\);/, "posée à chaque lecture de api/direct.php");
   assert.match(espace, /function arreterDirect\(\) \{[\s\S]*?poserTuileEvaluation\(null\);/, "partie avec l'élève (Se déconnecter, précédent)");
   // Elle mène à Défi tables comme sa tuile : même adresse, billet frais au clic.
@@ -273,7 +273,7 @@ test("E4 — Mon espace : la tuile « Évaluation de tables », jouée — ouver
   const espace = lire("_serveur/public/index.php");
   const bloc = espace.slice(espace.indexOf("let appliEvaluation = null;"), espace.indexOf("async function demanderDirect"));
   assert.ok(bloc.includes("function poserTuileEvaluation"), "le bloc de la tuile");
-  const elements = {"evaluation-lien": {hidden: true}, "evaluation-lien-texte": {textContent: "Clique pour commencer."}};
+  const elements = {"evaluation-lien": {hidden: true}, "evaluation-lien-texte": {textContent: "Commencer l’évaluation."}};
   const tuile = new Function("$", `${bloc}; return {poser: poserTuileEvaluation, set appli(a) { appliEvaluation = a; }};`)(id => elements[id]);
   const ouverte = {etat: "ouverte", commence: false, fini: false, close: false};
   tuile.poser(ouverte);
@@ -281,10 +281,10 @@ test("E4 — Mon espace : la tuile « Évaluation de tables », jouée — ouver
   tuile.appli = {cle: "defi-tables", url: "https://mathsgo.re/outils/calcul_mental/defi_tables.html"};
   tuile.poser(ouverte);
   assert.equal(elements["evaluation-lien"].hidden, false);
-  assert.equal(elements["evaluation-lien-texte"].textContent, "Clique pour commencer.");
+  assert.equal(elements["evaluation-lien-texte"].textContent, "Commencer l’évaluation.");
   tuile.poser({...ouverte, commence: true});
   assert.equal(elements["evaluation-lien"].hidden, false);
-  assert.equal(elements["evaluation-lien-texte"].textContent, "Clique pour continuer.");
+  assert.equal(elements["evaluation-lien-texte"].textContent, "Continuer l’évaluation.");
   for (const fin of [{fini: true}, {close: true}, {etat: "fermee"}]) {
     tuile.poser(ouverte);
     tuile.poser({...ouverte, commence: true, ...fin});

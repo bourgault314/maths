@@ -197,7 +197,7 @@ test("onglet Anzan, appli ouverte à toute la classe : tout le monde, « — » 
   assert.equal(lignes.length, 3);
   assert.deepEqual(cellules(lignes[0]).slice(0, 4).map(td => [td.textContent, td.className]), [["Alice", "nom"], ["—", "sans"], ["—", "sans"], ["—", "sans"]]);
   assert.deepEqual(cellules(lignes[1]).slice(1, 4).map(td => td.textContent), ["5 calculs", "1 jour", "22 oct. 2026"]);
-  assert.equal(zones.get("resume-classe").textContent, "3 élèves · 1 n’a encore rien fait");
+  assert.equal(zones.get("resume-classe").textContent, "3 élèves · aucun calcul reçu pour 1");
 });
 
 test("un élève qui n'a plus Anzan en plus mais y a du travail reste dans l'onglet ; un élève de la classe qui ne l'a pas n'y est pas", () => {
@@ -594,7 +594,7 @@ test("lot 4b-bis — des réglages Anzan enregistrés sans un calcul ne comptent
   // Anzan ouvert à toute la classe : Lucas n'a « encore rien fait ».
   const tous = ongletAnzan(liste.map(e => Object.assign({}, e, {acces: ACCES_RANIA})),
     {classe: {id: 7, libelle: "405", applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}});
-  assert.equal(tous.zones.get("resume-classe").textContent, "2 élèves · 1 n’a encore rien fait");
+  assert.equal(tous.zones.get("resume-classe").textContent, "2 élèves · aucun calcul reçu pour 1");
 });
 
 test("lot 4b-bis — une impression à la fois : la feuille des codes, sans « afterprint », ne sort pas avec le parcours Anzan ; son filet de 60 s ne touche pas l'impression suivante", () => {

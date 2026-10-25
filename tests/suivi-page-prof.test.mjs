@@ -372,7 +372,7 @@ test("passer un collègue en écriture demande confirmation, en nommant les code
 
 test("les deux chemins qui donnent l'écriture passent par la confirmation", () => {
   assert.match(fonction("demanderPuisPartager"), /texteConfirmationPartage\(/);
-  assert.match(fonction("demanderPuisPartager"), /if \(question && !await demander\(question\)\) return;/);
+  assert.match(fonction("demanderPuisPartager"), /if \(question && !await demander\(question, null, \{oui: "Autoriser"\}\)\) return;/);
   const listeur = fonction("chargerPartages");
   assert.match(listeur, /demanderPuisPartager\(partage,/);
   assert.ok(!/=> partager\(partage\.prof_id,/.test(listeur), "plus d'appel direct depuis la liste");
@@ -838,22 +838,24 @@ test("la barre de classe est remplie à la mesure des tables acquises", () => {
 // page. C'est elle qui reste quand la carte de classe se tait : elle doit
 // dire juste, surtout ce jour-là.
 function resumeDeLaClasse() {
-  const debut = page.indexOf("  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le)) {");
+  const debut = page.indexOf("  function resumeDeLaClasse(liste, aCommence = e => Boolean(e.maj_le), quoi = \"rien reçu\") {");
   assert.ok(debut > 0, "la page doit avoir sa ligne de résumé de classe");
   const fin = page.indexOf("\n  }", debut) + "\n  }".length;
   return new Function(page.slice(debut, fin) + "\n  return resumeDeLaClasse;")();
 }
 
-test("le résumé de classe compte ceux qui n'ont encore rien fait", () => {
+// Lot « textes justes » (24/10/2026) : le serveur ne sait pas qui n'a « rien
+// fait », il sait de qui il n'a rien reçu (travail hors ligne possible).
+test("le résumé de classe compte ceux dont le serveur n'a encore rien reçu", () => {
   const resume = resumeDeLaClasse();
   const eleve = maj_le => ({maj_le});
   assert.equal(resume([]), "Aucun élève. Commence par en ajouter.");
-  assert.equal(resume([eleve(null), eleve(null), eleve(null)]), "3 élèves · 3 n’ont encore rien fait",
+  assert.equal(resume([eleve(null), eleve(null), eleve(null)]), "3 élèves · rien reçu pour 3",
     "les codes sont distribués, personne n'a joué");
-  assert.equal(resume([eleve("2026-09-09"), eleve(null), eleve(null)]), "3 élèves · 2 n’ont encore rien fait");
-  assert.equal(resume([eleve("2026-09-09"), eleve("2026-09-09"), eleve(null)]), "3 élèves · 1 n’a encore rien fait",
-    "au singulier");
-  assert.equal(resume([eleve(null)]), "1 élève · 1 n’a encore rien fait");
+  assert.equal(resume([eleve("2026-09-09"), eleve(null), eleve(null)]), "3 élèves · rien reçu pour 2");
+  assert.equal(resume([eleve("2026-09-09"), eleve("2026-09-09"), eleve(null)]), "3 élèves · rien reçu pour 1");
+  assert.equal(resume([eleve(null)]), "1 élève · rien reçu pour 1");
+  assert.equal(resume([eleve(null)], e => Boolean(e.maj_le), "aucun calcul reçu"), "1 élève · aucun calcul reçu pour 1", "Anzan dit ce qu'il compte");
 });
 
 // Le jour de la distribution des codes, en fin d'heure : tout le monde a ouvert
@@ -865,7 +867,7 @@ test("quand tout le monde a commencé, le résumé le dit au lieu de compter zé
   const commence = ["2026-09-09", "2026-09-09", "2026-09-08"].map(maj_le => ({maj_le}));
   const texte = resume(commence);
   assert.equal(texte, "3 élèves · tout le monde a commencé");
-  assert.ok(!/\b0 n/.test(texte), "« 0 n'a encore rien fait » n'est pas une phrase");
+  assert.ok(!/pour 0\b/.test(texte), "« rien reçu pour 0 » n'est pas une phrase");
 });
 
 test("la jauge de classe ne demande rien de plus au serveur", () => {

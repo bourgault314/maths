@@ -98,7 +98,8 @@ entetes_page();
 
   <section class="carte">
     <h2>Ce qui est enregistré</h2>
-    <p>Ton prénom et l’initiale de ton nom (écrits par ton professeur), ta classe, ta progression dans chaque activité, et le jour de ta dernière activité. Rien d’autre : pas ton nom de famille, pas d’adresse, pas d’horaire.</p>
+    <p>Ton prénom et l’initiale de ton nom (écrits par ton professeur), ta classe, ta progression dans chaque activité, et le jour de ta dernière activité. Rien d’autre : pas ton nom de famille, pas d’adresse.</p>
+    <p>Pendant une évaluation ou une séance en direct, tes réponses et l’heure où tu commences sont gardées le temps que ton professeur les récupère, puis effacées au plus tard le lendemain.</p>
     <p>Tout est effacé à la fin de l’année scolaire. Tu peux aussi demander à ton professeur de l’effacer avant.</p>
   </section>
 

@@ -442,7 +442,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // defi-tables-fusion-jours-differents).
   // Puis « Qui voit quoi », lot 4b « Anzan dans Ma classe » (24/10/2026) :
   // prof/index.php seul change, 62 au manifeste (avant : qui-voit-quoi-anzan).
-  assert.match(lire("_serveur/public/VERSION"), /^lot qui-voit-quoi-anzan-page-prof$/m);
+  // Puis « serveur pro, lot 1 : textes justes » (24/10/2026) : prof/index.php,
+  // index.php et infos.php changent, 62 au manifeste (avant :
+  // qui-voit-quoi-anzan-page-prof).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-textes-justes$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

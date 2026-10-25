@@ -311,7 +311,7 @@ test("D4 · la page prof : « Retirer » au bout de chaque ligne de la carte (pa
   assert.match(pageProf, /if \(retirable && ligne\.eleve\) \{\s*const retirer = document\.createElement\("button"\);\s*retirer\.type = "button";\s*retirer\.className = "rec-retirer";\s*retirer\.textContent = "Retirer";\s*retirer\.title = "Retirer ce temps";/);
   assert.match(pageProf, /liste\.append\(ligneDeRecord\(ligne, true\)\)/, "la carte : retirable");
   assert.match(pageProf, /\(ligueRecords\[cle\] \|\| \[\]\)\.forEach\(ligne => liste\.append\(ligneDeRecord\(ligne\)\)\);/, "le plein écran : sans bouton");
-  assert.match(pageProf, /const reponse = await demander\(`Retirer le temps \$\{deNom\(qui\)\} \(\$\{formatTempsRecord\(ligne\.temps\)\}\) \? Son record et son temps de la semaine s’effacent\. Sa prochaine course compte à nouveau\.`\);\s*if \(!reponse\) return;/);
+  assert.match(pageProf, /const reponse = await demander\(`Retirer le temps \$\{deNom\(qui\)\} \(\$\{formatTempsRecord\(ligne\.temps\)\}\) \? Son record et son temps de la semaine s’effacent\. Sa prochaine course compte à nouveau\.`,\s*null, \{oui: "Retirer ce temps", danger: true\}\);\s*if \(!reponse\) return;/);
   assert.match(pageProf, /const qui = `\$\{ligne\.eleve\.prenom\} · \$\{ligne\.eleve\.classe\}`;/, "le vrai prénom, même pour une ligne « Mystère »");
   assert.match(pageProf, /const donnees = await api\("records\.retirer", \{eleve_id: ligne\.eleve\.id\}\);\s*ligueRecords = donnees;\s*dessinerRecords\(\);\s*messager\("message-records", `Le temps \$\{deNom\(qui\)\} est retiré\.`, "ok"\);/);
   assert.match(pageProf, /if \(classe\) await ouvrirClasse\(classe\.id\);/, "le temps à côté de la couronne, dans le tableau, est relu");
