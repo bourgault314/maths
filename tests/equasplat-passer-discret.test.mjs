@@ -53,3 +53,8 @@ test("téléphone : la consigne a une hauteur minimale, pas une hauteur fixe", (
 test("la consigne des petits jetons nomme le bouton comme l'élève le voit (« Partager » au téléphone)", () => {
   assert.match(html, /puis&nbsp;<strong><span class=\\"desktopLabel\\">Partager équitablement<\/span><span class=\\"mobileLabel\\">Partager<\/span><\/strong>&nbsp;quand il ne reste/);
 });
+
+test("au téléphone, pas de message de reprise dans la barre (elle reste sur une ligne) ; à l'ordinateur il reste", () => {
+  assert.match(html, /if\(ok && reprise && !eleveEcranEtroit\(\)\) eleveMajBarre\(reprise\);/);
+  assert.match(html, /reprise = `Tu reprends l\\u00e0 o\\u00f9 tu t'\\u00e9tais arr\\u00eat\\u00e9 !`;/);
+});

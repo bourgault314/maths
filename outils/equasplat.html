@@ -10694,7 +10694,10 @@
       reprise = `Tu reprends l\u00e0 o\u00f9 tu t'\u00e9tais arr\u00eat\u00e9 !`;
     }
     const ok = eleveChargerEquation();
-    if(ok && reprise) eleveMajBarre(reprise);
+    /* au téléphone, pas de message de reprise (25/10/2026, choix de Gwenaël) : avec 12 pastilles et
+       « Passer », il mettait la barre sur deux lignes et faisait descendre tout le jeu ; « 2 / 12 » et
+       les pastilles disent déjà où il en est. À l'ordinateur, le message tient sur la ligne : il reste. */
+    if(ok && reprise && !eleveEcranEtroit()) eleveMajBarre(reprise);
     window.setInterval(eleveSurveillerResolution, 400);
     return ok;
   }
