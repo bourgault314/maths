@@ -136,7 +136,7 @@ const AUJOURDHUI = new Date("2026-10-24T08:00:00Z");
 
 // ------------------------------------------------------------ la page, exécutée
 
-const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "boutonGeste", "menuGestes", "poserGestes",
+const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne",
   "jourCourt", "dessinerTableauAnzan", "resumeDeLaClasse", "lireAnzan", "parLaClasse", "elevesDeLOnglet", "voitLOnglet", "aDuTravail",
   "finirOnglet", "accesDe"].map(n => fonction(n)).join("\n");
 
@@ -147,11 +147,11 @@ function ongletAnzan(liste, options = {}) {
   const ouverts = [];
   const moteur = options.sansMoteur ? null : ANZAN;
   const classe = options.classe || {id: 7, libelle: "405", applis: ["defi-tables", "splat"], reglages: {}};
-  const fabrique = new Function("document", "$", "ANZAN", "droitClasse", "messager", "dessinerPapier", "revenirA", "placerMenu",
-    "classe", "appliAffichee", "ouvrirParcoursAnzan",
+  const fabrique = new Function("document", "$", "ANZAN", "droitClasse", "messager", "dessinerPapier",
+    "classe", "appliAffichee", "ouvrirFenetreEleve",
     `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: l => { eleves = l; }, lireAnzan, dessinerTableauAnzan, elevesDeLOnglet, finirOnglet};`);
   const f = fabrique(document, $, moteur, options.droit || "proprietaire", (id, t, type) => messages.push({id, t, type}),
-    () => {}, () => {}, () => {}, classe, "flash-anzan", eleve => ouverts.push(eleve.prenom));
+    () => {}, classe, "flash-anzan", eleve => ouverts.push(eleve.prenom));
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []}, e,
     {lu: f.lireAnzan(e.parcours)}));
   f.poser(eleves);
@@ -170,7 +170,7 @@ const classe405 = () => [
 ];
 const cellules = tr => tr.children;
 
-test("onglet Anzan, appli donnée à Rania seule : sa ligne seulement — « 106 calculs », « 10 jours », le jour de la dernière séance, « Parcours » ; la ligne du haut le dit", () => {
+test("onglet Anzan, appli donnée à Rania seule : sa ligne seulement — « 106 calculs », « 10 jours », le jour de la dernière séance ; la ligne ouvre sa fenêtre (lot 5c) ; la ligne du haut le dit", () => {
   const {lignes, zones, ouverts} = ongletAnzan(classe405());
   assert.equal(lignes.length, 1, "la classe n'a pas Anzan : seuls les élèves qui l'ont en plus");
   const [rania] = lignes;
@@ -178,11 +178,12 @@ test("onglet Anzan, appli donnée à Rania seule : sa ligne seulement — « 106
   const jours = new Set(RANIA_SEANCES.map(s => s[0])).size;
   assert.deepEqual(cellules(rania).slice(0, 4).map(td => td.textContent), ["Rania", `${calculs} calculs`, `${jours} jours`, "23 oct. 2026"]);
   assert.equal(cellules(rania)[1].premier(n => n.tag === "b").textContent, `${calculs} calculs`, "le compte en gras");
-  assert.deepEqual(cellules(rania).map(td => td.dataset.libelle), ["", "Calculs", "Jours", "Dernière séance", ""], "les libellés au téléphone");
-  const bouton = cellules(rania)[4].premier(n => n.tag === "button");
-  assert.equal(bouton.textContent, "Parcours");
-  bouton.cliquer();
-  assert.deepEqual(ouverts, ["Rania"]);
+  assert.deepEqual(cellules(rania).map(td => td.className), ["nom", "", "large", "", "va"], "au téléphone, les jours se cachent ; la flèche au bout");
+  assert.equal(cellules(rania)[0].premier(n => n.tag === "button").className, "lien-eleve", "le prénom est un bouton (le clavier y arrive)");
+  assert.equal(rania.className, "cliquable");
+  assert.equal(rania.premier(n => n.tag === "button" && n.textContent === "Parcours"), null, "plus de « Parcours » sur la ligne");
+  rania.cliquer();
+  assert.deepEqual(ouverts, ["Rania"], "la ligne entière ouvre la fenêtre de l'élève");
   assert.equal(zones.get("resume-classe").textContent, "1 élève · en plus de la classe, qui n’a pas cette activité");
   assert.equal(zones.get("objectif").hidden, true, "pas de carte de classe pour Anzan");
   assert.equal(zones.get("fragiles").hidden, true);
@@ -195,7 +196,7 @@ test("onglet Anzan, appli ouverte à toute la classe : tout le monde, « — » 
   liste[1].maj_le = "2026-10-22T07:00:00Z";
   const {lignes, zones} = ongletAnzan(liste, {classe: {id: 7, libelle: "405", applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}});
   assert.equal(lignes.length, 3);
-  assert.deepEqual(cellules(lignes[0]).slice(0, 4).map(td => [td.textContent, td.className]), [["Alice", "nom"], ["—", "sans"], ["—", "sans"], ["—", "sans"]]);
+  assert.deepEqual(cellules(lignes[0]).slice(0, 4).map(td => [td.textContent, td.className]), [["Alice", "nom"], ["—", "sans"], ["—", "sans large"], ["—", "sans"]]);
   assert.deepEqual(cellules(lignes[1]).slice(1, 4).map(td => td.textContent), ["5 calculs", "1 jour", "22 oct. 2026"]);
   assert.equal(zones.get("resume-classe").textContent, "3 élèves · aucun calcul reçu pour 1");
 });
@@ -230,11 +231,10 @@ test("la même règle pour toutes les applis : l'onglet SPLAT! d'un élève qui 
     "1 élève · en plus de la classe, qui n’a pas cette activité · 2 n’y ont plus accès (leur travail reste)");
 });
 
-test("sans moteur : l'onglet le dit, les lignes restent lisibles, pas de « Parcours »", () => {
+test("sans moteur : l'onglet le dit, les lignes restent lisibles", () => {
   const {lignes, messages} = ongletAnzan(classe405(), {sansMoteur: true});
   assert.equal(lignes.length, 1);
   assert.deepEqual(cellules(lignes[0]).slice(1, 4).map(td => td.textContent), ["—", "—", "—"]);
-  assert.equal(cellules(lignes[0])[4].premier(n => n.tag === "button" && n.textContent === "Parcours"), null);
   assert.ok(messages.some(m => m.id === "message-appli" && m.type === "erreur" && m.t.includes("prof/flash_anzan_parcours.js")));
 });
 
@@ -282,12 +282,11 @@ function fenetre(eleve, options = {}) {
   return {zones, $, f, lu, classes, impressions, ecouteurs};
 }
 
-test("« Parcours » : le titre, la phrase du compte, les dix dernières séances (la plus récente en haut) — jour, mode, réglages, score, « arrêtée » ; « sur 12 » dessous", () => {
+test("ses séances dans la fenêtre de l'élève (lot 5c) : la phrase du compte, les dix dernières séances (la plus récente en haut) — jour, mode, réglages, score, « arrêtée » ; « sur 12 » dessous", () => {
   const r = fenetre({id: 3, prenom: "Rania", parcours: RANIA});
   r.f.ouvrirParcoursAnzan(r.lu);
-  const boite = r.$("parcours-anzan");
-  assert.equal(boite.open, true);
-  assert.equal(r.$("pa-titre").textContent, "Le parcours de Rania");
+  assert.equal(r.f.eleve().prenom, "Rania");
+  assert.equal(r.f.parcoursAnzanDe(r.lu, AUJOURDHUI).titre, "Le parcours de Rania", "le titre de la feuille imprimée");
   assert.equal(r.$("pa-compte").textContent, ANZAN.texteResume(RANIA), "la phrase de la tuile, rendue par le moteur");
   assert.match(r.$("pa-compte").textContent, /^\d+ calculs · \d+ jours d’entraînement$/);
   const items = r.$("pa-liste").children;
@@ -310,7 +309,8 @@ test("« Parcours » : le titre, la phrase du compte, les dix dernières séance
   // Fermée : la fenêtre oublie tout.
   r.f.fermerParcoursAnzan();
   assert.equal(r.f.eleve(), null);
-  assert.deepEqual(["pa-titre", "pa-compte", "pa-liste", "pa-note"].map(id => r.$(id).textContent), ["", "", "", ""]);
+  assert.deepEqual(["pa-compte", "pa-liste", "pa-note"].map(id => r.$(id).textContent), ["", "", ""]);
+  assert.deepEqual([r.$("pa-plus").hidden, r.$("pa-imprimer").hidden], [true, true]);
 });
 
 test("« Voir les séances précédentes » : 10 de plus à chaque clic, jusqu'à la plus ancienne ; « Imprimer » sort ce que montre la fenêtre ; rouverte, la fenêtre repart à 10", () => {
@@ -344,21 +344,21 @@ test("« Voir les séances précédentes » : 10 de plus à chaque clic, jusqu'�
   assert.match(fonction("lireAnzan"), /historique: ANZAN\.historique\(brut \|\| null\)/, "toutes les séances, lues par le moteur");
 });
 
-test("« Parcours » d'un élève sans séance, ou sans prénom : la phrase le dit, pas de liste, pas d'« Imprimer » ; « d’Alice » s'élide", () => {
+test("la fenêtre d'un élève sans séance, ou sans prénom : la phrase le dit, pas de liste, pas d'« Imprimer » ; « d’Alice » s'élide", () => {
   const vide = fenetre({id: 1, prenom: "Alice", parcours: null});
   vide.f.ouvrirParcoursAnzan(vide.lu);
-  assert.equal(vide.$("pa-titre").textContent, "Le parcours d’Alice");
+  assert.equal(vide.f.parcoursAnzanDe(vide.lu, AUJOURDHUI).titre, "Le parcours d’Alice");
   assert.equal(vide.$("pa-compte").textContent, "Alice n’a pas encore fait de séance.");
   assert.equal(vide.$("pa-liste").hidden, true);
   assert.equal(vide.$("pa-note").textContent, "");
   assert.equal(vide.$("pa-imprimer").hidden, true);
   const anonyme = fenetre({id: 2, prenom: "", parcours: LUCAS});
   anonyme.f.ouvrirParcoursAnzan(anonyme.lu);
-  assert.equal(anonyme.$("pa-titre").textContent, "Le parcours de cet élève");
+  assert.equal(anonyme.f.parcoursAnzanDe(anonyme.lu, AUJOURDHUI).titre, "Le parcours de cet élève");
   assert.equal(anonyme.$("pa-note").textContent, "", "une seule séance : pas de « sur … »");
   const sansMoteur = fenetre({id: 3, prenom: "Rania", parcours: RANIA}, {sansMoteur: true});
   sansMoteur.f.ouvrirParcoursAnzan(sansMoteur.lu);
-  assert.equal(sansMoteur.$("parcours-anzan").open, false, "sans moteur, rien ne s'ouvre");
+  assert.equal(sansMoteur.f.eleve(), null, "sans moteur, rien ne s'ouvre");
 });
 
 test("les réglages d'une séance : les mots du noyau d'Anzan (CORE.resume sans le mode), sur TOUS les réglages possibles", () => {
@@ -424,7 +424,9 @@ test("le tri « Calculs » : les calculs faits, puis les jours ; « Dernière s�
     "à calculs égaux (Lucas et Zoé : 5), l'ordre stable du code départage");
   assert.deepEqual(trier(lus.slice(), {colonne: "date", sens: -1}, "flash-anzan", l => l).slice(0, 3), ["Rania", "Lucas", "Zoé"],
     "le jour de la dernière SÉANCE (Zoé : le 10), pas la dernière activité (Zoé : le 24)");
-  assert.match(constante("TRIS"), /"flash-anzan": \[\["prenom", "Prénom"\], \["calculs", "Calculs"\], \["date", "Dernière séance"\]\]/);
+  assert.match(constante("TRIS"), /"flash-anzan": \["prenom", "calculs", "jours", "date"\]/, "lot 5c : les titres de colonnes trient, « Jours » aussi");
+  assert.deepEqual(trier(lus.slice(), {colonne: "jours", sens: -1}, "flash-anzan", l => l), ["Rania", "Lucas", "Zoé", "Rien"],
+    "« Jours » : les jours d'entraînement, puis les calculs");
 });
 
 // ------------------------------------------------------------ la page
@@ -434,8 +436,8 @@ test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouve
   assert.deepEqual(APPLIS[2], {cle: "flash-anzan", nom: "Anzan", unite: ["séance", "séances"]}, "après Coffres, comme au catalogue ; nom « Anzan »");
   assert.match(page, /<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-anzan" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-anzan"')));
-  assert.deepEqual([...entete.matchAll(/<th>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[2]}${m[1] ? `:${m[1]}` : ""}`),
-    ["Élève:prenom", "Calculs:calculs", "Jours", "Dernière séance:date", ""]);
+  assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
+    ["Élève:prenom", "Calculs:calculs", "Jours:jours (large)", "Dernière séance:date", ""]);
   assert.match(page, /\$moteurAnzan = __DIR__ \. '\/flash_anzan_parcours\.js';\s*\$versionAnzan = is_file\(\$moteurAnzan\) \? substr\(md5_file\(\$moteurAnzan\), 0, 10\) : '0';/);
   assert.match(script, /const MOTEUR_ANZAN = "flash_anzan_parcours\.js\?v=<\?= htmlspecialchars\(\$versionAnzan, ENT_QUOTES\) \?>";/,
     "le moteur servi par le suivi (une adresse relative : jamais d'un autre domaine)");
@@ -443,7 +445,7 @@ test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouve
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "flash-anzan"\) return chargerMoteurAnzan\(\);/);
   assert.match(fonction("chargerMoteurAnzan"), /script\.src = MOTEUR_ANZAN;/);
   assert.match(fonction("elevesLus"), /cle === "flash-anzan" \? lireAnzan/);
-  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "flash-anzan"\) \{ dessinerTableauAnzan\(corps, ecriture, lignes\); finirOnglet\(lignes\); return; \}/);
+  assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "flash-anzan"\) \{ dessinerTableauAnzan\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("evalVisible"), /&& \(\(classe\.applis \|\| \[\]\)\.includes\("defi-tables"\)\)/,
     "un onglet Défi tables ouvert pour un élève en plus n'ouvre pas les évaluations de la classe");
   // ⚙ Réglages : la ligne Anzan après Coffres, sans réglage de classe, et sa ligne « En plus pour ».
@@ -452,17 +454,19 @@ test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouve
   assert.doesNotMatch(page, /data-appli="flash-anzan" checked/, "décochée par défaut : la case suit la liste de la classe");
   // Déconnexion : tout ce qui porte un prénom est vidé, la fenêtre fermée.
   const zones = new Function(`${constante("ZONES_TEXTE")}\nreturn ZONES_TEXTE;`)();
-  for (const id of ["en-plus-flash-anzan", "pa-titre", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note"]) {
+  for (const id of ["en-plus-flash-anzan", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note", "fe-titre", "fe-sous", "fe-contenu"]) {
     assert.ok(zones.includes(id), `${id} vidé à la déconnexion`);
   }
-  assert.match(fonction("viderZones"), /"voit", "parcours-anzan"\]\.forEach/);
+  assert.match(fonction("viderZones"), /"voit", "fenetre-eleve"\]\.forEach/);
   assert.match(fonction("oublierEtat"), /parcoursAnzanEleve = null;/);
-  assert.match(script, /\$\("parcours-anzan"\)\.addEventListener\("close", fermerParcoursAnzan\);/);
+  assert.match(script, /\$\("fenetre-eleve"\)\.addEventListener\("close", surFermetureFenetre\);/);
+  assert.match(fonction("surFermetureFenetre"), /fenetreEleveId = null;\s*fermerParcoursAnzan\(\);/, "fermée, la fenêtre oublie l'élève et ses séances");
   assert.match(script, /\$\("pa-imprimer"\)\.addEventListener\("click", imprimerParcoursAnzan\);/);
 });
 
 test("la fenêtre et la feuille : le HTML, le logo et la signature en pied ; à l'impression, la feuille seule", () => {
-  assert.match(page, /<dialog id="parcours-anzan" class="voit parcours-anzan" aria-labelledby="pa-titre">/);
+  assert.match(page, /<dialog id="fenetre-eleve" class="fenetre fenetre-eleve" aria-labelledby="fe-titre">/, "lot 5c : les séances vivent dans la fenêtre de l'élève");
+  assert.doesNotMatch(page, /id="parcours-anzan"/);
   assert.match(page, /<ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"><\/ol>/);
   const feuille = page.slice(page.indexOf('<div class="fiche-anzan" id="fiche-anzan">'), page.indexOf("<!-- Ctrl+P sans passer par un bouton"));
   assert.match(feuille, /<img src="\.\.\/mathsgo-logo-print\.png" alt="maths&go" style="height:26px">\s*<span>mathsgo\.re · CC BY-NC-SA 4\.0<\/span>/);
@@ -490,7 +494,7 @@ function classeRejouee() {
   const f = new Function("api", "etat", "poses", "APPLIS", "ANZAN",
     `let classe = null, droitClasse = "proprietaire", eleves = [], tableaux = {}, appliAffichee = "defi-tables", vue = "appli", demandeAppli = 0, voitEleve = null, parcoursAnzanEleve = null;
      const classes = [{id: 7, applis: ["defi-tables", "splat"]}];
-     const detailsOuverts = new Set();
+     function oublierRecherche() {} function fermerFenetreEleve() {}
      const $ = () => ({textContent: "", hidden: false});
      let jeton = etat.jeton;
      function chargerMoteurDe() { return Promise.resolve(null); }

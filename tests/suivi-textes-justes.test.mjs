@@ -65,10 +65,11 @@ test("point 4 · « rien reçu », pas « rien fait »", () => {
   assert.match(page, /resumeDeLaClasse\(eleves, aDuTravail, "aucun calcul reçu"\)/, "Anzan compte des calculs");
 });
 
-test("point 5 · au téléphone, les colonnes gardent leur période", () => {
-  assert.match(page, /cSemaine\.dataset\.libelle = "Cette semaine";/);
-  assert.ok(!page.includes('dataset.libelle = "Séances"') && !page.includes('dataset.libelle = "Activité"'));
-  assert.equal(page.split('cDate.dataset.libelle = "Dernière activité";').length - 1, 2, "Défi tables et SPLAT!");
+test("point 5 · les colonnes et la fenêtre de l'élève gardent leur période (lot 5c : plus de cartes au téléphone)", () => {
+  assert.match(page, /<th class="large"><button type="button" data-tri="semaine">Cette semaine<\/button><\/th>/);
+  assert.match(page, /\["Cette semaine", `\$\{lu\.seances\} séance\$\{lu\.seances > 1 \? "s" : ""\}`\]/);
+  assert.ok(!page.includes('"Séances"') && !page.includes('["Activité"'));
+  assert.equal(page.split('["Dernière activité", dateLisible(eleve.maj_le) || "rien reçu"]').length - 1, 2, "Défi tables et SPLAT!");
 });
 
 test("point 6 · chaque fenêtre nomme son geste ; une suppression est en rouge", () => {
@@ -96,7 +97,7 @@ test("point 7 · évaluation : ce qui s'arrête, ce qui s'efface, ce qu'on tél�
 });
 
 test("point 8 · Anzan : « Imprimer » dit combien de séances il imprime", () => {
-  assert.match(page, /id="pa-imprimer">Imprimer ces séances<\/button>/);
+  assert.match(page, /id="pa-imprimer" hidden>Imprimer ces séances<\/button>/);
   const bloc = page.slice(page.indexOf("  function dessinerParcoursAnzan() {"), page.indexOf("  function fermerParcoursAnzan() {"));
   const libelle = new Function("vu", bloc.match(/\$\("pa-imprimer"\)\.textContent = ([\s\S]*?);\n/)[0].replace('$("pa-imprimer").textContent = ', "return "));
   assert.equal(libelle({seances: [1]}), "Imprimer cette séance");

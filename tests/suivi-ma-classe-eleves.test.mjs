@@ -217,18 +217,17 @@ test("les codes ne s'écrivent à l'écran que dans l'onglet Élèves ; les tabl
   assert.ok(aClasse(sans, "sans"));
 });
 
-test("dans le tableau d'une appli, le « ⋯ » ne garde que « Revenir à… » — et rien en lecture seule", () => {
-  const poser = (eleve, ecriture) => {
-    const cActions = new Noeud("td");
-    new Function("document", "revenirA", "placerMenu", `${fonction("boutonGeste")}\n${fonction("menuGestes")}\n${fonction("poserGestes")}\nreturn poserGestes;`)(
-      document, () => {}, () => {})(eleve, ecriture, cActions);
-    const menu = cActions.premier(n => n.tag === "details");
-    return menu ? menu.tous(n => n.tag === "button").map(b => b.textContent) : null;
-  };
-  assert.deepEqual(poser({restaurable: true, journees: []}, true), ["Revenir à…"]);
-  assert.deepEqual(poser({restaurable: false, journees: [{jour: "2026-10-16", calculs: 3}]}, true), ["Revenir à…"]);
-  assert.equal(poser({restaurable: false, journees: []}, true), null, "rien à restaurer : pas de « ⋯ »");
-  assert.equal(poser({restaurable: true, journees: []}, false), null, "lecture seule : pas de « ⋯ »");
+test("dans le tableau d'une appli, plus de « ⋯ » : « Revenir à… » est en bas de la fenêtre de l'élève — et rien en lecture seule (serveur pro, lot 5c)", () => {
+  const peut = (eleve, droitClasse) => new Function("droitClasse", `${fonction("peutRevenir")}\nreturn peutRevenir;`)(droitClasse)(eleve);
+  assert.equal(peut({restaurable: true, journees: []}, "proprietaire"), true);
+  assert.equal(peut({restaurable: false, journees: [{jour: "2026-10-16", calculs: 3}]}, "ecriture"), true);
+  assert.equal(peut({restaurable: false, journees: []}, "proprietaire"), false, "rien à restaurer : pas de « Revenir à… »");
+  assert.equal(peut({restaurable: true, journees: []}, "lecture"), false, "lecture seule : pas de « Revenir à… »");
+  assert.match(fonction("dessinerFenetreEleve"), /\$\("fe-gestes"\)\.hidden = !peutRevenir\(eleve\);/);
+  assert.match(page, /<p class="fe-gestes" id="fe-gestes" hidden><button type="button" class="secondaire" id="fe-revenir"[^>]*>Revenir à…<\/button><\/p>/);
+  // La fenêtre se ferme avant les deux questions de « Revenir à… ».
+  assert.match(script, /\$\("fe-revenir"\)\.addEventListener\("click", \(\) => \{\s*const eleve = eleveDeLaFenetre\(\);\s*if \(!eleve\) return;\s*fermerFenetreEleve\(\);\s*revenirA\(eleve\);\s*\}\);/);
+  assert.doesNotMatch(script, /function poserGestes\(/, "plus de « ⋯ » sur les lignes des applis");
 });
 
 // ------------------------------------------------------------ la vue et les droits
@@ -259,7 +258,7 @@ test("la vue Élèves : propriétaire et collègue en écriture ; un collègue �
 
 test("une classe s'ouvre sur son tableau, jamais sur ses codes — sauf une classe vide, qui s'ouvre sur Élèves", () => {
   const ouvrir = fonction("ouvrirClasse");
-  assert.match(ouvrir, /if \(!memeClasse\) \{\s*detailsOuverts\.clear\(\);\s*vue = \(donnees\.eleves \|\| \[\]\)\.length === 0 && droitClasse !== "lecture" \? "eleves" : "appli";\s*\}/);
+  assert.match(ouvrir, /if \(!memeClasse\) \{\s*\/\/[^\n]*\n\s*oublierRecherche\(\);\s*fermerFenetreEleve\(\);\s*vue = \(donnees\.eleves \|\| \[\]\)\.length === 0 && droitClasse !== "lecture" \? "eleves" : "appli";\s*\}/);
   // La règle, rejouée : 0 élève en écriture → Élèves ; sinon (ou en lecture) → l'activité.
   const regle = (n, droitClasse) => (new Array(n).length === 0 && droitClasse !== "lecture" ? "eleves" : "appli");
   assert.equal(regle(0, "proprietaire"), "eleves");
@@ -315,7 +314,7 @@ test("le HTML : les quatre boutons, le message et la liste sont dans la vue Él�
     assert.ok(dans("vue-eleves", id), `${id} est dans la vue Élèves`);
     assert.ok(!dans("vue-appli", id), `${id} n'est plus dans la vue de l'activité`);
   }
-  for (const id of ["message-appli", "tableau", "tri", "bloc-evaluations", "bloc-records", "bloc-imprimer"]) {
+  for (const id of ["message-appli", "tableau", "chercher-eleve", "bloc-evaluations", "bloc-records", "bloc-imprimer"]) {
     assert.ok(dans("vue-appli", id), `${id} est dans la vue de l'activité`);
   }
   assert.ok(page.indexOf('id="message-classe"') > page.indexOf('id="imprimer-recap"') && page.indexOf('id="message-classe"') < page.indexOf('id="tableau-eleves"'),
@@ -335,7 +334,7 @@ test("les textes suivent : la légende du partage, le bandeau du collègue, la n
   assert.match(fonction("appliquerDroits"), /partagée avec toi \(voir et modifier\) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente\. Supprimer un élève ou la classe reste à \$\{qui\}\./);
   assert.match(fonction("appliquerDroits"), /\(voir seulement\) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien\./, "inchangé");
   assert.match(page, /Reviens à la page et choisis un bouton\. Onglet Élèves : <strong>« Imprimer les bandelettes »<\/strong>/);
-  assert.match(page, /Onglet Anzan : <strong>« Parcours »<\/strong> d’un élève, puis\s*<strong>« Imprimer »<\/strong> dans sa fenêtre\./, "la feuille Anzan aussi (lot « textes justes »)");
+  assert.match(page, /Onglet Anzan : touche la ligne d’un élève, puis\s*<strong>« Imprimer »<\/strong> dans sa fenêtre\./, "la feuille Anzan aussi (lot « textes justes » ; lot 5c : la ligne ouvre la fenêtre)");
   assert.match(script, /Nouveau code : \$\{donnees\.code\}\. Imprime sa bandelette \(menu ⋯\)/);
 });
 
@@ -689,7 +688,7 @@ function fenetreRejouee(eleve, options = {}) {
 // La vraie oublierEtat (« Se déconnecter »), avec ce qu'elle touche d'autre, en figurants.
 let modeles, evaluation, evalContenu, jeton, classes, eleves, estAdmin, mdpTemporaire, identifiant, annuaire, echues, tri, appliAffichee, vue, tableaux;
 let demandeAppli = 0, parcoursAnzanEleve = null;
-const detailsOuverts = new Set(); const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
+let recherche = "", fenetreEleveId = null, idsAffiches = []; const veille = {arreter() {}}; function arreterVeilleEvaluation() {}
 ${fonction("oublierEtat")}
 return {ouvrirCeQueVoit, fermerCeQueVoit, changerCeQueVoit, voit: () => voitEleve, deconnecter: () => { oublierEtat(); voitEleve = null; },
   enAttente: id => id === undefined ? [...voitAttentes.values()].reduce((a, b) => a + b, 0) : (voitAttentes.get(id) || 0),
@@ -922,7 +921,7 @@ test("qui voit quoi — le HTML : la colonne, la fenêtre, les lignes des Régla
     assert.ok(vider.ZONES_TEXTE.includes(id), `${id} vidé à la déconnexion`);
   }
   assert.ok(vider.ZONES_MESSAGE.includes("voit-message"));
-  assert.match(fonction("viderZones"), /\["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "parcours-anzan"\]\.forEach/, "les fenêtres se ferment à la déconnexion (lot 4b : le parcours Anzan aussi)");
+  assert.match(fonction("viderZones"), /\["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "fenetre-eleve"\]\.forEach/, "les fenêtres se ferment à la déconnexion (lot 5c : la fenêtre de l'élève aussi)");
   assert.match(fonction("oublierEtat"), /voitEleve = null;/);
   assert.match(script, /\$\("voit-fermer"\)\.addEventListener\("click", \(\) => \{ \$\("voit"\)\.close\(\); \}\);/, "« Fermer » ne fait que fermer");
   assert.match(script, /\$\("voit"\)\.addEventListener\("close", fermerCeQueVoit\);/, "fermée (bouton ou Échap)…");
