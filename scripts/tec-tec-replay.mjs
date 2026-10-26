@@ -43,7 +43,9 @@ function windows(inputs,limit=90){
     if(!base){out.push({lo:0,hi:0});continue;}
     const trial=d=>{
       const f=inputs.map((k,n)=>n!==i?k:{down:k.down+d,up:k.up+d});
-      restore(r,base);const end=r.tick+ahead+Math.abs(d);
+      // Mesurer après l'appui (pas après l'instantané, pris 0,75 s avant).
+      // Un maintien long doit être suivi jusqu'à son dernier atterrissage.
+      restore(r,base);const end=Math.max(inputs[i].down+ahead,inputs[i].up+Math.round(1/DT))+Math.abs(d);
       while(r.status==='running'&&r.tick<end){r.input(held(r.tick,f));r.step();}
       return r.status!=='dead';
     };
@@ -128,20 +130,32 @@ function withFlights(ground){
   for(const f of course.flights)inputs.push(...solveFlight(f));
   return inputs.sort((a,b)=>a.down-b.down);
 }
-const first=withFlights(fromSketch());
-const r0=play(first);
-if(r0.status!=='won'){
-  const m=course.motifs.filter(m=>m.t<=r0.time).pop();
-  console.error(`L'esquisse perd à ${r0.time.toFixed(2)} s (${r0.death?.kind}, x=${Math.round(r0.x)}, y=${r0.y.toFixed(1)}) — figure « ${m?.type} » niveau ${m?.level} à ${m?.t} s`);
-  process.exit(2);
+// Vérifier doit rejouer le fichier livré, sans recalculer inutilement les vols.
+let inputs;
+if(args.has('--verifier')){
+  const fixture=JSON.parse(fs.readFileSync(FIXTURE,'utf8'));
+  if(fixture.course!==course.id)throw new Error('Le replay ne correspond pas à la version du parcours.');
+  inputs=fixture.inputs;
+}else{
+  const first=withFlights(fromSketch()),r0=play(first);
+  if(r0.status!=='won'){
+    const m=course.motifs.filter(m=>m.t<=r0.time).pop();
+    console.error(`L'esquisse perd à ${r0.time.toFixed(2)} s (${r0.death?.kind}, x=${Math.round(r0.x)}, y=${r0.y.toFixed(1)}) — figure « ${m?.type} » niveau ${m?.level} à ${m?.t} s`);
+    process.exit(2);
+  }
+  inputs=centre(first);
 }
-const inputs=args.has('--verifier')?require(FIXTURE).inputs:centre(first);
 const {r,w}=report(inputs);
 if(args.has('--fenetres')){
   for(const x of w)console.log(`${String(x.t).padStart(7)} s  ${String(x.ms).padStart(4)} ms   [${x.lo},${x.hi}]`);
 }
 const sorted=w.map(x=>x.ms).sort((a,b)=>a-b);
 console.log(`${r.status} à ${r.time.toFixed(2)} s · ${r.jumpCount} sauts · ${r.inputCount} appuis · fenêtre la plus serrée ${sorted[0]} ms · médiane ${sorted[sorted.length>>1]} ms`);
+for(let i=0;i<course.zones.length;i++){
+  const zone=course.zones[i],end=course.zones[i+1]?.t??course.duration;
+  const ms=w.filter(x=>x.t>=zone.t&&x.t<end).map(x=>x.ms).sort((a,b)=>a-b);
+  console.log(`${zone.name} : ${ms.length} appuis · minimum ${ms[0]} ms · médiane ${ms[ms.length>>1]} ms`);
+}
 if(r.status!=='won')process.exit(1);
 if(!args.has('--verifier')){
   fs.writeFileSync(FIXTURE,JSON.stringify({course:course.id,rate:Math.round(1/DT),inputs},null,2)+'\n');

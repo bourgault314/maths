@@ -1,5 +1,5 @@
-/* Parcours V3 (lot 1, 17/09/2026) : petit saut réel, figures différenciées par niveau,
- * six pièges neufs, second vol coupé en deux, difficulté croissante du début à la fin. */
+/* Parcours V4 : apprendre un geste, le répéter puis le combiner.
+ * Quatre paysages, trois vols ; les dernières figures reprennent des gestes déjà vus. */
 (function(root,factory){
   if(typeof module==='object'&&module.exports)module.exports=factory(require('./engine.js'));
   else root.TecCourse=factory(root.TecEngine);
@@ -73,6 +73,16 @@
     const first=sketch.length,m={t,type,level,x:X(t),end:0};motifs.push(m);
     const v=motion.speed(t),W=win(level);
     switch(type){
+      case 'single':{
+        // Premier geste isolé : un petit groupe de piques, sans plafond ni trou.
+        // Le joueur a le temps d'observer et de choisir un appui assez long.
+        spikes(t+.33,spikeW(t+.33,level),SPIKE_H(level));press(t,jump(level));break;
+      }
+      case 'abri':{
+        // L'absence d'appui est aussi un geste : marcher sous l'abri, puis sauter
+        // après sa sortie. Le plafond bas finit AVANT le trou, sans piège caché.
+        roof(t-.72,t-.16,60);hole(t+.12,t+.12+holeW(t+.12,level));press(t+.08);break;
+      }
       // ── figures d'origine, désormais différenciées par le niveau ──────────────
       case 'short':{
         // Un petit saut sous un plafond bas, au-dessus d'un trou étroit.
@@ -178,9 +188,12 @@
       case 'rythme':{
         // Rythme cassé : court-long-court, puis long-court-court ou court-court-long. Le métronome ne suffit plus.
         const gaps=[[.76,1.16,.76],[1.16,.76,.76],[.76,.76,1.16]][level>=2?1+n%2:0];   // court-long-court, puis long-court-court / court-court-long
-        if(level>=4)roof(t-.10,t+gaps[0]+gaps[1]+gaps[2]+.75,CAP);
+        // La finale de niveau 4 précède un vol : trois bonds puis une respiration
+        // au sol pour lire le changement de commande, sans nouveau piège.
+        const beats=level>=4?2:3;
+        if(level>=4)roof(t-.10,t+gaps.slice(0,beats).reduce((a,b)=>a+b,0)+.75,CAP);
         let at=t;spikes(at+.33,spikeW(at+.33,level),SPIKE_H(level));press(at,jump(level));
-        for(let i=0;i<3;i++){at+=gaps[i];spikes(at+.33,spikeW(at+.33,level),SPIKE_H(level));press(at,jump(level));}break;
+        for(let i=0;i<beats;i++){at+=gaps[i];spikes(at+.33,spikeW(at+.33,level),SPIKE_H(level));press(at,jump(level));}break;
       }
       case 'grandpetit':{
         // Grand saut au-dessus du trou, puis aussitôt un petit saut sous le plafond.
@@ -212,25 +225,25 @@
     m.end=Math.max(t,...sketch.slice(first).map(j=>j.t+j.hold+.7));
   }
   [
-    // ── 1. La forêt des Hauts (0-30 s, 250 px/s) : on apprend chaque geste, fenêtres larges ──
-    [1.15,'short',0],[2.35,'stair',0],[6.05,'lowhigh',0],[7.9,'rebounds',0],
-    [11.15,'lowstairs',0],[13.3,'late',2],[15.7,'languette',3],[17.7,'pair',3],
-    [19.8,'short',3],[21.3,'rythme',3],[25.0,'lowstairs',2],[27.1,'quinconce',3],
-    // ── 2. Les remparts (30-65 s, 285 px/s) : les pièges neufs, puis le premier vol ──
-    [30.3,'stair',4],[34.05,'grandpetit',4],[36.0,'platforms',4],[38.5,'pente',4],
-    [41.1,'derobe',4],[43.6,'short',3],
+    // ── 1. La forêt des Hauts : une découverte à la fois, niveaux 0 puis 1 ──
+    [2.2,'single',0],[4.1,'single',0],[6.2,'short',0],[8.2,'pair',0],
+    [11.0,'stair',0],[15.0,'lowhigh',1],[18.0,'abri',1],
+    [20.4,'languette',1],[23.0,'lowstairs',1],[26.0,'rebounds',1],
+    // ── 2. Les remparts : variations larges puis combinaisons de niveau 2 ──
+    [30.3,'stair',1],[34.05,'grandpetit',1],[36.0,'platforms',2],[38.5,'pente',1],
+    [41.1,'derobe',1],[43.6,'short',1],
     /* vol 45-53 */
-    [53.7,'lowhigh',4],[55.6,'drop',4],[57.95,'triple',4],[60.6,'languette',4],[62.5,'lowstairs',3],
-    // ── 3. La Plaine des Sables (65-105 s) : coup d'accélérateur, puis 300 et 250 px/s ──
-    [66.2,'pair',4],[68.0,'triple',4],[70.6,'short',3],[71.5,'rythme',4],
-    [75.25,'quinconce',3],[77.9,'stair',4],[81.7,'derobe',4],[84.0,'lowstairs',4],[86.6,'grandpetit',4],
-    [88.4,'pente',4],[91.1,'quinconce',4],[93.9,'lowhigh',4],[95.7,'platforms',4],[98.5,'pair',4],
-    [100.8,'triple',4],[103.3,'rythme',4],
+    [53.7,'lowhigh',2],[55.6,'drop',2],[57.95,'triple',2],[60.6,'languette',2],[62.5,'lowstairs',2],
+    // ── 3. La Plaine des Sables : la vitesse varie, puis les gestes se précisent ──
+    [66.2,'pair',2],[68.0,'triple',2],[70.6,'short',2],[71.5,'rythme',2],
+    [75.25,'quinconce',2],[77.9,'stair',3],[81.7,'derobe',3],[84.0,'lowstairs',3],[86.6,'grandpetit',3],
+    [88.4,'pente',3],[91.1,'quinconce',3],[94.3,'abri',3],[95.7,'late',3],[98.5,'pair',3],
+    [100.8,'triple',3],[103.3,'rythme',3],
     // ── 4. Le littoral (105-150 s, 315 puis 365 px/s) : tout se resserre, deux vols ──
     [107.4,'quinconce',4],[109.8,'grandpetit',4],[111.6,'stair',4],[115.2,'triple',4],[117.8,'derobe',4],
     [119.9,'pente',4],[122.4,'rythme',4],
     /* vol 126-134 */
-    [134.5,'languette',4],[136.2,'quinconce',4],[138.7,'short',4],
+    [134.5,'languette',4],[136.1,'quinconce',4],
     /* vol 139.5-147.5 */
     [148.3,'lowhigh',4]
   ].forEach(args=>motif(...args));
@@ -261,13 +274,17 @@
     {t:65,name:'La Plaine des Sables',short:'Plaine des Sables',subtitle:'Change de tempo',color:'#e7ab83'},
     {t:105,name:'Le littoral',short:'Le littoral',subtitle:'Chaque geste compte',color:'#b9dbd2'}
   ];
-  // Mêmes textes qu'avant (aucun ajout) ; seuls les instants suivent la nouvelle géométrie.
-  cues.push({t:.12,text:'Appui court : petit saut',duration:1.35},{t:2,text:'Maintiens pour enchaîner',duration:1.3},
-    {t:3.65,text:'Relâche avant le plafond',duration:1.6},{t:10.65,text:'Trois petits sauts',duration:1.4},
+  // Les indications précèdent le geste ; elles ne couvrent jamais les obstacles.
+  cues.push({t:.15,text:'Appuie pour sauter · relâche pour retomber',duration:2.2},
+    {t:5.25,text:'Sous le plafond : un appui court',duration:1.8},
+    {t:10.1,text:'Maintiens pour monter les marches',duration:1.8},
+    {t:12.35,text:'Relâche avant le plafond',duration:1.65},
+    {t:16.9,text:'Sous l’abri, reste au sol',duration:1.6},
+    {t:22.2,text:'Trois petits sauts',duration:1.8},
     {t:44,text:'En vol : maintiens pour monter',duration:2.2},{t:47,text:'Relâche pour redescendre',duration:1.7},
     {t:51.6,text:'Prépare ton atterrissage',duration:1.5},{t:64.6,text:'Le rythme accélère'},
     {t:85.4,text:'Le rythme ralentit'},{t:138.2,text:'Dernier envol',duration:1.8},{t:147.6,text:'Le lagon est tout près',duration:1.4});
-  const course={id:'tec-tec-reunion-150-v3',duration,motion,holes,solids,hazards,motifs,zones,cues,flights};
+  const course={id:'tec-tec-reunion-150-v4',duration,motion,holes,solids,hazards,motifs,zones,cues,flights};
   sketch.sort((a,b)=>a.t-b.t);
   return {course,sketch};
 });

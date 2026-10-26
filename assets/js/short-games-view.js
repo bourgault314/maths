@@ -21,7 +21,7 @@
     } else if (game === "galets") {
       frame.src = "/jeux-cadeaux/galets-riviere/index.html?integre=1&v=1";
     } else if (game === "dodo") {
-      frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=4";
+      frame.src = "/jeux-cadeaux/tec-tec/index.html?integre=1&v=5";
     } else {
       frame.src = "/jeux-cadeaux/index.html?jeu=" + game + "&integre=1&v=9";
     }

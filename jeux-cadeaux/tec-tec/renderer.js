@@ -14,13 +14,33 @@
   function path(c,d,fill,stroke,width=1){let p=paths.get(d);if(!p){if(paths.size>=64)paths.clear();p=new Path2D(d);paths.set(d,p);}if(fill){c.fillStyle=fill;c.fill(p);}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke(p);}}
   function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
   const noise=n=>{const v=Math.sin(n*127.13+311.7)*43758.5453;return v-Math.floor(v);};
+  // Ombre portée sur une vraie surface : jamais une tache posée dans le vide.
+  // Le découpage respecte les trous et la disparition des plateformes friables.
+  function supportBelow(course,run,view=run){
+    const left=view.x-18,right=view.x+18,surfaces=[];
+    if(view.y>=-.1){
+      let cursor=left;
+      for(const h of course.holes.filter(h=>h.x+h.w>left&&h.x<right).sort((a,b)=>a.x-b.x)){
+        if(h.x>cursor)surfaces.push({left:cursor,right:Math.min(right,h.x),y:0});
+        cursor=Math.max(cursor,h.x+h.w);
+      }
+      if(cursor<right)surfaces.push({left:cursor,right,y:0});
+    }
+    for(const s of course.solids){
+      const intact=!s.crumble||run.crumbs?.[s.id]===undefined||run.time<run.crumbs[s.id]+s.crumble;
+      if(intact&&s.y<=view.y+.1&&s.x<right&&s.x+s.w>left)surfaces.push({left:Math.max(left,s.x),right:Math.min(right,s.x+s.w),y:s.y});
+    }
+    const y=Math.max(-Infinity,...surfaces.map(s=>s.y));
+    return surfaces.filter(s=>s.y===y&&s.right>s.left);
+  }
   // Tec-tec compact (lot 1, 17/09/2026) : le dessin coïncide avec la boîte du moteur
   // (24 px de large, de +3 à +42 px au-dessus des pattes) — queue et bec courts, comme
   // le vrai tec-tec de La Réunion. Aucun trait ne dépasse la boîte de plus de 4 px.
   function bird(c,x,y,scale=1,t=0,pose='idle',vy=0,land=0){
     c.save();c.translate(x,y);
     const flying=pose==='fly',airborne=pose==='air'||flying,dead=pose==='dead';
-    const bob=pose==='run'?Math.sin(t*35)*1.15:pose==='idle'?Math.sin(t*2)*1.1:0;
+    // Les pattes courent, mais l'origine du dessin reste collée à l'appui réel.
+    const bob=pose==='idle'?Math.sin(t*2)*1.1:0;
     c.scale(scale,scale);c.translate(0,bob);
     c.rotate(dead?-.4:airborne?Math.max(-.14,Math.min(.12,-vy*.0003)):0);
     const squash=land>0?Math.sin(land/.12*Math.PI)*.12:0;c.scale(1+squash,1-squash);
@@ -68,6 +88,7 @@
     }
     zone(t){let k=0;for(let i=1;i<4;i++)if(t>=this.course.zones[i].t)k=i;return k;}
     emit(event,run){
+      if(this.reduced)return;
       const count=event==='death'?22:event==='land'?7:event==='crack'?12:event==='jump'?5:event==='win'?45:0;
       for(let i=0;i<count;i++)this.particles.push({x:ANCHOR+(noise(i+run.tick)-.5)*18,y:G-run.y-4,vx:(noise(i*9+run.tick)-.5)*(event==='death'?155:80),vy:-25-noise(i*7+run.tick)*95,life:1,max:event==='win'?2: .35+noise(i*5)*.35,size:1.5+noise(i*31)*3,color:event==='death'?'#edbba1':palette[this.zone(run.time)].dust});
       if(event==='death'&&!this.reduced)this.flash=.16;
@@ -88,14 +109,15 @@
     ledge(x,w,y,p,world=0){
       if(w<=0)return;const c=this.c,top=G-y,bottom=H+15;
       const gradient=c.createLinearGradient(0,top,0,bottom);gradient.addColorStop(0,p.rock);gradient.addColorStop(1,p.deep);
-      c.fillStyle=gradient;c.beginPath();c.moveTo(x,top+3);c.lineTo(x+4,top);c.lineTo(x+w-4,top);c.lineTo(x+w,top+4);c.lineTo(x+w,bottom);c.lineTo(x,bottom);c.closePath();c.fill();
-      c.fillStyle=p.edge;c.fillRect(x,top+4,w,7);c.fillStyle=p.top;c.fillRect(x+1,top,w-2,4);
+      c.fillStyle=gradient;c.fillRect(x,top,w,bottom-top);
+      c.fillStyle=p.edge;c.fillRect(x,top+4,w,7);c.fillStyle=p.top;c.fillRect(x,top,w,4);
       c.save();c.beginPath();c.rect(x+2,top+13,w-4,bottom-top);c.clip();
       const first=Math.floor(world/40)*40;
       for(let a=first;a<world+w+40;a+=40){const px=x+(a-world),n=noise(a),h=18+n*40;c.fillStyle='rgba(255,255,230,.035)';c.beginPath();c.moveTo(px,top+12);c.lineTo(px+23,top+16);c.lineTo(px+31,top+h);c.lineTo(px+7,top+h+16);c.closePath();c.fill();c.strokeStyle='rgba(11,30,37,.2)';c.lineWidth=1;c.beginPath();c.moveTo(px+8,top+12);c.lineTo(px+15,top+26);c.lineTo(px+10,top+42);c.stroke();}
       c.restore();
       // A pale, flat landing surface; angular red tips always mean danger.
-      c.strokeStyle='rgba(255,255,225,.42)';c.lineWidth=1;c.beginPath();c.moveTo(x+4,top+.5);c.lineTo(x+w-4,top+.5);c.stroke();
+      c.strokeStyle='rgba(255,255,225,.64)';c.lineWidth=1;c.beginPath();c.moveTo(x,top+.5);c.lineTo(x+w,top+.5);c.stroke();
+      c.strokeStyle='rgba(17,37,39,.5)';c.beginPath();c.moveTo(x+.5,top+4);c.lineTo(x+.5,bottom);c.moveTo(x+w-.5,top+4);c.lineTo(x+w-.5,bottom);c.stroke();
     }
     terrain(run,zone,view=run){
       const c=this.c,p=palette[zone],camera=view.x-ANCHOR,min=camera-30,max=camera+W+30;
@@ -110,11 +132,14 @@
         // Plateforme qui se dérobe : fissurée d'avance ; après l'atterrissage elle tremble, puis tombe.
         const since=run.crumbs&&run.crumbs[s.id]!==undefined?run.time-run.crumbs[s.id]:-1,fall=since>s.crumble?since-s.crumble:0;
         if(fall>1.2)continue;
-        const shake=since>=0&&!fall?Math.sin(since*90)*1.5:0,drop=fall*fall*420;
+        const shake=since>=0&&!fall&&!this.reduced?Math.sin(since*90)*1.5:0,drop=fall*fall*420;
         c.save();c.translate(shake,drop);if(fall)c.globalAlpha=Math.max(0,1-fall/1.2);
-        this.ledge(s.x-camera,s.w,s.y,p,s.x);
+        this.ledge(s.x-camera,s.w,s.y,{...p,top:'#edc48a',edge:'#b5865d'},s.x);
         const x=s.x-camera,top=G-s.y;c.strokeStyle='rgba(20,30,32,.55)';c.lineWidth=1.2;c.lineJoin='round';
         for(let k=0;k<Math.max(2,Math.round(s.w/22));k++){const a=x+6+k*(s.w-12)/Math.max(1,Math.round(s.w/22)-1||1);c.beginPath();c.moveTo(a,top+2);c.lineTo(a+3,top+9);c.lineTo(a-2,top+15);c.lineTo(a+2,top+24);c.stroke();}
+        // Cassures visibles même avant le premier contact, aussi sans couleur.
+        c.strokeStyle='#785a42';c.lineWidth=1.4;
+        for(let a=x+7;a<x+s.w-3;a+=12){c.beginPath();c.moveTo(a,top);c.lineTo(a-2,top+5);c.stroke();}
         c.restore();
       }
       for(const h of this.course.hazards){
@@ -143,7 +168,7 @@
       const finish=this.course.motion.length-camera;
       if(finish<W+80&&finish>-80){
         c.strokeStyle='#446b62';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(finish,G);c.lineTo(finish,G-106);c.stroke();
-        path(c,`M${finish+1} ${G-106}q26-13 52 0v31q-26-13-52 0Z`,'#f8e4a0');
+        c.save();c.translate(finish+1,G-106);path(c,'M0 0q26-13 52 0v31q-26-13-52 0Z','#f8e4a0');c.restore();
         c.fillStyle='#335b51';c.font='bold 10px sans-serif';c.textAlign='center';c.fillText('ARRIVÉE',finish+27,G-88);
       }
     }
@@ -160,12 +185,20 @@
       if(k>0&&run.time<z.t+2){this.backdrop(k-1,view.x,realTime);this.backdrop(k,view.x,realTime,(run.time-z.t)/2);}else this.backdrop(k,view.x,realTime);
       if(mode==='intro'){
         this.ledge(0,W,0,palette[0],0);
-        ellipse(c,536,G+2,75,9,'rgba(27,57,51,.15)');bird(c,536,G,4.2,realTime,'idle');
+        ellipse(c,536,G+2,75,9,'rgba(27,57,51,.15)');bird(c,536,G,4.2,this.reduced?0:realTime,'idle');
         // A few fronds frame the portrait without obscuring the playable lane.
         c.save();c.translate(672,G+15);c.strokeStyle='#487865';c.lineWidth=3;c.lineCap='round';for(let i=0;i<7;i++){c.beginPath();c.moveTo(0,0);c.quadraticCurveTo(-20+i*8,-40,-58+i*18,-65-(i%3)*18);c.stroke();}c.restore();
       }else{
         this.terrain(run,k,view);
-        if(view.y>-110){const sh=Math.max(.2,1-view.y/180);ellipse(c,ANCHOR,G+2,16*sh,3*sh,'rgba(9,32,36,.2)');bird(c,ANCHOR,G-view.y,1.05,realTime,run.status==='dead'?'dead':run.flight?'fly':run.grounded?'run':'air',run.vy,run.land);}
+        if(view.y>-110){
+          const supports=supportBelow(this.course,run,view);
+          if(supports.length){
+            const surface=supports[0].y,sh=Math.max(.2,1-(view.y-surface)/180),camera=view.x-ANCHOR;
+            c.save();c.beginPath();for(const s of supports)c.rect(s.left-camera,G-surface, s.right-s.left,5);c.clip();
+            ellipse(c,ANCHOR,G-surface+2,16*sh,3*sh,'rgba(9,32,36,.24)');c.restore();
+          }
+          bird(c,ANCHOR,G-view.y,1.05,realTime,run.status==='dead'?'dead':run.flight?'fly':run.grounded?'run':'air',run.vy,run.land);
+        }
       }
       if(!this.reduced){
         for(const p of this.particles){p.life-=delta/p.max;p.x+=p.vx*delta;p.y+=p.vy*delta;p.vy+=180*delta;c.globalAlpha=Math.max(0,p.life)*.75;ellipse(c,p.x,p.y,p.size,p.size*.65,p.color);}this.particles=this.particles.filter(p=>p.life>0);c.globalAlpha=1;
@@ -175,5 +208,5 @@
       const shade=c.createLinearGradient(0,0,0,90);shade.addColorStop(0,'rgba(23,46,45,.16)');shade.addColorStop(1,'rgba(23,46,45,0)');c.fillStyle=shade;c.fillRect(0,0,W,90);
     }
   }
-  window.TecRenderer={Renderer,bird};
+  window.TecRenderer={Renderer,bird,supportBelow};
 })();

@@ -1,4 +1,4 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {createGift,connectFrame}=require('../jeux-cadeaux/tec-tec/site.js'),core=require('../jeux-cadeaux/core.js');
 const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('cadeau : le compteur est commun aux jeux, le retour reste sur le site',()=>{
@@ -31,15 +31,17 @@ test('les anciens favoris et les coffres Dodo rejoignent le Tec-tec sans consomm
 });
 test('le catalogue et le lien historique utilisent le même Tec-tec',()=>{
  assert.match(read('assets/js/short-games-view.js'),/dodo: "Tec-tec bondissant"/);
- assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=4/);
+ assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=5/);
  const wrapper=read('jeux-cadeaux/dodo.html');assert.match(wrapper,/<h1[^>]*>Tec-tec bondissant<\/h1>/);
  const html=read('jeux-cadeaux/tec-tec/index.html');for(const [,src]of html.matchAll(/(?:src|href)="([^"?]+)(?:\?[^" ]*)?"/g))if(!src.startsWith('http')&&!src.startsWith('/'))assert.ok(fs.existsSync(path.join(root,'jeux-cadeaux/tec-tec',src)),src);
  assert.ok(!read('jeux-cadeaux/tec-tec/app.js').includes('__TEC_QA__'));
 });
 
-test('le moteur et le parcours restent exactement ceux de la V3 approuvée (lot 1, 17/09/2026)',()=>{
- assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/engine.js'))).digest('hex'),'89870e9bed56387f077a164438398c367ced41c0a348b7242a0e601656699cf0');
- assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'jeux-cadeaux/tec-tec/course.js'))).digest('hex'),'c02c624ece4e71be7cf19be7d60ab21018f6ca5b454ac3300931c73838bdf5db');
+test('la V4 conserve un parcours de 150 secondes et quatre paysages',()=>{
+ const {course}=require('../jeux-cadeaux/tec-tec/course.js');
+ assert.equal(course.duration,150);assert.equal(course.zones.length,4);
+ assert.equal(course.zones[0].name,'La forêt des Hauts');
+ assert.equal(course.zones.at(-1).name,'Le littoral');
 });
 
 test('le grand écran garde tout le parcours visible et réserve la place du bouton et des zones sûres',()=>{

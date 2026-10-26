@@ -3,10 +3,11 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const {JSDOM,VirtualConsole}=require('jsdom');
 const fixture=require('./fixtures/tec-tec/winning-replay.json').inputs;
 const source=fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/index.html'),'utf8');
-async function setup({blockedStorage=false,width=1024,height=768,query="",saved=new Map(),fullscreen="native"}={}){
+async function setup({playMode='challenge',blockedStorage=false,width=1024,height=768,query="",saved=new Map(),fullscreen="native"}={}){
   const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
   const dom=new JSDOM(source,{runScripts:'outside-only',url:'https://mathsgo.re/jeux-cadeaux/tec-tec/index.html'+query,pretendToBeVisual:true,virtualConsole});
   const w=dom.window,d=w.document;let clock=0,observedRun=null;const frames=new Map();let frameId=0,fullscreenElement=null;
+  Object.defineProperty(w.performance,'now',{value:()=>clock});
   Object.defineProperties(w,{innerWidth:{value:width,writable:true},innerHeight:{value:height,writable:true}});
   w.requestAnimationFrame=cb=>{frames.set(++frameId,cb);return frameId;};
   Object.defineProperty(d,"fullscreenElement",{get:()=>fullscreenElement});
@@ -24,6 +25,8 @@ async function setup({blockedStorage=false,width=1024,height=768,query="",saved=
     w.eval(fs.readFileSync(path.resolve(__dirname,'../jeux-cadeaux/tec-tec',scripts[i].getAttribute('src').split('?')[0]),'utf8'));
   }
   await Promise.resolve();await Promise.resolve();
+  if(playMode==='challenge')d.getElementById('mode-challenge').click();
+  const elapse=ms=>{clock+=ms;};
   const tick=dt=>{clock+=dt;const callbacks=[...frames.values()];frames.clear();callbacks.forEach(cb=>cb(clock));};
   const advance=t=>{for(let i=0;i<Math.ceil(t*120);i++)tick(1000/120);};
   const key=(type,code='Space',repeat=false)=>(d.activeElement||d.body).dispatchEvent(new w.KeyboardEvent(type,{code,key:code==='Space'?' ':'ArrowUp',bubbles:true,cancelable:true,repeat}));
@@ -31,7 +34,7 @@ async function setup({blockedStorage=false,width=1024,height=768,query="",saved=
   const settle=async()=>{for(let i=0;i<10;i++){await Promise.resolve();tick(0);}};
   const open=async()=>{d.getElementById('screen-toggle').focus();d.getElementById('screen-toggle').click();await settle();};
   const start=async()=>{d.getElementById('start').focus();d.getElementById('start').click();await settle();};
-  return {w,d,dom,tick,advance,key,pointer,start,open,settle,errors,saved,get run(){return observedRun;}};
+  return {w,d,dom,tick,elapse,advance,key,pointer,start,open,settle,errors,saved,get run(){return observedRun;}};
 }
 test('la page du site démarre avec des fichiers locaux et sans commande de test',async()=>{const c=await setup();assert.equal(c.d.getElementById('start').disabled,false);for(const n of c.d.querySelectorAll('script[src],link[href]'))assert.ok(!/^https?:/.test(n.getAttribute('src')||n.getAttribute('href'))||n.rel==='canonical');assert.ok(!fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/app.js'),'utf8').includes('__TEC_QA__'));assert.deepEqual(c.errors,[]);c.dom.window.close();});
 test('le replay clavier traverse les escaliers et les deux vols jusqu’à 100 %',async()=>{
@@ -48,7 +51,7 @@ test('les boutons de pause ne déclenchent pas un saut et la reprise ne rattrape
   const c=await setup();await c.start();c.advance(1);const p=c.d.getElementById('percent').textContent;c.d.getElementById('pause').click();c.advance(10);assert.equal(c.d.getElementById('percent').textContent,p);assert.equal(c.d.getElementById('pause-veil').hidden,false);c.d.getElementById('resume').click();c.tick(0);c.advance(.1);assert.equal(c.d.getElementById('veil').hidden,true);assert.equal(c.d.getElementById('pause-veil').hidden,true);c.dom.window.close();
 });
 test('perdre puis rejouer repart de zéro et préserve un record séparé de celui du Dodo',async()=>{
-  const c=await setup();c.w.localStorage.setItem('mathsgo:dodo:v4','480');c.w.localStorage.setItem('mathsgo:tec-tec:essai:reunion-150-v1','75');await c.start();c.advance(4);assert.equal(c.d.getElementById('veil').hidden,false);assert.equal(c.w.localStorage.getItem('mathsgo:dodo:v4'),'480');assert.equal(c.w.localStorage.getItem('mathsgo:tec-tec:essai:reunion-150-v1'),'75');assert.ok(Number(c.w.localStorage.getItem('mathsgo:tec-tec:essai:reunion-150-v2'))>0);c.d.getElementById('retry').click();c.tick(0);c.advance(.05);assert.equal(c.d.getElementById('percent').textContent,'0%');assert.equal(c.d.getElementById('veil').hidden,true);c.dom.window.close();
+  const c=await setup();c.w.localStorage.setItem('mathsgo:dodo:v4','480');c.w.localStorage.setItem('mathsgo:tec-tec:essai:reunion-150-v1','75');await c.start();c.advance(4);assert.equal(c.d.getElementById('veil').hidden,false);assert.equal(c.w.localStorage.getItem('mathsgo:dodo:v4'),'480');assert.equal(c.w.localStorage.getItem('mathsgo:tec-tec:essai:reunion-150-v1'),'75');assert.ok(Number(c.w.localStorage.getItem('mathsgo:tec-tec:defi:reunion-v4'))>0);c.d.getElementById('retry').click();c.tick(0);c.advance(.05);assert.equal(c.d.getElementById('percent').textContent,'0%');assert.equal(c.d.getElementById('veil').hidden,true);c.dom.window.close();
 });
 test('une annulation tactile libère l’appui ; le stockage refusé ne bloque jamais le jeu',async()=>{
   const c=await setup({blockedStorage:true});await c.start();c.pointer('pointerdown',c.d.getElementById('jump'));assert.equal(c.d.getElementById('jump').classList.contains('is-held'),true);c.pointer('pointercancel',c.d.getElementById('jump'));assert.equal(c.d.getElementById('jump').classList.contains('is-held'),false);c.advance(4);assert.equal(c.d.getElementById('veil').hidden,false);assert.deepEqual(c.errors,[]);c.dom.window.close();
@@ -92,7 +95,7 @@ test('Espace, flèche, souris et tactile produisent les mêmes trajectoires à d
 
 test('la répétition clavier ne prolonge pas un appui relâché et le départ reste instantané',async()=>{
  const c=await setup();await c.start();c.key('keydown');c.tick(1000/120);assert.ok(c.run.y>0);
- c.key('keydown','Space',true);c.advance(.05);c.key('keyup');assert.equal(c.run.held,false);
+ c.key('keydown','Space',true);c.advance(.05);c.key('keyup');c.tick(1000/120);assert.equal(c.run.held,false);
  c.advance(.6);assert.equal(c.run.jumpCount,1);assert.equal(c.run.held,false);assert.equal(c.run.y,0);c.dom.window.close();
 });
 
@@ -134,7 +137,7 @@ test('Échap quitte le grand écran sans démarrer un saut',async()=>{
 });
 test('les consignes permanentes ont disparu ; le bouton garde sa commande selon la phase',async()=>{
  const c=await setup();assert.equal(c.d.querySelector('.instructions'),null);assert.equal(c.d.getElementById('control-title'),null);
- assert.equal(c.d.getElementById('jump-label').textContent,'SAUTER');assert.equal(c.d.getElementById('jump-help').textContent,'MAINTENIR POUR REBONDIR');c.dom.window.close();
+ assert.equal(c.d.getElementById('jump-label').textContent,'SAUTER');assert.equal(c.d.getElementById('jump-help').textContent,'APPUI BREF OU MAINTENU');c.dom.window.close();
 });
 
 test('un départ pendant l’agrandissement est ignoré, sans départ différé',async()=>{
@@ -196,4 +199,80 @@ test('l’essai autonome adapte aussi sa vue normale après rotation du téléph
  assert.equal(c.d.documentElement.classList.contains('screen-side'),false);
  assert.equal(parseInt(root.style.getPropertyValue('--screen-width')),before);
  assert.equal(c.run.status,'ready');c.dom.window.close();
+});
+
+
+test('Découverte est le choix initial et son horloge avance à 80 %',async()=>{
+ const c=await setup({playMode:'discovery'});assert.equal(c.d.getElementById('mode-discovery').getAttribute('aria-pressed'),'true');
+ await c.start();c.advance(1);assert.ok(Math.abs(c.run.time-.8)<.02);assert.equal(c.d.getElementById('mode-challenge').getAttribute('aria-pressed'),'false');
+ assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('Découverte reprend au dernier point sûr après un délai, puis peut changer de mode',async()=>{
+ const c=await setup({playMode:'discovery'});await c.start();let held=false;
+ for(let i=0;i<6000&&c.run.time<23;i++){
+  const down=fixture.some(j=>c.run.tick>=j.down&&c.run.tick<j.up);
+  if(down!==held){c.key(down?'keydown':'keyup');held=down;}c.tick(1000/120);
+ }
+ if(held)c.key('keyup');
+ assert.equal(c.run.status,'running');c.advance(5);assert.equal(c.run.status,'dead');c.advance(.5);
+ assert.match(c.d.getElementById('retry').textContent,/Reprendre à/);
+ const diedAt=c.run.time;c.d.getElementById('retry').click();const resumedAt=c.run.time;
+ assert.ok(resumedAt>0&&resumedAt<diedAt);assert.equal(c.d.getElementById('cue').textContent,'Prêt…');
+ c.advance(.6);assert.equal(c.run.time,resumedAt);c.advance(.3);assert.ok(c.run.time>resumedAt);
+ c.advance(5);c.advance(.5);assert.equal(c.run.status,'dead');c.d.getElementById('choose-mode').click();
+ assert.equal(c.d.getElementById('intro').hidden,false);c.d.getElementById('mode-challenge').click();await c.start();
+ assert.equal(c.run.time,0);assert.equal(c.d.getElementById('mode-challenge').getAttribute('aria-pressed'),'true');
+ assert.ok(Number(c.w.localStorage.getItem('mathsgo:tec-tec:decouverte:reunion-v4'))>0);
+ assert.equal(c.w.localStorage.getItem('mathsgo:tec-tec:defi:reunion-v4'),null);
+ assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('Espace sur Pause garde le bouton actif et ne déclenche aucun saut',async()=>{
+ const c=await setup();await c.start();const pause=c.d.getElementById('pause');pause.focus();
+ const event=new c.w.KeyboardEvent('keydown',{code:'Space',key:' ',bubbles:true,cancelable:true});
+ assert.equal(pause.dispatchEvent(event),true);c.tick(1000/120);assert.equal(c.run.jumpCount,0);
+ pause.click();assert.equal(c.d.getElementById('pause-veil').hidden,false);assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('le quota cadeau reste limité même avec reprises et changement de mode',async()=>{
+ const c=await setup({playMode:'discovery',query:'?mode=cadeau&parties=1&ticket=discovery'});await c.start();c.advance(5);
+ assert.equal(c.d.getElementById('retry').hidden,true);assert.equal(c.d.getElementById('choose-mode').hidden,true);
+ c.d.getElementById('choose-mode').click();assert.equal(c.d.getElementById('intro').hidden,true);
+ assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:discovery'),'1');assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('quitter depuis la pause ramène aux modes sans démarrer ni consommer une partie',async()=>{
+ const c=await setup({playMode:'discovery',width:320,height:568,query:'?mode=cadeau&parties=2&ticket=quit'});
+ await c.start();c.advance(.5);c.key('keydown');c.tick(1000/120);
+ c.d.getElementById('pause').click();c.d.getElementById('quit-run').click();
+ assert.equal(c.d.getElementById('intro').hidden,false);assert.equal(c.d.getElementById('pause-veil').hidden,true);
+ assert.equal(c.d.getElementById('veil').hidden,true);assert.equal(c.d.getElementById('hud').hidden,true);
+ assert.equal(c.d.activeElement,c.d.getElementById('start'));assert.equal(c.run.time,0);assert.equal(c.run.held,false);
+ assert.equal(c.d.getElementById('jump').disabled,true);assert.equal(c.d.getElementById('app').classList.contains('paused'),false);
+ c.advance(5);assert.equal(c.run.time,0);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit'),'1');
+ c.d.getElementById('mode-challenge').click();await c.start();c.advance(.5);
+ assert.ok(Math.abs(c.run.time-.5)<.02);assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit'),'2');
+ assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('quitter le dernier cadeau ferme la pause et propose le retour au parcours',async()=>{
+ const c=await setup({query:'?mode=cadeau&parties=1&ticket=quit-last&retour=/outils/'});
+ await c.start();c.advance(.5);c.d.getElementById('pause').click();c.d.getElementById('quit-run').click();
+ assert.equal(c.d.getElementById('pause-veil').hidden,true);assert.equal(c.d.getElementById('intro').hidden,true);
+ assert.equal(c.d.getElementById('veil').hidden,false);assert.equal(c.d.getElementById('gift-finish').hidden,false);
+ assert.equal(c.d.activeElement,c.d.getElementById('gift-finish'));assert.equal(c.d.getElementById('start').disabled,true);
+ const stoppedAt=c.run.time;c.advance(5);assert.equal(c.run.time,stoppedAt);
+ assert.equal(c.saved.get('mathsgo:jeux-cadeaux:v2:quit-last'),'1');assert.deepEqual(c.errors,[]);c.dom.window.close();
+});
+
+test('les consignes d’apprentissage restent visibles pendant les annonces de point de reprise',async()=>{
+ const c=await setup({playMode:'discovery'});await c.start();let held=false;
+ const checks=[{at:5.5,text:'Sous le plafond : un appui court'},{at:10.5,text:'Maintiens pour monter les marches'}];
+ for(let i=0;i<2000&&c.run.time<10.6;i++){
+  const down=fixture.some(j=>c.run.tick>=j.down&&c.run.tick<j.up);
+  if(down!==held){c.key(down?'keydown':'keyup');held=down;}c.tick(1000/120);
+  if(checks.length&&c.run.time>=checks[0].at){const check=checks.shift();assert.equal(c.d.getElementById('cue').hidden,false);assert.equal(c.d.getElementById('cue').textContent,check.text);}
+ }
+ assert.equal(c.run.status,'running');assert.equal(checks.length,0);assert.deepEqual(c.errors,[]);c.dom.window.close();
 });

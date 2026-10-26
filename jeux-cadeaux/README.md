@@ -14,18 +14,20 @@ La pile de galets est masquée du catalogue (statut `hidden`), de la recherche, 
 | Jeu | Partie | Niveaux |
 | --- | --- | --- |
 | La Luciole | Un seul chemin, qui s’allonge d’une lumière à chaque réussite ; la première erreur termine la partie ; pas de plafond de durée | Départ à 2, 3 ou 4 lumières, éclairage plus ou moins lent |
-| Tec-tec bondissant | Parcours fixe de 2 min 30 ; une seule vie ; toute défaite repart du début | Un seul parcours pour tout le monde |
+| Tec-tec bondissant | Quatre paysages : Découverte avec reprises et vitesse à 80 %, ou Défi de 2 min 30 en une seule vie | Apprentissage progressif puis combinaisons ; records séparés |
 | La pile de galets | Deux à cinq galets imposés à placer et retourner ; anticipation du poids, contrepoids et ponts ; aucun vent ni temps limite | Douze défis accessibles, répartis en quatre étapes |
 | Tempo volcan | Suite sans fin de signaux, trois vies ; le mot écrit finit par contredire le dessin, puis la consigne s'inverse | Un seul jeu : la fenêtre passe de 1,45 s à 0,58 s |
 | Les Carrés gloutons | Deux manches de neuf carrés contre Gloubi | Jeu existant, sans choix de niveau |
 
-Le Tec-tec utilise le parcours V3 du lot 1 (18 septembre 2026, voir plus bas) :
-petits et grands sauts, rebonds sur maintien, escaliers, trous, plafonds bas ou
-en pente, plateformes qui se dérobent, variations de vitesse et trois passages
-en vol. Il reste volontairement très dur, sans point de reprise ni vie de plus :
-on y échoue par imprécision ou méconnaissance du parcours, plus par hasard. La
-publication du 13 septembre a ajouté le raccord au site et les arbres demandés.
-La difficulté ne repose plus sur le calcul de largeur de l’ancien Dodo.
+Le Tec-tec utilise le parcours V4 (25 octobre 2026). Les contacts sur les
+bords, les appuis entre deux images et les surfaces visibles sont cohérents.
+La forêt présente les gestes progressivement ; les remparts, la Plaine des
+Sables et le littoral les combinent avec des respirations avant les vols.
+Découverte est proposée par défaut : vitesse à 80 %, reprises sur terrain sûr
+et court délai pour observer avant de repartir. Défi garde une seule vie et
+150 secondes de parcours. Chaque départ ou reprise consomme une partie en
+mode cadeau. Les records V4 sont séparés par mode et des anciennes versions.
+Voir [l’audit et les choix de conception](../docs/tec-tec-v4-audit.md).
 
 Les illustrations sont des SVG originaux dans `art.js`. Les jeux ne chargent aucune dépendance externe.
 La Luciole a une note par case (gamme pentatonique, `AudioContext` créé au premier départ) et un bouton pour couper le son ; le réglage tient dans `sessionStorage`.
