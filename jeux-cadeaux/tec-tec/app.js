@@ -106,6 +106,9 @@
     // de 3, 6 ou 9 px selon que l'image a consommé 1, 2 ou 3 pas — très visible en grand.
     const alpha=run.status==='running'?Math.min(1,accumulator/DT):1;
     view.x=before.x+(run.x-before.x)*alpha;view.y=before.y+(run.y-before.y)*alpha;
+    // Montrer le décollage dès son premier pas calculé. L'interpolation
+    // habituelle le cacherait encore une image lorsque alpha vaut zéro.
+    if(run.status==='running'&&run.jumpCount>0&&run.sinceJump===0)view.y=run.y;
     renderer.draw(run,realTime,paused?0:delta,mode==='intro'?'intro':'play',mode==='play'||mode==='ending'?view:run);
     if(mode==='ending'&&realTime-endedAt>.38){mode='result';$('veil').hidden=false;(!$('retry').hidden?$('retry'):!$('gift-finish').hidden?$('gift-finish'):$('result-title')).focus({preventScroll:true});}
     requestAnimationFrame(frame);

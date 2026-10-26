@@ -6,7 +6,7 @@ const source=fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/index.
 async function setup({playMode='challenge',blockedStorage=false,width=1024,height=768,query="",saved=new Map(),fullscreen="native"}={}){
   const errors=[],virtualConsole=new VirtualConsole();virtualConsole.on('jsdomError',e=>errors.push(e.message));
   const dom=new JSDOM(source,{runScripts:'outside-only',url:'https://mathsgo.re/jeux-cadeaux/tec-tec/index.html'+query,pretendToBeVisual:true,virtualConsole});
-  const w=dom.window,d=w.document;let clock=0,observedRun=null;const frames=new Map();let frameId=0,fullscreenElement=null;
+  const w=dom.window,d=w.document;let clock=0,observedRun=null,lastDraw=null;const frames=new Map();let frameId=0,fullscreenElement=null;
   Object.defineProperty(w.performance,'now',{value:()=>clock});
   Object.defineProperties(w,{innerWidth:{value:width,writable:true},innerHeight:{value:height,writable:true}});
   w.requestAnimationFrame=cb=>{frames.set(++frameId,cb);return frameId;};
@@ -19,7 +19,7 @@ async function setup({playMode='challenge',blockedStorage=false,width=1024,heigh
   const scripts=[...d.querySelectorAll('script')];
   for(let i=0;i<scripts.length;i++){
     if(scripts[i].getAttribute('src').startsWith('app.js')){const Base=w.TecEngine.Run;w.TecEngine.Run=class extends Base{constructor(...args){super(...args);observedRun=this;}};w.TecRenderer.Renderer=class{
-      constructor(){this.particles=[];this.flash=0;}load(){return Promise.resolve();}resize(){}draw(){}emit(){}
+      constructor(){this.particles=[];this.flash=0;}load(){return Promise.resolve();}resize(){}draw(run,time,delta,mode,view){lastDraw={time:clock,x:view.x,y:view.y,tick:run.tick};}emit(){}
       zone(t){return t>=105?3:t>=65?2:t>=30?1:0;}
     };}
     w.eval(fs.readFileSync(path.resolve(__dirname,'../jeux-cadeaux/tec-tec',scripts[i].getAttribute('src').split('?')[0]),'utf8'));
@@ -34,7 +34,7 @@ async function setup({playMode='challenge',blockedStorage=false,width=1024,heigh
   const settle=async()=>{for(let i=0;i<10;i++){await Promise.resolve();tick(0);}};
   const open=async()=>{d.getElementById('screen-toggle').focus();d.getElementById('screen-toggle').click();await settle();};
   const start=async()=>{d.getElementById('start').focus();d.getElementById('start').click();await settle();};
-  return {w,d,dom,tick,elapse,advance,key,pointer,start,open,settle,errors,saved,get run(){return observedRun;}};
+  return {w,d,dom,tick,elapse,advance,key,pointer,start,open,settle,errors,saved,get run(){return observedRun;},get draw(){return lastDraw;}};
 }
 test('la page du site démarre avec des fichiers locaux et sans commande de test',async()=>{const c=await setup();assert.equal(c.d.getElementById('start').disabled,false);for(const n of c.d.querySelectorAll('script[src],link[href]'))assert.ok(!/^https?:/.test(n.getAttribute('src')||n.getAttribute('href'))||n.rel==='canonical');assert.ok(!fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/app.js'),'utf8').includes('__TEC_QA__'));assert.deepEqual(c.errors,[]);c.dom.window.close();});
 test('le replay clavier traverse les escaliers et les deux vols jusqu’à 100 %',async()=>{
@@ -97,6 +97,51 @@ test('la répétition clavier ne prolonge pas un appui relâché et le départ r
  const c=await setup();await c.start();c.key('keydown');c.tick(1000/120);assert.ok(c.run.y>0);
  c.key('keydown','Space',true);c.advance(.05);c.key('keyup');c.tick(1000/120);assert.equal(c.run.held,false);
  c.advance(.6);assert.equal(c.run.jumpCount,1);assert.equal(c.run.held,false);assert.equal(c.run.y,0);c.dom.window.close();
+});
+
+test('le premier pas de saut est dessiné dès qu’il est calculé, clavier comme tactile',async()=>{
+ for(const playMode of ['challenge','discovery'])for(const input of ['keyboard','pointer']){
+  const c=await setup({playMode});await c.start();
+  if(input==='keyboard')c.key('keydown');else c.pointer('pointerdown',c.d.getElementById('game'));
+  // Alpha nul : auparavant la physique avait décollé mais l’image restait au sol.
+  c.tick(1000/120/(playMode==='discovery'?.8:1));
+  assert.equal(c.run.jumpCount,1);assert.equal(c.run.sinceJump,0);
+  assert.ok(c.run.y>1);assert.equal(c.draw.y,c.run.y);
+  c.dom.window.close();
+ }
+});
+
+test('le décollage visible suit le premier calcul sans recul à 30–240 Hz et sous cadence irrégulière',async t=>{
+ const schedules=[30,60,120,144,240].map(hz=>({label:hz+' Hz',frames:[1000/hz]}));
+ schedules.push({label:'irrégulier',frames:[8,12,35,9,17,25,11,16,18,14,50,9]});
+ for(const playMode of ['challenge','discovery']){
+  const maxima={};
+  for(const schedule of schedules){
+   let maxLatency=0;
+   for(const press of [100,100.1,103,107.9,112.4,119.9,129.9,132.9]){
+    const c=await setup({playMode});await c.start();let frame=0,now=0,lastY=0,firstPhysics=null,firstVisible=null;
+    // Inclut un tap de 1 ms entièrement entre deux images ; ses deux événements
+    // sont horodatés à leur instant réel, jamais à celui de l’image suivante.
+    const events=[{at:press,held:true},{at:press+(press===103?1:100),held:false}];
+    while(now<250){
+     const next=now+schedule.frames[frame++%schedule.frames.length];
+     while(events.length&&events[0].at<=next){const event=events.shift();c.elapse(event.at-now);now=event.at;c.key(event.held?'keydown':'keyup');}
+     c.tick(next-now);now=next;
+     if(c.run.jumpCount&&firstPhysics===null)firstPhysics=now;
+     if(c.draw.y>=1&&firstVisible===null)firstVisible=now;
+     if(!c.run.jumpCount)assert.equal(c.draw.y,0,'aucune anticipation du saut');
+     if(c.run.vy>0){assert.ok(c.draw.y+1e-9>=lastY,'aucun recul à la sortie du premier pas');assert.ok(c.draw.y<=c.run.y+1e-9,'aucune extrapolation');}
+     lastY=c.draw.y;
+    }
+    assert.notEqual(firstPhysics,null);assert.equal(firstVisible,firstPhysics,playMode+' '+schedule.label+' appui à '+press+' ms');
+    maxLatency=Math.max(maxLatency,firstVisible-press);
+    c.dom.window.close();
+   }
+   maxima[schedule.label]=Number(maxLatency.toFixed(2));
+  }
+  // Mesure d’ordonnancement simulée, sans promesse de latence d’un appareil.
+  t.diagnostic(playMode+' : latence maximale observée vers un dessin ≥ 1 px (ms) '+JSON.stringify(maxima));
+ }
 });
 
 test('cadeau : deux départs, pause gratuite et quota conservé après rechargement',async()=>{

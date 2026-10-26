@@ -3,7 +3,7 @@
  * position interpolée entre deux pas de physique. */
 (function(){
   'use strict';
-  const W=720,ANCHOR=132; let H=420,G=344;
+  const W=720,ANCHOR=132,{FOOT}=window.TecEngine; let H=420,G=344;
   const palette=[
     {sky:['#e9eddc','#cfdfc6'],top:'#c8dc99',edge:'#6b9475',rock:'#324e49',deep:'#1e3635',dust:'#c9d8a4'},
     {sky:['#dce7ed','#bacdd5'],top:'#d5ded9',edge:'#899f9e',rock:'#354b58',deep:'#213540',dust:'#bfced1'},
@@ -17,7 +17,8 @@
   // Ombre portée sur une vraie surface : jamais une tache posée dans le vide.
   // Le découpage respecte les trous et la disparition des plateformes friables.
   function supportBelow(course,run,view=run){
-    const left=view.x-18,right=view.x+18,surfaces=[];
+    // L'ombre d'appui utilise la même empreinte que les contacts du moteur.
+    const left=view.x-FOOT,right=view.x+FOOT,surfaces=[];
     if(view.y>=-.1){
       let cursor=left;
       for(const h of course.holes.filter(h=>h.x+h.w>left&&h.x<right).sort((a,b)=>a.x-b.x)){

@@ -96,6 +96,7 @@
         if(flight){this.vy=Math.max(this.vy,FLIGHT.launch);this.grounded=false;this.lastEvent='takeoff';}
         this.flight=flight;this.buffer=0;this.preserveArc=false;
       }
+      const bufferedAtStart=this.buffer;
       this.buffer=Math.max(0,this.buffer-DT); this.sinceJump+=DT; this.land=Math.max(0,this.land-DT);
       if(wasGrounded) this.air=0; else this.air+=DT;
       const wantsJump=this.buffer>0 || (this.held && wasGrounded);
@@ -114,17 +115,49 @@
       }
       this.y+=this.vy*DT;
       this.grounded=false;
-      let surface=-Infinity;
-      if(this.floorAt(this.x) && oldY>=-CORNER && this.y<=0 && this.vy<=0) surface=0;
+      let surface=-Infinity,contact=1;
+      // Un pied peut toucher le dessus puis quitter son bord pendant le même
+      // pas (jusqu'à 3,1 px de déplacement). Tester seulement x en fin de pas
+      // perdrait cet atterrissage et le rebond demandé par un appui maintenu.
+      // Garder aussi le contact au franchissement vertical, sans élargir les
+      // pieds : le pas suivant reprend normalement, avec l'appui/coyote acquis.
+      const crossing=y=>oldY>this.y?clamp((oldY-y)/(oldY-this.y),0,1):1;
+      const landingX=y=>oldX+(this.x-oldX)*crossing(y);
+      const entryAt=x=>this.x!==oldX?clamp((x-oldX)/(this.x-oldX),0,1):1;
+      const floorX=landingX(0),floorCrossed=oldY>0&&this.floorAt(floorX);
+      if((this.floorAt(this.x)||floorCrossed) && oldY>=-CORNER && this.y<=0 && this.vy<=0) {
+        surface=0;contact=crossing(0);
+        // Si le pied atteint la rive après être passé sous y=0, le contact
+        // arrive à la rive, pas au franchissement vertical encore dans le vide.
+        if(!this.floorAt(floorX)) {
+          const gap=this.floorGaps.find(h=>floorX-FOOT>=h.x&&floorX+FOOT<=h.end);
+          if(gap)contact=Math.max(contact,entryAt(this.x>=oldX?gap.end-FOOT:gap.x+FOOT));
+        }
+      }
       const solids=this.course.solids.filter(o=>o.x<Math.max(oldX,this.x)+40 && o.x+o.w>Math.min(oldX,this.x)-40 && this.solidAt(o));
       let landedOn=null;
       for(const s of solids) {
-        if(this.x+FOOT>s.x && this.x-FOOT<s.x+s.w && oldY>=s.y-CORNER && this.y<=s.y && this.vy<=0 && s.y>=surface) {surface=s.y;landedOn=s;}
+        const touches=x=>x+FOOT>s.x&&x-FOOT<s.x+s.w;
+        const crossX=landingX(s.y);
+        if((touches(this.x)||(oldY>s.y&&touches(crossX))) && oldY>=s.y-CORNER && this.y<=s.y && this.vy<=0 && s.y>=surface) {
+          let at=crossing(s.y);
+          if(!touches(crossX))at=Math.max(at,entryAt(this.x>=oldX?s.x-FOOT:s.x+s.w+FOOT));
+          // Entre deux appuis de même hauteur, conserver le premier contact,
+          // indépendamment de l'ordre des plateformes dans le parcours.
+          if(s.y>surface||at<contact){surface=s.y;landedOn=s;contact=at;}
+        }
       }
       if(surface>-Infinity) {
         this.y=surface; this.vy=0; this.grounded=true; this.air=0;
         this.preserveArc=false;
-        if(!wasGrounded) {this.land=.12; this.lastEvent='land';}
+        if(!wasGrounded) {
+          this.land=.12; this.lastEvent='land';
+          // L'appui était-il encore valable À L'INSTANT du contact ? Dans ce
+          // cas le garder jusqu'au prochain pas, qui exécutera le saut. Sans
+          // cela, un appui acquis au bord de la fenêtre expirait avant usage.
+          // Les appuis déjà expirés avant de toucher restent refusés.
+          if(!flight&&bufferedAtStart>0&&bufferedAtStart+1e-9>=contact*DT)this.buffer=Math.max(this.buffer,2*DT);
+        }
         if(landedOn?.crumble && this.crumbs[landedOn.id]===undefined) {this.crumbs={...this.crumbs,[landedOn.id]:this.time};this.lastEvent='crack';}
       }
       // At 120 Hz maximum movement is < 3.1 px. Collision substeps also make
@@ -147,5 +180,5 @@
     advance(seconds) { for(let n=0;n<Math.round(seconds/DT) && this.status==='running';n++)this.step(); }
     get progress() { return this.status==='won'?100:Math.min(99.9,this.time/this.course.duration*100); }
   }
-  return {DT,P,FLIGHT,Run,makeMotion,polygonBox};
+  return {DT,P,FOOT,FLIGHT,Run,makeMotion,polygonBox};
 });

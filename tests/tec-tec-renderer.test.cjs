@@ -1,10 +1,11 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const TecEngine=require('../jeux-cadeaux/tec-tec/engine.js');
 const source=fs.readFileSync(path.join(__dirname,'../jeux-cadeaux/tec-tec/renderer.js'),'utf8');
 function setup(width,height,dpr=2){
  let allocations=0,writes=0,w=0,h=0;
  const gradient={addColorStop(){}},context=new Proxy({},{get:(_,key)=>key==='createLinearGradient'?()=>gradient:()=>{},set:()=>true});
  const bounds={width,height},canvas={getContext:()=>context,getBoundingClientRect:()=>bounds,get width(){return w;},set width(v){writes++;w=v;},get height(){return h;},set height(v){writes++;h=v;}};
- const env={window:{devicePixelRatio:dpr},Path2D:class{constructor(){allocations++;}},matchMedia:()=>({matches:true})};
+ const env={window:{devicePixelRatio:dpr,TecEngine},Path2D:class{constructor(){allocations++;}},matchMedia:()=>({matches:true})};
  vm.runInNewContext(source,env);const renderer=new env.window.TecRenderer.Renderer(canvas,{zones:[]});
  return {renderer,canvas,bounds,bird:env.window.TecRenderer.bird,supportBelow:env.window.TecRenderer.supportBelow,context,get writes(){return writes;},get allocations(){return allocations;}};
 }
@@ -28,8 +29,22 @@ test('aucune ombre ne fait croire à un sol dans un trou ; le bord réel découp
  const {supportBelow}=setup(600,350),course={holes:[{x:100,w:100}],solids:[]};
  assert.equal(supportBelow(course,{x:150,y:20,time:0,crumbs:{}}).length,0);
  const edge=supportBelow(course,{x:105,y:0,time:0,crumbs:{}});
- assert.equal(edge.length,1);assert.equal(edge[0].left,87);assert.equal(edge[0].right,100);
+ assert.equal(edge.length,1);assert.equal(edge[0].left,94);assert.equal(edge[0].right,100);
  assert.equal(supportBelow(course,{x:202,y:-5,time:0,crumbs:{}}).length,0,'pas d’ombre au-dessus des pieds après la chute');
+});
+test('l’ombre ne suggère pas un appui quand les pieds ont quitté le bord',()=>{
+ const {supportBelow}=setup(600,350);
+ const course={duration:10,motion:TecEngine.makeMotion([[0,120],[10,120]]),holes:[{x:100,w:100}],solids:[],hazards:[],flights:[]};
+ const run=new TecEngine.Run(course);run.start();
+ for(let x=85;x<=125;x+=.25){
+  run.x=x;run.y=0;
+  assert.equal(supportBelow(course,run).length>0,run.floorAt(x),'bord de trou à '+x);
+ }
+ const platform={holes:[{x:0,w:1000}],solids:[{id:1,x:100,w:20,y:48}]};
+ run.x=132;run.y=48;
+ assert.equal(supportBelow(platform,run).length,0,'les plumes ou une ombre trop large ne créent pas de faux appui');
+ run.x=130;
+ assert.equal(supportBelow(platform,run).length,1,'le pied encore au-dessus du bord garde son ombre');
 });
 test('l’ombre suit le dessus d’une plateforme et disparaît quand celle-ci se dérobe',()=>{
  const {supportBelow}=setup(600,350),course={holes:[{x:0,w:1000}],solids:[{id:4,x:90,w:30,y:48,crumble:.1}]};
