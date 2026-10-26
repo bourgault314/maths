@@ -49,7 +49,7 @@ function create(query = "?domain=jeux-recherches") {
       assert.equal(frame.src, "https://mathsgo.re/outils/club_maths/carres_gloutons.html?integre=1&v=1");
       assert.equal(frame.allowFullscreen, true);
     } else if (id === "dodo") {
-      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=5");
+      assert.equal(frame.src, "https://mathsgo.re/jeux-cadeaux/tec-tec/index.html?integre=1&v=6");
       assert.equal(d.q("#page-title").textContent, "Tec-tec bondissant");
     } else {
       assert.ok(frame.src.endsWith("?jeu=" + id + "&integre=1&v=9"));

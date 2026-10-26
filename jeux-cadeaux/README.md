@@ -29,6 +29,12 @@ et court délai pour observer avant de repartir. Défi garde une seule vie et
 mode cadeau. Les records V4 sont séparés par mode et des anciennes versions.
 Voir [l’audit et les choix de conception](../docs/tec-tec-v4-audit.md).
 
+Correctif du 26 octobre 2026 : un atterrissage est reconnu au moment où les
+pieds touchent le bord, même s’ils le dépassent à la fin du pas de calcul.
+Un appui encore valide à cet instant est conservé jusqu’au saut. Le premier
+décollage calculé est affiché immédiatement ; l’ombre utilise la même largeur
+d’appui que le moteur. Le parcours et les dimensions des hitboxes sont conservés.
+
 Les illustrations sont des SVG originaux dans `art.js`. Les jeux ne chargent aucune dépendance externe.
 La Luciole a une note par case (gamme pentatonique, `AudioContext` créé au premier départ) et un bouton pour couper le son ; le réglage tient dans `sessionStorage`.
 Son plateau prend toute la place disponible : le catalogue lui transmet la hauteur de la fenêtre du site par `postMessage` (`mathsgo-short-game:fenetre`), reçue dans la variable CSS `--hauteur-site`.

@@ -26,8 +26,11 @@
       if(elapsed>.3){this.clear();return {interrupted:true,alpha:0};}
       const target=Math.max(0,(now-this.origin)*this.speed/1000);
       while((this.tick+1)*this.dt<=target+EPS&&running()){
-        const from=this.tick*this.dt;
-        while(this.events.length&&this.events[0].time<=from+EPS)input(this.events.shift().held);
+        const end=(this.tick+1)*this.dt;
+        // Une commande entre deux bornes agit sur le prochain état calculé.
+        // La borne de fin reste exclue : un appui exactement sur cette borne
+        // appartient au pas suivant, quel que soit l'ordre événement/image.
+        while(this.events.length&&this.events[0].time<end-EPS)input(this.events.shift().held);
         step();this.tick++;
       }
       return {interrupted:false,alpha:Math.max(0,Math.min(1,(target-this.tick*this.dt)/this.dt))};

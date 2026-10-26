@@ -31,7 +31,7 @@ test('les anciens favoris et les coffres Dodo rejoignent le Tec-tec sans consomm
 });
 test('le catalogue et le lien historique utilisent le même Tec-tec',()=>{
  assert.match(read('assets/js/short-games-view.js'),/dodo: "Tec-tec bondissant"/);
- assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=5/);
+ assert.match(read('assets/js/short-games-view.js'),/\/jeux-cadeaux\/tec-tec\/index\.html\?integre=1&v=6/);
  const wrapper=read('jeux-cadeaux/dodo.html');assert.match(wrapper,/<h1[^>]*>Tec-tec bondissant<\/h1>/);
  const html=read('jeux-cadeaux/tec-tec/index.html');for(const [,src]of html.matchAll(/(?:src|href)="([^"?]+)(?:\?[^" ]*)?"/g))if(!src.startsWith('http')&&!src.startsWith('/'))assert.ok(fs.existsSync(path.join(root,'jeux-cadeaux/tec-tec',src)),src);
  assert.ok(!read('jeux-cadeaux/tec-tec/app.js').includes('__TEC_QA__'));

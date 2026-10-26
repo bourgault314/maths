@@ -166,3 +166,157 @@ test('la hauteur dépend toujours de la durée de l’appui, sans saut automatiq
   assert.ok(peaks[0] < peaks[1] && peaks[1] < peaks[2]);
   assert.ok(P.coyote < .1 && P.buffer < .1, 'tolérances courtes, pas de vol accordé');
 });
+
+test('un contact descendant sur le bord de sortie reste un atterrissage même si le pas finit au-delà', () => {
+  const narrow = { id: 8, x: 100, w: 24, y: 24, bottom: -150 };
+  const c = scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids: [narrow] });
+  const r = place(c, { x: 132, y: 24.25, vy: -100 });
+  r.input(true);
+  r.step();
+  // Le franchissement a lieu vers x132,80, avec encore 2,20 px d'appui.
+  // À x135 en fin de pas, les pieds viennent juste de dépasser la plateforme.
+  assert.equal(r.x, 135);
+  assert.equal(r.y, 24);
+  assert.equal(r.grounded, true);
+  assert.equal(r.lastEvent, 'land');
+  r.step();
+  assert.equal(r.jumpCount, 1, 'le maintien utilise le contact qui vient de se produire');
+  assert.ok(r.y > 24);
+  assert.equal(r.status, 'running');
+});
+
+test('ce contact fugitif vaut aussi pour le sol, mais ne maintient pas le joueur au-dessus du vide', () => {
+  const c = scene({ speed: 360, holes: [{ x: 124, w: 1000 }] });
+  const r = place(c, { x: 132, y: .25, vy: -100 });
+  r.step();
+  assert.equal(r.x, 135);
+  assert.equal(r.y, 0);
+  assert.equal(r.grounded, true);
+  r.step();
+  assert.equal(r.grounded, false);
+  assert.ok(r.y < 0);
+  r.advance(.1);
+  assert.ok(r.y < -5, 'sans nouveau saut la chute continue');
+});
+
+test('si les pieds ont déjà quitté le bord au franchissement, aucune plateforme ne les rattrape', () => {
+  const r = place(scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids: [{ id: 8, x: 100, w: 24, y: 24 }] }), { x: 135, y: 26, vy: -400 });
+  r.input(true);
+  r.step();
+  assert.equal(r.grounded, false);
+  assert.equal(r.jumpCount, 0);
+  assert.ok(r.y < 24);
+});
+
+test('un atterrissage au bord ne masque pas une vraie collision avec un danger dans le même pas', () => {
+  const c = scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids: [{ id: 8, x: 100, w: 24, y: 24 }],
+    hazards: [{ id: 9, kind: 'piques', x: 132, w: 8, polys: [[[132, 24], [136, 44], [140, 24]]] }] });
+  const r = place(c, { x: 132, y: 24.25, vy: -100 });
+  r.step();
+  assert.equal(r.status, 'dead');
+  assert.equal(r.death.kind, 'piques');
+});
+
+function replayUntil(index, shift, endTick) {
+  const { course } = require('../jeux-cadeaux/tec-tec/course.js');
+  const inputs = require('./fixtures/tec-tec/winning-replay.json').inputs.map((j, i) => i === index ? { down: j.down + shift, up: j.up + shift } : j);
+  const r = new Run(course); r.start();
+  while (r.status === 'running' && r.tick < endTick) {
+    r.input(inputs.some(j => r.tick >= j.down && r.tick < j.up)); r.step();
+  }
+  assert.equal(r.status, 'running');
+  assert.equal(r.tick, endTick);
+  return r;
+}
+
+test('un appui humain retardé de 125 ms rebondit sur le bord réellement atteint dans les Remparts', () => {
+  // Cas naturellement atteint : seul le 21e appui du replay est retardé.
+  // Avant correction : y52,615 à la fin du pas, aucun atterrissage à y54.
+  const r = replayUntil(20, 15, 4479);
+  const jumps = r.jumpCount;
+  assert.equal(r.held, true);
+  assert.ok(r.y > 54 && r.y < 57);
+  r.step();
+  assert.equal(r.x, 9625);
+  assert.equal(r.y, 54);
+  assert.equal(r.grounded, true);
+  r.step();
+  assert.equal(r.jumpCount, jumps + 1);
+  assert.ok(r.y > 54);
+});
+
+test('le même contact fugitif déclenche puis utilise une plateforme fragile, sans la traverser', () => {
+  // Autre cas du vrai parcours : 26e appui retardé de 14 pas de physique.
+  // Avant correction : les pieds traversaient y48 sans déclencher la fissure.
+  const r = replayUntil(25, 14, 5092);
+  const jumps = r.jumpCount;
+  assert.equal(r.held, true);
+  assert.equal(r.crumbs[49], undefined);
+  r.step();
+  assert.equal(r.y, 48);
+  assert.equal(r.grounded, true);
+  assert.equal(r.lastEvent, 'crack');
+  assert.equal(r.crumbs[49], r.time);
+  r.step();
+  assert.equal(r.jumpCount, jumps + 1);
+  assert.ok(r.y > 48);
+});
+
+test('un tap relâché reste acquis si les pieds touchent avant ses 75 ms, mais pas après', () => {
+  for (const [height, expected] of [[19, 1], [20.2, 0]]) {
+    const r = place(scene(), { x: 0, y: height, vy: -200 });
+    r.input(true); r.input(false);
+    // Avec y19, les pieds touchent vers72ms dans le pas qui finit à75ms.
+    // Avec y20,2, le contact arrive après76ms, donc l'appui est trop ancien.
+    r.advance(.2);
+    assert.equal(r.jumpCount, expected, 'hauteur initiale ' + height);
+    assert.equal(r.held, false);
+    if (!expected) { r.advance(.3); assert.equal(r.jumpCount, 0, 'aucun saut tardif'); }
+  }
+  assert.equal(P.buffer, .075, 'la fenêtre de saisie n’a pas été allongée');
+});
+
+test('la validité du tap est décidée au contact balayé, même si son délai restant est inférieur à un pas', () => {
+  const c = scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids: [{ id: 8, x: 100, w: 24, y: 24 }] });
+  for (const [remaining, expected] of [[.0025, 1], [.002, 0]]) {
+    const r = place(c, { x: 132, y: 24.25, vy: -100 });
+    r.input(true); r.input(false);
+    r.buffer = remaining; // reliquat d'un appui antérieur, non multiple de DT
+    r.step();
+    assert.equal(r.y, 24);
+    assert.equal(r.grounded, true);
+    // Le pied touche à2,214ms : appui encore actif à2,5ms, expiré à2ms.
+    r.step();
+    assert.equal(r.jumpCount, expected);
+    assert.equal(r.held, false);
+  }
+});
+
+test('un appui expiré avant d’atteindre la rive n’est pas sauvé par le franchissement vertical dans le vide', () => {
+  for (const ground of [false, true]) {
+    const c = ground
+      ? scene({ speed: 360, holes: [{ x: 0, w: 100 }] })
+      : scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids: [{ id: 8, x: 100, w: 24, y: 24 }] });
+    for (const [remaining, expected] of [[.006, 1], [.003, 0]]) {
+      const r = place(c, { x: 87, y: ground ? .1 : 24.1, vy: -100 });
+      r.input(true); r.input(false); r.buffer = remaining;
+      r.step();
+      assert.equal(r.grounded, true);
+      // y atteint le dessus avant1ms, mais le pied n'atteint la rive qu'à5,56ms.
+      r.step();
+      assert.equal(r.jumpCount, expected, (ground ? 'rive' : 'plateforme') + ' / ' + remaining);
+    }
+  }
+});
+
+test('deux appuis successifs de même hauteur conservent le premier contact, dans les deux ordres', () => {
+  const platforms = [{ id: 8, x: 100, w: 24, y: 24 }, { id: 9, x: 145, w: 30, y: 24 }];
+  for (const solids of [platforms, platforms.slice().reverse()]) {
+    const r = place(scene({ speed: 360, holes: [{ x: 0, w: 1000 }], solids }), { x: 132, y: 24.25, vy: -100 });
+    r.input(true); r.input(false); r.buffer = .003;
+    r.step();
+    assert.equal(r.grounded, true);
+    r.step();
+    assert.equal(r.jumpCount, 1, 'le contact à2,214ms prime sur le suivant à5,56ms');
+  }
+});
