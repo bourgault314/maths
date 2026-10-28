@@ -6,7 +6,7 @@
   "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "À droite sur la droite graduée, les nombres sont plus grands.",
+    "regle": "J'écris les nombres avec autant de chiffres après la virgule, puis je compare rang par rang en partant de la gauche.",
     "exemple": "5,8 < 5,82.",
     "visuel": "Écritures décimales alignées et droite graduée ; positions et bornes clairement étiquetées.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -55,8 +55,8 @@
   ],
   "limites": "Les bornes strictes sont refusées ; pas de validation par comparaison à un exemple unique.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
+    "module": "automatismes/generateurs/numeration.js",
+    "tests": "tests/automatismes-cahier-nc-2.test.mjs",
     "variantes": 4,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
@@ -78,25 +78,25 @@
   "formes": [
     {
       "id": "a",
-      "objectif": "Comparer deux décimaux positifs",
+      "objectif": "Comparer deux décimaux",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Complète : 5,8 □ 5,82.",
+      "enonce": "Complète avec <, = ou > : 5,8 … 5,81.",
       "reponse": "<",
-      "donnees": "Un nombre au dixième 1–8 ; second à ±0,01, ±0,02, ±0,05 ou égal ; ajout de zéros possible.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Compare les mêmes rangs.",
-      "aide2": "Ajoute des zéros à droite si besoin.",
-      "correction": "5,8 < 5,82.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
+      "aide1": "Les deux nombres alignés sur la virgule, le 0 ajouté en gris. (dessin du cahier)",
+      "aide2": "5,80 et 5,81 : compare les centièmes.",
+      "correction": "5,8 = 5,80. Mêmes unités, mêmes dixièmes. 0 centième < 1 centième.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
       "controle_math": {
         "type": "text",
         "values": ["<"]
       },
       "exemple_champs": [
         {
-          "label": "Choisis une réponse",
+          "label": "Signe",
           "answer": "<",
           "kind": "text",
           "unit": "",
@@ -104,13 +104,13 @@
           "options": ["<", "=", ">"]
         }
       ],
-      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC02-a).",
       "identifiant": "NC02-a",
       "ancienId": "NC02-a",
       "ancienIdGenerateur": "NC02-A",
       "indiceGenerateur": 0,
-      "nom": "Comparer deux décimaux positifs",
+      "nom": "Comparer deux décimaux",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -118,63 +118,64 @@
       "champs": [
         {
           "type": "qcm",
-          "libelle": "Choisis une réponse",
+          "libelle": "Signe",
           "unite": ""
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Ordonner une liste de décimaux",
+      "objectif": "Ranger dans l'ordre croissant",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Range par ordre croissant : 0,4 ; 0,04 ; 0,404.",
-      "reponse": "0.04 ; 0.4 ; 0.404",
-      "donnees": "Trois décimaux positifs distincts construits à partir du même chiffre 1–8 ; jusqu’à trois décimales.",
-      "saisie": "Le plus petit : nombre ; Au milieu : nombre ; Le plus grand : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Compare des écritures avec trois décimales.",
-      "aide2": "Commence par le plus petit.",
-      "correction": "0,04 < 0,4 < 0,404",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Range dans l'ordre croissant : 0,4 ; 0,04 ; 0,404.",
+      "reponse": "0,04 · 0,4 · 0,404",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
+      "aide1": "Les trois nombres alignés, complétés par des 0 gris. (dessin du cahier)",
+      "aide2": "0,400 · 0,040 · 0,404 : compare d'abord les dixièmes.",
+      "correction": "0,400 · 0,040 · 0,404. 0,040 a 0 dixième : c'est le plus petit. 0,400 < 0,404 (0 millième < 4 millièmes).",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
       "controle_math": {
         "type": "fields",
-        "values": ["0.04", "0.4", "0.404"]
+        "values": ["0,04", "0,4", "0,404"]
       },
       "exemple_champs": [
         {
           "label": "Le plus petit",
-          "answer": "0.04",
+          "answer": "0,04",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         },
         {
           "label": "Au milieu",
-          "answer": "0.4",
+          "answer": "0,4",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         },
         {
           "label": "Le plus grand",
-          "answer": "0.404",
+          "answer": "0,404",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC02-b).",
       "identifiant": "NC02-b",
       "ancienId": "NC02-b",
       "ancienIdGenerateur": "NC02-B",
       "indiceGenerateur": 1,
-      "nom": "Ordonner une liste de décimaux",
+      "nom": "Ranger dans l'ordre croissant",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -197,45 +198,46 @@
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
-      "objectif": "Comparer deux nombres négatifs",
+      "objectif": "Comparer deux négatifs",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Complète : −5,8 □ −5,82.",
-      "reponse": ">",
-      "donnees": "Deux nombres négatifs proches ; inclure l’égalité et tester l’ordre inverse des distances à 0.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Un négatif plus éloigné de 0 est plus petit.",
-      "aide2": "Observe leur position.",
-      "correction": "−5,8 > −5,82.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Complète avec <, = ou > : −5,4 … −5,35.",
+      "reponse": "<",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
+      "aide1": "0 est vers la droite. Le plus à gauche est le plus petit. (dessin du cahier)",
+      "aide2": "−5,4 est plus loin de 0 que −5,35.",
+      "correction": "Sur la droite, −5,4 est à gauche de −5,35. Le plus à gauche est le plus petit.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
       "controle_math": {
         "type": "text",
-        "values": [">"]
+        "values": ["<"]
       },
       "exemple_champs": [
         {
-          "label": "Choisis une réponse",
-          "answer": ">",
+          "label": "Signe",
+          "answer": "<",
           "kind": "text",
           "unit": "",
           "placeholder": "",
           "options": ["<", "=", ">"]
         }
       ],
-      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC02-c).",
       "identifiant": "NC02-c",
       "ancienId": "NC02-c",
       "ancienIdGenerateur": "NC02-C",
       "indiceGenerateur": 2,
-      "nom": "Comparer deux nombres négatifs",
+      "nom": "Comparer deux négatifs",
       "niveauDescription": "5e ; entretien dans les classes suivantes.",
       "niveaux": ["5e", "4e", "3e"],
       "brevet": true,
@@ -243,53 +245,55 @@
       "champs": [
         {
           "type": "qcm",
-          "libelle": "Choisis une réponse",
+          "libelle": "Signe",
           "unite": ""
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Produire un décimal entre deux bornes strictes",
+      "objectif": "Un décimal entre deux autres",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Donne un nombre décimal strictement compris entre 3,8 et 3,9.",
-      "reponse": "3.8499999999999996",
-      "donnees": "Bornes positives consécutives au dixième ; toute valeur strictement intérieure convient.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Tout nombre strictement compris entre les bornes ; bornes exclues.",
-      "aide1": "Les deux bornes ne sont pas autorisées.",
-      "aide2": "Écris les bornes 3,80 et 3,90.",
-      "correction": "Par exemple 3,85 : 3,8 < 3,85 < 3,9.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Écris un nombre décimal compris entre 3,8 et 3,9. 3,8 < □ < 3,9",
+      "reponse": "3,85",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
+      "aide1": "Entre 3,8 et 3,9, il y a de la place : 10 petites graduations. (dessin du cahier)",
+      "aide2": "Écris 3,8 et 3,9 avec deux chiffres après la virgule : 3,80 et 3,90.",
+      "correction": "3,8 = 3,80 et 3,9 = 3,90. 3,81 ; 3,82 ; … ; 3,89 sont entre les deux. 3,85 convient (et bien d'autres).",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
       "controle_math": {
         "type": "property",
         "rule": "range",
         "min": 3.8,
         "max": 3.9,
         "minInclusive": false,
-        "maxInclusive": false
+        "maxInclusive": false,
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "3.8499999999999996",
+          "label": "Nombre décimal",
+          "answer": "3,85",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rangs décimaux alignés ou droite graduée. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Étape de calcul explicite.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC02-d).",
       "identifiant": "NC02-d",
       "ancienId": "NC02-d",
       "ancienIdGenerateur": "NC02-D",
       "indiceGenerateur": 3,
-      "nom": "Produire un décimal entre deux bornes strictes",
+      "nom": "Un décimal entre deux autres",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -297,14 +301,15 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Nombre décimal",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     }
   ]
 }

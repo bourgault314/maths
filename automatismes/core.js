@@ -1,5 +1,6 @@
 // 0.2.0 (lot NC-1, 24/10/2026) : NC17 et NC18 suivent le cahier ; une même graine y donne une autre question.
-export const VERSION = "0.2.0";
+// 0.3.0 (lot NC-2, 28/10/2026) : NC01, NC02 et NC03 suivent le cahier, de même.
+export const VERSION = "0.3.0";
 export function rng(seed) {
   let a = Number(seed) >>> 0;
   const next = () => {

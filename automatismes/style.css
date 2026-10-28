@@ -1872,6 +1872,7 @@ input.case {
 }
 /* La touche « ² » (NC18-c) : l'exposant seul est minuscule sur une grande touche ; il s'écrit en grand. */
 .clavier-symboles button.exposant {
+  gap: 0;
   font-size: 1.625rem;
   line-height: 1;
 }

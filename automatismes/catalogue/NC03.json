@@ -6,7 +6,7 @@
   "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "L’arrondi est la valeur la plus proche à la précision demandée. Pour un nombre positif exactement au milieu, on choisit la valeur supérieure. Un ordre de grandeur aide à repérer un résultat impossible.",
+    "regle": "L'arrondi est la valeur la plus proche ; couper sans regarder la suite, c'est tronquer.",
     "exemple": "41,57 est plus proche de 41,6.",
     "visuel": "Segment entre les deux arrondis possibles, point du nombre et milieu ; estimation sur une ligne séparée.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -41,8 +41,8 @@
   ],
   "limites": "Les demi-unités exactes sont évitées : aucune convention d’arrondi implicite.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
+    "module": "automatismes/generateurs/numeration.js",
+    "tests": "tests/automatismes-cahier-nc-2.test.mjs",
     "variantes": 4,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
@@ -67,30 +67,30 @@
       "objectif": "Arrondir au dixième",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Arrondis 41,57 au dixième.",
-      "reponse": "41.6",
-      "donnees": "Nombre positif au centième ; chiffre des unités différent de 5 pour éviter le cas à mi-distance.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Encadre par deux dixièmes consécutifs.",
-      "aide2": "Compare la position du point au milieu 41,55.",
-      "correction": "41,57 est plus proche de 41,6.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Arrondis au dixième. 41,57 ≈ □",
+      "reponse": "41,6",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
+      "aide1": "Les deux arrondis possibles, le milieu en pointillés, et 41,57. (dessin du cahier)",
+      "aide2": "41,57 est-il avant ou après le milieu 41,55 ?",
+      "correction": "41,57 est entre 41,5 et 41,6. Il dépasse le milieu 41,55. Le plus proche : 41,6.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
       "controle_math": {
         "type": "numeric",
-        "values": ["41.6"]
+        "values": ["41,6"]
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "41.6",
+          "label": "Arrondi",
+          "answer": "41,6",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Étape de calcul explicite.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC03-a).",
       "identifiant": "NC03-a",
       "ancienId": "NC03-a",
       "ancienIdGenerateur": "NC03-A",
@@ -103,80 +103,81 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Arrondi",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Arrondir au centième et distinguer la troncature",
+      "objectif": "Arrondir au centième (et pas tronquer)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Arrondis 4,157 au centième.",
+      "enonce": "Arrondis au centième. 4,157 ≈ □",
       "reponse": "4,16",
-      "donnees": "Nombre positif au millième ; centièmes voisins proposés ; chiffre des unités différent de 5 ; retenues possibles.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Encadre par deux centièmes consécutifs.",
-      "aide2": "Compare la position du point au milieu 4,155.",
-      "correction": "4,16 est l’arrondi ; 4,15 est la troncature.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
+      "aide1": "Le même dessin, un rang plus loin. (dessin du cahier)",
+      "aide2": "4,157 est-il avant ou après 4,155 ?",
+      "correction": "4,157 est entre 4,15 et 4,16. Il dépasse le milieu 4,155. Le plus proche : 4,16.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
       "controle_math": {
-        "type": "text",
+        "type": "numeric",
         "values": ["4,16"]
       },
       "exemple_champs": [
         {
-          "label": "Choisis une réponse",
+          "label": "Arrondi",
           "answer": "4,16",
-          "kind": "text",
+          "kind": "number",
           "unit": "",
-          "placeholder": "",
-          "options": ["4,15", "4,16"]
+          "placeholder": ""
         }
       ],
-      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Étape de calcul explicite.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC03-b).",
       "identifiant": "NC03-b",
       "ancienId": "NC03-b",
       "ancienIdGenerateur": "NC03-B",
       "indiceGenerateur": 1,
-      "nom": "Arrondir au centième et distinguer la troncature",
+      "nom": "Arrondir au centième (et pas tronquer)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
-      "reponseType": "qcm",
+      "reponseType": "nombre",
       "champs": [
         {
-          "type": "qcm",
-          "libelle": "Choisis une réponse",
+          "type": "nombre",
+          "libelle": "Arrondi",
           "unite": ""
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
-      "objectif": "Estimer un produit",
+      "objectif": "Ordre de grandeur d'un produit",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Quel ordre de grandeur convient à 29,8 × 7,1 ?",
+      "enonce": "Quel est l'ordre de grandeur de 29,8 × 7,1 ?",
       "reponse": "210",
-      "donnees": "Facteurs proches de 10, 20, 30 ou 40 et d’un entier 2–9 ; choix séparés par un facteur 10.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Remplace les facteurs par des entiers proches.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
+      "aide1": "Sous chaque facteur, un nombre proche et facile. (dessin du cahier)",
       "aide2": "29,8 ≈ 30 et 7,1 ≈ 7.",
-      "correction": "29,8 × 7,1 ≈ 30 × 7 = 210.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "correction": "29,8 ≈ 30 et 7,1 ≈ 7. 30 × 7 = 210.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
       "controle_math": {
         "type": "text",
         "values": ["210"]
@@ -188,19 +189,19 @@
           "kind": "text",
           "unit": "",
           "placeholder": "",
-          "options": ["21", "210", "2100"]
+          "options": ["21", "210", "2 100", "21 000"]
         }
       ],
-      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC03-c).",
       "identifiant": "NC03-c",
       "ancienId": "NC03-c",
       "ancienIdGenerateur": "NC03-C",
       "indiceGenerateur": 2,
-      "nom": "Estimer un produit",
+      "nom": "Ordre de grandeur d'un produit",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
-      "brevet": true,
+      "brevet": false,
       "reponseType": "qcm",
       "champs": [
         {
@@ -210,24 +211,25 @@
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Repérer une somme manifestement impossible",
+      "objectif": "Contrôler un résultat (une vraie erreur d'élève)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Lina écrit 6,8 + 7,2 = 0,14. Ce résultat est-il possible ?",
+      "enonce": "Lina a écrit ce calcul. Est-il juste ? 3,5 + 2,41 = 2,76",
       "reponse": "Non",
-      "donnees": "Somme de deux positifs entre 2,1 et 8,9 ; faux résultat divisé par 100, inférieur à chacun.",
-      "saisie": "Choisis une réponse : choix explicites",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "La somme de deux nombres positifs dépasse chacun des deux.",
-      "aide2": "0,14 est déjà plus petit que 6,8.",
-      "correction": "Non : 6,8 + 7,2 = 14.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
+      "aide1": "J'estime d'abord : environ combien ? (dessin du cahier)",
+      "aide2": "3,5 + 2,41, c'est environ 4 + 2 = 6.",
+      "correction": "J'estime : 3,5 + 2,41 ≈ 6. 2,76 est loin de 6 : le résultat est faux. Lina a aligné les chiffres à droite (35 + 241) au lieu d'aligner les virgules.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
       "controle_math": {
         "type": "text",
         "values": ["Non"]
@@ -242,16 +244,16 @@
           "options": ["Oui", "Non"]
         }
       ],
-      "visuel_aide1": "Droite entre deux repères ou modèle en barres. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC03-d).",
       "identifiant": "NC03-d",
       "ancienId": "NC03-d",
       "ancienIdGenerateur": "NC03-D",
       "indiceGenerateur": 3,
-      "nom": "Repérer une somme manifestement impossible",
+      "nom": "Contrôler un résultat (une vraie erreur d'élève)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
-      "brevet": true,
+      "brevet": false,
       "reponseType": "qcm",
       "champs": [
         {
@@ -261,9 +263,10 @@
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     }
   ]
 }

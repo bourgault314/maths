@@ -1,82 +1,10 @@
 {
   "origine": "8feecca64107ee9cdbd3dc5cb9963db38e25bfc0",
   "grainesParForme": 50,
-  "tirages": 21200,
+  "tirages": 20600,
   "methode": "Inclusion littérale de String(fields[].answer) dans hints[0].svg ; les valeurs dans les attributs SVG comptent aussi.",
   "avertissement": "Ce sont des occurrences à revoir, pas toutes des réponses affichées : les nombres courts rencontrent souvent des coordonnées SVG.",
   "formes": [
-    {
-      "id": "NC01-a",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["9"]
-      }
-    },
-    {
-      "id": "NC01-b",
-      "occurrences": 1,
-      "premierExemple": {
-        "graine": 7,
-        "reponses": ["109"]
-      }
-    },
-    {
-      "id": "NC01-c",
-      "occurrences": 1,
-      "premierExemple": {
-        "graine": 3,
-        "reponses": ["72"]
-      }
-    },
-    {
-      "id": "NC01-d",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["0", "5"]
-      }
-    },
-    {
-      "id": "NC02-a",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": [">"]
-      }
-    },
-    {
-      "id": "NC02-c",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["<"]
-      }
-    },
-    {
-      "id": "NC03-a",
-      "occurrences": 6,
-      "premierExemple": {
-        "graine": 13,
-        "reponses": ["34"]
-      }
-    },
-    {
-      "id": "NC03-b",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["3,77"]
-      }
-    },
-    {
-      "id": "NC03-c",
-      "occurrences": 19,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["60"]
-      }
-    },
     {
       "id": "NC04-a",
       "occurrences": 40,

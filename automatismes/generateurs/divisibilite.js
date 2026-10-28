@@ -21,6 +21,7 @@ import {
   venn,
   VERT,
 } from "../aides/dessins.js";
+import { champ, preparerCours, questionCahier } from "./cahier.js";
 
 export const counts = { NC17: 6, NC18: 7 };
 
@@ -169,9 +170,7 @@ function cours() {
       },
     ],
   };
-  for (const morceaux of Object.values(coursEnCache))
-    for (const morceau of morceaux)
-      Object.assign(morceau, { texte: typo(morceau.texte), exemple: typo(morceau.exemple) });
+  for (const morceaux of Object.values(coursEnCache)) preparerCours(morceaux);
   return coursEnCache;
 }
 
@@ -181,53 +180,9 @@ const REGLE = {
 };
 const GRADE = { NC17: [6, 5, 5, 5, 5, 5], NC18: [6, 5, 3, 6, 3, 3, 4] };
 
-function champ(answer, label, kind = "number", extra = {}) {
-  return { label, answer: String(answer), kind, unit: "", placeholder: "", ...extra };
-}
-
-/* La question du cahier, dans la forme du moule (moteur.js, core.js) et avec ce que la coque lit en
-   plus pour les cahiers. hints[0] : l'aide (dessin puis phrase) ; hints[1] : « Encore un indice ». */
-/* La typographie française : une espace insécable avant « ? ! : ; » et après « « », pour qu'un signe
-   ne parte jamais seul au début d'une ligne (retour de Code, 24/10). */
-const typo = (texte) =>
-  String(texte || "")
-    .replace(/ ([?!:;»])/g, "\u00a0$1")
-    .replace(/« /g, "«\u00a0");
-
-function question(famille, v, d) {
-  const etapes = (d.explication.etapes || []).map(typo);
-  const calc = d.explication.calc || [];
-  return {
-    family: famille,
-    variant: `${famille}-${String.fromCharCode(65 + v)}`,
-    grade: GRADE[famille][v],
-    dnb: true,
-    prompt: typo(d.prompt),
-    math: d.math || "",
-    fields: d.fields,
-    check: d.check,
-    hints: [
-      { text: typo(d.aide.text), svg: d.aide.svg || "" },
-      { text: typo(d.indice.text), svg: d.indice.svg || "" },
-    ],
-    solution: [...calc.map(([g, dr]) => `${g} ${dr}`.trim()), ...etapes].join(" "),
-    visual: "",
-    course: {
-      rule: REGLE[famille],
-      example: d.bonne || "",
-      svg: "",
-      morceaux: cours()[famille],
-    },
-    tags: [],
-    cahier: true,
-    pastille: d.pastille,
-    gabarit: d.gabarit || null,
-    touches: d.touches || null,
-    bonne: d.bonne ? typo(d.bonne) : null,
-    erreurs: (d.erreurs || []).map((erreur) => ({ ...erreur, phrase: typo(erreur.phrase) })),
-    explication: { calc, etapes, svg: d.explication.svg || "" },
-  };
-}
+// La question du cahier, dans la forme du moule (voir cahier.js).
+const question = (famille, v, d) =>
+  questionCahier(famille, v, GRADE[famille][v], REGLE[famille], cours()[famille], d);
 
 /* =================================================================== NC17 */
 function nc17a(r) {

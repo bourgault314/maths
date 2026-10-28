@@ -6,7 +6,7 @@
   "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "La position du chiffre donne sa valeur : unité, dixième, centième, millième.",
+    "regle": "Chaque chiffre a son rang : après la virgule, les dixièmes, puis les centièmes, puis les millièmes.",
     "exemple": "Le chiffre des dixièmes est 7.",
     "visuel": "Tableau fixe des rangs : unités, dixièmes, centièmes, millièmes ; chaque chiffre reste associé à son rang.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -41,8 +41,8 @@
   ],
   "limites": "Le chiffre d’un rang ne doit pas être confondu avec le nombre entier d’unités de ce rang.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
+    "module": "automatismes/generateurs/numeration.js",
+    "tests": "tests/automatismes-cahier-nc-2.test.mjs",
     "variantes": 4,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
@@ -64,38 +64,38 @@
   "formes": [
     {
       "id": "a",
-      "objectif": "Lire un chiffre à un rang donné",
+      "objectif": "Le chiffre d'un rang",
       "niveau": "6e",
       "dnb2027": false,
-      "enonce": "Dans 69,738, quel est le chiffre des dixièmes ?",
+      "enonce": "Quel est le chiffre des dixièmes de 52,738 ?",
       "reponse": "7",
-      "donnees": "Partie entière 0–99 ; trois décimales ; rang demandé tiré parmi dixième, centième et millième ; les zéros sont autorisés.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Repère la virgule, puis compte les rangs à droite.",
-      "aide2": "Le rang des dixièmes est le 1ᵉʳ après la virgule.",
-      "correction": "Le chiffre des dixièmes est 7.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
+      "aide1": "Je place 52,738 dans le tableau ; la colonne demandée est entourée. (dessin du cahier)",
+      "aide2": "Les dixièmes : le 1er chiffre après la virgule.",
+      "correction": "52,738 : 5 dizaines, 2 unités, 7 dixièmes, 3 centièmes, 8 millièmes.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
       "controle_math": {
         "type": "numeric",
         "values": ["7"]
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
+          "label": "Chiffre",
           "answer": "7",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC01-a).",
       "identifiant": "NC01-a",
       "ancienId": "NC01-a",
       "ancienIdGenerateur": "NC01-A",
       "indiceGenerateur": 0,
-      "nom": "Lire un chiffre à un rang donné",
+      "nom": "Le chiffre d'un rang",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": false,
@@ -103,49 +103,50 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Chiffre",
           "unite": ""
         }
       ],
       "typeTache": "reconnaître",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Compter les centièmes entiers contenus dans un nombre",
+      "objectif": "Combien de centièmes en tout ?",
       "niveau": "6e",
       "dnb2027": false,
-      "enonce": "Combien de centièmes entiers contient 69,73 ?",
-      "reponse": "6973",
-      "donnees": "Partie entière 0–99 ; deux décimales ; nombre entier de centièmes.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Une unité contient 100 centièmes.",
-      "aide2": "69 × 100 + 73 centièmes.",
-      "correction": "Combien de centièmes entiers contient 69,73 ? → 6973.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "52,73, c'est combien de centièmes en tout ? 52,73 = □ centièmes",
+      "reponse": "5273",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
+      "aide1": "1 unité = 100 centièmes. (dessin du cahier)",
+      "aide2": "52 unités = 52 × 100 centièmes. Ajoute les 73 centièmes.",
+      "correction": "52,73 = 52 unités + 73 centièmes = 5 200 centièmes + 73 centièmes = 5 273 centièmes",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
       "controle_math": {
         "type": "numeric",
-        "values": ["6973"]
+        "values": ["5273"]
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "6973",
+          "label": "Centièmes",
+          "answer": "5273",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC01-b).",
       "identifiant": "NC01-b",
       "ancienId": "NC01-b",
       "ancienIdGenerateur": "NC01-B",
       "indiceGenerateur": 1,
-      "nom": "Compter les centièmes entiers contenus dans un nombre",
+      "nom": "Combien de centièmes en tout ?",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": false,
@@ -153,49 +154,51 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Centièmes",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
-      "objectif": "Recomposer une écriture décimale",
+      "objectif": "Recomposer un nombre décimal (fractions décimales)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Écris sous forme décimale : 69 + 7/10 + 8/1000.",
-      "reponse": "69.708",
-      "donnees": "Partie entière 0–99 ; dixième et millième 0–9 ; centième nul, pour conserver sa place.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Place chaque fraction dans son rang.",
-      "aide2": "Aucun centième : garde la place avec 0.",
-      "correction": "69 + 7/10 + 8/1000 = 69,708.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Écris ce nombre sous forme décimale. 42 + 7/10 + 8/1000 = □",
+      "reponse": "42,708",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
+      "aide1": "Sous chaque colonne, la fraction qui va dedans. (dessin du cahier)",
+      "aide2": "Rien ne va dans les centièmes : écris 0.",
+      "correction": "4 dizaines, 2 unités, 7 dixièmes, 0 centième, 8 millièmes.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
       "controle_math": {
         "type": "numeric",
-        "values": ["69.708"]
+        "values": ["42,708"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "69.708",
+          "label": "Nombre décimal",
+          "answer": "42,708",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC01-c).",
       "identifiant": "NC01-c",
       "ancienId": "NC01-c",
       "ancienIdGenerateur": "NC01-C",
       "indiceGenerateur": 2,
-      "nom": "Recomposer une écriture décimale",
+      "nom": "Recomposer un nombre décimal (fractions décimales)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -203,56 +206,57 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Nombre décimal",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Décomposer par rang",
+      "objectif": "Décomposer un nombre décimal (fractions décimales)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Complète : 69,73 = 69 + □/10 + □/100.",
-      "reponse": "7 ; 3",
-      "donnees": "Partie entière 0–99 ; deux décimales ; deux numérateurs de rang à compléter.",
-      "saisie": "Numérateur sur 10 : nombre ; Numérateur sur 100 : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Lis les chiffres après la virgule.",
-      "aide2": "Le premier donne les dixièmes, le second les centièmes.",
-      "correction": "69,73 = 69 + 7/10 + 3/100.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Complète. 52,73 = 52 + □/10 + □/100",
+      "reponse": "7 · 3",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
+      "aide1": "Les en-têtes sont écrits en fractions : 1/10, 1/100. (dessin du cahier)",
+      "aide2": "Place 52,73 dans le tableau.",
+      "correction": "7 dixièmes, 3 centièmes.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
       "controle_math": {
         "type": "fields",
         "values": ["7", "3"]
       },
       "exemple_champs": [
         {
-          "label": "Numérateur sur 10",
+          "label": "Sur 10",
           "answer": "7",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         },
         {
-          "label": "Numérateur sur 100",
+          "label": "Sur 100",
           "answer": "3",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Tableau de numération ou unité en centièmes. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC01-d).",
       "identifiant": "NC01-d",
       "ancienId": "NC01-d",
       "ancienIdGenerateur": "NC01-D",
       "indiceGenerateur": 3,
-      "nom": "Décomposer par rang",
+      "nom": "Décomposer un nombre décimal (fractions décimales)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -260,19 +264,20 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Numérateur sur 10",
+          "libelle": "Sur 10",
           "unite": ""
         },
         {
           "type": "nombre",
-          "libelle": "Numérateur sur 100",
+          "libelle": "Sur 100",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     }
   ]
 }

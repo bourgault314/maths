@@ -23,7 +23,9 @@ const premier = (n) =>
 test("13 formes du cahier : NC17-a à f, NC18-a à g", () => {
   assert.deepEqual(formesDisponibles("NC17"), ["a", "b", "c", "d", "e", "f"]);
   assert.deepEqual(formesDisponibles("NC18"), ["a", "b", "c", "d", "e", "f", "g"]);
-  assert.equal(formesCahier.size, 13);
+  // Lot NC-2 : NC01, NC02 et NC03 s'ajoutent (12 formes, leurs tests dans automatismes-cahier-nc-2).
+  for (const forme of "abcdef") assert.ok(formesCahier.has(`NC17-${forme}`));
+  for (const forme of "abcdefg") assert.ok(formesCahier.has(`NC18-${forme}`));
 });
 
 test("chaque tirage : bonne réponse acceptée, erreurs connues refusées, explication, cours", () => {

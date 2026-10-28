@@ -20,9 +20,21 @@ export function questionPrompt(q) {
   const dernier = parts.length - 1;
   if (parts[dernier]?.value === "." && parts[dernier - 1]?.math && instruction) parts.pop();
   // La ponctuation qui suit un calcul lui reste collée (« … divisible par 9 ? » sans « ? » seul à la ligne).
-  return collerPonctuation(parts)
-    .map((part) => {
-      const html = part.math ? collerDans(mathText(part.value), part.colle) : mathText(part.value);
+  const morceaux = collerPonctuation(parts);
+  return morceaux
+    .map((part, rang) => {
+      // Une élision coupée de son apostrophe (le « c » de « 52,73, c'est ») et le verbe « a » (« Lina a
+      // écrit ») restent des lettres droites quand la phrase entière ne les lit pas comme une formule
+      // (lot NC-2) ; seuls, ils passeraient pour des variables.
+      const elision =
+        !part.math &&
+        (part.value === "a" ||
+          (/^\p{L}$/u.test(part.value) && /^['’]/.test(morceaux[rang + 1]?.value || "")));
+      const html = part.math
+        ? collerDans(mathText(part.value), part.colle)
+        : elision
+          ? part.value
+          : mathText(part.value);
       const formula =
         part.math && (/[+×÷=²³^/()]/.test(part.value) || /\S\s*[−-]\s*\S/.test(part.value));
       return instruction && formula && (!/^Écris/.test(q.prompt) || q.prompt.includes(":"))
