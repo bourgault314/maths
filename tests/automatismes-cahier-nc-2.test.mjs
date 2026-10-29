@@ -166,6 +166,34 @@ test("NC02-a et NC02-c : la case entre les deux nombres, les trois signes en gro
   assert.ok(egalNeg > 90 && egalNeg < 220, `égalités : ${egalNeg}`);
 });
 
+// Correctif NC-2 (29/10) : l'écart 0,02 ajouté, l'exemple du cahier sort ; plus aucune lettre en italique
+// de formule dans les phrases de NC01 à NC03 (« Lina a aligné… »).
+test("correctif NC-2 : l'exemple du cahier 5,8 … 5,82, et le verbe « a » droit partout", async () => {
+  const q = genererQuestion("NC02", "a", 3941);
+  assert.equal(q.prompt, "Complète avec <, = ou >\u00a0: 5,8 … 5,82.");
+  assert.equal(q.bonne, "5,8 < 5,82");
+  const { mathHtml } = await import("../automatismes/math-format.js");
+  const { questionPrompt } = await import("../automatismes/math-layout.js");
+  for (const id of formesCahier) {
+    if (!/^NC0[123]/.test(id)) continue;
+    for (const x of tirages(id, 60)) {
+      const textes = [
+        questionPrompt(x),
+        ...x.hints.map((h) => mathHtml(h.text)),
+        ...x.explication.etapes.map(mathHtml),
+        ...x.erreurs.map((e) => mathHtml(e.phrase)),
+        mathHtml(x.bonne || ""),
+      ];
+      for (const html of textes)
+        assert.doesNotMatch(html, /math-variable/, `${x.id} : ${html.slice(0, 120)}`);
+    }
+  }
+  assert.equal(
+    genererQuestion("NC03", "b", 58459).hints[0].text,
+    "Les deux arrondis possibles, le milieu en pointillés, et 4,157.",
+  );
+});
+
 test("NC02-b : ranger en touchant les nombres ; même partie entière ; un piège « plus long, plus petit »", () => {
   for (const q of tirages("NC02-b")) {
     const modele = modeleQuestion(q);

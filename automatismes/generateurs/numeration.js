@@ -490,15 +490,16 @@ const MEMES = {
 };
 
 function nc02a(r) {
-  // Un nombre au dixième de 0,1 à 9,9 ; l'autre à ± 0,01, ± 0,05, ± 0,1, ou égal avec un 0 en plus.
+  // Un nombre au dixième de 0,1 à 9,9 ; l'autre à ± 0,01, ± 0,02 (ajouté le 29/10 : l'exemple du
+  // cahier, 5,8 … 5,82), ± 0,05, ± 0,1, ou égal avec un 0 en plus.
   // Une fois sur deux, le plus long est le plus petit. Calculs en centièmes.
   const a = dixiemes(r, 1, 99) * 10;
   const cas = r.pick(["plus", "moins", "long_petit", "egal"]);
   let b;
   if (cas === "egal") b = a;
-  else if (cas === "long_petit") b = a - r.pick([1, 5]);
+  else if (cas === "long_petit") b = a - r.pick([1, 2, 5]);
   else {
-    const delta = r.pick([1, 5, 10]);
+    const delta = r.pick([1, 2, 5, 10]);
     b = cas === "plus" ? a + delta : a - delta;
     if (b <= 0) b = a + delta;
     if (b >= 1000) b = a - delta;
@@ -845,10 +846,9 @@ function arrondir(r, v, nd, x) {
           milieuTxt: `milieu ${gmilieu}`,
         },
       ),
-      text:
-        nd === 2
-          ? `Les deux arrondis possibles, le milieu en pointillés, et ${gx}.`
-          : "Le même dessin, un rang plus loin.",
+      // Une phrase qui se suffit, pour le dixième comme pour le centième (choix de Gwenaël du 29/10 :
+      // dans une série mélangée, l'élève n'a pas toujours vu le premier dessin).
+      text: `Les deux arrondis possibles, le milieu en pointillés, et ${gx}.`,
     },
     indice: {
       text:
