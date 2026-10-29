@@ -31,11 +31,11 @@ function contenuArchive(question) {
   return contenu;
 }
 
-test("84 familles et 437 formes : 87 400 réponses canoniques acceptées", () => {
+test("84 familles et 440 formes : 88 000 réponses canoniques acceptées", () => {
   assert.equal(Object.keys(generateurs).length, 84);
   assert.equal(
     Object.values(nombresFormes).reduce((somme, n) => somme + n, 0),
-    437,
+    440,
   );
   let total = 0;
   for (const famille of Object.keys(generateurs)) {
@@ -66,7 +66,7 @@ test("84 familles et 437 formes : 87 400 réponses canoniques acceptées", () =>
         assert.equal(empreinte.digest("hex"), empreintes[`${famille}-${forme}`]);
     }
   }
-  assert.equal(total, 87400);
+  assert.equal(total, 88000);
 });
 
 test("la même graine et la même forme reproduisent exactement la même question", () => {

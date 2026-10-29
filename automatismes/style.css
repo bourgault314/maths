@@ -1852,6 +1852,13 @@ input.case {
 .explication table.calculs td.droite {
   text-align: left;
 }
+/* Lot NC-3 : une fraction dans les calculs d'une explication (NC04-f : « = 4,8/0,6 », « = 48/6 ») dans
+   la police et à la taille des calculs, comme dans le cahier ; elle était plus petite et plus fine. */
+.explication table.calculs math:has(mfrac) {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 1.15em;
+}
 .explication ol.etapes {
   margin: 4px 0 8px;
   padding-left: 1.4em;

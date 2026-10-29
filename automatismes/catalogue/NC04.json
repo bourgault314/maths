@@ -6,7 +6,7 @@
   "prerequis": ["Numération de position", "Sens des opérations et des signes de comparaison"],
   "perimetre": "Couverture des prérequis et automatismes du collège. Le filtre DNB2027 utilise l’ancien programme du cycle 4 ; les niveaux indiqués suivent le nouveau programme. Le statut est précisé par variante.",
   "cours": {
-    "regle": "Choisis une décomposition simple. Déplacer tous les chiffres d’un rang vers la gauche multiplie le nombre par 10 ; vers la droite, il le divise par 10.",
+    "regle": "On choisit une décomposition simple. Multiplier par 10, 100, 1 000 : chaque chiffre glisse de 1, 2, 3 rangs vers la gauche ; diviser : vers la droite.",
     "exemple": "49 ÷ 7 = 7.",
     "visuel": "Décomposition du calcul ; tableau fixe de numération pour les facteurs 10, 100 et 1 000.",
     "mouvement": "Le schéma est entièrement compréhensible à l’arrêt. Une animation éventuelle révèle les étapes sans cacher les états précédents."
@@ -48,9 +48,9 @@
   ],
   "limites": "Aucune division par zéro ; les produits et quotients restent adaptés au calcul sans calculatrice.",
   "implementation": {
-    "module": "app-automatismes/dist/modules/nombres.js",
-    "tests": "etape1/test_nombres.mjs",
-    "variantes": 6,
+    "module": "automatismes/generateurs/calcul-decimaux.js",
+    "tests": "tests/automatismes-cahier-nc-3.test.mjs",
+    "variantes": 9,
     "graines_par_variante": 200,
     "principe": "Aide 1 : représentation visuelle des données. Aide 2 : étape de calcul. Deux aides maximum.",
     "aide1_visuelle": true
@@ -71,38 +71,39 @@
   "formes": [
     {
       "id": "a",
-      "objectif": "Mobiliser une table ou une division inverse",
+      "objectif": "Les tables, dans les deux sens",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Calcule 49 ÷ 7.",
+      "enonce": "Calcule. 42 ÷ 6 = □",
       "reponse": "7",
-      "donnees": "Facteurs 2–9 ; produit ou division exacte de la même table, tirés alternativement.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Dans la table de 7, cherche 49.",
-      "aide2": "7 × ? = 49",
-      "correction": "49 ÷ 7 = 7.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
+      "aide1": "42 cases, 6 par ligne : je compte les lignes. (dessin du cahier)",
+      "aide2": "6 × ? = 42",
+      "correction": "6 × 7 = 42. Donc 42 ÷ 6 = 7.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
       "controle_math": {
         "type": "numeric",
-        "values": ["7"]
+        "values": ["7"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
+          "label": "Quotient",
           "answer": "7",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-a).",
       "identifiant": "NC04-a",
       "ancienId": "NC04-a",
       "ancienIdGenerateur": "NC04-A",
       "indiceGenerateur": 0,
-      "nom": "Mobiliser une table ou une division inverse",
+      "nom": "Les tables, dans les deux sens",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -110,49 +111,51 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Quotient",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "b",
-      "objectif": "Addition, soustraction ou complément décimal",
+      "objectif": "Ajouter, soustraire, compléter (décimaux)",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Complète : 2,3 + □ = 5,5.",
-      "reponse": "3.2",
-      "donnees": "Décimaux positifs au dixième ; addition, différence positive ou terme manquant ; résultat exact.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Raisonne en dixièmes.",
-      "aide2": "5,5 − 2,3 = ?",
-      "correction": "2,3 + 3,2 = 5,5.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Complète. 2,3 + □ = 5,5",
+      "reponse": "3,2",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
+      "aide1": "Le tout 5,5 ; une part 2,3 ; l'autre part ? (dessin du cahier)",
+      "aide2": "La soustraction posée, sans le résultat.",
+      "correction": "La part qui manque : 5,5 − 2,3. 5,5 − 2,3 = 3,2. Vérification : 2,3 + 3,2 = 5,5.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
       "controle_math": {
         "type": "numeric",
-        "values": ["3.2"]
+        "values": ["3,2"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "3.2",
+          "label": "Nombre",
+          "answer": "3,2",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-b).",
       "identifiant": "NC04-b",
       "ancienId": "NC04-b",
       "ancienIdGenerateur": "NC04-B",
       "indiceGenerateur": 1,
-      "nom": "Addition, soustraction ou complément décimal",
+      "nom": "Ajouter, soustraire, compléter (décimaux)",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -160,44 +163,46 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Nombre",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "c",
       "objectif": "Multiplier en compensant",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Calcule 7 × 29.",
+      "enonce": "Calcule. 7 × 29 = □",
       "reponse": "203",
-      "donnees": "Un facteur 2–9 ; autre facteur 19, 29, 39, 49 ou 99 ; compensation par un multiple de 10.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "29 est proche de 30.",
-      "aide2": "Calcule 7 × 30, puis enlève 7.",
-      "correction": "7 × 29 = 210 − 7 = 203.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
+      "aide1": "7 × 30, avec une colonne de trop. (dessin du cahier)",
+      "aide2": "7 × 29 = 7 × 30 − 7 × 1",
+      "correction": "7 × 29 = 7 × 30 − 7 = 210 − 7 = 203",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
       "controle_math": {
         "type": "numeric",
-        "values": ["203"]
+        "values": ["203"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
+          "label": "Produit",
           "answer": "203",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-c).",
       "identifiant": "NC04-c",
       "ancienId": "NC04-c",
       "ancienIdGenerateur": "NC04-C",
@@ -210,49 +215,51 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Produit",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "d",
-      "objectif": "Multiplier ou diviser par 10, 100 ou 1 000",
+      "objectif": "× et ÷ par 10, 100, 1 000",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Calcule 37,7 ÷ 1000.",
-      "reponse": "0.037700000000000004",
-      "donnees": "Décimal positif au dixième ; multiplication ou division par 10, 100 ou 1 000.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "La valeur de chaque chiffre devient 1000 fois plus petite.",
-      "aide2": "Déplace les chiffres de 3 rangs vers la droite dans le tableau.",
-      "correction": "37,7 ÷ 1000 = 0,0377.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Calcule. 52,4 × 100 = □",
+      "reponse": "5240",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
+      "aide1": "× 100 : chaque chiffre glisse de 2 rangs vers la gauche. (dessin du cahier)",
+      "aide2": "Chaque chiffre glisse de 2 rangs vers la gauche.",
+      "correction": "Le 5 passe des dizaines aux milliers. Le 2 aux centaines, le 4 aux dizaines. Un 0 garde la place des unités.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
       "controle_math": {
         "type": "numeric",
-        "values": ["0.037700000000000004"]
+        "values": ["5240"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "0.037700000000000004",
+          "label": "Résultat",
+          "answer": "5240",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-d).",
       "identifiant": "NC04-d",
       "ancienId": "NC04-d",
       "ancienIdGenerateur": "NC04-D",
       "indiceGenerateur": 3,
-      "nom": "Multiplier ou diviser par 10, 100 ou 1 000",
+      "nom": "× et ÷ par 10, 100, 1 000",
       "niveauDescription": "6e ; entretien dans les classes suivantes.",
       "niveaux": ["6e", "5e", "4e", "3e"],
       "brevet": true,
@@ -260,44 +267,46 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Résultat",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "e",
       "objectif": "Multiplier un décimal par un entier",
       "niveau": "6e",
       "dnb2027": true,
-      "enonce": "Calcule 0,7 × 7.",
-      "reponse": "4.9",
-      "donnees": "Un facteur compris entre 0,2 et 0,9 ; entier 2–9 ; résultat au dixième.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "0,7 représente 7 dixièmes.",
-      "aide2": "Calcule 7 × 7 dixièmes.",
-      "correction": "0,7 × 7 = 49 dixièmes = 4,9.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Calcule. 9,3 × 4 = □",
+      "reponse": "37,2",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
+      "aide1": "Le rectangle coupé en deux : les unités, puis les dixièmes. (dessin du cahier)",
+      "aide2": "0,3 × 4 = 3 dixièmes × 4 = ? dixièmes",
+      "correction": "9,3 × 4 = 9 × 4 + 0,3 × 4 = 36 + 1,2 = 37,2",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
       "controle_math": {
         "type": "numeric",
-        "values": ["4.9"]
+        "values": ["37,2"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "4.9",
+          "label": "Produit",
+          "answer": "37,2",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-e).",
       "identifiant": "NC04-e",
       "ancienId": "NC04-e",
       "ancienIdGenerateur": "NC04-E",
@@ -310,44 +319,46 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Produit",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     },
     {
       "id": "f",
       "objectif": "Diviser par un décimal",
       "niveau": "5e",
       "dnb2027": true,
-      "enonce": "Calcule 4,9 ÷ 0,7.",
-      "reponse": "7",
-      "donnees": "Diviseur 0,2–0,9 ; dividende construit pour obtenir un quotient entier 2–9 ; aucun zéro au diviseur.",
-      "saisie": "Réponse : nombre",
-      "acceptation": "Chaque champ doit avoir la valeur exacte attendue. Les écritures numériques équivalentes, virgule ou point décimal, sont acceptées sauf forme explicitement imposée.",
-      "aide1": "Multiplie les deux nombres par 10 : le quotient ne change pas.",
-      "aide2": "4,9 ÷ 0,7 = 49 ÷ 7.",
-      "correction": "4,9 ÷ 0,7 = 49 ÷ 7 = 7.",
-      "controles": "200 graines par variante : réponse correcte acceptée, champ vide et réponse fausse refusés, calcul indépendant, données et contraintes vérifiées. Pour les réponses ouvertes : contrôle par propriété et contre-exemples.",
+      "enonce": "Calcule. 4,8 ÷ 0,6 = □",
+      "reponse": "8",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
+      "aide1": "Je l'écris en fraction, puis × 10 en haut et en bas. (dessin du cahier)",
+      "aide2": "48/6 : c'est la table de 6.",
+      "correction": "4,8 ÷ 0,6 = 4,8/0,6 = 48/6 = 8",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
       "controle_math": {
         "type": "numeric",
-        "values": ["7"]
+        "values": ["8"],
+        "form": "decimal"
       },
       "exemple_champs": [
         {
-          "label": "Réponse",
-          "answer": "7",
+          "label": "Quotient",
+          "answer": "8",
           "kind": "number",
           "unit": "",
           "placeholder": ""
         }
       ],
-      "visuel_aide1": "Rectangle de cases, barres ou tableau de rangs. Représentation calculée à partir des données ; la réponse finale n’est pas affichée.",
-      "visuel_aide2": "Schéma calculé avec les données de la question ; voir le module nombres.js.",
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-f).",
       "identifiant": "NC04-f",
       "ancienId": "NC04-f",
       "ancienIdGenerateur": "NC04-F",
@@ -360,14 +371,165 @@
       "champs": [
         {
           "type": "nombre",
-          "libelle": "Réponse",
+          "libelle": "Quotient",
           "unite": ""
         }
       ],
       "typeTache": "calculer",
-      "origine": "GPT",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
       "valide": true,
-      "referencesBrevet": []
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
+    },
+    {
+      "id": "g",
+      "objectif": "Le facteur manquant (10, 100, 1 000)",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Complète. 3,7 × □ = 370",
+      "reponse": "100",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "aide1": "(dessin du cahier)",
+      "aide2": "Le 3 est passé des unités aux centaines : combien de rangs ?",
+      "correction": "Le 3 passe des unités aux centaines : 2 rangs vers la gauche. 2 rangs vers la gauche, c'est × 100.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["100"],
+        "form": "decimal"
+      },
+      "exemple_champs": [
+        {
+          "label": "Nombre",
+          "answer": "100",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-g).",
+      "identifiant": "NC04-g",
+      "indiceGenerateur": 6,
+      "nom": "Le facteur manquant (10, 100, 1 000)",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Nombre",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
+    },
+    {
+      "id": "h",
+      "objectif": "Le nombre de départ",
+      "niveau": "6e",
+      "dnb2027": true,
+      "enonce": "Complète. □ × 100 = 45",
+      "reponse": "0,45",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "aide1": "(dessin du cahier)",
+      "aide2": "Pour revenir en arrière, divise par 100.",
+      "correction": "45 ÷ 100 = 0,45. Vérification : 0,45 × 100 = 45.",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0,45"],
+        "form": "decimal"
+      },
+      "exemple_champs": [
+        {
+          "label": "Nombre de départ",
+          "answer": "0,45",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-h).",
+      "identifiant": "NC04-h",
+      "indiceGenerateur": 7,
+      "nom": "Le nombre de départ",
+      "niveauDescription": "6e ; entretien dans les classes suivantes.",
+      "niveaux": ["6e", "5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Nombre de départ",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
+    },
+    {
+      "id": "i",
+      "objectif": "Multiplier deux décimaux",
+      "niveau": "5e",
+      "dnb2027": true,
+      "enonce": "Calcule. 0,3 × 0,2 = □",
+      "reponse": "0,06",
+      "donnees": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "saisie": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "acceptation": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "aide1": "0,3, c'est 3 fois 0,1 ; 0,2, c'est 2 fois 0,1. (dessin du cahier)",
+      "aide2": "Dixième × dixième = centième : 3 × 2 = 6 centièmes.",
+      "correction": "0,3 × 0,2 = (3 × 0,1) × (2 × 0,1) = (3 × 2) × (0,1 × 0,1) = 6 × 0,01 = 0,06",
+      "controles": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "controle_math": {
+        "type": "numeric",
+        "values": ["0,06"],
+        "form": "decimal"
+      },
+      "exemple_champs": [
+        {
+          "label": "Produit",
+          "answer": "0,06",
+          "kind": "number",
+          "unit": "",
+          "placeholder": ""
+        }
+      ],
+      "visuel_aide1": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "visuel_aide2": "Voir le cahier « Nombres et calculs », partie 1 (NC04-i).",
+      "identifiant": "NC04-i",
+      "indiceGenerateur": 8,
+      "nom": "Multiplier deux décimaux",
+      "niveauDescription": "5e ; entretien dans les classes suivantes.",
+      "niveaux": ["5e", "4e", "3e"],
+      "brevet": true,
+      "reponseType": "nombre",
+      "champs": [
+        {
+          "type": "nombre",
+          "libelle": "Produit",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "GPT, réécrite d'après le cahier NC partie 1 (24/10/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "cahier": "nombres-et-calculs/partie1"
     }
   ]
 }

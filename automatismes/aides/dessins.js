@@ -641,5 +641,388 @@ export function estimerSomme(a, b, annonce) {
   return svg(W, 112, body, "estimer la somme");
 }
 
+/* ===================================================================== lot NC-3 (NC04)
+   Repris de aides.py (version 3 du cahier) : les cases des tables, la soustraction posée, le
+   rectangle qui compense, le glisse-nombre (dessiné ; la bande manipulable viendra dans son propre
+   lot, choix de Gwenaël du 29/10), le rectangle de la décomposition, les bandes de dixièmes, la
+   division écrite en fraction, le produit de deux décimaux (aire, puis × 10, × 10 et le retour). */
+export const DIX_ORANGE = "#fab464";
+
+/* Une pointe de flèche pleine, dans l'axe (ux, uy) de son trait, la pointe en (x, y). Remarque de
+   Gwenaël du 30/10 : une pointe « > » posée de travers sur une courbe qui descend ne va pas. */
+function pointe(x, y, ux, uy, couleur = ORANGE, longueur = 9, demi = 5) {
+  const n = Math.hypot(ux, uy) || 1;
+  const [dx, dy] = [ux / n, uy / n];
+  const [bx, by] = [x - longueur * dx, y - longueur * dy];
+  return `<path d="M${n2(x)},${n2(y)} L${n2(bx - demi * dy)},${n2(by + demi * dx)} L${n2(bx + demi * dy)},${n2(by - demi * dx)} Z" fill="${couleur}"/>`;
+}
+
+// Une flèche courte vers le bas (les « × 10 » de la division et du produit).
+const flecheBas = (x, couleur = ORANGE) =>
+  line(x, 38, x, 62, couleur, 2.2) +
+  `<path d="M${n2(x - 5)},56 L${n2(x)},64 L${n2(x + 5)},56" fill="none" stroke="${couleur}" stroke-width="2.2"/>`;
+
+/* NC04-a : les cases à compter, le total écrit au-dessus (« 42 cases ») et « 6 par ligne » à gauche
+   (des données de la question, jamais la réponse). totalTexte : ce qu'on écrit au-dessus quand le
+   total est ce qu'on cherche (« ? cases », pour un produit). */
+export function casesTables(total, parLigne, options = {}) {
+  const { totalTexte = `${total} cases` } = options;
+  const c = 14;
+  const g = 3;
+  const rangs = Math.ceil(total / parLigne);
+  const wgrid = parLigne * (c + g);
+  const W = Math.max(wgrid + 150, 300);
+  const x0 = (W - wgrid) / 2 + 30;
+  let body = t(x0 + wgrid / 2, 12, totalTexte, 14, INK, { weight: 800 });
+  let k = 0;
+  for (let r = 0; r < rangs; r++)
+    for (let j = 0; j < parLigne; j++, k++) {
+      const y = 26 + r * (c + g + 2);
+      body +=
+        k < total
+          ? rect(x0 + j * (c + g), y, c, c, "#e0f2f1", TURQ, 1, 2)
+          : rect(x0 + j * (c + g), y, c, c, "none", FILET, 1, 2, "2 2");
+    }
+  const hg = rangs * (c + g + 2);
+  body += t(x0 - 12, 26 + hg / 2, `${parLigne} par ligne`, 13, BRUN, {
+    anchor: "end",
+    weight: 800,
+  });
+  body += line(x0 - 8, 26, x0 - 8, 26 + hg - 4, BRUN, 1.4);
+  return svg(W, 26 + hg + 6, body, "cases à compter");
+}
+
+/* NC04-b : a − b posée en colonnes, virgules alignées (0 ajoutés), la ligne du résultat en cases
+   vides. signe « + » : l'addition posée, de la même façon (les tirages « 3,4 + 9,1 »). */
+export function operationPosee(a, b, signe = "−") {
+  const [ea, da0 = ""] = a.split(",");
+  const [eb, db0 = ""] = b.split(",");
+  const nd = Math.max(da0.length, db0.length);
+  const ne = Math.max(ea.length, eb.length);
+  const [da, db] = [da0.padEnd(nd, "0"), db0.padEnd(nd, "0")];
+  const cw = 26;
+  const W = 220;
+  const x0 = W / 2 - ((ne + nd) * cw) / 2 + 10;
+  const gras = { weight: 700, font: MATH };
+  let body = "";
+  [
+    [ea, da],
+    [eb, db],
+  ].forEach(([e, d], r) => {
+    const y = 26 + r * 32;
+    [...e.padStart(ne)].forEach((ch, k) => {
+      if (ch !== " ") body += t(x0 + k * cw + cw / 2, y, ch, 22, INK, gras);
+    });
+    [...d].forEach((ch, k) => (body += t(x0 + (ne + k) * cw + cw / 2 + 6, y, ch, 22, INK, gras)));
+    body += t(x0 + ne * cw + 3, y + 2, ",", 24, INK, gras);
+  });
+  body += t(x0 - 14, 58, signe, 22, INK, { font: MATH });
+  const yl = 76;
+  body += line(x0 - 22, yl, x0 + (ne + nd) * cw + 14, yl, INK, 2);
+  for (let k = 0; k < ne + nd; k++)
+    body += rect(
+      x0 + k * cw + (k >= ne ? 6 : 0) + 3,
+      yl + 8,
+      cw - 6,
+      26,
+      "#fff",
+      FILET,
+      1.2,
+      3,
+      "3 2",
+    );
+  body += t(x0 + ne * cw + 3, yl + 26, ",", 24, INK, gras);
+  return svg(W, yl + 42, body, signe === "+" ? "addition posée" : "soustraction posée");
+}
+
+/* NC04-c : le rectangle a × (dizaine ronde), la dernière colonne hachurée d'orange : elle est de
+   trop (a × 29 = a × 30 − a). Les tirages « 6 × 31 » : la colonne est EN PLUS, à droite, en orange
+   plein (a × 31 = a × 30 + a). Une colonne garde au moins 8 px (pour 99 : 2,5 px dans le cahier). */
+export function aireCompensation(a, proche, b, legende = null) {
+  const W = 330;
+  const H = 150;
+  const [x0, y0, w, h] = [40, 34, 250, 80];
+  const chiffre = { weight: 700, font: MATH };
+  let body = "";
+  if (b < proche) {
+    body += rect(x0, y0, w, h, "#e0f2f1", TURQ, 1.6, 2);
+    const xc = x0 + w - Math.max((w / proche) * (proche - b), 8);
+    body +=
+      `<defs><pattern id="hach" width="6" height="6" patternUnits="userSpaceOnUse" ` +
+      `patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="${ORANGE}" stroke-width="2.2"/></pattern></defs>`;
+    body += rect(xc, y0, x0 + w - xc, h, "url(#hach)", ORANGE, 2);
+    body += t(x0 + w / 2, y0 - 14, String(proche), 15, INK, chiffre);
+    body += line(x0, y0 - 4, x0 + w, y0 - 4, INK, 1.2);
+    body += t(x0 - 16, y0 + h / 2, String(a), 15, INK, chiffre);
+    body += t(x0 + (xc - x0) / 2, y0 + h + 16, String(b), 15, INK, chiffre);
+    body += line(x0, y0 + h + 5, xc, y0 + h + 5, INK, 1.2);
+    body += t((xc + x0 + w) / 2, y0 + h + 16, String(proche - b), 15, BRUN, chiffre);
+  } else {
+    const xc = x0 + w - Math.max((w / b) * (b - proche), 8);
+    body += rect(x0, y0, xc - x0, h, "#e0f2f1", TURQ, 1.6, 2);
+    body += rect(xc, y0, x0 + w - xc, h, "#fde5c4", ORANGE, 2, 2);
+    body += t(x0 + (xc - x0) / 2, y0 - 14, String(proche), 15, INK, chiffre);
+    body += line(x0, y0 - 4, xc, y0 - 4, INK, 1.2);
+    body += t((xc + x0 + w) / 2, y0 - 14, String(b - proche), 15, BRUN, chiffre);
+    body += t(x0 - 16, y0 + h / 2, String(a), 15, INK, chiffre);
+    body += t(x0 + w / 2, y0 + h + 16, String(b), 15, INK, chiffre);
+    body += line(x0, y0 + h + 5, x0 + w, y0 + h + 5, INK, 1.2);
+  }
+  if (legende) body += t(W / 2, H - 2, legende, 12, GRIS);
+  return svg(W, H + 6, body, "rectangle de cases");
+}
+
+/* Le glisse-nombre de la V1 (dnb_02b) : en-têtes, la BANDE grise (le nombre de départ) et la ligne
+   d'arrivée ; colonne des unités en bleu ; virgule orange posée DEVANT, après les unités. haut, bas :
+   {rang: chiffre}. decalage : n rangs (> 0 vers la gauche, < 0 vers la droite) → une flèche par
+   chiffre, du haut vers sa place en bas (explication) ; fleches : les rangs qui en ont une (sans les 0
+   de tête de 0,45, qui n'arrivent sur aucun chiffre). Sept colonnes, de milliers à millièmes ; quand
+   un tirage va plus loin (65 520, 583 000), les sept colonnes glissent vers la gauche, et les rangs
+   « de mille » s'écrivent sur deux lignes. */
+export const RANGS_GLISSE = [
+  "centaines de mille",
+  "dizaines de mille",
+  "milliers",
+  "centaines",
+  "dizaines",
+  "unités",
+  "dixièmes",
+  "centièmes",
+  "millièmes",
+];
+export const GN_COLS = RANGS_GLISSE.slice(2);
+
+// Les sept colonnes qui montrent tous les rangs utilisés (milliers à millièmes si possible).
+export function colonnesGlisse(...rangsUtilises) {
+  const indices = rangsUtilises.flat().map((rang) => RANGS_GLISSE.indexOf(rang));
+  const debut = Math.min(2, ...indices);
+  return RANGS_GLISSE.slice(debut, debut + 7);
+}
+
+export function glisseNombre(haut, bas = null, options = {}) {
+  const { cols = GN_COLS, decalage = null, legende = null, fleches = null } = options;
+  // ecart : l'espace entre la bande et la ligne d'arrivée (6 px dans le cahier ; 24 px depuis le 30/10,
+  // pour que les flèches droites aient la place de rester séparées).
+  const [cw, hh, rh, ecart] = [46, 26, 40, 24];
+  const W = cols.length * cw + 14;
+  const x0 = 7;
+  const iu = cols.indexOf("unités");
+  // Le cadre entoure aussi la ligne d'arrivée (dans le cahier, elle dépassait de 2 px en bas).
+  let body = rect(
+    x0 - 2,
+    2,
+    cols.length * cw + 4,
+    hh + 2 * rh + ecart + 4,
+    "#fff",
+    "#1f2f45",
+    2,
+    10,
+  );
+  cols.forEach((col, i) => {
+    const x = x0 + i * cw;
+    const unites = col === "unités";
+    body += rect(x, 4, cw, hh, unites ? "#e8f1fd" : "#f5f9fc", "#c9d3df", 0.8);
+    // Les en-têtes longs (« centièmes », « millièmes ») un peu plus petits : à 9,5 px, ils se touchaient.
+    const taille = col.split(" de ")[0].length > 8 ? 8.6 : 9.5;
+    const style = [taille, unites ? "#1d4ed8" : INK, { weight: unites ? 800 : 600 }];
+    const [mot, mille] = col.split(" de ");
+    if (mille) {
+      body += t(x + cw / 2, 4 + hh / 2 - 5.5, mot, ...style);
+      body += t(x + cw / 2, 4 + hh / 2 + 5.5, `de ${mille}`, ...style);
+    } else body += t(x + cw / 2, 4 + hh / 2, col, ...style);
+    body += rect(x, 4 + hh, cw, rh, "#e2e6ec", "#c9d3df", 0.8);
+    body += rect(x, 4 + hh + rh + ecart, cw, rh, "#fff", "#c9d3df", 0.8);
+  });
+  const ys = [4 + hh + rh / 2 + 1, 4 + hh + rh + ecart + rh / 2 + 1];
+  [haut, bas].forEach((source, rang) => {
+    if (!source) return;
+    for (const [col, d] of Object.entries(source)) {
+      const x = x0 + cols.indexOf(col) * cw + cw / 2;
+      const bleu = col === "unités" && rang === 1;
+      body += t(x, ys[rang], d, 24, bleu ? "#1d4ed8" : INK, { weight: 700, font: MATH });
+    }
+  });
+  if (decalage)
+    for (const col of fleches ?? Object.keys(haut)) {
+      const i = cols.indexOf(col);
+      const j = i - decalage;
+      if (j < 0 || j >= cols.length) continue;
+      const [xa, xb] = [x0 + i * cw + cw / 2, x0 + j * cw + cw / 2];
+      // Remarques de Gwenaël du 29 et du 30/10 (« la pointe est mal faite », « tes flèches se
+      // touchent ») : une flèche DROITE par chiffre, toutes parallèles (même décalage), la pointe
+      // pleine dans l'axe du trait, juste au-dessus du chiffre d'arrivée.
+      const [ya, yb] = [ys[0] + 13, ys[1] - 15];
+      const n = Math.hypot(xb - xa, yb - ya);
+      const [ux, uy] = [(xb - xa) / n, (yb - ya) / n];
+      body += line(xa, ya, xb - 8 * ux, yb - 8 * uy, ORANGE, 2.2);
+      body += pointe(xb, yb, ux, uy);
+    }
+  const xv = x0 + (iu + 1) * cw;
+  for (const y of ys) body += virgule(xv, y + 9, 1.2, ORANGE);
+  let H = hh + 2 * rh + ecart + 8;
+  if (legende) {
+    body += t(W / 2, H + 10, legende, 12, BRUN, { weight: 800 });
+    H += 22;
+  }
+  return svg(W, H, body, "glisse-nombre");
+}
+
+/* NC04-e : le rectangle de la décomposition, (ent + 0,dec) en haut, k sur le côté ; deux morceaux, deux
+   produits (pas à l'échelle pour la partie décimale). montre : les produits écrits (explication).
+   Les nombres sont donnés écrits (« 9 », « 0,3 », « 36 », « 1,2 », « 37,2 »). */
+export function aireDecompo(ent, dec, k, produits = null) {
+  const W = 330;
+  const [x0, y0, h] = [46, 30, 84];
+  const [w1, w2] = [190, 70];
+  const gras = (poids) => ({ weight: poids, font: MATH });
+  let body =
+    rect(x0, y0, w1, h, "#e0f2f1", TURQ, 1.8, 2) +
+    rect(x0 + w1, y0, w2, h, "#fde5c4", "#b45309", 1.8, 2);
+  body += t(x0 + w1 / 2, y0 - 12, ent, 17, INK, gras(800));
+  body += t(x0 + w1 + w2 / 2, y0 - 12, dec, 17, INK, gras(800));
+  body += t(x0 - 16, y0 + h / 2, k, 17, INK, gras(800));
+  body += t(x0 + w1 / 2, y0 + h / 2 - 12, `${ent} × ${k}`, 16, INK, { font: MATH });
+  body += t(x0 + w1 + w2 / 2, y0 + h / 2 - 12, `${dec} × ${k}`, 14, INK, { font: MATH });
+  if (!produits) {
+    body +=
+      carreVide(x0 + w1 / 2, y0 + h / 2 + 16, 24) +
+      carreVide(x0 + w1 + w2 / 2, y0 + h / 2 + 16, 22);
+    return svg(W, y0 + h + 8, body, "rectangle de la décomposition");
+  }
+  const [p1, p2, total] = produits;
+  body += t(x0 + w1 / 2, y0 + h / 2 + 16, `= ${p1}`, 18, INK, gras(800));
+  body += t(x0 + w1 + w2 / 2, y0 + h / 2 + 16, `= ${p2}`, 16, INK, gras(800));
+  body += t(W / 2, y0 + h + 22, `${p1} + ${p2} = ${total}`, 18, INK, gras(800));
+  return svg(W, y0 + h + 34, body, "rectangle de la décomposition");
+}
+
+/* NC04-e, un nombre plus petit que 1 (0,7 × 7) : n bandes-unités de 10 cases, k dixièmes coloriés en
+   orange dans chacune ; on compte. */
+export function bandesDixiemes(nBandes, k, legende = null) {
+  const c = 22;
+  const W = 10 * c + 70;
+  const x0 = 50;
+  let body = "";
+  for (let b = 0; b < nBandes; b++) {
+    const y = 8 + b * (c + 8);
+    body += t(x0 - 26, y + c / 2, String(b + 1), 12, GRIS);
+    for (let j = 0; j < 10; j++)
+      body += rect(
+        x0 + j * c,
+        y,
+        c,
+        c,
+        j < k ? DIX_ORANGE : "#ffffff",
+        j < k ? "#111111" : FILET,
+        1.1,
+      );
+    body += rect(x0, y, 10 * c, c, "none", "#111111", 2);
+  }
+  let H = 8 + nBandes * (c + 8);
+  if (legende) {
+    body += t(W / 2, H + 8, legende, 12, GRIS);
+    H += 22;
+  }
+  return svg(W, H, body, "bandes de dixièmes");
+}
+
+/* Une fraction dessinée comme dans l'appli : le MÊME espace au-dessus et au-dessous de la barre. */
+function fractionSVG(cx, y, num, den, size = 22, col = INK) {
+  const w = Math.max(num.length, den.length) * size * 0.55 + 12;
+  const gap = 4 + size * 0.36;
+  const style = { weight: 700, font: MATH };
+  return [
+    t(cx, y - gap, num, size, col, style) +
+      `<rect x="${n2(cx - w / 2)}" y="${n2(y - 1.25)}" width="${n2(w)}" height="2.5" rx="1" fill="${col}"/>` +
+      t(cx, y + gap, den, size, col, style),
+    w,
+  ];
+}
+
+/* NC04-f d'après Gwenaël (24/10) : la division écrite en FRACTION, numérateur et dénominateur × 10 →
+   48/6 ; le quotient ne change pas. q, verif : l'explication (le quotient, la vérification). */
+export function divisionFraction(a, b, a10, b10, q = null, verif = null) {
+  const W = 330;
+  const y = 76;
+  const [f1, w1] = fractionSVG(70, y, a, b);
+  const [f2, w2] = fractionSVG(200, y, a10, b10);
+  let body = f1 + f2;
+  body += t(135, y, "=", 24, INK, { font: MATH });
+  const [g1, g2] = [70 + w1 / 2 - 4, 200 - w2 / 2 + 4];
+  for (const s of [-1, 1]) {
+    body += `<path d="M${n2(g1)},${y + 34 * s} C110,${y + 60 * s} 160,${y + 60 * s} ${n2(g2)},${y + 34 * s}" fill="none" stroke="${ORANGE}" stroke-width="2.2"/>`;
+    // La pointe pleine dans l'axe de la courbe qui arrive (remarque de Gwenaël du 30/10).
+    body += pointe(g2, y + 34 * s, g2 - 160, 26 * s);
+    body += t(135, s < 0 ? y - 58 : y + 62, "× 10", 14, BRUN, { weight: 800 });
+  }
+  body += t(250, y, "=", 24, INK, { font: MATH });
+  body += q ? t(285, y, q, 24, INK, { weight: 800, font: MATH }) : carreVide(285, y, 28);
+  let H = y + 84;
+  body += t(W / 2, H, "× 10 en haut et en bas : le quotient ne change pas", 12, BRUN, {
+    weight: 800,
+  });
+  H += 14;
+  if (verif) {
+    body +=
+      rect(W / 2 - 110, H, 220, 26, "#e5f7eb", VERT, 1.4, 8) +
+      t(W / 2, H + 13, `je vérifie : ${verif}`, 14, "#147447", { weight: 800 });
+    H += 32;
+  }
+  return svg(W, H + 4, body, "division écrite en fraction");
+}
+
+/* Le cours de NC04-i : comment on montre 0,1 × 0,1 = 0,01 (question de Gwenaël du 30/10). Multiplier
+   par 0,1, c'est prendre le dixième (document d'accompagnement de 6e) : l'unité en 100 petits carrés,
+   une colonne = 0,1 (un dixième), et le dixième de cette colonne = UN petit carré = 0,01. */
+export function dixiemeDeDixieme() {
+  const c = 13;
+  const [x0, y0] = [20, 10];
+  const vertFonce = "#166534";
+  let body = "";
+  for (let i = 0; i < 10; i++)
+    for (let j = 0; j < 10; j++) body += rect(x0 + j * c, y0 + i * c, c, c, "#fff", "#d6dde7", 0.6);
+  body += rect(x0, y0, c, 10 * c, "#dcfce7", vertFonce, 2);
+  for (let i = 0; i < 9; i++) body += rect(x0, y0 + i * c, c, c, "none", vertFonce, 0.6);
+  body += rect(x0, y0 + 9 * c, c, c, DIX_ORANGE, "#111", 1.6);
+  body += rect(x0, y0, 10 * c, 10 * c, "none", "#ef4444", 2);
+  body += t(x0 + 5 * c, y0 + 10 * c + 16, "1 unité = 100 petits carrés", 12, "#c81e1e", {
+    weight: 800,
+  });
+  const xt = 172;
+  body += line(x0 + c, y0 + 2.5 * c, xt - 6, 30, vertFonce, 1.6);
+  body += t(xt, 26, "une colonne : 0,1", 13, vertFonce, { weight: 800, anchor: "start" });
+  body += t(xt, 43, "(le dixième de l'unité)", 12, vertFonce, { anchor: "start" });
+  body += line(x0 + c, y0 + 9.5 * c, xt - 6, 112, ORANGE, 1.6);
+  body += t(xt, 96, "son dixième :", 13, BRUN, { weight: 800, anchor: "start" });
+  body += t(xt, 116, "0,1 × 0,1 = 0,01", 16, INK, { weight: 800, font: MATH, anchor: "start" });
+  body += t(xt, 134, "1 petit carré, un centième", 12, BRUN, { anchor: "start" });
+  return svg(340, y0 + 10 * c + 26, body, "0,1 × 0,1 = 0,01");
+}
+
+/* NC04-i, l'aide et l'explication (choix de Gwenaël du 30/10, d'après le document d'accompagnement
+   de 6e : « 0,4 × 0,3 = (0,1 × 4) × (0,1 × 3) = (0,1 × 0,1) × (3 × 4) = 0,01 × 12 ») : chaque nombre
+   écrit avec 0,1, puis regroupé ; le fait à connaître « 0,1 × 0,1 = 0,01 » dans son cadre (l'aide
+   seulement : l'explication de NC04-i écrit les mêmes calculs, sans dessin). */
+export function decompositionDixiemes(a, b, a1, b1) {
+  const W = 320;
+  const [xa, xb] = [80, 240];
+  const gras = { weight: 700, font: MATH };
+  const vert = "#147447";
+  let body =
+    t(xa, 22, a, 24, INK, gras) +
+    t(160, 22, "×", 24, INK, { font: MATH }) +
+    t(xb, 22, b, 24, INK, gras);
+  body += flecheBas(xa) + flecheBas(xb);
+  body += t(xa, 86, `${a1} × 0,1`, 20, INK, { font: MATH });
+  body += t(160, 86, "×", 20, INK, { font: MATH });
+  body += t(xb, 86, `${b1} × 0,1`, 20, INK, { font: MATH });
+  body += t(W / 2, 122, `= (${a1} × ${b1}) × (0,1 × 0,1)`, 19, INK, { font: MATH });
+  const y = 146;
+  body +=
+    rect(W / 2 - 100, y, 200, 26, "#e5f7eb", VERT, 1.4, 8) +
+    t(W / 2, y + 13, "0,1 × 0,1 = 0,01", 15, vert, { weight: 800 });
+  return svg(W, y + 32, body, "les deux nombres écrits avec 0,1");
+}
+
 /* Le point de cours (petite croix) gardé pour les lots suivants. */
 export { croix };

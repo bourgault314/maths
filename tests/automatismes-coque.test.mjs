@@ -24,20 +24,24 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
     }
   // Lot NC-1 : NC17 et NC18 suivent le cahier (sans leur gabarit, comme ici) ; NC17-f et NC18-g ajoutées.
   // Lot NC-2 : NC01, NC02 et NC03 aussi (NC01-d n'a plus de □ dans sa phrase, NC03-b n'est plus un QCM).
+  // Lot NC-3 : NC04 aussi (« Calcule. » avec son gabarit ; NC04-g, h, i ajoutées).
   assert.deepEqual(cas, {
     seule: 206,
-    carres: 8,
+    carres: 7,
     comparaison: 9,
     ranger: 2,
     qcm: 68,
-    calcule: 67,
-    etiquette: 70,
+    calcule: 62,
+    etiquette: 79,
     coordonnees: 7,
   });
 });
 
+// L'ancienne NC04-e de GPT (graine 12), réécrite au lot NC-3 avec son gabarit : une question « Calcule … ».
+const calcule04 = { prompt: "Calcule 0,4 × 2.", fields: [{ answer: "0.8" }] };
+
 test("C3 : « Calcule 0,4 × 2. » s'écrit « 0,4 × 2 = [ ] »", () => {
-  assert.deepEqual(modeleQuestion(question("NC04-e"), null), {
+  assert.deepEqual(modeleQuestion(calcule04, null), {
     cas: "calcule",
     consigne: "Calcule.",
     modele: "0,4 × 2 = [0]",
@@ -87,8 +91,7 @@ test("C3 : comparer, ranger, QCM, case seule, gabarit en priorité", () => {
 });
 
 test("C6 : la bonne réponse est l'égalité entière, ou les valeurs attendues", () => {
-  const nc04 = question("NC04-e");
-  assert.equal(bonneReponseTexte(nc04, modeleQuestion(nc04, null)), "0,4 × 2 = 0,8");
+  assert.equal(bonneReponseTexte(calcule04, modeleQuestion(calcule04, null)), "0,4 × 2 = 0,8");
   const nc18 = question("NC18-d");
   assert.equal(bonneReponseTexte(nc18, modeleQuestion(nc18, null)), "Quotient : 2 · Reste : 3");
   // Avec le gabarit du cahier (lot NC-1) : l'égalité entière.

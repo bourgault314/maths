@@ -1,6 +1,7 @@
 // 0.2.0 (lot NC-1, 24/10/2026) : NC17 et NC18 suivent le cahier ; une même graine y donne une autre question.
 // 0.3.0 (lot NC-2, 28/10/2026) : NC01, NC02 et NC03 suivent le cahier, de même.
-export const VERSION = "0.3.0";
+// 0.4.0 (lot NC-3, 29/10/2026) : NC04 suit le cahier, de même.
+export const VERSION = "0.4.0";
 export function rng(seed) {
   let a = Number(seed) >>> 0;
   const next = () => {
@@ -393,7 +394,8 @@ export function checkAnswer(q, answers) {
     if (
       ok &&
       c.form === "decimal" &&
-      !/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(String(answers[0]).trim())
+      // Les espaces entre les milliers (« 5 240 », écrit au clavier) restent une écriture décimale.
+      !/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(String(answers[0]).replace(/\s/g, ""))
     )
       return {
         ok: false,
