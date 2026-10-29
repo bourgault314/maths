@@ -141,7 +141,7 @@ const TOM = parcours({m1e1: etape(false, 0, 5)});
 // ------------------------------------------------------------ la page, exécutée
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
-  "elementSvg", "pastilleMonde", "contenuSplat", "dessinerTableauSplat", "objectifSplat",
+  "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "elementSvg", "pastilleMonde", "contenuSplat", "dessinerTableauSplat", "objectifSplat",
   "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts", "mondesDeLEleve"].map(fonction).join("\n");
 const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "GRIS_FERME", "CASES_ETAPE", "SVG", "NOMBRE_MONDES"].map(constante).join("\n");
 
@@ -149,17 +149,18 @@ function ongletSplat(liste, options = {}) {
   const {zones, $} = creerZones();
   const corps = new Noeud("tbody");
   const messages = [];
-  const etat = {ouverts: []};
+  const etat = {ouverts: [], revenir: []};
   const moteur = options.sansMoteur ? null : SPLAT;
   // Lot « splat-suivi-5 » : la classe ouverte porte ses réglages (les mondes ouverts).
   // Lot 5c : la ligne ouvre la fenêtre de l'élève (ouvrirFenetreEleve), dont
   // contenuSplat dessine le contenu.
   const fabrique = new Function("document", "$", "SPLAT", "droitClasse", "messager",
-    "dessinerPapier", "classe", "ouvrirFenetreEleve",
+    "dessinerPapier", "classe", "ouvrirFenetreEleve", "appliAffichee", "revenirA", "voirFiche",
     `${CONSTANTES}\nlet eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireSplat, dessinerTableauSplat, objectifSplat, contenuSplat};`);
   const f = fabrique(document, $, moteur, options.droit || "proprietaire",
     (id, t, type) => messages.push({id, t, type}), () => {},
-    {id: 7, libelle: "405", reglages: options.reglages || {}}, eleve => etat.ouverts.push(eleve.prenom));
+    {id: 7, libelle: "405", reglages: options.reglages || {}}, eleve => etat.ouverts.push(eleve.prenom),
+    "splat", eleve => etat.revenir.push(eleve.prenom), () => { throw new Error("pas de parcours Défi tables depuis SPLAT!"); });
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []},
     e, {lu: f.lireSplat(e.parcours, e)}));
   f.poser(eleves);
@@ -182,7 +183,7 @@ const COULEUR = n => ({1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5
 const pastilles = tr => tr.tous(n => n.tag === "svg");
 const etatPastille = svg => svg.className.replace("monde-p ", "");
 
-test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus ; la ligne ouvre la fenêtre de l'élève (lot 5c) — plus de « Détail » ni de « ⋯ »", () => {
+test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus ; la ligne ouvre la fenêtre de l'élève (lot 5c) — plus de « Détail », pas de « ⋯ » sans version à restaurer (lot 5f)", () => {
   const {lignes} = ongletSplat(classe8());
   assert.equal(lignes.length, 4);
   // Lot « Ma classe : élèves » (18/10/2026) : plus de colonne Code, le prénom en texte.
@@ -210,7 +211,7 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus ; 
   assert.equal(cellules(yanis)[C_DATE].textContent, "rien reçu");
   lignes.forEach(tr => {
     assert.equal(cellules(tr)[C_VA].textContent, "›");
-    assert.equal(tr.premier(n => n.tag === "details"), null, "plus de « ⋯ » : « Revenir à… » est dans la fenêtre");
+    assert.equal(tr.premier(n => n.tag === "details"), null, "rien à restaurer : pas de « ⋯ » (lot 5f : « Revenir à… » y est quand il y a une version)");
     assert.equal(aClasse(cellules(tr)[1], "large"), true, "au téléphone, les mondes se cachent");
   });
   const r = ongletSplat(classe8());
@@ -332,7 +333,7 @@ test("en lecture seule : pas de code, pas de saisie, pas de « ⋯ » vide", () 
   lignes.forEach(tr => {
     assert.equal(cellules(tr).length, 5, "pas de colonne Code");
     assert.equal(cellules(tr)[0].tous(n => n.tag === "input").length, 0, "pas de champ de saisie");
-    assert.equal(tr.premier(n => n.tag === "details"), null, "pas de « ⋯ » ; « Revenir à… » (fenêtre) est en écriture");
+    assert.equal(tr.premier(n => n.tag === "details"), null, "lecture seule : pas de « ⋯ » (« Revenir à… » est en écriture)");
   });
 });
 

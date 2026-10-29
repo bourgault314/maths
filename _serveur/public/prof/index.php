@@ -3,8 +3,10 @@
 require_once __DIR__ . '/../lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
 // Politique de contenu (voir lib/entetes.php) : seuls le moteur servi d'ici et
-// le script portant ce nonce s'exécutent dans la page.
-$nonce = entetes_page();
+// le script portant ce nonce s'exécutent dans la page. Serveur pro, lot 5f :
+// la fenêtre de l'élève de Défi tables montre son écran Mon parcours, une page
+// de mathsgo.re, dans un cadre — cette page-ci, et elle seule, l'autorise.
+$nonce = entetes_page('https://mathsgo.re');
 // Le moteur est une copie de outils/calcul_mental/defi_tables_mon_parcours.js
 // (identité vérifiée par un test du dépôt). Sa version dans l'adresse suit son
 // contenu : un nouveau fichier déposé n'est jamais masqué par le cache.
@@ -166,27 +168,58 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .outils-tableau .chercher svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
   #tableau th[aria-sort="ascending"] button::after { content: " ▲"; font-size: .8em; }
   #tableau th[aria-sort="descending"] button::after { content: " ▼"; font-size: .8em; }
-  /* La ligne entière ouvre la fenêtre de l'élève : plus de bouton par ligne.
-     Le prénom est un bouton (le clavier y arrive), la flèche dit qu'on peut
-     entrer. */
+  /* La ligne entière s'ouvre : plus de bouton par ligne. Le prénom est un
+     bouton (le clavier y arrive), la flèche dit qu'on peut entrer. Serveur
+     pro, lot 5f (retours de Gwenaël des 25, 26 et 28/10/2026) : la ligne
+     ouvre la fenêtre de l'élève dans les quatre applis ; dans Défi tables,
+     cette fenêtre montre son écran Mon parcours lui-même. */
   #tableau tbody tr.cliquable { cursor: pointer; }
   #tableau tbody tr.cliquable:hover td { background: var(--survol); }
   .lien-eleve { min-height: 0; padding: 0; gap: 0; justify-content: flex-start; color: var(--blue-dark); background: none;
                 border: 0; border-radius: 4px; font: inherit; font-weight: 600; text-align: left; white-space: nowrap; }
   .lien-eleve:hover, tr.cliquable:hover .lien-eleve { color: var(--blue); background: none; border: 0; text-decoration: underline; }
   td.nom.sans .lien-eleve { color: var(--muted); font-style: italic; font-weight: 400; }
-  #tableau td.va { width: 36px; padding-left: 0; color: var(--blue); font-size: var(--titre-carte); text-align: right; }
+  /* Le bout de la ligne : « ⋯ » (« Revenir à… », lot 5f — il était en bas de
+     la fenêtre de l'élève, « trop visible ») puis la flèche. Le « ⋯ » ne
+     grandit pas la ligne (marges négatives). */
+  #tableau td.va { width: 1%; padding-left: 0; text-align: right; white-space: nowrap; }
+  /* Lot 5f : la page remonte au message d'un parcours refusé — sous la ligne
+     des onglets, collée en haut, pas derrière elle. */
+  #message-appli { scroll-margin-top: 84px; }
+  #tableau td.va .plus { display: inline-block; margin: -9px 0; vertical-align: middle; }
+  #tableau td.va .fleche { display: inline-block; width: 28px; vertical-align: middle;
+                           color: var(--blue); font-size: var(--titre-carte); text-align: right; }
   #tableau .seul-telephone { display: none; }
   #tableau td.aucun { color: var(--muted); font-style: italic; white-space: normal; }
   /* Les trois cartes du haut de Défi tables, côte à côte, de la même largeur
      (charte : .grille-cartes), sans filet de couleur. */
   /* La fenêtre de l'élève : la même dans les quatre applis (charte :
-     .fenetre). ‹ › en haut à droite pour passer au précédent, au suivant. */
+     .fenetre). ‹ › en haut à droite pour passer au précédent, au suivant,
+     puis ✕ pour la fermer (lot 5f). */
   dialog.fenetre-eleve { max-width: 640px; }
-  .fenetre-eleve .fenetre-tete { position: relative; padding-right: 116px; }
+  .fenetre-eleve .fenetre-tete { position: relative; padding-right: 166px; }
   .fenetre-eleve .naviguer { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
   .fenetre-eleve .naviguer button { width: 44px; padding: 0; font-size: 22px; line-height: 1; }
   .fenetre-eleve .fenetre-tete h2 { overflow-wrap: anywhere; }
+  /* Serveur pro, lot 5f (choix de Gwenaël du 28/10/2026, « ouvrir dans la
+     même fenêtre avec une petite croix ») : dans Défi tables, la fenêtre est
+     grande et montre son écran Mon parcours (mathsgo.re) dans un cadre. Plus
+     d'onglet par élève : ‹ › passent au suivant, ✕ ferme. Au téléphone, elle
+     prend tout l'écran. Le pied (« Fermer ») laisse la place au parcours. */
+  dialog.fenetre-eleve.avec-parcours { max-width: 1180px; height: calc(100vh - 32px); }
+  .avec-parcours .fenetre-tete { padding-bottom: 10px; border-bottom: 1px solid var(--filet-doux); }
+  .avec-parcours .fenetre-corps { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .avec-parcours #fe-contenu { display: flex; flex: 1 1 auto; min-height: 0; }
+  .avec-parcours .fenetre-pied { display: none; }
+  .avec-parcours #fe-message { margin: 10px 20px 0; }
+  .fe-cadre { display: flex; flex: 1 1 auto; min-height: 0; background: var(--page); }
+  .fe-cadre iframe { display: block; flex: 1 1 auto; width: 100%; height: 100%; border: 0; }
+  .fe-attente { margin: auto; padding: 24px; color: var(--muted); text-align: center; }
+  /* « Ouvrir dans un onglet » : discret, sous le titre (pour imprimer sa
+     fiche depuis un onglet à part, par exemple). */
+  .fenetre-eleve .lien-onglet { min-height: 0; margin-top: 4px; padding: 0; color: var(--blue-dark); background: none; border: 0;
+                                font: inherit; font-size: var(--texte-secondaire); text-decoration: underline; }
+  .fenetre-eleve .lien-onglet:hover { color: var(--blue); background: none; border: 0; }
   .fiche-chiffres { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); margin: 4px 0 16px; }
   .fiche-chiffres > div { min-width: 0; padding: 10px 12px; background: var(--page); border: 1px solid var(--filet-doux); border-radius: var(--arrondi); }
   .fiche-chiffres dt { color: var(--muted); font-size: var(--texte-secondaire); }
@@ -195,15 +228,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .fenetre-eleve h3 { margin: 16px 0 6px; font-size: 16px; color: var(--ink); }
   .fenetre-eleve h3:first-child { margin-top: 0; }
   .fe-vide { margin: 4px 0 8px; color: var(--muted); }
-  .fe-alertes { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 12px; }
-  .fe-alertes .alerte { margin-left: 0; }
-  .cases-tables { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; padding: 0; list-style: none; }
-  .cases-tables li { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px;
-                     font-weight: 700; background: var(--gris-pale); color: var(--muted); }
-  .cases-tables li.passee { background: var(--vert-pale); color: var(--vert); }
-  .cases-tables li.encours { background: var(--paper); color: var(--blue); border: 2px solid var(--blue); }
-  .fe-retard { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-  .fe-gestes { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--filet-doux); }
   .fenetre-eleve .partie-en-cours { margin: 0 0 12px; }
   /* Lot 2b (03/10/2026) : la ligne d'un élève se lit sans survol et
      s'imprime en noir et blanc — du texte, pas des cases de couleur. */
@@ -693,7 +717,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     #tableau th { white-space: normal; line-height: 1.25; }
     #tableau th:first-child, #tableau td:first-child { padding-left: 10px; }
     #tableau .bonus-compte { display: none; }
-    #tableau th:last-child:empty, #tableau td.va { display: none; }
+    /* Lot 5f : le « ⋯ » reste au téléphone, la flèche part ; les titres
+       des colonnes passent sur deux lignes, pour que le « ⋯ » tienne
+       (mesuré : 356 px pour 356 à 390 de large, dans les quatre applis). */
+    #tableau td.va { padding-right: 6px; }
+    #tableau td.va .fleche { display: none; }
+    #tableau th button[data-tri] { white-space: normal; text-align: left; }
     #tableau td.nom { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
     .acquises-liste { display: none; }
     /* « Parfait : … » explique les niveaux de Coffres : cachés ici, ils sont
@@ -708,6 +737,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     /* Dans la fenêtre : deux chiffres par ligne, le nom du monde au-dessus
        de ses cases, le tableau par opération de Coffres resserré. */
     .fiche-chiffres { grid-template-columns: 1fr 1fr; }
+    /* Lot 5f : le parcours d'un élève prend tout l'écran du téléphone. */
+    dialog.fenetre-eleve.avec-parcours { width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;
+                                         margin: 0; border-radius: 0; }
     .detail-monde b { flex-basis: 100%; }
     .fenetre-eleve .tableau-operations { width: 100%; min-width: 0; }
     .fenetre-eleve .tableau-operations th, .fenetre-eleve .tableau-operations td { padding: 5px 3px; font-size: .76rem; white-space: normal; }
@@ -1019,7 +1051,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <div class="carte imprimer" id="bloc-imprimer">
       <strong>À imprimer pour la classe</strong>
       <p class="sous">Les papiers de Défi tables, sur mathsgo.re (nouvel onglet). La fiche de suivi
-      d’un élève, remplie : touche sa ligne, puis « Voir son parcours ».</p>
+      d’un élève, remplie : ouvre son parcours (touche sa ligne), puis « Imprimer sa fiche ».</p>
       <ul class="liens-imprimer">
         <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_parcours_tables.pdf" target="_blank" rel="noopener">Fiche « Mon parcours des tables » vierge</a> — à remplir à la main, une page.</li>
         <li><a href="https://mathsgo.re/outils/calcul_mental/fiche_tables_multiplication.pdf" target="_blank" rel="noopener">Les tables de 2 à 10 sur une page</a> — à coller dans le cahier.</li>
@@ -1400,17 +1432,27 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      createElement et textContent. Elle remplace « Parcours » (Défi tables,
      qui garde « Voir son parcours » dans un nouvel onglet), « Détail ▾ »
      (SPLAT!, Coffres) et la fenêtre « Le parcours de… » d'Anzan.
-     « Revenir à… » (le « ⋯ » de la ligne) est en bas de la fenêtre. -->
+     Serveur pro, lot 5f (retours de Gwenaël des 25, 26 et 28/10/2026) :
+     dans Défi tables, la fenêtre répétait la ligne ; elle montre maintenant
+     son écran Mon parcours lui-même (mathsgo.re, dans un cadre, par le
+     billet de lecture d'avant), en grand, au téléphone comme à l'ordinateur.
+     ‹ › passent au suivant sans ouvrir d'onglet, ✕ ferme. « Revenir à… » est
+     retourné dans le « ⋯ » de la ligne. -->
 <dialog id="fenetre-eleve" class="fenetre fenetre-eleve" aria-labelledby="fe-titre">
   <div class="fenetre-tete">
     <div class="naviguer">
       <button type="button" class="secondaire" id="fe-precedent" aria-label="Élève précédent" title="Élève précédent">‹</button>
       <button type="button" class="secondaire" id="fe-suivant" aria-label="Élève suivant" title="Élève suivant">›</button>
+      <button type="button" class="secondaire" id="fe-croix" aria-label="Fermer" title="Fermer">✕</button>
     </div>
     <h2 id="fe-titre"></h2>
     <p id="fe-sous"></p>
+    <button type="button" class="lien-onglet" id="fe-parcours" title="Son écran Mon parcours dans un nouvel onglet — pour imprimer sa fiche, par exemple" hidden>Ouvrir dans un onglet</button>
   </div>
   <div class="fenetre-corps">
+    <!-- Correctif des lots 5 (point 5) : un parcours refusé se lit ici, pas
+         derrière la fenêtre ; lot 5f : au-dessus du cadre du parcours. -->
+    <p class="message" id="fe-message" hidden></p>
     <div id="fe-contenu"></div>
     <!-- Anzan : ses dernières séances (l'écran « Mon historique » de l'élève). -->
     <div id="fe-anzan" hidden>
@@ -1419,14 +1461,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <p class="pa-note" id="pa-note"></p>
       <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
     </div>
-    <!-- Correctif des lots 5 (point 5) : « Voir son parcours » refusé se lit ici,
-         pas derrière la fenêtre. -->
-    <p class="message" id="fe-message" hidden></p>
-    <p class="fe-gestes" id="fe-gestes" hidden><button type="button" class="secondaire" id="fe-revenir" title="Revenir à une version précédente de sa progression">Revenir à…</button></p>
   </div>
   <div class="fenetre-pied">
     <button type="button" class="secondaire" id="fe-fermer">Fermer</button>
-    <button type="button" id="fe-parcours" title="Son écran Mon parcours, sur mathsgo.re, dans un nouvel onglet" hidden>Voir son parcours</button>
     <button type="button" id="pa-imprimer" hidden>Imprimer ces séances</button>
   </div>
 </dialog>
@@ -1576,6 +1613,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // recherche compris), que ‹ › suivent.
   let recherche = "";
   let fenetreEleveId = null;
+  // Lot 5f : le numéro de la dernière demande de parcours (Défi tables) —
+  // une réponse arrivée après un ‹ ›, un ✕ ou un autre élève est oubliée.
+  let demandeParcours = 0;
   let idsAffiches = [];
   let demandeAppli = 0;
   // Correctif des lots 5 (relecture Codex du 25/10/2026, point 1) : le numéro
@@ -2269,8 +2309,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Dans le tableau d'une appli : « Revenir à… », qui revient dans l'activité
   // affichée — il concerne sa progression, pas l'élève lui-même.
-  // « Revenir à… » (serveur pro, lot 5c : en bas de la fenêtre de l'élève,
-  // avant derrière le « ⋯ » de sa ligne). Le serveur garde la version d'avant
+  // « Revenir à… », derrière le « ⋯ » au bout de sa ligne (serveur pro, lot
+  // 5f — au lot 5c, il était en bas de la fenêtre de l'élève : « des gens
+  // risquent de cliquer dessus »). Le serveur garde la version d'avant
   // le dernier enregistrement ET la fin de chacune des sept dernières
   // journées : un écrasement (par quelqu'un qui avait le code, ou un
   // « Recommencer à zéro » malheureux) se répare même si on ne s'en aperçoit
@@ -3028,10 +3069,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
       const cDate = celluleDate(eleve);
 
-      // Serveur pro, lot 5c : plus de bouton « Parcours » sur la ligne — la
-      // ligne entière ouvre la fenêtre de l'élève, où « Voir son parcours »
-      // ouvre l'écran Mon parcours (voirFiche, billet de lecture). Au
-      // téléphone, trois colonnes : l'élève, les tables passées, le jour.
+      // Serveur pro, lot 5c : plus de bouton « Parcours » sur la ligne ; lot
+      // 5f : à l'ordinateur, la ligne entière ouvre l'écran Mon parcours
+      // (voirFiche, billet de lecture) ; au téléphone, la fenêtre de l'élève,
+      // où « Voir son parcours » l'ouvre. Au téléphone, trois colonnes :
+      // l'élève, les tables passées, le jour.
       [cEnCours, cSemaine, cRetard].forEach(large);
       ligne.append(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate);
       finirLigne(ligne, eleve, cNom);
@@ -3059,10 +3101,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
 
   // La fin de chaque ligne d'élève, dans les quatre applis : la ligne entière
-  // ouvre la fenêtre de l'élève (choix de Gwenaël, planche 4 du 25/10/2026).
-  // Le prénom devient un bouton — le clavier y arrive, Entrée l'ouvre — et une
-  // flèche « › » dit qu'on peut entrer (cachée au téléphone). Le prénom reste
-  // posé par textContent.
+  // s'ouvre (choix de Gwenaël, planche 4 du 25/10/2026). Le prénom devient un
+  // bouton — le clavier y arrive, Entrée l'ouvre — et une flèche « › » dit
+  // qu'on peut entrer (cachée au téléphone). Le prénom reste posé par
+  // textContent.
+  // Serveur pro, lot 5f (retours de Gwenaël des 25, 26 et 28/10/2026) :
+  //  - la ligne ouvre la fenêtre de l'élève, dans les quatre applis, au
+  //    téléphone comme à l'ordinateur ; dans Défi tables, cette fenêtre
+  //    montre son écran Mon parcours lui-même (montrerParcours) — aussi pour
+  //    un élève qui n'a rien envoyé : son parcours vierge ;
+  //  - « Revenir à… » retourne dans un « ⋯ » discret au bout de la ligne,
+  //    avant la flèche : en écriture, et s'il y a une version à restaurer
+  //    (peutRevenir). Toucher le « ⋯ » ou son menu n'ouvre pas la ligne.
   function finirLigne(ligne, eleve, cNom) {
     ligne.className = "cliquable";
     ligne.dataset.eleve = String(eleve.id);
@@ -3074,10 +3124,21 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     cNom.append(bouton);
     const va = document.createElement("td");
     va.className = "va";
-    va.setAttribute("aria-hidden", "true");
-    va.textContent = "›";
+    if (peutRevenir(eleve)) {
+      menuGestes(va, [boutonGeste("Revenir à…", "secondaire", () => revenirA(eleve),
+        "Revenir à une version précédente de sa progression")]);
+    }
+    const fleche = document.createElement("span");
+    fleche.className = "fleche";
+    fleche.setAttribute("aria-hidden", "true");
+    fleche.textContent = "›";
+    va.append(fleche);
     ligne.append(va);
-    ligne.addEventListener("click", () => ouvrirFenetreEleve(eleve));
+    ligne.addEventListener("click", evenement => {
+      const cible = evenement && evenement.target;
+      if (cible && typeof cible.closest === "function" && cible.closest(".plus")) return;
+      ouvrirFenetreEleve(eleve);
+    });
   }
 
   // La recherche (lot 5c) : sans majuscules ni accents — « lea » trouve Léa,
@@ -3115,10 +3176,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   //
   // Choix de Gwenaël (planche 4 du 25/10/2026) : UNE fenêtre, la même dans les
   // quatre applis, ‹ › pour l'élève précédent ou suivant dans l'ordre du
-  // tableau à l'écran. Tout est lu dans le tableau déjà chargé : aucun appel
-  // au serveur pour l'ouvrir (« Voir son parcours » de Défi tables demande son
-  // billet de lecture, comme avant, au moment du clic). Rien de ce que
-  // renvoie le serveur ne devient du HTML ; aucun code d'élève.
+  // tableau à l'écran. Coffres, SPLAT! et Anzan : tout est lu dans le tableau
+  // déjà chargé, aucun appel au serveur. Rien de ce que renvoie le serveur ne
+  // devient du HTML ; aucun code d'élève. Lot 5f : plus de « Revenir à… »
+  // dedans (il est dans le « ⋯ » de la ligne), un ✕ en haut ; dans Défi
+  // tables (choix de Gwenaël du 28/10/2026), la fenêtre montre son écran Mon
+  // parcours dans un cadre, par le billet de lecture d'avant (montrerParcours).
 
   function ouvrirFenetreEleve(eleve) {
     if (!classe || !eleve) return;
@@ -3141,6 +3204,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     fenetreEleveId = null;
     fermerParcoursAnzan();
     ["fe-titre", "fe-sous", "fe-contenu"].forEach(id => { const zone = $(id); if (zone) zone.textContent = ""; });
+    // Lot 5f : le cadre du parcours part avec le reste (plus aucun prénom
+    // dans la fenêtre) ; un billet encore en route ne rouvre rien
+    // (montrerParcours regarde fenetreEleveId).
+    delete $("fe-contenu").dataset.eleve;
     messager("fe-message", "", "");
   }
 
@@ -3182,11 +3249,21 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     $("fe-precedent").disabled = !voisinDeLaFenetre(-1);
     $("fe-suivant").disabled = !voisinDeLaFenetre(1);
     const zone = $("fe-contenu");
-    zone.textContent = "";
     const anzan = appliAffichee === "flash-anzan" && Boolean(ANZAN);
+    // Lot 5f : Défi tables, la grande fenêtre et son parcours — même sans
+    // rien reçu (correctif des lots 5, point 8 : Mon parcours s'ouvre alors
+    // vierge, avec son prénom et sa classe, et sa fiche s'imprime).
+    const avecParcours = appliAffichee === "defi-tables";
+    $("fenetre-eleve").classList.toggle("avec-parcours", avecParcours);
     $("fe-anzan").hidden = !anzan;
-    $("fe-parcours").hidden = true;
+    $("fe-parcours").hidden = !avecParcours;
     $("pa-imprimer").hidden = true;
+    // Le tableau redessiné (un prénom changé, un autre élève enregistré)
+    // redessine la fenêtre : le parcours déjà montré reste, sans nouveau
+    // billet ni rechargement.
+    if (avecParcours && zone.dataset.eleve === String(eleve.id)) return;
+    zone.textContent = "";
+    delete zone.dataset.eleve;
     if (anzan) {
       // Un autre élève : sa liste repart à 10 séances.
       if (!parcoursAnzanEleve || parcoursAnzanEleve.id !== eleve.id) ouvrirParcoursAnzan(eleve);
@@ -3196,15 +3273,51 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (appliAffichee === "splat") zone.append(contenuSplat(eleve));
       else if (appliAffichee === "coffres") zone.append(contenuCoffres(eleve));
       else if (appliAffichee === "flash-anzan") zone.append(paragrapheVide("Le moteur d’Anzan n’a pas pu être chargé."));
-      else {
-        zone.append(contenuDefiTables(eleve));
-        // Correctif des lots 5 (point 8) : même sans rien reçu — Mon parcours
-        // s'ouvre alors vierge, avec son prénom et sa classe, et sa fiche
-        // s'imprime (comme l'ancien bouton « Parcours » de la ligne).
-        $("fe-parcours").hidden = false;
-      }
+      else montrerParcours(eleve, zone);
     }
-    $("fe-gestes").hidden = !peutRevenir(eleve);
+  }
+
+  // Lot 5f (choix de Gwenaël du 28/10/2026) : l'écran Mon parcours de l'élève
+  // DANS la fenêtre — la page de mathsgo.re, dans un cadre, ouverte par le
+  // même billet de lecture qu'avant (eleves.fiche : usage unique, deux
+  // minutes ; la classe en lecture suffit). Le temps du billet, une phrase
+  // « Ouverture du parcours… ». Refusé : le message dans la fenêtre, au-dessus
+  // du cadre (jamais dans un écran caché). Session terminée : la fenêtre se
+  // ferme, la page le dit.
+  // Le cadre est enfermé (sandbox) : la page du parcours garde ses scripts et
+  // son adresse (mathsgo.re, pour parler au serveur et imprimer la fiche),
+  // mais ne peut ni changer l'adresse de cette page-ci, ni la lire — c'est un
+  // autre site pour le navigateur.
+  async function montrerParcours(eleve, zone) {
+    demandeParcours += 1;
+    const demande = demandeParcours;
+    const nom = deNom(nomAffiche(eleve) || "cet élève");
+    zone.dataset.eleve = String(eleve.id);
+    const cadre = document.createElement("div");
+    cadre.className = "fe-cadre";
+    const attente = document.createElement("p");
+    attente.className = "fe-attente";
+    attente.textContent = `Ouverture du parcours ${nom}…`;
+    cadre.append(attente);
+    zone.append(cadre);
+    const encore = () => demande === demandeParcours && fenetreEleveId === eleve.id;
+    try {
+      const reponse = await api("eleves.fiche", {eleve_id: eleve.id});
+      if (!encore()) return;
+      const vue = document.createElement("iframe");
+      vue.title = `Mon parcours ${nom}`;
+      vue.setAttribute("sandbox", "allow-scripts allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox");
+      vue.src = `https://mathsgo.re/outils/calcul_mental/defi_tables.html#b=${encodeURIComponent(reponse.billet)}&vue=fiche`;
+      cadre.textContent = "";
+      cadre.append(vue);
+    } catch (erreur) {
+      if (!encore()) return;
+      if (erreur.statut === 401) { fermerFenetreEleve(); surErreur(erreur, "message-appli"); return; }
+      // Rien gardé : ‹ › ou une nouvelle ouverture redemandent un billet.
+      delete zone.dataset.eleve;
+      attente.textContent = "";
+      messager("fe-message", `Le parcours ${nom} n’a pas pu s’ouvrir. ${raisonDe(erreur)}`, "erreur");
+    }
   }
 
   // Les chiffres d'un élève : [libellé, valeur, précision dessous (facultative)].
@@ -3233,84 +3346,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     p.className = "fe-vide";
     p.textContent = texte;
     return p;
-  }
-
-  // Défi tables dans la fenêtre (maquette 8) : les cinq chiffres de la ligne,
-  // les alertes, ses neuf tables (passées en vert, en cours encadrée), et ses
-  // calculs en retard — écrits : au téléphone, pas d'info-bulle.
-  function contenuDefiTables(eleve) {
-    const bloc = document.createElement("div");
-    const lu = eleve.lu || {};
-    if (!PARCOURS) { bloc.append(paragrapheVide("Le moteur de Défi tables n’a pas pu être chargé.")); return bloc; }
-    if (!lu.parcours) { bloc.append(paragrapheVide("Rien reçu pour l’instant.")); return bloc; }
-    const enCours = lu.enCours || {type: "rien", texte: "—"};
-    let texteEnCours = enCours.texte;
-    let precision = "";
-    if (enCours.type === "table") {
-      texteEnCours = `table de ${enCours.tables[0]}`;
-      precision = `${enCours.pleines} sur ${enCours.total}`;
-    } else if (enCours.type === "expert" && lu.couronne) {
-      precision = "Légende des tables";
-    }
-    if (eleve.record && Number.isInteger(eleve.record.meilleur) && PARCOURS.formatTemps) {
-      precision = [precision, `record : ${PARCOURS.formatTemps(eleve.record.meilleur)}`].filter(Boolean).join(" · ");
-    }
-    const retard = lu.retard ? lu.retard.length : null;
-    bloc.append(ficheChiffres([
-      ["Tables passées", `${lu.acquises.length} / ${PARCOURS.TABLES.length}`],
-      ["En cours", texteEnCours, precision],
-      ["Cette semaine", `${lu.seances} séance${lu.seances > 1 ? "s" : ""}`],
-      ["En retard", retard === null ? "—" : `${retard} calcul${retard > 1 ? "s" : ""}`],
-      ["Dernière activité", dateLisible(eleve.maj_le) || "rien reçu"]
-    ]));
-    const alertes = [];
-    if (lu.longue) alertes.push(`${lu.longue.seances} séances sur la table de ${lu.longue.table}`);
-    const absence = joursSansRien(eleve);
-    if (absence !== null) alertes.push(`rien depuis ${absence} jours`);
-    if (alertes.length) {
-      const ligne = document.createElement("p");
-      ligne.className = "fe-alertes";
-      alertes.forEach(texte => {
-        const alerte = document.createElement("span");
-        alerte.className = "alerte";
-        alerte.textContent = texte;
-        ligne.append(alerte);
-      });
-      bloc.append(ligne);
-    }
-    const titre = document.createElement("h3");
-    titre.textContent = "Ses tables";
-    const cases = document.createElement("ul");
-    cases.className = "cases-tables";
-    const enCoursTables = enCours.type === "table" ? [enCours.tables[0]]
-      : enCours.type === "tables" ? (enCours.tables || []) : [];
-    PARCOURS.TABLES.forEach(table => {
-      const caseTable = document.createElement("li");
-      const passee = lu.acquises.includes(table);
-      const encours = !passee && enCoursTables.includes(table);
-      caseTable.className = passee ? "passee" : encours ? "encours" : "";
-      caseTable.textContent = String(table);
-      caseTable.setAttribute("aria-label", `table de ${table} : ${passee ? "passée" : encours ? "en cours" : "pas encore passée"}`);
-      cases.append(caseTable);
-    });
-    const legende = document.createElement("p");
-    legende.className = "aide";
-    legende.textContent = "En vert : passée · encadrée : en cours.";
-    bloc.append(titre, cases, legende);
-    if (retard) {
-      const titreRetard = document.createElement("h3");
-      titreRetard.textContent = `Ses calculs en retard (${retard})`;
-      const liste = document.createElement("ul");
-      liste.className = "fe-retard";
-      lu.retard.forEach(cle => {
-        const item = document.createElement("li");
-        item.className = "pastille orange";
-        item.textContent = PARCOURS.libelleFait(cle);
-        liste.append(item);
-      });
-      bloc.append(titreRetard, liste);
-    }
-    return bloc;
   }
 
   // Lot « Qui voit quoi », lot 4b (24/10/2026) : une appli ouverte EN PLUS à
@@ -6434,7 +6469,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // ce navigateur. L'onglet est ouvert AVANT d'attendre le serveur (les
   // navigateurs ne laissent ouvrir une fenêtre que dans le geste du clic),
   // puis dirigé vers le parcours. L'adresse reste « #b=…&vue=fiche » : le site
-  // et cette page se mettent à jour dans n'importe quel ordre.
+  // et cette page se mettent à jour dans n'importe quel ordre. Lot 5f : c'est
+  // « Ouvrir dans un onglet », sous le prénom dans la fenêtre de Défi tables
+  // (montrerParcours y montre le même parcours, dans la fenêtre).
   async function voirFiche(eleve, bouton) {
     const fenetre = window.open("about:blank", "_blank");
     if (fenetre) { try { fenetre.opener = null; } catch (_) {} }
@@ -6448,10 +6485,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (fenetre) { try { fenetre.close(); } catch (_) {} }
       // Correctif des lots 5 (point 5) : la fenêtre de l'élève est encore
       // ouverte — le message s'y lit (avant, dans le tableau, derrière elle).
+      const texte = `Le parcours ${deNom(nomAffiche(eleve) || "cet élève")} n’a pas pu s’ouvrir. ${raisonDe(erreur)}`;
       if ($("fenetre-eleve").open && erreur.statut !== 401) {
-        messager("fe-message", `Le parcours ${deNom(nomAffiche(eleve) || "cet élève")} n’a pas pu s’ouvrir. ${raisonDe(erreur)}`, "erreur");
+        messager("fe-message", texte, "erreur");
         // Au téléphone, la fenêtre défile : le message vient sous les yeux.
         try { $("fe-message").scrollIntoView({block: "nearest"}); } catch (_) {}
+      } else if (erreur.statut !== 401 && zoneVisible("message-appli")) {
+        // La fenêtre a été fermée pendant l'attente du billet — le message
+        // au-dessus du tableau, et la page y remonte s'il est hors de
+        // l'écran (lot 5f).
+        messager("message-appli", texte, "erreur");
+        try { $("message-appli").scrollIntoView({block: "nearest"}); } catch (_) {}
       } else {
         surErreur(erreur, "message-appli");
       }
@@ -6642,12 +6686,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
   $("voit").addEventListener("close", fermerCeQueVoit);
   // Serveur pro, lot 5c : la fenêtre de l'élève. ‹ › (et les flèches du
-  // clavier) passent au voisin dans le tableau ; « Fermer » ou Échap la
-  // ferment, et elle oublie l'élève. « Voir son parcours » (Défi tables)
-  // ouvre l'écran Mon parcours par un billet de lecture (voirFiche) ;
-  // « Revenir à… » ferme la fenêtre avant ses deux questions.
+  // clavier) passent au voisin dans le tableau ; « Fermer », ✕ (lot 5f) ou
+  // Échap la ferment, et elle oublie l'élève. « Ouvrir dans un onglet »
+  // (Défi tables) ouvre l'écran Mon parcours par un billet de lecture
+  // (voirFiche). Lot 5f : « Revenir à… » n'est plus dans la fenêtre (le « ⋯ »
+  // de la ligne).
   $("fe-precedent").addEventListener("click", () => changerEleveDeLaFenetre(-1));
   $("fe-suivant").addEventListener("click", () => changerEleveDeLaFenetre(1));
+  $("fe-croix").addEventListener("click", fermerFenetreEleve);
   $("fe-fermer").addEventListener("click", fermerFenetreEleve);
   $("fenetre-eleve").addEventListener("close", surFermetureFenetre);
   $("fenetre-eleve").addEventListener("keydown", evenement => {
@@ -6658,12 +6704,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   $("fe-parcours").addEventListener("click", () => {
     const eleve = eleveDeLaFenetre();
     if (eleve) voirFiche(eleve, $("fe-parcours"));
-  });
-  $("fe-revenir").addEventListener("click", () => {
-    const eleve = eleveDeLaFenetre();
-    if (!eleve) return;
-    fermerFenetreEleve();
-    revenirA(eleve);
   });
   // Anzan : « Voir les séances précédentes » et « Imprimer ».
   $("pa-imprimer").addEventListener("click", imprimerParcoursAnzan);

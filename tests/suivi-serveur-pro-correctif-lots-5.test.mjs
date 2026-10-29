@@ -342,7 +342,7 @@ function fiche({fenetreOuverte}) {
   const onglet = {fermee: false, close() { this.fermee = true; }, location: {}};
   const messages = [];
   const voirFiche = new Function("$", "window", "api", "surErreur",
-    `${["messager", "raisonDe", "seElide", "deNom", "nomAffiche"].map(fonction).join("\n")}\n${fonction("voirFiche")}\nreturn voirFiche;`)(
+    `${["messager", "zoneVisible", "raisonDe", "seElide", "deNom", "nomAffiche"].map(fonction).join("\n")}\n${fonction("voirFiche")}\nreturn voirFiche;`)(
     z.$, {open: () => onglet}, async () => { throw Object.assign(new Error("Cet élève n’est plus dans tes classes."), {statut: 403}); },
     (e, zone) => messages.push([zone, e.message]));
   return {voirFiche, $: z.$, onglet, messages};
@@ -357,9 +357,50 @@ test("point 5 — « Voir son parcours » refusé, la fenêtre de l'élève ouve
   assert.deepEqual(r.messages, [], "rien derrière la fenêtre");
   const fermee = fiche({fenetreOuverte: false});
   await fermee.voirFiche({id: 4, prenom: "Inès", initiale: ""}, null);
-  assert.deepEqual(fermee.messages, [["message-appli", "Cet élève n’est plus dans tes classes."]], "fenêtre fermée entre-temps : au-dessus du tableau");
-  assert.match(page, /<p class="message" id="fe-message" hidden><\/p>\s*<p class="fe-gestes" id="fe-gestes" hidden>/);
+  // Lot 5f : fenêtre fermée entre-temps, l'écran de la classe affiché — au-dessus du tableau.
+  assert.deepEqual([fermee.$("message-appli").hidden, fermee.$("message-appli").textContent],
+    [false, "Le parcours d’Inès n’a pas pu s’ouvrir. Cet élève n’est plus dans tes classes."], "fenêtre fermée entre-temps : au-dessus du tableau");
+  assert.deepEqual(fermee.messages, []);
+  // Lot 5f : en haut du corps de la fenêtre, au-dessus du cadre du parcours.
+  assert.match(page, /<div class="fenetre-corps">\s*<!--[^>]*-->\s*<p class="message" id="fe-message" hidden><\/p>\s*<div id="fe-contenu"><\/div>/);
   assert.match(constante("ZONES_MESSAGE"), /"fe-message"/, "il part à la déconnexion");
+});
+
+// Lot 5f : « Ouvrir dans un onglet », puis la fenêtre fermée avant la réponse
+// du serveur. Un refus se lit alors au-dessus du tableau, et la page y remonte
+// (la 25e ligne) — la règle du point 5 tient : jamais dans un écran caché.
+test("point 5 (lot 5f) — la fenêtre fermée pendant l'attente du billet : le message au-dessus du tableau, la page y remonte", async () => {
+  const z = zones();
+  z.$("ecran-classe").hidden = false;
+  z.$("message-appli").closest = () => z.$("ecran-classe");
+  const vus = [];
+  z.$("message-appli").scrollIntoView = options => vus.push(options);
+  const onglet = {fermee: false, close() { this.fermee = true; }, location: {}};
+  const messages = [];
+  const bouton = {disabled: false};
+  let reponse = Object.assign(new Error("Cet élève n’est plus dans tes classes."), {statut: 403});
+  const voirFiche = new Function("$", "window", "api", "surErreur",
+    `${["messager", "zoneVisible", "raisonDe", "seElide", "deNom", "nomAffiche"].map(fonction).join("\n")}\n${fonction("voirFiche")}\nreturn voirFiche;`)(
+    z.$, {open: () => onglet}, async () => { throw reponse; }, (e, zone) => messages.push([zone, e.message]));
+  await voirFiche({id: 4, prenom: "Inès", initiale: ""}, bouton);
+  assert.equal(onglet.fermee, true);
+  assert.deepEqual([z.$("message-appli").hidden, z.$("message-appli").textContent],
+    [false, "Le parcours d’Inès n’a pas pu s’ouvrir. Cet élève n’est plus dans tes classes."]);
+  assert.deepEqual(vus, [{block: "nearest"}], "la page remonte jusqu'au message");
+  assert.match(page, /#message-appli \{ scroll-margin-top: 84px; \}/, "sous la ligne des onglets collée en haut, pas derrière");
+  assert.equal(bouton.disabled, false, "le prénom se rallume");
+  assert.deepEqual(messages, []);
+  // Session terminée : la reconnexion (surErreur), pas un message.
+  reponse = Object.assign(new Error("Session expirée."), {statut: 401});
+  z.$("message-appli").textContent = ""; z.$("message-appli").hidden = true;
+  await voirFiche({id: 4, prenom: "Léa", initiale: ""}, bouton);
+  assert.deepEqual(messages, [["message-appli", "Session expirée."]]);
+  assert.equal(z.$("message-appli").textContent, "");
+  // L'écran de la classe n'est plus affiché : surErreur choisit l'écran visible.
+  reponse = Object.assign(new Error("Le serveur ne répond pas."), {statut: 500});
+  z.$("ecran-classe").hidden = true;
+  await voirFiche({id: 4, prenom: "Léa", initiale: ""}, null);
+  assert.deepEqual(messages.at(-1), ["message-appli", "Le serveur ne répond pas."]);
 });
 
 // ------------------------------------------------- point 6 : 390 px

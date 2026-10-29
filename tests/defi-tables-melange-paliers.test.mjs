@@ -465,7 +465,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis le lot 5e « la séance en direct pour l'administrateur seul » (25/10/2026) :
   // lib/direct.php, api/prof.php, prof/index.php, prof/direct.php
   // (avant : serveur-pro-correctif-lots-5).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-direct-reserve$/m);
+  // Puis le lot 5f « la ligne ouvre le parcours » (28/10/2026) : prof/index.php
+  // et lib/entetes.php changent, 63 au manifeste (avant : serveur-pro-direct-reserve).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-ligne-parcours$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

@@ -217,17 +217,17 @@ test("les codes ne s'écrivent à l'écran que dans l'onglet Élèves ; les tabl
   assert.ok(aClasse(sans, "sans"));
 });
 
-test("dans le tableau d'une appli, plus de « ⋯ » : « Revenir à… » est en bas de la fenêtre de l'élève — et rien en lecture seule (serveur pro, lot 5c)", () => {
+test("dans le tableau d'une appli, « Revenir à… » est dans le « ⋯ » au bout de la ligne — et rien en lecture seule (serveur pro, lot 5f)", () => {
   const peut = (eleve, droitClasse) => new Function("droitClasse", `${fonction("peutRevenir")}\nreturn peutRevenir;`)(droitClasse)(eleve);
   assert.equal(peut({restaurable: true, journees: []}, "proprietaire"), true);
   assert.equal(peut({restaurable: false, journees: [{jour: "2026-10-16", calculs: 3}]}, "ecriture"), true);
   assert.equal(peut({restaurable: false, journees: []}, "proprietaire"), false, "rien à restaurer : pas de « Revenir à… »");
   assert.equal(peut({restaurable: true, journees: []}, "lecture"), false, "lecture seule : pas de « Revenir à… »");
-  assert.match(fonction("dessinerFenetreEleve"), /\$\("fe-gestes"\)\.hidden = !peutRevenir\(eleve\);/);
-  assert.match(page, /<p class="fe-gestes" id="fe-gestes" hidden><button type="button" class="secondaire" id="fe-revenir"[^>]*>Revenir à…<\/button><\/p>/);
-  // La fenêtre se ferme avant les deux questions de « Revenir à… ».
-  assert.match(script, /\$\("fe-revenir"\)\.addEventListener\("click", \(\) => \{\s*const eleve = eleveDeLaFenetre\(\);\s*if \(!eleve\) return;\s*fermerFenetreEleve\(\);\s*revenirA\(eleve\);\s*\}\);/);
-  assert.doesNotMatch(script, /function poserGestes\(/, "plus de « ⋯ » sur les lignes des applis");
+  // Lot 5f (retour de Gwenaël du 25/10/2026) : sorti de la fenêtre de l'élève,
+  // où il était « trop visible » ; dans le « ⋯ » de la ligne, comme avant le 5c.
+  assert.match(fonction("finirLigne"), /if \(peutRevenir\(eleve\)\) \{\s*menuGestes\(va, \[boutonGeste\("Revenir à…", "secondaire", \(\) => revenirA\(eleve\),/);
+  assert.doesNotMatch(page, /id="fe-gestes"|id="fe-revenir"/, "plus de « Revenir à… » dans la fenêtre");
+  assert.doesNotMatch(fonction("dessinerFenetreEleve"), /peutRevenir/);
 });
 
 // ------------------------------------------------------------ la vue et les droits

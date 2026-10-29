@@ -297,19 +297,22 @@ test("l'adresse reste #b=…&vue=fiche : la page prof et le site se mettent à j
 
 // ------------------------------------------------- Ma classe
 
-test("Ma classe : « Voir son parcours » dans la fenêtre de l'élève (serveur pro, lot 5c) — pour le propriétaire et pour un collègue « voir seulement »", () => {
-  // La ligne entière ouvre la fenêtre ; « Voir son parcours » y ouvre l'écran
-  // Mon parcours par un billet de lecture (voirFiche), comme l'ancien bouton
-  // « Parcours » de la ligne.
-  assert.match(maClasse, /<button type="button" id="fe-parcours" title="Son écran Mon parcours, sur mathsgo\.re, dans un nouvel onglet" hidden>Voir son parcours<\/button>/);
+test("Ma classe : la fenêtre de l'élève montre son parcours (serveur pro, lots 5c et 5f) — pour le propriétaire et pour un collègue « voir seulement », même sans rien reçu", () => {
+  // La ligne entière ouvre la fenêtre ; dans Défi tables, elle montre l'écran
+  // Mon parcours dans un cadre (montrerParcours), par le billet de lecture
+  // d'avant ; « Ouvrir dans un onglet » ouvre le même écran à part (voirFiche),
+  // comme l'ancien bouton « Parcours » de la ligne.
+  assert.match(maClasse, /<button type="button" class="lien-onglet" id="fe-parcours" title="Son écran Mon parcours dans un nouvel onglet — pour imprimer sa fiche, par exemple" hidden>Ouvrir dans un onglet<\/button>/);
   assert.match(maClasse, /\$\("fe-parcours"\)\.addEventListener\("click", \(\) => \{\s*const eleve = eleveDeLaFenetre\(\);\s*if \(eleve\) voirFiche\(eleve, \$\("fe-parcours"\)\);\s*\}\);/);
+  assert.match(maClasse, /api\("eleves\.fiche", \{eleve_id: eleve\.id\}\)[\s\S]*?#b=\$\{encodeURIComponent\(reponse\.billet\)\}&vue=fiche/, "le cadre : le même billet, la même adresse");
   assert.doesNotMatch(maClasse, /textContent = "Fiche"|"Voir sa fiche"|fiche\.textContent = "Parcours"/);
   // Il ne dépend pas du droit d'écriture — un collègue en lecture seule l'a
   // aussi. Correctif des lots 5 (relecture Codex, point 8) : il ne dépend pas
   // non plus d'une progression reçue — l'appli ouvre alors Mon parcours
   // vierge, avec le prénom et la classe, et sa fiche s'imprime (l'ancien
   // bouton « Parcours » de la ligne existait pour tous les élèves).
-  assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = false;/);
+  assert.match(maClasse, /const avecParcours = appliAffichee === "defi-tables";/);
+  assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = !avecParcours;/);
   assert.doesNotMatch(maClasse, /\$\("fe-parcours"\)\.hidden = !\(eleve\.lu && eleve\.lu\.parcours\);/);
   // Plus de « Détail ▾ » : SPLAT! a la même fenêtre.
   assert.doesNotMatch(maClasse, /"Détail ▾"/);
