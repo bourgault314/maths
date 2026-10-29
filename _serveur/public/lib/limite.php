@@ -251,6 +251,78 @@ function compter_echec_adresse(string $adresse): void
     limiter('echec-ip:' . $adresse, ECHECS_ADRESSE_BLOQUEE, FENETRE_ECHECS_ADRESSE);
 }
 
+// ------------------------------------------- le mot de passe d'installation
+//
+// Lot « correctifs de l'audit Codex » (29/10/2026, défaut 3 du 22/10) : CINQ
+// pages vérifient le même secret — installer.php, migrer.php, verifier.php,
+// secours.php, sauvegarde.php — et chacune avait son propre frein, ou pas de
+// frein du tout (migrer.php, installer.php). Un même secret avec des freins
+// séparés, c'est autant d'essais que de pages ; sans frein, c'est à la vitesse
+// du réseau (reproduit : 100 essais sur migrer.php en deux secondes).
+//
+// Un SEUL compteur, partagé par les cinq pages, par bloc d'adresse
+// (adresse_limitee()), sur dix minutes. Seuls les ÉCHECS comptent : le jour
+// d'un dépôt, on ouvre migrer.php, verifier.php et sauvegarde.php à la suite
+// avec le bon mot de passe, et aucune porte ne doit se fermer pour ça. Au
+// dixième échec, les cinq pages répondent « Trop d'essais » jusqu'à la fin
+// de la fenêtre, sans même comparer le mot de passe.
+const ECHECS_JETON_INSTALLATION = 10;
+const FENETRE_JETON_INSTALLATION = 600;
+
+function cle_jeton_installation(): string
+{
+    return 'jeton-installation:' . adresse_limitee();
+}
+
+// Vrai si cette adresse a déjà épuisé ses essais.
+function jeton_installation_bloque(): bool
+{
+    return compte_courant(cle_jeton_installation(), FENETRE_JETON_INSTALLATION) >= ECHECS_JETON_INSTALLATION;
+}
+
+// Un essai manqué de plus pour cette adresse (quelle que soit la page).
+function compter_echec_jeton_installation(): int
+{
+    return compter(cle_jeton_installation(), FENETRE_JETON_INSTALLATION);
+}
+
+// Dans combien de minutes la fenêtre se rouvre (au moins 1).
+function attente_jeton_installation(): int
+{
+    $fin = fin_de_fenetre_de(cle_jeton_installation(), FENETRE_JETON_INSTALLATION);
+    return max(1, (int)ceil(max(0, $fin - time()) / 60));
+}
+
+// LE contrôle, le même pour les cinq pages. Rend un mot :
+//  - 'ok'        : le mot de passe est le bon ;
+//  - 'trop'      : l'adresse a épuisé ses essais, rien n'a été comparé ;
+//  - 'absent'    : config.php n'a pas encore de mot de passe d'installation ;
+//  - 'incorrect' : mauvais mot de passe, et l'échec est compté.
+// La table « compteurs » doit exister : installer.php crée les tables avant
+// d'appeler ce contrôle ; verifier.php, qui doit s'ouvrir même base en panne,
+// garde son propre garde-fou autour.
+function verdict_jeton_installation(string $saisi): string
+{
+    if (jeton_installation_bloque()) return 'trop';
+    $attendu = (string)(config()['jeton_installation'] ?? '');
+    if ($attendu === '' || $attendu === 'à-remplacer') return 'absent';
+    if (!hash_equals($attendu, $saisi)) {
+        compter_echec_jeton_installation();
+        return 'incorrect';
+    }
+    return 'ok';
+}
+
+// La phrase que la page affiche pour chaque verdict (sauf 'ok').
+function message_jeton_installation(string $verdict): string
+{
+    return match ($verdict) {
+        'trop' => "Trop d'essais depuis cette adresse : attends " . attente_jeton_installation() . " minute(s).",
+        'absent' => "Renseigne d'abord « jeton_installation » dans config.php.",
+        default => "Mot de passe d'installation incorrect.",
+    };
+}
+
 // Efface les compteurs liés à un code (élève supprimé, code régénéré).
 function oublier_compteurs_du_code(PDO $pdo, string $code): void
 {

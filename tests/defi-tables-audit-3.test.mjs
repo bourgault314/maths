@@ -72,7 +72,10 @@ test("l’échelle est remesurée à chaque écran, à la première question, au
   assert.match(html, /suivreHistorique\(name\);\s*ajusterEchelle\(\);\s*\}/, "show()");
   // Lot « les règles des records » (11/10/2026) : la première question arrive
   // dans partir(), tout de suite ou après le décompte 3, 2, 1 (mesuré aussi).
-  assert.match(html, /show\("play"\);\s*if \(avecDecompte\(state\.configuration\)\) \{\s*decompter\(3\);\s*return;\s*\}\s*partir\(\);/, "la première question");
+  // Lot « correctifs de l'audit Codex » (29/10/2026) : entre show("play") et le
+  // décompte, la demande du ticket de course ; et le chrono part par
+  // partirQuandLeTicketEstLa() (partir() dès que le ticket est là).
+  assert.match(html, /show\("play"\);[\s\S]{0,900}if \(avecDecompte\(state\.configuration\)\) \{\s*decompter\(3\);\s*return;\s*\}\s*partirQuandLeTicketEstLa\(\);/, "la première question");
   assert.match(html, /function partir\(\) \{[\s\S]{0,300}renderQuestion\(\);[\s\S]{0,260}ajusterEchelle\(\);/, "la première question");
   assert.match(html, /if \(n === 3\) \{[\s\S]{0,400}ajusterEchelle\(\);\s*\}/, "le décompte");
   assert.match(html, /label\.textContent = active \? "Quitter le plein écran" : "Plein écran";\s*ajusterEchelle\(\);/);

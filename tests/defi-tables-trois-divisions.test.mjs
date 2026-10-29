@@ -259,7 +259,7 @@ test("l'écran avant le test sur téléphone : 3 + 2 au mélange, 2 + 2 au test 
 
 test("la page charge les moteurs du lot (leurs numéros montent) et le professeur a la même copie du moteur", async () => {
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/);
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261024-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261029-1"><\/script>/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, original);

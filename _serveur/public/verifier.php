@@ -16,9 +16,11 @@ header('X-Robots-Tag: noindex, nofollow');
 // Pas de script dans cette page : le nonce renvoyé ne sert pas.
 entetes_page();
 
-// Lot 11 : le frein de cette page (voir plus bas).
-const ESSAIS_VERIFIER = 12;
-const FENETRE_ESSAIS_VERIFIER = 600;
+// Lot 11 : le frein de cette page (voir plus bas). Depuis le lot
+// « correctifs de l'audit Codex » (29/10/2026), c'est le frein PARTAGÉ de
+// lib/limite.php (ECHECS_JETON_INSTALLATION, FENETRE_JETON_INSTALLATION) :
+// le même compteur que installer.php, migrer.php, secours.php et
+// sauvegarde.php, puisque c'est le même mot de passe.
 
 $configOk = is_file(__DIR__ . '/config.php');
 $autorise = false;
@@ -79,11 +81,12 @@ if (!$configOk) {
             // Lot 11 (05/09/2026, B-F08) : cette page était la seule porte du
             // serveur sans frein. Le mot de passe d'installation ouvre aussi
             // secours.php (un nouveau mot de passe administrateur) : on ne le
-            // laisse pas deviner à la vitesse du réseau. DOUZE essais par
-            // adresse et par dix minutes, comme le changement de mot de passe
-            // d'un professeur — un humain qui cherche dans ses papiers en fait
-            // trois, pas douze.
-            $adresse = adresse_limitee();
+            // laisse pas deviner à la vitesse du réseau. Depuis le 29/10/2026
+            // (audit Codex, défaut 3), le frein est celui de lib/limite.php,
+            // partagé par les cinq pages qui vérifient ce mot de passe : DIX
+            // échecs par adresse et par dix minutes, toutes pages confondues —
+            // un humain qui cherche dans ses papiers en fait trois, pas dix.
+            //
             // Le frein a besoin de la base. Deux cas où elle ne peut pas le
             // porter, et où il s'efface SANS fermer la page :
             //  - avant la toute première installation, la table « compteurs »
@@ -97,14 +100,13 @@ if (!$configOk) {
             try {
                 $freinPossible = table_existe(bd(), 'compteurs');
                 if ($freinPossible) {
-                    $dejaTrop = compte_courant('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER) >= ESSAIS_VERIFIER;
+                    $dejaTrop = jeton_installation_bloque();
                 }
             } catch (Throwable $e) {
                 error_log('verifier (frein indisponible, base injoignable ?) : ' . $e->getMessage());
             }
             if ($dejaTrop) {
-                $attente = (int)ceil(max(0, fin_de_fenetre_de('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER) - time()) / 60);
-                $message = "Trop d'essais depuis cette adresse. Réessaie dans " . max(1, $attente) . " minute(s).";
+                $message = "Trop d'essais depuis cette adresse. Réessaie dans " . attente_jeton_installation() . " minute(s).";
             } else {
                 $attendu = (string)(config()['jeton_installation'] ?? '');
                 if ($attendu === '' || $attendu === 'à-remplacer') {
@@ -114,7 +116,7 @@ if (!$configOk) {
                     // avec le bon mot de passe (ce qui arrive le jour d'un dépôt)
                     // ne ferme jamais la porte.
                     if ($freinPossible) {
-                        try { compter('verifier:' . $adresse, FENETRE_ESSAIS_VERIFIER); }
+                        try { compter_echec_jeton_installation(); }
                         catch (Throwable $e) { error_log('verifier (compteur) : ' . $e->getMessage()); }
                     }
                     $message = "Mot de passe d'installation incorrect.";

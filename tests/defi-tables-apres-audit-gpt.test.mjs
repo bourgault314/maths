@@ -118,7 +118,8 @@ test("D12 · en marche : records muets, une course attend ; le réseau revient (
   const appli = demarrerAppli({reseau, codeOnglet: "AXKQ7T", local: fauxStockage()});
   appli.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  appli.api.noterCourse(512);
+  const TICKET = "0123456789abcdef0123456789abcdef"; // lot « correctifs de l'audit Codex » (29/10/2026)
+  appli.api.noterCourse(512, TICKET);
   await new Promise(r => setTimeout(r, 5));
   assert.equal(appli.api.sync.course.temps, 512, "en attente");
   const avant = reseau.courses().length;
@@ -132,14 +133,14 @@ test("D12 · en marche : records muets, une course attend ; le réseau revient (
   reseau.reviens();
   await new Promise(r => setTimeout(r, 10));
   assert.equal(reseau.courses().length, avant + 1, "la course est partie au retour du réseau");
-  assert.deepEqual(reseau.courses().at(-1), {code: "AXKQ7T", temps: 512, justes: 25, jour: P.jourLocal()});
+  assert.deepEqual(reseau.courses().at(-1), {code: "AXKQ7T", temps: 512, justes: 25, jour: P.jourLocal(), course: TICKET});
   assert.equal(appli.api.sync.course, undefined, "plus rien en attente");
 });
 
 // -------------------------------------------------------------- D8 : le jour
 
 test("D8 · l'appli envoie le jour de la course avec le temps ; le serveur l'accepte (jour_de_course) et classe la course dans sa semaine", () => {
-  assert.match(source("envoyerCourseEnAttente"), /appelRecords\(\{temps: course\.temps, justes: PARCOURS\.SEUILS\.course\.total, jour: course\.jour\}\)/);
+  assert.match(source("envoyerCourseEnAttente"), /appelRecords\(\{temps: course\.temps, justes: PARCOURS\.SEUILS\.course\.total, jour: course\.jour, course: course\.ticket\}\)/);
   assert.match(apiRecords, /enregistrer_course\(\$pdo, \$eleveId, \$temps, jour_de_course\(\$corps\['jour'\] \?\? null\)\)/);
   // Le serveur : format strict, pas dans le futur, 7 jours au plus, sinon aujourd'hui.
   assert.match(libRecords, /const COURSE_JOURS_MAX = 7;/);
@@ -355,7 +356,7 @@ test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et ci
 // ------------------------------------------------------------- l'hygiène du lot
 
 test("le moteur a changé : son numéro de cache monte, et la copie de la page prof est identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(copie.equals(original));

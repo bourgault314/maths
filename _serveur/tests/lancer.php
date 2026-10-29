@@ -3315,9 +3315,11 @@ verifier("lot 11 — le secret des compteurs n'est PAS le mot de passe d'install
     vider_compteurs();
 });
 
-verifier("lot 11 — verifier.php : douze mauvais mots de passe, puis la porte se ferme", function () {
+verifier("lot 11 — verifier.php : dix mauvais mots de passe, puis la porte se ferme", function () {
+    // Douze jusqu'au 29/10/2026 ; dix depuis le frein PARTAGÉ du lot
+    // « correctifs de l'audit Codex » (ECHECS_JETON_INSTALLATION, lib/limite.php).
     vider_compteurs();
-    for ($i = 0; $i < 12; $i++) {
+    for ($i = 0; $i < 10; $i++) {
         $r = formulaire('/verifier.php', ['jeton' => 'faux-' . $i]);
         vrai(str_contains($r['texte'], 'incorrect'), "essai " . ($i + 1) . " : refus ordinaire");
     }
@@ -3325,7 +3327,7 @@ verifier("lot 11 — verifier.php : douze mauvais mots de passe, puis la porte s
     // La page échappe les apostrophes (htmlspecialchars) : on cherche un
     // morceau de phrase qui n'en contient pas.
     vrai(str_contains($r['texte'], 'essais depuis cette adresse'),
-        'le treizième essai est freiné — ' . substr(strip_tags($r['texte']), 0, 200));
+        'le onzième essai est freiné — ' . substr(strip_tags($r['texte']), 0, 200));
     // Le BON mot de passe ne passe plus non plus pendant la fenêtre : sinon le
     // frein se contournerait en glissant un bon essai entre deux mauvais.
     $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
@@ -3903,18 +3905,24 @@ verifier("lot B — les freins de secours.php et sauvegarde.php comptent le bloc
     // Le serveur de test répond toujours depuis 127.0.0.1 : ce qui se vérifie
     // ici, c'est que les deux pages emploient bien la CLÉ du bloc — et
     // adresse_limitee() a son propre test plus haut (lot 11).
-    foreach (['secours.php' => 'secours:', 'sauvegarde.php' => 'sauvegarde:'] as $fichier => $prefixe) {
+    // Depuis le lot « correctifs de l'audit Codex » (29/10/2026), les deux
+    // pages passent par le frein PARTAGÉ de lib/limite.php, dont la clé est
+    // le bloc : « jeton-installation: » . adresse_limitee().
+    $limite = (string)file_get_contents(dirname(__DIR__) . '/public/lib/limite.php');
+    vrai(str_contains($limite, "return 'jeton-installation:' . adresse_limitee();"), 'la clé partagée compte le bloc');
+    vrai(!str_contains($limite, "'jeton-installation:' . adresse_appelante("), 'et pas l’adresse exacte');
+    foreach (['secours.php', 'sauvegarde.php'] as $fichier) {
         $source = (string)file_get_contents(dirname(__DIR__) . '/public/' . $fichier);
-        vrai(str_contains($source, "compter('$prefixe' . adresse_limitee(), 600)"),
-            "$fichier doit compter le bloc, pas l’adresse exacte");
-        vrai(!str_contains($source, "compter('$prefixe' . adresse_appelante("), "et plus l’adresse exacte");
+        vrai(str_contains($source, "verdict_jeton_installation((string)(\$_POST['jeton'] ?? ''))"),
+            "$fichier doit passer par le frein partagé");
+        vrai(!str_contains($source, "compter('") , "$fichier n’a plus de compteur à lui");
     }
     // Et pour de vrai : deux adresses du même /64 tombent sur la même clé de
     // compteur, deux /64 différents sur deux clés.
     $avant = $_SERVER['REMOTE_ADDR'] ?? null;
     $cle = function (string $adresse): string {
         $_SERVER['REMOTE_ADDR'] = $adresse;
-        return cle_compteur_test('secours:' . adresse_limitee(), 600);
+        return cle_compteur_test('jeton-installation:' . adresse_limitee(), 600);
     };
     $a = $cle('2001:db8:1234:5678::1');
     $b = $cle('2001:db8:1234:5678:ffff::9');
@@ -5113,6 +5121,35 @@ function records_api(string $code, array $corps): array
     return appel('/api/records.php', ['code' => $code] + $corps);
 }
 
+// Lot « correctifs de l'audit Codex » (29/10/2026) : une course part avec
+// son TICKET de départ. Le ticket est demandé comme l'appli le fait
+// (« depart »), puis son départ est VIEILLI dans la base de test d'autant
+// que la course a duré (plus cinq secondes de marge) — sans quoi il faudrait
+// attendre pour de vrai. Un ticket se lit dans « billets » (type « course »,
+// empreinte SHA-256), et son départ = expire_le - 8 jours.
+function ticket_de_course(string $code, int $reculSecondes = 0): string
+{
+    $r = records_api($code, ['depart' => true]);
+    if ($r['code'] !== 200 || !is_string($r['json']['course'] ?? null)) {
+        throw new RuntimeException('pas de ticket de course : HTTP ' . $r['code'] . ' ' . $r['texte']);
+    }
+    $ticket = $r['json']['course'];
+    if ($reculSecondes > 0) vieillir_ticket($ticket, $reculSecondes);
+    return $ticket;
+}
+
+function vieillir_ticket(string $ticket, int $reculSecondes): void
+{
+    bd_test()->prepare('UPDATE billets SET expire_le = expire_le - ? WHERE hash = ?')
+        ->execute([$reculSecondes, hash('sha256', $ticket)]);
+}
+
+function courir(string $code, int $dixiemes, array $enPlus = []): array
+{
+    $ticket = ticket_de_course($code, intdiv($dixiemes, 10) + 5);
+    return records_api($code, ['temps' => $dixiemes, 'justes' => 25, 'course' => $ticket] + $enPlus);
+}
+
 verifier("records — préparation : une classe de quatre élèves, deux Légendes, une classe d'un collègue", function () use (&$jetonS1, &$recClasse, &$recEleves, &$recJetonClaire, &$recCodeClaire) {
     vider_compteurs();
     $recClasse = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '306', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
@@ -5160,10 +5197,13 @@ verifier("records — pas de code, mauvais code, pas Légende : rien n'entre", f
     egal(false, $r['json']['legende'], 'pas Légende');
     egal(null, $r['json']['record']['meilleur'], 'aucun record');
     egal([], $r['json']['toujours'], 'ligue vide');
-    $r = records_api($recEleves[2]['code'], ['temps' => 498, 'justes' => 25]);
+    $r = courir($recEleves[2]['code'], 498);
     egal(409, $r['code'], 'pas encore Légende : 409, l’appli réessaiera');
     egal(false, $r['json']['legende']);
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
+    // Lot « correctifs de l'audit Codex » : le ticket n'est PAS consommé par
+    // le 409 — l'appli renverra la même course, avec le même ticket.
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$recEleves[2]['id'])->fetchColumn(), 'le ticket attend encore');
 });
 
 verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapide, trop longue, illisible", function () use (&$recEleves) {
@@ -5191,7 +5231,7 @@ verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapi
 verifier("records — la première course d'une Légende : nouveau record, temps de la semaine, 1er, affiché « Mystère » tant que rien n'est choisi", function () use (&$recEleves) {
     vider_compteurs();
     $toti = $recEleves[0]['code'];
-    $r = records_api($toti, ['temps' => 498, 'justes' => 25]);
+    $r = courir($toti, 498);
     egal(200, $r['code'], 'code HTTP');
     egal(true, $r['json']['nouveau'], 'nouveau record');
     egal(null, $r['json']['avant'], 'aucun temps avant');
@@ -5218,18 +5258,18 @@ verifier("records — le choix du nom : prénom ou Mystère, changeable ; les ho
     egal('Toti', $r['json']['toujours'][0]['nom'], 'le prénom, sans initiale (pas d’homonyme), sans classe');
     // Les deux Léa : Léa B. (Légende) court ; Léa M. n'est pas Légende, donc
     // pas d'homonyme dans la ligue → « Léa » seule.
-    records_api($recEleves[1]['code'], ['temps' => 520, 'justes' => 25]);
+    courir($recEleves[1]['code'], 520);
     records_api($recEleves[1]['code'], ['nom' => true]);
     $r = records_api($toti, ['lire' => true]);
     egal(['Toti', 'Léa'], array_column($r['json']['toujours'], 'nom'), 'Léa seule : l’autre Léa n’est pas dans la ligue');
     // Léa M. devient Légende et court : deux Léa affichées → « Léa B. » et « Léa M. ».
     appel('/api/parcours.php', ['code' => $recEleves[2]['code'], 'appli' => 'defi-tables', 'parcours' => progression_legende(true), 'base_revision' => 1]);
-    records_api($recEleves[2]['code'], ['temps' => 613, 'justes' => 25]);
+    courir($recEleves[2]['code'], 613);
     records_api($recEleves[2]['code'], ['nom' => true]);
     $r = records_api($toti, ['lire' => true]);
     egal(['Toti', 'Léa B.', 'Léa M.'], array_column($r['json']['toujours'], 'nom'), 'les homonymes prennent l’initiale');
     // L'élève sans prénom : « Élève ».
-    records_api($recEleves[3]['code'], ['temps' => 700, 'justes' => 25]);
+    courir($recEleves[3]['code'], 700);
     records_api($recEleves[3]['code'], ['nom' => true]);
     $r = records_api($toti, ['lire' => true]);
     egal('Élève', $r['json']['toujours'][3]['nom']);
@@ -5245,11 +5285,11 @@ verifier("records — le choix du nom : prénom ou Mystère, changeable ; les ho
 verifier("records — seul le MEILLEUR temps est gardé ; le temps de la semaine vit à part ; les ex æquo : le premier arrivé devant", function () use (&$recEleves) {
     vider_compteurs();
     $toti = $recEleves[0]['code'];
-    $r = records_api($toti, ['temps' => 531, 'justes' => 25]);
+    $r = courir($toti, 531);
     egal(false, $r['json']['nouveau'], 'moins bien : pas un record');
     egal(498, $r['json']['avant']);
     egal(498, $r['json']['record']['meilleur'], 'le record reste');
-    $r = records_api($toti, ['temps' => 450, 'justes' => 25]);
+    $r = courir($toti, 450);
     egal(true, $r['json']['nouveau'], 'mieux : record battu');
     egal(498, $r['json']['avant'], 'l’ancien, pour « (avant : 49,8 s) »');
     egal(450, $r['json']['record']['meilleur']);
@@ -5262,11 +5302,11 @@ verifier("records — seul le MEILLEUR temps est gardé ; le temps de la semaine
     egal(1, $r['json']['rangToujours'], 'mais toujours premier de tous les temps');
     vrai(!in_array(300, array_column($r['json']['semaine'], 'temps'), true), 'l’ancien temps de semaine n’est pas dans le tableau');
     // Une course cette semaine : le temps de la semaine est remplacé, même moins bon que l'ancien.
-    $r = records_api($toti, ['temps' => 560, 'justes' => 25]);
+    $r = courir($toti, 560);
     egal(560, $r['json']['record']['semaine'], 'la nouvelle semaine repart de cette course');
     egal(450, $r['json']['record']['meilleur'], 'le record ne bouge pas');
     // Ex æquo : Léa B. (Mystère) fait 450 après Toti → Toti devant.
-    records_api($recEleves[1]['code'], ['temps' => 450, 'justes' => 25]);
+    courir($recEleves[1]['code'], 450);
     $r = records_api($toti, ['lire' => true]);
     egal(['Toti', 'Mystère'], array_slice(array_column($r['json']['toujours'], 'nom'), 0, 2), 'le premier arrivé devant');
     egal([1, 2], array_slice(array_column($r['json']['toujours'], 'rang'), 0, 2));
@@ -5274,7 +5314,7 @@ verifier("records — seul le MEILLEUR temps est gardé ; le temps de la semaine
 
 verifier("records — cloisonnement : un élève ne voit que la ligue de SON professeur ; records.ligue rend celle du professeur connecté ; un collègue en lecture ne voit rien de plus", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire, &$recClasse) {
     vider_compteurs();
-    records_api($recCodeClaire, ['temps' => 386, 'justes' => 25]);
+    courir($recCodeClaire, 386);
     records_api($recCodeClaire, ['nom' => true]);
     $r = records_api($recCodeClaire, ['lire' => true]);
     egal(['Jade'], array_column($r['json']['toujours'], 'nom'), 'Jade ne voit que la ligue de son professeur');
@@ -5322,6 +5362,7 @@ verifier("records — la case par classe : fermés, l'élève le sait, sa course
     $r = records_api($recEleves[0]['code'], ['lire' => true]);
     egal(false, $r['json']['ouvert'], 'lire : fermés');
     vrai(!isset($r['json']['toujours']), 'et rien de la ligue');
+    egal(403, records_api($recEleves[0]['code'], ['depart' => true])['code'], 'pas de ticket de course non plus');
     $r = records_api($recEleves[0]['code'], ['temps' => 400, 'justes' => 25]);
     egal(403, $r['code'], 'une course : refusée');
     egal(403, records_api($recEleves[0]['code'], ['nom' => false])['code'], 'le nom aussi');
@@ -5370,14 +5411,14 @@ verifier("records — repartent à zéro avec le nouveau tirage (09/10/2026) : u
     vrai(!in_array('Toti', array_column($l['json']['toujours'], 'nom'), true), 'ni dans la ligue projetée');
     egal('300', (string)bd_test()->query('SELECT meilleur FROM records WHERE eleve_id = ' . (int)$toti['id'])->fetchColumn(), 'rien n’est effacé en base');
     // Sa course suivante, même moins bonne que l'ancien temps, devient son record.
-    $r = records_api($toti['code'], ['temps' => 700, 'justes' => 25]);
+    $r = courir($toti['code'], 700);
     egal(200, $r['code']);
     egal(true, $r['json']['nouveau'], 'un nouveau record');
     egal(null, $r['json']['avant'], 'sans « avant » : l’ancien temps ne compte plus');
     egal(700, $r['json']['record']['meilleur']);
     egal(700, $r['json']['record']['semaine']);
     vrai(in_array('Toti', array_column($r['json']['toujours'], 'nom'), true), 'il revient dans la ligue');
-    $r = records_api($toti['code'], ['temps' => 650, 'justes' => 25]);
+    $r = courir($toti['code'], 650);
     egal(700, $r['json']['avant'], 'ensuite, tout redevient normal');
     egal(650, $r['json']['record']['meilleur']);
     // La date du changement, écrite comme meilleur_le (à la microseconde) :
@@ -5449,7 +5490,7 @@ verifier("records — D4 : « Retirer ce temps » — le propriétaire efface le
     egal(true, $e['json']['record']['nom'], 'mais garde son choix');
     egal(null, $e['json']['rangToujours']);
     // Sa prochaine course compte comme une première.
-    $r = records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+    $r = courir($toti['code'], 601);
     egal(true, $r['json']['nouveau']);
     egal(null, $r['json']['avant']);
     egal(601, $r['json']['record']['meilleur']);
@@ -5461,7 +5502,7 @@ verifier("records — D4 : « Retirer ce temps » — le propriétaire efface le
     // Journal : chaque demande du propriétaire = une ligne.
     egal(2, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'records.retirer' AND resultat = 'ok' AND cible_id = " . (int)$toti['id'])->fetchColumn(), 'journalisé');
     // Toti rejoue (601) pour les tests suivants.
-    records_api($toti['code'], ['temps' => 601, 'justes' => 25]);
+    courir($toti['code'], 601);
 });
 
 verifier("records — D4 : un collègue (classe partagée en lecture) est refusé et journalisé ; l'élève d'un autre professeur est introuvable ; sans jeton, rien", function () use (&$recEleves, &$jetonS1, &$recJetonClaire, &$recCodeClaire) {
@@ -5511,7 +5552,7 @@ verifier("records — D8 : le jour de la course — plausible, il classe la cour
     // Une course du dimanche soir (semaine passée), envoyée aujourd'hui : elle
     // ne touche pas à la semaine en cours (470 reste) ; 440 < 450, c'est quand
     // même le record de tous les temps, daté du dimanche.
-    $r = records_api($lea, ['temps' => 440, 'justes' => 25, 'jour' => $dimanche]);
+    $r = courir($lea, 440, ['jour' => $dimanche]);
     egal(200, $r['code']);
     egal(true, $r['json']['nouveau'], 'meilleur que 450 : le record, quel que soit le jour');
     egal(440, $r['json']['record']['meilleur']);
@@ -5522,25 +5563,25 @@ verifier("records — D8 : le jour de la course — plausible, il classe la cour
     egal($lundi, $ligne['semaine_lundi'], 'la semaine gardée reste celle en cours');
     egal($dimanche, substr((string)$ligne['meilleur_le'], 0, 10));
     // Une course de la semaine passée, moins bonne : rien ne bouge nulle part.
-    $r = records_api($lea, ['temps' => 480, 'justes' => 25, 'jour' => $dimanche]);
+    $r = courir($lea, 480, ['jour' => $dimanche]);
     egal(false, $r['json']['nouveau']);
     egal(470, $r['json']['record']['semaine']);
     // Un jour impossible : la course est d'aujourd'hui (semaine en cours : 460 < 470 la remplace).
-    $r = records_api($lea, ['temps' => 460, 'justes' => 25, 'jour' => '2030-01-01']);
+    $r = courir($lea, 460, ['jour' => '2030-01-01']);
     egal(460, $r['json']['record']['semaine'], 'jour dans le futur : jour de réception, donc cette semaine');
     egal($lundi, $r['json']['record']['lundi']);
     // Sans jour : comme avant.
-    $r = records_api($lea, ['temps' => 455, 'justes' => 25]);
+    $r = courir($lea, 455);
     egal(455, $r['json']['record']['semaine']);
     // Une ligne de la semaine PASSÉE en base (élève qui n'a pas joué cette
     // semaine), et une course de cette semaine : la nouvelle semaine s'ouvre.
     $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
-    $r = records_api($lea, ['temps' => 500, 'justes' => 25, 'jour' => jour_local()]);
+    $r = courir($lea, 500, ['jour' => jour_local()]);
     egal(500, $r['json']['record']['semaine'], 'la semaine repart de cette course');
     egal($lundi, $r['json']['record']['lundi']);
     // Et une course de la semaine passée sur une ligne de la semaine passée : le min.
     $pdo->prepare('UPDATE records SET semaine = 300, semaine_lundi = ? WHERE eleve_id = ?')->execute([$lundiPasse, $id]);
-    records_api($lea, ['temps' => 290, 'justes' => 25, 'jour' => $dimanche]);
+    courir($lea, 290, ['jour' => $dimanche]);
     $ligne = $pdo->query("SELECT semaine, semaine_lundi FROM records WHERE eleve_id = $id")->fetch(PDO::FETCH_ASSOC);
     egal([290, $lundiPasse], [(int)$ligne['semaine'], $ligne['semaine_lundi']], 'même semaine passée : le meilleur des deux');
     // Remise en ordre pour les tests suivants : le record de Léa B. à 450, pas de temps de semaine.
@@ -6976,6 +7017,310 @@ verifier("lot 5e — rangement : le collègue et ses classes partent", function 
     egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $l5e['sienne']], ['jeton' => $l5e['jetonCollegue']])['code']);
     egal(200, appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $l5e['collegue']], ['jeton' => $l5e['admin']])['code']);
     vider_compteurs();
+});
+
+// ------------------------------------------- correctifs de l'audit Codex (29/10/2026)
+//
+// Les quatre défauts de l'audit du 22/10/2026 (dossier audit-serveur-octobre,
+// AUDIT-CODEX-serveur-2026-10-22.md), chacun avec le test qui ROUGISSAIT sur
+// le main 7470a59 :
+//  1. migrer.php (et installer.php) sans frein, et un frein par page ;
+//  2. un record fabriqué en une requête ;
+//  3. supprimer un compte laissait les records de ses élèves ;
+//  4. l'historique de plus de sept jours restait lisible et restaurable.
+
+verifier("audit Codex 1 — le mot de passe d'installation a UN frein, partagé : dix échecs sur migrer.php ferment aussi secours.php et sauvegarde.php", function () use (&$travail) {
+    vider_compteurs();
+    // Preuve de Codex rejouée : 100 essais sur migrer.php répondaient 100
+    // fois « incorrect ». Dix échecs maintenant, puis « Trop d'essais ».
+    for ($i = 0; $i < 10; $i++) {
+        $r = formulaire('/migrer.php', ['jeton' => 'MAUVAIS-' . $i]);
+        egal(200, $r['code']);
+        vrai(str_contains($r['texte'], 'incorrect'), "migrer.php, essai " . ($i + 1) . " : refus ordinaire");
+    }
+    $r = formulaire('/migrer.php', ['jeton' => 'MAUVAIS-10']);
+    vrai(str_contains($r['texte'], 'essais depuis cette adresse'), 'migrer.php : le onzième essai est freiné');
+    vrai(!str_contains($r['texte'], 'incorrect'), 'et le mot de passe n’est même plus comparé');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'essais depuis cette adresse'), 'le BON mot de passe ne passe plus pendant la fenêtre');
+    vrai(!str_contains($r['texte'], 'rien à changer') && !str_contains($r['texte'], "C'est fait"), 'et rien n’est migré');
+    // Le MÊME compteur ferme les autres pages du même secret : secours,
+    // sauvegarde, verifier — et installer.php (déjà installé ici : sa page
+    // se verrouille avant le mot de passe, on le vérifie à part plus bas).
+    foreach (['secours.php', 'sauvegarde.php', 'verifier.php'] as $page) {
+        copy(dirname(__DIR__) . '/public/' . $page, $travail . '/' . $page);
+        $r = formulaire('/' . $page, ['jeton' => 'JETON-DE-TEST']);
+        vrai(str_contains($r['texte'], 'essais depuis cette adresse'), "$page est fermée par les échecs de migrer.php");
+    }
+    // Le compteur est unique : une seule ligne dans « compteurs », à la clé partagée.
+    egal(10, (int)bd_test()->query('SELECT COALESCE(MAX(nombre), 0) FROM compteurs')->fetchColumn(), 'dix échecs comptés sur une seule clé');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM compteurs')->fetchColumn(), 'une seule ligne de compteur');
+    // Dans l'autre sens : cinq échecs sur secours.php et cinq sur sauvegarde.php, et migrer.php est fermée.
+    vider_compteurs();
+    for ($i = 0; $i < 5; $i++) formulaire('/secours.php', ['jeton' => 'faux-' . $i]);
+    for ($i = 0; $i < 5; $i++) formulaire('/sauvegarde.php', ['jeton' => 'faux-' . $i]);
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'essais depuis cette adresse'), 'cinq et cinq font dix : migrer.php est fermée');
+    // Les RÉUSSITES ne comptent pas : vingt migrations de suite avec le bon
+    // mot de passe (le jour d'un dépôt) ne ferment rien.
+    vider_compteurs();
+    for ($i = 0; $i < 20; $i++) {
+        $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+        vrai(str_contains($r['texte'], 'rien à changer') || str_contains($r['texte'], "C'est fait") || str_contains($r['texte'], 'C&#039;est fait'), "migration n°" . ($i + 1) . " : passe");
+    }
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM compteurs')->fetchColumn(), 'aucun compteur pour des réussites');
+    // installer.php : même frein, même clé. La page de test est déjà
+    // installée (elle se verrouille avant le mot de passe) : on vérifie que
+    // son code passe par le même contrôle, et le comportement réel plus bas
+    // sur une base neuve.
+    $installer = (string)file_get_contents(dirname(__DIR__) . '/public/installer.php');
+    vrai(str_contains($installer, "verdict_jeton_installation((string)(\$_POST['jeton'] ?? ''))"), 'installer.php passe par le frein partagé');
+    $migrer = (string)file_get_contents(dirname(__DIR__) . '/public/migrer.php');
+    vrai(str_contains($migrer, "verdict_jeton_installation((string)(\$_POST['jeton'] ?? ''))"), 'migrer.php aussi');
+    vrai(!str_contains($migrer, 'hash_equals('), 'migrer.php ne compare plus lui-même');
+    foreach (['secours.php', 'sauvegarde.php', 'verifier.php'] as $page) @unlink($travail . '/' . $page);
+    vider_compteurs();
+});
+
+verifier("audit Codex 1 — installer.php sur une base neuve : dix mauvais mots de passe, puis freiné, et le compte n'est pas créé", function () use (&$travail) {
+    // Une seconde copie du serveur sur une base SQLite vide, le temps du test :
+    // c'est la seule façon de voir installer.php AVANT le premier compte.
+    $neuf = $travail . '-neuf';
+    copier_dossier(dirname(__DIR__) . '/public', $neuf);
+    $base = $neuf . '/neuf.sqlite';
+    file_put_contents($neuf . '/config.php', "<?php return " . var_export([
+        'bd' => ['dsn' => 'sqlite:' . $base],
+        'origines' => ['https://mathsgo.re'],
+        'jeton_installation' => 'JETON-NEUF',
+    ], true) . ";\n");
+    $port = 9000 + random_int(0, 900);
+    $serveur = proc_open(sprintf('php -S 127.0.0.1:%d -t %s', $port, escapeshellarg($neuf)),
+        [1 => ['file', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null', 'w'], 2 => ['file', $neuf . '/serveur.log', 'w']], $tuyaux);
+    for ($i = 0; $i < 60; $i++) {
+        $fp = @fsockopen('127.0.0.1', $port, $e, $s, 0.2);
+        if ($fp) { fclose($fp); break; }
+        usleep(150000);
+    }
+    try {
+        $poster = function (array $champs) use ($port): string {
+            $ch = curl_init("http://127.0.0.1:$port/installer.php");
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query($champs), CURLOPT_TIMEOUT => 10]);
+            $texte = (string)curl_exec($ch);
+            curl_close($ch);
+            return $texte;
+        };
+        for ($i = 0; $i < 10; $i++) {
+            vrai(str_contains($poster(['jeton' => 'faux-' . $i, 'identifiant' => 'pirate', 'motdepasse' => 'motdepasse-pirate-2026']), 'incorrect'), "installer.php, essai " . ($i + 1) . " : refus ordinaire");
+        }
+        $texte = $poster(['jeton' => 'JETON-NEUF', 'identifiant' => 'pirate', 'motdepasse' => 'motdepasse-pirate-2026']);
+        vrai(str_contains($texte, 'essais depuis cette adresse'), 'le onzième essai est freiné, même avec le bon mot de passe');
+        $neuve = new PDO('sqlite:' . $base);
+        egal(0, (int)$neuve->query('SELECT COUNT(*) FROM profs')->fetchColumn(), 'aucun compte créé');
+        $neuve->exec('DELETE FROM compteurs');
+        vrai(str_contains($poster(['jeton' => 'JETON-NEUF', 'identifiant' => 'gwenael', 'motdepasse' => 'motdepasse-de-test-2026']), 'Compte créé'), 'fenêtre rouverte : le bon mot de passe installe');
+        $neuve = null;
+    } finally {
+        arreter_serveur($serveur);
+        effacer_dossier($neuf);
+    }
+});
+
+verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il faut un ticket de départ, et un temps au moins égal à ce que le serveur a mesuré", function () use (&$jetonS1) {
+    vider_compteurs();
+    // Un pirate avec son code : il écrit la couronne dans sa progression
+    // (choix assumé), puis annonce 25 justes en 10 secondes — la preuve de
+    // Codex, « record_etape_2_sans_course ».
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3A', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $pirate = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $pirate['code'];
+    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    egal(200, appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code'], 'la couronne forgée entre (assumé)');
+    egal(true, records_api($code, ['lire' => true])['json']['legende'], 'il est Légende aux yeux du serveur (assumé)');
+    // Sans ticket : refusé.
+    $r = records_api($code, ['temps' => 100, 'justes' => 25]);
+    egal(400, $r['code'], 'sans ticket : refusé net');
+    egal("Le temps ne compte pas : la course n'a pas de ticket de départ.", $r['json']['erreur'] ?? null);
+    foreach (['', 'pas-un-ticket', str_repeat('0', 32), 42, null, ['a']] as $faux) {
+        egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $faux])['code'], 'ticket illisible ou inconnu : ' . json_encode($faux));
+    }
+    egal(null, bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn() ?: null, 'rien n’est écrit');
+    // Avec un ticket tout frais : 10 s annoncées, 0 s écoulée → refusé, et le ticket est brûlé.
+    $ticket = ticket_de_course($code);
+    $r = records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticket]);
+    egal(400, $r['code'], '10 s annoncées une seconde après le départ : refusé');
+    egal('Le temps ne compte pas.', $r['json']['erreur'] ?? null);
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$pirate['id'])->fetchColumn(), 'le ticket menteur est brûlé');
+    egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticket])['code'], 'et ne sert plus');
+    // Le ticket d'un AUTRE élève ne vaut rien.
+    $autre = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $ticketAutre = ticket_de_course($autre['code'], 60);
+    $r = records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticketAutre]);
+    egal(400, $r['code'], 'le ticket d’un autre élève : refusé');
+    egal("Le temps ne compte pas : la course n'a pas de ticket de départ.", $r['json']['erreur'] ?? null, 'refusé dès la lecture, pas seulement à la consommation');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$autre['id'])->fetchColumn(), 'et il reste à son propriétaire');
+    // Un billet d'ENTRÉE n'est pas un ticket de course, et un ticket de course
+    // n'entre pas par api/eleve.php.
+    $billetEntree = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'] ?? null;
+    vrai(is_string($billetEntree), 'un billet d’entrée pour le test');
+    egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $billetEntree])['code'], 'un billet d’entrée ne date aucune course');
+    $ticketEleve = ticket_de_course($code);
+    egal(404, appel('/api/eleve.php', ['billet' => $ticketEleve])['code'], 'un ticket de course n’ouvre pas la porte d’entrée');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticketEleve) . "'")->fetchColumn(), 'et il n’a pas été consommé par cet essai');
+    // La vraie course : le départ est vieilli dans la base du temps qu'elle
+    // aurait duré. La marge au plus juste : 49 s mesurées → 51,0 s annoncées
+    // passent (490 + 20 dixièmes), 51,1 s non.
+    vieillir_ticket($ticketEleve, 49);
+    $r = records_api($code, ['temps' => 511, 'justes' => 25, 'course' => $ticketEleve]);
+    egal(400, $r['code'], '51,1 s annoncées pour 49 s mesurées : au-delà de la marge de 2 s, refusé');
+    $ticketEleve = ticket_de_course($code, 49);
+    $r = records_api($code, ['temps' => 510, 'justes' => 25, 'course' => $ticketEleve]);
+    egal(200, $r['code'], '51,0 s pour 49 s mesurées : dans la marge, accepté');
+    egal(true, $r['json']['nouveau'], 'premier record');
+    egal(510, (int)bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn());
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticketEleve) . "'")->fetchColumn(), 'le ticket est consommé par la course');
+    egal(400, records_api($code, ['temps' => 510, 'justes' => 25, 'course' => $ticketEleve])['code'], 'rejouer la même course avec le même ticket : refusé');
+    // Une course finie hors ligne, envoyée bien plus tard : le serveur a
+    // mesuré plus que le temps annoncé, elle passe (D8, le jour en plus).
+    $tard = ticket_de_course($code, 3 * 86400);
+    egal(200, records_api($code, ['temps' => 480, 'justes' => 25, 'course' => $tard, 'jour' => gmdate('Y-m-d', time() - 3 * 86400)])['code'], 'envoyée trois jours après : acceptée');
+    // Un ticket de plus de huit jours est périmé.
+    $perime = ticket_de_course($code, 8 * 86400 + 60);
+    egal(400, records_api($code, ['temps' => 480, 'justes' => 25, 'course' => $perime])['code'], 'ticket périmé : refusé');
+    // Au plus quatre tickets par élève : un robot qui en demande cent n'en laisse que quatre.
+    for ($i = 0; $i < 6; $i++) ticket_de_course($code);
+    egal(4, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$pirate['id'])->fetchColumn(), 'quatre tickets au plus par élève');
+    // Les tickets partent avec l'élève.
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $pirate['id']], ['jeton' => $jetonS1])['code']);
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn(), 'ses tickets aussi');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("audit Codex 2 — la marge : temps_plausible_depuis, seule", function () {
+    require_once __DIR__ . '/../public/lib/records.php';
+    // 49 s mesurées : jusqu'à 51,0 s annoncées (490 + 20 dixièmes), pas plus.
+    egal(true, temps_plausible_depuis(1000, 510, 1049));
+    egal(false, temps_plausible_depuis(1000, 511, 1049));
+    egal(true, temps_plausible_depuis(1000, 100, 1008), '10 s annoncées, 8 s mesurées : la marge');
+    egal(false, temps_plausible_depuis(1000, 100, 1007), '10 s annoncées, 7 s mesurées : non');
+    egal(true, temps_plausible_depuis(1000, 100, 1000 + 3 * 86400), 'envoyée trois jours après : le serveur a mesuré plus, ça passe');
+    egal(20, MARGE_COURSE_DIXIEMES, 'deux secondes : une de rondeur, une de réseau');
+});
+
+verifier("audit Codex 3 — supprimer un compte avec ses classes emporte les records de ses élèves ; migrer.php et menage.php purgent les orphelins d'avant", function () use (&$jetonS1, &$travail) {
+    vider_compteurs();
+    // Preuve de Codex rejouée (« suppression_prof_record_orphelin ») : un
+    // professeur, une classe, un élève Légende avec un record, puis
+    // profs.supprimer avec avec_classes → le record restait.
+    $r = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'partant-codex'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'création du collègue (' . $r['texte'] . ')');
+    $collegue = $r['json'];
+    $jetonPartant = connexion('partant-codex', $collegue['motdepasse'])['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $collegue['motdepasse'], 'nouveau' => 'le-mdp-du-collegue-codex-2026'], ['jeton' => $jetonPartant]);
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '5B', 'applis' => ['defi-tables']], ['jeton' => $jetonPartant])['json']['id'];
+    vrai(is_int($classe), 'le collègue a sa classe');
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonPartant])['json']['eleves'][0];
+    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    egal(200, appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code']);
+    // Le record est planté directement (comme la preuve de Codex le fabriquait) :
+    // ce test ne dépend ainsi que de la suppression, pas du ticket de course.
+    bd_test()->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
+        ->execute([(int)$eleve['id'], 500, '2026-10-22T10:00:00.000000Z', 500, '2026-10-19', '2026-10-22T10:00:00Z']);
+    egal([[ (int)$eleve['id'], 500 ]], array_map(fn($l) => [(int)$l[0], (int)$l[1]], bd_test()->query("SELECT eleve_id, meilleur FROM records WHERE eleve_id = " . (int)$eleve['id'])->fetchAll(PDO::FETCH_NUM)), 'avant : le record est là');
+    $r = appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $collegue['id'], 'avec_classes' => true], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le compte est supprimé avec ses classes');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM eleves WHERE id = " . (int)$eleve['id'])->fetchColumn(), 'l’élève est parti');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM records WHERE eleve_id = " . (int)$eleve['id'])->fetchColumn(), 'SON RECORD AUSSI (défaut 4 de Codex)');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE eleve_id = " . (int)$eleve['id'])->fetchColumn(), 'et ses tickets');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = " . (int)$eleve['id'])->fetchColumn(), 'et son historique');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records r LEFT JOIN eleves e ON e.id = r.eleve_id WHERE e.id IS NULL')->fetchColumn(), 'aucune ligne orpheline');
+    // UN SEUL chemin : supprimer_prof passe par le corps de supprimer_classe.
+    $auth = (string)file_get_contents(dirname(__DIR__) . '/public/lib/auth.php');
+    vrai(str_contains($auth, 'effacer_classe_dans_la_transaction($pdo, (int)$classe[\'id\']);'), 'supprimer_prof appelle le chemin unique');
+    vrai(!str_contains($auth, "DELETE FROM eleves WHERE classe_id"), 'et n’efface plus les élèves lui-même');
+    vrai(!str_contains($auth, "DELETE FROM progressions"), 'ni les progressions');
+    // Le passé : un record orphelin planté à la main (comme ceux que
+    // l'ancienne suppression laissait) part avec migrer.php, et menage.php
+    // repasse derrière.
+    bd_test()->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
+        ->execute([987654, 500, '2026-10-22T10:00:00.000000Z', 500, '2026-10-19', '2026-10-22T10:00:00Z']);
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM records WHERE eleve_id = 987654')->fetchColumn(), 'l’orphelin est planté');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], '1 record(s) sans élève effacé(s)'), 'migrer.php le dit — ' . substr(strip_tags($r['texte']), 0, 300));
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records WHERE eleve_id = 987654')->fetchColumn(), 'et l’a effacé');
+    bd_test()->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
+        ->execute([987655, 500, '2026-10-22T10:00:00.000000Z', 500, '2026-10-19', '2026-10-22T10:00:00Z']);
+    $sortie = (string)shell_exec('php ' . escapeshellarg($travail . '/menage.php') . ' 2>&1');
+    vrai(str_contains($sortie, '1 record(s) sans élève effacé(s)'), 'menage.php le dit — ' . $sortie);
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records WHERE eleve_id = 987655')->fetchColumn(), 'et l’a effacé');
+    vider_compteurs();
+});
+
+verifier("audit Codex 4 — l'historique de plus de sept jours est purgé pour tous (à chaque écriture et par menage.php), et ni listé ni restaurable entre deux purges", function () use (&$jetonS1, &$travail) {
+    vider_compteurs();
+    // Preuve de Codex rejouée (« historique_ancien_conserve ») : un élève
+    // écrit, cesse d'écrire ; sa version est vieillie au 2026-09-01 ; un
+    // AUTRE élève écrit, menage.php tourne → la vieille version restait, et
+    // eleves.restaurer la rendait.
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '4C', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    [$dormeur, $actif] = $eleves;
+    $progression = ['version' => 3, 'expert' => ['etoiles' => 1, 'dernier' => null, 'couronne' => null]];
+    egal(200, appel('/api/parcours.php', ['code' => $dormeur['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $progression])['code']);
+    $vieux = '2026-09-01';
+    // revision 0 : la ligne ne porte pas la révision du moment, sinon le
+    // tableau l'écarterait comme « courante » et ce test ne verrait rien.
+    bd_test()->prepare('UPDATE versions SET jour = ?, revision = 0 WHERE eleve_id = ?')->execute([$vieux, (int)$dormeur['id']]);
+    // Entre deux purges, la vieille ligne n'est ni listée ni restaurable.
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = " . (int)$dormeur['id'])->fetchColumn(), 'la vieille version est en base (fixture)');
+    $tableau = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    egal(200, $tableau['code']);
+    $journees = null;
+    foreach ($tableau['json']['eleves'] ?? [] as $ligne) if ((int)$ligne['id'] === (int)$dormeur['id']) $journees = $ligne['journees'] ?? null;
+    vrai(is_array($journees), 'le dormeur est dans le tableau, avec sa liste de journées');
+    egal([], $journees, 'le menu « Revenir à… » ne propose pas un jour de plus de sept jours');
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $dormeur['id'], 'appli' => 'defi-tables', 'jour' => $vieux], ['jeton' => $jetonS1]);
+    egal(404, $r['code'], 'restaurer un jour de plus de sept jours : « plus dans l’historique », même si la ligne traîne encore');
+    // Un AUTRE élève écrit : la purge est globale, la vieille ligne du dormeur part.
+    egal(200, appel('/api/parcours.php', ['code' => $actif['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $progression])['code']);
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = " . (int)$dormeur['id'])->fetchColumn(), 'l’écriture d’un autre élève a purgé la version de plus de sept jours du dormeur');
+    egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = " . (int)$actif['id'])->fetchColumn(), 'la version du jour de l’actif, elle, est là');
+    // Exactement sept jours : J-6 reste, J-7 part.
+    $j6 = gmdate('Y-m-d', strtotime(jour_local() . ' 12:00:00 UTC') - 6 * 86400);
+    $j7 = gmdate('Y-m-d', strtotime(jour_local() . ' 12:00:00 UTC') - 7 * 86400);
+    bd_test()->prepare('INSERT INTO versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, 1, 0, ?, ?)')
+        ->execute([(int)$dormeur['id'], 'defi-tables', $j6, '{"version":3}', '2026-10-22T10:00:00Z']);
+    bd_test()->prepare('INSERT INTO versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, 1, 0, ?, ?)')
+        ->execute([(int)$dormeur['id'], 'defi-tables', $j7, '{"version":3}', '2026-10-22T10:00:00Z']);
+    // menage.php purge aussi, et le dit.
+    $sortie = (string)shell_exec('php ' . escapeshellarg($travail . '/menage.php') . ' 2>&1');
+    vrai(str_contains($sortie, 'historique : 1 version(s) de plus de sept jours effacée(s)'), 'menage.php purge et le dit — ' . $sortie);
+    egal([$j6], array_map(fn($l) => (string)$l[0], bd_test()->query("SELECT jour FROM versions WHERE eleve_id = " . (int)$dormeur['id'])->fetchAll(PDO::FETCH_NUM)), 'J-6 reste, J-7 est parti');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $dormeur['id'], 'appli' => 'defi-tables', 'jour' => $j6], ['jeton' => $jetonS1])['code'], 'J-6 se restaure encore');
+    // L'index par jour existe (SQLite : par le schéma ; MySQL : par migrer.php).
+    if (bd_test()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        vrai(count(bd_test()->query("SHOW INDEX FROM versions WHERE Key_name = 'versions_jour'")->fetchAll()) >= 1, 'l’index versions_jour est là (MySQL)');
+    } else {
+        egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'versions_jour'")->fetchColumn(), 'l’index versions_jour est là (SQLite)');
+    }
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("audit Codex 4 — migrer.php ajoute l'index versions_jour à une base MySQL d'avant (sur SQLite, il est dans le schéma)", function () use (&$travail) {
+    // Une base SQLite d'avant le lot, sans l'index : migrer_schema ne le
+    // crée que par installer_tables (IF NOT EXISTS) — on vérifie qu'il arrive.
+    $vieux = new PDO('sqlite::memory:');
+    $vieux->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    require_once dirname(__DIR__) . '/public/lib/bd.php';
+    installer_tables($vieux);
+    $vieux->exec('DROP INDEX versions_jour');
+    egal(0, (int)$vieux->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'versions_jour'")->fetchColumn());
+    migrer_schema($vieux);
+    egal(1, (int)$vieux->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'versions_jour'")->fetchColumn(), 'revenu');
+    $bd = (string)file_get_contents(dirname(__DIR__) . '/public/lib/bd.php');
+    vrai(str_contains($bd, "KEY versions_jour (jour)"), 'MySQL : dans le CREATE TABLE');
+    vrai(str_contains($bd, "ALTER TABLE versions ADD INDEX versions_jour (jour)"), 'MySQL : et par migrer.php sur une base d’avant');
 });
 
 // ---------------------------------------------------------------------- résultat

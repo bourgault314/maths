@@ -173,9 +173,18 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
   const stockage = fauxStockage();
   const code = "AXKQ7T";
   assert.deepEqual(P.chargerSync(stockage, code), {revision: 0, dirty: false, detache: false, maj: 0}, "une case neuve garde sa forme d'avant");
-  P.sauverSync(stockage, code, {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ}, record: {meilleur: 524, meilleurLe: "2026-10-08", semaine: 524, lundi: "2026-10-05", nom: true}});
-  assert.deepEqual(P.chargerSync(stockage, code), {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ},
+  // Lot « correctifs de l'audit Codex » (29/10/2026) : la course en attente
+  // porte son TICKET de départ (32 hex) ; absent ou illisible → null.
+  const TICKET = "0123456789abcdef0123456789abcdef";
+  P.sauverSync(stockage, code, {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ, ticket: TICKET}, record: {meilleur: 524, meilleurLe: "2026-10-08", semaine: 524, lundi: "2026-10-05", nom: true}});
+  assert.deepEqual(P.chargerSync(stockage, code), {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ, ticket: TICKET},
     record: {meilleur: 524, meilleurLe: "2026-10-08", semaine: 524, lundi: "2026-10-05", nom: true}});
+  P.sauverSync(stockage, code, {revision: 3, course: {temps: 498, jour: AUJ, ticket: "PAS-UN-TICKET"}});
+  assert.deepEqual(P.chargerSync(stockage, code).course, {temps: 498, jour: AUJ, ticket: null}, "un ticket illisible devient null");
+  assert.equal(P.ticketDeCourseValide(TICKET), true);
+  assert.equal(P.ticketDeCourseValide(TICKET.toUpperCase()), false, "minuscules seulement, comme le serveur");
+  assert.equal(P.ticketDeCourseValide(TICKET.slice(1)), false);
+  assert.equal(P.ticketDeCourseValide(null), false);
   // Une course impossible (robot, ou texte) ne se garde pas ; un record illisible non plus.
   P.sauverSync(stockage, code, {revision: 3, course: {temps: 50}, record: {meilleur: "beaucoup"}});
   const lu = P.chargerSync(stockage, code);
@@ -184,15 +193,15 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
   assert.deepEqual(P.normaliserRecordConnu({meilleur: 498, nom: false}), {meilleur: 498, meilleurLe: null, semaine: null, lundi: null, nom: false});
   assert.deepEqual(P.normaliserRecordConnu({meilleur: 498, nom: "oui"}).nom, null, "un nom qui n'est pas un booléen : pas choisi");
   assert.equal(P.normaliserRecordConnu(null), null);
-  assert.deepEqual(P.garderMeilleureCourse(null, {temps: 498, jour: AUJ}), {temps: 498, jour: AUJ});
-  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ}, {temps: 531, jour: AUJ}), {temps: 498, jour: AUJ}, "la plus courte reste");
-  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ}, {temps: 450, jour: AUJ}), {temps: 450, jour: AUJ});
+  assert.deepEqual(P.garderMeilleureCourse(null, {temps: 498, jour: AUJ}), {temps: 498, jour: AUJ, ticket: null});
+  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ, ticket: TICKET}, {temps: 531, jour: AUJ}), {temps: 498, jour: AUJ, ticket: TICKET}, "la plus courte reste, avec son ticket");
+  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ}, {temps: 450, jour: AUJ, ticket: TICKET}), {temps: 450, jour: AUJ, ticket: TICKET});
   assert.equal(P.garderMeilleureCourse(null, {temps: 20}), null, "une course impossible ne remplace rien");
 });
 
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
@@ -227,7 +236,7 @@ test("la page : le lancement et les trois fins de course, dans les mots des plan
   assert.match(html, /verdict\.titre = "Nouveau record\\u00a0!";/);
   assert.match(html, /verdict\.score = `Ton record reste \$\{PARCOURS\.formatTemps\(record\.meilleur\)\}\.`;/);
   assert.match(html, /verdict\.score = jugement\.raison === "erreurs" \? "Le temps ne compte pas\\u00a0: il faut tout juste\." : "Le temps ne compte pas\.";/);
-  assert.match(html, /\$\("result-course-attente"\)\.textContent = "Temps gardé ici, pas encore envoyé\.";/);
+  assert.match(html, /attente\.textContent = "Temps gardé ici, pas encore envoyé\.";/);
   assert.match(html, /rang\.textContent = `\$\{PARCOURS\.libelleRang\(donnees\.rangSemaine\)\} cette semaine`;/);
   // La couronne : son temps est le premier record (25 sur 25 en 1 minute).
   assert.match(html, /const couronne = suivi\.evenements\.find\(evenement => evenement\.type === "etoile" && evenement\.couronne\);\s*if \(!course && !couronne\) return;/);
@@ -300,6 +309,8 @@ function reseauAvecRecords({records = "ok", progression} = {}) {
     appels.push({chemin, corps});
     if (chemin === "records.php") {
       if (records === "muet") return new Promise(() => {});
+      // Lot « correctifs de l'audit Codex » : le ticket du départ.
+      if (corps.depart) return records === "coupe" ? Promise.reject(new TypeError("Failed to fetch")) : Promise.resolve(reponse(200, {ok: true, course: TICKET}));
       if (records === "pas-legende") return Promise.resolve(reponse(409, {ok: false, legende: false, erreur: "Pas encore Légende des tables."}));
       if (records === "ferme") return corps.lire ? Promise.resolve(reponse(200, {ok: true, ouvert: false})) : Promise.resolve(reponse(403, {ok: false, erreur: "Les records ne sont pas ouverts à ta classe."}));
       if (records === "refuse") return Promise.resolve(reponse(400, {ok: false, erreur: "Le temps ne compte pas."}));
@@ -314,6 +325,7 @@ function reseauAvecRecords({records = "ok", progression} = {}) {
 }
 
 const CODE = "AXKQ7T";
+const TICKET = "0123456789abcdef0123456789abcdef";
 
 test("en marche : une Légende suivie lit sa ligue à l'ouverture ; la case garde son record ; la séance reçoit l'option", async () => {
   const reseau = reseauAvecRecords({progression: sansPrenom(legende())});
@@ -359,10 +371,11 @@ test("en marche : une course à 25 sur 25 part tout de suite ; le serveur répon
   const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
   appli.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  appli.api.noterCourse(450);
+  appli.api.noterCourse(450, TICKET);
   await new Promise(r => setTimeout(r, 5));
-  // Lot « après l'audit GPT » (D8) : le jour de la course part avec le temps.
-  assert.deepEqual(reseau.records().slice(-1), [{code: CODE, temps: 450, justes: 25, jour: P.jourLocal()}], "le temps en dixièmes, « justes » 25, et le jour de la course");
+  // Lot « après l'audit GPT » (D8) : le jour de la course part avec le temps ;
+  // lot « correctifs de l'audit Codex » (29/10/2026) : et le ticket du départ.
+  assert.deepEqual(reseau.records().slice(-1), [{code: CODE, temps: 450, justes: 25, jour: P.jourLocal(), course: TICKET}], "le temps en dixièmes, « justes » 25, le jour de la course et le ticket");
   assert.equal(appli.api.sync.course, undefined, "plus rien en attente");
   assert.equal(appli.api.recordConnu().meilleur, 450, "le record connu suit");
   assert.equal(appli.api.sync.record.meilleur, 450);
@@ -374,20 +387,22 @@ test("en marche : serveur muet — la course attend dans la case, et repart apr�
   const appli = demarrerAppli({reseau, codeOnglet: CODE, local});
   appli.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  appli.api.noterCourse(450);
+  appli.api.noterCourse(450, TICKET);
   await new Promise(r => setTimeout(r, 5));
-  assert.deepEqual(appli.api.sync.course, {temps: 450, jour: P.jourLocal()}, "en attente");
-  assert.deepEqual(P.chargerSync(local, CODE).course, {temps: 450, jour: P.jourLocal()}, "et dans la case durable : elle survit à la fermeture");
-  appli.api.noterCourse(470);
+  assert.deepEqual(appli.api.sync.course, {temps: 450, jour: P.jourLocal(), ticket: TICKET}, "en attente, avec son ticket");
+  assert.deepEqual(P.chargerSync(local, CODE).course, {temps: 450, jour: P.jourLocal(), ticket: TICKET}, "et dans la case durable : elle survit à la fermeture");
+  appli.api.noterCourse(470, TICKET);
   assert.equal(appli.api.sync.course.temps, 450, "une course moins bonne ne remplace pas celle qui attend");
-  appli.api.noterCourse(430);
+  appli.api.noterCourse(430, TICKET);
   assert.equal(appli.api.sync.course.temps, 430, "une meilleure, si");
+  appli.api.noterCourse(400, null);
+  assert.equal(appli.api.sync.course.temps, 430, "sans ticket (course partie sans réseau), rien n'est gardé, même meilleure");
   // Le serveur revient : l'envoi du parcours réussit, la course part derrière.
   const revenu = reseauAvecRecords({progression: sansPrenom(legende())});
   const appli2 = demarrerAppli({reseau: revenu, codeOnglet: CODE, local});
   appli2.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  assert.deepEqual(revenu.records().filter(c => c.temps), [{code: CODE, temps: 430, justes: 25, jour: P.jourLocal()}], "la course en attente est partie à l'ouverture");
+  assert.deepEqual(revenu.records().filter(c => c.temps), [{code: CODE, temps: 430, justes: 25, jour: P.jourLocal(), course: TICKET}], "la course en attente est partie à l'ouverture, ticket compris");
   assert.equal(appli2.api.sync.course, undefined);
 });
 
@@ -396,7 +411,7 @@ test("en marche : « pas encore Légende » (409) garde la course ; un refus net
   const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
   appli.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  appli.api.noterCourse(450);
+  appli.api.noterCourse(450, TICKET);
   await new Promise(r => setTimeout(r, 5));
   assert.equal(appli.api.sync.course.temps, 450, "la couronne n'est pas encore là-bas : on garde");
   // Après un 200 du parcours, l'envoi est retenté (traiterReponseEnvoi).
@@ -408,7 +423,7 @@ test("en marche : « pas encore Légende » (409) garde la course ; un refus net
   const appli2 = demarrerAppli({reseau: refuse, codeOnglet: CODE, local: fauxStockage()});
   appli2.api.demarrerSuivi();
   await new Promise(r => setTimeout(r, 5));
-  appli2.api.noterCourse(450);
+  appli2.api.noterCourse(450, TICKET);
   await new Promise(r => setTimeout(r, 5));
   assert.equal(appli2.api.sync.course, undefined, "refusée pour de bon : effacée");
 });
@@ -493,4 +508,87 @@ test("la page prof : le temps à côté de la couronne, la carte des records ave
     "la case des records est rangée SOUS Défi tables, dans les Réglages");
   // Le plein écran (posé sur <body>) ne s'imprime pas avec les bandelettes ; la carte est dans #ecran-classe, déjà cachée à l'impression.
   assert.match(pageProf, /\.barre, header, footer, \.barre-outils, \.actions, \.rec-plein,\s*#ecran-classe > \*:not\(\.fiche\)/);
+});
+
+// ---------------------------------------------------------------------------
+// Lot « correctifs de l'audit Codex » (29/10/2026) — défaut 1 de l'audit du
+// 22/10 : un record se fabriquait en une requête. Le serveur chronomètre
+// désormais la course : un ticket au départ (« depart »), rendu avec le
+// temps à l'arrivée (« course »), et le serveur refuse un temps plus court
+// que ce qu'il a mesuré. Côté page : le ticket est demandé au « C'est
+// parti ! » (course des records ET marche de la couronne), le chrono ne part
+// qu'une fois le ticket arrivé ou refusé, et sans ticket (pas de réseau au
+// départ) le temps n'est pas gardé — le verdict le dit (décision de Gwenaël,
+// 29/10/2026 : « course jouée, verdict honnête »).
+
+test("ticket : courseAvecTicket — la course des records et la marche de la couronne, pas les étoiles ni les autres séries", async () => {
+  const appli = demarrerAppli({reseau: reseauAvecRecords({progression: sansPrenom(legende())}), codeOnglet: CODE, local: fauxStockage()});
+  appli.api.demarrerSuivi();
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(appli.api.courseAvecTicket(P.configCourse()), true, "la course des records");
+  assert.equal(appli.api.courseAvecTicket(P.configEtoile(P.ETOILES_MAX)), true, "la marche de la couronne (son temps est le premier record)");
+  // Un élève à 2 étoiles : sa marche suivante est la 3e, pas la couronne.
+  const deuxEtoiles = legende();
+  deuxEtoiles.expert = {etoiles: 2, dernier: "2026-10-08", couronne: null};
+  appli.api.parcours = sansPrenom(P.normaliserParcours(deuxEtoiles));
+  assert.equal(appli.api.courseAvecTicket(P.configEtoile(3)), false, "une étoile ordinaire");
+  assert.equal(appli.api.courseAvecTicket(P.configEtoile(5)), false, "la couronne tentée trop tôt ne compte pas : pas de ticket non plus");
+  assert.equal(appli.api.courseAvecTicket(P.configValidation(7)), false, "le test d'une table");
+  assert.equal(appli.api.courseAvecTicket(null), false);
+});
+
+test("ticket : demanderTicketDeCourse — un appel « depart » par le code ; réseau coupé → null ; sans code → null sans appel", async () => {
+  const reseau = reseauAvecRecords({progression: sansPrenom(legende())});
+  const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
+  appli.api.demarrerSuivi();
+  await new Promise(r => setTimeout(r, 5));
+  const avant = reseau.records().length;
+  assert.equal(await appli.api.demanderTicketDeCourse(), TICKET);
+  assert.deepEqual(reseau.records().slice(avant), [{code: CODE, depart: true}], "le code dans le corps, « depart »");
+  const coupe = reseauAvecRecords({records: "coupe", progression: sansPrenom(legende())});
+  const appli2 = demarrerAppli({reseau: coupe, codeOnglet: CODE, local: fauxStockage()});
+  appli2.api.demarrerSuivi();
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(await appli2.api.demanderTicketDeCourse(), null, "pas de réseau : pas de ticket");
+  const sansCode = demarrerAppli({reseau: reseauAvecRecords({progression: sansPrenom(legende())}), local: fauxStockage()});
+  assert.equal(await sansCode.api.demanderTicketDeCourse(), null);
+  assert.equal(sansCode.reseau.records().length, 0, "sans code, rien ne part");
+});
+
+test("ticket : la page — demandé au lancement, le chrono attend le ticket, la fin de course l'attend aussi, et le verdict dit « Temps non compté » sans ticket", () => {
+  // Au « C'est parti ! » : une seule demande, pendant le décompte.
+  assert.match(html, /state\.ticketCourse = null;\s*state\.ticketCourseValeur = undefined;\s*if \(courseAvecTicket\(state\.configuration\)\) \{\s*const demande = demanderTicketDeCourse\(\);\s*state\.ticketCourse = demande;/);
+  // Le chrono ne part qu'une fois le ticket là (ou refusé) : le « 1 » attend.
+  assert.match(html, /state\.decompte = window\.setTimeout\(\(\) => \(n > 1 \? decompter\(n - 1\) : partirQuandLeTicketEstLa\(\)\), DECOMPTE_MS\);/);
+  assert.match(html, /function partirQuandLeTicketEstLa\(\) \{\s*const demande = state\.ticketCourse;\s*if \(!demande \|\| state\.ticketCourseValeur !== undefined\) \{ partir\(\); return; \}/);
+  // Le temps part avec le ticket, jamais sans.
+  assert.match(html, /function noterCourse\(dixiemes, ticket\) \{\s*if \(!PARCOURS\.ticketDeCourseValide\(ticket\)\) return;/);
+  assert.match(html, /appelRecords\(\{temps: course\.temps, justes: PARCOURS\.SEUILS\.course\.total, jour: course\.jour, course: course\.ticket\}\)/);
+  // Le verdict honnête (décision de Gwenaël du 29/10/2026).
+  assert.match(html, /const TEXTE_SANS_TICKET = "Temps non compté\\u00a0: pas de réseau au départ de la course\.";/);
+  assert.match(html, /if \(state\.ticketCourseValeur === null\) \{\s*verdict\.classe = "is-neutre";\s*verdict\.icone = "⏱";\s*verdict\.titre = PARCOURS\.formatTemps\(dixiemes\);\s*verdict\.score = TEXTE_SANS_TICKET;/);
+  // La fin de course attend la promesse, et dit la vérité sous la couronne aussi.
+  assert.match(html, /Promise\.resolve\(demande\)\.then\(ticket => \{\s*if \(!PARCOURS\.ticketDeCourseValide\(ticket\)\) \{/);
+  assert.match(html, /noterCourse\(dixiemes, ticket\);/);
+});
+
+test("ticket : le serveur — « depart » délivre un billet de type « course », l'arrivée l'exige, le lit sans le consommer avant le 409, le consomme avant d'écrire, et refuse un temps plus court que mesuré", async () => {
+  const billets = await lire("../_serveur/public/lib/billets.php");
+  assert.match(billets, /const TYPES_BILLET = \['entree', 'fiche', 'course'\];/);
+  assert.match(billets, /const TYPES_BILLET_ENTREE = \['entree', 'fiche'\];/);
+  assert.match(billets, /if \(!in_array\(\(string\)\$ligne\['type'\], TYPES_BILLET_ENTREE, true\)\) return null;/, "un ticket de course n'entre pas par api/eleve.php");
+  assert.match(billets, /const DUREE_TICKET_COURSE = 8 \* 86400;/, "huit jours : une course finie hors ligne peut attendre");
+  assert.match(billets, /function lire_ticket_de_course\(PDO \$pdo, int \$eleveId, string \$ticket\): \?array/);
+  assert.match(billets, /function consommer_ticket_de_course\(PDO \$pdo, int \$eleveId, string \$ticket\): bool/);
+  assert.match(apiRecords, /if \(!empty\(\$corps\['depart'\]\)\) \{\s*repondre\(\['ok' => true, 'course' => emettre_billet\(\$pdo, \$eleveId, 'course'\)\]\);/);
+  assert.match(apiRecords, /\$depart = lire_ticket_de_course\(\$pdo, \$eleveId, \$ticket\);\s*if \(\$depart === null\) \{\s*erreur\("Le temps ne compte pas : la course n'a pas de ticket de départ\.", 400\);/);
+  assert.match(apiRecords, /if \(!temps_plausible_depuis\(\$depart\['depart'\], \$temps\)\) \{/);
+  assert.match(apiRecords, /if \(!consommer_ticket_de_course\(\$pdo, \$eleveId, \$ticket\)\) \{\s*erreur\("Le temps ne compte pas : ce ticket a déjà servi\.", 400\);/);
+  // L'ordre : le ticket est LU avant le 409 « pas encore Légende » et CONSOMMÉ après.
+  const lecture = apiRecords.indexOf("lire_ticket_de_course(");
+  const legende = apiRecords.indexOf("if (!est_legende($pdo, $eleveId)) {");
+  const consommation = apiRecords.indexOf("consommer_ticket_de_course($pdo, $eleveId, $ticket)) {");
+  assert.ok(lecture > 0 && lecture < legende && legende < consommation, "lu avant le 409, consommé après");
+  assert.match(serveurRecords, /const MARGE_COURSE_DIXIEMES = 20;/);
+  assert.match(serveurRecords, /function temps_plausible_depuis\(int \$depart, int \$dixiemes, \?int \$maintenant = null\): bool\s*\{\s*\$ecoule = \(\(\$maintenant \?\? time\(\)\) - \$depart\) \* 10;\s*return \$dixiemes <= \$ecoule \+ MARGE_COURSE_DIXIEMES;/);
 });

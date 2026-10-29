@@ -164,12 +164,22 @@ test("PHP n'annonce plus sa version", () => {
 });
 
 test("verifier.php freine les essais de mot de passe, et ne compte que les échecs", () => {
+  // Lot « correctifs de l'audit Codex » (29/10/2026) : le frein est celui de
+  // lib/limite.php, partagé par les cinq pages du mot de passe d'installation
+  // (dix échecs par dix minutes) ; verifier.php garde son garde-fou « base
+  // injoignable » et ne compte toujours que les échecs.
+  const limite = lire("_serveur/public/lib/limite.php");
+  assert.ok(/const ECHECS_JETON_INSTALLATION = 10;/.test(limite), "dix essais");
+  assert.ok(/const FENETRE_JETON_INSTALLATION = 600;/.test(limite), "par dix minutes");
   const page = lire("_serveur/public/verifier.php");
-  assert.ok(/const ESSAIS_VERIFIER = 12;/.test(page), "douze essais");
-  assert.ok(/const FENETRE_ESSAIS_VERIFIER = 600;/.test(page), "par dix minutes");
-  const bloc = page.slice(page.indexOf("adresse_limitee()"), page.indexOf("$autorise = true;"));
-  assert.ok(/incorrect/.test(bloc) && bloc.indexOf("compter('verifier:") < bloc.indexOf("incorrect"),
+  assert.ok(!/ESSAIS_VERIFIER/.test(page), "plus de seuil à part");
+  const bloc = page.slice(page.indexOf("$freinPossible = false;"), page.indexOf("$autorise = true;"));
+  assert.ok(/jeton_installation_bloque\(\)/.test(bloc), "le frein partagé est regardé avant le mot de passe");
+  assert.ok(/incorrect/.test(bloc) && bloc.indexOf("compter_echec_jeton_installation()") < bloc.indexOf("incorrect"),
     "le compteur n'avance que sur un mot de passe faux");
+  for (const f of ["installer.php", "migrer.php", "secours.php", "sauvegarde.php"]) {
+    assert.ok(lire("_serveur/public/" + f).includes("verdict_jeton_installation((string)($_POST['jeton'] ?? ''))"), f + " passe par le frein partagé");
+  }
 });
 
 test("les fichiers qui ne doivent pas sortir par HTTP sont refusés par .htaccess", () => {

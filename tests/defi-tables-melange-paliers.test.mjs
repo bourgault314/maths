@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261024-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261029-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -467,7 +467,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : serveur-pro-correctif-lots-5).
   // Puis le lot 5f « la ligne ouvre le parcours » (28/10/2026) : prof/index.php
   // et lib/entetes.php changent, 63 au manifeste (avant : serveur-pro-direct-reserve).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-ligne-parcours$/m);
+  // Puis les correctifs de l'audit Codex du 22/10 (29/10/2026) : frein partagé du
+  // mot de passe d'installation, ticket de course des records, suppression de
+  // compte par le chemin unique, historique de sept jours pour tous — 63 au
+  // manifeste (avant : serveur-pro-ligne-parcours).
+  assert.match(lire("_serveur/public/VERSION"), /^lot correctifs-audit-codex$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

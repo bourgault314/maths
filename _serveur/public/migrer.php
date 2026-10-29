@@ -17,6 +17,8 @@
 declare(strict_types=1);
 
 require __DIR__ . '/lib/bd.php';
+require __DIR__ . '/lib/limite.php';
+require __DIR__ . '/lib/archives.php';
 require_once __DIR__ . '/lib/entetes.php';
 
 header('Content-Type: text/html; charset=utf-8');
@@ -30,13 +32,27 @@ $termine = false;
 try {
     $pdo = bd();
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-        $attendu = (string)(config()['jeton_installation'] ?? '');
-        if ($attendu === '' || $attendu === 'à-remplacer') {
-            $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-        } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-            $message = "Mot de passe d'installation incorrect.";
+        // Audit Codex du 22/10/2026 (défaut 3) : cette page n'avait AUCUN
+        // frein — 100 essais en deux secondes. Le frein est celui de
+        // lib/limite.php, partagé avec installer, verifier, secours et
+        // sauvegarde : dix échecs par adresse et par dix minutes, toutes
+        // pages confondues. Il sert le jour où l'on oublie de supprimer ce
+        // fichier après l'avoir ouvert.
+        $verdict = verdict_jeton_installation((string)($_POST['jeton'] ?? ''));
+        if ($verdict !== 'ok') {
+            $message = message_jeton_installation($verdict);
         } else {
             $faits = migrer_schema($pdo);
+            // Lot « correctifs de l'audit Codex » (29/10/2026, défaut 4) : les
+            // records laissés orphelins par l'ancienne suppression de compte
+            // (lib/auth.php, supprimer_prof) partent ici, une fois pour
+            // toutes ; menage.php repasse derrière chaque année. Une ligne
+            // de records sans élève n'est rattachée à personne : la purger
+            // n'efface rien de visible.
+            $orphelins = purger_records_orphelins($pdo);
+            if ($orphelins > 0) {
+                $faits[] = "$orphelins record(s) sans élève effacé(s) (restes d'une ancienne suppression de compte).";
+            }
             $termine = true;
             $message = $faits === []
                 ? "Il n'y avait rien à changer : la base était déjà à jour."

@@ -12,6 +12,10 @@ require_once __DIR__ . '/versions.php';
 require_once __DIR__ . '/direct.php';
 // Pour oublier_modeles_du_prof() : les modèles d'évaluation partent avec le compte.
 require_once __DIR__ . '/evaluation.php';
+// Pour effacer_classe_dans_la_transaction() : les classes d'un compte supprimé
+// partent par LE chemin de suppression d'une classe (lot « correctifs de
+// l'audit Codex », 29/10/2026).
+require_once __DIR__ . '/archives.php';
 
 // Lot 7 : quatre heures, pas douze. Douze couvraient une journée entière de
 // collège ; quatre couvrent une demi-journée, et la page se déconnecte d'elle-même
@@ -201,37 +205,36 @@ function possessions_du_prof(PDO $pdo, int $profId): array
 
 // Supprimer un compte, tout ou rien : ses sessions, les partages qu'il a reçus,
 // et — s'il en possède — ses classes avec leurs élèves, leurs progressions,
-// leurs partages et leurs compteurs. Rien d'orphelin ne reste.
+// leurs historiques, leurs records, leurs partages et leurs compteurs. Rien
+// d'orphelin ne reste.
+//
+// Audit Codex du 22/10/2026 (défaut 4) : cette fonction avait SA boucle de
+// suppression des classes, recopiée de lib/archives.php, et elle oubliait
+// les records — un faux record survivait à la suppression de son
+// professeur, orphelin en base et dans les sauvegardes. Depuis le 29/10, les
+// classes partent par effacer_classe_dans_la_transaction(), le corps unique
+// de supprimer_classe() : une table de plus à effacer un jour se mettra à un
+// seul endroit. La transaction reste celle du compte entier.
 function supprimer_prof(PDO $pdo, int $profId): void
 {
-    $pdo->beginTransaction();
-    try {
-        $requete = $pdo->prepare('SELECT id FROM classes WHERE prof_id = ?');
-        $requete->execute([$profId]);
-        foreach ($requete->fetchAll() as $classe) {
-            $classeId = (int)$classe['id'];
-            $elevesDeLaClasse = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
-            $elevesDeLaClasse->execute([$classeId]);
-            foreach ($elevesDeLaClasse->fetchAll() as $eleve) {
-                $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-                oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
-                oublier_compteurs_du_code($pdo, (string)$eleve['code']);
-                oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+    avec_reprise($pdo, function () use ($pdo, $profId): void {
+        transaction_ouvrir($pdo);
+        try {
+            $requete = $pdo->prepare('SELECT id FROM classes WHERE prof_id = ?');
+            $requete->execute([$profId]);
+            foreach ($requete->fetchAll() as $classe) {
+                effacer_classe_dans_la_transaction($pdo, (int)$classe['id']);
             }
-            oublier_direct_de_la_classe($pdo, $classeId);
-            $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
-            $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
-            $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
+            $pdo->prepare('DELETE FROM partages WHERE prof_id = ?')->execute([$profId]);
+            $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
+            oublier_modeles_du_prof($pdo, $profId);
+            $pdo->prepare('DELETE FROM profs WHERE id = ?')->execute([$profId]);
+            transaction_valider($pdo);
+        } catch (Throwable $e) {
+            transaction_annuler($pdo);
+            throw $e;
         }
-        $pdo->prepare('DELETE FROM partages WHERE prof_id = ?')->execute([$profId]);
-        $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
-        oublier_modeles_du_prof($pdo, $profId);
-        $pdo->prepare('DELETE FROM profs WHERE id = ?')->execute([$profId]);
-        $pdo->commit();
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
-        throw $e;
-    }
+    });
 }
 
 function prof_de_session(PDO $pdo, string $jeton): ?int

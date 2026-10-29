@@ -153,15 +153,15 @@ $chiffrementPossible = function_exists('openssl_encrypt');
 try {
     $pdo = bd();
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-        // On compte soi-même : limiter() répondrait en JSON sur une page HTML.
-        $essais = compter('sauvegarde:' . adresse_limitee(), 600);
-        $attendu = (string)(config()['jeton_installation'] ?? '');
-        if ($essais > 10) {
-            $message = "Trop d'essais depuis cette adresse : attends dix minutes.";
-        } elseif ($attendu === '' || $attendu === 'à-remplacer') {
-            $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-        } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-            $message = "Mot de passe d'installation incorrect.";
+        // Le frein partagé de lib/limite.php (verdict_jeton_installation),
+        // le même que secours.php, migrer.php, installer.php et verifier.php
+        // depuis le lot « correctifs de l'audit Codex » (29/10/2026) : dix
+        // échecs par bloc d'adresse et par dix minutes, toutes pages
+        // confondues ; les réussites ne comptent pas. On compte soi-même :
+        // limiter() répondrait en JSON sur une page HTML.
+        $verdict = verdict_jeton_installation((string)($_POST['jeton'] ?? ''));
+        if ($verdict !== 'ok') {
+            $message = message_jeton_installation($verdict);
         } else {
             $autorise = true;
             $jetonSaisi = (string)($_POST['jeton'] ?? '');

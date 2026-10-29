@@ -156,7 +156,7 @@ function schema(string $pilote): array
   calculs INTEGER NOT NULL DEFAULT 0,
   donnees $texte NOT NULL,
   maj_le VARCHAR(25) NOT NULL"
-        . ($mysql ? ",\n  UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),\n  KEY versions_eleve (eleve_id)" : "")
+        . ($mysql ? ",\n  UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),\n  KEY versions_eleve (eleve_id),\n  KEY versions_jour (jour)" : "")
         . "\n)$fin",
 
         // Lot « Les records » (09/10/2026) : le meilleur temps de chaque
@@ -269,6 +269,9 @@ function schema(string $pilote): array
         'CREATE INDEX IF NOT EXISTS billets_eleve ON billets (eleve_id)',
         'CREATE UNIQUE INDEX IF NOT EXISTS versions_eleve_appli_jour ON versions (eleve_id, appli, jour)',
         'CREATE INDEX IF NOT EXISTS versions_eleve ON versions (eleve_id)',
+        // Lot « correctifs de l'audit Codex » (29/10/2026) : la purge des sept
+        // jours balaie TOUTE la table par le jour (lib/versions.php).
+        'CREATE INDEX IF NOT EXISTS versions_jour ON versions (jour)',
         'CREATE INDEX IF NOT EXISTS journal_quand ON journal (quand)',
         'CREATE UNIQUE INDEX IF NOT EXISTS directs_classe ON directs (classe_id)',
         'CREATE UNIQUE INDEX IF NOT EXISTS directs_questions_numero ON directs_questions (direct_id, numero)',
@@ -307,6 +310,16 @@ function colonne_existe(PDO $pdo, string $table, string $colonne): bool
     } catch (Throwable $e) {
         return false;
     }
+}
+
+// Vrai si cet index existe sur MySQL (SQLite passe par « IF NOT EXISTS »).
+function index_existe_mysql(PDO $pdo, string $table, string $index): bool
+{
+    $requete = $pdo->prepare("SHOW INDEX FROM `$table` WHERE Key_name = ?");
+    $requete->execute([$index]);
+    $trouve = $requete->fetch() !== false;
+    $requete->closeCursor();
+    return $trouve;
 }
 
 // Mise à niveau d'une base déjà installée : ajoute ce qui manque, sans jamais
@@ -405,6 +418,15 @@ function migrer_schema(?PDO $pdo = null): array
     }
     if ($modelesAbsente) {
         $faits[] = "Table « modeles_evaluation » créée (les modèles d'évaluation des tables de chaque professeur).";
+    }
+    // Lot « correctifs de l'audit Codex » (29/10/2026, défaut 5) : l'index
+    // par jour de « versions », pour la purge des sept jours de tous les
+    // élèves. SQLite l'a reçu par installer_tables() (IF NOT EXISTS) ; MySQL
+    // ne le crée que dans le CREATE TABLE, donc une base déjà installée ne
+    // l'a pas : on regarde, puis on l'ajoute.
+    if (pilote($pdo) === 'mysql' && !$versionsAbsente && !index_existe_mysql($pdo, 'versions', 'versions_jour')) {
+        $pdo->exec('ALTER TABLE versions ADD INDEX versions_jour (jour)');
+        $faits[] = "Index « par jour » ajouté à l'historique des versions (purge des sept jours).";
     }
 
     // Le premier compte créé devient administrateur et récupère les classes

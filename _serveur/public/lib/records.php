@@ -39,6 +39,30 @@ const SEUIL_COURSE_DIXIEMES = 100;
 const COURSE_MAX_DIXIEMES = 36000;
 const RECORDS_TOP = 10;
 
+// Lot « correctifs de l'audit Codex » (29/10/2026, défaut 1 du 22/10) : le
+// serveur CHRONOMÈTRE la course. Au départ, l'appli demande un ticket
+// (api/records.php, « depart ») ; le serveur le date. À l'arrivée, le temps
+// annoncé ne peut pas être plus court que ce que le serveur a vu passer
+// entre le ticket et l'envoi, à MARGE_COURSE_DIXIEMES près (le départ est
+// daté à la seconde, et le chrono de l'appli part à la première question,
+// après le ticket et le décompte 3-2-1 : pour une vraie course, le serveur
+// a TOUJOURS mesuré plus que l'appli). Un temps envoyé sans ticket, avec un
+// ticket inconnu, d'un autre élève, périmé ou déjà servi est refusé (400).
+// Ce que ça ferme : « 25 justes en 10 s » en une requête (reproduit par
+// Codex). Ce que ça ne ferme pas, et qu'on assume (décision du 14/10, « on
+// accepte et le professeur retire ») : un client bricolé qui prend un ticket,
+// attend dix secondes et envoie dix secondes — le serveur ne vérifie pas les
+// 25 réponses. La couronne reste lue dans la progression (choix assumé).
+const MARGE_COURSE_DIXIEMES = 20;
+
+// Vrai si le temps annoncé tient dans ce que le serveur a mesuré depuis le
+// départ ($depart, epoch en secondes) — à part, pour être testé seul.
+function temps_plausible_depuis(int $depart, int $dixiemes, ?int $maintenant = null): bool
+{
+    $ecoule = (($maintenant ?? time()) - $depart) * 10;
+    return $dixiemes <= $ecoule + MARGE_COURSE_DIXIEMES;
+}
+
 // Lot « le tirage des questions » (09/10/2026, décision de Gwenaël) : les
 // séries de la course ont changé (25 calculs tous différents, ×1 et ×10 une
 // fois chacun au plus) — un peu plus dures, plus égales d'une course à

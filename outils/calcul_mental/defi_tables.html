@@ -3206,7 +3206,7 @@
   </template>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261024-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261029-1"></script>
   <script>
     (() => {
       "use strict";
@@ -4466,10 +4466,46 @@
 
       // Une course finie à 25 sur 25 : son temps attend dans la case jusqu'à
       // ce que le serveur l'accepte. Deux courses en attente : la meilleure.
-      function noterCourse(dixiemes) {
-        sync.course = PARCOURS.garderMeilleureCourse(sync.course, {temps: dixiemes, jour: PARCOURS.jourLocal()});
+      // Depuis le lot « correctifs de l'audit Codex » (29/10/2026), la course
+      // part avec son TICKET (demanderTicketDeCourse) ; sans ticket, elle ne
+      // peut pas compter et n'est pas gardée (l'écran du résultat le dit).
+      function noterCourse(dixiemes, ticket) {
+        if (!PARCOURS.ticketDeCourseValide(ticket)) return;
+        sync.course = PARCOURS.garderMeilleureCourse(sync.course, {temps: dixiemes, jour: PARCOURS.jourLocal(), ticket});
         sauverSync();
         envoyerCourseEnAttente();
+      }
+
+      // Le ticket de course (lot « correctifs de l'audit Codex », 29/10/2026 —
+      // défaut 1 de l'audit du 22/10) : au « C'est parti ! » d'une course des
+      // records ou de la marche de la couronne, la page demande au serveur
+      // un ticket à usage unique ; le serveur note l'instant. À l'arrivée, le
+      // temps part avec le ticket, et le serveur refuse un temps plus court
+      // que ce qu'il a lui-même mesuré depuis le départ : un record ne se
+      // fabrique plus en une requête, il faut au moins vivre le temps qu'on
+      // annonce. Une course finie puis envoyée plus tard (réseau coupé à la
+      // fin) garde son ticket et compte ; une course PARTIE sans réseau n'a
+      // pas de ticket : son temps ne compte pas (décision de Gwenaël,
+      // 29/10/2026 : la course se joue quand même, le verdict le dit).
+      // Rend une promesse : le ticket, ou null.
+      function courseAvecTicket(config) {
+        const classement = PARCOURS.classerSerie(parcours, config);
+        if (!classement) return false;
+        if (classement.type === "course") return true;
+        return classement.type === "etoile" && classement.etoile === PARCOURS.ETOILES_MAX;
+      }
+
+      function demanderTicketDeCourse() {
+        if (!suiviActif() || sync.detache || !recordsReglage) return Promise.resolve(null);
+        // Une course encore en attente part d'abord : son ticket reste
+        // valable (le serveur en garde plusieurs par élève).
+        envoyerCourseEnAttente();
+        const code = codeSuivi;
+        return appelRecords({depart: true}).then(reponse => {
+          if (code !== codeSuivi) return null;
+          const ticket = reponse.statut === 200 && reponse.donnees && reponse.donnees.ok ? reponse.donnees.course : null;
+          return PARCOURS.ticketDeCourseValide(ticket) ? ticket : null;
+        });
       }
 
       // Chaque réponse a un sens, et un seul :
@@ -4495,7 +4531,7 @@
         // temps — une course du dimanche soir envoyée le lundi reste dans SA
         // semaine (le serveur n'accepte qu'un jour réel, pas dans le futur,
         // de 7 jours au plus ; sinon le jour de réception).
-        appelRecords({temps: course.temps, justes: PARCOURS.SEUILS.course.total, jour: course.jour}).then(reponse => {
+        appelRecords({temps: course.temps, justes: PARCOURS.SEUILS.course.total, jour: course.jour, course: course.ticket}).then(reponse => {
           courseEnVol = false;
           if (code !== codeSuivi) return;
           const donnees = reponse.donnees;
@@ -5581,6 +5617,14 @@
         answer: "",
         launchReady: false,
         decompte: null,
+        // Lot « correctifs de l'audit Codex » (29/10/2026) : le ticket de la
+        // course en cours (course des records, marche de la couronne) —
+        // demandé au serveur au « C'est parti ! », rendu avec le temps à
+        // l'arrivée. « ticketCourse » : la promesse ; « ticketCourseValeur » :
+        // undefined tant qu'elle court, le ticket (32 hex) ou null si le
+        // serveur n'a pas répondu (pas de réseau au départ).
+        ticketCourse: null,
+        ticketCourseValeur: undefined,
         origin: "menu",
         etapeOuverte: null,
         // Lot « Encore une séance » (08/10/2026, planche 13, choix A de
@@ -7618,6 +7662,8 @@
       // lot « les règles des records », la question reste jusqu'à la bonne
       // réponse : une course finit toujours à 25 justes ; ce verdict ne sert
       // plus qu'en garde-fou.)
+      const TEXTE_SANS_TICKET = "Temps non compté\u00a0: pas de réseau au départ de la course.";
+
       function verdictCourse(suivi, elapsed, verdict) {
         const dixiemes = Math.round(elapsed / 100);
         const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
@@ -7638,6 +7684,16 @@
           verdict.icone = "✗";
           verdict.titre = jugement.raison === "erreurs" ? pluriel(erreurs, "erreur") : PARCOURS.formatTemps(dixiemes);
           verdict.score = jugement.raison === "erreurs" ? "Le temps ne compte pas\u00a0: il faut tout juste." : "Le temps ne compte pas.";
+          return verdict;
+        }
+        // Pas de ticket (lot « correctifs de l'audit Codex ») : la course est
+        // partie sans réseau, le serveur ne pourra pas la dater — pas de
+        // « Nouveau record ! » mensonger, le temps est dit et c'est tout.
+        if (state.ticketCourseValeur === null) {
+          verdict.classe = "is-neutre";
+          verdict.icone = "⏱";
+          verdict.titre = PARCOURS.formatTemps(dixiemes);
+          verdict.score = TEXTE_SANS_TICKET;
           return verdict;
         }
         const record = recordConnu();
@@ -7680,10 +7736,43 @@
         if (!course && !couronne) return;
         if (!suiviActif() || !recordsReglage) return;
         const jugement = PARCOURS.courseCompte(state.correct, TOTAL, dixiemes);
-        if (jugement.compte) noterCourse(dixiemes);
-        if (!course) return;
-        $("result-course-attente").textContent = "Temps gardé ici, pas encore envoyé.";
-        $("result-course-attente").hidden = !(jugement.compte && sync.course);
+        if (!jugement.compte) return;
+        // Le ticket (lot « correctifs de l'audit Codex ») : presque toujours
+        // déjà là ; sinon on l'attend (8 s au plus, le délai d'appelSuivi),
+        // puis le temps part — ou l'écran dit qu'il ne compte pas.
+        const demande = state.ticketCourse;
+        const attente = $("result-course-attente");
+        attente.textContent = "Temps gardé ici, pas encore envoyé.";
+        attente.hidden = !course;
+        Promise.resolve(demande).then(ticket => {
+          if (!PARCOURS.ticketDeCourseValide(ticket)) {
+            // Sans ticket : rien n'est gardé, et le résultat de CETTE course
+            // (s'il est encore à l'écran) le dit honnêtement — sous la
+            // couronne aussi (elle est gagnée ; son temps, lui, ne compte pas).
+            if (state.ticketCourse === demande) state.ticketCourseValeur = null;
+            if (state.running || $("result").hidden) return;
+            if (course) {
+              // Le verdict de la course le dit (une seule fois) : s'il a été
+              // rendu avant que le refus soit connu (« Nouveau record ! »,
+              // « Ton record reste… »), on le reprend ici.
+              const resultat = $("result");
+              resultat.classList.remove("is-fete");
+              resultat.classList.add("is-neutre");
+              $("result-icon").textContent = "⏱";
+              $("result-title").textContent = soude(PARCOURS.formatTemps(dixiemes));
+              $("result-score").textContent = soude(TEXTE_SANS_TICKET);
+              attente.hidden = true;
+              return;
+            }
+            // La couronne : son verdict reste (elle est gagnée) ; la ligne
+            // grise dit que son temps, lui, ne compte pas.
+            attente.textContent = TEXTE_SANS_TICKET;
+            attente.hidden = false;
+            return;
+          }
+          noterCourse(dixiemes, ticket);
+          if (course && !state.running && !$("result").hidden) attente.hidden = !sync.course;
+        });
       }
 
       function renderVerdict(suivi, elapsed) {
@@ -7798,11 +7887,45 @@
         renderFilSeance($("seance-fil"));
         majSortieJeu();
         show("play");
+        // Le ticket de course, demandé pendant le décompte (il arrive bien
+        // avant la première réponse) ; null si le serveur n'a pas répondu.
+        state.ticketCourse = null;
+        state.ticketCourseValeur = undefined;
+        if (courseAvecTicket(state.configuration)) {
+          const demande = demanderTicketDeCourse();
+          state.ticketCourse = demande;
+          demande.then(ticket => { if (state.ticketCourse === demande) state.ticketCourseValeur = ticket; });
+        }
         if (avecDecompte(state.configuration)) {
           decompter(3);
           return;
         }
-        partir();
+        partirQuandLeTicketEstLa();
+      }
+
+      // Le chrono ne part qu'une fois le ticket de course arrivé (ou refusé) :
+      // le serveur date le départ quand il reçoit la demande, et la première
+      // question ne doit pas précéder cette date — sinon, sur un réseau lent,
+      // une vraie course serait « plus courte que mesurée » et refusée. Sur
+      // un réseau normal le ticket est là bien avant la fin du décompte ; sur
+      // un réseau lent, le « 1 » reste à l'écran le temps qu'il faut (8 s au
+      // plus, le délai d'appelSuivi), puis la course part. (Décision prise
+      // en l'absence de Gwenaël, lot « correctifs de l'audit Codex » :
+      // réversible — l'autre choix était une marge de 10 s côté serveur, qui
+      // aurait rendu le ticket inutile sous les 20 s.)
+      function partirQuandLeTicketEstLa() {
+        const demande = state.ticketCourse;
+        if (!demande || state.ticketCourseValeur !== undefined) { partir(); return; }
+        // Le minuteur du « 1 » : stopTimer() (« Ma table ») le remet à null,
+        // un décompte repris (« Précédent ») en pose un autre.
+        const decompte = state.decompte;
+        demande.then(() => {
+          // Toujours sur l'écran de jeu, même série, même décompte, pas
+          // encore partie : sinon l'élève a quitté ou relancé.
+          if (state.ticketCourse !== demande || state.running || $("play").hidden || state.decompteCoupe) return;
+          if (decompte !== null && state.decompte !== decompte) return;
+          partir();
+        });
       }
 
       // Lot « après l'audit GPT » (D7, 14/10/2026) : le chrono d'une série
@@ -7860,7 +7983,7 @@
           renderLearnSequence();
           ajusterEchelle();
         }
-        state.decompte = window.setTimeout(() => (n > 1 ? decompter(n - 1) : partir()), DECOMPTE_MS);
+        state.decompte = window.setTimeout(() => (n > 1 ? decompter(n - 1) : partirQuandLeTicketEstLa()), DECOMPTE_MS);
       }
 
       // Correction de Claude Code (lot « les règles des records ») : la page

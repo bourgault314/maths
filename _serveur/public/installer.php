@@ -23,11 +23,12 @@ try {
         $termine = true;
         $message = "Le serveur est déjà installé. Tu peux supprimer ce fichier installer.php.";
     } elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
-        $attendu = (string)(config()['jeton_installation'] ?? '');
-        if ($attendu === '' || $attendu === 'à-remplacer') {
-            $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-        } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-            $message = "Mot de passe d'installation incorrect.";
+        // Le frein partagé de lib/limite.php (audit Codex du 22/10/2026,
+        // défaut 3) : la table « compteurs » vient d'être créée par
+        // installer_tables(), il peut donc compter dès le premier essai.
+        $verdict = verdict_jeton_installation((string)($_POST['jeton'] ?? ''));
+        if ($verdict !== 'ok') {
+            $message = message_jeton_installation($verdict);
         } else {
             try {
                 // Le tout premier compte est administrateur : lui seul pourra en créer d'autres.

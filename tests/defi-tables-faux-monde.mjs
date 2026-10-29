@@ -283,7 +283,8 @@ export function demarrerAppli({entree = {}, local, session, reseau, running = fa
       renderRepere, majLienRetour, entrerParBillet, adopterCode, echangerBillet, prenomAffiche,
       verifierGarde, repondreGarde, GARDE_INACTIVITE_MS, GARDE_ESSAIS_MAX,
       CLE_PRENOM_ONGLET, CLE_DERNIER_GESTE, lirePrenomOnglet,
-      recordsOuverts, recordConnu, optionsSeance, noterCourse, envoyerCourseEnAttente, chargerRecords, choisirNom, lancerCourse, ouvrirRecords, lireReglageRecords
+      recordsOuverts, recordConnu, optionsSeance, noterCourse, envoyerCourseEnAttente, chargerRecords, choisirNom, lancerCourse, ouvrirRecords, lireReglageRecords,
+      courseAvecTicket, demanderTicketDeCourse // lot « correctifs de l'audit Codex » (29/10/2026) : le ticket de course
     };`)(window, document, navigator, reseau.fetch, PARCOURS, () => local, () => session, state,
     () => rendus.push("parcours"), horloge, id => document.getElementById(id), () => rendus.push("records"), () => rendus.push("accueil"),
     nom => rendus.push("show:" + nom), config => rendus.push("lancer:" + (config && config.course || config && config.mode)), () => rendus.push("accueil"),

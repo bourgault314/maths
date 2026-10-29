@@ -102,7 +102,7 @@ test("la page : les branches — next(), updateTimer(), renderQuestion(), majSor
 });
 
 test("e) le moteur a changé : nouveau numéro de cache, copie serveur identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(moteur, copie);
