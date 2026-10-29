@@ -23,14 +23,15 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
       cas[nom] = (cas[nom] || 0) + 1;
     }
   // Lot NC-1 : NC17 et NC18 suivent le cahier (sans leur gabarit, comme ici) ; NC17-f et NC18-g ajoutées.
+  // Lot NC-2 : NC01, NC02 et NC03 aussi (NC01-d n'a plus de □ dans sa phrase, NC03-b n'est plus un QCM).
   assert.deepEqual(cas, {
-    seule: 210,
-    carres: 9,
+    seule: 206,
+    carres: 8,
     comparaison: 9,
     ranger: 2,
-    qcm: 69,
+    qcm: 68,
     calcule: 67,
-    etiquette: 64,
+    etiquette: 70,
     coordonnees: 7,
   });
 });
@@ -46,7 +47,11 @@ test("C3 : « Calcule 0,4 × 2. » s'écrit « 0,4 × 2 = [ ] »", () => {
 });
 
 test("C3 : les □ deviennent les cases, dans l'ordre, fractions et puissances comprises", () => {
-  const nc01 = modeleQuestion(question("NC01-d"), null);
+  // L'ancienne NC01-d de GPT (réécrite au lot NC-2, elle a maintenant son gabarit) : une question à □.
+  const nc01 = modeleQuestion(
+    { prompt: "Complète : 28,05 = 28 + □/10 + □/100.", fields: [{ answer: "0" }, { answer: "5" }] },
+    null,
+  );
   assert.equal(nc01.consigne, "Complète.");
   assert.equal(nc01.modele, "28,05 = 28 + [0]/10 + [1]/100");
   assert.deepEqual(
@@ -69,8 +74,8 @@ test("C3 : les □ deviennent les cases, dans l'ordre, fractions et puissances c
 test("C3 : comparer, ranger, QCM, case seule, gabarit en priorité", () => {
   assert.deepEqual(modeleQuestion(question("NC02-a"), null), {
     cas: "comparaison",
-    consigne: "Complète.",
-    modele: "3 [0] 2,95",
+    consigne: "Complète avec <, = ou >.",
+    modele: "2,9 [0] 2,95",
   });
   const ranger = modeleQuestion(question("NC10-e"), null);
   assert.equal(ranger.modele, "[0] < [1] < [2]");

@@ -5,6 +5,11 @@ import {
   counts as quantitesDivisibilite,
   formesCahier as formesDivisibilite,
 } from "./generateurs/divisibilite.js";
+import {
+  generators as numeration,
+  counts as quantitesNumeration,
+  formesCahier as formesNumeration,
+} from "./generateurs/numeration.js";
 import { generators as algebre, counts as quantitesAlgebre } from "./generateurs/algebre.js";
 import { generators as geometrie, counts as quantitesGeometrie } from "./generateurs/geometrie.js";
 import { generators as mesures, counts as quantitesMesures } from "./generateurs/mesures.js";
@@ -16,6 +21,7 @@ import {
 
 export const generateurs = Object.freeze({
   ...nombres,
+  ...numeration,
   ...divisibilite,
   ...algebre,
   ...geometrie,
@@ -26,6 +32,7 @@ export const generateurs = Object.freeze({
 
 export const nombresFormes = Object.freeze({
   ...quantitesNombres,
+  ...quantitesNumeration,
   ...quantitesDivisibilite,
   ...quantitesAlgebre,
   ...quantitesGeometrie,
@@ -34,9 +41,10 @@ export const nombresFormes = Object.freeze({
   ...quantitesProportionnalite,
 });
 
-// Les formes réécrites d'après les cahiers de domaine (lot NC-1 : NC17 et NC18). Elles ne suivent plus
-// les empreintes de l'archive de GPT ; leurs propres tests sont tests/automatismes-cahier-*.test.mjs.
-export const formesCahier = Object.freeze(new Set([...formesDivisibilite]));
+// Les formes réécrites d'après les cahiers de domaine (lot NC-1 : NC17 et NC18 ; lot NC-2 : NC01, NC02
+// et NC03). Elles ne suivent plus les empreintes de l'archive de GPT ; leurs propres tests sont
+// tests/automatismes-cahier-*.test.mjs.
+export const formesCahier = Object.freeze(new Set([...formesNumeration, ...formesDivisibilite]));
 
 export function formesDisponibles(famille) {
   if (!Object.hasOwn(generateurs, famille)) return [];

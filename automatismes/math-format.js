@@ -86,11 +86,15 @@ function lexMath(value) {
       variable = true;
     if (t === "a")
       variable =
-        !/(?:\bil y |\by en |\ben |\bon |\bn’|\bn')$/i.test(before) &&
+        !/(?:\bil y |\bn['’]y |\by en |\ben |\bon |\bn’|\bn')$/i.test(before) &&
         // Le verbe « avoir » (« un nombre premier a exactement… », « il y en a beaucoup ») reste droit.
-        !/^\s+(?:pour|une?|été|besoin|des|le|la|les|exactement|beaucoup|toujours|aussi|plus|moins|deux|trois|quatre|autant|déjà)\b/.test(
+        // La fin du mot est « pas de lettre après » (et non \b, qui ne voit pas la fin de « été »,
+        // « déjà », « aligné » : correctif NC-2).
+        !/^\s+(?:pour|une?|été|besoin|des|le|la|les|exactement|beaucoup|toujours|aussi|plus|moins|deux|trois|quatre|autant|déjà|écrit|aligné|placé|additionné|raison)(?!\p{L})/u.test(
           after,
-        );
+        ) &&
+        // « 0,04 a 0 dixième » (lot NC-2) : le verbe, suivi d'un nombre de dixièmes, d'unités…
+        !/^\s+\d+\s+(?:millièmes?|centièmes?|dixièmes?|unités?|dizaines?|centaines?)\b/.test(after);
     if (t === "y") variable = !/(?:\bil\s+|\bn['’])$/i.test(before);
     // Les unités restent droites après un nombre.
     if (/^[hmsgLl]$/.test(t) && /\d\s*$/.test(before) && !/^\s*[=+−×÷*/^]/.test(after))

@@ -12,7 +12,7 @@ const reference = JSON.parse(
   readFileSync(new URL("fixtures/automatismes/aides-a-revoir.json", import.meta.url)),
 );
 
-test("21 200 aides comparées : les occurrences détectées restent celles de l’archive", (contexte) => {
+test("20 600 aides comparées : les occurrences détectées restent celles de l’archive", (contexte) => {
   const constats = [];
   let tirages = 0;
   for (const famille of Object.keys(generateurs)) {
@@ -38,7 +38,7 @@ test("21 200 aides comparées : les occurrences détectées restent celles de l�
       }
     }
   }
-  assert.equal(tirages, 21200);
+  assert.equal(tirages, 20600);
   assert.deepEqual(constats, reference.formes);
   contexte.diagnostic(
     `${constats.length} formes signalées : ce contrôle constate les défauts hérités, il ne valide pas leurs aides.`,

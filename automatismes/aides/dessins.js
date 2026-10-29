@@ -31,11 +31,12 @@ export function svg(w, h, body, label = "") {
 }
 
 export function t(x, y, s, size = 14, fill = INK, options = {}) {
-  const { anchor = "middle", weight = 400, font = null } = options;
+  const { anchor = "middle", weight = 400, font = null, italic = false } = options;
   const police = font ? ` font-family="${font}"` : "";
+  const penche = italic ? ` font-style="italic"` : "";
   return (
     `<text x="${n2(x)}" y="${n2(y)}" font-size="${size}" fill="${fill}" text-anchor="${anchor}" ` +
-    `font-weight="${weight}"${police} dominant-baseline="central">${esc(s)}</text>`
+    `font-weight="${weight}"${police}${penche} dominant-baseline="central">${esc(s)}</text>`
   );
 }
 
@@ -360,13 +361,24 @@ export function venn(a, b, fa, fb, commun = null) {
 }
 
 /* Droite graduée (version des cahiers). labels : {valeur: texte} sous la droite ; sauts : [de, à,
-   texte, couleur, niveau] (niveau > 0 au-dessus, < 0 au-dessous) ; petits : graduations fines. */
+   texte, couleur, niveau] (niveau > 0 au-dessus, < 0 au-dessous) ; petits : graduations fines ;
+   points : [valeur, texte au-dessus, couleur, étage] (une petite croix ; étage 1 : le texte un cran
+   plus haut, quand deux points sont trop proches) ; milieu : une valeur dessinée en tirets orange,
+   son texte dessous (lot NC-2, arrondis). */
 export function droite(vmin, vmax, ticks, labels, options = {}) {
-  const { sauts = [], petits = [], W = 340 } = options;
+  const {
+    sauts = [],
+    petits = [],
+    W = 340,
+    points = [],
+    milieu = null,
+    milieuTxt = "milieu",
+  } = options;
   const m = 26;
   const X = (v) => m + ((v - vmin) / (vmax - vmin)) * (W - 2 * m);
   const nsauts = Math.max(0, ...sauts.map((s) => s[4]));
-  const yl = 30 + 34 * nsauts;
+  const etages = Math.max(0, ...points.map((p) => p[3] || 0));
+  const yl = 30 + 34 * nsauts + (points.length ? 18 + 18 * etages : 0);
   let body = line(m - 14, yl, W - m + 14, yl, INK, 1.8);
   body += `<path d="M${W - m + 8},${yl - 5} L${W - m + 16},${yl} L${W - m + 8},${yl + 5}" fill="none" stroke="${INK}" stroke-width="1.8"/>`;
   for (const v of petits) body += line(X(v), yl - 4, X(v), yl + 4, FILET, 1.2);
@@ -374,6 +386,13 @@ export function droite(vmin, vmax, ticks, labels, options = {}) {
   const bas = Math.max(0, ...sauts.filter((s) => s[4] < 0).map((s) => -s[4]));
   for (const [v, s] of Object.entries(labels))
     body += t(X(Number(v)), yl + 22 + 26 * bas, s, 14, INK, { weight: 600, font: MATH });
+  if (milieu !== null) {
+    body += line(X(milieu), yl - 16, X(milieu), yl + 16, ORANGE, 2, "4 3");
+    body += t(X(milieu), yl + 40, milieuTxt, 12.5, BRUN, {
+      weight: 700,
+      font: milieuTxt !== "milieu" ? MATH : null,
+    });
+  }
   for (const [a, b, s, col, niv] of sauts) {
     const xa = X(a);
     const xb = X(b);
@@ -389,7 +408,237 @@ export function droite(vmin, vmax, ticks, labels, options = {}) {
     body += `<path d="M${n2(xb - 7 * sens)},${yl - 13} L${n2(xb)},${yl - 4} L${n2(xb + sens)},${yl - 15}" fill="none" stroke="${col}" stroke-width="2.4"/>`;
     if (s) body += t((xa + xb) / 2, haut - 4, s, 15, col, { weight: 800, font: MATH });
   }
-  return svg(W, yl + 34 + 26 * bas, body, "droite graduée");
+  for (const [v, s, col = BLEU, etage = 0] of points) {
+    body += croix(X(v), yl, col);
+    if (s)
+      body += t(X(v), sauts.length ? yl + 24 : yl - 20 - 18 * etage, s, 14, col, {
+        weight: 800,
+        font: MATH,
+      });
+  }
+  return svg(W, yl + (milieu !== null ? 52 : 34) + 26 * bas, body, "droite graduée");
+}
+
+/* ===================================================================== lot NC-2 (NC01, NC02, NC03)
+   Repris de aides.py (version 3 du cahier) : le tableau de numération, les nombres alignés sur la
+   virgule, l'unité en 100 centièmes, les arrondis d'un produit, l'estimation d'une somme. */
+
+// Les couleurs des rangs (celles du plateau de Gwenaël) : fond, texte de l'en-tête, bord.
+export const RANGS = {
+  milliers: ["#f5f9fc", INK, FILET],
+  centaines: ["#f5f9fc", INK, FILET],
+  dizaines: ["#f5f9fc", INK, FILET],
+  unités: ["#fee2e2", "#c81e1e", "#ef4444"],
+  dixièmes: ["#dcfce7", "#166534", "#22c55e"],
+  centièmes: ["#fef9c3", "#6f5b00", "#facc15"],
+  millièmes: ["#ede9fe", "#6d28d9", "#7c3aed"],
+};
+
+/* Une vraie virgule (le caractère), grande, posée DEVANT le trait de colonne ; y = ligne de base des
+   chiffres. Le contour blanc la détache du trait. */
+export function virgule(x, y, k = 1, col = "#c81e1e") {
+  return (
+    `<text x="${n2(x)}" y="${n2(y)}" font-size="${n2(40 * k)}" font-family="${MATH}" font-weight="700" fill="${col}" ` +
+    `stroke="#fff" stroke-width="${n2(3.5 * k)}" paint-order="stroke" text-anchor="middle">,</text>`
+  );
+}
+
+/* Le tableau de numération. cols : les rangs ; chiffres : {rang: chiffre} (données seulement ; « ? »
+   en bleu) ; surligne : le rang entouré d'orange ; entetesFraction : 1/10, 1/100… en en-tête ;
+   etiquettes : {rang: petit texte sous la colonne, avec sa flèche} (« 7/10 »). */
+export function tableauRangs(cols, chiffres = null, options = {}) {
+  const {
+    surligne = null,
+    entetesFraction = false,
+    etiquettes = null,
+    lignes = 1,
+    virguleApres = "unités",
+  } = options;
+  const cw = 64;
+  const hh = 30;
+  const rh = 40;
+  const W = cols.length * cw + 20;
+  const x0 = 10;
+  const frac = { dixièmes: "1/10", centièmes: "1/100", millièmes: "1/1000" };
+  let body = "";
+  cols.forEach((col, i) => {
+    const [fond, texte, bord] = RANGS[col];
+    const x = x0 + i * cw;
+    body += rect(x, 4, cw, hh, fond, bord, 1.2);
+    const lab = entetesFraction && frac[col] ? frac[col] : col;
+    body += t(x + cw / 2, 4 + hh / 2, lab, entetesFraction ? 13 : 11.5, texte, { weight: 700 });
+    for (let r = 0; r < lignes; r++) {
+      const y = 4 + hh + r * rh;
+      body += rect(x, y, cw, rh, "#fff", FILET, 1.2);
+      if (r === 0 && chiffres && col in chiffres) {
+        const v = chiffres[col];
+        body += t(x + cw / 2, y + rh / 2 + 1, v, 22, v === "?" ? INC_TEXTE : INK, {
+          weight: 700,
+          font: MATH,
+        });
+      }
+    }
+  });
+  if (cols.includes(virguleApres)) {
+    const xv = x0 + (cols.indexOf(virguleApres) + 1) * cw;
+    for (let r = 0; r < lignes; r++) body += virgule(xv, 4 + hh + r * rh + rh / 2 + 10, 1.5);
+  }
+  const H = 4 + hh + lignes * rh;
+  if (surligne) {
+    const i = cols.indexOf(surligne);
+    body += rect(x0 + i * cw - 2, 2, cw + 4, H, "none", ORANGE, 3.2, 4);
+  }
+  let y = H + 8;
+  if (etiquettes) {
+    cols.forEach((col, i) => {
+      if (!(col in etiquettes)) return;
+      const x = x0 + i * cw + cw / 2;
+      body += line(x, H + 18, x, H + 6, ORANGE, 1.8);
+      body += `<path d="M${n2(x - 4)},${H + 11} L${n2(x)},${H + 5} L${n2(x + 4)},${H + 11}" fill="none" stroke="${ORANGE}" stroke-width="1.8"/>`;
+      body += t(x, H + 30, etiquettes[col], 15, INK, { weight: 700, font: MATH });
+    });
+    y = H + 44;
+  }
+  return svg(W, y, body, "tableau de numération");
+}
+
+/* Les nombres l'un sous l'autre, virgules alignées, dans les colonnes du tableau ; zeros :
+   {rang du nombre: zéros ajoutés} (en gris, en italique). Une lettre A, B, C devant chaque ligne. */
+export function alignes(nombres, cols, zeros = {}, legende = null) {
+  const cw = 46;
+  const hh = 26;
+  const rh = 34;
+  const W = cols.length * cw + 60;
+  const x0 = 50;
+  const ENTETE = {
+    unités: "U",
+    dizaines: "D",
+    centaines: "C",
+    dixièmes: "1/10",
+    centièmes: "1/100",
+    millièmes: "1/1000",
+  };
+  let body = "";
+  cols.forEach((col, i) => {
+    const [fond, texte, bord] = RANGS[col];
+    body += rect(x0 + i * cw, 4, cw, hh, fond, bord, 1.1);
+    body += t(x0 + i * cw + cw / 2, 4 + hh / 2, ENTETE[col], 12, texte, { weight: 800 });
+  });
+  const iu = cols.indexOf("unités");
+  nombres.forEach((nb, r) => {
+    const y = 4 + hh + r * rh;
+    const neg = nb.startsWith("−");
+    const [ent, dec0 = ""] = nb.replace(/^−/, "").split(",");
+    const nz = zeros[r] || 0;
+    const dec = dec0 + "0".repeat(nz);
+    for (let i = 0; i < cols.length; i++)
+      body += rect(x0 + i * cw, y, cw, rh, "#fff", "#d6dde7", 1);
+    [...ent].reverse().forEach((ch, k) => {
+      body += t(x0 + (iu - k) * cw + cw / 2, y + rh / 2 + 1, ch, 20, INK, {
+        weight: 700,
+        font: MATH,
+      });
+    });
+    [...dec].forEach((ch, k) => {
+      const ajout = k >= dec.length - nz;
+      body += t(x0 + (iu + 1 + k) * cw + cw / 2, y + rh / 2 + 1, ch, 20, ajout ? FILET : INK, {
+        weight: 700,
+        font: MATH,
+        italic: ajout,
+      });
+    });
+    if (neg)
+      body += t(x0 + (iu - ent.length) * cw + cw - 8, y + rh / 2 + 1, "−", 20, INK, {
+        weight: 700,
+        font: MATH,
+      });
+    body += virgule(x0 + (iu + 1) * cw, y + rh / 2 + 8, 0.9, INK);
+    body += t(18, y + rh / 2, String.fromCharCode(65 + r), 13, GRIS, { weight: 800 });
+  });
+  let H = 4 + hh + nombres.length * rh + 6;
+  if (legende) {
+    body += t(W / 2, H + 8, legende, 12, GRIS);
+    H += 22;
+  }
+  return svg(W, H, body, "nombres alignés");
+}
+
+/* Ordre de grandeur : a × b, et sous chaque facteur une flèche « ≈ » vers une case vide (aide) ou
+   le nombre proche (indice, explication). */
+export function arrondisProduit(a, ar, b, br) {
+  let body =
+    t(80, 22, a, 22, INK, { weight: 700, font: MATH }) +
+    t(150, 22, "×", 22, INK, { font: MATH }) +
+    t(220, 22, b, 22, INK, { weight: 700, font: MATH });
+  for (const [x, v] of [
+    [80, ar],
+    [220, br],
+  ]) {
+    body += line(x, 38, x, 58, ORANGE, 2);
+    body += `<path d="M${x - 5},52 L${x},60 L${x + 5},52" fill="none" stroke="${ORANGE}" stroke-width="2"/>`;
+    body += t(x + 18, 48, "≈", 14, BRUN, { weight: 700 });
+    body += v === "□" ? carreVide(x, 76, 26) : t(x, 76, v, 22, INK, { weight: 700, font: MATH });
+  }
+  body += t(150, 76, "×", 22, INK, { font: MATH });
+  body += t(150, 98, "un nombre proche, facile à calculer", 12, GRIS);
+  return svg(300, 108, body, "ordre de grandeur");
+}
+
+/* Une unité en 100 centièmes : une colonne entourée = 1 dixième = 10 centièmes ; un petit carré plus
+   foncé = 1 centième. On peut compter. */
+export function grille100(legende = null, dixieme = true) {
+  const c = 11;
+  const x0 = 30;
+  const y0 = 10;
+  let body = "";
+  for (let i = 0; i < 10; i++)
+    for (let j = 0; j < 10; j++)
+      body += rect(x0 + j * c, y0 + i * c, c, c, "#fef9c3", "#b59a00", 0.6);
+  body += rect(x0, y0, 10 * c, 10 * c, "none", "#ef4444", 3);
+  if (dixieme) {
+    body += rect(x0 + 8 * c, y0, c, 10 * c, "#dcfce7", "#166534", 2.2);
+    for (let i = 0; i < 10; i++) body += rect(x0 + 8 * c, y0 + i * c, c, c, "none", "#166534", 0.6);
+  }
+  body += rect(x0 + 9 * c, y0 + 9 * c, c, c, "#facc15", "#111", 1.6);
+  body += t(x0 + 5 * c, y0 + 10 * c + 16, "1 unité = 100 centièmes", 13, "#c81e1e", {
+    weight: 800,
+  });
+  const xr = x0 + 10 * c + 60;
+  if (dixieme) {
+    body += line(x0 + 8.5 * c, y0 + 2 * c, xr - 6, y0 + 14, "#166534", 1.6);
+    body += t(xr + 56, y0 + 8, "1 dixième", 13, "#166534", { weight: 800 });
+    body += t(xr + 56, y0 + 24, "= 10 centièmes", 13, "#166534", { weight: 800 });
+  }
+  body += line(x0 + 9.5 * c + 6, y0 + 9.5 * c, xr - 6, y0 + 9.5 * c - 22, ORANGE, 1.6);
+  body += t(xr + 56, y0 + 9.5 * c - 26, "1 centième", 13, "#6f5b00", { weight: 800 });
+  let H = y0 + 10 * c + 28;
+  if (legende) {
+    body += t(170, H + 4, legende, 12, GRIS);
+    H += 20;
+  }
+  return svg(340, H, body, "une unité en centièmes");
+}
+
+/* a + b ≈ □ + □ : j'estime avant de juger le résultat annoncé. */
+export function estimerSomme(a, b, annonce) {
+  const W = 320;
+  let body =
+    t(80, 22, a, 22, INK, { weight: 700, font: MATH }) +
+    t(140, 22, "+", 22, INK, { font: MATH }) +
+    t(200, 22, b, 22, INK, { weight: 700, font: MATH });
+  body += t(262, 22, `= ${annonce} ?`, 18, INC_TEXTE, { weight: 800, font: MATH });
+  for (const x of [80, 200]) {
+    body += line(x, 38, x, 56, ORANGE, 2);
+    body += `<path d="M${x - 5},50 L${x},58 L${x + 5},50" fill="none" stroke="${ORANGE}" stroke-width="2"/>`;
+    body += t(x + 16, 46, "≈", 14, BRUN, { weight: 700 });
+    body += carreVide(x, 74, 26);
+  }
+  body +=
+    t(140, 74, "+", 22, INK, { font: MATH }) +
+    t(240, 74, "≈", 20, INK, { font: MATH }) +
+    carreVide(280, 74, 30);
+  body += t(W / 2, 104, "environ combien ? le résultat annoncé est-il proche ?", 12, GRIS);
+  return svg(W, 112, body, "estimer la somme");
 }
 
 /* Le point de cours (petite croix) gardé pour les lots suivants. */
