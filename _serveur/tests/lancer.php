@@ -1880,7 +1880,12 @@ verifier("l'espace élève, la page Infos et Ma classe envoient une politique de
         vrai($csp !== null, "$chemin : Content-Security-Policy présente");
         vrai((bool)preg_match("/script-src 'self' 'nonce-([A-Za-z0-9+\/=]+)'/", $csp, $m), "$chemin : script-src 'self' + nonce ($csp)");
         $nonce = $m[1];
-        vrai(!str_contains($csp, 'mathsgo.re'), "$chemin : plus aucun domaine extérieur dans la politique de contenu");
+        // Serveur pro, lot 5f : « Ma classe » montre l'écran Mon parcours
+        // d'un élève (mathsgo.re) dans un cadre — frame-src, et rien d'autre ;
+        // aucune autre page ne montre de cadre (default-src 'self').
+        $cadres = $chemin === '/prof/' ? "; frame-src https://mathsgo.re" : '';
+        egal($cadres, (string)strstr($csp, '; frame-src'), "$chemin : frame-src en dernier, mathsgo.re pour Ma classe seule");
+        vrai(!str_contains(str_replace($cadres, '', $csp), 'mathsgo.re'), "$chemin : plus aucun domaine extérieur dans la politique de contenu (hors le cadre du parcours)");
         vrai(str_contains($csp, "img-src 'self' data:"), "$chemin : les images ne viennent plus que d'ici (lot 7)");
         egal('no-store', entete($r, 'Cache-Control'), "$chemin : Cache-Control no-store");
         vrai(str_contains($csp, "connect-src 'self'") && str_contains($csp, "frame-ancestors 'none'") && str_contains($csp, "object-src 'none'"), "$chemin : connect-src, frame-ancestors, object-src");

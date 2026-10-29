@@ -242,7 +242,9 @@ test("le serveur : « boite » et « echeance » acceptés, « cases » toujours
   assert.match(prof, /<th class="large"><button type="button" data-tri="retard">En retard<\/button><\/th>/);
   assert.match(prof, /retard: PARCOURS\.calculsEnRetard \? PARCOURS\.calculsEnRetard\(parcours\) : null,/);
   assert.match(prof, /if \(tri\.colonne === "retard"\) return eleve\.lu\.retard \? eleve\.lu\.retard\.length : -1;/);
-  assert.match(prof, /\["En retard", retard === null \? "—" : `\$\{retard\} calcul\$\{retard > 1 \? "s" : ""\}`\]/);
+  // Serveur pro, lot 5f : la fenêtre de l'élève ne recompte plus ses calculs en retard —
+  // elle montre son écran Mon parcours (« Aujourd'hui : N calculs » et les cinq boîtes).
+  assert.doesNotMatch(prof, /\["En retard", retard === null/);
   // (Sans la colonne Code depuis le lot « Ma classe : élèves » : les codes sont dans l'onglet Élèves.)
   assert.match(prof, /ligne\.append\(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate\);/);
   // Le compteur est bien celui du moteur : dus AVANT aujourd'hui.

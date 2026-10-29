@@ -46,7 +46,15 @@ function entetes_securite(): void
 //   professeurs, y compris avant la connexion.
 // - connect-src 'self' : les appels d'API restent sur suivi.mathsgo.re.
 // - frame-ancestors 'none' : la version moderne de X-Frame-Options: DENY.
-function entetes_page(): string
+//   Aucune page d'ici ne se laisse mettre dans un cadre, sans exception.
+// - frame-src : l'inverse — ce que la page peut, ELLE, montrer dans un cadre.
+//   Par défaut rien d'autre qu'elle-même (default-src 'self'). Serveur pro,
+//   lot 5f (28/10/2026) : « Ma classe » seule passe 'https://mathsgo.re', pour
+//   l'écran Mon parcours d'un élève dans sa fenêtre. Le cadre est enfermé
+//   (sandbox, sans allow-top-navigation) et c'est un autre site pour le
+//   navigateur : il ne lit pas la page, ne change pas son adresse, et
+//   n'exécute rien dans la session du professeur (script-src reste 'self').
+function entetes_page(string $cadres = ''): string
 {
     entetes_securite();
     $nonce = base64_encode(random_bytes(16));
@@ -58,6 +66,7 @@ function entetes_page(): string
     header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-$nonce'; "
         . "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
         . "connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; "
-        . "form-action 'self'; frame-ancestors 'none'");
+        . "form-action 'self'; frame-ancestors 'none'"
+        . ($cadres !== '' ? "; frame-src $cadres" : ''));
     return $nonce;
 }

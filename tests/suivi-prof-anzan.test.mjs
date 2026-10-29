@@ -137,7 +137,7 @@ const AUJOURDHUI = new Date("2026-10-24T08:00:00Z");
 // ------------------------------------------------------------ la page, exécutée
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne",
-  "jourCourt", "dessinerTableauAnzan", "resumeDeLaClasse", "lireAnzan", "parLaClasse", "elevesDeLOnglet", "voitLOnglet", "aDuTravail",
+  "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "jourCourt", "dessinerTableauAnzan", "resumeDeLaClasse", "lireAnzan", "parLaClasse", "elevesDeLOnglet", "voitLOnglet", "aDuTravail",
   "finirOnglet", "accesDe"].map(n => fonction(n)).join("\n");
 
 function ongletAnzan(liste, options = {}) {
@@ -148,10 +148,11 @@ function ongletAnzan(liste, options = {}) {
   const moteur = options.sansMoteur ? null : ANZAN;
   const classe = options.classe || {id: 7, libelle: "405", applis: ["defi-tables", "splat"], reglages: {}};
   const fabrique = new Function("document", "$", "ANZAN", "droitClasse", "messager", "dessinerPapier",
-    "classe", "appliAffichee", "ouvrirFenetreEleve",
+    "classe", "appliAffichee", "ouvrirFenetreEleve", "revenirA", "voirFiche",
     `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: l => { eleves = l; }, lireAnzan, dessinerTableauAnzan, elevesDeLOnglet, finirOnglet};`);
   const f = fabrique(document, $, moteur, options.droit || "proprietaire", (id, t, type) => messages.push({id, t, type}),
-    () => {}, classe, "flash-anzan", eleve => ouverts.push(eleve.prenom));
+    () => {}, classe, "flash-anzan", eleve => ouverts.push(eleve.prenom),
+    () => {}, () => { throw new Error("pas de parcours Défi tables depuis Anzan"); });
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []}, e,
     {lu: f.lireAnzan(e.parcours)}));
   f.poser(eleves);

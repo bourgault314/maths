@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot serveur-pro-direct-reserve
-genere_le 2026-10-25
+lot serveur-pro-ligne-parcours
+genere_le 2026-10-28
 fichiers 63
-manifeste ff64b4abe7c7f7a2ad3740dffa8a8c6ed7963f03f7d614f09215a15fe686b78d
+manifeste 8c2eeb74f2b3d294d0fbce7b1653fbf3aa6d7b92fca4bdde20bd00c80763daf4
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -25,7 +25,7 @@ d2d33d84358e13d763610c829b0598439fd67c2b4f2155b39a723b04a2d821d5  lib/bd.php
 d49f2ca5a8922818d7e478089c73fb352a84e99c7c0df759826e320a8bff6541  lib/billets.php
 1840c6b0380a848669050fa054ce4607036e42f798de7b9fa4bad1749ef8785d  lib/codes.php
 d04d4ca1b4af56814ff97030eabe62910880af3554d9afe7fb1073b3aa35281a  lib/direct.php
-c4f27d5a643d6bc6d57ef344f376b7088f6d06f29215c31644b6aa5dbad84f99  lib/entetes.php
+78f6b81c88112a4e3df45b7f80b9466e54e95bb0d269300007ac699db49cbe69  lib/entetes.php
 2d419de049436e73d4cb1d859f77fbcb044cc13e6046139fb32e6c9be20c3515  lib/evaluation.php
 7523f6bebb260402da06e8473cf01eeae5baea8b7ae90dc38a7377c6ec1b5420  lib/journal.php
 f890b611c11816600a557cf092ce3abc6b7aa46f6618fcbc51ee9b0e7fe1cca2  lib/limite.php
@@ -41,7 +41,7 @@ a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tabl
 d2a89f8e47128e737e2e70635458fe4e8dd6d884dc3e518d54a9409e9b9ceb4e  prof/defi_tables_mon_parcours.js
 8644273520584266a4a60519e57a9cfc011c23de7c4126e6a4a164b56fff2382  prof/direct.php
 b459300c3294781f4e68137b2f7eedbe909cf0f9deda8bd5b2b559e5b1cb0fd6  prof/flash_anzan_parcours.js
-e986bf350fa3a9212baeeacbe50691d8e2f09ba202e63fc50bb303b3bfa06236  prof/index.php
+b74d3e913d8e73a81626a7d191cccd8a79acabd3df51649fe967ddb10a89235c  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
 1323ccb3e51d88de0edff3fbcec539bba68c6582b27c011f9e6b8c141325283c  suivi.css

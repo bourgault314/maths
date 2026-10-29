@@ -152,7 +152,7 @@ const TOM = COFFRES.commencerPartie(COFFRES.creer(), {niveau: 1, ops: [1], serie
 // ------------------------------------------------------------ la page, exécutée
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
-  "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres"].map(n => fonction(n)).join("\n");
+  "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres"].map(n => fonction(n)).join("\n");
 
 function ongletCoffres(liste, options = {}) {
   const {zones, $} = creerZones();
@@ -161,10 +161,13 @@ function ongletCoffres(liste, options = {}) {
   const ouverts = [];
   const moteur = options.sansMoteur ? null : COFFRES;
   const fabrique = new Function("document", "$", "COFFRES", "droitClasse", "messager",
-    "dessinerPapier", "classe", "ouvrirFenetreEleve",
+    "dessinerPapier", "classe", "ouvrirFenetreEleve", "appliAffichee", "revenirA", "voirFiche",
     `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
+  // Lot 5f : la ligne de Coffres ouvre toujours la fenêtre (voirFiche, le
+  // parcours de Défi tables, ne doit jamais partir d'ici).
   const f = fabrique(document, $, moteur, options.droit || "proprietaire",
-    (id, t, type) => messages.push({id, t, type}), () => {}, {id: 7, libelle: "CM1", reglages: {}}, eleve => ouverts.push(eleve.prenom));
+    (id, t, type) => messages.push({id, t, type}), () => {}, {id: 7, libelle: "CM1", reglages: {}}, eleve => ouverts.push(eleve.prenom),
+    "coffres", () => {}, () => { throw new Error("pas de parcours Défi tables depuis Coffres"); });
   const eleves = liste.map((e, i) => Object.assign({id: i + 1, code: `CODE0${i}`, initiale: "", restaurable: false, journees: []}, e, {lu: f.lireCoffres(e.parcours)}));
   f.poser(eleves);
   f.dessinerTableauCoffres(corps, (options.droit || "proprietaire") !== "lecture");
