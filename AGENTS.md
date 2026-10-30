@@ -71,6 +71,14 @@ là-haut, on perd de la place »). Ne pas la « corriger » vers la règle commu
   flèche ;
 - `tests/flash-anzan.test.mjs` garde ces trois points. Étendre cette
   disposition aux autres applis est une idée de Gwenaël, pas une décision.
+- Depuis le 30/10/2026 (planches validées, maquette « élève connecté » en
+  bleu), ces boutons et le titre vivent dans un BANDEAU turquoise pâle
+  (`#dff4f2`) en haut du cadre blanc : « Soroban / Flash Anzan » et les onglets
+  Flash / Colonne en intercalaires (trait orange `#f58220` sous l'actif, le
+  seul orange de la page) sur les réglages, « Calcul 1 / 5 » en séance. Les
+  ronds sont à la même place sur tous les écrans (même rangée, mêmes marges).
+  Les boutons restent bleus. Défi tables recevra le même bandeau dans un lot à
+  part.
 - Avec un code (l'élève venu de Mon espace, lot « Qui voit quoi », lot 4a,
   23/10/2026), le modèle commun ci-dessous s'applique : le bloc « Suivi par ton
   professeur » AU-DESSUS du cadre, la flèche du cadre mène à Mon espace (pas de

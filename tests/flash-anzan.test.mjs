@@ -252,3 +252,53 @@ test("4e relecture Codex (24/10) : « Envoyé à ton professeur » seulement si 
   assert.match(html, /const ordre = PARCOURS\.ordreDeId\(SUIVI\.client\.parcours, seance\.idSuivi\);\s*if \(ordre\) \{\s*seance\.ordreSuivi = ordre;/);
   assert.match(html, /if \(vue\) seance\.jourSuivi = vue\.jour;/, "et son jour de départ");
 });
+
+// ---------------------------------------------------------------------------
+// L'habillage du 30/10/2026 (planches validées : maquette « élève connecté »,
+// version bleue)
+// ---------------------------------------------------------------------------
+test("habillage : un bandeau turquoise pâle en haut du cadre, sur les réglages, la séance et Mon historique", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  assert.match(style, /\.bandeau \{[^}]*background: #dff4f2;/);
+  const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
+  for (const ecran of ["ecran-reglages", "ecran-historique", "ecran-seance"]) {
+    const debut = cadre.indexOf(`id="${ecran}"`);
+    assert.ok(debut > 0, ecran);
+    assert.match(cadre.slice(debut, debut + 400), /<div class="bandeau">/, `${ecran} commence par le bandeau`);
+  }
+  // Les ronds ne sautent pas : la rangée du titre et celle de la séance ont
+  // la même hauteur et les mêmes marges (mesuré au navigateur : même place
+  // au pixel près, téléphone et ordinateur).
+  assert.match(style, /\.cadre-haut, \.jeu-haut \{ display: flex; align-items: center; gap: 12px; min-height: var\(--rangee-h\); \}/);
+  assert.doesNotMatch(style, /\.cadre-haut > \.rond \{ position: absolute/, "plus de ronds posés à part sur ordinateur");
+});
+
+test("habillage : onglets Flash / Colonne en intercalaires, le trait orange sous l'actif ; l'orange ne sert qu'à lui, les boutons restent bleus", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  assert.match(style, /\.onglet\[aria-pressed="true"\]::after \{[^}]*\n?[^}]*background: #f58220;/);
+  assert.equal((style.match(/#f58220/gi) || []).length, 1, "l'orange maths&go : le trait de l'onglet, rien d'autre");
+  assert.match(style, /\.primary \{ color: #fff; border: 0; background: var\(--blue\);/, "C'est parti, Valider, Calcul suivant : bleu (choix de Gwenaël)");
+  assert.match(PAGE, /<button type="button" class="primary partir" id="partir">C’est parti<svg/);
+});
+
+test("habillage : la page ne redéfinit pas .puce (le point du bloc de suivi, dessiné par flash_anzan_suivi.js)", () => {
+  // Trouvé à la capture : une case de réglage nommée .puce faisait du petit
+  // point vert du bloc « Suivi par ton professeur » une pastille de 56 px.
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  assert.doesNotMatch(style, /(^|[\s,}])\.puce\b/);
+  assert.doesNotMatch(PAGE, /class="puce/);
+});
+
+test("habillage : réglages façon FastMath, le titre au-dessus de chaque réglage ; deux colonnes au téléphone, quatre sur ordinateur", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  assert.match(style, /\.grille \{ display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;/);
+  const telephone = [...style.matchAll(/@media ([^{]+)\{([\s\S]*?)\n    \}/g)]
+    .filter(m => m[1].trim() === "(max-width: 620px)" && /\.grille \{/.test(m[2]));
+  assert.equal(telephone.length, 1, "un bloc téléphone pour la grille");
+  assert.match(telephone[0][2], /\.grille \{ grid-template-columns: 1fr 1fr;/, "deux colonnes au téléphone (validé)");
+  for (const lab of ["Opérations", "Chiffres <small>au moins</small>", "Chiffres <small>au plus</small>", "Nombres", "Temps <small>par nombre</small>",
+    "Temps limite <small>par calcul</small>", "Calculs", "Son"]) {
+    assert.ok(PAGE.includes(`>${lab}</span>`), lab);
+  }
+  assert.match(PAGE, /<button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true"/);
+});
