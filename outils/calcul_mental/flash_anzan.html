@@ -425,16 +425,16 @@
       h1 { font-size: 1.75rem; }
       /* Deux colonnes au téléphone (planche validée le 30/10/2026). */
       .bandeau .onglets { width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; }
-      .reglages-corps { width: 100%; max-width: 588px; margin: 0 auto; padding: 14px var(--corps-cote) 18px; }
+      .reglages-corps { width: 100%; max-width: 588px; margin: 0 auto; padding: 12px var(--corps-cote) 12px; }
       .grille { grid-template-columns: 1fr 1fr; gap: 10px 14px; }
       .bloc { gap: 4px; }
       .bloc.large, .resume { grid-column: 1 / -1; }
       .pas, .option, .bascule { height: 52px; }
       .pas button { height: 38px; }
-      .resume { min-height: 0; padding: 10px 14px; }
-      .reglages-corps .bas { flex-direction: column; gap: 8px; margin-top: 12px; }
+      .resume { min-height: 0; padding: 8px 12px; }
+      .reglages-corps .bas { flex-direction: column; gap: 8px; margin-top: 10px; }
       .primary.partir { width: 100%; }
-      .reglages-corps .historique-bouton { min-height: 48px; }
+      .reglages-corps .historique-bouton { min-height: 44px; padding-top: 8px; padding-bottom: 6px; }
     }
     /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
        non plus. */
@@ -841,7 +841,7 @@
         memoire.flash = CORE.normaliser("flash", {...r, son: r.son === "bip" ? "aucun" : "bip"});
         ecrireMemoire();
         dessinerReglages();
-        if (memoire.flash.son === "bip") preparerSon();
+        preparerSon();
       });
       document.querySelectorAll("[data-pas]").forEach(b => b.addEventListener("click", () => {
         const r = reglages();
@@ -901,10 +901,11 @@
       function sonPret() {
         return Boolean(audio) && audio.state === "running";
       }
-      // Dès le premier toucher (ou la première touche) sur la page, si le son
-      // servira : la carte son a le temps de démarrer avant « C'est parti ».
+      // Dès le premier toucher (ou la première touche) sur la page, en Flash
+      // (le décompte bipe toujours) : la carte son a le temps de démarrer
+      // avant « C'est parti ».
       function reveillerSiBesoin() {
-        if (memoire.mode === "flash" && reglages().son === "bip") preparerSon();
+        if (memoire.mode === "flash") preparerSon();
       }
       document.addEventListener("pointerdown", reveillerSiBesoin, true);
       document.addEventListener("keydown", reveillerSiBesoin, true);
@@ -946,17 +947,25 @@
           bips.push(osc);
         } catch (e) { /* pas de son : la séance continue */ }
       }
+      // Le son, choix de Gwenaël du 30/10/2026 (comme en compétition : un
+      // signal de départ, puis un son à chaque nombre) :
+      //  - le décompte 3, 2, 1 bipe TOUJOURS (grave) ;
+      //  - l'interrupteur « 🔔 Un bip à chaque nombre » ne règle que les
+      //    nombres : allumé, un bip aigu à chaque nombre ; éteint, un seul
+      //    « top » aigu au premier nombre (« c'est parti »), puis le silence ;
+      //  - le silence complet, c'est le volume de l'appareil.
       // Les trois bips du décompte, programmés d'un coup à origine + k × 800 ms.
       function programmerDecompte(origine) {
-        if (!audio || seance.reglages.son !== "bip") return;
+        if (!audio) return;
         for (let k = 0; k < 3; k += 1) bip(BIP_DECOMPTE, versHorlogeSon(origine + k * DECOMPTE_MS), DUREE_BIP);
       }
-      // Un bip à chaque nombre, à t0 + i × T ; jamais plus long que la moitié
+      // Les bips des nombres, à t0 + i × T ; jamais plus longs que la moitié
       // de T (deux bips ne se touchent pas aux vitesses rapides).
       function programmerBips(t0, nombres, tempsMs) {
-        if (!audio || seance.reglages.son !== "bip") return;
+        if (!audio) return;
         const duree = Math.min(DUREE_BIP, tempsMs / 2000);
-        for (let i = 0; i < nombres; i += 1) bip(BIP_NOMBRE, versHorlogeSon(t0 + i * tempsMs), duree);
+        const combien = seance.reglages.son === "bip" ? nombres : 1; // éteint : le top du premier nombre seulement
+        for (let i = 0; i < combien; i += 1) bip(BIP_NOMBRE, versHorlogeSon(t0 + i * tempsMs), duree);
       }
       function couperBips() {
         bips.forEach(osc => { try { osc.stop(0); osc.disconnect(); } catch (e) {} });
@@ -1088,16 +1097,15 @@
         $("decompte").textContent = "";
         $("indic").hidden = false;
         $("indic").textContent = `⚡ ${CORE.resume("flash", seance.reglages, {avecMode: false})}`;
-        const avecSon = seance.reglages.son === "bip";
-        if (avecSon) preparerSon();
+        preparerSon(); // le décompte bipe toujours (choix du 30/10/2026)
         const debutAttente = performance.now();
         const partir = () => {
           if (jeton !== seance.jeton) return;
-          if (avecSon && audio && !(sonPret() && audio.currentTime > 0) && performance.now() - debutAttente < ATTENTE_SON_MS) {
+          if (audio && !(sonPret() && audio.currentTime > 0) && performance.now() - debutAttente < ATTENTE_SON_MS) {
             seance.attente = window.setTimeout(partir, 20);
             return;
           }
-          const origine = performance.now() + AVANCE_MS + (avecSon && audio ? retardSon() * 1000 : 0);
+          const origine = performance.now() + AVANCE_MS + (audio ? retardSon() * 1000 : 0);
           const t0 = origine + 3 * DECOMPTE_MS;
           programmerDecompte(origine);
           programmerBips(t0, seance.calculs[seance.index].termes.length, seance.reglages.temps * 100);

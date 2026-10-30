@@ -1037,9 +1037,14 @@ test("son : réveillé dès le premier toucher sur la page, avant « C'est parti
   assert.equal(p.audios.length, 1, "le premier toucher prépare le son");
   p.$("partir").click();
   assert.equal(p.audios.length, 1, "« C'est parti » reprend le même");
-  const sansSon = ouvrir({mode: "flash", flash: {...FLASH, son: "aucun"}});
-  sansSon.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
-  assert.equal(sansSon.audios.length, 0, "sans bip, pas de son préparé");
+  // Bips des nombres éteints : le décompte bipe quand même (choix du 30/10/2026), le son se prépare aussi.
+  const sansBips = ouvrir({mode: "flash", flash: {...FLASH, son: "aucun"}});
+  sansBips.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
+  assert.equal(sansBips.audios.length, 1);
+  // En Colonne, aucun son : rien à préparer.
+  const colonne = ouvrir(memoireColonne);
+  colonne.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
+  assert.equal(colonne.audios.length, 0, "en Colonne, pas de son préparé");
 });
 
 test("son : une carte son lente à démarrer retient le « 3 » (le cercle reste vide) au lieu de jouer un décompte qui accélère", () => {
@@ -1061,7 +1066,7 @@ test("son : une carte son lente à démarrer retient le « 3 » (le cercle reste
   assert.equal(q.$("decompte").textContent, "3", "le décompte part quand même");
 });
 
-test("son : l'interrupteur « 🔔 Un bip à chaque nombre » coupe et remet le bip, gardé dans les réglages", () => {
+test("son (choix du 30/10) : l'interrupteur « 🔔 Un bip à chaque nombre » ne règle que les nombres ; le 3, 2, 1 bipe toujours, et un top au premier nombre", () => {
   const p = ouvrir(memoireFlash);
   const bascule = p.$("bascule-son");
   assert.equal(bascule.getAttribute("aria-checked"), "true");
@@ -1070,7 +1075,15 @@ test("son : l'interrupteur « 🔔 Un bip à chaque nombre » coupe et remet le 
   assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.son, "aucun");
   p.$("partir").click();
   p.avancer(DUREE_FLASH);
-  assert.equal(p.oscillateurs.length, 0, "aucun bip");
+  const decompte = bipsDe(p, 440);
+  const nombres = bipsDe(p, 880);
+  assert.equal(decompte.length, 3, "le décompte bipe toujours");
+  assert.equal(nombres.length, 1, "un seul top, au premier nombre");
+  assert.ok(presque(nombres[0].debut - decompte[2].debut, 0.8), "le top tombe sur le premier nombre");
+  // Allumé : un bip à chaque nombre (le premier compris : pas de top en plus).
+  const allume = openFlash();
+  allume.avancer(DUREE_FLASH);
+  assert.equal(bipsDe(allume, 880).length, FLASH.nombres);
   const q = ouvrir({mode: "flash", flash: {...FLASH, son: "aucun"}});
   q.$("bascule-son").click();
   assert.equal(q.$("bascule-son").getAttribute("aria-checked"), "true");
