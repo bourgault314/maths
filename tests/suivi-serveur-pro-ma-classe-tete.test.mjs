@@ -173,7 +173,7 @@ test("le menu des classes : le HTML — le nom de la classe est le bouton, « + 
   assert.doesNotMatch(page, /class="ligne-retour"/, "plus de ligne de retour au-dessus du titre");
   // Se déconnecter : les noms des classes partent avec le reste, le menu se cache.
   assert.match(script, /const ZONES_TEXTE = \[[^\]]*"menu-classes-liste"/);
-  assert.match(script, /const BLOCS_A_CACHER = \[[^\]]*"menu-classes"\]/);
+  assert.match(script, /const BLOCS_A_CACHER = \[[^\]]*"menu-classes",/);
 });
 
 test("le menu des classes : toutes les classes, l'ouverte cochée ; choisir une autre classe l'ouvre, la même ne fait que fermer", () => {
@@ -369,24 +369,43 @@ test("onglets ou sélecteur : les onglets tant qu'ils tiennent sur la ligne, sin
   assert.match(fonction("montrerOngletChoisi"), /if \(poserModeApplis\(\)\) return;/);
 });
 
-test("le sélecteur d'appli : la liste des onglets visibles, l'appli regardée cochée ; choisir = toucher son onglet", () => {
+test("le sélecteur d'appli : la liste des onglets, l'appli regardée cochée, le gris et la pastille recopiés (lot 5b) ; choisir = toucher son onglet", () => {
   const {$, el} = document();
-  const onglets = ["defi-tables", "coffres", "flash-anzan", "splat"].map((cle, i) => Object.assign(new Noeud("button"),
-    {dataset: {appli: cle}, textContent: ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"][i], hidden: cle === "flash-anzan",
-     touche: 0, click() { this.touche += 1; }}));
+  // Lot 5b : chaque appli a toujours son onglet. Coffres est fermé à la
+  // classe (grisé), Anzan n'est ouvert qu'à un élève (pastille « 1 »).
+  const onglets = ["defi-tables", "coffres", "flash-anzan", "splat"].map((cle, i) => {
+    const onglet = Object.assign(new Noeud("button"), {dataset: {appli: cle}, textContent: ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"][i],
+      touche: 0, click() { this.touche += 1; }});
+    if (cle === "coffres") { onglet.classList.add("eteint"); onglet.attributs["aria-label"] = "Coffres magiques, fermé à la classe"; }
+    if (cle === "flash-anzan") {
+      const pastille = Object.assign(new Noeud("span"), {className: "compte-plus", textContent: "1", cloneNode() { return Object.assign(new Noeud("span"), {className: this.className, textContent: this.textContent, clone: true}); }});
+      onglet.append(pastille);
+      onglet.attributs["aria-label"] = "Anzan, ouvert à 1 élève";
+    }
+    onglet.hasAttribute = nom => nom in onglet.attributs;
+    onglet.getAttribute = nom => onglet.attributs[nom];
+    onglet.querySelector = sel => (sel === ".compte-plus" ? onglet.enfants.find(n => n.className === "compte-plus") || null : null);
+    return onglet;
+  });
   const doc = {createElement: b => new Noeud(b), querySelectorAll: () => onglets, documentElement: {clientWidth: 1440}};
   $("menu-applis").hidden = true;
   $("menu-applis-liste").querySelector = function (sel) {
     const tous = this.enfants.map(li => li.enfants[0]);
     return sel.includes("aria-current") ? tous.find(b => b.attributs["aria-current"] === "true") || null : tous[0] || null;
   };
-  const f = new Function("$", "el", "document", "classe", `let vue = "appli"; let appliAffichee = "splat";\n${["ouvrirMenuApplis", "fermerMenuApplis", "garderDansLEcran"].map(fonction).join("\n")}\nreturn {ouvrirMenuApplis};`)(
-    $, el, doc, {id: 5});
+  const APPLIS = [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}];
+  const f = new Function("$", "el", "document", "classe", "APPLIS", `let vue = "appli"; let appliAffichee = "splat";\n${["nomDeLAppli", "ouvrirMenuApplis", "fermerMenuApplis", "garderDansLEcran"].map(fonction).join("\n")}\nreturn {ouvrirMenuApplis};`)(
+    $, el, doc, {id: 5}, APPLIS);
   f.ouvrirMenuApplis();
   const boutons = $("menu-applis-liste").enfants.map(li => li.enfants[0]);
-  assert.deepEqual(boutons.map(b => b.textContent), ["Défi tables", "Coffres magiques", "SPLAT!"], "Anzan, que personne ne voit ici, n'y est pas (comme son onglet)");
-  assert.deepEqual(boutons.map(b => b.attributs["aria-current"] || ""), ["", "", "true"]);
-  assert.equal(boutons[2].focalise, true);
+  assert.deepEqual(boutons.map(b => b.textContent), ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"], "toutes les applis, comme leurs onglets");
+  assert.deepEqual(boutons.map(b => b.className), ["", "eteint", "", ""], "Coffres, fermé à la classe, est grisé comme son onglet");
+  const pastille = boutons[2].enfants.find(n => n.className === "compte-plus");
+  assert.ok(pastille && pastille.clone && pastille.textContent === "1", "la pastille « 1 » d'Anzan est recopiée (une copie, pas l'original)");
+  assert.equal(boutons[2].attributs["aria-label"], "Anzan, ouvert à 1 élève");
+  assert.equal(boutons[1].attributs["aria-label"], "Coffres magiques, fermé à la classe");
+  assert.deepEqual(boutons.map(b => b.attributs["aria-current"] || ""), ["", "", "", "true"]);
+  assert.equal(boutons[3].focalise, true);
   boutons[1].ecouteurs.click();
   assert.equal(onglets[1].touche, 1, "le même chemin que l'onglet : mêmes vérifications, même retour en haut de l'appli");
   assert.equal($("menu-applis").hidden, true);

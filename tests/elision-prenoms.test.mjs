@@ -64,12 +64,12 @@ test("aucun prénom ni nom collé à un « de » ou un « que » écrit en dur",
   }
   assert.match(defiTables, /`La fiche \$\{deNom\(prenomAffiche\(\)\)\}`/);
   assert.match(defiTables, /`Effacer le parcours \$\{deNom\(prenomAffiche\(\)\)\} \?/);
-  assert.match(pageProf, /vérifier les accès \$\{deNom\(prenomCourt\(eleve\)\)\} avant/);
+  // Serveur pro, lot 5b : la fenêtre « Ce que voit … » (et son « vérifier les
+  // accès de … avant », son « le monde 3 de SPLAT! ») a disparu ; « Régler … » ne colle aucun prénom à un « de ».
   assert.equal((pageProf.match(/`Classe \$\{deNom\(qui\)\}, partagée avec toi/g) || []).length, 2);
   assert.equal((pageProf.match(/\$\{deNom\(prof\.identifiant\)\}/g) || []).length, 7);
   assert.match(pageProf, /`Mot de passe temporaire \$\{deNom\(reponse\.identifiant\.trim\(\)\)\}, à lui/);
   assert.match(pageProf, /`Connecté en tant \$\{queNom\(identifiant\)\}\.`/);
-  assert.match(pageProf, /\$\{liste\.seul \? "" : ` \$\{deNom\(appli\.nom\)\}`\}`/);
 });
 
 test("Problèmes en barres : le filet corrige aussi « que » devant une voyelle", () => {

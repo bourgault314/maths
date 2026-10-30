@@ -447,7 +447,7 @@ test("la fenêtre se ferme et oublie l'élève : Fermer, Échap, son élève par
   assert.match(script, /\$\("fe-fermer"\)\.addEventListener\("click", fermerFenetreEleve\);/);
   assert.match(script, /\$\("fenetre-eleve"\)\.addEventListener\("close", surFermetureFenetre\);/);
   assert.match(fonction("ouvrirClasse"), /oublierRecherche\(\);\s*fermerFenetreEleve\(\);/);
-  assert.match(fonction("viderZones"), /"voit", "fenetre-eleve"\]/);
+  assert.match(fonction("viderZones"), /"regler", "fenetre-eleve"\]/, "lot 5b : « Ce que voit » est parti, « Régler … » se ferme aussi");
   assert.match(fonction("dessinerTableau"), /if \(fenetreEleveId !== null\) dessinerFenetreEleve\(\);/, "elle suit chaque nouveau dessin du tableau");
 });
 

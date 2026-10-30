@@ -4157,9 +4157,13 @@ verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la
     vrai((bool)preg_match('#id="onglet-reglages" aria-pressed="false"[^>]* hidden>#', $r['texte']), 'son onglet aussi');
     $vue = substr($r['texte'], strpos($r['texte'], 'id="vue-reglages"'));
     $vue = substr($vue, 0, strpos($vue, "<!-- Ce qui sort de l'imprimante"));
-    foreach (['bloc-activites', 'bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
+    // Serveur pro, lot 5b : plus de carte « Activités » — chaque appli se
+    // règle dans son onglet (« Régler … », la fenêtre #regler).
+    foreach (['bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
         vrai(str_contains($vue, 'id="' . $id . '"'), "« $id » est dans la vue Réglages");
     }
+    vrai(!str_contains($r['texte'], 'id="bloc-activites"'), 'plus de carte « Activités » dans Réglages (lot 5b)');
+    vrai(str_contains($r['texte'], '<dialog id="regler" class="fenetre regler" aria-labelledby="regler-titre">'), 'la fenêtre « Régler … » (lot 5b)');
 });
 
 verifier("ma-classe-eleves — « Ma classe » : les codes et les boutons des élèves sont dans la vue Élèves, cachée, et nulle part ailleurs", function () {
@@ -4650,7 +4654,8 @@ verifier("coffres-suivi — l'espace élève et « Ma classe » chargent le mote
     egal($m[1], $mp[1], 'la même empreinte des deux côtés');
     vrai(!str_contains($p['texte'], '<script src="coffres-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Coffres magiques');
     vrai(str_contains($p['texte'], '<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>'), 'l’onglet Coffres magiques, entre Défi tables et SPLAT!');
-    vrai(str_contains($p['texte'], 'id="coffres-reglages"'), 'les réglages de Coffres sous sa case, dans la vue Réglages');
+    // Serveur pro, lot 5b : ses niveaux et opérations se règlent dans son onglet (« Régler Coffres magiques »).
+    vrai(!str_contains($p['texte'], 'id="coffres-reglages"'), 'plus de cases de Coffres dans Réglages (lot 5b)');
     $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur Coffres magiques servi localement\s*<div class="detail">en place \(#u', $v['texte']),
         'verifier.php : la ligne existe, et elle est verte');
@@ -6903,7 +6908,7 @@ verifier("anzan-suivi — le billet d'entrée s'échange pour « flash-anzan »,
 // ouverture de l'onglet, avec la version de son contenu dans l'adresse. Le
 // serveur accepte déjà « flash-anzan » (lot 4a) : rien n'y change.
 
-verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionné par son contenu, seulement à l'ouverture de l'onglet ; l'onglet, la case des Réglages, la fenêtre", function () use ($racine) {
+verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionné par son contenu, seulement à l'ouverture de l'onglet ; l'onglet, la fenêtre", function () use ($racine) {
     $moteur = page('/prof/flash_anzan_parcours.js');
     egal(200, $moteur['code'], 'le moteur est servi');
     $p = page('/prof/');
@@ -6912,9 +6917,8 @@ verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionn
     egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
     vrai(!str_contains($p['texte'], '<script src="flash_anzan_parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Anzan');
     vrai(str_contains($p['texte'], '<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>'), 'l’onglet Anzan');
-    vrai(str_contains($p['texte'], '<input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong>'), 'sa case dans ⚙ Réglages → Activités');
-    vrai(!str_contains($p['texte'], 'data-appli="flash-anzan" checked'), 'décochée par défaut');
-    vrai(str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'sa ligne « En plus pour »');
+    // Serveur pro, lot 5b : plus de case dans ⚙ Réglages ni de ligne « En plus pour » — « Régler Anzan » dans son onglet.
+    vrai(!str_contains($p['texte'], 'data-appli="flash-anzan">') && !str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'plus de case ni de « En plus pour » (lot 5b)');
     // Serveur pro, lot 5c : les séances d'Anzan vivent dans la fenêtre de l'élève (la même pour les quatre applis).
     vrai(str_contains($p['texte'], '<dialog id="fenetre-eleve" class="fenetre fenetre-eleve"'), 'la fenêtre de l’élève');
     vrai(str_contains($p['texte'], '<div id="fe-anzan" hidden>'), 'avec la place des séances d’Anzan');

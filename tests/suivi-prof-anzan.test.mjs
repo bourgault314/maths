@@ -432,7 +432,7 @@ test("le tri « Calculs » : les calculs faits, puis les jours ; « Dernière s�
 
 // ------------------------------------------------------------ la page
 
-test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouverture, la ligne des Réglages, « En plus pour »", () => {
+test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouverture ; plus de ligne dans Réglages (lot 5b : « Régler Anzan »)", () => {
   const APPLIS = new Function(`${constante("APPLIS")}\nreturn APPLIS;`)();
   assert.deepEqual(APPLIS[2], {cle: "flash-anzan", nom: "Anzan", unite: ["séance", "séances"]}, "après Coffres, comme au catalogue ; nom « Anzan »");
   assert.match(page, /<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>/);
@@ -449,16 +449,16 @@ test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouve
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "flash-anzan"\) \{ dessinerTableauAnzan\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("evalVisible"), /&& \(\(classe\.applis \|\| \[\]\)\.includes\("defi-tables"\)\)/,
     "un onglet Défi tables ouvert pour un élève en plus n'ouvre pas les évaluations de la classe");
-  // ⚙ Réglages : la ligne Anzan après Coffres, sans réglage de classe, et sa ligne « En plus pour ».
-  const activites = page.slice(page.indexOf('<div class="carte" id="liste-activites">'), page.indexOf('data-appli="splat"> <strong>SPLAT!'));
-  assert.match(activites, /data-appli="coffres"[\s\S]*<label class="activite-tete"><input type="checkbox" data-appli="flash-anzan"> <strong>Anzan<\/strong><\/label>\s*<div class="en-plus-pour" id="en-plus-flash-anzan" hidden><\/div>\s*<\/div>/);
-  assert.doesNotMatch(page, /data-appli="flash-anzan" checked/, "décochée par défaut : la case suit la liste de la classe");
+  // Serveur pro, lot 5b : Anzan se règle dans son onglet (« Régler Anzan ») —
+  // plus de carte « Activités » dans Réglages, plus de ligne « En plus pour ».
+  assert.doesNotMatch(page, /id="liste-activites"|id="en-plus-flash-anzan"|class="activite-tete"/);
+  assert.doesNotMatch(page, /data-appli="flash-anzan" checked/);
   // Déconnexion : tout ce qui porte un prénom est vidé, la fenêtre fermée.
   const zones = new Function(`${constante("ZONES_TEXTE")}\nreturn ZONES_TEXTE;`)();
-  for (const id of ["en-plus-flash-anzan", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note", "fe-titre", "fe-sous", "fe-contenu"]) {
+  for (const id of ["regler-corps", "qui-voit-etat", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note", "fe-titre", "fe-sous", "fe-contenu"]) {
     assert.ok(zones.includes(id), `${id} vidé à la déconnexion`);
   }
-  assert.match(fonction("viderZones"), /"voit", "fenetre-eleve"\]\.forEach/);
+  assert.match(fonction("viderZones"), /"regler", "fenetre-eleve"\]\.forEach/);
   assert.match(fonction("oublierEtat"), /parcoursAnzanEleve = null;/);
   assert.match(script, /\$\("fenetre-eleve"\)\.addEventListener\("close", surFermetureFenetre\);/);
   assert.match(fonction("surFermetureFenetre"), /fenetreEleveId = null;\s*fermerParcoursAnzan\(\);/, "fermée, la fenêtre oublie l'élève et ses séances");
@@ -550,7 +550,7 @@ test("lot 4b-bis — un onglet qui arrive APRÈS « Se déconnecter » n'est pas
   assert.equal(r.f.etat().appliAffichee, "defi-tables");
 });
 
-test("lot 4b-bis — afficherAppli : la liste fraîche sans personne pour Anzan → l'activité affichée ne change pas, l'accès est reporté, l'onglet part, un message le dit", async () => {
+test("lot 4b-bis, revu au lot 5b — afficherAppli : la liste fraîche sans personne pour Anzan → l'accès est reporté, l'onglet s'affiche quand même (grisé, avec sa carte)", async () => {
   const poses = [];
   const messages = [];
   const tableaux = {"defi-tables": [{id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan"], reglages: {}}, lu: {}}]};
@@ -560,30 +560,39 @@ test("lot 4b-bis — afficherAppli : la liste fraîche sans personne pour Anzan 
      async function api() { return {eleves: [{id: 1, prenom: "Rania", acces: {applis: ["defi-tables"], reglages: {}}}]}; }
      function elevesLus(cle, liste) { return liste.map(e => Object.assign({}, e, {lu: {}})); }
      function messager(id, t, type) { messages.push([id, t, type]); } function surErreur(e) { throw e; }
-     function poserAppli() { poses.push("poserAppli"); } function poserOnglets() { poses.push("onglets " + applisAMontrer().join(",")); return applisAMontrer(); }
-     function retenirChoixAppli() {} function lireSplat() { return {}; } const redessin = {demander() { poses.push("tableau"); }};
+     function poserAppli() { poses.push("poserAppli " + appliAffichee + " " + applisAMontrer().join(",")); }
+     function retenirChoixAppli(cle) { poses.push("retenu " + cle); } function lireSplat() { return {}; } const redessin = {demander() { poses.push("tableau"); }};
      ${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "reporterAccesDeLaListe", "afficherAppli"].map(n => fonction(n)).join("\n")}
      return {afficherAppli, etat: () => ({appliAffichee, eleves})};`)(
     tableaux, poses, messages, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "flash-anzan", nom: "Anzan"}]);
   await f.afficherAppli("flash-anzan");
-  assert.equal(f.etat().appliAffichee, "defi-tables", "on reste sur Défi tables");
   assert.deepEqual(tableaux["defi-tables"][0].acces.applis, ["defi-tables"], "l'accès frais est reporté sur la liste déjà lue");
-  assert.deepEqual(poses, ["onglets defi-tables"], "l'onglet Anzan part ; rien d'autre n'est redessiné");
-  assert.deepEqual(messages.at(-1), ["message-appli", "Anzan n’est plus ouvert à aucun élève de cette classe.", "info"]);
+  assert.equal(f.etat().appliAffichee, "flash-anzan", "l'onglet Anzan s'affiche : grisé, sa carte dit qu'il est fermé (poserQuiVoit)");
+  assert.deepEqual(poses, ["retenu flash-anzan", "poserAppli flash-anzan defi-tables", "tableau"], "Anzan n'est plus parmi les applis ouvertes : son onglet sera grisé");
+  assert.deepEqual(messages.at(-1), ["message-appli", "", ""]);
+  // On va voir Défi tables, puis on revient sur l'onglet Anzan, grisé : il s'affiche (sa carte « fermé »).
+  await f.afficherAppli("defi-tables");
+  await f.afficherAppli("flash-anzan");
+  assert.equal(f.etat().appliAffichee, "flash-anzan", "un onglet grisé s'ouvre comme les autres");
+  // Une appli que la page ne connaît pas, ou sans classe : rien.
+  poses.length = 0;
+  await f.afficherAppli("inconnue");
+  assert.deepEqual(poses, []);
 });
 
-test("lot 4b-bis — supprimer le dernier élève qui avait Anzan : son onglet part, et on quitte l'onglet s'il était affiché", async () => {
+test("lot 5b — supprimer le dernier élève qui avait Anzan : l'onglet reste (grisé), on ne quitte pas l'onglet affiché", async () => {
   const appels = [];
   const f = new Function("appels",
     `let eleves = [{id: 1, prenom: "Rania"}], appliAffichee = "flash-anzan";
      async function demander() { return true; } async function api(a) { appels.push(a); return {ok: true}; }
-     function nomAffiche(e) { return e.prenom; } function reporterEleve() {} const redessin = {demander() {}};
-     function messager() {} function surErreur(e) { throw e; }
-     function poserOnglets() { appels.push("onglets"); return ["defi-tables"]; } function afficherAppli(cle) { appels.push("afficher " + cle); }
+     function nomAffiche(e) { return e.prenom; } function reporterEleve() { appels.push("reporté"); } const redessin = {demander() { appels.push("tableau"); }};
+     function messager(id, t) { appels.push(id + " " + t); } function surErreur(e) { throw e; }
+     function poserAppli() { appels.push("poserAppli " + appliAffichee); }
      ${fonction("supprimerEleve")}
-     return supprimerEleve;`)(appels);
-  await f({id: 1, prenom: "Rania"});
-  assert.deepEqual(appels, ["eleves.supprimer", "onglets", "afficher defi-tables"]);
+     return {supprimerEleve, eleves: () => eleves};`)(appels);
+  await f.supprimerEleve({id: 1, prenom: "Rania"});
+  assert.deepEqual(appels, ["eleves.supprimer", "reporté", "tableau", "message-classe Élève supprimé.", "poserAppli flash-anzan"]);
+  assert.deepEqual(f.eleves(), []);
 });
 
 test("lot 4b-bis — des réglages Anzan enregistrés sans un calcul ne comptent pas comme du travail (onglet « en plus » et « tout le monde a commencé »)", () => {

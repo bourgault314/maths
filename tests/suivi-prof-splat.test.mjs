@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
+import { reglerRejoue, Noeud as NoeudBanc, caseDe, cocher, caseNumero, lignesPlus, titres, laisser } from "./suivi-regler-banc.mjs";
 
 // Lot « splat-suivi-4 » (08/10/2026) — SPLAT! dans « Ma classe ».
 //
@@ -372,11 +373,11 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
     assert.equal({calculs: "calculs", etapes: "étapes", niveaux: "niveaux commencés", seances: "séances"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
   });
   assert.deepEqual(APPLIS.map(a => a.cle), ordre.filter(c => APPLIS.some(a => a.cle === c)));
-  // Le HTML suit la même liste : les boutons du choix, les cases des activités.
+  // Le HTML suit la même liste : les onglets. Serveur pro, lot 5b : plus de
+  // cases d'activité dans Réglages — chaque appli se règle dans son onglet.
   const boutons = [...page.matchAll(/<button type="button" data-appli="([\w-]+)" aria-pressed="(\w+)">([^<]+)<\/button>/g)];
   assert.deepEqual(boutons.map(m => [m[1], m[3]]), APPLIS.map(a => [a.cle, a.nom]));
-  const cases = [...page.matchAll(/<label class="activite-tete"><input type="checkbox" data-appli="([\w-]+)"> <strong>([^<]+)<\/strong><\/label>/g)];
-  assert.deepEqual(cases.map(m => [m[1], m[2]]), APPLIS.map(a => [a.cle, a.nom]));
+  assert.doesNotMatch(page, /class="activite-tete"|id="bloc-activites"/);
   // Lot « Ma classe : réglages » : les onglets sont TOUJOURS là (avant, le
   // choix n'apparaissait qu'avec deux activités, et rien ne disait de quelle
   // appli était le tableau).
@@ -403,56 +404,42 @@ test("l'activité montrée : le dernier choix si la classe l'a, sinon la premiè
   assert.equal(appliAMontrer(["splat"], ""), "splat");
   assert.equal(appliAMontrer(["defi-tables", "splat"], ""), "defi-tables", "sans choix : la première, dans l'ordre du catalogue");
   assert.match(fonction("ouvrirClasse"), /api\("tableau", \{classe_id: id, appli: voulue\}\)/, "le tableau lu est celui de l'activité montrée");
-  assert.match(fonction("ouvrirClasse"), /memeClasse \? appliAffichee : lireChoixAppli\(\)/, "rouvrir la même classe garde l'onglet");
+  assert.match(fonction("ouvrirClasse"), /const voulue = memeClasse && APPLIS\.some\(appli => appli\.cle === appliAffichee\)\s*\? appliAffichee\s*: appliAMontrer\(lesApplisConnues\(connue \? connue\.applis : \["defi-tables"\]\), lireChoixAppli\(\)\);/,
+    "rouvrir la même classe garde l'onglet, même s'il vient d'être grisé (lot 5b) ; une autre classe : le dernier choix si elle l'a");
+  assert.match(fonction("ouvrirClasse"), /if \(!memeClasse && presentes\.length && !presentes\.includes\(voulue\)\) \{ poserAppli\(\); await afficherAppli\(presentes\[0\]\); return true; \}/,
+    "une AUTRE classe s'ouvre sur une appli qu'elle a vraiment");
   assert.match(fonction("afficherAppli"), /retenirChoixAppli\(cle\);/);
   assert.match(script, /const CLE_APPLI = "mathsgo-suivi-prof-appli";/);
   assert.match(fonction("lireChoixAppli"), /sessionStorage\.getItem\(CLE_APPLI\)/, "retenu le temps de l'onglet, pas plus");
   assert.match(fonction("deconnecter"), /sessionStorage\.removeItem\(CLE_APPLI\)/);
 });
 
-function casesMondes() {
-  return [1, 2, 3, 4, 5, 6].map(n => {
-    const puce = Object.assign(new Noeud("label"), {dataset: {monde: String(n)}});
-    puce.classList = {toggle: (c, oui) => {
-      const liste = (puce.className || "").split(" ").filter(x => x && x !== c);
-      if (oui) liste.push(c);
-      puce.className = liste.join(" ");
-    }};
-    const caseMonde = Object.assign(new Noeud("input"), {dataset: {monde: String(n)}});
-    caseMonde.closest = () => puce;
-    caseMonde.puce = puce;
-    return caseMonde;
-  });
-}
-
+// Serveur pro, lot 5b : chaque appli a TOUJOURS son onglet — en clair si la
+// classe ou un élève l'a, grisé sinon ; « Anzan 1 » quand un seul élève l'a.
 function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli", eleves = []) {
   const {$} = creerZones();
-  const boutons = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new Noeud("button"), {dataset: {appli: cle}}));
-  const cases = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
-  const mondes = casesMondes();
-  // Les cases de Coffres magiques (niveaux, opérations) : à part, elles ne comptent pas ici.
-  const casesCoffres = s => (s.includes("data-niveau") ? [1, 2, 3] : [1, 2, 3, 4]).map(n => Object.assign(new Noeud("input"), {dataset: {niveau: String(n), operation: String(n)}}));
-  const doc = Object.assign({}, document, {querySelectorAll: s => (s.startsWith("#tableau") ? [] : s.startsWith("#choix-appli") ? boutons
-    : s.startsWith("#mondes-ouverts") ? mondes : s.startsWith("#coffres-reglages") ? casesCoffres(s) : cases)});
+  const boutons = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new NoeudBanc("button"), {dataset: {appli: cle}}));
+  const doc = Object.assign({}, document, {createElement: t => new NoeudBanc(t), querySelectorAll: s => (s.startsWith("#tableau") ? [] : s.startsWith("#choix-appli") ? boutons : [])});
   const TRIS = {"defi-tables": ["prenom", "acquises", "date"], "splat": ["prenom", "etapes", "date"]};
-  const lus = {records: 0, evaluations: 0};
+  const lus = {records: 0, evaluations: 0, quiVoit: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
-    `let tri = triInitial;\nlet vue = vueInitiale;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris", "poserActivites",
-      "mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse"].map(fonction).join("\n")}\nfunction poserEnPlusPour() {}\nfunction montrerOngletChoisi() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nposerAppli();\nreturn {tri, vue};`)(
-    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables"}, {cle: "coffres"}, {cle: "flash-anzan"}, {cle: "splat"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
-  return {$, boutons, cases, mondes, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
+    `let tri = triInitial;\nlet vue = vueInitiale;\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
+  const vus = boutons.map(b => [b.hidden, b.attributs["aria-pressed"], b.classList.contains("eteint") ? "gris" : "clair", (b.premier(n => n.classList.contains("compte-plus")) || {textContent: ""}).textContent]);
+  return {$, boutons, vus, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
 }
 
-test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
+test("chaque appli a toujours son onglet (lot 5b) : en clair si la classe l'a, grisé sinon ; l'onglet SPLAT! change l'en-tête, les tris, et cache ce qui est à Défi tables", () => {
   const seule = poserAppliRejoue(["defi-tables"], "defi-tables");
-  assert.notEqual(seule.$("choix-appli").hidden, true, "une seule activité : son onglet est là quand même");
-  assert.deepEqual(seule.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "true"], [true, "false"], [true, "false"], [true, "false"]],
-    "l'onglet Défi tables, souligné ; ni onglet Coffres, ni Anzan, ni SPLAT!");
+  assert.notEqual(seule.$("choix-appli").hidden, true, "une seule activité : les onglets sont là quand même");
+  assert.deepEqual(seule.vus, [[false, "true", "clair", ""], [false, "false", "gris", ""], [false, "false", "gris", ""], [false, "false", "gris", ""]],
+    "l'onglet Défi tables, souligné ; Coffres, Anzan et SPLAT! grisés (fermés à la classe)");
+  assert.deepEqual(seule.boutons.map(b => b.attributs["aria-label"] || ""), ["", "Coffres magiques, fermé à la classe", "Anzan, fermé à la classe", "SPLAT!, fermé à la classe"]);
   assert.equal(seule.$("entete-splat").hidden, true);
   assert.equal(seule.$("bloc-imprimer").hidden, false);
   const deux = poserAppliRejoue(["defi-tables", "splat"], "splat");
   assert.equal(deux.$("choix-appli").hidden, false);
-  assert.deepEqual(deux.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [true, "false"], [false, "true"]]);
+  assert.deepEqual(deux.vus, [[false, "false", "clair", ""], [false, "false", "gris", ""], [false, "false", "gris", ""], [false, "true", "clair", ""]]);
   assert.equal(deux.$("entete-defi-tables").hidden, true);
   assert.equal(deux.$("entete-splat").hidden, false);
   assert.equal(deux.$("bloc-imprimer").hidden, true, "« À imprimer » (papiers de Défi tables) caché");
@@ -460,39 +447,45 @@ test("un onglet par activité de la classe, même seule ; l'onglet SPLAT! change
   assert.deepEqual(deux.tri, {colonne: "prenom", sens: 1}, "un tri qui n'existe pas dans l'onglet revient au prénom");
   assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", {colonne: "date", sens: -1}).tri.colonne, "date",
     "« Dernière activité » existe des deux côtés : il reste");
-  // Les activités de la classe : cases à l'état du serveur.
-  assert.deepEqual(deux.cases.map(c => c.checked), [true, false, false, true]);
-  assert.deepEqual(seule.cases.map(c => c.checked), [true, false, false, false]);
-  // Hors Réglages : la vue de l'activité, ses cartes lues.
+  // Hors Réglages : la vue de l'activité, ses cartes lues, la ligne « qui voit ».
   assert.equal(deux.$("vue-appli").hidden, false);
   assert.equal(deux.$("vue-reglages").hidden, true);
   assert.equal(deux.$("vue-eleves").hidden, true);
   assert.equal(deux.$("onglet-reglages").attributs["aria-pressed"], "false");
   assert.equal(deux.$("onglet-eleves").attributs["aria-pressed"], "false");
-  assert.deepEqual(deux.lus, {records: 1, evaluations: 1});
+  assert.deepEqual(deux.lus, {records: 1, evaluations: 1, quiVoit: 1});
+  // Une appli grisée s'affiche quand même (sa carte « … est fermé à la 405 ») : l'onglet regardé est souligné.
+  assert.deepEqual(poserAppliRejoue(["defi-tables"], "coffres").vus[1], [false, "true", "gris", ""]);
 });
 
-test("lot 4b : une appli qu'un élève a EN PLUS a son onglet, même quand la classe ne l'a pas (Anzan donné à Rania seule) ; l'onglet Anzan a son en-tête", () => {
+test("lot 4b, revu au lot 5b : une appli qu'un élève a EN PLUS est en clair avec leur nombre (« Anzan 1 ») ; l'onglet Anzan a son en-tête", () => {
   const rania = {id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}};
   const lucas = {id: 2, prenom: "Lucas", acces: {applis: ["defi-tables", "splat"], reglages: {}}};
   const sans = poserAppliRejoue(["defi-tables", "splat"], "defi-tables", "proprietaire", undefined, {}, "appli", [lucas]);
-  assert.deepEqual(sans.boutons.map(b => b.hidden), [false, true, true, false], "personne n'a Anzan : pas d'onglet");
+  assert.deepEqual(sans.vus.map(v => v[2]), ["clair", "gris", "gris", "clair"], "personne n'a Anzan : grisé");
   const avec = poserAppliRejoue(["defi-tables", "splat"], "flash-anzan", "proprietaire", undefined, {}, "appli", [lucas, rania]);
-  assert.deepEqual(avec.boutons.map(b => [b.hidden, b.attributs["aria-pressed"]]), [[false, "false"], [true, "false"], [false, "true"], [false, "false"]],
-    "l'onglet Anzan, entre Coffres et SPLAT!, souligné");
-  assert.deepEqual(avec.cases.map(c => c.checked), [true, false, false, true], "la case de la classe, elle, reste décochée : c'est Rania qui l'a");
+  assert.deepEqual(avec.vus, [[false, "false", "clair", ""], [false, "false", "gris", ""], [false, "true", "clair", "1"], [false, "false", "clair", ""]],
+    "l'onglet Anzan, entre Coffres et SPLAT!, souligné, avec « 1 »");
+  assert.equal(avec.boutons[2].attributs["aria-label"], "Anzan, ouvert à 1 élève");
+  assert.equal(avec.boutons[2].premier(n => n.classList.contains("compte-plus")).title, "ouvert à 1 élève");
   assert.equal(avec.$("entete-anzan").hidden, false);
   assert.equal(avec.$("entete-defi-tables").hidden, true);
   assert.equal(avec.$("entete-coffres").hidden, true);
   assert.equal(avec.$("bloc-imprimer").hidden, true, "« À imprimer » est à Défi tables");
   assert.equal(avec.$("objectif").hidden, true, "pas de carte de classe pour Anzan");
   assert.equal(avec.$("fragiles").hidden, true);
-  assert.deepEqual(avec.lus, {records: 1, evaluations: 1});
-  // Sans « acces » (un serveur d'avant le lot 2 de Qui voit quoi) : les onglets de la classe, rien de plus.
-  assert.deepEqual(poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli", [{id: 3}]).boutons.map(b => b.hidden), [false, true, true, true]);
-  // Une appli inconnue de la page (« defi-calcul ») ne fait pas d'onglet.
+  // Deux élèves : « 2 », au pluriel.
+  const deux = poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli", [rania, {...lucas, acces: rania.acces}]);
+  assert.equal(deux.vus[2][3], "2");
+  assert.equal(deux.boutons[2].attributs["aria-label"], "Anzan, ouvert à 2 élèves");
+  assert.equal(deux.vus[3][3], "2", "SPLAT!, que la classe n'a pas, est ouvert à ces deux élèves");
+  // La classe l'a : pas de pastille, même si des élèves l'ont aussi.
+  assert.equal(poserAppliRejoue(["defi-tables", "flash-anzan"], "defi-tables", "proprietaire", undefined, {}, "appli", [rania]).vus[2][3], "");
+  // Sans « acces » (un serveur d'avant le lot 2 de Qui voit quoi) : la classe seule.
+  assert.deepEqual(poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli", [{id: 3}]).vus.map(v => v[2]), ["clair", "gris", "gris", "gris"]);
+  // Une appli inconnue de la page (« defi-calcul ») ne fait pas d'onglet : il n'y a pas de bouton pour elle.
   assert.deepEqual(poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli",
-    [{id: 4, acces: {applis: ["defi-tables", "defi-calcul"], reglages: {}}}]).boutons.map(b => b.hidden), [false, true, true, true]);
+    [{id: 4, acces: {applis: ["defi-tables", "defi-calcul"], reglages: {}}}]).vus.map(v => v[2]), ["clair", "gris", "gris", "gris"]);
 });
 
 test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'activité, propriétaire seulement", () => {
@@ -502,7 +495,6 @@ test("lot « Ma classe : réglages » : la vue Réglages remplace celle de l'act
   assert.equal(reglages.$("vue-reglages").hidden, false);
   assert.equal(reglages.$("onglet-reglages").attributs["aria-pressed"], "true");
   assert.deepEqual(reglages.boutons.map(b => b.attributs["aria-pressed"]), ["false", "false", "false", "false"], "aucun onglet d'activité souligné");
-  assert.deepEqual(reglages.cases.map(c => c.checked), [true, false, false, true], "les cases sont posées");
   // Un collègue n'a jamais la vue Réglages, même si l'état le demandait.
   for (const droit of ["ecriture", "lecture"]) {
     const collegue = poserAppliRejoue(["defi-tables", "splat"], "splat", droit, undefined, {}, true);
@@ -597,65 +589,72 @@ test("« Revenir à… » revient dans l'activité affichée, et compte ses éta
   assert.doesNotMatch(fonction("revenirA"), /"defi-tables"/);
 });
 
-// ------------------------------------------------------------ « Activités de la classe »
+// ------------------------------------------------------------ ouvrir ou fermer une appli à la classe (lot 5b : « Régler … »)
+//
+// Avant le lot 5b, une case par appli dans ⚙ Réglages › Activités, qui
+// s'enregistrait au clic. Maintenant la case « Ouvert à toute la 405 » de la
+// fenêtre « Régler SPLAT! » (banc suivi-regler-banc.mjs : les vraies
+// fonctions, un faux serveur) — rien ne part avant « Enregistrer ».
 
-async function changerRejoue(applis, cle, coche, options = {}) {
-  const appels = [];
-  const questions = [];
-  const messages = [];
-  const caseActivite = Object.assign(new Noeud("input"), {dataset: {appli: cle}, checked: coche});
-  const cases = [caseActivite];
-  let rouvert = 0;
-  const api = async (action, corps) => {
-    appels.push({action, corps, desactivees: cases.every(c => c.disabled)});
-    if (options.panne) { const e = new Error("Le serveur ne répond pas."); throw e; }
-    return {ok: true};
-  };
-  const demander = async texte => { questions.push(texte); return options.reponse === undefined ? {} : options.reponse; };
-  await new Function("document", "classe", "api", "demander", "messager", "surErreur", "ouvrirClasse", "APPLIS",
-    `${fonction("lesApplisConnues")}\n${fonction("changerActivite")}\nreturn changerActivite;`)(
-    {querySelectorAll: () => cases}, {id: 4, libelle: "405", applis}, api, demander,
-    (id, t, type) => messages.push({id, t, type}), (e, zone) => messages.push({id: zone, t: e.message, type: "erreur"}),
-    async () => { rouvert += 1; },
-    [{cle: "defi-tables", nom: "Défi tables"}, {cle: "splat", nom: "SPLAT!"}])(caseActivite);
-  return {appels, questions, messages, caseActivite, rouvert};
-}
+const classe405 = (applis, reglages = {}) => ({id: 4, libelle: "405", applis, reglages});
+const deuxEleves = () => [{id: 1, prenom: "Léa"}, {id: 2, prenom: "Noé"}];
 
-test("cocher SPLAT! : la liste de la classe part au serveur, la classe est relue, un mot court", async () => {
-  const r = await changerRejoue(["defi-tables"], "splat", true);
+test("ouvrir SPLAT! à la classe : la liste de la classe part à « Enregistrer », la classe est relue, un mot court", async () => {
+  const r = reglerRejoue({classe: classe405(["defi-tables"]), eleves: deuxEleves(), appli: "splat"});
+  r.f.ouvrirRegler("splat");
+  cocher(caseDe(r.corps(), "Ouvert à toute la 405"), true);
+  assert.deepEqual(r.serveur.appels, [], "rien ne part au clic");
   assert.deepEqual(r.questions, [], "ajouter ne demande rien");
-  assert.deepEqual(r.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, applis: ["defi-tables", "splat"]}]]);
-  assert.equal(r.appels[0].desactivees, true, "les cases sont désactivées pendant l'envoi");
-  assert.equal(r.rouvert, 1, "la classe est relue : le choix « Défi tables | SPLAT! » apparaît");
-  assert.deepEqual(r.messages.at(-1), {id: "message-activites", t: "SPLAT! ajouté : la tuile apparaît dans l’espace des élèves.", type: "ok"});
-  assert.equal(r.caseActivite.disabled, false);
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, applis: ["defi-tables", "splat"]}]]);
+  assert.deepEqual(r.journal, ["ouvrirClasse 4"], "la classe est relue : l'onglet SPLAT! passe en clair");
+  assert.deepEqual([r.$("message-appli").textContent, r.$("message-appli").className], ["SPLAT! : réglages enregistrés (la 405).", "message ok"]);
+  assert.equal(r.boite().open, false);
 });
 
-test("décocher SPLAT! : on demande d'abord, on dit que rien n'est effacé ; « Annuler » ne change rien", async () => {
-  const non = await changerRejoue(["defi-tables", "splat"], "splat", false, {reponse: null});
-  assert.deepEqual(non.questions, ["Retirer SPLAT! de la classe 405 ? La tuile disparaît de l’espace des élèves. Leur travail reste enregistré : rien n’est effacé."]);
-  assert.deepEqual(non.appels, [], "rien ne part sans un oui");
-  assert.equal(non.caseActivite.checked, true, "la case revient cochée");
-  const oui = await changerRejoue(["defi-tables", "splat"], "splat", false);
-  assert.deepEqual(oui.appels.map(a => a.corps.applis), [["defi-tables"]]);
-  assert.deepEqual(oui.messages.at(-1), {id: "message-activites", t: "SPLAT! retiré de l’espace des élèves. Rien n’est effacé.", type: "ok"});
+test("fermer SPLAT! à la classe : on demande d'abord, on dit que rien n'est effacé ; « Annuler » ne change rien", async () => {
+  const non = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves: deuxEleves(), appli: "splat", reponses: [null]});
+  non.f.ouvrirRegler("splat");
+  cocher(caseDe(non.corps(), "Ouvert à toute la 405"), false);
+  await non.f.enregistrerRegler();
+  assert.deepEqual(non.questions.map(q => [q.texte, q.oui]), [["Retirer SPLAT! de la classe 405 ? La tuile disparaît de l’espace des élèves. Leur travail reste enregistré : rien n’est effacé.", "Retirer de la classe"]]);
+  assert.deepEqual(non.serveur.appels, [], "rien ne part sans un oui");
+  assert.equal(non.boite().open, true, "la fenêtre reste ouverte, telle qu'on l'a laissée");
+  const oui = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves: deuxEleves(), appli: "splat"});
+  oui.f.ouvrirRegler("splat");
+  cocher(caseDe(oui.corps(), "Ouvert à toute la 405"), false);
+  await oui.f.enregistrerRegler();
+  assert.deepEqual(oui.serveur.appels.map(a => a.corps), [{classe_id: 4, applis: ["defi-tables"]}], "seulement la liste : les mondes de la classe restent rangés");
+  assert.equal(oui.f.etat().appliAffichee, "splat", "on reste dans l'onglet, désormais grisé");
   // Ce que la phrase promet est vrai : classes.modifier ne touche qu'à la liste.
   const api = lire("_serveur/public/api/prof.php");
   const modifier = api.slice(api.indexOf("case 'classes.modifier':"), api.indexOf("case 'classes.supprimer':"));
   assert.doesNotMatch(modifier, /DELETE|progressions/, "décocher n'efface aucune progression");
 });
 
-test("une classe garde au moins une activité ; une activité que la page ne montre pas n'est pas perdue", async () => {
-  const seule = await changerRejoue(["defi-tables"], "defi-tables", false);
-  assert.deepEqual(seule.appels, [], "rien ne part");
+test("une classe garde au moins une activité ; une activité que la page ne montre pas n'est pas perdue ; une panne remet la fenêtre sur l'état relu", async () => {
+  const seule = reglerRejoue({classe: classe405(["splat"]), eleves: deuxEleves(), appli: "splat"});
+  seule.f.ouvrirRegler("splat");
+  cocher(caseDe(seule.corps(), "Ouvert à toute la 405"), false);
+  await seule.f.enregistrerRegler();
+  assert.deepEqual(seule.serveur.appels, [], "rien ne part");
   assert.deepEqual(seule.questions, []);
-  assert.equal(seule.caseActivite.checked, true);
-  assert.deepEqual(seule.messages.at(-1), {id: "message-activites", t: "Une classe garde au moins une activité.", type: "erreur"});
-  const autre = await changerRejoue(["defi-tables", "automatismes"], "splat", true);
-  assert.deepEqual(autre.appels[0].corps.applis, ["defi-tables", "automatismes", "splat"], "« automatismes » (pas encore montrée ici) reste dans la liste");
-  const panne = await changerRejoue(["defi-tables"], "splat", true, {panne: true});
-  assert.equal(panne.caseActivite.checked, false, "le serveur ne répond pas : la case revient à son état");
-  assert.equal(panne.messages.at(-1).id, "message-activites");
+  assert.deepEqual([seule.$("regler-message").textContent, seule.$("regler-message").className], ["Une classe garde au moins une activité.", "message erreur"]);
+  assert.equal(seule.boite().open, true);
+  const autre = reglerRejoue({classe: classe405(["defi-tables", "automatismes"]), eleves: deuxEleves(), appli: "splat"});
+  autre.f.ouvrirRegler("splat");
+  cocher(caseDe(autre.corps(), "Ouvert à toute la 405"), true);
+  await autre.f.enregistrerRegler();
+  assert.deepEqual(autre.serveur.appels[0].corps.applis, ["defi-tables", "automatismes", "splat"], "« automatismes » (pas encore montrée ici) reste dans la liste");
+  const panne = reglerRejoue({classe: classe405(["defi-tables"]), eleves: deuxEleves(), appli: "splat"});
+  panne.serveur.panne("classes.modifier", panne.serveur.erreur("Le serveur a eu un souci.", 500));
+  panne.f.ouvrirRegler("splat");
+  cocher(caseDe(panne.corps(), "Ouvert à toute la 405"), true);
+  await panne.f.enregistrerRegler();
+  assert.equal(panne.boite().open, true, "la fenêtre reste");
+  assert.equal(caseDe(panne.corps(), "Ouvert à toute la 405").checked, false, "redessinée sur l'état relu : la classe n'a toujours pas SPLAT!");
+  assert.equal(panne.$("regler-message").textContent,
+    "Rien d’enregistré pour la 405 : Le serveur a eu un souci. La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque.");
 });
 
 test("le bilan de « Supprimer la classe » parle des tables, même depuis l'onglet SPLAT!", async () => {
@@ -716,9 +715,10 @@ test("le moteur SPLAT! est servi d'ici, chargé à la première ouverture de l'o
   assert.equal(scripts2.length, 2, "une nouvelle tentative à la prochaine ouverture de l'onglet");
 });
 
-test("à la déconnexion, l'onglet, les Réglages et les activités partent avec le reste", () => {
+test("à la déconnexion, l'onglet, les Réglages et la fenêtre « Régler … » partent avec le reste", () => {
   const zones = new Function(`${constante("ZONES_MESSAGE")}\n${constante("BLOCS_A_CACHER")}\nreturn {ZONES_MESSAGE, BLOCS_A_CACHER};`)();
-  for (const id of ["message-activites", "message-partage", "message-nom", "message-supprimer"]) assert.ok(zones.ZONES_MESSAGE.includes(id), id);
+  for (const id of ["regler-message", "message-partage", "message-nom", "message-supprimer"]) assert.ok(zones.ZONES_MESSAGE.includes(id), id);
+  for (const id of ["qui-voit", "appli-fermee"]) assert.ok(zones.BLOCS_A_CACHER.includes(id), id);
   // Lot « Ma classe : réglages » : les blocs du propriétaire sont DANS la vue
   // Réglages ; c'est elle (et son onglet) qu'on cache.
   assert.ok(zones.BLOCS_A_CACHER.includes("vue-reglages"));
@@ -727,7 +727,7 @@ test("à la déconnexion, l'onglet, les Réglages et les activités partent avec
   // de la vue et l'élément, les <div> ne se referment jamais toutes.
   const debut = page.indexOf('<div class="reglages" id="vue-reglages" hidden>');
   assert.ok(debut > 0);
-  for (const id of ["bloc-activites", "rec-reglage", "mondes-ouverts", "bloc-partage", "form-nom-classe", "supprimer-classe"]) {
+  for (const id of ["bloc-partage", "form-nom-classe", "supprimer-classe"]) {
     const position = page.indexOf(`id="${id}"`, debut);
     assert.ok(position > debut, `${id} après l'ouverture de la vue`);
     let profondeur = 0;
@@ -738,13 +738,15 @@ test("à la déconnexion, l'onglet, les Réglages et les activités partent avec
   }
   const oublier = fonction("oublierEtat");
   assert.match(oublier, /appliAffichee = "defi-tables";\s*vue = "appli";\s*tableaux = \{\};\s*recherche = "";\s*fenetreEleveId = null;/);
+  assert.match(oublier, /reglage = null;\s*reglageEnCours = false;/);
+  assert.doesNotMatch(page, /id="bloc-activites"|id="rec-reglage"|id="mondes-ouverts"|id="message-activites"/, "lot 5b : plus de carte « Activités »");
 });
 
 // ------------------------------------------------------------ lot « splat-suivi-5 »
 //
 // Les mondes de SPLAT! ouverts, classe par classe (08/10/2026, choix de
-// Gwenaël sur maquettes) : sous SPLAT! dans « Activités de la classe », un
-// bouton par monde ; dans l'onglet SPLAT!, les mondes fermés en gris
+// Gwenaël sur maquettes) : un bouton par monde (depuis le lot 5b, dans la
+// fenêtre « Régler SPLAT! ») ; dans l'onglet SPLAT!, les mondes fermés en gris
 // (pointillés) et les comptes sur les mondes ouverts seulement ; le Détail
 // garde tout le travail, les mondes fermés plus pâles avec un cadenas.
 
@@ -817,78 +819,90 @@ test("mondesOuverts : la liste de la classe, ou null (tous ouverts) — rien de 
   }
 });
 
-test("« Activités de la classe » : les six mondes sous SPLAT!, cochés d'après la classe ; cachés sans SPLAT!", () => {
-  const sans = poserAppliRejoue(["defi-tables"], "defi-tables");
-  assert.equal(sans.$("mondes-ouverts").hidden, true, "pas de SPLAT! : pas de mondes");
-  const tous = poserAppliRejoue(["defi-tables", "splat"], "splat");
-  assert.equal(tous.$("mondes-ouverts").hidden, false);
-  assert.deepEqual(tous.mondes.map(c => c.checked), Array(6).fill(true), "par défaut : tous ouverts");
-  assert.deepEqual(tous.mondes.map(c => aClasse(c.puce, "ferme")), Array(6).fill(false));
-  const deux = poserAppliRejoue(["defi-tables", "splat"], "splat", "proprietaire", undefined, MONDES_1_2);
-  assert.deepEqual(deux.mondes.map(c => c.checked), [true, true, false, false, false, false]);
-  assert.deepEqual(deux.mondes.map(c => aClasse(c.puce, "ferme")), [false, false, true, true, true, true]);
-  assert.equal(poserAppliRejoue(["defi-tables", "splat"], "splat", "ecriture", undefined, MONDES_1_2, true).$("vue-reglages").hidden, true,
-    "un collègue ne choisit pas les mondes (pas de vue Réglages)");
+test("« Régler SPLAT! » : les six mondes en puces, cochés d'après la classe ; sans SPLAT! pour la classe, pas de mondes ; un collègue ne règle rien", () => {
+  const eleves = deuxEleves();
+  const sans = reglerRejoue({classe: classe405(["defi-tables"], MONDES_1_2), eleves, appli: "splat"});
+  sans.f.ouvrirRegler("splat");
+  assert.equal(sans.corps().tous(n => n.classList.contains("puce-monde")).length, 0, "la classe n'a pas SPLAT! : pas de mondes, des élèves à choisir");
+  assert.deepEqual(titres(sans.corps()), ["Ou seulement pour quelques élèves"]);
+  const tous = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves, appli: "splat"});
+  tous.f.ouvrirRegler("splat");
+  const puces = r => r.corps().tous(n => n.classList.contains("puce-monde"));
+  assert.deepEqual(puces(tous).map(p => p.premier(n => n.tag === "input").checked), Array(6).fill(true), "par défaut : tous ouverts");
+  assert.deepEqual(puces(tous).map(p => p.classList.contains("ferme")), Array(6).fill(false));
+  assert.equal(tous.corps().premier(n => n.tag === "p" && n.className === "aide").textContent, "Tous les mondes sont ouverts à la 405 : rien à ajouter.");
+  const deux = reglerRejoue({classe: classe405(["defi-tables", "splat"], MONDES_1_2), eleves, appli: "splat"});
+  deux.f.ouvrirRegler("splat");
+  assert.deepEqual(puces(deux).map(p => p.premier(n => n.tag === "input").checked), [true, true, false, false, false, false]);
+  assert.deepEqual(puces(deux).map(p => p.classList.contains("ferme")), [false, false, true, true, true, true]);
+  assert.deepEqual(titres(deux.corps()), ["Pour la classe", "Un monde en plus pour quelques élèves"]);
+  assert.deepEqual(lignesPlus(deux.corps()).map(l => l.premier(n => n.className === "quoi").textContent), ["3Enquête", "4Système", "5Équations", "6Relatifs"],
+    "une ligne par monde FERMÉ à la classe");
+  for (const droit of ["ecriture", "lecture"]) {
+    const collegue = reglerRejoue({classe: classe405(["defi-tables", "splat"], MONDES_1_2), eleves, appli: "splat", droit});
+    collegue.f.ouvrirRegler("splat");
+    assert.equal(collegue.boite().open, false, `${droit} : la fenêtre ne s'ouvre pas`);
+  }
 });
 
-function changerMondeRejoue({ouverts = [1, 2, 3, 4, 5, 6], clic, echec = null}) {
-  const {$} = creerZones();
-  const mondes = casesMondes();
-  mondes.forEach((c, i) => { c.checked = ouverts.includes(i + 1); });
-  const appels = [], messages = [], erreurs = [];
-  let rouvertes = 0;
-  const doc = {querySelectorAll: () => mondes};
-  const changer = new Function("document", "$", "classe", "api", "ouvrirClasse", "messager", "surErreur",
-    `${["poserPuce", "changerMonde"].map(fonction).join("\n")}\nreturn changerMonde;`)(
-    doc, $, {id: 7, libelle: "405"},
-    async (action, corps) => { appels.push([action, corps]); if (echec) throw echec; return {ok: true}; },
-    async () => { rouvertes += 1; },
-    (id, t, type) => messages.push([id, t, type]), (e, zone) => erreurs.push([e.message, zone]));
-  const cible = mondes[clic - 1];
-  cible.checked = !cible.checked;
-  return {fin: changer(cible), mondes, appels, messages, erreurs, rouvertes: () => rouvertes};
-}
-
-test("fermer un monde : la liste des mondes cochés part au serveur, la classe est relue, un message court", async () => {
-  const r = changerMondeRejoue({clic: 3});
-  await r.fin;
-  assert.deepEqual(r.appels, [["classes.modifier", {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4, 5, 6]}}}]]);
-  assert.equal(r.rouvertes(), 1, "la classe est relue : comptes et pastilles suivent");
-  assert.deepEqual(r.messages.at(-1), ["message-activites", "Monde 3 fermé pour la 405.", "ok"]);
-  assert.ok(r.mondes.every(c => !c.disabled), "les cases redeviennent cliquables");
-  const ouvrir = changerMondeRejoue({ouverts: [1, 2], clic: 3});
-  await ouvrir.fin;
-  assert.deepEqual(ouvrir.appels[0][1].reglages.splat.mondes, [1, 2, 3]);
-  assert.deepEqual(ouvrir.messages.at(-1), ["message-activites", "Monde 3 ouvert pour la 405.", "ok"]);
+test("fermer un monde : la liste des mondes cochés part à « Enregistrer », la classe est relue, un message court", async () => {
+  const r = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves: deuxEleves(), appli: "splat"});
+  r.f.ouvrirRegler("splat");
+  cocher(caseNumero(r.corps(), "mondes", 3), false);
+  assert.equal(caseNumero(r.corps(), "mondes", 3).parent.classList.contains("ferme"), true, "la puce passe en pointillés tout de suite");
+  assert.equal(caseNumero(r.corps(), "mondes", 3).focalise, true, "la fenêtre redessinée rend la main à la même puce");
+  assert.deepEqual(lignesPlus(r.corps()).length, 1, "le monde 3 fermé : sa ligne « en plus » apparaît");
+  assert.deepEqual(r.serveur.appels, []);
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, reglages: {splat: {mondes: [1, 2, 4, 5, 6]}}}]]);
+  assert.deepEqual(r.journal, ["ouvrirClasse 4"], "la classe est relue : comptes et pastilles suivent");
+  assert.equal(r.$("message-appli").textContent, "SPLAT! : réglages enregistrés (la 405).");
+  const ouvrir = reglerRejoue({classe: classe405(["defi-tables", "splat"], MONDES_1_2), eleves: deuxEleves(), appli: "splat"});
+  ouvrir.f.ouvrirRegler("splat");
+  cocher(caseNumero(ouvrir.corps(), "mondes", 3), true);
+  await ouvrir.f.enregistrerRegler();
+  assert.deepEqual(ouvrir.serveur.appels[0].corps.reglages.splat.mondes, [1, 2, 3]);
 });
 
-test("fermer le dernier monde ouvert : refusé sans appel ; une erreur du serveur remet la case", async () => {
-  const dernier = changerMondeRejoue({ouverts: [2], clic: 2});
-  await dernier.fin;
-  assert.deepEqual(dernier.appels, [], "rien ne part");
-  assert.equal(dernier.mondes[1].checked, true, "la case se recoche");
-  assert.deepEqual(dernier.messages.at(-1), ["message-activites", "Une classe garde au moins un monde ouvert.", "erreur"]);
-  const panne = changerMondeRejoue({clic: 4, echec: new Error("Le serveur doit être mis à niveau.")});
-  await panne.fin;
-  assert.equal(panne.mondes[3].checked, true, "le monde 4 reste ouvert : rien n'a changé");
-  assert.equal(aClasse(panne.mondes[3].puce, "ferme"), false);
-  assert.deepEqual(panne.erreurs, [["Le serveur doit être mis à niveau.", "message-activites"]]);
+test("fermer le dernier monde ouvert : refusé sans appel, la puce reste cochée ; décocher puis recocher ne change rien et n'envoie rien", async () => {
+  const dernier = reglerRejoue({classe: classe405(["defi-tables", "splat"], {splat: {mondes: [2]}}), eleves: deuxEleves(), appli: "splat"});
+  dernier.f.ouvrirRegler("splat");
+  const deux = caseNumero(dernier.corps(), "mondes", 2);
+  cocher(deux, false);
+  assert.equal(deux.checked, true, "la case se recoche");
+  assert.deepEqual([dernier.$("regler-message").textContent, dernier.$("regler-message").className], ["Une classe garde au moins un monde ouvert.", "message erreur"]);
+  await dernier.f.enregistrerRegler();
+  assert.deepEqual(dernier.serveur.appels, [], "rien ne part : rien n'a changé");
+  assert.equal(dernier.boite().open, false, "rien à enregistrer : la fenêtre se ferme");
+  const allerRetour = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves: deuxEleves(), appli: "splat"});
+  allerRetour.f.ouvrirRegler("splat");
+  cocher(caseNumero(allerRetour.corps(), "mondes", 4), false);
+  cocher(caseNumero(allerRetour.corps(), "mondes", 4), true);
+  await allerRetour.f.enregistrerRegler();
+  assert.deepEqual(allerRetour.serveur.appels, []);
 });
 
-test("les six boutons de mondes : ceux de la carte du moteur, dans l'ordre, aux couleurs des mondes", () => {
-  const puces = [...page.matchAll(/<label class="puce-monde" data-monde="(\d)"><input type="checkbox" data-monde="(\d)"><i aria-hidden="true">(\d)<\/i>([^<]+)<\/label>/g)];
+test("les six puces de mondes : ceux de la carte du moteur, dans l'ordre, aux couleurs des mondes", () => {
+  const r = reglerRejoue({classe: classe405(["defi-tables", "splat"]), eleves: deuxEleves(), appli: "splat"});
+  r.f.ouvrirRegler("splat");
+  const puces = r.corps().tous(n => n.classList.contains("puce-monde"));
   assert.equal(puces.length, SPLAT.CARTE.MONDES.length);
-  puces.forEach((m, i) => {
+  puces.forEach((puce, i) => {
     const [numero, nom] = SPLAT.CARTE.MONDES[i];
-    assert.deepEqual([m[1], m[2], m[3]].map(Number), [numero, numero, numero]);
-    assert.equal(nom.replace(/\s*SPLAT!\s*/, "").trim() || nom, m[4], `le nom court du monde ${numero}`);
+    assert.equal(puce.dataset.monde, String(numero));
+    assert.equal(puce.premier(n => n.tag === "input").dataset.numero, String(numero));
+    assert.equal(puce.premier(n => n.tag === "i").textContent, String(numero));
+    assert.equal(puce.textContent, `${numero}${nom.replace(/\s*SPLAT!\s*/, "").trim() || nom}`, `le nom court du monde ${numero}`);
   });
   assert.equal(new Function(`${constante("NOMBRE_MONDES")}\nreturn NOMBRE_MONDES;`)(), SPLAT.CARTE.MONDES.length);
   const couleurs = new Function(`${constante("COULEURS_MONDES")}\nreturn COULEURS_MONDES;`)();
   for (let n = 1; n <= 6; n += 1) {
     assert.match(page, new RegExp(`\\.puce-monde\\[data-monde="${n}"\\] \\{ --c: ${couleurs[n]}; \\}`), `couleur du monde ${n}`);
   }
-  assert.match(fonction("changerMonde"), /api\("classes\.modifier", \{classe_id: classe\.id, reglages: \{splat: \{mondes: voulus\}\}\}\)/);
+  // Les lignes « en plus » : le rond du monde dans sa couleur.
+  const ferme = reglerRejoue({classe: classe405(["defi-tables", "splat"], MONDES_1_2), eleves: deuxEleves(), appli: "splat"});
+  ferme.f.ouvrirRegler("splat");
+  assert.deepEqual(lignesPlus(ferme.corps()).map(l => l.premier(n => n.className === "rond-monde").style.background), [3, 4, 5, 6].map(n => couleurs[n]));
 });
 
 // ------------------------------------------------------------ lot « Qui voit quoi » (22/10/2026)

@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot serveur-pro-semaines-passees
+lot serveur-pro-qui-voit-quoi
 genere_le 2026-10-30
 fichiers 63
-manifeste 54fa6dc46899f4f933b1e506228a647529bc37deede4c45e92b1e9190d68827d
+manifeste 0bcd9855b961cf6cd76505fd891cfda68b0b5dfff4c107c14807f5bbc1b3179e
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -41,7 +41,7 @@ a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tabl
 999717aa8e192df4eb8eb40c77c496ae8c265f1a3d5123b6a309786554d410e0  prof/defi_tables_mon_parcours.js
 8644273520584266a4a60519e57a9cfc011c23de7c4126e6a4a164b56fff2382  prof/direct.php
 b459300c3294781f4e68137b2f7eedbe909cf0f9deda8bd5b2b559e5b1cb0fd6  prof/flash_anzan_parcours.js
-aaf736477744dbfb3f960d0c9c04eb0d93a4e6c07d34f6e43f226ea6ee46acd6  prof/index.php
+d2502c0bfd026e1997a69dc50bbf5743dc061cea13a0307966702ff9b444b797  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
 1323ccb3e51d88de0edff3fbcec539bba68c6582b27c011f9e6b8c141325283c  suivi.css

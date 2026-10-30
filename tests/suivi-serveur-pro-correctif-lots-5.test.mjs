@@ -218,21 +218,21 @@ test("point 2 — la classe partie (supprimée, partage retiré) : ses prénoms,
   const r = purge();
   const restes = {"corps": "Hugo Jade Liam", "corps-eleves": "HU-12 JA-34", "titre-classe": "306", "titre-classe-colle": "306",
     "resume-classe": "3 élèves", "fe-titre": "Hugo", "fe-contenu": "7 × 8", "records-semaine": "Jade 1:02", "menu-classes-liste": "306",
-    "liste-partages": "collegue", "en-plus-splat": "Liam"};
+    "liste-partages": "collegue", "regler-corps": "Liam", "qui-voit-etat": "Ouvert à quelques élèves · Liam", "af-titre": "SPLAT! est fermé à la 306"};
   Object.entries(restes).forEach(([id, texte]) => { r.$(id).textContent = texte; });
   r.$("nom-classe").value = "306";
   r.$("chercher-eleve").value = "hu";
   r.$("message-appli").textContent = "Version restaurée : Hugo";
   r.$("message-appli").hidden = false;
   r.$("fenetre-eleve").open = true;
-  r.$("voit").open = true;
+  r.$("regler").open = true;
   r.$("liste-profs").textContent = "collegue · 1 classe";
   r.$("echues-texte").textContent = "1 classe de l'année 2025-2026";
   r.f.quitterLaClasse();
   for (const id of Object.keys(restes)) assert.equal(r.$(id).textContent, "", `${id} vidé`);
   assert.deepEqual([r.$("nom-classe").value, r.$("chercher-eleve").value], ["", ""], "le nom de la classe et la recherche");
   assert.deepEqual([r.$("message-appli").textContent, r.$("message-appli").hidden], ["", true]);
-  assert.deepEqual([r.$("fenetre-eleve").open, r.$("voit").open], [false, false], "les fenêtres se ferment");
+  assert.deepEqual([r.$("fenetre-eleve").open, r.$("regler").open], [false, false], "les fenêtres se ferment (lot 5b : « Régler … »)");
   assert.equal(r.$("liste-profs").textContent, "collegue · 1 classe", "Professeurs n'est pas à la classe : il reste");
   assert.equal(r.$("echues-texte").textContent, "1 classe de l'année 2025-2026", "le bandeau de l'année non plus");
   const e = r.f.etat();
@@ -485,7 +485,8 @@ test("point 12 — « Se déconnecter » vide aussi le nom de la classe, les rec
 // ------------------------------------------------- et un pirate ?
 
 test("et un pirate ? les mêmes appels au serveur qu'avant le correctif, rien n'est écrit comme du HTML", () => {
-  const appels = [...new Set([...script.matchAll(/api\("([a-z_.]+)"/g)].map(m => m[1]))].sort();
+  // Lot 5b : « Régler … » passe par appelBorne (le même api(), borné dans le temps).
+  const appels = [...new Set([...script.matchAll(/(?:api|appelBorne)\("([a-z_.]+)"/g)].map(m => m[1]))].sort();
   assert.deepEqual(appels, ["classes.creer", "classes.liste", "classes.modifier", "classes.supprimer", "classes.supprimer_echues",
     "eleves.acces", "eleves.ajouter", "eleves.fiche", "eleves.nommer", "eleves.regenerer", "eleves.restaurer", "eleves.supprimer",
     "evaluation.enregistrer_modele", "evaluation.etat", "evaluation.fermer", "evaluation.fichier", "evaluation.modeles", "evaluation.ouvrir",
