@@ -279,7 +279,7 @@ export function fauxServeur(classe, eleves) {
   };
 }
 
-export const tic = () => new Promise(r => setTimeout(r, 0));
+export const tic = () => new Promise(r => setImmediate(r));
 export async function laisser(n = 6) { for (let i = 0; i < n; i += 1) await tic(); }
 
 // ------------------------------------------------------------ la page rejouée
