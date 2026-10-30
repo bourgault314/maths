@@ -7440,16 +7440,21 @@ verifier("relecture Codex R3 — une écriture qui échoue rend le ticket : la c
     egal(200, appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code']);
     $ticket = ticket_de_course($eleve['code'], 60);
     // Une panne d'écriture de fixture : l'insertion du record est interdite.
+    //  - SQLite : un déclencheur qui refuse l'INSERT ;
+    //  - MySQL : pas de déclencheur (interdit sans SUPER quand le journal
+    //    binaire est actif — c'est le cas en CI, trouvé le 30/10/2026) ; une
+    //    colonne NOT NULL sans valeur par défaut, que l'INSERT du record ne
+    //    renseigne pas : refusé en mode strict (le mode par défaut de MySQL 8).
     $mysql = bd_test()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
     bd_test()->exec($mysql
-        ? "CREATE TRIGGER panne_records BEFORE INSERT ON records FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'panne de test'; END"
+        ? 'ALTER TABLE records ADD COLUMN panne_de_test INTEGER NOT NULL'
         : "CREATE TRIGGER panne_records BEFORE INSERT ON records BEGIN SELECT RAISE(ABORT, 'panne de test'); END");
     try {
         $r = records_api($eleve['code'], ['temps' => 500, 'justes' => 25, 'course' => $ticket]);
         egal(500, $r['code'], 'la base refuse d’écrire : 500');
         egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticket) . "'")->fetchColumn(), 'le ticket est TOUJOURS là (consommé dans la transaction annulée)');
     } finally {
-        bd_test()->exec('DROP TRIGGER panne_records');
+        bd_test()->exec($mysql ? 'ALTER TABLE records DROP COLUMN panne_de_test' : 'DROP TRIGGER panne_records');
     }
     $r = records_api($eleve['code'], ['temps' => 500, 'justes' => 25, 'course' => $ticket]);
     egal(200, $r['code'], 'la base revenue : la même course, le même ticket, acceptée');
