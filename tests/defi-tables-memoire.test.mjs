@@ -228,7 +228,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {

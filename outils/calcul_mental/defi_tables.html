@@ -3206,7 +3206,7 @@
   </template>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261029-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261029-2"></script>
   <script>
     (() => {
       "use strict";
@@ -4535,8 +4535,13 @@
           courseEnVol = false;
           if (code !== codeSuivi) return;
           const donnees = reponse.donnees;
+          // La réponse ne vaut que pour LA course envoyée (son ticket) : une
+          // course neuve arrivée pendant l'envoi reste dans la case et part
+          // ensuite (relecture Codex du 29/10/2026, R5 — le 400 tardif d'une
+          // vieille course effaçait la nouvelle).
+          const memeCourse = sync.course && sync.course.ticket === course.ticket;
           if (reponse.statut === 200 && donnees && donnees.ok) {
-            if (sync.course && sync.course.temps === course.temps) delete sync.course;
+            if (memeCourse) delete sync.course;
             retenirRecords(donnees);
             sauverSync();
             rafraichirRecords(donnees);
@@ -4544,10 +4549,11 @@
             return;
           }
           if (reponse.statut === 400 || reponse.statut === 403) {
-            delete sync.course;
+            if (memeCourse || reponse.statut === 403) delete sync.course;
             if (reponse.statut === 403) recordsReglage = false;
             sauverSync();
             rafraichirRecords(null);
+            if (sync.course) envoyerCourseEnAttente();
             return;
           }
           // Panne ou coupure, et le réseau est revenu entre-temps (D12) : on

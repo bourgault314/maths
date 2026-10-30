@@ -148,13 +148,15 @@ try {
         // sa progression. Rien n'est écrit, le ticket reste.
         repondre(['ok' => false, 'legende' => false, 'erreur' => "Pas encore Légende des tables."], 409);
     }
-    // Le ticket se consomme ICI, juste avant l'écriture : deux envois de la
-    // même course à la même seconde, un seul entre.
-    if (!consommer_ticket_de_course($pdo, $eleveId, $ticket)) {
+    // Le ticket se consomme DANS la transaction qui écrit le record (relecture
+    // Codex, R3) : deux envois de la même course à la même seconde, un seul
+    // entre ; et une écriture qui échoue rend le ticket — la course se renvoie.
+    // D8 : le jour de la course, s'il est plausible ; sinon aujourd'hui.
+    $resultat = enregistrer_course($pdo, $eleveId, $temps, jour_de_course($corps['jour'] ?? null),
+        fn(): bool => consommer_ticket_de_course($pdo, $eleveId, $ticket));
+    if (isset($resultat['ticket'])) {
         erreur("Le temps ne compte pas : ce ticket a déjà servi.", 400);
     }
-    // D8 : le jour de la course, s'il est plausible ; sinon aujourd'hui.
-    $resultat = enregistrer_course($pdo, $eleveId, $temps, jour_de_course($corps['jour'] ?? null));
     $reponse(['nouveau' => $resultat['nouveau'], 'avant' => $resultat['avant']]);
 } catch (Throwable $e) {
     error_log('records: ' . $e->getMessage());

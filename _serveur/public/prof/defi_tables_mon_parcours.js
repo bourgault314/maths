@@ -2807,11 +2807,16 @@
     return typeof valeur === "string" && /^[0-9a-f]{32}$/.test(valeur);
   }
 
+  // Une course sans ticket ne peut plus compter (le serveur la refuse) : elle
+  // n'est pas gardée — ni une course d'avant la mise à jour qui attendrait
+  // encore dans la case, ni une course partie sans réseau (relecture Codex du
+  // 29/10/2026, R5 : une vieille course sans ticket, plus rapide, aurait pris
+  // la place d'une course neuve munie de son ticket, puis l'aurait effacée).
   function normaliserCourseEnAttente(brut) {
     if (!brut || typeof brut !== "object") return null;
     const temps = entier(brut.temps, SEUILS.course.dixiemesMin, SEUILS.course.dixiemesMax, 0);
-    if (!temps) return null;
-    return {temps, jour: dateOuNull(brut.jour), ticket: ticketDeCourseValide(brut.ticket) ? brut.ticket : null};
+    if (!temps || !ticketDeCourseValide(brut.ticket)) return null;
+    return {temps, jour: dateOuNull(brut.jour), ticket: brut.ticket};
   }
 
   function normaliserRecordConnu(brut) {

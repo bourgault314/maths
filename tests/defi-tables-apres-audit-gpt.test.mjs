@@ -141,14 +141,15 @@ test("D12 · en marche : records muets, une course attend ; le réseau revient (
 
 test("D8 · l'appli envoie le jour de la course avec le temps ; le serveur l'accepte (jour_de_course) et classe la course dans sa semaine", () => {
   assert.match(source("envoyerCourseEnAttente"), /appelRecords\(\{temps: course\.temps, justes: PARCOURS\.SEUILS\.course\.total, jour: course\.jour, course: course\.ticket\}\)/);
-  assert.match(apiRecords, /enregistrer_course\(\$pdo, \$eleveId, \$temps, jour_de_course\(\$corps\['jour'\] \?\? null\)\)/);
+  // Depuis le 29/10/2026 (ticket de course, relecture Codex R3), le ticket se consomme dans la même transaction.
+  assert.match(apiRecords, /enregistrer_course\(\$pdo, \$eleveId, \$temps, jour_de_course\(\$corps\['jour'\] \?\? null\),\s*fn\(\): bool => consommer_ticket_de_course\(\$pdo, \$eleveId, \$ticket\)\);/);
   // Le serveur : format strict, pas dans le futur, 7 jours au plus, sinon aujourd'hui.
   assert.match(libRecords, /const COURSE_JOURS_MAX = 7;/);
   assert.match(libRecords, /function jour_de_course\(mixed \$brut, \?string \$aujourdhui = null\): string/);
   assert.match(libRecords, /preg_match\('\/\^\\d\{4\}-\\d\{2\}-\\d\{2\}\$\/', \$brut\) !== 1\) return \$aujourdhui;/);
   assert.match(libRecords, /if \(\$date > \$limite\) return \$aujourdhui;/, "pas dans le futur");
   assert.match(libRecords, /if \(\$date < \$limite->modify\('-' \. COURSE_JOURS_MAX \. ' days'\)\) return \$aujourdhui;/, "7 jours au plus");
-  assert.match(libRecords, /function enregistrer_course\(PDO \$pdo, int \$eleveId, int \$dixiemes, \?string \$jour = null\): array/);
+  assert.match(libRecords, /function enregistrer_course\(PDO \$pdo, int \$eleveId, int \$dixiemes, \?string \$jour = null, \?callable \$consommer = null\): array/);
   assert.match(libRecords, /\$lundi = lundi_de\(\$jour\);/, "la semaine du jour de la course");
   assert.match(libRecords, /if \(\$lundiGarde !== '' && strcmp\(\$lundi, \$lundiGarde\) < 0\) \{/, "une course d'une semaine passée ne touche pas à la semaine gardée");
   assert.match(libRecords, /record_affichable\(record_de\(\$pdo, \$eleveId\), \$lundiCourant\)/, "ce qui est rendu reste lu sur la semaine en cours");
@@ -356,7 +357,7 @@ test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et ci
 // ------------------------------------------------------------- l'hygiène du lot
 
 test("le moteur a changé : son numéro de cache monte, et la copie de la page prof est identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(copie.equals(original));

@@ -87,42 +87,24 @@ if (!$configOk) {
             // échecs par adresse et par dix minutes, toutes pages confondues —
             // un humain qui cherche dans ses papiers en fait trois, pas dix.
             //
-            // Le frein a besoin de la base. Deux cas où elle ne peut pas le
-            // porter, et où il s'efface SANS fermer la page :
+            // Le frein a besoin d'une mémoire. Deux cas où la base ne peut pas
+            // la porter, et où la page doit QUAND MÊME s'ouvrir :
             //  - avant la toute première installation, la table « compteurs »
             //    n'existe pas encore ;
             //  - la base ne répond pas — et c'est PRÉCISÉMENT le jour où cette
             //    page doit s'ouvrir, pour afficher en rouge « Connexion à la
-            //    base de données ». Un diagnostic qui s'éteint quand la base
-            //    tombe ne sert à rien (trouvé à la relecture du lot 11).
-            $freinPossible = false;
-            $dejaTrop = false;
-            try {
-                $freinPossible = table_existe(bd(), 'compteurs');
-                if ($freinPossible) {
-                    $dejaTrop = jeton_installation_bloque();
-                }
-            } catch (Throwable $e) {
-                error_log('verifier (frein indisponible, base injoignable ?) : ' . $e->getMessage());
-            }
-            if ($dejaTrop) {
-                $message = "Trop d'essais depuis cette adresse. Réessaie dans " . attente_jeton_installation() . " minute(s).";
+            //    base de données » (trouvé à la relecture du lot 11).
+            // Jusqu'au 29/10/2026, le frein s'effaçait alors tout bonnement
+            // (relecture Codex, R1 : vingt essais sans frein base en panne).
+            // Désormais verdict_jeton_installation() bascule seul sur un petit
+            // fichier à côté de config.php, puis sur un ralentissement de
+            // 1,5 s si même ce fichier ne s'écrit pas : la page s'ouvre
+            // toujours, mais plus jamais sans frein.
+            $verdict = verdict_jeton_installation((string)($_POST['jeton'] ?? ''));
+            if ($verdict === 'ok') {
+                $autorise = true;
             } else {
-                $attendu = (string)(config()['jeton_installation'] ?? '');
-                if ($attendu === '' || $attendu === 'à-remplacer') {
-                    $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-                } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-                    // Seuls les ÉCHECS comptent : vérifier vingt fois d'affilée
-                    // avec le bon mot de passe (ce qui arrive le jour d'un dépôt)
-                    // ne ferme jamais la porte.
-                    if ($freinPossible) {
-                        try { compter_echec_jeton_installation(); }
-                        catch (Throwable $e) { error_log('verifier (compteur) : ' . $e->getMessage()); }
-                    }
-                    $message = "Mot de passe d'installation incorrect.";
-                } else {
-                    $autorise = true;
-                }
+                $message = message_jeton_installation($verdict);
             }
         } catch (Throwable $e) {
             error_log('verifier: ' . $e->getMessage());

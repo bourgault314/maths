@@ -32,7 +32,7 @@ const MANIFESTE = join(PUBLIC, "VERSION");
 // sont jamais en ligne (config, installation, secours, sauvegarde) ou ne
 // peuvent pas contenir leur propre empreinte (VERSION).
 const HORS_MANIFESTE = new Set([
-  "config.php", "config.exemple.php",
+  "config.php", "config.exemple.php", "config-frein.json",
   "installer.php", "migrer.php", "secours.php", "sauvegarde.php",
   "VERSION",
 ]);

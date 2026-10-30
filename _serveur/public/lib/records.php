@@ -255,9 +255,15 @@ function record_affichable(?array $ligne, ?string $lundi = null): array
 // course entre dans la semaine de CE jour. Une course d'une semaine passée
 // ne touche pas au temps de la semaine en cours ; une course d'une semaine
 // plus récente que celle gardée ouvre la nouvelle semaine, comme avant.
-function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour = null): array
+// $consommer (relecture Codex du 29/10/2026, R3) : ce qui consomme le ticket
+// de course, joué DANS la transaction, après le verrou de la ligne — rend
+// faux si le ticket a déjà servi (deux envois ensemble : un seul entre). Un
+// échec de l'écriture annule aussi la consommation : la course se renvoie
+// avec le même ticket quand la base revient. Rend ['ticket' => false] si le
+// ticket n'a pas pu être consommé.
+function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour = null, ?callable $consommer = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes, $jour): array {
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes, $jour, $consommer): array {
         $aujourdhui = jour_local();
         $jour = $jour ?? $aujourdhui;
         $lundiCourant = lundi_de($aujourdhui);
@@ -269,6 +275,10 @@ function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour
             $requete->execute([$eleveId]);
             $ligne = $requete->fetch();
             $requete->closeCursor();
+            if ($consommer !== null && !$consommer()) {
+                transaction_annuler($pdo);
+                return ['ticket' => false];
+            }
             if ($ligne === false) {
                 $pdo->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
                     ->execute([$eleveId, $dixiemes, $instant, $dixiemes, $lundi, maintenant()]);

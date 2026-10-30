@@ -5,6 +5,7 @@ node_modules/
 
 # Le mot de passe MySQL du serveur de suivi ne quitte jamais la machine.
 _serveur/public/config.php
+_serveur/public/config-frein.json
 
 # Captures Playwright, rendues à chaque lot, rangées dans Claude cowork.
 tests/captures/

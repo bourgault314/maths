@@ -424,7 +424,7 @@ test("la page note les réponses, les rejoue au 409 et à l'ouverture, et charge
   assert.match(html, /PARCOURS\.reponsesParties\(storage\(\), codeSuivi, jusqua, epoque\);/);
   assert.match(moteur, /jour <= connu\.vu/, "un calcul dont les réponses se chevauchent se replie sur main");
   assert.doesNotMatch(moteur, /plusRecente\(R\.gagne, A\.gagne\)/, "la règle « par dates » du premier essai a disparu");
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/, "cache-buster du moteur bumpé");
 });
 
 

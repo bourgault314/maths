@@ -23,6 +23,9 @@ const RACINE_PUBLIC = __DIR__ . '/../public';
 //  - VERSION : il ne peut pas contenir sa propre empreinte.
 const HORS_MANIFESTE = [
     'config.php', 'config.exemple.php',
+    // Le repli fichier du frein du mot de passe d'installation (lib/limite.php,
+    // 29/10/2026) : écrit par le serveur à côté de config.php, jamais déposé.
+    'config-frein.json',
     'installer.php', 'migrer.php', 'secours.php', 'sauvegarde.php',
     'VERSION',
 ];

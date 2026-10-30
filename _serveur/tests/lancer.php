@@ -282,6 +282,38 @@ function appels_paralleles(string $chemin, array $corps, int $nombre): array
     return $codes;
 }
 
+// Plusieurs formulaires (POST x-www-form-urlencoded) lancés EN MÊME TEMPS :
+// rend les corps HTML des réponses (relecture Codex R2).
+function formulaires_paralleles(string $chemin, array $champs, int $nombre): array
+{
+    global $url;
+    $multi = curl_multi_init();
+    $canaux = [];
+    for ($i = 0; $i < $nombre; $i++) {
+        $ch = curl_init($url . $chemin);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($champs + ['essai' => $i]),
+            CURLOPT_TIMEOUT => 20,
+        ]);
+        curl_multi_add_handle($multi, $ch);
+        $canaux[] = $ch;
+    }
+    do {
+        $etat = curl_multi_exec($multi, $actifs);
+        if ($actifs) curl_multi_select($multi, 1.0);
+    } while ($actifs && $etat === CURLM_OK);
+    $textes = [];
+    foreach ($canaux as $ch) {
+        $textes[] = (string)curl_multi_getcontent($ch);
+        curl_multi_remove_handle($multi, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($multi);
+    return $textes;
+}
+
 echo "Serveur de suivi — tests de bout en bout\n\n";
 
 // ------------------------------------------------------------------ diagnostic
@@ -7044,6 +7076,11 @@ verifier("audit Codex 1 — le mot de passe d'installation a UN frein, partagé 
     $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
     vrai(str_contains($r['texte'], 'essais depuis cette adresse'), 'le BON mot de passe ne passe plus pendant la fenêtre');
     vrai(!str_contains($r['texte'], 'rien à changer') && !str_contains($r['texte'], "C'est fait"), 'et rien n’est migré');
+    // Le compteur est unique : une seule ligne dans « compteurs », à la clé partagée.
+    // Dix échecs, puis deux essais refusés sans comparaison — qui restent
+    // comptés (relecture Codex R2 : l'essai est réservé avant d'être comparé).
+    egal(12, (int)bd_test()->query('SELECT COALESCE(MAX(nombre), 0) FROM compteurs')->fetchColumn(), 'dix échecs et deux refus comptés sur une seule clé');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM compteurs')->fetchColumn(), 'une seule ligne de compteur');
     // Le MÊME compteur ferme les autres pages du même secret : secours,
     // sauvegarde, verifier — et installer.php (déjà installé ici : sa page
     // se verrouille avant le mot de passe, on le vérifie à part plus bas).
@@ -7052,9 +7089,7 @@ verifier("audit Codex 1 — le mot de passe d'installation a UN frein, partagé 
         $r = formulaire('/' . $page, ['jeton' => 'JETON-DE-TEST']);
         vrai(str_contains($r['texte'], 'essais depuis cette adresse'), "$page est fermée par les échecs de migrer.php");
     }
-    // Le compteur est unique : une seule ligne dans « compteurs », à la clé partagée.
-    egal(10, (int)bd_test()->query('SELECT COALESCE(MAX(nombre), 0) FROM compteurs')->fetchColumn(), 'dix échecs comptés sur une seule clé');
-    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM compteurs')->fetchColumn(), 'une seule ligne de compteur');
+    egal(1, (int)bd_test()->query('SELECT COUNT(*) FROM compteurs')->fetchColumn(), 'toujours une seule ligne de compteur');
     // Dans l'autre sens : cinq échecs sur secours.php et cinq sur sauvegarde.php, et migrer.php est fermée.
     vider_compteurs();
     for ($i = 0; $i < 5; $i++) formulaire('/secours.php', ['jeton' => 'faux-' . $i]);
@@ -7321,6 +7356,121 @@ verifier("audit Codex 4 — migrer.php ajoute l'index versions_jour à une base 
     $bd = (string)file_get_contents(dirname(__DIR__) . '/public/lib/bd.php');
     vrai(str_contains($bd, "KEY versions_jour (jour)"), 'MySQL : dans le CREATE TABLE');
     vrai(str_contains($bd, "ALTER TABLE versions ADD INDEX versions_jour (jour)"), 'MySQL : et par migrer.php sur une base d’avant');
+});
+
+// ------------------------- relecture Codex du 29/10/2026 (R1 à R5), correctif unique
+
+verifier("relecture Codex R2 — douze essais lancés ENSEMBLE au neuvième échec : un seul est comparé, les autres sont refusés sans comparaison", function () use (&$travail) {
+    vider_compteurs();
+    for ($i = 0; $i < 9; $i++) formulaire('/migrer.php', ['jeton' => 'faux-' . $i]);
+    $textes = formulaires_paralleles('/migrer.php', ['jeton' => 'faux-ensemble'], 12);
+    $incorrects = count(array_filter($textes, fn(string $t): bool => str_contains($t, 'incorrect')));
+    $freines = count(array_filter($textes, fn(string $t): bool => str_contains($t, 'essais depuis cette adresse')));
+    // Au plus UN essai comparé (le dixième) ; sur MySQL, compter() relit le
+    // compteur après l'UPSERT et peut voir un voisin déjà passé : il refuse
+    // alors aussi le dixième — plus sévère, jamais plus large.
+    vrai($incorrects <= 1, 'au plus un essai comparé — ' . $incorrects . ' « incorrect » sur 12');
+    vrai($freines >= 11 && $incorrects + $freines === 12, 'les autres refusés sans comparaison');
+    egal(21, (int)bd_test()->query('SELECT COALESCE(MAX(nombre), 0) FROM compteurs')->fetchColumn(), 'les douze réservations sont comptées');
+    // Un essai juste rend sa réservation : cinq échecs, un bon mot de passe → le compteur reste à cinq.
+    vider_compteurs();
+    for ($i = 0; $i < 5; $i++) formulaire('/migrer.php', ['jeton' => 'faux-' . $i]);
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'rien à changer') || str_contains($r['texte'], 'C&#039;est fait'), 'le bon mot de passe passe');
+    egal(5, (int)bd_test()->query('SELECT COALESCE(MAX(nombre), 0) FROM compteurs')->fetchColumn(), 'la réussite a rendu son essai');
+    vider_compteurs();
+});
+
+verifier("relecture Codex R1 — base injoignable : verifier.php s'ouvre encore, mais freine sur un fichier à côté de config.php (dix échecs, puis refus)", function () use (&$travail) {
+    $panne = $travail . '-panne';
+    copier_dossier(dirname(__DIR__) . '/public', $panne);
+    file_put_contents($panne . '/config.php', "<?php return " . var_export([
+        'bd' => ['dsn' => 'sqlite:' . $panne . '/dossier-absent/base.sqlite'],
+        'origines' => ['https://mathsgo.re'],
+        'jeton_installation' => 'JETON-PANNE',
+    ], true) . ";\n");
+    $port = 9000 + random_int(0, 900);
+    $serveur = proc_open(sprintf('php -S 127.0.0.1:%d -t %s', $port, escapeshellarg($panne)),
+        [1 => ['file', PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null', 'w'], 2 => ['file', $panne . '/serveur.log', 'w']], $tuyaux);
+    for ($i = 0; $i < 60; $i++) {
+        $fp = @fsockopen('127.0.0.1', $port, $e, $s, 0.2);
+        if ($fp) { fclose($fp); break; }
+        usleep(150000);
+    }
+    try {
+        $poster = function (string $page, array $champs) use ($port): string {
+            $ch = curl_init("http://127.0.0.1:$port/$page");
+            curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query($champs), CURLOPT_TIMEOUT => 10]);
+            $texte = (string)curl_exec($ch);
+            curl_close($ch);
+            return $texte;
+        };
+        for ($i = 0; $i < 10; $i++) {
+            vrai(str_contains($poster('verifier.php', ['jeton' => 'faux-' . $i]), 'incorrect'), "base en panne, essai " . ($i + 1) . " : refus ordinaire");
+        }
+        vrai(is_file($panne . '/config-frein.json'), 'le compteur de repli existe, à côté de config.php');
+        $texte = $poster('verifier.php', ['jeton' => 'JETON-PANNE']);
+        vrai(str_contains($texte, 'essais depuis cette adresse'), 'le onzième essai est freiné, même avec le bon mot de passe');
+        vrai(!str_contains($texte, 'PHP fonctionne'), 'et le diagnostic ne sort pas');
+        // migrer.php, secours.php et sauvegarde.php ouvrent la base AVANT de
+        // regarder le mot de passe : base en panne, elles répondent « La base
+        // n'a pas répondu » sans rien comparer — pas d'oracle là non plus.
+        copy(dirname(__DIR__) . '/public/secours.php', $panne . '/secours.php');
+        foreach (['migrer.php', 'secours.php'] as $page) {
+            $texte = $poster($page, ['jeton' => 'JETON-PANNE']);
+            vrai(!str_contains($texte, 'incorrect') && !str_contains($texte, 'rien à changer') && !str_contains($texte, 'remplac'), "$page ne compare rien base en panne");
+        }
+        // Fenêtre rouverte (fichier vidé) : le bon mot de passe ouvre le diagnostic, base en panne ou pas.
+        unlink($panne . '/config-frein.json');
+        $texte = $poster('verifier.php', ['jeton' => 'JETON-PANNE']);
+        vrai(str_contains($texte, 'PHP fonctionne'), 'le diagnostic s’ouvre avec le bon mot de passe');
+        vrai(str_contains($texte, 'base de donn'), 'et dit que la base ne répond pas');
+        vrai(!is_file($panne . '/config-frein.json') || !str_contains((string)file_get_contents($panne . '/config-frein.json'), '"nombre":1'), 'une réussite ne compte pas');
+    } finally {
+        arreter_serveur($serveur);
+        effacer_dossier($panne);
+    }
+});
+
+verifier("relecture Codex R3 — une écriture qui échoue rend le ticket : la course se renvoie avec le même ticket quand la base revient", function () use (&$jetonS1) {
+    vider_compteurs();
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3R', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    egal(200, appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code']);
+    $ticket = ticket_de_course($eleve['code'], 60);
+    // Une panne d'écriture de fixture : l'insertion du record est interdite.
+    $mysql = bd_test()->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+    bd_test()->exec($mysql
+        ? "CREATE TRIGGER panne_records BEFORE INSERT ON records FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'panne de test'; END"
+        : "CREATE TRIGGER panne_records BEFORE INSERT ON records BEGIN SELECT RAISE(ABORT, 'panne de test'); END");
+    try {
+        $r = records_api($eleve['code'], ['temps' => 500, 'justes' => 25, 'course' => $ticket]);
+        egal(500, $r['code'], 'la base refuse d’écrire : 500');
+        egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticket) . "'")->fetchColumn(), 'le ticket est TOUJOURS là (consommé dans la transaction annulée)');
+    } finally {
+        bd_test()->exec('DROP TRIGGER panne_records');
+    }
+    $r = records_api($eleve['code'], ['temps' => 500, 'justes' => 25, 'course' => $ticket]);
+    egal(200, $r['code'], 'la base revenue : la même course, le même ticket, acceptée');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticket) . "'")->fetchColumn(), 'et le ticket est consommé cette fois');
+    egal(400, records_api($eleve['code'], ['temps' => 500, 'justes' => 25, 'course' => $ticket])['code'], 'rejouer : refusé');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("relecture Codex R4 — six départs dans la même seconde : le ticket qui vient d'être rendu n'est jamais celui qu'on efface", function () use (&$jetonS1) {
+    vider_compteurs();
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3T', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    for ($tour = 0; $tour < 3; $tour++) {
+        $dernier = '';
+        for ($i = 0; $i < 6; $i++) $dernier = ticket_de_course($eleve['code']);
+        egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $dernier) . "'")->fetchColumn(), "tour $tour : le dernier ticket rendu existe encore");
+        vrai((int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$eleve['id'])->fetchColumn() <= 4, "tour $tour : quatre au plus");
+    }
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+    vider_compteurs();
 });
 
 // ---------------------------------------------------------------------- résultat

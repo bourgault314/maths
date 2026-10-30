@@ -97,6 +97,6 @@ test("la fiche vierge PDF et sa vignette sont refaites, le catalogue suit", () =
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
   // Le moteur n'a pas bougé : rien à déposer sur le serveur.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
 });

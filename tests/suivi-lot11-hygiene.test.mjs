@@ -173,10 +173,19 @@ test("verifier.php freine les essais de mot de passe, et ne compte que les éche
   assert.ok(/const FENETRE_JETON_INSTALLATION = 600;/.test(limite), "par dix minutes");
   const page = lire("_serveur/public/verifier.php");
   assert.ok(!/ESSAIS_VERIFIER/.test(page), "plus de seuil à part");
-  const bloc = page.slice(page.indexOf("$freinPossible = false;"), page.indexOf("$autorise = true;"));
-  assert.ok(/jeton_installation_bloque\(\)/.test(bloc), "le frein partagé est regardé avant le mot de passe");
-  assert.ok(/incorrect/.test(bloc) && bloc.indexOf("compter_echec_jeton_installation()") < bloc.indexOf("incorrect"),
-    "le compteur n'avance que sur un mot de passe faux");
+  // Relecture Codex (R1, R2) : l'essai est RÉSERVÉ en une instruction avant la
+  // comparaison, rendu si le mot de passe est bon ; base en panne, le compteur
+  // bascule sur un fichier à côté de config.php, puis sur un ralentissement.
+  const verdict = limite.slice(limite.indexOf("function verdict_jeton_installation("), limite.indexOf("function reserver_essai_base("));
+  assert.ok(verdict.indexOf("reserver_essai_base($cle)") < verdict.indexOf("hash_equals("), "réservé avant d'être comparé");
+  assert.ok(/catch \(Throwable \$e\) \{[\s\S]*reserver_essai_fichier\(\$cle\);/.test(verdict), "base en panne : le fichier");
+  assert.ok(/if \(\$reservation === null\) usleep\(RALENTISSEMENT_CONNEXION_US\);/.test(verdict), "ni base ni fichier : 1,5 s");
+  assert.ok(/if \(!hash_equals\(\$attendu, \$saisi\)\) return 'incorrect';\s*rendre_essai\(\$cle, \$reservation\);\s*return 'ok';/.test(verdict), "la réussite rend l'essai, l'échec le garde");
+  assert.ok(/UPDATE compteurs SET nombre = nombre - 1 WHERE cle = \? AND nombre > 0/.test(limite), "rendre = une instruction");
+  assert.ok(/return dirname\(__DIR__\) \. '\/config-frein\.json';/.test(limite), "le fichier de repli est un « config » : jamais servi (.htaccess)");
+  assert.ok(/flock\(\$fichier, LOCK_EX\)/.test(limite), "et verrouillé");
+  assert.ok(page.includes("verdict_jeton_installation((string)($_POST['jeton'] ?? ''))"), "verifier.php passe par le contrôle unique");
+  assert.ok(!page.includes("compter_echec_jeton_installation"), "et ne compte plus à part");
   for (const f of ["installer.php", "migrer.php", "secours.php", "sauvegarde.php"]) {
     assert.ok(lire("_serveur/public/" + f).includes("verdict_jeton_installation((string)($_POST['jeton'] ?? ''))"), f + " passe par le frein partagé");
   }

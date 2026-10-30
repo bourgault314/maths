@@ -67,20 +67,24 @@ function emettre_billet(PDO $pdo, int $eleveId, string $type): string
     $duree = $type === 'course' ? DUREE_TICKET_COURSE : DUREE_BILLET;
     $pdo->prepare('INSERT INTO billets (hash, eleve_id, type, expire_le) VALUES (?, ?, ?, ?)')
         ->execute([empreinte_billet($billet), $eleveId, $type, time() + $duree]);
-    if ($type === 'course') borner_tickets_de_course($pdo, $eleveId);
+    if ($type === 'course') borner_tickets_de_course($pdo, $eleveId, empreinte_billet($billet));
     return $billet;
 }
 
 // Ne garde que les TICKETS_COURSE_PAR_ELEVE tickets de course les plus
 // récents de l'élève (les plus anciens partent). Deux requêtes plutôt qu'une
 // sous-requête à LIMIT : MySQL n'accepte pas « IN (SELECT … LIMIT) ».
-function borner_tickets_de_course(PDO $pdo, int $eleveId): void
+// $garde (relecture Codex du 29/10/2026, R4) : le ticket qui vient d'être
+// émis n'entre pas dans le tri — plusieurs départs dans la même seconde ont
+// la même échéance, et le tri départageait par l'empreinte, au hasard : le
+// serveur pouvait rendre un ticket qu'il venait d'effacer.
+function borner_tickets_de_course(PDO $pdo, int $eleveId, string $garde): void
 {
-    $requete = $pdo->prepare("SELECT hash FROM billets WHERE eleve_id = ? AND type = 'course' ORDER BY expire_le DESC, hash");
-    $requete->execute([$eleveId]);
+    $requete = $pdo->prepare("SELECT hash FROM billets WHERE eleve_id = ? AND type = 'course' AND hash <> ? ORDER BY expire_le DESC, hash");
+    $requete->execute([$eleveId, $garde]);
     $hashes = array_map(fn(array $ligne): string => (string)$ligne['hash'], $requete->fetchAll());
     $requete->closeCursor();
-    $enTrop = array_slice($hashes, TICKETS_COURSE_PAR_ELEVE);
+    $enTrop = array_slice($hashes, TICKETS_COURSE_PAR_ELEVE - 1);
     foreach ($enTrop as $hash) {
         $pdo->prepare('DELETE FROM billets WHERE hash = ?')->execute([$hash]);
     }

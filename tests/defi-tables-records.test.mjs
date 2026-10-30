@@ -179,8 +179,11 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
   P.sauverSync(stockage, code, {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ, ticket: TICKET}, record: {meilleur: 524, meilleurLe: "2026-10-08", semaine: 524, lundi: "2026-10-05", nom: true}});
   assert.deepEqual(P.chargerSync(stockage, code), {revision: 3, dirty: false, detache: false, maj: 10, course: {temps: 498, jour: AUJ, ticket: TICKET},
     record: {meilleur: 524, meilleurLe: "2026-10-08", semaine: 524, lundi: "2026-10-05", nom: true}});
+  // Relecture Codex (R5) : une course sans ticket valable n'est pas gardée du tout — elle ne pourrait plus compter.
   P.sauverSync(stockage, code, {revision: 3, course: {temps: 498, jour: AUJ, ticket: "PAS-UN-TICKET"}});
-  assert.deepEqual(P.chargerSync(stockage, code).course, {temps: 498, jour: AUJ, ticket: null}, "un ticket illisible devient null");
+  assert.equal(P.chargerSync(stockage, code).course, undefined, "un ticket illisible : la course n'est pas gardée");
+  P.sauverSync(stockage, code, {revision: 3, course: {temps: 498, jour: AUJ}});
+  assert.equal(P.chargerSync(stockage, code).course, undefined, "une course d'avant la mise à jour (sans ticket) non plus");
   assert.equal(P.ticketDeCourseValide(TICKET), true);
   assert.equal(P.ticketDeCourseValide(TICKET.toUpperCase()), false, "minuscules seulement, comme le serveur");
   assert.equal(P.ticketDeCourseValide(TICKET.slice(1)), false);
@@ -193,15 +196,16 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
   assert.deepEqual(P.normaliserRecordConnu({meilleur: 498, nom: false}), {meilleur: 498, meilleurLe: null, semaine: null, lundi: null, nom: false});
   assert.deepEqual(P.normaliserRecordConnu({meilleur: 498, nom: "oui"}).nom, null, "un nom qui n'est pas un booléen : pas choisi");
   assert.equal(P.normaliserRecordConnu(null), null);
-  assert.deepEqual(P.garderMeilleureCourse(null, {temps: 498, jour: AUJ}), {temps: 498, jour: AUJ, ticket: null});
-  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ, ticket: TICKET}, {temps: 531, jour: AUJ}), {temps: 498, jour: AUJ, ticket: TICKET}, "la plus courte reste, avec son ticket");
-  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ}, {temps: 450, jour: AUJ, ticket: TICKET}), {temps: 450, jour: AUJ, ticket: TICKET});
+  assert.equal(P.garderMeilleureCourse(null, {temps: 498, jour: AUJ}), null, "sans ticket : rien à garder");
+  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ, ticket: TICKET}, {temps: 450, jour: AUJ}), {temps: 498, jour: AUJ, ticket: TICKET}, "une course sans ticket, même plus rapide, ne remplace pas celle qui a le sien (R5)");
+  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ}, {temps: 450, jour: AUJ, ticket: TICKET}), {temps: 450, jour: AUJ, ticket: TICKET}, "une vieille course sans ticket ne bloque pas une neuve");
+  assert.deepEqual(P.garderMeilleureCourse({temps: 498, jour: AUJ, ticket: TICKET}, {temps: 531, jour: AUJ, ticket: TICKET.replace("0", "f")}), {temps: 498, jour: AUJ, ticket: TICKET}, "la plus courte reste, avec son ticket");
   assert.equal(P.garderMeilleureCourse(null, {temps: 20}), null, "une course impossible ne remplace rien");
 });
 
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
@@ -583,12 +587,53 @@ test("ticket : le serveur — « depart » délivre un billet de type « course 
   assert.match(apiRecords, /if \(!empty\(\$corps\['depart'\]\)\) \{\s*repondre\(\['ok' => true, 'course' => emettre_billet\(\$pdo, \$eleveId, 'course'\)\]\);/);
   assert.match(apiRecords, /\$depart = lire_ticket_de_course\(\$pdo, \$eleveId, \$ticket\);\s*if \(\$depart === null\) \{\s*erreur\("Le temps ne compte pas : la course n'a pas de ticket de départ\.", 400\);/);
   assert.match(apiRecords, /if \(!temps_plausible_depuis\(\$depart\['depart'\], \$temps\)\) \{/);
-  assert.match(apiRecords, /if \(!consommer_ticket_de_course\(\$pdo, \$eleveId, \$ticket\)\) \{\s*erreur\("Le temps ne compte pas : ce ticket a déjà servi\.", 400\);/);
+  // Relecture Codex (R3) : la consommation est jouée DANS la transaction qui écrit le record.
+  assert.match(apiRecords, /fn\(\): bool => consommer_ticket_de_course\(\$pdo, \$eleveId, \$ticket\)\);\s*if \(isset\(\$resultat\['ticket'\]\)\) \{\s*erreur\("Le temps ne compte pas : ce ticket a déjà servi\.", 400\);/);
+  assert.match(serveurRecords, /if \(\$consommer !== null && !\$consommer\(\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['ticket' => false\];/);
   // L'ordre : le ticket est LU avant le 409 « pas encore Légende » et CONSOMMÉ après.
   const lecture = apiRecords.indexOf("lire_ticket_de_course(");
   const legende = apiRecords.indexOf("if (!est_legende($pdo, $eleveId)) {");
-  const consommation = apiRecords.indexOf("consommer_ticket_de_course($pdo, $eleveId, $ticket)) {");
+  const consommation = apiRecords.indexOf("fn(): bool => consommer_ticket_de_course($pdo, $eleveId, $ticket)");
   assert.ok(lecture > 0 && lecture < legende && legende < consommation, "lu avant le 409, consommé après");
   assert.match(serveurRecords, /const MARGE_COURSE_DIXIEMES = 20;/);
   assert.match(serveurRecords, /function temps_plausible_depuis\(int \$depart, int \$dixiemes, \?int \$maintenant = null\): bool\s*\{\s*\$ecoule = \(\(\$maintenant \?\? time\(\)\) - \$depart\) \* 10;\s*return \$dixiemes <= \$ecoule \+ MARGE_COURSE_DIXIEMES;/);
+});
+
+test("relecture Codex R5 : le refus définitif (400) d'une vieille course n'efface que CETTE course — la neuve, avec son ticket, part ensuite", async () => {
+  const ANCIEN = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const NEUF = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const reponse = (status, donnees) => ({status, json: async () => donnees, headers: {get: () => null}});
+  const ligue = {ok: true, ouvert: true, legende: true, record: {meilleur: null, meilleurLe: null, semaine: null, lundi: null, nom: true},
+    lundi: "2026-10-05", semaine: [], toujours: [], rangSemaine: null, rangToujours: null};
+  const envoyes = [];
+  let tenirLAncien = null;
+  const reseau = {fetch(url, options) {
+    const corps = options && options.body ? JSON.parse(String(options.body)) : {};
+    const chemin = url.split("/").pop();
+    if (chemin === "records.php") {
+      if (corps.temps) {
+        envoyes.push(corps);
+        // L'ancien envoi reste en vol jusqu'à ce que le test le libère, puis est refusé pour de bon.
+        if (corps.course === ANCIEN) return new Promise(r => { tenirLAncien = () => r(reponse(400, {ok: false, erreur: "Le temps ne compte pas."})); });
+        return Promise.resolve(reponse(200, {...ligue, nouveau: true, avant: null, record: {...ligue.record, meilleur: corps.temps}}));
+      }
+      return Promise.resolve(reponse(200, ligue));
+    }
+    if (chemin === "eleve.php") return Promise.resolve(reponse(200, {ok: true, prenom: "Toti", classe: "306", reglages: {}}));
+    if (corps.lire) return Promise.resolve(reponse(200, {ok: true, existe: true, parcours: sansPrenom(legende()), maj_le: null, revision: 1}));
+    return Promise.resolve(reponse(200, {ok: true, maj_le: AUJ, revision: (corps.base_revision || 0) + 1}));
+  }};
+  const appli = demarrerAppli({reseau, codeOnglet: CODE, local: fauxStockage()});
+  appli.api.demarrerSuivi();
+  await new Promise(r => setTimeout(r, 5));
+  appli.api.noterCourse(200, ANCIEN);
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(envoyes.length, 1, "l'ancienne course est partie (en vol)");
+  appli.api.noterCourse(120, NEUF);
+  assert.deepEqual(appli.api.sync.course, {temps: 120, jour: P.jourLocal(), ticket: NEUF}, "la neuve, meilleure, prend la place dans la case");
+  tenirLAncien();
+  await new Promise(r => setTimeout(r, 10));
+  assert.deepEqual(envoyes.map(c => c.course), [ANCIEN, NEUF], "le 400 de l'ancienne n'a pas effacé la neuve : elle est partie");
+  assert.equal(appli.api.sync.course, undefined, "acceptée : plus rien en attente");
+  assert.equal(appli.api.recordConnu().meilleur, 120);
 });
