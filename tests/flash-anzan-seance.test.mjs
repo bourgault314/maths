@@ -242,16 +242,19 @@ function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
 // `suivi: {billet, serveur}` — l'élève arrive de son espace avec un billet
 // dans l'adresse (lu par l'amorce du <head>, ici donné tel quel), pas encore
 // de code dans l'onglet.
-function ouvrir(memoire, {largeur = 390, suivi = null} = {}) {
+// `froid` (ms) : une carte son qui met ce temps à démarrer (son horloge reste
+// à zéro jusque-là), comme celle d'un vrai ordinateur (correctif du 30/10/2026).
+function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
   const stockage = new Map(memoire ? [["mathsgo-flash-anzan-v1", JSON.stringify(memoire)]] : []);
   const onglet = new Map(suivi && suivi.code ? [["mathsgo-suivi-code", suivi.code]] : []);
   const serveur = suivi && (suivi.code || suivi.billet) ? (suivi.serveur || fauxServeur()) : null;
+  const audios = [];
   class Audio {
-    constructor() { this.state = "running"; this.destination = {}; }
-    get currentTime() { return horloge.t / 1000; }
+    constructor() { this.state = "running"; this.destination = {}; audios.push(this); }
+    get currentTime() { return Math.max(0, horloge.t - froid) / 1000; }
     resume() { return Promise.resolve(); }
     createOscillator() {
       const o = {frequency: {value: 0}, debut: null, arrets: [], connect: x => x, disconnect() {},
@@ -313,6 +316,7 @@ function ouvrir(memoire, {largeur = 390, suivi = null} = {}) {
     $,
     horloge,
     oscillateurs,
+    audios,
     stockage,
     onglet,
     serveur,
@@ -387,6 +391,10 @@ const COLONNE = {operations: "plusmoins", chiffresMin: 2, chiffresMax: 3, nombre
 const memoireFlash = {mode: "flash", flash: FLASH};
 const memoireColonne = {mode: "colonne", colonne: COLONNE};
 const DUREE_FLASH = 3 * 800 + FLASH.nombres * FLASH.temps * 100 + 100;
+// Correctif du son (30/10/2026) : le cercle du décompte paraît tout de suite,
+// le « 3 » le temps de préparer le son (quelques centièmes de seconde), avec
+// son bip. Tout le décompte part de cette origine.
+const AVANT_LE_3 = 100;
 
 // ---------------------------------------------------------------------------
 // Les scénarios
@@ -395,6 +403,7 @@ test("séance Flash : décompte, nombres, réponse juste puis fausse, Entrée pa
   const p = openFlash();
   const attendus = calculsAttendus("flash", FLASH);
   assert.equal(p.$("decompte").hidden, false);
+  p.avancer(AVANT_LE_3);
   assert.equal(p.$("decompte").textContent, "3");
   p.avancer(DUREE_FLASH);
   assert.equal(p.$("zone-rep").hidden, false, "la réponse est demandée après le dernier nombre");
@@ -458,6 +467,7 @@ test("« ↻ Revoir » (Flash) rejoue les mêmes nombres après un décompte, ga
   p.$("revoir").click();
   assert.equal(p.$("zone-rep").hidden, true);
   assert.equal(p.$("decompte").hidden, false);
+  p.avancer(AVANT_LE_3);
   assert.equal(p.$("decompte").textContent, "3");
   const vus = [];
   let dernier = "";
@@ -501,6 +511,7 @@ test("un onglet caché pendant « ↻ Revoir » (décompte ou nombres) garde le 
     p.cacherOnglet(true);
     p.avancer(4000);
     p.cacherOnglet(false);
+    p.avancer(AVANT_LE_3);
     assert.equal(p.$("decompte").textContent, "3", "le Revoir recommence par son décompte");
     assert.equal(p.$("nombre").hidden, true, "aucun nombre resté à l'écran pendant le décompte");
     const vus = relever(p, DUREE_FLASH).map(v => v.texte);
@@ -695,6 +706,7 @@ test("onglet caché pendant le Flash : le calcul est retiré, rien n'est compté
   p.avancer(5000);
   p.cacherOnglet(false);
   assert.equal(p.$("decompte").hidden, false);
+  p.avancer(AVANT_LE_3);
   assert.equal(p.$("decompte").textContent, "3");
   assert.equal(p.$("nombre").textContent, "");
   assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
@@ -961,4 +973,128 @@ test("Mon historique : les séances du compte, dix par dix, la plus récente en 
   assert.equal(p.$("historique-liste").children.length, 15, "puis les suivantes");
   assert.equal(p.$("historique-plus").hidden, true);
   assert.match(texte(p.$("historique-liste").children[14]), /13 oct\./, "la plus ancienne en bas");
+});
+
+// ---------------------------------------------------------------------------
+// Le son (correctifs du 30/10/2026, diagnostic mesuré dans Chromium)
+// ---------------------------------------------------------------------------
+const bipsDe = (p, frequence) => p.oscillateurs.filter(o => o.frequency.value === frequence);
+const presque = (a, b) => Math.abs(a - b) < 1e-9;
+
+test("son : les trois bips du décompte et ceux des nombres sont programmés d'avance, depuis une même origine, à 800 ms d'écart", () => {
+  const p = openFlash();
+  p.avancer(AVANT_LE_3);
+  const decompte = bipsDe(p, 440);
+  const nombres = bipsDe(p, 880);
+  assert.equal(decompte.length, 3, "les trois bips du décompte sont déjà programmés au « 3 »");
+  assert.equal(nombres.length, FLASH.nombres, "et ceux des nombres aussi");
+  assert.ok(presque(decompte[1].debut - decompte[0].debut, 0.8) && presque(decompte[2].debut - decompte[1].debut, 0.8), "3, 2, 1 : 800 ms pile");
+  assert.ok(presque(nombres[0].debut - decompte[2].debut, 0.8), "le premier nombre 800 ms après le « 1 »");
+  assert.ok(decompte[0].debut > 0, "le bip du « 3 » est programmé dans le futur, pas joué en retard");
+});
+
+test("son : l'image suit la même origine que les bips (« 2 » et « 1 » tombent sur leur bip)", () => {
+  const p = openFlash();
+  p.avancer(AVANT_LE_3);
+  const decompte = bipsDe(p, 440).map(o => o.debut * 1000);
+  const vus = [];
+  let dernier = p.$("decompte").textContent;
+  for (let t = 0; t < 3 * 800; t += 1) {
+    p.avancer(1, {images: false});
+    const texte = p.$("decompte").hidden ? "" : p.$("decompte").textContent;
+    if (texte && texte !== dernier) vus.push({texte, t: p.horloge.t});
+    dernier = texte;
+  }
+  assert.deepEqual(vus.map(v => v.texte), ["2", "1"]);
+  assert.ok(Math.abs(vus[0].t - decompte[1]) <= 1 && Math.abs(vus[1].t - decompte[2]) <= 1, "chaque chiffre paraît avec son bip");
+});
+
+test("son : le bip des nombres est aussi présent que celui du décompte (même durée, ≥ 90 ms), et reste plus aigu", () => {
+  const p = openFlash();
+  p.avancer(AVANT_LE_3);
+  const duree = o => o.arrets[0] - o.debut;
+  const d = bipsDe(p, 440)[0];
+  const n = bipsDe(p, 880)[0];
+  assert.ok(duree(n) >= 0.09 + 0.01 - 1e-9, `bip des nombres : ${duree(n)} s`);
+  assert.ok(presque(duree(n), duree(d)), "la même durée que le décompte");
+  assert.ok(n.frequency.value > d.frequency.value, "aigu pour les nombres, grave pour le décompte (choix du 22/10)");
+  assert.match(PAGE, /gain\.gain\.setValueAtTime\(VOLUME, debut \+ duree - extinction\);/, "tenu au même volume jusqu'à la fin, puis éteint");
+  assert.doesNotMatch(PAGE, /exponentialRampToValueAtTime\(0\.001/, "plus d'extinction aussitôt après l'attaque");
+});
+
+test("son : aux vitesses rapides, deux bips de nombres ne se touchent pas", () => {
+  const p = ouvrir({mode: "flash", flash: {...FLASH, temps: 1}});
+  p.$("partir").click();
+  p.avancer(AVANT_LE_3);
+  const n = bipsDe(p, 880);
+  for (let i = 1; i < n.length; i += 1) assert.ok(n[i - 1].arrets[0] <= n[i].debut + 1e-9);
+});
+
+test("son : réveillé dès le premier toucher sur la page, avant « C'est parti »", () => {
+  const p = ouvrir(memoireFlash);
+  assert.equal(p.audios.length, 0, "rien avant un geste");
+  p.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
+  assert.equal(p.audios.length, 1, "le premier toucher prépare le son");
+  p.$("partir").click();
+  assert.equal(p.audios.length, 1, "« C'est parti » reprend le même");
+  // Bips des nombres éteints : le décompte bipe quand même (choix du 30/10/2026), le son se prépare aussi.
+  const sansBips = ouvrir({mode: "flash", flash: {...FLASH, son: "aucun"}});
+  sansBips.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
+  assert.equal(sansBips.audios.length, 1);
+  // En Colonne, aucun son : rien à préparer.
+  const colonne = ouvrir(memoireColonne);
+  colonne.$("ecran-reglages").querySelector("[data-reglage=calculs][data-valeur='10']").click();
+  assert.equal(colonne.audios.length, 0, "en Colonne, pas de son préparé");
+});
+
+test("son : une carte son lente à démarrer retient le « 3 » (le cercle reste vide) au lieu de jouer un décompte qui accélère", () => {
+  const p = ouvrir(memoireFlash, {froid: 300});
+  p.$("partir").click();
+  p.avancer(250);
+  assert.equal(p.$("decompte").hidden, false, "le cercle est là");
+  assert.equal(p.$("decompte").textContent, "", "pas de « 3 » tant que la carte son ne tourne pas");
+  assert.equal(bipsDe(p, 440).length, 0);
+  p.avancer(200);
+  assert.equal(p.$("decompte").textContent, "3");
+  const d = bipsDe(p, 440);
+  assert.ok(presque(d[1].debut - d[0].debut, 0.8) && presque(d[2].debut - d[1].debut, 0.8), "puis le rythme régulier");
+  assert.ok(d[0].debut > 0, "le « 3 » sonne à l'heure");
+  // Une carte son qui ne démarre jamais n'arrête pas la séance : une demi-seconde au plus.
+  const q = ouvrir(memoireFlash, {froid: 60000});
+  q.$("partir").click();
+  q.avancer(600);
+  assert.equal(q.$("decompte").textContent, "3", "le décompte part quand même");
+});
+
+test("son (choix du 30/10) : l'interrupteur « 🔔 Un bip à chaque nombre » ne règle que les nombres ; le 3, 2, 1 bipe toujours, et un top au premier nombre", () => {
+  const p = ouvrir(memoireFlash);
+  const bascule = p.$("bascule-son");
+  assert.equal(bascule.getAttribute("aria-checked"), "true");
+  bascule.click();
+  assert.equal(bascule.getAttribute("aria-checked"), "false");
+  assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).flash.son, "aucun");
+  p.$("partir").click();
+  p.avancer(DUREE_FLASH);
+  const decompte = bipsDe(p, 440);
+  const nombres = bipsDe(p, 880);
+  assert.equal(decompte.length, 3, "le décompte bipe toujours");
+  assert.equal(nombres.length, 1, "un seul top, au premier nombre");
+  assert.ok(presque(nombres[0].debut - decompte[2].debut, 0.8), "le top tombe sur le premier nombre");
+  // Allumé : un bip à chaque nombre (le premier compris : pas de top en plus).
+  const allume = openFlash();
+  allume.avancer(DUREE_FLASH);
+  assert.equal(bipsDe(allume, 880).length, FLASH.nombres);
+  const q = ouvrir({mode: "flash", flash: {...FLASH, son: "aucun"}});
+  q.$("bascule-son").click();
+  assert.equal(q.$("bascule-son").getAttribute("aria-checked"), "true");
+  assert.equal(JSON.parse(q.stockage.get("mathsgo-flash-anzan-v1")).flash.son, "bip");
+});
+
+test("réglages : la ligne de résumé « ⚡ 5 calculs · 4 nombres · 2 s par calcul » (remplace « soit … en tout »)", () => {
+  const p = ouvrir(memoireFlash);
+  assert.equal(p.$("resume-reglages").textContent.replace(/\s+/g, " "), "⚡ 5 calculs · 4 nombres · 2 s par calcul");
+  p.$("ecran-reglages").querySelector("[data-mode=colonne]").click();
+  assert.match(p.$("resume-reglages").textContent.replace(/\s+/g, " "), /^📝 10 calculs · 8 nombres · sans limite de temps$/);
+  assert.equal(p.$("grille").classList.contains("sans-son"), true, "en Colonne, pas de Son : le résumé prend la ligne");
+  assert.doesNotMatch(PAGE, /`soit \$\{|temps-total/, "plus de « soit 8 s en tout » sous le temps");
 });

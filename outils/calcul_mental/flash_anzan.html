@@ -129,58 +129,94 @@
     body.fullscreen-active .plein-ecran { border-color: #7899ae; }
     html.fullscreen-fallback { width: 100%; height: 100%; overflow: hidden; }
     html.fullscreen-fallback body { position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh; min-height: 100dvh; overflow: auto; overscroll-behavior: none; }
-    .cadre-haut { display: flex; align-items: center; gap: 12px; }
     /* Le titre « Soroban / Flash Anzan » est centré dans le cadre (choix de
        Gwenaël, 22/10/2026). */
     .cadre-haut .titre-bloc { flex: 1 1 auto; min-width: 0; text-align: center; }
     .cadre-haut .eyebrow { margin: 0 0 2px; }
-    /* Sur ordinateur, les deux ronds sont aux coins du cadre, exactement
-       là où sont la flèche et le plein écran pendant la séance : ils ne
-       sautent pas d'un écran à l'autre. */
-    @media (min-width: 900px) {
-      .cadre-haut > .rond { position: absolute; top: var(--pad-haut); }
-      .cadre-haut > #lien-retour { left: 42px; }
-      .cadre-haut > .plein-ecran { right: 42px; }
-    }
 
     /* ---- Le cadre blanc ---- */
     .panel {
       position: relative; display: flex; flex-direction: column; min-height: 0;
-      --pad-haut: 26px; padding: var(--pad-haut) 42px 28px; border: 1px solid var(--line); border-radius: 28px;
+      padding: 0; border: 1px solid var(--line); border-radius: 28px;
       background: rgba(255, 255, 255, .97); box-shadow: 0 18px 55px rgba(26, 66, 100, .12);
+      /* Le bandeau et le corps du cadre : les marges communes à tous les
+         écrans (réglages, séance, historique). */
+      --rayon: 27px; --bandeau-haut: 14px; --bandeau-cote: 28px; --rangee-h: 56px; --corps-cote: 42px;
     }
     /* En séance, le cadre prend toute la hauteur de l'écran et ne la dépasse
        jamais : ce qui est trop long défile à l'intérieur. */
     body.en-seance .shell { height: 100vh; height: 100dvh; padding-bottom: 16px; }
     body.en-seance .panel { flex: 1 1 auto; }
 
-    .eyebrow { margin: 0 0 4px; color: var(--teal); font-size: .74rem; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
+    /* ---- Le bandeau du haut du cadre (planches validées le 30/10/2026) ----
+       Turquoise pâle, il porte la flèche à gauche, le titre (« Soroban /
+       Flash Anzan » sur les réglages, « Calcul 1 / 5 » en séance) et le plein
+       écran à droite. Même hauteur de rangée et mêmes marges sur tous les
+       écrans : les ronds ne sautent pas d'un écran à l'autre. */
+    .bandeau { flex: 0 0 auto; padding: var(--bandeau-haut) var(--bandeau-cote) 10px; border-radius: var(--rayon) var(--rayon) 0 0; background: #dff4f2; }
+    .cadre-haut, .jeu-haut { display: flex; align-items: center; gap: 12px; min-height: var(--rangee-h); }
+    .bandeau .rond { border-color: #b9dcdc; }
+    /* La pastille « ● Rania » se détache en blanc sur le bandeau (ses états
+       « hors ligne » et « détaché », plus loin dans la page, gardent leurs
+       couleurs). */
+    .bandeau .suivi-pastille { background: #fff; }
+
+    .eyebrow { margin: 0 0 4px; color: var(--teal); font-size: .74rem; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
     h1 { margin: 0; font-size: 2.3rem; line-height: 1.05; font-weight: 900; }
 
     /* ---- Les réglages ---- */
-    .reglages-ecran { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; }
-    .modes { display: grid; grid-template-columns: 1fr 1fr; margin: 14px 0 4px; padding: 4px; border-radius: 16px; background: #e3ecf2; }
-    .modes button { min-height: 52px; border: 0; border-radius: 12px; background: none; font-weight: 950; font-size: 1.02rem; color: #2c4a63;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; cursor: pointer; }
-    .modes button small { font-weight: 700; font-size: .7rem; color: var(--muted); margin-top: 2px; }
-    .modes button[aria-pressed="true"] { background: #fff; color: var(--blue); box-shadow: 0 1px 0 #b3c6d3, 0 3px 10px rgba(26, 66, 100, .10); }
-    .lignes { display: flex; flex-direction: column; margin-top: 6px; }
-    .ligne { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #e7eff5; }
-    .ligne:last-child { border-bottom: 0; }
-    .ligne .lab { font-weight: 900; font-size: .95rem; }
-    .ligne .lab small { display: block; font-weight: 700; font-size: .74rem; color: var(--muted); margin-top: 2px; }
-    .pas { display: inline-flex; align-items: center; border: 1px solid #c5d9e6; border-radius: 13px; background: #fff; overflow: hidden; }
-    .pas button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; background: #f3f8fb; font-size: 1.3rem; font-weight: 900; color: var(--blue); cursor: pointer; }
-    .pas button:disabled { color: #a8bccb; cursor: default; }
-    .pas output { min-width: 62px; text-align: center; font-weight: 950; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-    .pas.court output { min-width: 40px; }
-    .deux { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: var(--muted); font-size: .85rem; }
-    .choix { display: inline-flex; gap: 5px; }
-    .choix button { min-height: 44px; min-width: 50px; padding: 0 12px; border: 1px solid #c5d9e6; border-radius: 12px; background: #fff;
-      font-weight: 900; font-size: .92rem; color: #2c4a63; cursor: pointer; }
-    .choix button[aria-pressed="true"] { border: 2px solid var(--blue); color: var(--blue); background: #eef4fd; }
+    .reglages-ecran { width: 100%; display: flex; flex-direction: column; }
+    /* Les onglets Flash / Colonne en intercalaires : l'actif est blanc et
+       soudé au cadre, avec un petit trait orange dessous ; l'autre est
+       turquoise très pâle. */
+    .bandeau .onglets { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 6px; margin: 8px 0 -10px; }
+    .onglet { position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 11px; border: 1px solid #c3e8e5; border-bottom: 0;
+      border-radius: 20px 20px 0 0; background: #eefaf9; color: #456673; font-weight: 950; font-size: 1.05rem; line-height: 1.1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+    .onglet small { font-weight: 700; font-size: .72rem; color: var(--muted); margin-top: 3px; }
+    .onglet[aria-pressed="true"] { z-index: 1; margin-top: 0; padding-top: 15px; padding-bottom: 15px; border-color: #fff; background: #fff; color: var(--ink); }
+    .onglet[aria-pressed="true"]::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 56px; height: 4px; border-radius: 4px;
+      background: #f58220; transform: translateX(-50%); }
+    .reglages-corps { padding: 16px var(--corps-cote) 22px; }
+    /* Les blocs turquoise (palette maths&go : #08aaa5, texte #087a71). */
+    .grille { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px 18px; }
+    .bloc { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .bloc.large { grid-column: span 2; }
+    .bloc .lab { font-weight: 900; font-size: .98rem; }
+    .bloc .lab small { margin-left: 2px; font-weight: 700; font-size: .78rem; color: var(--muted); }
+    .pas { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 6px; border-radius: 16px;
+      background: #e2f5f4; border: 2px solid #93d9d5; }
+    .pas button { flex: 0 0 44px; width: 44px; height: 42px; border-radius: 12px; border: 2px solid #93d9d5; background: #fff;
+      font-size: 1.4rem; font-weight: 900; line-height: 1; color: var(--teal); cursor: pointer; }
+    .pas button:disabled { background: transparent; border-color: #c4e7e5; color: #a9cfcd; cursor: default; }
+    .pas output { min-width: 0; flex: 1 1 auto; text-align: center; font-weight: 950; font-size: 1.35rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .options.trois { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .option { height: 56px; padding: 0 10px; border-radius: 14px; border: 2px solid #dde7ec; background: #f5f8fa; color: #557080;
+      font-weight: 900; font-size: 1.02rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; white-space: nowrap; }
+    .option .sig { font-size: 1.25rem; color: var(--teal); }
+    .option[aria-pressed="true"] { background: #e2f5f4; border-color: #08aaa5; color: var(--ink); }
+    /* Le son : un interrupteur « 🔔 Un bip à chaque nombre ». */
+    .bascule { display: flex; align-items: center; gap: 10px; width: 100%; height: 56px; padding: 0 12px 0 14px; border-radius: 14px;
+      border: 2px solid #dde7ec; background: #f5f8fa; color: #557080; font-weight: 900; font-size: 1rem; text-align: left; cursor: pointer; }
+    .bascule .inter { position: relative; flex: 0 0 auto; margin-left: auto; width: 52px; height: 30px; border-radius: 15px; background: #c9d6de; transition: background .15s; }
+    .bascule .inter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+      box-shadow: 0 1px 2px rgba(20, 52, 81, .25); transition: left .15s; }
+    .bascule[aria-checked="true"] { border-color: #08aaa5; background: #e2f5f4; color: var(--ink); }
+    .bascule[aria-checked="true"] .inter { background: #08aaa5; }
+    .bascule[aria-checked="true"] .inter::after { left: 25px; }
+    @media (prefers-reduced-motion: reduce) { .bascule .inter, .bascule .inter::after { transition: none; } }
+    /* « ⚡ 5 calculs · 10 nombres · 30 s par calcul » */
+    .resume { grid-column: span 2; align-self: end; display: grid; place-items: center; min-height: 56px; margin: 0;
+      padding: 8px 14px; border-radius: 14px; background: #f4f8fb; color: var(--muted); font-weight: 800; font-size: .92rem; text-align: center; }
+    .resume strong { color: var(--ink); }
+    /* En Colonne (pas de Son), le résumé prend toute la ligne. */
+    .grille.sans-son .resume { grid-column: 1 / -1; }
     .bas { margin-top: auto; }
-    .reglages-ecran .bas { width: 100%; max-width: 380px; margin: 22px auto 0; }
+    .reglages-corps .bas { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; }
+    .primary.partir { width: min(440px, 100%); min-height: 58px; gap: 12px; border-radius: 18px; font-size: 1.4rem; }
+    .partir svg { width: 20px; height: 20px; fill: currentColor; flex: 0 0 auto; }
+    .reglages-corps .historique-bouton { width: auto; min-height: 58px; margin-top: 0; padding-left: 20px; padding-right: 20px; }
 
     .primary, .secondary {
       min-height: 52px; display: flex; align-items: center; justify-content: center; width: 100%;
@@ -192,7 +228,8 @@
 
     /* ---- La séance ---- */
     .seance { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
-    .jeu-haut { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; flex: 0 0 auto; }
+    .seance-corps { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 4px var(--corps-cote) 26px; }
+    .jeu-haut { justify-content: space-between; flex: 0 0 auto; }
     .compte { font-weight: 950; font-size: .95rem; color: var(--muted); text-align: center; }
     .haut-droite { min-width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; }
     .compte { flex: 1 1 auto; }
@@ -329,7 +366,8 @@
     #suivi-pastille-slot:empty { display: none; }
     /* Pendant l'échange du billet, on ne sait pas encore qui entre ni quels
        sont ses réglages : le cadre attend, vide. */
-    html.suivi-eleve.suivi-attente #ecran-reglages > :not(.cadre-haut) { visibility: hidden; }
+    html.suivi-eleve.suivi-attente #ecran-reglages .onglets,
+    html.suivi-eleve.suivi-attente #ecran-reglages .reglages-corps { visibility: hidden; }
     .historique-bouton { margin-top: 10px; }
     /* « ● Envoyé à ton professeur » sous le résumé de la séance (planche 3
        du 22/10/2026) ; orange quand rien n'est encore parti. */
@@ -342,7 +380,8 @@
 
     /* ---- Mon historique (élève à code) : les séances, la plus récente en
        haut, dix par dix (planche 3 du 22/10/2026) ---- */
-    .historique-ecran { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; }
+    .historique-ecran { width: 100%; display: flex; flex-direction: column; }
+    .historique-corps { width: 100%; max-width: calc(560px + 2 * var(--corps-cote)); margin: 0 auto; padding: 14px var(--corps-cote) 24px; display: flex; flex-direction: column; }
     .hist-compte { margin: 2px 0 0; text-align: center; color: var(--muted); font-weight: 800; font-size: .9rem; }
     .hist-liste { margin-top: 12px; max-height: min(62vh, 560px); }
     .hist-item { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 56px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
@@ -379,18 +418,23 @@
       .shell { width: 100%; padding: 10px 0 0; }
       /* Comme Défi tables : pas de plein écran sur téléphone. */
       .plein-ecran { display: none; }
-      .panel { padding: 16px 14px 14px; border-radius: 20px; border-left: 0; border-right: 0; }
+      .panel { border-radius: 20px; border-left: 0; border-right: 0; --rayon: 19px; --bandeau-haut: 12px; --bandeau-cote: 14px; --rangee-h: 48px; --corps-cote: 14px; }
       body.en-seance .shell { padding-bottom: 0; }
-      body.en-seance .panel { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
-        padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+      body.en-seance .panel { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+      body.en-seance .seance-corps { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
       h1 { font-size: 1.75rem; }
-      /* « Chiffres de [1] à [3] » tient sur une ligne (demande de Gwenaël,
-         22/10/2026) : les cases du chiffre se resserrent, les boutons gardent
-         44 px. Sous 370 px de large seulement, la ligne passe en deux. */
-      .ligne.chiffres { gap: 6px; }
-      .ligne.chiffres .deux { gap: 4px; }
-      .pas.court output { min-width: 28px; }
-      .reglages-ecran .bas { margin-top: 16px; }
+      /* Deux colonnes au téléphone (planche validée le 30/10/2026). */
+      .bandeau .onglets { width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; }
+      .reglages-corps { width: 100%; max-width: 588px; margin: 0 auto; padding: 12px var(--corps-cote) 12px; }
+      .grille { grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+      .bloc { gap: 4px; }
+      .bloc.large, .resume { grid-column: 1 / -1; }
+      .pas, .option, .bascule { height: 52px; }
+      .pas button { height: 38px; }
+      .resume { min-height: 0; padding: 8px 12px; }
+      .reglages-corps .bas { flex-direction: column; gap: 8px; margin-top: 10px; }
+      .primary.partir { width: 100%; }
+      .reglages-corps .historique-bouton { min-height: 44px; padding-top: 8px; padding-bottom: 6px; }
     }
     /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
        non plus. */
@@ -403,27 +447,41 @@
     @media (max-width: 620px), (max-width: 899px) and (max-height: 500px) and (pointer: coarse) {
       .cadre-haut::after { content: ""; flex: 0 0 44px; }
     }
+    /* Très petit téléphone : les cases se resserrent, les boutons gardent
+       44 × 38 px. */
     @media (max-width: 369px) {
-      .ligne.chiffres { flex-wrap: wrap; row-gap: 6px; }
-      .ligne.chiffres .deux { margin-left: auto; }
-      .pas output { min-width: 40px; }
+      .grille { gap: 10px; }
+      .pas { padding: 0 4px; }
+      .pas output { font-size: 1.15rem; }
+      .option { font-size: .95rem; padding: 0 6px; gap: 5px; }
     }
-    /* Ordinateur à écran court (portable 1366 × 768, 1024 × 600) : les
-       réglages se resserrent pour tenir sans réduire les boutons sous
-       44 px. La réduction (× 0,75 au plus) ne reste qu'en dernier recours. */
+    /* Entre le téléphone et l'ordinateur (tablette en hauteur) : deux
+       colonnes aussi, sinon les cases du pas seraient trop étroites. */
+    @media (min-width: 621px) and (max-width: 899px) {
+      .grille { grid-template-columns: 1fr 1fr; }
+      .bloc.large, .resume { grid-column: 1 / -1; }
+    }
+    /* Ordinateur à écran court (portable 1366 × 768, 1024 × 600) : le cadre
+       se resserre pour tenir sans réduire les boutons sous 44 px. La
+       réduction (× 0,75 au plus) ne reste qu'en dernier recours. */
     @media (min-width: 1024px) and (max-height: 820px) {
       .shell { padding: 10px 0; }
-      .panel { --pad-haut: 14px; padding: var(--pad-haut) 42px 16px; }
+      .panel { --bandeau-haut: 12px; --rangee-h: 50px; }
       h1 { font-size: 1.9rem; }
-      .modes { margin: 10px 0 2px; }
-      .ligne { padding: 3px 0; }
-      .reglages-ecran .bas { margin-top: 12px; }
+      .reglages-corps { padding-top: 14px; padding-bottom: 18px; }
+      .grille { row-gap: 10px; }
+      .pas, .option, .bascule, .resume { height: 52px; min-height: 52px; }
+      .pas button { height: 38px; }
+      .reglages-corps .bas { margin-top: 14px; }
+      .seance-corps { padding-bottom: 18px; }
     }
     /* Téléphone tenu en largeur : pendant la séance, la barre du site
        s'efface et la réponse passe à droite, comme sur ordinateur. */
     @media (max-height: 500px) and (orientation: landscape) {
       body.en-seance .shell { width: calc(100% - 20px); padding: 6px 0 0; }
-      body.en-seance .panel { padding: 8px 16px 8px; border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+      body.en-seance .panel { --bandeau-haut: 4px; --bandeau-cote: 16px; --rangee-h: 44px; --corps-cote: 16px; border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+      body.en-seance .bandeau { padding-bottom: 4px; }
+      body.en-seance .seance-corps { padding-bottom: 8px; }
       .vue-jeu.avec-reponse { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 18px; margin-top: 6px; }
       .vue-jeu.avec-reponse .zone-rep { justify-content: center; padding-top: 0; --touche-h: 44px; --touche-ecart: 2px; }
       .vue-jeu.avec-reponse .case { width: 100%; height: 46px; font-size: 1.7rem; }
@@ -464,66 +522,73 @@
       <!-- Les réglages : un réglage par ligne, communs aux deux modes, puis
            ceux du mode choisi. -->
       <div id="ecran-reglages" class="reglages-ecran">
-        <div class="cadre-haut">
-          <a class="rond" id="lien-retour" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental" title="Calcul mental"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a>
-          <div class="titre-bloc">
-            <p class="eyebrow">Soroban</p>
-            <h1 id="titre" tabindex="-1">Flash Anzan</h1>
+        <!-- Le bandeau turquoise du haut du cadre (planches validées le
+             30/10/2026) : la flèche, le titre, le plein écran, puis les deux
+             onglets en intercalaires. -->
+        <div class="bandeau">
+          <div class="cadre-haut">
+            <a class="rond" id="lien-retour" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental" title="Calcul mental"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></a>
+            <div class="titre-bloc">
+              <p class="eyebrow">Soroban</p>
+              <h1 id="titre" tabindex="-1">Flash Anzan</h1>
+            </div>
+            <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
           </div>
-          <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
-        </div>
-        <div class="modes" role="group" aria-label="Mode">
-          <button type="button" data-mode="flash" aria-pressed="true">⚡ Flash<small>un nombre à la fois</small></button>
-          <button type="button" data-mode="colonne" aria-pressed="false">📝 Colonne<small>tous les nombres écrits</small></button>
-        </div>
-        <div class="lignes">
-          <div class="ligne">
-            <span class="lab" id="lab-operations">Opérations</span>
-            <span class="choix" role="group" aria-labelledby="lab-operations">
-              <button type="button" data-reglage="operations" data-valeur="plus" aria-label="Additions seulement">+</button>
-              <button type="button" data-reglage="operations" data-valeur="plusmoins" aria-label="Additions et soustractions">+ et −</button>
-            </span>
-          </div>
-          <div class="ligne chiffres">
-            <span class="lab">Chiffres<small>par nombre</small></span>
-            <span class="deux">de
-              <span class="pas court"><button type="button" data-pas="chiffresMin" data-sens="-1" aria-label="Un chiffre de moins au minimum">−</button><output id="val-chiffresMin" aria-live="polite"></output><button type="button" data-pas="chiffresMin" data-sens="1" aria-label="Un chiffre de plus au minimum">+</button></span>
-              à
-              <span class="pas court"><button type="button" data-pas="chiffresMax" data-sens="-1" aria-label="Un chiffre de moins au maximum">−</button><output id="val-chiffresMax" aria-live="polite"></output><button type="button" data-pas="chiffresMax" data-sens="1" aria-label="Un chiffre de plus au maximum">+</button></span>
-            </span>
-          </div>
-          <div class="ligne">
-            <span class="lab">Nombres</span>
-            <span class="pas"><button type="button" data-pas="nombres" data-sens="-1" aria-label="Un nombre de moins">−</button><output id="val-nombres" aria-live="polite"></output><button type="button" data-pas="nombres" data-sens="1" aria-label="Un nombre de plus">+</button></span>
-          </div>
-          <div class="ligne" data-pour="flash">
-            <span class="lab">Temps par nombre<small id="temps-total"></small></span>
-            <span class="pas"><button type="button" data-pas="temps" data-sens="-1" aria-label="Moins de temps par nombre">−</button><output id="val-temps" aria-live="polite"></output><button type="button" data-pas="temps" data-sens="1" aria-label="Plus de temps par nombre">+</button></span>
-          </div>
-          <div class="ligne" data-pour="colonne">
-            <span class="lab">Temps limite<small>par calcul</small></span>
-            <span class="pas"><button type="button" data-pas="limite" data-sens="-1" aria-label="Moins de temps">−</button><output id="val-limite" aria-live="polite"></output><button type="button" data-pas="limite" data-sens="1" aria-label="Plus de temps">+</button></span>
-          </div>
-          <div class="ligne">
-            <span class="lab" id="lab-calculs">Calculs</span>
-            <span class="choix" role="group" aria-labelledby="lab-calculs">
-              <button type="button" data-reglage="calculs" data-valeur="5">5</button>
-              <button type="button" data-reglage="calculs" data-valeur="10">10</button>
-              <button type="button" data-reglage="calculs" data-valeur="20">20</button>
-            </span>
-          </div>
-          <div class="ligne" data-pour="flash">
-            <span class="lab" id="lab-son">Son</span>
-            <span class="choix" role="group" aria-labelledby="lab-son">
-              <button type="button" data-reglage="son" data-valeur="aucun">Aucun</button>
-              <button type="button" data-reglage="son" data-valeur="bip">🔔 Bip</button>
-            </span>
+          <div class="modes onglets" role="group" aria-label="Mode">
+            <button type="button" class="onglet" data-mode="flash" aria-pressed="true">⚡ Flash<small>un nombre à la fois</small></button>
+            <button type="button" class="onglet" data-mode="colonne" aria-pressed="false">📝 Colonne<small>tous les nombres écrits</small></button>
           </div>
         </div>
-        <div class="bas">
-          <button type="button" class="primary" id="partir">C’est parti&nbsp;!</button>
-          <!-- L'élève à code, dès sa première séance : ses dernières séances -->
-          <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Mon historique</button>
+        <!-- Les réglages façon FastMath : le titre AU-DESSUS de chaque réglage.
+             Deux colonnes au téléphone, quatre sur ordinateur. -->
+        <div class="reglages-corps">
+          <div class="grille" id="grille">
+            <div class="bloc large">
+              <span class="lab" id="lab-operations">Opérations</span>
+              <span class="options" role="group" aria-labelledby="lab-operations">
+                <button type="button" class="option" data-reglage="operations" data-valeur="plus"><span class="sig" aria-hidden="true">+</span>Additions</button>
+                <button type="button" class="option" data-reglage="operations" data-valeur="plusmoins" title="Additions et soustractions"><span class="sig" aria-hidden="true">+&nbsp;−</span>Les deux</button>
+              </span>
+            </div>
+            <div class="bloc">
+              <span class="lab">Chiffres <small>au moins</small></span>
+              <span class="pas"><button type="button" data-pas="chiffresMin" data-sens="-1" aria-label="Un chiffre de moins au minimum">−</button><output id="val-chiffresMin" aria-live="polite"></output><button type="button" data-pas="chiffresMin" data-sens="1" aria-label="Un chiffre de plus au minimum">+</button></span>
+            </div>
+            <div class="bloc">
+              <span class="lab">Chiffres <small>au plus</small></span>
+              <span class="pas"><button type="button" data-pas="chiffresMax" data-sens="-1" aria-label="Un chiffre de moins au maximum">−</button><output id="val-chiffresMax" aria-live="polite"></output><button type="button" data-pas="chiffresMax" data-sens="1" aria-label="Un chiffre de plus au maximum">+</button></span>
+            </div>
+            <div class="bloc">
+              <span class="lab">Nombres</span>
+              <span class="pas"><button type="button" data-pas="nombres" data-sens="-1" aria-label="Un nombre de moins">−</button><output id="val-nombres" aria-live="polite"></output><button type="button" data-pas="nombres" data-sens="1" aria-label="Un nombre de plus">+</button></span>
+            </div>
+            <div class="bloc" data-pour="flash">
+              <span class="lab">Temps <small>par nombre</small></span>
+              <span class="pas"><button type="button" data-pas="temps" data-sens="-1" aria-label="Moins de temps par nombre">−</button><output id="val-temps" aria-live="polite"></output><button type="button" data-pas="temps" data-sens="1" aria-label="Plus de temps par nombre">+</button></span>
+            </div>
+            <div class="bloc" data-pour="colonne">
+              <span class="lab">Temps limite <small>par calcul</small></span>
+              <span class="pas"><button type="button" data-pas="limite" data-sens="-1" aria-label="Moins de temps">−</button><output id="val-limite" aria-live="polite"></output><button type="button" data-pas="limite" data-sens="1" aria-label="Plus de temps">+</button></span>
+            </div>
+            <div class="bloc large">
+              <span class="lab" id="lab-calculs">Calculs</span>
+              <span class="options trois" role="group" aria-labelledby="lab-calculs">
+                <button type="button" class="option" data-reglage="calculs" data-valeur="5">5</button>
+                <button type="button" class="option" data-reglage="calculs" data-valeur="10">10</button>
+                <button type="button" class="option" data-reglage="calculs" data-valeur="20">20</button>
+              </span>
+            </div>
+            <div class="bloc large" data-pour="flash">
+              <span class="lab" id="lab-son">Son</span>
+              <button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true" aria-describedby="lab-son"><span aria-hidden="true">🔔</span>Un bip à chaque nombre<span class="inter" aria-hidden="true"></span></button>
+            </div>
+            <p class="resume" id="resume-reglages"></p>
+          </div>
+          <div class="bas">
+            <button type="button" class="primary partir" id="partir">C’est parti<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg></button>
+            <!-- L'élève à code, dès sa première séance : ses dernières séances -->
+            <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Mon historique</button>
+          </div>
         </div>
       </div>
 
@@ -531,29 +596,38 @@
            plus récente en haut, dix par dix. Tout est posé par textContent :
            ce qui vient du serveur ne devient jamais du HTML. -->
       <div id="ecran-historique" class="historique-ecran" hidden>
-        <div class="cadre-haut">
-          <button type="button" class="rond" id="historique-retour" aria-label="Retour aux réglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
-          <div class="titre-bloc">
-            <p class="eyebrow">Soroban</p>
-            <h1 id="historique-titre" tabindex="-1">Mon historique</h1>
+        <div class="bandeau">
+          <div class="cadre-haut">
+            <button type="button" class="rond" id="historique-retour" aria-label="Retour aux réglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+            <div class="titre-bloc">
+              <p class="eyebrow">Soroban</p>
+              <h1 id="historique-titre" tabindex="-1">Mon historique</h1>
+            </div>
+            <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
           </div>
-          <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
         </div>
-        <p class="hist-compte" id="historique-compte"></p>
-        <ol class="liste hist-liste" id="historique-liste" aria-label="Mes séances"></ol>
-        <div class="bas">
-          <button type="button" class="secondary" id="historique-plus" hidden>Voir les séances précédentes</button>
+        <div class="historique-corps">
+          <p class="hist-compte" id="historique-compte"></p>
+          <ol class="liste hist-liste" id="historique-liste" aria-label="Mes séances"></ol>
+          <div class="bas">
+            <button type="button" class="secondary" id="historique-plus" hidden>Voir les séances précédentes</button>
+          </div>
         </div>
       </div>
 
-      <!-- La séance : la barre du haut, puis le jeu, la correction ou la fin. -->
+      <!-- La séance : le bandeau (la flèche, « Calcul 1 / 5 », la pastille, le
+           plein écran, aux mêmes places que sur les réglages), puis le jeu, la
+           correction ou la fin. -->
       <div id="ecran-seance" class="seance" hidden>
-        <div class="jeu-haut">
-          <button type="button" class="rond" id="retour" aria-label="Arrêter la séance"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
-          <span class="compte" id="compte" aria-live="polite"></span>
-          <span class="haut-droite"><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><span id="suivi-pastille-slot"></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
+        <div class="bandeau">
+          <div class="jeu-haut">
+            <button type="button" class="rond" id="retour" aria-label="Arrêter la séance"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+            <span class="compte" id="compte" aria-live="polite"></span>
+            <span class="haut-droite"><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><span id="suivi-pastille-slot"></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
+          </div>
         </div>
 
+        <div class="seance-corps">
         <div id="vue-jeu" class="vue-jeu">
           <div class="scene" id="scene">
             <div class="decompte" id="decompte" hidden></div>
@@ -602,6 +676,7 @@
             <button type="button" class="secondary" id="vers-reglages">Réglages</button>
             <button type="button" class="primary" id="rejouer">Rejouer</button>
           </div>
+        </div>
         </div>
       </div>
     </section>
@@ -697,6 +772,19 @@
       // L'écran des réglages
       // -----------------------------------------------------------------
       function texteLimite(s) { return s ? `${s} s` : "sans"; }
+      // La ligne de résumé sous les réglages (planche du 30/10/2026, elle
+      // remplace « soit 30 s en tout ») : « ⚡ 5 calculs · 10 nombres · 30 s
+      // par calcul ». Des nombres seulement : rien du compte n'y devient du HTML.
+      function texteResumeReglages(mode, r) {
+        const calculs = `<strong>${Number(r.calculs)} calculs</strong>`;
+        const nombres = `${Number(r.nombres)} nombres`;
+        if (mode === "flash") {
+          const total = CORE.secondes(r.nombres * CORE.tempsEnSecondes(r.temps));
+          return `<span>⚡&nbsp;${calculs} · ${nombres} · <strong>${total}</strong> par calcul</span>`;
+        }
+        const temps = r.limite ? `<strong>${Number(r.limite)}&nbsp;s</strong> par calcul` : "sans limite de temps";
+        return `<span>📝&nbsp;${calculs} · ${nombres} · ${temps}</span>`;
+      }
       function dessinerReglages() {
         const mode = memoire.mode;
         const r = reglages();
@@ -712,10 +800,12 @@
         $("val-nombres").textContent = r.nombres;
         if (mode === "flash") {
           $("val-temps").textContent = CORE.secondes(CORE.tempsEnSecondes(r.temps));
-          $("temps-total").textContent = `soit ${CORE.secondes(r.nombres * CORE.tempsEnSecondes(r.temps))} en tout`;
+          $("bascule-son").setAttribute("aria-checked", String(r.son === "bip"));
         } else {
           $("val-limite").textContent = texteLimite(r.limite);
         }
+        $("grille").classList.toggle("sans-son", mode !== "flash");
+        $("resume-reglages").innerHTML = texteResumeReglages(mode, r);
         const {chiffres, nombres} = CORE.BORNES;
         const bornes = {
           chiffresMin: [r.chiffresMin <= chiffres.min, r.chiffresMin >= chiffres.max],
@@ -744,6 +834,15 @@
         ecrireMemoire();
         dessinerReglages();
       }));
+      // Le son : un interrupteur (avant le 30/10/2026, deux boutons « Aucun /
+      // 🔔 Bip »). La valeur gardée reste « aucun » ou « bip ».
+      $("bascule-son").addEventListener("click", () => {
+        const r = reglages();
+        memoire.flash = CORE.normaliser("flash", {...r, son: r.son === "bip" ? "aucun" : "bip"});
+        ecrireMemoire();
+        dessinerReglages();
+        preparerSon();
+      });
       document.querySelectorAll("[data-pas]").forEach(b => b.addEventListener("click", () => {
         const r = reglages();
         const cle = b.dataset.pas;
@@ -761,47 +860,112 @@
 
       // -----------------------------------------------------------------
       // Le son : un bip fabriqué par la page (WebAudio), programmé à
-      // l'avance au même instant que le changement de nombre.
+      // l'avance sur l'horloge du son, au même instant que l'image.
+      //
+      // Correctifs du 30/10/2026 (mesurés dans Chromium) :
+      //  - la carte son d'un vrai ordinateur met du temps à démarrer. Créer
+      //    le son au clic sur « C'est parti » faisait arriver le bip du « 3 »
+      //    en retard ou coupé : le décompte semblait « accélérer ». Le son est
+      //    donc préparé et réveillé (un tampon silencieux) dès le premier
+      //    toucher sur la page, et une séance attend qu'il tourne (une demi-
+      //    seconde au plus) avant son « 3 » ;
+      //  - les trois bips du décompte et ceux des nombres sont programmés à
+      //    l'avance, depuis une même origine, sur l'horloge du son ;
+      //  - le bip des nombres durait 60 ms et s'éteignait aussitôt : on ne
+      //    l'entendait pas. Il a maintenant la présence de celui du décompte
+      //    (≈ 110 ms, même volume, tenu puis éteint), en restant plus aigu.
       // -----------------------------------------------------------------
       let audio = null;
       let bips = [];
-      function preparerSon() {
-        if (audio) { if (audio.state === "suspended") audio.resume().catch(() => {}); return; }
-        const Contexte = window.AudioContext || window.webkitAudioContext;
-        if (!Contexte) return;
-        try { audio = new Contexte(); } catch (e) { audio = null; }
-      }
-      function programmerBips(t0, nombres, tempsMs) {
-        couperBips();
-        if (!audio || seance.reglages.son !== "bip") return;
-        const maintenant = performance.now();
-        const base = audio.currentTime;
-        const duree = Math.min(0.06, tempsMs / 2000);
-        for (let i = 0; i < nombres; i += 1) {
-          bip(BIP_NOMBRE, base + Math.max(0, (t0 + i * tempsMs - maintenant) / 1000), duree);
-        }
-      }
-      // Un bip : la fréquence, l'instant (horloge du son), la durée.
+      const VOLUME = 0.22;
       const BIP_NOMBRE = 880;
       const BIP_DECOMPTE = 440; // plus grave (choix de Gwenaël, 22/10/2026)
+      const DUREE_BIP = 0.11; // secondes, décompte comme nombres
+      function preparerSon() {
+        if (!audio) {
+          const Contexte = window.AudioContext || window.webkitAudioContext;
+          if (!Contexte) return;
+          try { audio = new Contexte({latencyHint: "interactive"}); } catch (e) { audio = null; return; }
+          // Le réveil : un tampon silencieux joué tout de suite (iPhone,
+          // carte son endormie).
+          try {
+            const silence = audio.createBufferSource();
+            silence.buffer = audio.createBuffer(1, 1, 22050);
+            silence.connect(audio.destination);
+            silence.start(0);
+          } catch (e) { /* tant pis : le bip suivant réveillera */ }
+        }
+        if (audio.state === "suspended") { try { audio.resume().catch(() => {}); } catch (e) {} }
+      }
+      // Le son est-il prêt à jouer à l'heure ?
+      function sonPret() {
+        return Boolean(audio) && audio.state === "running";
+      }
+      // Dès le premier toucher (ou la première touche) sur la page, en Flash
+      // (le décompte bipe toujours) : la carte son a le temps de démarrer
+      // avant « C'est parti ».
+      function reveillerSiBesoin() {
+        if (memoire.mode === "flash") preparerSon();
+      }
+      document.addEventListener("pointerdown", reveillerSiBesoin, true);
+      document.addEventListener("keydown", reveillerSiBesoin, true);
+
+      // Le retard de la sortie du son (haut-parleurs, casque), en secondes.
+      function retardSon() {
+        try { return Math.min(0.3, Math.max(0, Number(audio.outputLatency || audio.baseLatency) || 0)); } catch (e) { return 0; }
+      }
+      // Un instant de la page (performance.now, ms) → l'instant du son
+      // (secondes) où il faut jouer pour qu'on l'ENTENDE à cet instant.
+      // getOutputTimestamp dit quel instant du son sort des haut-parleurs à
+      // quel instant de la page : le retard de la sortie y est déjà. Sans
+      // lui, on part de l'horloge du son et on retire ce retard.
+      function versHorlogeSon(tPage) {
+        try {
+          const s = audio.getOutputTimestamp && audio.getOutputTimestamp();
+          if (s && s.performanceTime > 0 && s.contextTime > 0) {
+            return Math.max(audio.currentTime, s.contextTime + (tPage - s.performanceTime) / 1000);
+          }
+        } catch (e) { /* l'horloge du son seule */ }
+        return Math.max(audio.currentTime, audio.currentTime + (tPage - performance.now()) / 1000 - retardSon());
+      }
+      // Un bip : la fréquence, l'instant (horloge du son), la durée. Tenu au
+      // même volume puis éteint en 25 ms : il s'entend en entier.
       function bip(frequence, debut, duree) {
         try {
           const osc = audio.createOscillator();
           const gain = audio.createGain();
+          const extinction = Math.min(0.025, duree / 3);
           osc.type = "sine";
           osc.frequency.value = frequence;
           gain.gain.setValueAtTime(0, debut);
-          gain.gain.linearRampToValueAtTime(0.22, debut + 0.004);
-          gain.gain.exponentialRampToValueAtTime(0.001, debut + duree);
+          gain.gain.linearRampToValueAtTime(VOLUME, debut + 0.005);
+          gain.gain.setValueAtTime(VOLUME, debut + duree - extinction);
+          gain.gain.linearRampToValueAtTime(0, debut + duree);
           osc.connect(gain).connect(audio.destination);
           osc.start(debut);
           osc.stop(debut + duree + 0.01);
           bips.push(osc);
         } catch (e) { /* pas de son : la séance continue */ }
       }
-      function bipDecompte() {
-        if (!audio || seance.reglages.son !== "bip") return;
-        bip(BIP_DECOMPTE, audio.currentTime + 0.01, 0.09);
+      // Le son, choix de Gwenaël du 30/10/2026 (comme en compétition : un
+      // signal de départ, puis un son à chaque nombre) :
+      //  - le décompte 3, 2, 1 bipe TOUJOURS (grave) ;
+      //  - l'interrupteur « 🔔 Un bip à chaque nombre » ne règle que les
+      //    nombres : allumé, un bip aigu à chaque nombre ; éteint, un seul
+      //    « top » aigu au premier nombre (« c'est parti »), puis le silence ;
+      //  - le silence complet, c'est le volume de l'appareil.
+      // Les trois bips du décompte, programmés d'un coup à origine + k × 800 ms.
+      function programmerDecompte(origine) {
+        if (!audio) return;
+        for (let k = 0; k < 3; k += 1) bip(BIP_DECOMPTE, versHorlogeSon(origine + k * DECOMPTE_MS), DUREE_BIP);
+      }
+      // Les bips des nombres, à t0 + i × T ; jamais plus longs que la moitié
+      // de T (deux bips ne se touchent pas aux vitesses rapides).
+      function programmerBips(t0, nombres, tempsMs) {
+        if (!audio) return;
+        const duree = Math.min(DUREE_BIP, tempsMs / 2000);
+        const combien = seance.reglages.son === "bip" ? nombres : 1; // éteint : le top du premier nombre seulement
+        for (let i = 0; i < combien; i += 1) bip(BIP_NOMBRE, versHorlogeSon(t0 + i * tempsMs), duree);
       }
       function couperBips() {
         bips.forEach(osc => { try { osc.stop(0); osc.disconnect(); } catch (e) {} });
@@ -859,7 +1023,7 @@
       }
 
       function demarrerSeance() {
-        preparerSon();
+        reveillerSiBesoin();
         seance.mode = memoire.mode;
         seance.reglages = {...reglages()};
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
@@ -910,25 +1074,51 @@
         $("colonne").hidden = true;
         $("nombre").hidden = true;
         $("scene").classList.remove("defile");
-        if (seance.mode === "flash") decompter(3);
+        if (seance.mode === "flash") decompter();
         else montrerColonne();
       }
 
       // ---- Le Flash ----
       const DECOMPTE_MS = 800; // comme Défi tables
-      function decompter(n) {
+      const AVANCE_MS = 40; // le temps de programmer les bips avant le « 3 » (plus le retard de la sortie du son)
+      const ATTENTE_SON_MS = 500; // une carte son qui ne démarre pas n'arrête pas la séance
+      // Le décompte 3, 2, 1 puis le Flash, tout depuis UNE origine (correctif
+      // du 30/10/2026) : le « 2 » à origine + 800 ms, le « 1 » à + 1 600 ms,
+      // le premier nombre à + 2 400 ms — les images comme les bips, programmés
+      // d'avance, jamais trois minuteries enchaînées qui dérivent. Si le son
+      // doit jouer et que la carte son ne tourne pas encore, le « 3 » attend
+      // qu'elle tourne (une demi-seconde au plus) : le rythme reste régulier.
+      function decompter() {
         seance.phase = "decompte";
         const jeton = seance.jeton;
+        // Le cercle vide le temps de préparer le son (quelques centièmes de
+        // seconde), puis le « 3 » avec son bip.
         $("decompte").hidden = false;
-        $("decompte").textContent = n;
-        bipDecompte();
+        $("decompte").textContent = "";
         $("indic").hidden = false;
         $("indic").textContent = `⚡ ${CORE.resume("flash", seance.reglages, {avecMode: false})}`;
-        seance.attente = window.setTimeout(() => {
+        preparerSon(); // le décompte bipe toujours (choix du 30/10/2026)
+        const debutAttente = performance.now();
+        const partir = () => {
           if (jeton !== seance.jeton) return;
-          if (n > 1) decompter(n - 1);
-          else lancerFlash();
-        }, DECOMPTE_MS);
+          if (audio && !(sonPret() && audio.currentTime > 0) && performance.now() - debutAttente < ATTENTE_SON_MS) {
+            seance.attente = window.setTimeout(partir, 20);
+            return;
+          }
+          const origine = performance.now() + AVANCE_MS + (audio ? retardSon() * 1000 : 0);
+          const t0 = origine + 3 * DECOMPTE_MS;
+          programmerDecompte(origine);
+          programmerBips(t0, seance.calculs[seance.index].termes.length, seance.reglages.temps * 100);
+          const etape = k => {
+            seance.attente = window.setTimeout(() => {
+              if (jeton !== seance.jeton) return;
+              if (k < 3) { $("decompte").textContent = 3 - k; etape(k + 1); }
+              else lancerFlash(t0);
+            }, Math.max(0, origine + k * DECOMPTE_MS - performance.now()));
+          };
+          etape(0);
+        };
+        partir();
       }
 
       // La taille du nombre est fixée d'après le plus long nombre possible et
@@ -953,7 +1143,9 @@
         nombre.style.height = `${taille}px`;
       }
 
-      function lancerFlash() {
+      // t0 : l'instant du premier nombre, fixé par le décompte (ses bips sont
+      // déjà programmés).
+      function lancerFlash(t0) {
         seance.phase = "flash";
         const jeton = seance.jeton;
         $("decompte").hidden = true;
@@ -965,8 +1157,6 @@
         const termes = seance.calculs[seance.index].termes;
         const tempsMs = seance.reglages.temps * 100;
         const n = termes.length;
-        const t0 = performance.now() + 40;
-        programmerBips(t0, n, tempsMs);
         let dejaIndex = -2;
         let dejaVisible = null;
         const image = maintenant => {
@@ -1094,7 +1284,7 @@
         $("question").hidden = true;
         $("zone-rep").hidden = true;
         $("vue-jeu").classList.remove("avec-reponse");
-        decompter(3);
+        decompter();
       }
       $("revoir").addEventListener("click", revoir);
 
