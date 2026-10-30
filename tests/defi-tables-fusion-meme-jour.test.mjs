@@ -205,5 +205,5 @@ test("le moteur porte la règle, la page charge le moteur du jour, l'ancien comm
   assert.match(moteur, /\} else \{[^}]*?if \(fait\.erreur !== date\) \{\s*descend = fait\.boite > 1;\s*fait\.boite = Math\.max\(1, fait\.boite - 1\);\s*\}\s*fait\.erreur = date;\s*fait\.echeance = date;\s*\}/, "appliquerReponse : la boîte ne descend qu'une fois par jour");
   assert.doesNotMatch(moteur, /LIMITE CONNUE, acceptée : deux appareils utilisés le MÊME JOUR/, "le commentaire faux (« gain puis erreur » et « erreur puis gain » ne peuvent pas être ordonnés) a disparu");
   assert.doesNotMatch(moteur, /Les erreurs comptent toujours, sans limite/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261024-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/, "cache-buster du moteur bumpé");
 });

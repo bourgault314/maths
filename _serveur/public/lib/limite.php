@@ -251,6 +251,183 @@ function compter_echec_adresse(string $adresse): void
     limiter('echec-ip:' . $adresse, ECHECS_ADRESSE_BLOQUEE, FENETRE_ECHECS_ADRESSE);
 }
 
+// ------------------------------------------- le mot de passe d'installation
+//
+// Lot « correctifs de l'audit Codex » (29/10/2026, défaut 3 du 22/10) : CINQ
+// pages vérifient le même secret — installer.php, migrer.php, verifier.php,
+// secours.php, sauvegarde.php — et chacune avait son propre frein, ou pas de
+// frein du tout (migrer.php, installer.php). Un même secret avec des freins
+// séparés, c'est autant d'essais que de pages ; sans frein, c'est à la vitesse
+// du réseau (reproduit : 100 essais sur migrer.php en deux secondes).
+//
+// Un SEUL compteur, partagé par les cinq pages, par bloc d'adresse
+// (adresse_limitee()), sur dix minutes. Seuls les ÉCHECS comptent : le jour
+// d'un dépôt, on ouvre migrer.php, verifier.php et sauvegarde.php à la suite
+// avec le bon mot de passe, et aucune porte ne doit se fermer pour ça. Au
+// dixième échec, les cinq pages répondent « Trop d'essais » jusqu'à la fin
+// de la fenêtre, sans même comparer le mot de passe.
+const ECHECS_JETON_INSTALLATION = 10;
+const FENETRE_JETON_INSTALLATION = 600;
+
+function cle_jeton_installation(): string
+{
+    return 'jeton-installation:' . adresse_limitee();
+}
+
+// Dans combien de minutes la fenêtre se rouvre (au moins 1).
+function attente_jeton_installation(): int
+{
+    try {
+        $fin = fin_de_fenetre_de(cle_jeton_installation(), FENETRE_JETON_INSTALLATION);
+    } catch (Throwable $e) {
+        $fin = 0; // base en panne : la fenêtre est dans le fichier de repli
+    }
+    if ($fin === 0) $fin = frein_fichier_fin();
+    return max(1, (int)ceil(max(0, $fin - time()) / 60));
+}
+
+// LE contrôle, le même pour les cinq pages. Rend un mot :
+//  - 'ok'        : le mot de passe est le bon ;
+//  - 'trop'      : l'adresse a épuisé ses essais, rien n'a été comparé ;
+//  - 'absent'    : config.php n'a pas encore de mot de passe d'installation ;
+//  - 'incorrect' : mauvais mot de passe, et l'échec est compté.
+//
+// Relecture Codex du 29/10/2026, R2 : l'ancienne forme « lire le compteur,
+// comparer, puis compter l'échec » laissait un trou entre la lecture et
+// l'écriture — douze essais lancés ENSEMBLE au neuvième échec passaient tous
+// la lecture avant qu'aucun n'écrive, et tous étaient comparés. Désormais
+// l'essai est RÉSERVÉ d'abord, en une seule instruction (compter(), un
+// UPSERT) ; seul l'essai dont la réservation tient dans le plafond est
+// comparé ; et si le mot de passe est le bon, la réservation est RENDUE
+// (nombre - 1) : les réussites ne comptent toujours pas, mais plus rien ne se
+// glisse entre deux instructions. Un essai refusé reste compté : c'est lui
+// qui tient la porte fermée jusqu'à la fin de la fenêtre.
+//
+// R1 : quand la base ne répond pas (ou n'a pas encore de table « compteurs »),
+// le compteur bascule sur un petit fichier à côté de config.php — même clé,
+// même plafond, même fenêtre — pour que verifier.php, qui DOIT s'ouvrir le
+// jour où la base tombe, ne devienne pas ce jour-là une porte sans frein.
+// Si ce fichier ne peut pas s'écrire non plus, l'essai attend 1,5 s avant
+// d'être comparé : sans aucune mémoire, on ralentit au lieu de laisser passer.
+function verdict_jeton_installation(string $saisi): string
+{
+    $attendu = (string)(config()['jeton_installation'] ?? '');
+    $cle = cle_jeton_installation();
+    $reservation = null;
+    try {
+        $reservation = reserver_essai_base($cle);
+    } catch (Throwable $e) {
+        error_log('jeton d\'installation (frein en base indisponible, repli fichier) : ' . $e->getMessage());
+        $reservation = reserver_essai_fichier($cle);
+    }
+    if ($reservation === 'trop') return 'trop';
+    if ($reservation === null) usleep(RALENTISSEMENT_CONNEXION_US);
+    if ($attendu === '' || $attendu === 'à-remplacer') {
+        rendre_essai($cle, $reservation);
+        return 'absent';
+    }
+    if (!hash_equals($attendu, $saisi)) return 'incorrect';
+    rendre_essai($cle, $reservation);
+    return 'ok';
+}
+
+// Réserve un essai en base : 'base' si l'essai tient dans le plafond, 'trop'
+// sinon. Lève si la base ou la table manque.
+function reserver_essai_base(string $cle): string
+{
+    return compter($cle, FENETRE_JETON_INSTALLATION) > ECHECS_JETON_INSTALLATION ? 'trop' : 'base';
+}
+
+// Rend un essai réservé (mot de passe juste, ou rien à comparer).
+function rendre_essai(string $cle, ?string $reservation): void
+{
+    try {
+        if ($reservation === 'base') {
+            $k = cle_compteur($cle, FENETRE_JETON_INSTALLATION);
+            bd()->prepare('UPDATE compteurs SET nombre = nombre - 1 WHERE cle = ? AND nombre > 0')->execute([$k]);
+            // Plus aucun essai en cours : la ligne s'en va (une adresse n'y
+            // survit pas plus longtemps que ses échecs).
+            bd()->prepare('DELETE FROM compteurs WHERE cle = ? AND nombre <= 0')->execute([$k]);
+        } elseif ($reservation === 'fichier') {
+            frein_fichier_modifier($cle, -1);
+        }
+    } catch (Throwable $e) {
+        error_log('jeton d\'installation (essai non rendu) : ' . $e->getMessage());
+    }
+}
+
+// ------------------------------------------ le repli fichier (base en panne)
+//
+// Un petit JSON à côté de config.php — donc derrière le même <FilesMatch
+// "^config"> du .htaccess, jamais servi — qui tient, par clé HMAC (comme la
+// table), le nombre d'essais et la fin de la fenêtre. Verrouillé (flock)
+// pendant la lecture-écriture : la réservation y est aussi indivisible.
+function frein_fichier_chemin(): string
+{
+    return dirname(__DIR__) . '/config-frein.json';
+}
+
+// Réserve un essai dans le fichier : 'fichier' ou 'trop' ; null si le fichier
+// ne peut pas s'écrire (le dossier n'est pas accessible en écriture).
+function reserver_essai_fichier(string $cle): ?string
+{
+    $nombre = frein_fichier_modifier($cle, +1);
+    if ($nombre === null) return null;
+    return $nombre > ECHECS_JETON_INSTALLATION ? 'trop' : 'fichier';
+}
+
+// Fin de la fenêtre ouverte dans le fichier pour cette adresse (0 si aucune).
+function frein_fichier_fin(): int
+{
+    $contenu = @file_get_contents(frein_fichier_chemin());
+    if (!is_string($contenu)) return 0;
+    $tout = json_decode($contenu, true);
+    $ligne = is_array($tout) ? ($tout[cle_compteur(cle_jeton_installation(), FENETRE_JETON_INSTALLATION)] ?? null) : null;
+    return is_array($ligne) && (int)($ligne['fenetre'] ?? 0) > time() ? (int)$ligne['fenetre'] : 0;
+}
+
+// Ajoute $delta à l'essai de cette clé (fenêtre ouverte par le premier essai,
+// lignes expirées effacées au passage) et rend le nombre courant ; null si le
+// fichier ne s'ouvre pas en écriture.
+function frein_fichier_modifier(string $cle, int $delta): ?int
+{
+    $chemin = frein_fichier_chemin();
+    $fichier = @fopen($chemin, 'c+');
+    if ($fichier === false) return null;
+    try {
+        if (!flock($fichier, LOCK_EX)) return null;
+        $contenu = stream_get_contents($fichier);
+        $tout = is_string($contenu) && $contenu !== '' ? json_decode($contenu, true) : [];
+        if (!is_array($tout)) $tout = [];
+        $maintenant = time();
+        foreach ($tout as $k => $ligne) {
+            if (!is_array($ligne) || (int)($ligne['fenetre'] ?? 0) <= $maintenant) unset($tout[$k]);
+        }
+        $k = cle_compteur($cle, FENETRE_JETON_INSTALLATION);
+        $ligne = $tout[$k] ?? ['fenetre' => $maintenant + FENETRE_JETON_INSTALLATION, 'nombre' => 0];
+        $ligne['nombre'] = max(0, (int)$ligne['nombre'] + $delta);
+        $tout[$k] = $ligne;
+        rewind($fichier);
+        ftruncate($fichier, 0);
+        fwrite($fichier, json_encode($tout));
+        fflush($fichier);
+        flock($fichier, LOCK_UN);
+        return (int)$ligne['nombre'];
+    } finally {
+        fclose($fichier);
+    }
+}
+
+// La phrase que la page affiche pour chaque verdict (sauf 'ok').
+function message_jeton_installation(string $verdict): string
+{
+    return match ($verdict) {
+        'trop' => "Trop d'essais depuis cette adresse : attends " . attente_jeton_installation() . " minute(s).",
+        'absent' => "Renseigne d'abord « jeton_installation » dans config.php.",
+        default => "Mot de passe d'installation incorrect.",
+    };
+}
+
 // Efface les compteurs liés à un code (élève supprimé, code régénéré).
 function oublier_compteurs_du_code(PDO $pdo, string $code): void
 {

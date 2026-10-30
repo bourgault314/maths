@@ -164,12 +164,31 @@ test("PHP n'annonce plus sa version", () => {
 });
 
 test("verifier.php freine les essais de mot de passe, et ne compte que les échecs", () => {
+  // Lot « correctifs de l'audit Codex » (29/10/2026) : le frein est celui de
+  // lib/limite.php, partagé par les cinq pages du mot de passe d'installation
+  // (dix échecs par dix minutes) ; verifier.php garde son garde-fou « base
+  // injoignable » et ne compte toujours que les échecs.
+  const limite = lire("_serveur/public/lib/limite.php");
+  assert.ok(/const ECHECS_JETON_INSTALLATION = 10;/.test(limite), "dix essais");
+  assert.ok(/const FENETRE_JETON_INSTALLATION = 600;/.test(limite), "par dix minutes");
   const page = lire("_serveur/public/verifier.php");
-  assert.ok(/const ESSAIS_VERIFIER = 12;/.test(page), "douze essais");
-  assert.ok(/const FENETRE_ESSAIS_VERIFIER = 600;/.test(page), "par dix minutes");
-  const bloc = page.slice(page.indexOf("adresse_limitee()"), page.indexOf("$autorise = true;"));
-  assert.ok(/incorrect/.test(bloc) && bloc.indexOf("compter('verifier:") < bloc.indexOf("incorrect"),
-    "le compteur n'avance que sur un mot de passe faux");
+  assert.ok(!/ESSAIS_VERIFIER/.test(page), "plus de seuil à part");
+  // Relecture Codex (R1, R2) : l'essai est RÉSERVÉ en une instruction avant la
+  // comparaison, rendu si le mot de passe est bon ; base en panne, le compteur
+  // bascule sur un fichier à côté de config.php, puis sur un ralentissement.
+  const verdict = limite.slice(limite.indexOf("function verdict_jeton_installation("), limite.indexOf("function reserver_essai_base("));
+  assert.ok(verdict.indexOf("reserver_essai_base($cle)") < verdict.indexOf("hash_equals("), "réservé avant d'être comparé");
+  assert.ok(/catch \(Throwable \$e\) \{[\s\S]*reserver_essai_fichier\(\$cle\);/.test(verdict), "base en panne : le fichier");
+  assert.ok(/if \(\$reservation === null\) usleep\(RALENTISSEMENT_CONNEXION_US\);/.test(verdict), "ni base ni fichier : 1,5 s");
+  assert.ok(/if \(!hash_equals\(\$attendu, \$saisi\)\) return 'incorrect';\s*rendre_essai\(\$cle, \$reservation\);\s*return 'ok';/.test(verdict), "la réussite rend l'essai, l'échec le garde");
+  assert.ok(/UPDATE compteurs SET nombre = nombre - 1 WHERE cle = \? AND nombre > 0/.test(limite), "rendre = une instruction");
+  assert.ok(/return dirname\(__DIR__\) \. '\/config-frein\.json';/.test(limite), "le fichier de repli est un « config » : jamais servi (.htaccess)");
+  assert.ok(/flock\(\$fichier, LOCK_EX\)/.test(limite), "et verrouillé");
+  assert.ok(page.includes("verdict_jeton_installation((string)($_POST['jeton'] ?? ''))"), "verifier.php passe par le contrôle unique");
+  assert.ok(!page.includes("compter_echec_jeton_installation"), "et ne compte plus à part");
+  for (const f of ["installer.php", "migrer.php", "secours.php", "sauvegarde.php"]) {
+    assert.ok(lire("_serveur/public/" + f).includes("verdict_jeton_installation((string)($_POST['jeton'] ?? ''))"), f + " passe par le frein partagé");
+  }
 });
 
 test("les fichiers qui ne doivent pas sortir par HTTP sont refusés par .htaccess", () => {

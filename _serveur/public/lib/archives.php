@@ -173,37 +173,63 @@ function classes_echues(PDO $pdo, ?int $profId = null): array
 // orpheline.
 //
 // UN SEUL chemin de suppression pour tout le serveur : le bouton « Supprimer
-// la classe » de « Ma classe » et la suppression automatique du 1er août
-// passent par ici. Deux codes qui effacent les mêmes tables, c'est deux
-// occasions d'en oublier une.
+// la classe » de « Ma classe », la suppression automatique du 1er août ET la
+// suppression d'un compte professeur avec ses classes (lib/auth.php,
+// supprimer_prof) passent par ici. Deux codes qui effacent les mêmes tables,
+// c'est deux occasions d'en oublier une — et c'est arrivé : jusqu'au
+// 29/10/2026, supprimer_prof() avait sa propre boucle, qui oubliait les
+// records (audit Codex du 22/10, défaut 4) ; ses records restaient en base,
+// orphelins, et partaient dans les sauvegardes.
 function supprimer_classe(PDO $pdo, int $classeId): void
 {
     avec_reprise($pdo, function () use ($pdo, $classeId): void {
         transaction_ouvrir($pdo);
         try {
-            $requete = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
-            $requete->execute([$classeId]);
-            foreach ($requete->fetchAll() as $eleve) {
-                $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
-                // L'historique des sept jours part avec le reste : une classe
-                // supprimée ne doit rien laisser derrière elle (06/09/2026).
-                oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
-                oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
-                oublier_compteurs_du_code($pdo, (string)$eleve['code']);
-                oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
-            }
-            // La séance en direct de la classe, s'il y en a une d'ouverte :
-            // questions et réponses partent avec elle (07/10/2026).
-            oublier_direct_de_la_classe($pdo, $classeId);
-            $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
-            $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
-            $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
+            effacer_classe_dans_la_transaction($pdo, $classeId);
             transaction_valider($pdo);
         } catch (Throwable $e) {
             transaction_annuler($pdo);
             throw $e;
         }
     });
+}
+
+// Le corps de la suppression d'une classe, SANS transaction : l'appelant en
+// ouvre une (supprimer_classe pour une classe seule, supprimer_prof pour
+// toutes les classes d'un compte, dans une seule transaction avec le compte).
+// Toute table qui garde une ligne d'élève ou de classe s'efface ICI et
+// nulle part ailleurs.
+function effacer_classe_dans_la_transaction(PDO $pdo, int $classeId): void
+{
+    $requete = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
+    $requete->execute([$classeId]);
+    foreach ($requete->fetchAll() as $eleve) {
+        $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
+        // L'historique des sept jours part avec le reste : une classe
+        // supprimée ne doit rien laisser derrière elle (06/09/2026).
+        oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
+        oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
+        oublier_compteurs_du_code($pdo, (string)$eleve['code']);
+        oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
+    }
+    // La séance en direct de la classe, s'il y en a une d'ouverte :
+    // questions et réponses partent avec elle (07/10/2026).
+    oublier_direct_de_la_classe($pdo, $classeId);
+    $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
+    $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
+    $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
+}
+
+// Les lignes de « records » dont l'élève n'existe plus : celles laissées par
+// l'ancienne suppression de compte (voir supprimer_classe). Rend le nombre
+// effacé. Appelé par migrer.php (une fois, pour le passé) et par menage.php
+// (pour le principe : plus rien ne devrait en laisser).
+function purger_records_orphelins(PDO $pdo): int
+{
+    if (!table_existe($pdo, 'records')) return 0;
+    $requete = $pdo->prepare('DELETE FROM records WHERE eleve_id NOT IN (SELECT id FROM eleves)');
+    $requete->execute();
+    return $requete->rowCount();
 }
 
 // La suppression automatique de fin d'année.

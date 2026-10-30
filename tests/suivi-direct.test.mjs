@@ -83,7 +83,12 @@ test("rien ne reste : durée bornée, purge à chaque passage, jamais dans la sa
 
 test("une classe, un compte ou un élève supprimé emporte la séance et les réponses", () => {
   assert.ok(lire("_serveur/public/lib/archives.php").includes("oublier_direct_de_la_classe($pdo, $classeId);"), "supprimer_classe");
-  assert.ok(lire("_serveur/public/lib/auth.php").includes("oublier_direct_de_la_classe($pdo, $classeId);"), "supprimer_prof");
+  // Depuis le lot « correctifs de l'audit Codex » (29/10/2026), supprimer_prof
+  // passe par le corps unique de supprimer_classe, qui emporte la séance.
+  assert.ok(lire("_serveur/public/lib/auth.php").includes("effacer_classe_dans_la_transaction($pdo, (int)$classe['id']);"), "supprimer_prof");
+  const corps = lire("_serveur/public/lib/archives.php");
+  const debut = corps.indexOf("function effacer_classe_dans_la_transaction(");
+  assert.ok(debut > 0 && corps.slice(debut, corps.indexOf("\n}\n", debut)).includes("oublier_direct_de_la_classe($pdo, $classeId);"), "le corps unique");
   const cas = apiProf.slice(apiProf.indexOf("case 'eleves.supprimer':"), apiProf.indexOf("case 'tableau':"));
   assert.ok(cas.includes("oublier_reponses_direct_de_l_eleve"), "eleves.supprimer");
 });

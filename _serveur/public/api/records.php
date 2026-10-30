@@ -4,15 +4,24 @@
 //
 //  - {code, lire: true}        → la ligue de SON professeur (deux top 10),
 //                                sa place, son record, son choix de nom ;
-//  - {code, temps, justes, jour} → une course finie : « temps » en dixièmes
+//  - {code, depart: true}      → un TICKET de course (32 hex), daté par le
+//                                serveur (lot « correctifs de l'audit
+//                                Codex », 29/10/2026) ;
+//  - {code, temps, justes, jour, course}
+//                              → une course finie : « temps » en dixièmes
 //                                de seconde, « justes » les bonnes réponses
 //                                sur 25 ; « jour » (facultatif, D8) le jour
 //                                de la course « AAAA-MM-JJ », pour sa
-//                                semaine ; le serveur juge (lib/records.php) ;
+//                                semaine ; « course » le ticket du départ —
+//                                le serveur juge (lib/records.php), et
+//                                refuse un temps plus court que ce qu'il a
+//                                lui-même mesuré depuis le ticket ;
 //  - {code, nom: true|false}   → prénom ou Mystère (changeable à volonté).
 //
 // Réponses hors 200 que l'appli distingue :
-//  400  refusé pour de bon (temps impossible, pas 25 sur 25) : pas de relance ;
+//  400  refusé pour de bon (temps impossible, pas 25 sur 25, pas de ticket
+//       ou ticket qui ne vaut rien, temps plus court que mesuré) : pas de
+//       relance ;
 //  403  les records ne sont pas ouverts à sa classe ;
 //  404  code inconnu (comme partout) ;
 //  409  « pas encore Légende » : la couronne n'est pas (encore) dans la
@@ -28,6 +37,7 @@ require __DIR__ . '/../lib/reponse.php';
 require __DIR__ . '/../lib/codes.php';
 require __DIR__ . '/../lib/limite.php';
 require __DIR__ . '/../lib/applis.php';
+require __DIR__ . '/../lib/billets.php';
 require __DIR__ . '/../lib/records.php';
 
 cors();
@@ -94,6 +104,15 @@ try {
         $reponse();
     }
 
+    // ------------------------------------------------------ le départ (ticket)
+    // Lot « correctifs de l'audit Codex » (29/10/2026) : au « C'est parti ! »,
+    // l'appli demande un ticket ; le serveur note l'instant. Délivré à tout
+    // élève dont la classe a les records ouverts — la marche de la couronne
+    // (dont le temps est le premier record) se court AVANT d'être Légende.
+    if (!empty($corps['depart'])) {
+        repondre(['ok' => true, 'course' => emettre_billet($pdo, $eleveId, 'course')]);
+    }
+
     // -------------------------------------------------------------- une course
     if (!array_key_exists('temps', $corps)) {
         erreur("Demande illisible.", 400);
@@ -111,13 +130,33 @@ try {
     if ($temps < SEUIL_COURSE_DIXIEMES || $temps > COURSE_MAX_DIXIEMES) {
         erreur("Le temps ne compte pas.", 400);
     }
+    // Le ticket du départ : lu d'abord SANS le consommer — un « pas encore
+    // Légende » (409) doit le laisser en place pour l'envoi suivant.
+    $ticket = is_string($corps['course'] ?? null) ? strtolower(trim($corps['course'])) : '';
+    $depart = lire_ticket_de_course($pdo, $eleveId, $ticket);
+    if ($depart === null) {
+        erreur("Le temps ne compte pas : la course n'a pas de ticket de départ.", 400);
+    }
+    if (!temps_plausible_depuis($depart['depart'], $temps)) {
+        // Plus court que ce que le serveur a vu passer depuis le départ :
+        // ce n'est pas une course, c'est une requête. Le ticket est brûlé.
+        consommer_ticket_de_course($pdo, $eleveId, $ticket);
+        erreur("Le temps ne compte pas.", 400);
+    }
     if (!est_legende($pdo, $eleveId)) {
         // Pas (encore) Légende ici : l'appli réessaiera après avoir enregistré
-        // sa progression. Rien n'est écrit.
+        // sa progression. Rien n'est écrit, le ticket reste.
         repondre(['ok' => false, 'legende' => false, 'erreur' => "Pas encore Légende des tables."], 409);
     }
+    // Le ticket se consomme DANS la transaction qui écrit le record (relecture
+    // Codex, R3) : deux envois de la même course à la même seconde, un seul
+    // entre ; et une écriture qui échoue rend le ticket — la course se renvoie.
     // D8 : le jour de la course, s'il est plausible ; sinon aujourd'hui.
-    $resultat = enregistrer_course($pdo, $eleveId, $temps, jour_de_course($corps['jour'] ?? null));
+    $resultat = enregistrer_course($pdo, $eleveId, $temps, jour_de_course($corps['jour'] ?? null),
+        fn(): bool => consommer_ticket_de_course($pdo, $eleveId, $ticket));
+    if (isset($resultat['ticket'])) {
+        erreur("Le temps ne compte pas : ce ticket a déjà servi.", 400);
+    }
     $reponse(['nouveau' => $resultat['nouveau'], 'avant' => $resultat['avant']]);
 } catch (Throwable $e) {
     error_log('records: ' . $e->getMessage());

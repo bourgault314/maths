@@ -223,6 +223,16 @@ try {
         // L'appli fusionne avec cet état, puis renvoie avec la bonne révision.
         repondre(['ok' => false, 'conflit' => true, 'erreur' => "La progression a changé entre-temps."] + $resultat['actuel'], 409);
     }
+    // Les sept jours d'historique, pour TOUS les élèves (audit Codex du
+    // 22/10/2026, défaut 5) : chaque enregistrement réussi emporte ce qui a
+    // plus de sept jours, pas seulement les vieilles lignes de cet élève.
+    // Hors transaction et après coup : la progression est déjà écrite, un
+    // ménage qui échoue ne la reprend pas.
+    try {
+        purger_versions_anciennes($pdo);
+    } catch (Throwable $e) {
+        error_log('parcours (purge de l\'historique) : ' . $e->getMessage());
+    }
     repondre(['ok' => true, 'maj_le' => $resultat['maj_le'], 'revision' => $resultat['revision']]);
 } catch (Throwable $e) {
     error_log('parcours: ' . $e->getMessage());

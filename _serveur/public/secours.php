@@ -50,22 +50,17 @@ try {
     $pdo = bd();
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         // Même sur une page déposée cinq minutes, on ne laisse pas essayer le
-        // mot de passe d'installation en boucle. On compte soi-même plutôt que
-        // d'appeler limiter() : celui-ci répondrait en JSON, ce qui n'a pas de
-        // sens sur une page qui s'affiche.
-        //
-        // adresse_limitee(), pas adresse_appelante() (M-02, audit du 05/09) :
-        // en IPv6 un abonné reçoit un bloc /64 entier et en change à volonté,
-        // si bien que dix essais par adresse exacte n'était aucun frein. Le
-        // frein compte le bloc, comme partout ailleurs depuis le lot 11.
-        $essais = compter('secours:' . adresse_limitee(), 600);
-        $attendu = (string)(config()['jeton_installation'] ?? '');
-        if ($essais > 10) {
-            $message = "Trop d'essais depuis cette adresse : attends dix minutes.";
-        } elseif ($attendu === '' || $attendu === 'à-remplacer') {
-            $message = "Renseigne d'abord « jeton_installation » dans config.php.";
-        } elseif (!hash_equals($attendu, (string)($_POST['jeton'] ?? ''))) {
-            $message = "Mot de passe d'installation incorrect.";
+        // mot de passe d'installation en boucle. Le frein est celui de
+        // lib/limite.php (verdict_jeton_installation), PARTAGÉ avec
+        // installer.php, migrer.php, verifier.php et sauvegarde.php depuis le
+        // lot « correctifs de l'audit Codex » (29/10/2026) : un même secret,
+        // un seul compteur — dix échecs par bloc d'adresse (adresse_limitee(),
+        // le /64 en IPv6 : M-02, audit du 05/09) et par dix minutes, et le
+        // onzième essai n'est même pas comparé. Cette page compte elle-même
+        // plutôt que d'appeler limiter() : celui-ci répondrait en JSON.
+        $verdict = verdict_jeton_installation((string)($_POST['jeton'] ?? ''));
+        if ($verdict !== 'ok') {
+            $message = message_jeton_installation($verdict);
         } else {
             $autorise = true;
             $comptes = comptes_administrateurs($pdo);

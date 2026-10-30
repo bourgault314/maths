@@ -39,6 +39,30 @@ const SEUIL_COURSE_DIXIEMES = 100;
 const COURSE_MAX_DIXIEMES = 36000;
 const RECORDS_TOP = 10;
 
+// Lot « correctifs de l'audit Codex » (29/10/2026, défaut 1 du 22/10) : le
+// serveur CHRONOMÈTRE la course. Au départ, l'appli demande un ticket
+// (api/records.php, « depart ») ; le serveur le date. À l'arrivée, le temps
+// annoncé ne peut pas être plus court que ce que le serveur a vu passer
+// entre le ticket et l'envoi, à MARGE_COURSE_DIXIEMES près (le départ est
+// daté à la seconde, et le chrono de l'appli part à la première question,
+// après le ticket et le décompte 3-2-1 : pour une vraie course, le serveur
+// a TOUJOURS mesuré plus que l'appli). Un temps envoyé sans ticket, avec un
+// ticket inconnu, d'un autre élève, périmé ou déjà servi est refusé (400).
+// Ce que ça ferme : « 25 justes en 10 s » en une requête (reproduit par
+// Codex). Ce que ça ne ferme pas, et qu'on assume (décision du 14/10, « on
+// accepte et le professeur retire ») : un client bricolé qui prend un ticket,
+// attend dix secondes et envoie dix secondes — le serveur ne vérifie pas les
+// 25 réponses. La couronne reste lue dans la progression (choix assumé).
+const MARGE_COURSE_DIXIEMES = 20;
+
+// Vrai si le temps annoncé tient dans ce que le serveur a mesuré depuis le
+// départ ($depart, epoch en secondes) — à part, pour être testé seul.
+function temps_plausible_depuis(int $depart, int $dixiemes, ?int $maintenant = null): bool
+{
+    $ecoule = (($maintenant ?? time()) - $depart) * 10;
+    return $dixiemes <= $ecoule + MARGE_COURSE_DIXIEMES;
+}
+
 // Lot « le tirage des questions » (09/10/2026, décision de Gwenaël) : les
 // séries de la course ont changé (25 calculs tous différents, ×1 et ×10 une
 // fois chacun au plus) — un peu plus dures, plus égales d'une course à
@@ -231,9 +255,15 @@ function record_affichable(?array $ligne, ?string $lundi = null): array
 // course entre dans la semaine de CE jour. Une course d'une semaine passée
 // ne touche pas au temps de la semaine en cours ; une course d'une semaine
 // plus récente que celle gardée ouvre la nouvelle semaine, comme avant.
-function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour = null): array
+// $consommer (relecture Codex du 29/10/2026, R3) : ce qui consomme le ticket
+// de course, joué DANS la transaction, après le verrou de la ligne — rend
+// faux si le ticket a déjà servi (deux envois ensemble : un seul entre). Un
+// échec de l'écriture annule aussi la consommation : la course se renvoie
+// avec le même ticket quand la base revient. Rend ['ticket' => false] si le
+// ticket n'a pas pu être consommé.
+function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour = null, ?callable $consommer = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes, $jour): array {
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $dixiemes, $jour, $consommer): array {
         $aujourdhui = jour_local();
         $jour = $jour ?? $aujourdhui;
         $lundiCourant = lundi_de($aujourdhui);
@@ -245,6 +275,10 @@ function enregistrer_course(PDO $pdo, int $eleveId, int $dixiemes, ?string $jour
             $requete->execute([$eleveId]);
             $ligne = $requete->fetch();
             $requete->closeCursor();
+            if ($consommer !== null && !$consommer()) {
+                transaction_annuler($pdo);
+                return ['ticket' => false];
+            }
             if ($ligne === false) {
                 $pdo->prepare('INSERT INTO records (eleve_id, meilleur, meilleur_le, semaine, semaine_lundi, nom, maj_le) VALUES (?, ?, ?, ?, ?, NULL, ?)')
                     ->execute([$eleveId, $dixiemes, $instant, $dixiemes, $lundi, maintenant()]);

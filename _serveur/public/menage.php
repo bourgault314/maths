@@ -59,6 +59,14 @@ try {
     // Une séance en direct oubliée ouverte est déjà effacée par le premier
     // appel venu ; la tâche planifiée repasse derrière, pour le principe.
     $directs = table_existe($pdo, 'directs') ? purger_directs($pdo) : 0;
+    // Lot « correctifs de l'audit Codex » (29/10/2026) :
+    //  - l'historique des sept jours est purgé pour TOUS les élèves, pas
+    //    seulement ceux qui viennent d'écrire (défaut 5) — la même purge que
+    //    api/parcours.php fait à chaque enregistrement, pour le principe ;
+    //  - les records sans élève (défaut 4), restes de l'ancienne suppression
+    //    de compte, partent aussi.
+    $versions = table_existe($pdo, 'versions') ? purger_versions_anciennes($pdo) : 0;
+    $orphelins = purger_records_orphelins($pdo);
     $restantes = count($attente) - count($supprimees);
     echo gmdate('Y-m-d\TH:i:s\Z') . " — ménage de fin d'année\n";
     echo "  année scolaire en cours : " . annee_scolaire_courante() . "\n";
@@ -73,6 +81,12 @@ try {
         : "  journal : rien à effacer (douze mois de conservation).\n";
     if ($directs > 0) {
         echo "  séances en direct : $directs séance(s) oubliée(s) effacée(s).\n";
+    }
+    echo $versions > 0
+        ? "  historique : $versions version(s) de plus de sept jours effacée(s).\n"
+        : "  historique : rien à effacer (sept jours de conservation).\n";
+    if ($orphelins > 0) {
+        echo "  records : $orphelins record(s) sans élève effacé(s).\n";
     }
     exit(0);
 } catch (Throwable $e) {

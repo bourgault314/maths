@@ -187,7 +187,10 @@ test("la page : la ligne de lancement de la course (planches 1 et 8)", () => {
 
 // ------------------------------------------------------------------ 2. le décompte
 
-function banc(parcours, configuration, duree) {
+// « ticket » (lot « correctifs de l'audit Codex », 29/10/2026) : null = la
+// série n'a pas de ticket de course (une étoile ordinaire, ou pas de code) ;
+// sinon {promesse} — ce que demanderTicketDeCourse() rendrait.
+function banc(parcours, configuration, duree, ticket = null) {
   const ecran = fauxEcran();
   const montre = {maintenant: 1000, minuteries: []};
   const fenetre = {
@@ -203,8 +206,10 @@ function banc(parcours, configuration, duree) {
   ecran.elements.expression.replaceChildren = (...n) => { ecran.elements.expression.enfants = n; };
   ecran.elements.time.setAttribute = () => {};
   ecran.elements.time.classList = {add() {}, remove() {}, toggle() {}};
-  const fabrique = new Function("state", "$", "window", "document", "Date", "PARCOURS", "parcours", "DURATION", "TOTAL", "journal", `
+  const fabrique = new Function("state", "$", "window", "document", "Date", "PARCOURS", "parcours", "DURATION", "TOTAL", "journal", "ticket", `
     const formatTime = s => "0:" + String(s).padStart(2, "0");
+    const courseAvecTicket = () => ticket !== null;
+    const demanderTicketDeCourse = () => { journal.push("ticket demandé"); return ticket.promesse; };
     const renderFilSeance = () => {};
     const majSortieJeu = () => {};
     const show = ecran => journal.push("show " + ecran);
@@ -217,6 +222,7 @@ function banc(parcours, configuration, duree) {
     const touches = document.querySelectorAll();
     const quitterSerie = () => { journal.push("quitter"); state.running = false; stopTimer(); };
     ${source("beginRound")}
+    ${source("partirQuandLeTicketEstLa")}
     ${source("horlogeSerie")}
     ${source("partir")}
     const DECOMPTE_MS = ${constante("DECOMPTE_MS")};
@@ -228,7 +234,7 @@ function banc(parcours, configuration, duree) {
     ${source("reprendreAuRetour")}
     return {beginRound, returnToMenu, stopTimer, noterDecompteCoupe, reprendreAuRetour};
   `);
-  const fonctions = fabrique(state, ecran.$, fenetre, document, {now: () => montre.maintenant}, P, parcours, duree, 25, journal);
+  const fonctions = fabrique(state, ecran.$, fenetre, document, {now: () => montre.maintenant}, P, parcours, duree, 25, journal, ticket);
   const avancer = ms => {
     const fin = montre.maintenant + ms;
     for (;;) {
@@ -345,4 +351,61 @@ test("la page : le décompte se dessine dans la case de la question, sans animat
   assert.match(html, /\.expression \.decompte \{\s*color: var\(--blue\);\s*font-size: 1\.35em;\s*line-height: 1;\s*animation: decompte-pop \.8s ease-out both;\s*\}/);
   assert.match(html, /@media \(prefers-reduced-motion: reduce\) \{\s*\.expression \.decompte \{ animation: none; \}\s*\}/);
   assert.match(html, /decompte: null,\n/, "l'état de départ le déclare");
+});
+
+// ------------------------------------------- le ticket de course (29/10/2026)
+
+test("ticket : sans ticket (étoile ordinaire, pas de code), rien ne change — le chrono part au bout du décompte", () => {
+  const b = banc(legende(), P.configCourse(), null);
+  b.beginRound();
+  assert.ok(!b.journal.includes("ticket demandé"));
+  b.avancer(2400);
+  assert.equal(b.state.running, true);
+});
+
+test("ticket : demandé au « C'est parti ! » ; déjà arrivé à la fin du décompte, le chrono part sans attendre", async () => {
+  const b = banc(legende(), P.configCourse(), null, {promesse: Promise.resolve("0123456789abcdef0123456789abcdef")});
+  b.beginRound();
+  assert.equal(b.journal.filter(e => e === "ticket demandé").length, 1, "une demande, au lancement");
+  await Promise.resolve(); // la promesse est tenue avant la fin du décompte
+  assert.equal(b.state.ticketCourseValeur, "0123456789abcdef0123456789abcdef");
+  b.avancer(2400);
+  assert.equal(b.state.running, true, "le chrono part avec la première question");
+  assert.equal(b.journal.filter(e => e === "question").length, 1);
+});
+
+test("ticket : réseau lent — le « 1 » attend le ticket, puis le chrono part ; refusé (pas de réseau), il part aussi", async () => {
+  let tenir;
+  const b = banc(legende(), P.configCourse(), null, {promesse: new Promise(r => { tenir = r; })});
+  b.beginRound();
+  b.avancer(2400);
+  assert.equal(b.state.running, false, "le décompte est fini mais le ticket n'est pas là : on attend");
+  assert.equal(b.chiffre(), "1", "le « 1 » reste à l'écran");
+  tenir("0123456789abcdef0123456789abcdef");
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(b.state.running, true, "le ticket arrive : la série part");
+  assert.equal(b.journal.filter(e => e === "question").length, 1);
+  // Pas de réseau : la promesse rend null, la course part quand même (le
+  // verdict dira que le temps ne compte pas — décision de Gwenaël, 29/10).
+  let refuser;
+  const c = banc(legende(), P.configCourse(), null, {promesse: new Promise(r => { refuser = r; })});
+  c.beginRound();
+  c.avancer(2400);
+  assert.equal(c.state.running, false);
+  refuser(null);
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(c.state.running, true, "sans ticket, la course se joue quand même");
+  assert.equal(c.state.ticketCourseValeur, null);
+});
+
+test("ticket : « Ma table » pendant l'attente du ticket arrête tout — la série ne démarre pas quand le ticket arrive", async () => {
+  let tenir;
+  const b = banc(legende(), P.configCourse(), null, {promesse: new Promise(r => { tenir = r; })});
+  b.beginRound();
+  b.avancer(2400);
+  b.returnToMenu();
+  tenir("0123456789abcdef0123456789abcdef");
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(b.state.running, false, "quittée : rien ne part");
+  assert.ok(!b.journal.includes("question"));
 });
