@@ -177,6 +177,13 @@ Défi tables est la référence.
   EN PLUS à quelques élèves (on ne retire jamais rien à un élève). Rien ne
   part avant « Enregistrer ». Tout ouvert par défaut. Plus de carte
   « Activités » dans ⚙ Réglages, plus de « Ce que voit… » dans Élèves.
+  Toute écriture d'accès part avec « avant », l'état que la page croit rangé
+  (`eleves.acces` : les ajouts de l'élève ; `classes.modifier` : la liste
+  des applis et les réglages de l'appli réglée, correctif du 30/10/2026) :
+  si un autre onglet a écrit entre-temps, le serveur refuse (409) avec l'état
+  actuel au lieu d'écraser, et la page se remet dessus. La relecture qui suit
+  un enregistrement est bornée comme l'écriture (15 s) ; sans relecture, la
+  fenêtre se libère et dit que la vérification n'a pas pu se faire.
 - Dans Ma classe, l'onglet d'une appli montre sa progression, sans aucun code
   d'élève : les codes ne s'écrivent que dans l'onglet « Élèves » (et sur les
   papiers imprimés), pour qu'une page projetée ne les montre jamais à la

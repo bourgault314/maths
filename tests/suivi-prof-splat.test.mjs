@@ -403,7 +403,7 @@ test("l'activité montrée : le dernier choix si la classe l'a, sinon la premiè
   assert.equal(appliAMontrer(["defi-tables"], "splat"), "defi-tables", "une classe sans SPLAT! montre Défi tables");
   assert.equal(appliAMontrer(["splat"], ""), "splat");
   assert.equal(appliAMontrer(["defi-tables", "splat"], ""), "defi-tables", "sans choix : la première, dans l'ordre du catalogue");
-  assert.match(fonction("ouvrirClasse"), /api\("tableau", \{classe_id: id, appli: voulue\}\)/, "le tableau lu est celui de l'activité montrée");
+  assert.match(fonction("ouvrirClasse"), /api\("tableau", \{classe_id: id, appli: voulue\}, \{signal\}\)/, "le tableau lu est celui de l'activité montrée (borné par le signal de l'appelant, correctif 5b)");
   assert.match(fonction("ouvrirClasse"), /const voulue = memeClasse && APPLIS\.some\(appli => appli\.cle === appliAffichee\)\s*\? appliAffichee\s*: appliAMontrer\(lesApplisConnues\(connue \? connue\.applis : \["defi-tables"\]\), lireChoixAppli\(\)\);/,
     "rouvrir la même classe garde l'onglet, même s'il vient d'être grisé (lot 5b) ; une autre classe : le dernier choix si elle l'a");
   assert.match(fonction("ouvrirClasse"), /if \(!memeClasse && presentes\.length && !presentes\.includes\(voulue\)\) \{ poserAppli\(\); await afficherAppli\(presentes\[0\]\); return true; \}/,
@@ -606,7 +606,8 @@ test("ouvrir SPLAT! à la classe : la liste de la classe part à « Enregistrer 
   assert.deepEqual(r.serveur.appels, [], "rien ne part au clic");
   assert.deepEqual(r.questions, [], "ajouter ne demande rien");
   await r.f.enregistrerRegler();
-  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, applis: ["defi-tables", "splat"]}]]);
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, applis: ["defi-tables", "splat"], avant: {applis: ["defi-tables"], reglages: {splat: {}}}}]],
+    "avec « avant » (correctif 5b) : la liste et les réglages de SPLAT! tels que la page les connaît");
   assert.deepEqual(r.journal, ["ouvrirClasse 4"], "la classe est relue : l'onglet SPLAT! passe en clair");
   assert.deepEqual([r.$("message-appli").textContent, r.$("message-appli").className], ["SPLAT! : réglages enregistrés (la 405).", "message ok"]);
   assert.equal(r.boite().open, false);
@@ -624,7 +625,7 @@ test("fermer SPLAT! à la classe : on demande d'abord, on dit que rien n'est eff
   oui.f.ouvrirRegler("splat");
   cocher(caseDe(oui.corps(), "Ouvert à toute la 405"), false);
   await oui.f.enregistrerRegler();
-  assert.deepEqual(oui.serveur.appels.map(a => a.corps), [{classe_id: 4, applis: ["defi-tables"]}], "seulement la liste : les mondes de la classe restent rangés");
+  assert.deepEqual(oui.serveur.appels.map(a => a.corps), [{classe_id: 4, applis: ["defi-tables"], avant: {applis: ["defi-tables", "splat"], reglages: {splat: {}}}}], "seulement la liste (et « avant ») : les mondes de la classe restent rangés");
   assert.equal(oui.f.etat().appliAffichee, "splat", "on reste dans l'onglet, désormais grisé");
   // Ce que la phrase promet est vrai : classes.modifier ne touche qu'à la liste.
   const api = lire("_serveur/public/api/prof.php");
@@ -854,7 +855,7 @@ test("fermer un monde : la liste des mondes cochés part à « Enregistrer », l
   assert.deepEqual(lignesPlus(r.corps()).length, 1, "le monde 3 fermé : sa ligne « en plus » apparaît");
   assert.deepEqual(r.serveur.appels, []);
   await r.f.enregistrerRegler();
-  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, reglages: {splat: {mondes: [1, 2, 4, 5, 6]}}}]]);
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 4, reglages: {splat: {mondes: [1, 2, 4, 5, 6]}}, avant: {applis: ["defi-tables", "splat"], reglages: {splat: {}}}}]]);
   assert.deepEqual(r.journal, ["ouvrirClasse 4"], "la classe est relue : comptes et pastilles suivent");
   assert.equal(r.$("message-appli").textContent, "SPLAT! : réglages enregistrés (la 405).");
   const ouvrir = reglerRejoue({classe: classe405(["defi-tables", "splat"], MONDES_1_2), eleves: deuxEleves(), appli: "splat"});

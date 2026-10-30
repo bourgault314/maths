@@ -1714,7 +1714,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees",
     // Serveur pro, lot 5b : la fenêtre « Régler … », la ligne « qui voit »
     // et la carte d’un onglet fermé (des prénoms, le nom de la classe).
-    "regler-titre", "regler-sous", "regler-corps", "qui-voit-etat", "af-titre", "af-texte",
+    // (correctif, relecture Codex point 7 : le bouton « Ouvrir à toute la 405 »
+    // et le mot « Régler SPLAT! » aussi — le nom de la classe restait dedans.)
+    "regler-titre", "regler-sous", "regler-corps", "qui-voit-etat", "af-titre", "af-texte", "af-toute", "regler-appli-mot",
     // Lot 4b : Anzan — « En plus pour », ses séances et sa feuille.
     "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note",
     // Lot 5c : la fenêtre de l’élève (un prénom).
@@ -2550,6 +2552,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       : `Aucun élève de la ${classe.libelle} ne le voit dans son espace.`;
     $("af-toute").textContent = `Ouvrir à toute la ${classe.libelle}`;
     $("af-actions").hidden = !proprietaire;
+    // Pendant un enregistrement (le raccourci lui-même, ou la fenêtre), les
+    // deux boutons attendent (correctif, point 2 : une seule écriture à la fois).
+    ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = reglageEnCours; });
   }
 
   // « Rania, Lucas, Alice et 2 autres » : trois prénoms au plus, sur une ligne.
@@ -2805,9 +2810,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     messager("regler-message", `${sujet} ${noms.length > 1 ? "le voient" : "le voit"} dans ${noms.length > 1 ? "leur" : "son"} espace.`, "info");
   }
 
-  // Ce qui part au serveur pour la classe : {applis?, reglages?}, ou null
-  // quand rien de la classe ne change. Les réglages de l'appli ne partent
-  // que si la classe l'a (cachés, ils sont gardés tels quels).
+  // Ce qui part au serveur pour la classe : {applis?, reglages?, avant}, ou
+  // null quand rien de la classe ne change. Les réglages de l'appli ne
+  // partent que si la classe l'a (cachés, ils sont gardés tels quels).
+  // Correctif (relecture Codex du 30/10, point 1) : « avant » — la liste des
+  // applis et les réglages de CETTE appli tels que la page les croit rangés.
+  // Un autre onglet les a changés entre-temps ? Le serveur refuse (409) au
+  // lieu d'écraser (un monde refermé ailleurs serait rouvert, un Anzan
+  // ajouté ailleurs retiré) : comme eleves.acces depuis le lot 3c.
   function changementsDeLaClasse(depart, b) {
     const charge = {};
     if (b.classeOuverte !== depart.classeOuverte) {
@@ -2824,7 +2834,77 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       });
       if (Object.keys(pourLAppli).length) charge.reglages = {[b.cle]: pourLAppli};
     }
-    return Object.keys(charge).length ? charge : null;
+    if (!Object.keys(charge).length) return null;
+    charge.avant = avantDeLaClasse(b.cle);
+    return charge;
+  }
+
+  // L'état de la classe tel que la page le connaît, pour « avant » : sa
+  // liste d'applis, et les réglages d'une appli (« {} » quand tout est
+  // ouvert, comme tableau les rend).
+  function avantDeLaClasse(cle) {
+    const reglages = (classe && classe.reglages) || {};
+    const reglage = reglages[cle];
+    return {
+      applis: ((classe && classe.applis) || []).slice(),
+      reglages: {[cle]: reglage && typeof reglage === "object" && !Array.isArray(reglage) ? reglage : {}}
+    };
+  }
+
+  // Un 409 de la classe porte son état vrai (applis, reglages) : posé tout
+  // de suite dans la page — même si la relecture qui suit ne passe pas, le
+  // prochain « avant » sera juste.
+  function poserEtatDeClasse(donnees) {
+    if (!classe || !donnees) return;
+    if (Array.isArray(donnees.applis)) classe.applis = donnees.applis.filter(cle => typeof cle === "string");
+    if (donnees.reglages && typeof donnees.reglages === "object" && !Array.isArray(donnees.reglages)) classe.reglages = donnees.reglages;
+  }
+
+  // Un 409 d'un élève porte ses ajouts vrais (et ce qu'il voit) : posés sur
+  // l'élève de la page (relecture Codex, point 5 : avant, le contenu du 409
+  // n'était pas appliqué, et une relecture en panne laissait l'ancien).
+  function poserAccesDeLEleve(eleve, donnees) {
+    if (!eleve || !donnees) return;
+    if (donnees.ajouts && typeof donnees.ajouts === "object" && !Array.isArray(donnees.ajouts)) eleve.ajouts = donnees.ajouts;
+    if (donnees.acces && typeof donnees.acces === "object" && Array.isArray(donnees.acces.applis)) eleve.acces = donnees.acces;
+  }
+
+  // Deux états d'ajouts disent-ils la même chose ? Lus comme ajoutsApres
+  // les lit (listes triées, vides écartées), clés rangées.
+  function ajoutsCanoniques(ajouts) {
+    const sortie = {};
+    Object.keys(ajouts || {}).sort().forEach(cle => {
+      const ajout = ajouts[cle];
+      if (!ajout || typeof ajout !== "object" || Array.isArray(ajout)) return;
+      const copie = {};
+      Object.keys(ajout).sort().forEach(nom => {
+        if (Array.isArray(ajout[nom]) && ajout[nom].length) copie[nom] = [...new Set(ajout[nom])].sort((a, b) => a - b);
+      });
+      if (Object.keys(ajout).length && !Object.keys(copie).length) return;
+      sortie[cle] = copie;
+    });
+    return JSON.stringify(sortie);
+  }
+
+  function memesAjouts(a, b) {
+    return ajoutsCanoniques(a) === ajoutsCanoniques(b);
+  }
+
+  // Après une relecture : ce que la fenêtre voulait pour la classe est-il
+  // en place ? (La case de la classe si la liste des applis est partie ;
+  // les records et chaque liste envoyés.) Sert quand la réponse de l'écriture
+  // s'est perdue (point 6) : en place = enregistré, sinon à refaire.
+  function classeConforme(pourLaClasse, b, neuf) {
+    if (pourLaClasse.applis && neuf.classeOuverte !== b.classeOuverte) return false;
+    const voulu = pourLaClasse.reglages && pourLaClasse.reglages[b.cle];
+    if (!voulu) return true;
+    if ("records" in voulu && neuf.records !== b.records) return false;
+    return Object.keys(voulu).every(nom => {
+      if (nom === "records") return true;
+      const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
+      const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
+      return a === c;
+    });
   }
 
   // Les gestes d'un élève (ce que le brouillon change pour lui), dans la
@@ -2880,6 +2960,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     }
   }
 
+  // La relecture qui suit un enregistrement, bornée elle aussi (correctif,
+  // point 4) : avant, un « tableau » qui ne répondait pas laissait la fenêtre
+  // grisée pour toujours. Vrai si la classe est relue, faux sinon.
+  async function relireBornee(classeId) {
+    const garde = new AbortController();
+    const minuteur = setTimeout(() => garde.abort(), DELAI_ACCES_MS);
+    try {
+      return Boolean(await ouvrirClasse(classeId, {signal: garde.signal}));
+    } catch (_) {
+      return false;
+    } finally {
+      clearTimeout(minuteur);
+    }
+  }
+
+  // Le mot de la fin, quand la relecture n'a pas pu se faire (point 4).
+  const SANS_VERIFICATION = "La vérification n’a pas pu se faire : recharge la page pour voir l’état.";
+
   async function enregistrerRegler() {
     if (!reglage || reglageEnCours || !classe || droitClasse !== "proprietaire") return;
     const {depart, brouillon: b, classeId} = reglage;
@@ -2904,105 +3002,198 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!reglage || reglage.brouillon !== b || !classe || classe.id !== classeId) return;
     const session = generation;
     const encoreLa = () => generation === session && Boolean(jeton);
-    reglageEnCours = true;
-    occuperRegler(true);
-    messager("regler-message", "Enregistrement…", "info");
-    let classeEcrite = false;
-    const reussis = [];
-    const rates = [];
-    let erreurClasse = null;
-    let coupe = null;   // un 401 : la session est finie
     // La classe ouverte est-elle toujours celle de la fenêtre ? (Supprimée
     // ou plus partagée pendant l'envoi : quitterLaClasse l'a refermée.)
     const memeClasse = () => Boolean(classe) && classe.id === classeId;
-    if (pourLaClasse) {
-      try {
-        await appelBorne("classes.modifier", Object.assign({classe_id: classeId}, pourLaClasse));
-        classeEcrite = true;
-      } catch (erreur) {
-        if (erreur.statut === 401) coupe = erreur; else erreurClasse = erreur;
-      }
-    }
-    // La classe refusée : on n'envoie rien pour les élèves (le brouillon
-    // formait un tout — « seulement pour Rania » n'a de sens que si la
-    // classe est bien fermée).
-    if (!coupe && !erreurClasse) {
-      for (const {eleve, gestes} of aChanger) {
-        if (!encoreLa() || !memeClasse()) break;
-        let ajouts = eleve.ajouts || {};
-        gestes.forEach(geste => { ajouts = ajoutsApres(ajouts, geste); });
+    reglageEnCours = true;
+    occuperRegler(true);
+    messager("regler-message", "Enregistrement…", "info");
+    // Le verrou est rendu dans un finally gardé par la génération (point 4) :
+    // quoi qu'il arrive, la fenêtre se libère — sauf si la page a changé de
+    // session entre-temps (oublierEtat l'a déjà rendu, pour la session neuve).
+    try {
+      let classeEcrite = false;
+      let erreurClasse = null;   // refusée (statut reçu) ou sans réponse (statut 0)
+      let coupe = null;          // un 401 : la session est finie
+      const reussis = [];        // écrits, réponse reçue
+      const rates = [];          // {eleve, erreur} : refusés, ou sans réponse (statut 0)
+      if (pourLaClasse) {
         try {
-          await appelBorne("eleves.acces", {eleve_id: eleve.id, avant: eleve.ajouts || {}, ajouts});
-          reussis.push(eleve);
+          await appelBorne("classes.modifier", Object.assign({classe_id: classeId}, pourLaClasse));
+          classeEcrite = true;
         } catch (erreur) {
-          if (erreur.statut === 401) { coupe = erreur; break; }
-          rates.push({eleve, erreur});
+          if (erreur.statut === 401) coupe = erreur;
+          else {
+            erreurClasse = erreur;
+            if (erreur.statut === 409 && encoreLa() && memeClasse()) poserEtatDeClasse(erreur.donnees);
+          }
         }
       }
-    }
-    // Déconnecté (et peut-être reconnecté) pendant l'envoi : cette réponse
-    // n'est plus à cette page. Elle ne touche ni la fenêtre, ni l'état, ni
-    // la session neuve — un vieux 401 ne la déconnecte pas (relecture du
-    // lot 3d). oublierEtat a déjà remis reglageEnCours à faux.
-    if (!encoreLa()) return;
-    if (coupe) { reglageEnCours = false; surErreur(coupe, "regler-message"); return; }
-    if (!memeClasse()) { reglageEnCours = false; return; }
-    // Tout relire : la classe, ses élèves, ce que chacun voit (le serveur a
-    // pu ranger autrement, un autre onglet a pu écrire).
-    await ouvrirClasse(classeId);
-    if (!encoreLa()) return;
-    reglageEnCours = false;
-    if (!memeClasse()) return;
-    const fait = [];
-    if (classeEcrite) fait.push(`la ${libelle}`);
-    if (reussis.length) fait.push(reussis.length === 1 ? (nomAffiche(reussis[0]) || "un élève") : `${reussis.length} élèves`);
-    if (!erreurClasse && !rates.length) {
-      occuperRegler(false);
-      if ($("regler").open) $("regler").close();
-      messager("message-appli", `${nom} : réglages enregistrés (${fait.join(" et ")}).`, "ok");
-      return;
-    }
-    // Quelque chose n'est pas passé : la fenêtre reste, sur l'état relu, et
-    // dit ce qui est enregistré et ce qui ne l'est pas.
-    if ($("regler").open && reglage && reglage.brouillon === b) {
-      const depliees = reglage.deplies;
-      const neuf = etatReglage(b.cle);
-      reglage = {depart: neuf, brouillon: copierEtat(neuf), classeId, deplies: depliees};
-      dessinerRegler();
-      occuperRegler(false);
-      // Une phrase finit par un point, sans en doubler un (« Alice G. »).
+      // La classe refusée : on n'envoie rien pour les élèves (le brouillon
+      // formait un tout — « seulement pour Rania » n'a de sens que si la
+      // classe est bien fermée).
+      if (!coupe && !erreurClasse) {
+        for (const {eleve, gestes} of aChanger) {
+          if (!encoreLa() || !memeClasse()) break;
+          let ajouts = eleve.ajouts || {};
+          gestes.forEach(geste => { ajouts = ajoutsApres(ajouts, geste); });
+          try {
+            await appelBorne("eleves.acces", {eleve_id: eleve.id, avant: eleve.ajouts || {}, ajouts});
+            reussis.push(eleve);
+          } catch (erreur) {
+            if (erreur.statut === 401) { coupe = erreur; break; }
+            if (erreur.statut === 409 && encoreLa()) poserAccesDeLEleve(eleve, erreur.donnees);
+            rates.push({eleve, erreur, ajouts});
+          }
+        }
+      }
+      // Déconnecté (et peut-être reconnecté) pendant l'envoi : cette réponse
+      // n'est plus à cette page. Elle ne touche ni la fenêtre, ni l'état, ni
+      // la session neuve — un vieux 401 ne la déconnecte pas (relecture du
+      // lot 3d). oublierEtat a déjà remis reglageEnCours à faux.
+      if (!encoreLa()) return;
+      if (coupe) { surErreur(coupe, "regler-message"); return; }
+      if (!memeClasse()) return;
+      // Tout relire : la classe, ses élèves, ce que chacun voit (le serveur a
+      // pu ranger autrement, un autre onglet a pu écrire). Bornée (point 4) ;
+      // et si elle ne passe pas, rien n'est redessiné dessus (point 5).
+      const relu = await relireBornee(classeId);
+      if (!encoreLa()) return;
+      if (!memeClasse()) return;
+      const neuf = relu ? etatReglage(b.cle) : null;
+      // Le bilan (point 6) : « refusé » (un statut reçu) n'est pas
+      // « sans réponse » (statut 0). Sans réponse mais relu : ce qui est en
+      // place est enregistré, le reste est à refaire ; pas relu : peut-être.
+      const fait = [];
+      const manques = [];
+      let incertain = false;
+      let finDite = false;   // la phrase de la classe changée ailleurs dit déjà « la fenêtre montre l'état actuel »
       const phrase = texte => (/[.!?…]$/.test(texte) ? texte : `${texte}.`);
-      const morceaux = [];
-      if (fait.length) morceaux.push(phrase(`Enregistré : ${fait.join(" et ")}`));
-      if (erreurClasse) morceaux.push(phrase(`Rien d’enregistré pour la ${libelle} : ${raisonDe(erreurClasse)}`));
-      // Un 409 : le serveur dit « refais ton clic » (fenêtre d'avant le 5b) ;
-      // ici la fin du message le dit déjà.
-      rates.forEach(({eleve, erreur}) => morceaux.push(phrase(`Pas enregistré pour ${nomAffiche(eleve) || "un élève sans prénom"} : `
-        + (erreur.statut === 409 ? "un autre onglet l’a changé entre-temps" : raisonDe(erreur)))));
-      morceaux.push("La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque.");
-      messager("regler-message", morceaux.join(" "), "erreur");
+      const prenomDe = eleve => nomAffiche(eleve) || "un élève sans prénom";
+      if (pourLaClasse) {
+        const sansReponse = erreurClasse && !erreurClasse.statut;
+        if (classeEcrite) fait.push(`la ${libelle}`);
+        else if (sansReponse && neuf && classeConforme(pourLaClasse, b, neuf)) {
+          // Écrite, la réponse perdue : confirmée par la relecture. Les
+          // élèves, eux, n'ont pas été envoyés (la classe n'avait pas
+          // répondu) : ils restent à faire, la fenêtre le dit.
+          fait.push(`la ${libelle}`);
+          if (aChanger.length) manques.push(`Pas enregistré pour ${aChanger.map(({eleve}) => prenomDe(eleve)).join(", ")} : la ${libelle} n’avait pas répondu.`);
+        }
+        else if (erreurClasse && erreurClasse.statut === 409) {
+          // Un autre onglet a changé la classe (point 1) : rien n'est parti,
+          // ni pour elle ni pour les élèves ; la fenêtre, relue, le dit.
+          finDite = relu;
+          manques.push(relu
+            ? `La ${libelle} a été changée ailleurs : la fenêtre montre l’état actuel, refais ton réglage.`
+            : `La ${libelle} a été changée ailleurs : rien n’est enregistré.`);
+        }
+        else if (!sansReponse) manques.push(phrase(`Rien d’enregistré pour la ${libelle} : ${raisonDe(erreurClasse)}`));
+        else if (neuf) manques.push(phrase(`Pas enregistré pour la ${libelle} : ${raisonDe(erreurClasse)}`));
+        else { incertain = true; manques.push(`Peut-être enregistré pour la ${libelle} (le serveur n’a pas répondu).`); }
+      }
+      const confirmes = reussis.slice();
+      rates.forEach(({eleve, erreur, ajouts}) => {
+        const sansReponse = !erreur.statut;
+        if (sansReponse && neuf) {
+          const relue = (eleves || []).find(autre => autre.id === eleve.id);
+          if (relue && memesAjouts(relue.ajouts || {}, ajouts)) { confirmes.push(eleve); return; }
+        }
+        if (!sansReponse) {
+          manques.push(phrase(`Pas enregistré pour ${prenomDe(eleve)} : ${erreur.statut === 409 ? "un autre onglet l’a changé entre-temps" : raisonDe(erreur)}`));
+        } else if (neuf) {
+          manques.push(phrase(`Pas enregistré pour ${prenomDe(eleve)} : ${raisonDe(erreur)}`));
+        } else {
+          incertain = true;
+          manques.push(`Peut-être enregistré pour ${prenomDe(eleve)} (le serveur n’a pas répondu).`);
+        }
+      });
+      if (confirmes.length) fait.push(confirmes.length === 1 ? prenomDe(confirmes[0]) : `${confirmes.length} élèves`);
+      if (!manques.length && relu) {
+        occuperRegler(false);
+        if ($("regler").open) $("regler").close();
+        messager("message-appli", `${nom} : réglages enregistrés (${fait.join(" et ")}).`, "ok");
+        return;
+      }
+      // Quelque chose n'est pas passé, ou n'a pas pu être vérifié : la
+      // fenêtre reste et dit ce qui est enregistré et ce qui ne l'est pas.
+      // Relue : sur l'état relu. Pas relue : telle quelle (jamais un
+      // brouillon « actuel » sur des données qui ne le sont pas) ; son
+      // prochain « Enregistrer » part avec « avant », le serveur tranche.
+      if ($("regler").open && reglage && reglage.brouillon === b) {
+        if (neuf) {
+          const depliees = reglage.deplies;
+          reglage = {depart: neuf, brouillon: copierEtat(neuf), classeId, deplies: depliees};
+          dessinerRegler();
+        }
+        occuperRegler(false);
+        const morceaux = [];
+        if (fait.length) morceaux.push(phrase(`Enregistré : ${fait.join(" et ")}`));
+        morceaux.push(...manques);
+        if (!finDite) morceaux.push(relu ? "La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque." : SANS_VERIFICATION);
+        messager("regler-message", morceaux.join(" "), incertain || !relu || manques.length ? "erreur" : "ok");
+      }
+    } finally {
+      if (encoreLa()) {
+        reglageEnCours = false;
+        // La ligne du haut (et les boutons de la carte, grisés pendant
+        // l'enregistrement par poserQuiVoit) suivent le verrou rendu.
+        if (classe && vue === "appli") poserQuiVoit();
+      }
     }
   }
 
   // « Ouvrir à toute la 306 », depuis la carte d'un onglet grisé : un geste
   // sans perte (rien n'est effacé, un autre geste le retire), comme cocher
-  // la case dans « Régler … ».
+  // la case dans « Régler … ». Correctif (points 2, 3, 4) : il prend le même
+  // verrou que la fenêtre (reglageEnCours — « Choisir quelques élèves » et
+  // « Régler » attendent qu'il ait fini), il est borné, il envoie « avant »,
+  // et une réponse d'une ancienne session ou d'une autre classe ne fait rien.
   async function ouvrirATouteLaClasse() {
     if (!classe || droitClasse !== "proprietaire" || reglageEnCours) return;
     const cle = appliAffichee;
     const nom = nomDeLAppli(cle);
     const classeId = classe.id;
-    const bouton = $("af-toute");
-    bouton.disabled = true;
+    const session = generation;
+    const encoreLa = () => generation === session && Boolean(jeton);
+    const memeClasse = () => Boolean(classe) && classe.id === classeId;
+    reglageEnCours = true;
+    ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = true; });
     try {
       const applis = ((classe.applis) || []).filter(autre => autre !== cle).concat([cle]);
-      await api("classes.modifier", {classe_id: classeId, applis});
-      await ouvrirClasse(classeId);
-      if (classe && classe.id === classeId) messager("message-appli", `${nom} ouvert à toute la ${classe.libelle} : la tuile apparaît dans l’espace des élèves.`, "ok");
-    } catch (erreur) {
-      surErreur(erreur, "message-appli");
+      let erreur = null;
+      try {
+        await appelBorne("classes.modifier", {classe_id: classeId, applis, avant: {applis: ((classe.applis) || []).slice()}});
+      } catch (e) {
+        erreur = e;
+      }
+      if (!encoreLa()) return;
+      if (erreur && erreur.statut === 401) { surErreur(erreur, "message-appli"); return; }
+      if (!memeClasse()) return;
+      if (erreur && erreur.statut === 409) poserEtatDeClasse(erreur.donnees);
+      const relu = await relireBornee(classeId);
+      if (!encoreLa() || !memeClasse()) return;
+      const ouverte = ((classe.applis) || []).includes(cle);
+      if (relu && ouverte) {
+        messager("message-appli", `${nom} ouvert à toute la ${classe.libelle} : la tuile apparaît dans l’espace des élèves.`, "ok");
+      } else if (erreur && erreur.statut === 409) {
+        messager("message-appli", relu
+          ? `La ${classe.libelle} a été changée ailleurs : l’onglet montre l’état actuel, réessaie.`
+          : `La ${classe.libelle} a été changée ailleurs : rien n’est enregistré. ${SANS_VERIFICATION}`, "erreur");
+      } else if (erreur && erreur.statut) {
+        messager("message-appli", erreur.message, "erreur");
+      } else if (erreur) {
+        messager("message-appli", relu
+          ? `${nom} : pas enregistré pour la ${classe.libelle}. ${raisonDe(erreur)}`
+          : `${nom} : peut-être ouvert à la ${classe.libelle} (le serveur n’a pas répondu). ${SANS_VERIFICATION}`, "erreur");
+      } else {
+        messager("message-appli", `${nom} ouvert à toute la ${classe.libelle}. ${SANS_VERIFICATION}`, "erreur");
+      }
     } finally {
-      bouton.disabled = false;
+      // Les boutons se libèrent toujours (poserQuiVoit les suit aussi) ; le
+      // verrou, seulement pour la session qui l'a pris.
+      ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = false; });
+      if (encoreLa()) reglageEnCours = false;
     }
   }
 
@@ -4638,6 +4829,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // Correctif des lots 5 : vrai si la classe est à l'écran, faux si
   // l'ouverture est périmée ; avec {remonter: true} (allerDansUneClasse), une
   // panne remonte au lieu d'être dite ici.
+  // Lot 5b, correctif (point 4) : {signal} borne la lecture — la relecture
+  // qui suit un enregistrement (relireBornee) s'arrête avec sa garde, le
+  // tableau ET le moteur ; arrêtée, elle rend faux sans rien dire (l'appelant
+  // le dit).
   async function ouvrirClasse(id, options) {
     // Un changement d'onglet encore en route ne vaut plus : on relit tout.
     // Lot 4b-bis (relecture Codex du 24/10) : le numéro de CETTE ouverture —
@@ -4645,6 +4840,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // l'attente le rend périmé, et sa réponse n'est plus posée dans la page.
     demandeAppli += 1;
     const numero = demandeAppli;
+    const signal = options && options.signal;
     try {
       const memeClasse = Boolean(classe) && classe.id === id;
       const connue = classes.find(uneClasse => uneClasse.id === id);
@@ -4655,7 +4851,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const voulue = memeClasse && APPLIS.some(appli => appli.cle === appliAffichee)
         ? appliAffichee
         : appliAMontrer(lesApplisConnues(connue ? connue.applis : ["defi-tables"]), lireChoixAppli());
-      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
+      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}, {signal}), avecSignal(chargerMoteurDe(voulue), signal)]);
       if (numero !== demandeAppli || !jeton) return false;
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
@@ -4702,10 +4898,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       return true;
     } catch (erreur) {
       if (numero !== demandeAppli || !jeton) return false;
+      // Arrêtée par sa garde (relireBornee) : rien à dire ici.
+      if (erreur && erreur.name === "AbortError") return false;
       if (options && options.remonter) throw erreur;
       surErreur(erreur, zoneClasses());
       return false;
     }
+  }
+
+  // Une attente qui s'arrête avec le signal (le chargement d'un moteur n'a
+  // pas de signal à lui) ; sans signal, la promesse telle quelle.
+  function avecSignal(promesse, signal) {
+    if (!signal) return promesse;
+    return new Promise((resolve, reject) => {
+      const abandon = () => reject(Object.assign(new Error("aborted"), {name: "AbortError"}));
+      if (signal.aborted) { abandon(); return; }
+      signal.addEventListener("abort", abandon, {once: true});
+      promesse.then(resolve, reject);
+    });
   }
 
   // Un menu ouvert reste dans l'écran (correctif des lots 5, point 6) : au

@@ -451,6 +451,85 @@ function reglages_recus(mixed $recus, array $actuels): array
     return $sortie;
 }
 
+// ------------------------------------------- « avant » d'une classe (lot 5b, correctif)
+//
+// Relecture Codex du 30/10/2026, point 1 : classes.modifier reçoit, comme
+// eleves.acces, l'état que la page croit rangé — {applis: [...]} (la liste
+// des applis de la classe) et/ou {reglages: {<cle>: {...}}} (les réglages
+// de l'appli que la fenêtre règle, tels que tableau les a rendus : « {} »
+// quand tout est ouvert). Lecture STRICTE : une forme fausse est refusée
+// (400), rien n'est deviné. Rend la forme CANONIQUE, prête à comparer :
+// applis dans l'ordre du catalogue (les inconnues ignorées — un vieux nom
+// resté dans une ligne ne fait pas un conflit), réglages comme reglages_recus
+// les range (listes triées, « tous » = rien, « true » = rien).
+function avant_de_classe_recu(mixed $recu): array
+{
+    if (!is_array($recu) || ($recu !== [] && array_is_list($recu))) {
+        throw new InvalidArgumentException("État d'avant illisible.");
+    }
+    foreach (array_keys($recu) as $cle) {
+        if (!in_array($cle, ['applis', 'reglages'], true)) throw new InvalidArgumentException("État d'avant illisible.");
+    }
+    $sortie = [];
+    if (array_key_exists('applis', $recu)) {
+        if (!is_array($recu['applis']) || !array_is_list($recu['applis'])) throw new InvalidArgumentException("État d'avant illisible.");
+        foreach ($recu['applis'] as $cle) {
+            if (!is_string($cle)) throw new InvalidArgumentException("État d'avant illisible.");
+        }
+        $sortie['applis'] = applis_canoniques($recu['applis']);
+    }
+    if (array_key_exists('reglages', $recu)) {
+        // Les clés d'appli reçues, même celles dont le réglage canonique est
+        // vide (« {} » = tout ouvert) : c'est pour ELLES qu'on compare.
+        $brut = $recu['reglages'];
+        if (!is_array($brut) || ($brut !== [] && array_is_list($brut))) throw new InvalidArgumentException("État d'avant illisible.");
+        $sortie['reglages'] = [];
+        foreach ($brut as $cle => $reglage) {
+            if (!is_string($cle) || !appli_connue($cle)) throw new InvalidArgumentException("État d'avant illisible.");
+            if (!is_array($reglage) || ($reglage !== [] && array_is_list($reglage))) throw new InvalidArgumentException("État d'avant illisible.");
+            // « {} » : tout ouvert — aussi pour une appli sans réglage (Anzan).
+            $canon = $reglage === [] ? [] : reglages_recus([$cle => $reglage], []);
+            $sortie['reglages'][$cle] = reglage_canonique($canon[$cle] ?? []);
+        }
+    }
+    return $sortie;
+}
+
+// La liste des applis d'une classe, dans l'ordre du catalogue, sans
+// doublon ni inconnue — la même forme pour la page et pour la base.
+function applis_canoniques(array $liste): array
+{
+    $sortie = [];
+    foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
+        if (in_array($cle, $liste, true)) $sortie[] = $cle;
+    }
+    return $sortie;
+}
+
+function reglage_canonique(array $reglage): array
+{
+    ksort($reglage);
+    return $reglage;
+}
+
+// La page croit-elle encore ce que la ligne contient ? Comparé sous le
+// verrou de la ligne (classes.modifier), seulement sur ce que « avant »
+// nomme : la liste des applis si elle est donnée, et, appli par appli, les
+// réglages donnés — ceux des autres applis ne comptent pas.
+function meme_etat_de_classe(array $avant, array $ligne): bool
+{
+    if (array_key_exists('applis', $avant)) {
+        if ($avant['applis'] !== applis_canoniques(explode(',', (string)($ligne['applis'] ?? '')))) return false;
+    }
+    if (array_key_exists('reglages', $avant)) {
+        $actuels = reglages_de_classe($ligne);
+        foreach ($avant['reglages'] as $cle => $reglage) {
+            if ($reglage !== reglage_canonique($actuels[$cle] ?? [])) return false;
+        }
+    }
+    return true;
+}
+
 // ---------------------------------------------------- ce qu'un élève a EN PLUS
 //
 // Lot « Qui voit quoi » (22/10/2026, demande de Gwenaël : « ouvrir Anzan à

@@ -505,7 +505,7 @@ function classeRejouee() {
      function appliquerDroits() {} function poserAppli() { poses.push("onglets"); } function dessinerTableau() { poses.push("tableau"); }
      function lireChoixAppli() { return ""; } function retenirChoixAppli() {} function lireSplat() { return {}; } function poserOnglets() { poses.push("onglets"); return []; }
      const redessin = {demander() { poses.push("tableau"); }};
-     ${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "appliAMontrer", "reporterAccesDeLaListe", "ouvrirClasse", "afficherAppli"].map(n => fonction(n)).join("\n")}
+     ${["lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "appliAMontrer", "reporterAccesDeLaListe", "ouvrirClasse", "avecSignal", "afficherAppli"].map(n => fonction(n)).join("\n")}
      // « Se déconnecter », pour ce qui compte ici (la vraie oublierEtat le fait : un test le vérifie).
      function deconnecter() { jeton = ""; classe = null; eleves = []; tableaux = {}; demandeAppli += 1; }
      return {ouvrirClasse, afficherAppli, deconnecter, etat: () => ({classe, eleves, appliAffichee}),

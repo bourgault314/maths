@@ -349,7 +349,7 @@ test("décocher un niveau ou une opération : la liste cochée part à « Enregi
   cocher(caseNumero(r.corps(), "niveaux", 3), false);
   assert.deepEqual(r.serveur.appels, [], "rien ne part au clic");
   await r.f.enregistrerRegler();
-  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 7, reglages: {coffres: {niveaux: [1, 2]}}}]], "seul le groupe touché part");
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 7, reglages: {coffres: {niveaux: [1, 2]}}, avant: {applis: ["coffres"], reglages: {coffres: {}}}}]], "seul le groupe touché part (avec « avant »)");
   assert.deepEqual(r.journal, ["ouvrirClasse 7"]);
   assert.equal(r.$("message-appli").textContent, "Coffres magiques : réglages enregistrés (la CM1).");
   const deux = reglerRejoue({classe: classeCM1(["coffres"]), eleves: eleves(), appli: "coffres"});

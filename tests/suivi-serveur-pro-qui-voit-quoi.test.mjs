@@ -163,18 +163,26 @@ test("personne ne voit l'appli : pas de ligne, la carte « … est fermé à la 
 test("« Ouvrir à toute la 306 » : un seul appel (la liste des applis), la classe relue, le mot ; un collègue ne peut pas", async () => {
   const r = banc({classe: classe405({libelle: "306"}), appli: "coffres"});
   await r.f.ouvrirATouteLaClasse();
-  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 7, applis: ["defi-tables", "splat", "coffres"]}]]);
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 7, applis: ["defi-tables", "splat", "coffres"], avant: {applis: ["defi-tables", "splat"]}}]],
+    "avec « avant » : la liste telle que la page la connaît (correctif 5b)");
   assert.deepEqual(r.journal, ["ouvrirClasse 7"]);
   assert.deepEqual(message(r, "message-appli"), ["Coffres magiques ouvert à toute la 306 : la tuile apparaît dans l’espace des élèves.", "message ok", false]);
-  assert.equal(r.$("af-toute").disabled, false);
+  assert.deepEqual([r.$("af-toute").disabled, r.$("af-quelques").disabled, r.f.etat().reglageEnCours], [false, false, false], "les deux boutons et le verrou se libèrent");
   const c = banc({appli: "coffres", droit: "ecriture"});
   await c.f.ouvrirATouteLaClasse();
   assert.deepEqual(c.serveur.appels, []);
   const panne = banc({appli: "coffres"});
   panne.serveur.panne("classes.modifier", panne.serveur.erreur("Le serveur a eu un souci.", 500));
   await panne.f.ouvrirATouteLaClasse();
-  assert.deepEqual(panne.journal, ["surErreur message-appli 500"]);
+  assert.deepEqual(panne.journal, ["ouvrirClasse 7"], "relue quand même (il a peut-être écrit) ; le refus est dit par la page, pas par surErreur");
+  assert.deepEqual(message(panne, "message-appli"), ["Le serveur a eu un souci.", "message erreur", false]);
   assert.equal(panne.$("af-toute").disabled, false, "le bouton se libère");
+  // Un 401 : la déconnexion, comme partout.
+  const fini = banc({appli: "coffres"});
+  fini.serveur.panne("classes.modifier", fini.serveur.erreur("Session expirée.", 401));
+  await fini.f.ouvrirATouteLaClasse();
+  assert.deepEqual(fini.journal, ["surErreur message-appli 401"]);
+  assert.equal(fini.f.etat().jeton, "");
 });
 
 // ------------------------------------------------------------ la fenêtre : le brouillon
@@ -253,7 +261,7 @@ test("Enregistrer : la classe d'abord (seul ce qui a changé), puis chaque élè
   cocher(caseDe(ligneDe(r, 6), "Rania"), true);
   await r.f.enregistrerRegler();
   assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [
-    ["classes.modifier", {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4, 5]}}}],
+    ["classes.modifier", {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4, 5]}}, avant: {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2, 5]}}}}],
     ["eleves.acces", {eleve_id: 1, avant: {}, ajouts: {splat: {mondes: [3]}}}],
     ["eleves.acces", {eleve_id: 16, avant: {splat: {mondes: [3]}}, ajouts: {}}],
     ["eleves.acces", {eleve_id: 22, avant: {"flash-anzan": {}}, ajouts: {"flash-anzan": {}, splat: {mondes: [6]}}}]
@@ -333,7 +341,7 @@ test("décocher la classe : la question d'abord (« sauf ceux qui l'ont en plus 
   await r.f.enregistrerRegler();
   assert.deepEqual(r.questions.map(q => q.texte), ["Retirer SPLAT! de la classe 405 ? La tuile disparaît de l’espace des élèves (sauf ceux qui l’ont en plus). Leur travail reste enregistré : rien n’est effacé."]);
   assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [
-    ["classes.modifier", {classe_id: 7, applis: ["defi-tables"]}],
+    ["classes.modifier", {classe_id: 7, applis: ["defi-tables"], avant: {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2, 5]}}}}],
     ["eleves.acces", {eleve_id: 30, avant: {}, ajouts: {splat: {}}}]
   ], "Lucas n'est pas touché : son « seulement monde 3 » reste tel quel");
   assert.deepEqual(r.serveur.etat.eleves.find(e => e.id === 16).ajouts, {splat: {mondes: [3]}});
@@ -402,7 +410,7 @@ test("🏆 Les records : une case « Pour la classe » de Défi tables ; décoch
   assert.equal(r.corps().premier(n => n.className === "deja").textContent, "Toute la 405 le voit déjà.");
   cocher(records, false);
   await r.f.enregistrerRegler();
-  assert.deepEqual(r.serveur.appels.map(a => a.corps), [{classe_id: 7, reglages: {"defi-tables": {records: false}}}]);
+  assert.deepEqual(r.serveur.appels.map(a => a.corps), [{classe_id: 7, reglages: {"defi-tables": {records: false}}, avant: {applis: ["defi-tables", "splat"], reglages: {"defi-tables": {}}}}]);
   const ferme = banc({appli: "defi-tables", classe: classe405({reglages: {"defi-tables": {records: false}}})});
   ferme.f.ouvrirRegler("defi-tables");
   assert.equal(caseDe(ferme.corps(), "🏆 Les records").checked, false);
@@ -537,6 +545,440 @@ test("un 401 dans la session : « Session terminée », la déconnexion — rien
   await c.f.enregistrerRegler();
   assert.deepEqual(c.serveur.appels.map(a => a.action), ["classes.modifier"]);
   assert.deepEqual(c.journal, ["surErreur regler-message 401"]);
+});
+
+// ------------------------------------------------------------ le correctif de la relecture Codex (30/10/2026)
+//
+// Huit points, tous fondés, corrigés d'un coup. Les tests « réels »
+// (reel: true) jouent la VRAIE api() sur un faux fetch sensible au signal et
+// la VRAIE ouvrirClasse() ; les autres, le banc simple (ouvrirClasse remplacée,
+// pilotable : relue, en panne, pendante).
+
+const reel = (o = {}) => banc(Object.assign({reel: true}, o));
+const fetchDe = (r, action) => r.serveur.appelsFetch.filter(a => a.action === action);
+// Fini avant `ms` millisecondes ? (sans bloquer le test si ce n'est pas le cas)
+const finiAvant = (promesse, ms) => Promise.race([promesse.then(() => true), new Promise(r => setTimeout(() => r(false), ms))]);
+
+test("conflit de classe (point 1) — un autre onglet a changé la 405 : « avant » part, le serveur refuse (409), rien n'est écrasé, aucun élève n'est envoyé, la fenêtre se remet sur l'état relu et le dit", async () => {
+  // Le scénario de Codex : B ferme le monde 5 ; A, resté sur [1, 2, 5], ouvre le 4 et coche Alice au monde 3.
+  const r = banc();
+  r.f.ouvrirRegler("splat");
+  cocher(caseNumero(r.corps(), "mondes", 4), true);
+  cocher(caseDe(ligneDe(r, 3), "Alice"), true);
+  r.serveur.changerLaClasseAilleurs({reglages: {splat: {mondes: [1, 2]}}});
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [
+    ["classes.modifier", {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4, 5]}}, avant: {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2, 5]}}}}]
+  ], "« avant » : ce que la page croyait ; le refus arrête tout — Alice n'est pas envoyée");
+  assert.deepEqual(r.serveur.etat.classe.reglages, {splat: {mondes: [1, 2]}}, "le monde 5 n'est PAS rouvert");
+  assert.deepEqual(r.serveur.etat.eleves.find(e => e.id === 1).ajouts, {}, "Alice : rien");
+  assert.deepEqual(r.journal, ["ouvrirClasse 7"], "relue");
+  assert.equal(r.boite().open, true, "la fenêtre reste");
+  assert.deepEqual([4, 5].map(n => caseNumero(r.corps(), "mondes", n).checked), [false, false], "redessinée sur l'état relu : ni le 4 ni le 5");
+  assert.deepEqual(message(r), ["La 405 a été changée ailleurs : la fenêtre montre l’état actuel, refais ton réglage.", "message erreur", false]);
+  assert.equal(r.f.etat().reglageEnCours, false);
+  assert.ok(r.corps().tous(n => n.tag === "input").every(c => !c.disabled), "libre");
+  // A refait son geste : cette fois « avant » est l'état relu, le serveur accepte, le 4 seul s'ouvre.
+  cocher(caseNumero(r.corps(), "mondes", 4), true);
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.appels.at(-1).corps, {classe_id: 7, reglages: {splat: {mondes: [1, 2, 4]}}, avant: {applis: ["defi-tables", "splat"], reglages: {splat: {mondes: [1, 2]}}}});
+  assert.deepEqual(r.serveur.etat.classe.reglages, {splat: {mondes: [1, 2, 4]}});
+  assert.equal(r.boite().open, false);
+  // Les applis : B a ajouté Anzan ; A, en retard, ouvre Coffres à la classe → refusé, Anzan reste.
+  const a = banc({appli: "coffres"});
+  a.f.ouvrirRegler("coffres");
+  cocher(caseDe(a.corps(), "Ouvert à toute la 405"), true);
+  a.serveur.changerLaClasseAilleurs({applis: ["defi-tables", "flash-anzan", "splat"]});
+  await a.f.enregistrerRegler();
+  assert.deepEqual(a.serveur.appels.at(-1).corps.avant, {applis: ["defi-tables", "splat"], reglages: {coffres: {}}});
+  assert.deepEqual(a.serveur.etat.classe.applis, ["defi-tables", "flash-anzan", "splat"], "Anzan n'est pas retiré");
+  assert.equal(caseDe(a.corps(), "Ouvert à toute la 405").checked, false, "relue : Coffres toujours fermé");
+  assert.equal(a.$("regler-message").textContent, "La 405 a été changée ailleurs : la fenêtre montre l’état actuel, refais ton réglage.");
+  cocher(caseDe(a.corps(), "Ouvert à toute la 405"), true);
+  await a.f.enregistrerRegler();
+  assert.deepEqual(a.serveur.etat.classe.applis, ["defi-tables", "flash-anzan", "splat", "coffres"], "refait : Coffres s'ajoute, Anzan reste");
+  // Le raccourci aussi envoie « avant », et dit le conflit (l'onglet relu).
+  const c = banc({appli: "coffres"});
+  c.serveur.changerLaClasseAilleurs({applis: ["defi-tables", "flash-anzan", "splat"]});
+  await c.f.ouvrirATouteLaClasse();
+  assert.deepEqual(c.serveur.appels.at(-1).corps, {classe_id: 7, applis: ["defi-tables", "splat", "coffres"], avant: {applis: ["defi-tables", "splat"]}});
+  assert.deepEqual(c.serveur.etat.classe.applis, ["defi-tables", "flash-anzan", "splat"]);
+  assert.deepEqual(message(c, "message-appli"), ["La 405 a été changée ailleurs : l’onglet montre l’état actuel, réessaie.", "message erreur", false]);
+  assert.deepEqual(c.f.etat().classe.applis, ["defi-tables", "flash-anzan", "splat"], "la page a l'état vrai");
+  // Le serveur : « avant » comparé sous le verrou de la ligne, 409 avec l'état actuel.
+  const api = (await import("node:fs")).readFileSync(new URL("../_serveur/public/api/prof.php", import.meta.url), "utf8");
+  const modifier = api.slice(api.indexOf("case 'classes.modifier':"), api.indexOf("case 'classes.supprimer':"));
+  assert.match(modifier, /avant_de_classe_recu\(\$corps\['avant'\]\)/);
+  assert.match(modifier, /'SELECT \* FROM classes WHERE id = \?' \. pour_mise_a_jour\(\$pdo\)/, "la ligne verrouillée");
+  assert.match(modifier, /if \(\$avant !== null && !meme_etat_de_classe\(\$avant, \$ligne\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['conflit' => true/);
+  assert.match(modifier, /\], 409\);/);
+  assert.doesNotMatch(modifier, /CREATE TRIGGER/);
+});
+
+test("raccourci et fenêtre en même temps (point 2) — un seul verrou : « Ouvrir à toute la … » en route, « Choisir quelques élèves » et « Régler » attendent ; le brouillon se construit sur l'état relu", async () => {
+  for (const mode of ["simple", "reel"]) {
+    const r = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    r.f.poserQuiVoit();
+    r.serveur.tenir(true);
+    const rapide = r.f.ouvrirATouteLaClasse();
+    await tic();
+    assert.equal(r.f.etat().reglageEnCours, true, `${mode} : le raccourci tient le verrou`);
+    assert.deepEqual([r.$("af-toute").disabled, r.$("af-quelques").disabled], [true, true], `${mode} : les deux boutons attendent`);
+    r.f.ouvrirRegler("coffres");
+    assert.equal(r.boite().open, false, `${mode} : la fenêtre ne s'ouvre pas pendant le raccourci`);
+    assert.equal(r.f.etat().reglage, null);
+    await r.f.enregistrerRegler();
+    assert.equal(r.serveur.appels.length, 1, `${mode} : rien d'autre ne part`);
+    r.serveur.lacher();                 // la réponse de classes.modifier
+    if (mode === "reel") { await laisser(); r.serveur.lacher(); }   // puis celle du tableau
+    await rapide;
+    assert.deepEqual(r.serveur.etat.classe.applis, ["defi-tables", "splat", "coffres"]);
+    assert.equal(r.f.etat().reglageEnCours, false, `${mode} : le verrou est rendu`);
+    assert.deepEqual([r.$("af-toute").disabled, r.$("af-quelques").disabled], [false, false]);
+    r.f.ouvrirRegler("coffres");
+    assert.equal(r.boite().open, true);
+    assert.equal(caseDe(r.corps(), "Ouvert à toute la 405").checked, true, `${mode} : le brouillon part de l'état relu — Coffres est ouvert à la classe`);
+    // L'autre ordre : la fenêtre enregistre, le raccourci ne part pas.
+    const f = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    f.serveur.tenir(true);
+    f.f.ouvrirRegler("coffres");
+    cocher(caseDe(f.corps(), "Alice"), true);
+    const fin = f.f.enregistrerRegler();
+    await tic();
+    await f.f.ouvrirATouteLaClasse();
+    assert.deepEqual(f.serveur.appels.map(a => a.action), ["eleves.acces"], `${mode} : le raccourci attend — Coffres n'est pas ouvert à la classe derrière le dos de « seulement Alice »`);
+    f.serveur.lacher();
+    if (mode === "reel") { await laisser(); f.serveur.lacher(); }
+    await fin;
+    assert.deepEqual(f.serveur.etat.classe.applis, ["defi-tables", "splat"], `${mode} : la classe n'a pas Coffres`);
+    assert.deepEqual(f.serveur.etat.eleves.find(e => e.id === 1).ajouts, {coffres: {}}, `${mode} : Alice seule`);
+    assert.deepEqual([f.$("af-toute").disabled, f.$("af-quelques").disabled, f.f.etat().reglageEnCours], [false, false, false],
+      `${mode} : après l'enregistrement de la fenêtre, les boutons de la carte (grisés pendant la relecture) sont libres`);
+  }
+});
+
+test("ancienne session dans le raccourci (point 3) — une réponse d'avant « Se déconnecter » (succès ou 401) ne fait rien : ni relecture, ni message, ni déconnexion de la session neuve ; une autre classe ouverte entre-temps non plus", async () => {
+  for (const mode of ["simple", "reel"]) {
+    for (const refuse of [false, true]) {
+      const r = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+      r.serveur.tenir(true);
+      if (refuse) r.serveur.panne("classes.modifier", r.serveur.erreur("Session expirée.", 401));
+      const fin = r.f.ouvrirATouteLaClasse();
+      await tic();
+      r.f.deconnecter();
+      assert.equal(r.f.etat().reglageEnCours, false, "la déconnexion rend le verrou");
+      r.f.reconnecter();
+      // La session neuve enregistre déjà quelque chose quand la vieille réponse tombe.
+      r.f.ouvrirRegler("coffres");
+      cocher(caseDe(r.corps(), "Alice"), true);
+      const neuf = r.f.enregistrerRegler();
+      await tic();
+      r.serveur.lacher();   // la vieille réponse
+      await fin;
+      const quoi = `${mode}, ${refuse ? "401" : "succès"}`;
+      assert.deepEqual(r.journal, [], `${quoi} : ni relecture ni « Session terminée »`);
+      assert.equal(r.f.etat().jeton, "jeton-2", `${quoi} : la session neuve tient`);
+      assert.equal(r.$("message-appli").textContent, "", `${quoi} : pas de message`);
+      assert.equal(r.f.etat().reglageEnCours, true, `${quoi} : le verrou de la session neuve n'est pas rendu par la vieille`);
+      assert.equal(r.serveur.appels.filter(a => a.action === "tableau").length, 0, `${quoi} : aucune lecture avec le nouveau jeton`);
+      r.serveur.lacher();
+      if (mode === "reel") { await laisser(); r.serveur.lacher(); }
+      await neuf;
+      assert.equal(r.f.etat().reglageEnCours, false);
+    }
+    // Une autre classe ouverte pendant l'attente : la réponse ne la relit pas, ne dit rien.
+    const autre = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    autre.serveur.tenir(true);
+    const fin = autre.f.ouvrirATouteLaClasse();
+    await tic();
+    autre.f.poser({classe: {id: 8, libelle: "306", applis: ["defi-tables"], reglages: {}}});
+    autre.serveur.lacher();
+    await fin;
+    assert.deepEqual(autre.journal, [], `${mode} : la 306 n'est pas relue par la réponse de la 405`);
+    assert.equal(autre.$("message-appli").textContent, "");
+    assert.equal(autre.f.etat().reglageEnCours, false, "le verrou est rendu (même session)");
+  }
+});
+
+test("relecture bornée (point 4) — le tableau qui ne répond pas après l'écriture : la fenêtre se libère dans le délai et dit que la vérification n'a pas pu se faire ; le raccourci aussi", {timeout: 5000}, async () => {
+  assert.match(fonction("relireBornee"), /ouvrirClasse\(classeId, \{signal: garde\.signal\}\)/);
+  assert.match(fonction("relireBornee"), /setTimeout\(\(\) => garde\.abort\(\), DELAI_ACCES_MS\)/);
+  assert.match(fonction("enregistrerRegler"), /const relu = await relireBornee\(classeId\);/);
+  assert.match(fonction("enregistrerRegler"), /\} finally \{\s*if \(encoreLa\(\)\) \{\s*reglageEnCours = false;/, "le verrou rendu dans un finally gardé par la génération");
+  assert.match(fonction("ouvrirATouteLaClasse"), /const relu = await relireBornee\(classeId\);/);
+  // Le banc simple : la relecture pendante.
+  const r = banc({delai: 60});
+  r.serveur.relecture("attente");
+  r.f.ouvrirRegler("splat");
+  cocher(caseNumero(r.corps(), "mondes", 4), true);
+  const debut = Date.now();
+  await r.f.enregistrerRegler();
+  assert.ok(Date.now() - debut < 1000, "borné");
+  assert.deepEqual(r.serveur.etat.classe.reglages, {splat: {mondes: [1, 2, 4, 5]}}, "écrit");
+  assert.equal(r.f.etat().reglageEnCours, false, "libérée");
+  assert.ok(r.corps().tous(n => n.tag === "input").every(c => !c.disabled));
+  assert.deepEqual(["regler-enregistrer", "regler-annuler", "regler-croix"].map(id => r.$(id).disabled), [false, false, false]);
+  assert.equal(r.boite().open, true, "la fenêtre reste : rien n'a été vérifié");
+  assert.equal(caseNumero(r.corps(), "mondes", 4).checked, true, "pas redessinée sur des données non relues : le brouillon tel quel");
+  assert.deepEqual(message(r), ["Enregistré : la 405. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  r.f.annuler();
+  assert.equal(r.boite().open, false, "Annuler ferme");
+  // Le vrai ouvrirClasse, le vrai fetch : le tableau retenu, puis le délai le coupe (le signal arrive au fetch).
+  const v = reel({delai: 200});
+  v.serveur.tenir(true);
+  v.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(v, 3), "Lucas D."), false);
+  const fin = v.f.enregistrerRegler();
+  await tic();
+  v.serveur.lacher();          // eleves.acces répond ; le tableau, lui, reste retenu
+  await laisser();
+  assert.deepEqual(v.serveur.etat.eleves.find(e => e.id === 16).ajouts, {}, "écrit");
+  assert.equal(await finiAvant(fin, 100), false, "à 100 ms, la relecture est pendante : la fenêtre attend encore");
+  assert.equal(v.f.etat().reglageEnCours, true);
+  assert.equal(await finiAvant(fin, 400), true, "à 300 ms, le délai (200 ms) a tranché");
+  const tableau = fetchDe(v, "tableau");
+  assert.equal(tableau.length, 1);
+  assert.ok(tableau[0].signal instanceof AbortSignal && tableau[0].signal.aborted, "le tableau a reçu le signal, et il a été coupé");
+  assert.equal(v.f.etat().reglageEnCours, false);
+  assert.deepEqual(message(v), ["Enregistré : Lucas D. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  assert.deepEqual(v.f.etat().eleves.find(e => e.id === 16).ajouts, {splat: {mondes: [3]}}, "la page garde l'ancien état (rien de relu) — son prochain « avant » est périmé, le serveur tranchera");
+  // Le moteur qui ne finit pas de se charger est coupé aussi.
+  const m = reel({delai: 60, appli: "coffres"});
+  m.serveur.moteurLent(true);
+  m.f.ouvrirRegler("coffres");
+  cocher(caseDe(m.corps(), "Alice"), true);
+  assert.equal(await finiAvant(m.f.enregistrerRegler(), 1000), true, "le moteur lent ne bloque pas");
+  assert.match(m.$("regler-message").textContent, /La vérification n’a pas pu se faire/);
+  // Le raccourci, relecture pendante.
+  const c = banc({appli: "coffres", delai: 60});
+  c.serveur.relecture("attente");
+  assert.equal(await finiAvant(c.f.ouvrirATouteLaClasse(), 1000), true);
+  assert.deepEqual(c.serveur.etat.classe.applis, ["defi-tables", "splat", "coffres"]);
+  assert.deepEqual(message(c, "message-appli"), ["Coffres magiques ouvert à toute la 405. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  assert.equal(c.f.etat().reglageEnCours, false);
+  // La relecture arrivée tard ne rend plus le verrou d'un enregistrement neuf.
+  const t = banc({delai: 60});
+  t.serveur.relecture("attente");
+  t.f.ouvrirRegler("splat");
+  cocher(caseNumero(t.corps(), "mondes", 4), true);
+  await t.f.enregistrerRegler();
+  t.serveur.relecture("ok");
+  t.serveur.tenir(true);
+  cocher(caseNumero(t.corps(), "mondes", 6), true);
+  const second = t.f.enregistrerRegler();
+  await tic();
+  t.serveur.lacherRelecture(true);   // la première relecture, enfin
+  await laisser();
+  assert.equal(t.f.etat().reglageEnCours, true, "l'enregistrement en cours garde son verrou");
+  t.serveur.lacher();
+  await second;
+  // Le second envoi partait avec un « avant » périmé (rien n'avait été relu) :
+  // le serveur a refusé, la fenêtre est relue — le 4 (écrit la première fois)
+  // est là, le 6 reste à refaire. Le refus a protégé.
+  assert.equal(t.boite().open, true);
+  assert.equal(t.$("regler-message").textContent, "La 405 a été changée ailleurs : la fenêtre montre l’état actuel, refais ton réglage.");
+  assert.deepEqual([4, 6].map(n => caseNumero(t.corps(), "mondes", n).checked), [true, false]);
+  t.serveur.tenir(false);
+  cocher(caseNumero(t.corps(), "mondes", 6), true);
+  await t.f.enregistrerRegler();
+  assert.equal(t.boite().open, false);
+  assert.deepEqual(t.serveur.etat.classe.reglages, {splat: {mondes: [1, 2, 4, 5, 6]}});
+});
+
+test("relecture en échec (point 5) — la relecture refusée n'est pas prise pour réussie : la fenêtre reste, rien n'est redessiné sur l'ancien ; le contenu d'un 409 d'élève est appliqué", async () => {
+  // Le banc simple : eleves.acces passe, la relecture tombe en panne.
+  const r = banc();
+  r.serveur.relecture("panne");
+  r.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(r, 3), "Lucas D."), false);
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.etat.eleves.find(e => e.id === 16).ajouts, {}, "écrit");
+  assert.equal(r.boite().open, true, "la fenêtre ne se ferme pas sur une relecture en panne");
+  assert.equal(r.$("message-appli").textContent, "", "pas de « réglages enregistrés » triomphant");
+  assert.deepEqual(message(r), ["Enregistré : Lucas D. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  assert.equal(caseDe(ligneDe(r, 3), "Lucas D.").checked, false, "le brouillon tel quel, pas un « actuel » reconstruit sur l'ancien");
+  // Le vrai ouvrirClasse : le tableau répond 500.
+  const v = reel();
+  v.serveur.panne("tableau", v.serveur.erreur("Panne tableau.", 500));
+  v.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(v, 3), "Lucas D."), false);
+  await v.f.enregistrerRegler();
+  assert.deepEqual(v.journal, ["surErreur message-classes 500"], "ouvrirClasse dit sa panne, et rend faux");
+  assert.equal(v.boite().open, true);
+  assert.equal(v.$("message-appli").textContent, "");
+  assert.match(v.$("regler-message").textContent, /^Enregistré : Lucas D\. La vérification n’a pas pu se faire/);
+  assert.equal(v.f.etat().reglageEnCours, false);
+  // Un 409 pour Inès, puis la relecture en panne : l'état vrai d'Inès vient du 409 ; le prochain « avant » est juste.
+  const c = banc();
+  c.serveur.relecture("panne");
+  c.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(c, 3), "Inès"), true);
+  c.serveur.ecrireAilleurs(30, {coffres: {}});
+  await c.f.enregistrerRegler();
+  assert.deepEqual(c.f.etat().eleves.find(e => e.id === 30).ajouts, {coffres: {}}, "le contenu du 409 est posé sur Inès");
+  assert.deepEqual(c.f.etat().eleves.find(e => e.id === 30).acces.applis, ["defi-tables", "splat", "coffres"]);
+  assert.deepEqual(message(c), ["Pas enregistré pour Inès : un autre onglet l’a changé entre-temps. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  c.serveur.relecture("ok");
+  await c.f.enregistrerRegler();
+  assert.deepEqual(acces(c).at(-1).corps, {eleve_id: 30, avant: {coffres: {}}, ajouts: {coffres: {}, splat: {mondes: [3]}}}, "« avant » = ce que le 409 a dit : accepté");
+  assert.equal(c.boite().open, false);
+  // Un 409 de la classe, puis la relecture en panne : l'état vrai de la classe vient du 409.
+  const k = banc();
+  k.serveur.relecture("panne");
+  k.f.ouvrirRegler("splat");
+  cocher(caseNumero(k.corps(), "mondes", 4), true);
+  k.serveur.changerLaClasseAilleurs({reglages: {splat: {mondes: [1, 2]}}});
+  await k.f.enregistrerRegler();
+  assert.deepEqual(k.f.etat().classe.reglages, {splat: {mondes: [1, 2]}}, "posé depuis le 409");
+  assert.deepEqual(message(k), ["La 405 a été changée ailleurs : rien n’est enregistré. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  assert.equal(caseNumero(k.corps(), "mondes", 4).checked, true, "pas redessinée");
+});
+
+test("réponse perdue (point 6) — le serveur a écrit, la réponse s'est perdue : relu, c'est « enregistré » ; pas relu, c'est « peut-être » — jamais « pas enregistré » à tort", async () => {
+  for (const mode of ["simple", "reel"]) {
+    const faire = o => (mode === "reel" ? reel(o) : banc(o));
+    // Un élève.
+    const r = faire();
+    r.serveur.perdre("eleves.acces");
+    r.f.ouvrirRegler("splat");
+    cocher(caseDe(ligneDe(r, 3), "Alice G."), true);
+    await r.f.enregistrerRegler();
+    assert.deepEqual(r.serveur.etat.eleves.find(e => e.id === 1).ajouts, {splat: {mondes: [3]}}, `${mode} : le serveur a écrit`);
+    assert.equal(r.boite().open, false, `${mode} : relu et en place — la fenêtre se ferme`);
+    assert.deepEqual(message(r, "message-appli"), ["SPLAT! : réglages enregistrés (Alice G.).", "message ok", false], `${mode}`);
+    // La classe.
+    const c = faire();
+    c.serveur.perdre("classes.modifier");
+    c.f.ouvrirRegler("splat");
+    cocher(caseNumero(c.corps(), "mondes", 4), true);
+    cocher(caseDe(ligneDe(c, 6), "Inès"), true);
+    await c.f.enregistrerRegler();
+    assert.deepEqual(c.serveur.appels.map(a => a.action).filter(a => a !== "tableau"), ["classes.modifier"], `${mode} : sans réponse pour la classe, les élèves ne partent pas (le brouillon forme un tout)`);
+    assert.equal(c.boite().open, true);
+    assert.equal(caseNumero(c.corps(), "mondes", 4).checked, true, `${mode} : relue : le 4 est bien ouvert`);
+    assert.deepEqual(message(c), ["Enregistré : la 405. Pas enregistré pour Inès : la 405 n’avait pas répondu. La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque.", "message erreur", false], `${mode} : la classe est confirmée, Inès reste à refaire`);
+    cocher(caseDe(ligneDe(c, 6), "Inès"), true);
+    await c.f.enregistrerRegler();
+    assert.equal(c.boite().open, false);
+    assert.deepEqual(c.serveur.etat.eleves.find(e => e.id === 30).ajouts, {splat: {mondes: [6]}});
+  }
+  // Perdue ET pas relue : « peut-être ».
+  const p = banc();
+  p.serveur.perdre("eleves.acces");
+  p.serveur.relecture("panne");
+  p.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(p, 3), "Alice G."), true);
+  await p.f.enregistrerRegler();
+  assert.deepEqual(message(p), ["Peut-être enregistré pour Alice G. (le serveur n’a pas répondu). La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  const q = banc();
+  q.serveur.perdre("classes.modifier");
+  q.serveur.relecture("panne");
+  q.f.ouvrirRegler("splat");
+  cocher(caseNumero(q.corps(), "mondes", 4), true);
+  await q.f.enregistrerRegler();
+  assert.deepEqual(message(q), ["Peut-être enregistré pour la 405 (le serveur n’a pas répondu). La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  // Pas écrit du tout (muet) et relu : « pas enregistré » — vrai, celui-là (le test « ne répond jamais » le joue aussi).
+  const m = banc({delai: 30});
+  m.serveur.muet(true);
+  m.f.ouvrirRegler("splat");
+  cocher(caseNumero(m.corps(), "mondes", 4), true);
+  await m.f.enregistrerRegler();
+  assert.deepEqual(message(m), ["Pas enregistré pour la 405 : Le serveur ne répond pas. La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque.", "message erreur", false]);
+  // Un refus certain reste « rien d'enregistré », même si l'état relu ressemble par hasard.
+  const n = banc();
+  n.serveur.panne("classes.modifier", n.serveur.erreur("Le serveur a eu un souci.", 500));
+  n.f.ouvrirRegler("splat");
+  cocher(caseNumero(n.corps(), "mondes", 4), true);
+  n.serveur.changerLaClasseAilleurs({reglages: {splat: {mondes: [1, 2, 4, 5]}}});
+  await n.f.enregistrerRegler();
+  assert.match(n.$("regler-message").textContent, /^Rien d’enregistré pour la 405 : Le serveur a eu un souci\./);
+  // Le raccourci : la réponse perdue, relue → ouvert ; pas relue → peut-être.
+  const s = banc({appli: "coffres"});
+  s.serveur.perdre("classes.modifier");
+  await s.f.ouvrirATouteLaClasse();
+  assert.deepEqual(message(s, "message-appli"), ["Coffres magiques ouvert à toute la 405 : la tuile apparaît dans l’espace des élèves.", "message ok", false]);
+  const u = banc({appli: "coffres"});
+  u.serveur.perdre("classes.modifier");
+  u.serveur.relecture("panne");
+  await u.f.ouvrirATouteLaClasse();
+  assert.deepEqual(message(u, "message-appli"), ["Coffres magiques : peut-être ouvert à la 405 (le serveur n’a pas répondu). La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  const w = reel({appli: "coffres", delai: 30});
+  w.serveur.muet(true);
+  await w.f.ouvrirATouteLaClasse();
+  assert.deepEqual(message(w, "message-appli"), ["Coffres magiques : peut-être ouvert à la 405 (le serveur n’a pas répondu). La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false], "muet : l'écriture ET la relecture sans réponse");
+  assert.match(fonction("ajoutsCanoniques"), /\.sort\(\)/);
+  const memes = new Function(`${fonction("ajoutsCanoniques")}\n${fonction("memesAjouts")}\nreturn memesAjouts;`)();
+  assert.ok(memes({splat: {mondes: [3, 1]}, coffres: {}}, {coffres: {}, splat: {mondes: [1, 3, 3]}}));
+  assert.ok(!memes({splat: {mondes: [3]}}, {splat: {}}), "un monde n'est pas l'appli entière");
+  assert.ok(memes({splat: {mondes: []}}, {}), "une liste vide ne compte pas");
+});
+
+test("nettoyage (point 7) — « Ouvrir à toute la 405 » et « Régler SPLAT! » sont vidés à la déconnexion et quand la classe part : plus aucun texte dans les zones", () => {
+  const constantes = ["ZONES_TEXTE", "ZONES_MESSAGE", "CHAMPS_A_VIDER", "BLOCS_A_CACHER", "ZONES_HORS_CLASSE", "ZONES_DE_LA_CLASSE", "MESSAGES_DE_LA_CLASSE"].map(constante).join("\n");
+  const r = banc({appli: "coffres"});
+  r.f.poserQuiVoit();
+  assert.equal(r.$("af-toute").textContent, "Ouvrir à toute la 405");
+  r.f.poser({appli: "splat"});
+  r.f.poserQuiVoit();
+  assert.equal(r.$("regler-appli-mot").textContent, "Régler SPLAT!");
+  const outils = new Function("$", "quitterImpressions", `${constantes}\n${fonction("viderZones")}\n${fonction("viderLaClasse")}\nreturn {viderZones, viderLaClasse, ZONES_TEXTE, ZONES_DE_LA_CLASSE};`)(r.$, () => {});
+  for (const id of ["af-toute", "regler-appli-mot"]) {
+    assert.ok(outils.ZONES_TEXTE.includes(id), `${id} dans ZONES_TEXTE`);
+    assert.ok(outils.ZONES_DE_LA_CLASSE.includes(id), `${id} vidé aussi quand la classe part`);
+  }
+  // Tout ce que la page a pu écrire, puis le nettoyage : plus rien.
+  outils.ZONES_TEXTE.forEach(id => { r.$(id).textContent = `texte de ${id}`; });
+  outils.viderLaClasse();
+  const restes = outils.ZONES_DE_LA_CLASSE.filter(id => r.$(id).textContent !== "");
+  assert.deepEqual(restes, [], "viderLaClasse : les zones de la classe sont vides");
+  assert.equal(r.$("af-toute").textContent, "");
+  assert.equal(r.$("regler-appli-mot").textContent, "");
+  outils.ZONES_TEXTE.forEach(id => { r.$(id).textContent = `texte de ${id}`; });
+  outils.viderZones();
+  assert.deepEqual(outils.ZONES_TEXTE.filter(id => r.$(id).textContent !== ""), [], "viderZones : tout est vide");
+});
+
+test("le signal arrive au vrai fetch (point 8) — la vraie api() borne l'écriture ET la relecture ; sans signal transmis, ce test rougit", {timeout: 5000}, async () => {
+  assert.match(fonction("api"), /signal: options\.signal/);
+  const r = reel({delai: 40});
+  r.serveur.muet(true);
+  r.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(r, 4), "Inès"), true);
+  const debut = Date.now();
+  assert.equal(await finiAvant(r.f.enregistrerRegler(), 2000), true, "fini : l'écriture puis la relecture sont bornées");
+  assert.ok(Date.now() - debut < 1000);
+  const envois = r.serveur.appelsFetch;
+  assert.deepEqual(envois.map(a => a.action), ["eleves.acces", "tableau"]);
+  for (const envoi of envois) {
+    assert.ok(envoi.signal instanceof AbortSignal, `${envoi.action} : fetch a reçu un AbortSignal`);
+    assert.equal(envoi.signal.aborted, true, `${envoi.action} : coupé par la garde`);
+    assert.equal(envoi.url, "../api/prof.php");
+    assert.equal(envoi.corps.jeton, "jeton-1", "le jeton voyage dans le corps");
+    assert.equal(envoi.entetes.Authorization, "Bearer jeton-1");
+  }
+  assert.equal(r.f.etat().reglageEnCours, false);
+  assert.deepEqual(message(r), ["Peut-être enregistré pour Inès (le serveur n’a pas répondu). La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
+  // Et un 409 d'élève de bout en bout (le JSON du refus lu par la vraie api).
+  const c = reel();
+  c.f.ouvrirRegler("splat");
+  cocher(caseDe(ligneDe(c, 3), "Inès"), true);
+  c.serveur.ecrireAilleurs(30, {coffres: {}});
+  await c.f.enregistrerRegler();
+  assert.equal(c.boite().open, true);
+  assert.deepEqual(c.serveur.etat.eleves.find(e => e.id === 30).ajouts, {coffres: {}}, "rien d'écrasé");
+  assert.deepEqual(message(c), ["Pas enregistré pour Inès : un autre onglet l’a changé entre-temps. La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque.", "message erreur", false]);
+  assert.equal(caseDe(ligneDe(c, 3), "Inès").checked, false, "relue par le vrai ouvrirClasse");
+  cocher(caseDe(ligneDe(c, 3), "Inès"), true);
+  await c.f.enregistrerRegler();
+  assert.equal(c.boite().open, false);
+  assert.deepEqual(c.serveur.etat.eleves.find(e => e.id === 30).ajouts, {coffres: {}, splat: {mondes: [3]}});
+  // Le raccourci, de bout en bout : avant, la relecture, le mot.
+  const s = reel({appli: "coffres"});
+  await s.f.ouvrirATouteLaClasse();
+  assert.deepEqual(s.serveur.appelsFetch.map(a => a.action), ["classes.modifier", "tableau"]);
+  assert.deepEqual(s.serveur.appelsFetch[0].corps.avant, {applis: ["defi-tables", "splat"]});
+  assert.deepEqual(s.f.etat().classe.applis, ["defi-tables", "splat", "coffres"], "la page a relu la classe");
+  assert.equal(s.$("message-appli").textContent, "Coffres magiques ouvert à toute la 405 : la tuile apparaît dans l’espace des élèves.");
 });
 
 // ------------------------------------------------------------ ajoutsApres : l'état complet, jamais « [] »
