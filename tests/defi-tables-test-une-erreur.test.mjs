@@ -101,6 +101,6 @@ test("le verdict raté : 18 sur 20 avec le même calcul raté deux fois dit « i
 });
 
 test("le moteur a changé : son numéro monte, et la copie du serveur reste identique", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261029-2"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261030-1"><\/script>/);
   assert.equal(copieServeur, moteur);
 });

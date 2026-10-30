@@ -238,6 +238,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .en-cours.expert { color: #8a5a00; font-weight: 800; letter-spacing: .06em; }
   .seances { font-weight: 800; color: var(--ink); }
   .seances.zero { color: var(--muted); font-weight: 600; }
+  /* Serveur pro, lot 5g : « 2 · 0 · 1 · 3 », la semaine en cours à droite, en
+     gras ; les semaines sans séance en gris. Du texte : lisible imprimé en
+     noir et blanc. */
+  .semaines { white-space: nowrap; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .semaines .zero { color: var(--muted); }
+  .semaines b { font-weight: 900; }
+  .semaines .point { color: var(--muted); }
   .alerte { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
             border: 1px solid #d9a3a3; background: #fff5f5; color: #9b2c2c;
             font-size: .78rem; font-weight: 800; white-space: nowrap; }
@@ -981,7 +988,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
             <th class="large"><button type="button" data-tri="encours">En cours</button></th>
-            <th class="large"><button type="button" data-tri="semaine">Cette semaine</button></th>
+            <th class="large"><button type="button" data-tri="semaine">4 dernières semaines</button></th>
             <th class="large"><button type="button" data-tri="retard">En retard</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
@@ -1989,7 +1996,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const vide = {acquises: [], couronne: null,
                   semaine: 0, retard: null, parcours: null, lisible: Boolean(PARCOURS),
                   enCours: {type: "rien", texte: "—", ordre: 0, tables: [], pleines: 0, total: 10},
-                  seances: 0, longue: null};
+                  seances: 0, longue: null, semaines: null, ordreSemaines: -1e9};
     if (!PARCOURS || !brut) return vide;
     try {
       const parcours = PARCOURS.normaliserParcours(brut);
@@ -2012,6 +2019,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         enCours: resume.enCours,
         seances: resume.seances,
         longue: resume.longue,
+        // Lot 5g : les séances finies des 4 dernières semaines, et la clé de
+        // leur tri (un moteur d'avant le lot 5g : rien, la case dit « — »).
+        semaines: resume.semaines || null,
+        ordreSemaines: Number.isFinite(resume.ordreSemaines) ? resume.ordreSemaines : -1e9,
         parcours,
         lisible: true
       };
@@ -2205,7 +2216,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (tri.colonne === "date" && appliAffichee === "flash-anzan") return eleve.lu.dernier || "";
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
-      if (tri.colonne === "semaine") return eleve.lu.seances;
+      if (tri.colonne === "semaine") return eleve.lu.ordreSemaines;
       if (tri.colonne === "retard") return eleve.lu.retard ? eleve.lu.retard.length : -1;
       return eleve.maj_le || "";
     };
@@ -3044,12 +3055,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         cEnCours.append(alerte);
       }
 
-      // Les séances de la semaine, et l'élève qu'on ne voit plus.
+      // Les séances des 4 dernières semaines (lot 5g), et l'élève qu'on ne
+      // voit plus.
       const cSemaine = document.createElement("td");
-      const seances = document.createElement("span");
-      seances.className = eleve.lu.seances ? "seances" : "seances zero";
-      seances.textContent = eleve.lu.parcours ? String(eleve.lu.seances) : "—";
-      cSemaine.append(seances);
+      cSemaine.append(celluleSemaines(eleve.lu));
       const absence = joursSansRien(eleve);
       if (absence !== null) {
         const alerte = document.createElement("span");
@@ -3096,6 +3105,45 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // ------------------------------------------------ lot 5c : lignes, recherche
 
   // Une cellule cachée au téléphone (le tableau compact garde trois colonnes).
+  // Serveur pro, lot 5g : « 2 · 0 · 1 · 3 » — les séances finies de chacune
+  // des 4 dernières semaines, la plus ancienne à gauche, la semaine en cours
+  // à droite et en gras. « 16+ » : au moins (le moteur ne garde que les 60
+  // dernières séances) ; « ? » : plus connu. Rien enregistré : tout est lu
+  // dans le parcours (resumeProf).
+  function celluleSemaines(lu) {
+    const zone = document.createElement("span");
+    zone.className = "semaines";
+    if (!lu.parcours || !Array.isArray(lu.semaines) || !lu.semaines.length) {
+      zone.classList.add("zero");
+      zone.textContent = "—";
+      return zone;
+    }
+    const derniere = lu.semaines.length - 1;
+    const dates = [];
+    lu.semaines.forEach((semaine, index) => {
+      if (index) {
+        const point = document.createElement("span");
+        point.className = "point";
+        point.textContent = "\u00a0·\u00a0";
+        zone.append(point);
+      }
+      const nombre = document.createElement(index === derniere ? "b" : "span");
+      nombre.textContent = PARCOURS.texteSemaine(semaine);
+      if (semaine.seances === 0 || semaine.seances === null) nombre.className = "zero";
+      zone.append(nombre);
+      dates.push(`${index === derniere ? "cette semaine" : `semaine du ${dateCourteSemaine(semaine.lundi)}`}\u00a0: ${PARCOURS.texteSemaine(semaine)}`);
+    });
+    zone.title = `Séances finies — ${dates.join(" · ")}`;
+    return zone;
+  }
+
+  // « 5 oct. » : le lundi d'une semaine, sans l'année.
+  function dateCourteSemaine(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    return d.toLocaleDateString("fr-FR", {day: "numeric", month: "short"});
+  }
+
   function large(cellule) {
     cellule.className = cellule.className ? `${cellule.className} large` : "large";
   }

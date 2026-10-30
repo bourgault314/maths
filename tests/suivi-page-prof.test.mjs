@@ -676,11 +676,11 @@ test("le tableau : six colonnes et la flèche, la liste des tables écrite, la l
   const debutEntete = page.indexOf('<tr id="entete-defi-tables">');
   const entete = page.slice(debutEntete, page.indexOf("</tr>", debutEntete));
   assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Tables passées:acquises", "En cours:encours (large)", "Cette semaine:semaine (large)", "En retard:retard (large)", "Dernière activité:date", ""]);
+    ["Élève:prenom", "Tables passées:acquises", "En cours:encours (large)", "4 dernières semaines:semaine (large)", "En retard:retard (large)", "Dernière activité:date", ""]);
   // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
   assert.doesNotMatch(page, /Tables acquises|"Acquises"/);
   assert.doesNotMatch(page, /À travailler|cMelange|cExpert|caseExpert|badgeRang|calculsATravailler\(/, "les trois colonnes d'avant sont retirées, et leur code avec");
-  assert.match(page, /if \(tri\.colonne === "encours"\) return eleve\.lu\.enCours\.ordre;\s*if \(tri\.colonne === "semaine"\) return eleve\.lu\.seances;/);
+  assert.match(page, /if \(tri\.colonne === "encours"\) return eleve\.lu\.enCours\.ordre;\s*if \(tri\.colonne === "semaine"\) return eleve\.lu\.ordreSemaines;/);
   assert.match(script, /"defi-tables": \["prenom", "acquises", "encours", "semaine", "retard", "date"\]/);
   // La liste des tables se LIT (une info-bulle ne s'imprime pas).
   assert.match(page, /liste\.textContent = reste\.length <= 3 \? `reste \$\{reste\.join\(", "\)\}` : eleve\.lu\.acquises\.join\(", "\);\s*cAcquises\.append\(liste\);/);
@@ -697,7 +697,7 @@ test("le tableau : six colonnes et la flèche, la liste des tables écrite, la l
 test("« lireProgression » demande tout au moteur, et un parcours illisible donne une ligne vide complète", () => {
   const debut = page.indexOf("  function lireProgression(brut) {");
   const bloc = page.slice(debut, page.indexOf("\n  }", debut));
-  ["couronne: etat.expert.couronne", "etat.jours ? etat.jours.semaine : 0", "enCours: resume.enCours", "seances: resume.seances", "longue: resume.longue"]
+  ["couronne: etat.expert.couronne", "etat.jours ? etat.jours.semaine : 0", "enCours: resume.enCours", "seances: resume.seances", "longue: resume.longue", "semaines: resume.semaines || null"]
     .forEach(attendu => assert.ok(bloc.includes(attendu),
       `la page doit lire « ${attendu} » dans ce que rend le moteur, sans le recalculer`));
   assert.match(bloc, /const resume = PARCOURS\.resumeProf \? PARCOURS\.resumeProf\(parcours\) :/, "un moteur d'avant le lot 2b resté sur le serveur ne vide pas le tableau");
