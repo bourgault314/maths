@@ -669,6 +669,11 @@
     .parcours-confirm .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
     /* Lot « un seul tableau » : la carte de ma table, puis Mes calculs. */
     .parcours-matable, .calculs-bloc { margin: 10px 0 0; }
+    /* Serveur pro, lot 5g : la ligne des 4 dernières semaines, comme « 3 fois
+       cette semaine » de l'accueil ; les nombres à l'encre, celui de la
+       semaine en cours en gras. */
+    .semaine.parcours-semaines { margin: 10px 0 0; }
+    .parcours-semaines span { color: var(--ink); font-weight: 700; }
     .parcours-matable .parcours-row-head { align-items: center; margin-bottom: 0; }
     .parcours-matable .parcours-row-head strong { font-size: 1.15rem; }
     .parcours-matable .echelle { margin-top: 8px; padding-top: 0; border-top: 0; }
@@ -1323,17 +1328,20 @@
     @media (min-width: 1024px) {
       .panel.avec-parcours { padding: 20px 18px; }
       .parcours-toolbar { min-height: 40px; }
-      .parcours-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto 1fr; gap: 10px 12px; align-items: start; margin-top: 8px; }
+      .parcours-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; gap: 10px 12px; align-items: start; margin-top: 8px; }
       .calculs-bloc { display: contents; }
       .parcours-corps > .parcours-matable { grid-column: 2; grid-row: 1; margin: 0; }
+      /* Lot 5g : la ligne des semaines sous ma table ; cachée, sa rangée
+         n'a pas de hauteur (le trou de la grille, lui, reste : 10 px). */
+      .parcours-corps > .parcours-semaines { grid-column: 2; grid-row: 2; margin: -4px 0 -2px; }
       .calculs-tableau, .calculs-tete { display: block; position: relative; padding: 10px 12px 11px; border: 2px solid #d4e3ed; border-radius: 16px; background: #fff; }
-      .calculs-tableau { grid-column: 1; grid-row: 1 / span 3; padding-top: 40px; }
+      .calculs-tableau { grid-column: 1; grid-row: 1 / span 4; padding-top: 40px; }
       .calculs-titre { grid-column: 1; grid-row: 1; z-index: 1; align-self: start; margin: 12px 14px 0; }
-      .calculs-tete { grid-column: 2; grid-row: 2; }
+      .calculs-tete { grid-column: 2; grid-row: 3; }
       /* Lot « un seul système » : la colonne de droite finit exactement au bas
          du tableau — « Je deviens expert » prend la hauteur qui reste (avant,
          les deux colonnes finissaient à 13 px l'une de l'autre). */
-      .parcours-suite { grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; }
+      .parcours-suite { grid-column: 2; grid-row: 4; align-self: stretch; display: flex; flex-direction: column; }
       .parcours-suite #parcours-expert { flex: 1 1 auto; }
       .parcours-suite .mp-melange-droite { flex-wrap: nowrap; }
       .parcours-corps > .calculs-bloc .calculs-tableau, .calculs-tableau { align-self: stretch; }
@@ -2897,6 +2905,9 @@
              le titre, Aujourd'hui, les boîtes, le détail, puis le tableau. -->
         <div class="parcours-corps">
         <div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"></div>
+        <!-- Serveur pro, lot 5g : « Mes 4 dernières semaines : 3 · 2 · 4 · 2
+             séances », sous la carte de ma table (renderSemaines). -->
+        <p id="parcours-semaines" class="semaine parcours-semaines" hidden></p>
         <section id="parcours-calculs" class="parcours-row calculs-bloc" aria-labelledby="calculs-titre">
           <h2 id="calculs-titre" class="calculs-titre">Mes calculs</h2>
           <div class="calculs-tete">
@@ -3206,7 +3217,7 @@
   </template>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261029-2"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261030-1"></script>
   <script>
     (() => {
       "use strict";
@@ -10968,6 +10979,29 @@
         return label;
       }
 
+      // Serveur pro, lot 5g (décision de Gwenaël, 26/10/2026) : sous la carte
+      // de ma table, « Mes 4 dernières semaines : 3 · 2 · 4 · 2 séances » — les
+      // séances finies, du lundi au dimanche, la semaine en cours à droite et
+      // en gras : les mêmes nombres que la colonne de « Ma classe »
+      // (PARCOURS.seancesParSemaine). Rien tant qu'il n'y en a aucune (une
+      // ligne de zéros ressemble à un reproche), sauf dans la vue du
+      // professeur, qui la lit toujours.
+      function renderSemaines() {
+        const zone = $("parcours-semaines");
+        const semaines = PARCOURS.seancesParSemaine(parcours);
+        zone.replaceChildren();
+        zone.hidden = !VUE_PROF && semaines.every(semaine => semaine.seances === 0);
+        if (zone.hidden) return;
+        zone.append("Mes 4 dernières semaines\u00a0: ");
+        semaines.forEach((semaine, index) => {
+          if (index) zone.append("\u00a0·\u00a0");
+          const nombre = document.createElement(index === semaines.length - 1 ? "b" : "span");
+          nombre.textContent = PARCOURS.texteSemaine(semaine);
+          zone.append(nombre);
+        });
+        zone.append("\u00a0séances");
+      }
+
       function renderParcours() {
         majLienRetour();
         // L'accueil lit le même parcours : il se redessine avec la carte, pour
@@ -11001,6 +11035,7 @@
         // carte de ma table — celle que l'accueil appelle « Ma table » — puis
         // Mes calculs, le tableau des 36 calculs, à la place des dix rangées.
         renderMaTable($("parcours-matable"), etat, tableEnCours(etat));
+        renderSemaines();
         renderCalculs();
 
         // « Mon mélange » : dès 2 tables passées, jusqu'aux 9 — libre (lot « un

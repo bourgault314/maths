@@ -522,7 +522,7 @@ test("Mes calculs vit dans Mon parcours : boîtes, détail, tableau, légende ; 
   assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]/);
   assert.doesNotMatch(html, /id="open-calculs"|id="calculs" class="calculs-screen"|id="calculs-back"|id="calculs-reviser"/);
   const parcoursEcran = html.slice(html.indexOf('<div id="parcours" class="parcours-screen" hidden>'), html.indexOf('<div id="play" hidden>'));
-  assert.match(parcoursEcran, /<div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"><\/div>\s*<section id="parcours-calculs" class="parcours-row calculs-bloc" aria-labelledby="calculs-titre">\s*<h2 id="calculs-titre" class="calculs-titre">Mes calculs<\/h2>/, "la carte de ma table, puis Mes calculs");
+  assert.match(parcoursEcran, /<div id="parcours-matable" class="parcours-row is-ma-table parcours-matable"><\/div>\s*<!--[^]*?-->\s*<p id="parcours-semaines" class="semaine parcours-semaines" hidden><\/p>\s*<section id="parcours-calculs" class="parcours-row calculs-bloc" aria-labelledby="calculs-titre">\s*<h2 id="calculs-titre" class="calculs-titre">Mes calculs<\/h2>/, "la carte de ma table, puis Mes calculs");
   assert.ok(parcoursEcran.indexOf('id="parcours-calculs"') < parcoursEcran.indexOf('id="parcours-melange"'), "puis le mélange et l’escalier");
   assert.doesNotMatch(html, /id="calculs-resume"/, "lot mémoire : la ligne de résumé a laissé la place aux tuiles des boîtes");
   assert.match(parcoursEcran, /id="calculs-grille"/);

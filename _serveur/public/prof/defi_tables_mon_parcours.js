@@ -2510,6 +2510,55 @@
     };
   }
 
+  // Serveur pro, lot 5g « les semaines passées » (26/10/2026, décision de
+  // Gwenaël) : le lundi, « Cette semaine » repartait à zéro — plus moyen de
+  // faire le point sur la semaine écoulée, ni de voir l'élève qui n'est venu
+  // qu'une fois dans le mois. Les SÉANCES FINIES de chacune des 4 dernières
+  // semaines (du lundi au dimanche), la plus ancienne d'abord, la semaine en
+  // cours en dernier (jusqu'à aujourd'hui) : le même nombre pour la colonne
+  // de « Ma classe » et pour la ligne de Mon parcours. Rien de plus n'est
+  // enregistré : c'est « seances », le jour de chacune des
+  // SEUILS.seance.garder (60) dernières séances finies.
+  // La borne : quand les 60 sont pleines et que la plus ancienne gardée tombe
+  // dans la fenêtre, sa semaine a pu en perdre — « plus » : au moins ce
+  // nombre (« 16+ ») — et les semaines d'avant ne sont plus connues
+  // (« seances » à null, « ? »). Jamais un faux chiffre.
+  const SEMAINES_AFFICHEES = 4;
+  function seancesParSemaine(parcours, aujourdhui = jourLocal()) {
+    const liste = parcours.seances;
+    const lundi = lundiDe(aujourdhui);
+    const plusAncienne = liste.length >= SEUILS.seance.garder
+      ? liste.reduce((petite, jour) => (jour < petite ? jour : petite), liste[0]) : null;
+    const semaines = [];
+    for (let recul = SEMAINES_AFFICHEES - 1; recul >= 0; recul -= 1) {
+      const debut = ajouterJours(lundi, -7 * recul);
+      const fin = recul === 0 ? aujourdhui : ajouterJours(debut, 6);
+      if (plusAncienne && plusAncienne > fin) {
+        semaines.push({lundi: debut, seances: null, plus: false});
+      } else {
+        semaines.push({
+          lundi: debut,
+          seances: liste.filter(jour => jour >= debut && jour <= fin).length,
+          plus: Boolean(plusAncienne && plusAncienne >= debut)
+        });
+      }
+    }
+    return semaines;
+  }
+
+  // « 3 », « 16+ » (au moins), « ? » (plus connu).
+  function texteSemaine(semaine) {
+    if (!semaine || semaine.seances === null) return "?";
+    return semaine.plus ? `${semaine.seances}+` : String(semaine.seances);
+  }
+
+  // La clé du tri de la colonne : la semaine en cours, puis la précédente.
+  function ordreSemaines(semaines) {
+    const n = semaine => (semaine && semaine.seances !== null ? semaine.seances : -1);
+    const fin = semaines.length - 1;
+    return n(semaines[fin]) * 1000 + n(semaines[fin - 1]);
+  }
+
   // Ce que la page du professeur écrit sur la ligne d'un élève (lot 2b,
   // 03/10/2026). Tout est lu dans le parcours tel qu'il est : aucun compteur
   // de plus n'est enregistré.
@@ -2524,6 +2573,8 @@
   //  - « seances » : les jours de la semaine avec une séance finie.
   //  - « longue » : le nombre de séances sur la table en cours, quand il
   //    atteint le seuil ; null sinon.
+  //  - « semaines » (lot 5g) : les séances finies des 4 dernières semaines
+  //    (seancesParSemaine), et « ordreSemaines », la clé de leur tri.
   function tableCommencee(ligne) {
     if (!ligne || ligne.acquise) return false;
     return Boolean(ligne.seance.dernier) || ligne.seance.n > 0 || CLES_FOIS.some(cle => ligne.fois[cle] > 0);
@@ -2531,9 +2582,11 @@
 
   function resumeProf(parcours, aujourdhui = jourLocal()) {
     const seances = bilanSeances(parcours, aujourdhui).semaine;
+    const semaines = seancesParSemaine(parcours, aujourdhui);
+    const ordre = ordreSemaines(semaines);
     const acquises = tablesAcquises(parcours);
     const rien = {type: "rien", tables: [], pleines: 0, total: 10, texte: "—", ordre: 0};
-    if (estVide(parcours) && !TABLES.some(table => tableCommencee(parcours.tables[table]))) return {enCours: rien, seances, longue: null};
+    if (estVide(parcours) && !TABLES.some(table => tableCommencee(parcours.tables[table]))) return {enCours: rien, seances, longue: null, semaines, ordreSemaines: ordre};
     let enCours;
     if (acquises.length === TABLES.length) {
       const etoiles = parcours.expert.etoiles;
@@ -2559,7 +2612,7 @@
       const n = parcours.tables[tableDeSeance(parcours)].seance.n;
       if (n >= SEUILS.prof.seancesLongues) longue = {table: tableDeSeance(parcours), seances: n};
     }
-    return {enCours, seances, longue};
+    return {enCours, seances, longue, semaines, ordreSemaines: ordre};
   }
 
   // ---------------------------------------------------- le rangement par code
@@ -3634,6 +3687,9 @@
     aRetenir,
     retenirErreurs,
     bilanSeances,
+    seancesParSemaine,
+    texteSemaine,
+    ordreSemaines,
     resumeProf,
     commencerApresDecouverte,
     departApresDecouverte,

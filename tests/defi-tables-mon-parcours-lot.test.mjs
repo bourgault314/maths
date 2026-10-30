@@ -166,13 +166,13 @@ test("2. ordinateur : deux colonnes — le tableau à gauche, ma table, Aujourd�
   assert.match(ordi, /\.parcours-corps \{ display: grid; grid-template-columns: auto minmax\(0, 1fr\);/);
   assert.match(ordi, /\.calculs-bloc \{ display: contents; \}/);
   assert.match(ordi, /\.parcours-corps > \.parcours-matable \{ grid-column: 2; grid-row: 1;/);
-  assert.match(ordi, /\.calculs-tableau \{ grid-column: 1; grid-row: 1 \/ span 3;/);
+  assert.match(ordi, /\.calculs-tableau \{ grid-column: 1; grid-row: 1 \/ span 4;/);
   assert.match(ordi, /\.calculs-titre \{ grid-column: 1; grid-row: 1;/);
-  assert.match(ordi, /\.calculs-tete \{ grid-column: 2; grid-row: 2; \}/);
+  assert.match(ordi, /\.calculs-tete \{ grid-column: 2; grid-row: 3; \}/);
   // Lot « les trophées » : la colonne de droite finit au bas du tableau —
   // « Je deviens expert » prend la hauteur qui reste ; les trophées restent à
   // côté de « Mon mélange », sur la même ligne.
-  assert.match(ordi, /\.parcours-suite \{ grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; \}/);
+  assert.match(ordi, /\.parcours-suite \{ grid-column: 2; grid-row: 4; align-self: stretch; display: flex; flex-direction: column; \}/);
   assert.match(ordi, /\.parcours-suite #parcours-expert \{ flex: 1 1 auto; \}/);
   assert.match(ordi, /\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
   // Écran bas (1024 × 600) : le bloc de Mon mélange et ses trophées se resserrent.

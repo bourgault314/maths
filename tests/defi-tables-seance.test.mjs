@@ -643,7 +643,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");
@@ -782,7 +782,7 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   assert.match(html, /parcours = PARCOURS\.commencerApresDecouverte\(parcours, table, \{juste: validation\.score\}\);\s*sauverParcours\(\);\s*ecrireTableChoisie\(table\);\s*fermerDecouverte\(\);/);
   // Mon parcours : lot « un seul tableau » (04/10/2026) — la carte de ma
   // table (son échelle) puis Mes calculs, à la place des dix rangées.
-  assert.match(html, /\n        renderMaTable\(\$\("parcours-matable"\), etat, tableEnCours\(etat\)\);\s*renderCalculs\(\);/);
+  assert.match(html, /\n        renderMaTable\(\$\("parcours-matable"\), etat, tableEnCours\(etat\)\);\s*renderSemaines\(\);\s*renderCalculs\(\);/);
   assert.doesNotMatch(html, /renderParcoursSeance/);
   assert.doesNotMatch(html, /kind: "dot",\s*etat: activite\.etat/, "lot 2b : les ronds de l'ancien parcours sont retirés");
   assert.doesNotMatch(html, /pas fait<\/span>\s*<span><span class="cell is-started">/, "et leur légende aussi");

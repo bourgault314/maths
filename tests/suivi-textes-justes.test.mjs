@@ -66,7 +66,7 @@ test("point 4 · « rien reçu », pas « rien fait »", () => {
 });
 
 test("point 5 · les colonnes et la fenêtre de l'élève gardent leur période (lot 5c : plus de cartes au téléphone)", () => {
-  assert.match(page, /<th class="large"><button type="button" data-tri="semaine">Cette semaine<\/button><\/th>/);
+  assert.match(page, /<th class="large"><button type="button" data-tri="semaine">4 dernières semaines<\/button><\/th>/);
   assert.ok(!page.includes('"Séances"') && !page.includes('["Activité"'));
   // Serveur pro, lot 5f : la fenêtre de Défi tables montre son écran Mon parcours
   // (ses jours de travail y sont datés) ; SPLAT! garde « Dernière activité ».

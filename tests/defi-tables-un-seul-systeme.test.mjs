@@ -423,11 +423,11 @@ test("coupes, page : « Tu gagnes la coupe des N tables ! » après un mélange 
 });
 
 test("trophées, page : sur ordinateur, la colonne de droite s'étire jusqu'au bas du tableau et « Je deviens expert » prend la hauteur qui reste", () => {
-  const debut = html.indexOf("      .parcours-suite { grid-column: 2; grid-row: 3;");
+  const debut = html.indexOf("      .parcours-suite { grid-column: 2; grid-row: 4;");
   assert.notEqual(debut, -1);
   const media = html.lastIndexOf("@media", debut);
   assert.match(html.slice(media, html.indexOf("{", media)), /^@media \(min-width: 1024px\) $/, "dans la règle « ordinateur » (1 024 px et plus)");
-  assert.match(html, /\.parcours-suite \{ grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; \}\s*\.parcours-suite #parcours-expert \{ flex: 1 1 auto; \}\s*\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
+  assert.match(html, /\.parcours-suite \{ grid-column: 2; grid-row: 4; align-self: stretch; display: flex; flex-direction: column; \}\s*\.parcours-suite #parcours-expert \{ flex: 1 1 auto; \}\s*\.parcours-suite \.mp-melange-droite \{ flex-wrap: nowrap; \}/);
   // Écran bas : le bloc du mélange et les coupes se resserrent.
   assert.match(html, /@media \(min-width: 1024px\) and \(max-height: 700px\) \{[^@]*?\.parcours-suite #parcours-melange \{ padding-top: 8px; padding-bottom: 8px; \}\s*\.parcours-suite \.mp-trophees b \{ width: 22px; height: 22px; \}\s*\}/);
   // Le triangle « jouer » : un dessin, plus le caractère ▶.
@@ -500,7 +500,7 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

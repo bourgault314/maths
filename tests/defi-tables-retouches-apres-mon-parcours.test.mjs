@@ -429,7 +429,7 @@ test("1. Mon parcours s’ouvre en haut", () => {
 // ------------------------------------------------- le moteur a changé
 
 test("le moteur a changé : numéro de cache, copie du serveur, « fois » dans bilanSeances", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261029-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie));
