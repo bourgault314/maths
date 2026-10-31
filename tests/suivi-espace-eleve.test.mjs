@@ -194,9 +194,9 @@ function executerPageshow({persisted, codeEnMemoire}) {
   // classe du précédent élève resterait posée sur l'écran du code.
   const directs = {arrets: 0};
   new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
-               "dessinerCases", "document", "arreterDirect", source)(
+               "dessinerCases", "document", "arreterDirect", "ouverture", source)(
     $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {},
-    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; });
+    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0);
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
   return {$, elements, classesCorps, classesHtml, dessins, directs};

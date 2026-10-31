@@ -156,19 +156,22 @@ test("b) les tuiles du haut (séance en direct, évaluation) sont notées à cha
 
 // ouvrir() jouée avec un faux serveur et de faux dessins : on lit ce que la
 // page a dessiné, et dans quel ordre. ATTENTE_JAUGES ramenée à 40 ms.
-function jouerOuvrir({copie = null, reponse, jauges = Promise.resolve({"defi-tables": {compte: "4"}}), silencieux = true, code = "ABC234"}) {
+function jouerOuvrir({copie = null, copieCassee = false, reponse, jauges = Promise.resolve({"defi-tables": {compte: "4"}}), silencieux = true, code = "ABC234"}) {
   const journal = [];
   const zones = {code: {value: ""}, erreur: {}};
   const html = classes();
   let codeGarde = code;
   const source = `${constante("ATTENTE_JAUGES").replace("1000", "40")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\nreturn ouvrir;`;
   const ouvrir = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
-    "lireJauges", "surveillerDirect", "revenirAuCode", "afficherErreur", "dessinerCases", source)(
+    "lireJauges", "surveillerDirect", "revenirAuCode", "afficherErreur", "dessinerCases", "oublierCopie", source)(
     {setTimeout}, {documentElement: {classList: html}},
     () => (reponse instanceof Error ? Promise.reject(reponse) : Promise.resolve({ok: reponse.status === 200, status: reponse.status, json: () => Promise.resolve(reponse.corps)})),
     id => zones[id],
     c => (c === code ? copie : null),
-    (donnees, c, j, h) => journal.push(["dessin", donnees.prenom, Object.keys(j || {}).join(","), h === undefined ? "-" : JSON.stringify(h)]),
+    (donnees, c, j, h) => {
+      if (copieCassee && donnees === copie) throw new TypeError("jauge illisible");
+      journal.push(["dessin", donnees.prenom, Object.keys(j || {}).join(","), h === undefined ? "-" : JSON.stringify(h)]);
+    },
     (c, donnees, j) => journal.push(["copie", Object.keys(j || {}).join(",")]),
     c => { codeGarde = c; journal.push(["code", c]); },
     () => codeGarde,
@@ -176,7 +179,8 @@ function jouerOuvrir({copie = null, reponse, jauges = Promise.resolve({"defi-tab
     () => { journal.push(["direct"]); return Promise.resolve(0); },
     () => journal.push(["menage"]),
     m => { if (m) journal.push(["erreur", m]); },
-    () => {});
+    () => {},
+    () => journal.push(["oubli-copie"]));
   html.add("retour");
   return {fini: ouvrir(code, silencieux), journal, zones, html, deconnecter: () => { codeGarde = ""; }};
 }
@@ -236,6 +240,58 @@ test("ouvrir — l'élève se déconnecte pendant l'attente des jauges : rien n'
   await r.fini;
   assert.deepEqual(r.journal, [["code", "ABC234"], ["direct"]], "ni dessin, ni copie : l'écran du code reste");
   assert.match(fonction("garderCopie"), /if \(lireCode\(\) !== code\) return;/, "et garderCopie a la même garde");
+});
+
+// La vraie ouvrir() et la vraie revenirAuCode(), ensemble. Relecture du lot : la
+// copie montre « Se déconnecter » AVANT la réponse du serveur, et cette réponse
+// ne doit pas remettre le code (poste partagé : le suivant verrait l'espace).
+for (const moment of ["api/eleve.php", "lireJauges"]) test(`ouvrir — « Se déconnecter » sur la copie, ${moment} encore en route : la réponse ne remet ni le code ni l'espace`, async () => {
+  const journal = [];
+  const zones = {};
+  let codeGarde = "ABC234";
+  let repondre;
+  let rendreJauges;
+  const source = `${constante("ATTENTE_JAUGES")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\n${fonction("revenirAuCode")}\nreturn {ouvrir, revenirAuCode};`;
+  const {ouvrir, revenirAuCode} = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
+    "lireJauges", "surveillerDirect", "afficherErreur", "dessinerCases", "arreterDirect", "oublierCopie", source)(
+    {setTimeout}, {documentElement: {classList: classes()}, body: {classList: classes()}},
+    () => new Promise(ok => { repondre = ok; }),
+    id => (zones[id] ||= {classList: classes()}),
+    () => COPIE,
+    donnees => journal.push(["dessin", donnees.prenom]),
+    () => journal.push(["copie"]),
+    c => { codeGarde = c; journal.push(["code", c]); },
+    () => codeGarde,
+    () => new Promise(ok => { rendreJauges = ok; }),
+    () => Promise.resolve(0),
+    () => {}, () => {}, () => {}, () => {});
+  const fini = ouvrir("ABC234", true);
+  assert.deepEqual(journal, [["dessin", "Rania (copie)"]], "la copie est à l'écran, le bouton aussi");
+  const reponse = {ok: true, status: 200, json: () => Promise.resolve(OK.corps)};
+  const avant = [["dessin", "Rania (copie)"]];
+  if (moment === "api/eleve.php") {
+    revenirAuCode();
+    repondre(reponse);
+  } else {
+    repondre(reponse);
+    await new Promise(ok => setTimeout(ok, 5));
+    avant.push(["code", "ABC234"]);
+    revenirAuCode();
+    rendreJauges({"defi-tables": {compte: "4"}});
+  }
+  await fini;
+  assert.equal(codeGarde, "", "le code reste oublié");
+  assert.deepEqual(journal, [...avant, ["code", ""]], "ni code remis, ni espace redessiné, ni copie gardée");
+});
+
+test("ouvrir — copie illisible (ancien format, trafiquée) : oubliée, et le serveur redessine l'espace ; jamais de page vide", async () => {
+  const r = jouerOuvrir({copie: COPIE, copieCassee: true, reponse: OK});
+  await r.fini;
+  assert.deepEqual(r.journal, [["oubli-copie"], ["code", "ABC234"], ["direct"], ["dessin", "Rania", "defi-tables", "-"], ["copie", "defi-tables"]]);
+  const panne = jouerOuvrir({copie: COPIE, copieCassee: true, reponse: new Error("réseau")});
+  await panne.fini;
+  assert.equal(panne.journal.at(-1)[0], "erreur", "serveur en panne : l'écran du code et le message, pas une page vide");
+  assert.ok(!panne.html.has("retour"));
 });
 
 // ------------------------------------------------------------ les tuiles du haut ne clignotent plus

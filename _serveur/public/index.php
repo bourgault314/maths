@@ -1210,8 +1210,13 @@ try {
     afficherErreur("");
     // Lot 8 : au retour dans l'onglet, la dernière copie de l'espace est
     // dessinée tout de suite ; la réponse du serveur la remplace ensuite.
-    const copie = silencieux ? lireCopie(code) : null;
-    if (copie) afficherEspace(copie, code, copie.jauges, copie.haut);
+    let copie = silencieux ? lireCopie(code) : null;
+    // Une copie illisible (ancien format, trafiquée) ne bloque rien : elle est
+    // oubliée, et la page attend le serveur comme s'il n'y en avait pas.
+    if (copie) {
+      try { afficherEspace(copie, code, copie.jauges, copie.haut); }
+      catch (_) { copie = null; oublierCopie(); }
+    }
     try {
       // Le code part dans le CORPS de la requête, jamais dans l'adresse : une
       // adresse s'inscrit en clair dans les journaux de l'hébergeur.
@@ -1308,6 +1313,9 @@ try {
   // retour d'un cache ci-dessous) : deux ménages écrits séparément, c'est un
   // jour où l'un des deux oublie une ligne.
   function revenirAuCode() {
+    // Lot 8 : la copie montre « Se déconnecter » avant la réponse du serveur.
+    // Une ouverture encore en route ne compte plus : elle remettrait le code.
+    ouverture += 1;
     ecrireCode("");
     arreterDirect();
     document.documentElement.classList.remove("retour");
