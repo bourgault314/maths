@@ -473,7 +473,8 @@
   //   depart   : le nombre de départ
   //   sauts    : [{val: +20}, {val: −1}] ; masque: true écrit « + ? »
   //   direct   : le saut direct, dessiné dessous (+ 19)
-  //   inconnue : le rang du point montré « ? » (0 = départ)
+  //   inconnue : le rang du point montré « ? » (0 = départ) ; inconnues :
+  //              plusieurs rangs
   //   acquis   : les rangs des points montrés en vert (trouvés)
   //   gras     : le rang (à partir de 1) du saut en gras
   function droiteSauts(o) {
@@ -505,9 +506,10 @@
       s += `<rect x="${lx - lw / 2}" y="${ly - 15}" width="${lw}" height="26" rx="13" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
         + `<text x="${lx}" y="${ly + 4}" text-anchor="middle" font-size="17" fill="${couleur}">${texte}</text>`;
     });
+    const inconnues = Array.isArray(o.inconnues) ? o.inconnues : [];
     plan.valeurs.forEach((valeur, index) => {
       const x = plan.x[index];
-      const inconnue = o.inconnue === index;
+      const inconnue = o.inconnue === index || inconnues.includes(index);
       const acquis = Array.isArray(o.acquis) && o.acquis.includes(index);
       const texte = inconnue ? "?" : nombre(valeur);
       const w = Math.max(50, texte.length * 11 + 18);
@@ -533,8 +535,9 @@
   // La même droite, en mots, pour un lecteur d'écran.
   function decrireDroite(o) {
     const plan = planDroite(o);
+    const inconnues = Array.isArray(o.inconnues) ? o.inconnues : [];
     const morceaux = o.sauts.map((saut, index) => {
-      const arrivee = o.inconnue === index + 1 ? "un nombre à trouver" : nombre(plan.valeurs[index + 1]);
+      const arrivee = o.inconnue === index + 1 || inconnues.includes(index + 1) ? "un nombre à trouver" : nombre(plan.valeurs[index + 1]);
       return `${saut.val < 0 ? "moins" : "plus"} ${saut.masque ? "un nombre à trouver" : nombre(saut.val)} : ${arrivee}`;
     });
     return `Droite : on part de ${nombre(o.depart)}. ${morceaux.join(". Puis ")}.`;
@@ -579,8 +582,9 @@
 
   // Ce que montre la bande quand elle a glissé de `decalage` colonnes vers
   // la gauche (négatif : vers la droite). Les zéros de tête tombent
-  // (0,6 × 10 se lit 6, pas 06) ; une case vide RESTE vide : c'est le zéro
-  // à écrire, l'outil ne l'écrit pas à la place de l'élève.
+  // (0,6 × 10 se lit 6, pas 06) ; pendant le glissement, une case vide RESTE
+  // vide : c'est le zéro à écrire, l'outil ne l'écrit pas à la place de
+  // l'élève.
   function bandeApres(base, decalage, indexUnites) {
     const vue = base.map((_, i) => base[i + decalage] || "");
     let gauche = vue.findIndex(chiffre => chiffre !== "");
@@ -589,6 +593,18 @@
       gauche += 1;
     }
     return vue;
+  }
+
+  // Les zéros de position, écrits une fois la bande lâchée au bon endroit
+  // (lot 3) : les cases vides entre le premier chiffre et les unités (2 700),
+  // et entre les unités et le dernier chiffre après la virgule (3,05) ; un
+  // nombre sans partie entière a son 0 des unités (0,25). Rend les indices.
+  function zerosDePosition(vue, indexUnites) {
+    const pleins = vue.map((chiffre, i) => (chiffre !== "" ? i : -1)).filter(i => i >= 0);
+    if (!pleins.length) return [];
+    const premier = Math.min(pleins[0], indexUnites);
+    const dernier = Math.max(pleins[pleins.length - 1], indexUnites);
+    return vue.map((chiffre, i) => (chiffre === "" && i >= premier && i <= dernier ? i : -1)).filter(i => i >= 0);
   }
 
   // Suivre un glissement jusqu'au lâcher, même hors de la bande (copié de
@@ -730,13 +746,24 @@
 
     function ecrireChiffres(decalage) {
       const vue = bandeApres(base, decalage, indexUnites);
-      cellulesBande.forEach(cellule => { cellule.textContent = ""; cellule.classList.remove("is-units-digit"); });
+      cellulesBande.forEach(cellule => { cellule.textContent = ""; cellule.classList.remove("is-units-digit", "is-zero-position"); });
       vue.forEach((chiffre, index) => {
         const cellule = cellulesBande[PAD + index + decalage];
         if (!cellule) return;
         cellule.textContent = chiffre;
         cellule.classList.toggle("is-units-digit", index === indexUnites);
       });
+      // La bande lâchée au bon endroit : les zéros de position s'écrivent,
+      // en gris, dans les cases restées vides (2 700 : un 0 aux dizaines, un
+      // 0 aux unités).
+      if (etat.fini && indexUnites >= 0) {
+        zerosDePosition(vue, indexUnites).forEach(index => {
+          const cellule = cellulesBande[PAD + index + decalage];
+          if (!cellule) return;
+          cellule.textContent = "0";
+          cellule.classList.add("is-zero-position");
+        });
+      }
     }
     function poser(px, animer) {
       const transition = animer ? "transform .34s cubic-bezier(.2,.75,.25,1)" : "none";
@@ -800,6 +827,7 @@
       bloc.classList.add("est-finie");
       barre.setAttribute("aria-disabled", "true");
       source.removeAttribute("tabindex");
+      ecrireChiffres(etat.decalage);
       ecrireTraces();
       if (typeof surFini === "function") surFini();
     }
@@ -1031,6 +1059,7 @@
     chiffresParRang,
     chiffresDansColonnes,
     bandeApres,
+    zerosDePosition,
     glisseNombres,
     TABLEAU,
     planTableau,

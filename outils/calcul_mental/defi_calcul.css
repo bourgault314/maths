@@ -707,9 +707,11 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 /* « bientôt » sur la ligne du nom : avec la légende, le palier de 14 modules
    doit encore tenir dans le cadre. */
 .dc-mod.bientot .nom small { display: inline; margin-left: 6px; }
-/* Un petit carré par compétence, à droite de la ligne. */
+/* Un petit carré par compétence du palier, à droite de la ligne ; le niveau
+   en cours est cerclé de bleu. */
 .dc-comp { display: inline-flex; gap: 4px; align-items: center; }
 .dc-comp i { width: 14px; height: 14px; border: 2px solid #9fb6c6; border-radius: 4px; background: #fff; box-sizing: border-box; }
+.dc-comp i.ici { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(7, 85, 184, .25); }
 .dc-comp i.r { border-color: #c62828; background: #c62828; }
 .dc-comp i.b { border-color: var(--blue); background: var(--blue); }
 .dc-comp i.v { border-color: var(--teal); background: var(--teal); }
@@ -822,11 +824,19 @@ div.dc-mod { cursor: default; }
 /* La case ne rétrécit jamais sous sa réponse (sa largeur minimale est
    fixée, elle se serait laissé écraser). */
 .challenge-playing .expression .inline-answer { flex-shrink: 0; }
-/* « J'écris » : le calcul en ligne, une étape par ligne. */
+/* « J'écris » (lot 3) : une étape par ligne, les morceaux en colonnes — la
+   case est sous la case, le « + » sous le « + ». L'étape faite garde sa
+   réponse en vert, celle qui se joue a la case, les suivantes sont grisées ;
+   au 2e essai faux, tout se révèle. */
 .expression.dc-lignes,
 .challenge-playing .expression.dc-lignes { height: auto; font-size: clamp(1.5rem, 5vw, 2.1rem); }
-.expression.dc-lignes .lg { display: grid; gap: 4px; text-align: left; }
-.expression.dc-lignes .lg.suite span:not(:first-child) { padding-left: 3.05em; }
+.expression.dc-lignes .lg { display: grid; grid-template-columns: repeat(var(--colonnes, 5), auto); justify-content: center; align-items: center; column-gap: .28em; row-gap: 6px; text-align: center; }
+.expression.dc-lignes .lg > span { display: contents; }
+.expression.dc-lignes .lg .cel { min-width: 0; text-align: center; }
+.expression.dc-lignes .lg .cel .inline-answer { display: inline-grid; }
+.expression.dc-lignes .lg > span.apres .cel { color: #9fb6c6; }
+.expression.dc-lignes .lg > span.apres .inline-answer.est-vide { border-color: #d5e0e8; background: #f6f9fb; color: transparent; }
+.expression.dc-lignes .lg > span.faite .cel { color: #4d6578; }
 /* La ligne de touches en plus, au-dessus du pavé (virgule, fraction) : le
    pavé lui-même ne change jamais. La virgule : D2 et tout le palier 3. */
 .dc-touches { width: min(100%, var(--pave-largeur)); display: grid; gap: 6px; margin: 6px auto 0; }
@@ -862,6 +872,8 @@ div.dc-mod { cursor: default; }
 .place-value-strip { position: absolute; inset: 0 auto 0 0; display: grid; align-items: center; justify-items: center; will-change: transform; }
 .place-value-strip-digit, .place-value-fixed-digit { display: grid; place-items: center; color: #0b2147; font-family: "Cambria Math", "Times New Roman", serif; font-size: 2.35rem; font-weight: 850; line-height: 1; }
 .place-value-fixed-digit.is-units-digit, .place-value-strip-digit.is-units-digit { color: #0879d0; }
+/* Lot 3 : les zéros de position, écrits en gris une fois la bande lâchée. */
+.place-value-strip-digit.is-zero-position { color: #8fa3b3; }
 .place-value-drag-bar { position: absolute; z-index: 2; left: -24px; right: -24px; top: 7px; height: 44px; cursor: grab; touch-action: none; outline: none; will-change: transform; }
 .place-value-drag-bar span { display: block; width: 100%; height: 100%; border: 1px solid rgba(107, 114, 128, .3); background: rgba(209, 213, 219, .62); box-shadow: inset 0 2px 3px rgba(0, 0, 0, .12), inset 0 -2px 3px rgba(255, 255, 255, .55); }
 .place-value-drag-bar:focus-visible span { box-shadow: inset 0 0 0 3px #f07818; }
@@ -993,3 +1005,38 @@ body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
   body.mode-eleve #lien-retour { width: 40px; min-width: 40px; min-height: 40px; padding: 0; }
   body.mode-eleve #lien-retour .catalogue-link-label { display: none; }
 }
+
+/* ------------------------------------------------- le scénario d'un module (lot 3) */
+/* Le test d'entrée en escalier : une marche par niveau, de plus en plus
+   haute ; montée en vert, celle qui se joue encadrée de bleu, ratée en
+   rouge ; sous chaque marche, un point par calcul (vert juste, rouge faux). */
+.dc-escalier { margin: 0 auto 6px; text-align: center; }
+.dc-escalier[hidden] { display: none; }
+.dc-escalier .marches { display: flex; align-items: flex-end; justify-content: center; gap: 6px; }
+.dc-escalier .marche { display: grid; justify-items: center; gap: 4px; width: 58px; }
+.dc-escalier .marche b { display: grid; place-items: center; width: 100%; height: calc(26px + var(--h, 1) * 10px); border: 2px solid #c5d9e6; border-radius: 9px; background: #f1f6fa; color: #8fa6b7; font-size: 1rem; font-weight: 950; box-sizing: border-box; }
+.dc-escalier .marche.ok b { border-color: var(--teal); background: var(--teal); color: #fff; }
+.dc-escalier .marche.ici b { border: 3px solid var(--blue); background: #fff; color: var(--blue); }
+.dc-escalier .marche.ratee b { border-color: #c62828; border-style: dashed; background: #fff; color: #c62828; }
+.dc-escalier .points { display: flex; gap: 4px; min-height: 10px; }
+.dc-escalier .points i { width: 10px; height: 10px; border: 2px solid #c5d9e6; border-radius: 50%; background: #fff; box-sizing: border-box; }
+.dc-escalier .points i.juste { border-color: var(--teal); background: var(--teal); }
+.dc-escalier .points i.faux { border-color: #c62828; background: #c62828; }
+.dc-escalier p { margin: 4px 0 0; color: #5b7286; font-size: .82rem; font-weight: 850; }
+/* « Nouveau : la case est devant » : une écriture nouvelle à l'entraînement. */
+.dc-annonce-forme { width: fit-content; margin: 0 auto 6px; padding: 4px 12px; border: 2px solid #e2a200; border-radius: 999px; background: #fff7dc; color: #7a4f00; font-size: .9rem; font-weight: 900; }
+.dc-annonce-forme[hidden] { display: none; }
+/* L'outil à manipuler à l'entraînement (après deux erreurs de suite) : on
+   manipule d'abord, le pavé et la touche « , » arrivent quand le geste est
+   fait, et on tape la réponse. */
+.question.manip-entraine.est-finie .keypad { display: grid; }
+.question.manip-entraine.est-finie .dc-touches:not([hidden]) { display: grid; }
+.question.manip-entraine.est-finie .answer-feedback { display: block; }
+.question.manip-entraine .dc-aide { flex: 0 1 auto; }
+.question.manip-entraine .perles-scene { min-height: 110px; max-height: 36dvh; }
+/* Les modules qui viennent, dans un palier : une liste compacte. */
+.dc-bientot { margin: 4px 2px 0; padding: 6px 9px; border: 1px dashed #c5d9e6; border-radius: 10px; background: #f6f9fb; color: #6b8192; font-size: .78rem; font-weight: 700; line-height: 1.35; text-align: left; }
+.dc-bientot b { color: #5b7286; font-weight: 900; }
+/* Le bilan du test : une marche qu'on n'a pas jouée. */
+.bilan-niveaux .pas i { background: #c5d9e6; color: #fff; }
+.bilan-niveaux .pas { color: #6b8192; }

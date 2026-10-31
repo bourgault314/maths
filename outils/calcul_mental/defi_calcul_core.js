@@ -1,5 +1,7 @@
 // Défi calcul — les modules (lot 1a, 03/10/2026 ; M2 et D2 au lot 1b ;
-// le test de module au lot 2a).
+// le test de module au lot 2a ; la carte v2 et le scénario d'un module au
+// lot 3, 30/10/2026 : test en escalier, J'apprends sur trois calculs
+// différents, calculs rangés du simple au difficile, outil de l'entraînement).
 //
 // Un module = une fiche de données : son nom, ses niveaux, ses générateurs,
 // ses erreurs connues, les trois temps de « J'apprends ». Tout texte vu par
@@ -19,14 +21,19 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
   "use strict";
 
+  // Les quatre paliers de la carte v2 : ce sont les NIVEAUX (les
+  // compétences) qui y sont rangés, par classe, pas les modules.
   const PALIERS = Object.freeze([
-    Object.freeze({n: 1, nom: "Le socle"}),
-    Object.freeze({n: 2, nom: "Les entiers"}),
-    Object.freeze({n: 3, nom: "Les décimaux"}),
-    Object.freeze({n: 4, nom: "Les fractions du CM"})
+    Object.freeze({n: 1, nom: "Les bases", classes: "CP · CE1 · CE2"}),
+    Object.freeze({n: 2, nom: "Le CM1", classes: "CM1"}),
+    Object.freeze({n: 3, nom: "Le CM2", classes: "CM2"}),
+    Object.freeze({n: 4, nom: "Vers la 6e", classes: "6e et choix pédagogiques"})
   ]);
 
-  const TOTAUX = Object.freeze({F: 12, P: 10, entraine: 10});
+  // Une validation (mode professeur) : 12 calculs pour un fait, 10 pour une
+  // procédure. Un entraînement : jusqu'à 20 calculs, rangés du plus simple
+  // au plus dur (la série s'arrête avant, le plus souvent).
+  const TOTAUX = Object.freeze({F: 12, P: 10, entraine: 20});
 
   // ------------------------------------------------------------------ hasard
 
@@ -196,18 +203,18 @@
   const centaineSuivante = n => (Math.floor(n / 100) + 1) * 100;
 
   const A2_NOMBRES_2 = Object.freeze([10, 20, 30, 40, 50, 60, 70, 80, 90, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]);
-  const A2_NOMBRES_3 = Object.freeze(Array.from({length: 99}, (_, i) => i + 1).filter(n => n % 5 !== 0));
+  const A2_NOMBRES_3 = Object.freeze(Array.from({length: 99}, (_, i) => i + 1).filter(n => n % 5 !== 0 && n < 90));
 
-  // Niveau 1 : à 10, et à la dizaine suivante (cible variable : 433 + ? = 440).
+  // Niveau 1 : à la dizaine suivante (cible variable : 67 + ? = 70,
+  // 433 + ? = 440). Les compléments à 10 sont partis dans A1 (carte v2).
   function a2Niveau1(rng, total, imposes) {
-    const [dix, deux, trois] = total === 12 ? [4, 4, 4] : repartir(total, [3, 4, 3]);
+    const [deux, trois] = repartir(total, [1, 1]);
     const impose = imposes.length;
-    const versDix = tirerDistincts(rng, dix, r => entierEntre(r, 1, 9)).map(a => a2Complement(1, a, 10));
     const aDeux = tirerDistincts(rng, deux, r => sansUniteNulle(r, 11, 99))
       .map(n => a2Complement(1, n, dizaineSuivante(n), {suivante: true}));
     const aTrois = tirerDistincts(rng, Math.max(0, trois - impose), r => sansUniteNulle(r, 101, 999), imposes.map(c => c.donnees.a))
       .map(n => a2Complement(1, n, dizaineSuivante(n), {suivante: true}));
-    return [...versDix, ...aDeux, ...aTrois, ...imposes];
+    return [...aDeux, ...aTrois, ...imposes];
   }
 
   // Niveau 2 : à 100, les dizaines entières et les nombres en 5.
@@ -339,6 +346,70 @@
     })
   ]);
 
+  // Du plus simple au plus dur (le test en escalier et l'entraînement
+  // rangent leurs calculs avec ça) : la forme d'abord (« a + ? » avant
+  // « ? + a », avant « 100 − a »), puis un saut de plus à faire, puis la
+  // taille du nombre de départ.
+  const A2_FORMES = Object.freeze({complement: 0, "complement-gauche": 1, difference: 2});
+  function a2Difficulte(calcul) {
+    const {a} = calcul.donnees;
+    const sauts = a2Sauts(calcul).sauts.length;
+    return A2_FORMES[calcul.forme] * 1000 + (sauts - 1) * 300 + String(a).length * 30 + (a % 10 ? 10 - a % 10 : 0);
+  }
+
+  // L'outil du début de l'entraînement, et de « je représente » : la droite
+  // est dessinée, ses points aussi (62, 70, 100), mais les sauts disent
+  // « + ? » — c'est eux qu'on cherche.
+  function a2Aide(calcul) {
+    const image = a2Image(calcul);
+    return Object.assign({}, image, {sauts: image.sauts.map(saut => ({val: saut.val, masque: true}))});
+  }
+
+  // Le rekenrek d'un complément (jusqu'à 100) : finir la rangée d'un coup,
+  // puis les rangées qui manquent, 10 perles d'un coup. La consigne ne dit
+  // jamais le nombre de perles : c'est lui qu'on cherche.
+  function a2Perles(calcul, consigne) {
+    const {a, cible} = calcul.donnees;
+    if (cible > 100) return null;
+    const {palier} = a2Sauts(calcul);
+    return Object.freeze({
+      outil: "perles", depart: a, texte: calcul.texte.replace(CASE, "?"),
+      gestes: Object.freeze(palier === null
+        ? (cible - a < 10 ? [cible - a] : Array.from({length: (cible - a) / 10}, () => 10))
+        : [palier - a, ...Array.from({length: (cible - palier) / 10}, () => 10)]),
+      consigne: consigne || (palier === null
+        ? (cible - a < 10 ? "Finis la rangée d’un coup." : "Pousse les rangées qui manquent, 10 perles d’un coup.")
+        : "Finis la rangée d’un coup, puis pousse les rangées qui manquent."),
+      traces: Object.freeze(palier === null
+        ? [Object.freeze({apres: cible - a < 10 ? 1 : (cible - a) / 10, attente: `${a} + … = ${cible}`, texte: `${a} + ${cible - a} = ${cible}`})]
+        : [
+          Object.freeze({apres: 1, attente: `${a} + … = ${palier}`, texte: `${a} + ${palier - a} = ${palier}`}),
+          Object.freeze({apres: 1 + (cible - palier) / 10, attente: `${palier} + … = ${cible}`, texte: `${palier} + ${cible - palier} = ${cible}`})
+        ])
+    });
+  }
+
+  // Les étapes de « J'écris » d'un complément : jusqu'au palier, puis
+  // jusqu'à la cible, puis le complément entier. Un seul saut : une étape.
+  function a2Etapes(calcul) {
+    const {a, cible} = calcul.donnees;
+    const {palier} = a2Sauts(calcul);
+    const etape = (texte, reponse) => Object.freeze({texte, reponse});
+    if (palier === null) return Object.freeze([etape(`${formaterNombre(a)} + ${CASE} = ${formaterNombre(cible)}`, cible - a)]);
+    return Object.freeze([
+      etape(`${formaterNombre(a)} + ${CASE} = ${formaterNombre(palier)}`, palier - a),
+      etape(`${formaterNombre(palier)} + ${CASE} = ${formaterNombre(cible)}`, cible - palier),
+      etape(`${formaterNombre(a)} + ${CASE} = ${formaterNombre(cible)}`, cible - a)
+    ]);
+  }
+
+  function a2Phrase(calcul) {
+    const {a, cible} = calcul.donnees;
+    const {palier} = a2Sauts(calcul);
+    if (palier === null) return `De ${formaterNombre(a)} à ${formaterNombre(cible)}, c’est + ${formaterNombre(cible - a)}.`;
+    return `Regarde\u00a0: ${formaterNombre(palier - a)} puis ${formaterNombre(cible - palier)}, ça fait ${formaterNombre(cible - a)}.`;
+  }
+
   // -------------------------------------------- A5 : ajouter 9, 19, 29… et 8, 18, 28…
 
   function a5Somme(niveau, n, a) {
@@ -374,6 +445,61 @@
     const {n, a} = calcul.donnees;
     const r = a5Arrondi(a);
     return {outil: "droite-sauts", depart: n, sauts: [{val: r}, {val: a - r}], direct: a, acquis: [2], gras};
+  }
+
+  // Du plus simple au plus dur : le terme ajouté (9 avant 19 avant 29), un
+  // retour de 2 après un retour de 1, le passage de la centaine, la taille
+  // du nombre de départ.
+  function a5Difficulte(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return a * 10 + (r - a) * 100 + (a5Passage(n) ? 400 : 0) + String(n).length * 30 + (n % 10 ? 0 : 20);
+  }
+
+  // L'outil du début de l'entraînement, et de « je représente » : la droite
+  // avec le détour (+ 10, − 1), ses deux arrivées à trouver.
+  function a5Aide(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return {outil: "droite-sauts", depart: n, sauts: [{val: r}, {val: a - r}], direct: a, inconnues: [1, 2]};
+  }
+
+  // Le rekenrek d'une somme (jusqu'à 100) : une rangée entière d'un coup
+  // (ou plusieurs), puis on retire.
+  function a5Perles(calcul) {
+    const {n, a} = calcul.donnees;
+    if (n + a > 100) return null;
+    const r = a5Arrondi(a);
+    const d = r - a;
+    const rangees = r / 10;
+    return Object.freeze({
+      outil: "perles", depart: n, texte: `${n} + ${a}`,
+      gestes: Object.freeze([...Array.from({length: rangees}, () => 10), -d]),
+      consigne: rangees === 1
+        ? `Pousse 10 perles d’un coup, puis retires-en ${d}.`
+        : `Pousse ${r} perles, 10 d’un coup, puis retires-en ${d}${d > 1 ? " d’un coup" : ""}.`,
+      traces: Object.freeze([
+        Object.freeze({apres: rangees, attente: `${n} + ${r} = …`, texte: `${n} + ${r} = ${n + r}`}),
+        Object.freeze({apres: rangees + 1, attente: `${n + r} − ${d} = …`, texte: `${n + r} − ${d} = ${n + a}`})
+      ])
+    });
+  }
+
+  function a5Etapes(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    const etape = (texte, reponse) => Object.freeze({texte, reponse});
+    return Object.freeze([
+      etape(`${formaterNombre(n)} + ${r} = ${CASE}`, n + r),
+      etape(`${formaterNombre(n + r)} − ${r - a} = ${CASE}`, n + a),
+      etape(`${formaterNombre(n)} + ${a} = ${CASE}`, n + a)
+    ]);
+  }
+
+  function a5Phrase(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return `Regarde\u00a0: + ${r}, ça fait ${formaterNombre(n + r)}\u202f; − ${r - a}, ça fait ${formaterNombre(n + a)}.`;
   }
 
   const A5_ERREURS = Object.freeze([
@@ -427,72 +553,67 @@
     })
   ]);
 
-  // Les trois temps de « J'apprends » d'un niveau d'A5 : le rekenrek (une
-  // rangée entière d'un coup, puis on retire), la droite (le détour dessus,
-  // le saut direct dessous), l'écriture en ligne.
-  function a5Apprends(n, a, bilan) {
+  // Les trois temps de « J'apprends » d'un niveau d'A5, sur TROIS calculs
+  // différents (scénario du 30/10) : le rekenrek sur le premier (une rangée
+  // entière d'un coup, puis on retire), la droite sur le deuxième (le détour
+  // dessus, le saut direct dessous, les arrivées à trouver), les étapes à
+  // remplir sur le troisième. Au 2e essai faux, la réponse s'affiche sur
+  // l'outil (« solution ») et une phrase la lit.
+  function a5Apprends(nM, nR, nE, a, bilan) {
     const r = a5Arrondi(a);
     const d = r - a;
-    const rangees = r / 10;
-    const consigne = rangees === 1
-      ? `Pousse 10 perles d’un coup, puis retires-en ${d}.`
-      : `Pousse ${r} perles, 10 d’un coup, puis retires-en ${d}${d > 1 ? " d’un coup" : ""}.`;
+    const cM = a5Somme(0, nM, a);
+    const cR = a5Somme(0, nR, a);
+    const cE = a5Somme(0, nE, a);
+    // Au-delà de 100 perles (+ 99), pas de rekenrek : on commence par la droite.
+    const manipule = a5Perles(cM);
+    const premier = manipule ? cM : cR;
     return Object.freeze({
-      exemple: Object.freeze({texte: `${n} + ${a}`, reponse: n + a}),
-      manipule: Object.freeze({
-        outil: "perles", depart: n,
-        gestes: Object.freeze([...Array.from({length: rangees}, () => 10), -d]),
-        consigne,
-        traces: Object.freeze([
-          Object.freeze({apres: rangees, attente: `${n} + ${r} = …`, texte: `${n} + ${r} = ${n + r}`}),
-          Object.freeze({apres: rangees + 1, attente: `${n + r} − ${d} = …`, texte: `${n + r} − ${d} = ${n + a}`})
-        ])
-      }),
+      exemple: Object.freeze({texte: `${premier.donnees.n} + ${a}`, reponse: premier.reponse}),
+      manipule,
       represente: Object.freeze({
         outil: "droite-sauts",
         consigne: `+ ${a}, c’est + ${r} puis − ${d}.`,
-        texte: `${n} + ${a} = ${CASE}`, reponse: n + a,
-        image: Object.freeze({outil: "droite-sauts", depart: n, sauts: [{val: r}, {val: -d}], direct: a, inconnue: 2, acquis: [1]})
+        texte: cR.texte, reponse: cR.reponse,
+        image: Object.freeze(a5Aide(cR)),
+        solution: Object.freeze({image: a5Image(cR), phrase: a5Phrase(cR)})
       }),
       ecris: Object.freeze({
-        lignes: Object.freeze([`${n} + ${a}`, `= ${n} + ${r} − ${d}`, `= ${n + r} − ${d}`, `= ${CASE}`]),
-        reponse: n + a, suite: true
+        etapes: a5Etapes(cE), reponse: cE.reponse,
+        solution: Object.freeze({image: a5Image(cE), phrase: a5Phrase(cE)})
       }),
       bilan,
-      image: Object.freeze({outil: "droite-sauts", depart: n, sauts: [{val: r}, {val: -d}], direct: a, acquis: [2]})
+      image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: r}, {val: -d}], direct: a, acquis: [2]}),
+      textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
 
-  // Les trois temps d'un niveau d'A2. Sur le rekenrek, la consigne ne dit
-  // jamais le nombre de perles : c'est lui qu'on cherche.
-  function a2Apprends({a, cible, manipule, consigne, lignes, bilan, masque}) {
-    const calcul = a2Complement(0, a, cible, cible !== 10 && cible !== 100 && cible !== 1000 ? {suivante: true} : {});
-    const {palier, sauts} = a2Sauts(calcul);
-    const image = {outil: "droite-sauts", depart: a, sauts: sauts.map(val => ({val}))};
+  // Les trois temps d'un niveau d'A2, sur trois calculs différents : les
+  // perles sur le premier (niveau 4 : pas de perles au-delà de 100), la
+  // droite dessinée avec ses sauts « + ? » sur le deuxième, les étapes à
+  // remplir sur le troisième.
+  function a2Apprends({manipule, represente, ecris, consigne, consigneManipule, bilan}) {
+    const calculDe = ({a, cible}) => a2Complement(0, a, cible, cible !== 10 && cible !== 100 && cible !== 1000 ? {suivante: true} : {});
+    const cM = manipule ? calculDe(manipule) : null;
+    const cR = calculDe(represente);
+    const cE = calculDe(ecris);
+    const premier = cM || cR;
     return Object.freeze({
-      exemple: Object.freeze({texte: `${formaterNombre(a)} + ? = ${formaterNombre(cible)}`, reponse: cible - a}),
-      manipule: manipule ? Object.freeze({
-        outil: "perles", depart: a,
-        gestes: Object.freeze(palier === null
-          ? (cible - a < 10 ? [cible - a] : Array.from({length: (cible - a) / 10}, () => 10))
-          : [palier - a, ...Array.from({length: (cible - palier) / 10}, () => 10)]),
-        consigne: manipule,
-        traces: Object.freeze(palier === null
-          ? [Object.freeze({apres: cible - a < 10 ? 1 : (cible - a) / 10, attente: `${a} + … = ${cible}`, texte: `${a} + ${cible - a} = ${cible}`})]
-          : [
-            Object.freeze({apres: 1, attente: `${a} + … = ${palier}`, texte: `${a} + ${palier - a} = ${palier}`}),
-            Object.freeze({apres: 1 + (cible - palier) / 10, attente: `${palier} + … = ${cible}`, texte: `${palier} + ${cible - palier} = ${cible}`})
-          ])
-      }) : null,
+      exemple: Object.freeze({texte: premier.texte.replace(CASE, "?"), reponse: premier.reponse}),
+      manipule: cM ? a2Perles(cM, consigneManipule) : null,
       represente: Object.freeze({
         outil: "droite-sauts", consigne,
-        texte: `${formaterNombre(a)} + ${CASE} = ${formaterNombre(cible)}`, reponse: cible - a,
-        // Un seul saut : son étiquette serait la réponse, elle reste « + ? ».
-        image: Object.freeze(Object.assign({}, image, masque ? {sauts: sauts.map(val => ({val, masque: true}))} : {}))
+        texte: cR.texte, reponse: cR.reponse,
+        image: Object.freeze(a2Aide(cR)),
+        solution: Object.freeze({image: a2Image(cR), phrase: a2Phrase(cR)})
       }),
-      ecris: Object.freeze({lignes: Object.freeze(lignes), reponse: cible - a, suite: false}),
+      ecris: Object.freeze({
+        etapes: a2Etapes(cE), reponse: cE.reponse,
+        solution: Object.freeze({image: a2Image(cE), phrase: a2Phrase(cE)})
+      }),
       bilan,
-      image: Object.freeze(image)
+      image: Object.freeze(a2Image(cR)),
+      textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
 
@@ -817,19 +938,76 @@
     })
   ]);
 
-  // Les trois temps d'un niveau de M2 ou D2 : le glisse-nombres (les
-  // chiffres glissent, la virgule ne bouge pas), le tableau à flèches, la
-  // décomposition écrite.
-  //   calcul    : l'exemple, fabriqué comme un calcul de la série
-  //   colonnes  : les rangs du glisse-nombres (5 = centaines de mille,
-  //               0 = unités, −3 = millièmes)
-  //   consigne  : celle du glisse-nombres et du tableau
-  //   refus     : la phrase d'un glissement faux (null : la consigne tremble)
-  //   inconnue  : ce que le tableau cache, « arrivee » ou « puissance »
-  function glisseApprends({calcul, exemple, colonnes, consigne, consigneTableau = consigne, refus, trace, lignes, suite, bilan, inconnue = "arrivee"}) {
+  const COLONNES_M2 = Object.freeze([5, 4, 3, 2, 1, 0]);
+  const COLONNES_D2 = Object.freeze([3, 2, 1, 0, -1, -2, -3]);
+  const MILLE = `1${ESPACE_FINE}000`;
+
+  // Du plus simple au plus dur, pour M2 et D2 : la forme d'abord (les
+  // produits, puis les trous sur la puissance, puis les trous sur le nombre,
+  // puis les divisions), la puissance (× 10 avant × 1 000), la taille du
+  // nombre (ses chiffres, ses décimales, un nombre sous 1).
+  const GLISSE_FORMES = Object.freeze({produit: 0, "produit-gauche": 1, "trou-facteur": 2, "trou-egal": 3, "trou-nombre": 4, "trou-nombre-gauche": 5, division: 6});
+  function glisseDifficulte(calcul) {
+    const {n, p} = calcul.donnees;
+    const zeros = calcul.module === "D2" && estProduit(calcul) ? Math.max(0, colonnesDe(p) - decimalesDe(n)) : 0;
+    return GLISSE_FORMES[calcul.forme] * 1000 + colonnesDe(p) * 100 + zeros * 60 + (n < 1 ? 40 : 0)
+      + String(Math.trunc(n)).length * 10 + decimalesDe(n) * 10;
+  }
+
+  // L'outil du début de l'entraînement, et de « je représente » : le
+  // tableau à flèches, l'arrivée à écrire (ses zéros sont des « ? ») ; sur
+  // un trou de la puissance, l'étiquette dit « × ? ».
+  function glisseAide(calcul) {
     const image = tableauDe(calcul);
+    if (calcul.forme === "trou-facteur" || calcul.forme === "trou-egal") return Object.assign({}, image, {masque: true});
+    // « □ × 100 = 9 400 » : on part de l'arrivée et on revient (÷ 100), sinon
+    // le tableau écrirait le nombre cherché en haut.
+    if (estTrouNombre(calcul)) {
+      const {n, p, m} = calcul.donnees;
+      return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule: calcul.module === "D2", inconnue: true};
+    }
+    return Object.assign({}, image, {inconnue: true});
+  }
+
+  // Le glisse-nombres d'un calcul de M2 ou D2 : le nombre de départ dans la
+  // bande, et le glissement attendu. Sur un trou de la puissance, on glisse
+  // jusqu'à lire l'arrivée.
+  function glisseManipulation(calcul) {
     const {n, p, m} = calcul.donnees;
-    const decalage = calcul.forme === "division" ? -colonnesDe(p) : colonnesDe(p);
+    const colonnes = calcul.module === "D2" ? COLONNES_D2 : COLONNES_M2;
+    const k = colonnesDe(p);
+    const division = calcul.forme === "division" || estTrouNombre(calcul);
+    const depart = division ? m : n;
+    const arrivee = division ? n : m;
+    const trou = calcul.forme === "trou-facteur" || calcul.forme === "trou-egal";
+    const sens = division ? "moins" : "plus";
+    return Object.freeze({
+      outil: "glisse", depart, colonnes, decalage: division ? -k : k,
+      texte: calcul.texte.replace(CASE, "?"),
+      consigne: trou ? `Glisse jusqu’à lire ${formaterNombre(m)}.` : `Chaque chiffre vaut ${formaterNombre(p)} fois ${sens}.`,
+      refus: trou ? null : `Chaque chiffre doit valoir ${formaterNombre(p)} fois ${sens}\u00a0: ${pluriel(k, "colonne")}.`,
+      traces: Object.freeze([Object.freeze({
+        apres: 1,
+        attente: trou ? `${formaterNombre(n)} × … = ${formaterNombre(m)}` : `${formaterNombre(depart)} ${division ? "÷" : "×"} ${formaterNombre(p)} = …`,
+        texte: trou ? `${formaterNombre(n)} × ${formaterNombre(p)} = ${formaterNombre(m)}` : `${formaterNombre(depart)} ${division ? "÷" : "×"} ${formaterNombre(p)} = ${formaterNombre(arrivee)}`
+      })])
+    });
+  }
+
+  // Les trois temps d'un niveau de M2 ou D2, sur trois calculs différents :
+  // le glisse-nombres (les chiffres glissent, la virgule ne bouge pas) sur
+  // le premier, le tableau à flèches sur le deuxième, les étapes écrites sur
+  // le troisième.
+  //   calcul     : le calcul du glisse-nombres
+  //   represente : le calcul du tableau (son arrivée à trouver, ou « × ? »)
+  //   ecris      : {calcul, etapes: [{texte, reponse}], phrase}
+  //   colonnes   : les rangs du glisse-nombres (5 = centaines de mille,
+  //                0 = unités, −3 = millièmes)
+  //   consigne   : celle du glisse-nombres et du tableau
+  //   refus      : la phrase d'un glissement faux (null : la consigne tremble)
+  function glisseApprends({calcul, exemple, represente, ecris, colonnes, consigne, consigneTableau = consigne, refus, trace, bilan}) {
+    const {n, m} = calcul.donnees;
+    const decalage = calcul.forme === "division" ? -colonnesDe(calcul.donnees.p) : colonnesDe(calcul.donnees.p);
     return Object.freeze({
       exemple: Object.freeze({texte: exemple, reponse: calcul.reponse}),
       manipule: Object.freeze({
@@ -839,76 +1017,106 @@
       }),
       represente: Object.freeze({
         outil: "tableau-fleches", consigne: consigneTableau,
-        texte: calcul.texte, reponse: calcul.reponse,
-        // L'arrivée cherchée : ses zéros à écrire sont des « ? ». La
-        // puissance cherchée : l'étiquette dit « × ? ».
-        image: Object.freeze(Object.assign({}, image, inconnue === "puissance" ? {masque: true} : {inconnue: true}))
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(glisseAide(represente)),
+        solution: Object.freeze({image: tableauDe(represente), phrase: ecris.phraseRepresente || glissePhrase(represente)})
       }),
-      ecris: Object.freeze({lignes: Object.freeze(lignes), reponse: calcul.reponse, suite}),
+      ecris: Object.freeze({
+        etapes: Object.freeze(ecris.etapes.map(e => Object.freeze(Object.assign({}, e)))), reponse: ecris.calcul.reponse,
+        solution: Object.freeze({image: tableauDe(ecris.calcul), phrase: ecris.phrase || glissePhrase(ecris.calcul)})
+      }),
       bilan,
-      image: Object.freeze(image)
+      image: Object.freeze(tableauDe(calcul)),
+      textes: Object.freeze([calcul.texte, represente.texte, ecris.calcul.texte])
     });
   }
 
-  const COLONNES_M2 = Object.freeze([5, 4, 3, 2, 1, 0]);
-  const COLONNES_D2 = Object.freeze([3, 2, 1, 0, -1, -2, -3]);
-  const MILLE = `1${ESPACE_FINE}000`;
+  // La phrase qui lit la réponse d'un calcul de M2 ou D2, au 2e essai faux.
+  function glissePhrase(calcul) {
+    const {n, p, m} = calcul.donnees;
+    if (calcul.forme === "trou-facteur" || calcul.forme === "trou-egal") return `Regarde\u00a0: de ${formaterNombre(n)} à ${formaterNombre(m)}, les chiffres glissent de ${pluriel(colonnesDe(p), "colonne")}\u00a0: c’est × ${formaterNombre(p)}.`;
+    if (calcul.forme === "division" || estTrouNombre(calcul)) return `Regarde\u00a0: ${formaterNombre(m)} ÷ ${formaterNombre(p)} = ${formaterNombre(n)}.`;
+    return `Regarde\u00a0: ${formaterNombre(n)} × ${formaterNombre(p)} = ${formaterNombre(m)}.`;
+  }
 
-  // ------------------------------------------------------------- les 71 modules
+  // ------------------------------------------------------------- les 74 modules
+  //
+  // La carte v2 (30/10/2026) : 45 modules, 129 compétences. Chaque niveau
+  // porte SON palier (par classe) et son type (F = fait à savoir par cœur,
+  // P = procédure). Les 29 identifiants réservés (palier 0) restent décrits
+  // dans l'ancienne carte et ne sont jamais affichés.
 
-  const niveauxVides = nombre => Array.from({length: nombre}, (_, i) => ({n: i + 1}));
+  // L'ordre du parcours (carte v2 du 30/10/2026, § 3) : la séance prend
+  // toujours la première compétence de cette liste qui n'est pas dans les
+  // boîtes. Les modules non construits sont sautés.
+  const ORDRE = Object.freeze([
+    // palier 1 : 37 compétences
+    "A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1",
+    "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2",
+    "A7-1", "M1-2", "A10-3", "A11-3", "A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3",
+    "M6-1", "A8-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2",
+    // palier 2 : 32 compétences
+    "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3",
+    "F1-1", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2",
+    "F5-1", "M8-3", "C3-1", "F6-1", "M10-1", "F8-1", "A8-3", "F3-3", "C3-2", "F5-2",
+    "M12-1", "F8-2",
+    // palier 3 : 45 compétences
+    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3",
+    "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2",
+    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "F8-3", "D9-1", "M11-2",
+    "F6-3", "D8-3", "C3-3", "M12-2", "F5-3", "D9-2", "F9-1", "M13-3", "A9-1", "C1-3",
+    "F11-1", "C4-1", "A9-2", "F9-2", "C4-2",
+    // palier 4 : 15 compétences
+    "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-3", "D7-2", "M12-3", "F4-2",
+    "M9-2", "D7-3", "F11-2", "A9-4", "M9-3"
+  ]);
 
   const A2 = {
-    id: "A2", nom: "Compléments à 10, 100, 1\u202f000", exemple: "37 + ? = 100",
-    famille: "A", palier: 1, rang: 2, avant: ["A1"], construit: true,
+    id: "A2", nom: "Compléments à la dizaine, à 100, à 1\u202f000", exemple: "37 + ? = 100",
+    famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A2_ERREURS, image: a2Image,
+    erreurs: A2_ERREURS, image: a2Image, aide: a2Aide, manipulation: calcul => a2Perles(calcul), difficulte: a2Difficulte,
     niveaux: [
       {
-        n: 1, titre: "à 10, dizaine suivante", nom: "Compléments à 10", type: "F", avant: [],
+        n: 1, titre: "à la dizaine suivante", nom: "Compléments à la dizaine", palier: 1, type: "F",
         composer: a2Niveau1,
         imposes: [a2Complement(1, 433, 440, {suivante: true})],
         apprends: a2Apprends({
-          a: 67, cible: 70, masque: true,
-          manipule: "Finis la rangée d’un coup.",
-          consigne: "De 67 à 70, il manque les unités.",
-          lignes: [`67 + ${CASE} = 70`],
+          manipule: {a: 67, cible: 70}, represente: {a: 48, cible: 50}, ecris: {a: 433, cible: 440},
+          consigneManipule: "Finis la rangée d’un coup.",
+          consigne: "Pour aller à la dizaine suivante, je complète les unités.",
           bilan: "Pour aller à la dizaine suivante, je complète les unités."
         })
       },
       {
-        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", type: "F", avant: ["A2-1"],
+        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", palier: 1, type: "F",
         composer: a2Niveau2,
         imposes: [a2Complement(2, 75, 100), a2Difference(2, 35, 100)],
         apprends: a2Apprends({
-          a: 40, cible: 100, masque: true,
-          manipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
-          consigne: "De 40 à 100, je compte les dizaines.",
-          lignes: [`40 + ${CASE} = 100`],
+          manipule: {a: 40, cible: 100}, represente: {a: 65, cible: 100}, ecris: {a: 20, cible: 100},
+          consigneManipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
+          consigne: "Je vais à la dizaine, puis je compte les dizaines jusqu’à 100.",
           bilan: "40 et 60, 30 et 70… les dizaines qui font 100, je les sais."
         })
       },
       {
-        n: 3, titre: "à 100\u00a0: tous les nombres", nom: "Compléments à 100", type: "P", avant: ["A2-2"],
+        n: 3, titre: "à 100\u00a0: tous les nombres", nom: "Compléments à 100", palier: 1, type: "P",
         composer: a2Niveau3,
         imposes: [a2Complement(3, 61, 100), a2Complement(3, 29, 100), a2Complement(3, 13, 100)],
         apprends: a2Apprends({
-          a: 37, cible: 100,
-          manipule: "Finis la rangée d’un coup, puis pousse les rangées qui manquent.",
+          manipule: {a: 37, cible: 100}, represente: {a: 58, cible: 100}, ecris: {a: 24, cible: 100},
+          consigneManipule: "Finis la rangée d’un coup, puis pousse les rangées qui manquent.",
           consigne: "Je vais à la dizaine, puis à 100.",
-          lignes: ["37 + 3 = 40", "40 + 60 = 100", `3 + 60 = ${CASE}`],
           bilan: "Pour aller à 100, je vais d’abord à la dizaine, puis à 100."
         })
       },
       {
-        n: 4, titre: "à 1\u202f000", nom: "Compléments à 1\u202f000", type: "P", avant: ["A2-3"],
+        n: 4, titre: "à 1\u202f000 et à la centaine suivante", nom: "Compléments à 1\u202f000", palier: 2, type: "P",
         composer: a2Niveau4,
         imposes: [a2Complement(4, 650, 1000), a2Complement(4, 230, 300, {suivante: true})],
         apprends: a2Apprends({
-          a: 650, cible: 1000,
-          manipule: null,
+          manipule: null, represente: {a: 650, cible: 1000}, ecris: {a: 370, cible: 1000},
           consigne: "Je vais à la centaine, puis à 1\u202f000.",
-          lignes: ["650 + 50 = 700", `700 + 300 = 1${ESPACE_FINE}000`, `50 + 300 = ${CASE}`],
           bilan: "Pour aller à 1\u202f000, je vais d’abord à la centaine, puis à 1\u202f000."
         })
       }
@@ -916,67 +1124,71 @@
   };
 
   const A5 = {
-    id: "A5", nom: "Ajouter 9, 19, 29…", exemple: "47 + 19",
-    famille: "A", palier: 1, rang: 8, avant: ["A3"], construit: true,
+    id: "A5", nom: "Ajouter 9, 19, 29… et 8, 18, 28…", exemple: "47 + 19",
+    famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A5_ERREURS, image: a5Image,
+    erreurs: A5_ERREURS, image: a5Image, aide: a5Aide, manipulation: a5Perles, difficulte: a5Difficulte,
     niveaux: [
       {
-        n: 1, titre: "+ 9", type: "P", avant: [],
+        n: 1, titre: "+ 9", palier: 1, type: "P",
         composer: a5Niveau(1, [9]),
         imposes: [a5Somme(1, 31, 9), a5Somme(1, 94, 9)],
-        apprends: a5Apprends(47, 9, "+ 9, c’est + 10 puis − 1.")
+        apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1.")
       },
       {
-        n: 2, titre: "+ 19, 29, 39", type: "P", avant: ["A5-1"],
+        n: 2, titre: "+ 19, 29, 39", palier: 1, type: "P",
         composer: a5Niveau(2, [19, 29, 39]),
         imposes: [a5Somme(2, 31, 19), a5Somme(2, 285, 19)],
-        apprends: a5Apprends(47, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1.")
+        apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1.")
       },
       {
-        n: 3, titre: "+ 8, 18, 28, 38", type: "P", avant: ["A5-2"],
+        n: 3, titre: "+ 8, 18, 28, 38", palier: 1, type: "P",
         composer: a5Niveau(3, [8, 18, 28, 38]),
         imposes: [a5Somme(3, 53, 38), a5Somme(3, 147, 18)],
-        apprends: a5Apprends(53, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2.")
+        apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2.")
       },
       {
-        n: 4, titre: "+ 48, 49… 98, 99", type: "P", avant: ["A5-3"],
+        n: 4, titre: "+ 48, 49… 98, 99", palier: 3, type: "P",
         composer: a5Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a5Somme(4, 152, 98), a5Somme(4, 126, 99)],
-        apprends: a5Apprends(23, 59, "Pour ajouter 99, j’ajoute 100, puis je retranche 1.")
+        apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1.")
       }
     ]
   };
 
+  const etapeDe = (texte, reponse) => ({texte, reponse});
+
   const M2 = {
-    id: "M2", nom: "× 10, × 100, × 1\u202f000", exemple: "27 × 100",
-    famille: "M", palier: 1, rang: 5, avant: [], construit: true,
+    id: "M2", nom: "× 10, × 100, × 1\u202f000 (entiers)", exemple: "27 × 100",
+    famille: "M", construit: true,
     aide_entraine: "tableau-fleches",
-    erreurs: M2_ERREURS, image: tableauDe,
+    erreurs: M2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "produits", nom: "× 10, × 100, × 1\u202f000", type: "P", avant: [],
+        n: 1, titre: "produits", nom: "× 10, × 100, × 1\u202f000", palier: 1, type: "P",
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
           calcul: produit("M2", 1, 27, 100), exemple: "27 × 100", colonnes: COLONNES_M2,
-          consigne: "Chaque chiffre vaut 100 fois plus.",
+          represente: produit("M2", 1, 45, 10),
+          ecris: {calcul: produit("M2", 1, 8, 1000), etapes: [etapeDe(`8 × ${MILLE} = 8 milliers = ${CASE}`, 8000)]},
+          consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 10 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["27 × 100 = …", `27 × 100 = 2${ESPACE_FINE}700`],
-          lignes: ["27 × 100", "= 2 milliers et 7 centaines", `= 2${ESPACE_FINE}000 + 700`, `= ${CASE}`], suite: true,
           bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
         })
       },
       {
-        n: 2, titre: "nombres en 0, trous, divisions", nom: "× 10, × 100\u00a0: trous, divisions", type: "P", avant: ["M2-1"],
+        n: 2, titre: "nombres en 0, trous, divisions", nom: "× 10, × 100\u00a0: trous, divisions", palier: 2, type: "P",
         composer: m2Niveau2,
         imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
         apprends: glisseApprends({
           calcul: division("M2", 2, 48, 10), exemple: "480 ÷ 10", colonnes: COLONNES_M2,
-          consigne: "Chaque chiffre vaut 10 fois moins.",
+          represente: produit("M2", 2, 30, 100),
+          ecris: {calcul: trouFacteur("M2", 2, 35, 100), etapes: [etapeDe(`35 × ${CASE} = 3${ESPACE_FINE}500`, 100)]},
+          consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois moins\u00a0: 1 colonne.",
           trace: ["480 ÷ 10 = …", "480 ÷ 10 = 48"],
-          lignes: ["480 ÷ 10", "= 4 dizaines et 8 unités", `= ${CASE}`], suite: true,
           bilan: "Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite."
         })
       }
@@ -985,151 +1197,314 @@
   // Les modules à décimales ont la touche « , » au-dessus du pavé.
   const D2 = {
     id: "D2", nom: "× 10, × 100, × 1\u202f000 avec virgule", exemple: "7,54 × 100",
-    famille: "D", palier: 3, rang: 2, avant: ["M2", "D1"], construit: true, virgule: true,
+    famille: "D", construit: true, virgule: true,
     aide_entraine: "tableau-fleches",
-    erreurs: D2_ERREURS, image: tableauDe,
+    erreurs: D2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "× 10", nom: "Décimal × 10", type: "P", avant: [],
+        n: 1, titre: "× 10", nom: "Décimal × 10", palier: 2, type: "P",
         composer: d2Niveau1,
         imposes: [produit("D2", 1, 0.6, 10), produit("D2", 1, 2.5, 10)],
         apprends: glisseApprends({
           calcul: produit("D2", 1, 2.5, 10), exemple: "2,5 × 10", colonnes: COLONNES_D2,
+          represente: produit("D2", 1, 0.6, 10),
+          ecris: {calcul: produit("D2", 1, 72.41, 10), etapes: [etapeDe(`72 × 10 = ${CASE}`, 720), etapeDe(`0,41 × 10 = ${CASE}`, 4.1), etapeDe(`72,41 × 10 = ${CASE}`, 724.1)]},
           consigne: "Chaque chiffre vaut 10 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
           trace: ["2,5 × 10 = …", "2,5 × 10 = 25"],
-          lignes: ["2,5 × 10", "2 → 20\u202f; 0,5 → 5", "= 20 + 5", `= ${CASE}`], suite: false,
           bilan: "Quand je multiplie par 10, chaque chiffre prend une valeur 10 fois plus grande. La virgule ne bouge pas, ce sont les chiffres qui glissent."
         })
       },
       {
-        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", nom: "Décimal × 100, × 1\u202f000", type: "P", avant: ["D2-1"],
+        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", nom: "Décimal × 100, × 1\u202f000", palier: 3, type: "P",
         composer: d2Niveau2,
         imposes: [produit("D2", 2, 7.54, 100), produit("D2", 2, 4.107, 1000)],
         apprends: glisseApprends({
           calcul: produit("D2", 2, 7.54, 100), exemple: "7,54 × 100", colonnes: COLONNES_D2,
-          consigne: "Chaque chiffre vaut 100 fois plus.",
+          represente: produit("D2", 2, 4.107, 1000),
+          ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3 × 100 = ${CASE}`, 300), etapeDe(`0,24 × 100 = ${CASE}`, 24), etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
+          consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u202f000 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
-          lignes: ["7,54 × 100", "7 → 700\u202f; 0,5 → 50\u202f; 0,04 → 4", "= 700 + 50 + 4", `= ${CASE}`], suite: false,
           bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
         })
       },
       {
-        n: 3, titre: "des zéros à écrire", nom: "Décimal\u00a0: zéros à écrire", type: "P", avant: ["D2-2"],
+        n: 3, titre: "des zéros à écrire", nom: "Décimal\u00a0: zéros à écrire", palier: 3, type: "P",
         composer: d2Niveau3,
         imposes: [produit("D2", 3, 3.6, 100), produit("D2", 3, 72.4, 100), produit("D2", 3, 0.2, 100)],
         apprends: glisseApprends({
           calcul: produit("D2", 3, 3.6, 100), exemple: "3,6 × 100", colonnes: COLONNES_D2,
+          represente: produit("D2", 3, 72.4, 100),
+          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4 × ${MILLE} = ${CASE}`, 4000), etapeDe(`0,5 × ${MILLE} = ${CASE}`, 500), etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
           consigne: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
-          lignes: ["3,6 × 100", "3 → 300\u202f; 0,6 → 60", "= 300 + 60", `= ${CASE}`], suite: false,
           bilan: "Quand une case reste vide, j’écris un zéro\u00a0: 3,6 × 100 = 360."
         })
       },
       {
-        n: 4, titre: "trous", nom: "Décimal\u00a0: trous", type: "P", avant: ["D2-3"],
+        n: 4, titre: "trous", nom: "Décimal\u00a0: trous", palier: 4, type: "P",
         composer: d2Niveau4,
         imposes: [trouFacteur("D2", 4, 3.6, 100), trouNombre("D2", 4, 0.45, 100), trouEgal("D2", 4, 1.2, 1000)],
         apprends: glisseApprends({
           calcul: trouEgal("D2", 4, 1.2, 1000), exemple: `1${ESPACE_FINE}200 = 1,2 × ?`, colonnes: COLONNES_D2,
+          represente: trouFacteur("D2", 4, 0.45, 100),
+          ecris: {calcul: trouFacteur("D2", 4, 3.6, 100), etapes: [etapeDe(`3,6 × ${CASE} = 360`, 100)]},
           consigne: `Glisse jusqu’à lire 1${ESPACE_FINE}200.`, consigneTableau: "Je compte les colonnes.",
-          refus: null, inconnue: "puissance",
+          refus: null,
           trace: [`1,2 × … = 1${ESPACE_FINE}200`, `1,2 × ${MILLE} = 1${ESPACE_FINE}200`],
-          lignes: [`1,2 → 1${ESPACE_FINE}200`, "3 colonnes", `1${ESPACE_FINE}200 = 1,2 × ${CASE}`], suite: false,
           bilan: "Pour trouver par combien on a multiplié, je compte les colonnes."
         })
       }
     ]
   };
 
-  const reserve = (id, nom, exemple, palier, rang, avant, niveaux) =>
-    ({id, nom, exemple, famille: id[0], palier, rang, avant, construit: false, niveaux: niveauxVides(niveaux)});
+  // Un module pas encore construit (« bientôt ») : son nom, son exemple,
+  // ses niveaux avec leur palier et leur type.
+  const reserve = (id, nom, exemple, niveaux) =>
+    ({id, nom, exemple, famille: id[0], construit: false, niveaux: niveaux.map(niveau => Object.assign({}, niveau))});
+  // Un identifiant réservé (palier 0, jamais affiché) : ses niveaux sans palier.
+  const reserveSansPalier = (id, nom, exemple, nombre) =>
+    reserve(id, nom, exemple, Array.from({length: nombre}, (_, i) => ({n: i + 1, palier: 0, type: "P"})));
 
-  // L'ordre de la liste est l'ordre conseillé : palier 1, 2, 3, 4, puis les
-  // 29 identifiants réservés (palier 0 : jamais affichés).
+  // Les 45 modules de la carte v2, dans l'ordre de ses tableaux, puis les 29
+  // identifiants réservés.
   const MODULES = Object.freeze([
-    reserve("A1", "Sommes jusqu’à 20", "8 + 7", 1, 1, [], 3),
+    reserve("A1", "Sommes et différences jusqu’à 20", "6 + 4", [
+      {n: 1, titre: "compléments à 10, sommes jusqu’à 10", palier: 1, type: "F", exemple: "6 + 4"},
+      {n: 2, titre: "sommes de 11 à 20 (passer par 10)", palier: 1, type: "F", exemple: "8 + 7"},
+      {n: 3, titre: "dans les deux sens : différences et trous", palier: 1, type: "F", exemple: "15 − 7"}
+    ]),
+    reserve("A10", "Ajouter un nombre à un chiffre", "32 + 4", [
+      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "32 + 4"},
+      {n: 2, titre: "passage de la dizaine", palier: 1, type: "P", exemple: "47 + 8"},
+      {n: 3, titre: "passage de la centaine", palier: 1, type: "P", exemple: "196 + 7"}
+    ]),
+    reserve("A11", "Retrancher un nombre à un chiffre", "157 − 5", [
+      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "157 − 5"},
+      {n: 2, titre: "passage de la dizaine (et 50 − 6)", palier: 1, type: "P", exemple: "523 − 7"},
+      {n: 3, titre: "passage de la centaine", palier: 1, type: "P", exemple: "403 − 5"}
+    ]),
     A2,
-    reserve("M1", "Doubles et moitiés", "double de 35", 1, 3, ["A1"], 3),
-    reserve("A3", "Dizaines et centaines entières", "1 462 + 300", 1, 4, ["A1"], 2),
-    M2,
-    reserve("A4", "Additionner deux nombres", "47 + 38", 1, 6, ["A3"], 3),
-    reserve("M4", "Les tables à l’envers", "56 ÷ 7", 1, 7, [], 3),
+    reserve("A3", "Ajouter, retrancher des dizaines, des centaines entières", "76 − 30", [
+      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "76 − 30"},
+      {n: 2, titre: "passage de la centaine", palier: 1, type: "P", exemple: "746 + 80"},
+      {n: 3, titre: "passage du millier", palier: 2, type: "P", exemple: "950 + 70"},
+      {n: 4, titre: "milliers dans les grands nombres", palier: 3, type: "P", exemple: "1 462 + 300"}
+    ]),
+    reserve("A4", "Additionner deux nombres", "42 + 35", [
+      {n: 1, titre: "deux chiffres, sans retenue", palier: 1, type: "P", exemple: "42 + 35"},
+      {n: 2, titre: "deux chiffres, avec retenue", palier: 1, type: "P", exemple: "47 + 28"},
+      {n: 3, titre: "résultat qui passe 100", palier: 1, type: "P", exemple: "78 + 45"},
+      {n: 4, titre: "trois chiffres + deux chiffres", palier: 2, type: "P", exemple: "168 + 18"}
+    ]),
     A5,
-    reserve("A6", "Retrancher 9, 19, 29…", "143 − 29", 1, 9, ["A5"], 4),
-    reserve("M3", "Tables étendues", "9 × 400", 1, 10, ["M2"], 3),
-
-    reserve("M6", "× 4, × 8, ÷ 4, ÷ 8", "23 × 4", 2, 1, ["M1"], 4),
-    reserve("A7", "Soustraire en reculant", "523 − 7", 2, 2, ["A3"], 4),
-    reserve("M7", "× 5, × 50, ÷ 5, × 25", "46 × 5", 2, 3, ["M1", "M2"], 5),
-    reserve("A8", "Soustraire par l’écart", "73 − 68", 2, 4, ["A2", "A7"], 3),
-    reserve("M5", "Repères 25, 50, 60, 100", "3 × 25", 2, 5, ["M4"], 2),
-    reserve("C1", "Parenthèses", "3 × (10 − 6)", 2, 6, ["A4", "M4", "A7"], 3),
-    reserve("C4", "Remonter un calcul", "(2 × ?) − 5 = 23", 2, 7, ["C1", "M4"], 2),
-    reserve("M8", "Distributivité\u00a0: décomposer", "6 × 23", 2, 8, ["M3", "A4"], 3),
-    reserve("A9", "Regrouper pour calculer", "27 + 48 + 73", 2, 9, ["A2", "A4"], 3),
-    reserve("M10", "Regrouper les facteurs", "5 × 43 × 2", 2, 10, ["M5", "M7"], 3),
-    reserve("C3", "Égalités à équilibrer", "144 + 7 = 142 + ?", 2, 11, ["A8", "M10"], 3),
-    reserve("M11", "Quotient et reste", "17 = 3 × 5 + ?", 2, 12, ["M4"], 2),
-    reserve("M12", "Diviser en décomposant", "96 ÷ 8", 2, 13, ["M3", "M4"], 3),
-    reserve("M9", "Distributivité\u00a0: retrancher", "7 × 99", 2, 14, ["M8", "A6", "A7"], 3),
-
-    reserve("D1", "Écritures d’un décimal", "3 + 2/10 = ?", 3, 1, [], 3),
+    reserve("A6", "Retrancher 9, 19, 29… et 8, 18, 28…", "63 − 9", [
+      {n: 1, titre: "− 9", palier: 1, type: "P", exemple: "63 − 9"},
+      {n: 2, titre: "− 19, 29, 39", palier: 1, type: "P", exemple: "143 − 29"},
+      {n: 3, titre: "− 8, 18, 28, 38", palier: 2, type: "P", exemple: "71 − 18"},
+      {n: 4, titre: "− 48, 49 … 98, 99", palier: 3, type: "P", exemple: "432 − 99"}
+    ]),
+    reserve("A7", "Soustraire un nombre à deux chiffres", "78 − 35", [
+      {n: 1, titre: "sans retenue", palier: 1, type: "P", exemple: "78 − 35"},
+      {n: 2, titre: "avec passage de la dizaine", palier: 1, type: "P", exemple: "63 − 27"},
+      {n: 3, titre: "passage de la centaine", palier: 2, type: "P", exemple: "523 − 67"}
+    ]),
+    reserve("A8", "Soustraire par l’écart (nombres proches)", "73 − 68", [
+      {n: 1, titre: "deux chiffres proches", palier: 1, type: "P", exemple: "73 − 68"},
+      {n: 2, titre: "de part et d’autre d’une centaine", palier: 2, type: "P", exemple: "402 − 397"},
+      {n: 3, titre: "de part et d’autre d’un millier", palier: 2, type: "P", exemple: "4 000 − ? = 3 999"}
+    ]),
+    reserve("A9", "Regrouper pour calculer", "27 + 48 + 73", [
+      {n: 1, titre: "trois termes", palier: 3, type: "P", exemple: "27 + 48 + 73"},
+      {n: 2, titre: "quatre termes", palier: 3, type: "P", exemple: "18 + 25 + 82 + 75"},
+      {n: 3, titre: "avec des soustractions", palier: 4, type: "P", exemple: "524 − 44 + 176 − 56"},
+      {n: 4, titre: "avec des décimaux", palier: 4, type: "P", exemple: "3,7 + 0,3 + 2,5 + 1,2"}
+    ]),
+    reserve("M4", "Les tables dans tous les sens", "4 × 7", [
+      {n: 1, titre: "tables de 2 à 5 : ×, ÷, nombre manquant", palier: 1, type: "F", exemple: "4 × 7"},
+      {n: 2, titre: "toutes les tables : ×, ÷, nombre manquant", palier: 1, type: "F", exemple: "56 ÷ 7"}
+    ]),
+    reserve("M1", "Doubles et moitiés", "double de 17", [
+      {n: 1, titre: "doubles de 1 à 20, moitiés des pairs jusqu’à 40, dizaines", palier: 1, type: "F", exemple: "double de 17"},
+      {n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", palier: 1, type: "F", exemple: "double de 75"},
+      {n: 3, titre: "par décomposition", palier: 1, type: "P", exemple: "moitié de 46"}
+    ]),
+    M2,
+    reserve("M3", "Tables étendues", "9 × 40", [
+      {n: 1, titre: "un chiffre × dizaines", palier: 1, type: "P", exemple: "9 × 40"},
+      {n: 2, titre: "un chiffre × centaines, milliers", palier: 2, type: "P", exemple: "9 × 400"},
+      {n: 3, titre: "dizaines, centaines, milliers entre eux", palier: 3, type: "P", exemple: "90 × 20"}
+    ]),
+    reserve("M5", "Repères 25, 60, 100", "3 × 25", [
+      {n: 1, titre: "multiples de 25, décompositions de 60 et de 100", palier: 1, type: "F", exemple: "3 × 25"}
+    ]),
+    reserve("M6", "× 4, × 8 : le double du double", "23 × 4", [
+      {n: 1, titre: "× 4", palier: 1, type: "P", exemple: "23 × 4"},
+      {n: 2, titre: "× 8", palier: 1, type: "P", exemple: "8 × 27"}
+    ]),
+    reserve("M13", "÷ 4, ÷ 8 : la moitié de la moitié", "140 ÷ 4", [
+      {n: 1, titre: "÷ 4", palier: 3, type: "P", exemple: "140 ÷ 4"},
+      {n: 2, titre: "÷ 8", palier: 3, type: "P", exemple: "360 ÷ 8"},
+      {n: 3, titre: "résultat décimal", palier: 3, type: "P", exemple: "260 ÷ 8 = 32,5"}
+    ]),
+    reserve("M7", "× 5, × 50", "46 × 5", [
+      {n: 1, titre: "× 5, nombre pair", palier: 2, type: "P", exemple: "46 × 5"},
+      {n: 2, titre: "× 5, tout nombre jusqu’à 200", palier: 2, type: "P", exemple: "37 × 5"},
+      {n: 3, titre: "× 50", palier: 3, type: "P", exemple: "24 × 50"}
+    ]),
+    reserve("M8", "Distributivité : décomposer", "13 × 7", [
+      {n: 1, titre: "un chiffre × 11 à 19", palier: 1, type: "P", exemple: "13 × 7"},
+      {n: 2, titre: "un chiffre × deux chiffres", palier: 1, type: "P", exemple: "23 × 7"},
+      {n: 3, titre: "× 11, × 12, × 21, × 31 (et en trou)", palier: 2, type: "P", exemple: "12 × 42"}
+    ]),
+    reserve("M9", "Distributivité : retrancher", "45 × 9", [
+      {n: 1, titre: "× 9", palier: 4, type: "P", exemple: "45 × 9"},
+      {n: 2, titre: "× 19, × 29", palier: 4, type: "P", exemple: "6 × 19"},
+      {n: 3, titre: "× 99, × 98", palier: 4, type: "P", exemple: "7 × 99"}
+    ]),
+    reserve("M10", "Regrouper les facteurs", "5 × 43 × 2", [
+      {n: 1, titre: "avec 2 et 5", palier: 2, type: "P", exemple: "5 × 43 × 2"},
+      {n: 2, titre: "avec 4 et 25", palier: 3, type: "P", exemple: "4 × 37 × 25"},
+      {n: 3, titre: "× 25 seul, moitié-double", palier: 4, type: "P", exemple: "16 × 25"}
+    ]),
+    reserve("M11", "Quotient et reste", "17 = 3 × 5 + ?", [
+      {n: 1, titre: "tables de 2 à 5", palier: 3, type: "P", exemple: "17 = 3 × 5 + ?"},
+      {n: 2, titre: "toutes les tables", palier: 3, type: "P", exemple: "47 = 6 × ? + 5"}
+    ]),
+    reserve("M12", "Diviser en décomposant", "240 ÷ 6", [
+      {n: 1, titre: "dizaines, centaines entières ÷ un chiffre", palier: 2, type: "P", exemple: "240 ÷ 6"},
+      {n: 2, titre: "quotient à deux chiffres", palier: 3, type: "P", exemple: "96 ÷ 8"},
+      {n: 3, titre: "dividende à trois chiffres", palier: 4, type: "P", exemple: "536 ÷ 8"}
+    ]),
+    reserve("C1", "Parenthèses", "3 × (10 − 6)", [
+      {n: 1, titre: "une paire", palier: 2, type: "P", exemple: "3 × (10 − 6)"},
+      {n: 2, titre: "deux paires", palier: 3, type: "P", exemple: "(4 + 6) × (9 − 2)"},
+      {n: 3, titre: "emboîtées", palier: 3, type: "P", exemple: "37 − (3 × (14 − 6))"}
+    ]),
+    reserve("C3", "Égalités à trou : + et −", "347 = 20 + ?", [
+      {n: 1, titre: "trous simples", palier: 2, type: "P", exemple: "347 = 20 + ?"},
+      {n: 2, titre: "garder l’égalité", palier: 2, type: "P", exemple: "144 + 7 = 142 + ?"},
+      {n: 3, titre: "garder l’égalité, grands nombres", palier: 3, type: "P", exemple: "144 + 237 = ? + 239"}
+    ]),
+    reserve("C4", "Remonter un calcul", "(2 × ?) − 5 = 23", [
+      {n: 1, titre: "deux opérations", palier: 3, type: "P", exemple: "(2 × ?) − 5 = 23"},
+      {n: 2, titre: "réponse décimale", palier: 3, type: "P", exemple: "8 + (2 × ?) = 11"}
+    ]),
+    reserve("D1", "Écritures d’un décimal", "3 + 2/10", [
+      {n: 1, titre: "dixièmes", palier: 2, type: "P", exemple: "3 + 2/10"},
+      {n: 2, titre: "centièmes", palier: 2, type: "P", exemple: "712/100"},
+      {n: 3, titre: "millièmes, sommes en désordre", palier: 3, type: "P", exemple: "4 + 107/1 000"}
+    ]),
     D2,
-    reserve("D3", "÷ 10, ÷ 100, ÷ 1\u202f000", "45,2 ÷ 10", 3, 3, ["D2"], 3),
-    reserve("F2", "Demis, quarts et unité", "1/2 + 1/4", 3, 4, [], 3),
-    reserve("D4", "Ajouter ou soustraire des unités d’un rang", "4,45 + 0,3", 3, 5, ["D1", "A3"], 3),
-    reserve("F3", "Fraction unitaire d’une quantité", "1/3 de 18 billes", 3, 6, ["M4", "M1"], 4),
-    reserve("D5", "Compléments à l’unité", "0,7 + ? = 1", 3, 7, ["A2", "D1"], 3),
-    reserve("D6", "Additionner deux décimaux", "2,7 + 1,4", 3, 8, ["D4", "A4"], 4),
-    reserve("F1", "Fractions usuelles et décimaux", "3/4 = ?", 3, 9, ["D1"], 3),
-    reserve("D7", "Soustraire deux décimaux", "3,4 − 0,8", 3, 10, ["D5", "D6", "A7"], 3),
-    reserve("D8", "Doubles et moitiés de décimaux", "moitié de 9", 3, 11, ["M1", "M6", "D1"], 4),
-    reserve("F4", "Fraction d’une quantité", "2/3 de 12 œufs", 3, 12, ["F3"], 3),
-    reserve("D9", "Décimal × 5, × 50", "3,4 × 5", 3, 13, ["M7", "D2", "D8"], 2),
+    reserve("D3", "÷ 10, ÷ 100, ÷ 1 000", "45,2 ÷ 10", [
+      {n: 1, titre: "÷ 10", palier: 2, type: "P", exemple: "45,2 ÷ 10"},
+      {n: 2, titre: "÷ 100, ÷ 1 000", palier: 3, type: "P", exemple: "456 ÷ 100"},
+      {n: 3, titre: "des zéros à écrire", palier: 3, type: "P", exemple: "0,6 ÷ 10"}
+    ]),
+    reserve("D4", "Ajouter ou retrancher des unités d’un rang", "4,45 + 0,3", [
+      {n: 1, titre: "sans retenue", palier: 2, type: "P", exemple: "4,45 + 0,3"},
+      {n: 2, titre: "millièmes, sans retenue", palier: 3, type: "P", exemple: "4,452 + 0,03"},
+      {n: 3, titre: "avec retenue (ajouter)", palier: 3, type: "P", exemple: "4,45 + 0,8"}
+    ]),
+    reserve("D5", "Compléments à l’unité", "0,7 + ? = 1", [
+      {n: 1, titre: "dixièmes, à l’entier suivant", palier: 3, type: "P", exemple: "0,7 + ? = 1"},
+      {n: 2, titre: "centièmes", palier: 4, type: "P", exemple: "0,35 + ? = 1"}
+    ]),
+    reserve("D6", "Additionner deux décimaux", "4,5 + 1,2", [
+      {n: 1, titre: "sans retenue", palier: 3, type: "P", exemple: "4,5 + 1,2"},
+      {n: 2, titre: "avec retenue (moins de 10, un chiffre après la virgule)", palier: 3, type: "P", exemple: "2,7 + 3,7"},
+      {n: 3, titre: "chiffres après la virgule différents", palier: 4, type: "P", exemple: "2,57 + 5,8"}
+    ]),
+    reserve("D7", "Soustraire deux décimaux", "5,8 − 2,3", [
+      {n: 1, titre: "sans retenue", palier: 3, type: "P", exemple: "5,8 − 2,3"},
+      {n: 2, titre: "avec retenue", palier: 4, type: "P", exemple: "3,4 − 0,8"},
+      {n: 3, titre: "chiffres après la virgule différents", palier: 4, type: "P", exemple: "9 − 1,9"}
+    ]),
+    reserve("D8", "Doubles et moitiés de décimaux", "moitié de 9", [
+      {n: 1, titre: "moitié des impairs jusqu’à 15", palier: 3, type: "F", exemple: "moitié de 9"},
+      {n: 2, titre: "un chiffre après la virgule", palier: 3, type: "P", exemple: "double de 13,6"},
+      {n: 3, titre: "deux chiffres après la virgule", palier: 3, type: "P", exemple: "2 × 4,35"}
+    ]),
+    reserve("D9", "Décimal × 5, × 50", "3,4 × 5", [
+      {n: 1, titre: "× 5 (trois chiffres au plus)", palier: 3, type: "P", exemple: "3,4 × 5"},
+      {n: 2, titre: "× 50 (nombre de moins de 20, au plus trois chiffres, chiffre le plus à droite pair)", palier: 3, type: "P", exemple: "50 × 12,4"}
+    ]),
+    reserve("F2", "Demis, quarts et unité", "1/2 + 1/2", [
+      {n: 1, titre: "demis et quarts", palier: 2, type: "F", exemple: "1/2 + 1/2"},
+      {n: 2, titre: "avec 3/4", palier: 3, type: "F", exemple: "3/4 + 1/4"}
+    ]),
+    reserve("F1", "Fractions usuelles et décimaux", "1/10 = ?", [
+      {n: 1, titre: "1/10 et 1/100", palier: 2, type: "F", exemple: "1/10 = ?"},
+      {n: 2, titre: "1/1 000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", palier: 3, type: "F", exemple: "3/4 = ?"},
+      {n: 3, titre: "cinquièmes", palier: 4, type: "F", exemple: "6/5 = ?"}
+    ]),
+    reserve("F3", "Fraction unitaire d’une quantité", "1/4 de 12 billes", [
+      {n: 1, titre: "demi, quart, dixième", palier: 2, type: "P", exemple: "1/4 de 12 billes"},
+      {n: 2, titre: "tiers, cinquième, sixième…", palier: 2, type: "P", exemple: "1/3 de 18 billes"},
+      {n: 3, titre: "résultat non entier", palier: 2, type: "P", exemple: "1/4 de 10 m = 2,5 m"}
+    ]),
+    reserve("F4", "Fraction d’une quantité", "2/3 de 12 œufs", [
+      {n: 1, titre: "résultat entier", palier: 3, type: "P", exemple: "2/3 de 12 œufs"},
+      {n: 2, titre: "résultat décimal", palier: 4, type: "P", exemple: "3/4 de 10 m"}
+    ]),
+    reserve("F5", "Entier et fraction", "17/5 = 3 + ?/5", [
+      {n: 1, titre: "décomposer", palier: 2, type: "P", exemple: "17/5 = 3 + ?/5"},
+      {n: 2, titre: "décomposer et recomposer", palier: 2, type: "P", exemple: "2 + 2/3 = ?/3"},
+      {n: 3, titre: "encadrer entre deux entiers", palier: 3, type: "P", exemple: "43/8 est entre 5 et ?"}
+    ]),
+    reserve("F6", "Fractions égales", "2/3 = ?/15", [
+      {n: 1, titre: "en multipliant", palier: 2, type: "P", exemple: "2/3 = ?/15"},
+      {n: 2, titre: "en divisant", palier: 3, type: "P", exemple: "12/16 = ?/4"},
+      {n: 3, titre: "trou au dénominateur", palier: 3, type: "P", exemple: "4/7 = 28/?"}
+    ]),
+    reserve("F8", "Additionner, soustraire : même dénominateur", "3/7 + 3/7", [
+      {n: 1, titre: "même dénominateur", palier: 2, type: "P", exemple: "3/7 + 3/7"},
+      {n: 2, titre: "1 − a/b", palier: 2, type: "P", exemple: "1 − 2/3"},
+      {n: 3, titre: "entier et fraction", palier: 3, type: "P", exemple: "3 + 2/5"}
+    ]),
+    reserve("F9", "Dénominateurs multiples", "3/2 + 7/4", [
+      {n: 1, titre: "l’un est le double de l’autre", palier: 3, type: "P", exemple: "3/2 + 7/4"},
+      {n: 2, titre: "multiple d’une table", palier: 3, type: "P", exemple: "4/7 − 2/21"}
+    ]),
+    reserve("F11", "Entier × fraction", "3 × 5/4", [
+      {n: 1, titre: "addition répétée", palier: 3, type: "P", exemple: "3 × 5/4"},
+      {n: 2, titre: "qui se simplifie", palier: 4, type: "P", exemple: "5 × 3/5"}
+    ]),
 
-    reserve("F5", "Entier et fraction", "17/5 = 3 + ?/5", 4, 1, ["M11"], 3),
-    reserve("F6", "Fractions égales", "2/3 = ?/15", 4, 2, ["M4"], 3),
-    reserve("F8", "Additionner des fractions", "3/7 + 3/7", 4, 3, ["F2", "F5"], 3),
-    reserve("F9", "Dénominateurs multiples", "3/2 + 7/4", 4, 4, ["F6", "F8"], 2),
-    reserve("F11", "Entier × fraction", "3 × 5/4", 4, 5, ["F4", "F5"], 3),
-
-    reserve("D10", "× 0,1 ; × 0,01 ; × 0,001", "780 × 0,1", 0, 0, ["D3"], 3),
-    reserve("D11", "Produits liés aux tables", "0,6 × 7", 0, 0, ["M3", "D10"], 3),
-    reserve("D12", "Décimal × décimal", "0,4 × 0,3", 0, 0, ["D11"], 2),
-    reserve("D13", "× 0,5 ; × 0,25 ; × 1,5", "48 × 0,5", 0, 0, ["F1", "M1", "M6"], 3),
-    reserve("D14", "Diviser un décimal par un entier", "4,8 ÷ 4", 0, 0, ["D8", "M12"], 3),
-    reserve("D15", "Diviser par un décimal", "1,5 ÷ 0,3", 0, 0, ["D10", "D13"], 3),
-    reserve("F7", "Simplifier", "15/35", 0, 0, ["F6"], 3),
-    reserve("F10", "Dénominateurs quelconques", "2/5 + 1/4", 0, 0, ["F9"], 3),
-    reserve("F12", "Multiplier deux fractions", "2/3 × 5/7", 0, 0, ["F7", "F11"], 2),
-    reserve("F13", "Inverse et division", "5 ÷ 1/2", 0, 0, ["F12"], 3),
-    reserve("P1", "Pourcentage, fraction, décimal", "25 % = 1/?", 0, 0, ["F1"], 3),
-    reserve("P2", "50 %, 10 %, 1 %, 25 % d’un nombre", "10 % de 250", 0, 0, ["F3", "D3"], 3),
-    reserve("P3", "Pourcentages composés", "20 % de 120", 0, 0, ["P2"], 4),
-    reserve("P4", "× 1,1 ; × 0,9 ; × 1,2 ; × 0,8", "800 × 1,1", 0, 0, ["P3", "D11"], 3),
-    reserve("R1", "Traverser zéro", "5 − 7", 0, 0, ["A8"], 2),
-    reserve("R2", "Additionner deux relatifs", "−3 + 7", 0, 0, ["R1"], 3),
-    reserve("R3", "Soustraire un relatif", "7 − (−5)", 0, 0, ["R2"], 3),
-    reserve("R4", "Sommes de plusieurs relatifs", "−3 + 7 − 5", 0, 0, ["R3", "A9"], 3),
-    reserve("R5", "Multiplier, diviser des relatifs", "−7 × 3", 0, 0, ["R2", "M4"], 4),
-    reserve("R6", "Somme ou produit\u00a0?", "−3 × (−5)", 0, 0, ["R4", "R5", "C2"], 2),
-    reserve("X1", "Carrés de 0 à 12", "7²", 0, 0, [], 3),
-    reserve("X2", "Puissances simples", "2³", 0, 0, ["X1"], 3),
-    reserve("X3", "Racines carrées", "√81", 0, 0, ["X1"], 2),
-    reserve("X4", "Puissances de 10", "10⁴", 0, 0, ["D2", "X2"], 3),
-    reserve("X5", "Exposants négatifs", "10⁻²", 0, 0, ["X4", "D10"], 4),
-    reserve("X6", "Notation scientifique", "4,58 × 10^?", 0, 0, ["X5"], 3),
-    reserve("X7", "Produits et quotients de puissances", "2³ × 2⁴", 0, 0, ["X4"], 3),
-    reserve("C2", "Priorités", "6 + 4 × 2", 0, 0, ["C1"], 4),
-    reserve("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 0, 0, ["M8", "C2"], 3)
+    reserveSansPalier("D10", "× 0,1\u00a0; × 0,01\u00a0; × 0,001", "780 × 0,1", 3),
+    reserveSansPalier("D11", "Produits liés aux tables", "0,6 × 7", 3),
+    reserveSansPalier("D12", "Décimal × décimal", "0,4 × 0,3", 2),
+    reserveSansPalier("D13", "× 0,5\u00a0; × 0,25\u00a0; × 1,5", "48 × 0,5", 3),
+    reserveSansPalier("D14", "Diviser un décimal par un entier", "4,8 ÷ 4", 3),
+    reserveSansPalier("D15", "Diviser par un décimal", "1,5 ÷ 0,3", 3),
+    reserveSansPalier("F7", "Simplifier", "15/35", 3),
+    reserveSansPalier("F10", "Dénominateurs quelconques", "2/5 + 1/4", 3),
+    reserveSansPalier("F12", "Multiplier deux fractions", "2/3 × 5/7", 2),
+    reserveSansPalier("F13", "Inverse et division", "5 ÷ 1/2", 3),
+    reserveSansPalier("P1", "Pourcentage, fraction, décimal", "25 % = 1/?", 3),
+    reserveSansPalier("P2", "50 %, 10 %, 1 %, 25 % d’un nombre", "10 % de 250", 3),
+    reserveSansPalier("P3", "Pourcentages composés", "20 % de 120", 4),
+    reserveSansPalier("P4", "× 1,1\u00a0; × 0,9\u00a0; × 1,2\u00a0; × 0,8", "800 × 1,1", 3),
+    reserveSansPalier("R1", "Traverser zéro", "5 − 7", 2),
+    reserveSansPalier("R2", "Additionner deux relatifs", "−3 + 7", 3),
+    reserveSansPalier("R3", "Soustraire un relatif", "7 − (−5)", 3),
+    reserveSansPalier("R4", "Sommes de plusieurs relatifs", "−3 + 7 − 5", 3),
+    reserveSansPalier("R5", "Multiplier, diviser des relatifs", "−7 × 3", 4),
+    reserveSansPalier("R6", "Somme ou produit\u00a0?", "−3 × (−5)", 2),
+    reserveSansPalier("X1", "Carrés de 0 à 12", "7²", 3),
+    reserveSansPalier("X2", "Puissances simples", "2³", 3),
+    reserveSansPalier("X3", "Racines carrées", "√81", 2),
+    reserveSansPalier("X4", "Puissances de 10", "10⁴", 3),
+    reserveSansPalier("X5", "Exposants négatifs", "10⁻²", 4),
+    reserveSansPalier("X6", "Notation scientifique", "4,58 × 10^?", 3),
+    reserveSansPalier("X7", "Produits et quotients de puissances", "2³ × 2⁴", 3),
+    reserveSansPalier("C2", "Priorités", "6 + 4 × 2", 4),
+    reserveSansPalier("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 3)
   ].map(fiche => Object.freeze(Object.assign({}, fiche, {
-    avant: Object.freeze(fiche.avant.slice()),
     niveaux: Object.freeze(fiche.niveaux.map(niveau => Object.freeze(Object.assign({}, niveau,
-      niveau.imposes ? {imposes: Object.freeze(niveau.imposes.slice())} : {},
-      niveau.avant ? {avant: Object.freeze(niveau.avant.slice())} : {}))))
+      niveau.imposes ? {imposes: Object.freeze(niveau.imposes.slice())} : {}))))
   }))));
 
   const PAR_ID = new Map(MODULES.map(fiche => [fiche.id, fiche]));
@@ -1155,22 +1530,38 @@
   }
 
   // Ce que le moteur de la progression a besoin de savoir de la carte, sans
-  // les textes ni les générateurs : l'ordre (c'est celui de la séance), le
-  // palier, ce qui est construit. Les « avant » ne sont plus des verrous :
-  // l'ordre les respecte déjà ; ils restent une information.
+  // les textes ni les générateurs : les modules (ce qui est construit, le
+  // palier et le type de chaque niveau) et l'ordre du parcours, compétence
+  // par compétence.
   function carte() {
-    return MODULES.map(fiche => ({
-      id: fiche.id, palier: fiche.palier, avant: fiche.avant.slice(), niveaux: fiche.niveaux.length,
-      construit: Boolean(fiche.construit)
-    }));
+    return {
+      modules: MODULES.map(fiche => ({
+        id: fiche.id, niveaux: fiche.niveaux.length,
+        paliers: fiche.niveaux.map(niveau => niveau.palier || 0),
+        types: fiche.niveaux.map(niveau => niveau.type || "P"),
+        construit: Boolean(fiche.construit)
+      })),
+      ordre: ORDRE.slice()
+    };
   }
 
   // ------------------------------------------------------------------ les séries
 
-  // Une série d'un niveau : « valide » (12 calculs pour un fait, 10 pour une
-  // procédure, les imposés dedans, placés au hasard) ou « entraine » (10
-  // calculs, sans imposé). La même graine rend la même série.
-  function genererSerie(cleNiveau, {graine = 1, genre = "entraine", total = null} = {}) {
+  // La difficulté d'un calcul, pour le ranger du plus simple au plus dur
+  // (0 quand le module n'en dit rien).
+  function difficulte(calcul) {
+    const fiche = calcul ? moduleDe(calcul.module) : null;
+    return fiche && typeof fiche.difficulte === "function" ? fiche.difficulte(calcul) : 0;
+  }
+
+  // Une série d'un niveau. `genre` :
+  //  - « valide » (mode professeur) : 12 calculs pour un fait, 10 pour une
+  //    procédure, les imposés dedans, placés au hasard ;
+  //  - « entraine » : jusqu'à 20 calculs sans imposé, rangés du plus simple
+  //    au plus dur (`ordonne: false` les laisse mélangés), jamais ceux dont
+  //    la clé est dans `exclure` (les calculs de « J'apprends »).
+  // La même graine rend la même série.
+  function genererSerie(cleNiveau, {graine = 1, genre = "entraine", total = null, ordonne = true, exclure = []} = {}) {
     const trouve = niveauDe(cleNiveau);
     if (!trouve || typeof trouve.niveau.composer !== "function") return [];
     const {niveau} = trouve;
@@ -1178,24 +1569,84 @@
     const validation = genre === "valide";
     const nombre = total !== null ? total : validation ? TOTAUX[niveau.type] : TOTAUX.entraine;
     const imposes = validation ? niveau.imposes.slice(0, nombre) : [];
-    return melanger(rng, niveau.composer(rng, nombre, imposes)).slice(0, nombre);
+    // `exclure` : des clés ou des textes de calculs (ceux de « J'apprends »).
+    const interdits = new Set(exclure);
+    const melanges = melanger(rng, niveau.composer(rng, nombre + interdits.size, imposes)).filter(calcul => !interdits.has(calcul.cle) && !interdits.has(calcul.texte)).slice(0, nombre);
+    if (validation || !ordonne) return melanges;
+    return ordonnerSerie(melanges);
   }
 
-  // Le test de module (« Tu connais déjà ? ») : `parNiveau` calculs de chaque
-  // niveau, sans imposé, mélangés. Chaque calcul porte son niveau.
-  function genererTest(id, {graine = 1, parNiveau = 3} = {}) {
+  // Du plus simple au plus dur, et les écritures nouvelles en fin de série,
+  // annoncées : les 6 premiers calculs de la première écriture, puis 2 de
+  // chaque autre écriture (« ? + 56 = 100 », puis « 100 − 34 »), puis le
+  // reste par difficulté. L'élève rapide (5 justes de suite) voit ainsi
+  // chaque écriture au moins une fois en une dizaine de calculs.
+  const ORDRE_SERIE = Object.freeze({premiere: 6, nouvelles: 2});
+  function ordonnerSerie(calculs) {
+    const tries = calculs.map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
+    const formes = [...new Set(tries.map(calcul => calcul.forme))];
+    if (formes.length < 2) return tries;
+    const pris = new Set();
+    const prendre = (forme, nombre) => tries.filter(calcul => calcul.forme === forme && !pris.has(calcul)).slice(0, nombre).map(calcul => { pris.add(calcul); return calcul; });
+    const debut = prendre(formes[0], ORDRE_SERIE.premiere);
+    const nouvelles = formes.slice(1).flatMap(forme => prendre(forme, ORDRE_SERIE.nouvelles));
+    return [...debut, ...nouvelles, ...tries.filter(calcul => !pris.has(calcul))];
+  }
+
+  // Le test d'entrée en escalier (« Tu connais déjà ? ») : une marche par
+  // niveau, trois calculs par marche, sans imposé — le plus simple, puis le
+  // plus dur, puis celui du milieu qui départage. Chaque calcul porte son
+  // niveau. Rend [{niveau, calculs}].
+  function genererTest(id, {graine = 1} = {}) {
     const fiche = moduleDe(id);
     if (!fiche || !fiche.construit) return [];
-    const calculs = fiche.niveaux.flatMap(niveau =>
-      genererSerie(`${id}-${niveau.n}`, {graine: (graine + niveau.n * 7919) >>> 0, genre: "entraine"}).slice(0, parNiveau));
-    return melanger(mulberry32(graine), calculs);
+    return fiche.niveaux.map(niveau => {
+      const serie = genererSerie(`${id}-${niveau.n}`, {graine: (graine + niveau.n * 7919) >>> 0, genre: "entraine", total: 12, ordonne: false})
+        .map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
+      const calculs = serie.length < 3 ? serie : [serie[0], serie[serie.length - 1], serie[Math.floor(serie.length / 2)]];
+      return {niveau: niveau.n, calculs};
+    });
   }
 
   // Un seul calcul d'un niveau (Mes calculs du jour en tirent un par
-  // compétence).
+  // compétence), tiré au hasard dans le niveau — pas le plus simple.
   function genererUn(cleNiveau, graine) {
-    const serie = genererSerie(cleNiveau, {graine, genre: "entraine"});
+    const serie = genererSerie(cleNiveau, {graine, genre: "entraine", total: TOTAUX.P, ordonne: false});
     return serie.length ? serie[0] : null;
+  }
+
+  // L'outil du début de l'entraînement, et ce qui revient après une erreur
+  // (la droite dessinée avec ses sauts « + ? », le tableau avec ses « ? ») ;
+  // null quand le module n'en a pas.
+  function aideDe(calcul) {
+    const fiche = calcul ? moduleDe(calcul.module) : null;
+    return fiche && typeof fiche.aide === "function" ? fiche.aide(calcul) : null;
+  }
+
+  // L'outil à manipuler pour un calcul (les perles, le glisse-nombres), après
+  // deux erreurs de suite à l'entraînement ; null quand il n'y en a pas
+  // (compléments à 1 000 : au-delà des 100 perles).
+  function manipulationDe(calcul) {
+    const fiche = calcul ? moduleDe(calcul.module) : null;
+    const manipulation = fiche && typeof fiche.manipulation === "function" ? fiche.manipulation(calcul) : null;
+    return manipulation || null;
+  }
+
+  // Quand l'écriture change dans l'entraînement (« ? + 56 = 100 » après des
+  // « 56 + ? = 100 ») : la famille d'écriture d'un calcul, et ce qu'on
+  // annonce quand elle arrive.
+  const ANNONCES = Object.freeze({
+    "complement-gauche": "la case est devant",
+    difference: "c’est une soustraction",
+    "produit-gauche": "les facteurs ont changé de place",
+    "trou-facteur": "on cherche par combien on a multiplié",
+    "trou-egal": "l’égalité est écrite à l’envers",
+    "trou-nombre": "on cherche le nombre de départ",
+    "trou-nombre-gauche": "on cherche le nombre de départ",
+    division: "c’est une division"
+  });
+  function annonceDe(calcul) {
+    return calcul && ANNONCES[calcul.forme] ? `Nouveau\u00a0: ${ANNONCES[calcul.forme]}.` : "Nouveau\u00a0: c’est écrit autrement.";
   }
 
   // ---------------------------------------------------------- les erreurs connues
@@ -1223,6 +1674,7 @@
     PALIERS,
     TOTAUX,
     MODULES,
+    ORDRE,
     CASE,
     ESPACE_FINE,
     mulberry32,
@@ -1237,9 +1689,13 @@
     niveauDe,
     nomCompetence,
     carte,
+    difficulte,
     genererSerie,
     genererTest,
     genererUn,
+    aideDe,
+    manipulationDe,
+    annonceDe,
     diagnostiquer,
     imageDe,
     a2Sauts
