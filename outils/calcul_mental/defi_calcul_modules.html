@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-3">
 </head>
 <body>
   <main class="shell">
@@ -91,9 +91,14 @@
         <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
+      <!-- En-tête commun (31/10/2026) : le titre de l'appli, au centre de la
+           barre quand elle est DANS le cadre (élève à code, accueil). Caché
+           pour tous les autres. -->
+      <div class="ec-titre"><p class="eyebrow">Calcul mental</p><p class="ec-nom">Défi calcul</p></div>
       <!-- Suivi de classe : le repère vit dans la barre du haut, donc sur
            TOUS les écrans. L'élève doit toujours savoir que son travail part
-           chez son professeur. -->
+           chez son professeur. Pour l'élève à code, la barre est dans le
+           cadre (en-tête commun, 31/10/2026). -->
       <p id="suivi-repere" class="suivi-repere" hidden></p>
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
         <div class="suivi-garde-carte">
@@ -428,12 +433,77 @@
       // code — son chemin de retour est en haut (« ← Mon espace »), et
       // l'information sur la confidentialité est sur sa page Mon espace.
 
+      // En-tête commun (variante A, 31/10/2026), comme Défi tables : pour
+      // l'élève à code — ou celui qui arrive de son espace avec un billet, le
+      // temps de l'échange — la barre du haut entre DANS le cadre blanc, en
+      // premier ; elle en ressort pour le visiteur. C'est la MÊME barre : ses
+      // boutons, son bloc de suivi (« Se déconnecter » compris) et la garde
+      // « C'est toujours toi ? » ne sont ni recréés ni rebranchés.
+      //
+      // Le titre de l'écran d'abord, la ligne dessous, partout (31/10/2026,
+      // demande de Gwenaël, comme Défi tables) : sur un écran qui a son titre
+      // (« ← Comment ça marche ? ») ou le fil de la séance (les étapes ①②③④
+      // et le nom de l'activité), la barre se range JUSTE DESSOUS. Sans titre
+      // (une activité hors séance, son bilan), elle reste en haut du cadre.
+      const TETES_ECRAN = ["#fil-seance", "#result-fil", "#notice > .settings-toolbar"];
+      function teteEcran() {
+        if (!document.body.classList.contains("ecran-interne")) return null;
+        for (const selecteur of TETES_ECRAN) {
+          const tete = document.querySelector(selecteur);
+          if (tete && !tete.closest("[hidden]")) return tete;
+        }
+        return null;
+      }
+      function placerEnTete() {
+        const barre = document.querySelector("header.topbar");
+        const cadre = document.querySelector(".shell > .panel");
+        if (!barre || !cadre || !document.body) return;
+        const attendu = Boolean(ENTREE.billet && ENTREE.vue !== "fiche");
+        const dedans = Boolean(suiviActif() || entreeRefusee || attendu);
+        document.body.classList.toggle("en-tete-cadre", dedans);
+        const tete = dedans && typeof cadre.contains === "function" ? teteEcran() : null;
+        document.body.classList.toggle("ligne-sous-titre", Boolean(tete));
+        if (tete) { if (tete.nextElementSibling !== barre) tete.after(barre); }
+        else if (dedans && cadre.firstElementChild !== barre) cadre.prepend(barre);
+        else if (!dedans && barre.parentNode !== cadre.parentNode) cadre.before(barre);
+        suivreHaut(cadre, barre);
+      }
+
+      // Le haut du cadre, blanc, et son trait fin gris (planche 16 du
+      // 31/10/2026) : sa hauteur suit la barre — l'accueil (titre et ligne), les autres écrans
+      // (la ligne seule), un écran qui change de taille. Rien sans la barre
+      // dans le cadre, rien si elle est cachée.
+      let observateurHaut = null;
+      // La barre est dans le cadre, directement ou rangée sous le titre d'un écran.
+      function dansLeCadre(cadre, barre) {
+        return typeof cadre.contains === "function" ? cadre.contains(barre) : barre.parentNode === cadre;
+      }
+      function teinterHaut(cadre, barre) {
+        const teinte = document.body.classList.contains("en-tete-cadre") && dansLeCadre(cadre, barre) && barre.offsetParent !== null;
+        cadre.classList.toggle("haut-teinte", teinte);
+        if (!teinte) { cadre.style.removeProperty("--haut-teinte"); return; }
+        // L'écart entre le haut du cadre et le bas de la barre, en pixels du
+        // cadre (la colonne peut être agrandie ou réduite par --echelle).
+        const c = cadre.getBoundingClientRect(), b = barre.getBoundingClientRect();
+        const echelle = cadre.offsetHeight ? c.height / cadre.offsetHeight : 1;
+        cadre.style.setProperty("--haut-teinte", Math.round((b.bottom - c.top) / (echelle || 1) + 6) + "px");
+      }
+      function suivreHaut(cadre, barre) {
+        if (!cadre.classList || !cadre.style || typeof cadre.style.removeProperty !== "function") return;
+        teinterHaut(cadre, barre);
+        if (observateurHaut || typeof ResizeObserver !== "function") return;
+        observateurHaut = new ResizeObserver(() => teinterHaut(cadre, barre));
+        observateurHaut.observe(cadre);
+        observateurHaut.observe(barre);
+      }
+
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
         const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
         // Comme dans Défi tables : l'élève à code (body.mode-eleve) n'a qu'une
         // barre fine en haut, sans logo, « Se déconnecter » dans le bandeau.
         if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
+        placerEnTete();
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les
@@ -743,28 +813,27 @@
         repere.classList.toggle("detache", sync.detache);
         repere.classList.toggle("hors-ligne", !sync.detache && suiviHorsLigne);
         let texte;
+        // En-tête commun (31/10/2026), comme Défi tables : « Suivi par ton
+        // professeur » devient « Suivi » — la ligne est courte, le mot reste.
         if (sync.detache) texte = "Ton code ne marche plus · demande le nouveau à ton professeur";
-        else if (erreurDefinitive) texte = "Suivi par ton professeur · impossible d’envoyer ce travail";
-        else if (suiviHorsLigne) texte = "Suivi par ton professeur · travail gardé ici, pas encore envoyé";
-        else texte = `Suivi par ton professeur${qui}${ou}`;
-        // Comme dans Défi tables : « Suivi par ton
-        // professeur », le prénom, la classe, chacun dans son morceau — au
-        // téléphone, trois lignes centrées (le texte lu reste le même :
-        // « Suivi par ton professeur · Léa · 6e B »).
+        else if (erreurDefinitive) texte = "Suivi · impossible d’envoyer ce travail";
+        else if (suiviHorsLigne) texte = "Suivi · travail gardé ici, pas encore envoyé";
+        else texte = `Suivi${qui}${ou}`;
+        // « Suivi », le prénom, la classe, chacun dans son morceau insécable :
+        // la ligne ne se coupe qu'aux « · » (le texte lu reste
+        // « Suivi · Léa · 6e B »).
         const morceaux = document.createElement("span");
         morceaux.className = "repere-texte";
         if (!sync.detache && !erreurDefinitive && !suiviHorsLigne && (qui || ou)) {
           const suivi = document.createElement("span");
-          suivi.textContent = "Suivi par ton professeur";
+          suivi.className = "morceau";
+          suivi.textContent = "Suivi";
           morceaux.append(suivi);
           [["repere-prenom", qui], ["repere-classe", ou]].filter(([, valeur]) => valeur).forEach(([classe, valeur]) => {
             const ligne = document.createElement("span");
-            ligne.className = classe;
-            const separe = document.createElement("span");
-            separe.className = "repere-sep";
-            separe.textContent = " · ";
-            ligne.append(separe, document.createTextNode(valeur.replace(/^ · /, "")));
-            morceaux.append(ligne);
+            ligne.className = "morceau " + classe;
+            ligne.textContent = valeur.replace(/^ · /, "");
+            morceaux.append(document.createTextNode(" · "), ligne);
           });
         } else {
           morceaux.textContent = texte;
@@ -790,7 +859,7 @@
         // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
         const bloc = document.createElement("span");
         bloc.className = "sortie-bloc";
-        bloc.append(document.createTextNode("· "), sortie);
+        bloc.append(document.createTextNode(" · "), sortie);
         repere.append(bloc);
       }
 
@@ -814,7 +883,7 @@
         retour.textContent = "Mon espace";
         const bloc = document.createElement("span");
         bloc.className = "repere-lien";
-        bloc.append(document.createTextNode("· "), retour);
+        bloc.append(document.createTextNode(" · "), retour);
         repere.append(puce, document.createTextNode(texte), bloc);
       }
 
@@ -1407,6 +1476,7 @@
         if (TITRES[name]) $(TITRES[name]).focus?.({preventScroll: true});
         if (name === "result") $(state.titreResultat)?.focus?.({preventScroll: true});
         suivreHistorique(name);
+        placerEnTete();
         ajusterEchelle();
       }
 
@@ -2068,13 +2138,15 @@
         zone.setAttribute("aria-label", enCours
           ? `Ma séance, étape ${faites + 1} sur ${total}${nom ? ` : ${prefixe ? `${prefixe} ` : ""}${nom}` : ""}`
           : `Ma séance, ${pluriel(faites, "étape")} sur ${total}`);
+        // Le fil est le titre de l'écran : la ligne de suivi vient dessous.
+        placerEnTete();
       }
 
       // Pendant une étape : le fil au-dessus du jeu. Hors séance, rien.
       function majFilDeJeu() {
         const fil = $("fil-seance");
         $("play").classList.toggle("en-seance", enSeance());
-        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); return; }
+        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); placerEnTete(); return; }
         const etape = state.seance.etape;
         const test = etape.type === "test";
         renderFilSeance(fil, {faites: etape.numero - 1, total: etape.total,
@@ -2085,7 +2157,7 @@
       // Sur un bilan : le fil avec l'étape qui vient d'être faite.
       function majFilDeBilan() {
         const fil = $("result-fil");
-        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); return; }
+        if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); placerEnTete(); return; }
         const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
         const faites = file.ouverte ? file.faites : state.seance.etape.numero;
         renderFilSeance(fil, {faites, total: faites + (file.ouverte ? file.etapes.length : 0), enCours: false});

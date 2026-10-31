@@ -313,7 +313,7 @@ test("la page : en construction, hors catalogue, sans menus pour l'élève, sans
   // Les mots de l'élève, repris de Défi tables, des maquettes et des planches de l'étape 5a.
   ["Mon module", "Comment ça marche", "Ma séance du jour", "Mes calculs du jour", "Tu connais déjà", "Une chose nouvelle",
     "Je m’entraîne encore", "Arrêter la séance", "Encore une séance", "Séance du jour faite", "fois cette semaine", "Module su !",
-    "Je recopie cette phrase dans mon cahier.", "Pas encore", "Suivi par ton professeur", "C’est toujours toi", "Nouveau", "escalier",
+    "Je recopie cette phrase dans mon cahier.", "Pas encore", "Suivi · travail gardé ici", "C’est toujours toi", "Nouveau", "escalier",
     "à apprendre", "en route", "à revoir", "Mode professeur", "rien n’est enregistré"].forEach(mot => assert.ok(page.includes(mot), mot));
   // « Je valide » n'existe plus, pour personne ; l'élève n'a plus de menus dans la page.
   ["Je valide", "Validation", "Juste, mais trop long", "trop lentement", "acc-valide", "Module validé", "validé !"].forEach(mot =>

@@ -149,13 +149,18 @@
     body.en-seance .panel { flex: 1 1 auto; }
 
     /* ---- Le bandeau du haut du cadre (planches validées le 30/10/2026) ----
-       Turquoise pâle, il porte la flèche à gauche, le titre (« Soroban /
-       Flash Anzan » sur les réglages, « Calcul 1 / 5 » en séance) et le plein
-       écran à droite. Même hauteur de rangée et mêmes marges sur tous les
-       écrans : les ronds ne sautent pas d'un écran à l'autre. */
-    .bandeau { flex: 0 0 auto; padding: var(--bandeau-haut) var(--bandeau-cote) 10px; border-radius: var(--rayon) var(--rayon) 0 0; background: #dff4f2; }
+       Il porte la flèche à gauche, le titre (« Soroban / Flash Anzan » sur
+       les réglages, « Calcul 1 / 5 » en séance) et le plein écran à droite.
+       Même hauteur de rangée et mêmes marges sur tous les écrans : les ronds
+       ne sautent pas d'un écran à l'autre. « Anzan adouci » (planche 4 du
+       31/10/2026, validée telle quelle) : plus de turquoise pâle ; le haut
+       du cadre BLANC (planche 16 du 31/10/2026, « tout blanc » — le même
+       haut dans toutes les applis suivies), un trait fin gris le sépare du
+       corps. */
+    .bandeau { flex: 0 0 auto; padding: var(--bandeau-haut) var(--bandeau-cote) 10px; border-radius: var(--rayon) var(--rayon) 0 0;
+      background: #fff; border-bottom: 1px solid #e3ebf0; }
     .cadre-haut, .jeu-haut { display: flex; align-items: center; gap: 12px; min-height: var(--rangee-h); }
-    .bandeau .rond { border-color: #b9dcdc; }
+    .bandeau .rond { border-color: #d4e3ed; }
     /* La pastille « ● Rania » se détache en blanc sur le bandeau (ses états
        « hors ligne » et « détaché », plus loin dans la page, gardent leurs
        couleurs). */
@@ -167,48 +172,50 @@
     /* ---- Les réglages ---- */
     .reglages-ecran { width: 100%; display: flex; flex-direction: column; }
     /* Les onglets Flash / Colonne en intercalaires : l'actif est blanc et
-       soudé au cadre, avec un petit trait orange dessous ; l'autre est
-       turquoise très pâle. */
+       soudé au cadre, avec un petit trait orange dessous ; l'autre est gris
+       très pâle (adouci, 31/10/2026). */
     .bandeau .onglets { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 6px; margin: 8px 0 -10px; }
-    .onglet { position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 11px; border: 1px solid #c3e8e5; border-bottom: 0;
-      border-radius: 20px 20px 0 0; background: #eefaf9; color: #456673; font-weight: 950; font-size: 1.05rem; line-height: 1.1;
+    .onglet { position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 11px; border: 1px solid #dde7ec; border-bottom: 0;
+      border-radius: 20px 20px 0 0; background: #f5f8fa; color: #557080; font-weight: 800; font-size: 1.05rem; line-height: 1.1;
       display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-    .onglet small { font-weight: 700; font-size: .72rem; color: var(--muted); margin-top: 3px; }
-    .onglet[aria-pressed="true"] { z-index: 1; margin-top: 0; padding-top: 15px; padding-bottom: 15px; border-color: #fff; background: #fff; color: var(--ink); }
+    .onglet small { font-weight: 600; font-size: .72rem; color: var(--muted); margin-top: 3px; }
+    .onglet[aria-pressed="true"] { z-index: 1; margin-top: 0; padding-top: 15px; padding-bottom: 15px; border-color: #dde7ec; background: #fff; color: var(--ink); }
     .onglet[aria-pressed="true"]::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 56px; height: 4px; border-radius: 4px;
       background: #f58220; transform: translateX(-50%); }
     .reglages-corps { padding: 16px var(--corps-cote) 22px; }
-    /* Les blocs turquoise (palette maths&go : #08aaa5, texte #087a71). */
+    /* Les réglages (adouci, 31/10/2026) : cases et boutons blancs à bordure
+       fine grise, signes et « − / + » en bleu maths&go, le choix actif en
+       bleu très pâle bordé de bleu. Le clavier et les nombres restent gras. */
     .grille { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px 18px; }
     .bloc { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
     .bloc.large { grid-column: span 2; }
-    .bloc .lab { font-weight: 900; font-size: .98rem; }
-    .bloc .lab small { margin-left: 2px; font-weight: 700; font-size: .78rem; color: var(--muted); }
+    .bloc .lab { font-weight: 800; font-size: .98rem; }
+    .bloc .lab small { margin-left: 2px; font-weight: 600; font-size: .78rem; color: var(--muted); }
     .pas { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 6px; border-radius: 16px;
-      background: #e2f5f4; border: 2px solid #93d9d5; }
-    .pas button { flex: 0 0 44px; width: 44px; height: 42px; border-radius: 12px; border: 2px solid #93d9d5; background: #fff;
-      font-size: 1.4rem; font-weight: 900; line-height: 1; color: var(--teal); cursor: pointer; }
-    .pas button:disabled { background: transparent; border-color: #c4e7e5; color: #a9cfcd; cursor: default; }
-    .pas output { min-width: 0; flex: 1 1 auto; text-align: center; font-weight: 950; font-size: 1.35rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      background: #fff; border: 1.5px solid #d4e3ed; }
+    .pas button { flex: 0 0 44px; width: 44px; height: 42px; border-radius: 12px; border: 1.5px solid #d4e3ed; background: #fff;
+      font-size: 1.4rem; font-weight: 800; line-height: 1; color: var(--blue); cursor: pointer; }
+    .pas button:disabled { background: transparent; border-color: #e6edf2; color: #b7c6d0; cursor: default; }
+    .pas output { min-width: 0; flex: 1 1 auto; text-align: center; font-weight: 900; font-size: 1.35rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .options.trois { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-    .option { height: 56px; padding: 0 10px; border-radius: 14px; border: 2px solid #dde7ec; background: #f5f8fa; color: #557080;
-      font-weight: 900; font-size: 1.02rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; white-space: nowrap; }
-    .option .sig { font-size: 1.25rem; color: var(--teal); }
-    .option[aria-pressed="true"] { background: #e2f5f4; border-color: #08aaa5; color: var(--ink); }
+    .option { height: 56px; padding: 0 10px; border-radius: 14px; border: 1.5px solid #d4e3ed; background: #fff; color: #557080;
+      font-weight: 800; font-size: 1.02rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; white-space: nowrap; }
+    .option .sig { font-size: 1.25rem; color: var(--blue); }
+    .option[aria-pressed="true"] { background: #eef4fc; border-color: var(--blue); color: var(--ink); }
     /* Le son : un interrupteur « 🔔 Un bip à chaque nombre ». */
     .bascule { display: flex; align-items: center; gap: 10px; width: 100%; height: 56px; padding: 0 12px 0 14px; border-radius: 14px;
-      border: 2px solid #dde7ec; background: #f5f8fa; color: #557080; font-weight: 900; font-size: 1rem; text-align: left; cursor: pointer; }
+      border: 1.5px solid #d4e3ed; background: #fff; color: #557080; font-weight: 800; font-size: 1rem; text-align: left; cursor: pointer; }
     .bascule .inter { position: relative; flex: 0 0 auto; margin-left: auto; width: 52px; height: 30px; border-radius: 15px; background: #c9d6de; transition: background .15s; }
     .bascule .inter::after { content: ""; position: absolute; left: 3px; top: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
       box-shadow: 0 1px 2px rgba(20, 52, 81, .25); transition: left .15s; }
-    .bascule[aria-checked="true"] { border-color: #08aaa5; background: #e2f5f4; color: var(--ink); }
-    .bascule[aria-checked="true"] .inter { background: #08aaa5; }
+    .bascule[aria-checked="true"] { border-color: #d4e3ed; background: #fff; color: var(--ink); }
+    .bascule[aria-checked="true"] .inter { background: var(--blue); }
     .bascule[aria-checked="true"] .inter::after { left: 25px; }
     @media (prefers-reduced-motion: reduce) { .bascule .inter, .bascule .inter::after { transition: none; } }
     /* « ⚡ 5 calculs · 10 nombres · 30 s par calcul » */
     .resume { grid-column: span 2; align-self: end; display: grid; place-items: center; min-height: 56px; margin: 0;
-      padding: 8px 14px; border-radius: 14px; background: #f4f8fb; color: var(--muted); font-weight: 800; font-size: .92rem; text-align: center; }
+      padding: 8px 14px; border-radius: 14px; background: none; color: var(--muted); font-weight: 700; font-size: .92rem; text-align: center; }
     .resume strong { color: var(--ink); }
     /* En Colonne (pas de Son), le résumé prend toute la ligne. */
     .grille.sans-son .resume { grid-column: 1 / -1; }
@@ -353,15 +360,14 @@
     .fin .actions { flex: 0 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; padding-bottom: 5px; }
 
     /* ---- L'élève à code (lot « Qui voit quoi », lot 4a, 23/10/2026) ----
-       Le MODÈLE COMMUN des applis suivies (AGENTS.md), Défi tables en
-       référence : le bloc « Suivi par ton professeur · Rania · 405 · Se
-       déconnecter » AU-DESSUS du cadre (dessiné et stylé par
-       flash_anzan_suivi.js) ; la flèche du cadre mène à Mon espace, sans
-       « ← Mon espace » en texte (la flèche y mène déjà) ; pendant la séance,
-       la pastille « ● Rania » à droite de la barre, à la place du plein écran
+       Le MODÈLE COMMUN des applis suivies (AGENTS.md) — en-tête commun du
+       31/10/2026 (variante A) : plus rien au-dessus du cadre ; dans le
+       bandeau, la flèche (vers Mon espace), le titre, le plein écran, et
+       SOUS le titre la ligne « ● Suivi · Rania · 405 · Se déconnecter »
+       (dessinée et stylée par flash_anzan_suivi.js) ; pendant la séance, la
+       pastille « ● Rania » à droite de la barre, à la place du plein écran
        sur téléphone ; rien en bas (24/10/2026 : plus de pied dans les
        applis). La classe « suivi-eleve » est posée dès le <head> pour ne pas clignoter. */
-    .shell > .suivi-repere { margin: 0 0 12px; }
     body.en-seance .suivi-repere { display: none; }
     #suivi-pastille-slot:empty { display: none; }
     /* Pendant l'échange du billet, on ne sait pas encore qui entre ni quels
@@ -393,9 +399,8 @@
     .hist-score small { display: block; font-size: .68rem; font-weight: 800; color: #8a4c0a; }
     .historique-ecran .bas { width: 100%; max-width: 380px; margin: 16px auto 0; }
     @media (max-width: 620px) {
-      /* Au téléphone, le bloc de suivi ne colle pas aux bords, et la liste des
-         séances défile avec la page (pas dans son cadre). */
-      .shell > .suivi-repere { margin: 0 10px 10px; }
+      /* Au téléphone, la liste des séances défile avec la page (pas dans son
+         cadre). */
       .hist-liste { max-height: none; overflow: visible; }
       .hist-item { grid-template-columns: 54px minmax(0, 1fr) auto; padding: 6px 10px; }
       .hist-jour { font-size: .82rem; }
@@ -514,10 +519,6 @@
 </head>
 <body>
   <main class="shell">
-    <!-- L'élève à code (modèle commun) : le bloc de suivi au-dessus du cadre,
-         dessiné par flash_anzan_suivi.js ; caché pour tous les autres -->
-    <p id="suivi-repere" class="suivi-repere" hidden></p>
-
     <section class="panel" id="panel">
       <!-- Les réglages : un réglage par ligne, communs aux deux modes, puis
            ceux du mode choisi. -->
@@ -534,6 +535,11 @@
             </div>
             <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
           </div>
+          <!-- L'élève à code (en-tête commun, 31/10/2026) : la ligne de suivi
+               sous le titre, dessinée par flash_anzan_suivi.js ; cachée pour
+               tous les autres. Elle suit l'écran affiché (réglages ou
+               historique) : placerRepere(). -->
+          <p id="suivi-repere" class="suivi-repere" hidden></p>
           <div class="modes onglets" role="group" aria-label="Mode">
             <button type="button" class="onglet" data-mode="flash" aria-pressed="true">⚡ Flash<small>un nombre à la fois</small></button>
             <button type="button" class="onglet" data-mode="colonne" aria-pressed="false">📝 Colonne<small>tous les nombres écrits</small></button>
@@ -686,7 +692,7 @@
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
   <script src="./flash_anzan_parcours.js?v=20261024-3"></script>
-  <script src="./flash_anzan_suivi.js?v=20261024-1"></script>
+  <script src="./flash_anzan_suivi.js?v=20261031-1"></script>
   <script>
     (function () {
       "use strict";
@@ -1535,8 +1541,19 @@
         try { return !PARCOURS.resumeTuile(SUIVI.lire()).vide; } catch (e) { return false; }
       }
 
+      // En-tête commun (31/10/2026) : la ligne de suivi vit SOUS LE TITRE de
+      // l'écran affiché — les réglages ou Mon historique. Un seul élément
+      // (#suivi-repere, son « Se déconnecter » et ses états), déplacé d'un
+      // bandeau à l'autre ; en séance, il est caché (la pastille suffit).
+      function placerRepere() {
+        const repere = $("suivi-repere");
+        const ecran = $("ecran-historique").hidden ? $("ecran-reglages") : $("ecran-historique");
+        const haut = ecran.querySelector(".cadre-haut");
+        if (repere && haut && typeof haut.after === "function" && haut.nextElementSibling !== repere) haut.after(repere);
+      }
+
       // Tout ce que l'élève à code voit de son suivi : la classe sur <html>,
-      // le bloc au-dessus du cadre, la flèche vers Mon espace, la pastille, le
+      // la ligne sous le titre, la flèche vers Mon espace, la pastille, le
       // bouton de l'historique, la ligne « Envoyé ».
       function majSuivi() {
         const eleve = modeEleve();
@@ -1548,6 +1565,7 @@
         }
         if (!SUIVI) return;
         SUIVI.dessinerBloc($("suivi-repere"));
+        placerRepere();
         poserPastille();
         $("vers-historique").hidden = !aUnHistorique();
         majEnvoi();
@@ -1613,6 +1631,7 @@
         historiqueAffiches = 10;
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = false;
+        placerRepere();
         dessinerHistorique();
         ajusterEchelle();
         $("historique-titre").focus({preventScroll: true});

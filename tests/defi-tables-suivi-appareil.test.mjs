@@ -94,7 +94,7 @@ test("serveur qui répond : fusion avec la case du code, prénom et classe sur l
   assert.equal(appli.api.parcours.prenom, "", "sous un code, plus de prénom dans la case (lot 8)");
   assert.equal(appli.api.prenomAffiche(), "Léa", "le prénom affiché est celui que le professeur a saisi");
   assert.deepEqual(PARCOURS.chargerIdentiteOnglet(appli.session, B), {prenom: "Léa", classe: "405"}, "rangé dans l’onglet, avec le code");
-  assert.match(appli.repere().texte, /Suivi par ton professeur · Léa · 405/);
+  assert.match(appli.repere().texte, /^Suivi · Léa · 405 · Se déconnecter$/);
   const envois = appli.reseau.appels.filter(a => a.parcours);
   assert.ok(envois.length >= 1 && envois.every(a => a.code === B && a.parcours.prenom === ""),
     "la fusion repart au serveur, sous le bon code, sans prénom");
@@ -215,18 +215,18 @@ test("un vieux #fiche= dans l’entrée n’ouvre plus rien et ne touche ni à l
 
 // --------------------------------------------------------------------- le repère
 
-test("le repère est rendu dans la barre du haut, avec la sortie dessus", async () => {
+test("le repère est rendu dans la barre du haut (dans le cadre pour l’élève), avec la sortie dessus", async () => {
   const appli = demarrerAppli({codeOnglet: B});
   appli.api.demarrerSuivi();
   await tic();
   const repere = appli.repere();
   assert.equal(repere.hidden, false);
-  assert.match(repere.texte, /^Suivi par ton professeur · Léa · 405· Se déconnecter$/);
+  assert.match(repere.texte, /^Suivi · Léa · 405 · Se déconnecter$/, "en-tête commun (31/10/2026) : « Suivi », pas « Suivi par ton professeur »");
   const bloc = repere.enfants[repere.enfants.length - 1];
   const sortie = bloc.enfants[1];
   assert.equal(sortie.textContent, "Se déconnecter");
   assert.equal(typeof sortie.ecouteurs.click, "function", "la sortie est un bouton qui agit");
-  assert.equal(bloc.enfants[0], "· ", "le séparateur voyage avec le bouton");
+  assert.equal(bloc.enfants[0], " · ", "le séparateur voyage avec le bouton");
   assert.match(html, /<header class="topbar">[\s\S]*<p id="suivi-repere" class="suivi-repere" hidden><\/p>\s*<div id="suivi-garde"[\s\S]*<\/header>/,
     "le repère est dans l’en-tête, donc sur tous les écrans");
   assert.doesNotMatch(html, /id="parcours-suivi"/, "plus de second repère limité à Mon parcours");

@@ -204,6 +204,14 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
       lignes: document.querySelector(".panel").innerText.split("\n").map(ligne => ligne.trim()).filter(Boolean),
       pilule: !document.getElementById("prof-pilule").hidden,
       filSeance: boite("#fil-seance"), status: boite("#play .status"), filTemps: boite("#seance-fil"),
+      // Ce qu'écrit le fil (ronds et nom), sans la rangée de 44 px qu'il prend quand la
+      // flèche monte sur sa ligne (en-tête commun, planche 16 du 31/10/2026).
+      filTexte: (() => {
+        const fil = document.getElementById("fil-seance");
+        const boites = fil && !fil.hidden ? [...fil.children].map(e => e.getBoundingClientRect()).filter(r => r.width) : [];
+        return boites.length ? Math.max(...boites.map(r => r.bottom)) - Math.min(...boites.map(r => r.top)) : 0;
+      })(),
+      flecheSurLeFil: document.body.classList.contains("ligne-sous-titre") && document.body.classList.contains("challenge-playing"),
       // Le fil d'une étape d'un niveau (« Je m'entraîne : … ») : son nom se coupe au téléphone.
       filCoupable: Boolean(document.querySelector("#fil-seance .quoi")),
       repere: (document.getElementById("suivi-repere").textContent || "").trim(),
@@ -215,20 +223,26 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
   assert.deepEqual(erreurs, [], `${ou} : aucune erreur de console`);
   if (bandeau) {
     assert.equal(m.repereVisible, true, `${ou} : le bandeau de suivi est affiché`);
-    assert.match(m.repere, /^Suivi par ton professeur · Léa · 4e B/, `${ou} : le bandeau`);
+    assert.match(m.repere, /^Suivi · Léa · 4e B · Se déconnecter$/, `${ou} : la ligne de suivi (en-tête commun, 31/10/2026)`);
     // Comme dans Défi tables : pas de logo en haut pour l'élève à code,
-    // « Se déconnecter » dans le bandeau, une seule barre fine.
+    // « Se déconnecter » dans la ligne, la barre DANS le cadre (en-tête commun).
     assert.equal(m.logo, null, `${ou} : pas de logo dans la barre de l'élève`);
     assert.ok(m.sortie && m.sortie.gauche >= m.bandeau.gauche && m.sortie.droite <= m.bandeau.droite + 1 && m.sortie.haut >= m.bandeau.haut - 1 && m.sortie.bas <= m.bandeau.bas + 1,
       `${ou} : « Se déconnecter » est dans le bandeau`);
-    assert.ok(m.barre.bas - m.barre.haut <= 72 * (Number(m.echelle) || 1), `${ou} : la barre du haut est fine (${Math.round(m.barre.bas - m.barre.haut)} px)`);
+    assert.ok(m.cadre && m.barre.haut >= m.cadre.haut && m.barre.bas <= m.cadre.bas, `${ou} : la barre du haut est dans le cadre blanc`);
   }
   // Le français de ce qui est affiché : une espace insécable devant : ? !
   // (après un mot ou un nombre : « + ? » est un calcul, pas une phrase).
   m.lignes.forEach(ligne => assert.doesNotMatch(ligne, /[\p{L}\d»)] [:?!]/u, `${ou} : « ${ligne} » (espace insécable devant : ? !)`));
   // Le fil de la séance est au-dessus de la barre, celui des trois temps ne le touche pas.
   if (m.filSeance && m.status) assert.ok(m.filSeance.bas <= m.status.haut + 1, `${ou} : le fil de la séance passe sur la barre`);
-  if (taille.telephone && m.filSeance && m.filCoupable) assert.ok(m.filSeance.bas - m.filSeance.haut <= 30, `${ou} : au téléphone, le fil de la séance tient sur une ligne (${Math.round(m.filSeance.bas - m.filSeance.haut)} px)`);
+  // Au téléphone, le fil tient sur une ligne. Pour l'élève à code, la flèche monte sur la
+  // ligne du fil (planche 16 du 31/10/2026, choix de Gwenaël) : un nom long passe alors
+  // sous les ronds, comme un long titre d'écran — deux lignes au plus.
+  if (taille.telephone && m.filSeance && m.filCoupable) {
+    const plafond = m.flecheSurLeFil ? 56 : 30;
+    assert.ok(m.filTexte <= plafond, `${ou} : au téléphone, le fil de la séance tient sur ${m.flecheSurLeFil ? "deux lignes" : "une ligne"} (${Math.round(m.filTexte)} px)`);
+  }
   if (m.filSeance && m.filTemps) assert.ok(m.filSeance.bas <= m.filTemps.haut + 1, `${ou} : les deux fils se chevauchent`);
   if (m.trace && m.valider) assert.ok(m.trace.bas <= m.valider.haut + .5, `${ou} : la ligne du calcul passe sous le bouton du bas (${Math.round(m.trace.bas - m.valider.haut)} px)`);
   assert.ok(m.largeurPage <= m.largeur, `${ou} : aucun défilement horizontal (${m.largeurPage} > ${m.largeur})`);

@@ -82,7 +82,7 @@
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, garde) : lots 2 et 6, 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261014-1"></script>
-<script src="../assets/js/splat-suivi.js?v=20261024-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261031-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -111,17 +111,16 @@ header .modeOpt{font-size:13px;font-weight:800;color:var(--muted);border-radius:
 header .modeOpt.actif{color:#fff;background:var(--blue)}
 header .modeOpt:not(.actif):hover{color:var(--ink)}
 
-/* ---------- l'élève à code (lot 6 « en-tête », 08/10/2026) ----------
-   Le modèle commun des applis suivies (AGENTS.md), Défi tables en référence. En haut, la
-   flèche (vers Mon espace) puis le bloc « Suivi par ton professeur », prénom, classe, avec
-   « Se déconnecter » dedans — dessiné et stylé par assets/js/splat-suivi.js (le bandeau
-   sous l'en-tête du lot 2 s'en va). Plus de logo en haut (il passe en petit dans le pied),
-   plus de lien « Mon espace » en texte, plus de choix « Élève | Professeur » : la vue prof
-   contient toutes les corrections (demande de Gwenaël, 08/10/2026). Classe posée dès le
-   <head> pour l'élève venu de son espace ; sans code, rien ne change. */
+/* ---------- l'élève à code (lot 6 « en-tête », 08/10/2026 ; en-tête commun, 31/10/2026) ----------
+   Le modèle commun des applis suivies (AGENTS.md). En haut, la flèche seule (vers Mon
+   espace) ; SOUS LE GRAND TITRE, la ligne « ● Suivi · Rania · 405 · Se déconnecter » —
+   dessinée et stylée par assets/js/splat-suivi.js (variante A du 31/10/2026 : plus de bloc
+   pâle dans la barre du haut). Plus de logo en haut, plus de lien « Mon espace » en texte,
+   plus de choix « Élève | Professeur » : la vue prof contient toutes les corrections
+   (demande de Gwenaël, 08/10/2026). Classe posée dès le <head> pour l'élève venu de son
+   espace ; sans code, rien ne change. */
 html.suivi-eleve header .brand,html.suivi-eleve header .modeBar{display:none}
 html.suivi-eleve body>footer{display:none}
-header .suivi-repere{flex:1 1 auto;min-width:0;max-width:760px;margin:0 auto}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}
@@ -564,8 +563,6 @@ body.prof .volet p{font-size:14.5px}
     <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
   </a>
   <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go"></a>
-  <!-- le bloc de suivi de l'élève à code (lot 6), à côté de la flèche ; caché pour tous les autres -->
-  <p id="suivi-repere" class="suivi-repere" hidden></p>
   <nav class="modeBar" aria-label="Choix du mode">
     <a class="modeOpt actif" id="optEleve">🎮 Élève</a>
     <a class="modeOpt" id="optProf" href="?prof=1">Professeur</a>
@@ -580,6 +577,9 @@ body.prof .volet p{font-size:14.5px}
   <svg class="heroBlob b4" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#f9bf3b" opacity=".22" width="110" height="110"/></svg>
   <svg class="heroBlob b6" viewBox="0 0 110 110"><use href="#tacheEtoile" fill="#08aaa5" opacity=".13" width="110" height="110"/></svg>
   <h1>L'univers <span class="splat">SPLAT!</span></h1>
+  <!-- la ligne de suivi de l'élève à code (en-tête commun, 31/10/2026), sous le grand titre ;
+       cachée pour tous les autres -->
+  <p id="suivi-repere" class="suivi-repere" hidden></p>
   <p class="sub">Des jetons se cachent sous les taches… Traverse les six mondes, étape par étape,
   et deviens un champion des équations !</p>
 </div>
