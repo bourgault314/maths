@@ -6,7 +6,8 @@
   <title>Défi calcul, par modules | maths&amp;go</title>
   <meta name="description" content="Défi calcul par modules, en construction : le calcul mental, module par module.">
   <!-- En construction (lot 1a, 03/10/2026 ; la séance guidée au lot 2a,
-       05/10/2026) : la page n'est reliée à rien, ni au catalogue ni au plan
+       05/10/2026 ; le scénario d'un module et la carte v2 au lot 3,
+       30/10/2026) : la page n'est reliée à rien, ni au catalogue ni au plan
        du site. À l'ouverture, elle prendra l'adresse defi_calcul.html. -->
   <meta name="robots" content="noindex">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -78,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261024-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261030-1">
 </head>
 <body>
   <main class="shell">
@@ -178,6 +179,8 @@
         </div>
         <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
         <article id="question-card" class="question">
+          <div id="escalier" class="dc-escalier" hidden></div>
+          <p id="annonce" class="dc-annonce-forme" hidden></p>
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
           <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
           <div id="aide" class="dc-aide" hidden></div>
@@ -225,17 +228,18 @@
         <div class="notice">
           <p><b>Ma séance du jour.</b> Je clique, elle est prête&nbsp;: mes calculs du jour, puis une chose nouvelle.</p>
           <p><b>Mes calculs du jour.</b> Les calculs qui reviennent. Juste, ils montent d’une boîte&nbsp;; raté, ils redescendent. C’est là que ça compte.</p>
-          <p><b>J’apprends, je m’entraîne.</b> Trois temps, puis 10 calculs avec les aides. Ici, se tromper ne compte pas.</p>
-          <p><b>Tu connais déjà&nbsp;?</b> Un test à l’entrée d’un module&nbsp;: ce que je sais déjà entre directement.</p>
+          <p><b>Le rouge d’abord.</b> Un calcul raté le matin, je le retravaille avec l’aide le jour même, avant toute nouveauté.</p>
+          <p><b>J’apprends, je m’entraîne.</b> Trois temps, puis des calculs du plus simple au plus dur&nbsp;: l’aide reste tant que j’en ai besoin, et c’est réussi à 5 justes de suite. Ici, se tromper ne compte pas.</p>
+          <p><b>Tu connais déjà&nbsp;?</b> À l’entrée d’un module, un escalier&nbsp;: une marche par niveau. Ce que je sais déjà entre directement.</p>
           <p><b>Mes couleurs.</b> Bleu&nbsp;: en route. Vert&nbsp;: su, ça revient de temps en temps. Rouge&nbsp;: à revoir demain.</p>
         </div>
       </div>
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261005-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261005-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261005-2"></script>
+  <script src="./defi_calcul_core.js?v=20261031-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261031-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261031-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1461,6 +1465,7 @@
       // Le nom d'une étape de la séance, et ce qu'elle contient.
       function nomEtape(etape) {
         if (etape.type === "jour") return "Mes calculs du jour";
+        if (etape.type === "suite") return "La suite";
         if (etape.type === "test") return `Tu connais déjà ? ${CORE.moduleDe(etape.module).nom}`;
         if (etape.type === "nouveau") return "Une chose nouvelle";
         const nom = nomCompetence(etape.module, etape.niveau);
@@ -1474,13 +1479,16 @@
         return [...(apprends.manipule ? ["manipule"] : []), "represente", "ecris"];
       }
 
+      const DETAIL_ENTRAINE = `jusqu’à ${PARCOURS.SEUILS.entraine.sansOutil} justes de suite`;
+
       function detailEtape(etape) {
         if (etape.type === "jour") return `${pluriel(etape.calculs, "calcul")} · ça compte`;
-        if (etape.type === "test") return `${PARCOURS.SEUILS.test.parNiveau} calculs par niveau, sans aide`;
+        if (etape.type === "suite") return "selon tes calculs du jour";
+        if (etape.type === "test") return `une marche par niveau, ${PARCOURS.SEUILS.test.parMarche} calculs`;
         if (etape.type === "nouveau") return "selon ton test";
         if (etape.type === "apprends") return `${tempsDe(etape.module, etape.niveau).length} temps`;
-        if (etape.type === "entraine") return "10 calculs";
-        return "10 calculs, avec les aides";
+        if (etape.type === "entraine") return DETAIL_ENTRAINE;
+        return `avec l’aide, ${DETAIL_ENTRAINE}`;
       }
 
       // Sur le bouton « Étape 3 : j'apprends + 8, 18, 28, 38 → ».
@@ -1560,19 +1568,31 @@
       const CLASSES_ETAT = Object.freeze({su: "su", revoir: "rouge", encours: "encours", libre: "", bientot: "bientot"});
       const MOTS_ETAT = Object.freeze({su: "su", revoir: "su, à revoir", encours: "en cours", libre: "pas commencé", bientot: "bientôt"});
 
-      // Une ligne du parcours : l'état (une forme, pas seulement une couleur),
-      // le nom, et un petit carré par compétence. Pour l'élève, la ligne ne
-      // s'ouvre pas : elle montre. En mode professeur, elle ouvre le module.
-      function ligneModule(fiche) {
+      // Les niveaux d'un module qui sont dans un palier (carte v2 : le palier
+      // est celui du niveau, un module peut s'étaler sur plusieurs paliers).
+      function niveauxDuPalier(fiche, palier) {
+        return fiche.niveaux.filter(niveau => niveau.palier === palier);
+      }
+
+      // Une ligne du parcours, dans un palier : l'état du module (une forme,
+      // pas seulement une couleur), le nom, les niveaux qui sont dans ce
+      // palier (« niv. 1 à 3 »), et un petit carré par compétence du palier.
+      // Pour l'élève, la ligne ne s'ouvre pas : elle montre. En mode
+      // professeur, elle ouvre le module.
+      function ligneModule(fiche, palier) {
         const etat = PARCOURS.etatModule(parcours, fiche.id, CARTE);
+        const niveaux = niveauxDuPalier(fiche, palier);
         const ouvrable = MODE_PROF && etat.etat !== "bientot";
         const ligne = document.createElement(ouvrable ? "button" : "div");
         if (ouvrable) ligne.type = "button";
         else ligne.setAttribute("role", "listitem");
-        // Mon module est encadré, même s'il n'est pas encore commencé.
-        const classe = etat.ici && etat.etat !== "revoir" ? "encours" : CLASSES_ETAT[etat.etat];
+        // Mon module est encadré dans le palier de mon niveau, même s'il
+        // n'est pas encore commencé.
+        const iciDansLePalier = etat.ici && niveaux.some(niveau => niveau.n === etat.ici);
+        const classe = iciDansLePalier && etat.etat !== "revoir" ? "encours" : CLASSES_ETAT[etat.etat];
         ligne.className = `dc-mod ${classe}`.trim();
         ligne.dataset.module = fiche.id;
+        ligne.dataset.palier = String(palier);
         const st = document.createElement("i");
         st.className = "st";
         st.setAttribute("aria-hidden", "true");
@@ -1580,45 +1600,52 @@
         const nom = document.createElement("span");
         nom.className = "nom";
         nom.textContent = fiche.nom;
-        if (etat.etat === "bientot") {
-          const petit = document.createElement("small");
-          petit.textContent = "bientôt";
-          nom.append(petit);
-        }
+        const petit = document.createElement("small");
+        const numeros = niveaux.map(niveau => niveau.n);
+        const partiel = numeros.length < fiche.niveaux.length;
+        const quels = numeros.length === 1 ? `niveau ${numeros[0]}` : numeros.length === numeros[numeros.length - 1] - numeros[0] + 1 ? `niveaux ${numeros[0]} à ${numeros[numeros.length - 1]}` : `niveaux ${numeros.join(", ")}`;
+        petit.textContent = [etat.etat === "bientot" ? "bientôt" : "", partiel ? quels : ""].filter(Boolean).join(" · ");
+        if (petit.textContent) nom.append(petit);
         const carres = document.createElement("span");
         carres.className = "dc-comp";
         carres.setAttribute("aria-hidden", "true");
-        etat.couleurs.forEach(couleur => {
+        niveaux.forEach(niveau => {
           const carre = document.createElement("i");
+          const couleur = etat.couleurs[niveau.n - 1];
           if (CLASSES_COULEUR[couleur]) carre.className = CLASSES_COULEUR[couleur];
+          if (niveau.n === etat.ici) carre.classList.add("ici");
           carres.append(carre);
         });
         ligne.append(st, nom, carres);
-        const comptes = ["vert", "bleu", "rouge", "gris"].map(couleur => [etat.couleurs.filter(c => c === couleur).length, MOTS_COULEUR[couleur]])
+        const couleurs = niveaux.map(niveau => etat.couleurs[niveau.n - 1]);
+        const comptes = ["vert", "bleu", "rouge", "gris"].map(couleur => [couleurs.filter(c => c === couleur).length, MOTS_COULEUR[couleur]])
           .filter(([nombre]) => nombre).map(([nombre, mot]) => `${nombre} ${mot}`).join(", ");
-        ligne.setAttribute("aria-label", [fiche.nom, MOTS_ETAT[etat.etat], etat.etat === "bientot" ? "" : `niveaux : ${comptes}`].filter(Boolean).join(", "));
+        ligne.setAttribute("aria-label", [fiche.nom, MOTS_ETAT[etat.etat], partiel ? quels : "", etat.etat === "bientot" ? "" : `${partiel ? "ici" : "niveaux"} : ${comptes}`].filter(Boolean).join(", "));
         if (ouvrable) ligne.addEventListener("click", () => ouvrirModule(fiche.id));
         return ligne;
       }
 
+      // Le parcours : quatre paliers (les compétences sues sur le total du
+      // palier), et dans le palier ouvert, une ligne par module qui y a des
+      // niveaux, dans l'ordre de la carte.
       function renderParcoursPaliers(id) {
         const compte = PARCOURS.compter(parcours, CARTE);
-        $("parcours-compte").textContent = soude(`${compte.sus} module${compte.sus > 1 ? "s" : ""} su${compte.sus > 1 ? "s" : ""} sur ${compte.total}`);
-        const fiche = id ? CORE.moduleDe(id) : null;
-        if (state.palier === null) state.palier = fiche && fiche.palier ? fiche.palier : 1;
+        $("parcours-compte").textContent = soude(`${compte.sues} compétence${compte.sues > 1 ? "s" : ""} sue${compte.sues > 1 ? "s" : ""} sur ${compte.total}`);
+        const courante = competenceCourante();
+        if (state.palier === null) state.palier = courante ? PARCOURS.palierDe(CARTE, courante.module, courante.niveau) || 1 : 1;
         const paliers = $("parcours-paliers");
         paliers.replaceChildren(...compte.paliers.map(palier => {
           const bouton = document.createElement("button");
           bouton.type = "button";
           const ici = palier.palier === state.palier;
-          bouton.className = [ici ? "ici" : "", palier.sus === palier.total ? "fini" : ""].filter(Boolean).join(" ");
+          bouton.className = [ici ? "ici" : "", palier.sues === palier.total ? "fini" : ""].filter(Boolean).join(" ");
           const numero = document.createElement("b");
           numero.textContent = String(palier.palier);
           const petit = document.createElement("small");
-          petit.textContent = `${palier.sus}/${palier.total}`;
+          petit.textContent = `${palier.sues}/${palier.total}`;
           bouton.append(numero, petit);
-          const nom = CORE.PALIERS.find(p => p.n === palier.palier).nom;
-          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${nom} : ${palier.sus} sur ${palier.total}`);
+          const fiche = CORE.PALIERS.find(p => p.n === palier.palier);
+          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${fiche.nom} : ${palier.sues} sur ${palier.total}`);
           bouton.setAttribute("aria-pressed", String(ici));
           bouton.addEventListener("click", () => {
             state.palier = palier.palier;
@@ -1628,8 +1655,33 @@
           return bouton;
         }));
         const palier = CORE.PALIERS.find(p => p.n === state.palier);
-        $("parcours-titre").textContent = `Palier ${palier.n} · ${palier.nom}`;
-        $("parcours-modules").replaceChildren(...CORE.MODULES.filter(f => f.palier === state.palier).map(ligneModule));
+        $("parcours-titre").textContent = soude(`Palier ${palier.n} · ${palier.nom} (${palier.classes})`);
+        // Les modules du palier, dans l'ordre où leurs compétences y arrivent.
+        const vus = new Set();
+        const modules = [];
+        CORE.ORDRE.forEach(cle => {
+          const [moduleId] = cle.split("-");
+          const fiche = CORE.moduleDe(moduleId);
+          if (!fiche || vus.has(moduleId) || !niveauxDuPalier(fiche, palier.n).length) return;
+          const trouve = CORE.niveauDe(cle);
+          if (!trouve || trouve.niveau.palier !== palier.n) return;
+          vus.add(moduleId);
+          modules.push(fiche);
+        });
+        // Les modules construits ont leur ligne ; ceux qui viennent (« bientôt »)
+        // tiennent en une liste compacte, pour que l'accueil tienne dans l'écran.
+        const construits = modules.filter(fiche => fiche.construit);
+        const bientot = modules.filter(fiche => !fiche.construit);
+        const lignes = construits.map(fiche => ligneModule(fiche, palier.n));
+        if (bientot.length) {
+          const liste = document.createElement("p");
+          liste.className = "dc-bientot";
+          const titre = document.createElement("b");
+          titre.textContent = soude(`Bientôt (${pluriel(bientot.reduce((somme, fiche) => somme + niveauxDuPalier(fiche, palier.n).length, 0), "compétence")}) :`);
+          liste.append(titre, document.createTextNode(" " + bientot.map(fiche => fiche.nom).join(" · ")));
+          lignes.push(liste);
+        }
+        $("parcours-modules").replaceChildren(...lignes);
       }
 
       function renderAccueil() {
@@ -1732,8 +1784,8 @@
         $("module-etapes").replaceChildren(
           etape(1, "J’apprends", DETAIL_APPRENDS[niveau.apprends.manipule ? niveau.apprends.manipule.outil : "aucun"],
             () => lancerApprends(id, niveau.n, "module")),
-          etape(2, "Je m’entraîne", "10 calculs, sans chrono", () => lancerSerie(id, niveau.n, "entraine", "module")),
-          etape(3, "Tu connais déjà ? (le test du module)", `${PARCOURS.SEUILS.test.parNiveau} calculs par niveau, sans aide`,
+          etape(2, "Je m’entraîne", `${DETAIL_ENTRAINE}, sans chrono`, () => lancerSerie(id, niveau.n, "entraine", "module")),
+          etape(3, "Tu connais déjà ? (le test d’entrée)", `une marche par niveau, ${PARCOURS.SEUILS.test.parMarche} calculs, sans aide`,
             () => lancerTest(id, "module"))
         );
       }
@@ -1751,7 +1803,10 @@
         aide.replaceChildren();
         aide.hidden = true;
         $("touches").hidden = true;
-        $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit");
+        $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit", "manip-entraine");
+        $("escalier").hidden = true;
+        $("escalier").replaceChildren();
+        $("annonce").hidden = true;
       }
 
       function arreterActivite() {
@@ -2087,27 +2142,89 @@
           });
           state.manip = glisse ? AIDES.glisseNombres($("aide"), options) : AIDES.perles100($("aide"), options);
         } else if (nom === "represente") {
+          // Un AUTRE calcul que celui des perles : la droite (ou le tableau)
+          // est dessinée, l'élève tape la réponse.
+          serie.essais = 0;
           renderExpression(apprends.represente.texte);
           renderTouches(serie.module);
           montrerImage(apprends.represente.image, apprends.represente.consigne);
           carte.classList.add("sans-retour");
         } else {
-          const lignes = document.createElement("span");
-          lignes.className = `lg${apprends.ecris.suite ? " suite" : ""}`;
-          apprends.ecris.lignes.forEach(texte => {
-            const ligne = document.createElement("span");
-            ligne.append(...avecCase(texte));
-            lignes.append(ligne);
-          });
+          // « J'écris », sur un troisième calcul : les étapes, puis la
+          // réponse, une case à la fois. Plus d'image.
+          serie.essais = 0;
+          serie.etape = 0;
           carte.classList.add("ecrit");
           renderTouches(serie.module);
-          const expression = $("expression");
-          expression.className = "expression dc-lignes";
-          expression.replaceChildren(lignes);
-          renderInlineAnswer();
+          renderEtapes();
         }
         carte.scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
+      }
+
+      // Les étapes de « J'écris » : celles qui sont faites gardent leur
+      // réponse (en vert), celle qui se joue a la case, les suivantes sont
+      // grisées. Les morceaux de chaque ligne sont rangés en colonnes : la
+      // case est toujours sous la case, le signe sous le signe.
+      function renderEtapes({revelees = false} = {}) {
+        const serie = state.serie;
+        const etapes = serie.apprends.ecris.etapes;
+        const lignes = document.createElement("span");
+        lignes.className = "lg";
+        const colonnes = Math.max(...etapes.map(etape => etape.texte.split(" ").length));
+        lignes.style.setProperty("--colonnes", String(colonnes));
+        etapes.forEach((etape, index) => {
+          const ligne = document.createElement("span");
+          ligne.className = index < serie.etape ? "faite" : index === serie.etape ? "ici" : "apres";
+          if (revelees) ligne.className = index < serie.etape ? "faite" : "revelee";
+          etape.texte.split(" ").forEach(morceau => {
+            const cellule = document.createElement("span");
+            cellule.className = "cel";
+            if (morceau === CORE.CASE) {
+              if (index === serie.etape && !revelees) cellule.append(caseReponse());
+              else {
+                const reponse = document.createElement("b");
+                reponse.className = `inline-answer ${index < serie.etape ? "is-correct" : revelees ? "is-corrected" : "est-vide"}`;
+                reponse.textContent = index < serie.etape || revelees ? CORE.formaterNombre(etape.reponse) : " ";
+                cellule.append(reponse);
+              }
+            } else cellule.textContent = insecable(morceau);
+            ligne.append(cellule);
+          });
+          lignes.append(ligne);
+        });
+        const expression = $("expression");
+        expression.className = "expression dc-lignes";
+        expression.replaceChildren(lignes);
+        renderInlineAnswer();
+      }
+
+      // Au 2e essai faux d'un temps : la réponse s'affiche sur l'outil (la
+      // droite remplie, le tableau), une phrase la lit, et le bouton devient
+      // « Suivant ». Jamais bloqué.
+      function revelerTemps() {
+        const serie = state.serie;
+        const nom = serie.temps[serie.index];
+        const temps = nom === "represente" ? serie.apprends.represente : serie.apprends.ecris;
+        const carte = $("question-card");
+        state.waitingForContinue = true;
+        state.effacerAuProchain = false;
+        if (nom === "represente") {
+          state.answer = CORE.formaterNombre(temps.reponse);
+          renderInlineAnswer("is-corrected");
+        } else {
+          serie.etape = Math.min(serie.etape, serie.apprends.ecris.etapes.length - 1);
+          renderEtapes({revelees: true});
+        }
+        carte.classList.remove("sans-retour", "ecrit");
+        montrerImage(temps.solution.image);
+        $("touches").hidden = true;
+        const feedback = $("answer-feedback");
+        feedback.className = "answer-feedback is-wrong";
+        feedback.textContent = temps.solution.phrase;
+        setAnswerControlsEnabled(false);
+        $("validate").focus?.({preventScroll: true});
+        ajusterEchelle();
       }
 
       function avancerTemps() {
@@ -2133,9 +2250,10 @@
         show("result");
       }
 
-      // Une réponse dans « je représente » ou « j'écris ». Chaque temps se
-      // termine par une réponse juste ; une erreur ramène l'image avec la
-      // consigne, sans limite et sans donner la réponse.
+      // Une réponse dans « je représente » ou « j'écris ». Juste : le temps
+      // (ou l'étape) est fait. Faux une fois : la case passe au rouge, la
+      // consigne tremble. Faux une deuxième fois : la réponse s'affiche sur
+      // l'outil, et « Suivant ».
       function repondreTemps() {
         const serie = state.serie;
         const nom = serie.temps[serie.index];
@@ -2146,10 +2264,21 @@
         if (state.waitingForContinue) { avancerTemps(); return; }
         const valeur = CORE.lireReponse(state.answer);
         if (valeur === null) { showAnswerError(); secouerConsigne(); return; }
-        const attendue = nom === "represente" ? serie.apprends.represente.reponse : serie.apprends.ecris.reponse;
+        const ecris = nom === "ecris";
+        const attendue = ecris ? serie.apprends.ecris.etapes[serie.etape].reponse : serie.apprends.represente.reponse;
         if (CORE.memeNombre(valeur, attendue)) {
+          if (ecris && serie.etape < serie.apprends.ecris.etapes.length - 1) {
+            // Une étape de plus : la suivante prend la case.
+            serie.etape += 1;
+            serie.essais = 0;
+            state.answer = "";
+            renderEtapes();
+            clearAnswerError();
+            return;
+          }
           state.waitingForContinue = true;
           renderInlineAnswer("is-correct");
+          if (ecris) renderEtapes({revelees: true});
           $("answer-feedback").className = "answer-feedback is-correct";
           $("answer-feedback").textContent = soude("Bravo !");
           setAnswerControlsEnabled(false);
@@ -2157,16 +2286,12 @@
           scheduleAutoAdvance(avancerTemps);
           return;
         }
-        // Faux : la case passe au rouge, la réponse s'effacera à la prochaine
-        // touche ; l'image revient (ou sa consigne tremble si elle est déjà là).
+        serie.essais += 1;
+        if (serie.essais >= 2) { revelerTemps(); return; }
+        // Faux une fois : la case passe au rouge, la réponse s'effacera à la
+        // prochaine touche ; la consigne tremble.
         renderInlineAnswer("is-invalid");
         state.effacerAuProchain = true;
-        if (!$("question-card").classList.contains("aide-image")) {
-          montrerImage(serie.apprends.represente.image, serie.apprends.represente.consigne);
-          // L'image prend la place de la ligne de retour.
-          $("question-card").classList.add("sans-retour");
-          ajusterEchelle();
-        }
         secouerConsigne();
       }
 
@@ -2247,10 +2372,15 @@
       // ------------------------------------------------- les séries de calculs
       //
       // Quatre genres, un seul écran :
-      //   entraine   10 calculs d'un niveau, avec les aides après une erreur ;
-      //   rattrape   la même chose, pour une compétence ratée deux fois ;
-      //   test       « Tu connais déjà ? » : 3 calculs par niveau, sans aide,
-      //              sans retour après chaque calcul ;
+      //   entraine   les calculs d'un niveau, du plus simple au plus dur, à
+      //              longueur adaptée : l'outil est affiché au début, part
+      //              après 2 justes de suite, revient après une erreur, redevient
+      //              à manipuler après 2 erreurs de suite ; réussi à 5 justes de
+      //              suite sans outil, arrêt à 20 calculs ;
+      //   rattrape   la même chose, pour une compétence rouge ;
+      //   test       « Tu connais déjà ? » en escalier : une marche par niveau,
+      //              2 calculs (un 3e si un faux), juste ou faux tout de suite,
+      //              sans aide ; arrêt à la marche ratée ;
       //   jour       Mes calculs du jour : un calcul par compétence, le seul
       //              moment qui fait monter ou descendre une boîte.
 
@@ -2275,20 +2405,28 @@
       function lancerSerie(id, n, genre, origine) {
         const trouve = CORE.niveauDe(`${id}-${n}`);
         if (!trouve) return;
-        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine"});
+        // Jamais un calcul déjà vu dans « J'apprends ».
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", exclure: trouve.niveau.apprends.textes});
         if (!calculs.length) return;
         demarrerSerie({
           genre, module: id, niveau: n, total: calculs.length,
+          // Les écritures du niveau, dans l'ordre où elles arrivent : la
+          // série n'est réussie qu'une fois toutes vues.
+          formes: [...new Set(calculs.map(calcul => calcul.forme))],
+          outil: "image",
           questions: calculs.map(calcul => ({calcul, retour: false}))
         }, origine);
       }
 
+      // Le test d'entrée : les marches (une par niveau), trois calculs
+      // chacune ; on joue la première.
       function lancerTest(id, origine) {
-        const calculs = CORE.genererTest(id, {graine: nouvelleGraine(), parNiveau: PARCOURS.SEUILS.test.parNiveau});
-        if (!calculs.length) return;
+        const marches = CORE.genererTest(id, {graine: nouvelleGraine()});
+        if (!marches.length || marches.some(marche => marche.calculs.length < 3)) return;
         demarrerSerie({
-          genre: "test", module: id, total: calculs.length,
-          questions: calculs.map(calcul => ({calcul, retour: false}))
+          genre: "test", module: id, marches, marche: 0, prouvee: 0, resultats: [], courante: [], finie: false,
+          total: marches.length,
+          questions: [{calcul: marches[0].calculs[0], retour: false}]
         }, origine);
       }
 
@@ -2314,20 +2452,98 @@
         demarrerSerie({genre: "jour", total: questions.length, questions, mouvements: [], sus: []}, "seance");
       }
 
+      const estEntrainement = serie => serie.genre === "entraine" || serie.genre === "rattrape";
+
+      // L'escalier du test : une marche par niveau, celles qui sont montées
+      // en vert, celle qui se joue encadrée, les points des calculs dessous.
+      function renderEscalier() {
+        const serie = state.serie;
+        const zone = $("escalier");
+        const marches = document.createElement("div");
+        marches.className = "marches";
+        serie.marches.forEach((marche, index) => {
+          const bloc = document.createElement("span");
+          const resultat = serie.resultats[index];
+          const etat = index < serie.marche ? "ok" : index === serie.marche && !serie.finie ? "ici" : index === serie.marche ? "ratee" : "";
+          bloc.className = `marche ${etat}`.trim();
+          bloc.style.setProperty("--h", String(index + 1));
+          const num = document.createElement("b");
+          num.textContent = etat === "ok" ? "✓" : String(marche.niveau);
+          const points = document.createElement("span");
+          points.className = "points";
+          const faits = resultat ? resultat.reponses : (index === serie.marche ? serie.courante : []);
+          for (let i = 0; i < Math.max(2, (faits || []).length); i += 1) {
+            const point = document.createElement("i");
+            if (faits && faits[i] !== undefined) point.className = faits[i] ? "juste" : "faux";
+            points.append(point);
+          }
+          bloc.append(num, points);
+          marches.append(bloc);
+        });
+        const legende = document.createElement("p");
+        const n = serie.courante.length;
+        legende.textContent = soude(serie.finie ? "" : n === 2 ? "Un calcul raté : un 3e calcul pour cette marche" : `Marche ${serie.marche + 1} : ${PARCOURS.SEUILS.test.parMarche} calculs`);
+        zone.replaceChildren(marches, legende);
+        zone.hidden = false;
+        zone.setAttribute("aria-label", `Escalier : marche ${serie.marche + 1} sur ${serie.marches.length}`);
+      }
+
+      // L'outil d'un calcul d'entraînement : « image » (la droite, le
+      // tableau, avec ses « ? »), « manip » (les perles, le glisse-nombres :
+      // on manipule, puis on tape la réponse), « aucun ».
+      function montrerOutil(question) {
+        const serie = state.serie;
+        const carte = $("question-card");
+        let outil = serie.outil;
+        const manipulation = outil === "manip" ? CORE.manipulationDe(question.calcul) : null;
+        if (outil === "manip" && !manipulation) outil = "image";
+        const aide = outil !== "aucun" ? CORE.aideDe(question.calcul) : null;
+        if (outil === "image" && !aide) outil = "aucun";
+        question.outil = outil;
+        if (outil === "manip") {
+          const glisse = manipulation.outil === "glisse";
+          carte.classList.add(glisse ? "aide-glisse" : "aide-perles", "manip-entraine");
+          $("aide").hidden = false;
+          const options = Object.assign({}, manipulation, {
+            surFini() {
+              carte.classList.add("est-finie");
+              ajusterEchelle();
+              $("expression").focus?.({preventScroll: true});
+            }
+          });
+          state.manip = glisse ? AIDES.glisseNombres($("aide"), options) : AIDES.perles100($("aide"), options);
+        } else if (outil === "image") {
+          montrerImage(aide);
+        }
+      }
+
       function renderQuestion() {
         const serie = state.serie;
         const question = serie.questions[serie.index];
         // L'image d'une correction s'en va : le cadre reprend sa taille.
         const avecAide = !$("aide").hidden;
         retirerAide();
-        const faits = Math.min(serie.reponses.length + 1, serie.total);
-        majBarre({
-          compte: `${faits} / ${serie.total}${question.retour ? " · il revient" : ""}`,
-          // Mes calculs du jour : pas de pastille, le temps d'un fait compte
-          // sans être montré.
-          pastille: serie.genre === "jour" ? "" : "À ton rythme",
-          avance: serie.reponses.length / serie.total * 100
-        });
+        if (serie.genre === "test") {
+          renderEscalier();
+          majBarre({compte: `Marche ${serie.marche + 1} sur ${serie.marches.length}`, pastille: "Tu connais déjà ?", avance: (serie.marche + serie.courante.length / 3) / serie.marches.length * 100});
+        } else if (estEntrainement(serie)) {
+          const suivi = PARCOURS.suivreEntrainement(serie.reponses);
+          const faits = serie.reponses.length + 1;
+          majBarre({
+            compte: `Calcul ${faits}${suivi.justesDeSuite ? ` · ${suivi.justesDeSuite} juste${suivi.justesDeSuite > 1 ? "s" : ""} de suite` : ""}`,
+            pastille: "À ton rythme",
+            avance: suivi.justesDeSuite / PARCOURS.SEUILS.entraine.sansOutil * 100
+          });
+        } else {
+          const faits = Math.min(serie.reponses.length + 1, serie.total);
+          majBarre({
+            compte: `${faits} / ${serie.total}${question.retour ? " · il revient" : ""}`,
+            // Mes calculs du jour : pas de pastille, le temps d'un fait compte
+            // sans être montré.
+            pastille: "",
+            avance: serie.reponses.length / serie.total * 100
+          });
+        }
         $("question-card").classList.remove("no-skip");
         state.answer = "";
         state.effacerAuProchain = false;
@@ -2336,12 +2552,23 @@
         // jour, elle n'apparaît que sur un calcul à décimales.
         renderTouches(question.calcul.module);
         clearAnswerFeedback();
+        if (estEntrainement(serie)) {
+          // Une écriture nouvelle est annoncée (« Nouveau : la case est devant »).
+          const precedente = serie.index ? serie.questions[serie.index - 1].calcul.forme : null;
+          const vue = serie.questions.slice(0, serie.index).some(q => q.calcul.forme === question.calcul.forme);
+          const annonce = $("annonce");
+          if (precedente !== null && !vue) {
+            annonce.textContent = CORE.annonceDe(question.calcul);
+            annonce.hidden = false;
+          }
+          montrerOutil(question);
+        }
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
-        // La touche « , » qui arrive ou qui s'en va change la hauteur du jeu :
-        // le cadre se remesure.
+        // La touche « , » qui arrive ou qui s'en va, l'outil qui vient ou qui
+        // part : le cadre se remesure.
         const virgule = !$("touches").hidden;
-        if (avecAide || (serie.virgule !== undefined && virgule !== serie.virgule)) ajusterEchelle();
+        if (avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule)) ajusterEchelle();
         serie.virgule = virgule;
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
@@ -2350,15 +2577,53 @@
       function avancerSerie() {
         const serie = state.serie;
         clearAutoAdvance();
+        if (serie.genre === "test") { avancerTest(); return; }
+        if (estEntrainement(serie)) {
+          const suivi = PARCOURS.suivreEntrainement(serie.reponses, {toutesFormesVues: toutesFormesVues()});
+          serie.outil = suivi.outil;
+          if (suivi.fini || serie.index + 1 >= serie.questions.length) { finish(); return; }
+        }
         serie.index += 1;
         if (serie.index >= serie.questions.length) finish();
         else renderQuestion();
       }
 
+      // Toutes les écritures du niveau ont été vues (la dernière arrive en
+      // fin de série, annoncée).
+      function toutesFormesVues() {
+        const serie = state.serie;
+        const vues = new Set(serie.questions.slice(0, serie.index + 1).map(q => q.calcul.forme));
+        return serie.formes.every(forme => vues.has(forme));
+      }
+
+      // Le test en escalier avance : la marche est montée (2 justes), ratée
+      // (2 faux), ou demande son 3e calcul.
+      function avancerTest() {
+        const serie = state.serie;
+        const courante = serie.courante;
+        const justes = courante.filter(Boolean).length;
+        const faux = courante.length - justes;
+        const marche = serie.marches[serie.marche];
+        if (justes >= 2 || faux >= 2) {
+          serie.resultats[serie.marche] = {niveau: marche.niveau, justes, total: courante.length, reponses: courante.slice()};
+          if (justes >= 2) {
+            serie.prouvee = marche.niveau;
+            serie.marche += 1;
+            if (serie.marche >= serie.marches.length) { serie.finie = true; finish(); return; }
+            serie.courante = [];
+          } else { serie.finie = true; finish(); return; }
+        }
+        serie.questions.push({calcul: serie.marches[serie.marche].calculs[serie.courante.length], retour: false});
+        serie.index += 1;
+        renderQuestion();
+      }
+
       // Après une réponse : « Bravo ! », ou la correction — la phrase de la
-      // cause et l'image, le pas oublié en gras, quand l'erreur est connue ;
-      // sinon le retour de Défi tables.
+      // cause quand l'erreur est connue (sinon le retour de Défi tables), et
+      // TOUJOURS l'image avec la réponse, sauf au test (juste ou faux, la
+      // bonne réponse, rien d'autre).
       function montrerRetour(question, juste, valeur, passe, cause) {
+        const serie = state.serie;
         state.waitingForContinue = true;
         state.correctionAfficheeA = juste ? 0 : Date.now();
         const feedback = $("answer-feedback");
@@ -2370,16 +2635,20 @@
         } else {
           state.answer = attendue;
           renderInlineAnswer("is-corrected");
-          if (cause) {
-            feedback.textContent = cause.texte;
-            montrerImage(cause.image);
-            // La touche « , » ne sert plus (la réponse est écrite) : la place
-            // va à l'image.
-            $("touches").hidden = true;
-          } else {
+          const image = serie.genre === "test" ? null : cause ? cause.image : CORE.imageDe(question.calcul);
+          if (cause) feedback.textContent = cause.texte;
+          else {
             feedback.textContent = soude(passe
               ? `Pas de réponse. Bonne réponse : ${attendue}.`
               : `Ta réponse : ${CORE.formaterNombre(valeur)}. Bonne réponse : ${attendue}.`);
+          }
+          if (image) {
+            if (state.manip) { state.manip.detruire(); state.manip = null; }
+            $("question-card").classList.remove("aide-perles", "aide-glisse", "manip-entraine", "est-finie");
+            montrerImage(image);
+            // La touche « , » ne sert plus (la réponse est écrite) : la place
+            // va à l'image.
+            $("touches").hidden = true;
           }
         }
         setAnswerControlsEnabled(false);
@@ -2389,10 +2658,9 @@
       // Une réponse de Mes calculs du jour : la boîte de la compétence bouge
       // tout de suite, et le bilan s'en souviendra.
       function noterRetour(serie, calcul, juste, ms, cause) {
-        const trouve = CORE.niveauDe(`${calcul.module}-${calcul.niveau}`);
         const suivi = PARCOURS.appliquerRetour(parcours, {
           module: calcul.module, niveau: calcul.niveau, juste, ms,
-          type: trouve ? trouve.niveau.type : "P", cause: cause ? cause.c : 0
+          type: PARCOURS.typeDe(CARTE, calcul.module, calcul.niveau), cause: cause ? cause.c : 0
         }, {aujourdhui: jourCourant()});
         parcours = suivi.parcours;
         sauverParcours();
@@ -2407,6 +2675,8 @@
           avancerSerie();
           return;
         }
+        // À l'entraînement avec l'outil à manipuler, on manipule d'abord.
+        if ($("question-card").classList.contains("manip-entraine") && !(state.manip && state.manip.fini)) return;
         const valeur = passe ? null : CORE.lireReponse(state.answer);
         if (!passe && valeur === null) { showAnswerError(); return; }
         const question = serie.questions[serie.index];
@@ -2418,16 +2688,13 @@
         // d'être corrigé sous les yeux de l'élève.
         if (!question.retour) {
           if (cause) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
-          serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul});
+          serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul, outil: question.outil || "aucun"});
           if (serie.genre === "jour") noterRetour(serie, question.calcul, juste, ms, cause);
+          if (serie.genre === "test") { serie.courante.push(juste); renderEscalier(); }
         }
-        if (serie.genre === "test") {
-          // Pas de retour après chaque calcul : le bilan dit ce qui est su.
-          avancerSerie();
-          return;
-        }
-        // Le calcul raté revient une fois en fin de série, hors score.
-        if (!juste && !question.retour) serie.questions.push({calcul: question.calcul, retour: true});
+        // Dans Mes calculs du jour, le calcul raté revient une fois en fin de
+        // série, hors score.
+        if (serie.genre === "jour" && !juste && !question.retour) serie.questions.push({calcul: question.calcul, retour: true});
         montrerRetour(question, juste, valeur, passe, cause);
         if (juste) {
           $("validate").style.visibility = "hidden";
@@ -2476,29 +2743,26 @@
         arreterActivite();
         const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance()};
         const justes = serie.reponses.filter(reponse => reponse.juste).length;
-        const sur = `${justes} sur ${serie.total}`;
+        const sur = estEntrainement(serie) ? `${justes} juste${justes > 1 ? "s" : ""} sur ${pluriel(serie.reponses.length, "calcul")}` : `${justes} sur ${serie.total}`;
         let suivi;
         if (serie.genre === "jour") {
           suivi = PARCOURS.terminerCalculsDuJour(parcours, options);
           noterEtape(sur);
         } else if (serie.genre === "test") {
-          const niveaux = CORE.moduleDe(serie.module).niveaux.map(niveau => {
-            const reponses = serie.reponses.filter(reponse => reponse.calcul.niveau === niveau.n);
-            return {niveau: niveau.n, justes: reponses.filter(reponse => reponse.juste).length, total: reponses.length};
-          });
-          suivi = PARCOURS.appliquerTest(parcours, {module: serie.module, niveaux, causes: serie.causes}, options);
-          const connus = suivi.bilan.filter(niveau => niveau.connu).length;
+          const niveaux = serie.resultats.filter(Boolean).map(resultat => ({niveau: resultat.niveau, justes: resultat.justes, total: resultat.total}));
+          suivi = PARCOURS.appliquerTest(parcours, {module: serie.module, marche: serie.prouvee, niveaux, causes: serie.causes}, options);
+          const connus = suivi.marche;
           noterEtape(`${connus} niveau${connus > 1 ? "x" : ""} sur ${suivi.bilan.length}`);
         } else {
           suivi = PARCOURS.appliquerSerie(parcours, {
             module: serie.module, niveau: serie.niveau, genre: serie.genre,
-            reponses: serie.reponses.map(reponse => ({juste: reponse.juste})), causes: serie.causes
+            reponses: serie.reponses.map(reponse => ({juste: reponse.juste, outil: reponse.outil})), causes: serie.causes
           }, options);
-          noterEtape(suivi.evenements.some(evenement => evenement.type === "entree") ? `${sur} · en route` : sur);
+          noterEtape(suivi.evenements.some(evenement => evenement.type === "entree") ? `${sur} · en route` : suivi.verdict.reussi ? `${sur} · réussi` : sur);
         }
         parcours = suivi.parcours;
         sauverParcours();
-        // Deux entraînements ratés : la séance s'arrête là.
+        // Un entraînement raté (20 calculs) : la séance s'arrête là.
         const arretee = enSeance() && suivi.finie && serie.genre === "entraine" && !suivi.verdict.reussi;
         if (enSeance() && suivi.finie) renderFinDeSeance(serie, sur, arretee);
         else if (serie.genre === "jour") renderBilanDuJour(serie, sur);
@@ -2563,7 +2827,9 @@
           nom.textContent = nomCompetence(mouvement.module, mouvement.niveau);
           const suite = document.createElement("span");
           const ou = mouvement.apres === 1 ? "à revoir" : mouvement.sens === "monte" && mouvement.couleur === "vert" ? "vert" : `boîte ${mouvement.apres}`;
-          suite.textContent = soude(`→ ${ou}, revient ${dansJours(mouvement.jours)}`);
+          // Une compétence sue qui redescend : à revoir aujourd'hui quand même.
+          const rouge = mouvement.sens === "descend" && mouvement.apres !== 1 ? ", à revoir aujourd’hui" : "";
+          suite.textContent = soude(`→ ${ou}${rouge}, revient ${dansJours(mouvement.jours)}`);
           ligne.append(nom, suite);
           liste.append(ligne);
         });
@@ -2583,34 +2849,37 @@
           ...suiteDeSeance());
       }
 
-      // Le bilan du test : niveau par niveau, ce qui entre et ce qui reste à
-      // apprendre.
+      // Le bilan du test en escalier : les marches montées (sues, ou en
+      // route pour la plus haute), celle qui est ratée (à apprendre), celles
+      // qu'on n'a pas jouées.
       function renderBilanTest(serie, suivi, sur) {
         const fiche = CORE.moduleDe(serie.module);
-        const connus = suivi.bilan.filter(niveau => niveau.connu).length;
+        const connus = suivi.marche;
         const total = suivi.bilan.length;
-        const justes = sur.replace(" sur ", " justes sur ").replace(/^1 justes/, "1 juste");
-        if (suivi.tout) poserVerdict({classe: "is-fete", titre: `Tu connais déjà ${fiche.nom} !`, score: justes});
-        else if (connus) poserVerdict({classe: "is-fete", titre: `${connus} niveau${connus > 1 ? "x" : ""} sur ${total} déjà connu${connus > 1 ? "s" : ""} !`, score: `${justes} · ${fiche.nom}`});
-        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${justes} · ${fiche.nom}`});
-        const liste = document.createElement("div");
-        liste.className = "bilan-niveaux";
-        const delai = dansJours(PARCOURS.delaiDeBoite(PARCOURS.SEUILS.revision.test));
+        const liste = n => (n === 1 ? "1" : n === 2 ? "1 et 2" : `1 à ${n}`);
+        if (suivi.tout) poserVerdict({classe: "is-fete", titre: `Tu connais déjà ${fiche.nom} !`, score: `${total} niveau${total > 1 ? "x" : ""} sur ${total}`});
+        else if (connus) poserVerdict({classe: "is-fete", titre: `Niveau${connus > 1 ? "x" : ""} ${liste(connus)} : déjà su${connus > 1 ? "s" : ""} !`, score: `Le niveau ${connus + 1}, tu vas l’apprendre · ${fiche.nom}`});
+        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `On commence au niveau 1 · ${fiche.nom}`});
+        const lignes = document.createElement("div");
+        lignes.className = "bilan-niveaux";
         suivi.bilan.forEach(niveau => {
           const ligne = document.createElement("span");
-          ligne.className = niveau.connu ? "oui" : "non";
+          ligne.className = niveau.connu ? "oui" : niveau.jouee ? "non" : "pas";
           const marque = document.createElement("i");
           marque.setAttribute("aria-hidden", "true");
-          marque.textContent = niveau.connu ? "✓" : "✗";
+          marque.textContent = niveau.connu ? "✓" : niveau.jouee ? "✗" : "·";
           const nom = document.createElement("span");
           nom.textContent = nomCompetence(serie.module, niveau.niveau);
           const detail = document.createElement("small");
-          detail.textContent = soude(`${niveau.justes} sur ${niveau.total} · ${niveau.connu ? `en route, ${delai}` : "à apprendre"}`);
+          const ou = niveau.connu
+            ? (niveau.boite >= PARCOURS.SEUILS.revision.su ? `su, revient ${dansJours(PARCOURS.delaiDeBoite(niveau.boite))}` : `en route, revient ${dansJours(PARCOURS.delaiDeBoite(niveau.boite))}`)
+            : niveau.jouee ? "à apprendre" : "plus tard";
+          detail.textContent = soude(niveau.jouee ? `${niveau.justes} sur ${niveau.total} · ${ou}` : ou);
           ligne.append(marque, nom, detail);
-          liste.append(ligne);
+          lignes.append(ligne);
         });
         const suite = enSeance() ? suiteDeSeance() : [boutonsDeSuite(["Mon module", "primary", () => ouvrirModule(serie.module)], ["Accueil", "secondary", versAccueil])];
-        $("result-suite").replaceChildren(cadre(liste), ...suite);
+        $("result-suite").replaceChildren(cadre(lignes), ...suite);
       }
 
       // Le bilan d'un entraînement ou d'un rattrapage, quand la séance
@@ -2619,7 +2888,7 @@
         const {module: id, niveau: n} = serie;
         const verdict = suivi.verdict;
         if (verdict.reussi) poserVerdict({titre: "Entraînement réussi !", score: sur});
-        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${sur} — il en faut ${PARCOURS.SEUILS.entraine.justes}`});
+        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `${sur} — il faut ${PARCOURS.SEUILS.entraine.sansOutil} justes de suite`});
         const entree = suivi.evenements.some(evenement => evenement.type === "entree");
         const morceaux = entree ? [cadre(phrase(gras(nomCompetence(id, n)), " revient demain."))] : [];
         if (enSeance()) {
@@ -2661,11 +2930,12 @@
           morceaux.push(...fetesDeModule(serie));
           if (serie.mouvements.length) morceaux.push(cadre(listeMouvements(serie)));
         }
-        // « Demain : + 48, 49… 98, 99, et 9 calculs qui reviennent. »
+        // « Demain : + 48, 49… 98, 99, et 9 calculs qui reviennent. » Une
+        // compétence rouge passe devant : « Demain : Compléments à 100 à revoir ».
         const demain = PARCOURS.demain(parcours, CARTE, {aujourdhui});
-        const prochaine = demain.prochaine;
-        const intact = prochaine && !ligneDe(prochaine.module).f.some(Boolean) && !ligneDe(prochaine.module).a.some(Boolean) && !ligneDe(prochaine.module).b.some(Boolean);
-        const nouveau = prochaine ? (intact ? CORE.moduleDe(prochaine.module).nom : nomCompetence(prochaine.module, prochaine.niveau)) : "";
+        const prochaine = demain.rouge || demain.prochaine;
+        const intact = prochaine && PARCOURS.estIntact(ligneDe(prochaine.module));
+        const nouveau = prochaine ? (intact ? CORE.moduleDe(prochaine.module).nom : `${nomCompetence(prochaine.module, prochaine.niveau)}${demain.rouge ? " à revoir" : ""}`) : "";
         const reviennent = demain.reviennent ? `${pluriel(demain.reviennent, "calcul")} qui ${demain.reviennent > 1 ? "reviennent" : "revient"}` : "";
         if (nouveau || reviennent) {
           morceaux.push(cadre(phrase("Demain : ", ...(nouveau ? [gras(nouveau)] : []), nouveau && reviennent ? `, et ${reviennent}.` : nouveau ? "." : `${reviennent}.`)));
@@ -2791,6 +3061,10 @@
             // L'étape de la séance qui se joue, et le genre de la série.
             etape: () => (enSeance() && state.seance.etape ? Object.assign({}, state.seance.etape) : null),
             genre: () => (state.running && state.serie ? state.serie.genre : null),
+            // L'entraînement : l'outil affiché pour ce calcul, les justes de suite ; le test : la marche.
+            entrainement: () => (state.running && state.serie && estEntrainement(state.serie)
+              ? Object.assign({outil: (state.serie.questions[state.serie.index] || {}).outil || null, joues: state.serie.reponses.length}, PARCOURS.suivreEntrainement(state.serie.reponses)) : null),
+            escalier: () => (state.running && state.serie && state.serie.genre === "test" ? {marche: state.serie.marche + 1, prouvee: state.serie.prouvee, courante: state.serie.courante.slice()} : null),
             prof: () => MODE_PROF,
             perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
