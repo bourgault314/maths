@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot serveur-pro-qui-voit-quoi
-genere_le 2026-10-30
+lot serveur-pro-entree-mon-espace
+genere_le 2026-10-31
 fichiers 63
-manifeste 51399b655c23c371a32b3b4dca2f7b16c13d6f89680029b752d1f270c047aae8
+manifeste 955d120cdabdddb13579fd4e6ce6f26d2204c771830eddcb6fc04c01995ba1d2
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -15,7 +15,7 @@ d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
 cd653974c5df2be35c05d7ff8eee4a921a9b0b761fbf07e9c7e89c8a9adeea68  direct.php
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-8e550076421167a05912f69cf0aff48cb72eb45053eda2e8d6d24d63178127ae  index.php
+d9ebcedbd92ee7f2e5663d0cbe367a8b98f8e08322819ce6dd4e77ad6eb60081  index.php
 38189032ae7a5b1a3bfa14798ccc3b4720c21a40274ad54de3c4a2e0b6ab693d  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 8ed6f07059d6ecf147fff81fcbdf0695e556fd66ab78f35e9a7d74d863e45db8  lib/applis.php
@@ -41,10 +41,10 @@ a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tabl
 999717aa8e192df4eb8eb40c77c496ae8c265f1a3d5123b6a309786554d410e0  prof/defi_tables_mon_parcours.js
 8644273520584266a4a60519e57a9cfc011c23de7c4126e6a4a164b56fff2382  prof/direct.php
 b459300c3294781f4e68137b2f7eedbe909cf0f9deda8bd5b2b559e5b1cb0fd6  prof/flash_anzan_parcours.js
-ad5f5e53915da2b66727a699fcc99f285ea94819d38af2a48b3a592185128e2e  prof/index.php
+1bba909f1fbcdcce62ab15fe4ce8160a40930304d16926c0083930d28538042b  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
-1323ccb3e51d88de0edff3fbcec539bba68c6582b27c011f9e6b8c141325283c  suivi.css
+b700655c85955b53cb54ba18703fc2e928a05a27203eb8ab5816b51284d84b8b  suivi.css
 0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308  vendor/katex-0.16.47/fonts/KaTeX_AMS-Regular.woff2
 de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c  vendor/katex-0.16.47/fonts/KaTeX_Caligraphic-Bold.woff2
 5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b  vendor/katex-0.16.47/fonts/KaTeX_Caligraphic-Regular.woff2

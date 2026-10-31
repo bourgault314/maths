@@ -130,8 +130,10 @@ test("la charte : nosniff s'étend aux feuilles de style (.htaccess)", () => {
   assert.doesNotMatch(htaccess, /<FilesMatch "\\\.js\$">/);
 });
 
-test("l'espace élève ne bouge pas : seule Ma classe charge la charte dans ce lot", () => {
-  for (const chemin of ["_serveur/public/index.php", "_serveur/public/direct.php", "_serveur/public/infos.php", "_serveur/public/prof/direct.php"]) {
+// Lot 6 (31/10/2026) : l'entrée de l'élève et Mon espace (index.php) chargent
+// à leur tour la charte (tests/suivi-serveur-pro-entree-mon-espace.test.mjs).
+test("les autres pages ne bougent pas : Ma classe et Mon espace seulement chargent la charte", () => {
+  for (const chemin of ["_serveur/public/direct.php", "_serveur/public/infos.php", "_serveur/public/prof/direct.php"]) {
     assert.doesNotMatch(lire(chemin), /suivi\.css/, `${chemin} ne charge pas encore la charte`);
   }
 });
