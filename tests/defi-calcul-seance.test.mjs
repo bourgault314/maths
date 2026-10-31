@@ -19,9 +19,9 @@ const J1 = "2026-11-02";
 const plus = n => P.ajouterJours(J1, n);
 
 // Un entraînement : `justes` justes de suite sans outil à la fin (réussi à 5),
-// ou raté (20 calculs, jamais 5 de suite).
+// ou raté (25 calculs, jamais 5 de suite).
 const reussie = () => [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
-const ratee = () => Array.from({length: 20}, (_, i) => ({juste: i % 3 !== 0, outil: i % 2 ? "image" : "aucun"}));
+const ratee = () => Array.from({length: 25}, (_, i) => ({juste: i % 3 !== 0, outil: i % 2 ? "image" : "aucun"}));
 const types = (parcours, jour, carte = CARTE) => P.fileSeance(parcours, carte, {aujourdhui: jour}).etapes.map(e => e.type);
 const file = (parcours, jour, carte = CARTE) => P.fileSeance(parcours, carte, {aujourdhui: jour});
 
@@ -97,9 +97,12 @@ test("le test en escalier : la marche la plus haute en boîte 3, celles d'en des
   assert.equal(r.marche, 2);
   assert.equal(r.tout, false);
   assert.equal(r.finie, false);
-  // La compétence suivante de l'ORDRE : M2-1 (pas A2-3, qui vient plus loin) — et son module est intact : le test.
-  assert.deepEqual(P.competenceCourante(p, CARTE), {module: "M2", niveau: 1});
-  assert.deepEqual(types(p, J1), ["test", "nouveau"]);
+  // Les marches prouvées comptent comme « J'apprends fait » (31/10).
+  assert.deepEqual(p.modules.A2.a, [1, 1, 0, 0]);
+  // « Le niveau 3, tu vas l'apprendre maintenant » : A2-3, jouée au test sans être prouvée, vient tout
+  // de suite — pas le test de M2, même si M2-1 la précède dans l'ordre de la carte (31/10).
+  assert.deepEqual(P.competenceCourante(p, CARTE), {module: "A2", niveau: 3});
+  assert.deepEqual(file(p, J1).etapes, [{type: "apprends", module: "A2", niveau: 3}, {type: "entraine", module: "A2", niveau: 3}]);
   // Rien prouvé : rien n'entre, le module n'est plus intact, on apprend.
   let q = tester(ouvrir(P.creerParcours(), J1), "A2", 0, J1).parcours;
   assert.deepEqual(q.modules.A2.b, [0, 0, 0, 0]);
@@ -138,29 +141,29 @@ test("au plus 4 tests par séance ; un élève qui sait tout traverse les module
   assert.equal(types(q, J1, CARTE_PLEINE)[0], "apprends");
 });
 
-test("la séance ordinaire : calculs du jour, la suite, J'apprends, Je m'entraîne — une nouveauté, puis c'est fini", () => {
+test("la séance ordinaire : calculs du jour, J'apprends, Je m'entraîne — une nouveauté, puis c'est fini", () => {
   const J2 = plus(1);
   let p = tester(ouvrir(P.creerParcours(), J1), "A2", 2, J1).parcours;
-  p = tester(p, "M2", 0, J1).parcours;
-  // M2 raté dès la 1re marche : on apprend M2-1 dans la même séance.
+  // Arrêté à la marche 3 : on apprend A2-3 dans la même séance.
   assert.deepEqual(types(p, J1), ["apprends", "entraine"]);
-  p = apprendre(p, "M2", 1, J1).parcours;
-  assert.equal(p.modules.M2.a[0], 1);
-  let r = entrainer(p, "M2", 1, reussie(), J1);
+  p = apprendre(p, "A2", 3, J1).parcours;
+  assert.equal(p.modules.A2.a[2], 1);
+  let r = entrainer(p, "A2", 3, reussie(), J1);
   p = r.parcours;
-  assert.deepEqual(r.evenements, [{type: "entree", module: "M2", niveau: 1, boite: 2}]);
-  assert.equal(p.modules.M2.b[0], 2);
-  assert.equal(p.modules.M2.e[0], J2);
+  assert.deepEqual(r.evenements, [{type: "entree", module: "A2", niveau: 3, boite: 2}]);
+  assert.equal(p.modules.A2.b[2], 2);
+  assert.equal(p.modules.A2.e[2], J2);
   assert.equal(r.finie, true, "une nouveauté par séance : la séance est finie");
   assert.equal(file(p, J1).finie, true);
   assert.equal(p.seance.n, 1);
-  // « Encore une séance » : la nouveauté suivante (A5-1, module intact : le test).
-  assert.deepEqual(types(p, J1), ["test", "nouveau"]);
-  // Le lendemain : A2-1 (boîte 4) n'est pas due, A2-2 non plus, M2-1 oui : 1 calcul du jour… complété à 10 au plus par l'entretien (3 entrées).
+  // « Encore une séance » : la nouveauté suivante (M2-1, module intact : le test).
+  assert.deepEqual(file(p, J1).etapes, [{type: "test", module: "M2"}, {type: "nouveau"}]);
+  // Le lendemain : A2-1 (boîte 4) et A2-2 (boîte 3) ne sont pas dues, A2-3 oui : 1 calcul du jour,
+  // rien d'autre (31/10 : plus de calculs d'entretien).
   const f = file(p, J2);
-  assert.deepEqual(f.etapes.map(e => e.type), ["jour", "suite"]);
-  assert.equal(f.etapes[0].calculs, 3);
-  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J2}).map(c => `${c.module}-${c.niveau}:${c.du}`), ["M2-1:true", "A2-2:false", "A2-1:false"]);
+  assert.deepEqual(f.etapes, [{type: "jour", calculs: 1}, {type: "test", module: "M2"}, {type: "nouveau"}], "le fil annonce la nouveauté dès le début");
+  assert.equal(f.etapes[0].calculs, 1);
+  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J2}).map(c => `${c.module}-${c.niveau}:${c.du}`), ["A2-3:true"]);
 });
 
 test("Mes calculs du jour : juste et due, la boîte monte ; fausse, elle descend ; deux ratés et J'apprends est à refaire", () => {
@@ -216,18 +219,18 @@ test("la vitesse des faits : juste mais au-delà de 5 s, la boîte reste et revi
 });
 
 test("le rouge d'abord : la compétence ratée est entraînée avec l'aide le jour même, avant la nouveauté ; ratée encore, elle refait J'apprends", () => {
-  assert.equal(P.SEUILS.rattrapage.nouveauteApres, true, "réglage du lot 3 : la nouveauté reprend une fois le rouge entraîné (réversible)");
+  assert.equal(P.SEUILS.rattrapage.parSeance, 3, "31/10 : 3 rouges au plus par séance, puis la nouveauté vient toujours");
   const J2 = plus(1);
   // A5-1 en route (boîte 2), due aujourd'hui ; A2-1 à apprendre après.
   let p = avecBoites({"A5-1": [2, J1], "A2-1": [3, plus(2)], "A2-2": [3, plus(2)], "M2-1": [3, plus(2)]});
   p = ouvrir(p, J1);
-  assert.deepEqual(types(p, J1), ["jour", "suite"]);
+  assert.equal(types(p, J1)[0], "jour");
   p = repondre(p, "A5", 1, false, J1).parcours;
   let r = finirJour(p, J1);
   p = r.parcours;
   assert.deepEqual(r.rouge, {module: "A5", niveau: 1});
-  // La suite : l'entraînement de la rouge, avec l'aide, sans J'apprends (a = 1) ; pas de nouveauté.
-  assert.deepEqual(types(p, J1), ["rattrape"]);
+  // La suite : l'entraînement de la rouge, avec l'aide, sans J'apprends (a = 1) ; puis la nouveauté.
+  assert.deepEqual(types(p, J1), ["rattrape", "apprends", "entraine"]);
   r = entrainer(p, "A5", 1, reussie(), J1, {genre: "rattrape"});
   p = r.parcours;
   assert.equal(p.modules.A5.t[0], 1, "entraînée aujourd'hui");
@@ -244,7 +247,7 @@ test("le rouge d'abord : la compétence ratée est entraînée avec l'aide le jo
   assert.deepEqual(file(ouvrir(p, J1), J1).etapes.map(e => `${e.type}:${e.module}-${e.niveau}`), ["apprends:A5-2", "entraine:A5-2"]);
   // Le lendemain : A5-1 est due ; ratée encore → J'apprends, puis l'entraînement.
   let q = ouvrir(p, J2);
-  assert.deepEqual(types(q, J2), ["jour", "suite"]);
+  assert.equal(types(q, J2)[0], "jour");
   q = repondre(q, "A5", 1, false, J2).parcours;
   assert.equal(q.modules.A5.a[0], 0);
   q = finirJour(q, J2).parcours;
@@ -271,59 +274,96 @@ test("une compétence sue ratée : rouge pour la journée (entraînée avec l'ai
   let r = finirJour(p, J1);
   p = r.parcours;
   assert.deepEqual(r.rouge, {module: "A2", niveau: 1});
-  assert.deepEqual(types(p, J1), ["rattrape"]);
+  assert.deepEqual(types(p, J1), ["rattrape", "test", "nouveau"]);
   p = entrainer(p, "A2", 1, reussie(), J1, {genre: "rattrape"}).parcours;
   assert.deepEqual(types(p, J1), ["test", "nouveau"], "le rouge entraîné, la nouveauté suit (A5-1, module intact)");
   // Demain : elle est due (boîte 3, revient demain), plus rouge ; juste, elle remonte en 4.
   assert.deepEqual(P.rouges(p, CARTE, J2), []);
   let q = ouvrir(p, J2);
-  assert.deepEqual(types(q, J2), ["jour", "suite"]);
+  assert.equal(types(q, J2)[0], "jour");
   q = repondre(q, "A2", 1, true, J2).parcours;
   assert.equal(q.modules.A2.b[0], 4);
   q = finirJour(q, J2).parcours;
   assert.deepEqual(types(q, J2), ["test", "nouveau"]);
 });
 
-test("deux rouges le même jour : une seule est entraînée par séance, l'autre à la séance suivante ; pas de nouveauté tant qu'il en reste une non entraînée", () => {
+test("plusieurs rouges le même jour : toutes entraînées, 3 au plus par séance, puis la nouveauté vient toujours", () => {
   let p = ouvrir(avecBoites({"A2-1": [2, J1], "A2-2": [2, J1], "M2-1": [3, plus(2)]}), J1);
   p = repondre(p, "A2", 1, false, J1).parcours;
   p = repondre(p, "A2", 2, false, J1).parcours;
   p = finirJour(p, J1).parcours;
-  assert.deepEqual(file(p, J1).etapes, [{type: "rattrape", module: "A2", niveau: 1}], "la seconde rouge attend : pas de nouveauté");
-  const r = entrainer(p, "A2", 1, reussie(), J1, {genre: "rattrape"});
+  assert.deepEqual(file(p, J1).etapes, [{type: "rattrape", module: "A2", niveau: 1}, {type: "test", module: "A5"}, {type: "nouveau"}]);
+  let r = entrainer(p, "A2", 1, reussie(), J1, {genre: "rattrape"});
   p = r.parcours;
-  assert.equal(r.finie, true, "une rouge entraînée, une autre qui attend : la séance est finie");
-  assert.equal(p.seance.n, 1);
-  // Encore une séance : la seconde rouge, puis la nouveauté (M2-1 est entré : A5-1, module intact).
-  let q = ouvrir(p, J1);
-  assert.deepEqual(file(q, J1).etapes, [{type: "rattrape", module: "A2", niveau: 2}]);
-  q = entrainer(q, "A2", 2, reussie(), J1, {genre: "rattrape"}).parcours;
-  assert.deepEqual(types(q, J1), ["test", "nouveau"]);
+  assert.equal(r.finie, false);
+  assert.deepEqual(file(p, J1).etapes[0], {type: "rattrape", module: "A2", niveau: 2}, "la seconde rouge, dans la même séance");
+  p = entrainer(p, "A2", 2, reussie(), J1, {genre: "rattrape"}).parcours;
+  assert.deepEqual(types(p, J1), ["test", "nouveau"]);
+  // Quatre rouges : 3 dans la séance (boîte la plus basse, puis l'ordre de la carte), puis la nouveauté ;
+  // la 4e attend « Encore une séance ».
+  let q = ouvrir(avecBoites({"A2-1": [2, J1], "A2-2": [2, J1], "M2-1": [2, J1], "A5-1": [2, J1]}), J1);
+  ["A2-1", "A2-2", "M2-1", "A5-1"].forEach(cle => { const [m, n] = cle.split("-"); q = repondre(q, m, Number(n), false, J1).parcours; });
+  q = finirJour(q, J1).parcours;
+  const entrainees = [];
+  for (let i = 0; i < 3; i += 1) {
+    const e = file(q, J1).etapes[0];
+    assert.equal(e.type, "rattrape");
+    entrainees.push(`${e.module}-${e.niveau}`);
+    q = entrainer(q, e.module, e.niveau, reussie(), J1, {genre: "rattrape"}).parcours;
+  }
+  assert.deepEqual(entrainees, ["A2-1", "A2-2", "M2-1"]);
+  assert.deepEqual(file(q, J1).etapes, [{type: "apprends", module: "A2", niveau: 3}, {type: "entraine", module: "A2", niveau: 3}], "puis la nouveauté");
+  q = apprendre(q, "A2", 3, J1).parcours;
+  r = entrainer(q, "A2", 3, reussie(), J1);
+  assert.equal(r.finie, true);
+  q = ouvrir(r.parcours, J1);
+  assert.deepEqual(file(q, J1).etapes[0], {type: "rattrape", module: "A5", niveau: 1}, "Encore une séance : la 4e rouge");
 });
 
-test("l'entraînement à longueur adaptée : l'outil part après 2 justes, revient après une erreur, se manipule après 2 erreurs ; réussi à 5 justes de suite sans outil, raté à 20", () => {
+test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis rien ; une erreur ramène l'image, deux les perles ; réussi à 5 justes de suite sans outil, raté à 25 ; « encore » : l'image d'abord, fini à 3", () => {
   const s = P.suivreEntrainement;
-  assert.deepEqual(s([]), {outil: "image", reussi: false, fini: false, justes: 0, total: 0, justesDeSuite: 0});
-  assert.equal(s([{juste: true, outil: "image"}]).outil, "image");
-  assert.equal(s([{juste: true, outil: "image"}, {juste: true, outil: "image"}]).outil, "aucun");
-  const deux = [{juste: true, outil: "image"}, {juste: true, outil: "image"}];
-  assert.equal(s([...deux, {juste: false, outil: "aucun"}]).outil, "image", "une erreur : l'outil revient");
-  assert.equal(s([...deux, {juste: false, outil: "aucun"}, {juste: false, outil: "image"}]).outil, "manip", "deux erreurs de suite : à manipuler");
-  assert.equal(s([...deux, {juste: false, outil: "aucun"}, {juste: false, outil: "image"}, {juste: true, outil: "manip"}]).outil, "image", "après les perles, la droite");
-  assert.equal(s([...deux, {juste: false, outil: "aucun"}, {juste: false, outil: "image"}, {juste: true, outil: "manip"}, {juste: true, outil: "image"}]).outil, "aucun");
-  const cinq = Array.from({length: 5}, () => ({juste: true, outil: "aucun"}));
-  assert.equal(s([...deux, ...cinq]).reussi, true);
-  assert.equal(s([...deux, ...cinq]).fini, true);
-  assert.equal(s([...deux, ...cinq.slice(0, 4)]).reussi, false);
-  assert.equal(s([...deux, ...cinq], {toutesFormesVues: false}).reussi, false, "une écriture pas encore vue : on continue");
+  const m = {juste: true, outil: "manip"};
+  const i = {juste: true, outil: "image"};
+  const a = {juste: true, outil: "aucun"};
+  const faux = outil => ({juste: false, outil});
+  assert.deepEqual(s([]), {outil: "manip", reussi: false, fini: false, justes: 0, total: 0, justesDeSuite: 0, objectif: 5});
+  assert.equal(s([m]).outil, "manip");
+  assert.equal(s([m, m]).outil, "image", "2 justes avec les perles : l'image");
+  assert.equal(s([m, m, i]).outil, "image");
+  assert.equal(s([m, m, i, i]).outil, "aucun", "2 justes avec l'image : plus rien");
+  // Pas d'outil à manipuler (au-delà de 100 perles) : l'image d'abord.
+  assert.equal(s([], {manip: false}).outil, "image");
+  assert.equal(s([i, i], {manip: false}).outil, "aucun");
+  assert.equal(s([faux("image"), faux("image")], {manip: false}).outil, "image", "sans perles, deux erreurs : l'image");
+  const debut = [m, m, i, i];
+  assert.equal(s([...debut, faux("aucun")]).outil, "image", "une erreur : l'image revient");
+  assert.equal(s([...debut, faux("aucun"), faux("image")]).outil, "manip", "deux erreurs de suite : à manipuler");
+  assert.equal(s([...debut, faux("aucun"), faux("image"), m]).outil, "image", "après ces perles-là, un juste suffit : la droite");
+  assert.equal(s([...debut, faux("aucun"), faux("image"), m, i]).outil, "aucun");
+  // Une erreur au milieu des perles du début : l'image (deux erreurs : les perles reviennent).
+  assert.equal(s([m, faux("manip")]).outil, "image");
+  const cinq = [a, a, a, a, a];
+  assert.equal(s([...debut, ...cinq]).reussi, true);
+  assert.equal(s([...debut, ...cinq]).fini, true);
+  assert.equal(s([...debut, ...cinq.slice(0, 4)]).reussi, false);
+  assert.equal(s([...debut, ...cinq], {toutesFormesVues: false}).reussi, false, "une écriture pas encore vue : on continue");
   // Un juste avec l'outil ne compte pas dans les 5 sans outil.
-  assert.equal(s([...deux, ...cinq.slice(0, 3), {juste: true, outil: "image"}, {juste: true, outil: "aucun"}]).justesDeSuite, 1);
-  // 20 calculs sans y arriver : fini, raté.
-  const r = s(ratee());
-  assert.equal(r.fini, true);
-  assert.equal(r.reussi, false);
+  assert.equal(s([...debut, a, a, a, i, a]).justesDeSuite, 1);
+  // 25 calculs sans y arriver : fini, raté ; 24 : pas fini.
+  assert.equal(s(ratee()).fini, true);
+  assert.equal(s(ratee()).reussi, false);
+  assert.equal(s(ratee().slice(0, 24)).fini, false);
   assert.equal(P.verdictEntrainement(reussie()).reussi, true);
   assert.equal(P.verdictEntrainement(ratee()).reussi, false);
+  // Je m'entraîne encore : l'image d'abord, fini à 3 justes de suite sans aide (toutes les écritures : pas exigé), 20 au plus.
+  const e = {genre: "rattrape"};
+  assert.equal(s([], e).outil, "image");
+  assert.equal(s([], e).objectif, 3);
+  assert.equal(s([i, i], e).outil, "aucun");
+  assert.equal(s([i, i, a, a, a], {genre: "rattrape", toutesFormesVues: false}).reussi, true);
+  assert.equal(s([i, i, a, a], e).reussi, false);
+  assert.equal(s(ratee().slice(0, 20), e).fini, true);
+  assert.equal(P.verdictEntrainement([i, i, a, a, a], e).reussi, true);
 });
 
 test("entraînement raté : la séance s'arrête, rien de nouveau aujourd'hui, demain repart de J'apprends", () => {
@@ -344,7 +384,7 @@ test("entraînement raté : la séance s'arrête, rien de nouveau aujourd'hui, d
   assert.deepEqual(file(p, J2).etapes[0], {type: "apprends", module: "A2", niveau: 1});
 });
 
-test("Mes calculs du jour : 10 à 20, un par compétence, les plus en retard d'abord", () => {
+test("Mes calculs du jour : seulement les dues, 20 au plus, un par compétence, les plus en retard d'abord", () => {
   const boites = {};
   const cles = P.parcoursConstruit(CARTE_PLEINE).map(c => `${c.module}-${c.niveau}`);
   cles.forEach((cle, i) => { boites[cle] = [1 + (i % 5), plus(-(i % 7))]; });
@@ -355,11 +395,13 @@ test("Mes calculs du jour : 10 à 20, un par compétence, les plus en retard d'a
   // Les boîtes les plus basses d'abord, puis les échéances les plus anciennes.
   const boitesTirees = tirage.map(c => plein.modules[c.module].b[c.niveau - 1]);
   assert.deepEqual(boitesTirees, [...boitesTirees].sort());
-  // Peu de dues : complétées à 10 par les plus proches.
+  // Peu de dues : rien n'est ajouté (31/10 : plus de calculs d'entretien).
   const peu = avecBoites({"A2-1": [2, J1], "A2-2": [3, plus(2)], "A5-1": [4, plus(6)], "M2-1": [5, plus(13)]});
-  const t = P.tirerCalculsDuJour(peu, CARTE, {aujourdhui: J1});
-  assert.deepEqual(t.map(c => `${c.module}-${c.niveau}:${c.du}`), ["A2-1:true", "A2-2:false", "A5-1:false", "M2-1:false"]);
-  assert.deepEqual(P.tirerCalculsDuJour(peu, CARTE, {aujourdhui: J1, entretien: false}).length, 1);
+  assert.deepEqual(P.tirerCalculsDuJour(peu, CARTE, {aujourdhui: J1}).map(c => `${c.module}-${c.niveau}:${c.du}`), ["A2-1:true"]);
+  // Rien de dû : l'étape disparaît de la séance.
+  const rien = avecBoites({"A2-1": [3, plus(2)], "A2-2": [3, plus(2)], "M2-1": [3, plus(2)]});
+  assert.deepEqual(P.tirerCalculsDuJour(rien, CARTE, {aujourdhui: J1}), []);
+  assert.equal(file(ouvrir(rien, J1), J1).etapes[0].type, "test");
 });
 
 test("module su : toutes ses compétences en boîte 4 ; ok est posé une fois et ne s'efface pas", () => {
@@ -441,7 +483,7 @@ test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté
       etapes += 1;
       if (e.type === "jour") {
         maxCalculs = Math.max(maxCalculs, e.calculs);
-        P.tirerCalculsDuJour(p, CARTE_PLEINE, {aujourdhui: jour, entretien: e.entretien}).forEach(c => {
+        P.tirerCalculsDuJour(p, CARTE_PLEINE, {aujourdhui: jour}).forEach(c => {
           p = repondre(p, c.module, c.niveau, rng() < 0.92, jour, {type: P.typeDe(CARTE_PLEINE, c.module, c.niveau), ms: 3000}).parcours;
         });
         p = finirJour(p, jour, CARTE_PLEINE).parcours;
@@ -481,4 +523,70 @@ test("le test d'entrée : la marche est bornée par les résultats", () => {
   // Le test honnête : inchangé.
   assert.deepEqual(tester(P.creerParcours(), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0]);
   assert.deepEqual(tester(P.creerParcours(), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3]);
+});
+
+// Lot 3b (31/10) : l'élève coincé. Au 3e échec de suite dans Mes calculs du
+// jour, la compétence est mise de côté 3 jours (boîte 1, pas rouge, ne bloque
+// rien), signalée « à voir en classe » ; elle revient par J'apprends et « Je
+// m'entraîne encore », puis par Mes calculs du jour ; un calcul du jour juste
+// remet tout à zéro.
+test("l'élève coincé : 3 échecs de suite, mise de côté 3 jours, signalée, puis elle revient par J'apprends", () => {
+  let p = avecBoites({"A5-1": [2, J1], "A2-1": [3, plus(9)], "A2-2": [3, plus(9)], "M2-1": [3, plus(9)]});
+  p = repondre(p, "A5", 1, false, J1).parcours;
+  p = repondre(p, "A5", 1, false, plus(1)).parcours;
+  assert.equal(p.modules.A5.x[0], 2);
+  assert.equal(P.aVoirEnClasse(p.modules.A5, 0), false);
+  const r = repondre(p, "A5", 1, false, plus(2));
+  p = r.parcours;
+  assert.equal(r.mouvement.deCote, true);
+  assert.equal(r.mouvement.rouge, false, "mise de côté : pas rouge");
+  assert.equal(p.modules.A5.x[0], 3);
+  assert.equal(p.modules.A5.b[0], 1);
+  assert.equal(p.modules.A5.a[0], 0);
+  assert.equal(p.modules.A5.e[0], plus(5), "revient dans 3 jours");
+  assert.equal(P.aVoirEnClasse(p.modules.A5, 0), true, "à voir en classe");
+  // Pendant ses jours de côté : pas rouge, pas dans Mes calculs du jour, elle ne bloque rien.
+  [plus(2), plus(3), plus(4)].forEach(jour => {
+    assert.deepEqual(P.rouges(p, CARTE, jour), [], jour);
+    assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: jour}), [], jour);
+  });
+  p = P.terminerCalculsDuJour(p, {aujourdhui: plus(2), carte: CARTE}).parcours;
+  assert.equal(file(p, plus(2)).etapes[0].type, "apprends", "la nouveauté du jour (A2-3) vient quand même");
+  // Le jour où elle revient : pas dans Mes calculs du jour (J'apprends d'abord), rouge : J'apprends puis « encore ».
+  const J = plus(5);
+  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}).map(c => `${c.module}-${c.niveau}`), []);
+  let q = ouvrir(p, J);
+  assert.deepEqual(file(q, J).etapes.slice(0, 2), [{type: "apprends", module: "A5", niveau: 1}, {type: "rattrape", module: "A5", niveau: 1}]);
+  q = apprendre(q, "A5", 1, J).parcours;
+  q = entrainer(q, "A5", 1, reussie(), J, {genre: "rattrape"}).parcours;
+  assert.equal(q.modules.A5.b[0], 1, "« encore » ne fait pas bouger la boîte");
+  assert.equal(P.aVoirEnClasse(q.modules.A5, 0), true, "toujours signalée tant qu'un calcul du jour n'est pas juste");
+  // Le lendemain : elle est dans Mes calculs du jour. Juste : tout repart à zéro.
+  const L = plus(6);
+  assert.deepEqual(P.tirerCalculsDuJour(q, CARTE, {aujourdhui: L}).map(c => `${c.module}-${c.niveau}`), ["A5-1"]);
+  const juste = repondre(q, "A5", 1, true, L).parcours;
+  assert.equal(juste.modules.A5.x[0], 0);
+  assert.equal(juste.modules.A5.b[0], 2);
+  assert.equal(P.aVoirEnClasse(juste.modules.A5, 0), false);
+  // Fausse encore : de nouveau mise de côté 3 jours.
+  const encore = repondre(q, "A5", 1, false, L);
+  assert.equal(encore.mouvement.deCote, true);
+  assert.equal(encore.parcours.modules.A5.e[0], P.ajouterJours(L, 3));
+  // La borne du format : x va jusqu'à 3.
+  assert.equal(P.normaliserParcours({modules: {A5: {b: [1], x: [3]}}}).modules.A5.x[0], 3);
+  assert.equal(P.normaliserParcours({modules: {A5: {b: [1], x: [4]}}}).modules.A5.x[0], 0);
+});
+
+test("Mes calculs du jour : l'écriture change d'un retour à l'autre", () => {
+  ["A2-3", "A2-4", "A5-1", "M2-2", "D2-1"].forEach(cle => {
+    const vues = new Set();
+    for (let tour = 0; tour < 6; tour += 1) {
+      const calcul = CORE.genererUn(cle, 12345, {tour});
+      assert.ok(calcul, cle);
+      vues.add(calcul.forme);
+    }
+    const toutes = new Set(CORE.genererSerie(cle, {graine: 12345, ordonne: false}).map(c => c.forme));
+    assert.equal(vues.size, toutes.size, `${cle} : toutes les écritures reviennent à tour de rôle`);
+    if (toutes.size > 1) assert.notEqual(CORE.genererUn(cle, 12345, {tour: 0}).forme, CORE.genererUn(cle, 12345, {tour: 1}).forme, cle);
+  });
 });
