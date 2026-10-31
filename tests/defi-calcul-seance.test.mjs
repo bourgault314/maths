@@ -13,7 +13,13 @@ const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 
 // La carte du site : quatre modules construits (A2, M2, A5, D2). Et une
 // carte où tout est construit, pour les grands nombres.
-const CARTE = CORE.carte();
+const CARTE_REELLE = CORE.carte();
+// Les scénarios de ce fichier ont été écrits quand seuls les quatre pilotes
+// étaient construits : ils jouent le MOTEUR sur cette carte-là (modules lot 1,
+// 31/10/2026 : A1, A10, A11, M1 sont construits depuis ; la vraie carte a son
+// propre test, juste en dessous).
+const PILOTES = new Set(["A2", "A5", "M2", "D2"]);
+const CARTE = {modules: CARTE_REELLE.modules.map(fiche => Object.assign({}, fiche, {construit: PILOTES.has(fiche.id)})), ordre: CARTE_REELLE.ordre};
 const CARTE_PLEINE = {modules: CARTE.modules.map(fiche => Object.assign({}, fiche, {construit: fiche.paliers.some(Boolean)})), ordre: CARTE.ordre};
 const J1 = "2026-11-02";
 const plus = n => P.ajouterJours(J1, n);
@@ -589,4 +595,11 @@ test("Mes calculs du jour : l'écriture change d'un retour à l'autre", () => {
     assert.equal(vues.size, toutes.size, `${cle} : toutes les écritures reviennent à tour de rôle`);
     if (toutes.size > 1) assert.notEqual(CORE.genererUn(cle, 12345, {tour: 0}).forme, CORE.genererUn(cle, 12345, {tour: 1}).forme, cle);
   });
+});
+
+test("la vraie carte (modules lot 1) : le parcours commence par A1, A10, A11, M1 ; le premier jour teste A1", () => {
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(0, 12).map(c => `${c.module}-${c.niveau}`),
+    ["A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A2-2", "M2-1", "A5-1"]);
+  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 26);
+  assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "nouveau"}]);
 });

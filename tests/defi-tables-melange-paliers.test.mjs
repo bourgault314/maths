@@ -486,7 +486,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // api/prof.php, index.php, prof/index.php, verifier.php et les deux moteurs
   // prof/defi_calcul_core.js, prof/defi_calcul_mon_parcours.js, 65 au manifeste
   // (avant : serveur-pro-direct-infos-katex).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-2b$/m);
+  // Puis Défi calcul, modules lot 1 (31/10/2026) : prof/defi_calcul_core.js seul
+  // change, 65 au manifeste (avant : defi-calcul-lot-2b).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-1$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

@@ -1260,6 +1260,753 @@
     ]
   };
 
+  // ------------------------------------- A1, A10, A11 : passer par la dizaine
+  //
+  // Modules lot 1 (31/10/2026). Un calcul d'ajout ou de retrait de moins de
+  // 10 se lit sur la droite : on part de n, on fait un saut d (signé), on
+  // arrive en m = n + d. S'il franchit une dizaine (une centaine, un
+  // millier), on s'y arrête : deux sauts. Les données : {n, d, m}, et la
+  // réponse fausse d'une erreur connue quand elle ne se calcule pas
+  // simplement à partir d'eux (pour l'exemple de la page prof).
+
+  // La dizaine franchie par un saut de moins de 10, ou null. En reculant
+  // depuis une dizaine entière (50 − 6), on ne s'arrête nulle part : un seul
+  // saut.
+  function dizainePassee(n, d) {
+    if (d > 0) {
+      const palier = Math.floor(n / 10) * 10 + 10;
+      return n + d > palier ? palier : null;
+    }
+    if (n % 10 === 0) return null;
+    const palier = Math.floor(n / 10) * 10;
+    return n + d < palier ? palier : null;
+  }
+
+  // Vrai quand le calcul change de dizaine (unite = 10), de centaine (100)…
+  // 50 − 6 passe la dizaine, 400 − 6 la centaine, même en un seul saut.
+  const franchit = (n, d, unite) => Math.floor(n / unite) !== Math.floor((n + d) / unite) && (d < 0 || (n + d) % unite !== 0);
+
+  function sautsDe(n, d) {
+    const palier = dizainePassee(n, d);
+    return palier === null ? {palier, sauts: [d]} : {palier, sauts: [palier - n, n + d - palier]};
+  }
+
+  // Un calcul des modules A1, A10, A11. Formes :
+  //  - « somme »            : 47 + 8 = □
+  //  - « difference »       : 523 − 7 = □
+  //  - « complement »       : 6 + □ = 13
+  //  - « complement-egal »  : 13 = 6 + □
+  // La clé de « 13 = 6 + □ » finit par « x » : sans lui, elle serait celle
+  // de « 13 − 6 = □ ».
+  function lignePlus(module, niveau, forme, n, d) {
+    const m = n + d;
+    const u = n % 10;
+    const extra = {};
+    // « Le petit du grand » (523 − 7 → 524) : la réponse fausse, pour la page prof.
+    if (d < 0 && u > 0 && -d > u) extra.inverse = n - u + (-d - u);
+    if (forme === "somme") return fabriquer(module, niveau, forme, [n, "+", d, "=", TROU], m, Object.assign({n, d, m}, extra));
+    if (forme === "difference") return fabriquer(module, niveau, forme, [n, "−", -d, "=", TROU], m, Object.assign({n, d, m}, extra));
+    if (forme === "complement") return fabriquer(module, niveau, forme, [n, "+", TROU, "=", m], d, {n, d, m});
+    const calcul = fabriquer(module, niveau, forme, [m, "=", n, "+", TROU], d, {n, d, m});
+    return Object.freeze(Object.assign({}, calcul, {cle: `${calcul.cle}-x`}));
+  }
+
+  const estTrou = calcul => calcul.forme === "complement" || calcul.forme === "complement-egal";
+
+  // Les sauts d'un complément : jusqu'à 10, puis jusqu'à la cible.
+  function sautsDuCalcul(calcul) {
+    const {n, d} = calcul.donnees;
+    return sautsDe(n, d);
+  }
+
+  // L'image d'un calcul, réponse montrée (la correction, « À retenir »).
+  function plusImage(calcul, gras = 0) {
+    const {n, d} = calcul.donnees;
+    const {sauts} = sautsDuCalcul(calcul);
+    const image = {outil: "droite-sauts", depart: n, sauts: sauts.map(val => ({val})), gras: sauts.length > 1 ? gras : 0};
+    if (!estTrou(calcul)) {
+      image.acquis = [sauts.length];
+      if (sauts.length > 1) image.direct = d;
+    }
+    return image;
+  }
+
+  // L'outil du début de l'entraînement, et de « je représente » : pour un
+  // ajout ou un retrait, les sauts sont donnés, les arrivées sont « ? » ;
+  // pour un trou, les points sont donnés, les sauts disent « + ? ».
+  function plusAide(calcul) {
+    const image = plusImage(calcul);
+    delete image.acquis;
+    if (estTrou(calcul)) return Object.assign(image, {sauts: image.sauts.map(saut => ({val: saut.val, masque: true}))});
+    return Object.assign(image, {inconnues: image.sauts.map((_, i) => i + 1)});
+  }
+
+  const signe = d => (d < 0 ? "−" : "+");
+
+  function plusPhrase(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const {palier, sauts} = sautsDuCalcul(calcul);
+    if (estTrou(calcul)) {
+      if (palier === null) return `De ${formaterNombre(n)} à ${formaterNombre(m)}, c’est + ${formaterNombre(d)}.`;
+      return `Regarde : ${sauts[0]} puis ${sauts[1]}, ça fait ${d}.`;
+    }
+    if (palier === null) return `Regarde : ${signe(d)} ${Math.abs(d)}, ça fait ${formaterNombre(m)}.`;
+    return `Regarde : ${signe(d)} ${Math.abs(sauts[0])}, ça fait ${formaterNombre(palier)} ; ${signe(d)} ${Math.abs(sauts[1])}, ça fait ${formaterNombre(m)}.`;
+  }
+
+  // Le rekenrek d'un calcul (jusqu'à 100) : la rangée finie (ou vidée) d'un
+  // coup, puis le reste. La consigne d'un trou ne donne jamais le nombre
+  // cherché ; celle d'un passage ne donne pas le découpage.
+  function plusPerles(calcul) {
+    const {n, d, m} = calcul.donnees;
+    if (Math.max(n, m) > 100) return null;
+    const {palier, sauts} = sautsDuCalcul(calcul);
+    const trou = estTrou(calcul);
+    const op = signe(d);
+    const traces = [];
+    if (palier === null) {
+      traces.push(trou
+        ? Object.freeze({apres: 1, attente: `${n} + … = ${m}`, texte: `${n} + ${d} = ${m}`})
+        : Object.freeze({apres: 1, attente: `${n} ${op} ${Math.abs(d)} = …`, texte: `${n} ${op} ${Math.abs(d)} = ${m}`}));
+    } else {
+      traces.push(Object.freeze({apres: 1, attente: `${n} ${op} … = ${palier}`, texte: `${n} ${op} ${Math.abs(sauts[0])} = ${palier}`}));
+      traces.push(trou
+        ? Object.freeze({apres: 2, attente: `${palier} + … = ${m}`, texte: `${palier} + ${sauts[1]} = ${m}`})
+        : Object.freeze({apres: 2, attente: `${palier} ${op} … = …`, texte: `${palier} ${op} ${Math.abs(sauts[1])} = ${m}`}));
+      traces.push(Object.freeze(trou
+        ? {apres: 2, attente: `${n} + … = ${m}`, texte: `${n} + ${d} = ${m}`}
+        : {apres: 2, attente: `${n} ${op} ${Math.abs(d)} = …`, texte: `${n} ${op} ${Math.abs(d)} = ${m}`}));
+    }
+    let consigne;
+    if (trou) consigne = palier === null ? "Finis la rangée d’un coup." : "Finis la rangée d’un coup, puis pousse les perles qui manquent.";
+    else if (d > 0) consigne = palier === null ? `Pousse ${d} perle${d > 1 ? "s" : ""} d’un coup.` : "Finis la rangée d’un coup, puis pousse le reste.";
+    else consigne = palier === null ? `Retire ${-d} perle${d < -1 ? "s" : ""} d’un coup.` : "Vide la rangée d’un coup, puis retire le reste.";
+    return Object.freeze({
+      outil: "perles", depart: n,
+      texte: trou ? calcul.texte.replace(CASE, "?") : `${n} ${op} ${Math.abs(d)}`,
+      gestes: Object.freeze(sauts.slice()), consigne, traces: Object.freeze(traces)
+    });
+  }
+
+  // Les trois temps de J'apprends d'un niveau d'A1, A10, A11, sur trois
+  // calculs différents : les perles (jusqu'à 100), la droite avec ses « ? »,
+  // les étapes à remplir.
+  function plusApprends({manipule, represente, ecris, etapes, consigne, bilan}) {
+    const premier = manipule || represente;
+    return Object.freeze({
+      exemple: Object.freeze({texte: estTrou(premier) ? premier.texte.replace(CASE, "?") : premier.texte.replace(` = ${CASE}`, ""), reponse: premier.reponse}),
+      manipule: manipule ? plusPerles(manipule) : null,
+      represente: Object.freeze({
+        outil: "droite-sauts", consigne,
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(plusAide(represente)),
+        solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
+      }),
+      ecris: Object.freeze({
+        etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte, reponse}))),
+        reponse: ecris.reponse,
+        solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
+      }),
+      bilan,
+      image: Object.freeze(plusImage(premier)),
+      textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // Du plus simple au plus dur : la forme, puis le passage (dizaine, puis
+  // centaine, puis millier), la taille du saut, celle du nombre de départ.
+  const PLUS_FORMES = Object.freeze({somme: 0, difference: 0, complement: 1, "complement-egal": 2});
+  function plusDifficulte(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const franchi = estTrou(calcul) ? (sautsDuCalcul(calcul).palier === null ? 0 : 1)
+      : franchit(n, d, 1000) ? 3 : franchit(n, d, 100) ? 2 : franchit(n, d, 10) ? 1 : 0;
+    return PLUS_FORMES[calcul.forme] * 2000 + franchi * 400 + Math.abs(d) * 20 + String(Math.max(n, m)).length * 5 + (n % 10 === 0 ? 3 : 0);
+  }
+
+  // Les erreurs connues, communes aux trois modules : chacune ne se
+  // reconnaît que là où elle a un sens (un trou, un retrait, un passage).
+  const PLUS_CAUSES = Object.freeze({
+    arrivee: Object.freeze({
+      nom: "l’arrivée donnée",
+      test: (calcul, reponse) => estTrou(calcul) && memeNombre(reponse, calcul.donnees.m),
+      retour: calcul => `Tu as écrit l’arrivée. Combien faut-il ajouter à ${formaterNombre(calcul.donnees.n)} pour arriver à ${formaterNombre(calcul.donnees.m)} ?`,
+      gras: 0
+    }),
+    ajoute: Object.freeze({
+      nom: "ajouté au lieu de retrancher",
+      test: (calcul, reponse) => {
+        const {n, d, m} = calcul.donnees;
+        if (calcul.forme === "difference") return memeNombre(reponse, n - d);
+        return estTrou(calcul) && memeNombre(reponse, n + m);
+      },
+      retour: (calcul, reponse) => {
+        const {n, d, m} = calcul.donnees;
+        if (calcul.forme === "difference") return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} + ${-d}. Ici, on retire : on recule.`;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} + ${formaterNombre(m)}. On cherche ce qui manque pour aller de ${formaterNombre(n)} à ${formaterNombre(m)}.`;
+      },
+      gras: 0
+    }),
+    inverse: Object.freeze({
+      nom: "le petit chiffre retiré du grand",
+      test: (calcul, reponse) => calcul.donnees.inverse !== undefined && memeNombre(reponse, calcul.donnees.inverse),
+      retour: calcul => {
+        const {n, d} = calcul.donnees;
+        const {palier} = sautsDuCalcul(calcul);
+        const u = n % 10;
+        if (palier === null) return `Tu as fait ${-d} − ${u}. Mais on retire ${-d} à ${formaterNombre(n)} : recule de ${-d}.`;
+        return `Tu as fait ${-d} − ${u}. Mais on retire ${-d} à ${formaterNombre(n)} : recule jusqu’à ${formaterNombre(palier)}, puis encore.`;
+      },
+      gras: 1
+    }),
+    dizaine: Object.freeze({
+      nom: "la dizaine pas changée",
+      test: (calcul, reponse) => {
+        const {d, m} = calcul.donnees;
+        return !estTrou(calcul) && franchit(calcul.donnees.n, d, 10) && memeNombre(reponse, m - 10 * Math.sign(d));
+      },
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        const {palier, sauts} = sautsDuCalcul(calcul);
+        return `${formaterNombre(reponse)} : la dizaine n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
+      },
+      gras: 2
+    }),
+    centaine: Object.freeze({
+      nom: "la centaine pas changée",
+      test: (calcul, reponse) => {
+        const {d, m} = calcul.donnees;
+        return !estTrou(calcul) && franchit(calcul.donnees.n, d, 100) && memeNombre(reponse, m - 100 * Math.sign(d));
+      },
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        const {palier, sauts} = sautsDuCalcul(calcul);
+        return `${formaterNombre(reponse)} : la centaine n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
+      },
+      gras: 2
+    }),
+    unPres: Object.freeze({
+      nom: "à 1 près",
+      test: (calcul, reponse) => Math.abs(reponse - calcul.reponse) === 1,
+      retour: calcul => {
+        const {n} = calcul.donnees;
+        const {sauts} = sautsDuCalcul(calcul);
+        const texte = sauts.map(s => `${signe(s)} ${Math.abs(s)}`).join(", puis ");
+        return `C’est à 1 près. Pars de ${formaterNombre(n)} et fais les sauts sans compter le départ : ${texte}.`;
+      },
+      gras: 0
+    })
+  });
+  const causes = liste => Object.freeze(liste.map(([c, nom]) => Object.freeze(Object.assign({c}, PLUS_CAUSES[nom]))));
+
+  const A1_ERREURS = causes([[1, "arrivee"], [2, "ajoute"], [3, "inverse"], [4, "unPres"]]);
+  const A10_ERREURS = causes([[1, "dizaine"], [2, "centaine"], [3, "unPres"]]);
+  const A11_ERREURS = causes([[1, "inverse"], [2, "dizaine"], [3, "centaine"], [4, "unPres"]]);
+
+  // Un niveau tiré dans des viviers par forme (A1 : des listes courtes, toutes
+  // écrites) : `parts` donne la proportion de chaque forme ; les imposés
+  // prennent la place d'un calcul de leur forme.
+  function composerViviers(module, niveau, viviers, parts) {
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = viviers.flatMap(({forme, liste}, i) => {
+        const deja = imposes.filter(c => c.forme === forme).length;
+        return melanger(rng, liste.map(([n, d]) => lignePlus(module, niveau, forme, n, d)))
+          .filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      });
+      return [...tires, ...imposes];
+    };
+  }
+
+  const paires = (filtre, de = 1, a = 9) => {
+    const liste = [];
+    for (let x = de; x <= 20; x += 1) for (let y = de; y <= a; y += 1) if (filtre(x, y)) liste.push([x, y]);
+    return liste;
+  };
+
+  // A1-1 : sommes jusqu'à 10, compléments à 10 dans les deux écritures.
+  const A1_SOMMES_10 = Object.freeze(paires((x, y) => x <= 9 && x + y <= 10));
+  const A1_COMPLEMENTS_10 = Object.freeze(Array.from({length: 9}, (_, i) => [i + 1, 9 - i]));
+  // A1-2 : un chiffre + un chiffre, au-delà de 10.
+  const A1_SOMMES_20 = Object.freeze(paires((x, y) => x >= 2 && x <= 9 && y >= 2 && x + y >= 11));
+  // A1-3 : les différences (en passant 10, et sous 10), les trous qui passent 10.
+  const A1_DIFFERENCES_PASSAGE = Object.freeze(paires((x, y) => x >= 11 && x <= 18 && x - y < 10, 2).map(([x, y]) => [x, -y]));
+  const A1_DIFFERENCES_SOUS_10 = Object.freeze(paires((x, y) => x >= 5 && x <= 10 && y >= 2 && x - y >= 1, 2).map(([x, y]) => [x, -y]));
+  const A1_TROUS_20 = Object.freeze(paires((x, y) => x >= 2 && x <= 9 && x + y >= 11, 2));
+
+  function a1Niveau3(rng, total, imposes) {
+    // 3 différences sur 4 passent 10.
+    const [differences, trous, egaux] = repartir(total, [6, 3, 3]);
+    const [passages] = repartir(differences, [3, 1]);
+    const pris = new Set(imposes.map(c => c.cle));
+    const prendre = (forme, liste, nombre) => melanger(rng, liste.map(([n, d]) => lignePlus("A1", 3, forme, n, d)))
+      .filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombre));
+    const imposesDe = forme => imposes.filter(c => c.forme === forme).length;
+    const dPassage = imposes.filter(c => c.forme === "difference" && c.donnees.n > 10).length;
+    const dSous = imposesDe("difference") - dPassage;
+    const passage = prendre("difference", A1_DIFFERENCES_PASSAGE, passages - dPassage);
+    const sous = prendre("difference", A1_DIFFERENCES_SOUS_10, differences - passages - dSous);
+    return [...passage, ...sous,
+      ...prendre("complement", A1_TROUS_20, trous - imposesDe("complement")),
+      ...prendre("complement-egal", A1_TROUS_20, egaux - imposesDe("complement-egal")),
+      ...imposes];
+  }
+
+  // A10, A11 : des nombres de 2 ou 3 chiffres (millier compris au passage de
+  // la centaine), tirés au hasard selon la règle du niveau.
+  function plusNiveau(module, niveau, tirer) {
+    return function composer(rng, total, imposes) {
+      const pris = new Set(imposes.map(c => c.cle));
+      const liste = [];
+      let essais = 0;
+      while (liste.length < Math.max(0, total - imposes.length) && essais < 5000) {
+        essais += 1;
+        const [n, d] = tirer(rng, liste.length);
+        const calcul = lignePlus(module, niveau, d > 0 ? "somme" : "difference", n, d);
+        if (pris.has(calcul.cle)) continue;
+        pris.add(calcul.cle);
+        liste.push(calcul);
+      }
+      return [...liste, ...imposes];
+    };
+  }
+
+  // Un nombre de départ : à deux chiffres un calcul sur deux, à trois chiffres
+  // l'autre (le rang du calcul dans la série décide, pour que les deux
+  // soient toujours là).
+  const departDe = (rng, rang, unites) => {
+    const dizaines = rang % 2 === 0 ? entierEntre(rng, 2, 9) : entierEntre(rng, 10, 99);
+    return {dizaines, n: dizaines * 10 + unites};
+  };
+
+  // A10-1 : sans passage (36 + 4 = 40 compris).
+  const a10Niveau1 = plusNiveau("A10", 1, (rng, rang) => {
+    const u = entierEntre(rng, 1, 8);
+    const d = entierEntre(rng, 1, 10 - u);
+    return [departDe(rng, rang, u).n, d];
+  });
+  // A10-2 : passage de la dizaine, sans passer la centaine.
+  const a10Niveau2 = plusNiveau("A10", 2, (rng, rang) => {
+    const u = entierEntre(rng, 2, 9);
+    const d = entierEntre(rng, 11 - u, 9);
+    let depart = departDe(rng, rang, u);
+    while (depart.dizaines % 10 === 9) depart = departDe(rng, rang, u);
+    return [depart.n, d];
+  });
+  // A10-3 : passage de la centaine (96 + 7, 196 + 7), et du millier une fois
+  // sur cinq (996 + 7).
+  const a10Niveau3 = plusNiveau("A10", 3, (rng, rang) => {
+    const u = entierEntre(rng, 2, 9);
+    const d = entierEntre(rng, 11 - u, 9);
+    const centaines = rang % 5 === 4 ? 9 : entierEntre(rng, 0, 8);
+    return [centaines * 100 + 90 + u, d];
+  });
+  // A11-1 : sans passage (157 − 7 = 150 compris).
+  const a11Niveau1 = plusNiveau("A11", 1, (rng, rang) => {
+    const u = entierEntre(rng, 1, 9);
+    const d = entierEntre(rng, 1, u);
+    return [departDe(rng, rang, u).n, -d];
+  });
+  // A11-2 : passage de la dizaine, sans passer la centaine ; une fois sur
+  // cinq depuis une dizaine entière (50 − 6).
+  const a11Niveau2 = plusNiveau("A11", 2, (rng, rang) => {
+    const u = rang % 5 === 4 ? 0 : entierEntre(rng, 1, 8);
+    const d = entierEntre(rng, u + 1, 9);
+    let depart = departDe(rng, rang, u);
+    while (depart.dizaines % 10 === 0) depart = departDe(rng, rang, u);
+    return [depart.n, -d];
+  });
+  // A11-3 : passage de la centaine (403 − 5, 400 − 6), et du millier une
+  // fois sur cinq (1 002 − 7).
+  const a11Niveau3 = plusNiveau("A11", 3, (rng, rang) => {
+    const u = entierEntre(rng, 0, 8);
+    const d = entierEntre(rng, u + 1, 9);
+    const n = rang % 5 === 4 ? entierEntre(rng, 1, 9) * 1000 + u : entierEntre(rng, 1, 9) * 100 + u;
+    return [n, -d];
+  });
+
+  const ligne = (module, niveau, n, d) => lignePlus(module, niveau, d > 0 ? "somme" : "difference", n, d);
+  const etapesDe = (...lignes) => lignes.map(([texte, reponse]) => [texte.replace("?", CASE), reponse]);
+
+  const A1 = {
+    id: "A1", nom: "Sommes et différences jusqu’à 20", exemple: "6 + 4",
+    famille: "A", construit: true,
+    aide_entraine: "droite-sauts",
+    erreurs: A1_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "compléments à 10, sommes jusqu’à 10", nom: "Sommes jusqu’à 10", palier: 1, type: "F",
+        composer: composerViviers("A1", 1, [
+          {forme: "somme", liste: A1_SOMMES_10},
+          {forme: "complement", liste: A1_COMPLEMENTS_10},
+          {forme: "complement-egal", liste: A1_COMPLEMENTS_10}
+        ], [6, 4, 2]),
+        imposes: [lignePlus("A1", 1, "complement", 3, 7), lignePlus("A1", 1, "complement-egal", 7, 3)],
+        apprends: plusApprends({
+          manipule: lignePlus("A1", 0, "complement", 3, 7),
+          represente: ligne("A1", 0, 4, 5),
+          ecris: lignePlus("A1", 0, "complement-egal", 8, 2),
+          etapes: etapesDe(["8 + ? = 10", 2], ["10 = 8 + ?", 2]),
+          consigne: "Je pars de 4 et j’avance de 5.",
+          bilan: "Pour faire 10 : 1 et 9, 2 et 8, 3 et 7, 4 et 6, 5 et 5."
+        })
+      },
+      {
+        n: 2, titre: "sommes de 11 à 20 (passer par 10)", nom: "Sommes jusqu’à 20", palier: 1, type: "F",
+        composer: composerViviers("A1", 2, [{forme: "somme", liste: A1_SOMMES_20}], [1]),
+        imposes: [ligne("A1", 2, 9, 6), ligne("A1", 2, 5, 8)],
+        apprends: plusApprends({
+          manipule: ligne("A1", 0, 8, 7),
+          represente: ligne("A1", 0, 9, 4),
+          ecris: ligne("A1", 0, 7, 5),
+          etapes: etapesDe(["7 + 3 = ?", 10], ["10 + 2 = ?", 12], ["7 + 5 = ?", 12]),
+          consigne: "Je vais à 10, puis j’ajoute le reste.",
+          bilan: "Pour dépasser 10, je vais d’abord à 10, puis j’ajoute le reste : 8 + 7 = 8 + 2 + 5 = 15."
+        })
+      },
+      {
+        n: 3, titre: "dans les deux sens : différences et trous", nom: "Différences et trous jusqu’à 20", palier: 1, type: "F",
+        composer: a1Niveau3,
+        imposes: [ligne("A1", 3, 14, -6), lignePlus("A1", 3, "complement", 7, 5)],
+        apprends: plusApprends({
+          manipule: ligne("A1", 0, 15, -7),
+          represente: ligne("A1", 0, 13, -5),
+          ecris: lignePlus("A1", 0, "complement", 6, 7),
+          etapes: etapesDe(["6 + ? = 10", 4], ["10 + ? = 13", 3], ["6 + ? = 13", 7]),
+          consigne: "Je recule jusqu’à 10, puis je retire le reste.",
+          bilan: "Pour passer 10 en reculant, je recule d’abord jusqu’à 10, puis je retire le reste : 15 − 7 = 15 − 5 − 2 = 8."
+        })
+      }
+    ]
+  };
+
+  const A10 = {
+    id: "A10", nom: "Ajouter un nombre à un chiffre", exemple: "47 + 8",
+    famille: "A", construit: true,
+    aide_entraine: "droite-sauts",
+    erreurs: A10_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "sans passage", nom: "Ajouter un chiffre sans passage", palier: 1, type: "P",
+        composer: a10Niveau1,
+        imposes: [ligne("A10", 1, 153, 5)],
+        apprends: plusApprends({
+          manipule: ligne("A10", 0, 32, 4),
+          represente: ligne("A10", 0, 53, 5),
+          ecris: ligne("A10", 0, 254, 3),
+          etapes: etapesDe(["4 + 3 = ?", 7], ["254 + 3 = ?", 257]),
+          consigne: "J’avance de 5 : seul le chiffre des unités change.",
+          bilan: "Sans passer la dizaine, seul le chiffre des unités change : 32 + 4 = 36."
+        })
+      },
+      {
+        n: 2, titre: "passage de la dizaine", nom: "Ajouter un chiffre en passant la dizaine", palier: 1, type: "P",
+        composer: a10Niveau2,
+        imposes: [ligne("A10", 2, 58, 6), ligne("A10", 2, 425, 9)],
+        apprends: plusApprends({
+          manipule: ligne("A10", 0, 47, 8),
+          represente: ligne("A10", 0, 68, 5),
+          ecris: ligne("A10", 0, 236, 7),
+          etapes: etapesDe(["236 + 4 = ?", 240], ["240 + 3 = ?", 243], ["236 + 7 = ?", 243]),
+          consigne: "Je vais à la dizaine, puis j’ajoute le reste.",
+          bilan: "Pour passer la dizaine, je vais d’abord à la dizaine, puis j’ajoute le reste : 47 + 8 = 47 + 3 + 5 = 55."
+        })
+      },
+      {
+        n: 3, titre: "passage de la centaine", nom: "Ajouter un chiffre en passant la centaine", palier: 1, type: "P",
+        composer: a10Niveau3,
+        imposes: [ligne("A10", 3, 996, 7), ligne("A10", 3, 297, 6)],
+        apprends: plusApprends({
+          manipule: null,
+          represente: ligne("A10", 0, 196, 7),
+          ecris: ligne("A10", 0, 395, 8),
+          etapes: etapesDe(["395 + 5 = ?", 400], ["400 + 3 = ?", 403], ["395 + 8 = ?", 403]),
+          consigne: "Je vais à la centaine, puis j’ajoute le reste.",
+          bilan: "Pour passer la centaine, je vais d’abord à la centaine, puis j’ajoute le reste : 196 + 7 = 196 + 4 + 3 = 203."
+        })
+      }
+    ]
+  };
+
+  const A11 = {
+    id: "A11", nom: "Retrancher un nombre à un chiffre", exemple: "523 − 7",
+    famille: "A", construit: true,
+    aide_entraine: "droite-sauts",
+    erreurs: A11_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "sans passage", nom: "Retrancher un chiffre sans passage", palier: 1, type: "P",
+        composer: a11Niveau1,
+        imposes: [ligne("A11", 1, 157, -5)],
+        apprends: plusApprends({
+          manipule: ligne("A11", 0, 68, -4),
+          represente: ligne("A11", 0, 239, -6),
+          ecris: ligne("A11", 0, 486, -3),
+          etapes: etapesDe(["6 − 3 = ?", 3], ["486 − 3 = ?", 483]),
+          consigne: "Je recule de 6 : seul le chiffre des unités change.",
+          bilan: "Sans passer la dizaine, seul le chiffre des unités change : 68 − 4 = 64."
+        })
+      },
+      {
+        n: 2, titre: "passage de la dizaine (et 50 − 6)", nom: "Retrancher un chiffre en passant la dizaine", palier: 1, type: "P",
+        composer: a11Niveau2,
+        imposes: [ligne("A11", 2, 70, -4), ligne("A11", 2, 734, -8)],
+        apprends: plusApprends({
+          manipule: ligne("A11", 0, 42, -8),
+          represente: ligne("A11", 0, 523, -7),
+          ecris: ligne("A11", 0, 50, -6),
+          etapes: etapesDe(["10 − 6 = ?", 4], ["50 − 6 = ?", 44]),
+          consigne: "Je recule jusqu’à la dizaine, puis je retire le reste.",
+          bilan: "Pour passer la dizaine en reculant, je recule d’abord jusqu’à la dizaine, puis je retire le reste : 42 − 8 = 42 − 2 − 6 = 34."
+        })
+      },
+      {
+        n: 3, titre: "passage de la centaine", nom: "Retrancher un chiffre en passant la centaine", palier: 1, type: "P",
+        composer: a11Niveau3,
+        imposes: [ligne("A11", 3, 601, -4), ligne("A11", 3, 3005, -8)],
+        apprends: plusApprends({
+          manipule: null,
+          represente: ligne("A11", 0, 403, -5),
+          ecris: ligne("A11", 0, 1002, -7),
+          etapes: etapesDe([`1${ESPACE_FINE}002 − 2 = ?`, 1000], [`1${ESPACE_FINE}000 − 5 = ?`, 995], [`1${ESPACE_FINE}002 − 7 = ?`, 995]),
+          consigne: "Je recule jusqu’à la centaine, puis je retire le reste.",
+          bilan: "Pour passer la centaine en reculant, je recule d’abord jusqu’à la centaine, puis je retire le reste : 403 − 5 = 403 − 3 − 2 = 398."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- M1 : doubles et moitiés
+  //
+  // Le schéma en barres de Gwenaël : pour une moitié, la barre du nombre,
+  // découpée en morceaux (46 = 40 + 6), puis deux barres égales en dessous ;
+  // pour un double, deux barres égales, puis la barre entière en dessous.
+  // Pas de manipulation (décision du 31/10) : M1 commence au schéma.
+  // Formes : « double » (double de 17), « moitie » (moitié de 36),
+  // « trou-double » (2 × □ = 70), « double-fois » (2 × 250), « division »
+  // (92 ÷ 2). Données : n (le nombre doublé ou coupé), r (la réponse).
+
+  const M1_MOITIES = Object.freeze(["moitie", "trou-double", "division"]);
+  const estMoitie = calcul => M1_MOITIES.includes(calcul.forme);
+
+  // Les morceaux d'un nombre : ses chiffres non nuls, chacun à son rang
+  // (46 → 40 et 6 ; 1 200 → 1 000 et 200).
+  function morceauxDe(n) {
+    const morceaux = [];
+    let rang = 1;
+    for (let reste = n; reste > 0; reste = Math.floor(reste / 10), rang *= 10) {
+      if (reste % 10) morceaux.unshift((reste % 10) * rang);
+    }
+    return morceaux;
+  }
+
+  // Chiffre par chiffre, chacun coupé en deux sans retenue (56 → 23) : la
+  // réponse fausse de la cause 3.
+  function moitieParChiffre(n) {
+    return morceauxDe(n).reduce((somme, morceau) => {
+      const rang = 10 ** (String(morceau).length - 1);
+      return somme + Math.floor(morceau / rang / 2) * rang;
+    }, 0);
+  }
+
+  function m1Calcul(niveau, forme, n) {
+    const moitie = M1_MOITIES.includes(forme);
+    const r = moitie ? n / 2 : n * 2;
+    const extra = moitie && moitieParChiffre(n) !== r ? {parChiffre: moitieParChiffre(n)} : {};
+    const donnees = Object.assign({n, r}, extra);
+    if (forme === "double") return fabriquer("M1", niveau, forme, ["double de", n, "=", TROU], r, donnees);
+    if (forme === "double-fois") return fabriquer("M1", niveau, forme, [2, "×", n, "=", TROU], r, donnees);
+    if (forme === "trou-double") return fabriquer("M1", niveau, forme, [2, "×", TROU, "=", n], r, donnees);
+    if (forme === "division") return fabriquer("M1", niveau, forme, [n, "÷", 2, "=", TROU], r, donnees);
+    // « moitié de 36 » : sa clé porte « q » (quotient), sinon elle serait
+    // celle de « double de 36 ».
+    const calcul = fabriquer("M1", niveau, forme, ["moitié de", n, "=", TROU], r, donnees);
+    return Object.freeze(Object.assign({}, calcul, {cle: `${calcul.cle}-q`}));
+  }
+
+  // L'image : {outil: "barres", sorte, n, morceaux}. `masque` : l'aide, la
+  // réponse cachée.
+  function m1Image(calcul) {
+    const {n} = calcul.donnees;
+    return {outil: "barres", sorte: estMoitie(calcul) ? "moitie" : "double", n, morceaux: morceauxDe(n)};
+  }
+  function m1Aide(calcul) {
+    return Object.assign(m1Image(calcul), {masque: true});
+  }
+
+  function m1Phrase(calcul) {
+    const {n, r} = calcul.donnees;
+    const morceaux = morceauxDe(n);
+    const f = formaterNombre;
+    if (estMoitie(calcul)) {
+      if (morceaux.length < 2) return `Regarde : ${f(n)} coupé en deux, ça fait ${f(r)} et ${f(r)}.`;
+      return `Regarde : ${morceaux.map(m => f(m / 2)).join(" et ")}, ça fait ${f(r)}.`;
+    }
+    if (morceaux.length < 2) return `Regarde : ${f(n)} et encore ${f(n)}, ça fait ${f(r)}.`;
+    return `Regarde : ${morceaux.map(m => f(2 * m)).join(" et ")}, ça fait ${f(r)}.`;
+  }
+
+  // Du plus simple au plus dur : le double, puis la moitié, puis les autres
+  // écritures ; un morceau de plus ; un morceau impair (moitié de 30) ; la
+  // taille.
+  const M1_FORMES = Object.freeze({double: 0, moitie: 1, "trou-double": 2, "double-fois": 2, division: 2});
+  function m1Difficulte(calcul) {
+    const {n} = calcul.donnees;
+    const morceaux = morceauxDe(n);
+    const impair = estMoitie(calcul) && moitieParChiffre(n) !== n / 2 ? 1 : 0;
+    return M1_FORMES[calcul.forme] * 1000 + (morceaux.length - 1) * 200 + impair * 100 + String(n).length * 20 + (n % 10);
+  }
+
+  const M1_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "double et moitié confondus",
+      test: (calcul, reponse) => {
+        const {n} = calcul.donnees;
+        return estMoitie(calcul) ? memeNombre(reponse, 2 * n) : memeNombre(reponse, n / 2);
+      },
+      retour: (calcul, reponse) => {
+        const {n} = calcul.donnees;
+        const f = formaterNombre;
+        return estMoitie(calcul)
+          ? `${f(reponse)}, c’est le double de ${f(n)}. Ici, on coupe ${f(n)} en deux : ${f(n)} ÷ 2.`
+          : `${f(reponse)}, c’est la moitié de ${f(n)}. Le double, c’est 2 fois ${f(n)} : ${f(n)} + ${f(n)}.`;
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un morceau oublié",
+      test: (calcul, reponse) => {
+        const {n, r} = calcul.donnees;
+        const morceaux = morceauxDe(n);
+        if (morceaux.length < 2) return false;
+        return morceaux.some(m => memeNombre(reponse, estMoitie(calcul) ? r + m / 2 : r - m));
+      },
+      retour: calcul => {
+        const morceaux = morceauxDe(calcul.donnees.n).map(formaterNombre).join(" et ");
+        return estMoitie(calcul) ? `Coupe CHAQUE morceau en deux : ${morceaux}.` : `Double CHAQUE morceau : ${morceaux}.`;
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "chiffre par chiffre, sans la retenue",
+      test: (calcul, reponse) => calcul.donnees.parChiffre !== undefined && memeNombre(reponse, calcul.donnees.parChiffre),
+      retour: (calcul, reponse) => {
+        const morceau = morceauxDe(calcul.donnees.n).find(m => (m / 10 ** (String(m).length - 1)) % 2 === 1 && m >= 10);
+        const rang = 10 ** (String(morceau).length - 1);
+        return `${formaterNombre(reponse)}, c’est trop petit : la moitié de ${formaterNombre(morceau)}, ce n’est pas ${formaterNombre(Math.floor(morceau / rang / 2) * rang)}.`;
+      },
+      gras: 0
+    })
+  ]);
+
+  // Les viviers des niveaux, par forme (les calculs d'un niveau ne sont
+  // jamais ceux d'un autre).
+  const entre = (de, a, pas = 1) => Array.from({length: Math.floor((a - de) / pas) + 1}, (_, i) => de + i * pas);
+  const M1_VIVIERS = Object.freeze({
+    1: Object.freeze({
+      double: [...entre(2, 20), 30, 40, 50],
+      moitie: [...entre(4, 40, 2), 50, 60, 70, 80, 90, 100],
+      "trou-double": [...entre(12, 40, 2), 50, 60, 70, 80, 90, 100]
+    }),
+    2: Object.freeze({
+      double: [25, 35, 45, 75, 60, 70, 80, 90, 150, 250, 350, 450, 500, 600, 700, 800, 900],
+      moitie: [120, 140, 160, 180, 150, 200, 300, 500, 700, 900, 1000, 1200, 1400, 1600, 1800, 2000, 3000, 5000],
+      "double-fois": [25, 75, 150, 250, 350, 450, 500, 600, 750, 1500, 2500]
+    }),
+    3: Object.freeze({
+      double: [...entre(21, 49).filter(n => n % 5 !== 0), 124, 132, 136, 143, 214, 225, 236, 318, 342, 417],
+      moitie: [...entre(42, 98, 2).filter(n => n % 10 !== 0), 230, 250, 270, 370, 410, 470, 520, 650, 830, 910],
+      division: [...entre(42, 98, 2).filter(n => n % 10 !== 0), 230, 250, 270, 370, 410, 470, 520, 650, 830, 910]
+    })
+  });
+
+  function m1Niveau(niveau, parts) {
+    const viviers = M1_VIVIERS[niveau];
+    const formes = Object.keys(viviers);
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = formes.flatMap((forme, i) => {
+        const deja = imposes.filter(c => c.forme === forme).length;
+        return melanger(rng, viviers[forme].map(n => m1Calcul(niveau, forme, n)))
+          .filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      });
+      return [...tires, ...imposes];
+    };
+  }
+
+  // J'apprends d'un niveau de M1 : le schéma (« je représente »), puis les
+  // étapes (« j'écris »), où la moitié s'écrit aussi « ÷ 2 » (carte v2).
+  function m1Apprends({represente, ecris, consigne, consigneEcris, etapes, bilan}) {
+    return Object.freeze({
+      exemple: Object.freeze({texte: represente.texte.replace(` = ${CASE}`, "").replace(CASE, "?"), reponse: represente.reponse}),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "barres", consigne,
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(m1Aide(represente)),
+        solution: Object.freeze({image: m1Image(represente), phrase: m1Phrase(represente)})
+      }),
+      ecris: Object.freeze({
+        consigne: consigneEcris,
+        etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
+        reponse: ecris.reponse,
+        solution: Object.freeze({image: m1Image(ecris), phrase: m1Phrase(ecris)})
+      }),
+      bilan,
+      image: Object.freeze(m1Image(ecris)),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const M1 = {
+    id: "M1", nom: "Doubles et moitiés", exemple: "double de 17",
+    famille: "M", construit: true,
+    aide_entraine: "barres",
+    erreurs: M1_ERREURS, image: m1Image, aide: m1Aide, manipulation: () => null, difficulte: m1Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "doubles de 1 à 20, moitiés des pairs jusqu’à 40, dizaines", nom: "Doubles et moitiés jusqu’à 40", palier: 1, type: "F",
+        composer: m1Niveau(1, [5, 5, 2]),
+        imposes: [m1Calcul(1, "moitie", 60), m1Calcul(1, "trou-double", 70)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "double", 17),
+          ecris: m1Calcul(0, "moitie", 28),
+          consigne: "Le double de 17, c’est 17 + 17.",
+          consigneEcris: "moitié de 28 = 28 ÷ 2",
+          etapes: [["20 ÷ 2 = ?", 10], ["8 ÷ 2 = ?", 4], ["moitié de 28 = ?", 14]],
+          bilan: "Le double, c’est 2 fois le nombre. La moitié, c’est le nombre divisé par 2 : moitié de 28 = 28 ÷ 2 = 14."
+        })
+      },
+      {
+        n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", nom: "Doubles et moitiés des nombres usuels", palier: 1, type: "F",
+        composer: m1Niveau(2, [5, 5, 2]),
+        imposes: [m1Calcul(2, "moitie", 1200), m1Calcul(2, "double-fois", 250)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "moitie", 150),
+          ecris: m1Calcul(0, "double", 75),
+          consigne: "Je coupe chaque morceau en deux.",
+          consigneEcris: "double de 75 = 2 × 75",
+          etapes: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
+          bilan: "Double de 25 = 50, double de 75 = 150, moitié de 150 = 150 ÷ 2 = 75, moitié de 1 200 = 600 : ces nombres-là, je les sais par cœur."
+        })
+      },
+      {
+        n: 3, titre: "par décomposition", nom: "Doubles et moitiés en découpant", palier: 1, type: "P",
+        composer: m1Niveau(3, [4, 4, 2]),
+        imposes: [m1Calcul(3, "moitie", 470), m1Calcul(3, "double", 136), m1Calcul(3, "division", 92)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "moitie", 74),
+          ecris: m1Calcul(0, "moitie", 46),
+          consigne: "Je coupe chaque morceau en deux.",
+          consigneEcris: "moitié de 46 = 46 ÷ 2",
+          etapes: [["40 ÷ 2 = ?", 20], ["6 ÷ 2 = ?", 3], ["moitié de 46 = ?", 23]],
+          bilan: "Pour la moitié, je coupe chaque morceau en deux : moitié de 46 = 46 ÷ 2 = 20 + 3 = 23. Pour le double, je double chaque morceau."
+        })
+      }
+    ]
+  };
+
   // Un module pas encore construit (« bientôt ») : son nom, son exemple,
   // ses niveaux avec leur palier et leur type.
   const reserve = (id, nom, exemple, niveaux) =>
@@ -1271,21 +2018,9 @@
   // Les 45 modules de la carte v2, dans l'ordre de ses tableaux, puis les 29
   // identifiants réservés.
   const MODULES = Object.freeze([
-    reserve("A1", "Sommes et différences jusqu’à 20", "6 + 4", [
-      {n: 1, titre: "compléments à 10, sommes jusqu’à 10", palier: 1, type: "F", exemple: "6 + 4"},
-      {n: 2, titre: "sommes de 11 à 20 (passer par 10)", palier: 1, type: "F", exemple: "8 + 7"},
-      {n: 3, titre: "dans les deux sens : différences et trous", palier: 1, type: "F", exemple: "15 − 7"}
-    ]),
-    reserve("A10", "Ajouter un nombre à un chiffre", "32 + 4", [
-      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "32 + 4"},
-      {n: 2, titre: "passage de la dizaine", palier: 1, type: "P", exemple: "47 + 8"},
-      {n: 3, titre: "passage de la centaine", palier: 1, type: "P", exemple: "196 + 7"}
-    ]),
-    reserve("A11", "Retrancher un nombre à un chiffre", "157 − 5", [
-      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "157 − 5"},
-      {n: 2, titre: "passage de la dizaine (et 50 − 6)", palier: 1, type: "P", exemple: "523 − 7"},
-      {n: 3, titre: "passage de la centaine", palier: 1, type: "P", exemple: "403 − 5"}
-    ]),
+    A1,
+    A10,
+    A11,
     A2,
     reserve("A3", "Ajouter, retrancher des dizaines, des centaines entières", "76 − 30", [
       {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "76 − 30"},
@@ -1326,11 +2061,7 @@
       {n: 1, titre: "tables de 2 à 5 : ×, ÷, nombre manquant", palier: 1, type: "F", exemple: "4 × 7"},
       {n: 2, titre: "toutes les tables : ×, ÷, nombre manquant", palier: 1, type: "F", exemple: "56 ÷ 7"}
     ]),
-    reserve("M1", "Doubles et moitiés", "double de 17", [
-      {n: 1, titre: "doubles de 1 à 20, moitiés des pairs jusqu’à 40, dizaines", palier: 1, type: "F", exemple: "double de 17"},
-      {n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", palier: 1, type: "F", exemple: "double de 75"},
-      {n: 3, titre: "par décomposition", palier: 1, type: "P", exemple: "moitié de 46"}
-    ]),
+    M1,
     M2,
     reserve("M3", "Tables étendues", "9 × 40", [
       {n: 1, titre: "un chiffre × dizaines", palier: 1, type: "P", exemple: "9 × 40"},
@@ -1673,7 +2404,12 @@
     "trou-egal": "l’égalité est écrite à l’envers",
     "trou-nombre": "on cherche le nombre de départ",
     "trou-nombre-gauche": "on cherche le nombre de départ",
-    division: "c’est une division"
+    division: "c’est une division",
+    complement: "on cherche le nombre qui manque",
+    "complement-egal": "l’égalité est écrite à l’envers",
+    moitie: "on cherche la moitié",
+    "trou-double": "on cherche le nombre qu’on a doublé",
+    "double-fois": "le double s’écrit avec «\u00a0×\u00a0»"
   });
   function annonceDe(calcul) {
     return calcul && ANNONCES[calcul.forme] ? `Nouveau\u00a0: ${ANNONCES[calcul.forme]}.` : "Nouveau\u00a0: c’est écrit autrement.";

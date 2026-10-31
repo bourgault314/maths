@@ -237,9 +237,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261031-2"></script>
+  <script src="./defi_calcul_core.js?v=20261031-3"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261031-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261031-2"></script>
   <script>
     (() => {
       "use strict";
@@ -1721,7 +1721,13 @@
       }
 
       // Sous « J'apprends », ce qu'on va manipuler.
-      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite"});
+      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres"});
+      // L'outil de J'apprends d'un niveau : ce qu'on manipule, sinon l'image
+      // (M1 n'a que son schéma en barres).
+      function outilApprends(apprends) {
+        if (apprends.manipule) return apprends.manipule.outil;
+        return apprends.represente.outil === "barres" ? "barres" : "aucun";
+      }
 
       function renderModule() {
         const id = state.module || PARCOURS.moduleCourant(parcours, CARTE);
@@ -1781,7 +1787,7 @@
           return bouton;
         };
         $("module-etapes").replaceChildren(
-          etape(1, "J’apprends", DETAIL_APPRENDS[niveau.apprends.manipule ? niveau.apprends.manipule.outil : "aucun"],
+          etape(1, "J’apprends", DETAIL_APPRENDS[outilApprends(niveau.apprends)],
             () => lancerApprends(id, niveau.n, "module")),
           etape(2, "Je m’entraîne", `${DETAIL_ENTRAINE}, sans chrono`, () => lancerSerie(id, niveau.n, "entraine", "module")),
           etape(3, "Tu connais déjà ? (le test d’entrée)", `une marche par niveau, ${PARCOURS.SEUILS.test.parMarche} calculs, sans aide`,
@@ -1967,6 +1973,16 @@
         aide.replaceChildren(...morceaux);
         aide.hidden = false;
         $("question-card").classList.add("aide-image");
+      }
+
+      // Une consigne seule, sans image (« J'écris » de M1).
+      function montrerConsigne(consigne) {
+        const aide = $("aide");
+        const p = document.createElement("p");
+        p.className = "consigne consigne-seule";
+        p.textContent = consigne;
+        aide.replaceChildren(p);
+        aide.hidden = false;
       }
 
       function majBarre({compte = "", pastille = "", avance = 0}) {
@@ -2169,6 +2185,8 @@
           carte.classList.add("ecrit");
           renderTouches(serie.module);
           renderEtapes();
+          // M1 : « moitié de 46 = 46 ÷ 2 » écrit au-dessus des étapes.
+          if (apprends.ecris.consigne) montrerConsigne(apprends.ecris.consigne);
         }
         carte.scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -2939,7 +2957,7 @@
       }
 
       // Après deux entraînements ratés : ce que l'élève retrouvera demain.
-      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite"});
+      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres"});
 
       // La fin de la séance : les étapes et leur score, « Demain : … », le
       // nombre de fois cette semaine. Après deux entraînements ratés, le
@@ -2947,8 +2965,8 @@
       function renderFinDeSeance(serie, sur, arretee) {
         const aujourdhui = jourCourant();
         if (arretee) {
-          const manipule = CORE.niveauDe(`${serie.module}-${serie.niveau}`).niveau.apprends.manipule;
-          poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `Demain, on reprend ${REPRISE[manipule ? manipule.outil : "aucun"]}.`});
+          const apprends = CORE.niveauDe(`${serie.module}-${serie.niveau}`).niveau.apprends;
+          poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `Demain, on reprend ${REPRISE[outilApprends(apprends)]}.`});
         } else {
           poserVerdict({classe: "is-fete", titre: "Séance du jour faite", score: ""});
         }
