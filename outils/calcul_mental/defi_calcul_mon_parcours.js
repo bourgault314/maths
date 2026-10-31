@@ -1447,6 +1447,97 @@
     return normaliserParcours(fusion);
   }
 
+  // ---------------------------------------------- ce que lit le professeur
+  //
+  // Lot 2b (31/10/2026) : la page « Ma classe » de suivi.mathsgo.re et la
+  // tuile de Mon espace lisent un parcours par cette fonction, et par elle
+  // seule — la page ne touche jamais aux boîtes. Elle rend ce qu'on affiche,
+  // jamais un texte : les noms viennent de defi_calcul_core.js, côté page.
+  // Un parcours abîmé ou absent est d'abord renormalisé (bornes du moteur) ;
+  // `lisible` dit si quelque chose a pu être lu.
+  //
+  // L'état d'une compétence, tel que le professeur le voit :
+  //   gris    pas entrée (à apprendre) ;
+  //   route   entrée, en route (boîtes 2 et 3) ;
+  //   su      sue (boîtes 4 et 5) ;
+  //   revoir  rouge pour la séance (boîte 1, ou ratée aujourd'hui) ;
+  //   classe  « à voir en classe » : mise de côté au 3e échec de suite, tant
+  //           qu'un calcul du jour juste ne l'a pas remise à zéro — pendant
+  //           ses jours de côté, et après, quand elle est revenue rouge.
+  function etatCompetence(ligne, index, aujourdhui) {
+    if (!ligne.b[index]) return "gris";
+    if (aVoirEnClasse(ligne, index)) return "classe";
+    if (estRouge(ligne, index, aujourdhui)) return "revoir";
+    return ligne.b[index] >= SEUILS.revision.su ? "su" : "route";
+  }
+
+  function resumeProf(brut, carte, aujourdhui = jourLocal()) {
+    const parcours = normaliserParcours(brut);
+    const lisible = Boolean(brut && typeof brut === "object");
+    const compte = compter(parcours, carte);
+    // Le même compte sur les seuls modules construits : ce que l'appli
+    // propose aujourd'hui (la page du professeur compte là-dessus ; la tuile
+    // et l'accueil de l'élève, sur toute la carte).
+    const carteOuverte = normaliserCarte(carte);
+    const ouvert = compter(parcours, {modules: carteOuverte.modules.filter(fiche => fiche.construit), ordre: carteOuverte.ordre});
+    const modules = [];
+    const revoir = [];
+    normaliserCarte(carte).modules.filter(fiche => Object.prototype.hasOwnProperty.call(NIVEAUX, fiche.id)).forEach(fiche => {
+      const ligne = ligneDe(parcours, fiche.id);
+      const etats = ligne.b.map((_, index) => etatCompetence(ligne, index, aujourdhui));
+      modules.push({
+        id: fiche.id,
+        construit: Boolean(fiche.construit),
+        niveaux: NIVEAUX[fiche.id],
+        etats,
+        paliers: ligne.b.map((_, index) => palierDe(carte, fiche.id, index + 1)),
+        boites: ligne.b.slice(),
+        su: Boolean(ligne.ok),
+        vu: ligne.vu
+      });
+      etats.forEach((etat, index) => {
+        if (etat !== "revoir" && etat !== "classe") return;
+        revoir.push({
+          module: fiche.id, niveau: index + 1, etat,
+          deCote: estDeCote(ligne, index, aujourdhui),
+          echeance: ligne.e[index],
+          // « J'apprends à refaire » : après deux échecs de suite.
+          apprends: ligne.a[index] === 0,
+          echecs: ligne.x[index]
+        });
+      });
+    });
+    // Les causes d'erreur, par module, les plus fréquentes d'abord (c est un
+    // compte depuis le début : le serveur n'a pas de semaine).
+    const causes = [];
+    Object.keys(parcours.modules).forEach(id => {
+      Object.keys(parcours.modules[id].c).forEach(cause => causes.push({module: id, cause: Number(cause), n: parcours.modules[id].c[cause]}));
+    });
+    causes.sort((p, q) => q.n - p.n || p.module.localeCompare(q.module) || p.cause - q.cause);
+    // Les séances : cette semaine (depuis lundi), les 4 dernières semaines
+    // (28 jours), et les jours de cette semaine où il y en a eu.
+    const lundi = lundiDe(aujourdhui);
+    const depuis = ajouterJours(aujourdhui, -27);
+    const seances = parcours.seances.filter(jour => jour <= aujourdhui);
+    const joursSemaine = [...new Set(seances.filter(jour => jour >= lundi))];
+    const dernier = seances.length ? seances[seances.length - 1] : null;
+    const vus = Object.keys(parcours.modules).map(id => parcours.modules[id].vu).filter(Boolean).sort();
+    return {
+      lisible,
+      commence: Object.keys(parcours.modules).length > 0 || parcours.seances.length > 0,
+      sues: compte.sues, entrees: compte.entrees, total: compte.total, paliers: compte.paliers,
+      ouvert: {sues: ouvert.sues, entrees: ouvert.entrees, total: ouvert.total, paliers: ouvert.paliers},
+      modules,
+      revoir,
+      aVoir: revoir.filter(c => c.etat === "classe").length,
+      rouges: revoir.filter(c => c.etat === "revoir").length,
+      causes,
+      seances: {semaine: seances.filter(jour => jour >= lundi).length, quatreSemaines: seances.filter(jour => jour >= depuis).length,
+        total: parcours.seances.length, jours: joursSemaine},
+      dernier: dernier && vus.length ? (dernier >= vus[vus.length - 1] ? dernier : vus[vus.length - 1]) : dernier || (vus.length ? vus[vus.length - 1] : null)
+    };
+  }
+
   // Le nombre de clés à toute profondeur (ce que compte le serveur) et la
   // taille en octets du JSON enregistré.
   function mesurer(parcours) {
@@ -1512,6 +1603,8 @@
     fileSeance,
     demain,
     bilanSeances,
+    etatCompetence,
+    resumeProf,
     mesurer,
     CLE_SEL,
     ITERATIONS_EMPREINTE,

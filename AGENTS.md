@@ -199,6 +199,15 @@ Défi tables est la référence.
   carte de classe. Une nouvelle appli suivie : une entrée dans `APPLIS`, son
   onglet, et ses listes dans `LISTES_PAR_ELEVE` si elle se règle (gardé par
   `tests/suivi-serveur-pro-qui-voit-quoi.test.mjs`).
+- Le moteur d'une appli suivie est COPIÉ octet pour octet dans
+  `_serveur/public/prof/` (gardé par `tests/suivi-moteur-copie.test.mjs`) et
+  c'est lui seul qui lit un parcours (`resumeProf`, `resumeTuile`) : la page
+  prof et la tuile ne touchent jamais aux données. Défi calcul (lot 2b,
+  31/10/2026) en a DEUX : `defi_calcul_core.js` (la carte, les noms, les
+  erreurs connues) puis `defi_calcul_mon_parcours.js` ; le noyau se charge
+  d'abord (`avant` dans `JAUGES` de l'espace élève, `chargerMoteurCalcul` de
+  la page prof). Aucun calcul d'élève n'est enregistré : l'exemple d'une
+  erreur est regénéré depuis la fiche du module (`exempleErreur`).
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
 - Sans code, rien ne change : en-tête et fil d'Ariane du site (et pas de pied,

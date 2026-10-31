@@ -26,6 +26,14 @@ $versionCoffres = is_file($moteurCoffres) ? substr(md5_file($moteurCoffres), 0, 
 // seulement quand on ouvre l'onglet Anzan d'une classe.
 $moteurAnzan = __DIR__ . '/flash_anzan_parcours.js';
 $versionAnzan = is_file($moteurAnzan) ? substr(md5_file($moteurAnzan), 0, 10) : '0';
+// Défi calcul (lot 2b, 31/10/2026) : ses DEUX moteurs, copies de
+// outils/calcul_mental/defi_calcul_core.js (la carte, les noms, les erreurs
+// connues et leurs exemples) et defi_calcul_mon_parcours.js (les boîtes,
+// resumeProf), chargés seulement quand on ouvre l'onglet Défi calcul.
+$moteurCalculCore = __DIR__ . '/defi_calcul_core.js';
+$versionCalculCore = is_file($moteurCalculCore) ? substr(md5_file($moteurCalculCore), 0, 10) : '0';
+$moteurCalcul = __DIR__ . '/defi_calcul_mon_parcours.js';
+$versionCalcul = is_file($moteurCalcul) ? substr(md5_file($moteurCalcul), 0, 10) : '0';
 // Lot E1 « les évaluations en classe » (15/10/2026) : le NOYAU de Défi tables
 // (copie de outils/calcul_mental/defi_tables_core.js, identité vérifiée par un
 // test), pour refaire le tirage d'une évaluation et la corriger ici.
@@ -701,6 +709,61 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      trois colonnes (l'élève, le compte, le dernier jour). Le reste est dans
      la fenêtre de l'élève : on touche la ligne. Avant, une carte par élève
      (≈ 230 px chacune). */
+  /* Défi calcul (lot 2b, 31/10/2026, planches validées) : l'onglet, la carte
+     « À reprendre en classe », la fenêtre d'un élève (ses compétences palier
+     par palier, en étiquettes aux couleurs de l'appli : gris à apprendre, bleu
+     en route, vert sue, rouge à revoir, rouge barré « à voir en classe »), et
+     les deux feuilles imprimées (la fiche d'un élève, la grille de la classe),
+     en noir et blanc : les symboles remplacent les couleurs. */
+  .dc-reprendre strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .dc-reprendre p.sous { margin: 4px 0 10px; font-size: .88rem; }
+  .dc-reprendre ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .dc-reprendre li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center;
+                     padding: 8px 12px; border: 1px solid var(--rouge-bord); border-radius: 10px; background: var(--rouge-pale); }
+  .dc-reprendre li b { color: var(--ink); }
+  .dc-reprendre li small { display: block; color: var(--muted); font-size: .84rem; }
+  .dc-reprendre li small i { font-style: normal; color: var(--rouge); font-weight: 700; }
+  .dc-reprendre li .dc-nombre { font-weight: 700; white-space: nowrap; text-align: right; }
+  .dc-reprendre li .dc-nombre small { color: var(--rouge); font-weight: 700; }
+  .dc-reprendre li a { grid-column: 2; justify-self: end; font-size: .86rem; font-weight: 700; white-space: nowrap; }
+  .dc-paliers { display: block; margin-top: 2px; color: var(--muted); font-size: .8rem; white-space: nowrap; }
+  td.dc-revoir .pastille + .pastille { margin-left: 4px; }
+  .p-rouge { background: var(--rouge-pale); color: var(--rouge); }
+  /* La fenêtre de l'élève. */
+  .dc-bloc { margin: 0 0 14px; }
+  .dc-bloc h3 { margin: 0 0 6px; font-size: .95rem; color: var(--blue-dark); }
+  .dc-bloc h3 small { font-weight: 400; color: var(--muted); font-size: .84rem; }
+  .dc-alerte { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+  .dc-alerte li { padding: 8px 12px; border: 1px solid var(--rouge-bord); border-radius: 10px; background: var(--rouge-pale); }
+  .dc-alerte li b { color: var(--ink); }
+  .dc-alerte li .dc-detail { display: block; color: var(--muted); font-size: .84rem; }
+  .dc-alerte li .dc-detail i { font-style: normal; color: var(--rouge); font-weight: 700; }
+  .dc-alerte li.dc-revoir { border-color: var(--orange-pale); background: var(--orange-pale); }
+  .dc-alerte li.dc-revoir .dc-detail i { color: var(--orange-texte); }
+  .dc-alerte li a { font-size: .86rem; font-weight: 700; white-space: nowrap; }
+  .dc-module { display: grid; grid-template-columns: 200px 1fr; gap: 6px 10px; align-items: center; margin: 6px 0; }
+  .dc-module b { color: var(--ink); font-size: .84rem; font-weight: 600; line-height: 1.25; }
+  .dc-comps { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dc-comp { display: inline-grid; place-items: center; min-height: 26px; padding: 0 9px; border-radius: 8px; font-size: .8rem; font-weight: 700;
+             border: 2px solid var(--line); background: #fff; color: var(--muted); }
+  .dc-comp.route { border-color: var(--bleu-vif); background: #eaf2fb; color: var(--bleu-vif); }
+  .dc-comp.su { border-color: var(--vert); background: var(--vert); color: #fff; }
+  .dc-comp.revoir { border-color: var(--rouge); background: var(--rouge-pale); color: var(--rouge); }
+  .dc-comp.classe { border-color: var(--rouge); background: var(--rouge); color: #fff; }
+  .dc-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 14px; font-size: .82rem; color: var(--muted); }
+  .dc-note { margin: -6px 0 14px; color: var(--muted); font-size: .84rem; }
+  .dc-legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .dc-legende .dc-comp { min-height: 18px; padding: 0 6px; font-size: .7rem; }
+  .dc-causes { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .9rem; }
+  .dc-causes li small { color: var(--muted); }
+  .dc-semaine { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .9rem; }
+  .dc-semaine .dc-jours { display: inline-flex; gap: 8px; }
+  .dc-semaine .dc-jours span { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: .82rem; }
+  .dc-semaine .dc-jours i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--vert); }
+  .dc-semaine .dc-jours i.ok { background: var(--vert); }
+  .dc-outils { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+  /* Les deux feuilles, seulement imprimées. */
+  .fiche-defi-calcul, .grille-defi-calcul { display: none; }
   @media (max-width: 700px) {
     #tableau th.large, #tableau td.large { display: none; }
     #tableau th.seul-telephone, #tableau td.seul-telephone { display: table-cell; }
@@ -716,6 +779,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     #tableau th button[data-tri] { white-space: normal; text-align: left; }
     #tableau td.nom { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
     .acquises-liste { display: none; }
+    /* Défi calcul : le détail par palier et la ligne du haut se lisent dans la fenêtre. */
+    .dc-paliers { display: none; }
     /* « Parfait : … » explique les niveaux de Coffres : cachés ici, ils sont
        (avec la même phrase) dans la fenêtre. */
     p.sous.note-coffres { display: none; }
@@ -732,6 +797,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     dialog.fenetre-eleve.avec-parcours { width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;
                                          margin: 0; border-radius: 0; }
     .detail-monde b { flex-basis: 100%; }
+    .dc-module { grid-template-columns: 1fr; gap: 4px; }
     .fenetre-eleve .tableau-operations { width: 100%; min-width: 0; }
     .fenetre-eleve .tableau-operations th, .fenetre-eleve .tableau-operations td { padding: 5px 3px; font-size: .76rem; white-space: normal; }
     .fenetre-eleve .tableau-operations th { font-size: .68rem; line-height: 1.2; letter-spacing: 0; text-transform: none; }
@@ -739,7 +805,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   @media print {
     @page { margin: 12mm; }
     .barre, header, footer, .barre-outils, .actions, .rec-plein,
-    #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression):not(.fiche-anzan) { display: none !important; }
+    #ecran-classe > *:not(.fiche):not(.bandelettes):not(.note-impression):not(.fiche-anzan):not(.fiche-defi-calcul):not(.grille-defi-calcul) { display: none !important; }
     body { background: #fff; }
     main { max-width: none; padding: 0; }
     /* Le bouton pose la classe sur <body> juste avant window.print() et
@@ -762,6 +828,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .fiche-anzan td.fa-score { text-align: right; font-weight: 800; white-space: nowrap; }
     .fiche-anzan .fa-note { margin: 8px 0 0; font-size: .85rem; color: #333; }
     .fiche-anzan .fa-pied { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; font-size: .78rem; color: #444; }
+    /* Défi calcul (lot 2b) : la fiche d'un élève ou la grille de la classe,
+       en noir et blanc — ✓ sue, ○ en route, ↻ à revoir, ✖ à voir en classe,
+       · à apprendre. La fenêtre ne sort pas. */
+    body.imprime-defi-calcul .fiche-defi-calcul, body.imprime-defi-calcul-grille .grille-defi-calcul { display: block; }
+    body.imprime-defi-calcul dialog, body.imprime-defi-calcul-grille dialog { display: none !important; }
+    body:not(.imprime-recap):not(.imprime-bandelettes):not(.imprime-anzan):not(.imprime-defi-calcul):not(.imprime-defi-calcul-grille) .note-impression { display: block; }
+    body.imprime-defi-calcul .note-impression, body.imprime-defi-calcul-grille .note-impression { display: none !important; }
+    .fiche-defi-calcul h2, .grille-defi-calcul h2 { margin: 0 0 2px; font-size: 1.3rem; }
+    .fiche-defi-calcul .fd-sous, .grille-defi-calcul .fd-sous { margin: 0 0 12px; color: #333; font-size: .9rem; }
+    .fiche-defi-calcul h3 { margin: 14px 0 4px; font-size: 1rem; }
+    .fiche-defi-calcul table, .grille-defi-calcul table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    .fiche-defi-calcul th, .fiche-defi-calcul td, .grille-defi-calcul th, .grille-defi-calcul td { padding: 4px 6px; border-bottom: 1px solid #999; text-align: left; vertical-align: top; }
+    .fiche-defi-calcul th, .grille-defi-calcul th { font-size: .78rem; color: #333; }
+    .grille-defi-calcul th.fd-mod, .grille-defi-calcul td.fd-mod { text-align: center; white-space: nowrap; }
+    .fiche-defi-calcul td.fd-etats { white-space: nowrap; }
+    .fiche-defi-calcul ul { margin: 0; padding-left: 18px; }
+    .fiche-defi-calcul .fd-legende, .grille-defi-calcul .fd-legende { margin: 10px 0 0; font-size: .8rem; color: #333; }
+    .fd-pied { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; font-size: .78rem; color: #444; }
     .pied-impression { margin-top: 18px; display: flex; align-items: center;
                        justify-content: space-between; font-size: .78rem; color: #444; }
   }
@@ -909,6 +993,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         <button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables</button>
         <button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>
         <button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>
+        <button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
       </div>
       <div class="onglets onglets-classe" role="group" aria-label="La classe">
@@ -962,6 +1047,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <ul id="fragiles-liste"></ul>
     </div>
 
+    <!-- Défi calcul (lot 2b, 31/10/2026) : « À reprendre en classe » — les
+         compétences rouges ou mises de côté chez au moins deux élèves (ou
+         « à voir en classe » chez un seul), avec la cause d'erreur la plus
+         fréquente du module et un calcul d'exemple REGÉNÉRÉ depuis la fiche
+         (aucun calcul d'élève n'est enregistré), et « ouvrir en classe »,
+         qui lance ce niveau dans l'appli en mode professeur. Calculé dans le
+         navigateur, aucun nom : c'est ce qu'on peut montrer au tableau. -->
+    <div class="carte dc-reprendre" id="dc-reprendre" hidden>
+      <strong>À reprendre en classe</strong>
+      <p class="sous" id="dc-reprendre-sous"></p>
+      <ul id="dc-reprendre-liste"></ul>
+    </div>
+
     <!-- Lot E1 « les évaluations en classe » (15/10/2026, planches 2 et 3) :
          la carte « 📝 Évaluations », onglet Défi tables, propriétaire et
          collègues en écriture. Les modèles sont ceux du professeur connecté ;
@@ -988,6 +1086,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
          « Trier par » — les titres de colonnes trient. La loupe est le dessin
          « search » de Feather Icons (licence MIT). -->
     <div class="outils-tableau" id="outils-tableau">
+      <!-- Défi calcul (lot 2b) : la grille de la classe, en noir et blanc. -->
+      <button type="button" class="secondaire" id="dc-imprimer-grille" title="La grille de la classe, module par module, en noir et blanc" hidden>Imprimer la grille</button>
       <div class="chercher"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="chercher-eleve" placeholder="Chercher un élève" aria-label="Chercher un élève" autocomplete="off" spellcheck="false" maxlength="40"></div>
     </div>
     <!-- Le message de l'activité (fiche, version restaurée, moteur absent) :
@@ -1029,6 +1129,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th><button type="button" data-tri="calculs">Calculs</button></th>
             <th class="large"><button type="button" data-tri="jours">Jours</button></th>
             <th><button type="button" data-tri="date">Dernière séance</button></th>
+            <th></th>
+          </tr>
+          <!-- L'onglet Défi calcul (lot 2b, 31/10/2026) : les compétences sues
+               (sur les 129 de la carte, et par palier dessous), ce qui est à
+               revoir, les séances des 4 dernières semaines, le dernier jour. -->
+          <tr id="entete-defi-calcul" hidden>
+            <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th><button type="button" data-tri="sues">Compétences sues</button></th>
+            <th class="large"><button type="button" data-tri="revoir">À revoir</button></th>
+            <th class="large"><button type="button" data-tri="seances">Séances · 4 semaines</button></th>
+            <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
           </tr>
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
@@ -1226,13 +1337,40 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <h2>Que veux-tu imprimer ?</h2>
       <p>Reviens à la page et choisis un bouton. Onglet Élèves : <strong>« Imprimer les bandelettes »</strong>
       (une par élève, à découper et à distribuer) ou <strong>« Imprimer la feuille prénom ↔ code »</strong>
-      (celle que tu gardes). Onglet Anzan : touche la ligne d’un élève, puis
-      <strong>« Imprimer »</strong> dans sa fenêtre. Chaque bouton n’imprime que sa feuille.</p>
+      (celle que tu gardes). Onglet Anzan ou Défi calcul : touche la ligne d’un élève, puis
+      <strong>« Imprimer »</strong> dans sa fenêtre ; Défi calcul a aussi <strong>« Imprimer la grille »</strong>
+      au-dessus du tableau. Chaque bouton n’imprime que sa feuille.</p>
       <div class="pied-impression">
         <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
         <span>mathsgo.re · CC BY-NC-SA 4.0</span>
       </div>
     </div>
+
+    <!-- Défi calcul (lot 2b, 31/10/2026) : la fiche d'un élève (« Imprimer sa
+         fiche » dans sa fenêtre) et la grille de la classe (« Imprimer la
+         grille » au-dessus du tableau). Remplies au moment d'imprimer, vidées
+         après ; noir et blanc, aucun code. -->
+    <div class="fiche-defi-calcul" id="fiche-defi-calcul">
+      <h2 id="fd-titre"></h2>
+      <p class="fd-sous" id="fd-sous"></p>
+      <div id="fd-corps"></div>
+      <div class="fd-pied">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+        <span></span>
+      </div>
+    </div>
+    <div class="grille-defi-calcul" id="grille-defi-calcul">
+      <h2 id="gd-titre"></h2>
+      <p class="fd-sous" id="gd-sous"></p>
+      <div id="gd-corps"></div>
+      <div class="fd-pied">
+        <img src="../mathsgo-logo-print.png" alt="maths&go" style="height:26px">
+        <span>mathsgo.re · CC BY-NC-SA 4.0</span>
+        <span></span>
+      </div>
+    </div>
+
   </section>
 
   <!-- Mon compte : changer son mot de passe. Avec un mot de passe temporaire
@@ -1416,6 +1554,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   <div class="fenetre-pied">
     <button type="button" class="secondaire" id="fe-fermer">Fermer</button>
     <button type="button" id="pa-imprimer" hidden>Imprimer ces séances</button>
+    <button type="button" id="dc-imprimer" hidden>Imprimer sa fiche</button>
   </div>
 </dialog>
 
@@ -1499,6 +1638,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026) : après Coffres,
     // comme au catalogue. Le serveur compte les séances (son compteur).
     {cle: "flash-anzan", nom: "Anzan", unite: ["séance", "séances"]},
+    // Défi calcul (lot 2b, 31/10/2026) : après Anzan, comme au catalogue. Le
+    // serveur compte les séances finies (son compteur).
+    {cle: "defi-calcul", nom: "Défi calcul", unite: ["séance", "séances"]},
     {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]}
   ];
   // Le dernier choix, retenu le temps de l'onglet.
@@ -1513,6 +1655,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // Le moteur d'Anzan, de même (lot 4b) : chargé à la première ouverture de
   // son onglet.
   const MOTEUR_ANZAN = "flash_anzan_parcours.js?v=<?= htmlspecialchars($versionAnzan, ENT_QUOTES) ?>";
+  // Les deux moteurs de Défi calcul (lot 2b) : le noyau d'abord (la carte,
+  // les noms, les erreurs connues), puis la progression ; chargés à la
+  // première ouverture de l'onglet Défi calcul.
+  const MOTEUR_CALCUL_CORE = "defi_calcul_core.js?v=<?= htmlspecialchars($versionCalculCore, ENT_QUOTES) ?>";
+  const MOTEUR_CALCUL = "defi_calcul_mon_parcours.js?v=<?= htmlspecialchars($versionCalcul, ENT_QUOTES) ?>";
   // Les tris de chaque activité : ceux de Défi tables sont lus dans la page.
   // Les colonnes qui trient, par appli : celles dont le titre est un bouton
   // (serveur pro, lot 5c : plus de menu « Trier par »). Coffres : « Trésors »
@@ -1521,6 +1668,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "defi-tables": ["prenom", "acquises", "encours", "semaine", "retard", "date"],
     "coffres": ["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date"],
     "flash-anzan": ["prenom", "calculs", "jours", "date"],
+    // Défi calcul (lot 2b) : les compétences sues, ce qui est à revoir, les
+    // séances des 4 dernières semaines, le dernier jour.
+    "defi-calcul": ["prenom", "sues", "revoir", "seances", "date"],
     "splat": ["prenom", "etapes", "date"]
   };
   let SPLAT = window.MathsGoSplatParcours || null;
@@ -1529,6 +1679,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let chargementCoffres = null;
   let ANZAN = window.MathsGoFlashAnzanParcours || null;
   let chargementAnzan = null;
+  // Défi calcul (lot 2b) : le noyau et le moteur de progression, et la carte
+  // que rend le noyau (les modules, leurs paliers, l'ordre du parcours).
+  let CALCUL_CORE = window.MATHSGO_DEFI_CALCUL_CORE || null;
+  let CALCUL = window.MATHSGO_DEFI_CALCUL_MON_PARCOURS || null;
+  let chargementCalcul = null;
   // Lot 4b : l'élève dont « Le parcours de… » (Anzan) est ouvert, et combien
   // de séances on y montre (10, puis 10 de plus à chaque « Voir les séances
   // précédentes », comme l'écran « Mon historique » de l'élève).
@@ -1723,6 +1878,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
     // Lot E1 : la carte « Évaluations » et ses deux boîtes.
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees",
+    // Défi calcul (lot 2b) : la carte « À reprendre en classe » et les deux feuilles.
+    "dc-reprendre-liste", "dc-reprendre-sous", "fd-titre", "fd-sous", "fd-corps", "gd-titre", "gd-sous", "gd-corps",
     // Serveur pro, lot 5b : la fenêtre « Régler … », la ligne « qui voit »
     // et la carte d’un onglet fermé (des prénoms, le nom de la classe).
     // (correctif, relecture Codex point 7 : le bouton « Ouvrir à toute la 405 »
@@ -2067,10 +2224,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     } catch (_) { return vide; }
   }
 
+  // Défi calcul (lot 2b, 31/10/2026) : la ligne d'un élève, lue par le moteur
+  // (prof/defi_calcul_mon_parcours.js, resumeProf) et par lui seul, sur la
+  // carte du noyau (prof/defi_calcul_core.js) — la page ne touche jamais aux
+  // boîtes. Le moteur renormalise tout ce qu'il relit (un x à 9 redevient 0,
+  // une liste trop longue est coupée) : rien de ce qu'un appareil bricolé
+  // enverrait ne déforme la page. Un élève sans parcours : rien de commencé.
+  function lireCalcul(brut) {
+    const vide = {lisible: false, commence: false, sues: 0, entrees: 0, total: 0, paliers: [], modules: [], revoir: [],
+      aVoir: 0, rouges: 0, causes: [], seances: {semaine: 0, quatreSemaines: 0, total: 0, jours: []}, dernier: null};
+    if (!CALCUL || !CALCUL_CORE) return vide;
+    try {
+      return CALCUL.resumeProf(brut || null, CALCUL_CORE.carte(), CALCUL.jourLocal());
+    } catch (_) { return vide; }
+  }
+
   // L'élève est passé aussi : SPLAT! compte sur SES mondes (lot « Qui voit
   // quoi » : classe + ajouts, eleve.acces), les autres lecteurs l'ignorent.
   function elevesLus(cle, liste) {
-    const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : cle === "flash-anzan" ? lireAnzan : lireProgression;
+    const lire = cle === "splat" ? lireSplat : cle === "coffres" ? lireCoffres : cle === "flash-anzan" ? lireAnzan
+      : cle === "defi-calcul" ? lireCalcul : lireProgression;
     return (liste || []).map(eleve => Object.assign({}, eleve, {lu: lire(eleve.parcours, eleve)}));
   }
 
@@ -2148,6 +2321,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       // « Dernière séance » : le jour de la dernière séance.
       if (tri.colonne === "calculs") return (eleve.lu.calculs || 0) * 1000 + (eleve.lu.jours || 0);
       if (tri.colonne === "date" && appliAffichee === "flash-anzan") return eleve.lu.dernier || "";
+      // Défi calcul (lot 2b) : les compétences sues, puis les entrées ; « À
+      // revoir » : à voir en classe d'abord, puis les rouges ; les séances
+      // des 4 dernières semaines ; « Dernière activité » : le dernier jour
+      // de travail lu dans le parcours.
+      if (tri.colonne === "sues") return ((eleve.lu.ouvert && eleve.lu.ouvert.sues) || 0) * 1000 + ((eleve.lu.ouvert && eleve.lu.ouvert.entrees) || 0);
+      if (tri.colonne === "revoir") return (eleve.lu.aVoir || 0) * 1000 + (eleve.lu.rouges || 0);
+      if (tri.colonne === "seances") return ((eleve.lu.seances && eleve.lu.seances.quatreSemaines) || 0) * 1000 + ((eleve.lu.seances && eleve.lu.seances.total) || 0);
+      if (tri.colonne === "date" && appliAffichee === "defi-calcul") return eleve.lu.dernier || "";
       if (tri.colonne === "acquises") return eleve.lu.acquises.length;
       if (tri.colonne === "encours") return eleve.lu.enCours.ordre;
       if (tri.colonne === "semaine") return eleve.lu.ordreSemaines;
@@ -3239,6 +3420,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (appliAffichee === "coffres") { dessinerTableauCoffres(corps, ecriture, lignes); fin(); return; }
     // Lot 4b : l'onglet Anzan et son compte.
     if (appliAffichee === "flash-anzan") { dessinerTableauAnzan(corps, ecriture, lignes); fin(); return; }
+    // Lot 2b de Défi calcul : son onglet, ses cartes.
+    if (appliAffichee === "defi-calcul") { dessinerTableauCalcul(corps, ecriture, lignes); fin(); return; }
 
     lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
@@ -3548,6 +3731,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     $("fe-anzan").hidden = !anzan;
     $("fe-parcours").hidden = !avecParcours;
     $("pa-imprimer").hidden = true;
+    // Défi calcul (lot 2b) : « Imprimer sa fiche », quand il y a quelque
+    // chose à imprimer.
+    $("dc-imprimer").hidden = !(appliAffichee === "defi-calcul" && CALCUL && CALCUL_CORE && eleve.lu && eleve.lu.commence);
     // Le tableau redessiné (un prénom changé, un autre élève enregistré)
     // redessine la fenêtre : le parcours déjà montré reste, sans nouveau
     // billet ni rechargement.
@@ -3562,6 +3748,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       fermerParcoursAnzan();
       if (appliAffichee === "splat") zone.append(contenuSplat(eleve));
       else if (appliAffichee === "coffres") zone.append(contenuCoffres(eleve));
+      else if (appliAffichee === "defi-calcul") zone.append(contenuCalcul(eleve));
       else if (appliAffichee === "flash-anzan") zone.append(paragrapheVide("Le moteur d’Anzan n’a pas pu être chargé."));
       else montrerParcours(eleve, zone);
     }
@@ -3685,6 +3872,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       // seulement les élèves de la classe.
       $("objectif").hidden = true;
       $("fragiles").hidden = true;
+      $("dc-reprendre").hidden = true;
       const n = (eleves || []).length;
       $("resume-classe").textContent = n ? `${n} élève${n > 1 ? "s" : ""}` : "Aucun élève. Commence par en ajouter.";
       return;
@@ -3692,6 +3880,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (parLaClasse(appliAffichee)) return;
     $("objectif").hidden = true;
     $("fragiles").hidden = true;
+    $("dc-reprendre").hidden = true;
     // Lot 4b-bis (remarque de Codex) : ceux qui l'ont encore, et ceux qui ne
     // l'ont plus mais dont le travail reste — comptés à part.
     const n = lignes.filter(voitLOnglet).length;
@@ -4409,6 +4598,697 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return true;
   }
 
+  // ------------------------------------------------------- l'onglet Défi calcul
+  //
+  // Lot 2b de Défi calcul (31/10/2026, dessins du 05/10 adaptés aux boîtes
+  // par compétence, à la carte v2 et à la mise de côté du 31/10) : une ligne
+  // par élève — les compétences sues sur les 129 de la carte (et par palier,
+  // dessous), ce qui est à revoir (les rouges, et « à voir en classe » : la
+  // mise de côté au 3e échec de suite), les séances des 4 dernières semaines,
+  // le dernier jour de travail — et, en haut, « Notre classe, ensemble » et
+  // « À reprendre en classe ». La ligne ouvre la fenêtre de l'élève
+  // (contenuCalcul) : ses compétences palier par palier, ce qui coince chez
+  // lui et pourquoi, ses erreurs les plus fréquentes, sa semaine ; « Imprimer
+  // sa fiche » et « Imprimer la grille », en noir et blanc.
+  // Tout est lu par le moteur (lireCalcul → resumeProf) et posé par
+  // createElement et textContent : rien de ce que renvoie le serveur ne
+  // devient du HTML, et aucun code d'élève n'est écrit ici. Aucun calcul
+  // d'élève n'est enregistré : l'exemple d'une erreur est REGÉNÉRÉ depuis la
+  // fiche du module (exempleErreur).
+
+  const ETATS_CALCUL = {gris: "à apprendre", route: "en route", su: "sue", revoir: "à revoir", classe: "à voir en classe"};
+  const SYMBOLES_CALCUL = {gris: "·", route: "○", su: "✓", revoir: "↻", classe: "✖"};
+  const APPLI_CALCUL = "https://mathsgo.re/outils/calcul_mental/defi_calcul_modules.html";
+
+  // « Compléments à 100 » : le nom court d'une compétence (le noyau), et le
+  // nom du module.
+  function nomCompetenceCalcul(id, niveau) {
+    const nom = CALCUL_CORE ? CALCUL_CORE.nomCompetence(id, niveau) : "";
+    return nom || `${nomModuleCalcul(id)} · niveau ${niveau}`;
+  }
+
+  function nomModuleCalcul(id) {
+    const fiche = CALCUL_CORE ? CALCUL_CORE.moduleDe(id) : null;
+    return fiche ? fiche.nom : id;
+  }
+
+  // « Les bases (CP · CE1 · CE2) », « Le CM1 », « Le CM2 », « Vers la 6e » :
+  // les classes ne sont écrites que là où le nom ne les dit pas.
+  function nomPalierCalcul(numero) {
+    const palier = CALCUL_CORE ? CALCUL_CORE.PALIERS.find(p => p.n === numero) : null;
+    if (!palier) return `Palier ${numero}`;
+    return palier.nom.includes(palier.classes) || numero === 4 ? palier.nom : `${palier.nom} (${palier.classes})`;
+  }
+
+  // Le nom d'une cause d'erreur du module (« retour oublié »), ou "".
+  function nomCauseCalcul(id, cause) {
+    const fiche = CALCUL_CORE ? CALCUL_CORE.moduleDe(id) : null;
+    const erreur = fiche && fiche.erreurs ? fiche.erreurs.find(e => e.c === cause) : null;
+    return erreur ? erreur.nom : "";
+  }
+
+  // Un calcul d'exemple pour une cause d'erreur, REGÉNÉRÉ depuis la fiche du
+  // module (jamais un calcul de l'élève : le serveur n'en garde aucun) : on
+  // tire des calculs du niveau, puis on cherche la réponse fausse que la
+  // cause reconnaît parmi des candidates tirées des nombres du calcul. Rend
+  // {texte, reponse}, ou null. Un niveau donné d'abord (celui qui coince).
+  const exemplesCalcul = new Map();
+  function exempleErreur(id, cause, niveau = 0) {
+    const cle = `${id}-${cause}-${niveau}`;
+    if (exemplesCalcul.has(cle)) return exemplesCalcul.get(cle);
+    let trouve = null;
+    const fiche = CALCUL_CORE ? CALCUL_CORE.moduleDe(id) : null;
+    if (fiche) {
+      const niveaux = fiche.niveaux.map(n => n.n);
+      const ordre = niveau && niveaux.includes(niveau) ? [niveau, ...niveaux.filter(n => n !== niveau)] : niveaux;
+      boucle: for (const n of ordre) for (let graine = 1; graine <= 6; graine += 1) for (let tour = 0; tour < 3; tour += 1) {
+        const calcul = CALCUL_CORE.genererUn(`${id}-${n}`, graine, {tour});
+        if (!calcul) continue;
+        for (const reponse of candidatsErreur(calcul)) {
+          const diagnostic = CALCUL_CORE.diagnostiquer(calcul, reponse);
+          if (diagnostic && diagnostic.c === cause) { trouve = {texte: calcul.texte, reponse: CALCUL_CORE.formaterNombre(reponse)}; break boucle; }
+        }
+      }
+    }
+    exemplesCalcul.set(cle, trouve);
+    return trouve;
+  }
+
+  function candidatsErreur(calcul) {
+    const valeurs = [calcul.reponse, ...Object.values(calcul.donnees || {}).filter(v => typeof v === "number")];
+    const trouves = new Set();
+    const ajouter = v => { if (typeof v === "number" && Number.isFinite(v) && v >= 0 && v !== calcul.reponse) trouves.add(Math.round(v * 1000) / 1000); };
+    valeurs.forEach(v => {
+      for (let k = -3; k <= 3; k += 1) ajouter(v * Math.pow(10, k));
+      [1, 2, 10, 20, 100, 1000].forEach(d => { ajouter(v + d); ajouter(v - d); });
+      ajouter(Math.trunc(v));
+    });
+    valeurs.forEach(a => valeurs.forEach(b => {
+      ajouter(a + b); ajouter(a - b); ajouter(b - a); ajouter(a * b);
+      if (b) ajouter(a / b);
+      ajouter(Math.trunc(a) * b + (a - Math.trunc(a)));
+    }));
+    return [...trouves];
+  }
+
+  // « ouvrir en classe » : ce niveau dans l'appli, en mode professeur (tous
+  // les menus, rien d'enregistré).
+  function lienOuvrirEnClasse(id, niveau) {
+    const lien = document.createElement("a");
+    lien.href = `${APPLI_CALCUL}?prof=1&module=${encodeURIComponent(id)}&niveau=${encodeURIComponent(String(niveau))}`;
+    lien.target = "_blank";
+    lien.rel = "noopener";
+    lien.textContent = "ouvrir en classe ↗";
+    lien.title = "Ce niveau dans Défi calcul, en mode professeur, dans un nouvel onglet";
+    return lien;
+  }
+
+  // La cause d'erreur la plus fréquente d'un module, chez un élève (ses
+  // compteurs) ou dans une liste d'élèves (la somme). {cause, n} ou null.
+  function causePrincipale(lus, id) {
+    const sommes = new Map();
+    lus.forEach(lu => (lu.causes || []).filter(c => c.module === id).forEach(c => sommes.set(c.cause, (sommes.get(c.cause) || 0) + c.n)));
+    let meilleure = null;
+    sommes.forEach((n, cause) => { if (!meilleure || n > meilleure.n || (n === meilleure.n && cause < meilleure.cause)) meilleure = {cause, n}; });
+    return meilleure;
+  }
+
+  // « ex. 61 + ? = 100 → 49 · chaque chiffre complété à 10 » — la ligne qui
+  // dit pourquoi, pour une compétence ; "" quand aucune cause n'est connue.
+  function ligneCause(lus, id, niveau) {
+    const cause = causePrincipale(lus, id);
+    if (!cause) return null;
+    const nom = nomCauseCalcul(id, cause.cause);
+    if (!nom) return null;
+    const exemple = exempleErreur(id, cause.cause, niveau);
+    const morceau = document.createElement("small");
+    if (exemple) {
+      morceau.append(document.createTextNode(`ex. ${exemple.texte.replace(/□/g, "?")} → `));
+      const faux = document.createElement("i");
+      faux.textContent = exemple.reponse;
+      morceau.append(faux, document.createTextNode(` · ${nom}`));
+    } else {
+      morceau.textContent = nom;
+    }
+    return morceau;
+  }
+
+  function dessinerTableauCalcul(corps, ecriture, lignes = eleves) {
+    $("fragiles").hidden = true;
+    const total = lignes.length && lignes[0].lu ? lignes[0].lu.total : 0;
+    lignes.forEach(eleve => {
+      const ligne = document.createElement("tr");
+      const cNom = celluleNomTexte(eleve);
+      const lu = eleve.lu || {};
+
+      // Sur les compétences OUVERTES (les modules construits : ce que l'appli
+      // propose aujourd'hui), pas sur les 129 de la carte : « 14 / 14 », c'est
+      // « elle sait tout ce qui existe ». L'élève, lui, voit sa place sur
+      // toute la carte (« 14 compétences sues sur 129 »).
+      const ouvert = lu.ouvert || {sues: 0, total: 0, paliers: []};
+      const cSues = document.createElement("td");
+      const compte = document.createElement("span");
+      compte.className = `pastille ${ouvert.sues ? "p-vert" : "p-gris"}`;
+      compte.textContent = lu.commence ? `${ouvert.sues} / ${ouvert.total}` : "—";
+      cSues.append(compte);
+      // Par palier, ceux où quelque chose est entré : « bases 6/7 · CM1 1/3 ».
+      const paliers = (ouvert.paliers || []).filter(p => p.entrees > 0);
+      if (paliers.length) {
+        const detail = document.createElement("span");
+        detail.className = "dc-paliers";
+        detail.textContent = paliers.map(p => `${nomCourtPalier(p.palier)} ${p.sues}/${p.total}`).join(" · ");
+        cSues.append(detail);
+      }
+
+      const cRevoir = document.createElement("td");
+      cRevoir.className = "dc-revoir";
+      if (!lu.commence) {
+        cRevoir.textContent = "—";
+        cRevoir.classList.add("sans");
+      } else if (!lu.rouges && !lu.aVoir) {
+        const rien = document.createElement("span");
+        rien.className = "pastille p-vert";
+        rien.textContent = "0";
+        cRevoir.append(rien);
+      } else {
+        if (lu.aVoir) {
+          const classe = document.createElement("span");
+          classe.className = "pastille p-rouge";
+          classe.textContent = `${lu.aVoir} à voir en classe`;
+          classe.title = (lu.revoir || []).filter(c => c.etat === "classe").map(c => nomCompetenceCalcul(c.module, c.niveau)).join(" · ");
+          cRevoir.append(classe);
+        }
+        if (lu.rouges) {
+          const rouge = document.createElement("span");
+          rouge.className = "pastille p-orange";
+          rouge.textContent = `${lu.rouges} à revoir`;
+          rouge.title = (lu.revoir || []).filter(c => c.etat === "revoir").map(c => nomCompetenceCalcul(c.module, c.niveau)).join(" · ");
+          cRevoir.append(rouge);
+        }
+      }
+
+      const cSeances = document.createElement("td");
+      const seances = lu.seances || {quatreSemaines: 0, semaine: 0};
+      if (!lu.commence) { cSeances.textContent = "—"; cSeances.className = "sans"; }
+      else {
+        const n = document.createElement("b");
+        n.textContent = String(seances.quatreSemaines);
+        cSeances.append(n);
+        if (seances.semaine) cSeances.append(document.createTextNode(` · ${seances.semaine} cette semaine`));
+        else if (seances.quatreSemaines) {
+          const alerte = document.createElement("span");
+          alerte.className = "alerte";
+          alerte.textContent = "rien cette semaine";
+          cSeances.append(alerte);
+        }
+      }
+
+      const cDate = document.createElement("td");
+      const quand = jourCourtCalcul(lu.dernier);
+      cDate.textContent = quand || "rien reçu";
+      if (!quand) cDate.className = "sans";
+
+      [cRevoir, cSeances].forEach(large);
+      ligne.append(cNom, cSues, cRevoir, cSeances, cDate);
+      finirLigne(ligne, eleve, cNom);
+      corps.appendChild(ligne);
+    });
+
+    dessinerObjectifCalcul();
+    dessinerReprendre();
+    $("dc-imprimer-grille").hidden = !parLaClasse("defi-calcul") && !eleves.some(e => e.lu && e.lu.commence) || !CALCUL;
+    // La ligne du haut dit aussi sur quoi on compte : les compétences que
+    // l'appli propose aujourd'hui, sur les 129 de la carte.
+    const ouvertes = lignes.length && lignes[0].lu && lignes[0].lu.ouvert ? lignes[0].lu.ouvert.total : 0;
+    $("resume-classe").textContent = resumeDeLaClasse(eleves, aDuTravail)
+      + (ouvertes && total ? ` · ${ouvertes} compétence${ouvertes > 1 ? "s" : ""} ouverte${ouvertes > 1 ? "s" : ""} dans l’appli, sur les ${total} de la carte` : "");
+    if (!CALCUL || !CALCUL_CORE) {
+      messager("message-appli",
+        "La progression ne peut pas être détaillée : les moteurs de Défi calcul (prof/defi_calcul_core.js et prof/defi_calcul_mon_parcours.js) n’ont pas pu être chargés — vérifie qu’ils sont bien déposés sur le serveur.",
+        "erreur");
+    }
+    dessinerPapier();
+  }
+
+  // « bases », « CM1 », « CM2 », « 6e » : le palier, en un mot, sous le compte.
+  function nomCourtPalier(numero) {
+    return ({1: "bases", 2: "CM1", 3: "CM2", 4: "vers la 6e"})[numero] || `palier ${numero}`;
+  }
+
+  // « ven. 27/11 » : le dernier jour de travail, une date du parcours.
+  function jourCourtCalcul(jour) {
+    if (!jour) return "";
+    const date = new Date(String(jour) + "T12:00:00Z");
+    if (isNaN(date)) return "";
+    return date.toLocaleDateString("fr-FR", {timeZone: "Indian/Reunion", weekday: "short", day: "2-digit", month: "2-digit"});
+  }
+
+  // « Notre classe, ensemble », version Défi calcul : les compétences sues de
+  // tout le monde (sur les 129 de la carte, comme chez l'élève), combien ont
+  // fini le palier 1, combien ont fait une séance cette semaine. Comme pour
+  // Défi tables : aucun nom, et CACHÉE tant qu'aucune compétence n'est sue
+  // dans la classe (une barre vide n'est pas un objectif).
+  function objectifCalcul() {
+    if (!CALCUL || !eleves.length) return null;
+    const lus = eleves.map(eleve => eleve.lu).filter(lu => lu && lu.lisible);
+    // Sur les compétences ouvertes (voir dessinerTableauCalcul).
+    const total = lus.length && lus[0].ouvert ? lus[0].ouvert.total : 0;
+    return {
+      fait: lus.reduce((somme, lu) => somme + (lu.ouvert ? lu.ouvert.sues : 0), 0),
+      total: eleves.length * total,
+      semaine: lus.filter(lu => lu.seances.semaine > 0).length,
+      seances: lus.reduce((somme, lu) => somme + lu.seances.semaine, 0)
+    };
+  }
+
+  function dessinerObjectifCalcul() {
+    const bloc = $("objectif");
+    const objectif = objectifCalcul();
+    const lignes = $("objectif-lignes");
+    lignes.textContent = "";
+    if (!objectif || !objectif.total || !objectif.fait) { bloc.hidden = true; return; }
+    const part = Math.max(0, Math.min(1, objectif.fait / objectif.total));
+    $("objectif-barre").style.width = `${Math.round(part * 100)}%`;
+    const pluriel = objectif.fait > 1 ? "s" : "";
+    $("objectif-compte").textContent = `Ensemble : ${objectif.fait} compétence${pluriel} sue${pluriel} sur ${objectif.total} ouvertes`;
+    const li = document.createElement("li");
+    const morceau = (texte, fort) => {
+      const span = document.createElement("span");
+      span.className = "insecable";
+      span.append(document.createTextNode(texte));
+      const b = document.createElement("b");
+      b.textContent = fort;
+      span.append(b);
+      return span;
+    };
+    li.append(morceau("Cette semaine : ", `${objectif.semaine} élève${objectif.semaine > 1 ? "s" : ""} sur ${eleves.length}`),
+      document.createTextNode(" · "), morceau("", `${objectif.seances} séance${objectif.seances > 1 ? "s" : ""}`));
+    lignes.appendChild(li);
+    bloc.hidden = false;
+  }
+
+  // « À reprendre en classe » : une ligne par compétence rouge ou mise de
+  // côté chez au moins deux élèves — ou « à voir en classe » chez un seul —,
+  // les plus partagées d'abord, 6 au plus ; le nombre d'élèves, la cause la
+  // plus fréquente du module chez eux et un exemple regénéré, « ouvrir en
+  // classe ». Cachée quand rien n'est à reprendre.
+  function reprendreEnClasse() {
+    if (!CALCUL || !CALCUL_CORE) return [];
+    const parCompetence = new Map();
+    eleves.forEach(eleve => {
+      const lu = eleve.lu;
+      if (!lu || !lu.lisible) return;
+      (lu.revoir || []).forEach(c => {
+        const cle = `${c.module}-${c.niveau}`;
+        const entree = parCompetence.get(cle) || {module: c.module, niveau: c.niveau, eleves: 0, classe: 0, lus: []};
+        entree.eleves += 1;
+        if (c.etat === "classe") entree.classe += 1;
+        entree.lus.push(lu);
+        parCompetence.set(cle, entree);
+      });
+    });
+    const ordre = CALCUL_CORE.carte().ordre;
+    return [...parCompetence.values()]
+      .filter(c => c.eleves >= 2 || c.classe >= 1)
+      .sort((p, q) => q.classe - p.classe || q.eleves - p.eleves || ordre.indexOf(`${p.module}-${p.niveau}`) - ordre.indexOf(`${q.module}-${q.niveau}`))
+      .slice(0, 6);
+  }
+
+  function dessinerReprendre() {
+    const bloc = $("dc-reprendre");
+    const liste = $("dc-reprendre-liste");
+    liste.textContent = "";
+    const lignes = reprendreEnClasse();
+    if (!lignes.length) { bloc.hidden = true; return; }
+    $("dc-reprendre-sous").textContent = "Les compétences qui coincent chez plusieurs élèves, ou mises de côté par l’appli · un exemple par cause, regénéré";
+    lignes.forEach(c => {
+      const li = document.createElement("li");
+      const quoi = document.createElement("span");
+      const b = document.createElement("b");
+      b.textContent = `${nomCompetenceCalcul(c.module, c.niveau)}`;
+      quoi.append(b);
+      const module = document.createElement("small");
+      module.textContent = nomModuleCalcul(c.module);
+      quoi.append(module);
+      const cause = ligneCause(c.lus, c.module, c.niveau);
+      if (cause) quoi.append(cause);
+      const nombre = document.createElement("span");
+      nombre.className = "dc-nombre";
+      nombre.append(document.createTextNode(`${c.eleves} élève${c.eleves > 1 ? "s" : ""}`));
+      if (c.classe) {
+        const petit = document.createElement("small");
+        petit.textContent = `${c.classe} à voir en classe`;
+        nombre.append(petit);
+      }
+      li.append(quoi, nombre, lienOuvrirEnClasse(c.module, c.niveau));
+      liste.append(li);
+    });
+    bloc.hidden = false;
+  }
+
+  // « mise de côté jusqu'à ven. 06/11, puis J'apprends » : ce que l'appli va
+  // faire d'une compétence à revoir.
+  function suiteCalcul(c) {
+    if (c.deCote) return `mise de côté jusqu’à ${jourCourtCalcul(c.echeance) || "bientôt"}, puis J’apprends et un entraînement`;
+    if (c.etat === "classe") return "revenue après sa mise de côté : J’apprends, puis un entraînement à sa prochaine séance";
+    const aujourdhui = CALCUL ? CALCUL.jourLocal() : "";
+    if (c.echeance && c.echeance > aujourdhui) return `ratée aujourd’hui · revient ${c.echeance === CALCUL.ajouterJours(aujourdhui, 1) ? "demain" : jourCourtCalcul(c.echeance)}${c.apprends ? ", J’apprends à refaire" : ""}`;
+    return `${c.apprends ? "J’apprends à refaire, puis " : ""}un entraînement avec l’aide à sa prochaine séance`;
+  }
+
+  // Défi calcul dans la fenêtre de l'élève : ses chiffres, ce qui coince chez
+  // lui (« à voir en classe », puis « à revoir »), ses compétences palier par
+  // palier (les modules construits ; les autres en une ligne), ses erreurs
+  // les plus fréquentes, sa semaine.
+  function contenuCalcul(eleve) {
+    const cellule = document.createElement("div");
+    const lu = eleve.lu || {};
+    if (!CALCUL || !CALCUL_CORE) { cellule.append(paragrapheVide("Les moteurs de Défi calcul n’ont pas pu être chargés.")); return cellule; }
+    if (!lu.lisible || !lu.commence) { cellule.append(paragrapheVide("Rien reçu pour l’instant.")); return cellule; }
+    const revoir = (lu.revoir || []).length;
+    const ouvert = lu.ouvert || {sues: 0, entrees: 0, total: 0, paliers: []};
+    cellule.append(ficheChiffres([
+      ["Compétences sues", `${ouvert.sues} / ${ouvert.total}`, `${ouvert.entrees - ouvert.sues} en route · ${ouvert.total} ouverte${ouvert.total > 1 ? "s" : ""} sur ${lu.total}`],
+      ["À revoir", String(revoir), lu.aVoir ? `dont ${lu.aVoir} à voir en classe` : ""],
+      ["Séances · 4 semaines", String(lu.seances.quatreSemaines), lu.seances.semaine ? `${lu.seances.semaine} cette semaine` : "aucune cette semaine"],
+      ["Dernière activité", jourCourtCalcul(lu.dernier) || "rien reçu"]
+    ]));
+
+    // Ce qui coince chez lui.
+    const aVoir = (lu.revoir || []).filter(c => c.etat === "classe");
+    const rouges = (lu.revoir || []).filter(c => c.etat === "revoir");
+    const blocAlerte = (titre, liste, classeCss) => {
+      if (!liste.length) return;
+      const bloc = document.createElement("div");
+      bloc.className = "dc-bloc";
+      const h3 = document.createElement("h3");
+      h3.textContent = titre;
+      bloc.append(h3);
+      const ul = document.createElement("ul");
+      ul.className = "dc-alerte";
+      liste.forEach(c => {
+        const li = document.createElement("li");
+        if (classeCss) li.className = classeCss;
+        const b = document.createElement("b");
+        b.textContent = nomCompetenceCalcul(c.module, c.niveau);
+        const module = document.createElement("small");
+        module.className = "dc-detail";
+        module.textContent = nomModuleCalcul(c.module);
+        li.append(b, document.createTextNode(" "), lienOuvrirEnClasse(c.module, c.niveau), module);
+        const detail = document.createElement("span");
+        detail.className = "dc-detail";
+        detail.textContent = suiteCalcul(c);
+        li.append(detail);
+        const cause = ligneCause([lu], c.module, c.niveau);
+        if (cause) { cause.className = "dc-detail"; li.append(cause); }
+        ul.append(li);
+      });
+      bloc.append(ul);
+      cellule.append(bloc);
+    };
+    blocAlerte("À voir en classe", aVoir, "");
+    blocAlerte("À revoir", rouges, "dc-revoir");
+
+    // Ses compétences, palier par palier.
+    const carte = CALCUL_CORE.carte();
+    [1, 2, 3, 4].forEach(numero => {
+      const modules = (lu.modules || []).filter(m => m.paliers.includes(numero));
+      if (!modules.length) return;
+      const compte = (ouvert.paliers || []).find(p => p.palier === numero) || {sues: 0, total: 0};
+      const bloc = document.createElement("div");
+      bloc.className = "dc-bloc";
+      const h3 = document.createElement("h3");
+      h3.append(document.createTextNode(`${nomPalierCalcul(numero)} `));
+      const petit = document.createElement("small");
+      petit.textContent = `· ${compte.sues} sue${compte.sues > 1 ? "s" : ""} sur ${compte.total}`;
+      h3.append(petit);
+      bloc.append(h3);
+      const construits = modules.filter(m => m.construit);
+      const autres = modules.filter(m => !m.construit);
+      // Dans l'ordre du parcours : le premier niveau du module dans ce palier.
+      const rang = m => { const i = m.paliers.indexOf(numero); return carte.ordre.indexOf(`${m.id}-${i + 1}`); };
+      construits.sort((p, q) => rang(p) - rang(q)).forEach(m => {
+        const ligne = document.createElement("div");
+        ligne.className = "dc-module";
+        const b = document.createElement("b");
+        b.textContent = nomModuleCalcul(m.id);
+        const puces = document.createElement("span");
+        puces.className = "dc-comps";
+        m.etats.forEach((etat, index) => {
+          if (m.paliers[index] !== numero) return;
+          const puce = document.createElement("span");
+          puce.className = `dc-comp ${etat}`;
+          puce.textContent = nomCompetenceCalcul(m.id, index + 1);
+          puce.title = ETATS_CALCUL[etat];
+          puces.append(puce);
+        });
+        ligne.append(b, puces);
+        bloc.append(ligne);
+      });
+      cellule.append(bloc);
+    });
+    // Ce qui n'est pas encore dans l'appli, en une ligne (le compte vient de
+    // la carte du noyau : rien n'est écrit ici).
+    const aVenir = (lu.modules || []).filter(m => !m.construit && m.paliers.some(Boolean));
+    if (aVenir.length) {
+      const note = document.createElement("p");
+      note.className = "dc-note";
+      const n = aVenir.reduce((somme, m) => somme + m.paliers.filter(Boolean).length, 0);
+      note.textContent = `Les ${aVenir.length} autres modules de la carte (${n} compétences) ne sont pas encore dans l’appli : ils arrivent avec les prochains lots.`;
+      cellule.append(note);
+    }
+    const legende = document.createElement("div");
+    legende.className = "dc-legende";
+    ["gris", "route", "su", "revoir", "classe"].forEach(etat => {
+      const morceau = document.createElement("span");
+      const puce = document.createElement("i");
+      puce.className = `dc-comp ${etat}`;
+      morceau.append(puce, document.createTextNode(ETATS_CALCUL[etat]));
+      legende.append(morceau);
+    });
+    cellule.append(legende);
+
+    // Ses erreurs les plus fréquentes (depuis le début : le serveur n'a pas
+    // de semaine), 4 au plus, avec un exemple regénéré.
+    const causes = (lu.causes || []).filter(c => nomCauseCalcul(c.module, c.cause)).slice(0, 4);
+    if (causes.length) {
+      const bloc = document.createElement("div");
+      bloc.className = "dc-bloc";
+      const h3 = document.createElement("h3");
+      h3.append(document.createTextNode("Ses erreurs les plus fréquentes "));
+      const petit = document.createElement("small");
+      petit.textContent = "· depuis le début";
+      h3.append(petit);
+      bloc.append(h3);
+      const ul = document.createElement("ul");
+      ul.className = "dc-causes";
+      causes.forEach(c => {
+        const li = document.createElement("li");
+        const b = document.createElement("b");
+        b.textContent = nomCauseCalcul(c.module, c.cause);
+        li.append(b, document.createTextNode(` × ${c.n} · ${nomModuleCalcul(c.module)}`));
+        const exemple = exempleErreur(c.module, c.cause);
+        if (exemple) {
+          const petit2 = document.createElement("small");
+          petit2.textContent = ` · ex. ${exemple.texte.replace(/□/g, "?")} → ${exemple.reponse}`;
+          li.append(petit2);
+        }
+        ul.append(li);
+      });
+      bloc.append(ul);
+      cellule.append(bloc);
+    }
+
+    // Sa semaine : les jours de classe, pleins quand il y a eu une séance.
+    const bloc = document.createElement("div");
+    bloc.className = "dc-bloc";
+    const h3 = document.createElement("h3");
+    h3.textContent = "Sa semaine";
+    bloc.append(h3);
+    const semaine = document.createElement("div");
+    semaine.className = "dc-semaine";
+    const jours = document.createElement("span");
+    jours.className = "dc-jours";
+    const lundi = CALCUL.lundiDe(CALCUL.jourLocal());
+    ["lun", "mar", "mer", "jeu", "ven"].forEach((nom, i) => {
+      const jour = CALCUL.ajouterJours(lundi, i);
+      const morceau = document.createElement("span");
+      const rond = document.createElement("i");
+      if (lu.seances.jours.includes(jour)) rond.className = "ok";
+      morceau.append(document.createTextNode(nom), rond);
+      jours.append(morceau);
+    });
+    semaine.append(jours);
+    const texte = document.createElement("span");
+    const n = lu.seances.semaine;
+    texte.textContent = `${n} séance${n > 1 ? "s" : ""} cette semaine · ${lu.seances.quatreSemaines} sur 4 semaines`;
+    semaine.append(texte);
+    bloc.append(semaine);
+    cellule.append(bloc);
+    return cellule;
+  }
+
+  // ----------------------------------------------- Défi calcul : les feuilles
+
+  // La fiche d'un élève, en noir et blanc : ses chiffres, ce qui coince, ses
+  // compétences palier par palier (symboles), ses erreurs fréquentes. Rien
+  // d'autre que ce que montre la fenêtre, aucun code.
+  function remplirFicheCalcul(eleve) {
+    const lu = eleve.lu || {};
+    const nom = nomAffiche(eleve) || "Élève sans prénom";
+    $("fd-titre").textContent = `${nom} — Défi calcul`;
+    const ouvert = lu.ouvert || {sues: 0, total: 0};
+    $("fd-sous").textContent = `${classe ? classe.libelle : ""} · ${jourLisible(CALCUL.jourLocal())} · ${ouvert.sues} compétence${ouvert.sues > 1 ? "s" : ""} sue${ouvert.sues > 1 ? "s" : ""} sur ${ouvert.total} ouverte${ouvert.total > 1 ? "s" : ""} · ${lu.seances.quatreSemaines} séance${lu.seances.quatreSemaines > 1 ? "s" : ""} sur 4 semaines`;
+    const corps = $("fd-corps");
+    corps.textContent = "";
+    const section = (titre) => { const h3 = document.createElement("h3"); h3.textContent = titre; corps.append(h3); };
+    const alertes = (lu.revoir || []);
+    if (alertes.length) {
+      section("À revoir");
+      const ul = document.createElement("ul");
+      alertes.forEach(c => {
+        const li = document.createElement("li");
+        const b = document.createElement("b");
+        b.textContent = `${SYMBOLES_CALCUL[c.etat]} ${nomCompetenceCalcul(c.module, c.niveau)} · ${nomModuleCalcul(c.module)}`;
+        li.append(b, document.createTextNode(` — ${c.etat === "classe" ? "à voir en classe · " : ""}${suiteCalcul(c)}`));
+        const cause = ligneCause([lu], c.module, c.niveau);
+        if (cause) { li.append(document.createTextNode(" — "), document.createTextNode(cause.textContent)); }
+        ul.append(li);
+      });
+      corps.append(ul);
+    }
+    section("Ses compétences");
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const tr = document.createElement("tr");
+    ["Palier", "Module", "Compétences"].forEach(t => { const th = document.createElement("th"); th.textContent = t; tr.append(th); });
+    thead.append(tr);
+    table.append(thead);
+    const tbody = document.createElement("tbody");
+    const carte = CALCUL_CORE.carte();
+    [1, 2, 3, 4].forEach(numero => {
+      const modules = (lu.modules || []).filter(m => m.construit && m.paliers.includes(numero));
+      const rang = m => { const i = m.paliers.indexOf(numero); return carte.ordre.indexOf(`${m.id}-${i + 1}`); };
+      modules.sort((p, q) => rang(p) - rang(q)).forEach((m, index) => {
+        const ligne = document.createElement("tr");
+        const tdPalier = document.createElement("td");
+        tdPalier.textContent = index === 0 ? nomPalierCalcul(numero) : "";
+        const tdModule = document.createElement("td");
+        tdModule.textContent = nomModuleCalcul(m.id);
+        const tdEtats = document.createElement("td");
+        tdEtats.className = "fd-etats";
+        tdEtats.textContent = m.etats.map((etat, i) => (m.paliers[i] === numero ? `${SYMBOLES_CALCUL[etat]} ${nomCompetenceCalcul(m.id, i + 1)}` : "")).filter(Boolean).join("   ");
+        ligne.append(tdPalier, tdModule, tdEtats);
+        tbody.append(ligne);
+      });
+    });
+    table.append(tbody);
+    corps.append(table);
+    const causes = (lu.causes || []).filter(c => nomCauseCalcul(c.module, c.cause)).slice(0, 4);
+    if (causes.length) {
+      section("Ses erreurs les plus fréquentes");
+      const ul = document.createElement("ul");
+      causes.forEach(c => {
+        const li = document.createElement("li");
+        const exemple = exempleErreur(c.module, c.cause);
+        li.textContent = `${nomCauseCalcul(c.module, c.cause)} × ${c.n} · ${nomModuleCalcul(c.module)}${exemple ? ` · ex. ${exemple.texte.replace(/□/g, "?")} → ${exemple.reponse}` : ""}`;
+        ul.append(li);
+      });
+      corps.append(ul);
+    }
+    const legende = document.createElement("p");
+    legende.className = "fd-legende";
+    legende.textContent = ["su", "route", "revoir", "classe", "gris"].map(etat => `${SYMBOLES_CALCUL[etat]} ${ETATS_CALCUL[etat]}`).join("   ·   ");
+    corps.append(legende);
+  }
+
+  // La grille de la classe : une ligne par élève, une colonne par module
+  // construit (✓ su, « 2/4 » compétences sues, ↻ une compétence à revoir, ✖
+  // une à voir en classe, · pas commencé), les compétences sues, les séances.
+  function remplirGrilleCalcul() {
+    $("gd-titre").textContent = `${classe ? classe.libelle : ""} — Défi calcul`;
+    const lignes = elevesDeLOnglet();
+    $("gd-sous").textContent = `${jourLisible(CALCUL.jourLocal())} · ${lignes.length} élève${lignes.length > 1 ? "s" : ""}`;
+    const corps = $("gd-corps");
+    corps.textContent = "";
+    const modules = CALCUL_CORE.carte().modules.filter(m => m.construit);
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const tr = document.createElement("tr");
+    const th0 = document.createElement("th");
+    th0.textContent = "Élève";
+    tr.append(th0);
+    modules.forEach(m => { const th = document.createElement("th"); th.className = "fd-mod"; th.textContent = nomModuleCalcul(m.id); tr.append(th); });
+    ["Sues", "Séances · 4 sem."].forEach(t => { const th = document.createElement("th"); th.className = "fd-mod"; th.textContent = t; tr.append(th); });
+    thead.append(tr);
+    table.append(thead);
+    const tbody = document.createElement("tbody");
+    lignes.forEach(eleve => {
+      const lu = eleve.lu || {};
+      const ligne = document.createElement("tr");
+      const tdNom = document.createElement("td");
+      tdNom.textContent = nomAffiche(eleve) || "sans prénom";
+      ligne.append(tdNom);
+      modules.forEach(m => {
+        const td = document.createElement("td");
+        td.className = "fd-mod";
+        const module = (lu.modules || []).find(x => x.id === m.id);
+        let texte = "·";
+        if (module && lu.commence) {
+          const sues = module.etats.filter(e => e === "su").length;
+          if (module.etats.includes("classe")) texte = "✖";
+          else if (module.etats.includes("revoir")) texte = "↻";
+          else if (sues === module.etats.length) texte = "✓";
+          else if (module.etats.some(e => e !== "gris")) texte = `${sues}/${module.etats.length}`;
+        }
+        td.textContent = texte;
+        ligne.append(td);
+      });
+      const tdSues = document.createElement("td");
+      tdSues.className = "fd-mod";
+      tdSues.textContent = lu.commence && lu.ouvert ? `${lu.ouvert.sues} / ${lu.ouvert.total}` : "—";
+      const tdSeances = document.createElement("td");
+      tdSeances.className = "fd-mod";
+      tdSeances.textContent = lu.commence ? String(lu.seances.quatreSemaines) : "—";
+      ligne.append(tdSues, tdSeances);
+      tbody.append(ligne);
+    });
+    table.append(tbody);
+    corps.append(table);
+    const legende = document.createElement("p");
+    legende.className = "fd-legende";
+    legende.textContent = "✓ module su (toutes ses compétences sues)   ·   2/4 compétences sues sur 4   ·   ↻ une compétence à revoir   ·   ✖ une compétence à voir en classe   ·   · pas commencé";
+    corps.append(legende);
+  }
+
+  // « Imprimer sa fiche » (fenêtre) et « Imprimer la grille » (onglet) : la
+  // feuille, seule, remplie le temps de l'impression puis vidée. Un collègue
+  // « voir seulement » peut imprimer : aucun code n'y figure.
+  function imprimerCalcul(quoi) {
+    if (!CALCUL || !CALCUL_CORE || !classe) return false;
+    const eleve = eleveDeLaFenetre();
+    if (quoi === "eleve" && (!eleve || !eleve.lu || !eleve.lu.commence)) return false;
+    quitterImpressions();
+    const numero = ++numeroImpression;
+    const classeCss = quoi === "eleve" ? "imprime-defi-calcul" : "imprime-defi-calcul-grille";
+    if (quoi === "eleve") remplirFicheCalcul(eleve);
+    else remplirGrilleCalcul();
+    document.body.classList.add(classeCss);
+    let fait = false;
+    const nettoyer = () => {
+      if (fait) return;
+      fait = true;
+      window.removeEventListener("afterprint", nettoyer);
+      if (numero !== numeroImpression) return;
+      document.body.classList.remove(classeCss);
+      ["fd-titre", "fd-sous", "fd-corps", "gd-titre", "gd-sous", "gd-corps"].forEach(id => { $(id).textContent = ""; });
+    };
+    window.addEventListener("afterprint", nettoyer);
+    setTimeout(nettoyer, 60000);
+    window.print();
+    return true;
+  }
+
   // ---------------------------------------------------------------- feuille imprimée
 
   // L'ORDRE DE LA FEUILLE IMPRIMÉE, calculé à UN SEUL endroit : les élèves qui
@@ -4554,11 +5434,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // autres et vider la feuille Anzan ; son nettoyage ne touche à rien si une
   // impression plus récente a commencé (numeroImpression). La déconnexion les
   // retire aussi (viderZones).
-  const MODES_IMPRESSION = ["imprime-recap", "imprime-bandelettes", "imprime-anzan"];
+  const MODES_IMPRESSION = ["imprime-recap", "imprime-bandelettes", "imprime-anzan", "imprime-defi-calcul", "imprime-defi-calcul-grille"];
   let numeroImpression = 0;
   function quitterImpressions() {
     MODES_IMPRESSION.forEach(mode => document.body.classList.remove(mode));
-    ["fa-titre", "fa-compte", "fa-corps", "fa-note"].forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
+    ["fa-titre", "fa-compte", "fa-corps", "fa-note", "fd-titre", "fd-sous", "fd-corps", "gd-titre", "gd-sous", "gd-corps"]
+      .forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
   }
 
   function imprimer(quoi, seul) {
@@ -5166,11 +6047,35 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return chargementAnzan;
   }
 
+  // Défi calcul (lot 2b) : ses deux moteurs, le noyau puis la progression,
+  // à la première ouverture de l'onglet. Rend le moteur de progression, ou
+  // null si l'un des deux manque.
+  function chargerMoteurCalcul() {
+    if (!CALCUL_CORE && window.MATHSGO_DEFI_CALCUL_CORE) CALCUL_CORE = window.MATHSGO_DEFI_CALCUL_CORE;
+    if (!CALCUL && window.MATHSGO_DEFI_CALCUL_MON_PARCOURS) CALCUL = window.MATHSGO_DEFI_CALCUL_MON_PARCOURS;
+    if (CALCUL && CALCUL_CORE) return Promise.resolve(CALCUL);
+    if (!chargementCalcul) {
+      const charger = (adresse, global) => new Promise(resolve => {
+        if (window[global]) { resolve(window[global]); return; }
+        const script = document.createElement("script");
+        script.src = adresse;
+        script.addEventListener("load", () => resolve(window[global] || null));
+        script.addEventListener("error", () => resolve(null));
+        document.head.appendChild(script);
+      });
+      chargementCalcul = charger(MOTEUR_CALCUL_CORE, "MATHSGO_DEFI_CALCUL_CORE")
+        .then(core => { CALCUL_CORE = core; return core ? charger(MOTEUR_CALCUL, "MATHSGO_DEFI_CALCUL_MON_PARCOURS") : null; })
+        .then(moteur => { CALCUL = moteur; if (!CALCUL || !CALCUL_CORE) chargementCalcul = null; return CALCUL && CALCUL_CORE ? CALCUL : null; });
+    }
+    return chargementCalcul;
+  }
+
   // Le moteur qu'il faut à une activité (Défi tables : déjà dans la page).
   function chargerMoteurDe(cle) {
     if (cle === "splat") return chargerMoteurSplat();
     if (cle === "coffres") return chargerMoteurCoffres();
     if (cle === "flash-anzan") return chargerMoteurAnzan();
+    if (cle === "defi-calcul") return chargerMoteurCalcul();
     return Promise.resolve(null);
   }
 
@@ -5185,14 +6090,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const splat = appliAffichee === "splat";
     const coffres = appliAffichee === "coffres";
     const anzan = appliAffichee === "flash-anzan";
-    $("entete-defi-tables").hidden = splat || coffres || anzan;
+    const calcul = appliAffichee === "defi-calcul";
+    $("entete-defi-tables").hidden = splat || coffres || anzan || calcul;
     $("entete-splat").hidden = !splat;
     $("entete-coffres").hidden = !coffres;
     $("entete-anzan").hidden = !anzan;
+    $("entete-defi-calcul").hidden = !calcul;
     $("note-coffres").hidden = !coffres;
-    $("bloc-imprimer").hidden = splat || coffres || anzan;
-    if (splat || coffres || anzan) $("fragiles").hidden = true;
+    $("bloc-imprimer").hidden = splat || coffres || anzan || calcul;
+    if (splat || coffres || anzan || calcul) $("fragiles").hidden = true;
     if (coffres || anzan) $("objectif").hidden = true;
+    // Défi calcul (lot 2b) : sa carte « À reprendre en classe » et son bouton
+    // « Imprimer la grille » n'existent que dans son onglet.
+    if (!calcul) { $("dc-reprendre").hidden = true; $("dc-imprimer-grille").hidden = true; }
     poserTris();
     // Serveur pro, lot 5b : la ligne « qui voit » (ou la carte d'un onglet
     // grisé) en haut de l'onglet.
@@ -6880,6 +7790,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   });
   // Anzan : « Voir les séances précédentes » et « Imprimer ».
   $("pa-imprimer").addEventListener("click", imprimerParcoursAnzan);
+  // Défi calcul (lot 2b) : la fiche de l'élève (fenêtre), la grille (onglet).
+  $("dc-imprimer").addEventListener("click", () => imprimerCalcul("eleve"));
+  $("dc-imprimer-grille").addEventListener("click", () => imprimerCalcul("grille"));
   $("pa-plus").addEventListener("click", plusDeSeancesAnzan);
   // La recherche : chaque lettre redessine le tableau (la file de redessin :
   // jamais par-dessus un prénom en cours d'enregistrement).

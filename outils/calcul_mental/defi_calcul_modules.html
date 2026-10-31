@@ -2011,7 +2011,10 @@
 
       // Le fil de la séance : « Ma séance ①②③④ », les étapes faites en vert,
       // celle qui se joue en bleu, et son nom.
-      function renderFilSeance(zone, {faites, total, enCours = true, nom = "", coupable = false}) {
+      // `prefixe` (lot 2b) : « Tu connais déjà ? » devant le nom du module du
+      // test — au téléphone, seul le nom reste (la pastille verte de la barre
+      // dit déjà « Tu connais déjà ? »), pour que le fil tienne sur une ligne.
+      function renderFilSeance(zone, {faites, total, enCours = true, nom = "", coupable = false, prefixe = ""}) {
         const titre = document.createElement("span");
         titre.textContent = "Ma séance";
         const liste = document.createElement("ol");
@@ -2023,7 +2026,14 @@
           liste.append(point);
         }
         const morceaux = [titre, liste];
-        if (nom) {
+        if (nom && prefixe) {
+          const fort = document.createElement("b");
+          const avant = document.createElement("span");
+          avant.className = "quoi";
+          avant.textContent = `${soude(prefixe)}\u00a0`;
+          fort.append(avant, document.createTextNode(soude(nom)));
+          morceaux.push(fort);
+        } else if (nom) {
           // « Je m'entraîne : Compléments à 100 » : sur un téléphone, seul le
           // début est écrit (le fil tient sur une ligne, la place va au calcul).
           const [debut, ...suite] = soude(nom).split("\u00a0: ");
@@ -2040,7 +2050,7 @@
         zone.replaceChildren(...morceaux);
         zone.hidden = false;
         zone.setAttribute("aria-label", enCours
-          ? `Ma séance, étape ${faites + 1} sur ${total}${nom ? ` : ${nom}` : ""}`
+          ? `Ma séance, étape ${faites + 1} sur ${total}${nom ? ` : ${prefixe ? `${prefixe} ` : ""}${nom}` : ""}`
           : `Ma séance, ${pluriel(faites, "étape")} sur ${total}`);
       }
 
@@ -2050,7 +2060,10 @@
         $("play").classList.toggle("en-seance", enSeance());
         if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); return; }
         const etape = state.seance.etape;
-        renderFilSeance(fil, {faites: etape.numero - 1, total: etape.total, nom: nomEtape(etape), coupable: Boolean(etape.niveau)});
+        const test = etape.type === "test";
+        renderFilSeance(fil, {faites: etape.numero - 1, total: etape.total,
+          nom: test ? CORE.moduleDe(etape.module).nom : nomEtape(etape), coupable: Boolean(etape.niveau),
+          prefixe: test ? "Tu connais déjà ?" : ""});
       }
 
       // Sur un bilan : le fil avec l'étape qui vient d'être faite.

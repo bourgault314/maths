@@ -172,16 +172,37 @@ const CATALOGUE_APPLIS = [
     // Le jour où l'une d'elles s'ouvre, elle reçoit son adresse, ses clés
     // acceptées et son compteur, passe à « disponible », et c'est alors la
     // liste de la classe qui décide qui la voit.
+    // Défi calcul (lot 2b, 31/10/2026) : le serveur apprend l'appli. Une ligne
+    // par élève, version 2 (lot 3) :
+    //   { version, epoque, prenom, modules: { A2: { vu, ok, b, e, a, f, x, t,
+    //     c: { "2": 1 } } }, seance: { jour, etape, n, p }, seances, jours }
+    // — des entiers (boîtes, compteurs, le plan de la séance), des dates et
+    // des listes de dates, null. Les clés de « modules » sont les 74 codes de
+    // la carte v2 (defi_calcul_mon_parcours.js, NIVEAUX ; un test les compare),
+    // les clés de « c » les numéros de cause (1 à 12). Aucun mot : le format n'a
+    // pas de texte. Le prénom part vide et le serveur le retire. Aucun calcul
+    // en clair, aucune réponse : l'exemple d'une erreur se regénère depuis la
+    // fiche du module. Les bornes de chaque champ (x de 0 à 3, b de 0 à 5…)
+    // sont celles du moteur, qui renormalise tout ce qu'il relit.
+    // Pire cas (74 modules, toutes les compétences entrées, 8 causes) :
+    // 1 639 clés, 21 207 octets (bornes du serveur : 2 000 / 40 000).
+    // Garde-fou : tests/parcours-reference-defi-calcul.json, généré par
+    // scripts/generer-parcours-reference-defi-calcul.mjs --ecrire.
     'defi-calcul' => [
         'nom' => 'Défi calcul',
         'description' => 'Tout le calcul mental du collège.',
-        'url' => null,
+        'url' => 'https://mathsgo.re/outils/calcul_mental/defi_calcul_modules.html',
         'ancre' => null,
-        'disponible' => false,
-        'cles' => [],
+        'disponible' => true,
+        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'c',
+            'seance', 'jour', 'etape', 'n', 'p', 'seances', 'jours'],
         'mots' => [],
-        'motifs' => [],
-        'compteur' => null,
+        'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
+        // « Revenir à… » nomme une version par ce compte : les séances finies
+        // (une liste de dates, 60 au plus).
+        'compteur' => 'seances',
+        // Pas de réglage de classe : ouvert ou non, c'est tout. Le module mis en
+        // avant par le professeur viendra plus tard (décision du 05/10/2026).
     ],
     'automatismes' => [
         'nom' => 'Automatismes',

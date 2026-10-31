@@ -482,7 +482,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis le lot 7 « la séance en direct, Infos et KaTeX 0.18.2 » (31/10/2026) :
   // direct.php, infos.php, prof/direct.php et KaTeX (vendor/katex-0.18.2, même
   // nombre de fichiers) changent, 63 au manifeste (avant : serveur-pro-entree-mon-espace).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-direct-infos-katex$/m);
+  // Puis Défi calcul, lot 2b (31/10/2026) : lib/applis.php, api/parcours.php,
+  // api/prof.php, index.php, prof/index.php, verifier.php et les deux moteurs
+  // prof/defi_calcul_core.js, prof/defi_calcul_mon_parcours.js, 65 au manifeste
+  // (avant : serveur-pro-direct-infos-katex).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-2b$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

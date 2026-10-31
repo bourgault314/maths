@@ -21,6 +21,8 @@ $versionMoteur = version_moteur('defi_tables_mon_parcours.js');
 $versionSplat = version_moteur('splat-parcours.js');
 $versionCoffres = version_moteur('coffres-parcours.js');
 $versionAnzan = version_moteur('flash_anzan_parcours.js');
+$versionCalculCore = version_moteur('defi_calcul_core.js');
+$versionCalcul = version_moteur('defi_calcul_mon_parcours.js');
 // Serveur pro (31/10/2026) : la charte commune, chargée AVANT le style de la
 // page, avec son empreinte dans l'adresse (comme prof/index.php).
 $charte = __DIR__ . '/suivi.css';
@@ -611,6 +613,28 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         if (resume.vide) return null;
         return {lignes: [{texte: resume.texte, bonus: ""}]};
       }
+    },
+    // Défi calcul (lot 2b, 31/10/2026, planche validée par Gwenaël) : une
+    // jauge et « 6 compétences sues sur 129 » — le compte de l'accueil de
+    // l'appli (la carte, par le noyau). Rien tant qu'aucune compétence n'est
+    // sue (une barre vide ressemble à un reproche : même règle que Défi
+    // tables). Deux moteurs : le noyau d'abord (la carte), puis la
+    // progression (resumeProf), le même fichier que la page du professeur.
+    "defi-calcul": {
+      avant: {url: "prof/defi_calcul_core.js?v=<?= htmlspecialchars($versionCalculCore, ENT_QUOTES) ?>", global: "MATHSGO_DEFI_CALCUL_CORE"},
+      url: "prof/defi_calcul_mon_parcours.js?v=<?= htmlspecialchars($versionCalcul, ENT_QUOTES) ?>",
+      global: "MATHSGO_DEFI_CALCUL_MON_PARCOURS",
+      lecteur: (P, brut) => {
+        const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
+        if (!CORE) return null;
+        const resume = P.resumeProf(brut, CORE.carte());
+        if (!resume.sues) return null;
+        return {
+          fait: resume.sues, total: resume.total,
+          compte: `${resume.sues} compétence${resume.sues > 1 ? "s" : ""} sue${resume.sues > 1 ? "s" : ""} sur ${resume.total}`,
+          bonus: ""
+        };
+      }
     }
   };
   const moteursEnCours = {};
@@ -679,17 +703,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // à habiller : 70 ko qu'un élève qui n'a rien commencé n'a aucune raison de
   // télécharger. C'est le même fichier que celui de la page du professeur,
   // gardé identique au dépôt par un test.
-  function chargerMoteur(cle) {
-    const jauge = JAUGES[cle];
-    if (window[jauge.global]) return Promise.resolve(window[jauge.global]);
-    if (moteursEnCours[cle]) return moteursEnCours[cle];
-    moteursEnCours[cle] = new Promise(resolve => {
+  // Lot 2b de Défi calcul : une activité peut demander un script AVANT son
+  // moteur (`avant` : le noyau, que le moteur lit) ; s'il manque, pas de
+  // jauge.
+  function chargerScript(url, global) {
+    if (window[global]) return Promise.resolve(window[global]);
+    return new Promise(resolve => {
       const script = document.createElement("script");
-      script.src = jauge.url;
-      script.addEventListener("load", () => resolve(window[jauge.global] || null));
+      script.src = url;
+      script.addEventListener("load", () => resolve(window[global] || null));
       script.addEventListener("error", () => resolve(null));
       document.head.appendChild(script);
     });
+  }
+
+  function chargerMoteur(cle) {
+    const jauge = JAUGES[cle];
+    if (window[jauge.global] && (!jauge.avant || window[jauge.avant.global])) return Promise.resolve(window[jauge.global]);
+    if (moteursEnCours[cle]) return moteursEnCours[cle];
+    moteursEnCours[cle] = (jauge.avant ? chargerScript(jauge.avant.url, jauge.avant.global) : Promise.resolve(true))
+      .then(prealable => (prealable ? chargerScript(jauge.url, jauge.global) : null));
     return moteursEnCours[cle];
   }
 

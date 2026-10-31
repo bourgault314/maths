@@ -65,9 +65,9 @@ test("« splat » remplace « splat-equations », à la même place du catalogue
 });
 
 test("l'API élève accepte « splat », et le professeur peut le proposer à une classe", () => {
-  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/,
     "sans « splat » ici, le premier envoi du site répondrait « 400 Application inconnue »");
-  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/,
     "« Ma classe » et « Activités de la classe » (lot 4) passent par cette liste");
 });
 
