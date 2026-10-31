@@ -36,7 +36,7 @@ test("premier écran : grand logo centré, pas d'en-tête ; l'espace de l'élèv
   assert.match(page, /#ecran-code \{ text-align: center;/);
   assert.match(page, /\n  dessinerCases\(\);\n  if \(oublierSiDemande\(\)\) \{/,
     "les cases sont dessinées dès l'ouverture : la 1re attend avant même qu'on touche");
-  const espace = page.slice(page.indexOf("  function afficherEspace("), page.indexOf("habillerJauges(donnees, code);"));
+  const espace = page.slice(page.indexOf("  function afficherEspace("), page.indexOf("\n  }\n", page.indexOf("  function afficherEspace(")));
   assert.match(espace, /\$\("ecran-espace"\)\.hidden = false;\s*document\.body\.classList\.remove\("sur-code"\);/,
     "une fois entré, l'élève retrouve l'en-tête (sa classe, « Se déconnecter »)");
 });

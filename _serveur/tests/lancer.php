@@ -1909,7 +1909,10 @@ verifier("les en-têtes de sécurité sortent sur chaque réponse de l'API, réu
 });
 
 verifier("l'espace élève, la page Infos et Ma classe envoient une politique de contenu à nonce, posé sur leur script", function () {
-    foreach (['/' => 1, '/prof/' => 1, '/infos.php' => 0] as $chemin => $scriptsEnLigne) {
+    // Serveur pro, lot 8 (31/10/2026) : l'espace élève a un second script en
+    // ligne, tout en haut de <head> (« avant-tout » : l'élève qui revient ne
+    // voit plus passer l'écran du code). Il porte le même nonce.
+    foreach (['/' => 2, '/prof/' => 1, '/infos.php' => 0] as $chemin => $scriptsEnLigne) {
         $r = page($chemin);
         egal(200, $r['code'], "$chemin");
         $csp = entete($r, 'Content-Security-Policy');

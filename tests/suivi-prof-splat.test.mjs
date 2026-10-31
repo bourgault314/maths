@@ -179,7 +179,8 @@ const classe8 = () => [
 
 const cellules = tr => tr.children;
 // Les colonnes de l'onglet SPLAT! (sans la colonne Code depuis le lot « Ma classe : élèves »).
-const C_ETAPES = 2, C_DATE = 3, C_VA = 4;
+// Lot 8 : le « ⋯ » a sa case avant la flèche.
+const C_ETAPES = 2, C_DATE = 3, C_GESTE = 4, C_VA = 5;
 const COULEUR = n => ({1: "#d9690c", 2: "#0b67b2", 3: "#be185d", 4: "#92400e", 5: "#08857f", 6: "#7b42b4"})[n];
 const pastilles = tr => tr.tous(n => n.tag === "svg");
 const etatPastille = svg => svg.className.replace("monde-p ", "");
@@ -188,7 +189,7 @@ test("l'onglet SPLAT! : six pastilles, les étapes sur 40, ✨ pour les Bonus ; 
   const {lignes} = ongletSplat(classe8());
   assert.equal(lignes.length, 4);
   // Lot « Ma classe : élèves » (18/10/2026) : plus de colonne Code, le prénom en texte.
-  lignes.forEach(tr => assert.equal(cellules(tr).length, 5, "Élève · Mondes · Étapes réussies · Dernière activité · flèche"));
+  lignes.forEach(tr => assert.equal(cellules(tr).length, 6, "Élève · Mondes · Étapes réussies · Dernière activité · « ⋯ » (lot 8) · flèche"));
   lignes.forEach(tr => {
     assert.deepEqual(cellules(tr)[0].children.map(n => `${n.tag}.${n.className}`), ["button.lien-eleve"], "le prénom est un bouton, pas un champ");
     assert.ok(!cellules(tr).some(c => aClasse(c, "code")), "aucune cellule de code");
@@ -332,7 +333,7 @@ test("sans moteur : l'onglet le dit, chaque ligne reste lisible, pas de carte", 
 test("en lecture seule : pas de code, pas de saisie, pas de « ⋯ » vide", () => {
   const {lignes} = ongletSplat(classe8().map(e => ({...e, code: null, restaurable: true})), {droit: "lecture"});
   lignes.forEach(tr => {
-    assert.equal(cellules(tr).length, 5, "pas de colonne Code");
+    assert.equal(cellules(tr).length, 6, "pas de colonne Code (la case du « ⋯ » reste, vide)");
     assert.equal(cellules(tr)[0].tous(n => n.tag === "input").length, 0, "pas de champ de saisie");
     assert.equal(tr.premier(n => n.tag === "details"), null, "lecture seule : pas de « ⋯ » (« Revenir à… » est en écriture)");
   });
@@ -391,7 +392,7 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
     "« Élèves » : caché tant que le droit n'est pas connu");
   const entete = page.slice(page.indexOf('<tr id="entete-splat" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-splat"')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Mondes (large)", "Étapes réussies:etapes", "Dernière activité:date", ""], "lot 5c : les mondes se cachent au téléphone");
+    ["Élève:prenom", "Mondes (large)", "Étapes réussies:etapes", "Dernière activité:date", "", " (fin)"], "lot 5c : les mondes se cachent au téléphone ; lot 8 : le « ⋯ » puis la flèche");
 });
 
 function choixAppli() {
@@ -459,16 +460,19 @@ test("chaque appli a toujours son onglet (lot 5b) : en clair si la classe l'a, g
   assert.deepEqual(poserAppliRejoue(["defi-tables"], "coffres").vus[1], [false, "true", "gris", ""]);
 });
 
-test("lot 4b, revu au lot 5b : une appli qu'un élève a EN PLUS est en clair avec leur nombre (« Anzan 1 ») ; l'onglet Anzan a son en-tête", () => {
+test("lot 4b, revu aux lots 5b et 8 : une appli qu'un élève a EN PLUS est en clair, SANS pastille (lot 8) ; le lecteur d'écran entend leur nombre ; l'onglet Anzan a son en-tête", () => {
   const rania = {id: 1, prenom: "Rania", acces: {applis: ["defi-tables", "flash-anzan", "splat"], reglages: {}}};
   const lucas = {id: 2, prenom: "Lucas", acces: {applis: ["defi-tables", "splat"], reglages: {}}};
   const sans = poserAppliRejoue(["defi-tables", "splat"], "defi-tables", "proprietaire", undefined, {}, "appli", [lucas]);
   assert.deepEqual(sans.vus.map(v => v[2]), ["clair", "gris", "gris", "clair"], "personne n'a Anzan : grisé");
   const avec = poserAppliRejoue(["defi-tables", "splat"], "flash-anzan", "proprietaire", undefined, {}, "appli", [lucas, rania]);
-  assert.deepEqual(avec.vus, [[false, "false", "clair", ""], [false, "false", "gris", ""], [false, "true", "clair", "1"], [false, "false", "clair", ""]],
-    "l'onglet Anzan, entre Coffres et SPLAT!, souligné, avec « 1 »");
+  // Lot 8 (retours du 31/10/2026) : plus de pastille « 1 » — la ligne de
+  // l'onglet dit qui voit l'appli (« ● Ouvert à quelques élèves · Rania »).
+  assert.deepEqual(avec.vus, [[false, "false", "clair", ""], [false, "false", "gris", ""], [false, "true", "clair", ""], [false, "false", "clair", ""]],
+    "l'onglet Anzan, entre Coffres et SPLAT!, souligné, en clair, sans pastille");
   assert.equal(avec.boutons[2].attributs["aria-label"], "Anzan, ouvert à 1 élève");
-  assert.equal(avec.boutons[2].premier(n => n.classList.contains("compte-plus")).title, "ouvert à 1 élève");
+  assert.equal(avec.boutons[2].premier(n => n.classList.contains("compte-plus")), null, "pas de pastille (lot 8)");
+  assert.doesNotMatch(page, /compte-plus/, "ni dans la page, ni dans son style");
   assert.equal(avec.$("entete-anzan").hidden, false);
   assert.equal(avec.$("entete-defi-tables").hidden, true);
   assert.equal(avec.$("entete-coffres").hidden, true);
@@ -477,9 +481,10 @@ test("lot 4b, revu au lot 5b : une appli qu'un élève a EN PLUS est en clair av
   assert.equal(avec.$("fragiles").hidden, true);
   // Deux élèves : « 2 », au pluriel.
   const deux = poserAppliRejoue(["defi-tables"], "defi-tables", "proprietaire", undefined, {}, "appli", [rania, {...lucas, acces: rania.acces}]);
-  assert.equal(deux.vus[2][3], "2");
+  assert.equal(deux.vus[2][3], "");
   assert.equal(deux.boutons[2].attributs["aria-label"], "Anzan, ouvert à 2 élèves");
-  assert.equal(deux.vus[3][3], "2", "SPLAT!, que la classe n'a pas, est ouvert à ces deux élèves");
+  assert.equal(deux.vus[3][2], "clair", "SPLAT!, que la classe n'a pas, est ouvert à ces deux élèves : en clair");
+  assert.equal(deux.boutons[3].attributs["aria-label"], "SPLAT!, ouvert à 2 élèves");
   // La classe l'a : pas de pastille, même si des élèves l'ont aussi.
   assert.equal(poserAppliRejoue(["defi-tables", "flash-anzan"], "defi-tables", "proprietaire", undefined, {}, "appli", [rania]).vus[2][3], "");
   // Sans « acces » (un serveur d'avant le lot 2 de Qui voit quoi) : la classe seule.
