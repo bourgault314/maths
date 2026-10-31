@@ -1633,9 +1633,16 @@
 
   // Un seul calcul d'un niveau (Mes calculs du jour en tirent un par
   // compétence), tiré au hasard dans le niveau — pas le plus simple.
-  function genererUn(cleNiveau, graine) {
+  // `tour` (un entier, le jour) choisit l'écriture à tour de rôle : d'un
+  // retour à l'autre, « 37 + ? = 100 », puis « ? + 37 = 100 », puis
+  // « 100 − 37 »… (31/10).
+  function genererUn(cleNiveau, graine, {tour = null} = {}) {
     const serie = genererSerie(cleNiveau, {graine, genre: "entraine", total: TOTAUX.P, ordonne: false});
-    return serie.length ? serie[0] : null;
+    if (!serie.length) return null;
+    if (!Number.isInteger(tour)) return serie[0];
+    const formes = [...new Set(serie.map(calcul => calcul.forme))].sort();
+    const voulue = formes[((tour % formes.length) + formes.length) % formes.length];
+    return serie.find(calcul => calcul.forme === voulue) || serie[0];
   }
 
   // L'outil du début de l'entraînement, et ce qui revient après une erreur
