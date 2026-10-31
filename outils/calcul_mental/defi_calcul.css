@@ -1047,3 +1047,114 @@ body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
 /* Le bilan du test : une marche qu'on n'a pas jouée. */
 .bilan-niveaux .pas i { background: #c5d9e6; color: #fff; }
 .bilan-niveaux .pas { color: #6b8192; }
+
+/* ---- En-tête commun des applis suivies (variante A, planches du
+   31/10/2026, AGENTS.md) — l'élève à code (même dessin que Défi tables) ----
+   Plus de barre au-dessus du cadre : la barre du haut (la même, avec ses
+   boutons, son bloc de suivi et sa garde) passe DANS le cadre blanc, en
+   premier (placerEnTete, body.en-tete-cadre). Sur l'accueil de l'appli :
+   la flèche ronde à gauche (vers Mon espace), le titre au centre
+   (« Calcul mental » puis « Défi calcul »), le plein écran rond à droite,
+   et sous le titre la ligne « ● Suivi · Rania · 405 · Se déconnecter ».
+   Sur les autres écrans (Mon parcours, une série, un résultat…), où
+   l'écran a déjà sa flèche et son titre : la ligne seule, centrée, avec
+   le plein écran à droite sur ordinateur — ce que portait la barre
+   d'avant, sans la barre. */
+.ec-titre { display: none; }
+body.en-tete-cadre .topbar { display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+  grid-template-areas: "g t d" "l l l"; align-items: center; gap: 0 12px; min-height: 0; margin: 0 0 8px; padding: 0; }
+body.en-tete-cadre .shell { padding-top: 10px; }
+/* Le haut du cadre BLANC, comme le reste (31/10/2026, soir, planche 16 :
+   « tout blanc » remplace le bleu très pâle de la planche 5), avec le
+   trait fin gris sous la ligne de suivi (le même que sous le bandeau
+   d'Anzan). Deux ombres intérieures : elles suivent l'arrondi du
+   cadre et passent sous son contenu. Leur hauteur, --haut-teinte, est
+   posée par teinterHaut() : le bas de la barre, plus 6 px. */
+body.en-tete-cadre .shell > .panel.haut-teinte { box-shadow: inset 0 var(--haut-teinte) 0 0 #fff,
+  inset 0 calc(var(--haut-teinte) + 1px) 0 0 #e3ebf0, 0 18px 55px rgba(26, 66, 100, .12); }
+body.en-tete-cadre.ecran-interne .topbar { grid-template-areas: "g l d"; margin-bottom: 10px; }
+body.en-tete-cadre #lien-retour { grid-area: g; justify-self: start; width: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+body.en-tete-cadre #lien-retour .catalogue-link-label { display: none; }
+body.en-tete-cadre .fullscreen-toggle { grid-area: d; justify-self: end; width: 44px; min-width: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+body.en-tete-cadre .fullscreen-toggle [data-fullscreen-label] { display: none; }
+body.en-tete-cadre .fullscreen-toggle-icon svg { width: 20px; height: 20px; }
+body.en-tete-cadre:not(.ecran-interne) .ec-titre { display: block; grid-area: t; min-width: 0; text-align: center; }
+.ec-titre .eyebrow { margin: 0 0 2px; font-size: .72rem; letter-spacing: .12em; }
+.ec-titre .ec-nom { margin: 0; color: var(--ink); font-size: 2rem; line-height: 1.1; font-weight: 900; }
+/* La ligne de suivi : les mêmes règles, les mêmes valeurs que dans les
+   cinq applis suivies (tests/en-tete-commun.test.mjs). Elle remplace
+   ici le bandeau pâle d'avant. */
+body.en-tete-cadre .suivi-repere { grid-area: l; display: block; flex: none; order: 0; box-sizing: border-box; min-width: 0; min-height: 0;
+  margin: 4px 0 0; padding: 0; border-radius: 0; background: none; color: #506b7d; font-weight: 500; font-size: .86rem; line-height: 1.35; text-align: center; }
+body.en-tete-cadre .suivi-repere[hidden] { display: none; }
+body.en-tete-cadre.ecran-interne .suivi-repere { margin: 0; }
+body.en-tete-cadre .suivi-repere .puce { display: inline-block; width: 8px; height: 8px; margin: 0 6px 0 0; border-radius: 50%; background: #147447; vertical-align: 1px; }
+body.en-tete-cadre .suivi-repere .repere-texte { display: inline; }
+body.en-tete-cadre .suivi-repere .morceau, body.en-tete-cadre .suivi-repere .sortie-bloc,
+body.en-tete-cadre .suivi-repere .repere-lien { display: inline; white-space: nowrap; font-size: inherit; }
+body.en-tete-cadre .suivi-repere .repere-prenom { font-weight: 700; color: #143451; }
+body.en-tete-cadre .suivi-repere .sortie { position: relative; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: none;
+  font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 2px; opacity: 1; cursor: pointer; }
+body.en-tete-cadre .suivi-repere .sortie::after { content: ""; position: absolute; left: -8px; right: -8px; top: -22px; height: 44px; }
+body.en-tete-cadre .suivi-repere .sortie:hover, body.en-tete-cadre .suivi-repere .sortie:focus-visible { color: #143451; }
+body.en-tete-cadre .suivi-repere .repere-lien a { color: inherit; text-underline-offset: 2px; }
+body.en-tete-cadre .suivi-repere.hors-ligne { background: none; color: #8a4c0a; }
+body.en-tete-cadre .suivi-repere.hors-ligne .puce { background: #d9822b; }
+body.en-tete-cadre .suivi-repere.detache { background: none; color: #3d4a5a; }
+body.en-tete-cadre .suivi-repere.detache .puce { display: none; }
+/* Pendant une série, la ligne reste en haut du cadre, sans rien changer
+   à la mise en page du jeu : la colonne n'a plus qu'une rangée. */
+body.en-tete-cadre.challenge-playing .shell { grid-template-rows: minmax(0, 1fr); }
+body.en-tete-cadre.challenge-playing .topbar { min-height: 0; padding: 0; margin-bottom: 4px; }
+/* La barre et le jeu s'empilent dans le cadre : le jeu prend la place qui
+   reste. Sans cela, le cadre débordait de la hauteur de la barre et le
+   navigateur le faisait défiler en donnant le focus à la case réponse :
+   la ligne de suivi était rognée en haut. */
+body.en-tete-cadre.challenge-playing .panel { display: flex; flex-direction: column; }
+body.en-tete-cadre.challenge-playing .panel > .topbar { flex: 0 0 auto; }
+body.en-tete-cadre.challenge-playing #play { flex: 1 1 auto; min-height: 0; height: auto; }
+/* Le titre de l'écran d'abord, la ligne dessous (31/10/2026) : la barre
+   est rangée juste sous le titre de l'écran ou sous le fil de la séance
+   (placerEnTete, body.ligne-sous-titre) ; le fil, centré, devient le titre
+   de l'écran de jeu. */
+body.en-tete-cadre header.topbar { flex: 0 0 auto; }
+body.en-tete-cadre.ligne-sous-titre .topbar,
+body.en-tete-cadre.ligne-sous-titre.challenge-playing .topbar { margin: 2px 0 12px; }
+body.en-tete-cadre.ligne-sous-titre #play .seance-fil.seance { justify-content: center; margin-bottom: 4px; }
+body.en-tete-cadre.ligne-sous-titre #result-fil { margin-bottom: 4px; }
+body.en-tete-cadre.ligne-sous-titre #result { margin-top: 8px; }
+/* La flèche toujours en haut à gauche (31/10/2026, soir) : pendant la
+   séance, « ← Accueil » monte sur la ligne du fil ; la ligne de suivi vient
+   dessous, puis le compteur. */
+body.en-tete-cadre.ligne-sous-titre.challenge-playing #play { position: relative; }
+body.en-tete-cadre.ligne-sous-titre.challenge-playing #fil-seance { min-height: 44px; padding: 0 112px; box-sizing: border-box;
+  flex-wrap: wrap; justify-content: center; row-gap: 2px; text-align: center; }
+/* « Ma séance » : les ronds numérotés le disent déjà, la place va au nom. */
+body.en-tete-cadre.ligne-sous-titre.challenge-playing #fil-seance > span:first-child { display: none; }
+body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: absolute; top: 0; left: 0; }
+/* Sur ordinateur, la barre du jeu n'est plus le repère de la flèche (elle
+   monte) : le fil de « J'apprends » reprend sa place dans la barre, entre le
+   compteur et « À ton rythme ». */
+@media (min-width: 621px) {
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #play .status { position: static; }
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #play .status .seance-fil { position: static; min-height: 0; }
+}
+@media (max-width: 620px) {
+  /* Au téléphone, les ronds à côté de la flèche, le nom de l'activité sur
+     toute la largeur juste dessous (il garde sa ligne entière). */
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #fil-seance { padding: 0 4px; flex-wrap: wrap; justify-content: center; row-gap: 2px; text-align: center; }
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #fil-seance > b { flex-basis: 100%; }
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { width: 44px; min-width: 44px; padding: 0; border-radius: 50%; }
+  body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu .game-menu-label { display: none; }
+}
+@media (max-width: 620px) {
+  body.en-tete-cadre.ligne-sous-titre #play .seance-fil.seance { justify-content: center; }
+}
+@media (max-width: 620px) {
+  body.en-tete-cadre .topbar { gap: 0 8px; padding: 0; }
+  body.en-tete-cadre:not(.ecran-interne) .topbar { margin-top: 2px; }
+  body.en-tete-cadre .ec-titre .ec-nom { font-size: 1.5rem; }
+  body.en-tete-cadre .suivi-repere { font-size: .8rem; }
+  body.en-tete-cadre.challenge-playing .topbar { padding: 0; margin-bottom: 2px; }
+  body.en-tete-cadre.challenge-playing .suivi-repere { margin: 0; padding: 0; font-size: .74rem; border-radius: 0; }
+}

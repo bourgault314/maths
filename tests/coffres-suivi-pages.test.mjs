@@ -76,30 +76,39 @@ test("l'en-tête du modèle commun : le lien, le bloc, la pastille ; le logo, «
   assert.match(PAGE, /<p id="suivi-repere" class="suivi-repere" hidden><\/p>/);
   assert.match(PAGE, /<span id="suivi-pastille-slot"><\/span>/);
   assert.match(PAGE, /html\.suivi-eleve \.topbar > \.brand,\s*html\.suivi-eleve \.topbar \.back-link\[data-origin-link\],\s*html\.suivi-eleve \.mode-switch-button,\s*html\.suivi-eleve \.mode-options \{ display: none; \}/);
-  assert.match(PAGE, /html\.suivi-eleve body:not\(\.ecran-jeu\) \.topbar-actions \{ display: none; \}/, "Plein écran et la pastille : sur l'écran de jeu seulement");
-  assert.match(PAGE, /html\.suivi-eleve body\.ecran-jeu \.suivi-repere \{ display: none; \}/, "le bloc : pas sur l'écran de jeu");
+  // En-tête commun (31/10/2026) : hors de l'accueil, la pastille à la place de la ligne ; au
+  // téléphone, le plein écran sur le jeu seulement.
+  assert.match(PAGE, /html\.suivi-eleve body:not\(\.ec-dans-carte\) \.topbar \.suivi-repere \{ display: none; \}/, "la ligne : sur l'accueil seulement (dans la carte)");
+  assert.match(PAGE, /html\.suivi-eleve body:not\(\.ecran-jeu\) \.topbar \.fullscreen-toggle \{ display: none; \}/, "au téléphone, Plein écran sur le jeu seulement");
+  assert.doesNotMatch(PAGE, /html\.suivi-eleve #suivi-pastille-slot \{ display: none; \}/, "la pastille sur le mémo et le jeu, à toutes les tailles");
   assert.match(PAGE, /#suivi-pastille-slot:empty \{ display: none; \}/, "sans pastille, aucun écart dans la barre du visiteur");
 });
 
-// Lot 2 « pieds des applis » (24/10/2026) : l'en-tête remis au dessin de Défi
-// tables — « ← Mon espace » avec son texte sur l'accueil de l'appli, le bloc au
-// milieu, « Plein écran » à droite ; dans l'appli, « ← Niveaux » en haut à
-// gauche du cadre blanc (mémo et jeu). Au téléphone, l'écran de jeu garde la
-// pastille. Le comportement est mesuré au navigateur dans la notice du lot.
-test("l'en-tête de Défi tables : « ← Mon espace » sur l'accueil, le bloc au milieu, Plein écran à droite, « ← Niveaux » dans le cadre", () => {
+// Lot 2 « pieds des applis » (24/10/2026) : « ← Mon espace » sur l'accueil de
+// l'appli ; dans l'appli, « ← Niveaux » en haut à gauche du cadre blanc (mémo et
+// jeu). En-tête commun (variante A, planches du 31/10/2026) : sur l'accueil, plus
+// de barre au-dessus — la flèche ronde, le titre « Calcul mental / Coffres
+// magiques », le plein écran rond et la ligne « ● Suivi · Léa · CM1 · Se
+// déconnecter » entrent DANS la carte (placerEnTete) ; le mémo et le jeu gardent
+// la pastille « ● Léa » et Plein écran. Mesuré au navigateur dans
+// tests/en-tete-commun.test.mjs.
+test("l'en-tête commun : sur l'accueil, la flèche, le titre, le plein écran et la ligne DANS la carte ; « ← Niveaux » dans le cadre ailleurs", () => {
   assert.match(PAGE, /<a class="retour-espace" id="lien-retour" href="https:\/\/suivi\.mathsgo\.re\/" aria-label="Retour à mon espace" hidden><svg[^>]*>[\s\S]*?<\/svg><span class="retour-espace-texte">Mon espace<\/span><\/a>/);
   assert.match(PAGE, /html\.suivi-eleve body\.accueil-appli \.retour-espace \{ display: inline-flex; \}/, "« ← Mon espace » : sur l'accueil de l'appli seulement");
-  assert.match(PAGE, /\.topbar \.suivi-repere \{ order: 2; flex: 1 1 auto; min-width: 0; margin: 0; \}/, "le bloc au milieu de la barre");
-  assert.match(PAGE, /html\.suivi-eleve \.topbar-actions \{ order: 3; flex: 0 0 auto; \}/, "Plein écran à droite");
+  assert.match(PAGE, /html\.suivi-eleve body\.ec-dans-carte \.topbar \{ display: none; \}/, "plus de barre au-dessus de la carte");
+  assert.match(PAGE, /html\.suivi-eleve body\.ec-dans-carte \.ec-haut \{ display: grid; grid-template-columns: minmax\(44px, 1fr\) auto minmax\(44px, 1fr\);\s*grid-template-areas: "g t d" "l l l";/);
+  assert.match(PAGE, /<div class="ec-haut"><div class="ec-titre"><p class="eyebrow">Calcul mental<\/p><p class="ec-nom">Coffres magiques<\/p><\/div><\/div>/);
+  assert.match(PAGE, /html\.suivi-eleve body\.ec-dans-carte \.mode-dialog-card #mode-title \{\s*position: absolute; width: 1px; height: 1px;/, "le titre de la carte reste lu, pas vu");
+  const placer = source("placerEnTete");
+  assert.match(placer, /const accueil = modeEleve\(\) && document\.body\.classList\.contains\("accueil-appli"\);/);
+  assert.match(placer, /enTete\.prepend\(lienRetour\)[\s\S]*\.after\(pleinEcran\)[\s\S]*enTete\.append\(repere\)/, "les MÊMES éléments, déplacés");
+  assert.match(placer, /barreHaut\.querySelector\("\.brand"\)\.after\(lienRetour\);[\s\S]*lienRetour\.after\(repere\);[\s\S]*actionsHaut\.append\(pleinEcran\);/, "et rendus à la barre ailleurs");
   // les deux boutons « ← Niveaux » : dans le cadre du jeu et dans la carte du mémo
   const boutons = PAGE.match(/<button class="retour-cadre" type="button" data-retour-choix aria-label="Retour au choix du niveau"><svg[^>]*>[\s\S]*?<\/svg><span class="retour-cadre-texte">Niveaux<\/span><\/button>/g) || [];
   assert.equal(boutons.length, 2);
   assert.match(PAGE, /<main class="solo-page">\s*<button class="retour-cadre"/);
   assert.match(PAGE, /<div class="dialog-card learn-card">\s*<button class="retour-cadre"/);
   assert.match(PAGE, /html\.suivi-eleve body\.retour-dans-cadre \.retour-cadre \{ display: inline-flex; \}/);
-  // au téléphone seulement : le bloc cède la place à la pastille sur le jeu
-  assert.match(PAGE, /@media \(max-width: 620px\) \{\s*html\.suivi-eleve body:not\(\.ecran-jeu\) \.topbar-actions \{ display: none; \}\s*html\.suivi-eleve body\.ecran-jeu \.suivi-repere \{ display: none; \}/);
-  assert.match(PAGE, /@media \(min-width: 621px\) \{\s*html\.suivi-eleve #suivi-pastille-slot \{ display: none; \}/);
   // qui est où : l'accueil (le choix, ou tout quand il n'y a rien à choisir), le cadre ailleurs
   const ecran = source("majEcran");
   assert.match(ecran, /classList\.toggle\("accueil-appli", eleve && \(!choixPossible \|\| surLeChoix\)\)/);
@@ -222,7 +231,7 @@ test("habillage : sans moteur, rien — la page joue comme avant", () => {
   assert.equal(o.fenetre.MathsGoCoffresSuivi.creer({}), null);
 });
 
-test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi par ton professeur / Léa / CM1 » avec « Se déconnecter », la pastille ; plus de pied (24/10/2026)", async () => {
+test("habillage : sans code, rien ne se voit ; sous un code, la ligne « Suivi · Léa · CM1 · Se déconnecter » (en-tête commun, 31/10/2026), la pastille ; plus de pied (24/10/2026)", async () => {
   const sans = fauxOnglet();
   const s = sans.fenetre.MathsGoCoffresSuivi.creer({});
   assert.equal(s.actif(), false);
@@ -244,7 +253,7 @@ test("habillage : sans code, rien ne se voit ; sous un code, le bloc « Suivi pa
   const b = avec.document.createElement("p");
   h.dessinerBloc(b);
   assert.equal(b.hidden, false);
-  assert.equal(b.texte.replace(/\s+/g, " ").replace("CM1·", "CM1 ·").trim(), "Suivi par ton professeur · Léa · CM1 · Se déconnecter");
+  assert.equal(b.texte.replace(/\s+/g, " ").trim(), "Suivi · Léa · CM1 · Se déconnecter", "« Suivi par ton professeur » devient « Suivi » (le titre de la pastille garde le texte entier)");
   const sortie = b.descendants().find(n => n.tagName === "BUTTON");
   assert.equal(sortie.textContent, "Se déconnecter");
   assert.match(h.pastilleHtml(), /class="suivi-pastille" title="Suivi par ton professeur · Léa · CM1"[^>]*><i aria-hidden="true"><\/i><span class="nom">Léa<\/span>/);
@@ -274,7 +283,11 @@ test("habillage : le style ne colore jamais du texte en clair sur fond clair, et
   assert.match(SOURCE_SUIVI, /\.suivi-pastille\{[^}]*background:#eef6f6;color:#0b5f5c;/);
   assert.match(SOURCE_SUIVI, /\.suivi-pastille\.hors-ligne\{background:#fdf0e3;color:#8a4c0a;/);
   assert.match(SOURCE_SUIVI, /\.suivi-pastille\.detache\{background:#eceff3;color:#3d4a5a;/);
-  assert.match(SOURCE_SUIVI, /\.suivi-repere\{[^}]*background:#eef6f6;color:#0b5f5c;/);
+  // La ligne de suivi (en-tête commun, 31/10/2026) : sans fond, grise sur le blanc du cadre (5,6:1) ;
+  // orange foncé hors ligne, gris foncé quand le code ne vaut plus rien.
+  assert.match(SOURCE_SUIVI, /\.suivi-repere\{[^}]*background:none;",\s*"color:#506b7d;/);
+  assert.match(SOURCE_SUIVI, /\.suivi-repere\.hors-ligne\{color:#8a4c0a\}/);
+  assert.match(SOURCE_SUIVI, /\.suivi-repere\.detache\{color:#3d4a5a\}/);
   assert.match(SOURCE_SUIVI, /html\.suivi-eleve \.mg-mention-slot\{display:none !important\}/);
   assert.match(SOURCE_SUIVI, /new RegExp\("\^mathsgo-coffres-\[a-z0-9-\]\+:\(\[0-9a-f\]\{" \+ P\.LONGUEUR_EMPREINTE \+ "\}\)\$"\)/, "le ménage des mémoires d'élève vise les clés de Coffres");
   assert.doesNotMatch(SOURCE_SUIVI.replace(/\/\/[^\n]*/g, ""), /MathsGoSplat/, "branché sur le moteur de Coffres, pas sur celui de SPLAT!");

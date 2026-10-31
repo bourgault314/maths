@@ -126,7 +126,7 @@ test("un billet d’entrée s’échange contre le code : l’élève est suivi,
   assert.equal(reseau.sousLeCode("ABCDEF").length, 0, "rien n’est envoyé sous le code de l’élève d’avant");
 
   assert.equal(appli.repere().hidden, false);
-  assert.match(appli.repere().texte, /Suivi par ton professeur · Léa · 405/, "le repère montre tout de suite qui c’est");
+  assert.match(appli.repere().texte, /^Suivi · Léa · 405 · Se déconnecter$/, "le repère montre tout de suite qui c’est");
   assert.ok(!appli.api.parcours.tables[7].acquise, "la case de Léa (ABCDEF) n’est pas celle de ce code");
   assert.equal(PARCOURS.charger(local, "ABCDEF").tables[7].acquise, "2026-08-29", "et elle n’a pas bougé");
   assert.ok(!local.cles().concat(session.cles()).some(k => k.includes(BILLET)), "le billet n’est rangé nulle part");

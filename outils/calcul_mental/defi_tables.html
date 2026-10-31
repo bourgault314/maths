@@ -2679,6 +2679,99 @@
     .parcours-prof .fiche-prof table { min-width: 640px; }
     .parcours-prof .fiche-prof tbody th { position: sticky; left: 0; background: #fff; }
     body.mesure-cadre #parcours-prof { display: none !important; }
+
+    /* ---- En-tête commun des applis suivies (variante A, planches du
+       31/10/2026, AGENTS.md) — l'élève à code, pas la vue du professeur ----
+       Plus de barre au-dessus du cadre : la barre du haut (la même, avec ses
+       boutons, son bloc de suivi et sa garde) passe DANS le cadre blanc, en
+       premier (placerEnTete, body.en-tete-cadre). Sur l'accueil de l'appli :
+       la flèche ronde à gauche (vers Mon espace), le titre au centre
+       (« Calcul mental » puis « Défi tables »), le plein écran rond à droite,
+       et sous le titre la ligne « ● Suivi · Rania · 405 · Se déconnecter ».
+       Sur les autres écrans (Mon parcours, une série, un résultat…), où
+       l'écran a déjà sa flèche et son titre : la ligne seule, centrée, avec
+       le plein écran à droite sur ordinateur — ce que portait la barre
+       d'avant, sans la barre. */
+    .ec-titre { display: none; }
+    body.en-tete-cadre .topbar { display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+      grid-template-areas: "g t d" "l l l"; align-items: center; gap: 0 12px; min-height: 0; margin: 0 0 8px; padding: 0; }
+    body.en-tete-cadre .shell { padding-top: 10px; }
+    /* Le haut du cadre BLANC, comme le reste (31/10/2026, soir, planche 16 :
+       « tout blanc » remplace le bleu très pâle de la planche 5), avec le
+       trait fin gris sous la ligne de suivi (le même que sous le bandeau
+       d'Anzan). Deux ombres intérieures : elles suivent l'arrondi du
+       cadre et passent sous son contenu. Leur hauteur, --haut-teinte, est
+       posée par teinterHaut() : le bas de la barre, plus 6 px. */
+    body.en-tete-cadre .shell > .panel.haut-teinte { box-shadow: inset 0 var(--haut-teinte) 0 0 #fff,
+      inset 0 calc(var(--haut-teinte) + 1px) 0 0 #e3ebf0, 0 18px 55px rgba(26, 66, 100, .12); }
+    body.en-tete-cadre.ecran-interne .topbar { grid-template-areas: "g l d"; margin-bottom: 10px; }
+    body.en-tete-cadre #lien-retour { grid-area: g; justify-self: start; width: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+    body.en-tete-cadre #lien-retour .catalogue-link-label { display: none; }
+    body.en-tete-cadre .fullscreen-toggle { grid-area: d; justify-self: end; width: 44px; min-width: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+    body.en-tete-cadre .fullscreen-toggle [data-fullscreen-label] { display: none; }
+    body.en-tete-cadre .fullscreen-toggle-icon svg { width: 20px; height: 20px; }
+    body.en-tete-cadre:not(.ecran-interne) .ec-titre { display: block; grid-area: t; min-width: 0; text-align: center; }
+    .ec-titre .eyebrow { margin: 0 0 2px; font-size: .72rem; letter-spacing: .12em; }
+    .ec-titre .ec-nom { margin: 0; color: var(--ink); font-size: 2rem; line-height: 1.1; font-weight: 900; }
+    /* La ligne de suivi : les mêmes règles, les mêmes valeurs que dans les
+       cinq applis suivies (tests/en-tete-commun.test.mjs). Elle remplace
+       ici le bandeau pâle d'avant (gardé pour la vue du professeur). */
+    body.en-tete-cadre .suivi-repere { grid-area: l; display: block; flex: none; order: 0; box-sizing: border-box; min-width: 0; min-height: 0;
+      margin: 4px 0 0; padding: 0; border-radius: 0; background: none; color: #506b7d; font-weight: 500; font-size: .86rem; line-height: 1.35; text-align: center; }
+    body.en-tete-cadre .suivi-repere[hidden] { display: none; }
+    body.en-tete-cadre.ecran-interne .suivi-repere { margin: 0; }
+    body.en-tete-cadre .suivi-repere .puce { display: inline-block; width: 8px; height: 8px; margin: 0 6px 0 0; border-radius: 50%; background: #147447; vertical-align: 1px; }
+    body.en-tete-cadre .suivi-repere .repere-texte { display: inline; }
+    body.en-tete-cadre .suivi-repere .morceau, body.en-tete-cadre .suivi-repere .sortie-bloc,
+    body.en-tete-cadre .suivi-repere .repere-lien { display: inline; white-space: nowrap; font-size: inherit; }
+    body.en-tete-cadre .suivi-repere .repere-prenom { font-weight: 700; color: #143451; }
+    body.en-tete-cadre .suivi-repere .sortie { position: relative; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: none;
+      font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 2px; opacity: 1; cursor: pointer; }
+    body.en-tete-cadre .suivi-repere .sortie::after { content: ""; position: absolute; left: -8px; right: -8px; top: -22px; height: 44px; }
+    body.en-tete-cadre .suivi-repere .sortie:hover, body.en-tete-cadre .suivi-repere .sortie:focus-visible { color: #143451; }
+    body.en-tete-cadre .suivi-repere .repere-lien a { color: inherit; text-underline-offset: 2px; }
+    body.en-tete-cadre .suivi-repere.hors-ligne { background: none; color: #8a4c0a; }
+    body.en-tete-cadre .suivi-repere.hors-ligne .puce { background: #d9822b; }
+    body.en-tete-cadre .suivi-repere.detache { background: none; color: #3d4a5a; }
+    body.en-tete-cadre .suivi-repere.detache .puce { display: none; }
+    /* Pendant une série, la ligne reste en haut du cadre, sans rien changer
+       à la mise en page du jeu : la colonne n'a plus qu'une rangée. */
+    body.en-tete-cadre.challenge-playing .shell { grid-template-rows: minmax(0, 1fr); }
+    body.en-tete-cadre.challenge-playing .topbar { min-height: 0; padding: 0; margin-bottom: 4px; }
+    /* La barre et le jeu s'empilent dans le cadre : le jeu prend la place qui
+       reste. Sans cela, le cadre débordait de la hauteur de la barre et le
+       navigateur le faisait défiler en donnant le focus à la case réponse :
+       la ligne de suivi était rognée en haut. */
+    body.en-tete-cadre.challenge-playing .panel { display: flex; flex-direction: column; }
+    body.en-tete-cadre.challenge-playing .panel > .topbar { flex: 0 0 auto; }
+    body.en-tete-cadre.challenge-playing #play { flex: 1 1 auto; min-height: 0; height: auto; }
+    /* Le titre de l'écran d'abord, la ligne dessous (31/10/2026) : la barre
+       est rangée juste sous le titre de l'écran ou sous le fil de la séance
+       (placerEnTete, body.ligne-sous-titre) ; le fil, centré, devient le
+       titre de l'écran de jeu. */
+    body.en-tete-cadre header.topbar { flex: 0 0 auto; }
+    body.en-tete-cadre.ligne-sous-titre .topbar,
+    body.en-tete-cadre.ligne-sous-titre.challenge-playing .topbar { margin: 2px 0 12px; }
+    body.en-tete-cadre.ligne-sous-titre #seance-fil { justify-content: center; margin-bottom: 4px; }
+    body.en-tete-cadre.ligne-sous-titre #seance-fil-resultat { margin-bottom: 4px; }
+    body.en-tete-cadre.ligne-sous-titre #result { margin-top: 8px; }
+    /* La flèche toujours en haut à gauche (31/10/2026, soir) : pendant la
+       séance, « ← Ma table » monte sur la ligne du fil, comme « ← Mon
+       parcours ⋯ » ; la ligne de suivi vient dessous, puis le compteur. */
+    body.en-tete-cadre.ligne-sous-titre.challenge-playing #play { position: relative; }
+    body.en-tete-cadre.ligne-sous-titre.challenge-playing #seance-fil { min-height: 44px; padding: 0 124px; box-sizing: border-box; }
+    body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: absolute; top: 0; left: 0; }
+    @media (max-width: 620px) {
+      body.en-tete-cadre .topbar { gap: 0 8px; padding: 0; }
+      body.en-tete-cadre:not(.ecran-interne) .topbar { margin-top: 2px; }
+      body.en-tete-cadre .ec-titre .ec-nom { font-size: 1.5rem; }
+      body.en-tete-cadre .suivi-repere { font-size: .8rem; }
+      body.en-tete-cadre.challenge-playing .topbar { padding: 0; margin-bottom: 2px; }
+      body.en-tete-cadre.challenge-playing .suivi-repere { margin: 0; padding: 0; font-size: .74rem; border-radius: 0; }
+      body.en-tete-cadre.ligne-sous-titre.challenge-playing #seance-fil { padding: 0 52px; }
+      body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { width: 44px; min-width: 44px; padding: 0; border-radius: 50%; }
+      body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu .game-menu-label { display: none; }
+    }
   </style>
 </head>
 <body class="avec-seance">
@@ -2691,10 +2784,15 @@
         <a id="lien-retour" class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="catalogue-link-label">Calcul mental</span></a>
         <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
       </div>
+      <!-- En-tête commun (31/10/2026) : le titre de l'appli, au centre de la
+           barre quand elle est DANS le cadre (élève à code, accueil). Caché
+           pour tous les autres. -->
+      <div class="ec-titre"><p class="eyebrow">Calcul mental</p><p class="ec-nom">Défi tables</p></div>
       <!-- Suivi de classe : le repère vit dans la barre du haut, donc sur TOUS
            les écrans — accueil, réglages, série, résultat, parcours. L'élève
            doit toujours savoir que son travail part chez son professeur, pas
-           seulement sur l'écran Mon parcours. -->
+           seulement sur l'écran Mon parcours. Pour l'élève à code, la barre
+           est dans le cadre (en-tête commun, 31/10/2026). -->
       <p id="suivi-repere" class="suivi-repere" hidden></p>
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
         <div class="suivi-garde-carte">
@@ -3454,6 +3552,74 @@
       // code — son chemin de retour est en haut (« ← Mon espace »), et
       // l'information sur la confidentialité est sur sa page Mon espace.
 
+      // En-tête commun (variante A, 31/10/2026) : pour l'élève à code — ou
+      // celui qui arrive de son espace avec un billet, le temps de l'échange —
+      // la barre du haut entre DANS le cadre blanc, en premier ; elle en
+      // ressort pour tous les autres (la vue du professeur garde sa barre
+      // fine au-dessus, le visiteur l'en-tête du site). C'est la MÊME barre :
+      // ses boutons, son bloc de suivi (« Se déconnecter » compris) et la
+      // garde « C'est toujours toi ? » ne sont ni recréés ni rebranchés.
+      //
+      // Le titre de l'écran d'abord, la ligne dessous, partout (31/10/2026,
+      // demande de Gwenaël) : sur un écran qui a son titre — « ← Mon parcours
+      // ⋯ », « ← Les records », la table qu'on lit, la fiche — ou le fil de la
+      // séance (les étapes ①②③④ et le nom de l'activité), la barre se range
+      // JUSTE DESSOUS. Sans titre (une série hors séance, son résultat, « Tu
+      // as choisi »), elle reste en haut du cadre, comme sur l'accueil.
+      const TETES_ECRAN = ["#seance-fil", "#seance-fil-resultat", "#parcours > .parcours-toolbar", "#records > .settings-toolbar",
+        "#records-nom > .settings-toolbar", "#lire > .settings-toolbar", "#fiche > .settings-toolbar"];
+      function teteEcran() {
+        if (!document.body.classList.contains("ecran-interne")) return null;
+        for (const selecteur of TETES_ECRAN) {
+          const tete = document.querySelector(selecteur);
+          if (tete && !tete.closest("[hidden]")) return tete;
+        }
+        return null;
+      }
+      function placerEnTete() {
+        const barre = document.querySelector("header.topbar");
+        const cadre = document.querySelector(".shell > .panel");
+        if (!barre || !cadre || !document.body) return;
+        const racineDoc = document.documentElement;
+        const attendu = Boolean(racineDoc && racineDoc.classList && racineDoc.classList.contains("entree-eleve"));
+        const dedans = !VUE_PROF && Boolean(suiviActif() || entreeRefusee || attendu);
+        document.body.classList.toggle("en-tete-cadre", dedans);
+        const tete = dedans && typeof cadre.contains === "function" ? teteEcran() : null;
+        document.body.classList.toggle("ligne-sous-titre", Boolean(tete));
+        if (tete) { if (tete.nextElementSibling !== barre) tete.after(barre); }
+        else if (dedans && cadre.firstElementChild !== barre) cadre.prepend(barre);
+        else if (!dedans && barre.parentNode !== cadre.parentNode) cadre.before(barre);
+        suivreHaut(cadre, barre);
+      }
+
+      // Le haut du cadre, blanc, et son trait fin gris (planche 16 du
+      // 31/10/2026) : sa hauteur suit la barre — l'accueil (titre et ligne), les autres écrans
+      // (la ligne seule), un écran qui change de taille. Rien sans la barre
+      // dans le cadre, rien si elle est cachée.
+      let observateurHaut = null;
+      // La barre est dans le cadre, directement ou rangée sous le titre d'un écran.
+      function dansLeCadre(cadre, barre) {
+        return typeof cadre.contains === "function" ? cadre.contains(barre) : barre.parentNode === cadre;
+      }
+      function teinterHaut(cadre, barre) {
+        const teinte = document.body.classList.contains("en-tete-cadre") && dansLeCadre(cadre, barre) && barre.offsetParent !== null;
+        cadre.classList.toggle("haut-teinte", teinte);
+        if (!teinte) { cadre.style.removeProperty("--haut-teinte"); return; }
+        // L'écart entre le haut du cadre et le bas de la barre, en pixels du
+        // cadre (la colonne peut être agrandie ou réduite par --echelle).
+        const c = cadre.getBoundingClientRect(), b = barre.getBoundingClientRect();
+        const echelle = cadre.offsetHeight ? c.height / cadre.offsetHeight : 1;
+        cadre.style.setProperty("--haut-teinte", Math.round((b.bottom - c.top) / (echelle || 1) + 6) + "px");
+      }
+      function suivreHaut(cadre, barre) {
+        if (!cadre.classList || !cadre.style || typeof cadre.style.removeProperty !== "function") return;
+        teinterHaut(cadre, barre);
+        if (observateurHaut || typeof ResizeObserver !== "function") return;
+        observateurHaut = new ResizeObserver(() => teinterHaut(cadre, barre));
+        observateurHaut.observe(cadre);
+        observateurHaut.observe(barre);
+      }
+
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
         const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
@@ -3464,6 +3630,7 @@
         // La vue du professeur (lot « Ma classe : le parcours de Léa ») a la
         // même barre fine que l'élève : son bandeau y tient seul.
         if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee || VUE_PROF));
+        placerEnTete();
         // Le logo suit la même règle que le lien du haut. C'était la dernière
         // porte qui faisait sortir un élève suivi de son espace : pour lui, le
         // logo ramène à son espace, pas à l'accueil du site. Pour tous les
@@ -3867,28 +4034,28 @@
         repere.classList.toggle("detache", sync.detache);
         repere.classList.toggle("hors-ligne", !sync.detache && suiviHorsLigne);
         let texte;
+        // En-tête commun (31/10/2026) : « Suivi par ton professeur » devient
+        // « Suivi » — la ligne est courte, le mot reste (l'élève sait que son
+        // travail remonte à son professeur).
         if (sync.detache) texte = "Ton code ne marche plus · demande le nouveau à ton professeur";
-        else if (erreurDefinitive) texte = "Suivi par ton professeur · impossible d’envoyer ce travail";
-        else if (suiviHorsLigne) texte = "Suivi par ton professeur · travail gardé ici, pas encore envoyé";
-        else texte = `Suivi par ton professeur${qui}${ou}`;
-        // Lot « Mon parcours » (point 6, dessin de Gwenaël) : « Suivi par ton
-        // professeur », le prénom, la classe, chacun dans son morceau — au
-        // téléphone, trois lignes centrées (le texte lu reste le même :
-        // « Suivi par ton professeur · Léa · 6e B »).
+        else if (erreurDefinitive) texte = "Suivi · impossible d’envoyer ce travail";
+        else if (suiviHorsLigne) texte = "Suivi · travail gardé ici, pas encore envoyé";
+        else texte = `Suivi${qui}${ou}`;
+        // « Suivi », le prénom, la classe, chacun dans son morceau insécable :
+        // la ligne ne se coupe qu'aux « · » (le texte lu reste
+        // « Suivi · Léa · 6e B »).
         const morceaux = document.createElement("span");
         morceaux.className = "repere-texte";
         if (!sync.detache && !erreurDefinitive && !suiviHorsLigne && (qui || ou)) {
           const suivi = document.createElement("span");
-          suivi.textContent = "Suivi par ton professeur";
+          suivi.className = "morceau";
+          suivi.textContent = "Suivi";
           morceaux.append(suivi);
           [["repere-prenom", qui], ["repere-classe", ou]].filter(([, valeur]) => valeur).forEach(([classe, valeur]) => {
             const ligne = document.createElement("span");
-            ligne.className = classe;
-            const separe = document.createElement("span");
-            separe.className = "repere-sep";
-            separe.textContent = " · ";
-            ligne.append(separe, document.createTextNode(valeur.replace(/^ · /, "")));
-            morceaux.append(ligne);
+            ligne.className = "morceau " + classe;
+            ligne.textContent = valeur.replace(/^ · /, "");
+            morceaux.append(document.createTextNode(" · "), ligne);
           });
         } else {
           morceaux.textContent = texte;
@@ -3914,7 +4081,7 @@
         // à la ligne, et un « · » resté seul en fin de ligne se lit « 405· ».
         const bloc = document.createElement("span");
         bloc.className = "sortie-bloc";
-        bloc.append(document.createTextNode("· "), sortie);
+        bloc.append(document.createTextNode(" · "), sortie);
         repere.append(bloc);
       }
 
@@ -3987,7 +4154,7 @@
         retour.textContent = "Mon espace";
         const bloc = document.createElement("span");
         bloc.className = "repere-lien";
-        bloc.append(document.createTextNode("· "), retour);
+        bloc.append(document.createTextNode(" · "), retour);
         repere.append(puce, document.createTextNode(texte), bloc);
       }
 
@@ -5854,6 +6021,9 @@
         document.body.classList.toggle("challenge-playing", name === "play" || name === "launch");
         // R4 bis : hors de l'accueil, le lien du site « ← Calcul mental » s'efface.
         document.body.classList.toggle("ecran-interne", name !== "intro");
+        // En-tête commun : la barre se range sous le titre du nouvel écran
+        // (ou revient en haut du cadre), avant la mesure de l'échelle.
+        if (typeof placerEnTete === "function") placerEnTete();
         if (name === "intro") syncControls();
         document.body.classList.toggle("settings-open", name === "intro" && Boolean(configuration.mode));
         window.scrollTo({top: 0, behavior: "auto"});
@@ -9927,7 +10097,7 @@
       function renderFilSeance(zone, {fini = false} = {}) {
         zone.replaceChildren();
         zone.hidden = !enSeance();
-        if (zone.hidden) return;
+        if (zone.hidden) { placerEnTete(); return; }
         const faites = seance.faites.length;
         const aVenir = PARCOURS.programmeDeSeance(parcours, seance, PARCOURS.jourLocal(), optionsSeance()).etapes;
         // Pendant une série, l'étape jouée est encore en tête de la file.
@@ -9952,6 +10122,8 @@
           zone.append(nom);
         }
         zone.setAttribute("aria-label", `Ma séance : étape ${Math.min(faites + 1, total)} sur ${total}${courante ? `, ${courante.nom}` : ""}`);
+        // Le fil est le titre de l'écran : la ligne de suivi vient dessous.
+        placerEnTete();
       }
 
       function effacerSuiteSeance() {

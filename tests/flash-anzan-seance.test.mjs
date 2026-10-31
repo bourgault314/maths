@@ -810,7 +810,7 @@ test("sous un code : le bloc de suivi, la flèche vers Mon espace, les réglages
   const p = ouvrir({mode: "flash", flash: {...FLASH, nombres: 12}}, {suivi: {code: "ABCDEF", serveur}});
   await p.souffler();
   assert.equal(p.$("suivi-repere").hidden, false, "le bloc de suivi est là");
-  assert.match(texte(p.$("suivi-repere")), /Suivi par ton professeur.*Rania.*405.*Se déconnecter/, "le modèle commun");
+  assert.equal(texte(p.$("suivi-repere")), "Suivi · Rania · 405 · Se déconnecter", "le modèle commun (en-tête commun, 31/10/2026 : « Suivi », sous le titre)");
   assert.equal(p.$("lien-retour").getAttribute("href"), "https://suivi.mathsgo.re/", "la flèche du cadre mène à Mon espace");
   assert.equal(p.$("lien-retour").getAttribute("aria-label"), "Retour à mon espace");
   assert.equal(p.$("ecran-reglages").querySelector("[data-mode=colonne]").getAttribute("aria-pressed"), "true", "le mode du compte");

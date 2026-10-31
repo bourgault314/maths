@@ -104,9 +104,13 @@ test("carte : le suivi démarre APRÈS le premier dessin, jamais quand ?apres= r
   assert.equal((f.match(/APRES_REDIRIGE=true;/g) || []).length, 3, "les trois départs aussitôt : ?apres= (Bonus, étape) et ?jouer= (la suite d’un film, 11/10/2026)");
   // la flèche et le logo mènent à l'espace sous un code (ou après un billet refusé), au site sinon
   assert.match(f, /const espace=!!\(SUIVI&&\(SUIVI\.actif\(\)\|\|SUIVI\.client\.entreeRefusee\)\);/);
-  // lot 6 : le bloc de suivi est DANS l'en-tête, à côté de la flèche, caché pour tous les autres
+  // en-tête commun (31/10/2026) : la ligne de suivi SOUS LE GRAND TITRE, cachée pour tous les
+  // autres ; dans la barre du haut, la flèche seule (plus de bloc pâle)
   const entete = f.slice(f.indexOf("<header>"), f.indexOf("</header>"));
-  assert.match(entete, /<a class="brand"[^\n]*\n\s*<!--[^\n]*-->\n\s*<p id="suivi-repere" class="suivi-repere" hidden><\/p>\n\s*<nav class="modeBar"/);
+  assert.doesNotMatch(entete, /suivi-repere/, "plus de bloc dans la barre du haut");
+  assert.match(entete, /<a class="brand"[^\n]*\n\s*<nav class="modeBar"/);
+  const titre = f.slice(f.indexOf('<div class="hero">'), f.indexOf('<div class="totalBar"'));
+  assert.match(titre, /<h1>L'univers <span class="splat">SPLAT!<\/span><\/h1>\s*<!--[\s\S]*?-->\s*<p id="suivi-repere" class="suivi-repere" hidden><\/p>\s*<p class="sub">/);
   assert.doesNotMatch(f, /<\/header>\n<p id="suivi-repere"/, "plus de bandeau sous l'en-tête");
   assert.doesNotMatch(f, /mention-confidentialite\.js/, "la carte ne charge pas la mention (pas de pied à remplacer)");
 });
@@ -140,7 +144,7 @@ test("habillage : sans code, rien ne se voit et rien ne part ; la case sans code
   assert.equal(o.document.getElementById("suivi-garde"), null, "pas de question de garde");
 });
 
-test("habillage : sous un code, la pastille « ● Léa » (étapes) et le bloc « Suivi par ton professeur / Léa / 405 » avec « Se déconnecter » dedans (carte, lot 6)", async () => {
+test("habillage : sous un code, la pastille « ● Léa » (étapes) et la ligne « Suivi · Léa · 405 · Se déconnecter » (carte, en-tête commun du 31/10/2026)", async () => {
   const reseau = fauxReseau();
   const o = fauxOnglet({codeOnglet: A, identite: LEA, fetch: reseau.fetch});
   const s = o.fenetre.MathsGoSplatSuivi.creer({});
@@ -151,11 +155,11 @@ test("habillage : sous un code, la pastille « ● Léa » (étapes) et le bloc 
   const bloc = o.document.createElement("p");
   s.dessinerBloc(bloc);
   assert.equal(bloc.hidden, false);
-  // le texte lu : « Suivi par ton professeur · Léa · 405 · Se déconnecter » ; au téléphone,
-  // trois lignes (prénom et classe chacun dans son morceau) et le bouton à droite
-  assert.equal(bloc.texte, "Suivi par ton professeur · Léa · 405· Se déconnecter");
+  // le texte lu : « Suivi · Léa · 405 · Se déconnecter » (« Suivi par ton professeur »
+  // raccourci ; la pastille garde le texte entier) ; chaque morceau insécable
+  assert.equal(bloc.texte, "Suivi · Léa · 405 · Se déconnecter");
   const morceaux = bloc.descendants().map(n => n.className).filter(Boolean);
-  assert.deepEqual(morceaux, ["puce", "repere-texte", "repere-prenom", "repere-sep", "repere-classe", "repere-sep", "sortie-bloc", "sortie"]);
+  assert.deepEqual(morceaux, ["puce", "repere-texte", "morceau", "morceau repere-prenom", "morceau repere-classe", "sortie-bloc", "sortie"]);
   assert.equal(bloc.descendants().filter(n => n.tagName === "A").length, 0, "plus de lien « Mon espace » en texte : la flèche y mène");
   const [sortie] = bloc.descendants().filter(n => n.tagName === "BUTTON");
   assert.equal(sortie.textContent, "Se déconnecter");
@@ -190,7 +194,7 @@ test("habillage : hors ligne, la pastille et le bloc passent à l'orange ; au re
   const bloc = o.document.createElement("p");
   s.dessinerBloc(bloc);
   assert.ok(bloc.classList.contains("hors-ligne"));
-  assert.equal(bloc.texte, "Suivi par ton professeur · travail gardé ici, pas encore envoyé· Se déconnecter");
+  assert.equal(bloc.texte, "Suivi · travail gardé ici, pas encore envoyé · Se déconnecter");
   // la pastille déjà posée par la page se met à jour sur place
   const posee = o.document.poserPastille("<span class=\"suivi-pastille\">…</span>");
   s.majPastilles();
@@ -216,7 +220,7 @@ test("habillage : un code qui ne vaut plus rien (404) — pastille et bloc gris,
   const bloc = o.document.createElement("p");
   s.dessinerBloc(bloc);
   assert.ok(bloc.classList.contains("detache"));
-  assert.equal(bloc.texte, "Ton code ne marche plus · demande le nouveau à ton professeur· Se déconnecter");
+  assert.equal(bloc.texte, "Ton code ne marche plus · demande le nouveau à ton professeur · Se déconnecter");
   const avant = o.envois().length;
   s.ecrire((P, p) => P.enregistrerSerie(p, "m2e4", {fait: true, etoiles: 6, cartes: 6, vues: 0}));
   await tic(20);
@@ -246,7 +250,7 @@ test("habillage : un billet — aucune étoile pendant l'échange, puis la case 
   const bloc = refuse.document.createElement("p");
   r.dessinerBloc(bloc);
   // le seul geste utile : repasser par l'espace (comme Défi tables)
-  assert.equal(bloc.texte, "Ce lien a expiré, repasse par ton espace· Mon espace");
+  assert.equal(bloc.texte, "Ce lien a expiré, repasse par ton espace · Mon espace");
   assert.equal(bloc.descendants().filter(n => n.tagName === "BUTTON").length, 0);
   assert.equal(bloc.descendants().find(n => n.tagName === "A").href, "https://suivi.mathsgo.re/");
 });

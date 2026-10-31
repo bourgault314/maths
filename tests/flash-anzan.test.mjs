@@ -257,9 +257,23 @@ test("4e relecture Codex (24/10) : « Envoyé à ton professeur » seulement si 
 // L'habillage du 30/10/2026 (planches validées : maquette « élève connecté »,
 // version bleue)
 // ---------------------------------------------------------------------------
-test("habillage : un bandeau turquoise pâle en haut du cadre, sur les réglages, la séance et Mon historique", () => {
+test("habillage : un bandeau en haut du cadre, sur les réglages, la séance et Mon historique — blanc, un trait fin gris dessous (Anzan adouci, 31/10/2026)", () => {
   const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
-  assert.match(style, /\.bandeau \{[^}]*background: #dff4f2;/);
+  assert.match(style, /\.bandeau \{[^}]*\n?[^}]*background: #fff; border-bottom: 1px solid #e3ebf0; \}/, "le haut du cadre blanc (planche 16 du 31/10/2026)");
+  // Anzan adouci (planche 4 du 31/10/2026, validée telle quelle) : plus de turquoise pâle
+  // nulle part dans les réglages ; cases et boutons blancs à bordure fine, signes en bleu,
+  // choix actif bleu très pâle bordé de bleu, interrupteur du son bleu, résumé sans fond.
+  for (const turquoise of ["#dff4f2", "#e2f5f4", "#93d9d5", "#c3e8e5", "#eefaf9", "#b9dcdc", "#c4e7e5", "#a9cfcd"]) {
+    assert.equal(style.includes(turquoise), false, `plus de ${turquoise}`);
+  }
+  assert.match(style, /\.onglet \{[^}]*border: 1px solid #dde7ec;[^}]*background: #f5f8fa;/, "l'onglet inactif gris très pâle");
+  assert.match(style, /\.pas \{[^}]*background: #fff; border: 1\.5px solid #d4e3ed; \}/);
+  assert.match(style, /\.pas button \{[^}]*border: 1\.5px solid #d4e3ed;[^}]*color: var\(--blue\);/, "− et + en bleu");
+  assert.match(style, /\.option \.sig \{ font-size: 1\.25rem; color: var\(--blue\); \}/, "les signes ± en bleu");
+  assert.match(style, /\.option\[aria-pressed="true"\] \{ background: #eef4fc; border-color: var\(--blue\); color: var\(--ink\); \}/);
+  assert.match(style, /\.bascule\[aria-checked="true"\] \.inter \{ background: var\(--blue\); \}/, "l'interrupteur du son bleu");
+  assert.match(style, /\.resume \{[^}]*\n?[^}]*background: none;/, "le résumé sans fond");
+  assert.match(style, /\.pas output \{[^}]*font-weight: 900;/, "les nombres restent gras");
   const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
   for (const ecran of ["ecran-reglages", "ecran-historique", "ecran-seance"]) {
     const debut = cadre.indexOf(`id="${ecran}"`);

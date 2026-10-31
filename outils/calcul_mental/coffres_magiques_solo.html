@@ -1679,15 +1679,52 @@
       .retour-espace-texte, .retour-cadre-texte { display: none; }
       .retour-cadre { width: 44px; padding: 0; }
     }
-    /* Plein écran à droite sur tous les écrans de l'ordinateur ; au téléphone, sur le jeu
-       seulement, avec la pastille à la place du bloc */
+    /* En-tête commun (variante A, 31/10/2026). Sur l'ACCUEIL de l'appli (le choix du
+       niveau, « Repartir à zéro clé ? », ou le mémo quand il n'y a rien à choisir), plus
+       de barre au-dessus : la flèche ronde, le titre et le plein écran entrent DANS la
+       carte, en haut, et la ligne « ● Suivi · Rania · 405 · Se déconnecter » sous le titre
+       (placerEnTete, body.ec-dans-carte). Ailleurs (le mémo, le jeu), la pastille
+       « ● Rania » et le plein écran, comme l'écran de jeu d'aujourd'hui au téléphone ;
+       « Se déconnecter » est à une flèche, sur le choix du niveau. Au téléphone, le plein
+       écran sur le jeu seulement. */
+    .ec-haut { display: none; }
+    html.suivi-eleve body.ec-dans-carte .topbar { display: none; }
+    html.suivi-eleve body.ec-dans-carte .ec-haut { display: grid; grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+      grid-template-areas: "g t d" "l l l"; align-items: center; gap: 0 12px; margin: 0 0 10px; text-align: center; }
+    .ec-haut .retour-espace { grid-area: g; justify-self: start; width: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+    .ec-haut .retour-espace-texte { display: none; }
+    .ec-haut .fullscreen-toggle { grid-area: d; justify-self: end; width: 44px; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; border-color: #d4e3ed; }
+    .ec-haut .fullscreen-toggle [data-fullscreen-label] { display: none; }
+    .ec-haut .ec-titre { grid-area: t; min-width: 0; }
+    .ec-haut .ec-titre .eyebrow { margin: 0 0 2px; letter-spacing: .12em; }
+    .ec-haut .ec-nom { margin: 0; color: #143e62; font-size: 2rem; line-height: 1.1; font-weight: 900; letter-spacing: -.02em; }
+    .ec-haut .suivi-repere { grid-area: l; }
+    /* le haut de la carte BLANC, avec le trait fin gris sous la ligne de suivi (planche 16 du
+       31/10/2026, « tout blanc », le même haut que les autres applis suivies) : deux
+       ombres intérieures sous le contenu ; --haut-teinte est posée par teinterHaut() */
+    html.suivi-eleve body.ec-dans-carte :is(#mode-dialog, #lesson, #confirm-zero) .dialog-card.haut-teinte { position: relative;
+      box-shadow: inset 0 var(--haut-teinte) 0 0 #fff, inset 0 calc(var(--haut-teinte) + 1px) 0 0 #e3ebf0, 0 16px 45px rgba(28, 69, 101, .12); }
+    /* le titre de la carte (🔐 « Choisis ton mode ») est dans l'en-tête : il reste lu, pas vu */
+    html.suivi-eleve body.ec-dans-carte .mode-dialog-card .mode-heading .dialog-icon { display: none; }
+    html.suivi-eleve body.ec-dans-carte .mode-dialog-card #mode-title {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    /* le mémo devenu accueil (rien à choisir) : sa première rangée est l'en-tête */
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .ec-haut { grid-column: 1 / -1; grid-row: 1; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .dialog-icon,
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > h2 { grid-row: 2; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .lesson-subline { grid-row: 3; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > p { grid-row: 4; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .operation-grid { grid-row: 5; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .reglages-changes { grid-row: 6; }
+    html.suivi-eleve body.ec-dans-carte #lesson .learn-card > .lesson-actions { grid-row: 7; }
+    html.suivi-eleve body.ec-dans-carte .learn-card { grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto; }
+    /* hors de l'accueil : la pastille à la place du bloc, à droite de la barre */
+    html.suivi-eleve body:not(.ec-dans-carte) .topbar .suivi-repere { display: none; }
+    html.suivi-eleve body:not(.ec-dans-carte) .topbar-actions { margin-left: auto; }
     @media (max-width: 620px) {
-      html.suivi-eleve body:not(.ecran-jeu) .topbar-actions { display: none; }
-      html.suivi-eleve body.ecran-jeu .suivi-repere { display: none; }
-      html.suivi-eleve body.ecran-jeu .topbar-actions { margin-left: auto; }
-    }
-    @media (min-width: 621px) {
-      html.suivi-eleve #suivi-pastille-slot { display: none; }
+      html.suivi-eleve body:not(.ecran-jeu) .topbar .fullscreen-toggle { display: none; }
+      .ec-haut .ec-nom { font-size: 1.35rem; }
+      html.suivi-eleve body.ec-dans-carte .ec-haut { gap: 0 8px; }
     }
     /* le mémo tient dans l'écran de l'ordinateur, sous la barre, comme celui du visiteur :
        le cours défile dedans, « J'ai compris, jouer » reste en vue */
@@ -1769,6 +1806,11 @@
       <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
     </div>
   </header>
+
+  <!-- En-tête commun (31/10/2026) : sur l'accueil de l'appli, placerEnTete() le pose en
+       haut de la carte et y range la flèche, le plein écran et la ligne de suivi de la
+       barre (les mêmes éléments, pas des copies). Caché pour tous les autres. -->
+  <div class="ec-haut"><div class="ec-titre"><p class="eyebrow">Calcul mental</p><p class="ec-nom">Coffres magiques</p></div></div>
 
   <main class="solo-page">
     <button class="retour-cadre" type="button" data-retour-choix aria-label="Retour au choix du niveau"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span class="retour-cadre-texte">Niveaux</span></button>
@@ -1995,7 +2037,7 @@
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
   <script src="../../assets/js/coffres-parcours.js?v=20261021-1"></script>
-  <script src="../../assets/js/coffres-suivi.js?v=20261024-1"></script>
+  <script src="../../assets/js/coffres-suivi.js?v=20261031-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2269,6 +2311,59 @@
         document.body.classList.toggle("accueil-appli", eleve && (!choixPossible || surLeChoix));
         document.body.classList.toggle("retour-dans-cadre", choixPossible && !surLeChoix);
         if (eleve) poserPastille();
+        placerEnTete();
+      }
+
+      // En-tête commun (variante A, 31/10/2026) : sur l'accueil de l'appli, la flèche
+      // (« ← Mon espace »), le plein écran et la ligne de suivi passent de la barre du
+      // haut à l'en-tête posé en haut de la carte affichée ; ailleurs, ils y reviennent,
+      // à leur place. Ce sont les MÊMES éléments : « Se déconnecter », la garde et le
+      // plein écran gardent leurs écouteurs.
+      // Le haut de la carte, blanc, et son trait fin gris (planche 16 du 31/10/2026) : sa hauteur suit
+      // l'en-tête (le bas de la ligne, plus 6 px), même quand la carte change de taille.
+      let observateurHaut = null;
+      let carteSuivie = null;
+      function teinterHaut(carte, enTete) {
+        carte.classList.add("haut-teinte");
+        carte.style.setProperty("--haut-teinte", Math.round(enTete.offsetTop + enTete.offsetHeight + 6) + "px");
+      }
+      function suivreHaut(carte, enTete) {
+        teinterHaut(carte, enTete);
+        if (typeof ResizeObserver !== "function") return;
+        if (!observateurHaut) observateurHaut = new ResizeObserver(() => { if (carteSuivie && carteSuivie.contains(enTete)) teinterHaut(carteSuivie, enTete); });
+        if (carteSuivie !== carte) {
+          if (carteSuivie) observateurHaut.unobserve(carteSuivie);
+          observateurHaut.observe(carte);
+          observateurHaut.observe(enTete);
+          carteSuivie = carte;
+        }
+      }
+
+      function placerEnTete() {
+        const enTete = document.querySelector(".ec-haut");
+        const barreHaut = document.querySelector(".topbar");
+        const actionsHaut = document.querySelector(".topbar-actions");
+        const pleinEcran = document.querySelector("[data-fullscreen-toggle]");
+        const lienRetour = document.getElementById("lien-retour");
+        const repere = document.getElementById("suivi-repere");
+        if (!enTete || !barreHaut || !actionsHaut || !pleinEcran || !repere) return;
+        const accueil = modeEleve() && document.body.classList.contains("accueil-appli");
+        const dialogue = ["#mode-dialog", "#confirm-zero", "#lesson"].map(id => document.querySelector(id)).find(d => d && !d.hidden);
+        const carte = accueil && dialogue ? dialogue.querySelector(".dialog-card") : null;
+        document.body.classList.toggle("ec-dans-carte", Boolean(carte));
+        document.querySelectorAll(".dialog-card.haut-teinte").forEach(c => { if (c !== carte) c.classList.remove("haut-teinte"); });
+        if (carte) {
+          if (enTete.parentNode !== carte || carte.firstElementChild !== enTete) carte.prepend(enTete);
+          if (lienRetour.parentNode !== enTete) enTete.prepend(lienRetour);
+          if (pleinEcran.parentNode !== enTete) enTete.querySelector(".ec-titre").after(pleinEcran);
+          if (repere.parentNode !== enTete) enTete.append(repere);
+          suivreHaut(carte, enTete);
+          return;
+        }
+        if (lienRetour.parentNode !== barreHaut) barreHaut.querySelector(".brand").after(lienRetour);
+        if (repere.parentNode !== barreHaut) lienRetour.after(repere);
+        if (pleinEcran.parentNode !== actionsHaut) actionsHaut.append(pleinEcran);
+        if (enTete.parentNode !== document.body) barreHaut.after(enTete);
       }
       [modeDialog, lesson, confirmZero].forEach(dialog => {
         new MutationObserver(majEcran).observe(dialog, { attributes: true, attributeFilter: ["hidden"] });

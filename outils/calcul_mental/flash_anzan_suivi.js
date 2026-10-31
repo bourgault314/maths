@@ -38,36 +38,34 @@
   const ID_STYLE = "suivi-anzan-style";
   const ID_GARDE = "suivi-garde";
 
-  // Le bloc de suivi, celui de Défi tables et de Coffres (lot « Mon parcours »,
-  // dessin de Gwenaël) : vert d'eau = suivi, orange = rien n'est encore parti, gris = le
-  // code ne vaut plus rien. Sur ordinateur, une ligne ; au téléphone (620 px et
-  // moins, le seuil de Défi tables), trois lignes centrées — « Suivi par ton
-  // professeur », le prénom, la classe — et « Se déconnecter » à droite, dans
-  // le bloc. Les états longs (hors ligne, code refusé) passent à la ligne.
+  // La ligne de suivi — l'EN-TÊTE COMMUN des applis suivies (variante A,
+  // planches du 31/10/2026, AGENTS.md) : sous le titre du cadre, une seule
+  // petite ligne centrée « ● Suivi · Rania · 405 · Se déconnecter ». Puce
+  // verte, prénom en gras couleur encre, « Se déconnecter » souligné gris ; sa
+  // zone de toucher fait 44 px de haut sans grossir la ligne. Orange quand rien
+  // n'est encore parti, grise (sans puce) quand le code ne vaut plus rien. La
+  // ligne ne se coupe qu'aux « · » : les états longs passent à la ligne entiers.
+  // Mêmes règles, mêmes valeurs dans les cinq applis (gardé par
+  // tests/en-tete-commun.test.mjs).
   const STYLE = [
-    ".suivi-repere{display:flex;align-items:center;justify-content:center;gap:4px 8px;flex-wrap:wrap;box-sizing:border-box;",
-    "min-height:40px;margin:0;padding:0 12px;border-radius:12px;background:#eef6f6;color:#0b5f5c;",
-    "font-weight:700;font-size:.9rem;line-height:1.25;text-align:center}",
+    ".suivi-repere{display:block;box-sizing:border-box;margin:4px 0 8px;padding:0;border-radius:0;background:none;",
+    "color:#506b7d;font-weight:500;font-size:.86rem;line-height:1.35;text-align:center}",
     ".suivi-repere[hidden]{display:none}",
-    ".suivi-repere .puce{width:9px;height:9px;border-radius:50%;background:#08aaa5;flex:0 0 auto}",
-    ".suivi-repere .sortie{border:0;background:none;margin:0;padding:0 2px;font:inherit;color:inherit;",
-    "text-decoration:underline;cursor:pointer;opacity:.85;min-height:40px}",
-    ".suivi-repere .sortie:hover,.suivi-repere .sortie:focus-visible{opacity:1}",
-    ".suivi-repere .repere-lien a{color:inherit}",
-    ".suivi-repere.hors-ligne{background:#fdf0e3;color:#8a4c0a}",
+    ".suivi-repere .puce{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:50%;background:#147447;vertical-align:1px}",
+    ".suivi-repere .morceau,.suivi-repere .sortie-bloc,.suivi-repere .repere-lien{white-space:nowrap}",
+    ".suivi-repere .repere-prenom{font-weight:700;color:#143451}",
+    ".suivi-repere .sortie{position:relative;margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;",
+    "text-decoration:underline;text-underline-offset:2px;cursor:pointer}",
+    // La zone de toucher de « Se déconnecter » : 44 px de haut, surtout AU-DESSUS du mot (le titre,
+    // ou le haut du cadre) — elle ne mord que de 5 px sur ce qui suit, un seul geste suffisant à déconnecter.
+    ".suivi-repere .sortie::after{content:\"\";position:absolute;left:-8px;right:-8px;top:-22px;height:44px}",
+    ".suivi-repere .sortie:hover,.suivi-repere .sortie:focus-visible{color:#143451}",
+    ".suivi-repere .repere-lien a{color:inherit;text-underline-offset:2px}",
+    ".suivi-repere.hors-ligne{color:#8a4c0a}",
     ".suivi-repere.hors-ligne .puce{background:#d9822b}",
-    ".suivi-repere.detache{background:#eceff3;color:#3d4a5a}",
+    ".suivi-repere.detache{color:#3d4a5a}",
     ".suivi-repere.detache .puce{display:none}",
-    "@media(max-width:620px){",
-    ".suivi-repere{flex-wrap:nowrap;gap:8px;min-height:44px;padding:5px 6px 5px 10px;font-size:.78rem;line-height:1.22;border-radius:10px}",
-    ".suivi-repere .repere-texte{flex:1 1 auto;min-width:0}",
-    ".suivi-repere .repere-texte>span{display:block}",
-    ".suivi-repere .repere-prenom{font-weight:900;color:#10294a}",
-    ".suivi-repere .repere-sep{display:none}",
-    ".suivi-repere .sortie-bloc{flex:0 0 auto;font-size:0}",
-    ".suivi-repere .repere-lien{flex:0 0 auto;white-space:nowrap}",
-    ".suivi-repere .sortie{min-height:36px;padding:0 11px;border:1px solid #b7d9d6;border-radius:999px;background:#fff;",
-    "font-size:.74rem;font-weight:900;text-decoration:none;opacity:1}}",
+    "@media(max-width:620px){.suivi-repere{font-size:.8rem}}",
     // La pastille de la séance : « ● Léa » au bout de la barre du haut.
     ".suivi-pastille{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:2px 9px;border-radius:999px;",
     "background:#eef6f6;color:#0b5f5c;font-weight:800;font-size:.8em;line-height:1.25;border:1px solid #cfe5e3;white-space:nowrap;flex:0 0 auto}",
@@ -198,20 +196,20 @@
       });
     }
 
-    // ------------------------------------------------- le bloc de l'accueil
-    // Dans l'en-tête, à côté de la flèche — le modèle commun, celui de
-    // Défi tables : « Suivi par ton professeur », le prénom,
-    // la classe, chacun dans son morceau (au téléphone, trois lignes ; le texte
-    // lu reste « Suivi par ton professeur · Léa · 405 »), puis « Se
-    // déconnecter », avec son « · » (un point resté seul en fin de ligne se lit
-    // mal). Orange hors ligne, gris si le code ne vaut plus rien. Un billet
-    // refusé le dit, avec le seul geste utile : repasser par l'espace.
+    // ------------------------------------------------- la ligne de l'accueil
+    // Sous le titre du cadre (en-tête commun, variante A, 31/10/2026) :
+    // « ● Suivi · Léa · 405 · Se déconnecter ». Le mot « Suivi » reste : l'élève
+    // sait que son travail remonte à son professeur. Les états reprennent les
+    // textes du moteur, « Suivi par ton professeur » raccourci en « Suivi »
+    // (le titre et l'étiquette de la pastille gardent le texte entier). Un
+    // billet refusé le dit, avec le seul geste utile : repasser par l'espace.
     const creerEl = (balise, classe, texte) => {
       const n = doc.createElement(balise);
       if (classe) n.className = classe;
       if (texte !== undefined) n.textContent = texte;
       return n;
     };
+    const court = texte => String(texte || "").replace(/^Suivi par ton professeur/, "Suivi");
 
     function dessinerBloc(el) {
       if (!el || !doc) return;
@@ -226,29 +224,28 @@
       puce.setAttribute("aria-hidden", "true");
       const texte = creerEl("span", "repere-texte");
       if (e.etat === "ok" && (e.prenom || e.classe)) {
-        texte.append(creerEl("span", "", client.TEXTES.suivi));
+        texte.append(creerEl("span", "morceau", "Suivi"));
         [["repere-prenom", e.prenom], ["repere-classe", e.classe]].filter(([, valeur]) => valeur).forEach(([classe, valeur]) => {
-          const ligne = creerEl("span", classe);
-          ligne.append(creerEl("span", "repere-sep", " · "), doc.createTextNode(valeur));
-          texte.append(ligne);
+          texte.append(doc.createTextNode(" · "), creerEl("span", "morceau " + classe, valeur));
         });
       } else {
-        texte.textContent = e.texte;
+        texte.textContent = court(e.texte);
       }
       el.append(puce, texte);
       if (e.etat === "refuse") {
         const espace = creerEl("a", "", client.TEXTES.espace);
         espace.href = ADRESSE_ESPACE;
         const lien = creerEl("span", "repere-lien");
-        lien.append(doc.createTextNode("· "), espace);
+        lien.append(doc.createTextNode(" · "), espace);
         el.append(lien);
         return;
       }
       const sortie = creerEl("button", "sortie", client.TEXTES.sortie);
       sortie.type = "button";
       sortie.addEventListener("click", () => client.quitterSuivi());
+      // Le « · » voyage avec le bouton : un point resté seul en fin de ligne se lit mal.
       const groupe = creerEl("span", "sortie-bloc");
-      groupe.append(doc.createTextNode("· "), sortie);
+      groupe.append(doc.createTextNode(" · "), sortie);
       el.append(groupe);
     }
 

@@ -212,10 +212,13 @@ test("pied : l'habillage n'en dessine plus ; un billet refusé marque quand mêm
 
 // ------------------------------------------------------------- les pages
 
-test("carte : sous un code, plus de logo en haut ni de choix « Élève | Professeur » ; le bloc à côté de la flèche", () => {
+test("carte : sous un code, plus de logo en haut ni de choix « Élève | Professeur » ; la ligne de suivi sous le grand titre (en-tête commun, 31/10/2026)", () => {
   const f = PAGES.carte;
   assert.match(f, /html\.suivi-eleve header \.brand,html\.suivi-eleve header \.modeBar\{display:none\}/);
-  assert.match(f, /header \.suivi-repere\{flex:1 1 auto;min-width:0;max-width:760px;margin:0 auto\}/);
+  // plus de bloc pâle dans la barre du haut : la flèche seule ; la ligne vient sous « L'univers SPLAT! »
+  assert.doesNotMatch(f, /header \.suivi-repere/);
+  assert.match(f, /<h1>L'univers <span class="splat">SPLAT!<\/span><\/h1>\s*<!--[\s\S]*?-->\s*<p id="suivi-repere" class="suivi-repere" hidden><\/p>/);
+  assert.doesNotMatch(f.slice(f.indexOf("<header>"), f.indexOf("</header>")), /suivi-repere/);
   // l'ancien bandeau (sa feuille de style dans la page) est parti : le bloc est stylé par l'habillage
   assert.doesNotMatch(f, /\.suivi-repere \.liens|\.suivi-repere \.espace/);
   assert.match(f, /SUIVI\.dessinerBloc\(document\.getElementById\("suivi-repere"\)\);/);
@@ -234,9 +237,9 @@ test("habillage : chaque fonction que la carte et les outils appellent existe �
   const s = o.fenetre.MathsGoSplatSuivi.creer({});
   appels.forEach(nom => assert.equal(typeof s[nom], "function", nom));
   // une page neuve avec l'ancien habillage en cache (sans dessinerBloc) casserait la carte :
-  // la version bouge avec le fichier (lot 6 : 20261008-3 ; plus de pied : 20261024-1)
+  // la version bouge avec le fichier (lot 6 : 20261008-3 ; plus de pied : 20261024-1 ; en-tête commun : 20261031-1)
   const versions = Object.values(PAGES).map(p => (p.match(/assets\/js\/splat-suivi\.js\?v=([0-9-]+)/) || [])[1]);
-  assert.deepEqual(versions, ["20261024-1", "20261024-1", "20261024-1", "20261024-1"]);
+  assert.deepEqual(versions, ["20261031-1", "20261031-1", "20261031-1", "20261031-1"]);
 });
 
 test("étapes : la pastille « ● Léa » reste, rien du bloc ; la mention du site ne s'affiche plus pour l'élève à code", () => {
@@ -274,8 +277,10 @@ test("AGENTS.md : le modèle commun des applis suivies est écrit, après la rè
   const modele = agents.indexOf("## Applis suivies — modèle commun");
   assert.ok(nav > 0 && modele > nav, "après « Navigation du site — règle commune »");
   const section = agents.slice(modele, agents.indexOf("\n## ", modele + 5));
-  for (const morceau of ["Défi tables est la référence", "« Se déconnecter » dans le bloc", "Pas de logo en haut",
-    "la pastille\n  « ● prénom »", "Pas de pied (24/10/2026)", "celle de l'élève, pas\n  celle de l'appareil",
+  // en-tête commun (variante A, 31/10/2026) : plus de barre au-dessus du cadre, la ligne sous le titre
+  for (const morceau of ["Défi tables est la référence", "PLUS DE BARRE AU-DESSUS DU CADRE", "« ● Suivi · Rania · 405 · Se déconnecter »",
+    "C'est le MÊME élément `#suivi-repere`", "tests/en-tete-commun.test.mjs", "Pas de logo en haut",
+    "la pastille « ● prénom »", "Pas de pied (24/10/2026)", "celle de l'élève, pas\n  celle de l'appareil",
     "il retrouve tout fermé", "EN\n  HAUT DE L'ONGLET DE L'APPLI", "Rien ne\n  part avant « Enregistrer »", "chaque appli a TOUJOURS son onglet", "Le cadre de l'appli tient entier", "Sans code, rien ne change"]) {
     assert.ok(section.includes(morceau), morceau);
   }

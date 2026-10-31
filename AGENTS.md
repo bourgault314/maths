@@ -145,19 +145,54 @@ Toute appli branchée sur le serveur de suivi (Défi tables, SPLAT!, Défi calcu
 puis les suivantes) suit ce modèle quand l'élève est connecté par son code.
 Défi tables est la référence.
 
-- En-tête (le dessin de Défi tables, décision du 14/10/2026) : une barre fine
-  au-dessus du cadre blanc, avec « ← Mon espace » à gauche (flèche et texte ;
-  la flèche seule au téléphone) sur l'ACCUEIL de l'appli seulement, le bloc
-  « Suivi par ton professeur » au milieu (prénom, classe, avec
-  « Se déconnecter » dans le bloc), « Plein écran » à droite. Dans l'appli, le
-  retour au niveau parent est un bouton en haut à gauche du CADRE BLANC
-  (« ← Ma table » dans Défi tables, « ← Niveaux » dans Coffres magiques) ; la
-  barre du haut n'est jamais cassée pour y loger une flèche.
-  Pas de logo en haut.
-- Écrans de jeu où la place manque (les étapes de SPLAT!) : la pastille
-  « ● prénom » au bout de la barre du jeu suffit. On ne déplace pas une mise en
-  page de jeu pour y loger le bloc ; « Se déconnecter » reste à une flèche, sur
-  l'accueil de l'appli.
+- En-tête commun (variante A, planches du 31/10/2026 ; remplace la barre fine
+  au-dessus du cadre du 14/10/2026) : PLUS DE BARRE AU-DESSUS DU CADRE. Sur
+  l'ACCUEIL de l'appli, dans le cadre blanc, en haut : la flèche ronde à gauche
+  (vers Mon espace), le titre centré (petit sur-titre + grand titre : « Calcul
+  mental / Défi tables », « Soroban / Flash Anzan »), le plein écran rond à
+  droite (pas au téléphone). Sous le titre, UNE petite ligne centrée :
+  « ● Suivi · Rania · 405 · Se déconnecter » — puce verte #147447, prénom en
+  gras couleur encre #143451, le reste gris #506b7d, « Se déconnecter »
+  souligné (zone de toucher de 44 px), .86rem (.8rem au téléphone), sans fond.
+  Le haut du cadre (titre et ligne) reste BLANC, avec un trait fin gris
+  #e3ebf0 sous la ligne de suivi, jusqu'aux bords du cadre (planche 16 du
+  31/10/2026, « tout blanc » : le bleu très pâle de la planche 5 est
+  abandonné) — le bandeau d'Anzan aussi.
+  Le mot « Suivi » reste (l'élève sait que son travail remonte au
+  professeur) ; les états reprennent les textes du moteur, « Suivi par ton
+  professeur » raccourci en « Suivi » : orange (#8a4c0a, puce #d9822b) quand
+  rien n'est encore parti, gris sans puce (#3d4a5a) quand le code ne vaut plus
+  rien ; un billet refusé dit « … · Mon espace ». La ligne ordinaire ne se
+  coupe qu'aux « · » (prénom et classe insécables) ; les états longs passent à
+  la ligne, « · Se déconnecter » toujours entier. C'est le MÊME élément `#suivi-repere` (son « Se déconnecter », la
+  garde « C'est toujours toi ? ») qu'on déplace et qu'on restyle — jamais une
+  copie. Les mêmes règles et valeurs dans toutes les applis (gardé par
+  `tests/en-tete-commun.test.mjs`). Dans l'appli, ailleurs que sur l'accueil,
+  la règle est la même partout : LE TITRE DE L'ÉCRAN D'ABORD, LA LIGNE DESSOUS
+  (31/10/2026, planches 11 et 12, pour téléphone ET ordinateur — un seul
+  modèle). Défi tables et Défi calcul rangent la barre (la ligne, et le plein
+  écran à droite sur ordinateur) juste sous la barre « ← titre » de l'écran
+  (Mon parcours, Les records, la table qu'on lit, la fiche, Comment ça
+  marche ?) ou sous le fil de la séance, qui est alors le titre de l'écran de
+  jeu : les étapes ①②③④ et le nom de l'activité, CENTRÉS (`placerEnTete`,
+  liste `TETES_ECRAN`, `body.ligne-sous-titre`). LA FLÈCHE EST TOUJOURS EN
+  HAUT À GAUCHE, sur la ligne du titre : pendant la séance, « ← Ma table »
+  (« ← Accueil » dans Défi calcul) monte sur la ligne des étapes (ronde au
+  téléphone), comme « ← Mon parcours ⋯ ». Sans titre (une série ou un
+  résultat hors séance, « Tu as choisi »), la ligne reste en haut du cadre.
+  Le trait fin gris passe sous la ligne. Anzan met la ligne sous le
+  titre de Mon historique ; le retour
+  au niveau parent reste un bouton en haut à gauche du CADRE BLANC (« ← Niveaux »
+  dans Coffres magiques). Pas de logo en haut. La vue du professeur dans Défi
+  tables (« Ma classe : le parcours de Léa », lecture seule) garde sa barre
+  fine au-dessus du cadre.
+- Écrans de jeu où la place manque (la séance d'Anzan, les étapes de SPLAT!, le
+  mémo et le jeu de Coffres magiques) : la pastille « ● prénom » (avec le plein
+  écran) suffit. On ne déplace pas une mise en page de jeu pour y loger la
+  ligne ; « Se déconnecter » reste à une flèche, sur l'accueil de l'appli.
+- Sans code, rien ne change (en-tête, fil d'Ariane du site). Seul l'habillage
+  propre à une appli vaut pour tous (« Anzan adouci » du 31/10/2026 : bandeau
+  blanc à trait fin gris, cases blanches à bordure fine, choix en bleu).
 - Pas de pied (24/10/2026) : ni « logo + Mon espace », ni crédits, ni liens du
   site. Le retour vers Mon espace est la flèche du haut ; l'information sur la
   confidentialité est sur la page Mon espace. (Avant le 24/10 : le petit logo et
