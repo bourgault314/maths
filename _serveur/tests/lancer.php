@@ -575,7 +575,7 @@ verifier("une activité n'est donnée que si elle est ouverte ET dans la liste d
 verifier("le pied de l'espace élève ne renvoie plus sur le site", function () {
     $r = page('/');
     egal(200, $r['code'], 'code HTTP');
-    vrai((bool)preg_match('#<footer>(.*?)</footer>#s', $r['texte'], $m), 'la page doit avoir un pied');
+    vrai((bool)preg_match('#<footer class="pied">(.*?)</footer>#s', $r['texte'], $m), 'la page doit avoir un pied');
     preg_match_all('/href="([^"]+)"/', $m[1], $liens);
     egal(['infos.php'], $liens[1], 'un seul lien dans le pied, et il reste dans l’espace');
     vrai(!str_contains($r['texte'], 'https://mathsgo.re'),

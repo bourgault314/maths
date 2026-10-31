@@ -1,10 +1,10 @@
 /* ==========================================================================
    suivi.css — la charte du serveur de suivi maths&go (suivi.mathsgo.re)
    Étape « serveur pro » n° 3, 25/10/2026. Chargée par prof/index.php (Ma
-   classe) depuis le lot 5a ; les autres pages la brancheront une à une
-   (<link rel="stylesheet" href="…/suivi.css?v=<empreinte>"> AVANT le <style>
-   de la page), en retirant de leur <style> ce qui est ici. L'espace élève ne
-   la charge pas encore.
+   classe) depuis le lot 5a, et par index.php (l'entrée de l'élève et Mon
+   espace) depuis le lot 6 du 31/10/2026 ; les autres pages la brancheront une
+   à une (<link rel="stylesheet" href="…/suivi.css?v=<empreinte>"> AVANT le
+   <style> de la page), en retirant de leur <style> ce qui est ici.
 
    Règles de la charte
    - Couleurs : uniquement celles qui sont DÉJÀ dans les dix pages (aucune

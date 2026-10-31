@@ -21,6 +21,10 @@ $versionMoteur = version_moteur('defi_tables_mon_parcours.js');
 $versionSplat = version_moteur('splat-parcours.js');
 $versionCoffres = version_moteur('coffres-parcours.js');
 $versionAnzan = version_moteur('flash_anzan_parcours.js');
+// Serveur pro (31/10/2026) : la charte commune, chargée AVANT le style de la
+// page, avec son empreinte dans l'adresse (comme prof/index.php).
+$charte = __DIR__ . '/suivi.css';
+$versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -35,48 +39,21 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Mon espace | maths&amp;go</title>
+<link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <style>
-  :root {
-    --blue: #063f86; --blue-dark: #052f67; --teal: #08aaa5; --orange: #f58220;
-    --ink: #10294a; --muted: #5c6c82; --paper: #fff; --line: #d9e2ec; --page: #f6f8fb;
-    --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
-    background: var(--page); color: var(--ink);
-    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  .barre { height: 5px; background: var(--brand-gradient); }
-  header { padding: 12px 16px; background: var(--paper); border-bottom: 1px solid var(--line);
-           display: flex; align-items: center; gap: 10px; }
-  header img { display: block; height: 34px; width: auto; }
-  /* Le bout droit de l'en-tête n'existe que pour un élève entré : sa classe,
-     et le geste pour sortir. Avant l'entrée, il n'y a rien à montrer. */
-  .entete-droite { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-  main { flex: 1; width: 100%; max-width: 780px; margin: 0 auto; padding: 22px 16px 30px; }
-  h1 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif;
-       font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.15; color: var(--blue-dark); }
+  /* Serveur pro (31/10/2026) : la charte (suivi.css) donne les couleurs, le
+     texte, l'en-tête, la carte, les boutons, le message et le pied ; ne
+     restent ici que les six cases du code et les tuiles avec leurs jauges.
+     Seule exception voulue (choix de Gwenaël, 31/10/2026) : côté élève, les
+     titres restent GRAS (« Mon espace », « Bonjour Rania ») ; la charte les
+     dessine fins pour le professeur. */
+  h1 { font-weight: 700; }
+  /* Le nom de la classe vient du professeur (40 caractères au plus) : au
+     téléphone, il passe à la ligne et « Se déconnecter » reste à l'écran. */
+  .entete .droite { flex: 0 1 auto; min-width: 0; }
+  #classe { white-space: normal; overflow-wrap: anywhere; }
+  #changer { flex: none; }
   .sous-titre { margin: 0 0 22px; color: var(--muted); }
-  .carte { background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-           padding: 18px; box-shadow: 0 10px 26px rgba(22,47,82,.07); }
-  label { display: block; margin-bottom: 8px; font-weight: 700; }
-  input[type=text] {
-    width: 100%; min-height: 56px; padding: 10px 14px;
-    font-size: 1.6rem; font-weight: 700; letter-spacing: .22em; text-align: center;
-    text-transform: uppercase; color: var(--blue-dark);
-    border: 2px solid var(--line); border-radius: 12px; background: #fff;
-  }
-  input[type=text]:focus { outline: 3px solid rgba(11,103,178,.35); border-color: var(--blue); }
-  button {
-    min-height: 48px; padding: 0 20px; font-size: 1rem; font-weight: 700; font-family: inherit;
-    color: #fff; background: var(--blue); border: 0; border-radius: 10px; cursor: pointer;
-  }
-  button:hover { background: var(--blue-dark); }
-  button.secondaire { color: var(--muted); background: transparent; border: 1px solid var(--line);
-                      min-height: 44px; font-size: .92rem; font-weight: 600; }
-  button.secondaire:hover { color: var(--blue); background: #fff; border-color: var(--blue); }
-  .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
   /* « Entrer » (04/10/2026) : sous la case du code, centrée, le bouton était
      collé à gauche. Téléphone : toute la largeur, comme la case ; ordinateur :
      centré, largeur moyenne. */
@@ -92,10 +69,10 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
      l'écran : sur un téléphone, le clavier cache toute la moitié du bas. Une
      fois l'élève entré, son espace retrouve l'en-tête (sa classe, « Se
      déconnecter »). */
-  body.sur-code header { display: none; }
+  body.sur-code .entete { display: none; }
   #ecran-code { text-align: center; padding-top: 10px; }
   .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
-  #ecran-code h1 { font-size: 2.15rem; }
+  #ecran-code h1 { font-size: 2.15rem; line-height: 1.15; }
   #ecran-code .sous-titre { margin-bottom: 22px; }
   #ecran-code .carte { max-width: 430px; margin: 0 auto; padding: 22px 18px; text-align: left; }
   /* Le code en six cases (05/10/2026) : l'élève voit qu'il en faut six et
@@ -124,10 +101,6 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
     .cases { gap: 5px; }
     .case { height: 56px; font-size: 1.45rem; }
   }
-  .erreur { margin-top: 12px; padding: 10px 12px; border-radius: 10px;
-            background: #fdecec; color: #a3261f; font-weight: 600; }
-  .classe { padding: 4px 11px; border-radius: 999px; background: #e6f6f5;
-            color: #06716e; font-size: .82rem; font-weight: 800; }
   /* Une seule mise en page pour toutes les tailles de liste : une colonne tant
      qu'il n'y a qu'une ou deux activités (la tuile reste large et la page ne
      paraît pas vide), deux ou trois dès qu'il y en a plus — sans rien réécrire
@@ -137,10 +110,10 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
   .appli { display: flex; align-items: center; gap: 13px; padding: 15px 16px; height: 100%;
            background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--teal);
            border-radius: 12px; text-decoration: none; color: inherit; min-height: 44px; }
-  .appli:hover { border-color: var(--blue); border-left-color: var(--blue); background: #f3f8fc; }
+  .appli:hover { border-color: var(--blue); border-left-color: var(--blue); background: var(--survol); }
   .appli .texte { min-width: 0; }
-  .appli strong { display: block; font-size: 1.05rem; color: var(--blue-dark); }
-  .appli span { color: var(--muted); font-size: .92rem; }
+  .appli strong { display: block; font-size: var(--texte); color: var(--blue-dark); }
+  .appli span { color: var(--muted); font-size: var(--texte-secondaire); }
   .appli .fleche { margin-left: auto; flex: 0 0 auto; color: var(--blue); }
   /* Le dessin ne remplace jamais le nom : à 40 px, aucun pictogramme ne dit
      « critères de divisibilité ». Il sert à retrouver d'un coup d'œil une
@@ -170,9 +143,9 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
   .jauge-barre i { display: block; height: 100%; border-radius: 999px;
                    background: linear-gradient(90deg, #08aaa5, #0b67b2); }
   .jauge-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-  .appli .jauge-ligne .compte { color: var(--ink); font-size: .86rem; font-weight: 800; }
+  .appli .jauge-ligne .compte { color: var(--ink); font-size: var(--texte-secondaire); font-weight: 800; }
   .appli .jauge-note { display: block; margin-top: 4px; color: #a15c11;
-                       font-size: .82rem; font-weight: 700; }
+                       font-size: var(--texte-secondaire); font-weight: 700; }
   /* Le badge de rang, repris tel quel de l'accueil de Defi tables : un point de
      metal et le nom (une couronne pour la Legende). */
   .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px;
@@ -234,24 +207,20 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
      tuile au-dessus des activités (une seule séance par classe : jamais les
      deux). Elle remplace la pastille « 📝 Évaluation ouverte » du lot E2,
      qui faisait doublon. */
-  .aide { margin-top: 20px; color: var(--muted); font-size: .9rem; }
-  footer { padding: 16px; border-top: 1px solid var(--line); background: var(--paper);
-           color: var(--muted); font-size: .82rem; text-align: center; }
-  footer a { display: inline-block; padding: 12px 8px; color: var(--muted); }
-  [hidden] { display: none !important; }
+  li.aide { margin-top: 20px; }
 </style>
 </head>
 <body class="sur-code">
 <div class="barre"></div>
-<header>
+<header class="entete">
   <img src="mathsgo-logo.png" alt="maths&go">
-  <div class="entete-droite" id="entete-droite" hidden>
-    <span class="classe" id="classe"></span>
+  <div class="droite" id="entete-droite" hidden>
+    <span class="pastille teal" id="classe"></span>
     <button type="button" class="secondaire" id="changer">Se déconnecter</button>
   </div>
 </header>
 
-<main>
+<main class="etroit">
   <section id="ecran-code">
     <img class="logo-accueil" src="mathsgo-logo.png" alt="maths&amp;go" width="180" height="84">
     <h1>Mon espace</h1>
@@ -271,7 +240,7 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
           <button type="submit" id="valider">Entrer</button>
         </div>
       </form>
-      <p class="erreur" id="erreur" hidden></p>
+      <p class="message erreur" id="erreur" hidden></p>
     </div>
     <!-- 05/10/2026 : plus de phrase sous la carte — les six cases disent qu'il
          faut six caractères. -->
@@ -301,7 +270,7 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
      un enfant qui se croit connecté, et son bouton « Retour à l'accueil » le
      déposait sur l'accueil du site. La licence n'est plus rappelée ici :
      l'espace est un service, pas un document ; elle est dite dans infos.php. -->
-<footer>
+<footer class="pied">
   <a href="infos.php">Infos et confidentialité</a>
 </footer>
 
@@ -742,7 +711,11 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
   }
 
   // Le badge du rang : le même dessin que sur l'accueil de l'activité (un point
-  // de métal et le nom ; la couronne pour la Légende).
+  // de métal et le nom ; la couronne pour la Légende). Une seule différence,
+  // voulue (choix de Gwenaël, 31/10/2026, planche 5 du lot 6) : sur la tuile,
+  // la Légende s'écrit « 👑 Légende » — le nom entier ne tenait pas à côté de
+  // « 9 tables passées sur 9 » et prenait une ligne à lui seul. Le lecteur
+  // d'écran entend toujours le nom entier (aria-label).
   function badgeRang(rang) {
     const badge = document.createElement("span");
     if (!rang || !rang.niveau) return badge;
@@ -752,7 +725,7 @@ $versionAnzan = version_moteur('flash_anzan_parcours.js');
       point.setAttribute("aria-hidden", "true");
       badge.append(point);
     }
-    badge.append(document.createTextNode(rang.cle === "legende" ? `\u{1F451} ${rang.nom}` : rang.nom));
+    badge.append(document.createTextNode(rang.cle === "legende" ? "\u{1F451} Légende" : rang.nom));
     badge.setAttribute("aria-label", `Mon rang : ${rang.lu || rang.nom}`);
     return badge;
   }

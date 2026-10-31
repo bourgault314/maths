@@ -476,7 +476,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : correctifs-audit-codex).
   // Puis le lot 5b « qui voit quoi » (30/10/2026) : prof/index.php seul change,
   // 63 au manifeste (avant : serveur-pro-semaines-passees).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-qui-voit-quoi$/m);
+  // Puis le lot 6 « l'entrée et Mon espace » (31/10/2026) : index.php,
+  // prof/index.php et suivi.css changent, 63 au manifeste
+  // (avant : serveur-pro-qui-voit-quoi).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-entree-mon-espace$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

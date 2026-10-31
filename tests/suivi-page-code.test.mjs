@@ -31,7 +31,7 @@ test("plus de phrase sous la carte, plus de conseil faux : les six cases disent 
 
 test("premier écran : grand logo centré, pas d'en-tête ; l'espace de l'élève le retrouve", () => {
   assert.match(page, /<body class="sur-code">/, "la page s'ouvre sur l'écran du code");
-  assert.match(page, /body\.sur-code header \{ display: none; \}/);
+  assert.match(page, /body\.sur-code \.entete \{ display: none; \}/);
   assert.match(page, /<section id="ecran-code">\s*<img class="logo-accueil" src="mathsgo-logo\.png" alt="maths&amp;go" width="180" height="84">\s*<h1>Mon espace<\/h1>/);
   assert.match(page, /#ecran-code \{ text-align: center;/);
   assert.match(page, /\n  dessinerCases\(\);\n  if \(oublierSiDemande\(\)\) \{/,

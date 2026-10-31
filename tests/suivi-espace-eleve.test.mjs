@@ -15,17 +15,17 @@ const catalogue = readFileSync(CATALOGUE, "utf8");
 // tenir dans le temps, et c'est ce que ce fichier garde.
 
 test("« Se déconnecter » est dans l'en-tête, pas au fil de la page", () => {
-  const entete = page.match(/<header>[\s\S]*?<\/header>/);
+  const entete = page.match(/<header class="entete">[\s\S]*?<\/header>/);
   assert.ok(entete, "la page doit avoir un <header>");
   assert.match(entete[0], /id="changer"[\s\S]*?Se déconnecter/,
     "le bouton doit être dans l'en-tête : plus bas, il passe sous la ligne de flottaison dès qu'il y a plusieurs activités");
   assert.equal((page.match(/id="changer"/g) || []).length, 1, "un seul bouton de déconnexion");
-  const principal = page.match(/<main>[\s\S]*?<\/main>/);
+  const principal = page.match(/<main class="etroit">[\s\S]*?<\/main>/);
   assert.doesNotMatch(principal[0], /id="changer"/, "et nulle part ailleurs");
 });
 
 test("l'en-tête ne montre la classe et la sortie qu'à un élève entré", () => {
-  assert.match(page, /<div class="entete-droite" id="entete-droite" hidden>/,
+  assert.match(page, /<div class="droite" id="entete-droite" hidden>/,
     "avant l'entrée du code, il n'y a rien à montrer");
   assert.match(page, /\$\("entete-droite"\)\.hidden = false;/, "l'entrée le montre");
   assert.match(page, /\$\("entete-droite"\)\.hidden = true;/, "la déconnexion le cache");
@@ -102,7 +102,7 @@ const INFOS = join(racine, "_serveur/public/infos.php");
 const infos = readFileSync(INFOS, "utf8");
 
 test("le pied de l'espace ne propose qu'une chose, et elle reste dans l'espace", () => {
-  const pied = page.match(/<footer>[\s\S]*?<\/footer>/);
+  const pied = page.match(/<footer class="pied">[\s\S]*?<\/footer>/);
   assert.ok(pied, "la page doit avoir un pied");
   const adresses = [...pied[0].matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(adresses, ["infos.php"], "un seul lien, vers la page Infos de l'espace");

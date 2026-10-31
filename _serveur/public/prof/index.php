@@ -765,6 +765,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .pied-impression { margin-top: 18px; display: flex; align-items: center;
                        justify-content: space-between; font-size: .78rem; color: #444; }
   }
+  /* Serveur pro (31/10/2026) : la connexion a le dessin de l'entrée de
+     l'élève — grand logo, titre et carte centrés, en haut de l'écran ; le
+     bouton prend toute la largeur de la carte. L'en-tête n'y répète pas le
+     titre : sur la connexion, il disparaît (la barre de couleur reste). Sans
+     :has() (vieux navigateur), l'en-tête reste simplement affiché. */
+  body:has(#ecran-connexion:not([hidden])) .entete { display: none; }
+  #ecran-connexion { text-align: center; padding-top: 10px; }
+  #ecran-connexion .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
+  #ecran-connexion .carte { max-width: 420px; margin: 0 auto; text-align: left; }
+  #ecran-connexion .actions button { flex: 1 1 100%; }
 </style>
 </head>
 <body>
@@ -782,9 +792,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 <main>
   <!-- Connexion -->
   <section id="ecran-connexion">
+    <img class="logo-accueil" src="../mathsgo-logo.png" alt="maths&amp;go" width="180" height="84">
     <h1>Suivi des élèves</h1>
     <p class="sous">Espace réservé. Cette page n’est pas accessible aux élèves.</p>
-    <div class="carte" style="max-width:420px">
+    <div class="carte">
       <form id="form-connexion" autocomplete="on">
         <label for="identifiant">Identifiant</label>
         <input id="identifiant" name="username" type="text" autocomplete="username" required>
