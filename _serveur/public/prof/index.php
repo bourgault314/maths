@@ -841,8 +841,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .fiche-defi-calcul table, .grille-defi-calcul table { width: 100%; border-collapse: collapse; font-size: .9rem; }
     .fiche-defi-calcul th, .fiche-defi-calcul td, .grille-defi-calcul th, .grille-defi-calcul td { padding: 4px 6px; border-bottom: 1px solid #999; text-align: left; vertical-align: top; }
     .fiche-defi-calcul th, .grille-defi-calcul th { font-size: .78rem; color: #333; }
-    .grille-defi-calcul th.fd-mod, .grille-defi-calcul td.fd-mod { text-align: center; white-space: nowrap; }
-    .fiche-defi-calcul td.fd-etats { white-space: nowrap; }
+    /* Relecture Codex : la fiche tient en A4 portrait (une compétence par
+       ligne dans sa cellule), la grille sort en paysage et ses titres de
+       colonnes passent à la ligne. */
+    .grille-defi-calcul { page: grille-defi-calcul; }
+    @page grille-defi-calcul { size: A4 landscape; margin: 12mm; }
+    .grille-defi-calcul th.fd-mod, .grille-defi-calcul td.fd-mod { text-align: center; }
+    .grille-defi-calcul th.fd-mod { white-space: normal; font-weight: 700; }
+    .grille-defi-calcul td.fd-mod { white-space: nowrap; }
+    .fiche-defi-calcul td.fd-etats span { display: block; }
+    .fiche-defi-calcul table { font-size: .85rem; }
     .fiche-defi-calcul ul { margin: 0; padding-left: 18px; }
     .fiche-defi-calcul .fd-legende, .grille-defi-calcul .fd-legende { margin: 10px 0 0; font-size: .8rem; color: #333; }
     .fd-pied { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-top: 18px; font-size: .78rem; color: #444; }
@@ -4952,7 +4960,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (c.deCote) return `mise de côté jusqu’à ${jourCourtCalcul(c.echeance) || "bientôt"}, puis J’apprends et un entraînement`;
     if (c.etat === "classe") return "revenue après sa mise de côté : J’apprends, puis un entraînement à sa prochaine séance";
     const aujourdhui = CALCUL ? CALCUL.jourLocal() : "";
-    if (c.echeance && c.echeance > aujourdhui) return `ratée aujourd’hui · revient ${c.echeance === CALCUL.ajouterJours(aujourdhui, 1) ? "demain" : jourCourtCalcul(c.echeance)}${c.apprends ? ", J’apprends à refaire" : ""}`;
+    // Ratée aujourd'hui : la séance du jour la réentraîne avec l'aide (« Je
+    // m'entraîne encore », lot 3b) — déjà fait (`entrainee`) ou à venir dans
+    // la séance en cours — et elle revient demain dans Mes calculs du jour.
+    if (c.echeance && c.echeance > aujourdhui) {
+      const retour = c.echeance === CALCUL.ajouterJours(aujourdhui, 1) ? "demain" : jourCourtCalcul(c.echeance);
+      const quand = c.entrainee ? "réentraînée avec l’aide aujourd’hui" : "un entraînement avec l’aide dans sa séance du jour";
+      return `ratée aujourd’hui · ${quand} · revient ${retour}${c.apprends ? ", J’apprends à refaire" : ""}`;
+    }
     return `${c.apprends ? "J’apprends à refaire, puis " : ""}un entraînement avec l’aide à sa prochaine séance`;
   }
 
@@ -5177,7 +5192,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         tdModule.textContent = nomModuleCalcul(m.id);
         const tdEtats = document.createElement("td");
         tdEtats.className = "fd-etats";
-        tdEtats.textContent = m.etats.map((etat, i) => (m.paliers[i] === numero ? `${SYMBOLES_CALCUL[etat]} ${nomCompetenceCalcul(m.id, i + 1)}` : "")).filter(Boolean).join("   ");
+        m.etats.forEach((etat, i) => {
+          if (m.paliers[i] !== numero) return;
+          const ligneEtat = document.createElement("span");
+          ligneEtat.textContent = `${SYMBOLES_CALCUL[etat]} ${nomCompetenceCalcul(m.id, i + 1)}`;
+          tdEtats.append(ligneEtat);
+        });
         ligne.append(tdPalier, tdModule, tdEtats);
         tbody.append(ligne);
       });
@@ -6279,6 +6299,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     try {
       await chargerMoteurDe(cle);
       const fraiche = !tableaux[cle];
+      // Relecture Codex du lot 2b de Défi calcul : une liste lue SANS son
+      // moteur (le script avait échoué) garde des résumés vides ; si le
+      // moteur est là maintenant, on la relit — sans rappeler le serveur.
+      if (tableaux[cle] && tableaux[cle].some(eleve => eleve.parcours && eleve.lu && eleve.lu.lisible === false)) {
+        tableaux[cle] = elevesLus(cle, tableaux[cle]);
+      }
       const liste = tableaux[cle]
         || elevesLus(cle, (await api("tableau", {classe_id: classe.id, appli: cle})).eleves);
       if (numero !== demandeAppli || !jeton) return;

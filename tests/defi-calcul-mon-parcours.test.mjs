@@ -423,7 +423,12 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.modules.length, 74);
   assert.deepEqual(r.revoir.map(c => `${c.module}-${c.niveau}:${c.etat}`), ["A2-3:revoir", "A5-1:revoir", "M2-1:classe"], "dans l'ordre de la carte");
   const deCote = r.revoir.find(c => c.module === "M2");
-  assert.deepEqual([deCote.deCote, deCote.echeance, deCote.apprends, deCote.echecs], [true, "2026-11-30", true, 3]);
+  assert.deepEqual([deCote.deCote, deCote.echeance, deCote.apprends, deCote.echecs, deCote.entrainee], [true, "2026-11-30", true, 3, false]);
+  // Réentraînée avec l'aide aujourd'hui (t = 1 le jour vu) : la page le dit.
+  p.modules.A5.t = [1, 0, 0, 0];
+  assert.equal(P.resumeProf(p, CARTE, jour).revoir.find(c => c.module === "A5").entrainee, true);
+  assert.equal(P.resumeProf(p, CARTE, "2026-11-28").revoir.find(c => c.module === "A5"), undefined, "le lendemain, A5-1 n'est plus rouge");
+  p.modules.A5.t = [0, 0, 0, 0];
   assert.equal(r.revoir.find(c => c.module === "A2").apprends, true, "deux échecs de suite : J'apprends à refaire");
   assert.deepEqual([r.aVoir, r.rouges], [1, 2]);
   assert.deepEqual(r.causes, [{module: "A5", cause: 1, n: 7}, {module: "A2", cause: 2, n: 5}], "les plus fréquentes d'abord");

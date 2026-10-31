@@ -144,6 +144,15 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.match(page, /body\.imprime-defi-calcul dialog, body\.imprime-defi-calcul-grille dialog \{ display: none !important; \}/);
   assert.match(page, /#ecran-classe > \*:not\(\.fiche\):not\(\.bandelettes\):not\(\.note-impression\):not\(\.fiche-anzan\):not\(\.fiche-defi-calcul\):not\(\.grille-defi-calcul\) \{ display: none !important; \}/);
   assert.match(constante("MODES_IMPRESSION"), /"imprime-defi-calcul", "imprime-defi-calcul-grille"/);
+  // Relecture Codex : la grille sort en A4 paysage, ses titres passent à la
+  // ligne ; dans la fiche, une compétence par ligne (rien de large en nowrap).
+  assert.match(page, /\.grille-defi-calcul \{ page: grille-defi-calcul; \}\s*@page grille-defi-calcul \{ size: A4 landscape; margin: 12mm; \}/);
+  assert.match(page, /\.grille-defi-calcul th\.fd-mod \{ white-space: normal; font-weight: 700; \}/);
+  assert.match(page, /\.fiche-defi-calcul td\.fd-etats span \{ display: block; \}/);
+  assert.doesNotMatch(page, /\.fiche-defi-calcul td\.fd-etats \{ white-space: nowrap; \}/);
+  assert.match(fonction("remplirFicheCalcul"), /const ligneEtat = document\.createElement\("span"\);/);
+  // Relecture Codex : une liste lue sans son moteur est relue quand le moteur arrive.
+  assert.match(fonction("afficherAppli"), /if \(tableaux\[cle\] && tableaux\[cle\]\.some\(eleve => eleve\.parcours && eleve\.lu && eleve\.lu\.lisible === false\)\) \{\s*tableaux\[cle\] = elevesLus\(cle, tableaux\[cle\]\);/);
   // Les deux feuilles portent le logo et la signature, une fois chacune.
   for (const id of ["fiche-defi-calcul", "grille-defi-calcul"]) {
     const feuille = page.slice(page.indexOf(`id="${id}">`), page.indexOf("</div>\n    </div>", page.indexOf(`id="${id}">`)));
@@ -254,9 +263,15 @@ test("suiteCalcul : ce que l'appli va faire d'une compétence à revoir, dans le
   const o = outils([]);
   assert.equal(o.suiteCalcul({etat: "classe", deCote: true, echeance: "2026-11-30", apprends: true}), "mise de côté jusqu’à lun. 30/11, puis J’apprends et un entraînement");
   assert.equal(o.suiteCalcul({etat: "classe", deCote: false, echeance: JOUR, apprends: true}), "revenue après sa mise de côté : J’apprends, puis un entraînement à sa prochaine séance");
+  // Relecture Codex : ratée aujourd'hui, la séance du jour la réentraîne (le
+  // rouge d'abord) — « revient demain » seul cachait ce rattrapage.
   const demain = CALCUL.ajouterJours(CALCUL.jourLocal(), 1);
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: false}), "ratée aujourd’hui · revient demain");
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: true}), "ratée aujourd’hui · revient demain, J’apprends à refaire");
+  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: false, entrainee: false}),
+    "ratée aujourd’hui · un entraînement avec l’aide dans sa séance du jour · revient demain");
+  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: false, entrainee: true}),
+    "ratée aujourd’hui · réentraînée avec l’aide aujourd’hui · revient demain");
+  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: true, entrainee: true}),
+    "ratée aujourd’hui · réentraînée avec l’aide aujourd’hui · revient demain, J’apprends à refaire");
   assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: "2026-01-01", apprends: false}), "un entraînement avec l’aide à sa prochaine séance");
   assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: "2026-01-01", apprends: true}), "J’apprends à refaire, puis un entraînement avec l’aide à sa prochaine séance");
 });

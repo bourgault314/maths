@@ -1503,7 +1503,9 @@
           echeance: ligne.e[index],
           // « J'apprends à refaire » : après deux échecs de suite.
           apprends: ligne.a[index] === 0,
-          echecs: ligne.x[index]
+          echecs: ligne.x[index],
+          // Déjà réentraînée avec l'aide aujourd'hui (le rouge d'abord).
+          entrainee: entraineeAujourdhui(ligne, index, aujourdhui)
         });
       });
     });
