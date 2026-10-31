@@ -185,7 +185,8 @@ function finir(eleve, {appli = "defi-tables", droit = "proprietaire", telephone 
   ligne.append(nom, new Noeud("td"));
   finirLigne(ligne, eleve, nom);
   const toucher = cible => (ligne.ecouteurs.click || []).forEach(f => f({target: cible}));
-  return {ligne, nom, journal, toucher, requetes, va: ligne.children[2], plus: ligne.premier(n => n.tag === "details")};
+  // Lot 8 (31/10/2026) : deux cases au bout — le « ⋯ » (geste), puis la flèche (va).
+  return {ligne, nom, journal, toucher, requetes, geste: ligne.children[2], va: ligne.children[3], plus: ligne.premier(n => n.tag === "details")};
 }
 
 test("la ligne : le prénom devient un bouton (du texte, même piégé), « › » au bout ; elle ouvre la fenêtre, dans les quatre applis, au téléphone comme à l'ordinateur (lot 5f)", () => {
@@ -197,8 +198,10 @@ test("la ligne : le prénom devient un bouton (du texte, même piégé), « › 
   assert.equal(bouton.textContent, "<img src=x onerror=alert(1)>", "posé par textContent");
   assert.equal(r.va.className, "va");
   assert.deepEqual(r.va.children.map(n => [n.tag, n.className, n.textContent, n.attributs["aria-hidden"]]), [["span", "fleche", "›", "true"]],
-    "rien à restaurer : la flèche seule, pas de « ⋯ »");
-  assert.equal(r.va.attributs["aria-hidden"], undefined, "la case n'est plus cachée aux lecteurs d'écran : le « ⋯ » y vit");
+    "la flèche seule dans la dernière case");
+  assert.equal(r.geste.className, "geste");
+  assert.deepEqual(r.geste.children, [], "rien à restaurer : la case du « ⋯ » est là, vide — la flèche reste au même endroit (lot 8)");
+  assert.equal(r.ligne.children.length, 4, "prénom, une colonne, le « ⋯ », la flèche");
   // Choix de Gwenaël du 28/10 : plus d'onglet par élève — la fenêtre, où
   // Défi tables montre son parcours. Un élève qui n'a rien envoyé aussi.
   for (const appli of ["defi-tables", "coffres", "splat", "flash-anzan"]) {
@@ -221,7 +224,8 @@ test("« Revenir à… » dans un « ⋯ » discret au bout de la ligne : en éc
     for (const telephone of [false, true]) {
       const r = finir({id: 1, prenom: "Léa", restaurable: true, journees: []}, {appli, telephone});
       assert.ok(r.plus, `${appli} : un « ⋯ »`);
-      assert.deepEqual(r.va.children.map(n => n.className), ["plus", "fleche"], "le « ⋯ » puis la flèche");
+      assert.deepEqual(r.geste.children.map(n => n.className), ["plus"], "le « ⋯ » dans sa case (lot 8)");
+      assert.deepEqual(r.va.children.map(n => n.className), ["fleche"], "la flèche seule dans la sienne");
       const poignee = r.plus.children[0];
       assert.deepEqual([poignee.tag, poignee.textContent, poignee.attributs["aria-label"]], ["summary", "⋯", "Autres actions"]);
       const menu = r.plus.children[1];
@@ -486,6 +490,18 @@ test("plus de « Trier par » : chaque titre qui trie a sa clé dans TRIS, et TR
   assert.match(fonction("dessinerTableau"), /poserTris\(\);/, "la flèche suit chaque tri");
 });
 
+// ------------------------------------------------------------ lot 8 : la ligne qui s'allume
+
+test("lot 8 (retours du 31/10/2026) : toute la ligne s'allume en bleu très pâle, s'éteint sur le « ⋯ » ; le « ⋯ » sans cadre tant qu'on ne le touche pas", () => {
+  assert.match(style, /#tableau tbody tr\.cliquable \{ cursor: pointer; \}/, "la main sur toute la ligne");
+  assert.match(style, /#tableau tbody tr\.cliquable:hover td \{ background: #eef6ff; \}/, "le bleu très pâle de la charte (« en cours »)");
+  assert.match(style, /#tableau tbody tr\.cliquable:has\(td\.geste \.plus:hover\) td \{ background: none; \}/, "sur le « ⋯ », la ligne s'éteint : il ne l'ouvre pas");
+  assert.match(style, /#tableau td\.geste \.plus summary \{ color: var\(--muted\); background: none; border-color: transparent; \}/, "discret");
+  assert.match(style, /#tableau td\.geste \.plus summary:hover, #tableau td\.geste \.plus\[open\] summary,\s*#tableau td\.geste \.plus summary:focus-visible \{ color: var\(--blue-dark\); background: var\(--paper\); border-color: var\(--blue\); \}/,
+    "son cadre revient au survol, menu ouvert, et au clavier");
+  assert.match(style, /#tableau td\.va \{ width: 1%; padding-left: 0; text-align: right; white-space: nowrap; \}/, "la flèche au bout");
+});
+
 // ------------------------------------------------------------ le téléphone, les cartes, la charte
 
 test("au téléphone : le tableau compact (trois colonnes et le « ⋯ »), plus de cartes d'élèves ; la fenêtre tient dans 390 px", () => {
@@ -493,9 +509,14 @@ test("au téléphone : le tableau compact (trois colonnes et le « ⋯ »), plus
   assert.match(telephone, /@media \(max-width: 700px\) \{\s*#tableau th\.large, #tableau td\.large \{ display: none; \}\s*#tableau th\.seul-telephone, #tableau td\.seul-telephone \{ display: table-cell; \}/);
   // Lot 5f : le « ⋯ » reste au téléphone, la flèche part ; les titres passent
   // sur deux lignes (mesuré : 356 px pour 356 à 390 de large, avec le « ⋯ »).
-  assert.match(telephone, /#tableau td\.va \{ padding-right: 6px; \}\s*#tableau td\.va \.fleche \{ display: none; \}\s*#tableau th button\[data-tri\] \{ white-space: normal; text-align: left; \}/);
-  assert.doesNotMatch(telephone, /#tableau td\.va \{ display: none; \}/, "le « ⋯ » ne disparaît pas au téléphone");
-  assert.match(style, /#tableau td\.va \.plus \{ display: inline-block; margin: -9px 0; vertical-align: middle; \}/, "le « ⋯ » ne grandit pas la ligne");
+  // Lot 8 : la colonne de la flèche part (avec son en-tête « fin ») ; le « ⋯ » garde la sienne.
+  assert.match(telephone, /#tableau td\.geste \{ padding-left: 0; padding-right: 6px; \}\s*#tableau th\.fin, #tableau td\.va \{ display: none; \}\s*#tableau td\.va \.fleche \{ display: none; \}\s*#tableau th button\[data-tri\] \{ white-space: normal; text-align: left; \}/);
+  assert.doesNotMatch(telephone, /#tableau td\.geste \{ display: none; \}/, "le « ⋯ » ne disparaît pas au téléphone");
+  assert.match(style, /#tableau td\.geste \.plus \{ display: inline-block; margin: -9px 0; vertical-align: middle; \}/, "le « ⋯ » ne grandit pas la ligne");
+  for (const id of ["entete-defi-tables", "entete-coffres", "entete-anzan", "entete-defi-calcul", "entete-splat"]) {
+    const debut = page.indexOf(`<tr id="${id}"`);
+    assert.match(page.slice(debut, page.indexOf("</tr>", debut)), /<th><\/th>\s*<th class="fin"><\/th>\s*$/, `${id} : la case du « ⋯ » puis celle de la flèche`);
+  }
   // Lot 5f : le parcours d'un élève prend tout l'écran du téléphone ; à l'ordinateur, une grande fenêtre.
   assert.match(telephone, /dialog\.fenetre-eleve\.avec-parcours \{ width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;\s*margin: 0; border-radius: 0; \}/);
   assert.match(style, /dialog\.fenetre-eleve\.avec-parcours \{ max-width: 1180px; height: calc\(100vh - 32px\); \}/);

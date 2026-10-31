@@ -143,7 +143,19 @@ test("Ma classe : « 4 dernières semaines », la semaine en cours à droite et 
   const rania = avecSeances(["2026-10-06", "2026-10-08", "2026-10-13", "2026-10-26", "2026-10-28", "2026-10-28"]);
   const zone = cellule({parcours: rania, semaines: P.seancesParSemaine(rania, JEUDI)});
   assert.equal(texte(zone), "2 · 1 · 0 · 3");
-  const nombres = zone.enfants.filter(e => e.className !== "point");
+  // Lot 8 (retours du 31/10/2026) : le séparateur s'appelle « sep-semaine ».
+  // Il s'appelait « point » et prenait la pastille verte de « ● Ouvert à
+  // toute la classe » (une règle .point globale du lot 5b) : un rond vert
+  // entre chaque semaine. La pastille ne vaut plus que dans sa ligne.
+  const separateurs = zone.enfants.filter(e => e.className === "sep-semaine");
+  assert.deepEqual(separateurs.map(e => e.textContent), ["\u00a0·\u00a0", "\u00a0·\u00a0", "\u00a0·\u00a0"]);
+  const nombres = zone.enfants.filter(e => e.className !== "sep-semaine");
+  assert.ok(!zone.enfants.some(e => e.className === "point"), "plus de « point » dans la case");
+  const style = page.slice(page.indexOf("<style>"), page.indexOf("</style>"));
+  assert.match(style, /\.semaines \.sep-semaine \{ color: var\(--muted\); \}/, "le séparateur, en gris : du texte");
+  assert.doesNotMatch(style, /^\s*\.point[ ,.{]/m, "aucune règle « .point » globale : elle repeindrait tout ce qui s'appelle « point »");
+  assert.match(style, /\.qui-voit \.point \{ display: inline-block; width: 10px; height: 10px;/, "la pastille de « qui voit », dans sa ligne seulement");
+  assert.match(style, /#seance-direct \.point \{ color: #f9bf3b; \}/, "le « ● » jaune de « Reprendre la séance en direct » redevient un simple caractère");
   assert.deepEqual(nombres.map(e => e.tag), ["span", "span", "span", "b"], "la semaine en cours, et elle seule, en gras (sabotage g)");
   assert.equal(nombres[3].textContent, "3", "à droite : la semaine en cours");
   assert.equal(nombres[2].className, "zero", "une semaine sans séance en gris");

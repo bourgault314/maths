@@ -179,7 +179,7 @@ test("onglet Anzan, appli donnée à Rania seule : sa ligne seulement — « 106
   const jours = new Set(RANIA_SEANCES.map(s => s[0])).size;
   assert.deepEqual(cellules(rania).slice(0, 4).map(td => td.textContent), ["Rania", `${calculs} calculs`, `${jours} jours`, "23 oct. 2026"]);
   assert.equal(cellules(rania)[1].premier(n => n.tag === "b").textContent, `${calculs} calculs`, "le compte en gras");
-  assert.deepEqual(cellules(rania).map(td => td.className), ["nom", "", "large", "", "va"], "au téléphone, les jours se cachent ; la flèche au bout");
+  assert.deepEqual(cellules(rania).map(td => td.className), ["nom", "", "large", "", "geste", "va"], "au téléphone, les jours se cachent ; le « ⋯ » (lot 8), la flèche au bout");
   assert.equal(cellules(rania)[0].premier(n => n.tag === "button").className, "lien-eleve", "le prénom est un bouton (le clavier y arrive)");
   assert.equal(rania.className, "cliquable");
   assert.equal(rania.premier(n => n.tag === "button" && n.textContent === "Parcours"), null, "plus de « Parcours » sur la ligne");
@@ -438,7 +438,7 @@ test("APPLIS, l'onglet, l'en-tête, le moteur chargé d'ICI à la première ouve
   assert.match(page, /<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-anzan" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-anzan"')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Calculs:calculs", "Jours:jours (large)", "Dernière séance:date", ""]);
+    ["Élève:prenom", "Calculs:calculs", "Jours:jours (large)", "Dernière séance:date", "", " (fin)"]);
   assert.match(page, /\$moteurAnzan = __DIR__ \. '\/flash_anzan_parcours\.js';\s*\$versionAnzan = is_file\(\$moteurAnzan\) \? substr\(md5_file\(\$moteurAnzan\), 0, 10\) : '0';/);
   assert.match(script, /const MOTEUR_ANZAN = "flash_anzan_parcours\.js\?v=<\?= htmlspecialchars\(\$versionAnzan, ENT_QUOTES\) \?>";/,
     "le moteur servi par le suivi (une adresse relative : jamais d'un autre domaine)");

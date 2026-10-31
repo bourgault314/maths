@@ -119,7 +119,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.match(page, /<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul<\/button>\s*<button type="button" data-appli="splat"/);
   const entete = page.slice(page.indexOf('<tr id="entete-defi-calcul" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-defi-calcul" hidden>')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Compétences sues:sues", "À revoir:revoir (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", ""],
+    ["Élève:prenom", "Compétences sues:sues", "À revoir:revoir (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", "", " (fin)"],
     "au téléphone : l'élève, les compétences sues, le dernier jour");
   const TRIS = new Function(`${constante("TRIS")}\nreturn TRIS;`)();
   assert.deepEqual(TRIS["defi-calcul"], ["prenom", "sues", "revoir", "seances", "date"]);

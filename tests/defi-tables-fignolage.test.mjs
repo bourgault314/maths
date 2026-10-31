@@ -171,6 +171,7 @@ test("la pastille : construite par textContent, dans la tuile, verte quand la sÃ
 });
 
 test("la pastille seule ne fait pas remonter la tuile ; une tuile avec un compte, si", () => {
-  const habiller = page.slice(page.indexOf("  async function habillerJauges("), page.indexOf("\n  }\n", page.indexOf("  async function habillerJauges(")));
+  // Lot 8 (31/10/2026) : la pose des jauges a sa fonction (poserLesJauges).
+  const habiller = page.slice(page.indexOf("  function poserLesJauges("), page.indexOf("\n  }\n", page.indexOf("  function poserLesJauges(")));
   assert.match(habiller, /poserJauge\(tuile, jauge\);\s*\/\/[^\n]*\n[^\n]*\n\s*if \(!jauge\.aujourdhui \|\| jauge\.compte\) remonter\(tuile\.closest\("li"\)\);/);
 });

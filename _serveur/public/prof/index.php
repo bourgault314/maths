@@ -182,19 +182,29 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      ouvre la fenêtre de l'élève dans les quatre applis ; dans Défi tables,
      cette fenêtre montre son écran Mon parcours lui-même. */
   #tableau tbody tr.cliquable { cursor: pointer; }
-  #tableau tbody tr.cliquable:hover td { background: var(--survol); }
+  /* Lot 8 (retours du 31/10/2026) : la ligne entière s'allume, bleu très pâle
+     (le « en cours » de la charte) — on voit d'un coup qu'elle s'ouvre. Sur
+     le « ⋯ », elle s'éteint : lui seul s'allume, il n'ouvre pas la ligne. */
+  #tableau tbody tr.cliquable:hover td { background: #eef6ff; }
+  #tableau tbody tr.cliquable:has(td.geste .plus:hover) td { background: none; }
   .lien-eleve { min-height: 0; padding: 0; gap: 0; justify-content: flex-start; color: var(--blue-dark); background: none;
                 border: 0; border-radius: 4px; font: inherit; font-weight: 600; text-align: left; white-space: nowrap; }
   .lien-eleve:hover, tr.cliquable:hover .lien-eleve { color: var(--blue); background: none; border: 0; text-decoration: underline; }
   td.nom.sans .lien-eleve { color: var(--muted); font-style: italic; font-weight: 400; }
   /* Le bout de la ligne : « ⋯ » (« Revenir à… », lot 5f — il était en bas de
      la fenêtre de l'élève, « trop visible ») puis la flèche. Le « ⋯ » ne
-     grandit pas la ligne (marges négatives). */
+     grandit pas la ligne (marges négatives). Lot 8 : chacun sa colonne — le
+     « ⋯ » dans la sienne, discret (sans cadre tant qu'on ne le survole
+     pas) ; la flèche seule tout au bout, à la même place sur chaque ligne. */
+  #tableau td.geste { width: 1%; padding-left: 8px; padding-right: 4px; text-align: center; white-space: nowrap; }
   #tableau td.va { width: 1%; padding-left: 0; text-align: right; white-space: nowrap; }
   /* Lot 5f : la page remonte au message d'un parcours refusé — sous la ligne
      des onglets, collée en haut, pas derrière elle. */
   #message-appli { scroll-margin-top: 84px; }
-  #tableau td.va .plus { display: inline-block; margin: -9px 0; vertical-align: middle; }
+  #tableau td.geste .plus { display: inline-block; margin: -9px 0; vertical-align: middle; }
+  #tableau td.geste .plus summary { color: var(--muted); background: none; border-color: transparent; }
+  #tableau td.geste .plus summary:hover, #tableau td.geste .plus[open] summary,
+  #tableau td.geste .plus summary:focus-visible { color: var(--blue-dark); background: var(--paper); border-color: var(--blue); }
   #tableau td.va .fleche { display: inline-block; width: 28px; vertical-align: middle;
                            color: var(--blue); font-size: var(--titre-carte); text-align: right; }
   #tableau .seul-telephone { display: none; }
@@ -252,7 +262,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .semaines { white-space: nowrap; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   .semaines .zero { color: var(--muted); }
   .semaines b { font-weight: 900; }
-  .semaines .point { color: var(--muted); }
+  /* Lot 8 (retours du 31/10/2026) : le séparateur a son propre nom. Il
+     s'appelait « point » et prenait la pastille verte de « ● Ouvert à toute
+     la classe » (lot 5b) : un rond vert entre chaque semaine. */
+  .semaines .sep-semaine { color: var(--muted); }
   .alerte { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
             border: 1px solid #d9a3a3; background: #fff5f5; color: #9b2c2c;
             font-size: .78rem; font-weight: 800; white-space: nowrap; }
@@ -373,17 +386,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .qui-voit .etat { flex: 1 1 240px; min-width: 0; margin: 0; }
   .qui-voit .etat span { color: var(--muted); font-size: var(--texte-secondaire); }
   .qui-voit button { display: inline-flex; align-items: center; gap: 8px; }
-  .point { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
-           background: var(--vert); vertical-align: 1px; }
-  .point.quelques { background: var(--teal); }
+  /* Lot 8 : la pastille vaut DANS cette ligne seulement. Écrite « .point »
+     tout court, elle peignait aussi le séparateur des 4 semaines et le « ● »
+     de « Reprendre la séance en direct ». */
+  .qui-voit .point { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
+                     background: var(--vert); vertical-align: 1px; }
+  .qui-voit .point.quelques { background: var(--teal); }
   /* Un onglet d'appli que personne ne voit : grisé (choix de Gwenaël,
-     planche 3) ; dedans, la carte « … est fermé à la 306 ». Une appli ouverte
-     à quelques élèves seulement : leur nombre en pastille. */
+     planche 3) ; dedans, la carte « … est fermé à la 306 ». Lot 8 (retours
+     du 31/10/2026) : plus de pastille « 1 » sur l'onglet d'une appli ouverte
+     à quelques élèves — qui la voit est dit dans la ligne de l'onglet
+     (« ● Ouvert à quelques élèves · Rania »). */
   #choix-appli > button.eteint { color: var(--indice); }
   #choix-appli > button.eteint[aria-pressed="true"] { color: var(--muted); }
-  .compte-plus { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 6px;
-                 padding: 0 6px; border-radius: 999px; background: var(--teal-pale); color: var(--teal-texte);
-                 font-size: var(--texte-secondaire); font-weight: 700; line-height: 1; }
   #menu-applis-liste button.eteint { color: var(--muted); }
   .appli-fermee { max-width: 640px; margin: 8px auto 24px; padding: 28px 24px; text-align: center; }
   .appli-fermee h2 { margin: 0 0 6px; }
@@ -773,8 +788,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     #tableau .bonus-compte { display: none; }
     /* Lot 5f : le « ⋯ » reste au téléphone, la flèche part ; les titres
        des colonnes passent sur deux lignes, pour que le « ⋯ » tienne
-       (mesuré : 356 px pour 356 à 390 de large, dans les quatre applis). */
-    #tableau td.va { padding-right: 6px; }
+       (mesuré : 356 px pour 356 à 390 de large, dans les quatre applis).
+       Lot 8 : la colonne de la flèche part avec elle, le « ⋯ » garde la
+       sienne (même largeur qu'avant : 50 px). */
+    #tableau td.geste { padding-left: 0; padding-right: 6px; }
+    #tableau th.fin, #tableau td.va { display: none; }
     #tableau td.va .fleche { display: none; }
     #tableau th button[data-tri] { white-space: normal; text-align: left; }
     #tableau td.nom { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; }
@@ -1106,7 +1124,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         <thead>
           <!-- Serveur pro, lot 5c : « large » = caché au téléphone (le tableau
                compact garde trois colonnes) ; « seul-telephone » = l'inverse.
-               La dernière colonne, sans titre, porte la flèche « › ». -->
+               Les deux dernières colonnes, sans titre : le « ⋯ » (lot 8), puis
+               la flèche « › » (« fin », cachée au téléphone). -->
           <tr id="entete-defi-tables">
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
@@ -1115,6 +1134,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th class="large"><button type="button" data-tri="retard">En retard</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
+            <th class="fin"></th>
           </tr>
           <!-- L'onglet Coffres magiques (lot « Coffres magiques sur le suivi »,
                21/10/2026, maquette 01 validée) : un niveau par colonne, le
@@ -1127,6 +1147,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th class="large"><button type="button" data-tri="niveau3">Niveau 3</button></th>
             <th><button type="button" data-tri="date">Dernier trésor</button></th>
             <th></th>
+            <th class="fin"></th>
           </tr>
           <!-- L'onglet Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026) : le
                compte en calculs et en jours (on compte des calculs, pas des
@@ -1138,6 +1159,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th class="large"><button type="button" data-tri="jours">Jours</button></th>
             <th><button type="button" data-tri="date">Dernière séance</button></th>
             <th></th>
+            <th class="fin"></th>
           </tr>
           <!-- L'onglet Défi calcul (lot 2b, 31/10/2026) : les compétences sues
                (sur les 129 de la carte, et par palier dessous), ce qui est à
@@ -1149,6 +1171,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th class="large"><button type="button" data-tri="seances">Séances · 4 semaines</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
+            <th class="fin"></th>
           </tr>
           <!-- L'onglet SPLAT! (lot « splat-suivi-4 ») : ses colonnes à lui. -->
           <tr id="entete-splat" hidden>
@@ -1157,6 +1180,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th><button type="button" data-tri="etapes">Étapes réussies</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
+            <th class="fin"></th>
           </tr>
         </thead>
         <tbody id="corps"></tbody>
@@ -3554,10 +3578,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const dates = [];
     lu.semaines.forEach((semaine, index) => {
       if (index) {
-        const point = document.createElement("span");
-        point.className = "point";
-        point.textContent = "\u00a0·\u00a0";
-        zone.append(point);
+        const separateur = document.createElement("span");
+        separateur.className = "sep-semaine";
+        separateur.textContent = "\u00a0·\u00a0";
+        zone.append(separateur);
       }
       const nombre = document.createElement(index === derniere ? "b" : "span");
       nombre.textContent = PARCOURS.texteSemaine(semaine);
@@ -3594,6 +3618,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   //  - « Revenir à… » retourne dans un « ⋯ » discret au bout de la ligne,
   //    avant la flèche : en écriture, et s'il y a une version à restaurer
   //    (peutRevenir). Toucher le « ⋯ » ou son menu n'ouvre pas la ligne.
+  // Lot 8 (retours du 31/10/2026) : le « ⋯ » dans sa propre case (vide sur
+  // les lignes qui n'en ont pas), la flèche seule dans la dernière : elle
+  // est au même endroit sur toutes les lignes.
   function finirLigne(ligne, eleve, cNom) {
     ligne.className = "cliquable";
     ligne.dataset.eleve = String(eleve.id);
@@ -3603,18 +3630,20 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     bouton.textContent = cNom.textContent;
     cNom.textContent = "";
     cNom.append(bouton);
-    const va = document.createElement("td");
-    va.className = "va";
+    const geste = document.createElement("td");
+    geste.className = "geste";
     if (peutRevenir(eleve)) {
-      menuGestes(va, [boutonGeste("Revenir à…", "secondaire", () => revenirA(eleve),
+      menuGestes(geste, [boutonGeste("Revenir à…", "secondaire", () => revenirA(eleve),
         "Revenir à une version précédente de sa progression")]);
     }
+    const va = document.createElement("td");
+    va.className = "va";
     const fleche = document.createElement("span");
     fleche.className = "fleche";
     fleche.setAttribute("aria-hidden", "true");
     fleche.textContent = "›";
     va.append(fleche);
-    ligne.append(va);
+    ligne.append(geste, va);
     ligne.addEventListener("click", evenement => {
       const cible = evenement && evenement.target;
       if (cible && typeof cible.closest === "function" && cible.closest(".plus")) return;
@@ -6136,11 +6165,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
 
   // Serveur pro, lot 5b (choix de Gwenaël, planche 3 de l'étape 4) : chaque
-  // appli a TOUJOURS son onglet. Ouverte à la classe : son nom. Ouverte à
-  // quelques élèves seulement : leur nombre en pastille (« Anzan 1 »).
-  // Ouverte à personne : grisée — dedans, de quoi l'ouvrir. Celui qu'on
-  // regarde est souligné, aucun hors de la vue de l'activité. Rend la liste
-  // des applis ouvertes (à la classe ou à quelqu'un).
+  // appli a TOUJOURS son onglet. Ouverte à la classe, ou à quelques élèves
+  // seulement : son nom (lot 8, 31/10/2026 : plus de pastille « Anzan 1 »,
+  // la ligne de l'onglet dit qui la voit ; le lecteur d'écran l'entend
+  // toujours). Ouverte à personne : grisée — dedans, de quoi l'ouvrir. Celui
+  // qu'on regarde est souligné, aucun hors de la vue de l'activité. Rend la
+  // liste des applis ouvertes (à la classe ou à quelqu'un).
   function poserOnglets() {
     const presentes = applisAMontrer();
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
@@ -6151,9 +6181,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       bouton.classList.toggle("eteint", !presentes.includes(cle));
       bouton.removeAttribute("title");
       if (quelques) {
-        const pastille = el("span", "compte-plus", String(quelques));
-        pastille.title = `ouvert à ${quelques} élève${quelques > 1 ? "s" : ""}`;
-        bouton.append(pastille);
         bouton.setAttribute("aria-label", `${nomDeLAppli(cle)}, ouvert à ${quelques} élève${quelques > 1 ? "s" : ""}`);
       } else if (!presentes.includes(cle)) {
         bouton.setAttribute("aria-label", `${nomDeLAppli(cle)}, fermé à la classe`);
@@ -6204,10 +6231,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(onglet => {
       if (onglet.hidden) return;
       const li = document.createElement("li");
-      // Lot 5b : le nom, la pastille (« Anzan 1 ») et le gris, comme l'onglet.
+      // Lot 5b : le nom et le gris, comme l'onglet (lot 8 : plus de pastille).
       const bouton = el("button", onglet.classList.contains("eteint") ? "eteint" : "", nomDeLAppli(onglet.dataset.appli));
-      const pastille = onglet.querySelector(".compte-plus");
-      if (pastille) bouton.append(pastille.cloneNode(true));
       if (onglet.hasAttribute("aria-label")) bouton.setAttribute("aria-label", onglet.getAttribute("aria-label"));
       bouton.type = "button";
       if (vue === "appli" && onglet.dataset.appli === appliAffichee) bouton.setAttribute("aria-current", "true");

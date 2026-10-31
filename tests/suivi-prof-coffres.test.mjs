@@ -185,7 +185,8 @@ const classe5 = () => [
 ];
 const cellules = tr => tr.children;
 // Lot 5c : « Trésors » (colonne du téléphone) après l'élève ; la flèche au bout.
-const C_TRESORS = 1, C_N1 = 2, C_N2 = 3, C_N3 = 4, C_DATE = 5, C_VA = 6;
+// Lot 8 : le « ⋯ » a sa case (C_GESTE) avant la flèche.
+const C_TRESORS = 1, C_N1 = 2, C_N2 = 3, C_N3 = 4, C_DATE = 5, C_GESTE = 6, C_VA = 7;
 const niveauLu = td => ({b: td.premier(n => n.tag === "b")?.textContent || null, small: td.premier(n => n.tag === "small")?.textContent || null, texte: td.textContent});
 
 test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » seulement au-dessus de zéro, « — » sinon, le jour du dernier trésor", () => {
@@ -206,7 +207,7 @@ test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » s
   // Au téléphone : « Trésors » (le total) à la place des trois niveaux.
   // Correctif des lots 5 (relecture Codex, point 7) : « Trésors » aussi à
   // l'ordinateur, devant les trois niveaux — son tri n'avait plus de titre.
-  assert.deepEqual(cellules(lea).map(td => td.className), ["nom", "", "tresors large", "tresors large", "tresors sans large", "", "va"]);
+  assert.deepEqual(cellules(lea).map(td => td.className), ["nom", "", "tresors large", "tresors large", "tresors sans large", "", "geste", "va"]);
   assert.equal(cellules(malo)[C_TRESORS].className, "sans", "rien : « — » en gris");
   assert.deepEqual(lignes.map(tr => cellules(tr)[C_TRESORS].textContent), ["7 trésors", "1 trésor", "—", "—", "5 trésors"]);
   assert.equal(zones.get("resume-classe").textContent, "5 élèves · rien reçu pour 1");
@@ -280,7 +281,7 @@ test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiqu
   assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-coffres" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-coffres"')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Trésors:tresors", "Niveau 1:niveau1 (large)", "Niveau 2:niveau2 (large)", "Niveau 3:niveau3 (large)", "Dernier trésor:date", ""]);
+    ["Élève:prenom", "Trésors:tresors", "Niveau 1:niveau1 (large)", "Niveau 2:niveau2 (large)", "Niveau 3:niveau3 (large)", "Dernier trésor:date", "", " (fin)"]);
   assert.match(page, /<p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée\.<\/p>/);
   assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("entete-defi-calcul"\)\.hidden = !calcul;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan \|\| calcul;/);
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); fin\(\); return; \}/);

@@ -222,7 +222,8 @@ test("dans le tableau d'une appli, « Revenir à… » est dans le « ⋯ » au 
   assert.equal(peut({restaurable: true, journees: []}, "lecture"), false, "lecture seule : pas de « Revenir à… »");
   // Lot 5f (retour de Gwenaël du 25/10/2026) : sorti de la fenêtre de l'élève,
   // où il était « trop visible » ; dans le « ⋯ » de la ligne, comme avant le 5c.
-  assert.match(fonction("finirLigne"), /if \(peutRevenir\(eleve\)\) \{\s*menuGestes\(va, \[boutonGeste\("Revenir à…", "secondaire", \(\) => revenirA\(eleve\),/);
+  // Lot 8 (31/10/2026) : le « ⋯ » dans sa propre case, avant celle de la flèche.
+  assert.match(fonction("finirLigne"), /if \(peutRevenir\(eleve\)\) \{\s*menuGestes\(geste, \[boutonGeste\("Revenir à…", "secondaire", \(\) => revenirA\(eleve\),/);
   assert.doesNotMatch(page, /id="fe-gestes"|id="fe-revenir"/, "plus de « Revenir à… » dans la fenêtre");
   assert.doesNotMatch(fonction("dessinerFenetreEleve"), /peutRevenir/);
 });

@@ -33,6 +33,21 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Lot 8 (retours du 31/10/2026) : l'élève qui REVIENT dans cet onglet (son
+     code y est encore, et ce n'est pas « Se déconnecter ») ne voit plus
+     passer l'écran du code le temps que le serveur réponde — « comme s'il
+     refaisait une identification ». Ce script, avant tout le reste, le cache
+     dès le premier rendu ; la page le remontre si le code ne vaut plus rien.
+     Il porte un nom (« avant-tout ») : le grand script de la page reste le
+     seul sans nom, celui que lisent les tests. -->
+<script id="avant-tout" nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
+try {
+  if (/^[A-Z0-9]{6}$/.test(window.sessionStorage.getItem("mathsgo-suivi-code") || "")
+      && !/[?&]oublier=1(&|$)/.test(window.location.search)) {
+    document.documentElement.classList.add("retour");
+  }
+} catch (_) {}
+</script>
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Espace élèves de maths&go : entre ton code pour retrouver tes activités.">
 <!-- Lot 7 : icônes et logo servis d'ICI (copies du dépôt, vérifiées par un
@@ -73,6 +88,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      déconnecter »). */
   body.sur-code .entete { display: none; }
   #ecran-code { text-align: center; padding-top: 10px; }
+  /* Lot 8 : posée par le script du haut quand l'élève revient avec son code. */
+  html.retour #ecran-code { display: none; }
   .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
   #ecran-code h1 { font-size: 2.15rem; line-height: 1.15; }
   #ecran-code .sous-titre { margin-bottom: 22px; }
@@ -295,6 +312,56 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
   function ecrireCode(code) {
     try { code ? stockage()?.setItem(CLE, code) : stockage()?.removeItem(CLE); } catch (_) {}
+    // Lot 8 : la copie de l'espace part avec le code (« Se déconnecter »,
+    // ?oublier=1, un code que le serveur ne connaît plus).
+    if (!code) oublierCopie();
+  }
+
+  // Lot 8 (retours du 31/10/2026) : la DERNIÈRE COPIE de l'espace — prénom,
+  // classe, tuiles dans leur ordre, jauges, tuiles du haut (séance en direct,
+  // évaluation). Elle vit dans le même sessionStorage que le code, le même
+  // temps (l'onglet), et part avec lui. Au retour d'une appli, elle est
+  // redessinée tout de suite, puis remplacée par la réponse du serveur.
+  // Rien n'y entre que ce que la page a déjà affiché ; tout en ressort par
+  // textContent, et une tuile ne mène qu'à une adresse de mathsgo.re.
+  const CLE_COPIE = "mathsgo-suivi-espace";
+  function oublierCopie() {
+    try { stockage()?.removeItem(CLE_COPIE); } catch (_) {}
+  }
+  function lireCopie(code) {
+    let copie = null;
+    try { copie = JSON.parse(stockage()?.getItem(CLE_COPIE) || "null"); } catch (_) { return null; }
+    if (!copie || typeof copie !== "object" || copie.code !== code || !Array.isArray(copie.applis)) return null;
+    copie.applis = copie.applis.filter(appli => appli && typeof appli === "object" && typeof appli.cle === "string"
+      && typeof appli.url === "string" && /^https:\/\/mathsgo\.re\//.test(appli.url));
+    if (!copie.jauges || typeof copie.jauges !== "object" || Array.isArray(copie.jauges)) copie.jauges = {};
+    if (!copie.haut || typeof copie.haut !== "object") copie.haut = null;
+    return copie;
+  }
+  function ecrireCopie(copie) {
+    try { stockage()?.setItem(CLE_COPIE, JSON.stringify(copie)); } catch (_) {}
+  }
+  function garderCopie(code, donnees, jauges) {
+    if (lireCode() !== code) return;
+    const ancienne = lireCopie(code);
+    ecrireCopie({
+      code,
+      prenom: typeof donnees.prenom === "string" ? donnees.prenom : "",
+      classe: typeof donnees.classe === "string" ? donnees.classe : "",
+      applis: (donnees.applis || []).filter(appli => appli.disponible && appli.url).map(appli => ({
+        cle: appli.cle, nom: appli.nom, description: appli.description, url: appli.url,
+        ancre: appli.ancre || null, disponible: true})),
+      jauges: jauges || {},
+      haut: hautCourant || (ancienne ? ancienne.haut : null)
+    });
+  }
+  // Les tuiles du haut, notées à chaque lecture de api/direct.php : elles
+  // reviennent à leur place au retour, au lieu de pousser la grille après.
+  function noterHaut(code, haut) {
+    const copie = lireCopie(code);
+    if (!copie || lireCode() !== code) return;
+    copie.haut = haut;
+    ecrireCopie(copie);
   }
   function nettoyer(brut) {
     return (brut || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
@@ -492,10 +559,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // une barre, le compte (« 4 tables passées sur 9 ») et le rang ; pour SPLAT!,
   // une pastille par monde et le compte (« 13 étapes réussies sur 37 »). Trois
   // règles tiennent tout ce qui suit :
-  //  1. la grille s'affiche d'abord, entière, et la jauge arrive après. Un
-  //     serveur muet, une réponse illisible, un moteur qui ne se charge pas :
-  //     la tuile reste exactement ce qu'elle était, sans message d'erreur.
-  //     L'élève doit pouvoir ouvrir son activité même quand la jauge échoue ;
+  //  1. la grille ne dépend jamais de la jauge. Depuis le lot 8 (31/10/2026),
+  //     elle attend ses jauges un court instant (ATTENTE_JAUGES) pour
+  //     s'afficher d'un coup, puis s'affiche sans elles. Un serveur muet, une
+  //     réponse illisible, un moteur qui ne se charge pas : la tuile reste
+  //     exactement ce qu'elle était, sans message d'erreur. L'élève doit
+  //     pouvoir ouvrir son activité même quand la jauge échoue ;
   //  2. rien de ce que le serveur renvoie n'entre dans la page autrement que
   //     par textContent — c'est la règle du serveur depuis le premier lot, et
   //     un parcours est un objet fabriqué par un appareil d'élève ;
@@ -911,24 +980,40 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (liste.firstChild && liste.firstChild !== li) liste.insertBefore(li, liste.firstChild);
   }
 
-  async function habillerJauges(donnees, code) {
+  // Lot 8 (retours du 31/10/2026) : la LECTURE des jauges est séparée de leur
+  // POSE. lireJauges ne touche pas à la page : elle rend {clé: jauge} (rien
+  // pour une activité sans parcours, illisible, ou dont le moteur manque).
+  // La page pose ensuite toutes les jauges d'un coup, avant de montrer la
+  // grille (afficherEspace) : plus de tuiles qui se remplissent ni qui
+  // remontent sous les yeux de l'élève.
+  async function lireJauges(donnees, code) {
+    const jauges = {};
     const aLire = (donnees.applis || [])
       .filter(appli => appli.disponible && appli.url && JAUGES[appli.cle])
       .map(appli => appli.cle);
-    if (!aLire.length) return;
+    if (!aLire.length) return jauges;
     const parcours = await Promise.all(aLire.map(cle => lireParcours(code, cle)));
-    if (!parcours.some(Boolean)) return;
+    if (!parcours.some(Boolean)) return jauges;
     // Un moteur par activité, et seulement pour celles qui ont un parcours.
     const moteurs = await Promise.all(aLire.map((cle, i) => (parcours[i] ? chargerMoteur(cle) : null)));
+    aLire.forEach((cle, i) => {
+      const P = moteurs[i];
+      if (!parcours[i] || !P) return;
+      let jauge = null;
+      try { jauge = JAUGES[cle].lecteur(P, parcours[i], donnees.reglages || {}); } catch (_) { jauge = null; }
+      if (jauge) jauges[cle] = jauge;
+    });
+    return jauges;
+  }
+
+  // Les jauges posées sur les tuiles (dans l'ordre des activités `cles`).
+  function poserLesJauges(jauges, cles) {
+    const aLire = cles.filter(cle => Object.prototype.hasOwnProperty.call(jauges, cle) && jauges[cle]);
     // À l'envers : la première activité commencée finit bien la première.
     for (let i = aLire.length - 1; i >= 0; i -= 1) {
-      const P = moteurs[i];
-      if (!parcours[i] || !P) continue;
+      const jauge = jauges[aLire[i]];
       const tuile = $("applis").querySelector(`.appli[data-cle="${CSS.escape(aLire[i])}"]`);
       if (!tuile || tuile.querySelector(".jauge")) continue;
-      let jauge = null;
-      try { jauge = JAUGES[aLire[i]].lecteur(P, parcours[i], donnees.reglages || {}); } catch (_) { jauge = null; }
-      if (!jauge) continue;
       poserJauge(tuile, jauge);
       // La pastille « Aujourd'hui » seule (aucune table passée) ne fait pas
       // remonter la tuile : l'ordre des tuiles ne change pas avec ce lot.
@@ -948,9 +1033,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   //  - le rythme est dit par le serveur (quelques secondes), borné ici.
   let directCode = "";
   let directMinuteur = 0;
+  // Lot 8 : chaque surveillance a son numéro — une lecture partie avant un
+  // redémarrage ne relance pas une seconde boucle.
+  let directTour = 0;
+  // Lot 8 : la dernière lecture de api/direct.php (tuiles du haut), pour les
+  // reposer quand la grille est redessinée et les garder dans la copie.
+  let hautCourant = null;
 
   function arreterDirect() {
     directCode = "";
+    directTour += 1;
+    hautCourant = null;
     window.clearTimeout(directMinuteur);
     $("direct-lien").hidden = true;
     poserTuileEvaluation(null);
@@ -970,6 +1063,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (ouverte) $("evaluation-lien-texte").textContent = etat.commence ? "Continuer l’évaluation." : "Commencer l’évaluation.";
   }
 
+  // Lot 8 : ce que la copie garde de l'évaluation (quatre mots, rien d'autre).
+  function resumeEvaluation(etat) {
+    if (!etat || typeof etat !== "object") return null;
+    return {etat: etat.etat === "ouverte" ? "ouverte" : "", fini: Boolean(etat.fini), close: Boolean(etat.close), commence: Boolean(etat.commence)};
+  }
+
   async function demanderDirect(code) {
     let attente = 6000;
     try {
@@ -985,6 +1084,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (reponse.ok && donnees && donnees.ok) {
         $("direct-lien").hidden = !donnees.direct;
         poserTuileEvaluation(donnees.evaluation);
+        hautCourant = {direct: Boolean(donnees.direct), evaluation: resumeEvaluation(donnees.evaluation)};
+        noterHaut(code, hautCourant);
         const propose = Number(donnees.rythme);
         if (propose >= 2000 && propose <= 60000) attente = propose;
       } else if (reponse.status === 404) {
@@ -996,17 +1097,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return attente;
   }
 
+  // Rend la promesse de la PREMIÈRE lecture (lot 8 : la première entrée
+  // l'attend, avec les jauges, pour tout dessiner d'un coup). Pour le même
+  // élève (onglet qui redevient visible), les tuiles restent où elles sont
+  // pendant la nouvelle lecture.
   function surveillerDirect(code) {
-    arreterDirect();
+    if (directCode !== code) arreterDirect();
+    window.clearTimeout(directMinuteur);
     directCode = code;
+    const moi = ++directTour;
     const tour = async () => {
-      if (directCode !== code) return;
+      if (directCode !== code || moi !== directTour) return;
       if (document.visibilityState === "hidden") return;
       const attente = await demanderDirect(code);
-      if (directCode !== code || !attente) return;
+      if (directCode !== code || moi !== directTour || !attente) return;
       directMinuteur = window.setTimeout(tour, attente);
     };
-    tour();
+    return tour();
   }
 
   document.addEventListener("visibilitychange", () => {
@@ -1014,7 +1121,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     else window.clearTimeout(directMinuteur);
   });
 
-  function afficherEspace(donnees, code) {
+  // Lot 8 : dessinée d'un coup, jauges comprises. Appelée avec la copie de
+  // l'onglet (au retour), puis avec la réponse du serveur : quand rien n'a
+  // changé, la seconde redessine la même chose — rien ne bouge à l'écran.
+  // La surveillance de la séance en direct n'est lancée qu'une fois.
+  function afficherEspace(donnees, code, jauges, haut) {
+    const dejaSuivi = directCode === code;
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
     $("classe").hidden = !donnees.classe;
@@ -1031,8 +1143,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const li = document.createElement("li");
       const lien = document.createElement("a");
       lien.className = "appli";
-      // La clé sert à retrouver la tuile quand son parcours arrive (voir
-      // habillerJauges). Elle vient du catalogue du serveur, pas de l'élève.
+      // La clé sert à retrouver la tuile pour y poser sa jauge (voir
+      // poserLesJauges). Elle vient du catalogue du serveur, pas de l'élève.
       lien.dataset.cle = appli.cle;
       // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans un
       // nouvel onglet ») ; un clic ordinaire en demande un frais.
@@ -1049,7 +1161,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // même adresse, même billet. Cachée jusqu'à la première lecture.
     appliEvaluation = disponibles.find(appli => appli.cle === "defi-tables") || null;
     const tuileEvaluation = $("evaluation-lien");
-    tuileEvaluation.hidden = true;
+    if (!dejaSuivi) tuileEvaluation.hidden = true;
     tuileEvaluation.href = appliEvaluation ? adresseAppli(appliEvaluation, donnees.billet || "") : "#";
     tuileEvaluation.onclick = appliEvaluation
       ? event => ouvrirAppli(event, tuileEvaluation, appliEvaluation, code, donnees.billet || "")
@@ -1062,18 +1174,44 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       liste.appendChild(li);
     }
 
+    // Les jauges sont posées AVANT que la grille se montre (lot 8) : un seul
+    // dessin, à sa place définitive. Celles qui manquent (serveur muet,
+    // moteur absent) ne manquent qu'à leur tuile.
+    poserLesJauges(jauges || {}, disponibles.map(appli => appli.cle));
+
     $("ecran-code").hidden = true;
     $("ecran-espace").hidden = false;
     document.body.classList.remove("sur-code");
 
-    // La grille est à l'écran, entière : ce qui suit ne peut plus l'empêcher
-    // d'exister. Volontairement sans await — rien n'attend la jauge.
-    habillerJauges(donnees, code);
-    surveillerDirect(code);
+    if (!dejaSuivi) surveillerDirect(code);
+    // Les tuiles du haut : la dernière lecture de api/direct.php si elle est
+    // déjà là, sinon celles de la copie (la lecture qui suit les corrige).
+    const enHaut = hautCourant || haut;
+    if (enHaut) {
+      $("direct-lien").hidden = !enHaut.direct;
+      poserTuileEvaluation(enHaut.evaluation || null);
+    }
+  }
+
+  // Lot 8 : à la première entrée (code tapé), la grille attend ses jauges
+  // au plus ce temps ; au-delà, elle se montre sans elles et se redessine
+  // d'un coup quand elles arrivent. L'élève peut toujours ouvrir son
+  // activité, même quand une jauge échoue.
+  const ATTENTE_JAUGES = 1000;
+  // Une seule ouverture compte : la dernière (deux « Entrer » de suite).
+  let ouverture = 0;
+
+  function attendre(ms) {
+    return new Promise(resolve => window.setTimeout(() => resolve(null), ms));
   }
 
   async function ouvrir(code, silencieux) {
+    const moi = ++ouverture;
     afficherErreur("");
+    // Lot 8 : au retour dans l'onglet, la dernière copie de l'espace est
+    // dessinée tout de suite ; la réponse du serveur la remplace ensuite.
+    const copie = silencieux ? lireCopie(code) : null;
+    if (copie) afficherEspace(copie, code, copie.jauges, copie.haut);
     try {
       // Le code part dans le CORPS de la requête, jamais dans l'adresse : une
       // adresse s'inscrit en clair dans les journaux de l'hébergeur.
@@ -1085,11 +1223,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         cache: "no-store"
       });
       const donnees = await reponse.json().catch(() => null);
+      if (moi !== ouverture) return;
       if (!reponse.ok || !donnees || !donnees.ok) {
         // Seul un 404 prouve que le code ne vaut plus rien. Un serveur en
         // panne ou trop sollicité ne doit pas faire oublier un bon code.
         if (reponse.status === 404) ecrireCode("");
-        if (silencieux && reponse.status === 404) return;
+        // Le code ne vaut plus rien (supprimé par le professeur) : retour à
+        // l'écran du code, vide, comme avant le lot 8 — l'espace dessiné
+        // depuis la copie part avec le ménage.
+        if (silencieux && reponse.status === 404) { revenirAuCode(); return; }
+        // Le serveur ne répond pas, mais l'espace est déjà là (la copie) :
+        // il reste, les tuiles s'ouvrent quand même.
+        if (copie) return;
+        document.documentElement.classList.remove("retour");
         if (silencieux) { $("code").value = code; dessinerCases(); }
         afficherErreur(reponse.status === 404
           ? "Ce code n’existe pas. Vérifie-le, ou demande à ton professeur."
@@ -1097,8 +1243,22 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         return;
       }
       ecrireCode(code);
-      afficherEspace(donnees, code);
+      const lecture = lireJauges(donnees, code).catch(() => ({}));
+      // Première entrée : les tuiles du haut (séance en direct, évaluation)
+      // sont lues en même temps, pour arriver dans le même dessin.
+      const pret = copie ? lecture
+        : Promise.all([lecture, surveillerDirect(code)]).then(([lues]) => lues);
+      const jauges = copie ? await lecture : await Promise.race([pret, attendre(ATTENTE_JAUGES)]);
+      if (moi !== ouverture || lireCode() !== code) return;
+      afficherEspace(donnees, code, jauges || {});
+      if (jauges) { garderCopie(code, donnees, jauges); return; }
+      const tardives = await lecture;
+      if (moi !== ouverture || lireCode() !== code) return;
+      afficherEspace(donnees, code, tardives);
+      garderCopie(code, donnees, tardives);
     } catch (_) {
+      if (moi !== ouverture || copie) return;
+      document.documentElement.classList.remove("retour");
       if (silencieux) { $("code").value = code; dessinerCases(); }
       afficherErreur("Pas de connexion. Réessaie dans un instant.");
     }
@@ -1150,6 +1310,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function revenirAuCode() {
     ecrireCode("");
     arreterDirect();
+    document.documentElement.classList.remove("retour");
     $("code").value = "";
     $("titre").textContent = "Mon espace";
     $("classe").textContent = "";
@@ -1186,10 +1347,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   dessinerCases();
   if (oublierSiDemande()) {
+    document.documentElement.classList.remove("retour");
     $("code").focus();
   } else {
     const memorise = nettoyer(lireCode());
     if (memorise.length === 6) ouvrir(memorise, true);
+    else document.documentElement.classList.remove("retour");
   }
 })();
 </script>

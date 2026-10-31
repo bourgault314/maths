@@ -375,19 +375,16 @@ test("onglets ou sélecteur : les onglets tant qu'ils tiennent sur la ligne, sin
   assert.match(fonction("montrerOngletChoisi"), /if \(poserModeApplis\(\)\) return;/);
 });
 
-test("le sélecteur d'appli : la liste des onglets, l'appli regardée cochée, le gris et la pastille recopiés (lot 5b) ; choisir = toucher son onglet", () => {
+test("le sélecteur d'appli : la liste des onglets, l'appli regardée cochée, le gris recopié (lot 5b), plus de pastille (lot 8) ; choisir = toucher son onglet", () => {
   const {$, el} = document();
   // Lot 5b : chaque appli a toujours son onglet. Coffres est fermé à la
-  // classe (grisé), Anzan n'est ouvert qu'à un élève (pastille « 1 »).
+  // classe (grisé), Anzan n'est ouvert qu'à un élève (lot 8 : sans pastille,
+  // le lecteur d'écran entend « ouvert à 1 élève »).
   const onglets = ["defi-tables", "coffres", "flash-anzan", "splat"].map((cle, i) => {
     const onglet = Object.assign(new Noeud("button"), {dataset: {appli: cle}, textContent: ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"][i],
       touche: 0, click() { this.touche += 1; }});
     if (cle === "coffres") { onglet.classList.add("eteint"); onglet.attributs["aria-label"] = "Coffres magiques, fermé à la classe"; }
-    if (cle === "flash-anzan") {
-      const pastille = Object.assign(new Noeud("span"), {className: "compte-plus", textContent: "1", cloneNode() { return Object.assign(new Noeud("span"), {className: this.className, textContent: this.textContent, clone: true}); }});
-      onglet.append(pastille);
-      onglet.attributs["aria-label"] = "Anzan, ouvert à 1 élève";
-    }
+    if (cle === "flash-anzan") onglet.attributs["aria-label"] = "Anzan, ouvert à 1 élève";
     onglet.hasAttribute = nom => nom in onglet.attributs;
     onglet.getAttribute = nom => onglet.attributs[nom];
     onglet.querySelector = sel => (sel === ".compte-plus" ? onglet.enfants.find(n => n.className === "compte-plus") || null : null);
@@ -406,8 +403,8 @@ test("le sélecteur d'appli : la liste des onglets, l'appli regardée cochée, l
   const boutons = $("menu-applis-liste").enfants.map(li => li.enfants[0]);
   assert.deepEqual(boutons.map(b => b.textContent), ["Défi tables", "Coffres magiques", "Anzan", "SPLAT!"], "toutes les applis, comme leurs onglets");
   assert.deepEqual(boutons.map(b => b.className), ["", "eteint", "", ""], "Coffres, fermé à la classe, est grisé comme son onglet");
-  const pastille = boutons[2].enfants.find(n => n.className === "compte-plus");
-  assert.ok(pastille && pastille.clone && pastille.textContent === "1", "la pastille « 1 » d'Anzan est recopiée (une copie, pas l'original)");
+  assert.deepEqual(boutons[2].enfants, [], "Anzan : son nom seul, plus de pastille « 1 » (lot 8)");
+  assert.doesNotMatch(fonction("ouvrirMenuApplis"), /compte-plus|cloneNode/);
   assert.equal(boutons[2].attributs["aria-label"], "Anzan, ouvert à 1 élève");
   assert.equal(boutons[1].attributs["aria-label"], "Coffres magiques, fermé à la classe");
   assert.deepEqual(boutons.map(b => b.attributs["aria-current"] || ""), ["", "", "", "true"]);

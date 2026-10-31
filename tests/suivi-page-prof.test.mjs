@@ -676,7 +676,7 @@ test("le tableau : six colonnes et la flèche, la liste des tables écrite, la l
   const debutEntete = page.indexOf('<tr id="entete-defi-tables">');
   const entete = page.slice(debutEntete, page.indexOf("</tr>", debutEntete));
   assert.deepEqual([...entete.matchAll(/<th(?: class="(\w+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Tables passées:acquises", "En cours:encours (large)", "4 dernières semaines:semaine (large)", "En retard:retard (large)", "Dernière activité:date", ""]);
+    ["Élève:prenom", "Tables passées:acquises", "En cours:encours (large)", "4 dernières semaines:semaine (large)", "En retard:retard (large)", "Dernière activité:date", "", " (fin)"]);
   // Lot « un seul système » (05/10/2026) : « Tables passées » partout (la clé de tri reste « acquises »).
   assert.doesNotMatch(page, /Tables acquises|"Acquises"/);
   assert.doesNotMatch(page, /À travailler|cMelange|cExpert|caseExpert|badgeRang|calculsATravailler\(/, "les trois colonnes d'avant sont retirées, et leur code avec");

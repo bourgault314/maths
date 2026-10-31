@@ -179,8 +179,14 @@ function executerPageshow({persisted, codeEnMemoire}) {
   // « sur-code » sur <body>) et redessine ses six cases. L'espace du
   // précédent élève avait l'en-tête, et ses cases pouvaient garder son code.
   const classesCorps = new Set();
+  // Lot 8 (31/10/2026) : la classe « retour » posée sur <html> par le script
+  // du haut (l'élève revenait avec son code) cache l'écran du code. Le ménage
+  // doit l'enlever, sinon l'écran du code resterait invisible.
+  const classesHtml = new Set(["retour"]);
   const documentFactice = {body: {classList: {
     add: c => classesCorps.add(c), remove: c => classesCorps.delete(c)
+  }}, documentElement: {classList: {
+    add: c => classesHtml.add(c), remove: c => classesHtml.delete(c)
   }}};
   const dessins = {n: 0};
   // Séance en direct (07/10/2026) : le ménage arrête aussi la surveillance de
@@ -193,15 +199,16 @@ function executerPageshow({persisted, codeEnMemoire}) {
     () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; });
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
-  return {$, elements, classesCorps, dessins, directs};
+  return {$, elements, classesCorps, classesHtml, dessins, directs};
 }
 
 // Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
 // c'est la raison d'être de la fonction commune. Ce test exécute l'autre
 // chemin, celui du bouton, sur le même écran de départ.
 test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
-  const {$, classesCorps, dessins, directs} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  const {$, classesCorps, classesHtml, dessins, directs} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
   $("changer").ecouteurs.click();
+  assert.ok(!classesHtml.has("retour"), "l'écran du code n'est plus caché par la classe du retour (lot 8)");
   assert.equal(directs.arrets, 1, "la surveillance de la séance en direct s'arrête, sa tuile part");
   assert.ok(classesCorps.has("sur-code"), "l'écran du code retrouve sa mise en page (sans en-tête)");
   assert.equal(dessins.n, 1, "les six cases sont redessinées : vides");
@@ -215,7 +222,8 @@ test("« Se déconnecter » fait le même ménage que le retour de cache", () =>
 });
 
 test("après « Se déconnecter », le bouton « précédent » ne rouvre pas l'espace", () => {
-  const {$, classesCorps, dessins, directs} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  const {$, classesCorps, classesHtml, dessins, directs} = executerPageshow({persisted: true, codeEnMemoire: ""});
+  assert.ok(!classesHtml.has("retour"), "l'écran du code se voit (lot 8)");
   assert.equal(directs.arrets, 1, "la tuile « Séance en direct » du précédent élève part avec le reste");
   assert.ok(classesCorps.has("sur-code"), "l'en-tête du précédent élève est caché");
   assert.equal(dessins.n, 1, "ses cases ne gardent pas son code");
@@ -386,23 +394,31 @@ test("les moteurs sont servis d'ici et ne sont chargés que s'il y a un parcours
   assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=/,
     "la copie servie par le suivi : la politique de contenu interdit un script d'un autre domaine");
   assert.match(page, /url: "prof\/splat-parcours\.js\?v=/, "même chose pour le moteur de SPLAT!");
-  const bloc = page.slice(page.indexOf("  async function habillerJauges"));
+  // Lot 8 : la lecture des jauges est dans lireJauges (la pose, à part).
+  const bloc = page.slice(page.indexOf("  async function lireJauges"));
   const lecture = bloc.indexOf("lireParcours(code, cle)");
   const chargement = bloc.indexOf("chargerMoteur(cle)");
   assert.ok(lecture > 0 && chargement > lecture,
     "70 ko de moteur ne se téléchargent qu'après avoir su qu'il y a quelque chose à afficher");
-  assert.match(bloc, /if \(!parcours\.some\(Boolean\)\) return;/,
+  assert.match(bloc, /if \(!parcours\.some\(Boolean\)\) return jauges;/,
     "aucun parcours : on s'arrête avant le moteur");
   assert.match(bloc, /parcours\[i\] \? chargerMoteur\(cle\) : null/,
     "un moteur par activité, et seulement pour celle qui a un parcours");
 });
 
-test("la grille s'affiche avant la jauge, et rien ne l'attend", () => {
-  const ordre = page.indexOf('$("ecran-espace").hidden = false;');
-  const appel = page.indexOf("habillerJauges(donnees, code);", ordre);
-  assert.ok(ordre > 0 && appel > ordre, "la grille est à l'écran avant que la jauge soit demandée");
-  assert.doesNotMatch(page.slice(ordre, appel + 60), /await habillerJauges/,
-    "un « await » ici, et un serveur lent retiendrait la liste des activités");
+// Lot 8 (retours du 31/10/2026) : la grille ne se remplit plus sous les yeux
+// de l'élève. Les jauges sont posées AVANT que la grille se montre ; à la
+// première entrée, la grille les attend au plus ATTENTE_JAUGES, puis se
+// montre sans elles et se redessine d'un coup quand elles arrivent. La règle
+// nº 1 tient toujours : une jauge qui ne vient pas n'empêche rien.
+test("la grille se montre d'un coup, jauges posées ; elle ne les attend qu'un instant (lot 8)", () => {
+  const espace = page.slice(page.indexOf("  function afficherEspace("), page.indexOf("\n  }\n", page.indexOf("  function afficherEspace(")));
+  const pose = espace.indexOf("poserLesJauges(jauges || {}, disponibles.map(appli => appli.cle));");
+  assert.ok(pose > 0 && pose < espace.indexOf('$("ecran-espace").hidden = false;'), "les jauges sont posées avant que la grille se montre");
+  assert.doesNotMatch(espace, /await/, "afficherEspace n'attend rien : elle dessine ce qu'on lui donne");
+  assert.match(page, /const ATTENTE_JAUGES = 1000;/);
+  assert.match(page, /const lecture = lireJauges\(donnees, code\)\.catch\(\(\) => \(\{\}\)\);/, "une lecture qui échoue rend « aucune jauge »");
+  assert.match(page, /await Promise\.race\(\[pret, attendre\(ATTENTE_JAUGES\)\]\)/, "l'attente est plafonnée");
 });
 
 test("la jauge se construit par textContent, jamais en HTML", () => {
@@ -457,11 +473,15 @@ function serveurDesParcours(parActivite) {
 function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"], reglages}) {
   const debut = page.indexOf("  const JAUGES = {");
   assert.ok(debut > 0, "la page doit nommer les moteurs qu'elle charge");
-  const ancre = page.indexOf("  async function habillerJauges(donnees, code) {", debut);
+  // Lot 8 : la lecture (lireJauges) puis la pose (poserLesJauges), jouées
+  // ensemble comme le fait la page.
+  const ancre = page.indexOf("  async function lireJauges(donnees, code) {", debut);
+  assert.ok(ancre > debut, "la lecture des jauges suit les moteurs");
   const fin = page.indexOf("\n  }", page.indexOf("for (let i = aLire.length - 1", ancre)) + "\n  }".length;
   const source = page.slice(debut, fin)
     .replace(/<\?=[\s\S]*?\?>/g, "0123456789")
-    + "\n  return habillerJauges;";
+    + "\n  return async (donnees, code) => { const jauges = await lireJauges(donnees, code); "
+    + "poserLesJauges(jauges, (donnees.applis || []).map(appli => appli.cle)); return jauges; };";
 
   const faireNoeud = (nom, espace) => {
     const noeud = {nom, espace, style: {}, textContent: "", enfants: [], ecouteurs: {}, attributs: {},
@@ -810,7 +830,7 @@ test("qui-voit-quoi — la page ne lit que « applis » et « reglages » : elle
   assert.doesNotMatch(page, /ajouts?\b/i, "aucune trace d'« ajouts » dans l'espace élève : c'est le serveur qui additionne");
   assert.doesNotMatch(page, /acces\b/, "ni d'« acces »");
   assert.match(page, /const disponibles = \(donnees\.applis \|\| \[\]\)\.filter\(a => a\.disponible && a\.url\);/, "les tuiles viennent de « applis »");
-  assert.match(page, /JAUGES\[aLire\[i\]\]\.lecteur\(P, parcours\[i\], donnees\.reglages \|\| \{\}\)/, "les jauges lisent « reglages »");
+  assert.match(page, /JAUGES\[cle\]\.lecteur\(P, parcours\[i\], donnees\.reglages \|\| \{\}\)/, "les jauges lisent « reglages » (lot 8 : dans lireJauges)");
   // Le serveur, lui, rend la même forme qu'avant : « applis » affichables et
   // « reglages » en objet, calculés pour l'élève (par le code ET par le billet).
   const eleve = readFileSync(join(racine, "_serveur/public/api/eleve.php"), "utf8");
