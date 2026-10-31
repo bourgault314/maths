@@ -24,6 +24,10 @@ header('Content-Type: text/html; charset=utf-8');
 // Cette page n'a aucun script — le nonce n'a rien à porter, la politique est
 // envoyée quand même.
 entetes_page();
+// Serveur pro, lot 7 (31/10/2026) : la charte commune, chargée AVANT le
+// style de la page, avec son empreinte dans l'adresse (comme Mon espace).
+$charte = __DIR__ . '/suivi.css';
+$versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -36,57 +40,41 @@ entetes_page();
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Ton espace, en clair | maths&amp;go</title>
+<link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <style>
-  :root {
-    --blue: #063f86; --blue-dark: #052f67; --teal: #08aaa5;
-    --ink: #10294a; --muted: #5c6c82; --paper: #fff; --line: #d9e2ec; --page: #f6f8fb;
-    --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
-    background: var(--page); color: var(--ink);
-    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  .barre { height: 5px; background: var(--brand-gradient); }
-  header { padding: 12px 16px; background: var(--paper); border-bottom: 1px solid var(--line);
-           display: flex; align-items: center; gap: 10px; }
-  header img { display: block; height: 34px; width: auto; }
-  main { flex: 1; width: 100%; max-width: 780px; margin: 0 auto; padding: 22px 16px 34px; }
-  h1 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif;
-       font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1.15; color: var(--blue-dark); }
+  /* Serveur pro, lot 7 (31/10/2026) : la charte (suivi.css) donne les
+     couleurs, le texte, l'en-tête, la carte et le bouton. Côté élève, les
+     titres restent GRAS (choix de Gwenaël, 31/10/2026). */
+  body { line-height: 1.6; }
+  h1 { font-weight: 700; line-height: 1.15; }
   .sous-titre { margin: 0 0 22px; color: var(--muted); }
-  h2 { margin: 0 0 8px; font-size: 1.06rem; color: var(--blue-dark); }
-  .carte { background: var(--paper); border: 1px solid var(--line); border-radius: 14px;
-           padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 10px 26px rgba(22,47,82,.07); }
+  .carte > h2:first-child { margin: 0 0 8px; font-weight: 700; }
   .carte p { margin: 0; }
   .carte p + p { margin-top: 8px; }
+  .carte + .carte { margin-top: 12px; }
   /* Le bloc des parents s'adresse à quelqu'un d'autre : il se repère d'un coup
      d'œil, et c'est le seul qui se lit au vouvoiement. */
-  .parents { border-left: 5px solid var(--teal); background: #f4fbfb; }
-  .parents h2 { color: #06716e; }
+  .parents { border-left: 5px solid var(--teal); background: var(--teal-pale); }
+  .parents > h2:first-child { color: var(--teal-texte); }
   /* Les trois blocs administratifs : plus discrets, parce qu'un élève n'a pas
      besoin de les lire pour comprendre son espace. Ils doivent être là, pas
      au premier plan. */
-  .administratif { color: var(--muted); font-size: .92rem; }
-  .administratif h2 { font-size: .98rem; color: var(--muted); }
+  .administratif { color: var(--muted); font-size: var(--texte-secondaire); }
+  .administratif > h2:first-child { font: 700 var(--texte)/1.4 var(--sans); color: var(--muted); }
   .administratif p + p { margin-top: 4px; }
   /* Une cible tapable au doigt (44 px de haut) même dans le petit texte. */
-  .administratif a { display: inline-block; padding: 11px 2px; color: var(--blue); font-weight: 700; }
-  /* Le seul geste de la page. En bas, large, et il ramène chez soi. */
-  .retour { display: block; width: fit-content; max-width: 100%; margin: 24px auto 0;
-            min-height: 48px; padding: 13px 22px; font-size: 1rem; font-weight: 700;
-            color: #fff; background: var(--blue); border-radius: 10px; text-decoration: none; }
-  .retour:hover { background: var(--blue-dark); }
+  .administratif a { display: inline-block; padding: 11px 2px; font-weight: 700; }
+  /* Le seul geste de la page. En bas, centré, et il ramène chez soi. */
+  .retour { display: flex; width: fit-content; max-width: 100%; margin: 24px auto 0; white-space: normal; }
 </style>
 </head>
 <body>
 <div class="barre"></div>
-<header>
+<header class="entete">
   <img src="mathsgo-logo.png" alt="maths&go">
 </header>
 
-<main>
+<main class="etroit">
   <h1>Ton espace, en clair</h1>
   <p class="sous-titre">Ce qui est enregistré quand tu travailles ici, et qui peut le voir.</p>
 
@@ -145,7 +133,7 @@ entetes_page();
     <p>Une question sur ton espace ? Demande à ton professeur.</p>
   </section>
 
-  <a class="retour" href="./">← Retour à mon espace</a>
+  <a class="bouton retour" href="./">← Retour à mon espace</a>
 </main>
 </body>
 </html>

@@ -1,6 +1,6 @@
 SplatLettres-Italic.woff2 — les lettres de l'inconnue de SPLAT! (maths&go, 26/09/2026)
 
-Police modifiée à partir de KaTeX_Math-Italic (KaTeX 0.16.9, aujourd'hui assets/vendor/katex-0.16.47/fonts/, polices inchangées) :
+Police modifiée à partir de KaTeX_Math-Italic (KaTeX 0.16.9, aujourd'hui assets/vendor/katex-0.18.2/fonts/, polices inchangées) :
 seules les 52 lettres latines sont gardées, rangées aux places des lettres mathématiques
 italiques d'Unicode (U+1D434…U+1D467, et U+210E pour h), et la police est renommée
 « SplatLettres » comme l'exige la licence (nom réservé « KaTeX_Math »).

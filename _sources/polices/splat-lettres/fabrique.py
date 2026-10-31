@@ -11,7 +11,7 @@ les PDF, c'était FreeSerif (le x rond des livrets de l'Enquête, que Gwenaël p
 d'autres, une lettre droite. Cette police règle la question une fois pour toutes : même
 lettre ronde sur tous les écrans et dans tous les PDF.
 
-Source : KaTeX_Math-Italic (assets/vendor/katex-0.16.47/fonts/), SIL Open Font License 1.1.
+Source : KaTeX_Math-Italic (assets/vendor/katex-0.18.2/fonts/), SIL Open Font License 1.1.
 Depuis le 27/09/2026, aussi KaTeX_Math-BoldItalic → SplatLettres-BoldItalic : le même dessin
 rond, en gras, pour les écritures grasses (ÉquaSplat : « la lettre fait vraiment petit à côté
 des chiffres », Gwenaël). Les pages déclarent le fin jusqu'à la graisse 599, le gras au-delà.
@@ -40,7 +40,7 @@ DESSINS = [
 from fontTools.ttLib.tables._c_m_a_p import cmap_format_12
 
 def fabrique(source_nom, sortie_nom, style, date):
-    source = RACINE / "assets/vendor/katex-0.16.47/fonts" / source_nom
+    source = RACINE / "assets/vendor/katex-0.18.2/fonts" / source_nom
     sortie = RACINE / "assets/fonts" / sortie_nom
     f = TTFont(str(source), recalcTimestamp=False)   # même fichier à chaque fabrication
     cmap = f.getBestCmap()

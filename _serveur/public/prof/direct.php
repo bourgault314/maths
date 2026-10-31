@@ -25,8 +25,10 @@ $versionDe = static function (string $chemin): string {
     return is_file($chemin) ? substr(md5_file($chemin), 0, 10) : '0';
 };
 $versionQuestionnaire = $versionDe(__DIR__ . '/questionnaire.js');
-$versionKatex = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.js');
-$versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css');
+$versionKatex = $versionDe(__DIR__ . '/../vendor/katex-0.18.2/katex.min.js');
+$versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.18.2/katex.min.css');
+// Serveur pro, lot 7 (31/10/2026) : la charte commune, comme Ma classe.
+$versionCharte = $versionDe(__DIR__ . '/../suivi.css');
 ?>
 <!doctype html>
 <html lang="fr">
@@ -37,47 +39,37 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
 <link rel="icon" href="../favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
-<link rel="stylesheet" href="../vendor/katex-0.16.47/katex.min.css?v=<?= htmlspecialchars($versionKatexCss, ENT_QUOTES) ?>">
+<link rel="stylesheet" href="../vendor/katex-0.18.2/katex.min.css?v=<?= htmlspecialchars($versionKatexCss, ENT_QUOTES) ?>">
 <title>Séance en direct | maths&amp;go</title>
+<link rel="stylesheet" href="../suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <style>
-  :root {
-    --blue: #063f86; --blue-dark: #052f67; --teal: #08aaa5; --orange: #f58220;
-    --ink: #10294a; --muted: #5c6c82; --paper: #fff; --line: #d9e2ec; --page: #f6f8fb;
-    --vert: #1a7f37; --rouge: #b42318;
-    --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
-  }
-  * { box-sizing: border-box; }
+  /* Serveur pro, lot 7 (31/10/2026) : la charte (suivi.css) donne les
+     couleurs, le texte, l'en-tête, les boutons, le menu déroulant, le
+     message, la pastille et les fenêtres. Ne restent ici que l'écran du
+     tableau, avec ses tailles À PART : la scène est PROJETÉE, elle se lit du
+     fond de la classe (« grands nombres » de la charte, section 12). */
   html, body { height: 100%; }
-  body { margin: 0; display: flex; flex-direction: column; background: var(--page); color: var(--ink);
-         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .barre { flex: 0 0 5px; background: var(--brand-gradient); }
-  header { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-           padding: 10px 16px; background: var(--paper); border-bottom: 1px solid var(--line); }
-  header img { display: block; height: 30px; width: auto; }
-  header .titre { font-family: Georgia, serif; font-size: 1.15rem; color: var(--blue-dark); }
-  header .classe { padding: 3px 12px; border-radius: 999px; background: #e6f6f5; color: #06716e;
-                   font-size: .9rem; font-weight: 800; }
-  header .qz-titre { color: var(--muted); font-size: .95rem; font-weight: 600; max-width: 40vw;
-                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  header .droite { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  button { min-height: 44px; padding: 0 16px; font: inherit; font-weight: 700;
-           color: #fff; background: var(--blue); border: 0; border-radius: 10px; cursor: pointer; }
-  button:hover { background: var(--blue-dark); }
-  button:disabled { opacity: .55; cursor: default; }
-  button.secondaire { color: var(--blue); background: #fff; border: 2px solid var(--line); }
-  button.secondaire:hover { border-color: var(--blue); background: #f3f8fc; }
-  button.danger { color: var(--rouge); background: #fff; border: 2px solid #f3d3d0; }
-  button.danger:hover { background: #fdecec; }
-  button.grand { min-height: 58px; padding: 0 30px; font-size: 1.2rem; border-radius: 14px; }
+  body { min-height: 0; }
+  .barre { flex: 0 0 5px; }
+  .entete { flex: 0 0 auto; }
+  /* Le nom de la classe vient du professeur (40 caractères au plus) : il
+     passe à la ligne plutôt que de pousser les boutons hors de l'écran. */
+  #classe { white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+  .entete .qz-titre { min-width: 0; color: var(--muted); font-size: var(--texte-secondaire); font-weight: 600;
+                      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .entete .droite { flex: 0 0 auto; }
+  /* L'action du moment, en bas : la seule grande touche de la page. */
+  button.grand { min-height: 56px; padding: 0 28px; font-size: 20px; border-radius: var(--arrondi-carte); }
   /* Tout tient dans l'écran projeté : la zone du milieu prend la place qui
      reste entre l'en-tête et les commandes, sans jamais faire défiler. */
   main { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1180px; margin: 0 auto;
          padding: 14px 20px 8px; display: flex; flex-direction: column; align-items: center;
          justify-content: center; text-align: center; }
   main.large { max-width: 1800px; padding: 12px 28px 4px; overflow: hidden; }
-  h1 { margin: 0; font-family: Georgia, serif; color: var(--blue-dark);
-       font-size: clamp(2rem, 5.2vw, 3.6rem); line-height: 1.1; }
-  .sous { margin: 10px 0 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.4rem); }
+  /* Les titres de la scène restent GRAS : ils sont projetés et lus par les
+     élèves (comme leurs titres à eux), pas par le professeur. */
+  #scene h1 { margin: 0; font: 700 clamp(2rem, 5.2vw, 3.6rem)/1.1 var(--serif); color: var(--blue-dark); }
+  #scene .sous { margin: 10px 0 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.4rem); }
   .adresse { margin: 16px 0 0; font-size: clamp(2rem, 6vw, 4.4rem); font-weight: 800;
              letter-spacing: .01em; color: var(--blue); }
   .etapes { margin: 12px 0 0; font-size: clamp(1.15rem, 2.4vw, 1.7rem); color: var(--ink); }
@@ -99,9 +91,9 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   .barres { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 980px; margin: 14px auto 0;
             display: flex; align-items: stretch; justify-content: center; gap: clamp(10px, 3vw, 34px); }
   .barres button { flex: 1 1 0; max-width: 190px; min-height: 0; padding: 0; display: flex;
-                   flex-direction: column; align-items: stretch; background: none; color: var(--ink);
-                   border: 0; border-radius: 14px; }
-  .barres button:hover { background: #eef3f9; }
+                   flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0;
+                   background: none; color: var(--ink); border: 0; border-radius: 14px; white-space: normal; }
+  .barres button:hover { color: var(--ink); background: var(--bleu-pale); }
   .barres .combien { flex: 0 0 auto; font-size: clamp(1.6rem, 4vw, 2.8rem); font-weight: 800;
                      color: var(--blue-dark); font-variant-numeric: tabular-nums; }
   .barres .colonne { flex: 1 1 auto; min-height: 60px; display: flex; align-items: flex-end;
@@ -140,12 +132,12 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   .q-reponses { flex: 1 1 auto; min-width: 0; min-height: 0; display: grid;
                 grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-auto-rows: minmax(0, 1fr);
                 gap: calc(var(--t) * 14px); }
-  .rep { position: relative; display: flex; align-items: center; gap: calc(var(--t) * 18px);
+  .rep { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: calc(var(--t) * 18px);
          min-height: 0; padding: calc(var(--t) * 12px) calc(var(--t) * 22px);
-         font: inherit; text-align: left; color: var(--ink); background: #fff; border: 2px solid var(--line);
-         border-radius: 16px; overflow: hidden; }
+         font: 400 16px/1.5 var(--sans); text-align: left; white-space: normal; color: var(--ink); background: #fff;
+         border: 2px solid var(--line); border-radius: 16px; overflow: hidden; }
   button.rep { cursor: pointer; }
-  button.rep:hover { background: #fff; border-color: #9fb6cf; }
+  button.rep:hover { color: var(--ink); background: #fff; border-color: #9fb6cf; }
   .rep .fond { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #dbe8f6; transition: width .6s ease; }
   .rep .l { position: relative; flex: 0 0 auto; display: grid; place-items: center;
             width: calc(var(--t) * clamp(44px, min(5.4vw, 9.5vh), 112px)); height: calc(var(--t) * clamp(44px, min(5.4vw, 9.5vh), 112px));
@@ -189,85 +181,93 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
   .q-chrono::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--page); }
   .q-chrono b { position: relative; font-size: clamp(1.8rem, min(3.2vw, 5.4vh), 3.2rem); font-variant-numeric: tabular-nums; }
   .q-chrono.fini { background: #e6ecf3; }
-  .katex { font-size: 1.08em; }
+  .katex { font-size: 1.08em; }   /* la boîte extérieure : KaTeX 0.18 ne l'a pas renommée */
   /* Le dépôt du questionnaire, avant d'ouvrir la séance. */
   .depot { margin: 26px auto 0; width: min(640px, 100%); padding: 18px 20px; border: 2px dashed #b8c6d6;
-           border-radius: 16px; background: #fff; }
+           border-radius: var(--arrondi-carte); background: var(--paper); }
   .depot.charge { border-style: solid; border-color: var(--line); text-align: left; }
-  .depot.survol { border-color: var(--teal); background: #eefaf9; }
+  .depot.survol { border-color: var(--teal); background: var(--teal-pale); }
   .depot p { margin: 8px 0 0; color: var(--muted); }
-  .depot .nom { margin: 0; font-weight: 800; color: var(--blue-dark); font-size: 1.15rem; }
+  .depot .nom { margin: 0; font: 400 var(--titre-carte)/1.25 var(--serif); color: var(--blue-dark); }
   .depot .gestes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
   .depot ul { margin: 10px 0 0; padding-left: 20px; text-align: left; color: var(--rouge); font-weight: 600; }
-  .depot.erreur { border-color: #f3d3d0; }
+  .depot.erreur { border-color: var(--rouge-bord); }
   /* 17/10/2026 : pour qui découvre la page — l'exemple, et comment en faire un. */
   .depot .aide { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 12px;
-                 padding-top: 10px; border-top: 1px solid var(--line); }
-  .depot .aide button { min-height: 36px; padding: 0 4px; color: var(--blue); background: none;
+                 padding-top: 10px; border-top: 1px solid var(--filet-doux); }
+  /* Deux liens d'aide : des boutons dessinés comme des liens, à 44 px. */
+  .depot .aide button { padding: 0 4px; color: var(--blue); background: none; border: 0;
                         font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .depot .aide button:hover { color: var(--blue-dark); background: none; }
-  dialog.preparer { max-width: 760px; padding: 0; }
-  .prep { margin: 0; padding: 14px 20px 20px 44px; display: grid; gap: 16px; }
+  dialog.preparer { max-width: 760px; }
+  .prep { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0; padding: 14px 20px 20px 44px; display: grid; gap: 16px; }
   .prep li::marker { font-weight: 800; color: var(--blue-dark); }
-  .prep p { margin: 0 0 8px; color: var(--ink); }
-  .prep textarea { display: block; width: 100%; margin: 0 0 8px; padding: 8px 10px; resize: vertical;
-                   font: .85rem/1.45 ui-monospace, Consolas, monospace; color: var(--ink);
-                   border: 2px solid var(--line); border-radius: 10px; background: #fbfcfe; }
-  .prep textarea:focus { outline: none; border-color: var(--blue); }
+  .prep p { margin: 0 0 8px; }
+  .prep textarea { display: block; margin: 0 0 8px; resize: vertical;
+                   font: var(--texte-secondaire)/1.45 ui-monospace, Consolas, monospace; background: #fbfcfe; }
   .prep .insecable { white-space: nowrap; }
   .prep .erreurs { margin: 8px 0 0; padding-left: 20px; color: var(--rouge); font-weight: 600; }
-  .commandes { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 14px;
+  .commandes { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px 14px;
                flex-wrap: wrap; padding: 12px 16px 18px; }
-  .commandes label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted);
-                     font-size: .95rem; font-weight: 600; }
+  .commandes label { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: var(--muted);
+                     font-size: var(--texte-secondaire); font-weight: 600; }
+  .commandes .case { min-height: var(--cible); cursor: pointer; }
   .commandes .case input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .commandes select { width: auto; }
   .compte { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 700;
-            font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-  .compte b { font-size: 1.9rem; color: var(--blue-dark); }
+            font-variant-numeric: tabular-nums; }
+  .compte b { font-size: 32px; line-height: 1.1; color: var(--blue-dark); }   /* « grand nombre » n1 */
   .compte .jauge { width: 170px; height: 12px; margin: 0; }
-  select { min-height: 44px; padding: 6px 10px; font: inherit; color: var(--ink);
-           border: 2px solid var(--line); border-radius: 10px; background: #fff; }
-  .message { margin: 0; padding: 8px 14px; border-radius: 10px; font-weight: 600;
-             background: #fdecec; color: var(--rouge); }
-  dialog { border: 0; border-radius: 14px; padding: 20px; max-width: 460px; width: calc(100% - 32px);
-           box-shadow: 0 20px 50px rgba(16,41,74,.28); color: var(--ink); }
-  dialog::backdrop { background: rgba(16,41,74,.45); }
-  dialog h2 { margin: 0 0 8px; font-family: Georgia, serif; font-size: 1.3rem; color: var(--blue-dark); }
-  dialog p { margin: 0 0 14px; color: var(--muted); }
-  dialog .choix { display: grid; gap: 10px; }
+  .commandes .message { margin: 0; }
+  /* Les fenêtres de décision : trois choix, l'un sous l'autre, le premier
+     est celui qu'on vient faire. */
+  dialog.fenetre:not(.apercu):not(.preparer) { max-width: 460px; }
+  .fenetre .choix { display: grid; gap: 10px; margin-top: 14px; }
+  .fenetre .choix button { white-space: normal; }
   /* L'aperçu : toutes les questions, bonnes réponses comprises — jamais
      pendant une séance (l'écran est projeté). */
-  dialog.apercu { max-width: 1100px; width: calc(100% - 32px); height: calc(100% - 32px); max-height: none;
-                  padding: 0; display: none; flex-direction: column; }
+  dialog.apercu { max-width: 1100px; height: calc(100% - 32px); max-height: none; display: none; }
   dialog.apercu[open] { display: flex; }
   .apercu-haut { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 16px 20px;
-                 border-bottom: 1px solid var(--line); }
+                 border-bottom: 1px solid var(--filet-doux); }
   .apercu-haut h2 { margin: 0; flex: 1 1 auto; }
   .apercu-liste { flex: 1 1 auto; overflow: auto; padding: 8px 20px 24px; }
-  .apercu-q { padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .apercu-q h3 { margin: 0; font-size: .95rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
-  .apercu-q .enonce { margin: 4px 0 10px; font-size: 1.35rem; font-weight: 600; color: var(--blue-dark); }
+  .apercu-q { padding: 16px 0; border-bottom: 1px solid var(--filet-doux); }
+  .apercu-q h3 { margin: 0; font-size: var(--texte-secondaire); color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .apercu-q .enonce { margin: 4px 0 10px; font-size: var(--titre-carte); font-weight: 600; color: var(--blue-dark); }
   .apercu-q .figure img { display: block; max-width: 100%; max-height: 260px; margin: 0 0 10px; }
   .apercu-q ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px;
                  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
   .apercu-q li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid var(--line);
-                 border-radius: 10px; font-size: 1.15rem; }
+                 border-radius: var(--arrondi); font-size: var(--titre-carte); }
   .apercu-q li img { display: block; max-width: 100%; max-height: 120px; }
   .apercu-q li .l { flex: 0 0 auto; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px;
                     background: var(--blue); color: #fff; font-weight: 800; line-height: 1; }
-  .apercu-q li.bonne { border-color: var(--vert); background: #effaf2; }
+  .apercu-q li.bonne { border-color: var(--vert); background: var(--vert-pale); }
   .apercu-q li.bonne .l { background: var(--vert); }
-  .apercu-q .pastille { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
-                        background: #fff3e6; color: #8a4500; font-size: .85rem; text-transform: none; letter-spacing: 0; }
-  [hidden] { display: none !important; }
+  .apercu-q .pastille { margin-left: 8px; text-transform: none; letter-spacing: 0; }
+  /* Au téléphone (le tableau se pilote parfois de là) : l'en-tête passe
+     sur deux lignes au plus, la figure d'une question va au-dessus des
+     réponses, et la barre du bas tient en trois rangées. */
+  @media (max-width: 600px) {
+    .entete { flex-wrap: wrap; row-gap: 6px; }
+    .entete .qz-titre { display: none; }
+    .q-corps { flex-direction: column; }
+    .q-figure { flex: 0 0 34%; }
+    .commandes { gap: 8px 10px; padding: 10px 16px 14px; }
+    .commandes #case-tous { flex: 1 1 100%; justify-content: center; }
+    .commandes #reglage-choix { font-size: 0; gap: 0; }        /* le menu dit déjà « A, B, C, D » */
+    .commandes #reglage-choix select { font-size: var(--texte); }
+    .commandes #action { flex: 1 1 100%; }
+  }
 </style>
 </head>
 <body>
 <div class="barre"></div>
-<header>
+<header class="entete">
   <img src="../mathsgo-logo.png" alt="maths&go">
   <span class="titre">Séance en direct</span>
-  <span class="classe" id="classe" hidden></span>
+  <span class="pastille teal" id="classe" hidden></span>
   <span class="qz-titre" id="qz-titre" hidden></span>
   <span class="droite">
     <button type="button" class="secondaire" id="retour">Ma classe</button>
@@ -280,10 +280,10 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
 <div class="commandes" id="commandes">
   <label class="case" id="case-tous" hidden><input type="checkbox" id="tous"> Dévoiler quand tous ont répondu</label>
   <span class="compte" id="compte" hidden></span>
-  <p class="message" id="message" hidden></p>
+  <p class="message erreur" id="message" hidden></p>
   <button type="button" class="secondaire" id="ouvrir-qz" hidden>📂 Questionnaire</button>
   <label id="reglage-choix" hidden>Réponses possibles
-    <select id="choix">
+    <select id="choix" aria-label="Réponses possibles">
       <option value="2">A et B</option>
       <option value="3">A, B, C</option>
       <option value="4" selected>A, B, C, D</option>
@@ -296,17 +296,19 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
 
 <input type="file" id="fichier" accept=".json,.txt,application/json,text/plain" hidden>
 
-<dialog id="fin">
-  <h2>Terminer la séance ?</h2>
+<dialog id="fin" class="fenetre">
+  <div class="fenetre-tete"><h2>Terminer la séance ?</h2></div>
+  <div class="fenetre-corps">
   <p id="fin-texte"></p>
   <div class="choix">
     <button type="button" id="fin-fichier">Télécharger le fichier, puis terminer</button>
     <button type="button" class="danger" id="fin-sans">Terminer sans fichier</button>
     <button type="button" class="secondaire" id="fin-non">Annuler</button>
   </div>
+  </div>
 </dialog>
 
-<dialog id="apercu" class="apercu">
+<dialog id="apercu" class="fenetre apercu">
   <div class="apercu-haut">
     <h2 id="apercu-titre">Aperçu</h2>
     <button type="button" class="secondaire" id="apercu-fermer">Fermer</button>
@@ -317,20 +319,22 @@ $versionKatexCss = $versionDe(__DIR__ . '/../vendor/katex-0.16.47/katex.min.css'
 <!-- 17/10/2026 : quitter le tableau pendant une séance. Elle reste ouverte
      (« ● Reprendre » dans la classe, pastille dans Mes classes) ; sans le tableau, elle
      s'arrête seule au bout de vingt minutes (lib/direct.php, VEILLE_DIRECT). -->
-<dialog id="quitter">
-  <h2>Quitter le tableau ?</h2>
+<dialog id="quitter" class="fenetre">
+  <div class="fenetre-tete"><h2>Quitter le tableau ?</h2></div>
+  <div class="fenetre-corps">
   <p>La séance reste ouverte : tu la reprends depuis la classe. Sans le tableau, elle s’arrête seule au bout de 20 minutes.</p>
   <div class="choix">
     <button type="button" id="quitter-oui">Quitter, la séance reste ouverte</button>
     <button type="button" class="danger" id="quitter-terminer">Terminer la séance</button>
     <button type="button" class="secondaire" id="quitter-non">Annuler</button>
   </div>
+  </div>
 </dialog>
 
 <!-- 17/10/2026 : préparer un questionnaire avec une IA, pour un professeur
      qui découvre la page. Seulement avant d'ouvrir la séance : le texte collé
      contient les bonnes réponses, et l'écran est peut-être projeté. -->
-<dialog id="preparer" class="preparer">
+<dialog id="preparer" class="fenetre preparer">
   <div class="apercu-haut">
     <h2>Préparer un questionnaire</h2>
     <button type="button" class="secondaire" id="preparer-fermer">Fermer</button>
@@ -381,7 +385,7 @@ Vérifie que le JSON est valide avant de répondre.</textarea>
   </ol>
 </dialog>
 
-<script src="../vendor/katex-0.16.47/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
+<script src="../vendor/katex-0.18.2/katex.min.js?v=<?= htmlspecialchars($versionKatex, ENT_QUOTES) ?>"></script>
 <script src="questionnaire.js?v=<?= htmlspecialchars($versionQuestionnaire, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {

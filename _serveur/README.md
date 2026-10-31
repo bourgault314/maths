@@ -66,7 +66,7 @@ _serveur/
     direct.php         séance en direct, écran de l'élève
     prof/direct.php    séance en direct, écran du tableau (à projeter)
     prof/questionnaire.js  lecteur du questionnaire JSON du professeur (lot 2) — LE CONTRAT
-    vendor/katex-0.16.47/  COPIE de assets/vendor/katex-0.16.47 (formules du tableau)
+    vendor/katex-0.18.2/   COPIE de assets/vendor/katex-0.18.2 (formules du tableau)
     api/direct.php     API élève de la séance en direct : l'état, et sa réponse ;
                        et de l'évaluation en classe (clé « evaluation »)
     lib/direct.php     séance en direct : types de réponse, purge, lectures, gestes
