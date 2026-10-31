@@ -53,6 +53,15 @@ test("Mon espace : les titres de l'élève restent gras (seule exception à la c
   assert.match(style, /#ecran-code h1 \{ font-size: 2\.15rem;/, "le grand titre du premier écran reste grand");
 });
 
+test("Mon espace : un nom de classe long passe à la ligne, « Se déconnecter » reste à l'écran", () => {
+  // La pastille de la charte ne se coupe pas et .droite ne rétrécit pas : un
+  // nom de 17 caractères débordait à 360 px, et 40 caractères sortaient le
+  // bouton de l'écran à 390 px.
+  assert.match(style, /\.entete \.droite \{ flex: 0 1 auto; min-width: 0; \}/);
+  assert.match(style, /#classe \{ white-space: normal; overflow-wrap: anywhere; \}/);
+  assert.match(style, /#changer \{ flex: none; \}/);
+});
+
 test("la tuile Défi tables : « 👑 Légende », le nom entier pour le lecteur d'écran", () => {
   const debut = script.indexOf("  function badgeRang(");
   const badge = script.slice(debut, script.indexOf("\n  }\n", debut));

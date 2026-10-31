@@ -48,6 +48,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      titres restent GRAS (« Mon espace », « Bonjour Rania ») ; la charte les
      dessine fins pour le professeur. */
   h1 { font-weight: 700; }
+  /* Le nom de la classe vient du professeur (40 caractères au plus) : au
+     téléphone, il passe à la ligne et « Se déconnecter » reste à l'écran. */
+  .entete .droite { flex: 0 1 auto; min-width: 0; }
+  #classe { white-space: normal; overflow-wrap: anywhere; }
+  #changer { flex: none; }
   .sous-titre { margin: 0 0 22px; color: var(--muted); }
   /* « Entrer » (04/10/2026) : sous la case du code, centrée, le bouton était
      collé à gauche. Téléphone : toute la largeur, comme la case ; ordinateur :
