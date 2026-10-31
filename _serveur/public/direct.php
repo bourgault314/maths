@@ -8,6 +8,10 @@
 require_once __DIR__ . '/lib/entetes.php';
 header('Content-Type: text/html; charset=utf-8');
 $nonce = entetes_page();
+// Serveur pro, lot 7 (31/10/2026) : la charte commune, chargée AVANT le
+// style de la page, avec son empreinte dans l'adresse (comme Mon espace).
+$charte = __DIR__ . '/suivi.css';
+$versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -19,39 +23,24 @@ $nonce = entetes_page();
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Séance en direct | maths&amp;go</title>
+<link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <style>
-  :root {
-    --blue: #063f86; --blue-dark: #052f67; --teal: #08aaa5; --orange: #f58220;
-    --ink: #10294a; --muted: #5c6c82; --paper: #fff; --line: #d9e2ec; --page: #f6f8fb;
-    --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
-    background: var(--page); color: var(--ink);
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  }
-  .barre { height: 5px; background: var(--brand-gradient); }
-  header { padding: 10px 16px; background: var(--paper); border-bottom: 1px solid var(--line);
-           display: flex; align-items: center; gap: 10px; }
-  header img { display: block; height: 34px; width: auto; }
-  header a { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
-             color: var(--muted); border: 1px solid var(--line); border-radius: 10px;
-             font-size: .92rem; font-weight: 600; text-decoration: none; }
-  header a:hover { color: var(--blue); border-color: var(--blue); background: #fff; }
-  main { flex: 1; width: 100%; max-width: 560px; margin: 0 auto; padding: 18px 16px 22px;
-         display: flex; flex-direction: column; justify-content: center; }
-  .carte { background: var(--paper); border: 1px solid var(--line); border-radius: 16px;
-           padding: 22px 18px 20px; box-shadow: 0 10px 26px rgba(22,47,82,.07); text-align: center; }
-  h1 { margin: 0 0 4px; font-family: Georgia, "Times New Roman", serif;
-       font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.15; color: var(--blue-dark); }
-  .consigne { margin: 0; color: var(--muted); font-size: 1.05rem; }
+  /* Serveur pro, lot 7 (31/10/2026) : la charte (suivi.css) donne les
+     couleurs, le texte, l'en-tête, la carte, les boutons et le message ; ne
+     restent ici que la carte centrée et les grosses touches A, B, C…
+     Côté élève, les titres restent GRAS (choix de Gwenaël, 31/10/2026). */
+  body { min-height: 100dvh; }
+  h1 { margin: 0 0 4px; font-weight: 700; line-height: 1.15; }
+  main { max-width: 560px; display: flex; flex-direction: column; justify-content: center; }
+  .carte { text-align: center; }
+  .consigne { margin: 0; color: var(--muted); }
   /* Les réponses : de grosses touches, deux par ligne. Une touche choisie se
      remplit et porte une coche — la couleur seule ne suffit pas. */
   .choix { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0 14px; }
   .choix button {
     position: relative; min-height: clamp(84px, 17vh, 132px); padding: 0; font-family: inherit;
     font-size: clamp(2.2rem, 9vw, 3.2rem); font-weight: 800; line-height: 1;
+    display: block; white-space: normal;
     color: var(--blue-dark); background: #fff; border: 3px solid #b8c7da; border-radius: 16px;
     cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
   }
@@ -59,20 +48,21 @@ $nonce = entetes_page();
      fond pâle sous la souris, donc illisible) ni les écrans tactiles, où il
      reste collé après le doigt. */
   @media (hover: hover) {
-    .choix button:hover:not(:disabled):not(.choisie) { border-color: var(--blue); background: #f3f8fc; }
-    .choix button.choisie:hover:not(:disabled) { background: var(--blue-dark); }
+    .choix button:hover:not(:disabled):not(.choisie) { color: var(--blue-dark); border-color: var(--blue); background: var(--survol); }
+    .choix button.choisie:hover:not(:disabled) { color: #fff; background: var(--blue-dark); border-color: var(--blue-dark); }
   }
-  .choix button:focus-visible { outline: 3px solid rgba(11,103,178,.4); outline-offset: 2px; }
+  .choix button:focus-visible { outline: 3px solid rgba(11,103,178,.4); outline-offset: 2px; box-shadow: none; }
   .choix button.choisie { color: #fff; background: var(--blue); border-color: var(--blue-dark); }
   .choix button.choisie::after { content: "✓"; position: absolute; top: 8px; right: 12px;
                                  font-size: 1.3rem; font-weight: 800; }
-  .choix button:disabled { cursor: default; }
+  .choix button:disabled { cursor: default; opacity: 1; }
+  .choix button.choisie:disabled:hover { background: var(--blue); border-color: var(--blue-dark); }
   .choix button:disabled:not(.choisie) { color: #9aa9bb; border-color: var(--line); background: #f8fafc; }
   /* Un nombre impair de réponses : la dernière prend toute la ligne. */
   .choix.impair button:last-child { grid-column: 1 / -1; }
-  .etat { min-height: 3.1em; margin: 0; font-size: 1.08rem; font-weight: 700; color: var(--blue-dark); }
-  .etat small { display: block; margin-top: 2px; font-size: .92rem; font-weight: 500; color: var(--muted); }
-  .etat.alerte { color: #a3261f; }
+  .etat { min-height: 3.1em; margin: 0; font-weight: 700; color: var(--blue-dark); }
+  .etat small { display: block; margin-top: 2px; font-weight: 500; }
+  .etat.alerte { color: var(--rouge); }
   .attente { display: flex; justify-content: center; gap: 8px; margin: 22px 0 6px; }
   .attente i { width: 12px; height: 12px; border-radius: 50%; background: var(--teal);
                animation: pouls 1.2s ease-in-out infinite; }
@@ -80,19 +70,15 @@ $nonce = entetes_page();
   .attente i:nth-child(3) { animation-delay: .4s; background: var(--orange); }
   @keyframes pouls { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
   @media (prefers-reduced-motion: reduce) { .attente i { animation: none; opacity: .7; } }
-  .bouton { display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
-            margin-top: 18px; padding: 0 20px; color: #fff; background: var(--blue); border-radius: 10px;
-            font-weight: 700; text-decoration: none; }
-  .bouton:hover { background: var(--blue-dark); }
-  .reseau { margin: 12px 0 0; color: #a15c11; font-size: .9rem; font-weight: 600; }
-  [hidden] { display: none !important; }
+  #vers-espace { margin-top: 18px; }
+  .reseau { text-align: left; }
 </style>
 </head>
 <body>
 <div class="barre"></div>
-<header>
+<header class="entete">
   <img src="mathsgo-logo.png" alt="maths&go">
-  <a href="./" id="retour">Mon espace</a>
+  <div class="droite"><a class="bouton secondaire" href="./" id="retour">← Mon espace</a></div>
 </header>
 
 <main>
@@ -103,7 +89,7 @@ $nonce = entetes_page();
     <p class="etat" id="etat" hidden></p>
     <div class="attente" id="attente" hidden aria-hidden="true"><i></i><i></i><i></i></div>
     <a class="bouton" href="./" id="vers-espace" hidden>Retour à mon espace</a>
-    <p class="reseau" id="reseau" hidden>Connexion perdue. Nouvel essai…</p>
+    <p class="message attention reseau" id="reseau" hidden>Connexion perdue. Nouvel essai…</p>
   </div>
 </main>
 

@@ -619,7 +619,8 @@ verifier("le manifeste connaît la page Infos", function () {
     // 35 depuis la séance en direct (07/10/2026) : direct.php, prof/direct.php,
     // api/direct.php, lib/direct.php ; 58 depuis le questionnaire au tableau
     // (lot 2, 15/10/2026) : prof/questionnaire.js et KaTeX (vendor/katex-0.16.9,
-    // devenu vendor/katex-0.16.47 au lot katex-a-jour, même nombre de fichiers :
+    // devenu vendor/katex-0.16.47 au lot katex-a-jour, puis vendor/katex-0.18.2
+    // au lot 7 du serveur pro (31/10/2026) ; toujours le même nombre de fichiers :
     // le script, la feuille et ses 20 polices).
     // 60 depuis les évaluations en classe (lot E1, 15/10/2026) : lib/evaluation.php
     // et la copie du noyau de Défi tables, prof/defi_tables_core.js.
@@ -631,8 +632,8 @@ verifier("le manifeste connaît la page Infos", function () {
         'le serveur compte 63 fichiers depuis la charte suivi.css');
     foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
-              'vendor/katex-0.16.47/katex.min.js', 'vendor/katex-0.16.47/katex.min.css',
-              'vendor/katex-0.16.47/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
+              'vendor/katex-0.18.2/katex.min.js', 'vendor/katex-0.18.2/katex.min.css',
+              'vendor/katex-0.18.2/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
             "$fichier doit figurer au manifeste");
     }

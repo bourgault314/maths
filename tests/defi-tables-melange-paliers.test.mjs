@@ -479,7 +479,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis le lot 6 « l'entrée et Mon espace » (31/10/2026) : index.php,
   // prof/index.php et suivi.css changent, 63 au manifeste
   // (avant : serveur-pro-qui-voit-quoi).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-entree-mon-espace$/m);
+  // Puis le lot 7 « la séance en direct, Infos et KaTeX 0.18.2 » (31/10/2026) :
+  // direct.php, infos.php, prof/direct.php et KaTeX (vendor/katex-0.18.2, même
+  // nombre de fichiers) changent, 63 au manifeste (avant : serveur-pro-entree-mon-espace).
+  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-direct-infos-katex$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

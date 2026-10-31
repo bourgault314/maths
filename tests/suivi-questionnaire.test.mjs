@@ -203,7 +203,7 @@ test("la page du tableau : formules sans « trust », textes par textContent, ap
 });
 
 // KaTeX est servi par suivi.mathsgo.re (la politique de contenu n'accepte aucun
-// script d'un autre domaine) : c'est une COPIE de assets/vendor/katex-0.16.47,
+// script d'un autre domaine) : c'est une COPIE de assets/vendor/katex-0.18.2,
 // dont les empreintes sont tenues par tests/scripts-tiers.test.mjs. Une
 // mise à jour de KaTeX se fait aux deux endroits, et se redépose par FTP.
 function fichiersDe(dossier) {
@@ -217,14 +217,14 @@ function fichiersDe(dossier) {
 }
 
 test("la copie de KaTeX servie par le suivi est identique à celle du site", () => {
-  const site = join(racine, "assets/vendor/katex-0.16.47");
-  const suivi = join(racine, "_serveur/public/vendor/katex-0.16.47");
+  const site = join(racine, "assets/vendor/katex-0.18.2");
+  const suivi = join(racine, "_serveur/public/vendor/katex-0.18.2");
   const noms = (dossier) => fichiersDe(dossier).map((chemin) => relative(dossier, chemin).replace(/\\/g, "/")).sort();
   assert.deepEqual(noms(suivi), noms(site), "les mêmes fichiers");
   for (const nom of noms(site)) {
     assert.ok(readFileSync(join(site, nom)).equals(readFileSync(join(suivi, nom))), `${nom} : octet pour octet`);
   }
-  assert.match(page, /<link rel="stylesheet" href="\.\.\/vendor\/katex-0\.16\.47\/katex\.min\.css\?v=<\?= htmlspecialchars\(\$versionKatexCss, ENT_QUOTES\) \?>">/);
+  assert.match(page, /<link rel="stylesheet" href="\.\.\/vendor\/katex-0\.18\.2\/katex\.min\.css\?v=<\?= htmlspecialchars\(\$versionKatexCss, ENT_QUOTES\) \?>">/);
 });
 
 // ------------------------------------------------ 17/10/2026 : l'exemple, le texte collé, le texte pour l'IA

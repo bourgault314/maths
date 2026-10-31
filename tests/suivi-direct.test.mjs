@@ -118,7 +118,7 @@ test("l'élève ne reçoit ni la répartition ni la bonne réponse", () => {
 // suit son contenu. Aucun autre.
 for (const [nom, page, externes] of [
   ["direct.php (élève)", pageEleve, []],
-  ["prof/direct.php (tableau)", pageTableau, ["../vendor/katex-0.16.47/katex.min.js", "questionnaire.js"]],
+  ["prof/direct.php (tableau)", pageTableau, ["../vendor/katex-0.18.2/katex.min.js", "questionnaire.js"]],
 ]) {
   test(`${nom} : nonce, aucun script d'ailleurs, rien du serveur en HTML`, () => {
     const balises = [...page.matchAll(/<script\b((?:\?>|[^>])*?)>/g)];
@@ -280,7 +280,8 @@ test("« Ma classe » ramène dans la classe ; pendant une séance, on demande a
   assert.match(pageTableau, /id="retour">Ma classe<\/button>/);
   assert.match(scriptTableau, /function versLaClasse\(\) \{ window\.location\.replace\("\.\/#classe=" \+ encodeURIComponent\(classeId\)\); \}/);
   assert.match(scriptTableau, /if \(!direct\) \{ versLaClasse\(\); return; \}\n    \$\("quitter"\)\.showModal\(\);/);
-  assert.match(pageTableau, /<dialog id="quitter">/);
+  // Serveur pro, lot 7 : la fenêtre de la charte (tête, corps).
+  assert.match(pageTableau, /<dialog id="quitter" class="fenetre">/);
   // Correctif 1 (PR #1010) : Échap sur « Terminer la séance ? » oublie aussi le départ.
   assert.match(scriptTableau, /\$\("fin"\)\.addEventListener\("cancel", \(\) => \{ partirApresFin = false; \}\);/,
     "Échap ne laisse pas un départ en attente");
