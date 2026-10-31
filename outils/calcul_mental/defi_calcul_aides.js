@@ -33,7 +33,7 @@
   const PERLES = Object.freeze({
     rangees: 10, parRangee: 10,
     montant: .45, hauteurRangee: 1.49, largeurCadre: 20.9, hauteurCadre: 14.9,
-    maxi: 55, mini: 14,
+    maxi: 55, mini: 14, miniTelephone: 12, miniFini: 6,
     ecart: 10, ecartSerre: 5, perleAuDoigt: 22
   });
 
@@ -212,13 +212,23 @@
     }
 
     // La géométrie est RECALCULÉE pour chaque écran, pas zoomée : perle =
-    // min(largeur / 20,9 ; hauteur / 14,9 ; 55 px), jamais moins de 14. Sous
+    // min(largeur / 20,9 ; hauteur / 14,9 ; 55 px), jamais moins de 14 (au
+    // téléphone 12, et 6 une fois le geste fait : il ne se manipule plus). Sous
     // 22 px (téléphone), le vide se resserre à 5 perles si la perle y gagne.
     function mesurer() {
       const largeur = scene.clientWidth || zone.clientWidth || 320;
       let hauteur = scene.clientHeight;
-      if (!(hauteur > 120)) hauteur = Math.round(window.innerHeight * .45);
-      const taillePour = largeurCadre => Math.max(PERLES.mini, Math.floor(Math.min(
+      // Téléphone (audit du 31/10) : la place du boulier est celle que la
+      // page lui laisse (defi_calcul.css), même petite ; le repli à 45 % de
+      // la fenêtre dès 120 px dessinait un boulier de 300 px dans une place
+      // de 110, par-dessus le pavé. Ailleurs, la place suit le boulier et le
+      // repli le fait grandir ; c'est l'échelle du cadre qui le ramène.
+      const telephone = window.matchMedia("(max-width: 620px)").matches;
+      if (telephone ? !scene.getClientRects().length : !(hauteur > 120)) hauteur = Math.round(window.innerHeight * .45);
+      // Le geste fait, le boulier ne se manipule plus : au téléphone, il peut
+      // rapetisser sous la taille du doigt pour laisser la place au pavé.
+      const mini = !telephone ? PERLES.mini : boulier.finie ? PERLES.miniFini : PERLES.miniTelephone;
+      const taillePour = largeurCadre => Math.max(mini, Math.floor(Math.min(
         largeur / largeurCadre, hauteur / PERLES.hauteurCadre, PERLES.maxi)));
       let ecart = PERLES.ecart;
       let taille = taillePour(PERLES.largeurCadre);
@@ -227,6 +237,10 @@
         ecart = PERLES.ecartSerre;
         taille = tailleSerree;
       }
+      // Le geste fait, sur un écran trop court même pour ce petit boulier
+      // (iPhone SE avec le bandeau de suivi), il s'efface : la trace du
+      // geste reste, au-dessus du pavé.
+      cadre.hidden = telephone && boulier.finie && Math.round(taille * PERLES.hauteurRangee) * PERLES.rangees > hauteur + 1;
       if (taille === boulier.taille && ecart === boulier.ecart) return;
       boulier.taille = taille;
       boulier.ecart = ecart;

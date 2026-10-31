@@ -570,7 +570,7 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
   .expression { min-height: 135px; }
 
   .challenge-playing { height: 100dvh; overflow: hidden; }
-  .challenge-playing .shell { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
+  .challenge-playing .shell { height: calc(100dvh / var(--echelle, 1)); display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
   .challenge-playing .topbar { min-height: 48px; padding: max(3px, env(safe-area-inset-top)) 10px 3px; }
   .challenge-playing .suivi-repere { margin: 0 0 2px; padding: 2px 8px; font-size: .74rem; border-radius: 8px; }
   .challenge-playing .brand img { width: 74px; }
@@ -1157,4 +1157,37 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
   body.en-tete-cadre .suivi-repere { font-size: .8rem; }
   body.en-tete-cadre.challenge-playing .topbar { padding: 0; margin-bottom: 2px; }
   body.en-tete-cadre.challenge-playing .suivi-repere { margin: 0; padding: 0; font-size: .74rem; border-radius: 0; }
+
+/* ------------------------------------------------- téléphone : tout tient (audit du 31/10)
+   Sur iPhone, la hauteur VISIBLE est celle de l'écran moins la barre
+   d'adresse de Safari (en bas) et le bandeau de suivi : 560 à 750 px.
+   Rien ne cédait de place (« .question > * » ne rétrécit pas) : le cadre du
+   jeu défilait en dedans et « Valider » passait sous l'écran. Ce qui cède,
+   quand la place manque, dans l'ordre : la ligne de retour tant qu'elle est
+   vide, les touches du pavé (jusqu'à 44 px de haut, la taille d'un doigt),
+   l'image et le rekenrek (dessinés plus petit, jamais déformés), la case du
+   calcul jusqu'à la taille de ses chiffres. Quand la place ne manque pas
+   (390 × 844), rien ne change. */
+@media (max-width: 620px) {
+  .challenge-playing .question > .answer-feedback { flex: 0 8 56px; min-height: auto; }
+  .challenge-playing .question:not(.aide-perles) > .expression { flex: 0 1 clamp(68px, 12dvh, 92px); min-height: auto; }
+  .challenge-playing .question > .keypad { flex: 0 2 calc(4 * (var(--touche-h) + 2 * var(--touche-ecart)) + 4px); min-height: 180px; grid-template-rows: repeat(4, minmax(0, 1fr)); }
+  .challenge-playing .question > .keypad button { height: auto; }
+  .challenge-playing .question.aide-image > .dc-aide { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .challenge-playing .question.aide-image > .dc-aide > svg { flex: 0 1 auto; min-height: 0; max-width: 100%; }
+  .challenge-playing .question.aide-image > .dc-aide > .consigne { flex: 0 0 auto; }
+  /* « Calcul 6 · 1 juste de suite » passe sur deux lignes à côté du bouton
+     plutôt que de pousser « À ton rythme » sur une ligne à lui. */
+  .challenge-playing #play .status-left { flex: 1 1 0; }
+  /* Le rekenrek de l'entraînement prend la place qui reste (et non sa
+     propre taille) : avant le geste, tout l'espace ; après, ce que le pavé
+     laisse. La consigne du geste (rekenrek, glisse-nombres) s'efface une
+     fois le geste fait. */
+  .challenge-playing .question.aide-perles.manip-entraine > .dc-aide { flex: 1 1 36dvh; min-height: 0; }
+  .challenge-playing .question.manip-entraine .perles-scene { min-height: 0; }
+  .challenge-playing .question.manip-entraine.est-finie .dc-aide .consigne { display: none; }
+  /* Le glisse-nombres garde sa taille : c'est ajusterGlisseTelephone() qui
+     le dessine plus petit, le geste fait, quand la place manque. */
+  .challenge-playing .question.aide-glisse.manip-entraine > .dc-aide { flex: 0 0 auto; }
+  .challenge-playing .question.aide-glisse.manip-entraine.est-finie > .dc-aide.sans-tableau .place-value-tool { display: none; }
 }
