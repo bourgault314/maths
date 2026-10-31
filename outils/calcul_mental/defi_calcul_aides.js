@@ -86,7 +86,12 @@
       const rangee = entamee >= 0 ? entamee : etats.findIndex(valeur => valeur === 0);
       return {rangees: rangee >= 0 ? [rangee] : [], ecart: geste};
     }
-    return {rangees: entamee >= 0 ? [entamee] : [], ecart: geste};
+    // En reculant : la rangée entamée ; sans rangée entamée (on part d'une
+    // dizaine entière, 50 − 6, ou on vient de vider la rangée, 42 − 2 − 6),
+    // la dernière rangée pleine.
+    const pleine = etats.map(valeur => valeur > 0).lastIndexOf(true);
+    const rangee = entamee >= 0 ? entamee : pleine;
+    return {rangees: rangee >= 0 ? [rangee] : [], ecart: geste};
   }
 
   // null si le geste est le bon, sinon le motif du refus : « rangee »,
@@ -486,6 +491,7 @@
     const fleche = (nom, couleur) => `<marker id="${id}-${nom}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0 0L10 5L0 10z" fill="${couleur}"/></marker>`;
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireDroite(o)}"><defs>${fleche("b", "#0755b8")}${fleche("n", "#143451")}${fleche("o", "#9a4a00")}</defs>`
       + `<line x1="14" y1="${y}" x2="${W - 14}" y2="${y}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`;
+    const seulementRetours = o.sauts.every(saut => saut.val < 0);
     o.sauts.forEach((saut, index) => {
       const retour = saut.val < 0;
       const xa = plan.x[index];
@@ -501,8 +507,10 @@
       const lw = texte.length * 11 + 16;
       // Le petit retour a son étiquette à côté, à droite : sur l'arc, elle
       // cacherait la pointe du grand saut.
-      const lx = retour ? Math.min(W - lw / 2 - 2, xa + 55) : mx;
-      const ly = retour ? y - 8 - h - 2 : y - 8 - h;
+      // Quand on ne fait que reculer (523 − 3 − 4), l'étiquette reste sur l'arc.
+      const aCote = retour && !seulementRetours;
+      const lx = aCote ? Math.min(W - lw / 2 - 2, xa + 55) : mx;
+      const ly = aCote ? y - 8 - h - 2 : y - 8 - h;
       s += `<rect x="${lx - lw / 2}" y="${ly - 15}" width="${lw}" height="26" rx="13" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
         + `<text x="${lx}" y="${ly + 4}" text-anchor="middle" font-size="17" fill="${couleur}">${texte}</text>`;
     });
@@ -1042,10 +1050,173 @@
     return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
   }
 
+  // ------------------------------------------------- le schéma en barres
+
+  // Le schéma en barres de M1 (doubles et moitiés, modules lot 1,
+  // 31/10/2026), dessiné avec Gwenaël : des rangées COLLÉES, alignées.
+  //  - double de 17 : 10 | 7 ‖ 10 | 7 (le nombre deux fois), puis 10 | 10 |
+  //    7 | 7 (les morceaux par paires), puis 20 | 14, chaque double sous sa
+  //    paire ; l'accolade dessous, c'est le double ;
+  //  - moitié de 74, le même schéma à l'envers : 70 | 4, puis chaque morceau
+  //    coupé en deux juste dessous (35 | 35 | 2 | 2), puis deux barres égales
+  //    (35 | 2 ‖ 35 | 2) ; l'accolade sous la première, c'est la moitié.
+  //    Les dizaines impaires restent à leur rang (70 + 4, pas 60 + 14).
+  // Dans l'aide (`masque`), ce que l'élève cherche est vide et l'accolade
+  // dit « ? ». Traits noirs, cases blanches : lisible en noir et blanc.
+  const BARRES = Object.freeze({largeur: 560, gauche: 40, droite: 520, haut: 50, rang: 46, ecart: 26, mini: 46});
+
+  // Les largeurs des cases d'une barre : proportionnelles, mais pas plus
+  // étroites que `mini` (un « 3 » à côté d'un « 20 » doit se lire).
+  function largeursDe(valeurs, total, mini = BARRES.mini) {
+    const largeurs = valeurs.map(() => 0);
+    const fixes = new Set();
+    for (let tour = 0; tour <= valeurs.length; tour += 1) {
+      const reste = total - fixes.size * mini;
+      const somme = valeurs.reduce((s, v, i) => (fixes.has(i) ? s : s + v), 0);
+      let change = false;
+      valeurs.forEach((v, i) => {
+        if (fixes.has(i)) { largeurs[i] = mini; return; }
+        largeurs[i] = somme ? v / somme * reste : reste;
+        if (largeurs[i] < mini && fixes.size < valeurs.length - 1) { fixes.add(i); change = true; }
+      });
+      if (!change) break;
+    }
+    return largeurs;
+  }
+
+  // Une barre : ses cases (valeur écrite, ou vide), un trait de coupe au
+  // milieu de chaque case si `coupe`.
+  function barreSvg(x, y, largeur, cases, {coupe = false, inconnue = false} = {}) {
+    const largeurs = largeursDe(cases.map(c => c.valeur), largeur);
+    let s = "";
+    let xx = x;
+    cases.forEach((c, i) => {
+      const w = largeurs[i];
+      s += `<rect x="${xx}" y="${y}" width="${w}" height="${BARRES.rang}" fill="${inconnue ? "#f3f6fa" : "#fff"}" stroke="#143451" stroke-width="2.5"/>`;
+      if (coupe) s += `<line x1="${xx + w / 2}" y1="${y - 7}" x2="${xx + w / 2}" y2="${y + BARRES.rang + 7}" stroke="#143451" stroke-width="2" stroke-dasharray="5 4"/>`;
+      if (c.texte) {
+        const tx = coupe ? xx + w / 4 : xx + w / 2;
+        s += `<text x="${tx}" y="${y + 30}" text-anchor="middle" font-size="${c.texte.length > 4 ? 16 : 19}" fill="#143451">${c.texte}</text>`;
+      }
+      xx += w;
+    });
+    return s;
+  }
+
+  // Une rangée de cases aux largeurs données (le double : les rangées
+  // s'alignent sur les mêmes largeurs).
+  function casesSvg(x, y, largeurs, textes, inconnue = false) {
+    let s = "";
+    let xx = x;
+    largeurs.forEach((w, i) => {
+      s += `<rect x="${xx}" y="${y}" width="${w}" height="${BARRES.rang}" fill="${inconnue ? "#f3f6fa" : "#fff"}" stroke="#143451" stroke-width="2.5"/>`;
+      if (textes[i]) s += `<text x="${xx + w / 2}" y="${y + 30}" text-anchor="middle" font-size="${textes[i].length > 4 ? 16 : 19}" fill="#143451">${textes[i]}</text>`;
+      xx += w;
+    });
+    return s;
+  }
+
+  // Une accolade horizontale sous [x1, x2], et son étiquette.
+  function accolade(x1, x2, y, texte, inconnue) {
+    const mx = (x1 + x2) / 2;
+    const lw = Math.max(46, texte.length * 11 + 18);
+    return `<path d="M${x1} ${y} Q${x1} ${y + 9} ${x1 + 10} ${y + 9} L${mx - 8} ${y + 9} Q${mx} ${y + 9} ${mx} ${y + 17} Q${mx} ${y + 9} ${mx + 8} ${y + 9} L${x2 - 10} ${y + 9} Q${x2} ${y + 9} ${x2} ${y}" fill="none" stroke="#143451" stroke-width="2.5"/>`
+      + `<rect x="${mx - lw / 2}" y="${y + 20}" width="${lw}" height="30" rx="8" fill="#fff" stroke="${inconnue ? "#0755b8" : "#143451"}" stroke-width="${inconnue ? 3 : 2}"/>`
+      + `<text x="${mx}" y="${y + 41}" text-anchor="middle" font-size="19" font-weight="700" fill="#143451">${texte}</text>`;
+  }
+
+  // Une accolade au-dessus de [x1, x2] : le nombre de départ.
+  function accoladeHaut(x1, x2, y, texte) {
+    const mx = (x1 + x2) / 2;
+    return `<path d="M${x1} ${y} Q${x1} ${y - 8} ${x1 + 10} ${y - 8} L${mx - 8} ${y - 8} Q${mx} ${y - 8} ${mx} ${y - 15} Q${mx} ${y - 8} ${mx + 8} ${y - 8} L${x2 - 10} ${y - 8} Q${x2} ${y - 8} ${x2} ${y}" fill="none" stroke="#143451" stroke-width="2"/>`
+      + `<text x="${mx}" y="${y - 21}" text-anchor="middle" font-size="18" font-weight="700" fill="#143451">${texte}</text>`;
+  }
+
+  function barres(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const moitie = o.sorte === "moitie";
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.n];
+    const reponse = moitie ? o.n / 2 : o.n * 2;
+    const y1 = BARRES.haut;
+    const y2 = y1 + BARRES.rang + BARRES.ecart;
+    const H = y2 + BARRES.rang + 62;
+    const cache = Boolean(o.masque);
+    // Les cases du haut écrivent toujours ce qu'on sait ; celles du bas ce
+    // qu'on cherche (vides dans l'aide).
+    const connu = morceaux.map(m => ({valeur: m, texte: nombre(m)}));
+    const cherche = morceaux.map(m => {
+      const v = moitie ? m / 2 : m * 2;
+      return {valeur: v, texte: cache ? "" : nombre(v)};
+    });
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarres(o)}">`;
+    // Le nombre de départ, au-dessus de sa barre (ou de chacune des deux).
+    const titre = (x, w) => accoladeHaut(x + 2, x + w - 2, y1 - 3, nombre(o.n));
+    if (moitie) {
+      // La moitié, le même schéma que le double, à l'envers (proposition
+      // du 31/10) : le nombre découpé (40 | 6), puis chaque morceau coupé
+      // en deux juste en dessous (20 | 20 | 3 | 3), puis les morceaux
+      // rangés en deux barres égales (20 | 3 ‖ 20 | 3) : l'accolade sous la
+      // première, c'est la moitié. Un seul morceau (30) : 30, puis 15 ‖ 15.
+      // Chaque moitié de case doit pouvoir porter son nombre : 2 × mini.
+      const largeurs = largeursDe(morceaux, L, 2 * BARRES.mini);
+      const demis = largeurs.flatMap(w => [w / 2, w / 2]);
+      const textesDemis = cherche.flatMap(c => [c.texte, c.texte]);
+      const rangees = morceaux.length > 1 ? 3 : 2;
+      s = s.replace(/viewBox="0 0 \d+ [\d.]+"/, `viewBox="0 0 ${W} ${y1 + rangees * BARRES.rang + 62}"`);
+      s += titre(gauche, L) + casesSvg(gauche, y1, largeurs, connu.map(c => c.texte));
+      let y = y1 + BARRES.rang;
+      if (rangees === 3) {
+        s += casesSvg(gauche, y, demis, textesDemis, cache);
+        y += BARRES.rang;
+      }
+      const uneMoitie = largeurs.map(w => w / 2);
+      const textesMoitie = cherche.map(c => c.texte);
+      s += casesSvg(gauche, y, uneMoitie, textesMoitie, cache) + casesSvg(gauche + L / 2, y, uneMoitie, textesMoitie, cache);
+      s += `<line x1="${gauche + L / 2}" y1="${y}" x2="${gauche + L / 2}" y2="${y + BARRES.rang + 4}" stroke="#143451" stroke-width="5"/>`;
+      s += accolade(gauche + 2, gauche + L / 2 - 2, y + BARRES.rang + 4, cache ? "?" : nombre(reponse), cache);
+    } else {
+      // Le double (choix de Gwenaël, 31/10) : trois rangées collées. Le
+      // nombre deux fois (10 | 7 | 10 | 7), puis les mêmes morceaux rangés
+      // par paires (10 | 10 | 7 | 7), puis chaque paire réunie (20 | 14),
+      // juste en dessous de sa paire. Un nombre d'un seul morceau (8) : la
+      // rangée du milieu n'a rien à ranger, elle n'est pas dessinée.
+      const paires = morceaux.flatMap(m => [m, m]);
+      const largeursPaires = largeursDe(paires, L);
+      const rangees = morceaux.length > 1 ? 3 : 2;
+      s = s.replace(/viewBox="0 0 \d+ [\d.]+"/, `viewBox="0 0 ${W} ${y1 + rangees * BARRES.rang + 62}"`);
+      s += titre(gauche, L / 2) + titre(gauche + L / 2, L / 2);
+      s += barreSvg(gauche, y1, L / 2, connu) + barreSvg(gauche + L / 2, y1, L / 2, connu);
+      s += `<line x1="${gauche + L / 2}" y1="${y1 - 4}" x2="${gauche + L / 2}" y2="${y1 + BARRES.rang}" stroke="#143451" stroke-width="5"/>`;
+      let y = y1 + BARRES.rang;
+      if (rangees === 3) {
+        s += casesSvg(gauche, y, largeursPaires, paires.map(m => nombre(m)));
+        y += BARRES.rang;
+      }
+      const largeursDoubles = morceaux.map((_, i) => largeursPaires[2 * i] + largeursPaires[2 * i + 1]);
+      s += casesSvg(gauche, y, largeursDoubles, cherche.map(c => c.texte), cache);
+      s += accolade(gauche + 2, droite - 2, y + BARRES.rang + 4, cache ? "?" : nombre(reponse), cache);
+    }
+    return s + "</svg>";
+  }
+
+  // Le même schéma, en mots, pour un lecteur d'écran (sans la réponse dans
+  // l'aide).
+  function decrireBarres(o) {
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.n];
+    const decoupe = morceaux.length > 1 ? ` : ${morceaux.map(nombre).join(" et ")}` : "";
+    const reponse = o.sorte === "moitie" ? o.n / 2 : o.n * 2;
+    const fin = o.masque ? "un nombre à trouver" : nombre(reponse);
+    return o.sorte === "moitie"
+      ? `Schéma : la barre de ${nombre(o.n)}${decoupe}, coupée en deux barres égales. Une barre : ${fin}.`
+      : `Schéma : deux barres de ${nombre(o.n)}${decoupe}, mises bout à bout. Ensemble : ${fin}.`;
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
     if (image.outil === "tableau-fleches") return tableauFleches(image);
+    if (image.outil === "barres") return barres(image);
     return droiteSauts(image);
   }
 
@@ -1070,6 +1241,9 @@
     planTableau,
     tableauFleches,
     decrireTableau,
+    BARRES,
+    barres,
+    decrireBarres,
     dessinerImage
   });
 });

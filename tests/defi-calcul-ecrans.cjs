@@ -314,16 +314,21 @@ const suiteVisible = page => page.isVisible("#result-suite button.primary, #resu
 // ({outil, depart, gestes} ou {outil: "glisse", decalage}).
 async function manipuler(page, m) {
   if (m.outil === "perles") {
-    let total = m.depart;
-    const entamee = Math.floor(total / 10);
+    // Les rangées comme le rekenrek les tient : on pousse dans la rangée
+    // entamée (sinon la première vide), on retire de la rangée entamée
+    // (sinon la dernière pleine : 50 − 6, 42 − 2 − 6, modules lot 1).
+    const etats = Array.from({length: 10}, (_, r) => Math.max(0, Math.min(10, m.depart - r * 10)));
     for (const geste of m.gestes) {
+      const entamee = etats.findIndex(v => v > 0 && v < 10);
       if (geste > 0) {
-        const rangee = total % 10 === 0 || geste === 10 ? Math.ceil(total / 10) : Math.floor(total / 10);
-        await glisser(page, rangee, 9, true);
+        const rangee = entamee >= 0 ? entamee : etats.findIndex(v => v === 0);
+        await glisser(page, rangee, etats[rangee] + geste - 1, true);
+        etats[rangee] += geste;
       } else {
-        await glisser(page, entamee, m.depart % 10 + geste, false);
+        const rangee = entamee >= 0 ? entamee : etats.map(v => v > 0).lastIndexOf(true);
+        await glisser(page, rangee, etats[rangee] + geste, false);
+        etats[rangee] += geste;
       }
-      total += geste;
     }
     assert.equal((await perles(page)).fini, true, "le rekenrek est fini");
   } else {
@@ -436,10 +441,11 @@ async function premierJour(navigateur, base, taille) {
   await page.waitForTimeout(800);
   assert.equal(await texte(page, "#result-title"), "Niveaux 1 et 2 : déjà sus !");
   assert.match(await texte(page, "#result-score"), /^Le niveau 3, tu vas l’apprendre maintenant/);
-  assert.equal(await boutonSuite(page), "Étape 2 : j’apprends Compléments à 100 →", "le niveau raté s'apprend TOUT DE SUITE (pas le test d'un autre module)");
+  assert.equal(await boutonSuite(page), "Étape 2 : j’apprends Différences et trous jusqu’à 20 →", "le niveau raté s'apprend TOUT DE SUITE (pas le test d'un autre module)");
   await ecran("test-bilan");
   await cliquerSuite(page);
-  await jouerApprendsTroisCalculs(page, "A2-3", (nom, options) => ecran(nom, options));
+  // Modules lot 1 (31/10) : le vrai premier module du parcours est A1.
+  await jouerApprendsTroisCalculs(page, "A1-3", (nom, options) => ecran(nom, options));
   await ecran("apprends-retenir");
   await cliquerSuite(page);
   // Je m'entraîne : perles, perles, droite, droite, rien…
@@ -465,8 +471,8 @@ async function premierJour(navigateur, base, taille) {
   assert.equal(await texte(page, "#result-title"), "Séance du jour faite", "une nouveauté par séance : la séance est finie");
   await ecran("fin-de-seance");
   const p = await parcours(page);
-  assert.deepEqual(p.modules.A2.b, [4, 3, 2, 0]);
-  assert.deepEqual(p.modules.A2.a, [1, 1, 1, 0], "les marches prouvées comptent comme J'apprends fait");
+  assert.deepEqual(p.modules.A1.b, [4, 3, 2]);
+  assert.deepEqual(p.modules.A1.a, [1, 1, 1], "les marches prouvées comptent comme J'apprends fait");
   await page.waitForTimeout(800);
   assert.deepEqual(session.erreurs, []);
   await session.contexte.close();
@@ -539,7 +545,8 @@ async function deCote(navigateur, base, taille) {
   const lignes = await textes(page, "#result-suite .cadre p, #result-suite .mouv > span");
   assert.ok(lignes.some(t => /mise de côté, revient dans 3 jours/.test(t)), `la ligne « mise de côté » (${lignes.join(" | ")})`);
   assert.ok(lignes.includes("On la met de côté quelques jours : ton professeur la reverra avec toi.") || lignes.includes("On la met de côté quelques jours\u00a0: ton professeur la reverra avec toi."), "la phrase");
-  assert.equal(await boutonSuite(page), "Étape 2 : j’apprends Compléments à 100 →", "la nouveauté vient quand même");
+  // Modules lot 1 : A1, jamais ouvert, passe avant A2-3 dans la carte.
+  assert.match(await boutonSuite(page), /^Étape 2 : tu connais déjà/, "la nouveauté vient quand même");
   await controler(session, taille, "de-cote-bilan");
   const p = await parcours(page);
   assert.equal(p.modules.A5.x[0], 3, "signalée « à voir en classe »");

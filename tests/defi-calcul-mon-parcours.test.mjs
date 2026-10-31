@@ -412,14 +412,15 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
   assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 129], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 129 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 14], "sur les modules construits : 14 compétences");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 26], "sur les modules construits : 26 compétences (14 + A1, A10, A11, M1)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2]);
   assert.equal(a2.construit, true);
   assert.deepEqual(r.modules.find(m => m.id === "M2").etats, ["classe", "su"], "mise de côté = « à voir en classe »");
   assert.deepEqual(r.modules.find(m => m.id === "A5").etats, ["revoir", "gris", "gris", "gris"], "ratée aujourd'hui : rouge pour la journée");
-  assert.equal(r.modules.find(m => m.id === "A1").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.find(m => m.id === "A3").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.find(m => m.id === "A1").construit, true, "modules lot 1 : A1 est construit");
   assert.equal(r.modules.length, 74);
   assert.deepEqual(r.revoir.map(c => `${c.module}-${c.niveau}:${c.etat}`), ["A2-3:revoir", "A5-1:revoir", "M2-1:classe"], "dans l'ordre de la carte");
   const deCote = r.revoir.find(c => c.module === "M2");
@@ -445,7 +446,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 14, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 26, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);
