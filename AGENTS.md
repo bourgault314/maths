@@ -167,18 +167,38 @@ Défi tables est la référence.
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
 - Tuile dans Mon espace : rien tant qu'aucune réussite, puis une jauge et
   « N … sur M », comptés sur ce que la classe a d'ouvert.
-- Réglage par classe : dans Ma classe, onglet « ⚙ Réglages », carte
-  « Activités », sous la case de l'appli ; propriétaire seulement ; tout
-  ouvert par défaut.
+- Réglage par classe (serveur pro, lot 5b, 30/10/2026) : dans Ma classe, EN
+  HAUT DE L'ONGLET DE L'APPLI. Une ligne dit qui la voit (« ● Ouvert à toute
+  la 405 · mondes 1, 2, 5 · en plus pour 1 élève », ou « ● Ouvert à quelques
+  élèves · Rania ») et « Régler … » (propriétaire seulement ; un collègue lit
+  la ligne) ouvre une fenêtre : la case « Ouvert à toute la classe », les
+  réglages de l'appli pour la classe (déclarés dans `LISTES_PAR_ELEVE` de la
+  page et dans `lib/applis.php`), puis ce qui est fermé à la classe, à ouvrir
+  EN PLUS à quelques élèves (on ne retire jamais rien à un élève). Rien ne
+  part avant « Enregistrer ». Tout ouvert par défaut. Plus de carte
+  « Activités » dans ⚙ Réglages, plus de « Ce que voit… » dans Élèves.
+  Toute écriture d'accès part avec « avant », l'état que la page croit rangé
+  (`eleves.acces` : les ajouts de l'élève ; `classes.modifier` : la liste
+  des applis et les réglages de l'appli réglée, correctif du 30/10/2026) :
+  si un autre onglet a écrit entre-temps, le serveur refuse (409) avec l'état
+  actuel au lieu d'écraser, et la page se remet dessus. La relecture qui suit
+  un enregistrement est bornée comme l'écriture (15 s) ; sans relecture, la
+  fenêtre se libère et dit que la vérification n'a pas pu se faire.
 - Dans Ma classe, l'onglet d'une appli montre sa progression, sans aucun code
   d'élève : les codes ne s'écrivent que dans l'onglet « Élèves » (et sur les
   papiers imprimés), pour qu'une page projetée ne les montre jamais à la
   classe (lot « Ma classe : élèves », 18/10/2026 ; gardé par
   `tests/suivi-ma-classe-eleves.test.mjs`).
-- Dans Ma classe, une appli a son onglet quand la classe l'a OU qu'un élève
-  l'a en plus (« Ce que voit… ») ; dans l'onglet d'une appli que la classe n'a
-  pas, seuls les élèves qui la voient (ou qui y ont déjà du travail) sont
-  listés, sans carte de classe (lot « Qui voit quoi », lot 4b, 24/10/2026).
+- Dans Ma classe, chaque appli a TOUJOURS son onglet (lot 5b) : son nom quand
+  la classe l'a ; le nombre d'élèves en pastille quand quelques élèves
+  seulement l'ont (« Anzan 1 ») ; grisé quand personne ne l'a, avec dedans la
+  carte « … est fermé à la 306 » (« Choisir quelques élèves », « Ouvrir à
+  toute la 306 »). Le menu « Défi tables ▾ » du téléphone recopie nom,
+  pastille et gris. Dans l'onglet d'une appli que la classe n'a pas, seuls
+  les élèves qui la voient (ou qui y ont déjà du travail) sont listés, sans
+  carte de classe. Une nouvelle appli suivie : une entrée dans `APPLIS`, son
+  onglet, et ses listes dans `LISTES_PAR_ELEVE` si elle se règle (gardé par
+  `tests/suivi-serveur-pro-qui-voit-quoi.test.mjs`).
 - Le cadre de l'appli tient entier dans l'écran avec le bloc de suivi, sur
   téléphone comme sur ordinateur.
 - Sans code, rien ne change : en-tête et fil d'Ariane du site (et pas de pied,

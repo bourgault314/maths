@@ -666,27 +666,82 @@ try {
             // n'est arrangé en silence. Ceux des autres activités restent tels
             // quels, et décocher une activité garde ses réglages (la recocher
             // les retrouve).
-            $reglages = null;
+            $reglages = null;   // ce qui est reçu, vérifié ; fondu sous le verrou
             if (array_key_exists('reglages', $corps)) {
                 if (!reglages_disponibles($pdo)) {
                     erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
                 }
                 try {
-                    $reglages = reglages_recus($corps['reglages'], reglages_de_classe($classe));
+                    reglages_recus($corps['reglages'], reglages_de_classe($classe));
                 } catch (InvalidArgumentException $e) {
                     erreur($e->getMessage(), 400);
                 }
+                $reglages = $corps['reglages'];
             }
-            if ($reglages === null) {
-                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
-                    ->execute([$libelle, implode(',', $applis), (int)$classe['id']]);
-            } else {
-                $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
-                    ->execute([$libelle, implode(',', $applis),
-                        $reglages === [] ? null : json_encode($reglages, JSON_UNESCAPED_UNICODE), (int)$classe['id']]);
+            // Serveur pro, lot 5b, correctif (relecture Codex du 30/10/2026,
+            // point 1) : la page envoie aussi « avant » — la liste des applis
+            // et les réglages de l'appli réglée, tels qu'elle les croit rangés
+            // ({applis: [...], reglages: {<cle>: {...}}}, l'une ou l'autre
+            // clé, ou les deux). Deux onglets « Régler SPLAT! » : l'un fermait
+            // le monde 5, l'autre, resté sur sa liste du matin, ouvrait le 4 —
+            // et renvoyait [1, 2, 4, 5] : le 5 rouvert sans que personne l'ait
+            // voulu. Même chose pour les applis (la liste complète d'un onglet
+            // en retard retirait l'Anzan ajouté ailleurs). Désormais, comme
+            // eleves.acces : la ligne de la classe est verrouillée, « avant »
+            // est comparé à ce qu'elle contient (forme canonique), et si c'est
+            // différent, 409 avec l'état actuel — rien d'écrit. « avant »
+            // absent : comme avant (une vieille page, un script).
+            $avant = null;
+            if (array_key_exists('avant', $corps)) {
+                try {
+                    $avant = avant_de_classe_recu($corps['avant']);
+                } catch (InvalidArgumentException $e) {
+                    erreur("État d'avant illisible : recharge la page et refais ton réglage.", 400);
+                }
             }
-            journaliser($pdo, $profId, 'classes.modifier', 'classe', (int)$classe['id']);
-            repondre(['ok' => true] + ($reglages === null ? [] : ['reglages' => reglages_json($reglages)]));
+            $classeId = (int)$classe['id'];
+            $resultat = avec_reprise($pdo, function () use ($pdo, $classeId, $libelle, $applis, $reglages, $avant): array {
+                transaction_ouvrir($pdo);
+                $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?' . pour_mise_a_jour($pdo));
+                $requete->execute([$classeId]);
+                $ligne = $requete->fetch();
+                $requete->closeCursor();
+                if ($ligne === false) {
+                    transaction_annuler($pdo);
+                    return ['disparue' => true];
+                }
+                if ($avant !== null && !meme_etat_de_classe($avant, $ligne)) {
+                    transaction_annuler($pdo);
+                    return ['conflit' => true, 'ligne' => $ligne];
+                }
+                // Les réglages reçus remplacent ceux de l'appli DANS la valeur
+                // relue sous le verrou (pas dans celle lue avant lui).
+                $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
+                if ($nouveaux === null) {
+                    $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
+                        ->execute([$libelle, implode(',', $applis), $classeId]);
+                } else {
+                    $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
+                        ->execute([$libelle, implode(',', $applis),
+                            $nouveaux === [] ? null : json_encode($nouveaux, JSON_UNESCAPED_UNICODE), $classeId]);
+                }
+                transaction_valider($pdo);
+                return ['ecrit' => true, 'reglages' => $nouveaux];
+            });
+            if (isset($resultat['disparue'])) erreur("Introuvable.", 404);
+            if (isset($resultat['conflit'])) {
+                // Rien n'est écrit. L'état actuel part avec le refus : la
+                // fenêtre se remet dessus. Pas de ligne au journal (rien n'a
+                // été fait, et ce n'est pas un refus de droit).
+                repondre([
+                    'ok' => false,
+                    'erreur' => "La {$resultat['ligne']['libelle']} a été changée ailleurs : la fenêtre montre l'état actuel, refais ton réglage.",
+                    'applis' => explode(',', (string)$resultat['ligne']['applis']),
+                    'reglages' => reglages_json(reglages_de_classe($resultat['ligne'])),
+                ], 409);
+            }
+            journaliser($pdo, $profId, 'classes.modifier', 'classe', $classeId);
+            repondre(['ok' => true] + ($resultat['reglages'] === null ? [] : ['reglages' => reglages_json($resultat['reglages'])]));
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au

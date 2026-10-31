@@ -185,7 +185,8 @@ test("aller dans une classe : c'est le chemin de la connexion, d'une classe supp
   const mdp = blocDepuis(script, script.indexOf('$("form-motdepasse").addEventListener'));
   assert.match(mdp, /if \(await allerSansPerdre\(dit, duLien, classe && classe\.id, lireDerniereClasse\(\)\)\) messager\(zoneClasses\(\), dit, "ok"\);/);
   assert.match(fonction("creerClasse"), /messager\(zoneClasses\(\), "Donne un nom à la classe\.", "erreur"\)/);
-  assert.match(fonction("ouvrirClasse"), /if \(numero !== demandeAppli \|\| !jeton\) return false;\s*if \(options && options\.remonter\) throw erreur;\s*surErreur\(erreur, zoneClasses\(\)\);/);
+  assert.match(fonction("ouvrirClasse"), /if \(numero !== demandeAppli \|\| !jeton\) return false;\s*(?:\/\/[^\n]*\n\s*)?if \(erreur && erreur\.name === "AbortError"\) return false;\s*if \(options && options\.remonter\) throw erreur;\s*surErreur\(erreur, zoneClasses\(\)\);/,
+    "une lecture arrêtée par sa garde (relireBornee, correctif 5b) ne dit rien ; une panne remonte ou se dit");
   assert.doesNotMatch(script, /rouvrirDerniereClasse|rouvrirClasseDemandee|chargerClasses\(\)\.then/);
 });
 

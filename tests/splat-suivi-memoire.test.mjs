@@ -276,7 +276,7 @@ test("AGENTS.md : le modèle commun des applis suivies est écrit, après la rè
   const section = agents.slice(modele, agents.indexOf("\n## ", modele + 5));
   for (const morceau of ["Défi tables est la référence", "« Se déconnecter » dans le bloc", "Pas de logo en haut",
     "la pastille\n  « ● prénom »", "Pas de pied (24/10/2026)", "celle de l'élève, pas\n  celle de l'appareil",
-    "il retrouve tout fermé", "onglet « ⚙ Réglages », carte\n  « Activités »", "Le cadre de l'appli tient entier", "Sans code, rien ne change"]) {
+    "il retrouve tout fermé", "EN\n  HAUT DE L'ONGLET DE L'APPLI", "Rien ne\n  part avant « Enregistrer »", "chaque appli a TOUJOURS son onglet", "Le cadre de l'appli tient entier", "Sans code, rien ne change"]) {
     assert.ok(section.includes(morceau), morceau);
   }
 });

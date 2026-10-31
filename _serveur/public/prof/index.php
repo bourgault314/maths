@@ -335,21 +335,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .onglets-classe > button svg { display: block; flex: none; }
   .barre-onglets > .onglets.suite { -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent);
                                     mask-image: linear-gradient(90deg, #000 80%, transparent); }
-  /* La vue « Réglages » : une colonne de cartes, la plus utile en haut —
-     Activités (chaque appli, ses réglages en retrait dessous), Partager, Nom
-     de la classe, Supprimer la classe. */
+  /* La vue « Réglages » : une colonne de cartes — Partager, Nom de la
+     classe, Supprimer la classe. Serveur pro, lot 5b : les activités l'ont
+     quittée (chaque appli se règle dans son onglet). */
   .reglages { max-width: 780px; }
-  #bloc-activites > h2 { margin-top: 4px; }
+  .reglages > .note-regler { margin: 0 0 18px; }
   .reglages .sous { margin: -4px 0 10px; }
-  .activite + .activite { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
-  .activite-tete { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin: 0;
-                   font-size: 1rem; cursor: pointer; }
-  .activite-tete input, .sous-reglage > label > input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
-  .sous-reglage { margin: 4px 0 6px 9px; padding: 4px 0 4px 20px; border-left: 3px solid #e6ecf3; }
-  .sous-reglage > label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; margin: 0;
-                          font-size: .93rem; cursor: pointer; }
-  .sous-reglage small { display: block; margin: -4px 0 0 28px; color: var(--muted); font-size: .84rem; line-height: 1.4; }
-  .sous-reglage .titre-sous { margin: 4px 0 8px; font-size: .88rem; font-weight: 700; color: var(--ink); }
   .legende-partage { margin: 0 0 12px; padding: 0; list-style: none; color: var(--muted); font-size: .9rem; line-height: 1.45; }
   .legende-partage li + li { margin-top: 4px; }
   .legende-partage b { color: var(--ink); }
@@ -366,61 +357,72 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   #tableau-eleves td.actions-eleve { width: 1%; text-align: right; }
   #tableau-eleves td input { min-width: 150px; }
   p.sous.note-eleves { margin: 12px 0 0; font-size: .88rem; }
-  /* Lot « Qui voit quoi » (22/10/2026, planches 1 à 4 validées par Gwenaël) :
-     la colonne « En plus » de l'onglet Élèves — une pastille par chose que
-     l'élève voit EN PLUS de sa classe (l'appli entière, ou les mondes /
-     niveaux qu'elle n'a pas) ; « — » sinon. Pour le propriétaire, la pastille
-     est un bouton qui ouvre « Ce que voit Léa » ; pour un collègue, du texte.
-     Sur téléphone, pas de colonne : les pastilles passent sous le prénom. */
-  /* La colonne prend sa part (45 %) : deux pastilles tiennent sur une ligne,
-     au-delà elles passent à la ligne — le tableau ne déborde jamais de son
-     cadre de 720 px (le « ⋯ » resterait hors de l'écran). Une pastille trop
-     longue pour sa ligne (Coffres : niveaux et opérations) coupe son texte
-     au lieu d'élargir le tableau. */
-  #tableau-eleves td.en-plus { width: 45%; white-space: normal; }
-  #tableau-eleves td.en-plus .vide { color: #9aa9bb; }
-  .ajout { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; margin: 2px 6px 2px 0;
-           padding: 3px 11px 3px 9px; border: 0; border-radius: 15px; background: #eaf0f7;
-           color: var(--blue-dark); font: inherit; font-size: .82rem; font-weight: 700; white-space: normal;
-           text-align: left; }
-  .ajout i { flex: none; }
-  button.ajout { cursor: pointer; }
-  button.ajout:hover { background: #dbe6f2; }
-  .ajout i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
-             background: var(--c, #0b67b2); color: #fff; font-style: normal; font-size: .72rem; font-weight: 800; }
-  .ajouts-sous { display: none; }
-  #corps-eleves tr.repere td { background: #fff7d6; transition: background .3s; }
-  /* La fenêtre « Ce que voit Léa » (planche 2) : ce que la classe donne est
-     coché, grisé, « par la classe » ; ce qu'on a donné à l'élève, « en plus »
-     en vert ; le reste à cocher. Chaque clic enregistre ; « Fermer » ferme. */
-  dialog.voit { max-width: 560px; max-height: calc(100vh - 32px); padding: 0; }
-  dialog.voit[open] { display: flex; flex-direction: column; }
-  .voit-tete { padding: 18px 20px 10px; }
-  .voit-tete h2 { margin: 0 0 4px; font-size: 1.25rem; }
-  .voit-tete p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
-  .voit-liste { flex: 1 1 auto; overflow-y: auto; padding: 4px 20px 6px; }
-  .voit-liste[aria-busy="true"] { opacity: .6; cursor: progress; }
-  .voit-liste .activite { padding: 6px 0; }
-  .voit-liste .activite + .activite { margin-top: 0; padding-top: 6px; border-top: 1px solid #e6ecf3; }
-  .voit-liste .activite-tete { display: flex; width: 100%; }
-  .voit-liste .activite-tete small { display: block; color: var(--muted); font-size: .82rem; font-weight: 400; }
-  .voit-liste .par-classe .activite-tete { cursor: default; }
-  .voit-liste .par-classe .activite-tete strong { color: #6b7685; }
-  .voit-liste .tag { margin-left: auto; padding: 2px 9px; border-radius: 999px; background: #f0f3f7;
-                     color: #6b7685; font-size: .78rem; font-weight: 700; white-space: nowrap; }
-  .voit-liste .tag.plus { background: #e2f4e4; color: #1b6b2e; }
-  .voit-liste .sous-reglage { margin: 0 0 6px 9px; padding: 2px 0 6px 20px; }
-  .voit-liste .titre-sous { margin: 4px 0 8px; font-size: .88rem; font-weight: 700; color: var(--muted); }
-  .voit-liste .puce-monde.classe { border-style: solid; border-color: #d2d9e2; background: #f6f8fa; color: #6b7685; cursor: default; }
-  .voit-liste .puce-monde.classe i { background: #cfd6df; color: #fff; }
-  .voit-liste .puce-monde.classe input { cursor: default; }
-  .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after {
-    content: "par la classe"; margin-left: 2px; color: #8a96a5; font-size: .72rem; font-weight: 600; }
-  .voit-liste .puce-monde.plus { box-shadow: 0 0 0 3px #e2f4e4; }
-  .voit-liste .cases-coffres label.classe { color: #6b7685; cursor: default; }
-  .voit-pied { display: flex; align-items: center; gap: 12px; padding: 12px 20px 16px; border-top: 1px solid #e6ecf3; }
-  .voit-pied .message { margin: 0; padding: 0; background: none; font-size: .88rem; }
-  .voit-pied button { margin-left: auto; }
+  /* Serveur pro, lot 5b « qui voit quoi » (choix de Gwenaël, planches 2, 3 et
+     7 du 25/10/2026) : chaque appli se règle dans son onglet. En haut de
+     l'onglet, une ligne : qui voit l'appli, et « Régler … » (propriétaire). */
+  .qui-voit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px;
+              padding: 8px 8px 8px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; }
+  .qui-voit .etat { flex: 1 1 240px; min-width: 0; margin: 0; }
+  .qui-voit .etat span { color: var(--muted); font-size: var(--texte-secondaire); }
+  .qui-voit button { display: inline-flex; align-items: center; gap: 8px; }
+  .point { display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%;
+           background: var(--vert); vertical-align: 1px; }
+  .point.quelques { background: var(--teal); }
+  /* Un onglet d'appli que personne ne voit : grisé (choix de Gwenaël,
+     planche 3) ; dedans, la carte « … est fermé à la 306 ». Une appli ouverte
+     à quelques élèves seulement : leur nombre en pastille. */
+  #choix-appli > button.eteint { color: var(--indice); }
+  #choix-appli > button.eteint[aria-pressed="true"] { color: var(--muted); }
+  .compte-plus { display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 6px;
+                 padding: 0 6px; border-radius: 999px; background: var(--teal-pale); color: var(--teal-texte);
+                 font-size: var(--texte-secondaire); font-weight: 700; line-height: 1; }
+  #menu-applis-liste button.eteint { color: var(--muted); }
+  .appli-fermee { max-width: 640px; margin: 8px auto 24px; padding: 28px 24px; text-align: center; }
+  .appli-fermee h2 { margin: 0 0 6px; }
+  .appli-fermee p { margin: 0; color: var(--muted); font-size: var(--texte-secondaire); }
+  .appli-fermee .actions { justify-content: center; margin-top: 16px; }
+  /* La fenêtre « Régler … » : la case de la classe, les élèves en plus, les
+     réglages de l'appli pour la classe. Rien n'est enregistré avant
+     « Enregistrer ». */
+  dialog.regler { max-width: 600px; }
+  .regler h3 { margin: 18px 0 2px; font-size: 16px; color: var(--ink); }
+  .regler .aide { margin: 0 0 8px; color: var(--muted); font-size: var(--texte-secondaire); }
+  .regler .case-a-cocher { display: flex; align-items: center; gap: 10px; min-height: var(--cible); margin: 0;
+                           font-weight: 600; cursor: pointer; }
+  .regler .case-a-cocher input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
+  .regler .case-a-cocher .mots { min-width: 0; }
+  .regler .case-a-cocher small { display: block; color: var(--muted); font-size: .82rem; font-weight: 400; }
+  .regler .case-classe { font-size: 1.05rem; }
+  .regler .grille-cases { display: grid; gap: 0 16px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .regler .grille-cases .case-a-cocher { font-weight: 400; }
+  .regler .sans-prenom { color: var(--muted); font-style: italic; }
+  .regler .deja { margin: 4px 0 0; color: var(--muted); font-size: var(--texte-secondaire); }
+  .regler .cases-ligne { display: flex; flex-wrap: wrap; gap: 0 18px; }
+  .regler .cases-ligne .case-a-cocher { font-weight: 400; }
+  .regler .titre-liste { margin: 10px 0 0; font-size: .88rem; font-weight: 700; color: var(--ink); }
+  .regler .puces-mondes { margin-top: 6px; }
+  /* « Un monde en plus pour quelques élèves » : une ligne par monde (niveau,
+     opération) fermé à la classe ; « Choisir… » déplie les élèves dessous. */
+  .regler .plus-ligne { border-top: 1px solid var(--filet-doux); }
+  .regler .plus-ligne:last-child { border-bottom: 1px solid var(--filet-doux); }
+  .regler .plus-ligne > summary { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 4px 0;
+                                  list-style: none; cursor: pointer; }
+  .regler .plus-ligne > summary::-webkit-details-marker { display: none; }
+  .regler .plus-ligne .quoi { flex: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+  .regler .plus-ligne .qui { flex: 1 1 auto; min-width: 0; color: var(--muted); font-size: var(--texte-secondaire);
+                             overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .regler .plus-ligne .qui.quelquun { color: var(--teal-texte); font-weight: 600; }
+  .regler .plus-ligne .choisir { flex: none; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px;
+                                 border: 1px solid var(--line); border-radius: var(--arrondi); color: var(--blue);
+                                 font-size: var(--texte-secondaire); font-weight: 700; background: var(--paper); }
+  .regler .plus-ligne[open] .choisir { background: var(--bleu-pale); }
+  .regler .plus-ligne .grille-cases { padding: 0 0 10px 4px; }
+  .regler .rond-monde { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+                        color: #fff; font-size: .78rem; font-weight: 800; }
+  .regler .fenetre-corps[aria-busy="true"] { opacity: .6; cursor: progress; }
+  .regler .fenetre-tete { position: relative; padding-right: 76px; }
+  .regler .naviguer { position: absolute; top: 16px; right: 16px; }
+  .regler .naviguer button { width: 44px; padding: 0; font-size: 22px; line-height: 1; }
   /* Lot « Qui voit quoi », lot 4b (24/10/2026) : « Le parcours de Rania » pour
      Anzan — l'écran « Mon historique » de l'élève, en lecture seule (planche 3
      du lot 4a) : le jour, le mode et ses réglages, le score sur les calculs
@@ -439,15 +441,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .pa-vide { margin: 4px 0 8px; color: var(--muted); }
   .pa-plus { display: block; width: 100%; margin: 10px 0 4px; }
   .pa-plus[hidden] { display: none; }
-  /* ⚙ Réglages (planche 4) : sous chaque appli, en lecture seule, à qui on a
-     ouvert quelque chose en plus ; chaque prénom mène à sa ligne d'Élèves. */
-  .en-plus-pour { margin: 0 0 6px 30px; color: var(--muted); font-size: .84rem; line-height: 1.5; }
-  .sous-reglage .en-plus-pour { margin: 6px 0 0; }
-  .en-plus-pour span { display: block; }
-  .en-plus-pour b { color: #1b6b2e; font-weight: 700; }
-  .en-plus-pour button { min-height: 28px; padding: 0; border: 0; background: none; color: var(--blue-dark);
-                         font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
-  .en-plus-pour button:hover { background: #eaf0f7; }
   /* Les six mondes : le dessin des pastilles de l'espace élève (index.php). */
   .mondes { display: inline-flex; gap: 5px; vertical-align: middle; }
   .mondes svg { display: block; }
@@ -475,10 +468,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                 padding: 0 12px 0 8px; border: 2px solid var(--c); border-radius: 999px; background: #fff;
                 color: var(--ink); font-size: .86rem; font-weight: 700; cursor: pointer; }
   .puce-monde i { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
-                  background: var(--c); color: #fff; font-style: normal; font-size: .78rem; font-weight: 800; }
+                  background: var(--c); color: #fff; font-style: normal; font-size: .78rem; font-weight: 800; line-height: 1; }
   .puce-monde input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
   .puce-monde.ferme { border-style: dashed; border-color: #b9c1cb; background: #f6f8fa; color: #6b7685; }
-  .puce-monde.ferme i { background: #fff; color: #6b7685; border: 2px dashed #b9c1cb; width: 18px; height: 18px; }
+  /* Lot 5b : le rond garde ses 22 px (bordure comprise, charte en border-box) —
+     à 18 px, le chiffre débordait du rond en pointillés, décentré vers le bas. */
+  .puce-monde.ferme i { background: #fff; color: #6b7685; border: 2px dashed #b9c1cb; }
   .puce-monde:focus-within { outline: 3px solid #7fb3e0; outline-offset: 2px; }
   .puces-mondes[aria-busy="true"] .puce-monde { opacity: .6; cursor: progress; }
   .puce-monde[data-monde="1"] { --c: #d9690c; } .puce-monde[data-monde="2"] { --c: #0b67b2; }
@@ -500,13 +495,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .tableau-operations th { background: #eef2f7; color: var(--ink); font-size: .74rem; letter-spacing: .04em; text-transform: uppercase; }
   .tableau-operations td.nombre { font-variant-numeric: tabular-nums; }
   p.sous.note-coffres { margin: 10px 0 0; font-size: .88rem; }
-  /* Les réglages de Coffres (⚙ Réglages) : deux rangées de cases, comme les
-     mondes de SPLAT! mais en cases simples (choix de Gwenaël, 21/10/2026). */
-  .cases-coffres { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0 0 6px; }
-  .cases-coffres label { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; margin: 0;
-                         font-size: .93rem; font-weight: 700; cursor: pointer; }
-  .cases-coffres input { width: 20px; height: 20px; margin: 0; accent-color: var(--blue); }
-  .cases-coffres[aria-busy="true"] label { opacity: .6; cursor: progress; }
   /* Le papier (lot 7). Deux impressions distinctes, jamais ensemble : les
      BANDELETTES à distribuer (numéro, prénom, adresse, code, consigne : une
      par élève, d'un seul tenant) et la FEUILLE prénom ↔ code, que le
@@ -700,17 +688,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .tete-classe #seance-direct { padding: 0 14px; }
     .menu-classes { width: min(340px, calc(100vw - 32px)); }
     .menu-classes.menu-applis { width: min(300px, calc(100vw - 32px)); }
-  }
-  /* Lot « Qui voit quoi » (planche 3) : sur téléphone, pas de colonne « En
-     plus » — les pastilles passent sous le prénom ; dans la fenêtre, les
-     étiquettes « par la classe » se taisent (la case grisée le dit). */
-  @media (max-width: 480px) {
-    #tableau-eleves th.th-plus, #tableau-eleves td.en-plus { display: none; }
-    .ajouts-sous { display: flex; flex-wrap: wrap; gap: 0 2px; margin: -4px 0 4px 8px; }
-    .ajouts-sous .ajout { min-height: 26px; margin: 2px 4px 2px 0; padding: 1px 8px 1px 6px; border-radius: 13px; font-size: .74rem; }
-    .ajouts-sous .ajout i { width: 15px; height: 15px; font-size: .62rem; }
-    .voit-liste .tag { display: none; }
-    .voit-liste .puce-monde.classe::after, .voit-liste .cases-coffres label.classe::after { content: none; }
+    /* Serveur pro, lot 5b : la ligne « qui voit » garde le point et le
+       mot fort, « Régler … » n'est plus que son rouage. */
+    .qui-voit { flex-wrap: nowrap; padding: 6px 6px 6px 14px; }
+    .qui-voit .etat { flex: 1 1 auto; }
+    .qui-voit .etat span, .qui-voit button .mot { display: none; }
+    .qui-voit button { width: var(--cible); padding: 0; justify-content: center; }
+    .regler .grille-cases { grid-template-columns: 1fr 1fr; }
   }
   /* Serveur pro, lot 5c (choix de Gwenaël, planche 5 du 25/10/2026) : au
      téléphone, le tableau reste un tableau — compact, une ligne par élève,
@@ -925,6 +909,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <!-- La vue de l'activité : ce qu'on regarde et ce qu'on fait avec l'appli. -->
     <div id="vue-appli">
 
+    <!-- Serveur pro, lot 5b (choix de Gwenaël, planches 2, 3 et 7 de l'étape 4,
+         25/10/2026) : en haut de l'onglet, qui voit l'appli (« ● Ouvert à
+         toute la 405 · … », « ● Ouvert à quelques élèves · Rania ») et
+         « Régler … » (propriétaire seulement : la fenêtre #regler). Une appli
+         que personne ne voit : l'onglet est grisé, et dedans la carte
+         « … est fermé à la 405 » (poserQuiVoit). Le rouage est le dessin
+         « settings » de Feather Icons (licence MIT). -->
+    <div class="qui-voit" id="qui-voit" hidden>
+      <p class="etat" id="qui-voit-etat"></p>
+      <button type="button" class="secondaire" id="regler-appli" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="mot" id="regler-appli-mot"></span></button>
+    </div>
+    <div class="carte appli-fermee" id="appli-fermee" hidden>
+      <h2 id="af-titre"></h2>
+      <p id="af-texte"></p>
+      <div class="actions" id="af-actions">
+        <button type="button" class="secondaire" id="af-quelques">Choisir quelques élèves</button>
+        <button type="button" id="af-toute"></button>
+      </div>
+    </div>
+
     <!-- Serveur pro, lot 5c (choix de Gwenaël, maquette 8 du 25/10/2026) : les
          trois cartes du haut de Défi tables côte à côte, de la même largeur
          (charte : .grille-cartes), sans filet de couleur. -->
@@ -978,7 +982,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <!-- Le message de l'activité (fiche, version restaurée, moteur absent) :
          au-dessus du tableau, pas sous trente lignes. -->
     <p class="message" id="message-appli" hidden></p>
-    <div class="tableau-enveloppe">
+    <div class="tableau-enveloppe" id="enveloppe-tableau">
       <table id="tableau">
         <thead>
           <!-- Serveur pro, lot 5c : « large » = caché au téléphone (le tableau
@@ -1029,7 +1033,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       </table>
     </div>
     <p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée.</p>
-    <p class="sous note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
+    <p class="sous note-tableau" id="note-tableau">Ce tableau est un <strong>indicateur pédagogique, pas une preuve
     d’évaluation</strong> : la progression vient de l’appareil de l’élève, et quiconque connaît son code
     peut la modifier.</p>
 
@@ -1090,7 +1094,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         <p class="sous note-eleves">Mêmes numéros que sur la feuille prénom ↔ code et les bandelettes.</p>
         <div class="tableau-enveloppe">
           <table id="tableau-eleves">
-            <thead><tr><th title="Le numéro de la feuille prénom ↔ code et des bandelettes">N°</th><th>Élève</th><th>Code</th><th class="th-plus" title="Ce que l’élève voit en plus de sa classe">En plus</th><th></th></tr></thead>
+            <thead><tr><th title="Le numéro de la feuille prénom ↔ code et des bandelettes">N°</th><th>Élève</th><th>Code</th><th></th></tr></thead>
             <tbody id="corps-eleves"></tbody>
           </table>
         </div>
@@ -1103,83 +1107,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
          classes.supprimer). Avant, ces blocs étaient en bas de chaque onglet,
          sous le tableau. -->
     <div class="reglages" id="vue-reglages" hidden>
-      <!-- Ce que les élèves trouvent dans leur espace (lot « splat-suivi-4 »,
-           conception D7) : une appli par ligne, ses réglages en retrait
-           dessous. Décocher retire la tuile et n'efface rien : le serveur
-           garde les progressions (classes.modifier ne change que la liste). -->
-      <div id="bloc-activites">
-        <h2>Activités</h2>
-        <p class="sous">Ce que tes élèves trouvent dans leur espace.</p>
-        <div class="carte" id="liste-activites">
-          <div class="activite">
-            <label class="activite-tete"><input type="checkbox" data-appli="defi-tables"> <strong>Défi tables</strong></label>
-            <!-- Lot « Les records » : la case par classe (ouverte par défaut) —
-                 décochée, les Légendes de la classe gardent l'escalier, ne
-                 voient pas les records et n'y apparaissent pas. -->
-            <div class="sous-reglage" id="rec-reglage" hidden>
-              <label><input type="checkbox" id="case-records"> 🏆 Les records</label>
-              <small>Le concours de temps des Légendes des tables. Décoché : cette classe ne le voit pas et n’y apparaît pas.</small>
-            </div>
-            <!-- Lot « Qui voit quoi » (planche 4) : sous chaque appli, en lecture
-                 seule, les élèves à qui elle est ouverte EN PLUS de la classe
-                 (rempli par poserEnPlusPour, d'après le tableau déjà lu). -->
-            <div class="en-plus-pour" id="en-plus-defi-tables" hidden></div>
-          </div>
-          <div class="activite">
-            <label class="activite-tete"><input type="checkbox" data-appli="coffres"> <strong>Coffres magiques</strong></label>
-            <div class="en-plus-pour" id="en-plus-coffres" hidden></div>
-            <!-- Lot « Coffres magiques sur le suivi » (21/10/2026, maquettes
-                 02/03 validées) : les niveaux et les opérations accessibles
-                 aux élèves, tout coché par défaut (rien d'écrit), enregistrés
-                 à chaque clic ; la dernière case cochée d'un groupe ne se
-                 décoche pas. Les trésors déjà ouverts restent. -->
-            <div class="sous-reglage" id="coffres-reglages" hidden>
-              <p class="titre-sous" id="titre-coffres-niveaux">Niveaux accessibles aux élèves</p>
-              <div class="cases-coffres" id="cases-coffres-niveaux" role="group" aria-labelledby="titre-coffres-niveaux">
-                <label><input type="checkbox" data-niveau="1"> Niveau 1</label>
-                <label><input type="checkbox" data-niveau="2"> Niveau 2</label>
-                <label><input type="checkbox" data-niveau="3"> Niveau 3</label>
-              </div>
-              <p class="titre-sous" id="titre-coffres-operations">Opérations accessibles</p>
-              <div class="cases-coffres" id="cases-coffres-operations" role="group" aria-labelledby="titre-coffres-operations">
-                <label><input type="checkbox" data-operation="1"> Addition</label>
-                <label><input type="checkbox" data-operation="2"> Soustraction</label>
-                <label><input type="checkbox" data-operation="3"> Multiplication</label>
-                <label><input type="checkbox" data-operation="4"> Division</label>
-              </div>
-              <div class="en-plus-pour" id="en-plus-coffres-listes" hidden></div>
-            </div>
-          </div>
-          <!-- Lot « Qui voit quoi », lot 4b (24/10/2026) : Anzan, fermé par
-               défaut (la case suit la liste de la classe, comme les autres) ;
-               pas de réglage de classe. Dessous, « En plus pour : Rania ». -->
-          <div class="activite">
-            <label class="activite-tete"><input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong></label>
-            <div class="en-plus-pour" id="en-plus-flash-anzan" hidden></div>
-          </div>
-          <div class="activite">
-            <label class="activite-tete"><input type="checkbox" data-appli="splat"> <strong>SPLAT!</strong></label>
-            <div class="en-plus-pour" id="en-plus-splat" hidden></div>
-            <!-- Lot « splat-suivi-5 » : les mondes ouverts à la classe (tous par
-                 défaut). Un monde fermé reste sur la carte de l'élève, grisé,
-                 avec un cadenas ; rien n'est effacé. Les six mondes de la
-                 carte, dans l'ordre (un test les compare au moteur). -->
-            <div class="sous-reglage" id="mondes-ouverts" hidden>
-              <p class="titre-sous" id="titre-mondes-ouverts">Mondes ouverts</p>
-              <div class="puces-mondes" id="puces-mondes" role="group" aria-labelledby="titre-mondes-ouverts">
-                <label class="puce-monde" data-monde="1"><input type="checkbox" data-monde="1"><i aria-hidden="true">1</i>Petit</label>
-                <label class="puce-monde" data-monde="2"><input type="checkbox" data-monde="2"><i aria-hidden="true">2</i>Classique</label>
-                <label class="puce-monde" data-monde="3"><input type="checkbox" data-monde="3"><i aria-hidden="true">3</i>Enquête</label>
-                <label class="puce-monde" data-monde="4"><input type="checkbox" data-monde="4"><i aria-hidden="true">4</i>Système</label>
-                <label class="puce-monde" data-monde="5"><input type="checkbox" data-monde="5"><i aria-hidden="true">5</i>Équations</label>
-                <label class="puce-monde" data-monde="6"><input type="checkbox" data-monde="6"><i aria-hidden="true">6</i>Relatifs</label>
-              </div>
-              <div class="en-plus-pour" id="en-plus-splat-listes" hidden></div>
-            </div>
-          </div>
-          <p class="message" id="message-activites" hidden></p>
-        </div>
-      </div>
+      <!-- Serveur pro, lot 5b : les activités ont quitté les Réglages — chaque
+           appli se règle dans son onglet (« Régler … »). -->
+      <p class="sous note-regler">Les applis de la classe se règlent dans leur onglet : « Régler Défi tables », « Régler SPLAT! »…</p>
 
       <!-- Partage : trois lignes, avec les mots des boutons (« Voir seulement »,
            « Voir et modifier »). La question posée avant de passer un collègue
@@ -1414,20 +1344,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   </div>
 </dialog>
 
-<!-- Lot « Qui voit quoi » (22/10/2026, planche 2) : « Ce que voit Léa ».
-     Propriétaire seulement (Q2). Le contenu est construit par
-     dessinerCeQueVoit (createElement et textContent : le prénom n'est jamais
-     du HTML) ; chaque case enregistre aussitôt (eleves.acces) et le message
-     du pied le dit ; « Fermer » ne fait que fermer. -->
-<dialog id="voit" class="voit" aria-labelledby="voit-titre">
-  <div class="voit-tete">
-    <h2 id="voit-titre"></h2>
-    <p id="voit-sous"></p>
+<!-- Serveur pro, lot 5b : « Régler Défi tables » (planches 2 et 3 de l'étape 4,
+     maquettes « Régler SPLAT! » et « Régler Coffres » du 30/10/2026).
+     Propriétaire seulement. Le contenu est construit par dessinerRegler
+     (createElement et textContent : un prénom n'est jamais du HTML) ; rien
+     n'est envoyé avant « Enregistrer ». Elle remplace « Ce que voit Léa » et
+     les cases de Réglages › Activités. -->
+<dialog id="regler" class="fenetre regler" aria-labelledby="regler-titre">
+  <div class="fenetre-tete">
+    <div class="naviguer"><button type="button" class="secondaire" id="regler-croix" aria-label="Fermer sans enregistrer" title="Fermer sans enregistrer">✕</button></div>
+    <h2 id="regler-titre"></h2>
+    <p id="regler-sous"></p>
   </div>
-  <div class="voit-liste" id="voit-liste"></div>
-  <div class="voit-pied">
-    <p class="message" id="voit-message" role="status" hidden></p>
-    <button type="button" class="secondaire" id="voit-fermer">Fermer</button>
+  <div class="fenetre-corps" id="regler-corps"></div>
+  <div class="fenetre-pied">
+    <p class="message" id="regler-message" role="status" hidden></p>
+    <button type="button" class="secondaire" id="regler-annuler">Annuler</button>
+    <button type="button" id="regler-enregistrer">Enregistrer</button>
   </div>
 </dialog>
 
@@ -1596,20 +1529,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // écriture) ou "reglages" (lot « Ma classe : réglages », 17/10/2026 :
   // propriétaire seulement).
   let vue = "appli";
-  // Lot « Qui voit quoi » : l'élève dont la fenêtre « Ce que voit… » est ouverte.
-  let voitEleve = null;
-  // Lot 3b (relecture Codex du 22/10) : les enregistrements de la fenêtre
-  // partent UN PAR UN, chacun calcule son état au moment de partir — jamais
-  // d'après un état qu'une réponse pas encore reçue va changer.
-  // Lot 3c (seconde relecture, le soir) : la file et le compteur sont PAR
-  // ÉLÈVE (voitFiles, voitAttentes, sur eleve.id) — un envoi qui traîne ne
-  // grise que la fenêtre de CET élève, pas celle des autres ; et chaque envoi
-  // a un délai (DELAI_ACCES_MS), passé lequel la case revient.
-  // voitOuverture : le numéro de la fenêtre ouverte (un message ne va qu'à
-  // la fenêtre qui a fait le clic).
-  const voitFiles = new Map();
-  const voitAttentes = new Map();
-  let voitOuverture = 0;
+  // Serveur pro, lot 5b : chaque envoi de « Régler … » a un délai, passé
+  // lequel la fenêtre dit que le serveur n'a pas répondu (lot 3c).
   const DELAI_ACCES_MS = 15000;
   // Les élèves déjà lus de la classe ouverte, par activité (un appel
   // « tableau » par activité, refait seulement quand la classe change).
@@ -1791,12 +1712,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "boite-champs", "secret-texte", "secret-valeur", "echues-texte", "supprimer-echues",
     // Lot E1 : la carte « Évaluations » et ses deux boîtes.
     "evaluations-zone", "em-titre", "em-tables", "em-types", "em-grille", "eo-titre", "eo-texte", "eo-durees",
-    // Lot « Qui voit quoi » : la fenêtre « Ce que voit Léa » et les lignes
-    // « En plus pour » des Réglages (des prénoms).
-    "voit-titre", "voit-sous", "voit-liste", "en-plus-defi-tables", "en-plus-coffres", "en-plus-coffres-listes",
-    "en-plus-splat", "en-plus-splat-listes",
+    // Serveur pro, lot 5b : la fenêtre « Régler … », la ligne « qui voit »
+    // et la carte d’un onglet fermé (des prénoms, le nom de la classe).
+    // (correctif, relecture Codex point 7 : le bouton « Ouvrir à toute la 405 »
+    // et le mot « Régler SPLAT! » aussi — le nom de la classe restait dedans.)
+    "regler-titre", "regler-sous", "regler-corps", "qui-voit-etat", "af-titre", "af-texte", "af-toute", "regler-appli-mot",
     // Lot 4b : Anzan — « En plus pour », ses séances et sa feuille.
-    "en-plus-flash-anzan", "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note",
+    "pa-compte", "pa-liste", "pa-note", "fa-titre", "fa-compte", "fa-corps", "fa-note",
     // Lot 5c : la fenêtre de l’élève (un prénom).
     "fe-titre", "fe-sous", "fe-contenu",
     // Correctif des lots 5 : les records (des prénoms et des temps) — la
@@ -1804,21 +1726,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "records-semaine", "records-toujours"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-premiere-classe", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
-    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
-    "voit-message", "fe-message"];
+    "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
+    "regler-message", "fe-message"];
   // Correctif des lots 5 (point 12) : le nom de la classe, dans ses Réglages.
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom", "chercher-eleve", "nom-classe"];
   const BLOCS_A_CACHER = ["fiche", "bandelettes", "objectif", "fragiles", "bloc-profs",
     "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
-    "vue-eleves", "onglet-eleves", "menu-classes"];
+    "vue-eleves", "onglet-eleves", "menu-classes",
+    // Serveur pro, lot 5b : la ligne « qui voit » et la carte d’un onglet grisé.
+    "qui-voit", "appli-fermee"];
 
   function viderZones() {
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
     BLOCS_A_CACHER.forEach(id => { const noeud = $(id); if (noeud) noeud.hidden = true; });
-    ["boite", "secret", "eval-modele", "eval-ouvrir", "voit", "fenetre-eleve"].forEach(id => {
+    ["boite", "secret", "eval-modele", "eval-ouvrir", "regler", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
@@ -1844,11 +1768,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "secret-valeur", "echues-texte", "supprimer-echues"];
   const ZONES_DE_LA_CLASSE = ZONES_TEXTE.filter(id => !ZONES_HORS_CLASSE.includes(id));
   const MESSAGES_DE_LA_CLASSE = ["message-classe", "message-appli", "message-partage", "bandeau-droit",
-    "message-activites", "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
-    "voit-message", "fe-message"];
+    "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
+    "regler-message", "fe-message"];
 
   function viderLaClasse() {
-    ["eval-modele", "eval-ouvrir", "voit", "fenetre-eleve"].forEach(id => {
+    ["eval-modele", "eval-ouvrir", "regler", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
     });
@@ -1885,7 +1809,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     recherche = "";
     fenetreEleveId = null;
     idsAffiches = [];
-    voitEleve = null;
+    reglage = null;
+    reglageEnCours = false;
     parcoursAnzanEleve = null;
     anneeCourante = "";
     classeApresMotDePasse = 0;
@@ -1897,11 +1822,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // professeurs, ni « moi » demandées avant.
     generation += 1;
     demandeProfs += 1;
-    // Lot 3c : un envoi encore en route ne touchera plus à rien (sa classe
-    // n'est plus la classe ouverte). Ses files et compteurs ne sont PAS
-    // vidés (relecture Codex du 23/10) : chaque envoi décompte lui-même son
-    // attente à l'arrivée, exactement une fois — vider ici faisait décompter
-    // une vieille réponse sur l'attente d'un envoi de la session suivante.
+    // Lot 5b : un « Enregistrer » encore en route ne touchera plus à rien
+    // (il compare sa génération) ; reglageEnCours est remis à faux plus haut,
+    // pour que « Régler … » s'ouvre tout de suite après une reconnexion.
     veille.arreter();
   }
 
@@ -2333,13 +2256,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Dans la liste de l'onglet Élèves : ce qui concerne l'élève lui-même.
   function poserGestesEleve(eleve, cActions) {
+    // Serveur pro, lot 5b : plus de « Ce que voit Léa… » ici — ce qu'un élève
+    // voit en plus se règle dans l'onglet de l'appli (« Régler … »).
     const boutons = [];
-    // Lot « Qui voit quoi » (D5, Q2) : « Ce que voit Léa… » en premier —
-    // propriétaire seulement, comme le serveur (eleves.acces).
-    if (droitClasse === "proprietaire") {
-      boutons.push(boutonGeste(`Ce que voit ${prenomCourt(eleve)}…`, "secondaire", () => ouvrirCeQueVoit(eleve),
-        "Ce qu’il voit dans son espace, et ce que tu peux lui ouvrir en plus"));
-    }
     boutons.push(
       // Choix de Gwenaël (18/10/2026) : l'élève qui a perdu son code, ou qui
       // en a un nouveau, repart avec SA bandelette, et rien à l'écran.
@@ -2377,22 +2296,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       cNumero.textContent = String(index + 1);
       const cNom = celluleNom(eleve, true);
       const cCode = celluleCode(eleve);
-      // Lot « Qui voit quoi » : la colonne « En plus » (une pastille par
-      // ajout effectif, « — » sinon) et, pour le téléphone, les mêmes
-      // pastilles sous le prénom (la colonne y est cachée, planche 3).
-      const cPlus = celluleEnPlus(eleve);
-      const sous = pastillesEnPlus(eleve);
-      if (sous.length) {
-        const bloc = document.createElement("div");
-        bloc.className = "ajouts-sous";
-        bloc.append(...sous);
-        cNom.append(bloc);
-      }
       const cActions = document.createElement("td");
       cActions.className = "actions-eleve";
       poserGestesEleve(eleve, cActions);
       ligne.dataset.eleve = String(eleve.id);
-      ligne.append(cNumero, cNom, cCode, cPlus, cActions);
+      ligne.append(cNumero, cNom, cCode, cActions);
       corps.appendChild(ligne);
     });
   }
@@ -2401,9 +2309,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   //
   // Conception validée par Gwenaël (qui-voit-quoi, lot 1, planches 1 à 4) :
   // ce qu'un élève voit = ce que voit sa classe + ce qu'on lui a ouvert EN
-  // PLUS ; on n'enlève jamais rien à un élève. Deux portes : ⚙ Réglages pour
-  // la classe, la ligne de l'élève (menu ⋯ « Ce que voit Léa… », pastilles
-  // de la colonne « En plus ») pour l'exception. Le serveur range les ajouts
+  // PLUS ; on n'enlève jamais rien à un élève. Depuis le serveur pro, lot 5b,
+  // une seule porte : « Régler … » en haut de l'onglet de l'appli (la classe
+  // ET les élèves en plus, plus bas). Le serveur range les ajouts
   // (eleve.ajouts) et CALCULE ce que voit l'élève (eleve.acces : la règle
   // « classe + ajouts » n'est écrite qu'une fois, en PHP, lib/applis.php) ;
   // la page lit `acces` pour montrer, et n'écrit que `ajouts`
@@ -2413,18 +2321,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Ce qu'un élève peut recevoir en plus à l'intérieur d'une appli : les
   // listes de numéros qu'elle déclare au catalogue (lib/applis.php,
-  // « reglages » entiers), avec les mots des Réglages (un test les compare
-  // aux puces et aux cases de la page). `mot` : comment on nomme un numéro ;
-  // `seul` : le mot suffit, sans le nom de l'appli (« le monde 3 »).
+  // « reglages » entiers). `titre` : le titre de ses cases dans « Régler … » ;
+  // `mot` : comment on nomme un numéro (« seulement : monde 3 »).
   const LISTES_PAR_ELEVE = {
     "coffres": [
-      {nom: "niveaux", titre: "Niveaux ouverts", mot: "niveau {n}", feminin: false, seul: false,
+      {nom: "niveaux", titre: "Niveaux ouverts", mot: "niveau {n}",
        numeros: [[1, "Niveau 1"], [2, "Niveau 2"], [3, "Niveau 3"]]},
-      {nom: "operations", titre: "Opérations ouvertes", mot: "opération {nom}", feminin: true, seul: false,
+      {nom: "operations", titre: "Opérations ouvertes", mot: "opération {nom}",
        numeros: [[1, "Addition"], [2, "Soustraction"], [3, "Multiplication"], [4, "Division"]]}
     ],
     "splat": [
-      {nom: "mondes", titre: "Mondes ouverts", mot: "monde {n}", feminin: false, seul: true,
+      {nom: "mondes", titre: "Mondes ouverts", mot: "monde {n}",
        numeros: [[1, "Petit"], [2, "Classique"], [3, "Enquête"], [4, "Système"], [5, "Équations"], [6, "Relatifs"]]}
     ]
   };
@@ -2476,100 +2383,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return {applis: (classe && classe.applis) || [], reglages: (classe && classe.reglages) || {}};
   }
 
-  // Ce qu'un élève voit EN PLUS de sa classe — ce qu'elle ne lui donne pas
-  // déjà —, appli par appli, dans l'ordre de APPLIS :
-  // [{appli, entiere, listes: [{liste, numeros}]}]. `entiere` : l'appli,
-  // que la classe n'a pas, lui est ouverte en entier. Un ajout rattrapé par
-  // la classe (D4) ne s'y voit pas : il est gardé, pas montré.
-  function enPlusDe(eleve) {
-    const acces = eleve && eleve.acces;
-    if (!acces || !Array.isArray(acces.applis)) return [];
-    const deLaClasse = (classe && classe.applis) || [];
-    const sortie = [];
-    APPLIS.forEach(appli => {
-      if (!acces.applis.includes(appli.cle)) return;
-      const parClasse = deLaClasse.includes(appli.cle);
-      const listes = [];
-      (LISTES_PAR_ELEVE[appli.cle] || []).forEach(liste => {
-        const pourLui = numerosOuverts(acces.reglages, appli.cle, liste);
-        const pourLaClasse = parClasse ? numerosOuverts(classe.reglages, appli.cle, liste) : [];
-        // La classe a déjà tout ; ou l'appli lui est ouverte entière.
-        if (pourLaClasse === null || (!parClasse && pourLui === null)) return;
-        const numeros = (pourLui || liste.numeros.map(([numero]) => numero)).filter(numero => !pourLaClasse.includes(numero));
-        if (numeros.length) listes.push({liste, numeros});
-      });
-      if (!parClasse) sortie.push({appli, entiere: listes.length === 0, listes});
-      else if (listes.length) sortie.push({appli, entiere: false, listes});
-    });
-    return sortie;
-  }
-
-  // Une pastille par ajout effectif (planche 1) : « ⚡ Coffres magiques »
-  // pour une appli entière ; « ③ SPLAT! Enquête » (le numéro dans la couleur
-  // du monde, comme les puces des Réglages) pour des mondes ; « Coffres
-  // magiques : niveau 2 » pour des niveaux ou des opérations. Propriétaire :
-  // des boutons qui ouvrent « Ce que voit… » ; collègue : du texte (Q2).
-  function pastillesEnPlus(eleve) {
-    const cliquable = droitClasse === "proprietaire";
-    return enPlusDe(eleve).map(plus => {
-      const pastille = document.createElement(cliquable ? "button" : "span");
-      pastille.className = "ajout";
-      if (cliquable) {
-        pastille.type = "button";
-        pastille.title = `En plus de sa classe — voir ou changer ce que voit ${prenomCourt(eleve)}`;
-        pastille.addEventListener("click", () => ouvrirCeQueVoit(eleve));
-      } else {
-        pastille.title = "En plus de sa classe";
-      }
-      const seule = plus.listes.length === 1 ? plus.listes[0] : null;
-      if (plus.entiere) {
-        pastille.textContent = `⚡ ${plus.appli.nom}`;
-      } else if (seule && seule.liste.nom === "mondes") {
-        seule.numeros.forEach(numero => {
-          const rond = document.createElement("i");
-          rond.setAttribute("aria-hidden", "true");
-          rond.style.background = COULEURS_MONDES[numero] || "#0b67b2";
-          rond.textContent = String(numero);
-          pastille.append(rond);
-        });
-        const nomMonde = seule.numeros.length === 1 ? ` ${motDeMonde(seule.liste, seule.numeros[0])}` : "";
-        pastille.append(document.createTextNode(`${plus.appli.nom}${nomMonde}`));
-        pastille.setAttribute("aria-label", `${plus.appli.nom} : ${seule.numeros.map(numero => motDe(seule.liste, numero)).join(", ")} en plus`);
-      } else {
-        pastille.textContent = `${plus.appli.nom} : `
-          + plus.listes.map(({liste, numeros}) => numeros.map(numero => motDe(liste, numero)).join(", ")).join(", ");
-      }
-      return pastille;
-    });
-  }
-
-  // « Enquête » : le nom court d'un monde (celui des puces).
-  function motDeMonde(liste, numero) {
-    const trouve = liste.numeros.find(([n]) => n === numero);
-    return trouve ? trouve[1] : "";
-  }
-
-  function celluleEnPlus(eleve) {
-    const cellule = document.createElement("td");
-    cellule.className = "en-plus";
-    const pastilles = pastillesEnPlus(eleve);
-    if (pastilles.length) {
-      cellule.append(...pastilles);
-    } else {
-      const vide = document.createElement("span");
-      vide.className = "vide";
-      vide.textContent = "—";
-      vide.title = "Rien de plus que sa classe";
-      cellule.append(vide);
-    }
-    return cellule;
-  }
-
-  // Les ajouts après un geste dans la fenêtre — l'état COMPLET que la page
-  // envoie (eleves.acces remplace la colonne entière, comme ⚙ Réglages
-  // envoie la liste des mondes). Jamais de liste vide, jamais « [] » : pour
-  // le serveur (PHP), {"splat": []} et {"splat": {}} sont la même chose —
-  // SPLAT! ENTIÈRE (relevé par Code à l'application du lot 2). Donc :
+  // Les ajouts après un geste — l'état COMPLET que la page envoie
+  // (eleves.acces remplace la colonne entière). Jamais de liste vide, jamais
+  // « [] » : pour le serveur (PHP), {"splat": []} et {"splat": {}} sont la
+  // même chose — SPLAT! ENTIÈRE (relevé par Code à l'application du lot 2 de
+  // « Qui voit quoi »). Donc :
   //  - une appli entière s'ouvre par un objet vide {} et se retire en
   //    SUPPRIMANT sa clé ;
   //  - un numéro décoché qui vide sa liste supprime la liste ; une appli
@@ -2609,361 +2427,774 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return suite;
   }
 
-  // « Enregistré : Léa voit Coffres magiques. », « Enregistré : le monde 3
-  // est ouvert à Lucas. » (planche 2).
-  function texteEnregistre(eleve, geste) {
-    const prenom = prenomCourt(eleve);
-    const appli = APPLIS.find(une => une.cle === geste.cle) || {nom: geste.cle};
-    if (geste.liste === undefined) {
-      return geste.ouvre ? `Enregistré : ${prenom} voit ${appli.nom}.` : `Enregistré : ${prenom} ne voit plus ${appli.nom}.`;
-    }
-    const liste = (LISTES_PAR_ELEVE[geste.cle] || []).find(une => une.nom === geste.liste);
-    if (!liste) return "Enregistré.";
-    const e = liste.feminin ? "e" : "";
-    const quoi = `${liste.feminin ? "l’" : "le "}${motDe(liste, geste.numero)}${liste.seul ? "" : ` ${deNom(appli.nom)}`}`;
-    return geste.ouvre ? `Enregistré : ${quoi} est ouvert${e} à ${prenom}.` : `Enregistré : ${quoi} n’est plus ouvert${e} à ${prenom}.`;
+  // ------------------------------------------- « Régler … » (serveur pro, lot 5b)
+  //
+  // Choix de Gwenaël (étape 4, planches 2, 3 et 7 du 25/10/2026) : chaque
+  // appli se règle DANS SON ONGLET. Une ligne en haut de l'onglet dit qui la
+  // voit ; « Régler Défi tables » ouvre une fenêtre avec la case de la classe,
+  // les élèves en plus et les réglages de l'appli pour la classe. C'est la
+  // seule porte : les cases ont quitté Réglages, « Élèves › ⋯ › Ce que
+  // voit… » et la colonne « En plus » ont disparu. Règle du 22/10 gardée :
+  // pour un élève, on ne fait qu'AJOUTER (ce que la classe a, il l'a).
+  //
+  // Propriétaire seulement, comme le serveur (classes.modifier et
+  // eleves.acces). Rien n'est envoyé avant « Enregistrer » : la fenêtre
+  // travaille sur un brouillon. À l'enregistrement, la classe d'abord
+  // (classes.modifier : la liste des applis, puis les réglages de CETTE
+  // appli), puis chaque élève dont les ajouts changent (eleves.acces, avec
+  // « avant », l'état rangé tel que la page le connaît : si un autre onglet
+  // l'a changé, le serveur refuse au lieu d'écraser — lot 3c). Un refus
+  // n'arrête pas les autres élèves ; la fenêtre dit ce qui est passé et ce
+  // qui ne l'est pas, et se remet sur l'état relu du serveur.
+  //
+  // Tout est construit par createElement et textContent : un prénom n'est
+  // jamais du HTML, et aucun code d'élève n'est écrit ici.
+  let reglage = null;          // le brouillon de la fenêtre ouverte, ou null
+  let reglageEnCours = false;  // un « Enregistrer » est en route
+
+  function nomDeLAppli(cle) {
+    return (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
   }
 
-  function ouvrirCeQueVoit(eleve) {
-    if (!classe || droitClasse !== "proprietaire" || !eleve) return;
-    voitEleve = eleve;
-    voitOuverture += 1;
-    messager("voit-message", "", "");
-    dessinerCeQueVoit();
-    const boite = $("voit");
+  // Un élève a-t-il un ajout pour cette appli (rangé par le serveur) ?
+  function ajoutDe(eleve, cle) {
+    const ajouts = eleve && eleve.ajouts;
+    const ajout = ajouts && ajouts[cle];
+    return ajout && typeof ajout === "object" && !Array.isArray(ajout) ? ajout : null;
+  }
+
+  // Ce numéro lui est-il ajouté ? Oui si l'appli lui est donnée entière ({}),
+  // ou si la liste le nomme.
+  function numeroAjoute(eleve, cle, liste, numero) {
+    const ajout = ajoutDe(eleve, cle);
+    if (!ajout) return false;
+    if (!Object.keys(ajout).length) return true;
+    return Array.isArray(ajout[liste.nom]) && ajout[liste.nom].includes(numero);
+  }
+
+  // L'état réel, d'après la classe et les élèves déjà lus : le point de
+  // départ du brouillon, et ce à quoi on le compare à l'enregistrement.
+  function etatReglage(cle) {
+    const listes = {};
+    (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
+      listes[liste.nom] = new Set(numerosOuverts(classe.reglages, cle, liste) || liste.numeros.map(([numero]) => numero));
+    });
+    const entiers = new Set();
+    const parNumero = {};
+    (eleves || []).forEach(eleve => {
+      if (ajoutDe(eleve, cle)) entiers.add(eleve.id);
+      (LISTES_PAR_ELEVE[cle] || []).forEach(liste => liste.numeros.forEach(([numero]) => {
+        const cleNumero = `${liste.nom}:${numero}`;
+        if (!parNumero[cleNumero]) parNumero[cleNumero] = new Set();
+        if (numeroAjoute(eleve, cle, liste, numero)) parNumero[cleNumero].add(eleve.id);
+      }));
+    });
+    return {
+      cle,
+      classeOuverte: parLaClasse(cle),
+      records: cle === "defi-tables" ? recordsOuvertsPourLaClasse() : null,
+      listes, entiers, parNumero
+    };
+  }
+
+  function copierEtat(etat) {
+    const listes = {};
+    Object.keys(etat.listes).forEach(nom => { listes[nom] = new Set(etat.listes[nom]); });
+    const parNumero = {};
+    Object.keys(etat.parNumero).forEach(cle => { parNumero[cle] = new Set(etat.parNumero[cle]); });
+    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, listes,
+            entiers: new Set(etat.entiers), parNumero};
+  }
+
+  // La ligne en haut de l'onglet : « ● Ouvert à toute la 405 · … » ou
+  // « ● Ouvert à quelques élèves · Rania ». Un onglet que personne ne voit n'a
+  // pas cette ligne : il a la carte « … est fermé à la 405 ». « Régler … »
+  // pour le propriétaire seulement ; un collègue lit la ligne.
+  function poserQuiVoit() {
+    const ligne = $("qui-voit");
+    const fermee = $("appli-fermee");
+    const bouton = $("regler-appli");
+    if (!classe || vue !== "appli") { ligne.hidden = true; fermee.hidden = true; return; }
+    const cle = appliAffichee;
+    const nom = nomDeLAppli(cle);
+    const proprietaire = droitClasse === "proprietaire";
+    const etat = $("qui-voit-etat");
+    etat.textContent = "";
+    $("regler-appli-mot").textContent = `Régler ${nom}`;
+    bouton.setAttribute("aria-label", `Régler ${nom}`);
+    bouton.hidden = !proprietaire;
+    const point = el("i", "point");
+    point.setAttribute("aria-hidden", "true");
+    if (parLaClasse(cle)) {
+      fermee.hidden = true;
+      ligne.hidden = false;
+      const fort = el("strong", "", `Ouvert à toute la ${classe.libelle}`);
+      etat.append(point, fort);
+      const details = detailsDeLaClasse(cle);
+      if (details.length) etat.append(" ", el("span", "", `· ${details.join(" · ")}`));
+      return;
+    }
+    const qui = ordreDeLaFeuille(eleves || []).filter(eleve => accesDe(eleve).applis.includes(cle));
+    if (qui.length) {
+      fermee.hidden = true;
+      ligne.hidden = false;
+      point.classList.add("quelques");
+      etat.append(point, el("strong", "", "Ouvert à quelques élèves"), " ",
+        el("span", "", `· ${listeDePrenoms(qui)}`));
+      return;
+    }
+    // Personne : l'onglet est grisé, et dedans la carte (planche 7).
+    ligne.hidden = true;
+    fermee.hidden = false;
+    $("af-titre").textContent = `${nom} est fermé à la ${classe.libelle}`;
+    $("af-texte").textContent = proprietaire
+      ? `Aucun élève de la ${classe.libelle} ne le voit dans son espace. Ouvre-le à toute la classe, ou seulement à quelques élèves.`
+      : `Aucun élève de la ${classe.libelle} ne le voit dans son espace.`;
+    $("af-toute").textContent = `Ouvrir à toute la ${classe.libelle}`;
+    $("af-actions").hidden = !proprietaire;
+    // Pendant un enregistrement (le raccourci lui-même, ou la fenêtre), les
+    // deux boutons attendent (correctif, point 2 : une seule écriture à la fois).
+    ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = reglageEnCours; });
+  }
+
+  // « Rania, Lucas, Alice et 2 autres » : trois prénoms au plus, sur une ligne.
+  function listeDePrenoms(liste) {
+    const noms = liste.map(eleve => nomAffiche(eleve) || "un élève sans prénom");
+    if (noms.length <= 3) return noms.join(", ");
+    const reste = noms.length - 3;
+    return `${noms.slice(0, 3).join(", ")} et ${reste} autre${reste > 1 ? "s" : ""}`;
+  }
+
+  // Ce que dit la ligne après « Ouvert à toute la 405 » : les réglages de la
+  // classe qui ne sont pas « tout », et combien d'élèves ont quelque chose en
+  // plus — en mots courts.
+  function detailsDeLaClasse(cle) {
+    const details = [];
+    if (cle === "defi-tables") details.push(recordsOuvertsPourLaClasse() ? "les records sont ouverts" : "sans les records");
+    (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
+      const ouverts = numerosOuverts(classe.reglages, cle, liste);
+      if (!ouverts) return;
+      if (liste.nom === "operations") {
+        details.push(ouverts.map(numero => libelleDe(liste, numero).toLocaleLowerCase("fr")).join(", "));
+      } else {
+        // « mondes 1, 2, 5 », mais « niveau 2 » quand il n'y en a qu'un.
+        details.push(ouverts.length > 1 ? `${liste.nom} ${ouverts.join(", ")}` : motDe(liste, ouverts[0]));
+      }
+    });
+    const enPlus = (eleves || []).filter(eleve => (LISTES_PAR_ELEVE[cle] || []).some(liste => {
+      const ouverts = numerosOuverts(classe.reglages, cle, liste);
+      return ouverts && liste.numeros.some(([numero]) => !ouverts.includes(numero) && numeroAjoute(eleve, cle, liste, numero));
+    })).length;
+    if (enPlus) details.push(`en plus pour ${enPlus} élève${enPlus > 1 ? "s" : ""}`);
+    return details;
+  }
+
+  // « Enquête », « Division » : le libellé d'un numéro.
+  function libelleDe(liste, numero) {
+    const trouve = liste.numeros.find(([n]) => n === numero);
+    return trouve ? trouve[1] : String(numero);
+  }
+
+  function ouvrirRegler(cle) {
+    if (!classe || droitClasse !== "proprietaire" || reglageEnCours) return;
+    const depart = etatReglage(cle);
+    reglage = {depart, brouillon: copierEtat(depart), classeId: classe.id, deplies: new Set()};
+    messager("regler-message", "", "");
+    dessinerRegler();
+    occuperRegler(false);
+    const boite = $("regler");
     if (!boite.open) boite.showModal();
   }
 
-  // Fermée (bouton ou Échap), la fenêtre oublie l'élève et ses prénoms. Un
-  // enregistrement encore en route continue : sa réponse mettra à jour la
-  // ligne de l'élève, sans rien réécrire dans la fenêtre fermée.
-  function fermerCeQueVoit() {
-    voitEleve = null;
-    voitOuverture += 1;
-    ["voit-titre", "voit-sous", "voit-liste"].forEach(id => { $(id).textContent = ""; });
-    messager("voit-message", "", "");
+  // Fermée (Annuler, ✕ ou Échap), la fenêtre oublie son brouillon et ses
+  // prénoms. Pendant un enregistrement, elle ne se ferme pas.
+  function fermerRegler() {
+    reglage = null;
+    ["regler-titre", "regler-sous", "regler-corps"].forEach(id => { $(id).textContent = ""; });
+    messager("regler-message", "", "");
   }
 
-  // La fenêtre (planche 2) : toutes les applis que la page sait montrer, une
-  // ligne chacune — par la classe : cochée, grisée, « par la classe » ; par
-  // un ajout : cochée, « en plus » ; le reste à cocher. Sous une appli que la
-  // classe a, ses mondes / niveaux / opérations : ceux de la classe grisés,
-  // les autres à cocher un par un. Une appli que la classe n'a pas s'ouvre
-  // ENTIÈRE (D3) : pas de puces. `garder` : la case à refocaliser après un
-  // enregistrement (la fenêtre est redessinée).
-  function dessinerCeQueVoit(garder) {
-    const eleve = voitEleve;
-    if (!eleve) return;
-    const prenom = prenomCourt(eleve);
-    $("voit-titre").textContent = `Ce que voit ${prenom}`;
-    const sous = $("voit-sous");
-    sous.textContent = "";
-    const enPlus = document.createElement("b");
-    enPlus.textContent = "en plus";
-    sous.append(`Sa classe (${classe.libelle}) décide, et tu peux lui ouvrir des choses `, enPlus,
-      `. Rien ne lui est retiré : ce que la classe a, ${prenom} l’a.`);
-    const zone = $("voit-liste");
-    zone.textContent = "";
-    zone.setAttribute("aria-busy", "false");
-    const acces = accesDe(eleve);
-    const deLaClasse = (classe && classe.applis) || [];
-    let aFocaliser = null;
-    APPLIS.forEach(appli => {
-      const parClasse = deLaClasse.includes(appli.cle);
-      const pourLui = acces.applis.includes(appli.cle);
-      const bloc = document.createElement("div");
-      bloc.className = parClasse ? "activite par-classe" : "activite";
-      const tete = document.createElement("label");
-      tete.className = "activite-tete";
-      const caseAppli = document.createElement("input");
-      caseAppli.type = "checkbox";
-      caseAppli.checked = parClasse || pourLui;
-      caseAppli.disabled = parClasse;
-      caseAppli.dataset.appli = appli.cle;
-      const nom = document.createElement("span");
-      const fort = document.createElement("strong");
-      fort.textContent = appli.nom;
-      nom.append(fort);
-      tete.append(caseAppli, nom);
-      if (parClasse || pourLui) {
-        const etiquette = document.createElement("span");
-        etiquette.className = parClasse ? "tag" : "tag plus";
-        etiquette.textContent = parClasse ? "par la classe" : "en plus";
-        tete.append(etiquette);
-      }
-      if (!parClasse) {
-        caseAppli.addEventListener("change", () => changerCeQueVoit({cle: appli.cle, ouvre: caseAppli.checked}, caseAppli));
-        if (garder && garder.cle === appli.cle && garder.liste === undefined) aFocaliser = caseAppli;
-      }
-      bloc.append(tete);
-      const listes = LISTES_PAR_ELEVE[appli.cle] || [];
-      if (parClasse && listes.length) {
-        const dessous = document.createElement("div");
-        dessous.className = "sous-reglage";
-        listes.forEach(liste => {
-          const pourLaClasse = numerosOuverts(classe.reglages, appli.cle, liste);
-          const ouvertsLui = numerosOuverts(acces.reglages, appli.cle, liste);
-          const titre = document.createElement("p");
-          titre.className = "titre-sous";
-          titre.id = `voit-${appli.cle}-${liste.nom}`;
-          titre.textContent = liste.titre;
-          const groupe = document.createElement("div");
-          groupe.className = appli.cle === "splat" ? "puces-mondes" : "cases-coffres";
-          groupe.setAttribute("role", "group");
-          groupe.setAttribute("aria-labelledby", titre.id);
-          liste.numeros.forEach(([numero, libelle]) => {
-            const deClasse = !pourLaClasse || pourLaClasse.includes(numero);
-            const ouvert = deClasse || !ouvertsLui || ouvertsLui.includes(numero);
-            const etiquette = document.createElement("label");
-            const caseNumero = document.createElement("input");
-            caseNumero.type = "checkbox";
-            caseNumero.checked = ouvert;
-            caseNumero.disabled = deClasse;
-            caseNumero.dataset.liste = liste.nom;
-            caseNumero.dataset.numero = String(numero);
-            if (appli.cle === "splat") {
-              etiquette.className = `puce-monde ${deClasse ? "classe" : ouvert ? "plus" : "ferme"}`;
-              etiquette.dataset.monde = String(numero);
-              const rond = document.createElement("i");
-              rond.setAttribute("aria-hidden", "true");
-              rond.textContent = String(numero);
-              etiquette.append(caseNumero, rond, libelle);
-            } else {
-              etiquette.className = deClasse ? "classe" : "";
-              etiquette.append(caseNumero, ` ${libelle}`);
-            }
-            if (deClasse) {
-              etiquette.title = "Ouvert par la classe";
-            } else {
-              caseNumero.addEventListener("change", () =>
-                changerCeQueVoit({cle: appli.cle, liste: liste.nom, numero, ouvre: caseNumero.checked}, caseNumero));
-              if (garder && garder.cle === appli.cle && garder.liste === liste.nom && garder.numero === numero) aFocaliser = caseNumero;
-            }
-            groupe.append(etiquette);
-          });
-          dessous.append(titre, groupe);
-        });
-        bloc.append(dessous);
-      } else if (!parClasse && pourLui) {
+  function caseACocher(texte, coche, quandChange, petit) {
+    const etiquette = el("label", "case-a-cocher");
+    const uneCase = document.createElement("input");
+    uneCase.type = "checkbox";
+    uneCase.checked = Boolean(coche);
+    uneCase.addEventListener("change", () => quandChange(uneCase.checked, uneCase));
+    // Le texte et sa précision dans un seul bloc, l'une sous l'autre (dans
+    // l'étiquette en flex, la précision passait à droite du texte).
+    const mots = el("span", "mots");
+    mots.append(texte);
+    if (petit) mots.append(el("small", "", petit));
+    etiquette.append(uneCase, mots);
+    return etiquette;
+  }
+
+  // La grille des élèves (ordre et numéros de la feuille prénom ↔ code).
+  function grilleDesEleves(coches, quandChange, precision) {
+    const grille = el("div", "grille-cases");
+    ordreDeLaFeuille(eleves || []).forEach((eleve, index) => {
+      const nom = nomAffiche(eleve);
+      const texte = nom ? document.createTextNode(nom) : el("span", "sans-prenom", `n° ${index + 1} (sans prénom)`);
+      grille.append(caseACocher(texte, coches.has(eleve.id), coche => {
+        if (coche) coches.add(eleve.id); else coches.delete(eleve.id);
+        quandChange();
+      }, precision ? precision(eleve) : ""));
+    });
+    return grille;
+  }
+
+  // Le dessin de la fenêtre, d'après le brouillon (redessinée à chaque case
+  // qui change ce qu'on montre : la case de la classe, un monde).
+  function dessinerRegler() {
+    if (!reglage || !classe) return;
+    const b = reglage.brouillon;
+    const cle = b.cle;
+    const nom = nomDeLAppli(cle);
+    const listes = LISTES_PAR_ELEVE[cle] || [];
+    $("regler-titre").textContent = `Régler ${nom}`;
+    $("regler-sous").textContent = `Ce que trouvent les élèves de la ${classe.libelle} dans leur espace.`;
+    const corps = $("regler-corps");
+    corps.textContent = "";
+    corps.append(caseACocher(`Ouvert à toute la ${classe.libelle}`, b.classeOuverte, coche => {
+      b.classeOuverte = coche;
+      dessinerRegler();
+    }));
+    corps.lastChild.classList.add("case-classe");
+    if (!b.classeOuverte) {
+      // La classe ne l'a pas : l'appli ENTIÈRE pour quelques élèves (D3).
+      corps.append(el("h3", "", "Ou seulement pour quelques élèves"));
+      corps.append(el("p", "aide", `Ils ont ${nom} dans leur espace.`));
+      corps.append(grilleDesEleves(b.entiers, direQuiVoit, eleve => {
         // Un ajout gardé alors que la classe a perdu l'appli (D4) peut ne
-        // nommer que certains numéros : on le dit, sans puces (D3).
-        const restreint = listes.map(liste => {
-          const numeros = numerosOuverts(acces.reglages, appli.cle, liste);
-          return numeros ? numeros.map(numero => motDe(liste, numero)).join(", ") : "";
-        }).filter(Boolean);
-        if (restreint.length) {
-          const petit = document.createElement("small");
-          petit.textContent = `Seulement : ${restreint.join(" · ")}`;
-          nom.append(petit);
+        // nommer que certains numéros : on le dit.
+        const ajout = ajoutDe(eleve, cle);
+        if (!ajout || !Object.keys(ajout).length || !b.entiers.has(eleve.id)) return "";
+        const seulement = listes.map(liste => (ajout[liste.nom] || []).map(numero => motDe(liste, numero)).join(", ")).filter(Boolean);
+        return seulement.length ? `seulement : ${seulement.join(" · ")}` : "";
+      }));
+      direQuiVoit();
+      return;
+    }
+    messager("regler-message", "", "");
+    // La classe l'a : ses réglages pour la classe, puis ce qui est fermé à la
+    // classe, à ouvrir en plus à quelques élèves.
+    if (cle === "defi-tables" || listes.length) corps.append(el("h3", "", "Pour la classe"));
+    if (cle === "defi-tables") {
+      corps.append(caseACocher("🏆 Les records", b.records, coche => { b.records = coche; },
+        `Le concours de temps des Légendes des tables. Décoché : la ${classe.libelle} ne le voit pas et n’y apparaît pas.`));
+    }
+    listes.forEach(liste => corps.append(...casesDeLaClasse(cle, liste)));
+    const fermes = [];
+    listes.forEach(liste => liste.numeros.forEach(([numero]) => {
+      if (!b.listes[liste.nom].has(numero)) fermes.push({liste, numero});
+    }));
+    if (!listes.length) {
+      corps.append(el("p", "deja", `Toute la ${classe.libelle} le voit déjà.`));
+      return;
+    }
+    corps.append(el("h3", "", cle === "splat" ? "Un monde en plus pour quelques élèves" : "En plus pour quelques élèves"));
+    if (!fermes.length) {
+      corps.append(el("p", "aide", cle === "splat"
+        ? `Tous les mondes sont ouverts à la ${classe.libelle} : rien à ajouter.`
+        : `Tout est ouvert à la ${classe.libelle} : rien à ajouter.`));
+      return;
+    }
+    corps.append(el("p", "aide", `${cle === "splat" ? "Les mondes fermés" : "Ce qui est fermé"} à la ${classe.libelle}. Rien n’est retiré à un élève : on ajoute.`));
+    fermes.forEach(({liste, numero}) => corps.append(lignePlus(cle, liste, numero)));
+  }
+
+  // Les cases de la classe pour une liste (les mondes en puces, comme
+  // avant dans Réglages ; les niveaux et opérations en cases). La dernière
+  // case cochée ne se décoche pas : une classe garde au moins un monde.
+  function casesDeLaClasse(cle, liste) {
+    const b = reglage.brouillon;
+    const ouverts = b.listes[liste.nom];
+    const titre = el("p", "titre-liste", liste.titre);
+    titre.id = `regler-${cle}-${liste.nom}`;
+    const groupe = el("div", cle === "splat" ? "puces-mondes" : "cases-ligne");
+    groupe.setAttribute("role", "group");
+    groupe.setAttribute("aria-labelledby", titre.id);
+    liste.numeros.forEach(([numero, libelle]) => {
+      const changer = (coche, uneCase) => {
+        if (!coche && ouverts.size === 1) {
+          uneCase.checked = true;
+          messager("regler-message", DERNIER_NUMERO[liste.nom] || "Il en faut au moins un.", "erreur");
+          return;
         }
-      }
-      zone.append(bloc);
-    });
-    // Un enregistrement de CET élève est encore en route (fenêtre rouverte
-    // entre-temps) : tout reste grisé jusqu'à sa réponse, qui redessine la
-    // fenêtre. Celle d'un autre élève n'attend rien (lot 3c).
-    if (voitEnAttenteDe(eleve) > 0) {
-      [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
-      zone.setAttribute("aria-busy", "true");
-      return;
-    }
-    if (aFocaliser) aFocaliser.focus();
-  }
-
-  function voitEnAttenteDe(eleve) {
-    return voitAttentes.get(eleve.id) || 0;
-  }
-
-  // Chaque clic enregistre (eleves.acces) : la page envoie TOUT l'état
-  // (ajoutsApres) ; le serveur répond le rangé et le calculé, que la page
-  // reporte sur l'élève dans toutes les listes déjà lues. En cas d'erreur,
-  // la case revient en arrière et le pied de la fenêtre le dit (comme les
-  // puces des mondes des Réglages).
-  //
-  // Lot 3b (relecture Codex du 22/10/2026) : décocher le monde 4, fermer,
-  // rouvrir AVANT la réponse puis cocher le 5 envoyait [3, 4, 5] — la
-  // seconde fenêtre partait de l'état d'avant la première réponse, et le
-  // monde 4 retiré était rouvert. Désormais les enregistrements font la queue
-  // et chacun calcule l'état complet au moment de partir, d'après ce que le
-  // serveur a répondu au précédent ; la fenêtre reste grisée tant qu'un
-  // enregistrement est en route.
-  //
-  // Lot 3c (seconde relecture Codex, le soir) : la queue ne suffit pas quand
-  // ce que la page croit savoir est FAUX — une réponse perdue en route (le
-  // serveur a écrit, la page ne l'a pas su) ou un second onglet sur le même
-  // élève. La page envoie donc aussi « avant », l'état rangé tel qu'elle le
-  // connaît, et le serveur n'écrit que si c'est encore le sien ; sinon il
-  // répond 409 avec l'état vrai, que la page reporte et redessine — le clic
-  // est à refaire, rien n'a été rouvert. La file et le compteur sont par
-  // élève ; l'attente est bornée (DELAI_ACCES_MS) ; une réponse arrivée après
-  // « Se déconnecter » ou après un changement de classe n'est pas traitée.
-  function changerCeQueVoit(geste, caseCochee) {
-    const eleve = voitEleve;
-    if (!eleve || !classe) return Promise.resolve();
-    const ouverture = voitOuverture;
-    const classeDepart = classe;
-    voitAttentes.set(eleve.id, voitEnAttenteDe(eleve) + 1);
-    const zone = $("voit-liste");
-    [...zone.querySelectorAll("input")].forEach(uneCase => { uneCase.disabled = true; });
-    zone.setAttribute("aria-busy", "true");
-    const file = voitFiles.get(eleve.id) || Promise.resolve();
-    const tour = file.then(() => envoyerCeQueVoit(eleve, geste, caseCochee, ouverture, classeDepart));
-    voitFiles.set(eleve.id, tour.catch(() => {}));
-    return tour;
-  }
-
-  async function envoyerCeQueVoit(eleve, geste, caseCochee, ouverture, classeDepart) {
-    let erreurRecue = null;
-    let etatRecu = null;
-    const garde = new AbortController();
-    const minuteur = setTimeout(() => garde.abort(), DELAI_ACCES_MS);
-    try {
-      // « avant » : ce que le serveur a rangé, tel qu'il l'a rendu (tableau ou
-      // réponse précédente) — pas recalculé, pas nettoyé.
-      const avant = eleve.ajouts || {};
-      const ajouts = ajoutsApres(eleve.ajouts, geste);
-      const reponse = await api("eleves.acces", {eleve_id: eleve.id, avant, ajouts}, {signal: garde.signal});
-      etatRecu = {ajouts: reponse.ajouts || {}, acces: reponse.acces || null};
-    } catch (erreur) {
-      erreurRecue = erreur;
-      // Délai dépassé, ou le navigateur n'a pas pu joindre le serveur
-      // (TypeError « Failed to fetch ») : dans les deux cas le serveur a
-      // peut-être écrit — même conseil, en français.
-      if (erreur.name === "AbortError" || erreur.name === "TypeError") {
-        erreurRecue = new Error(`Le serveur n’a pas répondu : recharge la page pour vérifier les accès ${deNom(prenomCourt(eleve))} avant de recommencer.`);
-        erreurRecue.statut = 0;
-      } else if (erreur.statut === 409 && erreur.donnees && erreur.donnees.ajouts) {
-        // L'état vrai est dans le refus : la page le prend, comme une réponse.
-        etatRecu = {ajouts: erreur.donnees.ajouts, acces: erreur.donnees.acces || null};
-      }
-    } finally {
-      clearTimeout(minuteur);
-      voitAttentes.set(eleve.id, Math.max(0, voitEnAttenteDe(eleve) - 1));
-    }
-    // Une autre session, une autre classe (ou la même, rouverte : son tableau
-    // a été relu) : cette réponse ne vaut plus rien, on ne reporte rien. Mais
-    // si une fenêtre est ouverte sur ce même élève (relu, donc un autre
-    // objet), elle attendait cet envoi : on la redessine, pour qu'elle se
-    // libère dès que plus rien n'est en route (relecture Codex du 23/10 :
-    // elle restait grisée pour de bon).
-    if (classe !== classeDepart) {
-      if ($("voit").open && voitEleve && voitEleve.id === eleve.id) dessinerCeQueVoit();
-      return;
-    }
-    if (etatRecu) reporterAcces(eleve, etatRecu.ajouts, etatRecu.acces);
-    // Le message d'un enregistrement ne va qu'à la fenêtre qui a fait le
-    // clic, encore ouverte ; celui d'une erreur, à la fenêtre de CET élève si
-    // elle est ouverte (rouverte ou non), sinon sous les boutons d'Élèves.
-    const memeEleve = $("voit").open && voitEleve === eleve;
-    const memeFenetre = memeEleve && voitOuverture === ouverture;
-    if (erreurRecue && memeFenetre) caseCochee.checked = !caseCochee.checked;
-    // La fenêtre de l'élève, si elle est ouverte, suit ce que le serveur a rangé.
-    if (memeEleve) dessinerCeQueVoit(!erreurRecue && memeFenetre ? geste : undefined);
-    if (erreurRecue) {
-      surErreur(erreurRecue, memeEleve ? "voit-message" : "message-classe");
-    } else if (memeFenetre) {
-      messager("voit-message", texteEnregistre(eleve, geste), "ok");
-    }
-  }
-
-  // Un élève est le même dans toutes les activités : ses ajouts et ce qu'il
-  // voit valent pour les listes déjà lues (SPLAT! recompte ses mondes), puis
-  // l'onglet Élèves et les lignes « En plus pour » des Réglages suivent.
-  function reporterAcces(eleve, ajouts, acces) {
-    eleve.ajouts = ajouts;
-    eleve.acces = acces;
-    Object.keys(tableaux).forEach(cle => {
-      (tableaux[cle] || []).forEach(autre => {
-        if (autre.id !== eleve.id) return;
-        autre.ajouts = ajouts;
-        autre.acces = acces;
-        if (cle === "splat") autre.lu = lireSplat(autre.parcours, autre);
-      });
-    });
-    redessin.demander();
-    poserEnPlusPour();
-    // Lot 4b : une appli donnée (ou retirée) en plus fait apparaître (ou
-    // disparaître) son onglet ; si c'était l'onglet affiché, on passe au
-    // premier qui reste.
-    const presentes = poserOnglets();
-    if (presentes.length && !presentes.includes(appliAffichee)) afficherAppli(presentes[0]);
-  }
-
-  // ⚙ Réglages (planche 4) : sous chaque appli, en LECTURE SEULE, à qui elle
-  // est ouverte en plus de la classe — « En plus pour Rania, Alice » (l'appli
-  // entière) ou, sous les mondes / niveaux, « En plus pour monde 3 : Lucas,
-  // Alice ». Chaque prénom mène à sa ligne de l'onglet Élèves, la seule porte
-  // pour modifier. Lu dans le tableau déjà chargé : aucun appel de plus.
-  function poserEnPlusPour() {
-    const deLaClasse = (classe && classe.applis) || [];
-    const ordre = ordreDeLaFeuille(eleves || []);
-    const proprietaire = droitClasse === "proprietaire";
-    APPLIS.forEach(appli => {
-      const listes = LISTES_PAR_ELEVE[appli.cle] || [];
-      const tete = $(`en-plus-${appli.cle}`);
-      const dessous = listes.length ? $(`en-plus-${appli.cle}-listes`) : null;
-      [tete, dessous].forEach(zone => { if (zone) { zone.textContent = ""; zone.hidden = true; } });
-      if (!proprietaire || !tete) return;
-      const entiers = [];
-      const parNumero = new Map();
-      ordre.forEach((eleve, index) => {
-        enPlusDe(eleve).filter(plus => plus.appli.cle === appli.cle).forEach(plus => {
-          if (!deLaClasse.includes(appli.cle)) {
-            const precision = plus.listes.map(({liste, numeros}) => numeros.map(numero => motDe(liste, numero)).join(", ")).join(", ");
-            entiers.push({eleve, numero: index + 1, precision});
-            return;
-          }
-          plus.listes.forEach(({liste, numeros}) => numeros.forEach(numero => {
-            const cle = `${liste.nom}:${numero}`;
-            if (!parNumero.has(cle)) parNumero.set(cle, []);
-            parNumero.get(cle).push({eleve, numero: index + 1, precision: ""});
-          }));
-        });
-      });
-      if (entiers.length) {
-        tete.append(ligneEnPlusPour("", entiers));
-        tete.hidden = false;
-      }
-      if (dessous) {
-        listes.forEach(liste => liste.numeros.forEach(([numero]) => {
-          const qui = parNumero.get(`${liste.nom}:${numero}`);
-          if (!qui) return;
-          dessous.append(ligneEnPlusPour(motDe(liste, numero), qui));
-          dessous.hidden = false;
-        }));
+        if (coche) ouverts.add(numero); else ouverts.delete(numero);
+        messager("regler-message", "", "");
+        dessinerRegler();
+        const pareil = $("regler-corps").querySelector(`input[data-liste="${liste.nom}"][data-numero="${numero}"]`);
+        if (pareil) pareil.focus();
+      };
+      if (cle === "splat") {
+        const puce = el("label", `puce-monde${ouverts.has(numero) ? "" : " ferme"}`);
+        puce.dataset.monde = String(numero);
+        const uneCase = document.createElement("input");
+        uneCase.type = "checkbox";
+        uneCase.checked = ouverts.has(numero);
+        uneCase.dataset.liste = liste.nom;
+        uneCase.dataset.numero = String(numero);
+        uneCase.addEventListener("change", () => changer(uneCase.checked, uneCase));
+        const rond = el("i", "", String(numero));
+        rond.setAttribute("aria-hidden", "true");
+        puce.append(uneCase, rond, libelle);
+        groupe.append(puce);
+      } else {
+        const etiquette = caseACocher(libelle, ouverts.has(numero), changer);
+        const uneCase = etiquette.querySelector("input");
+        uneCase.dataset.liste = liste.nom;
+        uneCase.dataset.numero = String(numero);
+        groupe.append(etiquette);
       }
     });
+    return [titre, groupe];
   }
 
-  function ligneEnPlusPour(quoi, qui) {
-    const ligne = document.createElement("span");
-    const titre = document.createElement("b");
-    titre.textContent = "En plus pour";
-    ligne.append(titre, quoi ? ` ${quoi} : ` : " ");
-    qui.forEach(({eleve, numero, precision}, rang) => {
-      if (rang) ligne.append(", ");
-      const lien = document.createElement("button");
-      lien.type = "button";
-      lien.textContent = nomAffiche(eleve) || `n° ${numero} (sans prénom)`;
-      lien.title = "Aller à sa ligne dans l’onglet Élèves";
-      lien.addEventListener("click", () => allerALEleve(eleve.id));
-      ligne.append(lien);
-      if (precision) ligne.append(` (${precision})`);
+  const DERNIER_NUMERO = {
+    mondes: "Une classe garde au moins un monde ouvert.",
+    niveaux: "Une classe garde au moins un niveau ouvert.",
+    operations: "Une classe garde au moins une opération ouverte."
+  };
+
+  // Une ligne « ③ Enquête · Alice, Lucas · Choisir… » ; « Choisir… » déplie
+  // les élèves dessous (un <details> : le clavier et le lecteur d'écran le
+  // connaissent). Une ligne dépliée le reste quand la fenêtre se redessine.
+  function lignePlus(cle, liste, numero) {
+    const b = reglage.brouillon;
+    const cleNumero = `${liste.nom}:${numero}`;
+    if (!b.parNumero[cleNumero]) b.parNumero[cleNumero] = new Set();
+    const qui = b.parNumero[cleNumero];
+    const ligne = el("details", "plus-ligne");
+    ligne.open = reglage.deplies.has(cleNumero);
+    ligne.addEventListener("toggle", () => {
+      if (ligne.open) reglage.deplies.add(cleNumero); else reglage.deplies.delete(cleNumero);
     });
+    const resume = document.createElement("summary");
+    const quoi = el("span", "quoi");
+    if (cle === "splat") {
+      const rond = el("span", "rond-monde", String(numero));
+      rond.setAttribute("aria-hidden", "true");
+      rond.style.background = COULEURS_MONDES[numero] || "#0b67b2";
+      quoi.append(rond, libelleDe(liste, numero));
+    } else {
+      quoi.textContent = liste.nom === "niveaux" ? `Niveau ${numero}` : libelleDe(liste, numero);
+    }
+    const quiTexte = el("span", "qui");
+    const poserQui = () => {
+      const noms = ordreDeLaFeuille(eleves || []).filter(eleve => qui.has(eleve.id));
+      quiTexte.textContent = noms.length ? listeDePrenoms(noms) : "personne";
+      quiTexte.classList.toggle("quelquun", noms.length > 0);
+    };
+    poserQui();
+    resume.append(quoi, quiTexte, el("span", "choisir", "Choisir…"));
+    ligne.append(resume, grilleDesEleves(qui, poserQui));
     return ligne;
   }
 
-  // Un prénom de « En plus pour » : l'onglet Élèves, sa ligne au milieu de
-  // l'écran, surlignée un instant, et le focus sur son « ⋯ ».
-  function allerALEleve(id) {
-    ouvrirEleves();
-    const ligne = [...document.querySelectorAll("#corps-eleves tr")].find(tr => tr.dataset.eleve === String(id));
-    if (!ligne) return;
-    ligne.scrollIntoView({block: "center"});
-    ligne.classList.add("repere");
-    window.setTimeout(() => ligne.classList.remove("repere"), 2000);
-    const poignee = ligne.querySelector("summary");
-    if (poignee) poignee.focus({preventScroll: true});
+  // Le pied, quand la classe n'a pas l'appli : qui la verra après
+  // « Enregistrer ».
+  function direQuiVoit() {
+    if (!reglage) return;
+    const b = reglage.brouillon;
+    if (b.classeOuverte) return;
+    const qui = ordreDeLaFeuille(eleves || []).filter(eleve => b.entiers.has(eleve.id));
+    const nom = nomDeLAppli(b.cle);
+    if (!qui.length) {
+      messager("regler-message", `Personne ne verra ${nom}.`, "info");
+      return;
+    }
+    const noms = qui.map(eleve => nomAffiche(eleve) || "un élève sans prénom");
+    const sujet = noms.length === 1 ? noms[0]
+      : noms.length <= 3 ? `${noms.slice(0, -1).join(", ")} et ${noms[noms.length - 1]}` : `${noms.length} élèves`;
+    messager("regler-message", `${sujet} ${noms.length > 1 ? "le voient" : "le voit"} dans ${noms.length > 1 ? "leur" : "son"} espace.`, "info");
+  }
+
+  // Ce qui part au serveur pour la classe : {applis?, reglages?, avant}, ou
+  // null quand rien de la classe ne change. Les réglages de l'appli ne
+  // partent que si la classe l'a (cachés, ils sont gardés tels quels).
+  // Correctif (relecture Codex du 30/10, point 1) : « avant » — la liste des
+  // applis et les réglages de CETTE appli tels que la page les croit rangés.
+  // Un autre onglet les a changés entre-temps ? Le serveur refuse (409) au
+  // lieu d'écraser (un monde refermé ailleurs serait rouvert, un Anzan
+  // ajouté ailleurs retiré) : comme eleves.acces depuis le lot 3c.
+  function changementsDeLaClasse(depart, b) {
+    const charge = {};
+    if (b.classeOuverte !== depart.classeOuverte) {
+      const autres = ((classe && classe.applis) || []).filter(cle => cle !== b.cle);
+      charge.applis = b.classeOuverte ? autres.concat([b.cle]) : autres;
+    }
+    if (b.classeOuverte) {
+      const pourLAppli = {};
+      if (b.cle === "defi-tables" && b.records !== depart.records) pourLAppli.records = b.records;
+      (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => {
+        const avant = [...depart.listes[liste.nom]].sort((x, y) => x - y);
+        const apres = [...b.listes[liste.nom]].sort((x, y) => x - y);
+        if (avant.join(",") !== apres.join(",")) pourLAppli[liste.nom] = apres;
+      });
+      if (Object.keys(pourLAppli).length) charge.reglages = {[b.cle]: pourLAppli};
+    }
+    if (!Object.keys(charge).length) return null;
+    charge.avant = avantDeLaClasse(b.cle);
+    return charge;
+  }
+
+  // L'état de la classe tel que la page le connaît, pour « avant » : sa
+  // liste d'applis, et les réglages d'une appli (« {} » quand tout est
+  // ouvert, comme tableau les rend).
+  function avantDeLaClasse(cle) {
+    const reglages = (classe && classe.reglages) || {};
+    const reglage = reglages[cle];
+    return {
+      applis: ((classe && classe.applis) || []).slice(),
+      reglages: {[cle]: reglage && typeof reglage === "object" && !Array.isArray(reglage) ? reglage : {}}
+    };
+  }
+
+  // Un 409 de la classe porte son état vrai (applis, reglages) : posé tout
+  // de suite dans la page — même si la relecture qui suit ne passe pas, le
+  // prochain « avant » sera juste.
+  function poserEtatDeClasse(donnees) {
+    if (!classe || !donnees) return;
+    if (Array.isArray(donnees.applis)) classe.applis = donnees.applis.filter(cle => typeof cle === "string");
+    if (donnees.reglages && typeof donnees.reglages === "object" && !Array.isArray(donnees.reglages)) classe.reglages = donnees.reglages;
+  }
+
+  // Un 409 d'un élève porte ses ajouts vrais (et ce qu'il voit) : posés sur
+  // l'élève de la page (relecture Codex, point 5 : avant, le contenu du 409
+  // n'était pas appliqué, et une relecture en panne laissait l'ancien).
+  function poserAccesDeLEleve(eleve, donnees) {
+    if (!eleve || !donnees) return;
+    if (donnees.ajouts && typeof donnees.ajouts === "object" && !Array.isArray(donnees.ajouts)) eleve.ajouts = donnees.ajouts;
+    if (donnees.acces && typeof donnees.acces === "object" && Array.isArray(donnees.acces.applis)) eleve.acces = donnees.acces;
+  }
+
+  // Deux états d'ajouts disent-ils la même chose ? Lus comme ajoutsApres
+  // les lit (listes triées, vides écartées), clés rangées.
+  function ajoutsCanoniques(ajouts) {
+    const sortie = {};
+    Object.keys(ajouts || {}).sort().forEach(cle => {
+      const ajout = ajouts[cle];
+      if (!ajout || typeof ajout !== "object" || Array.isArray(ajout)) return;
+      const copie = {};
+      Object.keys(ajout).sort().forEach(nom => {
+        if (Array.isArray(ajout[nom]) && ajout[nom].length) copie[nom] = [...new Set(ajout[nom])].sort((a, b) => a - b);
+      });
+      if (Object.keys(ajout).length && !Object.keys(copie).length) return;
+      sortie[cle] = copie;
+    });
+    return JSON.stringify(sortie);
+  }
+
+  function memesAjouts(a, b) {
+    return ajoutsCanoniques(a) === ajoutsCanoniques(b);
+  }
+
+  // Après une relecture : ce que la fenêtre voulait pour la classe est-il
+  // en place ? (La case de la classe si la liste des applis est partie ;
+  // les records et chaque liste envoyés.) Sert quand la réponse de l'écriture
+  // s'est perdue (point 6) : en place = enregistré, sinon à refaire.
+  function classeConforme(pourLaClasse, b, neuf) {
+    if (pourLaClasse.applis && neuf.classeOuverte !== b.classeOuverte) return false;
+    const voulu = pourLaClasse.reglages && pourLaClasse.reglages[b.cle];
+    if (!voulu) return true;
+    if ("records" in voulu && neuf.records !== b.records) return false;
+    return Object.keys(voulu).every(nom => {
+      if (nom === "records") return true;
+      const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
+      const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
+      return a === c;
+    });
+  }
+
+  // Les gestes d'un élève (ce que le brouillon change pour lui), dans la
+  // partie de la fenêtre qu'on voit : l'appli entière quand la classe ne
+  // l'a pas ; sinon, les numéros fermés à la classe (dans le brouillon).
+  // Ce qu'on ne voit pas n'est pas touché : un ajout « rattrapé » par la
+  // classe est gardé (D4).
+  function gestesDe(eleve, depart, b) {
+    const gestes = [];
+    if (!b.classeOuverte) {
+      const avait = depart.entiers.has(eleve.id);
+      const veut = b.entiers.has(eleve.id);
+      if (avait !== veut) gestes.push({cle: b.cle, ouvre: veut});
+      return gestes;
+    }
+    (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => liste.numeros.forEach(([numero]) => {
+      if (b.listes[liste.nom].has(numero)) return;
+      const cleNumero = `${liste.nom}:${numero}`;
+      const avait = Boolean(depart.parNumero[cleNumero] && depart.parNumero[cleNumero].has(eleve.id));
+      const veut = Boolean(b.parNumero[cleNumero] && b.parNumero[cleNumero].has(eleve.id));
+      if (avait !== veut) gestes.push({cle: b.cle, liste: liste.nom, numero, ouvre: veut});
+    }));
+    return gestes;
+  }
+
+  function occuperRegler(occupe) {
+    const corps = $("regler-corps");
+    corps.setAttribute("aria-busy", String(occupe));
+    corps.querySelectorAll("input, summary").forEach(champ => {
+      if (champ.tagName === "INPUT") champ.disabled = occupe;
+      else champ.tabIndex = occupe ? -1 : 0;
+    });
+    ["regler-enregistrer", "regler-annuler", "regler-croix"].forEach(id => { $(id).disabled = occupe; });
+  }
+
+  // Un appel borné dans le temps : passé DELAI_ACCES_MS, l'attente s'arrête
+  // et la page dit que le serveur ne répond pas (il a peut-être écrit :
+  // tout est relu après).
+  async function appelBorne(action, corps) {
+    const garde = new AbortController();
+    const minuteur = setTimeout(() => garde.abort(), DELAI_ACCES_MS);
+    try {
+      return await api(action, corps, {signal: garde.signal});
+    } catch (erreur) {
+      if (erreur.name === "AbortError" || erreur.name === "TypeError") {
+        const muet = new Error("Le serveur ne répond pas.");
+        muet.statut = 0;
+        throw muet;
+      }
+      throw erreur;
+    } finally {
+      clearTimeout(minuteur);
+    }
+  }
+
+  // La relecture qui suit un enregistrement, bornée elle aussi (correctif,
+  // point 4) : avant, un « tableau » qui ne répondait pas laissait la fenêtre
+  // grisée pour toujours. Vrai si la classe est relue, faux sinon.
+  async function relireBornee(classeId) {
+    const garde = new AbortController();
+    const minuteur = setTimeout(() => garde.abort(), DELAI_ACCES_MS);
+    try {
+      return Boolean(await ouvrirClasse(classeId, {signal: garde.signal}));
+    } catch (_) {
+      return false;
+    } finally {
+      clearTimeout(minuteur);
+    }
+  }
+
+  // Le mot de la fin, quand la relecture n'a pas pu se faire (point 4).
+  const SANS_VERIFICATION = "La vérification n’a pas pu se faire : recharge la page pour voir l’état.";
+
+  async function enregistrerRegler() {
+    if (!reglage || reglageEnCours || !classe || droitClasse !== "proprietaire") return;
+    const {depart, brouillon: b, classeId} = reglage;
+    const nom = nomDeLAppli(b.cle);
+    const libelle = classe.libelle;
+    const pourLaClasse = changementsDeLaClasse(depart, b);
+    const aChanger = (eleves || []).map(eleve => ({eleve, gestes: gestesDe(eleve, depart, b)}))
+      .filter(({gestes}) => gestes.length);
+    if (!pourLaClasse && !aChanger.length) { $("regler").close(); return; }
+    if (pourLaClasse && pourLaClasse.applis && !lesApplisConnues(pourLaClasse.applis).length) {
+      messager("regler-message", "Une classe garde au moins une activité.", "erreur");
+      return;
+    }
+    if (pourLaClasse && pourLaClasse.applis && !b.classeOuverte && !await demander(
+      `Retirer ${nom} de la classe ${libelle} ? La tuile disparaît de l’espace des élèves`
+      + `${aChanger.length || depart.entiers.size ? " (sauf ceux qui l’ont en plus)" : ""}. `
+      + `Leur travail reste enregistré : rien n’est effacé.`,
+      null, {oui: "Retirer de la classe"})) {
+      return;
+    }
+    // La fenêtre a pu être fermée, ou la classe changée, pendant la question.
+    if (!reglage || reglage.brouillon !== b || !classe || classe.id !== classeId) return;
+    const session = generation;
+    const encoreLa = () => generation === session && Boolean(jeton);
+    // La classe ouverte est-elle toujours celle de la fenêtre ? (Supprimée
+    // ou plus partagée pendant l'envoi : quitterLaClasse l'a refermée.)
+    const memeClasse = () => Boolean(classe) && classe.id === classeId;
+    reglageEnCours = true;
+    occuperRegler(true);
+    messager("regler-message", "Enregistrement…", "info");
+    // Le verrou est rendu dans un finally gardé par la génération (point 4) :
+    // quoi qu'il arrive, la fenêtre se libère — sauf si la page a changé de
+    // session entre-temps (oublierEtat l'a déjà rendu, pour la session neuve).
+    try {
+      let classeEcrite = false;
+      let erreurClasse = null;   // refusée (statut reçu) ou sans réponse (statut 0)
+      let coupe = null;          // un 401 : la session est finie
+      const reussis = [];        // écrits, réponse reçue
+      const rates = [];          // {eleve, erreur} : refusés, ou sans réponse (statut 0)
+      if (pourLaClasse) {
+        try {
+          await appelBorne("classes.modifier", Object.assign({classe_id: classeId}, pourLaClasse));
+          classeEcrite = true;
+        } catch (erreur) {
+          if (erreur.statut === 401) coupe = erreur;
+          else {
+            erreurClasse = erreur;
+            if (erreur.statut === 409 && encoreLa() && memeClasse()) poserEtatDeClasse(erreur.donnees);
+          }
+        }
+      }
+      // La classe refusée : on n'envoie rien pour les élèves (le brouillon
+      // formait un tout — « seulement pour Rania » n'a de sens que si la
+      // classe est bien fermée).
+      if (!coupe && !erreurClasse) {
+        for (const {eleve, gestes} of aChanger) {
+          if (!encoreLa() || !memeClasse()) break;
+          let ajouts = eleve.ajouts || {};
+          gestes.forEach(geste => { ajouts = ajoutsApres(ajouts, geste); });
+          try {
+            await appelBorne("eleves.acces", {eleve_id: eleve.id, avant: eleve.ajouts || {}, ajouts});
+            reussis.push(eleve);
+          } catch (erreur) {
+            if (erreur.statut === 401) { coupe = erreur; break; }
+            if (erreur.statut === 409 && encoreLa()) poserAccesDeLEleve(eleve, erreur.donnees);
+            rates.push({eleve, erreur, ajouts});
+          }
+        }
+      }
+      // Déconnecté (et peut-être reconnecté) pendant l'envoi : cette réponse
+      // n'est plus à cette page. Elle ne touche ni la fenêtre, ni l'état, ni
+      // la session neuve — un vieux 401 ne la déconnecte pas (relecture du
+      // lot 3d). oublierEtat a déjà remis reglageEnCours à faux.
+      if (!encoreLa()) return;
+      if (coupe) { surErreur(coupe, "regler-message"); return; }
+      if (!memeClasse()) return;
+      // Tout relire : la classe, ses élèves, ce que chacun voit (le serveur a
+      // pu ranger autrement, un autre onglet a pu écrire). Bornée (point 4) ;
+      // et si elle ne passe pas, rien n'est redessiné dessus (point 5).
+      const relu = await relireBornee(classeId);
+      if (!encoreLa()) return;
+      if (!memeClasse()) return;
+      const neuf = relu ? etatReglage(b.cle) : null;
+      // Le bilan (point 6) : « refusé » (un statut reçu) n'est pas
+      // « sans réponse » (statut 0). Sans réponse mais relu : ce qui est en
+      // place est enregistré, le reste est à refaire ; pas relu : peut-être.
+      const fait = [];
+      const manques = [];
+      let incertain = false;
+      let finDite = false;   // la phrase de la classe changée ailleurs dit déjà « la fenêtre montre l'état actuel »
+      const phrase = texte => (/[.!?…]$/.test(texte) ? texte : `${texte}.`);
+      const prenomDe = eleve => nomAffiche(eleve) || "un élève sans prénom";
+      if (pourLaClasse) {
+        const sansReponse = erreurClasse && !erreurClasse.statut;
+        if (classeEcrite) fait.push(`la ${libelle}`);
+        else if (sansReponse && neuf && classeConforme(pourLaClasse, b, neuf)) {
+          // Écrite, la réponse perdue : confirmée par la relecture. Les
+          // élèves, eux, n'ont pas été envoyés (la classe n'avait pas
+          // répondu) : ils restent à faire, la fenêtre le dit.
+          fait.push(`la ${libelle}`);
+          if (aChanger.length) manques.push(`Pas enregistré pour ${aChanger.map(({eleve}) => prenomDe(eleve)).join(", ")} : la ${libelle} n’avait pas répondu.`);
+        }
+        else if (erreurClasse && erreurClasse.statut === 409) {
+          // Un autre onglet a changé la classe (point 1) : rien n'est parti,
+          // ni pour elle ni pour les élèves ; la fenêtre, relue, le dit.
+          finDite = relu;
+          manques.push(relu
+            ? `La ${libelle} a été changée ailleurs : la fenêtre montre l’état actuel, refais ton réglage.`
+            : `La ${libelle} a été changée ailleurs : rien n’est enregistré.`);
+        }
+        else if (!sansReponse) manques.push(phrase(`Rien d’enregistré pour la ${libelle} : ${raisonDe(erreurClasse)}`));
+        else if (neuf) manques.push(phrase(`Pas enregistré pour la ${libelle} : ${raisonDe(erreurClasse)}`));
+        else { incertain = true; manques.push(`Peut-être enregistré pour la ${libelle} (le serveur n’a pas répondu).`); }
+      }
+      const confirmes = reussis.slice();
+      rates.forEach(({eleve, erreur, ajouts}) => {
+        const sansReponse = !erreur.statut;
+        if (sansReponse && neuf) {
+          const relue = (eleves || []).find(autre => autre.id === eleve.id);
+          if (relue && memesAjouts(relue.ajouts || {}, ajouts)) { confirmes.push(eleve); return; }
+        }
+        if (!sansReponse) {
+          manques.push(phrase(`Pas enregistré pour ${prenomDe(eleve)} : ${erreur.statut === 409 ? "un autre onglet l’a changé entre-temps" : raisonDe(erreur)}`));
+        } else if (neuf) {
+          manques.push(phrase(`Pas enregistré pour ${prenomDe(eleve)} : ${raisonDe(erreur)}`));
+        } else {
+          incertain = true;
+          manques.push(`Peut-être enregistré pour ${prenomDe(eleve)} (le serveur n’a pas répondu).`);
+        }
+      });
+      if (confirmes.length) fait.push(confirmes.length === 1 ? prenomDe(confirmes[0]) : `${confirmes.length} élèves`);
+      if (!manques.length && relu) {
+        occuperRegler(false);
+        if ($("regler").open) $("regler").close();
+        messager("message-appli", `${nom} : réglages enregistrés (${fait.join(" et ")}).`, "ok");
+        return;
+      }
+      // Quelque chose n'est pas passé, ou n'a pas pu être vérifié : la
+      // fenêtre reste et dit ce qui est enregistré et ce qui ne l'est pas.
+      // Relue : sur l'état relu. Pas relue : telle quelle (jamais un
+      // brouillon « actuel » sur des données qui ne le sont pas) ; son
+      // prochain « Enregistrer » part avec « avant », le serveur tranche.
+      if ($("regler").open && reglage && reglage.brouillon === b) {
+        if (neuf) {
+          const depliees = reglage.deplies;
+          reglage = {depart: neuf, brouillon: copierEtat(neuf), classeId, deplies: depliees};
+          dessinerRegler();
+        }
+        occuperRegler(false);
+        const morceaux = [];
+        if (fait.length) morceaux.push(phrase(`Enregistré : ${fait.join(" et ")}`));
+        morceaux.push(...manques);
+        if (!finDite) morceaux.push(relu ? "La fenêtre montre ce qui est enregistré maintenant : refais ce qui manque." : SANS_VERIFICATION);
+        messager("regler-message", morceaux.join(" "), incertain || !relu || manques.length ? "erreur" : "ok");
+      }
+    } finally {
+      if (encoreLa()) {
+        reglageEnCours = false;
+        // La ligne du haut (et les boutons de la carte, grisés pendant
+        // l'enregistrement par poserQuiVoit) suivent le verrou rendu.
+        if (classe && vue === "appli") poserQuiVoit();
+      }
+    }
+  }
+
+  // « Ouvrir à toute la 306 », depuis la carte d'un onglet grisé : un geste
+  // sans perte (rien n'est effacé, un autre geste le retire), comme cocher
+  // la case dans « Régler … ». Correctif (points 2, 3, 4) : il prend le même
+  // verrou que la fenêtre (reglageEnCours — « Choisir quelques élèves » et
+  // « Régler » attendent qu'il ait fini), il est borné, il envoie « avant »,
+  // et une réponse d'une ancienne session ou d'une autre classe ne fait rien.
+  async function ouvrirATouteLaClasse() {
+    if (!classe || droitClasse !== "proprietaire" || reglageEnCours) return;
+    const cle = appliAffichee;
+    const nom = nomDeLAppli(cle);
+    const classeId = classe.id;
+    const session = generation;
+    const encoreLa = () => generation === session && Boolean(jeton);
+    const memeClasse = () => Boolean(classe) && classe.id === classeId;
+    reglageEnCours = true;
+    ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = true; });
+    try {
+      const applis = ((classe.applis) || []).filter(autre => autre !== cle).concat([cle]);
+      let erreur = null;
+      try {
+        await appelBorne("classes.modifier", {classe_id: classeId, applis, avant: {applis: ((classe.applis) || []).slice()}});
+      } catch (e) {
+        erreur = e;
+      }
+      if (!encoreLa()) return;
+      if (erreur && erreur.statut === 401) { surErreur(erreur, "message-appli"); return; }
+      if (!memeClasse()) return;
+      if (erreur && erreur.statut === 409) poserEtatDeClasse(erreur.donnees);
+      const relu = await relireBornee(classeId);
+      if (!encoreLa() || !memeClasse()) return;
+      const ouverte = ((classe.applis) || []).includes(cle);
+      if (relu && ouverte) {
+        messager("message-appli", `${nom} ouvert à toute la ${classe.libelle} : la tuile apparaît dans l’espace des élèves.`, "ok");
+      } else if (erreur && erreur.statut === 409) {
+        messager("message-appli", relu
+          ? `La ${classe.libelle} a été changée ailleurs : l’onglet montre l’état actuel, réessaie.`
+          : `La ${classe.libelle} a été changée ailleurs : rien n’est enregistré. ${SANS_VERIFICATION}`, "erreur");
+      } else if (erreur && erreur.statut) {
+        messager("message-appli", erreur.message, "erreur");
+      } else if (erreur) {
+        messager("message-appli", relu
+          ? `${nom} : pas enregistré pour la ${classe.libelle}. ${raisonDe(erreur)}`
+          : `${nom} : peut-être ouvert à la ${classe.libelle} (le serveur n’a pas répondu). ${SANS_VERIFICATION}`, "erreur");
+      } else {
+        messager("message-appli", `${nom} ouvert à toute la ${classe.libelle}. ${SANS_VERIFICATION}`, "erreur");
+      }
+    } finally {
+      // Les boutons se libèrent toujours (poserQuiVoit les suit aussi) ; le
+      // verrou, seulement pour la session qui l'a pris.
+      ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = false; });
+      if (encoreLa()) reglageEnCours = false;
+    }
   }
 
   function dessinerTableau() {
@@ -3104,7 +3335,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // ------------------------------------------------ lot 5c : lignes, recherche
 
-  // Une cellule cachée au téléphone (le tableau compact garde trois colonnes).
   // Serveur pro, lot 5g : « 2 · 0 · 1 · 3 » — les séances finies de chacune
   // des 4 dernières semaines, la plus ancienne à gauche, la semaine en cours
   // à droite et en gras. « 16+ » : au moins (le moteur ne garde que les 60
@@ -3144,6 +3374,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return d.toLocaleDateString("fr-FR", {day: "numeric", month: "short"});
   }
 
+  // Une cellule cachée au téléphone (le tableau compact garde trois colonnes).
   function large(cellule) {
     cellule.className = cellule.className ? `${cellule.className} large` : "large";
   }
@@ -3429,7 +3660,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // au-dessus du tableau le dit, et les cartes « de la classe » (Notre classe,
   // ensemble ; les calculs qui coincent) se taisent — elles parlent de toute
   // la classe, qui n'a pas cette activité.
+  // Serveur pro, lot 5b : un onglet grisé (personne ne voit l'appli) sans
+  // aucun travail reçu n'a ni tableau ni note dessous — seulement sa carte
+  // « … est fermé à la 405 » (poserQuiVoit).
   function finirOnglet(lignes) {
+    const vide = !parLaClasse(appliAffichee) && !lignes.length;
+    $("enveloppe-tableau").hidden = vide;
+    $("note-tableau").hidden = vide;
+    if (vide) {
+      $("bloc-imprimer").hidden = true;
+      $("note-coffres").hidden = true;
+      // La carte dit déjà que l'appli est fermée : la ligne du haut compte
+      // seulement les élèves de la classe.
+      $("objectif").hidden = true;
+      $("fragiles").hidden = true;
+      const n = (eleves || []).length;
+      $("resume-classe").textContent = n ? `${n} élève${n > 1 ? "s" : ""}` : "Aucun élève. Commence par en ajouter.";
+      return;
+    }
     if (parLaClasse(appliAffichee)) return;
     $("objectif").hidden = true;
     $("fragiles").hidden = true;
@@ -4554,7 +4802,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     evaluation = null;
     evalContenu = null;
     ligueRecords = null;
-    voitEleve = null;
+    reglage = null;
     classe = null;
     droitClasse = "proprietaire";
     eleves = [];
@@ -4581,6 +4829,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // Correctif des lots 5 : vrai si la classe est à l'écran, faux si
   // l'ouverture est périmée ; avec {remonter: true} (allerDansUneClasse), une
   // panne remonte au lieu d'être dite ici.
+  // Lot 5b, correctif (point 4) : {signal} borne la lecture — la relecture
+  // qui suit un enregistrement (relireBornee) s'arrête avec sa garde, le
+  // tableau ET le moteur ; arrêtée, elle rend faux sans rien dire (l'appelant
+  // le dit).
   async function ouvrirClasse(id, options) {
     // Un changement d'onglet encore en route ne vaut plus : on relit tout.
     // Lot 4b-bis (relecture Codex du 24/10) : le numéro de CETTE ouverture —
@@ -4588,14 +4840,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // l'attente le rend périmé, et sa réponse n'est plus posée dans la page.
     demandeAppli += 1;
     const numero = demandeAppli;
+    const signal = options && options.signal;
     try {
       const memeClasse = Boolean(classe) && classe.id === id;
       const connue = classes.find(uneClasse => uneClasse.id === id);
-      // La même classe, rouverte (un élève ajouté, une activité changée) :
-      // un onglet qu'un élève a en plus (lot 4b) reste un choix possible.
-      const voulue = appliAMontrer(lesApplisConnues((connue ? connue.applis : ["defi-tables"]).concat(memeClasse ? applisAMontrer() : [])),
-        memeClasse ? appliAffichee : lireChoixAppli());
-      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}), chargerMoteurDe(voulue)]);
+      // La même classe, rouverte (un élève ajouté, une appli réglée) : on
+      // reste dans l'onglet regardé, même s'il vient d'être grisé (lot 5b :
+      // chaque appli a toujours son onglet). Une autre classe : l'appli
+      // choisie la dernière fois si elle l'a, sinon sa première.
+      const voulue = memeClasse && APPLIS.some(appli => appli.cle === appliAffichee)
+        ? appliAffichee
+        : appliAMontrer(lesApplisConnues(connue ? connue.applis : ["defi-tables"]), lireChoixAppli());
+      const [donnees] = await Promise.all([api("tableau", {classe_id: id, appli: voulue}, {signal}), avecSignal(chargerMoteurDe(voulue), signal)]);
       if (numero !== demandeAppli || !jeton) return false;
       classe = donnees.classe;
       droitClasse = classe.droit || "proprietaire";
@@ -4628,24 +4884,38 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       messager("message-classes", "", "");
       messager("message-classe", "", "");
       messager("message-appli", "", "");
-      messager("message-activites", "", "");
       messager("message-nom", "", "");
       messager("message-supprimer", "", "");
       montrer("ecran-classe");
       appliquerDroits();
       // La liste des classes était en retard (activités changées ailleurs) :
-      // on passe à une activité que la classe a vraiment.
+      // une AUTRE classe s'ouvre sur une activité qu'elle a vraiment. La même
+      // classe garde son onglet (grisé s'il le faut, lot 5b).
       const presentes = applisAMontrer();
-      if (presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return true; }
+      if (!memeClasse && presentes.length && !presentes.includes(voulue)) { poserAppli(); await afficherAppli(presentes[0]); return true; }
       poserAppli();
       dessinerTableau();
       return true;
     } catch (erreur) {
       if (numero !== demandeAppli || !jeton) return false;
+      // Arrêtée par sa garde (relireBornee) : rien à dire ici.
+      if (erreur && erreur.name === "AbortError") return false;
       if (options && options.remonter) throw erreur;
       surErreur(erreur, zoneClasses());
       return false;
     }
+  }
+
+  // Une attente qui s'arrête avec le signal (le chargement d'un moteur n'a
+  // pas de signal à lui) ; sans signal, la promesse telle quelle.
+  function avecSignal(promesse, signal) {
+    if (!signal) return promesse;
+    return new Promise((resolve, reject) => {
+      const abandon = () => reject(Object.assign(new Error("aborted"), {name: "AbortError"}));
+      if (signal.aborted) { abandon(); return; }
+      signal.addEventListener("abort", abandon, {once: true});
+      promesse.then(resolve, reject);
+    });
   }
 
   // Un menu ouvert reste dans l'écran (correctif des lots 5, point 6) : au
@@ -4805,11 +5075,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return lesApplisConnues(classe && classe.applis);
   }
 
-  // Les onglets d'activité (lot « Qui voit quoi », lot 4b, 24/10/2026) :
+  // Les applis ouvertes (lot « Qui voit quoi », lot 4b, 24/10/2026) :
   // celles de la classe, PLUS celles qu'un élève a en plus (eleve.acces,
-  // calculé par le serveur — le même pour toutes les listes lues). Anzan
-  // donné à Rania seule a ainsi son onglet ; la règle vaut pour toutes les
-  // applis, une seule règle.
+  // calculé par le serveur — le même pour toutes les listes lues). Depuis
+  // le lot 5b, chaque appli a son onglet : celles-ci sont en clair, les
+  // autres grisées (poserOnglets).
   function applisAMontrer(liste = eleves) {
     const enPlus = [];
     (liste || []).forEach(eleve => {
@@ -4913,7 +5183,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (splat || coffres || anzan) $("fragiles").hidden = true;
     if (coffres || anzan) $("objectif").hidden = true;
     poserTris();
-    poserActivites();
+    // Serveur pro, lot 5b : la ligne « qui voit » (ou la carte d'un onglet
+    // grisé) en haut de l'onglet.
+    poserQuiVoit();
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
     // ouverture de la classe). Pas dans les Réglages : elle n'y est pas.
     chargerRecords();
@@ -4922,13 +5194,32 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     poserEvaluations();
   }
 
-  // Un onglet par activité à montrer (applisAMontrer) ; celui qu'on regarde
-  // est souligné, aucun hors de la vue de l'activité. Rend la liste.
+  // Serveur pro, lot 5b (choix de Gwenaël, planche 3 de l'étape 4) : chaque
+  // appli a TOUJOURS son onglet. Ouverte à la classe : son nom. Ouverte à
+  // quelques élèves seulement : leur nombre en pastille (« Anzan 1 »).
+  // Ouverte à personne : grisée — dedans, de quoi l'ouvrir. Celui qu'on
+  // regarde est souligné, aucun hors de la vue de l'activité. Rend la liste
+  // des applis ouvertes (à la classe ou à quelqu'un).
   function poserOnglets() {
     const presentes = applisAMontrer();
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(bouton => {
-      bouton.hidden = !presentes.includes(bouton.dataset.appli);
-      bouton.setAttribute("aria-pressed", String(vue === "appli" && bouton.dataset.appli === appliAffichee));
+      const cle = bouton.dataset.appli;
+      bouton.hidden = false;
+      bouton.textContent = nomDeLAppli(cle);
+      const quelques = parLaClasse(cle) ? 0 : (eleves || []).filter(eleve => accesDe(eleve).applis.includes(cle)).length;
+      bouton.classList.toggle("eteint", !presentes.includes(cle));
+      bouton.removeAttribute("title");
+      if (quelques) {
+        const pastille = el("span", "compte-plus", String(quelques));
+        pastille.title = `ouvert à ${quelques} élève${quelques > 1 ? "s" : ""}`;
+        bouton.append(pastille);
+        bouton.setAttribute("aria-label", `${nomDeLAppli(cle)}, ouvert à ${quelques} élève${quelques > 1 ? "s" : ""}`);
+      } else if (!presentes.includes(cle)) {
+        bouton.setAttribute("aria-label", `${nomDeLAppli(cle)}, fermé à la classe`);
+      } else {
+        bouton.removeAttribute("aria-label");
+      }
+      bouton.setAttribute("aria-pressed", String(vue === "appli" && cle === appliAffichee));
     });
     montrerOngletChoisi();
     return presentes;
@@ -4972,7 +5263,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     document.querySelectorAll("#choix-appli button[data-appli]").forEach(onglet => {
       if (onglet.hidden) return;
       const li = document.createElement("li");
-      const bouton = el("button", "", onglet.textContent);
+      // Lot 5b : le nom, la pastille (« Anzan 1 ») et le gris, comme l'onglet.
+      const bouton = el("button", onglet.classList.contains("eteint") ? "eteint" : "", nomDeLAppli(onglet.dataset.appli));
+      const pastille = onglet.querySelector(".compte-plus");
+      if (pastille) bouton.append(pastille.cloneNode(true));
+      if (onglet.hasAttribute("aria-label")) bouton.setAttribute("aria-label", onglet.getAttribute("aria-label"));
       bouton.type = "button";
       if (vue === "appli" && onglet.dataset.appli === appliAffichee) bouton.setAttribute("aria-current", "true");
       bouton.addEventListener("click", () => { fermerMenuApplis(); onglet.click(); });
@@ -5057,7 +5352,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // après un changement d'activités dans les Réglages, on y reste ; c'est le
   // clic sur un onglet d'activité qui en sort.
   async function afficherAppli(cle) {
-    if (!classe || !applisAMontrer().includes(cle)) return;
+    // Lot 5b : chaque appli a son onglet, même fermée (grisée).
+    if (!classe || !APPLIS.some(appli => appli.cle === cle)) return;
     const numero = ++demandeAppli;
     try {
       await chargerMoteurDe(cle);
@@ -5067,16 +5363,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (numero !== demandeAppli || !jeton) return;
       // Lot 4b-bis (relecture Codex) : une liste fraîche dit ce que voit
       // chaque élève MAINTENANT (un autre onglet du navigateur a pu retirer
-      // Anzan à Rania) — on le reporte sur les listes déjà lues, et une
-      // activité que plus personne n'a ne s'affiche pas : son onglet part.
+      // Anzan à Rania) — on le reporte sur les listes déjà lues.
       if (fraiche) reporterAccesDeLaListe(liste);
-      if (!applisAMontrer(liste).includes(cle)) {
-        tableaux[cle] = liste;
-        poserOnglets();
-        const nom = (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
-        messager("message-appli", `${nom} n’est plus ouvert à aucun élève de cette classe.`, "info");
-        return;
-      }
+      // Lot 5b : une appli que plus personne n'a s'affiche quand même — son
+      // onglet est grisé, et dedans la carte « … est fermé à la 405 ».
       tableaux[cle] = liste;
       appliAffichee = cle;
       eleves = liste;
@@ -5119,8 +5409,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     });
     if (supprime) tableaux[appliAffichee] = eleves;
   }
-
-  // ------------------------------------------------- activités de la classe (D7)
 
   // ------------------------------------------------ 📝 Les évaluations (lot E1, 15/10/2026)
   //
@@ -5775,180 +6063,6 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function recordsOuvertsPourLaClasse() {
     const reglages = classe && classe.reglages;
     return !(reglages && reglages["defi-tables"] && reglages["defi-tables"].records === false);
-  }
-
-  async function changerRecords(caseRecords) {
-    const ouvre = caseRecords.checked;
-    caseRecords.disabled = true;
-    try {
-      await api("classes.modifier", {classe_id: classe.id, reglages: {"defi-tables": {records: ouvre}}});
-      await ouvrirClasse(classe.id);
-      messager("message-activites", `Les records ${ouvre ? "ouverts" : "fermés"} pour la ${classe.libelle}.`, "ok");
-    } catch (erreur) {
-      caseRecords.checked = !ouvre;
-      surErreur(erreur, "message-activites");
-    } finally {
-      caseRecords.disabled = false;
-    }
-  }
-
-  // Les cases des Réglages (propriétaire seulement : la vue n'existe que pour
-  // lui). Chaque appli a sa ligne ; ses réglages, dessous, ne se montrent que
-  // si la classe a l'appli (décochée, ils sont gardés pour la recocher).
-  function poserActivites() {
-    // Lot « Les records » : la case, seulement quand la classe a Défi tables.
-    const presentesRecords = (classe && classe.applis) || [];
-    $("rec-reglage").hidden = !presentesRecords.includes("defi-tables");
-    $("case-records").checked = recordsOuvertsPourLaClasse();
-    $("case-records").disabled = false;
-    const presentes = (classe && classe.applis) || [];
-    document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
-      caseActivite.checked = presentes.includes(caseActivite.dataset.appli);
-      caseActivite.disabled = false;
-    });
-    // Lot « splat-suivi-5 » : les mondes ouverts, seulement quand la classe a SPLAT!.
-    $("mondes-ouverts").hidden = !presentes.includes("splat");
-    const ouverts = mondesOuverts();
-    document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
-      caseMonde.checked = !ouverts || ouverts.includes(Number(caseMonde.dataset.monde));
-      caseMonde.disabled = false;
-      poserPuce(caseMonde);
-    });
-    // Lot « Coffres magiques sur le suivi » : niveaux et opérations
-    // accessibles, seulement quand la classe a Coffres ; tout coché par défaut.
-    $("coffres-reglages").hidden = !presentes.includes("coffres");
-    const niveaux = coffresOuverts("niveaux");
-    const operations = coffresOuverts("operations");
-    document.querySelectorAll("#coffres-reglages input[data-niveau]").forEach(caseNiveau => {
-      caseNiveau.checked = !niveaux || niveaux.includes(Number(caseNiveau.dataset.niveau));
-      caseNiveau.disabled = false;
-    });
-    document.querySelectorAll("#coffres-reglages input[data-operation]").forEach(caseOperation => {
-      caseOperation.checked = !operations || operations.includes(Number(caseOperation.dataset.operation));
-      caseOperation.disabled = false;
-    });
-    // Lot « Qui voit quoi » : sous chaque appli, « En plus pour … ».
-    poserEnPlusPour();
-  }
-
-  // Les niveaux (1 à 3) ou les opérations (1 à 4) de Coffres magiques ouverts
-  // à la classe ouverte (classe.reglages.coffres) : null quand tout l'est — le
-  // cas de toute classe où personne n'a rien choisi.
-  const NOMBRES_COFFRES = {niveaux: 3, operations: 4};
-  function coffresOuverts(nom) {
-    const reglages = classe && classe.reglages;
-    const liste = reglages && reglages.coffres && reglages.coffres[nom];
-    const nombre = NOMBRES_COFFRES[nom];
-    if (!Array.isArray(liste)) return null;
-    const ouverts = liste.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= nombre);
-    return ouverts.length && ouverts.length < nombre ? ouverts : null;
-  }
-
-  // Cocher ou décocher un niveau ou une opération de Coffres magiques pour la
-  // classe (choix de Gwenaël, 21/10/2026) : enregistré à chaque clic, comme
-  // les mondes de SPLAT!, sans bouton « Enregistrer ». La dernière case
-  // cochée d'un groupe ne se décoche pas (le message ne vient que si on
-  // essaie). Rien n'est effacé : les trésors restent ; l'élève dont la partie
-  // en cours ne tient plus repart à 0 clé, à sa prochaine ouverture.
-  async function changerReglageCoffres(nom, caseCochee) {
-    const attribut = nom === "niveaux" ? "niveau" : "operation";
-    const cases = [...document.querySelectorAll(`#coffres-reglages input[data-${attribut}]`)];
-    const voulus = cases.filter(uneCase => uneCase.checked).map(uneCase => Number(uneCase.dataset[attribut]));
-    if (!voulus.length) {
-      caseCochee.checked = true;
-      messager("message-activites", nom === "niveaux"
-        ? "Une classe garde au moins un niveau ouvert." : "Une classe garde au moins une opération ouverte.", "erreur");
-      return;
-    }
-    const groupe = $(nom === "niveaux" ? "cases-coffres-niveaux" : "cases-coffres-operations");
-    cases.forEach(uneCase => { uneCase.disabled = true; });
-    groupe.setAttribute("aria-busy", "true");
-    try {
-      await api("classes.modifier", {classe_id: classe.id, reglages: {coffres: {[nom]: voulus}}});
-      await ouvrirClasse(classe.id);
-      messager("message-activites", "Réglages de Coffres magiques enregistrés.", "ok");
-    } catch (erreur) {
-      caseCochee.checked = !caseCochee.checked;
-      surErreur(erreur, "message-activites");
-    } finally {
-      cases.forEach(uneCase => { uneCase.disabled = false; });
-      groupe.setAttribute("aria-busy", "false");
-    }
-  }
-
-  // Le dessin d'une case de monde suit la case (pointillés gris quand il est fermé).
-  function poserPuce(caseMonde) {
-    caseMonde.closest(".puce-monde").classList.toggle("ferme", !caseMonde.checked);
-  }
-
-  // Ouvrir ou fermer un monde de SPLAT! pour la classe (lot « splat-suivi-5 »,
-  // choix de Gwenaël : monde par monde). Pas de question : rien n'est effacé et
-  // un clic le rouvre. Un monde reste toujours ouvert (pour retirer SPLAT!, on
-  // décoche SPLAT!). L'élève le voit à la prochaine page qu'il ouvre.
-  async function changerMonde(caseMonde) {
-    const numero = Number(caseMonde.dataset.monde);
-    const ouvre = caseMonde.checked;
-    const cases = [...document.querySelectorAll("#mondes-ouverts input[data-monde]")];
-    const voulus = cases.filter(uneCase => uneCase.checked).map(uneCase => Number(uneCase.dataset.monde));
-    if (!voulus.length) {
-      caseMonde.checked = true;
-      messager("message-activites", "Une classe garde au moins un monde ouvert.", "erreur");
-      return;
-    }
-    poserPuce(caseMonde);
-    cases.forEach(uneCase => { uneCase.disabled = true; });
-    $("puces-mondes").setAttribute("aria-busy", "true");
-    try {
-      await api("classes.modifier", {classe_id: classe.id, reglages: {splat: {mondes: voulus}}});
-      await ouvrirClasse(classe.id);
-      messager("message-activites",
-        `Monde ${numero} ${ouvre ? "ouvert" : "fermé"} pour la ${classe.libelle}.`, "ok");
-    } catch (erreur) {
-      caseMonde.checked = !ouvre;
-      poserPuce(caseMonde);
-      surErreur(erreur, "message-activites");
-    } finally {
-      cases.forEach(uneCase => { uneCase.disabled = false; });
-      $("puces-mondes").setAttribute("aria-busy", "false");
-    }
-  }
-
-  // Cocher : la tuile apparaît dans l'espace des élèves. Décocher : elle
-  // disparaît, après confirmation, et RIEN n'est effacé — classes.modifier ne
-  // change que la liste de la classe, les progressions restent en base. Une
-  // classe garde au moins une activité (le serveur remettrait Défi tables).
-  async function changerActivite(caseActivite) {
-    const cle = caseActivite.dataset.appli;
-    const nom = (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
-    const ajout = caseActivite.checked;
-    const autres = ((classe && classe.applis) || []).filter(autre => autre !== cle);
-    const voulues = ajout ? autres.concat([cle]) : autres;
-    if (!lesApplisConnues(voulues).length) {
-      caseActivite.checked = true;
-      messager("message-activites", "Une classe garde au moins une activité.", "erreur");
-      return;
-    }
-    if (!ajout && !await demander(
-      `Retirer ${nom} de la classe ${classe.libelle} ? La tuile disparaît de l’espace des élèves. `
-      + `Leur travail reste enregistré : rien n’est effacé.`,
-      null, {oui: "Retirer de la classe"})) {
-      caseActivite.checked = true;
-      return;
-    }
-    const cases = document.querySelectorAll("#liste-activites input[data-appli]");
-    cases.forEach(uneCase => { uneCase.disabled = true; });
-    try {
-      await api("classes.modifier", {classe_id: classe.id, applis: voulues});
-      await ouvrirClasse(classe.id);
-      messager("message-activites", ajout
-        ? `${nom} ajouté : la tuile apparaît dans l’espace des élèves.`
-        : `${nom} retiré de l’espace des élèves. Rien n’est effacé.`, "ok");
-    } catch (erreur) {
-      caseActivite.checked = !ajout;
-      surErreur(erreur, "message-activites");
-    } finally {
-      cases.forEach(uneCase => { uneCase.disabled = false; });
-    }
   }
 
   // ------------------------------------------------- droits sur la classe ouverte
@@ -6636,11 +6750,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       reporterEleve(eleve, true);
       redessin.demander();
       messager("message-classe", "Élève supprimé.", "ok");
-      // Lot 4b-bis (relecture Codex) : le dernier élève qui avait une appli
-      // en plus est parti — son onglet aussi ; si c'était l'onglet affiché,
-      // on passe au premier qui reste.
-      const presentes = poserOnglets();
-      if (presentes.length && !presentes.includes(appliAffichee)) afficherAppli(presentes[0]);
+      // Lot 5b : le dernier élève qui avait une appli en plus est parti — son
+      // onglet reste, grisé (poserAppli le redessine, avec sa carte).
+      poserAppli();
     } catch (erreur) { surErreur(erreur, "message-classe"); }
   }
 
@@ -6728,11 +6840,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   document.addEventListener("click", fermerMenus);
   window.addEventListener("scroll", () => fermerMenus(null), true);
   window.addEventListener("resize", () => fermerMenus(null));
-  // Lot « Qui voit quoi » : « Fermer » ne fait que fermer (chaque clic a déjà
-  // été enregistré) ; fermée (bouton ou Échap), la fenêtre oublie l'élève et
-  // ses prénoms.
-  $("voit-fermer").addEventListener("click", () => { $("voit").close(); });
-  $("voit").addEventListener("close", fermerCeQueVoit);
+  // Serveur pro, lot 5b : « Régler … ». Annuler, ✕ ou Échap ferment sans
+  // rien envoyer, sauf pendant un enregistrement (la fenêtre attend sa fin).
+  $("regler-annuler").addEventListener("click", () => { if (!reglageEnCours) $("regler").close(); });
+  $("regler-croix").addEventListener("click", () => { if (!reglageEnCours) $("regler").close(); });
+  $("regler-enregistrer").addEventListener("click", enregistrerRegler);
+  $("regler").addEventListener("cancel", evenement => { if (reglageEnCours) evenement.preventDefault(); });
+  $("regler").addEventListener("close", fermerRegler);
   // Serveur pro, lot 5c : la fenêtre de l'élève. ‹ › (et les flèches du
   // clavier) passent au voisin dans le tableau ; « Fermer », ✕ (lot 5f) ou
   // Échap la ferment, et elle oublie l'élève. « Ouvrir dans un onglet »
@@ -6828,19 +6942,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Un onglet d'activité sort des Réglages (lot « Ma classe : réglages »).
     bouton.addEventListener("click", () => { vue = "appli"; afficherAppli(bouton.dataset.appli); });
   });
-  document.querySelectorAll("#liste-activites input[data-appli]").forEach(caseActivite => {
-    caseActivite.addEventListener("change", () => changerActivite(caseActivite));
-  });
-  document.querySelectorAll("#mondes-ouverts input[data-monde]").forEach(caseMonde => {
-    caseMonde.addEventListener("change", () => changerMonde(caseMonde));
-  });
-  document.querySelectorAll("#coffres-reglages input[data-niveau]").forEach(caseNiveau => {
-    caseNiveau.addEventListener("change", () => changerReglageCoffres("niveaux", caseNiveau));
-  });
-  document.querySelectorAll("#coffres-reglages input[data-operation]").forEach(caseOperation => {
-    caseOperation.addEventListener("change", () => changerReglageCoffres("operations", caseOperation));
-  });
-  $("case-records").addEventListener("change", () => changerRecords($("case-records")));
+  // Serveur pro, lot 5b : « Régler … » en haut de l'onglet, et les deux
+  // boutons de la carte d'un onglet grisé.
+  $("regler-appli").addEventListener("click", () => ouvrirRegler(appliAffichee));
+  $("af-quelques").addEventListener("click", () => ouvrirRegler(appliAffichee));
+  $("af-toute").addEventListener("click", ouvrirATouteLaClasse);
   $("records-plein-ecran").addEventListener("click", ouvrirRecordsPleinEcran);
 
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {

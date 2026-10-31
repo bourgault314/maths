@@ -4157,9 +4157,13 @@ verifier("splat-suivi-4 — « Ma classe » charge le moteur SPLAT! d'ici, à la
     vrai((bool)preg_match('#id="onglet-reglages" aria-pressed="false"[^>]* hidden>#', $r['texte']), 'son onglet aussi');
     $vue = substr($r['texte'], strpos($r['texte'], 'id="vue-reglages"'));
     $vue = substr($vue, 0, strpos($vue, "<!-- Ce qui sort de l'imprimante"));
-    foreach (['bloc-activites', 'bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
+    // Serveur pro, lot 5b : plus de carte « Activités » — chaque appli se
+    // règle dans son onglet (« Régler … », la fenêtre #regler).
+    foreach (['bloc-partage', 'form-nom-classe', 'supprimer-classe'] as $id) {
         vrai(str_contains($vue, 'id="' . $id . '"'), "« $id » est dans la vue Réglages");
     }
+    vrai(!str_contains($r['texte'], 'id="bloc-activites"'), 'plus de carte « Activités » dans Réglages (lot 5b)');
+    vrai(str_contains($r['texte'], '<dialog id="regler" class="fenetre regler" aria-labelledby="regler-titre">'), 'la fenêtre « Régler … » (lot 5b)');
 });
 
 verifier("ma-classe-eleves — « Ma classe » : les codes et les boutons des élèves sont dans la vue Élèves, cachée, et nulle part ailleurs", function () {
@@ -4650,7 +4654,8 @@ verifier("coffres-suivi — l'espace élève et « Ma classe » chargent le mote
     egal($m[1], $mp[1], 'la même empreinte des deux côtés');
     vrai(!str_contains($p['texte'], '<script src="coffres-parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Coffres magiques');
     vrai(str_contains($p['texte'], '<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques</button>'), 'l’onglet Coffres magiques, entre Défi tables et SPLAT!');
-    vrai(str_contains($p['texte'], 'id="coffres-reglages"'), 'les réglages de Coffres sous sa case, dans la vue Réglages');
+    // Serveur pro, lot 5b : ses niveaux et opérations se règlent dans son onglet (« Régler Coffres magiques »).
+    vrai(!str_contains($p['texte'], 'id="coffres-reglages"'), 'plus de cases de Coffres dans Réglages (lot 5b)');
     $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
     vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteur Coffres magiques servi localement\s*<div class="detail">en place \(#u', $v['texte']),
         'verifier.php : la ligne existe, et elle est verte');
@@ -5043,6 +5048,106 @@ verifier("qui-voit-quoi — D4 : un ajout rattrapé par la classe reste rangé ;
     egal(['splat' => ['mondes' => [1, 2, 3]]], identite($qvq['lea']['code'])['json']['reglages'], 'Léa : Coffres entière (rien d’écrit), et son monde 3');
     // Remise en état pour la suite.
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $qvq['id'], 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+});
+
+// Serveur pro, lot 5b, correctif (relecture Codex du 30/10/2026, point 1) :
+// classes.modifier reçoit « avant » comme eleves.acces — la liste des applis
+// et les réglages de l'appli réglée, tels que la page les croit rangés — et
+// n'écrit que si la ligne les contient encore ; sinon 409 avec l'état actuel.
+function classe_qvq(array $qvq, string $jeton): array
+{
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'splat'], ['jeton' => $jeton]);
+    return $t['json']['classe'];
+}
+
+function modifier_classe(int $classeId, array $changement, string $jeton, mixed $avant = 'rien'): array
+{
+    $corps = ['action' => 'classes.modifier', 'classe_id' => $classeId] + $changement;
+    if ($avant !== 'rien') $corps['avant'] = $avant;
+    return appel('/api/prof.php', $corps, ['jeton' => $jeton]);
+}
+
+verifier("serveur-pro 5b, correctif — classes.modifier avec « avant » : égal (même dans un autre ordre) → écrit ; différent → 409 avec l'état actuel, rien d'écrit ; illisible → 400 ; absent → comme avant", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $id = (int)$qvq['id'];
+    egal('defi-tables,splat', classe_en_base($id)['applis'], 'point de départ : Défi tables et SPLAT!');
+    egal('{"splat":{"mondes":[1,2]},"coffres":{"niveaux":[1,2]}}', classe_en_base($id)['reglages'], 'les mondes 1 et 2, et les niveaux gardés de Coffres');
+    // « avant » égal : la liste des applis, dans un autre ordre ; les réglages de SPLAT! dans le désordre.
+    $r = modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4]]]], $jetonS1, ['applis' => ['splat', 'defi-tables'], 'reglages' => ['splat' => ['mondes' => [2, 1]]]]);
+    egal(200, $r['code'], 'égal : écrit — ' . $r['texte']);
+    egal('{"splat":{"mondes":[1,2,4]},"coffres":{"niveaux":[1,2]}}', classe_en_base($id)['reglages'], 'le monde 4 ouvert, les niveaux de Coffres gardés');
+    // « avant » de la seule liste des applis, ou des seuls réglages : chacun suffit.
+    egal(200, modifier_classe($id, ['applis' => ['defi-tables', 'splat', 'flash-anzan']], $jetonS1, ['applis' => ['defi-tables', 'splat']])['code'], 'la liste seule');
+    egal('defi-tables,flash-anzan,splat', classe_en_base($id)['applis']);
+    egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4, 5]]]], $jetonS1, ['reglages' => ['splat' => ['mondes' => [1, 2, 4]]]])['code'], 'les réglages seuls');
+    // « {} » pour une appli sans réglage (Anzan), ou dont tout est ouvert : c'est bien « tout ouvert ».
+    egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4, 5]]]], $jetonS1, ['reglages' => ['flash-anzan' => new stdClass(), 'defi-tables' => new stdClass()]])['code'], '« {} » : Anzan sans réglage, Défi tables tout ouvert');
+    // Les réglages d'une AUTRE appli ont changé : pas un conflit pour celle qu'on règle.
+    egal(200, modifier_classe($id, ['reglages' => ['coffres' => ['niveaux' => [1]]]], $jetonS1)['code'], 'Coffres change (sans « avant », comme une vieille page)');
+    egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 5]]]], $jetonS1, ['applis' => ['defi-tables', 'flash-anzan', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 4, 5]]]])['code'], 'SPLAT! réglé avec son « avant » à lui : écrit');
+    egal('{"splat":{"mondes":[1,2,5]},"coffres":{"niveaux":[1]}}', classe_en_base($id)['reglages']);
+    // Différent : 409, l'état actuel dans la réponse, rien d'écrit, pas de ligne au journal.
+    bd_test()->exec('DELETE FROM journal');
+    $r = modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4, 5]]]], $jetonS1, ['reglages' => ['splat' => ['mondes' => [1, 2, 4]]]]);
+    egal(409, $r['code'], 'un « avant » qui croit encore au monde 4 : refusé');
+    egal(false, $r['json']['ok']);
+    egal("La qvq-405 a été changée ailleurs : la fenêtre montre l'état actuel, refais ton réglage.", $r['json']['erreur'] ?? null, 'le message, avec le nom de la classe');
+    egal(['defi-tables', 'flash-anzan', 'splat'], $r['json']['applis'], 'l’état actuel part avec le refus : les applis');
+    egal(['splat' => ['mondes' => [1, 2, 5]], 'coffres' => ['niveaux' => [1]]], $r['json']['reglages'], 'et les réglages');
+    egal('{"splat":{"mondes":[1,2,5]},"coffres":{"niveaux":[1]}}', classe_en_base($id)['reglages'], 'rien n’est écrit');
+    $r = modifier_classe($id, ['applis' => ['defi-tables', 'splat', 'coffres']], $jetonS1, ['applis' => ['defi-tables', 'splat']]);
+    egal(409, $r['code'], 'une liste d’applis qui a oublié Anzan : refusé (il serait retiré)');
+    egal('defi-tables,flash-anzan,splat', classe_en_base($id)['applis'], 'Anzan reste');
+    egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'classes.modifier'")->fetchColumn(), 'un 409 n’écrit pas au journal');
+    // Le scénario de Codex, à plat : l'onglet B ferme le monde 5 ; l'onglet A,
+    // resté sur [1, 2, 5], ouvre le 4 → refusé ; A refait d'après l'état reçu.
+    egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2]]]], $jetonS1, ['reglages' => ['splat' => ['mondes' => [1, 2, 5]]]])['code'], 'B ferme le 5');
+    $a = modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4, 5]]]], $jetonS1, ['reglages' => ['splat' => ['mondes' => [1, 2, 5]]]]);
+    egal(409, $a['code'], 'A, en retard, est refusé : le 5 n’est pas rouvert');
+    egal(['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [1]]], $a['json']['reglages'], 'A reçoit l’état vrai');
+    $a = modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 4]]]], $jetonS1, ['reglages' => ['splat' => ['mondes' => [1, 2]]]]);
+    egal(200, $a['code'], 'A refait son geste sur l’état reçu : le 4 seul s’ouvre');
+    egal('{"splat":{"mondes":[1,2,4]},"coffres":{"niveaux":[1]}}', classe_en_base($id)['reglages']);
+    // Illisible : 400, rien d'écrit.
+    foreach ([
+        ['x', 'une chaîne'], [[1, 2], 'une liste'], [['tables' => []], 'une clé inconnue'], [['applis' => 'splat'], 'applis en chaîne'],
+        [['applis' => [1]], 'applis avec un nombre'], [['reglages' => [['mondes' => [1]]]], 'reglages en liste'], [['reglages' => ['inconnue' => new stdClass()]], 'une appli inconnue'],
+        [['reglages' => ['splat' => ['mondes' => [9]]]], 'un monde qui n’existe pas'], [['reglages' => ['splat' => 'mondes']], 'un réglage illisible'],
+    ] as [$avant, $quoi]) {
+        $r = modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1]]]], $jetonS1, $avant);
+        egal(400, $r['code'], "« avant » illisible ($quoi) : refusé");
+        egal("État d'avant illisible : recharge la page et refais ton réglage.", $r['json']['erreur'] ?? null, "« avant » illisible ($quoi) : le message");
+    }
+    egal('{"splat":{"mondes":[1,2,4]},"coffres":{"niveaux":[1]}}', classe_en_base($id)['reglages'], 'rien n’a bougé');
+    // Une appli inconnue dans la liste de la page (un vieux nom) ne fait pas un conflit.
+    egal(200, modifier_classe($id, ['libelle' => 'qvq-405'], $jetonS1, ['applis' => ['defi-tables', 'flash-anzan', 'splat', 'vieille-appli']])['code']);
+    // Un collègue : refusé par le droit, « avant » ou pas (le test du propriétaire seul le vérifie déjà sans « avant »).
+    // Remise en état pour la suite.
+    egal(200, modifier_classe($id, ['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]], 'coffres' => ['niveaux' => [1, 2]]]], $jetonS1)['code']);
+    egal('defi-tables,splat', classe_en_base($id)['applis']);
+    egal('{"splat":{"mondes":[1,2]},"coffres":{"niveaux":[1,2]}}', classe_en_base($id)['reglages']);
+});
+
+verifier("serveur-pro 5b, correctif — deux classes.modifier au même instant avec le même « avant » : une seule passe, l'autre reçoit 409 (rejoué cinq fois)", function () use (&$jetonS1, &$qvq) {
+    vider_compteurs();
+    $id = (int)$qvq['id'];
+    for ($tour = 1; $tour <= 5; $tour++) {
+        egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2]]]], $jetonS1)['code'], "tour $tour : départ [1, 2]");
+        $reponses = appels_paralleles_mixtes([
+            ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'classes.modifier', 'classe_id' => $id,
+                'avant' => ['reglages' => ['splat' => ['mondes' => [1, 2]]]], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]]],
+            ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'classes.modifier', 'classe_id' => $id,
+                'avant' => ['reglages' => ['splat' => ['mondes' => [1, 2]]]], 'reglages' => ['splat' => ['mondes' => [1, 2, 4]]]]],
+        ]);
+        $codes = array_map(fn($r) => $r['code'], $reponses);
+        sort($codes);
+        egal([200, 409], $codes, "tour $tour : une seule passe (codes : " . json_encode($codes) . ')');
+        $gagnant = $reponses[0]['code'] === 200 ? $reponses[0] : $reponses[1];
+        $perdant = $reponses[0]['code'] === 200 ? $reponses[1] : $reponses[0];
+        egal($gagnant['json']['reglages']['splat'], $perdant['json']['reglages']['splat'], "tour $tour : la perdante reçoit ce que la gagnante a écrit");
+        egal(json_encode($gagnant['json']['reglages']['splat']), json_encode(json_decode(classe_en_base($id)['reglages'], true)['splat']), "tour $tour : la base est ce que la gagnante a écrit");
+    }
+    egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2]]]], $jetonS1)['code'], 'remis à [1, 2]');
 });
 
 verifier("qui-voit-quoi — parcours.php ne refuse rien (Q1 = non, comme les mondes de SPLAT!) : ouvrir guide, ça ne verrouille pas", function () use (&$qvq) {
@@ -6903,7 +7008,7 @@ verifier("anzan-suivi — le billet d'entrée s'échange pour « flash-anzan »,
 // ouverture de l'onglet, avec la version de son contenu dans l'adresse. Le
 // serveur accepte déjà « flash-anzan » (lot 4a) : rien n'y change.
 
-verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionné par son contenu, seulement à l'ouverture de l'onglet ; l'onglet, la case des Réglages, la fenêtre", function () use ($racine) {
+verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionné par son contenu, seulement à l'ouverture de l'onglet ; l'onglet, la fenêtre", function () use ($racine) {
     $moteur = page('/prof/flash_anzan_parcours.js');
     egal(200, $moteur['code'], 'le moteur est servi');
     $p = page('/prof/');
@@ -6912,9 +7017,8 @@ verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionn
     egal(substr(md5($moteur['texte']), 0, 10), $m[1], 'la version dans l’adresse est l’empreinte du fichier servi');
     vrai(!str_contains($p['texte'], '<script src="flash_anzan_parcours.js'), 'pas chargé d’office : seulement à l’ouverture de l’onglet Anzan');
     vrai(str_contains($p['texte'], '<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>'), 'l’onglet Anzan');
-    vrai(str_contains($p['texte'], '<input type="checkbox" data-appli="flash-anzan"> <strong>Anzan</strong>'), 'sa case dans ⚙ Réglages → Activités');
-    vrai(!str_contains($p['texte'], 'data-appli="flash-anzan" checked'), 'décochée par défaut');
-    vrai(str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'sa ligne « En plus pour »');
+    // Serveur pro, lot 5b : plus de case dans ⚙ Réglages ni de ligne « En plus pour » — « Régler Anzan » dans son onglet.
+    vrai(!str_contains($p['texte'], 'data-appli="flash-anzan">') && !str_contains($p['texte'], 'id="en-plus-flash-anzan"'), 'plus de case ni de « En plus pour » (lot 5b)');
     // Serveur pro, lot 5c : les séances d'Anzan vivent dans la fenêtre de l'élève (la même pour les quatre applis).
     vrai(str_contains($p['texte'], '<dialog id="fenetre-eleve" class="fenetre fenetre-eleve"'), 'la fenêtre de l’élève');
     vrai(str_contains($p['texte'], '<div id="fe-anzan" hidden>'), 'avec la place des séances d’Anzan');

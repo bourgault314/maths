@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
+import { reglerRejoue, caseDe, cocher, caseNumero, lignesPlus, titres } from "./suivi-regler-banc.mjs";
 
 // Lot « Coffres magiques sur le suivi » (21/10/2026) — Coffres magiques dans
 // « Ma classe » et dans l'espace élève.
@@ -289,89 +290,94 @@ test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiqu
   assert.match(page, /\$versionCoffres = is_file\(\$moteurCoffres\) \? substr\(md5_file\(\$moteurCoffres\), 0, 10\) : '0';/);
 });
 
-// ------------------------------------------------------------ ⚙ Réglages
+// ------------------------------------------------------------ « Régler Coffres magiques » (lot 5b)
+//
+// Avant le lot 5b, les niveaux et les opérations étaient sous Coffres dans
+// ⚙ Réglages › Activités et s'enregistraient au clic. Maintenant dans la
+// fenêtre « Régler Coffres magiques » (les vraies fonctions de la page, un
+// faux serveur : suivi-regler-banc.mjs) ; rien ne part avant « Enregistrer ».
 
-function casesCoffres() {
-  const niveaux = [1, 2, 3].map(n => Object.assign(new Noeud("input"), {dataset: {niveau: String(n)}}));
-  const operations = [1, 2, 3, 4].map(n => Object.assign(new Noeud("input"), {dataset: {operation: String(n)}}));
-  return {niveaux, operations};
-}
+// Lot 5b : les niveaux et opérations ouverts à la classe se lisent par
+// numerosOuverts (la même règle pour toutes les listes de LISTES_PAR_ELEVE) ;
+// coffresOuverts, qui ne servait qu'aux cases de Réglages, est parti.
+const lireCoffresOuverts = (reglages, nom) => new Function(`${constante("LISTES_PAR_ELEVE")}\n${fonction("numerosOuverts")}\nreturn (r, nom) => numerosOuverts(r, "coffres", LISTES_PAR_ELEVE.coffres.find(l => l.nom === nom));`)()(reglages, nom);
 
-function reglagesRejoues(applis, reglages, {reponse = null, echec = null} = {}) {
-  const {$} = creerZones();
-  const {niveaux, operations} = casesCoffres();
-  const mondes = [1, 2, 3, 4, 5, 6].map(n => { const i = Object.assign(new Noeud("input"), {dataset: {monde: String(n)}}); i.closest = () => new Noeud("label"); return i; });
-  const cases = ["defi-tables", "coffres", "splat"].map(cle => Object.assign(new Noeud("input"), {dataset: {appli: cle}}));
-  const doc = Object.assign({}, document, {querySelectorAll: s => (s.includes("data-niveau") ? niveaux : s.includes("data-operation") ? operations
-    : s.startsWith("#mondes-ouverts") ? mondes : cases)});
-  const appels = [];
-  const messages = [];
-  const rouverts = [];
-  const api = async (action, corps) => { appels.push({action, corps}); if (echec) throw echec; return reponse || {ok: true}; };
-  const etat = {classe: {id: 7, libelle: "CM1", applis, reglages}};
-  const monde = new Function("document", "$", "api", "messager", "surErreur", "ouvrirClasse", "etat",
-    `let classe = etat.classe;\n${constante("NOMBRE_MONDES")}\n${constante("NOMBRES_COFFRES")}\n${["mondesOuverts", "coffresOuverts", "poserPuce", "recordsOuvertsPourLaClasse", "poserActivites", "changerReglageCoffres"].map(n => fonction(n)).join("\n")}\nfunction poserEnPlusPour() {}\nposerActivites();\nreturn {changerReglageCoffres, coffresOuverts, poserActivites};`)(
-    doc, $, api, (id, t, type) => messages.push({id, t, type}), (e, id) => messages.push({id, t: e.message, type: "erreur"}), async id => rouverts.push(id), etat);
-  return {$, niveaux, operations, appels, messages, rouverts, monde};
-}
-
-test("coffresOuverts : les listes de la classe, ou null (tout ouvert) — rien de lisible, tout ouvert", () => {
-  const r = reglagesRejoues(["defi-tables", "coffres"], {coffres: {niveaux: [2], operations: [1, 3]}});
-  assert.deepEqual(r.monde.coffresOuverts("niveaux"), [2]);
-  assert.deepEqual(r.monde.coffresOuverts("operations"), [1, 3]);
-  assert.equal(reglagesRejoues(["coffres"], {}).monde.coffresOuverts("niveaux"), null);
-  assert.equal(reglagesRejoues(["coffres"], {coffres: {niveaux: [1, 2, 3], operations: "x"}}).monde.coffresOuverts("niveaux"), null);
-  assert.equal(reglagesRejoues(["coffres"], {coffres: {niveaux: [9, 0]}}).monde.coffresOuverts("niveaux"), null);
+test("les niveaux et opérations de la classe : ses listes, ou null (tout ouvert) — rien de lisible, tout ouvert", () => {
+  assert.deepEqual(lireCoffresOuverts({coffres: {niveaux: [2], operations: [1, 3]}}, "niveaux"), [2]);
+  assert.deepEqual(lireCoffresOuverts({coffres: {niveaux: [2], operations: [1, 3]}}, "operations"), [1, 3]);
+  assert.equal(lireCoffresOuverts({}, "niveaux"), null);
+  assert.equal(lireCoffresOuverts({coffres: {niveaux: [1, 2, 3], operations: "x"}}, "niveaux"), null);
+  assert.equal(lireCoffresOuverts({coffres: {niveaux: [9, 0]}}, "niveaux"), null);
+  assert.deepEqual(lireCoffresOuverts({coffres: {niveaux: [3, 1, 3, "2"]}}, "niveaux"), [1, 3], "triés, sans double, entiers seulement");
+  assert.doesNotMatch(script, /function coffresOuverts|NOMBRES_COFFRES/);
 });
 
-test("⚙ Réglages : sous Coffres, les trois niveaux et les quatre opérations, cochés d'après la classe ; cachés sans Coffres", () => {
-  const tout = reglagesRejoues(["defi-tables", "coffres", "splat"], {});
-  assert.equal(tout.$("coffres-reglages").hidden, false);
-  assert.deepEqual(tout.niveaux.map(c => c.checked), [true, true, true]);
-  assert.deepEqual(tout.operations.map(c => c.checked), [true, true, true, true]);
-  const regle = reglagesRejoues(["coffres"], {coffres: {niveaux: [2], operations: [1]}});
-  assert.deepEqual(regle.niveaux.map(c => c.checked), [false, true, false], "maquette 03");
-  assert.deepEqual(regle.operations.map(c => c.checked), [true, false, false, false]);
-  const sans = reglagesRejoues(["defi-tables"], {coffres: {niveaux: [2]}});
-  assert.equal(sans.$("coffres-reglages").hidden, true, "la classe n'a pas Coffres : rien à régler");
-  assert.match(page, /<label class="activite-tete"><input type="checkbox" data-appli="coffres"> <strong>Coffres magiques<\/strong><\/label>/);
-  assert.match(page, /<p class="titre-sous" id="titre-coffres-niveaux">Niveaux accessibles aux élèves<\/p>/);
-  assert.match(page, /<p class="titre-sous" id="titre-coffres-operations">Opérations accessibles<\/p>/);
-  assert.deepEqual([...page.matchAll(/<label><input type="checkbox" data-niveau="(\d)"> ([^<]+)<\/label>/g)].map(m => [m[1], m[2]]), [["1", "Niveau 1"], ["2", "Niveau 2"], ["3", "Niveau 3"]]);
-  assert.deepEqual([...page.matchAll(/<label><input type="checkbox" data-operation="(\d)"> ([^<]+)<\/label>/g)].map(m => [m[1], m[2]]), [["1", "Addition"], ["2", "Soustraction"], ["3", "Multiplication"], ["4", "Division"]]);
-  assert.doesNotMatch(page.slice(page.indexOf('id="coffres-reglages"'), page.indexOf('data-appli="splat"')), /Enregistrer/, "pas de bouton « Enregistrer » : chaque clic s'enregistre");
+const classeCM1 = (applis, reglages = {}) => ({id: 7, libelle: "CM1", applis, reglages});
+const eleves = () => [{id: 1, prenom: "Léa"}, {id: 2, prenom: "Noé"}];
+const cochees = (r, liste, n) => Array.from({length: n}, (_, i) => caseNumero(r.corps(), liste, i + 1).checked);
+
+test("« Régler Coffres magiques » : les trois niveaux et les quatre opérations, cochés d'après la classe ; sans Coffres pour la classe, des élèves à choisir", () => {
+  const tout = reglerRejoue({classe: classeCM1(["defi-tables", "coffres", "splat"]), eleves: eleves(), appli: "coffres"});
+  tout.f.ouvrirRegler("coffres");
+  assert.equal(tout.$("regler-titre").textContent, "Régler Coffres magiques");
+  assert.deepEqual(tout.corps().tous(n => n.className === "titre-liste").map(n => n.textContent), ["Niveaux ouverts", "Opérations ouvertes"]);
+  assert.deepEqual(cochees(tout, "niveaux", 3), [true, true, true]);
+  assert.deepEqual(cochees(tout, "operations", 4), [true, true, true, true]);
+  assert.deepEqual(tout.corps().tous(n => n.tag === "input" && n.dataset.liste === "operations").map(c => c.parent.textContent.trim()),
+    ["Addition", "Soustraction", "Multiplication", "Division"]);
+  assert.equal(tout.corps().premier(n => n.tag === "p" && n.className === "aide").textContent, "Tout est ouvert à la CM1 : rien à ajouter.");
+  const regle = reglerRejoue({classe: classeCM1(["coffres"], {coffres: {niveaux: [2], operations: [1]}}), eleves: eleves(), appli: "coffres"});
+  regle.f.ouvrirRegler("coffres");
+  assert.deepEqual(cochees(regle, "niveaux", 3), [false, true, false], "maquette 03");
+  assert.deepEqual(cochees(regle, "operations", 4), [true, false, false, false]);
+  assert.deepEqual(titres(regle.corps()), ["Pour la classe", "En plus pour quelques élèves"]);
+  assert.deepEqual(lignesPlus(regle.corps()).map(l => l.premier(n => n.className === "quoi").textContent),
+    ["Niveau 1", "Niveau 3", "Soustraction", "Multiplication", "Division"], "ce qui est fermé à la classe, à ouvrir en plus à quelques élèves");
+  // La ligne du haut de l'onglet le dit en mots courts.
+  regle.f.poserQuiVoit();
+  assert.equal(regle.$("qui-voit-etat").textContent, "Ouvert à toute la CM1 · niveau 2 · addition");
+  const sans = reglerRejoue({classe: classeCM1(["defi-tables"], {coffres: {niveaux: [2]}}), eleves: eleves(), appli: "coffres"});
+  sans.f.ouvrirRegler("coffres");
+  assert.equal(sans.corps().tous(n => n.tag === "input" && n.dataset.liste).length, 0, "la classe n'a pas Coffres : rien à régler pour elle");
+  assert.deepEqual(titres(sans.corps()), ["Ou seulement pour quelques élèves"]);
+  assert.doesNotMatch(page, /id="coffres-reglages"|data-niveau=|data-operation=/, "plus de cases dans Réglages");
 });
 
-test("décocher un niveau ou une opération : la liste cochée part au serveur, la classe est relue, « Réglages de Coffres magiques enregistrés. »", async () => {
-  const r = reglagesRejoues(["coffres"], {});
-  r.niveaux[2].checked = false;
-  await r.monde.changerReglageCoffres("niveaux", r.niveaux[2]);
-  assert.deepEqual(r.appels, [{action: "classes.modifier", corps: {classe_id: 7, reglages: {coffres: {niveaux: [1, 2]}}}}]);
-  assert.deepEqual(r.rouverts, [7]);
-  assert.deepEqual(r.messages.at(-1), {id: "message-activites", t: "Réglages de Coffres magiques enregistrés.", type: "ok"});
-  r.operations[1].checked = false; r.operations[3].checked = false;
-  await r.monde.changerReglageCoffres("operations", r.operations[3]);
-  assert.deepEqual(r.appels.at(-1).corps.reglages, {coffres: {operations: [1, 3]}}, "seul le groupe touché part");
-  assert.equal(r.$("cases-coffres-operations").attributs["aria-busy"], "false");
+test("décocher un niveau ou une opération : la liste cochée part à « Enregistrer », la classe est relue, le message le dit", async () => {
+  const r = reglerRejoue({classe: classeCM1(["coffres"]), eleves: eleves(), appli: "coffres"});
+  r.f.ouvrirRegler("coffres");
+  cocher(caseNumero(r.corps(), "niveaux", 3), false);
+  assert.deepEqual(r.serveur.appels, [], "rien ne part au clic");
+  await r.f.enregistrerRegler();
+  assert.deepEqual(r.serveur.appels.map(a => [a.action, a.corps]), [["classes.modifier", {classe_id: 7, reglages: {coffres: {niveaux: [1, 2]}}, avant: {applis: ["coffres"], reglages: {coffres: {}}}}]], "seul le groupe touché part (avec « avant »)");
+  assert.deepEqual(r.journal, ["ouvrirClasse 7"]);
+  assert.equal(r.$("message-appli").textContent, "Coffres magiques : réglages enregistrés (la CM1).");
+  const deux = reglerRejoue({classe: classeCM1(["coffres"]), eleves: eleves(), appli: "coffres"});
+  deux.f.ouvrirRegler("coffres");
+  cocher(caseNumero(deux.corps(), "operations", 2), false);
+  cocher(caseNumero(deux.corps(), "operations", 4), false);
+  await deux.f.enregistrerRegler();
+  assert.deepEqual(deux.serveur.appels.at(-1).corps.reglages, {coffres: {operations: [1, 3]}});
 });
 
-test("la dernière case cochée d'un groupe ne se décoche pas : refusé sans appel, avec le message ; une erreur du serveur remet la case", async () => {
-  const r = reglagesRejoues(["coffres"], {coffres: {niveaux: [2], operations: [1]}});
-  r.niveaux[1].checked = false;
-  await r.monde.changerReglageCoffres("niveaux", r.niveaux[1]);
-  assert.equal(r.niveaux[1].checked, true);
-  assert.equal(r.appels.length, 0);
-  assert.deepEqual(r.messages.at(-1), {id: "message-activites", t: "Une classe garde au moins un niveau ouvert.", type: "erreur"});
-  r.operations[0].checked = false;
-  await r.monde.changerReglageCoffres("operations", r.operations[0]);
-  assert.equal(r.operations[0].checked, true);
-  assert.deepEqual(r.messages.at(-1), {id: "message-activites", t: "Une classe garde au moins une opération ouverte.", type: "erreur"});
-  const panne = reglagesRejoues(["coffres"], {}, {echec: new Error("Le serveur n'a pas pu répondre.")});
-  panne.niveaux[0].checked = false;
-  await panne.monde.changerReglageCoffres("niveaux", panne.niveaux[0]);
-  assert.equal(panne.niveaux[0].checked, true, "la case revient");
-  assert.equal(panne.messages.at(-1).type, "erreur");
-  assert.ok(panne.niveaux.every(c => !c.disabled));
+test("la dernière case cochée d'un groupe ne se décoche pas : refusée sans appel, avec le message ; une panne remet la fenêtre sur l'état relu", async () => {
+  const r = reglerRejoue({classe: classeCM1(["coffres"], {coffres: {niveaux: [2], operations: [1]}}), eleves: eleves(), appli: "coffres"});
+  r.f.ouvrirRegler("coffres");
+  cocher(caseNumero(r.corps(), "niveaux", 2), false);
+  assert.equal(caseNumero(r.corps(), "niveaux", 2).checked, true);
+  assert.equal(r.$("regler-message").textContent, "Une classe garde au moins un niveau ouvert.");
+  cocher(caseNumero(r.corps(), "operations", 1), false);
+  assert.equal(caseNumero(r.corps(), "operations", 1).checked, true);
+  assert.deepEqual([r.$("regler-message").textContent, r.$("regler-message").className], ["Une classe garde au moins une opération ouverte.", "message erreur"]);
+  assert.deepEqual(r.serveur.appels, []);
+  const panne = reglerRejoue({classe: classeCM1(["coffres"]), eleves: eleves(), appli: "coffres"});
+  panne.serveur.panne("classes.modifier", panne.serveur.erreur("Le serveur n’a pas pu répondre.", 500));
+  panne.f.ouvrirRegler("coffres");
+  cocher(caseNumero(panne.corps(), "niveaux", 1), false);
+  await panne.f.enregistrerRegler();
+  assert.equal(caseNumero(panne.corps(), "niveaux", 1).checked, true, "la case revient : la fenêtre montre ce qui est rangé");
+  assert.equal(panne.$("regler-message").className, "message erreur");
+  assert.ok(panne.corps().tous(n => n.tag === "input").every(c => !c.disabled), "la fenêtre redevient cliquable");
 });
 
 // ------------------------------------------------------------ l'espace élève : la tuile
