@@ -203,7 +203,7 @@
   const centaineSuivante = n => (Math.floor(n / 100) + 1) * 100;
 
   const A2_NOMBRES_2 = Object.freeze([10, 20, 30, 40, 50, 60, 70, 80, 90, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]);
-  const A2_NOMBRES_3 = Object.freeze(Array.from({length: 99}, (_, i) => i + 1).filter(n => n % 5 !== 0 && n < 90));
+  const A2_NOMBRES_3 = Object.freeze(Array.from({length: 99}, (_, i) => i + 1).filter(n => n % 5 !== 0 && n > 10 && n < 90));
 
   // Niveau 1 : à la dizaine suivante (cible variable : 67 + ? = 70,
   // 433 + ? = 440). Les compléments à 10 sont partis dans A1 (carte v2).
