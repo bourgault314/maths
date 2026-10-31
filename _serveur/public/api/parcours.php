@@ -20,8 +20,9 @@ const TAILLE_MAX_PROGRESSION = 40000; // octets
 // outils enregistrent sous « splat » (assets/js/splat-parcours.js). Coffres
 // magiques solo (21/10/2026) sous « coffres » (assets/js/coffres-parcours.js).
 // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026) sous « flash-anzan »
-// (outils/calcul_mental/flash_anzan_parcours.js).
-const APPLIS_CONNUES = ['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'];
+// (outils/calcul_mental/flash_anzan_parcours.js). Défi calcul (lot 2b,
+// 31/10/2026) sous « defi-calcul » (outils/calcul_mental/defi_calcul_mon_parcours.js).
+const APPLIS_CONNUES = ['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'];
 
 function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 {

@@ -30,7 +30,7 @@ const MAX_ELEVES_PAR_LOT = 60;
 // absente d'ici est retirée EN SILENCE de la liste d'une classe à sa création
 // ou à sa modification (vérifié au banc, 21/10/2026) : toute appli ouverte au
 // catalogue doit y être.
-const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'];
+const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
 // ------------------------------------------------------------------- quotas

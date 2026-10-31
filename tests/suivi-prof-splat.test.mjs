@@ -363,7 +363,8 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   const ordre = [...catalogue.matchAll(/^ {4}'([a-z-]+)' => \[/gm)].map(m => m[1]);
   // Coffres magiques entre les deux (lot « Coffres magiques sur le suivi », 21/10/2026),
   // puis Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026), comme au catalogue.
-  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "flash-anzan", "splat"]);
+  // Défi calcul (lot 2b, 31/10/2026) après Anzan, comme au catalogue.
+  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "splat"]);
   APPLIS.forEach(appli => {
     const entree = catalogue.slice(catalogue.indexOf(`'${appli.cle}' => [`));
     const bloc = entree.slice(0, entree.indexOf("\n    ],"));

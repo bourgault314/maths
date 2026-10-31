@@ -332,7 +332,7 @@ test("les textes suivent : la légende du partage, le bandeau du collègue, la n
   assert.match(fonction("appliquerDroits"), /partagée avec toi \(voir et modifier\) : dans l’onglet Élèves, tu ajoutes des élèves, saisis les prénoms et donnes un nouveau code ; tu reviens aussi à une version précédente\. Supprimer un élève ou la classe reste à \$\{qui\}\./);
   assert.match(fonction("appliquerDroits"), /\(voir seulement\) : tu vois la progression, sans les codes des élèves, et tu ne modifies rien\./, "inchangé");
   assert.match(page, /Reviens à la page et choisis un bouton\. Onglet Élèves : <strong>« Imprimer les bandelettes »<\/strong>/);
-  assert.match(page, /Onglet Anzan : touche la ligne d’un élève, puis\s*<strong>« Imprimer »<\/strong> dans sa fenêtre\./, "la feuille Anzan aussi (lot « textes justes » ; lot 5c : la ligne ouvre la fenêtre)");
+  assert.match(page, /Onglet Anzan ou Défi calcul : touche la ligne d’un élève, puis\s*<strong>« Imprimer »<\/strong> dans sa fenêtre ; Défi calcul a aussi <strong>« Imprimer la grille »<\/strong>\s*au-dessus du tableau\./, "la feuille Anzan aussi (lot « textes justes » ; lot 5c : la ligne ouvre la fenêtre ; lot 2b de Défi calcul : ses deux feuilles)");
   assert.match(script, /Nouveau code : \$\{donnees\.code\}\. Imprime sa bandelette \(menu ⋯\)/);
 });
 

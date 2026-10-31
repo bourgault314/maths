@@ -628,10 +628,13 @@ verifier("le manifeste connaît la page Infos", function () {
     // de parcours, prof/coffres-parcours.js. 62 depuis Anzan (lot « Qui voit
     // quoi », lot 4a, 23/10/2026) : prof/flash_anzan_parcours.js.
     // 63 depuis la charte commune (serveur pro, lot 5a, 25/10/2026) : suivi.css.
-    vrai((bool)preg_match('/^fichiers 63$/m', $manifeste),
-        'le serveur compte 63 fichiers depuis la charte suivi.css');
+    // 65 depuis Défi calcul (lot 2b, 31/10/2026) : ses deux moteurs,
+    // prof/defi_calcul_core.js et prof/defi_calcul_mon_parcours.js.
+    vrai((bool)preg_match('/^fichiers 65$/m', $manifeste),
+        'le serveur compte 65 fichiers depuis les moteurs de Défi calcul');
     foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
+              'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js',
               'vendor/katex-0.18.2/katex.min.js', 'vendor/katex-0.18.2/katex.min.css',
               'vendor/katex-0.18.2/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
@@ -7028,6 +7031,181 @@ verifier("anzan-suivi — « Ma classe » charge le moteur Anzan d'ici, versionn
     $fin = strpos($p['texte'], 'feuille imprimée', (int)$debut);
     vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de l’onglet est là');
     vrai(!str_contains(substr($p['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans l’onglet Anzan');
+});
+
+// -------------------------------- Défi calcul, lot 2b : le serveur apprend « defi-calcul » (31/10/2026)
+//
+// Le serveur apprend Défi calcul : la clé « defi-calcul », entre Anzan et
+// Automatismes au catalogue (son rang de toujours), son adresse, ses clés
+// (version 2 du lot 3 : les boîtes par compétence, les causes d'erreur par
+// numéro, le plan de la séance, les dates), ses motifs (les 74 codes de
+// module, les numéros de cause), aucun mot, son compteur (les séances), les
+// copies de ses deux moteurs dans prof/, et aucun réglage de classe. Rien ne
+// change chez l'élève ni chez le professeur tant qu'aucune classe ni aucun
+// élève n'a « defi-calcul ».
+
+verifier("defi-calcul — le parcours de référence ressort identique du filtre du serveur", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $chemin = __DIR__ . '/parcours-reference-defi-calcul.json';
+    vrai(is_file($chemin), "tests/parcours-reference-defi-calcul.json manque : node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire");
+    $texte = (string)file_get_contents($chemin);
+    $reference = json_decode($texte, false);
+    vrai(is_object($reference), 'référence lisible');
+    // Le prénom reste sur l'appareil : le paquet l'envoie vide, le serveur le retire.
+    unset($reference->prenom);
+    $attendu = json_encode($reference, JSON_UNESCAPED_UNICODE);
+    $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
+    egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
+    $reference = json_decode($texte, false);
+    egal(2, $reference->version, 'version 2 (lot 3)');
+    egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
+    egal(4, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3)');
+    vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
+    vrai(isset($reference->modules->A5->c->{'1'}), 'les causes par numéro');
+    vrai(!isset($reference->test), '« test » a disparu (lot 3)');
+    egal(5, count($reference->seance->p), 'le plan de la séance : cinq nombres');
+    egal(60, compter_elements_declares('defi-calcul', $attendu), '« Revenir à… » compte les séances (60 gardées)');
+    vrai(strlen($attendu) < 40000, 'la référence tient sous la borne de 40 ko');
+    // Le pire cas (toutes les compétences entrées, 8 causes) : 1 639 clés, 21 207 octets, dit la notice du lot 3.
+    vrai(strlen($attendu) > 15000, 'la référence est bien un parcours complet');
+});
+
+verifier("defi-calcul — un texte, un prénom, un code de module inconnu, une cause hors motif, une liste de listes sont retirés", function () {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $propre = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), false);
+    $sale = json_decode(json_encode($propre), false);
+    $sale->prenom = 'Léa';
+    $sale->modules->A2->note = 'nulle';
+    $sale->modules->A2->vu = 'hier';
+    $sale->modules->ZZ9 = $propre->modules->A2;
+    $sale->modules->{'A2-3'} = $propre->modules->A2;
+    $sale->modules->A2->c->{'abc'} = 3;
+    $sale->modules->A2->c->{'123'} = 3;
+    $sale->modules->A2->b = [5, [1, 2], 'cinq', 5];
+    $sale->calculs = ['37+?=100', '63-9'];
+    $sale->reponses = [73, 54];
+    $sale->seance->commentaire = 'trop dur';
+    $obtenu = filtrer_progression('defi-calcul', $sale);
+    vrai(!isset($obtenu->prenom), 'le prénom reste sur l’appareil');
+    vrai(!isset($obtenu->modules->A2->note), 'un texte dans un module saute');
+    vrai(!isset($obtenu->modules->A2->vu), '« hier » n’est pas une date : retiré (le moteur remet null)');
+    vrai(!isset($obtenu->modules->ZZ9) && !isset($obtenu->modules->{'A2-3'}), 'un code hors de la carte saute');
+    vrai(!isset($obtenu->modules->A2->c->{'abc'}) && !isset($obtenu->modules->A2->c->{'123'}), 'une cause hors motif (deux chiffres au plus) saute');
+    egal([5, 5], $obtenu->modules->A2->b, 'dans une liste, une liste imbriquée et un texte sont retirés ; le moteur, lui, remet la liste à la longueur du module');
+    vrai(!isset($obtenu->calculs) && !isset($obtenu->reponses), 'aucun calcul ni réponse d’élève n’est gardé');
+    vrai(!isset($obtenu->seance->commentaire), 'pas de texte dans la séance');
+    $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
+    vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'nulle') && !str_contains($texte, '37+') && !str_contains($texte, 'trop dur'), 'aucun texte libre ne ressort');
+    // Le filtre est propre à chaque appli : un parcours Défi calcul envoyé sous « coffres » ne laisse passer aucun module.
+    $sousCoffres = json_encode(filtrer_progression('coffres', $propre));
+    vrai(!str_contains($sousCoffres, 'modules') && !str_contains($sousCoffres, '"A2"'), 'les modules de Défi calcul ne sont pas des clés de Coffres');
+    // Et l'inverse : la référence de Défi tables sous « defi-calcul » ne garde pas les tables.
+    $tables = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference.json'), false);
+    $sousCalcul = json_encode(filtrer_progression('defi-calcul', $tables));
+    vrai(!str_contains($sousCalcul, 'tables') && !str_contains($sousCalcul, 'apprends'), 'les tables ne sont pas des clés de Défi calcul');
+});
+
+$classeCalcul = null;
+verifier("defi-calcul — s'enregistre et se relit par l'API élève, à sa place du catalogue, dans le tableau du professeur, et se donne à un seul élève", function () use (&$jetonS1, &$classeCalcul) {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-calcul', 'applis' => ['splat', 'defi-calcul', 'defi-tables']], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'classe créée avec Défi calcul');
+    $classe = $r['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $classeCalcul = ['id' => $classe, 'eleves' => $eleves];
+    $code = $eleves[0]['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    egal(false, lire($code, 'defi-calcul')['json']['existe'], 'rien avant le premier envoi');
+    $w = ecrire($code, $reference, 0, 'defi-calcul');
+    egal(200, $w['code'], 'premier envoi accepté (révision 0) : ' . $w['texte']);
+    egal(1, $w['json']['revision']);
+    $r = lire($code, 'defi-calcul');
+    egal(true, $r['json']['existe']);
+    $attendu = $reference;
+    unset($attendu['prenom']);
+    egal($attendu, $r['json']['parcours'], 'relu exactement tel que le moteur l’a envoyé, prénom retiré');
+    egal(false, lire($code, 'defi-tables')['json']['existe'], 'Défi tables du même élève n’a pas bougé');
+    $ligne = bd_test()->prepare("SELECT calculs FROM versions WHERE eleve_id = ? AND appli = 'defi-calcul'");
+    $ligne->execute([(int)$eleves[0]['id']]);
+    $compte = (int)$ligne->fetchColumn();
+    $ligne->closeCursor();
+    egal(60, $compte, 'la version du jour est comptée en séances');
+    // Un deuxième envoi avec la révision lue : accepté ; sans : refusé (409) avec l'état.
+    $w2 = ecrire($code, $reference, 1, 'defi-calcul');
+    egal(200, $w2['code'], 'deuxième envoi avec la bonne révision');
+    $w3 = ecrire($code, $reference, 1, 'defi-calcul');
+    egal(409, $w3['code'], 'écrire par-dessus un état qu’on n’a pas vu : refusé');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'le tableau de la classe se demande pour Défi calcul');
+    $lu = null;
+    foreach ($t['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['modules'] ?? []) === 74, 'le tableau rend le parcours Défi calcul de l’élève, ses modules compris');
+    vrai(!isset($lu['parcours']['prenom']), 'et sans prénom');
+    $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];
+    $trouvee = null;
+    foreach ($classes as $c) if ((int)$c['id'] === (int)$classe) $trouvee = $c;
+    egal(['defi-tables', 'defi-calcul', 'splat'], $trouvee['applis'], 'Défi calcul entre Défi tables et SPLAT!, quel que soit l’ordre envoyé');
+    $e = identite($code);
+    egal(200, $e['code'], 'l’identité par le code : ' . $e['texte']);
+    $applis = $e['json']['applis'] ?? [];
+    egal(['defi-tables', 'defi-calcul', 'splat'], array_column($applis, 'cle'), 'l’espace élève reçoit les trois tuiles dans cet ordre');
+    egal(['cle' => 'defi-calcul', 'nom' => 'Défi calcul', 'description' => 'Tout le calcul mental du collège.',
+        'url' => 'https://mathsgo.re/outils/calcul_mental/defi_calcul_modules.html', 'ancre' => null, 'disponible' => true], $applis[1],
+        'la tuile : le nom, la phrase, l’adresse de l’appli ; pas de « cles » ni de « motifs »');
+    vrai(!str_contains($e['texte'], 'defi-calcul":{'), 'aucun réglage de classe pour Défi calcul : rien dans « reglages »');
+    // Décochée pour la classe : la tuile disparaît, le parcours reste.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $classe, 'applis' => ['defi-tables', 'splat']], ['jeton' => $jetonS1]);
+    egal(['defi-tables', 'splat'], array_column(identite($code)['json']['applis'], 'cle'), 'décochée : la tuile disparaît de l’espace élève');
+    egal(true, lire($code, 'defi-calcul')['json']['existe'], 'et son parcours reste en base');
+    // Donnée à un seul élève : lui seul la voit.
+    $r = donner((int)$eleves[0]['id'], ['defi-calcul' => new stdClass()], $jetonS1);
+    egal(200, $r['code'], 'eleves.acces accepte « defi-calcul » : ' . $r['texte']);
+    egal(['defi-tables', 'defi-calcul', 'splat'], array_column(identite($code)['json']['applis'], 'cle'), 'l’élève voit Défi calcul, à sa place du catalogue');
+    egal(['defi-tables', 'splat'], array_column(identite($eleves[1]['code'])['json']['applis'], 'cle'), 'sa camarade ne voit rien de plus');
+    $r = donner((int)$eleves[0]['id'], ['defi-calcul' => ['modules' => ['A2']]], $jetonS1);
+    egal(400, $r['code'], 'Défi calcul n’a pas de réglage à donner par morceaux');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'le tableau Défi calcul d’une classe sans Défi calcul');
+    egal(2, count($t['json']['eleves']), 'la classe entière y est listée');
+});
+
+verifier("defi-calcul — le billet d'entrée s'échange pour « defi-calcul », les deux moteurs sont servis d'ici, « Ma classe » et Mon espace les chargent versionnés", function () use (&$classeCalcul, $racine) {
+    $code = $classeCalcul['eleves'][0]['code'];
+    $billet = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'];
+    $b = echanger($billet, ['appli' => 'defi-calcul']);
+    egal(200, $b['code'], 'l’échange : ' . $b['texte']);
+    egal('entree', $b['json']['type']);
+    egal($code, $b['json']['code'], 'le code revient à l’appli, dans le corps');
+    $core = page('/prof/defi_calcul_core.js');
+    egal(200, $core['code'], 'prof/defi_calcul_core.js est servi');
+    vrai(str_contains($core['texte'], 'MATHSGO_DEFI_CALCUL_CORE'), 'et c’est bien le noyau');
+    $moteur = page('/prof/defi_calcul_mon_parcours.js');
+    egal(200, $moteur['code'], 'prof/defi_calcul_mon_parcours.js est servi');
+    vrai(str_contains($moteur['texte'], 'MATHSGO_DEFI_CALCUL_MON_PARCOURS') && str_contains($moteur['texte'], 'resumeProf'), 'et c’est bien le moteur, avec resumeProf');
+    egal((string)file_get_contents($racine . '/../outils/calcul_mental/defi_calcul_core.js'), $core['texte'], 'le noyau servi est la copie exacte de celui de l’appli');
+    egal((string)file_get_contents($racine . '/../outils/calcul_mental/defi_calcul_mon_parcours.js'), $moteur['texte'], 'le moteur servi est la copie exacte de celui de l’appli');
+    $v = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai((bool)preg_match('#class="etat oui">✓</span>\s*Moteurs Défi calcul servis localement#u', $v['texte']), 'verifier.php a sa ligne « Moteurs Défi calcul servis localement », verte');
+    $p = page('/prof/');
+    egal(200, $p['code']);
+    vrai((bool)preg_match('#const MOTEUR_CALCUL_CORE = "defi_calcul_core\.js\?v=([0-9a-f]{10})";#', $p['texte'], $m1), '« Ma classe » : l’adresse du noyau, relative, avec une version');
+    egal(substr(md5($core['texte']), 0, 10), $m1[1], 'la version du noyau est l’empreinte du fichier servi');
+    vrai((bool)preg_match('#const MOTEUR_CALCUL = "defi_calcul_mon_parcours\.js\?v=([0-9a-f]{10})";#', $p['texte'], $m2), 'l’adresse du moteur, avec une version');
+    egal(substr(md5($moteur['texte']), 0, 10), $m2[1], 'la version du moteur est l’empreinte du fichier servi');
+    vrai(!str_contains($p['texte'], '<script src="defi_calcul'), 'pas chargés d’office : seulement à l’ouverture de l’onglet Défi calcul');
+    vrai(str_contains($p['texte'], '<button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul</button>'), 'l’onglet Défi calcul');
+    vrai(str_contains($p['texte'], '<tr id="entete-defi-calcul" hidden>'), 'son en-tête de tableau');
+    vrai(str_contains($p['texte'], 'id="dc-reprendre"') && str_contains($p['texte'], 'id="fiche-defi-calcul"') && str_contains($p['texte'], 'id="grille-defi-calcul"'), 'la carte « À reprendre en classe » et les deux feuilles');
+    $debut = strpos($p['texte'], "l'onglet Défi calcul\n");
+    $fin = strpos($p['texte'], 'feuille imprimée', (int)$debut);
+    vrai($debut !== false && $fin !== false && $fin > $debut, 'le script de l’onglet est là');
+    vrai(!str_contains(substr($p['texte'], $debut, $fin - $debut), 'innerHTML'), 'rien n’est écrit par innerHTML dans l’onglet Défi calcul');
+    $espace = page('/');
+    egal(200, $espace['code']);
+    vrai((bool)preg_match('#avant: \{url: "prof/defi_calcul_core\.js\?v=([0-9a-f]{10})"#', $espace['texte'], $m3) && $m3[1] === $m1[1], 'Mon espace charge le noyau d’ici, à la même version');
+    vrai((bool)preg_match('#url: "prof/defi_calcul_mon_parcours\.js\?v=([0-9a-f]{10})"#', $espace['texte'], $m4) && $m4[1] === $m2[1], 'et le moteur, à la même version');
 });
 
 // -------------------------------- serveur pro, lot 5e : la séance en direct pour l'administrateur seul (25/10/2026)

@@ -277,12 +277,12 @@ test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiqu
   const APPLIS = new Function(`${constante("APPLIS")}\nreturn APPLIS;`)();
   assert.deepEqual(APPLIS[1], {cle: "coffres", nom: "Coffres magiques", unite: ["niveau commencé", "niveaux commencés"]});
   // Anzan se glisse entre Coffres et SPLAT! (lot « Qui voit quoi », lot 4b).
-  assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
+  assert.match(page, /<button type="button" data-appli="defi-tables" aria-pressed="true">Défi tables<\/button>\s*<button type="button" data-appli="coffres" aria-pressed="false">Coffres magiques<\/button>\s*<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul<\/button>\s*<button type="button" data-appli="splat" aria-pressed="false">SPLAT!<\/button>/);
   const entete = page.slice(page.indexOf('<tr id="entete-coffres" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-coffres"')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
     ["Élève:prenom", "Trésors:tresors", "Niveau 1:niveau1 (large)", "Niveau 2:niveau2 (large)", "Niveau 3:niveau3 (large)", "Dernier trésor:date", ""]);
   assert.match(page, /<p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée\.<\/p>/);
-  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan;/);
+  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("entete-defi-calcul"\)\.hidden = !calcul;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan \|\| calcul;/);
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("elevesLus"), /cle === "coffres" \? lireCoffres/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "coffres"\) return chargerMoteurCoffres\(\);/);

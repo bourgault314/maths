@@ -87,6 +87,28 @@ test("le moteur Anzan servi par suivi.mathsgo.re est la copie exacte de celui de
   );
 });
 
+// Défi calcul (lot 2b, 31/10/2026) : même règle pour ses DEUX moteurs — le
+// noyau (la carte, les noms, les erreurs connues) et la progression
+// (resumeProf). La tuile de l'espace élève et « Ma classe » les chargent
+// d'ici. Tout lot qui touche outils/calcul_mental/defi_calcul_core.js ou
+// defi_calcul_mon_parcours.js recopie les fichiers dans _serveur/public/prof/
+// ET les met dans son dossier à déposer.
+for (const [ORIGINAL_CALCUL, COPIE_CALCUL] of [
+  ["outils/calcul_mental/defi_calcul_core.js", "_serveur/public/prof/defi_calcul_core.js"],
+  ["outils/calcul_mental/defi_calcul_mon_parcours.js", "_serveur/public/prof/defi_calcul_mon_parcours.js"]
+]) {
+  test(`le moteur Défi calcul servi par suivi.mathsgo.re (${COPIE_CALCUL}) est la copie exacte de celui de l'appli`, () => {
+    const original = readFileSync(join(racine, ORIGINAL_CALCUL));
+    const copie = readFileSync(join(racine, COPIE_CALCUL));
+    assert.ok(original.length > 1000, `${ORIGINAL_CALCUL} doit être le vrai moteur`);
+    assert.ok(
+      original.equals(copie),
+      `${COPIE_CALCUL} diffère de ${ORIGINAL_CALCUL} (${copie.length} contre ${original.length} octets) : `
+        + `recopie le fichier (cp ${ORIGINAL_CALCUL} ${COPIE_CALCUL}) et ajoute-le au dossier à déposer.`
+    );
+  });
+}
+
 test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur contenu", () => {
   const page = readFileSync(join(racine, "_serveur/public/index.php"), "utf8");
   assert.match(page, /url: "prof\/defi_tables_mon_parcours\.js\?v=<\?= htmlspecialchars\(\$versionMoteur, ENT_QUOTES\) \?>"/);
@@ -97,6 +119,11 @@ test("l'espace élève charge ses moteurs d'ici, avec une version qui suit leur 
   assert.match(page, /\$versionCoffres = version_moteur\('coffres-parcours\.js'\);/);
   assert.match(page, /url: "prof\/flash_anzan_parcours\.js\?v=<\?= htmlspecialchars\(\$versionAnzan, ENT_QUOTES\) \?>"/);
   assert.match(page, /\$versionAnzan = version_moteur\('flash_anzan_parcours\.js'\);/);
+  assert.match(page, /avant: \{url: "prof\/defi_calcul_core\.js\?v=<\?= htmlspecialchars\(\$versionCalculCore, ENT_QUOTES\) \?>"/,
+    "Défi calcul : le noyau d'abord");
+  assert.match(page, /url: "prof\/defi_calcul_mon_parcours\.js\?v=<\?= htmlspecialchars\(\$versionCalcul, ENT_QUOTES\) \?>"/);
+  assert.match(page, /\$versionCalculCore = version_moteur\('defi_calcul_core\.js'\);/);
+  assert.match(page, /\$versionCalcul = version_moteur\('defi_calcul_mon_parcours\.js'\);/);
   assert.doesNotMatch(page, /https?:\/\/[^"']*\.js/, "aucun script d'un autre domaine");
 });
 

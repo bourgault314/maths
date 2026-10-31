@@ -12,9 +12,9 @@ const catalogue = lire("_serveur/public/lib/applis.php");
 const espace = lire("_serveur/public/index.php");
 
 test("l'API élève accepte « flash-anzan », et le professeur peut le proposer à une classe ou le donner à un élève", () => {
-  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/,
     "sans « flash-anzan » ici, le premier envoi de l'appli répondrait « 400 Application inconnue »");
-  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'automatismes', 'splat'\];/,
+  assert.match(lire("_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/,
     "« Ce que voit Rania » et « Activités de la classe » passent par cette liste");
   const cles = [...catalogue.matchAll(/^\s{4}'([a-z0-9-]+)' => \[$/gm)].map(m => m[1]);
   assert.deepEqual(cles, ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "automatismes", "splat", "soley"],

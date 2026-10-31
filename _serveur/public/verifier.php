@@ -422,6 +422,25 @@ if ($autorise) {
         }
         return "en place (" . number_format((float)filesize($chemin), 0, ',', ' ') . " octets, empreinte " . substr(md5_file($chemin), 0, 10) . ")";
     });
+    // Défi calcul (lot 2b, 31/10/2026) : ses deux moteurs, servis d'ici pour la
+    // même raison — le noyau (la carte, les noms, les erreurs) et la
+    // progression. S'il en manque un, la tuile Défi calcul de l'espace élève
+    // reste sans jauge et « Ma classe » ne saura pas lire les boîtes.
+    verif($lignes, "Moteurs Défi calcul servis localement", function () {
+        $attendus = ['prof/defi_calcul_core.js' => 'MATHSGO_DEFI_CALCUL_CORE', 'prof/defi_calcul_mon_parcours.js' => 'MATHSGO_DEFI_CALCUL_MON_PARCOURS'];
+        $morceaux = [];
+        foreach ($attendus as $fichier => $marque) {
+            $chemin = __DIR__ . '/' . $fichier;
+            if (!is_file($chemin) || filesize($chemin) === 0) {
+                throw new RuntimeException("$fichier absent : à déposer (copie de outils/calcul_mental/" . basename($fichier) . " du dépôt).");
+            }
+            if (!str_contains((string)file_get_contents($chemin), $marque)) {
+                throw new RuntimeException("$fichier n'est pas le moteur attendu.");
+            }
+            $morceaux[] = basename($fichier) . " " . substr(md5_file($chemin), 0, 10);
+        }
+        return "en place (" . implode(', ', $morceaux) . ")";
+    });
     // Lot 7 (03/09/2026) : le logo et les icônes sont servis d'ici, la
     // politique de contenu n'accepte plus d'image d'un autre domaine. S'ils
     // manquent, les deux pages s'affichent sans logo et sans favicon.

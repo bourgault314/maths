@@ -363,3 +363,109 @@ test("une progression de version 1 : les boîtes restent, la séance en cours se
   const v2 = Object.assign({}, v1, {version: 2});
   assert.deepEqual(P.normaliserParcours(v2).seance, {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1]});
 });
+
+// ---------------------------------------------------------------- lot 2b
+//
+// Le serveur apprend Défi calcul (31/10/2026) : ce que lib/applis.php déclare
+// doit couvrir ce que le moteur produit, et resumeProf — ce que lisent « Ma
+// classe » et la tuile de Mon espace — rend l'état de chaque compétence sans
+// que la page touche aux boîtes.
+
+test("lib/applis.php déclare pour « defi-calcul » les clés du moteur, les 74 codes et les numéros de cause, sans mot, le compteur « seances »", async () => {
+  const applis = await lire("../_serveur/public/lib/applis.php");
+  const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
+  assert.match(bloc, /'disponible' => true,/);
+  assert.match(bloc, /'url' => 'https:\/\/mathsgo\.re\/outils\/calcul_mental\/defi_calcul_modules\.html',/);
+  const cles = bloc.match(/'cles' => \[([\s\S]*?)\],/)[1].match(/'(\w+)'/g).map(c => c.replace(/'/g, ""));
+  assert.deepEqual(cles, [...CLES_DECLAREES], "les clés déclarées, dans l'ordre du générateur");
+  assert.match(bloc, /'mots' => \[\],/, "aucun mot : le format n'a pas de texte");
+  const motifs = [...bloc.matchAll(/'\/(\^[^']+\$)\/'/g)].map(m => new RegExp(m[1]));
+  assert.equal(motifs.length, 2, "deux motifs : les codes de module, les numéros de cause");
+  P.CODES.forEach(code => assert.ok(motifs[0].test(code), `code non couvert : ${code}`));
+  ["A", "A2-3", "ZZ9", "a2", "A20"].forEach(faux => assert.ok(!motifs[0].test(faux), `code accepté à tort : ${faux}`));
+  const codesDuMotif = motifs[0].source.replace(/^\^\(\?:|\)\$$/g, "").split("|");
+  assert.deepEqual(codesDuMotif, [...P.CODES], "le motif est la liste exacte des codes du moteur, dans son ordre");
+  ["1", "12", "0", "99"].forEach(c => assert.ok(motifs[1].test(c)));
+  ["123", "abc", "1a", ""].forEach(c => assert.ok(!motifs[1].test(c)));
+  assert.match(bloc, /'compteur' => 'seances',/);
+  assert.doesNotMatch(bloc, /'reglages' =>/, "pas de réglage de classe");
+  assert.match(await lire("../_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
+  assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
+  // La référence écrite pour le serveur est bien celle du générateur.
+  const ecrite = JSON.parse(await lire("../_serveur/tests/parcours-reference-defi-calcul.json"));
+  assert.deepEqual(ecrite, parcoursComplet(), "_serveur/tests/parcours-reference-defi-calcul.json est à regénérer : node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire");
+});
+
+test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les causes, les séances — sur toute la carte et sur ce qui est ouvert", () => {
+  const jour = "2026-11-27";
+  let p = P.creerParcours();
+  // A2 : niveau 1 sue (boîte 4), niveau 2 en route (boîte 2), niveau 3 rouge
+  // (boîte 1), niveau 4 pas entrée. M2 : niveau 1 mis de côté (x = 3, revient
+  // dans 3 jours), niveau 2 sue. A5 : niveau 1 ratée aujourd'hui (x = 1,
+  // boîte 3, revient demain). Les causes : A2 cause 2 × 5, A5 cause 1 × 7.
+  p.modules.A2 = {vu: jour, ok: null, b: [4, 2, 1, 0], e: ["2026-12-04", "2026-11-28", "2026-11-28", null], a: [1, 1, 0, 0], f: [3, 2, 4, 0], x: [0, 0, 2, 0], t: [0, 0, 0, 0], c: {"2": 5}};
+  p.modules.M2 = {vu: jour, ok: null, b: [1, 5], e: ["2026-11-30", "2026-12-11"], a: [0, 1], f: [5, 2], x: [3, 0], t: [0, 0], c: {}};
+  p.modules.A5 = {vu: jour, ok: null, b: [3, 0, 0, 0], e: ["2026-11-28", null, null, null], a: [1, 0, 0, 0], f: [2, 0, 0, 0], x: [1, 0, 0, 0], t: [0, 0, 0, 0], c: {"1": 7}};
+  p.seances = ["2026-11-02", "2026-11-23", "2026-11-24", "2026-11-24", "2026-11-26", "2026-11-27"];
+  p.jours = ["2026-11-23", "2026-11-24", "2026-11-26", "2026-11-27"];
+  const r = P.resumeProf(p, CARTE, jour);
+  assert.equal(r.lisible, true);
+  assert.equal(r.commence, true);
+  assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 129], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 129 compétences");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 14], "sur les modules construits : 14 compétences");
+  const a2 = r.modules.find(m => m.id === "A2");
+  assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris"]);
+  assert.deepEqual(a2.paliers, [1, 1, 1, 2]);
+  assert.equal(a2.construit, true);
+  assert.deepEqual(r.modules.find(m => m.id === "M2").etats, ["classe", "su"], "mise de côté = « à voir en classe »");
+  assert.deepEqual(r.modules.find(m => m.id === "A5").etats, ["revoir", "gris", "gris", "gris"], "ratée aujourd'hui : rouge pour la journée");
+  assert.equal(r.modules.find(m => m.id === "A1").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.length, 74);
+  assert.deepEqual(r.revoir.map(c => `${c.module}-${c.niveau}:${c.etat}`), ["A2-3:revoir", "A5-1:revoir", "M2-1:classe"], "dans l'ordre de la carte");
+  const deCote = r.revoir.find(c => c.module === "M2");
+  assert.deepEqual([deCote.deCote, deCote.echeance, deCote.apprends, deCote.echecs, deCote.entrainee], [true, "2026-11-30", true, 3, false]);
+  // Réentraînée avec l'aide aujourd'hui (t = 1 le jour vu) : la page le dit.
+  p.modules.A5.t = [1, 0, 0, 0];
+  assert.equal(P.resumeProf(p, CARTE, jour).revoir.find(c => c.module === "A5").entrainee, true);
+  assert.equal(P.resumeProf(p, CARTE, "2026-11-28").revoir.find(c => c.module === "A5"), undefined, "le lendemain, A5-1 n'est plus rouge");
+  p.modules.A5.t = [0, 0, 0, 0];
+  assert.equal(r.revoir.find(c => c.module === "A2").apprends, true, "deux échecs de suite : J'apprends à refaire");
+  assert.deepEqual([r.aVoir, r.rouges], [1, 2]);
+  assert.deepEqual(r.causes, [{module: "A5", cause: 1, n: 7}, {module: "A2", cause: 2, n: 5}], "les plus fréquentes d'abord");
+  assert.deepEqual(r.seances, {semaine: 5, quatreSemaines: 6, total: 6, jours: ["2026-11-23", "2026-11-24", "2026-11-26", "2026-11-27"]},
+    "cette semaine depuis lundi 23/11 (deux séances le 24), 4 semaines = 28 jours depuis le 31/10 (le 02/11 compte) ; les jours distincts de la semaine");
+  assert.equal(r.dernier, "2026-11-27");
+  // Trois jours plus tard : M2-1 est revenue rouge (boîte 1), toujours « à voir en classe » tant qu'un calcul juste ne l'a pas remise à zéro.
+  const plusTard = P.resumeProf(p, CARTE, "2026-12-01");
+  assert.equal(plusTard.modules.find(m => m.id === "M2").etats[0], "classe");
+  assert.equal(plusTard.revoir.find(c => c.module === "M2").deCote, false);
+  assert.equal(plusTard.modules.find(m => m.id === "A5").etats[0], "route", "le lendemain passé, A5-1 n'est plus rouge (boîte 3)");
+  assert.equal(plusTard.seances.semaine, 0, "lundi 30/11 : la semaine repart");
+});
+
+test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
+  const vide = P.resumeProf(null, CARTE, "2026-11-27");
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 14, [], []]);
+  assert.equal(vide.modules.length, 74);
+  assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
+  assert.equal(vide.dernier, null);
+  const abime = P.resumeProf({modules: {A2: {b: [9, "cinq", 5], x: [7, 7, 7, 7], c: {abc: 2, "1": 999999, "2": 3}}}, seances: ["hier", "2026-11-27"], prenom: 42}, CARTE, "2026-11-27");
+  assert.equal(abime.lisible, true);
+  assert.equal(abime.commence, true);
+  assert.deepEqual(abime.modules.find(m => m.id === "A2").etats, ["gris", "gris", "su", "gris"], "9 et « cinq » → pas entrée ; 5 → sue ; la liste à la longueur du module");
+  assert.deepEqual(abime.causes, [{module: "A2", cause: 2, n: 3}], "un compte hors borne et une cause « abc » sont ignorés");
+  assert.equal(abime.seances.total, 1);
+  const tables = P.resumeProf({tables: {"7": {calculs: {}}}, version: 3}, CARTE, "2026-11-27");
+  assert.deepEqual([tables.commence, tables.sues], [false, 0]);
+  // Une carte sans module construit : rien d'ouvert, et la page le dit.
+  assert.deepEqual(P.resumeProf(null, {modules: CARTE.modules.map(m => Object.assign({}, m, {construit: false})), ordre: CARTE.ordre}, "2026-11-27").ouvert.total, 0);
+});
+
+test("l'appli : au test, le fil écrit « Tu connais déjà ? » en préfixe, caché au téléphone", async () => {
+  const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
+  assert.match(page, /nom: test \? CORE\.moduleDe\(etape\.module\)\.nom : nomEtape\(etape\)/);
+  assert.match(page, /prefixe: test \? "Tu connais déjà \?" : ""/);
+  assert.match(page, /avant\.className = "quoi";/);
+  const css = await lire("../outils/calcul_mental/defi_calcul.css");
+  assert.match(css, /#play \.seance-fil\.seance \.quoi \{ display: none; \}/, "au téléphone, le préfixe disparaît avec le reste du « quoi »");
+});
