@@ -1571,9 +1571,32 @@
     const imposes = validation ? niveau.imposes.slice(0, nombre) : [];
     // `exclure` : des clés ou des textes de calculs (ceux de « J'apprends »).
     const interdits = new Set(exclure);
-    const melanges = melanger(rng, niveau.composer(rng, nombre + interdits.size, imposes)).filter(calcul => !interdits.has(calcul.cle) && !interdits.has(calcul.texte)).slice(0, nombre);
-    if (validation || !ordonne) return melanges;
-    return ordonnerSerie(melanges);
+    const garder = calcul => !interdits.has(calcul.cle) && !interdits.has(calcul.texte);
+    const brut = niveau.composer(rng, nombre + interdits.size, imposes);
+    // Les écritures du niveau, lues sur un grand tirage à part (un tirage
+    // de 20 peut en manquer une).
+    const formes = [...new Set(niveau.composer(mulberry32((graine ^ 0x9e3779b9) >>> 0), 60, []).map(calcul => calcul.forme))];
+    const serie = melanger(rng, brut).filter(garder).slice(0, nombre);
+    // Un vivier trop petit (A2-2 : 19 nombres), une écriture entièrement
+    // exclue ou tombée hors des 20 premiers : on complète par d'autres
+    // tirages, sans redonner un calcul déjà là, jusqu'au nombre voulu et à
+    // toutes les écritures du niveau.
+    const manque = () => serie.length < nombre || formes.some(forme => !serie.some(calcul => calcul.forme === forme));
+    for (let essai = 0; essai < 4 && manque(); essai += 1) {
+      const deja = new Set(serie.map(calcul => calcul.cle));
+      melanger(rng, niveau.composer(rng, nombre, [])).filter(calcul => garder(calcul) && !deja.has(calcul.cle)).forEach(calcul => {
+        if (serie.length < nombre) { serie.push(calcul); deja.add(calcul.cle); return; }
+        if (serie.some(c => c.forme === calcul.forme)) return;
+        // Une écriture manque encore : elle prend la place du dernier calcul
+        // de l'écriture la plus présente.
+        const comptes = serie.reduce((m, c) => m.set(c.forme, (m.get(c.forme) || 0) + 1), new Map());
+        const pleine = [...comptes.entries()].sort((p, q) => q[1] - p[1])[0][0];
+        serie.splice(serie.map(c => c.forme).lastIndexOf(pleine), 1, calcul);
+        deja.add(calcul.cle);
+      });
+    }
+    if (validation || !ordonne) return serie;
+    return ordonnerSerie(serie);
   }
 
   // Du plus simple au plus dur, et les écritures nouvelles en fin de série,

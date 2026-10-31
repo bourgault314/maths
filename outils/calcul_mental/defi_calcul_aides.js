@@ -966,8 +966,9 @@
   }
 
   // Le tableau en SVG (chaîne). o : {depart, arrivee, p, operation ("×" ou
-  // "÷"), virgule (montrer la virgule même sans décimale), inconnue (les
-  // zéros à écrire sont des « ? »), masque (l'étiquette dit « × ? »)}.
+  // "÷"), virgule (montrer la virgule même sans décimale), inconnue (la
+  // rangée du bas est à trouver : « ? » partout, les flèches restent),
+  // masque (l'étiquette dit « × ? »)}.
   function tableauFleches(o) {
     const plan = planTableau(o);
     const {colonne: C, ecart: E, bord: B, titre: T, rangee: R, entre: G} = TABLEAU;
@@ -1002,11 +1003,15 @@
         + (chiffreHaut ? `<text x="${cx}" y="${yHaut + 33}" text-anchor="middle" font-size="27" fill="#143451">${chiffreHaut}</text>` : "");
       const zero = plan.zeros.includes(rang);
       const fleche = plan.fleches.find(f => f.vers === rang);
-      const chiffreBas = fleche ? fleche.chiffre : zero ? (o.inconnue ? "?" : "0") : "";
+      // L'aide (`inconnue`) montre les flèches, pas la rangée du bas : chaque
+      // case d'arrivée dit « ? », les chiffres comme les zéros — sinon le
+      // tableau écrirait la réponse.
+      const cherche = o.inconnue && (fleche || zero);
+      const chiffreBas = cherche ? "?" : fleche ? fleche.chiffre : zero ? "0" : "";
       s += zero
         ? `<rect x="${x(rang) + 1.5}" y="${yBas + .5}" width="${C - 3}" height="${R - 1}" rx="9" fill="#fff" stroke="#0755b8" stroke-width="3" stroke-dasharray="6 4"/>`
-        : `<rect x="${x(rang) + 1}" y="${yBas}" width="${C - 2}" height="${R}" rx="9" fill="#fff" stroke="#143451" stroke-width="2"/>`;
-      if (chiffreBas) s += `<text x="${cx}" y="${yBas + 33}" text-anchor="middle" font-size="${zero && o.inconnue ? 22 : 27}" fill="${zero ? "#0755b8" : "#143451"}">${chiffreBas}</text>`;
+        : `<rect x="${x(rang) + 1}" y="${yBas}" width="${C - 2}" height="${R}" rx="9" fill="#fff" stroke="${cherche ? "#0755b8" : "#143451"}" stroke-width="2"/>`;
+      if (chiffreBas) s += `<text x="${cx}" y="${yBas + 33}" text-anchor="middle" font-size="${cherche ? 22 : 27}" fill="${zero || cherche ? "#0755b8" : "#143451"}">${chiffreBas}</text>`;
     });
     // La virgule, fixe, au même endroit dans les deux rangées.
     if (plan.colonnes.includes(-1)) {

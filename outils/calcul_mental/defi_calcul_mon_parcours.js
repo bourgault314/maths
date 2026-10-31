@@ -289,11 +289,16 @@
       });
     }
     const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
+    // Le plan d'une séance ne vaut que dans sa version : en version 1, les
+    // rangs des compétences et le sens de p[4] étaient autres. Une
+    // progression plus ancienne garde ses boîtes et son nombre de séances,
+    // mais sa séance en cours est refermée (elle se rouvre sur un plan neuf).
+    const ancienne = entier(brut.version, 0, 999) < VERSION;
     parcours.seance = {
-      jour: dateOuNull(seance.jour),
-      etape: entier(seance.etape, 0, SEUILS.seance.etapes),
+      jour: ancienne ? null : dateOuNull(seance.jour),
+      etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: normaliserPlan(seance.p)
+      p: ancienne ? planVide() : normaliserPlan(seance.p)
     };
     parcours.seances = normaliserSeances(brut.seances);
     parcours.jours = normaliserJours(brut.jours);
@@ -791,11 +796,17 @@
     toucher(ligne, aujourdhui);
     noterJour(copie, aujourdhui);
     ajouterCauses(ligne, test.causes);
-    const marche = entier(test.marche, 0, NIVEAUX[id]);
-    const bilan = Array.from({length: NIVEAUX[id]}, (_, index) => {
+    const resultats = Array.from({length: NIVEAUX[id]}, (_, index) => {
       const resultat = (Array.isArray(test.niveaux) ? test.niveaux : []).find(r => r && r.niveau === index + 1) || {};
       const total = entier(resultat.total, 0, 99);
-      const justes = entier(resultat.justes, 0, total);
+      return {total, justes: entier(resultat.justes, 0, total)};
+    });
+    // La marche annoncée ne dépasse jamais ce que les résultats prouvent :
+    // des marches montées l'une après l'autre, chacune avec 2 justes.
+    let prouvee = 0;
+    while (prouvee < NIVEAUX[id] && resultats[prouvee].justes >= SEUILS.test.parMarche) prouvee += 1;
+    const marche = Math.min(entier(test.marche, 0, NIVEAUX[id]), prouvee);
+    const bilan = resultats.map(({total, justes}, index) => {
       const connu = index + 1 <= marche;
       if (total) ligne.f[index] = Math.min(SEUILS.compteur, ligne.f[index] + 1);
       const boite = index + 1 === marche ? SEUILS.revision.test : SEUILS.revision.dessous;
@@ -1311,19 +1322,25 @@
     const ligne = moduleVide(id);
     ligne.vu = dateLaPlusRecente(a.vu, b.vu);
     ligne.ok = dateLaPlusAncienne(a.ok, b.ok);
-    // Les boîtes, les échéances et les échecs : en bloc, du côté qui a vu le
-    // module le plus récemment. Une compétence entrée seulement de l'autre
-    // côté n'est pas perdue : elle garde sa boîte de là-bas.
+    // Les boîtes, les échéances, les échecs et « J'apprends à refaire » : en
+    // bloc, du côté qui a vu le module le plus récemment. Une compétence
+    // entrée seulement de l'autre côté n'est pas perdue : elle garde sa boîte
+    // de là-bas. `a` (J'apprends fait) suit le bloc d'une compétence entrée
+    // (remis à 0 par deux échecs, il ne revient pas à 1 par l'autre côté) ;
+    // pas entrée, une leçon faite d'un côté compte ; le même jour des deux
+    // côtés, le plus prudent : refaire une leçon coûte moins que la sauter.
+    // `t` (entraînée avec l'aide le jour `vu`) vaut pour le jour le plus
+    // récent ; ce jour-là, entraînée d'un côté suffit.
     const recent = coteLePlusRecent(a, b);
     const autre = recent === a ? b : a;
     for (let i = 0; i < k; i += 1) {
-      ligne.a[i] = Math.max(a.a[i], b.a[i]);
       ligne.f[i] = Math.max(a.f[i], b.f[i]);
       const source = recent.b[i] || !autre.b[i] ? recent : autre;
+      ligne.a[i] = a.vu === b.vu ? Math.min(a.a[i], b.a[i]) : source.b[i] ? source.a[i] : Math.max(a.a[i], b.a[i]);
       ligne.b[i] = source.b[i];
       ligne.e[i] = source.e[i];
       ligne.x[i] = source.x[i];
-      ligne.t[i] = source.vu === ligne.vu ? source.t[i] : 0;
+      ligne.t[i] = ligne.b[i] ? Math.max(a.vu === ligne.vu ? a.t[i] : 0, b.vu === ligne.vu ? b.t[i] : 0) : 0;
     }
     [...new Set([...Object.keys(a.c), ...Object.keys(b.c)])].sort((x, y) => Number(x) - Number(y)).forEach(cause => {
       ligne.c[cause] = Math.max(a.c[cause] || 0, b.c[cause] || 0);

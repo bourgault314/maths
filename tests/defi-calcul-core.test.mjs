@@ -739,7 +739,7 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
       assert.equal(a.represente.reponse, image.masque ? image.p : image.arrivee, `${cle} : la réponse est dans le tableau`);
       const svg = AIDES.tableauFleches(image);
       if (image.masque) assert.match(svg, />× \?</, `${cle} : « × ? »`);
-      else assert.ok(plan.zeros.length === 0 || (svg.match(/>\?</g) || []).length === plan.zeros.length, `${cle} : un « ? » par zéro à écrire`);
+      else assert.equal((svg.match(/>\?</g) || []).length, plan.zeros.length + plan.fleches.length, `${cle} : un « ? » par case d'arrivée, chiffres et zéros`);
       const reponseEcrite = CORE.formaterNombre(a.represente.reponse);
       assert.ok(!AIDES.decrireTableau(image).includes(image.masque ? `par ${reponseEcrite}` : `, ${reponseEcrite}.`), `${cle} : le lecteur d'écran ne dit pas la réponse`);
       assert.ok(AIDES.decrireTableau({...image, inconnue: false, masque: false}).includes(reponseEcrite), `${cle} : la réponse montrée, il la dit`);
@@ -921,8 +921,11 @@ test("le tableau à flèches : une flèche par chiffre, un « ? » par zéro à 
   assert.deepEqual(plan.colonnes, [2, 1, 0, -1]);
   assert.deepEqual(plan.fleches.map(f => [f.chiffre, f.de, f.vers]), [["3", 0, 2], ["6", -1, 1]]);
   assert.deepEqual(plan.zeros, [0], "la case des unités : le zéro à écrire");
+  // L'aide : la rangée du bas est à trouver, chiffres et zéro (relecture
+  // Codex, 31/10 : le tableau écrivait 36 puis « ? », donc la réponse).
   const cherche = AIDES.tableauFleches({depart: 3.6, arrivee: 360, p: 100, operation: "×", virgule: true, inconnue: true});
-  assert.equal((cherche.match(/>\?</g) || []).length, 1);
+  assert.equal((cherche.match(/>\?</g) || []).length, 3, "un « ? » par case d'arrivée");
+  assert.equal((cherche.match(/font-size="27"[^>]*>[0-9]</g) || []).length, 2, "les chiffres écrits en grand : ceux du départ seulement (3 et 6)");
   assert.match(cherche, />× 100</);
   assert.equal((cherche.match(/marker-end/g) || []).length, 2, "deux flèches");
   assert.equal((cherche.match(/fill="#c62828"/g) || []).length, 2, "la virgule, au même endroit dans les deux rangées");
@@ -951,4 +954,24 @@ test("le tableau à flèches : une flèche par chiffre, un « ? » par zéro à 
   // Deux tableaux dans la même page n'ont pas les mêmes identifiants de flèche.
   const ids = texte => texte.match(/id="[^"]+"/g);
   assert.notDeepEqual(ids(montre), ids(AIDES.tableauFleches({depart: 3.6, arrivee: 360, p: 100, operation: "×", virgule: true})));
+});
+
+// Relecture Codex (31/10) : une série d'entraînement fait toujours ses 20
+// calculs et montre chaque écriture du niveau, même quand le vivier est
+// petit (A2-2 : 19 nombres) ou que l'exclusion de « J'apprends » a vidé une
+// écriture (A2-4, graine 107).
+test("les séries : toujours complètes, toutes les écritures, malgré les exclusions", () => {
+  NIVEAUX_CONSTRUITS.forEach(({fiche, niveau, cle}) => {
+    const exclure = niveau.apprends ? niveau.apprends.textes : [];
+    const formes = new Set(CORE.genererSerie(cle, {graine: 5, total: 40}).map(c => c.forme));
+    for (let graine = 1; graine <= 120; graine += 1) {
+      const serie = CORE.genererSerie(cle, {graine, exclure});
+      assert.equal(serie.length, CORE.TOTAUX.entraine, `${cle}, graine ${graine} : ${serie.length} calculs`);
+      assert.equal(new Set(serie.map(c => c.cle)).size, serie.length, `${cle}, graine ${graine} : pas de doublon`);
+      serie.forEach(c => assert.ok(!exclure.includes(c.texte), `${cle} : les calculs de J'apprends restent exclus`));
+      formes.forEach(forme => assert.ok(serie.some(c => c.forme === forme), `${cle}, graine ${graine} : l'écriture ${forme} manque`));
+    }
+  });
+  assert.equal(CORE.genererSerie("A2-2", {graine: 1, exclure: CORE.moduleDe("A2").niveaux[1].apprends.textes}).length, 20);
+  assert.ok(CORE.genererSerie("A2-4", {graine: 107, exclure: CORE.moduleDe("A2").niveaux[3].apprends.textes}).some(c => c.forme === "complement-gauche"));
 });

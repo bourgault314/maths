@@ -465,3 +465,20 @@ test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté
   assert.equal(compte.sues, 129, `${compte.sues} sues`);
   assert.ok(P.mesurer(p).cles < 2000 && P.mesurer(p).octets < 40000);
 });
+
+// Relecture Codex (31/10) : la marche annoncée par la page ne dépasse jamais
+// ce que les résultats prouvent (2 justes par marche, montées l'une après
+// l'autre). `marche: 4` avec un seul niveau joué à 0/2 n'entre rien.
+test("le test d'entrée : la marche est bornée par les résultats", () => {
+  const trafique = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 4, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE, seance: true});
+  assert.equal(trafique.marche, 0);
+  assert.equal(trafique.tout, false);
+  assert.deepEqual(trafique.parcours.modules.A2.b, [0, 0, 0, 0], "rien n'entre");
+  // Un trou dans l'escalier n'est pas une marche prouvée : 2/2, 1/3, 2/2 → marche 1.
+  const trou = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 3, niveaux: [{niveau: 1, justes: 2, total: 2}, {niveau: 2, justes: 1, total: 3}, {niveau: 3, justes: 2, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE});
+  assert.equal(trou.marche, 1);
+  assert.deepEqual(trou.parcours.modules.A2.b, [3, 0, 0, 0]);
+  // Le test honnête : inchangé.
+  assert.deepEqual(tester(P.creerParcours(), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0]);
+  assert.deepEqual(tester(P.creerParcours(), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3]);
+});
