@@ -117,14 +117,20 @@
   }
 
   // Le rekenrek dans `zone`. options : {depart, gestes, consigne, traces,
-  // surFini}. Rend {detruire, mesurer, deborde, fini}.
+  // surFini, droite}. Rend {detruire, mesurer, deborde, fini}.
+  //
+  // `droite` (lot « relier », 31/10/2026 : « Je manipule » de J'apprends) :
+  // une droite au-dessus du boulier reporte chaque geste — un saut par
+  // geste, avec son point d'arrivée, le dernier en vert. Avant le geste,
+  // rien : seul le départ est écrit. Les places sont celles de tous les
+  // gestes : rien ne bouge quand un saut apparaît.
   //
   // Au clavier, le même geste qu'au doigt : ↑ ↓ choisissent la rangée,
   // ← → la perle (celle que le doigt attraperait), Entrée la fait glisser
   // avec ses voisines. Un cadre bleu montre la rangée et la perle, seulement
   // quand on joue au clavier.
   function perles100(zone, options) {
-    const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null} = options;
+    const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null, droite: avecDroite = false} = options;
     const boulier = {
       taille: 0, ecart: PERLES.ecart, etats: etatsDe(depart), etape: 0, finie: false,
       drag: null, dom: null, observer: null, refus: 0, curseur: null
@@ -180,7 +186,9 @@
     trace.className = "dc-trace";
     trace.setAttribute("role", "status");
     trace.setAttribute("aria-live", "polite");
-    bloc.append(consigne, scene, trace, annonce);
+    const droite = avecDroite ? document.createElement("div") : null;
+    if (droite) droite.className = "perles-droite";
+    bloc.append(...[consigne, droite, scene, trace, annonce].filter(Boolean));
     zone.replaceChildren(bloc);
     boulier.dom = {scene, cadre, interieur, montants, rangees};
 
@@ -247,7 +255,19 @@
       dessiner(false);
     }
 
+    function dessinerDroite() {
+      if (!droite) return;
+      const faits = boulier.etape;
+      droite.innerHTML = droiteSauts({
+        depart, boulier: true,
+        sauts: gestes.map((val, i) => (i < faits ? {val} : {val, cache: true})),
+        caches: gestes.map((_, i) => i + 1).filter(i => i > faits),
+        acquis: faits ? [faits] : []
+      });
+    }
+
     function ecrireTraces() {
+      dessinerDroite();
       const lignes = [];
       for (const ligne of traces) {
         const faite = boulier.etape >= ligne.apres;
@@ -446,6 +466,17 @@
     gauche: 60, droite: 490, droiteRetour: 465, sautMin: 85,
     arcMin: 15, arcMax: 46
   });
+  // La droite du boulier (lot « relier », 31/10/2026) : la même, plus basse
+  // (le boulier garde sa place), un saut par geste. Au-delà de 4 gestes
+  // (37 + ? = 100 : + 3, puis six fois + 10), les sauts et les nombres se
+  // serrent, et les étiquettes s'écrivent plus petit.
+  const DROITE_BOULIER = Object.freeze({
+    largeur: 560, y: 72, hauteur: 124, hauteurDirect: 124,
+    gauche: 40, droite: 515, droiteRetour: 500, sautMin: 70,
+    arcMin: 12, arcMax: 24
+  });
+  const DROITE_BOULIER_SERREE = Object.freeze(Object.assign({}, DROITE_BOULIER, {sautMin: 52, serree: true}));
+  const geometrieDroite = o => (!o.boulier ? DROITE : o.sauts.length > 4 ? DROITE_BOULIER_SERREE : DROITE_BOULIER);
   const ESPACE_FINE = " ";
 
   function nombre(n) {
@@ -459,25 +490,26 @@
   // petit saut garde au moins `sautMin` pixels (sinon « + 3 » ou « − 1 » ne
   // se lirait pas). Rend {valeurs, x, bornes}.
   function planDroite(o) {
+    const g = geometrieDroite(o);
     const valeurs = [o.depart];
     o.sauts.forEach(saut => valeurs.push(valeurs[valeurs.length - 1] + saut.val));
     const tries = [...new Set(valeurs)].sort((a, b) => a - b);
     const retour = o.sauts.some(saut => saut.val < 0);
-    const gauche = DROITE.gauche;
-    const droite = retour ? DROITE.droiteRetour : DROITE.droite;
+    const gauche = g.gauche;
+    const droite = retour ? g.droiteRetour : g.droite;
     const ecarts = tries.slice(1).map((v, i) => v - tries[i]);
     const largeurs = ecarts.map(() => 0);
     const fixes = new Set();
     // Les sauts trop petits prennent la largeur minimale ; les autres se
     // partagent le reste, à proportion.
     for (let tour = 0; tour <= ecarts.length; tour += 1) {
-      const reste = (droite - gauche) - fixes.size * DROITE.sautMin;
+      const reste = (droite - gauche) - fixes.size * g.sautMin;
       const somme = ecarts.reduce((s, e, i) => (fixes.has(i) ? s : s + e), 0);
       let change = false;
       ecarts.forEach((e, i) => {
-        if (fixes.has(i)) { largeurs[i] = DROITE.sautMin; return; }
+        if (fixes.has(i)) { largeurs[i] = g.sautMin; return; }
         largeurs[i] = somme ? e / somme * reste : reste;
-        if (largeurs[i] < DROITE.sautMin && fixes.size < ecarts.length - 1) { fixes.add(i); change = true; }
+        if (largeurs[i] < g.sautMin && fixes.size < ecarts.length - 1) { fixes.add(i); change = true; }
       });
       if (!change) break;
     }
@@ -490,16 +522,26 @@
 
   // La droite à sauts, en SVG (chaîne).
   //   depart   : le nombre de départ
-  //   sauts    : [{val: +20}, {val: −1}] ; masque: true écrit « + ? »
-  //   direct   : le saut direct, dessiné dessous (+ 19)
+  //   sauts    : [{val: +20}, {val: −1}] ; masque: true écrit « + ? » ;
+  //              cache: true ne dessine pas le saut (sa place reste : rien
+  //              ne bouge quand il apparaît)
+  //   direct   : le saut direct, dessiné dessous (+ 19) ; directCache : sa
+  //              place est gardée, il n'est pas dessiné
   //   inconnue : le rang du point montré « ? » (0 = départ) ; inconnues :
   //              plusieurs rangs
   //   acquis   : les rangs des points montrés en vert (trouvés)
+  //   caches   : les rangs des points pas encore dessinés (la droite du
+  //              boulier : le point vient avec son geste)
   //   gras     : le rang (à partir de 1) du saut en gras
+  //   boulier  : la droite plus basse qui suit le boulier
   function droiteSauts(o) {
+    const g = geometrieDroite(o);
     const plan = planDroite(o);
-    const {largeur: W, y} = DROITE;
-    const H = o.direct ? DROITE.hauteurDirect : DROITE.hauteur;
+    const {largeur: W, y} = g;
+    const H = o.direct ? g.hauteurDirect : g.hauteur;
+    // Les tailles d'écriture : celles de la droite, un peu plus petites
+    // quand les sauts se serrent.
+    const T = g.serree ? {saut: 14, car: 8.5, pilule: 10, point: 15, carPoint: 9, mini: 40, haut: 22} : {saut: 17, car: 11, pilule: 16, point: 19, carPoint: 11, mini: 50, haut: 26};
     compteurDroites += 1;
     const id = `dc-fl-${compteurDroites}`;
     const fleche = (nom, couleur) => `<marker id="${id}-${nom}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0 0L10 5L0 10z" fill="${couleur}"/></marker>`;
@@ -507,40 +549,48 @@
       + `<line x1="14" y1="${y}" x2="${W - 14}" y2="${y}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`;
     const seulementRetours = o.sauts.every(saut => saut.val < 0);
     o.sauts.forEach((saut, index) => {
+      if (saut.cache) return;
       const retour = saut.val < 0;
       const xa = plan.x[index];
       const xb = plan.x[index + 1];
       const x1 = retour ? xa - 15 : xa;
       const x2 = retour ? xb + 6 : xb - 4;
-      const h = Math.max(DROITE.arcMin, Math.min(DROITE.arcMax, 8 + Math.abs(x2 - x1) * .095));
+      const h = Math.max(g.arcMin, Math.min(g.arcMax, 8 + Math.abs(x2 - x1) * .095));
       const mx = (x1 + x2) / 2;
       const couleur = retour ? "#9a4a00" : "#0755b8";
       const gras = o.gras === index + 1;
       s += `<path d="M${x1} ${y - 8} Q${mx} ${y - 8 - 2 * h} ${x2} ${y - 8}" fill="none" stroke="${couleur}" stroke-width="${gras ? 5.5 : 3.5}"${retour ? ' stroke-dasharray="7 5"' : ""} marker-end="url(#${id}-${retour ? "o" : "b"})"/>`;
       const texte = etiquetteSaut(saut);
-      const lw = texte.length * 11 + 16;
+      const lw = texte.length * T.car + T.pilule;
       // Le petit retour a son étiquette à côté, à droite : sur l'arc, elle
       // cacherait la pointe du grand saut.
       // Quand on ne fait que reculer (523 − 3 − 4), l'étiquette reste sur l'arc.
-      const aCote = retour && !seulementRetours;
-      const lx = aCote ? Math.min(W - lw / 2 - 2, xa + 55) : mx;
-      const ly = aCote ? y - 8 - h - 2 : y - 8 - h;
-      s += `<rect x="${lx - lw / 2}" y="${ly - 15}" width="${lw}" height="26" rx="13" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
-        + `<text x="${lx}" y="${ly + 4}" text-anchor="middle" font-size="17" fill="${couleur}">${texte}</text>`;
+      // Sur la droite du boulier (les sauts y sont serrés), le petit retour
+      // garde son étiquette au-dessus de son arc, une pilule plus haut que
+      // celle du saut d'avant.
+      const aCote = retour && !seulementRetours && !o.boulier;
+      const audessus = retour && !seulementRetours && o.boulier;
+      const lx = aCote ? Math.min(W - lw / 2 - 2, xa + 55) : audessus ? Math.min(W - lw / 2 - 2, mx) : mx;
+      const ly = aCote ? y - 8 - h - 2 : audessus ? y - 8 - h - T.haut - 4 : y - 8 - h;
+      s += `<rect x="${lx - lw / 2}" y="${ly - T.haut / 2 - 2}" width="${lw}" height="${T.haut}" rx="${T.haut / 2}" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
+        + `<text x="${lx}" y="${ly + (g.serree ? 3 : 4)}" text-anchor="middle" font-size="${T.saut}" fill="${couleur}">${texte}</text>`;
     });
     const inconnues = Array.isArray(o.inconnues) ? o.inconnues : [];
+    const caches = Array.isArray(o.caches) ? o.caches : [];
     plan.valeurs.forEach((valeur, index) => {
+      if (caches.includes(index)) return;
       const x = plan.x[index];
       const inconnue = o.inconnue === index || inconnues.includes(index);
       const acquis = Array.isArray(o.acquis) && o.acquis.includes(index);
       const texte = inconnue ? "?" : nombre(valeur);
-      const w = Math.max(50, texte.length * 11 + 18);
+      const w = Math.max(T.mini, texte.length * T.carPoint + 18);
       const style = acquis ? ["#e5f7eb", "#147447", "#147447", 2.5] : inconnue ? ["#fff", "#0755b8", "#0755b8", 3.5] : ["#fff", "#9fb6c6", "#143451", 2];
+      const hp = T.point + 13;
       s += `<line x1="${x}" y1="${y - 9}" x2="${x}" y2="${y + 9}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`
-        + `<rect x="${x - w / 2}" y="${y + 15}" width="${w}" height="32" rx="8" fill="${style[0]}" stroke="${style[1]}" stroke-width="${style[3]}"/>`
-        + `<text x="${x}" y="${y + 37.5}" text-anchor="middle" font-size="19" fill="${style[2]}">${texte}</text>`;
+        + `<rect x="${x - w / 2}" y="${y + 15}" width="${w}" height="${hp}" rx="8" fill="${style[0]}" stroke="${style[1]}" stroke-width="${style[3]}"/>`
+        + `<text x="${x}" y="${y + 5.5 + hp}" text-anchor="middle" font-size="${T.point}" fill="${style[2]}">${texte}</text>`;
     });
-    if (o.direct) {
+    if (o.direct && !o.directCache) {
       const x1 = plan.x[0];
       const x2 = plan.x[plan.x.length - 1];
       const yy = y + 52;
@@ -558,11 +608,14 @@
   function decrireDroite(o) {
     const plan = planDroite(o);
     const inconnues = Array.isArray(o.inconnues) ? o.inconnues : [];
-    const morceaux = o.sauts.map((saut, index) => {
-      const arrivee = o.inconnue === index + 1 || inconnues.includes(index + 1) ? "un nombre à trouver" : nombre(plan.valeurs[index + 1]);
+    const caches = Array.isArray(o.caches) ? o.caches : [];
+    // Un saut pas encore dessiné n'est pas lu (son arrivée non plus).
+    const morceaux = o.sauts.filter(saut => !saut.cache).map(saut => {
+      const index = o.sauts.indexOf(saut);
+      const arrivee = o.inconnue === index + 1 || inconnues.includes(index + 1) || caches.includes(index + 1) ? "un nombre à trouver" : nombre(plan.valeurs[index + 1]);
       return `${saut.val < 0 ? "moins" : "plus"} ${saut.masque ? "un nombre à trouver" : nombre(saut.val)} : ${arrivee}`;
     });
-    return `Droite : on part de ${nombre(o.depart)}. ${morceaux.join(". Puis ")}.`;
+    return `Droite : on part de ${nombre(o.depart)}.${morceaux.length ? ` ${morceaux.join(". Puis ")}.` : ""}`;
   }
 
 
@@ -998,8 +1051,11 @@
     // L'étiquette « × 100 » se pose hors des colonnes, du côté où les
     // flèches ne vont pas (à droite pour ×, à gauche pour ÷) : elle ne
     // cache jamais une flèche.
-    const etiquette = `${o.operation} ${o.masque ? "?" : nombre(o.p)}`;
-    const lw = etiquette.length * 10 + 18;
+    // « × ? » tant que l'élève ne l'a pas écrit (`etiquetteTrouvee`).
+    const etiquette = `${o.operation} ${o.masque && !o.etiquetteTrouvee ? "?" : nombre(o.p)}`;
+    // Dans J'écris, la pilule a déjà la largeur de « × 100 » : rien ne bouge
+    // quand l'élève l'écrit.
+    const lw = ("etiquetteTrouvee" in o ? `${o.operation} ${nombre(o.p)}` : etiquette).length * 10 + 18;
     const marge = lw + 10;
     const gaucheEtiquette = plan.k < 0;
     const W = B * 2 + n * C + (n - 1) * E + marge;
@@ -1028,12 +1084,15 @@
       // L'aide (`inconnue`) montre les flèches, pas la rangée du bas : chaque
       // case d'arrivée dit « ? », les chiffres comme les zéros — sinon le
       // tableau écrirait la réponse.
-      const cherche = o.inconnue && (fleche || zero);
+      // J'écris (lot « relier ») : `trouves` dit les cases du bas que l'élève
+      // a remplies en écrivant une égalité juste — elles s'écrivent, en vert.
+      const trouve = Boolean(o.inconnue && Array.isArray(o.trouves) && o.trouves.includes(rang) && (fleche || zero));
+      const cherche = o.inconnue && (fleche || zero) && !trouve;
       const chiffreBas = cherche ? "?" : fleche ? fleche.chiffre : zero ? "0" : "";
       s += zero
-        ? `<rect x="${x(rang) + 1.5}" y="${yBas + .5}" width="${C - 3}" height="${R - 1}" rx="9" fill="#fff" stroke="#0755b8" stroke-width="3" stroke-dasharray="6 4"/>`
-        : `<rect x="${x(rang) + 1}" y="${yBas}" width="${C - 2}" height="${R}" rx="9" fill="#fff" stroke="${cherche ? "#0755b8" : "#143451"}" stroke-width="2"/>`;
-      if (chiffreBas) s += `<text x="${cx}" y="${yBas + 33}" text-anchor="middle" font-size="${cherche ? 22 : 27}" fill="${zero || cherche ? "#0755b8" : "#143451"}">${chiffreBas}</text>`;
+        ? `<rect x="${x(rang) + 1.5}" y="${yBas + .5}" width="${C - 3}" height="${R - 1}" rx="9" fill="${trouve ? "#e5f7eb" : "#fff"}" stroke="${trouve ? "#147447" : "#0755b8"}" stroke-width="3" stroke-dasharray="6 4"/>`
+        : `<rect x="${x(rang) + 1}" y="${yBas}" width="${C - 2}" height="${R}" rx="9" fill="${trouve ? "#e5f7eb" : "#fff"}" stroke="${cherche ? "#0755b8" : trouve ? "#147447" : "#143451"}" stroke-width="${trouve ? 2.5 : 2}"/>`;
+      if (chiffreBas) s += `<text x="${cx}" y="${yBas + 33}" text-anchor="middle" font-size="${cherche ? 22 : 27}"${trouve ? ' font-weight="700"' : ""} fill="${trouve ? "#147447" : zero || cherche ? "#0755b8" : "#143451"}">${chiffreBas}</text>`;
     });
     // La virgule, fixe, au même endroit dans les deux rangées.
     if (plan.colonnes.includes(-1)) {
@@ -1046,8 +1105,9 @@
       s += `<line x1="${x1}" y1="${yHaut + R + 3}" x2="${x2}" y2="${yBas - 4}" stroke="#0755b8" stroke-width="3" stroke-linecap="round" marker-end="url(#${id})"/>`;
     });
     const lx = gaucheEtiquette ? B + lw / 2 : W - B - lw / 2;
-    s += `<rect x="${lx - lw / 2}" y="${yHaut + R + G / 2 - 13}" width="${lw}" height="26" rx="13" fill="#eaf2ff" stroke="#0755b8" stroke-width="2"/>`
-      + `<text x="${lx}" y="${yHaut + R + G / 2 + 6}" text-anchor="middle" font-size="16" fill="#0755b8">${etiquette}</text>`;
+    const verte = Boolean(o.masque && o.etiquetteTrouvee);
+    s += `<rect x="${lx - lw / 2}" y="${yHaut + R + G / 2 - 13}" width="${lw}" height="26" rx="13" fill="${verte ? "#e5f7eb" : "#eaf2ff"}" stroke="${verte ? "#147447" : "#0755b8"}" stroke-width="${verte ? 2.5 : 2}"/>`
+      + `<text x="${lx}" y="${yHaut + R + G / 2 + 6}" text-anchor="middle" font-size="16"${verte ? ' font-weight="700"' : ""} fill="${verte ? "#147447" : "#0755b8"}">${etiquette}</text>`;
     return s + "</svg>";
   }
 
@@ -1056,6 +1116,14 @@
   function decrireTableau(o, plan = planTableau(o)) {
     const glisse = `chaque chiffre glisse de ${accorder(Math.abs(plan.k), "colonne", "colonnes")} ${versLeCote(plan.k)}`;
     const depart = `Tableau de numération. En haut, ${ecritureLisible(o.depart)}.`;
+    if (o.masque && o.etiquetteTrouvee) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    const tout = Array.isArray(o.trouves) && [...plan.bas.keys()].every(rang => o.trouves.includes(rang));
+    if (o.inconnue && tout) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    if (o.inconnue && Array.isArray(o.trouves) && o.trouves.length) {
+      // Les chiffres déjà écrits par l'élève, chacun avec sa colonne.
+      const lus = [...plan.bas.entries()].filter(([rang]) => o.trouves.includes(rang)).map(([rang, chiffre]) => `${chiffre} aux ${RANGS[rang].toLowerCase()}`);
+      return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas : ${lus.join(", ")}, le reste à trouver.`;
+    }
     if (o.masque) return `${depart} En bas, ${ecritureLisible(o.arrivee)}. On a multiplié par combien ? Compte les colonnes.`;
     if (o.inconnue) {
       const vides = plan.zeros.length ? ` ${accorder(plan.zeros.length, "case reste vide", "cases restent vides")}.` : "";
@@ -1119,24 +1187,30 @@
 
   // Une rangée de cases aux largeurs données (le double : les rangées
   // s'alignent sur les mêmes largeurs).
+  // `inconnue` : vrai (toutes les cases sont cherchées), ou un état par
+  // case : « cherche » (vide, grisée), « trouve » (ce que l'élève vient
+  // d'écrire juste, en vert), sinon connue.
   function casesSvg(x, y, largeurs, textes, inconnue = false) {
     let s = "";
     let xx = x;
     largeurs.forEach((w, i) => {
-      s += `<rect x="${xx}" y="${y}" width="${w}" height="${BARRES.rang}" fill="${inconnue ? "#f3f6fa" : "#fff"}" stroke="#143451" stroke-width="2.5"/>`;
-      if (textes[i]) s += `<text x="${xx + w / 2}" y="${y + 30}" text-anchor="middle" font-size="${textes[i].length > 4 ? 16 : 19}" fill="#143451">${textes[i]}</text>`;
+      const etat = Array.isArray(inconnue) ? inconnue[i] : inconnue ? "cherche" : "";
+      const fond = etat === "cherche" ? "#f3f6fa" : etat === "trouve" ? "#e5f7eb" : "#fff";
+      s += `<rect x="${xx}" y="${y}" width="${w}" height="${BARRES.rang}" fill="${fond}" stroke="#143451" stroke-width="2.5"/>`;
+      if (textes[i]) s += `<text x="${xx + w / 2}" y="${y + 30}" text-anchor="middle" font-size="${textes[i].length > 4 ? 16 : 19}"${etat === "trouve" ? ' font-weight="700"' : ""} fill="${etat === "trouve" ? "#147447" : "#143451"}">${textes[i]}</text>`;
       xx += w;
     });
     return s;
   }
 
   // Une accolade horizontale sous [x1, x2], et son étiquette.
-  function accolade(x1, x2, y, texte, inconnue) {
+  function accolade(x1, x2, y, texte, inconnue, trouve = false) {
     const mx = (x1 + x2) / 2;
     const lw = Math.max(46, texte.length * 11 + 18);
+    const bord = inconnue ? "#0755b8" : trouve ? "#147447" : "#143451";
     return `<path d="M${x1} ${y} Q${x1} ${y + 9} ${x1 + 10} ${y + 9} L${mx - 8} ${y + 9} Q${mx} ${y + 9} ${mx} ${y + 17} Q${mx} ${y + 9} ${mx + 8} ${y + 9} L${x2 - 10} ${y + 9} Q${x2} ${y + 9} ${x2} ${y}" fill="none" stroke="#143451" stroke-width="2.5"/>`
-      + `<rect x="${mx - lw / 2}" y="${y + 20}" width="${lw}" height="30" rx="8" fill="#fff" stroke="${inconnue ? "#0755b8" : "#143451"}" stroke-width="${inconnue ? 3 : 2}"/>`
-      + `<text x="${mx}" y="${y + 41}" text-anchor="middle" font-size="19" font-weight="700" fill="#143451">${texte}</text>`;
+      + `<rect x="${mx - lw / 2}" y="${y + 20}" width="${lw}" height="30" rx="8" fill="${trouve ? "#e5f7eb" : "#fff"}" stroke="${bord}" stroke-width="${inconnue || trouve ? 3 : 2}"/>`
+      + `<text x="${mx}" y="${y + 41}" text-anchor="middle" font-size="19" font-weight="700" fill="${trouve ? "#147447" : "#143451"}">${texte}</text>`;
   }
 
   // Une accolade au-dessus de [x1, x2] : le nombre de départ.
@@ -1156,13 +1230,22 @@
     const y2 = y1 + BARRES.rang + BARRES.ecart;
     const H = y2 + BARRES.rang + 62;
     const cache = Boolean(o.masque);
+    // J'écris (lot « relier », 31/10/2026) : `trouves` dit les morceaux dont
+    // l'élève a écrit le double (ou la moitié) — leurs cases se remplissent,
+    // en vert ; `fini` : la dernière égalité, l'accolade (et, pour la
+    // moitié, les deux barres égales). Le reste attend, vide.
+    const ecrit = cache && Array.isArray(o.trouves);
+    const vu = i => !cache || (ecrit && o.trouves.includes(i));
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const etat = visible => (visible ? "trouve" : "cherche");
     // Les cases du haut écrivent toujours ce qu'on sait ; celles du bas ce
     // qu'on cherche (vides dans l'aide).
     const connu = morceaux.map(m => ({valeur: m, texte: nombre(m)}));
-    const cherche = morceaux.map(m => {
+    const cherche = morceaux.map((m, i) => {
       const v = moitie ? m / 2 : m * 2;
-      return {valeur: v, texte: cache ? "" : nombre(v)};
+      return {valeur: v, texte: vu(i) ? nombre(v) : ""};
     });
+    const etats = morceaux.map((_, i) => etat(vu(i)));
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarres(o)}">`;
     // Le nombre de départ, au-dessus de sa barre (ou de chacune des deux).
     const titre = (x, w) => accoladeHaut(x + 2, x + w - 2, y1 - 3, nombre(o.n));
@@ -1181,14 +1264,19 @@
       s += titre(gauche, L) + casesSvg(gauche, y1, largeurs, connu.map(c => c.texte));
       let y = y1 + BARRES.rang;
       if (rangees === 3) {
-        s += casesSvg(gauche, y, demis, textesDemis, cache);
+        s += casesSvg(gauche, y, demis, textesDemis, ecrit ? etats.flatMap(e => [e, e]) : cache);
         y += BARRES.rang;
       }
       const uneMoitie = largeurs.map(w => w / 2);
-      const textesMoitie = cherche.map(c => c.texte);
-      s += casesSvg(gauche, y, uneMoitie, textesMoitie, cache) + casesSvg(gauche + L / 2, y, uneMoitie, textesMoitie, cache);
+      // J'écris : les deux barres égales se remplissent avec la dernière
+      // égalité (quand le nombre a deux morceaux ; un seul morceau, 30 →
+      // 15 ‖ 15 : avec son égalité à lui).
+      const barreVue = i => (rangees === 3 ? finiVu : vu(i) || finiVu);
+      const textesMoitie = morceaux.map((m, i) => (barreVue(i) ? nombre(m / 2) : ""));
+      const etatsMoitie = ecrit ? morceaux.map((_, i) => etat(barreVue(i))) : cache;
+      s += casesSvg(gauche, y, uneMoitie, textesMoitie, etatsMoitie) + casesSvg(gauche + L / 2, y, uneMoitie, textesMoitie, etatsMoitie);
       s += `<line x1="${gauche + L / 2}" y1="${y}" x2="${gauche + L / 2}" y2="${y + BARRES.rang + 4}" stroke="#143451" stroke-width="5"/>`;
-      s += accolade(gauche + 2, gauche + L / 2 - 2, y + BARRES.rang + 4, cache ? "?" : nombre(reponse), cache);
+      s += accolade(gauche + 2, gauche + L / 2 - 2, y + BARRES.rang + 4, finiVu ? nombre(reponse) : "?", !finiVu, ecrit && finiVu);
     } else {
       // Le double (choix de Gwenaël, 31/10) : trois rangées collées. Le
       // nombre deux fois (10 | 7 | 10 | 7), puis les mêmes morceaux rangés
@@ -1208,8 +1296,8 @@
         y += BARRES.rang;
       }
       const largeursDoubles = morceaux.map((_, i) => largeursPaires[2 * i] + largeursPaires[2 * i + 1]);
-      s += casesSvg(gauche, y, largeursDoubles, cherche.map(c => c.texte), cache);
-      s += accolade(gauche + 2, droite - 2, y + BARRES.rang + 4, cache ? "?" : nombre(reponse), cache);
+      s += casesSvg(gauche, y, largeursDoubles, cherche.map(c => c.texte), ecrit ? etats : cache);
+      s += accolade(gauche + 2, droite - 2, y + BARRES.rang + 4, finiVu ? nombre(reponse) : "?", !finiVu, ecrit && finiVu);
     }
     return s + "</svg>";
   }
@@ -1220,10 +1308,13 @@
     const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.n];
     const decoupe = morceaux.length > 1 ? ` : ${morceaux.map(nombre).join(" et ")}` : "";
     const reponse = o.sorte === "moitie" ? o.n / 2 : o.n * 2;
-    const fin = o.masque ? "un nombre à trouver" : nombre(reponse);
+    const fin = o.masque && !(Array.isArray(o.trouves) && o.fini) ? "un nombre à trouver" : nombre(reponse);
+    // J'écris : ce que l'élève a déjà écrit.
+    const ecrits = o.masque && Array.isArray(o.trouves) && o.trouves.length && !o.fini
+      ? ` Déjà écrit : ${o.trouves.map(i => nombre(o.sorte === "moitie" ? morceaux[i] / 2 : morceaux[i] * 2)).join(" et ")}.` : "";
     return o.sorte === "moitie"
-      ? `Schéma : la barre de ${nombre(o.n)}${decoupe}, coupée en deux barres égales. Une barre : ${fin}.`
-      : `Schéma : deux barres de ${nombre(o.n)}${decoupe}, mises bout à bout. Ensemble : ${fin}.`;
+      ? `Schéma : la barre de ${nombre(o.n)}${decoupe}, coupée en deux barres égales.${ecrits} Une barre : ${fin}.`
+      : `Schéma : deux barres de ${nombre(o.n)}${decoupe}, mises bout à bout.${ecrits} Ensemble : ${fin}.`;
   }
 
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).

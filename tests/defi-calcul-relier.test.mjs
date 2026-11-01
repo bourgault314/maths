@@ -1,0 +1,153 @@
+// Défi calcul, lot « relier » (31/10/2026, décision de Gwenaël) : dans
+// J'apprends, ce que l'élève fait se voit dans le dessin.
+//  - « J'écris » : chaque égalité juste fait apparaître SON morceau dans le
+//    dessin au-dessus (la droite, le schéma en barres, le tableau) ; la
+//    réponse n'y est jamais écrite avant que l'élève l'ait trouvée.
+//  - « Je manipule » : chaque geste sur le boulier se reporte sur une droite,
+//    un saut par geste, avec son point d'arrivée.
+
+import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+import test from "node:test";
+
+const require = createRequire(import.meta.url);
+const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
+const AIDES = require("../outils/calcul_mental/defi_calcul_aides.js");
+
+const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit)
+  .flatMap(fiche => fiche.niveaux.map(niveau => ({fiche, niveau, cle: `${fiche.id}-${niveau.n}`})));
+const VERT = "#147447";
+
+// Les nombres écrits dans un dessin (les textes du SVG) : « + 4 » → 4,
+// « × 100 » → 100, « 1 000 » → 1000, « ? » et les noms de colonnes ne
+// comptent pas.
+function nombresDu(svg) {
+  const nombres = new Set();
+  for (const [, texte] of svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)) {
+    const net = texte.replace(/[   ]/g, "").replace(/^[+−×÷-]/, "");
+    if (/^\d+(,\d+)?$/.test(net)) nombres.add(Number(net.replace(",", ".")));
+  }
+  return nombres;
+}
+const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) || []).length;
+const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
+
+test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
+  assert.equal(NIVEAUX.length, 26, "les 8 modules construits : A1, A10, A11, A2, A5, M1, M2, D2");
+  NIVEAUX.forEach(({niveau, cle}) => {
+    const ecris = niveau.apprends.ecris;
+    assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
+    const svgs = ecris.dessins.map(AIDES.dessinerImage);
+    const taille = viewBox(svgs[0]);
+    svgs.forEach((svg, k) => assert.equal(viewBox(svg), taille, `${cle} : le dessin ${k} a la taille du premier (rien ne bouge)`));
+    assert.equal(viewBox(AIDES.dessinerImage(ecris.solution.image)), taille, `${cle} : la réponse donnée au 2e essai faux est le même dessin`);
+    assert.equal(vertsDe(svgs[0]), 0, `${cle} : rien n'est trouvé avant la première étape`);
+    assert.equal(vertsDe(AIDES.dessinerImage(ecris.solution.image)) <= 2, true, `${cle} : la réponse donnée n'est pas peinte comme trouvée`);
+    assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin se remplit`);
+  });
+});
+
+test("J'écris : chaque égalité juste fait apparaître son morceau, jamais un nombre pas encore écrit", () => {
+  NIVEAUX.forEach(({niveau, cle}) => {
+    const ecris = niveau.apprends.ecris;
+    const svgs = ecris.dessins.map(AIDES.dessinerImage);
+    const reponses = ecris.etapes.map(etape => Number(etape.reponse));
+    svgs.forEach((svg, k) => {
+      // Les réponses des étapes pas encore faites (236 + 4 = 240 : le 240
+      // avant la 1re étape), sauf celles qu'une étape faite a déjà écrites.
+      const trouvees = new Set(reponses.slice(0, k));
+      const interdites = reponses.slice(k).filter(r => !trouvees.has(r));
+      for (const n of nombresDu(svg)) assert.ok(!interdites.includes(n), `${cle} : ${n} est écrit dans le dessin ${k}, avant que l'élève l'ait trouvé`);
+      // Le vert ne fait que grandir : ce qui est trouvé reste trouvé.
+      if (k > 0) assert.ok(vertsDe(svg) >= vertsDe(svgs[k - 1]), `${cle} : le dessin ${k} perd un morceau trouvé`);
+    });
+  });
+});
+
+test("J'écris : les morceaux attendus, module par module", () => {
+  const ecris = cle => CORE.niveauDe(cle).niveau.apprends.ecris;
+  const lus = cle => ecris(cle).dessins.map(d => AIDES.dessinerImage(d).match(/aria-label="([^"]*)"/)[1]);
+  // A10-2 : 236 + 4 = 240 (le saut + 4 et le point 240), 240 + 3 = 243, puis
+  // 236 + 7 = 243 : le saut direct, dessous.
+  const a10 = ecris("A10-2").dessins;
+  assert.deepEqual(lus("A10-2").slice(0, 3), [
+    "Droite : on part de 236.",
+    "Droite : on part de 236. plus 4 : 240.",
+    "Droite : on part de 236. plus 4 : 240. Puis plus 3 : 243."]);
+  assert.deepEqual(a10.map(d => Boolean(d.directCache)), [true, true, true, false], "le saut direct vient avec la dernière égalité");
+  assert.deepEqual(a10.map(d => d.inconnues), [[1, 2], [2], [], []]);
+  // A10-1 : 4 + 3 = 7 (le saut), puis 254 + 3 = 257 (son point).
+  assert.deepEqual(lus("A10-1"), ["Droite : on part de 254.", "Droite : on part de 254. plus 3 : un nombre à trouver.", "Droite : on part de 254. plus 3 : 257."]);
+  // A2-3, un trou : les points sont là, chaque étape écrit son saut, puis le
+  // complément entier (+ 76) dessous.
+  const a2 = ecris("A2-3").dessins;
+  assert.deepEqual(a2.map(d => d.sauts.map(s => (s.masque ? "?" : s.val))), [["?", "?"], [6, "?"], [6, 70], [6, 70]]);
+  assert.deepEqual(a2.map(d => Boolean(d.directCache)), [true, true, true, false]);
+  assert.equal(a2[3].direct, 76);
+  assert.match(AIDES.dessinerImage(a2[2]), /^(?![\s\S]*\+ 76)/, "+ 76 n'est pas écrit avant la dernière égalité");
+  assert.match(AIDES.dessinerImage(a2[3]), /\+ 76/);
+  // M1-3, moitié de 46 : 20 et 20 sous le 40, puis 3 et 3 sous le 6, puis
+  // l'accolade (23).
+  const m1 = ecris("M1-3").dessins;
+  assert.deepEqual(m1.map(d => [d.trouves, d.fini]), [[[], false], [[0], false], [[0, 1], false], [[0, 1], true]]);
+  const m1svg = m1.map(AIDES.dessinerImage);
+  assert.ok(vertsDe(m1svg[1]) > vertsDe(m1svg[0]) && vertsDe(m1svg[2]) > vertsDe(m1svg[1]), "ce que l'élève trouve s'écrit en vert");
+  assert.equal((m1svg[0].match(/>20</g) || []).length, 0);
+  assert.equal((m1svg[1].match(/>20</g) || []).length, 2, "les deux cases sous le 40");
+  assert.equal((m1svg[1].match(/>3</g) || []).length, 0);
+  assert.equal((m1svg[2].match(/>3</g) || []).length, 2, "les deux cases sous le 6");
+  assert.equal((m1svg[2].match(/>23</g) || []).length, 0);
+  assert.equal((m1svg[3].match(/>23</g) || []).length, 1, "la dernière égalité remplit l'accolade");
+  // M1-2, double de 75 : 140, puis 10, puis l'accolade (150).
+  const m12 = ecris("M1-2").dessins.map(AIDES.dessinerImage);
+  assert.deepEqual(m12.map(s => [/>140</.test(s), />10</.test(s), />150</.test(s)]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
+  // D2-1, 72,41 × 10 : 72 × 10 = 720 écrit le 7 et le 2, 0,41 × 10 = 4,1
+  // le 4 et le 1.
+  const d2 = ecris("D2-1").dessins;
+  assert.deepEqual(d2.map(d => d.trouves.filter(r => r >= -1 && r <= 2)), [[], [2, 1], [2, 1, 0, -1], [2, 1, 0, -1]]);
+  assert.equal((AIDES.dessinerImage(d2[0]).match(/>\?</g) || []).length, 4);
+  assert.equal((AIDES.dessinerImage(d2[1]).match(/>\?</g) || []).length, 2);
+  // D2-3 : les zéros de 4 500 viennent avec 0,5 × 1 000 = 500.
+  assert.deepEqual(ecris("D2-3").dessins[1].trouves.filter(r => r >= 0 && r <= 3), [3]);
+  assert.deepEqual(ecris("D2-3").dessins[2].trouves.filter(r => r >= 0 && r <= 3), [3, 2, 1, 0]);
+  // M2-2, un trou : « × ? », puis « × 100 ».
+  const m2 = ecris("M2-2").dessins.map(AIDES.dessinerImage);
+  assert.match(m2[0], /× \?/);
+  assert.match(m2[1], /× 100/);
+});
+
+test("la droite du boulier : un saut par geste, son point d'arrivée, rien avant", () => {
+  const gestes = [3, 10, 10, 10, 10, 10, 10];
+  const droite = faits => AIDES.droiteSauts({
+    depart: 37, boulier: true,
+    sauts: gestes.map((val, i) => (i < faits ? {val} : {val, cache: true})),
+    caches: gestes.map((_, i) => i + 1).filter(i => i > faits),
+    acquis: faits ? [faits] : []
+  });
+  const avant = droite(0);
+  assert.equal((avant.match(/marker-end/g) || []).length, 0, "aucun saut avant le premier geste");
+  assert.deepEqual([...nombresDu(avant)], [37], "seul le départ est écrit");
+  const un = droite(1);
+  assert.equal((un.match(/marker-end/g) || []).length, 1);
+  assert.deepEqual([...nombresDu(un)].sort((a, b) => a - b), [3, 37, 40]);
+  const tout = droite(7);
+  assert.equal((tout.match(/marker-end/g) || []).length, 7);
+  assert.ok(nombresDu(tout).has(100));
+  assert.equal(viewBox(avant), viewBox(tout), "la droite garde sa taille");
+  // Les places sont celles de tous les gestes : le 40 ne bouge pas.
+  const x40 = svg => svg.match(/<rect x="([\d.]+)"[^>]*\/><text[^>]*>40</)[1];
+  assert.equal(x40(un), x40(tout));
+  // La droite ordinaire (Je représente, l'entraînement) ne change pas.
+  assert.equal(AIDES.droiteSauts({depart: 37, sauts: [{val: 3}, {val: 60}]}).match(/viewBox="([^"]+)"/)[1], "0 0 560 158");
+});
+
+test("J'apprends : le boulier de « Je manipule » a sa droite, celui de l'entraînement non", async () => {
+  const {readFile} = await import("node:fs/promises");
+  const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
+  const manipule = page.slice(page.indexOf("if (nom === \"manipule\") {"), page.indexOf("} else if (nom === \"represente\") {"));
+  assert.match(manipule, /droite: !glisse/, "Je manipule : le boulier reporte ses gestes sur une droite");
+  assert.equal((page.match(/droite: !glisse/g) || []).length, 1, "seulement dans Je manipule");
+  // J'écris montre son dessin, et le remplit à chaque étape juste.
+  assert.match(page, /montrerImage\(dessinEcris\(0\), apprends\.ecris\.consigne \|\| ""\)/);
+  assert.match(page, /renderEtapes\(\);\n\s*majDessinEcris\(serie\.etape\);/);
+});

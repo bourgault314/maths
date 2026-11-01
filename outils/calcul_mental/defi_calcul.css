@@ -761,6 +761,26 @@ div.dc-mod { cursor: default; }
   .challenge-playing .question.aide-image .dc-aide { order: -1; margin-top: auto; }
   .challenge-playing .question.aide-image .expression { margin-top: 6px; }
 }
+/* « J'écris » (lot « relier ») : le dessin AU-DESSUS des étapes, partout
+   (sur ordinateur aussi) : chaque égalité juste le remplit, l'œil monte de
+   l'égalité à son morceau. */
+.question.ecrit.aide-image .dc-aide { order: -1; }
+/* Sur un écran bas d'ordinateur, le dessin cède un peu de hauteur aux
+   trois lignes d'étapes (le schéma en barres de M1 est haut). */
+@media (min-width: 621px) {
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg { max-height: 21dvh; }
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-tableau { max-height: 18dvh; }
+}
+/* Téléphone : les étapes s'écrivent un peu plus serré pour laisser la
+   place au dessin ; une fois J'écris fini (juste, ou la réponse donnée),
+   le pavé grisé ne sert plus : il s'efface et le dessin rempli prend sa
+   place. */
+@media (max-width: 620px) {
+  .challenge-playing .question.ecrit.aide-image .expression.dc-lignes { font-size: 1.32rem; padding-top: 4px; padding-bottom: 4px; }
+  .challenge-playing .question.ecrit.aide-image .expression.dc-lignes .lg { row-gap: 3px; }
+  .challenge-playing .question.ecrit.aide-image > .actions { margin-top: 6px; }
+  .challenge-playing .question.ecrit-fini > .keypad { display: none; }
+}
 /* Avec une image, le pavé redescend un peu pour que tout tienne sans
    défiler (la même mesure que « J'apprends » de Défi tables). */
 .question.aide-image, .question.ecrit { --touche-h: clamp(44px, 6.9dvh, 46px); }
@@ -796,6 +816,11 @@ div.dc-mod { cursor: default; }
 .question.aide-perles .dc-aide { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; margin: 0; }
 .perles-zone { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; }
 .perles-scene { flex: 1 1 auto; min-height: 132px; width: 100%; display: grid; place-items: center; }
+/* La droite du boulier (« Je manipule », lot « relier ») : un saut par
+   geste. Elle garde sa hauteur ; c'est le boulier qui prend le reste. */
+.perles-droite { flex: 0 0 auto; width: min(100%, 520px); margin: 2px auto 0; }
+.perles-droite svg { display: block; width: 100%; height: auto; max-height: 20dvh; }
+.perles-droite text { font-family: inherit; font-weight: 900; }
 .challenge-playing .question.aide-perles .expression,
 .expression.dc-petit { min-height: 0; margin: 0 0 4px; padding: 6px 12px; font-size: 1.9rem; }
 /* Au clavier (seulement) : la rangée et la perle choisies. */
@@ -1157,6 +1182,7 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
   body.en-tete-cadre .suivi-repere { font-size: .8rem; }
   body.en-tete-cadre.challenge-playing .topbar { padding: 0; margin-bottom: 2px; }
   body.en-tete-cadre.challenge-playing .suivi-repere { margin: 0; padding: 0; font-size: .74rem; border-radius: 0; }
+}
 
 /* ------------------------------------------------- téléphone : tout tient (audit du 31/10)
    Sur iPhone, la hauteur VISIBLE est celle de l'écran moins la barre

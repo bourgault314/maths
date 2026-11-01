@@ -553,6 +553,108 @@
     })
   ]);
 
+  // ------------------------------------------- « relier » : le dessin de J'écris
+  //
+  // Lot « relier » (31/10/2026, décision de Gwenaël) : dans « J'écris »,
+  // le dessin est au-dessus des étapes, vide au début, et chaque égalité
+  // juste fait apparaître SON morceau. `dessins[k]` est ce qu'on voit quand
+  // k étapes sont faites : dessins[0] avant la première, le dernier quand
+  // tout est écrit. Jamais un nombre que l'élève n'a pas encore trouvé
+  // (gardé par un test sur les huit modules). `revele` : le même dessin, tout
+  // montré sans le vert (la réponse donnée au 2e essai faux) — même place,
+  // rien ne bouge.
+  //
+  // La droite : un morceau par étape.
+  //  - un ajout ou un retrait (236 + 7) : chaque saut avec son point
+  //    d'arrivée (236 + 4 = 240 : le saut + 4 et le point 240), puis la
+  //    dernière égalité (236 + 7 = 243) : le saut direct, dessous ;
+  //    un seul saut écrit en deux étapes (4 + 3 = 7, puis 254 + 3 = 257) :
+  //    le saut, puis son point ;
+  //  - un trou (6 + □ = 13, 24 + □ = 100) : les points sont donnés, chaque
+  //    étape écrit l'étiquette de son saut, la dernière le saut direct.
+  function droiteDessins({depart, sauts, direct, trou, etapes}) {
+    const morceaux = trou
+      ? sauts.map((_, i) => ({etiquette: i}))
+      : sauts.length === 1 && etapes > 1
+        ? [{saut: 0}, {point: 1}]
+        : sauts.map((_, i) => ({saut: i, point: i + 1}));
+    if (direct !== undefined) morceaux.push({direct: true});
+    const dessin = (vus, revele = false) => {
+      const voit = cle => vus.some(m => m[cle] !== undefined && m[cle] !== false);
+      const sautVu = i => vus.some(m => m.saut === i);
+      const pointVu = i => vus.some(m => m.point === i);
+      const etiquetteVue = i => vus.some(m => m.etiquette === i);
+      const image = {outil: "droite-sauts", depart};
+      if (trou) {
+        image.sauts = sauts.map((val, i) => (etiquetteVue(i) ? {val} : {val, masque: true}));
+      } else {
+        image.sauts = sauts.map((val, i) => (sautVu(i) ? {val} : {val, cache: true}));
+        const points = sauts.map((_, i) => i + 1);
+        image.inconnues = points.filter(i => !pointVu(i));
+        // Ce que l'élève a trouvé, en vert ; révélé, seule l'arrivée l'est
+        // (comme sur la correction).
+        image.acquis = revele ? [sauts.length] : points.filter(pointVu);
+      }
+      if (direct !== undefined) {
+        image.direct = direct;
+        if (!voit("direct")) image.directCache = true;
+      }
+      return Object.freeze(image);
+    };
+    return dessinsDe(morceaux, etapes, dessin);
+  }
+
+  // dessins[k] : les morceaux des k premières étapes ; la dernière étape
+  // montre tout ce qui reste.
+  function dessinsDe(morceaux, etapes, dessin) {
+    const liste = [];
+    for (let k = 0; k <= etapes; k += 1) liste.push(dessin(k === etapes ? morceaux : morceaux.slice(0, k)));
+    return {dessins: Object.freeze(liste), revele: dessin(morceaux, true)};
+  }
+
+  // Le schéma en barres (M1) : les morceaux du nombre un par un (moitié de
+  // 74 : 35 et 35 sous le 70, puis 2 et 2 sous le 4), puis la dernière
+  // égalité : l'accolade (et les deux barres égales de la moitié).
+  function barresDessins(image, etapes) {
+    const morceaux = image.morceaux.map((_, i) => ({morceau: i}));
+    morceaux.push({fini: true});
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.filter(m => m.morceau !== undefined).map(m => m.morceau), fini: vus.some(m => m.fini)})));
+    return dessinsDe(morceaux, etapes, dessin);
+  }
+
+  // Le tableau à flèches (M2, D2) : chaque étape écrit les chiffres de sa
+  // partie (72 × 10 = 720 : le 7 et le 2 ; 0,41 × 10 = 4,1 : le 4 et le 1),
+  // la dernière tout le nombre ; un trou (35 × □ = 3 500) : l'étiquette
+  // « × 100 ». `montre` d'une étape : « entiers » ou « decimaux » ; sans
+  // lui, tout.
+  function tableauDessins(aide, solution, etapes) {
+    const rangs = Array.from({length: 13}, (_, i) => 6 - i);
+    const decalage = Math.round(Math.log10(solution.p)) * (solution.operation === "÷" ? -1 : 1);
+    const morceaux = etapes.map(etape => {
+      if (aide.masque) return {etiquette: true};
+      if (etape.montre === "entiers") return {rangs: rangs.filter(r => r - decalage >= 0)};
+      if (etape.montre === "decimaux") return {rangs: rangs.filter(r => r - decalage < 0)};
+      return {rangs};
+    });
+    const dessin = (vus, revele = false) => {
+      if (revele) return Object.freeze(Object.assign({}, solution));
+      if (aide.masque) return Object.freeze(Object.assign({}, aide, {etiquetteTrouvee: vus.some(m => m.etiquette)}));
+      const trouves = [...new Set(vus.flatMap(m => m.rangs || []))].sort((a, b) => b - a);
+      return Object.freeze(Object.assign({}, aide, {trouves}));
+    };
+    return dessinsDe(morceaux, etapes.length, dessin);
+  }
+
+  // La partie « J'écris » d'un J'apprends, avec ses dessins.
+  function ecrisAvecDessins(ecris, relier) {
+    return Object.freeze(Object.assign({}, ecris, {
+      dessins: relier.dessins,
+      solution: Object.freeze(Object.assign({}, ecris.solution, {image: relier.revele}))
+    }));
+  }
+
   // Les trois temps de « J'apprends » d'un niveau d'A5, sur TROIS calculs
   // différents (scénario du 30/10) : le rekenrek sur le premier (une rangée
   // entière d'un coup, puis on retire), la droite sur le deuxième (le détour
@@ -578,10 +680,10 @@
         image: Object.freeze(a5Aide(cR)),
         solution: Object.freeze({image: a5Image(cR), phrase: a5Phrase(cR)})
       }),
-      ecris: Object.freeze({
+      ecris: ecrisAvecDessins({
         etapes: a5Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a5Image(cE), phrase: a5Phrase(cE)})
-      }),
+      }, droiteDessins({depart: cE.donnees.n, sauts: [r, -d], direct: a, trou: false, etapes: 3})),
       bilan,
       image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: r}, {val: -d}], direct: a, acquis: [2]}),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
@@ -607,14 +709,22 @@
         image: Object.freeze(a2Aide(cR)),
         solution: Object.freeze({image: a2Image(cR), phrase: a2Phrase(cR)})
       }),
-      ecris: Object.freeze({
+      ecris: ecrisAvecDessins({
         etapes: a2Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a2Image(cE), phrase: a2Phrase(cE)})
-      }),
+      }, a2Dessins(cE)),
       bilan,
       image: Object.freeze(a2Image(cR)),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
+  }
+
+  // Le dessin de « J'écris » d'un complément : les points sont donnés, chaque
+  // étape écrit son saut, la dernière le complément entier (dessous).
+  function a2Dessins(calcul) {
+    const {sauts} = a2Sauts(calcul);
+    return droiteDessins({depart: calcul.donnees.a, sauts, direct: sauts.length > 1 ? calcul.reponse : undefined,
+      trou: true, etapes: a2Etapes(calcul).length});
   }
 
   // --------------------------------------------- M2, D2 : × 10, × 100, × 1 000
@@ -1021,10 +1131,10 @@
         image: Object.freeze(glisseAide(represente)),
         solution: Object.freeze({image: tableauDe(represente), phrase: ecris.phraseRepresente || glissePhrase(represente)})
       }),
-      ecris: Object.freeze({
+      ecris: ecrisAvecDessins({
         etapes: Object.freeze(ecris.etapes.map(e => Object.freeze(Object.assign({}, e)))), reponse: ecris.calcul.reponse,
         solution: Object.freeze({image: tableauDe(ecris.calcul), phrase: ecris.phrase || glissePhrase(ecris.calcul)})
-      }),
+      }, tableauDessins(glisseAide(ecris.calcul), tableauDe(ecris.calcul), ecris.etapes)),
       bilan,
       image: Object.freeze(tableauDe(calcul)),
       textes: Object.freeze([calcul.texte, represente.texte, ecris.calcul.texte])
@@ -1156,7 +1266,9 @@
     ]
   };
 
-  const etapeDe = (texte, reponse) => ({texte, reponse});
+  // `montre` (lot « relier ») : la partie du tableau que l'étape remplit,
+  // « entiers » ou « decimaux » ; sans lui, tout le nombre.
+  const etapeDe = (texte, reponse, montre) => (montre ? {texte, reponse, montre} : {texte, reponse});
 
   const M2 = {
     id: "M2", nom: "× 10, × 100, × 1\u202f000 (entiers)", exemple: "27 × 100",
@@ -1208,7 +1320,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 1, 2.5, 10), exemple: "2,5 × 10", colonnes: COLONNES_D2,
           represente: produit("D2", 1, 0.6, 10),
-          ecris: {calcul: produit("D2", 1, 72.41, 10), etapes: [etapeDe(`72 × 10 = ${CASE}`, 720), etapeDe(`0,41 × 10 = ${CASE}`, 4.1), etapeDe(`72,41 × 10 = ${CASE}`, 724.1)]},
+          ecris: {calcul: produit("D2", 1, 72.41, 10), etapes: [etapeDe(`72 × 10 = ${CASE}`, 720, "entiers"), etapeDe(`0,41 × 10 = ${CASE}`, 4.1, "decimaux"), etapeDe(`72,41 × 10 = ${CASE}`, 724.1)]},
           consigne: "Chaque chiffre vaut 10 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
           trace: ["2,5 × 10 = …", "2,5 × 10 = 25"],
@@ -1222,7 +1334,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 2, 7.54, 100), exemple: "7,54 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 2, 4.107, 1000),
-          ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3 × 100 = ${CASE}`, 300), etapeDe(`0,24 × 100 = ${CASE}`, 24), etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
+          ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3 × 100 = ${CASE}`, 300, "entiers"), etapeDe(`0,24 × 100 = ${CASE}`, 24, "decimaux"), etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
           consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u202f000 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
@@ -1236,7 +1348,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 3, 3.6, 100), exemple: "3,6 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 3, 72.4, 100),
-          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4 × ${MILLE} = ${CASE}`, 4000), etapeDe(`0,5 × ${MILLE} = ${CASE}`, 500), etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
+          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4 × ${MILLE} = ${CASE}`, 4000, "entiers"), etapeDe(`0,5 × ${MILLE} = ${CASE}`, 500, "decimaux"), etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
           consigne: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
@@ -1341,6 +1453,15 @@
     return Object.assign(image, {inconnues: image.sauts.map((_, i) => i + 1)});
   }
 
+  // Le dessin de « J'écris » (lot « relier ») : la droite du calcul, qui se
+  // remplit étape par étape ; un trou en deux sauts a aussi son saut direct
+  // (6 + □ = 13 : + 4, + 3, puis + 7 dessous).
+  function plusDessins(calcul, etapes) {
+    const {n, d} = calcul.donnees;
+    const {sauts} = sautsDuCalcul(calcul);
+    return droiteDessins({depart: n, sauts, direct: sauts.length > 1 ? d : undefined, trou: estTrou(calcul), etapes});
+  }
+
   const signe = d => (d < 0 ? "−" : "+");
 
   function plusPhrase(calcul) {
@@ -1402,11 +1523,11 @@
         image: Object.freeze(plusAide(represente)),
         solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
       }),
-      ecris: Object.freeze({
+      ecris: ecrisAvecDessins({
         etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte, reponse}))),
         reponse: ecris.reponse,
         solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
-      }),
+      }, plusDessins(ecris, etapes.length)),
       bilan,
       image: Object.freeze(plusImage(premier)),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
@@ -1947,12 +2068,12 @@
         image: Object.freeze(m1Aide(represente)),
         solution: Object.freeze({image: m1Image(represente), phrase: m1Phrase(represente)})
       }),
-      ecris: Object.freeze({
+      ecris: ecrisAvecDessins({
         consigne: consigneEcris,
         etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
         reponse: ecris.reponse,
         solution: Object.freeze({image: m1Image(ecris), phrase: m1Phrase(ecris)})
-      }),
+      }, barresDessins(m1Image(ecris), etapes.length)),
       bilan,
       image: Object.freeze(m1Image(ecris)),
       textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
