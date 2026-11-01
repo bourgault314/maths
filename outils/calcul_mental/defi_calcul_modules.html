@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-5">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261101-1">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261031-4"></script>
+  <script src="./defi_calcul_core.js?v=20261101-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261031-4"></script>
+  <script src="./defi_calcul_aides.js?v=20261101-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1357,6 +1357,7 @@
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
       }
       window.addEventListener("resize", ajusterEchelle);
+      window.addEventListener("resize", () => ajusterRetenir());
 
       // Téléphone (audit du 31/10) : à l'entraînement, le geste fait, le pavé
       // arrive sous le glisse-nombres. Le glisse-nombres a une taille fixe :
@@ -1529,6 +1530,20 @@
         suivreHistorique(name);
         placerEnTete();
         ajusterEchelle();
+        ajusterRetenir();
+      }
+
+      // « À retenir » au téléphone (vu par Code sur la PR #1083, déjà là
+      // avant « relier ») : une longue phrase et un grand dessin (D2-1 : le
+      // tableau) faisaient défiler l'écran à 390 × 664. Le cadre tient entier
+      // dans l'écran : la phrase et le dessin rapetissent ensemble, par
+      // petits pas, jusqu'à ce qu'il tienne.
+      function ajusterRetenir() {
+        const racine = document.documentElement;
+        racine.style.removeProperty("--retenir-z");
+        if ($("result").hidden || $("result-retenir").hidden || window.innerWidth > ECHELLE.telephone) return;
+        const deborde = () => racine.scrollHeight > window.innerHeight + 1;
+        for (let z = .95; z >= .6 && deborde(); z -= .05) racine.style.setProperty("--retenir-z", z.toFixed(2));
       }
 
       function versAccueil() {
@@ -1802,6 +1817,20 @@
           lignes.push(liste);
         }
         $("parcours-modules").replaceChildren(...lignes);
+        montrerModuleEnCours(id);
+      }
+
+      // Sur ordinateur, la liste du palier défile dans sa carte (modules
+      // lot 2) : Mon module (sinon le premier à revoir) reste visible, sans
+      // faire défiler la page.
+      function montrerModuleEnCours(id) {
+        const liste = $("parcours-modules");
+        const ici = [...liste.querySelectorAll(".dc-mod")].find(ligne => ligne.dataset.module === id) || liste.querySelector(".dc-mod.rouge");
+        if (!ici || liste.scrollHeight <= liste.clientHeight) return;
+        const haut = ici.getBoundingClientRect().top - liste.getBoundingClientRect().top + liste.scrollTop;
+        if (haut < liste.scrollTop || haut + ici.offsetHeight > liste.scrollTop + liste.clientHeight) {
+          liste.scrollTop = Math.max(0, haut - (liste.clientHeight - ici.offsetHeight) / 2);
+        }
       }
 
       function renderAccueil() {
@@ -3291,6 +3320,17 @@
               if (!CORE.niveauDe(`${id}-${n}`)) return false;
               state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
               lancerApprends(id, n, "seance", {revoir: true});
+              return true;
+            },
+            // « À retenir » d'un niveau, tout de suite (la fin de J'apprends),
+            // pour mesurer qu'il tient dans l'écran (modules lot 2).
+            retenir: (id, n) => {
+              if (!CORE.niveauDe(`${id}-${n}`)) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              lancerApprends(id, n, "seance", {revoir: true});
+              arreterActivite();
+              renderRetenir(state.serie);
+              show("result");
               return true;
             }
           })

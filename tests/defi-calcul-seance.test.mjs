@@ -597,9 +597,10 @@ test("Mes calculs du jour : l'écriture change d'un retour à l'autre", () => {
   });
 });
 
-test("la vraie carte (modules lot 1) : le parcours commence par A1, A10, A11, M1 ; le premier jour teste A1", () => {
+test("la vraie carte (modules lots 1 et 2) : le parcours commence par A1, A10, A11, M1, puis A3 et A4 arrivent ; le premier jour teste A1", () => {
   assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(0, 12).map(c => `${c.module}-${c.niveau}`),
-    ["A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A2-2", "M2-1", "A5-1"]);
-  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 26);
+    ["A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1", "A2-2", "M2-1"]);
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(12, 16).map(c => `${c.module}-${c.niveau}`), ["A4-1", "A4-2", "A5-1", "A6-1"], "modules lot 2 : A4 puis A6 juste après A5");
+  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 44);
   assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "nouveau"}]);
 });
