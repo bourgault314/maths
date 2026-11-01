@@ -193,6 +193,7 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
       largeurPage: document.documentElement.scrollWidth, defilement: window.scrollY,
       cadre: boite(".panel"), carte: carte ? [carte.scrollHeight, carte.clientHeight] : null,
       pave: boite(".keypad"), valider: boite("#validate"), aide: boite("#aide"), expression: boite("#expression"),
+      ecrit: carte ? carte.classList.contains("ecrit") || carte.classList.contains("ecrit-fini") : false,
       boulier: boite(".perles-cadre"), scene: boite(".perles-scene"),
       trace: boite(".dc-trace"),
       logo: boite(".topbar > .brand"), sortie: boite("#suivi-repere .sortie"), bandeau: boite("#suivi-repere"), barre: boite(".topbar"),
@@ -265,7 +266,8 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
   if (image) {
     assert.ok(m.aide, `${ou} : l'image est affichée`);
     // Téléphone : l'aide au-dessus du calcul. Ordinateur : entre le calcul et le pavé.
-    if (taille.telephone) assert.ok(m.aide.bas <= m.expression.haut + 1, `${ou} : l'aide est au-dessus du calcul`);
+    // « J'écris » (lot « relier ») : le dessin au-dessus des étapes, partout.
+    if (taille.telephone || m.ecrit) assert.ok(m.aide.bas <= m.expression.haut + 1, `${ou} : l'aide est au-dessus du calcul`);
     else assert.ok(m.aide.haut >= m.expression.bas - 1 && m.aide.bas <= m.pave.haut + 1, `${ou} : l'aide est entre le calcul et le pavé`);
   }
   // Le rekenrek ne passe jamais sur le pavé ni sur le bouton du bas (iPhone, 31/10).
@@ -399,9 +401,14 @@ async function jouerApprendsTroisCalculs(page, cle, ecran) {
   }, cle);
   const textes = [a.manipule && a.manipule.texte, a.represente.texte, a.ecris.texte].filter(Boolean);
   assert.equal(new Set(textes).size, textes.length, `${cle} : J'apprends pose trois calculs différents`);
+  // Lot « relier » : le boulier de « Je manipule » reporte chaque geste sur
+  // une droite au-dessus — rien avant le geste, un saut par geste après.
+  const sautsDuBoulier = () => page.evaluate(() => document.querySelectorAll(".perles-droite path[marker-end]").length);
   if (a.manipule) {
     await ecran("apprends-manipule", {jeu: true});
+    if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), 0, `${cle} : la droite du boulier attend le premier geste`);
     await manipuler(page, a.manipule);
+    if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), a.manipule.gestes.length, `${cle} : un saut par geste sur la droite du boulier`);
     await valider(page);
     await page.waitForTimeout(400);
   }
@@ -416,13 +423,24 @@ async function jouerApprendsTroisCalculs(page, cle, ecran) {
   await ecran("apprends-represente-revele", {jeu: true, image: true});
   await valider(page);
   await page.waitForTimeout(400);
-  await ecran("apprends-ecris", {jeu: true, pave: true});
+  await ecran("apprends-ecris", {jeu: true, pave: true, image: true});
+  // Lot « relier » : le dessin au-dessus des étapes se remplit à chaque
+  // égalité juste ; il est au-dessus du calcul, à toutes les tailles.
+  const dessin = () => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.dessin());
+  const dessins = [await dessin()];
+  assert.ok(dessins[0], `${cle} : J'écris montre son dessin`);
+  assert.ok(await page.evaluate(() => document.getElementById("aide").getBoundingClientRect().bottom <= document.getElementById("expression").getBoundingClientRect().top + 1),
+    `${cle} : le dessin est au-dessus des étapes`);
   const reponses = a.ecris.etapes.length ? a.ecris.etapes : [a.ecris.reponse];
   for (const r of reponses) {
     await taper(page, r, {clavier: true});
     await valider(page, {clavier: true});
-    await page.waitForTimeout(500);
+    // (« Suivant » vient tout seul 800 ms après la dernière : on regarde avant.)
+    await page.waitForTimeout(250);
+    dessins.push(await dessin());
   }
+  assert.notEqual(dessins[dessins.length - 1], dessins[0], `${cle} : le dessin s'est rempli`);
+  await ecran("apprends-ecris-fini", {image: true});
   await page.waitForTimeout(900);
 }
 

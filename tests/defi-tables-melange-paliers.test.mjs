@@ -490,7 +490,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // change, 65 au manifeste (avant : defi-calcul-lot-2b).
   // Puis le lot 8 du serveur pro « retours du 31/10 » : index.php et
   // prof/index.php changent, 65 au manifeste (avant : defi-calcul-modules-lot-1).
-  assert.match(lire("_serveur/public/VERSION"), /^lot serveur-pro-lot-8-retours-31-10$/m);
+  // Puis Défi calcul, lot « relier » (31/10/2026) : prof/defi_calcul_core.js
+  // seul change (les dessins de J'écris), 65 au manifeste (avant :
+  // serveur-pro-lot-8-retours-31-10).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-relier$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

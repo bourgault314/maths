@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-4">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-5">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261031-3"></script>
+  <script src="./defi_calcul_core.js?v=20261031-4"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261031-3"></script>
+  <script src="./defi_calcul_aides.js?v=20261031-4"></script>
   <script>
     (() => {
       "use strict";
@@ -1931,7 +1931,7 @@
         aide.classList.remove("sans-tableau");
         aide.hidden = true;
         $("touches").hidden = true;
-        $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit", "manip-entraine");
+        $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit", "ecrit-fini", "manip-entraine");
         $("escalier").hidden = true;
         $("escalier").replaceChildren();
         $("annonce").hidden = true;
@@ -2098,14 +2098,21 @@
         $("question-card").classList.add("aide-image");
       }
 
-      // Une consigne seule, sans image (« J'écris » de M1).
-      function montrerConsigne(consigne) {
-        const aide = $("aide");
-        const p = document.createElement("p");
-        p.className = "consigne consigne-seule";
-        p.textContent = consigne;
-        aide.replaceChildren(p);
-        aide.hidden = false;
+      // « J'écris » (lot « relier », 31/10/2026) : le dessin au-dessus des
+      // étapes se remplit à chaque égalité juste — le morceau que l'élève
+      // vient d'écrire, rien d'autre (`ecris.dessins[k]` : k étapes faites).
+      // Seul le dessin change : la consigne (M1) reste, la place aussi (tous
+      // les dessins d'un calcul ont la même taille).
+      function dessinEcris(faites) {
+        const dessins = state.serie.apprends.ecris.dessins;
+        return dessins[Math.max(0, Math.min(dessins.length - 1, faites))];
+      }
+      function majDessinEcris(faites) {
+        const ancien = $("aide").querySelector(":scope > svg");
+        if (!ancien) return;
+        const dessin = document.createElement("div");
+        dessin.innerHTML = AIDES.dessinerImage(dessinEcris(faites));
+        ancien.replaceWith(dessin.firstChild);
       }
 
       function majBarre({compte = "", pastille = "", avance = 0}) {
@@ -2286,7 +2293,10 @@
           carte.classList.add(glisse ? "aide-glisse" : "aide-perles");
           $("aide").hidden = false;
           $("validate").textContent = "Suivant";
+          // Le boulier reporte chaque geste sur une droite, au-dessus (lot
+          // « relier ») ; le glisse-nombres a déjà son tableau.
           const options = Object.assign({}, apprends.manipule, {
+            droite: !glisse,
             surFini() {
               carte.classList.add("est-finie");
               state.waitingForContinue = true;
@@ -2304,14 +2314,15 @@
           carte.classList.add("sans-retour");
         } else {
           // « J'écris », sur un troisième calcul : les étapes, puis la
-          // réponse, une case à la fois. Plus d'image.
+          // réponse, une case à la fois. Au-dessus, le dessin du calcul,
+          // vide : chaque égalité juste y fait apparaître son morceau (lot
+          // « relier »). M1 : « moitié de 46 = 46 ÷ 2 » écrit au-dessus.
           serie.essais = 0;
           serie.etape = 0;
           carte.classList.add("ecrit");
           renderTouches(serie.module);
           renderEtapes();
-          // M1 : « moitié de 46 = 46 ÷ 2 » écrit au-dessus des étapes.
-          if (apprends.ecris.consigne) montrerConsigne(apprends.ecris.consigne);
+          montrerImage(dessinEcris(0), apprends.ecris.consigne || "");
         }
         carte.scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -2372,7 +2383,10 @@
           renderEtapes({revelees: true});
         }
         carte.classList.remove("sans-retour", "ecrit");
-        montrerImage(temps.solution.image);
+        if (nom === "ecris") carte.classList.add("ecrit-fini");
+        // J'écris : le même dessin, tout rempli (sans le vert : c'est la
+        // réponse donnée), à la même place, sous la même consigne.
+        montrerImage(temps.solution.image, nom === "ecris" ? (serie.apprends.ecris.consigne || "") : "");
         $("touches").hidden = true;
         const feedback = $("answer-feedback");
         feedback.className = "answer-feedback is-wrong";
@@ -2428,12 +2442,17 @@
             serie.essais = 0;
             state.answer = "";
             renderEtapes();
+            majDessinEcris(serie.etape);
             clearAnswerError();
             return;
           }
           state.waitingForContinue = true;
           renderInlineAnswer("is-correct");
-          if (ecris) renderEtapes({revelees: true});
+          if (ecris) {
+            renderEtapes({revelees: true});
+            majDessinEcris(serie.apprends.ecris.etapes.length);
+            $("question-card").classList.add("ecrit-fini");
+          }
           $("answer-feedback").className = "answer-feedback is-correct";
           $("answer-feedback").textContent = soude("Bravo !");
           setAnswerControlsEnabled(false);
@@ -3259,7 +3278,21 @@
             perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
-            arrets: () => arretsDeLaBande.slice()
+            arrets: () => arretsDeLaBande.slice(),
+            // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.
+            dessin: () => {
+              const image = $("aide").querySelector(":scope > svg");
+              return image && !$("aide").hidden ? image.getAttribute("aria-label") : null;
+            },
+            // J'apprends d'un niveau, comme à l'étape 2 d'une séance (le fil,
+            // la ligne de suivi), pour regarder ses écrans. Il ne compte pas
+            // (« Revoir l'exemple ») : rien n'est enregistré.
+            apprendre: (id, n) => {
+              if (!CORE.niveauDe(`${id}-${n}`)) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              lancerApprends(id, n, "seance", {revoir: true});
+              return true;
+            }
           })
         });
       }
