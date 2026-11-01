@@ -730,6 +730,12 @@ div.dc-mod { cursor: default; }
   .acc.dc-a .carte-seance .tete > span:first-child { order: 1; }
   .acc.dc-a .carte-seance .programme { order: 2; }
   .acc.dc-a .carte-seance .go { order: 3; margin-top: 12px; text-align: center; }
+  /* Modules lot 2 (31/10/2026) : le palier 1 a 11 modules construits (16
+     au lot 3) ; la carte « Mon parcours » prend la hauteur de la colonne de
+     gauche, et sa liste défile dedans, le module en cours toujours montré.
+     Le cadre tient ainsi dans l'écran, quel que soit le nombre de modules. */
+  .acc.dc-a .dc-parcours { contain: size; align-self: stretch; display: flex; flex-direction: column; min-height: 0; }
+  .acc.dc-a .dc-parcours .dc-mods { flex: 1 1 auto; min-height: 0; overflow-y: auto; grid-auto-rows: max-content; align-content: start; padding: 0 2px 6px 0; scrollbar-gutter: stable; }
 }
 .acc.dc-a .gauche { display: grid; gap: 12px; min-width: 0; }
 /* Tant que le serveur n'a pas dit qui est l'élève, l'accueil attend. */
@@ -780,6 +786,9 @@ div.dc-mod { cursor: default; }
   .challenge-playing .question.ecrit.aide-image .expression.dc-lignes .lg { row-gap: 3px; }
   .challenge-playing .question.ecrit.aide-image > .actions { margin-top: 6px; }
   .challenge-playing .question.ecrit-fini > .keypad { display: none; }
+  /* La touche « , » (D2) est à part du pavé : elle s'efface avec lui
+     (vu par Code sur la PR #1083). */
+  .challenge-playing .question.ecrit-fini > .dc-touches { display: none; }
 }
 /* Avec une image, le pavé redescend un peu pour que tout tienne sans
    défiler (la même mesure que « J'apprends » de Défi tables). */
@@ -934,9 +943,14 @@ div.dc-mod { cursor: default; }
 /* ---- la phrase-bilan, à la fin de « J'apprends » ---- */
 .dc-retenir { max-width: 560px; margin: 0 auto 14px; padding: 18px 18px 14px; border: 2px solid #9fd3cb; border-radius: 20px; background: linear-gradient(135deg, #eaf7f4, #f2f8ff); text-align: center; }
 .dc-retenir .eyebrow { margin: 0 0 6px; }
-.dc-retenir .phrase { margin: 0 0 4px; color: var(--ink); font-size: clamp(1.5rem, 5.4vw, 2.1rem); font-weight: 950; line-height: 1.2; }
+.dc-retenir .phrase { margin: 0 0 4px; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(1.5rem, 5.4vw, 2.1rem)); font-weight: 950; line-height: 1.2; }
 .dc-retenir .phrase:focus { outline: none; }
 .dc-retenir .dc-aide { max-width: 440px; }
+/* Téléphone : --retenir-z (posé par la page) rapetisse la phrase et le
+   dessin ensemble quand le cadre dépasserait l'écran. */
+@media (max-width: 620px) {
+  .dc-retenir .dc-aide { width: calc(min(100%, 440px) * var(--retenir-z, 1)); }
+}
 .dc-retenir .cahier { margin: 8px 0 0; color: #5b7286; font-size: .9rem; font-weight: 800; }
 
 /* ---- le bilan : « Juste, mais trop long » ---- */

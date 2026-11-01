@@ -572,17 +572,23 @@
   //    le saut, puis son point ;
   //  - un trou (6 + □ = 13, 24 + □ = 100) : les points sont donnés, chaque
   //    étape écrit l'étiquette de son saut, la dernière le saut direct.
-  function droiteDessins({depart, sauts, direct, trou, etapes}) {
-    const morceaux = trou
-      ? sauts.map((_, i) => ({etiquette: i}))
-      : sauts.length === 1 && etapes > 1
-        ? [{saut: 0}, {point: 1}]
-        : sauts.map((_, i) => ({saut: i, point: i + 1}));
+  //  - `groupes` (modules lot 2) : les sauts de chaque étape, quand une
+  //    étape en fait plusieurs (88 + 4 = 92 passe par 90 : les sauts + 2 et
+  //    + 2, et leurs points 90 et 92, viennent ensemble).
+  function droiteDessins({depart, sauts, direct, trou, etapes, groupes = null}) {
+    const morceaux = groupes
+      ? groupes.map(liste => ({saut: liste, point: liste.map(i => i + 1)}))
+      : trou
+        ? sauts.map((_, i) => ({etiquette: i}))
+        : sauts.length === 1 && etapes > 1
+          ? [{saut: 0}, {point: 1}]
+          : sauts.map((_, i) => ({saut: i, point: i + 1}));
     if (direct !== undefined) morceaux.push({direct: true});
     const dessin = (vus, revele = false) => {
       const voit = cle => vus.some(m => m[cle] !== undefined && m[cle] !== false);
-      const sautVu = i => vus.some(m => m.saut === i);
-      const pointVu = i => vus.some(m => m.point === i);
+      const contient = (valeur, i) => (Array.isArray(valeur) ? valeur.includes(i) : valeur === i);
+      const sautVu = i => vus.some(m => contient(m.saut, i));
+      const pointVu = i => vus.some(m => contient(m.point, i));
       const etiquetteVue = i => vus.some(m => m.etiquette === i);
       const image = {outil: "droite-sauts", depart};
       if (trou) {
@@ -1423,7 +1429,10 @@
     return Object.freeze(Object.assign({}, calcul, {cle: `${calcul.cle}-x`}));
   }
 
-  const estTrou = calcul => calcul.forme === "complement" || calcul.forme === "complement-egal";
+  // Un trou : on cherche le saut (6 + □ = 13), ou l'écart entre deux nombres
+  // proches (A8 : 73 − 68 = □, 4 000 − □ = 3 999).
+  const FORMES_TROU = new Set(["complement", "complement-egal", "ecart", "ecart-trou"]);
+  const estTrou = calcul => FORMES_TROU.has(calcul.forme);
 
   // Les sauts d'un complément : jusqu'à 10, puis jusqu'à la cible.
   function sautsDuCalcul(calcul) {
@@ -1544,6 +1553,16 @@
     return PLUS_FORMES[calcul.forme] * 2000 + franchi * 400 + Math.abs(d) * 20 + String(Math.max(n, m)).length * 5 + (n % 10 === 0 ? 3 : 0);
   }
 
+  // « 526 : la dizaine n’a pas changé. On passe 520 : 523 − 3 = 520, puis
+  // − 4. » En reculant depuis une dizaine entière (50 − 6 → 54), il n'y a
+  // pas d'arrêt : on le dit sans lui.
+  function pasChange(calcul, reponse, quoi) {
+    const {n, d} = calcul.donnees;
+    const {palier, sauts} = sautsDuCalcul(calcul);
+    if (palier === null) return `${formaterNombre(reponse)} : ${quoi} n’a pas changé. En reculant depuis ${formaterNombre(n)}, on passe sous ${formaterNombre(n)}.`;
+    return `${formaterNombre(reponse)} : ${quoi} n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
+  }
+
   // Les erreurs connues, communes aux trois modules : chacune ne se
   // reconnaît que là où elle a un sens (un trou, un retrait, un passage).
   const PLUS_CAUSES = Object.freeze({
@@ -1585,11 +1604,7 @@
         const {d, m} = calcul.donnees;
         return !estTrou(calcul) && franchit(calcul.donnees.n, d, 10) && memeNombre(reponse, m - 10 * Math.sign(d));
       },
-      retour: (calcul, reponse) => {
-        const {n, d} = calcul.donnees;
-        const {palier, sauts} = sautsDuCalcul(calcul);
-        return `${formaterNombre(reponse)} : la dizaine n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
-      },
+      retour: (calcul, reponse) => pasChange(calcul, reponse, "la dizaine"),
       gras: 2
     }),
     centaine: Object.freeze({
@@ -1598,18 +1613,17 @@
         const {d, m} = calcul.donnees;
         return !estTrou(calcul) && franchit(calcul.donnees.n, d, 100) && memeNombre(reponse, m - 100 * Math.sign(d));
       },
-      retour: (calcul, reponse) => {
-        const {n, d} = calcul.donnees;
-        const {palier, sauts} = sautsDuCalcul(calcul);
-        return `${formaterNombre(reponse)} : la centaine n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
-      },
+      retour: (calcul, reponse) => pasChange(calcul, reponse, "la centaine"),
       gras: 2
     }),
     unPres: Object.freeze({
       nom: "à 1 près",
       test: (calcul, reponse) => Math.abs(reponse - calcul.reponse) === 1,
       retour: calcul => {
-        const {n} = calcul.donnees;
+        const {n, m} = calcul.donnees;
+        // Sur un trou, les sauts sont ce qu'on cherche : on ne les dit pas
+        // (« 9 + □ = 10 » : « + 1 » serait la réponse).
+        if (estTrou(calcul)) return `C’est à 1 près. Pars de ${formaterNombre(n)} et avance jusqu’à ${formaterNombre(m)}, sans compter le départ.`;
         const {sauts} = sautsDuCalcul(calcul);
         const texte = sauts.map(s => `${signe(s)} ${Math.abs(s)}`).join(", puis ");
         return `C’est à 1 près. Pars de ${formaterNombre(n)} et fais les sauts sans compter le départ : ${texte}.`;
@@ -1897,6 +1911,1023 @@
     ]
   };
 
+  // ----------------------------- A3, A4, A7 : garder le premier nombre entier
+  //
+  // Modules lot 2 (31/10/2026). On garde le premier nombre entier et on
+  // saute sur la droite : les dizaines d'un coup (+ 20), puis les unités,
+  // en passant par la dizaine comme dans A10 et A11 (+ 3, + 5) : 47 + 28 =
+  // 47 + 20 + 3 + 5 (décision du 30/10). A3 n'ajoute que des dizaines (des
+  // centaines, des milliers) entières : quand on passe la centaine (le
+  // millier), on s'y arrête en gardant ce qui est dessous : 746 + 80 =
+  // 746 + 60 + 20 (choix du 31/10). Données : {n, d, m}, d signé, et
+  // `sauts`, le chemin sur la droite.
+
+  // L'unité des sauts d'A3 : 10, 100 ou 1 000.
+  const rangDe = d => (Math.abs(d) < 100 ? 10 : Math.abs(d) < 1000 ? 100 : 1000);
+  const NOMS_UNITE = Object.freeze({10: ["dizaine", "dizaines"], 100: ["centaine", "centaines"], 1000: ["millier", "milliers"]});
+  const NOMS_RANG = Object.freeze({100: "la centaine", 1000: "le millier", 10000: "la dizaine de mille"});
+
+  // Le chemin d'A3 : un saut, ou deux quand on passe la centaine (le
+  // millier, la dizaine de mille). On s'arrête au rang du dessus en gardant
+  // ce qui est sous le saut : 746 → 806 → 826 ; 715 → 705 → 685. En
+  // reculant depuis là (705 − 30), un seul saut, comme 50 − 6.
+  function sautsRang(n, d) {
+    const u = rangDe(d);
+    const g = 10 * u;
+    if (!franchit(n, d, g)) return [d];
+    const arret = (d > 0 ? Math.floor(n / g) + 1 : Math.floor(n / g)) * g + n % u;
+    const premier = arret - n;
+    return premier === 0 || premier === d ? [d] : [premier, d - premier];
+  }
+
+  // Le rang le plus haut qu'un saut d'A3 passe : 100 pour 746 + 80, 1 000
+  // pour 1 030 − 50 (on dit « le millier n'a pas changé »), ou null.
+  const rangPasse = (n, d) => [10000, 1000, 100].find(g => g > rangDe(d) && franchit(n, d, g)) || null;
+
+  // Le chiffre d'un rang (746, 10 → 4).
+  const chiffreDe = (n, u) => Math.floor(n / u) % 10;
+
+  // Les dizaines d'un nombre à deux chiffres signé (− 27 → − 20).
+  const dizainesDe = d => d - Math.sign(d) * (Math.abs(d) % 10);
+
+  // Le chemin d'A4 et A7 : les dizaines d'un saut, puis les unités (deux
+  // sauts quand elles passent la dizaine, un seul depuis une dizaine entière).
+  function sautsDizainesUnites(n, d) {
+    const dizaines = dizainesDe(d);
+    return [dizaines, ...sautsDe(n + dizaines, d - dizaines).sauts];
+  }
+
+  function ligneChemin(module, niveau, n, d) {
+    const sauts = Object.freeze(module === "A3" ? sautsRang(n, d) : sautsDizainesUnites(n, d));
+    const m = n + d;
+    const morceaux = d > 0 ? [n, "+", d, "=", TROU] : [n, "−", -d, "=", TROU];
+    // « Le petit chiffre retiré du grand » (63 − 27 → 44 ; 715 − 30 → 725) :
+    // la réponse fausse, pour l'exemple de la page prof.
+    const extra = {};
+    if (d < 0 && module === "A3") {
+      const u = rangDe(d);
+      const c = chiffreDe(n, u);
+      const k = -d / u;
+      if (c > 0 && k > c) extra.inverse = n + (k - 2 * c) * u;
+    } else if (d < 0) {
+      const x = n + dizainesDe(d);
+      const u = x % 10;
+      const v = -d % 10;
+      if (u > 0 && v > u) extra.inverse = x - u + (v - u);
+    }
+    const calcul = fabriquer(module, niveau, d > 0 ? "somme" : "difference", morceaux, m, Object.assign({n, d, m, sauts}, extra));
+    // A3 mêle les deux sens : la clé de « 86 − 10 » finit par « x », sans
+    // quoi elle serait celle de « 86 + 10 » (comme « 13 = 6 + □ » au lot 1).
+    return module === "A3" && d < 0 ? Object.freeze(Object.assign({}, calcul, {cle: `${calcul.cle}-x`})) : calcul;
+  }
+
+  // L'image, réponse montrée : les sauts, le saut direct dessous quand il y
+  // en a plusieurs, l'arrivée en vert.
+  function cheminImage(calcul, gras = 0) {
+    const {n, d, sauts} = calcul.donnees;
+    const image = {outil: "droite-sauts", depart: n, sauts: sauts.map(val => ({val})), acquis: [sauts.length], gras: sauts.length > 1 ? gras : 0};
+    if (sauts.length > 1) image.direct = d;
+    return image;
+  }
+
+  // L'outil du début de l'entraînement, et de « je représente » : les sauts
+  // donnés, toutes les arrivées « ? » (le point du milieu caché, 31/10).
+  function cheminAide(calcul) {
+    const image = cheminImage(calcul);
+    delete image.acquis;
+    return Object.assign(image, {inconnues: image.sauts.map((_, i) => i + 1)});
+  }
+
+  const sautsTexte = sauts => sauts.map(s => `${signe(s)} ${formaterNombre(Math.abs(s))}`).join(", puis ");
+
+  function cheminPhrase(calcul) {
+    let x = calcul.donnees.n;
+    const morceaux = calcul.donnees.sauts.map(s => {
+      x += s;
+      return `${signe(s)} ${formaterNombre(Math.abs(s))}, ça fait ${formaterNombre(x)}`;
+    });
+    return `Regarde : ${morceaux.join(" ; ")}.`;
+  }
+
+  // Le rekenrek (jusqu'à 100) : les dizaines, une rangée entière à la fois,
+  // puis les unités (finir ou vider la rangée quand elles passent la
+  // dizaine). La consigne d'un passage ne donne pas le découpage.
+  function cheminPerles(calcul) {
+    const {n, d, m, sauts} = calcul.donnees;
+    if (Math.max(n, m) > 100) return null;
+    const op = signe(d);
+    const dizaines = sauts[0];
+    const rangees = Math.abs(dizaines) / 10;
+    const gestes = [...Array.from({length: rangees}, () => Math.sign(d) * 10), ...sauts.slice(1)];
+    const x = n + dizaines;
+    const unites = d - dizaines;
+    const traces = [Object.freeze({apres: rangees, attente: `${n} ${op} ${Math.abs(dizaines)} = …`, texte: `${n} ${op} ${Math.abs(dizaines)} = ${x}`})];
+    if (unites) {
+      traces.push(Object.freeze({apres: gestes.length, attente: `${x} ${op} ${Math.abs(unites)} = …`, texte: `${x} ${op} ${Math.abs(unites)} = ${m}`}));
+      traces.push(Object.freeze({apres: gestes.length, attente: `${n} ${op} ${Math.abs(d)} = …`, texte: `${n} ${op} ${Math.abs(d)} = ${m}`}));
+    }
+    const verbe = d > 0 ? "Pousse" : "Retire";
+    const debut = rangees === 1 ? `${verbe} 10 perles d’un coup` : `${verbe} ${Math.abs(dizaines)} perles, 10 d’un coup`;
+    let consigne = `${debut}.`;
+    if (unites && sauts.length > 2) consigne = `${debut}, puis ${d > 0 ? "finis" : "vide"} la rangée et ${d > 0 ? "pousse" : "retire"} le reste.`;
+    else if (unites) consigne = Math.abs(unites) > 1 ? `${debut}, puis ${Math.abs(unites)} perles d’un coup.` : `${debut}, puis 1 perle.`;
+    return Object.freeze({
+      outil: "perles", depart: n, texte: `${n} ${op} ${Math.abs(d)}`,
+      gestes: Object.freeze(gestes), consigne, traces: Object.freeze(traces)
+    });
+  }
+
+  // Les trois temps de J'apprends d'A3, A4, A7, comme A10 et A11 : les
+  // perles (jusqu'à 100), la droite avec ses « ? », les étapes à remplir
+  // (avec, au-dessus, une ligne qui dit ce que vaut le nombre : « 715,
+  // c'est 71 dizaines et 5 unités »).
+  function cheminApprends({manipule, represente, ecris, etapes, consigne, consigneEcris = null, bilan}) {
+    const premier = manipule || represente;
+    return Object.freeze({
+      exemple: Object.freeze({texte: premier.texte.replace(` = ${CASE}`, ""), reponse: premier.reponse}),
+      manipule: manipule ? cheminPerles(manipule) : null,
+      represente: Object.freeze({
+        outil: "droite-sauts", consigne,
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(cheminAide(represente)),
+        solution: Object.freeze({image: cheminImage(represente), phrase: cheminPhrase(represente)})
+      }),
+      ecris: ecrisAvecDessins(Object.assign({
+        etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
+        reponse: ecris.reponse,
+        solution: Object.freeze({image: cheminImage(ecris), phrase: cheminPhrase(ecris)})
+      }, consigneEcris ? {consigne: consigneEcris} : {}), cheminDessins(ecris, etapes.length)),
+      bilan,
+      image: Object.freeze(cheminImage(premier)),
+      textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // Le dessin de « J'écris » (lot « relier ») : la droite du calcul, un saut
+  // par étape, puis le saut direct dessous. Quand le calcul a plus de sauts
+  // que d'étapes (58 + 34 : + 30, + 2, + 2, mais 88 + 4 = 92 s'écrit en une
+  // étape), la dernière étape avant le saut direct montre tous les sauts qui
+  // restent.
+  function cheminDessins(calcul, etapes) {
+    const {n, d, sauts} = calcul.donnees;
+    const direct = sauts.length > 1 ? d : undefined;
+    const avant = etapes - (direct === undefined ? 0 : 1);
+    const groupes = sauts.length > avant && avant > 0
+      ? Array.from({length: avant}, (_, k) => (k < avant - 1 ? [k] : sauts.map((_, i) => i).slice(k)))
+      : null;
+    return droiteDessins({depart: n, sauts, direct, trou: false, etapes, groupes});
+  }
+
+  // Du plus simple au plus dur : un saut de plus, le passage de la centaine
+  // (du millier), la taille des nombres.
+  function cheminDifficulte(calcul) {
+    const {n, d, m, sauts} = calcul.donnees;
+    const passages = [100, 1000, 10000].filter(g => franchit(n, d, g)).length;
+    return sauts.length * 400 + passages * 150 + String(Math.max(n, m)).length * 20 + (d < 0 ? 10 : 0) + (Math.abs(d) % 10) * 2 + (n % 10 === 0 ? 1 : 0);
+  }
+
+  // Le saut (à partir de 1) qui passe la centaine, pour le mettre en gras.
+  function sautQuiPasse(calcul, g) {
+    let x = calcul.donnees.n;
+    const rang = calcul.donnees.sauts.findIndex(s => {
+      const passe = Math.floor(x / g) !== Math.floor((x + s) / g);
+      x += s;
+      return passe;
+    });
+    return rang + 1;
+  }
+
+  // Les erreurs connues d'A4 et A7 (le même chemin, dans les deux sens).
+  const CHEMIN_CAUSES = Object.freeze({
+    unites: Object.freeze({
+      nom: "les unités oubliées",
+      test: (calcul, reponse) => memeNombre(reponse, calcul.donnees.n + dizainesDe(calcul.donnees.d)),
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        const dz = dizainesDe(d);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} ${signe(d)} ${Math.abs(dz)}. Il reste à ${d > 0 ? "ajouter" : "retirer"} ${Math.abs(d - dz)}.`;
+      },
+      gras: 2
+    }),
+    dizaines: Object.freeze({
+      nom: "les dizaines oubliées",
+      test: (calcul, reponse) => memeNombre(reponse, calcul.donnees.n + calcul.donnees.d - dizainesDe(calcul.donnees.d)),
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        const dz = dizainesDe(d);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} ${signe(d)} ${Math.abs(d - dz)}. Il faut d’abord ${d > 0 ? "ajouter" : "retirer"} les dizaines : ${formaterNombre(n)} ${signe(d)} ${Math.abs(dz)}.`;
+      },
+      gras: 1
+    }),
+    // 63 − 27 → 44 : 7 − 3 au lieu de passer la dizaine.
+    inverse: Object.freeze({
+      nom: "le petit chiffre retiré du grand",
+      test: (calcul, reponse) => calcul.donnees.inverse !== undefined && memeNombre(reponse, calcul.donnees.inverse),
+      retour: calcul => {
+        const {n, d} = calcul.donnees;
+        const x = n + dizainesDe(d);
+        const u = x % 10;
+        const v = Math.abs(d) % 10;
+        return `Tu as fait ${v} − ${u}. Mais on retire ${v} : après − ${Math.abs(dizainesDe(d))}, recule jusqu’à ${formaterNombre(x - u)}, puis encore.`;
+      },
+      gras: 2
+    }),
+    dizaine: Object.freeze({
+      nom: "la dizaine pas changée",
+      test: (calcul, reponse) => {
+        const {n, d, m} = calcul.donnees;
+        const dz = dizainesDe(d);
+        return franchit(n + dz, d - dz, 10) && memeNombre(reponse, m - 10 * Math.sign(d));
+      },
+      retour: (calcul, reponse) => {
+        const {n, d, sauts} = calcul.donnees;
+        const x = n + dizainesDe(d);
+        if (sauts.length < 3) return `${formaterNombre(reponse)} : la dizaine n’a pas changé. En reculant depuis ${formaterNombre(x)}, on passe sous ${formaterNombre(x)}.`;
+        const palier = x + sauts[1];
+        return `${formaterNombre(reponse)} : la dizaine n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(x)} ${signe(d)} ${Math.abs(sauts[1])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[2])}.`;
+      },
+      gras: 3
+    }),
+    centaine: Object.freeze({
+      nom: "la centaine pas changée",
+      test: (calcul, reponse) => franchit(calcul.donnees.n, calcul.donnees.d, 100) && memeNombre(reponse, calcul.donnees.m - 100 * Math.sign(calcul.donnees.d)),
+      retour: (calcul, reponse) => `${formaterNombre(reponse)} : la centaine n’a pas changé. Pars de ${formaterNombre(calcul.donnees.n)} et fais les sauts : ${sautsTexte(calcul.donnees.sauts)}.`,
+      gras: 0
+    }),
+    unPres: Object.freeze({
+      nom: "à 1 près",
+      test: (calcul, reponse) => Math.abs(reponse - calcul.reponse) === 1,
+      retour: calcul => `C’est à 1 près. Pars de ${formaterNombre(calcul.donnees.n)} et fais les sauts sans compter le départ : ${sautsTexte(calcul.donnees.sauts)}.`,
+      gras: 0
+    })
+  });
+  const cheminCauses = liste => Object.freeze(liste.map(([c, nom]) => {
+    const cause = Object.assign({c}, CHEMIN_CAUSES[nom]);
+    // La centaine : le saut qui la passe, en gras.
+    if (nom === "centaine") cause.grasDe = calcul => sautQuiPasse(calcul, 100);
+    return Object.freeze(cause);
+  }));
+  const A4_ERREURS = cheminCauses([[1, "unites"], [2, "dizaines"], [3, "dizaine"], [4, "centaine"], [5, "unPres"]]);
+  const A7_ERREURS = cheminCauses([[1, "inverse"], [2, "unites"], [3, "dizaines"], [4, "dizaine"], [5, "centaine"], [6, "unPres"]]);
+
+  // Les erreurs connues d'A3 : le chiffre du rang retiré à l'envers (715 − 30
+  // → 725), le mauvais rang (746 + 80 → 754), le rang du dessus pas changé
+  // (746 + 80 → 726), une dizaine (une centaine…) de trop ou de moins.
+  const A3_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le petit chiffre retiré du grand",
+      test: (calcul, reponse) => calcul.donnees.inverse !== undefined && memeNombre(reponse, calcul.donnees.inverse),
+      retour: calcul => {
+        const {n, d, sauts} = calcul.donnees;
+        const u = rangDe(d);
+        const k = Math.abs(d) / u;
+        return `Tu as fait ${k} − ${chiffreDe(n, u)}. Mais on retire ${k} ${NOMS_UNITE[u][k > 1 ? 1 : 0]} : recule jusqu’à ${formaterNombre(n + sauts[0])}, puis encore.`;
+      },
+      gras: 1
+    }),
+    Object.freeze({
+      c: 2, nom: "le mauvais rang",
+      test: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        return memeNombre(reponse, n + d / 10) || memeNombre(reponse, n + d * 10);
+      },
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        const u = rangDe(d);
+        const k = Math.abs(d) / u;
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} ${signe(d)} ${formaterNombre(Math.abs(reponse - n))}. Ici, on ${d > 0 ? "ajoute" : "retire"} ${k} ${NOMS_UNITE[u][k > 1 ? 1 : 0]} : ${signe(d)} ${formaterNombre(Math.abs(d))}.`;
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le rang du dessus pas changé",
+      test: (calcul, reponse) => {
+        const {n, d, m} = calcul.donnees;
+        const g = rangPasse(n, d);
+        return g !== null && memeNombre(reponse, m - g * Math.sign(d));
+      },
+      retour: (calcul, reponse) => {
+        const {n, d, m, sauts} = calcul.donnees;
+        const g = rangPasse(n, d);
+        const passe = (d > 0 ? Math.floor(m / g) : Math.floor(n / g)) * g;
+        const debut = `${formaterNombre(reponse)} : ${NOMS_RANG[g]} n’a pas changé.`;
+        if (sauts.length > 1) return `${debut} On passe ${formaterNombre(passe)} : ${formaterNombre(n)} ${signe(d)} ${formaterNombre(Math.abs(sauts[0]))} = ${formaterNombre(n + sauts[0])}, puis ${signe(d)} ${formaterNombre(Math.abs(sauts[1]))}.`;
+        return d > 0 ? `${debut} On passe ${formaterNombre(passe)}.` : `${debut} En reculant, on passe sous ${formaterNombre(passe)}.`;
+      },
+      gras: 2
+    }),
+    Object.freeze({
+      c: 4, nom: "une dizaine de trop ou de moins",
+      test: (calcul, reponse) => Math.abs(reponse - calcul.reponse) === rangDe(calcul.donnees.d),
+      retour: calcul => {
+        const {n, d, sauts} = calcul.donnees;
+        const u = rangDe(d);
+        return `C’est à ${u === 1000 ? "un" : "une"} ${NOMS_UNITE[u][0]} près. Pars de ${formaterNombre(n)} et fais les sauts : ${sautsTexte(sauts)}.`;
+      },
+      gras: 0
+    })
+  ]);
+
+  // Un niveau tiré au hasard selon sa règle : `tirer(rng, rang)` rend
+  // [n, d], ou null pour retirer. Jamais un résultat sous 11, ni égal à un
+  // nombre que les phrases des erreurs citent (60 − 30 = 30 : « − 30 » ;
+  // 1 200 − 700 = 500 : « − 200, puis − 500 » ; 360 + 40 = 400 :
+  // « 760, c’est 360 + 400 »).
+  function cheminNiveau(module, niveau, tirer) {
+    return function composer(rng, total, imposes) {
+      const pris = new Set(imposes.map(c => c.cle));
+      const liste = [];
+      let essais = 0;
+      while (liste.length < Math.max(0, total - imposes.length) && essais < 20000) {
+        essais += 1;
+        const tire = tirer(rng, liste.length);
+        if (!tire) continue;
+        const [n, d] = tire;
+        const m = n + d;
+        if (m < 11 || [d, d * 10, d / 10, dizainesDe(d)].some(x => Math.abs(x) === m)) continue;
+        const calcul = ligneChemin(module, niveau, n, d);
+        if (pris.has(calcul.cle) || calcul.donnees.sauts.some(saut => Math.abs(saut) === m)) continue;
+        pris.add(calcul.cle);
+        liste.push(calcul);
+      }
+      return [...liste, ...imposes];
+    };
+  }
+
+  // A3-1 : sans passage. 3 calculs sur 10 sur un nombre à deux chiffres
+  // (76 − 30 : les perles), 4 avec des dizaines sur trois chiffres
+  // (234 + 60), 3 avec des centaines (765 − 200) ; un sur deux en retirant.
+  // Arriver juste sur la centaine (340 + 60 = 400) est sans passage.
+  const a3Niveau1 = cheminNiveau("A3", 1, (rng, rang) => {
+    const sorte = rang % 10 < 3 ? 0 : rang % 10 < 7 ? 1 : 2;
+    const n = sorte === 0 ? entierEntre(rng, 11, 99) : entierEntre(rng, 101, 999);
+    const d = (rang % 2 ? -1 : 1) * entierEntre(rng, 1, 9) * (sorte === 2 ? 100 : 10);
+    return franchit(n, d, 10 * rangDe(d)) ? null : [n, d];
+  });
+  // A3-2 : des dizaines en passant la centaine, sous 1 000 (746 + 80,
+  // 715 − 30, 792 + 10). Un sur cinq part d'un nombre à deux chiffres
+  // (76 + 50), un sur cinq recule depuis le début de la centaine (705 − 30).
+  const a3Niveau2 = cheminNiveau("A3", 2, (rng, rang) => {
+    const k = entierEntre(rng, 1, 9);
+    let n = entierEntre(rng, 101, 999);
+    let d = (rang % 2 ? -10 : 10) * k;
+    if (rang % 5 === 1) { n = entierEntre(rng, 11, 99); d = 10 * k; }
+    if (rang % 5 === 3) { n = entierEntre(rng, 1, 9) * 100 + entierEntre(rng, 0, 9); d = -10 * k; }
+    return franchit(n, d, 100) && !franchit(n, d, 1000) && n + d < 1000 ? [n, d] : null;
+  });
+  // A3-3 : passer le millier, avec des dizaines (950 + 70, 1 030 − 50) ou
+  // des centaines (2 800 + 400, 1 200 − 400), sur des nombres ronds.
+  const a3Niveau3 = cheminNiveau("A3", 3, (rng, rang) => {
+    const u = rang % 2 ? 100 : 10;
+    const s = Math.floor(rang / 2) % 2 ? -1 : 1;
+    const millier = entierEntre(rng, 1, 9) * 1000;
+    const n = millier - s * u * entierEntre(rng, 1, 9);
+    const d = s * u * entierEntre(rng, 1, 9);
+    return franchit(n, d, 1000) && n + d < 10000 ? [n, d] : null;
+  });
+  // A3-4 : les grands nombres, à 4 ou 5 chiffres. La moitié ajoute ou
+  // retire des milliers (21 462 + 3 000 ; 47 530 + 6 000, en passant la
+  // dizaine de mille) ; l'autre moitié des centaines ou des dizaines, sans
+  // passage (1 462 + 300 ; 6 780 − 50). Un sur trois en retirant.
+  const a3Niveau4 = cheminNiveau("A3", 4, (rng, rang) => {
+    const u = rang % 2 === 0 ? 1000 : rang % 4 === 1 ? 100 : 10;
+    const n = entierEntre(rng, 1001, 99999);
+    const d = (rang % 3 === 2 ? -1 : 1) * u * entierEntre(rng, 1, 9);
+    const m = n + d;
+    if (m < 1000 || m >= 100000) return null;
+    return u < 1000 && franchit(n, d, 10 * u) ? null : [n, d];
+  });
+
+  const deuxChiffres = rng => 10 * entierEntre(rng, 1, 9) + entierEntre(rng, 1, 9);
+  // A4-1 : deux chiffres + deux chiffres sans passer la dizaine, sous 100
+  // (42 + 35 ; 42 + 38 = 80 compris).
+  const a4Niveau1 = cheminNiveau("A4", 1, rng => {
+    const n = entierEntre(rng, 11, 89);
+    const a = deuxChiffres(rng);
+    return n % 10 + a % 10 <= 10 && n + a <= 99 ? [n, a] : null;
+  });
+  // A4-2 : en passant la dizaine, sous 100 (47 + 28 ; 36 + 47).
+  const a4Niveau2 = cheminNiveau("A4", 2, rng => {
+    const n = entierEntre(rng, 11, 89);
+    const a = deuxChiffres(rng);
+    return n % 10 + a % 10 >= 11 && n + a <= 99 ? [n, a] : null;
+  });
+  // A4-3 : le résultat passe 100 (78 + 45 ; 96 + 37 ; 64 + 52).
+  const a4Niveau3 = cheminNiveau("A4", 3, rng => {
+    const n = entierEntre(rng, 11, 99);
+    const a = deuxChiffres(rng);
+    return n + a >= 101 ? [n, a] : null;
+  });
+  // A4-4 : trois chiffres + deux chiffres (168 + 18 ; 275 + 46).
+  const a4Niveau4 = cheminNiveau("A4", 4, rng => {
+    const n = entierEntre(rng, 101, 899);
+    const a = deuxChiffres(rng);
+    return n + a <= 999 ? [n, a] : null;
+  });
+
+  // A7-1 : sans passer la dizaine (78 − 35 ; 576 − 34), un sur deux à trois
+  // chiffres, sans passer la centaine (78 − 38 = 40 compris).
+  const a7Niveau1 = cheminNiveau("A7", 1, (rng, rang) => {
+    const n = rang % 2 ? entierEntre(rng, 101, 999) : entierEntre(rng, 21, 99);
+    const a = deuxChiffres(rng);
+    return n % 10 >= a % 10 && !franchit(n, -a, 100) ? [n, -a] : null;
+  });
+  // A7-2 : en passant la dizaine (63 − 27 ; 82 − 47 ; 543 − 27), sans
+  // passer la centaine ; un sur cinq depuis une dizaine entière (60 − 27),
+  // un sur trois à trois chiffres.
+  const a7Niveau2 = cheminNiveau("A7", 2, (rng, rang) => {
+    let n = rang % 3 === 2 ? entierEntre(rng, 101, 999) : entierEntre(rng, 21, 99);
+    if (rang % 5 === 4) n -= n % 10;
+    const a = deuxChiffres(rng);
+    return n % 10 < a % 10 && !franchit(n, -a, 100) ? [n, -a] : null;
+  });
+  // A7-3 : en passant la centaine (523 − 67 ; 412 − 35).
+  const a7Niveau3 = cheminNiveau("A7", 3, rng => {
+    const n = entierEntre(rng, 101, 999);
+    const a = deuxChiffres(rng);
+    return franchit(n, -a, 100) ? [n, -a] : null;
+  });
+
+  const chemin = (module, n, d) => ligneChemin(module, 0, n, d);
+  const commun = {famille: "A", construit: true, aide_entraine: "droite-sauts", image: cheminImage, aide: cheminAide, manipulation: cheminPerles, difficulte: cheminDifficulte};
+
+  const A3 = Object.assign({
+    id: "A3", nom: "Ajouter, retrancher des dizaines, des centaines entières", exemple: "76 − 30",
+    erreurs: A3_ERREURS,
+    niveaux: [
+      {
+        n: 1, titre: "sans passage", nom: "Dizaines, centaines entières sans passage", palier: 1, type: "P",
+        composer: a3Niveau1,
+        imposes: [ligneChemin("A3", 1, 541, -20), ligneChemin("A3", 1, 765, -200)],
+        apprends: cheminApprends({
+          manipule: chemin("A3", 76, -30),
+          represente: chemin("A3", 354, 500),
+          ecris: chemin("A3", 234, 60),
+          etapes: [["3 + 6 = ?", 9], ["234 + 60 = ?", 294]],
+          consigneEcris: "Dans 234, le chiffre des dizaines est 3.",
+          consigne: "J’avance de 5 centaines : seul le chiffre des centaines change.",
+          bilan: "Quand j’ajoute ou que je retire des dizaines, seul le chiffre des dizaines change : 76 − 30 = 46."
+        })
+      },
+      {
+        n: 2, titre: "passage de la centaine", nom: "Dizaines entières en passant la centaine", palier: 1, type: "P",
+        composer: a3Niveau2,
+        imposes: [ligneChemin("A3", 2, 792, 10), ligneChemin("A3", 2, 534, -70)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A3", 746, 80),
+          ecris: chemin("A3", 715, -30),
+          etapes: [["715 − 10 = ?", 705], ["705 − 20 = ?", 685], ["715 − 30 = ?", 685]],
+          consigneEcris: "715, c’est 71 dizaines et 5 unités.",
+          consigne: "Je complète la centaine avec des dizaines, puis j’ajoute le reste.",
+          bilan: "Pour passer la centaine, je la complète avec des dizaines, puis j’ajoute le reste : 746 + 80 = 746 + 60 + 20 = 826."
+        })
+      },
+      {
+        n: 3, titre: "passage du millier", nom: "Dizaines, centaines en passant le millier", palier: 2, type: "P",
+        composer: a3Niveau3,
+        imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 2800, 400)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A3", 950, 70),
+          ecris: chemin("A3", 1200, -400),
+          etapes: [[`1${ESPACE_FINE}200 − 200 = ?`, 1000], [`1${ESPACE_FINE}000 − 200 = ?`, 800], [`1${ESPACE_FINE}200 − 400 = ?`, 800]],
+          consigneEcris: `1${ESPACE_FINE}200, c’est 12 centaines.`,
+          consigne: "Je vais au millier, puis j’ajoute le reste.",
+          bilan: `Pour passer le millier, je vais d’abord au millier, puis j’ajoute le reste : 950 + 70 = 950 + 50 + 20 = 1${ESPACE_FINE}020.`
+        })
+      },
+      {
+        n: 4, titre: "milliers dans les grands nombres", nom: "Milliers dans les grands nombres", palier: 3, type: "P",
+        composer: a3Niveau4,
+        imposes: [ligneChemin("A3", 4, 1462, 300), ligneChemin("A3", 4, 6780, -50)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A3", 47530, 6000),
+          ecris: chemin("A3", 21462, 3000),
+          etapes: [["1 + 3 = ?", 4], [`21${ESPACE_FINE}462 + 3${ESPACE_FINE}000 = ?`, 24462]],
+          consigneEcris: `Dans 21${ESPACE_FINE}462, le chiffre des milliers est 1.`,
+          consigne: "Je vais à la dizaine de mille, puis j’ajoute le reste.",
+          bilan: `Dans un grand nombre, je repère le chiffre qui change : 47${ESPACE_FINE}530 + 6${ESPACE_FINE}000 = 47${ESPACE_FINE}530 + 3${ESPACE_FINE}000 + 3${ESPACE_FINE}000 = 53${ESPACE_FINE}530.`
+        })
+      }
+    ]
+  }, commun);
+
+  const A4 = Object.assign({
+    id: "A4", nom: "Additionner deux nombres", exemple: "42 + 35",
+    erreurs: A4_ERREURS,
+    niveaux: [
+      {
+        n: 1, titre: "deux chiffres, sans retenue", nom: "Additionner sans passer la dizaine", palier: 1, type: "P",
+        composer: a4Niveau1,
+        imposes: [ligneChemin("A4", 1, 53, 24), ligneChemin("A4", 1, 26, 42)],
+        apprends: cheminApprends({
+          manipule: chemin("A4", 42, 35),
+          represente: chemin("A4", 51, 27),
+          ecris: chemin("A4", 61, 28),
+          etapes: [["61 + 20 = ?", 81], ["81 + 8 = ?", 89], ["61 + 28 = ?", 89]],
+          consigne: "Je garde 51 : j’ajoute les dizaines, puis les unités.",
+          bilan: "J’ajoute les dizaines, puis les unités : 42 + 35 = 42 + 30 + 5 = 77."
+        })
+      },
+      {
+        n: 2, titre: "deux chiffres, avec retenue", nom: "Additionner en passant la dizaine", palier: 1, type: "P",
+        composer: a4Niveau2,
+        imposes: [ligneChemin("A4", 2, 36, 47), ligneChemin("A4", 2, 28, 56)],
+        apprends: cheminApprends({
+          manipule: chemin("A4", 47, 28),
+          represente: chemin("A4", 36, 57),
+          ecris: chemin("A4", 58, 34),
+          etapes: [["58 + 30 = ?", 88], ["88 + 4 = ?", 92], ["58 + 34 = ?", 92]],
+          consigne: "Je garde 36 : j’ajoute les dizaines, puis je passe la dizaine.",
+          bilan: "J’ajoute les dizaines, puis les unités en passant par la dizaine : 47 + 28 = 47 + 20 + 3 + 5 = 75."
+        })
+      },
+      {
+        n: 3, titre: "résultat qui passe 100", nom: "Additionner au-delà de 100", palier: 1, type: "P",
+        composer: a4Niveau3,
+        imposes: [ligneChemin("A4", 3, 96, 37), ligneChemin("A4", 3, 64, 52)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A4", 78, 45),
+          ecris: chemin("A4", 87, 36),
+          etapes: [["87 + 30 = ?", 117], ["117 + 6 = ?", 123], ["87 + 36 = ?", 123]],
+          consigne: "Je garde 78 : j’ajoute les dizaines, puis les unités.",
+          bilan: "J’ajoute les dizaines, puis les unités, même au-delà de 100 : 78 + 45 = 78 + 40 + 5 = 123."
+        })
+      },
+      {
+        n: 4, titre: "trois chiffres + deux chiffres", nom: "Trois chiffres + deux chiffres", palier: 2, type: "P",
+        composer: a4Niveau4,
+        imposes: [ligneChemin("A4", 4, 168, 18), ligneChemin("A4", 4, 482, 35)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A4", 275, 46),
+          ecris: chemin("A4", 347, 28),
+          etapes: [["347 + 20 = ?", 367], ["367 + 8 = ?", 375], ["347 + 28 = ?", 375]],
+          consigne: "Je garde 275 : j’ajoute les dizaines, puis les unités.",
+          bilan: "Avec trois chiffres aussi, j’ajoute les dizaines, puis les unités : 275 + 46 = 275 + 40 + 6 = 321."
+        })
+      }
+    ]
+  }, commun);
+
+  const A7 = Object.assign({
+    id: "A7", nom: "Soustraire un nombre à deux chiffres", exemple: "78 − 35",
+    erreurs: A7_ERREURS,
+    niveaux: [
+      {
+        n: 1, titre: "sans retenue", nom: "Soustraire sans passer la dizaine", palier: 1, type: "P",
+        composer: a7Niveau1,
+        imposes: [ligneChemin("A7", 1, 576, -34), ligneChemin("A7", 1, 95, -42)],
+        apprends: cheminApprends({
+          manipule: chemin("A7", 78, -35),
+          represente: chemin("A7", 486, -53),
+          ecris: chemin("A7", 89, -46),
+          etapes: [["89 − 40 = ?", 49], ["49 − 6 = ?", 43], ["89 − 46 = ?", 43]],
+          consigne: "Je garde 486 : je retire les dizaines, puis les unités.",
+          bilan: "Je retire les dizaines, puis les unités : 78 − 35 = 78 − 30 − 5 = 43."
+        })
+      },
+      {
+        n: 2, titre: "avec passage de la dizaine", nom: "Soustraire en passant la dizaine", palier: 1, type: "P",
+        composer: a7Niveau2,
+        imposes: [ligneChemin("A7", 2, 82, -47), ligneChemin("A7", 2, 70, -24)],
+        apprends: cheminApprends({
+          manipule: chemin("A7", 63, -27),
+          represente: chemin("A7", 81, -46),
+          ecris: chemin("A7", 74, -38),
+          etapes: [["74 − 30 = ?", 44], ["44 − 8 = ?", 36], ["74 − 38 = ?", 36]],
+          consigne: "Je garde 81 : je retire les dizaines, puis je passe la dizaine.",
+          bilan: "Je retire les dizaines, puis les unités en passant par la dizaine : 63 − 27 = 63 − 20 − 3 − 4 = 36."
+        })
+      },
+      {
+        n: 3, titre: "passage de la centaine", nom: "Soustraire en passant la centaine", palier: 2, type: "P",
+        composer: a7Niveau3,
+        imposes: [ligneChemin("A7", 3, 412, -35), ligneChemin("A7", 3, 704, -28)],
+        apprends: cheminApprends({
+          manipule: null,
+          represente: chemin("A7", 523, -67),
+          ecris: chemin("A7", 615, -38),
+          etapes: [["615 − 30 = ?", 585], ["585 − 8 = ?", 577], ["615 − 38 = ?", 577]],
+          consigne: "Je garde 523 : je retire les dizaines, puis les unités.",
+          bilan: "Je retire les dizaines, puis les unités, même en passant la centaine : 523 − 67 = 523 − 60 − 7 = 456."
+        })
+      }
+    ]
+  }, commun);
+
+  // -------------------------------------------- A6 : retrancher 9, 19, 29… et 8, 18, 28…
+  //
+  // Modules lot 2 (31/10/2026). Le miroir d'A5 (remarque du 30/10) : − 9,
+  // c'est − 10 puis + 1. La même droite (le grand recul, le petit retour,
+  // le saut direct dessous), les mêmes perles (des rangées entières d'un
+  // coup, puis on remet), les mêmes erreurs à l'envers. Jamais de résultat
+  // négatif.
+
+  function a6Difference(niveau, n, a) {
+    return fabriquer("A6", niveau, "difference", [n, "−", a, "=", TROU], n - a, {n, a});
+  }
+
+  const a6Passage = calcul => franchit(calcul.donnees.n, -calcul.donnees.a, 100);
+
+  function a6Niveau(niveau, retraits) {
+    return function composer(rng, total, imposes) {
+      const pris = new Set(imposes.map(c => c.cle));
+      const liste = [];
+      let essais = 0;
+      while (liste.length < Math.max(0, total - imposes.length) && essais < 20000) {
+        essais += 1;
+        const rang = liste.length;
+        const a = choisir(rng, retraits);
+        // − 9 : 2 passages de la centaine sur 10 (105 − 9) ; − 99 : le
+        // millier une fois sur cinq (1 040 − 99).
+        let n = entierEntre(rng, a + 11, 999);
+        if (niveau === 1 && rang % 5 === 2) n = entierEntre(rng, 1, 9) * 100 + entierEntre(rng, 1, 8);
+        if (niveau === 4 && rang % 5 === 4) n = 1000 + entierEntre(rng, 0, a - 1);
+        // Le résultat n'est jamais un nombre de la phrase (59 − 29 = 30,
+        // 36 − 18 = 18).
+        if (n - a < 11 || n - a === a5Arrondi(a) || n - a === a) continue;
+        const calcul = a6Difference(niveau, n, a);
+        if (pris.has(calcul.cle)) continue;
+        pris.add(calcul.cle);
+        liste.push(calcul);
+      }
+      return [...liste, ...imposes];
+    };
+  }
+
+  function a6Image(calcul, gras = 0) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return {outil: "droite-sauts", depart: n, sauts: [{val: -r}, {val: r - a}], direct: -a, acquis: [2], gras};
+  }
+
+  function a6Aide(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return {outil: "droite-sauts", depart: n, sauts: [{val: -r}, {val: r - a}], direct: -a, inconnues: [1, 2]};
+  }
+
+  function a6Difficulte(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return a * 10 + (r - a) * 100 + (a6Passage(calcul) ? 400 : 0) + String(n).length * 30 + (n % 10 ? 0 : 20);
+  }
+
+  // Le rekenrek (jusqu'à 100) : des rangées entières retirées d'un coup,
+  // puis on remet.
+  function a6Perles(calcul) {
+    const {n, a} = calcul.donnees;
+    if (n > 100) return null;
+    const r = a5Arrondi(a);
+    const d = r - a;
+    const rangees = r / 10;
+    return Object.freeze({
+      outil: "perles", depart: n, texte: `${n} − ${a}`,
+      gestes: Object.freeze([...Array.from({length: rangees}, () => -10), d]),
+      consigne: rangees === 1
+        ? `Retire 10 perles d’un coup, puis remets-en ${d}.`
+        : `Retire ${r} perles, 10 d’un coup, puis remets-en ${d}${d > 1 ? " d’un coup" : ""}.`,
+      traces: Object.freeze([
+        Object.freeze({apres: rangees, attente: `${n} − ${r} = …`, texte: `${n} − ${r} = ${n - r}`}),
+        Object.freeze({apres: rangees + 1, attente: `${n - r} + ${d} = …`, texte: `${n - r} + ${d} = ${n - a}`})
+      ])
+    });
+  }
+
+  function a6Etapes(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    const etape = (texte, reponse) => Object.freeze({texte, reponse});
+    return Object.freeze([
+      etape(`${formaterNombre(n)} − ${r} = ${CASE}`, n - r),
+      etape(`${formaterNombre(n - r)} + ${r - a} = ${CASE}`, n - a),
+      etape(`${formaterNombre(n)} − ${a} = ${CASE}`, n - a)
+    ]);
+  }
+
+  function a6Phrase(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return `Regarde : − ${r}, ça fait ${formaterNombre(n - r)} ; + ${r - a}, ça fait ${formaterNombre(n - a)}.`;
+  }
+
+  const A6_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "retour oublié",
+      test: (calcul, reponse) => memeNombre(reponse, calcul.donnees.n - a5Arrondi(calcul.donnees.a)),
+      retour: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} − ${r}. Il reste à remettre ${r - a}.`;
+      },
+      gras: 2
+    }),
+    Object.freeze({
+      c: 2, nom: "retour dans le mauvais sens",
+      test: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return memeNombre(reponse, n - r - (r - a));
+      },
+      retour: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} − ${r} − ${r - a}. Après − ${r}, il faut remettre ${r - a}, pas l’enlever.`;
+      },
+      gras: 2
+    }),
+    Object.freeze({
+      c: 3, nom: "dizaines oubliées",
+      test: (calcul, reponse) => calcul.donnees.a >= 18 && memeNombre(reponse, calcul.donnees.n - calcul.donnees.a % 10),
+      retour: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} − ${a % 10}. − ${a}, c’est − ${r} puis + ${r - a}.`;
+      },
+      gras: 1
+    }),
+    Object.freeze({
+      c: 4, nom: "retour de 1 au lieu de 2",
+      test: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return r - a === 2 && memeNombre(reponse, n - r + 1);
+      },
+      retour: (calcul, reponse) => {
+        const {n, a} = calcul.donnees;
+        const r = a5Arrondi(a);
+        return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} − ${r} + 1. Pour − ${a}, c’est − ${r} puis + 2.`;
+      },
+      gras: 2
+    })
+  ]);
+
+  // Les trois temps d'un niveau d'A6, comme A5, sur trois calculs
+  // différents : les perles (jusqu'à 100), la droite avec le détour, les
+  // étapes.
+  function a6Apprends(nM, nR, nE, a, bilan) {
+    const r = a5Arrondi(a);
+    const d = r - a;
+    const cM = a6Difference(0, nM, a);
+    const cR = a6Difference(0, nR, a);
+    const cE = a6Difference(0, nE, a);
+    const manipule = a6Perles(cM);
+    const premier = manipule ? cM : cR;
+    return Object.freeze({
+      exemple: Object.freeze({texte: `${premier.donnees.n} − ${a}`, reponse: premier.reponse}),
+      manipule,
+      represente: Object.freeze({
+        outil: "droite-sauts",
+        consigne: `− ${a}, c’est − ${r} puis + ${d}.`,
+        texte: cR.texte, reponse: cR.reponse,
+        image: Object.freeze(a6Aide(cR)),
+        solution: Object.freeze({image: a6Image(cR), phrase: a6Phrase(cR)})
+      }),
+      ecris: ecrisAvecDessins({
+        etapes: a6Etapes(cE), reponse: cE.reponse,
+        solution: Object.freeze({image: a6Image(cE), phrase: a6Phrase(cE)})
+      }, droiteDessins({depart: cE.donnees.n, sauts: [-r, d], direct: -a, trou: false, etapes: a6Etapes(cE).length})),
+      bilan,
+      image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: -r}, {val: d}], direct: -a, acquis: [2]}),
+      textes: Object.freeze([premier.texte, cR.texte, cE.texte])
+    });
+  }
+
+  const A6 = {
+    id: "A6", nom: "Retrancher 9, 19, 29… et 8, 18, 28…", exemple: "63 − 9",
+    famille: "A", construit: true,
+    aide_entraine: "droite-sauts",
+    erreurs: A6_ERREURS, image: a6Image, aide: a6Aide, manipulation: a6Perles, difficulte: a6Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "− 9", palier: 1, type: "P",
+        composer: a6Niveau(1, [9]),
+        imposes: [a6Difference(1, 105, 9), a6Difference(1, 31, 9)],
+        apprends: a6Apprends(63, 85, 142, 9, "− 9, c’est − 10 puis + 1 : 63 − 9 = 63 − 10 + 1 = 54.")
+      },
+      {
+        n: 2, titre: "− 19, 29, 39", palier: 1, type: "P",
+        composer: a6Niveau(2, [19, 29, 39]),
+        imposes: [a6Difference(2, 143, 29), a6Difference(2, 86, 39)],
+        apprends: a6Apprends(72, 154, 86, 29, "Pour retrancher 29, je retranche 30, puis j’ajoute 1 : 72 − 29 = 72 − 30 + 1 = 43.")
+      },
+      {
+        n: 3, titre: "− 8, 18, 28, 38", palier: 2, type: "P",
+        composer: a6Niveau(3, [8, 18, 28, 38]),
+        imposes: [a6Difference(3, 71, 18), a6Difference(3, 250, 38)],
+        apprends: a6Apprends(73, 145, 92, 18, "Pour retrancher 18, je retranche 20, puis j’ajoute 2 : 73 − 18 = 73 − 20 + 2 = 55.")
+      },
+      {
+        n: 4, titre: "− 48, 49… 98, 99", palier: 3, type: "P",
+        composer: a6Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
+        imposes: [a6Difference(4, 210, 98), a6Difference(4, 1040, 99)],
+        apprends: a6Apprends(250, 432, 710, 99, "Pour retrancher 99, je retranche 100, puis j’ajoute 1 : 432 − 99 = 432 − 100 + 1 = 333.")
+      }
+    ]
+  };
+
+  // ---------------------------------- A8 : soustraire par l'écart (nombres proches)
+  //
+  // Modules lot 2 (31/10/2026). Quand les deux nombres sont proches, la
+  // droite ne recule pas : elle avance du petit au grand, comme les
+  // compléments d'A2 (73 − 68 : 68 → 70 → 73, + 2 puis + 3). La soustraction
+  // se lit comme un écart. Consigne choisie le 31/10 : « Les nombres sont
+  // proches : je pars de 68 et j'avance jusqu'à 73. » Données : {n, d, m}
+  // comme un trou de A1 (n le petit nombre, m le grand, d l'écart).
+
+  function ligneEcart(niveau, forme, petit, grand) {
+    const e = grand - petit;
+    // `chiffres` : la réponse fausse « chiffre par chiffre » (73 − 68 → 15).
+    const donnees = {n: petit, d: e, m: grand, chiffres: chiffreParChiffre(grand, petit)};
+    if (forme === "ecart") return fabriquer("A8", niveau, forme, [grand, "−", petit, "=", TROU], e, donnees);
+    return fabriquer("A8", niveau, forme, [grand, "−", TROU, "=", petit], e, donnees);
+  }
+
+  // « 15 » pour 73 − 68 : chaque chiffre, le petit retiré du grand.
+  function chiffreParChiffre(grand, petit) {
+    let resultat = 0;
+    for (let a = grand, b = petit, p = 1; a > 0 || b > 0; a = Math.floor(a / 10), b = Math.floor(b / 10), p *= 10) resultat += Math.abs(a % 10 - b % 10) * p;
+    return resultat;
+  }
+
+  const A8_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "chiffre par chiffre",
+      test: (calcul, reponse) => memeNombre(reponse, calcul.donnees.chiffres),
+      retour: (calcul, reponse) => {
+        const {n, m} = calcul.donnees;
+        return `${formaterNombre(reponse)} : tu as retiré chiffre par chiffre, le petit du grand. Les nombres sont proches : pars de ${formaterNombre(n)} et avance jusqu’à ${formaterNombre(m)}.`;
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "arrêté à la dizaine",
+      test: (calcul, reponse) => {
+        const {palier, sauts} = sautsDuCalcul(calcul);
+        return palier !== null && memeNombre(reponse, sauts[0]);
+      },
+      retour: (calcul, reponse) => {
+        const {palier} = sautsDuCalcul(calcul);
+        return `${formaterNombre(reponse)}, c’est de ${formaterNombre(calcul.donnees.n)} à ${formaterNombre(palier)}. Continue jusqu’à ${formaterNombre(calcul.donnees.m)}.`;
+      },
+      gras: 2
+    }),
+    Object.freeze({
+      c: 3, nom: "parti de la dizaine",
+      test: (calcul, reponse) => {
+        const {palier, sauts} = sautsDuCalcul(calcul);
+        return palier !== null && memeNombre(reponse, sauts[1]);
+      },
+      retour: (calcul, reponse) => {
+        const {palier} = sautsDuCalcul(calcul);
+        return `${formaterNombre(reponse)}, c’est de ${formaterNombre(palier)} à ${formaterNombre(calcul.donnees.m)}. Il faut partir de ${formaterNombre(calcul.donnees.n)}.`;
+      },
+      gras: 1
+    }),
+    Object.freeze(Object.assign({c: 4}, PLUS_CAUSES.ajoute)),
+    Object.freeze(Object.assign({c: 5}, PLUS_CAUSES.unPres))
+  ]);
+
+  // Du plus simple au plus dur : l'écriture (« 4 000 − □ = 3 999 » à la
+  // fin), l'écart, la taille.
+  function a8Difficulte(calcul) {
+    const {d, m} = calcul.donnees;
+    return (calcul.forme === "ecart-trou" ? 2000 : 0) + d * 20 + String(m).length * 5;
+  }
+
+  // Le rekenrek (jusqu'à 100) : on part du petit nombre, on finit la
+  // rangée d'un coup, puis on pousse jusqu'au grand.
+  function a8Perles(calcul) {
+    const perles = plusPerles(calcul);
+    if (!perles) return null;
+    const {n, d, m} = calcul.donnees;
+    const traces = perles.traces.slice(0, -1).concat(Object.freeze({apres: perles.gestes.length, attente: `${m} − ${n} = …`, texte: `${m} − ${n} = ${d}`}));
+    return Object.freeze(Object.assign({}, perles, {
+      texte: `${m} − ${n}`,
+      consigne: `Pars de ${n} : finis la rangée d’un coup, puis pousse jusqu’à ${m}.`,
+      traces: Object.freeze(traces)
+    }));
+  }
+
+  // Un niveau d'A8 : `tirer(rng, rang)` rend [petit, grand, forme] ou null.
+  function a8Niveau(niveau, tirer) {
+    return function composer(rng, total, imposes) {
+      const pris = new Set(imposes.map(c => c.cle));
+      const liste = [];
+      let essais = 0;
+      while (liste.length < Math.max(0, total - imposes.length) && essais < 20000) {
+        essais += 1;
+        const tire = tirer(rng, liste.length);
+        if (!tire) continue;
+        const calcul = ligneEcart(niveau, tire[2], tire[0], tire[1]);
+        if (pris.has(calcul.cle)) continue;
+        pris.add(calcul.cle);
+        liste.push(calcul);
+      }
+      return [...liste, ...imposes];
+    };
+  }
+
+  // A8-1 : deux nombres à deux chiffres, de part et d'autre d'une dizaine,
+  // à moins de 10 l'un de l'autre (73 − 68 ; 52 − 47).
+  const a8Niveau1 = a8Niveau(1, rng => {
+    const petit = entierEntre(rng, 11, 88);
+    const grand = petit + entierEntre(rng, 2, 9);
+    return grand <= 99 && grand % 10 !== 0 && Math.floor(grand / 10) !== Math.floor(petit / 10) ? [petit, grand, "ecart"] : null;
+  });
+  // A8-2 : de part et d'autre d'une centaine (402 − 397 ; 103 − 97).
+  const a8Niveau2 = a8Niveau(2, rng => {
+    const centaine = entierEntre(rng, 1, 9) * 100;
+    const petit = centaine - entierEntre(rng, 1, 9);
+    const grand = petit + entierEntre(rng, 2, 9);
+    return grand > centaine && grand < 1000 ? [petit, grand, "ecart"] : null;
+  });
+  // A8-3 : de part et d'autre d'un millier (1 003 − 996), et une fois sur
+  // trois « 4 000 − □ = 3 999 » (exemple officiel de CM1).
+  const a8Niveau3 = a8Niveau(3, (rng, rang) => {
+    const millier = entierEntre(rng, 1, 9) * 1000;
+    const petit = millier - entierEntre(rng, 1, 9);
+    const grand = millier + entierEntre(rng, 0, 9);
+    return grand - petit <= 12 ? [petit, grand, rang % 3 === 2 ? "ecart-trou" : "ecart"] : null;
+  });
+
+  // Les trois temps d'un niveau d'A8 : les perles (jusqu'à 100), la droite
+  // qui avance du petit au grand (les sauts « + ? »), les étapes.
+  function a8Apprends({manipule, represente, ecris, etapes, bilan}) {
+    const premier = manipule || represente;
+    const {n, m} = represente.donnees;
+    return Object.freeze({
+      exemple: Object.freeze({texte: `${formaterNombre(premier.donnees.m)} − ${formaterNombre(premier.donnees.n)}`, reponse: premier.reponse}),
+      manipule: manipule ? a8Perles(manipule) : null,
+      represente: Object.freeze({
+        outil: "droite-sauts",
+        consigne: `Les nombres sont proches : je pars de ${formaterNombre(n)} et j’avance jusqu’à ${formaterNombre(m)}.`,
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(plusAide(represente)),
+        solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
+        reponse: ecris.reponse,
+        solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
+      }, plusDessins(ecris, etapes.length)),
+      bilan,
+      image: Object.freeze(plusImage(premier)),
+      textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const ecart = (petit, grand, forme = "ecart") => ligneEcart(0, forme, petit, grand);
+
+  const A8 = {
+    id: "A8", nom: "Soustraire par l’écart (nombres proches)", exemple: "73 − 68",
+    famille: "A", construit: true,
+    aide_entraine: "droite-sauts",
+    erreurs: A8_ERREURS, image: plusImage, aide: plusAide, manipulation: a8Perles, difficulte: a8Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "deux chiffres proches", nom: "Écart entre deux nombres proches", palier: 1, type: "P",
+        composer: a8Niveau1,
+        imposes: [ligneEcart(1, "ecart", 86, 91), ligneEcart(1, "ecart", 57, 63)],
+        apprends: a8Apprends({
+          manipule: ecart(68, 73),
+          represente: ecart(47, 52),
+          ecris: ecart(76, 81),
+          etapes: [["76 + ? = 80", 4], ["80 + ? = 81", 1], ["81 − 76 = ?", 5]],
+          bilan: "Quand les nombres sont proches, je pars du petit et j’avance jusqu’au grand : 73 − 68 = 2 + 3 = 5."
+        })
+      },
+      {
+        n: 2, titre: "de part et d’autre d’une centaine", nom: "Écart de part et d’autre d’une centaine", palier: 2, type: "P",
+        composer: a8Niveau2,
+        imposes: [ligneEcart(2, "ecart", 296, 305), ligneEcart(2, "ecart", 97, 103)],
+        apprends: a8Apprends({
+          manipule: null,
+          represente: ecart(397, 402),
+          ecris: ecart(596, 604),
+          etapes: [["596 + ? = 600", 4], ["600 + ? = 604", 4], ["604 − 596 = ?", 8]],
+          bilan: "De part et d’autre d’une centaine, j’avance du petit au grand : 402 − 397 = 3 + 2 = 5."
+        })
+      },
+      {
+        n: 3, titre: "de part et d’autre d’un millier", nom: "Écart de part et d’autre d’un millier", palier: 2, type: "P",
+        composer: a8Niveau3,
+        imposes: [ligneEcart(3, "ecart-trou", 3999, 4000), ligneEcart(3, "ecart", 996, 1003)],
+        apprends: a8Apprends({
+          manipule: null,
+          represente: ecart(2996, 3004),
+          ecris: ecart(4997, 5000, "ecart-trou"),
+          etapes: [[`4${ESPACE_FINE}997 + ? = 5${ESPACE_FINE}000`, 3], [`5${ESPACE_FINE}000 − ? = 4${ESPACE_FINE}997`, 3]],
+          bilan: `De part et d’autre d’un millier, j’avance du petit au grand : 3${ESPACE_FINE}004 − 2${ESPACE_FINE}996 = 4 + 4 = 8.`
+        })
+      }
+    ]
+  };
+
   // ------------------------------------------------- M1 : doubles et moitiés
   //
   // Le schéma en barres de Gwenaël : pour une moitié, la barre du nombre,
@@ -2143,35 +3174,12 @@
     A10,
     A11,
     A2,
-    reserve("A3", "Ajouter, retrancher des dizaines, des centaines entières", "76 − 30", [
-      {n: 1, titre: "sans passage", palier: 1, type: "P", exemple: "76 − 30"},
-      {n: 2, titre: "passage de la centaine", palier: 1, type: "P", exemple: "746 + 80"},
-      {n: 3, titre: "passage du millier", palier: 2, type: "P", exemple: "950 + 70"},
-      {n: 4, titre: "milliers dans les grands nombres", palier: 3, type: "P", exemple: "1 462 + 300"}
-    ]),
-    reserve("A4", "Additionner deux nombres", "42 + 35", [
-      {n: 1, titre: "deux chiffres, sans retenue", palier: 1, type: "P", exemple: "42 + 35"},
-      {n: 2, titre: "deux chiffres, avec retenue", palier: 1, type: "P", exemple: "47 + 28"},
-      {n: 3, titre: "résultat qui passe 100", palier: 1, type: "P", exemple: "78 + 45"},
-      {n: 4, titre: "trois chiffres + deux chiffres", palier: 2, type: "P", exemple: "168 + 18"}
-    ]),
+    A3,
+    A4,
     A5,
-    reserve("A6", "Retrancher 9, 19, 29… et 8, 18, 28…", "63 − 9", [
-      {n: 1, titre: "− 9", palier: 1, type: "P", exemple: "63 − 9"},
-      {n: 2, titre: "− 19, 29, 39", palier: 1, type: "P", exemple: "143 − 29"},
-      {n: 3, titre: "− 8, 18, 28, 38", palier: 2, type: "P", exemple: "71 − 18"},
-      {n: 4, titre: "− 48, 49 … 98, 99", palier: 3, type: "P", exemple: "432 − 99"}
-    ]),
-    reserve("A7", "Soustraire un nombre à deux chiffres", "78 − 35", [
-      {n: 1, titre: "sans retenue", palier: 1, type: "P", exemple: "78 − 35"},
-      {n: 2, titre: "avec passage de la dizaine", palier: 1, type: "P", exemple: "63 − 27"},
-      {n: 3, titre: "passage de la centaine", palier: 2, type: "P", exemple: "523 − 67"}
-    ]),
-    reserve("A8", "Soustraire par l’écart (nombres proches)", "73 − 68", [
-      {n: 1, titre: "deux chiffres proches", palier: 1, type: "P", exemple: "73 − 68"},
-      {n: 2, titre: "de part et d’autre d’une centaine", palier: 2, type: "P", exemple: "402 − 397"},
-      {n: 3, titre: "de part et d’autre d’un millier", palier: 2, type: "P", exemple: "4 000 − ? = 3 999"}
-    ]),
+    A6,
+    A7,
+    A8,
     reserve("A9", "Regrouper pour calculer", "27 + 48 + 73", [
       {n: 1, titre: "trois termes", palier: 3, type: "P", exemple: "27 + 48 + 73"},
       {n: 2, titre: "quatre termes", palier: 3, type: "P", exemple: "18 + 25 + 82 + 75"},
@@ -2520,6 +3528,8 @@
   const ANNONCES = Object.freeze({
     "complement-gauche": "la case est devant",
     difference: "c’est une soustraction",
+    somme: "c’est une addition",
+    "ecart-trou": "on cherche ce qu’on a retiré",
     "produit-gauche": "les facteurs ont changé de place",
     "trou-facteur": "on cherche par combien on a multiplié",
     "trou-egal": "l’égalité est écrite à l’envers",
@@ -2548,7 +3558,10 @@
     if (!fiche || !fiche.erreurs || typeof reponse !== "number" || memeNombre(reponse, calcul.reponse)) return null;
     const cause = fiche.erreurs.find(erreur => erreur.test(calcul, reponse));
     if (!cause) return null;
-    return {c: cause.c, nom: cause.nom, texte: cause.retour(calcul, reponse, ecrit), image: fiche.image(calcul, cause.gras || 0)};
+    // Le pas en gras : fixé par la cause, ou calculé (A4, A7 : le saut qui
+    // passe la centaine).
+    const gras = typeof cause.grasDe === "function" ? cause.grasDe(calcul) : cause.gras || 0;
+    return {c: cause.c, nom: cause.nom, texte: cause.retour(calcul, reponse, ecrit), image: fiche.image(calcul, gras)};
   }
 
   // L'image d'un calcul, réponse montrée (après une erreur, à la phrase-bilan).

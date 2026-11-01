@@ -33,7 +33,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 26, "les 8 modules construits : A1, A10, A11, A2, A5, M1, M2, D2");
+  assert.equal(NIVEAUX.length, 44, "les 13 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, puis A3, A4, A6, A7, A8 (modules lot 2)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
@@ -116,6 +116,31 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.match(m2[1], /× 100/);
 });
 
+test("J'écris des modules lot 2 (A3, A4, A6, A7, A8) : les morceaux attendus", () => {
+  const dessins = cle => CORE.niveauDe(cle).niveau.apprends.ecris.dessins;
+  const vus = d => d.sauts.map(s => (s.cache ? "·" : s.masque ? "?" : s.val));
+  // A3-2, 715 − 30 : − 10 (705), puis − 20 (685), puis − 30 dessous.
+  assert.deepEqual(dessins("A3-2").map(vus), [["·", "·"], [-10, "·"], [-10, -20], [-10, -20]]);
+  assert.deepEqual(dessins("A3-2").map(d => Boolean(d.directCache)), [true, true, true, false]);
+  // A3-1, 234 + 60 : « 3 + 6 = 9 » dessine le saut, « 234 + 60 = 294 » son point.
+  assert.deepEqual(dessins("A3-1").map(d => [vus(d), d.inconnues]), [[["·"], [1]], [[60], [1]], [[60], []]]);
+  // A4-2, 58 + 34 : « 58 + 30 = 88 », puis « 88 + 4 = 92 » fait les deux
+  // petits sauts (+ 2 jusqu'à 90, + 2) d'un coup, puis + 34 dessous.
+  assert.deepEqual(dessins("A4-2").map(vus), [["·", "·", "·"], [30, "·", "·"], [30, 2, 2], [30, 2, 2]]);
+  assert.deepEqual(dessins("A4-2").map(d => d.inconnues), [[1, 2, 3], [2, 3], [], []]);
+  // A7-3, 615 − 38 : − 30, puis − 5 et − 3 (par 580).
+  assert.deepEqual(dessins("A7-3").map(vus), [["·", "·", "·"], [-30, "·", "·"], [-30, -5, -3], [-30, -5, -3]]);
+  // A6-1, 142 − 9 : − 10 (132), puis + 1 (133), puis − 9 dessous.
+  assert.deepEqual(dessins("A6-1").map(vus), [["·", "·"], [-10, "·"], [-10, 1], [-10, 1]]);
+  assert.equal(dessins("A6-1")[3].direct, -9);
+  // A8-1, 81 − 76 : les points sont là ; « 76 + □ = 80 » écrit + 4,
+  // « 80 + □ = 81 » + 1, puis 81 − 76 = 5 : le saut direct + 5 dessous.
+  assert.deepEqual(dessins("A8-1").map(vus), [["?", "?"], [4, "?"], [4, 1], [4, 1]]);
+  assert.deepEqual(dessins("A8-1").map(d => Boolean(d.directCache)), [true, true, true, false]);
+  // A8-3, 5 000 − □ = 4 997 : un seul saut, écrit à la 1re étape.
+  assert.deepEqual(dessins("A8-3").map(vus), [["?"], [3], [3]]);
+});
+
 test("la droite du boulier : un saut par geste, son point d'arrivée, rien avant", () => {
   const gestes = [3, 10, 10, 10, 10, 10, 10];
   const droite = faits => AIDES.droiteSauts({
@@ -139,6 +164,29 @@ test("la droite du boulier : un saut par geste, son point d'arrivée, rien avant
   assert.equal(x40(un), x40(tout));
   // La droite ordinaire (Je représente, l'entraînement) ne change pas.
   assert.equal(AIDES.droiteSauts({depart: 37, sauts: [{val: 3}, {val: 60}]}).match(/viewBox="([^"]+)"/)[1], "0 0 560 158");
+});
+
+test("la droite du boulier, modules lot 2 : le petit saut d'un détour (A6 : − 10 puis + 1) a son étiquette au-dessus de son arc, sans chevaucher", () => {
+  // Les pilules des étiquettes de sauts : [gauche, haut, droite, bas] et le texte.
+  const pilules = svg => [...svg.matchAll(/<rect x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" height="([\d.]+)" rx="[\d.]+" fill="#(?:fff3e0|eaf2ff)"[^>]*\/><text[^>]*>([^<]*)<\/text>/g)]
+    .map(([, x, y, w, h, texte]) => ({texte: texte.replace(/[\u00a0\u202f]/g, " "), g: +x, h: +y, d: +x + +w, b: +y + +h}));
+  const touche = (a, b) => a.g < b.d && b.g < a.d && a.h < b.b && b.h < a.b;
+  for (const [depart, gestes] of [[63, [-10, 1]], [72, [-10, -10, -10, 1]], [73, [-10, -10, 2]], [41, [-10, 1]]]) {
+    const svg = AIDES.droiteSauts({depart, boulier: true, sauts: gestes.map(val => ({val})), acquis: [gestes.length]});
+    const liste = pilules(svg);
+    assert.equal(liste.length, gestes.length, `${depart} : une étiquette par geste`);
+    const petit = liste[liste.length - 1];
+    assert.match(petit.texte, /^\+ \d$/);
+    liste.slice(0, -1).forEach(autre => assert.ok(!touche(petit, autre), `${depart} : « ${petit.texte} » chevauche « ${autre.texte} »`));
+    const [, , largeur] = svg.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
+    assert.ok(petit.h >= 0 && petit.g >= 0 && petit.d <= largeur, `${depart} : « ${petit.texte} » sort du dessin`);
+    // Son arc est court : l'étiquette posée dessus le cacherait. Elle est
+    // au-dessus du sommet de l'arc (la courbe va de y0 à y0, contrôle yc :
+    // sommet (y0 + yc) / 2).
+    const arcs = [...svg.matchAll(/<path d="M[-\d.]+ ([-\d.]+) Q[-\d.]+ ([-\d.]+) /g)].map(([, y0, yc]) => (+y0 + +yc) / 2);
+    assert.equal(arcs.length, gestes.length);
+    assert.ok(petit.b <= arcs[arcs.length - 1], `${depart} : « ${petit.texte} » cache son arc`);
+  }
 });
 
 test("J'apprends : le boulier de « Je manipule » a sa droite, celui de l'entraînement non", async () => {

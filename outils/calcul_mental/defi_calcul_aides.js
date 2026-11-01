@@ -83,14 +83,20 @@
     }
     const entamee = rangeeEntamee(etats);
     if (geste > 0) {
-      const rangee = entamee >= 0 ? entamee : etats.findIndex(valeur => valeur === 0);
+      // Quand la rangée entamée n'a plus la place (49 − 10 + 2 : 9 perles,
+      // on en remet 2), la première rangée vide.
+      const vide = etats.findIndex(valeur => valeur === 0);
+      const rangee = entamee >= 0 && etats[entamee] + geste <= PERLES.parRangee ? entamee : vide;
       return {rangees: rangee >= 0 ? [rangee] : [], ecart: geste};
     }
     // En reculant : la rangée entamée ; sans rangée entamée (on part d'une
     // dizaine entière, 50 − 6, ou on vient de vider la rangée, 42 − 2 − 6),
+    // ou quand elle n'a pas assez de perles (21 + 10 − 2 : 1 perle, on en
+    // retire 2 ; « − 10 » des modules lot 2, 63 − 20 : une rangée entière),
     // la dernière rangée pleine.
     const pleine = etats.map(valeur => valeur > 0).lastIndexOf(true);
-    const rangee = entamee >= 0 ? entamee : pleine;
+    const derniere = etats.lastIndexOf(PERLES.parRangee);
+    const rangee = entamee >= 0 && etats[entamee] >= -geste ? entamee : entamee >= 0 && derniere >= 0 ? derniere : pleine;
     return {rangees: rangee >= 0 ? [rangee] : [], ecart: geste};
   }
 
@@ -547,7 +553,6 @@
     const fleche = (nom, couleur) => `<marker id="${id}-${nom}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" orient="auto"><path d="M0 0L10 5L0 10z" fill="${couleur}"/></marker>`;
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireDroite(o)}"><defs>${fleche("b", "#0755b8")}${fleche("n", "#143451")}${fleche("o", "#9a4a00")}</defs>`
       + `<line x1="14" y1="${y}" x2="${W - 14}" y2="${y}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`;
-    const seulementRetours = o.sauts.every(saut => saut.val < 0);
     o.sauts.forEach((saut, index) => {
       if (saut.cache) return;
       const retour = saut.val < 0;
@@ -565,12 +570,16 @@
       // Le petit retour a son étiquette à côté, à droite : sur l'arc, elle
       // cacherait la pointe du grand saut.
       // Quand on ne fait que reculer (523 − 3 − 4), l'étiquette reste sur l'arc.
-      // Sur la droite du boulier (les sauts y sont serrés), le petit retour
-      // garde son étiquette au-dessus de son arc, une pilule plus haut que
-      // celle du saut d'avant.
-      const aCote = retour && !seulementRetours && !o.boulier;
-      const audessus = retour && !seulementRetours && o.boulier;
-      const lx = aCote ? Math.min(W - lw / 2 - 2, xa + 55) : audessus ? Math.min(W - lw / 2 - 2, mx) : mx;
+      // Le petit saut en avant d'un détour en arrière (A6 : − 10 puis + 1) a
+      // son étiquette à gauche, pour la même raison.
+      // Sur la droite du boulier (les sauts y sont serrés), le petit saut du
+      // détour garde son étiquette au-dessus de son arc, une pilule plus haut
+      // que celle du saut d'avant.
+      const detour = index > 0 && Math.sign(saut.val) !== Math.sign(o.sauts[0].val);
+      const aCote = detour && !o.boulier;
+      const audessus = detour && o.boulier;
+      const lx = aCote ? (retour ? Math.min(W - lw / 2 - 2, xa + 55) : Math.max(lw / 2 + 2, xa - 55))
+        : audessus ? Math.max(lw / 2 + 2, Math.min(W - lw / 2 - 2, mx)) : mx;
       const ly = aCote ? y - 8 - h - 2 : audessus ? y - 8 - h - T.haut - 4 : y - 8 - h;
       s += `<rect x="${lx - lw / 2}" y="${ly - T.haut / 2 - 2}" width="${lw}" height="${T.haut}" rx="${T.haut / 2}" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
         + `<text x="${lx}" y="${ly + (g.serree ? 3 : 4)}" text-anchor="middle" font-size="${T.saut}" fill="${couleur}">${texte}</text>`;
