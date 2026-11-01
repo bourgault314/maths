@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-3">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261031-4">
 </head>
 <body>
   <main class="shell">
@@ -244,7 +244,7 @@
 
   <script src="./defi_calcul_core.js?v=20261031-3"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261031-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261031-3"></script>
   <script>
     (() => {
       "use strict";
@@ -1263,7 +1263,25 @@
       //  - une page longue (« Comment ça marche ? ») : ×1 en fenêtre, la
       //    largeur en plein écran ;
       //  - téléphone et tablette (moins de 1 024 px de large) : ×1, toujours.
-      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, maxGlisse: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12});
+      //  - téléphone en jeu (audit du 31/10) : ×1, et seulement si le cadre
+      //    ne tient toujours pas une fois l'image, le pavé et l'outil réduits
+      //    (iPhone SE, bandeau de suivi, une annonce « Nouveau : … »), un peu
+      //    plus petit, jusqu'à ×0,85.
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, maxGlisse: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12, telephone: 620, minTelephone: 0.85, imageTelephone: 56});
+      // Téléphone : l'image (la droite, les barres, le tableau) rapetisse pour
+      // laisser la place au pavé (CSS), mais pas sous la moitié de sa taille
+      // ni sous 56 px de haut — en dessous, ses nombres ne se lisent plus :
+      // c'est alors le cadre entier qui se réduit (jusqu'à ×0,85).
+      function imageTropPetite() {
+        const image = $("aide").hidden ? null : $("aide").querySelector(":scope > svg");
+        if (!image || !image.viewBox || !image.viewBox.baseVal || !image.viewBox.baseVal.width) return false;
+        // Sa taille sans contrainte de hauteur : toute la largeur de l'aide (le
+        // tableau à flèches, pas plus large que sa largeur à lui).
+        const attribut = image.width && image.width.baseVal && image.hasAttribute("width") ? image.width.baseVal.value : Infinity;
+        const largeur = Math.min($("aide").clientWidth, attribut);
+        const naturelle = image.viewBox.baseVal.height * largeur / image.viewBox.baseVal.width;
+        return image.clientHeight + 1 < Math.min(naturelle, Math.max(ECHELLE.imageTelephone, naturelle / 2));
+      }
       function bornesEchelle(largeur, pleinEcran) {
         if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
         const parLargeur = Math.max(1, Math.min(ECHELLE.max, (largeur - 32) / ECHELLE.largeurColonne));
@@ -1287,10 +1305,16 @@
         const racine = document.documentElement;
         const corps = document.body;
         const pleinEcran = corps.classList.contains("fullscreen-active");
-        const bornes = bornesEchelle(window.innerWidth, pleinEcran);
-        racine.style.setProperty("--bas-cadre", bornes.max === bornes.min ? "0px" : `${ECHELLE.basCadre}px`);
+        const telephone = window.innerWidth <= ECHELLE.telephone && corps.classList.contains("challenge-playing");
+        const bornes = telephone ? {min: ECHELLE.minTelephone, max: 1, longue: ECHELLE.minTelephone} : bornesEchelle(window.innerWidth, pleinEcran);
+        racine.style.setProperty("--bas-cadre", bornes.max === bornes.min || telephone ? "0px" : `${ECHELLE.basCadre}px`);
+        if (telephone) {
+          racine.style.setProperty("--echelle", "1");
+          ajusterGlisseTelephone();
+        }
         if (bornes.max === bornes.min) {
           racine.style.setProperty("--echelle", "1");
+          ajusterGlisseTelephone();
           return;
         }
         if (!$("notice").hidden) {
@@ -1302,7 +1326,7 @@
         // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
         // hauteur de la fenêtre : seul le cadre du jeu peut déborder. Ailleurs,
         // c'est la hauteur du corps (sans le pied de page) qui compte.
-        const fige = enJeu && window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches;
+        const fige = enJeu && (telephone || window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches);
         const limite = window.innerHeight - (pleinEcran ? ECHELLE.basCadre : 0);
         const tient = z => {
           racine.style.setProperty("--echelle", z.toFixed(3));
@@ -1314,6 +1338,7 @@
             if (state.manip.deborde) return false;
           }
           if (!fige && corps.offsetHeight > limite) return false;
+          if (telephone && imageTropPetite()) return false;
           return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
         };
         const defilement = window.scrollY;
@@ -1332,6 +1357,32 @@
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
       }
       window.addEventListener("resize", ajusterEchelle);
+
+      // Téléphone (audit du 31/10) : à l'entraînement, le geste fait, le pavé
+      // arrive sous le glisse-nombres. Le glisse-nombres a une taille fixe :
+      // quand la place manque (hauteur visible d'un iPhone, bandeau de
+      // suivi), il se dessine plus petit — il ne se manipule plus. Le
+      // rekenrek, lui, se redessine seul à sa place (defi_calcul_aides.js).
+      function ajusterGlisseTelephone() {
+        const aide = $("aide");
+        const carte = $("question-card");
+        aide.style.zoom = "";
+        aide.classList.remove("sans-tableau");
+        if (window.innerWidth > 620 || !carte.classList.contains("aide-glisse") || !carte.classList.contains("est-finie")) return;
+        const reduire = () => {
+          const trop = carte.scrollHeight - carte.clientHeight;
+          const hauteur = aide.offsetHeight;
+          return trop > 0 && hauteur ? (hauteur - trop - 1) / hauteur : 1;
+        };
+        let z = reduire();
+        // Plus petit que la moitié, le tableau ne se lit plus : il s'efface,
+        // la trace du geste reste au-dessus du pavé (iPhone SE et bandeau).
+        if (z < .5) {
+          aide.classList.add("sans-tableau");
+          z = reduire();
+        }
+        if (z < 1) aide.style.zoom = Math.max(.5, z).toFixed(3);
+      }
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -1876,6 +1927,8 @@
         if (state.manip) { state.manip.detruire(); state.manip = null; }
         const aide = $("aide");
         aide.replaceChildren();
+        aide.style.zoom = "";
+        aide.classList.remove("sans-tableau");
         aide.hidden = true;
         $("touches").hidden = true;
         $("question-card").classList.remove("aide-perles", "aide-glisse", "aide-image", "est-finie", "sans-retour", "ecrit", "manip-entraine");
@@ -2682,7 +2735,8 @@
         // La touche « , » qui arrive ou qui s'en va, l'outil qui vient ou qui
         // part : le cadre se remesure.
         const virgule = !$("touches").hidden;
-        if (avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule)) ajusterEchelle();
+        // Au téléphone, toujours : une annonce « Nouveau : … » prend aussi de la place.
+        if (avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule) || window.innerWidth <= ECHELLE.telephone) ajusterEchelle();
         serie.virgule = virgule;
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
@@ -2818,6 +2872,9 @@
         // Au test, rien à lire après un faux : on avance tout seul aussi.
         if (juste || serie.genre === "test") {
           $("validate").style.visibility = "hidden";
+          // Téléphone : la ligne de retour, repliée tant qu'elle était vide,
+          // s'écrit ; le cadre se remesure.
+          if (window.innerWidth <= ECHELLE.telephone) ajusterEchelle();
           scheduleAutoAdvance(avancerSerie);
         } else {
           ajusterEchelle();

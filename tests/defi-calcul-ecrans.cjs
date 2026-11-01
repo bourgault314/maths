@@ -7,7 +7,7 @@
 //   DEFI_CALCUL_CAPTURES=/chemin/du/dossier node tests/defi-calcul-ecrans.cjs   (dépose les captures)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome node tests/defi-calcul-ecrans.cjs   (un Chromium précis)
 //   DEFI_CALCUL_SEULEMENT=premier-jour node tests/defi-calcul-ecrans.cjs   (premier-jour | rouges | de-cote)
-//   DEFI_CALCUL_TAILLE=1366 …   (une seule taille : 1366, 1440 ou 390)
+//   DEFI_CALCUL_TAILLE=1366 …   (une seule taille : 1366, 1440, 390x844 ou 390x664)
 //
 // Ce qui est joué :
 //   premier-jour  l'accueil ; le test en escalier (monter, 3e calcul, ✗ sans
@@ -24,9 +24,9 @@
 //
 // L'élève : un faux serveur de suivi RÉPOND, le bandeau « Suivi par ton
 // professeur » est affiché, et c'est avec lui — et avec le fil de la
-// séance — que le cadre doit tenir. Trois tailles : 1366 × 768 en fenêtre,
-// 1440 × 900 en plein écran, 390 × 844. Le jour est fixé par l'horloge du
-// navigateur.
+// séance — que le cadre doit tenir. Quatre tailles : 1366 × 768 en fenêtre,
+// 1440 × 900 en plein écran, 390 × 844, et 390 × 664 (la hauteur visible
+// d'un iPhone dans Safari). Le jour est fixé par l'horloge du navigateur.
 
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
@@ -46,7 +46,11 @@ const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; cha
 const TOUTES_LES_TAILLES = [
   {nom: "1366x768", largeur: 1366, hauteur: 768},
   {nom: "1440x900-plein-ecran", largeur: 1440, hauteur: 900, plein: true},
-  {nom: "390x844", largeur: 390, hauteur: 844, telephone: true}
+  {nom: "390x844", largeur: 390, hauteur: 844, telephone: true},
+  // Audit téléphone du 31/10 : la hauteur VISIBLE d'un iPhone dans Safari
+  // (barre d'adresse en bas), avec le bandeau de suivi — 390 × 844 n'est
+  // que la taille de l'écran.
+  {nom: "390x664", largeur: 390, hauteur: 664, telephone: true}
 ];
 // DEFI_CALCUL_TAILLE=1366 : une seule taille (les sabotages s'en servent).
 const TAILLES = TOUTES_LES_TAILLES.filter(taille => taille.nom.startsWith(process.env.DEFI_CALCUL_TAILLE || ""));
@@ -264,6 +268,10 @@ async function controler(session, taille, nom, {jeu = false, pave = false, image
     if (taille.telephone) assert.ok(m.aide.bas <= m.expression.haut + 1, `${ou} : l'aide est au-dessus du calcul`);
     else assert.ok(m.aide.haut >= m.expression.bas - 1 && m.aide.bas <= m.pave.haut + 1, `${ou} : l'aide est entre le calcul et le pavé`);
   }
+  // Le rekenrek ne passe jamais sur le pavé ni sur le bouton du bas (iPhone, 31/10).
+  for (const [nomBoite, b] of [["le pavé", m.pave], ["le bouton du bas", m.valider]]) {
+    if (m.boulier && b) assert.ok(m.boulier.bas <= b.haut + 1 || m.boulier.haut >= b.bas - 1, `${ou} : le boulier passe sur ${nomBoite}`);
+  }
   if (m.boulier) {
     // 2 px : la place est mesurée en pixels entiers, puis le cadre est agrandi (plein écran).
     assert.ok(m.boulier.haut >= m.scene.haut - 2 && m.boulier.bas <= m.scene.bas + 2, `${ou} : le boulier tient dans sa place (boulier ${Math.round(m.boulier.haut)}–${Math.round(m.boulier.bas)}, place ${Math.round(m.scene.haut)}–${Math.round(m.scene.bas)})`);
@@ -362,9 +370,13 @@ const manipulationDuCalcul = page => page.evaluate(() => {
 
 // Un calcul d'entraînement : on manipule si l'outil est à manipuler, puis on
 // répond juste (ou faux). Attend la suite.
-async function repondreEntrainement(page, juste) {
+async function repondreEntrainement(page, juste, {apresGeste = null} = {}) {
   const avant = await entrainement(page);
-  if (avant.outil === "manip") await manipuler(page, await manipulationDuCalcul(page));
+  if (avant.outil === "manip") {
+    await manipuler(page, await manipulationDuCalcul(page));
+    // Le geste fait, le pavé arrive sous les perles.
+    if (apresGeste) await apresGeste();
+  }
   const c = await calcul(page);
   await taper(page, juste ? c.reponse : await fausse(page), {clavier: true});
   await valider(page, {clavier: true});
@@ -466,7 +478,12 @@ async function premierJour(navigateur, base, taille) {
   assert.equal(await genre(page), "entraine");
   const outils = [];
   await ecran("entraine-perles", {jeu: true});
-  for (let i = 0; i < 4; i += 1) outils.push((await repondreEntrainement(page, true)).outil);
+  for (let i = 0; i < 4; i += 1) {
+    // Au téléphone, le geste fait, le pavé arrive sous les perles (le bug
+    // vu sur iPhone le 31/10 : le boulier restait grand, sur le pavé).
+    const apresGeste = i === 1 && taille.telephone ? () => ecran("entraine-perles-apres-geste", {jeu: true, pave: true}) : null;
+    outils.push((await repondreEntrainement(page, true, {apresGeste})).outil);
+  }
   assert.deepEqual(outils, ["manip", "manip", "image", "image"], "perles 2 justes, puis la droite 2 justes");
   assert.equal((await entrainement(page)).outil, "aucun", "puis plus rien");
   await ecran("entraine-sans-outil", {jeu: true, pave: true});
