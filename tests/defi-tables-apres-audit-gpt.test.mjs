@@ -45,8 +45,11 @@ test("D7 · horlogeSerie lit performance.now (et Date.now seulement s'il manque)
   assert.match(source("finishRevision"), /const elapsed = horlogeSerie\(\) - state\.startAt;/);
   assert.match(source("updateTimer"), /formatTime\(Math\.floor\(\(horlogeSerie\(\) - state\.startAt\) \/ 1000\)\)/, "la course : le chrono qui monte");
   assert.match(source("updateTimer"), /Math\.ceil\(\(state\.endAt - horlogeSerie\(\)\) \/ 1000\)/, "les séries à durée : le compte à rebours");
-  assert.match(html, /state\.endAt \+= horlogeSerie\(\) - state\.pauseA;/, "la pause de Mes calculs du jour reprend sur la même horloge");
-  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = horlogeSerie\(\);/);
+  // Lot « Mes calculs du jour sans chrono » (04/11/2026) : plus de pause de
+  // chrono dans Mes calculs du jour ; le temps de chaque calcul se mesure sur
+  // la même horloge.
+  assert.match(html, /state\.questionAfficheeA = horlogeSerie\(\);/);
+  assert.match(html, /PARCOURS\.reponseLente\(\(horlogeSerie\(\) - \(state\.questionAfficheeA \|\| 0\)\) \/ 1000\)/);
   // Plus aucun chrono de série sur Date.now : les seuls Date.now qui restent
   // sont des instants (sync.maj, derniers gestes, purge) ou la lecture d'une
   // correction, pas une mesure de temps de jeu.
@@ -357,7 +360,7 @@ test("point 8 · « Lire la table » sur ordinateur : deux colonnes de six et ci
 // ------------------------------------------------------------- l'hygiène du lot
 
 test("le moteur a changé : son numéro de cache monte, et la copie de la page prof est identique", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(copie.equals(original));

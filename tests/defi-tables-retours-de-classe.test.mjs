@@ -312,7 +312,8 @@ test("la rangée : les nombres en gris dès « Je construis la bande », les cou
 
 test("le nombre et son mot ne se séparent plus : premier écran, carte, notice", () => {
   assert.match(html, /texte\.textContent = soude\("Passe le test de celles que tu connais : 20 questions en 1 min 30\."\);/);
-  assert.match(html, /const detail = etape\.type === "revision" \? soude\(`\$\{pluriel\(etape\.calculs, "calcul"\)\} · \$\{dureeCourte\(etape\.duree\)\}`\)/);
+  // Lot « Mes calculs du jour sans chrono » (04/11/2026) : plus de durée.
+  assert.match(html, /const detail = etape\.type === "revision" \? soude\(pluriel\(etape\.calculs, "calcul"\)\)/);
   assert.match(html, /: etape\.conditionnelle \? CONDITION_DU_TEST : "";/, "« si mes calculs sont prêts » remplacé");
   assert.doesNotMatch(html, /si mes calculs sont prêts/);
   // soude() colle aussi « 9 tables », « 4 étapes » ; exécutée :
@@ -326,7 +327,9 @@ test("le nombre et son mot ne se séparent plus : premier écran, carte, notice"
 
 test("Mes calculs du jour sans réponse : « 10 calculs pas faits », plus de « 0 sur 0 » ni de « 0 sur 1 »", () => {
   assert.match(html, /if \(config\.mode === "revision"\) return \{juste: state\.revisionPremierScore, total: Math\.max\(1, state\.revisionPremierTotal\), rien: state\.revisionPremierTotal === 0, erreurs\};/);
-  assert.match(html, /\$\("result-score"\)\.textContent = soude\(!pasFaits \? `\$\{score\} sur \$\{total\}`\s*: total \? `\$\{score\} sur \$\{total\} · \$\{restent\}` : restent\);/);
+  // Lot « Mes calculs du jour sans chrono » (04/11/2026) : plus de temps
+  // écoulé, donc plus de calculs « pas faits » — le score, et les lents.
+  assert.match(html, /\$\("result-score"\)\.textContent = soude\(`\$\{score\} sur \$\{total\}\$\{lents \?/);
   assert.match(html, /score\.textContent = faite\.type === "revision" && faite\.reussi === false \? "temps écoulé" :/);
   assert.match(html, /const rate = faite\.rate \|\| \(faite\.reussi === false && faite\.type !== "revision"\);/, "Mes calculs du jour ne se rate pas : la coche reste");
   assert.match(html, /petit\.textContent = passee\.reussi === false \? " · temps écoulé" : soude\(` · \$\{pluriel\(passee\.total, "calcul"\)\}`\);/);
@@ -355,7 +358,7 @@ test("la fiche a des cases carrées — toutes les fiches, celle du professeur c
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie du serveur identique ; « Ajouter des élèves » propose 1 dans une classe qui a déjà des élèves", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau n'a pas changé");
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8"));

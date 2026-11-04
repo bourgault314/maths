@@ -293,10 +293,13 @@
     // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
     // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise
     // porte le repère « à revoir ».
-    // Lot « un seul système » : Mes calculs du jour est chronométré —
-    // « secondesParCalcul » par calcul, « dureeMin » au moins ;
-    // « passeesSeulement » : il ne prend que les calculs des tables passées.
-    revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2, secondesParCalcul: 6, dureeMin: 30, passeesSeulement: true}),
+    // « passeesSeulement » : Mes calculs du jour ne prend que les calculs des
+    // tables passées. Lot « Mes calculs du jour sans chrono » (04/11/2026,
+    // décision de Gwenaël) : plus de chrono sur la série (un calcul long
+    // mangeait le temps des autres) — chaque calcul a son temps, mesuré sans
+    // rien montrer : juste en plus de « lentApres » secondes, il est « juste
+    // mais lent » (ni monté ni descendu, il revient demain).
+    revision: Object.freeze({total: 10, boites: 5, delais: Object.freeze([0, 1, 3, 7, 14]), aRevoirMin: 2, lentApres: 6, passeesSeulement: true}),
     // Les jours travaillés gardés dans le parcours (dates, sans heure).
     jours: Object.freeze({garder: 14}),
     // Ma séance du jour : trois marches par séance, un départ entre 1 et 6
@@ -1191,7 +1194,7 @@
     return ["train", "validation", "test", "revision"].includes(config.mode);
   }
 
-  // Applique UNE réponse à la grille. reponse = {correcte, date}.
+  // Applique UNE réponse à la grille. reponse = {correcte, date, lent}.
   // Lot mémoire : un calcul monte d'une boîte quand il est DÛ et réussi ; pas
   // dû, une bonne réponse ne change rien (savoir, c'est retrouver le calcul le
   // jour où il revient, pas le répéter dans l'heure). Une erreur = une boîte de
@@ -1200,6 +1203,11 @@
   // Une erreur compte toujours (une réussite juste après la correction prouve
   // peu, une erreur prouve beaucoup), mais la boîte ne descend qu'UNE fois par
   // jour pour un même calcul (22/10/2026) — comme elle ne monte qu'une fois.
+  // « lent » (lot « Mes calculs du jour sans chrono », 04/11/2026) : une
+  // réponse juste mais trop longue à venir (Mes calculs du jour) ne prouve
+  // pas que le calcul est su — elle ne fait ni monter ni descendre la boîte,
+  // et le calcul revient DEMAIN, qu'il ait été dû ou non (une réponse lente
+  // sur un calcul attendu dans 14 jours le fait revenir plus tôt).
   function appliquerReponse(parcours, cleBrute, reponse = {}) {
     const cle = cleFait(cleBrute);
     if (!cle) {
@@ -1232,7 +1240,10 @@
     };
     let monte = false;
     let descend = false;
-    if (reponse.correcte) {
+    const lent = Boolean(reponse.correcte && reponse.lent);
+    if (lent) {
+      fait.echeance = ajouterJours(date, 1);
+    } else if (reponse.correcte) {
       if (du && fait.erreur !== date) {
         if (fait.boite < SEUILS.revision.boites) {
           fait.boite += 1;
@@ -1257,7 +1268,7 @@
     }
     fait.cases = casesDeBoite(fait.boite);
     copie.calculs[cle] = fait;
-    return {parcours: copie, fait: {cle, boite: fait.boite, etat: etatFait(fait), du, monte, descend, echeance: fait.echeance}};
+    return {parcours: copie, fait: {cle, boite: fait.boite, etat: etatFait(fait), du, monte, descend, ...(lent ? {lent} : {}), echeance: fait.echeance}};
   }
 
   // Les bouts qu'un calcul hors grille remplit : [table, multiplicateur].
@@ -1445,9 +1456,10 @@
     return parcours.calculsDuJour !== aujourdhui && serieDuJour(parcours, {aujourdhui}).cles.length > 0;
   }
 
-  // Le temps de Mes calculs du jour, en secondes, pour une série de N calculs.
-  function dureeMesCalculs(nombre) {
-    return Math.max(SEUILS.revision.dureeMin, entier(nombre, 0, 100) * SEUILS.revision.secondesParCalcul);
+  // Une réponse juste de Mes calculs du jour est-elle « lente » ? Plus de
+  // « lentApres » secondes entre l'affichage du calcul et sa validation.
+  function reponseLente(secondes) {
+    return Number.isFinite(Number(secondes)) && Number(secondes) > SEUILS.revision.lentApres;
   }
 
   // Les calculs en retard : dus AVANT aujourd'hui et pas encore refaits —
@@ -2212,7 +2224,7 @@
         const serie = serieDuJour(parcours, {aujourdhui});
         const calculs = serie.cles.length;
         if (!calculs) continue;
-        return {type: "revision", nom: "Mes calculs du jour", calculs, duree: dureeMesCalculs(calculs), porte: !serie.faite, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
+        return {type: "revision", nom: "Mes calculs du jour", calculs, porte: !serie.faite, config: configRevision(), minutes: MINUTES_ETAPE.revision, prevue};
       }
       // Mon mélange aux paliers (lot du 09/10/2026) : l'étape d'une séance
       // sur une table, tant qu'une coupe est à gagner — gagnée ailleurs
@@ -2953,6 +2965,10 @@
   // Rien de cette file ne part au serveur : elle reste sur l'appareil, à côté
   // de la case, et disparaît avec elle (purge des 90 jours).
   const REPONSES_MAX = 500;
+  // Le 4e nombre d'une réponse de la file : 0 fausse, 1 juste, 2 juste mais
+  // lente (lot « Mes calculs du jour sans chrono », 04/11/2026) — rejouée
+  // telle quelle par rebaser.
+  const REPONSE_LENTE = 2;
 
   function reponsesNeutres() {
     return {sure: false, dernier: 0, liste: [], epoque: 0, perduJusqua: 0};
@@ -2973,7 +2989,7 @@
       const jour = dateOuNull(entree[2]);
       if (!numero || numero <= precedent || numero > file.dernier || !cle || !jour) return;
       precedent = numero;
-      file.liste.push([numero, cle, jour, entree[3] ? 1 : 0]);
+      file.liste.push([numero, cle, jour, entree[3] === REPONSE_LENTE ? REPONSE_LENTE : entree[3] ? 1 : 0]);
     });
     // Une file trop longue n'est plus sûre (on a dû en perdre le début).
     if (file.liste.length > REPONSES_MAX) {
@@ -3031,7 +3047,7 @@
 
   // Une réponse de la grille vient d'être appliquée sous ce code : on la note.
   // Hors grille (× 1, × 10) : rien — la fusion des bouts suffit.
-  function noterReponse(stockage, code, cleBrute, {correcte = false, date = null, epoque = null} = {}) {
+  function noterReponse(stockage, code, cleBrute, {correcte = false, lent = false, date = null, epoque = null} = {}) {
     const cle = cleFait(cleBrute);
     const jour = dateOuNull(date);
     if (!codeValide(normaliserCode(code || "")) || !cle || !jour) return chargerReponses(stockage, code);
@@ -3047,7 +3063,7 @@
       file.perduJusqua = file.dernier;
     }
     file.dernier += 1;
-    file.liste.push([file.dernier, cle, jour, correcte ? 1 : 0]);
+    file.liste.push([file.dernier, cle, jour, correcte && lent ? REPONSE_LENTE : correcte ? 1 : 0]);
     ecrireReponses(stockage, code, file);
     return chargerReponses(stockage, code);
   }
@@ -3545,7 +3561,7 @@
       const jour = dateOuNull(entree && entree[2]);
       if (!cle || !jour || ambigus.has(cle)) return;
       touches.add(cle);
-      rejoue = appliquerReponse(rejoue, cle, {correcte: Boolean(entree[3]), date: jour}).parcours;
+      rejoue = appliquerReponse(rejoue, cle, {correcte: Boolean(entree[3]), lent: entree[3] === REPONSE_LENTE, date: jour}).parcours;
     });
     const resultat = cloner(fusion);
     touches.forEach(cle => {
@@ -3660,7 +3676,7 @@
     dusDuJour,
     serieDuJour,
     mesCalculsAFaire,
-    dureeMesCalculs,
+    reponseLente,
     formesPermises,
     agendaCalculs,
     calculsATravailler,

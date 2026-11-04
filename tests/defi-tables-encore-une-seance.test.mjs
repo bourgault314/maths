@@ -76,7 +76,7 @@ function carte(parcours, state, table) {
   // séance (optionsSeance) — ici, pas de records : {}.
   const fabrique = new Function("document", "PARCOURS", "parcours", "state", "commencerSeance", "carteSeanceFaite",
     "NOM_DU_TEST", "CONDITION_DU_TEST", "optionsSeance",
-    `${source("soude")}; ${source("pluriel")}; ${source("dureeCourte")}; ${source("carteDeSeance")}; return carteDeSeance;`);
+    `${source("soude")}; ${source("pluriel")}; ${source("carteDeSeance")}; return carteDeSeance;`);
   const rendue = fabrique(document, PARCOURS, parcours, state, t => lancees.push(t), () => FAITE,
     constante("NOM_DU_TEST"), constante("CONDITION_DU_TEST"), () => ({}))(table);
   return {rendue, lancees, faite: rendue === FAITE};

@@ -416,7 +416,8 @@ test("page — « Recommencer à zéro » vide la file : rien d'avant ne se rejo
 // ---------------------------------------------------------- les épingles
 
 test("la page note les réponses, les rejoue au 409 et à l'ouverture, et charge le moteur du jour", () => {
-  assert.equal((html.match(/noterReponseAEnvoyer\(resultat, correcte\);/g) || []).length, 2, "Mes calculs et l'évaluation notent leurs réponses");
+  assert.equal((html.match(/noterReponseAEnvoyer\(resultat, correcte(, lent)?\);/g) || []).length, 2, "Mes calculs et l'évaluation notent leurs réponses");
+  assert.match(html, /noterReponseAEnvoyer\(resultat, correcte, lent\);/, "Mes calculs note aussi les réponses lentes (lot du 04/11/2026)");
   assert.match(html, /parcours = PARCOURS\.remettreAZero\(parcours\);\s*oublierReponsesAEnvoyer\(\);/);
   assert.match(html, /if \(reponse\.statut === 409 && donnees && donnees\.parcours !== undefined\) \{\s*rejoindreServeur\(PARCOURS\.normaliserParcours\(donnees\.parcours\)\);/);
   assert.match(html, /const fusion = rejoindreServeur\(distant\);/);
@@ -424,7 +425,7 @@ test("la page note les réponses, les rejoue au 409 et à l'ouverture, et charge
   assert.match(html, /PARCOURS\.reponsesParties\(storage\(\), codeSuivi, jusqua, epoque\);/);
   assert.match(moteur, /jour <= connu\.vu/, "un calcul dont les réponses se chevauchent se replie sur main");
   assert.doesNotMatch(moteur, /plusRecente\(R\.gagne, A\.gagne\)/, "la règle « par dates » du premier essai a disparu");
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/, "cache-buster du moteur bumpé");
 });
 
 
