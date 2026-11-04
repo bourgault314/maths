@@ -1625,6 +1625,507 @@
     return `${nombre(o.rangees * o.parRangee)} points en paquets de ${nombre(o.parRangee)} : ${vu ? `${nombre(o.rangees)} paquets` : "combien de paquets ? un nombre à trouver"}.`;
   }
 
+  // ============================================ modules lot 4 (04/11/2026)
+  // M7, M10, M12, C1, C3 : le palier 2, les entiers.
+
+  // Une étiquette arrondie (le « ? » cherché en bleu, le trouvé en vert).
+  function pastille(x, y, texte, etat = "", taille = 19) {
+    const w = Math.max(40, texte.length * (taille * 0.6) + 18);
+    const [fond, bord, encre, epais] = etat === "cherche" ? ["#fff", "#0755b8", "#0755b8", 3]
+      : etat === "trouve" ? ["#e5f7eb", "#147447", "#147447", 3] : ["#fff", "#143451", "#143451", 2];
+    return `<rect x="${x - w / 2}" y="${y - 16}" width="${w}" height="32" rx="8" fill="${fond}" stroke="${bord}" stroke-width="${epais}"/>`
+      + `<text x="${x}" y="${y + 7}" text-anchor="middle" font-size="${taille}" font-weight="700" fill="${encre}">${texte}</text>`;
+  }
+
+  // --------------------------------------------- dix fois le nombre (M7)
+
+  // × 5, c'est × 10 puis la moitié : le nombre 10 fois (46 | 46 | … | 46),
+  // l'accolade du haut « 46 × 10 = 460 », un trait épais au milieu, et
+  // l'accolade sous la première moitié « 46 × 5 = ? ». × 50 : dix cases de
+  // 240 (24 × 10), « 24 × 100 = 2 400 », puis « 24 × 50 = ? ».
+  //   o : {n (le nombre), p (10 ou 100), masque, trouves (J'écris : le
+  //        produit par p est écrit), fini}
+  const DIX = Object.freeze({largeur: 540, gauche: 10, droite: 530, haut: 54});
+  function dixFois(o) {
+    const {largeur: W, gauche, droite, haut} = DIX;
+    const L = droite - gauche;
+    const w = L / 10;
+    const R = BARRES.rang;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    const toutVu = !cache || (ecrit && Boolean(o.trouves));
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const H = haut + R + 62;
+    const caseTexte = nombre(o.n * o.p / 10);
+    const taille = caseTexte.length > 3 ? 15 : caseTexte.length > 2 ? 18 : 21;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireDixFois(o)}">`;
+    const total = `${nombre(o.n)} × ${nombre(o.p)} = ${toutVu ? nombre(o.n * o.p) : "?"}`;
+    s += accoladeHaut(gauche + 2, droite - 2, haut - 3, "").replace(/<text[^>]*><\/text>/, "");
+    s += `<text x="${gauche + L / 2}" y="${haut - 22}" text-anchor="middle" font-size="21" font-weight="700" fill="${cache && !toutVu ? "#0755b8" : ecrit && toutVu ? "#147447" : "#143451"}">${total}</text>`;
+    for (let k = 0; k < 10; k += 1) {
+      const x = gauche + k * w;
+      s += `<rect x="${x}" y="${haut}" width="${w}" height="${R}" fill="${k < 5 ? "#fff" : "#eef1f5"}" stroke="#143451" stroke-width="2"/>`
+        + `<text x="${x + w / 2}" y="${haut + 30}" text-anchor="middle" font-size="${taille}" fill="#143451">${caseTexte}</text>`;
+    }
+    s += `<line x1="${gauche + L / 2}" y1="${haut - 8}" x2="${gauche + L / 2}" y2="${haut + R + 8}" stroke="#143451" stroke-width="5"/>`;
+    const moitie = `${nombre(o.n)} × ${nombre(o.p / 2)} = ${finiVu ? nombre(o.n * o.p / 2) : "?"}`;
+    s += accolade(gauche + 2, gauche + L / 2 - 2, haut + R + 4, moitie, !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+  function decrireDixFois(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    return `Schéma : ${nombre(o.n * o.p / 10)}, dix fois : ${nombre(o.n)} × ${nombre(o.p)}. La moitié, cinq cases : ${vu ? nombre(o.n * o.p / 2) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------------ les facteurs regroupés (M10)
+
+  // 5 × 43 × 2 : les facteurs en étiquettes, un arc relie ceux qui font 10
+  // (« 5 × 2 = 10 ») ; dessous, le produit rangé (43 × 10) et l'accolade.
+  //   o : {avant (le calcul écrit d'abord, s'il a fallu couper un nombre :
+  //        « 16 × 25 »), facteurs, paire [i, j], groupe (10, 100), reste
+  //        (le facteur qui reste), groupeDevant (23 × 20 : « 46 × 10 »,
+  //        le groupe d'abord), groupeConnu (false : 23 × 2 reste « ? » dans
+  //        l'aide), masque, trouves, fini}
+  const FACTEURS = Object.freeze({largeur: 420, tuile: 70, signe: 32});
+  function facteursRegroupes(o) {
+    const {largeur: W, tuile, signe} = FACTEURS;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    // Dans l'aide, le groupe connu (5 × 2 = 10, 4 × 25 = 100) est écrit :
+    // c'est lui qu'on montre ; un groupe à calculer (23 × 2) reste « ? ».
+    const groupeVu = !cache || (ecrit ? Boolean(o.trouves) : o.groupeConnu !== false);
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const yAvant = 26;
+    const y1 = (o.avant ? 50 : 0) + 74;
+    const y2 = y1 + 92;
+    const H = y2 + 104;
+    const largeurTuile = t => Math.max(tuile, String(t).length * 15 + 26);
+    const rangee = (valeurs, y, etats) => {
+      const ws = valeurs.map(largeurTuile);
+      const total = ws.reduce((a, b) => a + b, 0) + signe * (valeurs.length - 1);
+      let x = (W - total) / 2;
+      const centres = [];
+      let s = "";
+      valeurs.forEach((v, i) => {
+        const etat = etats[i] || "";
+        const [fond, bord, encre] = etat === "groupe" ? ["#eaf2ff", "#0755b8", "#0755b8"] : etat === "cherche" ? ["#f3f6fa", "#0755b8", "#0755b8"] : etat === "trouve" ? ["#e5f7eb", "#147447", "#147447"] : ["#fff", "#143451", "#143451"];
+        s += `<rect x="${x}" y="${y}" width="${ws[i]}" height="50" rx="10" fill="${fond}" stroke="${bord}" stroke-width="${etat ? 3 : 2.5}"/>`
+          + `<text x="${x + ws[i] / 2}" y="${y + 34}" text-anchor="middle" font-size="25" font-weight="700" fill="${encre}">${v}</text>`;
+        centres.push(x + ws[i] / 2);
+        x += ws[i];
+        if (i < valeurs.length - 1) { s += `<text x="${x + signe / 2}" y="${y + 33}" text-anchor="middle" font-size="24" fill="#143451">×</text>`; x += signe; }
+      });
+      return {s, centres, gauche: (W - total) / 2, droite: (W + total) / 2};
+    };
+    // À sa taille, comme l'escalier de C1 : étroit, il deviendrait trop haut.
+    let s = `<svg class="dc-escalier" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireFacteurs(o)}">`;
+    if (o.avant) s += `<text x="${W / 2}" y="${yAvant + 8}" text-anchor="middle" font-size="22" fill="#5b7286">${o.avant} =</text>`;
+    const [i, j] = o.paire;
+    const haut = rangee(o.facteurs.map(nombre), y1, o.facteurs.map((_, k) => (k === i || k === j ? "groupe" : "")));
+    s += haut.s;
+    // L'arc au-dessus des deux facteurs qui vont ensemble.
+    const xa = haut.centres[i];
+    const xb = haut.centres[j];
+    s += `<path d="M${xa} ${y1 - 4} C${xa} ${y1 - 46} ${xb} ${y1 - 46} ${xb} ${y1 - 4}" fill="none" stroke="#0755b8" stroke-width="3"/>`;
+    s += pastille((xa + xb) / 2, y1 - 38, `${nombre(o.facteurs[i])} × ${nombre(o.facteurs[j])} = ${groupeVu ? nombre(o.groupe) : "?"}`, cache && !groupeVu ? "cherche" : ecrit && groupeVu ? "trouve" : "", 18);
+    // Dessous : le produit rangé, le groupe à part.
+    s += `<text x="${W / 2}" y="${y2 - 14}" text-anchor="middle" font-size="22" fill="#5b7286">=</text>`;
+    const tuileGroupe = groupeVu ? nombre(o.groupe) : "?";
+    const etatGroupe = cache && !groupeVu ? "cherche" : "groupe";
+    const bas = o.groupeDevant
+      ? rangee([tuileGroupe, nombre(o.reste)], y2, [etatGroupe, ""])
+      : rangee([nombre(o.reste), tuileGroupe], y2, ["", etatGroupe]);
+    s += bas.s;
+    s += accolade(bas.gauche + 2, bas.droite - 2, y2 + 54, finiVu ? nombre(o.reste * o.groupe) : "?", !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+  function decrireFacteurs(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    const [i, j] = o.paire;
+    const groupeVu = !o.masque || (o.trouves !== undefined ? Boolean(o.trouves) : o.groupeConnu !== false);
+    const groupe = groupeVu ? nombre(o.groupe) : "un nombre à trouver";
+    return `${o.facteurs.map(nombre).join(" × ")} : ${nombre(o.facteurs[i])} × ${nombre(o.facteurs[j])} = ${groupe}, puis ${o.groupeDevant ? `${groupe} × ${nombre(o.reste)}` : `${nombre(o.reste)} × ${groupe}`} : ${vu ? nombre(o.reste * o.groupe) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------------- la barre à partager (M12)
+
+  // 96 ÷ 8 = 80 ÷ 8 + 16 ÷ 8 : la barre de 96 coupée en 80 | 16, chaque
+  // morceau coupé en 8 parts (traits fins), et sous chaque morceau son
+  // calcul (« 80 ÷ 8 = ? »). Un seul morceau (240 ÷ 6) : sa barre coupée en
+  // 6, et « 240 ÷ 6 = ? » dessous. Pas tout à fait à l'échelle : un petit
+  // morceau doit pouvoir porter son calcul.
+  //   o : {n, d, morceaux, masque, trouves (J'écris : les morceaux déjà
+  //        partagés), fini}
+  function barrePartagee(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const R = 54;
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.n];
+    const d = o.d;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && Array.isArray(o.trouves);
+    const unSeul = morceaux.length === 1;
+    const vu = i => !cache || (ecrit && (o.trouves.includes(i) || (unSeul && Boolean(o.fini))));
+    const largeurs = unSeul ? [L] : largeursDe(morceaux, L, 150);
+    const y1 = unSeul ? 12 : BARRES.haut;
+    // Deux morceaux : le quotient entier s'écrit dessous (« 96 ÷ 8 = ? »).
+    const H = y1 + R + (unSeul ? 64 : 104);
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarrePartagee(o)}">`;
+    if (!unSeul) s += accoladeHaut(gauche + 2, droite - 2, y1 - 3, nombre(o.n));
+    let x = gauche;
+    morceaux.forEach((m, i) => {
+      const w = largeurs[i];
+      const etat = !cache ? "" : vu(i) ? "trouve" : "";
+      s += `<rect x="${x}" y="${y1}" width="${w}" height="${R}" fill="${etat === "trouve" ? "#e5f7eb" : "#fff"}"/>`;
+      for (let k = 1; k < d; k += 1) s += `<line x1="${x + k * w / d}" y1="${y1}" x2="${x + k * w / d}" y2="${y1 + R}" stroke="#9fb6c6" stroke-width="1.6"/>`;
+      s += `<rect x="${x}" y="${y1}" width="${w}" height="${R}" fill="none" stroke="#143451" stroke-width="2.5"/>`;
+      const t = nombre(m);
+      const tw = t.length * 13 + 16;
+      s += `<rect x="${x + w / 2 - tw / 2}" y="${y1 + 12}" width="${tw}" height="30" rx="6" fill="#fff"/>`
+        + `<text x="${x + w / 2}" y="${y1 + 35}" text-anchor="middle" font-size="22" font-weight="700" fill="#143451">${t}</text>`;
+      const calcul = `${nombre(m)} ÷ ${d} = ${vu(i) ? nombre(m / d) : "?"}`;
+      s += accolade(x + 3, x + w - 3, y1 + R + 4, calcul, cache && !vu(i), ecrit && vu(i));
+      x += w;
+    });
+    if (!unSeul) {
+      s += `<line x1="${gauche + largeurs[0]}" y1="${y1 - 6}" x2="${gauche + largeurs[0]}" y2="${y1 + R + 6}" stroke="#143451" stroke-width="5"/>`;
+      const encre = !cache ? "#143451" : finiVu ? "#147447" : "#0755b8";
+      s += `<text x="${gauche + L / 2}" y="${y1 + R + 92}" text-anchor="middle" font-size="21" font-weight="700" fill="${encre}">${nombre(o.n)} ÷ ${d} = ${finiVu ? nombre(o.n / d) : "?"}</text>`;
+    }
+    return s + "</svg>";
+  }
+  function decrireBarrePartagee(o) {
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.n];
+    const vu = !o.masque || (Array.isArray(o.trouves) && o.fini);
+    const coupe = morceaux.length > 1 ? ` : ${morceaux.map(nombre).join(" et ")}, chacun coupé en ${o.d} parts` : ` coupée en ${o.d} parts`;
+    return `Schéma : la barre de ${nombre(o.n)}${coupe}. Une part : ${vu ? nombre(o.n / o.d) : "un nombre à trouver"}.`;
+  }
+
+  // ---------------------------------------- les parenthèses en escalier (C1)
+
+  // 3 × (10 − 6) : le calcul, une accolade sous la parenthèse et son
+  // résultat ; la ligne suivante remplace la parenthèse par ce nombre
+  // (3 × 4), et ainsi de suite jusqu'au résultat.
+  //   o : {lignes: [{jetons: ["3", "×", "(", "10", "−", "6", ")"],
+  //        sous: [[2, 6]], valeurs: [4], nouveaux: [indices des jetons
+  //        qui viennent d'une accolade]}], masque, trouves (J'écris : le
+  //        nombre d'accolades déjà trouvées, dans l'ordre), fini}
+  const ESCALIER = Object.freeze({haut: 14, ligne: 104, police: 32, marge: 16, echelle: 0.95});
+  function largeurJeton(t) {
+    if (t === "(" || t === ")") return 15;
+    if (/^[×÷+−=]$/.test(t)) return 36;
+    return Math.max(26, t.length * 19 + 8);
+  }
+  function parenthesesEscalier(o) {
+    const {haut, ligne, police, marge} = ESCALIER;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && Number.isInteger(o.trouves);
+    // Les accolades, dans l'ordre où on les calcule.
+    const ordre = [];
+    o.lignes.forEach((l, i) => l.sous.forEach((_, k) => ordre.push(`${i}-${k}`)));
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const vu = cle => !cache || finiVu || (ecrit && ordre.indexOf(cle) < o.trouves);
+    // Un nombre venu d'une accolade prend la place d'une case (plus large).
+    const largeurs = l => l.jetons.map((t, k) => ((l.nouveaux || []).includes(k) ? Math.max(48, largeurJeton(t) + 14) : largeurJeton(t)));
+    const W = Math.max(260, ...o.lignes.map(l => largeurs(l).reduce((a, b) => a + b, 0))) + 2 * marge;
+    const H = haut + o.lignes.length * ligne;
+    // À sa taille (un peu réduite) : un escalier étroit ne prend pas toute
+    // la largeur, il deviendrait trop haut.
+    let s = `<svg class="dc-escalier" viewBox="0 0 ${W} ${H}" width="${Math.round(W * ESCALIER.echelle)}" height="${Math.round(H * ESCALIER.echelle)}" role="img" aria-label="${decrireParentheses(o)}">`;
+    o.lignes.forEach((l, i) => {
+      const y = haut + i * ligne;
+      const ws = largeurs(l);
+      const total = ws.reduce((a, b) => a + b, 0);
+      let x = (W - total) / 2;
+      const bords = [];
+      l.jetons.forEach((t, k) => {
+        const venu = (l.nouveaux || []).indexOf(k);
+        let texte = t;
+        let etat = "";
+        if (venu >= 0) {
+          const [li, ki] = l.origines[venu];
+          const trouve = vu(`${li}-${ki}`);
+          texte = trouve ? t : "?";
+          etat = cache ? (trouve ? "trouve" : "cherche") : "repere";
+          const [fond, bord] = etat === "trouve" ? ["#e5f7eb", "#147447"] : etat === "cherche" ? ["#fff", "#0755b8"] : ["#eaf2ff", "#0755b8"];
+          s += `<rect x="${x + 3}" y="${y}" width="${ws[k] - 6}" height="42" rx="8" fill="${fond}" stroke="${bord}" stroke-width="2.5"/>`;
+        }
+        const encre = etat === "trouve" ? "#147447" : etat === "cherche" ? "#0755b8" : "#143451";
+        s += `<text x="${x + ws[k] / 2}" y="${y + 31}" text-anchor="middle" font-size="${police}"${/^[()×÷+−]$/.test(t) ? ' font-weight="400"' : ' font-weight="700"'} fill="${encre}">${texte}</text>`;
+        bords.push([x, x + ws[k]]);
+        x += ws[k];
+      });
+      l.sous.forEach(([a, b], k) => {
+        const derniere = i === o.lignes.length - 1;
+        const montre = derniere ? finiVu : vu(`${i}-${k}`);
+        s += accolade(bords[a][0] + 3, bords[b][1] - 3, y + 44, montre ? nombre(l.valeurs[k]) : "?", cache && !montre, ecrit && montre);
+      });
+    });
+    return s + "</svg>";
+  }
+  function decrireParentheses(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    const premiere = o.lignes[0].jetons.join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
+    const fin = o.lignes[o.lignes.length - 1].valeurs[0];
+    return `${premiere} : d'abord ce qui est entre parenthèses, puis le reste. Résultat : ${vu ? nombre(fin) : "un nombre à trouver"}.`;
+  }
+
+  // -------------------------------------------- deux barres égales (C3)
+
+  // Une égalité, c'est deux barres de la même longueur, COLLÉES l'une sous
+  // l'autre (comme les rangées de M1 et de M6) :
+  //  - « tout » : 347 = 20 + ? → la barre de 347, juste dessous 20 | ? ;
+  //  - « somme » : 144 + 7 = 142 + ? → 144 | 7, juste dessous 142 | ? ;
+  //    142 s'arrête avant 144 : le bout qui manque (2) a sa petite
+  //    accolade, sous la barre du bas ; le « ? », c'est ce bout plus 7 ;
+  //  - « ecart » : 142 − 14 = ? − 17 → on retire un bout de chaque barre
+  //    (hachuré gris, comme le retrait de SPLAT! : le nombre posé dessus,
+  //    sans « − ») ; ce qui reste est pareil, la barre du bas dépasse de 3.
+  // Pas tout à fait à l'échelle : un petit bout doit porter son nombre.
+  //   o : {sorte, haut: [valeurs], bas: [valeurs], cherche: ["haut"|"bas",
+  //        index], masque, trouves (J'écris : le nombre d'étapes faites),
+  //        fini}
+  function deuxBarres(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const R = 52;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const etapeVue = !cache || (ecrit && (Number(o.trouves) >= 1 || Boolean(o.fini)));
+    const [ligneCherche, caseCherche] = o.cherche;
+    const estCherche = (ligne, i) => ligne === ligneCherche && i === caseCherche;
+    const texteDe = (ligne, i, v) => (estCherche(ligne, i) && !finiVu ? "?" : nombre(v));
+    const etatDe = (ligne, i) => (estCherche(ligne, i) ? (!cache ? "" : finiVu ? "trouve" : "cherche") : "");
+    const y1 = 46;
+    const y2 = y1 + R;
+    const H = y2 + R + 62;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireDeuxBarres(o)}">`;
+    s += `<defs><pattern id="dc-retire" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(135)"><rect width="16" height="16" fill="#e5e7eb"/><rect width="8" height="16" fill="#b7bcc4"/></pattern></defs>`;
+    const caseSvg = (x, y, w, texte, etat, retire = false) => {
+      const fond = retire ? "url(#dc-retire)" : etat === "cherche" ? "#f3f6fa" : etat === "trouve" ? "#e5f7eb" : "#fff";
+      const encre = etat === "trouve" ? "#147447" : etat === "cherche" ? "#0755b8" : retire ? "#4d575d" : "#143451";
+      let t = `<rect x="${x}" y="${y}" width="${w}" height="${R}" fill="${fond}" stroke="#143451" stroke-width="2.5"/>`;
+      if (texte) t += `<text x="${x + w / 2}" y="${y + 34}" text-anchor="middle" font-size="${texte.length > 4 ? 19 : 22}" font-weight="700" fill="${encre}">${texte}</text>`;
+      return t;
+    };
+    // Le contour de la case cherchée, par-dessus (sinon les cases voisines
+    // couvrent son bord bleu).
+    const contour = (x, y, w, etat) => (etat ? `<rect x="${x}" y="${y}" width="${w}" height="${R}" fill="none" stroke="${etat === "trouve" ? "#147447" : "#0755b8"}" stroke-width="3.5"/>` : "");
+    let dessus = "";
+    if (o.sorte === "tout") {
+      s += caseSvg(gauche, y1, L, texteDe("haut", 0, o.haut[0]), etatDe("haut", 0));
+      dessus += contour(gauche, y1, L, etatDe("haut", 0));
+      const ws = largeursDe(o.bas, L, 80);
+      let x = gauche;
+      o.bas.forEach((v, i) => { s += caseSvg(x, y2, ws[i], texteDe("bas", i, v), etatDe("bas", i)); dessus += contour(x, y2, ws[i], etatDe("bas", i)); x += ws[i]; });
+      return s + dessus + "</svg>";
+    }
+    const [a, b] = o.haut;
+    const [c, d] = o.bas;
+    const ecart = o.sorte === "somme" ? Math.abs(a - c) : Math.abs(d - b);
+    const pasEcart = 44;
+    if (o.sorte === "somme") {
+      // Le premier morceau du haut à sa longueur (mais un petit morceau
+      // garde de quoi porter son nombre), et le bout qui manque (2) à une
+      // largeur fixe, lisible.
+      const wa = Math.min(L - 92 - pasEcart, Math.max(92 + pasEcart, L * a / (a + b)));
+      const wb = L - wa;
+      const plusCourt = c < a;
+      const wc = plusCourt ? wa - pasEcart : wa + pasEcart;
+      s += caseSvg(gauche, y1, wa, texteDe("haut", 0, a), etatDe("haut", 0)) + caseSvg(gauche + wa, y1, wb, texteDe("haut", 1, b), etatDe("haut", 1));
+      s += caseSvg(gauche, y2, wc, texteDe("bas", 0, c), etatDe("bas", 0)) + caseSvg(gauche + wc, y2, L - wc, texteDe("bas", 1, d), etatDe("bas", 1));
+      dessus += contour(gauche, y2, wc, etatDe("bas", 0)) + contour(gauche + wc, y2, L - wc, etatDe("bas", 1)) + contour(gauche + wa, y1, wb, etatDe("haut", 1)) + contour(gauche, y1, wa, etatDe("haut", 0));
+      // La coupe du haut prolongée en pointillés dans la barre du bas, et
+      // l'accolade du bout qui manque (ou qui dépasse), sous la barre.
+      s += dessus;
+      s += `<line x1="${gauche + wa}" y1="${y2}" x2="${gauche + wa}" y2="${y2 + R}" stroke="#143451" stroke-width="2" stroke-dasharray="5 4"/>`;
+      const [x1, x2] = [Math.min(gauche + wa, gauche + wc), Math.max(gauche + wa, gauche + wc)];
+      s += accolade(x1 + 1, x2 - 1, y2 + R + 4, etapeVue ? nombre(ecart) : "?", cache && !etapeVue, ecrit && etapeVue);
+      s += `<text x="${gauche + L / 2}" y="${y1 - 14}" text-anchor="middle" font-size="18" fill="#5b7286">deux barres de la même longueur</text>`;
+      return s + "</svg>";
+    }
+    // « ecart » : 142 − 14 = ? − 17. Le reste a la même longueur en haut et
+    // en bas ; on a retiré 14 en haut, 17 en bas : la barre du bas dépasse.
+    const wRetire = 92;
+    const plusLong = d > b;
+    const wReste = L - wRetire - pasEcart;
+    const wHaut = wRetire + (plusLong ? 0 : pasEcart);
+    const wBas = wRetire + (plusLong ? pasEcart : 0);
+    s += caseSvg(gauche, y1, wReste, "", "") + caseSvg(gauche + wReste, y1, wHaut, nombre(b), "", true);
+    s += caseSvg(gauche, y2, wReste, "", "") + caseSvg(gauche + wReste, y2, wBas, nombre(d), "", true);
+    s += `<text x="${gauche + wReste / 2}" y="${y2 + 3}" text-anchor="middle" font-size="16" fill="#5b7286" dy="-8"></text>`;
+    s += `<line x1="${gauche + wReste}" y1="${y1}" x2="${gauche + wReste}" y2="${y2 + R}" stroke="#143451" stroke-width="5"/>`;
+    // Le bout qui dépasse : sa petite accolade au-dessus (3 de plus).
+    const xFinHaut = gauche + wReste + wHaut;
+    const xFinBas = gauche + wReste + wBas;
+    const [x1, x2] = [Math.min(xFinHaut, xFinBas), Math.max(xFinHaut, xFinBas)];
+    s += `<line x1="${x1}" y1="${plusLong ? y2 : y1}" x2="${x1}" y2="${plusLong ? y2 + R : y1 + R}" stroke="#143451" stroke-width="2" stroke-dasharray="5 4"/>`;
+    s += `<path d="M${x1 + 2} ${y2 - 4} Q${x1 + 2} ${y2 - 12} ${x1 + 8} ${y2 - 12} L${x2 - 8} ${y2 - 12} Q${x2 - 2} ${y2 - 12} ${x2 - 2} ${y2 - 4}" fill="none" stroke="#143451" stroke-width="2"/>`
+      + `<text x="${(x1 + x2) / 2}" y="${y2 - 18}" text-anchor="middle" font-size="19" font-weight="700" fill="${etapeVue ? (cache ? "#147447" : "#143451") : "#0755b8"}">${etapeVue ? nombre(ecart) : "?"}</text>`;
+    s += accoladeHaut(gauche + 2, xFinHaut - 2, y1 - 3, texteDe("haut", 0, a));
+    s += accolade(gauche + 2, xFinBas - 2, y2 + R + 4, texteDe("bas", 0, c), etatDe("bas", 0) === "cherche", etatDe("bas", 0) === "trouve");
+    return s + "</svg>";
+  }
+  function decrireDeuxBarres(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    const lire = (ligne, valeurs) => valeurs.map((v, i) => (o.cherche[0] === ligne && o.cherche[1] === i && !vu ? "un nombre à trouver" : nombre(v)));
+    if (o.sorte === "tout") return `Deux barres de la même longueur : ${lire("haut", o.haut)[0]} en haut ; dessous, ${lire("bas", o.bas).join(" et ")}.`;
+    if (o.sorte === "ecart") return `Deux barres : ${lire("haut", o.haut)[0]}, dont on retire ${nombre(o.haut[1])}, et ${lire("bas", o.bas)[0]}, dont on retire ${nombre(o.bas[1])}. Ce qui reste est pareil.`;
+    return `Deux barres de la même longueur : ${lire("haut", o.haut).join(" et ")} en haut, ${lire("bas", o.bas).join(" et ")} en bas.`;
+  }
+
+  // ------------------------------------ toucher le calcul à faire (C1, lot 4)
+
+  // Je manipule de C1 (décision du 04/11, planche « choix-4 ») : le calcul
+  // écrit en grand ; l'élève touche ce qu'il calcule en premier. Touché au
+  // bon endroit (dans la parenthèse la plus à l'intérieur), elle se referme
+  // sur son nombre, en vert, et le calcul s'écrit dessous (« 10 − 6 = 4 ») ;
+  // ailleurs, la consigne tremble et rien ne se passe, comme les perles
+  // refusent un geste faux. On recommence à la ligne suivante, jusqu'au
+  // résultat.
+  //   options : {lignes (l'escalier du noyau), consigne, refus (null : la
+  //              consigne tremble sans phrase), surFini}
+  // Rend {outil: "toucher", detruire, mesurer, deborde, fini, etape}.
+  function toucherCalcul(zone, options) {
+    const {lignes, consigne: texteConsigne, refus: texteRefus = null, surFini = null} = options;
+    const etat = {ligne: 0, faits: new Set(), fini: false, refus: 0, etape: 0};
+    compteurAides += 1;
+    const bloc = document.createElement("div");
+    bloc.className = "dc-toucher";
+    const consigne = document.createElement("p");
+    consigne.className = "consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    consigne.textContent = texteConsigne;
+    const calcul = document.createElement("div");
+    calcul.className = "dc-toucher-calcul";
+    calcul.setAttribute("role", "group");
+    calcul.setAttribute("aria-describedby", consigne.id);
+    const trace = document.createElement("p");
+    trace.className = "dc-trace dc-toucher-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    const annonce = zoneAnnonce();
+    bloc.append(consigne, calcul, trace, annonce);
+    zone.replaceChildren(bloc);
+
+    const texteAccolade = (l, k) => {
+      const [a, b] = l.sous[k];
+      let jetons = l.jetons.slice(a, b + 1);
+      if (jetons[0] === "(" && jetons[jetons.length - 1] === ")") jetons = jetons.slice(1, -1);
+      return jetons.join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
+    };
+    const ecrites = [];
+
+    // La ligne en cours : ses jetons, ceux des accolades déjà faites
+    // remplacés par leur nombre (en vert), comme à la ligne suivante.
+    function dessiner() {
+      const l = lignes[etat.ligne];
+      const morceaux = [];
+      for (let k = 0; k < l.jetons.length; k += 1) {
+        const accolade = l.sous.findIndex(([a]) => a === k);
+        if (accolade >= 0 && etat.faits.has(accolade)) {
+          morceaux.push({texte: nombre(l.valeurs[accolade]), trouve: true});
+          k = l.sous[accolade][1];
+          continue;
+        }
+        morceaux.push({texte: l.jetons[k], index: k, venu: l.nouveaux.includes(k)});
+      }
+      calcul.replaceChildren(...morceaux.map(m => {
+        const jeton = document.createElement("span");
+        jeton.textContent = m.texte;
+        const signe = /^[()×÷+−]$/.test(m.texte);
+        jeton.className = `dc-jeton${signe ? " est-signe" : ""}${m.trouve ? " est-trouve" : ""}${m.venu ? " est-venu" : ""}${/^[()]$/.test(m.texte) ? " est-parenthese" : ""}`;
+        if (!etat.fini && m.index !== undefined) {
+          jeton.tabIndex = 0;
+          jeton.setAttribute("role", "button");
+          jeton.dataset.index = String(m.index);
+          jeton.setAttribute("aria-label", `${m.texte} : le calculer en premier`);
+        }
+        return jeton;
+      }));
+    }
+    function ecrireTraces() {
+      trace.replaceChildren(...ecrites.map(t => {
+        const b = document.createElement("b");
+        b.className = "ok";
+        b.textContent = t;
+        return b;
+      }));
+    }
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      if (!consigne.classList.contains("est-refus")) return;
+      consigne.textContent = texteConsigne;
+      consigne.classList.remove("est-refus");
+    }
+    function refuser() {
+      clearTimeout(etat.refus);
+      consigne.textContent = texteRefus || texteConsigne;
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+    // Un jeton touché : dans une accolade pas encore faite, elle se ferme ;
+    // ailleurs, refusé.
+    function toucher(index) {
+      if (etat.fini) return;
+      const l = lignes[etat.ligne];
+      const k = l.sous.findIndex(([a, b], i) => !etat.faits.has(i) && index >= a && index <= b);
+      bloc.dispatchEvent(new CustomEvent("toucher", {bubbles: true, detail: {index, accepte: k >= 0}}));
+      if (k < 0) { refuser(); return; }
+      leverRefus();
+      etat.faits.add(k);
+      etat.etape += 1;
+      ecrites.push(`${texteAccolade(l, k)} = ${nombre(l.valeurs[k])}`);
+      annonce.annoncer(ecrites[ecrites.length - 1]);
+      if (etat.faits.size === l.sous.length) {
+        if (etat.ligne === lignes.length - 1) {
+          etat.fini = true;
+          bloc.classList.add("est-finie");
+        } else {
+          etat.ligne += 1;
+          etat.faits = new Set();
+        }
+      }
+      dessiner();
+      ecrireTraces();
+      if (etat.fini && typeof surFini === "function") surFini();
+    }
+    calcul.addEventListener("click", event => {
+      const jeton = event.target.closest && event.target.closest(".dc-jeton");
+      if (!jeton || jeton.dataset.index === undefined) return;
+      toucher(Number(jeton.dataset.index));
+    });
+    calcul.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const jeton = event.target.closest && event.target.closest(".dc-jeton");
+      if (!jeton || jeton.dataset.index === undefined) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toucher(Number(jeton.dataset.index));
+    });
+    dessiner();
+    ecrireTraces();
+    return {
+      outil: "toucher",
+      element: bloc,
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+      },
+      mesurer() {},
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return etat.fini; },
+      get etape() { return etat.etape; },
+      toucher
+    };
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
@@ -1635,6 +2136,11 @@
     if (image.outil === "parts") return partsEgales(image);
     if (image.outil === "bande") return bandeTable(image);
     if (image.outil === "points") return rectanglePoints(image);
+    if (image.outil === "dix-fois") return dixFois(image);
+    if (image.outil === "facteurs") return facteursRegroupes(image);
+    if (image.outil === "partage") return barrePartagee(image);
+    if (image.outil === "parentheses") return parenthesesEscalier(image);
+    if (image.outil === "deux-barres") return deuxBarres(image);
     return droiteSauts(image);
   }
 
@@ -1670,6 +2176,12 @@
     bandeTable,
     POINTS,
     rectanglePoints,
+    dixFois,
+    facteursRegroupes,
+    barrePartagee,
+    parenthesesEscalier,
+    deuxBarres,
+    toucherCalcul,
     dessinerImage
   });
 });

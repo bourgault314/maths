@@ -26,6 +26,10 @@ function nombresDu(svg) {
   for (const [, texte] of svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)) {
     const net = texte.replace(/[   ]/g, "").replace(/^[+−×÷-]/, "");
     if (/^\d+(,\d+)?$/.test(net)) nombres.add(Number(net.replace(",", ".")));
+    // Modules lot 4 : un calcul écrit dans le dessin (« 46 × 10 = 460 »,
+    // « 80 ÷ 8 = 10 ») : son résultat compte aussi.
+    const resultat = texte.replace(/[\u202f\u00a0 ]/g, "").match(/=(\d+(,\d+)?)$/);
+    if (resultat) nombres.add(Number(resultat[1].replace(",", ".")));
   }
   return nombres;
 }
@@ -33,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 55, "les 18 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), puis M3, M4, M5, M6, M8 (modules lot 3)");
+  assert.equal(NIVEAUX.length, 70, "les 23 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), puis M7, M10, M12, C1, C3 (modules lot 4)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);

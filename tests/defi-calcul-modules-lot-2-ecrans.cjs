@@ -92,7 +92,7 @@ async function jusquaEcris(page, cle) {
   const base = `http://127.0.0.1:${serveur.address().port}`;
   const navigateur = await chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
   const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => fiche.niveaux.map(niveau => `${fiche.id}-${niveau.n}`));
-  assert.equal(NIVEAUX.length, 55);
+  assert.equal(NIVEAUX.length, 70);
   let echecs = 0;
   const essai = async (nom, corps) => {
     if (SEULEMENT && !nom.startsWith(SEULEMENT)) return;
@@ -100,7 +100,7 @@ async function jusquaEcris(page, cle) {
   };
 
   for (const taille of [[390, 664], [390, 844], [1366, 768]]) {
-    await essai(`retenir ${taille.join("x")} : les 55 « À retenir » tiennent sans défiler`, async () => {
+    await essai(`retenir ${taille.join("x")} : les 70 « À retenir » tiennent sans défiler`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       const trop = [];
       for (const cle of NIVEAUX) {

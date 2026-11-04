@@ -314,6 +314,11 @@ test("la page : en construction, hors catalogue, sans menus pour l'élève, sans
   assert.equal((page.match(/\.\.\.renvoiTables\(serie\)/g) || []).length, 2, "le renvoi : au bilan de l'entraînement et à la fin de la séance");
   assert.match(page, /lien\.target = "_blank";/, "Défi tables s'ouvre à côté : la séance reste ouverte");
   assert.doesNotMatch(page.replace('lien.href = "./defi_tables.html";', ""), /defi[-_]tables/i, "la page ne charge ni ne nomme rien d'autre de Défi tables");
+  // Modules lot 4 (décision du 04/11) : C1 se manipule en touchant le calcul
+  // à faire en premier ; J'apprends et l'entraînement passent par le même
+  // aiguillage que les perles et le glisse-nombres.
+  assert.match(page, /if \(options\.outil === "toucher"\) return AIDES\.toucherCalcul\(zone, options\);/);
+  assert.equal((page.match(/state\.manip = creerManip\(\$\("aide"\), options\);/g) || []).length, 2, "Je manipule et l'entraînement");
   assert.equal((page.match(/appli: "defi-calcul"/g) || []).length, 3, "lecture, billet, envoi : appli « defi-calcul »");
   assert.match(page, /\/\/ \[suivi:debut\][\s\S]+\/\/ \[suivi:fin\]/);
   assert.match(page, /MATHSGO_ENTREE/);
@@ -419,14 +424,15 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
   assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 129], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 129 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 55], "sur les modules construits : 55 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8)");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 70], "sur les modules construits : 70 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2]);
   assert.equal(a2.construit, true);
   assert.deepEqual(r.modules.find(m => m.id === "M2").etats, ["classe", "su"], "mise de côté = « à voir en classe »");
   assert.deepEqual(r.modules.find(m => m.id === "A5").etats, ["revoir", "gris", "gris", "gris"], "ratée aujourd'hui : rouge pour la journée");
-  assert.equal(r.modules.find(m => m.id === "M7").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.find(m => m.id === "M9").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.find(m => m.id === "M7").construit, true, "modules lot 4 : M7 est construit");
   assert.equal(r.modules.find(m => m.id === "A3").construit, true, "modules lot 2 : A3 est construit");
   assert.equal(r.modules.find(m => m.id === "A1").construit, true, "modules lot 1 : A1 est construit");
   assert.equal(r.modules.length, 74);
@@ -454,7 +460,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 55, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 70, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);

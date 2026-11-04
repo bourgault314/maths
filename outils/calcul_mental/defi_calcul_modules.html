@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261101-4">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261104-1">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261101-4"></script>
+  <script src="./defi_calcul_core.js?v=20261104-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261101-4"></script>
+  <script src="./defi_calcul_aides.js?v=20261104-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2302,6 +2302,14 @@
         fil.setAttribute("aria-label", `J’apprends, temps ${serie.index + 1} sur ${serie.temps.length} : ${nom.textContent}`);
       }
 
+      // L'outil à manipuler : les perles, le glisse-nombres, ou les jetons à
+      // toucher (C1, modules lot 4 : je touche le calcul à faire en premier).
+      function creerManip(zone, options) {
+        if (options.outil === "glisse") return AIDES.glisseNombres(zone, options);
+        if (options.outil === "toucher") return AIDES.toucherCalcul(zone, options);
+        return AIDES.perles100(zone, options);
+      }
+
       function renderTemps() {
         const serie = state.serie;
         const nom = serie.temps[serie.index];
@@ -2319,8 +2327,9 @@
           // Pas de pavé : on touche les perles ou la bande, l'appli écrit les
           // calculs.
           renderExpression(apprends.exemple.texte, "dc-petit");
-          const glisse = apprends.manipule.outil === "glisse";
-          carte.classList.add(glisse ? "aide-glisse" : "aide-perles");
+          // Le glisse-nombres et les jetons à toucher (C1) ont une taille
+          // fixe : la même place dans la carte.
+          const glisse = apprends.manipule.outil !== "perles";
           $("aide").hidden = false;
           $("validate").textContent = "Suivant";
           // Le boulier reporte chaque geste sur une droite, au-dessus (lot
@@ -2333,7 +2342,8 @@
               $("validate").focus?.({preventScroll: true});
             }
           });
-          state.manip = glisse ? AIDES.glisseNombres($("aide"), options) : AIDES.perles100($("aide"), options);
+          carte.classList.add(glisse ? "aide-glisse" : "aide-perles");
+          state.manip = creerManip($("aide"), options);
         } else if (nom === "represente") {
           // Un AUTRE calcul que celui des perles : la droite (ou le tableau)
           // est dessinée, l'élève tape la réponse.
@@ -2717,7 +2727,7 @@
         if (outil === "image" && !aide) outil = "aucun";
         question.outil = outil;
         if (outil === "manip") {
-          const glisse = manipulation.outil === "glisse";
+          const glisse = manipulation.outil !== "perles";
           carte.classList.add(glisse ? "aide-glisse" : "aide-perles", "manip-entraine");
           $("aide").hidden = false;
           const options = Object.assign({}, manipulation, {
@@ -2727,7 +2737,7 @@
               $("expression").focus?.({preventScroll: true});
             }
           });
-          state.manip = glisse ? AIDES.glisseNombres($("aide"), options) : AIDES.perles100($("aide"), options);
+          state.manip = creerManip($("aide"), options);
         } else if (outil === "image") {
           montrerImage(aide);
         }
@@ -3325,6 +3335,8 @@
             prof: () => MODE_PROF,
             perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
+            // C1 (modules lot 4) : les jetons touchés, et le geste fini.
+            toucher: () => (state.manip && state.manip.outil === "toucher" ? {etape: state.manip.etape, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
             arrets: () => arretsDeLaBande.slice(),
             // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.
