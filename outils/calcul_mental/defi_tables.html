@@ -3316,7 +3316,7 @@
     <p><b>Ma séance du jour.</b> 4&nbsp;étapes (parfois 5), environ 5&nbsp;min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, une erreur au plus.</p>
     <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
-    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées. Juste en moins de 6&nbsp;secondes, un calcul revient plus tard. Lent ou raté, il revient demain.</p>
+    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées. Juste en 6&nbsp;secondes ou moins, un calcul revient plus tard. Lent ou raté, il revient demain.</p>
     <p><b>Mon mélange.</b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe.</p>
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
@@ -5788,6 +5788,8 @@
         running: false,
         timer: null,
         autoAdvanceTimer: null,
+        avancePrevue: null,
+        cacheeA: null,
         learnStickHelpTimer: null,
         startAt: 0,
         endAt: 0,
@@ -7322,6 +7324,7 @@
         // Lot « Mes calculs du jour sans chrono » : le temps d'un calcul part
         // quand il s'affiche.
         state.questionAfficheeA = horlogeSerie();
+        if (typeof document !== "undefined" && document.visibilityState === "hidden") state.cacheeA = state.questionAfficheeA;
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
       }
@@ -7336,6 +7339,7 @@
       function clearAnswerFeedback() {
         state.waitingForContinue = false;
         state.correctionBande = null;
+        state.avancePrevue = null;
         $("answer-feedback").textContent = "";
         $("answer-feedback").className = "answer-feedback";
         $("validate").style.visibility = "";
@@ -7416,6 +7420,11 @@
 
       function scheduleAutoAdvance(delai = DELAI_SUIVANT) {
         clearAutoAdvance();
+        // Correctif après la relecture de Codex (04/11/2026) : le délai prévu
+        // est gardé — « pagehide » (stopTimer) annule le minuteur, et la page
+        // rendue par « Précédent » doit pouvoir le relancer (reprendreAuRetour).
+        // Sans chrono de série, rien d'autre ne finirait l'attente.
+        state.avancePrevue = delai;
         state.autoAdvanceTimer = window.setTimeout(() => {
           state.autoAdvanceTimer = null;
           if (state.running && state.waitingForContinue) advanceAfterResponse();
@@ -8218,6 +8227,26 @@
         state.decompteCoupe = Boolean(state.decompte);
       }
 
+      // Correctif après la relecture de Codex (04/11/2026) : le temps d'un
+      // calcul de Mes calculs du jour ne compte que page VISIBLE. L'élève qui
+      // passe sur un autre onglet ou une autre appli, puis revient, n'est pas
+      // compté lent pour ce temps-là ; un calcul affiché pendant qu'il était
+      // ailleurs (passage automatique) part à son retour.
+      function noterVisibilite() {
+        const cachee = typeof document !== "undefined" && document.visibilityState === "hidden";
+        const maintenant = horlogeSerie();
+        if (cachee) {
+          if (state.cacheeA === null || state.cacheeA === undefined) state.cacheeA = maintenant;
+          return;
+        }
+        if (state.cacheeA === null || state.cacheeA === undefined) return;
+        const debut = state.questionAfficheeA;
+        if (typeof debut === "number") {
+          state.questionAfficheeA = debut < state.cacheeA ? debut + (maintenant - state.cacheeA) : maintenant;
+        }
+        state.cacheeA = null;
+      }
+
       function reprendreAuRetour() {
         if (state.decompteCoupe) {
           state.decompteCoupe = false;
@@ -8225,6 +8254,10 @@
           return;
         }
         if (!state.running) return;
+        noterVisibilite();
+        // Une réponse juste déjà validée attendait son passage automatique
+        // (« Bravo ! », « Juste, mais un peu lent… ») : il repart.
+        if (state.waitingForContinue && state.avancePrevue && state.autoAdvanceTimer === null) scheduleAutoAdvance(state.avancePrevue);
         updateTimer();
         if (state.running && enEvaluation() && state.timer === null) { state.timer = window.setInterval(updateTimer, 200); return; }
         if (state.running && (state.configuration?.duration !== null || state.configuration?.course === "records") && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
@@ -9191,7 +9224,7 @@
         $("launch-summary").textContent = `Mes calculs du jour\u00a0· ${pluriel(TOTAL, "calcul").replace(" ", "\u00a0")}`;
         const regle = document.createElement("p");
         const vite = document.createElement("b");
-        vite.textContent = `en moins de ${PARCOURS.SEUILS.revision.lentApres}\u00a0secondes`;
+        vite.textContent = `en ${PARCOURS.SEUILS.revision.lentApres}\u00a0secondes ou moins`;
         regle.append(document.createTextNode("Réponds vite\u00a0: juste "), vite, document.createTextNode(", un calcul revient plus tard."));
         $("launch-format").replaceChildren(regle);
         $("launch-format").hidden = false;
@@ -11994,6 +12027,20 @@
       $("back-to-modes").addEventListener("click", backToModes);
       setupFullscreen();
       poserNotices();
+      // Écran de lancement (« C'est parti ! ») : Entrée lance la série, comme
+      // elle valide les réponses ensuite — sauf si un autre bouton a la main
+      // (« ← Ma table » garde son Entrée), et jamais gardée enfoncée. Posé
+      // AVANT le gestionnaire de la série : la même touche ne valide pas, en
+      // plus, la première question.
+      function lancerAuClavier(event) {
+        if (state.running || event.key !== "Enter" || event.repeat || !state.launchReady || gardeVisible || $("launch").hidden) return;
+        const cible = event.target;
+        if (cible && typeof cible.closest === "function" && cible.closest("button, a, input, textarea, select, #suivi-garde")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        beginRound();
+      }
+      document.addEventListener("keydown", lancerAuClavier);
       document.addEventListener("keydown", event => {
         if (!state.running) return;
         // Audit 1 (30/09/2026) : la question « C'est toujours toi ? » est
@@ -12023,6 +12070,7 @@
         event.preventDefault();
       });
       document.addEventListener("visibilitychange", updateTimer);
+      document.addEventListener("visibilitychange", noterVisibilite);
       window.addEventListener("pagehide", noterDecompteCoupe);
       window.addEventListener("pagehide", stopTimer);
       window.addEventListener("pagehide", envoyerAvantDeFermer);

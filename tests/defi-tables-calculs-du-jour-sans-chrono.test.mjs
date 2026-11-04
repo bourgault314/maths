@@ -163,7 +163,7 @@ test("les textes choisis : la phrase après la réponse, le score, la liste, l'�
   assert.match(html, /titre\.textContent = lents\.length > 1 \? `⏱ Mes \$\{lents\.length\} calculs un peu lents` : "⏱ Mon calcul un peu lent";/);
   assert.match(html, /puces\.className = "correction-chips lents";/);
   assert.match(html, /regle\.append\(document\.createTextNode\("Réponds vite\\u00a0: juste "\), vite, document\.createTextNode\(", un calcul revient plus tard\."\)\);/);
-  assert.match(html, /Juste en moins de 6&nbsp;secondes, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
+  assert.match(html, /Juste en 6&nbsp;secondes ou moins, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
   assert.doesNotMatch(html, /en 1&nbsp;minute\. Réussi/);
   assert.doesNotMatch(html, /Temps écoulé" : "Mes calculs du jour : fait/);
 });
@@ -175,4 +175,117 @@ test("la Légende des tables : séance faite et calculs encore dus → « Séanc
 
 test("le moteur du jour est chargé (cache-buster bumpé)", () => {
   assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261104-1"><\/script>/);
+});
+
+// ------------------------------- correctif après la relecture de Codex (04/11)
+
+const sourcePage = nom => {
+  const debut = html.indexOf(`function ${nom}(`);
+  assert.ok(debut > 0, `function ${nom} introuvable`);
+  const fin = html.indexOf("\n      }\n", debut);
+  return html.slice(debut, fin + 9);
+};
+
+// Un petit monde : une horloge qu'on avance, une page visible ou cachée, de
+// fausses minuteries — et les vraies fonctions de la page.
+function monde() {
+  const m = {maintenant: 1000, cachee: false, minuteurs: new Map(), prochain: 1, avances: 0, chronos: 0};
+  const document = {get visibilityState() { return m.cachee ? "hidden" : "visible"; }};
+  const window = {
+    setTimeout: (f, d) => { const id = m.prochain++; m.minuteurs.set(id, {f, d}); return id; },
+    clearTimeout: id => { m.minuteurs.delete(id); },
+    setInterval: () => 99, clearInterval: () => {}
+  };
+  const state = {running: true, waitingForContinue: false, autoAdvanceTimer: null, avancePrevue: null, cacheeA: null, questionAfficheeA: null, timer: null, decompte: null, decompteCoupe: false, configuration: {mode: "revision", mesCalculs: true, duration: null}};
+  const corps = `
+    const DELAI_SUIVANT = 800;
+    const horlogeSerie = () => m.maintenant;
+    const advanceAfterResponse = () => { m.avances += 1; state.waitingForContinue = false; };
+    const updateTimer = () => {}; const enEvaluation = () => false; const decompter = () => {};
+    const clearLearnStickHelpTimer = () => {};
+    const $ = () => ({hidden: false});
+    ${sourcePage("clearAutoAdvance")}
+    ${sourcePage("scheduleAutoAdvance")}
+    ${sourcePage("stopTimer")}
+    ${sourcePage("noterVisibilite")}
+    ${sourcePage("reprendreAuRetour")}
+    return {scheduleAutoAdvance, stopTimer, noterVisibilite, reprendreAuRetour};`;
+  const f = new Function("m", "state", "document", "window", corps)(m, state, document, window);
+  const tourner = () => { const liste = [...m.minuteurs.values()]; m.minuteurs.clear(); liste.forEach(x => x.f()); };
+  return {m, state, f, tourner};
+}
+
+test("Codex 4 · page quittée pendant « Juste, mais un peu lent… » puis rendue par « Précédent » : le calcul suivant arrive quand même", () => {
+  const {m, state, f, tourner} = monde();
+  state.waitingForContinue = true;
+  f.scheduleAutoAdvance(1800);
+  f.stopTimer();                       // pagehide : le minuteur part
+  assert.equal(m.minuteurs.size, 0);
+  assert.equal(state.avancePrevue, 1800, "le délai prévu est gardé");
+  f.reprendreAuRetour();               // pageshow
+  assert.equal(m.minuteurs.size, 1, "le passage automatique est réarmé");
+  assert.equal([...m.minuteurs.values()][0].d, 1800);
+  tourner();
+  assert.equal(m.avances, 1, "le calcul suivant arrive, une seule fois");
+  // Rien d'attendu (correction d'une erreur, « Suivant » à toucher) : rien ne part tout seul.
+  const autre = monde();
+  autre.state.waitingForContinue = true;
+  autre.f.reprendreAuRetour();
+  assert.equal(autre.m.minuteurs.size, 0);
+});
+
+test("Codex 6 · le temps d'un calcul ne compte que page visible : 30 s ailleurs ne le rendent pas lent", () => {
+  const {m, state, f} = monde();
+  state.questionAfficheeA = 1000;      // le calcul s'affiche
+  m.maintenant = 3000;                 // 2 s plus tard, l'élève part
+  m.cachee = true; f.noterVisibilite();
+  m.maintenant = 33000;                // 30 s ailleurs
+  m.cachee = false; f.noterVisibilite();
+  m.maintenant = 35000;                // il répond 2 s après son retour
+  const secondes = (m.maintenant - state.questionAfficheeA) / 1000;
+  assert.equal(secondes, 4, "2 s avant + 2 s après, rien pendant");
+  assert.equal(P.reponseLente(secondes), false);
+  assert.equal(state.cacheeA, null);
+});
+
+test("Codex 6 · un calcul affiché pendant que l'élève est ailleurs part à son retour ; et 7 s visibles restent lentes", () => {
+  const {m, state, f} = monde();
+  m.cachee = true; f.noterVisibilite(); // parti à 1000
+  m.maintenant = 1500;
+  state.questionAfficheeA = 1500;       // le passage automatique affiche le calcul suivant
+  m.maintenant = 20000;
+  m.cachee = false; f.noterVisibilite();
+  assert.equal(state.questionAfficheeA, 20000, "il part au retour");
+  m.maintenant = 27000;
+  assert.equal(P.reponseLente((m.maintenant - state.questionAfficheeA) / 1000), true, "7 s visibles : lent");
+  // La page rendue par « Précédent » fait le même calcul (reprendreAuRetour).
+  assert.match(sourcePage("reprendreAuRetour"), /noterVisibilite\(\);/);
+  assert.match(html, /document\.addEventListener\("visibilitychange", noterVisibilite\);/);
+  assert.match(html, /state\.questionAfficheeA = horlogeSerie\(\);\s*if \(typeof document !== "undefined" && document\.visibilityState === "hidden"\) state\.cacheeA = state\.questionAfficheeA;/);
+});
+
+test("Codex 7 · les textes disent « en 6 secondes ou moins » (6 s pile n'est pas lent)", () => {
+  assert.equal(P.reponseLente(6), false);
+  assert.match(html, /vite\.textContent = `en \$\{PARCOURS\.SEUILS\.revision\.lentApres\}\\u00a0secondes ou moins`;/);
+  assert.match(html, /Juste en 6&nbsp;secondes ou moins, un calcul revient plus tard\./);
+  assert.doesNotMatch(html, /en moins de 6&nbsp;secondes|en moins de \$\{PARCOURS/);
+});
+
+test("Entrée lance la série depuis l'écran « C'est parti ! » — pas quand un autre bouton a la main, pas gardée enfoncée, et la même touche ne valide pas la 1re question", () => {
+  const essai = ({running = false, launchReady = true, cache = false, garde = false, repeat = false, surBouton = false, key = "Enter"} = {}) => {
+    const appels = {lance: 0, empeche: 0, arrete: 0};
+    const state = {running, launchReady};
+    const $ = () => ({hidden: cache});
+    const f = new Function("state", "gardeVisible", "$", "beginRound", `${sourcePage("lancerAuClavier")}\nreturn lancerAuClavier;`)(
+      state, garde, $, () => { appels.lance += 1; state.running = true; });
+    f({key, repeat, target: {closest: () => (surBouton ? {} : null)}, preventDefault() { appels.empeche += 1; }, stopImmediatePropagation() { appels.arrete += 1; }});
+    return appels;
+  };
+  assert.deepEqual(essai(), {lance: 1, empeche: 1, arrete: 1}, "Entrée lance, et la touche s'arrête là");
+  for (const cas of [{repeat: true}, {surBouton: true}, {running: true}, {launchReady: false}, {cache: true}, {garde: true}, {key: "7"}]) {
+    assert.deepEqual(essai(cas), {lance: 0, empeche: 0, arrete: 0}, JSON.stringify(cas));
+  }
+  const ici = html.indexOf('document.addEventListener("keydown", lancerAuClavier);');
+  const serie = html.indexOf('document.addEventListener("keydown", event => {\n        if (!state.running) return;');
+  assert.ok(ici > 0 && serie > ici, "posé avant le gestionnaire de la série");
 });
