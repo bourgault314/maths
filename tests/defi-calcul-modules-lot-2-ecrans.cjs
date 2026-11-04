@@ -7,7 +7,7 @@
 //   node tests/defi-calcul-modules-lot-2-ecrans.cjs
 //
 // Ce qui est vérifié :
-//   retenir   « À retenir » des 44 niveaux construits tient entier dans
+//   retenir   « À retenir » des 55 niveaux construits (44 avant les modules lot 3) tient entier dans
 //             l'écran, sans défiler : 390 × 664 (la hauteur visible d'un
 //             iPhone), 390 × 844, 1366 × 768 (vu par Code sur la PR #1083 :
 //             57 px pour M1-3, 112 px pour D2-1 à 390 × 664) ;
@@ -92,7 +92,7 @@ async function jusquaEcris(page, cle) {
   const base = `http://127.0.0.1:${serveur.address().port}`;
   const navigateur = await chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
   const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => fiche.niveaux.map(niveau => `${fiche.id}-${niveau.n}`));
-  assert.equal(NIVEAUX.length, 44);
+  assert.equal(NIVEAUX.length, 55);
   let echecs = 0;
   const essai = async (nom, corps) => {
     if (SEULEMENT && !nom.startsWith(SEULEMENT)) return;
@@ -100,7 +100,7 @@ async function jusquaEcris(page, cle) {
   };
 
   for (const taille of [[390, 664], [390, 844], [1366, 768]]) {
-    await essai(`retenir ${taille.join("x")} : les 44 « À retenir » tiennent sans défiler`, async () => {
+    await essai(`retenir ${taille.join("x")} : les 55 « À retenir » tiennent sans défiler`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       const trop = [];
       for (const cle of NIVEAUX) {

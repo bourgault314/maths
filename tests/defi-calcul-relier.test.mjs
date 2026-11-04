@@ -33,7 +33,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 44, "les 13 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, puis A3, A4, A6, A7, A8 (modules lot 2)");
+  assert.equal(NIVEAUX.length, 55, "les 18 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), puis M3, M4, M5, M6, M8 (modules lot 3)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
