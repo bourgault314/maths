@@ -1041,7 +1041,10 @@
     const colonnes = [];
     for (let rang = premier; rang >= dernier; rang -= 1) colonnes.push(rang);
     const plusHautBas = Math.max(...bas.keys());
+    // Le 0 des unités d'un nombre sous 1 (0,6 ÷ 10) ne glisse pas : le 0
+    // des dixièmes de 0,06 est un zéro à écrire.
     const fleches = [...haut.entries()]
+      .filter(([rang, chiffre]) => !(rang === 0 && chiffre === "0" && Math.abs(Number(o.depart)) < 1))
       .map(([rang, chiffre]) => ({de: rang, vers: rang + k, chiffre}))
       .filter(f => f.vers <= plusHautBas && f.vers >= dernier);
     const atteints = new Set(fleches.map(f => f.vers));
@@ -2126,6 +2129,585 @@
     };
   }
 
+  // ============================================ modules lot 5 (04/11/2026) :
+  // les décimaux du palier 2 (D1, D3, D4).
+
+  // ------------------------------------------- les fractions, comme au cahier
+  //
+  // Dans un texte de calcul, « 2/10 » s'écrit en fraction : le numérateur,
+  // la barre, le dénominateur. `noeudsCalcul` rend les morceaux d'une page ;
+  // la case « □ » devient `caseReponse()` — dans « □/10 », elle est le
+  // numérateur. Un lecteur d'écran lit « 2 sur 10 ».
+  const MOTIF_FRACTION = /(\d[\d\u202f\u00a0]*|□|\?)\/(\d[\d\u202f\u00a0]*\d|\d)/g;
+  function noeudsCalcul(texte, {caseReponse = null, insecable = t => t} = {}) {
+    const chaine = String(texte == null ? "" : texte);
+    const morceaux = [];
+    const ajouterTexte = t => {
+      if (!t) return;
+      const parts = t.split("□");
+      parts.forEach((part, i) => {
+        if (part) morceaux.push(document.createTextNode(insecable(part)));
+        if (i < parts.length - 1) morceaux.push(caseReponse ? caseReponse() : document.createTextNode("□"));
+      });
+    };
+    let dernier = 0;
+    for (const m of chaine.matchAll(MOTIF_FRACTION)) {
+      ajouterTexte(chaine.slice(dernier, m.index));
+      const fraction = document.createElement("span");
+      fraction.className = "dc-frac";
+      const num = document.createElement("span");
+      num.className = "dc-frac-num";
+      if (m[1] === "□" && caseReponse) num.append(caseReponse());
+      else num.textContent = insecable(m[1]);
+      const sur = document.createElement("span");
+      sur.className = "sr-only";
+      sur.textContent = " sur ";
+      const den = document.createElement("span");
+      den.className = "dc-frac-den";
+      den.textContent = insecable(m[2]);
+      fraction.append(num, sur, den);
+      morceaux.push(fraction);
+      dernier = m.index + m[0].length;
+    }
+    ajouterTexte(chaine.slice(dernier));
+    return morceaux;
+  }
+  // Un texte écrit dans un élément, ses fractions dessinées.
+  function ecrireTexte(element, texte, options = {}) {
+    element.replaceChildren(...noeudsCalcul(texte, options));
+    return element;
+  }
+
+  // Une fraction en SVG, écrite comme sur le cahier : le numérateur, la
+  // barre, le dénominateur. `num` peut être « ? » (la case à trouver).
+  function fractionSvg(x, y, num, den, {taille = 20, encre = "#143451", cherche = false} = {}) {
+    const n = String(num);
+    const d = String(den);
+    const w = Math.max(n.length, d.length) * taille * .62 + 6;
+    return `<text x="${x}" y="${y - 5}" text-anchor="middle" font-size="${taille}" font-weight="700" fill="${cherche && n === "?" ? "#0755b8" : encre}">${n}</text>`
+      + `<line x1="${x - w / 2}" y1="${y}" x2="${x + w / 2}" y2="${y}" stroke="${encre}" stroke-width="2.2" stroke-linecap="round"/>`
+      + `<text x="${x}" y="${y + taille + 1}" text-anchor="middle" font-size="${taille}" font-weight="700" fill="${encre}">${d}</text>`;
+  }
+  // Un morceau de calcul écrit dans un dessin : « 2/10 » en fraction, le
+  // reste en texte (« + », « 0,3 », « 4 »).
+  function morceauSvg(x, y, texte, opts = {}) {
+    const m = /^([−+] )?(\d[\d\u202f\u00a0]*|\?)\/(\d[\d\u202f\u00a0]*)$/.exec(String(texte));
+    const taille = opts.taille || 20;
+    const encre = opts.encre || "#143451";
+    if (!m) return `<text x="${x}" y="${y + 7}" text-anchor="middle" font-size="${taille}" font-weight="700" fill="${encre}">${texte}</text>`;
+    const large = Math.max(m[2].length, m[3].length) * taille * .62 + 6;
+    const signe = m[1] ? `<text x="${x - large / 2 - 4}" y="${y + 7}" text-anchor="middle" font-size="${taille}" font-weight="700" fill="${encre}">${m[1].trim()}</text>` : "";
+    return signe + fractionSvg(x + (m[1] ? 8 : 0), y, m[2], m[3], opts);
+  }
+
+  // --------------------------------------------- le tableau de numération (D1, D4)
+  //
+  // Des lignes de chiffres rangées dans les colonnes (unités, dixièmes…),
+  // comme une addition posée : chaque morceau du calcul sur sa ligne, son
+  // écriture à gauche (« 2/10 », « + 0,3 »), puis un trait et la ligne du
+  // résultat. La virgule : un trait rouge entre les unités et les dixièmes,
+  // du haut en bas.
+  //   o : {lignes: [{nombre, unite (le rang de son chiffre des unités : −1
+  //        pour « 3 dixièmes »), texte, cherche (ses chiffres sont « ? » :
+  //        J'écris de D4, « 3/100 = 0,03 » les écrit), trouvee (écrits par
+  //        l'élève, en vert)}], resultat: {nombre, unite, texte},
+  //        inconnue (la ligne du résultat est à trouver : « ? »), garder (les
+  //        rangs du résultat qui restent écrits, en gris : D4, ce qui ne
+  //        change pas), trouves (J'écris : les rangs déjà écrits par l'élève),
+  //        retenue (le rang, ou les rangs, qui reçoivent une retenue : un
+  //        petit « 1 » rouge au-dessus du trait), colonnes (les rangs,
+  //        sinon ceux des nombres)}
+  // Serré en hauteur : au téléphone, le tableau partage la place avec le
+  // calcul, la touche « , » et le pavé.
+  const NUMERATION = Object.freeze({colonne: 56, ecart: 5, bord: 4, titre: 22, rangee: 38, texte: 80, interligne: 4});
+  function rangsDe(nombreDonne, unite = 0) {
+    const rangs = new Map();
+    chiffresParRang(nombreDonne).forEach((chiffre, rang) => rangs.set(rang + unite, chiffre));
+    return rangs;
+  }
+  function planNumeration(o) {
+    const lignes = o.lignes.map(l => ({texte: l.texte, rangs: rangsDe(l.nombre, l.unite || 0), cherche: Boolean(l.cherche), trouvee: Boolean(l.trouvee)}));
+    const resultat = {texte: o.resultat.texte || "", rangs: rangsDe(o.resultat.nombre, o.resultat.unite || 0)};
+    const tous = [0, -1, ...lignes.flatMap(l => [...l.rangs.keys()]), ...resultat.rangs.keys()];
+    const colonnes = o.colonnes ? o.colonnes.slice() : [];
+    if (!o.colonnes) for (let r = Math.max(...tous); r >= Math.min(...tous); r -= 1) colonnes.push(r);
+    const retenues = o.retenue === undefined || o.retenue === null ? [] : [].concat(o.retenue);
+    return {lignes, resultat, colonnes, retenues};
+  }
+  function tableauNumeration(o) {
+    const plan = planNumeration(o);
+    const {colonne: C, ecart: E, bord: B, titre: T, rangee: R, texte: TX, interligne: I} = NUMERATION;
+    const n = plan.colonnes.length;
+    const x0 = B + TX;
+    const W = x0 + n * C + (n - 1) * E + B;
+    const x = rang => x0 + plan.colonnes.indexOf(rang) * (C + E);
+    const yLigne = i => T + 6 + i * (R + I);
+    const yTrait = yLigne(plan.lignes.length) + 2;
+    const yRes = yTrait + 8;
+    const H = yRes + R + 3;
+    let s = `<svg class="dc-numeration" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireNumeration(o, plan)}">`;
+    plan.colonnes.forEach(rang => {
+      const nom = RANGS[rang];
+      const cx = x(rang) + C / 2;
+      const coupure = nom.indexOf(" de ");
+      s += `<rect x="${x(rang)}" y="0" width="${C}" height="${T}" rx="7" fill="#e3ecf2"/>`;
+      s += coupure > 0
+        ? `<text x="${cx}" y="10" text-anchor="middle" font-size="9" fill="#2c4a63">${nom.slice(0, coupure)}</text><text x="${cx}" y="19" text-anchor="middle" font-size="9" fill="#2c4a63">${nom.slice(coupure + 1)}</text>`
+        : `<text x="${cx}" y="15.5" text-anchor="middle" font-size="${nom.length > 8 ? 10.5 : 11.5}" fill="#2c4a63">${nom}</text>`;
+    });
+    const cellule = (rang, y, chiffre, etat) => {
+      const fond = etat === "trouve" ? "#e5f7eb" : etat === "garde" ? "#eef2f5" : "#fff";
+      const bord = etat === "cherche" ? "#0755b8" : etat === "trouve" ? "#147447" : etat === "garde" ? "#8a9caa" : "#143451";
+      const encre = etat === "trouve" ? "#147447" : etat === "cherche" ? "#0755b8" : etat === "garde" ? "#5b7286" : "#143451";
+      return `<rect x="${x(rang) + 1}" y="${y}" width="${C - 2}" height="${R}" rx="8" fill="${fond}" stroke="${bord}" stroke-width="${etat === "cherche" || etat === "trouve" ? 2.5 : 1.6}"/>`
+        + (chiffre ? `<text x="${x(rang) + C / 2}" y="${y + R / 2 + (chiffre === "?" ? 7 : 9)}" text-anchor="middle" font-size="${chiffre === "?" ? 20 : 26}"${etat === "trouve" ? ' font-weight="700"' : ""} fill="${encre}">${chiffre}</text>` : "");
+    };
+    plan.lignes.forEach((l, i) => {
+      const y = yLigne(i);
+      s += morceauSvg(B + TX / 2 + 2, y + R / 2 - 1, l.texte, {taille: 16});
+      plan.colonnes.forEach(rang => {
+        if (!l.rangs.has(rang)) return;
+        const etat = l.trouvee ? "trouve" : l.cherche ? "cherche" : "";
+        s += cellule(rang, y, l.cherche && !l.trouvee ? "?" : l.rangs.get(rang), etat);
+      });
+    });
+    s += `<line x1="${x0 - 10}" y1="${yTrait}" x2="${W - B}" y2="${yTrait}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`;
+    if (plan.resultat.texte) s += morceauSvg(B + TX / 2 + 2, yRes + R / 2 - 1, plan.resultat.texte, {taille: 16, cherche: true});
+    const garder = new Set(o.garder || []);
+    const trouves = new Set(o.trouves || []);
+    plan.resultat.rangs.forEach((chiffre, rang) => {
+      if (!plan.colonnes.includes(rang)) return;
+      const etat = !o.inconnue ? "" : trouves.has(rang) ? "trouve" : garder.has(rang) ? "garde" : "cherche";
+      s += cellule(rang, yRes, etat === "cherche" ? "?" : chiffre, etat);
+    });
+    // La retenue : un petit « 1 » rouge, en haut à droite de sa colonne,
+    // juste au-dessus du trait.
+    plan.retenues.filter(rang => plan.colonnes.includes(rang)).forEach(rang => {
+      s += `<circle cx="${x(rang) + C - 8}" cy="${yTrait - 6}" r="7.5" fill="#fff" stroke="#c62828" stroke-width="2"/><text x="${x(rang) + C - 8}" y="${yTrait - 1.5}" text-anchor="middle" font-size="12" font-weight="700" fill="#c62828">1</text>`;
+    });
+    // La virgule : un trait rouge entre les unités et les dixièmes.
+    if (plan.colonnes.includes(0) && plan.colonnes.includes(-1)) {
+      const xv = x(0) + C + E / 2;
+      s += `<line x1="${xv}" y1="${T + 4}" x2="${xv}" y2="${H - 2}" stroke="#c62828" stroke-width="3.5" stroke-linecap="round"/>`;
+    }
+    return s + "</svg>";
+  }
+  // Le même tableau, en mots (sans la réponse quand elle est cherchée).
+  function decrireNumeration(o, plan = planNumeration(o)) {
+    const lire = rangs => [...rangs.entries()].map(([rang, chiffre]) => `${chiffre} aux ${RANGS[rang].toLowerCase()}`).join(", ");
+    const ecrit = texte => String(texte).replace(/\//g, " sur ");
+    const lignes = plan.lignes.map(l => `${ecrit(l.texte)} : ${l.cherche && !l.trouvee ? "à écrire" : lire(l.rangs)}`).join(" ; ");
+    const retenue = plan.retenues.length ? ` Une retenue aux ${plan.retenues.map(rang => RANGS[rang].toLowerCase()).join(" et aux ")}.` : "";
+    if (!o.inconnue) return `Tableau de numération. ${lignes}.${retenue} En bas, ${lire(plan.resultat.rangs)}.`;
+    const connus = new Set([...(o.garder || []), ...(o.trouves || [])]);
+    const deja = [...plan.resultat.rangs.entries()].filter(([rang]) => connus.has(rang));
+    const tout = deja.length === plan.resultat.rangs.size;
+    if (tout) return `Tableau de numération. ${lignes}.${retenue} En bas, ${lire(plan.resultat.rangs)}.`;
+    const bas = deja.length ? `En bas : ${lire(new Map(deja))}, le reste à trouver.` : "En bas, le nombre à trouver.";
+    return `Tableau de numération. ${lignes}.${retenue} ${bas}`;
+  }
+
+  // --------------------------------------------------- le carré de 100 (D1)
+  //
+  // Une unité = un carré partagé en 100 petits carrés : une bande (une
+  // colonne de 10) est un dixième, un petit carré un centième. Les unités
+  // entières sont des carrés pleins ; le dernier carré est colorié en
+  // partie (les dixièmes, puis les centièmes dans la colonne suivante).
+  // Aucun chiffre dessus : c'est un dessin à lire. Le bleu des carrés
+  // coloriés est un gris moyen à l'impression.
+  //   o : {unites, dixiemes, centiemes}
+  const CARRE = Object.freeze({cote: 100, ecart: 14, marge: 6, plein: "#5d86c8", clair: "#fff", trait: "#143451"});
+  function carreSvg(x, y, cote, pleines, centiemes, {grille = true} = {}) {
+    const c = cote / 10;
+    let s = `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="${CARRE.clair}"/>`;
+    if (pleines) s += `<rect x="${x}" y="${y}" width="${pleines * c}" height="${cote}" fill="${CARRE.plein}"/>`;
+    if (centiemes) s += `<rect x="${x + pleines * c}" y="${y}" width="${c}" height="${centiemes * c}" fill="${CARRE.plein}"/>`;
+    if (grille) {
+      for (let k = 1; k < 10; k += 1) {
+        s += `<line x1="${x + k * c}" y1="${y}" x2="${x + k * c}" y2="${y + cote}" stroke="${CARRE.trait}" stroke-width="1.1" opacity=".9"/>`;
+        s += `<line x1="${x}" y1="${y + k * c}" x2="${x + cote}" y2="${y + k * c}" stroke="${CARRE.trait}" stroke-width=".5" opacity=".45"/>`;
+      }
+    }
+    return s + `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="none" stroke="${CARRE.trait}" stroke-width="2.4"/>`;
+  }
+  // Décision du 04/11 (planche choix-4) : l'unité EST le grand carré —
+  // les unités entières sont des carrés de la même taille que le carré
+  // entamé, jamais plus petites (la fiche ne propose le carré que pour une
+  // partie entière de 0 à 3 : quatre carrés au plus, sur une rangée).
+  function carreCent(o) {
+    const unites = o.unites || 0;
+    const reste = (o.dixiemes || 0) > 0 || (o.centiemes || 0) > 0;
+    const M = CARRE.marge;
+    const nb = Math.max(1, unites + (reste ? 1 : 0));
+    const parRangee = nb > 5 ? Math.ceil(nb / 2) : nb;
+    const rangees = Math.ceil(nb / parRangee);
+    const cote = CARRE.cote;
+    const W = parRangee * cote + (parRangee - 1) * CARRE.ecart + 2 * M;
+    const H = rangees * cote + (rangees - 1) * CARRE.ecart + 2 * M;
+    let s = `<svg class="dc-carre" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireCarre(o)}">`;
+    for (let k = 0; k < nb; k += 1) {
+      const plein = k < unites;
+      s += carreSvg(M + (k % parRangee) * (cote + CARRE.ecart), M + Math.floor(k / parRangee) * (cote + CARRE.ecart), cote, plein ? 10 : o.dixiemes || 0, plein ? 0 : o.centiemes || 0);
+    }
+    return s + "</svg>";
+  }
+  function decrireCarre(o) {
+    const morceaux = [];
+    if (o.unites) morceaux.push(accorder(o.unites, "carré entier", "carrés entiers"));
+    if (o.dixiemes) morceaux.push(accorder(o.dixiemes, "bande", "bandes"));
+    if (o.centiemes) morceaux.push(accorder(o.centiemes, "petit carré", "petits carrés"));
+    return `Carrés de 100 : un carré entier est une unité, une bande un dixième, un petit carré un centième. Colorié : ${morceaux.join(", ") || "rien"}.`;
+  }
+
+  // La règle du carré à colorier, sans page (testée par node --test) : un
+  // toucher colorie la bande suivante tant qu'il manque des dixièmes, puis
+  // le petit carré suivant ; tout colorié, il est refusé (« de trop »).
+  // Rend le nouvel état, ou null pour un refus.
+  function carreGeste(etat, voulu) {
+    if (etat.dixiemes === voulu.dixiemes && etat.centiemes === voulu.centiemes) return null;
+    return etat.dixiemes < voulu.dixiemes ? {dixiemes: etat.dixiemes + 1, centiemes: etat.centiemes} : {dixiemes: etat.dixiemes, centiemes: etat.centiemes + 1};
+  }
+
+  // Le carré de 100 à colorier (D1, Je manipule) : les unités sont déjà
+  // là, à gauche, des carrés pleins DE LA MÊME TAILLE (décision du 04/11) ;
+  // dans le carré à colorier, chaque toucher colorie la
+  // bande suivante (un dixième), puis, les dixièmes faits, le petit carré
+  // suivant (un centième). Le geste est forcé (on ne colorie pas une case à
+  // la fois au hasard) ; une fois tout colorié, un toucher de plus fait
+  // trembler la consigne. Au bout, l'appli écrit le calcul.
+  //   options : {unites, dixiemes, centiemes, consigne, traces, surFini}
+  // Au clavier : Entrée ou Espace sur le grand carré.
+  function carreManip(zone, options) {
+    const {unites = 0, dixiemes = 0, centiemes = 0, consigne: texteConsigne, traces = [], surFini = null} = options;
+    const etat = {dixiemes: 0, centiemes: 0, fini: false, refus: 0, etape: 0};
+    compteurAides += 1;
+    const bloc = document.createElement("div");
+    bloc.className = "dc-carre-manip";
+    const consigne = document.createElement("p");
+    consigne.className = "consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    ecrireTexte(consigne, texteConsigne);
+    const scene = document.createElement("div");
+    scene.className = "dc-carre-scene";
+    // Les unités : des carrés pleins, de la taille du carré à colorier.
+    scene.style.setProperty("--n", String(unites + 1));
+    scene.classList.toggle("deux-rangees", unites + 1 >= 3);
+    const petits = Array.from({length: unites}, () => {
+      const unite = document.createElement("div");
+      unite.className = "dc-carre-unite";
+      unite.setAttribute("role", "img");
+      unite.setAttribute("aria-label", "Un carré entier : une unité");
+      unite.innerHTML = `<svg viewBox="0 0 204 204">${carreSvg(2, 2, 200, 10, 0)}</svg>`;
+      return unite;
+    });
+    const grand = document.createElement("div");
+    grand.className = "dc-carre-grand";
+    grand.tabIndex = 0;
+    grand.setAttribute("role", "button");
+    grand.setAttribute("aria-describedby", consigne.id);
+    const trace = document.createElement("p");
+    trace.className = "dc-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    const annonce = zoneAnnonce();
+    scene.append(...petits, grand);
+    bloc.append(consigne, scene, trace, annonce);
+    zone.replaceChildren(bloc);
+
+    const compte = () => [etat.dixiemes ? accorder(etat.dixiemes, "dixième", "dixièmes") : "", etat.centiemes ? accorder(etat.centiemes, "centième", "centièmes") : ""].filter(Boolean).join(" et ");
+    function dessiner() {
+      grand.innerHTML = `<svg viewBox="0 0 204 204">${carreSvg(2, 2, 200, etat.dixiemes, etat.centiemes)}</svg>`;
+      grand.setAttribute("aria-label", etat.fini ? `Carré de 100 : ${compte()} coloriés.` : `Carré de 100${etat.dixiemes || etat.centiemes ? ` : ${compte()} coloriés` : ""}. Touche pour colorier.`);
+      const pilule = document.createElement("b");
+      if (etat.fini && traces.length) {
+        pilule.className = "ok";
+        ecrireTexte(pilule, traces[traces.length - 1].texte);
+      } else if (etat.dixiemes || etat.centiemes) {
+        pilule.className = "ici";
+        pilule.textContent = `${compte()}…`;
+      }
+      trace.replaceChildren(...(pilule.className ? [pilule] : []));
+    }
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      consigne.classList.remove("est-refus");
+    }
+    function refuser() {
+      clearTimeout(etat.refus);
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+    function toucher() {
+      const apres = carreGeste(etat, {dixiemes, centiemes});
+      if (!apres) { refuser(); return; }
+      leverRefus();
+      etat.dixiemes = apres.dixiemes;
+      etat.centiemes = apres.centiemes;
+      etat.etape += 1;
+      if (etat.dixiemes === dixiemes && etat.centiemes === centiemes) {
+        etat.fini = true;
+        bloc.classList.add("est-finie");
+      }
+      dessiner();
+      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
+      if (etat.fini && typeof surFini === "function") surFini();
+    }
+    grand.addEventListener("click", toucher);
+    grand.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      toucher();
+    });
+    // Rien à colorier (4 = … : n'arrive pas, la fiche ne le propose pas).
+    if (!dixiemes && !centiemes) etat.fini = true;
+    dessiner();
+    return {
+      outil: "carre",
+      element: bloc,
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+      },
+      mesurer() {},
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return etat.fini; },
+      get etape() { return etat.etape; },
+      get colorie() { return {dixiemes: etat.dixiemes, centiemes: etat.centiemes}; },
+      toucher
+    };
+  }
+
+  // ------------------------------------------------- le tableau à jetons (D4)
+  //
+  // Le nombre de départ en jetons, colonne par colonne, rangés en carré de
+  // 3 × 3, chaque jeton écrit avec sa valeur (1 ; 0,1 ; 0,01 ; 0,001), dans
+  // sa colonne nommée, comme les disques de Singapour (décision du 04/11 :
+  // la colonne et le jeton disent la même chose ; des ronds vides ne se
+  // comprenaient pas). Sous le tableau, la réserve : un jeton de chaque sorte. L'élève touche le bon jeton de la réserve (4,45 + 0,3 :
+  // le jeton 0,1) : les 3 jetons arrivent d'un coup dans leur colonne
+  // (retrancher : ils s'en vont, barrés) ; un autre jeton : la consigne
+  // tremble. Avec une retenue, la colonne a 10 jetons ou plus : l'élève
+  // touche le paquet de 10, qui devient 1 jeton dans la colonne de gauche,
+  // autant de fois qu'il faut (3,96 + 0,05).
+  //   options : {depart, rang, chiffre, signe, colonnes, consigne, traces,
+  //   surFini}
+  const VALEURS_JETONS = Object.freeze({0: "1", "-1": "0,1", "-2": "0,01", "-3": "0,001"});
+  // La règle du tableau à jetons, sans page (testée par node --test).
+  // L'état : {comptes {rang: nombre de jetons}, phase (« reserve »,
+  // « echange », « fini »), echange (le rang du paquet à échanger)}. Un
+  // geste : {reserve: rang} (un jeton de la réserve) ou {echange: rang} (le
+  // paquet de 10 d'une colonne). Rend le nouvel état, ou null pour un refus.
+  function jetonsDepart({depart, colonnes}) {
+    const chiffres = chiffresParRang(depart);
+    return {comptes: Object.fromEntries(colonnes.map(rang => [rang, Number(chiffres.get(rang) || 0)])), phase: "reserve", echange: null};
+  }
+  function jetonsSuite(comptes, colonnes) {
+    const pleine = colonnes.slice().reverse().find(rang => comptes[rang] >= 10 && colonnes.includes(rang + 1));
+    return pleine === undefined ? {comptes, phase: "fini", echange: null} : {comptes, phase: "echange", echange: pleine};
+  }
+  function jetonsGeste(etat, geste, {rang, chiffre, signe = 1, colonnes}) {
+    if (etat.phase === "reserve" && geste.reserve === rang) {
+      const comptes = Object.assign({}, etat.comptes, {[rang]: etat.comptes[rang] + signe * chiffre});
+      return jetonsSuite(comptes, colonnes);
+    }
+    if (etat.phase === "echange" && geste.echange === etat.echange) {
+      const r = etat.echange;
+      const comptes = Object.assign({}, etat.comptes, {[r]: etat.comptes[r] - 10, [r + 1]: etat.comptes[r + 1] + 1});
+      return jetonsSuite(comptes, colonnes);
+    }
+    return null;
+  }
+  function jetonsManip(zone, options) {
+    const {depart, rang: rangAttendu, chiffre, signe = 1, colonnes, consigne: texteConsigne, traces = [], surFini = null} = options;
+    const regle = {rang: rangAttendu, chiffre, signe, colonnes};
+    let jeu = jetonsDepart({depart, colonnes});
+    const compte = {get: r => jeu.comptes[r]};
+    const etat = {get phase() { return jeu.phase; }, get echange() { return jeu.echange; }, get fini() { return jeu.phase === "fini"; }, refus: 0, etape: 0, venus: new Map(), partis: new Map(), echanges: []};
+    compteurAides += 1;
+    const bloc = document.createElement("div");
+    bloc.className = `dc-jetons colonnes-${colonnes.length}`;
+    bloc.style.setProperty("--colonnes", String(colonnes.length));
+    const consigne = document.createElement("p");
+    consigne.className = "consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    const tableau = document.createElement("div");
+    tableau.className = "dc-jetons-tableau";
+    tableau.setAttribute("role", "group");
+    tableau.setAttribute("aria-label", "Le tableau à jetons");
+    const reserve = document.createElement("div");
+    reserve.className = "dc-reserve";
+    reserve.setAttribute("role", "group");
+    reserve.setAttribute("aria-label", "La réserve");
+    const titreReserve = document.createElement("span");
+    titreReserve.className = "dc-reserve-titre";
+    titreReserve.textContent = "Réserve";
+    reserve.append(titreReserve, ...colonnes.map(rang => {
+      const bouton = document.createElement("button");
+      bouton.type = "button";
+      bouton.className = `dc-pion dc-pion-reserve l${VALEURS_JETONS[rang].length}`;
+      bouton.dataset.rang = String(rang);
+      bouton.dataset.valeur = VALEURS_JETONS[rang];
+      bouton.textContent = VALEURS_JETONS[rang];
+      bouton.setAttribute("aria-label", `Jeton de ${VALEURS_JETONS[rang]}`);
+      bouton.addEventListener("click", () => toucherReserve(rang));
+      return bouton;
+    }));
+    const trace = document.createElement("p");
+    trace.className = "dc-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    const annonce = zoneAnnonce();
+    bloc.append(consigne, tableau, reserve, trace, annonce);
+    zone.replaceChildren(bloc);
+
+    const texteDeLaConsigne = () => (etat.phase === "echange"
+      ? `Échange 10 jetons de ${VALEURS_JETONS[etat.echange]} contre 1 jeton de ${VALEURS_JETONS[etat.echange + 1]} : touche le paquet de 10.`
+      : texteConsigne);
+    function dessiner() {
+      ecrireTexte(consigne, texteDeLaConsigne());
+      tableau.replaceChildren(...colonnes.map(rang => {
+        const colonne = document.createElement("div");
+        colonne.className = `dc-jetons-col${rang === -1 ? " apres-virgule" : ""}`;
+        colonne.dataset.rang = String(rang);
+        const tete = document.createElement("span");
+        tete.className = "tete";
+        tete.textContent = RANGS[rang];
+        const pile = document.createElement("div");
+        pile.className = "pile";
+        const n = compte.get(rang);
+        const venus = etat.venus.get(rang) || 0;
+        const partis = etat.partis.get(rang) || 0;
+        const pions = [];
+        for (let i = 0; i < n; i += 1) {
+          const pion = document.createElement("span");
+          pion.className = `dc-pion l${VALEURS_JETONS[rang].length}${i >= n - venus ? " est-venu" : ""}`;
+          pion.textContent = VALEURS_JETONS[rang];
+          pions.push(pion);
+        }
+        for (let i = 0; i < partis; i += 1) {
+          const pion = document.createElement("span");
+          pion.className = `dc-pion l${VALEURS_JETONS[rang].length} est-parti`;
+          pion.textContent = VALEURS_JETONS[rang];
+          pions.push(pion);
+        }
+        // Le paquet de 10 à échanger : les 10 premiers jetons, entourés.
+        if (etat.phase === "echange" && etat.echange === rang) {
+          const paquet = document.createElement("span");
+          paquet.className = "dc-paquet";
+          paquet.append(...pions.splice(0, 10));
+          pile.append(paquet, ...pions);
+          colonne.classList.add("a-echanger");
+          colonne.tabIndex = 0;
+          colonne.setAttribute("role", "button");
+          colonne.setAttribute("aria-label", `Le paquet de 10 jetons de ${VALEURS_JETONS[rang]} : l’échanger`);
+        } else {
+          pile.append(...pions);
+          colonne.setAttribute("aria-label", `${RANGS[rang]} : ${accorder(n, "jeton", "jetons")} de ${VALEURS_JETONS[rang]}`);
+        }
+        colonne.append(tete, pile);
+        return colonne;
+      }));
+      reserve.querySelectorAll("button").forEach(bouton => { bouton.disabled = etat.fini; });
+      const pilules = [];
+      if (etat.fini && traces.length) {
+        const b = document.createElement("b");
+        b.className = "ok";
+        ecrireTexte(b, traces[traces.length - 1].texte);
+        pilules.push(b);
+      } else if (etat.echanges.length) {
+        const b = document.createElement("b");
+        b.className = "ici";
+        b.textContent = etat.echanges[etat.echanges.length - 1];
+        pilules.push(b);
+      }
+      trace.replaceChildren(...pilules);
+    }
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      consigne.classList.remove("est-refus");
+    }
+    function refuser() {
+      clearTimeout(etat.refus);
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+    // Après un geste accepté : une colonne de 10 jetons ou plus attend son
+    // échange (la plus à droite d'abord, jetonsSuite) ; sinon, c'est fini.
+    function toucherReserve(rang) {
+      const apres = jetonsGeste(jeu, {reserve: rang}, regle);
+      bloc.dispatchEvent(new CustomEvent("jeton", {bubbles: true, detail: {rang, accepte: Boolean(apres)}}));
+      if (etat.fini) return;
+      if (!apres) { refuser(); return; }
+      leverRefus();
+      etat.etape += 1;
+      jeu = apres;
+      if (signe > 0) etat.venus.set(rang, chiffre);
+      else etat.partis.set(rang, chiffre);
+      if (etat.fini) bloc.classList.add("est-finie");
+      dessiner();
+      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : `${chiffre} jetons de ${VALEURS_JETONS[rang]}`);
+      if (etat.fini && typeof surFini === "function") surFini();
+    }
+    function echanger(rang) {
+      if (etat.fini) return;
+      const apres = jetonsGeste(jeu, {echange: rang}, regle);
+      if (!apres) { refuser(); return; }
+      leverRefus();
+      etat.etape += 1;
+      jeu = apres;
+      etat.venus.set(rang, 0);
+      etat.venus.set(rang + 1, 1);
+      etat.echanges.push(`10 jetons de ${VALEURS_JETONS[rang]} = 1 jeton de ${VALEURS_JETONS[rang + 1]}`);
+      if (etat.fini) bloc.classList.add("est-finie");
+      dessiner();
+      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : etat.echanges[etat.echanges.length - 1]);
+      if (etat.fini && typeof surFini === "function") surFini();
+    }
+    // Un toucher dans le tableau : l'échange (sur la bonne colonne), sinon
+    // la consigne tremble.
+    tableau.addEventListener("click", event => {
+      const colonne = event.target.closest && event.target.closest(".dc-jetons-col");
+      if (!colonne || etat.fini) return;
+      const rang = Number(colonne.dataset.rang);
+      if (etat.phase === "echange") echanger(rang);
+      else refuser();
+    });
+    tableau.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const colonne = event.target.closest && event.target.closest(".dc-jetons-col");
+      if (!colonne) return;
+      event.preventDefault();
+      event.stopPropagation();
+      echanger(Number(colonne.dataset.rang));
+    });
+    dessiner();
+    return {
+      outil: "jetons",
+      element: bloc,
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+      },
+      mesurer() {},
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return etat.fini; },
+      get etape() { return etat.etape; },
+      get phase() { return etat.phase; },
+      get comptes() { return Object.assign({}, jeu.comptes); },
+      toucherReserve,
+      echanger
+    };
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
@@ -2141,6 +2723,8 @@
     if (image.outil === "partage") return barrePartagee(image);
     if (image.outil === "parentheses") return parenthesesEscalier(image);
     if (image.outil === "deux-barres") return deuxBarres(image);
+    if (image.outil === "numeration") return tableauNumeration(image);
+    if (image.outil === "carre") return carreCent(image);
     return droiteSauts(image);
   }
 
@@ -2182,6 +2766,20 @@
     parenthesesEscalier,
     deuxBarres,
     toucherCalcul,
+    NUMERATION,
+    planNumeration,
+    tableauNumeration,
+    decrireNumeration,
+    carreCent,
+    decrireCarre,
+    carreGeste,
+    carreManip,
+    jetonsDepart,
+    jetonsGeste,
+    jetonsManip,
+    VALEURS_JETONS,
+    noeudsCalcul,
+    ecrireTexte,
     dessinerImage
   });
 });
