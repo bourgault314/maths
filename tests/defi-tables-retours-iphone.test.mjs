@@ -109,16 +109,17 @@ test("fin de révision (sans chrono) : le cadre porte les boutons — Continuer 
   ], "deux boutons tant qu'il en reste, deux à zéro (plus d’« Encore 10 calculs ») — et « Voir mon parcours » n'est plus là");
 });
 
-// Lot « un seul système » (05/10/2026) : Mes calculs du jour est chronométré.
-// Il ne se rate pas : « fait » et le score ; le temps écoulé, les calculs pas
-// faits ne sont pas comptés faux — ils reviendront. Pas de bilan des boîtes
-// ni de « Continuer » : la séance prend la suite.
-test("fin de Mes calculs du jour (chronométré) : « Mes calculs du jour : fait » et le score, ou « Temps écoulé » et ce qui n’a pas été fait", () => {
-  const jouer = (faits, score) => {
+// Lot « un seul système » (05/10/2026) : Mes calculs du jour ne se rate pas :
+// « fait » et le score. Pas de bilan des boîtes ni de « Continuer » : la
+// séance prend la suite. Lot « Mes calculs du jour sans chrono » (04/11/2026) :
+// plus de « Temps écoulé » ; les calculs justes mais lents se comptent à côté
+// du score (« 9 sur 10 · 2 un peu lents ⏱ »).
+test("fin de Mes calculs du jour : « Mes calculs du jour : fait », le score, et les calculs un peu lents", () => {
+  const jouer = (faits, score, lents = 0) => {
     const {document, $} = fauxDocument(["result", "result-verdict", "result-icon", "result-title", "result-score", "result-config", "result-detail", "result-rang", "result-message", "result-previous", "retry", "result-parcours", "result-reglages", "result-accueil"]);
     const avant = `
       const document = ARG.document; const $ = ARG.$; const TOTAL = 10;
-      const state = {startAt: 0, configuration: {revisionTable: null, duration: 60}, revisionPremierTotal: ${faits}, revisionPremierScore: ${score}, revisionMontes: 0, revisionDescendus: 0, origin: "seance"};
+      const state = {startAt: 0, configuration: {revisionTable: null, duration: null, mesCalculs: true}, revisionPremierTotal: ${faits}, revisionPremierScore: ${score}, revisionLents: ${lents}, revisionMontes: 0, revisionDescendus: 0, origin: "seance"};
       const parcours = {}; const PARCOURS = {};
       const soude = t => t; const pluriel = (n, m) => n + " " + m + (n > 1 ? "s" : ""); const formatElapsed = () => "17 s";
       const renderCorrections = () => {}; const show = () => {}; const enSeance = () => true; const horlogeSerie = () => 17000;`;
@@ -127,14 +128,13 @@ test("fin de Mes calculs du jour (chronométré) : « Mes calculs du jour : fait
       zoneCachee: $("result-parcours").hidden, boutons: $("result-parcours").children.length, rejouer: !$("retry").hidden};
   };
   assert.deepEqual(jouer(10, 9), {icone: "✓", titre: "Mes calculs du jour : fait", score: "9 sur 10", detail: "", zoneCachee: true, boutons: 0, rejouer: false});
-  assert.deepEqual(jouer(7, 6), {icone: "⏱", titre: "Temps écoulé", score: "6 sur 7 · 3 calculs pas faits", detail: "Ils reviendront.", zoneCachee: true, boutons: 0, rejouer: false});
-  assert.deepEqual(jouer(9, 9), {icone: "⏱", titre: "Temps écoulé", score: "9 sur 9 · 1 calcul pas fait", detail: "Il reviendra.", zoneCachee: true, boutons: 0, rejouer: false});
-  // Le chrono : 6 secondes par calcul (30 au moins), seulement sans table ;
-  // il s'arrête tant qu'une correction est à l'écran, et un calcul raté ne
-  // revient pas en fin de série.
-  assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
-  assert.match(html, /if \(state\.pauseA\) return;/);
-  assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/);
+  assert.deepEqual(jouer(10, 9, 2), {icone: "✓", titre: "Mes calculs du jour : fait", score: "9 sur 10 · 2 un peu lents ⏱", detail: "", zoneCachee: true, boutons: 0, rejouer: false});
+  assert.deepEqual(jouer(10, 10, 1), {icone: "✓", titre: "Mes calculs du jour : fait", score: "10 sur 10 · 1 un peu lent ⏱", detail: "", zoneCachee: true, boutons: 0, rejouer: false});
+  // Plus de chrono : DURATION nulle, et un calcul raté ne revient pas en fin
+  // de série.
+  assert.match(html, /DURATION = null;\s+state\.pauseA = null;\s+state\.revisionLents = 0;/);
+  assert.doesNotMatch(html, /dureeMesCalculs|Temps écoulé" : "Mes calculs du jour : fait/);
+  assert.match(html, /const willRetry = !correct && !question\.retry && !mesCalculs;/);
 });
 
 test("fin de révision : la classe is-revision centre le cadre, cache la rangée du bas, et disparaît sur les autres verdicts", () => {

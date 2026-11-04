@@ -643,7 +643,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");

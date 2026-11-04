@@ -302,7 +302,7 @@ test("dans l’ordre et le désordre, rien ne change : le calcul revient jusqu�
 });
 
 test("la correction dit « Je l’écris dans la bande. » à la 3e erreur", () => {
-  assert.match(html, /function showAnswerFeedback\(question, correct, given, willRetry = false, assisted = false, donnee = false\)/);
+  assert.match(html, /function showAnswerFeedback\(question, correct, given, willRetry = false, assisted = false, donnee = false, lente = false\)/);
   assert.match(html, /const suite = willRetry\s*\? \(montree \? " Je l’écris dans la bande, le calcul reviendra\." : " Le calcul reviendra\."\)\s*: donnee \? " Je l’écris dans la bande\." : "";/);
   assert.match(html, /: `Ta réponse\\u00a0: \$\{given\}\. Bonne réponse\\u00a0: \$\{question\.answer\}\$\{car\}\.\$\{suite\}`;/);
   assert.match(html, /\? `Pas de réponse\. Bonne réponse\\u00a0: \$\{question\.answer\}\$\{car\}\.\$\{suite\}`/);
@@ -336,7 +336,11 @@ test("dans la bande, la question suivante arrive après 450 ms ; ailleurs, 800 m
   assert.ok(pop && Number(`0.${pop[1]}`) * 1000 < 450, "l’effet de la case qui se remplit a le temps de se jouer");
   assert.match(source("scheduleAutoAdvance"), /function scheduleAutoAdvance\(delai = DELAI_SUIVANT\)[\s\S]*\}, delai\);/);
   assert.match(html, /scheduleAutoAdvance\(stickActivity \? DELAI_SUIVANT_BANDE : DELAI_SUIVANT\);/);
-  // Les entraînements, la validation, la révision : l'appel sans délai, donc 800.
+  // Les entraînements, la validation : l'appel sans délai, donc 800. La
+  // révision aussi, sauf un calcul juste mais lent de Mes calculs du jour
+  // (lot du 04/11/2026) : le temps de lire « Juste, mais un peu lent ».
   const appels = html.match(/scheduleAutoAdvance\(\);/g) || [];
-  assert.ok(appels.length >= 2, "les autres séries gardent le délai par défaut");
+  assert.ok(appels.length >= 1, "les autres séries gardent le délai par défaut");
+  assert.match(html, /scheduleAutoAdvance\(lente \? DELAI_SUIVANT_LENT : DELAI_SUIVANT\);/);
+  assert.equal(constante("DELAI_SUIVANT_LENT"), 1800);
 });

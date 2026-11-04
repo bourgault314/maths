@@ -206,7 +206,8 @@ test("la révision = les calculs dus aujourd’hui des tables passées, boîtes 
   const joue = {...passe, calculsDuJour: "2026-09-06"};
   assert.deepEqual(parcours.planRevision(joue, {random: () => 0, aujourdhui: "2026-09-06"}).map(item => item.cle).sort(), ["2-5", "3-9", "4-4", "6-7", "7-8"], "le 6, déjà joué : les dus seulement — 8-8 (retour le 12) n’y est pas");
   assert.equal(parcours.serieDuJour(joue, {aujourdhui: "2026-09-06"}).faite, true);
-  assert.deepEqual([parcours.dureeMesCalculs(10), parcours.dureeMesCalculs(6), parcours.dureeMesCalculs(3)], [60, 36, 30], "6 secondes par calcul, 30 secondes au moins");
+  assert.equal(parcours.dureeMesCalculs, undefined, "plus de chrono sur la série (lot « Mes calculs du jour sans chrono »)");
+  assert.equal(parcours.SEUILS.revision.lentApres, 6, "6 secondes par calcul, mesurées une à une");
   // Trente calculs dus, répartis : chaque série de dix mêle les boîtes.
   let charge = parcours.creerParcours();
   parcours.FAITS.slice(0, 30).forEach((cle, index) => {
@@ -558,27 +559,28 @@ test("le détail d’une case écrit le calcul dans les deux sens et empile ses 
   assert.match(html, /\.calculs-detail\.is-ferme \{ display: block; height: 0;/);
 });
 
-test("seule la première réponse compte pour la grille ; un raté ne revient qu’une fois — et plus du tout dans Mes calculs du jour, chronométré", () => {
+test("seule la première réponse compte pour la grille ; un raté ne revient qu’une fois — et plus du tout dans Mes calculs du jour", () => {
   // Lot « les règles des records » : la question qui reste dans la course
   // (reessai) n'alimente pas la grille non plus.
-  assert.match(html, /if \(!question\.retry && !reessai\) alimenterMesCalculs\(question, correct && !skip\);/, "les calculs qui reviennent n’alimentent pas la grille");
-  assert.match(html, /const chrono = state\.configuration\.duration !== null;/);
-  assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/, "un calcul raté revient une seule fois par série de révision ; avec le chrono de Mes calculs du jour, il ne revient pas (il reviendra demain)");
-  assert.match(html, /if \(chrono\) \{\s*state\.pauseA = horlogeSerie\(\);/, "le chrono s’arrête le temps de lire la correction");
+  assert.match(html, /if \(!question\.retry && !reessai\) alimenterMesCalculs\(question, correct && !skip, lent\);/, "les calculs qui reviennent n’alimentent pas la grille");
+  assert.match(html, /const mesCalculs = Boolean\(state\.configuration\.mesCalculs\);/);
+  assert.match(html, /const willRetry = !correct && !question\.retry && !mesCalculs;/, "un calcul raté revient une seule fois par série de révision ; dans Mes calculs du jour, il ne revient pas (il reviendra demain)");
   assert.doesNotMatch(html, /repartira dans la prochaine révision/, "la règle n’est plus écrite sur l’écran de résultat (lot 2)");
   // Relecture du lot R2 : le temps de la révision est passé sur la ligne du
   // score ; la ligne du dessous reste vide (ni la règle, ni « Série terminée »).
   assert.match(html, /\$\("result-detail"\)\.textContent = "";/);
 });
 
-test("la révision : Mes calculs du jour chronométré (« fait » ou « Temps écoulé ») ; sur une table : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront » (plus d’« Encore 10 calculs »)", () => {
+test("la révision : Mes calculs du jour sans chrono (« fait », et les calculs un peu lents) ; sur une table : les calculs dus, 10 par 10, « Encore N → Continuer », puis « Reviens demain : N calculs t’attendront » (plus d’« Encore 10 calculs »)", () => {
   assert.match(html, /function startRevision\(/);
   assert.match(html, /mode: "revision"/);
-  // Lot « un seul système » : sans table, c'est Mes calculs du jour — 6 s par
-  // calcul (30 s au moins), et un bilan qui ne dit jamais « raté ».
-  assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
-  assert.match(html, /soude\(pasFaits \? "Temps écoulé" : "Mes calculs du jour : fait"\)/);
-  assert.match(html, /\$\("result-detail"\)\.textContent = pasFaits \? \(pasFaits > 1 \? "Ils reviendront\." : "Il reviendra\."\) : "";/, "les calculs pas faits ne sont pas comptés faux");
+  // Lot « un seul système » : sans table, c'est Mes calculs du jour, et un
+  // bilan qui ne dit jamais « raté ». Lot « Mes calculs du jour sans
+  // chrono » : plus de chrono ni de « Temps écoulé » — 6 s par calcul,
+  // mesurées une à une, et les calculs un peu lents comptés à côté du score.
+  assert.match(html, /mesCalculs: table === null/);
+  assert.match(html, /\$\("result-title"\)\.textContent = soude\("Mes calculs du jour : fait"\);/);
+  assert.match(html, /un peu lent\$\{lents > 1 \? "s" : ""\} ⏱/);
   assert.doesNotMatch(html, /Encore une révision/, "à zéro, rejouer ne ferait rien monter : le bouton n’existe plus");
   assert.match(html, /const restants = PARCOURS\.calculsDus\(parcours, \{table\}\)\.length;/, "ce qui reste dû après la série");
   assert.match(html, /encore \$\{pluriel\(restants, "calcul"\)\} du jour\./);

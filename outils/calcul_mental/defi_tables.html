@@ -1631,6 +1631,9 @@
     }
     .answer-feedback.is-correct { color: var(--green); background: var(--green-soft); }
     .answer-feedback.is-wrong { color: var(--red); background: var(--red-soft); }
+    /* Lot « Mes calculs du jour sans chrono » (04/11/2026) : juste, mais un
+       peu lent — l'ambre des réponses données, ni vert ni rouge. */
+    .answer-feedback.is-lent { color: #8a4b00; background: #fff1d6; }
     .learn-sequence {
       width: 100%;
       margin: 5px 0 0;
@@ -1871,6 +1874,10 @@
     .correction-details[open] summary::after { content: " ▴"; }
     .correction-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
     .correction-chips li { padding: 6px 9px; border-radius: 9px; color: var(--green); background: var(--green-soft); font-size: .92rem; font-weight: 850; }
+    .correction-chips.lents { margin-top: 0; }
+    .correction-chips.lents li { color: #8a4b00; background: #fff1d6; }
+    .corrections h2.titre-lents { margin-top: 12px; color: #8a4b00; }
+    .corrections h2.titre-lents:first-child { margin-top: 0; }
     .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 14px; }
     /* Lot « le cadre qui dépasse » (11/10/2026, planches 1 à 3, choix A de
        Gwenaël) : sur ordinateur, un résultat AVEC des erreurs se range sur
@@ -3309,13 +3316,13 @@
     <p><b>Ma séance du jour.</b> 4&nbsp;étapes (parfois 5), environ 5&nbsp;min. Réussi&nbsp;: j’avance. Raté&nbsp;: je reprends un peu plus bas.</p>
     <p><b>Ma table.</b> De marche en marche&nbsp;: les perles, la bande, dans l’ordre, dans le désordre, les nombres manquants et les divisions… jusqu’à «&nbsp;Je passe le test&nbsp;»&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30, une erreur au plus.</p>
     <p><b>Ma rangée.</b> En gris quand je l’ai construite, puis les couleurs de Mes calculs&nbsp;: rouge&nbsp;à&nbsp;revoir, bleu&nbsp;en&nbsp;route, vert&nbsp;su.</p>
-    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées, en 1&nbsp;minute. Réussi, un calcul revient plus tard. Raté, il revient demain.</p>
+    <p><b>Mes calculs du jour.</b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées. Juste en moins de 6&nbsp;secondes, un calcul revient plus tard. Lent ou raté, il revient demain.</p>
     <p><b>Mon mélange.</b> Mes tables passées mélangées&nbsp;: 20&nbsp;questions en 1&nbsp;min&nbsp;30. À 3, puis 6&nbsp;tables, il passe avant le test jusqu’à ce que je gagne la coupe.</p>
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
 
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261030-1"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261104-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3916,10 +3923,10 @@
       // grille est notée dans la file de l'appareil tant que le serveur ne l'a
       // pas confirmée (PARCOURS.noterReponse). Appelé juste après
       // appliquerReponse, avant sauverParcours.
-      function noterReponseAEnvoyer(resultat, correcte) {
+      function noterReponseAEnvoyer(resultat, correcte, lent = false) {
         if (VUE_PROF || !suiviActif() || !resultat || !resultat.fait) return;
         const fait = resultat.parcours.calculs[resultat.fait.cle];
-        PARCOURS.noterReponse(storage(), codeSuivi, resultat.fait.cle, {correcte, date: fait && fait.vu, epoque: resultat.parcours.epoque});
+        PARCOURS.noterReponse(storage(), codeSuivi, resultat.fait.cle, {correcte, lent, date: fait && fait.vu, epoque: resultat.parcours.epoque});
       }
 
       // « Recommencer à zéro » : rien d'avant ne se rejoue.
@@ -5235,6 +5242,7 @@
         // de lancement, sans retour.
         $("time").classList.remove("en-pause", "urgent", "no-timer", "anneau");
         $("time").style.removeProperty("--reste");
+        $("time").style.visibility = "";
         $("timer-alert").textContent = "";
         renderFilSeance($("seance-fil"));
         majSortieJeu();
@@ -6671,6 +6679,7 @@
       // bande, l'élève n'a rien à lire : juste le petit effet de la case qui
       // se remplit (0,35 s) — « le passage est un peu lent », 30/09.
       const DELAI_SUIVANT = 800;
+      const DELAI_SUIVANT_LENT = 1800;
       const DELAI_SUIVANT_BANDE = 450;
       // L'air qu'on laisse au-dessus du cadre du détail quand on le ramène
       // dans l'écran : de quoi voir qu'il n'est pas collé sous la barre.
@@ -7310,6 +7319,9 @@
         renderExpression(question);
         renderLearnSequence();
         clearAnswerFeedback();
+        // Lot « Mes calculs du jour sans chrono » : le temps d'un calcul part
+        // quand il s'affiche.
+        state.questionAfficheeA = horlogeSerie();
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
       }
@@ -7337,14 +7349,17 @@
       // changer à l'écran.
       const DELAI_LECTURE_CORRECTION_MS = 700;
 
-      function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false, donnee = false) {
+      function showAnswerFeedback(question, correct, given, willRetry = false, assisted = false, donnee = false, lente = false) {
         state.waitingForContinue = true;
         state.correctionAfficheeA = correct ? 0 : Date.now();
         const feedback = $("answer-feedback");
-        feedback.className = `answer-feedback ${correct ? "is-correct" : "is-wrong"}`;
+        feedback.className = `answer-feedback ${correct ? (lente ? "is-lent" : "is-correct") : "is-wrong"}`;
         if (correct) {
           renderInlineAnswer("is-correct");
-          feedback.textContent = assisted ? "Bravo\u00a0! On le reverra sans la bande." : "Bravo\u00a0!";
+          // Lot « Mes calculs du jour sans chrono » (phrase choisie par
+          // Gwenaël) : juste, mais trop long à venir.
+          feedback.textContent = lente ? "⏱ Juste, mais un peu lent\u00a0: il reviendra demain."
+            : assisted ? "Bravo\u00a0! On le reverra sans la bande." : "Bravo\u00a0!";
         } else {
           state.answer = String(question.answer);
           renderInlineAnswer("is-corrected");
@@ -7496,6 +7511,25 @@
             list.append(item);
           });
           zone.append(list);
+        }
+        // Lot « Mes calculs du jour sans chrono » : les calculs justes mais
+        // lents, avec leur réponse, en ambre — pour les retenir.
+        const lents = state.configuration.mesCalculs
+          ? state.responses.flatMap((response, index) => (response && response.correct && response.lent ? [state.questions[index]] : []))
+          : [];
+        if (lents.length) {
+          const titre = document.createElement("h2");
+          titre.className = "titre-lents";
+          titre.textContent = lents.length > 1 ? `⏱ Mes ${lents.length} calculs un peu lents` : "⏱ Mon calcul un peu lent";
+          const puces = document.createElement("ul");
+          puces.className = "correction-chips lents";
+          lents.forEach(question => {
+            const puce = document.createElement("li");
+            puce.textContent = question.prompt.replace("?", String(question.answer));
+            puces.append(puce);
+          });
+          zone.append(titre, puces);
+          $("result").classList.add("avec-erreurs");
         }
         if (completeReview && rightEntries.length) {
           const details = document.createElement("details");
@@ -8068,6 +8102,9 @@
         const course = state.configuration.course === "records";
         $("time").textContent = course ? formatTime(0) : DURATION === null ? "À ton rythme" : formatTime(DURATION);
         $("time").classList.toggle("no-timer", DURATION === null && !course);
+        // Mes calculs du jour : rien, pas même « À ton rythme » (il faut aller
+        // vite) — la place reste, rien ne bouge dans l'en-tête.
+        $("time").style.visibility = state.configuration.mesCalculs ? "hidden" : "";
         $("time").classList.remove("urgent");
         $("time").setAttribute("aria-label", course ? "Temps écoulé" : DURATION === null ? "Sans chrono" : "Temps restant");
         $("timer-alert").textContent = "";
@@ -8501,7 +8538,15 @@
         // un calcul qui revient après une erreur vient d'être corrigé sous les
         // yeux de l'élève. J'apprends n'alimente jamais la grille (le filtre est
         // dans serieAlimenteGrille).
-        if (!question.retry && !reessai) alimenterMesCalculs(question, correct && !skip);
+        // Mes calculs du jour : une réponse juste venue en plus de 6 secondes
+        // est « un peu lente » (lot « Mes calculs du jour sans chrono »).
+        const lent = Boolean(state.configuration.mesCalculs && correct && !skip && !question.retry
+          && PARCOURS.reponseLente((horlogeSerie() - (state.questionAfficheeA || 0)) / 1000));
+        if (lent) {
+          state.responses[state.index].lent = true;
+          state.revisionLents = (state.revisionLents || 0) + 1;
+        }
+        if (!question.retry && !reessai) alimenterMesCalculs(question, correct && !skip, lent);
 
         if (course && !skip && !correct) {
           state.essaisCourse = (state.essaisCourse || 0) + 1;
@@ -8517,22 +8562,19 @@
           }
           // Un calcul raté revient UNE fois dans la série ; s'il est encore raté,
           // il reste « à revoir » et la prochaine révision le reprendra.
-          // Mes calculs du jour (chronométré) : il ne revient pas, il revient
-          // demain ; et le chrono s'arrête le temps de lire.
-          const chrono = state.configuration.duration !== null;
-          if (chrono) {
-            state.pauseA = horlogeSerie();
-            $("time").classList.add("en-pause");
-          }
-          const willRetry = !correct && !question.retry && !chrono;
+          // Mes calculs du jour : il ne revient pas, il revient demain.
+          const mesCalculs = Boolean(state.configuration.mesCalculs);
+          const willRetry = !correct && !question.retry && !mesCalculs;
           if (willRetry) {
             const dejaEnAttente = state.questions.slice(state.index + 1).some(candidate => candidate.factKey === question.factKey);
             if (!dejaEnAttente) state.questions.push({...question, retry: true});
           }
-          showAnswerFeedback(question, correct, skip ? null : value, willRetry);
+          const lente = Boolean(state.responses[state.index] && state.responses[state.index].lent);
+          showAnswerFeedback(question, correct, skip ? null : value, willRetry, false, false, lente);
           if (correct) {
             $("validate").style.visibility = "hidden";
-            scheduleAutoAdvance();
+            // « Juste, mais un peu lent » : le temps de lire la phrase.
+            scheduleAutoAdvance(lente ? DELAI_SUIVANT_LENT : DELAI_SUIVANT);
           }
           return;
         }
@@ -8619,10 +8661,10 @@
       /* ---------- Mes calculs ---------- */
       let calculsSelection = null;
 
-      function alimenterMesCalculs(question, correcte) {
+      function alimenterMesCalculs(question, correcte, lent = false) {
         if (!question || !question.factKey) return;
         if (!PARCOURS.serieAlimenteGrille(state.configuration)) return;
-        const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte});
+        const resultat = PARCOURS.appliquerReponse(parcours, question.factKey, {correcte, lent});
         // Hors grille (× 1, × 10, la table de 10) : un bout de rangée réussi
         // pour la première fois est gardé (lot « Ma séance du jour »).
         if (!resultat.fait && resultat.bouts && resultat.bouts.length) {
@@ -8631,7 +8673,7 @@
         }
         if (!resultat.fait) return;
         parcours = resultat.parcours;
-        noterReponseAEnvoyer(resultat, correcte);
+        noterReponseAEnvoyer(resultat, correcte, lent);
         // Pour le bilan de la révision : ce qui monte, ce qui redescend.
         if (resultat.fait.monte) state.revisionMontes = (state.revisionMontes || 0) + 1;
         if (resultat.fait.descend) state.revisionDescendus = (state.revisionDescendus || 0) + 1;
@@ -9095,13 +9137,13 @@
       // Lot « Mon parcours » : plus de révision « libre » (« Encore 10
       // calculs », retiré) — la page ne demande au moteur que les calculs dus.
       // Lot « un seul système » (05/10/2026) : Mes calculs du jour (sans
-      // table) est CHRONOMÉTRÉ — 6 secondes par calcul, 30 au moins (le
-      // moteur le dit). Le chrono ne part qu'à « C'est parti ! », s'arrête
-      // tant qu'une correction est à l'écran, et un calcul raté ne revient
-      // plus en fin de série : il revient demain.
-      function dureeCourte(secondes) {
-        return secondes < 60 ? `${secondes}\u00a0s` : PARCOURS.libelleDuree(secondes).replace(/ /g, "\u00a0");
-      }
+      // table) a son écran de lancement, et un calcul raté ne revient plus en
+      // fin de série : il revient demain. Lot « Mes calculs du jour sans
+      // chrono » (04/11/2026, décision de Gwenaël) : plus de chrono sur la
+      // série (un calcul qui bloquait 20 s mangeait le temps des neuf
+      // autres) ; chaque calcul est mesuré, sans rien montrer pendant qu'il
+      // cherche — juste en plus de 6 secondes, il est « un peu lent » : ni
+      // monté ni descendu, il revient demain (le moteur, reponseLente).
 
       function startRevision(table = null, origin = "parcours") {
         if (VUE_PROF) return;
@@ -9111,12 +9153,13 @@
         state.revisionMontes = 0;
         state.revisionDescendus = 0;
         TOTAL = plan.length;
-        DURATION = table === null ? PARCOURS.dureeMesCalculs(plan.length) : null;
+        DURATION = null;
         state.pauseA = null;
+        state.revisionLents = 0;
         state.questions = plan.map(item => CORE.tableQuestion(item.type, item.first, item.second));
         state.responses = [];
         state.signature = "";
-        state.configuration = {mode: "revision", revisionTable: table, tables: [], learnActivity: null, questionTypes: [], total: TOTAL, duration: DURATION};
+        state.configuration = {mode: "revision", revisionTable: table, tables: [], learnActivity: null, questionTypes: [], total: TOTAL, duration: DURATION, mesCalculs: table === null};
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
@@ -9139,15 +9182,19 @@
         state.revisionPremierTotal = 0;
         state.origin = origin;
         state.launchReady = true;
-        if (DURATION === null) {
+        if (table !== null) {
           beginRound();
           return;
         }
-        // L'écran de lancement, comme pour un test : le chrono attend
-        // « C'est parti ! ».
-        $("launch-summary").textContent = `Mes calculs du jour\u00a0· ${pluriel(TOTAL, "calcul").replace(" ", "\u00a0")}\u00a0· ${dureeCourte(DURATION)}`;
-        $("launch-format").replaceChildren();
-        $("launch-format").hidden = true;
+        // L'écran de lancement, comme pour un test : la série attend
+        // « C'est parti ! », et dit la règle des 6 secondes.
+        $("launch-summary").textContent = `Mes calculs du jour\u00a0· ${pluriel(TOTAL, "calcul").replace(" ", "\u00a0")}`;
+        const regle = document.createElement("p");
+        const vite = document.createElement("b");
+        vite.textContent = `en moins de ${PARCOURS.SEUILS.revision.lentApres}\u00a0secondes`;
+        regle.append(document.createTextNode("Réponds vite\u00a0: juste "), vite, document.createTextNode(", un calcul revient plus tard."));
+        $("launch-format").replaceChildren(regle);
+        $("launch-format").hidden = false;
         $("launch-eyebrow").hidden = true;
         $("launch-back-fleche").hidden = false;
         $("launch-back-label").textContent = sortieDeSerie().mot;
@@ -9169,20 +9216,18 @@
         $("result-message").hidden = true;
         $("result-previous").hidden = true;
         $("retry").hidden = true;
-        // Lot « un seul système » : Mes calculs du jour, chronométré. Il ne se
-        // rate pas — « fait », le score ; le temps écoulé, les calculs pas
-        // faits ne sont pas comptés faux, ils reviendront.
-        if (state.configuration.duration !== null) {
-          const pasFaits = Math.max(0, TOTAL - total);
-          $("result-icon").textContent = pasFaits ? "⏱" : "✓";
-          $("result-title").textContent = soude(pasFaits ? "Temps écoulé" : "Mes calculs du jour : fait");
-          // Rien répondu avant la fin du temps : pas de « 0 sur 0 », seulement
-          // ce qui reste à faire (lot « retours de classe »).
-          const restent = `${pluriel(pasFaits, "calcul")} pas fait${pasFaits > 1 ? "s" : ""}`;
-          $("result-score").textContent = soude(!pasFaits ? `${score} sur ${total}`
-            : total ? `${score} sur ${total} · ${restent}` : restent);
+        // Lot « un seul système » : Mes calculs du jour ne se rate pas —
+        // « fait », le score. Lot « Mes calculs du jour sans chrono »
+        // (04/11/2026) : plus de « Temps écoulé » ; les calculs justes mais
+        // lents se comptent à côté du score (« 9 sur 10 · 2 un peu lents ⏱ »,
+        // choix de Gwenaël) et se listent sous les erreurs.
+        if (state.configuration.mesCalculs) {
+          const lents = state.revisionLents || 0;
+          $("result-icon").textContent = "✓";
+          $("result-title").textContent = soude("Mes calculs du jour : fait");
+          $("result-score").textContent = soude(`${score} sur ${total}${lents ? ` · ${lents} un peu lent${lents > 1 ? "s" : ""} ⏱` : ""}`);
           $("result-config").textContent = "";
-          $("result-detail").textContent = pasFaits ? (pasFaits > 1 ? "Ils reviendront." : "Il reviendra.") : "";
+          $("result-detail").textContent = "";
           const zoneDuJour = $("result-parcours");
           zoneDuJour.replaceChildren();
           zoneDuJour.hidden = true;
@@ -9670,9 +9715,19 @@
         const ouverte = PARCOURS.ouvrirSeance(parcours);
         const programme = PARCOURS.programmeDeSeance(parcours, ouverte, PARCOURS.jourLocal(), optionsSeance());
         const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0 && !ouverte.faites.length && !state.encoreOuverte;
+        // Lot « Mes calculs du jour sans chrono » (04/11/2026, remarque de
+        // Gwenaël) : la séance faite, il reste des calculs du jour (plus de
+        // 10 étaient dus) — comme pour les autres élèves, « ✓ Séance du jour
+        // faite » et « Encore une séance » (les 10 suivants, puis la course).
+        // Plus rien de dû : le bouton de la course, comme avant.
+        const resteDesCalculs = faite && programme.etapes.some(etape => etape.type === "revision");
         if (programme.etapes.length && !faite) {
           action.append(carteDeSeance(null));
         } else {
+          // Il reste des calculs du jour : la carte « Séance du jour faite »
+          // et « Encore une séance », AU-DESSUS du bouton de la course, qui
+          // reste (rien n'est retiré à la Légende).
+          if (resteDesCalculs) action.append(carteSeanceFaite(null));
           // Séance du jour faite (planche R1, 4e écran) : un seul bouton.
           const titre = record.meilleur === null ? "Ma première course" : "Je bats mon record";
           action.append(ligneEtape({
@@ -10520,7 +10575,7 @@
           numero.textContent = String(index + 1);
           const nom = document.createElement("span");
           nom.textContent = etape.nom;
-          const detail = etape.type === "revision" ? soude(`${pluriel(etape.calculs, "calcul")} · ${dureeCourte(etape.duree)}`)
+          const detail = etape.type === "revision" ? soude(pluriel(etape.calculs, "calcul"))
             : etape.type === "etoile" || etape.type === "melange" ? etape.detail
             : etape.type === "course" ? etape.detail
             : etape.conditionnelle ? CONDITION_DU_TEST : "";

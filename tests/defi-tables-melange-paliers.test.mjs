@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261030-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261104-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -496,7 +496,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, modules lot 2 (01/11/2026) : prof/defi_calcul_core.js
   // seul change (A3, A4, A6, A7, A8), 65 au manifeste (avant :
   // defi-calcul-relier).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-4$/m);
+  // Puis Défi tables, « Mes calculs du jour sans chrono » (04/11/2026) :
+  // prof/defi_tables_mon_parcours.js seul change, 65 au manifeste (avant :
+  // defi-calcul-modules-lot-4).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-calculs-du-jour-sans-chrono$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

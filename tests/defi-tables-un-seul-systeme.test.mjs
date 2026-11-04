@@ -175,7 +175,7 @@ test("point 4 : une fois Mes calculs du jour joué, les séances suivantes prenn
   let seance = P.ouvrirSeance(p, {table: 4, aujourdhui: MARDI});
   assert.deepEqual(seance.file.map(etape => etape.type), ["revision", "marche", "marche", "marche"]);
   let etape = P.etapeDeSeance(p, seance, MARDI);
-  assert.deepEqual([etape.type, etape.calculs, etape.duree, etape.porte], ["revision", 10, 60, true]);
+  assert.deepEqual([etape.type, etape.calculs, etape.duree, etape.porte], ["revision", 10, undefined, true], "plus de durée : pas de chrono (lot du 04/11/2026)");
   serie.cles.forEach(cle => { p = repondre(p, cle, true, MARDI); });
   let note = P.noterEtape(p, seance, etape, {juste: 10, total: 10}, MARDI);
   p = note.parcours;
@@ -189,11 +189,10 @@ test("point 4 : une fois Mes calculs du jour joué, les séances suivantes prenn
   etape = P.etapeDeSeance(p, seance, MARDI);
   assert.deepEqual([etape.type, etape.calculs, etape.porte], ["revision", 10, false]);
   serie.cles.forEach(cle => { p = repondre(p, cle, true, MARDI); });
-  // 3e séance : le dernier calcul dû, 30 secondes au moins.
+  // 3e séance : le dernier calcul dû.
   p.enCours = null;
   serie = P.serieDuJour(p, {aujourdhui: MARDI});
   assert.deepEqual([serie.cles.length, serie.complement], [1, 0], "pas de complément après le premier jeu du jour");
-  assert.equal(P.dureeMesCalculs(1), 30);
   p = repondre(p, serie.cles[0], true, MARDI);
   // 4e séance : plus rien de dû, quatre marches.
   seance = P.ouvrirSeance(p, {table: 4, aujourdhui: MARDI});
@@ -207,8 +206,8 @@ test("il ne se rate pas : quel que soit le score, l'étape jouée ouvre la porte
   const seance = P.ouvrirSeance(p, {table: 3, aujourdhui: MARDI});
   const etape = P.etapeDeSeance(p, seance, MARDI);
   assert.equal(etape.calculs, 8);
-  assert.equal(etape.duree, 48, "6 secondes par calcul");
-  // Temps écoulé après trois réponses, toutes fausses.
+  assert.equal(etape.duree, undefined, "plus de chrono sur la série");
+  // La série arrêtée après trois réponses, toutes fausses.
   const serie = P.serieDuJour(p, {aujourdhui: MARDI}).cles;
   serie.slice(0, 3).forEach(cle => { p = repondre(p, cle, false, MARDI); });
   const note = P.noterEtape(p, seance, etape, {juste: 0, total: 3}, MARDI);
@@ -216,7 +215,6 @@ test("il ne se rate pas : quel que soit le score, l'étape jouée ouvre la porte
   assert.equal(note.parcours.calculsDuJour, MARDI);
   assert.equal(note.seance.finie, false, "la séance continue");
   assert.equal(P.serieDuJour(note.parcours, {aujourdhui: MARDI}).cles.length, 5, "les cinq calculs pas faits restent dus (les trois ratés reviennent demain)");
-  assert.deepEqual([P.dureeMesCalculs(10), P.dureeMesCalculs(5), P.dureeMesCalculs(4), P.dureeMesCalculs(20)], [60, 30, 30, 120]);
 });
 
 test("calculsDuJour : une date, gardée par la normalisation, la plus récente à la fusion, déclarée au serveur", () => {
@@ -450,16 +448,17 @@ test("« Je passe le test », l'escalier et Platine dès 9 tables passées", () 
   assert.equal(P.resumeProf(p, MARDI).enCours.type, "expert");
 });
 
-test("la page : Mes calculs du jour chronométré, lancé par « C'est parti ! », en pause pendant une correction", () => {
-  assert.match(html, /DURATION = table === null \? PARCOURS\.dureeMesCalculs\(plan\.length\) : null;/);
-  assert.match(html, /if \(DURATION === null\) \{\s+beginRound\(\);\s+return;\s+\}/);
-  assert.match(html, /if \(state\.pauseA\) return;\s+const remaining/);
-  assert.match(html, /state\.endAt \+= horlogeSerie\(\) - state\.pauseA;/);
-  assert.match(html, /const willRetry = !correct && !question\.retry && !chrono;/);
-  assert.match(html, /soude\(pasFaits \? "Temps écoulé" : "Mes calculs du jour : fait"\)/);
-  assert.match(html, /pasFaits > 1 \? "Ils reviendront\." : "Il reviendra\."/);
-  assert.match(html, /#time\.en-pause \{ opacity: \.55; \}/);
-  assert.match(html, /\$\{pluriel\(etape\.calculs, "calcul"\)\} · \$\{dureeCourte\(etape\.duree\)\}/);
+// Lot « Mes calculs du jour sans chrono » (04/11/2026) : plus de chrono sur
+// la série, l'écran de lancement dit la règle des 6 secondes, le chrono de
+// l'en-tête est caché, et la carte de séance dit « 10 calculs » sans durée.
+test("la page : Mes calculs du jour lancé par « C'est parti ! », sans chrono, la règle des 6 secondes à l'écran", () => {
+  assert.match(html, /DURATION = null;\s+state\.pauseA = null;\s+state\.revisionLents = 0;/);
+  assert.match(html, /if \(table !== null\) \{\s+beginRound\(\);\s+return;\s+\}/);
+  assert.match(html, /regle\.append\(document\.createTextNode\("Réponds vite\\u00a0: juste "\), vite, document\.createTextNode\(", un calcul revient plus tard\."\)\);/);
+  assert.match(html, /\$\("time"\)\.style\.visibility = state\.configuration\.mesCalculs \? "hidden" : "";/);
+  assert.match(html, /const willRetry = !correct && !question\.retry && !mesCalculs;/);
+  assert.doesNotMatch(html, /Temps écoulé" : "Mes calculs du jour : fait|dureeCourte/);
+  assert.match(html, /const detail = etape\.type === "revision" \? soude\(pluriel\(etape\.calculs, "calcul"\)\)/);
 });
 
 // Lot « Mes calculs du jour d'abord » (08/10/2026, décision de Gwenaël,
@@ -500,7 +499,7 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261030-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {
