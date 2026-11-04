@@ -31,7 +31,7 @@ test("la notice garde six phrases et prend le nom que l'appli donne au mélange"
   assert.doesNotMatch(notice, /acquise|avant de valider/);
 });
 
-test("la notice dit « 10 calculs de mes tables passées, juste en moins de 6 secondes », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
+test("la notice dit « 10 calculs de mes tables passées, juste en 6 secondes ou moins », et le moteur les prend dans chaque boîte, à tour de rôle", () => {
   // Audit 1 (30/09/2026) : la notice tient en six lignes courtes ; le « à
   // tour de rôle » n'y est plus écrit, mais le moteur tire toujours ainsi.
   // Lot 2b : la notice de la séance ne dit plus « 10 à la fois » (Mes calculs
@@ -40,7 +40,7 @@ test("la notice dit « 10 calculs de mes tables passées, juste en moins de 6 se
   // du jour — 10 calculs des tables passées ; la notice le dit. Lot « Mes
   // calculs du jour sans chrono » (04/11/2026) : plus de minute pour la
   // série, 6 secondes par calcul, sans chrono à l'écran.
-  assert.match(notice, /<b>Mes calculs du jour\.<\/b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées\. Juste en moins de 6&nbsp;secondes, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
+  assert.match(notice, /<b>Mes calculs du jour\.<\/b> D’abord, chaque jour&nbsp;: 10&nbsp;calculs de mes tables passées\. Juste en 6&nbsp;secondes ou moins, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
   // Et le moteur tire bien ainsi : sur 30 calculs dus répartis dans les cinq
   // boîtes, la première série de 10 en prend dans chacune — pas dix rouges.
   const aujourdhui = PARCOURS.jourLocal();
@@ -65,12 +65,12 @@ test("la notice dit « 10 calculs de mes tables passées, juste en moins de 6 se
   assert.equal(serie.cles.length, 10, "10 calculs, pas les 30 dus");
   assert.ok(serie.cles.every(cle => PARCOURS.prisParMesCalculs(parcours, cle, aujourdhui)), "tous des tables passées");
   assert.equal(new Set(serie.cles.map(cle => parcours.calculs[cle].boite)).size, 5, "toujours à tour de rôle dans les boîtes");
-  assert.equal(PARCOURS.SEUILS.revision.lentApres, 6, "« en moins de 6 secondes »");
+  assert.equal(PARCOURS.SEUILS.revision.lentApres, 6, "« en 6 secondes ou moins »");
   assert.deepEqual([PARCOURS.reponseLente(6), PARCOURS.reponseLente(6.1), PARCOURS.reponseLente(2)], [false, true, false]);
 });
 
 test("la notice dit ce que fait une erreur, et le moteur le confirme : une boîte de moins, et demain", () => {
-  assert.match(notice, /Juste en moins de 6&nbsp;secondes, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
+  assert.match(notice, /Juste en 6&nbsp;secondes ou moins, un calcul revient plus tard\. Lent ou raté, il revient demain\./);
   assert.doesNotMatch(notice, /il revient tout de suite/);
   // La même phrase partout où l'élève lit la règle (audit 1) : le détail
   // d'une case et la fiche imprimée disent « demain », plus « tout de suite ».
