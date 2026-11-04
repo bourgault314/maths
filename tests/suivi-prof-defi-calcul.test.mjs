@@ -203,7 +203,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.deepEqual([lien.target, lien.rel], ["_blank", "noopener"]);
 });
 
-test("exempleErreur : un calcul regénéré pour chacune des 55 causes des 13 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2), jamais un calcul d'élève", () => {
+test("exempleErreur : un calcul regénéré pour chacune des 70 causes des 18 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3), jamais un calcul d'élève", () => {
   const o = outils([]);
   let trouves = 0;
   CALCUL_CORE.MODULES.filter(m => m.construit).forEach(fiche => {
@@ -218,7 +218,7 @@ test("exempleErreur : un calcul regénéré pour chacune des 55 causes des 13 mo
       trouves += 1;
     });
   });
-  assert.equal(trouves, 55);
+  assert.equal(trouves, 70);
   // Le niveau qui coince d'abord : A2 cause 2 au niveau 4 donne un complément à 1 000.
   assert.match(o.exempleErreur("A2", 2, 4).texte, /1 000|centaine|[0-9]{3}/);
   // Une cause inconnue : null, sans erreur.

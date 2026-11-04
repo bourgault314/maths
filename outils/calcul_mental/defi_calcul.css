@@ -762,6 +762,9 @@ div.dc-mod { cursor: default; }
 .dc-aide .consigne { margin: 0 0 2px; color: var(--teal); font-size: 1.02rem; font-weight: 900; line-height: 1.25; text-align: center; }
 .dc-aide .consigne.est-refus { color: var(--red); animation: perles-refus .28s ease-out; }
 .dc-aide svg { display: block; width: 100%; height: auto; }
+/* M4 (modules lot 3) : le rectangle de points est étroit ; il ne grandit
+   pas au-delà de la taille des autres dessins quand la place s'ouvre. */
+svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-aide text { font-family: inherit; font-weight: 900; }
 @media (max-width: 620px) {
   .challenge-playing .question.aide-image .dc-aide { order: -1; margin-top: auto; }
@@ -955,6 +958,9 @@ div.dc-mod { cursor: default; }
 
 /* ---- le bilan : « Juste, mais trop long » ---- */
 .result .seance-suite .cadre { max-width: 520px; text-align: center; }
+/* M4 (modules lot 3) : le bouton qui ouvre Défi tables, sous la phrase. */
+.seance-suite .cadre .renvoi-tables { justify-content: center; margin-top: 8px; }
+.seance-suite .cadre .renvoi-tables a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 14px; text-decoration: none; font-weight: 900; }
 
 /* ---- « Comment ça marche ? » ---- */
 .notice-screen { max-width: 620px; margin: 0 auto; }

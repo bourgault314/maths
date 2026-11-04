@@ -1085,9 +1085,14 @@
       s += coupure > 0
         ? `<text x="${cx}" y="13" text-anchor="middle" font-size="10.5" fill="#2c4a63">${nom.slice(0, coupure)}</text><text x="${cx}" y="25" text-anchor="middle" font-size="10.5" fill="#2c4a63">${nom.slice(coupure + 1)}</text>`
         : `<text x="${cx}" y="19.5" text-anchor="middle" font-size="11" fill="#2c4a63">${nom}</text>`;
-      const chiffreHaut = plan.haut.get(rang) || "";
-      s += `<rect x="${x(rang) + 1}" y="${yHaut}" width="${C - 2}" height="${R}" rx="9" fill="#e9eef2" stroke="#143451" stroke-width="2"/>`
-        + (chiffreHaut ? `<text x="${cx}" y="${yHaut + 33}" text-anchor="middle" font-size="27" fill="#143451">${chiffreHaut}</text>` : "");
+      // M3 (modules lot 3) : dans J'écris, le nombre du haut est le
+      // résultat de la table, que l'élève écrit d'abord — « ? » tant qu'il
+      // ne l'a pas trouvé (`haut: "cherche"`), en vert ensuite (« trouve »).
+      const chiffreHaut = plan.haut.has(rang) ? (o.haut === "cherche" ? "?" : plan.haut.get(rang)) : "";
+      const hautVert = o.haut === "trouve" && plan.haut.has(rang);
+      const hautBleu = o.haut === "cherche" && plan.haut.has(rang);
+      s += `<rect x="${x(rang) + 1}" y="${yHaut}" width="${C - 2}" height="${R}" rx="9" fill="${hautVert ? "#e5f7eb" : hautBleu ? "#fff" : "#e9eef2"}" stroke="${hautVert ? "#147447" : hautBleu ? "#0755b8" : "#143451"}" stroke-width="${hautVert ? 2.5 : 2}"/>`
+        + (chiffreHaut ? `<text x="${cx}" y="${yHaut + 33}" text-anchor="middle" font-size="${hautBleu ? 22 : 27}"${hautVert ? ' font-weight="700"' : ""} fill="${hautVert ? "#147447" : hautBleu ? "#0755b8" : "#143451"}">${chiffreHaut}</text>` : "");
       const zero = plan.zeros.includes(rang);
       const fleche = plan.fleches.find(f => f.vers === rang);
       // L'aide (`inconnue`) montre les flèches, pas la rangée du bas : chaque
@@ -1124,7 +1129,7 @@
   // quand elle est cherchée).
   function decrireTableau(o, plan = planTableau(o)) {
     const glisse = `chaque chiffre glisse de ${accorder(Math.abs(plan.k), "colonne", "colonnes")} ${versLeCote(plan.k)}`;
-    const depart = `Tableau de numération. En haut, ${ecritureLisible(o.depart)}.`;
+    const depart = o.haut === "cherche" ? "Tableau de numération. En haut, un nombre à trouver." : `Tableau de numération. En haut, ${ecritureLisible(o.depart)}.`;
     if (o.masque && o.etiquetteTrouvee) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)}. En bas, ${ecritureLisible(o.arrivee)}.`;
     const tout = Array.isArray(o.trouves) && [...plan.bas.keys()].every(rang => o.trouves.includes(rang));
     if (o.inconnue && tout) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
@@ -1326,11 +1331,310 @@
       : `Schéma : deux barres de ${nombre(o.n)}${decoupe}, mises bout à bout.${ecrits} Ensemble : ${fin}.`;
   }
 
+  // ------------------------------------- le double du double (M6, modules lot 3)
+
+  // × 4 et × 8 sur le schéma en barres de M1 (rangées COLLÉES, alignées) :
+  // le nombre 4 (ou 8) fois, puis chaque paire réunie juste en dessous
+  // (23 | 23 | 23 | 23, puis 46 | 46), et l'accolade sous la dernière
+  // rangée, c'est le produit. L'accolade du haut dit « 4 fois 23 ».
+  //   o : {n, fois (4 ou 8), masque (l'aide : ce qu'on cherche est vide),
+  //        trouves (J'écris : le nombre de rangées du dessous déjà
+  //        écrites), fini (la dernière égalité : l'accolade)}
+  function barresFois(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const etages = Math.round(Math.log2(o.fois));
+    const y1 = BARRES.haut;
+    const H = y1 + etages * BARRES.rang + 62;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && Number.isInteger(o.trouves);
+    const ligneVue = r => !cache || (ecrit && o.trouves >= r);
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarresFois(o)}">`;
+    s += accoladeHaut(gauche + 2, droite - 2, y1 - 3, `${o.fois} fois ${nombre(o.n)}`);
+    for (let r = 0; r < etages; r += 1) {
+      const nombreCases = o.fois / 2 ** r;
+      const valeur = o.n * 2 ** r;
+      const vue = r === 0 || ligneVue(r);
+      const etat = r === 0 ? "" : !cache ? "" : vue ? "trouve" : "cherche";
+      s += casesSvg(gauche, y1 + r * BARRES.rang, Array(nombreCases).fill(L / nombreCases), Array(nombreCases).fill(vue ? nombre(valeur) : ""), Array(nombreCases).fill(ecrit ? etat : cache && r > 0 ? "cherche" : ""));
+    }
+    const produit = o.n * o.fois;
+    s += accolade(gauche + 2, droite - 2, y1 + etages * BARRES.rang + 4, finiVu ? nombre(produit) : "?", !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+
+  function decrireBarresFois(o) {
+    const etages = Math.round(Math.log2(o.fois));
+    const lignes = [];
+    for (let r = 1; r < etages; r += 1) {
+      const vue = !o.masque || (Number.isInteger(o.trouves) && o.trouves >= r);
+      lignes.push(`${o.fois / 2 ** r} barres de ${vue ? nombre(o.n * 2 ** r) : "un nombre à trouver"}`);
+    }
+    const fin = !o.masque || (Number.isInteger(o.trouves) && o.fini) ? nombre(o.n * o.fois) : "un nombre à trouver";
+    return `Schéma : ${o.fois} barres de ${nombre(o.n)}${lignes.length ? `, réunies deux par deux : ${lignes.join(", puis ")}` : ""}. Ensemble : ${fin}.`;
+  }
+
+  // ------------------------------------------ le rectangle découpé (M8, lot 3)
+
+  // 13 × 7 = 10 × 7 + 3 × 7 : un rectangle de 13 de long et 7 de haut,
+  // coupé en 10 | 3. Quadrillé (`quadrille`) au niveau 1, où les carreaux
+  // se comptent ; un simple rectangle ensuite (23 × 7, 6 × 47).
+  //   o : {a (la hauteur, le facteur qu'on garde), b (la longueur), morceaux
+  //        (b découpé : [10, 3]), quadrille, masque, trouves (J'écris : les
+  //        morceaux dont l'élève a écrit le produit), fini}
+  // Chaque morceau dit son calcul (« 10 × 7 ») et, en dessous, son produit
+  // (« ? » tant qu'il est cherché). L'accolade sous le rectangle, c'est le
+  // produit entier.
+  // Lisible au téléphone (01/11) : le rectangle prend toute la largeur ;
+  // quadrillé, ses carreaux s'aplatissent un peu plutôt que de le rétrécir.
+  const RECTANGLE = Object.freeze({largeur: 560, gauche: 58, droite: 540, haut: 46, hauteurMax: 124, hauteurSimple: 112, mini: 118, dehors: 100});
+  function rectangle(o) {
+    const {largeur: W, gauche, droite, haut} = RECTANGLE;
+    const L = droite - gauche;
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.b];
+    let largeurs;
+    let hauteur;
+    let x0 = gauche;
+    let carreauHaut = 0;
+    // Quadrillé, un petit morceau (11 = 10 + 1, 12 = 10 + 2) est trop étroit
+    // pour son calcul : le rectangle laisse la place à droite, et le calcul
+    // du petit morceau s'écrit dehors, juste à côté.
+    let dehors = false;
+    if (o.quadrille) {
+      dehors = morceaux.length > 1 && morceaux[morceaux.length - 1] * L / o.b < RECTANGLE.dehors;
+      const carreau = (dehors ? L - RECTANGLE.dehors : L) / o.b;
+      largeurs = morceaux.map(m => m * carreau);
+      carreauHaut = Math.min(carreau, RECTANGLE.hauteurMax / o.a);
+      hauteur = o.a * carreauHaut;
+    } else {
+      largeurs = largeursDe(morceaux, L, RECTANGLE.mini);
+      hauteur = RECTANGLE.hauteurSimple;
+    }
+    const total = largeurs.reduce((s, w) => s + w, 0);
+    const H = haut + hauteur + 70;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && Array.isArray(o.trouves);
+    const vu = i => !cache || (ecrit && o.trouves.includes(i));
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireRectangle(o)}">`;
+    // La hauteur, à gauche.
+    s += `<line x1="${x0 - 16}" y1="${haut}" x2="${x0 - 16}" y2="${haut + hauteur}" stroke="#143451" stroke-width="2"/>`
+      + `<line x1="${x0 - 22}" y1="${haut}" x2="${x0 - 10}" y2="${haut}" stroke="#143451" stroke-width="2"/>`
+      + `<line x1="${x0 - 22}" y1="${haut + hauteur}" x2="${x0 - 10}" y2="${haut + hauteur}" stroke="#143451" stroke-width="2"/>`
+      + `<text x="${x0 - 30}" y="${haut + hauteur / 2 + 7}" text-anchor="end" font-size="19" font-weight="700" fill="#143451">${nombre(o.a)}</text>`;
+    let x = x0;
+    morceaux.forEach((m, i) => {
+      const w = largeurs[i];
+      const etat = !cache ? "" : vu(i) ? "trouve" : "cherche";
+      const fond = etat === "trouve" ? "#e5f7eb" : "#fff";
+      s += `<rect x="${x}" y="${haut}" width="${w}" height="${hauteur}" fill="${fond}"/>`;
+      if (o.quadrille) {
+        const c = w / m;
+        for (let k = 1; k < m; k += 1) s += `<line x1="${x + k * c}" y1="${haut}" x2="${x + k * c}" y2="${haut + hauteur}" stroke="#9fb6c6" stroke-width="1"/>`;
+        for (let k = 1; k < o.a; k += 1) s += `<line x1="${x}" y1="${haut + k * carreauHaut}" x2="${x + w}" y2="${haut + k * carreauHaut}" stroke="#9fb6c6" stroke-width="1"/>`;
+      }
+      s += `<rect x="${x}" y="${haut}" width="${w}" height="${hauteur}" fill="none" stroke="#143451" stroke-width="3"/>`;
+      s += accoladeHaut(x + 3, x + w - 3, haut - 3, nombre(m));
+      // Le calcul du morceau, et son produit dessous, sur une étiquette
+      // blanche (lisible par-dessus le quadrillage).
+      const aCote = dehors && i === morceaux.length - 1;
+      const cx = aCote ? x + w + RECTANGLE.dehors / 2 + 6 : x + w / 2;
+      const cy = haut + hauteur / 2;
+      if (aCote) s += `<line x1="${x + w / 2}" y1="${cy}" x2="${cx - 36}" y2="${cy}" stroke="#9fb6c6" stroke-width="2" stroke-dasharray="4 3"/>`;
+      const calcul = `${nombre(m)} × ${nombre(o.a)}`;
+      const produit = vu(i) ? nombre(m * o.a) : "?";
+      const lw = Math.max(calcul.length * 12 + 14, 50);
+      s += `<rect x="${cx - lw / 2}" y="${cy - 34}" width="${lw}" height="30" rx="8" fill="#fff" stroke="#9fb6c6" stroke-width="1.5"/>`
+        + `<text x="${cx}" y="${cy - 12}" text-anchor="middle" font-size="20" fill="#143451">${calcul}</text>`;
+      const pw = Math.max(produit.length * 13 + 22, 46);
+      const style = etat === "trouve" ? ["#e5f7eb", "#147447", "#147447", 2.5] : etat === "cherche" ? ["#fff", "#0755b8", "#0755b8", 3] : ["#fff", "#143451", "#143451", 2];
+      s += `<rect x="${cx - pw / 2}" y="${cy + 2}" width="${pw}" height="32" rx="8" fill="${style[0]}" stroke="${style[1]}" stroke-width="${style[3]}"/>`
+        + `<text x="${cx}" y="${cy + 25}" text-anchor="middle" font-size="21" font-weight="700" fill="${style[2]}">${produit}</text>`;
+      x += w;
+    });
+    // Le trait de coupe, épais.
+    x = x0;
+    largeurs.slice(0, -1).forEach(w => {
+      x += w;
+      s += `<line x1="${x}" y1="${haut - 6}" x2="${x}" y2="${haut + hauteur + 6}" stroke="#143451" stroke-width="5"/>`;
+    });
+    s += accolade(x0 + 2, x0 + total - 2, haut + hauteur + 4, finiVu ? nombre(o.a * o.b) : "?", !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+
+  function decrireRectangle(o) {
+    const morceaux = o.morceaux && o.morceaux.length ? o.morceaux : [o.b];
+    const parts = morceaux.map((m, i) => {
+      const vu = !o.masque || (Array.isArray(o.trouves) && o.trouves.includes(i));
+      return `${nombre(m)} × ${nombre(o.a)} : ${vu ? nombre(m * o.a) : "un nombre à trouver"}`;
+    });
+    const fin = !o.masque || (Array.isArray(o.trouves) && o.fini) ? nombre(o.a * o.b) : "un nombre à trouver";
+    return `Rectangle de ${nombre(o.b)} sur ${nombre(o.a)}, coupé en ${morceaux.map(nombre).join(" et ")}. ${parts.join(". ")}. En tout : ${fin}.`;
+  }
+
+  // -------------------------------------------- les parts égales (M5, lot 3)
+
+  // 100 = 4 × 25, 60 = 4 × 15 : la barre du nombre repère (accolade au-
+  // dessus), coupée en parts égales. Ce qu'on cherche :
+  //   « part »   : chaque part est vide (60 = 4 × ?, 60 ÷ 4) ;
+  //   « nombre » : les parts sont écrites, l'accolade du bas couvre `pris`
+  //                parts (3 × 25 : 3 parts sur les 4 de 100) et dit « ? » ;
+  //   « parts »  : les parts sont écrites, on cherche combien il y en a
+  //                (100 ÷ 25) : l'accolade du bas dit « ? parts ».
+  //   o : {total, parts, cherche, pris, masque, trouves (J'écris : les
+  //        parts déjà écrites, ou true), fini}
+  function partsEgales(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const y1 = BARRES.haut;
+    const part = o.total / o.parts;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const H = y1 + BARRES.rang + 62;
+    const pris = o.cherche === "nombre" ? o.pris : o.parts;
+    // Au-delà de la barre du repère (6 × 25 = 150) : la barre de 100 se
+    // prolonge de parts « en plus », en pointillés.
+    const casesTotal = Math.max(o.parts, pris);
+    const w = L / casesTotal * (casesTotal > o.parts ? 1 : 1);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrirePartsEgales(o)}">`;
+    s += accoladeHaut(gauche + 2, gauche + o.parts * w - 2, y1 - 3, nombre(o.total));
+    const partVue = !cache || o.cherche !== "part" || (ecrit && (o.trouves === true || finiVu));
+    const etat = cache && o.cherche === "part" ? (partVue ? "trouve" : "cherche") : "";
+    s += casesSvg(gauche, y1, Array(o.parts).fill(w), Array(o.parts).fill(partVue ? nombre(part) : ""), Array(o.parts).fill(etat));
+    for (let k = o.parts; k < casesTotal; k += 1) {
+      s += `<rect x="${gauche + k * w}" y="${y1}" width="${w}" height="${BARRES.rang}" fill="#fff" stroke="#143451" stroke-width="2.5" stroke-dasharray="7 5"/>`
+        + `<text x="${gauche + k * w + w / 2}" y="${y1 + 30}" text-anchor="middle" font-size="19" fill="#143451">${nombre(part)}</text>`;
+    }
+    if (o.cherche === "part") {
+      s += accolade(gauche + 2, gauche + w - 2, y1 + BARRES.rang + 4, partVue ? nombre(part) : "?", !partVue, ecrit && partVue);
+    } else if (o.cherche === "parts") {
+      s += accolade(gauche + 2, gauche + o.parts * w - 2, y1 + BARRES.rang + 4, finiVu ? `${o.parts} parts` : "? parts", !finiVu, ecrit && finiVu);
+    } else {
+      s += accolade(gauche + 2, gauche + pris * w - 2, y1 + BARRES.rang + 4, finiVu ? nombre(pris * part) : "?", !finiVu, ecrit && finiVu);
+    }
+    return s + "</svg>";
+  }
+
+  function decrirePartsEgales(o) {
+    const part = o.total / o.parts;
+    const vu = !o.masque || (o.trouves !== undefined && o.fini);
+    if (o.cherche === "part") return `Schéma : la barre de ${nombre(o.total)}, coupée en ${o.parts} parts égales. Une part : ${vu ? nombre(part) : "un nombre à trouver"}.`;
+    if (o.cherche === "parts") return `Schéma : la barre de ${nombre(o.total)}, coupée en parts de ${nombre(part)}. Combien de parts : ${vu ? o.parts : "un nombre à trouver"}.`;
+    return `Schéma : la barre de ${nombre(o.total)}, coupée en ${o.parts} parts de ${nombre(part)}. ${o.pris} parts : ${vu ? nombre(o.pris * part) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------------ la bande de la table (M4, lot 3)
+
+  // La bande de Défi tables : les 11 multiples de la table (0, 7, 14 … 70),
+  // les rangs au-dessus (× 0 … × 10), les sauts « + 7 » dessous.
+  //   o : {table, cherche : le rang dont le multiple est cherché (7 × 8 :
+  //        8), ou `rang` : le rang cherché d'un multiple montré (56 ÷ 7,
+  //        7 × ? = 56 : rang 8, écrit « × ? »), masque, fini}
+  const BANDE = Object.freeze({largeur: 560, gauche: 10, droite: 550, haut: 38, rang: 48});
+  function bandeTable(o) {
+    const {largeur: W, gauche, droite, haut, rang: R} = BANDE;
+    const w = (droite - gauche) / 11;
+    const H = haut + R + 44;
+    const cache = Boolean(o.masque);
+    const vu = !cache || Boolean(o.fini);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBandeTable(o)}">`;
+    for (let k = 0; k <= 10; k += 1) {
+      const x = gauche + k * w;
+      const cx = x + w / 2;
+      const estCherche = o.cherche === k;
+      const estRang = o.rang === k;
+      // L'aide (`masque`) : « ? » en bleu ; trouvé (J'écris, `fini`) : en
+      // vert ; la réponse montrée (sans masque) : en bleu, comme un repère.
+      const etatCase = estCherche ? (cache ? (vu ? "trouve" : "cherche") : "repere") : estRang ? "repere" : "";
+      const fond = etatCase === "trouve" ? "#e5f7eb" : etatCase === "repere" ? "#eaf2ff" : "#fff";
+      const bord = etatCase === "trouve" ? "#147447" : etatCase === "cherche" || etatCase === "repere" ? "#0755b8" : "#143451";
+      const rangTexte = estRang && cache && !vu ? "× ?" : `× ${k}`;
+      const rangCouleur = estRang ? (cache && vu ? "#147447" : "#0755b8") : "#5b7286";
+      s += `<text x="${cx}" y="${haut - 10}" text-anchor="middle" font-size="${estRang ? 17 : 15}"${estRang ? ' font-weight="700"' : ""} fill="${rangCouleur}">${rangTexte}</text>`;
+      s += `<rect x="${x}" y="${haut}" width="${w}" height="${R}" fill="${fond}" stroke="${bord}" stroke-width="${etatCase ? 3 : 2}"/>`;
+      const texte = estCherche && cache && !vu ? "?" : nombre(k * o.table);
+      s += `<text x="${cx}" y="${haut + 30}" text-anchor="middle" font-size="${texte.length > 2 ? 17 : 20}"${etatCase ? ' font-weight="700"' : ""} fill="${etatCase === "trouve" ? "#147447" : etatCase === "cherche" ? "#0755b8" : "#143451"}">${texte}</text>`;
+      if (k < 10) {
+        const xa = cx + 4;
+        const xb = cx + w - 4;
+        s += `<path d="M${xa} ${haut + R + 4} Q${(xa + xb) / 2} ${haut + R + 20} ${xb} ${haut + R + 4}" fill="none" stroke="#7d93a6" stroke-width="1.6"/>`;
+        if (k % 2 === 0) s += `<text x="${(xa + xb) / 2}" y="${haut + R + 36}" text-anchor="middle" font-size="14" fill="#5b7286">+ ${o.table}</text>`;
+      }
+    }
+    return s + "</svg>";
+  }
+
+  function decrireBandeTable(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    if (Number.isInteger(o.rang)) return `Bande de la table de ${o.table} : ${nombre(o.rang * o.table)}, c’est ${o.table} fois ${vu ? o.rang : "un nombre à trouver"}.`;
+    return `Bande de la table de ${o.table} : ${o.table} fois ${o.cherche}, ${vu ? nombre(o.cherche * o.table) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------- le rectangle de points (M4, lot 3)
+
+  // Décision du 01/11 : pour une division (56 ÷ 7) et un nombre manquant
+  // (6 × ? = 54), le rectangle de points montre le sens — « dans 56,
+  // combien de fois 7 ? » : 56 points rangés par paquets de 7, un paquet
+  // par colonne (entourée). En haut, « ? fois » (le nombre de paquets, ce
+  // qu'on cherche) ; à gauche, les points d'un paquet ; un cadre autour de
+  // tout, et « 56 points en tout » dessous. Dans « À retenir »
+  // (`lignes`), les lignes en pointillés : 9 fois 6, c'est aussi 6 fois 9.
+  // Le dessin est compact (au téléphone, J'écris lui laisse 21 % de la
+  // hauteur) : sa largeur suit le nombre de paquets.
+  //   o : {rangees (le nombre de paquets), parRangee (les points d'un
+  //        paquet), masque (« ? fois »), fini (J'écris : trouvé, en vert),
+  //        colonnes (À retenir : les lignes aussi)}
+  const POINTS = Object.freeze({haut: 64, pas: 19, rayon: 7, gauche: 78, marge: 22});
+  function rectanglePoints(o) {
+    const {haut: y0, pas, rayon, gauche, marge} = POINTS;
+    const largeur = o.rangees * pas;
+    const hauteur = o.parRangee * pas;
+    const W = Math.max(gauche + largeur + marge, 250);
+    const x0 = gauche + (W - gauche - marge - largeur) / 2;
+    const H = y0 + hauteur + 54;
+    const cache = Boolean(o.masque);
+    const vu = !cache || Boolean(o.fini);
+    const xm = x0 + largeur / 2;
+    const ym = y0 + hauteur / 2;
+    const etiquette = (x, y, texte, etat) => {
+      const w = Math.max(40, texte.length * 11.5 + 18);
+      const [fond, bord, encre] = etat === "cherche" ? ["#fff", "#0755b8", "#0755b8"] : etat === "trouve" ? ["#e5f7eb", "#147447", "#147447"] : ["#fff", "#143451", "#143451"];
+      return `<rect x="${x - w / 2}" y="${y - 15}" width="${w}" height="30" rx="8" fill="${fond}" stroke="${bord}" stroke-width="${etat ? 3 : 2}"/>`
+        + `<text x="${x}" y="${y + 7}" text-anchor="middle" font-size="20" font-weight="700" fill="${encre}">${texte}</text>`;
+    };
+    let s = `<svg class="dc-points" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireRectanglePoints(o)}">`;
+    // Un paquet par colonne, entouré.
+    for (let i = 0; i < o.rangees; i += 1) s += `<rect x="${x0 + i * pas + 1}" y="${y0 - 2}" width="${pas - 2}" height="${hauteur + 4}" rx="9" fill="#eef4fb" stroke="#9fb6c6" stroke-width="1.3"/>`;
+    if (o.colonnes) for (let j = 0; j < o.parRangee; j += 1) s += `<rect x="${x0 - 2}" y="${y0 + j * pas + 1}" width="${largeur + 4}" height="${pas - 2}" rx="9" fill="none" stroke="#b07d00" stroke-width="2" stroke-dasharray="4 3"/>`;
+    for (let i = 0; i < o.rangees; i += 1) for (let j = 0; j < o.parRangee; j += 1)
+      s += `<circle cx="${x0 + i * pas + pas / 2}" cy="${y0 + j * pas + pas / 2}" r="${rayon}" fill="#143451"/>`;
+    s += `<rect x="${x0 - 6}" y="${y0 - 6}" width="${largeur + 12}" height="${hauteur + 12}" rx="12" fill="none" stroke="#143451" stroke-width="2.5"/>`;
+    // En haut : combien de paquets (« ? fois »).
+    s += accoladeHaut(x0 + 2, x0 + largeur - 2, y0 - 9, "") + etiquette(xm, y0 - 40, vu ? `${nombre(o.rangees)} fois` : "? fois", cache ? (vu ? "trouve" : "cherche") : "");
+    // À gauche : les points d'un paquet.
+    s += `<path d="M${x0 - 10} ${y0 + 1} Q${x0 - 18} ${y0 + 1} ${x0 - 18} ${y0 + 10} L${x0 - 18} ${ym - 7} Q${x0 - 18} ${ym} ${x0 - 25} ${ym} Q${x0 - 18} ${ym} ${x0 - 18} ${ym + 7} L${x0 - 18} ${y0 + hauteur - 10} Q${x0 - 18} ${y0 + hauteur - 1} ${x0 - 10} ${y0 + hauteur - 1}" fill="none" stroke="#143451" stroke-width="2"/>`;
+    s += etiquette(x0 - 48, ym, nombre(o.parRangee), "");
+    s += etiquette(W / 2, y0 + hauteur + 31, `${nombre(o.rangees * o.parRangee)} points en tout`, "");
+    return s + "</svg>";
+  }
+
+  function decrireRectanglePoints(o) {
+    const vu = !o.masque || Boolean(o.fini);
+    return `${nombre(o.rangees * o.parRangee)} points en paquets de ${nombre(o.parRangee)} : ${vu ? `${nombre(o.rangees)} paquets` : "combien de paquets ? un nombre à trouver"}.`;
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
     if (image.outil === "tableau-fleches") return tableauFleches(image);
     if (image.outil === "barres") return barres(image);
+    if (image.outil === "barres-fois") return barresFois(image);
+    if (image.outil === "rectangle") return rectangle(image);
+    if (image.outil === "parts") return partsEgales(image);
+    if (image.outil === "bande") return bandeTable(image);
+    if (image.outil === "points") return rectanglePoints(image);
     return droiteSauts(image);
   }
 
@@ -1358,6 +1662,14 @@
     BARRES,
     barres,
     decrireBarres,
+    barresFois,
+    RECTANGLE,
+    rectangle,
+    partsEgales,
+    BANDE,
+    bandeTable,
+    POINTS,
+    rectanglePoints,
     dessinerImage
   });
 });

@@ -496,7 +496,7 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, modules lot 2 (01/11/2026) : prof/defi_calcul_core.js
   // seul change (A3, A4, A6, A7, A8), 65 au manifeste (avant :
   // defi-calcul-relier).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-2$/m);
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-3$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });
