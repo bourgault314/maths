@@ -3934,6 +3934,1015 @@
     ]
   };
 
+  // ======================================== modules lot 4 (04/11/2026) :
+  // M7, M10, M12, C1, C3, le palier 2 sur les entiers. Décisions de Gwenaël
+  // (questions à choix, planches « choix-1 » à « choix-5 ») :
+  //  - M7 : le glisse-nombres (× 10, × 100), puis le nombre dix fois, coupé
+  //    en deux : × 5, c'est la moitié de × 10 ;
+  //  - M10 : l'arc entre les facteurs qui font 10 (ou 100), sans manipulation ;
+  //  - M12 : la barre coupée en deux morceaux (96 = 80 | 16), chacun partagé ;
+  //  - C1 : je touche d'abord ce que je calcule en premier (la parenthèse se
+  //    referme sur son nombre), puis l'escalier d'accolades ;
+  //  - C3 : deux barres de la même longueur, COLLÉES (comme les rangées de M1
+  //    et de M6), le bout retiré hachuré gris, son nombre posé dessus, sans
+  //    « − » (comme le retrait de SPLAT! Enquête).
+
+  // Une clé faite à la main (C1, C3 : deux écritures peuvent avoir les mêmes
+  // nombres) : le module, le niveau, un numéro d'écriture, puis les nombres.
+  const avecCle = (calcul, cle) => Object.freeze(Object.assign({}, calcul, {cle}));
+  const sansEspace = texte => String(texte).replace(/[  ]/g, " ");
+
+  // ------------------------------------------------- M7 : × 5, × 50
+  //
+  // « 46 × 5 » ou « 5 × 46 » : n, fois (5 ou 50), p (10 ou 100 : × 5 est la
+  // moitié de × 10, × 50 la moitié de × 100), dix (n × p), r.
+  function m7Calcul(niveau, n, fois, gauche = false) {
+    const p = fois * 2;
+    const r = n * fois;
+    const donnees = {n, fois, p, dix: n * p, r, somme: n + fois, plus: r * 10, moins: r / 10};
+    return gauche
+      ? fabriquer("M7", niveau, "produit-gauche", [fois, "×", n, "=", TROU], r, donnees)
+      : fabriquer("M7", niveau, "produit", [n, "×", fois, "=", TROU], r, donnees);
+  }
+  const m7Image = calcul => ({outil: "dix-fois", n: calcul.donnees.n, p: calcul.donnees.p});
+  const m7Aide = calcul => Object.assign(m7Image(calcul), {masque: true});
+  function m7Phrase(calcul) {
+    const {n, p, dix, r} = calcul.donnees;
+    return fr(`Regarde : ${f(n)} × ${f(p)} = ${f(dix)}, et la moitié de ${f(dix)}, c’est ${f(r)}.`);
+  }
+  // Le glisse-nombres : × 10 (× 100 pour × 50), d'abord.
+  function m7Manipulation(calcul) {
+    const {n, fois, p, dix} = calcul.donnees;
+    const k = colonnesDe(p);
+    return Object.freeze({
+      outil: "glisse", depart: n, colonnes: COLONNES_M2, decalage: k,
+      texte: calcul.texte.replace(` = ${CASE}`, ""),
+      consigne: fr(`${f(n)} × ${fois} : d’abord ${f(n)} × ${f(p)}. Glisse ${f(n)} : chaque chiffre vaut ${f(p)} fois plus.`),
+      refus: fr(`Chaque chiffre doit valoir ${f(p)} fois plus : ${pluriel(k, "colonne")}.`),
+      traces: Object.freeze([Object.freeze({apres: 1, attente: `${f(n)} × ${f(p)} = …`, texte: `${f(n)} × ${f(p)} = ${f(dix)}`})])
+    });
+  }
+  // Du plus simple au plus dur : les facteurs à leur place, puis un nombre
+  // impair (sa moitié finit par 5), puis la taille.
+  function m7Difficulte(calcul) {
+    const {n} = calcul.donnees;
+    return (calcul.forme === "produit-gauche" ? 1000 : 0) + (n % 2 ? 500 : 0) + n;
+  }
+  const M7_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "× 10 sans prendre la moitié",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.dix)),
+      retour: (calcul, reponse) => {
+        const {n, fois, p} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est ${f(n)} × ${f(p)}. ${f(n)} × ${fois}, c’est la moitié de ${f(reponse)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un rang de trop ou de moins",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.plus) || memeNombre(reponse, calcul.donnees.moins)),
+      retour: (calcul, reponse) => {
+        const {n, fois, p, dix, r} = calcul.donnees;
+        return fr(`${f(reponse)} : un rang de ${reponse > r ? "trop" : "moins"}. ${f(n)} × ${fois}, c’est la moitié de ${f(n)} × ${f(p)} = ${f(dix)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "additionné au lieu de multiplier",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.somme)),
+      retour: (calcul, reponse) => {
+        const {n, fois, p} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est ${f(n)} + ${fois}. Ici, on multiplie : ${f(n)} × ${f(p)}, puis la moitié.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les nombres : jamais une dizaine entière (40 × 5 : M3), jamais 25
+  // (5 × 25 : M5). M7-1 : pairs de 12 à 98 ; M7-2 : tous les autres jusqu'à
+  // 199 (les impairs, et les pairs à trois chiffres) ; M7-3 : × 50, de 11 à
+  // 99.
+  const m7Nombres = niveau => {
+    const garder = n => n % 10 !== 0 && n !== 25;
+    if (niveau === 1) return entre(12, 98).filter(n => garder(n) && n % 2 === 0);
+    if (niveau === 2) return entre(11, 199).filter(n => garder(n) && (n % 2 === 1 || n > 100));
+    return entre(11, 99).filter(garder);
+  };
+  function m7Vivier(niveau) {
+    const fois = niveau === 3 ? 50 : 5;
+    const nombres = m7Nombres(niveau);
+    return Object.freeze({
+      produit: nombres.map(n => m7Calcul(niveau, n, fois)),
+      "produit-gauche": nombres.map(n => m7Calcul(niveau, n, fois, true))
+    });
+  }
+  const M7_VIVIERS = Object.freeze({1: m7Vivier(1), 2: m7Vivier(2), 3: m7Vivier(3)});
+  // Le dessin de J'écris : « 58 × 10 = 580 » écrit le haut, la dernière
+  // égalité l'accolade de la moitié.
+  function dixFoisDessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length > 0, fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  // J'apprends d'M7 : le glisse-nombres (× 10) sur le premier calcul, le
+  // nombre dix fois sur le deuxième, les étapes sur le troisième.
+  function m7Apprends({manipule, represente, ecris, consigne, consigneEcris, etapes, bilan}) {
+    const glisse = m7Manipulation(manipule);
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: Object.freeze({outil: "glisse", depart: glisse.depart, colonnes: glisse.colonnes, decalage: glisse.decalage, consigne: glisse.consigne, refus: glisse.refus, traces: glisse.traces}),
+      represente: Object.freeze({
+        outil: "dix-fois", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(m7Aide(represente)),
+        solution: Object.freeze({image: m7Image(represente), phrase: m7Phrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        consigne: fr(consigneEcris),
+        etapes: etapesEcris(etapes), reponse: ecris.reponse,
+        solution: Object.freeze({image: m7Image(ecris), phrase: m7Phrase(ecris)})
+      }, dixFoisDessins(m7Image(ecris), etapes.length)),
+      bilan: frBilan(bilan),
+      image: Object.freeze(m7Image(represente)),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const M7 = {
+    id: "M7", nom: "× 5, × 50", exemple: "46 × 5",
+    famille: "M", construit: true,
+    aide_entraine: "dix-fois",
+    erreurs: M7_ERREURS, image: m7Image, aide: m7Aide, phrase: m7Phrase, manipulation: m7Manipulation, difficulte: m7Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "× 5, nombre pair", nom: "× 5 d’un nombre pair", palier: 2, type: "P",
+        composer: vivierNiveau(M7_VIVIERS[1], [7, 3]),
+        imposes: [m7Calcul(1, 52, 5), m7Calcul(1, 36, 5, true)],
+        apprends: m7Apprends({
+          manipule: m7Calcul(0, 46, 5),
+          represente: m7Calcul(0, 34, 5),
+          ecris: m7Calcul(0, 58, 5, true),
+          consigne: "34 × 5, c’est la moitié de 34 × 10.",
+          consigneEcris: "5 × 58 : la moitié de 58 × 10.",
+          etapes: [["58 × 10 = ?", 580], ["5 × 58 = ?", 290]],
+          bilan: "× 5, c’est × 10 puis la moitié : 34 × 5 = 340 ÷ 2 = 170."
+        })
+      },
+      {
+        n: 2, titre: "× 5, tout nombre jusqu’à 200", nom: "× 5 de tout nombre jusqu’à 200", palier: 2, type: "P",
+        composer: vivierNiveau(M7_VIVIERS[2], [7, 3]),
+        imposes: [m7Calcul(2, 47, 5), m7Calcul(2, 126, 5, true)],
+        apprends: m7Apprends({
+          manipule: m7Calcul(0, 37, 5),
+          represente: m7Calcul(0, 143, 5),
+          ecris: m7Calcul(0, 89, 5, true),
+          consigne: "143 × 5, c’est la moitié de 143 × 10.",
+          consigneEcris: "5 × 89 : la moitié de 89 × 10.",
+          etapes: [["89 × 10 = ?", 890], ["5 × 89 = ?", 445]],
+          bilan: `× 5, c’est × 10 puis la moitié : 143 × 5 = 1${ESPACE_FINE}430 ÷ 2 = 715.`
+        })
+      },
+      {
+        n: 3, titre: "× 50", nom: "× 50", palier: 3, type: "P",
+        composer: vivierNiveau(M7_VIVIERS[3], [7, 3]),
+        imposes: [m7Calcul(3, 36, 50), m7Calcul(3, 43, 50, true)],
+        apprends: m7Apprends({
+          manipule: m7Calcul(0, 24, 50),
+          represente: m7Calcul(0, 18, 50),
+          ecris: m7Calcul(0, 37, 50, true),
+          consigne: "18 × 50, c’est la moitié de 18 × 100.",
+          consigneEcris: "50 × 37 : la moitié de 37 × 100.",
+          etapes: [["37 × 100 = ?", 3700], ["50 × 37 = ?", 1850]],
+          bilan: `× 50, c’est × 100 puis la moitié : 18 × 50 = 1${ESPACE_FINE}800 ÷ 2 = 900.`
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- M10 : regrouper les facteurs
+  //
+  // On change l'ordre des facteurs pour mettre ensemble ceux qui font 10 ou
+  // 100. Données : facteurs (dans l'ordre du texte), paire (les deux qu'on
+  // regroupe, dans le dessin), groupe (leur produit), reste (l'autre), et
+  // l'image (« avant » : le calcul écrit d'abord quand on a coupé un nombre,
+  // 16 × 25 = 4 × 4 × 25). Pour les erreurs : les produits de deux des trois
+  // facteurs, la somme des facteurs écrits, le double (moitié-double).
+  function m10Fabriquer(niveau, forme, morceaux, reponse, image, ecrits) {
+    const r = image.reste * image.groupe;
+    const [x, y, z] = image.facteurs;
+    const donnees = {
+      r, reste: image.reste, groupe: image.groupe, somme: ecrits.reduce((s, v) => s + v, 0),
+      plus: r * 10, moins: r / 10, xy: x * y, xz: x * z, yz: y * z, ecrits: ecrits.length
+    };
+    const calcul = fabriquer("M10", niveau, forme, morceaux, reponse, donnees);
+    return Object.freeze(Object.assign({}, calcul, {image: Object.freeze(Object.assign({}, image, {facteurs: Object.freeze(image.facteurs.slice())}))}));
+  }
+  // « 5 × 43 × 2 » (la paire aux deux bouts), « 43 × 2 × 5 »…
+  function m10Trois(niveau, a, paire, ordre) {
+    const [u, v] = paire;
+    const facteurs = ordre === 0 ? [u, a, v] : [v, a, u];
+    const groupe = u * v;
+    return m10Fabriquer(niveau, "regrouper", [facteurs[0], "×", facteurs[1], "×", facteurs[2], "=", TROU], a * groupe,
+      {facteurs, paire: [0, 2], groupe, reste: a, groupeConnu: true}, facteurs);
+  }
+  // « 2 × 137 × 5 = 137 × □ » : on cherche le groupe (10, 100).
+  function m10Trou(niveau, a, paire) {
+    const [u, v] = paire;
+    const groupe = u * v;
+    return m10Fabriquer(niveau, "trou-regroupe", [v, "×", a, "×", u, "=", a, "×", TROU], groupe,
+      {facteurs: [v, a, u], paire: [0, 2], groupe, reste: a, groupeConnu: true}, [v, a, u]);
+  }
+  // « 23 × 20 » : 20 = 2 × 10 (M10-1) ; « 25 × 120 » : 120 = 4 × 30 (M10-2).
+  function m10Couper(niveau, a, b, gauche) {
+    let image;
+    if (niveau === 1) {
+      // 23 × 20 = 23 × 2 × 10 : 23 × 2 = 46, puis 46 × 10.
+      image = {avant: `${f(a)} × ${f(b)}`, facteurs: [a, 2, b / 2], paire: [0, 1], groupe: a * 2, reste: b / 2, groupeDevant: true, groupeConnu: false};
+    } else {
+      // 25 × 120 = 25 × 4 × 30 : 25 × 4 = 100, puis 30 × 100.
+      image = {avant: `${f(a)} × ${f(b)}`, facteurs: [a, 4, b / 4], paire: [0, 1], groupe: a * 4, reste: b / 4, groupeConnu: true};
+    }
+    const morceaux = gauche ? [b, "×", a, "=", TROU] : [a, "×", b, "=", TROU];
+    return m10Fabriquer(niveau, gauche ? "couper-gauche" : "couper", morceaux, a * b, image, [a, b]);
+  }
+  // M10-3 : « 16 × 25 » = 4 × 4 × 25 ; « 24 × 5 = □ × 10 » : la moitié
+  // d'un côté, le double de l'autre.
+  function m10Quart(niveau, a, gauche) {
+    const q = a / 4;
+    const image = {avant: `${f(a)} × 25`, facteurs: [q, 4, 25], paire: [1, 2], groupe: 100, reste: q, groupeConnu: true};
+    return m10Fabriquer(niveau, gauche ? "produit-gauche" : "produit", gauche ? [25, "×", a, "=", TROU] : [a, "×", 25, "=", TROU], a * 25, image, [a, 25]);
+  }
+  function m10MoitieDouble(niveau, a) {
+    const image = {avant: `${f(a)} × 5`, facteurs: [a / 2, 2, 5], paire: [1, 2], groupe: 10, reste: a / 2, groupeConnu: true};
+    const calcul = m10Fabriquer(niveau, "moitie-double", [a, "×", 5, "=", TROU, "×", 10], a / 2, image, [a, 5]);
+    return Object.freeze(Object.assign({}, calcul, {donnees: Object.freeze(Object.assign({}, calcul.donnees, {a, double: 2 * a}))}));
+  }
+  const m10Image = calcul => Object.assign({outil: "facteurs"}, calcul.image);
+  // Le trou (« = 137 × □ », « = □ × 10 ») n'a pas d'aide : le dessin
+  // écrirait la réponse. La correction, elle, montre tout.
+  const m10Aide = calcul => (["trou-regroupe", "moitie-double"].includes(calcul.forme) ? null : Object.assign(m10Image(calcul), {masque: true}));
+  function m10Phrase(calcul) {
+    const {facteurs, paire, groupe, reste} = calcul.image;
+    const [i, j] = paire;
+    const r = groupe * reste;
+    if (calcul.forme === "moitie-double") return fr(`Regarde : ${f(calcul.donnees.a)} × 5 = ${f(reste)} × 2 × 5 = ${f(reste)} × 10.`);
+    return fr(`Regarde : ${f(facteurs[i])} × ${f(facteurs[j])} = ${f(groupe)}, et ${f(reste)} × ${f(groupe)} = ${f(r)}.`);
+  }
+  const M10_FORMES = Object.freeze({regrouper: 0, couper: 1, "couper-gauche": 2, produit: 0, "produit-gauche": 1, "trou-regroupe": 3, "moitie-double": 3});
+  const m10Difficulte = calcul => M10_FORMES[calcul.forme] * 1000 + Math.min(calcul.donnees.reste, 999);
+  const M10_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "un facteur oublié",
+      test: sauf((calcul, reponse) => calcul.forme === "regrouper" && ["xy", "xz", "yz"].some(k => memeNombre(reponse, calcul.donnees[k]))),
+      retour: (calcul, reponse) => {
+        const [x, y, z] = calcul.image.facteurs;
+        const [u, v, w] = memeNombre(reponse, x * y) ? [x, y, z] : memeNombre(reponse, x * z) ? [x, z, y] : [y, z, x];
+        return fr(`${f(reponse)}, c’est ${f(u)} × ${f(v)}. Il reste × ${f(w)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un rang de trop ou de moins",
+      test: sauf((calcul, reponse) => !["trou-regroupe", "moitie-double"].includes(calcul.forme) && (memeNombre(reponse, calcul.donnees.plus) || memeNombre(reponse, calcul.donnees.moins))),
+      retour: (calcul, reponse) => {
+        const {facteurs, paire, groupe, reste, groupeDevant} = calcul.image;
+        const [i, j] = paire;
+        const [g, d] = groupeDevant ? [groupe, reste] : [reste, groupe];
+        return fr(`${f(reponse)} : un rang de ${reponse > calcul.reponse ? "trop" : "moins"}. ${f(facteurs[i])} × ${f(facteurs[j])} = ${f(groupe)}, puis ${f(g)} × ${f(d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "additionné au lieu de multiplier",
+      test: sauf((calcul, reponse) => calcul.forme !== "moitie-double" && memeNombre(reponse, calcul.forme === "trou-regroupe" ? calcul.image.facteurs[0] + calcul.image.facteurs[2] : calcul.donnees.somme)),
+      retour: (calcul, reponse) => {
+        const {facteurs} = calcul.image;
+        if (calcul.forme === "trou-regroupe") return fr(`${f(reponse)}, c’est ${f(facteurs[0])} + ${f(facteurs[2])}. Ici, on multiplie : ${f(facteurs[0])} × ${f(facteurs[2])}.`);
+        const ecrits = calcul.texte.replace(` = ${CASE}`, "").split(" × ");
+        return fr(`${f(reponse)}, c’est ${ecrits.join(" + ")}. Ici, on multiplie.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "le double au lieu de la moitié",
+      test: sauf((calcul, reponse) => calcul.forme === "moitie-double" && memeNombre(reponse, calcul.donnees.double)),
+      retour: (calcul, reponse) => {
+        const {a} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est le double de ${f(a)}. × 10, c’est 2 fois plus que × 5 : de l’autre côté, il faut 2 fois moins que ${f(a)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les nombres qu'on garde entiers : jamais une dizaine entière.
+  const m10Nombres = (de, a) => entre(de, a).filter(n => n % 10 !== 0);
+  function m10Vivier(niveau) {
+    if (niveau === 3) {
+      // × 25 seul : un multiple de 4 (16 = 4 × 4) ; les dizaines (40 × 25)
+      // sont au niveau 2 ; 25 × 4 à 25 × 8 sont dans M5.
+      const quarts = entre(12, 96).filter(n => n % 4 === 0 && n % 10 !== 0);
+      const pairs = entre(12, 98).filter(n => n % 2 === 0 && n % 10 !== 0);
+      return Object.freeze({
+        produit: quarts.map(a => m10Quart(3, a)),
+        "produit-gauche": quarts.map(a => m10Quart(3, a, true)),
+        "moitie-double": pairs.map(a => m10MoitieDouble(3, a))
+      });
+    }
+    const paire = niveau === 1 ? [5, 2] : [4, 25];
+    const nombres = niveau === 1 ? m10Nombres(11, 199) : m10Nombres(11, 99);
+    // Les nombres à couper : 20 (M10-1 : 23 × 20), 40, 80, 120, 160, 200,
+    // 400, 800 (M10-2 : 25 × 120 = 25 × 4 × 30).
+    const coupes = gauche => (niveau === 1
+      ? m10Nombres(11, 49).map(a => m10Couper(1, a, 20, gauche))
+      : [40, 80, 120, 160, 240, 400, 800, 1200].map(b => m10Couper(2, 25, b, gauche)));
+    return Object.freeze({
+      regrouper: nombres.flatMap(a => [m10Trois(niveau, a, paire, 0), m10Trois(niveau, a, paire, 1)]),
+      "trou-regroupe": nombres.map(a => m10Trou(niveau, a, paire)),
+      couper: coupes(false),
+      "couper-gauche": coupes(true)
+    });
+  }
+  const M10_VIVIERS = Object.freeze({1: m10Vivier(1), 2: m10Vivier(2), 3: m10Vivier(3)});
+  // Le dessin de J'écris : la paire regroupée (« 5 × 2 = 10 »), puis
+  // l'accolade.
+  function facteursDessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length > 0, fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+
+  const M10 = {
+    id: "M10", nom: "Regrouper les facteurs", exemple: "5 × 43 × 2",
+    famille: "M", construit: true,
+    aide_entraine: "facteurs",
+    erreurs: M10_ERREURS, image: m10Image, aide: m10Aide, phrase: m10Phrase, manipulation: () => null, difficulte: m10Difficulte
+  };
+  // Les calculs de J'apprends : au niveau 0, hors de tout vivier.
+  M10.niveaux = [
+    {
+      n: 1, titre: "avec 2 et 5", nom: "Regrouper 2 et 5", palier: 2, type: "P",
+      composer: vivierNiveau(M10_VIVIERS[1], [4, 2, 2, 2]),
+      imposes: [m10Trois(1, 64, [5, 2], 1), m10Trou(1, 137, [5, 2]), m10Couper(1, 23, 20)],
+      apprends: apprendsSansManip({
+        fiche: M10,
+        represente: m10Trois(0, 43, [5, 2], 0),
+        ecris: m10Trois(0, 38, [5, 2], 1),
+        consigne: "5 × 2 = 10 : je les calcule ensemble.",
+        consigneEcris: "2 × 38 × 5 : je regroupe 2 et 5.",
+        etapes: [["2 × 5 = ?", 10], ["38 × 10 = ?", 380]],
+        dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
+        bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430."
+      })
+    },
+    {
+      n: 2, titre: "avec 4 et 25", nom: "Regrouper 4 et 25", palier: 3, type: "P",
+      composer: vivierNiveau(M10_VIVIERS[2], [4, 2, 2, 2]),
+      imposes: [m10Trois(2, 37, [4, 25], 0), m10Couper(2, 25, 400)],
+      apprends: apprendsSansManip({
+        fiche: M10,
+        represente: m10Trois(0, 37, [4, 25], 0),
+        ecris: m10Trois(0, 18, [4, 25], 1),
+        consigne: "4 × 25 = 100 : je les calcule ensemble.",
+        consigneEcris: "25 × 18 × 4 : je regroupe 25 et 4.",
+        etapes: [["25 × 4 = ?", 100], ["18 × 100 = ?", 1800]],
+        dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
+        bilan: `4 × 25 = 100 : je les calcule ensemble. 4 × 37 × 25 = 37 × 100 = 3${ESPACE_FINE}700.`
+      })
+    },
+    {
+      n: 3, titre: "× 25 seul, moitié-double", nom: "× 25 seul, moitié-double", palier: 4, type: "P",
+      composer: vivierNiveau(M10_VIVIERS[3], [4, 3, 3]),
+      imposes: [m10Quart(3, 36), m10MoitieDouble(3, 24)],
+      apprends: apprendsSansManip({
+        fiche: M10,
+        represente: m10Quart(0, 16),
+        ecris: m10Quart(0, 28, true),
+        consigne: "16, c’est 4 × 4. Et 4 × 25 = 100.",
+        consigneEcris: "28, c’est 7 × 4 : 25 × 28 = 7 × 4 × 25.",
+        etapes: [["4 × 25 = ?", 100], ["7 × 100 = ?", 700]],
+        dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
+        bilan: "16, c’est 4 × 4 : 16 × 25 = 4 × 4 × 25 = 4 × 100 = 400."
+      })
+    }
+  ];
+
+  // ------------------------------------------------- M12 : diviser en décomposant
+  //
+  // « 96 ÷ 8 » : n, d, q ; morceaux de n, chacun divisible par d : les
+  // dizaines du quotient et ses unités (96 = 80 + 16 ; 130 = 100 + 30 ;
+  // 536 = 480 + 56). Un seul morceau quand le quotient est une dizaine ou
+  // une centaine entière (240 ÷ 6 : 24 dizaines).
+  function m12Calcul(niveau, forme, n, d) {
+    const q = n / d;
+    const morceaux = q % 10 && q > 10 ? [d * (q - q % 10), d * (q % 10)] : [n];
+    // La table cachée d'un niveau 1 : 240 = 24 dizaines, 3 600 = 36 centaines.
+    let t = n;
+    let unite = 1;
+    while (t % 10 === 0 && (t / 10) % d === 0 && t / 10 >= d) { t /= 10; unite *= 10; }
+    const donnees = {n, d, q, t, unite, m1: morceaux[0] / d, m2: morceaux.length > 1 ? morceaux[1] / d : 0, fois: n * d, plus: q * 10, moins: q / 10};
+    const calcul = forme === "trou-facteur"
+      ? fabriquer("M12", niveau, forme, [d, "×", TROU, "=", n], q, donnees)
+      : fabriquer("M12", niveau, "division", [n, "÷", d, "=", TROU], q, donnees);
+    return Object.freeze(Object.assign({}, calcul, {morceaux: Object.freeze(morceaux)}));
+  }
+  const m12Image = calcul => ({outil: "partage", n: calcul.donnees.n, d: calcul.donnees.d, morceaux: calcul.morceaux.slice()});
+  const m12Aide = calcul => Object.assign(m12Image(calcul), {masque: true});
+  function m12Phrase(calcul) {
+    const {n, d, q, t} = calcul.donnees;
+    if (calcul.morceaux.length === 1) return fr(`Regarde : ${f(t)} ÷ ${d} = ${f(t / d)}, donc ${f(n)} ÷ ${d} = ${f(q)}.`);
+    const [a, b] = calcul.morceaux;
+    return fr(`Regarde : ${f(a)} ÷ ${d} = ${f(a / d)} et ${f(b)} ÷ ${d} = ${f(b / d)}, ça fait ${f(q)}.`);
+  }
+  const m12Difficulte = calcul => (calcul.forme === "trou-facteur" ? 5000 : 0) + Math.min(calcul.donnees.n / (calcul.morceaux.length === 1 ? calcul.donnees.unite : 1), 4999);
+  const M12_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "un rang de trop ou de moins",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.plus) || memeNombre(reponse, calcul.donnees.moins)),
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        return fr(`${f(reponse)} : un rang de ${reponse > calcul.reponse ? "trop" : "moins"}. Vérifie : ${d} × ${f(reponse)} = ${f(d * reponse)}, pas ${f(n)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un morceau oublié",
+      test: sauf((calcul, reponse) => calcul.morceaux.length > 1 && (memeNombre(reponse, calcul.donnees.m1) || memeNombre(reponse, calcul.donnees.m2))),
+      retour: (calcul, reponse) => {
+        const {d, m1} = calcul.donnees;
+        const [a, b] = calcul.morceaux;
+        const [fait, reste] = memeNombre(reponse, m1) ? [a, b] : [b, a];
+        return fr(`${f(reponse)}, c’est ${f(fait)} ÷ ${d}. Il reste ${f(reste)} ÷ ${d}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "multiplié au lieu de diviser",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.fois)),
+      retour: (calcul, reponse) => {
+        const {n, d} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est ${f(n)} × ${d}. Ici, on partage ${f(n)} en ${d} parts égales.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les diviseurs : de 3 à 9 (÷ 2, c'est la moitié : M1). Jamais 60 ni 100
+  // (60 ÷ 4, 100 ÷ 5 : les repères de M5).
+  const M12_DIVISEURS = Object.freeze(entre(3, 9));
+  const m12Garde = n => n !== 60 && n !== 100;
+  function m12Vivier(niveau) {
+    const paires = [];
+    if (niveau === 1) {
+      // 240 ÷ 6, 3 600 ÷ 9 : la table (24 ÷ 6), en dizaines ou en centaines.
+      M12_DIVISEURS.forEach(d => entre(2, 9).forEach(c => [10, 100].forEach(u => paires.push([d * c * u, d]))));
+    } else {
+      // Un quotient à deux chiffres (ou plus), qui n'est pas une dizaine
+      // entière : jusqu'à 199 au niveau 2 (96 ÷ 8, 130 ÷ 5), de 200 à 999
+      // au niveau 3 (536 ÷ 8, 525 ÷ 5).
+      const [de, a] = niveau === 2 ? [20, 199] : [200, 999];
+      M12_DIVISEURS.forEach(d => entre(11, Math.floor(a / d)).filter(q => q % 10 !== 0 && d * q >= de).forEach(q => paires.push([d * q, d])));
+    }
+    // Le quotient n'est jamais un des morceaux écrits sur la barre (45 ÷ 3 :
+    // 30 | 15, et 15 est la réponse).
+    const gardees = paires.filter(([n, d]) => m12Garde(n) && !m12Calcul(niveau, "division", n, d).morceaux.includes(n / d));
+    return Object.freeze({
+      division: gardees.map(([n, d]) => m12Calcul(niveau, "division", n, d)),
+      "trou-facteur": gardees.map(([n, d]) => m12Calcul(niveau, "trou-facteur", n, d))
+    });
+  }
+  const M12_VIVIERS = Object.freeze({1: m12Vivier(1), 2: m12Vivier(2), 3: m12Vivier(3)});
+  // Le dessin de J'écris : chaque morceau partagé (80 ÷ 8 = 10), puis la
+  // dernière égalité. Un seul morceau : la dernière égalité l'écrit.
+  function partageDessins(image, etapes) {
+    const deux = image.morceaux.length > 1;
+    const morceaux = deux ? [{m: 0}, {m: 1}, {fini: true}] : Array.from({length: etapes - 1}, () => ({})).concat([{fini: true}]);
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.filter(v => v.m !== undefined).map(v => v.m), fini: vus.some(v => v.fini)})));
+    return dessinsDe(morceaux, etapes, dessin);
+  }
+
+  const M12 = {
+    id: "M12", nom: "Diviser en décomposant", exemple: "240 ÷ 6",
+    famille: "M", construit: true,
+    aide_entraine: "partage",
+    erreurs: M12_ERREURS, image: m12Image, aide: m12Aide, phrase: m12Phrase, manipulation: () => null, difficulte: m12Difficulte
+  };
+  M12.niveaux = [
+    {
+      n: 1, titre: "dizaines, centaines entières ÷ un chiffre", nom: "Dizaines, centaines entières ÷ un chiffre", palier: 2, type: "P",
+      composer: vivierNiveau(M12_VIVIERS[1], [8, 2]),
+      imposes: [m12Calcul(1, "division", 420, 7), m12Calcul(1, "trou-facteur", 320, 8)],
+      apprends: apprendsSansManip({
+        fiche: M12,
+        represente: m12Calcul(0, "division", 240, 6),
+        ecris: m12Calcul(0, "division", 3600, 9),
+        consigne: "240, c’est 24 dizaines.",
+        consigneEcris: `3${ESPACE_FINE}600, c’est 36 centaines.`,
+        etapes: [["36 ÷ 9 = ?", 4], [`3${ESPACE_FINE}600 ÷ 9 = ?`, 400]],
+        dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
+        bilan: "240, c’est 24 dizaines : 24 ÷ 6 = 4, donc 240 ÷ 6 = 40."
+      })
+    },
+    {
+      n: 2, titre: "quotient à deux chiffres", nom: "Quotient à deux chiffres", palier: 3, type: "P",
+      composer: vivierNiveau(M12_VIVIERS[2], [8, 2]),
+      imposes: [m12Calcul(2, "division", 84, 4), m12Calcul(2, "trou-facteur", 98, 7)],
+      apprends: apprendsSansManip({
+        fiche: M12,
+        represente: m12Calcul(0, "division", 96, 8),
+        ecris: m12Calcul(0, "division", 135, 5),
+        consigne: "96, c’est 80 et 16. Je partage chacun en 8.",
+        consigneEcris: "135, c’est 100 et 35.",
+        etapes: [["100 ÷ 5 = ?", 20], ["35 ÷ 5 = ?", 7], ["135 ÷ 5 = ?", 27]],
+        dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
+        bilan: "96 ÷ 8 = 80 ÷ 8 + 16 ÷ 8 = 10 + 2 = 12."
+      })
+    },
+    {
+      n: 3, titre: "dividende à trois chiffres", nom: "Dividende à trois chiffres", palier: 4, type: "P",
+      composer: vivierNiveau(M12_VIVIERS[3], [8, 2]),
+      imposes: [m12Calcul(3, "division", 768, 8), m12Calcul(3, "division", 455, 5)],
+      apprends: apprendsSansManip({
+        fiche: M12,
+        represente: m12Calcul(0, "division", 536, 8),
+        ecris: m12Calcul(0, "division", 525, 5),
+        consigne: "536, c’est 480 et 56.",
+        consigneEcris: "525, c’est 500 et 25.",
+        etapes: [["500 ÷ 5 = ?", 100], ["25 ÷ 5 = ?", 5], ["525 ÷ 5 = ?", 105]],
+        dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
+        bilan: "536 ÷ 8 = 480 ÷ 8 + 56 ÷ 8 = 60 + 7 = 67."
+      })
+    }
+  ];
+
+  // ------------------------------------------------- C1 : parenthèses
+  //
+  // Un calcul est un arbre : un nombre, ou {op, g, d, par} (par : entre
+  // parenthèses). L'escalier (planche « choix-4 ») : à chaque ligne, les
+  // parenthèses les plus à l'intérieur (ou, quand il n'en reste plus, le
+  // dernier calcul) ; leur nombre prend leur place à la ligne suivante.
+  const OPERATIONS = Object.freeze({"+": (a, b) => a + b, "−": (a, b) => a - b, "×": (a, b) => a * b});
+  const op = (signe, g, d, par = false) => Object.freeze({op: signe, g, d, par});
+  const valeurDe = arbre => (typeof arbre === "number" ? arbre : OPERATIONS[arbre.op](valeurDe(arbre.g), valeurDe(arbre.d)));
+  function jetonsDe(arbre) {
+    if (typeof arbre === "number") return [f(arbre)];
+    const dedans = [...jetonsDe(arbre.g), arbre.op, ...jetonsDe(arbre.d)];
+    return arbre.par ? ["(", ...dedans, ")"] : dedans;
+  }
+  // « 3 × (10 − 6) » : pas d'espace après « ( » ni avant « ) ».
+  const ecrireJetons = jetons => jetons.join(" ").replace(/\( /g, "(").replace(/ \)/g, ")");
+  const nombresDe = arbre => (typeof arbre === "number" ? [arbre] : [...nombresDe(arbre.g), ...nombresDe(arbre.d)]);
+  // De gauche à droite, sans les parenthèses (3 × (10 − 6) → 3 × 10 − 6 = 24).
+  function gaucheADroite(arbre) {
+    const jetons = jetonsDe(arbre).filter(t => t !== "(" && t !== ")");
+    let v = Number(sansEspace(jetons[0]).replace(/ /g, ""));
+    for (let k = 1; k < jetons.length; k += 2) v = OPERATIONS[jetons[k]](v, Number(sansEspace(jetons[k + 1]).replace(/ /g, "")));
+    return v;
+  }
+  const aDesParentheses = arbre => typeof arbre !== "number" && !arbre.feuille && (arbre.par || aDesParentheses(arbre.g) || aDesParentheses(arbre.d));
+  // Les lignes de l'escalier : {jetons, sous: [[début, fin]], valeurs,
+  // nouveaux (les places des nombres venus d'une accolade), origines
+  // ([ligne, accolade] de chacun)}.
+  function escalierDe(arbre) {
+    const lignes = [];
+    let courant = arbre;
+    let venus = new Map();
+    while (typeof courant !== "number") {
+      // Les cibles : les parenthèses sans parenthèse dedans ; sinon le tout.
+      const cibles = [];
+      const chercher = noeud => {
+        if (typeof noeud === "number" || noeud.feuille) return;
+        if (noeud.par && !aDesParentheses(noeud.g) && !aDesParentheses(noeud.d)) { cibles.push(noeud); return; }
+        chercher(noeud.g); chercher(noeud.d);
+      };
+      chercher(courant);
+      if (!cibles.length) cibles.push(courant);
+      // Les jetons, et la place de chaque cible et de chaque nombre venu.
+      const jetons = [];
+      const places = new Map();
+      const nouveaux = [];
+      const origines = [];
+      const ecrire = noeud => {
+        const debut = jetons.length;
+        if (typeof noeud === "number" || noeud.feuille) {
+          const valeur = typeof noeud === "number" ? noeud : noeud.valeur;
+          if (noeud.feuille) { nouveaux.push(jetons.length); origines.push(noeud.origine); }
+          jetons.push(f(valeur));
+        } else {
+          if (noeud.par) jetons.push("(");
+          ecrire(noeud.g); jetons.push(noeud.op); ecrire(noeud.d);
+          if (noeud.par) jetons.push(")");
+        }
+        places.set(noeud, [debut, jetons.length - 1]);
+      };
+      ecrire(courant);
+      const i = lignes.length;
+      lignes.push({jetons, sous: cibles.map(c => places.get(c)), valeurs: cibles.map(valeurAvecFeuilles), nouveaux, origines});
+      const remplacer = noeud => {
+        const k = cibles.indexOf(noeud);
+        if (k >= 0) return {feuille: true, valeur: valeurAvecFeuilles(noeud), origine: [i, k]};
+        if (typeof noeud === "number" || noeud.feuille) return noeud;
+        return {op: noeud.op, g: remplacer(noeud.g), d: remplacer(noeud.d), par: noeud.par};
+      };
+      courant = remplacer(courant);
+      if (courant.feuille) break;
+    }
+    return lignes.map(l => Object.freeze({jetons: Object.freeze(l.jetons), sous: Object.freeze(l.sous.map(s => Object.freeze(s))), valeurs: Object.freeze(l.valeurs), nouveaux: Object.freeze(l.nouveaux), origines: Object.freeze(l.origines.map(o => Object.freeze(o)))}));
+  }
+  function valeurAvecFeuilles(noeud) {
+    if (typeof noeud === "number") return noeud;
+    if (noeud.feuille) return noeud.valeur;
+    return OPERATIONS[noeud.op](valeurAvecFeuilles(noeud.g), valeurAvecFeuilles(noeud.d));
+  }
+  // Le texte d'une accolade (« 10 − 6 ») : ses jetons, sans les parenthèses
+  // du bord.
+  function texteAccolade(ligne, k) {
+    const [a, b] = ligne.sous[k];
+    let jetons = ligne.jetons.slice(a, b + 1);
+    if (jetons[0] === "(" && jetons[jetons.length - 1] === ")") jetons = jetons.slice(1, -1);
+    return ecrireJetons(jetons);
+  }
+  // Les écritures, et leur numéro dans la clé (deux écritures peuvent avoir
+  // les mêmes nombres : 3 × (10 − 6) et (3 × 10) − 6).
+  const C1_CODES = Object.freeze({"fois-par": 1, "par-fois": 2, "moins-par": 3, "fois-paires": 4, "moins-paires": 5, "moins-emboite": 6, "fois-emboite": 7});
+  function c1Calcul(niveau, forme, arbre) {
+    const r = valeurDe(arbre);
+    const lignes = escalierDe(arbre);
+    const derniere = lignes[lignes.length - 1];
+    const dernierOp = derniere.jetons[1];
+    const [g, d] = [derniere.jetons[0], derniere.jetons[2]].map(t => Number(sansEspace(t).replace(/ /g, "")));
+    const parentheses = lignes.slice(0, -1).flatMap(l => l.valeurs);
+    const donnees = {r, gauche: gaucheADroite(arbre), somme: dernierOp === "×" ? g + d : -1, p1: parentheses[0], p2: parentheses.length > 1 ? parentheses[1] : -1, p3: parentheses.length > 2 ? parentheses[2] : -1};
+    const texte = `${ecrireJetons(jetonsDe(arbre))} = ${CASE}`;
+    return Object.freeze({
+      texte, reponse: r, forme, module: "C1", niveau,
+      cle: `C1-${niveau}-${C1_CODES[forme]}-${nombresDe(arbre).map(cleNombre).join("-")}`,
+      donnees: Object.freeze(donnees),
+      lignes
+    });
+  }
+  const c1Image = calcul => ({outil: "parentheses", lignes: calcul.lignes});
+  const c1Aide = calcul => Object.assign(c1Image(calcul), {masque: true});
+  function c1Phrase(calcul) {
+    const morceaux = calcul.lignes.map(l => ecrireJetons(l.jetons));
+    return fr(`Regarde : ${[...morceaux, f(calcul.reponse)].join(" = ")}.`);
+  }
+  // Toucher ce qu'on calcule en premier (Je manipule, et l'entraînement après
+  // deux erreurs) : les lignes de l'escalier.
+  function c1Manipulation(calcul) {
+    return Object.freeze({
+      outil: "toucher", lignes: calcul.lignes,
+      texte: calcul.texte.replace(` = ${CASE}`, ""),
+      consigne: "Touche le calcul à faire en premier.",
+      refus: null,
+      traces: Object.freeze([])
+    });
+  }
+  // Du plus simple au plus dur : l'écriture, puis la taille du résultat.
+  const C1_RANGS = Object.freeze({"fois-par": 0, "par-fois": 1, "moins-par": 2, "fois-paires": 0, "moins-paires": 1, "moins-emboite": 0, "fois-emboite": 1});
+  const c1Difficulte = calcul => C1_RANGS[calcul.forme] * 1000 + Math.min(calcul.reponse, 999);
+  const C1_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "calculé de gauche à droite",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.gauche)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as calculé de gauche à droite. Les parenthèses d’abord : ${texteAccolade(calcul.lignes[0], 0)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "la parenthèse seulement",
+      test: sauf((calcul, reponse) => ["p1", "p2", "p3"].some(k => calcul.donnees[k] >= 0 && memeNombre(reponse, calcul.donnees[k]))),
+      retour: (calcul, reponse) => {
+        let texte = "";
+        calcul.lignes.slice(0, -1).forEach(l => l.valeurs.forEach((v, k) => { if (!texte && memeNombre(v, reponse)) texte = texteAccolade(l, k); }));
+        return fr(`${f(reponse)}, c’est ${texte}. La parenthèse est faite : il reste à finir le calcul.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "additionné au lieu de multiplier",
+      test: sauf((calcul, reponse) => calcul.donnees.somme >= 0 && memeNombre(reponse, calcul.donnees.somme)),
+      retour: (calcul, reponse) => {
+        const derniere = calcul.lignes[calcul.lignes.length - 1];
+        const [g, , d] = derniere.jetons;
+        return fr(`${f(reponse)}, c’est ${g} + ${d}. Ici, on multiplie : ${g} × ${d}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les viviers. Niveau 1 (une paire) : a × (b ± c), (b ± c) × a,
+  // a − (b ± c). Niveau 2 (deux paires) : (a ± b) × (c ± d),
+  // (a × b) − (c + d). Niveau 3 (emboîtées) : a − (b × (c − d)),
+  // a × (b − (c + d)). Des petits nombres : c'est l'ordre qu'on apprend.
+  function c1Vivier(niveau) {
+    const v = {};
+    const ajouter = (forme, arbre) => {
+      const r = valeurDe(arbre);
+      // Le résultat n'est pas un des nombres écrits (5 × (12 − 10) = 10).
+      // Ni un des nombres d'une parenthèse : 4 × (10 − (5 + 3)) = 8.
+      if (!(r > 0) || !Number.isInteger(r) || nombresDe(arbre).includes(r)) return;
+      const calcul = c1Calcul(niveau, forme, arbre);
+      if ([calcul.donnees.p1, calcul.donnees.p2, calcul.donnees.p3].includes(r)) return;
+      (v[forme] = v[forme] || []).push(calcul);
+    };
+    // Une parenthèse de deux nombres, qui vaut de 2 à 9 : (b + c) avec b de
+    // 2 à 9, (b − c) avec b de 10 à 18.
+    const petites = [];
+    for (let b = 2; b <= 9; b += 1) for (let c = 2; c <= 9; c += 1) if (b + c <= 9) petites.push(op("+", b, c, true));
+    for (let b = 10; b <= 18; b += 1) for (let c = 2; c <= 9; c += 1) if (b - c >= 2 && b - c <= 9) petites.push(op("−", b, c, true));
+    if (niveau === 1) {
+      for (let a = 2; a <= 9; a += 1) petites.forEach(p => {
+        ajouter("fois-par", op("×", a, p));
+        ajouter("par-fois", op("×", p, a));
+      });
+      for (let a = 20; a <= 60; a += 5) petites.forEach(p => { if (valeurDe(p) < a - 1) ajouter("moins-par", op("−", a, p)); });
+    } else if (niveau === 2) {
+      // Deux parenthèses de 2 à 9, un produit jusqu'à 60.
+      const paires = petites.filter((_, i) => i % 3 === 0);
+      paires.forEach(p => paires.forEach(q => { if (p !== q && valeurDe(p) * valeurDe(q) <= 60) ajouter("fois-paires", op("×", p, q)); }));
+      for (let a = 2; a <= 9; a += 1) for (let b = 3; b <= 9; b += 1) petites.filter((_, i) => i % 2 === 0).forEach(q => {
+        if (q.op === "+" && a * b - valeurDe(q) >= 2) ajouter("moins-paires", op("−", op("×", a, b, true), q));
+      });
+    } else {
+      for (let b = 2; b <= 6; b += 1) petites.filter(p => p.op === "−" && valeurDe(p) <= 6).forEach(p => [30, 40, 50, 60].forEach(a => {
+        if (a - b * valeurDe(p) >= 2) ajouter("moins-emboite", op("−", a, op("×", b, p, true)));
+      }));
+      for (let a = 2; a <= 9; a += 1) petites.filter(p => p.op === "+" && valeurDe(p) <= 8).forEach(p => [10, 12, 15, 20].forEach(b => {
+        const dedans = b - valeurDe(p);
+        if (dedans >= 2 && dedans <= 9) ajouter("fois-emboite", op("×", a, op("−", b, p, true)));
+      }));
+    }
+    return Object.freeze(Object.fromEntries(Object.entries(v).map(([k, l]) => [k, Object.freeze(l)])));
+  }
+  const C1_VIVIERS = Object.freeze({1: c1Vivier(1), 2: c1Vivier(2), 3: c1Vivier(3)});
+  // Le dessin de J'écris : une accolade par étape, dans l'ordre.
+  function escalierDessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length, fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  // Les étapes de J'écris : une accolade, une égalité.
+  const c1Etapes = calcul => calcul.lignes.flatMap(l => l.valeurs.map((v, k) => [`${texteAccolade(l, k)} = ?`, v]));
+  // J'apprends de C1 : toucher sur le premier calcul, l'escalier sur le
+  // deuxième, les étapes sur le troisième.
+  function c1Apprends({manipule, represente, ecris, consigne, consigneEcris, bilan}) {
+    const m = c1Manipulation(manipule);
+    const etapes = c1Etapes(ecris);
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: Object.freeze({outil: "toucher", lignes: m.lignes, consigne: m.consigne, refus: null, traces: m.traces}),
+      represente: Object.freeze({
+        outil: "parentheses", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(c1Aide(represente)),
+        solution: Object.freeze({image: c1Image(represente), phrase: c1Phrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        consigne: fr(consigneEcris),
+        etapes: etapesEcris(etapes), reponse: ecris.reponse,
+        solution: Object.freeze({image: c1Image(ecris), phrase: c1Phrase(ecris)})
+      }, escalierDessins(c1Image(ecris), etapes.length)),
+      bilan: frBilan(bilan),
+      image: Object.freeze(c1Image(represente)),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+  const C1 = {
+    id: "C1", nom: "Parenthèses", exemple: "3 × (10 − 6)",
+    famille: "C", construit: true,
+    aide_entraine: "parentheses",
+    erreurs: C1_ERREURS, image: c1Image, aide: c1Aide, phrase: c1Phrase, manipulation: c1Manipulation, difficulte: c1Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "une paire", nom: "Une paire de parenthèses", palier: 2, type: "P",
+        composer: vivierNiveau(C1_VIVIERS[1], [4, 3, 3]),
+        imposes: [c1Calcul(1, "fois-par", op("×", 6, op("−", 13, 5, true))), c1Calcul(1, "moins-par", op("−", 45, op("+", 2, 7, true)))],
+        apprends: c1Apprends({
+          manipule: c1Calcul(0, "fois-par", op("×", 3, op("−", 10, 6, true))),
+          represente: c1Calcul(0, "moins-par", op("−", 20, op("+", 6, 3, true))),
+          ecris: c1Calcul(0, "fois-par", op("×", 5, op("−", 12, 4, true))),
+          consigne: "Je calcule d’abord ce qui est entre parenthèses.",
+          consigneEcris: "D’abord la parenthèse.",
+          bilan: "Je calcule d’abord ce qui est entre parenthèses : 20 − (6 + 3) = 20 − 9 = 11."
+        })
+      },
+      {
+        n: 2, titre: "deux paires", nom: "Deux paires de parenthèses", palier: 3, type: "P",
+        composer: vivierNiveau(C1_VIVIERS[2], [5, 5]),
+        imposes: [c1Calcul(2, "fois-paires", op("×", op("−", 9, 4, true), op("+", 3, 5, true))), c1Calcul(2, "moins-paires", op("−", op("×", 6, 7, true), op("+", 2, 5, true)))],
+        apprends: c1Apprends({
+          manipule: c1Calcul(0, "fois-paires", op("×", op("+", 4, 2, true), op("−", 12, 5, true))),
+          represente: c1Calcul(0, "moins-paires", op("−", op("×", 2, 9, true), op("+", 3, 4, true))),
+          ecris: c1Calcul(0, "fois-paires", op("×", op("+", 5, 3, true), op("−", 10, 4, true))),
+          consigne: "Chaque parenthèse d’abord.",
+          consigneEcris: "Chaque parenthèse d’abord.",
+          bilan: "Chaque parenthèse d’abord : (2 × 9) − (3 + 4) = 18 − 7 = 11."
+        })
+      },
+      {
+        n: 3, titre: "emboîtées", nom: "Parenthèses emboîtées", palier: 3, type: "P",
+        composer: vivierNiveau(C1_VIVIERS[3], [5, 5]),
+        imposes: [c1Calcul(3, "moins-emboite", op("−", 40, op("×", 5, op("−", 11, 6, true), true))), c1Calcul(3, "fois-emboite", op("×", 3, op("−", 15, op("+", 2, 6, true), true)))],
+        apprends: c1Apprends({
+          manipule: c1Calcul(0, "moins-emboite", op("−", 37, op("×", 3, op("−", 14, 6, true), true))),
+          represente: c1Calcul(0, "moins-emboite", op("−", 50, op("×", 4, op("−", 9, 2, true), true))),
+          ecris: c1Calcul(0, "fois-emboite", op("×", 6, op("−", 20, op("+", 8, 5, true), true))),
+          consigne: "La parenthèse la plus à l’intérieur d’abord.",
+          consigneEcris: "La parenthèse la plus à l’intérieur d’abord.",
+          bilan: "La parenthèse la plus à l’intérieur d’abord : 50 − (4 × (9 − 2)) = 50 − 28 = 22."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- C3 : égalités à trou
+  //
+  // Niveau 1 : « 347 = 20 + □ », « 5 760 − □ = 5 360 », « □ − 400 = 5 360 »
+  // (une barre et ses deux morceaux). Niveaux 2 et 3 : garder l'égalité,
+  // « 144 + 7 = 142 + □ », « 142 − 14 = □ − 17 » (deux barres de la même
+  // longueur). Données pour le dessin (sorte, haut, bas, cherche) et pour les
+  // erreurs (envers : le décalage dans le mauvais sens ; cote : la valeur
+  // d'un côté ; operation : la mauvaise opération).
+  const C3_CODES = Object.freeze({egal: 1, retire: 2, depart: 3, "egalite-somme": 4, "egalite-difference": 5, "egalite-somme-grande": 6, "egalite-difference-grande": 7});
+  function c3Fabriquer(niveau, forme, morceaux, reponse, image, donnees) {
+    const calcul = fabriquer("C3", niveau, forme, morceaux, reponse, donnees);
+    return Object.freeze(Object.assign({}, avecCle(calcul, calcul.cle.replace(/^C3-(\d+)-/, `C3-$1-${C3_CODES[forme]}-`)), {
+      image: Object.freeze({sorte: image.sorte, haut: Object.freeze(image.haut), bas: Object.freeze(image.bas), cherche: Object.freeze(image.cherche)})
+    }));
+  }
+  const c3Egal = (niveau, n, a) => c3Fabriquer(niveau, "egal", [n, "=", a, "+", TROU], n - a,
+    {sorte: "tout", haut: [n], bas: [a, n - a], cherche: ["bas", 1]}, {n, a, operation: n + a, envers: -1, cote: -1});
+  const c3Retire = (niveau, n, m) => c3Fabriquer(niveau, "retire", [n, "−", TROU, "=", m], n - m,
+    {sorte: "tout", haut: [n], bas: [m, n - m], cherche: ["bas", 1]}, {n, m, operation: n + m, envers: -1, cote: -1});
+  const c3Depart = (niveau, a, m) => c3Fabriquer(niveau, "depart", [TROU, "−", a, "=", m], m + a,
+    {sorte: "tout", haut: [m + a], bas: [m, a], cherche: ["haut", 0]}, {a, m, operation: m - a, envers: -1, cote: -1});
+  // « 144 + 7 = 142 + □ » (niveau 2) ; « 144 + 237 = □ + 239 » (niveau 3).
+  function c3Somme(niveau, a, b, c, d, grande) {
+    const forme = grande ? "egalite-somme-grande" : "egalite-somme";
+    const reponse = grande ? a + b - d : a + b - c;
+    const envers = grande ? a + (d - b) : b - (a - c);
+    const morceaux = grande ? [a, "+", b, "=", TROU, "+", d] : [a, "+", b, "=", c, "+", TROU];
+    const image = grande
+      ? {sorte: "somme", haut: [a, b], bas: [reponse, d], cherche: ["bas", 0]}
+      : {sorte: "somme", haut: [a, b], bas: [c, reponse], cherche: ["bas", 1]};
+    return c3Fabriquer(niveau, forme, morceaux, reponse, image, {a, b, c: grande ? reponse : c, d: grande ? d : reponse, ecart: grande ? d - b : a - c, envers, cote: a + b, operation: -1});
+  }
+  // « 142 − 14 = □ − 17 » : ce qui reste est pareil.
+  function c3Difference(niveau, a, b, d, grande) {
+    const forme = grande ? "egalite-difference-grande" : "egalite-difference";
+    const reponse = a - b + d;
+    return c3Fabriquer(niveau, forme, [a, "−", b, "=", TROU, "−", d], reponse,
+      {sorte: "ecart", haut: [a, b], bas: [reponse, d], cherche: ["bas", 0]},
+      {a, b, d, ecart: d - b, envers: a - (d - b), cote: a - b, operation: -1});
+  }
+  const c3Image = calcul => Object.assign({outil: "deux-barres"}, calcul.image, {haut: calcul.image.haut.slice(), bas: calcul.image.bas.slice(), cherche: calcul.image.cherche.slice()});
+  const c3Aide = calcul => Object.assign(c3Image(calcul), {masque: true});
+  function c3Phrase(calcul) {
+    const {texte, reponse} = calcul;
+    return fr(`Regarde : ${sansEspace(texte).replace(CASE, f(reponse))}.`);
+  }
+  const C3_RANGS = Object.freeze({egal: 0, retire: 1, depart: 2, "egalite-somme": 0, "egalite-difference": 1, "egalite-somme-grande": 0, "egalite-difference-grande": 1});
+  const c3Difficulte = calcul => C3_RANGS[calcul.forme] * 10000 + Math.min(calcul.reponse, 9999);
+  const C3_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le décalage dans le mauvais sens",
+      test: sauf((calcul, reponse) => calcul.donnees.envers >= 0 && memeNombre(reponse, calcul.donnees.envers)),
+      retour: (calcul, reponse) => {
+        const {a, b, c, d, ecart} = calcul.donnees;
+        if (calcul.forme === "egalite-somme") return fr(`${f(reponse)} : ${f(c)}, c’est ${f(Math.abs(ecart))} de ${ecart > 0 ? "moins" : "plus"} que ${f(a)}. De l’autre côté, il faut ${f(Math.abs(ecart))} de ${ecart > 0 ? "plus" : "moins"}.`);
+        if (calcul.forme === "egalite-somme-grande") return fr(`${f(reponse)} : ${f(d)}, c’est ${f(Math.abs(ecart))} de ${ecart > 0 ? "plus" : "moins"} que ${f(b)}. De l’autre côté, il faut ${f(Math.abs(ecart))} de ${ecart > 0 ? "moins" : "plus"}.`);
+        return fr(`${f(reponse)} : on retire ${f(Math.abs(ecart))} de ${ecart > 0 ? "plus" : "moins"}. Il faut partir de ${f(Math.abs(ecart))} de ${ecart > 0 ? "plus" : "moins"}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un seul côté calculé",
+      test: sauf((calcul, reponse) => calcul.donnees.cote >= 0 && memeNombre(reponse, calcul.donnees.cote)),
+      retour: (calcul, reponse) => {
+        const {a, b} = calcul.donnees;
+        const signe = calcul.forme.startsWith("egalite-somme") ? "+" : "−";
+        return fr(`${f(reponse)}, c’est ${f(a)} ${signe} ${f(b)} : ce que vaut chaque côté. Il manque le nombre de l’autre côté.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "la mauvaise opération",
+      test: sauf((calcul, reponse) => calcul.donnees.operation >= 0 && memeNombre(reponse, calcul.donnees.operation)),
+      retour: (calcul, reponse) => {
+        const {n, a, m} = calcul.donnees;
+        if (calcul.forme === "egal") return fr(`${f(reponse)}, c’est ${f(n)} + ${f(a)}. Ici, ${f(a)} et le nombre cherché font ${f(n)} : on enlève ${f(a)}.`);
+        if (calcul.forme === "retire") return fr(`${f(reponse)}, c’est ${f(n)} + ${f(m)}. Ici, on cherche l’écart entre ${f(n)} et ${f(m)}.`);
+        return fr(`${f(reponse)}, c’est ${f(m)} − ${f(a)}. On a retiré ${f(a)} au nombre cherché : il est plus grand que ${f(m)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Niveau 1 : des dizaines ou des centaines entières, sans retenue
+  // (347 − 20 : le 4 des dizaines devient 2). Niveaux 2 et 3 : un décalage
+  // de 1 à 3, dans un sens ou dans l'autre.
+  const chiffreAuRang = (n, rang) => Math.floor(n / rang) % 10;
+  function c3Vivier(niveau) {
+    if (niveau === 1) {
+      const egal = [];
+      const retire = [];
+      const depart = [];
+      for (let n = 213; n <= 987; n += 37) [10, 100].forEach(u => entre(1, 9).forEach(k => {
+        if (chiffreAuRang(n, u) > k) egal.push(c3Egal(1, n, k * u));
+      }));
+      for (let n = 2135; n <= 9876; n += 389) [10, 100].forEach(u => entre(1, 9).forEach(k => {
+        if (chiffreAuRang(n, u) > k) retire.push(c3Retire(1, n, n - k * u));
+        if (chiffreAuRang(n, u) + k <= 9) depart.push(c3Depart(1, k * u, n));
+      }));
+      return Object.freeze({egal, retire, depart});
+    }
+    const sommes = [];
+    const differences = [];
+    const decalages = [-3, -2, -1, 1, 2, 3];
+    if (niveau === 2) {
+      for (let a = 104; a <= 989; a += 23) entre(2, 9).forEach(b => decalages.forEach(e => {
+        if (b + e >= 1 && a - e > 100) sommes.push(c3Somme(2, a, b, a - e, null, false));
+      }));
+      for (let a = 121; a <= 989; a += 29) entre(11, 49).filter(b => b % 10 !== 0).forEach(b => decalages.forEach(e => {
+        if (b + e > 10) differences.push(c3Difference(2, a, b, b + e, false));
+      }));
+      return Object.freeze({"egalite-somme": sommes, "egalite-difference": differences});
+    }
+    for (let a = 112; a <= 989; a += 31) [137, 158, 179, 216, 237, 245, 263, 318, 342, 376, 425, 457, 482].forEach(b => decalages.forEach(e => {
+      if (a + b - (b + e) > 0) sommes.push(c3Somme(3, a, b, null, b + e, true));
+    }));
+    for (let a = 203; a <= 989; a += 31) entre(51, 99).filter(b => b % 10 !== 0).forEach(b => decalages.forEach(e => {
+      if (b + e <= 99) differences.push(c3Difference(3, a, b, b + e, true));
+    }));
+    return Object.freeze({"egalite-somme-grande": sommes, "egalite-difference-grande": differences});
+  }
+  // La réponse n'est jamais un des nombres écrits sur les barres
+  // (239 + 237 = □ + 239 → 237 : on la lirait sur la barre du haut).
+  // Ni le décalage (242 + 6 = 245 + □ : la réponse serait 3, le décalage).
+  const c3Lisible = calcul => [...calcul.image.haut, ...calcul.image.bas].filter(v => v === calcul.reponse).length === 1
+    && !(calcul.donnees.ecart !== undefined && Math.abs(calcul.donnees.ecart) === calcul.reponse);
+  const C3_VIVIERS = Object.freeze(Object.fromEntries([1, 2, 3].map(niveau => [niveau, Object.freeze(Object.fromEntries(Object.entries(c3Vivier(niveau)).map(([forme, liste]) => [forme, Object.freeze(liste.filter(c3Lisible))])))])));
+  // Le dessin de J'écris : le décalage (2, ou 3), puis le nombre cherché.
+  function deuxBarresDessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length, fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+
+  const C3 = {
+    id: "C3", nom: "Égalités à trou\u00a0: + et −", exemple: "347 = 20 + ?",
+    famille: "C", construit: true,
+    aide_entraine: "deux-barres",
+    erreurs: C3_ERREURS, image: c3Image, aide: c3Aide, phrase: c3Phrase, manipulation: () => null, difficulte: c3Difficulte
+  };
+  C3.niveaux = [
+    {
+      n: 1, titre: "trous simples", nom: "Égalités à trou simples", palier: 2, type: "P",
+      composer: vivierNiveau(C3_VIVIERS[1], [4, 3, 3]),
+      imposes: [c3Egal(1, 657, 40), c3Depart(1, 300, 4250)],
+      apprends: apprendsSansManip({
+        fiche: C3,
+        represente: c3Egal(0, 347, 20),
+        ecris: c3Retire(0, 5760, 5360),
+        consigne: "Les deux barres ont la même longueur.",
+        consigneEcris: `5${ESPACE_FINE}760 − ? = 5${ESPACE_FINE}360 : on cherche l’écart.`,
+        etapes: [[`5${ESPACE_FINE}760 − 5${ESPACE_FINE}360 = ?`, 400]],
+        dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
+        bilan: "Les deux barres ont la même longueur : 347 = 20 + 327, et 347 − 20 = 327."
+      })
+    },
+    {
+      n: 2, titre: "garder l’égalité", nom: "Garder l’égalité", palier: 2, type: "P",
+      composer: vivierNiveau(C3_VIVIERS[2], [6, 4]),
+      imposes: [c3Somme(2, 236, 8, 233, null, false), c3Difference(2, 175, 26, 28, false)],
+      apprends: apprendsSansManip({
+        fiche: C3,
+        represente: c3Somme(0, 144, 7, 142, null, false),
+        ecris: c3Difference(0, 253, 18, 21, false),
+        consigne: "142, c’est 2 de moins que 144.",
+        consigneEcris: "Ce qui reste est pareil.",
+        etapes: [["21 − 18 = ?", 3], ["253 + 3 = ?", 256]],
+        dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
+        bilan: "142, c’est 2 de moins que 144 : de l’autre côté, il faut 2 de plus. 144 + 7 = 142 + 9."
+      })
+    },
+    {
+      n: 3, titre: "garder l’égalité, grands nombres", nom: "Garder l’égalité, grands nombres", palier: 3, type: "P",
+      composer: vivierNiveau(C3_VIVIERS[3], [5, 5]),
+      imposes: [c3Somme(3, 258, 145, null, 148, true), c3Difference(3, 431, 67, 65, true)],
+      apprends: apprendsSansManip({
+        fiche: C3,
+        represente: c3Somme(0, 144, 237, null, 239, true),
+        ecris: c3Difference(0, 342, 56, 59, true),
+        consigne: "239, c’est 2 de plus que 237.",
+        consigneEcris: "Ce qui reste est pareil.",
+        etapes: [["59 − 56 = ?", 3], ["342 + 3 = ?", 345]],
+        dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
+        bilan: "239, c’est 2 de plus que 237 : de l’autre côté, il faut 2 de moins. 144 + 237 = 142 + 239."
+      })
+    }
+  ];
+
   // Un module pas encore construit (« bientôt ») : son nom, son exemple,
   // ses niveaux avec leur palier et leur type.
   const reserve = (id, nom, exemple, niveaux) =>
@@ -3972,41 +4981,21 @@
       {n: 2, titre: "÷ 8", palier: 3, type: "P", exemple: "360 ÷ 8"},
       {n: 3, titre: "résultat décimal", palier: 3, type: "P", exemple: "260 ÷ 8 = 32,5"}
     ]),
-    reserve("M7", "× 5, × 50", "46 × 5", [
-      {n: 1, titre: "× 5, nombre pair", palier: 2, type: "P", exemple: "46 × 5"},
-      {n: 2, titre: "× 5, tout nombre jusqu’à 200", palier: 2, type: "P", exemple: "37 × 5"},
-      {n: 3, titre: "× 50", palier: 3, type: "P", exemple: "24 × 50"}
-    ]),
+    M7,
     M8,
     reserve("M9", "Distributivité : retrancher", "45 × 9", [
       {n: 1, titre: "× 9", palier: 4, type: "P", exemple: "45 × 9"},
       {n: 2, titre: "× 19, × 29", palier: 4, type: "P", exemple: "6 × 19"},
       {n: 3, titre: "× 99, × 98", palier: 4, type: "P", exemple: "7 × 99"}
     ]),
-    reserve("M10", "Regrouper les facteurs", "5 × 43 × 2", [
-      {n: 1, titre: "avec 2 et 5", palier: 2, type: "P", exemple: "5 × 43 × 2"},
-      {n: 2, titre: "avec 4 et 25", palier: 3, type: "P", exemple: "4 × 37 × 25"},
-      {n: 3, titre: "× 25 seul, moitié-double", palier: 4, type: "P", exemple: "16 × 25"}
-    ]),
+    M10,
     reserve("M11", "Quotient et reste", "17 = 3 × 5 + ?", [
       {n: 1, titre: "tables de 2 à 5", palier: 3, type: "P", exemple: "17 = 3 × 5 + ?"},
       {n: 2, titre: "toutes les tables", palier: 3, type: "P", exemple: "47 = 6 × ? + 5"}
     ]),
-    reserve("M12", "Diviser en décomposant", "240 ÷ 6", [
-      {n: 1, titre: "dizaines, centaines entières ÷ un chiffre", palier: 2, type: "P", exemple: "240 ÷ 6"},
-      {n: 2, titre: "quotient à deux chiffres", palier: 3, type: "P", exemple: "96 ÷ 8"},
-      {n: 3, titre: "dividende à trois chiffres", palier: 4, type: "P", exemple: "536 ÷ 8"}
-    ]),
-    reserve("C1", "Parenthèses", "3 × (10 − 6)", [
-      {n: 1, titre: "une paire", palier: 2, type: "P", exemple: "3 × (10 − 6)"},
-      {n: 2, titre: "deux paires", palier: 3, type: "P", exemple: "(4 + 6) × (9 − 2)"},
-      {n: 3, titre: "emboîtées", palier: 3, type: "P", exemple: "37 − (3 × (14 − 6))"}
-    ]),
-    reserve("C3", "Égalités à trou : + et −", "347 = 20 + ?", [
-      {n: 1, titre: "trous simples", palier: 2, type: "P", exemple: "347 = 20 + ?"},
-      {n: 2, titre: "garder l’égalité", palier: 2, type: "P", exemple: "144 + 7 = 142 + ?"},
-      {n: 3, titre: "garder l’égalité, grands nombres", palier: 3, type: "P", exemple: "144 + 237 = ? + 239"}
-    ]),
+    M12,
+    C1,
+    C3,
     reserve("C4", "Remonter un calcul", "(2 × ?) − 5 = 23", [
       {n: 1, titre: "deux opérations", palier: 3, type: "P", exemple: "(2 × ?) − 5 = 23"},
       {n: 2, titre: "réponse décimale", palier: 3, type: "P", exemple: "8 + (2 × ?) = 11"}
@@ -4299,7 +5288,20 @@
     "complement-egal": "l’égalité est écrite à l’envers",
     moitie: "on cherche la moitié",
     "trou-double": "on cherche le nombre qu’on a doublé",
-    "double-fois": "le double s’écrit avec «\u00a0×\u00a0»"
+    "double-fois": "le double s’écrit avec «\u00a0×\u00a0»",
+    // Modules lot 4.
+    "trou-regroupe": "on cherche par quoi multiplier",
+    couper: "un facteur se coupe en deux",
+    "couper-gauche": "un facteur se coupe en deux",
+    "moitie-double": "la moitié d’un côté, le double de l’autre",
+    "par-fois": "la parenthèse est devant",
+    "moins-par": "on retire ce qui est entre parenthèses",
+    "moins-paires": "on retire une parenthèse",
+    "fois-emboite": "une parenthèse dans la parenthèse",
+    retire: "on cherche ce qu’on a retiré",
+    depart: "on cherche le nombre de départ",
+    "egalite-difference": "c’est une soustraction",
+    "egalite-difference-grande": "c’est une soustraction"
   });
   function annonceDe(calcul) {
     return calcul && ANNONCES[calcul.forme] ? `Nouveau\u00a0: ${ANNONCES[calcul.forme]}.` : "Nouveau\u00a0: c’est écrit autrement.";

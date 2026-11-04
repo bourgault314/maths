@@ -841,6 +841,28 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .perles-interieur:focus-visible .perle.curseur { outline: 3px solid #0f6cf9; outline-offset: 2px; z-index: 2; }
 /* align-items: center — sinon la pastille s'étire à 42 px et son texte
    reste en haut (lot 1b, vu par Gwenaël sur « 27 × 100 = … »). */
+/* C1 (modules lot 4) : les jetons du calcul, à toucher ; la parenthèse
+   touchée se referme sur son nombre, en vert. */
+.dc-toucher { width: 100%; }
+.dc-toucher-calcul { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 0 2px; margin: 14px auto 4px; color: var(--ink); font-size: clamp(1.55rem, 7.2vw, 2.6rem); font-weight: 950; line-height: 1.2; }
+.dc-jeton { display: inline-flex; align-items: center; justify-content: center; min-width: .9em; min-height: 1.6em; padding: 0 .08em; border-radius: 10px; cursor: pointer; touch-action: manipulation; }
+.dc-jeton.est-signe { font-weight: 700; }
+.dc-jeton.est-parenthese { min-width: .5em; font-weight: 500; }
+.dc-jeton:hover, .dc-jeton:focus-visible { background: var(--blue-soft, #eaf2ff); outline: none; }
+.dc-jeton.est-trouve, .dc-jeton.est-venu { margin: 0 .1em; padding: 0 .25em; border: 3px solid var(--green); background: var(--green-soft); color: var(--green); animation: dc-referme .3s ease-out; }
+.dc-jeton.est-venu { animation: none; }
+.dc-toucher.est-finie .dc-jeton { cursor: default; }
+@keyframes dc-referme { from { transform: scale(.6); opacity: .3; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dc-jeton.est-trouve { animation: none; } }
+/* L'escalier de C1 et les facteurs de M10 : étroits, à leur taille. */
+.dc-aide svg.dc-escalier { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
+/* Sur un écran bas d'ordinateur, l'escalier (et les facteurs de M10) cèdent
+   un peu de hauteur au pavé et à « Valider ». */
+@media (min-width: 621px) and (max-height: 900px) {
+  .challenge-playing .question.aide-image:not(.ecrit) .dc-aide svg.dc-escalier { max-height: 27dvh; }
+}
+/* « À retenir » : l'escalier rapetisse avec la phrase (--retenir-z). */
+.dc-retenir .dc-aide svg.dc-escalier { max-height: calc(26dvh * var(--retenir-z, 1)); }
 .dc-trace { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; min-height: 42px; margin: 8px 0 0; }
 .dc-trace b { padding: 6px 14px; border-radius: 12px; font-size: 1.15rem; font-weight: 950; line-height: 1.2; }
 .dc-trace b.ok { background: var(--green-soft); color: var(--green); }
