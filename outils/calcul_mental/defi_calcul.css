@@ -904,6 +904,93 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-touches button { min-height: calc(var(--touche-h, 56px) * .82); border: 0; border-radius: 13px; color: var(--ink); background: #cfdbe5; font-size: 1.9rem; font-weight: 950; line-height: 1; cursor: pointer; }
 .dc-touches button:disabled { opacity: .45; cursor: default; }
 
+/* ---- modules lot 5 (04/11/2026) : les décimaux ----
+   Les fractions s'écrivent comme sur le cahier : le numérateur, la barre,
+   le dénominateur (« 3 + 2/10 », « 0,3 = □/10 » : la case au numérateur). */
+.dc-frac { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; vertical-align: middle; margin: 0 .1em; font-size: .62em; line-height: 1.04; white-space: nowrap; }
+.dc-frac > .dc-frac-num { min-width: 1.2em; padding: 0 .14em .07em; border-bottom: .1em solid currentColor; text-align: center; }
+.dc-frac > .dc-frac-den { padding: .07em .14em 0; text-align: center; }
+.dc-frac .inline-answer { margin: 0 0 .08em; font-size: 1.2em; }
+.correction-expression .dc-frac, .answer-feedback .dc-frac, .consigne .dc-frac, .dc-trace .dc-frac,
+.dc-retenir .phrase .dc-frac, .annonce .dc-frac { font-size: .8em; }
+.expression.dc-lignes .lg .cel .dc-frac .inline-answer { display: inline-grid; }
+/* Dans les étapes de J'écris, une fraction ne fait pas grandir la ligne. */
+.expression.dc-lignes .lg .cel .dc-frac { font-size: .52em; line-height: 1; }
+/* Le tableau de numération et le carré de 100 dessinés : à leur taille. */
+.dc-aide svg.dc-numeration, .dc-aide svg.dc-carre { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
+.dc-aide svg.dc-carre { max-height: 34dvh; }
+@media (max-width: 620px) {
+  .challenge-playing .question.aide-image .dc-aide svg.dc-numeration { max-height: 30dvh; }
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-numeration { max-height: 27dvh; }
+  .challenge-playing .question.aide-image .dc-aide svg.dc-carre { max-height: 28dvh; }
+}
+@media (min-width: 621px) {
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-numeration { max-height: 18dvh; }
+  /* Sur ordinateur, le carré de 100 se dessine plus grand que sa taille
+     naturelle : les bandes se comptent. */
+  .dc-aide svg.dc-carre { width: min(100%, 320px); }
+}
+.dc-retenir .dc-aide svg.dc-numeration { max-height: calc(28dvh * var(--retenir-z, 1)); }
+/* D1 : le carré de 100 à colorier. Les unités, en petit, à gauche ; le
+   grand carré, qu'on touche, à droite. */
+.dc-carre-manip { width: 100%; }
+.dc-carre-scene { --n: 1; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px auto 0; }
+/* Tous les carrés ont la même taille : l'unité est le grand carré. */
+.dc-carre-scene > .dc-carre-unite, .dc-carre-scene > .dc-carre-grand { flex: 0 0 auto; width: min(230px, 33dvh, calc((100% - (var(--n) - 1) * 10px) / var(--n))); }
+/* Téléphone, trois carrés ou plus : deux rangées de deux, des carrés deux
+   fois plus grands (les bandes se comptent mieux). */
+@media (max-width: 620px) {
+  .dc-carre-scene.deux-rangees { flex-wrap: wrap; width: min(100%, 330px); }
+  .dc-carre-scene.deux-rangees > .dc-carre-unite, .dc-carre-scene.deux-rangees > .dc-carre-grand { width: min(150px, 22dvh, calc((100% - 10px) / 2)); }
+}
+.dc-carre-grand { border-radius: 4px; cursor: pointer; touch-action: manipulation; }
+.dc-carre-grand:focus-visible { outline: 3px solid #0f6cf9; outline-offset: 3px; }
+.dc-carre-manip.est-finie .dc-carre-grand { cursor: default; }
+/* D4 : le tableau à jetons et sa réserve. Les jetons en carré de 3 × 3 ;
+   la virgule, un trait rouge entre les unités et les dixièmes ; le paquet
+   de 10 à échanger, entouré de bleu. Noir et blanc : les jetons sont
+   blancs à bord noir, ceux qui arrivent à bord épais, ceux qui s'en vont
+   en pointillés. */
+.dc-jetons { width: 100%; --pion: 30px; }
+.dc-jetons.colonnes-4 { --pion: 26px; }
+.dc-jetons-tableau { display: grid; grid-template-columns: repeat(var(--colonnes, 3), minmax(0, 1fr)); gap: 8px; width: min(100%, 430px); margin: 8px auto 0; }
+.dc-jetons-col { position: relative; display: flex; flex-direction: column; min-height: calc(var(--pion) * 3 + 50px); border: 2px solid #143451; border-radius: 12px; background: #fff; }
+.dc-jetons-col.apres-virgule::before { content: ""; position: absolute; top: 4px; bottom: 4px; left: -7px; width: 3.5px; border-radius: 2px; background: #c62828; }
+.dc-jetons-col .tete { padding: 5px 2px 4px; border-radius: 10px 10px 0 0; background: #e3ecf2; color: #2c4a63; font-size: .74rem; font-weight: 850; line-height: 1.1; text-align: center; }
+.dc-jetons-col .pile { display: grid; grid-template-columns: repeat(3, var(--pion)); gap: 3px; justify-content: center; align-content: start; padding: 6px 2px; }
+.dc-jetons-col.a-echanger { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue); cursor: pointer; }
+.dc-jetons-col.a-echanger:focus-visible { outline: 3px solid #0f6cf9; outline-offset: 3px; }
+.dc-paquet { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, var(--pion)); gap: 3px; justify-content: center; padding: 3px; border: 3px dashed var(--blue); border-radius: 12px; }
+.dc-pion { box-sizing: border-box; display: grid; place-items: center; width: var(--pion); height: var(--pion); border: 2px solid #143451; border-radius: 50%; background: #fff; color: #143451; font-size: calc(var(--pion) * .36); font-weight: 900; line-height: 1; letter-spacing: -.04em; }
+.dc-pion.l1 { font-size: calc(var(--pion) * .5); }
+.dc-pion.l4 { font-size: calc(var(--pion) * .3); }
+.dc-pion.l5 { font-size: calc(var(--pion) * .26); }
+/* Chaque jeton porte sa valeur, dans sa colonne nommée (décision du 04/11,
+   les disques de Singapour). Celui qui arrive : vert, écrit en vert. */
+.dc-pion.est-venu { border: 3px solid var(--green); background: #fff; color: var(--green); animation: dc-referme .3s ease-out; }
+.dc-pion.est-parti { border: 2px dashed #8a9caa; background: repeating-linear-gradient(45deg, #fff 0 3px, #e6ecf1 3px 6px); color: #8a9caa; }
+.dc-reserve { display: flex; align-items: center; justify-content: center; gap: 10px; width: fit-content; margin: 10px auto 0; padding: 6px 12px; border: 2px dashed #9fb6c6; border-radius: 14px; }
+.dc-reserve-titre { color: #5b7286; font-size: .82rem; font-weight: 850; }
+.dc-reserve .dc-pion { --pion: 46px; cursor: pointer; font-family: inherit; touch-action: manipulation; }
+.dc-reserve .dc-pion:hover, .dc-reserve .dc-pion:focus-visible { background: var(--blue-soft, #eaf2ff); outline: none; box-shadow: 0 0 0 3px rgba(15, 108, 249, .45); }
+.dc-reserve .dc-pion:disabled { opacity: .45; cursor: default; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .dc-pion.est-venu { animation: none; } }
+@media (max-width: 620px) {
+  .dc-jetons { --pion: 27px; }
+  .dc-jetons-tableau { gap: 7px; margin-top: 6px; }
+  .dc-jetons-col { min-height: calc(var(--pion) * 3 + 40px); }
+  .dc-jetons-col .tete { padding: 3px 1px; font-size: .66rem; }
+  .dc-jetons-col .pile { gap: 2px; padding: 4px 1px; grid-template-columns: repeat(3, var(--pion)); }
+  .dc-paquet { gap: 2px; padding: 2px; }
+  .dc-reserve { margin-top: 8px; padding: 4px 10px; }
+  .dc-reserve .dc-pion { --pion: 42px; }
+  /* Quatre colonnes (millièmes) : des ronds plus petits. */
+  .dc-jetons.colonnes-4 { --pion: 24px; }
+  .dc-jetons.colonnes-4 .dc-jetons-col .dc-pion { border-width: 1.5px; letter-spacing: -.06em; }
+  .dc-jetons.colonnes-4 .dc-jetons-col .dc-pion.l4 { font-size: calc(var(--pion) * .31); }
+  .dc-jetons.colonnes-4 .dc-jetons-col .dc-pion.l5 { font-size: calc(var(--pion) * .28); }
+}
+
 /* ---- le glisse-nombres (copié d'Automatismes, place-value-table.js et
    03-slideshow.js) : la bande grise et ses chiffres glissent au-dessus du
    nombre de départ, la virgule reste fixe. Les colonnes viennent de

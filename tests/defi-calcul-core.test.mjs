@@ -53,8 +53,10 @@ function resoudre(texte) {
   // Modules lot 4 : les égalités à une case, linéaires (C1 « 3 × (10 − 6) »,
   // C3 « 144 + 7 = 142 + □ », M10 « 5 × 43 × 2 = 43 × □ », « 24 × 5 = □ × 10 ») :
   // chaque côté se calcule pour □ = 0 et □ = 1, la case est où ils se croisent.
-  if (/^[\d ×÷+−()=□]+$/.test(m) && (m.match(/=/g) || []).length === 1) {
-    const cote = (t, x) => Function(`return (${t.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/□/g, `(${x})`)});`)();
+  // Modules lot 5 : les fractions (« 3 + 2/10 = □ », « 0,3 = □/10 ») et les
+  // décimaux (« 4,45 + 0,3 = □ », « 6,78 − 0,05 = □ »).
+  if (/^[\d ×÷+−()=□,/]+$/.test(m) && (m.match(/=/g) || []).length === 1) {
+    const cote = (t, x) => Function(`return (${t.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/□/g, `(${x})`)});`)();
     const [g, d] = m.split("=");
     const ecart = x => cote(g, x) - cote(d, x);
     const pente = ecart(1) - ecart(0);
@@ -119,9 +121,9 @@ test("les 74 modules de la carte v2 : identifiants, paliers par niveau, ordre du
   assert.equal("avant" in CORE.moduleDe("A2"), false, "plus de verrous « avant » : l'ordre de la carte fait foi");
 });
 
-const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M7", "M8", "M10", "M12", "C1", "C3", "D2"];
+const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4"];
 
-test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), puis M7, M10, M12, C1, C3 (modules lot 4)", () => {
+test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), puis D1, D3, D4 (modules lot 5)", () => {
   assert.deepEqual(CORE.MODULES.filter(fiche => fiche.construit).map(fiche => fiche.id), CONSTRUITS);
   // Modules lot 1 : les niveaux de la carte v2, inchangés (nombre, paliers, types).
   assert.deepEqual(CORE.moduleDe("A1").niveaux.map(n => [n.palier, n.type]), [[1, "F"], [1, "F"], [1, "F"]]);
@@ -148,6 +150,13 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("C3").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [2, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("C1").niveaux.map(n => n.titre), ["une paire", "deux paires", "emboîtées"]);
   assert.deepEqual(CORE.moduleDe("C3").niveaux.map(n => n.titre), ["trous simples", "garder l’égalité", "garder l’égalité, grands nombres"]);
+  // Modules lot 5 : les niveaux de la carte v2, inchangés (nombre, paliers, types, titres).
+  assert.deepEqual(CORE.moduleDe("D1").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [2, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("D3").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("D4").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("D1").niveaux.map(n => n.titre), ["dixièmes", "centièmes", "millièmes, sommes en désordre"]);
+  assert.deepEqual(CORE.moduleDe("D3").niveaux.map(n => avecEspaces(n.titre)), ["÷ 10", "÷ 100, ÷ 1 000", "des zéros à écrire"]);
+  assert.deepEqual(CORE.moduleDe("D4").niveaux.map(n => n.titre), ["sans retenue", "millièmes, sans retenue", "avec retenue (ajouter)"]);
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.type), ["F", "F", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.type), ["P", "P"]);
@@ -155,9 +164,15 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.titre), ["produits", "nombres en 0, trous, divisions"]);
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.titre.replace(/\u202f/g, " ")), ["× 10", "× 100, × 1 000 sans zéro à écrire", "des zéros à écrire", "trous"]);
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.titre.replace(/[\u202f\u00a0]/g, " ")), ["à la dizaine suivante", "à 100 : dizaines et nombres en 5", "à 100 : tous les nombres", "à 1 000 et à la centaine suivante"]);
-  // La touche « , » : les modules à décimales seulement.
-  assert.equal(CORE.moduleDe("D2").virgule, true);
-  CONSTRUITS.filter(id => id !== "D2").forEach(id => assert.ok(!CORE.moduleDe(id).virgule, `${id} : pas de virgule`));
+  // La touche « , » : les modules à décimales seulement (D1, D2, D3, D4) ;
+  // pas quand la case est un numérateur (« 0,3 = □/10 », décision du 04/11).
+  const DECIMAUX = ["D1", "D2", "D3", "D4"];
+  DECIMAUX.forEach(id => assert.equal(CORE.moduleDe(id).virgule, true, `${id} : la virgule`));
+  CONSTRUITS.filter(id => !DECIMAUX.includes(id)).forEach(id => assert.ok(!CORE.moduleDe(id).virgule, `${id} : pas de virgule`));
+  assert.equal(CORE.virguleDuTexte("D1", "3 + 2/10 = □"), true);
+  assert.equal(CORE.virguleDuTexte("D1", "0,3 = □/10"), false, "la case est un numérateur : pas de virgule");
+  assert.equal(CORE.virguleDuTexte("D2", "3,6 × □ = 360"), true, "D2 : la touche suit le module, comme avant");
+  assert.equal(CORE.virguleDuTexte("A2", "37 + □ = 100"), false);
   // Lot 2a : plus de « pilotes ouverts pendant l'essai » — la séance parcourt
   // les modules construits, dans l'ordre de la carte.
   assert.equal("PILOTES" in CORE, false);
@@ -182,8 +197,10 @@ test("générateurs : nombre de calculs, réponse recalculée, clés, détermini
         serie.forEach(calcul => {
           assert.equal(calcul.reponse, resoudre(calcul.texte), `${cle} : ${calcul.texte}`);
           assert.ok(calcul.reponse > 0, `${cle} : réponse positive (${calcul.texte})`);
-          // Entière partout, sauf dans D2 ; jamais plus de 3 décimales.
-          if (fiche.id !== "D2") assert.ok(Number.isInteger(calcul.reponse), `${cle} : réponse entière (${calcul.texte})`);
+          // Entière partout, sauf dans les modules à décimales (D2 ; D1, D3,
+          // D4 depuis les modules lot 5) ; jamais plus de 3 décimales. Une
+          // case au numérateur (« 0,3 = □/10 ») : toujours un entier.
+          if (!fiche.virgule || calcul.texte.includes("□/")) assert.ok(Number.isInteger(calcul.reponse), `${cle} : réponse entière (${calcul.texte})`);
           assert.ok(CORE.decimalesDe(calcul.reponse) <= 3, `${cle} : au plus 3 décimales (${calcul.texte})`);
           assert.match(calcul.cle, new RegExp(`^${cle}(-(\\d+(d\\d)?|x|q))+$`), "clé stable, sans texte libre");
           assert.equal((calcul.texte.match(/□/g) || []).length, 1, "une seule case par calcul");
@@ -499,7 +516,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // Modules lot 1 : toutes les réponses de 0 au double de la bonne.
   // Modules lot 2 : les réponses proches de la bonne, à 1, 10, 100… près
   // (A3-4 va jusqu'à 100 000 : tout essayer serait trop long).
-  NIVEAUX_CONSTRUITS.filter(({fiche}) => ["A1", "A10", "A11", "M1", "A3", "A4", "A6", "A7", "A8", ...LOT3, ...LOT4].includes(fiche.id)).forEach(({cle}) => {
+  NIVEAUX_CONSTRUITS.filter(({fiche}) => ["A1", "A10", "A11", "M1", "A3", "A4", "A6", "A7", "A8", ...LOT3, ...LOT4, ...LOT5].includes(fiche.id)).forEach(({cle}) => {
     for (let graine = 1; graine <= 30; graine += 1) ["valide", "entraine"].forEach(genre => CORE.genererSerie(cle, {graine, genre}).forEach(calcul => {
       const fiche = CORE.moduleDe(calcul.module);
       fiche.erreurs.forEach(erreur => assert.equal(erreur.test(calcul, calcul.reponse), false, `${calcul.texte} : cause ${erreur.c} sur la bonne réponse`));
@@ -526,13 +543,20 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // la parenthèse seule) ; « 2 × (2 + 2) → 6 » (C1 : de gauche à droite, et
   // aussi 2 + 4) ; « 2 × (10 − (2 + 4)) → 6 » (C1 : la parenthèse, et aussi
   // 2 + 4) ; « 25 × 71 × 4 → 100 » (M10 : 25 × 4, et aussi 25 + 71 + 4).
-  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D2:1+2", "M10:1+3", "M4:1+3"], "les seules coïncidences connues");
+  // Modules lot 5 : « 3 + 2/10 → 32 » (D1 : les chiffres collés, et aussi un
+  // rang de trop) ; « 9/100 + 7/1 000 → 0,97 » (D1 : à la suite, et aussi un
+  // rang de trop) ; « 37 ÷ 10 → 37 » (D3 : pas divisé, et aussi une colonne
+  // de moins) ; « 4,5 + 0,3 → 4,53 » (D4 : le mauvais rang, et aussi écrit
+  // au bout) ; « 4,6 + 0,5 → 4,1 » (D4 : la retenue oubliée, et aussi le
+  // mauvais sens) — la première cause de la fiche parle.
+  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D1:3+1", "D1:4+1", "D2:1+2", "D3:1+2", "D4:1+2", "D4:3+4", "M10:1+3", "M4:1+3"], "les seules coïncidences connues");
 });
 
 // Les réponses fausses à essayer : toutes de 0 au double de la bonne pour
 // les modules du lot 1 ; pour ceux du lot 2, celles qui sont à quelques
 // unités, dizaines, centaines… de la bonne, et le chiffre mis au mauvais rang.
 function reponsesAEssayer(calcul) {
+  if (LOT5.includes(calcul.module)) return fauxLot5(calcul);
   if (LOT3.includes(calcul.module) || LOT4.includes(calcul.module)) return fauxLot3(calcul);
   if (!["A3", "A4", "A6", "A7", "A8"].includes(calcul.module)) return Array.from({length: calcul.reponse * 2 + 121}, (_, i) => i);
   const liste = new Set(Array.from({length: 201}, (_, i) => i));
@@ -764,8 +788,9 @@ test("l'entraînement : 20 calculs du simple au difficile, les écritures nouvel
 test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipuler, la correction qui montre la réponse", () => {
   NIVEAUX_CONSTRUITS.forEach(({fiche, cle}) => {
     CORE.genererSerie(cle, {graine: 11}).forEach(c => {
-      // Modules lot 4 : leur propre contrôle (plus bas).
+      // Modules lot 4 et lot 5 : leur propre contrôle (plus bas).
       if (LOT4.includes(c.module)) { verifierOutilLot4(c); return; }
+      if (LOT5.includes(c.module)) { verifierOutilLot5(c); return; }
       const aide = CORE.aideDe(c);
       // M8-3 en trou (12 × 42 = 10 × 42 + □ × 42) : pas d'aide, le rectangle
       // écrirait la réponse (le petit morceau).
@@ -873,6 +898,7 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
     assert.ok(a.ecris.solution.phrase.endsWith(".") && a.represente.solution.phrase.endsWith("."), `${cle} : la phrase du 2e essai faux`);
     assert.ok(a.ecris.solution.image && a.represente.solution.image, `${cle} : la réponse sur l'outil au 2e essai faux`);
     if (LOT4.includes(fiche.id)) { verifierApprendsLot4(fiche, niveau, cle); return; }
+    if (LOT5.includes(fiche.id)) { verifierApprendsLot5(fiche, niveau, cle); return; }
     if (fiche.id === "M3") {
       // M3 (décision du 01/11) : la table, puis le glisse-nombres de M2 ; le
       // tableau à flèches part de la table et cache l'arrivée.
@@ -1853,4 +1879,392 @@ test("modules lot 4 : les dessins nouveaux tiennent leurs promesses", () => {
   // Le retrait, comme SPLAT! : hachuré, le nombre posé dessus, sans « − ».
   const ecart = AIDES.dessinerImage({outil: "deux-barres", sorte: "ecart", haut: [142, 14], bas: [145, 17], cherche: ["bas", 0], masque: true});
   assert.ok(ecart.includes("url(#dc-retire)") && textesSvg(ecart).includes("14") && !textesSvg(ecart).some(t => /^−/.test(t)));
+});
+
+// ------------------------------------------------ modules lot 5 (04/11/2026)
+// D1, D3, D4 : les décimaux du palier 2.
+
+const LOT5 = ["D1", "D3", "D4"];
+const lot5 = cle => Array.from({length: 60}, (_, g) => ["valide", "entraine"].flatMap(genre => CORE.genererSerie(cle, {graine: g * 37 + 11, genre}))).flat();
+// Les nombres d'un texte, décimaux compris (« 0,48 », « 1 000 »).
+const decimauxDuTexte = texte => (avecEspaces(texte).match(/\d+(?: \d{3})*(?:,\d+)?/g) || []).map(x => Number(x.replace(/ /g, "").replace(",", ".")));
+// Les réponses fausses vraisemblables d'un décimal : la bonne à un rang
+// près, à quelques unités d'un rang près, et les nombres que le calcul
+// garde (ses réponses fausses connues), à un rang près.
+function fauxLot5(calcul) {
+  const r = calcul.reponse;
+  const liste = new Set();
+  for (let k = -4; k <= 4; k += 1) liste.add(CORE.exact(r * 10 ** k));
+  [1, 0.1, 0.01, 0.001].forEach(u => { for (let j = -9; j <= 9; j += 1) liste.add(CORE.exact(r + j * u)); });
+  Object.values(calcul.donnees).filter(v => typeof v === "number").forEach(v => [v, v * 10, v / 10].forEach(x => liste.add(CORE.exact(x))));
+  return [...liste].filter(x => x >= 0 && CORE.decimalesDe(x) <= 4);
+}
+// Le nombre que dit la rangée du bas d'un tableau de numération.
+function nombreDuBas(image) {
+  const plan = AIDES.planNumeration(image);
+  return CORE.exact([...plan.resultat.rangs.entries()].reduce((s, [rang, chiffre]) => s + Number(chiffre) * 10 ** rang, 0));
+}
+// Les dessins du lot 5 ne disent jamais la réponse : ni dans un texte du
+// dessin, ni au lecteur d'écran.
+// (Le carré de 100 d'un « ? au numérateur » — 0,3 = □/10 — se décrit en
+// bandes : c'est ce qu'on y lit, comme l'œil compte les bandes.)
+function sansLaReponse(svg, reponse, ou, {aria = true} = {}) {
+  const r = avecEspaces(CORE.formaterNombre(reponse));
+  assert.ok(!textesSvg(svg).some(t => avecEspaces(t) === r || avecEspaces(t).endsWith(`= ${r}`)), `${ou} : la réponse est écrite sur le dessin`);
+  if (aria) assert.ok(!decimauxDuTexte(ariaDe(svg).replace(/sur/g, " ")).includes(reponse), `${ou} : le lecteur d'écran dit la réponse (${ariaDe(svg)})`);
+}
+// Jouer le tableau à jetons jusqu'au bout : le bon jeton, puis chaque paquet.
+function jouerJetons(m) {
+  let etat = AIDES.jetonsDepart(m);
+  const regle = {rang: m.rang, chiffre: m.chiffre, signe: m.signe, colonnes: m.colonnes};
+  const autres = m.colonnes.filter(r => r !== m.rang);
+  autres.forEach(r => assert.equal(AIDES.jetonsGeste(etat, {reserve: r}, regle), null, "un autre jeton : refusé"));
+  assert.equal(AIDES.jetonsGeste(etat, {echange: m.rang}, regle), null, "toucher le tableau d'abord : refusé");
+  etat = AIDES.jetonsGeste(etat, {reserve: m.rang}, regle);
+  let echanges = 0;
+  while (etat.phase === "echange") {
+    assert.ok(etat.comptes[etat.echange] >= 10);
+    assert.equal(AIDES.jetonsGeste(etat, {reserve: m.rang}, regle), null, "pendant l'échange, la réserve est refusée");
+    etat = AIDES.jetonsGeste(etat, {echange: etat.echange}, regle);
+    echanges += 1;
+  }
+  assert.equal(etat.phase, "fini");
+  Object.values(etat.comptes).forEach(n => assert.ok(n >= 0 && n <= 9, "au plus 9 jetons par colonne à la fin"));
+  return {valeur: CORE.exact(Object.entries(etat.comptes).reduce((s, [rang, n]) => s + n * 10 ** Number(rang), 0)), echanges};
+}
+
+// L'outil de l'entraînement d'un calcul du lot 5.
+function verifierOutilLot5(c) {
+  const aide = CORE.aideDe(c);
+  const image = CORE.imageDe(c);
+  const m = CORE.manipulationDe(c);
+  if (c.module === "D3") {
+    // D2 retourné : le tableau à flèches « ÷ », l'arrivée à trouver.
+    assert.equal(aide.outil, "tableau-fleches");
+    assert.ok(aide.inconnue && aide.virgule && aide.operation === "÷");
+    assert.ok(!AIDES.decrireTableau(aide).includes(`, ${CORE.formaterNombre(c.reponse)}.`), `${c.texte} : le lecteur d'écran dit la réponse`);
+    assert.ok(!image.inconnue && image.arrivee === c.reponse, `${c.texte} : la correction montre l'arrivée`);
+    assert.equal(m.outil, "glisse");
+    assert.deepEqual([...m.colonnes], [3, 2, 1, 0, -1, -2, -3]);
+    assert.equal(m.decalage, -Math.round(Math.log10(c.donnees.p)));
+    const apres = AIDES.bandeApres(AIDES.chiffresDansColonnes(m.depart, m.colonnes), m.decalage, m.colonnes.indexOf(0));
+    const attendu = AIDES.chiffresDansColonnes(c.reponse, m.colonnes);
+    apres.forEach((chiffre, i) => assert.ok(chiffre === "" || chiffre === attendu[i], `${c.texte} : la bande lit ${CORE.formaterNombre(c.reponse)}`));
+    assert.doesNotMatch(m.consigne + m.refus, /zéro|virgule/i);
+    return;
+  }
+  // D1 et D4 : la correction, le tableau de numération rempli.
+  assert.equal(image.outil, "numeration");
+  assert.ok(!image.inconnue);
+  const lu = nombreDuBas(image);
+  assert.equal(c.forme === "numerateur" ? CORE.exact(lu * 10 ** c.k) : lu, c.reponse, `${c.texte} : la correction montre la réponse`);
+  sansLaReponse(AIDES.dessinerImage(aide), c.reponse, c.texte, {aria: !(aide.outil === "carre" && c.forme === "numerateur")});
+  if (c.module === "D1") {
+    // Pas de carré au niveau 3 (millièmes), ni au-delà de 3 unités : à la
+    // vraie taille, il ne tiendrait plus (décision du 04/11, planche choix-4).
+    const sansCarre = c.niveau === 3 || avecEspaces(c.texte).includes("1 000") || Math.trunc(c.donnees.v) > 3;
+    if (sansCarre) {
+      assert.equal(aide.outil, "numeration");
+      assert.ok(aide.inconnue);
+      assert.equal(m, null, `${c.texte} : pas de carré à colorier`);
+    } else {
+      // Le carré dessiné, sans aucun chiffre : il dit le décimal écrit.
+      assert.equal(aide.outil, "carre");
+      assert.deepEqual(textesSvg(AIDES.dessinerImage(aide)), [], `${c.texte} : aucun chiffre sur le carré`);
+      assert.equal(CORE.exact(aide.unites + aide.dixiemes / 10 + aide.centiemes / 100), c.donnees.v);
+      if (c.forme === "numerateur") assert.equal(m, null, `${c.texte} : pas de carré à colorier sur « ? au numérateur »`);
+      else {
+        // Le carré à colorier : chaque toucher colorie une bande, puis un
+        // petit carré, et il arrive au décimal ; un toucher de trop est refusé.
+        assert.equal(m.outil, "carre");
+        let etat = {dixiemes: 0, centiemes: 0};
+        for (let k = 0; k < m.dixiemes + m.centiemes; k += 1) etat = AIDES.carreGeste(etat, m);
+        assert.deepEqual(etat, {dixiemes: m.dixiemes, centiemes: m.centiemes});
+        assert.equal(AIDES.carreGeste(etat, m), null, "un toucher de trop");
+        assert.equal(CORE.exact(m.unites + m.dixiemes / 10 + m.centiemes / 100), c.reponse);
+        assert.ok(m.traces[0].texte.endsWith(`= ${CORE.formaterNombre(c.reponse)}`) && !m.consigne.includes(CORE.formaterNombre(c.reponse)));
+      }
+    }
+    return;
+  }
+  // D4 : le tableau, ce qui ne change pas en gris, ce qui change « ? » ; la
+  // retenue en petit 1 rouge. Les jetons arrivent au résultat.
+  assert.equal(aide.outil, "numeration");
+  assert.ok(aide.inconnue);
+  const plan = AIDES.planNumeration(aide);
+  const change = [...plan.resultat.rangs.keys()].filter(r => !aide.garder.includes(r));
+  assert.ok(change.includes(c.donnees.rang), `${c.texte} : le rang du chiffre ajouté change`);
+  assert.equal(change.length, 1 + c.retenues.length, `${c.texte} : un seul chiffre change, plus les retenues`);
+  aide.garder.forEach(rang => assert.equal(plan.resultat.rangs.get(rang), AIDES.chiffresParRang(c.donnees.n).get(rang) || "0", `${c.texte} : le chiffre gardé est celui du nombre`));
+  assert.equal(m.outil, "jetons");
+  const fin = jouerJetons(m);
+  assert.equal(fin.valeur, c.reponse, `${c.texte} : les jetons arrivent au résultat`);
+  assert.equal(fin.echanges, c.retenues.length, `${c.texte} : un échange par retenue`);
+  assert.ok(m.colonnes.length <= 4, "4 colonnes au plus");
+}
+
+// J'apprends d'un niveau du lot 5.
+function verifierApprendsLot5(fiche, niveau, cle) {
+  const a = niveau.apprends;
+  // « À retenir » cite le calcul de l'image (règle du lot 1).
+  const calculImage = avecEspaces(fiche.id === "D3" ? a.textes[0] : a.represente.texte);
+  const r = avecEspaces(CORE.formaterNombre(fiche.id === "D3" ? a.exemple.reponse : a.represente.reponse));
+  assert.ok([calculImage.replace(" = □", ""), calculImage.replace("□", r)].some(t => avecEspaces(a.bilan).includes(t)), `${cle} : « ${a.bilan} » cite ${calculImage}`);
+  if (fiche.id === "D3") {
+    // D2 retourné : le glisse-nombres vers la droite, puis le tableau à flèches.
+    assert.equal(a.manipule.outil, "glisse");
+    assert.ok(a.manipule.decalage < 0);
+    assert.equal(a.represente.outil, "tableau-fleches");
+    assert.ok(a.represente.image.inconnue && a.represente.image.operation === "÷");
+    assert.equal(a.ecris.etapes.length, 1, `${cle} : J'écris en une seule étape (décision du 04/11)`);
+    const arrivee = nombre(a.manipule.traces[0].texte.split("=").pop());
+    const apres = AIDES.bandeApres(AIDES.chiffresDansColonnes(a.manipule.depart, a.manipule.colonnes), a.manipule.decalage, a.manipule.colonnes.indexOf(0));
+    const attendu = AIDES.chiffresDansColonnes(arrivee, a.manipule.colonnes);
+    apres.forEach((chiffre, i) => assert.ok(chiffre === "" || chiffre === attendu[i], `${cle} : la bande lit l'arrivée`));
+    return;
+  }
+  sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} je représente`);
+  assert.equal(a.represente.solution.image.outil, "numeration");
+  assert.equal(nombreDuBas(a.represente.solution.image), a.represente.reponse, `${cle} : la correction montre la réponse`);
+  // « À retenir » : le tableau du calcul de l'image, rempli.
+  assert.equal(a.image.outil, "numeration");
+  assert.equal(nombreDuBas(a.image), a.represente.reponse);
+  if (fiche.id === "D1") {
+    // Décision du 04/11 : le carré à colorier, le carré à lire (niveaux 1
+    // et 2) ; le tableau seul au niveau 3.
+    assert.equal(a.represente.outil, niveau.n === 3 ? "numeration" : "carre", cle);
+    if (niveau.n === 3) assert.equal(a.manipule, null);
+    else {
+      assert.equal(a.manipule.outil, "carre");
+      assert.equal(CORE.exact(a.manipule.unites + a.manipule.dixiemes / 10 + a.manipule.centiemes / 100), a.exemple.reponse);
+    }
+    return;
+  }
+  // D4 : les jetons, puis le tableau.
+  assert.equal(a.manipule.outil, "jetons");
+  assert.equal(a.represente.outil, "numeration");
+  assert.equal(jouerJetons(a.manipule).valeur, a.exemple.reponse);
+}
+
+test("modules lot 5 : chaque niveau tient sa règle, et ses calculs ne sont pas ceux d'un autre niveau", () => {
+  const ks = c => (c.forme === "numerateur" ? [c.k, c.gauche.k] : c.termes.map(t => t.k));
+  const enOrdre = c => c.termes.every((t, i) => !i || t.k > c.termes[i - 1].k);
+  const regles = {
+    // D1 : les dixièmes, les centièmes, puis les millièmes et le désordre.
+    "D1-1": c => Math.max(...ks(c)) === 1 && (c.forme === "numerateur" ? CORE.decimalesDe(c.donnees.v) <= 1 : c.termes.every(t => t.num <= 99)),
+    "D1-2": c => Math.max(...ks(c)) === 2 && (c.forme !== "fractions" || enOrdre(c)) && (c.forme === "numerateur" ? CORE.decimalesDe(c.donnees.v) <= 2 : true),
+    "D1-3": c => (c.forme === "fractions" ? !enOrdre(c) || ks(c).includes(3) : Math.max(...ks(c)) === 3),
+    // D3 : ÷ 10, résultat au-dessus de 1 ; ÷ 100 et ÷ 1 000, au-dessus de 1 ;
+    // un résultat sous 1. Jamais un résultat entier, au plus trois décimales.
+    "D3-1": c => c.donnees.p === 10 && c.reponse >= 1,
+    "D3-2": c => [100, 1000].includes(c.donnees.p) && c.reponse >= 1,
+    "D3-3": c => c.reponse < 1,
+    // D4 : un chiffre change (dixièmes, centièmes ; nombres à 1 ou 2
+    // décimales), puis les millièmes, puis une retenue en ajoutant.
+    "D4-1": c => [1, 2].includes(CORE.decimalesDe(c.donnees.n)) && [-1, -2].includes(c.donnees.rang) && !c.retenues.length,
+    "D4-2": c => CORE.decimalesDe(c.donnees.n) === 3 && !c.retenues.length,
+    "D4-3": c => c.retenues.length >= 1 && c.forme !== "moins"
+  };
+  const parModule = {};
+  const ditCalcul = c => avecEspaces(c.texte);
+  Object.entries(regles).forEach(([cle, regle]) => {
+    const calculs = lot5(cle);
+    calculs.forEach(c => {
+      assert.ok(regle(c), `${cle} : ${c.texte}`);
+      assert.equal(c.reponse, resoudre(c.texte), `${cle} : ${c.texte}`);
+      assert.ok(CORE.decimalesDe(c.reponse) <= 3);
+      if (c.module === "D1") {
+        // Jamais une fraction unitaire seule (1/10 = □ : c'est F1), jamais un
+        // numérateur multiple de 10 dans « fraction ».
+        if (c.forme === "fraction") assert.ok(c.termes[0].num !== 1 && c.termes[0].num % 10 !== 0, c.texte);
+        if (c.forme === "numerateur") assert.ok(Number.isInteger(c.reponse) && c.texte.includes("□/"));
+        else assert.ok(!Number.isInteger(c.reponse), `${c.texte} : un décimal`);
+      }
+      if (c.module === "D3") assert.ok(!Number.isInteger(c.reponse), `${c.texte} : jamais un résultat entier (M2)`);
+      if (c.module === "D4") {
+        assert.ok(c.reponse < 10 && !Number.isInteger(c.reponse), c.texte);
+        // Un seul chiffre change (plus les retenues).
+        const avant = AIDES.chiffresParRang(c.donnees.n);
+        const apres = AIDES.chiffresParRang(c.reponse);
+        const changes = [...apres.keys()].filter(rang => (avant.get(rang) || "0") !== apres.get(rang));
+        assert.deepEqual(changes.sort(), [c.donnees.rang, ...c.retenues].filter(rang => (avant.get(rang) || "0") !== apres.get(rang)).sort(), c.texte);
+        assert.ok(!c.retenues.length || c.retenues.every(rang => changes.includes(rang)));
+      }
+    });
+    const [id] = cle.split("-");
+    (parModule[id] = parModule[id] || []).push([cle, new Set(calculs.map(ditCalcul))]);
+  });
+  Object.values(parModule).forEach(niveaux => niveaux.forEach(([cle, a], i) => niveaux.slice(i + 1).forEach(([autre, b]) => {
+    assert.deepEqual([...a].filter(x => b.has(x)), [], `${cle} et ${autre} : des calculs communs`);
+  })));
+  // Avec les voisins : D3 n'a aucune division de M2 (elles tombent juste),
+  // aucun calcul de D2 (des produits).
+  const quoi = c => (c.forme === "division" ? `${c.donnees.m}÷${c.donnees.p}` : `${c.donnees.n}×${c.donnees.p}`);
+  const voisins = new Set(["M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4"].flatMap(cle => lot5(cle).map(quoi)));
+  ["D3-1", "D3-2", "D3-3"].forEach(cle => lot5(cle).forEach(c => assert.ok(!voisins.has(quoi(c)), `${c.texte} : un calcul de M2 ou D2`)));
+  // Les écritures de chaque niveau.
+  const formes = cle => [...new Set(lot5(cle).map(c => c.forme))].sort();
+  assert.deepEqual(formes("D1-1"), ["entier-fraction", "fraction", "numerateur"]);
+  assert.deepEqual(formes("D1-2"), ["entier-fraction", "fraction", "fractions", "numerateur"]);
+  assert.deepEqual(formes("D1-3"), ["entier-fraction", "fractions", "numerateur"]);
+  assert.deepEqual(formes("D3-2"), ["division"]);
+  assert.deepEqual(formes("D4-1"), ["moins", "plus", "plus-fraction"]);
+  assert.deepEqual(formes("D4-3"), ["plus", "plus-fraction"]);
+  // Les variantes voulues sont toutes là : « 712/100 », « 45/100 », « 7/100 » ;
+  // « 0,3 = □/10 », « 2,7 = □/10 », « 4 = □/10 » ; une case vide qui se remplit
+  // (4,5 + 0,03) ; des retenues qui se propagent (3,96 + 0,05).
+  const d12 = lot5("D1-2").filter(c => c.forme === "fraction").map(c => String(c.termes[0].num).length);
+  [1, 2, 3].forEach(n => assert.ok(d12.includes(n), `D1-2 : un numérateur à ${n} chiffres`));
+  const d11 = lot5("D1-1").filter(c => c.forme === "numerateur").map(c => c.donnees.v);
+  assert.ok(d11.some(v => v < 1) && d11.some(v => v > 1 && !Number.isInteger(v)) && d11.some(Number.isInteger));
+  assert.ok(lot5("D4-1").some(c => -c.donnees.rang > CORE.decimalesDe(c.donnees.n)), "D4-1 : une case vide qui se remplit");
+  assert.ok(lot5("D4-3").some(c => c.retenues.length === 2), "D4-3 : une retenue qui se propage");
+  // Une seule case par calcul, deux écritures aux mêmes nombres n'ont pas la même clé.
+  assert.notEqual(CORE.niveauDe("D1-1").niveau.imposes[0].cle, CORE.niveauDe("D1-1").niveau.imposes[1].cle);
+  assert.match(CORE.niveauDe("D1-1").niveau.imposes[1].cle, /^D1-1-4-4d1-x-1$/);
+});
+
+test("modules lot 5 : les erreurs connues, reconnues avec leur phrase, sans la réponse", () => {
+  const trouver = (cle, texte) => impose(cle, texte) || lot5(cle).find(c => avecEspaces(c.texte) === texte);
+  const cas = [
+    ["D1-1", "5 + 3/10 = □", 8, 2], ["D1-1", "5 + 3/10 = □", 53, 3], ["D1-1", "5 + 3/10 = □", 0.53, 1], ["D1-1", "0,4 = □/10", 40, 1],
+    ["D1-2", "6/100 = □", 6, 3], ["D1-2", "6/100 = □", 0.6, 1], ["D1-2", "2 + 8/100 = □", 2.8, 1], ["D1-2", "2 + 8/100 = □", 10, 2],
+    ["D1-3", "5/1 000 + 2/10 = □", 0.52, 4], ["D1-3", "5/1 000 + 2/10 = □", 7, 2], ["D1-3", "5/1 000 + 2/10 = □", 0.007, 2], ["D1-3", "5/1 000 + 2/10 = □", 205, 3],
+    ["D3-1", "37 ÷ 10 = □", 37, 1], ["D3-1", "58,4 ÷ 10 = □", 58.4, 1], ["D3-1", "58,4 ÷ 10 = □", 0.584, 3], ["D3-1", "58,4 ÷ 10 = □", 584, 4], ["D3-1", "58,4 ÷ 10 = □", 58.04, 5],
+    ["D3-2", "283 ÷ 100 = □", 28.3, 2], ["D3-2", "283 ÷ 100 = □", 0.283, 3], ["D3-3", "0,8 ÷ 10 = □", 0.8, 1], ["D3-3", "34 ÷ 1 000 = □", 0.34, 2],
+    ["D4-1", "5,24 + 0,5 = □", 5.29, 1], ["D4-1", "5,24 + 0,5 = □", 10.24, 1], ["D4-1", "5,24 + 0,5 = □", 5.245, 2], ["D4-1", "5,24 + 0,5 = □", 4.74, 4], ["D4-1", "7,86 − 0,04 = □", 7.9, 4],
+    ["D4-3", "2,58 + 0,7 = □", 2.28, 3], ["D4-3", "6,97 + 5/100 = □", 6.92, 3]
+  ];
+  cas.forEach(([cle, texte, reponse, cause]) => {
+    const c = trouver(cle, texte);
+    assert.ok(c, `${cle} : ${texte}`);
+    const d = CORE.diagnostiquer(c, reponse);
+    assert.ok(d, `${texte} → ${reponse} : une cause`);
+    assert.equal(d.c, cause, `${texte} → ${reponse} (${d.texte})`);
+  });
+  const phrase = (cle, texte, reponse) => avecEspaces(CORE.diagnostiquer(trouver(cle, texte), reponse).texte);
+  assert.equal(phrase("D1-1", "5 + 3/10 = □", 8), "8, c’est 5 + 3. 3/10, c’est 3 dixièmes : les dixièmes s’écrivent après la virgule.");
+  assert.equal(phrase("D1-1", "5 + 3/10 = □", 53), "53 : la virgule manque. 5 + 3/10, c’est 5 unités et 3 dixièmes.");
+  assert.equal(phrase("D1-1", "0,4 = □/10", 40), "40 : un rang de trop. Compte les dixièmes dans 0,4.");
+  assert.equal(phrase("D1-2", "6/100 = □", 6), "6, c’est le numérateur. 6/100, c’est 6 centièmes : 100 centièmes font une unité.");
+  assert.equal(phrase("D1-3", "5/1 000 + 2/10 = □", 0.52), "0,52 : tu as écrit les chiffres à la suite, dans l’ordre du calcul. Range chaque morceau dans sa colonne : 2 dixièmes et 5 millièmes.");
+  assert.equal(phrase("D3-1", "58,4 ÷ 10 = □", 58.04), "Dans 58,04, le 58 n’a pas changé de rang. Lui aussi vaut 10 fois moins.");
+  assert.equal(phrase("D3-2", "283 ÷ 100 = □", 28.3), "28,3 : une colonne de moins. Pour ÷ 100, chaque chiffre glisse de 2 colonnes vers la droite.");
+  assert.equal(phrase("D4-1", "5,24 + 0,5 = □", 5.29), "5,29 : le 5 n’est pas dans la bonne colonne. 0,5, c’est 5 dixièmes.");
+  assert.equal(phrase("D4-3", "2,58 + 0,7 = □", 2.28), "2,28 : la retenue est oubliée. 5 + 7 = 12 dixièmes, et 10 dixièmes font 1 unité.");
+  assert.equal(phrase("D4-1", "7,86 − 0,04 = □", 7.9), "7,9, c’est 7,86 + 0,04. Ici, on retranche : 4 centièmes de moins.");
+  // D3 : jamais « zéro », jamais « virgule » dans un refus ou une phrase d'erreur.
+  // Aucune phrase ne donne la réponse, ni ne dit « NaN ».
+  LOT5.forEach(id => CORE.moduleDe(id).niveaux.forEach(niveau => {
+    for (let graine = 1; graine <= 20; graine += 1) CORE.genererSerie(`${id}-${niveau.n}`, {graine}).forEach(c => {
+      fauxLot5(c).forEach(reponse => {
+        const d = CORE.diagnostiquer(c, reponse);
+        if (!d) return;
+        assert.doesNotMatch(d.texte, /NaN|undefined|null|-1\b/, `${c.texte} → ${reponse}`);
+        assert.ok(!decimauxDuTexte(d.texte).includes(c.reponse), `${c.texte} → ${reponse} : la phrase donne la réponse (${d.texte})`);
+        if (id === "D3") assert.doesNotMatch(d.texte, /zéro|virgule/i, `${c.texte} → ${reponse}`);
+        assert.ok(d.image, `${c.texte} → ${reponse} : l'image de la correction`);
+      });
+    });
+  }));
+});
+
+test("modules lot 5 : les dessins nouveaux tiennent leurs promesses", () => {
+  const textes = o => textesSvg(AIDES.dessinerImage(o)).map(avecEspaces);
+  // Le tableau de numération : 712/100, la ligne et le résultat à trouver,
+  // la virgule (le trait rouge) entre les unités et les dixièmes.
+  const t = {outil: "numeration", lignes: [{nombre: 712, unite: -2, texte: "712/100"}], resultat: {nombre: 7.12, unite: 0, texte: ""}, inconnue: true};
+  const svg = AIDES.dessinerImage(t);
+  assert.deepEqual(textes(t).filter(x => /^\d$|^\?$/.test(x)), ["7", "1", "2", "?", "?", "?"]);
+  assert.match(svg, /stroke="#c62828" stroke-width="3.5"/, "la virgule");
+  assert.equal(AIDES.decrireNumeration(t), "Tableau de numération. 712 sur 100 : 7 aux unités, 1 aux dixièmes, 2 aux centièmes. En bas, le nombre à trouver.");
+  // J'écris : ce que l'élève a trouvé s'écrit en vert, le reste « ? ».
+  const vert = AIDES.dessinerImage(Object.assign({}, t, {trouves: [-1, -2]}));
+  assert.equal((vert.match(/fill="#147447">/g) || []).length, 2);
+  // D4 : ce qui ne change pas en gris, le chiffre qui change « ? », la
+  // retenue en petit 1 rouge (deux pour 3,96 + 0,05).
+  const d4 = CORE.aideDe(lot5("D4-3").find(c => c.retenues.length === 2));
+  assert.equal((AIDES.dessinerImage(d4).match(/<circle[^>]*stroke="#c62828"/g) || []).length, 2);
+  assert.ok(d4.garder.length >= 0 && textes(d4).filter(x => x === "?").length === 3, "trois chiffres changent : deux retenues et le rang ajouté");
+  const d41 = CORE.aideDe(impose("D4-1", "5,24 + 0,5 = □"));
+  assert.deepEqual(d41.garder.sort(), [-2, 0]);
+  assert.equal(textes(d41).filter(x => x === "?").length, 1);
+  assert.ok(AIDES.dessinerImage(d41).includes('fill="#5b7286">5<') && AIDES.dessinerImage(d41).includes('fill="#5b7286">4<'), "5 et 4 restent, en gris");
+  // Le carré de 100 : aucun chiffre ; l'unité est le grand carré (décision
+  // du 04/11) : 245/100, deux carrés entiers DE LA MÊME TAILLE que le carré
+  // entamé (4 bandes, 5 petits carrés).
+  const carre = AIDES.carreCent({unites: 2, dixiemes: 4, centiemes: 5});
+  assert.deepEqual(textesSvg(carre), []);
+  assert.equal((carre.match(/fill="#5d86c8"/g) || []).length, 2 + 2);
+  const cotes = [...carre.matchAll(/<rect x="[\d.]+" y="[\d.]+" width="([\d.]+)" height="([\d.]+)" fill="none"/g)].map(m => m[1] + "x" + m[2]);
+  assert.deepEqual(cotes, ["100x100", "100x100", "100x100"], "trois carrés de la même taille");
+  assert.match(AIDES.decrireCarre({unites: 2, dixiemes: 4, centiemes: 5}), /2 carrés entiers, 4 bandes, 5 petits carrés/);
+  // Les niveaux 1 et 2 : le carré jusqu'à 3 unités, le tableau au-delà.
+  ["D1-1", "D1-2"].forEach(cle => lot5(cle).forEach(c => assert.equal(CORE.aideDe(c).outil, Math.trunc(c.donnees.v) > 3 ? "numeration" : "carre", c.texte)));
+  // Les fractions dans un texte de calcul (la page les dessine) : le motif
+  // les reconnaît, la case au numérateur aussi, et « 1 000 » (espace fine)
+  // reste un seul dénominateur.
+  // (Un faux document suffit : `noeudsCalcul` ne fait que créer des morceaux.)
+  const fractionsDe = texte => {
+    const avant = globalThis.document;
+    const element = () => ({className: "", textContent: "", enfants: [], append(...n) { this.enfants.push(...n); }});
+    globalThis.document = {createTextNode: t => ({texte: t}), createElement: element};
+    try {
+      return AIDES.noeudsCalcul(texte, {caseReponse: () => ({texte: "CASE"})})
+        .filter(n => n.className === "dc-frac")
+        .map(n => [n.enfants[0].textContent || n.enfants[0].enfants.map(e => e.texte).join(""), n.enfants[2].textContent]);
+    } finally {
+      globalThis.document = avant;
+    }
+  };
+  assert.deepEqual(fractionsDe("3 + 2/10 = □"), [["2", "10"]]);
+  assert.deepEqual(fractionsDe("0,3 = □/10"), [["CASE", "10"]]);
+  assert.deepEqual(fractionsDe("4 + 107/1\u202f000 = □"), [["107", "1\u202f000"]]);
+  assert.deepEqual(fractionsDe("8/100 + 4/10 + 3/1\u202f000"), [["8", "100"], ["4", "10"], ["3", "1\u202f000"]]);
+  // Le niveau 3 de D1 (les millièmes) : le tableau seul, jamais le carré.
+  lot5("D1-3").forEach(c => assert.equal(CORE.aideDe(c).outil, "numeration", c.texte));
+  // D2 et D3 : J'écris en une seule étape (décision du 04/11) ; plus rien
+  // n'utilise les étapes « entiers » / « decimaux ».
+  ["D2-1", "D2-2", "D2-3", "D3-1", "D3-2", "D3-3"].forEach(cle => {
+    const etapes = CORE.niveauDe(cle).niveau.apprends.ecris.etapes;
+    assert.equal(etapes.length, 1, cle);
+    assert.ok(etapes.every(e => !("montre" in e)), cle);
+  });
+});
+
+test("modules lot 5 : les jetons, le carré à colorier — le geste est forcé", () => {
+  // 4,45 + 0,3 : le jeton 0,1, trois jetons arrivent ; un autre jeton est refusé.
+  const regle = {rang: -1, chiffre: 3, signe: 1, colonnes: [0, -1, -2]};
+  const depart = AIDES.jetonsDepart({depart: 4.45, colonnes: regle.colonnes});
+  assert.deepEqual(depart.comptes, {0: 4, "-1": 4, "-2": 5});
+  assert.equal(AIDES.jetonsGeste(depart, {reserve: -2}, regle), null);
+  assert.deepEqual(AIDES.jetonsGeste(depart, {reserve: -1}, regle), {comptes: {0: 4, "-1": 7, "-2": 5}, phase: "fini", echange: null});
+  // 6,78 − 0,05 : cinq jetons s'en vont.
+  assert.deepEqual(AIDES.jetonsGeste(AIDES.jetonsDepart({depart: 6.78, colonnes: [0, -1, -2]}), {reserve: -2}, {rang: -2, chiffre: 5, signe: -1, colonnes: [0, -1, -2]}).comptes, {0: 6, "-1": 7, "-2": 3});
+  // 3,96 + 0,05 : 11 centièmes → un paquet, puis 10 dixièmes → un paquet.
+  const r = {rang: -2, chiffre: 5, signe: 1, colonnes: [0, -1, -2]};
+  let e = AIDES.jetonsGeste(AIDES.jetonsDepart({depart: 3.96, colonnes: r.colonnes}), {reserve: -2}, r);
+  assert.deepEqual([e.phase, e.echange], ["echange", -2]);
+  assert.equal(AIDES.jetonsGeste(e, {echange: -1}, r), null, "le paquet d'une autre colonne : refusé");
+  e = AIDES.jetonsGeste(e, {echange: -2}, r);
+  assert.deepEqual([e.phase, e.echange, e.comptes], ["echange", -1, {0: 3, "-1": 10, "-2": 1}]);
+  e = AIDES.jetonsGeste(e, {echange: -1}, r);
+  assert.deepEqual([e.phase, e.comptes], ["fini", {0: 4, "-1": 0, "-2": 1}]);
+  // Le carré : 4/10 + 8/100, quatre bandes puis huit petits carrés, puis plus rien.
+  let c = {dixiemes: 0, centiemes: 0};
+  const voulu = {dixiemes: 4, centiemes: 8};
+  const suite = [];
+  for (let k = 0; k < 12; k += 1) { c = AIDES.carreGeste(c, voulu); suite.push(`${c.dixiemes}.${c.centiemes}`); }
+  assert.deepEqual(suite, ["1.0", "2.0", "3.0", "4.0", "4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8"]);
+  assert.equal(AIDES.carreGeste(c, voulu), null);
+  // Les jetons de chaque niveau de D4 tiennent : 4 colonnes au plus, 9 jetons
+  // au départ par colonne.
+  ["D4-1", "D4-2", "D4-3"].forEach(cle => lot5(cle).slice(0, 200).forEach(calcul => {
+    const m = CORE.manipulationDe(calcul);
+    assert.ok(m.colonnes.length >= 3 && m.colonnes.length <= 4, calcul.texte);
+    Object.values(AIDES.jetonsDepart(m).comptes).forEach(n => assert.ok(n <= 9));
+    const joue = jouerJetons(m);
+    assert.equal(joue.valeur, calcul.reponse, calcul.texte);
+    assert.equal(joue.echanges, calcul.retenues.length, `${calcul.texte} : un échange par retenue`);
+  }));
 });

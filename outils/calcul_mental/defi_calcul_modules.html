@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261104-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261104-6">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261104-1"></script>
+  <script src="./defi_calcul_core.js?v=20261104-5"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261104-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261104-6"></script>
   <script>
     (() => {
       "use strict";
@@ -1280,7 +1280,11 @@
         const attribut = image.width && image.width.baseVal && image.hasAttribute("width") ? image.width.baseVal.value : Infinity;
         const largeur = Math.min($("aide").clientWidth, attribut);
         const naturelle = image.viewBox.baseVal.height * largeur / image.viewBox.baseVal.width;
-        return image.clientHeight + 1 < Math.min(naturelle, Math.max(ECHELLE.imageTelephone, naturelle / 2));
+        // Le tableau de numération et le carré de 100 (modules lot 5) ont
+        // des chiffres et des bandes à lire : le pavé rapetisse (jusqu'à
+        // 0,85) avant qu'ils passent sous les trois quarts de leur taille.
+        const part = image.matches("svg.dc-numeration, svg.dc-carre") ? .75 : .5;
+        return image.clientHeight + 1 < Math.min(naturelle, Math.max(ECHELLE.imageTelephone, naturelle * part));
       }
       function bornesEchelle(largeur, pleinEcran) {
         if (largeur < ECHELLE.largeurMin) return {min: 1, max: 1, longue: 1};
@@ -1995,10 +1999,11 @@
       // puisse être tapé, et reconnu.
       const CHIFFRES_MAX = 8;
 
-      // La touche « , » au-dessus du pavé, dans les modules à décimales.
-      function renderTouches(id) {
-        const fiche = CORE.moduleDe(id);
-        $("touches").hidden = !(fiche && fiche.virgule);
+      // La touche « , » au-dessus du pavé, dans les modules à décimales —
+      // sauf quand la case est un numérateur (« 0,3 = □/10 » : la réponse
+      // est un entier ; modules lot 5).
+      function renderTouches(id, texte = "") {
+        $("touches").hidden = !CORE.virguleDuTexte(id, texte);
       }
 
       function renderInlineAnswer(status = "") {
@@ -2051,11 +2056,11 @@
       }
 
       // Un texte avec sa case (« 47 + 19 = □ ») : la case devient l'endroit
-      // où s'écrit la réponse.
+      // où s'écrit la réponse. Les fractions (« 3 + 2/10 », modules lot 5)
+      // s'écrivent comme sur le cahier ; dans « 0,3 = □/10 », la case est le
+      // numérateur.
       function avecCase(texte) {
-        const [avant, ...reste] = String(texte).split(CORE.CASE);
-        if (!reste.length) return [document.createTextNode(insecable(avant))];
-        return [document.createTextNode(insecable(avant)), caseReponse(), document.createTextNode(insecable(reste.join(CORE.CASE)))];
+        return AIDES.noeudsCalcul(texte, {caseReponse, insecable});
       }
 
       function renderExpression(texte, classe = "") {
@@ -2117,7 +2122,7 @@
         if (consigne) {
           const p = document.createElement("p");
           p.className = "consigne";
-          p.textContent = consigne;
+          AIDES.ecrireTexte(p, consigne);
           morceaux.push(p);
         }
         const dessin = document.createElement("div");
@@ -2303,10 +2308,14 @@
       }
 
       // L'outil à manipuler : les perles, le glisse-nombres, ou les jetons à
-      // toucher (C1, modules lot 4 : je touche le calcul à faire en premier).
+      // toucher (C1, modules lot 4 : je touche le calcul à faire en premier) ;
+      // modules lot 5 : le carré de 100 à colorier (D1), le tableau à jetons
+      // et sa réserve (D4).
       function creerManip(zone, options) {
         if (options.outil === "glisse") return AIDES.glisseNombres(zone, options);
         if (options.outil === "toucher") return AIDES.toucherCalcul(zone, options);
+        if (options.outil === "carre") return AIDES.carreManip(zone, options);
+        if (options.outil === "jetons") return AIDES.jetonsManip(zone, options);
         return AIDES.perles100(zone, options);
       }
 
@@ -2349,7 +2358,7 @@
           // est dessinée, l'élève tape la réponse.
           serie.essais = 0;
           renderExpression(apprends.represente.texte);
-          renderTouches(serie.module);
+          renderTouches(serie.module, apprends.represente.texte);
           montrerImage(apprends.represente.image, apprends.represente.consigne);
           carte.classList.add("sans-retour");
         } else {
@@ -2360,7 +2369,6 @@
           serie.essais = 0;
           serie.etape = 0;
           carte.classList.add("ecrit");
-          renderTouches(serie.module);
           renderEtapes();
           montrerImage(dessinEcris(0), apprends.ecris.consigne || "");
         }
@@ -2383,22 +2391,34 @@
           const ligne = document.createElement("span");
           ligne.className = index < serie.etape ? "faite" : index === serie.etape ? "ici" : "apres";
           if (revelees) ligne.className = index < serie.etape ? "faite" : "revelee";
-          etape.texte.split(" ").forEach(morceau => {
+          // La case de la ligne : celle où l'on tape (l'étape qui se joue),
+          // ou sa réponse écrite (faite, révélée), ou vide (les suivantes).
+          const laCase = () => {
+            if (index === serie.etape && !revelees) return caseReponse();
+            const reponse = document.createElement("b");
+            reponse.className = `inline-answer ${index < serie.etape ? "is-correct" : revelees ? "is-corrected" : "est-vide"}`;
+            reponse.textContent = index < serie.etape || revelees ? CORE.formaterNombre(etape.reponse) : " ";
+            return reponse;
+          };
+          // Une étape plus courte (« 6/10 = □ » sous « 4 + 6/10 = □ ») est
+          // calée à droite : le « = » sous le « = », la case sous la case.
+          const morceaux = etape.texte.split(" ");
+          for (let k = morceaux.length; k < colonnes; k += 1) {
+            const vide = document.createElement("span");
+            vide.className = "cel";
+            ligne.append(vide);
+          }
+          morceaux.forEach(morceau => {
             const cellule = document.createElement("span");
             cellule.className = "cel";
-            if (morceau === CORE.CASE) {
-              if (index === serie.etape && !revelees) cellule.append(caseReponse());
-              else {
-                const reponse = document.createElement("b");
-                reponse.className = `inline-answer ${index < serie.etape ? "is-correct" : revelees ? "is-corrected" : "est-vide"}`;
-                reponse.textContent = index < serie.etape || revelees ? CORE.formaterNombre(etape.reponse) : " ";
-                cellule.append(reponse);
-              }
-            } else cellule.textContent = insecable(morceau);
+            cellule.append(...AIDES.noeudsCalcul(morceau, {caseReponse: laCase, insecable}));
             ligne.append(cellule);
           });
           lignes.append(ligne);
         });
+        // La touche « , » suit l'étape qui se joue (une case de numérateur
+        // n'en a pas).
+        if (!revelees) renderTouches(serie.module, (etapes[serie.etape] || etapes[0]).texte);
         const expression = $("expression");
         expression.className = "expression dc-lignes";
         expression.replaceChildren(lignes);
@@ -2430,7 +2450,7 @@
         $("touches").hidden = true;
         const feedback = $("answer-feedback");
         feedback.className = "answer-feedback is-wrong";
-        feedback.textContent = temps.solution.phrase;
+        AIDES.ecrireTexte(feedback, temps.solution.phrase);
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
         ajusterEchelle();
@@ -2564,7 +2584,7 @@
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
-        $("retenir-phrase").textContent = serie.apprends.bilan;
+        AIDES.ecrireTexte($("retenir-phrase"), serie.apprends.bilan);
         $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
@@ -2776,7 +2796,7 @@
         renderExpression(question.calcul.texte);
         // La touche « , » suit le calcul, pas la série : dans Mes calculs du
         // jour, elle n'apparaît que sur un calcul à décimales.
-        renderTouches(question.calcul.module);
+        renderTouches(question.calcul.module, question.calcul.texte);
         clearAnswerFeedback();
         if (estEntrainement(serie)) {
           // Une écriture nouvelle est annoncée (« Nouveau : la case est devant »).
@@ -2868,7 +2888,7 @@
           state.answer = attendue;
           renderInlineAnswer("is-corrected");
           const image = serie.genre === "test" ? null : cause ? cause.image : CORE.imageDe(question.calcul);
-          if (cause) feedback.textContent = cause.texte;
+          if (cause) AIDES.ecrireTexte(feedback, cause.texte);
           else {
             feedback.textContent = soude(passe
               ? `Pas de réponse. Bonne réponse : ${attendue}.`
@@ -3230,11 +3250,11 @@
           question.className = "correction-question";
           const expression = document.createElement("span");
           expression.className = "correction-expression";
-          const [avant, apres] = reponse.calcul.texte.split(CORE.CASE);
           const attendue = document.createElement("b");
           attendue.className = "expected-answer";
           attendue.textContent = CORE.formaterNombre(reponse.calcul.reponse);
-          expression.append(document.createTextNode(insecable(avant)), attendue, document.createTextNode(insecable(apres ?? "")));
+          // (« 0,3 = □/10 » : la réponse s'écrit au numérateur.)
+          expression.append(...AIDES.noeudsCalcul(reponse.calcul.texte, {caseReponse: () => attendue, insecable}));
           question.append(expression);
           item.append(question);
           const donnee = document.createElement("span");
@@ -3337,6 +3357,9 @@
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
             // C1 (modules lot 4) : les jetons touchés, et le geste fini.
             toucher: () => (state.manip && state.manip.outil === "toucher" ? {etape: state.manip.etape, fini: state.manip.fini} : null),
+            // Modules lot 5 : le carré de 100 (D1), le tableau à jetons (D4).
+            carre: () => (state.manip && state.manip.outil === "carre" ? Object.assign({etape: state.manip.etape, fini: state.manip.fini}, state.manip.colorie) : null),
+            jetons: () => (state.manip && state.manip.outil === "jetons" ? {etape: state.manip.etape, phase: state.manip.phase, comptes: state.manip.comptes, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
             arrets: () => arretsDeLaBande.slice(),
             // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.

@@ -37,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 70, "les 23 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), puis M7, M10, M12, C1, C3 (modules lot 4)");
+  assert.equal(NIVEAUX.length, 79, "les 26 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), puis D1, D3, D4 (modules lot 5)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
@@ -105,15 +105,26 @@ test("J'écris : les morceaux attendus, module par module", () => {
   // M1-2, double de 75 : 140, puis 10, puis l'accolade (150).
   const m12 = ecris("M1-2").dessins.map(AIDES.dessinerImage);
   assert.deepEqual(m12.map(s => [/>140</.test(s), />10</.test(s), />150</.test(s)]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
-  // D2-1, 72,41 × 10 : 72 × 10 = 720 écrit le 7 et le 2, 0,41 × 10 = 4,1
-  // le 4 et le 1.
+  // D2-1, 72,41 × 10 : une seule étape (décision du 04/11, modules lot 5) —
+  // tous les chiffres glissent ensemble, le tableau se remplit d'un coup.
   const d2 = ecris("D2-1").dessins;
-  assert.deepEqual(d2.map(d => d.trouves.filter(r => r >= -1 && r <= 2)), [[], [2, 1], [2, 1, 0, -1], [2, 1, 0, -1]]);
+  assert.deepEqual(d2.map(d => d.trouves.filter(r => r >= -1 && r <= 2)), [[], [2, 1, 0, -1]]);
   assert.equal((AIDES.dessinerImage(d2[0]).match(/>\?</g) || []).length, 4);
-  assert.equal((AIDES.dessinerImage(d2[1]).match(/>\?</g) || []).length, 2);
-  // D2-3 : les zéros de 4 500 viennent avec 0,5 × 1 000 = 500.
-  assert.deepEqual(ecris("D2-3").dessins[1].trouves.filter(r => r >= 0 && r <= 3), [3]);
-  assert.deepEqual(ecris("D2-3").dessins[2].trouves.filter(r => r >= 0 && r <= 3), [3, 2, 1, 0]);
+  assert.equal((AIDES.dessinerImage(d2[1]).match(/>\?</g) || []).length, 0);
+  // D2-3 : 4,5 × 1 000 = 4 500, les zéros avec le reste.
+  assert.deepEqual(ecris("D2-3").dessins[1].trouves.filter(r => r >= 0 && r <= 3), [3, 2, 1, 0]);
+  // D3-1, 52,7 ÷ 10 : de même, d'un coup.
+  assert.deepEqual(ecris("D3-1").dessins.map(d => d.trouves.filter(r => r >= -2 && r <= 1)), [[], [1, 0, -1, -2]]);
+  // Modules lot 5 : le tableau de numération. D1-1, 4 + 6/10 : « 6/10 = 0,6 »
+  // écrit les dixièmes, « 4 + 6/10 = 4,6 » les unités.
+  assert.deepEqual(ecris("D1-1").dessins.map(d => d.trouves), [[], [-1], [0, -1]]);
+  assert.deepEqual(ecris("D1-3").dessins.map(d => d.trouves), [[], [-1, -2, -3], [0, -1, -2, -3]]);
+  // D4-2, 1,624 + 5/1 000 : « 5/1 000 = 0,005 » écrit la fraction en
+  // décimal (sa ligne), « 0,004 + 0,005 = 0,009 » les millièmes, puis tout.
+  const d4 = ecris("D4-2").dessins;
+  assert.deepEqual(d4.map(d => [d.lignes[1].cherche, Boolean(d.lignes[1].trouvee)]), [[true, false], [false, true], [false, true], [false, true]]);
+  assert.deepEqual(d4.map(d => d.trouves), [[], [], [-3], [0, -1, -2, -3]]);
+  assert.deepEqual(d4[0].garder.sort(), [-1, -2, 0], "les chiffres qui ne changent pas, en gris dès le début");
   // M2-2, un trou : « × ? », puis « × 100 ».
   const m2 = ecris("M2-2").dessins.map(AIDES.dessinerImage);
   assert.match(m2[0], /× \?/);

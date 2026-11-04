@@ -630,20 +630,13 @@
     return dessinsDe(morceaux, etapes, dessin);
   }
 
-  // Le tableau à flèches (M2, D2) : chaque étape écrit les chiffres de sa
-  // partie (72 × 10 = 720 : le 7 et le 2 ; 0,41 × 10 = 4,1 : le 4 et le 1),
-  // la dernière tout le nombre ; un trou (35 × □ = 3 500) : l'étiquette
-  // « × 100 ». `montre` d'une étape : « entiers » ou « decimaux » ; sans
-  // lui, tout.
+  // Le tableau à flèches (M2, D2, D3) : l'étape écrit tout le nombre (modules
+  // lot 5, décision du 04/11 : J'écris de D2 et D3 en une seule étape, tous
+  // les chiffres glissent ensemble) ; un trou (35 × □ = 3 500) : l'étiquette
+  // « × 100 ».
   function tableauDessins(aide, solution, etapes) {
     const rangs = Array.from({length: 13}, (_, i) => 6 - i);
-    const decalage = Math.round(Math.log10(solution.p)) * (solution.operation === "÷" ? -1 : 1);
-    const morceaux = etapes.map(etape => {
-      if (aide.masque) return {etiquette: true};
-      if (etape.montre === "entiers") return {rangs: rangs.filter(r => r - decalage >= 0)};
-      if (etape.montre === "decimaux") return {rangs: rangs.filter(r => r - decalage < 0)};
-      return {rangs};
-    });
+    const morceaux = etapes.map(() => (aide.masque ? {etiquette: true} : {rangs}));
     const dessin = (vus, revele = false) => {
       if (revele) return Object.freeze(Object.assign({}, solution));
       if (aide.masque) return Object.freeze(Object.assign({}, aide, {etiquetteTrouvee: vus.some(m => m.etiquette)}));
@@ -824,10 +817,14 @@
 
   // Le tableau à flèches d'un calcul, la réponse montrée (après une erreur,
   // à la phrase-bilan) : en haut le nombre de départ, en bas l'arrivée.
+  // Les modules à virgule du glisse-nombres : D2 (× 10, × 100, × 1 000) et
+  // D3 (÷ 10, ÷ 100, ÷ 1 000, modules lot 5).
+  const AVEC_VIRGULE = new Set(["D2", "D3"]);
   function tableauDe(calcul) {
     const {n, p, m} = calcul.donnees;
-    if (calcul.forme === "division") return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule: calcul.module === "D2"};
-    return {outil: "tableau-fleches", depart: n, arrivee: m, p, operation: "×", virgule: calcul.module === "D2"};
+    const virgule = AVEC_VIRGULE.has(calcul.module);
+    if (calcul.forme === "division") return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule};
+    return {outil: "tableau-fleches", depart: n, arrivee: m, p, operation: "×", virgule};
   }
 
   // Les erreurs connues de M2. « Un rang de trop », « un rang de moins » :
@@ -1065,7 +1062,10 @@
   const GLISSE_FORMES = Object.freeze({produit: 0, "produit-gauche": 1, "trou-facteur": 2, "trou-egal": 3, "trou-nombre": 4, "trou-nombre-gauche": 5, division: 6});
   function glisseDifficulte(calcul) {
     const {n, p} = calcul.donnees;
-    const zeros = calcul.module === "D2" && estProduit(calcul) ? Math.max(0, colonnesDe(p) - decimalesDe(n)) : 0;
+    // Les zéros à écrire : ceux d'un produit de D2 (3,6 × 100), ceux d'un
+    // quotient sous 1 de D3 (0,6 ÷ 10 = 0,06).
+    const zeros = calcul.module === "D2" && estProduit(calcul) ? Math.max(0, colonnesDe(p) - decimalesDe(n))
+      : calcul.module === "D3" && n < 1 ? decimalesDe(n) - decimalesDe(calcul.donnees.m) : 0;
     return GLISSE_FORMES[calcul.forme] * 1000 + colonnesDe(p) * 100 + zeros * 60 + (n < 1 ? 40 : 0)
       + String(Math.trunc(n)).length * 10 + decimalesDe(n) * 10;
   }
@@ -1080,7 +1080,7 @@
     // le tableau écrirait le nombre cherché en haut.
     if (estTrouNombre(calcul)) {
       const {n, p, m} = calcul.donnees;
-      return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule: calcul.module === "D2", inconnue: true};
+      return {outil: "tableau-fleches", depart: m, arrivee: n, p, operation: "÷", virgule: AVEC_VIRGULE.has(calcul.module), inconnue: true};
     }
     return Object.assign({}, image, {inconnue: true});
   }
@@ -1090,7 +1090,7 @@
   // jusqu'à lire l'arrivée.
   function glisseManipulation(calcul) {
     const {n, p, m} = calcul.donnees;
-    const colonnes = calcul.module === "D2" ? COLONNES_D2 : COLONNES_M2;
+    const colonnes = AVEC_VIRGULE.has(calcul.module) ? COLONNES_D2 : COLONNES_M2;
     const k = colonnesDe(p);
     const division = calcul.forme === "division" || estTrouNombre(calcul);
     const depart = division ? m : n;
@@ -1272,9 +1272,10 @@
     ]
   };
 
-  // `montre` (lot « relier ») : la partie du tableau que l'étape remplit,
-  // « entiers » ou « decimaux » ; sans lui, tout le nombre.
-  const etapeDe = (texte, reponse, montre) => (montre ? {texte, reponse, montre} : {texte, reponse});
+  // Une étape de J'écris. (Lot « relier » : `montre` disait la partie du
+  // tableau qu'une étape remplissait, « entiers » ou « decimaux » ; depuis
+  // les modules lot 5, J'écris de D2 et D3 se fait en une étape.)
+  const etapeDe = (texte, reponse) => ({texte, reponse});
 
   const M2 = {
     id: "M2", nom: "× 10, × 100, × 1\u202f000 (entiers)", exemple: "27 × 100",
@@ -1326,7 +1327,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 1, 2.5, 10), exemple: "2,5 × 10", colonnes: COLONNES_D2,
           represente: produit("D2", 1, 0.6, 10),
-          ecris: {calcul: produit("D2", 1, 72.41, 10), etapes: [etapeDe(`72 × 10 = ${CASE}`, 720, "entiers"), etapeDe(`0,41 × 10 = ${CASE}`, 4.1, "decimaux"), etapeDe(`72,41 × 10 = ${CASE}`, 724.1)]},
+          ecris: {calcul: produit("D2", 1, 72.41, 10), etapes: [etapeDe(`72,41 × 10 = ${CASE}`, 724.1)]},
           consigne: "Chaque chiffre vaut 10 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
           trace: ["2,5 × 10 = …", "2,5 × 10 = 25"],
@@ -1340,7 +1341,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 2, 7.54, 100), exemple: "7,54 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 2, 4.107, 1000),
-          ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3 × 100 = ${CASE}`, 300, "entiers"), etapeDe(`0,24 × 100 = ${CASE}`, 24, "decimaux"), etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
+          ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
           consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u202f000 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
@@ -1354,7 +1355,7 @@
         apprends: glisseApprends({
           calcul: produit("D2", 3, 3.6, 100), exemple: "3,6 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 3, 72.4, 100),
-          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4 × ${MILLE} = ${CASE}`, 4000, "entiers"), etapeDe(`0,5 × ${MILLE} = ${CASE}`, 500, "decimaux"), etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
+          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
           consigne: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
@@ -4943,6 +4944,845 @@
     }
   ];
 
+  // ============================================ modules lot 5 (04/11/2026)
+  //
+  // D1, D3, D4 : les décimaux du palier 2. Décisions de Gwenaël du 04/11
+  // (planches choix-1 à choix-3) :
+  //  - D1 : le carré de 100 à colorier (Je manipule), le carré dessiné à
+  //    lire (Je représente, l'aide de l'entraînement, niveaux 1 et 2), puis
+  //    le tableau de numération qui se remplit (J'écris, la correction,
+  //    « À retenir ») ; niveau 3 (millièmes) : le tableau seul. Les fractions
+  //    s'écrivent comme sur le cahier (« 2/10 » dans le texte, dessiné par la
+  //    page) ; « 0,3 = □/10 » : la case est le numérateur, sans virgule.
+  //  - D3 : D2 retourné (le glisse-nombres vers la droite, le tableau à
+  //    flèches « ÷ »).
+  //  - D4 : le tableau à jetons et sa réserve (Je manipule), puis le tableau
+  //    de numération partout : ce qui ne change pas en gris, ce qui change
+  //    « ? », la retenue en petit 1 rouge.
+
+  const RANGS_DECIMAUX = Object.freeze({0: Object.freeze(["unité", "unités"]), 1: Object.freeze(["dixième", "dixièmes"]), 2: Object.freeze(["centième", "centièmes"]), 3: Object.freeze(["millième", "millièmes"])});
+  // « 3 dixièmes », « 1 centième » (k : 0 unités, 1 dixièmes…).
+  const enRang = (nombre, k) => `${f(nombre)} ${RANGS_DECIMAUX[k][nombre >= 2 ? 1 : 0]}`;
+  const nomRangs = k => RANGS_DECIMAUX[k][1];
+  // « 10 dixièmes font une unité. »
+  const UNE_UNITE = Object.freeze({1: "10 dixièmes font une unité", 2: "100 centièmes font une unité", 3: `1${ESPACE_FINE}000 millièmes font une unité`});
+  // « a, b et c »
+  const etListe = liste => (liste.length < 2 ? liste.join("") : `${liste.slice(0, -1).join(", ")} et ${liste[liste.length - 1]}`);
+  // Le chiffre d'un décimal à un rang (0 : unités, −1 : dixièmes…).
+  const chiffreAuRangDecimal = (n, rang) => Math.floor(Math.round(n * 1000) / 10 ** (3 + rang)) % 10;
+  // Un morceau écrit : un entier (k = 0) ou une fraction décimale num/10^k.
+  const terme = (num, k) => Object.freeze({num, k});
+  const valeurTerme = t => exact(t.num / 10 ** t.k);
+  // « 2/10 », « 107/1 000 » (espace fine des milliers), « □/100 ».
+  const ecrireFraction = (num, k) => `${num === TROU ? CASE : f(num)}/${f(10 ** k)}`;
+  const ecrireTerme = t => (t.k === 0 ? f(t.num) : ecrireFraction(t.num, t.k));
+  // « 3 + 2/10 = □ » → « 3 + 2/10 »
+  const sansCase = texte => texte.replace(` = ${CASE}`, "");
+  // Pour tirer un échantillon régulier d'un long vivier (les numérateurs à
+  // trois chiffres de D1) : un calcul sur `pas`.
+  const echantillon = (liste, nombre) => {
+    const pas = Math.max(1, Math.ceil(liste.length / nombre));
+    return liste.filter((_, i) => i % pas === 0);
+  };
+
+  // Un niveau tiré dans des viviers par écriture, chaque écriture partagée
+  // en sous-viviers tirés à tour de rôle (D1-2 : « 712/100 », « 45/100 »,
+  // « 7/100 » — sans ça, les numérateurs à trois chiffres, les plus
+  // nombreux, prendraient toute la place). Le premier sous-vivier servi
+  // change d'une série à l'autre.
+  function vivierEquilibre(viviers, parts) {
+    const formes = Object.keys(viviers);
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = formes.flatMap((forme, i) => {
+        const voulu = Math.max(0, nombres[i] - imposes.filter(c => c.forme === forme).length);
+        const sous = viviers[forme].map(liste => melanger(rng, liste).filter(c => !pris.has(c.cle)));
+        const debut = Math.floor(rng() * sous.length);
+        const choix = [];
+        for (let tour = 0; choix.length < voulu && sous.some(liste => liste.length); tour += 1) {
+          const liste = sous[(debut + tour) % sous.length];
+          if (liste.length) choix.push(liste.shift());
+        }
+        return choix;
+      });
+      return [...tires, ...imposes];
+    };
+  }
+
+  // Le dessin de J'écris avec le tableau de numération (D1, D4) : chaque
+  // étape juste écrit ses cases (`rangs` du résultat, `lignes` : les
+  // chiffres d'une ligne du calcul, quand la ligne est une fraction à
+  // écrire, D4 « 3/100 = 0,03 »), en vert.
+  function numerationDessins(image, morceaux) {
+    const dessin = (vus, revele = false) => {
+      if (revele) return Object.freeze(Object.assign({}, image, {inconnue: false, lignes: image.lignes.map(l => Object.freeze(Object.assign({}, l, {cherche: false})))}));
+      const trouves = [...new Set(vus.flatMap(m => m.rangs || []))].sort((a, b) => b - a);
+      const lignes = new Set(vus.flatMap(m => m.lignes || []));
+      return Object.freeze(Object.assign({}, image, {
+        inconnue: true, trouves,
+        lignes: image.lignes.map((l, i) => Object.freeze(Object.assign({}, l, l.cherche && lignes.has(i) ? {cherche: false, trouvee: true} : {})))
+      }));
+    };
+    return dessinsDe(morceaux, morceaux.length, dessin);
+  }
+
+  // ------------------------------------------------- D1 : écritures d'un décimal
+  //
+  // Quatre écritures : « entier-fraction » (3 + 2/10 = □), « fraction »
+  // (32/10 = □), « fractions » (4/10 + 8/100 = □, en désordre au niveau 3),
+  // « numerateur » (0,3 = □/10 : la réponse est un entier). Les données :
+  // r (la réponse), v (le décimal écrit), et les réponses fausses des
+  // erreurs connues (pour la page du professeur, qui les retrouve dans les
+  // données) — -1 quand une erreur n'a pas de sens pour ce calcul.
+  const D1_CODES = Object.freeze({"entier-fraction": 1, fraction: 2, fractions: 3, numerateur: 4});
+  function d1Somme(niveau, forme, termes) {
+    const r = exact(termes.reduce((s, t) => s + valeurTerme(t), 0));
+    const fractions = termes.filter(t => t.k > 0);
+    const kmax = Math.max(...fractions.map(t => t.k));
+    const a = termes[0].k === 0 ? termes[0].num : 0;
+    const sommeNumerateurs = fractions.reduce((s, t) => s + t.num, 0);
+    // Les chiffres des numérateurs écrits à la suite après la virgule, dans
+    // l'ordre du calcul (8/100 + 4/10 + 3/1 000 → 0,843 ; 5/10 + 3/1 000 → 0,53).
+    const suite = forme === "fractions" && fractions.every(t => t.num <= 9) ? exact(fractions.reduce((s, t, i) => s + t.num / 10 ** (i + 1), 0)) : -1;
+    const donnees = {
+      r, v: r, a, kmax,
+      colles: forme === "fraction" ? fractions[0].num : forme === "entier-fraction" ? Number(`${a}${fractions[0].num}`) : exact(r * 10 ** kmax),
+      plus: exact(r * 10), moins: exact(r / 10),
+      // (3 + 2/10 → 5 : c'est 3 + 2, les nombres additionnés, pas un rang.)
+      decalePlus: forme === "entier-fraction" && kmax > 1 ? exact(a + (r - a) * 10) : -1,
+      decaleMoins: forme === "entier-fraction" ? exact(a + (r - a) / 10) : -1,
+      additionne: forme === "entier-fraction" ? a + fractions[0].num : forme === "fractions" ? sommeNumerateurs : -1,
+      additionneRang: forme === "fractions" ? exact(sommeNumerateurs / 10 ** kmax) : -1,
+      suite
+    };
+    return Object.freeze({
+      texte: `${termes.map(ecrireTerme).join(" + ")} = ${CASE}`, reponse: r, forme, module: "D1", niveau,
+      cle: `D1-${niveau}-${D1_CODES[forme]}-${termes.map(t => `${cleNombre(t.num)}-${t.k}`).join("-")}`,
+      donnees: Object.freeze(donnees), termes: Object.freeze(termes.slice())
+    });
+  }
+  // « 0,3 = □/10 », « 1/10 = □/100 » : `gauche` est un nombre ou une fraction.
+  function d1Numerateur(niveau, gauche, k) {
+    const nombre = typeof gauche === "number";
+    const v = nombre ? gauche : valeurTerme(gauche);
+    const r = Math.round(v * 10 ** k);
+    const ecrit = nombre ? f(gauche) : ecrireTerme(gauche);
+    return Object.freeze({
+      texte: `${ecrit} = ${ecrireFraction(TROU, k)}`, reponse: r, forme: "numerateur", module: "D1", niveau,
+      cle: `D1-${niveau}-4-${nombre ? cleNombre(gauche) : `${gauche.num}-${gauche.k}`}-x-${k}`,
+      donnees: Object.freeze({r, v, k, colles: -1, plus: r * 10, moins: exact(r / 10), decalePlus: -1, decaleMoins: -1, additionne: -1, additionneRang: -1, suite: -1}),
+      gauche: nombre ? terme(gauche, 0) : gauche, ecritGauche: ecrit, k
+    });
+  }
+  const d1EntierFraction = (niveau, a, b, k) => d1Somme(niveau, "entier-fraction", [terme(a, 0), terme(b, k)]);
+  const d1Fraction = (niveau, num, k) => d1Somme(niveau, "fraction", [terme(num, k)]);
+  const d1Fractions = (niveau, ...paires) => d1Somme(niveau, "fractions", paires.map(([num, k]) => terme(num, k)));
+
+  // Le carré de 100 ou le tableau : les millièmes ne se dessinent pas dans
+  // un carré de 100 (tout le niveau 3, décision du 04/11 : « 3/100 + 4/10 »
+  // aussi) ; et l'unité est le grand carré (planche choix-4 du 04/11) : à
+  // la vraie taille, quatre carrés au plus tiennent au téléphone — au-delà
+  // de 3 unités (712/100, 8 + 4/10), le tableau.
+  const D1_UNITES_DU_CARRE = 3;
+  const d1SansCarre = calcul => calcul.niveau === 3 || Math.trunc(calcul.donnees.v) > D1_UNITES_DU_CARRE
+    || (calcul.forme === "numerateur" ? calcul.k === 3 || calcul.gauche.k === 3 || decimalesDe(calcul.donnees.v) === 3 : calcul.termes.some(t => t.k === 3));
+  // Le carré de 100 d'un décimal : les unités (carrés pleins), les bandes
+  // (dixièmes), les petits carrés (centièmes).
+  function d1Carre(v) {
+    const c = Math.round(v * 100);
+    return {outil: "carre", unites: Math.floor(c / 100), dixiemes: Math.floor(c / 10) % 10, centiemes: c % 10};
+  }
+  // Le tableau de numération d'un calcul de D1 : chaque morceau sur sa
+  // ligne, dans ses colonnes ; le résultat dessous. « 0,3 = □/10 » : la
+  // ligne de 0,3, et dessous le numérateur cherché, rangé à ses dixièmes.
+  function d1Tableau(calcul, {inconnue = false} = {}) {
+    if (calcul.forme === "numerateur") {
+      const g = calcul.gauche;
+      const ligne = g.k === 0 ? {nombre: g.num, unite: 0, texte: f(g.num)} : {nombre: g.num, unite: -g.k, texte: ecrireTerme(g)};
+      return {outil: "numeration", lignes: [Object.freeze(ligne)],
+        resultat: {nombre: calcul.reponse, unite: -calcul.k, texte: `${inconnue ? "?" : f(calcul.reponse)}/${f(10 ** calcul.k)}`}, inconnue};
+    }
+    const lignes = calcul.termes.map((t, i) => Object.freeze({nombre: t.num, unite: -t.k, texte: `${i ? "+ " : ""}${ecrireTerme(t)}`}));
+    return {outil: "numeration", lignes, resultat: {nombre: calcul.reponse, unite: 0, texte: ""}, inconnue};
+  }
+  const d1Image = calcul => d1Tableau(calcul);
+  const d1Aide = calcul => (d1SansCarre(calcul) ? d1Tableau(calcul, {inconnue: true}) : d1Carre(calcul.donnees.v));
+  const d1Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  // « 4 dixièmes, 8 centièmes et 3 millièmes » : les morceaux rangés.
+  const d1Rangs = calcul => etListe(calcul.termes.filter(t => t.k > 0).slice().sort((p, q) => p.k - q.k).map(t => enRang(t.num, t.k)));
+
+  // Le carré de 100 à colorier (Je manipule, et l'entraînement après deux
+  // erreurs) : les unités sont déjà là (des carrés pleins, de la même
+  // taille) ; un
+  // toucher colorie une bande entière (un dixième), puis, les dixièmes
+  // faits, un petit carré (un centième). L'appli écrit le calcul au bout.
+  // Ni sur « ? au numérateur » (1 = □/100 ferait 100 touchers), ni sur les
+  // millièmes.
+  function d1Manipulation(calcul) {
+    if (calcul.forme === "numerateur" || d1SansCarre(calcul)) return null;
+    const carre = d1Carre(calcul.donnees.v);
+    const bande = "une bande, c’est un dixième";
+    const petit = "un petit carré, c’est un centième";
+    const pour = (num, k) => (k === 1 ? bande : num >= 10 ? "une bande, c’est 10 centièmes" : petit);
+    const carres = u => `${u} carré${u > 1 ? "s" : ""} entier${u > 1 ? "s" : ""}`;
+    let consigne;
+    if (calcul.forme === "entier-fraction") {
+      const [entier, t] = calcul.termes;
+      consigne = `${enRang(entier.num, 0)} : ${carres(entier.num)}. Colorie ${enRang(t.num, t.k)} : ${pour(t.num, t.k)}.`;
+    } else if (calcul.forme === "fraction") {
+      const [t] = calcul.termes;
+      const reste = t.num - carre.unites * 10 ** t.k;
+      consigne = carre.unites
+        ? `${f(t.num)} ${nomRangs(t.k)} : ${f(carre.unites * 10 ** t.k)} ${nomRangs(t.k)} font ${carres(carre.unites)}. Colorie les ${enRang(reste, t.k)} qui restent : ${pour(reste, t.k)}.`
+        : `Colorie ${enRang(t.num, t.k)} : ${pour(t.num, t.k)}.`;
+    } else {
+      const parRang = calcul.termes.slice().sort((p, q) => p.k - q.k);
+      consigne = `Colorie ${parRang.map(t => enRang(t.num, t.k)).join(", puis ")} : ${bande}, ${petit}.`;
+    }
+    const calc = sansCase(calcul.texte);
+    return Object.freeze(Object.assign(carre, {
+      texte: calc, consigne: fr(consigne), refus: null,
+      traces: Object.freeze([Object.freeze({apres: carre.dixiemes + carre.centiemes, attente: `${calc} = …`, texte: `${calc} = ${f(calcul.reponse)}`})])
+    }));
+  }
+
+  // Du plus simple au plus dur : l'écriture, les millièmes, un rang vide
+  // au milieu (3 + 5/100 = 3,05), au-delà de 3 unités, la taille des
+  // numérateurs.
+  const D1_RANGS = Object.freeze({"entier-fraction": 0, fraction: 1, fractions: 2, numerateur: 3});
+  function d1Difficulte(calcul) {
+    const {r, v} = calcul.donnees;
+    const decimales = decimalesDe(calcul.forme === "numerateur" ? v : r);
+    const trouVide = calcul.forme !== "numerateur" && [-1, -2].some(rang => -rang < decimales && chiffreAuRangDecimal(r, rang) === 0) ? 200 : 0;
+    const desordre = calcul.forme === "fractions" && calcul.termes.some((t, i) => i && t.k <= calcul.termes[i - 1].k) ? 300 : 0;
+    // Ceux qui tiennent dans le carré de 100 (de 0 à 3 unités) d'abord :
+    // l'entraînement commence au carré.
+    const auTableau = Math.trunc(v) > D1_UNITES_DU_CARRE ? 150 : 0;
+    return D1_RANGS[calcul.forme] * 1000 + decimales * 60 + trouVide + desordre + auTableau + Math.min(String(Math.round(r)).length, 3) * 10 + (calcul.forme === "numerateur" ? Math.min(r, 999) / 100 : 0);
+  }
+
+  // Les erreurs connues, essayées dans l'ordre 3, 4, 1, 2 : « 32 » pour
+  // 3 + 2/10 (les chiffres collés) est aussi un rang de trop — c'est la
+  // virgule qui manque qu'on dit ; « 0,97 » pour 9/100 + 7/1 000 (les
+  // chiffres à la suite) aussi — c'est l'ordre qu'on dit.
+  const D1_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 3, nom: "le numérateur seul, ou les chiffres collés",
+      test: sauf((calcul, reponse) => calcul.donnees.colles >= 0 && memeNombre(reponse, calcul.donnees.colles)),
+      retour: (calcul, reponse) => {
+        if (calcul.forme === "fraction") {
+          const [t] = calcul.termes;
+          return fr(`${f(reponse)}, c’est le numérateur. ${ecrireTerme(t)}, c’est ${enRang(t.num, t.k)} : ${UNE_UNITE[t.k]}.`);
+        }
+        if (calcul.forme === "entier-fraction") {
+          const [entier, t] = calcul.termes;
+          return fr(`${f(reponse)} : la virgule manque. ${sansCase(calcul.texte)}, c’est ${enRang(entier.num, 0)} et ${enRang(t.num, t.k)}.`);
+        }
+        return fr(`${f(reponse)} : la virgule manque. ${d1Rangs(calcul)}, c’est moins qu’une unité.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "les chiffres écrits à la suite, dans l’ordre du calcul",
+      test: sauf((calcul, reponse) => calcul.donnees.suite >= 0 && memeNombre(reponse, calcul.donnees.suite)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as écrit les chiffres à la suite, dans l’ordre du calcul. Range chaque morceau dans sa colonne : ${d1Rangs(calcul)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 1, nom: "un rang de trop ou de moins",
+      test: sauf((calcul, reponse) => ["plus", "moins", "decalePlus", "decaleMoins"].some(cle => calcul.donnees[cle] >= 0 && memeNombre(reponse, calcul.donnees[cle]))),
+      retour: (calcul, reponse) => {
+        if (calcul.forme === "numerateur") {
+          const g = calcul.gauche;
+          return fr(`${f(reponse)} : un rang de ${reponse > calcul.reponse ? "trop" : "moins"}. Compte les ${nomRangs(calcul.k)} dans ${g.k === 0 ? calcul.ecritGauche : enRang(g.num, g.k)}.`);
+        }
+        if (calcul.forme === "fraction") {
+          const [t] = calcul.termes;
+          return fr(`${f(reponse)} : un chiffre n’est pas au bon rang. Le chiffre des unités de ${f(t.num)} va aux ${nomRangs(t.k)}.`);
+        }
+        if (calcul.forme === "entier-fraction") {
+          const t = calcul.termes[1];
+          return fr(`${f(reponse)} : un chiffre n’est pas au bon rang. ${ecrireTerme(t)}, c’est ${enRang(t.num, t.k)}.`);
+        }
+        return fr(`${f(reponse)} : un chiffre n’est pas au bon rang. Range chaque morceau dans sa colonne : ${d1Rangs(calcul)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "les nombres écrits additionnés",
+      test: sauf((calcul, reponse) => ["additionne", "additionneRang"].some(cle => calcul.donnees[cle] >= 0 && memeNombre(reponse, calcul.donnees[cle]))),
+      retour: (calcul, reponse) => {
+        const fractions = calcul.termes.filter(t => t.k > 0);
+        if (calcul.forme === "entier-fraction") {
+          const [entier, t] = calcul.termes;
+          return fr(`${f(reponse)}, c’est ${f(entier.num)} + ${f(t.num)}. ${ecrireTerme(t)}, c’est ${enRang(t.num, t.k)} : les ${nomRangs(t.k)} s’écrivent après la virgule.`);
+        }
+        return fr(`${f(reponse)} : tu as ajouté ${etListe(fractions.map(t => f(t.num)))}. ${d1Rangs(calcul)} ne sont pas de la même sorte : chacun va dans sa colonne.`);
+      },
+      gras: 0
+    })
+  ]);
+
+  // Les viviers. Jamais une fraction unitaire seule (1/10 = □ : c'est F1),
+  // jamais un numérateur multiple de 10 dans « fraction ».
+  const sansDizaineEntiere = (de, a) => entre(de, a).filter(n => n % 10 !== 0);
+  function d1Vivier(niveau) {
+    if (niveau === 1) {
+      return Object.freeze({
+        "entier-fraction": [entre(1, 9).flatMap(a => entre(1, 9).map(b => d1EntierFraction(1, a, b, 1)))],
+        fraction: [sansDizaineEntiere(11, 99).map(n => d1Fraction(1, n, 1))],
+        numerateur: [
+          entre(1, 9).map(b => d1Numerateur(1, exact(b / 10), 1)),
+          entre(1, 9).flatMap(a => entre(1, 9).map(b => d1Numerateur(1, exact(a + b / 10), 1))),
+          entre(1, 9).map(a => d1Numerateur(1, a, 1))
+        ]
+      });
+    }
+    if (niveau === 2) {
+      return Object.freeze({
+        fraction: [
+          echantillon(sansDizaineEntiere(101, 999), 90).map(n => d1Fraction(2, n, 2)),
+          sansDizaineEntiere(11, 99).map(n => d1Fraction(2, n, 2)),
+          entre(2, 9).map(n => d1Fraction(2, n, 2))
+        ],
+        "entier-fraction": [
+          entre(1, 9).flatMap(a => entre(1, 9).map(b => d1EntierFraction(2, a, b, 2))),
+          echantillon(entre(1, 9).flatMap(a => sansDizaineEntiere(11, 99).map(b => [a, b])), 90).map(([a, b]) => d1EntierFraction(2, a, b, 2))
+        ],
+        fractions: [entre(1, 9).flatMap(b => entre(1, 9).map(c => d1Fractions(2, [b, 1], [c, 2])))],
+        numerateur: [
+          entre(1, 9).map(b => d1Numerateur(2, terme(b, 1), 2)),
+          echantillon(entre(0, 9).flatMap(a => sansDizaineEntiere(1, 99).map(c => exact(a + c / 100))), 90).map(v => d1Numerateur(2, v, 2)),
+          entre(1, 9).map(a => d1Numerateur(2, a, 2))
+        ]
+      });
+    }
+    // Niveau 3 : les millièmes, et les sommes en désordre.
+    // Trois morceaux en désordre, des chiffres tous différents (sinon
+    // « 3/100 + 3/1 000 + 3/10 » se lit dans n'importe quel ordre).
+    const trois = [];
+    const ordres = [[2, 1, 3], [1, 3, 2], [3, 1, 2], [2, 3, 1], [3, 2, 1]];
+    entre(1, 9).forEach(b => entre(1, 9).forEach(c => entre(1, 9).forEach(d => {
+      if (b === c || c === d || b === d || (b + c + d) % 5) return;
+      const ordre = ordres[(b + 2 * c + 3 * d) % ordres.length];
+      const chiffres = {1: b, 2: c, 3: d};
+      trois.push(ordre.map(k => [chiffres[k], k]));
+    })));
+    const deux = [];
+    entre(1, 9).forEach(x => entre(1, 9).forEach(y => {
+      if (x === y) return;
+      deux.push([[x, 2], [y, 1]], [[x, 3], [y, 1]], [[y, 1], [x, 3]], [[x, 3], [y, 2]], [[y, 2], [x, 3]]);
+    }));
+    const avecEntier = liste => liste.map((b, i) => d1EntierFraction(3, 1 + (i * 4) % 9, b, 3));
+    return Object.freeze({
+      "entier-fraction": [avecEntier(entre(1, 9)), avecEntier(sansDizaineEntiere(11, 99)), avecEntier(echantillon(sansDizaineEntiere(101, 999), 90))],
+      fractions: [echantillon(trois, 120).map(t => d1Fractions(3, ...t)), echantillon(deux, 120).map(t => d1Fractions(3, ...t))],
+      numerateur: [
+        echantillon(entre(0, 9).flatMap(a => sansDizaineEntiere(1, 999).filter(c => c % 7 === 3).map(c => exact(a + c / 1000))), 120).map(v => d1Numerateur(3, v, 3)),
+        entre(1, 9).map(c => d1Numerateur(3, terme(c, 2), 3)),
+        entre(1, 9).map(b => d1Numerateur(3, terme(b, 1), 3))
+      ]
+    });
+  }
+  const D1_VIVIERS = Object.freeze({1: d1Vivier(1), 2: d1Vivier(2), 3: d1Vivier(3)});
+
+  // J'apprends de D1 : le carré à colorier sur le premier calcul (niveaux 1
+  // et 2), le carré dessiné à lire sur le deuxième (le tableau au niveau
+  // 3), le tableau de numération qui se remplit sur le troisième.
+  //   rangs : les cases du résultat que chaque étape écrit.
+  function d1Apprends({manipule, represente, ecris, consigne, consigneEcris, etapes, rangs, bilan}) {
+    const premier = manipule || represente;
+    return Object.freeze({
+      exemple: exempleDe(premier),
+      manipule: manipule ? d1Manipulation(manipule) : null,
+      represente: Object.freeze({
+        outil: d1Aide(represente).outil, consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(d1Aide(represente)),
+        solution: Object.freeze({image: Object.freeze(d1Image(represente)), phrase: d1Phrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        consigne: fr(consigneEcris),
+        etapes: etapesEcris(etapes), reponse: ecris.reponse,
+        solution: Object.freeze({image: Object.freeze(d1Image(ecris)), phrase: d1Phrase(ecris)})
+      }, numerationDessins(d1Tableau(ecris, {inconnue: true}), rangs.map(liste => ({rangs: liste})))),
+      bilan: frBilan(bilan),
+      // « À retenir » : le tableau du calcul de « je représente », rempli.
+      image: Object.freeze(d1Image(represente)),
+      textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
+    });
+  }
+
+  const D1 = {
+    id: "D1", nom: "Écritures d’un décimal", exemple: "3 + 2/10",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "carre",
+    erreurs: D1_ERREURS, image: d1Image, aide: d1Aide, phrase: d1Phrase, manipulation: d1Manipulation, difficulte: d1Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "dixièmes", nom: "Dixièmes\u00a0: fraction et décimal", palier: 2, type: "P",
+        composer: vivierEquilibre(D1_VIVIERS[1], [4, 3, 3]),
+        imposes: [d1EntierFraction(1, 5, 3, 1), d1Numerateur(1, 0.4, 1)],
+        apprends: d1Apprends({
+          manipule: d1EntierFraction(0, 3, 2, 1),
+          represente: d1Fraction(0, 27, 1),
+          ecris: d1EntierFraction(0, 4, 6, 1),
+          consigne: "10 dixièmes font une unité.",
+          consigneEcris: "Chaque morceau va dans sa colonne.",
+          etapes: [["6/10 = ?", 0.6], ["4 + 6/10 = ?", 4.6]],
+          rangs: [[-1], [0, -1]],
+          bilan: "27 dixièmes, c’est 2 unités et 7 dixièmes : 27/10 = 2,7."
+        })
+      },
+      {
+        n: 2, titre: "centièmes", nom: "Centièmes\u00a0: fraction et décimal", palier: 2, type: "P",
+        composer: vivierEquilibre(D1_VIVIERS[2], [3, 2, 2, 3]),
+        imposes: [d1Fraction(2, 6, 2), d1EntierFraction(2, 2, 8, 2)],
+        apprends: d1Apprends({
+          manipule: d1Fractions(0, [4, 1], [8, 2]),
+          represente: d1Fraction(0, 245, 2),
+          ecris: d1EntierFraction(0, 3, 5, 2),
+          consigne: "100 centièmes font une unité.",
+          consigneEcris: "Chaque morceau va dans sa colonne.",
+          etapes: [["5/100 = ?", 0.05], ["3 + 5/100 = ?", 3.05]],
+          rangs: [[-1, -2], [0, -1, -2]],
+          bilan: "245 centièmes, c’est 2 unités, 4 dixièmes et 5 centièmes : 245/100 = 2,45."
+        })
+      },
+      {
+        n: 3, titre: "millièmes, sommes en désordre", nom: "Millièmes, sommes en désordre", palier: 3, type: "P",
+        composer: vivierEquilibre(D1_VIVIERS[3], [3, 4, 3]),
+        imposes: [d1Fractions(3, [5, 3], [2, 1]), d1EntierFraction(3, 3, 46, 3)],
+        apprends: d1Apprends({
+          represente: d1Fractions(0, [8, 2], [4, 1], [3, 3]),
+          ecris: d1EntierFraction(0, 4, 107, 3),
+          consigne: "Je range chaque morceau dans sa colonne.",
+          consigneEcris: "Chaque morceau va dans sa colonne.",
+          etapes: [[`107/1${ESPACE_FINE}000 = ?`, 0.107], [`4 + 107/1${ESPACE_FINE}000 = ?`, 4.107]],
+          rangs: [[-1, -2, -3], [0, -1, -2, -3]],
+          bilan: `Je range chaque morceau dans sa colonne : 8/100 + 4/10 + 3/1${ESPACE_FINE}000 = 0,483.`
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- D3 : ÷ 10, ÷ 100, ÷ 1 000
+  //
+  // « 45,2 ÷ 10 = □ » : D2 retourné. Les données : n (le résultat), p, m (le
+  // nombre divisé). Jamais un résultat entier (480 ÷ 10 est dans M2), au
+  // plus trois décimales.
+
+  // Un calcul de D3 : la division de M2 et D2, avec dans ses données la
+  // réponse fausse « la partie entière n'a pas changé de rang » (45,2 ÷ 10
+  // → 45,02), pour l'exemple de la page du professeur ; -1 sans objet.
+  function d3Division(niveau, n, p) {
+    const calcul = division("D3", niveau, n, p);
+    const {m} = calcul.donnees;
+    const entiere = Math.trunc(m);
+    const partie = entiere > 0 && !Number.isInteger(m) ? exact(entiere + (m - entiere) / p) : -1;
+    return Object.freeze(Object.assign({}, calcul, {donnees: Object.freeze(Object.assign({}, calcul.donnees, {partie}))}));
+  }
+  // Un décimal tiré : `decimales` chiffres après la virgule (le dernier non
+  // nul), la partie entière entre `minimum` et `maximum` ; un entier sans
+  // multiple de 10 quand `decimales` vaut 0.
+  const d3Nombre = (rng, decimales, minimum, maximum) => (decimales ? decimal(rng, decimales, minimum, maximum) : sansUniteNulle(rng, minimum, maximum));
+  function d3Composer(niveau, places) {
+    return function composer(rng, total, imposes) {
+      const parts = repartir(total, places.map(place => place.part));
+      let liste = places.flatMap((place, i) => Array.from({length: parts[i]}, () => place));
+      liste = retirerImposes(liste, imposes, (place, c) => place.p === c.donnees.p && place.d === decimalesDe(c.donnees.m) && (c.donnees.m < 1) === (place.max < 1));
+      const deja = imposes.slice();
+      // (Un vivier court — 0,1 à 0,9 ÷ 10 — peut s'épuiser sur un grand
+      // tirage : la place reste vide.)
+      const tires = liste.map(place => {
+        const [calcul] = tirerCalculs(rng, 1, r => d3Division(niveau, exact(d3Nombre(r, place.d, place.min, place.max) / place.p), place.p), deja);
+        if (calcul) deja.push(calcul);
+        return calcul;
+      });
+      return [...tires.filter(Boolean), ...imposes];
+    };
+  }
+  // Niveau 1 : ÷ 10, résultat au-dessus de 1 : 4 entiers (37), 3 nombres à
+  // une décimale (58,4), 3 à deux (45,26).
+  const d3Niveau1 = d3Composer(1, [{part: 4, p: 10, d: 0, min: 11, max: 999}, {part: 3, p: 10, d: 1, min: 10, max: 999}, {part: 3, p: 10, d: 2, min: 10, max: 99}]);
+  // Niveau 2 : ÷ 100 (6 sur 10 : entiers, et une décimale), ÷ 1 000 (4).
+  const d3Niveau2 = d3Composer(2, [{part: 3, p: 100, d: 0, min: 101, max: 9999}, {part: 3, p: 100, d: 1, min: 100, max: 999}, {part: 4, p: 1000, d: 0, min: 1001, max: 9999}]);
+  // Niveau 3 : un résultat sous 1, des zéros à écrire : 0,6 ÷ 10 ; 7 ÷ 10 ;
+  // 45 ÷ 100 ; 3,6 ÷ 100 ; 56 ÷ 1 000.
+  const d3Niveau3 = d3Composer(3, [
+    {part: 1, p: 10, d: 1, min: 0, max: 0}, {part: 1, p: 10, d: 2, min: 0, max: 0}, {part: 2, p: 10, d: 0, min: 1, max: 9},
+    {part: 2, p: 100, d: 0, min: 1, max: 99}, {part: 2, p: 100, d: 1, min: 1, max: 9},
+    {part: 2, p: 1000, d: 0, min: 11, max: 999}
+  ]);
+  // Les erreurs connues de D3, dans l'ordre 1, 2, 3, 4, 5. « Pas divisé »
+  // est aussi une colonne de moins pour ÷ 10 : c'est la première qui parle.
+  // Jamais « zéro » ni « virgule » qui se déplace : les chiffres glissent.
+  const D3_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "pas divisé",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.m)),
+      retour: (calcul, reponse, ecrit) => {
+        const {p, m} = calcul.donnees;
+        return fr(`${commeEcrit(reponse, ecrit)} = ${f(m)} : tu n’as pas divisé. Chaque chiffre doit valoir ${f(p)} fois moins.`);
+      }
+    }),
+    Object.freeze({
+      c: 2, nom: "une colonne de moins",
+      test: sauf((calcul, reponse) => memeNombre(reponse, exact(calcul.reponse * 10))),
+      retour: (calcul, reponse) => {
+        const {p} = calcul.donnees;
+        return fr(`${f(reponse)} : une colonne de moins. Pour ÷ ${f(p)}, chaque chiffre glisse de ${pluriel(colonnesDe(p), "colonne")} vers la droite.`);
+      }
+    }),
+    Object.freeze({
+      c: 3, nom: "une colonne de trop",
+      test: sauf((calcul, reponse) => memeNombre(reponse, exact(calcul.reponse / 10))),
+      retour: (calcul, reponse) => {
+        const {p} = calcul.donnees;
+        const k = colonnesDe(p);
+        return fr(`${f(reponse)} : une colonne de trop. Pour ÷ ${f(p)}, c’est ${pluriel(k, "colonne")}, pas ${k + 1}.`);
+      }
+    }),
+    Object.freeze({
+      c: 4, nom: "multiplié au lieu de diviser",
+      test: sauf((calcul, reponse) => memeNombre(reponse, exact(calcul.donnees.m * calcul.donnees.p))),
+      retour: (calcul, reponse) => {
+        const {p, m} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est ${f(m)} × ${f(p)}. Ici, on divise : chaque chiffre vaut ${f(p)} fois moins.`);
+      }
+    }),
+    Object.freeze({
+      c: 5, nom: "la partie entière n’a pas changé de rang",
+      test: sauf((calcul, reponse) => calcul.donnees.partie >= 0 && memeNombre(reponse, calcul.donnees.partie)),
+      retour: (calcul, reponse) => {
+        const {p, m} = calcul.donnees;
+        return fr(`Dans ${f(reponse)}, le ${f(Math.trunc(m))} n’a pas changé de rang. Lui aussi vaut ${f(p)} fois moins.`);
+      }
+    })
+  ]);
+
+  const D3 = {
+    id: "D3", nom: "÷ 10, ÷ 100, ÷ 1 000", exemple: "45,2 ÷ 10",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "tableau-fleches",
+    erreurs: D3_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "÷ 10", nom: "Décimal ÷ 10", palier: 2, type: "P",
+        composer: d3Niveau1,
+        imposes: [d3Division(1, 3.7, 10), d3Division(1, 5.84, 10)],
+        apprends: glisseApprends({
+          calcul: d3Division(1, 4.52, 10), exemple: "45,2 ÷ 10", colonnes: COLONNES_D2,
+          represente: d3Division(1, 7.3, 10),
+          ecris: {calcul: d3Division(1, 5.27, 10), etapes: [etapeDe(`52,7 ÷ 10 = ${CASE}`, 5.27)]},
+          consigne: "Chaque chiffre vaut 10 fois moins.",
+          refus: "Chaque chiffre doit valoir 10 fois moins : 1 colonne.",
+          trace: ["45,2 ÷ 10 = …", "45,2 ÷ 10 = 4,52"],
+          bilan: frBilan("Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite : 45,2 ÷ 10 = 4,52.")
+        })
+      },
+      {
+        n: 2, titre: "÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
+        composer: d3Niveau2,
+        imposes: [d3Division(2, 2.83, 100), d3Division(2, 4.125, 1000)],
+        apprends: glisseApprends({
+          calcul: d3Division(2, 4.56, 100), exemple: "456 ÷ 100", colonnes: COLONNES_D2,
+          represente: d3Division(2, 3.718, 1000),
+          ecris: {calcul: d3Division(2, 8.45, 100), etapes: [etapeDe(`845 ÷ 100 = ${CASE}`, 8.45)]},
+          consigne: "Chaque chiffre vaut 100 fois moins.", consigneTableau: "Chaque chiffre vaut 1 000 fois moins.",
+          refus: "Chaque chiffre doit valoir 100 fois moins : 2 colonnes.",
+          trace: ["456 ÷ 100 = …", "456 ÷ 100 = 4,56"],
+          bilan: frBilan("Quand je divise par 100, chaque chiffre prend une valeur 100 fois plus petite : 456 ÷ 100 = 4,56.")
+        })
+      },
+      {
+        n: 3, titre: "des zéros à écrire", nom: "Diviser : zéros à écrire", palier: 3, type: "P",
+        composer: d3Niveau3,
+        imposes: [d3Division(3, 0.08, 10), d3Division(3, 0.034, 1000)],
+        apprends: glisseApprends({
+          calcul: d3Division(3, 0.06, 10), exemple: "0,6 ÷ 10", colonnes: COLONNES_D2,
+          represente: d3Division(3, 0.036, 100),
+          ecris: {calcul: d3Division(3, 0.056, 1000), etapes: [etapeDe(`56 ÷ ${MILLE} = ${CASE}`, 0.056)]},
+          consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois moins.",
+          refus: "Chaque chiffre doit valoir 10 fois moins : 1 colonne.",
+          trace: ["0,6 ÷ 10 = …", "0,6 ÷ 10 = 0,06"],
+          bilan: frBilan("Quand une case reste vide, j’écris un zéro : 0,6 ÷ 10 = 0,06.")
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------- D4 : ajouter ou retrancher d'un rang
+  //
+  // « 4,45 + 0,3 = □ » (plus), « 0,45 + 3/100 = □ » (plus-fraction),
+  // « 6,78 − 0,05 = □ » (moins). Un seul chiffre ajouté ou retranché. Les
+  // données : n, d (signé), rang (−1 : dixièmes…), chiffre, r, et les
+  // réponses fausses des erreurs connues (-1 sans objet) : ailleurs (le
+  // chiffre au rang voisin), bout (écrit au bout), oubli (la retenue
+  // oubliée), sens (le mauvais sens).
+  const D4_CODES = Object.freeze({plus: 1, "plus-fraction": 2, moins: 3});
+  function d4Calcul(niveau, forme, n, rang, chiffre) {
+    const k = -rang;
+    const signe = forme === "moins" ? -1 : 1;
+    const d = exact(signe * chiffre / 10 ** k);
+    const r = exact(n + d);
+    const ecritD = forme === "plus-fraction" ? ecrireFraction(chiffre, k) : f(Math.abs(d));
+    // Les rangs qui reçoivent une retenue (3,96 + 0,05 : les dixièmes, puis
+    // les unités).
+    const retenues = [];
+    if (signe > 0 && chiffreAuRangDecimal(n, rang) + chiffre >= 10) {
+      for (let haut = rang + 1; ; haut += 1) {
+        retenues.push(haut);
+        if (chiffreAuRangDecimal(n, haut) + 1 < 10) break;
+      }
+    }
+    const ecritN = f(n).replace(new RegExp(ESPACE_FINE, "g"), "");
+    const voisin = rangVoisin => (rangVoisin <= 0 && rangVoisin >= -3 ? exact(n + signe * chiffre * 10 ** rangVoisin) : -1);
+    return Object.freeze({
+      texte: `${f(n)} ${signe > 0 ? "+" : "−"} ${ecritD} = ${CASE}`, reponse: r, forme, module: "D4", niveau,
+      cle: `D4-${niveau}-${D4_CODES[forme]}-${cleNombre(n)}-${chiffre}-${k}`,
+      donnees: Object.freeze({
+        n, d, rang, chiffre, r,
+        ailleursGauche: voisin(rang + 1), ailleursDroite: voisin(rang - 1),
+        bout: signe > 0 && decimalesDe(n) < 3 ? Number(`${ecritN}${ecritN.includes(",") ? "" : ","}${chiffre}`.replace(",", ".")) : -1,
+        oubli: retenues.length ? exact(r - 10 ** (rang + 1)) : -1,
+        sens: exact(n - d) >= 0 ? exact(n - d) : -1
+      }),
+      ecritD, signe, retenues: Object.freeze(retenues)
+    });
+  }
+  const d4Plus = (niveau, n, rang, chiffre) => d4Calcul(niveau, "plus", n, rang, chiffre);
+  const d4Fraction = (niveau, n, rang, chiffre) => d4Calcul(niveau, "plus-fraction", n, rang, chiffre);
+  const d4Moins = (niveau, n, rang, chiffre) => d4Calcul(niveau, "moins", n, rang, chiffre);
+
+  // Le tableau de numération d'un calcul de D4 : le nombre, ce qu'on
+  // ajoute (son chiffre à son rang), le résultat ; dans l'aide, les chiffres
+  // qui ne changent pas en gris (`garder`), ceux qui changent « ? ».
+  function d4Tableau(calcul, {inconnue = false, ligneCachee = false} = {}) {
+    const {n, rang, chiffre, r} = calcul.donnees;
+    const change = new Set([rang, ...calcul.retenues]);
+    const rangsResultat = [...chiffresDuNombre(r).keys()];
+    return {
+      outil: "numeration",
+      lignes: [
+        Object.freeze({nombre: n, unite: 0, texte: f(n)}),
+        Object.freeze(Object.assign({nombre: chiffre, unite: rang, texte: `${calcul.signe > 0 ? "+" : "−"} ${calcul.ecritD}`}, ligneCachee ? {cherche: true} : {}))
+      ],
+      resultat: {nombre: r, unite: 0, texte: ""},
+      garder: rangsResultat.filter(x => !change.has(x)),
+      retenue: calcul.retenues.slice(),
+      inconnue
+    };
+  }
+  // Les rangs des chiffres écrits d'un nombre (4,75 → 0, −1, −2).
+  function chiffresDuNombre(nombre) {
+    const [entiere, decimales = ""] = formaterNombre(nombre).replace(new RegExp(ESPACE_FINE, "g"), "").split(",");
+    const rangs = new Map();
+    [...entiere].forEach((chiffre, i) => rangs.set(entiere.length - 1 - i, chiffre));
+    [...decimales].forEach((chiffre, i) => rangs.set(-1 - i, chiffre));
+    return rangs;
+  }
+  const d4Image = calcul => d4Tableau(calcul);
+  const d4Aide = calcul => d4Tableau(calcul, {inconnue: true});
+  const d4Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  // Le tableau à jetons (Je manipule, et l'entraînement après deux
+  // erreurs) : le nombre de départ en jetons ; l'élève touche le bon jeton
+  // de la réserve ; avec une retenue, il échange chaque paquet de 10.
+  function d4Manipulation(calcul) {
+    const {n, rang, chiffre, r} = calcul.donnees;
+    const plusBas = Math.max(2, decimalesDe(n), -rang);
+    const calc = sansCase(calcul.texte);
+    return Object.freeze({
+      outil: "jetons", depart: n, rang, chiffre, signe: calcul.signe,
+      colonnes: Object.freeze(Array.from({length: plusBas + 1}, (_, i) => -i)),
+      texte: calc,
+      consigne: fr(`${calcul.signe > 0 ? "Ajoute" : "Retire"} ${calcul.ecritD} : touche le bon jeton.`),
+      refus: null,
+      traces: Object.freeze([Object.freeze({apres: 1 + calcul.retenues.length, attente: `${calc} = …`, texte: `${calc} = ${f(r)}`})])
+    });
+  }
+  // Du plus simple au plus dur : l'écriture, le rang (les millièmes après
+  // les dixièmes), une case vide qui se remplit (4,5 + 0,03), les retenues.
+  const D4_RANGS = Object.freeze({plus: 0, "plus-fraction": 1, moins: 2});
+  function d4Difficulte(calcul) {
+    const {n, rang} = calcul.donnees;
+    return D4_RANGS[calcul.forme] * 1000 + calcul.retenues.length * 200 + (-rang) * 50 + (-rang > decimalesDe(n) ? 30 : 0) + decimalesDe(n) * 10 + Math.min(Math.trunc(n), 9);
+  }
+  const D4_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le chiffre au mauvais rang",
+      test: sauf((calcul, reponse) => ["ailleursGauche", "ailleursDroite"].some(cle => calcul.donnees[cle] >= 0 && memeNombre(reponse, calcul.donnees[cle]))),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : le ${calcul.donnees.chiffre} n’est pas dans la bonne colonne. ${calcul.ecritD}, c’est ${enRang(calcul.donnees.chiffre, -calcul.donnees.rang)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "le chiffre écrit au bout",
+      test: sauf((calcul, reponse) => calcul.donnees.bout >= 0 && memeNombre(reponse, calcul.donnees.bout)),
+      retour: (calcul, reponse) => {
+        const k = -calcul.donnees.rang;
+        return fr(`${f(reponse)} : tu as écrit le ${calcul.donnees.chiffre} au bout. ${calcul.ecritD}, c’est ${enRang(calcul.donnees.chiffre, k)} : il va dans la colonne des ${nomRangs(k)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "la retenue oubliée",
+      test: sauf((calcul, reponse) => calcul.donnees.oubli >= 0 && memeNombre(reponse, calcul.donnees.oubli)),
+      retour: (calcul, reponse) => {
+        const {n, rang, chiffre} = calcul.donnees;
+        const k = -rang;
+        const total = chiffreAuRangDecimal(n, rang) + chiffre;
+        return fr(`${f(reponse)} : la retenue est oubliée. ${f(chiffreAuRangDecimal(n, rang))} + ${chiffre} = ${total} ${nomRangs(k)}, et 10 ${nomRangs(k)} font 1 ${RANGS_DECIMAUX[k - 1][0]}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "le mauvais sens",
+      test: sauf((calcul, reponse) => calcul.donnees.sens >= 0 && memeNombre(reponse, calcul.donnees.sens)),
+      retour: (calcul, reponse) => {
+        const {n, chiffre, rang} = calcul.donnees;
+        return calcul.signe < 0
+          ? fr(`${f(reponse)}, c’est ${f(n)} + ${calcul.ecritD}. Ici, on retranche : ${enRang(chiffre, -rang)} de moins.`)
+          : fr(`${f(reponse)}, c’est ${f(n)} − ${calcul.ecritD}. Ici, on ajoute : ${enRang(chiffre, -rang)} de plus.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les nombres de départ : la partie entière de 0 à 9 (au plus 9 jetons
+  // d'unités), le dernier chiffre non nul ; le résultat sous 10, et il
+  // garde ses décimales (4,45 + 0,05 = 4,5 perdrait la colonne qui change).
+  // (Vérifié en millièmes entiers avant de fabriquer le calcul : les
+  // viviers sont grands.)
+  const decimalesMillemes = x => (x % 1000 === 0 ? 0 : x % 100 === 0 ? 1 : x % 10 === 0 ? 2 : 3);
+  function d4Garde(n, rang, chiffre, signe) {
+    const nm = Math.round(n * 1000);
+    const rm = nm + signe * chiffre * 10 ** (3 + rang);
+    // (Ni un résultat égal au nombre ajouté : 0,04 − 0,02 = 0,02.)
+    return rm < 10000 && rm > 0 && rm % 1000 !== 0 && rm !== chiffre * 10 ** (3 + rang) && decimalesMillemes(rm) === Math.max(decimalesMillemes(nm), -rang);
+  }
+  function d4Vivier(niveau) {
+    const formes = {plus: [], "plus-fraction": [], moins: []};
+    const nombres = [];
+    // Des nombres à une ou deux décimales (niveaux 1 et 3), à trois (niveau 2).
+    const decimalesVoulues = niveau === 2 ? [3] : [1, 2];
+    decimalesVoulues.forEach(dec => {
+      const base = 10 ** dec;
+      for (let e = 0; e <= 9; e += 1) for (let x = 1; x < base; x += dec === 3 ? 37 : dec === 2 ? 3 : 1) {
+        if (x % 10 === 0) continue;
+        nombres.push(exact(e + x / base));
+      }
+    });
+    // Une écriture par nombre, à tour de rôle (le rang et le chiffre aussi) :
+    // assez de calculs, sans tout fabriquer.
+    const ecritures = niveau === 3 ? ["plus", "plus-fraction"] : ["plus", "plus-fraction", "moins"];
+    const rangs = niveau === 2 ? [-1, -2, -3] : [-1, -2];
+    nombres.forEach((n, i) => rangs.forEach((rang, j) => {
+      const forme = ecritures[(i + j) % ecritures.length];
+      const signe = forme === "moins" ? -1 : 1;
+      const chiffreN = chiffreAuRangDecimal(n, rang);
+      const possibles = entre(1, 9).filter(chiffre => {
+        if (forme === "moins" && !(chiffreN > chiffre)) return false;
+        if (forme !== "moins" && (chiffreN + chiffre >= 10) !== (niveau === 3)) return false;
+        return d4Garde(n, rang, chiffre, signe);
+      });
+      if (!possibles.length) return;
+      formes[forme].push(d4Calcul(niveau, forme, n, rang, possibles[(i * 7 + j * 3) % possibles.length]));
+    }));
+    if (niveau === 3) {
+      // Des retenues qui se propagent (3,96 + 0,05), en plus.
+      entre(0, 8).forEach(e => entre(1, 9).forEach(u => entre(1, 9).forEach(chiffre => {
+        if (u + chiffre < 10 || (e + u) % 3) return;
+        const n = exact(e + 0.9 + u / 100);
+        const forme = (e + u + chiffre) % 2 ? "plus" : "plus-fraction";
+        if (d4Garde(n, -2, chiffre, 1)) formes[forme].push(d4Calcul(3, forme, n, -2, chiffre));
+      })));
+      return Object.freeze({plus: Object.freeze(formes.plus), "plus-fraction": Object.freeze(formes["plus-fraction"])});
+    }
+    return Object.freeze(Object.fromEntries(Object.entries(formes).map(([forme, liste]) => [forme, Object.freeze(liste)])));
+  }
+  const D4_VIVIERS = Object.freeze({1: d4Vivier(1), 2: d4Vivier(2), 3: d4Vivier(3)});
+
+  // J'apprends de D4 : les jetons sur le premier calcul, le tableau sur le
+  // deuxième, le tableau qui se remplit sur le troisième. `morceaux` : ce
+  // que chaque étape écrit ({rangs} du résultat, {lignes} : la fraction
+  // écrite en décimal, « 3/100 = 0,03 »).
+  function d4Apprends({manipule, represente, ecris, consigne, consigneEcris, etapes, morceaux, bilan}) {
+    const m = d4Manipulation(manipule);
+    const ligneCachee = morceaux.some(morceau => morceau.lignes);
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: m,
+      represente: Object.freeze({
+        outil: "numeration", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(d4Aide(represente)),
+        solution: Object.freeze({image: Object.freeze(d4Image(represente)), phrase: d4Phrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        consigne: fr(consigneEcris),
+        etapes: etapesEcris(etapes), reponse: ecris.reponse,
+        solution: Object.freeze({image: Object.freeze(d4Image(ecris)), phrase: d4Phrase(ecris)})
+      }, numerationDessins(d4Tableau(ecris, {inconnue: true, ligneCachee}), morceaux)),
+      bilan: frBilan(bilan),
+      image: Object.freeze(d4Image(represente)),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const D4 = {
+    id: "D4", nom: "Ajouter ou retrancher des unités d’un rang", exemple: "4,45 + 0,3",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "numeration",
+    erreurs: D4_ERREURS, image: d4Image, aide: d4Aide, phrase: d4Phrase, manipulation: d4Manipulation, difficulte: d4Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "sans retenue", nom: "Un rang qui change : dixièmes, centièmes", palier: 2, type: "P",
+        composer: vivierNiveau(D4_VIVIERS[1], [4, 3, 3]),
+        imposes: [d4Plus(1, 5.24, -1, 5), d4Moins(1, 7.86, -2, 4)],
+        apprends: d4Apprends({
+          manipule: d4Plus(0, 4.45, -1, 3),
+          represente: d4Fraction(0, 0.45, -2, 3),
+          ecris: d4Plus(0, 6.24, -1, 5),
+          consigne: "3/100, c’est 3 centièmes.",
+          consigneEcris: "Seul le chiffre des dixièmes change.",
+          etapes: [["0,2 + 0,5 = ?", 0.7], ["6,24 + 0,5 = ?", 6.74]],
+          morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
+          bilan: "Seul le chiffre des centièmes change : 0,45 + 3/100 = 0,48."
+        })
+      },
+      {
+        n: 2, titre: "millièmes, sans retenue", nom: "Un rang qui change : millièmes", palier: 3, type: "P",
+        composer: vivierNiveau(D4_VIVIERS[2], [4, 3, 3]),
+        imposes: [d4Fraction(2, 2.315, -3, 4), d4Moins(2, 8.476, -1, 2)],
+        apprends: d4Apprends({
+          manipule: d4Plus(0, 2.435, -2, 4),
+          represente: d4Moins(0, 7.152, -2, 3),
+          ecris: d4Fraction(0, 1.624, -3, 5),
+          consigne: "0,03, c’est 3 centièmes.",
+          consigneEcris: "Seul le chiffre des millièmes change.",
+          etapes: [[`5/1${ESPACE_FINE}000 = ?`, 0.005], ["0,004 + 0,005 = ?", 0.009], [`1,624 + 5/1${ESPACE_FINE}000 = ?`, 1.629]],
+          morceaux: [{lignes: [1]}, {rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
+          bilan: "Seul le chiffre des centièmes change : 7,152 − 0,03 = 7,122."
+        })
+      },
+      {
+        n: 3, titre: "avec retenue (ajouter)", nom: "Ajouter avec une retenue", palier: 3, type: "P",
+        composer: vivierNiveau(D4_VIVIERS[3], [6, 4]),
+        imposes: [d4Plus(3, 2.58, -1, 7), d4Fraction(3, 6.97, -2, 5)],
+        apprends: d4Apprends({
+          manipule: d4Plus(0, 3.96, -2, 5),
+          represente: d4Plus(0, 4.45, -1, 8),
+          ecris: d4Plus(0, 5.73, -1, 6),
+          consigne: "10 dixièmes font 1 unité.",
+          consigneEcris: "10 dixièmes font 1 unité.",
+          etapes: [["0,7 + 0,6 = ?", 1.3], ["5,73 + 0,6 = ?", 6.33]],
+          morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
+          bilan: "10 dixièmes font 1 unité : 4,45 + 0,8 = 5,25."
+        })
+      }
+    ]
+  };
+
   // Un module pas encore construit (« bientôt ») : son nom, son exemple,
   // ses niveaux avec leur palier et leur type.
   const reserve = (id, nom, exemple, niveaux) =>
@@ -5000,22 +5840,10 @@
       {n: 1, titre: "deux opérations", palier: 3, type: "P", exemple: "(2 × ?) − 5 = 23"},
       {n: 2, titre: "réponse décimale", palier: 3, type: "P", exemple: "8 + (2 × ?) = 11"}
     ]),
-    reserve("D1", "Écritures d’un décimal", "3 + 2/10", [
-      {n: 1, titre: "dixièmes", palier: 2, type: "P", exemple: "3 + 2/10"},
-      {n: 2, titre: "centièmes", palier: 2, type: "P", exemple: "712/100"},
-      {n: 3, titre: "millièmes, sommes en désordre", palier: 3, type: "P", exemple: "4 + 107/1 000"}
-    ]),
+    D1,
     D2,
-    reserve("D3", "÷ 10, ÷ 100, ÷ 1 000", "45,2 ÷ 10", [
-      {n: 1, titre: "÷ 10", palier: 2, type: "P", exemple: "45,2 ÷ 10"},
-      {n: 2, titre: "÷ 100, ÷ 1 000", palier: 3, type: "P", exemple: "456 ÷ 100"},
-      {n: 3, titre: "des zéros à écrire", palier: 3, type: "P", exemple: "0,6 ÷ 10"}
-    ]),
-    reserve("D4", "Ajouter ou retrancher des unités d’un rang", "4,45 + 0,3", [
-      {n: 1, titre: "sans retenue", palier: 2, type: "P", exemple: "4,45 + 0,3"},
-      {n: 2, titre: "millièmes, sans retenue", palier: 3, type: "P", exemple: "4,452 + 0,03"},
-      {n: 3, titre: "avec retenue (ajouter)", palier: 3, type: "P", exemple: "4,45 + 0,8"}
-    ]),
+    D3,
+    D4,
     reserve("D5", "Compléments à l’unité", "0,7 + ? = 1", [
       {n: 1, titre: "dixièmes, à l’entier suivant", palier: 3, type: "P", exemple: "0,7 + ? = 1"},
       {n: 2, titre: "centièmes", palier: 4, type: "P", exemple: "0,35 + ? = 1"}
@@ -5301,8 +6129,26 @@
     retire: "on cherche ce qu’on a retiré",
     depart: "on cherche le nombre de départ",
     "egalite-difference": "c’est une soustraction",
-    "egalite-difference-grande": "c’est une soustraction"
+    "egalite-difference-grande": "c’est une soustraction",
+    // Modules lot 5.
+    fraction: "le nombre s’écrit en fraction",
+    fractions: "des fractions à ranger",
+    numerateur: "on cherche le numérateur",
+    plus: "c’est une addition",
+    "plus-fraction": "le nombre ajouté s’écrit en fraction",
+    moins: "c’est une soustraction"
   });
+  // La touche « , » : dans les modules à décimales, sauf quand la case est
+  // un numérateur (« 0,3 = □/10 » : la réponse est un entier, règle du 05/10
+  // — décision du 04/11).
+  function virguleDe(calcul) {
+    const fiche = calcul ? moduleDe(calcul.module) : null;
+    return Boolean(fiche && fiche.virgule) && !String(calcul.texte || "").includes(`${CASE}/`);
+  }
+  function virguleDuTexte(module, texte) {
+    return virguleDe({module, texte});
+  }
+
   function annonceDe(calcul) {
     return calcul && ANNONCES[calcul.forme] ? `Nouveau\u00a0: ${ANNONCES[calcul.forme]}.` : "Nouveau\u00a0: c’est écrit autrement.";
   }
@@ -5357,6 +6203,8 @@
     aideDe,
     manipulationDe,
     annonceDe,
+    virguleDe,
+    virguleDuTexte,
     diagnostiquer,
     imageDe,
     tableARevoir,

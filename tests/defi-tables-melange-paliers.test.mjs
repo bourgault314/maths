@@ -499,7 +499,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi tables, « Mes calculs du jour sans chrono » (04/11/2026) :
   // prof/defi_tables_mon_parcours.js seul change, 65 au manifeste (avant :
   // defi-calcul-modules-lot-4).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-tables-calculs-du-jour-sans-chrono$/m);
+  // Puis Défi calcul, modules lot 5 (04/11/2026) : prof/defi_calcul_core.js
+  // seul change (D1, D3, D4), 65 au manifeste (avant :
+  // defi-tables-calculs-du-jour-sans-chrono).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-5$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });
