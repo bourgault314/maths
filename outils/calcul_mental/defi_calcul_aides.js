@@ -2138,7 +2138,8 @@
   // la barre, le dénominateur. `noeudsCalcul` rend les morceaux d'une page ;
   // la case « □ » devient `caseReponse()` — dans « □/10 », elle est le
   // numérateur. Un lecteur d'écran lit « 2 sur 10 ».
-  const MOTIF_FRACTION = /(\d[\d\u202f\u00a0]*|□|\?)\/(\d[\d\u202f\u00a0]*\d|\d)/g;
+  // Modules lot 6 : la case peut être au dénominateur (« 4/7 = 12/□ »).
+  const MOTIF_FRACTION = /(\d[\d\u202f\u00a0]*|□|\?)\/(\d[\d\u202f\u00a0]*\d|\d|□|\?)/g;
   function noeudsCalcul(texte, {caseReponse = null, insecable = t => t} = {}) {
     const chaine = String(texte == null ? "" : texte);
     const morceaux = [];
@@ -2164,7 +2165,8 @@
       sur.textContent = " sur ";
       const den = document.createElement("span");
       den.className = "dc-frac-den";
-      den.textContent = insecable(m[2]);
+      if (m[2] === "□" && caseReponse) den.append(caseReponse());
+      else den.textContent = insecable(m[2]);
       fraction.append(num, sur, den);
       morceaux.push(fraction);
       dernier = m.index + m[0].length;
@@ -2708,6 +2710,401 @@
     };
   }
 
+  // ============================================ modules lot 6 (04/11/2026) :
+  // les fractions du CM1 (F2, F5, F6, F8). Décisions de Gwenaël du 04/11
+  // (planches choix-1 à choix-4, puis la version 2, choix-5 à choix-7) :
+  //  - tout se pose sur la DROITE GRADUÉE : l'unité, c'est l'écart entre deux
+  //    entiers, la même pour toutes les bandes et toute la barre d'un dessin ;
+  //    plus de bande « 1 » de référence au-dessus ;
+  //  - Je manipule : les bandes du site (palette de la charte, étiquette
+  //    « 1/d » toujours écrite), posées bout à bout ; gestes poser, couper,
+  //    fondre, enlever ; ce qu'on touche est entouré de bleu ;
+  //  - Je représente, l'aide, J'écris, la correction, « À retenir » : le
+  //    schéma en barres, une seule barre de 0 à a posée sur la droite, les
+  //    parts prises en bleu, enlevées hachurées, l'accolade « ?/4 » dessous.
+
+  // La palette des bandes (`COULEURS_BANDES_FRACTIONS` de
+  // packages/charte/src/charte.js, recopiée : Défi calcul se charge sans
+  // module ES). Les dénominateurs absents du site (7, 9, 11…) : gris.
+  const COULEURS_BANDES = Object.freeze({1: "#fff7e6", 2: "#facc15", 3: "#e9d5ff", 4: "#84cc16", 5: "#0ea5e9", 6: "#f97316", 8: "#f472b6", 10: "#b91c1c", 12: "#7dd3fc"});
+  const BANDE_GRISE = "#cbd5e1";
+  const couleurBande = d => COULEURS_BANDES[d] || BANDE_GRISE;
+  // Sur le rouge des dixièmes, l'étiquette s'écrit en blanc (en noir, elle
+  // ne se lit pas en noir et blanc).
+  const encreBande = d => (d === 10 ? "#fff" : "#111827");
+  const FRACTIONS = Object.freeze({largeur: 400, gauche: 18, longueur: 360, bande: 44, barre: 38, bleu: "#5d86c8", clair: "#dce7f7", cherche: "#0755b8", trouve: "#147447", encre: "#143451", enleve: "#6b7c8f"});
+
+  // Une étiquette dans un dessin : « 1/4 » en fraction, « 1 » ou « ? » en
+  // texte (centrée sur y).
+  function etiquetteSvg(x, y, texte, {taille = 18, encre = FRACTIONS.encre} = {}) {
+    const t = String(texte);
+    const m = /^(\?|\d+)\/(\?|\d+)$/.exec(t);
+    const couleur = valeur => (valeur === "?" ? FRACTIONS.cherche : encre);
+    if (!m) return `<text x="${x}" y="${y + taille * .36}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${couleur(t)}">${t}</text>`;
+    const w = Math.max(m[1].length, m[2].length) * taille * .62 + 6;
+    return `<text x="${x}" y="${y - 3}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${couleur(m[1])}">${m[1]}</text>`
+      + `<line x1="${x - w / 2}" y1="${y + 1}" x2="${x + w / 2}" y2="${y + 1}" stroke="${encre}" stroke-width="2"/>`
+      + `<text x="${x}" y="${y + taille + 1}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${couleur(m[2])}">${m[2]}</text>`;
+  }
+  // « 3/4 » se lit « 3 sur 4 ».
+  const lireFraction = texte => String(texte).replace(/\//g, " sur ");
+  // Des hachures dans un rectangle, sans `clipPath` (deux dessins dans une
+  // page ne se marchent pas dessus) : chaque trait est coupé au bord.
+  function hachuresSvg(x, y, w, h, couleur = FRACTIONS.bleu) {
+    let s = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fff"/>`;
+    for (let t = -h + 4; t < w; t += 9) {
+      const de = Math.max(0, -t);
+      const a = Math.min(h, w - t);
+      if (a <= de) continue;
+      s += `<line x1="${(x + t + de).toFixed(2)}" y1="${(y + h - de).toFixed(2)}" x2="${(x + t + a).toFixed(2)}" y2="${(y + h - a).toFixed(2)}" stroke="${couleur}" stroke-width="2.2"/>`;
+    }
+    return s;
+  }
+
+  // La droite graduée, de 0 à a : un trait épais à chaque entier, un petit
+  // trait à chaque part (`d` parts par unité, si elles se voient). Les
+  // entiers écrits dessous ; `cache` : l'entier cherché porte « ? » ;
+  // `ecrits` : {entier: « 18/6 »} — l'entier réécrit en fraction (J'écris,
+  // en vert, ou en noir sur la correction).
+  //   Rend {svg, bas} (le bas des étiquettes).
+  // `entiers` : les premières unités sans leurs petits traits (F5-3, des
+  // blocs pleins).
+  function droiteSvg(y, a, d, {cache = null, ecrits = {}, hautEtiquettes = 24, entiers = 0} = {}) {
+    const {gauche: G, longueur: L, encre} = FRACTIONS;
+    const u = L / a;
+    let s = `<line x1="${G}" y1="${y}" x2="${G + L + 12}" y2="${y}" stroke="${encre}" stroke-width="2.4"/>`
+      + `<path d="M${G + L + 12} ${y - 6} L${G + L + 22} ${y} L${G + L + 12} ${y + 6}" fill="${encre}"/>`;
+    if (d > 1 && u / d >= 5) {
+      for (let k = entiers * d + 1; k < a * d; k += 1) if (k % d) s += `<line x1="${(G + k * u / d).toFixed(2)}" y1="${y - 6}" x2="${(G + k * u / d).toFixed(2)}" y2="${y + 6}" stroke="${encre}" stroke-width="1.4"/>`;
+    }
+    for (let k = 0; k <= a; k += 1) {
+      const x = G + k * u;
+      s += `<line x1="${x.toFixed(2)}" y1="${y - 11}" x2="${x.toFixed(2)}" y2="${y + 11}" stroke="${encre}" stroke-width="3"/>`;
+      const ecrit = ecrits[k];
+      if (k === cache) {
+        s += `<rect x="${(x - 14).toFixed(2)}" y="${y + 13}" width="28" height="24" rx="6" fill="#fff" stroke="${FRACTIONS.cherche}" stroke-width="2.6"/>` + etiquetteSvg(x, y + 25, "?", {taille: 17});
+      } else if (ecrit) {
+        s += etiquetteSvg(x, y + 30, ecrit.texte, {taille: 16, encre: ecrit.trouve ? FRACTIONS.trouve : encre});
+      } else {
+        s += etiquetteSvg(x, y + 24, String(k), {taille: 17});
+      }
+    }
+    return {svg: s, bas: y + 13 + hautEtiquettes};
+  }
+  const lireDroite = (a, cache, ecrits = {}) => `Graduations : ${Array.from({length: a + 1}, (_, k) => (k === cache ? "?" : ecrits[k] ? lireFraction(ecrits[k].texte) : String(k))).join(", ")}.`;
+
+  // ----------------------------------------- le schéma en barres sur la droite
+  //
+  // Une seule barre, de 0 à a, posée sur la droite graduée ; d parts fines
+  // par unité, un trait épais à chaque entier et toutes les `gros` parts
+  // (F6 : chaque tiers coupé en 5). Les `pris` premières parts en bleu ;
+  // parmi elles, les `retire` dernières hachurées (on les enlève) ;
+  // `entiers` : les premières unités en blocs pleins, sans leurs parts
+  // (F5-3 : 43 parts fines ne se lisaient pas). Au-dessus, des crochets
+  // {de, a, texte, trouve} (en parts) ; dessous, l'accolade {de, a, texte,
+  // cherche, trouve}. Aucun chiffre de la réponse : on compte des parts.
+  //   o : {outil: "barre-droite", a, d, pris, retire, entiers, gros, haut,
+  //        bas, cache, ecrits, hautEtiquettes}
+  function planBarreDroite(o) {
+    const a = o.a || 1;
+    const d = o.d || 1;
+    const u = FRACTIONS.longueur / a;
+    const w = u / d;
+    const entiers = Array.from({length: a + 1}, (_, k) => FRACTIONS.gauche + k * u);
+    const parts = Array.from({length: a * d}, (_, k) => ({x: FRACTIONS.gauche + k * w, w}));
+    return {a, d, u, w, entiers, parts};
+  }
+  function barreDroite(o) {
+    const plan = planBarreDroite(o);
+    const {a, d, w} = plan;
+    const {gauche: G, longueur: L, barre: R, encre, bleu} = FRACTIONS;
+    const haut = o.haut || [];
+    const yb = haut.length ? (haut.some(h => String(h.texte).includes("/")) ? 46 : 32) : 6;
+    const pris = o.pris || 0;
+    const retire = o.retire || 0;
+    const entiers = o.entiers || 0;
+    let s = "";
+    for (let k = 0; k < a * d; k += 1) {
+      const x = G + k * w;
+      if (k < pris - retire) s += `<rect x="${x.toFixed(2)}" y="${yb}" width="${(w + .6).toFixed(2)}" height="${R}" fill="${bleu}"/>`;
+      else if (k < pris) s += hachuresSvg(x, yb, w, R);
+      else s += `<rect x="${x.toFixed(2)}" y="${yb}" width="${w.toFixed(2)}" height="${R}" fill="#fff"/>`;
+    }
+    for (let k = 1; k < a * d; k += 1) {
+      if (k < entiers * d && k % d) continue;
+      const epais = k % d === 0 ? 4 : o.gros && k % o.gros === 0 ? 3.4 : 1.3;
+      s += `<line x1="${(G + k * w).toFixed(2)}" y1="${yb}" x2="${(G + k * w).toFixed(2)}" y2="${yb + R}" stroke="${encre}" stroke-width="${epais}"/>`;
+    }
+    s += `<rect x="${G}" y="${yb}" width="${L}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
+    haut.forEach(h => {
+      // Un crochet caché (J'écris : il apparaît à son étape) garde sa place.
+      if (h.masque) return;
+      const x1 = G + h.de * w;
+      const x2 = G + h.a * w;
+      const couleur = h.trouve ? FRACTIONS.trouve : encre;
+      s += `<path d="M${(x1 + 2).toFixed(2)} ${yb - 3} L${(x1 + 2).toFixed(2)} ${yb - 9} L${(x2 - 2).toFixed(2)} ${yb - 9} L${(x2 - 2).toFixed(2)} ${yb - 3}" fill="none" stroke="${couleur}" stroke-width="2"/>`
+        + etiquetteSvg((x1 + x2) / 2, String(h.texte).includes("/") ? yb - 30 : yb - 20, h.texte, {taille: 16, encre: couleur});
+    });
+    const droite = droiteSvg(yb + R + 14, a, d, {cache: o.cache, ecrits: o.ecrits || {}, hautEtiquettes: o.hautEtiquettes || 24, entiers});
+    s += droite.svg;
+    let H = droite.bas + 4;
+    if (o.bas) {
+      const x1 = G + o.bas.de * w + 2;
+      const x2 = G + o.bas.a * w - 2;
+      const mx = (x1 + x2) / 2;
+      const ya = droite.bas;
+      const fraction = String(o.bas.texte).includes("/");
+      const bord = o.bas.trouve ? FRACTIONS.trouve : o.bas.cherche ? FRACTIONS.cherche : encre;
+      const lw = 54;
+      const lh = fraction ? 44 : 28;
+      s += `<path d="M${x1.toFixed(2)} ${ya} Q${x1.toFixed(2)} ${ya + 7} ${(x1 + 7).toFixed(2)} ${ya + 7} L${(mx - 6).toFixed(2)} ${ya + 7} Q${mx.toFixed(2)} ${ya + 7} ${mx.toFixed(2)} ${ya + 13} Q${mx.toFixed(2)} ${ya + 7} ${(mx + 6).toFixed(2)} ${ya + 7} L${(x2 - 7).toFixed(2)} ${ya + 7} Q${x2.toFixed(2)} ${ya + 7} ${x2.toFixed(2)} ${ya}" fill="none" stroke="${encre}" stroke-width="2.4"/>`
+        + `<rect x="${(mx - lw / 2).toFixed(2)}" y="${ya + 15}" width="${lw}" height="${lh}" rx="8" fill="#fff" stroke="${bord}" stroke-width="${o.bas.cherche || o.bas.trouve ? 2.8 : 2}"/>`
+        + etiquetteSvg(mx, ya + 15 + (fraction ? 20 : 14), o.bas.texte, {taille: 17, encre: o.bas.trouve ? FRACTIONS.trouve : encre});
+      H = ya + 15 + lh + 4;
+    }
+    return `<svg class="dc-fractions" viewBox="0 0 ${FRACTIONS.largeur} ${Math.ceil(H)}" role="img" aria-label="${decrireBarreDroite(o)}">${s}</svg>`;
+  }
+  // Ce que dit le dessin, sans la réponse (les textes écrits seulement) :
+  // « 3/4 » se lit « 3 sur 4 ».
+  function decrireBarreDroite(o) {
+    const morceaux = ["Schéma en barres posé sur la droite graduée.", lireDroite(o.a || 1, o.cache, o.ecrits || {})];
+    morceaux.push(o.retire ? "Des parts sont en bleu, d’autres sont hachurées : on les enlève." : "Des parts sont en bleu.");
+    const hauts = (o.haut || []).filter(h => !h.masque);
+    if (hauts.length) morceaux.push(`Au-dessus : ${hauts.map(h => lireFraction(h.texte)).join(", ")}.`);
+    if (o.bas) morceaux.push(`${o.bas.cherche ? "En dessous, à trouver" : "En dessous"} : ${lireFraction(o.bas.texte)}.`);
+    return morceaux.join(" ");
+  }
+
+  // ------------------------------------------------- les bandes sur la droite
+  //
+  // Je manipule (F2, F5, F6, F8) : les bandes du site posées bout à bout
+  // au-dessus de la droite graduée (0 à a), la réserve dessous. Le geste est
+  // forcé, une étape à la fois :
+  //  - poser {d, n} : toucher la bonne bande de la réserve, n bandes « 1/d »
+  //    se posent au bout ;
+  //  - couper {piece, en} : toucher la bande entourée de bleu, elle se coupe
+  //    en `en` morceaux égaux (le demi en deux quarts ; « 1 » en tiers) ;
+  //  - fondre {piece, n, d} : toucher le paquet entouré de bleu (n bandes
+  //    bout à bout), il devient UNE bande « 1/d » (5 cinquièmes → « 1 », de
+  //    la couleur des cinquièmes) ;
+  //  - enlever {piece, parmi} : toucher une des bandes à enlever ; la plus à
+  //    droite passe en pointillés.
+  // Un faux toucher fait trembler la consigne. Au bout, l'appli écrit le
+  // calcul, avec l'étape (« 1/2 + 1/4 = 2/4 + 1/4 = 3/4 »).
+  //   Une bande : {d (1 pour « 1 »), de (la couleur d'une bande « 1 » : celle
+  //   des parts qui l'ont faite, ou qu'elle va donner), enleve, neuf}.
+
+  // La règle, sans page (testée par node --test). L'état : {pieces, etape,
+  // fini}. Un geste : {reserve: d} ou {piece: i}. Rend le nouvel état, ou
+  // null pour un refus.
+  function bandesDepart(depart) {
+    return {pieces: depart.map(p => Object.freeze({d: p.d, de: p.de || p.d, enleve: Boolean(p.enleve), neuf: false})), etape: 0, fini: false};
+  }
+  function bandesGeste(etat, geste, etapes) {
+    const e = etapes[etat.etape];
+    if (!e || etat.fini) return null;
+    const pieces = etat.pieces.map(p => Object.freeze(Object.assign({}, p, {neuf: false})));
+    const bande = (d, de = d) => Object.freeze({d, de, enleve: false, neuf: true});
+    let apres = null;
+    if (e.geste === "poser" && geste.reserve === e.d) {
+      apres = pieces.concat(Array.from({length: e.n}, () => bande(e.d)));
+    } else if (e.geste === "couper" && geste.piece === e.piece) {
+      const p = pieces[e.piece];
+      apres = [...pieces.slice(0, e.piece), ...Array.from({length: e.en}, () => bande(p.d * e.en)), ...pieces.slice(e.piece + 1)];
+    } else if (e.geste === "fondre" && geste.piece >= e.piece && geste.piece < e.piece + e.n) {
+      const p = pieces[e.piece];
+      apres = [...pieces.slice(0, e.piece), bande(e.d, e.d === 1 ? p.d : e.d), ...pieces.slice(e.piece + e.n)];
+    } else if (e.geste === "enlever" && e.parmi.includes(geste.piece) && !pieces[geste.piece].enleve) {
+      apres = pieces.slice();
+      apres[e.piece] = Object.freeze(Object.assign({}, pieces[e.piece], {enleve: true, neuf: true}));
+    }
+    if (!apres) return null;
+    const etape = etat.etape + 1;
+    return {pieces: apres, etape, fini: etape >= etapes.length};
+  }
+  // La longueur posée, en unités (les bandes enlevées comptent : elles
+  // restent dessinées).
+  const longueurBandes = pieces => pieces.reduce((s, p) => s + 1 / p.d, 0);
+  // Les places des bandes sur la droite (x, largeur), pour les tests et la
+  // page : une unité a la même longueur pour toutes.
+  function planBandes(pieces, a) {
+    const u = FRACTIONS.longueur / a;
+    let x = FRACTIONS.gauche;
+    return pieces.map(p => {
+      const place = {x, w: u / p.d};
+      x += u / p.d;
+      return place;
+    });
+  }
+  // Le dessin de l'outil : les bandes, la droite, la réserve. `cible` : les
+  // bandes à entourer de bleu [de, a[ ; `reserve` : les bandes de la réserve
+  // (rien quand il n'y a rien à poser).
+  function bandesSvg({pieces, a, grad, reserve = [], reserveVide = false, cible = null, fini = false}) {
+    const {gauche: G, longueur: L, bande: h, encre} = FRACTIONS;
+    const u = L / a;
+    const places = planBandes(pieces, a);
+    const y = 8;
+    let s = "";
+    pieces.forEach((p, i) => {
+      const {x, w} = places[i];
+      const fond = p.enleve ? "#fff" : couleurBande(p.d === 1 ? p.de : p.d);
+      s += `<rect data-piece="${i}" x="${x.toFixed(2)}" y="${y}" width="${w.toFixed(2)}" height="${h}" fill="${fond}" stroke="${p.enleve ? FRACTIONS.enleve : "#111827"}" stroke-width="${p.enleve ? 2 : 1.4}"${p.enleve ? ' stroke-dasharray="6 4"' : ""}/>`;
+      if (w >= 16) s += `<g pointer-events="none">${etiquetteSvg(x + w / 2, y + h / 2, p.d === 1 ? "1" : `1/${p.d}`, {taille: w < 26 ? 11 : w < 34 ? 13 : 16, encre: p.enleve ? FRACTIONS.enleve : encreBande(p.d === 1 ? p.de : p.d)})}</g>`;
+      if (p.neuf && !p.enleve) s += `<rect x="${(x + 1.6).toFixed(2)}" y="${y + 1.6}" width="${Math.max(0, w - 3.2).toFixed(2)}" height="${h - 3.2}" fill="none" stroke="${FRACTIONS.trouve}" stroke-width="3" pointer-events="none"/>`;
+    });
+    if (cible) {
+      const p1 = places[cible[0]];
+      const p2 = places[cible[1] - 1];
+      s += `<rect class="dc-cible" x="${(p1.x - 3).toFixed(2)}" y="${y - 4}" width="${(p2.x + p2.w - p1.x + 6).toFixed(2)}" height="${h + 8}" rx="7" fill="none" stroke="${FRACTIONS.cherche}" stroke-width="3.5" pointer-events="none"/>`;
+    }
+    if (fini) {
+      const bout = places.filter((_, i) => !pieces[i].enleve).pop();
+      if (bout) s += `<line x1="${(bout.x + bout.w).toFixed(2)}" y1="${y + h}" x2="${(bout.x + bout.w).toFixed(2)}" y2="${y + h + 14}" stroke="${FRACTIONS.cherche}" stroke-width="2" stroke-dasharray="4 3"/>`;
+    }
+    const droite = droiteSvg(y + h + 14, a, grad);
+    s += droite.svg;
+    let H = droite.bas + 2;
+    if (reserve.length) {
+      s += `<line x1="${G}" y1="${H}" x2="${G + L}" y2="${H}" stroke="#cfdde8" stroke-width="2"/>`;
+      const yr = H + 8;
+      const largeurs = reserve.map(d => u / d);
+      let x = G + (L - largeurs.reduce((m, n) => m + n, 0) - (reserve.length - 1) * 14) / 2;
+      reserve.forEach((d, k) => {
+        if (reserveVide) { x += largeurs[k] + 14; return; }
+        s += `<g data-reserve="${d}" class="dc-bande-reserve"><rect x="${x.toFixed(2)}" y="${yr}" width="${largeurs[k].toFixed(2)}" height="${h - 4}" fill="${couleurBande(d)}" stroke="#111827" stroke-width="1.4"/>`
+          + `<g pointer-events="none">${etiquetteSvg(x + largeurs[k] / 2, yr + (h - 4) / 2, `1/${d}`, {taille: largeurs[k] < 34 ? 12 : 16, encre: encreBande(d)})}</g></g>`;
+        x += largeurs[k] + 14;
+      });
+      H = yr + h;
+    }
+    return `<svg class="dc-bandes-svg" viewBox="0 0 ${FRACTIONS.largeur} ${Math.ceil(H)}">${s}</svg>`;
+  }
+  // Ce que voit l'élève, pour un lecteur d'écran.
+  function decrireBandes(pieces) {
+    if (!pieces.length) return "La droite graduée, rien n’est posé.";
+    const restes = pieces.filter(p => !p.enleve).map(p => (p.d === 1 ? "1" : `1 sur ${p.d}`));
+    const enleves = pieces.filter(p => p.enleve).length;
+    return `Sur la droite : ${restes.join(", ") || "rien"}${enleves ? ` ; ${accorder(enleves, "bande enlevée", "bandes enlevées")}` : ""}.`;
+  }
+
+  // L'outil à toucher. options : {a, grad, depart, etapes (chacune avec sa
+  // consigne), reserve, traces, surFini}. Au clavier : Entrée ou Espace font
+  // le geste attendu.
+  function bandesManip(zone, options) {
+    const {a, grad = 1, depart = [], etapes, reserve = [], traces = [], surFini = null} = options;
+    let jeu = bandesDepart(depart);
+    const etat = {refus: 0, premier: true};
+    compteurAides += 1;
+    const bloc = document.createElement("div");
+    bloc.className = "dc-bandes";
+    const consigne = document.createElement("p");
+    consigne.className = "consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    const scene = document.createElement("div");
+    scene.className = "dc-bandes-scene dc-attente";
+    scene.tabIndex = 0;
+    scene.setAttribute("role", "button");
+    scene.setAttribute("aria-describedby", consigne.id);
+    const trace = document.createElement("p");
+    trace.className = "dc-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    const annonce = zoneAnnonce();
+    bloc.append(consigne, scene, trace, annonce);
+    zone.replaceChildren(bloc);
+
+    const attendue = () => etapes[jeu.etape] || null;
+    function cible() {
+      const e = attendue();
+      if (!e || jeu.fini) return null;
+      if (e.geste === "couper") return [e.piece, e.piece + 1];
+      if (e.geste === "fondre") return [e.piece, e.piece + e.n];
+      return null;
+    }
+    function dessiner() {
+      const e = attendue();
+      // Fini : la consigne s'efface, la trace écrit le calcul.
+      ecrireTexte(consigne, jeu.fini ? "" : e.consigne);
+      // La réserve, tant qu'il y a une bande à poser (la même place après :
+      // rien ne bouge, elle est seulement vide).
+      const poser = etapes.some(x => x.geste === "poser");
+      const resteAPoser = !jeu.fini && etapes.slice(jeu.etape).some(x => x.geste === "poser");
+      scene.innerHTML = bandesSvg({pieces: jeu.pieces, a, grad, reserve: poser ? reserve : [], reserveVide: poser && !resteAPoser, cible: cible(), fini: jeu.fini});
+      scene.setAttribute("aria-label", `${decrireBandes(jeu.pieces)}${jeu.fini ? "" : " Touche pour faire le geste."}`);
+      const pilules = [];
+      if (jeu.fini && traces.length) {
+        const b = document.createElement("b");
+        b.className = "ok";
+        ecrireTexte(b, traces[traces.length - 1].texte);
+        pilules.push(b);
+      }
+      trace.replaceChildren(...pilules);
+    }
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      consigne.classList.remove("est-refus");
+    }
+    function refuser() {
+      clearTimeout(etat.refus);
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+    function jouer(geste) {
+      if (jeu.fini) return;
+      const apres = bandesGeste(jeu, geste, etapes);
+      bloc.dispatchEvent(new CustomEvent("bande", {bubbles: true, detail: Object.assign({accepte: Boolean(apres)}, geste)}));
+      if (!apres) { refuser(); return; }
+      leverRefus();
+      jeu = apres;
+      if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
+      if (jeu.fini) bloc.classList.add("est-finie");
+      dessiner();
+      annonce.annoncer(jeu.fini && traces.length ? lireFraction(traces[traces.length - 1].texte) : decrireBandes(jeu.pieces));
+      if (jeu.fini && typeof surFini === "function") surFini();
+    }
+    // Le geste attendu, comme si l'élève touchait la bonne chose (clavier).
+    function gesteAttendu() {
+      const e = attendue();
+      if (!e) return null;
+      if (e.geste === "poser") return {reserve: e.d};
+      return {piece: e.piece};
+    }
+    scene.addEventListener("click", event => {
+      const cibleTouchee = event.target.closest && event.target.closest("[data-piece], [data-reserve]");
+      if (!cibleTouchee) { if (!jeu.fini) refuser(); return; }
+      if (cibleTouchee.hasAttribute("data-reserve")) jouer({reserve: Number(cibleTouchee.getAttribute("data-reserve"))});
+      else jouer({piece: Number(cibleTouchee.getAttribute("data-piece"))});
+    });
+    scene.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      const geste = gesteAttendu();
+      if (geste) jouer(geste);
+    });
+    if (!etapes.length) jeu.fini = true;
+    dessiner();
+    return {
+      outil: "bandes",
+      element: bloc,
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+      },
+      mesurer() {},
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return jeu.fini; },
+      get etape() { return jeu.etape; },
+      get pieces() { return jeu.pieces.map(p => ({d: p.d, de: p.de, enleve: p.enleve})); },
+      jouer,
+      gesteAttendu
+    };
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
@@ -2725,6 +3122,7 @@
     if (image.outil === "deux-barres") return deuxBarres(image);
     if (image.outil === "numeration") return tableauNumeration(image);
     if (image.outil === "carre") return carreCent(image);
+    if (image.outil === "barre-droite") return barreDroite(image);
     return droiteSauts(image);
   }
 
@@ -2778,6 +3176,18 @@
     jetonsGeste,
     jetonsManip,
     VALEURS_JETONS,
+    COULEURS_BANDES,
+    FRACTIONS,
+    planBarreDroite,
+    barreDroite,
+    decrireBarreDroite,
+    bandesDepart,
+    bandesGeste,
+    longueurBandes,
+    planBandes,
+    bandesSvg,
+    decrireBandes,
+    bandesManip,
     noeudsCalcul,
     ecrireTexte,
     dessinerImage

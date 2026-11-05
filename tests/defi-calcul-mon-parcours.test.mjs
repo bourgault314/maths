@@ -323,6 +323,10 @@ test("la page : en construction, hors catalogue, sans menus pour l'élève, sans
   // est un numérateur.
   assert.match(page, /if \(options\.outil === "carre"\) return AIDES\.carreManip\(zone, options\);/);
   assert.match(page, /if \(options\.outil === "jetons"\) return AIDES\.jetonsManip\(zone, options\);/);
+  // Modules lot 6 : les bandes du site sur la droite graduée (F2, F5, F6, F8) ;
+  // le schéma en barres a des parts à compter (le pavé rapetisse avant lui).
+  assert.match(page, /if \(options\.outil === "bandes"\) return AIDES\.bandesManip\(zone, options\);/);
+  assert.match(page, /image\.matches\("svg\.dc-numeration, svg\.dc-carre, svg\.dc-fractions"\)/);
   assert.match(page, /return AIDES\.noeudsCalcul\(texte, \{caseReponse, insecable\}\);/, "le calcul : ses fractions");
   assert.match(page, /AIDES\.ecrireTexte\(\$\("retenir-phrase"\), serie\.apprends\.bilan\);/, "« À retenir » : ses fractions");
   assert.match(page, /\$\("touches"\)\.hidden = !CORE\.virguleDuTexte\(id, texte\);/);
@@ -433,7 +437,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
   assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 129], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 129 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 79], "sur les modules construits : 79 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4)");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 90], "sur les modules construits : 90 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2]);
@@ -469,7 +473,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 79, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 90, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);

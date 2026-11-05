@@ -5783,6 +5783,1018 @@
     ]
   };
 
+  // ============================================ modules lot 6 (04/11/2026)
+  //
+  // F2, F5, F6, F8 : les fractions du CM1 (lot 6a ; F1 et F3 suivent, lot
+  // 6b). Décisions de Gwenaël du 04/11 (planches choix-1 à choix-4, puis la
+  // version 2, choix-5 à choix-7 ; fichier DECISIONS du dossier du lot) :
+  //  - une seule case par calcul, toujours (« 1/2 + 1/4 = □/4 »,
+  //    « 17/5 = 3 + □/5 », « 4/7 = 12/□ ») ; pas de touche « , » ;
+  //  - Je manipule : les bandes du site posées bout à bout sur la droite
+  //    graduée (poser, couper, fondre, enlever) ; Je représente, l'aide de
+  //    l'entraînement, J'écris, la correction, « À retenir » : le schéma en
+  //    barres, une seule barre de 0 à a posée sur la même droite ;
+  //  - chaque module est une échelle, et les voisins ne se marchent pas
+  //    dessus : F2 a les dénominateurs 2 et 4, et lui seul ; F6 n'a jamais
+  //    une égalité dont les deux dénominateurs sont dans 1, 2, 4, ni un
+  //    dénominateur d'arrivée 10 ; F5 et F8-3 n'ont jamais 10 (D1).
+  //
+  // Un calcul s'écrit en texte (« 1/2 + 1/4 = □/4 ») et se lit : ses deux
+  // côtés, leurs termes {n, d, s} (d = 1 : un entier ; s : le signe), la
+  // case (le côté, le terme, « n » ou « d »). La réponse se calcule, en
+  // fractions exactes.
+
+  const pgcd = (a, b) => (b ? pgcd(b, a % b) : Math.abs(a));
+  const ppcm = (a, b) => a / pgcd(a, b) * b;
+  // Une fraction exacte [num, den], réduite, den > 0.
+  const qf = (n, d = 1) => { const g = pgcd(n, d) || 1; return [n / g * Math.sign(d), Math.abs(d) / g]; };
+  const qPlus = (p, q) => qf(p[0] * q[1] + q[0] * p[1], p[1] * q[1]);
+  const qMoins = (p, q) => qPlus(p, [-q[0], q[1]]);
+  const qFois = (p, k) => qf(p[0] * k, p[1]);
+  const qValeur = p => p[0] / p[1];
+  const qEgal = (p, q) => p[0] === q[0] && p[1] === q[1];
+
+  const NOMS_PARTS = Object.freeze({2: ["demi", "demis"], 3: ["tiers", "tiers"], 4: ["quart", "quarts"], 5: ["cinquième", "cinquièmes"], 6: ["sixième", "sixièmes"], 7: ["septième", "septièmes"], 8: ["huitième", "huitièmes"], 9: ["neuvième", "neuvièmes"], 10: ["dixième", "dixièmes"], 12: ["douzième", "douzièmes"]});
+  const nomParts = (d, pluriel = true) => (NOMS_PARTS[d] ? NOMS_PARTS[d][pluriel ? 1 : 0] : null);
+  // « 3 quarts », « 1 tiers ».
+  const enParts = (n, d) => `${n} ${nomParts(d, n >= 2)}`;
+
+  // Lire un calcul écrit. « a/d est entre n et □ » (F5-3) a sa propre forme.
+  function lireFraction(texte) {
+    const entre = /^(\d+)\/(\d+) est entre (\d+|□) et (\d+|□)$/.exec(texte);
+    if (entre) {
+      const [, a, d, bas, haut] = entre;
+      return {entre: true, a: Number(a), d: Number(d), bas: bas === CASE ? null : Number(bas), haut: haut === CASE ? null : Number(haut)};
+    }
+    let cache = null;
+    const cotes = texte.split(" = ").map((cote, k) => {
+      const termes = [];
+      let s = 1;
+      cote.split(" ").forEach(morceau => {
+        if (morceau === "+") { s = 1; return; }
+        if (morceau === "−") { s = -1; return; }
+        const [n, d = "1"] = morceau.split("/");
+        if (n === CASE) cache = {cote: k, i: termes.length, part: "n"};
+        if (d === CASE) cache = {cote: k, i: termes.length, part: "d"};
+        termes.push(Object.freeze({n: n === CASE ? null : Number(n), d: d === CASE ? null : Number(d), s}));
+        s = 1;
+      });
+      return termes;
+    });
+    return {cotes, cache};
+  }
+  const valeurTermeF = t => qf(t.s * t.n, t.d);
+  const valeurCote = termes => termes.reduce((v, t) => qPlus(v, valeurTermeF(t)), [0, 1]);
+  // Les termes avec la case remplie par la réponse.
+  function remplir(lu, r) {
+    return lu.cotes.map((termes, k) => termes.map((t, i) => (k === lu.cache.cote && i === lu.cache.i ? Object.freeze(Object.assign({}, t, lu.cache.part === "d" ? {d: r} : {n: r})) : t)));
+  }
+  // La réponse : ce qui rend les deux côtés égaux.
+  function resoudreFraction(lu) {
+    if (lu.entre) {
+      const n = Math.floor(lu.a / lu.d);
+      return lu.bas === null ? n : n + 1;
+    }
+    const {cote, i, part} = lu.cache;
+    const autres = lu.cotes[cote].filter((_, j) => j !== i);
+    const voulu = qMoins(valeurCote(lu.cotes[1 - cote]), valeurCote(autres));
+    const t = lu.cotes[cote][i];
+    const terme = qf(voulu[0] * t.s, voulu[1]);
+    const r = part === "d" ? qf(t.n * terme[1], terme[0]) : qFois(terme, t.d);
+    return r[1] === 1 && r[0] > 0 ? r[0] : NaN;
+  }
+  // « 1/2 + 1/4 », un terme, ou un côté entier.
+  const ecrireTermeF = t => (t.d === 1 ? f(t.n) : `${f(t.n)}/${f(t.d)}`);
+  const ecrireCote = termes => termes.map((t, i) => `${i ? (t.s < 0 ? "− " : "+ ") : ""}${ecrireTermeF(t)}`).join(" ");
+  const ecrireFractionPleine = (lu, r) => (lu.entre
+    ? `${lu.a}/${lu.d} est entre ${lu.bas === null ? r : lu.bas} et ${lu.haut === null ? r : lu.haut}`
+    : remplir(lu, r).map(ecrireCote).join(" = "));
+
+  // Un calcul de fractions, tiré de son texte. La clé : les nombres dans
+  // l'ordre, « x » pour la case, « q » entre les deux côtés, le signe de
+  // chaque terme (1 : +, 2 : −).
+  function fracCalcul(module, niveau, forme, texte, code) {
+    const lu = lireFraction(texte);
+    const r = resoudreFraction(lu);
+    const morceaux = lu.entre
+      ? [lu.a, lu.d, lu.bas === null ? "x" : lu.bas, lu.haut === null ? "x" : lu.haut]
+      : lu.cotes.flatMap((termes, k) => [...(k ? ["q"] : []), ...termes.flatMap(t => [t.n === null ? "x" : t.n, t.d === null ? "x" : t.d, t.s > 0 ? 1 : 2])]);
+    return {texte, reponse: r, forme, module, niveau, cle: `${module}-${niveau}-${code}-${morceaux.join("-")}`, lu};
+  }
+
+  // ------------------------------------------------ le schéma en barres
+  //
+  // Une barre de 0 à a posée sur la droite, d parts fines par unité (le
+  // plus petit multiple commun des dénominateurs) ; un trait épais toutes
+  // les `gros` parts (le dénominateur le plus grossier). Ce qui est
+  // coloré, ce qui est hachuré, les crochets et l'accolade suivent le
+  // calcul. `revele` : la correction (la case remplie, sans « ? »).
+  function fracBarre(calcul, {revele = false} = {}) {
+    const lu = calcul.lu;
+    const r = calcul.reponse;
+    if (lu.entre) {
+      // F5-3 : 43/8, les unités entières en blocs pleins, la dernière unité
+      // coupée en huitièmes ; l'entier cherché porte « ? ».
+      const n = Math.floor(lu.a / lu.d);
+      return {outil: "barre-droite", a: n + 1, d: lu.d, pris: lu.a, entiers: n, cache: revele ? null : r, haut: [], bas: null};
+    }
+    const plein = remplir(lu, r);
+    const {cote, i} = lu.cache;
+    const termes = plein.flat();
+    const dens = termes.map(t => t.d);
+    const d = dens.reduce(ppcm, 1);
+    const grossier = Math.min(...dens.filter(x => x > 1));
+    const gros = grossier < d && Number.isFinite(grossier) ? d / grossier : 0;
+    const parts = q => q[0] * d / q[1];
+    const caseT = plein[cote][i];
+    const ecritCase = revele ? ecrireTermeF(caseT) : lu.cache.part === "d" ? `${f(caseT.n)}/?` : caseT.d === 1 ? "?" : `?/${f(caseT.d)}`;
+    const seul = lu.cotes[cote].length === 1;
+    const image = {outil: "barre-droite", d, gros, pris: 0, retire: 0, haut: [], bas: null, cache: null};
+    let fin = 0;
+    if (seul) {
+      // La case est seule de son côté : l'autre côté se dessine (une
+      // fraction, une somme, une différence).
+      const e = plein[1 - cote];
+      const total = valeurCote(e);
+      if (e.every(t => t.s > 0)) {
+        image.pris = parts(total);
+        let x = 0;
+        if (e.length > 1 || e[0].d > 1) e.forEach(t => { const w = parts(valeurTermeF(t)); if (t.d > 1) image.haut.push({de: x, a: x + w, texte: ecrireTermeF(t)}); x += w; });
+        fin = qValeur(total);
+      } else {
+        const premier = valeurTermeF(e[0]);
+        image.pris = parts(premier);
+        image.retire = parts(premier) - parts(total);
+        let x = parts(total);
+        e.slice(1).forEach(t => { const w = parts([t.n, t.d]); image.haut.push({de: x, a: x + w, texte: ecrireTermeF(t)}); x += w; });
+        fin = qValeur(premier);
+      }
+      if (caseT.d === 1 && lu.cache.part === "n") image.cache = revele ? null : qValeur(total);
+      else image.bas = {de: 0, a: parts(total), texte: ecritCase, cherche: !revele};
+    } else {
+      // La case est dans une somme ou une différence (17/5 = 3 + □/5,
+      // 2/5 + □/5 = 1, 3/4 − □/4 = 1/2) : la barre dit le tout, les crochets
+      // ce qu'on connaît, l'accolade ce qui manque.
+      const e = plein[cote];
+      const total = valeurCote(plein[1 - cote]);
+      const tout = plein[1 - cote];
+      if (e[i].s > 0) {
+        image.pris = parts(total);
+        let x = 0;
+        e.forEach((t, j) => {
+          const w = parts(valeurTermeF(t));
+          if (j === i) {
+            if (t.d === 1) image.cache = revele ? null : (x + w) / d;
+            else image.bas = {de: x, a: x + w, texte: ecritCase, cherche: !revele};
+          } else if (t.d > 1) image.haut.push({de: x, a: x + w, texte: ecrireTermeF(t)});
+          x += w;
+        });
+        if (tout.length === 1 && tout[0].d === 1 && !e.some(t => t.d === 1)) image.haut.unshift({de: 0, a: parts(total), texte: ecrireTermeF(tout[0])});
+        fin = qValeur(total);
+      } else {
+        // « 3/4 − □/4 = 1/2 » : le premier terme, la part enlevée hachurée.
+        const premier = valeurTermeF(e[0]);
+        image.pris = parts(premier);
+        image.retire = parts(premier) - parts(total);
+        image.haut.push({de: 0, a: parts(premier), texte: ecrireTermeF(e[0])});
+        image.bas = {de: parts(total), a: parts(premier), texte: ecritCase, cherche: !revele};
+        fin = qValeur(premier);
+      }
+    }
+    image.a = Math.max(1, Math.ceil(fin - 1e-9));
+    image.haut = Object.freeze(image.haut.map(Object.freeze));
+    if (image.bas) image.bas = Object.freeze(image.bas);
+    return image;
+  }
+  const fracImage = calcul => Object.freeze(fracBarre(calcul, {revele: true}));
+  const fracAide = calcul => Object.freeze(fracBarre(calcul));
+  const fracPhrase = calcul => fr(`Regarde : ${ecrireFractionPleine(calcul.lu, calcul.reponse)}.`);
+
+  // ------------------------------------------------ les bandes à manipuler
+  //
+  // Le plan des gestes d'un calcul, s'il en a un (sinon null) : les bandes
+  // de départ, puis les étapes (poser, couper, fondre, enlever), chacune
+  // avec sa consigne ; la trace écrite au bout, avec l'étape
+  // (« 1/2 + 1/4 = 2/4 + 1/4 = 3/4 »). Au plus 8 gestes, et des bandes
+  // assez larges (30 parts au plus sur la droite).
+  const FRAC_GESTES_MAX = 8;
+  const FRAC_PARTS_MAX = 30;
+  const DENS_RESERVE = Object.freeze([2, 3, 4, 5, 6, 8, 10, 12]);
+  const bandesDe = (t, couleur) => (t.d === 1 ? Array.from({length: t.n}, () => ({d: 1, de: couleur})) : Array.from({length: t.n}, () => ({d: t.d})));
+  // Couper ou fondre pour tout écrire en 1/T (T = 1 : en unités).
+  function convertir(pieces, T, etapes, consignes) {
+    const liste = pieces.slice();
+    let k = 0;
+    while (k < liste.length) {
+      const p = liste[k];
+      if (p.enleve || p.d === T) { k += 1; continue; }
+      if (T % p.d === 0) {
+        const en = T / p.d;
+        etapes.push({geste: "couper", piece: k, en, consigne: consignes.couper(p, T)});
+        liste.splice(k, 1, ...Array.from({length: en}, () => ({d: T})));
+        k += en;
+        continue;
+      }
+      // Un paquet de bandes plus fines qui fait 1/T.
+      let somme = [0, 1];
+      let n = 0;
+      while (k + n < liste.length && qValeur(somme) < 1 / T - 1e-9) { somme = qPlus(somme, [1, liste[k + n].d]); n += 1; }
+      if (!qEgal(somme, qf(1, T)) || n < 2) return null;
+      etapes.push({geste: "fondre", piece: k, n, d: T, consigne: consignes.fondre(liste.slice(k, k + n))});
+      liste.splice(k, n, {d: T, de: T === 1 ? liste[k].d : T});
+      k += 1;
+    }
+    return liste;
+  }
+  const FRAC_CONSIGNES = Object.freeze({
+    couper(p, T) {
+      const en = nomParts(T) ? `en ${nomParts(T)}` : `en ${T / p.d}`;
+      if (p.d === 1) return `1, c’est combien de ${nomParts(T) || `parts de 1/${T}`} ? Touche 1 : il se coupe ${en}.`;
+      return `Touche 1/${p.d} : il se coupe ${en}.`;
+    },
+    // (Sans dire ce que fait le paquet : « 2 quarts font 1/2 » donnerait la
+    // réponse de « 2/4 = □/2 ».)
+    fondre(paquet) {
+      const memes = paquet.every(p => p.d === paquet[0].d);
+      const quoi = memes && nomParts(paquet[0].d) ? `les ${enParts(paquet.length, paquet[0].d)}` : "ces bandes";
+      return `Touche le paquet : ${quoi} deviennent une seule bande.`;
+    }
+  });
+  function fracManipulation(calcul) {
+    const lu = calcul.lu;
+    if (lu.entre) return null;
+    const r = calcul.reponse;
+    const plein = remplir(lu, r);
+    const {cote, i} = lu.cache;
+    const caseT = plein[cote][i];
+    const etapes = [];
+    let depart = [];
+    let pieces;
+    let milieu = null;
+    let reserve = [];
+    if (lu.cotes[cote].length === 1) {
+      const e = plein[1 - cote];
+      const T = caseT.d;
+      if (e.every(t => t.s > 0)) {
+        const fin = valeurCote(e);
+        const poser = e.length > 1 && e.every(t => t.d > 1);
+        const couleur = T;
+        if (poser) {
+          pieces = [];
+          e.forEach(t => {
+            etapes.push({geste: "poser", d: t.d, n: t.n, consigne: `Pose ${e.map(ecrireTermeF).join(", puis ")} : touche la bonne bande.`});
+            pieces.push(...bandesDe(t));
+          });
+          reserve = [...new Set(e.map(t => t.d))];
+        } else {
+          depart = e.flatMap(t => bandesDe(t, couleur));
+          pieces = depart.slice();
+        }
+        if (!convertir(pieces, T, etapes, FRAC_CONSIGNES)) return null;
+        // L'étape écrite : chaque terme en 1/T, quand c'est possible.
+        if (T > 1 && e.length > 1 && e.some(t => t.d !== T) && e.every(t => T % t.d === 0)) milieu = e.map(t => ({n: t.n * T / t.d, d: T, s: t.s}));
+        if (T > 1 && e.length === 1 && e[0].d !== T && e[0].d === 1) milieu = null;
+        void fin;
+      } else {
+        // Une différence : le premier terme posé, coupé s'il le faut, puis
+        // on enlève ; le résultat dans les mêmes parts (sinon, pas de geste).
+        const Tp = e.map(t => t.d).reduce(ppcm, 1);
+        if (Tp !== T) return null;
+        depart = bandesDe(e[0], T);
+        pieces = convertir(depart.slice(), T, etapes, FRAC_CONSIGNES);
+        if (!pieces) return null;
+        const enlever = qMoins(valeurTermeF(e[0]), valeurCote(e)) ;
+        const nombre = enlever[0] * T / enlever[1];
+        const retires = e.slice(1).map(ecrireTermeF).join(" et ");
+        const reste = pieces.map((_, k) => k);
+        for (let k = 0; k < nombre; k += 1) {
+          const piece = reste.pop();
+          etapes.push({geste: "enlever", piece, parmi: reste.concat([piece]), consigne: `Enlève ${retires} : touche ${nombre > 1 ? "les" : "le"} ${nomParts(T, nombre > 1) || `bandes de 1/${T}`} à enlever.`});
+        }
+        if (e.some(t => t.d !== T)) milieu = e.map(t => ({n: t.n * T / t.d, d: T, s: t.s}));
+      }
+    } else if (cote === 1 && plein[0].length === 1 && plein[1][0].d === 1 && plein[1].length === 2) {
+      // « 17/5 = 3 + □/5 », « 9/4 = □ + 1/4 » : les parts posées, on fond
+      // chaque paquet qui fait 1.
+      const a = plein[0][0];
+      depart = bandesDe(a);
+      pieces = depart.slice();
+      const n = plein[1][0].n;
+      for (let k = 0; k < n; k += 1) {
+        etapes.push({geste: "fondre", piece: k, n: a.d, d: 1, consigne: `${enParts(a.d, a.d)} font 1 : touche le paquet.`});
+      }
+    } else {
+      return null;
+    }
+    if (!etapes.length || etapes.length > FRAC_GESTES_MAX) return null;
+    // La droite : de 0 à la plus grande longueur posée.
+    const longueur = Math.max(...[depart, pieces].map(liste => liste.reduce((s, p) => s + 1 / p.d, 0)));
+    const a = Math.max(1, Math.ceil(longueur - 1e-9));
+    const plusFin = Math.max(...plein.flat().map(t => t.d));
+    if (a * plusFin > FRAC_PARTS_MAX || a > 6) return null;
+    if (reserve.length) {
+      // La réserve : les bonnes bandes, et une ou deux autres, tant que tout
+      // tient sur une ligne.
+      // (D'abord la moitié de la plus petite bande, comme 1/8 à côté de 1/2
+      // et 1/4 ; puis les plus proches.)
+      const u = 360 / a;
+      const largeur = liste => liste.reduce((s, d) => s + u / d, 0) + 14 * (liste.length - 1);
+      const fin = Math.max(...reserve);
+      const autres = DENS_RESERVE.filter(d => !reserve.includes(d)).sort((p, q) => (q === 2 * fin) - (p === 2 * fin) || Math.abs(p - fin) - Math.abs(q - fin) || q - p);
+      for (const d of autres) if (reserve.length < 3 && largeur([...reserve, d]) <= 360) reserve.push(d);
+      reserve.sort((p, q) => p - q);
+    }
+    const plein1 = ecrireFractionPleine(lu, r);
+    const [gauche, droite] = plein1.split(" = ");
+    const fini = milieu ? `${cote === 1 ? gauche : droite} = ${ecrireCote(milieu)} = ${cote === 1 ? droite : gauche}` : plein1;
+    const texte = lu.cotes[cote].length === 1 ? ecrireCote(plein[1 - cote]) : calcul.texte;
+    return Object.freeze({
+      outil: "bandes", a, grad: plusFin, texte,
+      depart: Object.freeze(depart.map(Object.freeze)),
+      etapes: Object.freeze(etapes.map(e => Object.freeze(Object.assign({}, e, {consigne: fr(e.consigne)}, e.parmi ? {parmi: Object.freeze(e.parmi.slice())} : {})))),
+      reserve: Object.freeze(reserve),
+      consigne: fr(etapes[0].consigne), refus: null,
+      traces: Object.freeze([Object.freeze({apres: etapes.length, attente: `${texte} = …`, texte: fini})])
+    });
+  }
+
+  // ------------------------------------------------ J'apprends des fractions
+  //
+  // Les bandes sur le premier calcul (quand le niveau en a), la barre sur
+  // le deuxième, la barre qui se remplit sur le troisième. `morceaux` : ce
+  // que chaque étape de J'écris fait apparaître — {ecrit: entier} (la
+  // graduation se réécrit en fraction : « 1 = 4/4 »), {gros} (les traits
+  // épais : « chaque cinquième, 4 vingtièmes »), {haut: k} (un crochet
+  // caché qui apparaît), {bas: true} (la case trouvée), {} (rien de plus).
+  // L'exemple : le calcul sans sa case quand elle est seule à droite
+  // (« 1/2 + 1/4 »), sinon le calcul avec « ? ».
+  // (« 3/4 = ?/12 », « 1/4 + 1/4 = ?/2 » gardent leur droite : on y dit en
+  // quelles parts écrire.)
+  function exempleFraction(calcul) {
+    const lu = calcul.lu;
+    const droite = lu.cache && lu.cache.cote === 1 && lu.cotes[1].length === 1 ? lu.cotes[1][0] : null;
+    const seule = droite && lu.cotes[0].length > 1 && lu.cache.part === "n" && droite.d === Math.max(...lu.cotes[0].map(t => t.d));
+    return Object.freeze({texte: seule ? ecrireCote(lu.cotes[0]) : calcul.texte.replace(CASE, "?"), reponse: calcul.reponse});
+  }
+  function fracEcrisDessins(calcul, etapes, morceaux, {haut = []} = {}) {
+    const aide = fracBarre(calcul);
+    const correction = fracBarre(calcul, {revele: true});
+    const avecEcrits = morceaux.some(m => m.ecrit !== undefined);
+    const base = Object.assign({}, aide, {hautEtiquettes: avecEcrits ? 40 : 24, haut: [...aide.haut, ...haut.map(h => Object.assign({masque: true}, h))]});
+    const gros = morceaux.find(m => m.gros);
+    const dessin = (vus, revele = false) => {
+      const image = Object.assign({}, base);
+      const vu = cle => vus.some(m => m[cle] !== undefined);
+      image.ecrits = {};
+      morceaux.forEach((m, k) => {
+        if (m.ecrit === undefined) return;
+        if (revele || vus.includes(m)) image.ecrits[m.ecrit] = Object.freeze({texte: m.texte, trouve: !revele});
+      });
+      image.ecrits = Object.freeze(image.ecrits);
+      if (gros) image.gros = revele || vu("gros") ? gros.gros : 0;
+      // Un crochet caché qui apparaît, ou un crochet réécrit (« 1/2 » devient
+      // « 2/4 »), en vert à son étape.
+      image.haut = Object.freeze(base.haut.map((h, k) => {
+        const m = morceaux.find(x => x.haut === k);
+        const fait = Boolean(m && (revele || vus.includes(m)));
+        return Object.freeze(Object.assign({}, h, {masque: Boolean(h.masque) && !fait, trouve: fait && !revele}, fait && m.texte ? {texte: m.texte} : {}));
+      }));
+      if (revele || vu("bas")) {
+        if (correction.bas) image.bas = Object.freeze(Object.assign({}, correction.bas, {trouve: !revele}));
+        image.cache = null;
+        if (aide.cache !== null && !revele) image.ecrits = Object.freeze(Object.assign({}, image.ecrits, {[aide.cache]: Object.freeze({texte: String(aide.cache), trouve: true})}));
+      }
+      return Object.freeze(image);
+    };
+    return dessinsDe(morceaux, etapes.length, dessin);
+  }
+  function fracApprends({fiche, manipule = null, represente, ecris, consigne, consigneEcris, etapes, morceaux, haut = [], bilan}) {
+    const premier = manipule || represente;
+    return Object.freeze({
+      exemple: exempleFraction(premier),
+      manipule: manipule ? fracManipulation(manipule) : null,
+      represente: Object.freeze({
+        outil: "barre-droite", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: fracAide(represente),
+        solution: Object.freeze({image: fracImage(represente), phrase: fracPhrase(represente)})
+      }),
+      ecris: ecrisAvecDessins({
+        consigne: fr(consigneEcris),
+        etapes: etapesEcris(etapes), reponse: ecris.reponse,
+        solution: Object.freeze({image: fracImage(ecris), phrase: fracPhrase(ecris)})
+      }, fracEcrisDessins(ecris, etapes, morceaux, {haut})),
+      bilan: frBilan(bilan),
+      image: fracImage(represente),
+      textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
+    });
+  }
+
+  // Les données d'un calcul : la réponse, et les réponses fausses des
+  // erreurs connues (−1 quand une erreur n'a pas de sens ici) — la page du
+  // professeur les retrouve pour son exemple.
+  const finirCalcul = (calcul, donnees) => Object.freeze(Object.assign({}, calcul, {donnees: Object.freeze(Object.assign({r: calcul.reponse}, donnees))}));
+  const sansPareil = (calcul, valeur) => (valeur > 0 && Number.isInteger(valeur) && valeur !== calcul.reponse ? valeur : -1);
+
+  // Les parts d'une barre de 0 à a : au plus 30 (au téléphone, la barre a
+  // environ 300 px : une part de 10 px se compte encore).
+  const FRAC_BARRE_MAX = 30;
+  const tientSurLaBarre = (valeur, d) => Math.ceil(valeur - 1e-9) * d <= FRAC_BARRE_MAX;
+  const enUnites = n => `${n} unité${n > 1 ? "s" : ""}`;
+  // Les nombres « numérateurs seuls » : le calcul refait avec les
+  // numérateurs comme s'ils étaient des parts de la même taille.
+  function numerateursSeuls(lu) {
+    if (lu.entre || lu.cache.part === "d") return -1;
+    const {cote, i} = lu.cache;
+    const somme = termes => termes.reduce((s, t, j) => s + (t.n === null ? 0 : t.s * t.n), 0);
+    const t = lu.cotes[cote][i];
+    const x = t.s * (somme(lu.cotes[1 - cote]) - somme(lu.cotes[cote].filter((_, j) => j !== i)));
+    return x;
+  }
+  // Les dénominateurs d'un calcul lu (la case en moins).
+  const densDe = lu => lu.cotes.flat().map(t => t.d).filter(d => d !== null);
+
+  // ------------------------------------------------ F2 : demis, quarts et unité
+  //
+  // Seulement 1/2, 1/4, 2/4, 1 au niveau 1 ; 3/4 dans le calcul ou au
+  // résultat au niveau 2. Des viviers écrits à la main : les petits viviers
+  // de faits (décision technique : un peu plus de 30 calculs par niveau,
+  // tous de la même sorte, plutôt que des reprises dans une série).
+  const F2_CODES = Object.freeze({somme: 1, difference: 2, egale: 3, complement: 4});
+  function f2Calcul(niveau, forme, texte) {
+    const c = fracCalcul("F2", niveau, forme, texte, F2_CODES[forme]);
+    const lu = c.lu;
+    const caseT = lu.cotes[lu.cache.cote][lu.cache.i];
+    const plein = remplir(lu, c.reponse);
+    const T = lu.cache.part === "d" ? c.reponse : caseT.d;
+    const autres = densDe(lu).filter(d => d !== T);
+    const autre = autres.length ? autres.reduce((m, d) => (d < m ? d : m), autres[0]) : 1;
+    const v = valeurTermeF(plein[lu.cache.cote][lu.cache.i]);
+    const e = plein[1 - lu.cache.cote];
+    const avecMoins = lu.cotes[lu.cache.cote].length === 1 && e.some(t => t.s < 0);
+    const sens = avecMoins ? (() => { const q = e.reduce((s, t) => qPlus(s, [t.n, t.d]), [0, 1]); const x = qFois(q, T); return x[1] === 1 ? x[0] : -1; })() : -1;
+    const compte = lu.cache.part === "d" ? autre : (() => { const x = qFois(v, autre); return x[1] === 1 ? x[0] : -1; })();
+    // (Une égalité « 1/2 = □/4 » : recopier le numérateur, c'est compter
+    // dans les mauvaises parts — la cause 3.)
+    const plusieurs = lu.cotes.flat().length > 2;
+    return finirCalcul(c, {
+      numerateurs: plusieurs ? sansPareil(c, numerateursSeuls(lu)) : -1,
+      sens: sansPareil(c, sens),
+      compte: sansPareil(c, compte), autre
+    });
+  }
+  const F2_VIVIERS = Object.freeze({
+    1: Object.freeze({
+      somme: ["1/2 + 1/2 = □", "1/2 + 1/2 = □/2", "1/2 + 1/2 = □/4", "1/4 + 1/4 = □/4", "1/4 + 1/4 = □/2", "1/4 + 1/4 = 1/□",
+        "2/4 + 2/4 = □", "2/4 + 2/4 = □/4", "2/4 + 2/4 = □/2", "1/2 + 2/4 = □", "2/4 + 1/2 = □", "1/2 + 2/4 = □/4", "2/4 + 1/2 = □/2",
+        "1/4 + 1/4 + 1/2 = □", "1/2 + 1/4 + 1/4 = □", "1/4 + 1/4 + 1/4 + 1/4 = □", "1/4 + 1/4 + 1/4 + 1/4 = □/2"].map(t => f2Calcul(1, "somme", t)),
+      difference: ["1 − 1/2 = □/2", "1 − 1/2 = □/4", "1 − 2/4 = □/4", "1 − 2/4 = □/2", "1/2 − 1/4 = □/4", "2/4 − 1/4 = □/4",
+        "1 − 1/4 − 1/4 = □/2", "1 − 1/4 − 1/4 = □/4", "2/2 − 1/2 = □/2", "4/4 − 2/4 = □/4", "4/4 − 2/4 = □/2"].map(t => f2Calcul(1, "difference", t)),
+      egale: ["1/2 = □/4", "2/4 = □/2", "1 = □/2", "1 = □/4", "1/2 = 2/□", "2/4 = 1/□", "1 = 2/□", "1 = 4/□", "4/4 = □", "2/2 = □"].map(t => f2Calcul(1, "egale", t))
+    }),
+    2: Object.freeze({
+      somme: ["1/2 + 1/4 = □/4", "1/4 + 1/2 = □/4", "2/4 + 1/4 = □/4", "1/4 + 2/4 = □/4", "1/4 + 1/4 + 1/4 = □/4", "3/4 + 1/4 = □", "1/4 + 3/4 = □",
+        "3/4 + 1/4 = □/4", "3/4 + 1/2 = □/4", "1/2 + 3/4 = □/4", "3/4 + 2/4 = □/4", "3/4 + 3/4 = □/2", "3/4 + 3/4 = □/4"].map(t => f2Calcul(2, "somme", t)),
+      difference: ["1 − 1/4 = □/4", "1 − 3/4 = □/4", "3/4 − 1/2 = □/4", "3/4 − 2/4 = □/4", "3/4 − 1/4 = □/2", "3/4 − 1/4 = □/4",
+        "3/4 − 1/4 − 1/4 = □/4", "1 − 1/4 = 3/□"].map(t => f2Calcul(2, "difference", t)),
+      complement: ["3/4 + □/4 = 1", "1/4 + □/4 = 1", "1/2 + □/4 = 3/4", "1/4 + □/4 = 3/4", "3/4 − □/4 = 1/2", "3/4 − □/4 = 1/4",
+        "1 − □/4 = 3/4", "1 − □/4 = 1/4", "3/4 = 1/2 + □/4", "3/4 = 1/4 + □/4", "1 = 3/4 + □/4"].map(t => f2Calcul(2, "complement", t))
+    })
+  });
+  const f2 = (niveau, texte) => {
+    const tous = Object.values(F2_VIVIERS[niveau]).flat();
+    const trouve = tous.find(c => c.texte === texte);
+    if (!trouve) throw new Error(`F2-${niveau} : ${texte}`);
+    return trouve;
+  };
+  // Le même calcul hors série (J'apprends : niveau 0).
+  const pourApprendre = calcul => Object.freeze(Object.assign({}, calcul, {niveau: 0, cle: calcul.cle.replace(/^(\w+)-\d+-/, "$1-0-")}));
+  const F2_RANGS = Object.freeze({egale: 0, somme: 1, difference: 2, complement: 3});
+  function f2Difficulte(calcul) {
+    const lu = calcul.lu;
+    return F2_RANGS[calcul.forme] * 1000 + lu.cotes.flat().length * 100 + (lu.cache.part === "d" ? 50 : 0) + calcul.reponse;
+  }
+  const nomDe = d => nomParts(d) || `parts de 1/${d}`;
+  const F2_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "les numérateurs seuls, comme si les parts étaient de la même taille",
+      test: sauf((calcul, reponse) => calcul.donnees.numerateurs > 0 && memeNombre(reponse, calcul.donnees.numerateurs)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as calculé avec les numérateurs seuls. Les parts ne sont pas de la même taille : écris tout en ${nomDe(densDe(calcul.lu).reduce(ppcm, 1))}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "le mauvais sens",
+      test: sauf((calcul, reponse) => calcul.donnees.sens > 0 && memeNombre(reponse, calcul.donnees.sens)),
+      retour: (calcul, reponse) => {
+        const lu = calcul.lu;
+        const e = lu.cotes[1 - lu.cache.cote];
+        return fr(`${f(reponse)} : tu as ajouté. Ici, on enlève ${etListe(e.filter(t => t.s < 0).map(ecrireTermeF))}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "compté dans les mauvaises parts",
+      test: sauf((calcul, reponse) => calcul.donnees.compte > 0 && memeNombre(reponse, calcul.donnees.compte)),
+      retour: (calcul, reponse) => {
+        const lu = calcul.lu;
+        if (lu.cache.part === "d") return fr(`${f(reponse)} : tu as recopié un dénominateur. Cherche en combien de parts égales l’unité est coupée.`);
+        const caseT = lu.cotes[lu.cache.cote][lu.cache.i];
+        const autre = calcul.donnees.autre;
+        return fr(`${f(reponse)} : tu as compté des ${autre === 1 ? "unités" : nomDe(autre)}. Ici, on compte des ${caseT.d === 1 ? "unités" : nomDe(caseT.d)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  const F2 = {
+    id: "F2", nom: "Demis, quarts et unité", exemple: "1/2 + 1/2",
+    famille: "F", construit: true,
+    aide_entraine: "barre-droite",
+    erreurs: F2_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, manipulation: fracManipulation, difficulte: f2Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "demis et quarts", nom: "Demis et quarts", palier: 2, type: "F",
+        composer: vivierNiveau(F2_VIVIERS[1], [5, 4, 3]),
+        imposes: [f2(1, "1/2 + 1/2 = □"), f2(1, "2/4 = □/2")],
+        apprends: fracApprends({
+          fiche: "F2",
+          manipule: pourApprendre(f2(1, "1/4 + 1/4 = □/2")),
+          represente: pourApprendre(f2(1, "1 − 1/2 = □/2")),
+          ecris: pourApprendre(f2(1, "1/2 = □/4")),
+          consigne: "Une unité, c’est 2 demis.",
+          consigneEcris: "J’écris en quarts.",
+          etapes: [["1 = ?/4", 4], ["1/2 = ?/4", 2]],
+          morceaux: [{ecrit: 1, texte: "4/4"}, {bas: true}],
+          bilan: "Une unité, c’est 2 demis : 1 − 1/2 = 1/2."
+        })
+      },
+      {
+        n: 2, titre: "avec 3/4", nom: "Demis et quarts, avec 3/4", palier: 3, type: "F",
+        composer: vivierNiveau(F2_VIVIERS[2], [5, 4, 3]),
+        imposes: [f2(2, "3/4 + 1/4 = □"), f2(2, "1 − 3/4 = □/4")],
+        apprends: fracApprends({
+          fiche: "F2",
+          manipule: pourApprendre(f2(2, "1/2 + 1/4 = □/4")),
+          represente: pourApprendre(f2(2, "1 − 1/4 = □/4")),
+          ecris: pourApprendre(f2(2, "3/4 − 1/2 = □/4")),
+          consigne: "Une unité, c’est 4 quarts.",
+          consigneEcris: "J’écris en quarts.",
+          etapes: [["1/2 = ?/4", 2], ["3/4 − 2/4 = ?/4", 1]],
+          morceaux: [{haut: 0, texte: "2/4"}, {bas: true}],
+          bilan: "4 quarts moins 1 quart, c’est 3 quarts : 1 − 1/4 = 3/4."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------ F5 : entier et fraction
+  //
+  // Dénominateurs de 2 à 9 (jamais 10 : D1), des fractions sous 6 ; aux
+  // niveaux 1 et 2, au plus 30 parts sur la barre.
+  const F5_CODES = Object.freeze({decomposer: 1, recomposer: 2, entier: 3, encadrer: 4, "encadrer-bas": 5});
+  function f5Calcul(niveau, forme, texte) {
+    const c = fracCalcul("F5", niveau, forme, texte, F5_CODES[forme]);
+    const lu = c.lu;
+    const d = {quotient: -1, retranche: -1, ajoute: -1, oubli: -1, meme: -1};
+    if (forme === "decomposer") {
+      const [a] = lu.cotes[0];
+      const n = lu.cotes[1][0].n;
+      Object.assign(d, {quotient: sansPareil(c, n), retranche: sansPareil(c, a.n - n)});
+    } else if (forme === "entier") {
+      const [a] = lu.cotes[0];
+      const reste = lu.cotes[1][1].n;
+      Object.assign(d, {quotient: sansPareil(c, reste), retranche: sansPareil(c, a.n - reste)});
+    } else if (forme === "recomposer") {
+      const [n, t] = lu.cotes[0];
+      Object.assign(d, {ajoute: sansPareil(c, n.n + t.n), oubli: sansPareil(c, t.n)});
+    } else {
+      Object.assign(d, {meme: sansPareil(c, lu.bas === null ? lu.haut : lu.bas)});
+    }
+    return finirCalcul(c, d);
+  }
+  const fraction = (a, d) => `${a}/${d}`;
+  function f5Vivier(niveau) {
+    const decompositions = [];
+    entre(2, 9).forEach(d => entre(d + 1, 6 * d - 1).forEach(a => { if (a % d) decompositions.push([a, d]); }));
+    const surLaBarre = decompositions.filter(([a, d]) => tientSurLaBarre(a / d, d));
+    if (niveau === 1) return Object.freeze({decomposer: surLaBarre.map(([a, d]) => f5Calcul(1, "decomposer", `${fraction(a, d)} = ${Math.floor(a / d)} + ${CASE}/${d}`))});
+    if (niveau === 2) {
+      return Object.freeze({
+        recomposer: surLaBarre.map(([a, d]) => f5Calcul(2, "recomposer", `${Math.floor(a / d)} + ${fraction(a % d, d)} = ${CASE}/${d}`)),
+        entier: surLaBarre.map(([a, d]) => f5Calcul(2, "entier", `${fraction(a, d)} = ${CASE} + ${fraction(a % d, d)}`))
+      });
+    }
+    return Object.freeze({
+      encadrer: decompositions.map(([a, d]) => f5Calcul(3, "encadrer", `${fraction(a, d)} est entre ${Math.floor(a / d)} et ${CASE}`)),
+      "encadrer-bas": decompositions.map(([a, d]) => f5Calcul(3, "encadrer-bas", `${fraction(a, d)} est entre ${CASE} et ${Math.floor(a / d) + 1}`))
+    });
+  }
+  const F5_VIVIERS = Object.freeze({1: f5Vivier(1), 2: f5Vivier(2), 3: f5Vivier(3)});
+  const trouverDans = (viviers, module, niveau, texte) => {
+    const trouve = Object.values(viviers[niveau]).flat().find(c => c.texte === texte);
+    if (!trouve) throw new Error(`${module}-${niveau} : ${texte}`);
+    return trouve;
+  };
+  const f5 = (niveau, texte) => trouverDans(F5_VIVIERS, "F5", niveau, texte);
+  const F5_RANGS = Object.freeze({decomposer: 0, recomposer: 0, entier: 1, encadrer: 0, "encadrer-bas": 1});
+  function f5Difficulte(calcul) {
+    const lu = calcul.lu;
+    const [a, d] = lu.entre ? [lu.a, lu.d] : calcul.forme === "recomposer" ? [lu.cotes[0][0].n * lu.cotes[0][1].d + lu.cotes[0][1].n, lu.cotes[0][1].d] : [lu.cotes[0][0].n, lu.cotes[0][0].d];
+    return F5_RANGS[calcul.forme] * 1000 + Math.floor(a / d) * 60 + d * 5 + a / 10;
+  }
+  const F5_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le quotient et le reste confondus",
+      test: sauf((calcul, reponse) => calcul.donnees.quotient > 0 && memeNombre(reponse, calcul.donnees.quotient)),
+      retour: (calcul, reponse) => {
+        const d = calcul.lu.cotes[0][0].d;
+        return calcul.forme === "entier"
+          ? fr(`${f(reponse)}, c’est le nombre de ${nomDe(d)} qui restent. Ici, on cherche le nombre d’unités.`)
+          : fr(`${f(reponse)}, c’est le nombre d’unités. Ici, on cherche les ${nomDe(d)} qui restent.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "des parts comptées comme des unités",
+      test: sauf((calcul, reponse) => calcul.donnees.retranche > 0 && memeNombre(reponse, calcul.donnees.retranche)),
+      retour: (calcul, reponse) => {
+        const [a] = calcul.lu.cotes[0];
+        if (calcul.forme === "entier") return fr(`${f(reponse)} : ce sont des ${nomDe(a.d)}, pas des unités. Combien d’unités dans ${enParts(reponse, a.d)} ?`);
+        const n = calcul.lu.cotes[1][0].n;
+        return fr(`${f(reponse)} : tu as retiré ${n} de ${a.n}. Mais ${enUnites(n)}, c’est ${enParts(n * a.d, a.d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "l’entier ajouté au numérateur",
+      test: sauf((calcul, reponse) => calcul.donnees.ajoute > 0 && memeNombre(reponse, calcul.donnees.ajoute)),
+      retour: (calcul, reponse) => {
+        const [n, t] = calcul.lu.cotes[0];
+        return fr(`${f(reponse)}, c’est ${n.n} + ${t.n}. Une unité, c’est ${enParts(t.d, t.d)}${n.n > 1 ? ` : ${enUnites(n.n)}, c’est ${enParts(n.n * t.d, t.d)}` : ""}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "l’entier oublié",
+      test: sauf((calcul, reponse) => calcul.donnees.oubli > 0 && memeNombre(reponse, calcul.donnees.oubli)),
+      retour: (calcul, reponse) => {
+        const [n, t] = calcul.lu.cotes[0];
+        return fr(`${f(reponse)} : tu as oublié ${n.n === 1 ? "l’unité" : `les ${n.n} unités`}. Une unité, c’est ${enParts(t.d, t.d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 5, nom: "le même entier",
+      test: sauf((calcul, reponse) => calcul.donnees.meme > 0 && memeNombre(reponse, calcul.donnees.meme)),
+      retour: (calcul, reponse) => {
+        const lu = calcul.lu;
+        return lu.bas === null
+          ? fr(`${f(reponse)} : c’est le même entier. ${fraction(lu.a, lu.d)} est plus petit que ${f(reponse)} : cherche l’entier juste avant.`)
+          : fr(`${f(reponse)} : c’est le même entier. ${fraction(lu.a, lu.d)} est plus grand que ${f(reponse)} : cherche l’entier juste après.`);
+      },
+      gras: 0
+    })
+  ]);
+  const F5 = {
+    id: "F5", nom: "Entier et fraction", exemple: "17/5 = 3 + ?/5",
+    famille: "F", construit: true,
+    aide_entraine: "barre-droite",
+    erreurs: F5_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, difficulte: f5Difficulte,
+    // Le niveau 3 (encadrer) n'a pas de bandes à manipuler (décision du 04/11).
+    manipulation: calcul => (calcul.niveau === 3 ? null : fracManipulation(calcul)),
+    niveaux: [
+      {
+        n: 1, titre: "décomposer", nom: "Fraction : entier et reste", palier: 2, type: "P",
+        composer: vivierNiveau(F5_VIVIERS[1], [10]),
+        imposes: [f5(1, "13/4 = 3 + □/4"), f5(1, "8/3 = 2 + □/3")],
+        apprends: fracApprends({
+          fiche: "F5",
+          manipule: pourApprendre(f5(1, "17/5 = 3 + □/5")),
+          represente: pourApprendre(f5(1, "11/4 = 2 + □/4")),
+          ecris: pourApprendre(f5(1, "23/6 = 3 + □/6")),
+          consigne: "4 quarts font une unité.",
+          consigneEcris: "6 sixièmes font une unité.",
+          etapes: [["3 = ?/6", 18], ["23/6 = 18/6 + ?/6", 5], ["23/6 = 3 + ?/6", 5]],
+          morceaux: [{ecrit: 3, texte: "18/6"}, {bas: true}, {}],
+          bilan: "11 quarts, c’est 2 unités (8 quarts) et 3 quarts : 11/4 = 2 + 3/4."
+        })
+      },
+      {
+        n: 2, titre: "décomposer et recomposer", nom: "Fraction : décomposer, recomposer", palier: 2, type: "P",
+        composer: vivierNiveau(F5_VIVIERS[2], [5, 5]),
+        imposes: [f5(2, "1 + 3/4 = □/4"), f5(2, "11/3 = □ + 2/3")],
+        apprends: fracApprends({
+          fiche: "F5",
+          manipule: pourApprendre(f5(2, "2 + 2/3 = □/3")),
+          represente: pourApprendre(f5(2, "9/4 = □ + 1/4")),
+          ecris: pourApprendre(f5(2, "3 + 4/5 = □/5")),
+          consigne: "4 quarts font une unité.",
+          consigneEcris: "5 cinquièmes font une unité.",
+          etapes: [["3 = ?/5", 15], ["15/5 + 4/5 = ?/5", 19]],
+          morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
+          bilan: "9 quarts, c’est 2 unités et 1 quart : 9/4 = 2 + 1/4."
+        })
+      },
+      {
+        n: 3, titre: "encadrer entre deux entiers", nom: "Fraction entre deux entiers", palier: 3, type: "P",
+        composer: vivierNiveau(F5_VIVIERS[3], [5, 5]),
+        imposes: [f5(3, "17/3 est entre 5 et □"), f5(3, "11/2 est entre □ et 6")],
+        apprends: fracApprends({
+          fiche: "F5",
+          represente: pourApprendre(f5(3, "43/8 est entre 5 et □")),
+          ecris: pourApprendre(f5(3, "23/4 est entre □ et 6")),
+          consigne: "8 huitièmes font une unité.",
+          consigneEcris: "4 quarts font une unité.",
+          etapes: [["5 = ?/4", 20], ["23/4 est entre ? et 6", 5]],
+          morceaux: [{haut: 0}, {bas: true}],
+          haut: [{de: 0, a: 20, texte: "20/4"}],
+          bilan: "43/8 = 5 + 3/8 : 43/8 est entre 5 et 6."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------ F6 : fractions égales
+  //
+  // a/d irréductible, d de 2 à 9, un coefficient k ≥ 2, le dénominateur
+  // d'arrivée au plus 30 (les parts se comptent), jamais 10 (F1, D1) ;
+  // jamais une égalité aux dénominateurs 2 et 4 (F2).
+  const F6_CODES = Object.freeze({multiplier: 1, diviser: 2, "diviser-den": 3, denominateur: 4, "denominateur-gauche": 5});
+  function f6Calcul(niveau, forme, a, d, k) {
+    const A = k * a;
+    const D = k * d;
+    const textes = {
+      multiplier: `${a}/${d} = ${CASE}/${D}`,
+      diviser: `${A}/${D} = ${CASE}/${d}`,
+      "diviser-den": `${A}/${D} = ${a}/${CASE}`,
+      denominateur: `${a}/${d} = ${A}/${CASE}`,
+      "denominateur-gauche": `${a}/${CASE} = ${A}/${D}`
+    };
+    const c = fracCalcul("F6", niveau, forme, textes[forme], F6_CODES[forme]);
+    const ajoute = {multiplier: a + D - d, diviser: A - (D - d), "diviser-den": D - (A - a), denominateur: d + (A - a), "denominateur-gauche": D - (A - a)}[forme];
+    const recopie = {multiplier: a, diviser: A, "diviser-den": D, denominateur: d, "denominateur-gauche": D}[forme];
+    return finirCalcul(c, {a, d, k, ajoute: sansPareil(c, ajoute), recopie: sansPareil(c, recopie), coef: sansPareil(c, k)});
+  }
+  function f6Triplets() {
+    const liste = [];
+    entre(2, 9).forEach(d => entre(1, d - 1).forEach(a => {
+      if (pgcd(a, d) !== 1) return;
+      entre(2, 15).forEach(k => {
+        const D = k * d;
+        if (D > 30 || D === 10 || (d === 2 && D === 4)) return;
+        liste.push([a, d, k]);
+      });
+    }));
+    return liste;
+  }
+  const F6_TRIPLETS = Object.freeze(f6Triplets());
+  const F6_VIVIERS = Object.freeze({
+    1: Object.freeze({multiplier: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(1, "multiplier", a, d, k))}),
+    2: Object.freeze({diviser: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k))}),
+    3: Object.freeze({denominateur: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur", a, d, k)), "denominateur-gauche": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur-gauche", a, d, k))})
+  });
+  const f6 = (niveau, texte) => trouverDans(F6_VIVIERS, "F6", niveau, texte);
+  const F6_RANGS = Object.freeze({multiplier: 0, diviser: 0, "diviser-den": 1, denominateur: 0, "denominateur-gauche": 1});
+  const f6Difficulte = calcul => F6_RANGS[calcul.forme] * 1000 + calcul.donnees.k * calcul.donnees.d * 10 + calcul.donnees.k;
+  const F6_MULTIPLIE = Object.freeze({multiplier: true, denominateur: true, "denominateur-gauche": true});
+  const F6_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "ajouté au lieu de multiplié",
+      test: sauf((calcul, reponse) => calcul.donnees.ajoute > 0 && memeNombre(reponse, calcul.donnees.ajoute)),
+      retour: (calcul, reponse) => fr(F6_MULTIPLIE[calcul.forme]
+        ? `${f(reponse)} : tu as ajouté le même nombre en haut et en bas. Pour une fraction égale, on multiplie en haut et en bas par le même nombre.`
+        : `${f(reponse)} : tu as retiré le même nombre en haut et en bas. Pour une fraction égale, on divise en haut et en bas par le même nombre.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un nombre recopié",
+      test: sauf((calcul, reponse) => calcul.donnees.recopie > 0 && memeNombre(reponse, calcul.donnees.recopie)),
+      retour: (calcul, reponse) => {
+        const k = calcul.donnees.k;
+        const verbe = F6_MULTIPLIE[calcul.forme] ? "multiplié" : "divisé";
+        const auDen = calcul.lu.cache.part === "d";
+        return fr(`${f(reponse)} : tu as recopié le ${auDen ? "dénominateur" : "numérateur"}. Quand le ${auDen ? "numérateur" : "dénominateur"} est ${verbe} par ${k}, le ${auDen ? "dénominateur" : "numérateur"} aussi.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le nombre par lequel on multiplie (ou divise)",
+      test: sauf((calcul, reponse) => calcul.donnees.coef > 0 && memeNombre(reponse, calcul.donnees.coef)),
+      retour: (calcul, reponse) => {
+        const multiplie = F6_MULTIPLIE[calcul.forme];
+        const auDen = calcul.lu.cache.part === "d";
+        return fr(`${f(reponse)} : c’est le nombre par lequel on ${multiplie ? "multiplie" : "divise"}. Le ${auDen ? "dénominateur" : "numérateur"} aussi est ${multiplie ? "multiplié" : "divisé"} par ${f(reponse)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  const F6 = {
+    id: "F6", nom: "Fractions égales", exemple: "2/3 = ?/15",
+    famille: "F", construit: true,
+    aide_entraine: "barre-droite",
+    erreurs: F6_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, difficulte: f6Difficulte,
+    // Les niveaux 2 et 3 n'ont pas de bandes à manipuler (décision du 04/11).
+    manipulation: calcul => (calcul.niveau === 1 ? fracManipulation(calcul) : null),
+    niveaux: [
+      {
+        n: 1, titre: "en multipliant", nom: "Fractions égales : multiplier", palier: 2, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[1], [10]),
+        imposes: [f6(1, "2/5 = □/15"), f6(1, "5/6 = □/12")],
+        apprends: fracApprends({
+          fiche: "F6",
+          manipule: pourApprendre(f6(1, "3/4 = □/12")),
+          represente: pourApprendre(f6(1, "2/3 = □/15")),
+          ecris: pourApprendre(f6(1, "3/5 = □/20")),
+          consigne: "Chaque tiers est coupé en 5.",
+          consigneEcris: "Chaque cinquième se coupe en parts égales.",
+          etapes: [["1/5 = ?/20", 4], ["3/5 = ?/20", 12]],
+          morceaux: [{gros: 4}, {bas: true}],
+          bilan: "Chaque tiers coupé en 5 : 2/3 = 10/15 (× 5 en haut et en bas)."
+        })
+      },
+      {
+        n: 2, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[2], [6, 4]),
+        imposes: [f6(2, "6/9 = □/3"), f6(2, "8/12 = 2/□")],
+        apprends: fracApprends({
+          fiche: "F6",
+          represente: pourApprendre(f6(2, "12/16 = □/4")),
+          ecris: pourApprendre(f6(2, "10/15 = 2/□")),
+          consigne: "4 seizièmes font un quart.",
+          consigneEcris: "On divise en haut et en bas par le même nombre.",
+          etapes: [["10 ÷ ? = 2", 5], ["15 ÷ 5 = ?", 3], ["10/15 = 2/?", 3]],
+          morceaux: [{gros: 5}, {}, {bas: true}],
+          bilan: "12/16 = 3/4 (÷ 4 en haut et en bas)."
+        })
+      },
+      {
+        n: 3, titre: "trou au dénominateur", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[3], [6, 4]),
+        imposes: [f6(3, "2/3 = 8/□"), f6(3, "3/□ = 9/15")],
+        apprends: fracApprends({
+          fiche: "F6",
+          represente: pourApprendre(f6(3, "4/7 = 12/□")),
+          ecris: pourApprendre(f6(3, "5/□ = 15/24")),
+          consigne: "Chaque septième est coupé en 3.",
+          consigneEcris: "On multiplie en haut et en bas par le même nombre.",
+          etapes: [["15 = 5 × ?", 3], ["24 ÷ 3 = ?", 8], ["5/? = 15/24", 8]],
+          morceaux: [{gros: 3}, {}, {bas: true}],
+          bilan: "4/7 = 12/21 (× 3 en haut et en bas)."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------- F8 : même dénominateur
+  //
+  // Niveaux 1 et 2 : dénominateurs 3, 5 à 10, 12 (jamais 2 et 4 : F2) ;
+  // niveau 3 : des soustractions seulement (« 3 + 2/5 », c'est F5-2),
+  // dénominateurs de 2 à 9 (jamais 10 : D1), au plus 30 parts.
+  const F8_CODES = Object.freeze({somme: 1, difference: 2, "un-moins": 3, complement: 4, "entier-moins": 5, "moins-entier": 6});
+  function f8Calcul(niveau, forme, texte) {
+    const c = fracCalcul("F8", niveau, forme, texte, F8_CODES[forme]);
+    const lu = c.lu;
+    const g = lu.cotes[0];
+    const d = {un: -1, entier: -1, sens: -1, tout: -1};
+    if (forme === "somme") d.sens = sansPareil(c, Math.abs(g[0].n - g[1].n));
+    if (forme === "difference") d.sens = sansPareil(c, g[0].n + g[1].n);
+    if (forme === "un-moins") Object.assign(d, {un: sansPareil(c, g[1].n - 1), sens: sansPareil(c, g[1].d + g[1].n)});
+    if (forme === "complement") d.tout = sansPareil(c, g[0].d);
+    if (forme === "entier-moins") Object.assign(d, {entier: sansPareil(c, g[0].n - g[1].n), sens: sansPareil(c, g[0].n * g[1].d + g[1].n)});
+    if (forme === "moins-entier") Object.assign(d, {entier: sansPareil(c, g[0].n - g[1].n), sens: sansPareil(c, g[0].n + g[1].n * g[0].d)});
+    return finirCalcul(c, d);
+  }
+  const F8_DENS = Object.freeze([3, 5, 6, 7, 8, 9, 10, 12]);
+  function f8Vivier(niveau) {
+    if (niveau === 1) {
+      const sommes = [];
+      const differences = [];
+      F8_DENS.forEach(d => entre(1, d - 2).forEach(a => entre(1, d - 1 - a).forEach(b => sommes.push(f8Calcul(1, "somme", `${a}/${d} + ${b}/${d} = ${CASE}/${d}`)))));
+      F8_DENS.forEach(d => entre(2, d - 1).forEach(a => entre(1, a - 1).forEach(b => differences.push(f8Calcul(1, "difference", `${a}/${d} − ${b}/${d} = ${CASE}/${d}`)))));
+      return Object.freeze({somme: sommes, difference: differences});
+    }
+    if (niveau === 2) {
+      return Object.freeze({
+        "un-moins": F8_DENS.flatMap(d => entre(1, d - 1).map(a => f8Calcul(2, "un-moins", `1 − ${a}/${d} = ${CASE}/${d}`))),
+        complement: F8_DENS.flatMap(d => entre(1, d - 1).map(a => f8Calcul(2, "complement", `${a}/${d} + ${CASE}/${d} = 1`)))
+      });
+    }
+    const entierMoins = [];
+    const moinsEntier = [];
+    entre(2, 9).forEach(d => {
+      entre(2, 5).forEach(n => { if (n * d <= FRAC_BARRE_MAX) entre(1, d - 1).forEach(c => entierMoins.push(f8Calcul(3, "entier-moins", `${n} − ${c}/${d} = ${CASE}/${d}`))); });
+      entre(d + 1, 6 * d - 1).forEach(a => {
+        if (a % d === 0 || !tientSurLaBarre(a / d, d)) return;
+        entre(1, Math.floor(a / d)).forEach(n => moinsEntier.push(f8Calcul(3, "moins-entier", `${a}/${d} − ${n} = ${CASE}/${d}`)));
+      });
+    });
+    return Object.freeze({"entier-moins": entierMoins, "moins-entier": moinsEntier});
+  }
+  const F8_VIVIERS = Object.freeze({1: f8Vivier(1), 2: f8Vivier(2), 3: f8Vivier(3)});
+  const f8 = (niveau, texte) => trouverDans(F8_VIVIERS, "F8", niveau, texte);
+  const F8_RANGS = Object.freeze({somme: 0, difference: 1, "un-moins": 0, complement: 1, "entier-moins": 0, "moins-entier": 1});
+  function f8Difficulte(calcul) {
+    const dens = densDe(calcul.lu);
+    return F8_RANGS[calcul.forme] * 1000 + Math.max(...dens) * 20 + calcul.reponse;
+  }
+  const F8_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "1 compté comme un numérateur",
+      test: sauf((calcul, reponse) => calcul.donnees.un > 0 && memeNombre(reponse, calcul.donnees.un)),
+      retour: (calcul, reponse) => {
+        const t = calcul.lu.cotes[0][1];
+        return fr(`${f(reponse)}, c’est ${t.n} − 1. Mais 1, c’est ${enParts(t.d, t.d)} : écris 1 en ${nomDe(t.d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "l’entier retiré du numérateur",
+      test: sauf((calcul, reponse) => calcul.donnees.entier > 0 && memeNombre(reponse, calcul.donnees.entier)),
+      retour: (calcul, reponse) => {
+        const [p, q] = calcul.lu.cotes[0];
+        const [n, d] = calcul.forme === "entier-moins" ? [p.n, q.d] : [q.n, p.d];
+        return fr(`${f(reponse)}, c’est ${p.n} − ${q.n}. Mais ${enUnites(n)}, c’est ${enParts(n * d, d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le mauvais sens",
+      test: sauf((calcul, reponse) => calcul.donnees.sens > 0 && memeNombre(reponse, calcul.donnees.sens)),
+      retour: (calcul, reponse) => {
+        const t = calcul.lu.cotes[0][1];
+        return calcul.forme === "somme"
+          ? fr(`${f(reponse)} : tu as retiré. Ici, on ajoute ${ecrireTermeF(t)}.`)
+          : fr(`${f(reponse)} : tu as ajouté. Ici, on enlève ${ecrireTermeF(t)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "le tout écrit, pas ce qui manque",
+      test: sauf((calcul, reponse) => calcul.donnees.tout > 0 && memeNombre(reponse, calcul.donnees.tout)),
+      retour: (calcul, reponse) => {
+        const t = calcul.lu.cotes[0][0];
+        return fr(`${f(reponse)}, c’est le tout : 1 = ${t.d}/${t.d}. Cherche ce qui manque pour aller jusqu’à 1.`);
+      },
+      gras: 0
+    })
+  ]);
+  const F8 = {
+    id: "F8", nom: "Additionner, soustraire : même dénominateur", exemple: "3/7 + 3/7",
+    famille: "F", construit: true,
+    aide_entraine: "barre-droite",
+    erreurs: F8_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, difficulte: f8Difficulte,
+    // Le niveau 3 n'a pas de bandes à manipuler (décision du 04/11).
+    manipulation: calcul => (calcul.niveau === 3 ? null : fracManipulation(calcul)),
+    niveaux: [
+      {
+        n: 1, titre: "même dénominateur", nom: "Fractions : même dénominateur", palier: 2, type: "P",
+        composer: vivierNiveau(F8_VIVIERS[1], [6, 4]),
+        imposes: [f8(1, "2/7 + 3/7 = □/7"), f8(1, "9/10 − 4/10 = □/10")],
+        apprends: fracApprends({
+          fiche: "F8",
+          manipule: pourApprendre(f8(1, "3/8 + 3/8 = □/8")),
+          represente: pourApprendre(f8(1, "5/8 − 2/8 = □/8")),
+          ecris: pourApprendre(f8(1, "4/9 + 3/9 = □/9")),
+          consigne: "On enlève 2 huitièmes.",
+          consigneEcris: "Des neuvièmes et des neuvièmes.",
+          etapes: [["4 + 3 = ?", 7], ["4/9 + 3/9 = ?/9", 7]],
+          morceaux: [{}, {bas: true}],
+          bilan: "5 huitièmes − 2 huitièmes = 3 huitièmes : 5/8 − 2/8 = 3/8."
+        })
+      },
+      {
+        n: 2, titre: "1 − a/b", nom: "1 moins une fraction", palier: 2, type: "P",
+        composer: vivierNiveau(F8_VIVIERS[2], [6, 4]),
+        imposes: [f8(2, "1 − 4/5 = □/5"), f8(2, "3/7 + □/7 = 1")],
+        apprends: fracApprends({
+          fiche: "F8",
+          manipule: pourApprendre(f8(2, "1 − 2/3 = □/3")),
+          represente: pourApprendre(f8(2, "1 − 3/8 = □/8")),
+          ecris: pourApprendre(f8(2, "1 − 5/12 = □/12")),
+          consigne: "Une unité, c’est 8 huitièmes.",
+          consigneEcris: "J’écris 1 en douzièmes.",
+          etapes: [["1 = ?/12", 12], ["12/12 − 5/12 = ?/12", 7]],
+          morceaux: [{ecrit: 1, texte: "12/12"}, {bas: true}],
+          bilan: "1 = 8/8 : 1 − 3/8 = 5/8."
+        })
+      },
+      {
+        n: 3, titre: "entier et fraction", nom: "Entier moins une fraction", palier: 3, type: "P",
+        composer: vivierNiveau(F8_VIVIERS[3], [6, 4]),
+        imposes: [f8(3, "3 − 1/2 = □/2"), f8(3, "11/3 − 2 = □/3")],
+        apprends: fracApprends({
+          fiche: "F8",
+          represente: pourApprendre(f8(3, "2 − 1/4 = □/4")),
+          ecris: pourApprendre(f8(3, "3 − 2/5 = □/5")),
+          consigne: "Une unité, c’est 4 quarts.",
+          consigneEcris: "J’écris 3 en cinquièmes.",
+          etapes: [["3 = ?/5", 15], ["15/5 − 2/5 = ?/5", 13]],
+          morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
+          bilan: "2 = 8/4 : 2 − 1/4 = 7/4."
+        })
+      }
+    ]
+  };
+
   // Un module pas encore construit (« bientôt ») : son nom, son exemple,
   // ses niveaux avec leur palier et leur type.
   const reserve = (id, nom, exemple, niveaux) =>
@@ -5867,10 +6879,7 @@
       {n: 1, titre: "× 5 (trois chiffres au plus)", palier: 3, type: "P", exemple: "3,4 × 5"},
       {n: 2, titre: "× 50 (nombre de moins de 20, au plus trois chiffres, chiffre le plus à droite pair)", palier: 3, type: "P", exemple: "50 × 12,4"}
     ]),
-    reserve("F2", "Demis, quarts et unité", "1/2 + 1/2", [
-      {n: 1, titre: "demis et quarts", palier: 2, type: "F", exemple: "1/2 + 1/2"},
-      {n: 2, titre: "avec 3/4", palier: 3, type: "F", exemple: "3/4 + 1/4"}
-    ]),
+    F2,
     reserve("F1", "Fractions usuelles et décimaux", "1/10 = ?", [
       {n: 1, titre: "1/10 et 1/100", palier: 2, type: "F", exemple: "1/10 = ?"},
       {n: 2, titre: "1/1 000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", palier: 3, type: "F", exemple: "3/4 = ?"},
@@ -5885,21 +6894,9 @@
       {n: 1, titre: "résultat entier", palier: 3, type: "P", exemple: "2/3 de 12 œufs"},
       {n: 2, titre: "résultat décimal", palier: 4, type: "P", exemple: "3/4 de 10 m"}
     ]),
-    reserve("F5", "Entier et fraction", "17/5 = 3 + ?/5", [
-      {n: 1, titre: "décomposer", palier: 2, type: "P", exemple: "17/5 = 3 + ?/5"},
-      {n: 2, titre: "décomposer et recomposer", palier: 2, type: "P", exemple: "2 + 2/3 = ?/3"},
-      {n: 3, titre: "encadrer entre deux entiers", palier: 3, type: "P", exemple: "43/8 est entre 5 et ?"}
-    ]),
-    reserve("F6", "Fractions égales", "2/3 = ?/15", [
-      {n: 1, titre: "en multipliant", palier: 2, type: "P", exemple: "2/3 = ?/15"},
-      {n: 2, titre: "en divisant", palier: 3, type: "P", exemple: "12/16 = ?/4"},
-      {n: 3, titre: "trou au dénominateur", palier: 3, type: "P", exemple: "4/7 = 28/?"}
-    ]),
-    reserve("F8", "Additionner, soustraire : même dénominateur", "3/7 + 3/7", [
-      {n: 1, titre: "même dénominateur", palier: 2, type: "P", exemple: "3/7 + 3/7"},
-      {n: 2, titre: "1 − a/b", palier: 2, type: "P", exemple: "1 − 2/3"},
-      {n: 3, titre: "entier et fraction", palier: 3, type: "P", exemple: "3 + 2/5"}
-    ]),
+    F5,
+    F6,
+    F8,
     reserve("F9", "Dénominateurs multiples", "3/2 + 7/4", [
       {n: 1, titre: "l’un est le double de l’autre", palier: 3, type: "P", exemple: "3/2 + 7/4"},
       {n: 2, titre: "multiple d’une table", palier: 3, type: "P", exemple: "4/7 − 2/21"}
@@ -6136,14 +7133,31 @@
     numerateur: "on cherche le numérateur",
     plus: "c’est une addition",
     "plus-fraction": "le nombre ajouté s’écrit en fraction",
-    moins: "c’est une soustraction"
+    moins: "c’est une soustraction",
+    // Modules lot 6 : les fractions.
+    egale: "deux écritures de la même fraction",
+    decomposer: "on cherche les parts qui restent",
+    multiplier: "on cherche une fraction égale",
+    diviser: "on cherche une fraction égale",
+    recomposer: "on écrit tout en parts",
+    entier: "on cherche l’entier",
+    encadrer: "on cherche l’entier d’après",
+    "encadrer-bas": "on cherche l’entier d’avant",
+    "diviser-den": "la case est au dénominateur",
+    denominateur: "la case est au dénominateur",
+    "denominateur-gauche": "la case est à gauche, au dénominateur",
+    "un-moins": "on part de 1",
+    "entier-moins": "on part d’un entier",
+    "moins-entier": "on retire un entier"
   });
   // La touche « , » : dans les modules à décimales, sauf quand la case est
   // un numérateur (« 0,3 = □/10 » : la réponse est un entier, règle du 05/10
   // — décision du 04/11).
+  // Modules lot 6 : ni quand elle est un dénominateur (« 4/7 = 12/□ »).
   function virguleDe(calcul) {
     const fiche = calcul ? moduleDe(calcul.module) : null;
-    return Boolean(fiche && fiche.virgule) && !String(calcul.texte || "").includes(`${CASE}/`);
+    const texte = String(calcul.texte || "");
+    return Boolean(fiche && fiche.virgule) && !texte.includes(`${CASE}/`) && !texte.includes(`/${CASE}`);
   }
   function virguleDuTexte(module, texte) {
     return virguleDe({module, texte});
