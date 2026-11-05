@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261104-6">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261104-7">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261104-5"></script>
+  <script src="./defi_calcul_core.js?v=20261104-7"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261104-6"></script>
+  <script src="./defi_calcul_aides.js?v=20261104-7"></script>
   <script>
     (() => {
       "use strict";
@@ -1283,7 +1283,9 @@
         // Le tableau de numération et le carré de 100 (modules lot 5) ont
         // des chiffres et des bandes à lire : le pavé rapetisse (jusqu'à
         // 0,85) avant qu'ils passent sous les trois quarts de leur taille.
-        const part = image.matches("svg.dc-numeration, svg.dc-carre") ? .75 : .5;
+        // Modules lot 6 : le schéma en barres des fractions aussi (des parts
+        // à compter).
+        const part = image.matches("svg.dc-numeration, svg.dc-carre, svg.dc-fractions") ? .75 : .5;
         return image.clientHeight + 1 < Math.min(naturelle, Math.max(ECHELLE.imageTelephone, naturelle * part));
       }
       function bornesEchelle(largeur, pleinEcran) {
@@ -2310,12 +2312,14 @@
       // L'outil à manipuler : les perles, le glisse-nombres, ou les jetons à
       // toucher (C1, modules lot 4 : je touche le calcul à faire en premier) ;
       // modules lot 5 : le carré de 100 à colorier (D1), le tableau à jetons
-      // et sa réserve (D4).
+      // et sa réserve (D4) ; modules lot 6 : les bandes du site sur la droite
+      // graduée (F2, F5, F6, F8).
       function creerManip(zone, options) {
         if (options.outil === "glisse") return AIDES.glisseNombres(zone, options);
         if (options.outil === "toucher") return AIDES.toucherCalcul(zone, options);
         if (options.outil === "carre") return AIDES.carreManip(zone, options);
         if (options.outil === "jetons") return AIDES.jetonsManip(zone, options);
+        if (options.outil === "bandes") return AIDES.bandesManip(zone, options);
         return AIDES.perles100(zone, options);
       }
 
@@ -3360,6 +3364,8 @@
             // Modules lot 5 : le carré de 100 (D1), le tableau à jetons (D4).
             carre: () => (state.manip && state.manip.outil === "carre" ? Object.assign({etape: state.manip.etape, fini: state.manip.fini}, state.manip.colorie) : null),
             jetons: () => (state.manip && state.manip.outil === "jetons" ? {etape: state.manip.etape, phase: state.manip.phase, comptes: state.manip.comptes, fini: state.manip.fini} : null),
+            // Modules lot 6 : les bandes sur la droite (F2, F5, F6, F8).
+            bandes: () => (state.manip && state.manip.outil === "bandes" ? {etape: state.manip.etape, pieces: state.manip.pieces, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
             arrets: () => arretsDeLaBande.slice(),
             // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.

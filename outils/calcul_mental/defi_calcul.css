@@ -1346,3 +1346,29 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
   .challenge-playing .question.aide-glisse.manip-entraine > .dc-aide { flex: 0 0 auto; }
   .challenge-playing .question.aide-glisse.manip-entraine.est-finie > .dc-aide.sans-tableau .place-value-tool { display: none; }
 }
+
+/* Modules lot 6 (04/11/2026) : les fractions. Le schéma en barres sur la
+   droite graduée (Je représente, l'aide, J'écris, « À retenir ») : des
+   parts à compter, comme le tableau de numération. */
+.dc-aide svg.dc-fractions { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
+@media (max-width: 620px) {
+  .challenge-playing .question.aide-image .dc-aide svg.dc-fractions { max-height: 30dvh; }
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-fractions { max-height: 27dvh; }
+}
+@media (min-width: 621px) {
+  .dc-aide svg.dc-fractions { width: min(100%, 480px); }
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-fractions { max-height: 28dvh; }
+}
+.dc-retenir .dc-aide svg.dc-fractions { max-height: calc(28dvh * var(--retenir-z, 1)); }
+/* Les bandes du site, posées sur la droite (Je manipule). Ce qu'on touche
+   est entouré de bleu ; le contour bat doucement tant que l'élève n'a pas
+   fait son premier geste. */
+.dc-bandes { width: 100%; }
+.dc-bandes-scene { width: min(100%, 520px); margin: 8px auto 0; border-radius: 8px; cursor: pointer; touch-action: manipulation; }
+.dc-bandes-scene svg { display: block; width: 100%; height: auto; }
+.dc-bandes-scene:focus-visible { outline: 3px solid #0f6cf9; outline-offset: 3px; }
+.dc-bandes.est-finie .dc-bandes-scene { cursor: default; }
+.dc-bandes-scene [data-piece], .dc-bandes-scene [data-reserve] { cursor: pointer; }
+.dc-bandes-scene.dc-attente .dc-cible { animation: dc-battement 1.2s ease-in-out infinite; }
+@keyframes dc-battement { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .dc-bandes-scene.dc-attente .dc-cible { animation: none; } }
