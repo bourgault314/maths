@@ -497,3 +497,26 @@ test("l'appli : au test, le fil écrit « Tu connais déjà ? » en préfixe, ca
   const css = await lire("../outils/calcul_mental/defi_calcul.css");
   assert.match(css, /#play \.seance-fil\.seance \.quoi \{ display: none; \}/, "au téléphone, le préfixe disparaît avec le reste du « quoi »");
 });
+
+// 05/11/2026 : sous « J'apprends » (Mon module) et en fin de séance après
+// deux entraînements ratés (« Demain, on reprend … »), chaque niveau
+// construit a sa phrase — jamais « undefined », jamais « avec la droite »
+// quand il n'y a pas de droite.
+test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il apprend", async () => {
+  const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
+  const objet = nom => Function(`return ${page.match(new RegExp(`const ${nom} = Object\\.freeze\\((\\{[\\s\\S]*?\\})\\);`))[1]};`)();
+  const detail = objet("DETAIL_APPRENDS");
+  const reprise = objet("REPRISE");
+  const image = objet("OUTILS_IMAGE");
+  const outil = a => (a.manipule ? a.manipule.outil : image[a.represente.outil] || "aucun");
+  const SANS_DROITE = ["C3", "M10", "M12", "D1", "F2", "F5", "F6", "F8"];
+  CORE.MODULES.filter(m => m.construit).forEach(m => m.niveaux.forEach(n => {
+    const cle = outil(n.apprends);
+    assert.equal(typeof detail[cle], "string", `${m.id}-${n.n} : J'apprends ${cle}`);
+    assert.equal(typeof reprise[cle], "string", `${m.id}-${n.n} : demain, on reprend ${cle}`);
+    if (SANS_DROITE.includes(m.id)) assert.notEqual(cle, "aucun", `${m.id}-${n.n} : pas de droite`);
+  }));
+  assert.equal(detail[outil(CORE.niveauDe("D4-1").niveau.apprends)], "avec le tableau à jetons");
+  assert.equal(reprise[outil(CORE.niveauDe("F6-2").niveau.apprends)], "avec le schéma en barres");
+  assert.equal(detail[outil(CORE.niveauDe("F2-1").niveau.apprends)], "avec les bandes de fractions");
+});
