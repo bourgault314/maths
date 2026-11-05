@@ -505,7 +505,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, modules lot 6 (04/11/2026) : prof/defi_calcul_core.js
   // seul change (F2, F5, F6, F8), 65 au manifeste (avant :
   // defi-calcul-modules-lot-5).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-6$/m);
+  // Puis le lot 6b des modules de Défi calcul (05/11/2026, F1 et F3) : la
+  // copie prof/defi_calcul_core.js change, 65 au manifeste (avant :
+  // defi-calcul-modules-lot-6).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-modules-lot-6b$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
 });

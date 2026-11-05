@@ -329,8 +329,12 @@ test("la page : en construction, hors catalogue, sans menus pour l'élève, sans
   assert.match(page, /image\.matches\("svg\.dc-numeration, svg\.dc-carre, svg\.dc-fractions"\)/);
   assert.match(page, /return AIDES\.noeudsCalcul\(texte, \{caseReponse, insecable\}\);/, "le calcul : ses fractions");
   assert.match(page, /AIDES\.ecrireTexte\(\$\("retenir-phrase"\), serie\.apprends\.bilan\);/, "« À retenir » : ses fractions");
-  assert.match(page, /\$\("touches"\)\.hidden = !CORE\.virguleDuTexte\(id, texte\);/);
-  assert.match(page, /renderTouches\(question\.calcul\.module, question\.calcul\.texte\);/);
+  // Modules lot 6b : la touche suit le niveau (F3 : le niveau 3 seulement).
+  assert.match(page, /\$\("touches"\)\.hidden = !CORE\.virguleDuTexte\(id, texte, niveau\);/);
+  assert.match(page, /renderTouches\(question\.calcul\.module, question\.calcul\.texte, question\.calcul\.niveau\);/);
+  assert.match(page, /renderTouches\(serie\.module, apprends\.represente\.texte, serie\.niveau\);/);
+  // Les billes de F3 (lot 6b).
+  assert.match(page, /if \(options\.outil === "billes"\) return AIDES\.billesManip\(zone, options\);/);
   assert.equal((page.match(/state\.manip = creerManip\(\$\("aide"\), options\);/g) || []).length, 2, "Je manipule et l'entraînement");
   assert.equal((page.match(/appli: "defi-calcul"/g) || []).length, 3, "lecture, billet, envoi : appli « defi-calcul »");
   assert.match(page, /\/\/ \[suivi:debut\][\s\S]+\/\/ \[suivi:fin\]/);
@@ -437,7 +441,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
   assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 129], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 129 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 90], "sur les modules construits : 90 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8)");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 96], "sur les modules construits : 96 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8 + F1, F3)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2]);
@@ -473,7 +477,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 90, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 129, 96, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);
@@ -509,7 +513,7 @@ test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il
   const reprise = objet("REPRISE");
   const image = objet("OUTILS_IMAGE");
   const outil = a => (a.manipule ? a.manipule.outil : image[a.represente.outil] || "aucun");
-  const SANS_DROITE = ["C3", "M10", "M12", "D1", "F2", "F5", "F6", "F8"];
+  const SANS_DROITE = ["C3", "M10", "M12", "D1", "F2", "F5", "F6", "F8", "F1", "F3"];
   CORE.MODULES.filter(m => m.construit).forEach(m => m.niveaux.forEach(n => {
     const cle = outil(n.apprends);
     assert.equal(typeof detail[cle], "string", `${m.id}-${n.n} : J'apprends ${cle}`);
@@ -519,4 +523,23 @@ test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il
   assert.equal(detail[outil(CORE.niveauDe("D4-1").niveau.apprends)], "avec le tableau à jetons");
   assert.equal(reprise[outil(CORE.niveauDe("F6-2").niveau.apprends)], "avec le schéma en barres");
   assert.equal(detail[outil(CORE.niveauDe("F2-1").niveau.apprends)], "avec les bandes de fractions");
+  // Modules lot 6b : F1 les bandes, F3 les billes, puis le schéma (F3-3).
+  assert.equal(detail[outil(CORE.niveauDe("F1-1").niveau.apprends)], "avec les bandes de fractions");
+  assert.equal(detail[outil(CORE.niveauDe("F3-1").niveau.apprends)], "avec les billes");
+  assert.equal(reprise[outil(CORE.niveauDe("F3-2").niveau.apprends)], "avec les billes");
+  assert.equal(detail[outil(CORE.niveauDe("F3-3").niveau.apprends)], "avec le schéma en barres");
+});
+
+// Modules lot 6b (05/11/2026, choix de Gwenaël sur la planche avant/après) :
+// dans les étapes de J'écris, les fractions s'écrivent à 0,78 de la taille
+// du texte (à 0,52, « 1/2 = 50/100 » faisait 11 pixels au téléphone).
+test("J'écris : les fractions des étapes se lisent au téléphone", async () => {
+  const css = await lire("../outils/calcul_mental/defi_calcul.css");
+  assert.match(css, /\.expression\.dc-lignes \.lg \.cel \.dc-frac \{ font-size: \.78em; line-height: 1; \}/);
+  // Sur ordinateur : 0,6, et le dessin un peu plus petit (la carte tient à 1366 × 768).
+  assert.match(css, /@media \(min-width: 621px\) \{\n  \.expression\.dc-lignes \.lg \.cel \.dc-frac \{ font-size: \.6em; \}/);
+  assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
+  assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
+  const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
+  assert.match(page, /defi_calcul\.css\?v=20261105-1/);
 });
