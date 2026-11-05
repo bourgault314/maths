@@ -37,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 90, "les 30 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6)");
+  assert.equal(NIVEAUX.length, 96, "les 32 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
@@ -55,7 +55,10 @@ test("J'écris : un dessin par étape, de la même taille, vide de vert au débu
 // graduation « 1 » de la droite n'est pas la réponse « 1 quart » — leur
 // contrôle, sur les morceaux du dessin, est dans defi-calcul-core.test.mjs
 // (« le « ? » reste jusqu'à son étape »).
-const FRACTIONS = ["F2", "F5", "F6", "F8"];
+// Modules lot 6b : F1 et F3 aussi (« 0,03 = 3/□ » : 0,03 est écrit dans le
+// tableau dès le début, c'est le calcul ; « 1/2 de 6 L » : 3 L n'est pas
+// la réponse 3,5 L) — leur contrôle est dans « modules lot 6b » du même fichier.
+const FRACTIONS = ["F2", "F5", "F6", "F8", "F1", "F3"];
 test("J'écris : chaque égalité juste fait apparaître son morceau, jamais un nombre pas encore écrit", () => {
   NIVEAUX.filter(({fiche}) => !FRACTIONS.includes(fiche.id)).forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;

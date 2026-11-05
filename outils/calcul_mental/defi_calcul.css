@@ -914,8 +914,19 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .correction-expression .dc-frac, .answer-feedback .dc-frac, .consigne .dc-frac, .dc-trace .dc-frac,
 .dc-retenir .phrase .dc-frac, .annonce .dc-frac { font-size: .8em; }
 .expression.dc-lignes .lg .cel .dc-frac .inline-answer { display: inline-grid; }
-/* Dans les étapes de J'écris, une fraction ne fait pas grandir la ligne. */
-.expression.dc-lignes .lg .cel .dc-frac { font-size: .52em; line-height: 1; }
+/* Dans les étapes de J'écris, une fraction ne fait pas grandir la ligne.
+   Modules lot 6b (05/11/2026, choix de Gwenaël, planche avant/après) :
+   0,78 de la taille du texte au lieu de 0,52 — à 0,52, « 1/2 = 50/100 »
+   faisait 11 pixels au téléphone. */
+.expression.dc-lignes .lg .cel .dc-frac { font-size: .78em; line-height: 1; }
+/* Sur ordinateur, le texte des étapes est plus grand (2,1rem) : 0,6 suffit
+   (et le dessin de J'écris en fractions rapetisse un peu, plus bas), pour
+   que la carte tienne sans défiler à 1366 × 768 (F5-1 : trois étapes). Le
+   carré de 100 de Je représente aussi (F1 : « 1/100 = □ » est haut). */
+@media (min-width: 621px) {
+  .expression.dc-lignes .lg .cel .dc-frac { font-size: .6em; }
+  .challenge-playing .question.aide-image .dc-aide svg.dc-carre { max-height: 28dvh; }
+}
 /* Le tableau de numération et le carré de 100 dessinés : à leur taille. */
 .dc-aide svg.dc-numeration, .dc-aide svg.dc-carre { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
 .dc-aide svg.dc-carre { max-height: 34dvh; }
@@ -1357,7 +1368,8 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
 }
 @media (min-width: 621px) {
   .dc-aide svg.dc-fractions { width: min(100%, 480px); }
-  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-fractions { max-height: 28dvh; }
+  /* (Lot 6b : 20dvh au lieu de 28 — les fractions des étapes ont grandi.) */
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-fractions { max-height: 20dvh; }
 }
 .dc-retenir .dc-aide svg.dc-fractions { max-height: calc(28dvh * var(--retenir-z, 1)); }
 /* Les bandes du site, posées sur la droite (Je manipule). Ce qu'on touche
