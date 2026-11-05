@@ -34,6 +34,11 @@ const ELEVES = () => [
   {id: 31, prenom: "", initiale: "", code: "ZZZZ99"}
 ];
 const banc = (o = {}) => reglerRejoue(Object.assign({classe: classe405(), eleves: ELEVES(), appli: "splat"}, o));
+// Les tests qui tiennent le faux serveur et le relâchent eux-mêmes : le délai
+// de garde de la page (40 ms réelles par défaut au banc) ne doit pas trancher
+// avant eux. Sur une machine chargée (la CI), plus de 40 ms passent parfois
+// avant le tour suivant : l'envoi était coupé et le test voyait « fini ».
+const SANS_COUPURE = 60000;
 const message = (r, id = "regler-message") => [r.$(id).textContent, r.$(id).className, r.$(id).hidden];
 const ligneDe = (r, numero) => lignesPlus(r.corps()).find(l => l.premier(n => n.className === "quoi").textContent.startsWith(String(numero)));
 const acces = r => r.serveur.appels.filter(a => a.action === "eleves.acces");
@@ -286,7 +291,7 @@ test("Enregistrer : la classe d'abord (seul ce qui a changé), puis chaque élè
 });
 
 test("pendant l'enregistrement : la fenêtre est grisée, Annuler / ✕ / Échap ne la ferment pas, un second Enregistrer et « Régler » ne partent pas", async () => {
-  const r = banc();
+  const r = banc({delai: SANS_COUPURE});
   r.serveur.tenir(true);
   r.f.ouvrirRegler("splat");
   cocher(caseNumero(r.corps(), "mondes", 4), true);
@@ -617,7 +622,7 @@ test("conflit de classe (point 1) — un autre onglet a changé la 405 : « avan
 
 test("raccourci et fenêtre en même temps (point 2) — un seul verrou : « Ouvrir à toute la … » en route, « Choisir quelques élèves » et « Régler » attendent ; le brouillon se construit sur l'état relu", async () => {
   for (const mode of ["simple", "reel"]) {
-    const r = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    const r = mode === "reel" ? reel({appli: "coffres", delai: SANS_COUPURE}) : banc({appli: "coffres", delai: SANS_COUPURE});
     r.f.poserQuiVoit();
     r.serveur.tenir(true);
     const rapide = r.f.ouvrirATouteLaClasse();
@@ -639,7 +644,7 @@ test("raccourci et fenêtre en même temps (point 2) — un seul verrou : « Ouv
     assert.equal(r.boite().open, true);
     assert.equal(caseDe(r.corps(), "Ouvert à toute la 405").checked, true, `${mode} : le brouillon part de l'état relu — Coffres est ouvert à la classe`);
     // L'autre ordre : la fenêtre enregistre, le raccourci ne part pas.
-    const f = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    const f = mode === "reel" ? reel({appli: "coffres", delai: SANS_COUPURE}) : banc({appli: "coffres", delai: SANS_COUPURE});
     f.serveur.tenir(true);
     f.f.ouvrirRegler("coffres");
     cocher(caseDe(f.corps(), "Alice"), true);
@@ -660,7 +665,7 @@ test("raccourci et fenêtre en même temps (point 2) — un seul verrou : « Ouv
 test("ancienne session dans le raccourci (point 3) — une réponse d'avant « Se déconnecter » (succès ou 401) ne fait rien : ni relecture, ni message, ni déconnexion de la session neuve ; une autre classe ouverte entre-temps non plus", async () => {
   for (const mode of ["simple", "reel"]) {
     for (const refuse of [false, true]) {
-      const r = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+      const r = mode === "reel" ? reel({appli: "coffres", delai: SANS_COUPURE}) : banc({appli: "coffres", delai: SANS_COUPURE});
       r.serveur.tenir(true);
       if (refuse) r.serveur.panne("classes.modifier", r.serveur.erreur("Session expirée.", 401));
       const fin = r.f.ouvrirATouteLaClasse();
@@ -687,7 +692,7 @@ test("ancienne session dans le raccourci (point 3) — une réponse d'avant « S
       assert.equal(r.f.etat().reglageEnCours, false);
     }
     // Une autre classe ouverte pendant l'attente : la réponse ne la relit pas, ne dit rien.
-    const autre = mode === "reel" ? reel({appli: "coffres"}) : banc({appli: "coffres"});
+    const autre = mode === "reel" ? reel({appli: "coffres", delai: SANS_COUPURE}) : banc({appli: "coffres", delai: SANS_COUPURE});
     autre.serveur.tenir(true);
     const fin = autre.f.ouvrirATouteLaClasse();
     await tic();
