@@ -1876,11 +1876,15 @@
         show("module");
       }
 
-      // Sous « J'apprends », ce qu'on va manipuler.
-      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle"});
+      // Sous « J'apprends », ce qu'on va manipuler. (05/11/2026 : chaque outil
+      // a sa phrase — C1, D1, D4 et les bandes du lot 6 affichaient
+      // « undefined » ; C3, M10, M12, D1-3 disaient « avec la droite ».)
+      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
+        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre"});
       // L'outil de J'apprends d'un niveau : ce qu'on manipule, sinon l'image
-      // (M1, M5, M6 : le schéma en barres ; M4 : la bande ; M8 : le rectangle).
-      const OUTILS_IMAGE = Object.freeze({barres: "barres", "barres-fois": "barres", parts: "barres", bande: "bande", rectangle: "rectangle"});
+      // (M1, M5, M6, F5-3, F6-2, F6-3, F8-3 : le schéma en barres ; M4 : la
+      // bande ; M8 : le rectangle ; C3 : les deux barres ; M10, M12, D1-3).
+      const OUTILS_IMAGE = Object.freeze({barres: "barres", "barres-fois": "barres", parts: "barres", "barre-droite": "barres", bande: "bande", rectangle: "rectangle", "deux-barres": "deux-barres", facteurs: "facteurs", partage: "partage", numeration: "numeration"});
       function outilApprends(apprends) {
         if (apprends.manipule) return apprends.manipule.outil;
         return OUTILS_IMAGE[apprends.represente.outil] || "aucun";
@@ -3187,7 +3191,8 @@
       }
 
       // Après deux entraînements ratés : ce que l'élève retrouvera demain.
-      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle"});
+      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
+        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre"});
 
       // La fin de la séance : les étapes et leur score, « Demain : … », le
       // nombre de fois cette semaine. Après deux entraînements ratés, le
