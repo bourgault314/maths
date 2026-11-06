@@ -1129,6 +1129,10 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 @media (max-width: 620px) {
   .dc-retenir .dc-aide { width: calc(min(100%, 440px) * var(--retenir-z, 1)); }
 }
+/* Lot « couverture » (06/11/2026) : la deuxième façon de voir, sous le
+   dessin, plus petite que la règle. */
+.dc-retenir .dc-retenir-autre { margin: 8px 0 0; padding-top: 8px; border-top: 2px dashed #9fd3cb; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(1.05rem, 4vw, 1.35rem)); font-weight: 850; line-height: 1.25; }
+.dc-retenir .dc-retenir-autre .dc-retenir-calcul { font-size: 1.15em; }
 .dc-retenir .cahier { margin: 8px 0 0; color: #5b7286; font-size: .9rem; font-weight: 800; }
 
 /* ---- le bilan : « Juste, mais trop long » ---- */

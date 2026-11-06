@@ -37,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 96, "les 32 modules construits : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b)");
+  assert.equal(NIVEAUX.length, 95, "les 32 modules construits (95 niveaux depuis le lot « couverture ») : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
@@ -160,8 +160,10 @@ test("J'écris des modules lot 2 (A3, A4, A6, A7, A8) : les morceaux attendus", 
   // « 80 + □ = 81 » + 1, puis 81 − 76 = 5 : le saut direct + 5 dessous.
   assert.deepEqual(dessins("A8-1").map(vus), [["?", "?"], [4, "?"], [4, 1], [4, 1]]);
   assert.deepEqual(dessins("A8-1").map(d => Boolean(d.directCache)), [true, true, true, false]);
-  // A8-3, 5 000 − □ = 4 997 : un seul saut, écrit à la 1re étape.
-  assert.deepEqual(dessins("A8-3").map(vus), [["?"], [3], [3]]);
+  // A2-5 (lot « couverture »), 748 + □ = 1 200 : les points sont là, chaque
+  // étape écrit son saut (+ 2, + 50, + 400), la dernière le saut direct.
+  assert.deepEqual(dessins("A2-5").map(vus), [["?", "?", "?"], [2, "?", "?"], [2, 50, "?"], [2, 50, 400], [2, 50, 400]]);
+  assert.deepEqual(dessins("A2-5").map(d => Boolean(d.directCache)), [true, true, true, true, false]);
 });
 
 test("la droite du boulier : un saut par geste, son point d'arrivée, rien avant", () => {

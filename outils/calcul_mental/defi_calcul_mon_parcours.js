@@ -39,7 +39,10 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
   "use strict";
 
-  const VERSION = 2;
+  // Version 3 (lot « couverture », 06/11/2026) : A2 gagne un niveau (A2-5),
+  // A8 et F5 perdent leur niveau 3, réuni au niveau 2 (reprise des boîtes
+  // dans normaliserParcours) ; A9 et M9 (pas construits) passent à 2 niveaux.
+  const VERSION = 3;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -48,15 +51,16 @@
   const ALPHABET_CODE = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   const LONGUEUR_CODE = 6;
 
-  // Les 74 codes et leur nombre de niveaux, dans l'ordre de la carte v2 (les
+  // Les 74 codes et leur nombre de niveaux, dans l'ordre de la carte (les
   // 45 modules construits ou à construire, puis les 29 réservés). Un test
-  // compare cette table aux fiches de defi_calcul_core.js.
+  // compare cette table aux fiches de defi_calcul_core.js. Carte v3 (lot
+  // « couverture ») : A2 5, A8 2, A9 2, M9 2, F5 2.
   const NIVEAUX = Object.freeze({
-    A1: 3, A10: 3, A11: 3, A2: 4, A3: 4, A4: 4, A5: 4, A6: 4, A7: 3, A8: 3, A9: 4,
-    M4: 2, M1: 3, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 3, M10: 3, M11: 2, M12: 3,
+    A1: 3, A10: 3, A11: 3, A2: 5, A3: 4, A4: 4, A5: 4, A6: 4, A7: 3, A8: 2, A9: 2,
+    M4: 2, M1: 3, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
     C1: 3, C3: 3, C4: 2,
     D1: 3, D2: 4, D3: 3, D4: 3, D5: 2, D6: 3, D7: 3, D8: 3, D9: 2,
-    F2: 2, F1: 3, F3: 3, F4: 2, F5: 3, F6: 3, F8: 3, F9: 2, F11: 2,
+    F2: 2, F1: 3, F3: 3, F4: 2, F5: 2, F6: 3, F8: 3, F9: 2, F11: 2,
     D10: 3, D11: 3, D12: 2, D13: 3, D14: 3, D15: 3, F7: 3, F10: 3, F12: 2, F13: 3,
     P1: 3, P2: 3, P3: 4, P4: 3, R1: 2, R2: 3, R3: 3, R4: 3, R5: 4, R6: 2,
     X1: 3, X2: 3, X3: 2, X4: 3, X5: 4, X6: 3, X7: 3, C2: 4, C5: 3
@@ -283,19 +287,64 @@
     return PLAN_MAX.map((maximum, index) => entier(liste[index], 0, maximum));
   }
 
+  // La reprise des boîtes de la version 2 (lot « couverture », 06/11/2026) :
+  // A8-3 est réuni à A8-2, F5-3 à F5-2. Avant de couper la liste à 2
+  // niveaux, la compétence réunie prend, des deux anciennes, la plus
+  // prudente : celle qui est entrée ; entrées toutes les deux, celle qui a la
+  // boîte la plus basse (son échéance, ses échecs, son « entraînée avec
+  // l'aide »). « J'apprends fait » vaut si les deux l'étaient ; les séries
+  // jouées s'ajoutent. Une compétence réunie ratée revient donc tout de
+  // suite par Mes calculs du jour, jamais une boîte gagnée sans avoir été
+  // jouée. Les compétences des autres modules ne bougent pas : leurs rangs,
+  // si, et le plan d'une séance de la version 2 est refermé (plus bas).
+  const REUNIS_V3 = Object.freeze({A8: Object.freeze([2, 3]), F5: Object.freeze([2, 3])});
+  function reprendreV2(id, brut) {
+    if (!brut || typeof brut !== "object") return brut;
+    // A2 a un niveau de plus (A2-5) : le module n'est plus su tant que ce
+    // niveau n'est pas appris (il n'est plus coché).
+    if (id === "A2") return Object.assign({}, brut, {ok: null});
+    if (!REUNIS_V3[id]) return brut;
+    const [garde, parti] = REUNIS_V3[id].map(n => n - 1);
+    const liste = cle => (Array.isArray(brut[cle]) ? brut[cle].slice() : []);
+    const b = liste("b");
+    const nombre = (x, max) => entier(x, 0, max);
+    const boiteG = nombre(b[garde], SEUILS.revision.boites);
+    const boiteP = nombre(b[parti], SEUILS.revision.boites);
+    const source = !boiteP ? garde : !boiteG ? parti : boiteP < boiteG ? parti : garde;
+    const copie = Object.assign({}, brut);
+    ["b", "e", "x", "t"].forEach(cle => {
+      const l = liste(cle);
+      if (source === parti) l[garde] = l[parti];
+      l.splice(parti, 1);
+      copie[cle] = l;
+    });
+    const a = liste("a");
+    a[garde] = boiteG && boiteP ? Math.min(nombre(a[garde], 1), nombre(a[parti], 1)) : nombre(a[source], 1);
+    a.splice(parti, 1);
+    copie.a = a;
+    const f = liste("f");
+    f[garde] = Math.min(SEUILS.compteur, nombre(f[garde], SEUILS.compteur) + nombre(f[parti], SEUILS.compteur));
+    f.splice(parti, 1);
+    copie.f = f;
+    return copie;
+  }
+
   function normaliserParcours(brut) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object") return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
+    const avantV3 = entier(brut.version, 0, 999) < 3;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
-        if (Object.prototype.hasOwnProperty.call(brut.modules, id)) parcours.modules[id] = normaliserModule(id, brut.modules[id]);
+        if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
+        parcours.modules[id] = normaliserModule(id, avantV3 ? reprendreV2(id, brut.modules[id]) : brut.modules[id]);
       });
     }
     const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
     // Le plan d'une séance ne vaut que dans sa version : en version 1, les
-    // rangs des compétences et le sens de p[4] étaient autres. Une
+    // rangs des compétences et le sens de p[4] étaient autres ; en version 2,
+    // les rangs (A2 a un niveau de plus, A8, A9, M9, F5 en ont moins). Une
     // progression plus ancienne garde ses boîtes et son nombre de séances,
     // mais sa séance en cours est refermée (elle se rouvre sur un plan neuf).
     const ancienne = entier(brut.version, 0, 999) < VERSION;

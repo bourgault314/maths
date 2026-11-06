@@ -637,7 +637,10 @@
   // ------------------------------------------------------- le glisse-nombres
 
   // Les noms des colonnes, par rang (0 = unités).
+  // (Lot « couverture », 06/11/2026 : les millions — 900 × 7 000, 9 000 ×
+  // 7 000 au CM2.)
   const RANGS = Object.freeze({
+    7: "Dizaines de millions", 6: "Millions",
     5: "Centaines de mille", 4: "Dizaines de mille", 3: "Milliers", 2: "Centaines", 1: "Dizaines", 0: "Unités",
     "-1": "Dixièmes", "-2": "Centièmes", "-3": "Millièmes"
   });

@@ -64,7 +64,8 @@ test("Défi calcul : ni élève à code, ni élève qui arrive de son espace, ni
   // parcours ; rien à effacer → « Comment ça marche ? » centré sous les deux.
   assert.match(CALCUL_CSS, /\.acc\.dc-a \{ grid-template-areas: "gauche parcours" "bas effacer"; \}/);
   assert.match(CALCUL_CSS, /\.acc\.dc-a:not\(\.avec-effacer\) \{ grid-template-areas: "gauche parcours" "bas bas"; \}/);
-  assert.match(CALCUL, /defi_calcul\.css\?v=20261106-2/, "la feuille modifiée change d'adresse (cache)");
+  // (Puis le lot « couverture » de Défi calcul, le même soir : 20261106-3.)
+  assert.match(CALCUL, /defi_calcul\.css\?v=20261106-3/, "la feuille modifiée change d'adresse (cache)");
 });
 
 test("Défi tables : la remise à zéro n'existe plus sous un code, même par un clic forcé", () => {

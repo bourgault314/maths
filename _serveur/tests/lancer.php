@@ -7061,9 +7061,9 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(2, $reference->version, 'version 2 (lot 3)');
+    egal(3, $reference->version, 'version 3 (lot « couverture » : A2-5, A8 et F5 en deux niveaux)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
-    egal(4, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3)');
+    egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
     vrai(isset($reference->modules->A5->c->{'1'}), 'les causes par numéro');
     vrai(!isset($reference->test), '« test » a disparu (lot 3)');

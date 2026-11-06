@@ -4698,7 +4698,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (fiche) {
       const niveaux = fiche.niveaux.map(n => n.n);
       const ordre = niveau && niveaux.includes(niveau) ? [niveau, ...niveaux.filter(n => n !== niveau)] : niveaux;
-      boucle: for (const n of ordre) for (let graine = 1; graine <= 6; graine += 1) for (let tour = 0; tour < 3; tour += 1) {
+      // (Lot « couverture » de Défi calcul, 06/11/2026 : jusqu'à 6 écritures
+      // par niveau — M10-1 en a 4, et la moitié-double est la 4e.)
+      boucle: for (const n of ordre) for (let graine = 1; graine <= 6; graine += 1) for (let tour = 0; tour < 6; tour += 1) {
         const calcul = CALCUL_CORE.genererUn(`${id}-${n}`, graine, {tour});
         if (!calcul) continue;
         for (const reponse of candidatsErreur(calcul)) {

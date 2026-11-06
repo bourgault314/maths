@@ -64,10 +64,10 @@ function avecBoites(boites, base = P.creerParcours()) {
   return P.normaliserParcours(p);
 }
 
-test("l'ordre de la carte v2 : la séance suit les compétences, pas les modules", () => {
+test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules", () => {
   assert.deepEqual(P.parcoursConstruit(CARTE).map(c => `${c.module}-${c.niveau}`),
-    ["A2-1", "A2-2", "M2-1", "A5-1", "A2-3", "A5-2", "A5-3", "A2-4", "M2-2", "D2-1", "A5-4", "D2-2", "D2-3", "D2-4"]);
-  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 129);
+    ["A2-1", "A2-2", "M2-1", "A5-1", "A2-3", "A5-2", "A5-3", "A2-4", "M2-2", "D2-1", "A2-5", "A5-4", "D2-2", "D2-3", "D2-4"]);
+  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 125);
   assert.deepEqual(P.parcoursConstruit(CARTE_PLEINE).slice(0, 4).map(c => `${c.module}-${c.niveau}`), ["A1-1", "A1-2", "A1-3", "A10-1"]);
   // Le palier est celui du niveau : A5 « + 9 » aux bases, « + 98 » au CM2.
   assert.equal(P.palierDe(CARTE, "A5", 1), 1);
@@ -76,8 +76,8 @@ test("l'ordre de la carte v2 : la séance suit les compétences, pas les modules
   assert.equal(P.typeDe(CARTE, "A2", 1), "F");
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
   const compte = P.compter(P.creerParcours(), CARTE);
-  assert.deepEqual(compte.paliers.map(p => p.total), [37, 32, 45, 15]);
-  assert.equal(compte.total, 129);
+  assert.deepEqual(compte.paliers.map(p => p.total), [40, 30, 42, 13]);
+  assert.equal(compte.total, 125);
 });
 
 test("premier jour : pas de calculs du jour, la séance commence par le test du premier module", () => {
@@ -97,21 +97,21 @@ test("le test en escalier : la marche la plus haute en boîte 3, celles d'en des
   let p = ouvrir(P.creerParcours(), J1);
   let r = tester(p, "A2", 2, J1);
   p = r.parcours;
-  assert.deepEqual(p.modules.A2.b, [4, 3, 0, 0]);
-  assert.deepEqual(p.modules.A2.e, [plus(7), plus(3), null, null]);
-  assert.deepEqual(r.bilan.map(n => [n.connu, n.boite, n.jouee]), [[true, 4, true], [true, 3, true], [false, 0, true], [false, 0, false]]);
+  assert.deepEqual(p.modules.A2.b, [4, 3, 0, 0, 0]);
+  assert.deepEqual(p.modules.A2.e, [plus(7), plus(3), null, null, null]);
+  assert.deepEqual(r.bilan.map(n => [n.connu, n.boite, n.jouee]), [[true, 4, true], [true, 3, true], [false, 0, true], [false, 0, false], [false, 0, false]]);
   assert.equal(r.marche, 2);
   assert.equal(r.tout, false);
   assert.equal(r.finie, false);
   // Les marches prouvées comptent comme « J'apprends fait » (31/10).
-  assert.deepEqual(p.modules.A2.a, [1, 1, 0, 0]);
+  assert.deepEqual(p.modules.A2.a, [1, 1, 0, 0, 0]);
   // « Le niveau 3, tu vas l'apprendre maintenant » : A2-3, jouée au test sans être prouvée, vient tout
   // de suite — pas le test de M2, même si M2-1 la précède dans l'ordre de la carte (31/10).
   assert.deepEqual(P.competenceCourante(p, CARTE), {module: "A2", niveau: 3});
   assert.deepEqual(file(p, J1).etapes, [{type: "apprends", module: "A2", niveau: 3}, {type: "entraine", module: "A2", niveau: 3}]);
   // Rien prouvé : rien n'entre, le module n'est plus intact, on apprend.
   let q = tester(ouvrir(P.creerParcours(), J1), "A2", 0, J1).parcours;
-  assert.deepEqual(q.modules.A2.b, [0, 0, 0, 0]);
+  assert.deepEqual(q.modules.A2.b, [0, 0, 0, 0, 0]);
   assert.deepEqual(types(q, J1), ["apprends", "entraine"]);
   assert.deepEqual(file(q, J1).etapes[0], {type: "apprends", module: "A2", niveau: 1});
   // Tout prouvé : tout est su sauf la dernière marche (en route), le module n'est pas encore « su ».
@@ -121,7 +121,7 @@ test("le test en escalier : la marche la plus haute en boîte 3, celles d'en des
   // Le test ne touche pas une compétence déjà entrée.
   const deja = avecBoites({"A2-1": [2, J1]});
   r = tester(ouvrir(deja, J1), "A2", 3, J1);
-  assert.deepEqual(r.parcours.modules.A2.b, [2, 4, 3, 0]);
+  assert.deepEqual(r.parcours.modules.A2.b, [2, 4, 3, 0, 0]);
 });
 
 test("au plus 4 tests par séance ; un élève qui sait tout traverse les modules", () => {
@@ -470,13 +470,13 @@ test("tout est entré : la séance, ce sont les calculs du jour ; rien de dû à
 });
 
 test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté par séance, tout finit vert", () => {
-  // Un élève qui réussit presque tout, sur la carte pleine (129 compétences).
+  // Un élève qui réussit presque tout, sur la carte pleine (125 compétences).
   const rng = CORE.mulberry32(20261030);
   let p = P.creerParcours();
   let jour = J1;
   let maxCalculs = 0;
   let maxEtapes = 0;
-  for (let d = 0; d < 400 && !(P.competenceCourante(p, CARTE_PLEINE) === null && P.compter(p, CARTE_PLEINE).sues === 129); d += 1) {
+  for (let d = 0; d < 400 && !(P.competenceCourante(p, CARTE_PLEINE) === null && P.compter(p, CARTE_PLEINE).sues === 125); d += 1) {
     jour = plus(d);
     p = ouvrir(p, jour, CARTE_PLEINE);
     let etapes = 0;
@@ -507,10 +507,11 @@ test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté
     assert.ok(p.seance.n === nAvant + 1 || !file(p, jour, CARTE_PLEINE).etapes.length, `${jour} : la séance se finit`);
   }
   assert.ok(maxCalculs <= 20);
-  assert.ok(maxEtapes <= 9, `${maxEtapes} étapes`);
+  // Au plus : Mes calculs du jour, 3 rouges, 4 tests, J'apprends, Je m'entraîne.
+  assert.ok(maxEtapes <= 1 + P.SEUILS.rattrapage.parSeance + P.SEUILS.test.parSeance + 2, `${maxEtapes} étapes`);
   assert.equal(P.competenceCourante(p, CARTE_PLEINE), null, "tout est entré");
   const compte = P.compter(p, CARTE_PLEINE);
-  assert.equal(compte.sues, 129, `${compte.sues} sues`);
+  assert.equal(compte.sues, 125, `${compte.sues} sues`);
   assert.ok(P.mesurer(p).cles < 2000 && P.mesurer(p).octets < 40000);
 });
 
@@ -521,14 +522,15 @@ test("le test d'entrée : la marche est bornée par les résultats", () => {
   const trafique = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 4, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE, seance: true});
   assert.equal(trafique.marche, 0);
   assert.equal(trafique.tout, false);
-  assert.deepEqual(trafique.parcours.modules.A2.b, [0, 0, 0, 0], "rien n'entre");
+  assert.deepEqual(trafique.parcours.modules.A2.b, [0, 0, 0, 0, 0], "rien n'entre");
   // Un trou dans l'escalier n'est pas une marche prouvée : 2/2, 1/3, 2/2 → marche 1.
   const trou = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 3, niveaux: [{niveau: 1, justes: 2, total: 2}, {niveau: 2, justes: 1, total: 3}, {niveau: 3, justes: 2, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE});
   assert.equal(trou.marche, 1);
-  assert.deepEqual(trou.parcours.modules.A2.b, [3, 0, 0, 0]);
+  assert.deepEqual(trou.parcours.modules.A2.b, [3, 0, 0, 0, 0]);
   // Le test honnête : inchangé.
-  assert.deepEqual(tester(P.creerParcours(), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0]);
-  assert.deepEqual(tester(P.creerParcours(), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3]);
+  assert.deepEqual(tester(P.creerParcours(), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0, 0]);
+  assert.deepEqual(tester(P.creerParcours(), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3, 0]);
+  assert.deepEqual(tester(P.creerParcours(), "A2", 5, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 4, 3], "A2-5 (lot « couverture »), la 5e marche");
 });
 
 // Lot 3b (31/10) : l'élève coincé. Au 3e échec de suite dans Mes calculs du
@@ -602,15 +604,17 @@ test("la vraie carte (modules lots 1 à 5) : le parcours commence par A1, A10, A
     ["A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1", "M4-1", "A2-2"]);
   assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(12, 18).map(c => `${c.module}-${c.niveau}`), ["M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2"], "modules lot 2 : A4 puis A6 juste après A5 ; lot 3 : M4-2 après A6-1");
   // Modules lot 3 : la fin du palier 1, comme la carte (§ 3).
-  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(26, 37).map(c => `${c.module}-${c.niveau}`),
-    ["M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2"], "le palier 1 entier : 37 compétences sur 37");
+  // Carte v3 (lot « couverture ») : F8-1, F8-2, F6-1 (CE1, CE2) au palier 1.
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(26, 40).map(c => `${c.module}-${c.niveau}`),
+    ["A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2"], "le palier 1 entier : 40 compétences sur 40");
   // Modules lot 4 : le palier 2 des entiers, dans l'ordre de la carte (§ 3) ;
   // modules lot 5 : les décimaux D1, D3, D4 à leur place ; les fractions,
   // pas encore construites, sont sautées.
   // Modules lot 6 : F2, F5, F6, F8 à leur place ; modules lot 6b : F1-1 et
   // F3 reprennent la leur (le palier 2 entier).
-  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(37, 69).map(c => `${c.module}-${c.niveau}`),
-    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "F6-1", "M10-1", "F8-1", "A8-3", "F3-3", "C3-2", "F5-2", "M12-1", "F8-2"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5, F6, F8");
-  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 96);
+  // Carte v3 : A2-5 au CM1 ; A8-3, F5-3 réunis ; F9-1 (pas construit) sauté.
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(40, 69).map(c => `${c.module}-${c.niveau}`),
+    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "M12-1"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5");
+  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 95);
   assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "nouveau"}]);
 });
