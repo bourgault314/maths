@@ -356,7 +356,14 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 3 octobre 2026/);
+  assert.match(page, /Dernière mise à jour : 6 novembre 2026/);
+  // Lot « compteur de visites » (06/11/2026) : la page dit ce que reçoit le compteur, et ce qu'il ne garde pas.
+  assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil/);
+  assert.match(page, /sans ce qui suit le «&nbsp;\?&nbsp;»/);
+  assert.match(page, /Il ne garde ni votre adresse IP ni aucun identifiant/);
+  assert.match(page, /Les pages du suivi de classe ne sont pas comptées/);
+  assert.match(page, /<code>mathsgo-compteur-ignorer<\/code>/, "la seule case du compteur est déclarée");
+  assert.doesNotMatch(page, /Mesure d’audience&nbsp;: aucune|pas de statistiques|aucune page n’appelle de serveur tiers/, "plus de phrase devenue fausse");
   assert.match(page, /mathsgo-suivi-identite/, "la clé d'identité de l'onglet (lot 8) est déclarée");
   assert.doesNotMatch(page, /<code>_ga<\/code>/, "plus de ligne _ga dans le tableau");
   assert.doesNotMatch(page, /mathsgo:consentement:v1/, "plus de clé de consentement dans le tableau");

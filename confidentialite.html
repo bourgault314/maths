@@ -9,11 +9,12 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <meta name="description" content="Politique de confidentialité du site pédagogique maths&amp;go : aucun cookie, aucune mesure d’audience, des données qui restent sur votre appareil.">
+  <meta name="description" content="Politique de confidentialité du site pédagogique maths&amp;go : aucun cookie, un simple compteur de visites anonyme, des données qui restent sur votre appareil.">
   <link rel="canonical" href="https://mathsgo.re/confidentialite.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="stylesheet" href="assets/css/pages-legales.css?v=confidentialite-20260904-2">
   <script defer src="assets/js/mention-confidentialite.js"></script>
+<script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
   <header class="legal-header">
@@ -29,9 +30,9 @@
     <p class="legal-eyebrow">Vos données</p>
     <h1>Confidentialité</h1>
     <p class="legal-intro">maths&amp;go n’utilise aucun cookie de mesure ni aucun traceur tiers. Les outils s’utilisent sans compte, et ce qu’ils gardent en mémoire reste sur votre appareil.</p>
-    <p class="legal-updated">Dernière mise à jour : 3 octobre 2026</p>
+    <p class="legal-updated">Dernière mise à jour : 6 novembre 2026</p>
 
-    <p class="legal-note"><strong>En bref.</strong> Pas de compte, pas de statistiques, pas de publicité, aucun script venu d’ailleurs. Plusieurs jeux et outils gardent sur votre appareil, et seulement là, vos réglages et votre progression&nbsp;; rien n’est transmis. Seule exception&nbsp;: le suivi de classe, quand un élève entre le code remis par son professeur.</p>
+    <p class="legal-note"><strong>En bref.</strong> Pas de compte, pas de publicité, aucun script venu d’ailleurs, et un simple compteur de visites anonyme. Plusieurs jeux et outils gardent sur votre appareil, et seulement là, vos réglages et votre progression&nbsp;; rien n’est transmis. Seule exception&nbsp;: le suivi de classe, quand un élève entre le code remis par son professeur.</p>
 
     <div class="legal-sections">
       <section class="legal-section" aria-labelledby="responsable">
@@ -64,6 +65,7 @@
             <li><code>mathsgo-coffres-parcours</code>, <code>mathsgo-coffres-parcours:CODE</code>, <code>mathsgo-coffres-sync:CODE</code>, <code>mathsgo-coffres-sel</code> — la progression dans Coffres magiques (solo) pour un élève suivi par son professeur&nbsp;: une case par code de suivi (son nom ne contient jamais le code), les trésors ouverts par niveau, les clés gagnées, aides et erreurs par opération, la partie en cours, et le numéro de la dernière version confirmée par le serveur. Sans code de suivi, Coffres magiques ne garde rien.</li>
             <li><code>mathsgo-suivi-code</code>, <code>mathsgo-suivi-identite</code>, <code>mathsgo-splat-mondes</code>, <code>mathsgo-coffres-reglages</code>, <code>mathsgo-defi-tables-prenom</code>, <code>mathsgo-defi-tables-table</code> — stockage de session (le temps d’un onglet)&nbsp;: code de suivi, prénom et classe donnés par le serveur, mondes de SPLAT! ouverts à la classe, niveaux et opérations de Coffres magiques ouverts à la classe, prénom tapé sans code, table choisie sur l’accueil de Défi tables.</li>
             <li><code>mp_reussites</code>, <code>fractionstrips_scenes_v1</code>, <code>relatifs_sound_v2</code>, <code>nd_showGrid</code>, <code>nd_showFives</code>, <code>nd_projection</code>, <code>nd_labelMode</code> — réussites du Moulin de Pythagore, scènes des bandes de fractions, réglages de son et d’affichage des plateaux.</li>
+            <li><code>mathsgo-compteur-ignorer</code> — seulement sur les appareils de l’auteur du site&nbsp;: ne pas compter ses propres visites.</li>
             <li>Quelques réglages ou progressions propres à un outil (division posée, labo des régularités, jeux d’Axelle, retour aux automatismes, icônes du catalogue), sous des clés qui portent le nom de l’outil.</li>
           </ul>
         </details>
@@ -71,9 +73,10 @@
 
       <section class="legal-section" aria-labelledby="hebergement">
         <h2 id="hebergement">Hébergement, contact, audience</h2>
-        <p>Le site est hébergé par GitHub Pages&nbsp;: GitHub enregistre l’adresse IP des visiteurs pour la sécurité et peut traiter des données hors de l’Union européenne (<a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener noreferrer">déclaration de confidentialité GitHub</a>). Polices et bibliothèques sont servies par mathsgo.re lui-même&nbsp;: aucune page n’appelle de serveur tiers.</p>
+        <p>Le site est hébergé par GitHub Pages&nbsp;: GitHub enregistre l’adresse IP des visiteurs pour la sécurité et peut traiter des données hors de l’Union européenne (<a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener noreferrer">déclaration de confidentialité GitHub</a>). Polices, bibliothèques et compteur de visites sont servis par mathsgo.re lui-même&nbsp;; le seul autre serveur que les pages contactent est celui du compteur, décrit ci-dessous.</p>
         <p>« Me contacter » ouvre votre propre messagerie. Un message ne sert qu’à vous répondre et il est supprimé quand il n’est plus utile.</p>
-        <p>Mesure d’audience&nbsp;: aucune. Google Analytics, proposé avec votre accord jusqu’au 4 septembre 2026, a été retiré&nbsp;; s’il reste un ancien cookie de mesure, le site l’efface à votre prochaine visite.</p>
+        <p>Mesure d’audience&nbsp;: un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil. Il reçoit l’adresse de la page ouverte (sans ce qui suit le «&nbsp;?&nbsp;»), le site d’où vous venez, la largeur de l’écran et le pays. Il ne garde ni votre adresse IP ni aucun identifiant&nbsp;: il ne sait pas qui vous êtes. Les pages du suivi de classe ne sont pas comptées.</p>
+        <p>Google Analytics, proposé avec votre accord jusqu’au 4 septembre 2026, a été retiré&nbsp;; s’il reste un ancien cookie de mesure, le site l’efface à votre prochaine visite.</p>
       </section>
 
       <section class="legal-section" aria-labelledby="droits">
