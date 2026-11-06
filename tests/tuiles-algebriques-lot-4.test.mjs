@@ -130,7 +130,9 @@ test("Pivoter : un outil comme la corbeille, seulement pour 𝑥, hors tableau p
   assert.doesNotMatch(bouton, /<circle|<ellipse/);
   assert.match(methode("handleDragStart(e) {"), /if \(this\.currentTool === 'rotate'\) \{[\s\S]*?this\.pivoterTuile\(/);
   const pivoter = methode("pivoterTuile(t) {");
-  assert.match(pivoter, /if \(t\.type !== 'x' \|\| t\.productZone \|\| t\.pairId !== null\)/);
+  // lot 5 : dans une case du rectangle à factoriser, Pivoter marche ; ailleurs dans un tableau, toujours refusé
+  assert.match(pivoter, /const caseFacto = t\.productZone === 'cell' && this\.productFrame\?\.mode === 'facto';/);
+  assert.match(pivoter, /if \(t\.type !== 'x' \|\| \(t\.productZone && !caseFacto\) \|\| t\.pairId !== null\)/);
   assert.match(pivoter, /this\.saveState\(\);/);
   assert.match(pivoter, /t\.originalOrientation = o;/);
 });
