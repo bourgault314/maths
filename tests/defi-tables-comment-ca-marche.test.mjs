@@ -133,13 +133,14 @@ test("les nombres écrits pour l'élève sont ceux du moteur : 5 boîtes, 10 à 
 
 test("le prénom demandé à l'impression : un formulaire caché dans l'écran de la fiche, le bouton lui laisse la place", () => {
   assert.match(html, /<form id="fiche-prenom-form" class="fiche-prenom-form" hidden>[\s\S]*?<label for="fiche-prenom-input">Comment t’appelles-tu&nbsp;\? <span class="sr-only">\(facultatif\)<\/span><\/label>[\s\S]*?<input id="fiche-prenom-input" type="text" maxlength="20"[\s\S]*?<button class="primary" type="submit">OK<\/button>[\s\S]*?<button id="fiche-prenom-plus-tard" class="secondary" type="button">Plus tard<\/button>[\s\S]*?<\/form>\s*\n\s*<div id="fiche-action" class="fiche-action">/);
-  // Le même libellé que dans Mon parcours : une seule question, deux endroits.
-  assert.equal((html.match(/Comment t’appelles-tu&nbsp;\?/g) || []).length, 2);
+  // Lot « Effacer l'historique » (06/11/2026) : la question du prénom ne se
+  // pose plus qu'ici, à l'impression (plus dans Mon parcours).
+  assert.equal((html.match(/Comment t’appelles-tu&nbsp;\?/g) || []).length, 1);
   // Variante B : le bouton disparaît pendant la question, et revient après.
   assert.match(html, /function ouvrirPrenomFiche\(\) \{\s*\n\s*state\.fichePrenomDemande = true;\s*\n\s*\$\("fiche-prenom-form"\)\.hidden = false;\s*\n\s*\$\("fiche-action"\)\.hidden = true;/);
   assert.match(html, /function fermerPrenomFiche\(\) \{\s*\n\s*\$\("fiche-prenom-form"\)\.hidden = true;\s*\n\s*\$\("fiche-action"\)\.hidden = false;\s*\n\s*\}/);
-  // Le formulaire reprend le cadre de celui de Mon parcours.
-  assert.match(html, /\.parcours-name,\s*\n\s*\.fiche-prenom-form,\s*\n\s*\.parcours-confirm \{/);
+  // Le formulaire a le même cadre que la question « Effacer ? ».
+  assert.match(html, /\.fiche-prenom-form,\s*\n\s*\.parcours-confirm \{/);
   assert.match(html, /\.fiche-prenom-form \{ max-width: 340px; margin: 12px auto 4px; \}/);
 });
 

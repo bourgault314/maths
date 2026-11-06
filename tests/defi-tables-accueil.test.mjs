@@ -91,8 +91,9 @@ test("« Prochaine étape » a disparu du parcours et du résultat ; le résulta
   assert.match(html, /<button id="result-accueil" class="primary" type="button">Ma table<\/button>\s*<button id="retry" class="secondary" type="button">Rejouer<\/button>\s*<button id="result-open-parcours" class="secondary" type="button">Voir mon parcours<\/button>/);
 });
 
-test("le menu ⋯ du parcours garde ses trois options, dans cet ordre (R5 : plus d'impression ici)", () => {
-  assert.match(html, /id="parcours-rename"[\s\S]*Modifier mon prénom[\s\S]*id="parcours-reset"[\s\S]*Recommencer à zéro[\s\S]*id="parcours-notice-option"[\s\S]*Comment ça marche/);
+test("le menu ⋯ du parcours : « Effacer mon historique » puis « Comment ça marche ? » (lot « Effacer l'historique », 06/11/2026 ; R5 : plus d'impression ici)", () => {
+  assert.match(html, /id="parcours-reset"[^>]*>Effacer mon historique<[\s\S]*id="parcours-notice-option"[\s\S]*Comment ça marche/);
+  assert.doesNotMatch(html, /id="parcours-rename"|>Modifier mon prénom<|>Recommencer à zéro</);
   assert.doesNotMatch(html, /parcours-print-option/);
   assert.match(html, /id="parcours-notice-bouton"[^>]*aria-controls="parcours-notice"/);
   assert.match(html, /id="parcours-notice" class="notice" data-notice hidden/);
