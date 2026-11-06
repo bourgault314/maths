@@ -695,7 +695,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["calcul-mental", "additions", "soustractions", "complements", "doubles", "decimaux", "fractions"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/defi-calcul-modules.svg?v=1",
-      "cardDescription": "Apprendre et s’entraîner au calcul mental, module par module (compléments, doubles, passages à la dizaine…). D’autres modules arrivent."
+      "cardDescription": "Le calcul mental, module par module : compléments, doubles, passages à la dizaine… D’autres modules arrivent."
     },
     "outils/calcul_mental/flash_anzan.html": {
       "primaryNotion": "calcul-mental",
