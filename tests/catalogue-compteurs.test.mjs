@@ -58,7 +58,7 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
   const expected = {
     "nombres-calculs": 96,
     "proportionnalite-mesures": 18,
-    algebre: 30, // + « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama (11/10/2026), puis le diaporama en ligne
+    algebre: 28, // − les livrets bleu/jaune et Mathigon (06/11/2026) ; + « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama (11/10/2026), puis le diaporama en ligne
     geometrie: 20,
     donnees: 2,
     informatique: 0,
@@ -69,7 +69,7 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
     assert.equal(context.domainResourceCount(domain), count, domain);
   }
   assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 8);
-  assert.equal(context.resourceCount(published), 181, "Automatismes reste compté une fois dans le total du catalogue.");
+  assert.equal(context.resourceCount(published), 179, "Automatismes reste compté une fois dans le total du catalogue.");
 });
 
 test("Triangles compte ses descendants et les rubriques vides restent à zéro", () => {

@@ -513,5 +513,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // 65 au manifeste (avant : defi-calcul-modules-lot-6b).
   assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-relecture-1$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
