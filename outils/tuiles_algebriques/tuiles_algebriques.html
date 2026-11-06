@@ -16,6 +16,14 @@
     <script src="../../assets/vendor/katex-0.18.2/katex.min.js"></script>
     <link rel="stylesheet" href="../../assets/vendor/katex-0.18.2/katex.min.css">
     <style>
+        /* Le 𝑥 rond des tuiles (lot 2, 06/11/2026) : la police du site pour les lettres de l'inconnue,
+           SplatLettres (comme SPLAT! Équations et ÉquaSplat), qui ne sert QUE pour 𝑥 (unicode-range) ;
+           chiffres et signes gardent leur police. Avant, un x droit de Times New Roman sur les tuiles,
+           alors que l'équation écrit déjà 𝑥 rond. */
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:normal;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:italic;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
         body {
             font-family: 'Fredoka', sans-serif;
             background-color: #f0f9ff;
@@ -39,7 +47,7 @@
             z-index: 10;
             touch-action: none;
             box-sizing: border-box;
-            font-family: 'Times New Roman', serif;
+            font-family: SplatLettres, 'Times New Roman', serif;
             font-style: italic;
             font-size: 1.25rem;
             text-shadow: none;
@@ -244,7 +252,7 @@
             display: flex; align-items: center; justify-content: center; 
             border-radius: 0px; 
             color: #111827; font-weight: bold; 
-            font-family: 'Times New Roman', serif; font-style: italic;
+            font-family: SplatLettres, 'Times New Roman', serif; font-style: italic;
             text-shadow: none;
             box-shadow: 0 2px 4px rgba(0,0,0,0.16); 
             pointer-events: none; 
@@ -264,6 +272,22 @@
         }
         .btn-distribute { animation: pulse-blue 2s infinite; }
 
+        /* Parenthèse « − » pas encore retournée : un cadre pointillé autour des tuiles tapées
+           (elles gardent la couleur et le signe qu'on leur a donnés). Derrière les tuiles. */
+        .bracket-frame {
+            position: absolute; z-index: 4; pointer-events: none; box-sizing: border-box;
+            border: 3px dashed #ea580c; border-radius: 10px; background: rgba(251, 146, 60, 0.07);
+            transition: left 0.5s ease-in-out, top 0.5s ease-in-out, width 0.5s ease-in-out, height 0.5s ease-in-out;
+        }
+        .bracket-frame.dragging-follow { transition: none; }
+        /* Pendant son retournement, la tuile change de couleur d'un coup (sinon le fondu du vert au rouge passe par le marron). */
+        .token.flipping { transition: none !important; }
+
+        /* Flèche retour vers la collection (tool-parent-navigation.js), posée en tête de la barre :
+           même hauteur que le bouton ↶ et sans libellé, pour n'ajouter aucune ligne ni aucun espace. */
+        #barre-outils a.mathsgo-back { min-height: 38px; height: 38px; min-width: 38px; width: 38px; padding: 0; justify-content: center; border-radius: 0.5rem; margin: 0; }
+        #barre-outils a.mathsgo-back .mathsgo-back-label { display: none; }
+
         /* Équation : plus grande sur grand écran (projection), inchangée au téléphone. */
         #equation-display { font-size: clamp(20px, 2.4vw, 46px); }
         /* Au téléphone, l'équation prend toute une ligne au lieu d'être coupée par les boutons de vue. */
@@ -272,7 +296,7 @@
 <script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 <link rel="stylesheet" href="../../assets/vendor/tailwind/tailwind-outils.css?v=scripts-tiers-20260904-1">
 </head>
-<body class="h-screen w-screen flex flex-col">
+<body class="h-screen w-screen flex flex-col" data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;collection=tuiles-algebriques" data-mathsgo-parent-label="Tuiles algébriques" data-mathsgo-parent-place="#barre-outils">
 
     <div id="custom-cursor">
         
@@ -284,7 +308,7 @@
     </div>
 
     <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0">
-        <div class="flex flex-wrap items-center gap-2">
+        <div id="barre-outils" class="flex flex-wrap items-center gap-2">
             <!-- UNDO BUTTON -->
             <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -414,18 +438,18 @@
             <div class="flex flex-col gap-2 w-full px-1 items-center">
                 <!-- x² pair -->
                 <div class="flex gap-2">
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', 1)" class="tile-btn w-10 h-10" title="+x²"><div data-preview-type="x2" data-preview-sign="1" class="preview-shape ps-green w-8 h-8 text-sm">x²</div></button>
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', -1)" class="tile-btn w-10 h-10" title="-x²"><div data-preview-type="x2" data-preview-sign="-1" class="preview-shape ps-red w-8 h-8 text-sm">-x²</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', 1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', 1)" class="tile-btn w-10 h-10" title="+x²"><div data-preview-type="x2" data-preview-sign="1" class="preview-shape ps-green w-8 h-8 text-sm">𝑥²</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x2', -1)" ontouchstart="app.handleSidebarTouchStart(event, 'x2', -1)" class="tile-btn w-10 h-10" title="-x²"><div data-preview-type="x2" data-preview-sign="-1" class="preview-shape ps-red w-8 h-8 text-sm">-𝑥²</div></button>
                 </div>
                 <!-- x pair horizontal -->
                 <div class="flex gap-2">
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1, 'h')" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1, 'h')" class="tile-btn w-12 h-8" title="+x horizontal"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-10 h-[14px] text-sm">x</div></button>
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1, 'h')" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1, 'h')" class="tile-btn w-12 h-8" title="-x horizontal"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-10 h-[14px] text-sm">-x</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1, 'h')" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1, 'h')" class="tile-btn w-12 h-8" title="+x horizontal"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-10 h-[14px] text-sm">𝑥</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1, 'h')" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1, 'h')" class="tile-btn w-12 h-8" title="-x horizontal"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-10 h-[14px] text-sm">-𝑥</div></button>
                 </div>
                 <!-- x pair vertical -->
                 <div class="flex gap-2">
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1, 'v')" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1, 'v')" class="tile-btn w-8 h-12" title="+x vertical"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-5 h-10 text-[10px]">x</div></button>
-                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1, 'v')" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1, 'v')" class="tile-btn w-8 h-12" title="-x vertical"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-5 h-10 text-[10px]">-x</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', 1, 'v')" ontouchstart="app.handleSidebarTouchStart(event, 'x', 1, 'v')" class="tile-btn w-8 h-12" title="+x vertical"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-5 h-10 text-[10px]">𝑥</div></button>
+                    <button onmousedown="app.handleSidebarTouchStart(event, 'x', -1, 'v')" ontouchstart="app.handleSidebarTouchStart(event, 'x', -1, 'v')" class="tile-btn w-8 h-12" title="-x vertical"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-5 h-10 text-[10px]">-𝑥</div></button>
                 </div>
                 <!-- 1 pair -->
                 <div class="flex gap-2">
@@ -473,15 +497,20 @@
                     <canvas id="drawing-canvas"></canvas>
                 </div>
             </div>
-            <div class="absolute top-2 left-2 pointer-events-none opacity-40">
-                <p class="text-xs text-slate-400">Molette: Zoom | Clic-gauche/glisser: Pan</p>
-            </div>
         </main>
     </div>
 
     <script>
         const SNAP_THRESHOLD = 60;
         const INITIAL_SCALE = 1.45; // Zoom de départ : plus proche du tableau dès l'ouverture
+        // Zoom de départ adapté au plateau : on veut voir au moins INITIAL_VIEW_WORLD × INITIAL_VIEW_WORLD_H
+        // (en unités de plateau). Avant, 1,45 partout : au téléphone, une tuile x² remplissait l'écran.
+        // Au tableau (1920) et sur ordinateur (1366), la limite 1,45 reste celle qui s'applique.
+        const INITIAL_VIEW_WORLD = 400;   // environ trois tuiles x² côte à côte
+        const INITIAL_VIEW_WORLD_H = 300;
+        const MIN_SCALE = 0.5, MAX_SCALE = 3;
+        const FLIP_HALF_MS = 170;   // « Ajouter l'opposé » : durée d'un demi-retournement
+        const FLIP_STAGGER_MS = 230; // délai entre deux tuiles retournées
         const PEN_SCREEN_WIDTH = 2.2; // Épaisseur visuelle du stylo, compensée selon le zoom
         const CANVAS_WORLD_MIN = -1000;
         const CANVAS_WORLD_SIZE = 6000;
@@ -494,8 +523,8 @@
             return SIZES[type];
         }
         function getTileLabel(type, sign) {
-            if (type === 'x2') return sign === 1 ? 'x²' : '-x²';
-            if (type === 'x') return sign === 1 ? 'x' : '-x';
+            if (type === 'x2') return sign === 1 ? '𝑥²' : '-𝑥²';
+            if (type === 'x') return sign === 1 ? '𝑥' : '-𝑥';
             return sign === 1 ? '1' : '-1';
         }
         const TILE_COLOR_MODES = {
@@ -601,7 +630,7 @@
                 this.lastPos = { x: 40, y: 60, maxYInRow: 0 };
                 this.lastSequentialPackId = null; // Important for gaps
                 this.pendingPackGap = 0;
-                this.scale = INITIAL_SCALE; this.pan = { x: 0, y: 0 }; this.isPanning = false; this.panStart = { x: 0, y: 0 };
+                this.scale = 1; this.pan = { x: 0, y: 0 }; this.isPanning = false; this.panStart = { x: 0, y: 0 }; // zoom réglé plus bas (getInitialScale)
                 this.currentTool = 'hand'; this.isDrawing = false; this.lastDrawPos = {x:0, y:0};
                 this.activePointerId = null; this.ignoreMouse = false;
                 this.penStrokes = []; this.currentStroke = null;
@@ -613,6 +642,10 @@
                 this.boardWorld = document.getElementById('board-world');
                 this.canvas = document.getElementById('drawing-canvas');
                 this.ctx = this.canvas.getContext('2d');
+                this.viewTouched = false; // la vue a-t-elle été déplacée ou zoomée à la main ?
+                this.flipRun = 0; this.flipShown = new Map(); this.flippingSteps = new Set();
+                this.touchView = null;
+                this.scale = this.getInitialScale();
                 
                 this.updateTransform();
                 this.initListeners(); this.resizeCanvas(); this.updateEquation();
@@ -651,6 +684,20 @@
                 return `{\\color{${color}}{${content}}}`;
             }
 
+            // Une tuile d'une parenthèse « − » pas encore retournée garde le signe tapé :
+            // son signe réel (t.sign) est l'opposé, son signe affiché (t.displaySign) celui qu'on a tapé.
+            isFlipPending(t) { return !!t && t.displaySign !== undefined && t.displaySign !== t.sign; }
+            shownSign(t) {
+                if (this.flipShown && this.flipShown.has(t.id)) return this.flipShown.get(t.id);
+                return (t.displaySign === 1 || t.displaySign === -1) ? t.displaySign : t.sign;
+            }
+            paintToken(t, sign = this.shownSign(t)) {
+                const el = t.element; if (!el) return;
+                el.classList.toggle('green', sign === 1); el.classList.toggle('red', sign !== 1);
+                el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(t.type, sign)}</span>`;
+                this.styleTileElement(el, t.type, sign);
+            }
+
             styleTileElement(el, type, sign) {
                 if (!el) return;
                 const spec = this.getTileColorSpec(type, sign);
@@ -663,7 +710,7 @@
             applyColorMode(saveToHistory = false) {
                 const select = document.getElementById('color-mode-select');
                 if (select) this.colorMode = select.value || 'sign';
-                this.tokens.forEach(t => this.styleTileElement(t.element, t.type, t.sign));
+                this.tokens.forEach(t => this.styleTileElement(t.element, t.type, this.shownSign(t)));
                 if (this.menuDrag && this.menuDrag.el) this.styleTileElement(this.menuDrag.el, this.menuDrag.type, this.menuDrag.sign);
                 document.querySelectorAll('[data-preview-type]').forEach(el => {
                     const type = el.dataset.previewType;
@@ -1247,6 +1294,7 @@
 
             snapTokenToProductFrame(t) {
                 if (!this.productFrame || !t || t.pairId !== null) return false;
+                if (this.isFlipPending(t)) return false; // parenthèse « − » pas encore retournée
                 const info = this.getProductZoneInfo(t);
                 if (!info) {
                     if (t.productZone) {
@@ -1437,6 +1485,8 @@
                 return Math.min(38, Math.max(22, minDim * 0.85));
             }
 
+            stepIndexOfToken(t) { return this.steps.findIndex(s => s.tokenIds.includes(t.id)); }
+
             checkSnapAndFinalize(token) {
                 if (token?.productZone) return;
                 const s1 = getTileSize(token.type, token.orientation);
@@ -1449,6 +1499,10 @@
                 // avec un seuil adapté à la taille de la tuile.
                 for (let t of this.tokens) {
                     if (t === token || t.productZone || t.pairId || t.type !== token.type || t.sign === token.sign) continue;
+                    // Une tuile d'une parenthèse « − » pas encore retournée ne s'annule qu'avec une tuile de la MÊME
+                    // parenthèse : affichée « x » vert, elle vaut −x, et un x vert du dehors ne doit pas l'effacer.
+                    if (this.isFlipPending(t) !== this.isFlipPending(token)) continue;
+                    if (this.isFlipPending(t) && this.stepIndexOfToken(t) !== this.stepIndexOfToken(token)) continue;
                     const s2 = getTileSize(t.type, t.orientation);
                     const c2 = { x: t.x + s2.w/2, y: t.y + s2.h/2 };
                     const dist = Math.hypot(c1.x - c2.x, c1.y - c2.y);
@@ -1515,6 +1569,7 @@
             undo() {
                 if (this.history.length === 0) return;
                 const state = this.history.pop();
+                this.stopFlip();
                 
                 this.tokens.forEach(t => t.element && t.element.remove());
                 document.querySelectorAll('.zero-badge').forEach(b => b.remove());
@@ -1543,11 +1598,9 @@
                 this.tokens = state.tokens.map(data => {
                     const el = document.createElement('div');
                     data.classes.forEach(c => el.classList.add(c));
-                    let label = "";
-                    if (data.type === 'x2') label = data.sign === 1 ? "x²" : "-x²";
-                    else if (data.type === 'x') label = data.sign === 1 ? "x" : "-x";
-                    else label = data.sign === 1 ? "1" : "-1";
-                    el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                    const shown = (data.displaySign === 1 || data.displaySign === -1) ? data.displaySign : data.sign;
+                    el.classList.toggle('green', shown === 1); el.classList.toggle('red', shown !== 1);
+                    el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(data.type, shown)}</span>`;
                     el.id = `t-${data.id}`;
                     el.style.left = data.x + 'px';
                     el.style.top = data.y + 'px';
@@ -1555,7 +1608,7 @@
                     el.addEventListener('mousedown', (e) => this.handleDragStart(e));
                     el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
                     this.boardWorld.appendChild(el);
-                    this.styleTileElement(el, data.type, data.sign);
+                    this.styleTileElement(el, data.type, shown);
                     
                     return { ...data, element: el };
                 });
@@ -1583,7 +1636,8 @@
                     const worldY = (localY - this.pan.y) / this.scale;
 
                     const delta = -e.deltaY * 0.001;
-                    const newScale = Math.min(Math.max(0.5, this.scale + delta), 3);
+                    const newScale = Math.min(Math.max(MIN_SCALE, this.scale + delta), MAX_SCALE);
+                    this.viewTouched = true;
 
                     this.pan.x = localX - worldX * newScale;
                     this.pan.y = localY - worldY * newScale;
@@ -1595,7 +1649,7 @@
                 this.boardContainer.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
                     if (this.currentTool === 'pen' || this.currentTool === 'erase' || e.target.closest('.token') || e.target.closest('.product-frame')) return;
-                    this.isPanning = true;
+                    this.isPanning = true; this.viewTouched = true;
                     this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
                     this.boardContainer.classList.add('panning');
                 });
@@ -1611,6 +1665,16 @@
                     this.isPanning = false;
                     this.boardContainer.classList.remove('panning');
                 });
+                // --- TACTILE : glisser le plateau à un doigt sur le fond, pincer pour zoomer ---
+                // Avant, seuls la souris et la molette bougeaient la vue : au doigt, rien.
+                // Une tuile touchée garde son propre glisser (handleDragStart arrête l'événement) ;
+                // ici on ne reçoit donc que les doigts posés sur le fond du plateau.
+                // Pas de geste de vue en mode stylo : le doigt y dessine.
+                this.boardContainer.addEventListener('touchstart', (e) => this.handleBoardTouch(e), { passive: false });
+                this.boardContainer.addEventListener('touchmove', (e) => this.handleBoardTouch(e), { passive: false });
+                this.boardContainer.addEventListener('touchend', (e) => this.handleBoardTouch(e), { passive: false });
+                this.boardContainer.addEventListener('touchcancel', (e) => this.handleBoardTouch(e), { passive: false });
+
                 // Le stylo utilise uniquement Pointer Events : moins de doubles événements souris/stylet.
                 
                 // --- Support stylet (Pointer Events) : essentiel sur Windows/tablettes ---
@@ -1649,7 +1713,61 @@
                 const colorSelect = document.getElementById('color-mode-select');
                 if (colorSelect) colorSelect.addEventListener('input', () => this.applyColorMode(false));
                 window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.currentTool !== 'hand') this.setTool('hand'); });
-                window.addEventListener('resize', () => this.resizeCanvas());
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                    // Rotation du téléphone, plein écran… : tant que la vue n'a pas été touchée,
+                    // on garde le zoom de départ adapté au nouveau plateau.
+                    if (!this.viewTouched) { const s = this.getInitialScale(); if (s !== this.scale) { this.scale = s; this.updateTransform(); this.redrawPen(); } }
+                });
+            }
+
+            // Doigts posés sur le FOND du plateau (pas sur une tuile ni sur le tableau produit).
+            handleBoardTouch(e) {
+                const fingers = [...e.touches].filter(t => {
+                    const el = t.target && t.target.closest ? t.target : null;
+                    return !(el && (el.closest('.token') || el.closest('.product-frame')));
+                });
+                if (e.type === 'touchstart') {
+                    if (this.currentTool === 'pen' || this.draggedToken) { this.touchView = null; return; }
+                    if (!fingers.length) return;
+                }
+                if (!this.touchView && e.type !== 'touchstart') return;
+                if (this.currentTool === 'pen' || this.draggedToken) { this.touchView = null; return; }
+                e.preventDefault();
+                const r = this.boardContainer.getBoundingClientRect();
+                const local = (t) => ({ x: t.clientX - r.left, y: t.clientY - r.top });
+                if (!fingers.length) { this.touchView = null; this.redrawPen(); return; }
+                if (fingers.length === 1) {
+                    const p = local(fingers[0]);
+                    if (e.type !== 'touchmove' || !this.touchView || this.touchView.mode !== 'pan' || this.touchView.id !== fingers[0].identifier) {
+                        // départ (ou retour à un seul doigt après un pincement) : on repart d'ici
+                        this.touchView = { mode: 'pan', id: fingers[0].identifier, start: p, pan0: { ...this.pan } };
+                        return;
+                    }
+                    this.pan.x = this.touchView.pan0.x + (p.x - this.touchView.start.x);
+                    this.pan.y = this.touchView.pan0.y + (p.y - this.touchView.start.y);
+                    this.viewTouched = true;
+                    this.updateTransform();
+                    return;
+                }
+                const a = local(fingers[0]), b = local(fingers[1]);
+                const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+                const dist = Math.max(10, Math.hypot(a.x - b.x, a.y - b.y));
+                const ids = fingers[0].identifier + ':' + fingers[1].identifier;
+                if (!this.touchView || this.touchView.mode !== 'pinch' || this.touchView.ids !== ids) {
+                    this.touchView = {
+                        mode: 'pinch', ids, dist0: dist, scale0: this.scale,
+                        world: { x: (mid.x - this.pan.x) / this.scale, y: (mid.y - this.pan.y) / this.scale }
+                    };
+                    return;
+                }
+                // Le point du plateau qui était sous les deux doigts y reste : on zoome et on glisse en même temps.
+                const s = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this.touchView.scale0 * dist / this.touchView.dist0));
+                this.scale = s;
+                this.pan.x = mid.x - this.touchView.world.x * s;
+                this.pan.y = mid.y - this.touchView.world.y * s;
+                this.viewTouched = true;
+                this.updateTransform();
             }
 
             updateTransform() {
@@ -1662,10 +1780,20 @@
             }
 
             // --- VUE / OUTILS (petites actions sans risque) ---
+            getInitialScale() {
+                const w = this.boardContainer ? this.boardContainer.clientWidth : 0;
+                const h = this.boardContainer ? this.boardContainer.clientHeight : 0;
+                if (!w || !h) return INITIAL_SCALE;
+                const fit = Math.min(w / INITIAL_VIEW_WORLD, h / INITIAL_VIEW_WORLD_H);
+                return Math.round(Math.min(INITIAL_SCALE, Math.max(MIN_SCALE, fit)) * 100) / 100;
+            }
+
             resetView() {
-                this.scale = INITIAL_SCALE;
+                this.scale = this.getInitialScale();
                 this.pan = { x: 0, y: 0 };
+                this.viewTouched = false;
                 this.updateTransform();
+                this.redrawPen();
             }
 
             toggleSound() {
@@ -1836,16 +1964,18 @@
 
                 const id = this.nextId++;
                 const el = document.createElement('div');
-                const colorClass = tileSign === 1 ? 'green' : 'red';
+                // Affichée telle qu'on la tape (sign), même dans une parenthèse « − » : c'est « Ajouter l'opposé »
+                // qui la retourne. Avant, elle arrivait déjà retournée (x tapé → −x rouge) et seul le texte changeait.
+                const colorClass = sign === 1 ? 'green' : 'red';
                 el.classList.add('token', colorClass, `type-${type}`);
                 if (type === 'x' && orientation === 'v') el.classList.add('orient-v');
                 
                 if (this.isSubtractingInput) el.classList.add('in-bracket');
                 if ((this.isMultiplyingInput && !step.distributed)) el.classList.add('pending-mult');
 
-                let label = getTileLabel(type, tileSign);
+                let label = getTileLabel(type, sign);
                 el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
-                this.styleTileElement(el, type, tileSign);
+                this.styleTileElement(el, type, sign);
                 el.id = `t-${id}`;
 
                 let pos;
@@ -1973,14 +2103,114 @@
                 const btn=document.getElementById('btn-opposite'); if(has)btn.classList.remove('hidden'); else btn.classList.add('hidden');
             }
             applyOpposite() {
-                this.saveState();
+                if (this.flippingSteps.size) return; // un retournement est déjà en cours
                 const p = this.steps.filter(s=>s.type==='subtraction'&&!s.oppositeApplied);
-                if(!p.length) return; playSound('flip');
-                p.forEach(s => {
-                    s.tokenIds.forEach(id => { const t=this.tokens.find(x=>x.id===id); if(t){ t.displaySign=t.sign; t.element.classList.remove('in-bracket'); } });
-                    s.oppositeApplied=true;
+                if(!p.length) return;
+                this.saveState();
+                this.flipPendingBrackets();
+            }
+
+            // Ferme la parenthèse « − » encore ouverte, sans l'enregistrer dans l'historique
+            // (l'appelant l'a déjà fait). Sert à « Ordonner » et « Réduire ».
+            closeOpenSubtraction() {
+                if (!this.isSubtractingInput) return;
+                const s = this.steps[this.currentStepIndex];
+                this.isSubtractingInput = false; if (s) s.isClosed = true;
+                document.getElementById('btn-close-parenthesis').classList.add('hidden');
+                this.steps.push({ id: this.steps.length, operator: '+', type: 'simple', plusStep: true, implicit: true, tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
+                this.currentStepIndex = this.steps.length - 1;
+                this.lastPack = null;
+                this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP);
+            }
+
+            // « Ajouter l'opposé » : chaque tuile des parenthèses « − » se retourne, une à une.
+            // Les données changent tout de suite (signe affiché = signe réel) ; seul le dessin suit, tuile
+            // par tuile, puis l'équation et le cadre pointillé à la fin. Renvoie la durée totale en ms.
+            // Avant : les tuiles étaient déjà retournées à la pose, seul le texte de l'équation changeait.
+            flipPendingBrackets(after = null) {
+                const steps = this.steps.filter(s => s.type === 'subtraction' && !s.oppositeApplied);
+                if (!steps.length) { if (after) after(); return 0; }
+                this.closeOpenSubtraction();
+                const run = ++this.flipRun;
+                const toFlip = [];
+                steps.forEach(s => {
+                    this.flippingSteps.add(s.id);
+                    const toks = s.tokenIds.map(id => this.tokens.find(t => t.id === id)).filter(Boolean);
+                    // de gauche à droite, ligne par ligne, comme on lit
+                    toks.sort((a, b) => (Math.round(a.y / 40) - Math.round(b.y / 40)) || (a.x - b.x) || (a.id - b.id));
+                    toks.forEach(t => {
+                        if (this.isFlipPending(t)) { this.flipShown.set(t.id, t.displaySign); toFlip.push(t); }
+                        t.displaySign = t.sign;
+                    });
+                    s.oppositeApplied = true;
                 });
-                this.checkOppositeAvailable(); this.updateEquation();
+                document.getElementById('btn-opposite').classList.add('hidden');
+                const stagger = toFlip.length > 8 ? Math.max(90, Math.round(1840 / toFlip.length)) : FLIP_STAGGER_MS;
+                toFlip.forEach((t, i) => setTimeout(() => { if (run === this.flipRun) this.flipTileVisual(t, run); }, i * stagger));
+                const total = toFlip.length ? (toFlip.length - 1) * stagger + 2 * FLIP_HALF_MS + 60 : 0;
+                this.flipTimer = setTimeout(() => {
+                    if (run !== this.flipRun) return;
+                    this.flippingSteps.clear(); this.flipShown.clear();
+                    this.tokens.forEach(t => { if (t.element && !this.isFlipPending(t)) t.element.classList.remove('in-bracket'); });
+                    this.checkOppositeAvailable();
+                    if (after) after(); else this.updateEquation();
+                }, total);
+                return total;
+            }
+
+            flipTileVisual(t, run) {
+                const el = t.element; if (!el || !el.isConnected) return;
+                playSound('flip');
+                const base = el.style.transform && el.style.transform !== 'none' ? el.style.transform + ' ' : '';
+                const origin = el.style.transformOrigin;
+                el.style.transformOrigin = '50% 50%';
+                el.classList.add('flipping');
+                const half = (from, to, easing) => el.animate(
+                    [{ transform: `${base}perspective(500px) rotateY(${from}deg)` }, { transform: `${base}perspective(500px) rotateY(${to}deg)` }],
+                    { duration: FLIP_HALF_MS, easing, fill: 'forwards' });
+                const a1 = half(0, 90, 'ease-in');
+                a1.onfinish = () => {
+                    if (run !== this.flipRun) { a1.cancel(); el.style.transformOrigin = origin; el.classList.remove('flipping'); return; }
+                    this.flipShown.delete(t.id);
+                    this.paintToken(t);
+                    el.classList.remove('in-bracket');
+                    a1.cancel();
+                    const a2 = half(-90, 0, 'ease-out');
+                    a2.onfinish = () => { a2.cancel(); el.style.transformOrigin = origin; el.classList.remove('flipping'); };
+                };
+            }
+
+            // « Précédent » ou « Tout recommencer » pendant un retournement : on l'arrête net.
+            stopFlip() {
+                this.flipRun++;
+                if (this.flipTimer) clearTimeout(this.flipTimer);
+                this.flipTimer = null;
+                this.flipShown.clear(); this.flippingSteps.clear();
+            }
+
+            // Cadre pointillé autour des tuiles de chaque parenthèse « − » pas encore retournée.
+            renderBracketFrames() {
+                const steps = this.steps.filter(s => s.type === 'subtraction' && (!s.oppositeApplied || this.flippingSteps.has(s.id)));
+                const keep = new Set();
+                steps.forEach(s => {
+                    const toks = s.tokenIds.map(id => this.tokens.find(t => t.id === id)).filter(t => t && t.element && !t.productZone);
+                    if (!toks.length) return;
+                    const b = this.getTokenBounds(toks);
+                    const pad = 7;
+                    const fid = `bracket-frame-${s.id}`;
+                    keep.add(fid);
+                    let el = document.getElementById(fid);
+                    if (!el) {
+                        el = document.createElement('div');
+                        el.id = fid; el.className = 'bracket-frame';
+                        el.setAttribute('aria-hidden', 'true');
+                        this.boardWorld.appendChild(el);
+                    }
+                    el.classList.toggle('dragging-follow', !!this.draggedToken);
+                    el.style.left = (b.minX - pad) + 'px'; el.style.top = (b.minY - pad) + 'px';
+                    el.style.width = (b.width + 2 * pad) + 'px'; el.style.height = (b.height + 2 * pad) + 'px';
+                });
+                this.boardWorld.querySelectorAll('.bracket-frame').forEach(el => { if (!keep.has(el.id)) el.remove(); });
             }
             startMultiplication(f) { 
                 this.saveState();
@@ -2077,8 +2307,18 @@
                 });
             }
 
-            orderAll() { this.saveState(); playSound('pop'); this.displayMode='ordered'; this.isReduced=false; this.organizeBoard(false); this.updateEquation(); }
-            reduceExpression() { this.saveState(); playSound('magic'); this.displayMode='reduced'; this.isReduced=true; this.organizeBoard(true); this.updateEquation(); }
+            // Une parenthèse « − » pas encore retournée : Ordonner et Réduire jouent d'abord « Ajouter l'opposé »
+            // (choix du 06/11/2026), puis rangent. x − (x + 1) devient x − x − 1.
+            orderAll() {
+                if (this.flippingSteps.size) return;
+                this.saveState(); playSound('pop');
+                this.flipPendingBrackets(() => { this.displayMode='ordered'; this.isReduced=false; this.organizeBoard(false); this.updateEquation(); });
+            }
+            reduceExpression() {
+                if (this.flippingSteps.size) return;
+                this.saveState(); playSound('magic');
+                this.flipPendingBrackets(() => { this.displayMode='reduced'; this.isReduced=true; this.organizeBoard(true); this.updateEquation(); });
+            }
             
             organizeBoard(reduced) {
                 const subset = (this.productFrame ? this.tokens.filter(t => !t.productZone) : this.tokens)
@@ -2181,7 +2421,7 @@
                 });
 
                 // Then find new pairs among available tokens
-                const available = this.tokens.filter(t=>!t._canceling && t.pairId===null && !t.element.classList.contains('in-bracket'));
+                const available = this.tokens.filter(t=>!t._canceling && t.pairId===null && !this.isFlipPending(t));
                 const types=['x2','x','unit'];
                 types.forEach(ty=>{
                     const g = available.filter(t=>t.type===ty && t.sign===1);
@@ -2234,6 +2474,7 @@
             resetBoard(keepEquationMode = false) {
                 this.saveState(); // « Tout recommencer » peut maintenant s'annuler (flèche ↶)
                 playSound('pop');
+                this.stopFlip();
                 this.tokens.forEach(t => t.element.remove());
                 document.querySelectorAll('.zero-badge').forEach(b => b.remove());
                 this.removeProductFrameElement(false);
@@ -2245,7 +2486,7 @@
                 
                 this.lastPos = { x: 40, y: 60, maxYInRow: 0 };
                 this.lastSequentialPackId = null;
-                this.scale = INITIAL_SCALE; this.pan = {x:0, y:0};
+                this.scale = this.getInitialScale(); this.pan = {x:0, y:0}; this.viewTouched = false;
                 
                 // FORCE UI RESET
                 this.isSubtractingInput = false;
@@ -2270,6 +2511,7 @@
                 // Espace moyen autour de + et − (avant, tout était collé : « 3x²+2x−(x−1) », peu lisible au tableau).
                 displayString = displayString.replace(/\s+/g, "").replace(/\\;/g, "\\:").replace(/(\\,|\\quad|\\qquad)/g, "");
                 katex.render(displayString, document.getElementById('equation-display'), { throwOnError: false });
+                this.renderBracketFrames();
                 
                 const hasPending = this.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
                 const distBtn = document.getElementById('btn-distribute');
@@ -2311,10 +2553,11 @@
                     }
                     if (index > 0 && hasNonEmptyBefore(index)) {
                         const plus = this.colorLatex(this.getEquationOperatorColor(1), '+'); const minusColor = this.colorLatex(this.getEquationOperatorColor(-1), '-');
-                        if (step.type === 'subtraction' && step.oppositeApplied) { if (!this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`; }
-                        else if (step.type === 'multiplication' && step.distributed && this.latexStartsWithMinus(pStr)) {}
+                        if (step.type === 'subtraction' && step.oppositeApplied) { if (!this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`; else pStr = this.spaceLeadingMinus(pStr); }
+                        else if (step.type === 'multiplication' && step.distributed && this.latexStartsWithMinus(pStr)) { pStr = this.spaceLeadingMinus(pStr); }
                         else if (step.operator === '+' && !this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`;
                         else if (step.operator === '-') latex += `\\;${minusColor}\\;`;
+                        else if (this.latexStartsWithMinus(pStr)) pStr = this.spaceLeadingMinus(pStr); // après une parenthèse fermée : ) − x
                     }
                     latex += pStr; isEmpty = false;
                 });
@@ -2434,6 +2677,9 @@
             } 
 
             generateGroupedLatex() { return this.tokensToReducedSumLatex(this.tokens); }
+            // Un « − » en tête de morceau, collé à ce qui précède, s'écrivait sans espace (2x−x) :
+            // dans {\color{…}{-}}, KaTeX le prend pour un signe et non une opération. On l'entoure d'espaces.
+            spaceLeadingMinus(s) { return (s||'').replace(/^\{\\color\{[^}]+\}\{-\}\}/, m => `\\;${m}\\;`); }
             latexStartsWithMinus(s) { return (s||'').trim().startsWith('-') || /^\{\\color\{[^}]+\}\{-\}\}/.test(s||''); }
             
 
@@ -2561,6 +2807,7 @@
                     const wy = (cy - br.top - this.pan.y - this.dragOffset.y)/this.scale;
                     this.draggedToken.element.style.left=wx+'px'; this.draggedToken.element.style.top=wy+'px';
                     this.draggedToken.x=wx; this.draggedToken.y=wy;
+                    if (this.isFlipPending(this.draggedToken)) this.renderBracketFrames();
                     this.setTileTrashActive(this.isOverTileTrash(cx, cy));
                 };
                 const end=(ev)=>{
