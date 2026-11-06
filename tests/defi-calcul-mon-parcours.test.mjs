@@ -299,9 +299,13 @@ test("le rangement par code : une case par code, sous une empreinte, sans préno
   assert.deepEqual(onglet.cles(), []);
 });
 
-test("la page : en construction, hors catalogue, sans menus pour l'élève, sans rien de Défi tables", async () => {
+test("la page : au catalogue à sa propre adresse, sans menus pour l'élève, sans rien de Défi tables", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /<meta name="robots" content="noindex">/);
+  // Au catalogue depuis le 06/11/2026 (avant d'être finie) ; l'ancien défi
+  // chronométré reste à son adresse, hors catalogue et non indexé.
+  assert.match(page, /<meta name="robots" content="index, follow, max-image-preview:large">/);
+  assert.match(page, /<link rel="canonical" href="https:\/\/mathsgo\.re\/outils\/calcul_mental\/defi_calcul_modules\.html">/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul.html"), /<meta name="robots" content="noindex, follow">/);
   ["defi_calcul_core.js", "defi_calcul_mon_parcours.js", "defi_calcul_aides.js", "defi_calcul.css"].forEach(fichier => {
     assert.match(page, new RegExp(`\\./${fichier.replace(".", "\\.")}\\?v=\\d{8}-\\d+"`), `${fichier} chargé avec son ?v=`);
   });
@@ -362,10 +366,14 @@ test("la page : en construction, hors catalogue, sans menus pour l'élève, sans
   assert.equal(/brut === "calculs"/.test(page), false);
   // Ni code de module ni niveau de classe côté élève : la page ne les écrit nulle part en dur.
   assert.equal(/\b(CM1|CM2|6e|5e|4e|3e)\b/.test(page.replace(/<script[\s\S]*?<\/script>/g, "")), false, "aucun niveau de classe dans la page");
-  // Hors catalogue, hors plan du site, et l'ancien Défi calcul n'a pas bougé.
+  // Au catalogue et au plan du site à la place de l'ancien Défi calcul
+  // (06/11/2026), qui reste en ligne sans avoir bougé.
   const catalogue = await lire("../assets/js/catalogue-refonte-data.js");
-  assert.doesNotMatch(catalogue, /defi_calcul_modules/);
-  assert.doesNotMatch(await lire("../sitemap.xml"), /defi_calcul_modules/);
+  assert.match(catalogue, /"path": "outils\/calcul_mental\/defi_calcul_modules\.html"/);
+  assert.doesNotMatch(catalogue, /"path": "outils\/calcul_mental\/defi_calcul\.html"/);
+  const plan = await lire("../sitemap.xml");
+  assert.match(plan, /defi_calcul_modules\.html/);
+  assert.doesNotMatch(plan, /defi_calcul\.html/);
   assert.match(await lire("../outils/calcul_mental/defi_calcul.html"), /const TOTAL = 30;/);
   // Les trois scripts s'installent sous leur nom, sans se marcher dessus.
   for (const [fichier, nom] of [["defi_calcul_core.js", "MATHSGO_DEFI_CALCUL_CORE"], ["defi_calcul_mon_parcours.js", "MATHSGO_DEFI_CALCUL_MON_PARCOURS"], ["defi_calcul_aides.js", "MATHSGO_DEFI_CALCUL_AIDES"]]) {

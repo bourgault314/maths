@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
@@ -29,8 +30,10 @@ const pageDefinitions = [
     parent: "../index.html?domain=nombres-calculs&amp;notion=calcul-mental"
   },
   {
-    path: "outils/calcul_mental/defi_calcul.html",
-    canonical: "https://mathsgo.re/outils/calcul_mental/defi_calcul.html",
+    // Depuis le 06/11/2026, la carte « Défi calcul » mène à l'appli par
+    // modules ; l'ancien défi chronométré reste à son adresse, hors catalogue.
+    path: "outils/calcul_mental/defi_calcul_modules.html",
+    canonical: "https://mathsgo.re/outils/calcul_mental/defi_calcul_modules.html",
     parent: "../index.html?domain=nombres-calculs&amp;notion=calcul-mental"
   }
 ];
@@ -67,7 +70,7 @@ test("les cinq adaptations sont publiques, autonomes et reliées à leur vrai pa
     // autre raison — l'identité de l'élève suivi y vit le temps d'un onglet —
     // et, depuis le lot « Coffres magiques sur le suivi » (21/10/2026), Coffres
     // solo pour la même raison (l'amorce du <head> lit le code de l'onglet).
-    if (!["outils/calcul_mental/defi_tables.html", "outils/calcul_mental/coffres_magiques_solo.html"].includes(definition.path)) {
+    if (!["outils/calcul_mental/defi_tables.html", "outils/calcul_mental/coffres_magiques_solo.html", "outils/calcul_mental/defi_calcul_modules.html"].includes(definition.path)) {
       assert.doesNotMatch(html, /sessionStorage/i, definition.path);
     }
     for (const source of inlineScripts(html)) assert.doesNotThrow(() => new vm.Script(source), definition.path);
@@ -103,7 +106,11 @@ test("les règles et durées approuvées restent explicites", () => {
   assert.equal(tablesCore.PRESETS.test.testLevel, 1);
   assert.equal(tablesCore.PRESETS.evaluation.total, 25);
   assert.equal(tablesCore.PRESETS.evaluation.duration, 60);
-  assert.match(pages["outils/calcul_mental/defi_calcul.html"], /const TOTAL = 30;[\s\S]*const DURATION = 180;/);
+  // L'ancien défi chronométré, hors catalogue depuis le 06/11/2026, reste en
+  // ligne à son adresse, inchangé, sans être indexé.
+  const ancienDefi = readFileSync(new URL("../outils/calcul_mental/defi_calcul.html", import.meta.url), "utf8");
+  assert.match(ancienDefi, /const TOTAL = 30;[\s\S]*const DURATION = 180;/);
+  assert.match(ancienDefi, /<meta name="robots" content="noindex, follow">/);
 });
 
 test("les deux portes Coffres donnent accès aux modes solo et duo", () => {
@@ -140,7 +147,7 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
     ["outils/club_maths/coffres_magiques.html", ["jeux-recherches", "strategie", "jeux"]],
     ["outils/calcul_mental/coffres_magiques_solo.html", ["nombres-calculs", "calcul-mental", "entrainer"]],
     ["outils/calcul_mental/defi_tables.html", ["nombres-calculs", "calcul-mental", "entrainer"]],
-    ["outils/calcul_mental/defi_calcul.html", ["nombres-calculs", "calcul-mental", "entrainer"]]
+    ["outils/calcul_mental/defi_calcul_modules.html", ["nombres-calculs", "calcul-mental", "entrainer"]]
   ]);
 
   for (const [path, [domain, notion, group]] of expected) {
@@ -172,7 +179,7 @@ test("Calcul mental expose exactement les huit ressources autonomes validées", 
   const expectedPaths = [
     "outils/automatismes/CM_Livret_A5.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
-    "outils/calcul_mental/defi_calcul.html",
+    "outils/calcul_mental/defi_calcul_modules.html",
     "outils/calcul_mental/defi_tables.html",
     "outils/calcul_mental/flash_anzan.html",
     "outils/calcul_mental/fiche_tables_multiplication.pdf",

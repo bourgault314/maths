@@ -219,7 +219,7 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
     "auto/index.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
     "outils/calcul_mental/defi_tables.html",
-    "outils/calcul_mental/defi_calcul.html",
+    "outils/calcul_mental/defi_calcul_modules.html",
     "outils/calcul_mental/flash_anzan.html"
   ]);
   assertPathsInGroup("imprimer", ["outils/angles/fiche_angles_triangles.pdf"]);
