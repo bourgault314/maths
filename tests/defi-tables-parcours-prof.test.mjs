@@ -242,8 +242,8 @@ test("verrou 3 — launchFromParcours, start et startRevision sortent en premier
   // prénom — cachés, et inertes même par un clic forcé.
   assert.match(html, /function show\(name\) \{[\s\S]{0,900}?if \(VUE_PROF\) name = "parcours";[\s\S]{0,400}?\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]\.forEach/);
   assert.match(SOURCE_SUIVI, /function quitterSuivi\(\) \{\s*\n(\s*\/\/[^\n]*\n)*\s*if \(VUE_PROF\) return;\s*\n\s*envoyerAvantDeFermer\(\);/);
-  assert.match(html, /\$\("parcours-confirm-yes"\)\.addEventListener\("click", \(\) => \{\s*\n\s*if \(VUE_PROF\) return;\s*\n\s*parcours = PARCOURS\.remettreAZero\(parcours\);/);
-  assert.match(html, /\$\("parcours-name"\)\.addEventListener\("submit", event => \{\s*\n\s*event\.preventDefault\(\);\s*\n(\s*\/\/[^\n]*\n)*\s*if \(VUE_PROF\) return;/);
+  assert.match(html, /\$\("parcours-confirm-yes"\)\.addEventListener\("click", \(\) => \{\s*\n(\s*\/\/[^\n]*\n)*\s*if \(VUE_PROF \|\| !peutEffacer\(\)\) return;\s*\n\s*parcours = PARCOURS\.remettreAZero\(parcours\);/);
+  assert.doesNotMatch(html, /id="parcours-name"/, "plus de prénom demandé dans Mon parcours (06/11/2026)");
   assert.match(html, /\$\("fiche-prenom-form"\)\.addEventListener\("submit", event => \{\s*\n\s*event\.preventDefault\(\);\s*\n\s*if \(VUE_PROF\) return;/);
   // Pas de grisé : la seule règle sur .cell dans la vue est le curseur.
   assert.match(html, /body\.mode-prof \.cell \{ cursor: default; \}/);
@@ -253,9 +253,8 @@ test("verrou 3 — launchFromParcours, start et startRevision sortent en premier
 test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », sans flèche, ⋯, ▶, « Comment ça marche ? », plein écran ni pied ; Mon mélange sur une colonne", () => {
   assert.match(html, /if \(VUE_PROF && document\.body\) document\.body\.classList\.add\("mode-prof"\);/);
   assert.match(html, /if \(VUE_PROF\) return `Le parcours \$\{deNom\(\(parcours && parcours\.prenom\) \|\| "l’élève"\)\}`;/);
-  assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/);
   assert.match(html, /classList\.toggle\("mode-eleve", Boolean\(suiviActif\(\) \|\| entreeRefusee \|\| VUE_PROF\)\)/, "la même barre fine que l'élève");
-  const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-name, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;
+  const regle = /body\.mode-prof \.fullscreen-toggle, body\.mode-prof #intro,\s*\n\s*body\.mode-prof #parcours-options, body\.mode-prof #parcours-confirm,\s*\n\s*body\.mode-prof \.parcours-notice-action \.saut, body\.mode-prof #parcours-notice-bouton, body\.mode-prof #parcours-notice,\s*\n\s*body\.mode-prof #parcours-melange \.mp-melange > \.cell \{ display: none !important; \}/;
   assert.match(html, regle);
   assert.match(html, /body\.mode-prof #parcours-back, body\.mode-prof #parcours-more \{ visibility: hidden; pointer-events: none; \}/, "leur place reste : le titre ne bouge pas");
   assert.match(html, /body\.mode-prof #parcours-melange \.mp-melange \{ grid-template-columns: minmax\(0, 1fr\); \}/, "sans le ▶, les coupes ne chevauchent plus « Mon mélange »");

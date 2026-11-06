@@ -63,7 +63,9 @@ test("aucun prénom ni nom collé à un « de » ou un « que » écrit en dur",
     assert.deepEqual(source.match(colle) || [], [], page);
   }
   assert.match(defiTables, /`La fiche \$\{deNom\(prenomAffiche\(\)\)\}`/);
-  assert.match(defiTables, /`Effacer le parcours \$\{deNom\(prenomAffiche\(\)\)\} \?/);
+  // Lot « Effacer l'historique » (06/11/2026) : la question ne dit plus le
+  // prénom (« Effacer tout ton historique ? » pour tout le monde).
+  assert.doesNotMatch(defiTables, /Effacer le parcours \$\{/);
   // Serveur pro, lot 5b : la fenêtre « Ce que voit … » (et son « vérifier les
   // accès de … avant », son « le monde 3 de SPLAT! ») a disparu ; « Régler … » ne colle aucun prénom à un « de ».
   assert.equal((pageProf.match(/`Classe \$\{deNom\(qui\)\}, partagée avec toi/g) || []).length, 2);

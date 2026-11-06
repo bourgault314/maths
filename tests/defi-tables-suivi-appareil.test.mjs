@@ -406,9 +406,10 @@ test("après trois élèves, aucune clé du stockage durable ne contient un code
   assert.ok(local.cles().every(c => /^mathsgo-defi-tables-(sel|parcours|sync)(:[0-9a-f]{16})?$/.test(c)), `clés attendues, vu : ${local.cles()}`);
   assert.equal(local.cles().filter(c => c.startsWith(CLE + ":")).length, 3, "trois cases, une par élève");
   for (const code of [A, B, C]) assert.equal(PARCOURS.charger(local, code).tables[4].apprends.construct, 2, "chaque case se relit par son code");
-  assert.match(html, /\$\("parcours-name"\)\.hidden = VUE_PROF \|\| suiviActif\(\) \|\|/, "sous un code (et dans la vue du professeur), la page ne demande pas de prénom");
-  assert.match(html, /\$\("parcours-rename"\)\.hidden = suiviActif\(\);/, "ni ne propose de le modifier");
-  assert.match(html, /const prenom = prenomAffiche\(\);\s*return prenom \? `Le parcours \$\{deNom\(prenom\)\}` : "Mon parcours";/, "le titre affiche le prénom du professeur");
+  // Lot « Effacer l'historique » (06/11/2026) : plus de prénom demandé dans
+  // Mon parcours, pour personne ; le titre dit « Mon parcours ».
+  assert.doesNotMatch(html, /id="parcours-name"|id="parcours-rename"/, "ni question de prénom ni « Modifier mon prénom »");
+  assert.match(html, /\/\/ sert plus qu'à la fiche imprimée — l'écran dit « Mon parcours »\.\n\s*return "Mon parcours";/);
 });
 
 test("l’identité donnée par le serveur vit dans l’onglet, avec le code : rechargée hors ligne, elle est encore là ; sous un autre code, non", async () => {

@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-2">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -144,9 +144,13 @@
               </div>
             </section>
             <div id="acc-semaine" class="semaine" hidden></div>
-            <div class="acc-bas">
-              <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
-            </div>
+          </div>
+          <!-- Lot « Effacer l'historique » (06/11/2026) : « Comment ça
+               marche ? » sous Mon module, « Effacer mon historique » sous Mon
+               parcours, sur la même ligne (ordinateur) ; au téléphone, l'un
+               sous Mon module comme avant, l'autre tout en bas. -->
+          <div class="acc-bas">
+            <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
           </div>
           <section id="acc-parcours" class="dc-parcours" aria-labelledby="parcours-eyebrow">
             <div class="dc-ptete"><p id="parcours-eyebrow" class="eyebrow">Mon parcours</p><small id="parcours-compte"></small></div>
@@ -155,6 +159,20 @@
             <div id="parcours-modules" class="dc-mods" role="list"></div>
             <p class="dc-legende"><span><span class="dc-comp" aria-hidden="true"><i></i></span>à apprendre</span><span><span class="dc-comp" aria-hidden="true"><i class="b"></i></span>en route</span><span><span class="dc-comp" aria-hidden="true"><i class="v"></i></span>su</span><span><span class="dc-comp" aria-hidden="true"><i class="r"></i></span>à revoir</span></p>
           </section>
+          <!-- « Effacer mon historique » (06/11/2026, choix de Gwenaël) : le
+               visiteur SANS code seulement (ni l'élève à code, ni le mode
+               professeur), discret, sous Mon parcours. La question s'ouvre à
+               sa place. -->
+          <div class="acc-effacer-zone">
+            <button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique</button>
+            <div id="acc-confirm" class="acc-confirm" role="group" aria-labelledby="acc-confirm-texte" hidden>
+              <p id="acc-confirm-texte">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
+              <div class="acc-confirm-boutons">
+                <button id="acc-confirm-oui" class="danger" type="button">Effacer</button>
+                <button id="acc-confirm-non" class="garder" type="button">Garder</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1940,6 +1958,37 @@
         $("acc-liens").hidden = !MODE_PROF || !fiche;
         renderSemaine();
         renderParcoursPaliers(id);
+        $("acc-effacer").hidden = !peutEffacer() || PARCOURS.estVide(parcours) || !$("acc-confirm").hidden;
+        if (!peutEffacer()) $("acc-confirm").hidden = true;
+        marquerEffacer();
+      }
+
+      // « Effacer mon historique » (06/11/2026, choix de Gwenaël) : le
+      // VISITEUR SANS CODE seulement, et seulement la case « sans code » de
+      // l'appareil (caseSansCode). Ni l'élève à code, ni celui qui arrive de
+      // son espace (billet en route ou refusé), ni le mode professeur (rien
+      // n'y est enregistré) : pour eux, pas de bouton, et un clic forcé ne
+      // fait rien — ce que le professeur voit ne s'efface pas d'ici.
+      function peutEffacer() {
+        return !MODE_PROF && !suiviActif() && !ENTREE.billet && !entreeRefusee;
+      }
+      // Rien à effacer ici (élève à code, mode professeur, appareil vide) :
+      // « Comment ça marche ? » se centre sous les deux cartes (06/11/2026,
+      // choix de Gwenaël, « pour la symétrie »).
+      function marquerEffacer() {
+        const avec = !$("acc-effacer").hidden || !$("acc-confirm").hidden;
+        document.querySelector(".acc").classList.toggle("avec-effacer", avec);
+      }
+      function effacerHistorique() {
+        if (!peutEffacer()) return;
+        arreterActivite();
+        PARCOURS.effacer(storage(), "");
+        parcours = caseSansCode();
+        state.seance = null;
+        state.module = null;
+        $("acc-confirm").hidden = true;
+        renderAccueil();
+        $("acc-module-titre").focus?.({preventScroll: true});
       }
 
       // ------------------------------------------------- l'écran du module
@@ -3407,6 +3456,19 @@
       });
       $("prof-quitter").addEventListener("click", quitterModeProf);
       $("acc-notice-bouton").addEventListener("click", () => show("notice"));
+      $("acc-effacer").addEventListener("click", () => {
+        if (!peutEffacer()) return;
+        $("acc-confirm").hidden = false;
+        $("acc-effacer").hidden = true;
+        marquerEffacer();
+        $("acc-confirm-non").focus?.({preventScroll: true});
+      });
+      $("acc-confirm-non").addEventListener("click", () => {
+        $("acc-confirm").hidden = true;
+        renderAccueil();
+        $("acc-effacer").focus?.({preventScroll: true});
+      });
+      $("acc-confirm-oui").addEventListener("click", effacerHistorique);
       $("notice-back").addEventListener("click", versAccueil);
       $("game-menu").addEventListener("click", quitterSerie);
       document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {

@@ -398,6 +398,16 @@
     .hist-score { text-align: right; font-weight: 950; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
     .hist-score small { display: block; font-size: .68rem; font-weight: 800; color: #8a4c0a; }
     .historique-ecran .bas { width: 100%; max-width: 380px; margin: 16px auto 0; }
+    /* « Effacer mon historique » (06/11/2026) : le visiteur SANS code
+       seulement, discret sous la liste ; la question se pose à sa place
+       (« Effacer » en rouge, « Garder » à côté), comme dans Défi tables. */
+    .lien-effacer { display: block; margin: 18px auto 0; padding: 10px 12px; min-height: 44px; border: 0; background: none;
+                    color: var(--muted); font: inherit; font-weight: 800; font-size: .9rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .hist-confirm { margin: 16px auto 0; width: 100%; max-width: 420px; padding: 14px; border: 2px solid #cfe2ed; border-radius: 16px; background: #f8fcff; text-align: center; }
+    .hist-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
+    .hist-confirm-boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+    .hist-confirm-boutons button { width: auto; min-height: 46px; padding-left: 22px; padding-right: 22px; border-radius: 13px; font: inherit; font-weight: 950; font-size: 1rem; cursor: pointer; }
+    .hist-confirm-boutons .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; padding-top: 11px; padding-bottom: 7px; }
     @media (max-width: 620px) {
       /* Au téléphone, la liste des séances défile avec la page (pas dans son
          cadre). */
@@ -622,6 +632,16 @@
           <ol class="liste hist-liste" id="historique-liste" aria-label="Mes séances"></ol>
           <div class="bas">
             <button type="button" class="secondary" id="historique-plus" hidden>Voir les séances précédentes</button>
+          </div>
+          <!-- Le visiteur SANS code seulement (06/11/2026, choix de Gwenaël) :
+               l'élève à code ne peut rien effacer. -->
+          <button type="button" class="lien-effacer" id="historique-effacer" hidden>Effacer mon historique</button>
+          <div id="historique-confirm" class="hist-confirm" role="group" aria-labelledby="historique-confirm-texte" hidden>
+            <p id="historique-confirm-texte">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
+            <div class="hist-confirm-boutons">
+              <button type="button" class="danger" id="historique-confirm-oui">Effacer</button>
+              <button type="button" class="secondary" id="historique-confirm-non">Garder</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1683,10 +1703,43 @@
           liste.append(item);
         });
         $("historique-plus").hidden = seances.length <= historiqueAffiches;
+        $("historique-effacer").hidden = !peutEffacer() || !seances.length || !$("historique-confirm").hidden;
       }
+
+      // « Effacer mon historique » (06/11/2026, choix de Gwenaël) : le
+      // VISITEUR SANS CODE seulement, et seulement la case « sans code » de
+      // l'appareil. L'élève venu de son espace — sous un code, billet en route
+      // ou refusé (modeEleve) — ne voit pas le bouton, et un clic forcé ne fait
+      // rien : ce que son professeur voit ne s'efface pas d'ici. Les réglages
+      // de l'appareil (une autre clé) restent.
+      function peutEffacer() {
+        return caseVisiteur() && !suiviActif();
+      }
+      function demanderEffacement() {
+        if (!peutEffacer()) return;
+        $("historique-confirm").hidden = false;
+        $("historique-effacer").hidden = true;
+        ajusterEchelle();
+        $("historique-confirm-non").focus({preventScroll: true});
+      }
+      function fermerEffacement() {
+        $("historique-confirm").hidden = true;
+        $("historique-effacer").hidden = !peutEffacer() || !aUnHistorique();
+      }
+      function effacerHistorique() {
+        if (!peutEffacer()) return;
+        PARCOURS.effacer(stockageAppareil(), "");
+        $("historique-confirm").hidden = true;
+        versReglages();
+      }
+      $("historique-effacer").addEventListener("click", demanderEffacement);
+      $("historique-confirm-non").addEventListener("click", () => { fermerEffacement(); $("historique-titre").focus({preventScroll: true}); });
+      $("historique-confirm-oui").addEventListener("click", effacerHistorique);
+
       function versHistorique() {
         if (!caseHistorique()) return;
         historiqueAffiches = 10;
+        $("historique-confirm").hidden = true;
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = false;
         placerRepere();

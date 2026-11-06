@@ -596,12 +596,19 @@
       line-height: 1;
       cursor: pointer;
     }
-    .parcours-options { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin: 10px 0 0; }
+    /* Lot « Effacer l'historique » (06/11/2026, choix de Gwenaël) : le « ⋯ »
+       ouvre un petit menu qui se pose PAR-DESSUS l'écran, sous le bouton —
+       plus rien ne descend quand on l'ouvre. */
+    .parcours-options { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+                        width: max-content; min-width: 240px; max-width: calc(100vw - 32px); margin: 0; padding: 10px;
+                        border: 1px solid #cfe2ed; border-radius: 16px; background: #fff; box-shadow: 0 14px 32px rgba(20, 52, 81, .18); }
+    .parcours-options[hidden] { display: none; }
+    .parcours-toolbar > .parcours-confirm { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; width: min(340px, calc(100vw - 32px)); margin: 0;
+                                            background: #fff; border: 1px solid #cfe2ed; box-shadow: 0 14px 32px rgba(20, 52, 81, .18); }
+    .parcours-toolbar > .parcours-confirm[hidden] { display: none; }
     .parcours-options button,
-    .parcours-name button,
     .fiche-prenom-form button,
     .parcours-confirm button { min-height: 44px; }
-    .parcours-name,
     .fiche-prenom-form,
     .parcours-confirm {
       margin: 14px 0 0;
@@ -611,10 +618,8 @@
       background: #f8fcff;
       text-align: center;
     }
-    .parcours-name label,
     .fiche-prenom-form label { display: block; margin-bottom: 8px; color: var(--ink); font-weight: 950; }
     .parcours-name-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-    .parcours-name input,
     .fiche-prenom-form input {
       min-height: 44px;
       width: min(100%, 240px);
@@ -626,7 +631,6 @@
       font-weight: 850;
       text-align: center;
     }
-    .parcours-name small,
     .fiche-prenom-form small { display: block; margin-top: 8px; color: var(--muted); }
     /* R6 (13/09/2026) : le formulaire du prénom de l'écran « Voir ma fiche ».
        Il reprend le cadre de celui de Mon parcours, centré à la largeur du
@@ -2676,7 +2680,7 @@
        mesure de l'échelle (body.mesure-cadre) : le cadre du parcours seul
        doit tenir dans l'écran, à la même échelle que chez l'élève. */
     body.mode-prof .fullscreen-toggle, body.mode-prof #intro,
-    body.mode-prof #parcours-options, body.mode-prof #parcours-name, body.mode-prof #parcours-confirm,
+    body.mode-prof #parcours-options, body.mode-prof #parcours-confirm,
     body.mode-prof .parcours-notice-action .saut, body.mode-prof #parcours-notice-bouton, body.mode-prof #parcours-notice,
     body.mode-prof #parcours-melange .mp-melange > .cell { display: none !important; }
     body.mode-prof #parcours-back, body.mode-prof #parcours-more { visibility: hidden; pointer-events: none; }
@@ -2983,26 +2987,24 @@
           <button id="parcours-back" class="settings-back" type="button" aria-label="Retour à Ma table"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Ma table</span></button>
           <h1 id="parcours-title" class="settings-heading" tabindex="-1">Mon parcours</h1>
           <button id="parcours-more" class="parcours-more" type="button" aria-label="Options du parcours" aria-expanded="false" aria-controls="parcours-options">⋯</button>
-        </div>
-        <div id="parcours-options" class="parcours-options" hidden>
-          <button id="parcours-rename" class="secondary" type="button">Modifier mon prénom</button>
-          <button id="parcours-reset" class="secondary" type="button">Recommencer à zéro</button>
-          <button id="parcours-notice-option" class="secondary" type="button">Comment ça marche&nbsp;?</button>
-        </div>
-        <form id="parcours-name" class="parcours-name" hidden>
-          <label for="parcours-name-input">Comment t’appelles-tu&nbsp;? <span class="sr-only">(facultatif)</span></label>
-          <div class="parcours-name-row">
-            <input id="parcours-name-input" type="text" maxlength="20" autocomplete="off" autocapitalize="words" enterkeyhint="done">
-            <button class="primary" type="submit">OK</button>
-            <button id="parcours-name-skip" class="secondary" type="button">Plus tard</button>
+        <!-- Lot « Effacer l'historique » (06/11/2026, choix de Gwenaël) : le
+             « ⋯ » est celui du VISITEUR SANS CODE — l'élève à code n'efface
+             rien (le « ⋯ » est caché pour lui : « Comment ça marche ? » est
+             déjà en bas de l'écran). Plus de prénom demandé ici ni de
+             « Modifier mon prénom » : le prénom ne se demande qu'à
+             l'impression de la fiche. -->
+          <div id="parcours-options" class="parcours-options" hidden>
+            <button id="parcours-reset" class="secondary" type="button">Effacer mon historique</button>
+            <button id="parcours-notice-option" class="secondary" type="button">Comment ça marche&nbsp;?</button>
           </div>
-          <small id="parcours-name-note">Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.</small>
-        </form>
-        <div id="parcours-confirm" class="parcours-confirm" hidden>
-          <p id="parcours-confirm-text">Effacer tout ton parcours&nbsp;? Cette action ne peut pas être annulée.</p>
-          <div class="parcours-name-row">
-            <button id="parcours-confirm-yes" class="danger primary" type="button">Effacer</button>
-            <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
+          <!-- La question se pose dans le même petit menu, par-dessus l'écran :
+               rien ne bouge. -->
+          <div id="parcours-confirm" class="parcours-confirm" hidden>
+            <p id="parcours-confirm-text">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
+            <div class="parcours-name-row">
+              <button id="parcours-confirm-yes" class="danger primary" type="button">Effacer</button>
+              <button id="parcours-confirm-no" class="secondary" type="button">Garder</button>
+            </div>
           </div>
         </div>
         <!-- Lot « un seul tableau » (04/10/2026) : Mon parcours = la carte de ma
@@ -3525,6 +3527,13 @@
       }
 
       function suiviActif() { return Boolean(codeSuivi); }
+
+      // « Effacer mon historique » (lot du 06/11/2026, choix de Gwenaël) : le
+      // visiteur SANS code seulement. Ni l'élève à code, ni celui qui arrive
+      // de son espace (billet en route ou refusé), ni la vue du professeur.
+      function peutEffacer() {
+        return !VUE_PROF && !suiviActif() && !ENTREE.billet && !entreeRefusee;
+      }
 
       // Le prénom qu'on affiche : sous un code, celui que le professeur a saisi
       // (il vient du serveur, il ne vit que dans l'onglet) ; sans code, celui
@@ -5586,7 +5595,6 @@
         // celle de l'élève, en mémoire seulement (la mémoire est jetable).
         parcoursProf = distant;
         parcours = distant;
-        state.nameSkipped = true;
         // La feuille (page 1, et la page 2 « Pour le professeur »), remplie
         // maintenant : c'est elle qui s'imprime, et c'est son cadre du
         // professeur que la carte sous le parcours recopie.
@@ -11069,9 +11077,9 @@
       function parcoursTitle() {
         // Vue du professeur : « Le parcours de Léa » (choix de Gwenaël).
         if (VUE_PROF) return `Le parcours ${deNom((parcours && parcours.prenom) || "l’élève")}`;
-        if (suiviActif()) return "Mon parcours";
-        const prenom = prenomAffiche();
-        return prenom ? `Le parcours ${deNom(prenom)}` : "Mon parcours";
+        // Lot « Effacer l'historique » (06/11/2026) : le prénom du visiteur ne
+        // sert plus qu'à la fiche imprimée — l'écran dit « Mon parcours ».
+        return "Mon parcours";
       }
 
       function launchFromParcours(config, origin = "parcours", {puis} = {}) {
@@ -11281,23 +11289,21 @@
         // Lot « Mon parcours » (point 7) : un prénom long (« Le parcours de
         // Maximilien-Alexandre ») tenait sur trois lignes au téléphone.
         $("parcours-title").classList.toggle("est-long", parcoursTitle().length > 22);
-        // Sous un code, on ne demande pas de prénom : le professeur l'a déjà
-        // saisi, et rien de tapé ici ne resterait sur l'appareil (lot 8).
-        // Vue du professeur : jamais de prénom demandé (ni de « ⋯ »).
-        $("parcours-name").hidden = VUE_PROF || suiviActif() || !((!parcours.prenom && PARCOURS.estVide(parcours) && !state.nameSkipped) || state.renaming);
-        $("parcours-rename").hidden = suiviActif();
+        // Lot « Effacer l'historique » (06/11/2026) : le « ⋯ » (Effacer mon
+        // historique, Comment ça marche ?) n'existe que pour le visiteur sans
+        // code ; l'élève à code ne peut rien effacer. Vue du professeur : le
+        // « ⋯ » garde sa place, invisible (body.mode-prof).
+        if (!VUE_PROF && !peutEffacer()) {
+          state.parcoursOptionsOpen = false;
+          state.confirmingReset = false;
+        }
+        $("parcours-more").hidden = !VUE_PROF && !peutEffacer();
         $("parcours-confirm").hidden = !state.confirmingReset;
         $("parcours-options").hidden = !state.parcoursOptionsOpen;
         $("parcours-more").setAttribute("aria-expanded", String(Boolean(state.parcoursOptionsOpen)));
 
         // Suivi de classe : le repère vit dans la barre du haut (renderRepere),
         // sur tous les écrans ; rien d'autre ici.
-        // Sans code, il n'y a rien d'autre à dire — et rien à annoncer d'un suivi
-        // qui n'existe pas pour ce visiteur. Avec un code, la phrase doit dire
-        // exactement ce qui se passe.
-        $("parcours-name-note").textContent = suiviActif()
-          ? "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance. Ta progression, elle, est enregistrée pour ton professeur."
-          : "Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance.";
 
         // Plus de « Prochaine étape » ici (lot 2) : c'est l'accueil « Ma
         // table » qui dit quoi faire. Lot « un seul tableau » (04/10/2026) : la
@@ -11818,7 +11824,6 @@
         state.origin = "parcours";
         state.parcoursOptionsOpen = false;
         state.confirmingReset = false;
-        state.renaming = false;
         configuration.mode = null;
         configuration.tables = new Set();
         state.running = false;
@@ -11910,55 +11915,50 @@
         basculerNotice("parcours-notice-bouton", "parcours-notice", true);
       });
       $("parcours-more").addEventListener("click", () => {
+        if (VUE_PROF || !peutEffacer()) return;
         state.parcoursOptionsOpen = !state.parcoursOptionsOpen;
         state.confirmingReset = false;
         renderParcours();
       });
-      $("parcours-rename").addEventListener("click", () => {
-        state.renaming = true;
+      // Le menu posé par-dessus l'écran se referme quand on touche ailleurs,
+      // ou avec Échap — comme tout menu.
+      // La question « Effacer ? » aussi : toucher ailleurs vaut « Garder ».
+      function fermerOptionsParcours() {
+        if (!state.parcoursOptionsOpen && !state.confirmingReset) return;
         state.parcoursOptionsOpen = false;
-        renderParcours();
-        $("parcours-name-input").value = parcours.prenom;
-        $("parcours-name-input").focus?.({preventScroll: true});
+        state.confirmingReset = false;
+        $("parcours-options").hidden = true;
+        $("parcours-confirm").hidden = true;
+        $("parcours-more").setAttribute("aria-expanded", "false");
+      }
+      document.addEventListener("pointerdown", event => {
+        if (!state.parcoursOptionsOpen && !state.confirmingReset) return;
+        const cible = event.target;
+        if (cible && typeof cible.closest === "function" && cible.closest("#parcours-options, #parcours-confirm, #parcours-more")) return;
+        fermerOptionsParcours();
       });
-      $("parcours-name").addEventListener("submit", event => {
-        event.preventDefault();
-        // Vue du professeur : le parcours affiché ne se modifie pas (le
-        // formulaire et le « ⋯ » sont cachés ; un clic forcé ne fait rien).
-        if (VUE_PROF) return;
-        parcours = PARCOURS.definirPrenom(parcours, $("parcours-name-input").value);
-        sauverParcours();
-        state.renaming = false;
-        state.nameSkipped = true;
-        renderParcours();
-        $("parcours-title").focus?.({preventScroll: true});
-      });
-      $("parcours-name-skip").addEventListener("click", () => {
-        state.renaming = false;
-        state.nameSkipped = true;
-        $("parcours-name").hidden = true;
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && (state.parcoursOptionsOpen || state.confirmingReset)) { fermerOptionsParcours(); $("parcours-more").focus?.({preventScroll: true}); }
       });
       $("fiche-ecran-print").addEventListener("click", () => window.setTimeout(() => window.print(), 30));
 
       $("parcours-reset").addEventListener("click", () => {
+        if (VUE_PROF || !peutEffacer()) return;
         state.confirmingReset = true;
         state.parcoursOptionsOpen = false;
-        $("parcours-confirm-text").textContent = prenomAffiche()
-          ? `Effacer le parcours ${deNom(prenomAffiche())} ? Cette action ne peut pas être annulée.`
-          : "Effacer tout ton parcours ? Cette action ne peut pas être annulée.";
         renderParcours();
         $("parcours-confirm-no").focus?.({preventScroll: true});
       });
       $("parcours-confirm-yes").addEventListener("click", () => {
-        if (VUE_PROF) return;
+        // Lot « Effacer l'historique » (06/11/2026, choix de Gwenaël) : le
+        // VISITEUR SANS CODE seulement. Sous un code, l'effacement montait au
+        // serveur (le parcours vide, époque + 1) et vidait ce que le
+        // professeur voit dans Ma classe : plus jamais, même par un clic forcé.
+        if (VUE_PROF || !peutEffacer()) return;
         parcours = PARCOURS.remettreAZero(parcours);
         oublierReponsesAEnvoyer();
-        // « Recommencer à zéro » efface aussi ce que le professeur voit :
-        // on renvoie le parcours vide avant de tout oublier.
         sauverParcours();
-        envoyerAvantDeFermer();
         state.confirmingReset = false;
-        state.nameSkipped = true;
         renderParcours();
         $("parcours-title").focus?.({preventScroll: true});
       });

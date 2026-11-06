@@ -658,14 +658,14 @@ test("5 (soir). le titre de lancement : « 1 min 30 », « 20 questions », « T
   assert.match(html, /\.primary \{ color: #fff; border: 0; background: var\(--blue\); box-shadow: 0 5px 0 #043f8c;/);
 });
 
-test("6 (soir). sous un code, Mon parcours s’appelle « Mon parcours » (le prénom est dans la barre) ; sans code, « Le parcours de Léa »", () => {
+test("6 (soir). Mon parcours s’appelle « Mon parcours » (sous un code, le prénom est dans la barre ; sans code, depuis le 06/11/2026, le prénom ne sert qu’à la fiche)", () => {
   const titre = (suivi, prenom, vueProf = false) => new Function("suiviActif", "prenomAffiche", "VUE_PROF", "parcours", `${source("seElide")}\n${source("deNom")}\n${source("parcoursTitle")}\nreturn parcoursTitle();`)(() => suivi, () => prenom, vueProf, {prenom});
   // Lot « Ma classe : le parcours de Léa » : la vue du professeur dit « Le parcours de Léa » (titre choisi par Gwenaël).
   assert.equal(titre(false, "Léa", true), "Le parcours de Léa");
   assert.equal(titre(false, "", true), "Le parcours de l’élève");
   assert.equal(titre(false, "Axel", true), "Le parcours d’Axel", "lot « élision devant les prénoms »");
   assert.equal(titre(true, "Léa"), "Mon parcours");
-  assert.equal(titre(false, "Léa"), "Le parcours de Léa");
+  assert.equal(titre(false, "Léa"), "Mon parcours", "lot « Effacer l'historique » : le prénom tapé pour la fiche ne change pas le titre");
   assert.equal(titre(false, ""), "Mon parcours");
   // Un prénom long (sans code, 20 caractères au plus) : plus petit, deux lignes au plus.
   assert.match(html, /\$\("parcours-title"\)\.classList\.toggle\("est-long", parcoursTitle\(\)\.length > 22\);/);

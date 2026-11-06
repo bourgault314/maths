@@ -227,6 +227,18 @@ p { line-height: 1.5; }
 .etape small { display: block; color: #5b7286; font-size: .78rem; font-weight: 800; line-height: 1.25; margin-top: 2px; }
 .acc-bas { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; margin-top: 2px; }
 .acc-bas button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* « Effacer mon historique » (06/11/2026) : le visiteur SANS code seulement,
+   discret, sous Mon parcours (au téléphone : tout en bas), sur la ligne de
+   « Comment ça marche ? » ; la question se pose à sa place (« Effacer » en
+   rouge, « Garder » à côté). */
+.acc-effacer-zone { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.lien-effacer { min-height: 44px; margin-top: 2px; padding: 0 6px; border: 0; background: none; color: #5b7286; font: inherit; font-size: .82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.acc-confirm { width: 100%; max-width: 440px; margin: 14px 0 0; padding: 14px; border: 2px solid #cfe2ed; border-radius: 16px; background: #f8fcff; text-align: center; }
+.acc-confirm p { margin: 0 0 10px; color: var(--ink); font-weight: 900; }
+.acc-confirm-boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.acc-confirm-boutons button { min-height: 44px; padding: 0 22px; border-radius: 13px; font: inherit; font-weight: 950; cursor: pointer; }
+.acc-confirm-boutons .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; }
+.acc-confirm-boutons .garder { color: var(--blue); border: 2px solid #c5d9e6; background: #fff; box-shadow: 0 4px 0 #c5d9e6; }
 
 /* ---- Le verdict d'une série ---- */
 .result-verdict {
@@ -755,6 +767,20 @@ div.dc-mod { cursor: default; }
   .acc.dc-a .dc-parcours .dc-mods { flex: 1 1 auto; min-height: 0; overflow-y: auto; grid-auto-rows: max-content; align-content: start; padding: 0 2px 6px 0; scrollbar-gutter: stable; }
 }
 .acc.dc-a .gauche { display: grid; gap: 12px; min-width: 0; }
+/* Lot « Effacer l'historique » (06/11/2026) : sur l'ordinateur, deux
+   rangées — Mon module | Mon parcours, puis « Comment ça marche ? » |
+   « Effacer mon historique » sur la même ligne, chacun sous sa carte. */
+@media (min-width: 1040px) {
+  .acc.dc-a { grid-template-areas: "gauche parcours" "bas effacer"; }
+  .acc.dc-a > .gauche { grid-area: gauche; }
+  .acc.dc-a > .dc-parcours { grid-area: parcours; }
+  .acc.dc-a > .acc-bas { grid-area: bas; }
+  .acc.dc-a > .acc-effacer-zone { grid-area: effacer; }
+  /* Rien à effacer (élève à code, mode professeur, appareil vide) :
+     « Comment ça marche ? » centré sous les deux cartes. */
+  .acc.dc-a:not(.avec-effacer) { grid-template-areas: "gauche parcours" "bas bas"; }
+}
+.acc.dc-a:not(.avec-effacer) > .acc-effacer-zone { display: none; }
 /* Tant que le serveur n'a pas dit qui est l'élève, l'accueil attend. */
 .acc.en-attente > * { visibility: hidden; }
 @media (min-width: 621px) { .acc { max-width: 620px; } .etape { min-height: 60px; } .etape strong { font-size: 1.12rem; } }

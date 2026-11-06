@@ -951,10 +951,10 @@ test("la page charge le moteur du parcours et propose la carte Mon parcours", ()
   assert.match(html, /\["intro", "launch", "play", "result", "parcours", "lire", "fiche"\]/);
 });
 
-test("prénom local, remise à zéro confirmée dans la page, résultat relié au parcours", () => {
-  assert.match(html, /id="parcours-name-input"[^>]*maxlength="20"/);
-  assert.match(html, /Ton prénom n’est pas envoyé : il reste ici, le temps de ta séance\./);
-  assert.match(html, /id="parcours-reset"[\s\S]*Recommencer à zéro/);
+test("prénom à l'impression seulement, effacement confirmé dans la page, résultat relié au parcours", () => {
+  assert.match(html, /id="fiche-prenom-input"[^>]*maxlength="20"/);
+  assert.doesNotMatch(html, /id="parcours-name-input"/, "plus de prénom demandé dans Mon parcours (06/11/2026)");
+  assert.match(html, /id="parcours-reset"[^>]*>Effacer mon historique</);
   assert.match(html, /id="parcours-confirm-yes"[\s\S]*Effacer/);
   assert.doesNotMatch(html, /window\.confirm\(/);
   assert.match(html, /const resultatSerie = \{correct: state\.correct, total: TOTAL, decouverte: state\.origin === "decouverte"\};[\s\S]{0,500}?PARCOURS\.appliquerSerie\(parcours, state\.configuration, resultatSerie\)/);
@@ -997,8 +997,9 @@ test("dans Je deviens expert, « Toutes les tables » coche 2 à 10", () => {
 
 test("la page Confidentialité décrit la sauvegarde locale de Mon parcours", () => {
   assert.match(confidentialite, /<code>mathsgo-defi-tables-parcours<\/code>/);
-  assert.match(confidentialite, /un prénom saisi librement et la progression par table/);
-  assert.match(confidentialite, /Recommencer à zéro/);
+  assert.match(confidentialite, /la progression par table/);
+  assert.match(confidentialite, /« Effacer mon historique »/);
+  assert.doesNotMatch(confidentialite, /Recommencer à zéro/);
 });
 
 // Lot « un seul tableau » : plus de rangées en deux colonnes ; la page garde
@@ -1057,8 +1058,6 @@ test("l’appli est branchée au suivi de classe sans jamais bloquer", () => {
   // Même en creux : sans code, l'appli n'annonce pas un suivi qui n'existe pas
   // pour ce visiteur. La phrase complète revient dès qu'un code est actif.
   assert.doesNotMatch(html, /Si ton professeur te donne un code/);
-  assert.match(html, /Ta progression, elle, est enregistrée pour ton professeur\./,
-    "la phrase vraie pour un élève suivi doit rester");
   assert.match(html, /id="suivi-repere"/, "le repère de suivi est permanent, dans la barre du haut");
   assert.doesNotMatch(html, /id="parcours-fusion"/, "plus de question « c'est le tien ? » : ce qui est fait sans code reste sans code (lot 2b)");
 
