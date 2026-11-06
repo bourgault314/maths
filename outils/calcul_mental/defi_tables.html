@@ -975,6 +975,14 @@
     .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
     .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
     .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
+    /* Relecture 1 (05/11/2026) : le chiffre était 1,5 à 2,5 px trop haut dans
+       son rond (la boîte d'une ligne de texte garde la place des lettres qui
+       descendent). « text-box » rogne la boîte à la hauteur du chiffre : il se
+       centre pour de bon, quelle que soit la police (navigateurs qui le
+       connaissent ; les autres gardent le centrage d'avant). */
+    @supports (text-box: trim-both cap alphabetic) {
+      .seance-fil li { display: inline-block; align-content: center; text-align: center; text-box: trim-both cap alphabetic; }
+    }
     .seance-fil li + li { position: relative; margin-left: 18px; }
     .seance-fil li + li::before { content: ""; position: absolute; top: 50%; right: 100%; width: 18px; height: 2px; margin-right: 2px; background: #b9cbd8; }
     .seance-fil li.ok { border-color: var(--teal); background: var(--teal); color: #fff; }

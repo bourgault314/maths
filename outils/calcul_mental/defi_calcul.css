@@ -38,7 +38,13 @@
 }
 html { min-height: 100%; background: #edf5fb; -webkit-text-size-adjust: 100%; }
 body {
+  /* Relecture 1 (05/11/2026) : sur iPhone, Safari prend pour 100vh la
+     hauteur de l'écran barres cachées, plus grande que ce qu'on voit ; la
+     page « débordait » toujours et « À retenir » rapetissait jusqu'au
+     minimum. 100svh : la hauteur visible avec les barres (100vh reste pour
+     les navigateurs qui ne connaissent pas svh). */
   min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   color: var(--ink);
   background:
@@ -261,6 +267,14 @@ p { line-height: 1.5; }
 .seance-fil { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; color: var(--muted); font-size: .9rem; font-weight: 850; }
 .seance-fil ol { display: flex; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
 .seance-fil li { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid #b9cbd8; border-radius: 50%; background: #fff; color: #6b8192; font-size: .78rem; font-weight: 950; line-height: 1; box-sizing: border-box; }
+/* Relecture 1 (05/11/2026) : le chiffre était 1,5 à 2,5 px trop haut dans
+   son rond (la boîte d'une ligne de texte garde la place des lettres qui
+   descendent). « text-box » rogne la boîte à la hauteur du chiffre : il se
+   centre pour de bon, quelle que soit la police (navigateurs qui le
+   connaissent ; les autres gardent le centrage d'avant). */
+@supports (text-box: trim-both cap alphabetic) {
+  .seance-fil li { display: inline-block; align-content: center; text-align: center; text-box: trim-both cap alphabetic; }
+}
 .seance-fil li + li { position: relative; margin-left: 18px; }
 .seance-fil li + li::before { content: ""; position: absolute; top: 50%; right: 100%; width: 18px; height: 2px; margin-right: 2px; background: #b9cbd8; }
 .seance-fil li.ok { border-color: var(--teal); background: var(--teal); color: #fff; }
@@ -560,7 +574,7 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
   .suivi-repere .repere-lien { flex: 0 0 auto; white-space: nowrap; }
   .suivi-repere .sortie { min-height: 36px; padding: 0 11px; border: 1px solid #b7d9d6; border-radius: 999px; background: #fff;
                           font-size: .74rem; font-weight: 900; text-decoration: none; opacity: 1; }
-  .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
+  .panel { min-height: calc(100vh - 96px); min-height: calc(100svh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
   .intro,
   .result { margin: 20px auto; }
   .intro { margin: 6px auto 14px; }
@@ -666,7 +680,10 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-niveaux button em { color: #5b7286; font-size: .7rem; font-style: normal; font-weight: 800; line-height: 1.1; }
 .dc-niveaux button.ok { border-color: var(--teal); background: #eaf7f4; }
 .dc-niveaux button.ok small { color: var(--teal); }
-.dc-niveaux button.ici { border: 3px solid var(--blue); box-shadow: 0 0 0 3px rgba(7, 85, 184, .16); }
+/* Relecture 1 (05/11/2026) : le bouton choisi garde un bord de 2 px, comme
+   les autres (avec 3 px, son texte perdait 2 px de large et se recoupait
+   autrement) ; la sélection se marque par une ombre. */
+.dc-niveaux button.ici { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue), 0 0 0 4px rgba(7, 85, 184, .16); }
 .dc-niveaux button.ici small { color: var(--blue); }
 .dc-niveaux.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .dc-niveaux.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -689,7 +706,7 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-paliers button small { color: #5b7286; font-size: .68rem; font-weight: 850; line-height: 1; }
 .dc-paliers button.fini { border-color: var(--teal); background: var(--teal); color: #fff; }
 .dc-paliers button.fini small { color: #fff; }
-.dc-paliers button.ici { border: 3px solid var(--blue); background: #eef6ff; color: var(--ink); }
+.dc-paliers button.ici { border-color: var(--blue); background: #eef6ff; color: var(--ink); box-shadow: 0 0 0 1px var(--blue); }
 .dc-paliers button.ici b { color: var(--blue); }
 .dc-paliers button.ici small { color: #5b7286; }
 .dc-ptitre { margin: 0 2px 6px; color: var(--ink); font-size: 1.02rem; font-weight: 900; }
@@ -792,6 +809,11 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
   /* La touche « , » (D2) est à part du pavé : elle s'efface avec lui
      (vu par Code sur la PR #1083). */
   .challenge-playing .question.ecrit-fini > .dc-touches { display: none; }
+  /* Relecture 1 (05/11/2026) : J'écris fini reste à l'écran, avec
+     « Suivant ». Le travail se colle en haut (plus de grand vide au-dessus
+     du dessin) ; « Suivant » reste en bas, à la place de « Valider ». */
+  .challenge-playing .question.ecrit-fini.aide-image > .dc-aide { margin-top: 0; }
+  .challenge-playing .question.ecrit-fini.aide-image > .actions { margin-top: auto; }
 }
 /* Avec une image, le pavé redescend un peu pour que tout tienne sans
    défiler (la même mesure que « J'apprends » de Défi tables). */
@@ -852,6 +874,10 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-jeton.est-trouve, .dc-jeton.est-venu { margin: 0 .1em; padding: 0 .25em; border: 3px solid var(--green); background: var(--green-soft); color: var(--green); animation: dc-referme .3s ease-out; }
 .dc-jeton.est-venu { animation: none; }
 .dc-toucher.est-finie .dc-jeton { cursor: default; }
+/* L'entraînement (relecture 1) : le calcul à faire d'abord, entouré, sans
+   son nombre. */
+.dc-jetons-choisis { display: inline-flex; align-items: center; margin: 0 .1em; padding: 0 .12em; border: 3px solid var(--green); border-radius: 10px; background: var(--green-soft); color: var(--green); }
+.dc-jetons-choisis .dc-jeton { cursor: default; }
 @keyframes dc-referme { from { transform: scale(.6); opacity: .3; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dc-jeton.est-trouve { animation: none; } }
 /* L'escalier de C1 et les facteurs de M10 : étroits, à leur taille. */
@@ -1068,6 +1094,9 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-retenir .eyebrow { margin: 0 0 6px; }
 .dc-retenir .phrase { margin: 0 0 4px; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(1.5rem, 5.4vw, 2.1rem)); font-weight: 950; line-height: 1.2; }
 .dc-retenir .phrase:focus { outline: none; }
+/* Relecture 1 (05/11/2026) : le calcul du bilan, seul sur sa ligne, d'un
+   seul tenant. */
+.dc-retenir .dc-retenir-calcul { display: block; margin-top: .3em; white-space: nowrap; }
 .dc-retenir .dc-aide { max-width: 440px; }
 /* Téléphone : --retenir-z (posé par la page) rapetisse la phrase et le
    dessin ensemble quand le cadre dépasserait l'écran. */
