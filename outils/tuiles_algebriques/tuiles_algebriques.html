@@ -292,6 +292,52 @@
         #equation-display { font-size: clamp(20px, 2.4vw, 46px); }
         /* Au téléphone, l'équation prend toute une ligne au lieu d'être coupée par les boutons de vue. */
         header .eq-zone { min-width: 280px; }
+        /* --- TAPER UNE EXPRESSION (lot 4) : bouton, pavé, champ. Styles écrits ici (la feuille Tailwind
+           de la page est construite à l'avance : une classe Tailwind nouvelle ne ferait rien). --- */
+        #btn-taper { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px 0 10px; margin-left: 6px; border-radius: 999px; background: #fff; border: 2px solid #64748b; color: #334155; font-weight: 700; font-size: 15px; box-shadow: 0 1px 3px rgba(0,0,0,.12); cursor: pointer; }
+        #btn-taper:hover { background: #f1f5f9; }
+        #btn-taper.on { background: #334155; color: #fff; border-color: #334155; }
+        #taper-panneau { position: fixed; z-index: 60; width: 470px; max-width: calc(100vw - 32px); background: #fff; border: 2px solid #cbd5e1; border-radius: 16px; box-shadow: 0 12px 32px rgba(15,23,42,.22); padding: 14px; color: #1e293b; box-sizing: border-box; }
+        #taper-panneau[hidden] { display: none; }
+        #taper-panneau .taper-ligne { display: flex; align-items: center; gap: 8px; }
+        #taper-champ { flex: 1; min-width: 0; height: 54px; border: 2px solid #3b82f6; border-radius: 10px; padding: 0 14px; display: flex; align-items: center; font-size: 28px; font-weight: 600; background: #f8fafc; white-space: nowrap; overflow-x: auto; overflow-y: hidden; cursor: text; outline: none; scrollbar-width: none; }
+        #taper-champ:focus-visible { box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
+        #taper-champ.err { border-color: #dc2626; background: #fef2f2; }
+        #taper-champ .lettre { font-family: SplatLettres, 'Times New Roman', serif; font-style: italic; }
+        #taper-champ .op { margin: 0 .22em; }
+        #taper-champ .bad { background: #fecaca; box-shadow: inset 0 -3px 0 #dc2626; border-radius: 3px; }
+        #taper-champ .taper-vide { color: #94a3b8; font-weight: 400; font-size: 20px; }
+        #taper-champ .taper-caret { display: inline-block; width: 2px; height: 30px; margin: 0 -1px; background: #1d4ed8; vertical-align: middle; animation: taperCaret 1s steps(1) infinite; }
+        @keyframes taperCaret { 50% { opacity: 0; } }
+        #taper-panneau .taper-fermer { width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid #cbd5e1; background: #fff; font-size: 22px; color: #475569; cursor: pointer; }
+        #taper-panneau .taper-lis { margin: 8px 2px 10px; font-size: 15px; color: #64748b; min-height: 30px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        #taper-panneau .taper-lis .k { font-size: 24px; }
+        #taper-panneau .taper-lis .attente { color: #64748b; font-style: italic; }
+        #taper-panneau .taper-lis.err { display: block; color: #b91c1c; line-height: 1.35; }
+        #taper-panneau .taper-lis.err .m { font-weight: 700; }
+        #taper-panneau .taper-lis.err .a { color: #7f1d1d; }
+        #taper-pave { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
+        #taper-pave button { height: 46px; border-radius: 10px; border: 1px solid #cbd5e1; border-bottom-width: 3px; background: #fff; font-size: 22px; font-weight: 600; color: #1e293b; cursor: pointer; touch-action: manipulation; }
+        #taper-pave button:active { transform: translateY(2px); border-bottom-width: 1px; }
+        #taper-pave .lettre { font-family: SplatLettres, 'Times New Roman', serif; font-style: italic; background: #f0fdf4; border-color: #86efac; }
+        #taper-pave .par { background: #fff7ed; border-color: #fdba74; color: #c2410c; }
+        #taper-pave .op { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+        #taper-pave .eff { color: #475569; }
+        #taper-pave .tout { font-size: 14px; line-height: 1.1; }
+        #taper-poser { margin-top: 10px; width: 100%; height: 50px; border-radius: 12px; background: #3b82f6; color: #fff; font-weight: 700; font-size: 18px; border: none; border-bottom: 4px solid #1d4ed8; cursor: pointer; }
+        #taper-poser:disabled { background: #cbd5e1; border-bottom-color: #94a3b8; color: #f8fafc; cursor: not-allowed; }
+        #taper-panneau .taper-aide { margin-top: 8px; font-size: 13px; color: #64748b; text-align: center; }
+        @media (pointer: coarse) { #taper-panneau .taper-aide { display: none; } }
+        /* Grand écran projeté : le pavé grandit avec l'équation (à 1920, 470 px se lisaient mal au fond de la classe). */
+        @media (min-width: 1600px) { #taper-panneau { transform: scale(1.25); transform-origin: top left; } }
+        @media (max-width: 640px) {
+            #taper-panneau { left: 8px; right: 8px; bottom: 8px; top: auto; width: auto; max-width: none; }
+            #taper-pave button { height: 50px; }
+        }
+
+        /* --- PIVOTER (lot 4) --- */
+        #board-container.tool-rotate .token { cursor: pointer; }
+        .token.pivot-refus { animation: productShake 0.26s ease-in-out 0s 2; }
     </style>
 <script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 <link rel="stylesheet" href="../../assets/vendor/tailwind/tailwind-outils.css?v=scripts-tiers-20260904-1">
@@ -334,6 +380,16 @@
                 </svg>
             </button>
 
+            <!-- PIVOTER (lot 4) : une tuile 𝑥 touchée passe de couchée à debout et inversement.
+                 Icône sans flèche ronde, pour ne pas ressembler à ↶ (précédent) ni à ⟳ (tout recommencer). -->
+            <button onclick="app.setTool(app.currentTool === 'rotate' ? 'hand' : 'rotate')" id="tool-rotate" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Pivoter une tuile 𝑥 : cliquer puis toucher une tuile" aria-label="Pivoter une tuile 𝑥">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="1" y="13" width="9" height="5" stroke-width="2" stroke-linejoin="round"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15.5h4.5M13.8 13.5l2 2-2 2"/>
+                    <rect x="17.5" y="3" width="5" height="17" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
             <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20l4.2-1.1L19.1 8a2.1 2.1 0 00-3-3L5.2 15.9 4 20z"/>
@@ -370,6 +426,10 @@
                     <button onclick="app.setOperator('subtract')" class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full border-2 border-orange-400 font-bold text-xl active:scale-95 transition hover:bg-orange-200" title="Soustraire (Ouvrir parenthèse)">-</button>
                     <button id="btn-close-parenthesis" onclick="app.closeParenthesis()" class="hidden w-10 h-10 bg-orange-500 text-white rounded-full border-2 border-orange-700 font-bold text-xl active:scale-95 transition shadow-lg animate-pulse" title="Fermer parenthèse"> ) </button>
                 </div>
+                <!-- TAPER (lot 4) : ouvre le pavé pour taper une expression -->
+                <button id="btn-taper" type="button" onclick="app.basculerTaper()" aria-expanded="false" aria-controls="taper-panneau" title="Taper une expression">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>Taper
+                </button>
                 <button id="btn-opposite" onclick="app.applyOpposite()" class="hidden btn-opposite ml-2 bg-orange-600 text-white px-3 py-1 rounded-full font-bold shadow-lg border-b-4 border-orange-800 active:border-b-0 active:translate-y-1 text-xs sm:text-sm uppercase tracking-wide flex flex-col items-center leading-none py-2"><span class="text-xs sm:text-sm leading-none">Ajouter l'opposé</span></button>
             </div>
         </div>
@@ -500,6 +560,22 @@
         </main>
     </div>
 
+
+    <!-- TAPER UNE EXPRESSION (lot 4, 06/11/2026) : le pavé, posé sur le plateau -->
+    <div id="taper-panneau" role="dialog" aria-label="Taper une expression" hidden>
+        <div class="taper-ligne">
+            <div id="taper-champ" role="textbox" tabindex="0" aria-label="Expression à taper"></div>
+            <button type="button" class="taper-fermer" onclick="app.fermerTaper()" title="Fermer" aria-label="Fermer">×</button>
+        </div>
+        <div id="taper-lis" class="taper-lis" aria-live="polite"></div>
+        <div id="taper-pave">
+            <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" class="lettre" data-touche="x²">𝑥²</button><button type="button" class="par" data-touche="(">(</button><button type="button" class="eff" data-touche="retour" aria-label="Effacer le dernier signe">⌫</button>
+            <button type="button" data-touche="4">4</button><button type="button" data-touche="5">5</button><button type="button" data-touche="6">6</button><button type="button" class="lettre" data-touche="x">𝑥</button><button type="button" class="par" data-touche=")">)</button><button type="button" class="eff tout" data-touche="effacer">Tout<br>effacer</button>
+            <button type="button" data-touche="1">1</button><button type="button" data-touche="2">2</button><button type="button" data-touche="3">3</button><button type="button" data-touche="0">0</button><button type="button" class="op" data-touche="+">+</button><button type="button" class="op" data-touche="−">−</button>
+        </div>
+        <button type="button" id="taper-poser" onclick="app.taperPoser()" disabled>✓ Poser les tuiles</button>
+        <div class="taper-aide">Au clavier : x2 ou x^2 pour 𝑥², puis Entrée</div>
+    </div>
     <script>
         const SNAP_THRESHOLD = 60;
         const INITIAL_SCALE = 1.45; // Zoom de départ : plus proche du tableau dès l'ouverture
@@ -618,6 +694,185 @@
             }
         }
 
+        // === LECTURE DE L'EXPRESSION TAPÉE (lot 4, 06/11/2026) ===
+        // « Taper » : le texte du champ devient une liste de tuiles. Fonctions pures (sans la page),
+        // testées seules par tests/tuiles-algebriques-lot-4.test.mjs.
+        // Ce qu'on peut taper : 𝑥², 𝑥, des nombres entiers, +, −, une paire de parenthèses à la fois
+        // (−( ) retournée au clic sur « Ajouter l'opposé », comme au bouton −), et un produit seul de
+        // deux facteurs sans 𝑥², 2(𝑥 + 1) ou (𝑥 + 1)(𝑥 − 2), posé dans le tableau produit.
+        const TAPER_MAX_PAR_TERME = 20; // choix du 06/11 : 20 tuiles au plus par terme
+        const TAPER_AIDE = 'On peut taper : 𝑥², 𝑥, des nombres, +, − et des parenthèses.';
+
+        // Le texte tel qu'on le range dans le champ : sans espace, un seul signe moins, 𝑥 écrit x,
+        // x2 et x^2 écrits x². Les positions des erreurs se comptent dans CE texte.
+        function normaliserSaisie(s) {
+            return String(s || '')
+                .replace(/[\s  ]+/g, '')
+                .replace(/[X𝑥]/gu, 'x')
+                .replace(/[-–—‐‑]/g, '−')
+                .replace(/[*·∙⋅]/g, '×')
+                .replace(/x\^2/g, 'x²')
+                .replace(/x2/g, 'x²');
+        }
+
+        function lireExpressionTapee(brut) {
+            const s = normaliserSaisie(brut);
+            if (!s) return { ok: false, vide: true, texte: s };
+            const erreur = (message, start, end, aide = false) => ({ ok: false, message, start, end, aide, texte: s });
+            const incomplet = () => ({ ok: false, incomplet: true, texte: s });
+
+            // 1) les morceaux
+            const toks = [];
+            for (let i = 0; i < s.length;) {
+                const c = s[i];
+                if (/[0-9]/.test(c)) {
+                    let j = i; while (j < s.length && /[0-9]/.test(s[j])) j++;
+                    toks.push({ k: 'num', v: parseInt(s.slice(i, j), 10), start: i, end: j }); i = j; continue;
+                }
+                if (c === 'x') {
+                    if (s[i + 1] === '²') { toks.push({ k: 'x', p: 2, start: i, end: i + 2 }); i += 2; continue; }
+                    if (s[i + 1] === '³' || (s[i + 1] === '^' && /[0-9]/.test(s[i + 2] || ''))) {
+                        return erreur('Les tuiles s’arrêtent à 𝑥².', i, i + (s[i + 1] === '³' ? 2 : 3));
+                    }
+                    if (s[i + 1] === '^') { if (i + 2 >= s.length) return incomplet(); return erreur('Après « ^ », seulement 2 : 𝑥^2 s\u2019écrit 𝑥².', i, i + 3); }
+                    toks.push({ k: 'x', p: 1, start: i, end: i + 1 }); i += 1; continue;
+                }
+                if (c === '+' || c === '−') { toks.push({ k: 'op', v: c === '+' ? 1 : -1, start: i, end: i + 1 }); i++; continue; }
+                if (c === '(') { toks.push({ k: '(', start: i, end: i + 1 }); i++; continue; }
+                if (c === ')') { toks.push({ k: ')', start: i, end: i + 1 }); i++; continue; }
+                if (c === '×') { toks.push({ k: '×', start: i, end: i + 1 }); i++; continue; }
+                if (c === '²') return erreur('« ² » se tape juste après 𝑥.', i, i + 1);
+                const car = Array.from(s.slice(i))[0];
+                return erreur(`Je ne connais pas « ${car} ».`, i, i + car.length, true);
+            }
+
+            // 2) la structure : somme d'éléments, chaque élément un terme, une parenthèse ou un produit
+            let pos = 0;
+            const voir = () => toks[pos];
+            const terme = () => { // [nombre] [𝑥 ou 𝑥²]
+                const t = voir(); if (!t) return null;
+                if (t.k === 'num') {
+                    pos++;
+                    const n = voir();
+                    if (n && n.k === 'x') { pos++; return { n: 'terme', type: n.p === 2 ? 'x2' : 'x', count: t.v, start: t.start, end: n.end }; }
+                    return { n: 'terme', type: 'unit', count: t.v, start: t.start, end: t.end };
+                }
+                if (t.k === 'x') { pos++; return { n: 'terme', type: t.p === 2 ? 'x2' : 'x', count: 1, start: t.start, end: t.end }; }
+                return null;
+            };
+            let profondeur = 0;
+            const somme = () => { // [signe] élément (signe élément)*
+                const items = [];
+                let signe = 1, signeTok = null;
+                if (voir() && voir().k === 'op') { signeTok = voir(); signe = signeTok.v; pos++; }
+                for (;;) {
+                    const t = voir();
+                    if (!t) return { incomplet: true };
+                    if (t.k === 'op') return { err: erreur('Deux signes de suite : mets une parenthèse, comme + (−2).', (signeTok || t).start, t.end) };
+                    if (t.k === ')') return { err: erreur(signeTok ? 'Il manque un terme après le signe.' : 'Parenthèse « ) » sans « ( ».', t.start, t.end) };
+                    if (t.k === '×') return { err: erreur('Il manque un facteur avant « × ».', t.start, t.end) };
+                    const el = element();
+                    if (el.err || el.incomplet) return el;
+                    items.push({ signe, el, start: signeTok ? signeTok.start : el.start, end: el.end });
+                    const n = voir();
+                    if (!n || n.k === ')') return { items };
+                    if (n.k === 'op') { signeTok = n; signe = n.v; pos++; continue; }
+                    // deux termes collés sans signe : 2𝑥 3, 𝑥𝑥…
+                    const prec = toks[pos - 1];
+                    if (n.k === 'x' && prec.k === 'x') return { err: erreur('Écris 𝑥² plutôt que 𝑥𝑥.', prec.start, n.end) };
+                    return { err: erreur('Il manque + ou − ici.', prec.start, n.end) };
+                }
+            };
+            const facteur = () => { // un terme ou une parenthèse
+                const t = voir();
+                if (!t) return { incomplet: true };
+                if (t.k === '(') {
+                    pos++; profondeur++;
+                    if (profondeur > 1) return { err: erreur('Une seule paire de parenthèses à la fois.', t.start, t.end) };
+                    if (voir() && voir().k === ')') return { err: erreur('Parenthèses vides.', t.start, voir().end) };
+                    const r = somme();
+                    if (r.err || r.incomplet) return r;
+                    const f = voir();
+                    if (!f) return { incomplet: true };
+                    pos++; profondeur--;
+                    return { n: 'groupe', items: r.items, start: t.start, end: f.end };
+                }
+                const te = terme();
+                if (te) return te;
+                return { err: erreur('Il manque un terme ici.', t.start, t.end) };
+            };
+            const element = () => { // un facteur, ou plusieurs facteurs = un produit
+                const premier = facteur();
+                if (premier.err || premier.incomplet) return premier;
+                const facteurs = [premier];
+                for (;;) {
+                    const n = voir();
+                    const derniere = facteurs[facteurs.length - 1];
+                    let colle = false;
+                    if (n && n.k === '×') { pos++; colle = true; if (!voir()) return { incomplet: true }; }
+                    else if (n && n.k === '(') colle = true;
+                    else if (n && (n.k === 'num' || n.k === 'x') && derniere.n === 'groupe') colle = true;
+                    if (!colle) break;
+                    const f = facteur();
+                    if (f.err || f.incomplet) return f;
+                    facteurs.push(f);
+                }
+                if (facteurs.length === 1) return premier;
+                return { n: 'produit', facteurs, start: premier.start, end: facteurs[facteurs.length - 1].end };
+            };
+
+            const r = somme();
+            if (r.incomplet) return incomplet();
+            if (r.err) return r.err;
+            if (pos < toks.length) { const t = toks[pos]; return erreur('Parenthèse « ) » sans « ( ».', t.start, t.end); }
+
+            // 3) les tuiles
+            const tuiles = (te, signe) => {
+                if (te.count === 0) return { err: erreur('« 0 » ne pose aucune tuile.', te.start, te.end) };
+                if (te.count > TAPER_MAX_PAR_TERME) return { err: erreur(`${TAPER_MAX_PAR_TERME} tuiles au plus par terme.`, te.start, te.end) };
+                return { type: te.type, sign: signe, count: te.count, start: te.start, end: te.end };
+            };
+            const termesDuGroupe = (items) => {
+                const out = [];
+                for (const it of items) {
+                    if (it.el.n !== 'terme') return { err: erreur(it.el.n === 'produit' ? 'Un produit se tape seul, par exemple 2(𝑥 + 1).' : 'Une seule paire de parenthèses à la fois.', it.el.start, it.el.end) };
+                    const t = tuiles(it.el, it.signe); if (t.err) return t; out.push(t);
+                }
+                return { termes: out };
+            };
+
+            const produit = r.items.find(it => it.el.n === 'produit');
+            if (produit) {
+                if (r.items.length > 1) return erreur('Un produit se tape seul, par exemple 2(𝑥 + 1) ou (𝑥 + 1)(𝑥 − 2).', produit.el.start, produit.el.end);
+                const fs = produit.el.facteurs;
+                if (fs.length > 2) return erreur('Deux facteurs au plus.', fs[2].start, fs[fs.length - 1].end);
+                const facteurs = [];
+                for (let i = 0; i < 2; i++) {
+                    const f = fs[i];
+                    const lu = f.n === 'groupe' ? termesDuGroupe(f.items) : termesDuGroupe([{ signe: 1, el: f }]);
+                    if (lu.err) return lu.err;
+                    const x2 = lu.termes.find(t => t.type === 'x2');
+                    if (x2) return erreur('Dans un produit, seulement des 𝑥 et des nombres.', x2.start, x2.end);
+                    // le signe tapé devant le produit (−2(𝑥 + 1)) ira au premier facteur, à la pose
+                    facteurs.push({ termes: lu.termes, groupe: f.n === 'groupe', moinsDevant: i === 0 && produit.signe === -1 });
+                }
+                return { ok: true, kind: 'product', facteurs, texte: s };
+            }
+
+            const segments = [];
+            const plat = () => { let d = segments[segments.length - 1]; if (!d || d.kind !== 'plain') { d = { kind: 'plain', terms: [] }; segments.push(d); } return d; };
+            for (let i = 0; i < r.items.length; i++) {
+                const it = r.items[i];
+                if (it.el.n === 'terme') { const t = tuiles(it.el, it.signe); if (t.err) return t.err; plat().terms.push(t); continue; }
+                const lu = termesDuGroupe(it.el.items); if (lu.err) return lu.err;
+                if (it.signe === -1) segments.push({ kind: 'minus', terms: lu.termes });
+                else if (i === 0) lu.termes.forEach(t => plat().terms.push(t)); // (𝑥 + 1) au début : rien à séparer
+                else segments.push({ kind: 'plus', terms: lu.termes });
+            }
+            return { ok: true, kind: 'sum', segments, texte: s };
+        }
+        // === FIN DE LA LECTURE DE L'EXPRESSION TAPÉE ===
+
         class AlgebraApp {
             constructor() {
                 this.history = [];
@@ -653,6 +908,7 @@
                 this.updateToolButtons();
                 this.updateSoundButton();
                 this.updateFullscreenButton();
+                this.initTaper();
                 document.addEventListener('fullscreenchange', () => { this.updateFullscreenButton(); });
             }
 
@@ -1379,7 +1635,8 @@
                 const leftStr = left.length ? this.tokensToProductFactorLatex(left) : "\\dots";
                 // Tant que le gabarit est présent, on garde le produit sous forme factorisée.
                 // Le développement n'apparaît dans l'équation qu'après "Développer sur le plateau".
-                return `(${leftStr})(${topStr})`;
+                const leftSeul = left.length && new Set(left.map(t => `${t.type}:${t.sign}`)).size === 1;
+                return leftSeul ? `${leftStr}(${topStr})` : `(${leftStr})(${topStr})`;
             }
 
             hasFreeExpressionTokens() {
@@ -1844,6 +2101,7 @@
                 const handBtn = document.getElementById('tool-hand');
                 const penBtn = document.getElementById('tool-pen');
                 const trashBtn = document.getElementById('tile-trash-zone');
+                const rotateBtn = document.getElementById('tool-rotate');
                 if (!handBtn || !penBtn) return;
 
                 const setActive = (btn) => {
@@ -1857,9 +2115,11 @@
 
                 setInactive(handBtn);
                 setInactive(penBtn);
+                if (rotateBtn) setInactive(rotateBtn);
                 if (trashBtn) trashBtn.classList.remove('tool-active');
 
                 if (this.currentTool === 'pen') setActive(penBtn);
+                else if (this.currentTool === 'rotate' && rotateBtn) setActive(rotateBtn);
                 else if (this.currentTool === 'erase') {
                     if (trashBtn) trashBtn.classList.add('tool-active');
                 } else {
@@ -2504,6 +2764,288 @@
                 this.updateEquation();
             }
 
+            // --- TAPER UNE EXPRESSION (lot 4, 06/11/2026) ---
+            // Bouton « Taper » → pavé posé sur le plateau → « Poser les tuiles » REMPLACE le plateau
+            // (↶ ramène l'ancien). Au toucher, seul le pavé de l'appli : le champ n'est pas un <input>,
+            // donc le clavier du téléphone ne s'ouvre pas et ne cache pas le plateau. À l'ordinateur,
+            // pavé ET clavier (x2 ou x^2 pour 𝑥², Entrée pour poser, Échap pour fermer).
+            initTaper() {
+                this.taper = { texte: '', caret: 0, ouvert: false, lu: lireExpressionTapee('') };
+                const champ = document.getElementById('taper-champ');
+                const pave = document.getElementById('taper-pave');
+                if (!champ || !pave) return;
+                champ.addEventListener('keydown', (e) => this.taperClavier(e));
+                champ.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const t = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+                    this.taperInserer(normaliserSaisie(t));
+                });
+                champ.addEventListener('pointerdown', (e) => this.taperClicChamp(e));
+                // le pointerdown redessine le champ : le mousedown qui suit vise une lettre déjà retirée,
+                // et Chrome ne rendrait le focus à personne (la frappe suivante serait perdue).
+                champ.addEventListener('mousedown', (e) => e.preventDefault());
+                // une touche du pavé ne doit pas voler le clavier au champ (ordinateur)
+                pave.addEventListener('mousedown', (e) => e.preventDefault());
+                pave.addEventListener('click', (e) => {
+                    const b = e.target.closest('button[data-touche]'); if (!b) return;
+                    this.taperTouche(b.dataset.touche);
+                });
+                window.addEventListener('resize', () => { if (this.taper.ouvert) this.placerTaper(); });
+                this.rendreTaper();
+            }
+
+            basculerTaper() { if (this.taper.ouvert) this.fermerTaper(); else this.ouvrirTaper(); }
+
+            ouvrirTaper() {
+                const p = document.getElementById('taper-panneau'); if (!p) return;
+                this.taper.ouvert = true; p.hidden = false;
+                document.getElementById('btn-taper')?.classList.add('on');
+                document.getElementById('btn-taper')?.setAttribute('aria-expanded', 'true');
+                this.taper.caret = this.taper.texte.length;
+                this.placerTaper(); this.rendreTaper();
+                try { document.getElementById('taper-champ').focus({ preventScroll: true }); } catch (err) {}
+            }
+
+            fermerTaper() {
+                const p = document.getElementById('taper-panneau'); if (!p) return;
+                this.taper.ouvert = false; p.hidden = true;
+                document.getElementById('btn-taper')?.classList.remove('on');
+                document.getElementById('btn-taper')?.setAttribute('aria-expanded', 'false');
+            }
+
+            // Ordinateur : sous la barre, à droite de la colonne des tuiles. Téléphone : en bas (CSS).
+            placerTaper() {
+                const p = document.getElementById('taper-panneau'); if (!p) return;
+                if (window.matchMedia('(max-width: 640px)').matches) { p.style.top = ''; p.style.left = ''; return; }
+                const h = document.querySelector('header').getBoundingClientRect();
+                const a = document.querySelector('aside').getBoundingClientRect();
+                p.style.top = Math.round(h.bottom + 14) + 'px';
+                p.style.left = Math.round(a.right + 16) + 'px';
+            }
+
+            taperModifier(texte, caret) {
+                // x2 → 𝑥² se fait à la frappe : on recalcule la place du curseur dans le texte rangé
+                const t = normaliserSaisie(texte);
+                this.taper.caret = Math.min(t.length, normaliserSaisie(texte.slice(0, caret)).length);
+                this.taper.texte = t;
+                this.rendreTaper();
+            }
+
+            taperInserer(str) {
+                if (!str) return;
+                const { texte, caret } = this.taper;
+                this.taperModifier(texte.slice(0, caret) + str + texte.slice(caret), caret + str.length);
+            }
+
+            taperTouche(k) {
+                const { texte, caret } = this.taper;
+                if (k === 'retour') { if (caret > 0) this.taperModifier(texte.slice(0, caret - 1) + texte.slice(caret), caret - 1); }
+                else if (k === 'effacer') this.taperModifier('', 0);
+                else this.taperInserer(k);
+            }
+
+            taperClavier(e) {
+                if (e.ctrlKey || e.metaKey || e.altKey) return; // copier-coller, raccourcis du navigateur
+                const { texte, caret } = this.taper;
+                const k = e.key;
+                if (k === 'Enter') { e.preventDefault(); this.taperPoser(); return; }
+                if (k === 'Escape') { e.preventDefault(); this.fermerTaper(); return; }
+                if (k === 'Backspace') { e.preventDefault(); this.taperTouche('retour'); return; }
+                if (k === 'Delete') { e.preventDefault(); if (caret < texte.length) this.taperModifier(texte.slice(0, caret) + texte.slice(caret + 1), caret); return; }
+                if (k === 'ArrowLeft') { e.preventDefault(); this.taper.caret = Math.max(0, caret - 1); this.rendreTaper(); return; }
+                if (k === 'ArrowRight') { e.preventDefault(); this.taper.caret = Math.min(texte.length, caret + 1); this.rendreTaper(); return; }
+                if (k === 'Home') { e.preventDefault(); this.taper.caret = 0; this.rendreTaper(); return; }
+                if (k === 'End') { e.preventDefault(); this.taper.caret = texte.length; this.rendreTaper(); return; }
+                if (k === 'Tab') return;
+                if (k.length === 1 || Array.from(k).length === 1) { e.preventDefault(); if (k !== ' ') this.taperInserer(normaliserSaisie(k)); }
+            }
+
+            // Toucher le champ place le curseur avant ou après la lettre touchée.
+            taperClicChamp(e) {
+                const c = e.target.closest('[data-i]');
+                if (c) {
+                    const r = c.getBoundingClientRect();
+                    const i = parseInt(c.dataset.i, 10);
+                    this.taper.caret = e.clientX < r.left + r.width / 2 ? i : i + 1;
+                } else this.taper.caret = this.taper.texte.length;
+                this.rendreTaper();
+                try { document.getElementById('taper-champ').focus({ preventScroll: true }); } catch (err) {}
+            }
+
+            rendreTaper() {
+                const champ = document.getElementById('taper-champ');
+                const lis = document.getElementById('taper-lis');
+                const btn = document.getElementById('taper-poser');
+                if (!champ || !lis || !btn) return;
+                const { texte, caret } = this.taper;
+                const r = lireExpressionTapee(texte);
+                this.taper.lu = r;
+                const bad = (!r.ok && r.message) ? [r.start, r.end] : null;
+                const esc = (c) => c === '<' ? '&lt;' : (c === '>' ? '&gt;' : (c === '&' ? '&amp;' : c));
+                let html = '';
+                for (let i = 0; i <= texte.length; i++) {
+                    if (i === caret) html += '<span class="taper-caret" aria-hidden="true"></span>';
+                    if (i === texte.length) break;
+                    const c = texte[i];
+                    const cls = ['c'];
+                    if (c === 'x') cls.push('lettre');
+                    if (c === '+' || c === '−' || c === '×') cls.push('op');
+                    if (bad && i >= bad[0] && i < bad[1]) cls.push('bad');
+                    html += `<span class="${cls.join(' ')}" data-i="${i}">${c === 'x' ? '𝑥' : esc(c)}</span>`;
+                }
+                if (!texte) html += '<span class="taper-vide">par exemple 2𝑥² + 3𝑥 − 2</span>';
+                champ.innerHTML = html;
+                champ.classList.toggle('err', !!bad);
+                champ.setAttribute('aria-label', texte ? `Expression : ${texte}` : 'Expression à taper');
+                lis.className = 'taper-lis';
+                if (r.ok) {
+                    lis.innerHTML = 'Je lis : <span class="k"></span>';
+                    katex.render(this.latexDeLecture(r), lis.querySelector('.k'), { throwOnError: false });
+                } else if (r.message) {
+                    lis.classList.add('err');
+                    lis.innerHTML = '';
+                    const m = document.createElement('div'); m.className = 'm'; m.textContent = r.message; lis.appendChild(m);
+                    if (r.aide) { const a = document.createElement('div'); a.className = 'a'; a.textContent = TAPER_AIDE; lis.appendChild(a); }
+                } else if (r.incomplet) lis.innerHTML = '<span class="attente">À compléter…</span>';
+                else lis.innerHTML = '';
+                btn.disabled = !r.ok;
+            }
+
+            // Ce que « Je lis » écrit : l'expression comme on l'a tapée, aux couleurs des tuiles.
+            latexDeLecture(r) {
+                const plus = this.colorLatex(this.getEquationOperatorColor(1), '+');
+                const moins = this.colorLatex(this.getEquationOperatorColor(-1), '-');
+                const terme = (t, premier) => {
+                    const col = this.getEquationColor(t.type, t.sign);
+                    const corps = t.type === 'unit' ? String(t.count) : (t.count === 1 ? '' : String(t.count)) + (t.type === 'x2' ? 'x^2' : 'x');
+                    const c = this.colorLatex(col, corps);
+                    if (premier) return (t.sign === -1 ? this.colorLatex(col, '-') : '') + c;
+                    return t.sign === -1 ? `\\:${this.colorLatex(col, '-')}\\:${c}` : `\\:${plus}\\:${c}`;
+                };
+                const suite = (terms) => terms.map((t, i) => terme(t, i === 0)).join('');
+                if (r.kind === 'product') {
+                    const [a, b] = r.facteurs;
+                    const ecrire = (f) => f.groupe ? `(${suite(f.termes)})` : suite(f.termes);
+                    const signe = a.moinsDevant ? moins : '';
+                    return signe + ecrire(a) + (!a.groupe && !b.groupe ? '\\times ' : '') + ecrire(b);
+                }
+                let l = ''; let premier = true;
+                r.segments.forEach(seg => {
+                    if (seg.kind === 'plain') { seg.terms.forEach(t => { l += terme(t, premier); premier = false; }); return; }
+                    l += premier ? (seg.kind === 'minus' ? moins : '') : `\\:${seg.kind === 'minus' ? moins : plus}\\:`;
+                    l += `(${suite(seg.terms)})`;
+                    premier = false;
+                });
+                return l;
+            }
+
+            taperPoser() {
+                const r = lireExpressionTapee(this.taper.texte);
+                if (!r.ok) { this.rendreTaper(); return; }
+                this.poserExpressionTapee(r);
+                this.fermerTaper();
+            }
+
+            // Remplace le plateau par les tuiles de l'expression lue. Un seul pas dans l'historique (↶).
+            poserExpressionTapee(r) {
+                this.resetBoard(); // enregistre l'état d'avant : ↶ ramène l'ancien plateau
+                if (r.kind === 'product') { this.poserProduitTape(r); return; }
+                const poser = (terms) => terms.forEach(t => {
+                    this.lastPack = null; // un terme tapé = un groupe : 𝑥 + 𝑥 reste 𝑥 + 𝑥 (pas 2𝑥)
+                    for (let i = 0; i < t.count; i++) this.createTileToken(t.type, t.sign, 'auto');
+                });
+                const etapeApres = () => { // ce qui suit une parenthèse va APRÈS elle (comme closeParenthesis)
+                    this.steps.push({ id: this.steps.length, operator: '+', type: 'simple', plusStep: true, implicit: true, tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
+                    this.currentStepIndex = this.steps.length - 1;
+                    this.lastPack = null;
+                    this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP);
+                };
+                r.segments.forEach(seg => {
+                    if (seg.kind === 'minus') {
+                        // comme le bouton − puis « ) » : tuiles affichées telles qu'on les tape, cadre pointillé,
+                        // retournées au clic sur « Ajouter l'opposé »
+                        this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP);
+                        this.steps.push({ id: this.steps.length, operator: '-', type: 'subtraction', tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
+                        this.currentStepIndex = this.steps.length - 1;
+                        this.isSubtractingInput = true;
+                        poser(seg.terms);
+                        this.isSubtractingInput = false;
+                        this.steps[this.currentStepIndex].isClosed = true;
+                        etapeApres();
+                    } else if (seg.kind === 'plus') {
+                        // comme le bouton + : 𝑥 + (−2) garde sa parenthèse
+                        const cur = this.steps[this.currentStepIndex];
+                        if (cur && cur.implicit && !cur.tokenIds.length) cur.implicit = false;
+                        else {
+                            this.steps.push({ id: this.steps.length, operator: '+', type: 'simple', plusStep: true, implicit: false, tokenIds: [], factor: 1, oppositeApplied: false, distributed: false, isClosed: false });
+                            this.currentStepIndex = this.steps.length - 1;
+                        }
+                        this.pendingPackGap = Math.max(this.pendingPackGap, PACK_GAP);
+                        poser(seg.terms);
+                        etapeApres();
+                    } else poser(seg.terms);
+                });
+                document.getElementById('btn-close-parenthesis').classList.add('hidden');
+                this.checkOppositeAvailable();
+                this.updateEquation();
+            }
+
+            // 2(𝑥 + 1), (𝑥 + 1)(𝑥 − 2) : le tableau produit, premier facteur à gauche, second en haut,
+            // cases vides à remplir. Le tableau tient dans le plateau visible (zoom réduit s'il le faut).
+            poserProduitTape(r) {
+                this.productFrame = { x: 0, y: 0, element: null };
+                const [gauche, haut] = r.facteurs;
+                const poser = (f, zone, inverser) => {
+                    let idx = 0;
+                    f.termes.forEach(t => {
+                        const sign = inverser ? -t.sign : t.sign;
+                        for (let i = 0; i < t.count; i++) {
+                            this.createTileToken(t.type, sign, 'manual', 0, 0, t.type === 'x' && zone === 'left' ? 'v' : 'h');
+                            const tok = this.tokens[this.tokens.length - 1];
+                            tok.productZone = zone; tok.productIndex = idx++;
+                        }
+                    });
+                };
+                poser(gauche, 'left', gauche.moinsDevant);
+                poser(haut, 'top', false);
+                this.lastPack = null;
+                const m = this.getProductMetrics(this.productFrame);
+                const w = this.boardContainer.clientWidth, h = this.boardContainer.clientHeight;
+                const marge = 16;
+                const fit = Math.min((w - 2 * marge) / m.width, (h - 2 * marge) / m.height);
+                if (fit < this.scale) { this.scale = Math.max(MIN_SCALE, Math.floor(fit * 100) / 100); this.viewTouched = true; this.updateTransform(); this.redrawPen(); }
+                this.productFrame.x = Math.round(marge / this.scale);
+                this.productFrame.y = Math.round(marge / this.scale);
+                this.renderProductFrame();
+                this.reflowProductFrameTokens(false);
+                this.updateEquation();
+            }
+
+            // --- PIVOTER UNE TUILE 𝑥 (lot 4) : outil comme la corbeille, couchée ↔ debout ---
+            pivoterTuile(t) {
+                if (!t || !t.element) return;
+                // x² et 1 sont carrés ; dans le tableau produit ou dans une paire nulle, c'est l'appli qui oriente
+                if (t.type !== 'x' || t.productZone || t.pairId !== null) {
+                    t.element.classList.remove('pivot-refus'); void t.element.offsetWidth; t.element.classList.add('pivot-refus');
+                    setTimeout(() => t.element && t.element.classList.remove('pivot-refus'), 600);
+                    return;
+                }
+                this.saveState();
+                playSound('pop');
+                const avant = getTileSize(t.type, t.orientation);
+                const cx = t.x + avant.w / 2, cy = t.y + avant.h / 2;
+                const o = t.orientation === 'v' ? 'h' : 'v';
+                this.setTokenOrientation(t, o);
+                t.originalOrientation = o; // une paire nulle défaite lui rend CETTE orientation
+                const apres = getTileSize(t.type, o);
+                this.moveToken(t, Math.round(cx - apres.w / 2), Math.round(cy - apres.h / 2));
+                const el = t.element;
+                el.style.transformOrigin = '50% 50%';
+                const a = el.animate([{ transform: 'rotate(-90deg)' }, { transform: 'rotate(0deg)' }], { duration: 220, easing: 'ease-out' });
+                a.onfinish = () => { el.style.transformOrigin = ''; };
+                this.updateEquation();
+            }
+
             // --- EQUATION TEXT ---
             updateEquation() {
                 let displayString = "";
@@ -2558,6 +3100,9 @@
                         else if (step.operator === '+' && !this.latexStartsWithMinus(pStr)) latex += `\\;${plus}\\;`;
                         else if (step.operator === '-') latex += `\\;${minusColor}\\;`;
                         else if (this.latexStartsWithMinus(pStr)) pStr = this.spaceLeadingMinus(pStr); // après une parenthèse fermée : ) − x
+                    } else if (step.type === 'subtraction' && !step.oppositeApplied) {
+                        // « − » en tout premier : −(x + 1). Avant, le moins disparaissait et on lisait (x + 1).
+                        latex += this.colorLatex(this.getEquationOperatorColor(-1), '-');
                     }
                     latex += pStr; isEmpty = false;
                 });
@@ -2771,6 +3316,12 @@
                     this.deleteToken(token);
                     return;
                 }
+                if (this.currentTool === 'rotate') { // outil Pivoter : la tuile touchée pivote, elle ne se déplace pas
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.pivoterTuile(this.tokens.find(t => t.id === id));
+                    return;
+                }
                 if (this.currentTool !== 'hand') return; e.stopPropagation();
                 this.draggedToken = this.tokens.find(t => t.id === id);
                 this.dragStartState = this.draggedToken ? {
@@ -2848,6 +3399,7 @@
                 this.currentTool = t;
                 const p = t === 'pen';
                 this.boardContainer.classList.toggle('hide-cursor', p);
+                this.boardContainer.classList.toggle('tool-rotate', t === 'rotate');
                 document.getElementById('custom-cursor').style.display = p ? 'block' : 'none';
                 this.updateToolButtons();
             }
