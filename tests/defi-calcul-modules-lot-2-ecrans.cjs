@@ -92,7 +92,7 @@ async function jusquaEcris(page, cle) {
   const base = `http://127.0.0.1:${serveur.address().port}`;
   const navigateur = await chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
   const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => fiche.niveaux.map(niveau => `${fiche.id}-${niveau.n}`));
-  assert.equal(NIVEAUX.length, 96);
+  assert.equal(NIVEAUX.length, 95); // lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis
   let echecs = 0;
   const essai = async (nom, corps) => {
     if (SEULEMENT && !nom.startsWith(SEULEMENT)) return;
@@ -100,7 +100,7 @@ async function jusquaEcris(page, cle) {
   };
 
   for (const taille of [[390, 664], [390, 844], [1366, 768]]) {
-    await essai(`retenir ${taille.join("x")} : les 96 « À retenir » tiennent sans défiler`, async () => {
+    await essai(`retenir ${taille.join("x")} : les 95 « À retenir » tiennent sans défiler`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       const trop = [];
       for (const cle of NIVEAUX) {
@@ -151,10 +151,11 @@ async function jusquaEcris(page, cle) {
   });
 
   for (const taille of [[390, 664], [1366, 768]]) {
-    await essai(`relier ${taille.join("x")} : J'écris des modules A3, A4, A6, A7, A8 remplit son dessin`, async () => {
+    await essai(`relier ${taille.join("x")} : J'écris des modules A2, A3, A4, A6, A7, A8 remplit son dessin`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       // Un niveau sans boulier par module (J'écris s'atteint par Je représente).
-      for (const cle of ["A3-2", "A4-3", "A6-4", "A7-3", "A8-2", "A8-3"]) {
+      // (Lot « couverture » : A8-3 est réuni dans A8-2 ; A2-5, la droite à trois sauts.)
+      for (const cle of ["A3-2", "A4-3", "A6-4", "A7-3", "A8-2", "A2-5"]) {
         assert.equal(await jusquaEcris(page, cle), true, cle);
         const etapes = CORE.niveauDe(cle).niveau.apprends.ecris.etapes;
         const lus = [await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.dessin())];

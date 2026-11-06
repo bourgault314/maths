@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-3">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -237,6 +237,7 @@
           <p class="eyebrow">À retenir</p>
           <p id="retenir-phrase" class="phrase" tabindex="-1"></p>
           <div id="retenir-image" class="dc-aide"></div>
+          <p id="retenir-autre" class="dc-retenir-autre" hidden></p>
           <p class="cahier">Je recopie cette phrase dans mon cahier.</p>
         </div>
         <div id="result-suite" class="seance-suite"></div>
@@ -262,9 +263,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261106-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261106-1"></script>
+  <script src="./defi_calcul_core.js?v=20261106-2"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261106-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261106-2"></script>
   <script>
     (() => {
       "use strict";
@@ -1646,11 +1647,14 @@
         }
       }
       function ajusterCalculRetenir() {
-        const calcul = $("retenir-phrase").querySelector(".dc-retenir-calcul");
-        if (!calcul) return;
-        calcul.style.removeProperty("font-size");
-        const place = $("retenir-phrase").clientWidth;
-        if (calcul.scrollWidth > place) calcul.style.fontSize = `${(Math.floor(place / calcul.scrollWidth * 100) / 100).toFixed(2)}em`;
+        // La règle, et la deuxième façon de voir (lot « couverture »).
+        ["retenir-phrase", "retenir-autre"].forEach(id => {
+          const calcul = $(id).querySelector(".dc-retenir-calcul");
+          if (!calcul) return;
+          calcul.style.removeProperty("font-size");
+          const place = $(id).clientWidth;
+          if (calcul.scrollWidth > place) calcul.style.fontSize = `${(Math.floor(place / calcul.scrollWidth * 100) / 100).toFixed(2)}em`;
+        });
       }
 
       function versAccueil() {
@@ -2746,6 +2750,19 @@
           $("retenir-phrase").append(...(deux.phrase ? [" "] : []), calcul);
         } else AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(serie.apprends.bilan));
         $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
+        // Lot « couverture » (06/11/2026) : une deuxième façon de voir (A1-2 :
+        // le presque-double ; A3-2 : les dizaines), sous le dessin, la phrase
+        // puis le calcul seul sur sa ligne.
+        const autre = serie.apprends.autre;
+        $("retenir-autre").hidden = !autre;
+        $("retenir-autre").replaceChildren();
+        if (autre) {
+          AIDES.ecrireTexte($("retenir-autre"), AIDES.souderCalculs(autre.phrase));
+          const ligne = document.createElement("span");
+          ligne.className = "dc-retenir-calcul";
+          AIDES.ecrireTexte(ligne, autre.calcul);
+          $("retenir-autre").append(" ", ligne);
+        }
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
         if (enSeance()) {

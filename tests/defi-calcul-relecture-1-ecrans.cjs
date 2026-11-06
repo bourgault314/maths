@@ -15,7 +15,7 @@
 //              qu'il reste à faire ; après, plus rien ;
 //   ecris      J'écris fini reste à l'écran avec « Suivant » (plus de passage
 //              tout seul) ; au téléphone, le travail en haut ;
-//   retenir    les 96 « À retenir » : rien ne défile, le calcul seul sur sa
+//   retenir    les 95 « À retenir » : rien ne défile, le calcul seul sur sa
 //              ligne, jamais coupé ni plus large que le cadre ;
 //   iphone     Safari simulé (100vh plus grand que l'écran visible) : « À
 //              retenir » ne rapetisse plus (100svh) ;
@@ -251,7 +251,7 @@ function outilFini([cle, outil, sansReponse]) {
       await contexte.close();
     });
 
-    await essai(`retenir ${taille.join("x")} : les 96 « À retenir », le calcul seul sur sa ligne`, async () => {
+    await essai(`retenir ${taille.join("x")} : les 95 « À retenir », le calcul seul sur sa ligne`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       const fautes = [];
       for (const cle of CONSTRUITS) {

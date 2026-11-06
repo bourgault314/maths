@@ -166,7 +166,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.doesNotMatch(sectionCalcul.replace(/\/\/.*$/gm, ""), /\b129\b|\b14\b/);
 });
 
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « N compétences sues sur 129 » dès la première", () => {
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « N compétences sues sur 125 » dès la première", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
@@ -178,9 +178,9 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
   assert.equal(jauge.lecteur(CALCUL, p), null, "en route mais rien de su : pas de jauge (une barre vide ressemble à un reproche)");
   p.modules.A2.b = [4, 5, 0, 0];
   p.modules.A2.e = ["2026-12-04", "2026-12-11", null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 129, compte: "2 compétences sues sur 129", bonus: ""}, "sur toute la carte, comme l'accueil de l'appli");
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 125, compte: "2 compétences sues sur 125", bonus: ""}, "sur toute la carte, comme l'accueil de l'appli");
   p.modules.A2.b = [4, 0, 0, 0];
-  assert.equal(jauge.lecteur(CALCUL, p).compte, "1 compétence sue sur 129");
+  assert.equal(jauge.lecteur(CALCUL, p).compte, "1 compétence sue sur 125");
   assert.match(fonction("chargerMoteur", espace), /jauge\.avant \? chargerScript\(jauge\.avant\.url, jauge\.avant\.global\)/, "le script d'avant, puis le moteur");
   assert.match(fonction("chargerMoteur", espace), /prealable \? chargerScript\(jauge\.url, jauge\.global\) : null/, "sans le noyau, pas de moteur ni de jauge");
 });

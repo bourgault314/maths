@@ -30,7 +30,7 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // Les consignes de J'écris gardées telles quelles (elles disent autre chose
 // d'utile et l'égalité n'aurait pas de sens), et les niveaux sans ligne
 // (une seule étape, ou le calcul cherché est déjà la 1re ligne écrite).
-const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F5-3"]);
+const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3"]);
 const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3", "M5-1"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
@@ -80,7 +80,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 96);
+  assert.equal(NIVEAUX.length, 95, "95 niveaux construits (lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
