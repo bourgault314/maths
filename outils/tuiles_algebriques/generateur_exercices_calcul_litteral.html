@@ -13,6 +13,9 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
 <style>
+  /* 𝑥 rond de l'univers SPLAT! (comme l'appli des tuiles) : la police ne sert QUE pour 𝑥 (unicode-range) */
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+  @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:normal;font-weight:600 1000;font-display:block;unicode-range:U+1D434-1D467,U+210E}
   :root{
     --bg:#f5f1ea; --panel:#fff; --ink:#232323; --muted:#625a52; --line:#d8cfc4;
     --accent:#f47c20; --x2:#2f8fc9; --x:#72c475; --unit:#ffe64c; --neg:#ef3f35; --bwneg:#dedede;
@@ -25,7 +28,7 @@
     --model-u-dense:12px; --model-L-dense:44px;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#fff7ef,var(--bg));}
+  body{margin:0;font-family:SplatLettres,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#fff7ef,var(--bg));}
   .app{min-height:100vh;display:grid;grid-template-columns:292px 1fr;gap:16px;padding:16px;}
   .controls{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:16px;position:sticky;top:16px;height:calc(100vh - 32px);overflow:auto;}
   .brand{text-align:center;margin-bottom:14px}.logo-img{width:160px;max-width:100%;display:block;margin:0 auto 8px} h1{font-size:1.05rem;line-height:1.1;margin:0;letter-spacing:-.02em}.subtitle{font-size:.82rem;color:var(--muted);margin-top:2px}
@@ -143,7 +146,7 @@
   .check{padding:7px 8px;border-radius:10px;font-size:.8rem;gap:7px}
   .buttons{gap:7px;margin-top:8px}
   button{padding:8px 8px;border-radius:11px;font-size:.84rem}
-  .math-x,.tile-label,.term-block{font-family:"Cambria Math","STIX Two Math","Segoe UI Symbol","Comic Sans MS","Segoe Print","Bradley Hand","Chalkboard SE",cursive;font-weight:900}
+  .math-x,.tile-label,.term-block{font-family:SplatLettres,"Cambria Math","STIX Two Math","Segoe UI Symbol","Comic Sans MS","Segoe Print","Bradley Hand","Chalkboard SE",cursive;font-weight:900}
 
 
   /* Panneau de commande épuré : type principal visible, réglages rangés. */
@@ -167,6 +170,7 @@
   .seg-btn{border:1px solid #ded4c9;background:#fff;border-radius:9px;padding:6px 5px;min-height:30px;font-size:.72rem;font-weight:900;line-height:1.08;letter-spacing:-.01em;box-shadow:none;color:#2a2724;cursor:pointer;white-space:normal}
   .type-grid .seg-btn{min-height:42px;font-size:.76rem;border-radius:12px;padding:8px 6px;background:#fffdf9;box-shadow:0 1px 0 rgba(68,45,22,.04)}
   .seg-btn:hover{transform:none;filter:brightness(.992)}
+  .seg-btn{font-family:SplatLettres,Arial,sans-serif} /* police des boutons inchangée (Arial), seul le 𝑥 devient rond */
   .seg-btn.active{background:#fff3e9;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:#8e4a12}
   .type-grid .seg-btn.active{box-shadow:inset 0 0 0 1.5px var(--accent),0 2px 8px rgba(244,124,32,.08)}
   .fold-card{border:1px solid #eee4d9;border-radius:13px;background:#fbf9f6;margin:6px 0;overflow:hidden}
@@ -436,7 +440,7 @@
         </div>
         <div class="control-card">
           <div class="control-label">Couleurs</div>
-          <select id="colorMode" class="control-select"><option value="blueyellow" selected>Bleu / jaune — positifs bleus, opposés jaunes</option><option value="type">Classique — 1 jaune / x vert / x² bleu / opposés rouges</option><option value="sign">Vert / rouge — positifs verts / opposés rouges</option><option value="bw">Noir & blanc — positifs blancs / opposés gris</option><option value="outline">Contours seuls</option></select>
+          <select id="colorMode" class="control-select"><option value="sign" selected>Vert / rouge — positifs verts / opposés rouges</option><option value="blueyellow">Bleu / jaune — positifs bleus, opposés jaunes</option><option value="type">Classique — 1 jaune / x vert / x² bleu / opposés rouges</option><option value="bw">Noir & blanc — positifs blancs / opposés gris</option><option value="outline">Contours seuls</option></select>
           <div class="seg-grid cols-2" data-segment-target="colorMode"></div>
         </div>
         <div class="toggle-row">
@@ -512,7 +516,7 @@
     if(!select||!group) return;
     group.innerHTML=Array.from(select.options).map(opt=>{
       const active=opt.value===select.value?' active':'';
-      const label=segmentLabel(target,opt.value,opt.textContent);
+      const label=xRond(segmentLabel(target,opt.value,opt.textContent));
       return `<button type="button" class="seg-btn${active}" data-value="${escapeHTML(opt.value)}" title="${escapeHTML(opt.textContent)}">${escapeHTML(label)}</button>`;
     }).join('');
   }
@@ -534,8 +538,10 @@
     const select=$(target);
     if(!select) return '';
     const opt=select.selectedOptions&&select.selectedOptions[0];
-    return opt?segmentLabel(target,opt.value,opt.textContent):'';
+    return opt?xRond(segmentLabel(target,opt.value,opt.textContent)):'';
   }
+  // Dans les boutons du menu, le x des expressions devient 𝑥 rond (pas le x de « Mixte »)
+  function xRond(text){return String(text).replace(/(^|[^A-Za-zÀ-ÿ])x(?![A-Za-zÀ-ÿ])/g,'$1𝑥');}
   function updateFoldSummaries(){
     document.querySelectorAll('[data-summary-for]').forEach(el=>{
       el.textContent=selectedSegmentText(el.dataset.summaryFor);
@@ -1020,7 +1026,8 @@
   $('exprTop').addEventListener('change',()=>{syncSegmentGroup('exprTop');render(true);});
   $('level').addEventListener('change',()=>{syncSegmentGroup('level');render(false);});
   $('generateBtn').addEventListener('click',()=>render(false));
-  $('printBtn').addEventListener('click',()=>{render(true);requestAnimationFrame(()=>{fitTiles();setTimeout(()=>window.print(),80);});});
+  // La police du 𝑥 doit être chargée avant l'impression
+  $('printBtn').addEventListener('click',()=>{render(true);requestAnimationFrame(()=>{fitTiles();document.fonts.ready.then(()=>setTimeout(()=>window.print(),80));});});
   $('studentBtn').addEventListener('click',()=>{$('printMode').value='student';$('showAnswers').checked=false;refreshControlUI();render(true)});
   $('answerBtn').addEventListener('click',()=>{$('printMode').value='answer';$('showAnswers').checked=true;refreshControlUI();render(true)});
   ['count','pages','format'].forEach(id=>$(id).addEventListener('change',()=>{syncSegmentGroup(id);updateStepperDisplays();render(false);}));
