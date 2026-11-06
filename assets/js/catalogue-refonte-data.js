@@ -281,7 +281,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "expression", "developpement", "reduction", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=2",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=3",
       "cardDescription": "Composer, ordonner et simplifier des expressions avec les tuiles x², x et 1."
     },
     "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": {
@@ -289,7 +289,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "equation", "premier-degre", "balance", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=2",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=3",
       "cardDescription": "Poser puis résoudre une équation du premier degré en manipulant les deux membres."
     },
     "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },

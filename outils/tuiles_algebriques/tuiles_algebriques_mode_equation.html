@@ -16,38 +16,51 @@
     <script src="../../assets/vendor/katex-0.18.2/katex.min.js"></script>
     <link rel="stylesheet" href="../../assets/vendor/katex-0.18.2/katex.min.css">
     <style>
-        body { font-family: 'Fredoka', sans-serif; background-color: #f0f9ff; overflow: hidden; user-select: none; touch-action: none; }
-        
-        /* --- TUILES PLATEAU --- */
+        /* Le 𝑥 rond des tuiles (lot 3, 06/11/2026, comme l'appli principale au lot 2) : SplatLettres,
+           la police du site pour la lettre de l'inconnue (SPLAT! Équations, ÉquaSplat). Elle ne sert QUE
+           pour 𝑥 (unicode-range) ; chiffres et signes gardent leur police. */
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:normal;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:normal;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:italic;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+        body { font-family: 'Fredoka', sans-serif; background-color: #f0f9ff; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: none; }
+
+        /* --- TUILES PLATEAU ---
+           Lot 3 : même dessin que l'appli principale (aplat, bord net, texte foncé). La couleur exacte est
+           posée par styleTileElement selon le menu « Couleurs » ; .green / .red ne sont qu'un repli. */
         .token {
             position: absolute; display: flex; align-items: center; justify-content: center;
-            font-weight: 600; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.25);
+            font-weight: 700; color: #111827; box-shadow: 0 2px 4px rgba(0,0,0,0.18);
             cursor: grab; transition: transform 0.1s, background-color 0.5s; z-index: 10;
-            font-family: 'Times New Roman', serif; font-style: italic; font-size: 1.2rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3); transform-origin: 0 0;
+            touch-action: none; box-sizing: border-box; overflow: hidden;
+            font-family: SplatLettres, 'Times New Roman', serif; font-style: italic; font-size: 1.25rem;
+            text-shadow: none; transform-origin: 0 0;
         }
         .token.dragging { transition: none !important; z-index: 1000 !important; cursor: grabbing; box-shadow: 0 15px 30px rgba(0,0,0,0.4); transform: scale(1.1); }
         .token.animating { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.5s ease-in-out, top 0.5s ease-in-out, background-color 0.5s !important; }
+        /* Avant le lot 3, la règle du « 0 » était glissée À L'INTÉRIEUR de @keyframes vanish : le navigateur
+           jetait tout le bloc, et les tuiles annulées disparaissaient d'un coup au lieu de rétrécir. */
         .vanish { animation: vanish 0.45s ease-in forwards; pointer-events: none; }
-        @keyframes vanish { 0% { transform: scale(1); opacity: 1; } 
-/* Pour éviter que le badge '0' ne saute (translate) et pour synchroniser la disparition */
-.zero-badge.vanish { animation: vanishBadge 0.45s ease-in forwards; }
-@keyframes vanishBadge {
-    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
-}
-100% { transform: scale(0.1); opacity: 0; } }
+        @keyframes vanish { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.1); opacity: 0; } }
+        /* Le badge « 0 » est centré par translate : il garde son centrage pendant qu'il disparaît. */
+        .zero-badge.vanish { animation: vanishBadge 0.45s ease-in forwards; }
+        @keyframes vanishBadge {
+            0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.1); opacity: 0; }
+        }
 
         .token.scaling-transition { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important; }
 
-        .token.green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 2px solid #14532d; }
-        .token.red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 2px solid #7f1d1d; }
-.token.is-zero { background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280; box-shadow: none; z-index: 5; color: rgba(255,255,255,0.5); }
+        .token.green { background: #86efac; border: 2px solid #15803d; }
+        .token.red { background: #fca5a5; border: 2px solid #b91c1c; }
+        /* Paire nulle : une seule tuile grise, sans le « 𝑥 » ni le « -𝑥 » dessous, bord gris.
+           Les !important battent la couleur posée en style en ligne par styleTileElement (lot 1). */
+        .token.is-zero { background: #9ca3af !important; opacity: 0.6; border: 2px solid #6b7280 !important; box-shadow: none; z-index: 5; color: transparent !important; }
         .token.fading-gray { background: #9ca3af !important; border-color: #6b7280 !important; box-shadow: none !important; filter: grayscale(1); }
         .token.ghost { opacity: 0.5; filter: grayscale(0.8); pointer-events: none; }
 
-        .token.type-unit { width: 40px; height: 40px; border-radius: 4px; font-style: normal; }
-        .token.type-x { width: 90px; height: 40px; border-radius: 4px; }
+        .token.type-unit { width: 40px; height: 40px; border-radius: 0px; font-style: normal; }
+        .token.type-x { width: 90px; height: 40px; border-radius: 0px; }
 
         .zero-badge { 
             position: absolute; font-size: 2rem; font-weight: 800; color: #374151; 
@@ -116,13 +129,13 @@
         .tile-btn:active { cursor: grabbing; transform: scale(0.95); }
         .tile-btn:hover { transform: translateY(-2px); }
         
-        .preview-shape { 
-            display: flex; align-items: center; justify-content: center; border-radius: 4px; 
-            color: white; font-weight: bold; font-family: 'Times New Roman', serif; font-style: italic; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3); box-shadow: 0 3px 5px rgba(0,0,0,0.2); pointer-events: none; 
+        .preview-shape {
+            display: flex; align-items: center; justify-content: center; border-radius: 0px;
+            color: #111827; font-weight: bold; font-family: SplatLettres, 'Times New Roman', serif; font-style: italic;
+            text-shadow: none; box-shadow: 0 2px 4px rgba(0,0,0,0.16); pointer-events: none;
         }
-        .ps-green { background: radial-gradient(circle at 30% 30%, #4ade80, #16a34a); border: 1px solid #14532d; } 
-        .ps-red { background: radial-gradient(circle at 30% 30%, #f87171, #dc2626); border: 1px solid #7f1d1d; }
+        .ps-green { background: #86efac; border: 1px solid #15803d; }
+        .ps-red { background: #fca5a5; border: 1px solid #b91c1c; }
 
         .token.menu-ghost {
             position: fixed; z-index: 9999; pointer-events: none; opacity: 0.9;
@@ -145,10 +158,26 @@
         /* Equation: do not shift '=' because of the eye button */
         .equation-pill { padding-right: 44px; }
         .equation-pill .eye-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); margin-left: 0 !important; }
-.topbar { position: relative; }
-        .topbar .left-controls { position: relative; z-index: 70; }
-        .topbar .equation-holder { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 60; width: min(1100px, calc(100% - 520px)); }
-        @media (max-width: 900px) { .topbar .equation-holder { width: calc(100% - 40px); } }
+        /* Barre du haut (lot 3) : outils à gauche, vue et couleurs à droite, équation au milieu avec le « = »
+           au-dessus du trait du plateau. Sous 1180 px, l'équation prend sa propre ligne (avant, elle
+           recouvrait la main et le stylo au téléphone). */
+        .topbar { position: relative; }
+        .topbar .left-controls, .topbar .right-controls { position: relative; z-index: 70; }
+        .topbar .equation-holder { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 60; width: min(1024px, calc(100% - 760px)); }
+        .topbar .equation-holder .equation-pill { margin: 0 auto; }
+        /* La barre garde la hauteur de l'équation (plus grande au tableau), sinon elle débordait sur le plateau. */
+        @media (min-width: 1181px) { .topbar { min-height: calc(clamp(20px, 2.4vw, 46px) * 1.5 + 34px); } }
+        @media (max-width: 1180px) {
+            .topbar .equation-holder { position: static; transform: none; order: 3; width: 100%; }
+        }
+        /* Équation : plus grande sur grand écran (projection), comme l'appli principale au lot 1. */
+        #equation-display { font-size: clamp(20px, 2.4vw, 46px); }
+        /* Flèche retour vers la collection (tool-parent-navigation.js), en tête de la barre, à la hauteur de ↶. */
+        #barre-outils a.mathsgo-back { min-height: 38px; height: 38px; min-width: 38px; width: 38px; padding: 0; justify-content: center; border-radius: 0.5rem; margin: 0; }
+        #barre-outils a.mathsgo-back .mathsgo-back-label { display: none; }
+        #tile-trash-zone.trash-active, #tile-trash-zone.tool-active { background-color: #fecdd3 !important; color: #9f1239 !important; }
+        /* Corbeille : phase 1 seulement (choix du 06/11) ; en phase 2, enlever une tuile d'un seul côté fausserait l'égalité. */
+        #tile-trash-zone:disabled { opacity: 0.35; cursor: not-allowed; }
 .toggle-mode { background-color: #fef08a; color: #854d0e; border: 1px solid #eab308; }
         .toggle-mode.solve { background-color: #dcfce7; color: #166534; border-color: #22c55e; }
         .equation-blur { filter: blur(5px); opacity: 0.5; }
@@ -240,11 +269,30 @@
             #btn-diviser{ font-size: 1.05rem; padding: 12px 20px; min-width: 170px; }
         }
 
+        /* Téléphone (lot 3) : avant, en phase 2, le membre de droite sortait de l'écran et « Diviser »
+           recouvrait les tuiles. Chaque membre tient dans sa moitié : tuiles en 2 × 2 plus petites,
+           boutons empilés à côté ; « Diviser » monte au-dessus de la barre, sous le bouton de phase. */
+        .side-label { white-space: nowrap; }
+        @media (max-width: 600px){
+            .side-panel { padding: 14px 4px 4px; gap: 4px; }
+            .side-label { font-size: 0.55rem; padding: 1px 6px; }
+            .tiles-zone { gap: 2px; padding: 0; }
+            .tiles-zone .tile-btn { width: 46px; height: 46px; }
+            .tiles-zone .preview-shape.w-14 { width: 42px; height: 22px; }
+            .tiles-zone .preview-shape.w-8 { width: 24px; height: 24px; }
+            .tools-zone { min-width: 0; }
+            .tools-zone .tools-row { flex-direction: column; gap: 3px; }
+            .tools-zone .action-btn { font-size: 0.62rem; padding: 5px 6px; }
+            #center-actions { top: -66px; }
+            body.phase-solve #phase-tab { top: -128px; }
+            #btn-diviser { font-size: 0.95rem; padding: 9px 16px; min-width: 150px; }
+        }
+
 </style>
 <script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 <link rel="stylesheet" href="../../assets/vendor/tailwind/tailwind-outils.css?v=scripts-tiers-20260904-1">
 </head>
-<body class="h-screen w-screen flex flex-col overflow-hidden">
+<body class="h-screen w-screen flex flex-col overflow-hidden" data-mathsgo-parent-href="/outils/index.html?domain=algebre&amp;collection=tuiles-algebriques" data-mathsgo-parent-label="Tuiles algébriques" data-mathsgo-parent-place="#barre-outils">
 
     <div id="custom-cursor" class="fixed pointer-events-none z-50 hidden">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
@@ -255,18 +303,40 @@
     </div>
 
     <!-- HEADER -->
-    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-4 shrink-0 justify-between topbar">
-        <div class="left-controls flex items-center gap-2">
-            <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm" title="Tout effacer">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+    <header class="bg-white p-2 shadow-md z-30 flex flex-wrap items-center gap-2 shrink-0 justify-between topbar">
+        <!-- Même barre que l'appli principale (lot 3) : ← (posée par tool-parent-navigation.js), ↶, ⟳, puis les outils côte à côte -->
+        <div id="barre-outils" class="left-controls flex flex-wrap items-center gap-2">
+            <button onclick="app.undo()" class="bg-blue-100 text-blue-600 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Précédent (Annuler)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
             </button>
-            <button onclick="app.undo()" class="bg-slate-100 text-slate-600 hover:bg-slate-200 p-2 rounded-lg font-bold border border-slate-200 shadow-sm" title="Annuler">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+            <button id="btn-reset" onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout recommencer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 9a8 8 0 00-13.66-3.66L4 7.68M4 15a8 8 0 0013.66 3.66L20 16.32" />
+                </svg>
             </button>
             <div class="h-8 w-px bg-slate-200 mx-1"></div>
-            <button id="btn-mode" onclick="app.toggleMode()" class="toggle-mode px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2 shadow-sm hidden">
-                <span id="mode-text">Phase 1 : Poser l'équation</span>
-            </button>
+            <!-- OUTILS : main, stylo, gomme du stylo, supprimer une tuile (côte à côte pour voir lequel est actif) -->
+            <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer les tuiles)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg>
+                </button>
+                <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20l4.2-1.1L19.1 8a2.1 2.1 0 00-3-3L5.2 15.9 4 20z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.5 6.5l3 3"/></svg>
+                </button>
+                <button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Effacer le stylo">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 16.5l7.9-7.9a2 2 0 012.8 0l2.7 2.7a2 2 0 010 2.8l-5.2 5.2H8.2L5 16.5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.8 9.7l5.5 5.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.8 20h16.4" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M6.2 5.7h3.2M7.8 4.1v3.2" opacity=".65" />
+                    </svg>
+                </button>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <button id="tile-trash-zone" onclick="app.setTool(app.currentTool === 'erase' ? 'hand' : 'erase')" class="p-2 rounded text-rose-600 hover:bg-gray-200" title="Supprimer une tuile : cliquer puis toucher une tuile, ou glisser une tuile ici (phase 1)" aria-label="Supprimer une tuile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" /></svg>
+                </button>
+            </div>
         </div>
 
         <div class="equation-holder">
@@ -291,10 +361,27 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onclick="app.setTool('hand')" class="p-2 rounded bg-white shadow text-gray-700"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/></svg></button>
-            <button onclick="app.setTool('pen')" class="p-2 rounded text-gray-500 hover:bg-gray-200"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
-            <button onclick="app.clearDrawing()" class="p-2 rounded text-red-400 hover:bg-red-50"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+        <!-- COULEURS et VUE : recentrer, son (coupé au départ), plein écran — comme l'appli principale (lot 3) -->
+        <div class="right-controls flex items-center gap-2">
+            <select id="color-mode-select" class="text-[12px] font-bold text-slate-700 border border-slate-300 rounded bg-white px-2 py-1.5 shadow-sm" title="Couleurs des tuiles" aria-label="Couleurs des tuiles">
+                <option value="sign" selected>Vert rouge</option>
+                <option value="blueyellow">Bleu jaune</option>
+                <option value="mathigon">Mathigon</option>
+                <option value="bw">Blanc gris</option>
+            </select>
+            <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                <button onclick="app.resetView()" id="btn-reset-view" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Recentrer la vue">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0 8 8 0 01-16 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m-4-4h8"/></svg>
+                </button>
+                <button onclick="app.toggleSound()" id="btn-sound" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Son : coupé">
+                    <svg id="icon-sound-on" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+                    <svg id="icon-sound-off" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5l-5 4H3v6h3l5 4V5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 9l4 4m0-4l-4 4"/></svg>
+                </button>
+                <button onclick="app.toggleFullscreen()" id="btn-fullscreen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Plein écran">
+                    <svg id="icon-fs-enter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9V4h5M4 4l6 6M20 9V4h-5M20 4l-6 6M4 15v5h5M4 20l6-6M20 15v5h-5M20 20l-6-6"/></svg>
+                    <svg id="icon-fs-exit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l4 4M9 9V6M9 9H6M19 5l-4 4M15 9V6M15 9H18M5 19l4-4M9 15V18M9 15H6M19 19l-4-4M15 15V18M15 15H18"/></svg>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -341,16 +428,16 @@
         <div class="side-panel left">
             <div class="side-label">Membre de Gauche</div>
             <div class="tiles-zone">
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'left')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'left')" ontouchstart="app.handleMenuTouchStart(event, 'x', 1, 'left')" class="tile-btn w-16 h-16" title="+x"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-14 h-8 text-lg">𝑥</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'left')" ontouchstart="app.handleMenuTouchStart(event, 'unit', 1, 'left')" class="tile-btn w-16 h-16" title="+1"><div data-preview-type="unit" data-preview-sign="1" class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'left')" ontouchstart="app.handleMenuTouchStart(event, 'x', -1, 'left')" class="tile-btn w-16 h-16" title="-x"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-14 h-8 text-lg">-𝑥</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'left')" ontouchstart="app.handleMenuTouchStart(event, 'unit', -1, 'left')" class="tile-btn w-16 h-16" title="-1"><div data-preview-type="unit" data-preview-sign="-1" class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
             </div>
             <div class="tools-zone phase2-only hidden">
                 <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideLeft.order()" class="action-btn">Trier</button>
-                    <button onclick="app.sideLeft.reduce()" class="action-btn">Regrouper</button>
-                    <button onclick="app.sideLeft.simplify()" class="action-btn">Réduire</button>
+                    <button onclick="app.sideLeft.order()" class="action-btn" title="Ordonner les tuiles de ce membre">Ordonner</button>
+                    <button onclick="app.sideLeft.reduce()" class="action-btn" title="Réduire (regrouper les termes de même sorte)">Réduire</button>
+                    <button onclick="app.sideLeft.simplify()" class="action-btn" title="Simplifier (annuler + et −)">Simplifier</button>
                 </div>
             </div>
         </div>
@@ -359,16 +446,16 @@
         <div class="side-panel right">
             <div class="side-label">Membre de Droite</div>
             <div class="tiles-zone">
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-14 h-8 text-lg">x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-14 h-8 text-lg">-x</div></button>
-                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'right')" class="tile-btn w-16 h-16"><div class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', 1, 'right')" ontouchstart="app.handleMenuTouchStart(event, 'x', 1, 'right')" class="tile-btn w-16 h-16" title="+x"><div data-preview-type="x" data-preview-sign="1" class="preview-shape ps-green w-14 h-8 text-lg">𝑥</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', 1, 'right')" ontouchstart="app.handleMenuTouchStart(event, 'unit', 1, 'right')" class="tile-btn w-16 h-16" title="+1"><div data-preview-type="unit" data-preview-sign="1" class="preview-shape ps-green w-8 h-8 text-md">1</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'x', -1, 'right')" ontouchstart="app.handleMenuTouchStart(event, 'x', -1, 'right')" class="tile-btn w-16 h-16" title="-x"><div data-preview-type="x" data-preview-sign="-1" class="preview-shape ps-red w-14 h-8 text-lg">-𝑥</div></button>
+                <button onmousedown="app.handleMenuTouchStart(event, 'unit', -1, 'right')" ontouchstart="app.handleMenuTouchStart(event, 'unit', -1, 'right')" class="tile-btn w-16 h-16" title="-1"><div data-preview-type="unit" data-preview-sign="-1" class="preview-shape ps-red w-8 h-8 text-md">-1</div></button>
             </div>
             <div class="tools-zone phase2-only hidden">
                 <div class="tools-row flex-wrap justify-center">
-                    <button onclick="app.sideRight.order()" class="action-btn">Trier</button>
-                    <button onclick="app.sideRight.reduce()" class="action-btn">Regrouper</button>
-                    <button onclick="app.sideRight.simplify()" class="action-btn">Réduire</button>
+                    <button onclick="app.sideRight.order()" class="action-btn" title="Ordonner les tuiles de ce membre">Ordonner</button>
+                    <button onclick="app.sideRight.reduce()" class="action-btn" title="Réduire (regrouper les termes de même sorte)">Réduire</button>
+                    <button onclick="app.sideRight.simplify()" class="action-btn" title="Simplifier (annuler + et −)">Simplifier</button>
                 </div>
             </div>
         </div>
@@ -378,20 +465,64 @@
         const SNAP = 60;
         const PACK_GAP = 25;
         const SIZES = { 'unit': { w: 40, h: 40 }, 'x': { w: 90, h: 40 } };
-        const COLORS = { pos: 'green', neg: 'red', orange: 'orange' };
-        
+        // Zoom de départ (lot 3, comme le lot 2 de l'appli principale) : on veut voir au moins
+        // INITIAL_VIEW_WORLD unités de plateau en largeur (deux tuiles 𝑥 de chaque côté du trait).
+        // Au tableau et sur ordinateur, la limite INITIAL_SCALE = 1 s'applique : rien ne change ; au téléphone, ≈ 0,7.
+        const INITIAL_SCALE = 1;
+        const INITIAL_VIEW_WORLD = 560, INITIAL_VIEW_WORLD_H = 300;
+        const MIN_SCALE = 0.5, MAX_SCALE = 3;
+        function getTileLabel(type, sign) {
+            if (type === 'x') return sign === 1 ? '𝑥' : '-𝑥';
+            return sign === 1 ? '1' : '-1';
+        }
+        // Les couleurs de l'appli principale (mêmes valeurs, menu « Couleurs »), Vert rouge par défaut.
+        const TILE_COLOR_MODES = {
+            blueyellow: {
+                positive: { bg: '#2f8fc9', border: '#1f5f8c', text: '#111827', eq: '#2f8fc9' },
+                negative: { bg: '#ffe64c', border: '#b59a11', text: '#111827', eq: '#b59a11' }
+            },
+            sign: {
+                positive: { bg: '#72c475', border: '#2f7f35', text: '#111827', eq: '#2f7f35' },
+                negative: { bg: '#ef3f35', border: '#a61f18', text: '#111827', eq: '#ef3f35' }
+            },
+            bw: {
+                positive: { bg: '#ffffff', border: '#222222', text: '#111827', eq: '#111827' },
+                negative: { bg: '#dedede', border: '#666666', text: '#111827', eq: '#7a7a7a' }
+            },
+            mathigon: {
+                x:    { bg: '#72c475', border: '#2f7f35', text: '#111827', eq: '#2f7f35' },
+                unit: { bg: '#ffe64c', border: '#b59a11', text: '#111827', eq: '#b59a11' },
+                negative: { bg: '#ef3f35', border: '#a61f18', text: '#111827', eq: '#ef3f35' }
+            }
+        };
+
         // LIMITS FOR CONSISTENT WRAPPING (Phase 1 = plus large, adaptatif à l'écran)
 const BASE_ROW_WIDTH = 450;         // fallback (mode résolution)
 const MIN_ROW_WIDTH_SETUP = 590;    // ~6 tuiles x (90px + 10px d'écart) avant retour à la ligne
+// Largeur d'une moitié de plateau visible (unités monde). Au téléphone, une ligne de tuiles ne dépasse
+// plus cette largeur (avant : 590 partout, les tuiles sortaient de l'écran dès la 3e) ; au tableau et
+// sur ordinateur, la moitié visible est plus large que 590 et 450 : rien ne change.
+function visibleHalfWidth(app) { return (app.container.clientWidth / app.scale) / 2 - 10; }
 function getMaxRowWidth(app) {
-    const screenW = app.container.clientWidth / app.scale; // unités "monde"
-    const avail = (screenW / 2) - 10;                      // marge légère
+    const avail = visibleHalfWidth(app);
     const minW = (app.mode === 'setup') ? MIN_ROW_WIDTH_SETUP : BASE_ROW_WIDTH;
-    return Math.max(minW, avail);
+    return Math.max(Math.min(minW, avail), 2 * (90 + 10));
 }
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // --- SON : coupé au départ, bouton on/off (comme l'appli principale). Avant le lot 3, il était
+        // toujours allumé et le contexte audio était créé dès l'ouverture de la page.
+        let soundEnabled = false;
+        let audioCtx = null;
+        function ensureAudioCtx() {
+            if (!soundEnabled) return null;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+                return audioCtx;
+            } catch (e) { return null; }
+        }
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const audioCtx = ensureAudioCtx();
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination); const now = audioCtx.currentTime;
             if (type === 'pop') { osc.type = 'sine'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(500, now+0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.1); osc.start(now); osc.stop(now+0.1); }
@@ -455,9 +586,9 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (this.isSubInput) el.classList.add('in-bracket');
                 if (this.isMultInput && !step.distributed) el.classList.add('pending-mult');
                 
-                let lbl = type==='unit' ? (tileSign===1?'1':'-1') : (tileSign===1?'x':'-x');
-                el.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
-                
+                el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(type, tileSign)}</span>`;
+                this.app.styleTileElement(el, type, tileSign);
+
                 const tId = this.app.nextId++;
                 el.id = `t-${tId}`;
 
@@ -519,7 +650,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const gap = 10;
 
                 const screenH = this.app.container.clientHeight / this.app.scale;
-                const startY = -screenH/2 + 60;
+                const startY = -screenH/2 + 60 / this.app.scale; // 10 px sous le haut du plateau, quel que soit le zoom (au téléphone, la 1re ligne était coupée)
                 const startX = (this.id === 'left') ? -25 : 25;
 
                 const maxW = getMaxRowWidth(this.app);
@@ -607,7 +738,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 playSound('whoosh');
                 
                 const screenH = this.app.container.clientHeight / this.app.scale;
-                let y = -screenH/2 + 60;
+                let y = -screenH/2 + 60 / this.app.scale;
                 
                 const subset = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 const rows = [{t:'x',s:1},{t:'x',s:-1},{t:'unit',s:1},{t:'unit',s:-1}];
@@ -647,8 +778,8 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     let currentW = 0;
                     let lineMaxH = 0;
                     
-                    // USE CONSTANT WIDTH LIMIT
-                    const maxW = BASE_ROW_WIDTH; 
+                    // Largeur fixe (450) ; au téléphone, pas plus large que la moitié visible du plateau.
+                    const maxW = Math.max(Math.min(BASE_ROW_WIDTH, visibleHalfWidth(this.app)), 2 * (90 + 10));
 
                     tokensInOrder.forEach(item => {
                         if (item.isGap) {
@@ -777,7 +908,7 @@ if (existingZeros.length > 0) {
             layoutForDivision(n, keepIndex) {
                 const active = this.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 const screenH = this.app.container.clientHeight / this.app.scale;
-                const startY = -screenH/2 + 80;
+                const startY = -screenH/2 + 80 / this.app.scale;
                 const gapY = Math.min(120, (screenH - 160) / n);
                 
                 const xs = active.filter(t => t.type === 'x');
@@ -819,36 +950,80 @@ if (existingZeros.length > 0) {
                 this.container = document.getElementById('board-container');
                 this.world = document.getElementById('board-world');
                 this.eqDisplay = document.getElementById('equation-display');
-                this.scale = 1; 
+                this.scale = 1;
                 this.pan = {x:0, y:0};
                 this.menuDrag = null;
+                this.colorMode = 'sign'; // Vert rouge : le choix par défaut
+                this.currentTool = 'hand';
+                this.draggedToken = null;
+                this.viewTouched = false; // la vue a-t-elle été déplacée ou zoomée à la main ?
+                this.touchView = null;
                 this.sideLeft = new AlgebraSide('left', this);
                 this.sideRight = new AlgebraSide('right', this);
+                this.scale = this.getInitialScale();
                 this.initListeners();
                 this.centerView();
-                this.updateEquation();
+                this.applyColorMode();
                 this.updatePhaseUI();
+                this.updateSoundButton();
+                this.updateFullscreenButton();
+                document.addEventListener('fullscreenchange', () => this.updateFullscreenButton());
             }
-            
-            toggleMode() {
-                const btn = document.getElementById('btn-mode');
-                const txt = document.getElementById('mode-text');
 
-                if (this.mode === 'setup') {
-                    this.mode = 'solve';
-                    if (btn) btn.classList.add('solve');
-                    if (txt) txt.innerText = "Phase 2 : Résoudre l'équation";
-                } else {
-                    this.mode = 'setup';
-                    if (btn) btn.classList.remove('solve');
-                    if (txt) txt.innerText = "Phase 1 : Poser l'équation";
+            // --- COULEURS (les mêmes que l'appli principale) ---
+            getTileColorSpec(type, sign) {
+                const mode = this.colorMode || 'sign';
+                if (mode === 'mathigon') {
+                    if (sign === -1) return TILE_COLOR_MODES.mathigon.negative;
+                    return TILE_COLOR_MODES.mathigon[type] || TILE_COLOR_MODES.mathigon.x;
                 }
+                if (mode === 'blueyellow') return sign === 1 ? TILE_COLOR_MODES.blueyellow.positive : TILE_COLOR_MODES.blueyellow.negative;
+                if (mode === 'bw') return sign === 1 ? TILE_COLOR_MODES.bw.positive : TILE_COLOR_MODES.bw.negative;
+                return sign === 1 ? TILE_COLOR_MODES.sign.positive : TILE_COLOR_MODES.sign.negative;
+            }
+            getEquationColor(type, sign) { const spec = this.getTileColorSpec(type, sign); return spec.eq || spec.bg; }
+            getEquationOperatorColor(sign = 1) {
+                if (sign === -1) return this.getEquationColor('unit', -1);
+                if (this.colorMode === 'mathigon') return this.getEquationColor('x', 1);
+                return this.getEquationColor('unit', 1);
+            }
+            colorLatex(color, content) { return `{\\color{${color}}{${content}}}`; }
+            styleTileElement(el, type, sign) {
+                if (!el) return;
+                const spec = this.getTileColorSpec(type, sign);
+                el.style.background = spec.bg;
+                el.style.borderColor = spec.border;
+                el.style.color = spec.text;
+                el.style.textShadow = 'none';
+            }
+            applyColorMode() {
+                const select = document.getElementById('color-mode-select');
+                if (select) this.colorMode = select.value || 'sign';
+                this.allTokens.forEach(t => this.styleTileElement(t.element, t.type, t.sign));
+                if (this.menuDrag && this.menuDrag.el) this.styleTileElement(this.menuDrag.el, this.menuDrag.type, this.menuDrag.sign);
+                document.querySelectorAll('[data-preview-type]').forEach(el => {
+                    this.styleTileElement(el, el.dataset.previewType, parseInt(el.dataset.previewSign || '1', 10));
+                });
+                this.updateEquation();
+            }
 
+            toggleMode() {
+                this.mode = (this.mode === 'setup') ? 'solve' : 'setup';
                 this.updatePhaseUI();
             }
 
             updatePhaseUI() {
                 const isSolve = (this.mode === 'solve');
+                document.body.classList.toggle('phase-solve', isSolve);
+                // Corbeille : phase 1 seulement (choix du 06/11/2026).
+                const trash = document.getElementById('tile-trash-zone');
+                if (trash) {
+                    trash.disabled = isSolve;
+                    trash.title = isSolve
+                        ? "Supprimer une tuile : seulement en phase 1 (en phase 2, l'égalité doit rester vraie)"
+                        : "Supprimer une tuile : cliquer puis toucher une tuile, ou glisser une tuile ici";
+                }
+                if (isSolve && this.currentTool === 'erase') this.setTool('hand');
 
                 const phase1Btn = document.getElementById('btn-phase1');
                 const phase2Btn = document.getElementById('btn-phase2');
@@ -1171,7 +1346,11 @@ toggleEquationVisibility() {
                     lastSeqPackIdL: this.sideLeft.lastSeqPackId,
                     lastSeqPackIdR: this.sideRight.lastSeqPackId,
                     autoFlowL: this.sideLeft.autoFlow ? { ...this.sideLeft.autoFlow } : null,
-                    autoFlowR: this.sideRight.autoFlow ? { ...this.sideRight.autoFlow } : null
+                    autoFlowR: this.sideRight.autoFlow ? { ...this.sideRight.autoFlow } : null,
+                    // Lot 3 : la phase et le stylo sont dans l'historique, pour que « Tout recommencer »
+                    // s'annule entièrement (tuiles, phase 1 ou 2, traits du stylo).
+                    mode: this.mode,
+                    strokes: this.strokes || []
                 };
                 this.history.push(JSON.stringify(state));
                 if(this.history.length > 50) this.history.shift();
@@ -1181,8 +1360,12 @@ toggleEquationVisibility() {
                 if(this.history.length === 0) return;
                 const json = this.history.pop();
                 const state = JSON.parse(json);
-                this.resetBoard(false);
-                
+                this.clearBoard();
+                if (state.mode === 'setup' || state.mode === 'solve') this.mode = state.mode;
+                this.strokes = Array.isArray(state.strokes) ? state.strokes : [];
+                this.redrawAllStrokes();
+                this.updatePhaseUI();
+
                 this.nextId = state.nextId;
                 this.sideLeft.steps = state.stepsL; this.sideRight.steps = state.stepsR;
                 this.sideLeft.currStepIdx = state.currStepL; this.sideRight.currStepIdx = state.currStepR;
@@ -1206,8 +1389,8 @@ toggleEquationVisibility() {
                     const tileSign = data.sign;
                     const type = data.type;
                     el.className = `token ${type==='unit'?'type-unit':'type-x'} ${tileSign===1?'green':'red'}`;
-                    let lbl = type==='unit' ? (tileSign===1?'1':'-1') : (tileSign===1?'x':'-x');
-                    el.innerHTML = `<span style="pointer-events:none;">${lbl}</span>`;
+                    el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(type, tileSign)}</span>`;
+                    this.styleTileElement(el, type, tileSign);
                     el.id = `t-${data.id}`;
                     el.style.left = data.x+'px'; el.style.top = data.y+'px';
                     el.addEventListener('mousedown', e => this.handleDragStart(e, data.id));
@@ -1238,17 +1421,43 @@ toggleEquationVisibility() {
             }
 
             initListeners() {
-                this.container.addEventListener('wheel', e => { e.preventDefault(); this.scale = Math.min(Math.max(0.5, this.scale - e.deltaY * 0.001), 2.5); this.updateTransform(); }, {passive:false});
-                
+                // Molette : zoom (0,5 à 3, comme l'appli principale). Le trait du milieu reste au centre de
+                // l'écran (propre au mode équation : le « = » de l'équation est au-dessus) ; seule la hauteur
+                // suit la souris : le point du plateau sous la souris y reste.
+                this.container.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    const r = this.container.getBoundingClientRect();
+                    const localY = e.clientY - r.top;
+                    const worldY = (localY - this.pan.y) / this.scale;
+                    const s = Math.min(Math.max(MIN_SCALE, this.scale - e.deltaY * 0.001), MAX_SCALE);
+                    this.scale = s;
+                    this.pan.y = localY - worldY * s;
+                    this.viewTouched = true;
+                    this.updateTransform();
+                }, {passive:false});
+
                 // RESTORE PANNING (Vertical Only)
                 this.container.addEventListener('mousedown', e => {
-                    if (this.currentTool === 'pen') return; // en mode stylo, on dessine au lieu de déplacer le plateau
+                    if (e.button !== 0) return;
+                    if (this.currentTool === 'pen' || this.currentTool === 'erase') return; // stylo : on dessine ; corbeille : on touche une tuile
                     if (e.target.closest('.token') || e.target.closest('button')) return;
-                    this.isPanning = true; 
+                    this.isPanning = true; this.viewTouched = true;
                     // We only care about Y start relative to current pan.y
                     this.panStart = { y: e.clientY - this.pan.y };
                     this.container.classList.add('panning');
                 });
+
+                // --- TACTILE (lot 3, comme le lot 2 de l'appli principale) : un doigt sur le fond fait glisser
+                // le plateau (de haut en bas, comme la souris ici), deux doigts pincent pour zoomer. Une tuile
+                // touchée garde son propre glisser ; en mode stylo, le doigt dessine. Avant : rien au doigt.
+                ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(type => {
+                    this.container.addEventListener(type, (e) => this.handleBoardTouch(e), { passive: false });
+                });
+
+                const colorSelect = document.getElementById('color-mode-select');
+                if (colorSelect) colorSelect.addEventListener('input', () => this.applyColorMode());
+                // Échap : on revient à la main (stylo ou corbeille oubliés).
+                window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.currentTool !== 'hand') this.setTool('hand'); });
 
                 window.addEventListener('mousemove', e => {
                     if (this.isPanning) {
@@ -1267,17 +1476,110 @@ toggleEquationVisibility() {
                 
                 this.container.addEventListener('dragover', e => e.preventDefault());
                 this.container.addEventListener('drop', e => e.preventDefault());
-                window.addEventListener('resize', () => { this.centerView(); });
-                document.addEventListener('touchmove', e => { if (this.menuDrag) { e.preventDefault(); this.handleMenuDragMove(e); } }, {passive:false});
-                document.addEventListener('touchend', e => { if (this.menuDrag) this.handleMenuDragEnd(e); });
+                window.addEventListener('resize', () => {
+                    // Le trait reste au centre. Tant que la vue n'a pas été touchée (rotation du téléphone,
+                    // plein écran…), on reprend aussi le zoom de départ et la hauteur de départ.
+                    if (!this.viewTouched) { this.scale = this.getInitialScale(); this.centerView(); }
+                    else { this.pan.x = this.container.clientWidth / 2; this.updateTransform(); }
+                });
+                // (Le glisser depuis le menu écoute ses propres événements : handleMenuTouchStart.)
+            }
+
+            // Doigts posés sur le FOND du plateau (pas sur une tuile).
+            handleBoardTouch(e) {
+                const fingers = [...e.touches].filter(t => !(t.target && t.target.closest && t.target.closest('.token')));
+                if (e.type === 'touchstart') {
+                    if (this.currentTool === 'pen' || this.draggedToken || this.menuDrag) { this.touchView = null; return; }
+                    if (!fingers.length) return;
+                }
+                if (!this.touchView && e.type !== 'touchstart') return;
+                if (this.currentTool === 'pen' || this.draggedToken) { this.touchView = null; return; }
+                e.preventDefault();
+                const r = this.container.getBoundingClientRect();
+                const localY = (t) => t.clientY - r.top;
+                if (!fingers.length) { this.touchView = null; return; }
+                if (fingers.length === 1) {
+                    const y = localY(fingers[0]);
+                    if (e.type !== 'touchmove' || !this.touchView || this.touchView.mode !== 'pan' || this.touchView.id !== fingers[0].identifier) {
+                        // départ (ou retour à un seul doigt après un pincement) : on repart d'ici
+                        this.touchView = { mode: 'pan', id: fingers[0].identifier, startY: y, panY0: this.pan.y };
+                        return;
+                    }
+                    this.pan.y = this.touchView.panY0 + (y - this.touchView.startY);
+                    this.viewTouched = true;
+                    this.updateTransform();
+                    return;
+                }
+                const ya = localY(fingers[0]), yb = localY(fingers[1]);
+                const midY = (ya + yb) / 2;
+                const dist = Math.max(10, Math.hypot(fingers[0].clientX - fingers[1].clientX, fingers[0].clientY - fingers[1].clientY));
+                const ids = fingers[0].identifier + ':' + fingers[1].identifier;
+                if (!this.touchView || this.touchView.mode !== 'pinch' || this.touchView.ids !== ids) {
+                    this.touchView = { mode: 'pinch', ids, dist0: dist, scale0: this.scale, worldY: (midY - this.pan.y) / this.scale };
+                    return;
+                }
+                // La hauteur du plateau qui était sous les deux doigts y reste ; le trait reste au centre.
+                const s = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this.touchView.scale0 * dist / this.touchView.dist0));
+                this.scale = s;
+                this.pan.y = midY - this.touchView.worldY * s;
+                this.viewTouched = true;
+                this.updateTransform();
+            }
+
+            getInitialScale() {
+                const w = this.container ? this.container.clientWidth : 0;
+                const h = this.container ? this.container.clientHeight : 0;
+                if (!w || !h) return INITIAL_SCALE;
+                const fit = Math.min(w / INITIAL_VIEW_WORLD, h / INITIAL_VIEW_WORLD_H);
+                return Math.round(Math.min(INITIAL_SCALE, Math.max(MIN_SCALE, fit)) * 100) / 100;
             }
 
             centerView() {
                 const cx = this.container.clientWidth / 2;
                 const cy = this.container.clientHeight / 2;
-                this.pan.x = cx; 
+                this.pan.x = cx;
                 this.pan.y = cy - 50;
                 this.updateTransform();
+            }
+
+            // --- VUE : recentrer, son, plein écran (comme l'appli principale) ---
+            resetView() {
+                this.scale = this.getInitialScale();
+                this.viewTouched = false;
+                this.centerView();
+            }
+            toggleSound() {
+                soundEnabled = !soundEnabled;
+                if (soundEnabled) ensureAudioCtx();
+                this.updateSoundButton();
+            }
+            updateSoundButton() {
+                const on = document.getElementById('icon-sound-on'), off = document.getElementById('icon-sound-off'), btn = document.getElementById('btn-sound');
+                if (!on || !off || !btn) return;
+                on.classList.toggle('hidden', !soundEnabled);
+                off.classList.toggle('hidden', soundEnabled);
+                btn.title = soundEnabled ? 'Son : activé' : 'Son : coupé';
+            }
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    let p = null;
+                    if (document.documentElement.requestFullscreen) {
+                        try { p = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); }
+                        catch (e) { p = document.documentElement.requestFullscreen(); }
+                    }
+                    if (p && typeof p.catch === 'function') p.catch(() => {});
+                } else {
+                    const p = document.exitFullscreen ? document.exitFullscreen() : null;
+                    if (p && typeof p.catch === 'function') p.catch(() => {});
+                }
+            }
+            updateFullscreenButton() {
+                const enter = document.getElementById('icon-fs-enter'), exit = document.getElementById('icon-fs-exit'), btn = document.getElementById('btn-fullscreen');
+                if (!enter || !exit || !btn) return;
+                const fs = !!document.fullscreenElement;
+                enter.classList.toggle('hidden', fs);
+                exit.classList.toggle('hidden', !fs);
+                btn.title = fs ? 'Quitter le plein écran' : 'Plein écran';
             }
             updateTransform() { this.world.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`; }
             
@@ -1320,8 +1622,8 @@ toggleEquationVisibility() {
                 const el = document.createElement('div');
                 const colorClass = sign === 1 ? 'green' : 'red';
                 el.className = `token ${colorClass} type-${type==='unit'?'unit':'x'} menu-ghost scaling-transition`; 
-                let label = type==='unit' ? (sign===1?'1':'-1') : (sign===1?'x':'-x');
-                el.innerHTML = `<span style="pointer-events:none;">${label}</span>`;
+                el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(type, sign)}</span>`;
+                this.styleTileElement(el, type, sign);
                 document.body.appendChild(el);
                 const size = SIZES[type];
                 const offset = { x: (size.w * this.scale) / 2, y: (size.h * this.scale) / 2 };
@@ -1369,11 +1671,18 @@ toggleEquationVisibility() {
 
             // --- BOARD DRAG ---
             handleDragStart(e, id) {
-                e.stopPropagation();
                 const t = this.allTokens.find(x => x.id === id);
                 if (!t) return;
-                
-                this.saveState(); 
+                // Corbeille (phase 1 seulement) : toucher une tuile l'enlève.
+                if (this.currentTool === 'erase') {
+                    e.preventDefault(); e.stopPropagation();
+                    if (this.mode === 'setup') this.deleteToken(t);
+                    return;
+                }
+                if (this.currentTool === 'pen') return; // le stylo dessine par-dessus les tuiles
+                e.stopPropagation();
+
+                this.saveState();
 
                 if (t.pairId) {
                     const p = this.allTokens.find(x => x.id === t.pairId);
@@ -1387,6 +1696,7 @@ toggleEquationVisibility() {
                 const offset = { x: (e.touches?e.touches[0].clientX:e.clientX) - r.left, y: (e.touches?e.touches[0].clientY:e.clientY) - r.top };
                 
                 const startSide = t.x < 0 ? 'left' : 'right';
+                this.draggedToken = t;
 
                 const move = ev => {
                     ev.preventDefault();
@@ -1399,11 +1709,20 @@ toggleEquationVisibility() {
 
                     t.x = wx; t.y = wy;
                     t.element.style.left = t.x+'px'; t.element.style.top = t.y+'px';
+                    this.setTileTrashActive(this.mode === 'setup' && this.isOverTileTrash(cx, cy));
                 };
-                const end = () => {
+                const end = (ev) => {
                     document.removeEventListener('mousemove', move); document.removeEventListener('touchmove', move);
                     document.removeEventListener('mouseup', end); document.removeEventListener('touchend', end);
                     t.element.classList.remove('dragging');
+                    this.draggedToken = null;
+                    this.setTileTrashActive(false);
+                    // Tuile lâchée sur la corbeille (phase 1 seulement) : elle est enlevée.
+                    const src = ev && ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0] : ev;
+                    if (this.mode === 'setup' && src && this.isOverTileTrash(src.clientX, src.clientY)) {
+                        this.deleteToken(t, false); // l'état d'avant le glisser est déjà dans l'historique
+                        return;
+                    }
                     this.checkOverlap(t);
                     this.updateEquation();
                 };
@@ -1480,6 +1799,12 @@ toggleEquationVisibility() {
             }
 
 
+            // --- ÉQUATION (KaTeX) ---
+            // Lot 3 : couleurs du menu « Couleurs » (comme l'appli principale) et espace moyen autour de + et −
+            // (avant : « 𝑥+1+𝑥+1 », tout collé, peu lisible au tableau). Le « − » de tête reste collé : −3.
+            opLatex(sign) { return `\\:${this.colorLatex(this.getEquationOperatorColor(sign), sign === 1 ? '+' : '-')}\\:`; }
+            leadMinusLatex() { return this.colorLatex(this.getEquationOperatorColor(-1), '-'); }
+
             updateEquation() {
                 const getStr = (side) => {
                     if (side.displayMode === 'reduced') {
@@ -1502,25 +1827,18 @@ toggleEquationVisibility() {
                         
                         groups.forEach((g, i) => {
                             const lbl = g.type==='unit' ? '' : 'x';
-                            const val = g.c;
-                            const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
-                            const prefix = (i>0 && g.sign===1) ? `{\\color{${COLORS.pos}}{+}}` : (g.sign===-1?`{\\color{${COLORS.neg}}{-}}`:'');
-                            const leadMinus = (i===0 && g.sign===-1) ? `{\\color{${COLORS.neg}}{-}}` : '';
-                            const num = (val===1 && g.type!=='unit') ? '' : val;
-                            content += (i===0 ? leadMinus : `${prefix}`) + `{\\color{${col}}{${num}${lbl}}}`;
+                            const num = (g.c===1 && g.type!=='unit') ? '' : g.c;
+                            const prefix = i === 0 ? (g.sign === -1 ? this.leadMinusLatex() : '') : this.opLatex(g.sign);
+                            content += prefix + this.colorLatex(this.getEquationColor(g.type, g.sign), `${num}${lbl}`);
                         });
                         
                         if(!content) content = "\\dots";
                         
-                        let pStr = content;
-                        if (step.type === 'multiplication' && !step.distributed) pStr = `${step.factor}(${content})`;
-                        if (step.type === 'subtraction' && !step.oppositeApplied) pStr = `-(${content})`;
-                        
                         if (idx > 0 && hasNonEmptyBefore(idx)) {
-                            const rawStr = pStr.replace(/<[^>]*>|{[^}]*}/g, '');
-                            if (!pStr.includes('{red}{-}') && !pStr.startsWith('-')) s += `{\\color{${COLORS.pos}}{+}}`;
+                            if (content.startsWith(this.leadMinusLatex())) content = this.opLatex(-1) + content.slice(this.leadMinusLatex().length);
+                            else s += this.opLatex(1);
                         }
-                        s += pStr;
+                        s += content;
                     });
                     return s || "0";
                 };
@@ -1542,49 +1860,35 @@ toggleEquationVisibility() {
 
                 this.updateDivisionButtonState();
             }
+
+            // Réduire = regrouper les tuiles de même sorte et de même signe (sans annuler + et −).
             getReducedStr(side) {
                 const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 if (!active.length) return '0';
 
                 let xPos = 0, xNeg = 0, uPos = 0, uNeg = 0;
                 active.forEach(t => {
-                    if (t.type === 'x') {
-                        if (t.sign === 1) xPos++; else xNeg++;
-                    } else if (t.type === 'unit') {
-                        if (t.sign === 1) uPos++; else uNeg++;
-                    }
+                    if (t.type === 'x') { if (t.sign === 1) xPos++; else xNeg++; }
+                    else if (t.type === 'unit') { if (t.sign === 1) uPos++; else uNeg++; }
                 });
 
-                const parts = [];
-                const addTerm = (sign, body) => {
-                    const col = sign > 0 ? COLORS.pos : COLORS.neg;
-                    if (parts.length === 0) {
-                        if (sign < 0) {
-                            parts.push(`{\\color{${COLORS.neg}}{-}}{\\color{${col}}{${body}}}`);
-                        } else {
-                            parts.push(`{\\color{${col}}{${body}}}`);
-                        }
-                    } else {
-                        const sym = sign > 0 ? '+' : '-';
-                        parts.push(`{\\color{${col}}{${sym}}}{\\color{${col}}{${body}}}`);
-                    }
+                let s = '';
+                const addTerm = (type, sign, body) => {
+                    const prefix = s === '' ? (sign < 0 ? this.leadMinusLatex() : '') : this.opLatex(sign);
+                    s += prefix + this.colorLatex(this.getEquationColor(type, sign), body);
                 };
-
-                // Réduire = regrouper verts avec verts, rouges avec rouges (sans annuler vert/rouge)
-                if (xPos) addTerm(+1, `${xPos === 1 ? '' : xPos}x`);
-                if (xNeg) addTerm(-1, `${xNeg === 1 ? '' : xNeg}x`);
-                if (uPos) addTerm(+1, `${uPos}`);
-                if (uNeg) addTerm(-1, `${uNeg}`);
-
-                return parts.join('') || '0';
+                if (xPos) addTerm('x', +1, `${xPos === 1 ? '' : xPos}x`);
+                if (xNeg) addTerm('x', -1, `${xNeg === 1 ? '' : xNeg}x`);
+                if (uPos) addTerm('unit', +1, `${uPos}`);
+                if (uNeg) addTerm('unit', -1, `${uNeg}`);
+                return s || '0';
             }
 
+            // Ordonner = x positifs, x négatifs, unités positives, unités négatives, en gardant les paquets.
             getOrderedStr(side) {
                 const active = side.tokens.filter(t => !t.pairId && !t.element.classList.contains('ghost'));
                 if (!active.length) return '0';
 
-                // Ranger = trier par (x verts) puis (x rouges) puis (unit verts) puis (unit rouges)
-                // en conservant les paquets (packId) sans les additionner entre eux.
                 const groups = new Map();
                 for (const t of active) {
                     const pid = (typeof t.packId !== 'undefined') ? t.packId : -1;
@@ -1592,263 +1896,182 @@ toggleEquationVisibility() {
                     if (!groups.has(key)) groups.set(key, { type: t.type, sign: t.sign, pid, count: 0 });
                     groups.get(key).count += 1;
                 }
-
                 const list = Array.from(groups.values()).filter(g => g.count > 0);
                 list.sort((a, b) => {
-                    const typeA = a.type === 'x' ? 0 : 1;
-                    const typeB = b.type === 'x' ? 0 : 1;
+                    const typeA = a.type === 'x' ? 0 : 1, typeB = b.type === 'x' ? 0 : 1;
                     if (typeA !== typeB) return typeA - typeB;
-                    const signA = a.sign === 1 ? 0 : 1;
-                    const signB = b.sign === 1 ? 0 : 1;
+                    const signA = a.sign === 1 ? 0 : 1, signB = b.sign === 1 ? 0 : 1;
                     if (signA !== signB) return signA - signB;
                     return a.pid - b.pid;
                 });
 
                 let s = '';
                 list.forEach((g, i) => {
-                    const col = g.sign === 1 ? COLORS.pos : COLORS.neg;
-                    const isNeg = g.sign === -1;
                     const val = (g.count === 1 && g.type === 'x') ? '' : g.count;
                     const lbl = g.type === 'x' ? 'x' : '';
-
-                    let prefix = '';
-                    if (i === 0) {
-                        if (isNeg) prefix = `{\\color{${COLORS.neg}}{-}}`;
-                    } else {
-                        prefix = isNeg ? `{\\color{${COLORS.neg}}{-}}` : `{\\color{${COLORS.pos}}{+}}`;
-                    }
-                    s += `${prefix}{\\color{${col}}{${val}${lbl}}}`;
+                    const prefix = i === 0 ? (g.sign === -1 ? this.leadMinusLatex() : '') : this.opLatex(g.sign);
+                    s += prefix + this.colorLatex(this.getEquationColor(g.type, g.sign), `${val}${lbl}`);
                 });
-
                 return s || '0';
             }
             
-            // --- TOOLS ---
-            setTool(t){
-                this.currentTool=t;
-                const p=t==='pen';
-                // Toggle active class on body to allow click-through for tokens if needed, 
-                // or ensure canvas is top.
-                if(p) document.body.classList.add('drawing-active');
-                else document.body.classList.remove('drawing-active');
-                
-                document.getElementById('custom-cursor').style.display=p?'block':'none';
-                if(p) document.body.style.cursor = 'none';
-                else document.body.style.cursor = 'default';
+            // --- OUTILS : main, stylo, gomme du stylo, corbeille (comme l'appli principale, lot 1) ---
+            setTool(t) {
+                if (t === 'erase' && this.mode !== 'setup') t = 'hand'; // corbeille : phase 1 seulement
+                this.currentTool = t;
+                const isPen = (t === 'pen');
+                document.body.classList.toggle('drawing-active', isPen);
+                this.container.classList.toggle('hide-cursor', isPen);
+                const cursorEl = document.getElementById('custom-cursor');
+                cursorEl.classList.toggle('hidden', !isPen);
+                cursorEl.style.display = isPen ? 'block' : 'none';
+                this.updateToolButtons();
+                this.redrawAllStrokes();
             }
-            
-            startDraw(e){this.isDrawing=true;const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.clientX,e.touches?e.touches[0].clientY:e.clientY);this.lastDrawPos=p;this.ctx.beginPath();this.ctx.moveTo(p.x,p.y);}
-            draw(e){e.preventDefault();const p=this.getWorldPos(e.touches?e.touches[0].clientX:e.touches?e.touches[0].clientY:e.clientY);this.ctx.lineTo(p.x,p.y);this.ctx.stroke();this.lastDrawPos=p;}
-            clearDrawing(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);}
-            resizeCanvas(){this.canvas.width=4000;this.canvas.height=4000;this.canvas.style.width='4000px';this.canvas.style.height='4000px';this.ctx.lineWidth=3;this.ctx.lineCap='round';this.ctx.strokeStyle='#2563eb';}
-            moveCursor(e){if(this.currentTool!=='pen')return;const c=document.getElementById('custom-cursor');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';c.style.transform='translate(-6px,-28px)';}
+            updateToolButtons() {
+                const set = (btn, on) => {
+                    if (!btn) return;
+                    btn.classList.toggle('bg-white', on); btn.classList.toggle('shadow', on);
+                    btn.classList.toggle('text-gray-700', on); btn.classList.toggle('text-gray-500', !on);
+                };
+                set(document.getElementById('tool-hand'), this.currentTool === 'hand');
+                set(document.getElementById('tool-pen'), this.currentTool === 'pen');
+                const trash = document.getElementById('tile-trash-zone');
+                if (trash) trash.classList.toggle('tool-active', this.currentTool === 'erase');
+            }
+            isOverTileTrash(cx, cy) {
+                const zone = document.getElementById('tile-trash-zone');
+                if (!zone) return false;
+                const r = zone.getBoundingClientRect();
+                return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+            }
+            setTileTrashActive(active) {
+                const zone = document.getElementById('tile-trash-zone');
+                if (zone) zone.classList.toggle('trash-active', !!active);
+            }
+            // Enlève une tuile (phase 1). Si elle formait un 0 avec une autre, l'autre redevient libre.
+            deleteToken(t, save = true) {
+                if (!t || this.mode !== 'setup') return;
+                if (save) this.saveState();
+                playSound('pop');
+                this.removeTokens([t.id]);
+            }
+
+            // --- STYLO : les traits sont gardés en coordonnées du plateau et redessinés quand la vue bouge.
+            // Lot 3 : Pointer Events (souris, doigt, stylet) ; avant, seule la souris dessinait.
+            // Chaque trait et « Effacer le stylo » vont dans l'historique (↶), comme l'appli principale.
             getWorldPos(cx, cy) { const r = this.container.getBoundingClientRect(); return { x: (cx - r.left - this.pan.x) / this.scale, y: (cy - r.top - this.pan.y) / this.scale }; }
-            
-            resetBoard(clearHistory=true) {
-                // Remove DOM elements properly
+            worldToCanvas(pt) { return { x: this.pan.x + pt.x * this.scale, y: this.pan.y + pt.y * this.scale }; }
+            clearCanvas() {
+                const ctx = this.ctx; if (!ctx) return;
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+            }
+            redrawAllStrokes() {
+                if (!this.ctx) return;
+                this.clearCanvas();
+                const ctx = this.ctx;
+                ctx.lineWidth = 3 * this.scale;
+                for (const s of (this.strokes || [])) {
+                    if (!s || s.length < 2) continue;
+                    const p0 = this.worldToCanvas(s[0]);
+                    ctx.beginPath(); ctx.moveTo(p0.x, p0.y);
+                    for (let i = 1; i < s.length; i++) { const p = this.worldToCanvas(s[i]); ctx.lineTo(p.x, p.y); }
+                    ctx.stroke();
+                }
+            }
+            resizeCanvas() {
+                const cvs = this.canvas, ctx = this.ctx;
+                this.dpr = window.devicePixelRatio || 1;
+                const w = this.container.clientWidth, h = this.container.clientHeight;
+                cvs.style.position = 'absolute'; cvs.style.left = '0px'; cvs.style.top = '0px';
+                cvs.style.width = w + 'px'; cvs.style.height = h + 'px';
+                cvs.width = Math.max(1, Math.round(w * this.dpr));
+                cvs.height = Math.max(1, Math.round(h * this.dpr));
+                ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+                ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2563eb';
+                this.redrawAllStrokes();
+            }
+            initPen() {
+                this.canvas = document.getElementById('drawing-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                // Le canevas vit dans le conteneur (non transformé) : il est redessiné selon la vue.
+                if (this.canvas.parentElement !== this.container) this.container.appendChild(this.canvas);
+                this.strokes = this.strokes || [];
+                this.penPointer = null;
+                window.addEventListener('resize', () => this.resizeCanvas());
+                this.container.addEventListener('pointerdown', (e) => {
+                    if (this.currentTool !== 'pen' || this.penPointer !== null) return;
+                    if (e.pointerType === 'mouse' && e.button !== 0) return;
+                    e.preventDefault();
+                    this.saveState();
+                    this.penPointer = e.pointerId;
+                    try { this.container.setPointerCapture(e.pointerId); } catch (err) {}
+                    this.currentStroke = [this.getWorldPos(e.clientX, e.clientY)];
+                    this.strokes.push(this.currentStroke);
+                }, { passive: false });
+                window.addEventListener('pointermove', (e) => {
+                    if (this.currentTool === 'pen') {
+                        const c = document.getElementById('custom-cursor');
+                        c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; c.style.transform = 'translate(-9px,-9px)';
+                    }
+                    if (this.penPointer === null || e.pointerId !== this.penPointer || !this.currentStroke) return;
+                    e.preventDefault();
+                    const prev = this.worldToCanvas(this.currentStroke[this.currentStroke.length - 1]);
+                    const wp = this.getWorldPos(e.clientX, e.clientY);
+                    this.currentStroke.push(wp);
+                    const cp = this.worldToCanvas(wp);
+                    this.ctx.lineWidth = 3 * this.scale;
+                    this.ctx.beginPath(); this.ctx.moveTo(prev.x, prev.y); this.ctx.lineTo(cp.x, cp.y); this.ctx.stroke();
+                }, { passive: false });
+                const stop = (e) => {
+                    if (this.penPointer === null || e.pointerId !== this.penPointer) return;
+                    this.penPointer = null; this.currentStroke = null;
+                    try { this.container.releasePointerCapture(e.pointerId); } catch (err) {}
+                };
+                window.addEventListener('pointerup', stop);
+                window.addEventListener('pointercancel', stop);
+                this.resizeCanvas();
+            }
+            clearDrawing(saveToHistory = true) {
+                if (saveToHistory && this.strokes && this.strokes.length) this.saveState();
+                this.strokes = [];
+                this.currentStroke = null;
+                this.clearCanvas();
+            }
+
+            // Vide le plateau (tuiles, badges, membres), sans toucher à l'historique ni à la phase.
+            clearBoard() {
                 this.allTokens.forEach(t => t.element.remove());
                 document.querySelectorAll('.zero-badge').forEach(b=>b.remove());
-                
-                // Clear Data
                 this.allTokens = [];
-                
-                // Reset Sides
                 this.sideLeft = new AlgebraSide('left', this);
                 this.sideRight = new AlgebraSide('right', this);
-                
-                // Clear Drawing
-                ctx.clearRect(0,0,cvs.width,cvs.height);
-                
-                if(clearHistory) {
-                    this.history = [];
-                    this.mode = 'setup';
-                    document.getElementById('btn-mode').classList.remove('solve');
-                    document.getElementById('mode-text').innerText = "Phase 1 : Poser l'équation";
-                }
-                
-                this.centerView();
+            }
+
+            // « Tout recommencer » (lot 3, comme l'appli principale au lot 1) : s'annule avec ↶, revient en
+            // phase 1 AVEC les boutons de la phase 1 (avant, « Phase 2 » et « Diviser » restaient affichés),
+            // efface aussi le stylo (avant, le trait revenait au premier déplacement du plateau), remet la main.
+            resetBoard() {
+                this.saveState();
+                playSound('pop');
+                this.clearBoard();
+                this.clearDrawing(false);
+                this.mode = 'setup';
+                this.updatePhaseUI();
+                this.setTool('hand');
+                this.resetView();
                 this.updateEquation();
             }
         }
-        
-                // --- DESSIN (STYLO) : version robuste, sans énorme canevas ---
-        const cvs = document.getElementById('drawing-canvas');
-        const ctx = cvs.getContext('2d');
-
-        // On place le canvas dans le conteneur (non transformé) et on redessine selon pan/zoom.
-        const boardContainer = document.getElementById('board-container');
-        if (cvs.parentElement !== boardContainer) boardContainer.appendChild(cvs);
-
-        let dpr = window.devicePixelRatio || 1;
-
-        function resizeCvs() {
-            dpr = window.devicePixelRatio || 1;
-            const w = boardContainer.clientWidth;
-            const h = boardContainer.clientHeight;
-
-            cvs.style.position = 'absolute';
-            cvs.style.left = '0px';
-            cvs.style.top = '0px';
-            cvs.style.width = w + 'px';
-            cvs.style.height = h + 'px';
-
-            cvs.width = Math.max(1, Math.round(w * dpr));
-            cvs.height = Math.max(1, Math.round(h * dpr));
-
-            // Dessin en pixels CSS, rendu HD
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.strokeStyle = '#2563eb';
-            ctx.imageSmoothingEnabled = true;
-        }
-        window.addEventListener('resize', resizeCvs);
 
         const app = new AlgebraEqApp();
-        app.canvas = cvs;
-        app.ctx = ctx;
-
-        // --- Boutons outils : état visuel (main / stylo) ---
-        const btnToolHand = document.querySelector("button[onclick=\"app.setTool('hand')\"]");
-        const btnToolPen  = document.querySelector("button[onclick=\"app.setTool('pen')\"]");
-
-        function setToolBtnState(btn, active) {
-            if (!btn) return;
-            if (active) {
-                btn.classList.add('bg-white', 'shadow', 'text-gray-700');
-                btn.classList.remove('text-gray-500', 'hover:bg-gray-200');
-            } else {
-                btn.classList.remove('bg-white', 'shadow', 'text-gray-700');
-                btn.classList.add('text-gray-500', 'hover:bg-gray-200');
-            }
-        }
-        function updateToolButtons(tool) {
-            setToolBtnState(btnToolHand, tool === 'hand');
-            setToolBtnState(btnToolPen, tool === 'pen');
-        }
-
-        // --- Stockage des traits en coordonnées "monde" (pour écrire partout) ---
-        const strokes = []; // chaque stroke = [{x,y}, {x,y}, ...] en coords monde
-        let isDrawing = false;
-        let currentStroke = null;
-
-        function clearCanvas() {
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.clearRect(0, 0, cvs.width, cvs.height);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-
-        function worldToCanvas(pt) {
-            // monde -> écran (dans le conteneur)
-            return {
-                x: (app.pan.x + pt.x * app.scale),
-                y: (app.pan.y + pt.y * app.scale)
-            };
-        }
-
-        function redrawAllStrokes() {
-            clearCanvas();
-            const lw = 3 * app.scale; // épaisseur suit le zoom (si un jour tu ajoutes un zoom)
-            for (const s of strokes) {
-                if (!s || s.length < 2) continue;
-                ctx.lineWidth = lw;
-                const p0 = worldToCanvas(s[0]);
-                ctx.beginPath();
-                ctx.moveTo(p0.x, p0.y);
-                for (let i = 1; i < s.length; i++) {
-                    const p = worldToCanvas(s[i]);
-                    ctx.lineTo(p.x, p.y);
-                }
-                ctx.stroke();
-            }
-        }
-
-        // --- Tool binding (sans casser le reste) ---
-        app.setTool = function (t) {
-            app.currentTool = t;
-            updateToolButtons(t);
-
-            const isPen = (t === 'pen');
-            const cursorEl = document.getElementById('custom-cursor');
-
-            if (isPen) {
-                cursorEl.classList.remove('hidden');
-                cursorEl.style.display = 'block';
-                document.body.style.cursor = 'none';
-                document.body.classList.add('drawing-active');
-            } else {
-                cursorEl.classList.add('hidden');
-                cursorEl.style.display = 'none';
-                document.body.style.cursor = 'default';
-                document.body.classList.remove('drawing-active');
-            }
-
-            redrawAllStrokes();
-        };
-
-        app.clearDrawing = function () {
-            strokes.length = 0;
-            clearCanvas();
-        };
-
-        // Redessiner quand le monde bouge (centreView / pan / scale)
-        const _updateTransform = app.updateTransform.bind(app);
-        app.updateTransform = function () {
-            _updateTransform();
-            redrawAllStrokes();
-        };
-
-        // Curseur croix : suivre la souris
-        document.addEventListener('mousemove', (e) => {
-            if (app.currentTool !== 'pen') return;
-            const c = document.getElementById('custom-cursor');
-            c.style.left = e.clientX + 'px';
-            c.style.top = e.clientY + 'px';
-            c.style.transform = 'translate(-9px,-9px)';
-        });
-
-        // Dessin : on dessine en coordonnées écran, mais on enregistre en coordonnées monde
-        function clientToCanvas(e) {
-            const r = boardContainer.getBoundingClientRect();
-            return { x: e.clientX - r.left, y: e.clientY - r.top };
-        }
-
-        document.addEventListener('mousedown', (e) => {
-            if (app.currentTool !== 'pen') return;
-            if (e.target.closest('button')) return; // ne pas dessiner sur les boutons
-
-            isDrawing = true;
-            currentStroke = [];
-
-            const wp = app.getWorldPos(e.clientX, e.clientY);
-            currentStroke.push(wp);
-            strokes.push(currentStroke);
-
-            const cp = clientToCanvas(e);
-            ctx.lineWidth = 3 * app.scale;
-            ctx.beginPath();
-            ctx.moveTo(cp.x, cp.y);
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (app.currentTool !== 'pen' || !isDrawing) return;
-
-            const wp = app.getWorldPos(e.clientX, e.clientY);
-            if (currentStroke) currentStroke.push(wp);
-
-            const cp = clientToCanvas(e);
-            ctx.lineTo(cp.x, cp.y);
-            ctx.stroke();
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDrawing = false;
-            currentStroke = null;
-        });
-
-        // Init
-        resizeCvs();
+        app.initPen();
         app.setTool('hand');
+        // Redessiner le stylo quand le plateau bouge (glisser, zoom, recentrer).
+        const _updateTransform = app.updateTransform.bind(app);
+        app.updateTransform = function () { _updateTransform(); this.redrawAllStrokes(); };
 </script>
 </body>
 </html>
