@@ -1,0 +1,160 @@
+/* Livret « Calcul littéral » — mise en page commune aux 31 pages.
+   Deux versions, choisies par ?theme= dans l'adresse (voir render.py) :
+   vert-rouge (couleurs de l'appli des tuiles) et blanc-gris (pour photocopier). */
+
+@font-face{font-family:"Poppins";src:url("../../assets/fonts/Poppins-Regular.woff2") format("woff2");font-weight:400;font-display:block}
+@font-face{font-family:"Poppins";src:url("../../assets/fonts/Poppins-Bold.woff2") format("woff2");font-weight:700;font-display:block}
+/* La lettre 𝑥 ronde de l'univers SPLAT! : seulement les lettres mathématiques italiques. */
+@font-face{font-family:"SplatLettres";src:url("../../assets/fonts/SplatLettres-Italic.woff2") format("woff2");font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+@font-face{font-family:"SplatLettres";src:url("../../assets/fonts/SplatLettres-BoldItalic.woff2") format("woff2");font-weight:600 1000;font-display:block;unicode-range:U+1D434-1D467,U+210E}
+
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0b3a6b; --blue:#0e5a9e; --teal:#1fb3a5;
+  --orange:#e0762b; --orange-d:#a8481a; --orange-bg:#fff1e4;
+  --ink:#1f2937; --gris:#4b5563; --trait:#2f3a48; --pointille:#8a94a3; --pale:#f2f5f9; --case:#e6ebf1;
+  /* tuiles : vert / rouge de l'appli (outils/tuiles_algebriques/tuiles_algebriques.html) */
+  --pos:#72c475; --pos-bd:#2f7f35; --neg:#ef3f35; --neg-bd:#a61f18;
+  --u:4mm;
+}
+:root[data-theme="blanc-gris"]{ --pos:#ffffff; --pos-bd:#222222; --neg:#dedede; --neg-bd:#666666; }
+
+html,body{background:#fff}
+body{font-family:"SplatLettres","Poppins",sans-serif;color:var(--ink);font-size:10pt;line-height:1.3;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+sup{font-size:.62em;line-height:0;vertical-align:.62em}
+
+/* ---------- la page ---------- */
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;padding:8mm 11mm 12mm;display:flex;flex-direction:column;gap:3.2mm;page-break-after:always;break-after:page}
+.page:last-child{page-break-after:auto;break-after:auto}
+.tete{display:flex;align-items:center;justify-content:space-between;gap:6mm;padding-bottom:2.2mm;border-bottom:.5mm solid var(--navy);flex:none}
+.tete .sur{font-weight:700;font-size:8.6pt;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)}
+.tete h1{font-weight:700;font-size:17pt;line-height:1.15;color:var(--navy)}
+.tete img{height:13mm;width:auto;flex:none}
+.pied{position:absolute;left:0;right:0;bottom:5mm;text-align:center;font-weight:700;font-size:7.2pt;color:var(--navy);letter-spacing:.02em}
+
+/* ---------- titres de section ---------- */
+.sec{display:flex;align-items:baseline;gap:3mm;flex:none;margin-top:1mm}
+.sec b{flex:none;background:var(--navy);color:#fff;font-weight:700;font-size:8.4pt;padding:.7mm 2.6mm;border-radius:1.4mm;letter-spacing:.02em}
+.sec span{font-weight:700;font-size:10.4pt;color:var(--navy)}
+.sec.suite b{background:#fff;color:var(--navy);border:.35mm solid var(--navy)}
+
+/* ---------- écritures mathématiques ---------- */
+m{white-space:nowrap}
+/* la lettre ronde est dessinée plus petite que les chiffres de Poppins : on la remet à leur taille */
+.l{font-size:1.22em;line-height:1}
+.gros{font-size:12pt;font-weight:700}
+.tgros{font-size:14pt;font-weight:700}
+
+/* ---------- les tuiles ---------- */
+.t{display:inline-flex;align-items:center;justify-content:center;flex:none;position:relative;--lu:.66;
+   width:calc(var(--w) * var(--u));height:calc(var(--h) * var(--u));
+   background:var(--pos);border:.3mm solid var(--pos-bd);color:#111;
+   font-weight:700;font-size:calc(var(--u) * var(--lu));line-height:1;white-space:nowrap}
+.t.neg{background:var(--neg);border-color:var(--neg-bd)}
+.t.k-x,.t.k-xv,.t.k-b{font-size:calc(var(--u) * .74)}
+.t.k-xv.neg{font-size:calc(var(--u) * .56)}
+.t.k-x2{font-size:calc(var(--u) * .95)}
+.t.k-x2.petit{font-size:calc(var(--u) * .8)}
+.t.barre::after{content:"";position:absolute;inset:-.3mm;background-size:100% 100%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0L100 100M100 0L0 100' stroke='%23111' stroke-width='1.6' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E")}
+.tiles{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.6mm 1.8mm;vertical-align:middle}
+.tiles .br{flex-basis:100%;height:0}
+.tiles .sp{width:3mm}
+.grp{display:inline-grid;gap:.45mm;flex:none;justify-content:center;align-content:center}
+.tiles.serre{gap:.45mm}
+
+/* ---------- boîtes ---------- */
+.legende{display:flex;align-items:center;gap:6mm;background:var(--pale);border-radius:2mm;padding:2.6mm 5mm;flex:none}
+.legende>p{font-weight:700;color:var(--navy);font-size:9.6pt}
+.legende .lt{display:flex;flex-direction:column;align-items:center;gap:1.2mm;font-weight:700;font-size:10pt}
+.legende .lst{display:flex;align-items:flex-end;gap:5mm;flex:1;justify-content:space-around}
+.legende .eg{display:flex;align-items:center;gap:1.6mm;font-weight:700}
+
+.carte{border:.3mm solid var(--trait);border-radius:1.6mm;padding:2.2mm 2.6mm;position:relative;display:flex;flex-direction:column;gap:1.6mm;background:#fff}
+.carte .num{font-weight:700;color:var(--navy)}
+.carte .enonce{font-weight:700;font-size:10.2pt}
+.ex{border:.5mm solid var(--orange)}
+.ex>.tag{position:absolute;top:-2.6mm;left:3mm;background:var(--orange-bg);color:var(--orange-d);font-weight:700;font-size:8pt;padding:.4mm 2.2mm;border-radius:1mm;border:.3mm solid var(--orange);letter-spacing:.03em;text-transform:uppercase}
+.repbox{border:.3mm solid var(--trait);border-radius:1mm;min-height:9mm;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:10.4pt;padding:1mm;margin-top:auto}
+.ligne{display:flex;align-items:flex-end;gap:2mm;font-weight:700;color:var(--navy)}
+.ligne i{flex:1;border-bottom:.3mm dotted var(--pointille);height:5mm;font-style:normal}
+.lignes{display:flex;flex-direction:column}
+.lignes i{border-bottom:.3mm dotted var(--pointille);height:7.4mm}
+.centre{display:flex;align-items:center;justify-content:center}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3mm}
+.remplit{flex:1;min-height:0}
+
+/* ---------- tableaux de substitution ---------- */
+table{border-collapse:collapse}
+.subst{width:100%;table-layout:fixed}
+.subst th{background:var(--pale);font-size:8.4pt;font-weight:700;color:var(--navy);padding:1.2mm;border:.3mm solid var(--trait);line-height:1.2}
+.subst td{border:.3mm solid var(--trait);text-align:center;font-weight:700;font-size:10.4pt;padding:.8mm 1mm}
+.subst tr.ex td{background:var(--orange-bg)}
+.subst tr.ex td:first-child{position:relative}
+.subst .tagex{position:absolute;left:1mm;top:.8mm;font-size:6.6pt;color:var(--orange-d);text-transform:uppercase;letter-spacing:.03em}
+.subst tr.ex{outline:.5mm solid var(--orange);outline-offset:-.25mm}
+
+/* ---------- grille de distributivité (en T, comme au tableau) ---------- */
+.dist{border-collapse:collapse;margin:0 auto}
+.dist td,.dist th{padding:1.2mm 1.6mm;text-align:center;vertical-align:middle;font-weight:700}
+.dist thead th{border-bottom:.45mm solid var(--trait);vertical-align:bottom}
+.dist thead th .lab{display:block;margin-bottom:1mm;font-size:10pt}
+.dist tbody th{border-right:.45mm solid var(--trait);text-align:right;white-space:nowrap}
+.dist tbody th .lab{margin-right:1.6mm;font-size:10pt}
+.dist thead th.coin{border-right:.45mm solid var(--trait);color:var(--gris)}
+.dist td+td,.dist thead th+th+th{border-left:.3mm solid var(--trait)}
+.dist tbody tr+tr th,.dist tbody tr+tr td{border-top:.3mm solid var(--trait)}
+.dist .val{display:inline-block;border:.3mm solid var(--trait);background:var(--case);padding:1.4mm 2.2mm;font-size:11pt;min-width:12mm}
+.dist.vide td{width:var(--cw,16mm);height:var(--ch,16mm)}
+.dist.vide thead th{height:7mm;min-width:var(--cw,16mm)}
+.dist.vide tbody th{min-width:9mm}
+
+/* ---------- grille du modèle d'aire (cases) ---------- */
+.aire{border-collapse:collapse;table-layout:fixed}
+.aire td{border:.3mm solid var(--trait);width:var(--aw,14mm);height:var(--ah,8.6mm);text-align:center;font-weight:700;font-size:10pt;padding:0}
+.aire td.h{background:var(--case)}
+.aire td.coin{background:#fff;color:var(--gris);font-size:9pt}
+.aire tr:first-child td{border-bottom:.45mm solid var(--trait)}
+.aire td:first-child{border-right:.45mm solid var(--trait)}
+.aire td.tiret{border-left:.3mm dashed var(--trait)}
+.aire td:nth-child(2):not(:last-child){border-right:.3mm dashed var(--trait)}
+
+/* ---------- grilles de multiplication (activité 7) ---------- */
+.mult{width:100%;border-collapse:collapse;table-layout:fixed}
+.mult td,.mult th{border:.3mm solid var(--trait);text-align:center;font-weight:700;font-size:9.6pt;height:7mm;padding:0 1mm}
+.mult th{background:var(--case);color:var(--navy)}
+.mult th:first-child{width:16mm}
+.mult tbody th{background:var(--case)}
+.mult td.haut{border-bottom:.3mm dotted var(--pointille)}
+.mult td.bas{border-top:none}
+
+.facteurs{border-collapse:collapse;table-layout:fixed}
+.facteurs td,.facteurs th{border:.3mm solid var(--trait);text-align:center;font-weight:700;font-size:9.6pt;height:6mm;padding:0 1.5mm}
+.facteurs th{background:var(--case);color:var(--navy);font-size:8.6pt}
+
+/* ---------- listes d'exercices ---------- */
+.liste{display:grid;grid-auto-flow:column;column-gap:8mm;row-gap:0}
+.item{display:flex;align-items:flex-end;gap:2mm;font-weight:700;font-size:10.4pt;min-height:9mm;padding-bottom:1mm}
+.item .n{color:var(--navy);min-width:7mm}
+.item i{flex:1;border-bottom:.3mm dotted var(--pointille);height:5.5mm;font-style:normal;margin-left:1mm}
+.bloc{display:flex;flex-direction:column}
+.bloc .q{display:flex;gap:2mm;font-weight:700;font-size:10.4pt}
+.bloc .q .n{color:var(--navy);min-width:7mm}
+
+/* ---------- associer ---------- */
+.pt{width:2.4mm;height:2.4mm;border-radius:50%;background:var(--ink);display:inline-block;flex:none}
+.etiq{border:.3mm solid var(--trait);border-radius:1.6mm;padding:1.6mm 2mm;text-align:center;font-weight:700;font-size:11pt;background:#fff}
+
+/* ---------- bilans ---------- */
+.tag2{flex:none;background:var(--orange-bg);color:var(--orange-d);border:.3mm solid var(--orange);font-weight:700;font-size:8.4pt;padding:.7mm 2.6mm;border-radius:1.4mm;text-transform:uppercase;letter-spacing:.03em}
+.sec.bilan b{background:var(--orange-bg);color:var(--orange-d);border:.3mm solid var(--orange)}
+.cadre{background:#fff;border:.35mm solid #c9d3df;border-radius:2.4mm;padding:3.5mm 4.5mm}
+.cadre.pale{background:var(--pale);border-color:var(--pale)}
+.note{font-size:9.4pt;color:var(--gris);text-align:center}
+.note b{color:var(--ink)}
+.fleche{display:block;flex:none}
+
+.ex{padding-top:3.4mm}

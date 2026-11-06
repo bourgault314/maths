@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 55 PDF publics de maths&go.
+Ce document est l'inventaire technique des 53 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -67,33 +67,41 @@ par `scripts/uniformiser-signature-pdf.py`.
 
 ## PDF possédant une source HTML
 
-Ce document est écrit en HTML + CSS dans un seul fichier, puis imprimé en PDF par
-Chromium :
+Ces documents sont écrits en HTML + CSS, puis imprimés en PDF par Chromium :
 
 | PDF public | Source |
 |---|---|
 | `cours_criteres_divisibilite.pdf` | `../_sources/cours-criteres-divisibilite/cours_criteres_divisibilite.html` |
+| `tuiles_algebriques/livret_litteral_vert_rouge.pdf` | `../_sources/livret-litteral/livret_litteral.html` |
+| `tuiles_algebriques/livret_litteral_blanc_gris.pdf` | `../_sources/livret-litteral/livret_litteral.html` |
 
-Le texte se modifie directement dans le HTML. Pour régénérer le PDF :
+Le texte se modifie directement dans le HTML. Pour régénérer les PDF :
 
 ```bash
 python3 _sources/cours-criteres-divisibilite/render.py
+python3 _sources/livret-litteral/render.py
 ```
+
+Le livret « Calcul littéral » (31 pages) sort en deux versions depuis la même source :
+tuiles vertes et rouges (les couleurs de l'appli) et tuiles blanches et grises.
+Son `render.py` refait d'abord tous les calculs du livret (`verifier_calculs.py`),
+puis s'arrête si une police manque ou si quelque chose déborde d'une page.
+Il remplace depuis le 6 novembre 2026 l'ancien livret sans source, qui existait aussi
+en bleu et jaune et en couleurs Mathigon : ces deux versions ont été retirées du site.
 
 La signature `mathsgo.re · CC BY-NC-SA 4.0` est écrite dans le HTML lui-même : elle
 survit à une régénération, sans repasser par `scripts/ajouter-licence-pdf.py`.
 
 ## PDF sans source exacte
 
-Les 14 documents suivants ne possèdent pas de code permettant de modifier leur
+Les 10 documents suivants ne possèdent pas de code permettant de modifier leur
 contenu pédagogique :
 
 - les trois `detective_des_grandeurs_*.pdf` ;
 - `fractions/gabarits_fractions.pdf` ;
 - `fractions_multiples_problemes.pdf` ;
 - les quatre PDF de `nombres_relatifs/` ;
-- `pourcentages_recherche.pdf` ;
-- les quatre `tuiles_algebriques/livret_litteral_*.pdf`.
+- `pourcentages_recherche.pdf`.
 
 Leur signature peut néanmoins être remise à jour après import d'un nouveau PDF :
 

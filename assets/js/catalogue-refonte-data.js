@@ -326,8 +326,6 @@ window.MATHSGO_CATALOGUE = {
     "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "imprimer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
     "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "primaryGroup": "generer", "collections": [], "tags": ["ancien-index", "schema-barres"] },
     "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "primaryGroup": "generer", "collections": [], "tags": ["schema-barres", "reference-technique"] },
     "outils/labo-des-regularites.html": {
@@ -1683,20 +1681,16 @@ window.MATHSGO_CATALOGUE = {
       "id": "cours-tuiles-algebriques",
       "title": "Parcours de calcul littéral avec les tuiles",
       "description": "Choisir la version graphique du parcours.",
-      "cardDescription": "Une progression de huit activités et bilans proposée dans quatre styles de tuiles.",
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/livrets.png?v=1",
+      "cardDescription": "Une progression de huit activités et bilans, avec des tuiles vertes et rouges ou blanches et grises.",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/livrets.png?v=2",
       "group": "cours",
       "labels": {
-        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": "Blanc et gris",
-        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": "Bleu et jaune",
-        "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": "Mathigon",
-        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": "Vert et rouge"
+        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": "Vert et rouge",
+        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": "Blanc et gris"
       },
       "paths": [
-        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
-        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf",
-        "outils/tuiles_algebriques/livret_litteral_mathigon.pdf",
-        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf"
+        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf",
+        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf"
       ]
     },
     {
@@ -4692,66 +4686,6 @@ window.MATHSGO_CATALOGUE = {
       "title": "Livret de calcul littéral — blanc et gris",
       "description": "Un livret d’activités de calcul littéral avec des tuiles en blanc et gris.",
       "path": "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
-      "domains": [
-        "algebre"
-      ],
-      "notions": [
-        "calcul-litteral"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "tuiles algébriques"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-tuiles-algebriques-livret-litteral-bleu-jaune-pdf",
-      "title": "Livret de calcul littéral — bleu et jaune",
-      "description": "Un livret d’activités de calcul littéral avec des tuiles bleues et jaunes.",
-      "path": "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf",
-      "domains": [
-        "algebre"
-      ],
-      "notions": [
-        "calcul-litteral"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "tuiles algébriques"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-tuiles-algebriques-livret-litteral-mathigon-pdf",
-      "title": "Livret de calcul littéral — Mathigon",
-      "description": "Un livret d’activités de calcul littéral avec les couleurs de tuiles Mathigon.",
-      "path": "outils/tuiles_algebriques/livret_litteral_mathigon.pdf",
       "domains": [
         "algebre"
       ],

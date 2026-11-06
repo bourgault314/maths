@@ -167,7 +167,7 @@ test("1. une seule fiche : la page 1 ne se resserre plus pour le professeur — 
 
 test("1. la vignette et le catalogue suivent la fiche vierge refaite", () => {
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
   // Le moteur n'a pas bougé : rien à déposer sur le serveur.
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));

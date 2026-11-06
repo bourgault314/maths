@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>Calcul littéral — livret des tuiles algébriques</title>
+<link rel="stylesheet" href="livret.css">
+<style>
+/* ---- réglages propres à certaines pages ---- */
+.assoc6{display:grid;grid-template-columns:repeat(6,1fr);column-gap:2mm}
+.assoc6 .c{display:flex;flex-direction:column;align-items:center;gap:2mm}
+.boites{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:.3mm solid var(--trait)}
+.boites>div{border:.3mm solid var(--trait);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2.5mm 3mm}
+.boites .exb{font-weight:700;font-size:12pt}
+.boites .zone{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+.boites .ligne{width:100%}
+.cartes{display:grid;gap:2.6mm}
+.cartes .carte .zone{flex:1;display:flex;align-items:center;justify-content:center}
+.a3a{display:grid;grid-template-columns:52mm 14mm 1fr;align-items:stretch}
+.a3a .gauche{display:flex;flex-direction:column;justify-content:space-around;gap:3mm;padding:2mm 0}
+.a3a .gauche .r{display:flex;align-items:center;gap:3mm}
+.a3a .gauche .etiq{flex:1}
+.a3a .droite{display:flex;flex-direction:column}
+.a3a .droite .s{flex:1;display:flex;align-items:center;gap:4mm;padding:2.6mm 0}
+.a3a .droite .s+.s{border-top:.3mm solid #c9d3df}
+.reduire{display:flex;flex-direction:column;gap:5mm}
+.reduire .rg{display:flex;align-items:center;gap:3mm;min-height:13mm}
+.paire{display:inline-flex;position:relative;border:.35mm dashed var(--trait);border-radius:1.5mm;padding:1.4mm;margin-top:2mm}
+.paire>b{position:absolute;top:-2.6mm;left:50%;transform:translateX(-50%);background:#fff;padding:0 1.2mm;font-size:9pt;line-height:1.1}
+.terme{display:inline-flex;flex-direction:column;align-items:center;justify-content:space-between;gap:1.4mm;border:.3mm dashed var(--pointille);border-radius:1.6mm;padding:2mm 2.2mm 1.4mm}
+.terme>m{font-weight:700;font-size:10pt}
+.flux{display:grid;grid-template-columns:44mm 13mm 1fr 13mm 36mm;align-items:center}
+.flux .boite{background:#fff;border:.3mm solid #c9d3df;border-radius:2mm;padding:2mm;display:flex;flex-direction:column;align-items:center;gap:2mm;min-height:17mm;justify-content:center}
+.flux .boite p{font-weight:700;font-size:8.4pt;color:var(--gris)}
+.flux .milieu{display:flex;flex-direction:column;gap:3mm}
+.sub4{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+.sub4 .carte{align-items:center;justify-content:space-between;min-height:40mm;padding:3mm 2mm}
+.assoc2{display:grid;grid-template-columns:1fr 14mm 56mm 14mm 1fr;row-gap:3.6mm;align-items:center}
+.assoc2 .g{text-align:right;font-weight:700;font-size:10.6pt}
+.assoc2 .d{font-weight:700;font-size:10.6pt}
+.assoc2 .pt{justify-self:center}
+.aires{display:grid;grid-template-columns:repeat(3,1fr);gap:7mm 4mm;align-items:start;justify-items:start;--aw:17mm;--ah:10mm}
+.partie{display:grid;grid-template-columns:7mm 1fr}
+.partie>.n{font-weight:700;color:var(--navy);font-size:10.4pt;padding-top:1mm}
+.ex-aire{padding:3.4mm 2mm 1.6mm;gap:1.4mm;align-items:center}
+.tri td{width:24mm;height:7.4mm}
+.tri td.coin{width:24mm}
+.trou{display:inline-block;width:16mm;border-bottom:.3mm dotted var(--pointille);height:4mm;vertical-align:-1mm}
+.mj{display:grid;grid-template-columns:1fr 1fr;gap:10mm}
+.mj .carte{min-height:36mm;align-items:center;font-weight:700}
+.mj .carte h3{font-size:10.4pt;color:var(--navy)}
+.calc{display:flex;flex-direction:column;gap:2.2mm;font-weight:700;font-size:11pt}
+.calc .eg{display:grid;grid-template-columns:44mm 1fr;align-items:baseline}
+.calc .eg>span:first-child{text-align:right;padding-right:2mm}
+</style>
+<script src="livret.js" defer></script>
+</head><body>
+
+<!-- =========================================================================
+     ACTIVITÉ 1 — Découvrir les tuiles algébriques (pages 1 et 2)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 1" data-titre="Découvrir les tuiles algébriques">
+  <div class="legende"><p>Voici les tuiles<br>algébriques utilisées :</p>
+    <div class="lst">
+      <span class="lt"><tl u="4.2">x2</tl><m>x^2</m></span>
+      <span class="lt"><tl u="4.2">-x2</tl><m>-x^2</m></span>
+      <span class="lt"><tl u="4.2">x</tl><m>x</m></span>
+      <span class="lt"><tl u="4.2">-x</tl><m>-x</m></span>
+      <span class="lt"><tl u="4.2">1</tl><m>1</m></span>
+      <span class="lt"><tl u="4.2">-1</tl><m>-1</m></span>
+    </div>
+  </div>
+
+  <h2 class="sec"><b>Section A</b><span>Associe chaque schéma à la bonne expression</span></h2>
+  <div class="assoc6">
+    <div class="c"><div class="etiq" style="width:100%"><m>3x</m></div><span class="pt"></span></div>
+    <div class="c"><div class="etiq" style="width:100%"><m>3 - x</m></div><span class="pt"></span></div>
+    <div class="c"><div class="etiq" style="width:100%"><m>3 - x^2</m></div><span class="pt"></span></div>
+    <div class="c"><div class="etiq" style="width:100%"><m>3x + 3</m></div><span class="pt"></span></div>
+    <div class="c"><div class="etiq" style="width:100%"><m>3 + x</m></div><span class="pt"></span></div>
+    <div class="c"><div class="etiq" style="width:100%"><m>x - 3</m></div><span class="pt"></span></div>
+  </div>
+  <div class="assoc6" style="margin-top:17mm">
+    <div class="c"><span class="pt"></span><tl u="3.4">3*1 -x2</tl></div>
+    <div class="c"><span class="pt"></span><tl u="3.4">3*x 3*1</tl></div>
+    <div class="c"><span class="pt"></span><tl u="3.4">3*x</tl></div>
+    <div class="c"><span class="pt"></span><tl u="3.4">1 -x 2*1</tl></div>
+    <div class="c"><span class="pt"></span><tl u="3.4">x 3*1</tl></div>
+    <div class="c"><span class="pt"></span><tl u="3.4">x 3*-1</tl></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:4mm"><b>Section B</b><span>Dessine les tuiles qui représentent chaque expression</span></h2>
+  <div class="boites remplit" style="grid-template-rows:1fr 1fr">
+    <div><div class="zone"></div><span class="exb"><m>x - 2</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>4 - x</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>x + 5</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>-7 - x</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>2x - 5</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>-4x + 1</m></span></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 1" data-titre="Découvrir les tuiles algébriques">
+  <h2 class="sec suite"><b>Section B (suite)</b><span>Dessine les tuiles qui représentent chaque expression</span></h2>
+  <div class="boites" style="height:52mm">
+    <div><div class="zone"></div><span class="exb"><m>x^2 - x</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>5 - x^2</m></span></div>
+    <div><div class="zone"></div><span class="exb"><m>3x^2 - 4 + 6x</m></span></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:4mm"><b>Section C</b><span>Écris une expression pour chaque collection de tuiles</span></h2>
+  <div class="boites remplit" style="grid-template-rows:1fr 1fr 1fr">
+    <div><div class="zone"><tl u="4" vide>x | -x2</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>4*1 -x 3*1</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>4x2*1 | 3*-x</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>2*1 x2 / x2 2*1</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>x x x / x x x / 1 | 1 | 1</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>x -x2 2*1</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>-x2 | -x2 / x x x</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>-x -x / -1 / -x -x</tl></div><div class="ligne"><i></i></div></div>
+    <div><div class="zone"><tl u="4" vide>x2 3*-1 2*x</tl></div><div class="ligne"><i></i></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 2 — Substitution avec les tuiles (pages 3 et 4)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 2" data-titre="Substitution avec les tuiles algébriques">
+  <div class="legende"><p>Voici les tuiles<br>algébriques utilisées :</p>
+    <div class="lst">
+      <span class="eg"><tl u="3.8">x2</tl> = <m>x^2</m></span>
+      <span class="eg"><tl u="3.8">-x2</tl> = <m>-x^2</m></span>
+      <span class="eg"><tl u="3.8">x</tl> = <m>x</m></span>
+      <span class="eg"><tl u="3.8">-x</tl> = <m>-x</m></span>
+      <span class="eg"><tl u="3.8">1</tl> = 1</span>
+      <span class="eg"><tl u="3.8">-1</tl> = <m>-1</m></span>
+    </div>
+  </div>
+
+  <h2 class="sec"><b>Section A</b><span>Substitue puis calcule avec les tuiles algébriques</span></h2>
+  <table class="subst">
+    <colgroup><col style="width:30mm"><col><col style="width:44mm"><col style="width:28mm"></colgroup>
+    <tr><th>Expression</th><th>Représentation avec les tuiles</th><th>Substitue <m>x = 3</m></th><th>Valeur de l’expression</th></tr>
+    <tr class="ex" style="height:12mm"><td style="padding-top:3mm"><span class="tagex">Exemple</span><m>x + 6</m></td><td><tl u="3.2">x 6*1</tl></td><td><m>3 + 6</m></td><td>9</td></tr>
+    <tr style="height:9.6mm"><td><m>x - 10</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>5x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>3 + x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>6 - 2x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>9 - x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>3x - 1</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>4x + 5</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>3 + 2x</m></td><td></td><td></td><td></td></tr>
+  </table>
+
+  <h2 class="sec" style="margin-top:2mm"><b>Section B</b><span>Substitue puis calcule avec les tuiles algébriques</span></h2>
+  <table class="subst">
+    <colgroup><col style="width:30mm"><col><col style="width:44mm"><col style="width:28mm"></colgroup>
+    <tr><th>Expression</th><th>Représentation avec les tuiles</th><th>Substitue <m>x = -7</m></th><th>Valeur de l’expression</th></tr>
+    <tr class="ex" style="height:12mm"><td style="padding-top:3mm"><span class="tagex">Exemple</span><m>x - 1</m></td><td><tl u="3.2">x -1</tl></td><td><m>-7 - 1</m></td><td><m>-8</m></td></tr>
+    <tr style="height:9.6mm"><td><m>2x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>x + 7</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>5 + x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>8 - x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>4x - 3</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:9.6mm"><td><m>9 + 5x</m></td><td></td><td></td><td></td></tr>
+  </table>
+</section>
+
+<section class="page" data-sur="Activité 2" data-titre="Substitution avec les tuiles algébriques">
+  <h2 class="sec"><b>Section C</b><span>Substitue avec des carrés <m>x^2</m> et des opposés</span></h2>
+  <table class="subst">
+    <colgroup><col style="width:30mm"><col><col style="width:52mm"><col style="width:28mm"></colgroup>
+    <tr><th>Expression</th><th>Représentation avec les tuiles</th><th>Substitue <m>x = 2</m></th><th>Valeur de l’expression</th></tr>
+    <tr class="ex" style="height:19mm"><td style="padding-top:3mm"><span class="tagex">Exemple</span><m>x^2 + 1</m></td><td><tl u="3.4">x2 1</tl></td><td><m>2^2 + 1 = 4 + 1</m></td><td>5</td></tr>
+    <tr style="height:19.5mm"><td><m>x^2 + 2x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>-2x + 1</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>-x^2 + x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>-2x^2 + x + 3</m></td><td></td><td></td><td></td></tr>
+  </table>
+  <table class="subst" style="margin-top:4mm">
+    <colgroup><col style="width:30mm"><col><col style="width:52mm"><col style="width:28mm"></colgroup>
+    <tr><th>Expression</th><th>Représentation avec les tuiles</th><th>Substitue <m>x = -2</m></th><th>Valeur de l’expression</th></tr>
+    <tr class="ex" style="height:19mm"><td style="padding-top:3mm"><span class="tagex">Exemple</span><m>-2x + 1</m></td><td><tl u="3.4">2*-x 1</tl></td><td><m>-2 * (-2) + 1</m></td><td>5</td></tr>
+    <tr style="height:19.5mm"><td><m>x^2 - x</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>2x^2 - 3x + 2</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>2x - 1</m></td><td></td><td></td><td></td></tr>
+    <tr style="height:19.5mm"><td><m>-2x + 4</m></td><td></td><td></td><td></td></tr>
+  </table>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 3 — Réduire avec les tuiles (pages 5 et 6)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 3" data-titre="Réduire avec les tuiles algébriques">
+  <h2 class="sec"><b>Section A</b><span>Associe les expressions au bon schéma de tuiles</span></h2>
+  <div class="a3a">
+    <div class="gauche">
+      <div class="r"><div class="etiq"><m>10x + 4x^2 - 7x</m></div><span class="pt"></span></div>
+      <div class="r"><div class="etiq"><m>4x - 1 - 2x + 4</m></div><span class="pt"></span></div>
+      <div class="r"><div class="etiq"><m>x + 12</m></div><span class="pt"></span></div>
+      <div class="r"><div class="etiq"><m>6x - x + 5 - 2</m></div><span class="pt"></span></div>
+    </div>
+    <div></div>
+    <div class="droite">
+      <div class="s"><span class="pt"></span><tl u="2.9">4*x | 2*-x | 4*1 / -1</tl></div>
+      <div class="s"><span class="pt"></span><tl u="2.9">10*x | 4*x2 | 7*-x</tl></div>
+      <div class="s"><span class="pt"></span><tl u="2.9">2x3*x | -x | 5*1 | 2*-1</tl></div>
+    </div>
+  </div>
+  <p style="font-weight:700;font-size:9.8pt;color:var(--navy)">Une expression ne correspond à aucun schéma : dessine ses tuiles.</p>
+  <div style="height:13mm;border:.3mm dashed var(--pointille);border-radius:1.6mm"></div>
+
+  <h2 class="sec" style="margin-top:2mm"><b>Section B</b><span>Utilise les tuiles pour réduire les expressions</span></h2>
+  <div class="cartes g3 remplit" style="grid-template-rows:1fr 1fr 1fr;gap:0;border:.3mm solid var(--trait)">
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">1)</span> <m>3x + x</m></span><div class="zone"><tl u="2.9">3*x x</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">2)</span> <m>2x^2 + 3x^2</m></span><div class="zone"><tl u="2.9">2*x2 3*x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">3)</span> <m>7x - 2x</m></span><div class="zone"><tl u="2.9">7*x 2*-x</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">4)</span> <m>4x^2 + x^2 - 2x^2</m></span><div class="zone"><tl u="2.9">4*x2 x2 2*-x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">5)</span> <m>-x + 3x - 5x</m></span><div class="zone"><tl u="2.9">-x 3*x 5*-x</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">6)</span> <m>2x^2 + 3x + 4x + x^2</m></span><div class="zone"><tl u="2.9">2*x2 3*x 4*x x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">7)</span> <m>2x^2 - 3x + 4x + x^2</m></span><div class="zone"><tl u="2.9">2*x2 3*-x 4*x x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">8)</span> <m>x + 2 + 5x + x^2 + 4 + 3x^2</m></span><div class="zone"><tl u="2.9">x 2*1 5*x x2 4*1 3*x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">9)</span> <m>5 - 3x + 2x^2 - 4 + 5x + x^2</m></span><div class="zone"><tl u="2.9">5*1 3*-x 2*x2 4*-1 5*x x2</tl></div><div class="ligne">Réponse :<i></i></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 3" data-titre="Réduire avec les tuiles algébriques">
+  <h2 class="sec"><b>Section C</b><span>Dessine les tuiles puis réduis chaque expression</span></h2>
+  <div class="cartes g3" style="grid-template-rows:repeat(3,45mm);gap:0;border:.3mm solid var(--trait)">
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">1)</span> <m>2x + 5x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">2)</span> <m>4x^2 + x^2</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">3)</span> <m>3x - 5x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">4)</span> <m>2x^2 + 3x^2 - x^2</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">5)</span> <m>-4x + 2x - x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">6)</span> <m>5x + 2x^2 + 3x^2 + 2x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">7)</span> <m>3x^2 - 4x - x + 2x^2</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">8)</span> <m>3 + 2x + x^2 + 4 + 4x^2 + 3x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+    <div class="carte" style="border-radius:0"><span class="enonce"><span class="num">9)</span> <m>2x^2 - 7 + 2x + 3 - 3x^2 + 4x</m></span><div class="zone"></div><div class="ligne">Réponse :<i></i></div></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:3mm"><b>Section D</b><span>L’affirmation est-elle correcte ? Explique.</span></h2>
+  <p class="centre tgros" style="margin:1mm 0"><m>2x + 3x^2 + 6x^2 + 5x = 16x^6</m></p>
+  <div class="ligne" style="padding-left:6mm">Explication :<i></i></div>
+  <div class="lignes" style="padding-left:6mm"><i></i><i></i></div>
+
+  <h2 class="sec" style="margin-top:3mm"><b>Section E</b><span>Écris au moins 5 expressions équivalentes à : &nbsp;<m class="gros">x^2 + 5x - 2</m></span></h2>
+  <div class="bloc" style="padding-left:6mm">
+    <div class="item"><span class="n">1)</span><i></i></div>
+    <div class="item"><span class="n">2)</span><i></i></div>
+    <div class="item"><span class="n">3)</span><i></i></div>
+    <div class="item"><span class="n">4)</span><i></i></div>
+    <div class="item"><span class="n">5)</span><i></i></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 4 — Distributivité simple (pages 7 et 8)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 4" data-titre="Distributivité simple">
+  <h2 class="sec"><b>Section A</b><span>Développe avec les tuiles et la grille</span></h2>
+  <div class="cartes g3" style="grid-template-rows:58mm 58mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce">Développer <m>2(x + 3)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+3</span><tl u="3.2">3*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">2</span><tl u="3.2">2x1*1</tl></th><td><tl u="3.2">2*x</tl></td><td><tl u="3.2">2x3*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"><m>2x + 6</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>4(x + 5)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th style="min-width:18mm"><span class="lab">+5</span><tl u="3.2">5*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">4</span><tl u="3.2">4x1*1</tl></th><td><tl u="3.2">4*x</tl></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>4(x + 3)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th style="min-width:14mm"><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+3</span><tl u="3.2">3*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">4</span><tl u="3.2">4x1*1</tl></th><td></td><td><tl u="3.2">4x3*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>2(x + 6)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+6</span><tl u="3.2">1x6*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">2</span><tl u="3.2">2x1*1</tl></th><td><tl u="3.2">2*x</tl></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>5(x + 8)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+8</span><tl u="3.2">1x8*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">5</span><tl u="3.2">5x1*1</tl></th><td><tl u="3.2">5*x</tl></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>2(x + 5)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th style="min-width:14mm"><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th style="min-width:18mm"><span class="lab">+5</span><tl u="3.2">5*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">2</span><tl u="3.2">2x1*1</tl></th><td style="height:9mm"></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:2mm"><b>Section B</b><span>Développe avec la grille</span></h2>
+  <div class="cartes g3" style="grid-template-rows:56mm 50mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce">Développer <m>5(x + 6)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+6</span><tl u="3.2">1x6*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">5</span><tl u="3.2">5x1*1</tl></th><td><span class="val"><m>5x</m></span></td><td><span class="val">+30</span></td></tr></tbody></table></div>
+      <div class="repbox"><m>5x + 30</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>7(x + 9)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:17mm;--ch:17mm"><thead><tr><th></th><th><m>x</m></th><th>+9</th></tr></thead><tbody><tr><th>7</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>8(x + 2)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:17mm;--ch:17mm"><thead><tr><th></th><th><m>x</m></th><th>+2</th></tr></thead><tbody><tr><th>8</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>8(x - 6)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:17mm;--ch:17mm"><thead><tr><th></th><th><m>x</m></th><th><m>-6</m></th></tr></thead><tbody><tr><th>8</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>2(x - 1)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:17mm;--ch:17mm"><thead><tr><th></th><th><m>x</m></th><th><m>-1</m></th></tr></thead><tbody><tr><th>2</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>6(x - 3)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:17mm;--ch:17mm"><thead><tr><th></th><th><m>x</m></th><th><m>-3</m></th></tr></thead><tbody><tr><th>6</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 4" data-titre="Distributivité simple">
+  <h2 class="sec"><b>Section C</b><span>Développe avec la grille</span></h2>
+  <div class="cartes g2" style="grid-template-rows:repeat(4,1fr);flex:1">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce">Développer <m>2(4x + 7)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>4x</m></span><tl u="3.2">B:4x</tl></th><th><span class="lab">+7</span><tl u="3.2">1x7*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">2</span><tl u="3.2">2x1*1</tl></th><td><tl u="3.2">2*B:4x</tl></td><td><tl u="3.2">2x7*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"><m>8x + 14</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>2(3x + 4)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>3x</m></span><tl u="3.2">B:3x</tl></th><th><span class="lab">+4</span><tl u="3.2">1x4*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">2</span><tl u="3.2">2x1*1</tl></th><td><tl u="3.2">2*B:3x</tl></td><td><tl u="3.2">2x4*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>3(7x + 2)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>7x</m></th><th>+2</th></tr></thead><tbody><tr><th>3</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>11(4x + 5)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>4x</m></th><th>+5</th></tr></thead><tbody><tr><th>11</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>6(2x + 3)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>2x</m></th><th>+3</th></tr></thead><tbody><tr><th>6</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>5(3x + 1)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>3x</m></th><th>+1</th></tr></thead><tbody><tr><th>5</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">6)</span> <m>3(4x + 6)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>4x</m></th><th>+6</th></tr></thead><tbody><tr><th>3</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">7)</span> <m>5(7x + 9)</m></span>
+      <div class="zone"><table class="dist vide" style="--cw:26mm;--ch:13mm"><thead><tr><th></th><th><m>7x</m></th><th>+9</th></tr></thead><tbody><tr><th>5</th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 5 — Développer et réduire (pages 9 et 10)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 5" data-titre="Développer et réduire">
+  <h2 class="sec"><b>Section A</b><span>Développe et réduis avec les tuiles et la grille</span></h2>
+  <div class="cartes g3" style="grid-template-rows:60mm 48mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce"><m>1 + 3(x + 2)</m></span>
+      <div class="zone" style="gap:2mm"><tl u="3.2">1</tl><b class="gros">+</b>
+        <table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+2</span><tl u="3.2">2*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">3</span><tl u="3.2">3x1*1</tl></th><td><tl u="3.2">3*x</tl></td><td><tl u="3.2">3x2*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"><m>1 + 3x + 6 = 3x + 7</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>3(x + 2) + 3</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>3(x + 2) + 3x</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>2x + 2(3x + 1)</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>2(3x + 1) + 2x</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>4(2x + 3) + 7</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:2mm"><b>Section B</b><span>Développe et réduis avec les tuiles et la grille</span></h2>
+  <div class="cartes g3" style="grid-template-rows:66mm 48mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce"><m>6(2x - 1) + 8</m></span>
+      <div class="zone" style="gap:2mm">
+        <table class="dist"><thead><tr><th></th><th><span class="lab"><m>2x</m></span><tl u="3.2">B:2x</tl></th><th><span class="lab"><m>-1</m></span><tl u="3.2">-1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab">6</span><tl u="3.2">6x1*1</tl></th><td><tl u="3.2">6*B:2x</tl></td><td><tl u="3.2">6x1*-1</tl></td></tr></tbody></table>
+        <b class="gros">+</b><tl u="3.2">4x2*1</tl></div>
+      <div class="repbox"><m>12x - 6 + 8 = 12x + 2</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>6(2x - 1) - 8</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:24mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>5 + 3(2x - 3)</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:24mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>5 - 3(x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>7 - 2(3x - 1)</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>4 - 3(3x - 2) - 5x</m></span><div class="zone"><table class="dist vide" style="--cw:16mm;--ch:14mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 5" data-titre="Développer et réduire">
+  <h2 class="sec"><b>Section C</b><span>Développe et réduis avec le modèle de l’aire</span></h2>
+  <div class="cartes g3" style="grid-template-rows:56mm 56mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce"><m>2(4x + 1) + 3(2x + 4)</m></span>
+      <div class="zone" style="gap:4mm">
+        <table class="aire" style="--aw:11mm;--ah:8mm"><tr><td class="coin">×</td><td class="h"><m>4x</m></td><td class="h">+1</td></tr><tr><td class="h">2</td><td><m>8x</m></td><td>+2</td></tr></table>
+        <table class="aire" style="--aw:11mm;--ah:8mm"><tr><td class="coin">×</td><td class="h"><m>2x</m></td><td class="h">+4</td></tr><tr><td class="h">3</td><td><m>6x</m></td><td>+12</td></tr></table>
+      </div>
+      <div class="repbox"><m>8x + 2 + 6x + 12 = 14x + 14</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>5(x + 2) + 4(x + 1)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>2(3x + 5) + 3(x + 2)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>5(4x + 1) + 3(6x + 2)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>3(1 + 4x) + 2(3 + 5x)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>3x(2x + 3) + 2(4x + 3)</m></span><div class="zone"></div><div class="repbox"></div></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:2mm"><b>Section D</b><span>Développe et réduis avec le modèle de l’aire</span></h2>
+  <div class="cartes g3" style="grid-template-rows:56mm 56mm">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce"><m>2(4x - 1) + 3(2x + 4)</m></span>
+      <div class="zone" style="gap:4mm">
+        <table class="aire" style="--aw:11mm;--ah:8mm"><tr><td class="coin">×</td><td class="h"><m>4x</m></td><td class="h"><m>-1</m></td></tr><tr><td class="h">2</td><td><m>8x</m></td><td><m>-2</m></td></tr></table>
+        <table class="aire" style="--aw:11mm;--ah:8mm"><tr><td class="coin">×</td><td class="h"><m>2x</m></td><td class="h">+4</td></tr><tr><td class="h">3</td><td><m>6x</m></td><td>+12</td></tr></table>
+      </div>
+      <div class="repbox"><m>8x - 2 + 6x + 12 = 14x + 10</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>2(4x + 1) + 3(2x - 4)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>2(4x - 1) + 3(2x - 4)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>2(4x + 1) - 3(2x + 4)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>2(4x + 1) - 3(2x - 4)</m></span><div class="zone"></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>2(4x - 1) - 3(2x - 4)</m></span><div class="zone"></div><div class="repbox"></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 6 — Double distributivité (pages 11 à 13)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 6" data-titre="Double distributivité">
+  <h2 class="sec"><b>Section A</b><span>Développe et réduis avec la grille et les tuiles</span></h2>
+  <div class="cartes g3" style="grid-template-rows:70mm 1fr 1fr 1fr;flex:1">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce"><m>(x + 3)(x + 4)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th><span class="lab">+4</span><tl u="3.2">4*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab"><m>x</m></span><tl u="3.2">xv</tl></th><td><tl u="3.2">x2</tl></td><td><tl u="3.2">4*xv</tl></td></tr>
+               <tr><th><span class="lab">+3</span><tl u="3.2">3x1*1</tl></th><td><tl u="3.2">3*x</tl></td><td><tl u="3.2">3x4*1</tl></td></tr></tbody></table></div>
+      <div class="repbox" style="line-height:1.35"><m>x^2 + 4x + 3x + 12</m><m>= x^2 + 7x + 12</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>(x + 2)(x + 5)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th style="min-width:16mm"><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th style="min-width:20mm"><span class="lab">+2</span><tl u="3.2">2*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab"><m>x</m></span><tl u="3.2">xv</tl></th><td></td><td></td></tr>
+               <tr><th><span class="lab">+5</span><tl u="3.2">5x1*1</tl></th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>(x + 2)(x + 1)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th style="min-width:16mm"><span class="lab"><m>x</m></span><tl u="3.2">x</tl></th><th style="min-width:20mm"><span class="lab">+2</span><tl u="3.2">2*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab"><m>x</m></span><tl u="3.2">xv</tl></th><td></td><td></td></tr>
+               <tr><th style="height:12mm"><span class="lab">+1</span><tl u="3.2">1</tl></th><td></td><td></td></tr></tbody></table></div>
+      <div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>(x + 3)(x + 6)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>(x + 8)(x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>(x - 6)(x + 3)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">6)</span> <m>(x - 5)(x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">7)</span> <m>(x + 8)(x - 9)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">8)</span> <m>(x - 4)(x - 1)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">9)</span> <m>(2 - x)(x + 1)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">10)</span> <m>(5 - x)(x - 2)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">11)</span> <m>(7 + x)(3 - x)</m></span><div class="zone"><table class="dist vide" style="--cw:17mm;--ch:11mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 6" data-titre="Double distributivité">
+  <h2 class="sec"><b>Section B</b><span>Développe et réduis avec la grille</span></h2>
+  <div class="cartes g2" style="grid-template-rows:84mm 1fr 1fr;flex:1">
+    <div class="carte ex"><span class="tag">Exemple</span><span class="enonce">Développer et réduire <m>(2x + 3)(x + 4)</m></span>
+      <div class="zone"><table class="dist"><thead><tr><th></th><th><span class="lab"><m>2x</m></span><tl u="3.2">1x2*x</tl></th><th><span class="lab">+3</span><tl u="3.2">3*1</tl></th></tr></thead>
+        <tbody><tr><th><span class="lab"><m>x</m></span><tl u="3.2">xv</tl></th><td><tl u="3.2">1x2*x2</tl></td><td><tl u="3.2">3*xv</tl></td></tr>
+               <tr><th><span class="lab">+4</span><tl u="3.2">4x1*1</tl></th><td><tl u="3.2">4x2*x</tl></td><td><tl u="3.2">4x3*1</tl></td></tr></tbody></table></div>
+      <div class="repbox"><m>2x^2 + 11x + 12</m></div></div>
+    <div class="carte"><span class="enonce"><span class="num">1)</span> <m>(5x + 2)(x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:17mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">2)</span> <m>(3x + 7)(2x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:13mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">3)</span> <m>(7x - 4)(x - 9)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:13mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">4)</span> <m>(5x - 2)(3x + 4)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:13mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">5)</span> <m>(2x - 3)(7x - 11)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:13mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 6" data-titre="Double distributivité">
+  <h2 class="sec suite"><b>Section B (suite)</b><span>Développe et réduis avec la grille</span></h2>
+  <div class="cartes g2" style="grid-template-rows:1fr 1fr 1fr;flex:1">
+    <div class="carte"><span class="enonce"><span class="num">6)</span> <m>(11 + x)(5 - x)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">7)</span> <m>(4 - x)(3 - 4x)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">8)</span> <m>(7x - 8)(2 - 5x)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">9)</span> <m>(3 + 5x)(3 - 8x)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">10)</span> <m>(2 - 3x)(x + 7)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+    <div class="carte"><span class="enonce"><span class="num">11)</span> <m>(1 - 2x)(x - 6)</m></span><div class="zone"><table class="dist vide" style="--cw:24mm;--ch:18mm"><thead><tr><th></th><th></th><th></th></tr></thead><tbody><tr><th></th><td></td><td></td></tr><tr><th></th><td></td><td></td></tr></tbody></table></div><div class="repbox"></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     EXERCICES 1 — Développer une parenthèse (pages 14 et 15)
+     ========================================================================= -->
+<section class="page" data-sur="Exercices 1" data-titre="Développer une parenthèse">
+  <h2 class="sec"><b>Section A</b><span>Facteur constant : développe les parenthèses</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(3,1fr);flex:1;max-height:62mm;padding:2mm 4mm 4mm">
+    <div class="item"><span class="n">1)</span><m>7(a + 4) =</m><i></i></div>
+    <div class="item"><span class="n">3)</span><m>8(7 + c) =</m><i></i></div>
+    <div class="item"><span class="n">5)</span><m>3(11 - 3e) =</m><i></i></div>
+    <div class="item"><span class="n">2)</span><m>9(b + 5) =</m><i></i></div>
+    <div class="item"><span class="n">4)</span><m>8(2 - d) =</m><i></i></div>
+    <div class="item"><span class="n">6)</span><m>6(2f - 9) =</m><i></i></div>
+  </div>
+  <h2 class="sec"><b>Section B</b><span>Facteur variable : développe les parenthèses</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(3,1fr);flex:1;max-height:62mm;padding:2mm 4mm 4mm">
+    <div class="item"><span class="n">1)</span><m>g(2 + g) =</m><i></i></div>
+    <div class="item"><span class="n">3)</span><m>i(i + 2) =</m><i></i></div>
+    <div class="item"><span class="n">5)</span><m>k(4 - k) =</m><i></i></div>
+    <div class="item"><span class="n">2)</span><m>h(h - 6) =</m><i></i></div>
+    <div class="item"><span class="n">4)</span><m>j(7 - j) =</m><i></i></div>
+    <div class="item"><span class="n">6)</span><m>l(l + m) =</m><i></i></div>
+  </div>
+  <h2 class="sec"><b>Section C</b><span>Facteur constant et variable</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(3,1fr);flex:1;max-height:62mm;padding:2mm 4mm 4mm">
+    <div class="item"><span class="n">1)</span><m>2n(5 + n) =</m><i></i></div>
+    <div class="item"><span class="n">3)</span><m>4q(2q + 7) =</m><i></i></div>
+    <div class="item"><span class="n">5)</span><m>5s(5s - 2) =</m><i></i></div>
+    <div class="item"><span class="n">2)</span><m>8p(4 - p) =</m><i></i></div>
+    <div class="item"><span class="n">4)</span><m>3r(7 - 2r) =</m><i></i></div>
+    <div class="item"><span class="n">6)</span><m>3t(5t + 9) =</m><i></i></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Exercices 1" data-titre="Développer une parenthèse">
+  <h2 class="sec"><b>Section D</b><span>Expressions avec deux variables</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(3,1fr);height:62mm;padding:2mm 4mm 6mm">
+    <div class="item"><span class="n">1)</span><m>7y(3y + x) =</m><i></i></div>
+    <div class="item"><span class="n">3)</span><m>5t(8t + s) =</m><i></i></div>
+    <div class="item"><span class="n">5)</span><m>9h(5h - 2g) =</m><i></i></div>
+    <div class="item"><span class="n">2)</span><m>3q(3q - p) =</m><i></i></div>
+    <div class="item"><span class="n">4)</span><m>2w(v - 2w) =</m><i></i></div>
+    <div class="item"><span class="n">6)</span><m>12b(3a + b^2) =</m><i></i></div>
+  </div>
+  <h2 class="sec"><b>Section E</b><span>Complète la grille de multiplication</span></h2>
+  <table class="mult" style="margin-top:2mm">
+    <tr style="height:10mm"><th>×</th><th><m>(2a - b)</m></th><th><m>(7b + ab)</m></th><th><m>(2a^2 - 7a)</m></th><th><m>(abc + a)</m></th></tr>
+    <tr style="height:26mm"><th><m>-3</m></th><td></td><td></td><td></td><td></td></tr>
+    <tr style="height:26mm"><th><m>-2a</m></th><td></td><td></td><td></td><td></td></tr>
+    <tr style="height:26mm"><th><m>4b</m></th><td></td><td></td><td></td><td></td></tr>
+    <tr style="height:26mm"><th><m>2ab</m></th><td></td><td></td><td></td><td></td></tr>
+  </table>
+</section>
+
+<!-- =========================================================================
+     EXERCICES 2 — Développer puis réduire (pages 16 et 17)
+     ========================================================================= -->
+<section class="page" data-sur="Exercices 2" data-titre="Développer puis réduire">
+  <h2 class="sec"><b>Section A</b><span>Développe puis réduis</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 4mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>7(y + 4) + 8</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>5(b + 2) + 4</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>3(a + 5) + 2a</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>2(x + 6) + 7x</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>4(9 + f) + 18f</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>8(1 + 2g) + 5g</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>9 + 3(c + 4)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>11 + 5(6d + 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>7x + 4(2x + 12)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>12a + 9(5 + 2a)</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+  <h2 class="sec"><b>Section B</b><span>Avec soustractions et opposés</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 4mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>6(3d - 1) + 8</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>5(6x - 2) + 2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>7 - 3(8f + 6)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>-9 - (4j + 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>8 - (1 - k)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>-2h - 4(6h - 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>5b(2b - 3) + 8</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>7c(2c - 5) - 3</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>9 - 2e(3 - 5e)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>xy - x(y - 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Exercices 2" data-titre="Développer puis réduire">
+  <h2 class="sec"><b>Section C</b><span>Deux développements à additionner</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 4mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>2(a + 5) + 4(3a + 7)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>2(5x + 7) + 8(4x + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>9(2y + 8) + 7(3y + 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>8(4s + 3) + 9(5s + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>3x(5x + 1) + 2(5 + 2x)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>4y(5y + 6) + 3(4 + 7y)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>7(5s + 2) + s(3s + 4)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>8y(7 + 5y) + 2(9 + 6y)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>5(2s + 4) + 8s(4s + 6)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>x(4y + 6) + 3y(8 + 4x)</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+  <h2 class="sec"><b>Section D</b><span>Deux développements avec soustractions</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 4mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>5(2b + 4) + 3(8b - 9)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>8(5d - 3) + 3(d + 2)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>5(7g + 8) - 2(3g + 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>4(5c + 3) - 7(6c + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>8(3h - 5) - 6(8h + 9)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>-5(3e + 9) + 2(3e - 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>-6(3f + 4) + 2(4f + 3)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>-6(2i - 3) + 4(6i + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>7k(8k + 9) - 3(k + 7)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>-9m(m - 4) + m(m + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     EXERCICES 3 — Double distributivité (pages 18 et 19)
+     ========================================================================= -->
+<section class="page" data-sur="Exercices 3" data-titre="Double distributivité">
+  <h2 class="sec"><b>Section A</b><span>Développe puis réduis</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 2mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>(x + 2)(x + 7)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>(x + 9)(x + 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>(x - 8)(x + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>(x - 3)(x - 4)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>(8x + 10)(x + 3)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>(2x + 11)(9x + 2)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>(5x - 4)(x + 3)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>(3x + 1)(x - 2)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>(7x - 4)(4x - 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>(6x - 1)(4x + 3)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">11)</span><m>(8x - 3)(4x + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">12)</span><m>(2x - 6)(3x - 5)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">13)</span><m>(3x - 4)(5x - 2)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">14)</span><m>(6 - x)(x - 7)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">15)</span><m>(3 - 2x)(2 - x)</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+  <h2 class="sec"><b>Section B</b><span>Avec deux lettres ou des carrés</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(5,1fr);flex:1;padding:0 2mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>(a + b)(a + b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>(3a + b)(2a + b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>(5a + 2b)(a + b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>(4a + b)(5a + 2b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>(6a + 3b)(2a - b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>(7a - 5b)(a + 4b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>(a - 3b)(11a - b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>(4a + 5b)(6a - 9b)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>(x + 6)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>(3y + 7)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">11)</span><m>(8 + 2z)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">12)</span><m>(2a - 3b)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">13)</span><m>(3p - 4q)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">14)</span><m>(7e - 8w)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">15)</span><m>(5x^2 + 11)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Exercices 3" data-titre="Double distributivité">
+  <h2 class="sec"><b>Section C</b><span>Développe puis réduis</span></h2>
+  <div class="liste" style="grid-template-rows:repeat(8,1fr);flex:1;padding:0 4mm">
+    <div class="bloc"><div class="q"><span class="n">1)</span><m>8(7x + 2)(x + 6)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">2)</span><m>3(3y + 5)(y + 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">3)</span><m>3(2x + 7)(8x - 1)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">4)</span><m>-5(6y - 5)(y + 2)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">5)</span><m>x(4x + 9)(7 + 3x)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">6)</span><m>6a(3 + a)(8 + 3a)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">7)</span><m>x(7x - 8)(2 - 5x)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">8)</span><m>-7t(4 - t)(3 - 4t)</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">9)</span><m>6(2x + 3)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">10)</span><m>-5(2y - 5)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">11)</span><m>x(3x - 1)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">12)</span><m>-4k(3k - 2)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">13)</span><m>(5x - 2)^2 + (x + 7)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">14)</span><m>(3y - 1)^2 - (y - 5)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+    <div class="bloc"><div class="q"><span class="n">15)</span><m>(a + b)^2 - (a - b)^2</m></div><div class="lignes"><i></i><i></i></div></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     EXERCICES 4 — Approfondissement : triple distributivité (pages 20 à 22)
+     ========================================================================= -->
+<section class="page" data-sur="Exercices 4" data-titre="Approfondissement : triple distributivité">
+  <h2 class="sec"><b>Section A</b><span>Développe puis réduis. Complète les grilles pour t’aider.</span></h2>
+  <div class="g2" style="gap:6mm 10mm;padding:1mm 2mm">
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">1)</span><m>(x^2 + 10x + 9)(x + 4)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h">+4</td></tr>
+        <tr><td class="h"><m>x^2</m></td><td><m>x^3</m></td><td><m>4x^2</m></td></tr>
+        <tr><td class="h">+10<m>x</m></td><td></td><td><m>40x</m></td></tr>
+        <tr><td class="h">+9</td><td></td><td>36</td></tr></table>
+      <div class="lignes"><i></i></div></div>
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">2)</span><m>(x^2 + 8x + 15)(x + 4)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h">+4</td></tr>
+        <tr><td class="h"><m>x^2</m></td><td><m>x^3</m></td><td></td></tr>
+        <tr><td class="h">+8<m>x</m></td><td><m>8x^2</m></td><td></td></tr>
+        <tr><td class="h">+15</td><td></td><td>60</td></tr></table>
+      <div class="lignes"><i></i></div></div>
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">3)</span><m>(x^2 + 8x + 15)(x + 1)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h">+1</td></tr>
+        <tr><td class="h"><m>x^2</m></td><td></td><td></td></tr>
+        <tr><td class="h">+8<m>x</m></td><td></td><td></td></tr>
+        <tr><td class="h">+15</td><td></td><td></td></tr></table>
+      <div class="lignes"><i></i></div></div>
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">4)</span><m>(x^2 + 11x + 30)(x + 7)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h">+7</td></tr>
+        <tr><td class="h"><m>x^2</m></td><td></td><td></td></tr>
+        <tr><td class="h">+11<m>x</m></td><td></td><td></td></tr>
+        <tr><td class="h">+30</td><td></td><td></td></tr></table>
+      <div class="lignes"><i></i></div></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:4mm"><b>Section B</b><span>Deux méthodes pour un même produit</span></h2>
+  <div class="bloc" style="gap:2mm;padding:0 2mm">
+    <div class="q"><span class="n">1)</span><span>Mali et Jayden développent tous les deux : <m>(x + 2)(x + 8)(x + 3)</m></span></div>
+    <p style="padding-left:9mm;font-weight:700;font-size:10pt">Montre qu’ils obtiennent le même résultat. Tu peux utiliser une grille.</p>
+  </div>
+  <div class="mj remplit" style="padding:1mm 2mm">
+    <div class="carte"><h3>Mali</h3><m>(x + 2)(x + 8)(x + 3)</m><m>= (x^2 + 10x + 16)(x + 3)</m></div>
+    <div class="carte"><h3>Jayden</h3><m>(x + 2)(x + 8)(x + 3)</m><m>= (x + 2)(x^2 + 11x + 24)</m></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Exercices 4" data-titre="Approfondissement : triple distributivité">
+  <h2 class="sec suite"><b>Section B (suite)</b><span>Deux méthodes pour un même produit</span></h2>
+  <div class="bloc" style="gap:1.5mm;padding:0 2mm">
+    <div class="q"><span class="n">2)</span><span><b>a)</b>&nbsp; Développe puis réduis : <m>(x + 1)(x + 7)</m></span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i></div>
+    <div class="q" style="margin-top:3mm"><span class="n"></span><span><b>b)</b>&nbsp; Utilise ta réponse à la question a) pour développer : <m>(x + 1)(x + 7)(x + 2)</m></span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i><i></i></div>
+    <div class="q" style="margin-top:3mm"><span class="n"></span><span><b>c)</b>&nbsp; Développe puis réduis : <m>(x + 9)(x + 4)(x + 5)</m></span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:4mm"><b>Section C</b><span>Développe puis réduis. Complète les grilles pour t’aider.</span></h2>
+  <div class="g2" style="gap:6mm 10mm;padding:1mm 2mm">
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">1)</span><m>(x^2 + 6x - 7)(x + 2)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h">+2</td></tr>
+        <tr><td class="h"><m>x^2</m></td><td></td><td></td></tr>
+        <tr><td class="h">+6<m>x</m></td><td></td><td></td></tr>
+        <tr><td class="h"><m>-7</m></td><td></td><td></td></tr></table>
+      <div class="lignes"><i></i><i></i><i></i><i></i></div></div>
+    <div class="bloc" style="gap:2mm"><div class="q"><span class="n">2)</span><m>(x^2 - 6x - 7)(x - 2)</m></div>
+      <table class="aire tri"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h"><m>-2</m></td></tr>
+        <tr><td class="h"><m>x^2</m></td><td></td><td></td></tr>
+        <tr><td class="h"><m>-6x</m></td><td></td><td></td></tr>
+        <tr><td class="h"><m>-7</m></td><td></td><td></td></tr></table>
+      <div class="lignes"><i></i><i></i><i></i><i></i></div></div>
+  </div>
+</section>
+
+<section class="page" data-sur="Exercices 4" data-titre="Approfondissement : triple distributivité">
+  <h2 class="sec"><b>Section D</b><span>Développe puis réduis</span></h2>
+  <div class="bloc" style="gap:1.5mm;padding:0 2mm">
+    <div class="q"><span class="n">1)</span><m>(x - 9)(x + 4)(x - 5)</m></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i></div>
+    <div class="q" style="margin-top:3mm"><span class="n">2)</span><m>(x + 9)(x - 4)(x - 5)</m></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i></div>
+    <div class="q" style="margin-top:3mm"><span class="n">3)</span><m>(x - 9)(x - 4)(x - 5)</m></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i></div>
+  </div>
+
+  <h2 class="sec" style="margin-top:4mm"><b>Section E</b><span>Erreur et raisonnement</span></h2>
+  <div class="bloc" style="gap:2mm;padding:0 2mm">
+    <div class="q"><span class="n">1)</span><span>Repère, explique et corrige l’erreur ci-dessous.</span></div>
+    <div style="display:grid;grid-template-columns:96mm 1fr;gap:6mm;padding-left:9mm">
+      <div class="calc" style="font-size:10.4pt;gap:1.6mm">
+        <m>(x + 1)(x - 5)(x - 6)</m>
+        <m>= (x^2 - 4x - 5)(x - 6)</m>
+        <table class="aire tri" style="margin:1mm 0"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h"><m>-6</m></td></tr>
+          <tr><td class="h"><m>x^2</m></td><td><m>x^3</m></td><td><m>-6x^2</m></td></tr>
+          <tr><td class="h"><m>-4x</m></td><td><m>-4x^2</m></td><td><m>-24x</m></td></tr>
+          <tr><td class="h"><m>-5</m></td><td><m>-5x</m></td><td>30</td></tr></table>
+        <m>= x^3 - 10x^2 - 29x + 30</m>
+      </div>
+      <div><div class="ligne">Explication :<i></i></div><div class="lignes"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    </div>
+    <div class="q" style="margin-top:6mm"><span class="n">2)</span><span>Sachant que <m>(x + 4)(x + c)(x + 2) = x^3 + 9x^2 + 26x + 24</m>, trouve la valeur de <m>c</m>.</span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i><i></i><i></i></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 7 — Introduire la factorisation (pages 23 et 24)
+     (c'était l'activité 8 de l'ancien livret : ordre inversé le 06/11/2026)
+     ========================================================================= -->
+<section class="page" data-sur="Activité 7" data-titre="Introduire la factorisation">
+  <h2 class="sec"><b>Section A</b><span>Complète la grille de multiplication : développe si nécessaire</span></h2>
+  <table class="mult">
+    <tr><th>×</th><th><m>2 + x</m></th><th><m>2x + 7</m></th><th><m>x - 5</m></th></tr>
+    <tr><th rowspan="2">4</th><td class="haut"><m>4(2 + x)</m></td><td class="haut"><m>4(2x + 7)</m></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>8 + 4x</m></td><td class="bas"></td><td class="bas"></td></tr>
+    <tr><th rowspan="2">5</th><td class="haut"><m>5(2 + x)</m></td><td class="haut"></td><td class="haut"><m>5(x - 5)</m></td></tr>
+    <tr><td class="bas"></td><td class="bas"></td><td class="bas"><m>5x - 25</m></td></tr>
+    <tr><th rowspan="2">7</th><td class="haut"><m>7(2 + x)</m></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"></td><td class="bas"></td></tr>
+  </table>
+  <h2 class="sec" style="margin-top:3mm"><b>Section B</b><span>Complète la grille de multiplication : développe si nécessaire</span></h2>
+  <table class="mult">
+    <tr><th>×</th><th><m>2x + 1</m></th><th><m>4x - 2</m></th><th><m>3x + 8</m></th></tr>
+    <tr><th rowspan="2">3</th><td class="haut"><m>3(2x + 1)</m></td><td class="haut"><m>3(4x - 2)</m></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>6x + 3</m></td><td class="bas"></td><td class="bas"></td></tr>
+    <tr><th rowspan="2">6</th><td class="haut"></td><td class="haut"></td><td class="haut"><m>6(3x + 8)</m></td></tr>
+    <tr><td class="bas"></td><td class="bas"></td><td class="bas"></td></tr>
+    <tr><th rowspan="2">9</th><td class="haut"></td><td class="haut"><m>9(4x - 2)</m></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"></td><td class="bas"></td></tr>
+  </table>
+  <h2 class="sec" style="margin-top:3mm"><b>Section C</b><span>Complète la grille. Écris la forme factorisée au-dessus si besoin.</span></h2>
+  <table class="mult">
+    <tr><th>×</th><th><m>5x + 1</m></th><th><m>x + 3</m></th><th><m>2x + 5</m></th></tr>
+    <tr><th rowspan="2">2</th><td class="haut"><m>2(5x + 1)</m></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"><m>2x + 6</m></td><td class="bas"><m>4x + 10</m></td></tr>
+    <tr><th rowspan="2">3</th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"><m>3x + 9</m></td><td class="bas"></td></tr>
+    <tr><th rowspan="2">5</th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"><m>5x + 15</m></td><td class="bas"></td></tr>
+  </table>
+  <h2 class="sec" style="margin-top:3mm"><b>Section D</b><span>Complète la grille. Écris la forme factorisée au-dessus si besoin.</span></h2>
+  <table class="mult">
+    <tr><th>×</th><th><m>2 - x</m></th><th><m>4 - 7x</m></th><th><m>3x + 8</m></th></tr>
+    <tr><th rowspan="2">5</th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>10 - 5x</m></td><td class="bas"><m>20 - 35x</m></td><td class="bas"><m>15x + 40</m></td></tr>
+    <tr><th rowspan="2">4</th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"><m>16 - 28x</m></td><td class="bas"></td></tr>
+    <tr><th rowspan="2">3</th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"></td><td class="bas"></td><td class="bas"><m>9x + 24</m></td></tr>
+  </table>
+</section>
+
+<section class="page" data-sur="Activité 7" data-titre="Introduire la factorisation">
+  <h2 class="sec"><b>Section E</b><span>Complète la grille. Écris la forme factorisée au-dessus si besoin.</span></h2>
+  <table class="mult">
+    <tr><th>×</th><th><m>x - 7</m></th><th><m>x + 2</m></th><th><m>4x + 2</m></th></tr>
+    <tr><th rowspan="2"><m>x</m></th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>x^2 - 7x</m></td><td class="bas"><m>x^2 + 2x</m></td><td class="bas"></td></tr>
+    <tr><th rowspan="2"><m>2x</m></th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>2x^2 - 14x</m></td><td class="bas"></td><td class="bas"></td></tr>
+    <tr><th rowspan="2"><m>5x</m></th><td class="haut"></td><td class="haut"></td><td class="haut"></td></tr>
+    <tr><td class="bas"><m>5x^2 - 35x</m></td><td class="bas"></td><td class="bas"><m>20x^2 + 10x</m></td></tr>
+  </table>
+
+  <h2 class="sec" style="margin-top:3mm"><b>Section F</b><span>Écris le facteur commun des deux termes</span></h2>
+  <div class="g2" style="gap:8mm;padding:0 4mm">
+    <table class="facteurs" style="width:100%"><colgroup><col><col><col style="width:34mm"></colgroup>
+      <tr><th colspan="2">Termes</th><th>Facteur commun</th></tr>
+      <tr><td><m>2x</m></td><td>18</td><td>2</td></tr>
+      <tr><td><m>9x</m></td><td>27</td><td></td></tr>
+      <tr><td><m>12x</m></td><td>18</td><td></td></tr>
+      <tr><td><m>20x</m></td><td>55</td><td></td></tr>
+      <tr><td>16</td><td><m>36x</m></td><td></td></tr>
+      <tr><td>14</td><td><m>26x</m></td><td></td></tr></table>
+    <table class="facteurs" style="width:100%"><colgroup><col><col><col style="width:34mm"></colgroup>
+      <tr><th colspan="2">Termes</th><th>Facteur commun</th></tr>
+      <tr><td><m>8x</m></td><td><m>-16</m></td><td></td></tr>
+      <tr><td><m>-7x</m></td><td>21</td><td></td></tr>
+      <tr><td><m>20x</m></td><td><m>-5</m></td><td></td></tr>
+      <tr><td><m>6x^2</m></td><td><m>9x</m></td><td><m>3x</m></td></tr>
+      <tr><td><m>15x</m></td><td><m>18x^2</m></td><td></td></tr>
+      <tr><td><m>16x</m></td><td><m>-24x^2</m></td><td></td></tr></table>
+  </div>
+
+  <h2 class="sec" style="margin-top:3mm"><b>Section G</b><span>Factorise les expressions suivantes</span></h2>
+  <div class="liste remplit" style="grid-template-rows:repeat(12,1fr);padding:0 4mm">
+    <div class="item"><span class="n">1)</span><m>4x + 20 = 4(</m><span class="trou"></span><m>)</m></div>
+    <div class="item"><span class="n">2)</span><m>5x + 15 =</m><span class="trou" style="width:9mm"></span><m>(x + 3)</m></div>
+    <div class="item"><span class="n">3)</span><m>6x - 12 = 6(</m><span class="trou"></span><m>)</m></div>
+    <div class="item"><span class="n">4)</span><m>3x + 6 =</m><span class="trou" style="width:9mm"></span><m>(x + 2)</m></div>
+    <div class="item"><span class="n">5)</span><m>35x + 15 = 5(</m><span class="trou"></span><m>)</m></div>
+    <div class="item"><span class="n">6)</span><m>24x + 16 = 8(</m><span class="trou"></span><m>)</m></div>
+    <div class="item"><span class="n">7)</span><m>18x - 12 =</m><i></i></div>
+    <div class="item"><span class="n">8)</span><m>33x + 121 =</m><i></i></div>
+    <div class="item"><span class="n">9)</span><m>6x - 36 =</m><i></i></div>
+    <div class="item"><span class="n">10)</span><m>7x - 49 =</m><i></i></div>
+    <div class="item"><span class="n">11)</span><m>9x - 72 =</m><i></i></div>
+    <div class="item"><span class="n">12)</span><m>4x - 48 =</m><i></i></div>
+    <div class="item"><span class="n">13)</span><m>35 + 7x =</m><i></i></div>
+    <div class="item"><span class="n">14)</span><m>32 - 8x =</m><i></i></div>
+    <div class="item"><span class="n">15)</span><m>14 - 21x =</m><i></i></div>
+    <div class="item"><span class="n">16)</span><m>27 - 18x =</m><i></i></div>
+    <div class="item"><span class="n">17)</span><m>x^2 + 2x =</m><i></i></div>
+    <div class="item"><span class="n">18)</span><m>2x^2 - 14x =</m><i></i></div>
+    <div class="item"><span class="n">19)</span><m>6x^2 - 9x =</m><i></i></div>
+    <div class="item"><span class="n">20)</span><m>15x^2 + 30x =</m><i></i></div>
+    <div class="item"><span class="n">21)</span><m>64x - 8x^2 =</m><i></i></div>
+    <div class="item"><span class="n">22)</span><m>63x + 36x^2 =</m><i></i></div>
+    <div class="item"><span class="n">23)</span><m>132x^2 + 44x =</m><i></i></div>
+    <div class="item"><span class="n">24)</span><m>125x - 50x^2 =</m><i></i></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     ACTIVITÉ 8 — Factoriser avec le modèle d'aire (pages 25 et 26)
+     (c'était l'activité 7 de l'ancien livret)
+     Chaque grille : 1re ligne = × | facteur 1 | facteur 2 ; 2e ligne = facteur | produit 1 | produit 2.
+     ========================================================================= -->
+<section class="page" data-sur="Activité 8" data-titre="Factoriser avec le modèle d’aire">
+  <h2 class="sec"><b>Section A</b><span>Associe les expressions équivalentes</span></h2>
+  <div class="assoc2" style="padding:1mm 0 2mm">
+    <span class="g"><m>4x - 32</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>12x + 32</m></span>
+    <span class="g"><m>4(3x + 8)</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>8x + 32</m></span>
+    <span class="g"><m>32 - 4x</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>16 - 6x + 2y</m></span>
+    <span class="g"><m>8(4 + x)</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>4(8 - x)</m></span>
+    <span class="g"><m>24x - 12</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>4(x - 8)</m></span>
+    <span class="g"><m>2(8 - 3x + y)</m></span><span class="pt"></span><span></span><span class="pt"></span><span class="d"><m>12(2x - 1)</m></span>
+  </div>
+
+  <h2 class="sec" style="margin-top:3mm"><b>Section B</b><span>Complète les grilles du modèle d’aire</span></h2>
+  <div class="partie" style="margin-top:3mm"><span class="n">1)</span>
+    <div class="aires">
+      <div class="carte ex ex-aire"><span class="tag">Exemple</span>
+        <table class="aire"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h tiret">+4</td></tr><tr><td class="h">5</td><td><m>5x</m></td><td class="tiret">+20</td></tr></table>
+        <span style="font-weight:700;font-size:9.6pt"><m>5(x + 4) = 5x + 20</m></span></div>
+      <table class="aire"><tr><td class="coin">×</td><td class="h">1</td><td class="h tiret"><m>+x</m></td></tr><tr><td class="h">3</td><td></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h">8</td><td><m>8x</m></td><td class="tiret">+64</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret">+6</td></tr><tr><td class="h"></td><td><m>9x</m></td><td class="tiret">+54</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>7x</m></td><td class="tiret">+14</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td>8</td><td class="tiret"><m>+2x</m></td></tr></table>
+    </div>
+  </div>
+  <div class="partie" style="margin-top:6mm"><span class="n">2)</span>
+    <div class="aires">
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h tiret"><m>-1</m></td></tr><tr><td class="h">3</td><td></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h tiret"><m>-5</m></td></tr><tr><td class="h"></td><td><m>3x</m></td><td class="tiret"><m>-15</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>x</m></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>-7x</m></td><td class="tiret"><m>-21</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"><m>+x</m></td></tr><tr><td class="h"></td><td><m>-36</m></td><td class="tiret"><m>+9x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>-32</m></td><td class="tiret"><m>-4x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>7x</m></td><td class="tiret"><m>-14</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>-x</m></td><td class="tiret"><m>-7</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>-5x</m></td><td class="tiret">+25</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td>12</td><td class="tiret"><m>-3x</m></td></tr></table>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-sur="Activité 8" data-titre="Factoriser avec le modèle d’aire">
+  <h2 class="sec suite"><b>Section B (suite)</b><span>Complète les grilles du modèle d’aire</span></h2>
+  <div class="partie"><span class="n">3)</span>
+    <div class="aires">
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>2x</m></td><td class="h tiret">+1</td></tr><tr><td class="h">7</td><td></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>5x</m></td><td class="h tiret">+1</td></tr><tr><td class="h"></td><td><m>20x</m></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret">+9</td></tr><tr><td class="h">2</td><td><m>16x</m></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h">7</td><td><m>49x</m></td><td class="tiret">+56</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"><m>+9x</m></td></tr><tr><td class="h"></td><td>24</td><td class="tiret"><m>+54x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>2x</m></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>8x</m></td><td class="tiret">+12</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td>10</td><td class="tiret"><m>+25x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>27x</m></td><td class="tiret">+45</td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>40x</m></td><td class="tiret">+48</td></tr></table>
+    </div>
+  </div>
+  <div class="partie" style="margin-top:4mm"><span class="n">4)</span>
+    <div class="aires">
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>5x</m></td><td class="h tiret"><m>-2</m></td></tr><tr><td class="h">9</td><td></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>3x</m></td><td class="h tiret"><m>-7</m></td></tr><tr><td class="h"><m>-3</m></td><td></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h">1</td><td class="h tiret"></td></tr><tr><td class="h">4</td><td></td><td class="tiret"><m>-28x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret">2</td></tr><tr><td class="h"><m>-2</m></td><td><m>18x</m></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"><m>4x</m></td><td class="h tiret"><m>-1</m></td></tr><tr><td class="h"></td><td><m>16x</m></td><td class="tiret"></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"><m>-5x</m></td></tr><tr><td class="h"></td><td>8</td><td class="tiret"><m>-10x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h">8</td><td><m>24x</m></td><td class="tiret"><m>-16</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"><m>-6x</m></td></tr><tr><td class="h"></td><td>4</td><td class="tiret"><m>-24x</m></td></tr></table>
+      <table class="aire"><tr><td class="coin">×</td><td class="h"></td><td class="h tiret"></td></tr><tr><td class="h"></td><td><m>15x</m></td><td class="tiret"><m>-27</m></td></tr></table>
+    </div>
+  </div>
+
+  <h2 class="sec" style="margin-top:5mm"><b>Section C</b><span>Raisonne sur la factorisation</span></h2>
+  <div class="bloc" style="gap:2.5mm;padding:0 2mm">
+    <div class="q"><span class="n">1)</span><span>Identifie l’expression qui ne peut pas être factorisée. Explique pourquoi.</span></div>
+    <div style="display:flex;justify-content:space-around;padding:1mm 9mm"><span class="etiq" style="min-width:32mm"><m>28x + 77</m></span><span class="etiq" style="min-width:32mm"><m>22x - 37</m></span><span class="etiq" style="min-width:32mm"><m>63 - 21x</m></span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i></div>
+    <div class="q" style="margin-top:2mm"><span class="n">2)</span><span>Factorise les deux expressions qui peuvent l’être.</span></div>
+    <div class="lignes" style="padding-left:9mm"><i></i><i></i></div>
+  </div>
+</section>
+
+<!-- =========================================================================
+     BILANS (pages 27 à 31)
+     ========================================================================= -->
+<section class="page" data-sur="Bilan" data-titre="Lire une collection de tuiles et réduire">
+  <h2 class="sec bilan"><b>À retenir</b><span>Identifier la forme et le signe de chaque tuile</span></h2>
+  <div class="cadre pale" style="display:flex;justify-content:space-around;align-items:flex-end">
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">x2</tl><m class="gros">x^2</m></span>
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">-x2</tl><m class="gros">-x^2</m></span>
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">x</tl><m class="gros">x</m></span>
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">-x</tl><m class="gros">-x</m></span>
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">1</tl><m class="gros">1</m></span>
+    <span class="lt" style="display:flex;flex-direction:column;align-items:center;gap:2mm"><tl u="4.6">-1</tl><m class="gros">-1</m></span>
+  </div>
+
+  <h2 class="sec bilan"><b>Attention</b><span>Ne pas confondre <m>x^2</m>, <m>2x</m> et <m>x + 2</m></span></h2>
+  <div class="cadre pale" style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;text-align:center">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2mm"><m class="gros">x^2</m><tl u="4.6">x2</tl></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2mm;border-left:.3mm solid #c9d3df;border-right:.3mm solid #c9d3df"><m class="gros">2x</m><tl u="4.6">2*x</tl></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2mm"><m class="gros">x + 2</m><tl u="4.6">x 2*1</tl></div>
+  </div>
+
+  <h2 class="sec bilan"><b>Lire</b><span>Représenter une expression littérale avec des tuiles</span></h2>
+  <div class="cadre pale" style="display:flex;flex-direction:column;align-items:center;gap:3mm">
+    <m class="tgros">2x^2 + x + 3 - x^2 - 3x - 1</m>
+    <div style="display:flex;gap:2.4mm;align-items:stretch;flex-wrap:wrap;justify-content:center">
+      <span class="terme"><tl u="3.6">2*x2</tl><m>2x^2</m></span>
+      <span class="terme"><tl u="3.6">x</tl><m>+x</m></span>
+      <span class="terme"><tl u="3.6">3*1</tl><m>+3</m></span>
+      <span class="terme"><tl u="3.6">-x2</tl><m>-x^2</m></span>
+      <span class="terme"><tl u="3.6">3*-x</tl><m>-3x</m></span>
+      <span class="terme"><tl u="3.6">-1</tl><m>-1</m></span>
+    </div>
+  </div>
+
+  <h2 class="sec bilan"><b>Réduire</b><span>Supprimer les paires zéro</span></h2>
+  <div class="cadre pale remplit" style="display:flex;flex-direction:column;gap:2mm">
+    <p style="font-weight:700">On repère les tuiles opposées de même forme.<br><span style="font-weight:400">Chaque paire zéro est entourée puis supprimée.</span></p>
+    <div style="display:grid;grid-template-columns:1fr 14mm 52mm;align-items:center;flex:1">
+      <div class="reduire">
+        <p class="centre" style="margin-bottom:1mm"><m class="gros">2x^2 + x + 3 - x^2 - 3x - 1</m></p>
+        <div class="rg"><tl u="5">x2</tl><span class="paire"><b>0</b><tl u="5" serre>x2! -x2!</tl></span></div>
+        <div class="rg"><span class="paire"><b>0</b><tl u="5" serre>x! -x!</tl></span><tl u="5">-x -x</tl></div>
+        <div class="rg"><tl u="5">1 1</tl><span class="paire"><b>0</b><tl u="5" serre>1! -1!</tl></span></div>
+      </div>
+      <svg class="fleche" viewBox="0 0 40 20" style="width:12mm"><path d="M2 10H34M27 4l8 6-8 6" fill="none" stroke="#2f3a48" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="cadre" style="display:flex;flex-direction:column;align-items:center;gap:3mm">
+        <p style="font-weight:700;font-size:8.6pt;color:var(--gris)">Tuiles restantes</p>
+        <tl u="5">x2 2*-x / 2*1</tl>
+        <m class="tgros">x^2 - 2x + 2</m>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="page" data-sur="Bilan" data-titre="Enlever, c’est ajouter l’opposé">
+  <h2 class="sec bilan"><b>À retenir</b><span>Enlever une tuile revient à ajouter la tuile opposée</span></h2>
+  <div class="cadre pale"><p class="note"><b>La tuile enlevée est barrée. Dans l’écriture équivalente, une paire zéro disparaît.</b></p></div>
+
+  <h2 class="sec bilan"><b>Exemple 1</b><span>Enlever 1</span></h2>
+  <div class="cadre pale">
+    <div class="flux">
+      <div class="boite"><p>Situation initiale</p><tl u="4.8">x 2*1</tl></div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M3 30L35 8M28 7l7 1-3 6M3 30L35 52M28 53l7-1-3-6" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="milieu">
+        <div class="boite"><p>On enlève 1</p><tl u="4.8">x 1 1!</tl></div>
+        <div class="boite"><p>On ajoute <m>-1</m></p><tl u="4.8">x 1 | 1! -1!</tl></div>
+      </div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M5 8L37 30M5 52L37 30M30 26l7 4-7 3" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="boite"><p>Même résultat</p><tl u="4.8">x 1</tl></div>
+    </div>
+    <p class="centre gros" style="margin-top:3mm"><m>x + 2 - 1 = x + 2 + (-1) = x + 1</m></p>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple 2</b><span>Enlever <m>+x</m></span></h2>
+  <div class="cadre pale">
+    <div class="flux">
+      <div class="boite"><p>Situation initiale</p><tl u="4.8">x 2*1</tl></div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M3 30L35 8M28 7l7 1-3 6M3 30L35 52M28 53l7-1-3-6" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="milieu">
+        <div class="boite"><p>On enlève <m>+x</m></p><tl u="4.8">x! 2*1</tl></div>
+        <div class="boite"><p>On ajoute <m>-x</m></p><tl u="4.8">x! -x! | 2*1</tl></div>
+      </div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M5 8L37 30M5 52L37 30M30 26l7 4-7 3" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="boite"><p>Même résultat</p><tl u="4.8">2*1</tl></div>
+    </div>
+    <p class="centre gros" style="margin-top:3mm"><m>x + 2 - x = x + 2 + (-x) = 2</m></p>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple 3</b><span>Enlever <m>-x</m></span></h2>
+  <div class="cadre pale">
+    <div class="flux">
+      <div class="boite"><p>Situation initiale</p><tl u="4.8">-x 3*1</tl></div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M3 30L35 8M28 7l7 1-3 6M3 30L35 52M28 53l7-1-3-6" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="milieu">
+        <div class="boite"><p>On enlève <m>-x</m></p><tl u="4.8">-x! 3*1</tl></div>
+        <div class="boite"><p>On ajoute <m>+x</m></p><tl u="4.8">-x! x! | 3*1</tl></div>
+      </div>
+      <svg viewBox="0 0 40 60" style="width:12mm;height:18mm"><path d="M5 8L37 30M5 52L37 30M30 26l7 4-7 3" fill="none" stroke="#2f3a48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="boite"><p>Même résultat</p><tl u="4.8">3*1</tl></div>
+    </div>
+    <p class="centre gros" style="margin-top:3mm"><m>-x + 3 - (-x) = -x + 3 + x = 3</m></p>
+  </div>
+</section>
+
+<section class="page" data-sur="Bilan" data-titre="Substituer une valeur à `x`">
+  <h2 class="sec bilan"><b>Méthode</b><span>Lire, remplacer, puis calculer</span></h2>
+  <div class="cadre pale" style="display:flex;flex-direction:column;gap:2.4mm;font-size:10.4pt">
+    <p><b>1.</b> Lire ce que représente la tuile : <m>x</m>, <m>-x</m>, <m>x^2</m> ou <m>-x^2</m>.</p>
+    <p><b>2.</b> Remplacer <m>x</m> par la valeur donnée, avec des parenthèses si besoin.</p>
+    <p><b>3.</b> Calculer en respectant les priorités opératoires.</p>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple</b><span>Pour <m>x = -2</m></span></h2>
+  <div class="cadre pale sub4">
+    <div class="carte"><m class="gros">x</m><tl u="4.4">x</tl><m class="gros">x = -2</m></div>
+    <div class="carte"><m class="gros">-x</m><tl u="4.4">-x</tl><m class="gros">-x = -(-2) = 2</m></div>
+    <div class="carte"><m class="gros">x^2</m><tl u="4.4">x2</tl><m class="gros">x^2 = (-2)^2 = 4</m></div>
+    <div class="carte"><m class="gros">-x^2</m><tl u="4.4">-x2</tl><m class="gros">-x^2 = -(-2)^2 = -4</m></div>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple</b><span>Calculer une expression</span></h2>
+  <div class="cadre pale" style="display:grid;grid-template-columns:62mm 1fr;gap:6mm;align-items:center">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3mm;border-right:.3mm solid #c9d3df;padding-right:5mm">
+      <m class="tgros">x^2 - x + 3</m>
+      <p class="gros">pour <m>x = -2</m></p>
+      <tl u="4.4">x2 -x 3*1</tl>
+      <p class="note">On lit d’abord les tuiles, puis on remplace <m>x</m>.</p>
+    </div>
+    <div class="calc">
+      <div class="eg"><span><m>x^2 - x + 3</m></span><span><m>= (-2)^2 - (-2) + 3</m></span></div>
+      <div class="eg"><span></span><span><m>= 4 + 2 + 3</m></span></div>
+      <div class="eg"><span></span><span><m>= 9</m></span></div>
+    </div>
+  </div>
+
+  <div class="cadre" style="border-color:var(--orange);background:var(--orange-bg)"><p class="gros" style="text-align:center;color:var(--ink)">Substituer, c’est remplacer <m>x</m> par une valeur, puis calculer.</p></div>
+</section>
+
+<section class="page" data-sur="Bilan" data-titre="Distributivité simple">
+  <h2 class="sec bilan"><b>Formule</b><span>Le facteur multiplie chacun des termes de la parenthèse</span></h2>
+  <div class="cadre pale" style="display:grid;grid-template-columns:1fr auto;gap:8mm;align-items:center">
+    <p class="centre tgros"><m>a * (b + c) = a * b + a * c</m></p>
+    <table class="aire" style="--aw:20mm;--ah:9mm;background:#fff"><tr><td class="coin">×</td><td class="h"><m>b</m></td><td class="h"><m>c</m></td></tr><tr><td class="h"><m>a</m></td><td><m>a * b</m></td><td><m>a * c</m></td></tr></table>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple</b><span>Développer <m>2 * (x + 3)</m> avec le modèle d’aire</span></h2>
+  <div class="cadre pale remplit" style="display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:4mm">
+    <p class="tgros"><m>2 * (x + 3)</m></p>
+    <table class="dist" style="background:#fff"><thead><tr><th style="font-size:12pt;color:var(--gris)">×</th><th><span class="lab gros"><m>x</m></span><tl u="8">x</tl></th><th><span class="lab gros">+3</span><tl u="8">3*1</tl></th></tr></thead>
+      <tbody><tr><th><span class="lab gros">2</span><tl u="8">2x1*1</tl></th><td><tl u="8">2*x</tl></td><td><tl u="8">2x3*1</tl></td></tr></tbody></table>
+    <div style="text-align:center"><p style="font-weight:700">Les tuiles du bord donnent les dimensions du rectangle.</p><p class="note">Les produits sont séparés par les barres du tableau.</p></div>
+    <div class="calc" style="align-items:center;font-size:13pt">
+      <m>2 * (x + 3)</m>
+      <m>= 2 * x + 2 * 3</m>
+      <m>= 2x + 6</m>
+    </div>
+  </div>
+  <div class="cadre" style="border-color:var(--orange);background:var(--orange-bg);text-align:center">
+    <p class="gros">On multiplie 2 par <m>x</m>, puis 2 par 3.</p>
+    <p class="note" style="color:var(--ink)">Chaque case du tableau correspond à un produit.</p>
+  </div>
+</section>
+
+<section class="page" data-sur="Bilan" data-titre="Double distributivité">
+  <h2 class="sec bilan"><b>Formule</b><span>Chaque terme de la première parenthèse multiplie chaque terme de la seconde</span></h2>
+  <div class="cadre pale" style="display:grid;grid-template-columns:1fr auto;gap:8mm;align-items:center">
+    <div class="centre" style="flex-direction:column;gap:2mm"><p class="tgros"><m>(a + b) * (c + d)</m></p><p class="gros"><m>= a * c + a * d + b * c + b * d</m></p></div>
+    <table class="aire" style="--aw:18mm;--ah:9mm;background:#fff"><tr><td class="coin">×</td><td class="h"><m>c</m></td><td class="h"><m>d</m></td></tr><tr><td class="h"><m>a</m></td><td><m>a * c</m></td><td><m>a * d</m></td></tr><tr><td class="h"><m>b</m></td><td><m>b * c</m></td><td><m>b * d</m></td></tr></table>
+  </div>
+
+  <h2 class="sec bilan"><b>Exemple</b><span>Développer et réduire <m>(2x + 1) * (x - 2)</m></span></h2>
+  <div class="cadre pale remplit" style="display:flex;flex-direction:column;align-items:center;justify-content:space-around;gap:3mm">
+    <p class="tgros"><m>(2x + 1) * (x - 2)</m></p>
+    <table class="dist" style="background:#fff"><thead><tr><th style="font-size:12pt;color:var(--gris)">×</th><th><span class="lab gros"><m>x</m></span><tl u="7">x</tl></th><th><span class="lab gros"><m>-2</m></span><tl u="7">2*-1</tl></th></tr></thead>
+      <tbody><tr><th><span class="lab gros"><m>2x</m></span><tl u="7">2x1*xv</tl></th><td><tl u="7">2x1*x2</tl></td><td><tl u="7">2x2*-xv</tl></td></tr>
+             <tr><th><span class="lab gros">+1</span><tl u="7">1</tl></th><td><tl u="7">x</tl></td><td><tl u="7">2*-1</tl></td></tr></tbody></table>
+    <div class="calc" style="align-items:center;font-size:12.4pt">
+      <m>(2x + 1) * (x - 2)</m>
+      <m>= 2x * x + 2x * (-2) + 1 * x + 1 * (-2)</m>
+      <m>= 2x^2 - 4x + x - 2</m>
+      <m>= 2x^2 - 3x - 2</m>
+    </div>
+    <p class="note"><b>Les quatre cases donnent les quatre produits.</b></p>
+  </div>
+  <div class="cadre" style="border-color:var(--orange);background:var(--orange-bg)"><p class="gros" style="text-align:center">On réduit ensuite les termes de même nature : <m>-4x + x = -3x</m>.</p></div>
+</section>
+
+</body></html>
