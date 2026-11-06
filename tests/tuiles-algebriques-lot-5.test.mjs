@@ -152,5 +152,5 @@ test("l'équation trop longue rapetisse pour tenir dans sa boîte (13 px au moin
 });
 
 test("le tableau à factoriser tient dans son cadre (bord de 3 px compté)", () => {
-  assert.match(methode("factoMetrics(frame) {"), /Math\.max\(300, gridW \+ BORD\)/);
+  assert.match(methode("factoMetrics(frame) {"), /Math\.max\(300, gridW \+ 2 \* bord\)/);
 });

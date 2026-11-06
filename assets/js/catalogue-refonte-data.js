@@ -282,7 +282,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "expression", "developpement", "reduction", "manipulation"],
       "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=3",
-      "cardDescription": "Composer, ordonner et simplifier des expressions avec les tuiles x², x et 1."
+      "cardDescription": "Taper ou composer une expression avec les tuiles x², x et 1, puis la réduire, la développer ou la factoriser."
     },
     "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": {
       "primaryNotion": "equations",
@@ -811,7 +811,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "exerciseur", "fiche", "developper", "reduire"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/generateur-exercices.png?v=1",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/generateur-exercices.png?v=2",
       "cardDescription": "Créer une fiche d’exercices illustrés pour développer, réduire ou compléter des expressions."
     },
     "outils/tuiles_algebriques/generateur_tuiles.html": {
@@ -819,7 +819,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "materiel", "imprimer", "decouper", "generateur"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/tuiles-decouper.png?v=1",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/tuiles-decouper.png?v=2",
       "cardDescription": "Personnaliser une planche de tuiles algébriques à imprimer et à découper."
     },
     "outils/fractions_multiples_problemes.pdf": {
@@ -2762,7 +2762,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-tuiles-algebriques-html",
       "title": "Tuiles algébriques — expressions",
-      "description": "Composez, ordonnez et simplifiez des expressions avec les tuiles x², x et 1.",
+      "description": "Tapez ou composez une expression avec les tuiles x², x et 1, puis réduisez-la, développez-la ou factorisez-la.",
       "path": "outils/tuiles_algebriques/tuiles_algebriques.html",
       "domains": [
         "algebre"

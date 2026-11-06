@@ -224,7 +224,7 @@ test("les cartes : un PDF de 2 pages par table de 2 à 10, un PDF de 18 pages po
   const png = await stat(new URL(vignette, racine));
   const webp = await stat(new URL(vignette.replace(/\.png$/, ".webp"), racine));
   assert.ok(webp.size < png.size, "la webp est plus légère que la png");
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=defi-calcul-20261106-1/, "le cache-buster du catalogue suit");
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/, "le cache-buster du catalogue suit");
 });
 
 test("la feuille des tables (PDF) décrit le parcours réel et la révision du jour (A21)", async () => {

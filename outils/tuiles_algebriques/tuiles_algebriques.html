@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tuiles algébriques — expressions | maths&amp;go</title>
-  <meta name="description" content="Composez, ordonnez et simplifiez des expressions avec les tuiles x², x et 1.">
+  <meta name="description" content="Tapez ou composez une expression avec les tuiles x², x et 1, puis réduisez-la, développez-la ou factorisez-la.">
   <link rel="canonical" href="https://mathsgo.re/outils/tuiles_algebriques/tuiles_algebriques.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -25,7 +25,9 @@
         @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-Italic.woff2') format('woff2');font-style:italic;font-weight:100 599;font-display:block;unicode-range:U+1D434-1D467,U+210E}
         @font-face{font-family:SplatLettres;src:url('/assets/fonts/SplatLettres-BoldItalic.woff2') format('woff2');font-style:italic;font-weight:600 900;font-display:block;unicode-range:U+1D434-1D467,U+210E}
         body {
-            font-family: 'Fredoka', sans-serif;
+            /* SplatLettres d'abord : elle ne couvre que 𝑥 (unicode-range), le reste du texte reste en Fredoka.
+               Le 𝑥 des boutons, bulles et aides est ainsi rond, comme sur les tuiles. */
+            font-family: SplatLettres, 'Fredoka', sans-serif;
             background-color: #f0f9ff;
             overflow: hidden;
             touch-action: none;
@@ -201,6 +203,8 @@
             display: grid;
             pointer-events: none;
         }
+        /* Tableau produit « développer » : la grille est en bas du cadre, elle en suit les coins arrondis */
+        .product-frame:not(.facto) > .product-grid { border-radius: 0 0 9px 9px; overflow: hidden; }
         .product-slot, .product-cell, .product-corner {
             display: flex;
             align-items: center;
@@ -609,6 +613,7 @@
         const INITIAL_VIEW_WORLD = 400;   // environ trois tuiles x² côte à côte
         const INITIAL_VIEW_WORLD_H = 300;
         const MIN_SCALE = 0.5, MAX_SCALE = 3;
+        const PRODUCT_FRAME_BORDER = 3; // bord des tableaux (.product-frame, border: 3px) : compté dans leur taille
         const FLIP_HALF_MS = 170;   // « Ajouter l'opposé » : durée d'un demi-retournement
         const FLIP_STAGGER_MS = 230; // délai entre deux tuiles retournées
         const PEN_SCREEN_WIDTH = 2.2; // Épaisseur visuelle du stylo, compensée selon le zoom
@@ -1412,15 +1417,21 @@
                     return h;
                 });
 
-                const width = leftW + colWidths.reduce((a, b) => a + b, 0);
-                const height = toolbarH + topH + rowHeights.reduce((a, b) => a + b, 0);
-                const colX = (c) => (frame?.x || 0) + leftW + colWidths.slice(0, c).reduce((a, b) => a + b, 0);
-                const rowY = (r) => (frame?.y || 0) + toolbarH + topH + rowHeights.slice(0, r).reduce((a, b) => a + b, 0);
+                // Le cadre a un bord de 3 px (box-sizing: border-box) : on le compte dans sa taille, et
+                // tout ce qui est placé dans le cadre part de son bord intérieur (ox, oy).
+                const bord = PRODUCT_FRAME_BORDER;
+                const gridW = leftW + colWidths.reduce((a, b) => a + b, 0);
+                const gridH = topH + rowHeights.reduce((a, b) => a + b, 0);
+                const width = gridW + 2 * bord;
+                const height = toolbarH + gridH + 2 * bord;
+                const ox = (frame?.x || 0) + bord, oy = (frame?.y || 0) + bord;
+                const colX = (c) => ox + leftW + colWidths.slice(0, c).reduce((a, b) => a + b, 0);
+                const rowY = (r) => oy + toolbarH + topH + rowHeights.slice(0, r).reduce((a, b) => a + b, 0);
                 return {
-                    rows, cols, toolbarH, leftW, topH, colWidths, rowHeights, width, height,
-                    gridY: (frame?.y || 0) + toolbarH,
-                    centralX: (frame?.x || 0) + leftW,
-                    centralY: (frame?.y || 0) + toolbarH + topH,
+                    rows, cols, toolbarH, leftW, topH, colWidths, rowHeights, width, height, gridW, gridH, bord, ox, oy,
+                    gridY: oy + toolbarH,
+                    centralX: ox + leftW,
+                    centralY: oy + toolbarH + topH,
                     colX, rowY
                 };
             }
@@ -1468,8 +1479,8 @@
                 grid.className = 'product-grid';
                 grid.style.gridTemplateColumns = `${m.leftW}px ${m.colWidths.map(w => `${w}px`).join(' ')}`;
                 grid.style.gridTemplateRows = `${m.topH}px ${m.rowHeights.map(h => `${h}px`).join(' ')}`;
-                grid.style.width = m.width + 'px';
-                grid.style.height = (m.height - m.toolbarH) + 'px';
+                grid.style.width = m.gridW + 'px';
+                grid.style.height = m.gridH + 'px';
 
                 const corner = document.createElement('div');
                 corner.className = 'product-corner';
@@ -1575,12 +1586,12 @@
                 const m = this.getProductMetrics(f);
                 const c = this.tokenCenter(t);
                 const x = c.x, y = c.y;
-                const topStartY = f.y + m.toolbarH;
+                const topStartY = m.oy + m.toolbarH;
                 const topEndY = topStartY + m.topH;
-                const leftStartX = f.x;
-                const leftEndX = f.x + m.leftW;
-                const centralX = f.x + m.leftW;
-                const centralY = f.y + m.toolbarH + m.topH;
+                const leftStartX = m.ox;
+                const leftEndX = m.ox + m.leftW;
+                const centralX = m.centralX;
+                const centralY = m.centralY;
                 const centralEndX = centralX + m.colWidths.reduce((a, b) => a + b, 0);
                 const centralEndY = centralY + m.rowHeights.reduce((a, b) => a + b, 0);
 
@@ -1664,7 +1675,7 @@
                     if (t.type === 'x') this.setTokenOrientation(t, 'h');
                     const size = getTileSize(t.type, t.orientation);
                     const x = m.colX(c) + (m.colWidths[c] - size.w) / 2;
-                    const y = f.y + m.toolbarH + (m.topH - size.h) / 2;
+                    const y = m.oy + m.toolbarH + (m.topH - size.h) / 2;
                     if (animate && t.element) t.element.classList.add('animating');
                     this.moveToken(t, x, y);
                     if (animate) setTimeout(() => t.element && t.element.classList.remove('animating'), 350);
@@ -1674,7 +1685,7 @@
                     const t = o.t;
                     if (t.type === 'x') this.setTokenOrientation(t, 'v');
                     const size = getTileSize(t.type, t.orientation);
-                    const x = f.x + (m.leftW - size.w) / 2;
+                    const x = m.ox + (m.leftW - size.w) / 2;
                     const y = m.rowY(r) + (m.rowHeights[r] - size.h) / 2;
                     if (animate && t.element) t.element.classList.add('animating');
                     this.moveToken(t, x, y);
@@ -1850,8 +1861,8 @@
                 // On remplace le tableau par les tuiles développées au niveau exact des cases remplies.
                 // Le point de départ est donc le coin haut-gauche des tuiles qui étaient réellement dans le tableau,
                 // pas le bas du gabarit complet.
-                const startX = Math.max(20, Number.isFinite(cellBounds.minX) ? cellBounds.minX : f.x + m.leftW + 8);
-                const startY = Math.max(20, Number.isFinite(cellBounds.minY) ? cellBounds.minY : f.y + m.toolbarH + m.topH + 8);
+                const startX = Math.max(20, Number.isFinite(cellBounds.minX) ? cellBounds.minX : m.centralX + 8);
+                const startY = Math.max(20, Number.isFinite(cellBounds.minY) ? cellBounds.minY : m.centralY + 8);
                 const visibleRight = (-this.pan.x + this.boardContainer.clientWidth) / this.scale;
                 const maxX = Math.max(startX + 420, visibleRight - 40, f.x + m.width + 180);
                 const arrangedSpecs = this.normalizeProductDevelopmentSpecs(specs);
@@ -3221,16 +3232,17 @@
                 });
                 const toolbarH = 34, leftW = 62, topH = 50, statutH = 52; // deux lignes de texte
                 const gridW = leftW + colWidths.reduce((a, b) => a + b, 0);
-                const BORD = 6; // le cadre a un bord de 3 px de chaque côté (avant, le tableau dépassait)
-                const width = Math.max(300, gridW + BORD);
-                const height = toolbarH + topH + rowHeights.reduce((a, b) => a + b, 0) + statutH + BORD;
-                const colX = (c) => (frame?.x || 0) + leftW + colWidths.slice(0, c).reduce((a, b) => a + b, 0);
-                const rowY = (r) => (frame?.y || 0) + toolbarH + topH + rowHeights.slice(0, r).reduce((a, b) => a + b, 0);
+                const bord = PRODUCT_FRAME_BORDER; // compté dans la taille ; on place depuis le bord intérieur
+                const width = Math.max(300, gridW + 2 * bord);
+                const height = toolbarH + topH + rowHeights.reduce((a, b) => a + b, 0) + statutH + 2 * bord;
+                const ox = (frame?.x || 0) + bord, oy = (frame?.y || 0) + bord;
+                const colX = (c) => ox + leftW + colWidths.slice(0, c).reduce((a, b) => a + b, 0);
+                const rowY = (r) => oy + toolbarH + topH + rowHeights.slice(0, r).reduce((a, b) => a + b, 0);
                 return {
-                    rows, cols, toolbarH, leftW, topH, colWidths, rowHeights, width, height, gridW, statutH, etat, d, fantome,
-                    gridY: (frame?.y || 0) + toolbarH,
-                    centralX: (frame?.x || 0) + leftW,
-                    centralY: (frame?.y || 0) + toolbarH + topH,
+                    rows, cols, toolbarH, leftW, topH, colWidths, rowHeights, width, height, gridW, statutH, etat, d, fantome, bord, ox, oy,
+                    gridY: oy + toolbarH,
+                    centralX: ox + leftW,
+                    centralY: oy + toolbarH + topH,
                     colX, rowY
                 };
             }
@@ -3315,11 +3327,11 @@
                     if (t.productZone === 'top') {
                         if (t.type === 'x') this.setTokenOrientation(t, 'h');
                         const s = getTileSize(t.type, t.orientation), c = t.productIndex ?? 0;
-                        placer(t, m.colX(c) + (m.colWidths[c] - s.w) / 2, f.y + m.toolbarH + (m.topH - s.h) / 2);
+                        placer(t, m.colX(c) + (m.colWidths[c] - s.w) / 2, m.oy + m.toolbarH + (m.topH - s.h) / 2);
                     } else if (t.productZone === 'left') {
                         if (t.type === 'x') this.setTokenOrientation(t, 'v');
                         const s = getTileSize(t.type, t.orientation), r = t.productIndex ?? 0;
-                        placer(t, f.x + (m.leftW - s.w) / 2, m.rowY(r) + (m.rowHeights[r] - s.h) / 2);
+                        placer(t, m.ox + (m.leftW - s.w) / 2, m.rowY(r) + (m.rowHeights[r] - s.h) / 2);
                     } else {
                         const s = getTileSize(t.type, t.orientation), r = t.productRow ?? 0, c = t.productCol ?? 0;
                         placer(t, m.colX(c) + (m.colWidths[c] - s.w) / 2, m.rowY(r) + (m.rowHeights[r] - s.h) / 2);
