@@ -1396,8 +1396,9 @@
         }
         serie.index = 0;
         renderTemps();
-        state.lecon = {serie, echelles, plus: Math.min(...echelles)};
+        state.lecon = {serie, echelles, plus: Math.min(...echelles), fenetre: cleFenetre()};
       }
+      const cleFenetre = () => `${window.innerWidth}x${window.innerHeight}`;
       function echelleCourante() {
         return Number(document.documentElement.style.getPropertyValue("--echelle")) || 1;
       }
@@ -1409,7 +1410,17 @@
         if (!$("play").hidden) {
           const propre = lecon.echelles[lecon.serie.index];
           if (!propre) return null;
-          lecon.courante = lecon.plus * z / propre;
+          // La proportion ne sert qu'à suivre une fenêtre qui a changé (plein
+          // écran). Dans la même fenêtre, un écran qui a plus de place (J'écris
+          // fini : le pavé est parti) ne doit pas agrandir le cadre : la leçon
+          // garde sa taille, et ne descend que si l'écran en a besoin.
+          const voulue = lecon.plus * z / propre;
+          const fenetre = cleFenetre();
+          if (lecon.baseFenetre !== fenetre) {
+            lecon.base = fenetre === lecon.fenetre ? lecon.plus : voulue;
+            lecon.baseFenetre = fenetre;
+          }
+          lecon.courante = Math.min(lecon.base, voulue);
           return lecon.courante;
         }
         if (!$("result").hidden && !$("result-retenir").hidden) return lecon.courante || lecon.plus;
@@ -1604,7 +1615,11 @@
         if ($("result").hidden || $("result-retenir").hidden) return;
         ajusterCalculRetenir();
         if (window.innerWidth > ECHELLE.telephone) return;
-        const deborde = () => racine.scrollHeight > window.innerHeight + 1;
+        // Un calcul soudé resté dans la phrase (M10-2 : « 4 × 37 × 25 =
+        // 37 × 100 = 3 700. ») peut être plus large que la phrase avec une
+        // police plus large (Windows) : la phrase rapetisse alors aussi.
+        const phrase = $("retenir-phrase");
+        const deborde = () => racine.scrollHeight > window.innerHeight + 1 || phrase.scrollWidth > phrase.clientWidth + 1;
         for (let z = .95; z >= .6 && deborde(); z -= .05) {
           racine.style.setProperty("--retenir-z", z.toFixed(2));
           ajusterCalculRetenir();
