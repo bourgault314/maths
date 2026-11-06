@@ -201,7 +201,7 @@ test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans 
   assert.doesNotMatch(PAGE, /class="topbar"/);
   const cadre = PAGE.slice(PAGE.indexOf('<section class="panel"'), PAGE.indexOf("</section>"));
   assert.match(cadre, /<a class="rond" id="lien-retour" href="\.\.\/index\.html\?domain=nombres-calculs&amp;notion=calcul-mental"/);
-  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 3, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique");
+  assert.equal((cadre.match(/data-fullscreen-toggle/g) || []).length, 4, "un plein écran sur les réglages, un pendant la séance, un sur Mon historique, un sur les grades");
   // Plus de pied du tout, logo compris (24/10/2026, choix de Gwenaël) ; ni
   // « Sans cookie ni traceur » (retirée des applis le 23/10/2026).
   assert.doesNotMatch(PAGE, /<footer\b|site-footer|pied-logo|confidentialite\.html|dessinerPied/);

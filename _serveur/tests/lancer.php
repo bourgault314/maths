@@ -6891,12 +6891,21 @@ verifier("anzan-suivi — le parcours de référence d'Anzan ressort identique d
     $obtenu = json_encode(filtrer_progression('flash-anzan', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Anzan produit : compléter 'cles'/'mots'/'motifs' de « flash-anzan » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(10, count(get_object_vars($reference->seances)), 'dix séances');
+    egal(14, count(get_object_vars($reference->seances)), 'quatorze séances (dix d’entraînement, quatre de grades depuis le lot « grades » du 07/11/2026)');
     egal('colonne', $reference->reglages->mode, 'le mode choisi');
     egal(12, count($reference->seances->{'7'}), 'une séance = douze scalaires (les deux derniers : son identifiant et son ordre)');
     vrai($reference->seances->{'7'}[8] < $reference->seances->{'7'}[7], 'la séance 7 est arrêtée : moins de calculs faits (7) que prévus (10)');
-    egal(10, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
-    vrai(strlen($attendu) < 2000, 'dix séances pèsent moins de 2 ko : 500 tiennent sous la borne de 40 ko');
+    egal(14, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
+    vrai(strlen($attendu) < 2000, 'quatorze séances pèsent moins de 2 ko : 500 tiennent sous la borne de 40 ko');
+    // Lot « grades » (07/11/2026) : les mots des séances de grade et le plus
+    // haut grade réussi passent le filtre.
+    egal('grade', $reference->seances->{'11'}[1], 'un passage de grade');
+    egal('entrainement', $reference->seances->{'12'}[1], 'un entraînement à un grade');
+    egal(2, $reference->gradeReussi, 'le plus haut grade réussi (le 19e kyu)');
+    $filtre = filtrer_progression('flash-anzan', json_decode($texte, false));
+    egal('grade', $filtre->seances->{'11'}[1], 'le serveur garde le mot « grade »');
+    egal('entrainement', $filtre->seances->{'12'}[1], 'le serveur garde le mot « entrainement »');
+    egal(2, $filtre->gradeReussi, 'le serveur garde « gradeReussi »');
 });
 
 verifier("anzan-suivi — un texte, une clé étrangère, un numéro de séance hors motif, une liste de listes sont retirés", function () {
@@ -6953,12 +6962,12 @@ verifier("anzan-suivi — Anzan s'enregistre et se relit par l'API élève, à s
     $ligne->execute([(int)$eleves[0]['id']]);
     $compte = (int)$ligne->fetchColumn();
     $ligne->closeCursor();
-    egal(10, $compte, 'la version du jour est comptée en séances');
+    egal(14, $compte, 'la version du jour est comptée en séances');
     $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'flash-anzan'], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'le tableau de la classe se demande pour Anzan');
     $lu = null;
     foreach ($r['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
-    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['seances'] ?? []) === 10,
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['seances'] ?? []) === 14,
         'le tableau rend le parcours Anzan de l’élève, ses séances comprises');
     // L'ordre de la liste de la classe est celui du catalogue : Anzan juste après Coffres.
     $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];

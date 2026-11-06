@@ -451,6 +451,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      du lot 4a) : le jour, le mode et ses réglages, le score sur les calculs
      faits, « arrêtée » dessous quand la séance s'est arrêtée en route. */
   .pa-compte { margin: 0 0 12px; color: var(--ink); font-weight: 700; }
+  /* Lot « grades » (07/11/2026) : le plus haut grade réussi, sous le compte. */
+  .pa-grade { margin: -6px 0 12px; color: var(--ink); font-weight: 800; }
+  .anzan-grade { display: block; margin-top: 2px; font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
   .pa-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; }
   .pa-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
                  min-height: 54px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
@@ -1351,6 +1354,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <div class="fiche-anzan" id="fiche-anzan">
       <h2 id="fa-titre"></h2>
       <p class="fa-compte" id="fa-compte"></p>
+      <p class="fa-compte" id="fa-grade"></p>
       <table>
         <thead><tr><th>Jour</th><th>Séance</th><th>Réglages</th><th>Réussis</th></tr></thead>
         <tbody id="fa-corps"></tbody>
@@ -1578,6 +1582,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <!-- Anzan : ses dernières séances (l'écran « Mon historique » de l'élève). -->
     <div id="fe-anzan" hidden>
       <p class="pa-compte" id="pa-compte"></p>
+      <p class="pa-grade" id="pa-grade" hidden></p>
       <ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"></ol>
       <p class="pa-note" id="pa-note"></p>
       <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
@@ -4440,6 +4445,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         const compte = document.createElement("b");
         compte.textContent = `${lu.calculs} calcul${lu.calculs > 1 ? "s" : ""}`;
         cCalculs.append(compte);
+        // Lot « grades » (07/11/2026) : le plus haut grade réussi, sous le
+        // compte — visible sans ouvrir la fenêtre (demande de Gwenaël).
+        if (lu.grade && ANZAN && ANZAN.nomGrade) {
+          const grade = document.createElement("small");
+          grade.className = "anzan-grade";
+          grade.textContent = `🥋 ${ANZAN.nomGrade(lu.grade)}`;
+          cCalculs.append(grade);
+        }
         cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
       } else {
         cCalculs.textContent = "—";
@@ -4508,16 +4521,22 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const lu = (eleve && eleve.lu) || {};
     const prenom = prenomCourt(eleve);
     const toutes = lu.historique || lu.dernieres || [];
-    const seances = toutes.slice(0, combien).map(s => ({
-      jour: jourAnzan(s.jour, aujourdhui),
-      mode: s.mode === "flash" ? "⚡ Flash" : "📝 Colonne",
-      reglages: reglagesAnzan(s.mode, s.reglages || {}),
-      score: `${s.score}/${s.faits}`,
-      arretee: Boolean(s.arretee)
-    }));
+    const seances = toutes.slice(0, combien).map(s => {
+      // Un grade (lot « grades », 07/11/2026) : les mots du moteur,
+      // « 🥋 13e kyu · Passage · réussi » ou « 🎯 13e kyu · Entraînement au grade ».
+      const grade = ANZAN && ANZAN.libelleGrade ? ANZAN.libelleGrade(s) : null;
+      return {
+        jour: jourAnzan(s.jour, aujourdhui),
+        mode: grade ? grade.mode : (s.mode === "flash" ? "⚡ Flash" : "📝 Colonne"),
+        reglages: grade ? grade.details : reglagesAnzan(s.mode, s.reglages || {}),
+        score: `${s.score}/${s.faits}`,
+        arretee: Boolean(s.arretee)
+      };
+    });
     return {
       titre: `Le parcours ${deNom(prenom)}`,
       compte: lu.texte || `${prenom[0].toUpperCase()}${prenom.slice(1)} n’a pas encore fait de séance.`,
+      grade: lu.texteGrade || "",
       seances,
       note: lu.seances > seances.length ? `Les ${seances.length} dernières séances, sur ${lu.seances}.` : "",
       reste: Math.max(0, toutes.length - seances.length)
@@ -4546,6 +4565,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!eleve) return;
     const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
     $("pa-compte").textContent = vu.compte;
+    $("pa-grade").textContent = vu.grade;
+    $("pa-grade").hidden = !vu.grade;
     const liste = $("pa-liste");
     liste.textContent = "";
     liste.hidden = !vu.seances.length;
@@ -4589,7 +4610,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function fermerParcoursAnzan() {
     parcoursAnzanEleve = null;
     parcoursAnzanAffiches = 10;
-    ["pa-compte", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
+    ["pa-compte", "pa-grade", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
+    $("pa-grade").hidden = true;
     $("pa-plus").hidden = true;
     $("pa-imprimer").hidden = true;
   }
@@ -4606,6 +4628,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
     $("fa-titre").textContent = vu.titre;
     $("fa-compte").textContent = vu.compte;
+    $("fa-grade").textContent = vu.grade;
     const corps = $("fa-corps");
     corps.textContent = "";
     vu.seances.forEach(s => {
@@ -4627,7 +4650,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       window.removeEventListener("afterprint", nettoyer);
       if (numero !== numeroImpression) return;
       document.body.classList.remove("imprime-anzan");
-      ["fa-titre", "fa-compte", "fa-corps", "fa-note"].forEach(id => { $(id).textContent = ""; });
+      ["fa-titre", "fa-compte", "fa-grade", "fa-corps", "fa-note"].forEach(id => { $(id).textContent = ""; });
     };
     window.addEventListener("afterprint", nettoyer);
     setTimeout(nettoyer, 60000);
