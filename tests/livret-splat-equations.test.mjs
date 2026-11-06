@@ -590,7 +590,7 @@ test("Q4 : page des livrets — les corrigés du monde 5 repliés sous chaque li
   assert.match(catalogue, /Pour chaque livret : le PDF, le livret à plier et le corrigé\./);   // « de 8 pages » retiré à l'ouverture du monde 4 (livrets de 12 pages)
   assert.doesNotMatch(pageLivrets, /pour les mondes 1 à 4/);
   assert.doesNotMatch(lire("outils/toutes-les-ressources.html"), /pour les mondes 1 à 4, les livrets corrigés/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/, "le cache-buster du catalogue suit");
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/, "le cache-buster du catalogue suit");
 });
 
 /* ------------------------------------------------------------------ lot Q5 (25/09/2026)
@@ -792,7 +792,7 @@ test("Q5 : la page des livrets et la carte des mondes — « Le défi » au mond
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   // (01/10/2026) les textes du catalogue raccourcis : « du monde 1 au monde 6 »
   assert.match(catalogue, /"cardDescription": "Tous les livrets SPLAT! à plier, du monde 1 au monde 6, avec leurs corrigés\."/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/);
 });
 
 test("Q5 : ÉquaSplat ne reprend une série interrompue que si c'est la même (empreinte)", () => {

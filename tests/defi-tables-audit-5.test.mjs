@@ -89,5 +89,5 @@ test("la miniature a été refaite (993 × 1404, webp plus légère) et son ?v= 
   assert.equal(png.readUInt32BE(20), 1404);
   const webp = await stat(new URL("assets/img/thumbnails/calcul-mental/fiche-tables-multiplication.webp", racine));
   assert.ok(webp.size < png.length);
-  assert.match(await lire("outils/index.html"), /catalogue-refonte-data\.js\?v=flash-anzan-20261022-1/);
+  assert.match(await lire("outils/index.html"), /catalogue-refonte-data\.js\?v=tuiles-algebriques-20261106-1/);
 });
