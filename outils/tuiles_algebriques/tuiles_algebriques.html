@@ -233,6 +233,28 @@
             outline-offset: 3px;
             animation: productShake 0.26s ease-in-out 0s 2;
         }
+        /* Factoriser (lot 5) : la colonne et la ligne « + » où l'on agrandit le rectangle, l'état en bas */
+        .product-frame.facto .product-slot.fantome { background: transparent; border-right-style: dashed; border-bottom-style: dashed; }
+        .product-frame.facto .product-cell.fantome {
+            background: transparent; border-right: 2px dashed rgba(51,65,85,0.32); border-bottom: 2px dashed rgba(51,65,85,0.32);
+            color: rgba(51,65,85,0.32); font-size: 26px; font-weight: 700;
+        }
+        .product-frame.facto .product-cell:not(.fantome) { background: #ffffff; }
+        .product-toolbar button.paire { color: #334155; }
+        .facto-statut {
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            padding: 0 10px; font-size: 15px; line-height: 1.2; font-weight: 800; color: #334155;
+            border-top: 1px solid rgba(148,163,184,0.55); background: rgba(255,255,255,0.9); border-radius: 0 0 9px 9px;
+        }
+        .facto-statut.alerte { color: #a61f18; }
+        .facto-statut.ok { color: #1f6b28; background: #e7f6e8; }
+        .product-frame.facto-juste { border-color: #2f7f35; box-shadow: 0 0 0 4px rgba(114,196,117,0.35), 0 10px 24px rgba(15,23,42,0.12); }
+        .token.facto-mal { outline: 3px dashed #d9822b; outline-offset: 2px; }
+        #facto-bulle {
+            position: fixed; z-index: 80; transform: translateY(-50%); max-width: 230px;
+            background: #143451; color: #ffffff; font-size: 13px; font-weight: 700; line-height: 1.25;
+            padding: 8px 11px; border-radius: 8px; box-shadow: 0 6px 18px rgba(15,23,42,0.25); pointer-events: none;
+        }
         @keyframes productShake {
             0%, 100% { translate: 0 0; }
             25% { translate: -5px 0; }
@@ -289,7 +311,7 @@
         #barre-outils a.mathsgo-back .mathsgo-back-label { display: none; }
 
         /* Équation : plus grande sur grand écran (projection), inchangée au téléphone. */
-        #equation-display { font-size: clamp(20px, 2.4vw, 46px); }
+        #equation-display { font-size: clamp(20px, 2.4vw, 46px); transition-property: opacity; } /* la taille se règle d'un coup (ajusterEquation) */
         /* Au téléphone, l'équation prend toute une ligne au lieu d'être coupée par les boutons de vue. */
         header .eq-zone { min-width: 280px; }
         /* --- TAPER UNE EXPRESSION (lot 4) : bouton, pavé, champ. Styles écrits ici (la feuille Tailwind
@@ -536,6 +558,7 @@
             <div class="flex flex-col gap-2 w-full px-2 items-center">
                 <span class="text-[9px] font-bold text-slate-400 uppercase text-center leading-tight">Produit</span>
                 <button onclick="app.createProductFrame()" class="w-full py-2 bg-white border border-purple-300 rounded text-[11px] font-bold text-purple-700 shadow-sm active:bg-purple-50 hover:bg-purple-50 transition" title="Ajouter un tableau produit">Tableau produit</button>
+                <button id="btn-factoriser" onclick="app.lancerFactoriser()" class="w-full py-2 bg-white border border-purple-300 rounded text-[11px] font-bold text-purple-700 shadow-sm active:bg-purple-50 hover:bg-purple-50 transition" title="Factoriser : ranger les tuiles du plateau en rectangle">Factoriser</button>
             </div>
 
             <div class="w-16 h-px bg-slate-200"></div>
@@ -874,6 +897,122 @@
         }
         // === FIN DE LA LECTURE DE L'EXPRESSION TAPÉE ===
 
+        // === FACTORISER : ANALYSE DU RECTANGLE (lot 5, 06/11/2026) ===
+        // L'élève range les tuiles de l'expression dans un tableau qui s'agrandit (une case = une tuile), puis
+        // pose les côtés. Chaque tuile a deux côtés, 'x' (long) ou '1' (court) : 𝑥² = 𝑥 × 𝑥, 𝑥 couché = 𝑥 × 1,
+        // 𝑥 debout = 1 × 𝑥, 1 = 1 × 1. Dans une colonne, toutes les tuiles ont la même largeur ; dans une
+        // ligne, la même hauteur ; et chaque case = côté de sa ligne × côté de sa colonne, signes compris.
+        function factoDims(type, orientation) {
+            if (type === 'x2') return { l: 'x', h: 'x' };
+            if (type === 'x') return orientation === 'v' ? { l: '1', h: 'x' } : { l: 'x', h: '1' };
+            return { l: '1', h: '1' };
+        }
+        function factoCote(type) { return type === 'x' ? 'x' : (type === 'unit' ? '1' : null); }
+        function factoValeur(liste) {
+            const v = { x2: 0, x: 0, unit: 0 };
+            liste.forEach(t => { v[t.type] += t.sign; });
+            return v;
+        }
+        function factoEgales(a, b) { return a.x2 === b.x2 && a.x === b.x && a.unit === b.unit; }
+        function factoPgcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; }
+
+        // La taille de chaque colonne et de chaque ligne. Un côté posé décide ; sinon la tuile du haut
+        // (de gauche) de la colonne (de la ligne). Rend les tuiles qui ne remplissent pas leur case.
+        function factoTailles(R, C, cells, tops, lefts) {
+            const col = Array(C).fill(null), lig = Array(R).fill(null);
+            tops.forEach(t => { if (t.col < C) col[t.col] = factoCote(t.type); });
+            lefts.forEach(t => { if (t.row < R) lig[t.row] = factoCote(t.type); });
+            const ordre = [...cells].sort((a, b) => a.row - b.row || a.col - b.col);
+            ordre.forEach(c => { if (col[c.col] === null) col[c.col] = factoDims(c.type, c.orientation).l; });
+            [...cells].sort((a, b) => a.col - b.col || a.row - b.row)
+                .forEach(c => { if (lig[c.row] === null) lig[c.row] = factoDims(c.type, c.orientation).h; });
+            const mal = cells.filter(c => { const d = factoDims(c.type, c.orientation); return d.l !== col[c.col] || d.h !== lig[c.row]; });
+            return { col, lig, mal };
+        }
+
+        // Les signes : chaque case = signe de sa ligne × signe de sa colonne ; un côté posé fixe le sien.
+        // Rend { lig, col } (+1 ou −1, 0 si rien ne le dit) ou null si c'est impossible.
+        // Sans côté posé, la première ligne est mise en +1 : on lit (𝑥 + 1)(𝑥 − 2), pas (−𝑥 − 1)(−𝑥 + 2).
+        function factoSignes(R, C, cells, tops, lefts) {
+            const n = R + C, val = Array(n).fill(0), voisins = Array.from({ length: n }, () => []);
+            cells.forEach(c => { voisins[c.row].push([R + c.col, c.sign]); voisins[R + c.col].push([c.row, c.sign]); });
+            const fixe = Array(n).fill(0);
+            lefts.forEach(t => { if (t.row < R) fixe[t.row] = t.sign; });
+            tops.forEach(t => { if (t.col < C) fixe[R + t.col] = t.sign; });
+            const propager = (depart, v) => {
+                val[depart] = v;
+                const file = [depart];
+                while (file.length) {
+                    const a = file.shift();
+                    for (const [b, s] of voisins[a]) {
+                        const vb = val[a] * s;
+                        if (val[b] === 0) { if (fixe[b] && fixe[b] !== vb) return false; val[b] = vb; file.push(b); }
+                        else if (val[b] !== vb) return false;
+                    }
+                }
+                return true;
+            };
+            for (let i = 0; i < n; i++) if (fixe[i] && val[i] === 0 && !propager(i, fixe[i])) return null;
+            for (let i = 0; i < n; i++) if (fixe[i] && val[i] !== fixe[i]) return null;
+            for (let i = 0; i < n; i++) if (val[i] === 0 && voisins[i].length && !propager(i, 1)) return null;
+            return { lig: val.slice(0, R), col: val.slice(R) };
+        }
+
+        // Un côté posé sur la colonne (top) ou la ligne (left) « index » : accepté s'il a la taille de la
+        // colonne (de la ligne) et si les signes restent possibles.
+        function factoCoteAccepte(d, cote) {
+            const k = factoCote(cote.type);
+            if (!k) return false;
+            const haut = cote.zone === 'top';
+            const n = haut ? d.C : d.R;
+            if (cote.index < 0 || cote.index >= n) return false;
+            if ((haut ? d.tops : d.lefts).some(t => (haut ? t.col : t.row) === cote.index)) return false;
+            const dedans = d.cells.filter(c => (haut ? c.col : c.row) === cote.index);
+            if (!dedans.length) return false;
+            if (dedans.some(c => (haut ? factoDims(c.type, c.orientation).l : factoDims(c.type, c.orientation).h) !== k)) return false;
+            const tops = haut ? [...d.tops, { col: cote.index, type: cote.type, sign: cote.sign }] : d.tops;
+            const lefts = haut ? d.lefts : [...d.lefts, { row: cote.index, type: cote.type, sign: cote.sign }];
+            return factoSignes(d.R, d.C, d.cells, tops, lefts) !== null;
+        }
+
+        // Où en est l'élève : le premier point qui manque, dans l'ordre où il le rencontre.
+        function factoAnalyser(d) {
+            const { R, C, cells, tops, lefts, cible } = d;
+            if (!cells.length) return { etat: 'vide' };
+            if (d.resteNombre > 0 && !factoEgales(d.resteValeur, { x2: 0, x: 0, unit: 0 })) return { etat: 'reste', n: d.resteNombre };
+            const occ = new Set(cells.map(c => c.row + ':' + c.col));
+            for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (!occ.has(r + ':' + c)) return { etat: 'trou' };
+            const tailles = factoTailles(R, C, cells, tops, lefts);
+            if (tailles.mal.length) return { etat: 'taille', mal: tailles.mal.map(c => c.id) };
+            if (!factoSignes(R, C, cells, [], [])) return { etat: 'signes' };
+            if (!factoEgales(factoValeur(cells), cible)) return { etat: 'valeur' };
+            if (!factoSignes(R, C, cells, tops, lefts)) return { etat: 'cote-faux' };
+            if (tops.length < C || lefts.length < R) return { etat: 'cotes', manque: R + C - tops.length - lefts.length };
+            const facteur = (hs) => ({ x: hs.filter(t => t.type === 'x').reduce((s, t) => s + t.sign, 0), unit: hs.filter(t => t.type === 'unit').reduce((s, t) => s + t.sign, 0) });
+            const g = facteur(lefts), h = facteur(tops);
+            const vautUn = (f) => f.x === 0 && Math.abs(f.unit) === 1;
+            if (vautUn(g) || vautUn(h)) return { etat: 'juste-1' };
+            const encore = (f) => f.x !== 0 && f.unit !== 0 && factoPgcd(f.x, f.unit) > 1;
+            if (encore(g) || encore(h)) return { etat: 'juste-plus' };
+            return { etat: 'juste' };
+        }
+        const FACTO_TEXTES = {
+            vide: 'Glisse les tuiles dans le tableau pour en faire un rectangle.',
+            reste: (e) => e.n === 1 ? 'Encore 1 tuile à ranger.' : `Encore ${e.n} tuiles à ranger.`,
+            trou: 'Il y a un trou : chaque case reçoit une tuile.',
+            taille: 'Une tuile n’a pas la taille de sa case.',
+            signes: 'Les couleurs ne vont pas ensemble : échange deux tuiles.',
+            valeur: 'Ce rectangle ne vaut pas l’expression de départ.',
+            'cote-faux': 'Un côté ne va plus avec le rectangle : enlève-le.',
+            cotes: 'C’est un rectangle ! Pose ses côtés avec les tuiles du menu.',
+            'juste-1': '✓ Juste, mais un côté vaut 1 : cherche un rectangle plus haut.',
+            'juste-plus': '✓ Juste. On peut encore mettre un nombre en facteur.',
+            juste: '✓ Factorisé !'
+        };
+        function factoTexte(e) { const t = FACTO_TEXTES[e.etat]; return typeof t === 'function' ? t(e) : (t || ''); }
+        function factoEstJuste(e) { return e.etat === 'juste' || e.etat === 'juste-1' || e.etat === 'juste-plus'; }
+        // === FIN DE L'ANALYSE DU RECTANGLE ===
+
         class AlgebraApp {
             constructor() {
                 this.history = [];
@@ -911,6 +1050,7 @@
                 this.updateFullscreenButton();
                 this.initTaper();
                 document.addEventListener('fullscreenchange', () => { this.updateFullscreenButton(); });
+                window.addEventListener('resize', () => this.ajusterEquation());
             }
 
 
@@ -1121,6 +1261,7 @@
                         const newToken = this.tokens[this.tokens.length - 1];
                         if (newToken) {
                             this.checkSnapAndFinalize(newToken);
+                            this.dragStartState = null;
                             this.snapTokenToProductFrame(newToken);
                         }
                     }
@@ -1240,6 +1381,7 @@
             }
 
             getProductMetrics(frame = this.productFrame) {
+                if (frame?.mode === 'facto') return this.factoMetrics(frame);
                 const topObjs = this.getProductHeaderObjects('top');
                 const leftObjs = this.getProductHeaderObjects('left');
                 const rows = Math.max(1, leftObjs.length);
@@ -1298,6 +1440,7 @@
 
             renderProductFrame() {
                 if (!this.productFrame) return;
+                if (this.productFrame.mode === 'facto') { this.factoRendre(); return; }
                 if (this.productFrame.element) this.productFrame.element.remove();
                 const f = this.productFrame;
                 const m = this.getProductMetrics(f);
@@ -1466,6 +1609,7 @@
             }
 
             reindexProductHeaders(zone) {
+                if (this.productFrame?.mode === 'facto') { this.factoTasser(); return; } // un côté reste sur SA colonne
                 this.getProductHeaderObjects(zone).forEach((o, i) => { o.t.productIndex = i; });
             }
 
@@ -1509,6 +1653,7 @@
 
             reflowProductFrameTokens(animate = true) {
                 if (!this.productFrame) return;
+                if (this.productFrame.mode === 'facto') { this.factoReplacer(animate); return; }
                 const f = this.productFrame;
                 const m = this.getProductMetrics(f);
                 const topObjs = this.getProductHeaderObjects('top');
@@ -1552,6 +1697,7 @@
             snapTokenToProductFrame(t) {
                 if (!this.productFrame || !t || t.pairId !== null) return false;
                 if (this.isFlipPending(t)) return false; // parenthèse « − » pas encore retournée
+                if (this.productFrame.mode === 'facto') return this.factoPoser(t);
                 const info = this.getProductZoneInfo(t);
                 if (!info) {
                     if (t.productZone) {
@@ -1819,7 +1965,7 @@
                     pendingPackGap: this.pendingPackGap,
                     penStrokes: this.clonePenStrokes(),
                     colorMode: this.colorMode,
-                    productFrame: this.productFrame ? { x: this.productFrame.x, y: this.productFrame.y } : null
+                    productFrame: this.productFrame ? { x: this.productFrame.x, y: this.productFrame.y, mode: this.productFrame.mode, cible: this.productFrame.cible ? { ...this.productFrame.cible } : undefined, dejaJuste: this.productFrame.dejaJuste } : null
                 };
                 this.history.push(state);
             }
@@ -3022,11 +3168,328 @@
                 this.updateEquation();
             }
 
+            // --- FACTORISER (lot 5, 06/11/2026) ---
+            // Bouton « Factoriser » de la colonne : les tuiles du plateau sont rangées à côté d'un tableau
+            // vide qui s'agrandit. L'élève y fait un rectangle (une case = une tuile), puis pose les côtés
+            // avec des tuiles du menu. L'équation écrit « expression de départ = côté × côté ».
+            factoDonnees(exclu = null) {
+                const dans = (z) => this.tokens.filter(t => t !== exclu && t.productZone === z && t.pairId === null);
+                const cells = dans('cell').map(t => ({ id: t.id, row: t.productRow ?? 0, col: t.productCol ?? 0, type: t.type, sign: t.sign, orientation: t.orientation || 'h' }));
+                const tops = dans('top').map(t => ({ id: t.id, col: t.productIndex ?? 0, type: t.type, sign: t.sign }));
+                const lefts = dans('left').map(t => ({ id: t.id, row: t.productIndex ?? 0, type: t.type, sign: t.sign }));
+                const libres = this.tokens.filter(t => t !== exclu && !t.productZone && t.pairId === null && !t._canceling);
+                const R = Math.max(0, ...cells.map(c => c.row + 1), ...lefts.map(l => l.row + 1));
+                const C = Math.max(0, ...cells.map(c => c.col + 1), ...tops.map(t => t.col + 1));
+                return { R, C, cells, tops, lefts, cible: this.productFrame?.cible || { x2: 0, x: 0, unit: 0 }, resteValeur: factoValeur(libres), resteNombre: libres.length };
+            }
+
+            // Plus de ligne ni de colonne vide au milieu : on renumérote 0, 1, 2…
+            factoTasser() {
+                const z = (n) => this.tokens.filter(t => t.productZone === n);
+                const tasser = (cles, lire, ecrire) => {
+                    const vus = [...new Set(cles.map(lire))].sort((a, b) => a - b);
+                    const place = new Map(vus.map((v, i) => [v, i]));
+                    cles.forEach(t => ecrire(t, place.get(lire(t))));
+                };
+                tasser([...z('cell'), ...z('left')], t => t.productZone === 'cell' ? (t.productRow ?? 0) : (t.productIndex ?? 0),
+                    (t, i) => { if (t.productZone === 'cell') t.productRow = i; else t.productIndex = i; });
+                tasser([...z('cell'), ...z('top')], t => t.productZone === 'cell' ? (t.productCol ?? 0) : (t.productIndex ?? 0),
+                    (t, i) => { if (t.productZone === 'cell') t.productCol = i; else t.productIndex = i; });
+            }
+
+            factoEtat() { return factoAnalyser(this.factoDonnees()); }
+
+            factoMetrics(frame) {
+                const d = this.factoDonnees();
+                const etat = factoAnalyser(d);
+                const fantome = !factoEstJuste(etat); // la colonne et la ligne « + » où l'on agrandit le rectangle
+                const PAD = 8, FANTOME = 72;
+                const cols = d.C + (fantome ? 1 : 0), rows = d.R + (fantome ? 1 : 0);
+                const colWidths = Array.from({ length: cols }, (_, c) => {
+                    if (c >= d.C) return FANTOME;
+                    const top = d.tops.find(t => t.col === c);
+                    const ws = d.cells.filter(x => x.col === c).map(x => getTileSize(x.type, x.orientation).w);
+                    if (top) ws.push(getTileSize(top.type, 'h').w);
+                    return Math.max(...ws, 34) + PAD;
+                });
+                const rowHeights = Array.from({ length: rows }, (_, r) => {
+                    if (r >= d.R) return FANTOME;
+                    const left = d.lefts.find(t => t.row === r);
+                    const hs = d.cells.filter(x => x.row === r).map(x => getTileSize(x.type, x.orientation).h);
+                    if (left) hs.push(getTileSize(left.type, 'v').h);
+                    return Math.max(...hs, 34) + PAD;
+                });
+                const toolbarH = 34, leftW = 62, topH = 50, statutH = 52; // deux lignes de texte
+                const gridW = leftW + colWidths.reduce((a, b) => a + b, 0);
+                const BORD = 6; // le cadre a un bord de 3 px de chaque côté (avant, le tableau dépassait)
+                const width = Math.max(300, gridW + BORD);
+                const height = toolbarH + topH + rowHeights.reduce((a, b) => a + b, 0) + statutH + BORD;
+                const colX = (c) => (frame?.x || 0) + leftW + colWidths.slice(0, c).reduce((a, b) => a + b, 0);
+                const rowY = (r) => (frame?.y || 0) + toolbarH + topH + rowHeights.slice(0, r).reduce((a, b) => a + b, 0);
+                return {
+                    rows, cols, toolbarH, leftW, topH, colWidths, rowHeights, width, height, gridW, statutH, etat, d, fantome,
+                    gridY: (frame?.y || 0) + toolbarH,
+                    centralX: (frame?.x || 0) + leftW,
+                    centralY: (frame?.y || 0) + toolbarH + topH,
+                    colX, rowY
+                };
+            }
+
+            factoRendre() {
+                const f = this.productFrame;
+                if (f.element) f.element.remove();
+                const m = this.factoMetrics(f);
+                const juste = factoEstJuste(m.etat);
+                const el = document.createElement('div');
+                el.className = 'product-frame product-dynamic facto' + (juste ? ' facto-juste' : '');
+                el.style.left = f.x + 'px';
+                el.style.top = f.y + 'px';
+                el.style.width = m.width + 'px';
+                el.style.height = m.height + 'px';
+
+                const toolbar = document.createElement('div');
+                toolbar.className = 'product-toolbar';
+                toolbar.title = 'Déplacer le tableau';
+                toolbar.innerHTML = `<span>Factoriser</span><div class="flex gap-1"><button class="paire" onclick="app.factoAjouterPaire()" title="Ajouter 𝑥 et −𝑥 : ensemble, elles valent 0">+ 𝑥 et −𝑥</button><button class="danger" onclick="app.deleteProductFrame(true)" title="Fermer le tableau">×</button></div>`;
+                toolbar.addEventListener('pointerdown', (e) => this.startProductFrameDrag(e));
+                toolbar.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('pointerdown', e => e.stopPropagation());
+                    btn.addEventListener('mousedown', e => e.stopPropagation());
+                });
+                el.addEventListener('mousedown', e => e.stopPropagation());
+                el.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+                el.appendChild(toolbar);
+
+                const grid = document.createElement('div');
+                grid.className = 'product-grid';
+                grid.style.gridTemplateColumns = `${m.leftW}px ${m.colWidths.map(w => `${w}px`).join(' ')}`;
+                grid.style.gridTemplateRows = `${m.topH}px ${m.rowHeights.map(h => `${h}px`).join(' ')}`;
+                grid.style.width = m.gridW + 'px';
+                const corner = document.createElement('div');
+                corner.className = 'product-corner';
+                corner.textContent = '×';
+                grid.appendChild(corner);
+                for (let c = 0; c < m.cols; c++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'product-slot top' + (c >= m.d.C ? ' fantome' : '');
+                    grid.appendChild(slot);
+                }
+                for (let r = 0; r < m.rows; r++) {
+                    const left = document.createElement('div');
+                    left.className = 'product-slot left' + (r >= m.d.R ? ' fantome' : '');
+                    grid.appendChild(left);
+                    for (let c = 0; c < m.cols; c++) {
+                        const cell = document.createElement('div');
+                        const fantome = r >= m.d.R || c >= m.d.C;
+                        cell.className = 'product-cell' + (fantome ? ' fantome' : '');
+                        if (fantome) cell.textContent = '+';
+                        grid.appendChild(cell);
+                    }
+                }
+                el.appendChild(grid);
+
+                const statut = document.createElement('div');
+                statut.className = 'facto-statut' + (juste ? ' ok' : '') + (this.factoMessage ? ' alerte' : '');
+                statut.style.height = m.statutH + 'px';
+                statut.textContent = this.factoMessage || factoTexte(m.etat);
+                el.appendChild(statut);
+
+                this.boardWorld.appendChild(el);
+                f.element = el;
+                if (juste && !f.dejaJuste) playSound('magic');
+                f.dejaJuste = juste;
+            }
+
+            factoReplacer(animate = true) {
+                const f = this.productFrame;
+                const m = this.factoMetrics(f);
+                const mal = new Set(m.etat.etat === 'taille' ? m.etat.mal : []);
+                const placer = (t, x, y) => {
+                    if (animate && t.element) t.element.classList.add('animating');
+                    this.moveToken(t, x, y);
+                    if (animate) setTimeout(() => t.element && t.element.classList.remove('animating'), 350);
+                };
+                this.tokens.forEach(t => {
+                    if (t.element) t.element.classList.toggle('facto-mal', mal.has(t.id));
+                    if (!t.productZone || t.pairId !== null) return;
+                    if (t.productZone === 'top') {
+                        if (t.type === 'x') this.setTokenOrientation(t, 'h');
+                        const s = getTileSize(t.type, t.orientation), c = t.productIndex ?? 0;
+                        placer(t, m.colX(c) + (m.colWidths[c] - s.w) / 2, f.y + m.toolbarH + (m.topH - s.h) / 2);
+                    } else if (t.productZone === 'left') {
+                        if (t.type === 'x') this.setTokenOrientation(t, 'v');
+                        const s = getTileSize(t.type, t.orientation), r = t.productIndex ?? 0;
+                        placer(t, f.x + (m.leftW - s.w) / 2, m.rowY(r) + (m.rowHeights[r] - s.h) / 2);
+                    } else {
+                        const s = getTileSize(t.type, t.orientation), r = t.productRow ?? 0, c = t.productCol ?? 0;
+                        placer(t, m.colX(c) + (m.colWidths[c] - s.w) / 2, m.rowY(r) + (m.rowHeights[r] - s.h) / 2);
+                    }
+                });
+            }
+
+            // Une tuile 𝑥 posée dans une case se couche ou se met debout selon sa colonne, puis sa ligne.
+            factoOrienter(t) {
+                if (t.type !== 'x') return;
+                const d = this.factoDonnees(t);
+                const sorte = (liste, cle) => { const k = new Set(liste.map(cle)); return k.size === 1 ? [...k][0] : null; };
+                const top = d.tops.find(x => x.col === t.productCol), left = d.lefts.find(x => x.row === t.productRow);
+                const colK = top ? factoCote(top.type) : sorte(d.cells.filter(c => c.col === t.productCol), c => factoDims(c.type, c.orientation).l);
+                const ligK = left ? factoCote(left.type) : sorte(d.cells.filter(c => c.row === t.productRow), c => factoDims(c.type, c.orientation).h);
+                let o = t.orientation || 'h';
+                if (colK === 'x') o = 'h'; else if (colK === '1') o = 'v'; else if (ligK === 'x') o = 'v'; else if (ligK === '1') o = 'h';
+                this.setTokenOrientation(t, o);
+                t.originalOrientation = o;
+            }
+
+            factoPoser(t) {
+                const info = this.getProductZoneInfo(t);
+                const fini = () => { this.factoTasser(); this.renderProductFrame(); this.reflowProductFrameTokens(); this.updateEquation(); return true; };
+                const refuser = (message) => {
+                    this.history.pop(); // rien n'a changé : le pas enregistré au début du geste ne sert à rien
+                    this.markProductError(t);
+                    if (message) this.factoDire(message);
+                    if (this.dragStartState) this.restoreDraggedToken(t);
+                    else setTimeout(() => this.deleteToken(t, false), 420); // tuile tirée du menu : elle repart
+                    return true;
+                };
+                if (!info) {
+                    if (!t.productZone) return false;
+                    this.clearProductPlacement(t);
+                    return fini();
+                }
+                const d = this.factoDonnees(t);
+                if (info.zone === 'cell') {
+                    const row = Math.min(info.row, d.R), col = Math.min(info.col, d.C);
+                    if (d.cells.some(c => c.row === row && c.col === col)) return refuser(null);
+                    this.clearProductPlacement(t);
+                    t.productZone = 'cell'; t.productRow = row; t.productCol = col;
+                    this.factoOrienter(t);
+                    playSound('snap');
+                    return fini();
+                }
+                const index = info.zone === 'top' ? info.col : info.row;
+                if (!factoCoteAccepte(d, { zone: info.zone, index, type: t.type, sign: t.sign }))
+                    return refuser(t.type === 'x2' ? 'Un côté se fait avec des tuiles 𝑥 et 1.' : 'Ce côté ne va pas : case = côté × côté.');
+                this.clearProductPlacement(t);
+                t.productZone = info.zone; t.productIndex = index;
+                if (t.type === 'x') this.setTokenOrientation(t, info.zone === 'top' ? 'h' : 'v');
+                playSound('snap');
+                return fini();
+            }
+
+            // Un message court à la place de l'état, le temps de le lire.
+            factoDire(texte) {
+                this.factoMessage = texte;
+                clearTimeout(this._factoTimer);
+                this._factoTimer = setTimeout(() => { this.factoMessage = null; if (this.productFrame?.mode === 'facto') { this.renderProductFrame(); } }, 2600);
+                if (this.productFrame?.mode === 'facto') this.renderProductFrame();
+            }
+
+            // Sous le bouton « Factoriser » quand il ne peut pas se lancer.
+            factoBulle(texte) {
+                const b = document.getElementById('btn-factoriser');
+                let bulle = document.getElementById('facto-bulle');
+                if (!bulle) { bulle = document.createElement('div'); bulle.id = 'facto-bulle'; bulle.setAttribute('role', 'status'); document.body.appendChild(bulle); }
+                bulle.textContent = texte;
+                const r = b.getBoundingClientRect();
+                bulle.style.left = Math.round(r.right + 10) + 'px';
+                bulle.style.top = Math.round(r.top + r.height / 2) + 'px';
+                bulle.hidden = false;
+                b.classList.remove('pivot-refus'); void b.offsetWidth; b.classList.add('pivot-refus');
+                clearTimeout(this._bulleTimer);
+                this._bulleTimer = setTimeout(() => { bulle.hidden = true; b.classList.remove('pivot-refus'); }, 2600);
+            }
+
+            lancerFactoriser() {
+                if (this.productFrame) { this.factoBulle('Un tableau est déjà ouvert : ferme-le d’abord (×).'); return; }
+                if (this.tokens.some(t => this.isFlipPending(t))) { this.factoBulle('Retourne d’abord la parenthèse : « Ajouter l’opposé ».'); return; }
+                const libres = this.tokens.filter(t => t.pairId === null && !t._canceling);
+                const cible = factoValeur(libres);
+                if (factoEgales(cible, { x2: 0, x: 0, unit: 0 })) { this.factoBulle('Pose ou tape d’abord une expression.'); return; }
+                this.saveState();
+                if (this.taper?.ouvert) this.fermerTaper();
+                this.setTool('hand');
+                this.stopFlip();
+                // Le tableau en haut à gauche de la vue ; les tuiles à côté (écran large) ou dessous (téléphone),
+                // rangées par sorte : 𝑥², 𝑥, 1, les vertes d'abord.
+                const sc = this.scale, w = this.boardContainer.clientWidth / sc, h = this.boardContainer.clientHeight / sc;
+                const x0 = -this.pan.x / sc, y0 = -this.pan.y / sc, marge = 16 / sc;
+                this.productFrame = { x: Math.round(x0 + marge), y: Math.round(y0 + marge), element: null, mode: 'facto', cible, dejaJuste: false };
+                const estW = 440, estH = 400;
+                const aCote = w - estW - 2 * marge >= 250;
+                const rx = aCote ? this.productFrame.x + estW + 24 : this.productFrame.x;
+                const ry = aCote ? this.productFrame.y + 8 : this.productFrame.y + estH;
+                const rw = aCote ? x0 + w - marge - rx : w - 2 * marge;
+                const ordre = { x2: 0, x: 1, unit: 2 };
+                const rangees = [...libres].sort((a, b) => ordre[a.type] - ordre[b.type] || b.sign - a.sign || a.id - b.id);
+                let x = rx, y = ry, hRang = 0, avant = null;
+                rangees.forEach(t => {
+                    if (t.type === 'x') { this.setTokenOrientation(t, 'h'); t.originalOrientation = 'h'; }
+                    const s = getTileSize(t.type, t.orientation);
+                    const cle = t.type + ':' + t.sign;
+                    const gap = avant === null ? 0 : (avant === cle ? 6 : 18);
+                    if (x > rx && x + gap + s.w > rx + rw) { x = rx; y += hRang + 14; hRang = 0; }
+                    else x += (x > rx ? gap : 0);
+                    this.moveToken(t, x, y);
+                    x += s.w; hRang = Math.max(hRang, s.h); avant = cle;
+                });
+                this.factoReserve = { x: rx, y: y + hRang + 24, w: rw };
+                this.factoMessage = null;
+                this.renderProductFrame();
+                this.reflowProductFrameTokens(false);
+                this.updateEquation();
+            }
+
+            // « + 𝑥 et −𝑥 » : deux tuiles qui ensemble valent 0 (pour 𝑥² − 1, 𝑥² + 𝑥 − 2…), posées sous les tuiles.
+            factoAjouterPaire() {
+                this.saveState();
+                playSound('pop');
+                const f = this.productFrame, m = this.factoMetrics(f);
+                const r = this.factoReserve || { x: f.x + m.width + 24, y: f.y, w: 260 };
+                const libre = (x, y, w, h) => !this.tokens.some(t => { const s = getTileSize(t.type, t.orientation); return x < t.x + s.w + 6 && t.x < x + w + 6 && y < t.y + s.h + 6 && t.y < y + h + 6; })
+                    && !(x < f.x + m.width + 6 && f.x < x + w + 6 && y < f.y + m.height + 6 && f.y < y + h + 6);
+                let px = r.x, py = r.y;
+                for (let essai = 0; essai < 400 && !libre(px, py, 236, 34); essai++) { py += 20; }
+                this.createTileToken('x', 1, 'manual', px, py, 'h');
+                this.createTileToken('x', -1, 'manual', px + 126, py, 'h');
+                this.applyColorMode(false);
+                this.renderProductFrame();
+                this.updateEquation();
+            }
+
+            // L'équation : « expression de départ = côté × côté », avec … tant qu'un côté manque.
+            factoLatex() {
+                const f = this.productFrame;
+                const compte = [];
+                [['x2', 1], ['x2', -1], ['x', 1], ['x', -1], ['unit', 1], ['unit', -1]].forEach(([type, sign]) => {
+                    const n = sign === 1 ? Math.max(0, f.cible[type]) : Math.max(0, -f.cible[type]);
+                    for (let i = 0; i < n; i++) compte.push({ type, sign, pairId: null });
+                });
+                const cible = this.tokensToReducedSumLatex(compte) || '0';
+                const cote = (zone) => this.productTokens(zone).map(o => o.t);
+                const g = cote('left'), h = cote('top');
+                const d = this.factoDonnees();
+                // un côté pas fini s'écrit avec « … » : (𝑥 + …), jamais un produit faux comme 𝑥(𝑥 + 2)
+                const fini = (l, n) => l.length > 0 && l.length >= n;
+                const seul = (l, n) => fini(l, n) && new Set(l.map(t => t.type + ':' + t.sign)).size === 1;
+                const ecrit = (l, n) => !l.length ? '\\dots' : this.tokensToReducedSumLatex(l) + (fini(l, n) ? '' : `\\;${this.colorLatex(this.getEquationOperatorColor(1), '+')}\\;\\dots`);
+                const sg = seul(g, d.R), sh = seul(h, d.C);
+                const lg = ecrit(g, d.R), lh = ecrit(h, d.C);
+                let produit;
+                if (sg && sh) produit = `${lg}\\times ${lh}`;
+                else if (sg) produit = `${lg}(${lh})`;
+                else if (sh) produit = `${lh}(${lg})`;
+                else if (fini(g, d.R) && fini(h, d.C) && lg === lh) produit = `(${lg})^2`;
+                else produit = `(${lg})(${lh})`;
+                return `${cible}\\;=\\;${produit}`;
+            }
+
             // --- PIVOTER UNE TUILE 𝑥 (lot 4) : outil comme la corbeille, couchée ↔ debout ---
             pivoterTuile(t) {
                 if (!t || !t.element) return;
                 // x² et 1 sont carrés ; dans le tableau produit ou dans une paire nulle, c'est l'appli qui oriente
-                if (t.type !== 'x' || t.productZone || t.pairId !== null) {
+                const caseFacto = t.productZone === 'cell' && this.productFrame?.mode === 'facto';
+                if (t.type !== 'x' || (t.productZone && !caseFacto) || t.pairId !== null) {
                     t.element.classList.remove('pivot-refus'); void t.element.offsetWidth; t.element.classList.add('pivot-refus');
                     setTimeout(() => t.element && t.element.classList.remove('pivot-refus'), 600);
                     return;
@@ -3040,6 +3503,7 @@
                 t.originalOrientation = o; // une paire nulle défaite lui rend CETTE orientation
                 const apres = getTileSize(t.type, o);
                 this.moveToken(t, Math.round(cx - apres.w / 2), Math.round(cy - apres.h / 2));
+                if (caseFacto) { this.renderProductFrame(); this.reflowProductFrameTokens(false); }
                 const el = t.element;
                 el.style.transformOrigin = '50% 50%';
                 const a = el.animate([{ transform: 'rotate(-90deg)' }, { transform: 'rotate(0deg)' }], { duration: 220, easing: 'ease-out' });
@@ -3050,15 +3514,33 @@
             // --- EQUATION TEXT ---
             updateEquation() {
                 let displayString = "";
-                displayString = this.productFrame ? this.generateExpressionWithProductFrameLatex() : this.generateExpressionString(this.displayMode);
+                displayString = this.productFrame?.mode === 'facto' ? this.factoLatex()
+                    : (this.productFrame ? this.generateExpressionWithProductFrameLatex() : this.generateExpressionString(this.displayMode));
                 // Espace moyen autour de + et − (avant, tout était collé : « 3x²+2x−(x−1) », peu lisible au tableau).
                 displayString = displayString.replace(/\s+/g, "").replace(/\\;/g, "\\:").replace(/(\\,|\\quad|\\qquad)/g, "");
                 katex.render(displayString, document.getElementById('equation-display'), { throwOnError: false });
+                this.ajusterEquation();
                 this.renderBracketFrames();
                 
                 const hasPending = this.steps.some(s => s.type === 'multiplication' && !s.distributed && s.isClosed && s.factor > 1);
                 const distBtn = document.getElementById('btn-distribute');
                 if (hasPending) distBtn.classList.remove('hidden'); else distBtn.classList.add('hidden');
+            }
+
+            // Une équation trop longue pour sa boîte (« 𝑥² + 3𝑥 + 2 = (𝑥 + 1)(𝑥 + 2) » au téléphone) rapetisse
+            // jusqu'à tenir, au lieu de passer sous l'œil ; elle ne descend pas sous 13 px.
+            ajusterEquation() {
+                const eq = document.getElementById('equation-display');
+                const boite = eq?.parentElement;
+                if (!eq || !boite) return;
+                eq.style.fontSize = '';
+                const st = getComputedStyle(boite);
+                const place = boite.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+                const besoin = eq.scrollWidth;
+                if (place > 0 && besoin > place) {
+                    const base = parseFloat(getComputedStyle(eq).fontSize);
+                    eq.style.fontSize = Math.max(13, Math.floor(base * place / besoin * 0.97)) + 'px';
+                }
             }
 
             generateExpressionString(mode, excludeProduct = false) {
@@ -3258,8 +3740,9 @@
                 // et on décale proprement les indices des autres cases.
                 const removedTop = [];
                 const removedLeft = [];
+                const facto = this.productFrame?.mode === 'facto'; // Factoriser : enlever un côté laisse les tuiles du rectangle
                 this.tokens.forEach(t => {
-                    if (!ids.has(t.id)) return;
+                    if (!ids.has(t.id) || facto) return;
                     if (t.productZone === 'top') removedTop.push(t.productIndex ?? 0);
                     if (t.productZone === 'left') removedLeft.push(t.productIndex ?? 0);
                 });
@@ -3324,6 +3807,8 @@
                     return;
                 }
                 if (this.currentTool !== 'hand') return; e.stopPropagation();
+                // Factoriser : chaque tuile rangée (ou sortie) du rectangle s'annule avec ↶
+                if (this.productFrame?.mode === 'facto') this.saveState();
                 this.draggedToken = this.tokens.find(t => t.id === id);
                 this.dragStartState = this.draggedToken ? {
                     x: this.draggedToken.x,
