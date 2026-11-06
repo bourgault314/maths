@@ -435,12 +435,17 @@ async function jouerApprendsTroisCalculs(page, cle, ecran) {
   for (const r of reponses) {
     await taper(page, r, {clavier: true});
     await valider(page, {clavier: true});
-    // (« Suivant » vient tout seul 800 ms après la dernière : on regarde avant.)
     await page.waitForTimeout(250);
     dessins.push(await dessin());
   }
   assert.notEqual(dessins[dessins.length - 1], dessins[0], `${cle} : le dessin s'est rempli`);
   await ecran("apprends-ecris-fini", {image: true});
+  // Relecture 1 (05/11/2026) : J'écris fini reste à l'écran, avec tout le
+  // travail ; plus de passage tout seul, « Suivant » mène à « À retenir ».
+  await page.waitForTimeout(1200);
+  assert.equal(await texte(page, "#validate"), "Suivant", `${cle} : J'écris fini, « Suivant »`);
+  assert.equal(await page.isVisible("#question-card.ecrit-fini"), true, `${cle} : J'écris fini reste à l'écran`);
+  await valider(page);
   await page.waitForTimeout(900);
 }
 

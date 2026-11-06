@@ -79,7 +79,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261105-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-1">
 </head>
 <body>
   <main class="shell">
@@ -242,9 +242,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261105-1"></script>
+  <script src="./defi_calcul_core.js?v=20261106-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261031-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261105-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261106-1"></script>
   <script>
     (() => {
       "use strict";
@@ -283,6 +283,9 @@
         autoAdvanceTimer: null,
         // L'aide qu'on touche dans « J'apprends » (rekenrek, glisse-nombres).
         manip: null,
+        // J'apprends sur ordinateur : la taille du cadre de la leçon
+        // (relecture 1, mesurerLecon).
+        lecon: null,
         palier: null,
         // La séance qui se joue : son étape, et ce qui a été joué (pour
         // « Séance du jour faite »).
@@ -1356,7 +1359,14 @@
         const maximum = Math.min(bornes.max, plafond);
         // Un écran qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est.
-        const z = chercherEchelle({...bornes, max: maximum, longue: bornes.min}, tient);
+        let z = chercherEchelle({...bornes, max: maximum, longue: bornes.min}, tient);
+        // Relecture 1 : une leçon (J'apprends, puis « À retenir ») garde une
+        // seule taille de cadre, celle de son écran le plus serré.
+        const lecon = echelleDeLecon(z);
+        if (lecon !== null && lecon < z) {
+          z = lecon;
+          tient(z);
+        }
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
         if (state.manip) state.manip.mesurer();
@@ -1364,6 +1374,47 @@
       }
       window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", () => ajusterRetenir());
+
+      // J'apprends sur ordinateur (relecture 1, 05/11/2026) : la page
+      // rapetissait écran par écran pour tenir sans défiler, et le cadre
+      // changeait de largeur à chaque temps (≈ 840, 790, 715 px). À l'entrée
+      // de la leçon, chaque temps est dessiné puis mesuré (rien ne se voit :
+      // tout se passe avant que la page soit repeinte) ; la leçon garde la
+      // plus petite de ces tailles, « À retenir » compris. Si la fenêtre
+      // change (plein écran), la taille suit dans la même proportion : le
+      // temps en cours se remesure, rien n'est recommencé.
+      function mesurerLecon() {
+        const serie = state.serie;
+        state.lecon = null;
+        if (!serie || serie.genre !== "apprends" || window.innerWidth <= ECHELLE.telephone) return;
+        const echelles = [];
+        for (let i = 0; i < serie.temps.length; i += 1) {
+          serie.index = i;
+          renderTemps();
+          ajusterEchelle();
+          echelles.push(echelleCourante());
+        }
+        serie.index = 0;
+        renderTemps();
+        state.lecon = {serie, echelles, plus: Math.min(...echelles)};
+      }
+      function echelleCourante() {
+        return Number(document.documentElement.style.getPropertyValue("--echelle")) || 1;
+      }
+      // La taille de la leçon pour l'écran qui se mesure (`z` : la sienne,
+      // seul) ; null hors d'une leçon.
+      function echelleDeLecon(z) {
+        const lecon = state.lecon;
+        if (!lecon || state.serie !== lecon.serie || window.innerWidth <= ECHELLE.telephone) return null;
+        if (!$("play").hidden) {
+          const propre = lecon.echelles[lecon.serie.index];
+          if (!propre) return null;
+          lecon.courante = lecon.plus * z / propre;
+          return lecon.courante;
+        }
+        if (!$("result").hidden && !$("result-retenir").hidden) return lecon.courante || lecon.plus;
+        return null;
+      }
 
       // Téléphone (audit du 31/10) : à l'entraînement, le geste fait, le pavé
       // arrive sous le glisse-nombres. Le glisse-nombres a une taille fixe :
@@ -1544,12 +1595,27 @@
       // tableau) faisaient défiler l'écran à 390 × 664. Le cadre tient entier
       // dans l'écran : la phrase et le dessin rapetissent ensemble, par
       // petits pas, jusqu'à ce qu'il tienne.
+      //
+      // Relecture 1 : le calcul, seul sur sa ligne, ne se coupe jamais ; trop
+      // long pour la largeur, il rapetisse (au téléphone comme à l'ordinateur).
       function ajusterRetenir() {
         const racine = document.documentElement;
         racine.style.removeProperty("--retenir-z");
-        if ($("result").hidden || $("result-retenir").hidden || window.innerWidth > ECHELLE.telephone) return;
+        if ($("result").hidden || $("result-retenir").hidden) return;
+        ajusterCalculRetenir();
+        if (window.innerWidth > ECHELLE.telephone) return;
         const deborde = () => racine.scrollHeight > window.innerHeight + 1;
-        for (let z = .95; z >= .6 && deborde(); z -= .05) racine.style.setProperty("--retenir-z", z.toFixed(2));
+        for (let z = .95; z >= .6 && deborde(); z -= .05) {
+          racine.style.setProperty("--retenir-z", z.toFixed(2));
+          ajusterCalculRetenir();
+        }
+      }
+      function ajusterCalculRetenir() {
+        const calcul = $("retenir-phrase").querySelector(".dc-retenir-calcul");
+        if (!calcul) return;
+        calcul.style.removeProperty("font-size");
+        const place = $("retenir-phrase").clientWidth;
+        if (calcul.scrollWidth > place) calcul.style.fontSize = `${(Math.floor(place / calcul.scrollWidth * 100) / 100).toFixed(2)}em`;
       }
 
       function versAccueil() {
@@ -2291,29 +2357,26 @@
         show("play");
         majFilDeJeu();
         majBoutonRetour();
-        renderTemps();
+        mesurerLecon();
+        if (!state.lecon) renderTemps();
         ajusterEchelle();
       }
 
-      // Le fil des temps : « J'apprends ①②③ Je manipule ».
+      // Le fil des temps : « J'apprends · Je manipule », au-dessus de la barre
+      // qui avance dans la leçon. Relecture 1 (05/11/2026, choix de Gwenaël
+      // sur la planche) : plus de 2e ligne de pastilles (①②③) sous celles
+      // de la séance ; une seule progression, la barre, avec son nom.
       function renderFilApprends() {
         const serie = state.serie;
         const fil = $("seance-fil");
         fil.hidden = false;
         // Dans une séance, le fil de la séance dit déjà « J'apprends : … ».
         const titre = document.createElement("span");
-        titre.textContent = "J’apprends";
+        titre.textContent = "J’apprends ·";
         titre.hidden = enSeance();
-        const liste = document.createElement("ol");
-        serie.temps.forEach((nom, index) => {
-          const point = document.createElement("li");
-          if (index < serie.index) { point.className = "ok"; point.textContent = "✓"; }
-          else { point.textContent = String(index + 1); if (index === serie.index) point.className = "ici"; }
-          liste.append(point);
-        });
         const nom = document.createElement("b");
         nom.textContent = NOMS_TEMPS[serie.temps[serie.index]];
-        fil.replaceChildren(titre, liste, nom);
+        fil.replaceChildren(titre, nom);
         fil.setAttribute("aria-label", `J’apprends, temps ${serie.index + 1} sur ${serie.temps.length} : ${nom.textContent}`);
       }
 
@@ -2529,6 +2592,13 @@
           $("answer-feedback").className = "answer-feedback is-correct";
           $("answer-feedback").textContent = soude("Bravo !");
           setAnswerControlsEnabled(false);
+          if (ecris) {
+            // Relecture 1 (05/11/2026) : J'écris fini reste à l'écran, avec
+            // tout le travail ; l'élève passe à « À retenir » quand il veut.
+            $("validate").focus?.({preventScroll: true});
+            ajusterEchelle();
+            return;
+          }
           $("validate").style.visibility = "hidden";
           scheduleAutoAdvance(avancerTemps);
           return;
@@ -2597,7 +2667,18 @@
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
-        AIDES.ecrireTexte($("retenir-phrase"), serie.apprends.bilan);
+        // Relecture 1 (05/11/2026) : la règle en phrase, puis le calcul seul
+        // sur sa ligne, d'un seul tenant (ajusterRetenir le rapetisse s'il
+        // ne tient pas dans la largeur).
+        // Un calcul qui reste dans la phrase ne se coupe pas non plus.
+        const deux = AIDES.bilanEnDeux(serie.apprends.bilan);
+        if (deux) {
+          AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(deux.phrase));
+          const calcul = document.createElement("span");
+          calcul.className = "dc-retenir-calcul";
+          AIDES.ecrireTexte(calcul, deux.calcul);
+          $("retenir-phrase").append(...(deux.phrase ? [" "] : []), calcul);
+        } else AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(serie.apprends.bilan));
         $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
@@ -2763,7 +2844,10 @@
           const glisse = manipulation.outil !== "perles";
           carte.classList.add(glisse ? "aide-glisse" : "aide-perles", "manip-entraine");
           $("aide").hidden = false;
+          // Relecture 1 (05/11/2026) : à l'entraînement, l'outil ne donne
+          // pas la réponse ; sous lui, seulement ce qu'il reste à faire.
           const options = Object.assign({}, manipulation, {
+            sansReponse: true,
             surFini() {
               carte.classList.add("est-finie");
               ajusterEchelle();

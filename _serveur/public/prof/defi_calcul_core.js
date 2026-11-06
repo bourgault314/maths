@@ -679,7 +679,9 @@
         image: Object.freeze(a5Aide(cR)),
         solution: Object.freeze({image: a5Image(cR), phrase: a5Phrase(cR)})
       }),
+      // Relecture 1 : au-dessus du dessin, le calcul cherché et son détour.
       ecris: ecrisAvecDessins({
+        consigne: `${formaterNombre(cE.donnees.n)} + ${a} = ${formaterNombre(cE.donnees.n)} + ${r} − ${d}`,
         etapes: a5Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a5Image(cE), phrase: a5Phrase(cE)})
       }, droiteDessins({depart: cE.donnees.n, sauts: [r, -d], direct: a, trou: false, etapes: 3})),
@@ -708,10 +710,12 @@
         image: Object.freeze(a2Aide(cR)),
         solution: Object.freeze({image: a2Image(cR), phrase: a2Phrase(cR)})
       }),
-      ecris: ecrisAvecDessins({
+      // Relecture 1 : le complément cherché, avec son « ? » (jamais la
+      // réponse) ; avec une seule étape, rien : c'est déjà la ligne écrite.
+      ecris: ecrisAvecDessins(Object.assign({
         etapes: a2Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a2Image(cE), phrase: a2Phrase(cE)})
-      }, a2Dessins(cE)),
+      }, a2Etapes(cE).length > 1 ? {consigne: cE.texte.replace(CASE, "?")} : {}), a2Dessins(cE)),
       bilan,
       image: Object.freeze(a2Image(cR)),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
@@ -1508,10 +1512,14 @@
         ? {apres: 2, attente: `${n} + … = ${m}`, texte: `${n} + ${d} = ${m}`}
         : {apres: 2, attente: `${n} ${op} ${Math.abs(d)} = …`, texte: `${n} ${op} ${Math.abs(d)} = ${m}`}));
     }
+    // « d'un coup » seulement à partir de 2 perles (relecture 1 : « Retire
+    // 1 perle d'un coup » n'a pas de sens). Un trou garde sa phrase : elle
+    // ne doit pas dire combien de perles manquent.
+    const coup = n => (Math.abs(n) > 1 ? " d’un coup" : "");
     let consigne;
     if (trou) consigne = palier === null ? "Finis la rangée d’un coup." : "Finis la rangée d’un coup, puis pousse les perles qui manquent.";
-    else if (d > 0) consigne = palier === null ? `Pousse ${d} perle${d > 1 ? "s" : ""} d’un coup.` : "Finis la rangée d’un coup, puis pousse le reste.";
-    else consigne = palier === null ? `Retire ${-d} perle${d < -1 ? "s" : ""} d’un coup.` : "Vide la rangée d’un coup, puis retire le reste.";
+    else if (d > 0) consigne = palier === null ? `Pousse ${d} perle${d > 1 ? "s" : ""}${coup(d)}.` : `Finis la rangée${coup(sauts[0])}, puis pousse le reste.`;
+    else consigne = palier === null ? `Retire ${-d} perle${d < -1 ? "s" : ""}${coup(d)}.` : `Vide la rangée${coup(sauts[0])}, puis retire le reste.`;
     return Object.freeze({
       outil: "perles", depart: n,
       texte: trou ? calcul.texte.replace(CASE, "?") : `${n} ${op} ${Math.abs(d)}`,
@@ -1522,7 +1530,7 @@
   // Les trois temps de J'apprends d'un niveau d'A1, A10, A11, sur trois
   // calculs différents : les perles (jusqu'à 100), la droite avec ses « ? »,
   // les étapes à remplir.
-  function plusApprends({manipule, represente, ecris, etapes, consigne, bilan}) {
+  function plusApprends({manipule, represente, ecris, etapes, consigne, consigneEcris = null, bilan}) {
     const premier = manipule || represente;
     return Object.freeze({
       exemple: Object.freeze({texte: estTrou(premier) ? premier.texte.replace(CASE, "?") : premier.texte.replace(` = ${CASE}`, ""), reponse: premier.reponse}),
@@ -1533,11 +1541,11 @@
         image: Object.freeze(plusAide(represente)),
         solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
       }),
-      ecris: ecrisAvecDessins({
+      ecris: ecrisAvecDessins(Object.assign({
         etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte, reponse}))),
         reponse: ecris.reponse,
         solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
-      }, plusDessins(ecris, etapes.length)),
+      }, consigneEcris ? {consigne: consigneEcris} : {}), plusDessins(ecris, etapes.length)),
       bilan,
       image: Object.freeze(plusImage(premier)),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
@@ -1783,6 +1791,7 @@
           represente: ligne("A1", 0, 4, 5),
           ecris: lignePlus("A1", 0, "complement-egal", 8, 2),
           etapes: etapesDe(["8 + ? = 10", 2], ["10 = 8 + ?", 2]),
+          consigneEcris: "10 = 8 + ?",
           consigne: "Je pars de 4 et j’avance de 5.",
           bilan: "Pour faire 10 : 1 et 9, 2 et 8, 3 et 7, 4 et 6, 5 et 5."
         })
@@ -1796,6 +1805,7 @@
           represente: ligne("A1", 0, 9, 4),
           ecris: ligne("A1", 0, 7, 5),
           etapes: etapesDe(["7 + 3 = ?", 10], ["10 + 2 = ?", 12], ["7 + 5 = ?", 12]),
+          consigneEcris: "7 + 5 = 7 + 3 + 2",
           consigne: "Je vais à 10, puis j’ajoute le reste.",
           bilan: "Pour dépasser 10, je vais d’abord à 10, puis j’ajoute le reste : 8 + 7 = 8 + 2 + 5 = 15."
         })
@@ -1809,6 +1819,7 @@
           represente: ligne("A1", 0, 13, -5),
           ecris: lignePlus("A1", 0, "complement", 6, 7),
           etapes: etapesDe(["6 + ? = 10", 4], ["10 + ? = 13", 3], ["6 + ? = 13", 7]),
+          consigneEcris: "6 + ? = 13",
           consigne: "Je recule jusqu’à 10, puis je retire le reste.",
           bilan: "Pour passer 10 en reculant, je recule d’abord jusqu’à 10, puis je retire le reste : 15 − 7 = 15 − 5 − 2 = 8."
         })
@@ -1831,6 +1842,7 @@
           represente: ligne("A10", 0, 53, 5),
           ecris: ligne("A10", 0, 254, 3),
           etapes: etapesDe(["4 + 3 = ?", 7], ["254 + 3 = ?", 257]),
+          consigneEcris: "254 + 3 = 250 + 4 + 3",
           consigne: "J’avance de 5 : seul le chiffre des unités change.",
           bilan: "Sans passer la dizaine, seul le chiffre des unités change : 32 + 4 = 36."
         })
@@ -1844,6 +1856,7 @@
           represente: ligne("A10", 0, 68, 5),
           ecris: ligne("A10", 0, 236, 7),
           etapes: etapesDe(["236 + 4 = ?", 240], ["240 + 3 = ?", 243], ["236 + 7 = ?", 243]),
+          consigneEcris: "236 + 7 = 236 + 4 + 3",
           consigne: "Je vais à la dizaine, puis j’ajoute le reste.",
           bilan: "Pour passer la dizaine, je vais d’abord à la dizaine, puis j’ajoute le reste : 47 + 8 = 47 + 3 + 5 = 55."
         })
@@ -1857,6 +1870,7 @@
           represente: ligne("A10", 0, 196, 7),
           ecris: ligne("A10", 0, 395, 8),
           etapes: etapesDe(["395 + 5 = ?", 400], ["400 + 3 = ?", 403], ["395 + 8 = ?", 403]),
+          consigneEcris: "395 + 8 = 395 + 5 + 3",
           consigne: "Je vais à la centaine, puis j’ajoute le reste.",
           bilan: "Pour passer la centaine, je vais d’abord à la centaine, puis j’ajoute le reste : 196 + 7 = 196 + 4 + 3 = 203."
         })
@@ -1879,6 +1893,7 @@
           represente: ligne("A11", 0, 239, -6),
           ecris: ligne("A11", 0, 486, -3),
           etapes: etapesDe(["6 − 3 = ?", 3], ["486 − 3 = ?", 483]),
+          consigneEcris: "486 − 3 = 480 + 6 − 3",
           consigne: "Je recule de 6 : seul le chiffre des unités change.",
           bilan: "Sans passer la dizaine, seul le chiffre des unités change : 68 − 4 = 64."
         })
@@ -1892,6 +1907,7 @@
           represente: ligne("A11", 0, 523, -7),
           ecris: ligne("A11", 0, 50, -6),
           etapes: etapesDe(["10 − 6 = ?", 4], ["50 − 6 = ?", 44]),
+          consigneEcris: "50 − 6 = 40 + 10 − 6",
           consigne: "Je recule jusqu’à la dizaine, puis je retire le reste.",
           bilan: "Pour passer la dizaine en reculant, je recule d’abord jusqu’à la dizaine, puis je retire le reste : 42 − 8 = 42 − 2 − 6 = 34."
         })
@@ -1905,6 +1921,7 @@
           represente: ligne("A11", 0, 403, -5),
           ecris: ligne("A11", 0, 1002, -7),
           etapes: etapesDe([`1${ESPACE_FINE}002 − 2 = ?`, 1000], [`1${ESPACE_FINE}000 − 5 = ?`, 995], [`1${ESPACE_FINE}002 − 7 = ?`, 995]),
+          consigneEcris: `1${ESPACE_FINE}002 − 7 = 1${ESPACE_FINE}002 − 2 − 5`,
           consigne: "Je recule jusqu’à la centaine, puis je retire le reste.",
           bilan: "Pour passer la centaine en reculant, je recule d’abord jusqu’à la centaine, puis je retire le reste : 403 − 5 = 403 − 3 − 2 = 398."
         })
@@ -2379,7 +2396,7 @@
           represente: chemin("A3", 746, 80),
           ecris: chemin("A3", 715, -30),
           etapes: [["715 − 10 = ?", 705], ["705 − 20 = ?", 685], ["715 − 30 = ?", 685]],
-          consigneEcris: "715, c’est 71 dizaines et 5 unités.",
+          consigneEcris: "715 − 30 = 715 − 10 − 20",
           consigne: "Je complète la centaine avec des dizaines, puis j’ajoute le reste.",
           bilan: "Pour passer la centaine, je la complète avec des dizaines, puis j’ajoute le reste : 746 + 80 = 746 + 60 + 20 = 826."
         })
@@ -2393,7 +2410,7 @@
           represente: chemin("A3", 950, 70),
           ecris: chemin("A3", 1200, -400),
           etapes: [[`1${ESPACE_FINE}200 − 200 = ?`, 1000], [`1${ESPACE_FINE}000 − 200 = ?`, 800], [`1${ESPACE_FINE}200 − 400 = ?`, 800]],
-          consigneEcris: `1${ESPACE_FINE}200, c’est 12 centaines.`,
+          consigneEcris: `1${ESPACE_FINE}200 − 400 = 1${ESPACE_FINE}200 − 200 − 200`,
           consigne: "Je vais au millier, puis j’ajoute le reste.",
           bilan: `Pour passer le millier, je vais d’abord au millier, puis j’ajoute le reste : 950 + 70 = 950 + 50 + 20 = 1${ESPACE_FINE}020.`
         })
@@ -2428,6 +2445,7 @@
           represente: chemin("A4", 51, 27),
           ecris: chemin("A4", 61, 28),
           etapes: [["61 + 20 = ?", 81], ["81 + 8 = ?", 89], ["61 + 28 = ?", 89]],
+          consigneEcris: "61 + 28 = 61 + 20 + 8",
           consigne: "Je garde 51 : j’ajoute les dizaines, puis les unités.",
           bilan: "J’ajoute les dizaines, puis les unités : 42 + 35 = 42 + 30 + 5 = 77."
         })
@@ -2441,6 +2459,7 @@
           represente: chemin("A4", 36, 57),
           ecris: chemin("A4", 58, 34),
           etapes: [["58 + 30 = ?", 88], ["88 + 4 = ?", 92], ["58 + 34 = ?", 92]],
+          consigneEcris: "58 + 34 = 58 + 30 + 4",
           consigne: "Je garde 36 : j’ajoute les dizaines, puis je passe la dizaine.",
           bilan: "J’ajoute les dizaines, puis les unités en passant par la dizaine : 47 + 28 = 47 + 20 + 3 + 5 = 75."
         })
@@ -2454,6 +2473,7 @@
           represente: chemin("A4", 78, 45),
           ecris: chemin("A4", 87, 36),
           etapes: [["87 + 30 = ?", 117], ["117 + 6 = ?", 123], ["87 + 36 = ?", 123]],
+          consigneEcris: "87 + 36 = 87 + 30 + 6",
           consigne: "Je garde 78 : j’ajoute les dizaines, puis les unités.",
           bilan: "J’ajoute les dizaines, puis les unités, même au-delà de 100 : 78 + 45 = 78 + 40 + 5 = 123."
         })
@@ -2467,6 +2487,7 @@
           represente: chemin("A4", 275, 46),
           ecris: chemin("A4", 347, 28),
           etapes: [["347 + 20 = ?", 367], ["367 + 8 = ?", 375], ["347 + 28 = ?", 375]],
+          consigneEcris: "347 + 28 = 347 + 20 + 8",
           consigne: "Je garde 275 : j’ajoute les dizaines, puis les unités.",
           bilan: "Avec trois chiffres aussi, j’ajoute les dizaines, puis les unités : 275 + 46 = 275 + 40 + 6 = 321."
         })
@@ -2487,6 +2508,7 @@
           represente: chemin("A7", 486, -53),
           ecris: chemin("A7", 89, -46),
           etapes: [["89 − 40 = ?", 49], ["49 − 6 = ?", 43], ["89 − 46 = ?", 43]],
+          consigneEcris: "89 − 46 = 89 − 40 − 6",
           consigne: "Je garde 486 : je retire les dizaines, puis les unités.",
           bilan: "Je retire les dizaines, puis les unités : 78 − 35 = 78 − 30 − 5 = 43."
         })
@@ -2500,6 +2522,7 @@
           represente: chemin("A7", 81, -46),
           ecris: chemin("A7", 74, -38),
           etapes: [["74 − 30 = ?", 44], ["44 − 8 = ?", 36], ["74 − 38 = ?", 36]],
+          consigneEcris: "74 − 38 = 74 − 30 − 8",
           consigne: "Je garde 81 : je retire les dizaines, puis je passe la dizaine.",
           bilan: "Je retire les dizaines, puis les unités en passant par la dizaine : 63 − 27 = 63 − 20 − 3 − 4 = 36."
         })
@@ -2513,6 +2536,7 @@
           represente: chemin("A7", 523, -67),
           ecris: chemin("A7", 615, -38),
           etapes: [["615 − 30 = ?", 585], ["585 − 8 = ?", 577], ["615 − 38 = ?", 577]],
+          consigneEcris: "615 − 38 = 615 − 30 − 8",
           consigne: "Je garde 523 : je retire les dizaines, puis les unités.",
           bilan: "Je retire les dizaines, puis les unités, même en passant la centaine : 523 − 67 = 523 − 60 − 7 = 456."
         })
@@ -2688,7 +2712,9 @@
         image: Object.freeze(a6Aide(cR)),
         solution: Object.freeze({image: a6Image(cR), phrase: a6Phrase(cR)})
       }),
+      // Relecture 1 : au-dessus du dessin, le calcul cherché et son détour.
       ecris: ecrisAvecDessins({
+        consigne: `${formaterNombre(cE.donnees.n)} − ${a} = ${formaterNombre(cE.donnees.n)} − ${r} + ${d}`,
         etapes: a6Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a6Image(cE), phrase: a6Phrase(cE)})
       }, droiteDessins({depart: cE.donnees.n, sauts: [-r, d], direct: -a, trou: false, etapes: a6Etapes(cE).length})),
@@ -2871,7 +2897,9 @@
         image: Object.freeze(plusAide(represente)),
         solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
       }),
+      // Relecture 1 : au-dessus du dessin, l'écart cherché, avec son « ? ».
       ecris: ecrisAvecDessins({
+        consigne: ecris.texte.replace(CASE, "?"),
         etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
         reponse: ecris.reponse,
         solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
@@ -3466,7 +3494,6 @@
         represente: faitCalcul("M5", 0, "produit", 3, 25, 25),
         ecris: faitCalcul("M5", 0, "trou-egal", 4, 15, 60),
         consigne: "100, c’est 4 fois 25.",
-        consigneEcris: "Je coupe 60 en 4 parts égales.",
         etapes: [["60 = 4 × ?", 15], ["60 ÷ 4 = ?", 15]],
         dessins: (calcul, n) => partsDessins(m5Image(calcul), n),
         bilan: "100 = 4 × 25, donc 3 × 25 = 75. Je sais par cœur : 100 = 2 × 50 = 5 × 20 et 60 = 4 × 15 = 5 × 12 = 6 × 10."
@@ -3573,7 +3600,7 @@
         represente: m6Calcul(0, 4, 23),
         ecris: m6Calcul(0, 4, 37, true),
         consigne: "Je double 23, puis je double encore.",
-        consigneEcris: "4 × 37 : je double 37, puis je double encore.",
+        consigneEcris: "4 × 37 = 2 × 2 × 37",
         etapes: [["2 × 37 = ?", 74], ["4 × 37 = ?", 148]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
         bilan: "× 4, c’est le double du double : 23 × 4 = 46 × 2 = 92."
@@ -3588,7 +3615,7 @@
         represente: m6Calcul(0, 8, 15),
         ecris: m6Calcul(0, 8, 27, true),
         consigne: "Je double 15, puis encore, puis encore.",
-        consigneEcris: "8 × 27 : je double trois fois.",
+        consigneEcris: "8 × 27 = 2 × 2 × 2 × 27",
         etapes: [["2 × 27 = ?", 54], ["4 × 27 = ?", 108], ["8 × 27 = ?", 216]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
         bilan: "× 8, c’est doubler trois fois : 15 × 8 = 30 × 4 = 60 × 2 = 120."
@@ -3713,7 +3740,7 @@
         represente: m8Calcul(0, 7, 13),
         ecris: m8Calcul(0, 6, 14, true),
         consigne: "13 fois 7, c’est 10 fois 7 plus 3 fois 7.",
-        consigneEcris: "6 × 14 : je coupe 14 en 10 et 4.",
+        consigneEcris: "6 × 14 = 10 × 6 + 4 × 6",
         etapes: [["10 × 6 = ?", 60], ["4 × 6 = ?", 24], ["6 × 14 = ?", 84]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
         bilan: "13 fois 7, c’est 10 fois 7 plus 3 fois 7 : 13 × 7 = 70 + 21 = 91."
@@ -3728,7 +3755,7 @@
         represente: m8Calcul(0, 7, 23),
         ecris: m8Calcul(0, 6, 47, true),
         consigne: "Je coupe 23 en 20 et 3.",
-        consigneEcris: "6 × 47 : je coupe 47 en 40 et 7.",
+        consigneEcris: "6 × 47 = 40 × 6 + 7 × 6",
         etapes: [["40 × 6 = ?", 240], ["7 × 6 = ?", 42], ["6 × 47 = ?", 282]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
         bilan: "Je coupe le nombre en dizaines et unités : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
@@ -3743,7 +3770,7 @@
         represente: m8Calcul(0, 43, 21),
         ecris: m8Calcul(0, 35, 12),
         consigne: "21 fois 43, c’est 20 fois 43 plus 1 fois 43.",
-        consigneEcris: "12 × 35 : je coupe 12 en 10 et 2.",
+        consigneEcris: "12 × 35 = 10 × 35 + 2 × 35",
         etapes: [["10 × 35 = ?", 350], ["2 × 35 = ?", 70], ["12 × 35 = ?", 420]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
         bilan: "21 fois 43, c’est 20 fois 43 plus 1 fois 43 : 21 × 43 = 860 + 43 = 903."
@@ -4084,7 +4111,7 @@
           represente: m7Calcul(0, 34, 5),
           ecris: m7Calcul(0, 58, 5, true),
           consigne: "34 × 5, c’est la moitié de 34 × 10.",
-          consigneEcris: "5 × 58 : la moitié de 58 × 10.",
+          consigneEcris: "5 × 58 = 58 × 10 ÷ 2",
           etapes: [["58 × 10 = ?", 580], ["5 × 58 = ?", 290]],
           bilan: "× 5, c’est × 10 puis la moitié : 34 × 5 = 340 ÷ 2 = 170."
         })
@@ -4098,7 +4125,7 @@
           represente: m7Calcul(0, 143, 5),
           ecris: m7Calcul(0, 89, 5, true),
           consigne: "143 × 5, c’est la moitié de 143 × 10.",
-          consigneEcris: "5 × 89 : la moitié de 89 × 10.",
+          consigneEcris: "5 × 89 = 89 × 10 ÷ 2",
           etapes: [["89 × 10 = ?", 890], ["5 × 89 = ?", 445]],
           bilan: `× 5, c’est × 10 puis la moitié : 143 × 5 = 1${ESPACE_FINE}430 ÷ 2 = 715.`
         })
@@ -4112,7 +4139,7 @@
           represente: m7Calcul(0, 18, 50),
           ecris: m7Calcul(0, 37, 50, true),
           consigne: "18 × 50, c’est la moitié de 18 × 100.",
-          consigneEcris: "50 × 37 : la moitié de 37 × 100.",
+          consigneEcris: "50 × 37 = 37 × 100 ÷ 2",
           etapes: [["37 × 100 = ?", 3700], ["50 × 37 = ?", 1850]],
           bilan: `× 50, c’est × 100 puis la moitié : 18 × 50 = 1${ESPACE_FINE}800 ÷ 2 = 900.`
         })
@@ -4289,7 +4316,7 @@
         represente: m10Trois(0, 43, [5, 2], 0),
         ecris: m10Trois(0, 38, [5, 2], 1),
         consigne: "5 × 2 = 10 : je les calcule ensemble.",
-        consigneEcris: "2 × 38 × 5 : je regroupe 2 et 5.",
+        consigneEcris: "2 × 38 × 5 = 2 × 5 × 38",
         etapes: [["2 × 5 = ?", 10], ["38 × 10 = ?", 380]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
         bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430."
@@ -4304,7 +4331,7 @@
         represente: m10Trois(0, 37, [4, 25], 0),
         ecris: m10Trois(0, 18, [4, 25], 1),
         consigne: "4 × 25 = 100 : je les calcule ensemble.",
-        consigneEcris: "25 × 18 × 4 : je regroupe 25 et 4.",
+        consigneEcris: "25 × 18 × 4 = 25 × 4 × 18",
         etapes: [["25 × 4 = ?", 100], ["18 × 100 = ?", 1800]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
         bilan: `4 × 25 = 100 : je les calcule ensemble. 4 × 37 × 25 = 37 × 100 = 3${ESPACE_FINE}700.`
@@ -4319,7 +4346,7 @@
         represente: m10Quart(0, 16),
         ecris: m10Quart(0, 28, true),
         consigne: "16, c’est 4 × 4. Et 4 × 25 = 100.",
-        consigneEcris: "28, c’est 7 × 4 : 25 × 28 = 7 × 4 × 25.",
+        consigneEcris: "25 × 28 = 7 × 4 × 25",
         etapes: [["4 × 25 = ?", 100], ["7 × 100 = ?", 700]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
         bilan: "16, c’est 4 × 4 : 16 × 25 = 4 × 4 × 25 = 4 × 100 = 400."
@@ -4438,7 +4465,7 @@
         represente: m12Calcul(0, "division", 240, 6),
         ecris: m12Calcul(0, "division", 3600, 9),
         consigne: "240, c’est 24 dizaines.",
-        consigneEcris: `3${ESPACE_FINE}600, c’est 36 centaines.`,
+        consigneEcris: `3${ESPACE_FINE}600 ÷ 9 = 36 ÷ 9 × 100`,
         etapes: [["36 ÷ 9 = ?", 4], [`3${ESPACE_FINE}600 ÷ 9 = ?`, 400]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
         bilan: "240, c’est 24 dizaines : 24 ÷ 6 = 4, donc 240 ÷ 6 = 40."
@@ -4453,7 +4480,7 @@
         represente: m12Calcul(0, "division", 96, 8),
         ecris: m12Calcul(0, "division", 135, 5),
         consigne: "96, c’est 80 et 16. Je partage chacun en 8.",
-        consigneEcris: "135, c’est 100 et 35.",
+        consigneEcris: "135 ÷ 5 = 100 ÷ 5 + 35 ÷ 5",
         etapes: [["100 ÷ 5 = ?", 20], ["35 ÷ 5 = ?", 7], ["135 ÷ 5 = ?", 27]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
         bilan: "96 ÷ 8 = 80 ÷ 8 + 16 ÷ 8 = 10 + 2 = 12."
@@ -4468,7 +4495,7 @@
         represente: m12Calcul(0, "division", 536, 8),
         ecris: m12Calcul(0, "division", 525, 5),
         consigne: "536, c’est 480 et 56.",
-        consigneEcris: "525, c’est 500 et 25.",
+        consigneEcris: "525 ÷ 5 = 500 ÷ 5 + 25 ÷ 5",
         etapes: [["500 ÷ 5 = ?", 100], ["25 ÷ 5 = ?", 5], ["525 ÷ 5 = ?", 105]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
         bilan: "536 ÷ 8 = 480 ÷ 8 + 56 ÷ 8 = 60 + 7 = 67."
@@ -4906,7 +4933,7 @@
         represente: c3Egal(0, 347, 20),
         ecris: c3Retire(0, 5760, 5360),
         consigne: "Les deux barres ont la même longueur.",
-        consigneEcris: `5${ESPACE_FINE}760 − ? = 5${ESPACE_FINE}360 : on cherche l’écart.`,
+        consigneEcris: `5${ESPACE_FINE}760 − ? = 5${ESPACE_FINE}360`,
         etapes: [[`5${ESPACE_FINE}760 − 5${ESPACE_FINE}360 = ?`, 400]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
         bilan: "Les deux barres ont la même longueur : 347 = 20 + 327, et 347 − 20 = 327."
@@ -4921,7 +4948,7 @@
         represente: c3Somme(0, 144, 7, 142, null, false),
         ecris: c3Difference(0, 253, 18, 21, false),
         consigne: "142, c’est 2 de moins que 144.",
-        consigneEcris: "Ce qui reste est pareil.",
+        consigneEcris: "253 − 18 = ? − 21",
         etapes: [["21 − 18 = ?", 3], ["253 + 3 = ?", 256]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
         bilan: "142, c’est 2 de moins que 144 : de l’autre côté, il faut 2 de plus. 144 + 7 = 142 + 9."
@@ -4936,7 +4963,7 @@
         represente: c3Somme(0, 144, 237, null, 239, true),
         ecris: c3Difference(0, 342, 56, 59, true),
         consigne: "239, c’est 2 de plus que 237.",
-        consigneEcris: "Ce qui reste est pareil.",
+        consigneEcris: "342 − 56 = ? − 59",
         etapes: [["59 − 56 = ?", 3], ["342 + 3 = ?", 345]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
         bilan: "239, c’est 2 de plus que 237 : de l’autre côté, il faut 2 de moins. 144 + 237 = 142 + 239."
@@ -5744,7 +5771,7 @@
           represente: d4Fraction(0, 0.45, -2, 3),
           ecris: d4Plus(0, 6.24, -1, 5),
           consigne: "3/100, c’est 3 centièmes.",
-          consigneEcris: "Seul le chiffre des dixièmes change.",
+          consigneEcris: "6,24 + 0,5 = 6,04 + 0,2 + 0,5",
           etapes: [["0,2 + 0,5 = ?", 0.7], ["6,24 + 0,5 = ?", 6.74]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
           bilan: "Seul le chiffre des centièmes change : 0,45 + 3/100 = 0,48."
@@ -5759,7 +5786,7 @@
           represente: d4Moins(0, 7.152, -2, 3),
           ecris: d4Fraction(0, 1.624, -3, 5),
           consigne: "0,03, c’est 3 centièmes.",
-          consigneEcris: "Seul le chiffre des millièmes change.",
+          consigneEcris: `1,624 + 5/1${ESPACE_FINE}000 = 1,62 + 0,004 + 5/1${ESPACE_FINE}000`,
           etapes: [[`5/1${ESPACE_FINE}000 = ?`, 0.005], ["0,004 + 0,005 = ?", 0.009], [`1,624 + 5/1${ESPACE_FINE}000 = ?`, 1.629]],
           morceaux: [{lignes: [1]}, {rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
           bilan: "Seul le chiffre des centièmes change : 7,152 − 0,03 = 7,122."
@@ -5774,7 +5801,7 @@
           represente: d4Plus(0, 4.45, -1, 8),
           ecris: d4Plus(0, 5.73, -1, 6),
           consigne: "10 dixièmes font 1 unité.",
-          consigneEcris: "10 dixièmes font 1 unité.",
+          consigneEcris: "5,73 + 0,6 = 5,03 + 0,7 + 0,6",
           etapes: [["0,7 + 0,6 = ?", 1.3], ["5,73 + 0,6 = ?", 6.33]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
           bilan: "10 dixièmes font 1 unité : 4,45 + 0,8 = 5,25."
@@ -6321,7 +6348,7 @@
           represente: pourApprendre(f2(1, "1 − 1/2 = □/2")),
           ecris: pourApprendre(f2(1, "1/2 = □/4")),
           consigne: "Une unité, c’est 2 demis.",
-          consigneEcris: "J’écris en quarts.",
+          consigneEcris: "1/2 = ?/4",
           etapes: [["1 = ?/4", 4], ["1/2 = ?/4", 2]],
           morceaux: [{ecrit: 1, texte: "4/4"}, {bas: true}],
           bilan: "Une unité, c’est 2 demis : 1 − 1/2 = 1/2."
@@ -6337,7 +6364,7 @@
           represente: pourApprendre(f2(2, "1 − 1/4 = □/4")),
           ecris: pourApprendre(f2(2, "3/4 − 1/2 = □/4")),
           consigne: "Une unité, c’est 4 quarts.",
-          consigneEcris: "J’écris en quarts.",
+          consigneEcris: "3/4 − 1/2 = ?/4",
           etapes: [["1/2 = ?/4", 2], ["3/4 − 2/4 = ?/4", 1]],
           morceaux: [{haut: 0, texte: "2/4"}, {bas: true}],
           bilan: "4 quarts moins 1 quart, c’est 3 quarts : 1 − 1/4 = 3/4."
@@ -6472,7 +6499,7 @@
           represente: pourApprendre(f5(1, "11/4 = 2 + □/4")),
           ecris: pourApprendre(f5(1, "23/6 = 3 + □/6")),
           consigne: "4 quarts font une unité.",
-          consigneEcris: "6 sixièmes font une unité.",
+          consigneEcris: "23/6 = 3 + ?/6",
           etapes: [["3 = ?/6", 18], ["23/6 = 18/6 + ?/6", 5], ["23/6 = 3 + ?/6", 5]],
           morceaux: [{ecrit: 3, texte: "18/6"}, {bas: true}, {}],
           bilan: "11 quarts, c’est 2 unités (8 quarts) et 3 quarts : 11/4 = 2 + 3/4."
@@ -6488,7 +6515,7 @@
           represente: pourApprendre(f5(2, "9/4 = □ + 1/4")),
           ecris: pourApprendre(f5(2, "3 + 4/5 = □/5")),
           consigne: "4 quarts font une unité.",
-          consigneEcris: "5 cinquièmes font une unité.",
+          consigneEcris: "3 + 4/5 = ?/5",
           etapes: [["3 = ?/5", 15], ["15/5 + 4/5 = ?/5", 19]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
           bilan: "9 quarts, c’est 2 unités et 1 quart : 9/4 = 2 + 1/4."
@@ -6605,7 +6632,7 @@
           represente: pourApprendre(f6(1, "2/3 = □/15")),
           ecris: pourApprendre(f6(1, "3/5 = □/20")),
           consigne: "Chaque tiers est coupé en 5.",
-          consigneEcris: "Chaque cinquième se coupe en parts égales.",
+          consigneEcris: "3/5 = ?/20",
           etapes: [["1/5 = ?/20", 4], ["3/5 = ?/20", 12]],
           morceaux: [{gros: 4}, {bas: true}],
           bilan: "Chaque tiers coupé en 5 : 2/3 = 10/15 (× 5 en haut et en bas)."
@@ -6620,7 +6647,7 @@
           represente: pourApprendre(f6(2, "12/16 = □/4")),
           ecris: pourApprendre(f6(2, "10/15 = 2/□")),
           consigne: "4 seizièmes font un quart.",
-          consigneEcris: "On divise en haut et en bas par le même nombre.",
+          consigneEcris: "10/15 = 2/?",
           etapes: [["10 ÷ ? = 2", 5], ["15 ÷ 5 = ?", 3], ["10/15 = 2/?", 3]],
           morceaux: [{gros: 5}, {}, {bas: true}],
           bilan: "12/16 = 3/4 (÷ 4 en haut et en bas)."
@@ -6635,7 +6662,7 @@
           represente: pourApprendre(f6(3, "4/7 = 12/□")),
           ecris: pourApprendre(f6(3, "5/□ = 15/24")),
           consigne: "Chaque septième est coupé en 3.",
-          consigneEcris: "On multiplie en haut et en bas par le même nombre.",
+          consigneEcris: "5/? = 15/24",
           etapes: [["15 = 5 × ?", 3], ["24 ÷ 3 = ?", 8], ["5/? = 15/24", 8]],
           morceaux: [{gros: 3}, {}, {bas: true}],
           bilan: "4/7 = 12/21 (× 3 en haut et en bas)."
@@ -6755,7 +6782,7 @@
           represente: pourApprendre(f8(1, "5/8 − 2/8 = □/8")),
           ecris: pourApprendre(f8(1, "4/9 + 3/9 = □/9")),
           consigne: "On enlève 2 huitièmes.",
-          consigneEcris: "Des neuvièmes et des neuvièmes.",
+          consigneEcris: "4/9 + 3/9 = ?/9",
           etapes: [["4 + 3 = ?", 7], ["4/9 + 3/9 = ?/9", 7]],
           morceaux: [{}, {bas: true}],
           bilan: "5 huitièmes − 2 huitièmes = 3 huitièmes : 5/8 − 2/8 = 3/8."
@@ -6771,7 +6798,7 @@
           represente: pourApprendre(f8(2, "1 − 3/8 = □/8")),
           ecris: pourApprendre(f8(2, "1 − 5/12 = □/12")),
           consigne: "Une unité, c’est 8 huitièmes.",
-          consigneEcris: "J’écris 1 en douzièmes.",
+          consigneEcris: "1 − 5/12 = ?/12",
           etapes: [["1 = ?/12", 12], ["12/12 − 5/12 = ?/12", 7]],
           morceaux: [{ecrit: 1, texte: "12/12"}, {bas: true}],
           bilan: "1 = 8/8 : 1 − 3/8 = 5/8."
@@ -6786,7 +6813,7 @@
           represente: pourApprendre(f8(3, "2 − 1/4 = □/4")),
           ecris: pourApprendre(f8(3, "3 − 2/5 = □/5")),
           consigne: "Une unité, c’est 4 quarts.",
-          consigneEcris: "J’écris 3 en cinquièmes.",
+          consigneEcris: "3 − 2/5 = ?/5",
           etapes: [["3 = ?/5", 15], ["15/5 − 2/5 = ?/5", 13]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
           bilan: "2 = 8/4 : 2 − 1/4 = 7/4."
@@ -7071,7 +7098,7 @@
           represente: pourApprendre(f1(1, "1/100 = □")),
           ecris: pourApprendre(f1(1, "0,03 = 3/□")),
           consigne: "Un petit carré sur 100.",
-          consigneEcris: "Chaque chiffre est dans sa colonne.",
+          consigneEcris: "0,03 = 3/?",
           etapes: [["3/100 = ?", 0.03], ["0,03 = 3/?", 100]],
           // Le tableau : la ligne de 0,03, le 3 rangé aux centièmes ; la
           // 2e étape écrit « 3/100 » en vert.
@@ -7091,7 +7118,7 @@
           represente: pourApprendre(f1(2, "5/2 = □")),
           ecris: pourApprendre(f1(2, "1/4 = □/100")),
           consigne: "2 demis font une unité.",
-          consigneEcris: "J’écris en centièmes.",
+          consigneEcris: "1/4 = ?/100",
           etapes: [["1/2 = ?/100", 50], ["1/4 = ?/100", 25]],
           // Le carré de 100 : vide, puis la moitié coloriée, puis le quart.
           dessins: (k, revele) => (revele || k >= 2 ? d1Carre(0.25) : k === 1 ? d1Carre(0.5) : d1Carre(0)),
@@ -7107,7 +7134,7 @@
           represente: pourApprendre(f1(3, "6/5 = □")),
           ecris: pourApprendre(f1(3, "0,4 = □/5")),
           consigne: "5 cinquièmes font une unité.",
-          consigneEcris: "J’écris en cinquièmes.",
+          consigneEcris: "0,4 = ?/5",
           etapes: [["1/5 = ?", 0.2], ["0,4 = ?/5", 2]],
           // La barre de 0,4 : la 1re étape écrit 0,2 sous sa graduation, la
           // 2e remplit l'accolade.
@@ -7291,7 +7318,7 @@
           represente: pourApprendre(f3Calcul(1, 2, 18, "billes")),
           ecris: pourApprendre(f3Calcul(1, 10, 500, "g")),
           consigne: "18 billes partagées en 2 parts égales.",
-          consigneEcris: "1/10, c’est une part sur 10.",
+          consigneEcris: "1/10 de 500 g = 500 g ÷ 10",
           etapes: [["500\u00a0g ÷ 10 = ? g", 50], ["1/10 de 500\u00a0g = ? g", 50]],
           bilan: "1/2 de 18 billes, c’est 18 ÷ 2 = 9 billes."
         })
@@ -7305,7 +7332,7 @@
           represente: pourApprendre(f3Calcul(2, 5, 60, "kg")),
           ecris: pourApprendre(f3Calcul(2, 6, 42, "€")),
           consigne: "60 kg partagés en 5 parts égales.",
-          consigneEcris: "1/6, c’est une part sur 6.",
+          consigneEcris: "1/6 de 42 € = 42 € ÷ 6",
           etapes: [["42\u00a0€ ÷ 6 = ? €", 7], ["1/6 de 42\u00a0€ = ? €", 7]],
           bilan: "1/5 de 60 kg, c’est 60 ÷ 5 = 12 kg."
         })
@@ -7318,7 +7345,7 @@
           represente: pourApprendre(f3Calcul(3, 4, 10, "m")),
           ecris: pourApprendre(f3Calcul(3, 2, 7, "L")),
           consigne: "10 m partagés en 4 parts égales.",
-          consigneEcris: "Je partage 6 L, puis 1 L.",
+          consigneEcris: "1/2 de 7 L = 1/2 de 6 L + 1/2 de 1 L",
           etapes: [["1/2 de 6\u00a0L = ? L", 3], ["1/2 de 1\u00a0L = ? L", 0.5], ["1/2 de 7\u00a0L = ? L", 3.5]],
           bilan: "1/4 de 10 m, c’est 10 ÷ 4 = 2,5 m."
         })

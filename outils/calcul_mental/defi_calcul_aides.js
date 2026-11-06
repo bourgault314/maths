@@ -123,7 +123,12 @@
   }
 
   // Le rekenrek dans `zone`. options : {depart, gestes, consigne, traces,
-  // surFini, droite}. Rend {detruire, mesurer, deborde, fini}.
+  // surFini, droite, sansReponse}. Rend {detruire, mesurer, deborde, fini}.
+  //
+  // `sansReponse` (relecture 1, 05/11/2026 : l'entraînement, tous les
+  // outils) : sous l'outil, seulement ce qu'il reste à faire (« 68 + … =
+  // 70 ») ; ni les étapes faites ni le résultat. C'est l'élève qui lit
+  // l'outil et écrit la réponse. Dans J'apprends, rien ne change.
   //
   // `droite` (lot « relier », 31/10/2026 : « Je manipule » de J'apprends) :
   // une droite au-dessus du boulier reporte chaque geste — un saut par
@@ -136,7 +141,7 @@
   // avec ses voisines. Un cadre bleu montre la rangée et la perle, seulement
   // quand on joue au clavier.
   function perles100(zone, options) {
-    const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null, droite: avecDroite = false} = options;
+    const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null, droite: avecDroite = false, sansReponse = false} = options;
     const boulier = {
       taille: 0, ecart: PERLES.ecart, etats: etatsDe(depart), etape: 0, finie: false,
       drag: null, dom: null, observer: null, refus: 0, curseur: null
@@ -277,6 +282,7 @@
       const lignes = [];
       for (const ligne of traces) {
         const faite = boulier.etape >= ligne.apres;
+        if (faite && sansReponse) continue;
         const b = document.createElement("b");
         b.className = faite ? "ok" : "ici";
         b.textContent = faite ? ligne.texte : ligne.attente;
@@ -730,7 +736,7 @@
   // des unités puis sa colonne d'arrivée ; au clavier, ← → font glisser
   // d'une colonne, Entrée lâche la bande.
   function glisseNombres(zone, options) {
-    const {depart, colonnes, decalage: attendu, consigne: texteConsigne, refus: texteRefus = null, traces = [], surFini = null} = options;
+    const {depart, colonnes, decalage: attendu, consigne: texteConsigne, refus: texteRefus = null, traces = [], surFini = null, sansReponse = false} = options;
     const nombreColonnes = colonnes.length;
     const indexUnites = colonnes.indexOf(0);
     const virgule = colonnes.includes(-1);
@@ -870,7 +876,7 @@
     }
 
     function ecrireTraces() {
-      trace.replaceChildren(...traces.map(t => {
+      trace.replaceChildren(...(etat.fini && sansReponse ? [] : traces).map(t => {
         const b = document.createElement("b");
         b.className = etat.fini ? "ok" : "ici";
         b.textContent = etat.fini ? t.texte : t.attente;
@@ -1989,10 +1995,14 @@
   // refusent un geste faux. On recommence à la ligne suivante, jusqu'au
   // résultat.
   //   options : {lignes (l'escalier du noyau), consigne, refus (null : la
-  //              consigne tremble sans phrase), surFini}
+  //              consigne tremble sans phrase), surFini, sansReponse}
   // Rend {outil: "toucher", detruire, mesurer, deborde, fini, etape}.
+  //
+  // `sansReponse` (l'entraînement, relecture 1) : l'outil ne calcule rien.
+  // Le calcul touché s'entoure, sans son nombre, et rien ne s'écrit
+  // dessous ; c'est fini quand ce qu'on calcule en premier est trouvé.
   function toucherCalcul(zone, options) {
-    const {lignes, consigne: texteConsigne, refus: texteRefus = null, surFini = null} = options;
+    const {lignes, consigne: texteConsigne, refus: texteRefus = null, surFini = null, sansReponse = false} = options;
     const etat = {ligne: 0, faits: new Set(), fini: false, refus: 0, etape: 0};
     compteurAides += 1;
     const bloc = document.createElement("div");
@@ -2029,13 +2039,27 @@
       for (let k = 0; k < l.jetons.length; k += 1) {
         const accolade = l.sous.findIndex(([a]) => a === k);
         if (accolade >= 0 && etat.faits.has(accolade)) {
-          morceaux.push({texte: nombre(l.valeurs[accolade]), trouve: true});
+          if (sansReponse) morceaux.push({groupe: l.jetons.slice(l.sous[accolade][0], l.sous[accolade][1] + 1)});
+          else morceaux.push({texte: nombre(l.valeurs[accolade]), trouve: true});
           k = l.sous[accolade][1];
           continue;
         }
         morceaux.push({texte: l.jetons[k], index: k, venu: l.nouveaux.includes(k)});
       }
+      const jetonSeul = texte => {
+        const jeton = document.createElement("span");
+        jeton.textContent = texte;
+        jeton.className = `dc-jeton${/^[()×÷+−]$/.test(texte) ? " est-signe" : ""}${/^[()]$/.test(texte) ? " est-parenthese" : ""}`;
+        return jeton;
+      };
       calcul.replaceChildren(...morceaux.map(m => {
+        if (m.groupe) {
+          // Entouré, sans son nombre : c'est l'élève qui le calcule.
+          const groupe = document.createElement("span");
+          groupe.className = "dc-jetons-choisis";
+          groupe.append(...m.groupe.map(jetonSeul));
+          return groupe;
+        }
         const jeton = document.createElement("span");
         jeton.textContent = m.texte;
         const signe = /^[()×÷+−]$/.test(m.texte);
@@ -2084,10 +2108,13 @@
       leverRefus();
       etat.faits.add(k);
       etat.etape += 1;
-      ecrites.push(`${texteAccolade(l, k)} = ${nombre(l.valeurs[k])}`);
-      annonce.annoncer(ecrites[ecrites.length - 1]);
+      if (sansReponse) annonce.annoncer(`${texteAccolade(l, k)} : d’abord`);
+      else {
+        ecrites.push(`${texteAccolade(l, k)} = ${nombre(l.valeurs[k])}`);
+        annonce.annoncer(ecrites[ecrites.length - 1]);
+      }
       if (etat.faits.size === l.sous.length) {
-        if (etat.ligne === lignes.length - 1) {
+        if (etat.ligne === lignes.length - 1 || sansReponse) {
           etat.fini = true;
           bloc.classList.add("est-finie");
         } else {
@@ -2178,6 +2205,32 @@
   function ecrireTexte(element, texte, options = {}) {
     element.replaceChildren(...noeudsCalcul(texte, options));
     return element;
+  }
+
+  // « À retenir » (relecture 1, 05/11/2026) : la règle en phrase, puis le
+  // calcul seul sur sa ligne. « Pour passer la dizaine, …, puis j'ajoute
+  // le reste : 47 + 8 = 47 + 3 + 5 = 55. » → {phrase: « Pour passer la
+  // dizaine, …, puis j'ajoute le reste. », calcul: « 47 + 8 = 47 + 3 + 5 =
+  // 55 »}. Seulement quand ce qui suit le dernier « : » est un calcul et
+  // rien d'autre (des nombres, des signes, « moitié de », « double de »),
+  // et que la phrase n'en a pas déjà un ; sinon null (le bilan reste tel
+  // quel). Un bilan qui n'est qu'un calcul (M12 : « 96 ÷ 8 = 80 ÷ 8 + 16 ÷
+  // 8 = 10 + 2 = 12. ») : {phrase: "", calcul}.
+  function bilanEnDeux(texte) {
+    const seul = String(texte || "").replace(/\.$/, "");
+    if (seul.includes("=") && !/[A-Za-zÀ-ÖØ-öø-ÿ’:.;]/.test(seul.replace(/\d[.,]\d/g, ""))) return {phrase: "", calcul: seul};
+    const m = /^(.*\S)[\s\u00a0\u202f]+:[\s\u00a0\u202f]+([^:]*)$/.exec(String(texte || ""));
+    if (!m) return null;
+    const phrase = m[1];
+    const calcul = m[2].replace(/\.$/, "");
+    if (phrase.includes("=") || !calcul.includes("=") || /[.;]/.test(calcul.replace(/\d[.]\d/g, ""))) return null;
+    if (/[A-Za-zÀ-ÖØ-öø-ÿ’]/.test(calcul.replace(/\b(moitié|double) de\b/gi, ""))) return null;
+    return {phrase: `${phrase}.`, calcul};
+  }
+  // Un calcul écrit dans une phrase ne se coupe pas en fin de ligne (« 18 ÷
+  // 2 ⏎ = 9 ») : les espaces autour de ses signes deviennent insécables.
+  function souderCalculs(texte) {
+    return String(texte || "").replace(/([\d)])[ \u00a0]([×÷+−=])[ \u00a0](?=[\d(])/g, "$1\u00a0$2\u00a0");
   }
 
   // Une fraction en SVG, écrite comme sur le cahier : le numérateur, la
@@ -2381,7 +2434,7 @@
   //   options : {unites, dixiemes, centiemes, consigne, traces, surFini}
   // Au clavier : Entrée ou Espace sur le grand carré.
   function carreManip(zone, options) {
-    const {unites = 0, dixiemes = 0, centiemes = 0, consigne: texteConsigne, traces = [], surFini = null} = options;
+    const {unites = 0, dixiemes = 0, centiemes = 0, consigne: texteConsigne, traces = [], surFini = null, sansReponse = false} = options;
     const etat = {dixiemes: 0, centiemes: 0, fini: false, refus: 0, etape: 0};
     compteurAides += 1;
     const bloc = document.createElement("div");
@@ -2422,7 +2475,9 @@
       grand.innerHTML = `<svg viewBox="0 0 204 204">${carreSvg(2, 2, 200, etat.dixiemes, etat.centiemes)}</svg>`;
       grand.setAttribute("aria-label", etat.fini ? `Carré de 100 : ${compte()} coloriés.` : `Carré de 100${etat.dixiemes || etat.centiemes ? ` : ${compte()} coloriés` : ""}. Touche pour colorier.`);
       const pilule = document.createElement("b");
-      if (etat.fini && traces.length) {
+      if (sansReponse) {
+        // Rien sous le carré : l'élève compte ce qu'il a colorié.
+      } else if (etat.fini && traces.length) {
         pilule.className = "ok";
         ecrireTexte(pilule, traces[traces.length - 1].texte);
       } else if (etat.dixiemes || etat.centiemes) {
@@ -2456,7 +2511,7 @@
         bloc.classList.add("est-finie");
       }
       dessiner();
-      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
       if (etat.fini && typeof surFini === "function") surFini();
     }
     grand.addEventListener("click", toucher);
@@ -2526,7 +2581,7 @@
     return null;
   }
   function jetonsManip(zone, options) {
-    const {depart, rang: rangAttendu, chiffre, signe = 1, colonnes, consigne: texteConsigne, traces = [], surFini = null} = options;
+    const {depart, rang: rangAttendu, chiffre, signe = 1, colonnes, consigne: texteConsigne, traces = [], surFini = null, sansReponse = false} = options;
     const regle = {rang: rangAttendu, chiffre, signe, colonnes};
     let jeu = jetonsDepart({depart, colonnes});
     const compte = {get: r => jeu.comptes[r]};
@@ -2617,7 +2672,9 @@
       }));
       reserve.querySelectorAll("button").forEach(bouton => { bouton.disabled = etat.fini; });
       const pilules = [];
-      if (etat.fini && traces.length) {
+      if (sansReponse) {
+        // Rien sous le tableau : l'élève lit les jetons.
+      } else if (etat.fini && traces.length) {
         const b = document.createElement("b");
         b.className = "ok";
         ecrireTexte(b, traces[traces.length - 1].texte);
@@ -2657,7 +2714,7 @@
       else etat.partis.set(rang, chiffre);
       if (etat.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : `${chiffre} jetons de ${VALEURS_JETONS[rang]}`);
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : `${chiffre} jetons de ${VALEURS_JETONS[rang]}`);
       if (etat.fini && typeof surFini === "function") surFini();
     }
     function echanger(rang) {
@@ -2672,7 +2729,7 @@
       etat.echanges.push(`10 jetons de ${VALEURS_JETONS[rang]} = 1 jeton de ${VALEURS_JETONS[rang + 1]}`);
       if (etat.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(etat.fini && traces.length ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : etat.echanges[etat.echanges.length - 1]);
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : etat.echanges[etat.echanges.length - 1]);
       if (etat.fini && typeof surFini === "function") surFini();
     }
     // Un toucher dans le tableau : l'échange (sur la bonne colonne), sinon
@@ -3044,7 +3101,7 @@
   // consigne), reserve, traces, surFini}. Au clavier : Entrée ou Espace font
   // le geste attendu.
   function bandesManip(zone, options) {
-    const {a, grad = 1, depart = [], etapes, reserve = [], traces = [], surFini = null, decimaux = false, arrivee = null} = options;
+    const {a, grad = 1, depart = [], etapes, reserve = [], traces = [], surFini = null, decimaux = false, arrivee = null, sansReponse = false} = options;
     let jeu = bandesDepart(depart);
     const etat = {refus: 0, premier: true};
     compteurAides += 1;
@@ -3087,7 +3144,7 @@
       scene.innerHTML = bandesSvg({pieces: jeu.pieces, a, grad, reserve: poser ? reserve : [], reserveVide: poser && !resteAPoser, cible: cible(), fini: jeu.fini, nombres});
       scene.setAttribute("aria-label", `${decrireBandes(jeu.pieces)}${jeu.fini ? "" : " Touche pour faire le geste."}`);
       const pilules = [];
-      if (jeu.fini && traces.length) {
+      if (jeu.fini && traces.length && !sansReponse) {
         const b = document.createElement("b");
         b.className = "ok";
         ecrireTexte(b, traces[traces.length - 1].texte);
@@ -3118,7 +3175,7 @@
       if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
       if (jeu.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(jeu.fini && traces.length ? lireFraction(traces[traces.length - 1].texte) : decrireBandes(jeu.pieces));
+      annonce.annoncer(jeu.fini && traces.length && !sansReponse ? lireFraction(traces[traces.length - 1].texte) : decrireBandes(jeu.pieces));
       if (jeu.fini && typeof surFini === "function") surFini();
     }
     // Le geste attendu, comme si l'élève touchait la bonne chose (clavier).
@@ -3267,7 +3324,7 @@
   // L'outil à toucher. options : {n, d, tout, consigne, consigneFin, traces,
   // surFini}. Au clavier : Entrée ou Espace font un tour.
   function billesManip(zone, options) {
-    const {n, d, tout, consigne: texteConsigne, consigneFin = "", traces = [], surFini = null} = options;
+    const {n, d, tout, consigne: texteConsigne, consigneFin = "", traces = [], surFini = null, sansReponse = false} = options;
     let jeu = billesDepart();
     const etat = {refus: 0, premier: true};
     compteurAides += 1;
@@ -3294,7 +3351,9 @@
       scene.innerHTML = billesSvg({n, d, tout, tours: jeu.tours, fini: jeu.fini, cible: true});
       scene.setAttribute("aria-label", `${decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini})}${jeu.fini ? "" : " Touche le tas."}`);
       const pilule = document.createElement("b");
-      if (jeu.fini && traces.length) {
+      if (sansReponse) {
+        // Rien sous les cases : l'élève compte les billes d'une case.
+      } else if (jeu.fini && traces.length) {
         pilule.className = "ok";
         ecrireTexte(pilule, traces[traces.length - 1].texte);
       } else if (jeu.tours) {
@@ -3324,7 +3383,7 @@
       if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
       if (jeu.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(jeu.fini && traces.length ? lireFraction(traces[traces.length - 1].texte) : decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini}));
+      annonce.annoncer(jeu.fini && traces.length && !sansReponse ? lireFraction(traces[traces.length - 1].texte) : decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini}));
       if (jeu.fini && typeof surFini === "function") surFini();
     }
     scene.addEventListener("click", event => {
@@ -3453,6 +3512,8 @@
     billesManip,
     noeudsCalcul,
     ecrireTexte,
+    bilanEnDeux,
+    souderCalculs,
     dessinerImage
   });
 });
