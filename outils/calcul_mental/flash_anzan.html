@@ -1167,8 +1167,14 @@
         const largeur100 = essai.getBoundingClientRect().width;
         scene.removeChild(essai);
         const largeurDispo = scene.clientWidth * 0.9;
-        const hauteurDispo = scene.clientHeight * 0.66;
-        const taille = Math.max(24, Math.floor(Math.min(largeurDispo / largeur100 * 100, hauteurDispo, 380)));
+        // Chiffres agrandis (06/11/2026, planche avant/après) : le chiffre
+        // dessiné fait environ 0,76 de la taille de la police ; une police à
+        // 76 % de la hauteur donne des chiffres sur ~58 % de la hauteur du
+        // cadre, sur tous les écrans. Plus de plafond à 380 px : il bridait
+        // l'ordinateur et la tablette. Le nombre le plus long reste limité
+        // par la largeur (90 %), comme avant.
+        const hauteurDispo = scene.clientHeight * 0.76;
+        const taille = Math.max(24, Math.floor(Math.min(largeurDispo / largeur100 * 100, hauteurDispo)));
         seance.tailleFlash = taille;
         nombre.style.fontSize = `${taille}px`;
         nombre.style.width = `${Math.ceil(largeur100 * taille / 100) + 2}px`;
