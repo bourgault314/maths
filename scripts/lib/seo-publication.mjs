@@ -27,7 +27,7 @@ export const CURATED_PAGES = [
   {
     path: "confidentialite.html",
     title: "Confidentialité | maths&go",
-    description: "Politique de confidentialité du site pédagogique maths&go : aucun cookie, aucune mesure d’audience, des données qui restent sur votre appareil."
+    description: "Politique de confidentialité du site pédagogique maths&go : aucun cookie, un simple compteur de visites anonyme, des données qui restent sur votre appareil."
   },
   {
     path: "outils/index.html",
@@ -418,6 +418,7 @@ export function buildDirectoryHtml(catalogue) {
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=pied-sans-nom-20261003-1">
   <script defer src="../assets/js/mention-confidentialite.js"></script>
+  <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#ressources">Aller aux ressources</a>

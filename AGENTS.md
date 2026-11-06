@@ -282,6 +282,24 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
   ne doit rien renvoyer, et des identifiants qui ne montent pas dans le sens du
   temps.
 
+## Compteur de visites (depuis le 06/11/2026)
+
+- Chaque page HTML du plan du site (`sitemap.xml`) charge
+  `assets/js/compteur.js` par une ligne posée avant `</head>`. Après
+  `npm run seo:generer` qui ajoute une page, lancer
+  `node scripts/injecter-compteur.mjs --apply` ; sinon
+  `tests/compteur-visites.test.mjs` rougit.
+- Le compteur est écrit pour le site : ne pas le remplacer par le script de
+  GoatCounter. Il n'envoie que le chemin (sans « ? » ni « # »), le site
+  d'origine réduit à son nom, la largeur d'écran, et le nom d'une fiche PDF
+  cliquée. Jamais le titre de la page, ni rien du stockage du navigateur.
+- Aucun fichier de `_serveur/` ne le charge : le suivi de classe n'est pas
+  compté.
+- Toute nouvelle information envoyée se dit d'abord dans `confidentialite.html`
+  (section « Hébergement, contact, audience »).
+- L'auteur ne compte pas ses visites : `#ne-pas-me-compter` à la fin d'une
+  adresse du site, une fois par appareil (`#me-compter` pour annuler).
+
 ## Automatismes V2
 
 - **Périmètre immédiat : exclusivement le DNB.** La liste officielle des
