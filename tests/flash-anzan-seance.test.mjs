@@ -244,11 +244,14 @@ function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
 // de code dans l'onglet.
 // `froid` (ms) : une carte son qui met ce temps à démarrer (son horloge reste
 // à zéro jusque-là), comme celle d'un vrai ordinateur (correctif du 30/10/2026).
-function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0} = {}) {
+// `appareil` : d'autres clés déjà dans le localStorage de l'appareil (la case
+// « sans code » d'un visiteur, par exemple), {clé: valeur}.
+function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = null} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
   const stockage = new Map(memoire ? [["mathsgo-flash-anzan-v1", JSON.stringify(memoire)]] : []);
+  if (appareil) Object.entries(appareil).forEach(([k, v]) => stockage.set(k, v));
   const onglet = new Map(suivi && suivi.code ? [["mathsgo-suivi-code", suivi.code]] : []);
   const serveur = suivi && (suivi.code || suivi.billet) ? (suivi.serveur || fauxServeur()) : null;
   const audios = [];
@@ -784,10 +787,10 @@ test("chaque mode garde ses réglages ; une mémoire abîmée ne casse rien", ()
 // ---------------------------------------------------------------------------
 const texte = el => el.texteLu.replace(/\s+/g, " ").trim();
 
-test("sans code, rien ne change : moteur chargé ou pas, pas de bloc, pas d'historique, les réglages sur l'appareil, rien n'est envoyé", () => {
+test("sans code : pas de bloc, rien n'est envoyé, les réglages sur l'appareil ; la séance est gardée dans la case « sans code » de l'appareil (Mon historique du visiteur, 06/11/2026)", () => {
   const p = ouvrir(memoireFlash, {suivi: {}});
   assert.equal(p.$("suivi-repere").hidden, true);
-  assert.equal(p.$("vers-historique").hidden, true);
+  assert.equal(p.$("vers-historique").hidden, true, "pas d'historique avant le premier calcul");
   assert.equal(p.$("suivi-pastille-slot").innerHTML, "");
   assert.equal(p.$("lien-retour").getAttribute("href"), "../index.html?domain=nombres-calculs&amp;notion=calcul-mental", "la flèche mène au calcul mental");
   p.$("partir").click();
@@ -797,10 +800,94 @@ test("sans code, rien ne change : moteur chargé ou pas, pas de bloc, pas d'hist
   p.$("retour").click();
   assert.equal(p.vue(), "vue-fin");
   assert.equal(p.$("envoi-fin").hidden, true, "pas de « Envoyé à ton professeur »");
-  assert.ok(![...p.stockage.keys()].some(k => k.startsWith("mathsgo-anzan-")), "aucune case de suivi : la séance sans code n'est pas gardée");
+  const cles = [...p.stockage.keys()].filter(k => k.startsWith("mathsgo-anzan-"));
+  assert.deepEqual(cles, ["mathsgo-anzan-parcours"], "une seule case : celle « sans code » de l'appareil (ni empreinte, ni état d'envoi)");
+  const garde = JSON.parse(p.stockage.get("mathsgo-anzan-parcours"));
+  const jour = PARCOURS.jourLocal(Date.now());
+  const id = garde.seances["1"][10];
+  assert.deepEqual(garde.seances, {"1": [jour, "flash", "plusmoins", 2, 3, 4, 5, 5, 1, 1, id, 1]}, "1 fait, 1 juste, 5 prévus — jamais les calculs");
+  assert.deepEqual(garde.reglages, {}, "les réglages restent dans la mémoire de la page, pas dans la case");
   p.$("vers-reglages").click();
+  assert.equal(p.$("vers-historique").hidden, false, "« Mon historique » apparaît dès la première séance");
+  p.$("vers-historique").click();
+  assert.equal(p.$("ecran-historique").hidden, false);
+  assert.equal(p.$("historique-compte").textContent, "1 calcul · 1 jour d’entraînement");
+  assert.equal(p.$("historique-liste").children.length, 1);
+  assert.match(texte(p.$("historique-liste").children[0]), /1\/1 ?arrêtée/);
+  p.$("historique-retour").click();
   p.$("ecran-reglages").querySelector("[data-mode=colonne]").click();
   assert.equal(JSON.parse(p.stockage.get("mathsgo-flash-anzan-v1")).mode, "colonne", "les réglages restent sur l'appareil");
+  // Une nouvelle séance : la deuxième ligne, sans toucher la première.
+  p.$("partir").click();
+  p.taper(calculsAttendus("colonne", COLONNE)[0].total);
+  p.$("valider").click();
+  const apres = JSON.parse(p.stockage.get("mathsgo-anzan-parcours"));
+  assert.deepEqual(Object.keys(apres.seances), ["1", "2"]);
+  assert.deepEqual(apres.seances["1"], garde.seances["1"], "la première séance n'a pas bougé");
+  assert.equal(apres.seances["2"][1], "colonne");
+});
+
+test("sans code, le moteur absent : la page joue comme avant, sans historique ni case", () => {
+  const p = ouvrir(memoireFlash);
+  p.$("partir").click();
+  p.avancer(DUREE_FLASH);
+  p.taper(calculsAttendus("flash", FLASH)[0].total);
+  p.$("valider").click();
+  p.$("retour").click();
+  p.$("vers-reglages").click();
+  assert.equal(p.$("vers-historique").hidden, true);
+  assert.ok(![...p.stockage.keys()].some(k => k.startsWith("mathsgo-anzan-")));
+});
+
+test("le visiteur retrouve ses séances en rouvrant la page sur le même appareil", () => {
+  const seance = [PARCOURS.jourLocal(Date.now()), "colonne", "plus", 1, 2, 5, 0, 10, 10, 9, 4242, 1];
+  const p = ouvrir(memoireFlash, {suivi: {}, appareil: {"mathsgo-anzan-parcours": JSON.stringify({version: 1, epoque: 0, reglages: {}, seances: {"1": seance}})}});
+  assert.equal(p.$("vers-historique").hidden, false, "le bouton est là dès l'ouverture");
+  p.$("vers-historique").click();
+  assert.equal(p.$("historique-compte").textContent, "10 calculs · 1 jour d’entraînement");
+  assert.match(texte(p.$("historique-liste").children[0]), /📝 Colonne/);
+  assert.match(texte(p.$("historique-liste").children[0]), /9\/10/);
+});
+
+test("deux cases qui ne se mélangent jamais : l'élève à code ne voit pas l'historique du visiteur, et ses séances n'y vont pas", async () => {
+  const visiteur = {version: 1, epoque: 0, reglages: {}, seances: {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 1, 1, 3, 10, 5, 5, 5, 777, 1]}};
+  const brut = JSON.stringify(visiteur);
+  const serveur = fauxServeur(PARCOURS.sauverReglages(PARCOURS.creer(), {mode: "flash", flash: FLASH}));
+  const p = ouvrir(null, {suivi: {code: "ABCDEF", serveur}, appareil: {"mathsgo-anzan-parcours": brut}});
+  await p.souffler();
+  assert.equal(p.$("vers-historique").hidden, true, "Rania n'a encore rien fait : pas l'historique du visiteur");
+  p.$("partir").click();
+  p.avancer(DUREE_FLASH);
+  p.taper(calculsAttendus("flash", FLASH)[0].total);
+  p.$("valider").click();
+  p.avancer(800);
+  await p.souffler();
+  assert.equal(p.stockage.get("mathsgo-anzan-parcours"), brut, "la case du visiteur n'a pas bougé d'un octet");
+  const envoye = serveur.dernier();
+  assert.deepEqual(Object.keys(envoye.parcours.seances), ["1"], "le compte n'a que la séance de Rania");
+  assert.notEqual(envoye.parcours.seances["1"][10], 777, "pas celle du visiteur");
+  p.$("retour").click();
+  p.$("vers-reglages").click();
+  p.$("vers-historique").click();
+  assert.equal(p.$("historique-liste").children.length, 1, "Mon historique de Rania : sa séance seulement");
+  assert.equal(p.$("historique-compte").textContent, "1 calcul · 1 jour d’entraînement");
+});
+
+test("un billet refusé (élève venu de son espace) : la séance n'est gardée NULLE PART sur l'appareil, ni montrée", async () => {
+  const visiteur = JSON.stringify({version: 1, epoque: 0, reglages: {}, seances: {"1": [PARCOURS.jourLocal(Date.now()), "flash", "plus", 1, 1, 3, 10, 5, 5, 5, 777, 1]}});
+  const reponse = (status, donnees) => Promise.resolve({status, json: () => Promise.resolve(donnees), headers: {get: () => null}});
+  const serveur = {fetch: () => reponse(404, {ok: false}), envois: [], dernier: () => null};
+  const p = ouvrir(memoireFlash, {suivi: {billet: "B-PERIME", serveur}, appareil: {"mathsgo-anzan-parcours": visiteur}});
+  await p.souffler();
+  p.avancer(6000);
+  await p.souffler();
+  assert.equal(p.$("vers-historique").hidden, true, "pas l'historique du visiteur pour un élève venu de son espace");
+  p.$("partir").click();
+  p.avancer(3 * 800 + FLASH.nombres * FLASH.temps * 100 + 100);
+  p.taper(calculsAttendus("flash", FLASH)[0].total);
+  p.$("valider").click();
+  assert.equal(p.stockage.get("mathsgo-anzan-parcours"), visiteur, "rien n'est écrit dans la case du visiteur");
+  assert.deepEqual([...p.stockage.keys()].filter(k => k.startsWith("mathsgo-anzan-")), ["mathsgo-anzan-parcours"], "ni ailleurs");
 });
 
 test("sous un code : le bloc de suivi, la flèche vers Mon espace, les réglages du compte (pas ceux de l'appareil)", async () => {

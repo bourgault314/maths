@@ -172,8 +172,17 @@ test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du
     "le moteur du parcours et l'habillage du suivi, avec une version, après le moteur des calculs");
   assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
   assert.match(script, /function suiviActif\(\) \{\s*return Boolean\(SUIVI && SUIVI\.actif\(\)\);/);
-  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\) \|\| !seance\.resultats\.length\) return;\s*if \(!seance\.idSuivi\) seance\.idSuivi = PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\);/,
-    "rien sans code, rien sans calcul fait ; une séance partie avant le billet reçoit son identifiant à sa première note");
+  assert.match(script, /function noterSeanceSuivi\(\) \{\s*if \(!suiviActif\(\)\) \{ noterSeanceVisiteur\(\); return; \}\s*if \(!seance\.resultats\.length\) return;\s*if \(!seance\.idSuivi\) seance\.idSuivi = PARCOURS\.idLibre\(SUIVI\.lire\(\), 0\);/,
+    "sans code, la case de l'appareil ; rien sans calcul fait ; une séance partie avant le billet reçoit son identifiant à sa première note");
+  // Mon historique sans code (06/11/2026) : la case « sans code » de l'appareil,
+  // jamais pour l'élève venu de son espace (billet en route ou refusé compris),
+  // jamais par le client du suivi (qui seul parle au serveur).
+  assert.match(script, /function caseVisiteur\(\) \{\s*return Boolean\(PARCOURS\) && !modeEleve\(\);\s*\}/);
+  assert.match(script, /function noterSeanceVisiteur\(\) \{\s*if \(!caseVisiteur\(\) \|\| !seance\.resultats\.length\) return;/);
+  assert.match(script, /PARCOURS\.sauver\(stockageAppareil\(\), apres, ""\);/, "la case sans code, rien d'autre");
+  assert.match(script, /try \{ return PARCOURS\.charger\(stockageAppareil\(\), ""\); \}/);
+  const visiteur = script.slice(script.indexOf("function noterSeanceVisiteur"), script.indexOf("// « ● Envoyé à ton professeur »"));
+  assert.doesNotMatch(visiteur, /SUIVI\.|noterUneSeance/, "la séance du visiteur ne passe jamais par le client du suivi");
   assert.match(script, /if \(e\.etat === "ok" && SUIVI\.client\.sync\.dirty\) \{ envoi\.hidden = true; return; \}/, "« Envoyé » attend la confirmation du serveur");
   assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
   assert.match(script, /if \(modeEleve\(\)\) return; \/\/ billet en route ou refusé : rien à l'appareil/);
@@ -249,7 +258,8 @@ test("4e relecture Codex (24/10) : « Envoyé à ton professeur » seulement si 
   assert.match(html, /if \(PARCOURS\.ordreDeId\(SUIVI\.client\.parcours, seance\.idSuivi\) === null\) \{ envoi\.hidden = true; return; \}/);
   assert.match(html, /seance\.ordreSuivi = 0;/, "remis à zéro à chaque séance");
   assert.match(html, /ordre: seance\.ordreSuivi \|\| 0,\s*jour: seance\.jourSuivi \|\| "",/, "l'ordre et le jour gardés repartent avec chaque note");
-  assert.match(html, /const ordre = PARCOURS\.ordreDeId\(SUIVI\.client\.parcours, seance\.idSuivi\);\s*if \(ordre\) \{\s*seance\.ordreSuivi = ordre;/);
+  assert.match(html, /garderOrdre\(SUIVI\.client\.parcours\);/, "après chaque note sous un code");
+  assert.match(html, /function garderOrdre\(parcours\) \{\s*const ordre = PARCOURS\.ordreDeId\(parcours, seance\.idSuivi\);\s*if \(ordre\) \{\s*seance\.ordreSuivi = ordre;/);
   assert.match(html, /if \(vue\) seance\.jourSuivi = vue\.jour;/, "et son jour de départ");
 });
 
@@ -311,8 +321,12 @@ test("habillage : réglages façon FastMath, le titre au-dessus de chaque régla
   assert.equal(telephone.length, 1, "un bloc téléphone pour la grille");
   assert.match(telephone[0][2], /\.grille \{ grid-template-columns: 1fr 1fr;/, "deux colonnes au téléphone (validé)");
   for (const lab of ["Opérations", "Chiffres <small>au moins</small>", "Chiffres <small>au plus</small>", "Nombres", "Temps <small>par nombre</small>",
-    "Temps limite <small>par calcul</small>", "Calculs", "Son"]) {
+    "Temps limite <small>par calcul</small>", "Calculs"]) {
     assert.ok(PAGE.includes(`>${lab}</span>`), lab);
   }
+  // Pas de petit titre « Son » (06/11/2026) : la ligne du bip a la hauteur du
+  // résumé qui la remplace en Colonne — le cadre ne bouge plus d'un mode à l'autre.
+  assert.ok(!PAGE.includes(">Son</span>"), "plus de titre « Son »");
+  assert.doesNotMatch(PAGE, /lab-son/);
   assert.match(PAGE, /<button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true"/);
 });

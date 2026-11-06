@@ -585,20 +585,24 @@
               </span>
             </div>
             <div class="bloc large" data-pour="flash">
-              <span class="lab" id="lab-son">Son</span>
-              <button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true" aria-describedby="lab-son"><span aria-hidden="true">🔔</span>Un bip à chaque nombre<span class="inter" aria-hidden="true"></span></button>
+              <!-- Pas de petit titre « Son » (06/11/2026, choix de Gwenaël) :
+                   « 🔔 Un bip à chaque nombre » se suffit, et la ligne a la
+                   même hauteur que le résumé qui la remplace en Colonne — le
+                   cadre ne bouge plus quand on passe de Flash à Colonne. -->
+              <button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true"><span aria-hidden="true">🔔</span>Un bip à chaque nombre<span class="inter" aria-hidden="true"></span></button>
             </div>
             <p class="resume" id="resume-reglages"></p>
           </div>
           <div class="bas">
             <button type="button" class="primary partir" id="partir">C’est parti<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg></button>
-            <!-- L'élève à code, dès sa première séance : ses dernières séances -->
+            <!-- Dès la première séance : les dernières séances (l'élève à code :
+                 celles de son compte ; le visiteur : celles de l'appareil) -->
             <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Mon historique</button>
           </div>
         </div>
       </div>
 
-      <!-- Mon historique (l'élève à code) : le compte, puis les séances, la
+      <!-- Mon historique (l'élève à code, ou le visiteur sur son appareil) : le compte, puis les séances, la
            plus récente en haut, dix par dix. Tout est posé par textContent :
            ce qui vient du serveur ne devient jamais du HTML. -->
       <div id="ecran-historique" class="historique-ecran" hidden>
@@ -704,9 +708,10 @@
       // -----------------------------------------------------------------
       // Le suivi de classe (lot « Qui voit quoi », lot 4a, 23/10/2026). Le
       // moteur du parcours (flash_anzan_parcours.js) et l'habillage du suivi
-      // (flash_anzan_suivi.js) ne font rien sans code dans l'onglet : la page
-      // joue comme avant, sans rien enregistrer (AGENTS.md : « sans code,
-      // rien ne change »). Sous un code (l'élève venu de son espace, par un
+      // (flash_anzan_suivi.js) n'envoient rien sans code dans l'onglet : la
+      // page joue comme avant (AGENTS.md : « sans code, rien ne change »),
+      // sauf « Mon historique », que le visiteur garde sur SON appareil depuis
+      // le 06/11/2026 (voir caseVisiteur). Sous un code (l'élève venu de son espace, par un
       // billet) :
       //   - le bloc de suivi au-dessus du cadre, la pastille « ● Rania »
       //     pendant la séance, la flèche vers Mon espace ; rien en bas ;
@@ -1486,11 +1491,15 @@
 
       // La séance en cours est notée dans la case de l'élève : à chaque calcul
       // validé (la même séance, retrouvée par son identifiant), et à la fin.
-      // Rien sans code ; rien sans calcul fait. Une séance partie avant que le
-      // billet soit échangé (plus de six secondes d'attente) reçoit son
-      // identifiant ici, à sa première note (relecture Codex, 23/10/2026).
+      // Rien sans calcul fait. Une séance partie avant que le billet soit
+      // échangé (plus de six secondes d'attente) reçoit son identifiant ici, à
+      // sa première note (relecture Codex, 23/10/2026).
+      // Sans code (06/11/2026, choix de Gwenaël du 23/10, comme Défi tables) :
+      // la séance du visiteur est notée de la même façon dans la case « sans
+      // code » de l'appareil (voir caseVisiteur) — jamais envoyée.
       function noterSeanceSuivi() {
-        if (!suiviActif() || !seance.resultats.length) return;
+        if (!suiviActif()) { noterSeanceVisiteur(); return; }
+        if (!seance.resultats.length) return;
         if (!seance.idSuivi) seance.idSuivi = PARCOURS.idLibre(SUIVI.lire(), 0);
         const justes = seance.resultats.filter(r => r.juste).length;
         SUIVI.client.noterUneSeance({
@@ -1504,12 +1513,59 @@
         });
         // L'ordre que la séance a reçu : redonné à chaque note, pour qu'elle le
         // garde même si une fusion l'a fait sortir du parcours entre-temps.
-        const ordre = PARCOURS.ordreDeId(SUIVI.client.parcours, seance.idSuivi);
+        garderOrdre(SUIVI.client.parcours);
+      }
+      function garderOrdre(parcours) {
+        const ordre = PARCOURS.ordreDeId(parcours, seance.idSuivi);
         if (ordre) {
           seance.ordreSuivi = ordre;
-          const vue = PARCOURS.historique(SUIVI.client.parcours).find(s => s.id === seance.idSuivi);
+          const vue = PARCOURS.historique(parcours).find(s => s.id === seance.idSuivi);
           if (vue) seance.jourSuivi = vue.jour;
         }
+      }
+
+      // -----------------------------------------------------------------
+      // Mon historique SANS CODE (06/11/2026). Le visiteur garde ses séances
+      // sur l'appareil, dans la case « sans code » du moteur (la clé
+      // mathsgo-anzan-parcours, sans rien derrière) : les cases des élèves à
+      // code sont ailleurs (une par empreinte de code), elles ne se voient
+      // pas l'une l'autre. Rien ne part au serveur. L'élève venu de son
+      // espace — billet en route ou refusé compris — n'y lit ni n'y écrit
+      // JAMAIS rien (modeEleve), comme pour les réglages de l'appareil.
+      // -----------------------------------------------------------------
+      function caseVisiteur() {
+        return Boolean(PARCOURS) && !modeEleve();
+      }
+      function stockageAppareil() {
+        try { return window.localStorage; } catch (e) { return null; }
+      }
+      // La case à montrer dans « Mon historique » : celle du compte sous un
+      // code, celle de l'appareil pour le visiteur, aucune sinon.
+      function caseHistorique() {
+        if (suiviActif()) return SUIVI.lire();
+        if (!caseVisiteur()) return null;
+        try { return PARCOURS.charger(stockageAppareil(), ""); } catch (e) { return null; }
+      }
+      function noterSeanceVisiteur() {
+        if (!caseVisiteur() || !seance.resultats.length) return;
+        const avant = caseHistorique();
+        if (!avant) return;
+        if (!seance.idSuivi) seance.idSuivi = PARCOURS.idLibre(avant, 0);
+        const justes = seance.resultats.filter(r => r.juste).length;
+        let apres = null;
+        try {
+          apres = PARCOURS.noterSeance(avant, {
+            id: seance.idSuivi,
+            ordre: seance.ordreSuivi || 0,
+            jour: seance.jourSuivi || "",
+            mode: seance.mode,
+            reglages: seance.reglages,
+            faits: seance.resultats.length,
+            score: justes
+          }, PARCOURS.jourLocal(Date.now())).parcours;
+        } catch (e) { return; }
+        PARCOURS.sauver(stockageAppareil(), apres, ""); // navigation privée : tant pis
+        garderOrdre(apres);
       }
 
       // « ● Envoyé à ton professeur » sous le résumé de la séance finie — quand
@@ -1535,10 +1591,11 @@
       }
 
       // Y a-t-il quelque chose à montrer dans « Mon historique » ? Dès le
-      // premier calcul fait.
+      // premier calcul fait (sous un code, ou sans code sur l'appareil).
       function aUnHistorique() {
-        if (!suiviActif()) return false;
-        try { return !PARCOURS.resumeTuile(SUIVI.lire()).vide; } catch (e) { return false; }
+        const c = caseHistorique();
+        if (!c) return false;
+        try { return !PARCOURS.resumeTuile(c).vide; } catch (e) { return false; }
       }
 
       // En-tête commun (31/10/2026) : la ligne de suivi vit SOUS LE TITRE de
@@ -1563,11 +1620,11 @@
           lienRetour.setAttribute("aria-label", "Retour à mon espace");
           lienRetour.title = "Mon espace";
         }
+        $("vers-historique").hidden = !aUnHistorique();
         if (!SUIVI) return;
         SUIVI.dessinerBloc($("suivi-repere"));
         placerRepere();
         poserPastille();
-        $("vers-historique").hidden = !aUnHistorique();
         majEnvoi();
       }
 
@@ -1595,8 +1652,8 @@
       function dessinerHistorique() {
         const liste = $("historique-liste");
         liste.replaceChildren();
-        if (!suiviActif()) return;
-        const parcours = SUIVI.lire();
+        const parcours = caseHistorique();
+        if (!parcours) return;
         $("historique-compte").textContent = PARCOURS.texteResume(parcours);
         const seances = PARCOURS.historique(parcours);
         seances.slice(0, historiqueAffiches).forEach(s => {
@@ -1627,7 +1684,7 @@
         $("historique-plus").hidden = seances.length <= historiqueAffiches;
       }
       function versHistorique() {
-        if (!suiviActif()) return;
+        if (!caseHistorique()) return;
         historiqueAffiches = 10;
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = false;
@@ -1745,8 +1802,8 @@
           SUIVI.client.pret(),
           new Promise(resolve => window.setTimeout(resolve, 6000))
         ]).then(demarrerEleve);
-      } else if (SUIVI) {
-        majSuivi();
+      } else {
+        majSuivi(); // le visiteur : son bouton « Mon historique », s'il a déjà joué ici
       }
     })();
   </script>
