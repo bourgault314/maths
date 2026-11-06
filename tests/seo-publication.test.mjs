@@ -86,7 +86,7 @@ test("l’annuaire range les bouliers en Numération et réserve Calcul mental a
   const expected = [
     "outils/automatismes/CM_Livret_A5.html",
     "outils/calcul_mental/coffres_magiques_solo.html",
-    "outils/calcul_mental/defi_calcul.html",
+    "outils/calcul_mental/defi_calcul_modules.html",
     "outils/calcul_mental/defi_tables.html",
     "outils/calcul_mental/flash_anzan.html",
     "outils/calcul_mental/fiche_tables_multiplication.pdf",

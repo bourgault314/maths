@@ -689,13 +689,13 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/calcul-mental/cartes-tables.png?v=2",
       "cardDescription": "Les cartes recto verso des tables de 2 à 10 : le calcul devant, la réponse derrière, à découper."
     },
-    "outils/calcul_mental/defi_calcul.html": {
+    "outils/calcul_mental/defi_calcul_modules.html": {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "entrainer",
       "collections": [],
-      "tags": ["calcul-mental", "additions", "soustractions", "complements", "chronometre"],
-      "thumbnail": "assets/img/thumbnails/calcul-mental/defi-calcul.svg?v=1",
-      "cardDescription": "Enchaîner 30 calculs en trois minutes : sommes, différences, compléments et multiplications par 10 ou 100."
+      "tags": ["calcul-mental", "additions", "soustractions", "complements", "doubles", "decimaux", "fractions"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/defi-calcul-modules.svg?v=1",
+      "cardDescription": "Le calcul mental, module par module : compléments, doubles, passages à la dizaine… D’autres modules arrivent."
     },
     "outils/calcul_mental/flash_anzan.html": {
       "primaryNotion": "calcul-mental",
@@ -7395,10 +7395,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": true
     },
     {
-      "id": "outils-calcul-mental-defi-calcul-html",
+      "id": "outils-calcul-mental-defi-calcul-modules-html",
       "title": "Défi calcul",
-      "description": "Un entraînement chronométré de 30 calculs variés en trois minutes pour automatiser les stratégies de calcul mental.",
-      "path": "outils/calcul_mental/defi_calcul.html",
+      "description": "Apprendre et s’entraîner au calcul mental, module par module : compléments, doubles et moitiés, passages à la dizaine, décimaux, fractions. D’autres modules arrivent.",
+      "path": "outils/calcul_mental/defi_calcul_modules.html",
       "domains": [
         "nombres-calculs"
       ],
@@ -7416,7 +7416,8 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "additions et soustractions",
         "compléments",
-        "30 calculs en trois minutes"
+        "doubles et moitiés",
+        "module par module"
       ],
       "kind": "tool",
       "status": "published",
