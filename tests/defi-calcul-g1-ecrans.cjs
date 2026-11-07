@@ -10,9 +10,10 @@
 //              justes, 20 s entre deux gestes) arrive au serveur avec son
 //              entrée de journal : 2 calculs, 2 justes, une minute au moins ;
 //              les deux compétences passées en boîte 4 ont leur date `s` ;
-//   accueil    INCHANGÉ (il sera refait dans une discussion à part) :
-//              « 2 fois cette semaine », ni gains ni « ↑ cette semaine »,
-//              au téléphone et sur l'ordinateur (cadre entier) ;
+//   accueil    (refait au lot « accueil », 07/11/2026) la pastille
+//              « N soirs cette semaine », les gains sur la porte et dans
+//              Mon parcours, « ↑ cette semaine » sur A2, au téléphone et sur
+//              l'ordinateur (cadre entier) ;
 //   arrêter    une étape arrêtée au milieu : son temps compte quand même ;
 // Le correctif après la relecture de Codex (le temps ne se perd plus) :
 //   recharger  la page rechargée au milieu d'une étape garde son temps
@@ -139,15 +140,26 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     await s.ctx.close();
   });
 
-  await cas("accueil : inchangé (l'accueil sera refait à part) — « 2 fois cette semaine », ni gains ni « ↑ »", async () => {
+  // Lot « accueil » (07/11/2026) : l'accueil refait lit la semaine du moteur.
+  await cas("accueil : la pastille des soirs, les gains sur la porte et dans Mon parcours, « ↑ cette semaine »", async () => {
     assert.ok(apresSeance, "la séance a été jouée");
     for (const [largeur, hauteur] of [[390, 844], [1366, 657]]) {
       const s = await ouvrir(nav, base, {parcours: apresSeance, largeur, hauteur});
-      assert.equal(await texte(s.page, "#acc-semaine"), "2 fois cette semaine");
-      assert.equal(await s.page.locator("#parcours-gains").count(), 0);
-      assert.equal(await s.page.locator("#parcours-modules small.monte").count(), 0);
+      const attendu = await s.page.evaluate(() => {
+        const P = window.MATHSGO_DEFI_CALCUL_MON_PARCOURS;
+        const sem = P.semaineEleve(window.__MATHSGO_DEFI_CALCUL_TEST__.parcours(), window.MATHSGO_DEFI_CALCUL_CORE.carte(), P.jourLocal());
+        return {soirs: sem.soirs, sues: sem.sues};
+      });
+      assert.ok(attendu.soirs >= 1 && attendu.sues >= 2, JSON.stringify(attendu));
+      assert.equal(await texte(s.page, "#acc-soirs"), `✓${attendu.soirs} soir${attendu.soirs > 1 ? "s" : ""} cette semaine`);
+      assert.ok((await texte(s.page, "#acc-porte-note")).endsWith(` · +${attendu.sues} cette semaine`));
+      assert.equal(await s.page.locator("#acc-semaine").count(), 0, "plus de ligne « N fois cette semaine »");
       const cadre = await boite(s.page, ".panel");
       if (largeur > 620) assert.ok(cadre.bas <= hauteur, `cadre entier (${Math.round(cadre.bas)} pour ${hauteur})`);
+      await s.page.click("#acc-porte");
+      await s.page.waitForTimeout(300);
+      assert.equal(await texte(s.page, "#parcours-gains"), `+${attendu.sues} cette semaine`);
+      assert.ok(await s.page.locator('#parcours-modules .dc-mod[data-module="A2"] small b.monte').count() >= 1, "A2 a avancé cette semaine");
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();
     }

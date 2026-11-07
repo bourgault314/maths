@@ -60,12 +60,13 @@ test("Défi calcul : ni élève à code, ni élève qui arrive de son espace, ni
   assert.match(effacer, /PARCOURS\.effacer\(storage\(\), ""\);\s*\n\s*parcours = caseSansCode\(\);/);
   assert.doesNotMatch(effacer, /envoyer|sauverParcours/, "rien ne part au serveur");
   assert.match(ecouteur(CALCUL, "acc-effacer"), /if \(!peutEffacer\(\)\) return;/);
-  // Ordinateur : « Comment ça marche ? » sous Mon module, « Effacer » sous Mon
-  // parcours ; rien à effacer → « Comment ça marche ? » centré sous les deux.
-  assert.match(CALCUL_CSS, /\.acc\.dc-a \{ grid-template-areas: "gauche parcours" "bas effacer"; \}/);
-  assert.match(CALCUL_CSS, /\.acc\.dc-a:not\(\.avec-effacer\) \{ grid-template-areas: "gauche parcours" "bas bas"; \}/);
-  // (Puis le lot « couverture » de Défi calcul, le même soir : 20261106-3.)
-  assert.match(CALCUL, /defi_calcul\.css\?v=20261106-3/, "la feuille modifiée change d'adresse (cache)");
+  // Lot « accueil » (07/11/2026) : une seule colonne ; « Comment ça marche ? »
+  // et « Effacer mon historique » sur la même ligne, centrés ensemble ; la
+  // question s'ouvre à la place de la porte et de la ligne.
+  assert.match(CALCUL, /<div id="acc-bas" class="acc-bas">\s*<button id="acc-notice-bouton"[^>]*>Comment ça marche&nbsp;\?<\/button>\s*<button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique<\/button>/);
+  assert.match(corps(CALCUL, "marquerEffacer"), /pied\.classList\.toggle\("est-ouverte", !\$\("acc-confirm"\)\.hidden\);/);
+  assert.match(CALCUL_CSS, /\.acc-pied > \* \{ grid-area: 1 \/ 1; min-width: 0; \}/, "la question et le pied dans la même case");
+  assert.match(CALCUL, /defi_calcul\.css\?v=20261107-1/, "la feuille modifiée change d'adresse (cache)");
 });
 
 test("Défi tables : la remise à zéro n'existe plus sous un code, même par un clic forcé", () => {
@@ -284,26 +285,35 @@ test("Défi tables : le « ⋯ » et la question se posent par-dessus — rien n
   } finally { await nav.close(); }
 });
 
-test("Défi calcul (ordinateur) : les deux liens sur la même ligne ; sans rien à effacer, « Comment ça marche ? » centré sous les deux cartes, cartes de même hauteur", {skip: ignorer, timeout: PLAFOND}, async () => {
+test("Défi calcul (ordinateur) : les deux liens sur la même ligne, centrés ensemble sous la porte ; sans rien à effacer, « Comment ça marche ? » seul et centré ; la question n'agrandit pas le cadre", {skip: ignorer, timeout: PLAFOND}, async () => {
   await demarrerServeur();
   const nav = await navigateur.launch();
   try {
     for (const eleve of [false, true]) {
       const {ctx, page, erreurs} = await ouvrir(nav, "calcul", {largeur: 1440, hauteur: 900, eleve});
-      const m = await page.evaluate(() => {
+      const mesurer = () => page.evaluate(() => {
         const r = s => { const e = document.querySelector(s); const b = e.getBoundingClientRect(); return {haut: b.top, bas: b.bottom, centre: (b.left + b.right) / 2, g: b.left, d: b.right}; };
         return {notice: r("#acc-notice-bouton"), effacer: document.getElementById("acc-effacer").hidden ? null : r("#acc-effacer"),
-          module: r(".acc .gauche .matable"), parcours: r("#acc-parcours"), acc: r(".acc")};
+          module: r(".acc .matable"), porte: r("#acc-porte"), acc: r(".acc"), cadre: r(".panel"), echelle: getComputedStyle(document.documentElement).getPropertyValue("--echelle")};
       });
+      const m = await mesurer();
+      assert.ok(Math.abs(m.porte.centre - m.module.centre) < 2, "la porte de Mon parcours centrée sous Mon module");
       if (!eleve) {
         assert.ok(Math.abs(m.notice.haut - m.effacer.haut) < 2, "visiteur : même ligne");
-        assert.ok(Math.abs(m.notice.centre - m.module.centre) < 2, "« Comment ça marche ? » sous Mon module");
-        assert.ok(Math.abs(m.effacer.centre - m.parcours.centre) < 2, "« Effacer » sous Mon parcours");
+        // (Avec « Mode professeur », 07/11/2026 : les trois liens centrés ensemble.)
+        const ligne = await page.evaluate(() => { const b = [...document.querySelectorAll("#acc-bas > *")].filter(e => !e.hidden).map(e => e.getBoundingClientRect()); return (Math.min(...b.map(r => r.left)) + Math.max(...b.map(r => r.right))) / 2; });
+        assert.ok(Math.abs(ligne - m.acc.centre) < 3, "les liens centrés ensemble");
+        await page.click("#acc-effacer");
+        const q = await mesurer();
+        assert.equal(await page.isVisible("#acc-porte"), false, "la question prend la place de la porte");
+        assert.equal(q.echelle, m.echelle, "le cadre ne change pas de taille");
+        assert.ok(Math.abs(q.module.haut - m.module.haut) < 1, "rien au-dessus ne bouge");
+        await page.click("#acc-confirm-non");
+        assert.ok(await page.isVisible("#acc-porte"));
       } else {
         assert.equal(m.effacer, null);
-        assert.ok(Math.abs(m.notice.centre - m.acc.centre) < 2, "élève : centré sous les deux cartes");
+        assert.ok(Math.abs(m.notice.centre - m.acc.centre) < 2, "élève : centré");
       }
-      assert.ok(Math.abs(m.module.bas - m.parcours.bas) < 2, "les deux cartes ont la même hauteur");
       assert.deepEqual(erreurs, []);
       await ctx.close();
     }

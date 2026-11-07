@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261106-3">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261107-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -124,47 +124,50 @@
            enregistré. La pilule est sur l'accueil et sur l'écran d'un module. -->
       <p id="prof-pilule" class="prof-pilule" hidden><b>Mode professeur</b><span>· tous les menus, rien n’est enregistré ·</span><button id="prof-quitter" type="button">Quitter</button></p>
       <p id="prof-refus" class="prof-pilule est-refus" hidden><b>Mode professeur</b><span>· déconnecte-toi d’abord</span></p>
-      <!-- L'accueil : Mon module et sa séance à gauche, le parcours à
-           droite, un seul palier ouvert à la fois. L'élève n'a pas de
-           menus : sa séance est prête. Tout ce qui s'y lit est calculé par
+      <!-- L'accueil (lot « accueil », 07/11/2026, choix A de Gwenaël) : une
+           seule colonne, comme Défi tables. Mon module et sa séance, la
+           pastille « N soirs cette semaine », puis la porte « Mon parcours »
+           (un écran à part, plus de liste sur l'accueil), puis « Comment ça
+           marche ? » (et « Effacer mon historique » pour le visiteur sans
+           code) sur une seule ligne. Le professeur voit la même page, avec
+           ses liens en plus. Tout ce qui s'y lit est calculé par
            renderAccueil(). -->
-      <div id="intro" class="intro dc-large">
-        <div class="acc dc-a">
-          <div class="gauche">
-            <section class="matable" aria-labelledby="acc-module-titre">
-              <div class="matable-head">
-                <div><p class="eyebrow">Mon module</p><h1 id="acc-module-titre" tabindex="-1">Défi calcul</h1></div>
-                <div id="acc-droite" class="matable-droite" hidden><button id="acc-changer" class="matable-changer" type="button">Changer de module</button></div>
+      <div id="intro" class="intro">
+        <div class="acc">
+          <section class="matable" aria-labelledby="acc-module-titre">
+            <div class="matable-head">
+              <div class="matable-titre">
+                <div class="acc-tete"><p class="eyebrow">Mon module</p><span id="acc-soirs" class="acc-soirs" hidden><i aria-hidden="true">✓</i><span id="acc-soirs-texte"></span></span></div>
+                <h1 id="acc-module-titre" tabindex="-1">Défi calcul</h1>
               </div>
-              <div id="acc-niv" class="dc-niv"></div>
-              <div id="acc-seance"></div>
-              <div id="acc-liens" class="seance-liens" hidden>
-                <button id="acc-test" type="button">Tu connais déjà&nbsp;? (le test)</button>
-                <button id="acc-choisir" type="button">Choisir une activité</button>
-              </div>
-            </section>
-            <div id="acc-semaine" class="semaine" hidden></div>
-          </div>
-          <!-- Lot « Effacer l'historique » (06/11/2026) : « Comment ça
-               marche ? » sous Mon module, « Effacer mon historique » sous Mon
-               parcours, sur la même ligne (ordinateur) ; au téléphone, l'un
-               sous Mon module comme avant, l'autre tout en bas. -->
-          <div class="acc-bas">
-            <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
-          </div>
-          <section id="acc-parcours" class="dc-parcours" aria-labelledby="parcours-eyebrow">
-            <div class="dc-ptete"><p id="parcours-eyebrow" class="eyebrow">Mon parcours</p><small id="parcours-compte"></small></div>
-            <div id="parcours-paliers" class="dc-paliers" role="group" aria-label="Les paliers"></div>
-            <p id="parcours-titre" class="dc-ptitre"></p>
-            <div id="parcours-modules" class="dc-mods" role="list"></div>
-            <p class="dc-legende"><span><span class="dc-comp" aria-hidden="true"><i></i></span>à apprendre</span><span><span class="dc-comp" aria-hidden="true"><i class="b"></i></span>en route</span><span><span class="dc-comp" aria-hidden="true"><i class="v"></i></span>su</span><span><span class="dc-comp" aria-hidden="true"><i class="r"></i></span>à revoir</span></p>
+              <div id="acc-droite" class="matable-droite" hidden><button id="acc-changer" class="matable-changer" type="button">Changer de module</button></div>
+            </div>
+            <div id="acc-niv" class="dc-niv"></div>
+            <div id="acc-seance"></div>
+            <div id="acc-liens" class="seance-liens" hidden>
+              <button id="acc-test" type="button">Tu connais déjà&nbsp;? (le test)</button>
+              <button id="acc-choisir" type="button">Choisir une activité</button>
+            </div>
           </section>
-          <!-- « Effacer mon historique » (06/11/2026, choix de Gwenaël) : le
-               visiteur SANS code seulement (ni l'élève à code, ni le mode
-               professeur), discret, sous Mon parcours. La question s'ouvre à
-               sa place. -->
-          <div class="acc-effacer-zone">
-            <button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique</button>
+          <!-- Le pied de l'accueil : la porte de Mon parcours et la ligne des
+               liens. La question « Effacer tout ton historique ? » s'ouvre À LEUR
+               PLACE, dans la même case : la case garde sa hauteur, rien ne
+               bouge. -->
+          <div id="acc-pied" class="acc-pied">
+            <div class="acc-pied-normal">
+              <button id="acc-porte" class="acc-porte" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small id="acc-porte-note"></small></span></button>
+              <!-- « Comment ça marche ? » et, pour le visiteur SANS code seulement,
+                   « Effacer mon historique » (06/11/2026) et « Mode professeur » :
+                   sur la même ligne, centrés. -->
+              <div id="acc-bas" class="acc-bas">
+                <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
+                <button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique</button>
+                <!-- « Mode professeur » (07/11/2026, choix de Gwenaël) : pour le
+                     visiteur SANS code seulement, jamais pour l'élève à code
+                     (avec un code dans l'onglet, ?prof=1 est refusé). -->
+                <a id="acc-prof" class="lien-prof" href="?prof=1" hidden>Mode professeur</a>
+              </div>
+            </div>
             <div id="acc-confirm" class="acc-confirm" role="group" aria-labelledby="acc-confirm-texte" hidden>
               <p id="acc-confirm-texte">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
               <div class="acc-confirm-boutons">
@@ -174,6 +177,25 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- « Mon parcours » : un écran à part (lot « accueil », 07/11/2026),
+           ouvert par la porte de l'accueil. Les paliers, et dans le palier
+           ouvert une ligne par module. Pour l'élève, la ligne montre ; en
+           mode professeur, elle ouvre le module. -->
+      <div id="ecran-parcours" class="parcours-screen" hidden>
+        <div class="settings-toolbar">
+          <button id="parcours-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
+          <h1 id="parcours-heading" class="settings-heading" tabindex="-1">Mon parcours</h1>
+        </div>
+        <section id="acc-parcours" class="dc-parcours" aria-labelledby="parcours-heading">
+          <!-- Le compte et les gains de la semaine à gauche, la légende à droite
+               (une seule ligne : le palier le plus long tient dans le cadre). -->
+          <div class="dc-ptete"><p class="dc-compte"><small id="parcours-compte"></small><b id="parcours-gains" class="dc-gains" hidden></b></p><p class="dc-legende"><span><span class="dc-comp" aria-hidden="true"><i></i></span>à apprendre</span><span><span class="dc-comp" aria-hidden="true"><i class="b"></i></span>en route</span><span><span class="dc-comp" aria-hidden="true"><i class="v"></i></span>su</span><span><span class="dc-comp" aria-hidden="true"><i class="r"></i></span>à revoir</span></p></div>
+          <div id="parcours-paliers" class="dc-paliers" role="group" aria-label="Les paliers"></div>
+          <p id="parcours-titre" class="dc-ptitre"></p>
+          <div id="parcours-modules" class="dc-mods" role="list"></div>
+        </section>
       </div>
 
       <!-- L'écran d'un module, en mode professeur seulement : les cases de
@@ -1309,6 +1331,7 @@
       // Le suivi redessine l'écran visible (jamais une activité en cours).
       function renderParcours() {
         if (!$("intro").hidden) renderAccueil();
+        else if (!$("ecran-parcours").hidden) renderParcoursPaliers(PARCOURS.moduleCourant(parcours, CARTE));
         else if (!$("module").hidden) renderModule();
         ajusterEchelle();
       }
@@ -1367,7 +1390,33 @@
         }
         return Math.floor(bas * 200) / 200;
       }
+      // Mon parcours sur l'ordinateur (lot « accueil ») : chaque palier a sa
+      // longueur de liste. L'écran garde la taille de son palier le plus
+      // long : passer d'un palier à l'autre ne change jamais la taille du
+      // cadre (rien ne bouge). Chaque palier est dessiné puis mesuré avant que
+      // la page soit repeinte ; on revient ensuite au palier ouvert.
+      let mesureParcours = false;
       function ajusterEchelle() {
+        if (mesureParcours || $("ecran-parcours").hidden || window.innerWidth < ECHELLE.largeurMin) { ajusterEchelleSeule(); return; }
+        mesureParcours = true;
+        const ouvert = state.palier;
+        const id = PARCOURS.moduleCourant(parcours, CARTE);
+        let plus = Infinity;
+        try {
+          CORE.PALIERS.forEach(palier => {
+            state.palier = palier.n;
+            renderParcoursPaliers(id);
+            ajusterEchelleSeule();
+            plus = Math.min(plus, echelleCourante());
+          });
+        } finally {
+          state.palier = ouvert;
+          renderParcoursPaliers(id);
+          mesureParcours = false;
+        }
+        document.documentElement.style.setProperty("--echelle", plus.toFixed(3));
+      }
+      function ajusterEchelleSeule() {
         const racine = document.documentElement;
         const corps = document.body;
         const pleinEcran = corps.classList.contains("fullscreen-active");
@@ -1630,24 +1679,28 @@
       window.addEventListener("popstate", retourNavigateur);
       // [retour-navigateur:fin]
 
-      const ECRANS = Object.freeze(["intro", "module", "play", "result", "notice"]);
-      const TITRES = Object.freeze({intro: "acc-module-titre", module: "module-titre", notice: "notice-title"});
+      const ECRANS = Object.freeze(["intro", "ecran-parcours", "module", "play", "result", "notice"]);
+      const TITRES = Object.freeze({intro: "acc-module-titre", "ecran-parcours": "parcours-heading", module: "module-titre", notice: "notice-title"});
 
       // La pilule du mode professeur : sur l'accueil et sur l'écran d'un
       // module. Avec un code d'élève, la clé est ignorée et l'accueil le dit.
       function majPilule(name) {
-        $("prof-pilule").hidden = !(MODE_PROF && (name === "intro" || name === "module"));
+        $("prof-pilule").hidden = !(MODE_PROF && (name === "intro" || name === "ecran-parcours" || name === "module"));
         $("prof-refus").hidden = !(PROF_REFUSE && suiviActif() && name === "intro");
       }
 
       function show(name) {
         ECRANS.forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
+        if (name === "ecran-parcours") renderParcoursPaliers(PARCOURS.moduleCourant(parcours, CARTE));
         if (name === "module") renderModule();
         document.body.classList.toggle("challenge-playing", name === "play");
         // Hors de l'accueil, le lien du site « ← Calcul mental » s'efface :
         // la seule flèche à l'écran est celle de l'appli.
         document.body.classList.toggle("ecran-interne", name !== "intro");
+        if (name !== "intro") document.body.classList.remove("accueil-en-attente");
+        // Mon parcours : le même bas de cadre que l'accueil.
+        document.body.classList.toggle("sur-parcours", name === "ecran-parcours");
         majPilule(name);
         window.scrollTo({top: 0, behavior: "auto"});
         if (TITRES[name]) $(TITRES[name]).focus?.({preventScroll: true});
@@ -1793,6 +1846,7 @@
         const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
         const reste = file.etapes;
         if (!reste.length && !file.finie) return null;
+        const affiche = (competenceCourante() || {}).module;
         const jouable = reste.length > 0;
         const reprise = file.ouverte && file.faites > 0;
         const carte = document.createElement(jouable ? "button" : "div");
@@ -1825,7 +1879,9 @@
           const numero = document.createElement("i");
           numero.textContent = String(file.faites + index + 1);
           const nom = document.createElement("span");
-          nom.textContent = soude(nomEtape(etape));
+          // Le test du module affiché juste au-dessus : son nom n'est pas
+          // répété (lot « accueil », choix de Gwenaël).
+          nom.textContent = etape.type === "test" && etape.module === affiche ? "Tu connais déjà ce module\u00a0?" : soude(nomEtape(etape));
           const detail = document.createElement("small");
           detail.textContent = soude(detailEtape(etape));
           nom.append(detail);
@@ -1838,16 +1894,46 @@
         return carte;
       }
 
-      // « 3 fois cette semaine » : les séances finies depuis lundi.
+      // La semaine de l'élève (lot « accueil », 07/11/2026, choix de
+      // Gwenaël) : sur l'accueil, juste « 2 soirs cette semaine », en
+      // pastille dans la tête de Mon module — rien tant qu'il n'y a aucun
+      // soir (une ligne de zéros ressemble à un reproche), et rien en mode
+      // professeur (rien n'y est enregistré). La pastille vit dans une ligne
+      // de hauteur fixe : qu'elle paraisse ou non, rien ne bouge. Les gains
+      // (« +2 cette semaine ») sont sur la porte de Mon parcours et dans
+      // l'écran Mon parcours ; le détail des jours et des semaines est pour la
+      // page de suivi du professeur.
+      const semaine = () => PARCOURS.semaineEleve(parcours, CARTE, jourCourant());
+      // La fin de séance garde « 3 fois cette semaine » (les séances finies
+      // depuis lundi) : elle n'est pas dans ce lot.
       function texteSemaine() {
         const fois = PARCOURS.bilanSeances(parcours, jourCourant()).semaine;
         return fois ? `${fois} fois cette semaine` : "";
       }
+      function texteSoirs(soirs) {
+        return soirs ? `${soirs}\u00a0soir${soirs > 1 ? "s" : ""} cette semaine` : "";
+      }
+      const texteGains = sues => sues ? `+${sues} cette semaine` : "";
+      function texteCompte(compte) {
+        return soude(`${compte.sues} compétence${compte.sues > 1 ? "s" : ""} sue${compte.sues > 1 ? "s" : ""} sur ${compte.total}`);
+      }
 
       function renderSemaine() {
-        const zone = $("acc-semaine");
-        zone.textContent = texteSemaine();
-        zone.hidden = !zone.textContent;
+        const s = semaine();
+        const soirs = MODE_PROF ? "" : texteSoirs(s.soirs);
+        $("acc-soirs-texte").textContent = soirs;
+        $("acc-soirs").hidden = !soirs;
+        $("acc-soirs").setAttribute("aria-label", soirs);
+        // La porte de Mon parcours : le compte, et ce qui a été gagné depuis
+        // lundi, en vert.
+        const note = $("acc-porte-note");
+        note.replaceChildren(document.createTextNode(texteCompte(PARCOURS.compter(parcours, CARTE))));
+        const gains = texteGains(s.sues);
+        if (gains) {
+          const b = document.createElement("b");
+          b.textContent = gains;
+          note.append(" · ", b);
+        }
       }
 
       const CLASSES_ETAT = Object.freeze({su: "su", revoir: "rouge", encours: "encours", libre: "", bientot: "bientot"});
@@ -1864,7 +1950,7 @@
       // palier (« niv. 1 à 3 »), et un petit carré par compétence du palier.
       // Pour l'élève, la ligne ne s'ouvre pas : elle montre. En mode
       // professeur, elle ouvre le module.
-      function ligneModule(fiche, palier) {
+      function ligneModule(fiche, palier, avancees = []) {
         const etat = PARCOURS.etatModule(parcours, fiche.id, CARTE);
         const niveaux = niveauxDuPalier(fiche, palier);
         const ouvrable = MODE_PROF && etat.etat !== "bientot";
@@ -1890,6 +1976,15 @@
         const partiel = numeros.length < fiche.niveaux.length;
         const quels = numeros.length === 1 ? `niveau ${numeros[0]}` : numeros.length === numeros[numeros.length - 1] - numeros[0] + 1 ? `niveaux ${numeros[0]} à ${numeros[numeros.length - 1]}` : `niveaux ${numeros.join(", ")}`;
         petit.textContent = [etat.etat === "bientot" ? "bientôt" : "", partiel ? quels : ""].filter(Boolean).join(" · ");
+        // « ↑ cette semaine » : une compétence du module entrée ou devenue sue
+        // depuis lundi (dans ce palier), pour montrer à l'élève qu'il avance.
+        if (avancees.some(a => a.module === fiche.id && niveaux.some(niveau => niveau.n === a.niveau))) {
+          const monte = document.createElement("b");
+          monte.className = "monte";
+          monte.textContent = "↑ cette semaine";
+          if (petit.textContent) petit.append(" · ");
+          petit.append(monte);
+        }
         if (petit.textContent) nom.append(petit);
         const carres = document.createElement("span");
         carres.className = "dc-comp";
@@ -1915,7 +2010,10 @@
       // niveaux, dans l'ordre de la carte.
       function renderParcoursPaliers(id) {
         const compte = PARCOURS.compter(parcours, CARTE);
-        $("parcours-compte").textContent = soude(`${compte.sues} compétence${compte.sues > 1 ? "s" : ""} sue${compte.sues > 1 ? "s" : ""} sur ${compte.total}`);
+        $("parcours-compte").textContent = texteCompte(compte);
+        const s = semaine();
+        $("parcours-gains").textContent = texteGains(s.sues);
+        $("parcours-gains").hidden = !s.sues;
         const courante = competenceCourante();
         if (state.palier === null) state.palier = courante ? PARCOURS.palierDe(CARTE, courante.module, courante.niveau) || 1 : 1;
         const paliers = $("parcours-paliers");
@@ -1957,7 +2055,7 @@
         // tiennent en une liste compacte, pour que l'accueil tienne dans l'écran.
         const construits = modules.filter(fiche => fiche.construit);
         const bientot = modules.filter(fiche => !fiche.construit);
-        const lignes = construits.map(fiche => ligneModule(fiche, palier.n));
+        const lignes = construits.map(fiche => ligneModule(fiche, palier.n, s.avancees));
         if (bientot.length) {
           const liste = document.createElement("p");
           liste.className = "dc-bientot";
@@ -1989,6 +2087,11 @@
         // un appareil neuf ne montre pas un instant le premier module à un
         // élève qui en est au troisième.
         acc.classList.toggle("en-attente", suiviAttendu);
+        // Lot « accueil » : tant que le serveur n'a pas répondu, le cadre
+        // entier attend (une fraction de seconde) — il apparaît d'un coup à sa
+        // taille, au lieu de rapetisser sous les yeux de l'élève quand Mon
+        // module arrive.
+        document.body.classList.toggle("accueil-en-attente", suiviAttendu && !$("intro").hidden);
         const courante = competenceCourante();
         const id = courante ? courante.module : null;
         const fiche = id ? CORE.moduleDe(id) : null;
@@ -2000,8 +2103,10 @@
         $("acc-droite").hidden = !MODE_PROF;
         $("acc-liens").hidden = !MODE_PROF || !fiche;
         renderSemaine();
-        renderParcoursPaliers(id);
-        $("acc-effacer").hidden = !peutEffacer() || PARCOURS.estVide(parcours) || !$("acc-confirm").hidden;
+        $("acc-effacer").hidden = !peutEffacer() || PARCOURS.estVide(parcours);
+        // Le visiteur sans code : la porte du mode professeur (même règle que
+        // « Effacer », mais aussi sur un appareil vide).
+        $("acc-prof").hidden = !peutEffacer();
         if (!peutEffacer()) $("acc-confirm").hidden = true;
         marquerEffacer();
       }
@@ -2015,12 +2120,14 @@
       function peutEffacer() {
         return !MODE_PROF && !suiviActif() && !ENTREE.billet && !entreeRefusee;
       }
-      // Rien à effacer ici (élève à code, mode professeur, appareil vide) :
-      // « Comment ça marche ? » se centre sous les deux cartes (06/11/2026,
-      // choix de Gwenaël, « pour la symétrie »).
+      // La question « Effacer tout ton historique ? » s'ouvre à la place de
+      // la porte de Mon parcours et de la ligne des liens, dans la même case
+      // (la plus haute des deux décide de sa hauteur) : rien ne bouge.
       function marquerEffacer() {
-        const avec = !$("acc-effacer").hidden || !$("acc-confirm").hidden;
-        document.querySelector(".acc").classList.toggle("avec-effacer", avec);
+        const pied = $("acc-pied");
+        pied.classList.toggle("est-ouverte", !$("acc-confirm").hidden);
+        // La place de la question n'est gardée que là où elle peut s'ouvrir.
+        pied.classList.toggle("avec-effacer", !$("acc-effacer").hidden || !$("acc-confirm").hidden);
       }
       function effacerHistorique() {
         if (!peutEffacer()) return;
@@ -3562,12 +3669,18 @@
         const courante = competenceCourante();
         if (courante) ouvrirModule(courante.module, courante.niveau);
       });
-      // « Changer de module » : le parcours est sur l'accueil.
-      $("acc-changer").addEventListener("click", () => $("acc-parcours").scrollIntoView?.({block: "nearest"}));
-      $("module-changer").addEventListener("click", () => {
-        versAccueil();
-        $("acc-parcours").scrollIntoView?.({block: "nearest"});
-      });
+      // « Mon parcours » : un écran à part, ouvert sur le palier en cours.
+      // « Changer de module » (professeur) y mène aussi : chaque ligne y
+      // ouvre son module.
+      function ouvrirParcours() {
+        arreterActivite();
+        state.palier = null;
+        show("ecran-parcours");
+      }
+      $("acc-porte").addEventListener("click", ouvrirParcours);
+      $("acc-changer").addEventListener("click", ouvrirParcours);
+      $("module-changer").addEventListener("click", () => show("ecran-parcours"));
+      $("parcours-back").addEventListener("click", versAccueil);
       $("prof-quitter").addEventListener("click", quitterModeProf);
       // Lot F1 : « puis une chose nouvelle », « puis 2 choses nouvelles » :
       // le nombre réglé pour la classe.
