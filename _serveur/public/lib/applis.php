@@ -67,7 +67,7 @@ const CATALOGUE_APPLIS = [
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance',
-            'journal', 'etapes', 'justes', 'test'],
+            'journal', 'etapes', 'justes', 'test', 'numero'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
         // Lot serveur A (06/09/2026) : la SEULE chose que le serveur compte
@@ -85,10 +85,11 @@ const CATALOGUE_APPLIS = [
         // ({"defi-tables": {"records": false}}). Voir reglages_recus().
         'reglages' => ['records' => true],
         // Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses
-        // élèves ») : le journal des séances — `journal`, cinq listes
+        // élèves ») : le journal des séances — `journal`, six listes
         // d'entiers alignées sur `seances` (`table`, `etapes`, `calculs`,
-        // `justes`, `test` ; -1 = pas connu ; pas de temps passé, décision de
-        // Gwenaël du 07/11/2026). Version 4 du
+        // `justes`, `test`, et `numero`, le numéro de la séance qui la fait
+        // reconnaître d'un appareil à l'autre ; -1 = pas connu ; pas de temps
+        // passé, décision de Gwenaël du 07/11/2026). Version 4 du
         // moteur : la version la plus basse qu'on accepte À L'ÉCRITURE
         // (api/parcours.php), comme pour Défi calcul. Une page de version 3
         // restée ouverte ne connaît pas le journal : relue puis renvoyée, sa
@@ -232,7 +233,7 @@ const CATALOGUE_APPLIS = [
         // listes d'entiers alignées sur `seances`, -1 = pas connu).
         'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'd', 's', 'c',
             'seance', 'jour', 'etape', 'n', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
-            'rouges', 'minutes', 'jours'],
+            'rouges', 'minutes', 'jours', 'numero'],
         'mots' => [],
         'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances finies
@@ -257,7 +258,10 @@ const CATALOGUE_APPLIS = [
         // Lot G1 « journal + accueil » (07/11/2026) : 5. Une page de version 4
         // ne connaît ni le journal ni les dates des compétences : relue puis
         // renvoyée, sa progression les effacerait.
-        'version_min' => 5,
+        // Correctif du lot S1 « les journaux » (07/11/2026, relecture de
+        // Codex) : 6. Chaque séance du journal a son numéro (`numero`) ; une
+        // page de version 5 ne le connaît pas et l'effacerait.
+        'version_min' => 6,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',

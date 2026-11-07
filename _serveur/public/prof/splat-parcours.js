@@ -324,8 +324,11 @@
 
   // Ce qu'un geste ajoute au journal du jour : [séries, réussies, vues].
   // Une colonne « pas connue » reste pas connue tant qu'on n'y ajoute rien.
-  function ajouterAuJournal(p, jour, ajouts) {
-    if (!ajouts.some(n => n > 0)) return p;
+  // `joue` : l'élève a répondu ce jour-là — le jour est noté même si rien ne
+  // s'ajoute (une série commencée la veille et continuée aujourd'hui :
+  // correctif S1, relecture de Codex).
+  function ajouterAuJournal(p, jour, ajouts, joue = false) {
+    if (!joue && !ajouts.some(n => n > 0)) return p;
     const lignes = lignesDuJournal(p.jours, p.journal);
     const ligne = lignes.find(l => l.jour === jour);
     if (ligne) ligne.entree = ligne.entree.map((valeur, index) => (ajouts[index] > 0 ? Math.min(JOURNAL_MAX, Math.max(0, valeur) + ajouts[index]) : valeur));
@@ -466,7 +469,7 @@
     // été comptée en commençant, une étoile si elle est faite, et les
     // réponses vues qui n'y sont pas encore.
     ajouterAuJournal(p, jour, [dejaComptee ? 0 : 1, nouvelle.fait ? 1 : 0,
-      Math.max(0, nouvelle.vues - (dejaComptee ? avant.enCours.vj || 0 : 0))]);
+      Math.max(0, nouvelle.vues - (dejaComptee ? avant.enCours.vj || 0 : 0))], true);
     const gagnante = meilleure(avant, nouvelle);
     const etape = etapeVide();
     etape.fait = gagnante.fait;
@@ -499,7 +502,10 @@
     const vuesDejaNotees = memeSerie ? avant.enCours.vj || 0 : 0;
     const vuesMaintenant = entier(etat.vues, 0, COMPTE_MAX, vuesDe(enCours.res));
     if (Math.max(vuesDejaNotees, vuesMaintenant)) enCours.vj = Math.max(vuesDejaNotees, vuesMaintenant);
-    ajouterAuJournal(p, jour, [memeSerie ? 0 : 1, 0, Math.max(0, vuesMaintenant - vuesDejaNotees)]);
+    // Une réponse de plus (la carte atteinte ou les pastilles ont bougé) : le
+    // jour est un jour joué, même pour une série commencée la veille.
+    const avance = !memeSerie || avant.enCours.idx !== idx || JSON.stringify(avant.enCours.res) !== JSON.stringify(enCours.res);
+    ajouterAuJournal(p, jour, [memeSerie ? 0 : 1, 0, Math.max(0, vuesMaintenant - vuesDejaNotees)], avance);
     const etape = cloner(avant);
     etape.essais = Math.min(ESSAIS_MAX, avant.essais + (memeSerie ? 0 : 1));
     if (!etape.fait) {

@@ -6,6 +6,11 @@
 // serveur déclare, le pire cas, et la fonction de lecture commune aux cinq
 // moteurs (resumeSuivi) que la page prof appellera au lot S2. Rien ne
 // change à l'écran.
+// Correctif après la relecture de Codex (07/11/2026) : chaque séance de Défi
+// tables et de Défi calcul a son NUMÉRO ; la fusion réunit les séances par
+// numéro (une copie sans journal n'efface plus rien, l'ordre des fusions ne
+// compte plus) ; Défi calcul passe en version 6. SPLAT! note aussi le jour
+// d'une série commencée la veille et continuée.
 
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
@@ -18,6 +23,37 @@ const S = require("../assets/js/splat-parcours.js");
 const C = require("../assets/js/coffres-parcours.js");
 const A = require("../outils/calcul_mental/flash_anzan_parcours.js");
 const D = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+const CORE_CALCUL = require("../outils/calcul_mental/defi_calcul_core.js");
+// Tout ce qui a un palier est « construit » : il y a toujours une nouveauté (comme tests/defi-calcul-journal-g1).
+const CARTE_CALCUL = (carte => ({modules: carte.modules.map(fiche => Object.assign({}, fiche, {construit: fiche.paliers.some(Boolean)})), ordre: carte.ordre}))(CORE_CALCUL.carte());
+
+// Une séance de Défi calcul jouée jusqu'au bout, comme la page (la même que
+// tests/defi-calcul-journal-g1.test.mjs, tout juste ; `n` choisit la marche du test).
+function jouerSeanceD(p, jour, n = 0) {
+  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour, nouveautes: 1});
+  const avant = p.seance.n;
+  for (let tour = 0; tour < 30 && p.seance.n === avant; tour += 1) {
+    const etape = D.fileSeance(p, CARTE_CALCUL, {aujourdhui: jour}).etapes[0];
+    if (!etape) break;
+    p = D.noterTemps(p, 60);
+    if (etape.type === "jour") {
+      D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour}).forEach(c => {
+        p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: (n + c.niveau) % 3 !== 0, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
+      });
+      p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
+    } else if (etape.type === "test") {
+      const m = Math.min(n % 3, D.NIVEAUX[etape.module]);
+      const niveaux = Array.from({length: Math.min(D.NIVEAUX[etape.module], m + 1)}, (_, i) => ({niveau: i + 1, justes: i < m ? 2 : 0, total: 2}));
+      p = D.appliquerTest(p, {module: etape.module, marche: m, niveaux}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
+    } else if (etape.type === "apprends") {
+      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
+    } else {
+      const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
+      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
+    }
+  }
+  return p;
+}
 const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
 
 // Mercredi 11 novembre 2026 ; le lundi de sa semaine est le 9.
@@ -40,7 +76,8 @@ function deuxSens(fusionner, a, b) {
 
 const entreeT = (p, i) => T.JOURNAL.map(champ => p.journal[champ][i]);
 // Un parcours de Défi tables dont les séances et le journal sont donnés :
-// [[jour, [table, etapes, calculs, justes, test]], …].
+// [[jour, [table, etapes, calculs, justes, test, numero?]], …] — sans numéro,
+// une entrée connue en reçoit un en se relisant.
 function avecJournalT(paires) {
   const p = T.creerParcours();
   p.seances = paires.map(([jour]) => jour);
@@ -48,6 +85,9 @@ function avecJournalT(paires) {
   return T.normaliserParcours(p);
 }
 const ligneT = n => [7, 4, n, n, 0];
+// Une entrée telle que la page l'écrit : avec son numéro (rang × 10 000 + tirage).
+const numeroteeT = (n, numero) => [7, 4, n, n, 0, numero];
+const sansNumero = entree => entree.slice(0, -1);
 
 // Une séance jouée jusqu'au bout, comme la page : le moteur note chaque
 // étape. `resultat` donne le score d'une étape (par défaut : tout juste).
@@ -69,8 +109,8 @@ function jouerSeanceT(p, jour, {table = null, resultat = () => null, finJour = j
 test("Défi tables, version 4 : un journal vide au départ, aligné sur les séances ; jamais de temps passé", () => {
   assert.equal(T.VERSION, 4);
   const p = T.creerParcours();
-  assert.deepEqual(T.JOURNAL, ["table", "etapes", "calculs", "justes", "test"]);
-  assert.deepEqual(p.journal, {table: [], etapes: [], calculs: [], justes: [], test: []});
+  assert.deepEqual(T.JOURNAL, ["table", "etapes", "calculs", "justes", "test", "numero"]);
+  assert.deepEqual(p.journal, {table: [], etapes: [], calculs: [], justes: [], test: [], numero: []});
   assert.deepEqual(T.normaliserParcours(p), p);
   // Décision de Gwenaël (07/11/2026) : aider l'élève, pas le fliquer — ni
   // minutes ni temps de séance, et la page ne mesure rien.
@@ -177,17 +217,37 @@ test("Défi tables : la borne — 60 séances, le journal suit les plus récente
   assert.equal(p.journal.calculs[59], 69);
 });
 
-test("Défi tables, fusion : deux appareils hors ligne le même jour — le plus grand compte, jamais la somme", () => {
+test("Défi tables : chaque séance finie a son numéro — son rang dans la journée, puis l'empreinte de ses nombres", () => {
+  let p = avecJournalT([["2026-11-09", ligneT(10)]]);
+  p = jouerSeanceT(p, MERCREDI, {table: 2}).parcours;
+  p = jouerSeanceT(p, MERCREDI, {table: 3}).parcours;
+  const [lundi, premiere, seconde] = p.journal.numero;
+  assert.equal(Math.floor(lundi / 10000), 1, "une entrée connue sans numéro en reçoit un (rang 1)");
+  assert.equal(Math.floor(premiere / 10000), 1, "la première séance de mercredi : rang 1");
+  assert.equal(Math.floor(seconde / 10000), 2, "la seconde : rang 2 — la journée reste dans l'ordre où elle a été jouée");
+  assert.deepEqual(p.journal.table, [7, 2, 3]);
+  // Relu, le numéro ne bouge pas ; une séance blanche (d'avant le journal) n'en a pas.
+  assert.deepEqual(T.normaliserParcours(JSON.parse(JSON.stringify(p))), p);
+  assert.deepEqual(T.normaliserParcours({version: 3, seances: [MERCREDI]}).journal.numero, [-1]);
+  // Un numéro abîmé (rang 0, trop grand, pas un entier) : pas de numéro, l'entrée connue en reçoit un.
+  const abime = T.normaliserParcours({seances: [MERCREDI, MERCREDI, MERCREDI], journal: {table: [2, 3, 4], etapes: [], calculs: [], justes: [], test: [], numero: [42, 1000000, 15000.5]}});
+  assert.deepEqual(abime.journal.numero.map(n => Math.floor(n / 10000)), [1, 2, 3]);
+});
+
+test("Défi tables, fusion : deux appareils hors ligne le même jour — chaque séance une fois, jamais une copie en double", () => {
   const avant = avecJournalT([["2026-11-09", ligneT(10)]]);
   // Le téléphone : une séance mercredi ; la tablette : deux séances mercredi.
   const telephone = jouerSeanceT(avant, MERCREDI, {table: 2}).parcours;
   let tablette = jouerSeanceT(avant, MERCREDI, {table: 3}).parcours;
   tablette = jouerSeanceT(tablette, MERCREDI, {table: 3}).parcours;
   const f = deuxSens(T.fusionner, telephone, tablette);
-  assert.deepEqual(f.seances, ["2026-11-09", MERCREDI, MERCREDI], "deux séances mercredi (le plus grand des deux comptes)");
+  assert.deepEqual(f.seances, ["2026-11-09", MERCREDI, MERCREDI, MERCREDI], "les trois séances jouées mercredi");
+  assert.deepEqual([...f.journal.table].sort(), [2, 3, 3, 7]);
   assert.equal(f.journal.calculs[0], 10, "lundi ne bouge pas");
   // Chaque entrée vient entière d'un seul côté.
-  [1, 2].forEach(i => assert.ok([entreeT(telephone, 1), entreeT(tablette, 1), entreeT(tablette, 2)].some(e => JSON.stringify(e) === JSON.stringify(entreeT(f, i)))));
+  [1, 2, 3].forEach(i => assert.ok([entreeT(telephone, 1), entreeT(tablette, 1), entreeT(tablette, 2)].some(e => JSON.stringify(e) === JSON.stringify(entreeT(f, i)))));
+  // Le téléphone renvoie ensuite la fusion : rien ne double.
+  assert.deepEqual(T.fusionner(T.fusionner(f, telephone), tablette), f);
 });
 
 test("Défi tables, fusion : une vieille copie revient — elle n'efface aucune entrée connue, rien ne double", () => {
@@ -195,30 +255,43 @@ test("Défi tables, fusion : une vieille copie revient — elle n'efface aucune 
   // Une page de version 3 restée ouverte : deux séances mercredi, sans journal.
   const vieille = T.normaliserParcours({version: 3, seances: ["2026-11-02", MERCREDI, MERCREDI]});
   const f = deuxSens(T.fusionner, recente, vieille);
-  assert.deepEqual(f.seances, ["2026-11-02", MERCREDI, MERCREDI]);
-  assert.deepEqual(f.journal.calculs, [8, 12, -1], "la connue bat la « pas connue », place par place");
-  // Place par place, l'entrée qui en sait le plus gagne, même avec un plus
-  // petit total ; puis le plus grand total — l'entrée entière d'un seul côté.
-  const partielle = T.normaliserParcours({seances: [MERCREDI], journal: {table: [7], etapes: [], calculs: [], justes: [], test: []}});
-  const complete = avecJournalT([[MERCREDI, [0, 1, 0, 0, 0]]]);
-  assert.deepEqual(entreeT(deuxSens(T.fusionner, partielle, complete), 0), [0, 1, 0, 0, 0]);
-  assert.deepEqual(entreeT(deuxSens(T.fusionner, avecJournalT([[MERCREDI, [7, 4, 2, 2, 0]]]), complete), 0), [7, 4, 2, 2, 0]);
+  assert.deepEqual(f.seances, ["2026-11-02", MERCREDI, MERCREDI], "le plus grand des deux comptes : une séance sans numéro peut être la séance connue");
+  assert.deepEqual(f.journal.calculs, [8, -1, 12], "la connue est gardée ; la séance de plus, pas connue, se range avant");
+  // Deux copies d'une même séance (le même numéro) : celle qui en sait le
+  // plus gagne, même avec un plus petit total ; puis le plus grand total.
+  const partielle = T.normaliserParcours({seances: [MERCREDI], journal: {table: [7], etapes: [], calculs: [], justes: [], test: [], numero: [15555]}});
+  const complete = avecJournalT([[MERCREDI, [0, 1, 0, 0, 0, 15555]]]);
+  assert.deepEqual(entreeT(deuxSens(T.fusionner, partielle, complete), 0), [0, 1, 0, 0, 0, 15555]);
+  assert.deepEqual(entreeT(deuxSens(T.fusionner, avecJournalT([[MERCREDI, [7, 4, 2, 2, 0, 15555]]]), complete), 0), [7, 4, 2, 2, 0, 15555]);
   // Une copie d'il y a quinze jours, avec son propre journal.
   const ancienne = avecJournalT([["2026-10-20", ligneT(3)]]);
-  assert.deepEqual(deuxSens(T.fusionner, f, ancienne).journal.calculs, [3, 8, 12, -1]);
+  assert.deepEqual(deuxSens(T.fusionner, f, ancienne).journal.calculs, [3, 8, -1, 12]);
 });
 
-test("Défi tables, fusion : la borne de 60 atteinte — une vieille copie ne remplace pas une entrée récente, rien n'oscille", () => {
-  const vieille = avecJournalT([["2026-09-01", ligneT(4)], ["2026-09-01", ligneT(8)]]);
-  const recente = avecJournalT([["2026-09-01", ligneT(12)], ...Array.from({length: 59}, (_, i) => [plus("2026-09-02", i), ligneT(20)])]);
-  assert.equal(recente.seances.length, 60);
-  const f = deuxSens(T.fusionner, vieille, recente);
-  assert.equal(f.journal.calculs[0], 12, "la séance gardée est la 3e du 1er septembre");
-  assert.deepEqual(f, recente);
-  let x = f;
+test("Défi tables, fusion (relecture de Codex, défaut 1) : une copie sans journal de 60 séances n'efface pas l'entrée connue de sa plus ancienne", () => {
+  const a = avecJournalT([["2026-09-01", [7, 4, 12, 12, 0]]]);
+  const b = T.normaliserParcours({version: 3, seances: ["2026-09-01", ...Array.from({length: 59}, (_, i) => plus("2026-09-02", i))]});
+  assert.equal(b.seances.length, 60);
+  const f = deuxSens(T.fusionner, a, b);
+  assert.equal(f.seances.length, 60);
+  assert.deepEqual(sansNumero(entreeT(f, 0)), [7, 4, 12, 12, 0], "l'entrée connue reste connue");
+});
+
+test("Défi tables, fusion (relecture de Codex, défaut 2) : la borne de 60 après la réunion — l'ordre des fusions ne change rien", () => {
+  const a = avecJournalT([["2026-09-01", numeroteeT(4, 11234)], ["2026-09-01", numeroteeT(12, 25678)]]);
+  const b = avecJournalT([["2026-09-01", numeroteeT(8, 13333)]]);
+  const c = avecJournalT(Array.from({length: 59}, (_, i) => [plus("2026-09-02", i), numeroteeT(20, 10000 + i)]));
+  const gauche = T.fusionner(T.fusionner(a, b), c);
+  assert.deepEqual(T.fusionner(a, T.fusionner(b, c)), gauche);
+  assert.deepEqual(T.fusionner(T.fusionner(a, c), b), gauche);
+  assert.deepEqual(T.fusionner(T.fusionner(c, b), a), gauche);
+  assert.equal(gauche.seances.length, 60);
+  assert.deepEqual(entreeT(gauche, 0), numeroteeT(12, 25678), "le 1er septembre garde sa dernière séance");
+  // Rien n'oscille : la vieille copie revient, encore et encore.
+  let x = gauche;
   for (let tour = 0; tour < 4; tour += 1) {
-    x = T.fusionner(x, tour % 2 ? recente : vieille);
-    assert.equal(x.journal.calculs[0], 12, `tour ${tour + 1}`);
+    x = T.fusionner(x, [a, b, c][tour % 3]);
+    assert.deepEqual(x, gauche, `tour ${tour + 1}`);
   }
 });
 
@@ -250,6 +323,96 @@ test("Défi tables, fusion : stable sur des histoires au hasard (copies d'une m�
     assert.deepEqual(T.fusionner(toute, a), toute, `essai ${essai} : la copie à jour reste telle quelle`);
   }
 });
+
+test("Défi tables et Défi calcul, fusion : trois appareils qui jouent chacun de leur côté et se réunissent dans n'importe quel ordre — le même journal, rien de connu perdu", () => {
+  let graine = 7;
+  const hasard = n => { graine = (graine * 48271) % 2147483647; return graine % n; };
+  const vraiHasard = Math.random;
+  Math.random = () => hasard(1000000) / 1000000;
+  try {
+    for (const [P, nom] of [[T, "Défi tables"], [D, "Défi calcul"]]) {
+      for (let essai = 0; essai < 25; essai += 1) {
+        // Des séances écrites comme la page les écrit (rangerSeances via la fin
+        // de séance) : on les fabrique avec le moteur, jour après jour.
+        const appareils = [P.creerParcours(), P.creerParcours(), P.creerParcours()];
+        let jour = "2026-09-01";
+        for (let n = 0; n < 30 + hasard(50); n += 1) {
+          const i = hasard(3);
+          appareils[i] = P.normaliserParcours(ajouterSeance(P, appareils[i], jour, hasard(9)));
+          if (!hasard(4)) appareils[(i + 1) % 3] = P.fusionner(appareils[(i + 1) % 3], appareils[i]);
+          if (!hasard(2)) jour = plus(jour, 1);
+        }
+        // Une page d'avant (sans journal) qui a vu l'un d'eux.
+        const vieux = JSON.parse(JSON.stringify(appareils[hasard(3)]));
+        delete vieux.journal;
+        vieux.version = P === T ? 3 : 5;
+        const [a, b, c, v] = [...appareils, P.normaliserParcours(vieux)];
+        const reference = P.fusionner(P.fusionner(P.fusionner(a, b), c), v);
+        const ordres = [P.fusionner(a, P.fusionner(b, P.fusionner(c, v))), P.fusionner(P.fusionner(v, c), P.fusionner(b, a)),
+          P.fusionner(P.fusionner(P.fusionner(c, a), v), b)];
+        // Le journal (les autres champs ont leurs propres règles, testées ailleurs).
+        const journalDe = x => ({seances: x.seances, journal: x.journal});
+        ordres.forEach((x, k) => assert.deepEqual(journalDe(x), journalDe(reference), `${nom}, essai ${essai}, ordre ${k + 2}`));
+        // Toute séance connue d'un appareil, et encore dans les 60 plus récentes, est là, entière.
+        const gardees = new Set(P.JOURNAL.length && reference.seances.map((j, i) => `${j} ${JSON.stringify(P.JOURNAL.map(ch => reference.journal[ch][i]))}`));
+        const plusAncien = reference.seances[0];
+        appareils.forEach(app => app.seances.forEach((j, i) => {
+          const e = P.JOURNAL.map(ch => app.journal[ch][i]);
+          if (j > plusAncien) assert.ok(gardees.has(`${j} ${JSON.stringify(e)}`), `${nom}, essai ${essai} : la séance ${j} est gardée`);
+        }));
+      }
+    }
+  } finally {
+    Math.random = vraiHasard;
+  }
+});
+
+test("Défi calcul, version 6 (relecture de Codex) : chaque séance a son numéro ; un journal de version 5 se relit sans rien perdre ; une copie sans journal n'efface rien", () => {
+  assert.equal(D.VERSION, 6);
+  assert.deepEqual(D.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero"]);
+  // Un journal de version 5 (lot G1) : ses entrées connues reçoivent un numéro (rang 1, 2…), les blanches non.
+  const v5 = {version: 5, seances: ["2026-11-02", MERCREDI, MERCREDI],
+    journal: {calculs: [-1, 10, 6], justes: [-1, 9, 6], nouveautes: [-1, 1, 0], prouvees: [-1, 0, 2], rouges: [-1, 0, 1], minutes: [-1, 6, 4]}};
+  const p = D.normaliserParcours(v5);
+  assert.equal(p.version, 6);
+  assert.deepEqual(p.journal.calculs, [-1, 10, 6], "rien de perdu, dans l'ordre");
+  assert.deepEqual(p.journal.numero.map(n => (n < 0 ? n : Math.floor(n / 10000))), [-1, 1, 2]);
+  assert.deepEqual(D.normaliserParcours(v5), p, "le même numéro à chaque relecture, sur chaque appareil");
+  // Une séance jouée ensuite : rang 3 ce jour-là.
+  const suite = jouerSeanceD(p, MERCREDI);
+  assert.equal(Math.floor(suite.journal.numero[3] / 10000), 3);
+  // Le défaut 1 de la relecture : une copie sans journal de 60 séances.
+  const a = D.normaliserParcours({version: 5, seances: ["2026-09-01"], journal: {calculs: [10], justes: [9], nouveautes: [2], prouvees: [1], rouges: [0], minutes: [12]}});
+  const b = D.normaliserParcours({version: 4, seances: ["2026-09-01", ...Array.from({length: 59}, (_, i) => plus("2026-09-02", i))]});
+  const f = deuxSens(D.fusionner, a, b);
+  assert.deepEqual(D.JOURNAL.slice(0, -1).map(champ => f.journal[champ][0]), [10, 9, 2, 1, 0, 12], "l'entrée connue reste connue");
+  // La page prof et resumeSuivi ne rendent pas le numéro.
+  assert.equal("numero" in D.resumeProf(suite, CARTE_CALCUL, MERCREDI).journal[0], false);
+  assert.equal("numero" in D.resumeSuivi(suite, {aujourdhui: MERCREDI}).jours[0].lignes[0], false);
+});
+
+test("Défi tables et Défi calcul : entre la mise à jour du site et le FTP, le serveur jette le numéro — relue, la séance retrouve le même numéro et ne double pas", () => {
+  for (const [P, jouer, nom] of [[T, (p, jour) => jouerSeanceT(p, jour, {table: 4}).parcours, "Défi tables"], [D, (p, jour) => jouerSeanceD(p, jour), "Défi calcul"]]) {
+    // La page du jour : deux séances lundi, une mercredi.
+    let local = P.normaliserParcours(P === T ? {version: 3, seances: [LUNDI]} : {version: 5, seances: [LUNDI], journal: {calculs: [3], justes: [3], nouveautes: [0], prouvees: [0], rouges: [0], minutes: [2]}});
+    local = jouer(jouer(local, LUNDI), MERCREDI);
+    // Le serveur d'avant le FTP : il garde le journal (Défi calcul) ou rien (Défi tables), jamais le numéro.
+    const serveur = JSON.parse(JSON.stringify(local));
+    if (P === T) delete serveur.journal; else delete serveur.journal.numero;
+    const relu = P.fusionner(local, P.normaliserParcours(serveur));
+    assert.deepEqual(relu.seances, local.seances, `${nom} : aucune séance en double`);
+    assert.deepEqual(relu.journal, local.journal, `${nom} : le même journal, les mêmes numéros`);
+    if (P === D) assert.deepEqual(P.normaliserParcours(serveur).journal.numero, local.journal.numero, "Défi calcul : le numéro se retrouve à la relecture");
+  }
+});
+
+// Une séance finie, ajoutée par le moteur comme à la fin d'une vraie séance
+// (même chemin : rangerSeances et un numéro neuf), sans la jouer étape par
+// étape : on passe par une copie que l'on fusionne.
+function ajouterSeance(P, p, jour, n) {
+  if (P === T) return jouerSeanceT(p, jour, {table: 2 + (n % 9)}).parcours;
+  return jouerSeanceD(p, jour, n);
+}
 
 test("Défi tables : réouverture — relire la progression du serveur ne change rien, rien à renvoyer", () => {
   const p = jouerSeanceT(avecJournalT([["2026-11-02", ligneT(8)]]), MERCREDI, {table: 2}).parcours;
@@ -304,6 +467,24 @@ test("SPLAT! : une série commencée hier et finie aujourd'hui — la série hie
   p = S.enregistrerSerie(p, "m2e1", serieS(true, 3, 4, 0), MERCREDI);
   assert.deepEqual(p.jours, ["2026-11-10", MERCREDI]);
   assert.deepEqual(p.journal, {series: [1, 0], reussies: [0, 1], vues: [0, 0]});
+});
+
+test("SPLAT! (relecture de Codex, défaut 3) : une série commencée la veille et continuée sans être finie — ce jour-là aussi est un jour joué, la série n'est pas recomptée", () => {
+  let p = S.creerParcours ? S.creerParcours() : {};
+  p = S.enregistrerEnCours(p, "m1e1", {sig: "x", idx: 1, res: [true], vues: 0, cartes: 4}, LUNDI);
+  p = S.enregistrerEnCours(p, "m1e1", {sig: "x", idx: 2, res: [true, true], vues: 0, cartes: 4}, plus(LUNDI, 1));
+  assert.deepEqual(p.jours, [LUNDI, plus(LUNDI, 1)]);
+  assert.deepEqual(p.journal, {series: [1, 0], reussies: [0, 0], vues: [0, 0]});
+  const r = S.resumeSuivi(p, {aujourdhui: MERCREDI});
+  assert.deepEqual(r.jours.map(j => j.jour), [LUNDI, plus(LUNDI, 1)]);
+  assert.equal(r.dernier, plus(LUNDI, 1));
+  // La même carte, rien de nouveau (la page rechargée) : pas un jour joué.
+  p = S.enregistrerEnCours(p, "m1e1", {sig: "x", idx: 2, res: [true, true], vues: 0, cartes: 4}, MERCREDI);
+  assert.deepEqual(p.jours, [LUNDI, plus(LUNDI, 1)]);
+  // Finie le lendemain sans étoile : ce jour-là aussi.
+  p = S.enregistrerSerie(p, "m1e1", serieS(false, 1, 4, 0), MERCREDI);
+  assert.deepEqual(p.jours, [LUNDI, plus(LUNDI, 1), MERCREDI]);
+  assert.deepEqual(p.journal.series, [1, 0, 0]);
 });
 
 test("SPLAT! : donnée abîmée, borne de 60 jours, jours en double", () => {
@@ -537,10 +718,12 @@ test("le pire cas de chaque appli tient sous les bornes du serveur (2 000 clés,
   const {parcoursComplet: completT} = await import("../scripts/generer-parcours-reference.mjs");
   const t = completT();
   t.seances = Array.from({length: 60}, (_, i) => plus("2026-09-01", i));
-  t.journal = {table: Array(60).fill(10), etapes: Array(60).fill(16), calculs: Array(60).fill(999), justes: Array(60).fill(999), test: Array(60).fill(2)};
+  t.journal = {table: Array(60).fill(10), etapes: Array(60).fill(16), calculs: Array(60).fill(999), justes: Array(60).fill(999), test: Array(60).fill(2),
+    numero: Array.from({length: 60}, (_, i) => 999999 - i)};
   t.retenir = {jour: "2026-10-30", erreurs: Array.from({length: 60}, (_, i) => 1000 + i)};
   const pireT = T.normaliserParcours(t);
   assert.equal(pireT.journal.calculs.length, 60);
+  assert.equal(Math.max(...pireT.journal.numero), 999999);
   // SPLAT! : les 54 parcours, 60 jours au journal plein.
   const {parcoursComplet: completS} = await import("../scripts/generer-parcours-reference-splat.mjs");
   const s = completS();
@@ -561,7 +744,7 @@ test("le pire cas de chaque appli tient sous les bornes du serveur (2 000 clés,
   });
 });
 
-test("serveur : version_min 4 (Défi tables) et 2 (SPLAT!, Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
+test("serveur : version_min 4 (Défi tables), 6 (Défi calcul) et 2 (SPLAT!, Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = (debut, fin) => applis.slice(applis.indexOf(`'${debut}' => [`), applis.indexOf(`'${fin}' => [`));
   const tables = bloc("defi-tables", "coffres");
@@ -570,6 +753,9 @@ test("serveur : version_min 4 (Défi tables) et 2 (SPLAT!, Coffres), les clés d
   const clesTables = tables.slice(tables.indexOf("'cles' => ["), tables.indexOf("'mots' =>"));
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
   assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 2,/);
+  const calcul = bloc("defi-calcul", "automatismes");
+  assert.match(calcul, /'version_min' => 6,/, "Défi calcul : une page de version 5 effacerait les numéros");
+  ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
   assert.match(bloc("splat", "soley"), /'version_min' => 2,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   ["jours", "journal", "depuis", ...S.JOURNAL].forEach(cle => assert.ok(S.CLES_SERVEUR.includes(cle), `SPLAT! : ${cle}`));

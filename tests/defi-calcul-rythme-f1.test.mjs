@@ -60,10 +60,12 @@ test("serveur : une page d'avant F1 (version 3) ne réécrit pas la progression 
   const api = await lire("../_serveur/public/api/parcours.php");
   const moteur = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
   // Lot G1 « journal + accueil » : 5, et le serveur suit (une page de
-  // version 4 effacerait le journal et les dates des compétences).
-  assert.match(moteur, /const VERSION = 5;/);
+  // version 4 effacerait le journal et les dates des compétences). Puis le
+  // correctif du lot S1 : 6 (une page de version 5 effacerait le numéro des
+  // séances).
+  assert.match(moteur, /const VERSION = 6;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 5,/);
+  assert.match(bloc, /'version_min' => 6,/);
   // Lot S1 « les journaux » : Défi tables, Coffres magiques et SPLAT! aussi
   // (tests/suivi-journaux-s1.test.mjs).
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
