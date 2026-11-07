@@ -524,7 +524,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Anzan, les cartes dan et les grades sans retenue (07/11/2026) : la
   // copie prof/flash_anzan_parcours.js change (les grades « + et − »), 65 au
   // manifeste (avant : defi-calcul-F1-rythme).
-  assert.match(lire("_serveur/public/VERSION"), /^lot anzan-dan-sans-retenue$/m);
+  // Puis Défi calcul, lot G1 « journal + accueil » (07/11/2026) :
+  // lib/applis.php, infos.php et prof/defi_calcul_mon_parcours.js changent
+  // (avant : anzan-dan-sans-retenue).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-G1-journal$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

@@ -264,7 +264,7 @@
   </main>
 
   <script src="./defi_calcul_core.js?v=20261106-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261107-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261107-3"></script>
   <script src="./defi_calcul_aides.js?v=20261106-2"></script>
   <script>
     (() => {
@@ -2165,6 +2165,8 @@
       // du module pour le professeur, l'accueil sinon. Une séance quittée au
       // milieu d'une étape garde ses étapes faites.
       function quitterSerie() {
+        // Une étape arrêtée au milieu : son temps compte quand même.
+        if (verserTempsActif()) sauverParcours();
         arreterActivite();
         if (state.origine === "module") { show("module"); return; }
         state.seance = null;
@@ -2351,6 +2353,41 @@
 
       const enSeance = () => state.origine === "seance" && Boolean(state.seance);
 
+      // Le temps actif de la séance (lot G1, pour le journal) : entre deux
+      // gestes de l'élève (toucher, cliquer, taper), le temps compte — une
+      // minute au plus, quoi qu'il fasse entre les deux ; un onglet caché
+      // ne compte pas. Le moteur ne garde que des minutes, jamais une heure.
+      // Rien ne s'affiche à l'élève.
+      // Correctif G1 (relecture de Codex) : UN SEUL endroit verse le temps au
+      // moteur, `verserTempsActif`, et remet le compteur à zéro (jamais
+      // compté deux fois). Il est appelé avant chaque sortie, avant la
+      // sauvegarde qui part déjà à ce moment-là : la fin d'une étape
+      // (`finish`, `avancerTemps`), l'étape arrêtée au milieu
+      // (`quitterSerie`), « Arrêter la séance » et « Accueil »
+      // (`quitterSeance`), l'onglet caché et la page qui se ferme ou se
+      // recharge (`fermerLaPage`).
+      const TROU_ACTIF_MS = 60000;
+      const actif = {ms: 0, dernier: null};
+      // Le temps depuis le dernier geste (une minute au plus) s'ajoute ; le
+      // compte repart de maintenant, ou de rien si l'onglet est caché.
+      function compterTempsActif() {
+        const maintenant = performance.now();
+        if (enSeance() && actif.dernier !== null) actif.ms += Math.min(TROU_ACTIF_MS, Math.max(0, maintenant - actif.dernier));
+        actif.dernier = enSeance() && document.visibilityState !== "hidden" ? maintenant : null;
+      }
+      // Rend vrai quand la progression a changé (à sauvegarder).
+      function verserTempsActif() {
+        if (!enSeance()) { actif.ms = 0; actif.dernier = null; return false; }
+        compterTempsActif();
+        const secondes = Math.floor(actif.ms / 1000);
+        actif.ms -= secondes * 1000;
+        if (!secondes) return false;
+        const avant = parcours.seance.j[4];
+        parcours = PARCOURS.noterTemps(parcours, secondes);
+        return parcours.seance.j[4] !== avant;
+      }
+      ["pointerdown", "keydown"].forEach(type => document.addEventListener(type, compterTempsActif, true));
+
       let ouvertureEnCours = false;
       async function lancerSeance() {
         if (ouvertureEnCours) return;
@@ -2369,6 +2406,9 @@
         parcours = PARCOURS.ouvrirSeance(parcours, CARTE, optionsSeance());
         sauverParcours();
         state.seance = {jouees: []};
+        // Le temps actif part du clic sur « Commencer ».
+        actif.ms = 0;
+        actif.dernier = performance.now();
         etapeSuivante();
       }
 
@@ -2385,6 +2425,8 @@
       }
 
       function quitterSeance() {
+        // « Arrêter la séance » (sur un bilan aussi) : le temps compte.
+        if (verserTempsActif()) sauverParcours();
         state.seance = null;
         versAccueil();
       }
@@ -2668,6 +2710,7 @@
         // « Revoir l'exemple » ne compte pas une seconde fois.
         arreterActivite();
         if (!serie.revoir) {
+          verserTempsActif();
           const suivi = PARCOURS.appliquerSerie(parcours, {module: serie.module, niveau: serie.niveau, genre: "apprends"},
             {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance()});
           parcours = suivi.parcours;
@@ -3231,6 +3274,7 @@
         const serie = state.serie;
         arreterActivite();
         const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance()};
+        verserTempsActif();
         const justes = serie.reponses.filter(reponse => reponse.juste).length;
         const sur = estEntrainement(serie) ? `${justes} juste${justes > 1 ? "s" : ""} sur ${pluriel(serie.reponses.length, "calcul")}` : `${justes} sur ${serie.total}`;
         let suivi;
@@ -3582,9 +3626,16 @@
         else return;
         event.preventDefault();
       });
-      window.addEventListener("pagehide", envoyerAvantDeFermer);
+      // L'onglet caché, la page fermée ou rechargée : le temps actif d'abord
+      // (correctif G1), rangé avec le reste, puis l'envoi. Caché puis
+      // fermé ne compte pas deux fois : le compteur est déjà à zéro.
+      function fermerLaPage() {
+        if (verserTempsActif()) sauverParcours();
+        envoyerAvantDeFermer();
+      }
+      window.addEventListener("pagehide", fermerLaPage);
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") envoyerAvantDeFermer();
+        if (document.visibilityState === "hidden") fermerLaPage();
         // L'onglet resté ouvert depuis la veille : au retour, l'accueil se
         // redessine sur le jour d'aujourd'hui.
         else if (document.visibilityState === "visible" && !$("intro").hidden) renderAccueil();

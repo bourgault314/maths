@@ -792,7 +792,7 @@ test("Codex 1-2 : une séance de version 3 continue en version 4 ; la fusion gar
   p = tester(p, "M2", 0, J2).parcours;
   p = apprendre(p, "M2", 1, J2).parcours;
   p = entrainer(p, "M2", 1, reussie(), J2).parcours;
-  assert.equal(P.VERSION, 4);
+  assert.equal(P.VERSION, 5);
   assert.deepEqual(p.seance.p.slice(3), [1, P.NOUVEAUTE.aFaire, 3, 1]);
   // Une page d'avant F1 réécrit la même séance : 5 nombres, version 3, les
   // tests remis à 0 (elle borne à 4).

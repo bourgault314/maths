@@ -7070,16 +7070,22 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(4, $reference->version, 'version 4 (lot F1 « rythme » : boîtes 6 et 7, plan à 7 nombres ; 3 au lot « couverture »)');
+    egal(5, $reference->version, 'version 5 (lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
     vrai(isset($reference->modules->A5->c->{'1'}), 'les causes par numéro');
     vrai(!isset($reference->test), '« test » a disparu (lot 3)');
     egal(7, count($reference->seance->p), 'le plan de la séance : sept nombres (lot F1 ; cinq avant)');
+    // Lot G1 : six listes d'entiers alignées sur les 60 séances (-1 : pas connu), et deux dates par compétence.
+    foreach (['calculs', 'justes', 'nouveautes', 'prouvees', 'rouges', 'minutes'] as $champ) egal(60, count($reference->journal->{$champ}), "journal : $champ");
+    egal(-1, $reference->journal->calculs[0], 'une séance d’avant le journal : -1, gardé par le filtre');
+    egal(5, count($reference->modules->A2->d), 'd : une date par compétence');
+    egal(6, count($reference->seance->j), 'j : ce que la séance ouverte a fait (six nombres depuis le correctif G1 : les nouveautés en 6e)');
+    egal(3, $reference->seance->j[5], 'j : les nouveautés réussies, gardées par le filtre');
     egal(60, compter_elements_declares('defi-calcul', $attendu), '« Revenir à… » compte les séances (60 gardées)');
     vrai(strlen($attendu) < 40000, 'la référence tient sous la borne de 40 ko');
-    // Le pire cas (toutes les compétences entrées, 8 causes) : 1 639 clés, 21 207 octets, dit la notice du lot 3.
+    // Le pire cas (toutes les compétences entrées, 12 causes) : 1 795 clés, 28 853 octets depuis le correctif du lot G1 (28 851 au lot G1, 1 639 et 21 107 avant).
     vrai(strlen($attendu) > 15000, 'la référence est bien un parcours complet');
 });
 
@@ -7106,7 +7112,11 @@ verifier("defi-calcul — un texte, un prénom, un code de module inconnu, une c
     vrai(!isset($obtenu->modules->ZZ9) && !isset($obtenu->modules->{'A2-3'}), 'un code hors de la carte saute');
     vrai(!isset($obtenu->modules->A2->c->{'abc'}) && !isset($obtenu->modules->A2->c->{'123'}), 'une cause hors motif (deux chiffres au plus) saute');
     egal([5, 5], $obtenu->modules->A2->b, 'dans une liste, une liste imbriquée et un texte sont retirés ; le moteur, lui, remet la liste à la longueur du module');
-    vrai(!isset($obtenu->calculs) && !isset($obtenu->reponses), 'aucun calcul ni réponse d’élève n’est gardé');
+    // Lot G1 : « calculs » est désormais une clé déclarée (une liste du journal,
+    // des NOMBRES de calculs) — la clé passe, mais aucun texte ne passe dans
+    // une liste : il ne reste rien du calcul posé.
+    egal([], $obtenu->calculs ?? [], 'aucun calcul posé n’est gardé (les textes d’une liste sont retirés)');
+    vrai(!isset($obtenu->reponses), 'aucune réponse d’élève n’est gardée');
     vrai(!isset($obtenu->seance->commentaire), 'pas de texte dans la séance');
     $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
     vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'nulle') && !str_contains($texte, '37+') && !str_contains($texte, 'trop dur'), 'aucun texte libre ne ressort');
@@ -7863,15 +7873,18 @@ verifier("defi-calcul F1 — nouveautés par séance : une valeur fausse est ref
     vider_compteurs();
 });
 
-verifier("defi-calcul F1 — une page d'avant F1 (version 3) ne réécrit pas la progression : 400, rien d'écrit ; la lecture et les autres applis ne changent pas", function () use (&$jetonS1) {
+// Lot G1 « journal + accueil » (07/11/2026) : la version minimale passe à 5 —
+// une page de version 4 (d'avant le journal) est refusée comme une page de
+// version 3 l'était au lot F1.
+verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne réécrit pas la progression : 400, rien d'écrit ; la lecture et les autres applis ne changent pas", function () use (&$jetonS1) {
     vider_compteurs();
     $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F1c', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $eleve['code'];
     $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
-    egal(4, $reference['version'], 'le parcours de référence est en version 4');
-    egal(4, CATALOGUE_APPLIS['defi-calcul']['version_min']);
-    foreach ([[3, 'version 3'], [0, 'version 0'], ['4', '« 4 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
+    egal(5, $reference['version'], 'le parcours de référence est en version 5');
+    egal(5, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['5', '« 5 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
         $ancien = $reference;
         if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
         $w = ecrire($code, $ancien, 0, 'defi-calcul');
@@ -7880,16 +7893,22 @@ verifier("defi-calcul F1 — une page d'avant F1 (version 3) ne réécrit pas la
         egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
     }
     $w = ecrire($code, $reference, 0, 'defi-calcul');
-    egal(200, $w['code'], 'version 4 : accepté');
+    egal(200, $w['code'], 'version 5 : accepté');
     $ancien = $reference;
-    $ancien['version'] = 3;
+    $ancien['version'] = 4;
+    unset($ancien['journal']);
     $w = ecrire($code, $ancien, 1, 'defi-calcul');
-    egal(400, $w['code'], 'par-dessus une version 4 : refusé, même avec la bonne révision');
+    egal(400, $w['code'], 'par-dessus une version 5 : refusé, même avec la bonne révision');
     $w = ecrire($code, $ancien, 0, 'defi-calcul');
     egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
     $r = lire($code, 'defi-calcul');
     egal(1, $r['json']['revision'], 'toujours la révision 1');
-    egal(4, $r['json']['parcours']['version'], 'la version 4 est restée');
+    egal(5, $r['json']['parcours']['version'], 'la version 5 est restée');
+    // Lot G1 : le journal (six listes d'entiers, -1 compris) et les deux dates
+    // des compétences (des dates et des null) reviennent tels quels.
+    egal($reference['journal'], $r['json']['parcours']['journal'], 'le journal est gardé tel quel');
+    egal($reference['modules']['A5']['d'], $r['json']['parcours']['modules']['A5']['d'], 'les dates des compétences aussi');
+    egal($reference['seance']['j'], $r['json']['parcours']['seance']['j'], 'et ce que la séance ouverte a fait');
     // Les autres applis ne déclarent pas de version minimale : rien ne change pour elles.
     foreach (CATALOGUE_APPLIS as $cle => $fiche) if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_min', $fiche), "$cle : pas de version minimale");
     $w = ecrire($code, ['version' => 1, 'tables' => new stdClass()], 0, 'defi-tables');

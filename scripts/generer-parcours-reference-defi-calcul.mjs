@@ -21,10 +21,11 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 
 // Les clés que le serveur devra déclarer pour « defi-calcul » (document de
 // l'étape 5a, § 9, plus `p` : le plan de la séance, et `t` : entraînée avec
-// l'aide le jour `vu`, lot 3 ; `test` a disparu au lot 3), en plus des 74
-// codes de module et des numéros de cause.
-export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "c",
-  "seance", "jour", "etape", "n", "p", "seances", "jours"]);
+// l'aide le jour `vu`, lot 3 ; `test` a disparu au lot 3 ; `d`, `s`, `j`,
+// `journal` et ses six listes au lot G1), en plus des 74 codes de module et
+// des numéros de cause.
+export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "d", "s", "c",
+  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours"]);
 
 // `entier` : toutes les compétences des 74 modules dans une boîte (le pire
 // cas pour la taille).
@@ -46,6 +47,10 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
       f: Array.from({length: k}, () => PARCOURS.SEUILS.compteur),
       x: Array.from({length: k}, (_, i) => (index + i) % 3),
       t: Array.from({length: k}, (_, i) => (index + i) % 2),
+      // Lot G1 : les deux dates de chaque compétence (le pire cas : toutes
+      // posées).
+      d: Array.from({length: k}, () => "2026-09-15"),
+      s: Array.from({length: k}, () => "2026-09-29"),
       c: Object.fromEntries(Array.from({length: causes}, (_, c) => [String(c + 1), PARCOURS.SEUILS.compteur]))
     };
   });
@@ -57,8 +62,16 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
     dernier.b = dernier.b.map((boite, i) => (i === 0 ? boite : 0));
   }
   // Lot F1 : le plan a sept nombres (8 tests, 3 nouveautés prévues, 2 réussies).
-  p.seance = {jour: "2026-10-28", etape: 2, n: 60, p: [1, 0, PARCOURS.rangDe("A5", 2) + 1, 8, 0, 3, 2]};
+  // Lot G1 : ce que la séance ouverte a fait (j, six nombres depuis le
+  // correctif : les nouveautés en 6e), et le journal des 60
+  // séances (les plus grands nombres, le pire cas pour la taille ; une
+  // séance d'avant G1 en -1).
+  p.seance = {jour: "2026-10-28", etape: 2, n: 60, p: [1, 0, PARCOURS.rangDe("A5", 2) + 1, 8, 0, 3, 2], j: [999, 999, 999, 999, 5400, 3]};
   p.seances = Array.from({length: PARCOURS.SEUILS.seance.garder}, (_, i) => PARCOURS.ajouterJours("2026-09-01", Math.floor(i / 2)));
+  const garder = PARCOURS.SEUILS.seance.garder;
+  p.journal = {calculs: Array(garder).fill(999), justes: Array(garder).fill(999), nouveautes: Array(garder).fill(3),
+    prouvees: Array(garder).fill(999), rouges: Array(garder).fill(999), minutes: Array(garder).fill(90)};
+  Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
   return PARCOURS.normaliserParcours(p);
 }
