@@ -154,7 +154,7 @@ const CATALOGUE_APPLIS = [
         'ancre' => null,
         'disponible' => true,
         'cles' => ['version', 'epoque', 'reglages', 'rang', 'mode', 'flash', 'colonne',
-            'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances', 'gradeReussi'],
+            'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances', 'gradeReussi', 'gradeColonne'],
         // « grade » et « entrainement » : les séances des grades (lot
         // « grades », 07/11/2026) ; « gradeReussi » : le plus haut grade réussi.
         'mots' => ['flash', 'colonne', 'plus', 'plusmoins', 'aucun', 'bip', 'grade', 'entrainement'],

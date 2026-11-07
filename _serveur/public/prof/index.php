@@ -4498,6 +4498,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
           grade.textContent = `🥋 ${ANZAN.nomGrade(lu.grade)}`;
           cCalculs.append(grade);
         }
+        // Lot « grades-colonne » (07/11/2026) : le plus haut grade réussi en
+        // Colonne, sous celui du Flash.
+        if (lu.gradeColonne && ANZAN && ANZAN.nomGrade) {
+          const grade = document.createElement("small");
+          grade.className = "anzan-grade";
+          grade.textContent = `🥋 ${ANZAN.nomGrade(lu.gradeColonne)} · Colonne`;
+          cCalculs.append(grade);
+        }
         cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
       } else {
         cCalculs.textContent = "—";

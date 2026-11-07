@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-calcul-G1-journal
+lot anzan-grades-colonne
 genere_le 2026-11-07
 fichiers 65
-manifeste a2cb45ed1b706b9d63149bb792947e66cdf41a6a963e5918638023f20bba5cd6
+manifeste dbe88f59b019d64a969a4036f9e35de46c3f34cb3ec72fc5d721dec02e67f727
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 d6837ab1c6c01f0515639c7143c3b1fe41866fb6f1a2ef68d5f667eb6c8b1109  api/eleve.php
@@ -18,7 +18,7 @@ b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
 90b82ebfe35980c29ed7b73166790f77f94170a0b3b4a708a23b62d08947b167  index.php
 d56ca923b380d65ddcd6fc6dd5b37f457cc2fbce53e7a6f5d9bcc2ae81a4f636  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-ce858fb444afd7a0d438d77995bcc64831ed16d68c58e5f531773e5ec6dcd4dc  lib/applis.php
+0eee95fed442e4a167419184147ce18986695eb84b5c2e5484eefd4e064a2aa9  lib/applis.php
 e948d2eb3eeda38fdd467f524e07ae3030853acfb2d2f1e5218765d9b09848ca  lib/archives.php
 06eee1587bb69a601abfa120c8eeca97a8fbd7de9932c13650da7fb2da203720  lib/auth.php
 88a97ce1ae439217c52d8c6a1581818ad5e7a8dfed99d6fefa22620df7070cb1  lib/bd.php
@@ -42,8 +42,8 @@ e1fa3a8ef99a6abd347b9aea89e37a7c00d6bca76a1469af336a9f7b15e7e43b  prof/defi_calc
 a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tables_core.js
 b9abbfd8bd9206b37f2bf09bf6daf8a0de31dcad20e6c431cbb20dd5a262b73e  prof/defi_tables_mon_parcours.js
 99f574761497a6a413747acf1a7d7214e62bb92f40809955c69e71fc65454caa  prof/direct.php
-80148b8736c6c01d67cccfab3a0c40554f2488c51c01ced711644923d244c4ae  prof/flash_anzan_parcours.js
-5c8891b2beb372a85be68222e6ea0e1e138ee73ec4b9d88b0d75c97edbc695ed  prof/index.php
+feb67988033598967c5dc311cbb3dbf6f94ae5adafea0fb7af172ef40bdf4016  prof/flash_anzan_parcours.js
+ad442669f6b2caaeb749a91d839959b7f39cd57a23c1ad2f4770e353a99a0926  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 4fd3ad293be6b8e84399167ed17bf8df47ee237119d33d4d2a1cf4764439e874  prof/splat-parcours.js
 53399653d399c9f7013eb5bdd5edcd9d8fbe5a2115e4930fcf1a13a535b87082  suivi.css

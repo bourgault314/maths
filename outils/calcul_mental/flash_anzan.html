@@ -584,6 +584,42 @@
     .carte-grand-boite.dan { --carte-l: min(380px, calc(100vw - 48px), calc((100dvh - 130px) * 640 / 984)); }
     .carte-grand-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: var(--carte-l); }
     .carte-grand-boutons .primary, .carte-grand-boutons .secondary { min-height: 48px; }
+    /* Les grades en Colonne (lot « grades-colonne », 07/11/2026, choix de
+       Gwenaël) : pas de carte, une ESTAMPE faite par la page — une
+       étiquette de papier crème, le nom japonais écrit de haut en bas
+       (十級, 準三級) et, si le grade est réussi, le petit sceau rouge 合.
+       Grise pour le grade à passer ; un cadenas pour les autres. La même
+       sur la ligne du grade, dans le bandeau du menu, sur la fiche et, en
+       grand, à la réussite. Les créatures restent au Flash. */
+    .es { display: flex; align-items: center; justify-content: center; background: #fdfbf6; border: 1px solid #cdbf98; border-radius: 3px;
+      box-shadow: 0 1px 4px rgba(20, 52, 81, .2); color: var(--ink); aspect-ratio: 640 / 904; }
+    .es-jp { writing-mode: vertical-rl; font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "MS Mincho", serif;
+      font-weight: 700; font-size: .98rem; line-height: 1; letter-spacing: .06em; }
+    .es.long .es-jp { font-size: .78rem; letter-spacing: .02em; }
+    .es.grisee { border-color: #d9d1bb; box-shadow: none; }
+    .es.grisee .es-jp { color: #a3b1ba; }
+    .gr-carte.es { background: #fdfbf6; }
+    .gr-carte.es .es-jp, .bg-carte.es .es-jp { translate: 0 -4px; }
+    /* En Colonne, pas de groupes : la liste garde sa distance au compte. */
+    #grades-groupes[hidden] + .gr-liste { margin-top: 12px; }
+    .bg-carte.es { position: relative; overflow: visible; }
+    .bg-carte.es .es-jp { font-size: .9rem; }
+    .bg-carte.es .gr-sceau { right: -8px; bottom: -7px; width: 17px; height: 17px; font-size: .58rem; }
+    .bg-carte.es.long .es-jp { font-size: .72rem; }
+    .fiche-carte.es { position: relative; width: 100%; border-radius: 6px; box-shadow: 0 3px 10px rgba(20, 52, 81, .16); }
+    .fiche-carte.es .es-jp { font-size: 2.6rem; }
+    .fiche-carte.es.long .es-jp { font-size: 2rem; }
+    .fiche-carte.es.grisee { box-shadow: none; }
+    .fiche-carte.es .gr-sceau { right: -9px; bottom: -8px; width: 34px; height: 34px; font-size: 1.1rem; }
+    .es.grande { position: relative; width: var(--carte-l, 220px); margin: 0 auto; container-type: inline-size; border: 2px solid var(--ink); border-radius: 7px;
+      /* En px : les unités cqw d'un conteneur ne valent que pour ses enfants. */
+      box-shadow: inset 0 0 0 7px #fdfbf6, inset 0 0 0 8.5px var(--ink), 0 8px 22px rgba(20, 52, 81, .18); }
+    .es.grande .es-jp { font-size: 30cqw; letter-spacing: .04em; translate: 0 -5cqw; }
+    .es.grande.long .es-jp { font-size: 23cqw; }
+    .es-fr { position: absolute; left: 0; right: 0; bottom: 9cqw; margin: 0; font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; font-size: 8cqw; }
+    .es.grande .es-sceau { position: absolute; right: 10cqw; bottom: 17cqw; width: 22cqw; height: 22cqw; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+      border: 1.2cqw solid var(--red); box-shadow: inset 0 0 0 .9cqw #fdfbf6, inset 0 0 0 1.6cqw var(--red); color: var(--red); transform: rotate(-9deg);
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "MS Mincho", serif; font-weight: 700; font-size: 11cqw; line-height: 1; }
     /* La fin d'un passage (planche 3) : le verdict, la note, les dix points. */
     .fin-grade { text-align: center; margin-top: 10px; }
     .fin-grade .emoji { font-size: 3rem; line-height: 1; }
@@ -921,7 +957,7 @@
           </div>
         </div>
         <div class="historique-corps" id="grades-liste-vue">
-          <p class="hist-compte">10 calculs en Flash · réussi à 7 sur 10</p>
+          <p class="hist-compte" id="grades-compte">10 calculs en Flash · réussi à 7 sur 10</p>
           <!-- Lot « grades-estampe » : dès la première carte gagnée, dire qu'elle se touche. -->
           <p class="gr-indice" id="grades-indice" hidden>Touche une carte pour la revoir en grand</p>
           <div class="options gr-groupes" id="grades-groupes" role="group" aria-label="Les niveaux"></div>
@@ -1198,6 +1234,8 @@
         memoire.mode = b.dataset.mode;
         ecrireMemoire();
         dessinerReglages();
+        // Lot « grades-colonne » : le bandeau des grades suit l'onglet.
+        dessinerBandeauGrades();
       }));
       document.querySelectorAll("[data-reglage]").forEach(b => b.addEventListener("click", () => {
         const r = reglages();
@@ -1409,7 +1447,7 @@
       function demarrerGrade(n, mode) {
         const r = CORE.reglagesGrade(n, memoire.flash.son);
         if (!r) return;
-        if (mode === "grade" && !gradesDeLEleve()[n - 1].ouvert) return; // un cadenas ne s'ouvre pas d'ici
+        if (mode === "grade" && !etatDuGrade(n).ouvert) return; // un cadenas ne s'ouvre pas d'ici
         commencer(mode === "grade" ? "grade" : "entrainement", r);
       }
       function commencer(mode, r) {
@@ -1419,7 +1457,7 @@
         // Le plus haut grade réussi AVANT ce passage (chaque calcul validé
         // note la séance : à la fin, le grade est déjà compté) — pour dire
         // « le … est ouvert » seulement quand ce passage l'ouvre.
-        seance.gradeAvant = mode === "grade" ? plusHautGrade() : 0;
+        seance.gradeAvant = mode === "grade" ? plusHautGrade(CORE.estGradeColonne(r.grade)) : 0;
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
         seance.resultats = [];
         seance.index = 0;
@@ -1469,7 +1507,8 @@
         $("colonne").hidden = true;
         $("nombre").hidden = true;
         $("scene").classList.remove("defile");
-        if (seance.mode !== "colonne") decompter(); // Flash, passage ou entraînement de grade
+        // Un grade en Colonne (lot « grades-colonne ») se joue en colonne.
+        if (seance.mode !== "colonne" && !seance.reglages.colonne) decompter(); // Flash, passage ou entraînement de grade
         else montrerColonne();
       }
 
@@ -1677,7 +1716,7 @@
       // décompte. Ce qui est déjà tapé reste. Le score ne change pas (on est à
       // l'entraînement) ; le nombre de fois est gardé pour plus tard.
       function revoir() {
-        if (seance.phase !== "reponse" || seance.mode === "colonne" || seance.mode === "grade") return;
+        if (seance.phase !== "reponse" || seance.mode === "colonne" || seance.mode === "grade" || seance.reglages.colonne) return;
         seance.revus += 1;
         rejouerLeCalcul();
       }
@@ -2169,19 +2208,63 @@
       // -----------------------------------------------------------------
       let groupeAffiche = -1; // -1 : celui du grade à passer
       let ficheGrade = 0; // le grade dont la fiche est ouverte (0 : la liste)
+      // Lot « grades-colonne » (07/11/2026, choix de Gwenaël : « selon
+      // l'onglet ») : l'écran des grades montre ceux du Flash (1 … 40) ou
+      // ceux de la Colonne (41 … 53) — le bandeau ouvre ceux du mode choisi.
+      let gradesColonne = false;
       // Sans le moteur du parcours (son fichier n'a pas pu se charger) : le
-      // 20e kyu seul est ouvert, et rien ne se garde.
-      function gradesSansMoteur() {
-        return CORE.GRADES.map((g, i) => ({numero: i + 1, nom: CORE.nomGrade(i + 1), reussi: false, ouvert: i === 0, actuel: i === 0, meilleur: null}));
+      // premier grade seul est ouvert, et rien ne se garde.
+      function gradesSansMoteur(colonne) {
+        const premier = colonne ? CORE.PREMIER_COLONNE : 1;
+        const combien = colonne ? CORE.NB_GRADES_COLONNE : CORE.NB_GRADES;
+        return Array.from({length: combien}, (_, i) => ({numero: premier + i, rang: i + 1, nom: CORE.nomGrade(premier + i), reussi: false, ouvert: i === 0, actuel: i === 0, meilleur: null}));
       }
-      function gradesDeLEleve() {
-        if (!PARCOURS) return gradesSansMoteur();
+      // Les grades du Flash (par défaut) ou de la Colonne.
+      function gradesDeLEleve(colonne = false) {
+        if (!PARCOURS || (colonne && !PARCOURS.etatGradesColonne)) return gradesSansMoteur(colonne);
         const c = caseHistorique();
-        try { return PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(); }
+        try { return colonne ? PARCOURS.etatGradesColonne(c || PARCOURS.creer()) : PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(colonne); }
       }
-      function plusHautGrade() {
+      // L'état du grade n, du Flash ou de la Colonne.
+      function etatDuGrade(n) {
+        const colonne = CORE.estGradeColonne(n);
+        return gradesDeLEleve(colonne).find(g => g.numero === n) || {ouvert: false, reussi: false};
+      }
+      // Le NUMÉRO du plus haut grade réussi (0 : aucun), au Flash ou en Colonne.
+      function plusHautGrade(colonne = false) {
         const c = caseHistorique();
-        try { return c ? PARCOURS.gradeReussi(c) : 0; } catch (e) { return 0; }
+        try {
+          if (!c) return 0;
+          if (!colonne) return PARCOURS.gradeReussi(c);
+          const rang = PARCOURS.gradeColonneReussi ? PARCOURS.gradeColonneReussi(c) : 0;
+          return rang ? CORE.NB_GRADES + rang : 0;
+        } catch (e) { return 0; }
+      }
+      // L'estampe d'un grade en Colonne (voir .es) : « reussi » (le sceau 合),
+      // « grisee » (le grade à passer) ; `classe` la place (gr-carte, bg-carte,
+      // fiche-carte ; « grande » à la réussite, avec le nom français) ; `el`
+      // (facultatif) : l'élément vide à remplir (le bandeau a déjà le sien).
+      function construireEstampe(n, etat, classe, el = document.createElement("span")) {
+        const jp = CORE.nomJaponais(n);
+        el.className = `${classe} es${jp.length > 2 ? " long" : ""}${etat === "grisee" ? " grisee" : ""}`;
+        const texte = document.createElement("span");
+        texte.className = "es-jp";
+        texte.lang = "ja";
+        texte.textContent = jp;
+        el.append(texte);
+        if (classe === "grande") {
+          const fr = document.createElement("span");
+          fr.className = "es-fr";
+          fr.textContent = CORE.nomGrade(n);
+          el.append(fr);
+        }
+        if (etat === "reussi") {
+          const sceau = document.createElement("span");
+          sceau.className = classe === "grande" ? "es-sceau" : "gr-sceau";
+          sceau.textContent = "合";
+          el.append(sceau);
+        }
+        return el;
       }
       function groupeDuGrade(n) {
         let k = 0;
@@ -2189,6 +2272,9 @@
         return k;
       }
       function dessinerGrades() {
+        if (gradesColonne) { dessinerGradesColonne(); return; }
+        $("grades-groupes").hidden = false;
+        $("grades-compte").textContent = "10 calculs en Flash · réussi à 7 sur 10";
         const etat = gradesDeLEleve();
         const actuel = etat.find(g => g.actuel);
         const k = groupeAffiche >= 0 ? groupeAffiche : groupeDuGrade(actuel ? actuel.numero : CORE.NB_GRADES);
@@ -2272,6 +2358,66 @@
             passer.className = "gr-passer";
             // « À toi ▶ » (lot « anzan-cartes ») : la ligne ouvre la fiche du
             // grade, pas l'épreuve — « Passer » la promettait.
+            passer.textContent = "À toi ▶";
+            droite.append(passer);
+          } else {
+            const ferme = document.createElement("span");
+            ferme.className = "lecteur";
+            ferme.textContent = "fermé";
+            droite.append(ferme);
+          }
+          const place = document.createElement("span");
+          place.setAttribute("aria-hidden", "true");
+          ligne.append(place, milieu, droite);
+          item.append(ligne, marque);
+          liste.append(item);
+        });
+      }
+
+      // Les 13 grades en Colonne : une seule liste (pas de groupes), une
+      // estampe sur chaque ligne à la place de la carte ; la ligne ouvre la
+      // fiche du grade, comme au Flash.
+      function dessinerGradesColonne() {
+        const etat = gradesDeLEleve(true);
+        $("grades-groupes").hidden = true;
+        $("grades-indice").hidden = true;
+        $("grades-compte").textContent = "10 calculs en Colonne · grille du test japonais";
+        const liste = $("grades-liste");
+        liste.replaceChildren();
+        etat.forEach(g => {
+          const item = document.createElement("li");
+          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : "ferme");
+          item.className = `gr-item ${statut}`;
+          const ligne = document.createElement(g.ouvert ? "button" : "div");
+          ligne.className = "gr-ligne";
+          if (g.ouvert) { ligne.type = "button"; ligne.setAttribute("data-grade", String(g.numero)); }
+          let marque;
+          if (g.ouvert) marque = construireEstampe(g.numero, g.reussi ? "reussi" : "grisee", "gr-carte");
+          else {
+            marque = document.createElement("span");
+            marque.className = "gr-carte vide";
+            marque.textContent = "🔒";
+          }
+          marque.setAttribute("aria-hidden", "true");
+          const milieu = document.createElement("span");
+          const nom = document.createElement("span");
+          nom.className = "gr-nom";
+          nom.textContent = g.nom;
+          nom.setAttribute("data-jp", CORE.nomJaponais(g.numero));
+          const det = document.createElement("span");
+          det.className = "gr-det";
+          det.textContent = CORE.texteGrade(g.numero);
+          milieu.append(nom, det);
+          const droite = document.createElement("span");
+          droite.className = "gr-droite";
+          if (g.reussi) {
+            droite.textContent = g.meilleur !== null ? `${g.meilleur}/10` : "✓";
+            const petit = document.createElement("small");
+            petit.textContent = "réussi";
+            droite.append(petit);
+          } else if (g.actuel) {
+            const passer = document.createElement("span");
+            passer.className = "gr-passer";
             passer.textContent = "À toi ▶";
             droite.append(passer);
           } else {
@@ -2401,6 +2547,14 @@
       // elle s'ouvre en grand), grisée sinon — un kyu comme un dan.
       function dessinerCarteFiche(n) {
         const place = $("fiche-carte-place");
+        // Un grade en Colonne : son estampe, à la place de la carte.
+        if (CORE.estGradeColonne(n)) {
+          place.replaceChildren(construireEstampe(n, etatDuGrade(n).reussi ? "reussi" : "grisee", "fiche-carte"));
+          place.hidden = false;
+          $("fiche-haut").classList.add("avec-carte");
+          $("grades-fiche-vue").classList.add("avec-carte");
+          return;
+        }
         const c = CORE.carteDuGrade(n);
         place.replaceChildren();
         place.hidden = !c;
@@ -2441,6 +2595,12 @@
         $("carte-retourner").hidden = true;
         $("carte-retourner").setAttribute("aria-pressed", "false");
         if (!montrer) return;
+        // Un grade en Colonne : son estampe en grand (pas de dos à retourner).
+        if (CORE.estGradeColonne(n)) {
+          $("fin-grade-carte").classList.remove("dan");
+          place.append(construireEstampe(n, "reussi", "grande"));
+          return;
+        }
         const c = CORE.carteDuGrade(n);
         $("fin-grade-carte").classList.toggle("dan", estDan(c));
         if (!c) return;
@@ -2483,7 +2643,47 @@
         return `${quoi} ${faire}${sr ? ", sans retenue" : ""}`;
       }
       // La fiche d'un grade : ses règles, « 🎯 M'entraîner », « Je passe le … ».
+      // Un grade en Colonne : ses règles, et ce qui est officiel ou non
+      // (choix du 07/11/2026 : « dire honnêtement ce qui est officiel »).
+      function reglesColonne(n) {
+        const c = CORE.GRADES_COLONNE[n - CORE.PREMIER_COLONNE];
+        const debut = c.plan[0];
+        let fort;
+        let quoi;
+        if (debut[0] === "u") { fort = "3 à 5"; quoi = "nombres d’un chiffre à additionner, tous différents"; }
+        else if (debut === "m6") { fort = "5"; quoi = "nombres à additionner : un de 2 chiffres, quatre d’un chiffre"; }
+        else if (debut === "m8") { fort = "5"; quoi = "nombres à additionner : trois de 2 chiffres, deux d’un chiffre"; }
+        else if (c.chiffresMin !== c.chiffresMax) { fort = "5"; quoi = "nombres de 2 chiffres, puis de 3 chiffres, à additionner"; }
+        else {
+          const premiers = Number(debut.slice(1));
+          fort = premiers === c.nombres ? String(c.nombres) : `${premiers} puis ${c.nombres}`;
+          quoi = `nombres de ${c.chiffresMax} chiffres ${c.operations === "plusmoins" ? "à additionner ou à soustraire" : "à additionner"}`;
+        }
+        const examen = c.limite ? 50 : 20;
+        return [
+          [fort, quoi],
+          c.limite ? [`${c.limite} s`, "par calcul (12 min pour 50 à l’examen)"] : ["Libre", "pas de temps officiel à ce grade"],
+          [String(CORE.GRADE_CALCULS), `calculs (${examen} à l’examen)`],
+          [`${c.seuil}/${CORE.GRADE_CALCULS}`, `pour réussir (${c.seuil * 10}\u00a0% à l’examen)`]
+        ];
+      }
       function dessinerFiche(n) {
+        if (CORE.estGradeColonne(n)) {
+          $("fiche-niveau").textContent = `Colonne · grade ${n - CORE.NB_GRADES} sur ${CORE.NB_GRADES_COLONNE}`;
+          const regles = $("fiche-regles");
+          regles.replaceChildren();
+          reglesColonne(n).forEach(([fort, texte]) => {
+            const li = document.createElement("li");
+            const b = document.createElement("b");
+            b.textContent = fort;
+            li.append(b, document.createTextNode(texte));
+            regles.append(li);
+          });
+          $("fiche-passer").textContent = "Je le passe ▶";
+          $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
+          dessinerCarteFiche(n);
+          return;
+        }
         const g = CORE.GRADES[n - 1];
         $("fiche-niveau").textContent = `${CORE.GROUPES_GRADES[groupeDuGrade(n)].nom} · grade ${n} sur ${CORE.NB_GRADES}`;
         const regles = $("fiche-regles");
@@ -2503,7 +2703,7 @@
         // « Je le passe » : le nom du grade est déjà le titre (« Je passe le
         // 13e kyu » passait sur deux lignes au téléphone).
         $("fiche-passer").textContent = "Je le passe ▶";
-        $("fiche-passer").disabled = !gradesDeLEleve()[n - 1].ouvert;
+        $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
         dessinerCarteFiche(n);
       }
       $("fiche-entrainer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement"); });
@@ -2519,11 +2719,13 @@
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = true;
         $("ecran-grades").hidden = false;
-        const fiche = Number.isInteger(n) && n >= 1 && n <= CORE.NB_GRADES ? n : 0;
+        const fiche = CORE.gradeExiste(n) ? n : 0;
         ficheGrade = fiche;
+        if (fiche) gradesColonne = CORE.estGradeColonne(fiche);
         $("grades-liste-vue").hidden = Boolean(fiche);
         $("grades-fiche-vue").hidden = !fiche;
-        $("grades-eyebrow").textContent = fiche ? "Les grades" : "Soroban";
+        // En Colonne, le sur-titre le dit (« Soroban · 📝 Colonne »).
+        $("grades-eyebrow").textContent = (fiche ? "Les grades" : "Soroban") + (gradesColonne ? " · 📝 Colonne" : "");
         $("grades-titre").textContent = fiche ? CORE.nomGrade(fiche) : "Les grades";
         // Le nom japonais du grade, en petit à côté du titre de sa fiche
         // (posé par le CSS : le titre garde son texte).
@@ -2531,7 +2733,7 @@
         $("grades-retour").setAttribute("aria-label", fiche ? "Retour aux grades" : "Retour aux réglages");
         $("grades-retour").title = fiche ? "Les grades" : "Réglages";
         if (fiche) {
-          groupeAffiche = groupeDuGrade(fiche); // au retour, la liste montre son groupe
+          if (!gradesColonne) groupeAffiche = groupeDuGrade(fiche); // au retour, la liste montre son groupe
           dessinerFiche(fiche);
         } else {
           dessinerGrades();
@@ -2542,13 +2744,33 @@
         window.scrollTo(0, 0);
         $("grades-titre").focus({preventScroll: true});
       }
-      $("vers-grades").addEventListener("click", () => { groupeAffiche = -1; versGrades(0); });
+      $("vers-grades").addEventListener("click", () => { groupeAffiche = -1; gradesColonne = memoire.mode === "colonne"; versGrades(0); });
 
       // Le bandeau des grades, sous « C'est parti » (maquette A, 07/11/2026) :
       // la dernière carte gagnée (sinon la place grise de la prochaine), le
       // grade à passer et le compte des cartes. Rien de nouveau n'est lu :
       // l'état des grades, comme la liste.
       function dessinerBandeauGrades() {
+        // En Colonne (lot « grades-colonne ») : l'estampe du dernier grade
+        // réussi (sinon le cadenas), le grade à passer et « N sur 13 ».
+        if (memoire.mode === "colonne") {
+          const etat = gradesDeLEleve(true);
+          const actuel = etat.find(g => g.actuel);
+          const reussis = etat.filter(g => g.reussi);
+          const place = $("bg-carte");
+          place.replaceChildren();
+          if (reussis.length) {
+            construireEstampe(reussis[reussis.length - 1].numero, "reussi", "bg-carte", place);
+          } else {
+            place.className = "bg-carte a-gagner";
+            place.textContent = "🔒";
+          }
+          const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
+          const compte = `${reussis.length} sur ${etat.length}`;
+          $("bg-det").textContent = `${tete} · ${compte}`;
+          $("vers-grades").setAttribute("aria-label", `Les grades en Colonne. ${tete}. ${reussis.length} grade${reussis.length > 1 ? "s" : ""} réussi${reussis.length > 1 ? "s" : ""} sur ${etat.length}.`);
+          return;
+        }
         const etat = gradesDeLEleve();
         const actuel = etat.find(g => g.actuel);
         let derniere = 0;
@@ -2584,8 +2806,9 @@
       function dessinerFinGrade(justes, avantGrade, arretee) {
         const n = seance.reglages.grade;
         const faits = seance.resultats.length;
-        const verdict = arretee ? "arrete" : CORE.verdictGrade(faits, justes);
-        $("compte").textContent = `🥋 ${CORE.nomGrade(n)}`;
+        const colonne = CORE.estGradeColonne(n);
+        const verdict = arretee ? "arrete" : CORE.verdictGrade(faits, justes, n);
+        $("compte").textContent = `🥋 ${CORE.nomGrade(n)}${colonne ? " · Colonne" : ""}`;
         const textes = {
           reussi: ["🎉", "Grade réussi !"],
           presque: ["💪", "Presque !"],
@@ -2612,14 +2835,15 @@
         ouvert.hidden = true;
         sous.hidden = true;
         // Ce que le passage ouvre : le grade suivant, s'il ne l'était pas déjà.
-        if (verdict === "reussi" && n === CORE.NB_GRADES) {
+        const dernier = CORE.dernierDeSaListe(n);
+        if (verdict === "reussi" && n === dernier) {
           ouvert.textContent = "🏆 Tu as tous les grades !";
           ouvert.hidden = false;
-        } else if (verdict === "reussi" && n > avantGrade && plusHautGrade() >= n) {
+        } else if (verdict === "reussi" && n > avantGrade && plusHautGrade(colonne) >= n) {
           ouvert.textContent = `🔓 Le ${CORE.nomGrade(n + 1)} est ouvert`;
           ouvert.hidden = false;
         } else if (verdict === "presque") {
-          sous.textContent = `Il en fallait ${CORE.GRADE_REUSSI}. Tu peux le repasser tout de suite.`;
+          sous.textContent = `Il en fallait ${CORE.seuilGrade(n)}. Tu peux le repasser tout de suite.`;
           sous.hidden = false;
         } else if (verdict === "pasencore") {
           sous.textContent = "Entraîne-toi à ce grade, puis reviens.";
@@ -2636,7 +2860,7 @@
         if (verdict === "reussi") {
           a.textContent = "Les grades";
           a.dataset.action = "liste";
-          if (n < CORE.NB_GRADES) {
+          if (n < dernier) {
             b.textContent = `Le ${CORE.nomGrade(n + 1)} ▶`;
             b.dataset.action = "suivant";
           } else {
@@ -2664,7 +2888,7 @@
         const n = seance.reglages && seance.reglages.grade;
         if (!n) return;
         const action = bouton.dataset.action;
-        if (action === "liste") { groupeAffiche = -1; versGrades(0); }
+        if (action === "liste") { groupeAffiche = -1; gradesColonne = CORE.estGradeColonne(n); versGrades(0); }
         else if (action === "suivant") versGrades(n + 1);
         else if (action === "repasser") demarrerGrade(n, "grade");
         else if (action === "entrainer") demarrerGrade(n, "entrainement");

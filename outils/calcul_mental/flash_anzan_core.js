@@ -97,8 +97,76 @@
 
   const gradeValide = n => Number.isInteger(n) && n >= 1 && n <= NB_GRADES;
 
+  // ---------------------------------------------------------------------
+  // Les grades en Colonne (lot « grades-colonne », 07/11/2026)
+  // ---------------------------------------------------------------------
+  // La colonne du 暗算検定 (examen de calcul mental) du 日本珠算連盟, celui
+  // des chambres de commerce japonaises : みとり暗算. Sources : la page
+  // officielle https://www.shuzan.jp/kentei/anzan/, le document de la chambre
+  // de commerce de Kurashiki (anzan1-6_teido.pdf) et dix sujets modèles
+  // officiels (shuzan.jp/kentei/mihon/an-*.pdf), vérifiés un par un.
+  // 13 grades, du 10e kyu (十級) au 1er kyu (一級), 準 compris (« pré-3e
+  // kyu », 準三級). À l'examen : 50 calculs en 12 minutes du 10e au 7e kyu
+  // (réussi à 50, 60, 70, 80 %), 20 calculs ensuite (80 %), mêlés à des
+  // multiplications et des divisions, en 12 minutes pour le tout : AUCUN
+  // temps officiel propre à la colonne du 6e au 1er kyu.
+  // Ce qui n'est PAS officiel (choix du 07/11/2026, dit dans la fiche) :
+  // 10 calculs par grade ; 15 s par calcul du 10e au 7e kyu (12 min ÷ 50 ≈
+  // 14 s) ; aucune limite ensuite.
+  // Un grade en Colonne porte le NUMÉRO 40 + rang (41 = 10e kyu … 53 = 1er
+  // kyu), dans le même espace que ceux du Flash (1 … 40) : une séance de
+  // grade garde ce numéro dans son champ « temps », sans nouveau mot pour le
+  // serveur. Chaque ligne : le nom (kyu, pré), les chiffres de … à, le plus
+  // grand nombre de nombres d'un calcul, les opérations, le seuil (sur 10),
+  // la limite par calcul (s, 0 = sans) et le PLAN des 10 calculs — une
+  // forme par calcul, dans l'ordre de la feuille :
+  //   "u3" … "u5" : 3 à 5 nombres d'un chiffre (10e-7e : sans zéro, aucun
+  //                 chiffre deux fois dans un même calcul, comme les 50
+  //                 calculs du sujet modèle) ;
+  //   "m6", "m8"  : 5 nombres, 6 ou 8 chiffres en tout (un ou trois nombres
+  //                 de 2 chiffres, à une place tirée au hasard) ;
+  //   "d5"        : 5 nombres de 2 chiffres ;
+  //   "t5", "t7", "t10" : 5, 7 ou 10 nombres de 3 chiffres ;
+  //   "s10"       : 10 nombres de 3 chiffres, dont 4 enlevés (jamais le 1er,
+  //                 le 2e ni le dernier ; total et sous-totaux positifs, comme
+  //                 au sujet modèle).
+  // La place des calculs « s10 » parmi les autres est tirée au hasard.
+  const PREMIER_COLONNE = NB_GRADES + 1;
+  const UNITES = ["u3", "u3", "u3", "u4", "u4", "u4", "u5", "u5", "u5", "u5"]; // 15/15/20 sur 50
+  const fois = (forme, k) => Array.from({length: k}, () => forme);
+  const GRADES_COLONNE = Object.freeze([
+    [10, false, 1, 1, 5, "plus", 5, 15, UNITES],
+    [9, false, 1, 1, 5, "plus", 6, 15, UNITES],
+    [8, false, 1, 1, 5, "plus", 7, 15, UNITES],
+    [7, false, 1, 1, 5, "plus", 8, 15, UNITES],
+    [6, false, 1, 2, 5, "plus", 8, 0, fois("m6", 10)],
+    [5, false, 1, 2, 5, "plus", 8, 0, fois("m8", 10)],
+    [4, false, 2, 2, 5, "plus", 8, 0, fois("d5", 10)],
+    [3, true, 2, 3, 5, "plus", 8, 0, fois("d5", 5).concat(fois("t5", 5))],
+    [3, false, 3, 3, 5, "plus", 8, 0, fois("t5", 10)],
+    [2, true, 3, 3, 7, "plus", 8, 0, fois("t5", 5).concat(fois("t7", 5))],
+    [2, false, 3, 3, 7, "plus", 8, 0, fois("t7", 10)],
+    [1, true, 3, 3, 10, "plusmoins", 8, 0, fois("t7", 5).concat(fois("t10", 3), fois("s10", 2))],
+    [1, false, 3, 3, 10, "plusmoins", 8, 0, fois("t10", 6).concat(fois("s10", 4))]
+  ].map(([kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil, limite, plan]) =>
+    Object.freeze({kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil, limite, plan: Object.freeze(plan.slice())})));
+  const NB_GRADES_COLONNE = GRADES_COLONNE.length;
+  const DERNIER_GRADE = NB_GRADES + NB_GRADES_COLONNE;
+  const estGradeColonne = n => Number.isInteger(n) && n >= PREMIER_COLONNE && n <= DERNIER_GRADE;
+  const gradeExiste = n => gradeValide(n) || estGradeColonne(n);
+  const ligneColonne = n => (estGradeColonne(n) ? GRADES_COLONNE[n - PREMIER_COLONNE] : null);
+  // Le dernier grade de la même liste (40 pour le Flash, 53 pour la Colonne).
+  const dernierDeSaListe = n => (estGradeColonne(n) ? DERNIER_GRADE : NB_GRADES);
+  // Le nombre de bonnes réponses sur 10 pour réussir le grade n.
+  function seuilGrade(n) {
+    const c = ligneColonne(n);
+    return c ? c.seuil : GRADE_REUSSI;
+  }
+
   // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan ».
   function nomGrade(n) {
+    const c = ligneColonne(n);
+    if (c) return `${c.pre ? "pré-" : ""}${c.kyu}${c.kyu === 1 ? "er" : "e"} kyu`;
     if (!gradeValide(n)) return "";
     if (n <= 20) { const k = 21 - n; return `${k}${k === 1 ? "er" : "e"} kyu`; }
     const d = n - 20;
@@ -115,6 +183,8 @@
     return "二十";
   }
   function nomJaponais(n) {
+    const c = ligneColonne(n);
+    if (c) return `${c.pre ? "準" : ""}${kanjiNombre(c.kyu)}級`;
     if (!gradeValide(n)) return "";
     if (n <= 20) return `${kanjiNombre(21 - n)}級`;
     const d = n - 20;
@@ -126,6 +196,21 @@
   // nombre est en millisecondes (pas forcément un nombre rond : 5 s pour
   // 3 nombres, c'est 1 666,7 ms) ; `son` est celui des réglages du Flash.
   function reglagesGrade(n, son) {
+    const c = ligneColonne(n);
+    // Un grade en Colonne : les nombres écrits les uns sous les autres, le
+    // temps limite par calcul (0 : sans), le plan des 10 calculs.
+    if (c) {
+      return {
+        operations: c.operations,
+        chiffresMin: c.chiffresMin,
+        chiffresMax: c.chiffresMax,
+        nombres: c.nombres,
+        calculs: GRADE_CALCULS,
+        grade: n,
+        colonne: true,
+        limite: c.limite
+      };
+    }
     if (!gradeValide(n)) return null;
     const g = GRADES[n - 1];
     const sr = SANS_RETENUE[n];
@@ -144,16 +229,29 @@
 
   // Le verdict d'un passage : « reussi » (7 ou plus sur 10), « presque »
   // (5 ou 6), « pasencore » (4 ou moins) ; « arrete » s'il manque des calculs.
-  function verdictGrade(faits, score) {
+  // `n` (facultatif) : le grade, pour son seuil (les grades en Colonne ont
+  // le leur, 5 à 8) ; « presque » à deux réponses du seuil, comme au Flash.
+  function verdictGrade(faits, score, n) {
+    const seuil = n === undefined ? GRADE_REUSSI : seuilGrade(n);
     if (faits < GRADE_CALCULS) return "arrete";
-    if (score >= GRADE_REUSSI) return "reussi";
-    if (score >= GRADE_PRESQUE) return "presque";
+    if (score >= seuil) return "reussi";
+    if (score >= seuil - (GRADE_REUSSI - GRADE_PRESQUE)) return "presque";
     return "pasencore";
   }
 
   // « 20 nombres d'un chiffre », « 5 nombres d'un chiffre, + et −, sans
   // retenue », « 10 dizaines rondes, + et −, sans retenue ».
   function texteNombresGrade(n) {
+    const c = ligneColonne(n);
+    if (c) {
+      const forme = c.plan[0];
+      if (forme[0] === "u") return "3 à 5 nombres d’un chiffre";
+      if (forme[0] === "m") return "5 nombres de 1 ou 2 chiffres";
+      if (c.chiffresMin !== c.chiffresMax) return "5 nombres de 2, puis de 3 chiffres";
+      const premiers = Number(c.plan[0].slice(1));
+      const combien = premiers === c.nombres ? String(c.nombres) : `${premiers} puis ${c.nombres}`;
+      return `${combien} nombres de ${c.chiffresMax} chiffres${c.operations === "plusmoins" ? ", + et −" : ""}`;
+    }
     if (!gradeValide(n)) return "";
     const g = GRADES[n - 1];
     const sr = SANS_RETENUE[n];
@@ -165,6 +263,8 @@
 
   // « 20 nombres d'un chiffre · 15 s en tout »
   function texteGrade(n) {
+    const c = ligneColonne(n);
+    if (c) return c.limite ? `${texteNombresGrade(n)} · ${c.limite} s par calcul` : texteNombresGrade(n);
     if (!gradeValide(n)) return "";
     const g = GRADES[n - 1];
     return `${texteNombresGrade(n)} · ${secondes(g.dixiemes / 10)} en tout`;
@@ -545,7 +645,101 @@
     return {termes, total};
   }
 
+  // ---- Les calculs d'un grade en Colonne (voir GRADES_COLONNE) ----
+  // Un nombre de 1 à 9 que le calcul n'a pas encore (10e-7e kyu).
+  function chiffreNeuf(rng, deja) {
+    const libres = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(v => deja.indexOf(v) < 0);
+    return libres[Math.floor(rng() * libres.length)];
+  }
+  // Un nombre de `chiffres` chiffres, différent du précédent.
+  function nombrePasPareil(rng, chiffres, avant) {
+    let v = nombreDeChiffres(rng, chiffres);
+    while (v === avant) v = nombreDeChiffres(rng, chiffres);
+    return v;
+  }
+  // Les places des nombres enlevés d'un calcul « s10 » : 4 parmi la 3e …
+  // la 9e (jamais la 1re, la 2e ni la dernière).
+  function placesEnleves(rng) {
+    const places = [2, 3, 4, 5, 6, 7, 8];
+    for (let i = places.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rng() * (i + 1));
+      [places[i], places[j]] = [places[j], places[i]];
+    }
+    return places.slice(0, 4);
+  }
+  function tirerCalculColonne(forme, rng) {
+    const valeurs = [];
+    const signes = [];
+    if (forme[0] === "u") {
+      for (let i = 0; i < Number(forme.slice(1)); i += 1) valeurs.push(chiffreNeuf(rng, valeurs));
+    } else if (forme[0] === "m") {
+      // 6 chiffres en tout : un nombre de 2 chiffres ; 8 : trois.
+      const deux = forme === "m6" ? 1 : 3;
+      const places = [0, 1, 2, 3, 4];
+      for (let i = places.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rng() * (i + 1));
+        [places[i], places[j]] = [places[j], places[i]];
+      }
+      const aDeux = places.slice(0, deux);
+      for (let i = 0; i < 5; i += 1) valeurs.push(nombrePasPareil(rng, aDeux.indexOf(i) >= 0 ? 2 : 1, valeurs[i - 1]));
+    } else {
+      const chiffres = forme[0] === "d" ? 2 : 3;
+      const k = Number(forme.slice(1));
+      for (let i = 0; i < k; i += 1) valeurs.push(nombrePasPareil(rng, chiffres, valeurs[i - 1]));
+    }
+    valeurs.forEach(() => signes.push(1));
+    if (forme === "s10") {
+      // Quatre nombres enlevés ; le total reste au-dessus de zéro après
+      // chacun. Une suite impossible (un enlevé plus grand que le total)
+      // est retirée en entier : on recommence avec un nouveau tirage.
+      for (let essai = 0; essai < 1000; essai += 1) {
+        const enleves = placesEnleves(rng);
+        const v = [];
+        let total = 0;
+        let bon = true;
+        for (let i = 0; i < 10 && bon; i += 1) {
+          if (enleves.indexOf(i) >= 0) {
+            const maxi = Math.min(999, total - 1);
+            if (maxi < 100) { bon = false; break; }
+            let x = 100 + Math.floor(rng() * (maxi - 99));
+            if (x === v[i - 1]) x = x > 100 ? x - 1 : (x < maxi ? x + 1 : x);
+            if (x === v[i - 1]) { bon = false; break; }
+            v.push(x);
+            total -= x;
+          } else {
+            const x = nombrePasPareil(rng, 3, v[i - 1]);
+            v.push(x);
+            total += x;
+          }
+        }
+        if (!bon) continue;
+        const termes = v.map((valeur, i) => ({signe: enleves.indexOf(i) >= 0 ? -1 : 1, valeur}));
+        return {termes, total};
+      }
+    }
+    const termes = valeurs.map((valeur, i) => ({signe: signes[i], valeur}));
+    return {termes, total: valeurs.reduce((a, x) => a + x, 0)};
+  }
+  // Les 10 calculs d'un grade en Colonne : le plan de la feuille, les
+  // calculs « s10 » mêlés aux autres calculs de 10 nombres à des places
+  // tirées au hasard.
+  function tirerSeanceColonne(n, rng) {
+    const c = ligneColonne(n);
+    const plan = c.plan.slice();
+    const debut = plan.findIndex(f => f === "t10" || f === "s10");
+    if (debut >= 0) {
+      const fin = plan.slice(debut);
+      for (let i = fin.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(rng() * (i + 1));
+        [fin[i], fin[j]] = [fin[j], fin[i]];
+      }
+      plan.splice(debut, fin.length, ...fin);
+    }
+    return plan.map(forme => tirerCalculColonne(forme, rng));
+  }
+
   function tirerSeance(reglages, rng) {
+    if (reglages && reglages.colonne && estGradeColonne(reglages.grade)) return tirerSeanceColonne(reglages.grade, rng);
     return Array.from({length: reglages.calculs}, () => tirerCalcul(reglages, rng));
   }
 
@@ -590,8 +784,8 @@
   function resume(mode, r, {avecMode = true} = {}) {
     // Un grade : « 🥋 13e kyu · 20 nombres d'un chiffre · 15 s en tout » (le
     // passage) ou « 🎯 … » (l'entraînement au grade).
-    if ((mode === "grade" || mode === "entrainement") && r && gradeValide(r.grade)) {
-      const tete = avecMode ? [`${mode === "grade" ? "🥋" : "🎯"} ${nomGrade(r.grade)}`] : [];
+    if ((mode === "grade" || mode === "entrainement") && r && gradeExiste(r.grade)) {
+      const tete = avecMode ? [`${mode === "grade" ? "🥋" : "🎯"} ${nomGrade(r.grade)}${estGradeColonne(r.grade) ? " · Colonne" : ""}`] : [];
       return tete.concat([texteGrade(r.grade)]).join(" · ");
     }
     const morceaux = [];
@@ -646,6 +840,15 @@
     GRADE_REUSSI,
     GRADE_PRESQUE,
     GROUPES_GRADES,
+    GRADES_COLONNE,
+    NB_GRADES_COLONNE,
+    PREMIER_COLONNE,
+    DERNIER_GRADE,
+    estGradeColonne,
+    gradeExiste,
+    dernierDeSaListe,
+    seuilGrade,
+    tirerSeanceColonne,
     nomGrade,
     nomJaponais,
     reglagesGrade,

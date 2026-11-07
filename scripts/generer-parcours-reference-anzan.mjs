@@ -64,6 +64,15 @@ export function parcoursComplet() {
   p = seance_(p, "2026-11-07", "entrainement", GRADE(2), 10, 8);
   p = seance_(p, "2026-11-07", "grade", GRADE(2), 10, 6);
   p = seance_(p, "2026-11-08", "grade", GRADE(2), 10, 7);
+  // Les grades en Colonne (lot « grades-colonne », 07/11/2026) : le 10e kyu
+  // (numéro 41) réussi à 5 sur 10, un entraînement au 9e kyu (42) — le
+  // serveur doit garder la clé « gradeColonne ».
+  const COLONNE_GRADE = n => {
+    const c = PARCOURS.GRADES_COLONNE[n - PARCOURS.PREMIER_COLONNE];
+    return {operations: c.operations, chiffresMin: c.chiffresMin, chiffresMax: c.chiffresMax, nombres: c.nombres, calculs: 10, grade: n};
+  };
+  p = seance_(p, "2026-11-08", "grade", COLONNE_GRADE(41), 10, 5);
+  p = seance_(p, "2026-11-08", "entrainement", COLONNE_GRADE(42), 10, 9);
   return PARCOURS.pourServeur(p);
 }
 

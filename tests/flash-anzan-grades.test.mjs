@@ -35,7 +35,7 @@ test("la grille est celle de l'Association japonaise du test de Flash Anzan (fla
   assert.deepEqual(CORE.GRADES.slice(30).map(g => g.dixiemes), [28, 26, 24, 22, 20, 19, 18, 17, 16, 15], "11e → 20e dan");
   for (let n = 1; n <= 40; n += 1) assert.equal(PARCOURS.nomGrade(n), CORE.nomGrade(n));
   assert.equal(CORE.nomGrade(0), "");
-  assert.equal(CORE.nomGrade(41), "");
+  assert.equal(CORE.nomGrade(54), ""); // 41 … 53 : les grades en Colonne (lot « grades-colonne »)
   assert.equal(CORE.GRADE_CALCULS, 10);
   assert.equal(CORE.GRADE_REUSSI, 7, "10問中7題以上の正解で合格");
 });
@@ -258,6 +258,6 @@ test("grades-estampe : les noms japonais — 二十級 … 一級, 初段, 二�
     "十一段", "十二段", "十三段", "十四段", "十五段", "十六段", "十七段", "十八段", "十九段", "二十段"];
   for (let n = 1; n <= 40; n += 1) assert.equal(CORE.nomJaponais(n), attendus[n - 1], CORE.nomGrade(n));
   assert.equal(CORE.nomJaponais(0), "");
-  assert.equal(CORE.nomJaponais(41), "");
+  assert.equal(CORE.nomJaponais(54), ""); // 41 … 53 : les grades en Colonne
   assert.equal(CORE.nomJaponais(2.5), "");
 });
