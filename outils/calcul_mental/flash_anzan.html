@@ -228,6 +228,24 @@
        « 📜 Historique » à droite de « C'est parti », dans les deux modes (le
        menu ne bouge pas en passant de Flash à Colonne). */
     .reglages-corps .bas .primary.partir { flex: 1 1 auto; width: auto; max-width: 440px; }
+    /* Lot « bandeau des grades » (07/11/2026, maquette A choisie par
+       Gwenaël) : sous « C'est parti », un bandeau « esprit estampe » avec la
+       dernière carte gagnée. Sur ordinateur, il a EXACTEMENT la largeur de
+       la rangée du dessus (« des boutons de tailles différentes, c'est
+       étrange ») : la pile prend la largeur de la rangée, et le bandeau ne
+       compte pas dans ce calcul (width: 0 ; min-width: 100 %). */
+    .bas-pile { width: fit-content; max-width: 100%; margin: 18px auto 0; display: flex; flex-direction: column; gap: 14px; }
+    .reglages-corps .bas-pile .bas { margin-top: 0; }
+    .reglages-corps .bas-pile .bas .primary.partir { flex: 0 1 auto; width: 440px; max-width: 100%; }
+    .bandeau-grades { width: 0; min-width: 100%; min-height: 62px; display: flex; align-items: center; gap: 12px; margin: 0; padding: 7px 18px 7px 10px;
+      border: 2px solid var(--ink); border-radius: 14px; background: #fdfbf6; box-shadow: 0 4px 0 #d8c89c; color: var(--ink); text-align: left; cursor: pointer; }
+    .bg-carte { flex: 0 0 auto; width: 34px; aspect-ratio: 640 / 904; border-radius: 3px; overflow: hidden; background: #fefdf9; box-shadow: 0 1px 4px rgba(20, 52, 81, .22); }
+    .bg-carte img { display: block; width: 100%; height: 100%; }
+    .bg-carte.a-gagner { display: flex; align-items: center; justify-content: center; background: #eef3f6; border: 1px dashed #c3d2db; box-shadow: none; font-size: .8rem; }
+    .bg-texte { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .bg-titre { font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; font-size: 1.16rem; line-height: 1.2; }
+    .bg-det { color: var(--muted); font-weight: 800; font-size: .9rem; line-height: 1.25; }
+    .bg-fleche { flex: 0 0 auto; width: 18px; height: 18px; fill: var(--blue); }
 
     .primary, .secondary {
       min-height: 52px; display: flex; align-items: center; justify-content: center; width: 100%;
@@ -454,7 +472,7 @@
     /* La carte du grade, en petit à droite des règles (au-dessus au
        téléphone) : en couleur si le grade est réussi, grisée sinon. Sa place
        est réservée (largeur fixe, 2/3) : l'écran ne bouge pas quand l'image
-       arrive. Un dan n'a pas de carte (série à venir). */
+       arrive. Un dan a la sienne, plus haute (07/11/2026). */
     .fiche-grade .fiche-haut { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 16px; }
     .fiche-grade .fiche-haut.avec-carte { grid-template-columns: minmax(0, 1fr) 132px; }
     /* Avec la carte, la fiche s'élargit de la place de la carte : le tableau
@@ -474,6 +492,8 @@
     .carte-kyu { position: relative; width: var(--carte-l, 260px); aspect-ratio: 640 / 904; container-type: inline-size; perspective: 1600px; margin: 0 auto; }
     .carte-tour { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s ease; }
     .carte-kyu.retournee .carte-tour { transform: rotateY(180deg); }
+    /* Les cartes dan (07/11/2026) : 640 × 984, plus hautes que les kyu. */
+    .carte-kyu.or, .vignette.or, .fiche-carte.or img, .bg-carte.or { aspect-ratio: 640 / 984; }
     .carte-face { position: absolute; inset: 0; border-radius: 2.4cqw; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
       box-shadow: 0 8px 22px rgba(20, 52, 81, .18); background: #fefdf9; }
     .carte-face img { display: block; width: 100%; height: 100%; }
@@ -491,13 +511,6 @@
     .cv-lecture { color: var(--muted); font-style: italic; font-weight: 600; font-size: 3.8cqw; margin-top: .6cqw !important; }
     .cv-fr { font-weight: 800; font-size: 4.3cqw; line-height: 1.28; margin-top: 1.2cqw !important; }
     .cv-idee { color: var(--muted); font-weight: 650; font-size: 3.9cqw; line-height: 1.28; margin-top: .6cqw !important; }
-    /* Un dan réussi : une carte simple, sans créature (la série des dan
-       viendra plus tard). */
-    .carte-dan { position: relative; width: var(--carte-l, 260px); aspect-ratio: 640 / 904; container-type: inline-size; margin: 0 auto; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 4cqw; border-radius: 2.4cqw; border: .8cqw solid var(--ink); background: #fefdf9;
-      box-shadow: inset 0 0 0 1.4cqw #fefdf9, inset 0 0 0 1.75cqw var(--ink), 0 8px 22px rgba(20, 52, 81, .18); color: var(--ink); }
-    .carte-dan .ceinture { font-size: 26cqw; line-height: 1; }
-    .carte-dan .nom-dan { font-weight: 950; font-size: 13cqw; }
     @media (prefers-reduced-motion: reduce) { .carte-tour { transition: none; } }
     .carte-retourner { margin-top: 10px; }
 
@@ -508,6 +521,7 @@
        boutons dessous sur toute la largeur — tout tient sans défiler, même
        sur un petit téléphone ; « Retourner » montre le dos en grand. */
     .fin-carte { --carte-l: min(clamp(140px, 44vw, 230px), (100vh - 420px) * 640 / 904); --carte-l: min(clamp(140px, 44vw, 230px), (100dvh - 420px) * 640 / 904); }
+    .fin-carte.dan { --carte-l: min(clamp(140px, 44vw, 230px), (100vh - 420px) * 640 / 984); --carte-l: min(clamp(140px, 44vw, 230px), (100dvh - 420px) * 640 / 984); }
     @media (max-width: 899px) {
       .fin-grade.avec-carte .fin-grade-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; align-items: center; margin-top: 12px; }
       .fin-grade.avec-carte .fin-grade-bilan { display: contents; }
@@ -523,6 +537,7 @@
       .fin.passage.avec-carte { max-width: 740px; }
       .fin-grade.avec-carte .fin-grade-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 40px; align-items: center; margin-top: 8px; }
       .fin-grade.avec-carte .fin-carte { --carte-l: min(320px, (100vh - 300px) * 640 / 904); --carte-l: min(320px, (100dvh - 300px) * 640 / 904); margin-top: 0; }
+      .fin-grade.avec-carte .fin-carte.dan { --carte-l: min(320px, (100vh - 300px) * 640 / 984); --carte-l: min(320px, (100dvh - 300px) * 640 / 984); }
     }
 
     /* La collection, sous la liste des grades : les cartes gagnées en
@@ -538,6 +553,9 @@
     .cartes-titre { margin: 0 0 8px; font-size: 1rem; font-weight: 900; text-align: left; }
     .cartes-titre span { color: var(--muted); font-weight: 800; margin-left: 4px; }
     .cartes-grille { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+    /* « Kyu » et « Dan » au-dessus de leurs grilles, dans l'écriture des cartes. */
+    .cartes-serie { margin: 10px 0 6px; color: var(--muted); font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; font-size: .95rem; text-align: left; }
+    .cartes-titre + .cartes-serie { margin-top: 0; }
     .cartes-grille li { min-width: 0; }
     .vignette { display: block; width: 100%; aspect-ratio: 640 / 904; padding: 0; border: 0; border-radius: 5px; overflow: hidden; background: #fefdf9; }
     button.vignette { cursor: pointer; box-shadow: 0 2px 6px rgba(20, 52, 81, .16); }
@@ -550,6 +568,7 @@
     .carte-grand { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px;
       background: rgba(20, 52, 81, .55); }
     .carte-grand-boite { display: flex; flex-direction: column; align-items: center; gap: 16px; --carte-l: min(380px, calc(100vw - 48px), calc((100dvh - 130px) * 640 / 904)); }
+    .carte-grand-boite.dan { --carte-l: min(380px, calc(100vw - 48px), calc((100dvh - 130px) * 640 / 984)); }
     .carte-grand-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: var(--carte-l); }
     .carte-grand-boutons .primary, .carte-grand-boutons .secondary { min-height: 48px; }
     /* La fin d'un passage (planche 3) : le verdict, la note, les dix points. */
@@ -636,6 +655,14 @@
       .reglages-corps .bas { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
       .primary.partir, .reglages-corps .bas .primary.partir { width: 100%; max-width: none; flex: 1 1 100%; }
       .reglages-corps .historique-bouton { flex: 1 1 0; max-width: calc(50% - 4px); min-height: 44px; padding: 8px 10px 6px; font-size: 1rem; }
+      /* Au téléphone : « C'est parti », le bandeau des grades, puis
+         « Historique » (une demi-ligne, au centre). */
+      .bas-pile { width: 100%; margin-top: 10px; gap: 10px; }
+      .reglages-corps .bas-pile .bas { display: contents; }
+      .reglages-corps .bas-pile .bas .primary.partir { order: 1; width: 100%; }
+      .bandeau-grades { order: 2; width: 100%; min-height: 54px; padding-top: 5px; padding-bottom: 5px; gap: 10px; }
+      .bg-carte { width: 30px; }
+      .reglages-corps .bas-pile .historique-bouton { order: 3; flex: 0 0 auto; width: calc(50% - 5px); max-width: none; align-self: center; }
     }
     /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
        non plus. */
@@ -790,13 +817,21 @@
             </div>
             <p class="resume" id="resume-reglages"></p>
           </div>
+          <div class="bas-pile">
           <div class="bas">
             <button type="button" class="primary partir" id="partir">C’est parti<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg></button>
             <!-- Dès la première séance : les dernières séances (l'élève à code :
                  celles de son compte ; le visiteur : celles de l'appareil) -->
-            <!-- Lot « grades » (07/11/2026) : toujours là, dans les deux modes. -->
-            <button type="button" class="secondary historique-bouton" id="vers-grades">🥋 Grades</button>
             <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Historique</button>
+          </div>
+            <!-- Lot « bandeau des grades » (07/11/2026, maquette A) : toujours
+                 là, dans les deux modes ; la dernière carte gagnée, le grade
+                 à passer et le compte des cartes (posés par textContent). -->
+            <button type="button" class="bandeau-grades" id="vers-grades">
+              <span class="bg-carte" id="bg-carte" aria-hidden="true"></span>
+              <span class="bg-texte"><span class="bg-titre"><span aria-hidden="true">🥋</span> Les grades</span><span class="bg-det" id="bg-det"></span></span>
+              <svg class="bg-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -857,7 +892,10 @@
           <!-- Lot « anzan-cartes » (07/11/2026) : la collection des cartes, sous la liste. -->
           <div class="cartes-collection" role="group" aria-labelledby="cartes-titre">
             <h2 class="cartes-titre" id="cartes-titre">Mes cartes<span id="cartes-compte"></span></h2>
-            <ol class="cartes-grille" id="cartes-collection"></ol>
+            <p class="cartes-serie" aria-hidden="true">Kyu</p>
+            <ol class="cartes-grille" id="cartes-collection" aria-label="Les cartes kyu"></ol>
+            <p class="cartes-serie" aria-hidden="true">Dan</p>
+            <ol class="cartes-grille" id="cartes-collection-dan" aria-label="Les cartes dan"></ol>
           </div>
         </div>
         <div class="fiche-grade" id="grades-fiche-vue" hidden>
@@ -978,7 +1016,7 @@
   <!-- Une carte en grand (lot « anzan-cartes », 07/11/2026) : depuis la
        collection ou la fiche d'un grade réussi. -->
   <div class="carte-grand" id="carte-grand" role="dialog" aria-modal="true" aria-labelledby="carte-grand-titre" hidden>
-    <div class="carte-grand-boite">
+    <div class="carte-grand-boite" id="carte-grand-boite">
       <h2 class="lecteur" id="carte-grand-titre"></h2>
       <div id="carte-grand-place"></div>
       <div class="carte-grand-boutons">
@@ -988,10 +1026,10 @@
     </div>
   </div>
 
-  <script src="./flash_anzan_core.js?v=20261107-2"></script>
+  <script src="./flash_anzan_core.js?v=20261107-4"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261107-1"></script>
+  <script src="./flash_anzan_parcours.js?v=20261107-2"></script>
   <script src="./flash_anzan_suivi.js?v=20261031-1"></script>
   <script>
     (function () {
@@ -1979,6 +2017,7 @@
           lienRetour.title = "Mon espace";
         }
         $("vers-historique").hidden = !aUnHistorique();
+        dessinerBandeauGrades();
         if (!SUIVI) return;
         SUIVI.dessinerBloc($("suivi-repere"));
         placerRepere();
@@ -2196,7 +2235,9 @@
       // est réussi. Tout est posé par textContent ; les images sont celles
       // du dossier ./anzan-cartes/ (une seule en grand à la fois).
       // -----------------------------------------------------------------
-      const kyuCarte = c => `${c.kyu}${c.kyu === 1 ? "er" : "e"} Kyu`;
+      // « 8e Kyu », « 1er Dan » (les dan ont leur série depuis le 07/11/2026).
+      const kyuCarte = c => CORE.nomCarte(c).replace(/\u00a0/g, " ");
+      const estDan = c => Boolean(c && c.dan);
       function paragraphe(classe, texte) {
         const el = document.createElement("p");
         el.className = classe;
@@ -2205,7 +2246,9 @@
       }
       function construireCarte(c) {
         const carte = document.createElement("div");
-        carte.className = "carte-kyu";
+        // Une carte dan est plus haute (timbre doré) : « or » lui donne sa
+        // propre hauteur, jamais déformée.
+        carte.className = estDan(c) ? "carte-kyu or" : "carte-kyu";
         const tour = document.createElement("div");
         tour.className = "carte-tour";
         const recto = document.createElement("div");
@@ -2213,8 +2256,8 @@
         const img = document.createElement("img");
         img.src = c.image;
         img.alt = `Carte du ${kyuCarte(c)} : ${c.nom}`;
-        img.width = 640;
-        img.height = 904;
+        img.width = c.largeur;
+        img.height = c.hauteur;
         recto.append(img);
         const verso = document.createElement("div");
         verso.className = "carte-face carte-verso";
@@ -2246,51 +2289,59 @@
         if (bouton) bouton.setAttribute("aria-pressed", String(dos));
       }
 
-      // La collection : 20 places, du 20e au 1er kyu.
-      function dessinerCollection(etat) {
-        const grille = $("cartes-collection");
-        grille.replaceChildren();
-        let gagnees = 0;
-        CORE.CARTES_KYU.forEach((c, i) => {
-          const g = etat[i];
-          const li = document.createElement("li");
-          if (g && g.reussi) {
-            gagnees += 1;
-            const b = document.createElement("button");
-            b.type = "button";
-            b.className = "vignette";
-            b.setAttribute("data-carte", String(i + 1));
-            b.setAttribute("aria-label", `${c.nom}, ${kyuCarte(c)} : voir la carte`);
-            const img = document.createElement("img");
-            img.src = c.vignette;
-            img.alt = "";
-            img.width = 160;
-            img.height = 226;
-            b.append(img);
-            li.append(b);
-          } else {
-            const v = document.createElement("div");
-            v.className = "vignette a-gagner";
-            v.setAttribute("role", "img");
-            v.setAttribute("aria-label", `${kyuCarte(c)} : carte à gagner`);
-            const cad = document.createElement("span");
-            cad.className = "cad";
-            cad.setAttribute("aria-hidden", "true");
-            cad.textContent = "🔒";
-            const rang = document.createElement("span");
-            rang.setAttribute("aria-hidden", "true");
-            rang.textContent = `${c.kyu}${c.kyu === 1 ? "er" : "e"}`;
-            v.append(cad, rang);
-            li.append(v);
-          }
-          grille.append(li);
-        });
-        $("cartes-compte").textContent = `\u00a0· ${gagnees}/${CORE.CARTES_KYU.length}`;
+      // La collection : 40 places, les kyu (du 20e au 1er) puis les dan (du
+      // 1er au 20e), chacune dans sa grille.
+      function placeCollection(c, n, reussi) {
+        const li = document.createElement("li");
+        if (reussi) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = estDan(c) ? "vignette or" : "vignette";
+          b.setAttribute("data-carte", String(n));
+          b.setAttribute("aria-label", `${c.nom}, ${kyuCarte(c)} : voir la carte`);
+          const img = document.createElement("img");
+          img.src = c.vignette;
+          img.alt = "";
+          img.width = c.vignetteLargeur;
+          img.height = c.vignetteHauteur;
+          b.append(img);
+          li.append(b);
+        } else {
+          const v = document.createElement("div");
+          v.className = estDan(c) ? "vignette a-gagner or" : "vignette a-gagner";
+          v.setAttribute("role", "img");
+          v.setAttribute("aria-label", `${kyuCarte(c)} : carte à gagner`);
+          const cad = document.createElement("span");
+          cad.className = "cad";
+          cad.setAttribute("aria-hidden", "true");
+          cad.textContent = "🔒";
+          const rang = document.createElement("span");
+          rang.setAttribute("aria-hidden", "true");
+          const k = c.dan || c.kyu;
+          rang.textContent = `${k}${k === 1 ? "er" : "e"}`;
+          v.append(cad, rang);
+          li.append(v);
+        }
+        return li;
       }
-      $("cartes-collection").addEventListener("click", e => {
+      function dessinerCollection(etat) {
+        let gagnees = 0;
+        [["cartes-collection", CORE.CARTES_KYU, 0], ["cartes-collection-dan", CORE.CARTES_DAN, CORE.CARTES_KYU.length]].forEach(([id, cartes, decalage]) => {
+          const grille = $(id);
+          grille.replaceChildren();
+          cartes.forEach((c, i) => {
+            const g = etat[decalage + i];
+            const reussi = Boolean(g && g.reussi);
+            if (reussi) gagnees += 1;
+            grille.append(placeCollection(c, decalage + i + 1, reussi));
+          });
+        });
+        $("cartes-compte").textContent = `\u00a0· ${gagnees}/${CORE.CARTES.length}`;
+      }
+      ["cartes-collection", "cartes-collection-dan"].forEach(id => $(id).addEventListener("click", e => {
         const b = e.target.closest("[data-carte]");
         if (b) ouvrirCarteGrand(Number(b.getAttribute("data-carte")), b);
-      });
+      }));
 
       // Une carte en grand, par-dessus l'écran.
       let ouvreurCarte = null;
@@ -2300,6 +2351,7 @@
         if (!c || !gradesDeLEleve()[n - 1].reussi) return false; // une carte se gagne
         const carte = construireCarte(c);
         $("carte-grand-place").replaceChildren(carte);
+        $("carte-grand-boite").classList.toggle("dan", estDan(c));
         $("carte-grand-titre").textContent = `La carte du ${kyuCarte(c)} : ${c.nom}`;
         $("carte-grand-retourner").setAttribute("aria-pressed", "false");
         if (dos) retourner(carte, $("carte-grand-retourner"));
@@ -2339,7 +2391,7 @@
       }, true);
 
       // La petite carte de la fiche : en couleur si le grade est réussi (et
-      // elle s'ouvre en grand), grisée sinon ; pas de carte pour un dan.
+      // elle s'ouvre en grand), grisée sinon — un kyu comme un dan.
       function dessinerCarteFiche(n) {
         const place = $("fiche-carte-place");
         const c = CORE.carteDuGrade(n);
@@ -2350,7 +2402,7 @@
         if (!c) return;
         const reussi = Boolean(gradesDeLEleve()[n - 1].reussi);
         const el = document.createElement(reussi ? "button" : "div");
-        el.className = reussi ? "fiche-carte" : "fiche-carte grisee";
+        el.className = (reussi ? "fiche-carte" : "fiche-carte grisee") + (estDan(c) ? " or" : "");
         if (reussi) {
           el.type = "button";
           el.setAttribute("data-carte", String(n));
@@ -2359,8 +2411,8 @@
         const img = document.createElement("img");
         img.src = c.image;
         img.alt = reussi ? "" : `Carte à gagner : ${c.nom}`;
-        img.width = 640;
-        img.height = 904;
+        img.width = c.largeur;
+        img.height = c.hauteur;
         el.append(img);
         place.append(el);
       }
@@ -2369,8 +2421,8 @@
         if (b) ouvrirCarteGrand(Number(b.getAttribute("data-carte")), b);
       });
 
-      // À la réussite : la carte du kyu (ou la carte simple d'un dan), sous
-      // « Grade réussi ! » ; rien pour les autres verdicts.
+      // À la réussite : la carte du grade (kyu ou dan), sous « Grade
+      // réussi ! » ; rien pour les autres verdicts.
       function dessinerCarteFin(n, verdict) {
         const bloc = $("fin-grade-carte");
         const place = $("fin-carte-place");
@@ -2383,25 +2435,10 @@
         $("carte-retourner").setAttribute("aria-pressed", "false");
         if (!montrer) return;
         const c = CORE.carteDuGrade(n);
-        if (c) {
-          place.append(construireCarte(c));
-          $("carte-retourner").hidden = false;
-        } else {
-          const dan = document.createElement("div");
-          dan.className = "carte-dan";
-          dan.setAttribute("role", "img");
-          dan.setAttribute("aria-label", `Carte du ${CORE.nomGrade(n)}`);
-          const ceinture = document.createElement("span");
-          ceinture.className = "ceinture";
-          ceinture.setAttribute("aria-hidden", "true");
-          ceinture.textContent = "🥋";
-          const nom = document.createElement("span");
-          nom.className = "nom-dan";
-          nom.setAttribute("aria-hidden", "true");
-          nom.textContent = CORE.nomGrade(n);
-          dan.append(ceinture, nom);
-          place.append(dan);
-        }
+        $("fin-grade-carte").classList.toggle("dan", estDan(c));
+        if (!c) return;
+        place.append(construireCarte(c));
+        $("carte-retourner").hidden = false;
       }
       // Sur ordinateur, la carte se retourne sur place ; au téléphone elle
       // est trop petite pour lire son dos : il s'ouvre en grand.
@@ -2426,6 +2463,16 @@
         if (b) versGrades(Number(b.getAttribute("data-grade")));
       });
 
+      // La première règle de la fiche : « nombres d'un chiffre à additionner »,
+      // et pour un grade sans retenue (07/11/2026) « … à ajouter ou à
+      // enlever, sans retenue », « dizaines rondes (10, 20 … 90) … ».
+      function texteNombresFiche(n, g) {
+        const sr = CORE.SANS_RETENUE[n];
+        const quoi = sr && sr.forme === "dizaines" ? "dizaines rondes"
+          : `nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`}`;
+        const faire = sr && sr.plusmoins ? "à ajouter ou à enlever" : "à additionner";
+        return `${quoi} ${faire}${sr ? ", sans retenue" : ""}`;
+      }
       // La fiche d'un grade : ses règles, « 🎯 M'entraîner », « Je passe le … ».
       function dessinerFiche(n) {
         const g = CORE.GRADES[n - 1];
@@ -2433,7 +2480,7 @@
         const regles = $("fiche-regles");
         regles.replaceChildren();
         [
-          [String(g.nombres), `nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`} à additionner`],
+          [String(g.nombres), texteNombresFiche(n, g)],
           [CORE.secondes(g.dixiemes / 10), "pour voir tous les nombres d’un calcul"],
           [String(CORE.GRADE_CALCULS), "calculs"],
           [`${CORE.GRADE_REUSSI}/${CORE.GRADE_CALCULS}`, "bonnes réponses pour réussir le grade"]
@@ -2484,6 +2531,37 @@
         $("grades-titre").focus({preventScroll: true});
       }
       $("vers-grades").addEventListener("click", () => { groupeAffiche = -1; versGrades(0); });
+
+      // Le bandeau des grades, sous « C'est parti » (maquette A, 07/11/2026) :
+      // la dernière carte gagnée (sinon la place grise de la prochaine), le
+      // grade à passer et le compte des cartes. Rien de nouveau n'est lu :
+      // l'état des grades, comme la liste.
+      function dessinerBandeauGrades() {
+        const etat = gradesDeLEleve();
+        const actuel = etat.find(g => g.actuel);
+        let derniere = 0;
+        etat.forEach(g => { if (g.reussi && CORE.carteDuGrade(g.numero)) derniere = g.numero; });
+        const total = etat.filter(g => CORE.carteDuGrade(g.numero)).length;
+        const gagnees = etat.filter(g => g.reussi && CORE.carteDuGrade(g.numero)).length;
+        const place = $("bg-carte");
+        place.replaceChildren();
+        if (derniere) {
+          place.className = estDan(CORE.carteDuGrade(derniere)) ? "bg-carte or" : "bg-carte";
+          const img = document.createElement("img");
+          img.src = CORE.carteDuGrade(derniere).vignette;
+          img.alt = "";
+          img.width = CORE.carteDuGrade(derniere).vignetteLargeur;
+          img.height = CORE.carteDuGrade(derniere).vignetteHauteur;
+          place.append(img);
+        } else {
+          place.className = "bg-carte a-gagner";
+          place.textContent = "🔒";
+        }
+        const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
+        const cartes = `${gagnees}\u00a0carte${gagnees > 1 ? "s" : ""} sur ${total}`;
+        $("bg-det").textContent = `${tete} · ${cartes}`;
+        $("vers-grades").setAttribute("aria-label", `Les grades. ${tete}. ${cartes}.`);
+      }
       $("grades-retour").addEventListener("click", () => {
         if (ficheGrade) versGrades(0);
         else versReglages();

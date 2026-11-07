@@ -1450,22 +1450,60 @@ test("cartes : pas de carte pour « presque », « pas encore » ou un passage a
   assert.equal(p.$("fin-carte-place").children.length, 0);
 });
 
-test("cartes : un dan réussi montre une carte simple « 🥋 1er dan », sans créature ni « Retourner »", () => {
+test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais déformée) et « Retourner » ; sa fiche a sa petite carte ; la collection a ses 20 places dan", () => {
   const t = tirages();
   const p = ouvrirGradesA(1440, caseGrades(20));
+  // Avant : la collection a les 20 kyu et les 20 dan à gagner.
+  assert.equal(p.$("cartes-collection").children.length, 20);
+  assert.equal(p.$("cartes-collection-dan").children.length, 20);
+  assert.equal(p.$("cartes-collection-dan").querySelectorAll("button.vignette").length, 0);
+  const premiereDan = p.$("cartes-collection-dan").querySelectorAll(".a-gagner")[0];
+  assert.match(premiereDan.className, /\bor\b/, "la place d'une carte dan a sa hauteur");
+  assert.equal(texte(premiereDan), "🔒1er");
+  assert.equal(premiereDan.getAttribute("aria-label"), "1er Dan : carte à gagner");
+  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 20/40");
   p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
   p.$("grades-liste").querySelector('[data-grade="21"]').click();
-  assert.equal(p.$("fiche-carte-place").hidden, true, "la fiche d'un dan n'a pas de carte");
-  assert.doesNotMatch(p.$("fiche-haut").className, /avec-carte/);
+  assert.equal(p.$("fiche-carte-place").hidden, false, "la fiche d'un dan a sa carte");
+  assert.match(p.$("fiche-haut").className, /\bavec-carte\b/);
+  const grisee = p.$("fiche-carte-place").querySelector(".fiche-carte");
+  assert.match(grisee.className, /\bgrisee\b/);
+  assert.match(grisee.className, /\bor\b/);
+  assert.deepEqual([grisee.querySelector("img").attrs.width, grisee.querySelector("img").attrs.height], ["640", "984"]);
   p.$("fiche-passer").click();
   jouerPassage(p, 21, t.suivants("grade", CORE.reglagesGrade(21)), 9);
   assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  const dan = p.$("fin-carte-place").querySelector(".carte-dan");
-  assert.ok(dan);
-  assert.equal(texte(dan), "🥋1er dan");
-  assert.equal(dan.getAttribute("aria-label"), "Carte du 1er dan");
-  assert.ok(dan.querySelector("img") === null, "pas de créature");
-  assert.equal(p.$("carte-retourner").hidden, true);
+  assert.match(p.$("fin-grade-carte").className, /\bdan\b/, "le cadre de la carte prend la hauteur d'une carte dan");
+  const carte = carteFin(p);
+  assert.ok(carte);
+  assert.match(carte.className, /\bor\b/);
+  const img = carte.querySelector("img");
+  assert.equal(img.src, "./anzan-cartes/dan01-kuma.webp");
+  assert.equal(img.attrs.alt, "Carte du 1er Dan : Kuma");
+  assert.deepEqual([img.attrs.width, img.attrs.height], ["640", "984"]);
+  assert.equal(p.$("carte-retourner").hidden, false);
+  assert.equal(texte(carte.querySelector(".cv-grade")), "1er Dan");
+  assert.match(PAGE, /\.carte-kyu\.or, \.vignette\.or, \.fiche-carte\.or img, \.bg-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
+  assert.match(PAGE, /\.fin-carte\.dan \{ --carte-l: min\(clamp\(140px, 44vw, 230px\), \(100vh - 420px\) \* 640 \/ 984\);/);
+  assert.match(PAGE, /\.carte-grand-boite\.dan \{ --carte-l: min\(380px, calc\(100vw - 48px\), calc\(\(100dvh - 130px\) \* 640 \/ 984\)\); \}/);
+});
+
+test("cartes dan : dans la collection, une carte dan gagnée s'ouvre en grand à sa hauteur ; la carte kyu d'après ne garde pas la hauteur dan", () => {
+  const p = ouvrirGradesA(1440, caseGrades(22));
+  const gagnees = p.$("cartes-collection-dan").querySelectorAll("button.vignette");
+  assert.deepEqual(gagnees.map(b => b.getAttribute("data-carte")), ["21", "22"]);
+  assert.equal(gagnees[1].querySelector("img").src, "./anzan-cartes/dan02-taka-vignette.webp");
+  assert.deepEqual([gagnees[1].querySelector("img").attrs.width, gagnees[1].querySelector("img").attrs.height], ["160", "246"]);
+  assert.equal(gagnees[1].getAttribute("aria-label"), "Taka, 2e Dan : voir la carte");
+  gagnees[1].click();
+  assert.equal(p.$("carte-grand").hidden, false);
+  assert.match(p.$("carte-grand-boite").className, /\bdan\b/);
+  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 2e Dan : Taka");
+  p.$("carte-grand-fermer").click();
+  p.$("cartes-collection").querySelectorAll("button.vignette")[0].click();
+  assert.doesNotMatch(p.$("carte-grand-boite").className, /\bdan\b/);
+  p.$("carte-grand-fermer").click();
+  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 22/40");
 });
 
 test("cartes : la collection sous la liste — les cartes gagnées en vignettes qui s'ouvrent en grand, les autres en silhouette grise avec un cadenas", () => {
@@ -1487,7 +1525,7 @@ test("cartes : la collection sous la liste — les cartes gagnées en vignettes 
   assert.ok(fermees[0].querySelector("img") === null, "ni image : une silhouette");
   assert.equal(texte(fermees[0]), "🔒17e");
   assert.equal(fermees[16].getAttribute("aria-label"), "1er Kyu : carte à gagner");
-  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 3/20");
+  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 3/40", "40 cartes : 20 kyu et 20 dan");
   assert.match(PAGE, /<h2 class="cartes-titre" id="cartes-titre">Mes cartes<span id="cartes-compte"><\/span><\/h2>/);
   // Une carte en grand : son recto d'abord, « Retourner » montre le dos.
   gagnees[1].click();
@@ -1551,4 +1589,68 @@ test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la tai
   assert.match(style, /body\.mesure-cadre \.cartes-collection \{ display: none; \}/, "la liste des grades garde la taille d'avant sur ordinateur");
   assert.match(style, /\.carte-grand \{ position: fixed;/, "la carte en grand passe par-dessus : elle ne pousse rien");
   assert.match(style, /@media \(prefers-reduced-motion: reduce\) \{ \.carte-tour \{ transition: none; \} \}/);
+});
+
+// ---------------------------------------------------------------------------
+// Lot « bandeau des grades » (07/11/2026, maquette A) : sous « C'est parti »,
+// le bandeau montre la dernière carte gagnée, le grade à passer et le compte
+// des cartes ; il ouvre la liste des grades. Rien de nouveau n'est gardé.
+// ---------------------------------------------------------------------------
+test("bandeau des grades : au départ, la place grise et « À toi : le 20e kyu · 0 carte sur 40 » ; il ouvre la liste", () => {
+  const p = ouvrir(null, {moteur: true});
+  assert.equal(p.$("bg-det").textContent, "À toi : le 20e kyu · 0 carte sur 40");
+  assert.match(p.$("bg-carte").className, /\ba-gagner\b/);
+  assert.equal(p.$("bg-carte").querySelector("img"), null);
+  assert.equal(p.$("vers-grades").getAttribute("aria-label"), "Les grades. À toi : le 20e kyu. 0 carte sur 40.");
+  p.$("ecran-reglages").querySelector('[data-mode="colonne"]').click();
+  assert.equal(p.$("vers-grades").hidden, false, "en Colonne aussi");
+  p.$("vers-grades").click();
+  assert.equal(p.$("ecran-grades").hidden, false);
+  assert.equal(p.$("grades-titre").textContent, "Les grades");
+});
+
+test("bandeau des grades : trois grades réussis → la vignette du 18e kyu, « À toi : le 17e kyu · 3 cartes sur 40 » ; tout réussi : la carte du 20e dan", () => {
+  const p = ouvrir(null, {moteur: true, appareil: caseGrades(3)});
+  assert.equal(p.$("bg-det").textContent, "À toi : le 17e kyu · 3 cartes sur 40");
+  assert.doesNotMatch(p.$("bg-carte").className, /\ba-gagner\b/);
+  assert.equal(p.$("bg-carte").querySelector("img").src, CORE.carteDuGrade(3).vignette);
+  const q = ouvrir(null, {moteur: true, appareil: caseGrades(1)});
+  assert.equal(q.$("bg-det").textContent, "À toi : le 19e kyu · 1 carte sur 40", "une carte : au singulier");
+  const r = ouvrir(null, {moteur: true, appareil: caseGrades(CORE.NB_GRADES)});
+  assert.equal(r.$("bg-det").textContent, "Tous les grades sont réussis · 40\u00a0cartes sur 40");
+  assert.equal(r.$("bg-carte").querySelector("img").src, "./anzan-cartes/dan20-oryu-vignette.webp", "la dernière carte gagnée : le 20e dan");
+  assert.match(r.$("bg-carte").className, /\bor\b/);
+  // Après un passage réussi, le bandeau suit (retour aux réglages).
+  const t = tirages();
+  const s = ouvrirGrades();
+  s.$("grades-liste").querySelector('[data-grade="1"]').click();
+  s.$("fiche-passer").click();
+  jouerPassage(s, 1, t.suivants("grade", CORE.reglagesGrade(1)), 8);
+  s.$("grades-retour").click();
+  if (!s.$("ecran-grades").hidden) s.$("grades-retour").click();
+  assert.equal(s.$("ecran-reglages").hidden, false);
+  assert.equal(s.$("bg-det").textContent, "À toi : le 19e kyu · 1 carte sur 40");
+});
+
+test("bandeau des grades : sur ordinateur, il prend la largeur de la rangée de « C'est parti » (CSS) ; au téléphone, « Historique » passe dessous", () => {
+  assert.match(PAGE, /\.bas-pile \{ width: fit-content; max-width: 100%;/);
+  assert.match(PAGE, /\.bandeau-grades \{ width: 0; min-width: 100%;/, "le bandeau ne compte pas dans la largeur de la pile");
+  assert.match(PAGE, /\.reglages-corps \.bas-pile \.bas \.primary\.partir \{ flex: 0 1 auto; width: 440px; max-width: 100%; \}/);
+  assert.match(PAGE, /\.reglages-corps \.bas-pile \.bas \{ display: contents; \}/);
+  assert.match(PAGE, /\.bandeau-grades \{ order: 2;/);
+  assert.match(PAGE, /\.reglages-corps \.bas-pile \.historique-bouton \{ order: 3;/);
+});
+
+test("sans retenue : la fiche du 19e kyu dit « à ajouter ou à enlever, sans retenue », celle du 12e « dizaines rondes », celle du 20e « à additionner, sans retenue »", () => {
+  const p = ouvrirGradesA(1440, caseGrades(9));
+  const premiere = n => {
+    p.$("grades-liste").querySelector(`[data-grade="${n}"]`).click();
+    const l = texte(p.$("fiche-regles").querySelectorAll("li")[0]);
+    p.$("grades-retour").click();
+    return l;
+  };
+  assert.match(premiere(1), /nombres d’un chiffre à additionner, sans retenue$/);
+  assert.match(premiere(2), /nombres d’un chiffre à ajouter ou à enlever, sans retenue$/);
+  assert.match(premiere(9), /dizaines rondes à ajouter ou à enlever, sans retenue$/);
+  assert.match(premiere(10), /nombres de 2 chiffres à ajouter ou à enlever, sans retenue$/);
 });

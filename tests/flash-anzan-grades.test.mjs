@@ -41,7 +41,8 @@ test("la grille est celle de l'Association japonaise du test de Flash Anzan (fla
 });
 
 test("les réglages d'un grade : additions, un seul nombre de chiffres, 10 calculs, le temps de toute la série partagé entre ses nombres", () => {
-  assert.deepEqual(reglages(8), {operations: "plus", chiffresMin: 1, chiffresMax: 1, nombres: 20, calculs: 10, grade: 8, tempsMs: 750, son: "bip"});
+  assert.deepEqual(reglages(8), {operations: "plusmoins", chiffresMin: 1, chiffresMax: 1, nombres: 20, calculs: 10, grade: 8, sansRetenue: "unites", tempsMs: 750, son: "bip"});
+  assert.deepEqual(reglages(11), {operations: "plus", chiffresMin: 2, chiffresMax: 2, nombres: 2, calculs: 10, grade: 11, tempsMs: 2000, son: "bip"}, "10e kyu : la retenue arrive, additions seules");
   assert.ok(Math.abs(reglages(1).tempsMs - 5000 / 3) < 1e-9, "5 s pour 3 nombres");
   assert.equal(reglages(40).tempsMs, 100, "20e dan : un dixième de seconde par nombre");
   assert.equal(CORE.tempsParNombreMs(reglages(29)), 300);
@@ -49,10 +50,14 @@ test("les réglages d'un grade : additions, un seul nombre de chiffres, 10 calcu
   assert.equal(CORE.reglagesGrade(0), null);
   assert.equal(CORE.reglagesGrade(2, "aucun").son, "aucun", "le bip suit l'interrupteur du Flash");
   const sp = t => t.replace(/\u00a0/g, " ");
-  assert.equal(sp(CORE.texteGrade(1)), "3 nombres d’un chiffre · 5 s en tout");
+  assert.equal(sp(CORE.texteGrade(1)), "3 nombres d’un chiffre, sans retenue · 5 s en tout");
+  assert.equal(sp(CORE.texteGrade(2)), "3 nombres d’un chiffre, + et −, sans retenue · 5 s en tout", "le 19e kyu n'est plus le même que le 20e");
+  assert.equal(sp(CORE.texteGrade(9)), "10 dizaines rondes, + et −, sans retenue · 10 s en tout");
+  assert.equal(sp(CORE.texteGrade(10)), "15 nombres de 2 chiffres, + et −, sans retenue · 15 s en tout");
+  assert.equal(sp(CORE.texteGrade(11)), "2 nombres de 2 chiffres · 4 s en tout");
   assert.equal(sp(CORE.texteGrade(29)), "15 nombres de 3 chiffres · 4,5 s en tout");
-  assert.equal(sp(CORE.resume("grade", reglages(8))), "🥋 13e kyu · 20 nombres d’un chiffre · 15 s en tout");
-  assert.equal(sp(CORE.resume("entrainement", reglages(8))), "🎯 13e kyu · 20 nombres d’un chiffre · 15 s en tout");
+  assert.equal(sp(CORE.resume("grade", reglages(12))), "🥋 9e kyu · 3 nombres de 2 chiffres · 6 s en tout");
+  assert.equal(sp(CORE.resume("entrainement", reglages(8))), "🎯 13e kyu · 20 nombres d’un chiffre, + et −, sans retenue · 15 s en tout");
 });
 
 test("le verdict : réussi à 7, presque à 5 ou 6, pas encore à 4 ; un passage incomplet est « arrêté »", () => {
@@ -65,7 +70,7 @@ test("le verdict : réussi à 7, presque à 5 ou 6, pas encore à 4 ; un passage
 });
 
 test("les calculs d'un grade : additions de nombres d'exactement N chiffres, jamais deux fois le même nombre de suite ; le Flash ordinaire tire comme avant", () => {
-  for (const n of [1, 8, 11, 22, 40]) {
+  for (const n of [11, 20, 22, 40]) {
     const rng = CORE.mulberry32(1000 + n);
     const g = CORE.GRADES[n - 1];
     for (let k = 0; k < 500; k += 1) {
@@ -101,6 +106,63 @@ test("les calculs d'un grade : additions de nombres d'exactement N chiffres, jam
   const a = CORE.mulberry32(7);
   const b = CORE.mulberry32(7);
   for (let k = 0; k < 200; k += 1) assert.deepEqual(CORE.tirerCalcul(r, a), ancien(r, b));
+});
+
+test("sans retenue (20e → 11e kyu) : chaque colonne du boulier reste entre 0 et 9 ; le 20e kyu n'a que des additions ; le 12e des dizaines rondes ; jamais deux fois le même nombre de suite ; jamais 0 comme réponse", () => {
+  const colonnesOk = (avant, signe, v) => [1, 10].every(p => {
+    const c = Math.floor(avant / p) % 10 + signe * (Math.floor(v / p) % 10);
+    return c >= 0 && c <= 9;
+  });
+  const vus = {};
+  for (let n = 1; n <= 10; n += 1) {
+    const r = reglages(n);
+    const g = CORE.GRADES[n - 1];
+    assert.ok(r.sansRetenue, `${CORE.nomGrade(n)} : sans retenue`);
+    assert.equal(r.operations, n === 1 ? "plus" : "plusmoins");
+    const rng = CORE.mulberry32(500 + n);
+    let moins = 0;
+    for (let k = 0; k < 2000; k += 1) {
+      const c = CORE.tirerCalcul(r, rng);
+      assert.equal(c.termes.length, g.nombres);
+      let total = 0;
+      c.termes.forEach((t, i) => {
+        if (i === 0) assert.equal(t.signe, 1, "le premier nombre est ajouté");
+        if (n === 1) assert.equal(t.signe, 1, "20e kyu : additions seules");
+        if (t.signe < 0) moins += 1;
+        assert.equal(String(t.valeur).length, g.chiffres);
+        if (n === 9) assert.equal(t.valeur % 10, 0, "12e kyu : 10, 20 … 90");
+        assert.ok(colonnesOk(total, t.signe, t.valeur), `${CORE.nomGrade(n)} : retenue à ${total} ${t.signe < 0 ? "−" : "+"} ${t.valeur}`);
+        if (i) assert.notEqual(t.valeur, c.termes[i - 1].valeur);
+        total += t.signe * t.valeur;
+      });
+      assert.equal(c.total, total);
+      assert.ok(total > 0, "jamais 0 comme réponse");
+      if (n === 1) assert.ok(total <= 9);
+      vus[n] = true;
+    }
+    if (n > 1) assert.ok(moins > 2000 * (g.nombres - 1) * 0.25, `${CORE.nomGrade(n)} : des soustractions, souvent`);
+  }
+  assert.equal(Object.keys(vus).length, 10);
+  // Les grades « + et − » du moteur sont ceux que le parcours (et sa copie de
+  // la page prof) accepte.
+  const plusEtMoins = Object.keys(CORE.SANS_RETENUE).map(Number).filter(n => CORE.SANS_RETENUE[n].plusmoins);
+  assert.deepEqual(plusEtMoins, [...PARCOURS.GRADES_PLUS_ET_MOINS]);
+});
+
+test("le parcours : une séance de grade « + et − » est gardée pour le 19e → 11e kyu (et les anciennes, en additions, aussi) ; jetée pour le 20e kyu et dès le 10e", () => {
+  const seance = champs => ({version: 1, epoque: 0, reglages: {}, seances: {"1": champs}});
+  const garde = (ops, n) => {
+    const g = CORE.GRADES[n - 1];
+    return Object.keys(PARCOURS.normaliser(seance(["2026-11-07", "grade", ops, g.chiffres, g.chiffres, g.nombres, n, 10, 10, 8, 5, 1])).seances).length === 1;
+  };
+  for (let n = 1; n <= 40; n += 1) {
+    assert.equal(garde("plus", n), true, `${CORE.nomGrade(n)} en additions`);
+    assert.equal(garde("plusmoins", n), n >= 2 && n <= 10, `${CORE.nomGrade(n)} en + et −`);
+  }
+  // Une séance notée par la page garde ses opérations.
+  const p = noter(PARCOURS.creer(), 1, "grade", 2, 10, 8);
+  assert.equal(PARCOURS.historique(p)[0].reglages.operations, "plusmoins");
+  assert.equal(PARCOURS.gradeReussi(p), 2);
 });
 
 test("le parcours : un passage réussi (7/10 sur 10 faits) donne « gradeReussi » ; presque, arrêté ou entraînement ne donnent rien", () => {
