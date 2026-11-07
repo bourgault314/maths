@@ -374,7 +374,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
     calculs: {"2-5": {cases: 2, vu: "2026-09-01", erreur: null, gagne: "2026-09-01"}}
   };
   const migre = P.normaliserParcours(ancien);
-  assert.equal(migre.version, 3);
+  assert.equal(migre.version, P.VERSION); // 4 depuis le lot S1 « les journaux »
   assert.equal(migre.epoque, 2, "l’époque ne bouge pas");
   assert.deepEqual(P.tablesAcquises(migre), [2, 5, 10], "les tables acquises restent acquises");
   assert.equal(migre.tables[2].acquise, "2026-08-30", "à leur date");
@@ -400,7 +400,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   assert.equal(P.etatAffichage(champion).expert.niveau, 1);
 
   // Sans version : c'est un parcours d'avant aussi.
-  assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).version, 3);
+  assert.equal(P.normaliserParcours({tables: {7: {acquise: "2026-09-01"}}}).version, P.VERSION);
   // Un parcours qui porte encore les anciens compteurs d'avis les perd en silence.
   assert.ok(!("avis" in P.normaliserParcours({version: 2, avis: 2, avisVu: 0})));
 
@@ -412,7 +412,7 @@ test("migration des parcours d’avant : tables gardées, ★/★★ → rien, �
   const relu = P.normaliserParcours(JSON.parse(JSON.stringify(refait)));
   assert.equal(relu.melange.aJour, true, "pas de seconde migration");
   assert.deepEqual([relu.melange.reussi, relu.melange.score, relu.melange.dernier], [3, 20, DATE], "le mélange réussi est relu tel quel");
-  assert.equal(relu.version, 3);
+  assert.equal(relu.version, P.VERSION); // 4 depuis le lot S1 « les journaux »
   // Les anciens champs (niveau, champion) n'existent plus dans un parcours à jour.
   assert.equal("niveau" in relu.expert, false);
   assert.equal("champion" in relu.expert, false);
@@ -436,7 +436,7 @@ test("migration robuste à un appareil resté sur l’ancienne version : ce qu�
     assert.equal(fusion.melange.aJour, true, "« aJour » = l’un OU l’autre");
     assert.equal(fusion.melange.aRefaireAvec, null);
     assert.deepEqual(fusion.melange.tables, [2, 5, 10]);
-    assert.equal(fusion.version, 3);
+    assert.equal(fusion.version, P.VERSION); // 4 depuis le lot S1 « les journaux »
     assert.equal(fusion.rang, 2);
   });
   // Et si l'ancien appareil renvoie plus (un parcours avancé sous les vieilles
@@ -558,7 +558,7 @@ test("le lancement : le mélange se joue en 1 min 30, comme la validation d’un
 
 test("les scripts modifiés ont un nouveau numéro de cache, et la copie serveur du moteur est identique", async () => {
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js doit être la copie octet pour octet du moteur");
@@ -574,7 +574,7 @@ test("le serveur accepte les nouveaux champs (sinon filtrer_progression les jett
   assert.match(cles, /'niveau'/, "l’ancien « niveau » reste accepté : un appareil d’avant l’envoie encore");
   // Le parcours de référence figé pour le test PHP porte bien les nouveaux champs.
   const reference = JSON.parse(require("node:fs").readFileSync(new URL("../_serveur/tests/parcours-reference.json", import.meta.url), "utf8"));
-  assert.equal(reference.version, 3);
+  assert.equal(reference.version, P.VERSION); // 4 depuis le lot S1 « les journaux »
   assert.equal(reference.expert.etoiles, 5);
   assert.deepEqual(reference.calculs["2-2"], {boite: 1, cases: 0, vu: "2026-09-23", erreur: null, gagne: null, echeance: "2026-09-24"}, "lot mémoire : boîte et échéance dans le parcours de référence");
   assert.equal(reference.rang, 6);
@@ -591,7 +591,7 @@ test("un parcours migré fait l’aller-retour du paquet envoyé au serveur sans
   migre = P.appliquerReponse(migre, "2-5", {correcte: true, date: DATE}).parcours;
   const paquet = JSON.parse(paquetParcours("ABC234", migre, 4));
   assert.equal(paquet.parcours.prenom, "");
-  assert.equal(paquet.parcours.version, 3);
+  assert.equal(paquet.parcours.version, P.VERSION); // 4 depuis le lot S1 « les journaux »
   assert.equal(paquet.parcours.expert.etoiles, 1);
   assert.deepEqual(paquet.parcours.calculs["2-5"], {boite: 2, cases: 1, vu: DATE, erreur: null, gagne: DATE, echeance: P.ajouterJours(DATE, 1)});
   assert.equal(paquet.parcours.rang, 2);

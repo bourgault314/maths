@@ -22,10 +22,11 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 // Les clés que le serveur devra déclarer pour « defi-calcul » (document de
 // l'étape 5a, § 9, plus `p` : le plan de la séance, et `t` : entraînée avec
 // l'aide le jour `vu`, lot 3 ; `test` a disparu au lot 3 ; `d`, `s`, `j`,
-// `journal` et ses six listes au lot G1), en plus des 74 codes de module et
+// `journal` et ses six listes au lot G1, `numero` au correctif du lot S1),
+// en plus des 74 codes de module et
 // des numéros de cause.
 export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "d", "s", "c",
-  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours"]);
+  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours", "numero"]);
 
 // `entier` : toutes les compétences des 74 modules dans une boîte (le pire
 // cas pour la taille).
@@ -70,7 +71,9 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
   p.seances = Array.from({length: PARCOURS.SEUILS.seance.garder}, (_, i) => PARCOURS.ajouterJours("2026-09-01", Math.floor(i / 2)));
   const garder = PARCOURS.SEUILS.seance.garder;
   p.journal = {calculs: Array(garder).fill(999), justes: Array(garder).fill(999), nouveautes: Array(garder).fill(3),
-    prouvees: Array(garder).fill(999), rouges: Array(garder).fill(999), minutes: Array(garder).fill(90)};
+    prouvees: Array(garder).fill(999), rouges: Array(garder).fill(999), minutes: Array(garder).fill(90),
+    // Correctif S1 : le numéro de chaque séance (les plus grands, le pire cas).
+    numero: Array.from({length: garder}, (_, i) => 999999 - i)};
   Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
   return PARCOURS.normaliserParcours(p);

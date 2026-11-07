@@ -18,7 +18,8 @@ const SERIE = ["sum", "sum", "sum", "difference", "difference", "difference", "p
 // ------------------------------------------------------------------ le format
 
 test("un parcours neuf est vide ; normaliser borne tout, ne garde que ce qui compte", () => {
-  assert.deepEqual(PARCOURS.creer(), {version: 1, epoque: 0, niveaux: {}, operations: {}});
+  // Version 2 depuis le lot S1 « les journaux » (le journal des jours joués).
+  assert.deepEqual(PARCOURS.creer(), {version: 2, epoque: 0, niveaux: {}, operations: {}});
   assert.equal(PARCOURS.estVide(PARCOURS.creer()), true);
   const p = PARCOURS.normaliser({
     epoque: "3",
@@ -149,7 +150,8 @@ test("ce qui part au serveur : le format, rien d'autre — jamais un plateau, un
   assert.deepEqual(chainesLibres(sortie), []);
   assert.equal("plateau" in sortie.partie, false);
   assert.equal("prenom" in sortie, false);
-  assert.deepEqual(Object.keys(sortie), ["version", "epoque", "niveaux", "operations", "dernier", "partie"]);
+  // Lot S1 : le journal des jours joués part avec le reste.
+  assert.deepEqual(Object.keys(sortie), ["version", "epoque", "niveaux", "operations", "dernier", "partie", "jours", "journal", "depuis"]);
 });
 
 test("le parcours de référence du serveur est à jour (node scripts/generer-parcours-reference-coffres.mjs)", () => {

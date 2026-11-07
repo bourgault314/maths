@@ -174,7 +174,7 @@ test("la Légende des tables : séance faite et calculs encore dus → « Séanc
 });
 
 test("le moteur du jour est chargé (cache-buster bumpé)", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261104-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261107-1"><\/script>/);
 });
 
 // ------------------------------- correctif après la relecture de Codex (04/11)

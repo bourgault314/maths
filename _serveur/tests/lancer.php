@@ -456,7 +456,13 @@ verifier("saisie du prénom et de l'initiale", function () use (&$codes, &$jeton
 
 // Le paquet tel que l'appli l'envoie : sans prénom (il reste sur l'appareil),
 // et le serveur le retirerait de toute façon (voir plus bas, lot A2).
-$parcours = ['version' => 1, 'tables' => ['7' => ['acquise' => '2026-08-29']]];
+// Lot S1 « les journaux » (07/11/2026) : Défi tables (version 4), SPLAT! et
+// Coffres magiques (version 2) refusent l'écriture d'une page plus ancienne
+// (lib/applis.php « version_min »). Les progressions de ces tests portent
+// donc la version du moteur d'aujourd'hui.
+const VERSION_TABLES = 4;
+const VERSION_COFFRES = 2;
+$parcours = ['version' => VERSION_TABLES, 'tables' => ['7' => ['acquise' => '2026-08-29']]];
 
 verifier("code inconnu refusé", function () {
     $r = lire('ZZZZZZ');
@@ -506,7 +512,7 @@ verifier("un élève n'écrit que sur son propre code", function () use (&$codes
 });
 
 verifier("progression trop volumineuse refusée", function () use (&$codes) {
-    $gros = ['version' => 1, 'bloc' => str_repeat('x', 45000)];
+    $gros = ['version' => VERSION_TABLES, 'bloc' => str_repeat('x', 45000)];
     $r = appel('/api/parcours.php', ['code' => $codes[1]['code'], 'parcours' => $gros, 'base_revision' => 0]);
     vrai(in_array($r['code'], [413], true), "attendu 413, obtenu " . $r['code']);
     $r = lire($codes[1]['code']);
@@ -755,7 +761,7 @@ verifier("régénérer un code invalide l'ancien et garde la progression", funct
 
 verifier("supprimer un élève efface aussi sa progression", function () use (&$codes, &$jeton) {
     $code = $codes[11]['code'];
-    appel('/api/parcours.php', ['code' => $code, 'parcours' => ['version' => 1], 'base_revision' => 0]);
+    appel('/api/parcours.php', ['code' => $code, 'parcours' => ['version' => VERSION_TABLES], 'base_revision' => 0]);
     $r = appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $codes[11]['id']], ['jeton' => $jeton]);
     egal(200, $r['code'], 'code HTTP');
     egal(404, lire($code)['code'], "le code ne doit plus exister");
@@ -1517,7 +1523,7 @@ verifier("la lecture renvoie la révision : 0 sans progression, 1 après la prem
     $r = lire($codesA2[0]['code']);
     egal(false, $r['json']['existe']);
     egal(0, $r['json']['revision'], 'sans progression');
-    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'epoque' => 0, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0);
+    $r = ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES, 'epoque' => 0, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0);
     egal(200, $r['code'], 'première écriture');
     egal(1, $r['json']['revision'], 'révision 1');
     $r = lire($codesA2[0]['code']);
@@ -1527,11 +1533,11 @@ verifier("la lecture renvoie la révision : 0 sans progression, 1 après la prem
 
 verifier("écrire avec la bonne révision passe, avec une révision périmée répond 409 et l’état actuel", function () use (&$codesA2) {
     $code = $codesA2[0]['code'];
-    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02']]], 1);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02']]], 1);
     egal(200, $r['code']);
     egal(2, $r['json']['revision']);
     // Un autre appareil, parti de la révision 1, envoie sa copie.
-    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '7' => ['acquise' => '2026-09-03']]], 1);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01'], '7' => ['acquise' => '2026-09-03']]], 1);
     egal(409, $r['code'], 'conflit');
     egal(true, $r['json']['conflit']);
     egal(2, $r['json']['revision'], 'la révision en base');
@@ -1539,7 +1545,7 @@ verifier("écrire avec la bonne révision passe, avec une révision périmée r�
     $r = lire($code);
     vrai(!isset($r['json']['parcours']['tables']['7']), "rien n'a été écrasé");
     // Il fusionne et renvoie avec la bonne révision.
-    $r = ecrire($code, ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02'], '7' => ['acquise' => '2026-09-03']]], 2);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01'], '5' => ['acquise' => '2026-09-02'], '7' => ['acquise' => '2026-09-03']]], 2);
     egal(200, $r['code']);
     egal(3, $r['json']['revision']);
 });
@@ -1547,15 +1553,15 @@ verifier("écrire avec la bonne révision passe, avec une révision périmée r�
 // Lot S2 : base_revision est devenue obligatoire (l'appli du lot A2 l'envoie
 // toujours). Un client qui ne dit pas ce qu'il a lu n'écrit pas.
 verifier("sans base_revision, l’écriture est refusée (400) et rien ne bouge", function () use (&$codesA2) {
-    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]]);
+    $r = ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01']]]);
     egal(400, $r['code']);
     vrai(str_contains((string)$r['json']['erreur'], 'Révision'), "le message dit ce qui manque");
     egal(3, lire($codesA2[0]['code'])['json']['revision'], 'la révision n’a pas bougé');
-    egal(400, ecrire($codesA2[0]['code'], ['version' => 1], -3)['code'], 'une révision négative est refusée');
-    egal(400, ecrire_brut($codesA2[0]['code'], '{"version":1}', null)['code'], 'même en JSON brut');
-    $r = appel('/api/parcours.php', '{"code":' . json_encode($codesA2[0]['code']) . ',"base_revision":"3","parcours":{"version":1}}');
+    egal(400, ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES], -3)['code'], 'une révision négative est refusée');
+    egal(400, ecrire_brut($codesA2[0]['code'], '{"version":4}', null)['code'], 'même en JSON brut');
+    $r = appel('/api/parcours.php', '{"code":' . json_encode($codesA2[0]['code']) . ',"base_revision":"3","parcours":{"version":4}}');
     egal(400, $r['code'], 'une révision en texte est refusée');
-    $r = ecrire($codesA2[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 3);
+    $r = ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 3);
     egal(200, $r['code'], 'avec la bonne révision, ça passe');
     egal(4, $r['json']['revision']);
 });
@@ -1563,7 +1569,7 @@ verifier("sans base_revision, l’écriture est refusée (400) et rien ne bouge"
 verifier("vingt premières créations simultanées : une seule passe, les autres reçoivent 409, aucune 500", function () use (&$codesA2) {
     vider_compteurs();
     $statuts = appels_paralleles('/api/parcours.php', ['code' => $codesA2[1]['code'], 'base_revision' => 0,
-        'parcours' => ['version' => 1, 'tables' => ['3' => ['acquise' => '2026-09-01']]]], 20);
+        'parcours' => ['version' => VERSION_TABLES, 'tables' => ['3' => ['acquise' => '2026-09-01']]]], 20);
     $comptes = array_count_values($statuts);
     egal(1, $comptes[200] ?? 0, 'une seule création');
     egal(19, $comptes[409] ?? 0, 'les autres en conflit (statuts : ' . json_encode($comptes) . ')');
@@ -1573,7 +1579,7 @@ verifier("vingt premières créations simultanées : une seule passe, les autres
 
 verifier("le serveur ne garde ni prénom, ni texte libre, ni clé inconnue, à aucune profondeur", function () use (&$codesA2) {
     $code = $codesA2[2]['code'];
-    $r = ecrire_brut($code, '{"version":1,"prenom":"Léa Dupont","commentaire":"n\'importe quoi","tables":{"7":{"prenom":"Alice","acquise":"2026-09-01","commentaire":"x","apprends":{"construct":2,"information":"médicale"}},"11":{"acquise":"2026-09-01"}},"expert":{"niveau":2,"dernier":"' . str_repeat('x', 300) . '"},"calculs":{"3-7":{"cases":2,"vu":"' . str_repeat('y', 300) . '","gagne":"2026-09-01"}},"melange":{"tables":[2,"abc",5],"aJour":true}}', 0);
+    $r = ecrire_brut($code, '{"version":4,"prenom":"Léa Dupont","commentaire":"n\'importe quoi","tables":{"7":{"prenom":"Alice","acquise":"2026-09-01","commentaire":"x","apprends":{"construct":2,"information":"médicale"}},"11":{"acquise":"2026-09-01"}},"expert":{"niveau":2,"dernier":"' . str_repeat('x', 300) . '"},"calculs":{"3-7":{"cases":2,"vu":"' . str_repeat('y', 300) . '","gagne":"2026-09-01"}},"melange":{"tables":[2,"abc",5],"aJour":true}}', 0);
     egal(200, $r['code']);
     $lu = lire($code)['json']['parcours'];
     egal(['version', 'tables', 'expert', 'calculs', 'melange'], array_keys($lu), 'clés de premier niveau');
@@ -1586,7 +1592,7 @@ verifier("le serveur ne garde ni prénom, ni texte libre, ni clé inconnue, à a
     $texte = lire($code)['texte'];
     vrai(!str_contains($texte, 'Dupont') && !str_contains($texte, 'médicale') && !str_contains($texte, 'xxxx'), 'aucun texte libre ne ressort');
     // Un objet vide reste un objet vide : l'appli relit ce qu'elle a envoyé.
-    ecrire_brut($code, '{"version":1,"calculs":{},"melange":{"tables":[]}}', 1);
+    ecrire_brut($code, '{"version":4,"calculs":{},"melange":{"tables":[]}}', 1);
     vrai(str_contains(lire($code)['texte'], '"calculs":{}'), '{} reste {}');
     vrai(str_contains(lire($code)['texte'], '"tables":[]'), '[] reste []');
 });
@@ -1740,7 +1746,7 @@ verifier("préparation : une classe et deux élèves pour le lot 6", function ()
 
 verifier("première écriture : une révision autre que 0 est un conflit (409, état vide), rien n’est créé", function () use (&$codesL6) {
     $code = $codesL6[0]['code'];
-    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 5);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 5);
     egal(409, $r['code'], 'une appli qui annonce la révision 5 alors que le serveur n’a rien');
     egal(true, $r['json']['conflit']);
     egal(0, $r['json']['revision'], 'l’état renvoyé est la révision 0');
@@ -1749,10 +1755,10 @@ verifier("première écriture : une révision autre que 0 est un conflit (409, �
     egal(false, $r['json']['existe'], 'aucune ligne créée');
     egal(0, $r['json']['revision']);
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM progressions WHERE eleve_id = ' . (int)$codesL6[0]['id'])->fetchColumn(), 'en base non plus');
-    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 0);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['4' => ['acquise' => '2026-09-04']]], 0);
     egal(200, $r['code'], 'avec la révision 0, la création passe');
     egal(1, $r['json']['revision']);
-    $r = ecrire($code, ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-04'], '6' => ['acquise' => '2026-09-04']]], 1);
+    $r = ecrire($code, ['version' => VERSION_TABLES, 'tables' => ['4' => ['acquise' => '2026-09-04'], '6' => ['acquise' => '2026-09-04']]], 1);
     egal(2, $r['json']['revision'], 'puis la mise à jour normale');
 });
 
@@ -1795,8 +1801,8 @@ verifier("la restauration attend le verrou de la ligne et repart de la révision
 verifier("dix restaurations et dix écritures de l’élève en même temps : aucune révision attribuée deux fois, aucun 500", function () use (&$jetonS1, &$codesL6) {
     vider_compteurs();
     $eleve = $codesL6[1];
-    ecrire($eleve['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04']]], 0);
-    ecrire($eleve['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04'], '3' => ['acquise' => '2026-09-04']]], 1);
+    ecrire($eleve['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-04']]], 0);
+    ecrire($eleve['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-04'], '3' => ['acquise' => '2026-09-04']]], 1);
     $revisions = [];
     $statuts = [];
     for ($tour = 0; $tour < 10; $tour++) {
@@ -1805,7 +1811,7 @@ verifier("dix restaurations et dix écritures de l’élève en même temps : au
         $reponses = appels_paralleles_mixtes([
             ['chemin' => '/api/prof.php', 'jeton' => $jetonS1, 'corps' => ['action' => 'eleves.restaurer', 'eleve_id' => $eleve['id'], 'appli' => 'defi-tables']],
             ['chemin' => '/api/parcours.php', 'corps' => ['code' => $eleve['code'], 'base_revision' => $base,
-                'parcours' => ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-04'], (string)(4 + $tour % 6) => ['acquise' => '2026-09-04']]]]],
+                'parcours' => ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-04'], (string)(4 + $tour % 6) => ['acquise' => '2026-09-04']]]]],
         ]);
         foreach ($reponses as $r) {
             $statuts[] = $r['code'];
@@ -1823,7 +1829,7 @@ verifier("aucune réponse de l’API ne peut rester dans un cache : Cache-Contro
     vider_compteurs();
     foreach ([
         'lecture 200' => lire($codesL6[0]['code']),
-        'écriture 409' => ecrire($codesL6[0]['code'], ['version' => 1], 1),
+        'écriture 409' => ecrire($codesL6[0]['code'], ['version' => VERSION_TABLES], 1),
         'identité 200' => identite($codesL6[0]['code']),
         'code inconnu 404' => identite(code_inconnu(0)),
         'tableau prof 200' => appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $codesL6[0]['classe']], ['jeton' => $jetonS1]),
@@ -2372,7 +2378,7 @@ verifier("supprimer un compte qui possède des classes exige un oui explicite, p
     $c2 = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P2'], ['jeton' => $jp])['json']['id'];
     $e1 = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $c1, 'nombre' => 3], ['jeton' => $jp])['json']['eleves'];
     appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $c2, 'nombre' => 1], ['jeton' => $jp]);
-    egal(200, ecrire($e1[0]['code'], ['version' => 1, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
+    egal(200, ecrire($e1[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
     $claireId = null; $moi = null;
     foreach (appel('/api/prof.php', ['action' => 'profs.liste'], ['jeton' => $jetonS1])['json']['profs'] as $p) {
         if ($p['identifiant'] === 'claire') $claireId = $p['id'];
@@ -2443,7 +2449,7 @@ verifier("préparation : une classe, deux élèves nommés, Claire en lecture", 
     $elevesBillets = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classeBillets, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
     egal(2, count($elevesBillets), 'deux élèves');
     egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $elevesBillets[0]['id'], 'prenom' => 'Sam', 'initiale' => 'B'], ['jeton' => $jetonS1])['code'], 'Sam nommé');
-    egal(200, ecrire($elevesBillets[0]['code'], ['version' => 1, 'tables' => ['3' => ['acquise' => '2026-09-01']]], 0)['code'], 'Sam a une progression');
+    egal(200, ecrire($elevesBillets[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['3' => ['acquise' => '2026-09-01']]], 0)['code'], 'Sam a une progression');
     egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeBillets, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'partagée à Claire en lecture');
 });
 
@@ -2534,7 +2540,7 @@ verifier("« Voir sa fiche » : un billet de fiche rend la progression et le pr�
 verifier("un billet de fiche ne permet pas d'écrire", function () use (&$jetonS1, &$elevesBillets) {
     $billet = appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonS1])['json']['billet'];
     // parcours.php ne connaît que le code : un billet n'y ouvre rien.
-    $r = appel('/api/parcours.php', ['billet' => $billet, 'appli' => 'defi-tables', 'parcours' => ['version' => 1, 'tables' => ['9' => ['acquise' => '2026-09-02']]], 'base_revision' => 1]);
+    $r = appel('/api/parcours.php', ['billet' => $billet, 'appli' => 'defi-tables', 'parcours' => ['version' => VERSION_TABLES, 'tables' => ['9' => ['acquise' => '2026-09-02']]], 'base_revision' => 1]);
     egal(400, $r['code'], 'refusé avant même de regarder le billet');
     $r = appel('/api/parcours.php', ['billet' => $billet, 'appli' => 'defi-tables', 'lire' => true]);
     egal(400, $r['code'], 'ni lire');
@@ -2667,7 +2673,7 @@ verifier("préparation : une classe de fin d'année, trois élèves, deux progre
     egal(3, count($elevesFin), 'trois élèves');
     foreach ([0, 1] as $i) {
         egal(200, appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $elevesFin[$i]['id'], 'prenom' => 'Enfant' . $i, 'initiale' => 'Z'], ['jeton' => $jetonS1])['code']);
-        egal(200, ecrire($elevesFin[$i]['code'], ['version' => 1, 'tables' => ['4' => ['acquise' => '2026-09-01']]], 0)['code'], 'progression écrite');
+        egal(200, ecrire($elevesFin[$i]['code'], ['version' => VERSION_TABLES, 'tables' => ['4' => ['acquise' => '2026-09-01']]], 0)['code'], 'progression écrite');
     }
     egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeFin, 'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'partagée à Claire');
     // Un billet vivant, pour vérifier qu'il part avec le reste.
@@ -2705,7 +2711,7 @@ verifier("supprimer une classe n'en laisse RIEN : ni élève, ni code, ni progre
 verifier("ouvrir « Ma classe » ne supprime plus rien : les classes échues sont PROPOSÉES", function () use (&$jetonS1) {
     $vieille = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'test-an-dernier'], ['jeton' => $jetonS1])['json']['id'];
     $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $vieille, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
-    egal(200, ecrire($eleves[0]['code'], ['version' => 1, 'tables' => ['5' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
+    egal(200, ecrire($eleves[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['5' => ['acquise' => '2026-09-01']]], 0)['code'], 'une progression');
 
     // Année scolaire passée, mais une activité d'aujourd'hui : le garde-fou
     // des 21 jours la retient, elle n'est même pas proposée.
@@ -2797,7 +2803,7 @@ verifier("constat 2 — la classe préparée en juillet survit à la rentrée (c
     // ses élèves ont été créés il y a peu : ce n'est pas une classe morte.
     $casB = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'cas-B-juillet'], ['jeton' => $jetonS1])['json']['id'];
     $elevesB = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $casB, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
-    ecrire($elevesB[0]['code'], ['version' => 1], 0);
+    ecrire($elevesB[0]['code'], ['version' => VERSION_TABLES], 0);
     bd_test()->exec("UPDATE classes SET cree_le = '$an-07-10T08:00:00Z' WHERE id = " . (int)$casB);
     bd_test()->exec("UPDATE progressions SET maj_le = '" . gmdate('Y-m-d', time() - 22 * 86400) . "' WHERE eleve_id = " . (int)$elevesB[0]['id']);
     $r = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1]);
@@ -3115,8 +3121,8 @@ verifier("lot 11 — mise en place : une classe à moi, partagée à un collègu
 
     // Une progression avec une version précédente, pour que « Version
     // précédente » ait un sens dans la matrice.
-    ecrire($lot11['eleve']['code'], ['version' => 1], 0);
-    ecrire($lot11['eleve']['code'], ['version' => 1, 'expert' => 1], 1);
+    ecrire($lot11['eleve']['code'], ['version' => VERSION_TABLES], 0);
+    ecrire($lot11['eleve']['code'], ['version' => VERSION_TABLES, 'expert' => 1], 1);
 });
 
 // Une action de la matrice, jouée avec un corps valide. On ne regarde que le
@@ -3431,11 +3437,11 @@ verifier("lot 11 — une date impossible n'est plus enregistrée comme une date"
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $lot11['classe'],
         'nombre' => 1], ['jeton' => $lot11['jetonProprio']])['json']['eleves'][0];
     $code = $eleve['code'];
-    ecrire($code, ['version' => 1, 'epoque' => '9999-99-99', 'dernier' => '2026-02-29'], 0);
+    ecrire($code, ['version' => VERSION_TABLES, 'epoque' => '9999-99-99', 'dernier' => '2026-02-29'], 0);
     $lu = (array)lire($code)['json']['parcours'];
     vrai(!array_key_exists('epoque', $lu), '« 9999-99-99 » n’est pas une date : elle est retirée');
     vrai(!array_key_exists('dernier', $lu), '« 2026-02-29 » n’existe pas (2026 n’est pas bissextile) : retirée');
-    ecrire($code, ['version' => 1, 'epoque' => '2024-02-29'], 1);
+    ecrire($code, ['version' => VERSION_TABLES, 'epoque' => '2024-02-29'], 1);
     $lu = (array)lire($code)['json']['parcours'];
     egal('2024-02-29', $lu['epoque'] ?? null, 'le 29 février d’une année bissextile, lui, est gardé');
     appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleve['id']], ['jeton' => $lot11['jetonProprio']]);
@@ -3551,9 +3557,9 @@ verifier("lot A — le jour est celui de LA RÉUNION : 23 h 30 et 00 h 30 ne tom
 verifier("lot A — trois enregistrements le même jour ne font qu'UNE ligne, égale au dernier état", function () use (&$serveurA) {
     $code = $serveurA['eleve']['code'];
     $id = (int)$serveurA['eleve']['id'];
-    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1]]], 0)['code'], '1er envoi');
-    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1]]], 1)['code'], '2e');
-    egal(200, ecrire($code, ['version' => 1, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1], '7-8' => ['cases' => 1]]], 2)['code'], '3e');
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'calculs' => ['3-4' => ['cases' => 1]]], 0)['code'], '1er envoi');
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1]]], 1)['code'], '2e');
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'calculs' => ['3-4' => ['cases' => 1], '5-6' => ['cases' => 1], '7-8' => ['cases' => 1]]], 2)['code'], '3e');
 
     $lignes = bd_test()->query("SELECT jour, revision, calculs, donnees FROM versions WHERE eleve_id = $id AND appli = 'defi-tables'")->fetchAll(PDO::FETCH_ASSOC);
     egal(1, count($lignes), 'une seule ligne pour la journée');
@@ -3578,7 +3584,7 @@ verifier("lot A — neuf journées enregistrées, SEPT gardées : les deux plus 
     egal(8, (int)bd_test()->query("SELECT COUNT(*) FROM versions WHERE eleve_id = $id")->fetchColumn(), 'huit journées semées');
 
     $r = lire($serveurA['eleve']['code']);
-    egal(200, ecrire($serveurA['eleve']['code'], ['version' => 1, 'calculs' => ['2-2' => ['cases' => 1]]], (int)$r['json']['revision'])['code'],
+    egal(200, ecrire($serveurA['eleve']['code'], ['version' => VERSION_TABLES, 'calculs' => ['2-2' => ['cases' => 1]]], (int)$r['json']['revision'])['code'],
         'un enregistrement d’aujourd’hui');
 
     $jours = bd_test()->query("SELECT jour FROM versions WHERE eleve_id = $id ORDER BY jour")->fetchAll(PDO::FETCH_COLUMN);
@@ -3668,7 +3674,7 @@ verifier("lot A — supprimer l'élève, puis la classe, emporte l'historique", 
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'lot-A-suppression'], ['jeton' => $jetonS1])['json']['id'];
     $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
     foreach ($eleves as $eleve) {
-        egal(200, ecrire($eleve['code'], ['version' => 1, 'calculs' => ['2-3' => ['cases' => 1]]], 0)['code'], 'une progression');
+        egal(200, ecrire($eleve['code'], ['version' => VERSION_TABLES, 'calculs' => ['2-3' => ['cases' => 1]]], 0)['code'], 'une progression');
     }
     $un = (int)$eleves[0]['id'];
     $deux = (int)$eleves[1]['id'];
@@ -3690,8 +3696,8 @@ verifier("lot A — le journal écrit UNE ligne par action du professeur", funct
     $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'];
     $eleveId = (int)$eleves[0]['id'];
     appel('/api/prof.php', ['action' => 'eleves.nommer', 'eleve_id' => $eleveId, 'prenom' => 'Léa', 'initiale' => 'B'], ['jeton' => $jetonS1]);
-    ecrire($eleves[0]['code'], ['version' => 1], 0);
-    ecrire($eleves[0]['code'], ['version' => 1, 'expert' => 1], 1);
+    ecrire($eleves[0]['code'], ['version' => VERSION_TABLES], 0);
+    ecrire($eleves[0]['code'], ['version' => VERSION_TABLES, 'expert' => 1], 1);
     appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'eleves.regenerer', 'eleve_id' => $eleveId], ['jeton' => $jetonS1]);
     appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleveId, 'avant' => new stdClass(), 'ajouts' => ['coffres' => new stdClass()]], ['jeton' => $jetonS1]);
@@ -3892,8 +3898,8 @@ verifier("lot B — une restauration repose une époque plus haute que les DEUX 
     // L'élève enregistre deux fois : la deuxième écriture pousse la première
     // dans donnees_avant. Les deux portent une époque de 5 — c'est le cas de
     // Gwenaël : rien n'a été remis à zéro, l'élève a simplement joué.
-    egal(200, ecrire($code, ['version' => 1, 'epoque' => 5, 'expert' => 1], 0)['code'], 'premier enregistrement');
-    egal(200, ecrire($code, ['version' => 1, 'epoque' => 5, 'expert' => 2], 1)['code'], 'deuxième enregistrement');
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 5, 'expert' => 1], 0)['code'], 'premier enregistrement');
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 5, 'expert' => 2], 1)['code'], 'deuxième enregistrement');
 
     // Le professeur restaure « avant le dernier enregistrement ».
     egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
@@ -4063,8 +4069,13 @@ verifier("splat-suivi-3 — un texte, une clé étrangère ou un parcours inconn
     vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'ABCD') && !str_contains($texte, 'mardi'), 'aucun texte libre ne ressort');
     // Le filtre est propre à chaque appli : un parcours SPLAT! envoyé sous
     // « defi-tables » ne laisse passer aucune étape.
-    egal('{"version":1,"epoque":2}', json_encode(filtrer_progression('defi-tables', $propre)),
-        'les étapes de SPLAT! ne sont pas des clés de Défi tables');
+    // (Lot S1 « les journaux » : « jours », « journal » et « etapes » — une
+    // colonne du journal de Défi tables — sont des clés des deux applis ;
+    // aucune étape de SPLAT! ni aucune colonne de son journal ne passe.)
+    $croise = filtrer_progression('defi-tables', $propre);
+    egal([], array_keys(get_object_vars($croise->etapes ?? new stdClass())), 'les étapes de SPLAT! ne sont pas des clés de Défi tables');
+    egal([], array_values(array_diff(array_keys(get_object_vars($croise)), ['version', 'epoque', 'jours', 'journal', 'etapes'])), 'rien d’autre de SPLAT! ne passe');
+    egal([], array_keys(get_object_vars($croise->journal ?? new stdClass())), 'ni les colonnes de son journal');
 });
 
 $classeSplat = null;
@@ -4475,7 +4486,12 @@ verifier("coffres-suivi — un texte, une clé étrangère, un niveau hors 1-3 o
     vrai(!str_contains($texte, 'Léa') && !str_contains($texte, 'super') && !str_contains($texte, '3+2') && !str_contains($texte, 'mardi'), 'aucun texte libre ne ressort');
     // Le filtre est propre à chaque appli : un parcours Coffres envoyé sous
     // « splat » ne laisse passer ni niveau ni opération.
-    egal('{"version":1,"epoque":2}', json_encode(filtrer_progression('splat', $propre)), 'les compteurs de Coffres ne sont pas des clés de SPLAT!');
+    // (Lot S1 « les journaux » : « jours », « journal » et « depuis » sont des
+    // clés des deux applis — leurs colonnes non.)
+    $croise = filtrer_progression('splat', $propre);
+    vrai(!isset($croise->niveaux) && !isset($croise->operations) && !isset($croise->partie), 'les compteurs de Coffres ne sont pas des clés de SPLAT!');
+    egal([], array_values(array_diff(array_keys(get_object_vars($croise)), ['version', 'epoque', 'jours', 'journal', 'depuis'])), 'rien d’autre de Coffres ne passe');
+    egal([], array_keys(get_object_vars($croise->journal ?? new stdClass())), 'ni les colonnes de son journal');
 });
 
 $classeCoffres = null;
@@ -5162,7 +5178,7 @@ verifier("qui-voit-quoi — parcours.php ne refuse rien (Q1 = non, comme les mon
     // Lucas n'a pas Coffres ; son appli peut quand même enregistrer (un lien
     // d'entrée fabriqué à la main) : le professeur le verrait dans son
     // Parcours, rien de plus. Décision de Gwenaël du 22/10/2026.
-    $r = ecrire($qvq['lucas']['code'], ['version' => 1, 'epoque' => 0, 'niveaux' => ['1' => ['tresors' => 1, 'parfaits' => 0]]], 0, 'coffres');
+    $r = ecrire($qvq['lucas']['code'], ['version' => VERSION_COFFRES, 'epoque' => 0, 'niveaux' => ['1' => ['tresors' => 1, 'parfaits' => 0]]], 0, 'coffres');
     egal(200, $r['code'], 'enregistré, sans refus : ' . $r['texte']);
     egal(200, lire($qvq['lucas']['code'], 'coffres')['code']);
 });
@@ -5257,7 +5273,7 @@ $recCodeClaire = null;
 // le serveur lit pour dire « Légende » (lib/records.php, est_legende).
 function progression_legende(bool $couronne): array
 {
-    return ['version' => 3, 'epoque' => 0, 'tables' => [], 'expert' => ['etoiles' => $couronne ? 5 : 4, 'dernier' => '2026-10-09', 'couronne' => $couronne ? '2026-10-09' : null], 'calculs' => []];
+    return ['version' => VERSION_TABLES, 'epoque' => 0, 'tables' => [], 'expert' => ['etoiles' => $couronne ? 5 : 4, 'dernier' => '2026-10-09', 'couronne' => $couronne ? '2026-10-09' : null], 'calculs' => []];
 }
 
 function records_api(string $code, array $corps): array
@@ -7075,7 +7091,7 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(5, $reference->version, 'version 5 (lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
+    egal(6, $reference->version, 'version 6 (correctif du lot S1 : le numéro des séances ; 5 au lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
@@ -7083,7 +7099,8 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     vrai(!isset($reference->test), '« test » a disparu (lot 3)');
     egal(7, count($reference->seance->p), 'le plan de la séance : sept nombres (lot F1 ; cinq avant)');
     // Lot G1 : six listes d'entiers alignées sur les 60 séances (-1 : pas connu), et deux dates par compétence.
-    foreach (['calculs', 'justes', 'nouveautes', 'prouvees', 'rouges', 'minutes'] as $champ) egal(60, count($reference->journal->{$champ}), "journal : $champ");
+    foreach (['calculs', 'justes', 'nouveautes', 'prouvees', 'rouges', 'minutes', 'numero'] as $champ) egal(60, count($reference->journal->{$champ}), "journal : $champ");
+    egal(999998, max($reference->journal->numero), 'le numéro d’une séance (correctif S1) : près de 999 999, gardé par le filtre');
     egal(-1, $reference->journal->calculs[0], 'une séance d’avant le journal : -1, gardé par le filtre');
     egal(5, count($reference->modules->A2->d), 'd : une date par compétence');
     egal(6, count($reference->seance->j), 'j : ce que la séance ouverte a fait (six nombres depuis le correctif G1 : les nouveautés en 6e)');
@@ -7478,7 +7495,7 @@ verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il f
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3A', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $pirate = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $pirate['code'];
-    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    $couronne = ['version' => VERSION_TABLES, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
     egal(200, appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code'], 'la couronne forgée entre (assumé)');
     egal(true, records_api($code, ['lire' => true])['json']['legende'], 'il est Légende aux yeux du serveur (assumé)');
     // Sans ticket : refusé.
@@ -7565,7 +7582,7 @@ verifier("audit Codex 3 — supprimer un compte avec ses classes emporte les rec
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '5B', 'applis' => ['defi-tables']], ['jeton' => $jetonPartant])['json']['id'];
     vrai(is_int($classe), 'le collègue a sa classe');
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonPartant])['json']['eleves'][0];
-    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    $couronne = ['version' => VERSION_TABLES, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
     egal(200, appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code']);
     // Le record est planté directement (comme la preuve de Codex le fabriquait) :
     // ce test ne dépend ainsi que de la suppression, pas du ticket de course.
@@ -7610,7 +7627,7 @@ verifier("audit Codex 4 — l'historique de plus de sept jours est purgé pour t
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '4C', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
     [$dormeur, $actif] = $eleves;
-    $progression = ['version' => 3, 'expert' => ['etoiles' => 1, 'dernier' => null, 'couronne' => null]];
+    $progression = ['version' => VERSION_TABLES, 'expert' => ['etoiles' => 1, 'dernier' => null, 'couronne' => null]];
     egal(200, appel('/api/parcours.php', ['code' => $dormeur['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $progression])['code']);
     $vieux = '2026-09-01';
     // revision 0 : la ligne ne porte pas la révision du moment, sinon le
@@ -7746,7 +7763,7 @@ verifier("relecture Codex R3 — une écriture qui échoue rend le ticket : la c
     vider_compteurs();
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3R', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
-    $couronne = ['version' => 3, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
+    $couronne = ['version' => VERSION_TABLES, 'expert' => ['etoiles' => 5, 'dernier' => '2026-10-22', 'couronne' => '2026-10-22']];
     egal(200, appel('/api/parcours.php', ['code' => $eleve['code'], 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code']);
     $ticket = ticket_de_course($eleve['code'], 60);
     // Une panne d'écriture de fixture : l'insertion du record est interdite.
@@ -7887,9 +7904,11 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $eleve['code'];
     $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
-    egal(5, $reference['version'], 'le parcours de référence est en version 5');
-    egal(5, CATALOGUE_APPLIS['defi-calcul']['version_min']);
-    foreach ([[4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['5', '« 5 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
+    // Puis le correctif du lot S1 « les journaux » : 6 (le numéro de chaque
+    // séance du journal) ; une page de version 5 est refusée à son tour.
+    egal(6, $reference['version'], 'le parcours de référence est en version 6');
+    egal(6, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['6', '« 6 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
         $ancien = $reference;
         if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
         $w = ecrire($code, $ancien, 0, 'defi-calcul');
@@ -7898,26 +7917,81 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
         egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
     }
     $w = ecrire($code, $reference, 0, 'defi-calcul');
-    egal(200, $w['code'], 'version 5 : accepté');
+    egal(200, $w['code'], 'version 6 : accepté');
     $ancien = $reference;
-    $ancien['version'] = 4;
+    $ancien['version'] = 5;
     unset($ancien['journal']);
     $w = ecrire($code, $ancien, 1, 'defi-calcul');
-    egal(400, $w['code'], 'par-dessus une version 5 : refusé, même avec la bonne révision');
+    egal(400, $w['code'], 'par-dessus une version 6 : refusé, même avec la bonne révision');
     $w = ecrire($code, $ancien, 0, 'defi-calcul');
     egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
     $r = lire($code, 'defi-calcul');
     egal(1, $r['json']['revision'], 'toujours la révision 1');
-    egal(5, $r['json']['parcours']['version'], 'la version 5 est restée');
-    // Lot G1 : le journal (six listes d'entiers, -1 compris) et les deux dates
+    egal(6, $r['json']['parcours']['version'], 'la version 6 est restée');
+    // Lot G1 : le journal (sept listes d'entiers depuis le correctif S1, -1 compris) et les deux dates
     // des compétences (des dates et des null) reviennent tels quels.
     egal($reference['journal'], $r['json']['parcours']['journal'], 'le journal est gardé tel quel');
     egal($reference['modules']['A5']['d'], $r['json']['parcours']['modules']['A5']['d'], 'les dates des compétences aussi');
     egal($reference['seance']['j'], $r['json']['parcours']['seance']['j'], 'et ce que la séance ouverte a fait');
-    // Les autres applis ne déclarent pas de version minimale : rien ne change pour elles.
-    foreach (CATALOGUE_APPLIS as $cle => $fiche) if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_min', $fiche), "$cle : pas de version minimale");
-    $w = ecrire($code, ['version' => 1, 'tables' => new stdClass()], 0, 'defi-tables');
-    egal(200, $w['code'], 'Défi tables en version 1 : accepté comme avant');
+    // Les applis sans version minimale : rien ne change pour elles (Défi
+    // tables, SPLAT! et Coffres en ont une depuis le lot S1 « les journaux » :
+    // voir le test du lot S1 plus bas).
+    foreach (CATALOGUE_APPLIS as $cle => $fiche) {
+        if (!in_array($cle, ['defi-calcul', 'defi-tables', 'splat', 'coffres'], true)) vrai(!array_key_exists('version_min', $fiche), "$cle : pas de version minimale");
+    }
+    $w = ecrire($code, ['version' => 1, 'seances' => new stdClass()], 0, 'flash-anzan');
+    egal(200, $w['code'], 'Anzan en version 1 : accepté comme avant');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses élèves ») :
+// Défi tables (version 4), SPLAT! et Coffres magiques (version 2) tiennent un
+// journal. Une page d'avant (Défi tables 3, SPLAT! 1, Coffres 1) l'effacerait
+// en renvoyant la progression : son envoi est refusé (400), rien n'est écrit,
+// même par-dessus une progression déjà là et avec la bonne révision. Le
+// journal (des -1 compris) revient tel quel ; la lecture ne change pas.
+verifier("lot S1 — Défi tables, SPLAT! et Coffres : une page d'avant le journal ne réécrit rien (400) ; le journal revient tel quel", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'S1j', 'applis' => ['defi-tables', 'splat', 'coffres']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $eleve['code'];
+    $cas = [
+        'defi-tables' => ['fichier' => 'parcours-reference.json', 'min' => 4, 'avant' => [3, 2, 1]],
+        'splat' => ['fichier' => 'parcours-reference-splat.json', 'min' => 2, 'avant' => [1, 0]],
+        'coffres' => ['fichier' => 'parcours-reference-coffres.json', 'min' => 2, 'avant' => [1, 0]],
+    ];
+    foreach ($cas as $appli => $c) {
+        $reference = json_decode((string)file_get_contents(__DIR__ . '/' . $c['fichier']), true);
+        egal($c['min'], $reference['version'], "$appli : le parcours de référence est en version {$c['min']}");
+        egal($c['min'], CATALOGUE_APPLIS[$appli]['version_min'], "$appli : version_min");
+        vrai(isset($reference['journal']), "$appli : la référence porte un journal");
+        foreach (array_merge($c['avant'], ['texte', null]) as $version) {
+            $ancien = $reference;
+            if ($version === null) unset($ancien['version']);
+            elseif ($version === 'texte') $ancien['version'] = (string)$c['min'];
+            else $ancien['version'] = $version;
+            unset($ancien['journal']);
+            $w = ecrire($code, $ancien, 0, $appli);
+            egal(400, $w['code'], "$appli, version " . var_export($version, true) . ' : refusé');
+            egal('Page ancienne : recharge la page.', $w['json']['erreur'] ?? null, "$appli : le message");
+            egal(false, lire($code, $appli)['json']['existe'], "$appli : rien d'écrit");
+        }
+        $w = ecrire($code, $reference, 0, $appli);
+        egal(200, $w['code'], "$appli, version {$c['min']} : accepté");
+        $ancien = $reference;
+        $ancien['version'] = $c['avant'][0];
+        unset($ancien['journal']);
+        egal(400, ecrire($code, $ancien, 1, $appli)['code'], "$appli : par-dessus, avec la bonne révision : refusé");
+        $r = lire($code, $appli);
+        egal(1, $r['json']['revision'], "$appli : toujours la révision 1");
+        egal($reference['journal'], $r['json']['parcours']['journal'] ?? null, "$appli : le journal revient tel quel, -1 compris");
+        vrai(in_array(-1, array_merge(...array_values($reference['journal'])), true), "$appli : la référence a bien un « pas connu » (-1)");
+    }
+    // Défi tables ne garde pas de temps passé (décision du 07/11/2026).
+    vrai(!array_key_exists('minutes', lire($code, 'defi-tables')['json']['parcours']['journal']), 'Défi tables : pas de minutes au journal');
+    // Correctif S1 (relecture de Codex) : le numéro de chaque séance revient tel quel.
+    vrai(count(array_filter(lire($code, 'defi-tables')['json']['parcours']['journal']['numero'], fn($n) => $n >= 10000)) > 0, 'Défi tables : les numéros des séances sont gardés');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

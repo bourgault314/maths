@@ -34,6 +34,10 @@ export function parcoursComplet() {
     ligne.sansFaute = {desordre: 1, trous: index % 2};
   });
   p.seances = ["2026-09-21", "2026-09-22", "2026-09-22", "2026-09-23"];
+  // Lot S1 « les journaux » : le journal de chaque séance (la première est
+  // d'avant le lot : pas connue, -1).
+  p.journal = {table: [-1, 7, 7, 0], etapes: [-1, 4, 5, 2], calculs: [-1, 10, 0, 10], justes: [-1, 9, 0, 8],
+    test: [-1, 0, 2, 0]};
   // Lot M1 : une séance en cours, avec tout ce qu'elle peut porter (une
   // marche ratée refaite, une étoile tentée, des calculs à retenir).
   p.enCours = {jour: "2026-09-23", table: 7, depart: 5, echelle: false, rang: 1,

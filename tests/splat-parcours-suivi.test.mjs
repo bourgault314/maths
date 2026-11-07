@@ -280,8 +280,9 @@ test("à la fermeture (pagehide, onglet caché) : sendBeacon emporte ce qui atte
   appli.document.visibilityState = "hidden";
   appli.document.declencher("visibilitychange");
   assert.equal(appli.balises.length, 2);
-  // Et la reprise est bien dans la case, pour l'outil.
-  assert.deepEqual(PARCOURS.charger(appli.local, B).etapes.enq14.enCours, {sig: "graine=7", idx: 3, etoiles: 2, res: [true, true, "ko"]});
+  // Et la reprise est bien dans la case, pour l'outil (avec, depuis le lot
+  // S1, la réponse vue déjà portée au journal : « vj »).
+  assert.deepEqual(PARCOURS.charger(appli.local, B).etapes.enq14.enCours, {sig: "graine=7", idx: 3, etoiles: 2, res: [true, true, "ko"], vj: 1});
 });
 
 test("« Se déconnecter » : envoie ce qui restait, oublie le code, revient à la case sans code, renvoie l’espace vers ?oublier=1", async () => {

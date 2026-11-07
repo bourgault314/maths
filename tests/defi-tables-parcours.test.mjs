@@ -269,7 +269,7 @@ test("J’apprends garde la bande pour construire et la propose en aide temporai
   // « PARCOURS.chargerSync is not a function », plus de repère de suivi, plus
   // rien envoyé au professeur, et une page d'accueil d'apparence normale.
   // Changer ce numéro à chaque modification du moteur ; ce test le rappelle.
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/);
 });
 
 test("une erreur = une ligne : le calcul avec sa bonne réponse, la réponse donnée barrée à côté", () => {

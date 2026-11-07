@@ -26,10 +26,15 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 // Copie exacte de git show 7bb9c9e0:outils/calcul_mental/defi_tables_mon_parcours.js.
 // Fixture autonome : les tests fonctionnent aussi avec un checkout Git superficiel.
-import MAIN from "./fixtures/defi-tables/main-7bb9c9e0.cjs";
+import MAIN_7BB9 from "./fixtures/defi-tables/main-7bb9c9e0.cjs";
 import {PARCOURS, html, fauxStockage, fauxServeur, fauxTemps, demarrerAppli, tic} from "./defi-tables-faux-monde.mjs";
 
 const P = PARCOURS;
+// Le moteur de main (7bb9c9e0) ne connaît ni le journal des séances ni le
+// temps de la séance ouverte (lot S1 « les journaux », version 4) : son
+// résultat est relu par le moteur d'aujourd'hui, qui les ajoute vides, avant
+// d'être comparé. Tout le reste est comparé tel quel.
+const MAIN = Object.assign({}, MAIN_7BB9, {fusionner: (a, b) => P.normaliserParcours(MAIN_7BB9.fusionner(a, b))});
 const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
 const J = "2026-10-23";
 const CODE = "AXKQ7T";
@@ -425,7 +430,7 @@ test("la page note les réponses, les rejoue au 409 et à l'ouverture, et charge
   assert.match(html, /PARCOURS\.reponsesParties\(storage\(\), codeSuivi, jusqua, epoque\);/);
   assert.match(moteur, /jour <= connu\.vu/, "un calcul dont les réponses se chevauchent se replie sur main");
   assert.doesNotMatch(moteur, /plusRecente\(R\.gagne, A\.gagne\)/, "la règle « par dates » du premier essai a disparu");
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/, "cache-buster du moteur bumpé");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/, "cache-buster du moteur bumpé");
 });
 
 

@@ -63,7 +63,13 @@
   // (window, document, navigator, fetch, stockages, horloge) en paramètre —
   // c'est ainsi que les tests l'exécutent dans node avec un faux monde.
 
-  const VERSION = 1;
+  // Version 2 (lot S1 « les journaux », 07/11/2026) : le journal des jours
+  // de travail (`jours`, `journal`, `depuis`, voir plus bas). Le serveur
+  // refuse l'écriture d'une page de version 1 (lib/applis.php,
+  // « version_min » 2) : elle ne connaît pas le journal et l'effacerait en
+  // renvoyant le parcours ; elle garde son travail sur l'appareil, et la page
+  // rechargée le renvoie, fusionné.
+  const VERSION = 2;
   const APPLI = "splat";
   const SUIVI_URL = "https://suivi.mathsgo.re";
 
@@ -150,7 +156,8 @@
 
   // Les clés que le serveur devra déclarer pour « splat » (lib/applis.php) :
   // tout ce que pourServeur() écrit, et rien d'autre.
-  const CLES_SERVEUR = Object.freeze(["version", "epoque", "etapes", "fait", "etoiles", "cartes", "vues", "essais", "date", "idx"]);
+  const CLES_SERVEUR = Object.freeze(["version", "epoque", "etapes", "fait", "etoiles", "cartes", "vues", "essais", "date", "idx",
+    "jours", "journal", "series", "reussies", "depuis"]);
 
   function motifPhp() {
     return "/^(?:" + PARCOURS_VALIDES.join("|") + ")$/";
@@ -227,7 +234,7 @@
     const res = Array.isArray(brut.res)
       ? brut.res.slice(0, RESULTATS_MAX).map(r => (r === true || r === false || r === "ko" ? r : null))
       : [];
-    return {
+    const enCours = {
       sig: typeof brut.sig === "string" ? brut.sig.slice(0, 400) : "",
       idx,
       // ÉquaSplat écrivait « resolues » là où les deux autres outils écrivent
@@ -235,10 +242,98 @@
       etoiles: entier(brut.etoiles !== undefined ? brut.etoiles : brut.resolues, 0, COMPTE_MAX, 0),
       res
     };
+    // Lot S1 : les réponses vues de cette série déjà portées au journal
+    // (local, comme le reste de la reprise ; absent : aucune) — chacune n'y
+    // entre qu'une fois.
+    const vj = entier(brut.vj, 0, COMPTE_MAX, 0);
+    if (vj) enCours.vj = vj;
+    return enCours;
   }
 
   function vuesDe(res) {
     return res.filter(r => r === "ko").length;
+  }
+
+  // ------------------------------------------------------------- le journal
+  //
+  // Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses élèves ») :
+  // une entrée par JOUR où l'élève a joué, pour que le professeur sache ce
+  // qu'il a fait chaque jour (la fiche toutes applis, lot S2). Trois listes
+  // d'entiers alignées sur `jours` (les 60 derniers jours joués) :
+  //   series    les séries commencées ce jour-là (comptées comme `essais`) ;
+  //   reussies  les séries finies avec l'étoile ce jour-là ;
+  //   vues      les réponses montrées ce jour-là (3e essai, « Passer »).
+  // -1 : pas connu (une donnée abîmée). Ni heure, ni calcul, ni réponse.
+  // `depuis` : le premier jour où ce parcours a tenu son journal — avant,
+  // on ne sait pas (le lot S2 ne compte pas ces jours-là pour « rien fait »).
+  // Fusion : un jour vu de deux appareils prend le PLUS GRAND de chaque
+  // colonne, jamais la somme (refusionner doublerait) ; un nombre connu bat
+  // « pas connu » (-1 est le plus petit) ; puis les 60 jours les plus
+  // récents. Le plus grand ne dépend ni de l'ordre ni du nombre de fusions :
+  // refusionner avec l'une ou l'autre copie ne change plus rien. Le léger
+  // sous-compte quand deux appareils servent le même jour est accepté.
+  // Le journal n'existe qu'à partir du premier jour joué : un parcours qui
+  // n'a rien fait depuis le lot S1 n'a ni `jours`, ni `journal`, ni `depuis`.
+  const JOURNAL = Object.freeze(["series", "reussies", "vues"]);
+  const JOURNAL_JOURS = 60;
+  const JOURNAL_MAX = 9999;
+
+  function valeurDuJournal(valeur) {
+    return Number.isInteger(valeur) && valeur >= 0 && valeur <= JOURNAL_MAX ? valeur : -1;
+  }
+
+  // Les jours et leurs entrées, lus ensemble. Une colonne plus courte que
+  // les jours (abîmée) s'aligne sur les plus récents : les plus anciens
+  // valent -1 ; un jour qui n'en est pas part avec son entrée.
+  function lignesDuJournal(joursBruts, journalBrut) {
+    const dates = Array.isArray(joursBruts) ? joursBruts : [];
+    const journal = journalBrut && typeof journalBrut === "object" && !Array.isArray(journalBrut) ? journalBrut : {};
+    const colonnes = JOURNAL.map(champ => {
+      const liste = Array.isArray(journal[champ]) ? journal[champ] : [];
+      const decalage = dates.length - liste.length;
+      return index => (index - decalage >= 0 && index - decalage < liste.length ? liste[index - decalage] : -1);
+    });
+    const lignes = [];
+    dates.forEach((brute, index) => {
+      const jour = dateOuNull(brute);
+      if (jour) lignes.push({jour, entree: colonnes.map(lire => valeurDuJournal(lire(index)))});
+    });
+    return lignes;
+  }
+
+  // Une entrée par jour (deux du même jour : le plus grand, colonne par
+  // colonne), dans l'ordre des jours, les 60 plus récents ; `depuis` jamais
+  // après le premier jour gardé. Rien : pas de journal du tout.
+  function poserJournal(p, lignes, depuisBrut) {
+    delete p.jours;
+    delete p.journal;
+    delete p.depuis;
+    const parJour = new Map();
+    lignes.forEach(({jour, entree}) => {
+      const avant = parJour.get(jour);
+      parJour.set(jour, avant ? avant.map((valeur, index) => Math.max(valeur, entree[index])) : entree.slice());
+    });
+    const jours = [...parJour.keys()].sort().slice(-JOURNAL_JOURS);
+    if (!jours.length) return p;
+    p.jours = jours;
+    p.journal = {};
+    JOURNAL.forEach((champ, index) => { p.journal[champ] = jours.map(jour => parJour.get(jour)[index]); });
+    p.depuis = dateLaPlusAncienne(dateOuNull(depuisBrut), jours[0]);
+    return p;
+  }
+
+  // Ce qu'un geste ajoute au journal du jour : [séries, réussies, vues].
+  // Une colonne « pas connue » reste pas connue tant qu'on n'y ajoute rien.
+  // `joue` : l'élève a répondu ce jour-là — le jour est noté même si rien ne
+  // s'ajoute (une série commencée la veille et continuée aujourd'hui :
+  // correctif S1, relecture de Codex).
+  function ajouterAuJournal(p, jour, ajouts, joue = false) {
+    if (!joue && !ajouts.some(n => n > 0)) return p;
+    const lignes = lignesDuJournal(p.jours, p.journal);
+    const ligne = lignes.find(l => l.jour === jour);
+    if (ligne) ligne.entree = ligne.entree.map((valeur, index) => (ajouts[index] > 0 ? Math.min(JOURNAL_MAX, Math.max(0, valeur) + ajouts[index]) : valeur));
+    else lignes.push({jour, entree: ajouts.map(n => Math.min(JOURNAL_MAX, Math.max(0, n)))});
+    return poserJournal(p, lignes, dateLaPlusAncienne(p.depuis || null, jour));
   }
 
   // Une entrée telle qu'un outil l'a écrite — format d'aujourd'hui ({fait,
@@ -284,6 +379,7 @@
       const etape = normaliserEtape(source[id]);
       if (etape) p.etapes[id] = etape;
     });
+    if (enveloppe) poserJournal(p, lignesDuJournal(brut.jours, brut.journal), brut.depuis);
     return p;
   }
 
@@ -345,6 +441,10 @@
     ids.forEach(id => {
       fusion.etapes[id] = fusionnerEtape(a.etapes[id] || null, b.etapes[id] || null);
     });
+    // Le journal (lot S1) : l'union des jours, le plus grand de chaque
+    // colonne le même jour, et le plus ancien `depuis`.
+    poserJournal(fusion, [...lignesDuJournal(a.jours, a.journal), ...lignesDuJournal(b.jours, b.journal)],
+      dateLaPlusAncienne(a.depuis || null, b.depuis || null));
     return normaliser(fusion);
   }
 
@@ -365,6 +465,11 @@
     nouvelle.vues = entier(serie.vues, 0, COMPTE_MAX, 0);
     nouvelle.date = jour;
     const dejaComptee = Boolean(avant.enCours);
+    // Le journal du jour (lot S1) : une série de plus si elle n'a pas déjà
+    // été comptée en commençant, une étoile si elle est faite, et les
+    // réponses vues qui n'y sont pas encore.
+    ajouterAuJournal(p, jour, [dejaComptee ? 0 : 1, nouvelle.fait ? 1 : 0,
+      Math.max(0, nouvelle.vues - (dejaComptee ? avant.enCours.vj || 0 : 0))], true);
     const gagnante = meilleure(avant, nouvelle);
     const etape = etapeVide();
     etape.fait = gagnante.fait;
@@ -392,6 +497,15 @@
     const avant = p.etapes[parcoursId] || etapeVide();
     const enCours = normaliserEnCours({sig: etat.sig, idx, etoiles: etat.etoiles, res: etat.res});
     const memeSerie = Boolean(avant.enCours) && (etat.sig === undefined || avant.enCours.sig === enCours.sig);
+    // Le journal du jour (lot S1) : une série de plus quand elle commence,
+    // et les réponses vues depuis la dernière note (chacune une fois : `vj`).
+    const vuesDejaNotees = memeSerie ? avant.enCours.vj || 0 : 0;
+    const vuesMaintenant = entier(etat.vues, 0, COMPTE_MAX, vuesDe(enCours.res));
+    if (Math.max(vuesDejaNotees, vuesMaintenant)) enCours.vj = Math.max(vuesDejaNotees, vuesMaintenant);
+    // Une réponse de plus (la carte atteinte ou les pastilles ont bougé) : le
+    // jour est un jour joué, même pour une série commencée la veille.
+    const avance = !memeSerie || avant.enCours.idx !== idx || JSON.stringify(avant.enCours.res) !== JSON.stringify(enCours.res);
+    ajouterAuJournal(p, jour, [memeSerie ? 0 : 1, 0, Math.max(0, vuesMaintenant - vuesDejaNotees)], avance);
     const etape = cloner(avant);
     etape.essais = Math.min(ESSAIS_MAX, avant.essais + (memeSerie ? 0 : 1));
     if (!etape.fait) {
@@ -438,6 +552,11 @@
       if (!etape.fait && etape.idx) e.idx = etape.idx;
       sortie.etapes[id] = e;
     });
+    if (p.jours) {
+      sortie.jours = p.jours.slice();
+      sortie.journal = cloner(p.journal);
+      sortie.depuis = p.depuis;
+    }
     return sortie;
   }
 
@@ -502,6 +621,87 @@
       mondes: resumeMondes,
       etapes: etats
     };
+  }
+
+  // --------------------------------------- pour « Suivre ses élèves » (S2)
+  //
+  // Lot S1 « les journaux » (07/11/2026) : la même fonction, avec la même
+  // forme de réponse, dans les cinq moteurs suivis (Défi tables, Coffres
+  // magiques, Anzan, Défi calcul, SPLAT!). La page du professeur l'appellera
+  // au lot S2 ; rien ne l'affiche encore. Des nombres, des dates et des codes,
+  // jamais une phrase : c'est la page qui écrit.
+  //   resumeSuivi(parcours, {aujourdhui}) → {
+  //     appli, aujourdhui,
+  //     debut        le lundi d'il y a trois semaines (les 4 dernières semaines) ;
+  //     connuDepuis  null : rien n'est coupé ; une date : les jours d'avant ne
+  //                  sont pas connus (journal commencé ce jour-là, ou borne) ;
+  //     dernier      le dernier jour de travail connu (null : aucun) ;
+  //     jours        [{jour, lignes: [{…nombres}]}] — les jours de travail de
+  //                  debut à aujourdhui, du plus ancien au plus récent (un
+  //                  jour futur, horloge fausse, n'y est pas) ; null dans une
+  //                  ligne : pas connu ;
+  //     aider        [{type, …}] ce qui est « à aider » maintenant ;
+  //     feliciter    [{type, …}] ce qui est « à féliciter » cette semaine }
+  // L'absence (rien depuis 7 jours, toutes applis confondues) se calcule
+  // dans la page : une appli seule ne le sait pas.
+  // SPLAT! : un jour de travail = un jour du journal (une série y a été
+  // jouée) ; une ligne par jour {series, reussies, vues} ; à aider : des
+  // réponses vues cette semaine ({type: "reponses-vues", vues}) ; à
+  // féliciter : un monde fini cette semaine ({type: "monde", monde}).
+  function jourPlus(jour, nombre) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() + nombre);
+    return jourLocal(d);
+  }
+
+  function lundiDu(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+    return jourLocal(d);
+  }
+
+  function aujourdhuiDes(options) {
+    const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
+    return dateOuNull(o.aujourdhui) || jourLocal();
+  }
+
+  function resumeSuivi(parcours, options) {
+    const aujourdhui = aujourdhuiDes(options);
+    const p = normaliser(parcours);
+    const debut = jourPlus(lundiDu(aujourdhui), -21);
+    const lundi = lundiDu(aujourdhui);
+    const lignes = lignesDuJournal(p.jours, p.journal).filter(l => l.jour <= aujourdhui);
+    const nombre = valeur => (valeur >= 0 ? valeur : null);
+    const jours = lignes.filter(l => l.jour >= debut).map(l => ({
+      jour: l.jour,
+      lignes: [{series: nombre(l.entree[0]), reussies: nombre(l.entree[1]), vues: nombre(l.entree[2])}]
+    }));
+    // Le dernier jour : le journal, ou à défaut les dates des étapes (le jour
+    // de la première étoile, ou du dernier passage) — un élève qui n'a rien
+    // joué depuis le lot S1 a quand même un dernier jour.
+    let dernier = lignes.length ? lignes[lignes.length - 1].jour : null;
+    Object.keys(p.etapes).forEach(id => {
+      const date = p.etapes[id].date;
+      if (date && date <= aujourdhui && (!dernier || date > dernier)) dernier = date;
+    });
+    // Connu depuis : le premier jour du journal (et, la borne des 60 jours
+    // atteinte, le plus ancien jour gardé) ; un parcours qui a joué sans
+    // journal (avant le lot S1) : rien de connu jusqu'à aujourd'hui compris.
+    let connuDepuis = null;
+    if (p.depuis) connuDepuis = p.jours.length >= JOURNAL_JOURS && p.jours[0] > p.depuis ? p.jours[0] : p.depuis;
+    else if (!estVide(p)) connuDepuis = jourPlus(aujourdhui, 1);
+    const vues = lignes.filter(l => l.jour >= lundi).reduce((somme, l) => somme + Math.max(0, l.entree[2]), 0);
+    const aider = vues ? [{type: "reponses-vues", vues}] : [];
+    const feliciter = [];
+    CARTE.MONDES.forEach(([numero]) => {
+      const etapes = CARTE.ETAPES.filter(e => e[4] === numero).map(e => p.etapes[e[0]]);
+      if (!etapes.length || !etapes.every(e => e && e.fait)) return;
+      const fin = etapes.reduce((plusTard, e) => (e.date && e.date > plusTard ? e.date : plusTard), "");
+      if (fin >= lundi && fin <= aujourdhui) feliciter.push({type: "monde", monde: numero});
+    });
+    return {appli: APPLI, aujourdhui, debut, connuDepuis, dernier, jours, aider, feliciter};
   }
 
   // ------------------------------------------------------------- empreintes
@@ -1607,6 +1807,8 @@
     etatEtape,
     pourServeur,
     resumeProf,
+    JOURNAL,
+    resumeSuivi,
     sha256Hex,
     selAppareil,
     empreinteCode,

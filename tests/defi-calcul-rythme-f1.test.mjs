@@ -37,7 +37,7 @@ test("page élève : chaque lecture de la séance passe le réglage au moteur", 
   assert.match(page, /etape\.rang \? `Une \$\{etape\.rang\}e chose nouvelle` : "Une chose nouvelle"/);
   assert.match(page, /const DETAIL_NOUVEAU_RANG = "si l’entraînement est réussi";/);
   // Lot G1 : 20261107-2 ; son correctif (relecture de Codex) : 20261107-3.
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-3/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-4/, "le moteur change d'adresse");
 });
 
 test("page prof : « Nouveautés par séance » dans Régler Défi calcul, envoyé comme réglage de classe", async () => {
@@ -60,11 +60,15 @@ test("serveur : une page d'avant F1 (version 3) ne réécrit pas la progression 
   const api = await lire("../_serveur/public/api/parcours.php");
   const moteur = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
   // Lot G1 « journal + accueil » : 5, et le serveur suit (une page de
-  // version 4 effacerait le journal et les dates des compétences).
-  assert.match(moteur, /const VERSION = 5;/);
+  // version 4 effacerait le journal et les dates des compétences). Puis le
+  // correctif du lot S1 : 6 (une page de version 5 effacerait le numéro des
+  // séances).
+  assert.match(moteur, /const VERSION = 6;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 5,/);
-  assert.equal((applis.match(/'version_min' =>/g) || []).length, 1, "Défi calcul seul");
+  assert.match(bloc, /'version_min' => 6,/);
+  // Lot S1 « les journaux » : Défi tables, Coffres magiques et SPLAT! aussi
+  // (tests/suivi-journaux-s1.test.mjs).
+  assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   // Avant l'écriture, pas avant la lecture.
   assert.ok(api.indexOf("$versionMin") > api.indexOf("if (!empty($corps['lire']))"));

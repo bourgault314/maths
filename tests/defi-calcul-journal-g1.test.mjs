@@ -23,8 +23,10 @@ const plus = (jour, n) => P.ajouterJours(jour, n);
 
 const reussie = () => [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
 const ratee = () => Array.from({length: 25}, (_, i) => ({juste: i % 3 !== 0, outil: "aucun"}));
-const vide = () => ({calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: []});
-const entree = (p, i) => P.JOURNAL.map(champ => p.journal[champ][i]);
+const vide = () => ({calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: []});
+// Les six nombres du lot G1 (sans le numéro de la séance, ajouté au correctif du lot S1).
+const SIX = ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes"];
+const entree = (p, i) => SIX.map(champ => p.journal[champ][i]);
 
 // Une séance jouée jusqu'au bout, comme la page : chaque étape reçoit d'abord
 // son temps actif (noterTemps), puis le moteur. `juste(module, niveau)` : la
@@ -56,12 +58,12 @@ function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () =
   return p;
 }
 
-test("version 5 : le journal est vide au départ, ce que la séance a fait aussi", () => {
-  assert.equal(P.VERSION, 5);
+test("version 5 (6 depuis le correctif du lot S1) : le journal est vide au départ, ce que la séance a fait aussi", () => {
+  assert.equal(P.VERSION, 6);
   const neuf = P.creerParcours();
   assert.deepEqual(neuf.journal, vide());
   assert.deepEqual(neuf.seance.j, [0, 0, 0, 0, 0, 0]);
-  assert.deepEqual(P.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes"]);
+  assert.deepEqual(P.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero"]);
 });
 
 test("le journal d'une séance : calculs du jour, justes, nouveautés, compétences prouvées, rouges, minutes", () => {
@@ -181,7 +183,7 @@ test("une progression de version 4 se relit sans rien perdre : journal « pas co
     seances: ["2026-11-03", "2026-11-04", "2026-11-05"], jours: ["2026-11-05"]
   };
   const p = P.normaliserParcours(v4);
-  assert.equal(p.version, 5);
+  assert.equal(p.version, 6);
   assert.deepEqual(p.seances, v4.seances);
   assert.deepEqual(p.journal.calculs, [-1, -1, -1]);
   assert.deepEqual(p.modules.A2.d, [null, null, null, null, null]);
@@ -262,26 +264,21 @@ function deuxSens(a, b, {divergentes = false} = {}) {
   return ab;
 }
 
-test("fusion : deux appareils hors ligne le même jour — le plus grand compte, entrée par entrée la plus complète, les dates les plus anciennes", () => {
+test("fusion : deux appareils hors ligne le même jour — chaque séance une fois (son numéro), entière, les dates les plus anciennes", () => {
   const base = jouerSeance(P.creerParcours(), "2026-11-09", {marche: () => 1});
   // Téléphone et tablette repartent de la même copie, hors ligne, mardi.
   const telephone = jouerSeance(base, "2026-11-10", {secondes: 300});
   const tablette = jouerSeance(jouerSeance(base, "2026-11-10", {secondes: 60}), "2026-11-10", {secondes: 60});
   const f = deuxSens(telephone, tablette);
-  assert.deepEqual(f.seances, ["2026-11-09", "2026-11-10", "2026-11-10"], "mardi : 2 séances (le plus grand des deux comptes)");
-  // Le journal, entrée par entrée (correctif G1) : la 1re séance de mardi
-  // est connue des deux côtés — la plus grande (le téléphone : 5 minutes par
-  // étape) ; la 2e n'existe que sur la tablette.
-  assert.deepEqual(entree(f, 1), entree(telephone, 1), "à la même place, l'entrée au plus grand total");
-  assert.ok(telephone.journal.minutes[1] > tablette.journal.minutes[1]);
-  assert.deepEqual(entree(f, 2), entree(tablette, 2), "la séance de plus, du côté qui l'a");
+  // Correctif du lot S1 (relecture de Codex) : chaque séance a son numéro —
+  // les trois séances jouées mardi sont là, chacune une fois, entière ; la
+  // séance de lundi, connue des deux côtés, ne double pas.
+  assert.deepEqual(f.seances, ["2026-11-09", "2026-11-10", "2026-11-10", "2026-11-10"], "mardi : les 3 séances jouées");
   assert.deepEqual(entree(f, 0), entree(base, 0));
-  // Autant de séances des deux côtés : celle qui en sait le plus, puis les
-  // plus grands comptes — la même dans les deux sens.
-  const unAutre = jouerSeance(base, "2026-11-10", {secondes: 600});
-  const g = deuxSens(telephone, unAutre);
-  assert.deepEqual(g.seances, ["2026-11-09", "2026-11-10"]);
-  assert.equal(g.journal.minutes[1], Math.max(telephone.journal.minutes[1], unAutre.journal.minutes[1]));
+  const mardi = [1, 2, 3].map(i => JSON.stringify(entree(f, i))).sort();
+  assert.deepEqual(mardi, [entree(telephone, 1), entree(tablette, 1), entree(tablette, 2)].map(e => JSON.stringify(e)).sort());
+  // Le téléphone a reçu la fusion et la renvoie : rien ne double.
+  assert.deepEqual(P.fusionner(P.fusionner(f, telephone), tablette), f);
   // Les dates d'une compétence entrée des deux côtés : la plus ancienne.
   const x = P.normaliserParcours({modules: {A5: {vu: "2026-11-10", b: [2, 0, 0, 0], e: ["2026-11-11", null, null, null], d: ["2026-11-10", null, null, null]}}});
   const y = P.normaliserParcours({modules: {A5: {vu: "2026-11-09", b: [4, 0, 0, 0], e: ["2026-11-16", null, null, null], d: ["2026-11-06", null, null, null], s: ["2026-11-09", null, null, null]}}});
@@ -309,14 +306,17 @@ test("fusion : une vieille copie revient 15 jours plus tard — rien ne se perd,
 });
 
 test("fusion : la borne de 60 atteinte, le même jour et des jours différents", () => {
+  // b : une copie plus ancienne (après 58 séances), qui avait encore les 2
+  // séances du 1er jour, coupées depuis dans a.
   let a = P.creerParcours();
-  for (let i = 0; i < 64; i += 1) a = jouerSeance(a, plus("2026-09-01", Math.floor(i / 2)), {secondes: 60});
-  // b : une copie plus ancienne qui avait encore les 2 séances du 1er jour coupé.
-  let b = P.creerParcours();
-  for (let i = 0; i < 58; i += 1) b = jouerSeance(b, plus("2026-09-01", Math.floor(i / 2)), {secondes: 60});
+  let b = null;
+  for (let i = 0; i < 64; i += 1) {
+    a = jouerSeance(a, plus("2026-09-01", Math.floor(i / 2)), {secondes: 60});
+    if (i === 57) b = JSON.parse(JSON.stringify(a));
+  }
   const f = deuxSens(a, b);
   assert.equal(f.seances.length, 60);
-  assert.deepEqual(f.seances, P.normaliserParcours(a).seances);
+  assert.deepEqual(f, P.normaliserParcours(a), "la copie récente, telle quelle");
   // Deux appareils qui ont chacun 60 séances, décalées : les 60 plus récentes de l'union.
   let c = P.creerParcours();
   for (let i = 0; i < 60; i += 1) c = jouerSeance(c, plus("2026-09-05", i), {secondes: 120});
@@ -437,15 +437,16 @@ test("taille : un élève qui a tout rempli tient sous les bornes du serveur", a
   assert.ok(complet.modules.A2.d.every(Boolean));
 });
 
-test("serveur : version_min 5, les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
+test("serveur : version_min 5 (6 depuis le correctif du lot S1), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 5,/);
+  assert.match(bloc, /'version_min' => 6,/);
   ["d", "s", "j", "journal", ...P.JOURNAL].forEach(cle => assert.match(bloc, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const infos = await lire("../_serveur/public/infos.php");
-  assert.match(infos, /<p>Ta progression, ce sont aussi les jours où tu t’entraînes et le nombre de calculs que tu réussis\.<\/p>/);
+  // Lot S1 « les journaux » : la phrase vaut désormais pour toutes les applis.
+  assert.match(infos, /<p>Dans chaque activité, ta progression, ce sont aussi les jours où tu travailles et le nombre de tes réussites\.<\/p>/);
   const confidentialite = await lire("../confidentialite.html");
-  assert.match(confidentialite, /dont les jours d’entraînement et le nombre de calculs réussis/);
+  assert.match(confidentialite, /dont, dans chacun, les jours de travail et le nombre de réussites/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
 });
@@ -454,7 +455,8 @@ test("serveur : version_min 5, les clés du journal déclarées ; infos.php le d
 
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-3/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-4/);
+  assert.match(page, /defi_calcul\.css\?v=20261107-1/, "la feuille ne change pas");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
   // « N fois cette semaine ».
@@ -482,12 +484,16 @@ function avecJournal(paires, extra = {}) {
   return P.normaliserParcours(Object.assign({version: 5, seances: paires.map(([jour]) => jour), journal}, extra));
 }
 
+// Correctif du lot S1 (relecture de Codex) : chaque séance écrite par la page
+// a son numéro, rang dans la journée × 10 000 + un tirage.
+const numerotee = (e, numero) => [...e, numero];
+
 test("Codex 1 : à la borne des 60, une vieille copie ne remplace pas une entrée récente, et rien n'oscille", () => {
   // La vieille copie : deux séances le 1er septembre (4 et 8 calculs).
-  const vieille = avecJournal([["2026-09-01", ligneJ(4)], ["2026-09-01", ligneJ(8)]]);
+  const vieille = avecJournal([["2026-09-01", numerotee(ligneJ(4), 11111)], ["2026-09-01", numerotee(ligneJ(8), 22222)]]);
   // L'élève en finit une 3e le 1er septembre (12 calculs), puis 59 séances
   // les jours suivants : la copie récente ne garde que la 3e du 1er.
-  const recente = avecJournal([["2026-09-01", ligneJ(12)], ...Array.from({length: 59}, (_, i) => [plus("2026-09-02", i), ligneJ(20)])]);
+  const recente = avecJournal([["2026-09-01", numerotee(ligneJ(12), 33333)], ...Array.from({length: 59}, (_, i) => [plus("2026-09-02", i), numerotee(ligneJ(20), 10000 + i)])]);
   assert.equal(recente.seances.length, 60);
   const f = deuxSens(vieille, recente);
   assert.equal(f.seances[0], "2026-09-01");
@@ -500,9 +506,9 @@ test("Codex 1 : à la borne des 60, une vieille copie ne remplace pas une entré
     assert.equal(x.journal.calculs[0], 12, `tour ${tour + 1}`);
   }
   assert.deepEqual(x, f);
-  // Même quand la vieille entrée est la plus grosse (30 calculs) : le côté
-  // coupé fait foi à la place qu'il couvre.
-  const grosse = avecJournal([["2026-09-01", ligneJ(4)], ["2026-09-01", ligneJ(30)]]);
+  // Même quand la vieille entrée est la plus grosse (30 calculs) : la borne
+  // garde les séances les plus récentes, pas les plus grosses.
+  const grosse = avecJournal([["2026-09-01", numerotee(ligneJ(4), 11111)], ["2026-09-01", numerotee(ligneJ(30), 22222)]]);
   assert.equal(deuxSens(grosse, recente).journal.calculs[0], 12);
 });
 
@@ -513,28 +519,30 @@ test("Codex 2 : une copie v4 plus fournie ce jour-là n'efface pas ce que le jou
   const v4 = P.normaliserParcours({version: 4, seances: ["2026-11-07", "2026-11-07"]});
   const f = deuxSens(v5, v4);
   assert.deepEqual(f.seances, ["2026-11-07", "2026-11-07"], "la longueur du jour reste la plus grande");
-  assert.deepEqual(f.journal.calculs, [12, -1]);
-  assert.deepEqual(entree(f, 0), [12, 10, 0, 0, 0, 4], "l'entrée entière, sans mélanger les colonnes");
-  assert.deepEqual(entree(f, 1), [-1, -1, -1, -1, -1, -1]);
+  assert.deepEqual(f.journal.calculs, [-1, 12], "la séance de plus, pas connue, se range avant la connue");
+  assert.deepEqual(entree(f, 1), [12, 10, 0, 0, 0, 4], "l'entrée entière, sans mélanger les colonnes");
+  assert.deepEqual(entree(f, 0), [-1, -1, -1, -1, -1, -1]);
 });
 
-test("fusion entrée par entrée : à chaque place, la connue bat la « pas connue » ; entre deux connues, le plus grand total", () => {
+test("fusion séance par séance : une séance sans numéro (pas connue) peut être une séance connue de l'autre côté ; deux copies d'une même séance, la plus complète, puis le plus grand total", () => {
   // Le même jour : [connue, pas connue, connue] contre [pas connue, connue].
   const inconnue = [-1, -1, -1, -1, -1, -1];
   const a = avecJournal([["2026-11-07", ligneJ(6)], ["2026-11-07", inconnue], ["2026-11-07", ligneJ(9)]]);
   const b = avecJournal([["2026-11-07", inconnue], ["2026-11-07", ligneJ(7)]]);
   const f = deuxSens(a, b);
   assert.deepEqual(f.journal.calculs, [6, 7, 9]);
-  // Deux connues différentes à la même place : le plus grand total, puis le
-  // texte — le même dans les deux sens.
-  const c = avecJournal([["2026-11-07", [5, 5, 0, 0, 0, 9]]]);
-  const d = avecJournal([["2026-11-07", [8, 2, 0, 0, 0, 1]]]);
+  // Deux copies d'une même séance (le même numéro) : le plus grand total,
+  // puis le texte — le même dans les deux sens.
+  const c = avecJournal([["2026-11-07", numerotee([5, 5, 0, 0, 0, 9], 12345)]]);
+  const d = avecJournal([["2026-11-07", numerotee([8, 2, 0, 0, 0, 1], 12345)]]);
   assert.deepEqual(entree(deuxSens(c, d), 0), [5, 5, 0, 0, 0, 9], "19 contre 11 : l'entrée entière du plus grand total");
-  // La journée coupée par la borne des DEUX côtés : alignée depuis la fin.
+  const partielle = avecJournal([["2026-11-07", numerotee([40, -1, -1, -1, -1, -1], 12345)]]);
+  assert.deepEqual(entree(deuxSens(partielle, c), 0), [5, 5, 0, 0, 0, 9], "celle qui en sait le plus, même avec un plus petit total");
+  // La journée coupée par la borne des deux côtés : les séances retrouvées par leur numéro.
   const suite = Array.from({length: 58}, (_, i) => [plus("2026-09-02", i), ligneJ(20)]);
-  const e = avecJournal([["2026-09-01", ligneJ(3)], ["2026-09-01", inconnue], ...suite]);
-  const g = avecJournal([["2026-09-01", ligneJ(1)], ["2026-09-01", ligneJ(4)], ...suite]);
-  assert.deepEqual(deuxSens(e, g).journal.calculs.slice(0, 2), [3, 4]);
+  const e = avecJournal([["2026-09-01", numerotee(ligneJ(3), 20001)], ["2026-09-01", inconnue], ...suite]);
+  const g = avecJournal([["2026-09-01", numerotee(ligneJ(1), 10001)], ["2026-09-01", numerotee(ligneJ(4), 20001)], ...suite]);
+  assert.deepEqual(deuxSens(e, g).journal.calculs.slice(0, 2), [1, 4]);
 });
 
 test("fusion : stable — refusionner avec l'une ou l'autre copie ne change plus rien (copies d'une même histoire, v4 comprises, borne comprise)", () => {

@@ -372,7 +372,8 @@ for (const [nom, cle] of OUTILS) {
     t.regler({idx: 1, res: [true, "ko"], vues: 1});
     t.eleveSauverEnCours();
     let e = o.caseDe().etapes.m2e1;
-    assert.deepEqual(e.enCours, {sig: "SIG", idx: 2, etoiles: 0, res: [true, "ko"]}, "la reprise, locale");
+    // (Lot S1 « les journaux » : « vj », la réponse vue déjà portée au journal du jour.)
+    assert.deepEqual(e.enCours, {sig: "SIG", idx: 2, etoiles: 0, res: [true, "ko"], vj: 1}, "la reprise, locale");
     assert.equal(e.vues, 1, "le compte, dans l'étape");
     t.regler({idx: 3, res: [true, "ko", true, true], etoiles: 3});
     t.eleveSauverEnCours(); // fin de série avec une rouge : retour sur « Encore 1 carte ! »
@@ -385,6 +386,8 @@ for (const [nom, cle] of OUTILS) {
     assert.deepEqual([e.fait, e.etoiles, e.vues, e.essais, e.enCours], [true, 3, 1, 1, undefined]);
     assert.deepEqual(Object.keys(PARCOURS.pourServeur(o.caseDe()).etapes.m2e1), ["fait", "etoiles", "cartes", "vues", "essais", "date"],
       "ce qui part au serveur : les comptes, jamais la reprise");
+    // Le journal du jour : une série, une étoile, UNE réponse vue (pas une par note).
+    assert.deepEqual(PARCOURS.pourServeur(o.caseDe()).journal, {series: [1], reussies: [1], vues: [1]});
   });
 
   test(`${nom} : la meilleure série gagne — une série bâclée ne remplace pas une étoile sans aide`, () => {
