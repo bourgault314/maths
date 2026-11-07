@@ -452,14 +452,14 @@ test("serveur : version_min 5, les clés du journal déclarées ; infos.php le d
 
 // ------------------------------------------------------------- la page élève
 
-test("la page élève : le temps actif donné au moteur ; l'accueil ne change pas (il sera refait à part)", async () => {
+test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-3/);
-  assert.match(page, /defi_calcul\.css\?v=20261106-3/, "la feuille ne change pas");
-  // L'accueil : « N fois cette semaine », comme avant le lot.
-  assert.match(page, /<div id="acc-semaine" class="semaine" hidden><\/div>/);
-  assert.match(page, /return fois \? `\$\{fois\} fois cette semaine` : "";/);
-  assert.ok(!/parcours-gains|cette semaine";\s*\n\s*petit\.className = "monte"/.test(page), "ni gains ni « ↑ cette semaine » (l'accueil sera refait à part)");
+  // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
+  // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
+  // « N fois cette semaine ».
+  assert.match(page, /PARCOURS\.semaineEleve\(parcours, CARTE, jourCourant\(\)\)/);
+  assert.ok(!page.includes('id="acc-semaine"'));
   // Le temps : avant chaque fin d'étape, et quand on arrête au milieu.
   const finish = page.slice(page.indexOf("function finish()"), page.indexOf("function poserVerdict("));
   assert.ok(finish.indexOf("verserTempsActif();") > 0 && finish.indexOf("verserTempsActif();") < finish.indexOf("PARCOURS.terminerCalculsDuJour"), "fin d'étape : le temps d'abord");
