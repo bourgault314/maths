@@ -330,3 +330,27 @@ test("habillage : réglages façon FastMath, le titre au-dessus de chaque régla
   assert.doesNotMatch(PAGE, /lab-son/);
   assert.match(PAGE, /<button type="button" class="bascule" id="bascule-son" role="switch" aria-checked="true"/);
 });
+
+// Lot « menu immobile » (07/11/2026) : au téléphone, le menu raccourcissait
+// en passant de Flash à Colonne (« C'est parti » remontait de 25 à 70 px).
+test("menu immobile : les blocs cachés de Flash/Colonne gardent leur place", () => {
+  // Les deux « Temps » dans la même case, le caché garde sa place.
+  const temps = PAGE.match(/<div class="bloc-temps">([\s\S]*?)<\/div>\s*<div class="bloc large">/);
+  assert.ok(temps, "une case .bloc-temps, suivie du bloc Calculs");
+  assert.match(temps[1], /<div class="bloc" data-pour="flash">[\s\S]*val-temps/);
+  assert.match(temps[1], /<div class="bloc" data-pour="colonne">[\s\S]*val-limite/);
+  assert.match(PAGE, /\.bloc-temps > \.bloc \{ grid-area: 1 \/ 1; \}/);
+  assert.match(PAGE, /\.bloc-temps > \.bloc\[hidden\] \{ display: flex !important; visibility: hidden; \}/);
+  // Les champs d'une rangée alignés par le bas.
+  assert.match(PAGE, /\.bloc \{ display: flex; flex-direction: column; justify-content: flex-end;/);
+  // Le bip garde sa place au téléphone et à la tablette (pas sur ordinateur,
+  // où le résumé prend sa place), et le résumé garde deux lignes.
+  assert.match(PAGE, /<div class="bloc large garde-place-tel" data-pour="flash">\s*(<!--[\s\S]*?-->\s*)?<button type="button" class="bascule" id="bascule-son"/);
+  const tel = [...PAGE.matchAll(/@media \(max-width: 899px\) \{([\s\S]*?)\n    \}/g)].map(m => m[1]).join("\n");
+  assert.match(tel, /\.garde-place-tel\[hidden\] \{ display: flex !important; visibility: hidden; \}/);
+  assert.match(tel, /\.resume \{ line-height: 1\.3; min-height: max\(56px, calc\(2\.6em \+ 16px\)\); \}/);
+  assert.doesNotMatch(PAGE.replace(/@media \(max-width: 899px\) \{[\s\S]*?\n    \}/g, ""), /\.garde-place-tel\[hidden\]/, "seulement sous 900 px");
+  // Les onglets : au repos 8 + 9 + 13 = choisi 15 + 15.
+  assert.match(PAGE, /\.onglet \{ position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 13px;/);
+  assert.match(PAGE, /\.onglet\[aria-pressed="true"\] \{ z-index: 1; margin-top: 0; padding-top: 15px; padding-bottom: 15px;/);
+});
