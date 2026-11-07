@@ -602,6 +602,12 @@
     .gr-carte.es .es-jp, .bg-carte.es .es-jp { translate: 0 -4px; }
     /* En Colonne, pas de groupes : la liste garde sa distance au compte. */
     #grades-groupes[hidden] + .gr-liste { margin-top: 12px; }
+    /* 13 lignes au lieu de 10 : sur un ordinateur à écran court, la page ne
+       se réduit pas sous × 0,75 ; des lignes un peu moins hautes font tenir
+       le cadre entier (1280 × 720, 1536 × 730). */
+    @media (min-width: 1024px) and (max-height: 820px) {
+      #grades-groupes[hidden] + .gr-liste .gr-ligne { min-height: 56px; }
+    }
     .bg-carte.es { position: relative; overflow: visible; }
     .bg-carte.es .es-jp { font-size: .9rem; }
     .bg-carte.es .gr-sceau { right: -8px; bottom: -7px; width: 17px; height: 17px; font-size: .58rem; }
