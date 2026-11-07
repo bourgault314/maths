@@ -222,7 +222,7 @@
     .bascule[aria-checked="true"] .inter { background: var(--blue); }
     .bascule[aria-checked="true"] .inter::after { left: 25px; }
     @media (prefers-reduced-motion: reduce) { .bascule .inter, .bascule .inter::after { transition: none; } }
-    /* « ⚡ 5 calculs · 10 nombres · 30 s par calcul » */
+    /* « ⚡ 10 calculs · 10 nombres en 8 s » ; « 📝 10 calculs · 8 nombres · 30 s par calcul » */
     .resume { grid-column: span 2; align-self: end; display: grid; place-items: center; min-height: 56px; margin: 0;
       padding: 8px 14px; border-radius: 14px; background: none; color: var(--muted); font-weight: 700; font-size: .92rem; text-align: center; }
     .resume strong { color: var(--ink); }
@@ -1202,14 +1202,21 @@
       // -----------------------------------------------------------------
       function texteLimite(s) { return s ? `${s} s` : "sans"; }
       // La ligne de résumé sous les réglages (planche du 30/10/2026, elle
-      // remplace « soit 30 s en tout ») : « ⚡ 5 calculs · 10 nombres · 30 s
-      // par calcul ». Des nombres seulement : rien du compte n'y devient du HTML.
+      // remplace « soit 30 s en tout »). Flash : « ⚡ 10 calculs · 10 nombres
+      // en 8 s » — le temps d'un calcul en entier, dit comme les grades (lot
+      // « temps en tout », 07/11/2026, choix A de Gwenaël) : « en 8 s » collé
+      // aux nombres, il ne se lit pas « 8 s pour les 10 calculs ». Le réglage
+      // reste « Temps par nombre ». Colonne : « 📝 10 calculs · 8 nombres ·
+      // 30 s par calcul ». Des nombres seulement : rien du compte n'y devient
+      // du HTML.
       function texteResumeReglages(mode, r) {
-        const calculs = `<strong>${Number(r.calculs)} calculs</strong>`;
-        const nombres = `${Number(r.nombres)} nombres`;
+        const calculs = `<strong>${Number(r.calculs)}&nbsp;calculs</strong>`;
+        const nombres = `${Number(r.nombres)}&nbsp;nombres`;
         if (mode === "flash") {
+          // « 8 s » arrive d'un bloc (espace insécable de CORE.secondes) :
+          // « 10 nombres en 8 s » ne se coupe jamais en deux.
           const total = CORE.secondes(r.nombres * CORE.tempsEnSecondes(r.temps));
-          return `<span>⚡&nbsp;${calculs} · ${nombres} · <strong>${total}</strong> par calcul</span>`;
+          return `<span>⚡&nbsp;${calculs}&nbsp;· ${nombres}&nbsp;en&nbsp;<strong>${total}</strong></span>`;
         }
         const temps = r.limite ? `<strong>${Number(r.limite)}&nbsp;s</strong> par calcul` : "sans limite de temps";
         return `<span>📝&nbsp;${calculs} · ${nombres} · ${temps}</span>`;

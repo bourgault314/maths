@@ -1183,9 +1183,16 @@ test("son (choix du 30/10) : l'interrupteur « 🔔 Un bip à chaque nombre » n
   assert.equal(JSON.parse(q.stockage.get("mathsgo-flash-anzan-v1")).flash.son, "bip");
 });
 
-test("réglages : la ligne de résumé « ⚡ 5 calculs · 4 nombres · 2 s par calcul » (remplace « soit … en tout »)", () => {
+test("réglages : la ligne de résumé « ⚡ 5 calculs · 4 nombres en 2 s » (le temps en tout, dit comme les grades)", () => {
   const p = ouvrir(memoireFlash);
-  assert.equal(p.$("resume-reglages").textContent.replace(/\s+/g, " "), "⚡ 5 calculs · 4 nombres · 2 s par calcul");
+  assert.equal(p.$("resume-reglages").textContent.replace(/\s+/g, " "), "⚡ 5 calculs · 4 nombres en 2 s");
+  // « 4 nombres en 2 s » ne se coupe pas, et une ligne ne commence pas par « · ».
+  assert.match(p.$("resume-reglages").innerHTML, /4&nbsp;nombres&nbsp;en&nbsp;<strong>2\u00a0s<\/strong>/);
+  assert.match(p.$("resume-reglages").innerHTML, /calculs<\/strong>&nbsp;· /);
+  assert.doesNotMatch(p.$("resume-reglages").textContent, /par calcul/, "au Flash, plus de « par calcul »");
+  // Le temps en tout suit le nombre de nombres, le temps par nombre ne bouge pas.
+  p.$("ecran-reglages").querySelector('[data-pas="nombres"][data-sens="1"]').click();
+  assert.equal(p.$("resume-reglages").textContent.replace(/\s+/g, " "), "⚡ 5 calculs · 5 nombres en 2,5 s");
   p.$("ecran-reglages").querySelector("[data-mode=colonne]").click();
   assert.match(p.$("resume-reglages").textContent.replace(/\s+/g, " "), /^📝 10 calculs · 8 nombres · sans limite de temps$/);
   assert.equal(p.$("grille").classList.contains("sans-son"), true, "en Colonne, pas de Son : le résumé prend la ligne");
