@@ -248,3 +248,16 @@ test("le parcours : le grade réussi reste quand ses séances sortent des 500 ga
   assert.equal(JSON.stringify(PARCOURS.normaliser(flash)), JSON.stringify(flash));
   assert.ok(!JSON.stringify(flash).includes("grade"));
 });
+
+// Lot « grades-estampe » (07/11/2026) : le vrai nom japonais de chaque grade,
+// écrit en petit à côté du nom français dans la liste et sur la fiche.
+test("grades-estampe : les noms japonais — 二十級 … 一級, 初段, 二段 … 二十段", () => {
+  const attendus = ["二十級", "十九級", "十八級", "十七級", "十六級", "十五級", "十四級", "十三級", "十二級", "十一級",
+    "十級", "九級", "八級", "七級", "六級", "五級", "四級", "三級", "二級", "一級",
+    "初段", "二段", "三段", "四段", "五段", "六段", "七段", "八段", "九段", "十段",
+    "十一段", "十二段", "十三段", "十四段", "十五段", "十六段", "十七段", "十八段", "十九段", "二十段"];
+  for (let n = 1; n <= 40; n += 1) assert.equal(CORE.nomJaponais(n), attendus[n - 1], CORE.nomGrade(n));
+  assert.equal(CORE.nomJaponais(0), "");
+  assert.equal(CORE.nomJaponais(41), "");
+  assert.equal(CORE.nomJaponais(2.5), "");
+});

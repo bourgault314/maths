@@ -105,6 +105,22 @@
     return `${d}${d === 1 ? "er" : "e"} dan`;
   }
 
+  // Le vrai nom japonais d'un grade (lot « grades-estampe », 07/11/2026),
+  // écrit en petit à côté du nom français : « 二十級 » (20e kyu) … « 一級 »
+  // (1er kyu), « 初段 » (1er dan, « shodan »), « 二段 » … « 二十段 ».
+  const KANJI_CHIFFRES = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+  function kanjiNombre(k) {
+    if (k <= 10) return KANJI_CHIFFRES[k];
+    if (k < 20) return `十${KANJI_CHIFFRES[k - 10]}`;
+    return "二十";
+  }
+  function nomJaponais(n) {
+    if (!gradeValide(n)) return "";
+    if (n <= 20) return `${kanjiNombre(21 - n)}級`;
+    const d = n - 20;
+    return d === 1 ? "初段" : `${kanjiNombre(d)}段`;
+  }
+
   // Les réglages d'un grade, au format d'une séance : additions, un seul
   // nombre de chiffres, 10 calculs ; `grade` est son numéro ; le temps par
   // nombre est en millisecondes (pas forcément un nombre rond : 5 s pour
@@ -631,6 +647,7 @@
     GRADE_PRESQUE,
     GROUPES_GRADES,
     nomGrade,
+    nomJaponais,
     reglagesGrade,
     SANS_RETENUE,
     texteNombresGrade,
