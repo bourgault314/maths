@@ -356,7 +356,7 @@ test("l'historique : la plus récente en haut, « arrêtée » quand il manque d
   const arretee = h.find(s => s.arretee);
   assert.deepEqual([arretee.calculs, arretee.faits, arretee.score], [10, 7, 6], "la séance arrêtée : 6/7 sur 10 prévus");
   assert.deepEqual(h[0].reglages, {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, calculs: 10, temps: 8}, "les réglages joués, au format de la page");
-  assert.equal(CORE.resume(h[0].mode, h[0].reglages, {avecMode: false}).replace(/ /g, " "), "2 à 3 chiffres · 10 nombres · 0,8 s", "la page les décrit avec le moteur des calculs");
+  assert.equal(CORE.resume(h[0].mode, h[0].reglages, {avecMode: false}).replace(/ /g, " "), "2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout", "la page les décrit avec le moteur des calculs");
   const r = PARCOURS.resume(p);
   assert.deepEqual(r, {calculs: 162, justes: 138, jours: 11, seances: 16, premier: "2026-10-13", dernier: "2026-11-08"},
     "les calculs des grades comptent aussi");

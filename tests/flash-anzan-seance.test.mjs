@@ -1308,9 +1308,9 @@ test("grades : « presque » à 6, « pas encore » à 4, « arrêté » par la 
   p.$("fiche-passer").click();
   jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 6);
   assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
-  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 7. Tu peux le repasser tout de suite.");
+  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 7. Tu peux retenter tout de suite.");
   assert.equal(p.$("fin-grade-ouvert").hidden, true);
-  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Le repasser"]);
+  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Retenter"]);
   p.$("fin-grade-b").click();
   jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 4);
   assert.equal(p.$("fin-grade-titre").textContent, "Pas encore");
@@ -1332,8 +1332,8 @@ test("grades : « presque » à 6, « pas encore » à 4, « arrêté » par la 
 test("grades : « 🎯 M'entraîner » joue le grade comme le Flash — correction après chaque calcul, « Revoir » — sans compter comme un passage", () => {
   const p = ouvrirGrades();
   p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-entrainer").click();
-  const calculs = tirages().suivants("entrainement", CORE.reglagesGrade(1));
+  p.$("fiche-entrainer-10").click();
+  const calculs = tirages().suivants("entrainement", CORE.reglagesGrade(1, "bip", 10));
   p.avancer(dureeGrade(1));
   assert.equal(p.$("revoir").hidden, false, "« Revoir » à l'entraînement");
   p.taper(calculs[0].total);
@@ -1590,7 +1590,7 @@ test("cartes : la fiche d'un grade — la petite carte en couleur si réussi (el
   assert.equal(grisee.querySelector("img").attrs.alt, "Carte à gagner : Tombo");
   // Le texte fixe de la fiche (l'écran simulé ne lit pas le texte du HTML).
   const fiche = PAGE.slice(PAGE.indexOf('id="grades-fiche-vue"'), PAGE.indexOf("<!-- La séance"));
-  assert.match(fiche, /id="fiche-entrainer">🎯 M’entraîner<\/button>\s*<p class="fiche-note">Correction après chaque calcul<\/p>/);
+  assert.match(fiche, /id="fiche-entrainer-10" data-calculs="10"><span>🎯&nbsp;10<\/span> <span>calculs<\/span><\/button>\s*<\/div>\s*<p class="fiche-note">M’entraîner&nbsp;: correction après chaque calcul<\/p>/);
   assert.match(fiche, /id="fiche-passer"><\/button>\s*<p class="fiche-note">Comme à l’examen&nbsp;: correction à la fin<\/p>/);
   assert.doesNotMatch(fiche, /Revoir/, "la phrase « Pas de Revoir… » n'est plus là");
   assert.equal(p.$("grades-fiche-vue").querySelectorAll(".fiche-note").length, 2);
@@ -1795,7 +1795,7 @@ test("grades en Colonne : 4 sur 10 au 10e kyu, c'est « presque » (il en fallai
     p.touche("Enter", p.$("valider"));
   }
   assert.match(p.$("fin-grade").className, /\bpresque\b/);
-  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 5. Tu peux le repasser tout de suite.");
+  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 5. Tu peux retenter tout de suite.");
   assert.equal(p.$("fin-carte-place").querySelector(".es"), null);
   assert.equal(caseDe(p).gradeColonne, undefined);
 });
@@ -1804,8 +1804,8 @@ test("grades en Colonne : « 🎯 M'entraîner » corrige après chaque calcul, 
   const t = tirages();
   const p = ouvrirGradesColonne();
   p.$("grades-liste").querySelector('[data-grade="41"]').click();
-  p.$("fiche-entrainer").click();
-  const calculs = t.suivants("entrainement", CORE.reglagesGrade(41, "bip"));
+  p.$("fiche-entrainer-10").click();
+  const calculs = t.suivants("entrainement", CORE.reglagesGrade(41, "bip", 10));
   assert.equal(p.$("colonne").hidden, false);
   p.taper(calculs[0].total);
   p.touche("Enter", p.$("valider"));
@@ -1822,4 +1822,86 @@ test("grades en Colonne : « 🎯 M'entraîner » corrige après chaque calcul, 
   assert.equal(caseDe(p).seances["1"][1], "entrainement");
   p.$("vers-reglages").click();
   assert.equal(p.$("grades-titre").textContent, "10e kyu");
+});
+
+// ---------------------------------------------------------------------------
+// « 🎯 M'entraîner » en 5 ou 10 calculs (lot « entraînement 5 ou 10 »,
+// 07/11/2026) : deux boutons sur la fiche ; le passage reste à 10.
+
+test("entraînement 5 ou 10 : au Flash, « 🎯 5 calculs » joue 5 calculs, la séance garde 5 prévus, « Rejouer » refait 5", () => {
+  const t = tirages();
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  assert.equal(p.$("fiche-entrainer-5").dataset.calculs, "5");
+  assert.equal(p.$("fiche-entrainer-10").dataset.calculs, "10");
+  p.$("fiche-entrainer-5").click();
+  const calculs = t.suivants("entrainement", CORE.reglagesGrade(1, "bip", 5));
+  assert.equal(calculs.length, 5);
+  for (let i = 0; i < 5; i += 1) {
+    p.avancer(dureeGrade(1));
+    assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), `Calcul ${i + 1} / 5`);
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+    assert.equal(p.vue(), "vue-correction");
+    p.$("suivant").click();
+  }
+  assert.equal(p.vue(), "vue-fin", "fini après 5 calculs");
+  assert.match(p.$("score").textContent, /^5\s*\/ 5$/);
+  const s = caseDe(p).seances["1"];
+  assert.deepEqual([s[1], s[6], s[7], s[8], s[9]], ["entrainement", 1, 5, 5, 5], "entraînement au 20e kyu, 5 prévus, 5 faits, 5 justes");
+  assert.equal(caseDe(p).gradeReussi, undefined, "5 sur 5 à l'entraînement ne réussit pas le grade");
+  assert.equal(PARCOURS.historique(caseDe(p))[0].arretee, false, "5 sur 5 prévus : pas « arrêtée »");
+  p.$("rejouer").click();
+  p.avancer(dureeGrade(1));
+  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 5", "« Rejouer » refait 5 calculs");
+});
+
+test("entraînement 5 ou 10 : « 🎯 10 calculs » joue 10 calculs ; « Je tente ▶ » en fait toujours 10", () => {
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  assert.equal(p.$("fiche-passer").textContent, "Je tente ▶", "« Je tente ▶ » (choix du 07/11, avant « Je le passe ▶ »)");
+  p.$("fiche-entrainer-10").click();
+  p.avancer(dureeGrade(1));
+  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 10");
+  p.$("retour").click();
+  p.$("retour").click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  p.$("fiche-entrainer-5").click();
+  p.$("retour").click();
+  p.$("fiche-passer").click();
+  p.avancer(dureeGrade(1));
+  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 10", "un passage : 10 calculs, même juste après un entraînement à 5");
+});
+
+test("entraînement 5 ou 10 : en Colonne, « 🎯 5 calculs » joue la moitié de la feuille (une forme sur deux)", () => {
+  const t = tirages();
+  const p = ouvrirGradesColonne();
+  p.$("grades-liste").querySelector('[data-grade="41"]').click();
+  p.$("fiche-entrainer-5").click();
+  const calculs = t.suivants("entrainement", CORE.reglagesGrade(41, "bip", 5));
+  assert.deepEqual(calculs.map(c => c.termes.length), [3, 4, 4, 5, 5], "10e kyu : 3, 4, 4, 5, 5 nombres");
+  for (let i = 0; i < 5; i += 1) {
+    if (i) p.$("suivant").click();
+    assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), `Calcul ${i + 1} / 5`);
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+  }
+  p.$("suivant").click();
+  assert.equal(p.vue(), "vue-fin");
+  const s = caseDe(p).seances["1"];
+  assert.deepEqual([s[1], s[6], s[7], s[8]], ["entrainement", 41, 5, 5]);
+  assert.equal(caseDe(p).gradeColonne, undefined);
+});
+
+test("entraînement 5 ou 10 : après un passage manqué, « 🎯 M'entraîner » ouvre la fiche du grade (on y choisit 5 ou 10)", () => {
+  const t = tirages();
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1, "bip")), 4);
+  assert.equal(p.$("fin-grade-a").dataset.action, "entrainer");
+  p.$("fin-grade-a").click();
+  assert.equal(p.$("grades-fiche-vue").hidden, false, "la fiche du grade");
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  assert.equal(p.$("ecran-seance").hidden, true, "aucune séance lancée d'office");
 });

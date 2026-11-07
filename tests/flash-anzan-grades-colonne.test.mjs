@@ -54,14 +54,14 @@ test("les réglages d'un grade en Colonne : la colonne, 10 calculs, la limite de
   assert.equal(CORE.reglagesGrade(45).limite, 0);
   assert.equal(CORE.reglagesGrade(53).operations, "plusmoins");
   assert.equal(CORE.reglagesGrade(54), null);
-  assert.equal(CORE.texteGrade(41), "3 à 5 nombres d’un chiffre · 15 s par calcul");
-  assert.equal(CORE.texteGrade(45), "5 nombres de 1 ou 2 chiffres");
-  assert.equal(CORE.texteGrade(48), "5 nombres de 2, puis de 3 chiffres");
-  assert.equal(CORE.texteGrade(50), "5 puis 7 nombres de 3 chiffres");
-  assert.equal(CORE.texteGrade(52), "7 puis 10 nombres de 3 chiffres, + et −");
-  assert.equal(CORE.texteGrade(53), "10 nombres de 3 chiffres, + et −");
-  assert.equal(CORE.resume("grade", r), "🥋 10e kyu · Colonne · 3 à 5 nombres d’un chiffre · 15 s par calcul");
-  assert.equal(CORE.resume("entrainement", CORE.reglagesGrade(53), {avecMode: false}), "10 nombres de 3 chiffres, + et −");
+  assert.equal(CORE.texteGrade(41).replace(/\u00a0/g, " "), "3 à 5 nombres d’un chiffre · 15 s par calcul");
+  assert.equal(CORE.texteGrade(45).replace(/\u00a0/g, " "), "5 nombres de 1 ou 2 chiffres");
+  assert.equal(CORE.texteGrade(48).replace(/\u00a0/g, " "), "5 nombres de 2, puis de 3 chiffres");
+  assert.equal(CORE.texteGrade(50).replace(/\u00a0/g, " "), "5 puis 7 nombres de 3 chiffres");
+  assert.equal(CORE.texteGrade(52).replace(/\u00a0/g, " "), "7 puis 10 nombres de 3 chiffres, + et −");
+  assert.equal(CORE.texteGrade(53).replace(/\u00a0/g, " "), "10 nombres de 3 chiffres, + et −");
+  assert.equal(CORE.resume("grade", r).replace(/\u00a0/g, " "), "🥋 10e kyu · Colonne · 3 à 5 nombres d’un chiffre · 15 s par calcul");
+  assert.equal(CORE.resume("entrainement", CORE.reglagesGrade(53), {avecMode: false}).replace(/\u00a0/g, " "), "10 nombres de 3 chiffres, + et −");
   // Le verdict suit le seuil du grade.
   assert.equal(CORE.verdictGrade(10, 5, 41), "reussi");
   assert.equal(CORE.verdictGrade(10, 4, 41), "presque");

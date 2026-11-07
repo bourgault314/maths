@@ -282,7 +282,7 @@
     .scene.defile { overflow-y: auto; align-items: flex-start; padding: 12px 0; }
     .decompte { width: 150px; height: 150px; border-radius: 50%; border: 6px solid #cfe0ec; display: flex; align-items: center; justify-content: center;
       font-size: 5rem; font-weight: 950; color: var(--blue); font-variant-numeric: tabular-nums; }
-    .indic { position: absolute; bottom: 14px; left: 8px; right: 8px; text-align: center; color: #5f7787; font-weight: 800; font-size: .8rem; }
+    .indic { position: absolute; bottom: 14px; left: 8px; right: 8px; text-align: center; color: #5f7787; font-weight: 800; font-size: .8rem; text-wrap: balance; }
     /* Le nombre du Flash : une boîte de taille fixe pour tout le calcul
        (le plus long nombre possible, signe compris), au centre du cadre,
        chiffres à chasse fixe : rien ne bouge d'un nombre à l'autre. */
@@ -374,7 +374,7 @@
     .score { font-size: 4rem; font-weight: 950; line-height: 1; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
     .score small { font-size: 1.6rem; color: var(--muted); }
     .tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #eef4fd; color: var(--blue);
-      font-weight: 850; font-size: .8rem; }
+      font-weight: 850; font-size: .8rem; text-wrap: balance; }
     .liste { flex: 0 1 auto; min-height: 0; overflow-y: auto; margin: 12px 0 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
     .item { border-bottom: 1px solid #edf3f7; }
     .item:last-child { border-bottom: 0; }
@@ -503,6 +503,14 @@
     .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
     .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
     .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
+    /* « 🎯 M'entraîner » en 5 ou 10 calculs (lot « entraînement 5 ou 10 »,
+       07/11/2026) : deux boutons côte à côte à la place d'un, à la même
+       hauteur que « Je tente ». Trop étroits (téléphone), « calculs »
+       passe sous le nombre, dans le bouton. */
+    .fiche-grade .fiche-boutons { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .fiche-grade .fiche-note { text-wrap: balance; }
+    .fiche-grade .fiche-paire { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fiche-grade .fiche-paire .secondary { flex-wrap: wrap; column-gap: .3em; row-gap: 0; padding-left: 6px; padding-right: 6px; font-size: 1.05rem; line-height: 1.15; }
     /* Lot « anzan-cartes » (07/11/2026) : sous chaque bouton, ce qu'il fait
        (la phrase « Pas de Revoir… » était fausse pour M'entraîner). */
     .fiche-grade .fiche-note { margin: 10px 0 0; color: var(--muted); font-weight: 700; font-size: .85rem; line-height: 1.3; }
@@ -977,8 +985,13 @@
           </div>
           <div class="fiche-boutons">
             <div>
-              <button type="button" class="secondary" id="fiche-entrainer">🎯 M’entraîner</button>
-              <p class="fiche-note">Correction après chaque calcul</p>
+              <!-- Lot « entraînement 5 ou 10 » (07/11/2026) : l'élève choisit 5
+                   ou 10 calculs ; le passage reste à 10. -->
+              <div class="fiche-paire" role="group" aria-label="M’entraîner">
+                <button type="button" class="secondary" id="fiche-entrainer-5" data-calculs="5"><span>🎯&nbsp;5</span> <span>calculs</span></button>
+                <button type="button" class="secondary" id="fiche-entrainer-10" data-calculs="10"><span>🎯&nbsp;10</span> <span>calculs</span></button>
+              </div>
+              <p class="fiche-note">M’entraîner&nbsp;: correction après chaque calcul</p>
             </div>
             <div>
               <button type="button" class="primary" id="fiche-passer"></button>
@@ -1449,9 +1462,11 @@
       // passage (10 calculs, correction à la fin, pas de « Revoir »),
       // « entrainement » pour s'y entraîner (comme le Flash : correction
       // après chaque calcul, « Revoir »). Les réglages sont ceux de la grille ;
-      // le bip à chaque nombre suit l'interrupteur du Flash.
-      function demarrerGrade(n, mode) {
-        const r = CORE.reglagesGrade(n, memoire.flash.son);
+      // le bip à chaque nombre suit l'interrupteur du Flash. `calculs` : 5 ou
+      // 10 pour un entraînement (lot « entraînement 5 ou 10 ») ; un passage
+      // en fait toujours 10.
+      function demarrerGrade(n, mode, calculs) {
+        const r = CORE.reglagesGrade(n, memoire.flash.son, mode === "grade" ? CORE.GRADE_CALCULS : calculs);
         if (!r) return;
         if (mode === "grade" && !etatDuGrade(n).ouvert) return; // un cadenas ne s'ouvre pas d'ici
         commencer(mode === "grade" ? "grade" : "entrainement", r);
@@ -1873,13 +1888,14 @@
         $("titre").focus({preventScroll: true});
       }
       // En fin d'entraînement à un grade : « Le grade » ramène à sa fiche,
-      // « Rejouer » relance le même entraînement.
+      // « Rejouer » relance le même entraînement (5 ou 10 calculs, comme
+      // celui qui vient de finir).
       $("vers-reglages").addEventListener("click", () => {
         if (seance.mode === "entrainement") versGrades(seance.reglages.grade);
         else versReglages();
       });
       $("rejouer").addEventListener("click", () => {
-        if (seance.mode === "entrainement") demarrerGrade(seance.reglages.grade, "entrainement");
+        if (seance.mode === "entrainement") demarrerGrade(seance.reglages.grade, "entrainement", seance.reglages.calculs);
         else demarrerSeance();
       });
       $("partir").addEventListener("click", demarrerSeance);
@@ -2685,7 +2701,7 @@
             li.append(b, document.createTextNode(texte));
             regles.append(li);
           });
-          $("fiche-passer").textContent = "Je le passe ▶";
+          $("fiche-passer").textContent = "Je tente ▶";
           $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
           dessinerCarteFiche(n);
           return;
@@ -2706,13 +2722,17 @@
           li.append(b, document.createTextNode(texte));
           regles.append(li);
         });
-        // « Je le passe » : le nom du grade est déjà le titre (« Je passe le
+        // « Je tente ▶ » (choix du 07/11/2026, 16 h 30 ; avant : « Je le
+        // passe ▶ » — « on n'est pas en mode examen ») : le nom du grade est
+        // déjà le titre (« Je passe le
         // 13e kyu » passait sur deux lignes au téléphone).
-        $("fiche-passer").textContent = "Je le passe ▶";
+        $("fiche-passer").textContent = "Je tente ▶";
         $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
         dessinerCarteFiche(n);
       }
-      $("fiche-entrainer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement"); });
+      [5, 10].forEach(k => {
+        $(`fiche-entrainer-${k}`).addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement", k); });
+      });
       $("fiche-passer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "grade"); });
 
       // L'écran des grades : la liste (n = 0) ou la fiche du grade n.
@@ -2849,7 +2869,7 @@
           ouvert.textContent = `🔓 Le ${CORE.nomGrade(n + 1)} est ouvert`;
           ouvert.hidden = false;
         } else if (verdict === "presque") {
-          sous.textContent = `Il en fallait ${CORE.seuilGrade(n)}. Tu peux le repasser tout de suite.`;
+          sous.textContent = `Il en fallait ${CORE.seuilGrade(n)}. Tu peux retenter tout de suite.`;
           sous.hidden = false;
         } else if (verdict === "pasencore") {
           sous.textContent = "Entraîne-toi à ce grade, puis reviens.";
@@ -2878,12 +2898,12 @@
         } else if (verdict === "arrete") {
           a.textContent = "Les grades";
           a.dataset.action = "liste";
-          b.textContent = "Le repasser";
+          b.textContent = "Retenter";
           b.dataset.action = "repasser";
         } else {
           a.textContent = "🎯 M’entraîner";
           a.dataset.action = "entrainer";
-          b.textContent = "Le repasser";
+          b.textContent = "Retenter";
           b.dataset.action = "repasser";
         }
         $("fin-grade-calculs").hidden = !faits;
@@ -2897,7 +2917,9 @@
         if (action === "liste") { groupeAffiche = -1; gradesColonne = CORE.estGradeColonne(n); versGrades(0); }
         else if (action === "suivant") versGrades(n + 1);
         else if (action === "repasser") demarrerGrade(n, "grade");
-        else if (action === "entrainer") demarrerGrade(n, "entrainement");
+        // « 🎯 M'entraîner » après un passage manqué : la fiche du grade, où
+        // l'élève choisit 5 ou 10 calculs (lot « entraînement 5 ou 10 »).
+        else if (action === "entrainer") versGrades(n);
       }
       $("fin-grade-a").addEventListener("click", () => actionFinGrade($("fin-grade-a")));
       $("fin-grade-b").addEventListener("click", () => actionFinGrade($("fin-grade-b")));

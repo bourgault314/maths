@@ -530,7 +530,7 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Anzan, les grades en Colonne (07/11/2026) : lib/applis.php
   // (« gradeColonne »), prof/index.php et prof/flash_anzan_parcours.js
   // changent (avant : defi-calcul-G1-journal).
-  assert.match(lire("_serveur/public/VERSION"), /^lot anzan-grades-colonne$/m);
+  assert.match(lire("_serveur/public/VERSION"), /^lot anzan-entrainement-5-ou-10$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
