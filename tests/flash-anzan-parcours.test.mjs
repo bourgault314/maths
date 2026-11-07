@@ -343,7 +343,11 @@ test("2e relecture Codex (24/10) : à rang égal et séances égales, deux appar
 
 test("l'historique : la plus récente en haut, « arrêtée » quand il manque des calculs ; le compte en calculs et en jours", () => {
   const p = parcoursComplet();
-  const h = PARCOURS.historique(p);
+  const toutes = PARCOURS.historique(p);
+  assert.equal(toutes.length, 14, "dix séances de Flash et de Colonne, quatre de grades (lot « grades », 07/11/2026)");
+  assert.deepEqual(toutes.slice(0, 4).map(s => [s.mode, s.grade, s.score]), [["grade", 2, 7], ["grade", 2, 6], ["entrainement", 2, 8], ["grade", 1, 9]],
+    "les grades, les plus récents en haut");
+  const h = toutes.filter(s => s.mode === "flash" || s.mode === "colonne");
   assert.equal(h.length, 10);
   assert.equal(h[0].jour, "2026-10-22");
   assert.deepEqual(h.map(s => s.jour), [...h.map(s => s.jour)].sort().reverse(), "du plus récent au plus ancien");
@@ -354,14 +358,15 @@ test("l'historique : la plus récente en haut, « arrêtée » quand il manque d
   assert.deepEqual(h[0].reglages, {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, calculs: 10, temps: 8}, "les réglages joués, au format de la page");
   assert.equal(CORE.resume(h[0].mode, h[0].reglages, {avecMode: false}).replace(/ /g, " "), "2 à 3 chiffres · 10 nombres · 0,8 s", "la page les décrit avec le moteur des calculs");
   const r = PARCOURS.resume(p);
-  assert.deepEqual(r, {calculs: 102, justes: 94, jours: 9, seances: 10, premier: "2026-10-13", dernier: "2026-10-22"});
-  assert.equal(PARCOURS.texteResume(p), "102 calculs · 9 jours d’entraînement");
+  assert.deepEqual(r, {calculs: 142, justes: 124, jours: 11, seances: 14, premier: "2026-10-13", dernier: "2026-11-08"},
+    "les calculs des grades comptent aussi");
+  assert.equal(PARCOURS.texteResume(p), "142 calculs · 11 jours d’entraînement");
   assert.equal(PARCOURS.texteResume(r), PARCOURS.texteResume(p), "depuis le compte ou depuis le parcours");
   const un = note(PARCOURS.creer(), {mode: "flash", reglages: FLASH, faits: 1, score: 1}, 23, "2026-10-22").parcours;
   assert.equal(PARCOURS.texteResume(un), "1 calcul · 1 jour d’entraînement", "au singulier");
   assert.equal(PARCOURS.texteResume(PARCOURS.creer()), "", "rien sans calcul");
   assert.deepEqual(PARCOURS.resumeTuile(PARCOURS.creer()), {texte: "", vide: true});
-  assert.deepEqual(PARCOURS.resumeTuile(p), {texte: "102 calculs · 9 jours d’entraînement", vide: false});
+  assert.deepEqual(PARCOURS.resumeTuile(p), {texte: "142 calculs · 11 jours d’entraînement", vide: false});
   const prof = PARCOURS.resumeProf(p);
   assert.equal(prof.commence, true);
   assert.equal(prof.dernieres.length, 10);
@@ -458,7 +463,7 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
 
 test("la page charge le moteur à jour (4a-sexies : l'ordre seul, sans le jour) — son numéro de version a monté", () => {
   const html = lire("outils/calcul_mental/flash_anzan.html");
-  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261024-3"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
+  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261107-1"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
 });
 
 test("4e relecture Codex (24/10) : ni l'horloge ni minuit ne dérangent — une tablette à la mauvaise date ne perd pas sa séance, une séance qui passe minuit garde son jour", () => {

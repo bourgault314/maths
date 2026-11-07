@@ -223,7 +223,11 @@
     .reglages-corps .bas { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; }
     .primary.partir { width: min(440px, 100%); min-height: 58px; gap: 12px; border-radius: 18px; font-size: 1.4rem; }
     .partir svg { width: 20px; height: 20px; fill: currentColor; flex: 0 0 auto; }
-    .reglages-corps .historique-bouton { width: auto; min-height: 58px; margin-top: 0; padding-left: 20px; padding-right: 20px; }
+    .reglages-corps .historique-bouton { width: auto; min-height: 58px; margin-top: 0; padding-left: 20px; padding-right: 20px; white-space: nowrap; }
+    /* Lot « grades » (07/11/2026, planche 1) : « 🥋 Grades » et
+       « 📜 Historique » à droite de « C'est parti », dans les deux modes (le
+       menu ne bouge pas en passant de Flash à Colonne). */
+    .reglages-corps .bas .primary.partir { flex: 1 1 auto; width: auto; max-width: 440px; }
 
     .primary, .secondary {
       min-height: 52px; display: flex; align-items: center; justify-content: center; width: 100%;
@@ -408,7 +412,68 @@
     .hist-confirm-boutons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
     .hist-confirm-boutons button { width: auto; min-height: 46px; padding-left: 22px; padding-right: 22px; border-radius: 13px; font: inherit; font-weight: 950; font-size: 1rem; cursor: pointer; }
     .hist-confirm-boutons .danger { color: #fff; border: 0; background: var(--red); box-shadow: 0 4px 0 #7a1f1f; padding-top: 11px; padding-bottom: 7px; }
+    /* ---- Les grades (lot « grades », 07/11/2026, planches 2 et 3) ----
+       La liste : quatre groupes de dix (Débutant, Intermédiaire, Avancé,
+       Expert) ; un grade réussi a son ✓ vert, celui à passer est bordé de
+       bleu, les autres sont gris avec un cadenas. La fiche : les règles du
+       grade, « 🎯 M'entraîner » et « Je passe le … ». */
+    .gr-groupes { grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+    .gr-groupes .option { height: auto; min-height: 56px; flex-direction: column; gap: 1px; font-weight: 900; font-size: .95rem; padding: 6px 4px; }
+    .gr-groupes .option small { font-weight: 700; font-size: .7rem; color: var(--muted); }
+    .gr-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .gr-item { border-bottom: 1px solid #edf3f7; }
+    .gr-item:last-child { border-bottom: 0; }
+    .gr-ligne { width: 100%; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 54px;
+      padding: 6px 12px; border: 0; background: none; color: var(--ink); text-align: left; font: inherit; }
+    button.gr-ligne { cursor: pointer; }
+    .gr-marque { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: .85rem; }
+    .gr-item.reussi .gr-marque { background: var(--green); color: #fff; }
+    .gr-item.ferme .gr-marque { background: #eef3f6; color: #8aa0ad; font-size: .8rem; }
+    .gr-item.ferme .gr-ligne { color: #6f8796; }
+    .gr-item.actuel { position: relative; z-index: 1; margin: -1px; border: 2px solid var(--blue); border-radius: 14px; background: #eef4fc; }
+    .gr-item.actuel .gr-marque { background: var(--blue); color: #fff; }
+    .gr-nom { display: block; font-weight: 900; font-size: 1.02rem; }
+    .gr-det { display: block; color: var(--muted); font-weight: 700; font-size: .78rem; margin-top: 1px; }
+    .gr-item.ferme .gr-det { color: #7d95a3; }
+    .gr-droite { text-align: right; font-weight: 950; font-variant-numeric: tabular-nums; }
+    .gr-droite small { display: block; font-size: .68rem; font-weight: 800; color: var(--muted); }
+    .gr-passer { display: inline-flex; align-items: center; min-height: 42px; padding: 8px 14px 6px; border-radius: 12px; background: var(--blue); color: #fff;
+      font-weight: 950; box-shadow: 0 4px 0 #043f8c; white-space: nowrap; }
+    .fiche-grade { width: 100%; max-width: calc(560px + 2 * var(--corps-cote)); margin: 0 auto; padding: 18px var(--corps-cote) 26px; text-align: center; }
+    .fiche-grade .niv { margin: 0; color: var(--teal); font-weight: 900; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+    .fiche-grade .regles { margin: 16px auto 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 16px; text-align: left; }
+    .fiche-grade .regles li { display: flex; gap: 12px; align-items: center; min-height: 52px; padding: 6px 14px; border-bottom: 1px solid #edf3f7; font-weight: 800; }
+    .fiche-grade .regles li:last-child { border-bottom: 0; }
+    .fiche-grade .regles b { flex: 0 0 auto; min-width: 84px; font-size: 1.25rem; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .fiche-grade .rappel { margin: 14px 0 0; color: var(--muted); font-weight: 700; font-size: .88rem; }
+    .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
+    .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
+    .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
+    /* La fin d'un passage (planche 3) : le verdict, la note, les dix points. */
+    .fin-grade { text-align: center; margin-top: 10px; }
+    .fin-grade .emoji { font-size: 3rem; line-height: 1; }
+    .fin-grade .titre-fin { margin: 8px 0 2px; font-size: 2rem; font-weight: 950; }
+    .fin-grade.reussi .titre-fin { color: var(--green); }
+    .fin-grade .score { margin-top: 10px; }
+    .points { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+    .points i { width: 18px; height: 18px; border-radius: 50%; background: var(--green); }
+    .points i.x { background: #fff; border: 2px solid var(--red); }
+    .points i.rien { background: #fff; border: 2px solid #c9d6de; }
+    .fin-grade .sous { margin: 10px 0 0; color: var(--muted); font-weight: 800; }
+    .fin-grade .ouvert { display: inline-flex; gap: 8px; align-items: center; margin-top: 14px; padding: 8px 14px; border-radius: 999px;
+      background: var(--green-soft); color: var(--green); font-weight: 900; }
+    .fin-grade .actions { margin-top: 20px; }
+    .fin-grade .actions.seul { grid-template-columns: 1fr; max-width: 280px; margin-left: auto; margin-right: auto; }
+    .lien-calculs { display: block; margin: 12px auto 0; padding: 8px 12px; min-height: 44px; border: 0; background: none; color: var(--blue);
+      font: inherit; font-weight: 850; font-size: .95rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .fin.passage .tete-fin { margin-top: 0; }
+    .fin.passage .tete-fin .score, .fin.passage .tete-fin .tag, .fin.passage > .actions { display: none; }
+
     @media (max-width: 620px) {
+      .gr-groupes { grid-template-columns: 1fr 1fr; }
+      .fiche-grade .regles b { min-width: 72px; }
+      .fiche-grade .fiche-boutons { grid-template-columns: 1fr 1fr; }
+      .fiche-grade .fiche-boutons .primary { font-size: 1.05rem; }
       /* Au téléphone, la liste des séances défile avec la page (pas dans son
          cadre). */
       .hist-liste { max-height: none; overflow: visible; }
@@ -447,9 +512,11 @@
       .pas, .option, .bascule { height: 52px; }
       .pas button { height: 38px; }
       .resume { min-height: 0; padding: 8px 12px; }
-      .reglages-corps .bas { flex-direction: column; gap: 8px; margin-top: 10px; }
-      .primary.partir { width: 100%; }
-      .reglages-corps .historique-bouton { min-height: 44px; padding-top: 8px; padding-bottom: 6px; }
+      /* Au téléphone : « C'est parti » sur toute la largeur, puis « Grades »
+         et « Historique » côte à côte (chacun une demi-ligne au plus). */
+      .reglages-corps .bas { flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .primary.partir, .reglages-corps .bas .primary.partir { width: 100%; max-width: none; flex: 1 1 100%; }
+      .reglages-corps .historique-bouton { flex: 1 1 0; max-width: calc(50% - 4px); min-height: 44px; padding: 8px 10px 6px; font-size: 1rem; }
     }
     /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
        non plus. */
@@ -608,7 +675,9 @@
             <button type="button" class="primary partir" id="partir">C’est parti<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg></button>
             <!-- Dès la première séance : les dernières séances (l'élève à code :
                  celles de son compte ; le visiteur : celles de l'appareil) -->
-            <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Mon historique</button>
+            <!-- Lot « grades » (07/11/2026) : toujours là, dans les deux modes. -->
+            <button type="button" class="secondary historique-bouton" id="vers-grades">🥋 Grades</button>
+            <button type="button" class="secondary historique-bouton" id="vers-historique" hidden>📜 Historique</button>
           </div>
         </div>
       </div>
@@ -642,6 +711,38 @@
               <button type="button" class="danger" id="historique-confirm-oui">Effacer</button>
               <button type="button" class="secondary" id="historique-confirm-non">Garder</button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Les grades (lot « grades », 07/11/2026, planches 2 et 3) : la liste
+           des 40 grades de l'Association japonaise du test de Flash Anzan, en
+           quatre groupes de dix, puis la fiche d'un grade. Les cadenas :
+           dans l'ordre, un grade réussi ouvre le suivant. Tout est posé par
+           textContent. -->
+      <div id="ecran-grades" class="historique-ecran grades-ecran" hidden>
+        <div class="bandeau">
+          <div class="cadre-haut">
+            <button type="button" class="rond" id="grades-retour" aria-label="Retour aux réglages" title="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+            <div class="titre-bloc">
+              <p class="eyebrow" id="grades-eyebrow">Soroban</p>
+              <h1 id="grades-titre" tabindex="-1">Les grades</h1>
+            </div>
+            <button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button>
+          </div>
+        </div>
+        <div class="historique-corps" id="grades-liste-vue">
+          <p class="hist-compte">10 calculs en Flash · réussi à 7 sur 10</p>
+          <div class="options gr-groupes" id="grades-groupes" role="group" aria-label="Les niveaux"></div>
+          <ol class="gr-liste" id="grades-liste" aria-label="Les grades"></ol>
+        </div>
+        <div class="fiche-grade" id="grades-fiche-vue" hidden>
+          <p class="niv" id="fiche-niveau"></p>
+          <ol class="regles" id="fiche-regles"></ol>
+          <p class="rappel">Pas de «&nbsp;Revoir&nbsp;»&nbsp;: comme à l’examen, chaque calcul ne passe qu’une fois. La correction vient à la fin.</p>
+          <div class="fiche-boutons">
+            <button type="button" class="secondary" id="fiche-entrainer">🎯 M’entraîner</button>
+            <button type="button" class="primary" id="fiche-passer"></button>
           </div>
         </div>
       </div>
@@ -696,6 +797,21 @@
         </div>
 
         <div id="vue-fin" class="fin" hidden>
+          <!-- La fin d'un passage de grade (planche 3) : le verdict, la note,
+               les dix points, puis « Voir mes calculs » qui déplie la liste. -->
+          <div class="fin-grade" id="fin-grade" hidden>
+            <div class="emoji" id="fin-grade-emoji" aria-hidden="true"></div>
+            <div class="titre-fin" id="fin-grade-titre"></div>
+            <div class="score" id="fin-grade-score"></div>
+            <div class="points" id="fin-grade-points" aria-hidden="true"></div>
+            <div class="ouvert" id="fin-grade-ouvert" hidden></div>
+            <p class="sous" id="fin-grade-sous" hidden></p>
+            <div class="actions" id="fin-grade-actions">
+              <button type="button" class="secondary" id="fin-grade-a"></button>
+              <button type="button" class="primary" id="fin-grade-b"></button>
+            </div>
+            <button type="button" class="lien-calculs" id="fin-grade-calculs" aria-expanded="false" aria-controls="liste">Voir mes calculs</button>
+          </div>
           <div class="tete-fin">
             <div class="score" id="score"></div>
             <span class="tag" id="tag-fin"></span>
@@ -713,10 +829,10 @@
     </section>
   </main>
 
-  <script src="./flash_anzan_core.js?v=20261022-1"></script>
+  <script src="./flash_anzan_core.js?v=20261107-1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261024-3"></script>
+  <script src="./flash_anzan_parcours.js?v=20261107-1"></script>
   <script src="./flash_anzan_suivi.js?v=20261031-1"></script>
   <script>
     (function () {
@@ -937,7 +1053,7 @@
       // (le décompte bipe toujours) : la carte son a le temps de démarrer
       // avant « C'est parti ».
       function reveillerSiBesoin() {
-        if (memoire.mode === "flash") preparerSon();
+        if (memoire.mode === "flash" || !$("ecran-grades").hidden) preparerSon();
       }
       document.addEventListener("pointerdown", reveillerSiBesoin, true);
       document.addEventListener("keydown", reveillerSiBesoin, true);
@@ -1037,6 +1153,7 @@
         enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0,
+        gradeAvant: 0, // le plus haut grade réussi au début d'un passage
         idSuivi: 0 // l'identifiant de cette séance dans la case de l'élève à code (tiré au départ)
       };
       const rng = CORE.mulberry32((Math.random() * 4294967296) >>> 0);
@@ -1054,10 +1171,29 @@
         couperBips();
       }
 
+      // Une séance des réglages (Flash ou Colonne)…
       function demarrerSeance() {
-        reveillerSiBesoin();
-        seance.mode = memoire.mode;
-        seance.reglages = {...reglages()};
+        commencer(memoire.mode, {...reglages()});
+      }
+      // … ou d'un grade (lot « grades », 07/11/2026) : « grade » pour le
+      // passage (10 calculs, correction à la fin, pas de « Revoir »),
+      // « entrainement » pour s'y entraîner (comme le Flash : correction
+      // après chaque calcul, « Revoir »). Les réglages sont ceux de la grille ;
+      // le bip à chaque nombre suit l'interrupteur du Flash.
+      function demarrerGrade(n, mode) {
+        const r = CORE.reglagesGrade(n, memoire.flash.son);
+        if (!r) return;
+        if (mode === "grade" && !gradesDeLEleve()[n - 1].ouvert) return; // un cadenas ne s'ouvre pas d'ici
+        commencer(mode === "grade" ? "grade" : "entrainement", r);
+      }
+      function commencer(mode, r) {
+        preparerSon();
+        seance.mode = mode;
+        seance.reglages = r;
+        // Le plus haut grade réussi AVANT ce passage (chaque calcul validé
+        // note la séance : à la fin, le grade est déjà compté) — pour dire
+        // « le … est ouvert » seulement quand ce passage l'ouvre.
+        seance.gradeAvant = mode === "grade" ? plusHautGrade() : 0;
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
         seance.resultats = [];
         seance.index = 0;
@@ -1070,6 +1206,7 @@
         seance.jourSuivi = "";
         $("ecran-reglages").hidden = true;
         $("ecran-historique").hidden = true;
+        $("ecran-grades").hidden = true;
         $("ecran-seance").hidden = false;
         $("envoi-fin").hidden = true;
         corps.classList.add("en-seance");
@@ -1106,7 +1243,7 @@
         $("colonne").hidden = true;
         $("nombre").hidden = true;
         $("scene").classList.remove("defile");
-        if (seance.mode === "flash") decompter();
+        if (seance.mode !== "colonne") decompter(); // Flash, passage ou entraînement de grade
         else montrerColonne();
       }
 
@@ -1128,7 +1265,9 @@
         $("decompte").hidden = false;
         $("decompte").textContent = "";
         $("indic").hidden = false;
-        $("indic").textContent = `⚡ ${CORE.resume("flash", seance.reglages, {avecMode: false})}`;
+        $("indic").textContent = seance.mode === "flash"
+          ? `⚡ ${CORE.resume("flash", seance.reglages, {avecMode: false})}`
+          : CORE.resume(seance.mode, seance.reglages);
         preparerSon(); // le décompte bipe toujours (choix du 30/10/2026)
         const debutAttente = performance.now();
         const partir = () => {
@@ -1140,7 +1279,7 @@
           const origine = performance.now() + AVANCE_MS + (audio ? retardSon() * 1000 : 0);
           const t0 = origine + 3 * DECOMPTE_MS;
           programmerDecompte(origine);
-          programmerBips(t0, seance.calculs[seance.index].termes.length, seance.reglages.temps * 100);
+          programmerBips(t0, seance.calculs[seance.index].termes.length, CORE.tempsParNombreMs(seance.reglages));
           const etape = k => {
             seance.attente = window.setTimeout(() => {
               if (jeton !== seance.jeton) return;
@@ -1193,7 +1332,9 @@
         nombre.hidden = false;
         fixerTailleFlash();
         const termes = seance.calculs[seance.index].termes;
-        const tempsMs = seance.reglages.temps * 100;
+        // Le temps par nombre : celui du Flash, ou celui du grade (le temps de
+        // toute la série partagé entre ses nombres, au millième près).
+        const tempsMs = CORE.tempsParNombreMs(seance.reglages);
         const n = termes.length;
         let dejaIndex = -2;
         let dejaVisible = null;
@@ -1226,8 +1367,10 @@
         seance.enRevoir = false;
         $("nombre").hidden = true;
         $("question").hidden = false;
-        $("revoir").hidden = false;
-        $("rangee-valider").classList.add("avec-revoir");
+        // Le passage d'un grade : pas de « Revoir » (comme à l'examen).
+        const avecRevoir = seance.mode !== "grade";
+        $("revoir").hidden = !avecRevoir;
+        $("rangee-valider").classList.toggle("avec-revoir", avecRevoir);
         $("zone-rep").hidden = false;
         $("vue-jeu").classList.add("avec-reponse");
       }
@@ -1308,7 +1451,7 @@
       // décompte. Ce qui est déjà tapé reste. Le score ne change pas (on est à
       // l'entraînement) ; le nombre de fois est gardé pour plus tard.
       function revoir() {
-        if (seance.phase !== "reponse" || seance.mode !== "flash") return;
+        if (seance.phase !== "reponse" || seance.mode === "colonne" || seance.mode === "grade") return;
         seance.revus += 1;
         rejouerLeCalcul();
       }
@@ -1341,6 +1484,13 @@
         if (tempsEcoule) {
           $("chrono").style.setProperty("--reste", "0");
           $("chrono-s").textContent = "0";
+        }
+        // Le passage d'un grade : la correction vient à la fin (choix de
+        // Gwenaël, 07/11/2026) — le calcul suivant part tout de suite.
+        if (seance.mode === "grade") {
+          seance.phase = "correction";
+          suivant();
+          return;
         }
         montrerCorrection(seance.resultats[seance.resultats.length - 1]);
       }
@@ -1407,6 +1557,12 @@
         $("tag-fin").textContent = CORE.resume(seance.mode, seance.reglages);
         noterSeanceSuivi();
         majEnvoi();
+        const passage = seance.mode === "grade";
+        $("vue-fin").classList.toggle("passage", passage);
+        $("fin-grade").hidden = !passage;
+        $("liste").hidden = passage;
+        $("vers-reglages").textContent = seance.mode === "entrainement" ? "Le grade" : "Réglages";
+        if (passage) dessinerFinGrade(justes, seance.gradeAvant || 0, arretee);
         $("liste").innerHTML = seance.resultats.map((r, i) => {
           const marque = r.juste
             ? '<span class="m v" aria-label="juste">✓</span>'
@@ -1435,6 +1591,7 @@
         corps.classList.remove("en-seance");
         $("ecran-seance").hidden = true;
         $("ecran-historique").hidden = true;
+        $("ecran-grades").hidden = true;
         $("ecran-reglages").hidden = false;
         // Le compte a pu bouger pendant la séance (billet arrivé en route,
         // autre appareil) : ses réglages sont relus maintenant, jamais avant.
@@ -1443,15 +1600,28 @@
         majSuivi();
         $("titre").focus({preventScroll: true});
       }
-      $("vers-reglages").addEventListener("click", versReglages);
-      $("rejouer").addEventListener("click", demarrerSeance);
+      // En fin d'entraînement à un grade : « Le grade » ramène à sa fiche,
+      // « Rejouer » relance le même entraînement.
+      $("vers-reglages").addEventListener("click", () => {
+        if (seance.mode === "entrainement") versGrades(seance.reglages.grade);
+        else versReglages();
+      });
+      $("rejouer").addEventListener("click", () => {
+        if (seance.mode === "entrainement") demarrerGrade(seance.reglages.grade, "entrainement");
+        else demarrerSeance();
+      });
       $("partir").addEventListener("click", demarrerSeance);
 
       // La flèche : arrête la séance. Rien de fait → retour aux réglages ;
       // sinon l'écran de fin, avec ce qui est fait. Depuis la fin → réglages.
+      // Un grade (passage ou entraînement) : retour à sa fiche.
+      function quitterSeance() {
+        if (seance.mode === "grade" || seance.mode === "entrainement") versGrades(seance.reglages.grade);
+        else versReglages();
+      }
       $("retour").addEventListener("click", () => {
-        if (seance.phase === "fin") { versReglages(); return; }
-        if (seance.resultats.length === 0) { versReglages(); return; }
+        if (seance.phase === "fin") { quitterSeance(); return; }
+        if (seance.resultats.length === 0) { quitterSeance(); return; }
         // Relecture Codex (B1) : « arrêtée » = moins de calculs faits que
         // prévu (c'est ce qui servira au professeur au lot 2).
         finir(seance.resultats.length < seance.reglages.calculs);
@@ -1631,7 +1801,8 @@
       // bandeau à l'autre ; en séance, il est caché (la pastille suffit).
       function placerRepere() {
         const repere = $("suivi-repere");
-        const ecran = $("ecran-historique").hidden ? $("ecran-reglages") : $("ecran-historique");
+        const ecran = !$("ecran-historique").hidden ? $("ecran-historique")
+          : !$("ecran-grades").hidden ? $("ecran-grades") : $("ecran-reglages");
         const haut = ecran.querySelector(".cadre-haut");
         if (repere && haut && typeof haut.after === "function" && haut.nextElementSibling !== repere) haut.after(repere);
       }
@@ -1663,6 +1834,7 @@
         rechargerMemoire();
         if (!$("ecran-reglages").hidden) dessinerReglages();
         if (!$("ecran-historique").hidden) dessinerHistorique();
+        if (!$("ecran-grades").hidden && !$("grades-liste-vue").hidden) dessinerGrades();
         majSuivi();
       }
 
@@ -1692,10 +1864,13 @@
           const milieu = document.createElement("span");
           const mode = document.createElement("span");
           mode.className = "hist-mode";
-          mode.textContent = s.mode === "flash" ? "⚡ Flash" : "📝 Colonne";
+          // Un grade : « 🥋 13e kyu / Passage · réussi » ou « 🎯 13e kyu /
+          // Entraînement au grade » (les mots du moteur, ceux de Ma classe).
+          const grade = PARCOURS.libelleGrade ? PARCOURS.libelleGrade(s) : null;
+          mode.textContent = grade ? grade.mode : (s.mode === "flash" ? "⚡ Flash" : "📝 Colonne");
           const details = document.createElement("span");
           details.className = "hist-reglages";
-          details.textContent = CORE.resume(s.mode, s.reglages, {avecMode: false});
+          details.textContent = grade ? grade.details : CORE.resume(s.mode, s.reglages, {avecMode: false});
           milieu.append(mode, details);
           const score = document.createElement("span");
           score.className = "hist-score";
@@ -1756,6 +1931,268 @@
       $("vers-historique").addEventListener("click", versHistorique);
       $("historique-retour").addEventListener("click", versReglages);
       $("historique-plus").addEventListener("click", () => { historiqueAffiches += 10; dessinerHistorique(); ajusterEchelle(); });
+
+      // -----------------------------------------------------------------
+      // Les grades (lot « grades », 07/11/2026 ; choix de Gwenaël : les
+      // vrais noms kyu/dan, des cadenas dans l'ordre, la correction à la fin
+      // du passage, un bouton « Grades » en bas du menu, « 🎯 M'entraîner »).
+      // Ce que l'élève a réussi vient de sa case (le compte sous un code,
+      // l'appareil pour le visiteur) : le moteur le lit (etatGrades).
+      // -----------------------------------------------------------------
+      let groupeAffiche = -1; // -1 : celui du grade à passer
+      let ficheGrade = 0; // le grade dont la fiche est ouverte (0 : la liste)
+      // Sans le moteur du parcours (son fichier n'a pas pu se charger) : le
+      // 20e kyu seul est ouvert, et rien ne se garde.
+      function gradesSansMoteur() {
+        return CORE.GRADES.map((g, i) => ({numero: i + 1, nom: CORE.nomGrade(i + 1), reussi: false, ouvert: i === 0, actuel: i === 0, meilleur: null}));
+      }
+      function gradesDeLEleve() {
+        if (!PARCOURS) return gradesSansMoteur();
+        const c = caseHistorique();
+        try { return PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(); }
+      }
+      function plusHautGrade() {
+        const c = caseHistorique();
+        try { return c ? PARCOURS.gradeReussi(c) : 0; } catch (e) { return 0; }
+      }
+      function groupeDuGrade(n) {
+        let k = 0;
+        CORE.GROUPES_GRADES.forEach((g, i) => { if (n >= g.debut) k = i; });
+        return k;
+      }
+      function dessinerGrades() {
+        const etat = gradesDeLEleve();
+        const actuel = etat.find(g => g.actuel);
+        const k = groupeAffiche >= 0 ? groupeAffiche : groupeDuGrade(actuel ? actuel.numero : CORE.NB_GRADES);
+        const groupes = $("grades-groupes");
+        groupes.replaceChildren();
+        CORE.GROUPES_GRADES.forEach((g, i) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "option";
+          b.setAttribute("data-groupe", String(i));
+          b.setAttribute("aria-pressed", String(i === k));
+          const fin = CORE.GROUPES_GRADES[i + 1] ? CORE.GROUPES_GRADES[i + 1].debut - 1 : CORE.NB_GRADES;
+          const petit = document.createElement("small");
+          petit.textContent = `${CORE.nomGrade(g.debut)} → ${CORE.nomGrade(fin)}`;
+          b.append(document.createTextNode(g.nom), petit);
+          groupes.append(b);
+        });
+        const liste = $("grades-liste");
+        liste.replaceChildren();
+        const debut = CORE.GROUPES_GRADES[k].debut;
+        const fin = CORE.GROUPES_GRADES[k + 1] ? CORE.GROUPES_GRADES[k + 1].debut - 1 : CORE.NB_GRADES;
+        etat.slice(debut - 1, fin).forEach(g => {
+          const item = document.createElement("li");
+          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : "ferme");
+          item.className = `gr-item ${statut}`;
+          const ligne = document.createElement(g.ouvert ? "button" : "div");
+          ligne.className = "gr-ligne";
+          if (g.ouvert) { ligne.type = "button"; ligne.setAttribute("data-grade", String(g.numero)); }
+          const marque = document.createElement("span");
+          marque.className = "gr-marque";
+          marque.setAttribute("aria-hidden", "true");
+          marque.textContent = g.reussi ? "✓" : (g.actuel ? "▶" : "🔒");
+          const milieu = document.createElement("span");
+          const nom = document.createElement("span");
+          nom.className = "gr-nom";
+          nom.textContent = g.nom;
+          const det = document.createElement("span");
+          det.className = "gr-det";
+          det.textContent = CORE.texteGrade(g.numero);
+          milieu.append(nom, det);
+          const droite = document.createElement("span");
+          droite.className = "gr-droite";
+          if (g.reussi) {
+            droite.textContent = g.meilleur !== null ? `${g.meilleur}/10` : "✓";
+            const petit = document.createElement("small");
+            petit.textContent = "réussi";
+            droite.append(petit);
+          } else if (g.actuel) {
+            const passer = document.createElement("span");
+            passer.className = "gr-passer";
+            passer.textContent = "Passer ▶";
+            droite.append(passer);
+          } else {
+            const ferme = document.createElement("span");
+            ferme.className = "lecteur";
+            ferme.textContent = "fermé";
+            droite.append(ferme);
+          }
+          ligne.append(marque, milieu, droite);
+          item.append(ligne);
+          liste.append(item);
+        });
+      }
+      $("grades-groupes").addEventListener("click", e => {
+        const b = e.target.closest("[data-groupe]");
+        if (!b) return;
+        groupeAffiche = Number(b.getAttribute("data-groupe"));
+        dessinerGrades();
+        ajusterEchelle();
+      });
+      $("grades-liste").addEventListener("click", e => {
+        const b = e.target.closest("[data-grade]");
+        if (b) versGrades(Number(b.getAttribute("data-grade")));
+      });
+
+      // La fiche d'un grade : ses règles, « 🎯 M'entraîner », « Je passe le … ».
+      function dessinerFiche(n) {
+        const g = CORE.GRADES[n - 1];
+        $("fiche-niveau").textContent = `${CORE.GROUPES_GRADES[groupeDuGrade(n)].nom} · grade ${n} sur ${CORE.NB_GRADES}`;
+        const regles = $("fiche-regles");
+        regles.replaceChildren();
+        [
+          [String(g.nombres), `nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`} à additionner`],
+          [CORE.secondes(g.dixiemes / 10), "pour voir tous les nombres d’un calcul"],
+          [String(CORE.GRADE_CALCULS), "calculs"],
+          [`${CORE.GRADE_REUSSI} sur ${CORE.GRADE_CALCULS}`, "pour réussir le grade"]
+        ].forEach(([fort, texte]) => {
+          const li = document.createElement("li");
+          const b = document.createElement("b");
+          b.textContent = fort;
+          li.append(b, document.createTextNode(texte));
+          regles.append(li);
+        });
+        // « Je le passe » : le nom du grade est déjà le titre (« Je passe le
+        // 13e kyu » passait sur deux lignes au téléphone).
+        $("fiche-passer").textContent = "Je le passe ▶";
+        $("fiche-passer").disabled = !gradesDeLEleve()[n - 1].ouvert;
+      }
+      $("fiche-entrainer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement"); });
+      $("fiche-passer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "grade"); });
+
+      // L'écran des grades : la liste (n = 0) ou la fiche du grade n.
+      function versGrades(n) {
+        annulerMinuteries();
+        rendreVeille();
+        seance.phase = "aucune";
+        corps.classList.remove("en-seance");
+        $("ecran-seance").hidden = true;
+        $("ecran-reglages").hidden = true;
+        $("ecran-historique").hidden = true;
+        $("ecran-grades").hidden = false;
+        const fiche = Number.isInteger(n) && n >= 1 && n <= CORE.NB_GRADES ? n : 0;
+        ficheGrade = fiche;
+        $("grades-liste-vue").hidden = Boolean(fiche);
+        $("grades-fiche-vue").hidden = !fiche;
+        $("grades-eyebrow").textContent = fiche ? "Les grades" : "Soroban";
+        $("grades-titre").textContent = fiche ? CORE.nomGrade(fiche) : "Les grades";
+        $("grades-retour").setAttribute("aria-label", fiche ? "Retour aux grades" : "Retour aux réglages");
+        $("grades-retour").title = fiche ? "Les grades" : "Réglages";
+        if (fiche) {
+          groupeAffiche = groupeDuGrade(fiche); // au retour, la liste montre son groupe
+          dessinerFiche(fiche);
+        } else {
+          dessinerGrades();
+        }
+        if (suiviActif()) rechargerMemoire();
+        majSuivi();
+        ajusterEchelle();
+        window.scrollTo(0, 0);
+        $("grades-titre").focus({preventScroll: true});
+      }
+      $("vers-grades").addEventListener("click", () => { groupeAffiche = -1; versGrades(0); });
+      $("grades-retour").addEventListener("click", () => {
+        if (ficheGrade) versGrades(0);
+        else versReglages();
+      });
+
+      // La fin d'un passage : réussi (7 ou plus), presque (5 ou 6), pas encore,
+      // ou arrêté (la flèche avant le 10e calcul).
+      function dessinerFinGrade(justes, avantGrade, arretee) {
+        const n = seance.reglages.grade;
+        const faits = seance.resultats.length;
+        const verdict = arretee ? "arrete" : CORE.verdictGrade(faits, justes);
+        $("compte").textContent = `🥋 ${CORE.nomGrade(n)}`;
+        const textes = {
+          reussi: ["🎉", "Grade réussi !"],
+          presque: ["💪", "Presque !"],
+          pasencore: ["🌱", "Pas encore"],
+          arrete: ["⏸", "Passage arrêté"]
+        }[verdict];
+        $("fin-grade").className = `fin-grade ${verdict}`;
+        $("fin-grade-emoji").textContent = textes[0];
+        $("fin-grade-titre").textContent = textes[1];
+        $("fin-grade-score").innerHTML = `${Number(justes)}<small>/${CORE.GRADE_CALCULS}</small>`;
+        const points = $("fin-grade-points");
+        points.replaceChildren();
+        for (let i = 0; i < CORE.GRADE_CALCULS; i += 1) {
+          const p = document.createElement("i");
+          if (i >= faits) p.className = "rien";
+          else if (!seance.resultats[i].juste) p.className = "x";
+          points.append(p);
+        }
+        const ouvert = $("fin-grade-ouvert");
+        const sous = $("fin-grade-sous");
+        ouvert.hidden = true;
+        sous.hidden = true;
+        // Ce que le passage ouvre : le grade suivant, s'il ne l'était pas déjà.
+        if (verdict === "reussi" && n === CORE.NB_GRADES) {
+          ouvert.textContent = "🏆 Tu as tous les grades !";
+          ouvert.hidden = false;
+        } else if (verdict === "reussi" && n > avantGrade && plusHautGrade() >= n) {
+          ouvert.textContent = `🔓 Le ${CORE.nomGrade(n + 1)} est ouvert`;
+          ouvert.hidden = false;
+        } else if (verdict === "presque") {
+          sous.textContent = `Il en fallait ${CORE.GRADE_REUSSI}. Tu peux le repasser tout de suite.`;
+          sous.hidden = false;
+        } else if (verdict === "pasencore") {
+          sous.textContent = "Entraîne-toi à ce grade, puis reviens.";
+          sous.hidden = false;
+        } else if (verdict === "arrete") {
+          sous.textContent = `Un grade se passe en ${CORE.GRADE_CALCULS} calculs d’affilée.`;
+          sous.hidden = false;
+        }
+        const a = $("fin-grade-a");
+        const b = $("fin-grade-b");
+        const actions = $("fin-grade-actions");
+        actions.classList.remove("seul");
+        a.hidden = false;
+        if (verdict === "reussi") {
+          a.textContent = "Les grades";
+          a.dataset.action = "liste";
+          if (n < CORE.NB_GRADES) {
+            b.textContent = `Le ${CORE.nomGrade(n + 1)} ▶`;
+            b.dataset.action = "suivant";
+          } else {
+            a.hidden = true;
+            actions.classList.add("seul");
+            b.textContent = "Les grades";
+            b.dataset.action = "liste";
+          }
+        } else if (verdict === "arrete") {
+          a.textContent = "Les grades";
+          a.dataset.action = "liste";
+          b.textContent = "Le repasser";
+          b.dataset.action = "repasser";
+        } else {
+          a.textContent = "🎯 M’entraîner";
+          a.dataset.action = "entrainer";
+          b.textContent = "Le repasser";
+          b.dataset.action = "repasser";
+        }
+        $("fin-grade-calculs").hidden = !faits;
+        $("fin-grade-calculs").setAttribute("aria-expanded", "false");
+        $("fin-grade-calculs").textContent = "Voir mes calculs";
+      }
+      function actionFinGrade(bouton) {
+        const n = seance.reglages && seance.reglages.grade;
+        if (!n) return;
+        const action = bouton.dataset.action;
+        if (action === "liste") { groupeAffiche = -1; versGrades(0); }
+        else if (action === "suivant") versGrades(n + 1);
+        else if (action === "repasser") demarrerGrade(n, "grade");
+        else if (action === "entrainer") demarrerGrade(n, "entrainement");
+      }
+      $("fin-grade-a").addEventListener("click", () => actionFinGrade($("fin-grade-a")));
+      $("fin-grade-b").addEventListener("click", () => actionFinGrade($("fin-grade-b")));
+      $("fin-grade-calculs").addEventListener("click", () => {
+        const liste = $("liste");
+        liste.hidden = !liste.hidden;
+        $("fin-grade-calculs").setAttribute("aria-expanded", String(!liste.hidden));
+        $("fin-grade-calculs").textContent = liste.hidden ? "Voir mes calculs" : "Cacher mes calculs";
+      });
 
       // Au démarrage sous un code : les réglages du compte (et l'historique)
       // sont connus quand le serveur a répondu ; six secondes au plus, puis

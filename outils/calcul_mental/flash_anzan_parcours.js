@@ -53,6 +53,16 @@
   //                     séance en coûterait dix, une liste une seule. Rien
   //                     d'autre n'est envoyé : ni heure, ni calculs posés, ni
   //                     réponses, ni temps de réponse. }
+  //     LES GRADES (lot « grades », 07/11/2026) : un passage de grade est une
+  //     séance de mode « grade », un entraînement à un grade une séance de
+  //     mode « entrainement » ; pour elles, le champ « temps » porte le
+  //     NUMÉRO du grade (1 = 20e kyu … 40 = 20e dan) et les réglages sont
+  //     exactement ceux de la grille (additions, chiffres, nombres, 10
+  //     calculs) — sinon la séance est jetée. Un grade est réussi à 7 justes
+  //     sur 10 calculs faits. À côté des séances, « gradeReussi » garde le
+  //     plus haut grade réussi (0 ou absent : aucun) : les cadenas restent
+  //     ouverts quand les vieilles séances sortent des 500 gardées. Il ne
+  //     fait que monter : en fusion, le plus haut des deux.
   //     Les SEANCES_MAX dernières séances sont gardées (≈ deux années de
   //     classe à une séance par jour) ; au-delà, la plus ancienne part.
   //     UN SEUL ORDRE pour tout (historique, borne, numéros, fusion) :
@@ -104,6 +114,9 @@
   // page prof charge ce moteur seul) ; tests/flash-anzan-parcours.test.mjs
   // vérifie qu'elles sont les mêmes.
   const MODES = Object.freeze(["flash", "colonne"]);
+  // Les modes d'une SÉANCE : ceux des réglages, plus le passage d'un grade et
+  // l'entraînement à un grade (lot « grades », 07/11/2026).
+  const MODES_SEANCE = Object.freeze(["flash", "colonne", "grade", "entrainement"]);
   const OPERATIONS = Object.freeze(["plus", "plusmoins"]);
   const SONS = Object.freeze(["aucun", "bip"]);
   const CALCULS = Object.freeze([5, 10, 20]);
@@ -115,6 +128,31 @@
     flash: Object.freeze({operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, temps: 8, calculs: 10, son: "bip"}),
     colonne: Object.freeze({operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 0, calculs: 10})
   });
+
+  // Les grades : la grille de flash_anzan_core.js (GRADES), recopiée — la page
+  // prof charge ce moteur seul ; tests/flash-anzan-parcours.test.mjs vérifie
+  // qu'elle est la même. [chiffres, nombres, temps de toute la série en
+  // dixièmes de seconde], du 20e kyu (1) au 20e dan (40).
+  const GRADES = Object.freeze([
+    [1, 3, 50], [1, 3, 50], [1, 5, 70], [1, 8, 100], [1, 10, 120], [1, 12, 150], [1, 15, 150], [1, 20, 150], [2, 10, 100], [2, 15, 150],
+    [2, 2, 40], [2, 3, 60], [2, 4, 70], [2, 5, 80], [2, 6, 90], [2, 7, 100], [2, 8, 110], [2, 10, 120], [2, 12, 120], [2, 15, 130],
+    [2, 15, 100], [3, 4, 40], [3, 6, 50], [3, 8, 60], [3, 10, 70], [3, 12, 80], [3, 15, 80], [3, 15, 60], [3, 15, 45], [3, 15, 30],
+    [3, 15, 28], [3, 15, 26], [3, 15, 24], [3, 15, 22], [3, 15, 20], [3, 15, 19], [3, 15, 18], [3, 15, 17], [3, 15, 16], [3, 15, 15]
+  ].map(([chiffres, nombres, dixiemes]) => Object.freeze({chiffres, nombres, dixiemes})));
+  const NB_GRADES = GRADES.length;
+  const GRADE_CALCULS = 10;
+  const GRADE_REUSSI = 7;
+  const estModeGrade = mode => mode === "grade" || mode === "entrainement";
+  function gradeValide(n) {
+    return Number.isInteger(n) && n >= 1 && n <= NB_GRADES;
+  }
+  // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan » (les mots du noyau).
+  function nomGrade(n) {
+    if (!gradeValide(n)) return "";
+    if (n <= 20) { const k = 21 - n; return `${k}${k === 1 ? "er" : "e"} kyu`; }
+    const d = n - 20;
+    return `${d}${d === 1 ? "er" : "e"} dan`;
+  }
 
   // Une séance : les douze champs, dans cet ordre, et rien d'autre.
   const SEANCE_CHAMPS = Object.freeze(["jour", "mode", "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "calculs", "faits", "score", "id", "ordre"]);
@@ -132,8 +170,8 @@
   // toute profondeur), les mots et le motif des numéros de séance. Un test
   // compare le texte du catalogue à ces trois listes.
   const CLES_SERVEUR = Object.freeze(["version", "epoque", "reglages", "rang", "mode", "flash", "colonne",
-    "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances"]);
-  const MOTS_SERVEUR = Object.freeze(["flash", "colonne", "plus", "plusmoins", "aucun", "bip"]);
+    "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances", "gradeReussi"]);
+  const MOTS_SERVEUR = Object.freeze(["flash", "colonne", "plus", "plusmoins", "aucun", "bip", "grade", "entrainement"]);
   const MOTIF_SEANCES_PHP = "/^[1-9]\\d{0,3}$/";
   const COMPTE_MAX = 1000000;
 
@@ -237,14 +275,20 @@
     const s = {};
     SEANCE_CHAMPS.forEach((champ, i) => { s[champ] = liste[i]; });
     s.jour = dateOuNull(s.jour);
-    if (!s.jour || MODES.indexOf(s.mode) < 0 || OPERATIONS.indexOf(s.operations) < 0) return null;
+    if (!s.jour || MODES_SEANCE.indexOf(s.mode) < 0 || OPERATIONS.indexOf(s.operations) < 0) return null;
     s.chiffresMin = entier(s.chiffresMin, 0, CHIFFRES.max + 1, 0);
     s.chiffresMax = entier(s.chiffresMax, 0, CHIFFRES.max + 1, 0);
     if (s.chiffresMin < CHIFFRES.min || s.chiffresMax > CHIFFRES.max || s.chiffresMin > s.chiffresMax) return null;
     s.nombres = entier(s.nombres, 0, NOMBRES.max + 1, 0);
     if (s.nombres < NOMBRES.min || s.nombres > NOMBRES.max) return null;
     s.temps = entier(s.temps, -1, COMPTE_MAX, -1);
-    if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
+    if (estModeGrade(s.mode)) {
+      // Un grade : exactement sa ligne de la grille, rien d'approché.
+      if (!gradeValide(s.temps)) return null;
+      const g = GRADES[s.temps - 1];
+      if (s.operations !== "plus" || s.chiffresMin !== g.chiffres || s.chiffresMax !== g.chiffres
+        || s.nombres !== g.nombres || s.calculs !== GRADE_CALCULS) return null;
+    } else if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
     if (CALCULS.indexOf(s.calculs) < 0) return null;
     s.faits = entier(s.faits, 0, s.calculs, 0);
     if (!s.faits) return null;
@@ -262,11 +306,19 @@
   // Les réglages d'une séance, au format de la page (temps ou limite).
   function reglagesDeSeance(s) {
     const r = {operations: s.operations, chiffresMin: s.chiffresMin, chiffresMax: s.chiffresMax, nombres: s.nombres, calculs: s.calculs};
-    if (s.mode === "flash") r.temps = s.temps; else r.limite = s.temps;
+    if (estModeGrade(s.mode)) r.grade = s.temps;
+    else if (s.mode === "flash") r.temps = s.temps; else r.limite = s.temps;
     return r;
   }
 
+  // Un PASSAGE réussi : 10 calculs faits, 7 justes ou plus.
+  function passageReussi(s) {
+    return s.mode === "grade" && s.faits >= GRADE_CALCULS && s.score >= GRADE_REUSSI;
+  }
+
   const I_JOUR = SEANCE_CHAMPS.indexOf("jour");
+  const I_MODE = SEANCE_CHAMPS.indexOf("mode");
+  const I_TEMPS = SEANCE_CHAMPS.indexOf("temps");
   const I_FAITS = SEANCE_CHAMPS.indexOf("faits");
   const I_SCORE = SEANCE_CHAMPS.indexOf("score");
   const I_ID = SEANCE_CHAMPS.indexOf("id");
@@ -314,8 +366,18 @@
       parId.set(s[I_ID], deja ? plusAvancee(deja, s) : s);
     });
     const triees = [...parId.values()].sort(avant);
+    // Le plus haut grade réussi : celui que p connaissait, ou celui d'un
+    // passage réussi — compté AVANT que la borne fasse sortir les plus
+    // vieilles séances.
+    let grade = gradeValide(p.gradeReussi) ? p.gradeReussi : 0;
+    triees.forEach(s => {
+      if (s[I_MODE] === "grade" && s[I_FAITS] >= GRADE_CALCULS && s[I_SCORE] >= GRADE_REUSSI && s[I_TEMPS] > grade) grade = s[I_TEMPS];
+    });
     p.seances = {};
     triees.slice(Math.max(0, triees.length - SEANCES_MAX)).forEach((s, i) => { p.seances[String(i + 1)] = s.slice(); });
+    // Absent tant qu'aucun grade n'est réussi : le parcours d'une élève qui
+    // ne passe pas de grade reste octet pour octet celui d'avant.
+    if (grade) p.gradeReussi = grade; else delete p.gradeReussi;
     return p;
   }
 
@@ -328,6 +390,8 @@
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return p;
     p.epoque = entier(brut.epoque, 0, COMPTE_MAX, 0);
     p.reglages = normaliserReglages(brut.reglages);
+    const grade = entier(brut.gradeReussi, 0, NB_GRADES, 0);
+    if (grade) p.gradeReussi = grade;
     const seances = brut.seances && typeof brut.seances === "object" && !Array.isArray(brut.seances) ? brut.seances : {};
     const propres = [];
     Object.keys(seances).forEach(cle => {
@@ -399,6 +463,9 @@
     if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
     const fusion = creer();
     fusion.epoque = a.epoque;
+    // Le plus haut grade réussi ne fait que monter : le plus haut des deux.
+    const grade = Math.max(a.gradeReussi || 0, b.gradeReussi || 0);
+    if (grade) fusion.gradeReussi = grade;
     // L'union par identifiant, rangée dans l'ordre du temps : aucune séance
     // ne dépend de la place qu'elle avait dans l'une ou l'autre copie.
     ranger(fusion, listes(a).concat(listes(b)));
@@ -453,7 +520,7 @@
     const p = normaliser(parcours);
     const s = seance && typeof seance === "object" ? seance : {};
     const r = s.reglages && typeof s.reglages === "object" ? s.reglages : {};
-    const mode = dans(MODES, s.mode, "flash");
+    const mode = dans(MODES_SEANCE, s.mode, "flash");
     const propre = normaliserSeance({
       jour: dateOuNull(jour) || jourLocal(),
       mode,
@@ -461,7 +528,7 @@
       chiffresMin: r.chiffresMin,
       chiffresMax: r.chiffresMax,
       nombres: r.nombres,
-      temps: mode === "flash" ? r.temps : r.limite,
+      temps: estModeGrade(mode) ? r.grade : (mode === "flash" ? r.temps : r.limite),
       calculs: r.calculs,
       faits: s.faits,
       score: s.score,
@@ -515,8 +582,13 @@
       .sort((x, y) => avant(p.seances[String(y)], p.seances[String(x)]))
       .map(n => {
         const s = normaliserSeance(p.seances[String(n)]);
-        return {numero: n, id: s.id, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
+        const vue = {numero: n, id: s.id, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
           calculs: s.calculs, faits: s.faits, score: s.score, arretee: s.faits < s.calculs};
+        if (estModeGrade(s.mode)) {
+          vue.grade = s.temps;
+          if (s.mode === "grade") vue.reussi = passageReussi(s);
+        }
+        return vue;
       });
   }
 
@@ -551,7 +623,59 @@
   // dix dernières séances.
   function resumeProf(parcours) {
     const r = resume(parcours);
-    return Object.assign(r, {texte: texteResume(r), dernieres: historique(parcours).slice(0, 10), commence: r.calculs > 0});
+    const grade = gradeReussi(parcours);
+    return Object.assign(r, {texte: texteResume(r), dernieres: historique(parcours).slice(0, 10), commence: r.calculs > 0,
+      grade, texteGrade: texteGradeReussi(grade)});
+  }
+
+  // ------------------------------------------------------------- les grades
+  //
+  // Lot « grades » (07/11/2026). Les cadenas : le grade suivant le plus haut
+  // réussi est ouvert, ceux d'en dessous aussi (on peut repasser un grade
+  // réussi), les autres sont fermés.
+
+  // Le plus haut grade réussi (0 : aucun).
+  function gradeReussi(parcours) {
+    const p = normaliser(parcours);
+    return gradeValide(p.gradeReussi) ? p.gradeReussi : 0;
+  }
+
+  // « 🥋 Grade réussi : 13e kyu » ; rien sans grade réussi.
+  function texteGradeReussi(grade) {
+    return gradeValide(grade) ? `🥋 Grade réussi\u00a0: ${nomGrade(grade)}` : "";
+  }
+
+  // Les 40 grades, pour l'écran des grades : {numero, nom, reussi, ouvert,
+  // actuel (le premier non réussi, celui à passer), meilleur (le meilleur
+  // score d'un passage complet encore dans l'historique, ou null)}.
+  function etatGrades(parcours) {
+    const plusHaut = gradeReussi(parcours);
+    const meilleurs = {};
+    historique(parcours).forEach(s => {
+      if (s.mode !== "grade" || s.faits < GRADE_CALCULS) return;
+      if (!(s.grade in meilleurs) || s.score > meilleurs[s.grade]) meilleurs[s.grade] = s.score;
+    });
+    return GRADES.map((g, i) => {
+      const n = i + 1;
+      return {numero: n, nom: nomGrade(n), chiffres: g.chiffres, nombres: g.nombres, dixiemes: g.dixiemes,
+        reussi: n <= plusHaut, ouvert: n <= plusHaut + 1, actuel: n === plusHaut + 1,
+        meilleur: n in meilleurs ? meilleurs[n] : null};
+    });
+  }
+
+  // Ce que l'historique écrit d'une séance de grade (la page et « Ma
+  // classe ») : {mode: « 🥋 13e kyu », details: « Passage · réussi »}, ou
+  // {mode: « 🎯 13e kyu », details: « Entraînement au grade »} ; null pour
+  // une séance de Flash ou de Colonne.
+  function libelleGrade(s) {
+    if (!s || !estModeGrade(s.mode) || !gradeValide(s.grade)) return null;
+    if (s.mode === "entrainement") return {mode: `🎯 ${nomGrade(s.grade)}`, details: "Entraînement au grade"};
+    let verdict;
+    if (s.faits < GRADE_CALCULS) verdict = "arrêté";
+    else if (s.score >= GRADE_REUSSI) verdict = "réussi";
+    else if (s.score >= 5) verdict = "presque";
+    else verdict = "pas encore";
+    return {mode: `🥋 ${nomGrade(s.grade)}`, details: `Passage · ${verdict}`};
   }
 
   // La tuile de l'espace élève : une ligne, « 230 calculs · 5 jours
@@ -1567,6 +1691,16 @@
   }
 
   return Object.freeze({
+    MODES_SEANCE,
+    GRADES,
+    NB_GRADES,
+    GRADE_CALCULS,
+    GRADE_REUSSI,
+    nomGrade,
+    gradeReussi,
+    texteGradeReussi,
+    etatGrades,
+    libelleGrade,
     VERSION,
     APPLI,
     SUIVI_URL,

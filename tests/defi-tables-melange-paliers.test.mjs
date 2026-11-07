@@ -514,7 +514,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, lot « couverture » (06/11/2026) : les copies
   // prof/defi_calcul_core.js, prof/defi_calcul_mon_parcours.js et
   // prof/index.php changent, 65 au manifeste (avant : defi-calcul-relecture-1).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-couverture$/m);
+  // Puis Anzan, les grades (07/11/2026) : lib/applis.php (les mots « grade »
+  // et « entrainement », la clé « gradeReussi »), la copie
+  // prof/flash_anzan_parcours.js et prof/index.php changent, 65 au manifeste
+  // (avant : defi-calcul-couverture).
+  assert.match(lire("_serveur/public/VERSION"), /^lot anzan-grades$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

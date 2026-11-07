@@ -52,6 +52,18 @@ export function parcoursComplet() {
   p = seance_(p, "2026-10-21", "flash", {...FLASH, chiffresMin: 2, chiffresMax: 2, temps: 10}, 10, 9);
   p = seance_(p, "2026-10-21", "colonne", COLONNE, 10, 10);
   p = seance_(p, "2026-10-22", "flash", FLASH, 10, 8);
+  // Les grades (lot « grades », 07/11/2026) : un passage réussi (20e kyu),
+  // un entraînement au 19e kyu, un passage « presque », puis réussi — le
+  // serveur doit garder les mots « grade » et « entrainement » et la clé
+  // « gradeReussi ».
+  const GRADE = n => {
+    const g = PARCOURS.GRADES[n - 1];
+    return {operations: "plus", chiffresMin: g.chiffres, chiffresMax: g.chiffres, nombres: g.nombres, calculs: 10, grade: n};
+  };
+  p = seance_(p, "2026-11-07", "grade", GRADE(1), 10, 9);
+  p = seance_(p, "2026-11-07", "entrainement", GRADE(2), 10, 8);
+  p = seance_(p, "2026-11-07", "grade", GRADE(2), 10, 6);
+  p = seance_(p, "2026-11-08", "grade", GRADE(2), 10, 7);
   return PARCOURS.pourServeur(p);
 }
 

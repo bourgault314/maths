@@ -246,7 +246,7 @@ function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
 // à zéro jusque-là), comme celle d'un vrai ordinateur (correctif du 30/10/2026).
 // `appareil` : d'autres clés déjà dans le localStorage de l'appareil (la case
 // « sans code » d'un visiteur, par exemple), {clé: valeur}.
-function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = null} = {}) {
+function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = null, moteur = false} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
@@ -301,6 +301,9 @@ function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = nul
   };
   ctx.window = ctx;
   if (suivi && suivi.billet) ctx.MATHSGO_ENTREE = {billet: suivi.billet};
+  // Le visiteur avec le moteur du parcours chargé (comme sur le site), sans
+  // habillage du suivi : sa case « sans code » de l'appareil (lot « grades »).
+  if (moteur && !suivi) ctx.MathsGoFlashAnzanParcours = PARCOURS;
   if (suivi) {
     ctx.MathsGoFlashAnzanParcours = PARCOURS;
     // L'habillage prend la fenêtre de la page (ici la simulée), et le faux serveur.
@@ -1052,14 +1055,14 @@ test("Mon historique : les séances du compte, dix par dix, la plus récente en 
   const p = ouvrir(null, {suivi: {code: "ABCDEF", serveur: fauxServeur(distant)}});
   await p.souffler();
   p.$("vers-historique").click();
-  assert.equal(p.$("historique-compte").textContent, "127 calculs · 10 jours d’entraînement");
+  assert.equal(p.$("historique-compte").textContent, "167 calculs · 12 jours d’entraînement");
   assert.equal(p.$("historique-liste").children.length, 10, "dix d'abord");
   assert.match(texte(p.$("historique-liste").children[0]), /23 oct\./, "la plus récente en haut");
   assert.equal(p.$("historique-plus").hidden, false);
   p.$("historique-plus").click();
-  assert.equal(p.$("historique-liste").children.length, 15, "puis les suivantes");
+  assert.equal(p.$("historique-liste").children.length, 19, "puis les suivantes (quatre séances de grades comprises, lot « grades »)");
   assert.equal(p.$("historique-plus").hidden, true);
-  assert.match(texte(p.$("historique-liste").children[14]), /13 oct\./, "la plus ancienne en bas");
+  assert.match(texte(p.$("historique-liste").children[18]), /13 oct\./, "la plus ancienne en bas");
 });
 
 // ---------------------------------------------------------------------------
@@ -1184,4 +1187,173 @@ test("réglages : la ligne de résumé « ⚡ 5 calculs · 4 nombres · 2 s par 
   assert.match(p.$("resume-reglages").textContent.replace(/\s+/g, " "), /^📝 10 calculs · 8 nombres · sans limite de temps$/);
   assert.equal(p.$("grille").classList.contains("sans-son"), true, "en Colonne, pas de Son : le résumé prend la ligne");
   assert.doesNotMatch(PAGE, /`soit \$\{|temps-total/, "plus de « soit 8 s en tout » sous le temps");
+});
+
+// ---------------------------------------------------------------------------
+// Les grades (lot « grades », 07/11/2026) : la page jouée par un visiteur
+// sans code, le moteur du parcours chargé (sa case « sans code »).
+// ---------------------------------------------------------------------------
+const CLE_CASE = "mathsgo-anzan-parcours";
+const caseDe = p => JSON.parse(p.stockage.get(CLE_CASE) || "null");
+// La durée d'un calcul de grade : le décompte, la série entière, une marge.
+const dureeGrade = n => AVANT_LE_3 + 3 * 800 + CORE.GRADES[n - 1].dixiemes * 100 + 100;
+// Les calculs que la page tire, séance après séance (une seule graine par page).
+function tirages() {
+  const rng = CORE.mulberry32((0.5 * 4294967296) >>> 0);
+  return {suivants: (mode, r) => CORE.tirerSeance(r, rng)};
+}
+// Joue un passage entier : `justes` bonnes réponses d'abord, puis des fausses.
+function jouerPassage(p, n, calculs, justes) {
+  for (let i = 0; i < CORE.GRADE_CALCULS; i += 1) {
+    p.avancer(dureeGrade(n));
+    assert.equal(p.$("zone-rep").hidden, false, `calcul ${i + 1} : la réponse est demandée`);
+    assert.equal(p.$("revoir").hidden, true, "pas de « Revoir » pendant un passage");
+    p.taper(i < justes ? calculs[i].total : calculs[i].total + 1);
+    p.touche("Enter", p.$("valider"));
+    if (i < CORE.GRADE_CALCULS - 1) {
+      assert.equal(p.vue(), "vue-jeu", "pas de correction entre deux calculs : le suivant part");
+      assert.equal(p.$("compte").textContent, `Calcul ${i + 2} / 10`);
+    }
+  }
+}
+function ouvrirGrades(appareil = null) {
+  const p = ouvrir(null, {moteur: true, appareil});
+  p.$("vers-grades").click();
+  return p;
+}
+
+test("grades : le bouton « 🥋 Grades » est là dans les deux modes ; au départ, le 20e kyu seul est ouvert", () => {
+  const p = ouvrir(null, {moteur: true});
+  assert.equal(p.$("vers-grades").hidden, false);
+  p.$("ecran-reglages").querySelector('[data-mode="colonne"]').click();
+  assert.equal(p.$("vers-grades").hidden, false, "en Colonne aussi : le menu ne bouge pas");
+  p.$("vers-grades").click();
+  assert.equal(p.$("ecran-grades").hidden, false);
+  assert.equal(p.$("grades-titre").textContent, "Les grades");
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(lignes.length, 10, "le groupe Débutant : dix grades");
+  assert.match(lignes[0].className, /\bactuel\b/);
+  assert.equal(lignes[0].querySelector(".gr-ligne").tagName, "BUTTON");
+  assert.equal(texte(lignes[0]).includes("20e kyu"), true);
+  lignes.slice(1).forEach(l => {
+    assert.match(l.className, /\bferme\b/);
+    assert.equal(l.querySelector(".gr-ligne").tagName, "DIV", "un grade fermé ne se touche pas");
+  });
+  assert.equal(p.$("grades-groupes").querySelectorAll("[data-groupe]").length, 4);
+  p.$("grades-groupes").querySelector('[data-groupe="3"]').click();
+  assert.match(texte(p.$("grades-liste").querySelectorAll(".gr-item")[9]), /20e dan/);
+  p.$("grades-retour").click();
+  assert.equal(p.vue(), "reglages");
+});
+
+test("grades : la fiche, puis un passage réussi — 10 calculs sans correction entre eux, au temps de la grille, et le grade suivant s'ouvre", () => {
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  assert.match(texte(p.$("fiche-regles")), /3nombres d’un chiffre à additionner/);
+  assert.match(texte(p.$("fiche-regles")), /5 s/);
+  assert.match(texte(p.$("fiche-regles")), /7 sur 10pour réussir le grade/);
+  const t = tirages();
+  p.$("fiche-passer").click();
+  const calculs = t.suivants("grade", CORE.reglagesGrade(1, "bip"));
+  assert.ok(calculs.every(c => c.termes.every(x => x.signe === 1 && x.valeur >= 1 && x.valeur <= 9)), "des additions de nombres d'un chiffre");
+  // Le rythme : 5 s pour trois nombres, soit 1 666,7 ms par nombre.
+  p.avancer(AVANT_LE_3);
+  const nombres = p.oscillateurs.filter(o => o.frequency.value === 880).map(o => o.debut);
+  assert.equal(nombres.length, 3);
+  assert.ok(Math.abs(nombres[1] - nombres[0] - 5 / 3) < 1e-9 && Math.abs(nombres[2] - nombres[1] - 5 / 3) < 1e-9);
+  jouerPassage(p, 1, calculs, 8);
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("fin-grade").hidden, false);
+  assert.match(p.$("fin-grade").className, /\breussi\b/);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  assert.match(p.$("fin-grade-score").textContent, /^8\/10$/);
+  assert.equal(p.$("fin-grade-ouvert").hidden, false);
+  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 19e kyu est ouvert");
+  assert.equal(p.$("liste").hidden, true, "la liste des calculs est repliée");
+  p.$("fin-grade-calculs").click();
+  assert.equal(p.$("liste").hidden, false);
+  assert.equal(caseDe(p).gradeReussi, 1, "le grade est gardé dans la case de l'appareil");
+  assert.equal(caseDe(p).seances["1"][1], "grade");
+  // Le repasser une fois réussi : réussi encore, mais rien de « neuf » ne s'ouvre.
+  p.$("fin-grade-a").click();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1, "bip")), 10);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  assert.equal(p.$("fin-grade-ouvert").hidden, true, "le 19e kyu était déjà ouvert : on ne le redit pas");
+  // « Le 19e kyu ▶ » : sa fiche ; la flèche ramène à la liste, où le 20e kyu
+  // a son ✓ et sa note, et le 19e kyu est à passer.
+  assert.equal(p.$("fin-grade-b").textContent, "Le 19e kyu ▶");
+  p.$("fin-grade-b").click();
+  assert.equal(p.$("grades-titre").textContent, "19e kyu");
+  p.$("grades-retour").click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.match(lignes[0].className, /\breussi\b/);
+  assert.match(texte(lignes[0]), /10\/10réussi/, "la meilleure note des passages complets");
+  assert.match(lignes[1].className, /\bactuel\b/);
+});
+
+test("grades : « presque » à 6, « pas encore » à 4, « arrêté » par la flèche — rien ne s'ouvre", () => {
+  const t = tirages();
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 6);
+  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
+  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 7. Tu peux le repasser tout de suite.");
+  assert.equal(p.$("fin-grade-ouvert").hidden, true);
+  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Le repasser"]);
+  p.$("fin-grade-b").click();
+  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 4);
+  assert.equal(p.$("fin-grade-titre").textContent, "Pas encore");
+  assert.equal(caseDe(p).gradeReussi, undefined, "aucun grade réussi : la clé n'existe pas");
+  p.$("fin-grade-b").click();
+  const calculs = t.suivants("grade", CORE.reglagesGrade(1));
+  for (let i = 0; i < 3; i += 1) {
+    p.avancer(dureeGrade(1));
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+  }
+  p.$("retour").click();
+  assert.equal(p.$("fin-grade-titre").textContent, "Passage arrêté");
+  assert.match(p.$("fin-grade-score").textContent, /^3\/10$/);
+  assert.equal(caseDe(p).gradeReussi, undefined, "3 justes sur 3 faits ne réussissent pas un grade");
+  assert.equal(PARCOURS.historique(caseDe(p))[0].reussi, false);
+});
+
+test("grades : « 🎯 M'entraîner » joue le grade comme le Flash — correction après chaque calcul, « Revoir » — sans compter comme un passage", () => {
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-entrainer").click();
+  const calculs = tirages().suivants("entrainement", CORE.reglagesGrade(1));
+  p.avancer(dureeGrade(1));
+  assert.equal(p.$("revoir").hidden, false, "« Revoir » à l'entraînement");
+  p.taper(calculs[0].total);
+  p.touche("Enter", p.$("valider"));
+  assert.equal(p.vue(), "vue-correction", "la correction après le calcul");
+  p.$("retour").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("fin-grade").hidden, true, "pas l'écran d'un passage");
+  assert.equal(p.$("vers-reglages").textContent, "Le grade");
+  assert.equal(caseDe(p).seances["1"][1], "entrainement");
+  assert.equal(caseDe(p).gradeReussi, undefined, "un entraînement ne réussit pas de grade, même tout juste");
+  p.$("vers-reglages").click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu", "« Le grade » ramène à sa fiche");
+});
+
+test("grades : le plus haut grade réussi gardé ouvre les cadenas même sans ses séances ; Mon historique écrit les grades avec les mots du moteur", () => {
+  const q = ouvrirGrades({[CLE_CASE]: JSON.stringify({version: 1, epoque: 0, reglages: {}, gradeReussi: 3,
+    seances: {"1": ["2026-11-06", "grade", "plus", 1, 1, 5, 3, 10, 10, 9, 77, 1], "2": ["2026-11-07", "entrainement", "plus", 1, 1, 10, 5, 10, 4, 3, 78, 2]}})});
+  const lignes = q.$("grades-liste").querySelectorAll(".gr-item");
+  assert.deepEqual(lignes.slice(0, 5).map(l => l.className.replace("gr-item ", "")), ["reussi", "reussi", "reussi", "actuel", "ferme"],
+    "gradeReussi = 3 : les trois premiers réussis (même sans leur séance), le 4e à passer");
+  assert.match(texte(lignes[2]), /9\/10réussi/, "la note du passage encore dans l'historique");
+  assert.match(texte(lignes[1]), /✓réussi/, "un grade réussi dont la séance n'est plus là : ✓ sans note");
+  assert.match(texte(lignes[3]), /Passer ▶/);
+  q.$("grades-retour").click();
+  q.$("vers-historique").click();
+  const items = q.$("historique-liste").children;
+  assert.match(texte(items[0]), /🎯 16e kyuEntraînement au grade/);
+  assert.match(texte(items[1]), /🥋 18e kyuPassage · réussi/);
 });

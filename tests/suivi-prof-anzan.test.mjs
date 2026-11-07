@@ -652,3 +652,51 @@ test("lot 4b-bis — une impression à la fois : la feuille des codes, sans « a
   assert.deepEqual([...classes], ["imprime-anzan"], "le parcours en cours garde sa classe");
   assert.equal($("fa-titre").textContent, "Le parcours de Rania", "et sa feuille n'est pas vidée par le vieux filet");
 });
+
+// ------------------------------------------------------------ les grades
+// Lot « grades » (07/11/2026), demande de Gwenaël : voir où en est l'élève
+// sans ouvrir l'historique — le plus haut grade réussi sous le compte de
+// calculs, et dans sa fenêtre ; chaque passage et entraînement dans ses
+// séances, avec les mots du moteur.
+const G = (ordre, jour, mode, n, faits, score) => {
+  const g = ANZAN.GRADES[n - 1];
+  return S(ordre, jour, mode, "plus", g.chiffres, g.chiffres, g.nombres, n, 10, faits, score);
+};
+const RANIA_GRADES = parcoursDe(RANIA_SEANCES.concat([
+  G(13, "2026-11-07", "grade", 1, 10, 9),
+  G(14, "2026-11-07", "entrainement", 2, 10, 6),
+  G(15, "2026-11-08", "grade", 2, 10, 6)
+]));
+
+test("grades : le plus haut grade réussi sous le compte de calculs (sans ouvrir la fenêtre) ; rien pour qui n'en a pas", () => {
+  const liste = classe405();
+  liste[2].parcours = RANIA_GRADES;
+  const {lignes} = ongletAnzan(liste);
+  const calculs = cellules(lignes[0])[1];
+  assert.equal(calculs.premier(n => n.tag === "b").textContent, `${RANIA_SEANCES.reduce((s, x) => s + x[8], 0) + 30} calculs`);
+  const grade = calculs.premier(n => n.tag === "small");
+  assert.equal(grade.className, "anzan-grade");
+  assert.equal(grade.textContent, "🥋 20e kyu", "le 19e kyu n'est que « presque » : le grade réussi reste le 20e kyu");
+  const sans = ongletAnzan(classe405());
+  assert.equal(cellules(sans.lignes[0])[1].premier(n => n.tag === "small"), null);
+});
+
+test("grades : dans la fenêtre, « 🥋 Grade réussi : 20e kyu » sous le compte, et les séances de grade avec les mots du moteur (imprimées aussi)", () => {
+  const r = fenetre({id: 3, prenom: "Rania", parcours: RANIA_GRADES});
+  r.f.ouvrirParcoursAnzan(r.lu);
+  assert.equal(r.$("pa-grade").hidden, false);
+  assert.equal(r.$("pa-grade").textContent, "🥋 Grade réussi : 20e kyu");
+  const items = r.$("pa-liste").children;
+  const ligne = li => li.children.slice(1).map(span => span.textContent.replace(/ /g, " "));
+  assert.deepEqual(ligne(items[0]), ["🥋 19e kyuPassage · presque", "6/10"]);
+  assert.deepEqual(ligne(items[1]), ["🎯 19e kyuEntraînement au grade", "6/10"]);
+  assert.deepEqual(ligne(items[2]), ["🥋 20e kyuPassage · réussi", "9/10"]);
+  r.f.imprimerParcoursAnzan();
+  assert.deepEqual(r.impressions[0].lignes[0].slice(1), ["🥋 19e kyu", "Passage · presque", "6/10"]);
+  r.f.fermerParcoursAnzan();
+  assert.equal(r.$("pa-grade").hidden, true);
+  assert.equal(r.$("pa-grade").textContent, "");
+  const sans = fenetre({id: 3, prenom: "Rania", parcours: RANIA});
+  sans.f.ouvrirParcoursAnzan(sans.lu);
+  assert.equal(sans.$("pa-grade").hidden, true, "pas de ligne sans grade réussi");
+});
