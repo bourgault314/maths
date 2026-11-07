@@ -142,10 +142,10 @@ test("les instants se calculent depuis le top départ, sans dérive", () => {
 // ---------------------------------------------------------------------------
 test("le résumé d'une séance s'écrit à la française", () => {
   const nbsp = s => s.replace(/ /g, " ");
-  assert.equal(nbsp(CORE.resume("flash", CORE.normaliser("flash", {}))), "⚡ Flash · 2 à 3 chiffres · 10 nombres · 0,8 s");
+  assert.equal(nbsp(CORE.resume("flash", CORE.normaliser("flash", {}))), "⚡ Flash · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout");
   assert.equal(nbsp(CORE.resume("colonne", CORE.normaliser("colonne", {}))), "📝 Colonne · + et − · 3 chiffres · 8 nombres");
   assert.equal(nbsp(CORE.resume("colonne", CORE.normaliser("colonne", {limite: 20, chiffresMin: 1, chiffresMax: 1}))), "📝 Colonne · + et − · 1 chiffre · 8 nombres · 20 s");
-  assert.equal(nbsp(CORE.resume("flash", CORE.normaliser("flash", {temps: 25}), {avecMode: false})), "2 à 3 chiffres · 10 nombres · 2,5 s");
+  assert.equal(nbsp(CORE.resume("flash", CORE.normaliser("flash", {temps: 25}), {avecMode: false})), "2 à 3 chiffres · 10 nombres · 2,5 s par nombre · 25 s en tout");
   assert.equal(nbsp(CORE.secondes(10 * 0.3)), "3 s");
   assert.equal(nbsp(CORE.secondes(7 * 0.3)), "2,1 s");
 });

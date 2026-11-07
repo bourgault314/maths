@@ -4548,7 +4548,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return date.toLocaleDateString("fr-FR", options);
   }
 
-  // « + et − · 3 chiffres · 8 nombres · 20 s » : les réglages d'une séance,
+  // « + et − · 3 chiffres · 8 nombres · 20 s » (Colonne), « 2 à 3 chiffres ·
+  // 10 nombres · 0,8 s par nombre · 8 s en tout » (Flash) : les réglages d'une séance,
   // les mots de MATHSGO_FLASH_ANZAN_CORE.resume(mode, reglages, {avecMode:
   // false}) — le noyau n'est pas servi par le suivi, la petite fonction est
   // recopiée ici ; un test la compare au noyau sur tous les réglages.
@@ -4560,9 +4561,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       ? `${r.chiffresMin}\u00a0chiffre${r.chiffresMin > 1 ? "s" : ""}`
       : `${r.chiffresMin} à ${r.chiffresMax}\u00a0chiffres`);
     morceaux.push(`${r.nombres}\u00a0nombres`);
-    if (mode === "flash") morceaux.push(`${String(Math.round(r.temps) / 10).replace(".", ",")}\u00a0s`);
+    // Flash : le temps par nombre et le temps du calcul en entier (lot
+    // « entraînement 5 ou 10 », 07/11/2026) — « 0,8 s par nombre · 8 s en tout ».
+    const sec = v => `${String(Math.round(v * 10) / 10).replace(".", ",")}\u00a0s`;
+    if (mode === "flash") morceaux.push(`${sec(r.temps / 10)}\u00a0par\u00a0nombre`, `${sec(r.nombres * (r.temps / 10))}\u00a0en\u00a0tout`);
     else if (r.limite) morceaux.push(`${r.limite}\u00a0s`);
-    return morceaux.join(" · ");
+    return morceaux.join("\u00a0· "); // le point collé au morceau d'avant, comme le noyau
   }
 
   // Ce que disent la fenêtre et sa feuille, lu une fois : le titre, le

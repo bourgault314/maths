@@ -297,11 +297,11 @@ test("ses séances dans la fenêtre de l'élève (lot 5c) : la phrase du compte,
   const sp = x => x.replace(/\u00a0/g, " ");
   const lu = li => li.children.map(span => (span.children.length
     ? [propre(span), ...span.children.map(x => sp(x.textContent))].filter(Boolean) : span.textContent));
-  assert.deepEqual(lu(items[0]), ["23 oct.", ["⚡ Flash", "+ et − · 2 à 3 chiffres · 10 nombres · 0,8 s"], ["0/2", "arrêtée"]],
+  assert.deepEqual(lu(items[0]), ["23 oct.", ["⚡ Flash", "+ et − · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout"], ["0/2", "arrêtée"]],
     "la plus récente en haut (le plus grand ORDRE, même avec le plus petit identifiant)");
-  assert.deepEqual(lu(items[2]), ["22 oct.", ["⚡ Flash", "2 à 3 chiffres · 10 nombres · 0,8 s"], "8/10"]);
+  assert.deepEqual(lu(items[2]), ["22 oct.", ["⚡ Flash", "2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout"], "8/10"]);
   assert.deepEqual(lu(items[3]), ["21 oct.", ["📝 Colonne", "+ et − · 3 chiffres · 8 nombres · 20 s"], "10/10"]);
-  assert.deepEqual(lu(items[5]), ["20 oct.", ["⚡ Flash", "2 chiffres · 10 nombres · 1 s"], ["6/7", "arrêtée"]], "6/7 · arrêtée = 7 calculs faits sur 10 prévus");
+  assert.deepEqual(lu(items[5]), ["20 oct.", ["⚡ Flash", "2 chiffres · 10 nombres · 1 s par nombre · 10 s en tout"], ["6/7", "arrêtée"]], "6/7 · arrêtée = 7 calculs faits sur 10 prévus");
   assert.deepEqual(lu(items[9]), ["15 oct.", ["📝 Colonne", "+ et − · 2 chiffres · 10 nombres"], "9/10"],
     "la dixième : les deux plus anciennes (12 et 13 oct.) ne sont pas montrées ; Colonne sans limite de temps");
   assert.equal(r.$("pa-note").textContent, "Les 10 dernières séances, sur 12.");
@@ -403,8 +403,8 @@ test("« Imprimer » : la feuille seule (classe imprime-anzan), les mêmes séan
   assert.deepEqual(sortie.classes, ["imprime-anzan"]);
   assert.equal(sortie.titre, "Le parcours de Rania");
   assert.equal(sortie.lignes.length, 10);
-  assert.deepEqual(sortie.lignes[0], ["23 oct.", "⚡ Flash", "+ et − · 2 à 3 chiffres · 10 nombres · 0,8 s", "0/2 · arrêtée"]);
-  assert.deepEqual(sortie.lignes[2], ["22 oct.", "⚡ Flash", "2 à 3 chiffres · 10 nombres · 0,8 s", "8/10"]);
+  assert.deepEqual(sortie.lignes[0], ["23 oct.", "⚡ Flash", "+ et − · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout", "0/2 · arrêtée"]);
+  assert.deepEqual(sortie.lignes[2], ["22 oct.", "⚡ Flash", "2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout", "8/10"]);
   r.ecouteurs.afterprint();
   assert.equal(r.classes.size, 0, "la classe part au retour");
   assert.deepEqual(["fa-titre", "fa-compte", "fa-corps", "fa-note"].map(id => r.$(id).textContent), ["", "", "", ""], "la feuille est vidée");

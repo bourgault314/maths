@@ -58,7 +58,9 @@
   //     mode « entrainement » ; pour elles, le champ « temps » porte le
   //     NUMÉRO du grade (1 = 20e kyu … 40 = 20e dan) et les réglages sont
   //     exactement ceux de la grille (additions, chiffres, nombres, 10
-  //     calculs) — sinon la séance est jetée. Un grade est réussi à 7 justes
+  //     calculs) — sinon la séance est jetée. Seule exception (lot
+  //     « entraînement 5 ou 10 », 07/11/2026) : un ENTRAÎNEMENT peut faire 5
+  //     calculs (ENTRAINEMENT_CALCULS) ; un passage, jamais. Un grade est réussi à 7 justes
   //     sur 10 calculs faits. À côté des séances, « gradeReussi » garde le
   //     plus haut grade réussi (0 ou absent : aucun) : les cadenas restent
   //     ouverts quand les vieilles séances sortent des 500 gardées. Il ne
@@ -155,6 +157,9 @@
   // additions, restent valables : « plus » est toujours accepté.
   const GRADES_PLUS_ET_MOINS = Object.freeze([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const GRADE_CALCULS = 10;
+  // « 🎯 M'entraîner » en 5 ou 10 calculs (ENTRAINEMENT_CALCULS de
+  // flash_anzan_core.js, recopié ; un test vérifie qu'il est le même).
+  const ENTRAINEMENT_CALCULS = Object.freeze([5, 10]);
   const GRADE_REUSSI = 7;
   // Les grades en Colonne : la grille de flash_anzan_core.js
   // (GRADES_COLONNE), recopiée — un test vérifie qu'elle est la même.
@@ -322,18 +327,21 @@
     s.nombres = entier(s.nombres, 0, NOMBRES.max + 1, 0);
     if (s.nombres < NOMBRES.min || s.nombres > NOMBRES.max) return null;
     s.temps = entier(s.temps, -1, COMPTE_MAX, -1);
+    // Les calculs d'un grade : 10 pour un passage ; 5 ou 10 pour un
+    // entraînement (lot « entraînement 5 ou 10 », 07/11/2026).
+    const calculsDuGrade = s.mode === "entrainement" ? ENTRAINEMENT_CALCULS : [GRADE_CALCULS];
     if (estModeGrade(s.mode) && estGradeColonne(s.temps)) {
       // Un grade en Colonne : exactement sa ligne de la grille.
       const c = ligneColonne(s.temps);
       if (s.operations !== c.operations || s.chiffresMin !== c.chiffresMin || s.chiffresMax !== c.chiffresMax
-        || s.nombres !== c.nombres || s.calculs !== GRADE_CALCULS) return null;
+        || s.nombres !== c.nombres || calculsDuGrade.indexOf(s.calculs) < 0) return null;
     } else if (estModeGrade(s.mode)) {
       // Un grade : exactement sa ligne de la grille, rien d'approché.
       if (!gradeValide(s.temps)) return null;
       const g = GRADES[s.temps - 1];
       const operationsDuGrade = s.operations === "plus" || GRADES_PLUS_ET_MOINS.indexOf(s.temps) >= 0;
       if (!operationsDuGrade || s.chiffresMin !== g.chiffres || s.chiffresMax !== g.chiffres
-        || s.nombres !== g.nombres || s.calculs !== GRADE_CALCULS) return null;
+        || s.nombres !== g.nombres || calculsDuGrade.indexOf(s.calculs) < 0) return null;
     } else if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
     if (CALCULS.indexOf(s.calculs) < 0) return null;
     s.faits = entier(s.faits, 0, s.calculs, 0);
@@ -1803,6 +1811,7 @@
     texteGradesReussis,
     GRADES_PLUS_ET_MOINS,
     GRADE_CALCULS,
+    ENTRAINEMENT_CALCULS,
     GRADE_REUSSI,
     nomGrade,
     gradeReussi,

@@ -85,6 +85,9 @@
     10: Object.freeze({forme: "deux", plusmoins: true})
   });
   const GRADE_CALCULS = 10;
+  // « 🎯 M'entraîner » : 5 ou 10 calculs, au choix de l'élève (choix du
+  // 07/11/2026 : Rania trouvait 10 trop long). Le PASSAGE reste à 10.
+  const ENTRAINEMENT_CALCULS = Object.freeze([5, 10]);
   const GRADE_REUSSI = 7;
   const GRADE_PRESQUE = 5;
   // Les quatre groupes de l'écran des grades (le premier numéro de chacun).
@@ -195,7 +198,10 @@
   // nombre de chiffres, 10 calculs ; `grade` est son numéro ; le temps par
   // nombre est en millisecondes (pas forcément un nombre rond : 5 s pour
   // 3 nombres, c'est 1 666,7 ms) ; `son` est celui des réglages du Flash.
-  function reglagesGrade(n, son) {
+  // `calculs` (facultatif) : pour « 🎯 M'entraîner », 5 ou 10
+  // (ENTRAINEMENT_CALCULS) ; tout autre nombre donne 10, ceux d'un passage.
+  function reglagesGrade(n, son, calculs) {
+    const nb = ENTRAINEMENT_CALCULS.includes(calculs) ? calculs : GRADE_CALCULS;
     const c = ligneColonne(n);
     // Un grade en Colonne : les nombres écrits les uns sous les autres, le
     // temps limite par calcul (0 : sans), le plan des 10 calculs.
@@ -205,7 +211,7 @@
         chiffresMin: c.chiffresMin,
         chiffresMax: c.chiffresMax,
         nombres: c.nombres,
-        calculs: GRADE_CALCULS,
+        calculs: nb,
         grade: n,
         colonne: true,
         limite: c.limite
@@ -219,7 +225,7 @@
       chiffresMin: g.chiffres,
       chiffresMax: g.chiffres,
       nombres: g.nombres,
-      calculs: GRADE_CALCULS,
+      calculs: nb,
       grade: n,
       ...(sr ? {sansRetenue: sr.forme} : {}),
       tempsMs: g.dixiemes * 100 / g.nombres,
@@ -264,10 +270,13 @@
   // « 20 nombres d'un chiffre · 15 s en tout »
   function texteGrade(n) {
     const c = ligneColonne(n);
-    if (c) return c.limite ? `${texteNombresGrade(n)} · ${c.limite} s par calcul` : texteNombresGrade(n);
+    if (c) return c.limite ? `${texteNombresGrade(n)}${POINT}${c.limite} s par calcul` : texteNombresGrade(n);
     if (!gradeValide(n)) return "";
     const g = GRADES[n - 1];
-    return `${texteNombresGrade(n)} · ${secondes(g.dixiemes / 10)} en tout`;
+    // « en tout » collé au temps (espaces insécables) : la ligne ne se coupe
+    // qu'aux points, jamais entre « 8 s » et « en tout » (lot « entraînement
+    // 5 ou 10 »).
+    return `${texteNombresGrade(n)}${POINT}${secondes(g.dixiemes / 10)}\u00a0en\u00a0tout`;
   }
 
   // ---------------------------------------------------------------------
@@ -722,10 +731,16 @@
   }
   // Les 10 calculs d'un grade en Colonne : le plan de la feuille, les
   // calculs « s10 » mêlés aux autres calculs de 10 nombres à des places
-  // tirées au hasard.
-  function tirerSeanceColonne(n, rng) {
+  // tirées au hasard. `calculs` = 5 (« 🎯 M'entraîner » en 5 calculs) : une
+  // forme sur deux du plan (la 2e, la 4e … la 10e), pour garder le mélange
+  // de la feuille — 10e kyu : 3, 4, 4, 5, 5 nombres ; pré-1er kyu : deux
+  // calculs de 7 nombres, deux de 10, un avec des nombres enlevés.
+  function planColonne(n, calculs) {
     const c = ligneColonne(n);
-    const plan = c.plan.slice();
+    return calculs === 5 ? c.plan.filter((_, i) => i % 2 === 1) : c.plan.slice();
+  }
+  function tirerSeanceColonne(n, rng, calculs) {
+    const plan = planColonne(n, calculs);
     const debut = plan.findIndex(f => f === "t10" || f === "s10");
     if (debut >= 0) {
       const fin = plan.slice(debut);
@@ -739,7 +754,7 @@
   }
 
   function tirerSeance(reglages, rng) {
-    if (reglages && reglages.colonne && estGradeColonne(reglages.grade)) return tirerSeanceColonne(reglages.grade, rng);
+    if (reglages && reglages.colonne && estGradeColonne(reglages.grade)) return tirerSeanceColonne(reglages.grade, rng, reglages.calculs);
     return Array.from({length: reglages.calculs}, () => tirerCalcul(reglages, rng));
   }
 
@@ -767,6 +782,10 @@
   // ---------------------------------------------------------------------
   // Les textes
   // ---------------------------------------------------------------------
+  // Le point qui sépare les morceaux d'un résumé : collé au morceau d'avant
+  // (espace insécable), pour qu'une ligne coupée ne commence jamais par
+  // « · » (lot « entraînement 5 ou 10 », 07/11/2026).
+  const POINT = "\u00a0· ";
   // 0,8 s ; 2 s ; 2,5 s — à la française.
   function secondes(valeur) {
     const arrondi = Math.round(valeur * 10) / 10;
@@ -779,23 +798,28 @@
     return `${r.chiffresMin} à ${r.chiffresMax} chiffres`;
   }
 
-  // Le résumé d'une séance (décompte, écran de fin ; plus tard l'historique).
-  // ⚡ Flash · + et − · 2 à 3 chiffres · 10 nombres · 0,8 s
+  // Le résumé d'une séance (décompte, écran de fin, historique).
+  // ⚡ Flash · + et − · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout
+  // (le temps total d'un calcul à côté du temps par nombre : choix du
+  // 07/11/2026, « 0,8 s » seul se lisait comme le temps de tout le calcul).
   function resume(mode, r, {avecMode = true} = {}) {
     // Un grade : « 🥋 13e kyu · 20 nombres d'un chiffre · 15 s en tout » (le
     // passage) ou « 🎯 … » (l'entraînement au grade).
     if ((mode === "grade" || mode === "entrainement") && r && gradeExiste(r.grade)) {
       const tete = avecMode ? [`${mode === "grade" ? "🥋" : "🎯"} ${nomGrade(r.grade)}${estGradeColonne(r.grade) ? " · Colonne" : ""}`] : [];
-      return tete.concat([texteGrade(r.grade)]).join(" · ");
+      return tete.concat([texteGrade(r.grade)]).join(POINT);
     }
     const morceaux = [];
     if (avecMode) morceaux.push(mode === "flash" ? "⚡ Flash" : "📝 Colonne");
     if (r.operations === "plusmoins") morceaux.push("+ et −");
     morceaux.push(texteChiffres(r));
     morceaux.push(`${r.nombres} nombres`);
-    if (mode === "flash") morceaux.push(secondes(tempsEnSecondes(r.temps)));
+    if (mode === "flash") {
+      morceaux.push(`${secondes(tempsEnSecondes(r.temps))}\u00a0par\u00a0nombre`);
+      morceaux.push(`${secondes(r.nombres * tempsEnSecondes(r.temps))}\u00a0en\u00a0tout`);
+    }
     else if (r.limite) morceaux.push(`${r.limite} s`);
-    return morceaux.join(" · ");
+    return morceaux.join(POINT);
   }
 
   // Le temps par nombre d'une séance, en millisecondes : celui du grade, ou
@@ -837,6 +861,7 @@
     GRADES,
     NB_GRADES,
     GRADE_CALCULS,
+    ENTRAINEMENT_CALCULS,
     GRADE_REUSSI,
     GRADE_PRESQUE,
     GROUPES_GRADES,
@@ -849,6 +874,7 @@
     dernierDeSaListe,
     seuilGrade,
     tirerSeanceColonne,
+    planColonne,
     nomGrade,
     nomJaponais,
     reglagesGrade,
