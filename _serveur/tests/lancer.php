@@ -7070,13 +7070,13 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(3, $reference->version, 'version 3 (lot « couverture » : A2-5, A8 et F5 en deux niveaux)');
+    egal(4, $reference->version, 'version 4 (lot F1 « rythme » : boîtes 6 et 7, plan à 7 nombres ; 3 au lot « couverture »)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
     vrai(isset($reference->modules->A5->c->{'1'}), 'les causes par numéro');
     vrai(!isset($reference->test), '« test » a disparu (lot 3)');
-    egal(5, count($reference->seance->p), 'le plan de la séance : cinq nombres');
+    egal(7, count($reference->seance->p), 'le plan de la séance : sept nombres (lot F1 ; cinq avant)');
     egal(60, compter_elements_declares('defi-calcul', $attendu), '« Revenir à… » compte les séances (60 gardées)');
     vrai(strlen($attendu) < 40000, 'la référence tient sous la borne de 40 ko');
     // Le pire cas (toutes les compétences entrées, 8 causes) : 1 639 clés, 21 207 octets, dit la notice du lot 3.
@@ -7770,6 +7770,131 @@ verifier("relecture Codex R4 — six départs dans la même seconde : le ticket 
         vrai((int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$eleve['id'])->fetchColumn() <= 4, "tour $tour : quatre au plus");
     }
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------------------- Défi calcul, lot F1 « rythme » (07/11/2026)
+//
+// Un réglage de classe d'un nouveau genre : UN NOMBRE (les nouveautés par
+// séance, 1 à 3, déclaré ['de' => 1, 'a' => 3]). 1 = rien d'écrit ; 2 ou 3
+// rangés ; tout le reste refusé. L'élève le reçoit par son code et par le
+// billet ; il ne se donne pas « en plus » à un élève (lot F2, plus tard).
+
+verifier("defi-calcul F1 — nouveautés par séance : 1 par défaut (rien d'écrit), 2 ou 3 rangés, l'élève les reçoit par son code et par le billet", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F1', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    egal(null, classe_en_base($id)['reglages'], 'une classe neuve : rien d’écrit');
+    vrai(str_contains(identite($eleve['code'])['texte'], '"reglages":{}'), 'l’élève reçoit « {} » : 1 nouveauté');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => ['nouveautes' => 2]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'accepté');
+    egal(['defi-calcul' => ['nouveautes' => 2]], $r['json']['reglages'], 'la réponse rend la nouvelle valeur');
+    egal('{"defi-calcul":{"nouveautes":2}}', classe_en_base($id)['reglages'], 'en base');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    egal(['defi-calcul' => ['nouveautes' => 2]], $t['json']['classe']['reglages'], 'tableau');
+    egal(['defi-calcul' => ['nouveautes' => 2]], identite($eleve['code'])['json']['reglages'], 'l’élève, par son code');
+    $billet = appel('/api/eleve.php', ['code' => $eleve['code'], 'billet' => true])['json']['billet'];
+    egal(['defi-calcul' => ['nouveautes' => 2]], echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'], 'l’élève, par le billet');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => ['nouveautes' => 3]]], ['jeton' => $jetonS1]);
+    egal(['defi-calcul' => ['nouveautes' => 3]], $r['json']['reglages'], '3');
+    // Avec « avant » (la fenêtre « Régler Défi calcul ») : juste → écrit ; en retard → 409.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['defi-calcul' => ['nouveautes' => 2]]],
+        'reglages' => ['defi-calcul' => ['nouveautes' => 1]]], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'un « avant » en retard : refusé, rien d’écrit');
+    egal('{"defi-calcul":{"nouveautes":3}}', classe_en_base($id)['reglages'], 'toujours 3');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['defi-calcul' => ['nouveautes' => 3]]],
+        'reglages' => ['defi-calcul' => ['nouveautes' => 1]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'un « avant » juste : écrit');
+    vrai(str_contains($r['texte'], '"reglages":{}'), 'revenu à 1 : « {} »');
+    egal(null, classe_en_base($id)['reglages'], 'en base : NULL');
+    // Décochée pour la classe : l'élève ne reçoit plus rien de Défi calcul ; recochée, le réglage revient.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => ['nouveautes' => 2]]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => []], ['jeton' => $jetonS1]);
+    vrai(str_contains(identite($eleve['code'])['texte'], '"reglages":{}'), 'Défi calcul décoché : rien');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-calcul']], ['jeton' => $jetonS1]);
+    egal(['defi-calcul' => ['nouveautes' => 2]], identite($eleve['code'])['json']['reglages'], 'recoché : le même réglage');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("defi-calcul F1 — nouveautés par séance : une valeur fausse est refusée, en base une valeur abîmée vaut 1, et rien ne se donne par élève", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F1b', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => ['nouveautes' => 2]]], ['jeton' => $jetonS1]);
+    foreach ([
+        [['nouveautes' => 0], 'Nombre hors des choix.', '0'],
+        [['nouveautes' => 4], 'Nombre hors des choix.', '4'],
+        [['nouveautes' => -1], 'Nombre hors des choix.', '-1'],
+        [['nouveautes' => '2'], 'Nombre hors des choix.', '« 2 » en texte'],
+        [['nouveautes' => 2.5], 'Nombre hors des choix.', '2,5'],
+        [['nouveautes' => true], 'Nombre hors des choix.', 'vrai'],
+        [['nouveautes' => [2]], 'Nombre hors des choix.', 'une liste'],
+        [['nouveautes' => null], 'Nombre hors des choix.', 'null'],
+        [['records' => false], 'Réglage inconnu.', 'les records sont à Défi tables'],
+        [['mondes' => [1]], 'Réglage inconnu.', 'les mondes sont à SPLAT!'],
+    ] as [$reglage, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => $reglage]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal('{"defi-calcul":{"nouveautes":2}}', classe_en_base($id)['reglages'], 'la classe n’a pas bougé');
+    $maj = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    foreach ([['{"defi-calcul":{"nouveautes":9}}', '{}'], ['{"defi-calcul":{"nouveautes":"3"}}', '{}'], ['{"defi-calcul":{"nouveautes":1}}', '{}'],
+              ['{"defi-calcul":{"nouveautes":3,"intrus":7}}', '{"defi-calcul":{"nouveautes":3}}'], ['{"defi-calcul":[3]}', '{}']] as [$brut, $attendu]) {
+        $maj->execute([$brut, $id]);
+        vrai(str_contains(identite($eleve['code'])['texte'], '"reglages":' . $attendu), "« $brut » → $attendu");
+    }
+    // Par élève : refusé (le lot F2 viendra plus tard) ; Défi calcul entier reste possible.
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(),
+        'ajouts' => ['defi-calcul' => ['nouveautes' => 3]]], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], 'un nombre ne se donne pas en plus à un élève');
+    egal(['nouveautes' => ['de' => 1, 'a' => 3]], CATALOGUE_APPLIS['defi-calcul']['reglages'], 'le catalogue');
+    egal([], listes_declarees('defi-calcul'), 'aucune liste par élève');
+    egal(true, est_reglage_nombre(['de' => 1, 'a' => 3]));
+    foreach ([['de' => 3, 'a' => 1], ['de' => 0, 'a' => 3], ['a' => 3, 'de' => 1], ['de' => 1], 3, true] as $faux) egal(false, est_reglage_nombre($faux), json_encode($faux));
+    // La règle « classe + ajouts » : le nombre suit la classe, un ajout ne le change pas.
+    $classe = ['applis' => 'defi-calcul', 'reglages' => '{"defi-calcul":{"nouveautes":3}}'];
+    egal(['applis' => ['defi-calcul'], 'reglages' => ['defi-calcul' => ['nouveautes' => 3]]], acces_de_l_eleve($classe, null), 'la classe');
+    egal(['applis' => ['defi-calcul'], 'reglages' => ['defi-calcul' => ['nouveautes' => 3]]], acces_de_l_eleve($classe, '{"defi-calcul":{}}'), 'avec un ajout « entier »');
+    egal(['applis' => ['defi-calcul'], 'reglages' => []], acces_de_l_eleve(['applis' => '', 'reglages' => '{"defi-calcul":{"nouveautes":3}}'], '{"defi-calcul":{}}'),
+        'la classe n’a pas Défi calcul, l’élève l’a en plus : 1 nouveauté');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("defi-calcul F1 — une page d'avant F1 (version 3) ne réécrit pas la progression : 400, rien d'écrit ; la lecture et les autres applis ne changent pas", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F1c', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $eleve['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    egal(4, $reference['version'], 'le parcours de référence est en version 4');
+    egal(4, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[3, 'version 3'], [0, 'version 0'], ['4', '« 4 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
+        $ancien = $reference;
+        if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
+        $w = ecrire($code, $ancien, 0, 'defi-calcul');
+        egal(400, $w['code'], "$quoi : refusé");
+        egal('Page ancienne : recharge la page.', $w['json']['erreur'] ?? null, "$quoi : le message");
+        egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
+    }
+    $w = ecrire($code, $reference, 0, 'defi-calcul');
+    egal(200, $w['code'], 'version 4 : accepté');
+    $ancien = $reference;
+    $ancien['version'] = 3;
+    $w = ecrire($code, $ancien, 1, 'defi-calcul');
+    egal(400, $w['code'], 'par-dessus une version 4 : refusé, même avec la bonne révision');
+    $w = ecrire($code, $ancien, 0, 'defi-calcul');
+    egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
+    $r = lire($code, 'defi-calcul');
+    egal(1, $r['json']['revision'], 'toujours la révision 1');
+    egal(4, $r['json']['parcours']['version'], 'la version 4 est restée');
+    // Les autres applis ne déclarent pas de version minimale : rien ne change pour elles.
+    foreach (CATALOGUE_APPLIS as $cle => $fiche) if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_min', $fiche), "$cle : pas de version minimale");
+    $w = ecrire($code, ['version' => 1, 'tables' => new stdClass()], 0, 'defi-tables');
+    egal(200, $w['code'], 'Défi tables en version 1 : accepté comme avant');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });
 

@@ -423,6 +423,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .regler .cases-ligne { display: flex; flex-wrap: wrap; gap: 0 18px; }
   .regler .cases-ligne .case-a-cocher { font-weight: 400; }
   .regler .titre-liste { margin: 10px 0 0; font-size: .88rem; font-weight: 700; color: var(--ink); }
+  /* Lot F1 (Défi calcul) : « Nouveautés par séance », trois choix ronds. */
+  .regler .choix-nombre .case-a-cocher { min-width: 52px; }
+  .regler .choix-nombre + .aide { margin-top: 2px; }
   .regler .puces-mondes { margin-top: 6px; }
   /* « Un monde en plus pour quelques élèves » : une ligne par monde (niveau,
      opération) fermé à la classe ; « Choisir… » déplie les élèves dessous. */
@@ -2722,6 +2725,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       cle,
       classeOuverte: parLaClasse(cle),
       records: cle === "defi-tables" ? recordsOuvertsPourLaClasse() : null,
+      nouveautes: cle === "defi-calcul" ? nouveautesPourLaClasse() : null,
       listes, entiers, parNumero
     };
   }
@@ -2731,7 +2735,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     Object.keys(etat.listes).forEach(nom => { listes[nom] = new Set(etat.listes[nom]); });
     const parNumero = {};
     Object.keys(etat.parNumero).forEach(cle => { parNumero[cle] = new Set(etat.parNumero[cle]); });
-    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, listes,
+    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, nouveautes: etat.nouveautes, listes,
             entiers: new Set(etat.entiers), parNumero};
   }
 
@@ -2800,6 +2804,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function detailsDeLaClasse(cle) {
     const details = [];
     if (cle === "defi-tables") details.push(recordsOuvertsPourLaClasse() ? "les records sont ouverts" : "sans les records");
+    if (cle === "defi-calcul") details.push(texteNouveautes(nouveautesPourLaClasse()));
     (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
       const ouverts = numerosOuverts(classe.reglages, cle, liste);
       if (!ouverts) return;
@@ -2907,11 +2912,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     messager("regler-message", "", "");
     // La classe l'a : ses réglages pour la classe, puis ce qui est fermé à la
     // classe, à ouvrir en plus à quelques élèves.
-    if (cle === "defi-tables" || listes.length) corps.append(el("h3", "", "Pour la classe"));
+    if (cle === "defi-tables" || cle === "defi-calcul" || listes.length) corps.append(el("h3", "", "Pour la classe"));
     if (cle === "defi-tables") {
       corps.append(caseACocher("🏆 Les records", b.records, coche => { b.records = coche; },
         `Le concours de temps des Légendes des tables. Décoché : la ${classe.libelle} ne le voit pas et n’y apparaît pas.`));
     }
+    if (cle === "defi-calcul") corps.append(...choixNouveautes());
     listes.forEach(liste => corps.append(...casesDeLaClasse(cle, liste)));
     const fermes = [];
     listes.forEach(liste => liste.numeros.forEach(([numero]) => {
@@ -2978,6 +2984,43 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       }
     });
     return [titre, groupe];
+  }
+
+  // Lot F1 (07/11/2026) : « Nouveautés par séance », 1, 2 ou 3 — trois
+  // boutons ronds (un seul choix), et ce que ça change, en une phrase.
+  function choixNouveautes() {
+    const b = reglage.brouillon;
+    const titre = el("p", "titre-liste", "Nouveautés par séance");
+    titre.id = "regler-defi-calcul-nouveautes";
+    const groupe = el("div", "cases-ligne choix-nombre");
+    groupe.setAttribute("role", "radiogroup");
+    groupe.setAttribute("aria-labelledby", titre.id);
+    [1, 2, 3].forEach(nombre => {
+      const etiquette = el("label", "case-a-cocher");
+      const rond = document.createElement("input");
+      rond.type = "radio";
+      rond.name = "regler-nouveautes";
+      rond.value = String(nombre);
+      rond.checked = b.nouveautes === nombre;
+      rond.addEventListener("change", () => { if (rond.checked) b.nouveautes = nombre; });
+      const mots = el("span", "mots", String(nombre));
+      etiquette.append(rond, mots);
+      groupe.append(etiquette);
+    });
+    const aide = el("p", "aide", "Une nouveauté : une chose apprise et réussie à l’entraînement. Avec 2 ou 3, la classe avance plus vite, mais la séance dure 15 à 25 min au lieu de 10 à 15.");
+    return [titre, groupe, aide];
+  }
+
+  // Les nouveautés par séance de la classe ouverte (classe.reglages) : 1
+  // quand rien n'est écrit, ou quand ce qui est écrit n'est pas 2 ou 3.
+  function nouveautesPourLaClasse() {
+    const reglages = classe && classe.reglages;
+    const n = reglages && reglages["defi-calcul"] && reglages["defi-calcul"].nouveautes;
+    return n === 2 || n === 3 ? n : 1;
+  }
+
+  function texteNouveautes(n) {
+    return `${n} nouveauté${n > 1 ? "s" : ""} par séance`;
   }
 
   const DERNIER_NUMERO = {
@@ -3056,6 +3099,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (b.classeOuverte) {
       const pourLAppli = {};
       if (b.cle === "defi-tables" && b.records !== depart.records) pourLAppli.records = b.records;
+      if (b.cle === "defi-calcul" && b.nouveautes !== depart.nouveautes) pourLAppli.nouveautes = b.nouveautes;
       (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => {
         const avant = [...depart.listes[liste.nom]].sort((x, y) => x - y);
         const apres = [...b.listes[liste.nom]].sort((x, y) => x - y);
@@ -3128,8 +3172,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const voulu = pourLaClasse.reglages && pourLaClasse.reglages[b.cle];
     if (!voulu) return true;
     if ("records" in voulu && neuf.records !== b.records) return false;
+    if ("nouveautes" in voulu && neuf.nouveautes !== b.nouveautes) return false;
     return Object.keys(voulu).every(nom => {
-      if (nom === "records") return true;
+      if (nom === "records" || nom === "nouveautes") return true;
       const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
       const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
       return a === c;

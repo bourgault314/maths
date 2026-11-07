@@ -218,6 +218,16 @@ try {
         erreur("Révision invalide.", 400);
     }
     $base = $corps['base_revision'];
+    // La version la plus basse acceptée à l'écriture, quand l'appli en déclare
+    // une (Défi calcul depuis le lot F1, lib/applis.php « version_min ») : une
+    // page restée sur une version d'avant ne réécrit pas par-dessus.
+    $versionMin = CATALOGUE_APPLIS[$appli]['version_min'] ?? null;
+    if (is_int($versionMin)) {
+        $version = $parcoursBrut->version ?? null;
+        if (!is_int($version) || $version < $versionMin) {
+            erreur("Page ancienne : recharge la page.", 400);
+        }
+    }
 
     $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base);
     if (isset($resultat['conflit'])) {

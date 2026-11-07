@@ -252,7 +252,7 @@
           <h1 id="notice-title" class="settings-heading" tabindex="-1">Comment ça marche&nbsp;?</h1>
         </div>
         <div class="notice">
-          <p><b>Ma séance du jour.</b> Je clique, elle est prête&nbsp;: mes calculs du jour, puis une chose nouvelle.</p>
+          <p><b>Ma séance du jour.</b> Je clique, elle est prête&nbsp;: mes calculs du jour, puis <span id="notice-nouveautes">une chose nouvelle</span>.</p>
           <p><b>Mes calculs du jour.</b> Les calculs qui reviennent. Juste, ils montent d’une boîte&nbsp;; raté, ils redescendent. C’est là que ça compte.</p>
           <p><b>Le rouge d’abord.</b> Un calcul raté le matin, je le retravaille avec l’aide le jour même, avant toute nouveauté.</p>
           <p><b>J’apprends, je m’entraîne.</b> Trois temps, puis des calculs du plus simple au plus dur&nbsp;: l’aide reste tant que j’en ai besoin, et c’est réussi à 5 justes de suite. Ici, se tromper ne compte pas.</p>
@@ -264,7 +264,7 @@
   </main>
 
   <script src="./defi_calcul_core.js?v=20261106-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261106-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261107-1"></script>
   <script src="./defi_calcul_aides.js?v=20261106-2"></script>
   <script>
     (() => {
@@ -404,6 +404,39 @@
       // Le prénom et la classe donnés par le serveur pour ce code : relus depuis
       // l'onglet (même code seulement) en attendant que le serveur réponde.
       let suiviIdentite = PARCOURS.chargerIdentiteOnglet(stockageSession(), codeSuivi);
+      // Lot F1 (07/11/2026) : les nouveautés par séance réglées par le
+      // professeur pour la classe (1, 2 ou 3), relues depuis l'onglet (même
+      // code seulement) en attendant que le serveur réponde. Sans code, et
+      // en mode professeur : 1.
+      let nouveautesDeLaClasse = PARCOURS.chargerReglagesOnglet(stockageSession(), codeSuivi);
+      function nouveautesReglees() {
+        return MODE_PROF || !codeSuivi ? PARCOURS.SEUILS.nouveautes.defaut : nouveautesDeLaClasse;
+      }
+      // Le réglage reçu vaut tout de suite, même si l'onglet ne peut pas le
+      // ranger (stockage plein ou refusé : relecture de Codex, lot F1). Une
+      // réponse sans « reglages » ne touche à rien.
+      function noterReglages(code, reglages) {
+        if (!reglages || typeof reglages !== "object" || Array.isArray(reglages)) return;
+        nouveautesDeLaClasse = PARCOURS.nouveautesDeReglages(reglages);
+        PARCOURS.sauverReglagesOnglet(stockageSession(), code, reglages);
+      }
+      // Avant d'ouvrir une séance NEUVE, le réglage est relu sur le serveur
+      // (le professeur a pu le changer depuis l'ouverture de la page, ou la
+      // première lecture n'est pas encore revenue) : 2 secondes au plus, puis
+      // ce que l'onglet sait (relecture de Codex, lot F1). Une seule lecture
+      // à la fois ; la lecture du démarrage passe par ici aussi.
+      let lectureReglages = null;
+      function rafraichirReglages() {
+        if (MODE_PROF || !suiviActif() || sync.detache) return Promise.resolve();
+        if (!lectureReglages) {
+          lectureReglages = chargerIdentite(codeSuivi).catch(() => {}).then(() => { lectureReglages = null; });
+        }
+        return lectureReglages;
+      }
+      // Les options de la séance pour le moteur : le jour, et le réglage.
+      function optionsSeance(aujourdhui = jourCourant()) {
+        return {aujourdhui, nouveautes: nouveautesReglees()};
+      }
       let suiviHorsLigne = false;
       let envoiEnAttente = null;
       // Vrai tant qu'un envoi groupé est programmé et n'est pas encore parti
@@ -701,7 +734,7 @@
           renderRepere();
           // Le prénom et la classe n'avaient pas pu être lus (réseau absent au
           // démarrage) : maintenant que le serveur répond, on les demande.
-          if (suiviIdentite === null) chargerIdentite(codeSuivi);
+          if (suiviIdentite === null) rafraichirReglages();
           if (renvoiDemande) envoyerMaintenant();
           return;
         }
@@ -808,6 +841,7 @@
         if (reponse.statut === 200 && reponse.donnees && reponse.donnees.ok) {
           suiviIdentite = {prenom: reponse.donnees.prenom || "", classe: reponse.donnees.classe || ""};
           PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+          noterReglages(code, reponse.donnees.reglages);
         } else if (reponse.statut === 404) {
           suiviIdentite = null;
         }
@@ -919,6 +953,7 @@
         noterDernierGeste(Date.now());
         entreeRefusee = null;
         suiviIdentite = null;
+        nouveautesDeLaClasse = PARCOURS.chargerReglagesOnglet(stockageSession(), code);
         suiviHorsLigne = false;
         erreurDefinitive = false;
         echecsSuccessifs = 0;
@@ -954,6 +989,7 @@
         // suite, demarrerSuivi le confirmera.
         suiviIdentite = {prenom: donnees.prenom || "", classe: donnees.classe || ""};
         PARCOURS.sauverIdentiteOnglet(stockageSession(), code, suiviIdentite);
+        noterReglages(code, donnees.reglages);
         if (typeof ouvrir === "function") ouvrir();
         demarrerSuivi();
         return true;
@@ -1221,7 +1257,7 @@
         }
         renderRepere();
         if (sync.detache) { finAttente(); return; }
-        chargerIdentite(codeSuivi);
+        rafraichirReglages();
         const code = codeSuivi;
         // Appareil neuf (case vide) : l'accueil attend la lecture du parcours.
         if (PARCOURS.estVide(parcours)) {
@@ -1713,7 +1749,7 @@
       function nomEtape(etape) {
         if (etape.type === "jour") return "Mes calculs du jour";
         if (etape.type === "test") return `Tu connais déjà ? ${CORE.moduleDe(etape.module).nom}`;
-        if (etape.type === "nouveau") return "Une chose nouvelle";
+        if (etape.type === "nouveau") return etape.rang ? `Une ${etape.rang}e chose nouvelle` : "Une chose nouvelle";
         const nom = nomCompetence(etape.module, etape.niveau);
         if (etape.type === "apprends") return `J’apprends : ${nom}`;
         if (etape.type === "entraine") return `Je m’entraîne : ${nom}`;
@@ -1727,11 +1763,14 @@
 
       const DETAIL_ENTRAINE = `jusqu’à ${PARCOURS.SEUILS.entraine.sansOutil} justes de suite`;
       const DETAIL_ENCORE = `avec l’aide, jusqu’à ${PARCOURS.SEUILS.rattrapage.sansOutil} justes de suite`;
+      // Lot F1 : la 2e (3e) nouveauté de la séance, tant que la précédente
+      // n'est pas réussie.
+      const DETAIL_NOUVEAU_RANG = "si l’entraînement est réussi";
 
       function detailEtape(etape) {
         if (etape.type === "jour") return `${pluriel(etape.calculs, "calcul")} · ça compte`;
         if (etape.type === "test") return `une marche par niveau, ${PARCOURS.SEUILS.test.parMarche} calculs`;
-        if (etape.type === "nouveau") return "selon ton test";
+        if (etape.type === "nouveau") return etape.rang ? DETAIL_NOUVEAU_RANG : "selon ton test";
         if (etape.type === "apprends") return `${tempsDe(etape.module, etape.niveau).length} temps`;
         if (etape.type === "entraine") return DETAIL_ENTRAINE;
         return DETAIL_ENCORE;
@@ -1751,7 +1790,7 @@
       // milieu), faite (« Encore une séance », ou « À demain ! » quand il ne
       // reste rien à jouer aujourd'hui).
       function carteDeSeance() {
-        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
         const reste = file.etapes;
         if (!reste.length && !file.finie) return null;
         const jouable = reste.length > 0;
@@ -2312,8 +2351,22 @@
 
       const enSeance = () => state.origine === "seance" && Boolean(state.seance);
 
-      function lancerSeance() {
-        parcours = PARCOURS.ouvrirSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+      let ouvertureEnCours = false;
+      async function lancerSeance() {
+        if (ouvertureEnCours) return;
+        // Une séance déjà ouverte aujourd'hui garde son plan : rien à relire.
+        if (!PARCOURS.fileSeance(parcours, CARTE, optionsSeance()).ouverte && suiviActif() && !suiviHorsLigne) {
+          ouvertureEnCours = true;
+          const code = codeSuivi;
+          try {
+            await Promise.race([rafraichirReglages(), new Promise(fini => window.setTimeout(fini, 2000))]);
+          } finally {
+            ouvertureEnCours = false;
+          }
+          // Pendant l'attente : « Ce n'est pas moi », ou une autre activité.
+          if (code !== codeSuivi || state.running || $("intro").hidden && $("result").hidden) return;
+        }
+        parcours = PARCOURS.ouvrirSeance(parcours, CARTE, optionsSeance());
         sauverParcours();
         state.seance = {jouees: []};
         etapeSuivante();
@@ -2321,7 +2374,7 @@
 
       // L'étape à jouer maintenant : la première de celles qui restent.
       function etapeSuivante() {
-        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
         const etape = file.etapes[0];
         if (!etape || !state.seance) { quitterSeance(); return; }
         state.seance.etape = Object.assign({}, etape, {numero: file.faites + 1, total: file.faites + file.etapes.length});
@@ -2399,7 +2452,7 @@
       function majFilDeBilan() {
         const fil = $("result-fil");
         if (!enSeance()) { fil.hidden = true; fil.replaceChildren(); placerEnTete(); return; }
-        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
         const faites = file.ouverte ? file.faites : state.seance.etape.numero;
         renderFilSeance(fil, {faites, total: faites + (file.ouverte ? file.etapes.length : 0), enCours: false});
       }
@@ -2719,7 +2772,7 @@
       // Ce qui suit un bilan d'étape : le bouton « Étape 3 : … → » et
       // « Arrêter la séance ». Rend [] quand la séance est finie.
       function suiteDeSeance() {
-        const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+        const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
         if (!file.ouverte || !file.etapes.length) return [];
         const etape = file.etapes[0];
         const bouton = document.createElement("button");
@@ -2766,7 +2819,7 @@
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
         if (enSeance()) {
-          const file = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui: jourCourant()});
+          const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
           const etape = file.etapes[0];
           $("result-suite").replaceChildren(
             boutonsDeSuite(etape ? [`Étape ${file.faites + 1} : ${nomBouton(etape)} →`, "primary", etapeSuivante] : null, revoir),
@@ -3409,7 +3462,7 @@
         semaine.className = "semaine";
         semaine.textContent = texteSemaine();
         // Après deux ratés, le moteur ne propose plus rien de nouveau aujourd'hui.
-        const encore = PARCOURS.fileSeance(parcours, CARTE, {aujourdhui}).etapes.length > 0;
+        const encore = PARCOURS.fileSeance(parcours, CARTE, optionsSeance(aujourdhui)).etapes.length > 0;
         $("result-suite").replaceChildren(...morceaux, semaine, boutonsDeSuite(
           ["Accueil", "primary", quitterSeance],
           encore ? ["Encore une séance", "secondary", lancerSeance] : null));
@@ -3472,7 +3525,13 @@
         $("acc-parcours").scrollIntoView?.({block: "nearest"});
       });
       $("prof-quitter").addEventListener("click", quitterModeProf);
-      $("acc-notice-bouton").addEventListener("click", () => show("notice"));
+      // Lot F1 : « puis une chose nouvelle », « puis 2 choses nouvelles » :
+      // le nombre réglé pour la classe.
+      $("acc-notice-bouton").addEventListener("click", () => {
+        const n = nouveautesReglees();
+        $("notice-nouveautes").textContent = n > 1 ? `${n}\u00a0choses nouvelles` : "une chose nouvelle";
+        show("notice");
+      });
       $("acc-effacer").addEventListener("click", () => {
         if (!peutEffacer()) return;
         $("acc-confirm").hidden = false;
