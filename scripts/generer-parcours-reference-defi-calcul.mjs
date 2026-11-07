@@ -1,7 +1,7 @@
 // La progression de référence de Défi calcul : une progression COMPLÈTE telle
 // que defi_calcul_mon_parcours.js la produit, dans son format définitif
 // (lot 2a, version 2 au lot 3) — les 74 modules, toutes les compétences dans
-// une boîte, toutes les causes, la séance et son plan, les dates. Elle sert
+// une boîte (1 à 7 depuis le lot F1), toutes les causes, la séance et son plan, les dates. Elle sert
 // de garde-fou entre l'appli et le serveur (lot 2b) : le serveur ne garde que
 // ce qu'il connaît (lib/progression.php), et ce fichier doit ressortir
 // identique de son filtre. Si l'appli gagne un champ, la référence change
@@ -56,7 +56,8 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
     dernier.ok = null;
     dernier.b = dernier.b.map((boite, i) => (i === 0 ? boite : 0));
   }
-  p.seance = {jour: "2026-10-28", etape: 2, n: 60, p: [1, 0, PARCOURS.rangDe("A5", 2) + 1, 4, 2]};
+  // Lot F1 : le plan a sept nombres (8 tests, 3 nouveautés prévues, 2 réussies).
+  p.seance = {jour: "2026-10-28", etape: 2, n: 60, p: [1, 0, PARCOURS.rangDe("A5", 2) + 1, 8, 0, 3, 2]};
   p.seances = Array.from({length: PARCOURS.SEUILS.seance.garder}, (_, i) => PARCOURS.ajouterJours("2026-09-01", Math.floor(i / 2)));
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
   return PARCOURS.normaliserParcours(p);

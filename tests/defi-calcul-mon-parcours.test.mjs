@@ -39,9 +39,9 @@ const reponses = reussi => (reussi
 const entrainer = (parcours, module, niveau, {reussi = true, jour = JOUR, causes = {}} = {}) =>
   P.appliquerSerie(parcours, {module, niveau, genre: "entraine", reponses: reponses(reussi), causes}, {aujourdhui: jour, carte: CARTE});
 
-test("le format : version 3, rien d'autre que ce que le document décrit", () => {
+test("le format : version 4 (lot F1 ; 3 au lot « couverture »), rien d'autre que ce que le document décrit", () => {
   const neuf = P.creerParcours();
-  assert.deepEqual(neuf, {version: 3, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0]}, seances: [], jours: []});
+  assert.deepEqual(neuf, {version: 4, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0, 0, 0]}, seances: [], jours: []});
   assert.equal(P.estVide(neuf), true);
   const {parcours} = entrainer(neuf, "A5", 1);
   assert.deepEqual(parcours.modules.A5, {
@@ -83,7 +83,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   };
   const propre = P.normaliserParcours(forge);
   assert.deepEqual(P.normaliserParcours(propre), propre, "idempotente");
-  assert.equal(propre.version, 3);
+  assert.equal(propre.version, 4, "lot F1 : version 4");
   assert.equal(propre.epoque, 0);
   assert.equal(propre.prenom.length, 20);
   assert.equal("test" in propre, false, "`test` (version 1) n'est plus gardé : le test d'entrée est toujours proposé");
@@ -96,7 +96,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   assert.deepEqual(a5, {vu: null, ok: "2026-10-01", b: [2, 0, 0, 5], e: ["2026-10-09", null, null, a5.e[3]], a: [0, 0, 0, 0], f: [0, 3, 0, 0], x: [0, 0, 0, 1], t: [1, 0, 0, 0], c: {1: 3}});
   assert.match(a5.e[3], /^\d{4}-\d{2}-\d{2}$/, "une compétence entrée a toujours une échéance");
   assert.deepEqual(propre.modules.M2, {vu: null, ok: null, b: [0, 0], e: [null, null], a: [0, 0], f: [0, 0], x: [0, 0], t: [0, 0], c: {}});
-  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 0, p: [1, 0, 0, 2, 0]});
+  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 0, p: [1, 0, 0, 2, 0, 1, 0]}, "lot F1 : le plan a sept nombres ; 1 nouveauté prévue est lisible");
   assert.deepEqual(propre.seances, ["2026-10-01"]);
   assert.deepEqual(propre.jours, ["2026-10-02"]);
   assert.deepEqual(P.normaliserParcours(null), P.creerParcours());
@@ -118,7 +118,7 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // toujours sous les limites, avec de la marge.
   const pire = P.mesurer(parcoursComplet({causes: P.SEUILS.causes, entier: true}));
   assert.ok(pire.cles < 2000 && pire.octets < 40000, `pire cas : ${pire.cles} clés, ${pire.octets} octets`);
-  assert.deepEqual(pire, {cles: 1639, octets: 21103}, "la mesure du pire cas, à la clé et à l'octet près");
+  assert.deepEqual(pire, {cles: 1639, octets: 21107}, "la mesure du pire cas, à la clé et à l'octet près");
   // Une compétence pas entrée n'a pas d'échéance : null, jamais "" (le serveur
   // retire d'une liste toute chaîne qui n'est pas une date, et les échéances
   // suivantes glisseraient d'un rang). La référence en porte.
@@ -185,7 +185,7 @@ test("fusionner : le plus avancé des deux, dans les deux sens", () => {
   assert.deepEqual(m.b, [2, 2, 0, 0]);
   assert.deepEqual(m.e, ["2026-10-06", "2026-10-07", null, null]);
   assert.ok(ab.modules.A2, "un module présent d'un seul côté est gardé");
-  assert.deepEqual(ab.seance, {jour: "2026-10-06", etape: 2, n: 3, p: [1, 0, 0, 1, 0]}, "la séance qui a le plus de séances finies, avec son plan");
+  assert.deepEqual(ab.seance, {jour: "2026-10-06", etape: 2, n: 3, p: [1, 0, 0, 1, 0, 0, 0]}, "la séance qui a le plus de séances finies, avec son plan");
   assert.deepEqual(ab.seances, ["2026-10-04", "2026-10-05", "2026-10-06", "2026-10-06"], "par date, le plus grand des deux comptes");
   assert.deepEqual(ab.jours, ["2026-10-05", "2026-10-06"]);
   // b, e et x : en bloc, du côté qui a vu le module le plus récemment.
@@ -391,10 +391,10 @@ test("une progression de version 1 : les boîtes restent, la séance en cours se
     seance: {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1]}, seances: ["2026-10-29", "2026-10-30"], jours: ["2026-10-30"]
   };
   const propre = P.normaliserParcours(v1);
-  assert.equal(propre.version, 3);
+  assert.equal(propre.version, 4);
   assert.deepEqual(propre.modules.A2.b, [4, 3, 0, 0, 0]);
   assert.deepEqual(propre.modules.A2.a, [0, 0, 1, 0, 0]);
-  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0]}, "le plan de version 1 ne vaut plus ; le compte de séances reste");
+  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0, 0, 0]}, "le plan de version 1 ne vaut plus ; le compte de séances reste");
   assert.deepEqual(propre.seances, ["2026-10-29", "2026-10-30"]);
   const file = P.fileSeance(propre, CARTE, {aujourdhui: "2026-10-31"});
   assert.equal(file.ouverte, false);
@@ -402,9 +402,11 @@ test("une progression de version 1 : les boîtes restent, la séance en cours se
   // Une progression de version 3 garde son plan tel quel ; une de version 2
   // le perd (les rangs ont changé avec la carte v3).
   const v3 = Object.assign({}, v1, {version: 3});
-  assert.deepEqual(P.normaliserParcours(v3).seance, {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1]});
+  // Lot F1 : un plan de version 3 à cinq nombres (une page d'avant F1) se
+  // relit avec 0 et 0 : une seule nouveauté, comme avant.
+  assert.deepEqual(P.normaliserParcours(v3).seance, {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1, 0, 0]});
   const v2 = Object.assign({}, v1, {version: 2});
-  assert.deepEqual(P.normaliserParcours(v2).seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0]});
+  assert.deepEqual(P.normaliserParcours(v2).seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0, 0, 0]});
 });
 
 // Lot « couverture » (06/11/2026) : la carte v3 réunit A8-3 à A8-2 et F5-3 à
@@ -425,7 +427,7 @@ test("une progression de version 2 : A8-3 et F5-3 réunis, A2 a un niveau de plu
     seance: {jour: "2026-11-06", etape: 2, n: 5, p: [1, 0, 40, 1, 0]}, seances: ["2026-11-06"], jours: []
   };
   const propre = P.normaliserParcours(v2);
-  assert.equal(propre.version, 3);
+  assert.equal(propre.version, 4);
   assert.deepEqual(propre.modules.A8, {vu: "2026-11-01", ok: "2026-11-01", b: [4, 2], e: ["2026-11-05", "2026-11-02"], a: [1, 1], f: [3, 6], x: [0, 1], t: [0, 1], c: {1: 2}});
   // Seule l'ancienne marche du haut entrée : elle prend la place.
   const haut = P.normaliserParcours(Object.assign({}, v2, {modules: {A8: Object.assign({}, v2.modules.A8, {b: [4, 0, 3], e: ["2026-11-05", null, "2026-11-03"], a: [1, 0, 1]})}}));
@@ -434,7 +436,7 @@ test("une progression de version 2 : A8-3 et F5-3 réunis, A2 a un niveau de plu
   assert.deepEqual(propre.modules.F5.e, ["2026-11-04", "2026-11-05"]);
   assert.deepEqual([propre.modules.A2.ok, propre.modules.A2.b], [null, [5, 5, 5, 4, 0]]);
   assert.deepEqual(propre.modules.M4, v2.modules.M4, "les autres modules ne bougent pas");
-  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0]}, "le plan (des rangs) de version 2 est refermé");
+  assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0, 0, 0]}, "le plan (des rangs) de version 2 est refermé");
   // Idempotente, et la fusion avec une copie de version 3 ne perd rien.
   assert.deepEqual(P.normaliserParcours(propre), propre);
   assert.deepEqual(P.fusionner(v2, propre).modules, propre.modules);
@@ -466,7 +468,9 @@ test("lib/applis.php déclare pour « defi-calcul » les clés du moteur, les 74
   ["1", "12", "0", "99"].forEach(c => assert.ok(motifs[1].test(c)));
   ["123", "abc", "1a", ""].forEach(c => assert.ok(!motifs[1].test(c)));
   assert.match(bloc, /'compteur' => 'seances',/);
-  assert.doesNotMatch(bloc, /'reglages' =>/, "pas de réglage de classe");
+  // Lot F1 (07/11/2026) : un seul réglage de classe, le nombre de
+  // nouveautés par séance (1 à 3, 1 par défaut).
+  assert.match(bloc, /'reglages' => \['nouveautes' => \['de' => 1, 'a' => 3\]\],/, "le réglage « nouveautes », de 1 à 3");
   assert.match(await lire("../_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
   assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
   // La référence écrite pour le serveur est bien celle du générateur.

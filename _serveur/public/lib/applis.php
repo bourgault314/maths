@@ -184,8 +184,10 @@ const CATALOGUE_APPLIS = [
     // les clés de « c » les numéros de cause (1 à 12). Aucun mot : le format n'a
     // pas de texte. Le prénom part vide et le serveur le retire. Aucun calcul
     // en clair, aucune réponse : l'exemple d'une erreur se regénère depuis la
-    // fiche du module. Les bornes de chaque champ (x de 0 à 3, b de 0 à 5…)
-    // sont celles du moteur, qui renormalise tout ce qu'il relit.
+    // fiche du module. Les bornes de chaque champ (x de 0 à 3, b de 0 à 7
+    // depuis le lot F1 — 5 avant…) sont celles du moteur, qui renormalise
+    // tout ce qu'il relit. Le plan de la séance « p » a 7 nombres depuis le
+    // lot F1 (5 avant) : rien à déclarer, c'est une liste d'entiers.
     // Pire cas (74 modules, toutes les compétences entrées, 8 causes) :
     // 1 639 clés, 21 207 octets (bornes du serveur : 2 000 / 40 000).
     // Garde-fou : tests/parcours-reference-defi-calcul.json, généré par
@@ -203,8 +205,23 @@ const CATALOGUE_APPLIS = [
         // « Revenir à… » nomme une version par ce compte : les séances finies
         // (une liste de dates, 60 au plus).
         'compteur' => 'seances',
-        // Pas de réglage de classe : ouvert ou non, c'est tout. Le module mis en
-        // avant par le professeur viendra plus tard (décision du 05/10/2026).
+        // Lot F1 « rythme » (07/11/2026, décision de Gwenaël) : ce qu'un
+        // professeur règle pour SA classe — « nouveautes », le nombre de
+        // choses nouvelles par séance, UN NOMBRE de 1 à 3 (déclaré
+        // ['de' => 1, 'a' => 3] : le premier est le défaut). 1 = rien d'écrit ;
+        // sinon {"defi-calcul": {"nouveautes": 2}}. Voir reglages_recus().
+        // Pas par élève (lot F2, plus tard) : un nombre ne se donne pas
+        // « en plus » comme un monde ; listes_declarees() ne le voit pas.
+        'reglages' => ['nouveautes' => ['de' => 1, 'a' => 3]],
+        // Lot F1 « rythme » (07/11/2026, relecture de Codex) : la version la
+        // plus basse qu'on accepte À L'ÉCRITURE (api/parcours.php). Une page
+        // d'avant F1 (version 3), restée ouverte dans un onglet, lirait une
+        // boîte 6 ou 7 comme « pas entrée » et tronquerait le plan de la
+        // séance : son envoi est refusé (400), elle garde son travail dans
+        // l'appareil, et la page rechargée le renverra, fusionné. La lecture
+        // n'est pas touchée. SI UN JOUR ON REVIENT EN ARRIÈRE sur le moteur de
+        // Défi calcul, il faut aussi revenir en arrière ici.
+        'version_min' => 4,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
@@ -400,10 +417,24 @@ function reglages_lus(?string $json, ?array $applis = null): array
             // Un réglage booléen (lot « Les records ») : seul « false » est
             // gardé, « true » est le défaut et ne s'écrit pas.
             if ($defaut === true && ($reglageBrut[$nom] ?? null) === false) $reglage[$nom] = false;
+            // Un nombre (lot F1, les nouveautés de Défi calcul) : un entier
+            // dans ses bornes, autre que le défaut ; sinon, le défaut (rien).
+            if (est_reglage_nombre($defaut)) {
+                $valeur = $reglageBrut[$nom] ?? null;
+                if (is_int($valeur) && $valeur > $defaut['de'] && $valeur <= $defaut['a']) $reglage[$nom] = $valeur;
+            }
         }
         if ($reglage !== []) $sortie[$cle] = $reglage;
     }
     return $sortie;
+}
+
+// Un réglage « nombre » (lot F1) est déclaré ['de' => min, 'a' => max] : deux
+// entiers, min ≥ 1, min < max. Le défaut est le plus petit, qui ne s'écrit pas.
+function est_reglage_nombre(mixed $declare): bool
+{
+    return is_array($declare) && array_keys($declare) === ['de', 'a']
+        && is_int($declare['de']) && is_int($declare['a']) && $declare['de'] >= 1 && $declare['de'] < $declare['a'];
 }
 
 // Ce qu'on renvoie en JSON : toujours un objet (« {} » et non « [] » quand rien
@@ -459,6 +490,18 @@ function reglages_recus(mixed $recus, array $actuels): array
                 ksort($numeros);
                 if (count($numeros) === $nombre) unset($nouveau[$nom]);
                 else $nouveau[$nom] = array_values($numeros);
+                continue;
+            }
+            // Un nombre (lot F1, « nouveautes » de Défi calcul) : un entier
+            // dans ses bornes, rien d'autre (ni « 2 » en texte, ni 2.0) ; le
+            // plus petit = le défaut, donc rien d'écrit.
+            if (est_reglage_nombre($defaut)) {
+                $valeur = $reglage[$nom];
+                if (!is_int($valeur) || $valeur < $defaut['de'] || $valeur > $defaut['a']) {
+                    throw new InvalidArgumentException("Nombre hors des choix.");
+                }
+                if ($valeur === $defaut['de']) unset($nouveau[$nom]);
+                else $nouveau[$nom] = $valeur;
                 continue;
             }
             // Les réglages booléens (« records » de Défi tables) : vrai ou
@@ -739,7 +782,8 @@ function ajouts_pour_la_base(array $ajouts): ?string
 //     entière) ouvre tout ; une appli qui ne vient que d'un ajout ouvre tout
 //     ce que l'ajout ne nomme pas (un ajout n'a jamais rien fermé).
 //     « Tous » = rien d'écrit dans reglages, la convention d'aujourd'hui.
-//  3. Les réglages booléens (records) suivent la classe telle quelle.
+//  3. Les réglages booléens (records) et les nombres (les nouveautés de
+//     Défi calcul, lot F1) suivent la classe telle quelle.
 function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
 {
     $clesClasse = array_column(applis_de_classe((string)($classe['applis'] ?? '')), 'cle');
@@ -765,7 +809,7 @@ function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
             if ($ouverts !== null && $ouverts !== []) $reglage[$nom] = $ouverts;
         }
         foreach ($reglagesClasse[$cle] ?? [] as $nom => $valeur) {
-            if (is_bool($valeur)) $reglage[$nom] = $valeur;
+            if (is_bool($valeur) || is_int($valeur)) $reglage[$nom] = $valeur;
         }
         if ($reglage !== []) $reglages[$cle] = $reglage;
     }
