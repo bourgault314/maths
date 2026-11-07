@@ -1234,6 +1234,7 @@ test("grades : le bouton « 🥋 Grades » est là dans les deux modes ; au dép
   assert.equal(lignes.length, 10, "le groupe Débutant : dix grades");
   assert.match(lignes[0].className, /\bactuel\b/);
   assert.equal(lignes[0].querySelector(".gr-ligne").tagName, "BUTTON");
+  assert.equal(p.$("grades-indice").hidden, true, "aucune carte gagnée : pas de phrase sur les cartes");
   assert.equal(texte(lignes[0]).includes("20e kyu"), true);
   lignes.slice(1).forEach(l => {
     assert.match(l.className, /\bferme\b/);
@@ -1450,19 +1451,16 @@ test("cartes : pas de carte pour « presque », « pas encore » ou un passage a
   assert.equal(p.$("fin-carte-place").children.length, 0);
 });
 
-test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais déformée) et « Retourner » ; sa fiche a sa petite carte ; la collection a ses 20 places dan", () => {
+test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais déformée) et « Retourner » ; sa fiche a sa petite carte ; sa ligne a sa carte grise", () => {
   const t = tirages();
   const p = ouvrirGradesA(1440, caseGrades(20));
-  // Avant : la collection a les 20 kyu et les 20 dan à gagner.
-  assert.equal(p.$("cartes-collection").children.length, 20);
-  assert.equal(p.$("cartes-collection-dan").children.length, 20);
-  assert.equal(p.$("cartes-collection-dan").querySelectorAll("button.vignette").length, 0);
-  const premiereDan = p.$("cartes-collection-dan").querySelectorAll(".a-gagner")[0];
-  assert.match(premiereDan.className, /\bor\b/, "la place d'une carte dan a sa hauteur");
-  assert.equal(texte(premiereDan), "🔒1er");
-  assert.equal(premiereDan.getAttribute("aria-label"), "1er Dan : carte à gagner");
-  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 20/40");
+  // Avant : le 1er dan est à passer — sa ligne a sa carte dorée, en gris.
   p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
+  assert.equal(p.$("grades-indice").hidden, false);
+  const premiereDan = p.$("grades-liste").querySelectorAll(".gr-item")[0].querySelector(".gr-carte");
+  assert.match(premiereDan.className, /\bor\b/, "la place d'une carte dan a sa hauteur");
+  assert.equal(premiereDan.querySelector("img").src, "./anzan-cartes/dan01-kuma-vignette.webp");
+  assert.equal(premiereDan.querySelector(".gr-sceau"), null, "pas de sceau : pas encore réussi");
   p.$("grades-liste").querySelector('[data-grade="21"]').click();
   assert.equal(p.$("fiche-carte-place").hidden, false, "la fiche d'un dan a sa carte");
   assert.match(p.$("fiche-haut").className, /\bavec-carte\b/);
@@ -1483,73 +1481,86 @@ test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais dé
   assert.deepEqual([img.attrs.width, img.attrs.height], ["640", "984"]);
   assert.equal(p.$("carte-retourner").hidden, false);
   assert.equal(texte(carte.querySelector(".cv-grade")), "1er Dan");
-  assert.match(PAGE, /\.carte-kyu\.or, \.vignette\.or, \.fiche-carte\.or img, \.bg-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
+  assert.match(PAGE, /\.carte-kyu\.or, \.fiche-carte\.or img, \.bg-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
+  assert.match(PAGE, /\.gr-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
   assert.match(PAGE, /\.fin-carte\.dan \{ --carte-l: min\(clamp\(140px, 44vw, 230px\), \(100vh - 420px\) \* 640 \/ 984\);/);
   assert.match(PAGE, /\.carte-grand-boite\.dan \{ --carte-l: min\(380px, calc\(100vw - 48px\), calc\(\(100dvh - 130px\) \* 640 \/ 984\)\); \}/);
 });
 
-test("cartes dan : dans la collection, une carte dan gagnée s'ouvre en grand à sa hauteur ; la carte kyu d'après ne garde pas la hauteur dan", () => {
-  const p = ouvrirGradesA(1440, caseGrades(22));
-  const gagnees = p.$("cartes-collection-dan").querySelectorAll("button.vignette");
-  assert.deepEqual(gagnees.map(b => b.getAttribute("data-carte")), ["21", "22"]);
-  assert.equal(gagnees[1].querySelector("img").src, "./anzan-cartes/dan02-taka-vignette.webp");
-  assert.deepEqual([gagnees[1].querySelector("img").attrs.width, gagnees[1].querySelector("img").attrs.height], ["160", "246"]);
-  assert.equal(gagnees[1].getAttribute("aria-label"), "Taka, 2e Dan : voir la carte");
-  gagnees[1].click();
-  assert.equal(p.$("carte-grand").hidden, false);
-  assert.match(p.$("carte-grand-boite").className, /\bdan\b/);
-  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 2e Dan : Taka");
-  p.$("carte-grand-fermer").click();
-  p.$("cartes-collection").querySelectorAll("button.vignette")[0].click();
-  assert.doesNotMatch(p.$("carte-grand-boite").className, /\bdan\b/);
-  p.$("carte-grand-fermer").click();
-  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 22/40");
-});
-
-test("cartes : la collection sous la liste — les cartes gagnées en vignettes qui s'ouvrent en grand, les autres en silhouette grise avec un cadenas", () => {
+// Lot « grades-estampe » (07/11/2026, choix B de Gwenaël) : la carte de
+// chaque grade est sur sa ligne ; la collection du bas, qui redisait la
+// liste, n'existe plus.
+test("grades-estampe : chaque ligne a sa carte — en couleur avec le sceau 合 si réussi, grise pour le grade à passer, une place vide fermée", () => {
   const p = ouvrirGradesA(1440, caseGrades(3));
   const avant = p.stockage.get(CLE_CASE);
-  // La liste d'abord, la collection dessous.
-  const vue = p.$("grades-liste-vue");
-  const ordre = vue.children.map(e => e.id || e.className);
-  assert.ok(ordre.indexOf("grades-liste") < ordre.indexOf("cartes-collection"), ordre.join(" "));
-  const places = p.$("cartes-collection").children;
-  assert.equal(places.length, 20);
-  const gagnees = p.$("cartes-collection").querySelectorAll("button.vignette");
-  assert.deepEqual(gagnees.map(b => b.getAttribute("data-carte")), ["1", "2", "3"]);
-  assert.equal(gagnees[0].querySelector("img").src, "./anzan-cartes/kyu20-kaeru-vignette.webp");
-  assert.equal(gagnees[2].getAttribute("aria-label"), "Suzume, 18e Kyu : voir la carte");
-  const fermees = p.$("cartes-collection").querySelectorAll(".a-gagner");
-  assert.equal(fermees.length, 17);
-  assert.equal(fermees[0].tagName, "DIV", "une carte à gagner ne se touche pas");
-  assert.ok(fermees[0].querySelector("img") === null, "ni image : une silhouette");
-  assert.equal(texte(fermees[0]), "🔒17e");
-  assert.equal(fermees[16].getAttribute("aria-label"), "1er Kyu : carte à gagner");
-  assert.equal(p.$("cartes-compte").textContent, "\u00a0· 3/40", "40 cartes : 20 kyu et 20 dan");
-  assert.match(PAGE, /<h2 class="cartes-titre" id="cartes-titre">Mes cartes<span id="cartes-compte"><\/span><\/h2>/);
-  // Une carte en grand : son recto d'abord, « Retourner » montre le dos.
-  gagnees[1].click();
+  assert.doesNotMatch(PAGE, /cartes-collection|cartes-compte|Mes cartes/, "plus de collection sous la liste");
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(lignes.length, 10);
+  const cartes = lignes.map(l => l.querySelector(".gr-carte"));
+  assert.ok(lignes.every((l, i) => l.children.includes(cartes[i]) && !l.querySelector(".gr-ligne").querySelector(".gr-carte")), "la carte est posée sur la ligne, pas dans son bouton");
+  assert.ok(cartes.slice(3).every(c => c.tagName === "SPAN" && c.getAttribute("aria-hidden") === "true"), "une carte pas gagnée est muette : la ligne garde ses mots");
+  // Réussis : 20e, 19e, 18e kyu.
+  [0, 1, 2].forEach(i => {
+    assert.match(lignes[i].className, /\breussi\b/);
+    assert.equal(cartes[i].querySelector("img").src, CORE.carteDuGrade(i + 1).vignette);
+    assert.equal(texte(cartes[i].querySelector(".gr-sceau")), "合");
+    assert.doesNotMatch(cartes[i].className, /\bvide\b|\bor\b/);
+    assert.equal(cartes[i].tagName, "BUTTON", "une carte gagnée se touche");
+    assert.equal(cartes[i].getAttribute("data-carte"), String(i + 1));
+  });
+  assert.equal(cartes[2].getAttribute("aria-label"), "Suzume, 18e Kyu : voir la carte");
+  assert.equal(p.$("grades-indice").hidden, false, "une carte gagnée : on dit qu'elle se touche");
+  assert.match(PAGE, /<p class="gr-indice" id="grades-indice" hidden>Touche une carte pour la revoir en grand<\/p>/);
+  // La toucher l'ouvre en grand (sans ouvrir la fiche) ; fermer rend le focus à la carte.
+  cartes[1].click();
   assert.equal(p.$("carte-grand").hidden, false);
-  const grande = p.$("carte-grand-place").querySelector(".carte-kyu");
-  assert.equal(grande.querySelector("img").src, "./anzan-cartes/kyu19-usagi.webp");
-  assert.doesNotMatch(grande.className, /retournee/);
-  assert.equal(ecranActif(p), "carte-grand-fermer");
+  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 19e Kyu : Usagi");
+  assert.equal(p.$("grades-liste-vue").hidden, false, "la liste reste dessous");
   p.$("carte-grand-retourner").click();
-  assert.match(grande.className, /\bretournee\b/);
-  // Le focus reste dans la fenêtre (Tab passe d'un bouton à l'autre).
-  p.touche("Tab", p.$("carte-grand-retourner"));
-  assert.equal(ecranActif(p), "carte-grand-fermer");
+  assert.match(p.$("carte-grand-place").querySelector(".carte-kyu").className, /\bretournee\b/, "et se retourne");
   p.$("carte-grand-fermer").click();
   assert.equal(p.$("carte-grand").hidden, true);
-  assert.equal(ecranActif(p), "2", "le focus revient sur la vignette");
-  // Toucher le fond referme aussi.
-  gagnees[0].click();
-  p.$("carte-grand").click();
-  assert.equal(p.$("carte-grand").hidden, true);
-  // Changer de groupe ne touche pas à la collection (la liste ne bouge pas).
-  p.$("grades-groupes").querySelector('[data-groupe="1"]').click();
-  assert.equal(p.$("cartes-collection").querySelectorAll("button.vignette").length, 3);
-  assert.equal(p.stockage.get(CLE_CASE), avant, "regarder ses cartes n'enregistre rien");
+  assert.equal(ecranActif(p), "2", "le focus revient sur la carte");
+  assert.equal(cartes[0].querySelector("img").src, "./anzan-cartes/kyu20-kaeru-vignette.webp");
+  assert.deepEqual([cartes[0].querySelector("img").attrs.width, cartes[0].querySelector("img").attrs.height], ["160", "226"]);
+  // À passer : le 17e kyu, sa carte (grise par le CSS), sans sceau.
+  assert.match(lignes[3].className, /\bactuel\b/);
+  assert.equal(cartes[3].querySelector("img").src, CORE.carteDuGrade(4).vignette);
+  assert.equal(cartes[3].querySelector(".gr-sceau"), null);
+  // Fermés : une place vide, un cadenas, pas d'image.
+  for (let i = 4; i < 10; i += 1) {
+    assert.match(cartes[i].className, /\bvide\b/);
+    assert.equal(cartes[i].querySelector("img"), null);
+    assert.equal(texte(cartes[i]), "🔒");
+  }
+  // Les noms japonais, à côté des noms (posés par le CSS).
+  assert.equal(lignes[0].querySelector(".gr-nom").getAttribute("data-jp"), "二十級");
+  assert.equal(lignes[9].querySelector(".gr-nom").getAttribute("data-jp"), "十一級");
+  // La ligne ouvre toujours la fiche, où la carte s'ouvre en grand.
+  p.$("grades-liste").querySelector('[data-grade="2"]').click();
+  assert.equal(p.$("grades-titre").textContent, "19e kyu");
+  assert.equal(p.$("grades-titre").getAttribute("data-jp"), "十九級");
+  p.$("grades-retour").click();
+  assert.equal(p.$("grades-titre").getAttribute("data-jp"), "", "« Les grades » n'a pas de nom japonais");
+  // Les dan : leurs places ont la hauteur dan.
+  p.$("grades-groupes").querySelector('[data-groupe="3"]').click();
+  const dan = p.$("grades-liste").querySelectorAll(".gr-carte");
+  assert.ok(dan.every(c => /\bor\b/.test(c.className) && /\bvide\b/.test(c.className)));
+  assert.equal(p.$("grades-liste").querySelectorAll(".gr-nom")[9].getAttribute("data-jp"), "二十段");
+  assert.equal(p.stockage.get(CLE_CASE), avant, "regarder ses grades n'enregistre rien");
+});
+
+test("grades-estampe : une carte dan réussie sur sa ligne, dorée et à sa hauteur", () => {
+  const p = ouvrirGradesA(1440, caseGrades(22));
+  p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  const taka = lignes[1].querySelector(".gr-carte");
+  assert.match(taka.className, /\bor\b/);
+  assert.equal(taka.querySelector("img").src, "./anzan-cartes/dan02-taka-vignette.webp");
+  assert.deepEqual([taka.querySelector("img").attrs.width, taka.querySelector("img").attrs.height], ["160", "246"]);
+  assert.equal(texte(taka.querySelector(".gr-sceau")), "合");
+  assert.equal(lignes[0].querySelector(".gr-nom").getAttribute("data-jp"), "初段");
+  assert.match(lignes[2].className, /\bactuel\b/);
 });
 
 test("cartes : la fiche d'un grade — la petite carte en couleur si réussi (elle s'ouvre en grand), grisée sinon ; une ligne sous chaque bouton ; « 7/10 »", () => {
@@ -1580,13 +1591,14 @@ test("cartes : la fiche d'un grade — la petite carte en couleur si réussi (el
   assert.match(texte(p.$("fiche-regles")), /7\/10bonnes réponses pour réussir le grade/);
 });
 
-test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la taille de la carte, la collection n'entre pas dans la réduction de l'écran", () => {
+test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la taille de la carte, la carte de la ligne aussi", () => {
   const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
   assert.match(style, /\.carte-kyu \{[^}]*aspect-ratio: 640 \/ 904;[^}]*container-type: inline-size;/);
   assert.match(style, /\.cv-creature \{[^}]*font-size: 4\.05cqw;/);
   assert.match(style, /\.fiche-carte img \{[^}]*aspect-ratio: 640 \/ 904;/);
-  assert.match(style, /\.vignette \{[^}]*aspect-ratio: 640 \/ 904;/);
-  assert.match(style, /body\.mesure-cadre \.cartes-collection \{ display: none; \}/, "la liste des grades garde la taille d'avant sur ordinateur");
+  assert.match(style, /\.gr-carte \{[^}]*width: 36px;[^}]*aspect-ratio: 640 \/ 904;/);
+  assert.match(style, /\.gr-item\.actuel \.gr-carte img \{ filter: grayscale\(1\); opacity: \.5; \}/, "la carte à gagner, en gris");
+  assert.doesNotMatch(style, /cartes-collection|\.vignette/, "plus de collection");
   assert.match(style, /\.carte-grand \{ position: fixed;/, "la carte en grand passe par-dessus : elle ne pousse rien");
   assert.match(style, /@media \(prefers-reduced-motion: reduce\) \{ \.carte-tour \{ transition: none; \} \}/);
 });
