@@ -175,7 +175,11 @@
        soudé au cadre, avec un petit trait orange dessous ; l'autre est gris
        très pâle (adouci, 31/10/2026). */
     .bandeau .onglets { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 6px; margin: 8px 0 -10px; }
-    .onglet { position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 11px; border: 1px solid #dde7ec; border-bottom: 0;
+    /* Un onglet au repos fait 2 px de plus que celui choisi moins sa marche
+       (8 + 9 + 13 = 15 + 15) : si un sous-titre passe sur deux lignes, la
+       rangée garde la même hauteur quel que soit l'onglet choisi (lot
+       « menu immobile », 07/11/2026). */
+    .onglet { position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 13px; border: 1px solid #dde7ec; border-bottom: 0;
       border-radius: 20px 20px 0 0; background: #f5f8fa; color: #557080; font-weight: 800; font-size: 1.05rem; line-height: 1.1;
       display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
     .onglet small { font-weight: 600; font-size: .72rem; color: var(--muted); margin-top: 3px; }
@@ -187,7 +191,12 @@
        fine grise, signes et « − / + » en bleu maths&go, le choix actif en
        bleu très pâle bordé de bleu. Le clavier et les nombres restent gras. */
     .grille { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px 18px; }
-    .bloc { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    /* Les champs d'une même rangée alignés par le bas (lot « menu immobile ») :
+       un titre sur deux lignes ne décale pas la case d'à côté. */
+    .bloc { display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-width: 0; }
+    .bloc-temps { display: grid; min-width: 0; }
+    .bloc-temps > .bloc { grid-area: 1 / 1; }
+    .bloc-temps > .bloc[hidden] { display: flex !important; visibility: hidden; }
     .bloc.large { grid-column: span 2; }
     .bloc .lab { font-weight: 800; font-size: .98rem; }
     .bloc .lab small { margin-left: 2px; font-weight: 600; font-size: .78rem; color: var(--muted); }
@@ -692,6 +701,23 @@
       .grille { grid-template-columns: 1fr 1fr; }
       .bloc.large, .resume { grid-column: 1 / -1; }
     }
+    /* Lot « menu immobile » (07/11/2026) : au téléphone et à la tablette, le
+       résumé est sous l'interrupteur du son en Flash, seul en Colonne — le
+       menu raccourcissait (de 25 à 70 px) et « C'est parti » remontait. En
+       Colonne, la place du son est gardée (vide) et le résumé, qui garde
+       toujours la place de deux lignes, reste au même endroit : « C'est
+       parti » et le bandeau des grades ne bougent plus. Sur ordinateur, le
+       résumé prend déjà la place du son : rien ne change. Un bloc caché
+       « qui garde sa place » est invisible (ni vu, ni touché, ni lu) mais
+       occupe toujours la même hauteur, quelle que soit la police de
+       l'appareil. */
+    @media (max-width: 899px) {
+      .garde-place-tel[hidden] { display: flex !important; visibility: hidden; }
+      .resume { line-height: 1.3; min-height: max(56px, calc(2.6em + 16px)); }
+    }
+    @media (max-width: 620px) {
+      .resume { min-height: calc(2.6em + 16px); }
+    }
     /* Ordinateur à écran court (portable 1366 × 768, 1024 × 600) : le cadre
        se resserre pour tenir sans réduire les boutons sous 44 px. La
        réduction (× 0,75 au plus) ne reste qu'en dernier recours. */
@@ -795,6 +821,11 @@
               <span class="lab">Nombres</span>
               <span class="pas"><button type="button" data-pas="nombres" data-sens="-1" aria-label="Un nombre de moins">−</button><output id="val-nombres" aria-live="polite"></output><button type="button" data-pas="nombres" data-sens="1" aria-label="Un nombre de plus">+</button></span>
             </div>
+            <!-- Lot « menu immobile » (07/11/2026) : les deux « Temps » dans la
+                 même case — le caché garde sa place, la case a toujours la
+                 hauteur du plus haut (« Temps limite par calcul » passe sur
+                 deux lignes sur un petit téléphone). -->
+            <div class="bloc-temps">
             <div class="bloc" data-pour="flash">
               <span class="lab">Temps <small>par nombre</small></span>
               <span class="pas"><button type="button" data-pas="temps" data-sens="-1" aria-label="Moins de temps par nombre">−</button><output id="val-temps" aria-live="polite"></output><button type="button" data-pas="temps" data-sens="1" aria-label="Plus de temps par nombre">+</button></span>
@@ -802,6 +833,7 @@
             <div class="bloc" data-pour="colonne">
               <span class="lab">Temps limite <small>par calcul</small></span>
               <span class="pas"><button type="button" data-pas="limite" data-sens="-1" aria-label="Moins de temps">−</button><output id="val-limite" aria-live="polite"></output><button type="button" data-pas="limite" data-sens="1" aria-label="Plus de temps">+</button></span>
+            </div>
             </div>
             <div class="bloc large">
               <span class="lab" id="lab-calculs">Calculs</span>
@@ -811,7 +843,7 @@
                 <button type="button" class="option" data-reglage="calculs" data-valeur="20">20</button>
               </span>
             </div>
-            <div class="bloc large" data-pour="flash">
+            <div class="bloc large garde-place-tel" data-pour="flash">
               <!-- Pas de petit titre « Son » (06/11/2026, choix de Gwenaël) :
                    « 🔔 Un bip à chaque nombre » se suffit, et la ligne a la
                    même hauteur que le résumé qui la remplace en Colonne — le
