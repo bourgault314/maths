@@ -66,7 +66,8 @@ const CATALOGUE_APPLIS = [
             'retenir', 'calculsDuJour', 'reussi',
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
-            'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance'],
+            'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance',
+            'journal', 'etapes', 'justes', 'test'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
         // Lot serveur A (06/09/2026) : la SEULE chose que le serveur compte
@@ -83,6 +84,22 @@ const CATALOGUE_APPLIS = [
         // oui : rien n'est écrit ; seul « false » est rangé
         // ({"defi-tables": {"records": false}}). Voir reglages_recus().
         'reglages' => ['records' => true],
+        // Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses
+        // élèves ») : le journal des séances — `journal`, cinq listes
+        // d'entiers alignées sur `seances` (`table`, `etapes`, `calculs`,
+        // `justes`, `test` ; -1 = pas connu ; pas de temps passé, décision de
+        // Gwenaël du 07/11/2026). Version 4 du
+        // moteur : la version la plus basse qu'on accepte À L'ÉCRITURE
+        // (api/parcours.php), comme pour Défi calcul. Une page de version 3
+        // restée ouverte ne connaît pas le journal : relue puis renvoyée, sa
+        // progression l'effacerait. Son envoi est refusé (400), elle garde son
+        // travail dans l'appareil, et la page rechargée le renverra, fusionné.
+        // La lecture n'est pas touchée. SI UN JOUR ON REVIENT EN ARRIÈRE sur le
+        // moteur, il faut aussi revenir en arrière ici. Le pire cas (toutes
+        // les tables, les 36 calculs, 60 séances au journal plein, une séance
+        // en cours pleine) : sous 2 000 clés et 40 000 octets
+        // (tests/suivi-journaux-s1.test.mjs).
+        'version_min' => 4,
     ],
     // Coffres magiques, version SOLO (lot « Coffres magiques sur le suivi »,
     // 21/10/2026, pour un professeur des écoles qui la teste avec ses élèves ;
@@ -112,7 +129,7 @@ const CATALOGUE_APPLIS = [
         'disponible' => true,
         'cles' => ['version', 'epoque', 'niveaux', 'tresors', 'parfaits', 'operations',
             'sum', 'difference', 'product', 'quotient', 'cles', 'aides', 'solutions', 'erreurs',
-            'dernier', 'partie', 'niveau', 'ops', 'serie', 'familles', 'parfait', 'jour'],
+            'dernier', 'partie', 'niveau', 'ops', 'serie', 'familles', 'parfait', 'jour', 'jours', 'journal', 'depuis'],
         'mots' => [],
         'motifs' => ['/^[1-3]$/'],
         // « Revenir à… » nomme une version par ce compte : les niveaux
@@ -124,6 +141,15 @@ const CATALOGUE_APPLIS = [
         // mondes de SPLAT! : la liste des numéros OUVERTS ; tout ouvert = rien
         // d'écrit ({"coffres": {"niveaux": [1, 2], "operations": [1, 3]}}).
         'reglages' => ['niveaux' => 3, 'operations' => 4],
+        // Lot S1 « les journaux » (07/11/2026) : le journal des jours joués —
+        // `jours` (les 60 derniers, des dates), `journal` (quatre listes
+        // d'entiers alignées : `tresors`, `parfaits`, `aides`, `solutions` ;
+        // -1 = pas connu) et `depuis` (le premier jour du journal). Version 2
+        // du moteur, et la même garde que Défi calcul et Défi tables : une
+        // page de version 1 effacerait le journal en renvoyant la progression,
+        // son envoi est refusé (400). SI UN JOUR ON REVIENT EN ARRIÈRE sur le
+        // moteur, il faut aussi revenir en arrière ici.
+        'version_min' => 2,
     ],
     // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026 — l'appli de Flash
     // Anzan / Colonne du soroban, faite pour une élève et donnée élève par
@@ -261,7 +287,8 @@ const CATALOGUE_APPLIS = [
         'url' => 'https://mathsgo.re/outils/splat_univers.html',
         'ancre' => null,
         'disponible' => true,
-        'cles' => ['version', 'epoque', 'etapes', 'fait', 'etoiles', 'cartes', 'vues', 'essais', 'date', 'idx'],
+        'cles' => ['version', 'epoque', 'etapes', 'fait', 'etoiles', 'cartes', 'vues', 'essais', 'date', 'idx',
+            'jours', 'journal', 'series', 'reussies', 'depuis'],
         'mots' => [],
         'motifs' => ['/^(?:m1e1|m1e2|m1e3|m1e4|m1e5|m1e6|m2e1|m2e4|m2e5|enq10|enq11|enq12|enq13|enq14|enq15|enq16|enq17|enq18|enq19|enq20|enq21|enq22|enq23|enq24|sys25|sys26|sys27|sys28|m3e1|m3e2|m3e4|ech1|ech2|ech3|m4e1|m4e2|m4e3|m4e4|m4e5|m4e6|enq11d|enq12d|enq13d|enq16d|enq17d|enq18d|enq20d|enq22d|enq19d|enq24d|sys25d|sys26d|sys27d|sys28d)$/'],
         // « Revenir à… » nomme une version par ce compte : les étapes
@@ -272,6 +299,15 @@ const CATALOGUE_APPLIS = [
         // mondes ; un test compare ce nombre à la carte du moteur). Par défaut,
         // tous : rien n'est écrit. Voir reglages_recus() plus bas.
         'reglages' => ['mondes' => 6],
+        // Lot S1 « les journaux » (07/11/2026) : le journal des jours joués —
+        // `jours` (les 60 derniers, des dates), `journal` (trois listes
+        // d'entiers alignées : `series`, `reussies`, `vues` ; -1 = pas connu)
+        // et `depuis` (le premier jour du journal). Version 2 du moteur, et la
+        // même garde que Défi calcul et Défi tables : une page de version 1
+        // effacerait le journal en renvoyant la progression, son envoi est
+        // refusé (400). SI UN JOUR ON REVIENT EN ARRIÈRE sur le moteur, il
+        // faut aussi revenir en arrière ici.
+        'version_min' => 2,
     ],
     'soley' => [
         'nom' => 'Solèy',

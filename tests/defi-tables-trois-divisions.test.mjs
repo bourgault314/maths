@@ -217,7 +217,7 @@ test("rien de nouveau n'est enregistré : une division compte pour son calcul, q
     p = P.appliquerReponse(p, question.factKey, {correcte: true, date: `2026-10-0${index + 1}`}).parcours;
   });
   assert.deepEqual(Object.keys(p.calculs), ["7-8"], "une seule case : 7 × 8");
-  assert.equal(P.VERSION, 3, "pas de changement de version");
+  assert.equal(P.VERSION, 4, "pas de changement de version (4 : le lot S1 « les journaux », plus tard)");
   assert.doesNotMatch(JSON.stringify(p), /division|quotient|dividend|divisor/, "aucune écriture dans le parcours enregistré");
 });
 
@@ -259,7 +259,7 @@ test("l'écran avant le test sur téléphone : 3 + 2 au mélange, 2 + 2 au test 
 
 test("la page charge les moteurs du lot (leurs numéros montent) et le professeur a la même copie du moteur", async () => {
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/);
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261104-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261107-1"><\/script>/);
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   const original = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url), "utf8");
   assert.equal(copie, original);

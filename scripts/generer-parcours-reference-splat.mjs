@@ -49,6 +49,11 @@ export function parcoursComplet() {
     p = PARCOURS.enregistrerSerie(p, id, {fait: true, etoiles: cartes - (index % 3), cartes, vues: index % 5 === 0 ? 1 : 0},
       index % 4 === 0 ? `2026-09-${String(2 + (index % 28)).padStart(2, "0")}` : jour);
   });
+  // Lot S1 « les journaux » : le journal s'est rempli tout seul, un jour par
+  // jour joué ; un vieux jour venu d'une copie abîmée (des valeurs pas
+  // connues, -1) s'y ajoute par la fusion.
+  p = PARCOURS.fusionner(p, {version: PARCOURS.VERSION, epoque: 2, etapes: {}, jours: ["2026-08-30"],
+    journal: {series: [-1], reussies: [1], vues: [-1]}, depuis: "2026-08-30"});
   return PARCOURS.pourServeur(p);
 }
 

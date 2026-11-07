@@ -791,6 +791,69 @@
     return {texte, vide: !texte};
   }
 
+  // --------------------------------------- pour « Suivre ses élèves » (S2)
+  //
+  // Lot S1 « les journaux » (07/11/2026) : la même fonction, avec la même
+  // forme de réponse, dans les cinq moteurs suivis (Défi tables, Coffres
+  // magiques, Anzan, Défi calcul, SPLAT! ; la forme complète est écrite dans
+  // defi_tables_mon_parcours.js, resumeSuivi). La page du professeur
+  // l'appellera au lot S2 ; rien ne l'affiche encore. Anzan garde déjà chaque
+  // séance : rien de nouveau n'est enregistré.
+  // Anzan : un jour de travail = une séance avec au moins un calcul fait ;
+  // une ligne par séance, dans l'ordre {mode (le code : flash, colonne,
+  // grade, entrainement), calculs (faits), justes, prevus, grade (le numéro,
+  // 0 hors des grades)} ; à aider : rien (aucune règle décidée) ; à
+  // féliciter : un grade réussi cette semaine ({type: "grade", grade}, le
+  // plus haut).
+  function jourPlus(jour, nombre) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() + nombre);
+    return jourLocal(d);
+  }
+
+  function lundiDu(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+    return jourLocal(d);
+  }
+
+  function resumeSuivi(parcours, options) {
+    const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
+    const aujourdhui = dateOuNull(o.aujourdhui) || jourLocal();
+    const lundi = lundiDu(aujourdhui);
+    const debut = jourPlus(lundi, -21);
+    // L'historique va du plus récent au plus ancien : on le retourne, puis on
+    // range par jour (tri stable : une horloge d'appareil fausse ne coupe pas
+    // un jour en deux).
+    const toutes = historique(parcours).slice().reverse();
+    const faites = toutes.filter(s => s.faits > 0 && s.jour <= aujourdhui)
+      .sort((x, y) => (x.jour < y.jour ? -1 : x.jour > y.jour ? 1 : 0));
+    const jours = [];
+    faites.filter(s => s.jour >= debut).forEach(s => {
+      const ligne = {mode: s.mode, calculs: s.faits, justes: s.score, prevus: s.calculs, grade: s.grade || 0};
+      const dernierJour = jours[jours.length - 1];
+      if (dernierJour && dernierJour.jour === s.jour) dernierJour.lignes.push(ligne);
+      else jours.push({jour: s.jour, lignes: [ligne]});
+    });
+    const grades = faites.filter(s => s.reussi && s.jour >= lundi).map(s => s.grade);
+    // La borne des 500 séances atteinte : les jours d'avant la plus ancienne
+    // gardée ne sont plus connus (« ordre » range les séances, pas le jour :
+    // la plus ancienne date gardée).
+    const dates = toutes.map(s => s.jour).sort();
+    return {
+      appli: APPLI,
+      aujourdhui,
+      debut,
+      connuDepuis: toutes.length >= SEANCES_MAX && dates.length ? dates[0] : null,
+      dernier: faites.length ? faites.map(s => s.jour).sort().pop() : null,
+      jours,
+      aider: [],
+      feliciter: grades.length ? [{type: "grade", grade: Math.max(...grades)}] : []
+    };
+  }
+
   // ------------------------------------------------------------- empreintes
   //
   // Le même rangement que Défi tables (lot 8) et Coffres : la clé d'une case à code porte
@@ -1870,6 +1933,7 @@
     resume,
     texteResume,
     resumeProf,
+    resumeSuivi,
     resumeTuile,
     sha256Hex,
     selAppareil,

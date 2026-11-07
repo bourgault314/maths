@@ -2026,6 +2026,69 @@
     };
   }
 
+  // --------------------------------------- pour « Suivre ses élèves » (S2)
+  //
+  // Lot S1 « les journaux » (07/11/2026) : la même fonction, avec la même
+  // forme de réponse, dans les cinq moteurs suivis (Défi tables, Coffres
+  // magiques, Anzan, Défi calcul, SPLAT! ; la forme complète est écrite dans
+  // defi_tables_mon_parcours.js, resumeSuivi). La page du professeur
+  // l'appellera au lot S2 ; rien ne l'affiche encore. Des nombres, des dates
+  // et des codes, jamais une phrase.
+  // Défi calcul : un jour de travail = une séance finie ; une ligne par
+  // séance {calculs, justes, nouveautes, prouvees, rouges} — les minutes
+  // gardées au journal ne sont PAS rendues (décision de Gwenaël, 07/11/2026 :
+  // aider l'élève, pas le fliquer ; la page prof ne montre aucun temps) ; à
+  // aider : des compétences à reprendre en classe (mises de côté, {type:
+  // "a-reprendre", competences}) et des compétences rouges ({type: "rouges",
+  // competences}) ; à féliciter : beaucoup de compétences devenues sues
+  // cette semaine (FELICITER_COMPETENCES ou plus : {type: "competences",
+  // competences}).
+  const FELICITER_COMPETENCES = 5;
+  function resumeSuivi(brut, options) {
+    const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
+    const aujourdhui = dateOuNull(o.aujourdhui) || jourLocal();
+    const parcours = normaliserParcours(brut);
+    const lundi = lundiDe(aujourdhui);
+    const debut = ajouterJours(lundi, -21);
+    const nombre = valeur => (valeur >= 0 ? valeur : null);
+    const passees = pairesDe(parcours).filter(paire => paire.jour <= aujourdhui);
+    const jours = [];
+    passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
+      const ligne = {};
+      JOURNAL.forEach((champ, index) => { if (champ !== "minutes") ligne[champ] = nombre(entree[index]); });
+      const dernierJour = jours[jours.length - 1];
+      if (dernierJour && dernierJour.jour === jour) dernierJour.lignes.push(ligne);
+      else jours.push({jour, lignes: [ligne]});
+    });
+    let classe = 0;
+    let rougesVues = 0;
+    let sues = 0;
+    Object.keys(parcours.modules).sort().forEach(id => {
+      if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return;
+      const ligne = ligneDe(parcours, id);
+      ligne.b.forEach((_, index) => {
+        const etat = etatCompetence(ligne, index, aujourdhui);
+        if (etat === "classe") classe += 1;
+        if (etat === "revoir") rougesVues += 1;
+        const sue = ligne.s[index];
+        if (sue && sue >= lundi && sue <= aujourdhui) sues += 1;
+      });
+    });
+    const aider = [];
+    if (classe) aider.push({type: "a-reprendre", competences: classe});
+    if (rougesVues) aider.push({type: "rouges", competences: rougesVues});
+    return {
+      appli: "defi-calcul",
+      aujourdhui,
+      debut,
+      connuDepuis: parcours.seances.length >= SEUILS.seance.garder ? parcours.seances[0] : null,
+      dernier: passees.length ? passees[passees.length - 1].jour : null,
+      jours,
+      aider,
+      feliciter: sues >= FELICITER_COMPETENCES ? [{type: "competences", competences: sues}] : []
+    };
+  }
+
   // Le nombre de clés à toute profondeur (ce que compte le serveur) et la
   // taille en octets du JSON enregistré.
   function mesurer(parcours) {
@@ -2098,6 +2161,7 @@
     JOURNAL,
     etatCompetence,
     resumeProf,
+    resumeSuivi,
     mesurer,
     CLE_SEL,
     ITERATIONS_EMPREINTE,

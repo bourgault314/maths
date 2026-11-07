@@ -233,7 +233,14 @@
   // lecture de la case, à la fusion, à la sauvegarde — et jamais deux fois.
   // Le lot 4b n'a pas changé de version : il ajoute une activité (une clé de
   // plus dans « apprends »), et une clé absente vaut 0 — c'est déjà la règle.
-  const VERSION = 3;
+  // 4 = lot S1 « les journaux » (07/11/2026) : le journal des séances
+  // (`journal`, cinq listes d'entiers alignées sur `seances`). Un parcours de version 3 se relit sans rien
+  // perdre : ses séances déjà finies ont un journal « pas connu » (-1). Le
+  // serveur refuse l'écriture d'une page de version 3 (lib/applis.php,
+  // « version_min » 4) : elle ne connaît pas le journal et l'effacerait en
+  // renvoyant le parcours ; elle garde son travail sur l'appareil, et la page
+  // rechargée le renvoie, fusionné.
+  const VERSION = 4;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
   const TABLES = Object.freeze(Array.from({length: 9}, (_, index) => index + 2));
   const ORDRE_CONSEIL = Object.freeze([2, 10, 5, 3, 4, 6, 7, 8, 9]);
@@ -325,7 +332,9 @@
     // qui n'est toujours pas acquise, la ligne le signale (l'élève moyen en
     // met 4 ou 5, l'élève en difficulté 7 à 9 : simulation du lot 1) ; et à
     // partir de 7 jours sans rien faire.
-    prof: Object.freeze({seancesLongues: 8, absenceJours: 7})
+    prof: Object.freeze({seancesLongues: 8, absenceJours: 7}),
+    // Le journal d'une séance (lot S1) : des comptes bornés.
+    journal: Object.freeze({etapes: 16, calculs: 999})
   });
   const ETOILES_MAX = SEUILS.etoile.durees.length;
 
@@ -390,6 +399,24 @@
   function cloner(valeur) {
     return JSON.parse(JSON.stringify(valeur));
   }
+
+  // Le journal des séances (lot S1 « les journaux », 07/11/2026, chantier
+  // « Suivre ses élèves »), sur le modèle de Défi calcul (lot G1). Pour
+  // chaque séance FINIE, rangée comme `seances` (la même place dans chaque
+  // liste) :
+  //   table    la table de la séance (2 à 10 ; 0 : sans table — Mes
+  //            calculs du jour seuls, ou l'étoile des 9 tables) ;
+  //   etapes   les étapes faites ;
+  //   calculs  les calculs de « Mes calculs du jour » faits dans la séance ;
+  //   justes   combien étaient justes ;
+  //   test     le test de la table : 0 pas passé, 1 réussi, 2 pas encore.
+  // Rien que des entiers ; ni heure, ni temps passé, ni calcul, ni réponse
+  // (décision de Gwenaël, 07/11/2026 : pas de minutes — « aider l'élève,
+  // pas le fliquer » ; le nombre de séances sur une table dit déjà qu'il
+  // bloque). -1 : pas connu (une séance finie avant le lot S1, ou abîmée).
+  const JOURNAL = Object.freeze(["table", "etapes", "calculs", "justes", "test"]);
+  const JOURNAL_MAX = Object.freeze([10, SEUILS.journal.etapes, SEUILS.journal.calculs, SEUILS.journal.calculs, 2]);
+  const TEST = Object.freeze({aucun: 0, reussi: 1, pasEncore: 2});
 
   // Les clés du compteur « fois » : les cinq activités de J'apprends et les
   // trois entraînements (noms distincts, un seul objet plat par table).
@@ -459,6 +486,9 @@
       jours: [],
       // Le jour de chaque séance finie (un jour peut y être plusieurs fois).
       seances: [],
+      // Le journal de chaque séance finie (lot S1) : cinq listes alignées sur
+      // « seances » (voir JOURNAL).
+      journal: journalVide(),
       // La séance commencée et pas finie (lot M1), rangée en nombres ; null :
       // aucune. Elle ne vaut que pour son jour (voir seanceEnCours).
       enCours: null,
@@ -510,11 +540,76 @@
     return [...jours].sort().slice(-SEUILS.jours.garder);
   }
 
+  // Un VRAI jour (lot S1) : la même règle que le serveur (lib/progression.php,
+  // date_reelle : checkdate). Le serveur retire d'une liste « 2026-02-30 » :
+  // les séances et leur journal, alignés, glisseraient d'un rang ; ici, une
+  // telle séance est écartée avec son entrée.
+  function jourReel(valeur) {
+    const jour = dateOuNull(valeur);
+    if (!jour) return null;
+    const [annee, mois, quantieme] = jour.split("-").map(Number);
+    if (annee < 1 || mois < 1 || mois > 12 || quantieme < 1) return null;
+    const bissextile = annee % 4 === 0 && (annee % 100 !== 0 || annee % 400 === 0);
+    return quantieme <= [31, bissextile ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mois - 1] ? jour : null;
+  }
+
+  function journalVide() {
+    const journal = {};
+    JOURNAL.forEach(champ => { journal[champ] = []; });
+    return journal;
+  }
+
+  // Une entrée du journal, propre : cinq entiers, -1 quand ce n'est pas
+  // connu ; jamais plus de justes que de calculs.
+  function entreePropre(brute) {
+    const entree = JOURNAL_MAX.map((maximum, index) => entier(brute[index], -1, maximum, -1));
+    if (entree[2] >= 0 && entree[3] > entree[2]) entree[3] = entree[2];
+    return entree;
+  }
+
+  // Les séances finies ET leur journal, rangés ensemble (lot S1, comme Défi
+  // calcul) : chaque date garde son entrée. Une liste du journal plus courte
+  // que les séances (une progression d'avant le lot S1, ou abîmée) s'aligne
+  // sur les plus récentes : les plus anciennes valent -1. Une date qui n'en
+  // est pas part avec son entrée ; puis le tri par date (stable : deux
+  // séances du même jour gardent leur ordre) et les 60 plus récentes.
+  function normaliserSeancesEtJournal(listeBrute, journalBrut) {
+    const dates = Array.isArray(listeBrute) ? listeBrute : [];
+    const journal = journalBrut && typeof journalBrut === "object" && !Array.isArray(journalBrut) ? journalBrut : {};
+    const colonnes = JOURNAL.map(champ => {
+      const liste = Array.isArray(journal[champ]) ? journal[champ] : [];
+      const decalage = dates.length - liste.length;
+      return index => (index - decalage >= 0 && index - decalage < liste.length ? liste[index - decalage] : -1);
+    });
+    const paires = [];
+    dates.forEach((brute, index) => {
+      const jour = jourReel(brute);
+      if (jour) paires.push({jour, entree: entreePropre(colonnes.map(lire => lire(index)))});
+    });
+    return rangerSeances(paires);
+  }
+
+  // Des paires {jour, entree} : triées par jour (stable), les 60 plus
+  // récentes, en deux formes — `seances` (les dates) et `journal`.
+  function rangerSeances(paires) {
+    const triees = paires.map((paire, rang) => ({paire, rang}))
+      .sort((x, y) => (x.paire.jour < y.paire.jour ? -1 : x.paire.jour > y.paire.jour ? 1 : x.rang - y.rang))
+      .map(x => x.paire).slice(-SEUILS.seance.garder);
+    const journal = journalVide();
+    triees.forEach(({entree}) => JOURNAL.forEach((champ, index) => journal[champ].push(entree[index])));
+    return {seances: triees.map(paire => paire.jour), journal};
+  }
+
+  function pairesDe(parcours) {
+    return parcours.seances.map((jour, index) => ({jour, entree: JOURNAL.map(champ => parcours.journal[champ][index])}));
+  }
+
   // Les jours des séances finies : des dates, répétées quand il y a eu
   // plusieurs séances le même jour, les plus récentes gardées.
   function normaliserSeances(liste) {
-    return (Array.isArray(liste) ? liste : []).map(dateOuNull).filter(Boolean).sort().slice(-SEUILS.seance.garder);
+    return normaliserSeancesEtJournal(liste, null).seances;
   }
+
 
   // Les multiplicateurs HORS GRILLE d'une table : × 1 et × 10 ; pour la table
   // de 10, tous (aucun de ses calculs n'est dans la grille des 36).
@@ -629,7 +724,9 @@
       parcours.rang = entier(brut.rang, 0, RANGS.length - 1);
       parcours.jours = normaliserJours(brut.jours);
     }
-    parcours.seances = normaliserSeances(brut.seances);
+    const rangees = normaliserSeancesEtJournal(brut.seances, brut.journal);
+    parcours.seances = rangees.seances;
+    parcours.journal = rangees.journal;
     parcours.enCours = normaliserEnCours(brut.enCours);
     parcours.retenir = normaliserRetenir(brut.retenir);
     parcours.calculsDuJour = dateOuNull(brut.calculsDuJour);
@@ -2478,11 +2575,38 @@
         ligne.seance.n = Math.min(FOIS_MAX, ligne.seance.n + 1);
         suite.avance = ligne.seance.depart - avant;
       }
-      copie.seances = normaliserSeances([...copie.seances, suite.jour]);
+      // Le journal de la séance (lot S1) : elle compte pour le jour où elle
+      // FINIT (une séance qui passe minuit compte pour le lendemain, comme
+      // dans Défi calcul).
+      const fin = jourReel(aujourdhui) || jourReel(suite.jour) || jourLocal();
+      const rangees = rangerSeances([...pairesDe(copie), {jour: fin, entree: entreeDeSeance(copie, suite)}]);
+      copie.seances = rangees.seances;
+      copie.journal = rangees.journal;
     }
     // La séance en cours suit dans le parcours ; finie, elle n'y est plus.
     copie.enCours = suite.finie ? null : coderSeance(suite);
     return {parcours: copie, seance: suite, faite};
+  }
+
+  // L'entrée du journal d'une séance qui finit (lot S1) : tout se lit dans
+  // ses étapes faites (elles la suivent, même après minuit et d'un appareil
+  // à l'autre : « faites » est dans « enCours »).
+  //  - « Mes calculs du jour » joué sans aucune réponse (temps écoulé) :
+  //    0 calcul ;
+  //  - le test : réussi (1) s'il l'a été, sinon pas encore (2) s'il a été
+  //    tenté, sinon 0.
+  function entreeDeSeance(parcours, seance) {
+    let calculs = 0;
+    let justes = 0;
+    let test = TEST.aucun;
+    seance.faites.forEach(faite => {
+      if (faite.type === "revision" && faite.reussi !== false) {
+        calculs += faite.total;
+        justes += faite.juste;
+      }
+      if (faite.type === "validation") test = faite.reussi ? TEST.reussi : (test === TEST.reussi ? test : TEST.pasEncore);
+    });
+    return entreePropre([seance.table === null ? 0 : seance.table, seance.faites.length, calculs, justes, test]);
   }
 
   // Une table ratée sur le premier écran (« Tu connais déjà des tables ? ») :
@@ -2625,6 +2749,65 @@
       if (n >= SEUILS.prof.seancesLongues) longue = {table: tableDeSeance(parcours), seances: n};
     }
     return {enCours, seances, longue, semaines, ordreSemaines: ordre};
+  }
+
+  // --------------------------------------- pour « Suivre ses élèves » (S2)
+  //
+  // Lot S1 « les journaux » (07/11/2026) : la même fonction, avec la même
+  // forme de réponse, dans les cinq moteurs suivis (Défi tables, Coffres
+  // magiques, Anzan, Défi calcul, SPLAT!). La page du professeur l'appellera
+  // au lot S2 ; rien ne l'affiche encore. Des nombres, des dates et des codes,
+  // jamais une phrase : c'est la page qui écrit.
+  //   resumeSuivi(parcours, {aujourdhui}) → {
+  //     appli, aujourdhui,
+  //     debut        le lundi d'il y a trois semaines (les 4 dernières semaines) ;
+  //     connuDepuis  null : rien n'est coupé ; une date : les jours d'avant ne
+  //                  sont pas connus (la borne des 60 séances) ;
+  //     dernier      le dernier jour de travail connu (null : aucun) ;
+  //     jours        [{jour, lignes: [{…nombres}]}] — les jours de travail de
+  //                  debut à aujourdhui, du plus ancien au plus récent (un
+  //                  jour futur, horloge fausse, n'y est pas) ; null dans une
+  //                  ligne : pas connu ;
+  //     aider        [{type, …}] ce qui est « à aider » maintenant ;
+  //     feliciter    [{type, …}] ce qui est « à féliciter » cette semaine }
+  // L'absence (rien depuis 7 jours, toutes applis confondues) se calcule
+  // dans la page : une appli seule ne le sait pas.
+  // Défi tables : un jour de travail = une séance finie ; une ligne par
+  // séance {table, etapes, calculs, justes, test} (deux séances le
+  // même jour, deux lignes) ; à aider : 8 séances ou plus sur la même table
+  // toujours pas passée ({type: "seances-longues", table, seances} — le seuil
+  // de la page prof, SEUILS.prof.seancesLongues) ; à féliciter : une table
+  // passée cette semaine ({type: "table", table}).
+  function resumeSuivi(brut, options) {
+    const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
+    const aujourdhui = jourReel(o.aujourdhui) || jourLocal();
+    const parcours = normaliserParcours(brut);
+    const lundi = lundiDe(aujourdhui);
+    const debut = ajouterJours(lundi, -21);
+    const nombre = valeur => (valeur >= 0 ? valeur : null);
+    const passees = pairesDe(parcours).filter(paire => paire.jour <= aujourdhui);
+    const jours = [];
+    passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
+      const ligne = {};
+      JOURNAL.forEach((champ, index) => { ligne[champ] = nombre(entree[index]); });
+      const dernierJour = jours[jours.length - 1];
+      if (dernierJour && dernierJour.jour === jour) dernierJour.lignes.push(ligne);
+      else jours.push({jour, lignes: [ligne]});
+    });
+    const longue = resumeProf(parcours, aujourdhui).longue;
+    return {
+      appli: "defi-tables",
+      aujourdhui,
+      debut,
+      connuDepuis: parcours.seances.length >= SEUILS.seance.garder ? parcours.seances[0] : null,
+      dernier: passees.length ? passees[passees.length - 1].jour : null,
+      jours,
+      aider: longue ? [{type: "seances-longues", table: longue.table, seances: longue.seances}] : [],
+      feliciter: TABLES.filter(table => {
+        const acquise = parcours.tables[table].acquise;
+        return acquise && acquise >= lundi && acquise <= aujourdhui;
+      }).map(table => ({type: "table", table}))
+    };
   }
 
   // ---------------------------------------------------- le rangement par code
@@ -3415,12 +3598,55 @@
     fusion.rang = Math.max(a.rang, b.rang);
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
     // Les séances : par jour, le plus grand des deux comptes (deux appareils
-    // portent le même parcours, pas deux moitiés à additionner).
-    const compter = liste => liste.reduce((compte, jour) => compte.set(jour, (compte.get(jour) || 0) + 1), new Map());
-    const seancesA = compter(a.seances);
-    const seancesB = compter(b.seances);
-    fusion.seances = normaliserSeances([...new Set([...seancesA.keys(), ...seancesB.keys()])]
-      .flatMap(jour => new Array(Math.max(seancesA.get(jour) || 0, seancesB.get(jour) || 0)).fill(jour)));
+    // portent le même parcours, pas deux moitiés à additionner). Le journal
+    // suit ses séances (lot S1), ENTRÉE PAR ENTRÉE — la règle de Défi calcul
+    // après la relecture de Codex du lot G1, jamais une journée entière d'un
+    // côté :
+    //  - les entrées d'un jour s'alignent depuis le début (les séances d'un
+    //    jour s'ajoutent à la fin : une vieille copie en a le début) ;
+    //  - une journée COUPÉE par la borne (la date la plus ancienne d'une
+    //    liste pleine, 60 séances) n'en garde que la fin : ce jour-là, les
+    //    entrées s'alignent depuis la fin, et celles du côté coupé font foi
+    //    aux places qu'elles couvrent (une vieille copie qui a encore le
+    //    début de la journée ne remplace pas ce qui l'a suivi) ;
+    //  - à une même place, l'entrée qui en sait le plus (le moins de « pas
+    //    connu ») gagne, puis le plus grand total, puis un choix fixe sur le
+    //    texte : le même dans les deux sens. L'entrée entière vient d'un seul
+    //    côté, les colonnes ne se mélangent pas.
+    const parJour = cote => pairesDe(cote).reduce((m, paire) => m.set(paire.jour, [...(m.get(paire.jour) || []), paire.entree]), new Map());
+    const [ja, jb] = [parJour(a), parJour(b)];
+    const coupee = cote => (cote.seances.length >= SEUILS.seance.garder ? cote.seances[0] : null);
+    const [coupeeA, coupeeB] = [coupee(a), coupee(b)];
+    const connues = entree => entree.filter(v => v >= 0).length;
+    const totalEntree = entree => entree.reduce((somme, v) => somme + Math.max(0, v), 0);
+    const meilleure = (x, y) => {
+      if (connues(x) !== connues(y)) return connues(x) > connues(y) ? x : y;
+      if (totalEntree(x) !== totalEntree(y)) return totalEntree(x) > totalEntree(y) ? x : y;
+      return JSON.stringify(x) >= JSON.stringify(y) ? x : y;
+    };
+    const paires = [];
+    [...new Set([...ja.keys(), ...jb.keys()])].sort().forEach(jour => {
+      const ea = ja.get(jour) || [];
+      const eb = jb.get(jour) || [];
+      const longueur = Math.max(ea.length, eb.length);
+      const [aCoupe, bCoupe] = [jour === coupeeA, jour === coupeeB];
+      const depuisLaFin = aCoupe || bCoupe;
+      const lire = (liste, place) => {
+        const index = depuisLaFin ? place - (longueur - liste.length) : place;
+        return index >= 0 && index < liste.length ? liste[index] : null;
+      };
+      for (let place = 0; place < longueur; place += 1) {
+        const [x, y] = [lire(ea, place), lire(eb, place)];
+        let gagne;
+        if (!x || !y) gagne = x || y;
+        else if (aCoupe !== bCoupe) gagne = aCoupe ? x : y;
+        else gagne = meilleure(x, y);
+        paires.push({jour, entree: gagne.slice()});
+      }
+    });
+    const rangees = rangerSeances(paires);
+    fusion.seances = rangees.seances;
+    fusion.journal = rangees.journal;
 
     FAITS.forEach(cle => {
       const faitA = a.calculs[cle];
@@ -3707,6 +3933,8 @@
     texteSemaine,
     ordreSemaines,
     resumeProf,
+    JOURNAL,
+    resumeSuivi,
     commencerApresDecouverte,
     departApresDecouverte,
     MARCHE_APRES_DECOUVERTE,

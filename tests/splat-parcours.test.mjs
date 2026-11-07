@@ -117,7 +117,8 @@ test("la carte et les trois outils chargent le moteur puis l’habillage du suiv
 
 test("l’ancien contenu de la clé sans code se lit tel quel et se complète (vues 0, essais 1)", () => {
   const p = PARCOURS.normaliser(caseAncienne());
-  assert.equal(p.version, 1);
+  // Relue dans la version du moteur (2 depuis le lot S1 « les journaux »).
+  assert.equal(p.version, 2);
   assert.equal(p.epoque, 0);
   assert.deepEqual(p.etapes.m1e1, {fait: true, etoiles: 10, cartes: 12, vues: 0, essais: 1, date: "2026-09-28"});
   // Une étape faite qu'on rejoue : l'étoile reste, la reprise aussi (locale).
@@ -156,7 +157,8 @@ test("normaliser rejette ce qui ne dit rien : entrée vide, parcours au nom impo
 });
 
 test("le format D2 (enveloppe version/epoque/etapes) se relit à l’identique", () => {
-  const d2 = {version: 1, epoque: 3, etapes: {enq11: {fait: true, etoiles: 2, cartes: 4, vues: 1, essais: 2, date: "2026-10-05"},
+  // Version 2 depuis le lot S1 « les journaux » (sans jour joué : pas de journal).
+  const d2 = {version: 2, epoque: 3, etapes: {enq11: {fait: true, etoiles: 2, cartes: 4, vues: 1, essais: 2, date: "2026-10-05"},
     enq14: {fait: false, etoiles: 2, cartes: 4, vues: 0, essais: 1, date: "2026-10-07", idx: 3}}};
   const p = PARCOURS.normaliser(d2);
   assert.deepEqual(p, d2);
@@ -285,7 +287,8 @@ test("pourServeur : version, epoque et les 7 champs de chaque étape de la liste
   let p = PARCOURS.normaliser(caseAncienne());
   p = PARCOURS.enregistrerSerie(p, "perso42", serie(true, 4, 4, 0), "2026-10-07");
   const s = PARCOURS.pourServeur(p);
-  assert.deepEqual(Object.keys(s), ["version", "epoque", "etapes"]);
+  // Lot S1 « les journaux » : la série jouée a ouvert le journal du jour.
+  assert.deepEqual(Object.keys(s), ["version", "epoque", "etapes", "jours", "journal", "depuis"]);
   assert.deepEqual(Object.keys(s.etapes), ["m1e1", "m2e1", "enq14"], "dans l’ordre de la liste fermée ; « perso42 » ne part pas");
   assert.deepEqual(s.etapes.enq14, {fait: false, etoiles: 2, cartes: 0, vues: 1, essais: 1, date: null, idx: 3});
   assert.deepEqual(s.etapes.m2e1, {fait: true, etoiles: 3, cartes: 4, vues: 0, essais: 1, date: "2026-10-01"}, "pas d’enCours, pas d’idx");
@@ -415,7 +418,8 @@ test("charger / sauver / effacer : la case d’aujourd’hui se lit telle quelle
   assert.equal(local.cles().filter(c => c.startsWith("mathsgo-splat-parcours")).length, 3);
   // Ce qui est écrit sous un code est normalisé (format D2) et relu à l'identique.
   const brut = JSON.parse(local.getItem(PARCOURS.cleStockage(A, local)));
-  assert.deepEqual(Object.keys(brut), ["version", "epoque", "etapes"]);
+  // Lot S1 « les journaux » : et le journal du jour joué.
+  assert.deepEqual(Object.keys(brut), ["version", "epoque", "etapes", "jours", "journal", "depuis"]);
   PARCOURS.effacer(local, A);
   assert.equal(PARCOURS.estVide(PARCOURS.charger(local, A)), true);
   assert.deepEqual(Object.keys(PARCOURS.charger(local, B).etapes), ["m1e3"], "effacer A ne touche pas B");

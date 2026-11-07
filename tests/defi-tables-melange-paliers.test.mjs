@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261104-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261107-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -527,10 +527,12 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, lot G1 « journal + accueil » (07/11/2026) :
   // lib/applis.php, infos.php et prof/defi_calcul_mon_parcours.js changent
   // (avant : anzan-dan-sans-retenue).
-  // Puis Anzan, les grades en Colonne (07/11/2026) : lib/applis.php
-  // (« gradeColonne »), prof/index.php et prof/flash_anzan_parcours.js
-  // changent (avant : defi-calcul-G1-journal).
-  assert.match(lire("_serveur/public/VERSION"), /^lot anzan-entrainement-5-ou-10$/m);
+  // Puis Anzan, les grades en Colonne et l'entraînement en 5 ou 10 (07/11/2026) :
+  // lib/applis.php (« gradeColonne »), prof/index.php et prof/flash_anzan_parcours.js.
+  // Puis « Suivre ses élèves », lot S1 « les journaux » (07/11/2026) :
+  // lib/applis.php, infos.php et les cinq moteurs copiés dans prof/ changent
+  // (avant : anzan-entrainement-5-ou-10).
+  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S1-journaux$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

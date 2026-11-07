@@ -105,7 +105,7 @@ test("le moteur reconnaît les nouveaux entraînements, et plus les anciens", ()
   assert.deepEqual(P.classerSerie(p, P.configEntraine(7, "mixte")), {type: "entraine", table: 7, entrainement: "mixte"});
   assert.equal(P.classerSerie(p, {mode: "train", tables: [7], total: 10, questionTypes: ["missing"]}), null, "l'ancien « nombres manquants » seul ne compte plus");
   assert.equal(P.classerSerie(p, {mode: "train", tables: [7], total: 10, questionTypes: ["direct", "missing"]}), null);
-  assert.equal(P.VERSION, 3, "rien ne change dans ce qui est enregistré");
+  assert.equal(P.VERSION, 4, "rien ne change dans ce qui est enregistré (4 : le lot S1 « les journaux », plus tard)");
   assert.deepEqual(P.MARCHES.map(marche => marche.nom).slice(4), ["Dans le désordre", "Nombres manquants et divisions", "Résultats, nombres manquants et divisions", "Je passe le test"]);
   assert.deepEqual(P.MARCHES.map(marche => marche.cle).slice(4, 7), ["desordre", "trous", "mixte"], "les clés ne changent pas");
 });

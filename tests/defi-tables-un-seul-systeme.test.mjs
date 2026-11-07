@@ -227,7 +227,7 @@ test("calculsDuJour : une date, gardée par la normalisation, la plus récente �
   assert.equal(P.fusionner(b, a).calculsDuJour, MARDI);
   assert.equal(P.fusionner(a, P.creerParcours()).calculsDuJour, LUNDI);
   assert.match(applis, /'retenir', 'calculsDuJour', 'reussi',/);
-  assert.equal(P.VERSION, 3, "pas de changement de version : des clés en plus");
+  assert.equal(P.VERSION, 4, "pas de changement de version : des clés en plus (4 : le lot S1 « les journaux », plus tard)");
 });
 
 test("les nombres manquants : la table connue est écrite, c'est l'autre nombre qui manque", () => {
@@ -499,7 +499,7 @@ test("la page : les mots, les coupes du mélange et les petits restes", () => {
   assert.match(html, /@media \(max-width: 359px\) \{ #question-count \.compteur-mot \{ display: none; \} \}/);
   // Les numéros de cache ont monté.
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/);
 });
 
 test("le serveur : la copie du moteur, « Tables passées », la tuile sans « Mon mélange à faire »", () => {

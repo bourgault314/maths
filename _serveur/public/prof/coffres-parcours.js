@@ -72,7 +72,13 @@
   // (window, document, navigator, fetch, stockages, horloge) en paramètre —
   // c'est ainsi que les tests l'exécutent dans node avec un faux monde.
 
-  const VERSION = 1;
+  // Version 2 (lot S1 « les journaux », 07/11/2026) : le journal des jours
+  // de travail (`jours`, `journal`, `depuis`, voir plus bas). Le serveur
+  // refuse l'écriture d'une page de version 1 (lib/applis.php,
+  // « version_min » 2) : elle ne connaît pas le journal et l'effacerait en
+  // renvoyant le parcours ; elle garde son travail sur l'appareil, et la page
+  // rechargée le renvoie, fusionné.
+  const VERSION = 2;
   const APPLI = "coffres";
   const SUIVI_URL = "https://suivi.mathsgo.re";
 
@@ -111,7 +117,7 @@
   // catalogue à ces deux listes.
   const CLES_SERVEUR = Object.freeze(["version", "epoque", "niveaux", "tresors", "parfaits", "operations",
     "sum", "difference", "product", "quotient", "cles", "aides", "solutions", "erreurs",
-    "dernier", "partie", "niveau", "ops", "serie", "familles", "parfait", "jour"]);
+    "dernier", "partie", "niveau", "ops", "serie", "familles", "parfait", "jour", "jours", "journal", "depuis"]);
   const MOTIF_NIVEAUX_PHP = "/^[1-3]$/";
   const COMPTE_MAX = 1000000;
 
@@ -147,6 +153,12 @@
     if (!premiere) return seconde || null;
     if (!seconde) return premiere;
     return premiere >= seconde ? premiere : seconde;
+  }
+
+  function dateLaPlusAncienne(premiere, seconde) {
+    if (!premiere) return seconde || null;
+    if (!seconde) return premiere;
+    return premiere <= seconde ? premiere : seconde;
   }
 
   function niveauValide(valeur) {
@@ -250,7 +262,85 @@
     if (dernier) p.dernier = dernier;
     const partie = normaliserPartie(brut.partie);
     if (partie) p.partie = partie;
+    poserJournal(p, lignesDuJournal(brut.jours, brut.journal), brut.depuis);
     return p;
+  }
+
+  // ------------------------------------------------------------- le journal
+  //
+  // Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses élèves ») :
+  // une entrée par JOUR où l'élève a joué, pour que le professeur sache ce
+  // qu'il a fait chaque jour (la fiche toutes applis, lot S2). Quatre listes
+  // d'entiers alignées sur `jours` (les 60 derniers jours joués) :
+  //   tresors    les trésors ouverts ce jour-là ;
+  //   parfaits   parmi eux, les parfaits ;
+  //   aides      les aides ouvertes ce jour-là ;
+  //   solutions  les solutions montrées ce jour-là.
+  // -1 : pas connu (une donnée abîmée). Ni heure, ni calcul, ni réponse.
+  // `depuis` : le premier jour où ce parcours a tenu son journal.
+  // Fusion : un jour vu de deux appareils prend le PLUS GRAND de chaque
+  // colonne, jamais la somme (refusionner doublerait) ; un nombre connu bat
+  // « pas connu » (-1 est le plus petit) ; puis les 60 jours les plus
+  // récents. Refusionner avec l'une ou l'autre copie ne change plus rien.
+  // Le léger sous-compte quand deux appareils servent le même jour est
+  // accepté. Pas de journal tant que rien n'a été fait depuis le lot S1.
+  const JOURNAL = Object.freeze(["tresors", "parfaits", "aides", "solutions"]);
+  const JOURNAL_JOURS = 60;
+  const JOURNAL_MAX = 9999;
+
+  function valeurDuJournal(valeur) {
+    return Number.isInteger(valeur) && valeur >= 0 && valeur <= JOURNAL_MAX ? valeur : -1;
+  }
+
+  // Les jours et leurs entrées, lus ensemble. Une colonne plus courte que
+  // les jours (abîmée) s'aligne sur les plus récents : les plus anciens
+  // valent -1 ; un jour qui n'en est pas part avec son entrée.
+  function lignesDuJournal(joursBruts, journalBrut) {
+    const dates = Array.isArray(joursBruts) ? joursBruts : [];
+    const journal = journalBrut && typeof journalBrut === "object" && !Array.isArray(journalBrut) ? journalBrut : {};
+    const colonnes = JOURNAL.map(champ => {
+      const liste = Array.isArray(journal[champ]) ? journal[champ] : [];
+      const decalage = dates.length - liste.length;
+      return index => (index - decalage >= 0 && index - decalage < liste.length ? liste[index - decalage] : -1);
+    });
+    const lignes = [];
+    dates.forEach((brute, index) => {
+      const jour = dateOuNull(brute);
+      if (jour) lignes.push({jour, entree: colonnes.map(lire => valeurDuJournal(lire(index)))});
+    });
+    return lignes;
+  }
+
+  // Une entrée par jour (deux du même jour : le plus grand, colonne par
+  // colonne), dans l'ordre des jours, les 60 plus récents ; `depuis` jamais
+  // après le premier jour gardé. Rien : pas de journal du tout.
+  function poserJournal(p, lignes, depuisBrut) {
+    delete p.jours;
+    delete p.journal;
+    delete p.depuis;
+    const parJour = new Map();
+    lignes.forEach(({jour, entree}) => {
+      const avant = parJour.get(jour);
+      parJour.set(jour, avant ? avant.map((valeur, index) => Math.max(valeur, entree[index])) : entree.slice());
+    });
+    const jours = [...parJour.keys()].sort().slice(-JOURNAL_JOURS);
+    if (!jours.length) return p;
+    p.jours = jours;
+    p.journal = {};
+    JOURNAL.forEach((champ, index) => { p.journal[champ] = jours.map(jour => parJour.get(jour)[index]); });
+    p.depuis = dateLaPlusAncienne(dateOuNull(depuisBrut), jours[0]);
+    return p;
+  }
+
+  // Ce qu'un geste ajoute au journal du jour : [trésors, parfaits, aides,
+  // solutions]. Une colonne « pas connue » le reste tant qu'on n'y ajoute rien.
+  function ajouterAuJournal(p, aujourdhui, ajouts) {
+    const jour = dateOuNull(aujourdhui) || jourLocal();
+    const lignes = lignesDuJournal(p.jours, p.journal);
+    const ligne = lignes.find(l => l.jour === jour);
+    if (ligne) ligne.entree = ligne.entree.map((valeur, index) => (ajouts[index] > 0 ? Math.min(JOURNAL_MAX, Math.max(0, valeur) + ajouts[index]) : valeur));
+    else lignes.push({jour, entree: ajouts.map(n => Math.min(JOURNAL_MAX, Math.max(0, n)))});
+    return poserJournal(p, lignes, dateLaPlusAncienne(p.depuis || null, jour));
   }
 
   // Vide : ni trésor, ni compteur d'opération, ni partie en cours.
@@ -302,6 +392,10 @@
     if (dernier) fusion.dernier = dernier;
     const partie = meilleurePartie(a.partie || null, b.partie || null);
     if (partie) fusion.partie = cloner(partie);
+    // Le journal (lot S1) : l'union des jours, le plus grand de chaque
+    // colonne le même jour, et le plus ancien `depuis`.
+    poserJournal(fusion, [...lignesDuJournal(a.jours, a.journal), ...lignesDuJournal(b.jours, b.journal)],
+      dateLaPlusAncienne(a.depuis || null, b.depuis || null));
     return normaliser(fusion);
   }
 
@@ -375,6 +469,7 @@
     if (!o) return p;
     o.aides = Math.min(COMPTE_MAX, o.aides + 1);
     if (p.partie) toucherPartie(p, aujourdhui);
+    ajouterAuJournal(p, aujourdhui, [0, 0, 1, 0]);
     return p;
   }
 
@@ -385,6 +480,7 @@
     if (!o) return p;
     o.solutions = Math.min(COMPTE_MAX, o.solutions + 1);
     if (p.partie) { p.partie.parfait = false; toucherPartie(p, aujourdhui); }
+    ajouterAuJournal(p, aujourdhui, [0, 0, 0, 1]);
     return p;
   }
 
@@ -404,6 +500,7 @@
     if (parfait) p.niveaux[cle].parfaits = Math.min(p.niveaux[cle].tresors, p.niveaux[cle].parfaits + 1);
     p.dernier = dateLaPlusRecente(p.dernier || null, dateOuNull(aujourdhui) || jourLocal());
     delete p.partie;
+    ajouterAuJournal(p, aujourdhui, [1, parfait ? 1 : 0, 0, 0]);
     return p;
   }
 
@@ -550,6 +647,61 @@
         total: CLES_PAR_TRESOR
       }));
     return {lignes, vide: !lignes.length};
+  }
+
+  // --------------------------------------- pour « Suivre ses élèves » (S2)
+  //
+  // Lot S1 « les journaux » (07/11/2026) : la même fonction, avec la même
+  // forme de réponse, dans les cinq moteurs suivis (voir splat-parcours.js,
+  // resumeSuivi, pour la forme complète). Rien ne l'affiche encore.
+  // Coffres magiques : un jour de travail = un jour avec un trésor ouvert ;
+  // une ligne par jour {tresors, parfaits, aides, solutions} ; à aider : des
+  // solutions vues cette semaine ({type: "solutions-vues", solutions}) ; à
+  // féliciter : rien (aucune règle décidée pour Coffres).
+  function jourPlus(jour, nombre) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() + nombre);
+    return jourLocal(d);
+  }
+
+  function lundiDu(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+    return jourLocal(d);
+  }
+
+  function aujourdhuiDes(options) {
+    const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
+    return dateOuNull(o.aujourdhui) || jourLocal();
+  }
+
+  function resumeSuivi(parcours, options) {
+    const aujourdhui = aujourdhuiDes(options);
+    const p = normaliser(parcours);
+    const debut = jourPlus(lundiDu(aujourdhui), -21);
+    const lundi = lundiDu(aujourdhui);
+    const lignes = lignesDuJournal(p.jours, p.journal).filter(l => l.jour <= aujourdhui);
+    const nombre = valeur => (valeur >= 0 ? valeur : null);
+    // Un trésor ouvert (une valeur pas connue compte : le jour est dans le
+    // journal, on ne sait pas ce qui s'y est fait).
+    const travail = lignes.filter(l => l.entree[0] !== 0);
+    const jours = travail.filter(l => l.jour >= debut).map(l => ({
+      jour: l.jour,
+      lignes: [{tresors: nombre(l.entree[0]), parfaits: nombre(l.entree[1]), aides: nombre(l.entree[2]), solutions: nombre(l.entree[3])}]
+    }));
+    let dernier = travail.length ? travail[travail.length - 1].jour : null;
+    if (p.dernier && p.dernier <= aujourdhui && (!dernier || p.dernier > dernier)) dernier = p.dernier;
+    let connuDepuis = null;
+    if (p.depuis) connuDepuis = p.jours.length >= JOURNAL_JOURS && p.jours[0] > p.depuis ? p.jours[0] : p.depuis;
+    else if (!estVide(p)) connuDepuis = jourPlus(aujourdhui, 1);
+    const solutions = lignes.filter(l => l.jour >= lundi).reduce((somme, l) => somme + Math.max(0, l.entree[3]), 0);
+    return {
+      appli: APPLI, aujourdhui, debut, connuDepuis, dernier, jours,
+      aider: solutions ? [{type: "solutions-vues", solutions}] : [],
+      feliciter: []
+    };
   }
 
   // ------------------------------------------------------------- empreintes
@@ -1630,6 +1782,8 @@
     pourServeur,
     resumeProf,
     resumeTuile,
+    JOURNAL,
+    resumeSuivi,
     reglagesDeClasse,
     niveauOuvert,
     operationOuverte,

@@ -443,9 +443,10 @@ test("serveur : version_min 5, les clés du journal déclarées ; infos.php le d
   assert.match(bloc, /'version_min' => 5,/);
   ["d", "s", "j", "journal", ...P.JOURNAL].forEach(cle => assert.match(bloc, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const infos = await lire("../_serveur/public/infos.php");
-  assert.match(infos, /<p>Ta progression, ce sont aussi les jours où tu t’entraînes et le nombre de calculs que tu réussis\.<\/p>/);
+  // Lot S1 « les journaux » : la phrase vaut désormais pour toutes les applis.
+  assert.match(infos, /<p>Dans chaque activité, ta progression, ce sont aussi les jours où tu travailles et le nombre de tes réussites\.<\/p>/);
   const confidentialite = await lire("../confidentialite.html");
-  assert.match(confidentialite, /dont les jours d’entraînement et le nombre de calculs réussis/);
+  assert.match(confidentialite, /dont, dans chacun, les jours de travail et le nombre de réussites/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
 });
@@ -454,7 +455,8 @@ test("serveur : version_min 5, les clés du journal déclarées ; infos.php le d
 
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-3/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-4/);
+  assert.match(page, /defi_calcul\.css\?v=20261107-1/, "la feuille ne change pas");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
   // « N fois cette semaine ».

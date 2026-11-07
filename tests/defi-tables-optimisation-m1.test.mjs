@@ -97,7 +97,7 @@ test("une séance coupée entre dans le parcours et se reprend le jour même : l
   const depart = eleveEnRoute();
   assert.equal(depart.enCours, null, "un parcours neuf n'a pas de séance en cours");
   assert.equal(P.creerParcours().enCours, null);
-  assert.equal(P.VERSION, 3, "pas de changement de version : une clé de plus");
+  assert.equal(P.VERSION, 4, "pas de changement de version : une clé de plus (4 : le lot S1 « les journaux », plus tard)");
   const programme = P.programmeDeSeance(depart, P.ouvrirSeance(depart, {aujourdhui: jour(2)}), jour(2)).etapes.map(etape => etape.nom);
   assert.deepEqual(programme, ["Mes calculs du jour", "Dans l’ordre", "Dans le désordre", "Nombres manquants et divisions"]);
   // Deux étapes, puis l'onglet se ferme.
@@ -503,7 +503,7 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261104-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));

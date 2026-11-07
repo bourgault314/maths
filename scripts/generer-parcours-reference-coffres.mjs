@@ -59,6 +59,11 @@ export function parcoursComplet() {
     if (index === 2) p = PARCOURS.noterErreur(p, operation, "2026-10-21");
     p = PARCOURS.noterCle(p, operation, "2026-10-21");
   });
+  // Lot S1 « les journaux » : le journal s'est rempli tout seul, un jour par
+  // jour joué ; un vieux jour venu d'une copie abîmée (des valeurs pas
+  // connues, -1) s'y ajoute par la fusion.
+  p = PARCOURS.fusionner(p, {version: PARCOURS.VERSION, epoque: 2, niveaux: {}, operations: {}, jours: ["2026-10-09"],
+    journal: {tresors: [1], parfaits: [-1], aides: [-1], solutions: [0]}, depuis: "2026-10-09"});
   return PARCOURS.pourServeur(p);
 }
 
