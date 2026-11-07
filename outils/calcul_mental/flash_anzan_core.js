@@ -113,6 +113,107 @@
     return `${g.nombres} nombres ${chiffres} · ${secondes(g.dixiemes / 10)} en tout`;
   }
 
+  // ---------------------------------------------------------------------
+  // Les cartes des grades (lot « anzan-cartes », 07/11/2026)
+  // ---------------------------------------------------------------------
+  // Une carte par kyu, du 20e au 1er : une créature japonaise (les images de
+  // Gwenaël, toutes dans un même cadre, dans ./anzan-cartes/), et au dos la
+  // créature, un message et un proverbe. Textes et images se refont depuis
+  // _sources/anzan-cartes/ (generer_textes.py écrit les lignes ci-dessous).
+  // Les dan n'ont pas encore leur série : un dan réussi montre une carte
+  // simple « 🥋 1er dan ».
+  // Rien de nouveau n'est enregistré : une carte est gagnée quand son grade
+  // est réussi (gradeReussi du parcours).
+  const DOSSIER_CARTES = "./anzan-cartes/";
+  const carte = c => Object.freeze({...c, proverbe: Object.freeze(c.proverbe),
+    image: `${DOSSIER_CARTES}${c.image}.webp`, vignette: `${DOSSIER_CARTES}${c.image}-vignette.webp`});
+  const CARTES_KYU = Object.freeze([
+    carte({kyu: 20, nom: "Kaeru", sens: "la grenouille", image: "kyu20-kaeru",
+      creature: "La grenouille (kaeru) est un porte-bonheur au Japon\u00a0: son nom se prononce comme «\u00a0revenir\u00a0» (帰る), et on l’offre pour qu’un voyageur revienne sain et sauf. Ayame (iris).",
+      message: "Bravo pour ton 20e\u00a0Kyu\u00a0! C’est ton tout premier grade\u00a0: comme la petite grenouille, tu as fait ton premier saut. Le voyage commence\u00a0!",
+      proverbe: {japonais: "案ずるより産むが易し", lecture: "anzuru yori umu ga yasushi", francais: "Agir est plus facile que s’inquiéter.", idee: "Ose\u00a0: c’est moins dur que tu ne le crois."}}),
+    carte({kyu: 19, nom: "Usagi", sens: "le lapin", image: "kyu19-usagi",
+      creature: "Au Japon, on ne voit pas un visage dans la Lune, mais un lapin (tsuki no usagi) qui prépare des gâteaux de riz. À la fête de la lune (Tsukimi), on dispose des herbes susuki et des dango.",
+      message: "Félicitations pour ton 19e\u00a0Kyu\u00a0! Tu bondis de grade en grade comme le lapin de la Lune. Garde ce bel élan\u00a0!",
+      proverbe: {japonais: "好きこそ物の上手なれ", lecture: "suki koso mono no jōzu nare", francais: "On devient habile dans ce qu’on aime.", idee: ""}}),
+    carte({kyu: 18, nom: "Suzume", sens: "le moineau", image: "kyu18-suzume",
+      creature: "Le moineau (suzume) vit tout près des humains, dans les villages et les rizières. Petit mais vif, il ramasse les grains un à un. Inaho (épi de riz), tanada (rizières en terrasses).",
+      message: "Bravo pour ton 18e\u00a0Kyu\u00a0! Comme le moineau qui ramasse ses grains un à un, tu additionnes tes progrès.",
+      proverbe: {japonais: "塵も積もれば山となる", lecture: "chiri mo tsumoreba yama to naru", francais: "Même la poussière, en s’accumulant, devient montagne.", idee: ""}}),
+    carte({kyu: 17, nom: "Tombo", sens: "la libellule", image: "kyu17-tombo",
+      creature: "La libellule (tombo) ne vole jamais en arrière\u00a0: les samouraïs l’appelaient kachimushi, «\u00a0l’insecte de la victoire\u00a0». La libellule rouge (akatombo) annonce l’automne.",
+      message: "Félicitations pour ton 17e\u00a0Kyu\u00a0! Comme la libellule, tu vas toujours de l’avant. Rien ne t’arrête\u00a0!",
+      proverbe: {japonais: "為せば成る", lecture: "naseba naru", francais: "Quand on s’y met, on y arrive.", idee: ""}}),
+    carte({kyu: 16, nom: "Kame", sens: "la tortue", image: "kyu16-kame",
+      creature: "Au Japon, la tortue (kame) est le symbole de la longue vie et de la patience. Matsu (pin toujours vert), seigaiha (motif de vagues).",
+      message: "Bravo pour ton 16e\u00a0Kyu\u00a0! Pas à pas, comme la tortue, tu avances sûrement. Ta patience te mène loin.",
+      proverbe: {japonais: "雨垂れ石を穿つ", lecture: "amadare ishi o ugatsu", francais: "Les gouttes de pluie finissent par creuser la pierre.", idee: ""}}),
+    carte({kyu: 15, nom: "Akabeko", sens: "la vache rouge", image: "kyu15-akabeko",
+      creature: "L’akabeko est une petite vache rouge en papier mâché de la région d’Aizu (Fukushima)\u00a0: sa tête hoche au moindre souffle. Selon la légende, une vache rouge aida à bâtir un temple. On dit qu’elle porte bonheur et protège les enfants. Ume (prunier en fleur).",
+      message: "Félicitations pour ton 15e\u00a0Kyu\u00a0! Comme l’akabeko qui hoche la tête, tu dis «\u00a0oui\u00a0» à chaque nouveau défi\u00a0!",
+      proverbe: {japonais: "笑う門には福来る", lecture: "warau kado ni wa fuku kitaru", francais: "Le bonheur entre dans la maison où l’on rit.", idee: ""}}),
+    carte({kyu: 14, nom: "Shika", sens: "le cerf", image: "kyu14-shika",
+      creature: "À Nara, les cerfs (shika) se promènent en liberté\u00a0: on les dit messagers des dieux, et certains saluent d’un signe de tête. Tōrō (lanterne de pierre), fuji (glycine).",
+      message: "Bravo pour ton 14e\u00a0Kyu\u00a0! Tu progresses avec calme et élégance, comme le cerf de Nara.",
+      proverbe: {japonais: "実るほど頭を垂れる稲穂かな", lecture: "minoru hodo kōbe o tareru inaho kana", francais: "Plus l’épi de riz est mûr, plus il baisse la tête.", idee: "Plus on sait, plus on reste modeste."}}),
+    carte({kyu: 13, nom: "Inoshishi", sens: "le sanglier", image: "kyu13-inoshishi",
+      creature: "Le sanglier (inoshishi) est l’un des douze animaux du zodiaque japonais\u00a0: il fonce droit devant, plein de courage. Sugi (cèdre du Japon).",
+      message: "Félicitations pour ton 13e\u00a0Kyu\u00a0! Avec le courage du sanglier, tu fonces vers chaque défi. Et quand tu te trompes, tu repars encore plus fort\u00a0!",
+      proverbe: {japonais: "失敗は成功のもと", lecture: "shippai wa seikō no moto", francais: "L’erreur est la source de la réussite.", idee: ""}}),
+    carte({kyu: 12, nom: "Yatagarasu", sens: "le corbeau à trois pattes", image: "kyu12-yatagarasu",
+      creature: "Le Yatagarasu est un corbeau à trois pattes, messager du soleil. La légende raconte qu’il guida un empereur à travers les montagnes de Kumano\u00a0: il est le guide de ceux qui cherchent leur chemin. Unkai (mer de nuages).",
+      message: "Bravo pour ton 12e\u00a0Kyu\u00a0! Comme le Yatagarasu, tu as trouvé ton chemin. Le grade suivant t’ouvre la porte des créatures de légende\u00a0!",
+      proverbe: {japonais: "習うより慣れよ", lecture: "narau yori nareyo", francais: "S’exercer vaut mieux qu’écouter des leçons.", idee: "C’est en pratiquant qu’on progresse."}}),
+    carte({kyu: 11, nom: "Kitsune", sens: "le renard", image: "kyu11-kitsune",
+      creature: "Le Kitsune est un renard du folklore japonais, symbole d’intelligence, de curiosité et d’astuce bienveillante. Sakura (cerisiers), torii (porte d’entrée d’un sanctuaire), kumo (nuage).",
+      message: "Félicitations pour ton 11e\u00a0Kyu\u00a0! Tel un jeune Kitsune, tu as exploré avec brio le monde du soroban. Cultive ta curiosité et ta joie d’apprendre\u00a0!",
+      proverbe: {japonais: "千里の道も一歩から", lecture: "senri no michi mo ippo kara", francais: "Même un chemin de mille lieues commence par un pas.", idee: ""}}),
+    carte({kyu: 10, nom: "Tanuki", sens: "", image: "kyu10-tanuki",
+      creature: "Le Tanuki symbolise la bonne humeur, la chance et surtout la persévérance tranquille\u00a0: avancer régulièrement, pas après pas. Take (bambou), tōrō (lanterne de pierre), hasu (lotus).",
+      message: "Bravo pour ton 10e\u00a0Kyu\u00a0! Comme le Tanuki qui trouve son chemin, tu as posé des bases solides. Ta patience est ta meilleure alliée.",
+      proverbe: {japonais: "石の上にも三年", lecture: "ishi no ue ni mo san nen", francais: "Assis trois ans sur une pierre, on finit par la réchauffer.", idee: "La patience paie."}}),
+    carte({kyu: 9, nom: "Maneki-neko", sens: "le chat", image: "kyu09-maneki-neko",
+      creature: "Le maneki-neko «\u00a0invite\u00a0» la chance de sa patte levée\u00a0; il symbolise l’agilité et la précision. La poupée daruma n’est pas fâchée\u00a0: on colorie un œil pour se fixer un objectif, puis le second quand on l’a atteint. Elle se redresse toujours quand on la pousse\u00a0: c’est la persévérance.",
+      message: "Félicitations pour ton 9e\u00a0Kyu\u00a0! Ton agilité féline est remarquable. Continue de «\u00a0chasser\u00a0» les bonnes réponses avec précision\u00a0!",
+      proverbe: {japonais: "継続は力なり", lecture: "keizoku wa chikara nari", francais: "La régularité fait la force.", idee: ""}}),
+    carte({kyu: 8, nom: "Koinobori", sens: "la carpe koï", image: "kyu08-koinobori",
+      creature: "Les koinobori, des manches à air en forme de carpe, flottent au vent pour le 5\u00a0mai, la fête des enfants au Japon (Kodomo no Hi). La carpe koï remonte le courant et franchit les obstacles\u00a0: elle symbolise la persévérance et la réussite. Momiji (feuilles d’érable), taikobashi (pont en arc).",
+      message: "Bravo pour ton 8e\u00a0Kyu\u00a0! Tel un koinobori qui remonte le courant, tu montres une force et une persévérance admirables. Continue ta belle ascension\u00a0!",
+      proverbe: {japonais: "七転び八起き", lecture: "nana korobi ya oki", francais: "Tomber sept fois, se relever huit.", idee: ""}}),
+    carte({kyu: 7, nom: "Fukurō", sens: "le hibou", image: "kyu07-fukuro",
+      creature: "Le fukurō (hibou) est associé à la sagesse et, par un jeu de mots avec fuku (la chance), à la bonne fortune. Son regard perçant évoque l’attention aux détails.",
+      message: "Félicitations pour ton 7e\u00a0Kyu\u00a0! Ton esprit est vif et ton attention aux détails est digne du sage Fukurō. La précision est ta force.",
+      proverbe: {japonais: "急がば回れ", lecture: "isogaba maware", francais: "Si tu es pressé, prends le détour.", idee: "Mieux vaut faire juste que vite."}}),
+    carte({kyu: 6, nom: "Tsuru", sens: "la grue", image: "kyu06-tsuru",
+      creature: "La grue (tsuru) est au Japon un symbole de longévité, de fidélité et d’élégance. La tradition des mille grues en origami (senbazuru) célèbre la patience et l’espérance.",
+      message: "Bravo pour ton 6e\u00a0Kyu\u00a0! Tes gestes sont désormais aussi élégants que le vol de la grue. Ta maîtrise s’envole vers de nouveaux sommets\u00a0!",
+      proverbe: {japonais: "鶴は千年、亀は万年", lecture: "tsuru wa sen nen, kame wa man nen", francais: "La grue vit mille ans, la tortue dix mille.", idee: "Longue vie à toi\u00a0!"}}),
+    carte({kyu: 5, nom: "Ryū", sens: "le dragon", image: "kyu05-ryu",
+      creature: "Le Ryū est le dragon japonais, gardien des pluies et des eaux. Il incarne une puissance bienveillante et la sagesse.",
+      message: "Félicitations pour ton 5e\u00a0Kyu\u00a0! La force du Ryū est en toi\u00a0: tes calculs sont aussi vifs que l’envol du dragon dans les nuages.",
+      proverbe: {japonais: "雲の上はいつも青空", lecture: "kumo no ue wa itsumo aozora", francais: "Au-dessus des nuages, le ciel est toujours bleu.", idee: "Après l’effort, la clarté\u00a0: persévère et tout s’éclaire."}}),
+    carte({kyu: 4, nom: "Hō-ō", sens: "le phénix", image: "kyu04-ho-o",
+      creature: "Le Hō-ō est l’oiseau de feu des légendes japonaises\u00a0: il n’apparaît qu’aux temps de paix et de prospérité. Il symbolise l’harmonie, le renouveau et la vertu. Il ne se pose que sur le kiri (paulownia).",
+      message: "Bravo pour ton 4e\u00a0Kyu\u00a0! Comme le majestueux Hō-ō, tu te surpasses à chaque défi. Chaque nouveau départ te fait grandir.",
+      proverbe: {japonais: "雨降って地固まる", lecture: "ame futte ji katamaru", francais: "Après la pluie, la terre se durcit.", idee: "Les épreuves te rendent plus solide."}}),
+    carte({kyu: 3, nom: "Baku", sens: "", image: "kyu03-baku",
+      creature: "Le Baku est une créature bienveillante du folklore\u00a0: il mange les mauvais rêves et aide à garder l’esprit clair. Sur la plaque\u00a0: 夢 (yume), «\u00a0rêve\u00a0».",
+      message: "Félicitations pour ton 3e\u00a0Kyu\u00a0! Tel le Baku qui chasse les doutes, ta concentration est inébranlable. Ton esprit reste calme et précis.",
+      proverbe: {japonais: "初心忘るべからず", lecture: "shoshin wasuru bekarazu", francais: "N’oublie jamais l’esprit du débutant.", idee: ""}}),
+    carte({kyu: 2, nom: "Shisa", sens: "", image: "kyu02-shisa",
+      creature: "Les Shisa, mi-lions mi-chiens, protègent les maisons d’Okinawa. Celui qui a la bouche ouverte chasse les mauvais esprits\u00a0; celui qui a la bouche fermée garde la chance à l’intérieur. Ils symbolisent la protection, la force tranquille et la vigilance.",
+      message: "Bravo pour ton 2e\u00a0Kyu\u00a0! Tel le puissant Shisa, tu protèges ton savoir avec force et détermination. Ta maîtrise inspire confiance.",
+      proverbe: {japonais: "備えあれば憂いなし", lecture: "sonae areba urei nashi", francais: "Quand on est préparé, on n’a pas d’inquiétude.", idee: ""}}),
+    carte({kyu: 1, nom: "Kirin", sens: "", image: "kyu01-kirin",
+      creature: "Le Kirin est une créature bienveillante qui n’apparaît qu’aux temps de paix et de justice. Il incarne l’excellence, la pureté et la sagesse.",
+      message: "Félicitations pour ton 1er\u00a0Kyu\u00a0! Tu as atteint l’excellence\u00a0: tel le noble Kirin, ta maîtrise et ta sagesse inspirent tous ceux qui t’entourent.",
+      proverbe: {japonais: "温故知新", lecture: "onko chishin", francais: "Étudie l’ancien pour découvrir le nouveau.", idee: ""}})
+  ]);
+  // La carte du grade n (1 = 20e kyu … 20 = 1er kyu), ou null (un dan).
+  function carteDuGrade(n) {
+    return Number.isInteger(n) && n >= 1 && n <= CARTES_KYU.length ? CARTES_KYU[n - 1] : null;
+  }
+
   const entier = (valeur, defaut) => (Number.isInteger(valeur) ? valeur : defaut);
   const borner = (valeur, min, max) => Math.min(max, Math.max(min, valeur));
   const dans = (liste, valeur, defaut) => (liste.includes(valeur) ? valeur : defaut);
@@ -316,6 +417,8 @@
     nomGrade,
     reglagesGrade,
     verdictGrade,
-    texteGrade
+    texteGrade,
+    CARTES_KYU,
+    carteDuGrade
   });
 });

@@ -445,15 +445,126 @@
     .fiche-grade .regles li { display: flex; gap: 12px; align-items: center; min-height: 52px; padding: 6px 14px; border-bottom: 1px solid #edf3f7; font-weight: 800; }
     .fiche-grade .regles li:last-child { border-bottom: 0; }
     .fiche-grade .regles b { flex: 0 0 auto; min-width: 84px; font-size: 1.25rem; text-align: center; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .fiche-grade .rappel { margin: 14px 0 0; color: var(--muted); font-weight: 700; font-size: .88rem; }
     .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
     .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
     .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
+    /* Lot « anzan-cartes » (07/11/2026) : sous chaque bouton, ce qu'il fait
+       (la phrase « Pas de Revoir… » était fausse pour M'entraîner). */
+    .fiche-grade .fiche-note { margin: 10px 0 0; color: var(--muted); font-weight: 700; font-size: .85rem; line-height: 1.3; }
+    /* La carte du grade, en petit à droite des règles (au-dessus au
+       téléphone) : en couleur si le grade est réussi, grisée sinon. Sa place
+       est réservée (largeur fixe, 2/3) : l'écran ne bouge pas quand l'image
+       arrive. Un dan n'a pas de carte (série à venir). */
+    .fiche-grade .fiche-haut { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; margin-top: 16px; }
+    .fiche-grade .fiche-haut.avec-carte { grid-template-columns: minmax(0, 1fr) 132px; }
+    /* Avec la carte, la fiche s'élargit de la place de la carte : le tableau
+       des règles garde sa largeur d'avant. */
+    .fiche-grade.avec-carte { max-width: calc(708px + 2 * var(--corps-cote)); }
+    .fiche-grade .fiche-haut .regles { margin: 0; }
+    .fiche-carte-place { width: 132px; }
+    .fiche-carte { display: block; width: 100%; padding: 0; border: 0; background: none; border-radius: 6px; }
+    button.fiche-carte { cursor: pointer; }
+    .fiche-carte img { display: block; width: 100%; height: auto; aspect-ratio: 640 / 904; border-radius: 6px; box-shadow: 0 3px 10px rgba(20, 52, 81, .16); }
+    .fiche-carte.grisee img { filter: grayscale(1); opacity: .45; box-shadow: none; }
+
+    /* ---- Les cartes des grades (lot « anzan-cartes », 07/11/2026) ----
+       Une carte = l'image de la créature (recto) et son dos (la créature, le
+       message, le proverbe). Les tailles du dos suivent la largeur de la
+       carte (unités cqw) : le même dos en grand et en petit. */
+    .carte-kyu { position: relative; width: var(--carte-l, 260px); aspect-ratio: 640 / 904; container-type: inline-size; perspective: 1600px; margin: 0 auto; }
+    .carte-tour { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s ease; }
+    .carte-kyu.retournee .carte-tour { transform: rotateY(180deg); }
+    .carte-face { position: absolute; inset: 0; border-radius: 2.4cqw; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+      box-shadow: 0 8px 22px rgba(20, 52, 81, .18); background: #fefdf9; }
+    .carte-face img { display: block; width: 100%; height: 100%; }
+    .carte-verso { transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: center; gap: 2.4cqw; padding: 5.8cqw 6.8cqw;
+      border: .8cqw solid var(--ink); box-shadow: inset 0 0 0 1.4cqw #fefdf9, inset 0 0 0 1.75cqw var(--ink), 0 8px 22px rgba(20, 52, 81, .18);
+      color: var(--ink); text-align: center; overflow-y: auto; }
+    .carte-verso p { margin: 0; }
+    .cv-grade { color: var(--teal); font-weight: 900; font-size: 4.6cqw; letter-spacing: .04em; }
+    .cv-nom { font-weight: 950; font-size: 8.4cqw; line-height: 1.05; }
+    .cv-nom small { display: block; margin-top: .6cqw; color: var(--muted); font-weight: 750; font-size: 4.4cqw; }
+    .cv-creature { color: #34536a; font-weight: 600; font-size: 4.05cqw; line-height: 1.3; }
+    .cv-message { font-weight: 850; font-size: 4.35cqw; line-height: 1.28; }
+    .cv-proverbe { padding: 2.6cqw 3cqw; border-top: .35cqw solid var(--line); border-bottom: .35cqw solid var(--line); }
+    .cv-jp { font-weight: 700; font-size: 6cqw; line-height: 1.25; }
+    .cv-lecture { color: var(--muted); font-style: italic; font-weight: 600; font-size: 3.8cqw; margin-top: .6cqw !important; }
+    .cv-fr { font-weight: 800; font-size: 4.3cqw; line-height: 1.28; margin-top: 1.2cqw !important; }
+    .cv-idee { color: var(--muted); font-weight: 650; font-size: 3.9cqw; line-height: 1.28; margin-top: .6cqw !important; }
+    /* Un dan réussi : une carte simple, sans créature (la série des dan
+       viendra plus tard). */
+    .carte-dan { position: relative; width: var(--carte-l, 260px); aspect-ratio: 640 / 904; container-type: inline-size; margin: 0 auto; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4cqw; border-radius: 2.4cqw; border: .8cqw solid var(--ink); background: #fefdf9;
+      box-shadow: inset 0 0 0 1.4cqw #fefdf9, inset 0 0 0 1.75cqw var(--ink), 0 8px 22px rgba(20, 52, 81, .18); color: var(--ink); }
+    .carte-dan .ceinture { font-size: 26cqw; line-height: 1; }
+    .carte-dan .nom-dan { font-weight: 950; font-size: 13cqw; }
+    @media (prefers-reduced-motion: reduce) { .carte-tour { transition: none; } }
+    .carte-retourner { margin-top: 10px; }
+
+    /* À la réussite d'un grade : la carte en grand sous « Grade réussi ! ».
+       Ordinateur : la carte à gauche, la note et les boutons à droite (tout
+       tient dans le cadre). Téléphone : l'une sous l'autre. */
+    /* Téléphone et tablette : la carte à gauche, la note à droite, les
+       boutons dessous sur toute la largeur — tout tient sans défiler, même
+       sur un petit téléphone ; « Retourner » montre le dos en grand. */
+    .fin-carte { --carte-l: min(clamp(140px, 44vw, 230px), (100vh - 420px) * 640 / 904); --carte-l: min(clamp(140px, 44vw, 230px), (100dvh - 420px) * 640 / 904); }
+    @media (max-width: 899px) {
+      .fin-grade.avec-carte .fin-grade-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; align-items: center; margin-top: 12px; }
+      .fin-grade.avec-carte .fin-grade-bilan { display: contents; }
+      .fin-grade.avec-carte .actions, .fin-grade.avec-carte .lien-calculs:not(.carte-retourner) { grid-column: 1 / -1; }
+      .fin-grade.avec-carte .score { font-size: 3rem; margin-top: 0; }
+      .fin-grade.avec-carte .score small { font-size: 1.3rem; }
+      .fin-grade.avec-carte .points { flex-wrap: wrap; gap: 5px; }
+      .fin-grade.avec-carte .points i { width: 13px; height: 13px; }
+      .fin-grade.avec-carte .ouvert { border-radius: 14px; font-size: .92rem; line-height: 1.25; }
+      .fin-grade.avec-carte .carte-retourner { margin-top: 6px; }
+    }
+    @media (min-width: 900px) {
+      .fin.passage.avec-carte { max-width: 740px; }
+      .fin-grade.avec-carte .fin-grade-corps { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 40px; align-items: center; margin-top: 8px; }
+      .fin-grade.avec-carte .fin-carte { --carte-l: min(320px, (100vh - 300px) * 640 / 904); --carte-l: min(320px, (100dvh - 300px) * 640 / 904); margin-top: 0; }
+    }
+
+    /* La collection, sous la liste des grades : les cartes gagnées en
+       vignettes (une touche montre la carte en grand), les autres en
+       silhouette grise avec un cadenas. Deux rangées de dix sur
+       ordinateur, quatre de cinq au téléphone. */
+    .cartes-collection { margin-top: 18px; }
+    /* Sur ordinateur, l'écran des grades est réduit pour tenir dans la
+       fenêtre : la collection n'entre pas dans ce calcul. La liste garde
+       exactement sa taille d'avant ; la collection est juste dessous (sur
+       un écran court, on la trouve en descendant). */
+    body.mesure-cadre .cartes-collection { display: none; }
+    .cartes-titre { margin: 0 0 8px; font-size: 1rem; font-weight: 900; text-align: left; }
+    .cartes-titre span { color: var(--muted); font-weight: 800; margin-left: 4px; }
+    .cartes-grille { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .cartes-grille li { min-width: 0; }
+    .vignette { display: block; width: 100%; aspect-ratio: 640 / 904; padding: 0; border: 0; border-radius: 5px; overflow: hidden; background: #fefdf9; }
+    button.vignette { cursor: pointer; box-shadow: 0 2px 6px rgba(20, 52, 81, .16); }
+    .vignette img { display: block; width: 100%; height: 100%; }
+    .vignette.a-gagner { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: #eef3f6; border: 1px dashed #c3d2db;
+      color: #7d95a3; font-weight: 850; font-size: .7rem; }
+    .vignette.a-gagner .cad { font-size: .9rem; }
+
+    /* Une carte en grand, par-dessus l'écran (elle ne pousse rien). */
+    .carte-grand { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px;
+      background: rgba(20, 52, 81, .55); }
+    .carte-grand-boite { display: flex; flex-direction: column; align-items: center; gap: 16px; --carte-l: min(380px, calc(100vw - 48px), calc((100dvh - 130px) * 640 / 904)); }
+    .carte-grand-boutons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: var(--carte-l); }
+    .carte-grand-boutons .primary, .carte-grand-boutons .secondary { min-height: 48px; }
     /* La fin d'un passage (planche 3) : le verdict, la note, les dix points. */
     .fin-grade { text-align: center; margin-top: 10px; }
     .fin-grade .emoji { font-size: 3rem; line-height: 1; }
     .fin-grade .titre-fin { margin: 8px 0 2px; font-size: 2rem; font-weight: 950; }
     .fin-grade.reussi .titre-fin { color: var(--green); }
+    /* Grade réussi, « esprit estampe » (07/11/2026) : le titre dans
+       l'écriture des cartes (lettres à empattements, bleu marine) et un
+       sceau rouge 合格 (« réussi », comme sur les diplômes japonais). */
+    .fin-grade.reussi .titre-fin { color: var(--ink); font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; letter-spacing: .005em; }
+    .sceau { width: 64px; height: 64px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+      border: 3px solid var(--red); box-shadow: inset 0 0 0 2.5px #fff, inset 0 0 0 4px var(--red); color: var(--red); transform: rotate(-9deg); }
+    .sceau span { writing-mode: vertical-rl; font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "MS Mincho", serif;
+      font-weight: 700; font-size: 1.32rem; line-height: 1; letter-spacing: .02em; }
     .fin-grade .score { margin-top: 10px; }
     .points { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
     .points i { width: 18px; height: 18px; border-radius: 50%; background: var(--green); }
@@ -468,12 +579,20 @@
       font: inherit; font-weight: 850; font-size: .95rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
     .fin.passage .tete-fin { margin-top: 0; }
     .fin.passage .tete-fin .score, .fin.passage .tete-fin .tag, .fin.passage > .actions { display: none; }
+    /* Avec la carte (lot « anzan-cartes ») : ce qui ne tient pas défile dans
+       le cadre, la liste des calculs comprise (elle ne s'écrase pas). */
+    .fin.passage.avec-carte { overflow-y: auto; }
+    .fin.passage.avec-carte .liste { flex: 0 0 auto; overflow: visible; }
 
     @media (max-width: 620px) {
       .gr-groupes { grid-template-columns: 1fr 1fr; }
       .fiche-grade .regles b { min-width: 72px; }
       .fiche-grade .fiche-boutons { grid-template-columns: 1fr 1fr; }
       .fiche-grade .fiche-boutons .primary { font-size: 1.05rem; }
+      /* Au téléphone, la petite carte au-dessus des règles. */
+      .fiche-grade .fiche-haut.avec-carte { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .fiche-grade .fiche-haut .fiche-carte-place { order: -1; width: 92px; margin: 0 auto; }
+      .cartes-grille { grid-template-columns: repeat(5, minmax(0, 1fr)); }
       /* Au téléphone, la liste des séances défile avec la page (pas dans son
          cadre). */
       .hist-liste { max-height: none; overflow: visible; }
@@ -735,14 +854,27 @@
           <p class="hist-compte">10 calculs en Flash · réussi à 7 sur 10</p>
           <div class="options gr-groupes" id="grades-groupes" role="group" aria-label="Les niveaux"></div>
           <ol class="gr-liste" id="grades-liste" aria-label="Les grades"></ol>
+          <!-- Lot « anzan-cartes » (07/11/2026) : la collection des cartes, sous la liste. -->
+          <div class="cartes-collection" role="group" aria-labelledby="cartes-titre">
+            <h2 class="cartes-titre" id="cartes-titre">Mes cartes<span id="cartes-compte"></span></h2>
+            <ol class="cartes-grille" id="cartes-collection"></ol>
+          </div>
         </div>
         <div class="fiche-grade" id="grades-fiche-vue" hidden>
           <p class="niv" id="fiche-niveau"></p>
-          <ol class="regles" id="fiche-regles"></ol>
-          <p class="rappel">Pas de «&nbsp;Revoir&nbsp;»&nbsp;: comme à l’examen, chaque calcul ne passe qu’une fois. La correction vient à la fin.</p>
+          <div class="fiche-haut" id="fiche-haut">
+            <ol class="regles" id="fiche-regles"></ol>
+            <div class="fiche-carte-place" id="fiche-carte-place" hidden></div>
+          </div>
           <div class="fiche-boutons">
-            <button type="button" class="secondary" id="fiche-entrainer">🎯 M’entraîner</button>
-            <button type="button" class="primary" id="fiche-passer"></button>
+            <div>
+              <button type="button" class="secondary" id="fiche-entrainer">🎯 M’entraîner</button>
+              <p class="fiche-note">Correction après chaque calcul</p>
+            </div>
+            <div>
+              <button type="button" class="primary" id="fiche-passer"></button>
+              <p class="fiche-note">Comme à l’examen&nbsp;: correction à la fin</p>
+            </div>
           </div>
         </div>
       </div>
@@ -801,16 +933,30 @@
                les dix points, puis « Voir mes calculs » qui déplie la liste. -->
           <div class="fin-grade" id="fin-grade" hidden>
             <div class="emoji" id="fin-grade-emoji" aria-hidden="true"></div>
+            <!-- Grade réussi (lot « anzan-cartes », choix du 07/11/2026 : « esprit
+                 estampe ») : un sceau rouge 合格 (« réussi ») à la place du 🎉. -->
+            <div class="sceau" id="fin-grade-sceau" aria-hidden="true" hidden><span>合格</span></div>
             <div class="titre-fin" id="fin-grade-titre"></div>
-            <div class="score" id="fin-grade-score"></div>
-            <div class="points" id="fin-grade-points" aria-hidden="true"></div>
-            <div class="ouvert" id="fin-grade-ouvert" hidden></div>
-            <p class="sous" id="fin-grade-sous" hidden></p>
-            <div class="actions" id="fin-grade-actions">
-              <button type="button" class="secondary" id="fin-grade-a"></button>
-              <button type="button" class="primary" id="fin-grade-b"></button>
+            <div class="fin-grade-corps">
+              <!-- Lot « anzan-cartes » (07/11/2026) : la carte du grade réussi, et « Retourner ». -->
+              <div class="fin-carte" id="fin-grade-carte" hidden>
+                <div id="fin-carte-place"></div>
+                <button type="button" class="lien-calculs carte-retourner" id="carte-retourner" aria-pressed="false" hidden>↻ Retourner</button>
+              </div>
+              <div class="fin-grade-bilan">
+                <div class="fin-grade-note">
+                  <div class="score" id="fin-grade-score"></div>
+                  <div class="points" id="fin-grade-points" aria-hidden="true"></div>
+                  <div class="ouvert" id="fin-grade-ouvert" hidden></div>
+                  <p class="sous" id="fin-grade-sous" hidden></p>
+                </div>
+                <div class="actions" id="fin-grade-actions">
+                  <button type="button" class="secondary" id="fin-grade-a"></button>
+                  <button type="button" class="primary" id="fin-grade-b"></button>
+                </div>
+                <button type="button" class="lien-calculs" id="fin-grade-calculs" aria-expanded="false" aria-controls="liste">Voir mes calculs</button>
+              </div>
             </div>
-            <button type="button" class="lien-calculs" id="fin-grade-calculs" aria-expanded="false" aria-controls="liste">Voir mes calculs</button>
           </div>
           <div class="tete-fin">
             <div class="score" id="score"></div>
@@ -829,7 +975,20 @@
     </section>
   </main>
 
-  <script src="./flash_anzan_core.js?v=20261107-1"></script>
+  <!-- Une carte en grand (lot « anzan-cartes », 07/11/2026) : depuis la
+       collection ou la fiche d'un grade réussi. -->
+  <div class="carte-grand" id="carte-grand" role="dialog" aria-modal="true" aria-labelledby="carte-grand-titre" hidden>
+    <div class="carte-grand-boite">
+      <h2 class="lecteur" id="carte-grand-titre"></h2>
+      <div id="carte-grand-place"></div>
+      <div class="carte-grand-boutons">
+        <button type="button" class="secondary" id="carte-grand-retourner" aria-pressed="false">↻ Retourner</button>
+        <button type="button" class="primary" id="carte-grand-fermer">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./flash_anzan_core.js?v=20261107-2"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
   <script src="./flash_anzan_parcours.js?v=20261107-1"></script>
@@ -1559,6 +1718,7 @@
         majEnvoi();
         const passage = seance.mode === "grade";
         $("vue-fin").classList.toggle("passage", passage);
+        if (!passage) $("vue-fin").classList.remove("avec-carte");
         $("fin-grade").hidden = !passage;
         $("liste").hidden = passage;
         $("vers-reglages").textContent = seance.mode === "entrainement" ? "Le grade" : "Réglages";
@@ -2011,7 +2171,9 @@
           } else if (g.actuel) {
             const passer = document.createElement("span");
             passer.className = "gr-passer";
-            passer.textContent = "Passer ▶";
+            // « À toi ▶ » (lot « anzan-cartes ») : la ligne ouvre la fiche du
+            // grade, pas l'épreuve — « Passer » la promettait.
+            passer.textContent = "À toi ▶";
             droite.append(passer);
           } else {
             const ferme = document.createElement("span");
@@ -2023,7 +2185,235 @@
           item.append(ligne);
           liste.append(item);
         });
+        dessinerCollection(etat);
       }
+
+      // -----------------------------------------------------------------
+      // Les cartes des grades (lot « anzan-cartes », 07/11/2026 ; choix de
+      // Gwenaël : la carte en grand à la réussite, « Retourner » pour son
+      // dos, la collection sous la liste, la petite carte sur la fiche).
+      // Rien de nouveau n'est gardé : une carte est gagnée quand son grade
+      // est réussi. Tout est posé par textContent ; les images sont celles
+      // du dossier ./anzan-cartes/ (une seule en grand à la fois).
+      // -----------------------------------------------------------------
+      const kyuCarte = c => `${c.kyu}${c.kyu === 1 ? "er" : "e"} Kyu`;
+      function paragraphe(classe, texte) {
+        const el = document.createElement("p");
+        el.className = classe;
+        el.textContent = texte;
+        return el;
+      }
+      function construireCarte(c) {
+        const carte = document.createElement("div");
+        carte.className = "carte-kyu";
+        const tour = document.createElement("div");
+        tour.className = "carte-tour";
+        const recto = document.createElement("div");
+        recto.className = "carte-face carte-recto";
+        const img = document.createElement("img");
+        img.src = c.image;
+        img.alt = `Carte du ${kyuCarte(c)} : ${c.nom}`;
+        img.width = 640;
+        img.height = 904;
+        recto.append(img);
+        const verso = document.createElement("div");
+        verso.className = "carte-face carte-verso";
+        verso.setAttribute("aria-hidden", "true");
+        const nom = paragraphe("cv-nom", c.nom);
+        if (c.sens) {
+          const sens = document.createElement("small");
+          sens.textContent = c.sens;
+          nom.append(sens);
+        }
+        const proverbe = document.createElement("div");
+        proverbe.className = "cv-proverbe";
+        const jp = paragraphe("cv-jp", c.proverbe.japonais);
+        jp.setAttribute("lang", "ja");
+        proverbe.append(jp, paragraphe("cv-lecture", c.proverbe.lecture), paragraphe("cv-fr", `«\u00a0${c.proverbe.francais}\u00a0»`));
+        if (c.proverbe.idee) proverbe.append(paragraphe("cv-idee", c.proverbe.idee));
+        verso.append(paragraphe("cv-grade", kyuCarte(c)), nom, paragraphe("cv-creature", c.creature), paragraphe("cv-message", c.message), proverbe);
+        tour.append(recto, verso);
+        carte.append(tour);
+        return carte;
+      }
+      // Recto ↔ verso ; seul le côté visible est lu par un lecteur d'écran.
+      function retourner(carte, bouton) {
+        if (!carte) return;
+        const dos = carte.classList.toggle("retournee");
+        const [recto, verso] = carte.querySelectorAll(".carte-face");
+        if (recto) recto.setAttribute("aria-hidden", String(dos));
+        if (verso) verso.setAttribute("aria-hidden", String(!dos));
+        if (bouton) bouton.setAttribute("aria-pressed", String(dos));
+      }
+
+      // La collection : 20 places, du 20e au 1er kyu.
+      function dessinerCollection(etat) {
+        const grille = $("cartes-collection");
+        grille.replaceChildren();
+        let gagnees = 0;
+        CORE.CARTES_KYU.forEach((c, i) => {
+          const g = etat[i];
+          const li = document.createElement("li");
+          if (g && g.reussi) {
+            gagnees += 1;
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "vignette";
+            b.setAttribute("data-carte", String(i + 1));
+            b.setAttribute("aria-label", `${c.nom}, ${kyuCarte(c)} : voir la carte`);
+            const img = document.createElement("img");
+            img.src = c.vignette;
+            img.alt = "";
+            img.width = 160;
+            img.height = 226;
+            b.append(img);
+            li.append(b);
+          } else {
+            const v = document.createElement("div");
+            v.className = "vignette a-gagner";
+            v.setAttribute("role", "img");
+            v.setAttribute("aria-label", `${kyuCarte(c)} : carte à gagner`);
+            const cad = document.createElement("span");
+            cad.className = "cad";
+            cad.setAttribute("aria-hidden", "true");
+            cad.textContent = "🔒";
+            const rang = document.createElement("span");
+            rang.setAttribute("aria-hidden", "true");
+            rang.textContent = `${c.kyu}${c.kyu === 1 ? "er" : "e"}`;
+            v.append(cad, rang);
+            li.append(v);
+          }
+          grille.append(li);
+        });
+        $("cartes-compte").textContent = `\u00a0· ${gagnees}/${CORE.CARTES_KYU.length}`;
+      }
+      $("cartes-collection").addEventListener("click", e => {
+        const b = e.target.closest("[data-carte]");
+        if (b) ouvrirCarteGrand(Number(b.getAttribute("data-carte")), b);
+      });
+
+      // Une carte en grand, par-dessus l'écran.
+      let ouvreurCarte = null;
+      // `dos` : elle s'ouvre déjà retournée (« Retourner » au téléphone).
+      function ouvrirCarteGrand(n, ouvreur, dos = false) {
+        const c = CORE.carteDuGrade(n);
+        if (!c || !gradesDeLEleve()[n - 1].reussi) return false; // une carte se gagne
+        const carte = construireCarte(c);
+        $("carte-grand-place").replaceChildren(carte);
+        $("carte-grand-titre").textContent = `La carte du ${kyuCarte(c)} : ${c.nom}`;
+        $("carte-grand-retourner").setAttribute("aria-pressed", "false");
+        if (dos) retourner(carte, $("carte-grand-retourner"));
+        $("carte-grand").hidden = false;
+        ouvreurCarte = ouvreur || null;
+        $("carte-grand-fermer").focus();
+        return true;
+      }
+      function fermerCarteGrand() {
+        if ($("carte-grand").hidden) return;
+        $("carte-grand").hidden = true;
+        $("carte-grand-place").replaceChildren();
+        if (ouvreurCarte && ouvreurCarte.focus) ouvreurCarte.focus();
+        ouvreurCarte = null;
+      }
+      $("carte-grand-fermer").addEventListener("click", fermerCarteGrand);
+      $("carte-grand-retourner").addEventListener("click", () => retourner($("carte-grand-place").querySelector(".carte-kyu"), $("carte-grand-retourner")));
+      $("carte-grand").addEventListener("click", e => {
+        if (e.target === $("carte-grand")) { fermerCarteGrand(); return; }
+        // Toucher la carte la retourne aussi.
+        if (e.target.closest && e.target.closest(".carte-kyu")) retourner($("carte-grand-place").querySelector(".carte-kyu"), $("carte-grand-retourner"));
+      });
+      document.addEventListener("keydown", e => {
+        if ($("carte-grand").hidden) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          if (e.stopPropagation) e.stopPropagation(); // pas de sortie du plein écran en même temps
+          fermerCarteGrand();
+          return;
+        }
+        // Le focus reste sur les deux boutons de la carte.
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const actif = document.activeElement;
+          (actif === $("carte-grand-fermer") ? $("carte-grand-retourner") : $("carte-grand-fermer")).focus();
+        }
+      }, true);
+
+      // La petite carte de la fiche : en couleur si le grade est réussi (et
+      // elle s'ouvre en grand), grisée sinon ; pas de carte pour un dan.
+      function dessinerCarteFiche(n) {
+        const place = $("fiche-carte-place");
+        const c = CORE.carteDuGrade(n);
+        place.replaceChildren();
+        place.hidden = !c;
+        $("fiche-haut").classList.toggle("avec-carte", Boolean(c));
+        $("grades-fiche-vue").classList.toggle("avec-carte", Boolean(c));
+        if (!c) return;
+        const reussi = Boolean(gradesDeLEleve()[n - 1].reussi);
+        const el = document.createElement(reussi ? "button" : "div");
+        el.className = reussi ? "fiche-carte" : "fiche-carte grisee";
+        if (reussi) {
+          el.type = "button";
+          el.setAttribute("data-carte", String(n));
+          el.setAttribute("aria-label", `${c.nom}, ta carte du ${kyuCarte(c)} : la voir en grand`);
+        }
+        const img = document.createElement("img");
+        img.src = c.image;
+        img.alt = reussi ? "" : `Carte à gagner : ${c.nom}`;
+        img.width = 640;
+        img.height = 904;
+        el.append(img);
+        place.append(el);
+      }
+      $("fiche-carte-place").addEventListener("click", e => {
+        const b = e.target.closest("[data-carte]");
+        if (b) ouvrirCarteGrand(Number(b.getAttribute("data-carte")), b);
+      });
+
+      // À la réussite : la carte du kyu (ou la carte simple d'un dan), sous
+      // « Grade réussi ! » ; rien pour les autres verdicts.
+      function dessinerCarteFin(n, verdict) {
+        const bloc = $("fin-grade-carte");
+        const place = $("fin-carte-place");
+        place.replaceChildren();
+        const montrer = verdict === "reussi";
+        bloc.hidden = !montrer;
+        $("fin-grade").classList.toggle("avec-carte", montrer);
+        $("vue-fin").classList.toggle("avec-carte", montrer);
+        $("carte-retourner").hidden = true;
+        $("carte-retourner").setAttribute("aria-pressed", "false");
+        if (!montrer) return;
+        const c = CORE.carteDuGrade(n);
+        if (c) {
+          place.append(construireCarte(c));
+          $("carte-retourner").hidden = false;
+        } else {
+          const dan = document.createElement("div");
+          dan.className = "carte-dan";
+          dan.setAttribute("role", "img");
+          dan.setAttribute("aria-label", `Carte du ${CORE.nomGrade(n)}`);
+          const ceinture = document.createElement("span");
+          ceinture.className = "ceinture";
+          ceinture.setAttribute("aria-hidden", "true");
+          ceinture.textContent = "🥋";
+          const nom = document.createElement("span");
+          nom.className = "nom-dan";
+          nom.setAttribute("aria-hidden", "true");
+          nom.textContent = CORE.nomGrade(n);
+          dan.append(ceinture, nom);
+          place.append(dan);
+        }
+      }
+      // Sur ordinateur, la carte se retourne sur place ; au téléphone elle
+      // est trop petite pour lire son dos : il s'ouvre en grand.
+      function retournerCarteFin() {
+        const n = seance.reglages && seance.reglages.grade;
+        if (window.innerWidth < 900 && n && ouvrirCarteGrand(n, $("carte-retourner"), true)) return;
+        retourner($("fin-carte-place").querySelector(".carte-kyu"), $("carte-retourner"));
+      }
+      $("carte-retourner").addEventListener("click", retournerCarteFin);
+      $("fin-carte-place").addEventListener("click", e => {
+        if (e.target.closest && e.target.closest(".carte-kyu")) retournerCarteFin();
+      });
       $("grades-groupes").addEventListener("click", e => {
         const b = e.target.closest("[data-groupe]");
         if (!b) return;
@@ -2046,7 +2436,7 @@
           [String(g.nombres), `nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`} à additionner`],
           [CORE.secondes(g.dixiemes / 10), "pour voir tous les nombres d’un calcul"],
           [String(CORE.GRADE_CALCULS), "calculs"],
-          [`${CORE.GRADE_REUSSI} sur ${CORE.GRADE_CALCULS}`, "pour réussir le grade"]
+          [`${CORE.GRADE_REUSSI}/${CORE.GRADE_CALCULS}`, "bonnes réponses pour réussir le grade"]
         ].forEach(([fort, texte]) => {
           const li = document.createElement("li");
           const b = document.createElement("b");
@@ -2058,6 +2448,7 @@
         // 13e kyu » passait sur deux lignes au téléphone).
         $("fiche-passer").textContent = "Je le passe ▶";
         $("fiche-passer").disabled = !gradesDeLEleve()[n - 1].ouvert;
+        dessinerCarteFiche(n);
       }
       $("fiche-entrainer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement"); });
       $("fiche-passer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "grade"); });
@@ -2112,7 +2503,10 @@
           arrete: ["⏸", "Passage arrêté"]
         }[verdict];
         $("fin-grade").className = `fin-grade ${verdict}`;
+        dessinerCarteFin(n, verdict);
         $("fin-grade-emoji").textContent = textes[0];
+        $("fin-grade-emoji").hidden = verdict === "reussi";
+        $("fin-grade-sceau").hidden = verdict !== "reussi";
         $("fin-grade-titre").textContent = textes[1];
         $("fin-grade-score").innerHTML = `${Number(justes)}<small>/${CORE.GRADE_CALCULS}</small>`;
         const points = $("fin-grade-points");
