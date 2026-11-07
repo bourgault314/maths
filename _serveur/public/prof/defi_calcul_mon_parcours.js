@@ -48,7 +48,15 @@
   // SERVEUR : il refuse l'écriture d'une page de version 3 (catalogue,
   // « version_min ») — une page d'avant F1 lirait une boîte 6 ou 7 comme
   // « pas entrée » et tronquerait le plan (relecture de Codex, 07/11/2026).
-  const VERSION = 4;
+  // Version 5 (lot G1 « journal + accueil », 07/11/2026) : le journal des
+  // séances (`journal`, six listes d'entiers alignées sur `seances`), ce que
+  // la séance ouverte a déjà fait (`seance.j`), et deux dates par compétence
+  // (`d` entrée, `s` devenue sue). Une progression de version 4 se relit sans
+  // rien perdre : ses séances déjà finies ont un journal « inconnu » (-1),
+  // ses compétences n'ont pas de date (null). Le serveur refuse l'écriture
+  // d'une page de version 4 (« version_min » 5) : elle ne connaît pas ces
+  // champs et les effacerait.
+  const VERSION = 5;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -129,6 +137,10 @@
     // elle revient par J'apprends et « Je m'entraîne encore ».
     rattrapage: Object.freeze({echecs: 2, deCote: 3, joursDeCote: 3, parSeance: 3, sansOutil: 3, maximum: 20}),
     seance: Object.freeze({garder: 60, etapes: 99}),
+    // Le journal d'une séance (lot G1) : des comptes bornés, la durée en
+    // minutes de temps actif (90 au plus). La séance ouverte compte ses
+    // secondes (90 minutes au plus).
+    journal: Object.freeze({compte: 999, minutes: 90, secondes: 5400}),
     jours: Object.freeze({garder: 14}),
     compteur: 9999,
     causes: 12
@@ -151,6 +163,31 @@
   const NOUVEAUTE = Object.freeze({aFaire: 0, faite: 2, arretee: 3});
   const PLAN_MAX = Object.freeze([1, 1, RANGS.total, SEUILS.test.parSeance, 3, SEUILS.nouveautes.maximum, SEUILS.nouveautes.maximum]);
 
+  // Le journal des séances (lot G1 « journal + accueil », 07/11/2026). Pour
+  // chaque séance FINIE, rangée comme `seances` (la même place dans chaque
+  // liste) : les calculs du jour faits, combien étaient justes, les
+  // nouveautés réussies, les compétences prouvées au test, les rouges
+  // entraînées (« Je m'entraîne encore »), la durée en minutes de temps
+  // actif. Rien que des entiers : le serveur ne garde ni texte ni liste
+  // d'objets ; ni heure, ni calcul, ni réponse. -1 : pas connu (une séance
+  // finie avant le lot G1, ou une valeur abîmée).
+  const JOURNAL = Object.freeze(["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes"]);
+  const JOURNAL_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.nouveautes.maximum,
+    SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.minutes]);
+  // Ce que la séance OUVERTE a déjà fait, `seance.j` : six nombres, versés
+  // au journal quand elle finit.
+  //   [0] calculs du jour faits, [1] justes, [2] compétences prouvées au
+  //   test, [3] rouges entraînées, [4] secondes de temps actif,
+  //   [5] nouveautés réussies.
+  // Correctif G1 (relecture de Codex) : les nouveautés se comptent ICI, au
+  // moment où elles sont réussies, et plus dans le plan (`p[6]`) — après
+  // minuit, le plan neuf repart de 0 et la nouveauté de la veille était
+  // perdue. Un `j` de cinq nombres (enregistré avant le correctif) se relit
+  // avec 0 nouveauté.
+  const EN_COURS = Object.freeze({calculs: 0, justes: 1, prouvees: 2, rouges: 3, secondes: 4, nouveautes: 5});
+  const EN_COURS_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte,
+    SEUILS.journal.compte, SEUILS.journal.secondes, SEUILS.nouveautes.maximum]);
+
   // Le nombre de nouveautés d'une séance : 1, 2 ou 3 (un vrai nombre, pas
   // « 2 » en texte) ; tout le reste vaut 1.
   function nombreDeNouveautes(valeur) {
@@ -172,9 +209,21 @@
     return nombre;
   }
 
-  // Une date est un jour, « AAAA-MM-JJ », rien d'autre.
+  // Une date est un VRAI jour, « AAAA-MM-JJ », rien d'autre : la même règle
+  // que le serveur (lib/progression.php, date_reelle : checkdate, année 1 à
+  // 9999). Lot G1 : la forme seule ne suffit plus — le serveur retire d'une
+  // liste « 2026-02-30 » ou « 0000-01-01 », et les listes alignées (les
+  // séances et leur journal, les dates des compétences) glisseraient d'un
+  // rang ; ici, elles sont écartées (séances) ou valent null (compétences).
   function dateOuNull(valeur) {
-    return typeof valeur === "string" && /^\d{4}-\d{2}-\d{2}$/.test(valeur) ? valeur : null;
+    if (typeof valeur !== "string") return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valeur);
+    if (!m) return null;
+    const [annee, mois, jour] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    if (annee < 1 || mois < 1 || mois > 12 || jour < 1) return null;
+    const bissextile = annee % 4 === 0 && (annee % 100 !== 0 || annee % 400 === 0);
+    const jours = [31, bissextile ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mois - 1];
+    return jour <= jours ? valeur : null;
   }
 
   // LE jour du parcours : le jour local de l'appareil.
@@ -237,7 +286,62 @@
   // Les jours des séances finies : des dates, répétées quand il y a eu
   // plusieurs séances le même jour, les plus récentes gardées.
   function normaliserSeances(liste) {
-    return (Array.isArray(liste) ? liste : []).map(dateOuNull).filter(Boolean).sort().slice(-SEUILS.seance.garder);
+    return normaliserSeancesEtJournal(liste, null).seances;
+  }
+
+  function journalVide() {
+    const journal = {};
+    JOURNAL.forEach(champ => { journal[champ] = []; });
+    return journal;
+  }
+
+  // Une entrée du journal, propre : six entiers, -1 quand ce n'est pas
+  // connu ; jamais plus de justes que de calculs.
+  function entreePropre(brute) {
+    const entree = JOURNAL_MAX.map((maximum, index) => entier(brute[index], -1, maximum, -1));
+    if (entree[0] >= 0 && entree[1] > entree[0]) entree[1] = entree[0];
+    return entree;
+  }
+
+  // Les séances finies ET leur journal, rangés ensemble (lot G1) : chaque
+  // date garde son entrée. Une liste du journal plus courte que les séances
+  // (une progression d'avant le lot G1, ou abîmée) s'aligne sur les plus
+  // récentes : les plus anciennes valent -1 (pas connu). Une date qui n'en
+  // est pas part avec son entrée ; puis le tri par date (stable : deux
+  // séances du même jour gardent leur ordre) et les 60 plus récentes.
+  function normaliserSeancesEtJournal(listeBrute, journalBrut) {
+    const dates = Array.isArray(listeBrute) ? listeBrute : [];
+    const journal = journalBrut && typeof journalBrut === "object" && !Array.isArray(journalBrut) ? journalBrut : {};
+    const colonnes = JOURNAL.map(champ => {
+      const liste = Array.isArray(journal[champ]) ? journal[champ] : [];
+      const decalage = dates.length - liste.length;
+      return index => (index - decalage >= 0 && index - decalage < liste.length ? liste[index - decalage] : -1);
+    });
+    const paires = [];
+    dates.forEach((brute, index) => {
+      const jour = dateOuNull(brute);
+      if (jour) paires.push({jour, entree: entreePropre(colonnes.map(lire => lire(index)))});
+    });
+    return rangerSeances(paires);
+  }
+
+  // Des paires {jour, entree} : triées par jour (stable), les 60 plus
+  // récentes, en deux formes — `seances` (les dates) et `journal`.
+  function rangerSeances(paires) {
+    const triees = paires.map((paire, rang) => ({paire, rang}))
+      .sort((x, y) => (x.paire.jour < y.paire.jour ? -1 : x.paire.jour > y.paire.jour ? 1 : x.rang - y.rang))
+      .map(x => x.paire).slice(-SEUILS.seance.garder);
+    const journal = journalVide();
+    triees.forEach(({entree}) => JOURNAL.forEach((champ, index) => journal[champ].push(entree[index])));
+    return {seances: triees.map(paire => paire.jour), journal};
+  }
+
+  function pairesDe(parcours) {
+    return parcours.seances.map((jour, index) => ({jour, entree: JOURNAL.map(champ => parcours.journal[champ][index])}));
+  }
+
+  function enCoursVide() {
+    return [0, 0, 0, 0, 0, 0];
   }
 
   function nettoyerPrenom(valeur) {
@@ -259,9 +363,16 @@
   // Une compétence pas entrée n'a pas d'échéance : null, et surtout pas "" —
   // le serveur retire d'une liste toute chaîne qui n'est pas une date, les
   // échéances suivantes glisseraient d'un rang.
+  // Lot G1 : deux dates par compétence, comme `e` (null quand il n'y en a
+  // pas) — `d`, le jour où elle est ENTRÉE (apprise à l'entraînement, ou
+  // prouvée au test), et `s`, le jour où elle est devenue SUE (passée de la
+  // boîte 3 à la boîte 4, ou entrée sue par le test). Chacune est posée UNE
+  // fois et ne bouge plus : une compétence redescendue puis remontée ne
+  // compte pas une seconde fois.
   function moduleVide(id) {
     const k = NIVEAUX[id];
-    return {vu: null, ok: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), f: listeDe(k), x: listeDe(k), t: listeDe(k), c: {}};
+    return {vu: null, ok: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), f: listeDe(k), x: listeDe(k), t: listeDe(k),
+      d: listeDe(k, null), s: listeDe(k, null), c: {}};
   }
 
   function planVide() {
@@ -274,8 +385,9 @@
       epoque: 0,
       prenom: "",
       modules: {},
-      seance: {jour: null, etape: 0, n: 0, p: planVide()},
+      seance: {jour: null, etape: 0, n: 0, p: planVide(), j: enCoursVide()},
       seances: [],
+      journal: journalVide(),
       jours: []
     };
   }
@@ -297,11 +409,17 @@
     ligne.x = normaliserListe(brut.x, k, SEUILS.rattrapage.deCote);
     ligne.t = normaliserListe(brut.t, k, 1);
     const echeances = Array.isArray(brut.e) ? brut.e : [];
+    const entrees = Array.isArray(brut.d) ? brut.d : [];
+    const sues = Array.isArray(brut.s) ? brut.s : [];
     for (let i = 0; i < k; i += 1) {
-      // L'échéance, les échecs et l'entraînement du jour n'existent que pour
-      // une compétence entrée.
-      if (ligne.b[i]) ligne.e[i] = dateOuNull(echeances[i]) || ligne.vu || jourLocal();
-      else { ligne.x[i] = 0; ligne.t[i] = 0; }
+      // L'échéance, les échecs, l'entraînement du jour et les deux dates
+      // n'existent que pour une compétence entrée. Une date absente ou
+      // abîmée vaut null (une compétence entrée avant le lot G1).
+      if (ligne.b[i]) {
+        ligne.e[i] = dateOuNull(echeances[i]) || ligne.vu || jourLocal();
+        ligne.d[i] = dateOuNull(entrees[i]);
+        ligne.s[i] = dateOuNull(sues[i]);
+      } else { ligne.x[i] = 0; ligne.t[i] = 0; }
     }
     if (brut.c && typeof brut.c === "object" && !Array.isArray(brut.c)) {
       Object.keys(brut.c).filter(cause => /^\d{1,2}$/.test(cause)).sort((x, y) => Number(x) - Number(y))
@@ -385,9 +503,18 @@
       jour: ancienne ? null : dateOuNull(seance.jour),
       etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: ancienne ? planVide() : normaliserPlan(seance.p)
+      p: ancienne ? planVide() : normaliserPlan(seance.p),
+      j: enCoursVide()
     };
-    parcours.seances = normaliserSeances(brut.seances);
+    // Ce que la séance ouverte a fait (lot G1) : rien quand elle n'est pas
+    // ouverte. Une séance de version 4 ouverte repart de zéro.
+    if (parcours.seance.p[PLAN.ouverte] === 1 && Array.isArray(seance.j)) {
+      parcours.seance.j = EN_COURS_MAX.map((maximum, index) => entier(seance.j[index], 0, maximum));
+      if (parcours.seance.j[EN_COURS.justes] > parcours.seance.j[EN_COURS.calculs]) parcours.seance.j[EN_COURS.justes] = parcours.seance.j[EN_COURS.calculs];
+    }
+    const rangees = normaliserSeancesEtJournal(brut.seances, brut.journal);
+    parcours.seances = rangees.seances;
+    parcours.journal = rangees.journal;
     parcours.jours = normaliserJours(brut.jours);
     return parcours;
   }
@@ -775,18 +902,45 @@
     const etape = seanceOuverte(avant, aujourdhui) ? avant.seance.etape : 0;
     changer(plan);
     plan[PLAN.ouverte] = 1;
-    copie.seance = {jour: aujourdhui, etape: Math.min(SEUILS.seance.etapes, etape + 1), n: copie.seance.n, p: plan};
+    // Ce que la séance a fait la suit, même après minuit (lot G1) : elle
+    // compte pour le jour où elle finit.
+    const fait = copie.seance.j.slice();
+    copie.seance = {jour: aujourdhui, etape: Math.min(SEUILS.seance.etapes, etape + 1), n: copie.seance.n, p: plan, j: fait};
     if (fileSeance(copie, carte, {aujourdhui}).etapes.length) return false;
     // Finie : elle compte, et le plan se referme. L'arrêt après un
-    // entraînement raté reste noté jusqu'à demain.
+    // entraînement raté reste noté jusqu'à demain. Son journal est écrit à
+    // la place de la séance (lot G1).
     copie.seance = {
       jour: aujourdhui,
       etape: 0,
       n: Math.min(SEUILS.compteur, copie.seance.n + 1),
-      p: [0, 0, 0, 0, plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0, 0, 0]
+      p: [0, 0, 0, 0, plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0, 0, 0],
+      j: enCoursVide()
     };
-    copie.seances = normaliserSeances([...copie.seances, aujourdhui]);
+    const secondes = fait[EN_COURS.secondes];
+    const entree = [fait[EN_COURS.calculs], fait[EN_COURS.justes], fait[EN_COURS.nouveautes], fait[EN_COURS.prouvees], fait[EN_COURS.rouges],
+      secondes ? Math.max(1, Math.min(SEUILS.journal.minutes, Math.round(secondes / 60))) : 0];
+    const rangees = rangerSeances([...pairesDe(copie), {jour: aujourdhui, entree: entreePropre(entree)}]);
+    copie.seances = rangees.seances;
+    copie.journal = rangees.journal;
     return true;
+  }
+
+  // Le temps actif d'une étape (lot G1) : la page le mesure (les gestes de
+  // l'élève, les silences comptés une minute au plus) et le donne à la fin
+  // de chaque étape. Il s'ajoute à la séance ouverte, et seulement à elle.
+  function noterTemps(parcours, secondes) {
+    const copie = normaliserParcours(parcours);
+    const ajout = entier(Math.round(Number(secondes)), 0, SEUILS.journal.secondes);
+    if (copie.seance.p[PLAN.ouverte] !== 1 || !ajout) return copie;
+    copie.seance.j[EN_COURS.secondes] = Math.min(SEUILS.journal.secondes, copie.seance.j[EN_COURS.secondes] + ajout);
+    return copie;
+  }
+
+  // Ajoute à ce que la séance ouverte a fait.
+  function compterEnCours(parcours, index, ajout) {
+    if (parcours.seance.p[PLAN.ouverte] !== 1 || !ajout) return;
+    parcours.seance.j[index] = Math.min(EN_COURS_MAX[index], parcours.seance.j[index] + ajout);
   }
 
   // Un module est joué aujourd'hui : son jour `vu` change, et ce qui ne
@@ -906,6 +1060,7 @@
     noterJour(copie, aujourdhui);
     if (serie.genre === "rattrape") {
       if (ligne.b[n - 1]) ligne.t[n - 1] = 1;
+      if (seance) compterEnCours(copie, EN_COURS.rouges, 1);
       // La rouge suivante (3 par séance au plus), sinon la nouveauté.
       if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
         const suivante = aEntrainer(copie, carte, aujourdhui);
@@ -917,8 +1072,12 @@
     if (verdict.reussi && nouvelle) {
       ligne.b[n - 1] = SEUILS.revision.entraine;
       ligne.e[n - 1] = echeanceDeBoite(SEUILS.revision.entraine, aujourdhui);
+      if (!ligne.d[n - 1]) ligne.d[n - 1] = aujourdhui;
       evenements.push({type: "entree", module: id, niveau: n, boite: SEUILS.revision.entraine});
     }
+    // Une nouveauté réussie compte dans la séance ouverte, tout de suite
+    // (correctif G1 : elle reste comptée si la séance continue après minuit).
+    if (seance && verdict.reussi && nouvelle) compterEnCours(copie, EN_COURS.nouveautes, 1);
     if (seance) {
       // Raté : demain repart de « J'apprends », rien de nouveau aujourd'hui.
       if (!verdict.reussi) ligne.a[n - 1] = 0;
@@ -974,6 +1133,10 @@
       if (entre) {
         ligne.b[index] = boite;
         ligne.e[index] = echeanceDeBoite(boite, aujourdhui);
+        // Lot G1 : entrée aujourd'hui ; sue aujourd'hui si elle entre en
+        // boîte 4 (une marche en dessous de la plus haute prouvée).
+        if (!ligne.d[index]) ligne.d[index] = aujourdhui;
+        if (boite >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
         // Une marche prouvée compte comme « J'apprends fait » (31/10) : il ne
         // revient qu'après deux échecs de suite.
         ligne.a[index] = 1;
@@ -983,6 +1146,7 @@
     if (!ligne.ok && toutSu(ligne)) ligne.ok = aujourdhui;
     const tout = marche === NIVEAUX[id];
     let finie = false;
+    if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
     if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); });
     return {parcours: copie, bilan, tout, marche, finie};
   }
@@ -1013,6 +1177,10 @@
     copie.modules[id] = ligne;
     toucher(ligne, aujourdhui);
     noterJour(copie, aujourdhui);
+    // Le journal (lot G1) : un calcul du jour de plus dans la séance ouverte,
+    // juste ou pas.
+    compterEnCours(copie, EN_COURS.calculs, 1);
+    if (retour.juste) compterEnCours(copie, EN_COURS.justes, 1);
     const due = ligne.e[index] <= aujourdhui;
     if (retour.juste) {
       const lent = retour.type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
@@ -1020,6 +1188,8 @@
       else if (due) {
         ligne.b[index] = Math.min(SEUILS.revision.boites, boite + 1);
         ligne.e[index] = echeanceDeBoite(ligne.b[index], aujourdhui);
+        // Lot G1 : la boîte 4 atteinte pour la première fois — sue.
+        if (boite < SEUILS.revision.su && ligne.b[index] >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
       }
       ligne.x[index] = 0;
     } else {
@@ -1076,7 +1246,9 @@
     if (seanceOuverte(copie, aujourdhui)) return copie;
     const plan = planNeuf(copie, carte, aujourdhui, nouveautes);
     plan[PLAN.ouverte] = 1;
-    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, p: plan};
+    // Une séance NEUVE part de zéro (lot G1) : ce qu'avait fait une séance
+    // laissée ouverte un autre jour ne la suit pas.
+    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, p: plan, j: enCoursVide()};
     return copie;
   }
 
@@ -1098,6 +1270,79 @@
     return {
       semaine: parcours.seances.filter(jour => jour >= lundi && jour <= aujourdhui).length,
       aujourdhui: parcours.seances.filter(jour => jour === aujourdhui).length
+    };
+  }
+
+  // Les séances finies des 4 dernières semaines, du lundi au dimanche, la
+  // semaine en cours en dernier (jusqu'à aujourd'hui) — le calcul de Défi
+  // tables (seancesParSemaine, lot 5g). Les 60 séances gardées peuvent ne
+  // plus couvrir une vieille semaine : `seances` vaut null (« ? ») pour une
+  // semaine finie avant la plus ancienne gardée, et `plus` dit « au moins »
+  // (« 16+ ») pour la semaine où elle tombe.
+  const SEMAINES_AFFICHEES = 4;
+  function seancesParSemaine(parcours, aujourdhui = jourLocal()) {
+    const liste = parcours.seances.filter(jour => jour <= aujourdhui);
+    const lundi = lundiDe(aujourdhui);
+    const plusAncienne = parcours.seances.length >= SEUILS.seance.garder ? parcours.seances[0] : null;
+    const semaines = [];
+    for (let recul = SEMAINES_AFFICHEES - 1; recul >= 0; recul -= 1) {
+      const debut = ajouterJours(lundi, -7 * recul);
+      const fin = recul === 0 ? aujourdhui : ajouterJours(debut, 6);
+      if (plusAncienne && plusAncienne > fin) semaines.push({lundi: debut, seances: null, plus: false});
+      else semaines.push({lundi: debut, seances: liste.filter(jour => jour >= debut && jour <= fin).length, plus: Boolean(plusAncienne && plusAncienne >= debut)});
+    }
+    return semaines;
+  }
+
+  // « 3 », « 16+ » (au moins), « ? » (plus connu).
+  function texteSemaine(semaine) {
+    if (!semaine || semaine.seances === null) return "?";
+    return semaine.plus ? `${semaine.seances}+` : String(semaine.seances);
+  }
+
+  // Ce que l'élève pourra voir de sa semaine (lot G1, planche 1 du
+  // 07/11/2026 ; l'accueil est à refaire, en discussion à part — il garde
+  // « N fois cette semaine » en attendant), et ce que lira la page prof :
+  //   montrer   faux tant qu'il n'y a aucune séance dans les 4 dernières
+  //             semaines (une ligne de zéros ressemble à un reproche) ;
+  //   jours     les 7 jours, du lundi au dimanche : fait (une séance finie),
+  //             aujourdhui, apres (pas encore venu) ;
+  //   soirs     les jours de cette semaine avec une séance finie ;
+  //   semaines  les 4 dernières semaines (seancesParSemaine) ;
+  //   sues      les compétences devenues sues depuis lundi, et toujours
+  //             sues (une compétence redescendue ne compte plus) ;
+  //   avancees  les compétences entrées ou devenues sues depuis lundi
+  //             [{module, niveau}] — leurs modules ont « avancé ».
+  // Seulement les modules de la carte (un module réservé n'a pas de palier).
+  function semaineEleve(parcours, carte, aujourdhui = jourLocal()) {
+    const p = normaliserParcours(parcours);
+    const lundi = lundiDe(aujourdhui);
+    const jours = Array.from({length: 7}, (_, i) => {
+      const jour = ajouterJours(lundi, i);
+      // Un jour pas encore venu n'est jamais « fait », même avec une séance
+      // datée de lui (l'horloge d'un autre appareil) — correctif G1.
+      return {jour, fait: jour <= aujourdhui && p.seances.includes(jour), aujourdhui: jour === aujourdhui, apres: jour > aujourdhui};
+    });
+    const semaines = seancesParSemaine(p, aujourdhui);
+    const cetteSemaine = jour => Boolean(jour) && jour >= lundi && jour <= aujourdhui;
+    let sues = 0;
+    const avancees = [];
+    normaliserCarte(carte).modules.filter(fiche => Object.prototype.hasOwnProperty.call(NIVEAUX, fiche.id)).forEach(fiche => {
+      const ligne = p.modules[fiche.id];
+      if (!ligne) return;
+      ligne.b.forEach((boite, index) => {
+        if (!boite || !palierDe(carte, fiche.id, index + 1)) return;
+        if (cetteSemaine(ligne.s[index]) && boite >= SEUILS.revision.su) sues += 1;
+        if (cetteSemaine(ligne.d[index]) || cetteSemaine(ligne.s[index])) avancees.push({module: fiche.id, niveau: index + 1});
+      });
+    });
+    return {
+      montrer: semaines.some(semaine => semaine.seances),
+      jours,
+      soirs: jours.filter(jour => jour.fait && !jour.apres).length,
+      semaines,
+      sues,
+      avancees
     };
   }
 
@@ -1561,6 +1806,11 @@
       ligne.e[i] = source.e[i];
       ligne.x[i] = source.x[i];
       ligne.t[i] = ligne.b[i] ? Math.max(a.vu === ligne.vu ? a.t[i] : 0, b.vu === ligne.vu ? b.t[i] : 0) : 0;
+      // Les deux dates (lot G1) : le premier jour connu d'un côté ou de
+      // l'autre — elles ne sont posées qu'une fois, la plus ancienne est la
+      // vraie. Pas entrée : pas de date.
+      ligne.d[i] = ligne.b[i] ? dateLaPlusAncienne(a.d[i], b.d[i]) : null;
+      ligne.s[i] = ligne.b[i] ? dateLaPlusAncienne(a.s[i], b.s[i]) : null;
     }
     [...new Set([...Object.keys(a.c), ...Object.keys(b.c)])].sort((x, y) => Number(x) - Number(y)).forEach(cause => {
       ligne.c[cause] = Math.max(a.c[cause] || 0, b.c[cause] || 0);
@@ -1584,11 +1834,17 @@
       if (a.modules[id] || b.modules[id]) fusion.modules[id] = fusionnerModule(id, a.modules[id], b.modules[id]);
     });
     // La séance et son plan : du côté qui a le plus de séances finies, puis
-    // le jour le plus récent, puis l'étape la plus avancée ; à égalité
-    // complète, le texte le plus petit.
-    const rang = cote => [cote.seance.n, cote.seance.jour || "", cote.seance.etape, JSON.stringify(cote.seance.p)];
+    // le jour le plus récent, puis l'étape la plus avancée, puis la séance
+    // OUVERTE ; à égalité complète, le texte le plus petit.
+    // Correctif G1 : une séance ne se referme qu'en finissant (son compte
+    // monte) — au même compte, au même jour et à la même étape, l'ouverte
+    // est donc la plus récente. Avant, le texte le plus petit (la fermée)
+    // gagnait : une séance ouverte sans étape finie, rechargée avant que le
+    // serveur l'ait reçue, se refermait et perdait ce qu'elle avait fait.
+    const rang = cote => [cote.seance.n, cote.seance.jour || "", cote.seance.etape, cote.seance.p[PLAN.ouverte], JSON.stringify(cote.seance.p)];
     const [ra, rb] = [rang(a), rang(b)];
-    const aDevant = ra[0] !== rb[0] ? ra[0] > rb[0] : ra[1] !== rb[1] ? ra[1] > rb[1] : ra[2] !== rb[2] ? ra[2] > rb[2] : ra[3] <= rb[3];
+    const aDevant = ra[0] !== rb[0] ? ra[0] > rb[0] : ra[1] !== rb[1] ? ra[1] > rb[1] : ra[2] !== rb[2] ? ra[2] > rb[2]
+      : ra[3] !== rb[3] ? ra[3] > rb[3] : ra[4] <= rb[4];
     fusion.seance = cloner(aDevant ? a.seance : b.seance);
     // La même séance des deux côtés (même compte, même jour) : les tests
     // faits, la nouveauté (0 à faire < 2 faite < 3 arrêtée), les nouveautés
@@ -1603,15 +1859,63 @@
         p[i] = Math.max(a.seance.p[i], b.seance.p[i]);
       });
       if (p[PLAN.nouveaute] === NOUVEAUTE.aFaire && p[PLAN.reussies] >= prevuesDuPlan(p)) p[PLAN.nouveaute] = NOUVEAUTE.faite;
+      // Ce que la séance a fait (lot G1) : le plus grand des deux, compte
+      // par compte, comme le plan. Ouverte d'un côté seulement : celui-là.
+      if (p[PLAN.ouverte] === 1) {
+        const ouverte = cote => (cote.seance.p[PLAN.ouverte] === 1 ? cote.seance.j : enCoursVide());
+        fusion.seance.j = EN_COURS_MAX.map((_, i) => Math.max(ouverte(a)[i], ouverte(b)[i]));
+      }
     }
-    // Les séances finies : par date, le plus grand des deux comptes.
-    const compte = liste => liste.reduce((m, jour) => m.set(jour, (m.get(jour) || 0) + 1), new Map());
-    const [ca, cb] = [compte(a.seances), compte(b.seances)];
-    const seances = [];
-    [...new Set([...ca.keys(), ...cb.keys()])].forEach(jour => {
-      for (let i = 0; i < Math.max(ca.get(jour) || 0, cb.get(jour) || 0); i += 1) seances.push(jour);
+    if (fusion.seance.p[PLAN.ouverte] !== 1) fusion.seance.j = enCoursVide();
+    // Les séances finies : par date, le plus grand des deux comptes. Le
+    // journal suit ses séances (lot G1), ENTRÉE PAR ENTRÉE (correctif G1,
+    // relecture de Codex) — jamais une journée entière d'un côté :
+    //  - les entrées d'un jour s'alignent depuis le début (les séances d'un
+    //    jour s'ajoutent à la fin : une vieille copie en a le début) ;
+    //  - une journée COUPÉE par la borne (la date la plus ancienne d'une
+    //    liste pleine, 60 séances) n'en garde que la fin : ce jour-là, les
+    //    entrées s'alignent depuis la fin, et celles du côté coupé font foi
+    //    aux places qu'elles couvrent (une vieille copie qui a encore le
+    //    début de la journée ne remplace pas ce qui l'a suivi) ;
+    //  - à une même place, l'entrée qui en sait le plus (le moins de « pas
+    //    connu ») gagne, puis le plus grand total, puis un choix fixe sur le
+    //    texte : le même dans les deux sens. L'entrée entière vient d'un
+    //    seul côté, les colonnes ne se mélangent pas.
+    // Le format ne bouge pas (pas d'identifiant de séance).
+    const parJour = cote => pairesDe(cote).reduce((m, paire) => m.set(paire.jour, [...(m.get(paire.jour) || []), paire.entree]), new Map());
+    const [ja, jb] = [parJour(a), parJour(b)];
+    const coupee = cote => (cote.seances.length >= SEUILS.seance.garder ? cote.seances[0] : null);
+    const [coupeeA, coupeeB] = [coupee(a), coupee(b)];
+    const connues = entree => entree.filter(v => v >= 0).length;
+    const total = entree => entree.reduce((somme, v) => somme + Math.max(0, v), 0);
+    const meilleure = (x, y) => {
+      if (connues(x) !== connues(y)) return connues(x) > connues(y) ? x : y;
+      if (total(x) !== total(y)) return total(x) > total(y) ? x : y;
+      return JSON.stringify(x) >= JSON.stringify(y) ? x : y;
+    };
+    const paires = [];
+    [...new Set([...ja.keys(), ...jb.keys()])].sort().forEach(jour => {
+      const ea = ja.get(jour) || [];
+      const eb = jb.get(jour) || [];
+      const longueur = Math.max(ea.length, eb.length);
+      const [aCoupe, bCoupe] = [jour === coupeeA, jour === coupeeB];
+      const depuisLaFin = aCoupe || bCoupe;
+      const lire = (liste, place) => {
+        const index = depuisLaFin ? place - (longueur - liste.length) : place;
+        return index >= 0 && index < liste.length ? liste[index] : null;
+      };
+      for (let place = 0; place < longueur; place += 1) {
+        const [x, y] = [lire(ea, place), lire(eb, place)];
+        let gagne;
+        if (!x || !y) gagne = x || y;
+        else if (aCoupe !== bCoupe) gagne = aCoupe ? x : y;
+        else gagne = meilleure(x, y);
+        paires.push({jour, entree: gagne.slice()});
+      }
     });
-    fusion.seances = normaliserSeances(seances);
+    const rangees = rangerSeances(paires);
+    fusion.seances = rangees.seances;
+    fusion.journal = rangees.journal;
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
     return normaliserParcours(fusion);
   }
@@ -1662,7 +1966,11 @@
         paliers: ligne.b.map((_, index) => palierDe(carte, fiche.id, index + 1)),
         boites: ligne.b.slice(),
         su: Boolean(ligne.ok),
-        vu: ligne.vu
+        vu: ligne.vu,
+        // Lot G1 (pour la page prof, lot G2) : le jour où chaque compétence
+        // est entrée, et celui où elle est devenue sue (null : pas connu).
+        entrees: ligne.d.slice(),
+        sues: ligne.s.slice()
       });
       etats.forEach((etat, index) => {
         if (etat !== "revoir" && etat !== "classe") return;
@@ -1705,6 +2013,15 @@
       causes,
       seances: {semaine: seances.filter(jour => jour >= lundi).length, quatreSemaines: seances.filter(jour => jour >= depuis).length,
         total: parcours.seances.length, jours: joursSemaine},
+      // Lot G1 (pour la page prof, lot G2) : les 4 dernières semaines, et le
+      // journal, une séance finie par ligne, de la plus ancienne à la plus
+      // récente — null : pas connu (une séance finie avant le lot G1).
+      semaines: seancesParSemaine(parcours, aujourdhui),
+      journal: pairesDe(parcours).map(({jour, entree}) => {
+        const ligne = {jour};
+        JOURNAL.forEach((champ, index) => { ligne[champ] = entree[index] >= 0 ? entree[index] : null; });
+        return ligne;
+      }),
       dernier: dernier && vus.length ? (dernier >= vus[vus.length - 1] ? dernier : vus[vus.length - 1]) : dernier || (vus.length ? vus[vus.length - 1] : null)
     };
   }
@@ -1774,6 +2091,11 @@
     fileSeance,
     demain,
     bilanSeances,
+    seancesParSemaine,
+    texteSemaine,
+    semaineEleve,
+    noterTemps,
+    JOURNAL,
     etatCompetence,
     resumeProf,
     mesurer,

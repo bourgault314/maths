@@ -188,8 +188,10 @@ const CATALOGUE_APPLIS = [
     // depuis le lot F1 — 5 avant…) sont celles du moteur, qui renormalise
     // tout ce qu'il relit. Le plan de la séance « p » a 7 nombres depuis le
     // lot F1 (5 avant) : rien à déclarer, c'est une liste d'entiers.
-    // Pire cas (74 modules, toutes les compétences entrées, 8 causes) :
-    // 1 639 clés, 21 207 octets (bornes du serveur : 2 000 / 40 000).
+    // Pire cas (74 modules, toutes les compétences entrées, 12 causes) :
+    // 1 639 clés, 21 107 octets avant le lot G1 ; 1 795 clés, 28 853 octets
+    // depuis (les deux dates de chaque compétence, le journal des 60
+    // séances, `j` à six nombres) — bornes du serveur : 2 000 / 40 000.
     // Garde-fou : tests/parcours-reference-defi-calcul.json, généré par
     // scripts/generer-parcours-reference-defi-calcul.mjs --ecrire.
     'defi-calcul' => [
@@ -198,8 +200,13 @@ const CATALOGUE_APPLIS = [
         'url' => 'https://mathsgo.re/outils/calcul_mental/defi_calcul_modules.html',
         'ancre' => null,
         'disponible' => true,
-        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'c',
-            'seance', 'jour', 'etape', 'n', 'p', 'seances', 'jours'],
+        // Lot G1 « journal + accueil » (07/11/2026) : `d` et `s` (les deux
+        // dates d'une compétence, des listes de dates ou null), `j` (ce que
+        // la séance ouverte a fait, une liste d'entiers) et `journal` (six
+        // listes d'entiers alignées sur `seances`, -1 = pas connu).
+        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'd', 's', 'c',
+            'seance', 'jour', 'etape', 'n', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
+            'rouges', 'minutes', 'jours'],
         'mots' => [],
         'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances finies
@@ -221,7 +228,10 @@ const CATALOGUE_APPLIS = [
         // l'appareil, et la page rechargée le renverra, fusionné. La lecture
         // n'est pas touchée. SI UN JOUR ON REVIENT EN ARRIÈRE sur le moteur de
         // Défi calcul, il faut aussi revenir en arrière ici.
-        'version_min' => 4,
+        // Lot G1 « journal + accueil » (07/11/2026) : 5. Une page de version 4
+        // ne connaît ni le journal ni les dates des compétences : relue puis
+        // renvoyée, sa progression les effacerait.
+        'version_min' => 5,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',

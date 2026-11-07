@@ -36,7 +36,8 @@ test("page élève : chaque lecture de la séance passe le réglage au moteur", 
   // La carte : « Une 2e chose nouvelle · si l'entraînement est réussi ».
   assert.match(page, /etape\.rang \? `Une \$\{etape\.rang\}e chose nouvelle` : "Une chose nouvelle"/);
   assert.match(page, /const DETAIL_NOUVEAU_RANG = "si l’entraînement est réussi";/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-1/, "le moteur change d'adresse");
+  // Lot G1 : 20261107-2 ; son correctif (relecture de Codex) : 20261107-3.
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261107-3/, "le moteur change d'adresse");
 });
 
 test("page prof : « Nouveautés par séance » dans Régler Défi calcul, envoyé comme réglage de classe", async () => {
@@ -58,9 +59,11 @@ test("serveur : une page d'avant F1 (version 3) ne réécrit pas la progression 
   const applis = await lire("../_serveur/public/lib/applis.php");
   const api = await lire("../_serveur/public/api/parcours.php");
   const moteur = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.match(moteur, /const VERSION = 4;/);
+  // Lot G1 « journal + accueil » : 5, et le serveur suit (une page de
+  // version 4 effacerait le journal et les dates des compétences).
+  assert.match(moteur, /const VERSION = 5;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 4,/);
+  assert.match(bloc, /'version_min' => 5,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 1, "Défi calcul seul");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   // Avant l'écriture, pas avant la lecture.
