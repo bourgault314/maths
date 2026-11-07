@@ -47,7 +47,8 @@
   // du 20e kyu au 20e dan : le nombre de chiffres, le nombre de nombres et le
   // temps de TOUTE la série, en dixièmes de seconde (pas le temps par nombre).
   // Chaque grade = 10 calculs ; réussi à 7 justes sur 10 (« 10問中7題以上の
-  // 正解で合格 »), « presque » à 5 ou 6 (準合格). Additions seulement.
+  // 正解で合格 »), « presque » à 5 ou 6 (準合格). Du 20e au 11e kyu : sans
+  // retenue (voir SANS_RETENUE, sous la grille) ; ensuite, des additions.
   // Le numéro d'un grade va de 1 (20e kyu) à 40 (20e dan).
   const GRADES = Object.freeze([
     [1, 3, 50], [1, 3, 50], [1, 5, 70], [1, 8, 100], [1, 10, 120], [1, 12, 150], [1, 15, 150], [1, 20, 150], [2, 10, 100], [2, 15, 150],
@@ -56,6 +57,33 @@
     [3, 15, 28], [3, 15, 26], [3, 15, 24], [3, 15, 22], [3, 15, 20], [3, 15, 19], [3, 15, 18], [3, 15, 17], [3, 15, 16], [3, 15, 15]
   ].map(([chiffres, nombres, dixiemes]) => Object.freeze({chiffres, nombres, dixiemes})));
   const NB_GRADES = GRADES.length;
+  // SANS RETENUE (07/11/2026, après la question de Gwenaël « c'est quoi la
+  // différence entre le 19 et le 20 ? ») : la grille ci-dessus ne dit pas
+  // tout. Trois grilles détaillées (kentei.soroban-soft.com, kani-math.com,
+  // la grille de l'école rakutama-soroban.com) précisent : « 繰り上がりなし »
+  // (sans retenue) au début — du 20e au 13e kyu en 1 chiffre, puis le 12e en
+  // dizaines rondes (« 10+20 ») et le 11e en 2 chiffres (« 11+22 ») ;
+  // « 11級まではひき算あり » (des soustractions jusqu'au 11e kyu) et
+  // « 10級からたし算のみ » (additions seules dès le 10e kyu, où la retenue
+  // arrive : d'où ses 2 nombres seulement). Vingt nombres d'un chiffre sans retenue, ce n'est
+  // possible qu'en ajoutant ET en enlevant : chaque colonne du boulier reste
+  // entre 0 et 9. Le 20e et le 19e kyu restent identiques dans ces grilles :
+  // choix de Claude, le 20e kyu n'a que des additions (total jusqu'à 9), le
+  // 19e ajoute les soustractions.
+  // Grade → {forme : "unites" (1 chiffre), "dizaines" (10, 20 … 90) ou
+  // "deux" (2 chiffres), plusmoins : + et −}.
+  const SANS_RETENUE = Object.freeze({
+    1: Object.freeze({forme: "unites", plusmoins: false}),
+    2: Object.freeze({forme: "unites", plusmoins: true}),
+    3: Object.freeze({forme: "unites", plusmoins: true}),
+    4: Object.freeze({forme: "unites", plusmoins: true}),
+    5: Object.freeze({forme: "unites", plusmoins: true}),
+    6: Object.freeze({forme: "unites", plusmoins: true}),
+    7: Object.freeze({forme: "unites", plusmoins: true}),
+    8: Object.freeze({forme: "unites", plusmoins: true}),
+    9: Object.freeze({forme: "dizaines", plusmoins: true}),
+    10: Object.freeze({forme: "deux", plusmoins: true})
+  });
   const GRADE_CALCULS = 10;
   const GRADE_REUSSI = 7;
   const GRADE_PRESQUE = 5;
@@ -84,13 +112,15 @@
   function reglagesGrade(n, son) {
     if (!gradeValide(n)) return null;
     const g = GRADES[n - 1];
+    const sr = SANS_RETENUE[n];
     return {
-      operations: "plus",
+      operations: sr && sr.plusmoins ? "plusmoins" : "plus",
       chiffresMin: g.chiffres,
       chiffresMax: g.chiffres,
       nombres: g.nombres,
       calculs: GRADE_CALCULS,
       grade: n,
+      ...(sr ? {sansRetenue: sr.forme} : {}),
       tempsMs: g.dixiemes * 100 / g.nombres,
       son: SONS.includes(son) ? son : "bip"
     };
@@ -105,12 +135,23 @@
     return "pasencore";
   }
 
+  // « 20 nombres d'un chiffre », « 5 nombres d'un chiffre, + et −, sans
+  // retenue », « 10 dizaines rondes, + et −, sans retenue ».
+  function texteNombresGrade(n) {
+    if (!gradeValide(n)) return "";
+    const g = GRADES[n - 1];
+    const sr = SANS_RETENUE[n];
+    const quoi = sr && sr.forme === "dizaines" ? `${g.nombres} dizaines rondes`
+      : `${g.nombres} nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`}`;
+    if (!sr) return quoi;
+    return `${quoi}${sr.plusmoins ? ", + et −" : ""}, sans retenue`;
+  }
+
   // « 20 nombres d'un chiffre · 15 s en tout »
   function texteGrade(n) {
     if (!gradeValide(n)) return "";
     const g = GRADES[n - 1];
-    const chiffres = g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`;
-    return `${g.nombres} nombres ${chiffres} · ${secondes(g.dixiemes / 10)} en tout`;
+    return `${texteNombresGrade(n)} · ${secondes(g.dixiemes / 10)} en tout`;
   }
 
   // ---------------------------------------------------------------------
@@ -120,12 +161,19 @@
   // Gwenaël, toutes dans un même cadre, dans ./anzan-cartes/), et au dos la
   // créature, un message et un proverbe. Textes et images se refont depuis
   // _sources/anzan-cartes/ (generer_textes.py écrit les lignes ci-dessous).
-  // Les dan n'ont pas encore leur série : un dan réussi montre une carte
-  // simple « 🥋 1er dan ».
+  // Les dan ont leur série (CARTES_DAN, plus bas, 07/11/2026).
   // Rien de nouveau n'est enregistré : une carte est gagnée quand son grade
   // est réussi (gradeReussi du parcours).
   const DOSSIER_CARTES = "./anzan-cartes/";
+  // Les kyu font 640 × 904 (vignettes 160 × 226), les dan 640 × 984
+  // (vignettes 160 × 246) : leur timbre doré est plus haut. Chaque carte
+  // porte sa taille ; la page ne déforme jamais une carte.
+  const TAILLES_CARTES = Object.freeze({
+    kyu: Object.freeze({largeur: 640, hauteur: 904, vignetteLargeur: 160, vignetteHauteur: 226}),
+    dan: Object.freeze({largeur: 640, hauteur: 984, vignetteLargeur: 160, vignetteHauteur: 246})
+  });
   const carte = c => Object.freeze({...c, proverbe: Object.freeze(c.proverbe),
+    ...TAILLES_CARTES[c.dan ? "dan" : "kyu"],
     image: `${DOSSIER_CARTES}${c.image}.webp`, vignette: `${DOSSIER_CARTES}${c.image}-vignette.webp`});
   const CARTES_KYU = Object.freeze([
     carte({kyu: 20, nom: "Kaeru", sens: "la grenouille", image: "kyu20-kaeru",
@@ -209,9 +257,108 @@
       message: "Félicitations pour ton 1er\u00a0Kyu\u00a0! Tu as atteint l’excellence\u00a0: tel le noble Kirin, ta maîtrise et ta sagesse inspirent tous ceux qui t’entourent.",
       proverbe: {japonais: "温故知新", lecture: "onko chishin", francais: "Étudie l’ancien pour découvrir le nouveau.", idee: ""}})
   ]);
+
+  // Les cartes des dan (lot « anzan-dan », 07/11/2026)
+  // Une carte par dan, du 1er au 20e : une créature ou un lieu japonais
+  // (images faites par GPT dans le même timbre que les kyu, mais doré, dans
+  // ./anzan-cartes/, 640 × 984 : plus hautes que les kyu, 640 × 904), et au dos
+  // la créature et l'élément japonais qu'on voit sur l'image, un message et un
+  // vrai proverbe japonais (aucun ne reprend un proverbe des kyu).
+  // Même structure que CARTES_KYU, avec « dan » à la place de « kyu ».
+  const CARTES_DAN = Object.freeze([
+    carte({dan: 1, nom: "Kuma", sens: "l’ours", image: "dan01-kuma",
+      creature: "L’ours brun (kuma) d’Hokkaidō pêche le saumon dans les rivières. Les Aïnous, le peuple du nord du Japon, l’honoraient comme le dieu de la montagne (kimun kamuy). La corde de paille tressée (shimenawa) et les papiers blancs en zigzag (shide) montrent que l’arbre est sacré (shinboku)\u00a0: un dieu y habite.",
+      message: "Bravo pour ton 1er\u00a0Dan\u00a0! Te voilà dans la série des maîtres. Comme l’ours, reste calme et puissant\u00a0: les nombres défilent, ta tête reste tranquille.",
+      proverbe: {japonais: "思い立ったが吉日", lecture: "omoitatta ga kichijitsu", francais: "Le jour où l’on décide de commencer est le bon jour.", idee: "N’attends pas le moment parfait pour te lancer."}}),
+    carte({dan: 2, nom: "Taka", sens: "le faucon", image: "dan02-taka",
+      creature: "Le faucon (taka) chasse grâce à son regard perçant. Au Japon, le plus beau premier rêve de l’année (hatsuyume) montre, dans cet ordre, le mont Fuji, un faucon et une aubergine (nasu)\u00a0: «\u00a0Ichi Fuji, ni taka, san nasubi\u00a0». Les trois sont sur la carte\u00a0!",
+      message: "Félicitations pour ton 2e\u00a0Dan\u00a0! Ton regard est aussi vif que celui du faucon\u00a0: un nombre passe en un éclair, et tu l’as déjà attrapé.",
+      proverbe: {japonais: "能ある鷹は爪を隠す", lecture: "nō aru taka wa tsume o kakusu", francais: "Le faucon habile cache ses serres.", idee: "Les vrais talents n’ont pas besoin de se vanter."}}),
+    carte({dan: 3, nom: "Kamaitachi", sens: "les belettes du vent", image: "dan03-kamaitachi",
+      creature: "Le Kamaitachi est un esprit du vent\u00a0: trois belettes (itachi) qui filent dans un tourbillon, si vite qu’on ne les voit jamais. Le fūrin est une clochette à vent en verre, accrochée sous le toit en été\u00a0: quand la brise la fait tinter, on se sent au frais. Momiji (feuilles d’érable).",
+      message: "Bravo pour ton 3e\u00a0Dan\u00a0! Tes calculs filent comme les belettes dans le vent, si vite qu’on ne les voit pas passer.",
+      proverbe: {japonais: "三人寄れば文殊の知恵", lecture: "sannin yoreba monju no chie", francais: "À trois, on est aussi sage que Monju.", idee: "Monju est le saint bouddhiste de la sagesse\u00a0: à plusieurs, on trouve plus d’idées."}}),
+    carte({dan: 4, nom: "Namazu", sens: "le poisson-chat", image: "dan04-namazu",
+      creature: "Le Namazu est un poisson-chat géant qui vit sous le Japon\u00a0: quand il s’agite, la terre tremble. Le dieu du sanctuaire de Kashima le tient immobile avec une pierre sacrée posée sur sa tête, la kaname-ishi. La corde (shimenawa) et les papiers (shide) qui l’entourent montrent qu’elle est sacrée.",
+      message: "Félicitations pour ton 4e\u00a0Dan\u00a0! Comme la pierre posée sur le Namazu, ta concentration tient bon\u00a0: même quand tout va très vite, rien ne t’ébranle.",
+      proverbe: {japonais: "一念岩をも通す", lecture: "ichinen iwa o mo tōsu", francais: "Une volonté ferme traverse même le rocher.", idee: "Quand on veut vraiment, on surmonte les obstacles."}}),
+    carte({dan: 5, nom: "Shachihoko", sens: "", image: "dan05-shachihoko",
+      creature: "Le Shachihoko a une tête de tigre et un corps de poisson. Posé par paires sur le toit des châteaux, il devait faire venir la pluie pour protéger le château du feu. Le plus célèbre, en or, est à Nagoya. Au fond, le donjon (tenshu) d’un château japonais et ses toits superposés. Sakura (cerisiers).",
+      message: "Bravo pour ton 5e\u00a0Dan\u00a0! Te voilà tout en haut du château, comme le Shachihoko. De là-haut, tu vois loin… et tu calcules de plus en plus vite\u00a0!",
+      proverbe: {japonais: "猿も木から落ちる", lecture: "saru mo ki kara ochiru", francais: "Même le singe tombe de l’arbre.", idee: "Même les meilleurs se trompent\u00a0: reste attentif, même quand c’est facile."}}),
+    carte({dan: 6, nom: "Shishi", sens: "le lion", image: "dan06-shishi",
+      creature: "Le Shishi est le lion des légendes japonaises\u00a0: il chasse le malheur. Au Nouvel An et pendant les fêtes, on danse le shishi-mai, la danse du lion, au son du taiko, le grand tambour japonais qu’on frappe avec des baguettes (bachi). Botan (pivoine)\u00a0: la reine des fleurs accompagne le roi des animaux.",
+      message: "Félicitations pour ton 6e\u00a0Dan\u00a0! Tes calculs dansent au rythme du taiko. Le tempo s’accélère, et tu suis chaque battement\u00a0!",
+      proverbe: {japonais: "獅子奮迅", lecture: "shishi funjin", francais: "Avec la fougue d’un lion qui s’élance.", idee: "Donne-toi à fond, avec toute ton énergie."}}),
+    carte({dan: 7, nom: "Ōkami", sens: "le loup", image: "dan07-okami",
+      creature: "Le loup japonais (ōkami), aujourd’hui disparu, était honoré comme gardien des montagnes\u00a0: il protégeait les champs des cerfs et des sangliers. On rapproche son nom de 大神, «\u00a0grand dieu\u00a0». Le torii vermillon marque le début du chemin sacré qui monte au sanctuaire. Sugi (cèdres du Japon).",
+      message: "Bravo pour ton 7e\u00a0Dan\u00a0! Comme le loup gardien de la montagne, tu montes marche après marche, sans jamais lâcher ta concentration.",
+      proverbe: {japonais: "情けは人の為ならず", lecture: "nasake wa hito no tame narazu", francais: "La bonté n’est pas seulement pour les autres.", idee: "Le bien que tu fais finit par te revenir."}}),
+    carte({dan: 8, nom: "Raijū", sens: "la bête du tonnerre", image: "dan08-raiju",
+      creature: "Le Raijū accompagne Raijin, le dieu de l’orage\u00a0: on raconte qu’il descend du ciel avec la foudre. Les tambours en arc de cercle sont ceux de Raijin\u00a0: quand il les frappe, le tonnerre gronde. Sur chacun, le mitsudomoe, un motif de trois virgules qui tournent.",
+      message: "Félicitations pour ton 8e\u00a0Dan\u00a0! Tes réponses tombent aussi vite que la foudre. Le tonnerre du Raijū gronde pour toi\u00a0!",
+      proverbe: {japonais: "電光石火", lecture: "denkō sekka", francais: "L’éclair et l’étincelle du silex.", idee: "Agir en un instant, vif comme l’éclair."}}),
+    carte({dan: 9, nom: "Ryūme", sens: "le cheval-dragon", image: "dan09-ryume",
+      creature: "Selon une légende chinoise, le cheval-dragon sortit du fleuve Jaune avec, sur le dos, un dessin de points (le Hetu), qu’on représente avec les nombres de 1\u00a0à 10. Les vagues rappellent La Grande Vague de Kanagawa, l’estampe d’Hokusai (vers 1831), sans doute l’image japonaise la plus célèbre au monde.",
+      message: "Bravo pour ton 9e\u00a0Dan\u00a0! Comme le cheval-dragon sur les vagues, tu galopes sur les nombres sans jamais te laisser emporter.",
+      proverbe: {japonais: "塞翁が馬", lecture: "saiō ga uma", francais: "Le cheval du vieil homme de la frontière.", idee: "Un malheur peut devenir une chance\u00a0: une erreur aujourd’hui t’aide à réussir demain."}}),
+    carte({dan: 10, nom: "Hakutaku", sens: "", image: "dan10-hakutaku",
+      creature: "On raconte que le Hakutaku, une bête blanche qui sait tout, décrivit à l’Empereur Jaune de Chine 11\u00a0520\u00a0sortes de créatures, et l’empereur fit tout écrire. Au Japon, son image servait de porte-bonheur contre les maladies. Le makimono est un long rouleau qu’on déroule de droite à gauche, au fil de la lecture.",
+      message: "Félicitations pour ton 10e\u00a0Dan\u00a0! Te voilà à mi-chemin des dan. Comme le sage Hakutaku, tu en sais déjà beaucoup… et il te reste tout un rouleau à écrire\u00a0!",
+      proverbe: {japonais: "一を聞いて十を知る", lecture: "ichi o kiite jū o shiru", francais: "Entendre un, comprendre dix.", idee: "Un esprit vif comprend beaucoup à partir de peu."}}),
+    carte({dan: 11, nom: "Genbu", sens: "la tortue noire", image: "dan11-genbu",
+      creature: "Genbu, la tortue noire enlacée d’un serpent, garde le Nord et l’hiver. C’est l’un des quatre gardiens des points cardinaux, avec le tigre blanc, l’oiseau vermillon et le dragon azur. Le yukimi-dōrō est la «\u00a0lanterne pour regarder la neige\u00a0» des jardins\u00a0: basse, avec un large toit où la neige s’accumule.",
+      message: "Bravo pour ton 11e\u00a0Dan\u00a0! Te voilà parmi les quatre gardiens. Comme Genbu, tu as la solidité de la tortue et la vivacité du serpent.",
+      proverbe: {japonais: "亀の甲より年の功", lecture: "kame no kō yori toshi no kō", francais: "L’expérience des années vaut mieux que la carapace de la tortue.", idee: "Tout ce que tu as appris te protège mieux qu’une carapace."}}),
+    carte({dan: 12, nom: "Byakko", sens: "le tigre blanc", image: "dan12-byakko",
+      creature: "Byakko, le tigre blanc, garde l’Ouest et l’automne. Le karesansui est un jardin sec\u00a0: pas une goutte d’eau, mais du gravier ratissé qui dessine des vagues autour des rochers, comme des îles dans la mer. Pour les moines zen, ratisser est un exercice de concentration. Take (bambou).",
+      message: "Félicitations pour ton 12e\u00a0Dan\u00a0! Comme le tigre blanc, tu avances avec calme et précision… et ta vitesse impressionne.",
+      proverbe: {japonais: "虎穴に入らずんば虎子を得ず", lecture: "koketsu ni irazunba koji o ezu", francais: "Qui n’entre pas dans l’antre du tigre n’attrape pas son petit.", idee: "Pour réussir, il faut oser."}}),
+    carte({dan: 13, nom: "Suzaku", sens: "l’oiseau vermillon", image: "dan13-suzaku",
+      creature: "Suzaku, l’oiseau vermillon aux ailes de flammes, garde le Sud et l’été. L’allée de torii rappelle le sanctuaire Fushimi Inari, à Kyōto\u00a0: des milliers de portes vermillon s’y suivent dans la montagne, chacune offerte pour remercier ou pour faire un vœu.",
+      message: "Bravo pour ton 13e\u00a0Dan\u00a0! Les nombres défilent comme les torii sous les ailes de Suzaku\u00a0: un, puis un autre, toujours plus vite.",
+      proverbe: {japonais: "立つ鳥跡を濁さず", lecture: "tatsu tori ato o nigosazu", francais: "L’oiseau qui s’envole ne laisse pas l’eau troublée derrière lui.", idee: "Termine proprement ce que tu fais, jusqu’au bout."}}),
+    carte({dan: 14, nom: "Seiryū", sens: "le dragon azur", image: "dan14-seiryu",
+      creature: "Seiryū, le dragon azur, garde l’Est et le printemps. Les cinq toits de la pagode bouddhiste (gojū-no-tō) représenteraient la terre, l’eau, le feu, le vent et le ciel\u00a0; grâce à son pilier central, elle résiste bien aux tremblements de terre. Sakura (cerisiers en fleurs).",
+      message: "Félicitations pour ton 14e\u00a0Dan\u00a0! Comme le dragon azur au lever du soleil, ta maîtrise monte chaque jour un peu plus haut.",
+      proverbe: {japonais: "青は藍より出でて藍より青し", lecture: "ao wa ai yori idete ai yori aoshi", francais: "Le bleu vient de l’indigo, mais il est plus bleu que l’indigo.", idee: "L’élève peut dépasser son maître."}}),
+    carte({dan: 15, nom: "Kyūbi", sens: "le renard à neuf queues", image: "dan15-kyubi",
+      creature: "On raconte qu’un renard gagne des queues en vieillissant et en devenant plus sage\u00a0: avec neuf, le Kyūbi a des siècles de savoir. Sur la marche repose un kitsune-men, le masque de renard qu’on porte aux fêtes\u00a0: le renard est le messager du dieu Inari. Kitsunebi (feux de renard), fuji (glycine).",
+      message: "Bravo pour ton 15e\u00a0Dan\u00a0! Le Kyūbi a gagné ses neuf queues une à une\u00a0; toi aussi, tu as gagné tes grades un à un, avec patience et intelligence.",
+      proverbe: {japonais: "大器晩成", lecture: "taiki bansei", francais: "Les grands talents mûrissent lentement.", idee: ""}}),
+    carte({dan: 16, nom: "Kujaku", sens: "le paon", image: "dan16-kujaku",
+      creature: "Au Japon, le paon (kujaku) porte Kujaku Myōō, un protecteur bouddhiste\u00a0: on dit qu’il mange les serpents venimeux et éloigne le malheur. Le byōbu est un paravent pliant (son nom veut dire «\u00a0qui arrête le vent\u00a0»)\u00a0; dans les palais, il est couvert de feuilles d’or. Fuji (glycine).",
+      message: "Félicitations pour ton 16e\u00a0Dan\u00a0! Ton calcul est devenu un art, aussi fin que les plumes du paon blanc. Déploie tout ton talent\u00a0!",
+      proverbe: {japonais: "絵に描いた餅", lecture: "e ni kaita mochi", francais: "Un gâteau de riz en peinture ne se mange pas.", idee: "Un projet qui reste sur le papier ne sert à rien\u00a0: passe à l’action."}}),
+    carte({dan: 17, nom: "Takarabune", sens: "le bateau des trésors", image: "dan17-takarabune",
+      creature: "Le Takarabune est le bateau des sept dieux du bonheur (Shichifukujin). Au Nouvel An, on glisse son image sous l’oreiller pour faire un beau premier rêve. Sur la voile, le caractère 宝 (takara) veut dire «\u00a0trésor\u00a0». À bord\u00a0: des ballots de riz (tawara), des bourses, un coffre et des pièces d’or.",
+      message: "Bravo pour ton 17e\u00a0Dan\u00a0! Ta vitesse et ta précision sont un vrai trésor. Ton bateau est bien chargé\u00a0: cap sur les derniers grades\u00a0!",
+      proverbe: {japonais: "宝の持ち腐れ", lecture: "takara no mochigusare", francais: "Un trésor qu’on garde sans s’en servir finit par se gâter.", idee: "Un talent qu’on n’utilise pas se perd\u00a0: continue de t’entraîner."}}),
+    carte({dan: 18, nom: "Fujisan", sens: "le mont Fuji", image: "dan18-fujisan",
+      creature: "Le Fuji, volcan sacré, est la plus haute montagne du Japon (3\u00a0776\u00a0m). Dans «\u00a0Fujisan\u00a0», san ne veut pas dire «\u00a0monsieur\u00a0»\u00a0: c’est 山, «\u00a0montagne\u00a0». Le 1er\u00a0janvier, on se lève tôt pour voir le premier lever de soleil de l’année (hatsuhinode). Quand le soleil se pose pile sur le sommet, c’est le «\u00a0Fuji diamant\u00a0».",
+      message: "Félicitations pour ton 18e\u00a0Dan\u00a0! Le sommet est en vue. Comme le soleil sur le Fuji, ton talent brille au-dessus des nuages.",
+      proverbe: {japonais: "一年の計は元旦にあり", lecture: "ichinen no kei wa gantan ni ari", francais: "Le plan de toute l’année se fait le jour de l’an.", idee: "Un bon départ prépare la suite\u00a0: fixe-toi un objectif."}}),
+    carte({dan: 19, nom: "Hakuryū", sens: "le dragon blanc", image: "dan19-hakuryu",
+      creature: "Comme tous les dragons japonais, Hakuryū, le dragon blanc, règne sur les eaux\u00a0; et au Japon, les animaux blancs sont vus comme des messagers des dieux. Le torii dans la mer rappelle celui du sanctuaire d’Itsukushima, sur l’île de Miyajima\u00a0: à marée haute, il semble flotter. Mangetsu (pleine lune).",
+      message: "Bravo pour ton 19e\u00a0Dan\u00a0! Plus qu’un grade avant le sommet. Comme le dragon blanc sous la lune, tu calcules vite, avec grâce et sang-froid.",
+      proverbe: {japonais: "上には上がある", lecture: "ue ni wa ue ga aru", francais: "Au-dessus du meilleur, il y a toujours mieux.", idee: "Il y a toujours plus haut à viser."}}),
+    carte({dan: 20, nom: "Ōryū", sens: "le dragon jaune", image: "dan20-oryu",
+      creature: "Au centre des quatre gardiens (tortue noire du Nord, tigre blanc de l’Ouest, oiseau vermillon du Sud, dragon azur de l’Est) règne Ōryū, le dragon jaune\u00a0: le jaune-or est la couleur du centre. En bas, le Kinkaku-ji, le Pavillon d’or de Kyōto, couvert de feuilles d’or, avec un phénix (hō-ō) sur le toit.",
+      message: "Félicitations pour ton 20e\u00a0Dan, le plus haut grade\u00a0! Comme Ōryū au centre des gardiens, te voilà au cœur du soroban. Le titre de maître est à toi\u00a0!",
+      proverbe: {japonais: "画竜点睛", lecture: "garyō tensei", francais: "Peindre les yeux du dragon.", idee: "La dernière touche donne vie à tout\u00a0: un peintre ajouta les yeux à ses dragons, et ils s’envolèrent\u00a0!"}})
+  ]);
   // La carte du grade n (1 = 20e kyu … 20 = 1er kyu), ou null (un dan).
+  // Les 40 cartes dans l'ordre des grades : 20e kyu (1) … 1er kyu (20),
+  // 1er dan (21) … 20e dan (40).
+  const CARTES = Object.freeze([...CARTES_KYU, ...CARTES_DAN]);
   function carteDuGrade(n) {
-    return Number.isInteger(n) && n >= 1 && n <= CARTES_KYU.length ? CARTES_KYU[n - 1] : null;
+    return Number.isInteger(n) && n >= 1 && n <= CARTES.length ? CARTES[n - 1] : null;
+  }
+  // « 8e Kyu », « 1er Dan » (comme écrit sur la carte ; insécable).
+  function nomCarte(c) {
+    if (!c) return "";
+    const k = c.dan || c.kyu;
+    return `${k}${k === 1 ? "er" : "e"}\u00a0${c.dan ? "Dan" : "Kyu"}`;
   }
 
   const entier = (valeur, defaut) => (Number.isInteger(valeur) ? valeur : defaut);
@@ -294,7 +441,76 @@
   //    de suite ;
   //  - en « + et − », le total en cours ne passe jamais sous zéro : une
   //    soustraction qui le rendrait négatif devient une addition.
+  //  - un grade SANS RETENUE (reglages.sansRetenue, du 20e au 11e kyu) :
+  //    voir tirerSansRetenue.
+  //
+  // Sans retenue, additions seules (le 20e kyu) : une suite tirée au hasard
+  // parmi TOUTES celles qui conviennent (3 nombres de 1 à 9, total jusqu'à
+  // 9, jamais deux fois le même de suite) — tirer nombre par nombre pouvait
+  // bloquer (8 puis 1 : plus rien pour le 3e).
+  const suitesAdditions = new Map();
+  function suitesSansRetenue(nombres) {
+    if (!suitesAdditions.has(nombres)) {
+      const toutes = [];
+      const suite = [];
+      (function etendre(total) {
+        if (suite.length === nombres) { toutes.push(suite.slice()); return; }
+        for (let v = 1; v <= 9 && total + v <= 9; v += 1) {
+          if (suite.length && v === suite[suite.length - 1]) continue;
+          suite.push(v);
+          etendre(total + v);
+          suite.pop();
+        }
+      })(0);
+      suitesAdditions.set(nombres, toutes);
+    }
+    return suitesAdditions.get(nombres);
+  }
+  // Les nombres permis d'une forme : 1 à 9, 10 à 90 de dix en dix, 10 à 99.
+  function nombresDeForme(forme) {
+    if (forme === "dizaines") return Array.from({length: 9}, (_, i) => (i + 1) * 10);
+    if (forme === "deux") return Array.from({length: 90}, (_, i) => i + 10);
+    return Array.from({length: 9}, (_, i) => i + 1);
+  }
+  // Sans retenue : chaque chiffre du total (unités, dizaines) reste entre
+  // 0 et 9 après chaque nombre — sur le boulier, jamais de retenue ni
+  // d'emprunt. En « + et − » : le premier nombre est ajouté ; ensuite le
+  // signe est tiré parmi ceux qui ont encore un nombre possible.
+  function sansRetenueApres(total, signe, valeur) {
+    for (let p = 1; p <= 10; p *= 10) {
+      const chiffre = Math.floor(total / p) % 10 + signe * (Math.floor(valeur / p) % 10);
+      if (chiffre < 0 || chiffre > 9) return false;
+    }
+    return true;
+  }
+  function tirerSansRetenue(reglages, rng) {
+    if (reglages.operations !== "plusmoins") {
+      const toutes = suitesSansRetenue(reglages.nombres);
+      const suite = toutes[Math.floor(rng() * toutes.length)];
+      return {termes: suite.map(valeur => ({signe: 1, valeur})), total: suite.reduce((a, v) => a + v, 0)};
+    }
+    const forme = nombresDeForme(reglages.sansRetenue);
+    const termes = [];
+    let total = 0;
+    for (let i = 0; i < reglages.nombres; i += 1) {
+      const avant = i > 0 ? termes[i - 1].valeur : null;
+      // Le dernier nombre ne ramène jamais le total à 0 (« 0 » comme réponse
+      // revenait une fois sur huit).
+      const dernier = i === reglages.nombres - 1;
+      const choix = signe => forme.filter(v => v !== avant && sansRetenueApres(total, signe, v) && !(dernier && total + signe * v === 0));
+      const signes = (i === 0 ? [1] : [1, -1]).filter(signe => choix(signe).length);
+      // Jamais vu : il reste toujours un nombre (à 0, on peut ajouter ; à 9,
+      // enlever) ; par prudence, on accepte alors le même nombre qu'avant.
+      const signe = signes.length ? signes[Math.floor(rng() * signes.length)] : (sansRetenueApres(total, 1, avant) ? 1 : -1);
+      const possibles = signes.length ? choix(signe) : [avant];
+      const valeur = possibles[Math.floor(rng() * possibles.length)];
+      total += signe * valeur;
+      termes.push({signe, valeur});
+    }
+    return {termes, total};
+  }
   function tirerCalcul(reglages, rng) {
+    if (reglages.grade && reglages.sansRetenue) return tirerSansRetenue(reglages, rng);
     const termes = [];
     let total = 0;
     for (let i = 0; i < reglages.nombres; i += 1) {
@@ -416,9 +632,15 @@
     GROUPES_GRADES,
     nomGrade,
     reglagesGrade,
+    SANS_RETENUE,
+    texteNombresGrade,
     verdictGrade,
     texteGrade,
     CARTES_KYU,
+    CARTES_DAN,
+    CARTES,
+    TAILLES_CARTES,
+    nomCarte,
     carteDuGrade
   });
 });

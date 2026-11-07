@@ -140,6 +140,10 @@
     [3, 15, 28], [3, 15, 26], [3, 15, 24], [3, 15, 22], [3, 15, 20], [3, 15, 19], [3, 15, 18], [3, 15, 17], [3, 15, 16], [3, 15, 15]
   ].map(([chiffres, nombres, dixiemes]) => Object.freeze({chiffres, nombres, dixiemes})));
   const NB_GRADES = GRADES.length;
+  // Les grades « + et − » (du 19e au 11e kyu, sans retenue : SANS_RETENUE de
+  // flash_anzan_core.js, 07/11/2026). Leurs séances d'avant, toutes en
+  // additions, restent valables : « plus » est toujours accepté.
+  const GRADES_PLUS_ET_MOINS = Object.freeze([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const GRADE_CALCULS = 10;
   const GRADE_REUSSI = 7;
   const estModeGrade = mode => mode === "grade" || mode === "entrainement";
@@ -286,7 +290,8 @@
       // Un grade : exactement sa ligne de la grille, rien d'approché.
       if (!gradeValide(s.temps)) return null;
       const g = GRADES[s.temps - 1];
-      if (s.operations !== "plus" || s.chiffresMin !== g.chiffres || s.chiffresMax !== g.chiffres
+      const operationsDuGrade = s.operations === "plus" || GRADES_PLUS_ET_MOINS.indexOf(s.temps) >= 0;
+      if (!operationsDuGrade || s.chiffresMin !== g.chiffres || s.chiffresMax !== g.chiffres
         || s.nombres !== g.nombres || s.calculs !== GRADE_CALCULS) return null;
     } else if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
     if (CALCULS.indexOf(s.calculs) < 0) return null;
@@ -1694,6 +1699,7 @@
     MODES_SEANCE,
     GRADES,
     NB_GRADES,
+    GRADES_PLUS_ET_MOINS,
     GRADE_CALCULS,
     GRADE_REUSSI,
     nomGrade,

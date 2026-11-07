@@ -463,7 +463,7 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
 
 test("la page charge le moteur à jour (4a-sexies : l'ordre seul, sans le jour) — son numéro de version a monté", () => {
   const html = lire("outils/calcul_mental/flash_anzan.html");
-  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261107-1"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
+  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261107-2"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
 });
 
 test("4e relecture Codex (24/10) : ni l'horloge ni minuit ne dérangent — une tablette à la mauvaise date ne perd pas sa séance, une séance qui passe minuit garde son jour", () => {
