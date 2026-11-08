@@ -2905,7 +2905,13 @@
   // dans la page : une appli seule ne le sait pas.
   // Défi tables : un jour de travail = une séance finie ; une ligne par
   // séance {table, etapes, calculs, justes, test} (deux séances le
-  // même jour, deux lignes) ; à aider : 8 séances ou plus sur la même table
+  // même jour, deux lignes). Lot « un jour de travail dès le premier
+  // geste » (choix de Gwenaël, 08/11/2026, « l'élève a fait quelque
+  // chose ») : AUSSI le jour de la séance en cours (pas finie) dès qu'une
+  // étape y est faite — sans rien changer aux données (« enCours » garde
+  // déjà son jour et ses étapes faites) ; sa ligne se lit comme celle d'une
+  // séance finie. Limite acceptée : seule la dernière séance pas finie est
+  // gardée (une autre, commencée plus tard, la remplace) ; à aider : 8 séances ou plus sur la même table
   // toujours pas passée ({type: "seances-longues", table, seances} — le seuil
   // de la page prof, SEUILS.prof.seancesLongues) ; à féliciter : une table
   // passée cette semaine ({type: "table", table}).
@@ -2917,6 +2923,13 @@
     const debut = ajouterJours(lundi, -21);
     const nombre = valeur => (valeur >= 0 ? valeur : null);
     const passees = pairesDe(parcours).filter(paire => paire.jour <= aujourdhui);
+    // La séance en cours, une étape faite au moins (normaliserEnCours n'en
+    // garde pas sans étape), un jour sans séance finie, pas à venir.
+    const code = parcours.enCours;
+    if (code && code.jour <= aujourdhui && !passees.some(paire => paire.jour === code.jour)) {
+      passees.push({jour: code.jour, entree: entreeDeSeance(parcours, decoderSeance(code))});
+      passees.sort((a, b) => (a.jour < b.jour ? -1 : a.jour > b.jour ? 1 : 0));
+    }
     const jours = [];
     passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
       const ligne = {};

@@ -211,7 +211,7 @@ test("Mon parcours : Mon mélange et les étoiles ne sont plus grisés « après
 });
 
 test("rien d'autre ne change : le moteur, le serveur, la séance", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/, "le moteur a changé depuis (lot S1 « les journaux »)");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261108-1/, "le moteur a changé depuis (lot S1 « les journaux »)");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.match(html, /function commencerSeance\(table\) \{[\s\S]*?seance = PARCOURS\.ouvrirSeance\(parcours, \{table\}\);\s*lancerEtapeDeSeance\(\);/);
   assert.match(html, /suite\.textContent = `Étape \$\{seance\.faites\.length \+ 1\}\\u00a0: \$\{prochaine\.nom\}\\u00a0→`;/, "dans la séance, toujours « Étape 2 : … → »");

@@ -655,6 +655,13 @@
   // forme de réponse, dans les cinq moteurs suivis (voir splat-parcours.js,
   // resumeSuivi, pour la forme complète). Rien ne l'affiche encore.
   // Coffres magiques : un jour de travail = un jour avec un trésor ouvert ;
+  // lot « Coffres : un jour dès la première clé » (choix de Gwenaël,
+  // 08/11/2026, « l'élève a fait quelque chose ») : AUSSI le dernier jour
+  // joué de la partie en cours quand elle a au moins une clé — sans rien
+  // changer aux données (la partie garde déjà ses clés et son jour). Limite
+  // acceptée : la même partie reprise un autre jour ne garde que ce jour-là.
+  // Ce jour-là, sa ligne ne dit pas de trésor (null) — l'aide et les
+  // solutions vues, si le journal les a notées ;
   // une ligne par jour {tresors, parfaits, aides, solutions} ; à aider : des
   // solutions vues cette semaine ({type: "solutions-vues", solutions}) ; à
   // féliciter : rien (aucune règle décidée pour Coffres).
@@ -687,6 +694,14 @@
     // Un trésor ouvert (une valeur pas connue compte : le jour est dans le
     // journal, on ne sait pas ce qui s'y est fait).
     const travail = lignes.filter(l => l.entree[0] !== 0);
+    // Le jour de la partie en cours, dès sa première clé (pas un jour à
+    // venir : horloge fausse d'un autre appareil).
+    const partie = p.partie && p.partie.cles >= 1 ? dateOuNull(p.partie.jour) : null;
+    if (partie && partie <= aujourdhui && !travail.some(l => l.jour === partie)) {
+      const duJour = lignes.find(l => l.jour === partie);
+      travail.push({jour: partie, entree: [-1, -1, duJour ? duJour.entree[2] : -1, duJour ? duJour.entree[3] : -1]});
+      travail.sort((a, b) => (a.jour < b.jour ? -1 : a.jour > b.jour ? 1 : 0));
+    }
     const jours = travail.filter(l => l.jour >= debut).map(l => ({
       jour: l.jour,
       lignes: [{tresors: nombre(l.entree[0]), parfaits: nombre(l.entree[1]), aides: nombre(l.entree[2]), solutions: nombre(l.entree[3])}]
