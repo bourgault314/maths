@@ -445,8 +445,10 @@ test("serveur : version_min 5 (6 depuis le correctif du lot S1), les clés du jo
   const infos = await lire("../_serveur/public/infos.php");
   // Lot S1 « les journaux » : la phrase vaut désormais pour toutes les applis.
   assert.match(infos, /<p>Dans chaque activité, ta progression, ce sont aussi les jours où tu travailles et le nombre de tes réussites\.<\/p>/);
+  // 08/11/2026 : la page publique ne liste plus les données du suivi ; elle
+  // renvoie à la page Infos de l'espace, qui les dit (assertion ci-dessus).
   const confidentialite = await lire("../confidentialite.html");
-  assert.match(confidentialite, /dont, dans chacun, les jours de travail et le nombre de réussites/);
+  assert.match(confidentialite, /expliqué aux élèves et à leurs familles sur la page Infos de leur espace/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
 });

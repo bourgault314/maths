@@ -356,7 +356,7 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 6 novembre 2026/);
+  assert.match(page, /Dernière mise à jour : 8 novembre 2026/);
   // Lot « compteur de visites » (06/11/2026) : la page dit ce que reçoit le compteur, et ce qu'il ne garde pas.
   assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil/);
   assert.match(page, /sans ce qui suit le «&nbsp;\?&nbsp;»/);
@@ -379,5 +379,10 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   // Retours de Gwenaël du 03/10 : page raccourcie (plus de doublon « En bref » / suivi, plus de
   // « tableau ci-dessus » qui n'existait pas, plus de « retirer votre consentement » sans consentement).
   assert.doesNotMatch(page, /tableau ci-dessus|retirer votre consentement/);
-  assert.match(page, /<h2 id="suivi">Le suivi de classe, sur code<\/h2>/);
+  // 08/11/2026 : l'espace élève est annoncé (bouton « Mon espace » de l'accueil) sans lister
+  // ici ce qui est enregistré : le détail est donné aux élèves et aux familles sur la page Infos
+  // de leur espace (_serveur/public/infos.php).
+  assert.match(page, /<h2 id="suivi">L’espace élève<\/h2>/);
+  assert.match(page, /expliqué aux élèves et à leurs familles sur la page Infos de leur espace/);
+  assert.doesNotMatch(page, /initiale du nom|nombre de réussites|date de la dernière activité/, "la liste des données reste sur la page Infos de l'espace");
 });
