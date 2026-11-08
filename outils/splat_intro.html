@@ -508,6 +508,7 @@ const film={
     const o=this.o,Y=this.Y;if(o.stCle===txt)return;o.stCle=txt;
     while(o.st.firstChild)o.st.removeChild(o.st.firstChild);
     o.st.setAttribute('font-size',Y.cap.size);
+    o.st.style.display='';   /* visible pour la mesure (lot 5, 08/11/2026 : cachée, elle mesurait 0 et ne se coupait jamais) */
     const l1=F.E('tspan',{x:Y.cap.x,y:Y.cap.y},o.st);l1.textContent=txt;
     if(!txt||!Y.cap.gap||o.st.getComputedTextLength()<=Y.cap.max)return;
     const mots=txt.split(' ');let best=1,ecart=1e9;
@@ -799,6 +800,10 @@ function cartons(o,Y,svg,sousTitre){
 /* ---------- rendu ---------- */
 function legende(o,Y,t){if(o.stCle===t)return;o.stCle=t;
   while(o.st.firstChild)o.st.removeChild(o.st.firstChild);
+  /* visible au moment de la mesure (lot 5, 08/11/2026) : la légende arrive cachée (son fondu part de 0, F.op la met en
+     display:none), et cachée elle mesurait 0 — une phrase trop longue ne passait jamais sur deux lignes au téléphone.
+     Le fondu qui suit (op) la recache dans la même image, si besoin. */
+  o.st.style.display='';
   const l1=E('tspan',{x:Y.cap.x,y:Y.cap.y},o.st);l1.textContent=t;
   if(!t||!Y.cap.gap||o.st.getComputedTextLength()<=Y.cap.max)return;
   const mots=t.split(' ');let best=1,ecart=1e9;
@@ -1943,15 +1948,457 @@ const aToi={
     let i=-1;for(let k=0;k<GUIDE_T.length;k++)if(GUIDE_T[k][0]<=t)i=k;
     if(i<0)op(o.st,0);else{const cur=GUIDE_T[i],nx=GUIDE_T[i+1],fait=cur[2]!=null&&apres(cur[2]),aide=cur[3]!=null&&!fait&&this.aide[cur[3]];
       const texte=aide?ECRIRE[cur[3]].aide[port?1:0]:(Array.isArray(cur[1])?cur[1][port?1:0]:cur[1]);
-      /* visible au moment où la légende se mesure : une consigne trop longue pour le téléphone passe alors sur deux
-         lignes (cachée, elle mesurait 0 et ne se coupait pas) */
-      o.st.style.display='';Q.legende(o,Y,(fait?'✓\u00a0':'')+texte);o.st.setAttribute('fill',fait?'#15803d':aide?'#c2410c':'#1e293b');
+      /* la légende se mesure visible (Q.legende, corrigée au lot 5) : une consigne trop longue passe sur deux lignes */
+      Q.legende(o,Y,(fait?'✓\u00a0':'')+texte);o.st.setAttribute('fill',fait?'#15803d':aide?'#c2410c':'#1e293b');
       let a=P(t,cur[0],.3,F.out);if(nx)a=Math.min(a,1-P(t,nx[0]-.22,.22,F.lin));op(o.st,a);}
     Q.fin(o,Y,t,TT.fin);
   }
 };
 film.aToi=aToi;
 return film;
+})();
+</script>
+<script>
+/* ===== « À toi de faire » : des taches sur les deux plateaux — SPLAT! Équations, étape 37 =====
+   ?film=equasplat-taches (lot 5 « aides et carte », 08/11/2026). Un tutoriel seul, sans film : sur la carte, « ✋ À toi de
+   faire » sous l'étape 37, et « ? Comment faire » dans ÉquaSplat (AIDES, assets/js/splat-etapes.js). Le prof, depuis la page
+   Splat, ouvre le même tutoriel. L'écran est celui d'ÉquaSplat (bloc ECRAN_EQ), comme les deux tutoriels de l'étape 35.
+   Choix de Gwenaël (questions à choix du 08/11/2026) :
+   - deux exemples HORS de la série de l'étape : 𝑡 + 4 = 3𝑡 en petits jetons (on enlève 1 tache de chaque côté, puis on
+     partage 4 en 2), puis 2𝑘 + 9 = 5𝑘 en jetons numérotés (on enlève 2 taches de chaque côté, puis on partage 9 en 3) ;
+   - C'EST L'ÉLÈVE QUI COMPTE LES TACHES : la consigne dit « Enlève le même nombre de taches de chaque côté », sans dire
+     combien. Il touche les taches dans l'ordre qu'il veut, à gauche et à droite ; une tache de trop n'est pas prise, et
+     l'aide arrive (en orange) après l'erreur : « À gauche, il y a 2 taches : touches-en 2 de chaque côté. » ;
+   - au partage, il tape lui-même la valeur d'une part (2, puis 3), comme dans le tutoriel des jetons numérotés : une
+     mauvaise touche n'écrit rien, l'aide donne le calcul, toucher la case (ordinateur sans clavier) donne d'abord l'aide puis
+     écrit le nombre. Il n'est jamais bloqué.
+   Sous l'équation, les phrases de l'outil (relevées dans ÉquaSplat le 08/11/2026, ordinateur et téléphone) ; pendant qu'il
+   touche les taches, elles suivent ce qu'il a choisi (« Sélectionne maintenant l’autre côté. », « Même quantité
+   sélectionnée : 2𝑘. »…). On ne touche pas à equasplat.html. */
+FILMS['equasplat-taches']=(function(){
+'use strict';
+const Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,C=Q.C;
+const I0='Il y a la même quantité à gauche qu’à droite.';
+/* le déroulé : A = 𝑡 + 4 = 3𝑡 (petits jetons), B = 2𝑘 + 9 = 5𝑘 (jetons numérotés) */
+const TT=(()=>{const a0=5,aS1=a0+1,aS2=aS1+1,aV=aS2+1,aFp=aV+2.2,aP=aFp+1,aE=aP+1,aOk=aE+1,rangeA=aOk+.15,coupeA=rangeA+1.25,
+    groupesA=rangeA+1.9,aG=groupesA+.9,resoluA=aG+1.6,aSuiv=resoluA+1.3,b=aSuiv+.3,
+    b0=b+2.2,bS1=b0+1,bS2=bS1+1,bS3=bS2+1,bS4=bS3+1,bV=bS4+1,bPar=bV+2.2,bJ=bPar+1,bP=bJ+1,bE=bP+1,bOk=bE+1,groupesB=bOk+.15,
+    bG=groupesB+1.3,fin=bG+3.8;
+  return {ecran:2.7,a0,aS1,aS2,aV,ecritA:aV+.2,aFp,aP,aE,aOk,rangeA,coupeA,groupesA,aG,replieA:aG+.9,resoluA,aSuiv,b,
+    b0,bS1,bS2,bS3,bS4,bV,ecritB:bV+.2,bPar,bJ,bP,bE,bOk,groupesB,bG,replieB:bG+.5,resoluB:bG+1.2,fin};})();
+/* les attentes, une par geste : Enlever, 2 taches, Valider, Partager, « 2 parts », écrire 2, Partager, un groupe, Équation
+   suivante ; Enlever, 4 taches, Valider, Partager, le jeton 9, « 3 parts », écrire 3, Partager, un groupe */
+const ATT=[TT.a0,TT.aS1,TT.aS2,TT.aV,TT.aFp,TT.aP,TT.aE,TT.aOk,TT.aG,TT.aSuiv,
+  TT.b0,TT.bS1,TT.bS2,TT.bS3,TT.bS4,TT.bV,TT.bPar,TT.bJ,TT.bP,TT.bE,TT.bOk,TT.bG];
+/* les attentes où l'élève touche une tache : l'exemple, et combien il peut en prendre de chaque côté (le nombre de taches du
+   côté qui en a le moins) */
+const TACHES={1:'A',2:'A',11:'B',12:'B',13:'B',14:'B'};
+const MAX={A:1,B:2};
+/* l'aide après une tache de trop (ou « Valider » touché trop tôt) */
+const AIDE_T={A:'À gauche, il y a 1 tache : touches-en 1 de chaque côté.',B:'À gauche, il y a 2 taches : touches-en 2 de chaque côté.'};
+/* les deux attentes où l'élève écrit : la fenêtre, ce qui est accepté, et l'aide après une erreur ([ordinateur, téléphone]) */
+const ECRIRE={
+  6:{d:'dA2',ok:['2'],aide:['4 = 2 + 2 : tape 2, ou touche la case.','4 = 2 + 2 : tape 2.']},
+  19:{d:'dB2',ok:['3'],aide:['9 = 3 + 3 + 3 : tape 3, ou touche la case.','9 = 3 + 3 + 3 : tape 3.']}};
+/* les consignes en haut ; la troisième case dit après quelle attente le geste est fait (en vert avec ✓) ; la quatrième,
+   l'écriture dont l'aide remplace la consigne après une erreur ; la cinquième, l'exemple dont on compte les taches */
+const GUIDE_T=[[3.2,'Trouve ce que cache la tache 𝑡.'],[TT.a0-.3,'Touche « Enlever des deux côtés ».',TT.a0],
+  [TT.a0+.75,'Enlève le même nombre de taches de chaque côté : touche-les.',TT.aS2,null,'A'],
+  [TT.aS2+.75,'Touche « Valider la suppression ».',TT.aV],[TT.aV+1,'Une ligne s’écrit : 4 = 2𝑡.'],
+  [TT.aFp-.3,['Touche « Partager équitablement ».','Touche « Partager ».'],TT.aFp],
+  [TT.aFp+.75,'Choisis « 2 parts ».',TT.aP],
+  [TT.aP+.75,['Chaque part vaut combien ? Tape-le au clavier.','Chaque part vaut combien ? Tape-le.'],TT.aE,6],
+  [TT.aE+.75,'Touche « Partager ».',TT.aOk],[TT.aG-.3,'Touche un des groupes.',TT.aG],
+  [TT.aG+1,'Bravo ! Une tache cache 2 jetons : 𝑡 = 2.'],[TT.aSuiv-.3,'Touche « Équation suivante ».',TT.aSuiv],
+  [TT.b+.3,'Trouve ce que cache la tache 𝑘.'],[TT.b0-.3,'Touche « Enlever des deux côtés ».',TT.b0],
+  [TT.b0+.75,'Enlève le même nombre de taches de chaque côté : touche-les.',TT.bS4,null,'B'],
+  [TT.bS4+.75,'Touche « Valider la suppression ».',TT.bV],[TT.bV+1,'Une ligne s’écrit : 9 = 3𝑘.'],
+  [TT.bPar-.3,['Touche « Partager équitablement ».','Touche « Partager ».'],TT.bPar],
+  [TT.bPar+.75,'Touche le jeton 9.',TT.bJ],[TT.bJ+.75,'Choisis « 3 parts ».',TT.bP],
+  [TT.bP+.75,['Chaque part vaut combien ? Tape-le au clavier.','Chaque part vaut combien ? Tape-le.'],TT.bE,19],
+  [TT.bE+.75,'Touche « Partager ».',TT.bOk],[TT.bG-.3,'Touche un des groupes.',TT.bG],
+  [TT.bG+1,'Bravo ! Une tache cache 3 : 𝑘 = 3.'],[TT.fin,'']];
+/* sous l'équation : les phrases d'ÉquaSplat. Pendant qu'il touche les taches (de « Enlever » à « Valider »), elles suivent sa
+   sélection (consTaches) ; ailleurs, elles changent juste APRÈS le geste (+ 1 ms) */
+const CONS=[[0,I0],[TT.aV+.001,'Il reste 2 taches et 4 jetons : on peut partager.'],[TT.aOk+.001,''],
+  [TT.groupesA,'2 groupes identiques — touche-en un.',C.orangeC],[TT.replieA,''],
+  [TT.b,I0],[TT.bV+.001,'Sélectionne la même quantité des deux côtés.'],[TT.bPar+.001,'Touche le jeton à partager.'],
+  [TT.groupesB,'3 groupes identiques — touche-en un.',C.orangeC],[TT.replieB,'']];
+/* ce qu'ÉquaSplat écrit selon les taches choisies (g à gauche, d à droite) */
+function consTaches(g,d,lettre){
+  if(!g&&!d)return 'Sélectionne la même quantité des deux côtés.';
+  if(!g||!d)return 'Sélectionne maintenant l’autre côté.';
+  if(g===d)return 'Même quantité sélectionnée : '+(g===1?'':g)+lettre+'.';
+  return 'Les taches sélectionnées ne représentent pas la même quantité d’inconnues.';}
+
+/* les pièces, en pixels de l'outil : en miroir de part et d'autre du trait, pour qu'on voie ce qui se correspond.
+   A : la tache de gauche en face d'une tache de droite ; B : les deux taches de gauche en face des deux du haut à droite.
+   Les groupes (cartes) : la tache à DROITE, comme dans l'outil (4 = 2𝑡, 9 = 3𝑘). */
+function exemples(port){
+  if(!port)return {
+    A:{g:[[580,330]],d:[[860,330],[1060,330],[960,490]],b:[[236,304],[318,452],[452,520],[196,540]],
+      cartes:{x:107,w:1226,h:180,ys:[216,410],rx:21.7,tx:977,tR:52,bx:[442,484],bR:18,sw:3.4,swOk:8.5},
+      plie:{t:[1020,400],b:[[520,340],[380,460]]}},
+    B:{g:[[330,320],[510,320]],d:[[930,320],[1110,320],[870,480],[1020,480],[1170,480]],j9:[420,490],
+      cartes:{x:107,w:1226,h:122,ys:[208,340,472],rx:21.7,tx:977,tR:45,jx:463,jR:33,jFs:30.7,sw:3.4,swOk:8.5},
+      plie:{t:[1020,400],j:[420,400]}}};
+  return {
+    A:{g:[[150,262]],d:[[240,262],[320,262],[280,340]],b:[[45,245],[70,318],[118,350],[34,356]],
+      cartes:{x:15,w:361,h:78,ys:[220,304],rx:7,tx:270.5,tR:20,bx:[110,129],bR:8.5,sw:.94,swOk:2.3},
+      plie:{t:[290,300],b:[[110,270],[80,334]]}},
+    B:{g:[[70,262],[140,262]],d:[[250,262],[320,262],[230,340],[290,340],[350,340]],j9:[105,340],
+      cartes:{x:15,w:361,h:52,ys:[218,274,330],rx:7,tx:270.5,tR:16,jx:119.5,jR:12,jFs:8.3,sw:.94,swOk:2.3},
+      plie:{t:[290,290],j:[100,290]}}};
+}
+/* l'écran des jetons numérotés (3 lignes d'équation), avec le bouton « Partager équitablement » seul des petits jetons */
+const AJOUT={
+  paysage:{eq:{ys:[[92],[74,112],[72,107,142]]},consigne:{x:720,y:180,fs:17},
+    pan:{x:30,y:196,w:1380,h:424,r:18},plat:{x:116,y:214,w:1208,h:388,rx:29,sw:2.56},
+    fp:{x:614,y:632,w:212,h:48,r:15},
+    outils:[{id:'dec',x:483,y:632,w:130,h:48},{id:'gro',x:622,y:632,w:114,h:48},{id:'par',x:745,y:632,w:211,h:48}],
+    rangs:[{id:'enl',x:372,y:689,w:212,h:48},{id:'ajo',x:592,y:689,w:210,h:48},{id:'ann',x:822,y:689,w:94,h:48},{id:'rec',x:924,y:689,w:144,h:48}],
+    act:{y:746,h:46,effacer:{x:676,w:88},effSel:{x:630,w:180},valider:{x:525,w:202},effSel2:{x:735,w:180}},
+    /* la tache choisie : un anneau orange autour de sa forme (.selectedOutline.fineRing de l'outil) */
+    anT:{gap:6,w:7},
+    fin:{lignes:['Enlève d’abord le même nombre de taches de chaque côté.']}},
+  portrait:{eq:{ys:[[73],[73,125],[73,125,177]],boite:{x:12,y:48,w:366,h:152,r:14}},consigne:{x:195,y:414,fs:13,ys:[406,422]},
+    pan:{x:5,y:208,w:380,h:186,r:18},plat:{x:10,y:216,w:370,h:170,rx:8,sw:.7},
+    fp:{x:17,y:439,w:356,h:42,r:12},
+    outils:[{id:'dec',x:17,y:439,w:114.7,h:42},{id:'gro',x:137.7,y:439,w:114.7,h:42},{id:'par',x:258.3,y:439,w:114.7,h:42}],
+    boiteOutils:{x:11,y:432,w:368,h:56},grille:{x:11,y:494,w:368,h:104},
+    rangs:[{id:'enl',x:17,y:500,w:175.5,h:42},{id:'ajo',x:197.5,y:500,w:175.5,h:42},{id:'ann',x:17,y:547,w:175.5,h:42},{id:'rec',x:197.5,y:547,w:175.5,h:42}],
+    act:{y:606,h:40,x:11,w:368},anT:{gap:2.8,w:3.3},
+    fin:{lignes:['Enlève d’abord le même nombre','de taches de chaque côté.']}}
+};
+const NOMS={dec:'Décomposer',gro:'Regrouper',par:['Partager équitablement','Partager'],enl:'Enlever des deux côtés',ajo:'Ajouter des deux côtés',ann:'Annuler',rec:'Recommencer'};
+/* les fenêtres Partager équitablement de l'outil (relevées le 08/11/2026) : A, les 4 petits jetons, « 2 parts » et « 4 parts » ;
+   B, le jeton 9 et « 3 parts » seul (l'outil ne propose pas « 9 parts » pour un jeton numéroté). Mêmes conventions que
+   les fenêtres des deux films de l'étape 35 (Q.fenetre). */
+const DLG={
+  paysage:{
+    A1:{w:620,h:313,r:24,el:[['titre','Partager équitablement',310,53.5,34],['groupe',4,310,123],
+      ['puce','2 parts',209,178,95,49,'p3'],['puce','4 parts',316,178,95,49],['btn','Annuler',271.5,245,77,37,13.5,'blanc']]},
+    A2:{w:620,h:491,r:24,el:[['titre','Partager équitablement',310,53.5,34],['groupe',4,310,123],
+      ['puce','2 parts',209,178,95,49,'choisie'],['puce','4 parts',316,178,95,49],['label','Chaque part vaut',310,255,16],
+      ['champ',37,273,546,100,18,54,'P'],['btn','Partager',228.6,423,79,37,13.5,'bleu','ok'],['btn','Annuler',314.4,423,77,37,13.5,'blanc']]},
+    B1:{w:620,h:315,r:24,el:[['titre','Partager équitablement',310,53.5,34],['jeton',9,310,124,35,30],
+      ['puce','3 parts',262.5,180,95,49,'p3'],['btn','Annuler',271,247,77,37,13.5,'blanc']]},
+    B2:{w:620,h:493,r:24,el:[['titre','Partager équitablement',310,53.5,34],['jeton',9,310,124,35,30],
+      ['puce','3 parts',262.5,180,95,49,'choisie'],['label','Chaque part vaut',310,257,16],
+      ['champ',37,275,546,100,18,54,'P'],['btn','Partager',229,425,79,37,13.5,'bleu','ok'],['btn','Annuler',314,425,77,37,13.5,'blanc']]}},
+  portrait:{
+    A1:{w:352,h:334,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['groupe',4,176,154],
+      ['puce','2 parts',75,209,95,49,'p3'],['puce','4 parts',182,209,95,49],['btn','Annuler',137.5,276,77,37,13.5,'blanc']]},
+    A2:{w:352,h:781,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['groupe',4,176,154],
+      ['puce','2 parts',75,209,95,49,'choisie'],['puce','4 parts',182,209,95,49],['label','Chaque part vaut',176,286,16],
+      ['champ',19,304,314,77,18,34,'P'],['pave',19,391,101,42,106.5,48,'Partager',false],['btn','Annuler',137.5,723,77,37,13.5,'blanc']]},
+    B1:{w:352,h:324,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['jeton',9,176,149,29.5,25.3],
+      ['puce','3 parts',128.5,199,95,49,'p3'],['btn','Annuler',137,266,77,37,13.5,'blanc']]},
+    B2:{w:352,h:771,r:20,el:[['titre','Partager',176,43,34],['titre','équitablement',176,84,34],['jeton',9,176,149,29.5,25.3],
+      ['puce','3 parts',128.5,199,95,49,'choisie'],['label','Chaque part vaut',176,276,16],
+      ['champ',19,294,314,77,18,34,'P'],['pave',19,381,101,42,106.5,48,'Partager',false],['btn','Annuler',137,713,77,37,13.5,'blanc']]}}
+};
+const appuiT=(bt,t,tt)=>{const s=1-.05*Math.sin(Math.PI*F.clamp((t-tt)/.2)),c=bt.c;bt.g.setAttribute('transform',s<.9999?`translate(${c[0]},${c[1]}) scale(${s}) translate(${-c[0]},${-c[1]})`:'');};
+const maintenant=()=>(typeof performance!=='undefined'?performance.now():Date.now());
+const placer=(g,c,s)=>g.setAttribute('transform',`translate(${(+c[0]).toFixed(1)},${(+c[1]).toFixed(1)}) scale(${(+s).toFixed(3)})`);
+
+const aToi={
+  duration:TT.fin+3.4, poster:2.4, stops:[], attentes:ATT.map(t=>({t})),
+  modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
+  passer:SUITE, passerTexte:'Passer ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  aria:'À toi de faire : le tutoriel d’ÉquaSplat avec des taches sur les deux plateaux. Enlever le même nombre de taches de chaque côté, puis partager équitablement',
+  titre:'À toi de faire — Des taches sur les deux plateaux — ÉquaSplat — maths&go',
+  chapters:[{t:0,name:'SPLAT! Équations'}],
+  /* sel : les taches touchées, {ex, cote ('g' ou 'd'), i, t} ; aideT : l'aide des taches affichée ; groupe : le groupe touché */
+  choix:{sel:[],groupe:{},touches:{}}, saisie:{}, aide:{}, aideT:{}, indice:null, appuiCle:null,
+  build(svg,mode){
+    const port=mode==='portrait',Y=this.Y=Q.mise(mode,AJOUT),o=this.o={port},X=this.X=exemples(port);
+    this.svg=svg;svg.style.fontFamily=Q.POLICE;
+    Q.defs(svg,port);
+    const S=Q.ecran(o,Y,svg,port);
+    const TM=TT;
+    o.eqA=Q.equation(Y,S,[{g:'𝑡 + 4',d:'3𝑡'},{g:'4',d:'2𝑡',op:'−𝑡',t:TM.ecritA},{g:'2',d:'𝑡',op:'÷ 2',t:TM.groupesA,sol:true}]);
+    o.eqB=Q.equation(Y,S,[{g:'2𝑘 + 9',d:'5𝑘'},{g:'9',d:'3𝑘',op:'−2𝑘',t:TM.ecritB},{g:'3',d:'𝑘',op:'÷ 3',t:TM.groupesB,sol:true}]);
+    /* la phrase sous l'équation : une ligne, ou deux au téléphone quand elle est trop longue (comme dans l'outil) */
+    o.consigne=Q.txt(S,Y.consigne.x,Y.consigne.y,Y.consigne.fs,{'text-anchor':'middle','font-weight':800,fill:C.consigne});o.consCle=null;
+    Q.plateau(o,Y,S);
+    /* une tache qu'on peut choisir : la tache de l'outil, et son anneau orange autour de sa forme */
+    const tache=(p,c,lettre)=>{const g=E('g',{},p);Q.tache(Y,g,[0,0],Y.tRB,lettre);
+      const an=E('path',{d:Q.blob(0,0,Y.tRB+Y.anT.gap),fill:'none',stroke:C.anneau,'stroke-width':Y.anT.w,filter:'url(#fsHalo)'},g);op(an,0);
+      placer(g,c,1);return {g,an,c};};
+    const A=X.A,B=X.B;
+    o.A=E('g',{},S);
+    o.Ab=A.b.map(c=>{const b=Q.piece(Y,o.A,null,Y.bR);b.c=c;placer(b.g,c,1);return b;});
+    o.At={g:A.g.map(c=>tache(o.A,c,'𝑡')),d:A.d.map(c=>tache(o.A,c,'𝑡'))};
+    /* 4 = 2𝑡 partagé en 2 : chaque tache qui reste va sur sa ligne, deux jetons en face ; un trait coupe les plateaux en deux */
+    const KA=A.cartes;
+    o.coupe=KA.ys.slice(1).map((y,k)=>{const yc=(KA.ys[k]+KA.h+y)/2;
+      return Object.assign(E('line',{x1:Y.plat.x,x2:Y.plat.x,y1:yc,y2:yc,stroke:'#94a3b8','stroke-width':Y.div,'stroke-linecap':'round'},S),{xa:Y.plat.x,xb:Y.plat.x+Y.plat.w});});
+    o.cartesA=Q.cartes(Y,S,KA,'𝑡',(g,cy)=>{for(const bx of KA.bx)E('circle',{cx:bx,cy,r:KA.bR,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW*1.1},g);});
+    o.Aplie=E('g',{},S);Q.tache(Y,o.Aplie,A.plie.t,Y.tR,'𝑡');
+    for(const c of A.plie.b)E('circle',{cx:c[0],cy:c[1],r:Y.bR,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW},o.Aplie);
+    o.B=E('g',{},S);
+    o.j9=Q.piece(Y,o.B,9,Y.jR);placer(o.j9.g,B.j9,1);
+    o.Bt={g:B.g.map(c=>tache(o.B,c,'𝑘')),d:B.d.map(c=>tache(o.B,c,'𝑘'))};
+    const KB=B.cartes,cc=Q.couleurJeton(3);
+    o.cartesB=Q.cartes(Y,S,KB,'𝑘',(g,cy)=>{E('circle',{cx:KB.jx,cy,r:KB.jR,fill:cc.fill,stroke:cc.stroke,'stroke-width':Y.bSW},g);
+      Q.txt(g,KB.jx,cy+KB.jFs*.04,KB.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent='3';});
+    o.Bplie=E('g',{},S);Q.tache(Y,o.Bplie,B.plie.t,Y.tR,'𝑘');
+    {const j=Q.piece(Y,o.Bplie,3,Y.jR);placer(j.g,B.plie.j,1);}
+    /* les boutons : « Partager équitablement » seul (petits jetons, A) ou Décomposer / Regrouper / Partager (jetons
+       numérotés, B) ; puis Enlever / Ajouter / Annuler / Recommencer */
+    if(Y.boiteOutils){const b=Y.boiteOutils;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
+    if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
+    const repos=port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'};
+    o.repos=repos;
+    o.fp=Q.bouton(Y,S,Y.fp,NOMS.par[port?1:0],repos);
+    o.outils={};for(const b of Y.outils){const nom=Array.isArray(NOMS[b.id])?NOMS[b.id][port?1:0]:NOMS[b.id];o.outils[b.id]=Q.bouton(Y,S,b,nom,repos);}
+    const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:repos,
+      ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
+      rec:{fond:'#eef2ff',bord:'rgba(99,102,241,.22)',encre:'#3730a3'}};
+    o.rangs={};for(const b of Y.rangs)o.rangs[b.id]=Q.bouton(Y,S,b,NOMS[b.id],st[b.id]);
+    if(port){const b=Y.rangs[2],cx=b.x+b.w/2,cy=b.y+b.h/2;o.rangs.ann.t[0].setAttribute('x',cx+10);
+      E('path',{d:`M${cx-30},${cy+2}l-5,-5l5,-5 M${cx-35},${cy-3}h9a5.5,5.5 0 0 1 0,11h-3`,fill:'none',stroke:'#9a3412','stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'},o.rangs.ann.g);}
+    /* zone d'action : ce que l'outil montre selon les taches choisies */
+    const Ac=Y.act;o.act={};
+    const ghost={fond:'#ffffff',bord:'rgba(15,23,42,.13)',encre:'#111827'},orange={fond:'url(#fsOrange)',bord:'rgba(234,88,12,.3)',encre:'#ffffff'};
+    if(port){
+      o.act.attente=Q.bouton(Y,S,{x:Ac.x,y:Ac.y,w:Ac.w,h:Ac.h,r:15},'Valider',{fond:'#f8fafc',bord:'rgba(71,85,105,.16)',encre:'#c3cad4'});
+      o.act.valider=Q.bouton(Y,S,{x:Ac.x,y:Ac.y,w:Ac.w,h:Ac.h,r:15},'Valider la suppression',orange);
+    }else{
+      o.act.effacer=Q.bouton(Y,S,{x:Ac.effacer.x,y:Ac.y,w:Ac.effacer.w,h:Ac.h},'Effacer',ghost);
+      o.act.effSel=Q.bouton(Y,S,{x:Ac.effSel.x,y:Ac.y,w:Ac.effSel.w,h:Ac.h},'Effacer la sélection',ghost);
+      o.act.valider=Q.bouton(Y,S,{x:Ac.valider.x,y:Ac.y,w:Ac.valider.w,h:Ac.h},'Valider la suppression',orange);
+      o.act.effSel2=Q.bouton(Y,S,{x:Ac.effSel2.x,y:Ac.y,w:Ac.effSel2.w,h:Ac.h},'Effacer la sélection',ghost);
+    }
+    Q.grouperOutils(o,S,[o.boite,o.grille,o.fp.g].concat(Y.outils.map(b=>o.outils[b.id].g),Y.rangs.map(b=>o.rangs[b.id].g)));
+    o.bravoA=Q.bandeau(o,Y,S,'𝑡 = 2');o.bravoB=Q.bandeau(o,Y,S,'𝑘 = 3');
+    o.voile=E('rect',{x:0,y:0,width:Y.w,height:Y.h,rx:port?22:14,fill:'rgba(15,23,42,.35)'},o.ecran);
+    const DD=DLG[mode]||DLG.paysage;
+    for(const k of ['A1','A2','B1','B2'])o['d'+k]=Q.fenetre(Y,o.ecran,DD[k],port);
+    Q.doigt(o,Y,o.ecran,port);
+    Y.fin=Object.assign({},Y.fin,{revoir:'↺ Recommencer'});
+    Q.cartons(o,Y,svg,'Des taches sur les deux plateaux');
+    Q.placerFleches(Y,o.eqA);Q.placerFleches(Y,o.eqB);Q.apresPolice(this,o,[o.eqA,o.eqB]);
+  },
+  /* l'attente k en cours (ou −1) */
+  attente(t){return ATT.findIndex(a=>Math.abs(a-t)<1e-4);},
+  /* les taches de l'exemple ex : [{cote, i, c}] ; prises : celles déjà touchées (avant l'instant t, si t est donné) */
+  taches(ex){const X=this.X[ex],l=[];for(const cote of ['g','d'])X[cote].forEach((c,i)=>l.push({cote,i,c}));return l;},
+  prises(ex,t){return this.choix.sel.filter(s=>s.ex===ex&&(t==null||t>s.t+1e-6));},
+  /* après « Valider » : les taches enlevées. Toujours MAX de chaque côté sur le chemin de l'élève ; sinon (un saut dans le
+     tutoriel, sans toucher), les premières de chaque côté */
+  finale(ex){const p=this.prises(ex),n=c=>p.filter(s=>s.cote===c).length;
+    return n('g')===MAX[ex]&&n('d')===MAX[ex]?p:['g','d'].flatMap(cote=>Array.from({length:MAX[ex]},(_,i)=>({ex,cote,i,t:-1})));},
+  compte(ex,t){const p=this.prises(ex,t);return {g:p.filter(s=>s.cote==='g').length,d:p.filter(s=>s.cote==='d').length};},
+  /* une tache qu'on peut encore prendre (pour le doigt) : du côté qui en a le moins, d'abord */
+  libre(ex){const n=this.compte(ex),p=this.prises(ex);
+    return this.taches(ex).find(x=>n[x.cote]<MAX[ex]&&!p.some(s=>s.cote===x.cote&&s.i===x.i))||null;},
+  /* ce qu'on peut toucher à l'attente k : des zones en pixels de l'outil, agrandies pour le doigt (44 px à l'écran au moins) */
+  zones(k){
+    const o=this.o,Y=this.Y,X=this.X,ch=this.choix;
+    let px=1;try{px=this.svg.getScreenCTM().a*Y.s||1;}catch(e){}
+    const rect=(x,y,w,h,faire,cle)=>{const pv=Math.max(4/px,(44/px-h)/2),ph=Math.max(4/px,(44/px-w)/2);
+      return {c:[x+w/2,y+h/2],cle,d:q=>q[0]>=x-ph&&q[0]<=x+w+ph&&q[1]>=y-pv&&q[1]<=y+h+pv?Math.hypot(q[0]-x-w/2,q[1]-y-h/2):null,faire};};
+    const touche=(R,cle)=>({c:[R.x+R.w/2,R.y+R.h/2],cle,d:q=>q[0]>=R.x-2&&q[0]<=R.x+R.w+2&&q[1]>=R.y-2&&q[1]<=R.y+R.h+2?Math.hypot(q[0]-R.x-R.w/2,q[1]-R.y-R.h/2):null});
+    const bt=b=>{const r=b.r,n=a=>+r.getAttribute(a);return rect(n('x'),n('y'),n('width'),n('height'));};
+    const zr=R=>rect(R.x,R.y,R.w,R.h);
+    const rond=(c,R)=>({c,d:q=>{const e=Math.hypot(q[0]-c[0],q[1]-c[1]);return e<=R?e:null;}});
+    if(ECRIRE[k]){const d=o[ECRIRE[k].d];
+      return o.port?Object.keys(d.clesR).map(c=>touche(d.clesR[c],c)):[zr(d.champR)];}
+    if(TACHES[k]){const ex=TACHES[k],p=this.prises(ex),R=Math.max(Y.tRB,22/px);
+      return this.taches(ex).filter(x=>!p.some(s=>s.cote===x.cote&&s.i===x.i)).map(x=>Object.assign(rond(x.c,R),{tache:x}));}
+    const groupes=(K,ex)=>K.ys.map((y,i)=>rect(K.x,y,K.w,K.h,()=>{ch.groupe[ex]=i;}));
+    switch(k){
+      case 0:case 10:return [bt(o.rangs.enl)];
+      case 3:case 15:return [bt(o.act.valider)];
+      case 4:return [bt(o.fp)];
+      case 5:return [zr(o.dA1.pucesR.p3)];
+      case 7:return [zr(o.dA2.okR)];
+      case 8:return groupes(X.A.cartes,'A');
+      case 9:return [bt(o.bravoA.btn)];
+      case 16:return [bt(o.outils.par)];
+      case 17:return [rond(X.B.j9,Math.max(Y.jR+Y.anG,22/px))];
+      case 18:return [zr(o.dB1.pucesR.p3)];
+      case 20:return [zr(o.dB2.okR)];
+      case 21:return groupes(X.B.cartes,'B');
+    }
+    return [];
+  },
+  /* la touche suivante attendue à l'écriture k */
+  attendu(k){const s=this.saisie[k]||'',bon=ECRIRE[k].ok.find(x=>x.startsWith(s))||ECRIRE[k].ok[0];return bon.charAt(s.length);},
+  /* un caractère à l'écriture k : écrit seulement s'il est bon ; vrai quand le nombre est complet */
+  saisir(k,c){const s=(this.saisie[k]||'')+c,ok=ECRIRE[k].ok;
+    if(!ok.some(x=>x.startsWith(s))){this.aide[k]=true;this.montrer(k);return false;}
+    this.saisie[k]=s;this.indice=null;return ok.includes(s);},
+  /* après une erreur, au téléphone : le doigt montre la bonne touche du pavé */
+  montrer(k){if(!this.o.port)return;const d=this.o[ECRIRE[k].d],c=this.attendu(k),R=d.clesR[c];
+    if(R)this.indice={r0:maintenant(),c:[R.x+R.w/2,R.y+R.h/2]};},
+  /* le clavier (ordinateur) : les chiffres à une attente d'écriture ; Entrée valide une fenêtre ; null = pas pour nous */
+  taper(t,cle){const k=this.attente(t);if(k<0)return null;
+    if(ECRIRE[k]){if(/^[0-9]$/.test(cle))return this.saisir(k,cle);
+      if(cle===' '||cle==='Backspace'||cle==='Delete')return false;
+      if(cle.length===1){this.aide[k]=true;return false;}
+      return null;}
+    if(cle==='Enter'&&(k===7||k===20)){this.choix.touches[k]=null;return true;}
+    return null;},
+  /* un toucher à l'attente : le bon geste fait repartir le tutoriel ; ailleurs, rien ne change et le doigt montre où toucher */
+  toucher(t,p){
+    const Y=this.Y,k=this.attente(t);if(k<0)return false;
+    const q=[(p[0]-Y.ox)/Y.s,(p[1]-Y.oy)/Y.s],zs=this.zones(k);
+    let bon=null,db=Infinity;for(const z of zs){const d=z.d(q);if(d!=null&&d<db){bon=z;db=d;}}
+    if(ECRIRE[k]){
+      if(this.o.port){if(!bon){this.montrer(k);return false;}
+        this.appuiCle={d:ECRIRE[k].d,c:bon.cle,r0:maintenant()};
+        const fini=this.saisir(k,bon.cle);if(fini)this.choix.touches[k]={t:ATT[k],p:q};return fini;}
+      /* à l'ordinateur, la case : le premier toucher donne le calcul (l'élève sans clavier n'est pas bloqué), le second l'écrit */
+      if(bon){if(!this.aide[k]){this.aide[k]=true;this.indice=null;return false;}
+        this.saisie[k]=ECRIRE[k].ok[0];this.indice=null;this.choix.touches[k]={t:ATT[k],p:q};return true;}
+      this.indice={r0:maintenant(),c:zs[0].c};return false;}
+    if(TACHES[k]){const ex=TACHES[k];
+      if(bon){const x=bon.tache,n=this.compte(ex);
+        /* une tache de trop n'est pas prise : l'aide dit combien, le doigt montre une tache qu'on peut prendre */
+        if(n[x.cote]>=MAX[ex]){this.aideT[ex]=true;const l=this.libre(ex);this.indice=l?{r0:maintenant(),c:l.c}:null;return false;}
+        this.choix.sel.push({ex,cote:x.cote,i:x.i,t:ATT[k]});this.indice=null;this.choix.touches[k]={t:ATT[k],p:q};return true;}
+      /* une tache déjà choisie : rien ne change ; « Valider » touché trop tôt : l'aide ; ailleurs : le doigt */
+      const deja=this.taches(ex).some(x=>Math.hypot(q[0]-x.c[0],q[1]-x.c[1])<=Y.tRB);
+      if(deja)return false;
+      const v=this.o.act.valider.r,n=a=>+v.getAttribute(a);
+      if(q[0]>=n('x')&&q[0]<=n('x')+n('width')&&q[1]>=n('y')&&q[1]<=n('y')+n('height'))this.aideT[ex]=true;
+      const l=this.libre(ex);if(l)this.indice={r0:maintenant(),c:l.c};return false;}
+    if(bon){this.indice=null;if(bon.faire)bon.faire();this.choix.touches[k]={t:ATT[k],p:q};return true;}
+    let pres=zs[0];for(const z of zs)if(Math.hypot(q[0]-z.c[0],q[1]-z.c[1])<Math.hypot(q[0]-pres.c[0],q[1]-pres.c[1]))pres=z;
+    if(pres)this.indice={r0:maintenant(),c:pres.c};
+    return false;
+  },
+  /* la cible de l'attente en cours, en unités du film (pour les essais automatiques) : une tache qu'on peut prendre ; à une
+     écriture au téléphone, la touche suivante ; à l'ordinateur, la case */
+  cible(t){const k=this.attente(t);if(k<0)return null;const Y=this.Y;let c=null;
+    if(TACHES[k]){const l=this.libre(TACHES[k]);if(l)c=l.c;}
+    else if(ECRIRE[k]&&this.o.port){const R=this.o[ECRIRE[k].d].clesR[this.attendu(k)];if(R)c=[R.x+R.w/2,R.y+R.h/2];}
+    else{const z=this.zones(k)[0];if(z)c=z.c;}
+    return c?[Y.ox+c[0]*Y.s,Y.oy+c[1]*Y.s]:null;},
+  anime(){const n=maintenant();return (!!this.indice&&n-this.indice.r0<2800)||(!!this.appuiCle&&n-this.appuiCle.r0<260);},
+  /* la phrase sous l'équation, coupée en deux lignes au téléphone quand elle ne tient pas (comme dans l'outil) */
+  consigne(texte,coul,vu){const o=this.o,Y=this.Y,cs=Y.consigne,cle=texte+'|'+(coul||'');
+    if(o.consCle!==cle){o.consCle=cle;while(o.consigne.firstChild)o.consigne.removeChild(o.consigne.firstChild);
+      o.consigne.setAttribute('fill',coul||C.consigne);o.consigne.setAttribute('font-weight',coul?900:800);
+      o.consigne.style.display='';const l1=E('tspan',{x:cs.x,y:cs.y},o.consigne);l1.textContent=texte;
+      let lg=0;try{lg=o.consigne.getComputedTextLength();}catch(e){}
+      if(cs.ys&&texte&&lg>Y.w-30){const mots=texte.split(' ');let best=1,ecart=1e9;
+        for(let k=1;k<mots.length;k++){const d=Math.abs(mots.slice(0,k).join(' ').length-mots.slice(k).join(' ').length);if(d<ecart){ecart=d;best=k;}}
+        l1.textContent=mots.slice(0,best).join(' ');l1.setAttribute('y',cs.ys[0]);
+        E('tspan',{x:cs.x,y:cs.ys[1]},o.consigne).textContent=mots.slice(best).join(' ');}}
+    op(o.consigne,vu);},
+  render(t){
+    const o=this.o,Y=this.Y,X=this.X,port=o.port,ch=this.choix,enA=t<TT.b;
+    /* au départ, et quand on recommence */
+    if(t<TT.a0-1e-6){ch.sel=[];ch.groupe={};ch.touches={};this.saisie={};this.aide={};this.aideT={};this.indice=null;this.appuiCle=null;}
+    const apres=a=>t>a+1e-6,entre=(a,b)=>apres(a)&&t<b?1:0;
+    Q.titre(o,Y,t,TT.ecran);
+    if(enA)Q.barre(o,Y,t,TT.resoluA,TT.b-.05);else Q.barre(o,Y,t,TT.resoluB,1e9);
+    const vA=1-P(t,TT.b-.3,.3,F.lin),vB=P(t,TT.b,.3,F.lin);
+    Q.ecrire(Y,o.eqA,t,vA);Q.ecrire(Y,o.eqB,t,t>=TT.b-.3?vB:0);
+    /* la phrase sous l'équation */
+    {let ci=0;for(let k=0;k<CONS.length;k++)if(CONS[k][0]<=t)ci=k;let txt=CONS[ci][1],coul=CONS[ci][2];
+      if(apres(TT.a0)&&t<=TT.aV+.001){const n=this.compte('A',t);txt=consTaches(n.g,n.d,'𝑡');coul=null;}
+      if(apres(TT.b0)&&t<=TT.bV+.001){const n=this.compte('B',t);txt=consTaches(n.g,n.d,'𝑘');coul=null;}
+      this.consigne(txt,coul,t<TT.b?vA:1);}
+    op(o.fondPlateau,t<TT.groupesA?1:t<TT.replieA?1-P(t,TT.groupesA,.25,F.lin):
+      t<TT.groupesB?P(t,TT.replieA+.1,.3,F.lin):t<TT.replieB?1-P(t,TT.groupesB,.12,F.lin):P(t,TT.replieB+.1,.3,F.lin));
+    /* les taches choisies : l'anneau orange dès le toucher ; à la validation, elles s'en vont */
+    const taches=(ex,T0,TV)=>{const L0=ex==='A'?o.At:o.Bt,pr=t>TV+1e-6?this.finale(ex):this.prises(ex,t),part=P(t,TV,.3,F.io);
+      for(const cote of ['g','d'])L0[cote].forEach((e,i)=>{const s=pr.find(x=>x.cote===cote&&x.i===i),ok=!!s;
+        op(e.an,ok&&t<TV+.02?1:0);
+        const k=ok?part:0;op(e.g,1-k);
+        placer(e.g,e.c,ok?L(1,.3,k)*(t<TV?L(1.08,1,P(t,s.t,.18,F.out)):1):1);});};
+    /* ---- A : 𝑡 + 4 = 3𝑡 ---- */
+    op(o.A,t<TT.groupesA+.3?vA:0);
+    taches('A',TT.a0,TT.aV);
+    /* 4 = 2𝑡 partagé : les deux taches qui restent vont sur leur ligne (là où sera leur groupe), deux jetons en face de chacune ;
+       un trait coupe les plateaux en deux ; les bandes deviennent les groupes, sans bouger */
+    {const KA=X.A.cartes,ligne=k=>KA.ys[k]+KA.h/2,pr=this.finale('A');
+      const restent=o.At.d.filter((e,i)=>!pr.some(s=>s.cote==='d'&&s.i===i));
+      if(apres(TT.aV)){const u=P(t,TT.rangeA,.8,F.io);
+        restent.forEach((e,k)=>placer(e.g,[L(e.c[0],KA.tx,u),L(e.c[1],ligne(k),u)],L(1,KA.tR/Y.tRB,u)));}
+      o.Ab.forEach((b,i)=>{const u=P(t,TT.rangeA+i*.04,.8,F.io),c1=[KA.bx[i%2],ligne(Math.floor(i/2))];
+        placer(b.g,[L(b.c[0],c1[0],u),L(b.c[1],c1[1],u)],L(1,KA.bR/Y.bR,u));});
+      o.coupe.forEach((l,k)=>{const u=P(t,TT.coupeA+k*.1,.35,F.out);l.setAttribute('x2',L(l.xa,l.xb,u).toFixed(1));
+        op(l,t<TT.coupeA?0:(t<TT.groupesA?1:1-P(t,TT.groupesA,.25,F.lin)));});
+      o.cartesA.forEach((c,k)=>{let v=t<TT.groupesA?0:P(t,TT.groupesA,.3,F.lin);
+        if(apres(TT.aG)&&k!==ch.groupe.A)v*=1-P(t,TT.aG+.12,.25,F.lin);
+        if(t>=TT.replieA)v*=1-P(t,TT.replieA,.18,F.lin);
+        op(c.g,v*vA);
+        const ok=k===ch.groupe.A&&apres(TT.aG);
+        c.r.setAttribute('fill',ok?'#dcfce7':'#f8fafc');c.r.setAttribute('stroke',ok?'#16a34a':'rgba(59,130,246,.42)');
+        c.r.setAttribute('stroke-width',ok?KA.swOk:KA.sw);});}
+    op(o.Aplie,t<TT.replieA?0:P(t,TT.replieA+.16,.3,F.lin)*vA);
+    /* ---- B : 2𝑘 + 9 = 5𝑘 ---- */
+    op(o.B,t<TT.b?0:(t<TT.groupesB?vB:1-P(t,TT.groupesB,.12,F.lin)));
+    taches('B',TT.b0,TT.bV);
+    op(o.j9.anV,apres(TT.bJ)&&t<TT.groupesB?1:0);
+    {const KB=X.B.cartes;
+      o.cartesB.forEach((c,k)=>{const a=P(t,TT.groupesB+.14+k*.06,.55,F.out);let v=t<TT.groupesB?0:a;
+        if(apres(TT.bG)&&k!==ch.groupe.B)v*=1-P(t,TT.bG+.12,.25,F.lin);
+        if(t>=TT.replieB)v*=1-P(t,TT.replieB,.18,F.lin);
+        op(c.g,v);const s=L(.94,1,a),dy=L(18,0,a)*(port?.35:1),cx=Y.eq.x;
+        c.g.setAttribute('transform',`translate(0,${dy}) translate(${cx},${c.cy}) scale(${s}) translate(${-cx},${-c.cy})`);
+        const ok=k===ch.groupe.B&&apres(TT.bG);
+        c.r.setAttribute('fill',ok?'#dcfce7':'#f8fafc');c.r.setAttribute('stroke',ok?'#16a34a':'rgba(59,130,246,.42)');
+        c.r.setAttribute('stroke-width',ok?KB.swOk:KB.sw);});}
+    op(o.Bplie,t<TT.replieB?0:P(t,TT.replieB+.16,.3,F.lin));
+    /* ---- boutons : petits jetons (A) ou jetons numérotés (B) ; celui que l'élève a touché est bleu, comme dans l'outil ---- */
+    o.fp.g.style.display=enA?'':'none';for(const id of ['dec','gro','par'])o.outils[id].g.style.display=enA?'none':'';
+    const allume=(b,on,r)=>{r=r||b.st||o.repos;b.r.setAttribute('fill',on?'url(#fsBleu)':r.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':r.bord);b.t[0].setAttribute('fill',on?'#ffffff':r.encre);};
+    allume(o.rangs.enl,(apres(TT.a0)&&t<TT.b)||(apres(TT.b0)&&!apres(TT.bPar)));
+    allume(o.fp,apres(TT.aFp)&&t<TT.rangeA,o.repos);
+    for(const id of ['dec','gro'])allume(o.outils[id],false,o.repos);
+    allume(o.outils.par,apres(TT.bPar),o.repos);
+    const grise=(t>=TT.groupesA&&t<TT.replieA)||(t>=TT.groupesB&&t<TT.replieB);
+    for(const id of ['enl','ajo'])o.rangs[id].g.setAttribute('opacity',grise?.45:1);
+    for(const b of [o.fp,o.outils.dec,o.outils.gro,o.outils.par])b.g.setAttribute('opacity',grise?.45:1);
+    appuiT(o.rangs.enl,t,enA?TT.a0:TT.b0);appuiT(o.fp,t,TT.aFp);appuiT(o.outils.par,t,TT.bPar);
+    /* zone d'action : selon les taches choisies (un seul côté : Effacer ; autant des deux côtés : Valider la suppression ;
+       pas autant : Effacer la sélection) */
+    {const ac=o.act,ex=enA?'A':'B',T0=enA?TT.a0:TT.b0,TV=enA?TT.aV:TT.bV,dans=apres(T0)&&t<TV+.15,n=this.compte(ex,Math.min(t,TV));
+      const un=dans&&(!n.g!==!n.d),pareil=dans&&n.g>0&&n.g===n.d,autre=dans&&n.g>0&&n.d>0&&n.g!==n.d;
+      if(port){op(ac.attente.g,pareil?0:1);op(ac.valider.g,pareil?1:0);}
+      else{op(ac.effacer.g,un?1:0);op(ac.effSel.g,autre?1:0);op(ac.valider.g,pareil?1:0);op(ac.effSel2.g,pareil?1:0);}
+      appuiT(ac.valider,t,TV);
+      const bv=enA?Q.bravo(o,t,o.bravoA,TT.resoluA,TT.b-.05,TT.aSuiv,appuiT):Q.bravo(o,t,o.bravoB,TT.resoluB,1e9,null);
+      if(bv)for(const k in ac)op(ac[k].g,0);}
+    /* ---- les fenêtres : elles s'ouvrent juste APRÈS le toucher, la seconde remplace la première sans fondu ---- */
+    const e=.001;
+    Q.fenetres(o,Y,t,[[o.dA1,TT.aFp+e,TT.aP+e,null,null,false],[o.dA2,TT.aP+e,TT.aOk+e+.1,null,null,true],
+      [o.dB1,TT.bJ+e,TT.bP+e,null,null,false],[o.dB2,TT.bP+e,TT.bOk+e+.1,null,null,true]],[TT.aOk+e,TT.bOk+e],port);
+    /* ce que l'élève a écrit : à l'attente, ce qu'il tape ; après, son nombre */
+    const ici=this.attente(t),nApp=maintenant();
+    for(const k of [6,19]){const d=o[ECRIRE[k].d],s=apres(ATT[k])?ECRIRE[k].ok[0]:(ici===k?(this.saisie[k]||''):'');
+      d.champ.textContent=s;
+      if(d.curseur){let w=0;if(s){try{w=d.champ.getComputedTextLength();}catch(er){}}d.curseur.setAttribute('x',d.champC+w/2+3);
+        op(d.curseur,ici===k?1:((Math.floor(t*2)%2===0)?1:0));}
+      for(const c in d.fondsCles){const a=this.appuiCle;d.fondsCles[c].setAttribute('fill',a&&a.d===ECRIRE[k].d&&a.c===c&&nApp-a.r0<200?'#dbeafe':'#f8fafc');}}
+    /* le rond bleu sous le doigt de l'élève, quand le geste est bon */
+    let rip=null;for(const k in ch.touches){const v=ch.touches[k];if(v&&t>v.t+1e-6&&t<v.t+.45)rip=v;}
+    if(rip){const u=F.clamp((t-rip.t)/.45);o.ripple.setAttribute('cx',rip.p[0]);o.ripple.setAttribute('cy',rip.p[1]);
+      o.ripple.setAttribute('r',(port?5:12)+(port?16:34)*F.out(u));op(o.ripple,(1-u)*.9);}else op(o.ripple,0);
+    /* le doigt : seulement quand l'élève a touché ailleurs (ou une tache de trop, une mauvaise touche) ; il vient sur la cible */
+    const ind=this.indice,ui=ind?(nApp-ind.r0)/1000:9;
+    if(ui<2.6){const dec=port?[34,46]:[110,120],c=ind.c,a=F.io(F.clamp(ui/.5));
+      const vis=Math.min(F.clamp(ui/.2),1-F.clamp((ui-2.2)/.4)),tape=x=>.1*Math.sin(Math.PI*F.clamp((ui-x)/.3));
+      op(o.doigt,vis);o.doigt.setAttribute('transform',`translate(${L(c[0]+dec[0],c[0],a).toFixed(1)},${L(c[1]+dec[1],c[1],a).toFixed(1)}) scale(${(1-tape(.75)-tape(1.3)).toFixed(3)})`);
+    }else op(o.doigt,0);
+    /* la consigne en haut : en vert avec ✓ quand le geste est fait ; l'aide (en orange) après une erreur */
+    let i=-1;for(let k=0;k<GUIDE_T.length;k++)if(GUIDE_T[k][0]<=t)i=k;
+    if(i<0)op(o.st,0);else{const cur=GUIDE_T[i],nx=GUIDE_T[i+1],fait=cur[2]!=null&&apres(cur[2]);
+      const aide=!fait&&((cur[3]!=null&&this.aide[cur[3]])||(cur[4]!=null&&this.aideT[cur[4]]));
+      const texte=aide?(cur[3]!=null?ECRIRE[cur[3]].aide[port?1:0]:AIDE_T[cur[4]]):(Array.isArray(cur[1])?cur[1][port?1:0]:cur[1]);
+      Q.legende(o,Y,(fait?'✓ ':'')+texte);o.st.setAttribute('fill',fait?'#15803d':aide?'#c2410c':'#1e293b');
+      let a=P(t,cur[0],.3,F.out);if(nx)a=Math.min(a,1-P(t,nx[0]-.22,.22,F.lin));op(o.st,a);}
+    Q.fin(o,Y,t,TT.fin);
+  }
+};
+return aToi;
 })();
 </script>
 <script>
