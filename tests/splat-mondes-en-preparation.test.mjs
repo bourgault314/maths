@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20261108-1";   // les aides des étapes (AIDES, aide) pour « ? Aide » des outils (lot 3 « aides et carte », 08/11/2026)
+const VERSION = "20261108-2";   // l’aide suit l’équation jouée à l’étape 35 (AIDES_JETONS, lot 4 « aides et carte », 08/11/2026)
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {

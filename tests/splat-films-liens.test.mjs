@@ -68,7 +68,8 @@ test("carte : la durée écrite sur chaque bouton est celle du film (arrondie)",
   const duree = (marque) => Number(blocs.find((b) => b.includes(marque)).match(/duration:([\d.]+)/)[1]);
   const vrai = { intro: duree("FILMS.intro=film;"), dessine: duree("FILMS.dessine="), paquets: duree("FILMS.paquets="), "equasplat-jetons": duree("FILMS['equasplat-jetons']=") };
   const ecrits = [...carte.matchAll(/\["([a-z-]+)","[^"]+",(\d+)\]/g)];
-  assert.equal(ecrits.length, 4);
+  // trois films ont leur durée sur la carte ; les deux boutons de l'étape 35 sont des tutoriels (lot 4, 08/11/2026)
+  assert.equal(ecrits.length, 3);
   for (const [, f, s] of ecrits) assert.equal(Number(s), Math.round(vrai[f]), f);
 });
 

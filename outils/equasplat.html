@@ -4900,7 +4900,7 @@
   .actionZone > .btnrow{margin-top:0}
 </style>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261108-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261108-2"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261107-1"></script>
@@ -10492,8 +10492,12 @@
      parcours ni sans aide propre à l'étape (36, 37 et le monde 6 n'en ont pas encore). */
   function eleveLienAideHtml(){
     const E = window.MathsGoSplatEtapes;
+    /* l'aide suit l'équation jouée (lot 4, 08/11/2026, choix de Gwenaël) : en jetons numérotés, le tutoriel des
+       jetons numérotés ; en petits jetons (numberMode « unit », comme createImportedEquationState), celui des petits jetons */
+    const eq = eleveEqs[eleveIdx];
+    const jetons = !!eq && String(eq.numberMode || eq.tokenMode || "").toLowerCase() !== "unit";
     const href = eleveParcours && E && typeof E.aide === "function"
-      ? E.aide(eleveParcours, location.pathname + location.search + location.hash) : null;
+      ? E.aide(eleveParcours, location.pathname + location.search + location.hash, jetons) : null;
     if(!href) return "";
     return `<a class="eleveAide" href="${href.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" title="Comment faire : le tutoriel" aria-label="Comment faire">? <span class="txt">Comment faire</span></a>`;
   }

@@ -148,17 +148,23 @@
      tests/splat-aide-jeux.test.mjs la recalcule à partir de splat_univers.html et échoue si les deux
      diffèrent. Chaque étape : parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
   const AIDES = { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat" };
+  /* L'aide qui suit la carte jouée (lot 4 « aides et carte », 08/11/2026, choix de Gwenaël : « celui de la carte
+     jouée ») : à l'étape 35, une équation en jetons numérotés ouvre le tutoriel des jetons numérotés, une
+     équation en petits jetons celui des petits jetons (AIDES). C'est le second film de l'étape sur la carte ;
+     tests/splat-aide-jeux.test.mjs le vérifie aussi. */
+  const AIDES_JETONS = { m3e1: "equasplat-jetons" };
   const URL_FILMS = "/outils/splat_intro.html";
   /* le retour : l'adresse du jeu lui-même (la même série, donc la même reprise — deux livrets peuvent
      partager un parcours avec des cartes différentes), seulement une page du site ; au-delà de 6 000
      caractères (les séries d'ÉquaSplat font 3,5 ko), la carte qui relance le jeu de l'étape (?jouer=) */
   const RETOUR_MAX = 6000;
-  function aide(parcours, retour) {
+  function aide(parcours, retour, jetons) {
     if (!Object.prototype.hasOwnProperty.call(AIDES, parcours)) return null;
+    const film = jetons === true && Object.prototype.hasOwnProperty.call(AIDES_JETONS, parcours) ? AIDES_JETONS[parcours] : AIDES[parcours];
     const suite = typeof retour === "string" && /^\/[^\/\\]/.test(retour) && retour.length <= RETOUR_MAX
       ? retour
       : "/outils/splat_univers.html?jouer=" + encodeURIComponent(parcours);
-    return URL_FILMS + "?film=" + AIDES[parcours] + "&suite=" + encodeURIComponent(suite) + "&depuis=jeu";
+    return URL_FILMS + "?film=" + film + "&suite=" + encodeURIComponent(suite) + "&depuis=jeu";
   }
 
   function echapper(texte) {
@@ -255,5 +261,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, BONUS, AIDES, aide, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, AIDES, AIDES_JETONS, aide, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
 })();

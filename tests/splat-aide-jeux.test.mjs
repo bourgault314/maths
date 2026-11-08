@@ -96,11 +96,11 @@ function fonction(src, nom) {
   }
   throw new Error(nom);
 }
-function lienAide(nomOutil, varParcours, parcours, adresse) {
+function lienAide(nomOutil, varParcours, parcours, adresse, eqs) {
   const u = new URL(adresse, "https://mathsgo.re");
-  const f = new Function("window", "location", varParcours,
+  const f = new Function("window", "location", varParcours, "eleveEqs", "eleveIdx",
     fonction(OUTILS[nomOutil], "eleveLienAideHtml") + "; return eleveLienAideHtml();");
-  return f({ MathsGoSplatEtapes: E }, { pathname: u.pathname, search: u.search, hash: u.hash }, parcours);
+  return f({ MathsGoSplatEtapes: E }, { pathname: u.pathname, search: u.search, hash: u.hash }, parcours, eqs || [], 0);
 }
 const VARS = { "Petit SPLAT!": "parcoursId", "SPLAT! Classique": "parcoursId", "ÉquaSplat": "eleveParcours" };
 const CLASSES = { "Petit SPLAT!": "eleve-aide", "SPLAT! Classique": "eleveAide", "ÉquaSplat": "eleveAide" };
@@ -175,4 +175,33 @@ test("lecteur : ouvert par « ? Aide » (&depuis=jeu), la pastille de droite dit
   const val = (s) => new Function("location", dep + "return DEPUIS_JEU;")({ search: s });
   assert.equal(val("?film=intro&suite=%2Fx&depuis=jeu"), true);
   for (const s of ["?film=intro&suite=%2Fx", "?depuis=carte", "?depuis=jeux", "?depuis=JEU"]) assert.equal(val(s), false, s);
+});
+
+// Lot 4 « aides et carte » (08/11/2026, choix de Gwenaël : « celui de la carte jouée ») : à l'étape 35, « ? » ouvre le
+// tutoriel qui correspond à l'équation affichée — jetons numérotés ou petits jetons. C'est le second film de l'étape sur la
+// carte, et seule l'étape 35 a ce choix.
+test("ÉquaSplat, étape 35 : « ? » suit l'équation jouée (jetons numérotés → leur tutoriel, petits jetons → le sien)", () => {
+  const films35 = JSON.parse(JSON.stringify(MONDES.flatMap((m) => m.etapes).find((e) => e.p === "m3e1").films));
+  assert.deepEqual(films35.map((f) => f[0]), ["equasplat", "equasplat-jetons"], "les deux tutoriels de l'étape 35 sur la carte");
+  assert.deepEqual(films35.map((f) => f[2]), ["toi", "toi"], "les deux s'ouvrent comme « ✋ À toi de faire »");
+  assert.deepEqual({ ...E.AIDES_JETONS }, { m3e1: films35[1][0] });
+  assert.match(intro, /FILMS\['equasplat-jetons'\]=\(function\(\)\{/);
+  const adr = "/outils/equasplat.html?eleve=1&parcours=m3e1#data=eyJzb3VyY2Ui";
+  const film = (eqs) => new URL(lienAide("ÉquaSplat", "eleveParcours", "m3e1", adr, eqs).match(/href="([^"]+)"/)[1].replace(/&amp;/g, "&"), "https://mathsgo.re").searchParams.get("film");
+  assert.equal(film([{ numberMode: "unit", left: ["x", 2], right: [8] }]), "equasplat");
+  assert.equal(film([{ numberMode: "grouped", left: [28], right: ["x", 12] }]), "equasplat-jetons");
+  assert.equal(film([{ tokenMode: "UNIT" }]), "equasplat", "même lecture que createImportedEquationState");
+  assert.equal(film([{}]), "equasplat-jetons", "sans précision, l'outil joue en jetons numérotés");
+  assert.equal(film([]), "equasplat", "sans équation chargée : le premier tutoriel de l'étape");
+  // l'outil lit l'équation affichée, la même que createImportedEquationState
+  assert.match(fonction(OUTILS["ÉquaSplat"], "eleveLienAideHtml"), /const eq = eleveEqs\[eleveIdx\];/);
+  // les autres étapes n'ont pas de second choix : le drapeau ne change rien
+  for (const p of ["m1e1", "m1e2", "m2e4"]) assert.equal(E.aide(p, "/outils/splat.html", true), E.aide(p, "/outils/splat.html"), p);
+  assert.equal(E.aide("m3e2", adr, true), null, "36 : toujours pas d'aide");
+  // la série réelle de l'étape 35 : 8 équations sur 12 en jetons numérotés
+  const j = MONDES.flatMap((m) => m.etapes).find((e) => e.p === "m3e1").j;
+  const serie = JSON.parse(Buffer.from(j.split("#data=")[1], "base64").toString("utf8")).serie;
+  const parEq = serie.map((q) => film([q]));
+  assert.equal(parEq.filter((f) => f === "equasplat-jetons").length, 8);
+  assert.equal(parEq.filter((f) => f === "equasplat").length, 4);
 });
