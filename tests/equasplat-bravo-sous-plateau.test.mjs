@@ -89,15 +89,16 @@ test("films : la barre n'a plus de bouton « Équation suivante », le bandeau p
   assert.match(intro, /function barre\(o,Y,t,tr,tCache\)\{/);
   assert.match(intro, /const AVANCE_FIGE=1\.0,APRES_BRAVO=\.4;/, "1,4 s entre les boutons figés et le bandeau, comme ELEVE_PAUSE_SOLUTION");
   assert.match(intro, /if\(G\)\{op\(G,vu\?0:1-\.65\*f\);if\(f>0&&!vu\)G\.setAttribute\('filter','url\(#fsGris\)'\)/);
-  assert.equal((intro.match(/Q\.grouperOutils\(o,S,/g) || []).length, 4);
+  assert.equal((intro.match(/Q\.grouperOutils\(o,S,/g) || []).length, 5);   // + le tutoriel de l'étape É1 (lot 6a)
   // 5 rendus : le film des billes, son tutoriel, le film des jetons numérotés et son tutoriel (lot 4, 08/11/2026 ; les deux
-  // derniers partagent l'écran, d'où un grouperOutils pour eux deux), le tutoriel de l'étape 37 (lot 5)
-  assert.equal((intro.match(/const bv=enA\?Q\.bravo\(o,t,o\.bravoA,/g) || []).length, 5);
-  for (const sol of ["'𝑡 = 4'", "'𝑦 = 3'", "'𝑡 = 3'", "'𝑘 = 14'", "'𝑝 = 7'", "'𝑡 = 2'", "'𝑘 = 3'"]) assert.ok(intro.includes(`Q.bandeau(o,Y,S,${sol})`), sol);
+  // derniers partagent l'écran, d'où un grouperOutils pour eux deux), le tutoriel de l'étape 37 (lot 5), celui de l'étape É1 (lot 6a)
+  assert.equal((intro.match(/const bv=enA\?Q\.bravo\(o,t,o\.bravoA,/g) || []).length, 6);
+  for (const sol of ["'𝑡 = 4'", "'𝑦 = 3'", "'𝑡 = 3'", "'𝑘 = 14'", "'𝑝 = 7'", "'𝑡 = 2'", "'𝑘 = 3'", "'𝑘 = 2'", "'𝑘 = −3'"]) assert.ok(intro.includes(`Q.bandeau(o,Y,S,${sol})`), sol);
   assert.equal((intro.match(/o\.cSuivant=o\.bravoA\.btn\.c;/g) || []).length, 2, "le doigt des films touche le bouton du bandeau");
   assert.match(intro, /case 6:return \[bt\(o\.bravoA\.btn\)\];/, "le tutoriel attend le toucher sur le bouton du bandeau");
   assert.match(intro, /case 14:return \[bt\(o\.bravoA\.btn\)\];/, "celui des jetons numérotés aussi");
   assert.match(intro, /case 9:return \[bt\(o\.bravoA\.btn\)\];/, "et celui de l'étape 37 (lot 5)");
+  assert.match(intro, /case 11:return \[bt\(o\.bravoA\.btn\)\];/, "et celui de l'étape É1 (lot 6a)");
 });
 
 test("le bandeau se centre sous le plateau : sur ordinateur il couvre aussi la zone d'action vide (21/10/2026)", () => {

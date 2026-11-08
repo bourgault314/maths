@@ -662,6 +662,19 @@ function blob(cx,cy,r){const n=36,pts=[];
 const DECALAGE={'𝑡':[.004,.385],'𝑦':[-.011,.15],'𝑥':[.010,.27],'𝑘':[.006,.27],'𝑝':[.002,.15]};
 /* couleur d'un jeton numéroté (positiveTokenColorForValue de l'outil) */
 function couleurJeton(v){const h=((Math.abs(Math.round(v))*37)%360+360)%360;return {fill:`hsla(${h},78%,54%,.2)`,stroke:`hsla(${h},78%,45%,.62)`};}
+/* les jetons du monde 6 (SPLAT! Relatifs, univers « relative » de l'outil, lot 6a du 08/11/2026) : vert pour un positif
+   (.tokenCircle.relativePositive), rouge pour un négatif (.negative), gris pour 0 (.zero) ; le nombre écrit avec un vrai
+   signe moins (formatSignedNumber) */
+function couleurRelatif(v){return v<0?{fill:'#fff1f2',stroke:'#e11d48'}:(v===0?{fill:'#f1f5f9',stroke:'#64748b'}:{fill:'#ecfdf5',stroke:'#16a34a'});}
+const signe=v=>(v<0?'−':'')+Math.abs(v);
+/* le décalage d'une lettre que la table ne connaît pas (« −𝑘 » de la tache opposée) : mesuré à l'encre comme
+   splatLettreDecalage de l'outil */
+const DECALAGE_MESURE={};
+function decalage(l){if(DECALAGE[l])return DECALAGE[l];if(DECALAGE_MESURE[l])return DECALAGE_MESURE[l];let d=[0,.33];
+  try{const cx=document.createElement('canvas').getContext('2d');cx.font="italic 900 100px SplatLettres, Georgia, 'Times New Roman', serif";
+    const m=cx.measureText(l);if(m.actualBoundingBoxAscent>0){d=[(m.width-(m.actualBoundingBoxRight-m.actualBoundingBoxLeft))/200,(m.actualBoundingBoxAscent-m.actualBoundingBoxDescent)/200];
+      if(!document.fonts||document.fonts.check('italic 900 100px SplatLettres','\u{1D465}'))DECALAGE_MESURE[l]=d;}}catch(e){}
+  return d;}
 const txt=(p,x,y,s,a)=>E('text',Object.assign({x,y,'font-size':s,'dominant-baseline':'central'},a||{}),p);
 
 /* ---------- construction ---------- */
@@ -742,20 +755,22 @@ function plateau(o,Y,S){
   E('rect',{x:pl.x,y:pl.y,width:pl.w,height:pl.h,rx:pl.rx,fill:'#fefeff',stroke:'rgba(15,23,42,.18)','stroke-width':pl.sw},o.fondPlateau);
   E('line',{x1:Y.eq.x,y1:pl.y,x2:Y.eq.x,y2:pl.y+pl.h,stroke:'#94a3b8','stroke-width':Y.div},o.fondPlateau);
 }
-function tache(Y,p,c,r,lettre){const g=E('g',{},p);
-  E('path',{d:blob(c[0],c[1],r),fill:C.tache,stroke:'rgba(0,0,0,.22)','stroke-width':Y.bSW},g);
-  const dc=DECALAGE[lettre]||[0,.27];
+/* oppose : la tache opposée du monde 6 (.splatShape.oppositeX de l'outil : violette, « −𝑘 ») */
+function tache(Y,p,c,r,lettre,oppose){const g=E('g',{},p);
+  E('path',{d:blob(c[0],c[1],r),fill:oppose?'#4c1d95':C.tache,stroke:oppose?'rgba(76,29,149,.42)':'rgba(0,0,0,.22)','stroke-width':Y.bSW},g);
+  const l=oppose?'−'+lettre:lettre,dc=oppose?decalage(l):(DECALAGE[lettre]||[0,.27]);
   E('text',{x:c[0],y:c[1],dx:dc[0]+'em',dy:dc[1]+'em','text-anchor':'middle','font-size':(r*.8).toFixed(1),'font-weight':900,'font-style':'italic',
-    'font-family':'SplatLettres,Georgia,"Times New Roman",serif',fill:'#ffffff'},g).textContent=lettre;
+    'font-family':'SplatLettres,Georgia,"Times New Roman",serif',fill:'#ffffff'},g).textContent=l;
   return g;}
-/* une pièce ronde (bille, ou jeton numéroté si v est donné), dessinée en (0,0) : on la place par transform ; anneau de sélection orange ou vert */
-function piece(Y,p,v,r,vert){const g=E('g',{},p);
+/* une pièce ronde (bille, ou jeton numéroté si v est donné), dessinée en (0,0) : on la place par transform ; anneau de sélection orange ou vert ;
+   relatif : un jeton du monde 6 (vert, rouge ou gris, couleurRelatif) */
+function piece(Y,p,v,r,vert,relatif){const g=E('g',{},p);
   const an=E('circle',{cx:0,cy:0,r:r+Y.anG,fill:'none',stroke:vert?C.anneauVert:C.anneau,'stroke-width':Y.anW,filter:vert?'url(#fsHaloVert)':'url(#fsHalo)'},g);op(an,0);
   let anV=null;if(v!=null){anV=E('circle',{cx:0,cy:0,r:r+Y.anG,fill:'none',stroke:C.anneauVert,'stroke-width':Y.anW,filter:'url(#fsHaloVert)'},g);op(anV,0);}
   if(v==null)E('circle',{cx:0,cy:0,r,fill:C.bille,'fill-opacity':.18,stroke:C.bille,'stroke-opacity':.58,'stroke-width':Y.bSW},g);
-  else{const c=couleurJeton(v);E('circle',{cx:0,cy:0,r,fill:c.fill,stroke:c.stroke,'stroke-width':Y.bSW},g);
+  else{const c=relatif?couleurRelatif(v):couleurJeton(v);E('circle',{cx:0,cy:0,r,fill:c.fill,stroke:c.stroke,'stroke-width':Y.bSW},g);
     /* le chiffre placé comme dans ÉquaSplat (.tokenText) : dominant-baseline « middle », 2 px plus bas pour 50 px de police */
-    txt(g,0,Y.jFs*.04,Y.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent=String(v);}
+    txt(g,0,Y.jFs*.04,Y.jFs,{'dominant-baseline':'middle','text-anchor':'middle','font-weight':900,fill:C.encre}).textContent=relatif?signe(v):String(v);}
   return {g,an,anV};}
 /* les groupes identiques (« touche-en un ») : une tache en face d'une part */
 function cartes(Y,p,K,lettre,dessinePart){return K.ys.map(y=>{const g=E('g',{},p);
@@ -942,7 +957,7 @@ const BASE={
 function fenetre(Y,p,spec,port){
   const g=E('g',{},p),s=port?Math.min(1,620/spec.h):1,x0=Y.w/2-spec.w*s/2,y0=Y.h/2-spec.h*s/2;
   const g2=E('g',{transform:`translate(${x0},${y0}) scale(${s})`},g);
-  const res={g,cles:{},fondsCles:{},ok:null,champ:null,puces:{},clesR:{},pucesR:{},okR:null,champR:null};
+  const res={g,cles:{},fondsCles:{},ok:null,champ:null,puces:{},clesR:{},pucesR:{},okR:null,champR:null,textes:[]};
   const abs=(x,y)=>[x0+x*s,y0+y*s],rect=(x,y,w,h)=>({x:x0+x*s,y:y0+y*s,w:w*s,h:h*s});
   E('rect',{x:0,y:0,width:spec.w,height:spec.h,rx:spec.r,fill:'#ffffff',filter:'url(#fsOmbre)'},g2);
   const T_=(x,y,fs,a)=>txt(g2,x,y,fs,Object.assign({'text-anchor':'middle'},a));
@@ -952,7 +967,7 @@ function fenetre(Y,p,spec,port){
     T_(x+w/2,y+h/2-fs*.08,fs,{'font-weight':900,'font-family':ARIAL,fill:st[1]}).textContent=lab;return {r,c:abs(x+w/2,y+h/2),R:rect(x,y,w,h)};};
   for(const el of spec.el){const k=el[0];
     if(k==='titre')T_(el[2],el[3],el[4],{'font-weight':900,fill:'#000000','letter-spacing':-el[4]*.04}).textContent=el[1];
-    else if(k==='texte')T_(el[2],el[3],el[4],Object.assign({'font-weight':el[5]||750,fill:el[6]||'#64748b'},el[7]?{'letter-spacing':el[7]}:{})).textContent=el[1];
+    else if(k==='texte')res.textes.push(Object.assign(T_(el[2],el[3],el[4],Object.assign({'font-weight':el[5]||750,fill:el[6]||'#64748b'},el[7]?{'letter-spacing':el[7]}:{})),{textContent:el[1]}));
     else if(k==='texteB'){const t=T_(el[2],el[3],el[4],{'font-weight':750,fill:'#64748b'});el[1].forEach((m,i)=>{E('tspan',i%2?{'font-weight':900}:{},t).textContent=m;});}
     else if(k==='jeton'){/* le jeton dessiné de Décomposer et Partager (18/10/2026), couleurs du plateau */
       const c=couleurJeton(el[1]);E('circle',{cx:el[2],cy:el[3],r:el[4],fill:c.fill,stroke:c.stroke,'stroke-width':3*el[4]/35},g2);
@@ -972,9 +987,10 @@ function fenetre(Y,p,spec,port){
       const r=E('rect',{x:el[2],y:el[3],width:el[4],height:el[5],rx:el[5]/2,fill:ch?'#dbeafe':'#f1f5f9',stroke:ch?'#2563eb':'rgba(15,23,42,.08)','stroke-width':ch?1.5:1},g2);
       T_(el[2]+el[4]/2,el[3]+el[5]/2-18*.08,18,{'font-weight':900,fill:ch?'#1e3a8a':C.encre}).textContent=el[1];
       if(el[6]==='p3'){res.puces.p3=abs(el[2]+el[4]/2,el[3]+el[5]/2);res.pucesR.p3=rect(el[2],el[3],el[4],el[5]);}}
-    else if(k==='pave'){/* le pavé de chiffres du téléphone : 1-9, (+) 0, Effacer ⌫, puis le bouton d'action seul sur sa ligne (18/10/2026) */
+    else if(k==='pave'){/* le pavé de chiffres du téléphone : 1-9, (+) 0, Effacer ⌫, puis le bouton d'action seul sur sa ligne (18/10/2026) ;
+         plus === 'moins' : la touche « − » à droite du 0 (monde 6, fenêtres Regrouper et Ajouter des deux côtés, lot 6a) */
       const [x,y,w,h,px,py,lab,plus]=el.slice(1);
-      const chiffres=[['1','2','3'],['4','5','6'],['7','8','9'],[plus?'+':null,'0',null]];
+      const chiffres=[['1','2','3'],['4','5','6'],['7','8','9'],plus==='moins'?[null,'0','−']:[plus?'+':null,'0',null]];
       chiffres.forEach((ligne,li)=>ligne.forEach((c,ci)=>{if(!c)return;const b=btn(c,x+ci*px,y+li*py,w,h,20,'cle');res.cles[c]=b.c;res.clesR[c]=b.R;res.fondsCles[c]=b.r;}));
       const W=2*px+w,ecart=px-w,demi=(W-ecart)/2;
       btn('Effacer',x,y+4*py,demi,h,14,'action');btn('⌫',x+demi+ecart,y+4*py,demi,h,14,'action');const ok=btn(lab,x,y+5*py,W,h,18,'bleuClair');res.ok=ok.c;res.okR=ok.R;}
@@ -1000,7 +1016,7 @@ function fenetres(o,Y,t,liste,oks,port){
 }
 function mise(mode,ajout){const b=BASE[mode]||BASE.paysage,a=(ajout&&ajout[mode])||{},Y=Object.assign({},b,a);
   for(const k of ['eq','barre','titre','fin','cap'])if(a[k])Y[k]=Object.assign({},b[k],a[k]);return Y;}
-return {C,POLICE,ARIAL,blob,couleurJeton,txt,defs,bouton,ecran,equation,placerFleches,plateau,tache,piece,cartes,doigt,cartons,
+return {C,POLICE,ARIAL,blob,couleurJeton,couleurRelatif,signe,txt,defs,bouton,ecran,equation,placerFleches,plateau,tache,piece,cartes,doigt,cartons,
   legende,sousTitres,titre,barre,grouperOutils,bandeau,bravo,ecrire,consigne,appui,rendreDoigt,fin,evenements,apresPolice,mise,fenetre,fenetres};
 })();
 </script>
@@ -2394,6 +2410,382 @@ const aToi={
       const aide=!fait&&((cur[3]!=null&&this.aide[cur[3]])||(cur[4]!=null&&this.aideT[cur[4]]));
       const texte=aide?(cur[3]!=null?ECRIRE[cur[3]].aide[port?1:0]:AIDE_T[cur[4]]):(Array.isArray(cur[1])?cur[1][port?1:0]:cur[1]);
       Q.legende(o,Y,(fait?'✓ ':'')+texte);o.st.setAttribute('fill',fait?'#15803d':aide?'#c2410c':'#1e293b');
+      let a=P(t,cur[0],.3,F.out);if(nx)a=Math.min(a,1-P(t,nx[0]-.22,.22,F.lin));op(o.st,a);}
+    Q.fin(o,Y,t,TT.fin);
+  }
+};
+return aToi;
+})();
+</script>
+<script>
+/* ===== « À toi de faire » : des jetons verts et rouges — SPLAT! Relatifs, étape É1 =====
+   ?film=equasplat-relatifs (lot 6a « aides et carte », 08/11/2026). Un tutoriel seul, sans film : sur la carte, « ✋ À toi
+   de faire » sous l'étape É1, et « ? Comment faire » dans ÉquaSplat (AIDES ech1, assets/js/splat-etapes.js). L'écran est
+   celui d'ÉquaSplat (bloc ECRAN_EQ, jetons du monde 6 : vert « 1 », rouge « −1 », gris « 0 »), comme le tutoriel de l'étape 37.
+   Choix de Gwenaël (questions à choix du 08/11/2026, 18 h 45) :
+   - deux exemples HORS de la série de l'étape : 𝑘 + 1 − 1 = 1 + 1 (une paire déjà sur le plateau : on regroupe le 1 et le
+     −1, on tape 0 → 𝑘 = 1 + 1, puis on regroupe la droite → 𝑘 = 2), puis 𝑘 + 1 = −1 − 1 (« Ajouter des deux côtés » −1 →
+     𝑘 + 1 − 1 = −1 − 1 − 1, la paire nulle → 𝑘 = −1 − 1 − 1, on regroupe la droite → 𝑘 = −3) ;
+   - L'ÉLÈVE TAPE TOUT, comme aux tutoriels des étapes 35 et 37 : le jeton à ajouter (−1) et chaque somme (0, 2, 0, −3) ;
+     une mauvaise touche n'écrit rien, l'aide arrive après l'erreur, le doigt montre la bonne touche du pavé au téléphone ;
+     toucher la case (ordinateur sans clavier) donne d'abord l'aide, puis écrit le nombre. Il n'est jamais bloqué.
+   Ce que fait l'écran est relevé dans ÉquaSplat (main 4ff131f, mode élève, 1440 × 900 et 390 × 844, le 08/11/2026) :
+   les phrases sous l'équation, la fenêtre « Regrouper » (« 1 + (−1) = ? », l'ordre des jetons touchés), celle d'« Ajouter
+   des deux côtés », le 0 qui apparaît puis disparaît (0,95 s), « Regrouper » qui reste choisi après une paire nulle, la
+   deuxième ligne qui se réécrit à chaque regroupement (𝑘 = 1 + 1, puis 𝑘 = 2). Seul ajout : les jetons regroupés glissent
+   0,25 s vers leur milieu avant que le résultat arrive (dans l'outil, il arrive d'un coup). On ne touche pas à equasplat.html. */
+FILMS['equasplat-relatifs']=(function(){
+'use strict';
+const Q=ECRAN_EQ,E=F.E,P=F.P,L=F.L,op=F.op,C=Q.C;
+const I0='Il y a la même quantité à gauche qu’à droite.';
+/* le déroulé : A = 𝑘 + 1 − 1 = 1 + 1, B = 𝑘 + 1 = −1 − 1 */
+const TT=(()=>{const a0=5,aS1=a0+1,aS2=aS1+1,aAct=aS2+1,aE0=aAct+1,aOk0=aE0+1,aS3=aOk0+3.4,aS4=aS3+1,aAct2=aS4+1,aE2=aAct2+1,aOk2=aE2+1,
+    aSuiv=aOk2+2.6,b=aSuiv+.3,bAjo=b+2.2,bE=bAjo+1,bOk=bE+1,bGro=bOk+2.8,bS1=bGro+1,bS2=bS1+1,bAct=bS2+1,bE0=bAct+1,bOk0=bE0+1,
+    bS3=bOk0+3.4,bS4=bS3+1,bS5=bS4+1,bAct2=bS5+1,bE3=bAct2+1,bOk3=bE3+1,fin=bOk3+4.4;
+  return {ecran:2.7,a0,aS1,aS2,aAct,aE0,aOk0,aS3,aS4,aAct2,aE2,aOk2,resoluA:aOk2+1,aSuiv,b,
+    bAjo,bE,bOk,bGro,bS1,bS2,bAct,bE0,bOk0,bS3,bS4,bS5,bAct2,bE3,bOk3,resoluB:bOk3+1,fin};})();
+/* les attentes, une par geste */
+const ATT=[TT.a0,TT.aS1,TT.aS2,TT.aAct,TT.aE0,TT.aOk0,TT.aS3,TT.aS4,TT.aAct2,TT.aE2,TT.aOk2,TT.aSuiv,
+  TT.bAjo,TT.bE,TT.bOk,TT.bGro,TT.bS1,TT.bS2,TT.bAct,TT.bE0,TT.bOk0,TT.bS3,TT.bS4,TT.bS5,TT.bAct2,TT.bE3,TT.bOk3];
+/* les quatre regroupements : l'exemple, les jetons à toucher, le début (« Regrouper » choisi), la validation (« Regrouper »
+   de la fenêtre), la fenêtre, et l'aide après une erreur (null : pas d'aide écrite, le doigt suffit) */
+const GROUPES={
+  A0:{ex:'A',ids:['L1','L2'],d0:TT.a0,ok:TT.aOk0,dlg:'dG1',aide:'Le 1 et le −1 sont à gauche : touche-les.'},
+  A2:{ex:'A',ids:['R1','R2'],d0:TT.aOk0,ok:TT.aOk2,dlg:'dG2',aide:null},
+  B0:{ex:'B',ids:['L1','L2'],d0:TT.bGro,ok:TT.bOk0,dlg:'dG3',aide:'Le 1 et le −1 sont à gauche : touche-les.'},
+  B3:{ex:'B',ids:['R1','R2','R3'],d0:TT.bOk0,ok:TT.bOk3,dlg:'dG4',aide:'À droite, il y a 3 jetons : touche-les tous les trois.'}};
+/* les attentes où l'élève touche un jeton */
+const SEL={1:'A0',2:'A0',6:'A2',7:'A2',16:'B0',17:'B0',21:'B3',22:'B3',23:'B3'};
+/* les attentes où l'élève écrit : la fenêtre, ce qui est accepté, et l'aide après une erreur ([ordinateur, téléphone]) */
+const ECRIRE={
+  4:{d:'dG1',ok:['0'],aide:['Un 1 et un −1 s’annulent : tape 0, ou touche la case.','Un 1 et un −1 s’annulent : tape 0.']},
+  9:{d:'dG2',ok:['2'],aide:['1 + 1 = 2 : tape 2, ou touche la case.','1 + 1 = 2 : tape 2.']},
+  13:{d:'dAj',ok:['−1'],aide:['−1 annule le 1 : tape −1, ou touche la case.','−1 annule le 1 : tape −1.']},
+  19:{d:'dG3',ok:['0'],aide:['Un 1 et un −1 s’annulent : tape 0, ou touche la case.','Un 1 et un −1 s’annulent : tape 0.']},
+  25:{d:'dG4',ok:['−3'],aide:['Trois jetons −1 font −3 : tape −3, ou touche la case.','Trois jetons −1 font −3 : tape −3.']}};
+/* les attentes où l'on valide une fenêtre (Entrée le fait aussi) */
+const OK={5:'dG1',10:'dG2',14:'dAj',20:'dG3',26:'dG4'};
+/* « Combien font 1 + (−1) ? » : la somme écrite dans l'ordre des jetons touchés, comme la fenêtre de l'outil */
+const COMBIEN=gk=>function(){const e=this.expr(gk);return ['Combien font '+e+' ? Tape-le au clavier.','Combien font '+e+' ? Tape-le.'];};
+/* les consignes en haut ; la troisième case dit après quelle attente le geste est fait (en vert avec ✓) ; la quatrième,
+   l'écriture dont l'aide remplace la consigne après une erreur ; la cinquième, le regroupement dont l'aide la remplace */
+const GUIDE_T=[[3.2,'Trouve ce que cache la tache 𝑘.'],[TT.a0-.3,'Touche « Regrouper ».',TT.a0],
+  [TT.a0+.75,'Touche le 1 et le −1, à gauche.',TT.aS2,null,'A0'],
+  [TT.aS2+.75,'Touche le bouton vert « Regrouper ».',TT.aAct],
+  [TT.aAct+.75,COMBIEN('A0'),TT.aE0,4],[TT.aE0+.75,'Touche « Regrouper ».',TT.aOk0],
+  [TT.aOk0+.3,'1 et −1 font 0 : la paire disparaît.'],[TT.aOk0+1.9,'Une ligne s’écrit : 𝑘 = 1 + 1.'],
+  [TT.aS3-.3,'Regroupe les deux jetons de droite : touche-les.',TT.aS4,null,'A2'],
+  [TT.aS4+.75,'Touche le bouton vert « Regrouper ».',TT.aAct2],
+  [TT.aAct2+.75,COMBIEN('A2'),TT.aE2,9],[TT.aE2+.75,'Touche « Regrouper ».',TT.aOk2],
+  [TT.aOk2+1,'Bravo ! La tache cache 2 : 𝑘 = 2.'],[TT.aSuiv-.3,'Touche « Équation suivante ».',TT.aSuiv],
+  [TT.b+.3,'Trouve ce que cache la tache 𝑘.'],[TT.bAjo-.3,'Touche « Ajouter des deux côtés ».',TT.bAjo],
+  [TT.bAjo+.75,['Quel jeton annule le 1 ? Tape-le au clavier.','Quel jeton annule le 1 ? Tape-le.'],TT.bE,13],
+  [TT.bE+.75,'Touche « Ajouter ».',TT.bOk],[TT.bOk+.4,'Une ligne s’écrit : 𝑘 + 1 − 1 = −1 − 1 − 1.'],
+  [TT.bGro-.3,'Touche « Regrouper ».',TT.bGro],
+  [TT.bGro+.75,'Touche le 1 et le −1, à gauche.',TT.bS2,null,'B0'],
+  [TT.bS2+.75,'Touche le bouton vert « Regrouper ».',TT.bAct],
+  [TT.bAct+.75,COMBIEN('B0'),TT.bE0,19],[TT.bE0+.75,'Touche « Regrouper ».',TT.bOk0],
+  [TT.bOk0+.3,'1 et −1 font 0 : la paire disparaît.'],[TT.bOk0+1.9,'La ligne devient : 𝑘 = −1 − 1 − 1.'],
+  [TT.bS3-.3,'Regroupe tous les jetons de droite : touche-les.',TT.bS5,null,'B3'],
+  [TT.bS5+.75,'Touche le bouton vert « Regrouper ».',TT.bAct2],
+  [TT.bAct2+.75,COMBIEN('B3'),TT.bE3,25],[TT.bE3+.75,'Touche « Regrouper ».',TT.bOk3],
+  [TT.bOk3+1,'Bravo ! La tache cache −3 : 𝑘 = −3.'],[TT.fin,'']];
+/* les jetons de chaque exemple, en pixels de l'outil ; les jetons ajoutés (B : L2, R3) arrivent à la validation de la fenêtre */
+function exemples(port){
+  if(!port)return {
+    A:{t:[330,408],p:{L1:[1,[520,330]],L2:[-1,[520,490]],R1:[1,[930,408]],R2:[1,[1110,408]]}},
+    B:{t:[330,408],p:{L1:[1,[520,408]],L2:[-1,[620,505]],R1:[-1,[930,330]],R2:[-1,[1110,330]],R3:[-1,[1020,490]]}}};
+  return {
+    A:{t:[80,300],p:{L1:[1,[150,262]],L2:[-1,[150,340]],R1:[1,[255,300]],R2:[1,[330,300]]}},
+    B:{t:[80,300],p:{L1:[1,[150,300]],L2:[-1,[140,356]],R1:[-1,[255,262]],R2:[-1,[330,262]],R3:[-1,[292,342]]}}};
+}
+const AJOUTES={B:{L2:TT.bOk,R3:TT.bOk}};
+/* l'écran : celui du tutoriel de l'étape 37 (jetons numérotés), les jetons du monde 6 relevés dans l'outil (rayon 42,9 et
+   chiffre de 39,7 px à l'ordinateur ; 17,1 et 11,7 au téléphone ; anneau vert fin) ; la zone d'action de « Regrouper » */
+const AJOUT={
+  paysage:{eq:{ys:[[92],[74,112]]},consigne:{x:720,y:180,fs:17},
+    pan:{x:30,y:196,w:1380,h:424,r:18},plat:{x:116,y:214,w:1208,h:388,rx:29,sw:2.56},
+    jR:42.9,jFs:39.7,bSW:2.38,anG:4.8,anW:5.6,
+    outils:[{id:'dec',x:483,y:632,w:130,h:48},{id:'gro',x:622,y:632,w:114,h:48},{id:'par',x:745,y:632,w:211,h:48}],
+    rangs:[{id:'enl',x:372,y:689,w:212,h:48},{id:'ajo',x:592,y:689,w:210,h:48},{id:'ann',x:822,y:689,w:94,h:48},{id:'rec',x:924,y:689,w:144,h:48}],
+    act:{y:746,h:46,eff1:{x:676,w:88},reg:{x:615,w:113},eff2:{x:736,w:88}},
+    fin:{lignes:['Un 1 et un −1 s’annulent : ensemble, ils font 0.']}},
+  portrait:{eq:{ys:[[73],[73,125]],boite:{x:12,y:48,w:366,h:152,r:14}},consigne:{x:195,y:414,fs:13,ys:[406,422]},
+    pan:{x:5,y:208,w:380,h:186,r:18},plat:{x:10,y:216,w:370,h:170,rx:8,sw:.7},
+    jR:17.1,jFs:11.7,bSW:.7,anG:2.8,anW:3.3,
+    outils:[{id:'dec',x:17,y:439,w:114.7,h:42},{id:'gro',x:137.7,y:439,w:114.7,h:42},{id:'par',x:258.3,y:439,w:114.7,h:42}],
+    boiteOutils:{x:11,y:432,w:368,h:56},grille:{x:11,y:494,w:368,h:104},
+    rangs:[{id:'enl',x:17,y:500,w:175.5,h:42},{id:'ajo',x:197.5,y:500,w:175.5,h:42},{id:'ann',x:17,y:547,w:175.5,h:42},{id:'rec',x:197.5,y:547,w:175.5,h:42}],
+    act:{y:606,h:40,x:11,w:368},
+    fin:{lignes:['Un 1 et un −1 s’annulent :','ensemble, ils font 0.']}}
+};
+const NOMS={dec:'Décomposer',gro:'Regrouper',par:['Partager équitablement','Partager'],enl:'Enlever des deux côtés',ajo:'Ajouter des deux côtés',ann:'Annuler',rec:'Recommencer'};
+/* les fenêtres de l'outil, relevées le 08/11/2026 (#groupDialog et #addBothDialog, mode élève) ; la somme (« 1 + (−1) = ? »)
+   s'écrit selon l'ordre des jetons touchés. Mêmes conventions que les fenêtres des autres tutoriels (Q.fenetre). */
+const fG=(port,lab)=>port
+  ?{w:350,h:682,r:20,el:[['titre','Regrouper',175,52,30],['texte',lab,175,98,23,900,'#0f172a'],['label','Somme des jetons',175,140,16],['label','sélectionnés',175,160,16],
+    ['champ',38,178,274,77,18,34,'P'],['pave',38,265,87.3,42,93.3,48,'Regrouper','moins'],['btn','Annuler',118,597,114,53,18,'blanc']]}
+  :{w:598,h:424.5,r:24,el:[['titre','Regrouper',299,61,44],['texte',lab,299,122.8,34,900,'#0f172a'],['label','Somme des jetons sélectionnés',299,171.5,16],
+    ['champ',38,189.5,522,100,18,54,'P'],['btn','Regrouper',171,339.5,135,53,18,'vert','ok'],['btn','Annuler',313,339.5,114,53,18,'blanc']]};
+const fAj=port=>port
+  ?{w:350,h:760.4,r:20,el:[['titre','Ajouter des deux',175,49,29],['titre','côtés',175,79,29],
+    ['texte','Ajoute le même jeton de',175,119.8,18,850],['texte','chaque côté. Tu peux écrire',175,142.8,18,850],['texte','une valeur positive ou',175,165.8,18,850],['texte','négative.',175,188.8,18,850],
+    ['label','Un jeton',175,228.4,16],['champ',38,246.4,274,77,18,34,'P'],['pave',38,333.4,87.3,42,93.3,48,'Ajouter','moins'],['btn','Annuler',118,675.4,114,53,18,'blanc']]}
+  :{w:598,h:551.5,r:24,el:[['titre','Ajouter des deux côtés',299,61,44],
+    ['texte','Ajoute le même jeton de chaque côté.',299,119.9,28,850],['texte','Tu peux écrire une valeur positive ou',299,155.7,28,850],['texte','négative.',299,191.6,28,850],
+    ['label','Un jeton',299,237.5,16],['champ',38,255.5,522,100,18,54,'P'],['btn','Ajouter',245.5,405.5,107,51,18,'bleu','ok'],['btn','Annuler',242,466.5,114,53,18,'blanc']]};
+const appuiT=(bt,t,tt)=>{const s=1-.05*Math.sin(Math.PI*F.clamp((t-tt)/.2)),c=bt.c;bt.g.setAttribute('transform',s<.9999?`translate(${c[0]},${c[1]}) scale(${s}) translate(${-c[0]},${-c[1]})`:'');};
+const maintenant=()=>(typeof performance!=='undefined'?performance.now():Date.now());
+const placer=(g,c,s)=>g.setAttribute('transform',`translate(${(+c[0]).toFixed(1)},${(+c[1]).toFixed(1)}) scale(${(+s).toFixed(3)})`);
+const moyenne=cs=>[cs.reduce((a,c)=>a+c[0],0)/cs.length,cs.reduce((a,c)=>a+c[1],0)/cs.length];
+/* la deuxième ligne de chaque équation : elle s'écrit, puis se réécrit à chaque regroupement (comme l'outil) */
+const LIGNE2={A:[[TT.aOk0,'𝑘','1 + 1',false],[TT.aOk2,'𝑘','2',true]],
+  B:[[TT.bOk,'𝑘 + 1 − 1','−1 − 1 − 1',false],[TT.bOk0,'𝑘','−1 − 1 − 1',false],[TT.bOk3,'𝑘','−3',true]]};
+
+const aToi={
+  duration:TT.fin+3.4, poster:2.4, stops:[], attentes:ATT.map(t=>({t})),
+  modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
+  passer:SUITE, passerTexte:'Passer ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  aria:'À toi de faire : le tutoriel d’ÉquaSplat avec des jetons verts et rouges. Un 1 et un −1 s’annulent : regrouper la paire nulle, ajouter le même jeton des deux côtés',
+  titre:'À toi de faire — Des jetons verts et rouges — ÉquaSplat — maths&go',
+  chapters:[{t:0,name:'SPLAT! Relatifs'}],
+  /* sel : les jetons touchés par regroupement, {id, t} ; touches : les bons gestes (le rond bleu) */
+  choix:{sel:{},touches:{}}, saisie:{}, aide:{}, aideT:{}, indice:null, appuiCle:null,
+  build(svg,mode){
+    const port=mode==='portrait',Y=this.Y=Q.mise(mode,AJOUT),o=this.o={port},X=this.X=exemples(port);
+    this.svg=svg;svg.style.fontFamily=Q.POLICE;
+    Q.defs(svg,port);
+    const S=Q.ecran(o,Y,svg,port);
+    o.eqA=Q.equation(Y,S,[{g:'𝑘 + 1 − 1',d:'1 + 1'},{g:'𝑘',d:'1 + 1',t:TT.aOk0+.001}]);
+    o.eqB=Q.equation(Y,S,[{g:'𝑘 + 1',d:'−1 − 1'},{g:'𝑘 + 1 − 1',d:'−1 − 1 − 1',op:'−1',t:TT.bOk+.001}]);
+    o.consigne=Q.txt(S,Y.consigne.x,Y.consigne.y,Y.consigne.fs,{'text-anchor':'middle','font-weight':800,fill:C.consigne});o.consCle=null;
+    Q.plateau(o,Y,S);
+    /* les jetons : ceux du plateau, puis les jetons nés d'un regroupement (0, 2, 0, −3), au milieu des jetons regroupés */
+    o.pieces={};
+    for(const ex of ['A','B']){const G=o[ex]=E('g',{},S);Q.tache(Y,G,X[ex].t,Y.tRB,'𝑘');o.pieces[ex]={};
+      for(const id in X[ex].p){const [v,c]=X[ex].p[id],pc=Q.piece(Y,G,v,Y.jR,true,true);pc.c=c;pc.v=v;placer(pc.g,c,1);o.pieces[ex][id]=pc;}}
+    o.nes={};
+    for(const gk in GROUPES){const g=GROUPES[gk],ex=g.ex,cs=g.ids.map(id=>X[ex].p[id][1]),v=g.ids.reduce((a,id)=>a+X[ex].p[id][0],0);
+      const pc=Q.piece(Y,o[ex],v,Y.jR,true,true);pc.c=moyenne(cs);pc.v=v;placer(pc.g,pc.c,1);op(pc.g,0);o.nes[gk]=pc;}
+    /* les boutons : Décomposer / Regrouper / Partager ; puis Enlever / Ajouter / Annuler / Recommencer */
+    if(Y.boiteOutils){const b=Y.boiteOutils;o.boite=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#f0f6fc',stroke:'rgba(59,130,246,.18)','stroke-width':1},S);}
+    if(Y.grille){const b=Y.grille;o.grille=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,rx:14,fill:'#e8f6f6',stroke:'rgba(22,163,74,.16)','stroke-width':1},S);}
+    const repos=port?{fond:'#f8fbff',bord:'rgba(59,130,246,.18)',encre:'#1e3a5f'}:{fond:'#ffffff',bord:'rgba(15,23,42,.11)',encre:'#334155'};
+    o.repos=repos;
+    o.outils={};for(const b of Y.outils){const nom=Array.isArray(NOMS[b.id])?NOMS[b.id][port?1:0]:NOMS[b.id];o.outils[b.id]=Q.bouton(Y,S,b,nom,repos);}
+    const st={enl:port?{fond:'#fff7ed',bord:'rgba(249,115,22,.25)',encre:'#9a3412'}:repos,
+      ajo:{fond:'#f6fef9',bord:'rgba(22,163,74,.18)',encre:'#166534'},ann:{fond:'#fffaf4',bord:'rgba(249,115,22,.2)',encre:'#9a3412'},
+      rec:{fond:'#eef2ff',bord:'rgba(99,102,241,.22)',encre:'#3730a3'}};
+    o.rangs={};for(const b of Y.rangs)o.rangs[b.id]=Q.bouton(Y,S,b,NOMS[b.id],st[b.id]);
+    if(port){const b=Y.rangs[2],cx=b.x+b.w/2,cy=b.y+b.h/2;o.rangs.ann.t[0].setAttribute('x',cx+10);
+      E('path',{d:`M${cx-30},${cy+2}l-5,-5l5,-5 M${cx-35},${cy-3}h9a5.5,5.5 0 0 1 0,11h-3`,fill:'none',stroke:'#9a3412','stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'},o.rangs.ann.g);}
+    /* zone d'action de « Regrouper » : un jeton choisi, « Effacer » ; deux ou plus, « Regrouper » (vert) et « Effacer » ;
+       au téléphone, « Valider » grisé, puis « Regrouper » (vert) sur toute la largeur */
+    const Ac=Y.act;o.act={};
+    const ghost={fond:'#ffffff',bord:'rgba(15,23,42,.13)',encre:'#111827'},vert={fond:'url(#fsVert)',bord:'rgba(21,148,71,.3)',encre:'#ffffff'};
+    if(port){
+      o.act.attente=Q.bouton(Y,S,{x:Ac.x,y:Ac.y,w:Ac.w,h:Ac.h,r:15},'Valider',{fond:'#f8fafc',bord:'rgba(71,85,105,.16)',encre:'#c3cad4'});
+      o.act.reg=Q.bouton(Y,S,{x:Ac.x,y:Ac.y,w:Ac.w,h:Ac.h,r:15},'Regrouper',vert);
+    }else{
+      o.act.eff1=Q.bouton(Y,S,{x:Ac.eff1.x,y:Ac.y,w:Ac.eff1.w,h:Ac.h},'Effacer',ghost);
+      o.act.reg=Q.bouton(Y,S,{x:Ac.reg.x,y:Ac.y,w:Ac.reg.w,h:Ac.h},'Regrouper',vert);
+      o.act.eff2=Q.bouton(Y,S,{x:Ac.eff2.x,y:Ac.y,w:Ac.eff2.w,h:Ac.h},'Effacer',ghost);
+    }
+    Q.grouperOutils(o,S,[o.boite,o.grille].concat(Y.outils.map(b=>o.outils[b.id].g),Y.rangs.map(b=>o.rangs[b.id].g)));
+    o.bravoA=Q.bandeau(o,Y,S,'𝑘 = 2');o.bravoB=Q.bandeau(o,Y,S,'𝑘 = −3');
+    o.voile=E('rect',{x:0,y:0,width:Y.w,height:Y.h,rx:port?22:14,fill:'rgba(15,23,42,.35)'},o.ecran);
+    for(const gk in GROUPES)o[GROUPES[gk].dlg]=Q.fenetre(Y,o.ecran,fG(port,'? = ?'),port);
+    o.dAj=Q.fenetre(Y,o.ecran,fAj(port),port);
+    Q.doigt(o,Y,o.ecran,port);
+    Y.fin=Object.assign({},Y.fin,{revoir:'↺ Recommencer'});
+    Q.cartons(o,Y,svg,'Des jetons verts et rouges');
+    o.ligne2={};
+    Q.placerFleches(Y,o.eqA);Q.placerFleches(Y,o.eqB);Q.apresPolice(this,o,[o.eqA,o.eqB]);
+  },
+  /* l'attente k en cours (ou −1) */
+  attente(t){return ATT.findIndex(a=>Math.abs(a-t)<1e-4);},
+  /* les jetons touchés du regroupement gk (avant l'instant t, si t est donné) */
+  prises(gk,t){return (this.choix.sel[gk]||[]).filter(s=>t==null||t>s.t+1e-6);},
+  /* l'ordre des jetons regroupés : celui de l'élève, ou (un saut dans le tutoriel, sans toucher) l'ordre du plateau */
+  ordre(gk){const p=this.prises(gk),ids=GROUPES[gk].ids;return p.length===ids.length?p.map(s=>s.id):ids.slice();},
+  /* la somme de la fenêtre, comme l'outil : « 1 + (−1) », « −1 + (−1) + (−1) » */
+  expr(gk){const ex=GROUPES[gk].ex,X=this.X[ex].p;
+    return this.ordre(gk).map((id,i)=>{const v=X[id][0];return i&&v<0?'(−'+(-v)+')':Q.signe(v);}).join(' + ');},
+  /* un jeton qu'on peut encore toucher (pour le doigt) */
+  libre(gk){const p=this.prises(gk),id=GROUPES[gk].ids.find(i=>!p.some(s=>s.id===i));if(!id)return null;
+    return {id,c:this.X[GROUPES[gk].ex].p[id][1]};},
+  /* ce qu'on peut toucher à l'attente k : des zones en pixels de l'outil, agrandies pour le doigt (44 px à l'écran au moins) */
+  zones(k){
+    const o=this.o,Y=this.Y;
+    let px=1;try{px=this.svg.getScreenCTM().a*Y.s||1;}catch(e){}
+    const rect=(x,y,w,h)=>{const pv=Math.max(4/px,(44/px-h)/2),ph=Math.max(4/px,(44/px-w)/2);
+      return {c:[x+w/2,y+h/2],d:q=>q[0]>=x-ph&&q[0]<=x+w+ph&&q[1]>=y-pv&&q[1]<=y+h+pv?Math.hypot(q[0]-x-w/2,q[1]-y-h/2):null};};
+    const touche=(R,cle)=>({c:[R.x+R.w/2,R.y+R.h/2],cle,d:q=>q[0]>=R.x-2&&q[0]<=R.x+R.w+2&&q[1]>=R.y-2&&q[1]<=R.y+R.h+2?Math.hypot(q[0]-R.x-R.w/2,q[1]-R.y-R.h/2):null});
+    const bt=b=>{const r=b.r,n=a=>+r.getAttribute(a);return rect(n('x'),n('y'),n('width'),n('height'));};
+    const zr=R=>rect(R.x,R.y,R.w,R.h);
+    const rond=(c,R)=>({c,d:q=>{const e=Math.hypot(q[0]-c[0],q[1]-c[1]);return e<=R?e:null;}});
+    if(ECRIRE[k]){const d=o[ECRIRE[k].d];
+      return o.port?Object.keys(d.clesR).map(c=>touche(d.clesR[c],c)):[zr(d.champR)];}
+    if(SEL[k]){const gk=SEL[k],g=GROUPES[gk],p=this.prises(gk),R=Math.max(Y.jR+Y.anG,22/px);
+      return g.ids.filter(id=>!p.some(s=>s.id===id)).map(id=>Object.assign(rond(this.X[g.ex].p[id][1],R),{id}));}
+    if(OK[k])return o.port?[zr(o[OK[k]].okR)]:[zr(o[OK[k]].okR)];
+    switch(k){
+      case 0:case 15:return [bt(o.outils.gro)];
+      case 12:return [bt(o.rangs.ajo)];
+      case 3:case 8:case 18:case 24:return [bt(o.act.reg)];
+      case 11:return [bt(o.bravoA.btn)];
+    }
+    return [];
+  },
+  /* la touche suivante attendue à l'écriture k */
+  attendu(k){const s=this.saisie[k]||'',bon=ECRIRE[k].ok.find(x=>x.startsWith(s))||ECRIRE[k].ok[0];return bon.charAt(s.length);},
+  /* un caractère à l'écriture k : écrit seulement s'il est bon ; vrai quand le nombre est complet */
+  saisir(k,c){if(c==='-')c='−';const s=(this.saisie[k]||'')+c,ok=ECRIRE[k].ok;
+    if(!ok.some(x=>x.startsWith(s))){this.aide[k]=true;this.montrer(k);return false;}
+    this.saisie[k]=s;this.indice=null;return ok.includes(s);},
+  /* après une erreur, au téléphone : le doigt montre la bonne touche du pavé */
+  montrer(k){if(!this.o.port)return;const d=this.o[ECRIRE[k].d],c=this.attendu(k),R=d.clesR[c];
+    if(R)this.indice={r0:maintenant(),c:[R.x+R.w/2,R.y+R.h/2]};},
+  /* le clavier (ordinateur) : les chiffres et le signe moins à une attente d'écriture ; Entrée valide une fenêtre */
+  taper(t,cle){const k=this.attente(t);if(k<0)return null;
+    if(ECRIRE[k]){if(/^[0-9]$/.test(cle)||cle==='-'||cle==='−')return this.saisir(k,cle);
+      if(cle===' '||cle==='Backspace'||cle==='Delete')return false;
+      if(cle.length===1){this.aide[k]=true;return false;}
+      return null;}
+    if(cle==='Enter'&&OK[k]){this.choix.touches[k]=null;return true;}
+    return null;},
+  /* un toucher à l'attente : le bon geste fait repartir le tutoriel ; ailleurs, rien ne change et le doigt montre où toucher */
+  toucher(t,p){
+    const Y=this.Y,k=this.attente(t);if(k<0)return false;
+    const q=[(p[0]-Y.ox)/Y.s,(p[1]-Y.oy)/Y.s],zs=this.zones(k);
+    let bon=null,db=Infinity;for(const z of zs){const d=z.d(q);if(d!=null&&d<db){bon=z;db=d;}}
+    if(ECRIRE[k]){
+      if(this.o.port){if(!bon){this.montrer(k);return false;}
+        this.appuiCle={d:ECRIRE[k].d,c:bon.cle,r0:maintenant()};
+        const fini=this.saisir(k,bon.cle);if(fini)this.choix.touches[k]={t:ATT[k],p:q};return fini;}
+      /* à l'ordinateur, la case : le premier toucher donne l'aide (l'élève sans clavier n'est pas bloqué), le second écrit */
+      if(bon){if(!this.aide[k]){this.aide[k]=true;this.indice=null;return false;}
+        this.saisie[k]=ECRIRE[k].ok[0];this.indice=null;this.choix.touches[k]={t:ATT[k],p:q};return true;}
+      this.indice={r0:maintenant(),c:zs[0].c};return false;}
+    if(SEL[k]){const gk=SEL[k],g=GROUPES[gk];
+      if(bon){(this.choix.sel[gk]=this.choix.sel[gk]||[]).push({id:bon.id,t:ATT[k]});this.indice=null;this.choix.touches[k]={t:ATT[k],p:q};return true;}
+      /* un jeton déjà choisi : rien ne change. Un jeton de l'autre côté, ou « Regrouper » touché trop tôt : l'aide (en
+         orange), et le doigt sur un jeton qu'on peut prendre */
+      const X=this.X[g.ex].p,R=Y.jR+Y.anG;
+      const sur=Object.keys(X).find(id=>Math.hypot(q[0]-X[id][1][0],q[1]-X[id][1][1])<=R&&this.visible(g.ex,id,t));
+      if(sur&&g.ids.includes(sur))return false;
+      const v=this.o.act.reg.r,n=a=>+v.getAttribute(a);
+      const surReg=this.prises(gk).length>=2&&q[0]>=n('x')&&q[0]<=n('x')+n('width')&&q[1]>=n('y')&&q[1]<=n('y')+n('height');
+      if(g.aide&&(sur||surReg))this.aideT[gk]=true;
+      const l=this.libre(gk);if(l)this.indice={r0:maintenant(),c:l.c};return false;}
+    if(bon){this.indice=null;this.choix.touches[k]={t:ATT[k],p:q};return true;}
+    let pres=zs[0];for(const z of zs)if(Math.hypot(q[0]-z.c[0],q[1]-z.c[1])<Math.hypot(q[0]-pres.c[0],q[1]-pres.c[1]))pres=z;
+    if(pres)this.indice={r0:maintenant(),c:pres.c};
+    return false;
+  },
+  /* la cible de l'attente en cours, en unités du film (pour les essais automatiques) */
+  cible(t){const k=this.attente(t);if(k<0)return null;const Y=this.Y;let c=null;
+    if(SEL[k]){const l=this.libre(SEL[k]);if(l)c=l.c;}
+    else if(ECRIRE[k]&&this.o.port){const R=this.o[ECRIRE[k].d].clesR[this.attendu(k)];if(R)c=[R.x+R.w/2,R.y+R.h/2];}
+    else{const z=this.zones(k)[0];if(z)c=z.c;}
+    return c?[Y.ox+c[0]*Y.s,Y.oy+c[1]*Y.s]:null;},
+  anime(){const n=maintenant();return (!!this.indice&&n-this.indice.r0<2800)||(!!this.appuiCle&&n-this.appuiCle.r0<260);},
+  /* un jeton est sur le plateau à l'instant t : arrivé (les jetons ajoutés), et pas encore regroupé */
+  visible(ex,id,t){const a=AJOUTES[ex]&&AJOUTES[ex][id];if(a!=null&&!(t>a+1e-6))return false;
+    for(const gk in GROUPES){const g=GROUPES[gk];if(g.ex===ex&&g.ids.includes(id)&&t>g.ok+1e-6)return false;}return true;},
+  /* le regroupement en cours à l'instant t (de « Regrouper » choisi à la validation de la fenêtre) */
+  enCours(t){for(const gk in GROUPES){const g=GROUPES[gk];if(t>g.d0+1e-6&&t<=g.ok+1e-6)return gk;}return null;},
+  /* la phrase sous l'équation, coupée en deux lignes au téléphone quand elle ne tient pas (comme dans l'outil) */
+  consigne(texte,coul,vu){const o=this.o,Y=this.Y,cs=Y.consigne,cle=texte+'|'+(coul||'');
+    if(o.consCle!==cle){o.consCle=cle;while(o.consigne.firstChild)o.consigne.removeChild(o.consigne.firstChild);
+      o.consigne.setAttribute('fill',coul||C.consigne);o.consigne.setAttribute('font-weight',coul?900:800);
+      o.consigne.style.display='';const l1=E('tspan',{x:cs.x,y:cs.y},o.consigne);l1.textContent=texte;
+      let lg=0;try{lg=o.consigne.getComputedTextLength();}catch(e){}
+      if(cs.ys&&texte&&lg>Y.w-30){const mots=texte.split(' ');let best=1,ecart=1e9;
+        for(let k=1;k<mots.length;k++){const d=Math.abs(mots.slice(0,k).join(' ').length-mots.slice(k).join(' ').length);if(d<ecart){ecart=d;best=k;}}
+        l1.textContent=mots.slice(0,best).join(' ');l1.setAttribute('y',cs.ys[0]);
+        E('tspan',{x:cs.x,y:cs.ys[1]},o.consigne).textContent=mots.slice(best).join(' ');}}
+    op(o.consigne,vu);},
+  /* les phrases d'ÉquaSplat sous l'équation */
+  sousEquation(t){const apres=a=>t>a+1e-6;
+    if(apres(TT.bOk3)||(apres(TT.aOk2)&&t<TT.b))return '';
+    const gk=this.enCours(t);if(!gk)return I0;
+    const n=this.prises(gk,t).length;
+    if(n===0)return gk==='A2'||gk==='B3'?'La paire nulle vaut 0 : elle disparaît du plateau.':'Touche les jetons à regrouper, du même côté.';
+    if(n===1)return 'Touche un autre jeton du même côté.';
+    return n+' jetons sélectionnés. Calcule leur somme pour les regrouper.';},
+  render(t){
+    const o=this.o,Y=this.Y,X=this.X,port=o.port,ch=this.choix,enA=t<TT.b;
+    /* au départ, et quand on recommence */
+    if(t<TT.a0-1e-6){ch.sel={};ch.touches={};this.saisie={};this.aide={};this.aideT={};this.indice=null;this.appuiCle=null;}
+    const apres=a=>t>a+1e-6;
+    Q.titre(o,Y,t,TT.ecran);
+    if(enA)Q.barre(o,Y,t,TT.resoluA,TT.b-.05);else Q.barre(o,Y,t,TT.resoluB,1e9);
+    const vA=1-P(t,TT.b-.3,.3,F.lin),vB=P(t,TT.b,.3,F.lin);
+    /* la deuxième ligne : elle se réécrit à chaque regroupement, les flèches se recalent */
+    for(const ex of ['A','B']){const l2=(ex==='A'?o.eqA:o.eqB).L[1];let v=LIGNE2[ex][0];for(const w of LIGNE2[ex])if(apres(w[0]))v=w;
+      const cle=v.join('|');if(o.ligne2[ex]!==cle){o.ligne2[ex]=cle;l2.a.textContent=v[1];l2.b.textContent=v[2];l2.sol=v[3];Q.placerFleches(Y,ex==='A'?o.eqA:o.eqB);}}
+    Q.ecrire(Y,o.eqA,t,vA);Q.ecrire(Y,o.eqB,t,t>=TT.b-.3?vB:0);
+    /* la paire nulle : « 0 apparaît, puis disparaît », puis « elle disparaît du plateau » (0,25 s de glissé + 0,95 s) */
+    {let txt=this.sousEquation(t);
+      for(const ok of [TT.aOk0,TT.bOk0])if(apres(ok)&&t<ok+1.2)txt='Paire nulle : 0 apparaît, puis disparaît.';
+      this.consigne(txt,null,t<TT.b?vA:1);}
+    op(o.A,t<TT.b?vA:0);op(o.B,t<TT.b?0:vB);
+    /* les jetons : l'anneau vert dès le toucher ; à la validation, ils glissent vers leur milieu et laissent la place à leur
+       somme (le 0 grossit un peu puis s'efface, comme l'animation zeroPulseFade de l'outil) */
+    for(const ex of ['A','B'])for(const id in o.pieces[ex]){const pc=o.pieces[ex][id],aj=AJOUTES[ex]&&AJOUTES[ex][id];
+      let vis=1,c=pc.c,s=1,ring=0;
+      if(aj!=null){const u=P(t,aj+.001,.3,F.back);vis=apres(aj)?1:0;s=L(.5,1,u);}
+      for(const gk in GROUPES){const g=GROUPES[gk];if(g.ex!==ex||!g.ids.includes(id))continue;
+        if(t<g.ok+.001&&this.prises(gk,t).some(x=>x.id===id))ring=1;
+        if(apres(g.ok)){const u=P(t,g.ok+.001,.25,F.io),m=o.nes[gk].c;c=[L(pc.c[0],m[0],u),L(pc.c[1],m[1],u)];vis*=1-P(t,g.ok+.2,.06,F.lin);}}
+      op(pc.g,vis);placer(pc.g,c,s);op(pc.an,ring);}
+    for(const gk in GROUPES){const g=GROUPES[gk],pc=o.nes[gk],t0=g.ok+.25;
+      if(!apres(t0)){op(pc.g,0);continue;}
+      if(pc.v===0){const u=F.clamp((t-t0)/.95),sc=u<.45?L(1,1.08,u/.45):L(1.08,.82,(u-.45)/.55),a=u<.45?1:1-(u-.45)/.55;op(pc.g,a);placer(pc.g,pc.c,sc);}
+      else{const u=P(t,t0,.3,F.back);op(pc.g,1);placer(pc.g,pc.c,L(.6,1,u));}}
+    /* ---- boutons : « Regrouper » bleu tant qu'il est choisi, comme dans l'outil ---- */
+    const allume=(b,on,r)=>{r=r||b.st||o.repos;b.r.setAttribute('fill',on?'url(#fsBleu)':r.fond);b.r.setAttribute('stroke',on?'rgba(37,99,235,.38)':r.bord);b.t[0].setAttribute('fill',on?'#ffffff':r.encre);};
+    allume(o.outils.gro,(apres(TT.a0)&&t<TT.aSuiv+.001)||apres(TT.bGro),o.repos);
+    for(const id of ['dec','par'])allume(o.outils[id],false,o.repos);
+    appuiT(o.outils.gro,t,enA?TT.a0:TT.bGro);appuiT(o.rangs.ajo,t,TT.bAjo);
+    /* zone d'action : selon les jetons choisis */
+    {const ac=o.act,gk=this.enCours(t),n=gk&&t<GROUPES[gk].ok+.001?this.prises(gk,Math.min(t,GROUPES[gk].ok)).length:0;
+      if(port){op(ac.attente.g,n>=2?0:1);op(ac.reg.g,n>=2?1:0);}
+      else{op(ac.eff1.g,n===1?1:0);op(ac.reg.g,n>=2?1:0);op(ac.eff2.g,n>=2?1:0);}
+      for(const a of [TT.aAct,TT.aAct2,TT.bAct,TT.bAct2])appuiT(ac.reg,t,a);
+      const bv=enA?Q.bravo(o,t,o.bravoA,TT.resoluA,TT.b-.05,TT.aSuiv,appuiT):Q.bravo(o,t,o.bravoB,TT.resoluB,1e9,null);
+      if(bv)for(const k in ac)op(ac[k].g,0);}
+    /* ---- les fenêtres : elles s'ouvrent juste APRÈS le toucher ---- */
+    const e=.001;
+    for(const gk in GROUPES){const d=this.o[GROUPES[gk].dlg],tx=this.expr(gk)+' = ?';if(d.textes[0].textContent!==tx)d.textes[0].textContent=tx;}
+    Q.fenetres(o,Y,t,[[o.dG1,TT.aAct+e,TT.aOk0+e,null,null,false],[o.dG2,TT.aAct2+e,TT.aOk2+e,null,null,false],
+      [o.dAj,TT.bAjo+e,TT.bOk+e,null,null,false],[o.dG3,TT.bAct+e,TT.bOk0+e,null,null,false],[o.dG4,TT.bAct2+e,TT.bOk3+e,null,null,false]],
+      [TT.aOk0+e,TT.aOk2+e,TT.bOk+e,TT.bOk0+e,TT.bOk3+e],port);
+    /* ce que l'élève a écrit : à l'attente, ce qu'il tape ; après, son nombre */
+    const ici=this.attente(t),nApp=maintenant();
+    for(const k of [4,9,13,19,25]){const d=o[ECRIRE[k].d],s=apres(ATT[k])?ECRIRE[k].ok[0]:(ici===k?(this.saisie[k]||''):'');
+      d.champ.textContent=s;
+      if(d.curseur){let w=0;if(s){try{w=d.champ.getComputedTextLength();}catch(er){}}d.curseur.setAttribute('x',d.champC+w/2+3);
+        op(d.curseur,ici===k?1:((Math.floor(t*2)%2===0)?1:0));}
+      for(const c in d.fondsCles){const a=this.appuiCle;d.fondsCles[c].setAttribute('fill',a&&a.d===ECRIRE[k].d&&a.c===c&&nApp-a.r0<200?'#dbeafe':'#f8fafc');}}
+    /* le rond bleu sous le doigt de l'élève, quand le geste est bon */
+    let rip=null;for(const k in ch.touches){const v=ch.touches[k];if(v&&t>v.t+1e-6&&t<v.t+.45)rip=v;}
+    if(rip){const u=F.clamp((t-rip.t)/.45);o.ripple.setAttribute('cx',rip.p[0]);o.ripple.setAttribute('cy',rip.p[1]);
+      o.ripple.setAttribute('r',(port?5:12)+(port?16:34)*F.out(u));op(o.ripple,(1-u)*.9);}else op(o.ripple,0);
+    /* le doigt : seulement quand l'élève a touché ailleurs (ou un jeton de l'autre côté, une mauvaise touche) ; il vient sur la cible */
+    const ind=this.indice,ui=ind?(nApp-ind.r0)/1000:9;
+    if(ui<2.6){const dec=port?[34,46]:[110,120],c=ind.c,a=F.io(F.clamp(ui/.5));
+      const vis=Math.min(F.clamp(ui/.2),1-F.clamp((ui-2.2)/.4)),tape=x=>.1*Math.sin(Math.PI*F.clamp((ui-x)/.3));
+      op(o.doigt,vis);o.doigt.setAttribute('transform',`translate(${L(c[0]+dec[0],c[0],a).toFixed(1)},${L(c[1]+dec[1],c[1],a).toFixed(1)}) scale(${(1-tape(.75)-tape(1.3)).toFixed(3)})`);
+    }else op(o.doigt,0);
+    /* la consigne en haut : en vert avec ✓ quand le geste est fait ; l'aide (en orange) après une erreur */
+    let i=-1;for(let k=0;k<GUIDE_T.length;k++)if(GUIDE_T[k][0]<=t)i=k;
+    if(i<0)op(o.st,0);else{const cur=GUIDE_T[i],nx=GUIDE_T[i+1],fait=cur[2]!=null&&apres(cur[2]);
+      const aide=!fait&&((cur[3]!=null&&this.aide[cur[3]])||(cur[4]!=null&&this.aideT[cur[4]]));
+      let lab=typeof cur[1]==='function'?cur[1].call(this):cur[1];
+      const texte=aide?(cur[3]!=null?ECRIRE[cur[3]].aide[port?1:0]:GROUPES[cur[4]].aide):(Array.isArray(lab)?lab[port?1:0]:lab);
+      Q.legende(o,Y,(fait?'✓ ':'')+texte);o.st.setAttribute('fill',fait?'#15803d':aide?'#c2410c':'#1e293b');
       let a=P(t,cur[0],.3,F.out);if(nx)a=Math.min(a,1-P(t,nx[0]-.22,.22,F.lin));op(o.st,a);}
     Q.fin(o,Y,t,TT.fin);
   }
