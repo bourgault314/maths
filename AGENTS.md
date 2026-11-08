@@ -197,6 +197,22 @@ Défi tables est la référence.
   site. Le retour vers Mon espace est la flèche du haut ; l'information sur la
   confidentialité est sur la page Mon espace. (Avant le 24/10 : le petit logo et
   « Mon espace » en bas.)
+- L'ÉLÈVE CONNECTÉ NE RETOMBE JAMAIS SUR LE SITE (règle de Gwenaël du
+  08/11/2026, après qu'une maman a dit que sa fille « sortait du suivi ») :
+  quand il revient, c'est sur son menu à lui, Mon espace. Dans une appli
+  suivie, ses jeux et ses films, aucun lien visible ne mène au site (logo,
+  « ← Calcul mental », catalogue, licence, pied) ; la flèche, « Se
+  déconnecter », « Non, ce n'est pas moi », un billet expiré ou un serveur
+  muet mènent tous à Mon espace. Et les pages de navigation du site (celles
+  qui chargent `mention-confidentialite.js`) chargent aussi
+  `assets/js/eleve-retour-espace.js`, premier script du `<head>`, sans
+  `defer` : un onglet qui garde le code d'un élève repart vers Mon espace sans
+  montrer la page (un Retour de trop, un détour). Jamais dans une appli
+  suivie. Gardé par `tests/eleve-retour-espace.test.mjs`. Une nouvelle appli
+  suivie se vérifie élève connecté, au téléphone et à l'ordinateur, liens
+  cachés compris. Ce que le site ne peut pas régler : l'appli rouverte dans
+  un autre onglet (favori, historique, icône) n'a pas de code et s'ouvre en
+  visiteur — les familles repartent toujours de suivi.mathsgo.re.
 - Mémoire de l'appli (monde ouvert, table choisie…) : celle de l'élève, pas
   celle de l'appareil (clé portant l'empreinte du code, jamais le code en
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
