@@ -76,14 +76,14 @@ function constante(nom, source = script) {
 // ------------------------------------------------------------ la page, rejouée
 
 const SOURCES = ["jourPlus", "lundiDuJour", "joursEntre", "pluriel", "moteurSuivi", "suiviApp", "eleveDe", "elevesDeLaVue",
-  "bilanEleve", "aiderDe", "feliciterDe", "texteLigne", "joursDeLaFiche", "seancesDeLAppli", "etatModulePalier",
+  "bilanEleve", "coupureDe", "jourCourtChiffres", "aiderDe", "feliciterDe", "texteLigne", "joursDeLaFiche", "seancesDeLAppli", "etatModulePalier",
   "nomDeLAppli", "nomCompetenceCalcul", "nomModuleCalcul"].map(n => fonction(n)).join("\n");
 const CONSTANTES = ["APPLIS", "RANGS_AIDER", "JOURS_ABSENT", "memoSuivi"].map(n => constante(n)).join("\n");
 
 // `listes` : {cle: [élèves lus]} — ce que la page a lu par « tableau ».
 function pageRejouee(listes, aujourdhui) {
   return new Function("PARCOURS", "CALCUL", "CALCUL_CORE", "SPLAT", "COFFRES", "ANZAN", "tableaux", "AUJ",
-    `let eleves = [];\n${CONSTANTES}\n${SOURCES}\nfunction applisDeLaVue() { return APPLIS.map(a => a.cle).filter(cle => tableaux[cle]); }\nfunction aujourdhuiSuivi() { return AUJ; }\n`
+    `let eleves = [];\n${CONSTANTES}\n${SOURCES}\nfunction applisDeLaVue() { return APPLIS.map(a => a.cle).filter(cle => tableaux[cle]); }\nfunction applisDuBilan() { return APPLIS.map(a => a.cle); }\nfunction aujourdhuiSuivi() { return AUJ; }\n`
     + "return {bilanEleve, texteLigne, joursDeLaFiche, seancesDeLAppli, etatModulePalier, suiviApp};")(
     T, D, DCORE, S, C, A, listes, aujourdhui);
 }

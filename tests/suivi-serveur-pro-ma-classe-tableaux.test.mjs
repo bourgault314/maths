@@ -265,11 +265,14 @@ function fenetre({eleves, ids, appli = "defi-tables", droit = "proprietaire", an
   const apiPoche = api || ((action, corps) => new Promise((ok, non) => demandes.push({action, corps, ok, non})));
   const f = new Function("document", "$", "classe", "droitClasse", "appliAffichee", "APPLIS", "ANZAN", "journal", "listes", "api",
     `let eleves = listes.eleves, idsAffiches = listes.ids, fenetreEleveId = null, parcoursAnzanEleve = null, demandeParcours = 0;
-     let vue = "appli", tableaux = {[appliAffichee]: listes.eleves}, ongletFiche = "ensemble", joursFiche = 6, seancesFiche = 6;
+     let vue = "appli", tableaux = {[appliAffichee]: listes.eleves}, ongletFiche = "ensemble", joursFiche = 6, seancesFiche = 6, generation = 0, jeton = "j";
      function ongletsDeLaFiche() { return ["ensemble", appliAffichee]; }
      function dessinerOngletsFiche() {}
      function moteurSuivi() { return {}; }
      function chargerApplis() { return Promise.resolve(); }
+     function listesManquantes() { return []; }
+     function lectureDeLaClasse() { return null; }
+     function textePanne() { return ""; }
      function contenuEnsemble(id) { journal.push("ensemble " + id); return document.createElement("div"); }
      function surErreur(e, zone) { journal.push("surErreur " + zone + " " + e.statut); }
      function raisonDe(e) { return e.message; }

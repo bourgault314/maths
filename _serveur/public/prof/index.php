@@ -259,6 +259,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      noir et blanc. */
   .semaines { white-space: nowrap; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
   .semaines .zero { color: var(--muted); }
+  .semaines .inconnu { color: var(--muted); font-weight: 600; }
   .semaines b { font-weight: 900; }
   /* Lot 8 (retours du 31/10/2026) : le séparateur a son propre nom. Il
      s'appelait « point » et prenait la pastille verte de « ● Ouvert à toute
@@ -864,6 +865,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .lc-jour.ok { background: var(--vert); }
   .lc-jour.rien { background: var(--gris-pale); }
   .lc-jour.futur { border: 1.5px dashed var(--line); }
+  .lc-jour.inconnu { color: var(--muted); font-size: 11px; background: repeating-linear-gradient(-45deg, var(--gris-pale) 0 4px, var(--paper) 4px 7px); }
   .lc-jour.aujourdhui { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--blue); }
   .lc-note .lc-jour { width: 16px; height: 16px; font-size: 10px; vertical-align: -3px; margin: 0 2px; }
   .lc-note { margin-top: 10px; }
@@ -891,6 +893,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
              border: 1px solid var(--filet-doux); border-radius: 7px; background: var(--paper); }
   .fe-case:not(.fait):not(.futur) { background: var(--gris-pale); border-color: var(--gris-pale); }
   .fe-case.futur { border-style: dashed; }
+  /* Un jour pas connu (avant la coupure de l'historique) : « ? », rayé. */
+  .fe-case.inconnu { color: var(--muted); font-size: .8rem; font-weight: 700;
+                     background: repeating-linear-gradient(-45deg, var(--gris-pale) 0 4px, var(--paper) 4px 7px); }
   .fe-case.aujourdhui { box-shadow: 0 0 0 2px var(--blue); }
   .fe-case .lc-puce { width: 8px; height: 8px; margin: 0; }
   .fe-resume { margin: 8px 0 4px; }
@@ -911,6 +916,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .fe-chiffres.faible, .dc-seances td.faible { color: var(--orange-texte); font-weight: 700; }
   .fe-plus { margin-top: 10px; }
   .fe-note { margin: 10px 0 0; color: var(--muted); font-size: .84rem; }
+  .fe-ensemble > .fe-panne { grid-column: 1 / -1; margin: 0 0 4px; color: var(--rouge); font-weight: 600; }
   /* Défi calcul, dans la fiche : ses séances, ses compétences en cases. */
   .dc-seances { margin: 0; font-size: .9rem; }
   .dc-seances th, .dc-seances td { padding: 6px 10px; white-space: nowrap; }
@@ -977,12 +983,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .lc-ligne { grid-template-columns: auto 1fr; }
     .lc-ligne .lc-texte, .lc-ligne .lc-faire { grid-column: 1 / -1; }
     #lc-tableau th.large, #lc-tableau td.large { display: none; }
-    #lc-tableau td.nom .lien-eleve { max-width: 40vw; }
+    /* Correctif après Codex (point 9) : le prénom et les 7 jours tiennent
+       dans la largeur, jusqu'à 320 px — le prénom prend ce qui reste, coupé
+       « … » ; les cases et les marges rétrécissent. */
+    #lc-tableau { width: 100%; table-layout: fixed; }
+    #lc-tableau td, #lc-tableau th { padding: 8px 4px; }
+    #lc-tableau th:first-child, #lc-tableau td:first-child { padding-left: 8px; }
+    #lc-tableau th:nth-child(2) { width: 148px; }
+    #lc-tableau td.nom { overflow: hidden; }
+    #lc-tableau td.nom .lien-eleve { max-width: 100%; }
     #lc-tableau th.fin, #lc-tableau td.va { display: none; }
-    .lc-jour { width: 20px; height: 20px; }
+    .lc-semaine { gap: 1px; }
+    .lc-jour { width: 19px; height: 19px; }
     dialog.fenetre-eleve, dialog.fenetre-eleve.avec-parcours { width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;
                                                                margin: 0; border-radius: 0; }
     .fenetre-eleve .fenetre-tete { padding: 14px 14px 0; }
+    /* Correctif après Codex (point 8) : la place de ‹ › ✕ reste réservée à
+       droite du prénom et de la classe (le prénom passe à la ligne, jamais
+       dessous) ; les onglets de la fiche gardent toute la largeur. */
+    .fenetre-eleve .naviguer { top: 12px; right: 12px; }
+    .fenetre-eleve #fe-titre, .fenetre-eleve #fe-sous { padding-right: 146px; }
     /* Pas pour Défi tables : son écran Mon parcours garde toute la largeur. */
     .fenetre-eleve:not(.avec-parcours) .fenetre-corps { padding: 8px 14px 16px; }
     .fe-ensemble { grid-template-columns: 1fr; }
@@ -3747,7 +3767,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       direAucun(corps, toutes, lignes);
       // Lot S2 : « La classe » se redessine avec le tableau (un prénom
       // changé, une liste relue) ; ‹ › suivent alors SON ordre.
+      // Correctif après Codex (point 1) : hors de La classe, ses zones sont
+      // vidées — un élève supprimé, une autre classe ne laissent aucun
+      // prénom dans le tableau ni dans les cartes cachés. De même pour les
+      // cartes de Défi calcul hors de son onglet.
       if (vue === "classe") dessinerLaClasse();
+      else viderZonesClasse();
+      if (appliAffichee !== "defi-calcul") viderZonesCalcul();
       // Une fenêtre ouverte suit le nouveau dessin (un prénom changé, un
       // élève parti) ; elle se ferme si son élève n'est plus là.
       if (fenetreEleveId !== null) dessinerFenetreEleve();
@@ -4087,15 +4113,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // L'élève dans la liste de l'appli de l'onglet (lue au besoin, sans
     // rappeler le serveur pour une liste déjà là).
     const appli = cle === "ensemble" ? null : cle;
-    if (appli && (!tableaux[appli] || !moteurSuivi(appli) && appli !== "defi-tables")) {
+    // Sa liste pas encore lue : la lecture de la classe (une seule, partagée
+    // avec La classe et la Vue d'ensemble ; correctif après Codex, points 3
+    // et 5) ; la fiche se redessine quand elle finit. Après une panne : la
+    // phrase reste, rien n'est relancé tout seul.
+    if (appli && listesManquantes().includes(appli)) {
+      const lecture = lectureDeLaClasse();
       zone.textContent = "";
       delete zone.dataset.eleve;
-      zone.append(paragrapheVide("Lecture de l’appli…"));
+      demandeParcours += 1;
       fermerParcoursAnzan();
       $("fe-anzan").hidden = true;
-      chargerApplis([appli])
-        .catch(erreur => messager("fe-message", `${nomDeLAppli(appli)} n’a pas pu être lu. ${raisonDe(erreur)}`, "erreur"))
-        .finally(() => { if (fenetreEleveId === base.id && ongletFiche === appli && tableaux[appli]) dessinerFenetreEleve(); });
+      $("fe-parcours").hidden = true;
+      $("fenetre-eleve").classList.remove("avec-parcours");
+      $("dc-imprimer").hidden = true;
+      $("pa-imprimer").hidden = true;
+      zone.append(paragrapheVide(lecture && lecture.fini
+        ? `${textePanne([appli], lecture)}. Recharge la page pour réessayer.` : "Lecture de l’appli…"));
+      poserPiedFiche();
       return;
     }
     const eleve = appli ? (eleveDe(appli, base.id) || base) : base;
@@ -4163,7 +4198,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     attente.textContent = `Ouverture du parcours ${nom}…`;
     cadre.append(attente);
     zone.append(cadre);
-    const encore = () => demande === demandeParcours && fenetreEleveId === eleve.id;
+    const session = generation;
+    const encore = () => demande === demandeParcours && fenetreEleveId === eleve.id
+      && ongletFiche === "defi-tables" && session === generation && Boolean(jeton);
     try {
       const reponse = await api("eleves.fiche", {eleve_id: eleve.id});
       if (!encore()) return;
@@ -6128,6 +6165,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       // Une autre classe s'ouvre en haut de la page — son nom et son résumé —,
       // pas au milieu, là où on en était dans la précédente (lot 5a).
       if (!memeClasse) window.scrollTo(0, 0);
+      // Lot S2, correctif après Codex (point 1) : rien de la classe d'avant
+      // dans La classe ni dans les cartes de Défi calcul, même cachées.
+      if (!memeClasse) { viderZonesClasse(); viderZonesCalcul(); }
       appliAffichee = voulue;
       eleves = elevesLus(voulue, donnees.eleves);
       tableaux = {[voulue]: eleves};
@@ -6744,6 +6784,24 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let joursFiche = 6;
   let seancesFiche = 6;
 
+  // Les zones de La classe et des cartes de Défi calcul qui portent des
+  // prénoms : vidées dès qu'elles ne sont plus redessinées (correctif après
+  // Codex, point 1).
+  const ZONES_LA_CLASSE = ["lc-aider-liste", "lc-aider-plus", "lc-feliciter-liste", "lc-feliciter-plus", "lc-entete", "lc-corps"];
+  const ZONES_CALCUL_CLASSE = ["dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-liste", "dc-ouest-pop", "dc-qui-barres", "dc-qui-texte"];
+  function viderZonesIds(ids) {
+    ids.forEach(id => { const zone = $(id); if (zone) zone.textContent = ""; });
+  }
+  function viderZonesClasse() {
+    viderZonesIds(ZONES_LA_CLASSE);
+    ["lc-aider-plus", "lc-feliciter-plus"].forEach(id => { const zone = $(id); if (zone) zone.hidden = true; });
+  }
+  function viderZonesCalcul() {
+    fermerPopOuEnEst();
+    viderZonesIds(ZONES_CALCUL_CLASSE);
+    ["dc-ouest", "dc-qui"].forEach(id => { const zone = $(id); if (zone) zone.hidden = true; });
+  }
+
   // ----- les jours (des dates « 2026-11-12 », à l'heure de La Réunion)
 
   function jourPlus(jour, nombre) {
@@ -6811,10 +6869,20 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return (tableaux[cle] || []).find(eleve => eleve.id === id) || null;
   }
 
-  // Les applis de « La classe » : celles de la classe, et celles qu'un élève
-  // a en plus (les onglets en clair, lot 5b).
+  // Les applis du bilan (absent, jours de travail, la fiche) : toutes celles
+  // du catalogue. Correctif après Codex (point 4) : une appli fermée depuis
+  // garde le travail déjà fait (modèle commun) — il compte toujours « toutes
+  // applis confondues ». Ce sont les mêmes listes « tableau » qu'avant.
+  function applisDuBilan() {
+    return APPLIS.map(appli => appli.cle);
+  }
+
+  // Les colonnes de « La classe » : les applis de la classe, celles qu'un
+  // élève a en plus (les onglets en clair, lot 5b), et celles où quelqu'un a
+  // déjà du travail.
   function applisDeLaVue() {
-    return applisAMontrer(elevesDeLaVue());
+    const ouvertes = applisAMontrer(elevesDeLaVue());
+    return applisDuBilan().filter(cle => ouvertes.includes(cle) || (tableaux[cle] || []).some(aDuTravail));
   }
 
   // Les élèves de la classe : la même liste dans chaque lecture « tableau ».
@@ -6824,44 +6892,132 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
 
   function listesManquantes() {
-    return applisDeLaVue().filter(cle => !tableaux[cle]
+    return applisDuBilan().filter(cle => !tableaux[cle]
       || (moteurSuivi(cle) === null && cle !== "defi-tables")
       || tableaux[cle].some(eleve => eleve.parcours && eleve.lu && eleve.lu.lisible === false));
   }
 
+  // Une liste reçue, sans les élèves supprimés pendant l'attente : seulement
+  // ceux de la classe telle que la page la connaît maintenant (un élève
+  // supprimé quitte toutes les listes déjà lues, reporterEleve ; un élève
+  // ajouté fait relire la classe, et `tableaux` avec elle).
+  function sansSupprimes(liste) {
+    const connus = new Set(elevesDeLaVue().map(eleve => eleve.id));
+    return (liste || []).filter(eleve => connus.has(eleve.id));
+  }
+
   // Lire ce qui manque (les moteurs, puis les listes), sans relire une liste
-  // déjà là ; puis redessiner. Une erreur se dit au-dessus du tableau.
+  // déjà là. Correctif après Codex (point 2) : une réponse ne s'écrit que
+  // dans l'état pour lequel elle a été demandée — la même session
+  // (generation), la même classe ET la même lecture de la classe
+  // (ouvrirClasse refait `tableaux` : A → B → A, une relecture après un
+  // ajout, une reconnexion rendent l'ancienne réponse périmée) ; un élève
+  // supprimé pendant l'attente n'y revient pas. Chaque appli va au bout
+  // (une panne n'arrête pas les autres) ; la première panne remonte ensuite.
   async function chargerApplis(cles) {
     const classeId = classe && classe.id;
     if (!classeId) return;
+    const lesTableaux = tableaux;
+    const session = generation;
+    const aJour = () => tableaux === lesTableaux && generation === session && Boolean(jeton)
+      && Boolean(classe) && classe.id === classeId;
+    let panne = null;
     await Promise.all(cles.map(async cle => {
-      await chargerMoteurDe(cle);
-      if (!classe || classe.id !== classeId || !jeton) return;
-      if (tableaux[cle]) {
-        if (tableaux[cle].some(eleve => eleve.parcours && eleve.lu && eleve.lu.lisible === false)) {
-          tableaux[cle] = elevesLus(cle, tableaux[cle]);
-          if (cle === appliAffichee) eleves = tableaux[cle];
+      try {
+        await chargerMoteurDe(cle);
+        if (!aJour()) return;
+        if (tableaux[cle]) {
+          if (tableaux[cle].some(eleve => eleve.parcours && eleve.lu && eleve.lu.lisible === false)) {
+            tableaux[cle] = elevesLus(cle, tableaux[cle]);
+            if (cle === appliAffichee) eleves = tableaux[cle];
+          }
+          return;
         }
-        return;
+        const donnees = await api("tableau", {classe_id: classeId, appli: cle});
+        if (!aJour() || tableaux[cle]) return;
+        tableaux[cle] = elevesLus(cle, sansSupprimes(donnees.eleves));
+        reporterAccesDeLaListe(tableaux[cle]);
+      } catch (erreur) {
+        if (!panne) panne = erreur;
       }
-      const donnees = await api("tableau", {classe_id: classeId, appli: cle});
-      if (!classe || classe.id !== classeId || !jeton || tableaux[cle]) return;
-      tableaux[cle] = elevesLus(cle, donnees.eleves);
-      reporterAccesDeLaListe(tableaux[cle]);
     }));
+    if (panne && aJour()) throw panne;
+  }
+
+  // La lecture des listes qui manquent, UNE par lecture de la classe (une
+  // classe ouverte ou relue) : La classe et la fiche la partagent.
+  // Correctif après Codex (points 3 et 5) : jamais relancée toute seule —
+  // après une panne, ce qui manque le reste, et chaque dessin le dit à sa
+  // place (marque.raison), sans écrire dans un message d'un autre écran ;
+  // une session terminée passe par surErreur (la reconnexion). Recharger la
+  // page, rouvrir la classe : une nouvelle lecture.
+  function lectureAJour(marque) {
+    return Boolean(marque) && lectureClasse === marque && Boolean(classe) && classe.id === marque.classeId
+      && tableaux === marque.tableaux && generation === marque.session && Boolean(jeton);
   }
 
   function chargerLaClasse() {
     if (!classe) return;
-    const marque = {classeId: classe.id, fini: false};
+    const marque = {classeId: classe.id, tableaux, session: generation, fini: false, raison: ""};
     lectureClasse = marque;
     messager("lc-message", "", "");
     chargerApplis(listesManquantes())
-      .catch(erreur => { if (lectureClasse === marque) surErreur(erreur, "lc-message"); })
+      .catch(erreur => {
+        if (!lectureAJour(marque)) return;
+        if (erreur && erreur.statut === 401) { surErreur(erreur, "lc-message"); return; }
+        marque.raison = raisonDe(erreur);
+      })
       .finally(() => {
         marque.fini = true;
-        if (lectureClasse === marque && classe && classe.id === marque.classeId) redessin.demander();
+        if (lectureAJour(marque)) redessin.demander();
       });
+  }
+
+  // La lecture de la classe ouverte : lancée si rien n'a été tenté pour elle.
+  // null : rien ne manque.
+  function lectureDeLaClasse() {
+    if (!classe || !listesManquantes().length) return null;
+    if (!lectureAJour(lectureClasse)) chargerLaClasse();
+    return lectureClasse;
+  }
+
+  // « Coffres magiques n'a pas pu être lu : … » — ce qui manque encore à la
+  // fin de la lecture (le serveur a refusé, un moteur n'a pas pu se charger).
+  function textePanne(manquantes, marque) {
+    const noms = manquantes.map(nomDeLAppli);
+    const dit = noms.length > 1 ? `${noms.slice(0, -1).join(", ")} et ${noms[noms.length - 1]} n’ont pas pu être lus` : `${noms[0]} n’a pas pu être lu`;
+    return `${dit}${marque && marque.raison ? ` (${marque.raison.replace(/\.$/, "")})` : ""}`;
+  }
+
+  // Le jour avant lequel les jours de travail d'un élève dans une appli ne
+  // sont pas connus (null : rien n'est coupé). Correctif après Codex
+  // (point 7) : resumeSuivi le dit pour les cinq applis (connuDepuis) — la
+  // borne des 60 séances, des 500 d'Anzan, des 60 jours de SPLAT! et de
+  // Coffres, des jours notés seulement depuis le lot S1. SPLAT! et Coffres disent aussi
+  // le premier jour qu’ils ont noté quand c'est simplement le premier jour
+  // joué : rien n'est coupé s'ils ne connaissent aucun travail d'avant —
+  // sauf leur borne de 60 jours, qui coupe au moins 59 jours en arrière.
+  function coupureDe(cle, eleve, aujourdhui) {
+    const suivi = suiviApp(cle, eleve, aujourdhui);
+    const depuis = suivi && suivi.connuDepuis;
+    if (!depuis) return null;
+    if (cle === "splat" || cle === "coffres") {
+      const avant = suiviApp(cle, eleve, jourPlus(depuis, -1));
+      if ((!avant || !avant.dernier) && joursEntre(depuis, aujourdhui) < 59) return null;
+    }
+    return depuis;
+  }
+
+  // « 3 », « ≥ 3 » (au moins 3), « ? » : les jours d'une semaine, connue en
+  // entier ou non.
+  function compteSemaine(semaine) {
+    if (!semaine.incomplete) return String(semaine.jours);
+    return semaine.jours ? `≥ ${semaine.jours}` : "?";
+  }
+
+  function enJoursSemaine(s) {
+    if (!s.incomplete) return pluriel(s.jours, "jour");
+    return s.jours ? `au moins ${pluriel(s.jours, "jour")}` : "pas connu";
   }
 
   // Tout ce qu'on sait d'un élève, toutes applis : ses jours de travail, son
@@ -6874,13 +7030,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const jours = new Map();
     let dernier = null;
     let recu = false;
-    applisDeLaVue().forEach(cle => {
+    let coupure = null;
+    applisDuBilan().forEach(cle => {
       const eleve = eleveDe(cle, id);
       if (!eleve) return;
       if (eleve.maj_le) recu = true;
       const suivi = suiviApp(cle, eleve, aujourdhui);
       if (!suivi) return;
       parApp[cle] = {eleve, suivi};
+      const depuis = coupureDe(cle, eleve, aujourdhui);
+      if (depuis && (!coupure || depuis > coupure)) coupure = depuis;
       suivi.jours.forEach(j => {
         if (!jours.has(j.jour)) jours.set(j.jour, []);
         jours.get(j.jour).push(cle);
@@ -6891,13 +7050,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const debutSemaine = jourPlus(debut, 7 * k);
       let n = 0;
       for (let d = 0; d < 7; d += 1) if (jours.has(jourPlus(debutSemaine, d))) n += 1;
-      return {lundi: debutSemaine, jours: n};
+      // Correctif après Codex (point 7) : une semaine qui commence avant la
+      // coupure n'est pas connue en entier — son nombre est « au moins ».
+      return {lundi: debutSemaine, jours: n, incomplete: Boolean(coupure && coupure > debutSemaine)};
     });
     let absent = null;
     if (!recu) absent = {jamais: true};
     else if (!dernier) absent = {aucun: true};
     else if (joursEntre(dernier, aujourdhui) >= JOURS_ABSENT) absent = {jours: joursEntre(dernier, aujourdhui)};
-    const bilan = {id, aujourdhui, lundi, debut, parApp, jours, dernier, semaines, absent, recu};
+    const bilan = {id, aujourdhui, lundi, debut, parApp, jours, dernier, semaines, absent, recu, coupure};
     bilan.aider = aiderDe(bilan);
     bilan.feliciter = feliciterDe(bilan);
     return bilan;
@@ -6990,17 +7151,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // Le dessin (appelé par chaque redessin du tableau, quand la vue est là).
   function dessinerLaClasse() {
     if (!classe || vue !== "classe") return;
+    const lecture = lectureDeLaClasse();
     const manquantes = listesManquantes();
-    const dejaLue = Boolean(lectureClasse && lectureClasse.classeId === classe.id);
-    if (manquantes.length && !dejaLue) chargerLaClasse();
     // Une lecture finie à laquelle il manque encore une appli (le serveur a
     // refusé, un moteur n'a pas pu être chargé) : on montre ce qu'on a, et on
-    // le dit — jamais « Lecture… » pour toujours.
-    const enLecture = manquantes.length > 0 && !(dejaLue && lectureClasse.fini);
-    if (manquantes.length && !enLecture) {
-      const message = $("lc-message");
-      if (message.hidden) messager("lc-message", `${manquantes.map(nomDeLAppli).join(", ")} n’a pas pu être lu : ce qui suit ne le compte pas. Recharge la page pour réessayer.`, "erreur");
-    }
+    // le dit — jamais « Lecture… » pour toujours, jamais une relecture en
+    // boucle.
+    const enLecture = manquantes.length > 0 && !(lecture && lecture.fini);
+    if (manquantes.length && !enLecture) messager("lc-message", `${textePanne(manquantes, lecture)} : ce qui suit ne le compte pas. Recharge la page pour réessayer.`, "erreur");
+    else messager("lc-message", "", "");
     const aujourdhui = aujourdhuiSuivi();
     const liste = elevesDeLaVue();
     const bilans = new Map();
@@ -7096,8 +7255,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // entourée, les jours à venir en pointillés. Rien de rouge, jamais.
   function caseSemaine(bilan, jour, aujourdhui) {
     const fait = bilan && bilan.jours.has(jour);
-    const genre = jour > aujourdhui ? "futur" : fait ? "ok" : "rien";
-    const c = el("i", `lc-jour ${genre}${jour === aujourdhui ? " aujourdhui" : ""}`, fait ? "✓" : "");
+    // Un jour d'avant la coupure, sans travail connu : pas connu (« ? »), pas
+    // « rien » (correctif après Codex, point 7).
+    const inconnu = !fait && Boolean(bilan && bilan.coupure && jour < bilan.coupure);
+    const genre = jour > aujourdhui ? "futur" : fait ? "ok" : inconnu ? "inconnu" : "rien";
+    const c = el("i", `lc-jour ${genre}${jour === aujourdhui ? " aujourdhui" : ""}`, fait ? "✓" : genre === "inconnu" ? "?" : "");
     c.setAttribute("aria-hidden", "true");
     return c;
   }
@@ -7112,7 +7274,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (bilan && bilan.jours.has(jour)) faits.push(JOURS_SEMAINE[d]);
     }
     zone.setAttribute("role", "img");
-    zone.setAttribute("aria-label", faits.length ? `Cette semaine : ${faits.join(", ")}` : "Cette semaine : rien pour l’instant");
+    const pasConnu = Boolean(bilan && bilan.coupure && bilan.coupure > lundi);
+    zone.setAttribute("aria-label", (faits.length ? `Cette semaine : ${faits.join(", ")}` : pasConnu ? "Cette semaine : pas connue" : "Cette semaine : rien pour l’instant")
+      + (pasConnu && faits.length ? " (les autres jours ne sont pas tous connus)" : ""));
     return zone;
   }
 
@@ -7123,11 +7287,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!bilan || !bilan.recu) { zone.classList.add("zero"); zone.textContent = "—"; return zone; }
     bilan.semaines.forEach((semaine, index) => {
       if (index) zone.append(el("span", "sep-semaine", " · "));
-      const nombre = el(index === 3 ? "b" : "span", semaine.jours ? "" : "zero", String(semaine.jours));
+      const nombre = el(index === 3 ? "b" : "span", semaine.incomplete ? "inconnu" : semaine.jours ? "" : "zero", compteSemaine(semaine));
       zone.append(nombre);
     });
     zone.append(el("span", "lc-unite", " jours"));
-    zone.title = bilan.semaines.map((s, i) => `${i === 3 ? "cette semaine" : `semaine du ${jourCourtChiffres(s.lundi)}`} : ${pluriel(s.jours, "jour")}`).join(" · ");
+    zone.title = bilan.semaines.map((s, i) => `${i === 3 ? "cette semaine" : `semaine du ${jourCourtChiffres(s.lundi)}`} : ${enJoursSemaine(s)}`).join(" · ")
+      + (bilan.coupure ? ` — les jours d’avant le ${jourCourtChiffres(bilan.coupure)} ne sont pas tous connus` : "");
     return zone;
   }
 
@@ -7269,6 +7434,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function changerOngletFiche(cle) {
     if (cle === ongletFiche) return;
     ongletFiche = cle;
+    // Un billet de parcours encore en route (Défi tables) ne vaut plus pour
+    // l'onglet suivant, même son erreur (correctif après Codex, point 5).
+    demandeParcours += 1;
     seancesFiche = 6;
     messager("fe-message", "", "");
     dessinerFenetreEleve();
@@ -7279,14 +7447,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // est » ; à droite « Ce qu'il a fait », jour par jour.
   function contenuEnsemble(id) {
     const zone = el("div", "fe-ensemble");
+    // La lecture de la classe (une seule, partagée avec La classe) : la
+    // fiche se redessine quand elle finit (redessin → dessinerTableau). Une
+    // panne se dit ICI, dans le dessin de cette fiche (correctif après
+    // Codex, points 3 et 5) : jamais relancée, jamais chez un autre élève.
+    const lecture = lectureDeLaClasse();
     const manquantes = listesManquantes();
-    if (manquantes.length) {
+    if (manquantes.length && !(lecture && lecture.fini)) {
       zone.append(paragrapheVide("Lecture des applis…"));
-      chargerApplis(manquantes)
-        .catch(erreur => messager("fe-message", `Une appli n’a pas pu être lue. ${raisonDe(erreur)}`, "erreur"))
-        .finally(() => { if (fenetreEleveId === id && ongletFiche === "ensemble") dessinerFenetreEleve(); });
       return zone;
     }
+    if (manquantes.length) zone.append(el("p", "fe-note fe-panne", `${textePanne(manquantes, lecture)} : ce qui suit ne le compte pas. Recharge la page pour réessayer.`));
     const aujourdhui = aujourdhuiSuivi();
     const bilan = bilanEleve(id, aujourdhui);
     const gauche = el("div", "fe-col");
@@ -7305,7 +7476,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       for (let d = 0; d < 7; d += 1) {
         const jour = jourPlus(lundi, d);
         const applis = bilan.jours.get(jour) || [];
-        const c = el("span", `fe-case${jour > aujourdhui ? " futur" : ""}${jour === aujourdhui ? " aujourdhui" : ""}${applis.length ? " fait" : ""}`);
+        const inconnu = !applis.length && jour <= aujourdhui && Boolean(bilan.coupure && jour < bilan.coupure);
+        const c = el("span", `fe-case${jour > aujourdhui ? " futur" : ""}${jour === aujourdhui ? " aujourdhui" : ""}${applis.length ? " fait" : ""}${inconnu ? " inconnu" : ""}`);
+        if (inconnu) c.textContent = "?";
         applis.forEach(cle => c.append(puceAppli(cle)));
         if (applis.length) dits.push(`${jourEnClair(jour)} : ${applis.map(nomDeLAppli).join(", ")}`);
         grille.append(c);
@@ -7313,10 +7486,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     }
     grille.setAttribute("aria-label", dits.length ? dits.join(" ; ") : "Aucun jour de travail sur les 4 dernières semaines");
     gauche.append(grille);
-    const semaine = bilan.semaines[3].jours;
-    const avant = bilan.semaines[2].jours;
     const resume = el("p", "fe-resume");
-    resume.append(el("b", "", pluriel(semaine, "jour")), document.createTextNode(` cette semaine · ${avant} la semaine dernière`));
+    resume.append(el("b", "", enJoursSemaine(bilan.semaines[3])), document.createTextNode(` cette semaine · ${enJoursSemaine(bilan.semaines[2])} la semaine dernière`));
     gauche.append(resume);
     const legende = el("p", "fe-legende");
     Object.keys(bilan.parApp).forEach(cle => {
@@ -7324,6 +7495,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       morceau.append(puceAppli(cle), document.createTextNode(nomDeLAppli(cle)));
       legende.append(morceau);
     });
+    if (grille.querySelector(".inconnu")) legende.append(el("span", "fe-legende-inconnu", "? pas connu"));
     if (legende.childNodes.length) gauche.append(legende);
 
     // À voir.
@@ -7406,38 +7578,42 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
 
   // Les jours de travail d'un élève, du plus récent au plus ancien, autant
-  // qu'il en faut : les 4 dernières semaines, puis les 4 d'avant… (chaque
-  // moteur relu « comme si on était » à la fin de la période). `encore` : il
-  // y en a d'autres plus anciens. `notes` : ce qu'une appli ne savait pas
-  // encore (ses jours notés commencent à une date).
+  // qu'il en faut : les 4 dernières semaines, puis les 4 qui finissent au
+  // jour de travail le plus récent d'avant… (chaque moteur relu « comme si on
+  // était » à la fin de la période). Correctif après Codex (point 6) : plus
+  // de plafond — on saute les mois sans travail, jusqu'au plus ancien jour
+  // gardé (chaque tour avance d'au moins un jour connu vers le passé : la
+  // boucle finit). `encore` : il y en a d'autres plus anciens. `notes` : ce
+  // qu'une appli ne connaît plus (point 7 : ses jours commencent à une date).
   function joursDeLaFiche(id, aujourdhui, besoin) {
-    const applis = applisDeLaVue().filter(cle => eleveDe(cle, id));
+    const applis = applisDuBilan().filter(cle => eleveDe(cle, id));
     const tous = [];
     const notes = [];
+    applis.forEach(cle => {
+      const depuis = coupureDe(cle, eleveDe(cle, id), aujourdhui);
+      if (!depuis) return;
+      notes.push(depuis > aujourdhui
+        ? `${nomDeLAppli(cle)} : ses jours de travail d’avant ne sont pas connus (l’appli ne les notait pas encore).`
+        : `${nomDeLAppli(cle)} : les jours d’avant le ${jourCourtChiffres(depuis)} ne sont pas connus.`);
+    });
     let fin = aujourdhui;
     let encore = false;
-    for (let periode = 0; periode < 13; periode += 1) {
+    while (fin) {
       const parJour = new Map();
-      let plusAncien = false;
       const debut = jourPlus(lundiDuJour(fin), -21);
+      let suivant = null;
       applis.forEach(cle => {
-        const suivi = suiviApp(cle, eleveDe(cle, id), fin);
+        const eleve = eleveDe(cle, id);
+        const suivi = suiviApp(cle, eleve, fin);
         if (!suivi) return;
         suivi.jours.forEach(j => {
+          if (j.jour < debut || j.jour > fin) return;
           if (!parJour.has(j.jour)) parJour.set(j.jour, []);
           j.lignes.forEach(ligne => parJour.get(j.jour).push({cle, ligne}));
         });
-        // Une borne atteinte (les 60 dernières séances, les 500 d'Anzan) :
-        // les jours d'avant ne sont plus connus, on le dit. (SPLAT! et
-        // Coffres disent depuis quand ils notent les jours — c'est le plus
-        // souvent le premier jour joué : rien à dire.)
-        if (periode === 0 && suivi.connuDepuis && suivi.connuDepuis <= aujourdhui && cle !== "splat" && cle !== "coffres") {
-          notes.push(`${nomDeLAppli(cle)} : le détail des jours commence le ${jourCourtChiffres(suivi.connuDepuis)}.`);
-        }
-        // Un jour plus ancien que cette période ? (le dernier jour connu
-        // avant son début)
-        const avant = suiviApp(cle, eleveDe(cle, id), jourPlus(debut, -1));
-        if (avant && avant.dernier) plusAncien = true;
+        // Le jour de travail le plus récent d'avant cette période.
+        const avant = suiviApp(cle, eleve, jourPlus(debut, -1));
+        if (avant && avant.dernier && avant.dernier < debut && (!suivant || avant.dernier > suivant)) suivant = avant.dernier;
       });
       [...parJour.keys()].sort().reverse().forEach(jour => {
         const lignes = parJour.get(jour);
@@ -7445,9 +7621,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         tous.push({jour, lignes});
       });
       if (tous.length > besoin) { encore = true; break; }
-      if (!plusAncien) break;
-      fin = jourPlus(debut, -1);
-      if (tous.length === besoin) { encore = true; break; }
+      fin = suivant;
     }
     return {jours: tous.slice(0, besoin), encore, notes};
   }
@@ -7517,7 +7691,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     fermerPopOuEnEst();
     const bloc = $("dc-ouest");
     const lignes = elevesDeLOnglet();
-    if (!CALCUL || !CALCUL_CORE || !lignes.some(e => e.lu && e.lu.commence)) { bloc.hidden = true; return; }
+    if (!CALCUL || !CALCUL_CORE || !lignes.some(e => e.lu && e.lu.commence)) {
+      bloc.hidden = true;
+      viderZonesIds(["dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-liste"]);
+      return;
+    }
     const carte = CALCUL_CORE.carte();
     // Ouverte à l'ordinateur, repliée au téléphone — la première fois
     // seulement : ensuite, comme le professeur l'a laissée.
@@ -7594,13 +7772,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const pop = $("dc-ouest-pop");
     if (!pop) return;
     pop.hidden = true;
+    // Fermée, elle n'a plus de prénom (correctif après Codex, point 1).
+    pop.textContent = "";
     delete pop.dataset.module;
   }
 
   function dessinerQuiSentraine() {
     const bloc = $("dc-qui");
     const lignes = elevesDeLOnglet();
-    if (!CALCUL || !lignes.some(e => e.lu && e.lu.commence)) { bloc.hidden = true; return; }
+    if (!CALCUL || !lignes.some(e => e.lu && e.lu.commence)) {
+      bloc.hidden = true;
+      viderZonesIds(["dc-qui-barres", "dc-qui-texte"]);
+      return;
+    }
     const aujourdhui = aujourdhuiSuivi();
     const lundi = lundiDuJour(aujourdhui);
     const debut = jourPlus(lundi, -21);
@@ -7650,18 +7834,20 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 
   // Les séances d'un élève dans une appli, de la plus récente à la plus
   // ancienne, autant qu'il en faut : relues dans resumeSuivi, période de 4
-  // semaines par période (comme « Ce qu'il a fait ») — donc jamais un temps
-  // passé. {seances: [{jour, ligne}], encore}.
+  // semaines par période (comme « Ce qu'il a fait », sans plafond : on saute
+  // les mois sans séance) — donc jamais un temps passé.
+  // {seances: [{jour, ligne}], encore}.
   function seancesDeLAppli(cle, eleve, besoin) {
     const seances = [];
     let fin = aujourdhuiSuivi();
-    for (let periode = 0; periode < 13 && seances.length <= besoin; periode += 1) {
+    while (fin && seances.length <= besoin) {
       const suivi = suiviApp(cle, eleve, fin);
       if (!suivi) break;
-      suivi.jours.slice().reverse().forEach(j => j.lignes.slice().reverse().forEach(ligne => seances.push({jour: j.jour, ligne})));
+      suivi.jours.slice().reverse().forEach(j => {
+        if (j.jour >= suivi.debut && j.jour <= fin) j.lignes.slice().reverse().forEach(ligne => seances.push({jour: j.jour, ligne}));
+      });
       const avant = suiviApp(cle, eleve, jourPlus(suivi.debut, -1));
-      if (!avant || !avant.dernier) break;
-      fin = jourPlus(suivi.debut, -1);
+      fin = avant && avant.dernier && avant.dernier < suivi.debut ? avant.dernier : null;
     }
     return {seances: seances.slice(0, besoin), encore: seances.length > besoin};
   }
@@ -7670,7 +7856,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const bloc = el("div", "dc-bloc");
     const {seances, encore} = seancesDeLAppli("defi-calcul", eleve, seancesFiche);
     bloc.append(el("h3", "", "Ses séances"));
-    if (!seances.length) { bloc.append(paragrapheVide("Aucune séance finie.")); return bloc; }
+    // La borne des 60 séances atteinte : celles d'avant ne sont plus connues
+    // (correctif après Codex, point 7).
+    const depuis = coupureDe("defi-calcul", eleve, aujourdhuiSuivi());
+    const note = depuis ? el("p", "fe-note", `Les séances d’avant le ${jourCourtChiffres(depuis)} ne sont pas connues.`) : null;
+    if (!seances.length) { bloc.append(paragrapheVide(depuis ? "Aucune séance connue." : "Aucune séance finie.")); if (note) bloc.append(note); return bloc; }
     const table = el("table", "dc-seances");
     const tete = document.createElement("tr");
     ["Jour", "Calculs du jour", "Ce qui a changé"].forEach(t => tete.append(el("th", "", t)));
@@ -7700,7 +7890,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       plus.type = "button";
       plus.addEventListener("click", () => { seancesFiche += 10; dessinerFenetreEleve(); });
       bloc.append(plus);
-    }
+    } else if (note) bloc.append(note);
     return bloc;
   }
 
@@ -8823,6 +9013,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const boite = $("boite");
       const fermer = valeur => {
         boite.close();
+        // Lot S2, correctif après Codex (point 1) : la question posée
+        // (« Supprimer … et toute sa progression ? », avec son prénom) et ses champs
+        // quittent le document avec la boîte — plus aucun prénom caché.
+        $("boite-texte").textContent = "";
+        zone.textContent = "";
         zone.removeEventListener("input", rafraichirApercu);
         $("form-boite").onsubmit = null;
         $("boite-non").onclick = null;
