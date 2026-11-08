@@ -143,8 +143,8 @@ test("la page Infos dit « espace », jamais « compte »", () => {
 // aucun. Ce test EXÉCUTE le gestionnaire tel qu'il est écrit dans la page :
 // une assertion sur le texte du fichier décrirait l'intention au lieu de la
 // vérifier.
-function executerPageshow({persisted, codeEnMemoire}) {
-  const debut = page.indexOf("  function revenirAuCode() {");
+function executerPageshow({persisted, codeEnMemoire, codeAffiche = "ABC123"}) {
+  const debut = page.indexOf("  function revenirAuCode(");
   assert.ok(debut > 0, "la page doit ranger le ménage dans une fonction");
   const ancre = page.indexOf('window.addEventListener("pageshow"', debut);
   assert.ok(ancre > debut, "la page doit écouter « pageshow »");
@@ -193,21 +193,30 @@ function executerPageshow({persisted, codeEnMemoire}) {
   // la séance et retire sa tuile — sinon la tuile « Séance en direct » de la
   // classe du précédent élève resterait posée sur l'écran du code.
   const directs = {arrets: 0};
+  // Lot S3 : le ménage vide aussi « Ma semaine » (poserSemaine(null)).
+  const semaines = [];
+  // Correctif S3 (Codex, nº 1) : le code effacé (ou non), et les ouvertures
+  // relancées par le retour de cache.
+  const codesEcrits = [];
+  const ouvertures = [];
   new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
-               "dessinerCases", "document", "arreterDirect", "ouverture", source)(
-    $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {},
-    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0);
+               "dessinerCases", "document", "arreterDirect", "ouverture", "poserSemaine",
+               "codeAffiche", "jourAffiche", "appliEvaluation", "ouvrir", source)(
+    $, fenetre, code => codesEcrits.push(code), () => codeEnMemoire, nettoyer, () => {},
+    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0, espace => semaines.push(espace),
+    codeAffiche, "2026-11-12", {cle: "defi-tables"}, (code, silencieux) => ouvertures.push([code, silencieux]));
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
-  return {$, elements, classesCorps, classesHtml, dessins, directs};
+  return {$, elements, classesCorps, classesHtml, dessins, directs, semaines, codesEcrits, ouvertures};
 }
 
 // Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
 // c'est la raison d'être de la fonction commune. Ce test exécute l'autre
 // chemin, celui du bouton, sur le même écran de départ.
 test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
-  const {$, classesCorps, classesHtml, dessins, directs} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  const {$, classesCorps, classesHtml, dessins, directs, semaines} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
   $("changer").ecouteurs.click();
+  assert.deepEqual(semaines, [null], "« Ma semaine » est vidée (lot S3)");
   assert.ok(!classesHtml.has("retour"), "l'écran du code n'est plus caché par la classe du retour (lot 8)");
   assert.equal(directs.arrets, 1, "la surveillance de la séance en direct s'arrête, sa tuile part");
   assert.ok(classesCorps.has("sur-code"), "l'écran du code retrouve sa mise en page (sans en-tête)");
@@ -238,9 +247,35 @@ test("après « Se déconnecter », le bouton « précédent » ne rouvre pas l'
 });
 
 test("le retour d'un cache ne dérange pas un élève encore identifié", () => {
-  const {$} = executerPageshow({persisted: true, codeEnMemoire: "ABC123"});
+  const {$, codesEcrits, ouvertures} = executerPageshow({persisted: true, codeEnMemoire: "ABC123"});
   assert.equal($("ecran-espace").hidden, false, "l'onglet a encore son code : rien ne bouge");
   assert.equal($("titre").textContent, "Bonjour Léa");
+  assert.deepEqual(codesEcrits, [], "son code reste");
+  // Correctif S3 (Codex, nº 3) : la page restaurée peut dater d'hier — elle
+  // se rouvre comme au retour dans l'onglet (la copie, puis le serveur).
+  assert.deepEqual(ouvertures, [["ABC123", true]]);
+});
+
+// Correctif S3 (Codex, nº 1, P1) : un code dans l'onglet ne suffit pas — il
+// faut que ce soit celui de l'écran restauré.
+test("le retour d'un cache avec le code d'un AUTRE élève : l'écran de l'ancien part, le code du nouveau reste", () => {
+  const {$, classesHtml, directs, semaines, codesEcrits, ouvertures} =
+    executerPageshow({persisted: true, codeEnMemoire: "BOB234", codeAffiche: "ABC123"});
+  assert.equal($("titre").textContent, "Mon espace", "le prénom de l'ancien est parti");
+  assert.equal($("classe").textContent, "");
+  assert.equal($("applis").textContent, "", "ses activités (et leurs liens) aussi");
+  assert.deepEqual(semaines, [null], "sa semaine aussi");
+  assert.equal(directs.arrets, 1, "sa surveillance de la séance en direct s'arrête");
+  assert.equal($("evaluation-lien").href, "#", "la tuile de l'évaluation ne mène plus nulle part");
+  assert.deepEqual(codesEcrits, [], "le code du nouvel élève n'est PAS effacé");
+  assert.deepEqual(ouvertures, [["BOB234", true]], "l'espace du nouvel élève s'ouvre");
+  assert.ok(classesHtml.has("retour"), "sans faire clignoter l'écran du code");
+});
+
+test("le retour d'un cache sur l'écran du code : rien ne s'ouvre tout seul", () => {
+  const {ouvertures, codesEcrits} = executerPageshow({persisted: true, codeEnMemoire: "ABC123", codeAffiche: ""});
+  assert.deepEqual(ouvertures, []);
+  assert.deepEqual(codesEcrits, []);
 });
 
 test("un affichage ordinaire (pas un retour de cache) ne touche à rien", () => {

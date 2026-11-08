@@ -153,6 +153,10 @@ try {
      meme sur un telephone. Seule une tuile qui PORTE une jauge passe en
      plusieurs lignes ; les autres gardent leur mise en page d'avant. */
   .appli.a-jauge { flex-wrap: wrap; }
+  /* Lot S3 : à l'ordinateur, deux tuiles d'une même rangée ont la même
+     hauteur ; le contenu de la plus courte reste en haut au lieu de
+     s'étaler (la ligne « Niveau 1 : 1 trésor » de Coffres tombait en bas). */
+  .appli.a-jauge { align-content: flex-start; }
   .appli.a-jauge .jauge { flex: 0 0 100%; }
   /* Sans base zero, le texte garde sa largeur de contenu et c'est LUI qui
      passe a la ligne : le dessin se retrouvait seul sur la premiere. */
@@ -227,6 +231,43 @@ try {
      deux). Elle remplace la pastille « 📝 Évaluation ouverte » du lot E2,
      qui faisait doublon. */
   li.aide { margin-top: 20px; }
+  /* Lot S3 « Mon espace côté élève » (chantier « Suivre ses élèves », choix
+     de Gwenaël du 07/11/2026, planches 4 et 5) : « Ma semaine », sept cases
+     du lundi au dimanche, ✓ les jours où l'élève a travaillé, toutes applis
+     ensemble ; on parle de JOURS (des élèves travaillent le matin), jamais
+     d'un temps passé. Rien de rouge : un jour sans travail est une case
+     vide, comme un jour à venir (en pointillés). La carte est posée entre
+     les tuiles du haut (séance en direct, évaluation) et les activités ; elle
+     reste dans le document même cachée, pour que l'écart au-dessus des
+     activités ne bouge pas (12 px, comme après les tuiles du haut). */
+  .semaine { margin: 12px 0 0; padding: 14px 16px 15px; background: var(--paper);
+             border: 1px solid var(--line); border-radius: 12px; }
+  .semaine h2 { margin: 0 0 10px; font: 700 var(--texte)/1.3 var(--sans); color: var(--blue-dark); }
+  .semaine + ul { margin-top: 12px; }
+  .semaine-ligne { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 22px; }
+  .semaine-jours { list-style: none; margin: 0; padding: 0; display: grid;
+                   grid-template-columns: repeat(7, minmax(0, 40px)); gap: 8px; flex: 0 1 328px; }
+  .semaine-jours li { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+  .semaine-jours .lettre { color: var(--muted); font-size: .74rem; font-weight: 700; line-height: 1; }
+  .semaine-jours .case-jour { display: grid; place-items: center; width: 100%; aspect-ratio: 1;
+                              border: 1.5px solid #cfdae6; border-radius: 9px; background: #fff; }
+  .semaine-jours .avenir .case-jour { border-style: dashed; border-color: #dbe3ec; background: transparent; }
+  .semaine-jours .fait .case-jour { border-color: #147447; background: #147447; }
+  .semaine-jours .case-jour svg { width: 58%; height: auto; }
+  .semaine-jours .aujourdhui .case-jour { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--blue); }
+  .semaine-jours .aujourdhui .lettre { color: var(--blue-dark); }
+  .semaine-compte { margin: 0 0 4px; color: var(--ink); font-size: var(--texte-secondaire); }
+  .semaine-compte:empty { display: none; }
+  .semaine-compte strong { font-weight: 800; }
+  /* Lot S3 : sous la tuile, en vert, ce que l'élève a GAGNÉ cette semaine
+     (une table passée, un monde fini, un grade, des compétences), et
+     seulement quand il y en a. Les mots sont ceux de « À féliciter » de la
+     page du professeur. */
+  .appli .jauge-gain { display: block; margin-top: 8px; color: #147447;
+                       font-size: var(--texte-secondaire); font-weight: 800; line-height: 1.35; }
+  /* Lot S3 : une tuile épurée — la phrase sous le nom de l'appli ne reste que
+     tant que l'élève ne l'a jamais ouverte. */
+  .appli .texte span[hidden] { display: none; }
 </style>
 </head>
 <body class="sur-code">
@@ -278,6 +319,16 @@ try {
       <div class="texte"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Commencer l’évaluation.</span></div>
       <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
+    <!-- Lot S3 : « Ma semaine ». Les cases et le compte sont écrits par la
+         page (poserSemaine), d'après les moteurs des applis : rien du
+         serveur n'y entre en HTML. -->
+    <section class="semaine" id="semaine" aria-labelledby="semaine-titre" hidden>
+      <h2 id="semaine-titre">Ma semaine</h2>
+      <div class="semaine-ligne">
+        <ol class="semaine-jours" id="semaine-jours"></ol>
+        <p class="semaine-compte" id="semaine-compte"></p>
+      </div>
+    </section>
     <ul id="applis"></ul>
   </section>
 </main>
@@ -532,13 +583,21 @@ try {
     if (lien.dataset.enCours) return;
     lien.dataset.enCours = "1";
     const billet = await billetFrais(code);
+    // Correctif S3 (Codex, nº 4) : le serveur ne connaît plus ce code — on
+    // ne part pas avec l'ancien billet, on fait le ménage.
+    if (billet === null) {
+      delete lien.dataset.enCours;
+      if (lireCode() === code) revenirAuCode();
+      return;
+    }
     window.location.assign(adresseAppli(appli, billet || billetEntree));
     window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
   }
 
   // Un billet neuf au moment du clic : celui reçu à l'entrée peut avoir
   // expiré si l'élève a pris son temps. Si le serveur ne répond pas, on part
-  // avec le billet de l'entrée — il vaut peut-être encore.
+  // avec le billet de l'entrée — il vaut peut-être encore. null : le serveur
+  // dit que ce code n'existe plus (404) — seul cas où l'on ne part pas.
   async function billetFrais(code) {
     try {
       const reponse = await fetch("api/eleve.php", {
@@ -549,6 +608,7 @@ try {
       });
       const donnees = await reponse.json().catch(() => null);
       if (reponse.ok && donnees && donnees.ok && typeof donnees.billet === "string") return donnees.billet;
+      if (reponse.status === 404) return null;
     } catch (_) {}
     return "";
   }
@@ -894,6 +954,15 @@ try {
     return pastille;
   }
 
+  // Lot S3 : le gain de la semaine, en vert, au bas de la jauge.
+  function poserGain(bloc, jauge) {
+    if (!jauge.gain || typeof jauge.gain !== "string") return;
+    const gain = document.createElement("span");
+    gain.className = "jauge-gain";
+    gain.textContent = jauge.gain;
+    bloc.append(gain);
+  }
+
   // La jauge posée dans la tuile. Tout est construit par createElement et
   // textContent : rien du serveur ne devient du HTML.
   function poserJauge(tuile, jauge) {
@@ -904,6 +973,7 @@ try {
     if (jauge.aujourdhui && !jauge.compte) {
       bloc.className = "jauge seule";
       bloc.append(pastilleAujourdhui(jauge.aujourdhui));
+      poserGain(bloc, jauge);
       tuile.classList.add("a-jauge");
       tuile.append(bloc);
       return;
@@ -927,6 +997,17 @@ try {
         }
         bloc.append(ligne);
       });
+      poserGain(bloc, jauge);
+      tuile.classList.add("a-jauge");
+      tuile.append(bloc);
+      return;
+    }
+    // Lot S3 : un gain sans jauge (cas limite : une table passée cette
+    // semaine dont la jauge n'a pas pu être lue) — le gain seul.
+    if (!jauge.compte) {
+      if (!jauge.gain) return;
+      bloc.className = "jauge seule";
+      poserGain(bloc, jauge);
       tuile.classList.add("a-jauge");
       tuile.append(bloc);
       return;
@@ -969,6 +1050,7 @@ try {
       bloc.append(note);
     }
     if (jauge.aujourdhui) bloc.append(pastilleAujourdhui(jauge.aujourdhui));
+    poserGain(bloc, jauge);
     tuile.classList.add("a-jauge");
     tuile.append(bloc);
   }
@@ -986,6 +1068,105 @@ try {
   // La page pose ensuite toutes les jauges d'un coup, avant de montrer la
   // grille (afficherEspace) : plus de tuiles qui se remplissent ni qui
   // remontent sous les yeux de l'élève.
+  // ------------------------------------------- lot S3 : Ma semaine, les gains
+  //
+  // Chantier « Suivre ses élèves », lot S3 (choix de Gwenaël du 07/11/2026).
+  // RIEN DE NOUVEAU N'EST DEMANDÉ AU SERVEUR : la page relit les parcours
+  // qu'elle lit déjà pour les jauges, et chaque moteur rend le même résumé
+  // que pour la page du professeur (resumeSuivi, lot S1) — des jours et des
+  // nombres, jamais un temps passé (« aider l'élève, pas le fliquer »).
+  //  - un jour de travail : la règle de chaque moteur (une séance finie, une
+  //    étape jouée, un trésor ouvert) ; une connexion seule ne compte pas ;
+  //  - les gains : ceux de « À féliciter » (une table passée, un monde fini,
+  //    un grade), et pour Défi calcul les compétences devenues sues ;
+  //  - la tuile épurée : la phrase sous le nom de l'appli reste tant que le
+  //    serveur n'a aucun parcours de l'élève pour elle (jamais ouverte).
+  // Le tout est rangé avec les jauges sous la clé CLE_ESPACE (une clé
+  // d'appli ne commence jamais par « @ ») : la copie de l'onglet le garde
+  // avec elles, et poserLesJauges ne lit que les clés des applis.
+  const CLE_ESPACE = "@espace";
+
+  // La date de l'appareil de l'élève, « 2026-11-12 » : celle qu'utilisent
+  // les applis elles-mêmes pour dater une séance.
+  function jourDeLAppareil(instant) {
+    const d = instant instanceof Date ? instant : new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+  function jourDecale(jour, nombre) {
+    const d = new Date(`${jour}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return jour;
+    d.setDate(d.getDate() + nombre);
+    return jourDeLAppareil(d);
+  }
+  function lundiDeJour(jour) {
+    const d = new Date(`${jour}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? jour : jourDecale(jour, -((d.getDay() + 6) % 7));
+  }
+  const JOUR_VALIDE = /^\d{4}-\d{2}-\d{2}$/;
+  // Correctif S3 (Codex, nº 5) : une VRAIE date du calendrier (« 2026-02-31 »
+  // a la forme, mais pas la date).
+  function jourValide(jour) {
+    if (typeof jour !== "string" || !JOUR_VALIDE.test(jour)) return false;
+    const d = new Date(`${jour}T12:00:00`);
+    return !Number.isNaN(d.getTime()) && jourDeLAppareil(d) === jour;
+  }
+
+  // Ce qu'une appli dit de la semaine : ses jours de travail depuis lundi,
+  // s'il a déjà travaillé une fois, et ce qu'elle félicite. null : le moteur
+  // ne sait pas le dire (une copie d'avant le lot S1).
+  function semaineDe(P, brut, aujourdhui) {
+    if (!P || typeof P.resumeSuivi !== "function") return null;
+    const resume = P.resumeSuivi(brut, {aujourdhui});
+    if (!resume || !Array.isArray(resume.jours)) return null;
+    const lundi = lundiDeJour(aujourdhui);
+    return {
+      jours: resume.jours.map(j => j && j.jour).filter(j => jourValide(j) && j >= lundi && j <= aujourdhui),
+      travail: Boolean(resume.dernier),
+      feliciter: Array.isArray(resume.feliciter) ? resume.feliciter : []
+    };
+  }
+
+  // « 4 », « 4 et 6 », « 2, 4 et 6 ».
+  function enListe(nombres) {
+    return nombres.length > 1 ? `${nombres.slice(0, -1).join(", ")} et ${nombres[nombres.length - 1]}` : String(nombres[0]);
+  }
+
+  // Le gain d'une appli cette semaine, en mots (vide : rien de gagné).
+  function gainDe(cle, P, brut, semaine, aujourdhui) {
+    const f = semaine ? semaine.feliciter : [];
+    const nombres = (type, champ) => f.filter(x => x && x.type === type && Number.isInteger(x[champ]))
+      .map(x => x[champ]).sort((a, b) => a - b);
+    if (cle === "defi-tables") {
+      const tables = nombres("table", "table");
+      if (!tables.length) return "";
+      return tables.length > 1 ? `↑ tables de ${tables.slice(0, -1).join(", ")} et de ${tables[tables.length - 1]} passées cette semaine` : `↑ table de ${tables[0]} passée cette semaine`;
+    }
+    if (cle === "splat") {
+      const mondes = nombres("monde", "monde");
+      if (!mondes.length) return "";
+      return mondes.length > 1 ? `↑ mondes ${enListe(mondes)} finis cette semaine` : `↑ monde ${mondes[0]} fini cette semaine`;
+    }
+    if (cle === "flash-anzan") {
+      const grades = nombres("grade", "grade");
+      const nom = grades.length && typeof P.nomGrade === "function" ? P.nomGrade(grades[grades.length - 1]) : "";
+      return nom ? `↑ ${nom} réussi cette semaine` : "";
+    }
+    if (cle === "defi-calcul") {
+      // Les compétences devenues sues depuis lundi, lues par le moteur
+      // (resumeProf : le jour où chacune est devenue sue).
+      const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
+      if (!CORE || typeof P.resumeProf !== "function") return "";
+      const lundi = lundiDeJour(aujourdhui);
+      const resume = P.resumeProf(brut, CORE.carte(), aujourdhui);
+      let n = 0;
+      (resume.modules || []).forEach(m => (m.sues || []).forEach(jour => {
+        if (typeof jour === "string" && jour >= lundi && jour <= aujourdhui) n += 1;
+      }));
+      return n ? `↑ +${n} cette semaine` : "";
+    }
+    return "";
+  }
+
   async function lireJauges(donnees, code) {
     const jauges = {};
     const aLire = (donnees.applis || [])
@@ -996,13 +1177,27 @@ try {
     if (!parcours.some(Boolean)) return jauges;
     // Un moteur par activité, et seulement pour celles qui ont un parcours.
     const moteurs = await Promise.all(aLire.map((cle, i) => (parcours[i] ? chargerMoteur(cle) : null)));
+    // Lot S3 : la semaine, toutes applis ensemble, et les applis ouvertes.
+    const aujourdhui = jourDeLAppareil();
+    const espace = {aujourdhui, jours: [], travail: false, ouvertes: aLire.filter((cle, i) => Boolean(parcours[i]))};
     aLire.forEach((cle, i) => {
       const P = moteurs[i];
       if (!parcours[i] || !P) return;
       let jauge = null;
       try { jauge = JAUGES[cle].lecteur(P, parcours[i], donnees.reglages || {}); } catch (_) { jauge = null; }
+      let semaine = null;
+      try { semaine = semaineDe(P, parcours[i], aujourdhui); } catch (_) { semaine = null; }
+      if (semaine) {
+        semaine.jours.forEach(jour => { if (!espace.jours.includes(jour)) espace.jours.push(jour); });
+        if (semaine.travail) espace.travail = true;
+      }
+      let gain = "";
+      try { gain = gainDe(cle, P, parcours[i], semaine, aujourdhui); } catch (_) { gain = ""; }
+      if (gain) jauge = Object.assign({}, jauge || {}, {gain});
       if (jauge) jauges[cle] = jauge;
     });
+    espace.jours.sort();
+    jauges[CLE_ESPACE] = espace;
     return jauges;
   }
 
@@ -1089,6 +1284,11 @@ try {
         const propose = Number(donnees.rythme);
         if (propose >= 2000 && propose <= 60000) attente = propose;
       } else if (reponse.status === 404) {
+        // Correctif S3 (Codex, nº 4) : le serveur dit que ce code n'existe
+        // plus (supprimé par le professeur) — tout part tout de suite, copie
+        // comprise, comme avec « Se déconnecter ». Une panne (503…) ne fait
+        // rien oublier.
+        if (lireCode() === code) revenirAuCode();
         return 0;
       }
     } catch (_) {
@@ -1119,7 +1319,110 @@ try {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && directCode) surveillerDirect(directCode);
     else window.clearTimeout(directMinuteur);
+    // Correctif S3 (Codex, nº 3) : la page laissée ouverte (veille, autre
+    // onglet) depuis la veille se redessine pour le nouveau jour.
+    if (document.visibilityState === "visible") revoirSiNouveauJour();
   });
+
+  // Lot S3 : ce que la lecture des jauges a rangé sous CLE_ESPACE, vérifié
+  // (la copie de l'onglet peut être ancienne ou abîmée) : des dates et des
+  // clés d'applis, rien d'autre. null : rien de lu. Correctif S3 (Codex,
+  // nº 5) : de vraies dates, et seulement les applis que la page connaît ;
+  // nº 2 : le jour de la lecture est gardé (« aujourdhui », vide s'il n'est
+  // pas une vraie date).
+  function espaceLu(jauges) {
+    const brut = jauges && typeof jauges === "object" ? jauges[CLE_ESPACE] : null;
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return null;
+    return {
+      aujourdhui: jourValide(brut.aujourdhui) ? brut.aujourdhui : "",
+      jours: Array.isArray(brut.jours) ? brut.jours.filter(jourValide) : [],
+      travail: brut.travail === true,
+      ouvertes: Array.isArray(brut.ouvertes)
+        ? brut.ouvertes.filter(c => typeof c === "string" && Object.prototype.hasOwnProperty.call(JAUGES, c)) : []
+    };
+  }
+
+  // Correctif S3 (Codex, nº 2) : les gains sont ceux de la semaine de la
+  // LECTURE. Lus une autre semaine (une copie de dimanche relue lundi, une
+  // copie sans date), ils ne se montrent plus, même hors ligne : le lundi,
+  // les tuiles repartent à neuf dès le premier dessin. Une jauge qui n'était
+  // qu'un gain disparaît avec lui (la tuile ne remonte pas pour rien).
+  function sansGainsPerimes(jauges, espace) {
+    if (!jauges || typeof jauges !== "object") return {};
+    const aujourdhui = jourDeLAppareil();
+    const lu = espace ? espace.aujourdhui : "";
+    if (lu && lu <= aujourdhui && lundiDeJour(lu) === lundiDeJour(aujourdhui)) return jauges;
+    const propres = {};
+    Object.keys(jauges).forEach(cle => {
+      const jauge = jauges[cle];
+      if (!jauge || typeof jauge !== "object" || Array.isArray(jauge) || !("gain" in jauge)) { propres[cle] = jauge; return; }
+      const reste = Object.assign({}, jauge);
+      delete reste.gain;
+      if (Object.keys(reste).length) propres[cle] = reste;
+    });
+    return propres;
+  }
+
+  const JOURS_LETTRES = [["L", "lundi"], ["M", "mardi"], ["M", "mercredi"], ["J", "jeudi"], ["V", "vendredi"], ["S", "samedi"], ["D", "dimanche"]];
+
+  // « Ma semaine » : sept cases du lundi au dimanche de la semaine EN COURS
+  // (la date de l'appareil au moment du dessin : une copie de la veille se
+  // redessine juste), ✓ les jours de travail, toutes applis ensemble. Rien
+  // tant que l'élève n'a jamais travaillé. Tout est construit par
+  // createElement et textContent.
+  function poserSemaine(espace) {
+    const carte = $("semaine");
+    const cases = $("semaine-jours");
+    cases.textContent = "";
+    $("semaine-compte").textContent = "";
+    if (!espace || !espace.travail) { carte.hidden = true; return; }
+    const aujourdhui = jourDeLAppareil();
+    const lundi = lundiDeJour(aujourdhui);
+    let compte = 0;
+    JOURS_LETTRES.forEach(([lettre, nom], i) => {
+      const jour = jourDecale(lundi, i);
+      const fait = jour <= aujourdhui && espace.jours.includes(jour);
+      if (fait) compte += 1;
+      const li = document.createElement("li");
+      li.className = [fait ? "fait" : "", jour === aujourdhui ? "aujourdhui" : "", jour > aujourdhui ? "avenir" : ""].filter(Boolean).join(" ");
+      const haut = document.createElement("span");
+      haut.className = "lettre";
+      haut.setAttribute("aria-hidden", "true");
+      haut.textContent = lettre;
+      const boite = document.createElement("span");
+      boite.className = "case-jour";
+      if (fait) {
+        const coche = elementSvg("svg", {viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false"});
+        coche.append(elementSvg("path", {d: "M5 12.5l4.5 4.5L19 7.5", fill: "none", stroke: "#fff", "stroke-width": "3.2",
+          "stroke-linecap": "round", "stroke-linejoin": "round"}));
+        boite.append(coche);
+      }
+      li.setAttribute("aria-label", `${nom}${jour === aujourdhui ? " (aujourd’hui)" : ""} : ${fait ? "travaillé" : jour > aujourdhui ? "à venir" : "pas de travail"}`);
+      li.append(haut, boite);
+      cases.append(li);
+    });
+    if (compte) {
+      const nombre = document.createElement("strong");
+      nombre.textContent = `${compte} jour${compte > 1 ? "s" : ""}`;
+      $("semaine-compte").append(nombre, " cette semaine");
+    }
+    carte.hidden = false;
+  }
+
+  // Correctif S3 (Codex, nº 1 et 3) : le code de l'élève dont l'écran montre
+  // l'espace (vide : l'écran du code), et le jour de l'appareil à ce dessin.
+  let codeAffiche = "";
+  let jourAffiche = "";
+
+  // Le jour a changé depuis le dernier dessin (page restée ouverte la nuit,
+  // retour du lundi) : on rouvre l'espace comme au retour dans l'onglet — la
+  // copie redessinée tout de suite pour le nouveau jour (semaine, gains),
+  // puis la réponse du serveur, d'un coup.
+  function revoirSiNouveauJour() {
+    if (!codeAffiche || $("ecran-espace").hidden || lireCode() !== codeAffiche) return;
+    if (jourDeLAppareil() === jourAffiche) return;
+    ouvrir(codeAffiche, true);
+  }
 
   // Lot 8 : dessinée d'un coup, jauges comprises. Appelée avec la copie de
   // l'onglet (au retour), puis avec la réponse du serveur : quand rien n'a
@@ -1127,10 +1430,20 @@ try {
   // La surveillance de la séance en direct n'est lancée qu'une fois.
   function afficherEspace(donnees, code, jauges, haut) {
     const dejaSuivi = directCode === code;
+    // Correctif S3 (Codex, nº 1 et 3) : à qui est l'écran, et pour quel jour.
+    codeAffiche = code;
+    jourAffiche = jourDeLAppareil();
     $("titre").textContent = donnees.prenom ? `Bonjour ${donnees.prenom}` : "Mon espace";
     $("classe").textContent = donnees.classe || "";
     $("classe").hidden = !donnees.classe;
     $("entete-droite").hidden = false;
+
+    // Lot S3 : « Ma semaine » et les applis déjà ouvertes, lues avec les
+    // jauges (rien quand elles ne sont pas encore là).
+    const espace = espaceLu(jauges);
+    const ouvertes = espace ? espace.ouvertes : [];
+    poserSemaine(espace);
+    jauges = sansGainsPerimes(jauges, espace);
 
     const liste = $("applis");
     liste.textContent = "";
@@ -1153,6 +1466,9 @@ try {
       lien.innerHTML = `${icone(appli.cle)}<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
       lien.querySelector("strong").textContent = appli.nom;
       lien.querySelector("span").textContent = appli.description;
+      // Lot S3 : la tuile épurée — la phrase n'est plus utile à l'élève qui
+      // a déjà ouvert l'appli (le serveur a son parcours).
+      lien.querySelector("span").hidden = ouvertes.includes(appli.cle);
       li.appendChild(lien);
       liste.appendChild(li);
     });
@@ -1312,11 +1628,17 @@ try {
   // activités. Une seule fonction, appelée par deux chemins (le bouton, et le
   // retour d'un cache ci-dessous) : deux ménages écrits séparément, c'est un
   // jour où l'un des deux oublie une ligne.
-  function revenirAuCode() {
+  //
+  // Correctif S3 (Codex, nº 1) : « garderCode » — le même ménage SANS toucher
+  // au code de l'onglet, pour un écran restauré qui n'est pas celui de
+  // l'élève dont l'onglet garde le code (son code, à lui, doit rester).
+  function revenirAuCode(garderCode) {
     // Lot 8 : la copie montre « Se déconnecter » avant la réponse du serveur.
     // Une ouverture encore en route ne compte plus : elle remettrait le code.
     ouverture += 1;
-    ecrireCode("");
+    if (garderCode !== true) ecrireCode("");
+    codeAffiche = "";
+    jourAffiche = "";
     arreterDirect();
     document.documentElement.classList.remove("retour");
     $("code").value = "";
@@ -1325,6 +1647,13 @@ try {
     $("classe").hidden = true;
     $("entete-droite").hidden = true;
     $("applis").textContent = "";
+    // Correctif S3 (Codex, nº 1) : la tuile de l'évaluation ne garde pas le
+    // code du précédent élève dans son clic.
+    $("evaluation-lien").href = "#";
+    $("evaluation-lien").onclick = event => event.preventDefault();
+    appliEvaluation = null;
+    // Lot S3 : la semaine du précédent élève part aussi.
+    poserSemaine(null);
     afficherErreur("");
     $("ecran-espace").hidden = true;
     $("ecran-code").hidden = false;
@@ -1347,10 +1676,25 @@ try {
   // qu'un code ait été retapé. « persisted » ne vaut vrai QUE dans ce cas ; le
   // sessionStorage, lui, dit la vérité de l'onglet, et « Se déconnecter » l'a
   // vidé. Pas de code : on refait le ménage.
+  //
+  // Correctif S3 (Codex, nº 1 et 3) : un code ne suffit pas, il faut que ce
+  // soit CELUI de l'écran restauré. Un autre élève : l'écran de l'ancien
+  // part (données, liens, surveillance) sans effacer le code du nouveau, et
+  // l'espace du nouveau s'ouvre. Le même élève : l'espace se rouvre comme au
+  // retour dans l'onglet (la copie tout de suite, puis le serveur) — la page
+  // restaurée peut dater d'hier, ou d'avant sa dernière séance.
   window.addEventListener("pageshow", event => {
     if (!event.persisted) return;
-    if (nettoyer(lireCode()).length === 6) return;
-    revenirAuCode();
+    const memorise = nettoyer(lireCode());
+    if (memorise.length !== 6) { revenirAuCode(); return; }
+    if (!codeAffiche) return;
+    if (memorise !== codeAffiche) {
+      revenirAuCode(true);
+      // L'écran du code ne clignote pas pendant que l'espace du nouvel élève
+      // s'ouvre (comme à l'arrivée d'un onglet qui garde un code).
+      document.documentElement.classList.add("retour");
+    }
+    ouvrir(memorise, true);
   });
 
   dessinerCases();

@@ -411,7 +411,8 @@ test("la tuile Coffres : une ligne par niveau commencé, « 🔑 6 / 10 » au bo
 });
 
 test("la tuile est posée par createElement et textContent : une ligne par niveau, la pastille dorée au bout", () => {
-  const poserJauge = new Function("document", `${fonction("poserJauge", scriptEspace)}\nreturn poserJauge;`)(document);
+  // Lot S3 : poserJauge pose aussi le gain de la semaine (poserGain).
+  const poserJauge = new Function("document", `${fonction("poserGain", scriptEspace)}\n${fonction("poserJauge", scriptEspace)}\nreturn poserJauge;`)(document);
   const tuile = new Noeud("a");
   poserJauge(tuile, {lignes: [{texte: "Niveau 1 : 5 trésors", bonus: ""}, {texte: "Niveau 2 : 2 trésors", bonus: "🔑 6 / 10"}]});
   assert.ok(aClasse(tuile, "a-jauge"));

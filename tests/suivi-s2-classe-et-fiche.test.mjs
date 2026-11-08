@@ -320,7 +320,11 @@ test("rien d'un élève ne devient du HTML : textContent partout ; le seul inner
   assert.doesNotMatch(blocS2, /insertAdjacentHTML|outerHTML|document\.write/);
   // Les dessins : ceux de Mon espace, recopiés tels quels.
   const espace = lire("_serveur/public/index.php");
-  const ICONES = new Function(`${constante("ICONES", espace.slice(espace.indexOf("const ICONES = {")))}\nreturn ICONES;`)();
+  // Le bloc ICONES seul, jusqu'à son « }; » : les apostrophes des commentaires
+  // (« l'inconnue ») tromperaient constante() sur la suite de la page.
+  const debutIcones = espace.indexOf("const ICONES = {");
+  const blocIcones = espace.slice(debutIcones, espace.indexOf("\n  };", debutIcones) + "\n  };".length);
+  const ICONES = new Function(`${blocIcones}\nreturn ICONES;`)();
   const ICONES_APPLIS = new Function(`${constante("ICONES_APPLIS")}\nreturn ICONES_APPLIS;`)();
   const corps = svg => svg.replace(/^<svg[^>]*>/, "");
   for (const cle of Object.keys(ICONES_APPLIS)) assert.equal(corps(ICONES_APPLIS[cle]), corps(ICONES[cle]), cle);

@@ -163,7 +163,8 @@ test("la pastille : construite par textContent, dans la tuile, verte quand la s�
   assert.doesNotMatch(bloc, /innerHTML/);
   const poser = page.slice(page.indexOf("  function poserJauge("), page.indexOf("\n  }\n", page.indexOf("  function poserJauge(")));
   assert.match(poser, /if \(jauge\.aujourdhui && !jauge\.compte\) \{\s*bloc\.className = "jauge seule";\s*bloc\.append\(pastilleAujourdhui\(jauge\.aujourdhui\)\);/, "sans table passée : la pastille seule");
-  assert.match(poser, /if \(jauge\.aujourdhui\) bloc\.append\(pastilleAujourdhui\(jauge\.aujourdhui\)\);\s*tuile\.classList\.add\("a-jauge"\);/, "sous le compte et le badge");
+  // Lot S3 (08/11/2026) : le gain de la semaine, en vert, vient après la pastille.
+  assert.match(poser, /if \(jauge\.aujourdhui\) bloc\.append\(pastilleAujourdhui\(jauge\.aujourdhui\)\);\s*poserGain\(bloc, jauge\);\s*tuile\.classList\.add\("a-jauge"\);/, "sous le compte et le badge");
   // `.appli span { color: var(--muted) }` grise tout span de la tuile : la
   // pastille passe devant par « .appli ».
   assert.match(page, /\.appli \.jauge-aujourdhui \{ display: inline-block;[^}]*color: #a15c11;/);
