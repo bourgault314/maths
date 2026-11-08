@@ -147,7 +147,7 @@
      C'EST UNE COPIE des films de la carte (MONDES, champ « films », le premier de l'étape) :
      tests/splat-aide-jeux.test.mjs la recalcule à partir de splat_univers.html et échoue si les deux
      diffèrent. Chaque étape : parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
-  const AIDES = { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches" };
+  const AIDES = { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches", ech1: "equasplat-relatifs" };
   /* L'aide qui suit la carte jouée (lot 4 « aides et carte », 08/11/2026, choix de Gwenaël : « celui de la carte
      jouée ») : à l'étape 35, une équation en jetons numérotés ouvre le tutoriel des jetons numérotés, une
      équation en petits jetons celui des petits jetons (AIDES). C'est le second film de l'étape sur la carte ;

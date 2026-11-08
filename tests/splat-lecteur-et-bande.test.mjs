@@ -35,7 +35,7 @@ test("3b : au téléphone, marges 8 px ; une ligne sans rien dedans disparaît (
 test("3b : le crédit sur le carton de titre, sous le sous-titre, lien vers le site de Steve Wyborney ; il suit le sous-titre", () => {
   assert.match(intro, /film\.build\(svg,m\);poserCredit\(\);return true;\}/);
   // les cinq films gardent leur crédit et leur sous-titre de carton
-  assert.equal((intro.match(/credit:'Jeu SPLAT! créé par <a href="https:\/\/stevewyborney\.com" target="_blank" rel="noopener">Steve Wyborney<\/a>'/g) || []).length, 6);
+  assert.equal((intro.match(/credit:'Jeu SPLAT! créé par <a href="https:\/\/stevewyborney\.com" target="_blank" rel="noopener">Steve Wyborney<\/a>'/g) || []).length, 7);
   assert.equal((intro.match(/o\.titreSous=E\('text'/g) || []).length, 4);
   // seul un lien https:// entre dans le dessin
   const re = new RegExp(intro.match(/const m=\/(\^\(\[\^<\]\*\)<a href="\(https:[^\n]*?\$)\/\.exec\(film\.credit\)/)[1].replace(/\\\//g, "/"));

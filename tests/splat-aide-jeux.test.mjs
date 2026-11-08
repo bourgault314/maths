@@ -55,11 +55,11 @@ test("splat-etapes.js : AIDES est la copie des films de la carte (seulement les 
     "les films de la carte ont changé : recopier dans assets/js/splat-etapes.js (AIDES) :\n" + JSON.stringify(attendu, null, 1) +
     "\npuis bumper son ?v= partout où il est chargé");
   // les choix du 08/11, écrits en clair
-  assert.deepEqual({ ...E.AIDES }, { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches" });
+  assert.deepEqual({ ...E.AIDES }, { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches", ech1: "equasplat-relatifs" });
   // une aide « à peu près » décourage : pas de bouton aux étapes sans leur propre aide
   for (const p of ["m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e5", "m3e2"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
-  // Enquête, Système (et leurs Bonus), Relatifs : rien
-  for (const p of ["enq10", "enq24", "enq11d", "sys25", "sys28d", "ech1", "m4e1", "m4e6"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
+  // Enquête, Système (et leurs Bonus), Relatifs hors de l'étape É1 (lot 6a, 08/11/2026) : rien
+  for (const p of ["enq10", "enq24", "enq11d", "sys25", "sys28d", "ech2", "ech3", "m4e1", "m4e6"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
   // chaque aide est une étape de la carte, et un film du lecteur
   const parcours = E.ETAPES.map((e) => e[0]);
   for (const [p, f] of Object.entries(E.AIDES)) {
