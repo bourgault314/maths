@@ -1494,7 +1494,7 @@ test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais dé
   assert.deepEqual([img.attrs.width, img.attrs.height], ["640", "984"]);
   assert.equal(p.$("carte-retourner").hidden, false);
   assert.equal(texte(carte.querySelector(".cv-grade")), "1er Dan");
-  assert.match(PAGE, /\.carte-kyu\.or, \.fiche-carte\.or img, \.bg-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
+  assert.match(PAGE, /\.carte-kyu\.or, \.fiche-carte\.or img \{ aspect-ratio: 640 \/ 984; \}/);
   assert.match(PAGE, /\.gr-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
   assert.match(PAGE, /\.fin-carte\.dan \{ --carte-l: min\(clamp\(140px, 44vw, 230px\), \(100vh - 420px\) \* 640 \/ 984\);/);
   assert.match(PAGE, /\.carte-grand-boite\.dan \{ --carte-l: min\(380px, calc\(100vw - 48px\), calc\(\(100dvh - 130px\) \* 640 \/ 984\)\); \}/);
@@ -1621,11 +1621,13 @@ test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la tai
 // le bandeau montre la dernière carte gagnée, le grade à passer et le compte
 // des cartes ; il ouvre la liste des grades. Rien de nouveau n'est gardé.
 // ---------------------------------------------------------------------------
-test("bandeau des grades : au départ, la place grise et « À toi : le 20e kyu · 0 carte sur 40 » ; il ouvre la liste", () => {
+test("bandeau des grades : au départ, le kimono et « À toi : le 20e kyu · 0 carte sur 40 » ; il ouvre la liste", () => {
   const p = ouvrir(null, {moteur: true});
   assert.equal(p.$("bg-det").textContent, "À toi : le 20e kyu · 0 carte sur 40");
-  assert.match(p.$("bg-carte").className, /\ba-gagner\b/);
-  assert.equal(p.$("bg-carte").querySelector("img"), null);
+  // 08/11/2026 : un grand kimono, toujours le même (plus de case au cadenas ni de petite carte) ; plus de petit kimono dans le titre.
+  assert.match(PAGE, /<span class="bg-kimono" id="bg-kimono" aria-hidden="true">🥋<\/span>\s*<span class="bg-texte"><span class="bg-titre">Les grades<\/span>/);
+  assert.doesNotMatch(PAGE, /bg-carte/, "plus de petite carte ni de case au cadenas dans le bandeau");
+  assert.doesNotMatch(PAGE, /\$\("bg-kimono"\)/, "le kimono ne change jamais : aucun script n'y touche");
   assert.equal(p.$("vers-grades").getAttribute("aria-label"), "Les grades. À toi : le 20e kyu. 0 carte sur 40.");
   p.$("ecran-reglages").querySelector('[data-mode="colonne"]').click();
   assert.equal(p.$("vers-grades").hidden, false, "en Colonne aussi");
@@ -1634,17 +1636,14 @@ test("bandeau des grades : au départ, la place grise et « À toi : le 20e kyu 
   assert.equal(p.$("grades-titre").textContent, "Les grades");
 });
 
-test("bandeau des grades : trois grades réussis → la vignette du 18e kyu, « À toi : le 17e kyu · 3 cartes sur 40 » ; tout réussi : la carte du 20e dan", () => {
+test("bandeau des grades : trois grades réussis → toujours le kimono, « À toi : le 17e kyu · 3 cartes sur 40 » ; tout réussi : « 40 cartes sur 40 »", () => {
   const p = ouvrir(null, {moteur: true, appareil: caseGrades(3)});
   assert.equal(p.$("bg-det").textContent, "À toi : le 17e kyu · 3 cartes sur 40");
-  assert.doesNotMatch(p.$("bg-carte").className, /\ba-gagner\b/);
-  assert.equal(p.$("bg-carte").querySelector("img").src, CORE.carteDuGrade(3).vignette);
+
   const q = ouvrir(null, {moteur: true, appareil: caseGrades(1)});
   assert.equal(q.$("bg-det").textContent, "À toi : le 19e kyu · 1 carte sur 40", "une carte : au singulier");
   const r = ouvrir(null, {moteur: true, appareil: caseGrades(CORE.NB_GRADES)});
   assert.equal(r.$("bg-det").textContent, "Tous les grades sont réussis · 40\u00a0cartes sur 40");
-  assert.equal(r.$("bg-carte").querySelector("img").src, "./anzan-cartes/dan20-oryu-vignette.webp", "la dernière carte gagnée : le 20e dan");
-  assert.match(r.$("bg-carte").className, /\bor\b/);
   // Après un passage réussi, le bandeau suit (retour aux réglages).
   const t = tirages();
   const s = ouvrirGrades();
@@ -1704,7 +1703,7 @@ function jouerPassageColonne(p, calculs, justes) {
 test("grades en Colonne : le bandeau et l'écran des grades suivent l'onglet — 13 grades, une estampe par ligne", () => {
   const p = ouvrir(memoireColonne, {moteur: true});
   assert.equal(p.$("bg-det").textContent, "À toi : le 10e kyu · 0 sur 13");
-  assert.equal(p.$("bg-carte").textContent, "🔒");
+
   p.$("vers-grades").click();
   assert.equal(p.$("grades-eyebrow").textContent, "Soroban · 📝 Colonne");
   assert.equal(p.$("grades-groupes").hidden, true, "une seule liste, pas de groupes");
@@ -1781,10 +1780,10 @@ test("grades en Colonne : la fiche dit ce qui est officiel ; le passage se joue 
   assert.equal(lignes[0].querySelector(".gr-sceau").textContent, "合");
   assert.match(texte(lignes[0]), /5\/10réussi/);
   assert.match(lignes[1].className, /\bactuel\b/);
-  // Le bandeau du menu : l'estampe du 10e kyu, le 9e à passer.
+  // Le bandeau du menu : toujours le kimono, le 9e à passer.
   p.$("grades-retour").click();
   assert.equal(p.$("bg-det").textContent, "À toi : le 9e kyu · 1 sur 13");
-  assert.equal(p.$("bg-carte").querySelector(".es-jp").textContent, "十級");
+
 });
 
 test("grades en Colonne : 4 sur 10 au 10e kyu, c'est « presque » (il en fallait 5) ; le temps écoulé compte faux et passe au calcul suivant", () => {
