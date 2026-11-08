@@ -269,12 +269,113 @@ test("Ma semaine et les gains : construits par textContent, jamais en HTML ; auc
   assert.doesNotMatch(s3 + fonction("poserSemaine"), /minute|soir|\bmin\b/i, "ni minutes ni soirs");
 });
 
+// Les fonctions de la page sur les jours, avec une horloge fixée.
+function lesJours(maintenant, autres = []) {
+  const noms = ["jourDeLAppareil", "jourDecale", "lundiDeJour", "jourValide", ...autres];
+  return new Function("Date", "JAUGES", `const CLE_ESPACE = "@espace";\nconst JOUR_VALIDE = /^\\d{4}-\\d{2}-\\d{2}$/;\n`
+    + `${noms.map(fonction).join("\n")}\nreturn {${noms.join(", ")}};`)(horloge(maintenant),
+    {"defi-tables": {}, "splat": {}, "coffres": {}, "flash-anzan": {}, "defi-calcul": {}});
+}
+
 test("la copie de l'onglet : une semaine abîmée ou trafiquée ne passe pas (des dates et des clés seulement)", () => {
-  const espaceLu = new Function(`const CLE_ESPACE = "@espace";\nconst JOUR_VALIDE = /^\\d{4}-\\d{2}-\\d{2}$/;\n${fonction("espaceLu")}\nreturn espaceLu;`)();
+  const {espaceLu} = lesJours(JEUDI, ["espaceLu"]);
   assert.equal(espaceLu({}), null);
   assert.equal(espaceLu({"@espace": "texte"}), null);
   assert.deepEqual(espaceLu({"@espace": {jours: ["2026-11-10", "<img src=x>", 3], travail: "oui", ouvertes: ["splat", {}]}}),
-    {jours: ["2026-11-10"], travail: false, ouvertes: ["splat"]});
+    {aujourdhui: "", jours: ["2026-11-10"], travail: false, ouvertes: ["splat"]});
+  // Correctif S3 (Codex, nº 5) : la copie trafiquée du relecteur.
+  assert.deepEqual(espaceLu({"@espace": {
+    aujourdhui: "2026-02-30", travail: true,
+    jours: ["2026-02-31", "2026-99-99", "<img src=x>", "2026-11-10"],
+    ouvertes: ["splat", "<img src=x>", "inconnue", "__proto__", "constructor", "toString", {}]
+  }}), {aujourdhui: "", jours: ["2026-11-10"], travail: true, ouvertes: ["splat"]},
+  "des dates du calendrier et les applis que la page connaît, rien d'autre");
+  assert.equal(espaceLu({"@espace": {aujourdhui: "2026-11-12"}}).aujourdhui, "2026-11-12", "le jour de la lecture est gardé");
+});
+
+// Correctif S3 (Codex, nº 2) : une copie relue une autre semaine ne remet
+// pas les gains de la semaine d'avant, même hors ligne.
+test("la copie du dimanche relue le lundi : plus aucun gain, dès le premier dessin (une jauge qui n'était qu'un gain disparaît)", () => {
+  const jauges = {
+    "defi-tables": {compte: "4 tables passées sur 9", gain: "↑ table de 4 passée cette semaine"},
+    "splat": {gain: "↑ monde 2 fini cette semaine"},
+    "coffres": {lignes: [{texte: "Niveau 1 : 1 trésor"}]}
+  };
+  const avecEspace = jour => Object.assign({}, jauges, {"@espace": {aujourdhui: jour, jours: [], travail: true, ouvertes: []}});
+  const lundi = lesJours(LUNDI_SUIVANT, ["espaceLu", "sansGainsPerimes"]);
+  const dimanche = avecEspace("2026-11-15");
+  const propres = lundi.sansGainsPerimes(dimanche, lundi.espaceLu(dimanche));
+  assert.deepEqual(propres["defi-tables"], {compte: "4 tables passées sur 9"}, "la jauge reste, le gain part");
+  assert.equal("splat" in propres, false, "la jauge qui n'était qu'un gain part (la tuile ne remonte pas pour rien)");
+  assert.deepEqual(propres["coffres"], jauges.coffres);
+  assert.equal(dimanche["defi-tables"].gain, "↑ table de 4 passée cette semaine", "la copie elle-même n'est pas modifiée");
+  // Sans date (copie abîmée, ou d'avant le correctif) : pas de gain non plus.
+  const sansDate = lundi.sansGainsPerimes(jauges, lundi.espaceLu(jauges));
+  assert.equal(sansDate["defi-tables"].gain, undefined);
+  // Une date à venir (l'horloge de l'appareil a reculé) : pas de gain.
+  const avenir = avecEspace("2026-11-17");
+  assert.equal(lundi.sansGainsPerimes(avenir, lundi.espaceLu(avenir))["defi-tables"].gain, undefined);
+  // La même semaine (lue mardi, relue jeudi) : les gains restent.
+  const jeudi = lesJours(JEUDI, ["espaceLu", "sansGainsPerimes"]);
+  const mardi = avecEspace("2026-11-10");
+  assert.equal(jeudi.sansGainsPerimes(mardi, jeudi.espaceLu(mardi)), mardi, "rien à retirer : les mêmes jauges");
+});
+
+test("le lundi, la copie se redessine sans les gains AVANT de poser les jauges ; la lecture fraîche garde son jour", () => {
+  const espace = fonction("afficherEspace");
+  assert.ok(espace.indexOf("jauges = sansGainsPerimes(jauges, espace);") > 0
+    && espace.indexOf("jauges = sansGainsPerimes(jauges, espace);") < espace.indexOf("poserLesJauges(jauges || {}"));
+  assert.match(fonction("lireJauges"), /const espace = \{aujourdhui, jours: \[\]/);
+});
+
+// Correctif S3 (Codex, nº 3) : la page restée ouverte la nuit.
+test("la page restée ouverte jusqu'au lendemain se rouvre pour le nouveau jour ; le même jour, rien ne se relit", () => {
+  const source = `${["jourDeLAppareil", "revoirSiNouveauJour"].map(fonction).join("\n")}\nreturn revoirSiNouveauJour;`;
+  const essayer = ({maintenant, jourAffiche, codeAffiche = "ABC234", code = "ABC234", cache = false}) => {
+    const ouvertures = [];
+    const revoir = new Function("Date", "$", "lireCode", "ouvrir", "codeAffiche", "jourAffiche", source)(
+      horloge(maintenant), () => ({hidden: cache}), () => code, (c, s) => ouvertures.push([c, s]), codeAffiche, jourAffiche);
+    revoir();
+    return ouvertures;
+  };
+  assert.deepEqual(essayer({maintenant: LUNDI_SUIVANT, jourAffiche: "2026-11-15"}), [["ABC234", true]], "dimanche → lundi : l'espace se rouvre");
+  assert.deepEqual(essayer({maintenant: JEUDI, jourAffiche: "2026-11-12"}), [], "le même jour : rien");
+  assert.deepEqual(essayer({maintenant: LUNDI_SUIVANT, jourAffiche: "2026-11-15", code: ""}), [], "déconnecté entre-temps : rien");
+  assert.deepEqual(essayer({maintenant: LUNDI_SUIVANT, jourAffiche: "2026-11-15", codeAffiche: ""}), [], "sur l'écran du code : rien");
+  assert.deepEqual(essayer({maintenant: LUNDI_SUIVANT, jourAffiche: "2026-11-15", code: "BOB234"}), [], "un autre code : c'est le retour de cache qui décide");
+  assert.match(page, /if \(document\.visibilityState === "visible"\) revoirSiNouveauJour\(\);/, "au retour visible de l'onglet");
+});
+
+// Correctif S3 (Codex, nº 4) : un code que le serveur ne connaît plus.
+test("api/direct.php répond « code inconnu » (404) : tout part tout de suite ; une panne (503) ne fait rien oublier", async () => {
+  const essayer = async statut => {
+    const menages = [];
+    const demander = new Function("fetch", "$", "poserTuileEvaluation", "resumeEvaluation", "noterHaut", "lireCode", "revenirAuCode",
+      `let directCode = "ABC234"; let hautCourant = null;\n${fonction("demanderDirect")}\nreturn demanderDirect;`)(
+      () => Promise.resolve({ok: statut === 200, status: statut, json: () => Promise.resolve(statut === 200 ? {ok: true, direct: false} : {ok: false})}),
+      () => ({}), () => {}, () => null, () => {}, () => "ABC234", () => menages.push(1));
+    const attente = await demander("ABC234");
+    return {attente, menages: menages.length};
+  };
+  assert.deepEqual(await essayer(404), {attente: 0, menages: 1}, "404 : le ménage, la surveillance s'arrête");
+  assert.deepEqual(await essayer(503), {attente: 6000, menages: 0}, "503 : le code reste, on redemandera");
+});
+
+test("un clic d'activité quand le serveur ne connaît plus le code : pas de départ avec l'ancien billet, le ménage", async () => {
+  const source = `${fonction("billetFrais")}\n${fonction("adresseAppli")}\n${fonction("ouvrirAppli")}\nreturn ouvrirAppli;`;
+  const essayer = async statut => {
+    const departs = [];
+    const menages = [];
+    const ouvrirAppli = new Function("fetch", "window", "lireCode", "revenirAuCode", source)(
+      () => Promise.resolve({ok: statut === 200, status: statut, json: () => Promise.resolve(statut === 200 ? {ok: true, billet: "neuf"} : {ok: false})}),
+      {location: {assign: a => departs.push(a)}, setTimeout: () => 0}, () => "ABC234", () => menages.push(1));
+    const lien = {dataset: {}};
+    await ouvrirAppli({button: 0, preventDefault() {}}, lien, {url: "https://mathsgo.re/x.html", ancre: null}, "ABC234", "ancien");
+    return {departs, menages: menages.length, enCours: "enCours" in lien.dataset};
+  };
+  assert.deepEqual(await essayer(404), {departs: [], menages: 1, enCours: false});
+  assert.deepEqual(await essayer(200), {departs: ["https://mathsgo.re/x.html#b=neuf"], menages: 0, enCours: true});
+  assert.deepEqual((await essayer(503)).departs, ["https://mathsgo.re/x.html#b=ancien"], "une panne : le billet de l'entrée sert de secours, comme avant");
 });
 
 test("la tuile épurée : la phrase se cache seulement pour une appli que le serveur connaît ; « Se déconnecter » efface la semaine", () => {

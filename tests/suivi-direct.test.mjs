@@ -149,7 +149,7 @@ test("le code de l'élève ne voyage que dans le corps d'un POST", () => {
 test("l'espace élève : la tuile n'existe que pendant une séance, et part avec le ménage", () => {
   assert.match(espace, /<a class="appli direct-lien" id="direct-lien" href="direct\.php" hidden>/, "cachée par défaut");
   assert.match(espace, /\$\("direct-lien"\)\.hidden = !donnees\.direct;/, "montrée seulement si le serveur annonce une séance");
-  const menage = espace.slice(espace.indexOf("  function revenirAuCode() {"), espace.indexOf("  $(\"changer\")"));
+  const menage = espace.slice(espace.indexOf("  function revenirAuCode("), espace.indexOf("  $(\"changer\")"));
   assert.ok(menage.includes("arreterDirect();"), "« Se déconnecter » arrête la surveillance et retire la tuile");
   const arret = espace.slice(espace.indexOf("  function arreterDirect() {"), espace.indexOf("  async function demanderDirect"));
   assert.ok(arret.includes("clearTimeout") && arret.includes('$("direct-lien").hidden = true;'), "arreterDirect fait les deux");

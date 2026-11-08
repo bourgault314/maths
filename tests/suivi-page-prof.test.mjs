@@ -530,7 +530,7 @@ test("dans l'espace élève, le bouton s'appelle « Se déconnecter » et ne lai
   assert.ok(bloc.includes("revenirAuCode();"),
     "le bouton passe par le ménage commun (08/09/2026 : le retour d’un cache arrière/avant en a besoin aussi)");
   // Le ménage lui-même, où qu'il soit appelé : rien du précédent élève ne reste.
-  const menage = espace.slice(espace.indexOf("function revenirAuCode() {"));
+  const menage = espace.slice(espace.indexOf("function revenirAuCode("));
   ['$("titre").textContent = "Mon espace"', '$("classe").textContent = ""', '$("applis").textContent = ""']
     .forEach(attendu => assert.ok(menage.slice(0, menage.indexOf("\n  }")).includes(attendu),
       `« Se déconnecter » doit aussi nettoyer la page : ${attendu}`));
