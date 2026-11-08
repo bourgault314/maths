@@ -174,6 +174,15 @@ test("lecteur : ouvert par « ? Aide » (&depuis=jeu), la pastille de droite dit
   assert.match(intro, /\$\('pied'\)\.classList\.toggle\('serre',DEPUIS_JEU&&!!autre&&!\$\('passer'\)\.hidden\);/);
   const tel = intro.match(/@media \(max-width:640px\)\{([\s\S]*?)\n\}/)[1];
   assert.match(tel, /\.pied\.serre\{gap:0 6px\}\n\s*\.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 12px\}\n\s*\.pied\.serre #autre\{padding:10px 2px\}/);
+  // (correctif, relevé par Code sur la PR #1128) : de 641 à 960 px, « Plein écran » en icône seule et les pastilles resserrées ;
+  // sous 400 px, encore un peu plus serré
+  const moyen = intro.match(/@media \(min-width:641px\) and \(max-width:960px\)\{([\s\S]*?)\n\}/);
+  assert.ok(moyen, "la ligne du tutoriel resserrée de 641 à 960 px");
+  assert.match(moyen[1], /\.pied\.serre #fsTxt\{display:none\}/);
+  assert.match(moyen[1], /\.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 14px\}/);
+  // de 641 à 699 px tenu droit, le tutoriel est en portrait : la mise en page du téléphone (une ligne, le crédit dessous)
+  assert.match(intro, /@media \(min-width:641px\)\{\n\s*\.player\.portrait \.pied\.serre\{gap:0 8px\}\n\s*\.player\.portrait \.pied\.serre \.credit\{order:3;flex-basis:100%\}\n\s*\.player\.portrait \.pied\.serre #carte \.long,\.player\.portrait \.pied\.serre #fsTxt\{display:none\}/);
+  assert.match(tel, /@media \(max-width:400px\)\{ \.pied\.serre\{gap:0 4px\} \.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 9px\} \}/);
   const dep = intro.match(/const DEPUIS_JEU=[^\n]*\n/)[0];
   const val = (s) => new Function("location", dep + "return DEPUIS_JEU;")({ search: s });
   assert.equal(val("?film=intro&suite=%2Fx&depuis=jeu"), true);
