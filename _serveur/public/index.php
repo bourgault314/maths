@@ -268,6 +268,38 @@ try {
   /* Lot S3 : une tuile épurée — la phrase sous le nom de l'appli ne reste que
      tant que l'élève ne l'a jamais ouverte. */
   .appli .texte span[hidden] { display: none; }
+  /* L'appli Cours (lot « cours-appli », 08/11/2026, choix de Gwenaël) : la
+     tuile « Mes cours » est la PREMIÈRE de la liste des activités, comme les
+     autres (« est-ce qu'on sépare vraiment Mes cours ? … tu peux tout
+     laisser ») ; dessous, le nombre de chapitres ouverts, pas de phrase.
+     Puis deux écrans dans la page : la liste des chapitres et le sommaire
+     d'un chapitre (#cours, #cours=3e-PYT). Trois touches jusqu'à une fiche ;
+     « ← » remonte d'un niveau. */
+  .cours-tete { position: relative; display: flex; align-items: center; min-height: 44px; margin: 0 0 16px; }
+  .cours-tete .rond { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+                      background: var(--paper); border: 1.5px solid var(--line); color: var(--blue); }
+  .cours-tete .rond:hover { background: var(--survol); }
+  .cours-tete h1 { position: absolute; left: 54px; right: 54px; margin: 0; text-align: center; font-size: 24px; }
+  .cours-sur { display: block; margin: 0 0 3px; color: var(--teal-texte); font-size: 13px; font-weight: 700;
+               letter-spacing: .05em; text-transform: uppercase; }
+  .niv, .appli .niv { display: inline-block; margin: 0 4px 0 2px; padding: 0 6px; border: 1.5px solid var(--teal-texte); border-radius: 6px;
+         color: var(--teal-texte); font-size: 12.5px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1.5; }
+  #cours-corps ul { grid-template-columns: 1fr; margin-top: 0; }
+  #cours-corps .appli { height: auto; }
+  .cours-titre { margin: 2px 0 14px; font: 400 26px/1.25 var(--serif); color: var(--blue-dark); }
+  .som-liste { display: grid; gap: 10px; }
+  .som-carte { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--paper);
+               border: 1px solid var(--line); border-radius: 14px; color: inherit; text-decoration: none; }
+  .som-carte:hover, .som-autre:hover { border-color: var(--blue); background: var(--survol); }
+  .som-carte .n { flex: 0 0 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+                  background: var(--ink); color: #fff; font-weight: 800; }
+  .som-carte .t { flex: 1 1 auto; min-width: 0; }
+  .som-carte .t b { display: block; color: var(--blue-dark); line-height: 1.3; }
+  .som-carte .t small { display: block; margin-top: 5px; color: var(--muted); font-size: var(--texte-secondaire); }
+  .som-carte .fleche { flex: 0 0 auto; color: var(--blue); }
+  .som-autre { display: block; margin: 12px 0 0; padding: 12px 14px; background: var(--paper); border: 1.5px solid var(--ink);
+               border-radius: 14px; color: var(--blue-dark); font-weight: 700; text-decoration: none; }
+  .som-autre small { display: block; font-weight: 400; color: var(--muted); font-size: var(--texte-secondaire); }
 </style>
 </head>
 <body class="sur-code">
@@ -330,6 +362,19 @@ try {
       </div>
     </section>
     <ul id="applis"></ul>
+  </section>
+
+  <!-- L'appli Cours : la liste des chapitres (#cours) et le sommaire d'un
+       chapitre (#cours=3e-PYT), dessinés par la page (dessinerCours) avec
+       textContent : rien du serveur ne devient du HTML. Une fiche s'ouvre sur
+       mathsgo.re, dans le même onglet ; son bouton « ◀ Mes cours » ramène ici,
+       au chapitre (#cours=…). Rien n'est enregistré. -->
+  <section id="ecran-cours" hidden>
+    <div class="cours-tete">
+      <a class="rond" id="cours-retour" href="#" aria-label="Mon espace"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
+      <h1>Mes cours</h1>
+    </div>
+    <div id="cours-corps"></div>
   </section>
 </main>
 
@@ -401,7 +446,7 @@ try {
   function garderCopie(code, donnees, jauges) {
     if (lireCode() !== code) return;
     const ancienne = lireCopie(code);
-    ecrireCopie({
+    const copie = {
       code,
       prenom: typeof donnees.prenom === "string" ? donnees.prenom : "",
       classe: typeof donnees.classe === "string" ? donnees.classe : "",
@@ -410,7 +455,13 @@ try {
         ancre: appli.ancre || null, disponible: true})),
       jauges: jauges || {},
       haut: hautCourant || (ancienne ? ancienne.haut : null)
-    });
+    };
+    // L'appli Cours (lot « cours-appli ») : ses chapitres, seulement si la
+    // classe l'a — au retour d'une fiche, l'écran du chapitre se dessine tout
+    // de suite, sans passer par Mon espace. Relus par coursLus, comme ce qui
+    // vient du serveur.
+    if (Array.isArray(donnees.cours)) copie.cours = donnees.cours;
+    ecrireCopie(copie);
   }
   // Les tuiles du haut, notées à chaque lecture de api/direct.php : elles
   // reviennent à leur place au retour, au lieu de pousser la grille après.
@@ -554,7 +605,9 @@ try {
       + '<circle cx="23" cy="23" r="7.5" fill="#ffc94d"/>'
       + '<g stroke="#ffc94d" stroke-width="2.8" stroke-linecap="round">'
       + '<path d="M23 8.5v3.5M23 34v3.5M8.5 23h3.5M34 23h3.5M12.8 12.8l2.5 2.5M30.7 30.7l2.5 2.5'
-      + 'M33.2 12.8l-2.5 2.5M15.3 30.7l-2.5 2.5"/></g></svg>'
+      + 'M33.2 12.8l-2.5 2.5M15.3 30.7l-2.5 2.5"/></g></svg>',
+    // L'appli Cours (lot « cours-appli », 08/11/2026) : un livre ouvert.
+    "cours": '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#e6f6f5"/><path d="M23 14c-4-3-9-3.5-13-2.5v21c4-1 9-.5 13 2.5z" fill="#fff" stroke="#063f86" stroke-width="2.4" stroke-linejoin="round"/><path d="M23 14c4-3 9-3.5 13-2.5v21c-4-1-9-.5-13 2.5z" fill="#fff" stroke="#063f86" stroke-width="2.4" stroke-linejoin="round"/><path d="M14 18c2.5-.5 4.5-.2 6 .6M14 23c2.5-.5 4.5-.2 6 .6" stroke="#08aaa5" stroke-width="2.2" stroke-linecap="round"/><path d="M26 18.6c1.5-.8 3.5-1.1 6-.6M26 23.6c1.5-.8 3.5-1.1 6-.6" stroke="#f58220" stroke-width="2.2" stroke-linecap="round"/></svg>'
   };
   const ICONE_DEFAUT =
     '<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'
@@ -1065,7 +1118,10 @@ try {
   // L'ordre des autres ne bouge pas.
   function remonter(li) {
     const liste = $("applis");
-    if (liste.firstChild && liste.firstChild !== li) liste.insertBefore(li, liste.firstChild);
+    // Lot « cours-appli » : « Mes cours » reste la première tuile.
+    const tete = liste.firstChild && liste.firstChild.classList && liste.firstChild.classList.contains("cours-li")
+      ? liste.firstChild.nextSibling : liste.firstChild;
+    if (tete && tete !== li) liste.insertBefore(li, tete);
   }
 
   // Lot 8 (retours du 31/10/2026) : la LECTURE des jauges est séparée de leur
@@ -1459,6 +1515,8 @@ try {
     const disponibles = (donnees.applis || []).filter(a => a.disponible && a.url);
 
     disponibles.forEach(appli => {
+      // L'appli Cours a sa tuile à elle, en tête (poserTuileCours).
+      if (appli.cle === "cours") return;
       const li = document.createElement("li");
       const lien = document.createElement("a");
       lien.className = "appli";
@@ -1489,6 +1547,8 @@ try {
       ? event => ouvrirAppli(event, tuileEvaluation, appliEvaluation, code, donnees.billet || "")
       : event => event.preventDefault();
 
+    // L'appli Cours : sa tuile en tête de la liste.
+    poserTuileCours(coursLus(donnees.cours));
     if (!liste.children.length) {
       const li = document.createElement("li");
       li.className = "aide";
@@ -1513,7 +1573,160 @@ try {
       $("direct-lien").hidden = !enHaut.direct;
       poserTuileEvaluation(enHaut.evaluation || null);
     }
+    // L'appli Cours : l'écran que demande l'adresse (#cours=… au retour
+    // d'une fiche).
+    suivreAdresse();
   }
+
+  // ------------------------------------------- l'appli Cours (lot « cours-appli », 08/11/2026)
+  //
+  // api/eleve.php rend `cours` : les chapitres que le professeur a ouverts à
+  // la classe, dans l'ordre de la progression, avec leurs fiches ouvertes et
+  // les adresses toutes faites (lib/cours.php). Rien n'est enregistré de ce
+  // que l'élève ouvre : ni ici, ni sur le serveur, ni dans le téléphone.
+  // L'écran suit l'adresse : #cours (la liste), #cours=3e-PYT (un chapitre) ;
+  // le bouton « ◀ Mes cours » d'une fiche ramène à #cours=<son chapitre>.
+  // Ce qui vient du serveur (ou de la copie de l'onglet) est relu ici : une
+  // adresse qui n'est pas une fiche du dossier cours/ de mathsgo.re est
+  // écartée, et tout s'écrit en textContent.
+  const MOTIF_CHAPITRE = /^[0-9]e-[A-Z]{2,8}$/;
+  const ADRESSE_COURS = /^https:\/\/mathsgo\.re\/cours\/[0-9]e\/[0-9]e-[A-Z]{2,8}-(?:[0-9]{2}|brevet|imprimable)\.html#ch=[0-9]e-[A-Z]{2,8}$/;
+  let coursOuverts = null;   // null : la classe n'a pas l'appli Cours
+
+  function texteDe(valeur) {
+    return typeof valeur === "string" ? valeur : "";
+  }
+  function adresseCours(valeur) {
+    return typeof valeur === "string" && ADRESSE_COURS.test(valeur) ? valeur : null;
+  }
+  function coursLus(brut) {
+    if (!Array.isArray(brut)) return null;
+    return brut.filter(c => c && typeof c === "object" && typeof c.id === "string" && MOTIF_CHAPITRE.test(c.id))
+      .map(c => ({
+        id: c.id, niveau: texteDe(c.niveau), chapitre: texteDe(c.chapitre), titre: texteDe(c.titre),
+        fiches: (Array.isArray(c.fiches) ? c.fiches : [])
+          .filter(f => f && typeof f === "object" && adresseCours(f.url))
+          .map(f => ({n: Number.isInteger(f.n) && f.n > 0 ? f.n : 0, h1: texteDe(f.h1), type: texteDe(f.type), url: f.url,
+                      niveaux: (Array.isArray(f.niveaux) ? f.niveaux : []).filter(n => typeof n === "string" && /^[0-9]e$/.test(n))})),
+        brevet: adresseCours(c.brevet),
+        imprimable: adresseCours(c.imprimable)
+      }))
+      .filter(c => c.fiches.length || c.brevet);
+  }
+
+  // La tuile : « Mes cours », la PREMIÈRE de la liste des activités, et
+  // dessous le nombre de chapitres ouverts (choix de Gwenaël du 08/11/2026).
+  // Aucun chapitre ouvert : pas de tuile. Une activité commencée remonte en
+  // tête, mais sous « Mes cours » (remonter).
+  function poserTuileCours(cours) {
+    coursOuverts = cours;
+    const liste = $("applis");
+    const ancienne = liste.querySelector("li.cours-li");
+    if (ancienne) ancienne.remove();
+    const n = cours ? cours.length : 0;
+    if (!n) return;
+    const li = document.createElement("li");
+    li.className = "cours-li";
+    li.innerHTML = `<a class="appli cours-tuile" id="cours-lien" href="#cours">${icone("cours")}<div class="texte"><strong>Mes cours</strong><span></span></div>${FLECHE}</a>`;
+    li.querySelector(".texte span").textContent = n > 1 ? `${n} chapitres` : "1 chapitre";
+    liste.prepend(li);
+  }
+
+  function etiquetteNiveau(niveau) {
+    const etiquette = document.createElement("span");
+    etiquette.className = "niv";
+    etiquette.textContent = niveau;
+    return etiquette;
+  }
+  // « LE TRIANGLE RECTANGLE 3e », au-dessus d'un titre de chapitre.
+  function surTitre(chapitre) {
+    const sur = document.createElement("small");
+    sur.className = "cours-sur";
+    sur.append(chapitre.chapitre + " ", etiquetteNiveau(chapitre.niveau));
+    return sur;
+  }
+  function lienAutre(href, titre, precision) {
+    const lien = document.createElement("a");
+    lien.className = "som-autre";
+    lien.href = href;
+    const petit = document.createElement("small");
+    petit.textContent = precision;
+    lien.append(titre, petit);
+    return lien;
+  }
+
+  // La liste des chapitres (#cours) : le retour mène à Mon espace.
+  function dessinerListeCours() {
+    $("cours-retour").href = "#";
+    $("cours-retour").setAttribute("aria-label", "Mon espace");
+    const corps = $("cours-corps");
+    corps.textContent = "";
+    const liste = document.createElement("ul");
+    coursOuverts.forEach(chapitre => {
+      const li = document.createElement("li");
+      const lien = document.createElement("a");
+      lien.className = "appli";
+      lien.href = `#cours=${chapitre.id}`;
+      lien.innerHTML = `<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
+      const texte = lien.querySelector(".texte");
+      texte.prepend(surTitre(chapitre));
+      lien.querySelector("strong").textContent = chapitre.titre;
+      const n = chapitre.fiches.length;
+      lien.querySelector("span:not(.niv)").textContent =
+        [n ? `${n} fiche${n > 1 ? "s" : ""}` : "", chapitre.brevet ? "Entraînement brevet" : ""].filter(Boolean).join(" · ");
+      li.append(lien);
+      liste.append(li);
+    });
+    corps.append(liste);
+  }
+
+  // Le sommaire d'un chapitre (#cours=3e-PYT) : le retour mène à la liste.
+  // Les numéros sont ceux du chapitre, même si le professeur a fermé une
+  // fiche : « ouvrez la fiche 4 » veut dire la même chose pour toute la classe.
+  function dessinerChapitre(chapitre) {
+    $("cours-retour").href = "#cours";
+    $("cours-retour").setAttribute("aria-label", "Mes cours");
+    const corps = $("cours-corps");
+    corps.textContent = "";
+    const titre = document.createElement("h2");
+    titre.className = "cours-titre";
+    titre.textContent = chapitre.titre;
+    const liste = document.createElement("div");
+    liste.className = "som-liste";
+    chapitre.fiches.forEach(fiche => {
+      const lien = document.createElement("a");
+      lien.className = "som-carte";
+      lien.href = fiche.url;
+      lien.innerHTML = `<span class="n"></span><span class="t"><b></b><small></small></span>${FLECHE}`;
+      lien.querySelector(".n").textContent = fiche.n ? String(fiche.n) : "•";
+      lien.querySelector("b").textContent = fiche.h1;
+      const petit = lien.querySelector("small");
+      fiche.niveaux.forEach(niveau => petit.append(etiquetteNiveau(niveau)));
+      if (fiche.type) petit.append(" " + fiche.type);
+      liste.append(lien);
+    });
+    corps.append(surTitre(chapitre), titre, liste);
+    if (chapitre.brevet) corps.append(lienAutre(chapitre.brevet, "🎯 Entraînement brevet", "De vrais sujets du brevet, corrigés pas à pas."));
+    if (chapitre.imprimable) corps.append(lienAutre(chapitre.imprimable, "🖨 Tout le chapitre à imprimer", "Toutes les fiches, avec les exemples rédigés et les réponses."));
+  }
+
+  // L'écran que demande l'adresse : Mon espace, la liste ou un chapitre. Un
+  // chapitre qui n'est plus ouvert (le professeur l'a fermé) : la liste.
+  function suivreAdresse() {
+    if (!codeAffiche) return;
+    const adresse = window.location.hash;
+    const demande = /^#cours(?:=([0-9]e-[A-Z]{2,8}))?$/.exec(adresse);
+    const montrer = Boolean(demande) && Boolean(coursOuverts && coursOuverts.length);
+    $("ecran-espace").hidden = montrer;
+    $("ecran-cours").hidden = !montrer;
+    if (!montrer) { $("cours-corps").textContent = ""; return; }
+    const chapitre = demande[1] ? coursOuverts.find(c => c.id === demande[1]) : null;
+    if (chapitre) dessinerChapitre(chapitre); else dessinerListeCours();
+  }
+  window.addEventListener("hashchange", () => {
+    suivreAdresse();
+    window.scrollTo(0, 0);
+  });
 
   // Lot 8 : à la première entrée (code tapé), la grille attend ses jauges
   // au plus ce temps ; au-delà, elle se montre sans elles et se redessine
@@ -1660,6 +1873,9 @@ try {
     appliEvaluation = null;
     // Lot S3 : la semaine du précédent élève part aussi.
     poserSemaine(null);
+    // L'appli Cours : son écran part aussi (sa tuile est partie avec la liste).
+    $("cours-corps").textContent = "";
+    $("ecran-cours").hidden = true;
     afficherErreur("");
     $("ecran-espace").hidden = true;
     $("ecran-code").hidden = false;

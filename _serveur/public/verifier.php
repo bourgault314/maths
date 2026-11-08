@@ -247,6 +247,19 @@ if ($autorise) {
             ? "en place (toutes les classes ont tout ouvert : mondes de SPLAT!, niveaux et opérations de Coffres)"
             : "en place ($reglees classe(s) avec un réglage — mondes de SPLAT!, niveaux ou opérations de Coffres)";
     });
+    // Lot « cours-appli » (08/11/2026) : le catalogue du livret de cours
+    // (lib/cours.json, fabriqué par le moteur du livret) est déposé et lisible.
+    // Sans lui, rien ne tombe en panne : la tuile « Mes cours » ne s'affiche
+    // pas et l'onglet Cours n'a aucun chapitre à proposer.
+    verif($lignes, "Livret de cours (appli Cours)", function () {
+        require_once __DIR__ . '/lib/cours.php';
+        $chapitres = cours_catalogue();
+        if ($chapitres === []) {
+            throw new RuntimeException("catalogue absent ou illisible — dépose lib/cours.json.");
+        }
+        $fiches = array_sum(array_map(fn ($c) => count($c['fiches']), $chapitres));
+        return count($chapitres) . " chapitre(s), $fiches fiche(s) au catalogue";
+    });
     // Lot « Qui voit quoi » (22/10/2026) : ce qu'un professeur ouvre à un
     // élève en plus de sa classe vit dans eleves.ajouts, ajoutée par
     // migrer.php. Sans elle, rien ne tombe en panne (chacun voit ce que voit

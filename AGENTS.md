@@ -282,6 +282,37 @@ Défi tables est la référence.
 - Sans code, rien ne change : en-tête et fil d'Ariane du site (et pas de pied,
   comme pour toutes les applis).
 
+## L'appli Cours : le livret de cours (depuis le 08/11/2026)
+
+- Le livret de cours de Gwenaël (une fiche par savoir-faire, « Je sais… »)
+  est FABRIQUÉ HORS DU DÉPÔT, dans son dossier « Livret de cours\_moteur »
+  (`python build.py site <dépôt>`). La commande écrit les pages du dossier
+  `cours/` (une par fiche, `cours/<niveau>/<identifiant>.html`, plus
+  l'Entraînement brevet et la version imprimable de chaque chapitre) et le
+  catalogue du serveur `_serveur/public/lib/cours.json`. Ne pas modifier ces
+  fichiers à la main : refaire la commande. Une page qui sort du livret est
+  retirée du dossier par la même commande.
+- Les pages ne sont PAS publiques au début (choix de Gwenaël) : aucune page
+  du site ne les cite (catalogue, plan du site, annuaire, accueil), elles
+  portent « noindex », le compteur de visites n'y est pas. On y arrive par
+  l'espace élève de suivi.mathsgo.re (tuile « Mes cours », en haut). Un élève
+  qui tape l'adresse d'une fiche fermée peut la lire : accepté (un cours sous
+  licence libre, aucune donnée d'élève derrière).
+- Rien n'est enregistré de ce que l'élève ouvre ou répond : ni serveur, ni
+  stockage du navigateur, ni compteur. Le bouton « ◀ Mes cours » (barre
+  collée en haut de chaque page) ramène au chapitre d'où l'élève vient parce
+  que l'adresse le dit (`#ch=3e-PYT`), pas parce que le téléphone l'a retenu.
+- Le professeur règle, classe par classe, les chapitres ouverts (rien au
+  départ), les fiches fermées et les fiches du nouveau programme ouvertes
+  (fermées par défaut) : `classes.reglages.cours`, des identifiants du
+  catalogue seulement (`lib/cours.php`). Pas d'ajout par élève, pas de
+  progression (`api/parcours.php` ne connaît pas « cours »). Dans Ma classe,
+  l'onglet Cours n'a pas de tableau et n'entre ni dans La classe ni dans la
+  fiche d'un élève (`sansSuivi`).
+- Gardé par `tests/cours-appli.test.mjs` et les tests « cours-appli » de
+  `_serveur/tests/lancer.php`. Ajouter un chapitre : le refaire avec le
+  moteur, puis déposer par FTP `lib/cours.json` et `VERSION`.
+
 ## Fusion des données : modèle commun
 
 Quand une appli suivie garde une LISTE d'événements (des séances, des parties),

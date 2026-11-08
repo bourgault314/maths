@@ -6,6 +6,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/cours.php';
+
 const CATALOGUE_APPLIS = [
     'defi-tables' => [
         'nom' => 'Défi tables',
@@ -313,6 +315,28 @@ const CATALOGUE_APPLIS = [
         // faut aussi revenir en arrière ici.
         'version_min' => 2,
     ],
+    // L'appli « Cours » (lot « cours-appli », 08/11/2026, lib/cours.php) :
+    // le livret de cours de Gwenaël, une fiche par savoir-faire. Rien n'est
+    // enregistré pour l'élève : pas de progression (api/parcours.php ne la
+    // connaît pas), pas de jauge, pas d'ajout par élève (« par_eleve »). Ce
+    // qui se règle pour la classe : les chapitres ouverts, les fiches
+    // fermées, les fiches du nouveau programme ouvertes — des identifiants
+    // du catalogue (« cours »). Au départ, RIEN n'est ouvert (choix de
+    // Gwenaël du 08/11/2026) : la tuile dit « 0 chapitre » tant qu'il n'a rien
+    // coché. L'espace élève la montre à part, en haut (pas une activité).
+    'cours' => [
+        'nom' => 'Mes cours',
+        'description' => '',
+        'url' => 'https://mathsgo.re/cours/',
+        'ancre' => null,
+        'disponible' => true,
+        'cles' => [],
+        'mots' => [],
+        'motifs' => [],
+        'compteur' => null,
+        'reglages' => ['chapitres' => 'cours', 'sans' => 'cours', 'avec' => 'cours'],
+        'par_eleve' => false,
+    ],
     'soley' => [
         'nom' => 'Solèy',
         'description' => 'Les fractions avec des rayons de soleil.',
@@ -473,6 +497,12 @@ function reglages_lus(?string $json, ?array $applis = null): array
                 $valeur = $reglageBrut[$nom] ?? null;
                 if (is_int($valeur) && $valeur > $defaut['de'] && $valeur <= $defaut['a']) $reglage[$nom] = $valeur;
             }
+            // Une liste d'identifiants du livret (l'appli Cours, lib/cours.php) :
+            // ceux qui existent encore au catalogue ; rien quand la liste est vide.
+            if ($defaut === 'cours') {
+                $liste = cours_liste_lue($nom === 'chapitres' ? 'chapitres' : 'fiches', $reglageBrut[$nom] ?? null);
+                if ($liste !== null) $reglage[$nom] = $liste;
+            }
         }
         if ($reglage !== []) $sortie[$cle] = $reglage;
     }
@@ -552,6 +582,14 @@ function reglages_recus(mixed $recus, array $actuels): array
                 }
                 if ($valeur === $defaut['de']) unset($nouveau[$nom]);
                 else $nouveau[$nom] = $valeur;
+                continue;
+            }
+            // Une liste d'identifiants du livret (l'appli Cours) : chacun connu
+            // du catalogue, rangés dans son ordre ; vide = rien d'écrit.
+            if ($defaut === 'cours') {
+                $liste = cours_liste_recue($nom === 'chapitres' ? 'chapitres' : 'fiches', $reglage[$nom]);
+                if ($liste === []) unset($nouveau[$nom]);
+                else $nouveau[$nom] = $liste;
                 continue;
             }
             // Les réglages booléens (« records » de Défi tables) : vrai ou
@@ -719,6 +757,7 @@ function ajouts_lus(?string $json): array
     $sortie = [];
     foreach ($brut as $cle => $ajoutBrut) {
         if (!is_string($cle) || !appli_ouverte($cle) || !is_array($ajoutBrut)) continue;
+        if ((CATALOGUE_APPLIS[$cle]['par_eleve'] ?? true) === false) continue;
         if ($ajoutBrut === []) { $sortie[$cle] = []; continue; }
         if (array_is_list($ajoutBrut)) continue;
         $ajout = [];
@@ -752,6 +791,9 @@ function ajouts_recus(mixed $recus): array
     $sortie = [];
     foreach ($recus as $cle => $ajout) {
         if (!is_string($cle) || !appli_ouverte($cle)) throw new InvalidArgumentException("Application inconnue.");
+        if ((CATALOGUE_APPLIS[$cle]['par_eleve'] ?? true) === false) {
+            throw new InvalidArgumentException("Les cours s'ouvrent à toute la classe, pas à un élève.");
+        }
         if (!is_array($ajout) || ($ajout !== [] && array_is_list($ajout))) throw new InvalidArgumentException("Ajout illisible.");
         $declares = listes_declarees($cle);
         foreach (array_keys($ajout) as $nom) {
@@ -860,6 +902,8 @@ function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
         }
         foreach ($reglagesClasse[$cle] ?? [] as $nom => $valeur) {
             if (is_bool($valeur) || is_int($valeur)) $reglage[$nom] = $valeur;
+            // L'appli Cours : les listes du livret suivent la classe telles quelles.
+            if (is_array($valeur) && (CATALOGUE_APPLIS[$cle]['reglages'][$nom] ?? null) === 'cours') $reglage[$nom] = $valeur;
         }
         if ($reglage !== []) $reglages[$cle] = $reglage;
     }

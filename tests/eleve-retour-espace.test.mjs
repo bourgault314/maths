@@ -95,6 +95,11 @@ const JAMAIS = [
   "splat/relatifs/livret/index.html",
   "splat/systeme/livret/index.html",
 ];
+// Le livret de cours (lot « cours-appli », 08/11/2026) : une destination de
+// l'élève connecté, pas une page de navigation. Toutes les pages du dossier
+// cours/ (y compris celles que le moteur du livret ajoutera) : jamais le
+// renvoi, un retour vers Mon espace, aucun lien vers l'accueil ou le catalogue.
+const COURS = pages.map((p) => p.chemin).filter((chemin) => chemin.startsWith("cours/"));
 
 // ---------------------------------------------------------------------------
 // Les pages
@@ -116,6 +121,22 @@ test("aucune appli suivie, aucun jeu suivi, aucun film ne charge le renvoi", () 
     if (/splat-suivi\.js|coffres-suivi\.js|flash_anzan_suivi\.js|defi_tables_core\.js|defi_calcul_mon_parcours\.js/.test(p.html)) {
       assert.ok(!charge(p.html), `${p.chemin} est suivie et charge le renvoi`);
     }
+  }
+});
+
+test("le livret de cours (dossier cours/) : jamais le renvoi, le retour vers Mon espace, aucun lien vers l'accueil ou le catalogue du site", () => {
+  assert.ok(COURS.length >= 1, "les pages du livret sont là");
+  for (const chemin of COURS) {
+    const html = pageDe(chemin);
+    assert.ok(!charge(html), `${chemin} renverrait l'élève hors de son cours`);
+    assert.match(html, /var SITE = \{"retour": "https:\/\/suivi\.mathsgo\.re\/#cours=", /, `${chemin} : le retour vers Mon espace`);
+    // Les seuls liens écrits en clair : les icônes de la page. Les autres sont
+    // fabriqués par le moteur (le retour, et les pages du livret lui-même).
+    for (const [, href] of html.matchAll(/href="([^"'+]*)"/g)) {
+      assert.match(href, /^\/(?:favicon\.(?:ico|svg)|assets\/img\/[a-z0-9-]+\.png)$/, `${chemin} : lien en clair ${href}`);
+    }
+    for (const [, href] of html.matchAll(/href:'([^']*)'/g)) assert.match(href, /^\/cours\//, `${chemin} : lien ${href} hors du livret`);
+    assert.doesNotMatch(html, /mention-confidentialite\.js|toutes-les-ressources|outils\/index\.html|catalogue-refonte/, `${chemin} : rien du site autour`);
   }
 });
 

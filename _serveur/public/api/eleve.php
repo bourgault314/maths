@@ -170,6 +170,13 @@ try {
         'prenom' => $eleve['prenom'],
         'classe' => $eleve['libelle'],
     ] + acces_affichable($eleve);
+    // Lot « cours-appli » (08/11/2026) : l'appli Cours — les chapitres et les
+    // fiches ouverts par le professeur, avec leurs adresses (lib/cours.php).
+    // Rien n'est enregistré de ce que l'élève y ouvre.
+    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null);
+    if (in_array('cours', $acces['applis'], true)) {
+        $reponse['cours'] = cours_de_l_eleve($acces['reglages']['cours'] ?? []);
+    }
     // Le billet n'est tiré que si on le demande : l'appli relit l'identité à
     // chaque ouverture sans en avoir besoin, et un billet que personne
     // n'attend est une clé de plus qui traîne, même deux minutes.

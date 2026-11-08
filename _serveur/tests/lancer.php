@@ -640,11 +640,13 @@ verifier("le manifeste connaît la page Infos", function () {
     // 63 depuis la charte commune (serveur pro, lot 5a, 25/10/2026) : suivi.css.
     // 65 depuis Défi calcul (lot 2b, 31/10/2026) : ses deux moteurs,
     // prof/defi_calcul_core.js et prof/defi_calcul_mon_parcours.js.
-    vrai((bool)preg_match('/^fichiers 65$/m', $manifeste),
-        'le serveur compte 65 fichiers depuis les moteurs de Défi calcul');
+    // 67 depuis l'appli Cours (lot « cours-appli », 08/11/2026) : lib/cours.php
+    // et le catalogue du livret, lib/cours.json.
+    vrai((bool)preg_match('/^fichiers 67$/m', $manifeste),
+        'le serveur compte 67 fichiers depuis l’appli Cours');
     foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
-              'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js',
+              'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json',
               'vendor/katex-0.18.2/katex.min.js', 'vendor/katex-0.18.2/katex.min.css',
               'vendor/katex-0.18.2/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
@@ -1922,7 +1924,10 @@ verifier("l'espace élève, la page Infos et Ma classe envoient une politique de
     // Serveur pro, lot 8 (31/10/2026) : l'espace élève a un second script en
     // ligne, tout en haut de <head> (« avant-tout » : l'élève qui revient ne
     // voit plus passer l'écran du code). Il porte le même nonce.
-    foreach (['/' => 2, '/prof/' => 1, '/infos.php' => 0] as $chemin => $scriptsEnLigne) {
+    // Lot « cours-appli » (08/11/2026) : Ma classe a un second bloc, de
+    // DONNÉES (le catalogue du livret, <script type="application/json">), qui
+    // porte le même nonce.
+    foreach (['/' => 2, '/prof/' => 2, '/infos.php' => 0] as $chemin => $scriptsEnLigne) {
         $r = page($chemin);
         egal(200, $r['code'], "$chemin");
         $csp = entete($r, 'Content-Security-Policy');
@@ -4699,7 +4704,7 @@ verifier("coffres-suivi — le catalogue déclare exactement ce que le moteur ex
     vrai((bool)preg_match('#const NOMBRE_NIVEAUX = (\d);#', $moteur, $mn) && (int)$mn[1] === CATALOGUE_APPLIS['coffres']['reglages']['niveaux'], 'autant de niveaux que le moteur');
     vrai((bool)preg_match('#const NOMBRE_OPERATIONS = (\d);#', $moteur, $mo) && (int)$mo[1] === CATALOGUE_APPLIS['coffres']['reglages']['operations'], 'autant d’opérations que le moteur');
     egal([], CATALOGUE_APPLIS['coffres']['mots'], 'aucun mot : le parcours n’a que des nombres, des booléens et des dates');
-    egal(['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables, puis Anzan (lot 4a, 23/10/2026) : l’ordre des tuiles');
+    egal(['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours', 'soley'], array_keys(CATALOGUE_APPLIS), 'Coffres juste après Défi tables, puis Anzan (lot 4a, 23/10/2026), puis Cours (lot « cours-appli », 08/11/2026) : l’ordre des tuiles');
 });
 
 // ------------------------------------------------ lot « Qui voit quoi » (22/10/2026)
@@ -7996,6 +8001,158 @@ verifier("lot S1 — Défi tables, SPLAT! et Coffres : une page d'avant le journ
     vrai(!array_key_exists('minutes', lire($code, 'defi-tables')['json']['parcours']['journal']), 'Défi tables : pas de minutes au journal');
     // Correctif S1 (relecture de Codex) : le numéro de chaque séance revient tel quel.
     vrai(count(array_filter(lire($code, 'defi-tables')['json']['parcours']['journal']['numero'], fn($n) => $n >= 10000)) > 0, 'Défi tables : les numéros des séances sont gardés');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------------------------ l'appli Cours (lot « cours-appli », 08/11/2026)
+//
+// Gwenaël : « AUCUNE donnée élève enregistrée » ; le professeur choisit les
+// chapitres et les fiches, « nouveau programme » masqué par défaut ; rien
+// d'ouvert au départ. Le catalogue est celui du dépôt (lib/cours.json,
+// fabriqué par le moteur du livret) ; le test des fiches du nouveau programme
+// pose un catalogue d'essai le temps du test.
+
+verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fiches, leurs adresses (#ch=), le brevet, l'imprimable ; une fiche fermée s'en va, l'imprimable aussi, les numéros restent", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C1', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $r = identite($eleve['code']);
+    egal([], $r['json']['cours'] ?? null, 'au départ : la clé « cours », vide — pas de tuile');
+    egal(null, classe_en_base($id)['reglages'], 'rien d’écrit en base');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'un chapitre ouvert');
+    egal('{"cours":{"chapitres":["3e-PYT"]}}', classe_en_base($id)['reglages'], 'en base');
+    $cours = identite($eleve['code'])['json']['cours'];
+    egal(1, count($cours), 'un chapitre');
+    egal('3e-PYT', $cours[0]['id'], 'le chapitre');
+    egal([1, 2, 3, 4, 5, 6], array_column($cours[0]['fiches'], 'n'), 'six fiches, numérotées');
+    egal('https://mathsgo.re/cours/4e/4e-TRI-03.html#ch=3e-PYT', $cours[0]['fiches'][2]['url'], 'une fiche de 4e, avec le chapitre d’où l’on vient');
+    egal('https://mathsgo.re/cours/3e/3e-PYT-brevet.html#ch=3e-PYT', $cours[0]['brevet'], 'le brevet');
+    egal('https://mathsgo.re/cours/3e/3e-PYT-imprimable.html#ch=3e-PYT', $cours[0]['imprimable'], 'l’imprimable : toutes les fiches sont ouvertes');
+    foreach ($cours[0]['fiches'] as $fiche) {
+        egal(['n', 'h1', 'niveaux', 'type', 'url'], array_keys($fiche), 'une fiche : rien d’autre que ce que la page affiche');
+    }
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['3e-PYT-02', '3e-PYT-brevet']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'une fiche et le brevet fermés');
+    $cours = identite($eleve['code'])['json']['cours'];
+    egal([1, 2, 3, 5, 6], array_column($cours[0]['fiches'], 'n'), 'la fiche 4 s’en va, les numéros restent');
+    egal(null, $cours[0]['brevet'], 'plus de brevet');
+    egal(null, $cours[0]['imprimable'], 'plus d’imprimable : il contiendrait la fiche fermée');
+    // Le même chapitre en 4e : la fiche commune fermée l'est aussi (un seul identifiant).
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT', '4e-TRI'], 'sans' => ['4e-TRI-03']]]], ['jeton' => $jetonS1]);
+    $cours = identite($eleve['code'])['json']['cours'];
+    egal(['4e-TRI', '3e-PYT'], array_column($cours, 'id'), 'deux chapitres, dans l’ordre du livret (la progression)');
+    egal([[1, 2, 4, 5], [1, 2, 4, 5, 6]], [array_column($cours[0]['fiches'], 'n'), array_column($cours[1]['fiches'], 'n')], 'la fiche commune fermée dans les deux');
+    // Tous les chapitres fermés : la clé reste, vide ; l'appli retirée : plus de clé.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => [], 'sans' => []]]], ['jeton' => $jetonS1]);
+    vrai(str_contains($r['texte'], '"reglages":{}'), 'tout fermé : « {} »');
+    egal(null, classe_en_base($id)['reglages'], 'en base : NULL');
+    egal([], identite($eleve['code'])['json']['cours'], 'tout fermé : vide');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    vrai(!array_key_exists('cours', identite($eleve['code'])['json']), 'sans l’appli Cours : pas de clé « cours »');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-appli — lecture stricte du réglage (chapitre ou fiche inconnus, liste illisible : 400, rien d'écrit) ; « avant » en retard : 409 ; en base, un identifiant disparu du livret est oublié", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C2', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]], ['jeton' => $jetonS1]);
+    foreach ([
+        [['chapitres' => ['9e-XYZ']], 'Chapitre inconnu.'],
+        [['chapitres' => ['4e-TRI-01']], 'Chapitre inconnu.'],
+        [['sans' => ['4e-TRI']], 'Fiche inconnue.'],
+        [['sans' => ['<script>']], 'Fiche inconnue.'],
+        [['avec' => [3]], 'Fiche inconnue.'],
+        [['chapitres' => '4e-TRI'], 'Liste de cours illisible.'],
+        [['chapitres' => ['a' => '4e-TRI']], 'Liste de cours illisible.'],
+        [['niveau' => '4e'], 'Réglage inconnu.'],
+    ] as [$reglage, $message]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => $reglage]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], json_encode($reglage) . ' : refusé');
+        egal($message, $r['json']['erreur'] ?? null, json_encode($reglage) . ' : le message');
+    }
+    egal('{"cours":{"chapitres":["4e-TRI"]}}', classe_en_base($id)['reglages'], 'rien d’écrit');
+    // Doublons et désordre : rangés dans l'ordre du livret.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT', '4e-TRI', '3e-PYT'], 'sans' => ['4e-TRI-05', '4e-TRI-01', '4e-TRI-05']]]], ['jeton' => $jetonS1]);
+    egal(['cours' => ['chapitres' => ['4e-TRI', '3e-PYT'], 'sans' => ['4e-TRI-01', '4e-TRI-05']]], $r['json']['reglages'], 'rangés, sans doublon');
+    // « avant » en retard (un autre onglet a changé la classe) : 409, rien d'écrit.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]],
+        'reglages' => ['cours' => ['chapitres' => []]]], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], '« avant » en retard : refusé');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['cours' => ['chapitres' => ['4e-TRI', '3e-PYT'], 'sans' => ['4e-TRI-01', '4e-TRI-05']]]],
+        'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => []]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], '« avant » juste : écrit');
+    // En base, une fiche ou un chapitre que le livret n'a plus : oublié à la lecture.
+    bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?')->execute(['{"cours":{"chapitres":["3e-PYT","5e-ZZZ"],"sans":["3e-PYT-99",4,"4e-TRI-01"],"avec":"x"}}', $id]);
+    $cours = identite($eleve['code'])['json']['cours'];
+    egal(['3e-PYT'], array_column($cours, 'id'), 'le chapitre disparu est oublié');
+    egal([2, 3, 4, 5, 6], array_column($cours[0]['fiches'], 'n'), 'la fiche fermée reste fermée, le reste est oublié');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-appli — les fiches du nouveau programme sont masquées par défaut et s'ouvrent une par une ; une entrée abîmée du catalogue (adresse hors cours/) n'atteint jamais l'élève", function () use (&$jetonS1, $travail) {
+    vider_compteurs();
+    $fichier = $travail . '/lib/cours.json';
+    $vrai = file_get_contents($fichier);
+    $essai = ['chapitres' => [[
+        'id' => '3e-ESS', 'niveau' => '3e', 'chapitre' => 'Essai', 'titre' => 'Un chapitre d’essai',
+        'fiches' => [
+            ['id' => '3e-ESS-01', 'n' => 1, 'ids' => '3e-ESS-01', 'h1' => 'Je sais A', 'niveaux' => ['3e'], 'type' => 'méthode', 'nouveau' => false, 'page' => '/cours/3e/3e-ESS-01.html'],
+            ['id' => '3e-ESS-02', 'n' => 2, 'ids' => '3e-ESS-02', 'h1' => 'Je sais B', 'niveaux' => ['3e'], 'type' => 'savoir', 'nouveau' => true, 'page' => '/cours/3e/3e-ESS-02.html'],
+            ['id' => '3e-ESS-03', 'n' => 3, 'ids' => '3e-ESS-03', 'h1' => 'Piège', 'niveaux' => ['3e'], 'type' => '', 'nouveau' => false, 'page' => 'https://ailleurs.example/x.html'],
+            ['id' => '3e-ESS-04', 'n' => 4, 'ids' => '3e-ESS-04', 'h1' => 'Piège 2', 'niveaux' => ['3e'], 'type' => '', 'nouveau' => false, 'page' => '/cours/3e/../../index.html'],
+        ],
+        'brevet' => null, 'imprimable' => '/cours/3e/3e-ESS-imprimable.html',
+    ]]];
+    file_put_contents($fichier, json_encode($essai, JSON_UNESCAPED_UNICODE));
+    try {
+        $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C3', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+        $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+        appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-ESS']]]], ['jeton' => $jetonS1]);
+        $cours = identite($eleve['code'])['json']['cours'];
+        egal([1], array_column($cours[0]['fiches'], 'n'), 'le nouveau programme masqué ; les deux pièges écartés');
+        egal(null, $cours[0]['imprimable'], 'l’imprimable contiendrait la fiche masquée : pas donné');
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['avec' => ['3e-ESS-02']]]], ['jeton' => $jetonS1]);
+        egal(200, $r['code'], 'la fiche du nouveau programme ouverte');
+        $cours = identite($eleve['code'])['json']['cours'];
+        egal([1, 2], array_column($cours[0]['fiches'], 'n'), 'elle apparaît');
+        egal('https://mathsgo.re/cours/3e/3e-ESS-imprimable.html#ch=3e-ESS', $cours[0]['imprimable'], 'tout est ouvert : l’imprimable revient');
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['sans' => ['3e-ESS-03']]]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], 'une fiche écartée du catalogue n’existe pas non plus pour le réglage');
+        // La page Ma classe porte le catalogue en DONNÉES, échappé.
+        $page = page('/prof/')['texte'];
+        vrai((bool)preg_match('/<script type="application\/json" id="cours-catalogue" nonce="[^"]+">/', $page), 'Ma classe : le catalogue, avec le nonce de la page');
+        vrai(!str_contains($page, 'ailleurs.example') && !str_contains($page, '..\/..'), 'Ma classe : les pièges n’y sont pas');
+        appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    } finally {
+        file_put_contents($fichier, $vrai);
+    }
+    vider_compteurs();
+});
+
+verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.php ne connaît pas « cours » ; pas de cours donné à un élève seul ; le tableau de l'onglet Cours n'a aucune progression", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C4', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $w = ecrire($eleve['code'], ['version' => 1], 0, 'cours');
+    egal(400, $w['code'], 'écrire une progression « cours » : refusé');
+    egal(400, lire($eleve['code'], 'cours')['code'], 'la lire : refusé');
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => new stdClass()]], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], 'Cours à un élève seul : refusé');
+    egal("Les cours s'ouvrent à toute la classe, pas à un élève.", $r['json']['erreur'] ?? null, 'le message');
+    // Rangé quand même en base (une vieille page, un script) : ignoré à la lecture.
+    bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute(['{"cours":{}}', $eleve['id']]);
+    vrai(!array_key_exists('cours', identite($eleve['code'])['json']), 'un ajout « cours » en base ne donne rien');
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables', 'cours']], ['jeton' => $jetonS1]);
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'le tableau de l’onglet Cours');
+    egal([null], array_column($t['json']['eleves'], 'parcours'), 'aucune progression');
+    $n = bd_test()->query("SELECT COUNT(*) FROM progressions WHERE appli = 'cours'")->fetchColumn();
+    egal(0, (int)$n, 'aucune ligne « cours » en base');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });
