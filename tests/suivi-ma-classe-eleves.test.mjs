@@ -232,7 +232,8 @@ test("dans le tableau d'une appli, « Revenir à… » est dans le « ⋯ » au 
 
 function poserVueRejoue(vueAvant, droit) {
   const {$} = creerZones();
-  return new Function("$", "droitClasse", "vueInitiale", `let vue = vueInitiale;\n${fonction("poserVue")}\nposerVue();\nreturn {vue, $};`)($, droit, vueAvant);
+  // Lot S4b : poserVue ferme aussi la liste des prénoms d'un « 5 élèves » (garderPopEleves).
+  return new Function("$", "droitClasse", "vueInitiale", "garderPopEleves", `let vue = vueInitiale;\n${fonction("poserVue")}\nposerVue();\nreturn {vue, $};`)($, droit, vueAvant, () => {});
 }
 
 test("la vue Élèves : propriétaire et collègue en écriture ; un collègue « voir seulement » retombe sur l'activité", () => {
@@ -417,7 +418,11 @@ function fragilesRejoues(comptes, commences = 12) {
   const eleves = Array.from({length: commences}, () => ({lu: {parcours: {}}}));
   const seuil = script.match(/const SEUIL_FRAGILES = (\d+);/);
   assert.ok(seuil, "le seuil est écrit à un seul endroit");
-  new Function("document", "$", "PARCOURS", "eleves", `const SEUIL_FRAGILES = ${seuil[1]};\n${fonction("dessinerFragiles")}\ndessinerFragiles();`)(document, $, PARCOURS, eleves);
+  // Lot S4b : « 5 élèves » est un bouton (boutonNombre, ses prénoms par-dessus la page) ;
+  // ici, son texte seul.
+  const boutonNombre = texte => { const n = document.createElement("span"); n.textContent = texte; return n; };
+  new Function("document", "$", "PARCOURS", "eleves", "garderPopEleves", "ordreDeLaFeuille", "boutonNombre",
+    `const SEUIL_FRAGILES = ${seuil[1]};\n${fonction("dessinerFragiles")}\ndessinerFragiles();`)(document, $, PARCOURS, eleves, () => {}, liste => liste, boutonNombre);
   return {$, liste: $("fragiles-liste").children.map(li => li.textContent)};
 }
 

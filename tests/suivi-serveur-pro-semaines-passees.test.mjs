@@ -127,10 +127,10 @@ test("resumeProf rend les semaines (le même calcul que la ligne de l'élève), 
   assert.match(lire("_serveur/public/lib/applis.php"), /'seances'/);
 });
 
-test("Ma classe : « 4 dernières semaines », la semaine en cours à droite et en gras", () => {
+test("Ma classe : « Séances · 4 semaines » (lot S4b : le mot « séances »), la semaine en cours à droite et en gras", () => {
   const debut = page.indexOf('<tr id="entete-defi-tables">');
   const entete = page.slice(debut, page.indexOf("</tr>", debut));
-  assert.match(entete, /<th class="large"><button type="button" data-tri="semaine">4 dernières semaines<\/button><\/th>/);
+  assert.match(entete, /<th class="large"><button type="button" data-tri="semaine">Séances · 4 semaines<\/button><\/th>/);
   assert.doesNotMatch(entete, /Cette semaine/);
   // La cellule, dessinée par la page avec le vrai moteur.
   const source = page.slice(page.indexOf("  function celluleSemaines(lu) {"), page.indexOf("  function large(cellule) {"));
@@ -142,14 +142,14 @@ test("Ma classe : « 4 dernières semaines », la semaine en cours à droite et 
   const texte = el => (el.enfants.length ? el.enfants.map(texte).join("") : el.textContent);
   const rania = avecSeances(["2026-10-06", "2026-10-08", "2026-10-13", "2026-10-26", "2026-10-28", "2026-10-28"]);
   const zone = cellule({parcours: rania, semaines: P.seancesParSemaine(rania, JEUDI)});
-  assert.equal(texte(zone), "2 · 1 · 0 · 3");
+  assert.equal(texte(zone), "2 · 1 · 0 · 3 séances");
   // Lot 8 (retours du 31/10/2026) : le séparateur s'appelle « sep-semaine ».
   // Il s'appelait « point » et prenait la pastille verte de « ● Ouvert à
   // toute la classe » (une règle .point globale du lot 5b) : un rond vert
   // entre chaque semaine. La pastille ne vaut plus que dans sa ligne.
   const separateurs = zone.enfants.filter(e => e.className === "sep-semaine");
   assert.deepEqual(separateurs.map(e => e.textContent), ["\u00a0·\u00a0", "\u00a0·\u00a0", "\u00a0·\u00a0"]);
-  const nombres = zone.enfants.filter(e => e.className !== "sep-semaine");
+  const nombres = zone.enfants.filter(e => e.className !== "sep-semaine" && e.className !== "lc-unite");
   assert.ok(!zone.enfants.some(e => e.className === "point"), "plus de « point » dans la case");
   const style = page.slice(page.indexOf("<style>"), page.indexOf("</style>"));
   assert.match(style, /\.semaines \.sep-semaine \{ color: var\(--muted\); \}/, "le séparateur, en gris : du texte");
