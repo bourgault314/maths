@@ -983,7 +983,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     dialog.fenetre-eleve, dialog.fenetre-eleve.avec-parcours { width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;
                                                                margin: 0; border-radius: 0; }
     .fenetre-eleve .fenetre-tete { padding: 14px 14px 0; }
-    .fenetre-eleve .fenetre-corps { padding: 8px 14px 16px; }
+    /* Pas pour Défi tables : son écran Mon parcours garde toute la largeur. */
+    .fenetre-eleve:not(.avec-parcours) .fenetre-corps { padding: 8px 14px 16px; }
     .fe-ensemble { grid-template-columns: 1fr; }
     .fe-ou li { grid-template-columns: 30px 1fr auto; }
     .fe-ou li .lc-barre { grid-column: 2; grid-row: 2; }
