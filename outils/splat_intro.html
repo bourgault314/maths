@@ -213,7 +213,8 @@ function lancerLecteur(film,autre){
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
-  if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
+  if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;
+    if(DEPUIS_JEU)$('passer').textContent='Retour au jeu ›';}
   if(!PRESENTATION){$('carte').href=CARTE;$('carte').hidden=false;}
   $('pied').classList.toggle('avecPasser',!$('passer').hidden);
   if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
@@ -327,6 +328,10 @@ const PRESENTATION=!new URLSearchParams(location.search).has('suite');
      monde retenu au départ (retenirMonde, côté carte).
    La vue prof (?suite=…?prof=1) revient à la vue prof. */
 const DEPUIS_CARTE=new URLSearchParams(location.search).get('depuis')==='carte';
+/* ouvert par « ? Aide » d'un jeu (&depuis=jeu, lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : la pastille de
+   droite dit « Retour au jeu › » au lieu de « Passer le film › » — ?suite= est alors le jeu lui-même, l'élève retrouve sa
+   carte (la reprise des outils) ; « ‹ Carte des mondes » reste à gauche, « Je joue ▶ » à la fin ramène aussi au jeu */
+const DEPUIS_JEU=new URLSearchParams(location.search).get('depuis')==='jeu';
 const CARTE=(()=>{const base=/^\/outils\/splat_univers\.html\?prof=1(&|#|$)/.test(SUITE)?'/outils/splat_univers.html?prof=1':'/outils/splat_univers.html';
   const e=new URLSearchParams(location.search).get('etape')||'';return base+(/^[A-Za-z0-9_-]{1,40}$/.test(e)?'#'+e:'');})();
 const RETOUR_PAGE='/outils/?domain=algebre&collection=splat';
@@ -2337,7 +2342,10 @@ return film;
   const film=Object.prototype.hasOwnProperty.call(FILMS,nom)&&nom!=='intro'?FILMS[nom]:FILMS.intro;
   const aToi=!!film.aToi&&(voir==='atoi'||(voir!=='film'&&!PRESENTATION));
   let autre=null;
-  if(film.aToi){const u=new URL(location.href);u.searchParams.set('voir',aToi?'film':'atoi');
+  /* ouvert par « ? Comment faire » d'un jeu (&depuis=jeu, choix de Gwenaël du 08/11/2026) : l'élève a demandé UNE aide, pas
+     un choix entre deux — pas de lien « 🎬 Voir le film » sous le tutoriel ; la ligne du bas garde « ‹ Carte » et
+     « Retour au jeu › » (par « Continuer » ou depuis la carte, le lien reste) */
+  if(film.aToi&&!DEPUIS_JEU){const u=new URL(location.href);u.searchParams.set('voir',aToi?'film':'atoi');
     autre={href:u.pathname+u.search,txt:aToi?'🎬 Voir le film':'✋ À toi de faire'};}
   lancerLecteur(aToi?film.aToi:film,autre);})();
 </script>

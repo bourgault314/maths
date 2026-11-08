@@ -138,6 +138,29 @@
     return BONUS.some((b) => b[0] === parcours);
   }
 
+  /* « ? Comment faire » des trois outils (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : à
+     côté de « ◀ Carte des mondes », le bouton ouvre le film ou le tutoriel DE L'ÉTAPE, puis ramène
+     l'élève sur SA carte (« Retour au jeu › » sous le film, ou « Je joue ▶ » à la fin). Seulement les
+     étapes qui ont leur propre aide (choix du 08/11 : « l'aide doit être pertinente sur ce qu'il fait ») :
+     une aide « à peu près » (le film d'une autre étape) décourage plus qu'elle n'aide. Une étape qui
+     reçoit son film ou son tutoriel sur la carte (lots 4 à 7) aura son bouton : on l'ajoute ici.
+     C'EST UNE COPIE des films de la carte (MONDES, champ « films », le premier de l'étape) :
+     tests/splat-aide-jeux.test.mjs la recalcule à partir de splat_univers.html et échoue si les deux
+     diffèrent. Chaque étape : parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
+  const AIDES = { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat" };
+  const URL_FILMS = "/outils/splat_intro.html";
+  /* le retour : l'adresse du jeu lui-même (la même série, donc la même reprise — deux livrets peuvent
+     partager un parcours avec des cartes différentes), seulement une page du site ; au-delà de 6 000
+     caractères (les séries d'ÉquaSplat font 3,5 ko), la carte qui relance le jeu de l'étape (?jouer=) */
+  const RETOUR_MAX = 6000;
+  function aide(parcours, retour) {
+    if (!Object.prototype.hasOwnProperty.call(AIDES, parcours)) return null;
+    const suite = typeof retour === "string" && /^\/[^\/\\]/.test(retour) && retour.length <= RETOUR_MAX
+      ? retour
+      : "/outils/splat_univers.html?jouer=" + encodeURIComponent(parcours);
+    return URL_FILMS + "?film=" + AIDES[parcours] + "&suite=" + encodeURIComponent(suite) + "&depuis=jeu";
+  }
+
   function echapper(texte) {
     return String(texte).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -232,5 +255,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, AIDES, aide, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
 })();
