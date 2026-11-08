@@ -354,6 +354,8 @@ html.suivi-attente main#univers,html.suivi-attente #carteMondes{visibility:hidde
    des autres parties sont masqués (.replieP), pas retirés : ids et numérotation ne bougent pas.
    (Du 04/10 au 08/11/2026, chaque partie était un menu déroulant.) */
 .etapes>li.replieP,.etapes>.volet.ferme[data-volet]{display:none}
+/* lot 5b : la « partie » des étapes du monde 4 n'a pas de titre (le bouton suffit) */
+main>.monde>.etapes>.volet.sansTitre{display:none}
 main>.monde>.etapes>.volet[data-volet]{background:none;border:none;border-radius:0;margin:2px 0 0;padding:6px 4px 2px}
 main>.monde>.etapes>.volet[data-volet] h4{color:var(--c)}
 /* le Bonus des mondes 3 et 4 (monde 4 : lot M4-4) : un menu de plus sous les étapes, fermé par défaut, en pointillés ;
@@ -1543,11 +1545,16 @@ function partieBtnHtml(cle,rang,idStars,cls){
   return '<button type="button" class="partieBtn'+cls+'" data-volet="'+cle+'" aria-pressed="false">'+rang+
     '<span class="stars" id="'+idStars+'"></span></button>';
 }
-/* La ligne des boutons d'un monde : ses parties, puis son Bonus. Rien pour un monde sans partie. */
+/* La ligne des boutons d'un monde : ses parties, puis son Bonus. Rien pour un monde sans partie.
+   Un monde sans partie mais avec un Bonus (le monde 4) : un premier bouton pour ses étapes
+   (lot 5b, 08/11/2026 — sinon le Bonus, seul bouton, était ouvert et enfoncé à l'arrivée). */
+const NOM_ETAPES="Les étapes";
+function etapesSeules(m){return !(m.volets||[]).length&&!!bonusDe(m);}
 function partiesHtml(m,mi){
   const b=bonusDe(m);
   if(!(m.volets||[]).length&&!b) return '';
   return '<div class="parties" role="group" aria-label="Les parties du monde">'+
+    (etapesSeules(m)?partieBtnHtml('etapes',NOM_ETAPES,'stars'+mi+'-etapes',''):'')+
     (m.volets||[]).map((v,vi)=>partieBtnHtml(partieCle(v,vi),partieRang(m,v,vi),'stars'+mi+'-'+vi,v.ech?' ech':'')).join('')+
     (b?partieBtnHtml('bonus','Bonus',b.stars,' bonus'):'')+'</div>';
 }
@@ -1649,9 +1656,11 @@ else MONDES.forEach((m,mi)=>{
        partieFiches(m,v,compteur),v.o,v.ech?' ech':'');
      /* l'étape et sa partie (data-partie : le menu qui la montre ou la cache) */
      const partie=(m.volets||[]).findIndex(x=>ei>=x.de&&ei<x.a);
-     const clePartie=partie>=0?partieCle(m.volets[partie],partie):null;
+     const clePartie=partie>=0?partieCle(m.volets[partie],partie):etapesSeules(m)?'etapes':null;
      const badgeAttrs = (m.actif && !e.p) ? ' title="Marquer comme réussie" data-id="'+ids[ei]+'"' : ' disabled';
-     return volet+'<li class="etape'+(e.code?' code':'')+'" id="'+ids[ei]+'"'+(clePartie!==null?' data-partie="'+clePartie+'"':'')+'>'+
+     /* lot 5b : les étapes d'un monde sans partie mais avec un Bonus (le monde 4) — une partie sans titre */
+     const sansTitre=etapesSeules(m)&&ei===0?'<li class="volet ferme sansTitre" id="'+m.idp+'-etapes" data-volet="etapes"></li>':'';
+     return sansTitre+volet+'<li class="etape'+(e.code?' code':'')+'" id="'+ids[ei]+'"'+(clePartie!==null?' data-partie="'+clePartie+'"':'')+'>'+
        '<button class="badge" type="button"'+badgeAttrs+'>'+
          '<svg class="tache" viewBox="0 0 110 110"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
          '<span class="n">'+(e.code||compteur)+'</span>'+
@@ -1703,6 +1712,8 @@ function majAffichage(){
     if(st) st.textContent="⭐ "+f+" / "+m.etapes.length;
     /* fermé à la classe : ses étoiles déjà gagnées restent écrites, pas « ⭐ 0 / 3 » */
     if(st) st.hidden=!!m.verrouille&&!f;
+    const se=document.getElementById("stars"+mi+"-etapes");
+    if(se) se.textContent="⭐ "+f+" / "+m.etapes.length;
     (m.volets||[]).forEach((v,vi)=>{
       const sv=document.getElementById("stars"+mi+"-"+vi);
       if(!sv) return;
