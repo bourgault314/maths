@@ -534,7 +534,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (avant : anzan-entrainement-5-ou-10).
   // Puis « Suivre ses élèves », lot S2 « la classe et la fiche » (08/11/2026) :
   // prof/index.php seul change (avant : suivre-les-eleves-S1-journaux).
-  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S2-classe-et-fiche$/m);
+  // Puis Défi calcul, la relecture 2 (08/11/2026) : la copie
+  // prof/defi_calcul_core.js change (titres des niveaux, J'apprends d'A1,
+  // M1, A2, A11, l'ordre de l'entraînement) (avant : suivre-les-eleves-S2-classe-et-fiche).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-relecture-2$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

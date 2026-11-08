@@ -3417,6 +3417,31 @@
     };
   }
 
+
+  // PROTOTYPE relecture 2 : les paires qui font 10 (A1-1, « À retenir »),
+  // une rangée par paire ; perles : la rangée de 10 perles coupée.
+  function pairesDix(o) {
+    const lignes = o.paires;
+    const h = 40;
+    const W = o.perles ? 440 : 320;
+    let s = "";
+    lignes.forEach(([a, b], i) => {
+      const y = 8 + i * h;
+      let x = 6;
+      if (o.perles) {
+        for (let k = 0; k < 10; k += 1) {
+          const rouge = k < 5;
+          const cx = x + 13 + k * 24 + (k >= a ? 10 : 0);
+          s += `<circle cx="${cx}" cy="${y + 15}" r="10.5" fill="${rouge ? "#d64545" : "#f4f1ea"}" stroke="${rouge ? "#a32c2c" : "#8a8f96"}" stroke-width="2"/>`;
+        }
+        s += `<line x1="${x + 13 + a * 24 - 6}" y1="${y - 2}" x2="${x + 13 + a * 24 - 6}" y2="${y + 32}" stroke="#143451" stroke-width="3"/>`;
+        x = 268;
+      } else x = o.total >= 100 ? 50 : 70;
+      s += `<text x="${x}" y="${y + 23}" font-size="24" font-weight="900" fill="#143451">${a} + ${b} = ${o.total}</text>`;
+    });
+    return `<svg viewBox="0 0 ${W} ${lignes.length * h + 12}" role="img" aria-label="${lignes.map(([a, b]) => `${a} + ${b} = ${o.total}`).join(", ")}">${s}</svg>`;
+  }
+
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
   function dessinerImage(image) {
     if (!image) return "";
@@ -3437,6 +3462,7 @@
     if (image.outil === "barre-droite") return barreDroite(image);
     if (image.outil === "bandes-droite") return bandesImage(image);
     if (image.outil === "tout-parts") return toutParts(image);
+    if (image.outil === "paires") return pairesDix(image);
     return droiteSauts(image);
   }
 

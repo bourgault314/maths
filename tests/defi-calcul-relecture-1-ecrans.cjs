@@ -84,6 +84,20 @@ const defile = page => page.evaluate(() => document.documentElement.scrollHeight
 async function taper(page, nombre) {
   for (const signe of CORE.formaterNombre(nombre).replace(/\s/g, "").replace(".", ",")) await page.click(`#play [data-key="${signe}"]`);
 }
+
+// Relecture 2 (08/11/2026) : « Je représente » de M1 se fait par étapes,
+// comme J'écris ; puis « Suivant ».
+async function representer(page, apprends) {
+  const r = apprends.represente;
+  if (r.etapes) {
+    for (const etape of r.etapes) { await taper(page, etape.reponse); await page.click("#validate"); await page.waitForTimeout(300); }
+    await page.waitForTimeout(300);
+    await page.click("#validate");
+    return;
+  }
+  await taper(page, r.reponse);
+  await page.click("#validate");
+}
 async function glisser(page, rangee, index, pousser) {
   const g = await page.evaluate(([r, i]) => {
     const perle = document.querySelectorAll(".perles-rangee")[r].querySelectorAll(".perle")[i].getBoundingClientRect();
@@ -224,8 +238,7 @@ function outilFini([cle, outil, sansReponse]) {
         await page.evaluate(([i, k]) => window.__MATHSGO_DEFI_CALCUL_TEST__.apprendre(i, k), [id, Number(n)]);
         await page.waitForTimeout(300);
         const apprends = CORE.niveauDe(cle).niveau.apprends;
-        await taper(page, apprends.represente.reponse);
-        await page.click("#validate");
+        await representer(page, apprends);
         await page.waitForSelector("#question-card.ecrit", {timeout: 8000});
         const consigne = await page.evaluate(() => (document.querySelector("#aide > .consigne") || {}).textContent || "");
         assert.equal(consigne.replace(/[\u202f\u00a0]/g, " "), apprends.ecris.consigne.replace(/[\u202f\u00a0]/g, " "), `${cle} : la ligne du but au-dessus du dessin`);
@@ -336,8 +349,7 @@ function outilFini([cle, outil, sansReponse]) {
         await page.waitForTimeout(400);
       }
       vues.push(await largeur());
-      await taper(page, apprends.represente.reponse);
-      await page.click("#validate");
+      await representer(page, apprends);
       await page.waitForSelector("#question-card.ecrit", {timeout: 8000});
       vues.push(await largeur());
       for (const etape of apprends.ecris.etapes) { await taper(page, etape.reponse); await page.click("#validate"); await page.waitForTimeout(300); }

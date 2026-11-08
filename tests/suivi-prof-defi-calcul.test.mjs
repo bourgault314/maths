@@ -188,7 +188,7 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
 test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvrir en classe » mène au niveau en mode professeur", () => {
   const o = outils([]);
   assert.equal(o.nomCompetenceCalcul("A2", 3), "Compléments à 100");
-  assert.equal(o.nomCompetenceCalcul("A5", 1), "+ 9");
+  assert.equal(o.nomCompetenceCalcul("A5", 1), "ajouter 9");
   assert.equal(o.nomModuleCalcul("M2"), "× 10, × 100, × 1 000 (entiers)");
   assert.equal(o.nomPalierCalcul(1), "Les bases (CP · CE1 · CE2)");
   assert.equal(o.nomPalierCalcul(2), "Le CM1", "les classes ne sont pas répétées quand le nom les dit");

@@ -153,7 +153,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
         return {soirs: sem.soirs, sues: sem.sues};
       });
       assert.ok(attendu.soirs >= 1 && attendu.sues >= 2, JSON.stringify(attendu));
-      assert.equal(await texte(s.page, "#acc-soirs"), `✓${attendu.soirs} soir${attendu.soirs > 1 ? "s" : ""} cette semaine`);
+      assert.equal(await texte(s.page, "#acc-soirs"), `✓${attendu.soirs} jour${attendu.soirs > 1 ? "s" : ""} cette semaine` /* relecture 2 : « jours » */);
       assert.ok((await texte(s.page, "#acc-porte-note")).endsWith(` · +${attendu.sues} cette semaine`));
       assert.equal(await s.page.locator("#acc-semaine").count(), 0, "plus de ligne « N fois cette semaine »");
       const cadre = await boite(s.page, ".panel");

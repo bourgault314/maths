@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261107-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261108-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -122,11 +122,11 @@
     <section class="panel">
       <!-- Le mode professeur (?prof=1) : tous les menus, rien n'est
            enregistré. La pilule est sur l'accueil et sur l'écran d'un module. -->
-      <p id="prof-pilule" class="prof-pilule" hidden><b>Mode professeur</b><span>· tous les menus, rien n’est enregistré ·</span><button id="prof-quitter" type="button">Quitter</button></p>
+      <p id="prof-pilule" class="prof-pilule" hidden><b>Mode professeur</b><span class="pp-point" aria-hidden="true">·</span><span class="pp-texte">tous les menus, rien n’est enregistré</span><span class="pp-point" aria-hidden="true">·</span><button id="prof-quitter" type="button">Quitter</button></p>
       <p id="prof-refus" class="prof-pilule est-refus" hidden><b>Mode professeur</b><span>· déconnecte-toi d’abord</span></p>
       <!-- L'accueil (lot « accueil », 07/11/2026, choix A de Gwenaël) : une
            seule colonne, comme Défi tables. Mon module et sa séance, la
-           pastille « N soirs cette semaine », puis la porte « Mon parcours »
+           pastille « N jours cette semaine », puis la porte « Mon parcours »
            (un écran à part, plus de liste sur l'accueil), puis « Comment ça
            marche ? » (et « Effacer mon historique » pour le visiteur sans
            code) sur une seule ligne. Le professeur voit la même page, avec
@@ -260,7 +260,8 @@
           <p id="retenir-phrase" class="phrase" tabindex="-1"></p>
           <div id="retenir-image" class="dc-aide"></div>
           <p id="retenir-autre" class="dc-retenir-autre" hidden></p>
-          <p class="cahier">Je recopie cette phrase dans mon cahier.</p>
+          <!-- Relecture 2 (08/11/2026, Gwenaël) : « cela » — la phrase, le calcul et le dessin. -->
+          <p class="cahier">Je recopie cela dans mon cahier.</p>
         </div>
         <div id="result-suite" class="seance-suite"></div>
         <section id="corrections" class="corrections" aria-live="polite"></section>
@@ -285,9 +286,9 @@
     </section>
   </main>
 
-  <script src="./defi_calcul_core.js?v=20261106-2"></script>
+  <script src="./defi_calcul_core.js?v=20261108-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261107-4"></script>
-  <script src="./defi_calcul_aides.js?v=20261106-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261108-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1350,7 +1351,7 @@
       //    ne tient toujours pas une fois l'image, le pavé et l'outil réduits
       //    (iPhone SE, bandeau de suivi, une annonce « Nouveau : … »), un peu
       //    plus petit, jusqu'à ×0,85.
-      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, maxGlisse: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12, telephone: 620, minTelephone: 0.85, imageTelephone: 56});
+      const ECHELLE = Object.freeze({largeurMin: 1024, min: 0.8, max: 1.6, maxPerles: 1.2, maxGlisse: 1.6, largeurColonne: 850, largeurBase: 1280, basCadre: 12, telephone: 620, minTelephone: 0.85, imageTelephone: 56, secours: 0.7});
       // Téléphone : l'image (la droite, les barres, le tableau) rapetisse pour
       // laisser la place au pavé (CSS), mais pas sous la moitié de sa taille
       // ni sous 56 px de haut — en dessous, ses nombres ne se lisent plus :
@@ -1466,6 +1467,16 @@
         // Un écran qui ne tient à aucune échelle garde la plus petite : moins
         // il reste à faire défiler, mieux c'est.
         let z = chercherEchelle({...bornes, max: maximum, longue: bornes.min}, tient);
+        // Relecture 2 (08/11/2026) : un écran qui ne tient pas même à la plus
+        // petite échelle (J'écris d'A2-5 en 4 étapes, fenêtre de 1366 × 768 :
+        // « Valider » coupé en bas du cadre) descend encore un peu, jusqu'à
+        // ×0,7, plutôt que de couper un bouton.
+        if (!telephone && z === bornes.min && bornes.max > bornes.min && !tient(z)) {
+          for (let k = z - .02; k >= ECHELLE.secours - 1e-9; k -= .02) {
+            z = k;
+            if (tient(z)) break;
+          }
+        }
         // Relecture 1 : une leçon (J'apprends, puis « À retenir ») garde une
         // seule taille de cadre, celle de son écran le plus serré.
         const lecon = echelleDeLecon(z);
@@ -1722,7 +1733,13 @@
       function ajusterRetenir() {
         const racine = document.documentElement;
         racine.style.removeProperty("--retenir-z");
-        if ($("result").hidden || $("result-retenir").hidden) return;
+        racine.style.removeProperty("--retenir-p");
+        const ouvert = !$("result").hidden && !$("result-retenir").hidden;
+        // Relecture 2 (08/11/2026) : au téléphone, « À retenir » n'a plus de
+        // vide sous ses boutons (les marges du bas de l'écran) ; la place va
+        // à la phrase et au dessin.
+        racine.classList.toggle("retenir-ouvert", ouvert);
+        if (!ouvert) return;
         ajusterCalculRetenir();
         if (window.innerWidth > ECHELLE.telephone) return;
         // Un calcul soudé resté dans la phrase (M10-2 : « 4 × 37 × 25 =
@@ -1730,6 +1747,12 @@
         // police plus large (Windows) : la phrase rapetisse alors aussi.
         const phrase = $("retenir-phrase");
         const deborde = () => racine.scrollHeight > window.innerHeight + 1 || phrase.scrollWidth > phrase.clientWidth + 1;
+        // Relecture 2 : la phrase rapetisse d'abord (jusqu'à 80 %), le
+        // dessin seulement ensuite — c'est lui qu'on doit bien voir.
+        for (let p = .95; p >= .8 && deborde(); p -= .05) {
+          racine.style.setProperty("--retenir-p", p.toFixed(2));
+          ajusterCalculRetenir();
+        }
         for (let z = .95; z >= .6 && deborde(); z -= .05) {
           racine.style.setProperty("--retenir-z", z.toFixed(2));
           ajusterCalculRetenir();
@@ -1811,7 +1834,8 @@
 
       function tempsDe(id, n) {
         const apprends = CORE.niveauDe(`${id}-${n}`).niveau.apprends;
-        return [...(apprends.manipule ? ["manipule"] : []), "represente", "ecris"];
+        // Relecture 2 : un « Je représente » à étapes (M1) se joue comme J'écris.
+        return [...(apprends.manipule ? ["manipule"] : []), apprends.represente.etapes ? "represente-ecrit" : "represente", "ecris"];
       }
 
       const DETAIL_ENTRAINE = `jusqu’à ${PARCOURS.SEUILS.entraine.sansOutil} justes de suite`;
@@ -1895,7 +1919,7 @@
       }
 
       // La semaine de l'élève (lot « accueil », 07/11/2026, choix de
-      // Gwenaël) : sur l'accueil, juste « 2 soirs cette semaine », en
+      // Gwenaël) : sur l'accueil, juste « 2 jours cette semaine », en
       // pastille dans la tête de Mon module — rien tant qu'il n'y a aucun
       // soir (une ligne de zéros ressemble à un reproche), et rien en mode
       // professeur (rien n'y est enregistré). La pastille vit dans une ligne
@@ -1904,14 +1928,15 @@
       // l'écran Mon parcours ; le détail des jours et des semaines est pour la
       // page de suivi du professeur.
       const semaine = () => PARCOURS.semaineEleve(parcours, CARTE, jourCourant());
-      // La fin de séance garde « 3 fois cette semaine » (les séances finies
-      // depuis lundi) : elle n'est pas dans ce lot.
+      // Relecture 2 (08/11/2026, Gwenaël : « les élèves ne travaillent pas
+      // forcément le soir ») : « 2 jours cette semaine », sur l'accueil et à
+      // la fin de la séance — le même nombre aux deux endroits (les jours
+      // avec une séance finie ; deux séances le même jour comptent pour un).
       function texteSemaine() {
-        const fois = PARCOURS.bilanSeances(parcours, jourCourant()).semaine;
-        return fois ? `${fois} fois cette semaine` : "";
+        return texteSoirs(semaine().soirs);
       }
       function texteSoirs(soirs) {
-        return soirs ? `${soirs}\u00a0soir${soirs > 1 ? "s" : ""} cette semaine` : "";
+        return soirs ? `${soirs}\u00a0jour${soirs > 1 ? "s" : ""} cette semaine` : "";
       }
       const texteGains = sues => sues ? `+${sues} cette semaine` : "";
       function texteCompte(compte) {
@@ -2616,14 +2641,16 @@
 
       // ------------------------------------------------- J'apprends, en trois temps
 
-      const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", ecris: "J’écris"});
+      const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", "represente-ecrit": "Je représente", ecris: "J’écris"});
+      // Les temps à étapes : J'écris, et « Je représente » à étapes (M1).
+      const aEtapes = nom => nom === "ecris" || nom === "represente-ecrit";
 
       function lancerApprends(id, n, origine, {revoir = false} = {}) {
         const trouve = CORE.niveauDe(`${id}-${n}`);
         if (!trouve || !trouve.niveau.apprends) return;
         arreterActivite();
         const apprends = trouve.niveau.apprends;
-        state.serie = {genre: "apprends", module: id, niveau: n, apprends, temps: tempsDe(id, n), index: 0, revoir};
+        state.serie = {genre: "apprends", module: id, niveau: n, apprends, base: apprends, temps: tempsDe(id, n), index: 0, revoir};
         state.origine = origine;
         state.running = true;
         show("play");
@@ -2670,6 +2697,9 @@
       function renderTemps() {
         const serie = state.serie;
         const nom = serie.temps[serie.index];
+        // « Je représente » à étapes : il se joue avec le moteur de J'écris
+        // (ses étapes, ses dessins), le temps d'un écran.
+        serie.apprends = nom === "represente-ecrit" ? Object.assign({}, serie.base, {ecris: serie.base.represente}) : serie.base;
         const apprends = serie.apprends;
         const carte = $("question-card");
         retirerAide();
@@ -2791,10 +2821,10 @@
           renderEtapes({revelees: true});
         }
         carte.classList.remove("sans-retour", "ecrit");
-        if (nom === "ecris") carte.classList.add("ecrit-fini");
+        if (aEtapes(nom)) carte.classList.add("ecrit-fini");
         // J'écris : le même dessin, tout rempli (sans le vert : c'est la
         // réponse donnée), à la même place, sous la même consigne.
-        montrerImage(temps.solution.image, nom === "ecris" ? (serie.apprends.ecris.consigne || "") : "");
+        montrerImage(temps.solution.image, aEtapes(nom) ? (serie.apprends.ecris.consigne || "") : "");
         $("touches").hidden = true;
         const feedback = $("answer-feedback");
         feedback.className = "answer-feedback is-wrong";
@@ -2842,7 +2872,7 @@
         if (state.waitingForContinue) { avancerTemps(); return; }
         const valeur = CORE.lireReponse(state.answer);
         if (valeur === null) { showAnswerError(); secouerConsigne(); return; }
-        const ecris = nom === "ecris";
+        const ecris = aEtapes(nom);
         const attendue = ecris ? serie.apprends.ecris.etapes[serie.etape].reponse : serie.apprends.represente.reponse;
         if (CORE.memeNombre(valeur, attendue)) {
           if (ecris && serie.etape < serie.apprends.ecris.etapes.length - 1) {

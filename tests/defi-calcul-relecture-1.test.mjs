@@ -141,13 +141,14 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
     assert.doesNotMatch(deux.calcul.replace(/moitié de|double de/g, ""), /[A-Za-zÀ-ÖØ-öø-ÿ.:]/, `${cle} : le calcul seul (« ${deux.calcul} »)`);
     assert.equal(espaces(`${deux.phrase.slice(0, -1)} : ${deux.calcul}.`), espaces(bilan), `${cle} : rien ne se perd`);
   });
-  assert.equal(coupes, 58, "les 56 bilans qui finissent par « : calcul. », et les 2 qui ne sont qu'un calcul (M12-2, M12-3)");
+  // Relecture 2 (08/11/2026) : + 3, A2-1, A2-3 et A2-4 écrivent leur calcul.
+  assert.equal(coupes, 61, "les 59 bilans qui finissent par « : calcul. », et les 2 qui ne sont qu'un calcul (M12-2, M12-3)");
   const deux = AIDES.bilanEnDeux(CORE.niveauDe("A10-2").niveau.apprends.bilan);
   assert.deepEqual([espaces(deux.phrase), espaces(deux.calcul)],
     ["Pour passer la dizaine, je vais d’abord à la dizaine, puis j’ajoute le reste.", "47 + 8 = 47 + 3 + 5 = 55"]);
   // Inchangés : pas de calcul au bout, un calcul déjà dans la phrase, une
   // phrase après le calcul.
-  ["A1-1", "A2-1", "M4-1", "M1-3", "M10-1"].forEach(cle => assert.equal(AIDES.bilanEnDeux(CORE.niveauDe(cle).niveau.apprends.bilan), null, cle));
+  ["A1-1", "A2-2", "M4-1", "M1-3", "M10-1"].forEach(cle => assert.equal(AIDES.bilanEnDeux(CORE.niveauDe(cle).niveau.apprends.bilan), null, cle));
 });
 
 test("« À retenir » : un calcul resté dans la phrase ne se coupe pas", () => {

@@ -1166,7 +1166,7 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 /* ---- la phrase-bilan, à la fin de « J'apprends » ---- */
 .dc-retenir { max-width: 560px; margin: 0 auto 14px; padding: 18px 18px 14px; border: 2px solid #9fd3cb; border-radius: 20px; background: linear-gradient(135deg, #eaf7f4, #f2f8ff); text-align: center; }
 .dc-retenir .eyebrow { margin: 0 0 6px; }
-.dc-retenir .phrase { margin: 0 0 4px; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(1.5rem, 5.4vw, 2.1rem)); font-weight: 950; line-height: 1.2; }
+.dc-retenir .phrase { margin: 0 0 4px; color: var(--ink); font-size: calc(var(--retenir-p, 1) * var(--retenir-z, 1) * clamp(1.5rem, 5.4vw, 2.1rem)); font-weight: 950; line-height: 1.2; }
 .dc-retenir .phrase:focus { outline: none; }
 /* Relecture 1 (05/11/2026) : le calcul du bilan, seul sur sa ligne, d'un
    seul tenant. */
@@ -1176,10 +1176,15 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
    dessin ensemble quand le cadre dépasserait l'écran. */
 @media (max-width: 620px) {
   .dc-retenir .dc-aide { width: calc(min(100%, 440px) * var(--retenir-z, 1)); }
+  /* Relecture 2 (08/11/2026) : pas de vide sous les boutons d'« À
+     retenir » (87 px de marges au bas de l'écran) : la place va au dessin. */
+  html.retenir-ouvert .shell { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  html.retenir-ouvert .shell > .panel { padding-bottom: 12px; }
+  html.retenir-ouvert #result { margin-bottom: 0; }
 }
 /* Lot « couverture » (06/11/2026) : la deuxième façon de voir, sous le
    dessin, plus petite que la règle. */
-.dc-retenir .dc-retenir-autre { margin: 8px 0 0; padding-top: 8px; border-top: 2px dashed #9fd3cb; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(1.05rem, 4vw, 1.35rem)); font-weight: 850; line-height: 1.25; }
+.dc-retenir .dc-retenir-autre { margin: 8px 0 0; padding-top: 8px; border-top: 2px dashed #9fd3cb; color: var(--ink); font-size: calc(var(--retenir-p, 1) * var(--retenir-z, 1) * clamp(1.05rem, 4vw, 1.35rem)); font-weight: 850; line-height: 1.25; }
 .dc-retenir .dc-retenir-autre .dc-retenir-calcul { font-size: 1.15em; }
 .dc-retenir .cahier { margin: 8px 0 0; color: #5b7286; font-size: .9rem; font-weight: 800; }
 
@@ -1247,6 +1252,16 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .prof-pilule b { font-weight: 950; }
 .prof-pilule button { padding: 0; border: 0; background: none; color: #fff; font: inherit; font-weight: 900; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .prof-pilule.est-refus { background: #5b7286; }
+/* Relecture 2 (08/11/2026) : au téléphone, la bande passait sur deux lignes
+   avec un « · » en tête de la seconde. Sur un écran étroit : « Mode
+   professeur · Quitter » sur la 1re ligne, la phrase seule sur la 2e. */
+@media (max-width: 520px) {
+  .prof-pilule:not(.est-refus) { border-radius: 16px; }
+  .prof-pilule:not(.est-refus) .pp-point:last-of-type { order: 1; }
+  .prof-pilule:not(.est-refus) #prof-quitter { order: 2; }
+  .prof-pilule:not(.est-refus) .pp-point:first-of-type { display: none; }
+  .prof-pilule:not(.est-refus) .pp-texte { order: 3; flex-basis: 100%; text-align: center; font-weight: 750; }
+}
 /* Le bilan du test : une ligne par niveau. */
 .bilan-niveaux { display: grid; gap: 6px; width: 100%; margin: 0; }
 .bilan-niveaux > span { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid #cfe0f2; border-radius: 10px; background: #fff; font-size: .95rem; font-weight: 850; text-align: left; }
@@ -1491,3 +1506,25 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
 .dc-bandes-scene.dc-attente .dc-cible { animation: dc-battement 1.2s ease-in-out infinite; }
 @keyframes dc-battement { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .dc-bandes-scene.dc-attente .dc-cible { animation: none; } }
+
+/* Relecture 2 (08/11/2026) : au téléphone, le dessin de Je représente, de
+   J'écris et de l'entraînement prend toute la place que le pavé et les
+   étapes lui laissent (avant : une hauteur fixe, 21 à 30 % de l'écran, et
+   du vide autour ; A2-5 au petit iPhone : une droite illisible). Il reste
+   entier : le dessin garde ses proportions dans sa place. Mesuré sur les
+   95 niveaux, 390 × 664 et 390 × 844 : jamais plus petit, rien ne défile. */
+@media (max-width: 620px) {
+  .challenge-playing .question.aide-image > .dc-aide { flex: 0 1 auto; margin-top: 0; }
+  .challenge-playing .question.aide-image > .dc-aide > svg,
+  .challenge-playing .question.aide-image .dc-aide svg.dc-fractions,
+  .challenge-playing .question.aide-image .dc-aide svg.dc-carre,
+  .challenge-playing .question.aide-image .dc-aide svg.dc-numeration,
+  .challenge-playing .question.aide-image .dc-aide svg.dc-escalier,
+  .challenge-playing .question.aide-image .dc-aide svg.dc-tableau { flex: 0 1 auto; width: 100%; max-height: none; min-height: 0; }
+  /* Le vide qui reste va sous les étapes, au-dessus du pavé : le dessin ne
+     bouge pas quand le pavé s'efface (J'écris fini). */
+  .challenge-playing .question.aide-image:not(.ecrit-fini) > .keypad { margin-top: auto; }
+  /* La touche « , » (D1, D2…) reste collée au pavé. */
+  .challenge-playing .question.aide-image:not(.ecrit-fini) > .dc-touches:not([hidden]) { margin-top: auto; }
+  .challenge-playing .question.aide-image:not(.ecrit-fini) > .dc-touches:not([hidden]) + .keypad { margin-top: 0; }
+}

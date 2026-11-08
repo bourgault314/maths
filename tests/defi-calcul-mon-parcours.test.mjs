@@ -360,7 +360,7 @@ test("la page : au catalogue à sa propre adresse, sans menus pour l'élève, sa
   // Les mots de l'élève, repris de Défi tables, des maquettes et des planches de l'étape 5a.
   ["Mon module", "Comment ça marche", "Ma séance du jour", "Mes calculs du jour", "Tu connais déjà", "Une chose nouvelle",
     "Je m’entraîne encore", "Arrêter la séance", "Encore une séance", "Séance du jour faite", "fois cette semaine", "Module su !",
-    "Je recopie cette phrase dans mon cahier.", "Pas encore", "Suivi · travail gardé ici", "C’est toujours toi", "Nouveau", "escalier",
+    "Je recopie cela dans mon cahier.", "Pas encore", "Suivi · travail gardé ici", "C’est toujours toi", "Nouveau", "escalier",
     "à apprendre", "en route", "à revoir", "Mode professeur", "rien n’est enregistré"].forEach(mot => assert.ok(page.includes(mot), mot));
   // « Je valide » n'existe plus, pour personne ; l'élève n'a plus de menus dans la page.
   ["Je valide", "Validation", "Juste, mais trop long", "trop lentement", "acc-valide", "Module validé", "validé !"].forEach(mot =>
@@ -606,5 +606,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261107-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261108-1/);
 });
