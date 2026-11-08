@@ -45,7 +45,9 @@ test("une seule colonne : plus de deux cartes côte à côte ni de liste sur l'a
 test("la pastille des soirs : dans la tête de Mon module, sur une ligne de hauteur fixe ; rien sans soir ni en mode professeur", () => {
   assert.match(PAGE, /<div class="acc-tete"><p class="eyebrow">Mon module<\/p><span id="acc-soirs" class="acc-soirs" hidden>/);
   assert.match(CSS, /\.acc-tete \{ display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 26px;/);
-  assert.match(PAGE, /return soirs \? `\$\{soirs\}\\u00a0soir\$\{soirs > 1 \? "s" : ""\} cette semaine` : "";/);
+  // Relecture 2 (08/11/2026) : « jours », pas « soirs » (les élèves ne
+  // travaillent pas forcément le soir).
+  assert.match(PAGE, /return soirs \? `\$\{soirs\}\\u00a0jour\$\{soirs > 1 \? "s" : ""\} cette semaine` : "";/);
   const rendu = corps(PAGE, "renderSemaine");
   assert.match(rendu, /const soirs = MODE_PROF \? "" : texteSoirs\(s\.soirs\);/);
   assert.match(rendu, /\$\("acc-soirs"\)\.hidden = !soirs;/);
@@ -98,15 +100,15 @@ test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché 
   assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-parcours:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261107-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261108-1/);
 });
 
 test("la question « Effacer » s'ouvre dans la même case que la porte et les liens", () => {
   assert.match(PAGE, /<div id="acc-pied" class="acc-pied">\s*<div class="acc-pied-normal">/);
   assert.match(CSS, /\.acc-pied > \* \{ grid-area: 1 \/ 1; min-width: 0; \}/);
   assert.match(CSS, /\.acc-pied\.avec-effacer > \.acc-confirm\[hidden\] \{ display: block !important; visibility: hidden; \}/);
-  // La fin de séance garde « N fois cette semaine » (pas dans ce lot).
-  assert.match(corps(PAGE, "texteSemaine"), /return fois \? `\$\{fois\} fois cette semaine` : "";/);
+  // Relecture 2 : la fin de séance dit le même nombre de jours que l'accueil.
+  assert.match(corps(PAGE, "texteSemaine"), /return texteSoirs\(semaine\(\)\.soirs\);/);
 });
 
 test("« Mode professeur » : pour le visiteur sans code seulement, sur la ligne du bas", () => {

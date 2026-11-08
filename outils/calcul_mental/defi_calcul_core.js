@@ -792,7 +792,7 @@
   // perles sur le premier (niveau 4 : pas de perles au-delà de 100), la
   // droite dessinée avec ses sauts « + ? » sur le deuxième, les étapes à
   // remplir sur le troisième.
-  function a2Apprends({manipule, represente, ecris, consigne, consigneManipule, bilan}) {
+  function a2Apprends({manipule, represente, ecris, consigne, consigneManipule, bilan, imageRetenir = null}) {
     const calculDe = ({a, cible}) => a2Complement(0, a, cible, cible === dizaineSuivante(a) || cible === centaineSuivante(a) ? {suivante: true} : {});
     const cM = manipule ? calculDe(manipule) : null;
     const cR = calculDe(represente);
@@ -814,7 +814,8 @@
         solution: Object.freeze({image: a2Image(cE), phrase: a2Phrase(cE)})
       }, a2Etapes(cE).length > 1 ? {consigne: cE.texte.replace(CASE, "?")} : {}), a2Dessins(cE)),
       bilan,
-      image: Object.freeze(a2Image(cR)),
+      // Relecture 2 : A2-2 retient les paires de dizaines (comme A1-1).
+      image: Object.freeze(imageRetenir || a2Image(cR)),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
@@ -1305,7 +1306,7 @@
           manipule: {a: 67, cible: 70}, represente: {a: 48, cible: 50}, ecris: {a: 433, cible: 440},
           consigneManipule: "Finis la rangée d’un coup.",
           consigne: "Pour aller à la dizaine suivante, je complète les unités.",
-          bilan: "Pour aller à la dizaine suivante, je complète les unités."
+          bilan: "Pour aller à la dizaine suivante, je complète les unités\u00a0: 48 + 2 = 50."
         })
       },
       {
@@ -1316,7 +1317,8 @@
           manipule: {a: 40, cible: 100}, represente: {a: 65, cible: 100}, ecris: {a: 20, cible: 100},
           consigneManipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
           consigne: "Je vais à la dizaine, puis je compte les dizaines jusqu’à 100.",
-          bilan: "40 et 60, 30 et 70… les dizaines qui font 100, je les sais."
+          bilan: "Les dizaines qui font 100, je les sais par cœur.",
+          imageRetenir: {outil: "paires", total: 100, perles: false, paires: [[10, 90], [20, 80], [30, 70], [40, 60], [50, 50]]}
         })
       },
       {
@@ -1327,7 +1329,7 @@
           manipule: {a: 37, cible: 100}, represente: {a: 58, cible: 100}, ecris: {a: 24, cible: 100},
           consigneManipule: "Finis la rangée d’un coup, puis pousse les rangées qui manquent.",
           consigne: "Je vais à la dizaine, puis à 100.",
-          bilan: "Pour aller à 100, je vais d’abord à la dizaine, puis à 100."
+          bilan: "Pour aller à 100, je vais d’abord à la dizaine, puis à 100\u00a0: 2 + 40 = 42."
         })
       },
       {
@@ -1337,7 +1339,7 @@
         apprends: a2Apprends({
           manipule: null, represente: {a: 650, cible: 1000}, ecris: {a: 370, cible: 1000},
           consigne: "Je vais à la centaine, puis à 1\u202f000.",
-          bilan: "Pour aller à 1\u202f000, je vais d’abord à la centaine, puis à 1\u202f000."
+          bilan: "Pour aller à 1\u202f000, je vais d’abord à la centaine, puis à 1\u202f000\u00a0: 50 + 300 = 350."
         })
       },
       {
@@ -1349,8 +1351,8 @@
         imposes: [a2Complement(5, 266, 300), a2Complement(5, 748, 1200)],
         apprends: a2Apprends({
           manipule: null, represente: {a: 368, cible: 1000}, ecris: {a: 748, cible: 1200},
-          consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’au bout.",
-          bilan: "Pour compléter, je vais à la dizaine, puis à la centaine, puis jusqu’au bout\u00a0: 2 + 30 + 600 = 632."
+          consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u202f000.",
+          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u202f000\u00a0: 2 + 30 + 600 = 632."
         })
       }
     ]
@@ -1363,25 +1365,25 @@
     erreurs: A5_ERREURS, image: a5Image, aide: a5Aide, manipulation: a5Perles, difficulte: a5Difficulte,
     niveaux: [
       {
-        n: 1, titre: "+ 9", palier: 1, type: "P",
+        n: 1, titre: "ajouter 9", palier: 1, type: "P",
         composer: a5Niveau(1, [9]),
         imposes: [a5Somme(1, 31, 9), a5Somme(1, 94, 9)],
         apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1.")
       },
       {
-        n: 2, titre: "+ 19, 29, 39", palier: 1, type: "P",
+        n: 2, titre: "ajouter 19, 29, 39", palier: 1, type: "P",
         composer: a5Niveau(2, [19, 29, 39]),
         imposes: [a5Somme(2, 31, 19), a5Somme(2, 285, 19)],
         apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1.")
       },
       {
-        n: 3, titre: "+ 8, 18, 28, 38", palier: 1, type: "P",
+        n: 3, titre: "ajouter 8, 18, 28, 38", palier: 1, type: "P",
         composer: a5Niveau(3, [8, 18, 28, 38]),
         imposes: [a5Somme(3, 53, 38), a5Somme(3, 147, 18)],
         apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2.")
       },
       {
-        n: 4, titre: "+ 48, 49… 98, 99", palier: 3, type: "P",
+        n: 4, titre: "ajouter 48, 49… 98, 99", palier: 3, type: "P",
         composer: a5Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a5Somme(4, 152, 98), a5Somme(4, 126, 99)],
         apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1.")
@@ -1401,7 +1403,7 @@
     erreurs: M2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "produits", nom: "× 10, × 100, × 1\u202f000", palier: 1, type: "P",
+        n: 1, titre: "multiplier par 10, 100, 1 000", nom: "× 10, × 100, × 1\u202f000", palier: 1, type: "P",
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
@@ -1415,7 +1417,7 @@
         })
       },
       {
-        n: 2, titre: "nombres en 0, trous, divisions", nom: "× 10, × 100\u00a0: trous, divisions", palier: 2, type: "P",
+        n: 2, titre: "nombres en 0, nombre manquant, divisions", nom: "× 10, × 100\u00a0: trous, divisions", palier: 2, type: "P",
         composer: m2Niveau2,
         imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
         apprends: glisseApprends({
@@ -1438,7 +1440,7 @@
     erreurs: D2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "× 10", nom: "Décimal × 10", palier: 2, type: "P",
+        n: 1, titre: "décimal × 10", nom: "Décimal × 10", palier: 2, type: "P",
         composer: d2Niveau1,
         imposes: [produit("D2", 1, 0.6, 10), produit("D2", 1, 2.5, 10)],
         apprends: glisseApprends({
@@ -1480,7 +1482,7 @@
         })
       },
       {
-        n: 4, titre: "trous", nom: "Décimal\u00a0: trous", palier: 4, type: "P",
+        n: 4, titre: "le nombre manquant", nom: "Décimal\u00a0: trous", palier: 4, type: "P",
         composer: d2Niveau4,
         imposes: [trouFacteur("D2", 4, 3.6, 100), trouNombre("D2", 4, 0.45, 100), trouEgal("D2", 4, 1.2, 1000)],
         apprends: glisseApprends({
@@ -1905,11 +1907,50 @@
   const ligne = (module, niveau, n, d) => lignePlus(module, niveau, d > 0 ? "somme" : "difference", n, d);
   const etapesDe = (...lignes) => lignes.map(([texte, reponse]) => [texte.replace("?", CASE), reponse]);
 
+  // Relecture 2 (08/11/2026, choix de Gwenaël sur la planche) : A1-1 ne
+  // parle que des compléments à 10. Je représente et J'écris montrent le
+  // schéma en barres (10 en haut ; 4 et ce qui manque, collés dessous) ;
+  // l'aide de l'entraînement aussi, pour les compléments du niveau 1 (les
+  // sommes gardent la droite). « À retenir » : les cinq paires, chacune en
+  // rangée du boulier (5 rouges, 5 blanches) coupée, son calcul à côté.
+  const a1Barres = calcul => Object.freeze({outil: "deux-barres", sorte: "tout",
+    haut: Object.freeze([calcul.donnees.m]), bas: Object.freeze([calcul.donnees.n, calcul.donnees.d]), cherche: Object.freeze(["bas", 1])});
+  const a1EnBarres = calcul => calcul.niveau === 1 && estTrou(calcul);
+  function a1Image(calcul, gras) {
+    return a1EnBarres(calcul) ? a1Barres(calcul) : plusImage(calcul, gras);
+  }
+  function a1Aide(calcul) {
+    return a1EnBarres(calcul) ? Object.freeze(Object.assign({}, a1Barres(calcul), {masque: true})) : plusAide(calcul);
+  }
+  const PAIRES_DIX = Object.freeze([[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]].map(p => Object.freeze(p)));
+  function a1Niveau1Apprends(apprends) {
+    const barresDe = (n, d) => Object.freeze({outil: "deux-barres", sorte: "tout", haut: Object.freeze([n + d]), bas: Object.freeze([n, d]), cherche: Object.freeze(["bas", 1])});
+    const represente = barresDe(4, 6);
+    const ecris = barresDe(8, 2);
+    // J'écris : un dessin par étape (lot « relier ») ; la case « ? » se
+    // remplit dès la première égalité juste (8 + 2 = 10), et le reste.
+    const relier = dessinsDe([{}, {}], 2, (vus, revele = false) => (revele
+      ? ecris
+      : Object.freeze(Object.assign({}, ecris, {masque: true, trouves: vus.length, fini: vus.length >= 1}))));
+    return Object.freeze(Object.assign({}, apprends, {
+      represente: Object.freeze(Object.assign({}, apprends.represente, {
+        outil: "deux-barres",
+        image: Object.freeze(Object.assign({}, represente, {masque: true})),
+        solution: Object.freeze({image: represente, phrase: "4 + 6 = 10."})
+      })),
+      ecris: Object.freeze(Object.assign({}, apprends.ecris, {
+        dessins: relier.dessins,
+        solution: Object.freeze(Object.assign({}, apprends.ecris.solution, {image: relier.revele, phrase: "8 + 2 = 10."}))
+      })),
+      image: Object.freeze({outil: "paires", total: 10, perles: true, paires: PAIRES_DIX})
+    }));
+  }
+
   const A1 = {
     id: "A1", nom: "Sommes et différences jusqu’à 20", exemple: "6 + 4",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A1_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    erreurs: A1_ERREURS, image: a1Image, aide: a1Aide, manipulation: plusPerles, difficulte: plusDifficulte,
     niveaux: [
       {
         n: 1, titre: "compléments à 10, sommes jusqu’à 10", nom: "Sommes jusqu’à 10", palier: 1, type: "F",
@@ -1920,15 +1961,15 @@
           {forme: "somme", liste: A1_ZERO}
         ], [6, 4, 2, 1]),
         imposes: [lignePlus("A1", 1, "complement", 3, 7), lignePlus("A1", 1, "complement-egal", 7, 3)],
-        apprends: plusApprends({
+        apprends: a1Niveau1Apprends(plusApprends({
           manipule: lignePlus("A1", 0, "complement", 3, 7),
-          represente: ligne("A1", 0, 4, 5),
+          represente: lignePlus("A1", 0, "complement", 4, 6),
           ecris: lignePlus("A1", 0, "complement-egal", 8, 2),
           etapes: etapesDe(["8 + ? = 10", 2], ["10 = 8 + ?", 2]),
           consigneEcris: "10 = 8 + ?",
-          consigne: "Je pars de 4 et j’avance de 5.",
-          bilan: "Pour faire 10 : 1 et 9, 2 et 8, 3 et 7, 4 et 6, 5 et 5."
-        })
+          consigne: "En haut, 10. En bas, 4 et ce qui manque.",
+          bilan: "Pour faire 10, je connais ces paires par cœur."
+        }))
       },
       {
         n: 2, titre: "sommes de 11 à 20 (passer par 10)", nom: "Sommes jusqu’à 20", palier: 1, type: "F",
@@ -1948,7 +1989,7 @@
         })
       },
       {
-        n: 3, titre: "dans les deux sens : différences et trous", nom: "Différences et trous jusqu’à 20", palier: 1, type: "F",
+        n: 3, titre: "différences et nombre manquant", nom: "Différences et trous jusqu’à 20", palier: 1, type: "F",
         composer: a1Niveau3,
         imposes: [ligne("A1", 3, 14, -6), lignePlus("A1", 3, "complement", 7, 5)],
         apprends: plusApprends({
@@ -2042,9 +2083,12 @@
         apprends: plusApprends({
           manipule: ligne("A11", 0, 42, -8),
           represente: ligne("A11", 0, 523, -7),
-          ecris: ligne("A11", 0, 50, -6),
-          etapes: etapesDe(["10 − 6 = ?", 4], ["50 − 6 = ?", 44]),
-          consigneEcris: "50 − 6 = 40 + 10 − 6",
+          // Relecture 2 (08/11/2026) : J'écris garde la méthode de la leçon
+          // (reculer jusqu'à la dizaine, puis retirer le reste) ; 50 − 6
+          // reste dans l'entraînement.
+          ecris: ligne("A11", 0, 532, -7),
+          etapes: etapesDe(["532 − 2 = ?", 530], ["530 − 5 = ?", 525], ["532 − 7 = ?", 525]),
+          consigneEcris: "532 − 7 = 532 − 2 − 5",
           consigne: "Je recule jusqu’à la dizaine, puis je retire le reste.",
           bilan: "Pour passer la dizaine en reculant, je recule d’abord jusqu’à la dizaine, puis je retire le reste : 42 − 8 = 42 − 2 − 6 = 34."
         })
@@ -2900,25 +2944,25 @@
     erreurs: A6_ERREURS, image: a6Image, aide: a6Aide, manipulation: a6Perles, difficulte: a6Difficulte,
     niveaux: [
       {
-        n: 1, titre: "− 9", palier: 1, type: "P",
+        n: 1, titre: "retirer 9", palier: 1, type: "P",
         composer: a6Niveau(1, [9]),
         imposes: [a6Difference(1, 105, 9), a6Difference(1, 31, 9)],
         apprends: a6Apprends(63, 85, 142, 9, "− 9, c’est − 10 puis + 1 : 63 − 9 = 63 − 10 + 1 = 54.")
       },
       {
-        n: 2, titre: "− 19, 29, 39", palier: 1, type: "P",
+        n: 2, titre: "retirer 19, 29, 39", palier: 1, type: "P",
         composer: a6Niveau(2, [19, 29, 39]),
         imposes: [a6Difference(2, 143, 29), a6Difference(2, 86, 39)],
         apprends: a6Apprends(72, 154, 86, 29, "Pour retrancher 29, je retranche 30, puis j’ajoute 1 : 72 − 29 = 72 − 30 + 1 = 43.")
       },
       {
-        n: 3, titre: "− 8, 18, 28, 38", palier: 2, type: "P",
+        n: 3, titre: "retirer 8, 18, 28, 38", palier: 2, type: "P",
         composer: a6Niveau(3, [8, 18, 28, 38]),
         imposes: [a6Difference(3, 71, 18), a6Difference(3, 250, 38)],
         apprends: a6Apprends(73, 145, 92, 18, "Pour retrancher 18, je retranche 20, puis j’ajoute 2 : 73 − 18 = 73 − 20 + 2 = 55.")
       },
       {
-        n: 4, titre: "− 48, 49… 98, 99", palier: 3, type: "P",
+        n: 4, titre: "retirer 48, 49… 98, 99", palier: 3, type: "P",
         composer: a6Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a6Difference(4, 210, 98), a6Difference(4, 1040, 99)],
         apprends: a6Apprends(250, 432, 710, 99, "Pour retrancher 99, je retranche 100, puis j’ajoute 1 : 432 − 99 = 432 − 100 + 1 = 333.")
@@ -3289,19 +3333,27 @@
 
   // J'apprends d'un niveau de M1 : le schéma (« je représente »), puis les
   // étapes (« j'écris »), où la moitié s'écrit aussi « ÷ 2 » (carte v2).
-  function m1Apprends({represente, ecris, consigne, consigneEcris, etapes, bilan}) {
+  // Relecture 2 (08/11/2026, remarque de Gwenaël sur M1-1) : le double et
+  // la moitié suivent le même chemin. « Je représente » a aussi ses étapes
+  // (`etapesRepresente`) : le schéma en barres au-dessus se remplit à chaque
+  // égalité, comme dans J'écris (double de 17 : 10 + 10, 7 + 7, 20 + 14).
+  function m1Apprends({represente, ecris, consigne, consigneEcris, etapes, etapesRepresente = null, bilan}) {
+    const enEtapes = liste => Object.freeze(liste.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse})));
+    const representeSimple = Object.freeze({
+      outil: "barres", consigne,
+      texte: represente.texte, reponse: represente.reponse,
+      image: Object.freeze(m1Aide(represente)),
+      solution: Object.freeze({image: m1Image(represente), phrase: m1Phrase(represente)})
+    });
     return Object.freeze({
       exemple: Object.freeze({texte: represente.texte.replace(` = ${CASE}`, "").replace(CASE, "?"), reponse: represente.reponse}),
       manipule: null,
-      represente: Object.freeze({
-        outil: "barres", consigne,
-        texte: represente.texte, reponse: represente.reponse,
-        image: Object.freeze(m1Aide(represente)),
-        solution: Object.freeze({image: m1Image(represente), phrase: m1Phrase(represente)})
-      }),
+      represente: etapesRepresente
+        ? ecrisAvecDessins(Object.assign({}, representeSimple, {etapes: enEtapes(etapesRepresente)}), barresDessins(m1Image(represente), etapesRepresente.length))
+        : representeSimple,
       ecris: ecrisAvecDessins({
         consigne: consigneEcris,
-        etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse}))),
+        etapes: enEtapes(etapes),
         reponse: ecris.reponse,
         solution: Object.freeze({image: m1Image(ecris), phrase: m1Phrase(ecris)})
       }, barresDessins(m1Image(ecris), etapes.length)),
@@ -3324,7 +3376,8 @@
         apprends: m1Apprends({
           represente: m1Calcul(0, "double", 17),
           ecris: m1Calcul(0, "moitie", 28),
-          consigne: "Le double de 17, c’est 17 + 17.",
+          consigne: "double de 17 = 17 + 17",
+          etapesRepresente: [["10 + 10 = ?", 20], ["7 + 7 = ?", 14], ["double de 17 = ?", 34]],
           consigneEcris: "moitié de 28 = 28 ÷ 2",
           etapes: [["20 ÷ 2 = ?", 10], ["8 ÷ 2 = ?", 4], ["moitié de 28 = ?", 14]],
           bilan: "Le double, c’est 2 fois le nombre. La moitié, c’est le nombre divisé par 2 : moitié de 28 = 28 ÷ 2 = 14."
@@ -3337,20 +3390,22 @@
         apprends: m1Apprends({
           represente: m1Calcul(0, "moitie", 150),
           ecris: m1Calcul(0, "double", 75),
-          consigne: "Je coupe chaque morceau en deux.",
+          consigne: "moitié de 150 = 150 ÷ 2",
+          etapesRepresente: [["100 ÷ 2 = ?", 50], ["50 ÷ 2 = ?", 25], ["moitié de 150 = ?", 75]],
           consigneEcris: "double de 75 = 2 × 75",
           etapes: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
           bilan: "Double de 25 = 50, double de 75 = 150, moitié de 150 = 150 ÷ 2 = 75, moitié de 1 200 = 600 : ces nombres-là, je les sais par cœur."
         })
       },
       {
-        n: 3, titre: "par décomposition", nom: "Doubles et moitiés en découpant", palier: 1, type: "P",
+        n: 3, titre: "n’importe quel nombre (46, 136, 470…)", nom: "Doubles et moitiés en découpant", palier: 1, type: "P",
         composer: m1Niveau(3, [4, 4, 2]),
         imposes: [m1Calcul(3, "moitie", 470), m1Calcul(3, "double", 136), m1Calcul(3, "division", 92)],
         apprends: m1Apprends({
-          represente: m1Calcul(0, "moitie", 74),
+          represente: m1Calcul(0, "double", 470),
           ecris: m1Calcul(0, "moitie", 46),
-          consigne: "Je coupe chaque morceau en deux.",
+          consigne: "double de 470 = 2 × 470",
+          etapesRepresente: [["2 × 400 = ?", 800], ["2 × 70 = ?", 140], ["double de 470 = ?", 940]],
           consigneEcris: "moitié de 46 = 46 ÷ 2",
           etapes: [["40 ÷ 2 = ?", 20], ["6 ÷ 2 = ?", 3], ["moitié de 46 = ?", 23]],
           bilan: "Pour la moitié, je coupe chaque morceau en deux : moitié de 46 = 46 ÷ 2 = 20 + 3 = 23. Pour le double, je double chaque morceau."
@@ -3783,7 +3838,7 @@
   const M6_VIVIERS = Object.freeze({1: m6Vivier(1, 4, 12, 99), 2: m6Vivier(2, 8, 11, 60)});
   M6.niveaux = [
     {
-      n: 1, titre: "× 4", nom: "× 4 : le double du double", palier: 1, type: "P",
+      n: 1, titre: "× 4\u00a0: le double du double", nom: "× 4 : le double du double", palier: 1, type: "P",
       composer: vivierNiveau(M6_VIVIERS[1], [7, 3]),
       imposes: [m6Calcul(1, 4, 38, true), m6Calcul(1, 4, 47)],
       apprends: apprendsSansManip({
@@ -3798,7 +3853,7 @@
       })
     },
     {
-      n: 2, titre: "× 8", nom: "× 8 : doubler trois fois", palier: 1, type: "P",
+      n: 2, titre: "× 8\u00a0: doubler trois fois", nom: "× 8 : doubler trois fois", palier: 1, type: "P",
       composer: vivierNiveau(M6_VIVIERS[2], [7, 3]),
       imposes: [m6Calcul(2, 8, 26, true), m6Calcul(2, 8, 17)],
       apprends: apprendsSansManip({
@@ -3953,7 +4008,7 @@
       })
     },
     {
-      n: 3, titre: "× 11, × 12, × 21, × 31 (et en trou)", nom: "× 11, × 12, × 21, × 31", palier: 2, type: "P",
+      n: 3, titre: "× 11, × 12, × 21, × 31 (et nombre manquant)", nom: "× 11, × 12, × 21, × 31", palier: 2, type: "P",
       composer: vivierNiveau(M8_VIVIERS[3], [4, 4, 2]),
       imposes: [m8Calcul(3, 42, 12), m8Trou(3, 35, 21)],
       apprends: apprendsSansManip({
@@ -4342,7 +4397,7 @@
         })
       },
       {
-        n: 3, titre: "× 50", nom: "× 50", palier: 3, type: "P",
+        n: 3, titre: "multiplier par 50", nom: "× 50", palier: 3, type: "P",
         composer: vivierNiveau(M7_VIVIERS[3], [7, 3]),
         imposes: [m7Calcul(3, 36, 50), m7Calcul(3, 43, 50, true)],
         apprends: m7Apprends({
@@ -4557,7 +4612,7 @@
       })
     },
     {
-      n: 3, titre: "× 25 seul", nom: "× 25 seul", palier: 4, type: "P",
+      n: 3, titre: "multiplier par 25", nom: "× 25 seul", palier: 4, type: "P",
       composer: vivierNiveau(M10_VIVIERS[3], [5, 5]),
       imposes: [m10Quart(3, 36), m10Quart(3, 52, true)],
       apprends: apprendsSansManip({
@@ -4961,7 +5016,7 @@
     erreurs: C1_ERREURS, image: c1Image, aide: c1Aide, phrase: c1Phrase, manipulation: c1Manipulation, difficulte: c1Difficulte,
     niveaux: [
       {
-        n: 1, titre: "une paire", nom: "Une paire de parenthèses", palier: 2, type: "P",
+        n: 1, titre: "une paire de parenthèses", nom: "Une paire de parenthèses", palier: 2, type: "P",
         composer: vivierNiveau(C1_VIVIERS[1], [4, 3, 3]),
         imposes: [c1Calcul(1, "fois-par", op("×", 6, op("−", 13, 5, true))), c1Calcul(1, "moins-par", op("−", 45, op("+", 2, 7, true)))],
         apprends: c1Apprends({
@@ -4974,7 +5029,7 @@
         })
       },
       {
-        n: 2, titre: "deux paires", nom: "Deux paires de parenthèses", palier: 3, type: "P",
+        n: 2, titre: "deux paires de parenthèses", nom: "Deux paires de parenthèses", palier: 3, type: "P",
         composer: vivierNiveau(C1_VIVIERS[2], [5, 5]),
         imposes: [c1Calcul(2, "fois-paires", op("×", op("−", 9, 4, true), op("+", 3, 5, true))), c1Calcul(2, "moins-paires", op("−", op("×", 6, 7, true), op("+", 2, 5, true)))],
         apprends: c1Apprends({
@@ -4987,7 +5042,7 @@
         })
       },
       {
-        n: 3, titre: "emboîtées", nom: "Parenthèses emboîtées", palier: 3, type: "P",
+        n: 3, titre: "parenthèses emboîtées", nom: "Parenthèses emboîtées", palier: 3, type: "P",
         composer: vivierNiveau(C1_VIVIERS[3], [5, 5]),
         imposes: [c1Calcul(3, "moins-emboite", op("−", 40, op("×", 5, op("−", 11, 6, true), true))), c1Calcul(3, "fois-emboite", op("×", 3, op("−", 15, op("+", 2, 6, true), true)))],
         apprends: c1Apprends({
@@ -5161,7 +5216,7 @@
   };
   C3.niveaux = [
     {
-      n: 1, titre: "trous simples", nom: "Égalités à trou simples", palier: 2, type: "P",
+      n: 1, titre: "un nombre manquant", nom: "Égalités à trou simples", palier: 2, type: "P",
       composer: vivierNiveau(C3_VIVIERS[1], [4, 3, 3]),
       imposes: [c3Egal(1, 657, 40), c3Depart(1, 300, 4250)],
       apprends: apprendsSansManip({
@@ -5754,7 +5809,7 @@
     erreurs: D3_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "÷ 10", nom: "Décimal ÷ 10", palier: 2, type: "P",
+        n: 1, titre: "décimal ÷ 10", nom: "Décimal ÷ 10", palier: 2, type: "P",
         composer: d3Niveau1,
         imposes: [d3Division(1, 3.7, 10), d3Division(1, 5.84, 10)],
         apprends: glisseApprends({
@@ -5768,7 +5823,7 @@
         })
       },
       {
-        n: 2, titre: "÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
+        n: 2, titre: "décimal ÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
         composer: d3Niveau2,
         imposes: [d3Division(2, 2.83, 100), d3Division(2, 4.125, 1000)],
         apprends: glisseApprends({
@@ -6977,7 +7032,7 @@
         })
       },
       {
-        n: 3, titre: "trou au dénominateur", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
+        n: 3, titre: "le dénominateur manquant", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[3], [5, 3, 2]),
         imposes: [f6(3, "2/3 = 8/□"), f6(3, "3/□ = 9/15")],
         apprends: fracApprends({
@@ -7127,7 +7182,7 @@
         })
       },
       {
-        n: 2, titre: "1 − a/b", nom: "1 moins une fraction", palier: 1, type: "P",
+        n: 2, titre: "1 moins une fraction", nom: "1 moins une fraction", palier: 1, type: "P",
         composer: vivierNiveau(F8_VIVIERS[2], [5, 4, 1]),
         imposes: [f8(2, "1 − 4/5 = □/5"), f8(2, "3/7 + □/7 = 1")],
         apprends: fracApprends({
@@ -7944,20 +7999,32 @@
     return ordonnerSerie(serie);
   }
 
-  // Du plus simple au plus dur, et les écritures nouvelles en fin de série,
-  // annoncées : les 6 premiers calculs de la première écriture, puis 2 de
-  // chaque autre écriture (« ? + 56 = 100 », puis « 100 − 34 »), puis le
-  // reste par difficulté. L'élève rapide (5 justes de suite) voit ainsi
-  // chaque écriture au moins une fois en une dizaine de calculs.
-  const ORDRE_SERIE = Object.freeze({premiere: 6, nouvelles: 2});
+  // Du plus simple au plus dur, et les écritures nouvelles annoncées.
+  // Relecture 2 (08/11/2026, choix de Gwenaël) : l'élève rapide finit son
+  // entraînement en 7 calculs (2 justes avec l'outil, puis 5 sans) ; avant,
+  // la première écriture prenait les 6 premières places et ses calculs les
+  // plus durs arrivaient tard (A2-2 : jamais de nombre en 5 avant le 9e
+  // calcul ; 31 niveaux sur 95 gardaient une écriture après le 7e). Dans
+  // les 7 premiers calculs, chaque écriture arrive au moins une fois (son
+  // calcul le plus simple), et la première écriture y montre toute son
+  // étendue (du plus simple au plus dur, à intervalles réguliers) ; la
+  // suite reste par difficulté.
+  const ORDRE_SERIE = Object.freeze({fenetre: 7, premiereMini: 2});
+  function etales(liste, nombre) {
+    if (nombre >= liste.length) return liste.slice();
+    if (nombre <= 1) return liste.slice(0, nombre);
+    const rangs = new Set(Array.from({length: nombre}, (_, i) => Math.round(i * (liste.length - 1) / (nombre - 1))));
+    return liste.filter((_, i) => rangs.has(i));
+  }
   function ordonnerSerie(calculs) {
     const tries = calculs.map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
     const formes = [...new Set(tries.map(calcul => calcul.forme))];
-    if (formes.length < 2) return tries;
-    const pris = new Set();
-    const prendre = (forme, nombre) => tries.filter(calcul => calcul.forme === forme && !pris.has(calcul)).slice(0, nombre).map(calcul => { pris.add(calcul); return calcul; });
-    const debut = prendre(formes[0], ORDRE_SERIE.premiere);
-    const nouvelles = formes.slice(1).flatMap(forme => prendre(forme, ORDRE_SERIE.nouvelles));
+    const premiere = tries.filter(calcul => calcul.forme === formes[0]);
+    const place = Math.max(ORDRE_SERIE.premiereMini, ORDRE_SERIE.fenetre - (formes.length - 1));
+    const debut = etales(premiere, Math.min(place, premiere.length));
+    const pris = new Set(debut);
+    const nouvelles = formes.slice(1).map(forme => tries.find(calcul => calcul.forme === forme && !pris.has(calcul))).filter(Boolean);
+    nouvelles.forEach(calcul => pris.add(calcul));
     return [...debut, ...nouvelles, ...tries.filter(calcul => !pris.has(calcul))];
   }
 

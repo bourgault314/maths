@@ -190,14 +190,14 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("M12").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [4, "P"]]);
   assert.deepEqual(CORE.moduleDe("C1").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("C3").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [2, "P"], [3, "P"]]);
-  assert.deepEqual(CORE.moduleDe("C1").niveaux.map(n => n.titre), ["une paire", "deux paires", "emboîtées"]);
-  assert.deepEqual(CORE.moduleDe("C3").niveaux.map(n => n.titre), ["trous simples", "garder l’égalité", "garder l’égalité, grands nombres"]);
+  assert.deepEqual(CORE.moduleDe("C1").niveaux.map(n => n.titre), ["une paire de parenthèses", "deux paires de parenthèses", "parenthèses emboîtées"]);
+  assert.deepEqual(CORE.moduleDe("C3").niveaux.map(n => n.titre), ["un nombre manquant", "garder l’égalité", "garder l’égalité, grands nombres"]);
   // Modules lot 5 : les niveaux de la carte v2, inchangés (nombre, paliers, types, titres).
   assert.deepEqual(CORE.moduleDe("D1").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [2, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("D3").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("D4").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("D1").niveaux.map(n => n.titre), ["dixièmes", "centièmes", "millièmes, sommes en désordre"]);
-  assert.deepEqual(CORE.moduleDe("D3").niveaux.map(n => avecEspaces(n.titre)), ["÷ 10", "÷ 100, ÷ 1 000", "des zéros à écrire"]);
+  assert.deepEqual(CORE.moduleDe("D3").niveaux.map(n => avecEspaces(n.titre)), ["décimal ÷ 10", "décimal ÷ 100, ÷ 1 000", "des zéros à écrire"]);
   assert.deepEqual(CORE.moduleDe("D4").niveaux.map(n => n.titre), ["sans retenue", "millièmes, sans retenue", "avec retenue (ajouter)"]);
   // Modules lot 6 : les niveaux de la carte v2, inchangés (nombre, paliers, types, titres).
   assert.deepEqual(CORE.moduleDe("F2").niveaux.map(n => [n.palier, n.type]), [[2, "F"], [3, "F"]]);
@@ -206,8 +206,8 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => [n.palier, n.type]), [[1, "P"], [3, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("F8").niveaux.map(n => [n.palier, n.type]), [[1, "P"], [1, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("F5").niveaux.map(n => n.titre), ["décomposer", "décomposer, recomposer, encadrer"]);
-  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => n.titre), ["en multipliant", "en divisant", "trou au dénominateur"]);
-  assert.deepEqual(CORE.moduleDe("F8").niveaux.map(n => n.titre), ["même dénominateur", "1 − a/b", "entier et fraction"]);
+  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => n.titre), ["en multipliant", "en divisant", "le dénominateur manquant"]);
+  assert.deepEqual(CORE.moduleDe("F8").niveaux.map(n => n.titre), ["même dénominateur", "1 moins une fraction", "entier et fraction"]);
   assert.equal(CORE.virguleDuTexte("F6", "4/7 = 12/□"), false, "les fractions : pas de touche « , »");
   // Modules lot 6b : les niveaux de la carte v2, inchangés.
   assert.deepEqual(CORE.moduleDe("F1").niveaux.map(n => [n.palier, n.type]), [[2, "F"], [3, "F"], [4, "F"]]);
@@ -219,8 +219,8 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.type), ["P", "P"]);
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
-  assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.titre), ["produits", "nombres en 0, trous, divisions"]);
-  assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.titre.replace(/\u202f/g, " ")), ["× 10", "× 100, × 1 000 sans zéro à écrire", "des zéros à écrire", "trous"]);
+  assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.titre), ["multiplier par 10, 100, 1\u202f000", "nombres en 0, nombre manquant, divisions"]);
+  assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.titre.replace(/\u202f/g, " ")), ["décimal × 10", "× 100, × 1 000 sans zéro à écrire", "des zéros à écrire", "le nombre manquant"]);
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.titre.replace(/[\u202f\u00a0]/g, " ")), ["à la dizaine suivante", "à 100 : dizaines et nombres en 5", "à 100 : tous les nombres", "à 1 000 et à la centaine suivante", "de n’importe quel nombre jusqu’à une centaine, un millier"]);
   // La touche « , » : les modules à décimales seulement (D1, D2, D3, D4) ;
   // pas quand la case est un numérateur (« 0,3 = □/10 », décision du 04/11).
@@ -831,7 +831,7 @@ test("les consignes : l'impératif devant « en », pas de signe seul en début 
 test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 calculs par marche", () => {
   const noms = id => CORE.moduleDe(id).niveaux.map(n => avecEspaces(CORE.nomCompetence(id, n.n)));
   assert.deepEqual(noms("A2"), ["Compléments à la dizaine", "Compléments à 100 : dizaines", "Compléments à 100", "Compléments à 1 000", "Compléter jusqu’à une centaine, un millier"]);
-  assert.deepEqual(noms("A5"), ["+ 9", "+ 19, 29, 39", "+ 8, 18, 28, 38", "+ 48, 49… 98, 99"], "sans nom court, le titre du niveau");
+  assert.deepEqual(noms("A5"), ["ajouter 9", "ajouter 19, 29, 39", "ajouter 8, 18, 28, 38", "ajouter 48, 49… 98, 99"], "sans nom court, le titre du niveau (relecture 2 : en mots d'élève)");
   assert.deepEqual(noms("M2"), ["× 10, × 100, × 1 000", "× 10, × 100 : trous, divisions"]);
   assert.deepEqual(noms("D2"), ["Décimal × 10", "Décimal × 100, × 1 000", "Décimal : zéros à écrire", "Décimal : trous"]);
   assert.equal(CORE.nomCompetence("A2", 9), "");
@@ -862,7 +862,7 @@ test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 ca
   assert.deepEqual(noms("M1"), ["Doubles et moitiés jusqu’à 40", "Doubles et moitiés des nombres usuels", "Doubles et moitiés en découpant"]);
 });
 
-test("l'entraînement : 20 calculs du simple au difficile, les écritures nouvelles après les 6 premiers, jamais ceux de J'apprends", () => {
+test("l'entraînement : 20 calculs du simple au difficile, chaque écriture dans les 7 premiers, jamais ceux de J'apprends", () => {
   NIVEAUX_CONSTRUITS.forEach(({niveau, cle}) => {
     for (let graine = 1; graine <= 30; graine += 1) {
       const serie = CORE.genererSerie(cle, {graine, exclure: niveau.apprends.textes});
@@ -870,26 +870,29 @@ test("l'entraînement : 20 calculs du simple au difficile, les écritures nouvel
       assert.equal(new Set(serie.map(c => c.cle)).size, serie.length, `${cle} : sans doublon`);
       serie.forEach(c => assert.ok(!niveau.apprends.textes.includes(c.texte), `${cle} : ${c.texte} est un calcul de J'apprends`));
       const formes = [...new Set(serie.map(c => c.forme))];
-      const premiere = serie.slice(0, Math.min(6, serie.filter(c => c.forme === formes[0]).length));
+      const nPremiere = serie.filter(c => c.forme === formes[0]).length;
+      const place = Math.min(nPremiere, Math.max(2, 7 - (formes.length - 1)));
+      const premiere = serie.slice(0, place);
       assert.ok(premiere.every(c => c.forme === formes[0]), `${cle} : la première écriture d'abord`);
       // Dans la première écriture, du plus simple au plus dur.
       const difficultes = premiere.map(CORE.difficulte);
       assert.deepEqual(difficultes, [...difficultes].sort((a, b) => a - b), `${cle} graine ${graine} : ${difficultes}`);
-      // Chaque autre écriture arrive 2 fois juste après, puis le reste.
-      let rang = premiere.length;
-      formes.slice(1).forEach(forme => {
-        const n = Math.min(2, serie.filter(c => c.forme === forme).length);
-        assert.ok(serie.slice(rang, rang + n).every(c => c.forme === forme), `${cle} graine ${graine} : ${forme} attendue au rang ${rang}`);
-        rang += n;
-      });
-      // Et chaque écriture du niveau a été vue dans les 12 premiers calculs.
-      formes.forEach(forme => assert.ok(serie.slice(0, 12).some(c => c.forme === forme), `${cle} : ${forme} dans les 12 premiers`));
+      // Relecture 2 (08/11/2026) : l'élève rapide finit en 7 calculs ; il
+      // y voit chaque écriture (formes.length ≤ 6 partout aujourd'hui)...
+      formes.forEach(forme => assert.ok(serie.slice(0, 7).some(c => c.forme === forme), `${cle} graine ${graine} : ${forme} dans les 7 premiers`));
+      // ... et la première écriture y montre son plus dur.
+      const dePremiere = serie.filter(c => c.forme === formes[0]).map(CORE.difficulte);
+      if (place >= 2) assert.equal(Math.max(...difficultes), Math.max(...dePremiere), `${cle} graine ${graine} : le plus dur de la 1re écriture dans les 7 premiers`);
     }
   });
   // A2-3 : « a + ? », puis « ? + a » (la case est devant), puis « 100 − a ».
   const a23 = CORE.genererSerie("A2-3", {graine: 3}).map(c => c.forme);
-  assert.deepEqual(a23.slice(0, 10), ["complement", "complement", "complement", "complement", "complement", "complement", "complement-gauche", "complement-gauche", "difference", "difference"]);
-  assert.equal(CORE.annonceDe(CORE.genererSerie("A2-3", {graine: 3})[6]).replace(/\u00a0/g, " "), "Nouveau : la case est devant.");
+  assert.deepEqual(a23.slice(0, 7), ["complement", "complement", "complement", "complement", "complement", "complement-gauche", "difference"]);
+  assert.equal(CORE.annonceDe(CORE.genererSerie("A2-3", {graine: 3})[5]).replace(/\u00a0/g, " "), "Nouveau : la case est devant.");
+  // A2-2 : un nombre en 5 dans les 7 premiers calculs (avant : jamais avant le 9e).
+  for (let graine = 1; graine <= 30; graine += 1) {
+    assert.ok(CORE.genererSerie("A2-2", {graine}).slice(0, 7).some(c => c.donnees.a % 10 === 5), `A2-2 graine ${graine} : un nombre en 5 tôt`);
+  }
   assert.equal(CORE.annonceDe(CORE.genererSerie("M2-2", {graine: 3}).find(c => c.forme === "division")).replace(/\u00a0/g, " "), "Nouveau : c’est une division.");
   // Mes calculs du jour tirent au hasard, pas le plus simple.
   const uns = Array.from({length: 40}, (_, g) => CORE.difficulte(CORE.genererUn("A2-3", g + 1)));
@@ -955,6 +958,12 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
         const etiquettes = [...svg.matchAll(/>([^<]+)<\/text>/g)].map(m => m[1]);
         assert.ok(etiquettes.includes("?") && !etiquettes.includes(reponse), `${cle} : ${c.texte} — ${etiquettes.join(" ")}`);
         assert.ok(!AIDES.decrireBarres(aide).includes(reponse), `${cle} : le lecteur d'écran ne dit pas la réponse`);
+      } else if (aide.outil === "deux-barres") {
+        // Relecture 2 : les compléments d'A1-1 (10 en haut ; 4 et « ? » dessous).
+        assert.ok(cle === "A1-1" && aide.masque, `${cle} : ${c.texte}`);
+        const etiquettes = textesSvg(AIDES.dessinerImage(aide));
+        assert.deepEqual(etiquettes, [String(c.donnees.m), String(c.donnees.n), "?"], `${cle} : ${c.texte} — ${etiquettes.join(" ")}`);
+        assert.deepEqual([...aide.haut], [c.donnees.m]);
       } else {
         assert.equal(aide.outil, "tableau-fleches");
         const texte = AIDES.decrireTableau(aide);
@@ -1092,24 +1101,38 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
       assert.match(a.bilan, /÷ 2/);
       return;
     }
-    assert.equal(a.represente.outil, "droite-sauts");
-    // La droite arrive bien où l'exemple le dit.
-    const plan = AIDES.planDroite(a.represente.image);
-    const arrivee = plan.valeurs[plan.valeurs.length - 1];
-    if (fiche.id === "A5" || fiche.id === "A6") {
-      assert.equal(arrivee, a.represente.reponse);
-      assert.equal(a.represente.image.direct, a.represente.reponse - a.represente.image.depart, "le saut direct sous le détour");
-      assert.deepEqual(a.represente.image.inconnues, [1, 2], "les deux arrivées sont à trouver");
-    } else if (fiche.id !== "A2" && !a.represente.image.sauts.some(saut => saut.masque)) {
-      // A1, A10, A11 : les sauts sont donnés, chaque arrivée est « ? » ; le
-      // saut direct dessous quand il y a deux sauts (choix du 31/10 : le
-      // point du milieu est caché aussi).
-      assert.equal(arrivee, a.represente.reponse);
-      assert.deepEqual(a.represente.image.inconnues, a.represente.image.sauts.map((_, i) => i + 1));
-      if (a.represente.image.sauts.length > 1) assert.equal(a.represente.image.direct, a.represente.reponse - a.represente.image.depart);
+    if (cle === "A1-1") {
+      // Relecture 2 (08/11/2026) : A1-1 ne parle que des compléments à 10 ;
+      // Je représente et J'écris sur le schéma en barres, « À retenir » les
+      // cinq paires en rangées du boulier.
+      assert.equal(a.represente.outil, "deux-barres");
+      assert.equal(a.represente.texte.replace(/\s/g, " "), "4 + □ = 10");
+      assert.ok(a.represente.image.masque && !a.represente.solution.image.masque);
+      assert.ok(!textesSvg(AIDES.dessinerImage(a.represente.image)).includes("6"));
+      assert.ok(textesSvg(AIDES.dessinerImage(a.represente.solution.image)).includes("6"));
+      assert.equal(a.image.outil, "paires");
+      assert.deepEqual(a.image.paires.map(p => [...p]), [[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]]);
+      assert.doesNotMatch(a.bilan, /\d et \d/, "plus de « 1 et 9, 2 et 8 »");
     } else {
-      assert.ok(a.represente.image.sauts.every(saut => saut.masque), `${cle} : les sauts disent « + ? »`);
-      assert.equal(arrivee - a.represente.image.depart, a.represente.reponse, `${cle} : la somme des sauts est la réponse`);
+      assert.equal(a.represente.outil, "droite-sauts");
+      // La droite arrive bien où l'exemple le dit.
+      const plan = AIDES.planDroite(a.represente.image);
+      const arrivee = plan.valeurs[plan.valeurs.length - 1];
+      if (fiche.id === "A5" || fiche.id === "A6") {
+        assert.equal(arrivee, a.represente.reponse);
+        assert.equal(a.represente.image.direct, a.represente.reponse - a.represente.image.depart, "le saut direct sous le détour");
+        assert.deepEqual(a.represente.image.inconnues, [1, 2], "les deux arrivées sont à trouver");
+      } else if (fiche.id !== "A2" && !a.represente.image.sauts.some(saut => saut.masque)) {
+        // A1, A10, A11 : les sauts sont donnés, chaque arrivée est « ? » ; le
+        // saut direct dessous quand il y a deux sauts (choix du 31/10 : le
+        // point du milieu est caché aussi).
+        assert.equal(arrivee, a.represente.reponse);
+        assert.deepEqual(a.represente.image.inconnues, a.represente.image.sauts.map((_, i) => i + 1));
+        if (a.represente.image.sauts.length > 1) assert.equal(a.represente.image.direct, a.represente.reponse - a.represente.image.depart);
+      } else {
+        assert.ok(a.represente.image.sauts.every(saut => saut.masque), `${cle} : les sauts disent « + ? »`);
+        assert.equal(arrivee - a.represente.image.depart, a.represente.reponse, `${cle} : la somme des sauts est la réponse`);
+      }
     }
     if (!a.manipule) return;
     // Le rekenrek : les gestes sont faisables, un par un, et mènent au bon total.
@@ -1697,7 +1720,7 @@ test("modules lot 3 : chaque niveau tient sa règle, et ses calculs ne sont pas 
   assert.deepEqual(formes("M3-3"), ["produit", "trou-facteur"]);
   assert.deepEqual(formes("M6-2"), ["produit", "produit-gauche"]);
   assert.deepEqual(formes("M8-3"), ["produit", "produit-gauche", "trou"]);
-  assert.equal(CORE.niveauDe("M8-3").niveau.titre, "× 11, × 12, × 21, × 31 (et en trou)");
+  assert.equal(CORE.niveauDe("M8-3").niveau.titre, "× 11, × 12, × 21, × 31 (et nombre manquant)");
 });
 
 test("modules lot 3 : les erreurs connues, reconnues avec leur phrase, sans la réponse", () => {

@@ -199,7 +199,7 @@ const texte = (page, s) => page.evaluate(sel => { const e = document.querySelect
   await cas("pastille : « N soirs cette semaine » ; sans aucun soir, rien, et la tête garde sa hauteur ; le test dit « ce module »", async () => {
     const avec = await ouvrir(nav, base, {parcours: NOAH});
     await attendreAccueil(avec.page);
-    assert.equal(await texte(avec.page, "#acc-soirs"), `✓${sem.soirs} soir${sem.soirs > 1 ? "s" : ""} cette semaine`);
+    assert.equal(await texte(avec.page, "#acc-soirs"), `✓${sem.soirs} jour${sem.soirs > 1 ? "s" : ""} cette semaine` /* relecture 2 : « jours » */);
     const tete = await boite(avec.page, ".acc-tete");
     const etapes = await avec.page.evaluate(() => [...document.querySelectorAll("#acc-carte .programme > span > span")].map(e => e.firstChild.textContent));
     if (etapes.some(t => t.startsWith("Tu connais"))) assert.ok(etapes.includes("Tu connais déjà ce module ?"), JSON.stringify(etapes));
