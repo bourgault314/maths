@@ -539,7 +539,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // M1, A2, A11, l'ordre de l'entraînement) (avant : suivre-les-eleves-S2-classe-et-fiche).
   // Puis « Suivre ses élèves », lot S3 « Mon espace côté élève » (08/11/2026) :
   // index.php (Mon espace) seul change (avant : defi-calcul-relecture-2).
-  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S3-mon-espace$/m);
+  // Puis « Suivre ses élèves », lot S2bis « les jours pas connus » (08/11/2026) :
+  // prof/index.php seul change (avant : suivre-les-eleves-S3-mon-espace).
+  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S2bis-jours-pas-connus$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

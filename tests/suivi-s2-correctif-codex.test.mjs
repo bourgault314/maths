@@ -372,7 +372,11 @@ test("point 7 — 60 séances de Défi tables le même jour : les semaines d'ava
   assert.deepEqual(bc.semaines.map(court.compteSemaine), ["0", "0", "1", "1"]);
 });
 
-test("point 7 — SPLAT! et Coffres : la borne des 60 jours et un journal d'avant le lot S1 coupent ; un journal commencé au premier jour joué, non", () => {
+// Lot S2bis « les jours pas connus » (choix de Gwenaël, 08/11/2026) : les
+// jours que SPLAT! et Coffres ne notaient pas avant le lot S1 (07/11) ne sont
+// plus « pas connus » — cases vides, chiffres simples, aucune phrase. Seule
+// leur borne des 60 jours coupe encore.
+test("point 7 (S2bis) — SPLAT! et Coffres : seule la borne des 60 jours coupe ; un travail d'avant le lot S1 ne donne ni « ? », ni « ≥ », ni phrase", () => {
   const etape = date => ({m1e1: {fait: true, etoiles: 3, cartes: 4, vues: 0, essais: 1, date}});
   const jourPlus = (jour, n) => { const d = new Date(`${jour}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   // Nouveau : son journal commence le jour où il a joué pour la première fois.
@@ -387,15 +391,33 @@ test("point 7 — SPLAT! et Coffres : la borne des 60 jours et un journal d'avan
   const p = pageRejouee(listes, JEUDI);
   assert.equal(p.coupureDe("splat", listes.splat[0], JEUDI), null, "rien n'est coupé pour un élève qui a commencé avec le journal");
   assert.deepEqual(p.bilanEleve(1, JEUDI).semaines.map(p.compteSemaine), ["0", "0", "0", "1"]);
-  assert.equal(p.coupureDe("splat", listes.splat[1], JEUDI), "2026-11-13", "joué avant le lot S1 : rien de connu jusqu'à aujourd'hui");
-  assert.deepEqual(p.bilanEleve(2, JEUDI).semaines.map(p.compteSemaine), ["?", "?", "?", "?"]);
-  assert.match(p.joursDeLaFiche(2, JEUDI, 6).notes[0], /^SPLAT! : ses jours de travail d’avant ne sont pas connus/);
+  assert.equal(S.resumeSuivi(ancien, {aujourdhui: JEUDI}).connuDepuis, "2026-11-13", "le moteur, lui, dit toujours que rien n'est noté");
+  assert.equal(p.coupureDe("splat", listes.splat[1], JEUDI), null, "joué avant le lot S1, rien depuis : rien n'est « pas connu » à la page");
+  assert.deepEqual(p.bilanEleve(2, JEUDI).semaines.map(p.compteSemaine), ["0", "0", "0", "0"], "des chiffres simples, ce qu'on sait");
+  assert.deepEqual(p.joursDeLaFiche(2, JEUDI, 6).notes, [], "aucune phrase");
   assert.equal(p.coupureDe("splat", listes.splat[2], JEUDI), "2026-09-01", "la borne des 60 jours coupe");
   assert.deepEqual(p.joursDeLaFiche(3, JEUDI, 6).notes, ["SPLAT! : les jours d’avant le 01/09 ne sont pas connus."]);
   // Coffres : un trésor le 10/11, journal commencé ce jour-là — rien de coupé.
   const coffre = C.normaliser({jours: ["2026-11-10"], journal: {tresors: [2], parfaits: [1], aides: [0], solutions: [0]}, depuis: "2026-11-10"});
   const pc = pageRejouee({"coffres": [lu("coffres", 4, coffre, JEUDI)]}, JEUDI);
   assert.equal(pc.coupureDe("coffres", lu("coffres", 4, coffre, JEUDI), JEUDI), null);
+  // Le cas de la classe (S2bis) : joué en octobre (sans journal), puis noté
+  // depuis le 07/11 — le moteur coupe au 07/11, la page non.
+  const reprise = {version: 2, epoque: 0, etapes: etape("2026-10-01"), jours: ["2026-11-09", "2026-11-12"],
+    journal: {series: [2, 1], reussies: [1, 1], vues: [0, 0]}, depuis: "2026-11-07"};
+  assert.equal(S.resumeSuivi(reprise, {aujourdhui: JEUDI}).connuDepuis, "2026-11-07");
+  const ps = pageRejouee({"splat": [lu("splat", 5, reprise, JEUDI)]}, JEUDI);
+  assert.equal(ps.coupureDe("splat", lu("splat", 5, reprise, JEUDI), JEUDI), null);
+  const bs = ps.bilanEleve(5, JEUDI);
+  assert.deepEqual(bs.semaines.map(ps.compteSemaine), ["0", "0", "0", "2"]);
+  assert.ok(bs.semaines.every(s => !s.incomplete), "aucune semaine « pas connue en entier »");
+  assert.deepEqual(ps.joursDeLaFiche(5, JEUDI, 6).notes, []);
+  // Coffres, la même chose : des trésors en octobre, noté depuis le 07/11.
+  const coffreReprise = C.normaliser({dernier: "2026-11-10", jours: ["2026-11-10"], journal: {tresors: [1], parfaits: [0], aides: [0], solutions: [0]}, depuis: "2026-11-07",
+    niveaux: {"1": {tresors: 3, parfaits: 1, dernier: "2026-10-20"}}});
+  const pr = pageRejouee({"coffres": [lu("coffres", 6, coffreReprise, JEUDI)]}, JEUDI);
+  assert.equal(pr.coupureDe("coffres", lu("coffres", 6, coffreReprise, JEUDI), JEUDI), null);
+  assert.deepEqual(pr.bilanEleve(6, JEUDI).semaines.map(pr.compteSemaine), ["0", "0", "0", "1"]);
 });
 
 test("point 7 — à l'écran : « ? » dans la case d'un jour pas connu, dans le tableau et dans le calendrier de la fiche ; l'infobulle le dit", () => {
