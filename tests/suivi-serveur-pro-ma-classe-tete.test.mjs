@@ -278,7 +278,7 @@ test("la dernière classe : seul son numéro est gardé, à chaque ouverture ré
 // ------------------------------------------------------------ les onglets
 
 test("les onglets : une ligne — les applis (qui défilent) puis Élèves et Réglages, qui restent au bout", () => {
-  assert.match(page, /<div class="barre-onglets" id="onglets">\s*<button [^>]*id="bouton-classes-colle"[^>]*>[\s\S]*?<\/button>\s*<!--[\s\S]*?-->\s*<div class="choix-appli-menu" id="choix-appli-menu" hidden>[\s\S]*?<\/div>\s*<\/div>\s*<div class="onglets" id="choix-appli" role="group" aria-label="Activité affichée">/);
+  assert.match(page, /<div class="barre-onglets" id="onglets">\s*<button [^>]*id="bouton-classes-colle"[^>]*>[\s\S]*?<\/button>\s*<!--[\s\S]*?-->\s*<div class="onglets onglets-vue" role="group" aria-label="Toutes les applis">\s*<button type="button" id="onglet-classe" aria-pressed="false">[\s\S]*?<\/button>\s*<\/div>\s*<div class="choix-appli-menu" id="choix-appli-menu" hidden>[\s\S]*?<\/div>\s*<\/div>\s*<div class="onglets" id="choix-appli" role="group" aria-label="Activité affichée">/);
   assert.match(page, /<div class="onglets onglets-classe" role="group" aria-label="La classe">\s*<button type="button" class="onglet-eleves" id="onglet-eleves"/);
   assert.match(style, /\.barre-onglets > \.onglets-classe \{ flex: none; overflow: visible;/, "Élèves et Réglages ne défilent pas");
   assert.match(style, /\.barre-onglets > \.onglets\.suite \{[^}]*mask-image: linear-gradient\(90deg, #000 80%, transparent\);/);

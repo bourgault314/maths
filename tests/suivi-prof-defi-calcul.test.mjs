@@ -133,7 +133,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.match(page, /\$versionCalcul = is_file\(\$moteurCalcul\) \? substr\(md5_file\(\$moteurCalcul\), 0, 10\) : '0';/);
   assert.doesNotMatch(page, /<script src="defi_calcul/, "pas chargés d'office");
   assert.match(fonction("poserAppli"), /\$\("entete-defi-calcul"\)\.hidden = !calcul;/);
-  assert.match(fonction("dessinerFenetreEleve"), /else if \(appliAffichee === "defi-calcul"\) zone\.append\(contenuCalcul\(eleve\)\);/);
+  assert.match(fonction("dessinerFenetreEleve"), /else if \(appli === "defi-calcul"\) zone\.append\(contenuCalcul\(eleve\)\);/, "lot S2 : l'onglet Défi calcul de la fiche");
   assert.match(page, /<button type="button" id="dc-imprimer" hidden>Imprimer sa fiche<\/button>/);
   assert.match(page, /<button type="button" class="secondaire" id="dc-imprimer-grille"[^>]*hidden>Imprimer la grille<\/button>/);
   assert.match(page, /<div class="carte dc-reprendre" id="dc-reprendre" hidden>/);

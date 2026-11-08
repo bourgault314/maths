@@ -310,7 +310,7 @@ test("Ma classe : la fenêtre de l'élève montre son parcours (serveur pro, lot
   // non plus d'une progression reçue — l'appli ouvre alors Mon parcours
   // vierge, avec le prénom et la classe, et sa fiche s'imprime (l'ancien
   // bouton « Parcours » de la ligne existait pour tous les élèves).
-  assert.match(maClasse, /const avecParcours = appliAffichee === "defi-tables";/);
+  assert.match(maClasse, /const avecParcours = appli === "defi-tables";/, "lot S2 : l'onglet Défi tables de la fiche");
   assert.match(maClasse, /\$\("fe-parcours"\)\.hidden = !avecParcours;/);
   assert.doesNotMatch(maClasse, /\$\("fe-parcours"\)\.hidden = !\(eleve\.lu && eleve\.lu\.parcours\);/);
   // Plus de « Détail ▾ » : SPLAT! a la même fenêtre.
