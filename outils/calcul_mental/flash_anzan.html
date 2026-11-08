@@ -248,9 +248,12 @@
     .reglages-corps .bas-pile .bas .primary.partir { flex: 0 1 auto; width: 440px; max-width: 100%; }
     .bandeau-grades { width: 0; min-width: 100%; min-height: 62px; display: flex; align-items: center; gap: 12px; margin: 0; padding: 7px 18px 7px 10px;
       border: 2px solid var(--ink); border-radius: 14px; background: #fdfbf6; box-shadow: 0 4px 0 #d8c89c; color: var(--ink); text-align: left; cursor: pointer; }
-    .bg-carte { flex: 0 0 auto; width: 34px; aspect-ratio: 640 / 904; border-radius: 3px; overflow: hidden; background: #fefdf9; box-shadow: 0 1px 4px rgba(20, 52, 81, .22); }
-    .bg-carte img { display: block; width: 100%; height: 100%; }
-    .bg-carte.a-gagner { display: flex; align-items: center; justify-content: center; background: #eef3f6; border: 1px dashed #c3d2db; box-shadow: none; font-size: .8rem; }
+    /* 08/11/2026 (choix de Gwenaël après son essai sur iPhone) : à gauche du
+       bandeau, un grand kimono, TOUJOURS le même — plus de case au cadenas,
+       plus de petite carte qui change. Les cartes se découvrent dans
+       l'écran des grades, chacune sur la ligne de son grade. */
+    .bg-kimono { flex: 0 0 auto; width: 40px; height: 48px; display: flex; align-items: center; justify-content: center;
+      font-size: 2.15rem; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
     .bg-texte { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
     .bg-titre { font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; font-size: 1.16rem; line-height: 1.2; }
     .bg-det { color: var(--muted); font-weight: 800; font-size: .9rem; line-height: 1.25; }
@@ -538,7 +541,7 @@
     .carte-tour { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s ease; }
     .carte-kyu.retournee .carte-tour { transform: rotateY(180deg); }
     /* Les cartes dan (07/11/2026) : 640 × 984, plus hautes que les kyu. */
-    .carte-kyu.or, .fiche-carte.or img, .bg-carte.or { aspect-ratio: 640 / 984; }
+    .carte-kyu.or, .fiche-carte.or img { aspect-ratio: 640 / 984; }
     .carte-face { position: absolute; inset: 0; border-radius: 2.4cqw; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
       box-shadow: 0 8px 22px rgba(20, 52, 81, .18); background: #fefdf9; }
     .carte-face img { display: block; width: 100%; height: 100%; }
@@ -607,7 +610,7 @@
     .es.grisee { border-color: #d9d1bb; box-shadow: none; }
     .es.grisee .es-jp { color: #a3b1ba; }
     .gr-carte.es { background: #fdfbf6; }
-    .gr-carte.es .es-jp, .bg-carte.es .es-jp { translate: 0 -4px; }
+    .gr-carte.es .es-jp { translate: 0 -4px; }
     /* En Colonne, pas de groupes : la liste garde sa distance au compte. */
     #grades-groupes[hidden] + .gr-liste { margin-top: 12px; }
     /* 13 lignes au lieu de 10 : sur un ordinateur à écran court, la page ne
@@ -616,10 +619,6 @@
     @media (min-width: 1024px) and (max-height: 820px) {
       #grades-groupes[hidden] + .gr-liste .gr-ligne { min-height: 56px; }
     }
-    .bg-carte.es { position: relative; overflow: visible; }
-    .bg-carte.es .es-jp { font-size: .9rem; }
-    .bg-carte.es .gr-sceau { right: -8px; bottom: -7px; width: 17px; height: 17px; font-size: .58rem; }
-    .bg-carte.es.long .es-jp { font-size: .72rem; }
     .fiche-carte.es { position: relative; width: 100%; border-radius: 6px; box-shadow: 0 3px 10px rgba(20, 52, 81, .16); }
     .fiche-carte.es .es-jp { font-size: 2.6rem; }
     .fiche-carte.es.long .es-jp { font-size: 2rem; }
@@ -723,7 +722,7 @@
       .reglages-corps .bas-pile .bas { display: contents; }
       .reglages-corps .bas-pile .bas .primary.partir { order: 1; width: 100%; }
       .bandeau-grades { order: 2; width: 100%; min-height: 54px; padding-top: 5px; padding-bottom: 5px; gap: 10px; }
-      .bg-carte { width: 30px; }
+      .bg-kimono { width: 36px; height: 42px; font-size: 1.95rem; }
       .reglages-corps .bas-pile .historique-bouton { order: 3; flex: 0 0 auto; width: calc(50% - 5px); max-width: none; align-self: center; }
     }
     /* Relecture Codex (A4) : pas de plein écran sur téléphone, en largeur
@@ -767,6 +766,16 @@
     }
     @media (max-width: 620px) {
       .resume { min-height: calc(2.6em + 16px); }
+    }
+    /* Retour iPhone du 08/11/2026 : dans Safari (iOS 26), la barre
+       d'adresse flotte PAR-DESSUS le bas de la page. Le menu faisait
+       juste la hauteur de l'écran : la page ne défilait pas, et le
+       bandeau des grades et « Historique » restaient cachés sous la
+       barre. Une marge sous le cadre (hors séance) laisse toujours
+       remonter le bas du menu au-dessus de la barre. Ordinateur : rien
+       ne change. */
+    @media (max-width: 1023px) and (pointer: coarse), (max-width: 620px) {
+      body:not(.en-seance) .shell { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
     }
     /* Ordinateur à écran court (portable 1366 × 768, 1024 × 600) : le cadre
        se resserre pour tenir sans réduire les boutons sous 44 px. La
@@ -913,8 +922,8 @@
                  là, dans les deux modes ; la dernière carte gagnée, le grade
                  à passer et le compte des cartes (posés par textContent). -->
             <button type="button" class="bandeau-grades" id="vers-grades">
-              <span class="bg-carte" id="bg-carte" aria-hidden="true"></span>
-              <span class="bg-texte"><span class="bg-titre"><span aria-hidden="true">🥋</span> Les grades</span><span class="bg-det" id="bg-det"></span></span>
+              <span class="bg-kimono" id="bg-kimono" aria-hidden="true">🥋</span>
+              <span class="bg-texte"><span class="bg-titre">Les grades</span><span class="bg-det" id="bg-det"></span></span>
               <svg class="bg-fleche" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4l14 8-14 8z"/></svg>
             </button>
           </div>
@@ -2270,7 +2279,7 @@
         } catch (e) { return 0; }
       }
       // L'estampe d'un grade en Colonne (voir .es) : « reussi » (le sceau 合),
-      // « grisee » (le grade à passer) ; `classe` la place (gr-carte, bg-carte,
+      // « grisee » (le grade à passer) ; `classe` la place (gr-carte,
       // fiche-carte ; « grande » à la réussite, avec le nom français) ; `el`
       // (facultatif) : l'élément vide à remplir (le bandeau a déjà le sien).
       function construireEstampe(n, etat, classe, el = document.createElement("span")) {
@@ -2780,24 +2789,15 @@
       $("vers-grades").addEventListener("click", () => { groupeAffiche = -1; gradesColonne = memoire.mode === "colonne"; versGrades(0); });
 
       // Le bandeau des grades, sous « C'est parti » (maquette A, 07/11/2026) :
-      // la dernière carte gagnée (sinon la place grise de la prochaine), le
-      // grade à passer et le compte des cartes. Rien de nouveau n'est lu :
-      // l'état des grades, comme la liste.
+      // le kimono (toujours le même depuis le 08/11/2026), le grade à passer
+      // et le compte des cartes. Rien de nouveau n'est lu : l'état des
+      // grades, comme la liste.
       function dessinerBandeauGrades() {
-        // En Colonne (lot « grades-colonne ») : l'estampe du dernier grade
-        // réussi (sinon le cadenas), le grade à passer et « N sur 13 ».
+        // En Colonne (lot « grades-colonne ») : le grade à passer et « N sur 13 ».
         if (memoire.mode === "colonne") {
           const etat = gradesDeLEleve(true);
           const actuel = etat.find(g => g.actuel);
           const reussis = etat.filter(g => g.reussi);
-          const place = $("bg-carte");
-          place.replaceChildren();
-          if (reussis.length) {
-            construireEstampe(reussis[reussis.length - 1].numero, "reussi", "bg-carte", place);
-          } else {
-            place.className = "bg-carte a-gagner";
-            place.textContent = "🔒";
-          }
           const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
           const compte = `${reussis.length} sur ${etat.length}`;
           $("bg-det").textContent = `${tete} · ${compte}`;
@@ -2806,24 +2806,8 @@
         }
         const etat = gradesDeLEleve();
         const actuel = etat.find(g => g.actuel);
-        let derniere = 0;
-        etat.forEach(g => { if (g.reussi && CORE.carteDuGrade(g.numero)) derniere = g.numero; });
         const total = etat.filter(g => CORE.carteDuGrade(g.numero)).length;
         const gagnees = etat.filter(g => g.reussi && CORE.carteDuGrade(g.numero)).length;
-        const place = $("bg-carte");
-        place.replaceChildren();
-        if (derniere) {
-          place.className = estDan(CORE.carteDuGrade(derniere)) ? "bg-carte or" : "bg-carte";
-          const img = document.createElement("img");
-          img.src = CORE.carteDuGrade(derniere).vignette;
-          img.alt = "";
-          img.width = CORE.carteDuGrade(derniere).vignetteLargeur;
-          img.height = CORE.carteDuGrade(derniere).vignetteHauteur;
-          place.append(img);
-        } else {
-          place.className = "bg-carte a-gagner";
-          place.textContent = "🔒";
-        }
         const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
         const cartes = `${gagnees}\u00a0carte${gagnees > 1 ? "s" : ""} sur ${total}`;
         $("bg-det").textContent = `${tete} · ${cartes}`;
