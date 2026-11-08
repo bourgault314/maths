@@ -191,9 +191,6 @@ html.suivi-attente main#univers{visibility:hidden}
 .continuer a small{font-weight:650;opacity:.9}
 .continuer a:hover{filter:brightness(1.06)}
 .monde .desc{padding:12px 18px 0;color:var(--muted);font-size:14px}
-.monde .intro{padding:10px 18px 0;margin:0;display:flex;flex-wrap:wrap;gap:10px}
-.monde .introLien{display:inline-block;font-weight:800;color:#0f5c5c;background:#d9f2f0;border:1px solid #9ad9d3;border-radius:999px;padding:7px 14px;text-decoration:none}
-.monde .introLien:hover{background:#c3ebe7}
 
 /* ---------- étapes ---------- */
 .etapes{list-style:none;margin:0;padding:10px 14px 20px;position:relative}
@@ -214,8 +211,14 @@ html.suivi-attente main#univers{visibility:hidden}
 .actions a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-weight:750;
   font-size:14px;border-radius:12px;padding:9px 14px;min-height:44px;border:1px solid var(--line)}
 .actions a.jouer{color:#fff;border:none}
-.actions a.filmLien{color:#0f5c5c;background:#d9f2f0;border-color:#9ad9d3;border-radius:999px}
-.actions a.filmLien:hover{background:#c3ebe7;filter:none}
+.actions a.filmLien{color:var(--c-monde,var(--teal));background:#fff;border:2px solid var(--c-monde,var(--teal));padding:7px 14px 7px 10px}
+.actions a.filmLien:hover{background:#f6f8fb;filter:none}
+.actions a.filmLien .rond{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--c-monde,var(--teal));flex:0 0 auto}
+.actions a.filmLien .rond svg{width:12px;height:12px;fill:#fff;margin-left:2px}
+.actions a.filmLien .main{font-size:17px;line-height:1}
+.actions a.filmLien .duree{font-size:12.5px;font-weight:700;opacity:.75;margin-left:1px}
+.m1{--c-monde:var(--orange)} .m2{--c-monde:var(--blue)} .menq{--c-monde:var(--framboise)}
+.m3{--c-monde:var(--teal)} .msys{--c-monde:var(--cannelle)} .m4{--c-monde:var(--violet)}
 .m1 .actions a.jouer{background:var(--orange)}
 .m2 .actions a.jouer{background:var(--blue)}
 .menq .actions a.jouer{background:var(--framboise)}
@@ -855,11 +858,12 @@ const MONDES=[
  {cls:"m1",idp:"e0",actif:true,nom:"Petit SPLAT!",desc:"Le tout, les parties… et les premières taches ! Complète les schémas en barres : ici, c'est toi qui réponds et la page vérifie.",
   etapes:[
    {t:"Complète le schéma",o:"Un tout, deux parties : écris les nombres qui manquent.",p:"m1e1",
+    films:[["intro","Le film",43]],
     eqs:["𝑥 + 4 = 20", "𝑥 + 8 = 9", "𝑥 + 11 = 13", "𝑥 + 9 = 20", "𝑥 + 7 = 10", "𝑥 + 4 = 6", "𝑥 + 14 = 18", "𝑥 = 16", "𝑥 + 5 = 11", "𝑥 + 9 = 19", "𝑥 + 3 = 8", "𝑥 + 1 = 18"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=find_hidden&seed=201490&parcours=m1e1",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=find_hidden&seed=201490"},
    {t:"Dessine les jetons",o:"Le schéma est donné : à toi de dessiner la carte qui va avec.",p:"m1e2",dessin:true,
-    films:[["dessine","Comment on joue ?"]],
+    films:[["dessine","Le film",36]],
     eqs:["𝑥 + 5 = 7", "𝑥 = 20", "𝑥 + 4 = 8", "𝑥 + 10 = 16", "𝑥 + 9 = 18", "𝑥 + 7 = 16", "𝑥 + 6 = 13", "𝑥 + 9 = 12", "𝑥 + 5 = 15", "𝑥 + 6 = 17", "𝑥 + 13 = 20", "𝑥 + 14 = 15"],
     j:PS+"?support=eleve&problem=classic&target=20&splats=1&exercise=construct&seed=203592&parcours=m1e2",
     f:PS+"?support=print&problem=classic&target=20&splats=1&exercise=construct&seed=203592"},
@@ -899,7 +903,7 @@ const MONDES=[
     ]},
    {t:"Avec des paquets de jetons",fo:"x + a = b · a × x = b",o:"Les jetons arrivent en paquets : on compte plus vite.",
     p:"m2e4",
-    films:[["paquets","Comment on joue ?"]],
+    films:[["paquets","Le film",47]],
     eqs:["𝑥 + 15 = 33", "𝑥 + 6 = 49", "𝑥 + 9 = 44", "𝑥 + 24 = 48", "𝑥 + 13 = 33", "𝑥 + 11 = 37",
          "5𝑥 = 40", "2𝑥 = 28", "4𝑥 = 36", "2𝑥 = 22", "3𝑥 = 45", "5𝑥 = 25"],
     j:SC+"?"+M2E4A+"&eleve=1&parcours=m2e4&suite="+encodeURIComponent(M2E4B),
@@ -931,7 +935,7 @@ const MONDES=[
    {t:"Premières équations",fo:"x + b = c · a × x = c",
     o:"Une tache : enlève les jetons en trop, ou partage. D'abord un par un, puis en paquets.",
     p:"m3e1",id:"e2-0",
-    films:[["equasplat","Comment on joue ?"],["equasplat-jetons","Avec des jetons numérotés"]],
+    films:[["equasplat","À toi de faire","toi"],["equasplat-jetons","Les jetons numérotés",40]],
     eqs:["𝑚 + 2 = 8", "7 = 𝑥 + 4", "28 = 𝑛 + 12", "𝑏 + 6 = 25", "26 + 16 = 𝑥 + 34", "𝑎 + 16 = 31 + 6", "8 = 2𝑏", "3𝑥 = 6", "24 = 2𝑛", "4𝑚 = 28", "14 + 11 = 5𝑥", "3𝑐 = 7 + 17"],
     q:EQ5_F35[0],suite:EQ5_F35.slice(1),vp:"schema",
     j:"/outils/equasplat.html?eleve=1&parcours=m3e1#data=eyJzb3VyY2UiOiJ1bml2ZXJzX3NwbGF0IiwicGFyY291cnMiOiJtM2UxIiwic2VyaWUiOlt7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NiwibGVmdCI6WyJ4IiwyXSwicmlnaHQiOls4XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkaUiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoidW5pdCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjMsImxlZnQiOls3XSwicmlnaHQiOlsieCIsNF19LHsic291cmNlIjoic3BsYXRfZXF1YXRpb25zIiwidmFyaWFibGUiOiLwnZGbIiwidW5rbm93bkRpc3BsYXkiOiJsZXR0ZXIiLCJ1bml2ZXJzZSI6InBvc2l0aXZlIiwibnVtYmVyTW9kZSI6Imdyb3VwZWQiLCJzaWduZWRXcml0aW5nTW9kZSI6InNpbXBsaWZpZWQiLCJ4IjoxNiwibGVmdCI6WzI4XSwicmlnaHQiOlsieCIsMTJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MTksImxlZnQiOlsieCIsNl0sInJpZ2h0IjpbMjVdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6OCwibGVmdCI6WzI2LDE2XSwicmlnaHQiOlsieCIsMzRdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MjEsImxlZnQiOlsieCIsMTZdLCJyaWdodCI6WzMxLDZdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RjyIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NCwibGVmdCI6WzhdLCJyaWdodCI6WyJ4IiwieCJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJ1bml0Iiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6MiwibGVmdCI6WyJ4IiwieCIsIngiXSwicmlnaHQiOls2XX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZsiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjEyLCJsZWZ0IjpbMjRdLCJyaWdodCI6WyJ4IiwieCJdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RmiIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NywibGVmdCI6WyJ4IiwieCIsIngiLCJ4Il0sInJpZ2h0IjpbMjhdfSx7InNvdXJjZSI6InNwbGF0X2VxdWF0aW9ucyIsInZhcmlhYmxlIjoi8J2RpSIsInVua25vd25EaXNwbGF5IjoibGV0dGVyIiwidW5pdmVyc2UiOiJwb3NpdGl2ZSIsIm51bWJlck1vZGUiOiJncm91cGVkIiwic2lnbmVkV3JpdGluZ01vZGUiOiJzaW1wbGlmaWVkIiwieCI6NSwibGVmdCI6WzE0LDExXSwicmlnaHQiOlsieCIsIngiLCJ4IiwieCIsIngiXX0seyJzb3VyY2UiOiJzcGxhdF9lcXVhdGlvbnMiLCJ2YXJpYWJsZSI6IvCdkZAiLCJ1bmtub3duRGlzcGxheSI6ImxldHRlciIsInVuaXZlcnNlIjoicG9zaXRpdmUiLCJudW1iZXJNb2RlIjoiZ3JvdXBlZCIsInNpZ25lZFdyaXRpbmdNb2RlIjoic2ltcGxpZmllZCIsIngiOjgsImxlZnQiOlsieCIsIngiLCJ4Il0sInJpZ2h0IjpbNywxN119XX0"},
@@ -1293,7 +1297,8 @@ const LIVRET_TEXTE=[
   "L'échauffement, un livret par partie avec son Le défi, et leurs corrigés."];
 function ressourcesHtml(m,mi){
   const li=[];
-  if(mi===0) li.push('<li><a href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'">'+IC.diapo+
+  /* &depuis=carte (08/11/2026) : sous le film, « ‹ Carte des mondes » ramène à la vue prof (pas de « Passer le film › » en double) */
+  if(mi===0) li.push('<li><a href="/outils/splat_intro.html?suite='+encodeURIComponent('/outils/splat_univers.html?prof=1')+'&depuis=carte">'+IC.diapo+
     '<span><span class="rt">Présenter le principe</span><span class="rd">Le film, avant la première fiche.</span></span></a></li>');
   if(LIVRET_TEXTE[mi]) li.push('<li><a href="/outils/livrets_splat.html#monde-'+(mi+1)+'">'+IC.livret+
     '<span><span class="rt">Les livrets du monde '+(mi+1)+'</span><span class="rd">'+LIVRET_TEXTE[mi]+'</span></span></a></li>');
@@ -1493,7 +1498,6 @@ else MONDES.forEach((m,mi)=>{
      '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>'+
    '</div>'+
    '<p class="desc">'+m.desc+'</p>'+
-   (mi===0?'<p class="intro"><a class="introLien" href="/outils/splat_intro.html?suite='+encodeURIComponent(m.etapes[0].j)+'">\ud83c\udfac Comment on joue ?</a></p>':'')+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      /* une étape à code (l'échauffement du monde 6, « É1 ») n'avance pas la numérotation */
      if(!e.code) compteur++;
@@ -1519,9 +1523,13 @@ else MONDES.forEach((m,mi)=>{
          (m.actif
            ? '<div class="actions">'+
              '<a class="jouer" href="'+e.j+'">🎮 Je joue</a>'+
-             /* les films « Comment on joue ? » de l'étape (10/10/2026) : sur le lecteur du film d'introduction, ?film= ; rien ne se lance tout seul */
+             /* les films de l'étape (10/10/2026) : sur le lecteur du film d'introduction, ?film= ; rien ne se lance tout seul */
              /* la suite du film passe par la carte (?jouer=, 11/10/2026) : le lien du jeu en entier recopiait toute la série dans l'adresse */
-             (e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'">\ud83c\udfac '+f[1]+'</a>').join(''):'')+
+             /* lot « films : liens et boutons » (08/11/2026, choix de Gwenaël) : bouton blanc au contour de la couleur du monde,
+                rond plein ▶ + « Le film » + durée (✋ pour le tutoriel « À toi de faire ») ; ouvert d'ici, le film ramène à la
+                carte, sur cette étape (&depuis=carte&etape=…), au lieu de proposer « Passer le film › » */
+             (e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'&amp;depuis=carte&amp;etape='+ids[ei]+'">'+
+               (f[2]==='toi'?'<span class="main" aria-hidden="true">\u270b</span>'+f[1]:'<span class="rond" aria-hidden="true"><svg viewBox="0 0 12 12"><path d="M4 2.6v6.8L9.4 6z"/></svg></span>'+f[1]+(f[2]?'<span class="duree">'+f[2]+' s</span>':''))+'</a>').join(''):'')+
              (e.p ? '' : '<button class="faitBtn" type="button" data-id="'+ids[ei]+'">⭐ J\'ai réussi !</button>')+
              '</div>'
            : '<div class="actions"><span class="bientot">\ud83d\udea7 Le vrai jeu de ce monde est en construction — bient\u00f4t !</span></div>')+

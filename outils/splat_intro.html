@@ -51,7 +51,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
   background:rgba(37,99,235,.92);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 30px rgba(37,99,235,.35)}
 .bigplay svg{width:40px;height:40px}
 .bigplay:focus-visible{outline:4px solid #93c5fd;outline-offset:4px}
-/* sous le film, une seule ligne discrète : plein écran, crédit, passer l'intro */
+/* sous le film, une seule ligne discrète : la carte, plein écran, crédit, passer le film */
 .pied{width:min(100%, calc((100dvh - var(--reserve,80px)) * 1.7778));min-width:min(100%,320px);max-width:100%;
   display:flex;align-items:center;justify-content:space-between;gap:0 16px;flex-wrap:wrap}
 .lien{font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:none;border:none;padding:10px 4px;cursor:pointer;
@@ -63,6 +63,10 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
    doit voir qu'il peut aller jouer tout de suite (11/10/2026) */
 .passer{color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:9px 18px;font-size:16px;font-weight:800;margin-left:auto}
 .passer:hover{color:var(--accent);background:var(--accent-soft-hover)}
+/* « ‹ Carte des mondes » (lot « films : liens et boutons », 08/11/2026, choix de Gwenaël) : la même pastille que
+   « Passer le film › », toujours à gauche — on peut toujours revenir à la carte sans passer par le jeu */
+.carte{color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:9px 18px;font-size:16px;font-weight:800}
+.carte:hover{color:var(--accent);background:var(--accent-soft-hover)}
 .credit{flex:1 1 auto;font-size:12px;color:var(--muted);text-align:center}
 .credit a{color:var(--accent)}
 .player.fs{position:fixed;inset:0;z-index:10;max-width:none;background:var(--page);justify-content:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
@@ -82,8 +86,14 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .player.portrait .pill{left:50%;top:auto;bottom:2%;transform:translateX(-50%);white-space:nowrap;font-size:clamp(13px,3.6vw,17px)}
 .player.portrait .pill br{display:none}
 @media (max-width:640px){
-  /* téléphone : les deux liens sur une ligne, le crédit dessous (sur iPhone, sans plein écran, tout tient sur une ligne) */
-  .pied:has(> #fs:not([hidden])) .credit,.pied:has(> #son:not([hidden])) .credit{order:3;flex-basis:100%}
+  /* téléphone (08/11/2026, choix de Gwenaël, planche 6b) : UNE ligne — « ‹ Carte » à gauche, « Passer le film › » à
+     droite, même hauteur — et le crédit dessous, centré. Plus de « Plein écran » : mesuré, il ne faisait rien gagner
+     (cadre 358 × 477 avant comme après pour l'intro), et l'iPhone ne le proposait déjà pas. « Carte » tout court
+     quand « Passer le film › » est là ; « Carte des mondes » en entier sinon. */
+  #fs{display:none}
+  .pied{gap:0 10px}
+  .pied .credit{order:3;flex-basis:100%}
+  .pied.avecPasser #carte .long{display:none}
   .bigplay{width:56px;height:56px}
   .bigplay svg{width:24px;height:24px}
 }
@@ -99,6 +109,7 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
       <button class="bigplay" id="bigplay" type="button" aria-label="Lancer le film"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg></button>
     </div>
     <div class="pied" id="pied">
+      <a class="lien carte" id="carte" href="/outils/splat_univers.html" hidden><span>‹ Carte<span class="long">&nbsp;des mondes</span></span></a>
       <button class="lien" id="fs" type="button" title="Plein écran (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span id="fsTxt">Plein écran</span></button>
       <button class="lien" id="son" type="button" hidden aria-pressed="true" title="Couper le son"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path class="on" d="M16.5 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M17 9.5l5 5M22 9.5l-5 5" style="display:none"/></svg><span id="sonTxt">Son</span></button>
       <div class="credit" id="credit" hidden></div>
@@ -202,7 +213,9 @@ function lancerLecteur(film,autre){
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
-  if(film.passer&&!PRESENTATION){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
+  if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
+  if(!PRESENTATION){$('carte').href=CARTE;$('carte').hidden=false;}
+  $('pied').classList.toggle('avecPasser',!$('passer').hidden);
   if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
   /* le lien vers l'autre façon de voir (le film ou « À toi de faire »), sous le cadre */
   if(autre){const a=$('autre');a.href=autre.href;a.textContent=autre.txt;a.hidden=false;}
@@ -306,6 +319,16 @@ const SUITE=(()=>{const repli='/outils/splat_univers.html';
    Ni « Passer le film › » ni « Je joue » ; à la fin, « ↺ Revoir le film » et le retour à la page Splat (11/10/2026).
    Tous les liens de la carte des mondes portent ?suite= : rien ne change pour l'élève. */
 const PRESENTATION=!new URLSearchParams(location.search).has('suite');
+/* Le retour à la carte des mondes (lot « films : liens et boutons », 08/11/2026, choix de Gwenaël) : sur le chemin de
+   l'élève (?suite=), la pastille « ‹ Carte des mondes » est toujours là, à gauche de la ligne du bas.
+   - ouvert depuis le bouton d'une étape sur la carte (&depuis=carte) : c'est elle qui ramène, ouverte sur cette étape
+     (&etape=<id>, l'ancre de l'étape) ; pas de « Passer le film › » — l'élève voulait REGARDER le film ;
+   - ouvert par « Continuer » ou « Étape suivante » : elle s'ajoute à « Passer le film › » ; la carte s'ouvre sur le
+     monde retenu au départ (retenirMonde, côté carte).
+   La vue prof (?suite=…?prof=1) revient à la vue prof. */
+const DEPUIS_CARTE=new URLSearchParams(location.search).get('depuis')==='carte';
+const CARTE=(()=>{const base=/^\/outils\/splat_univers\.html\?prof=1(&|#|$)/.test(SUITE)?'/outils/splat_univers.html?prof=1':'/outils/splat_univers.html';
+  const e=new URLSearchParams(location.search).get('etape')||'';return base+(/^[A-Za-z0-9_-]{1,40}$/.test(e)?'#'+e:'');})();
 const RETOUR_PAGE='/outils/?domain=algebre&collection=splat';
 
 const LAY={
@@ -354,7 +377,8 @@ const film={
   /* arrêts aux questions : le film s'arrête, les élèves cherchent, on relance */
   stops:[{t:T.arret1},{t:T.arret2},{t:T.arret3}],
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1200}},
-  passer:SUITE, credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
+  /* « Passer le film › » comme les autres films (08/11/2026) : l'introduction est devenue « Le film » de l'étape 1 */
+  passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   chapters:[{t:0,name:'SPLAT!'},{t:3.3,name:'Compter les jetons'},{t:10.6,name:'La tache tombe'},{t:15.5,name:'Le schéma en barres'},
     {t:23.0,name:'Remplir le schéma'},{t:30.6,name:'Répondre'},{t:32.6,name:'Vérifier sous la tache'},{t:40.0,name:'À toi de jouer'}],
   build(svg,mode){

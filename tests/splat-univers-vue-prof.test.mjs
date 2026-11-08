@@ -71,7 +71,7 @@ test("aucun lien ne change : exactement les liens des données, plus la page des
   let total = 0;
   MONDES.forEach((m, mi) => {
     const attendu = new Set();
-    if (mi === 0) attendu.add("/outils/splat_intro.html?suite=" + encodeURIComponent("/outils/splat_univers.html?prof=1"));
+    if (mi === 0) attendu.add("/outils/splat_intro.html?suite=" + encodeURIComponent("/outils/splat_univers.html?prof=1") + "&depuis=carte");
     attendu.add("/outils/livrets_splat.html#monde-" + (mi + 1)); /* chaque monde a sa page des livrets */
     m.etapes.forEach((e) => {
       for (const k of ["jp", "j", "f", "fe", "c", "c2", "cl"]) if (e[k]) attendu.add(e[k]);

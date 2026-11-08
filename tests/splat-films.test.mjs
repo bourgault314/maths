@@ -109,12 +109,12 @@ test("en suivant le parcours (« Étape suivante » par ?apres=, « Continuer »
   // les deux portes du parcours s'en servent
   assert.match(carte, /APRES_REDIRIGE=true;\s*window\.location\.replace\(versEtape\(suite\[k\+1\]\)\);/);
   assert.match(carte, /a\.href=versEtape\(prochaine\.e\); a\.dataset\.monde=prochaine\.mi;/);
-  // le film d'une étape propose « Passer le film › », bien visible ; l'introduction garde « Passer l'intro › »
+  // le film d'une étape propose « Passer le film › », bien visible — l'introduction aussi depuis qu'elle est « Le film »
+  // de l'étape 1 (08/11/2026)
   const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
-  for (const nom of ["FILMS.equasplat=", "FILMS['equasplat-jetons']=", "FILMS.dessine=", "FILMS.paquets="]) {
+  for (const nom of ["FILMS.intro=film;", "FILMS.equasplat=", "FILMS['equasplat-jetons']=", "FILMS.dessine=", "FILMS.paquets="]) {
     assert.ok(blocs.find((b) => b.includes(nom)).includes("passerTexte:'Passer le film ›'"), nom);
   }
-  assert.ok(!blocs.find((b) => b.includes("FILMS.intro=film;")).includes("passerTexte"));
   assert.match(page, /<a class="lien passer" id="passer" href="#" hidden>Passer l’intro ›<\/a>/);
   assert.match(page, /if\(film\.passerTexte\)\$\('passer'\)\.textContent=film\.passerTexte;/);
   assert.match(page, /\.passer\{color:var\(--accent\);background:var\(--accent-soft\);border-radius:999px;/);
@@ -126,19 +126,22 @@ test("le caractère ▶ est toujours suivi de U+FE0E (sinon l'iPhone le dessine 
   assert.deepEqual(mauvais, []);
 });
 
-test("carte des mondes : les films sous les étapes 2 et 35, qui reviennent au jeu de l'étape", () => {
-  assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","Comment on joue \?"\],\["equasplat-jetons","Avec des jetons numérotés"\]\],/);
+test("carte des mondes : les films sous les étapes 1, 2, « paquets » et 35, qui reviennent au jeu de l'étape", () => {
+  assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés",40\]\],/);
   // le lien : le lecteur, le film, et ?suite= = la carte avec ?jouer=<parcours>, qui renvoie aussitôt au jeu de
   // l'étape (11/10/2026 : avant, ?suite= portait le lien du jeu en entier, #data= compris — une adresse de plusieurs Ko)
-  assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'">\\ud83c\\udfac '+f[1]+'</a>').join(''):'')`));
+  // (08/11/2026 : + &depuis=carte&etape=<id>, le film ramène à la carte sur cette étape)
+  assert.ok(carte.includes(`(e.films?e.films.map(f=>'<a class="filmLien" href="/outils/splat_intro.html?film='+f[0]+'&amp;suite='+encodeURIComponent(e.p?'/outils/splat_univers.html?jouer='+e.p:e.j)+'&amp;depuis=carte&amp;etape='+ids[ei]+'">'+`));
   assert.match(carte, /const jouer=new URLSearchParams\(window\.location\.search\)\.get\("jouer"\);/);
   assert.match(carte, /window\.location\.replace\(MONDES\[mi\]\.etapes\.find\(e=>e\.p===jouer\)\.j\);/);
   // ?jouer= n'ouvre que les mondes jouables : ni un monde en préparation sans la clé, ni un monde fermé à la classe
   assert.match(carte, /const mi=MONDES\.findIndex\(m=>jouable\(m\)&&m\.etapes\.some\(e=>e\.p===jouer&&e\.j\)\);/);
-  // les étapes qui ont un film : la 35 (deux films), la 2 (« Dessine les jetons ») et, au monde 2, « Avec des paquets de jetons »
-  assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Comment on joue \?"\]\],/);
-  assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Comment on joue \?"\]\],/);
-  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 3);
+  // les étapes qui ont un film : la 1 (l'introduction, 08/11/2026), la 35 (deux), la 2 (« Dessine les jetons ») et,
+  // au monde 2, « Avec des paquets de jetons »
+  assert.match(carte, /p:"m1e1",\n\s*films:\[\["intro","Le film",43\]\],/);
+  assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Le film",36\]\],/);
+  assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Le film",47\]\],/);
+  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 4);
 });
 
 /* Ouvert depuis la page Splat du catalogue (sans ?suite=), le film est présenté par le prof : il ne mène pas
@@ -148,7 +151,7 @@ test("film ouvert depuis la page Splat : « Revoir le film » et retour à la pa
   const code = sansCommentaires(page);
   assert.match(code, /const PRESENTATION=!new URLSearchParams\(location\.search\)\.has\('suite'\);/);
   assert.match(code, /const RETOUR_PAGE='\/outils\/\?domain=algebre&collection=splat';/);
-  assert.match(code, /if\(film\.passer&&!PRESENTATION\)\{\$\('passer'\)\.href=film\.passer;/);
+  assert.match(code, /if\(film\.passer&&!PRESENTATION&&!DEPUIS_CARTE\)\{\$\('passer'\)\.href=film\.passer;/);
   // les quatre écrans de fin (introduction, films d'ÉquaSplat, « Dessine les jetons », « Avec des paquets de jetons ») passent par le même assemblage
   assert.equal((code.match(/F\.boutonsFin\(o,fi\);/g) || []).length, 4);
   // « Je joue » n'existe plus que dans F.boutonsFin, sur le chemin de l'élève
@@ -168,7 +171,8 @@ test("film ouvert depuis la page Splat : « Revoir le film » et retour à la pa
 
 test("la carte des mondes envoie toujours ses films avec ?suite= : rien ne change pour l'élève", () => {
   const liens = [...carte.matchAll(/\/outils\/splat_intro\.html/g)].map((m) => carte.slice(m.index, m.index + 90));
-  assert.equal(liens.length, 4, "lien du monde 1, vue prof, films sous les étapes, chemin du parcours");
+  // 08/11/2026 : le lien « Comment on joue ? » sous le monde 1 est parti (le film d'intro est le bouton de l'étape 1)
+  assert.equal(liens.length, 3, "vue prof, films sous les étapes, chemin du parcours");
   for (const l of liens) assert.match(l, /^\/outils\/splat_intro\.html\?(film='\+f\[0\]\+'&amp;|film='\+e\.films\[0\]\[0\]\+'&)?suite=/, l);
 });
 
@@ -448,8 +452,8 @@ test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutorie
   // seul le film des billes a son tutoriel pour l'instant (les jetons numérotés viendront après)
   assert.equal((code.match(/film\.aToi=aToi;/g) || []).length, 1);
   assert.match(blocBilles(), /passer:SUITE, passerTexte:'Passer ›', credit:film\.credit,/);
-  // aucune page de la carte des mondes ne change : le lien sous l'étape 35 reste ?film=equasplat&suite=…
-  assert.match(carte, /films:\[\["equasplat","Comment on joue \?"\],\["equasplat-jetons","Avec des jetons numérotés"\]\]/);
+  // le bouton sous l'étape 35 ouvre ?film=equasplat&suite=… : il s'appelle « ✋ À toi de faire » (08/11/2026)
+  assert.match(carte, /films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés",40\]\]/);
 });
 
 test("le film des billes range toujours les jetons, mais ne le dit plus", () => {
