@@ -138,6 +138,33 @@
     return BONUS.some((b) => b[0] === parcours);
   }
 
+  /* « ? Aide » des trois outils (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : à côté de
+     « ◀ Carte des mondes », le bouton ouvre l'aide de l'étape — son film ou son tutoriel, sinon le
+     film de son monde — puis ramène l'élève sur SA carte (« Retour au jeu › » sous le film, ou
+     « Je joue ▶ » à la fin). Une étape qui « dessine » ouvre le film « Dessine les jetons » (choix du
+     08/11 pour l'étape 6). Les mondes sans film ni tutoriel (Enquête, Système, Relatifs) n'ont pas de
+     bouton : il viendra tout seul quand ils auront une aide (choix du 08/11).
+     C'EST UNE COPIE des films de la carte (MONDES, champ « films ») : tests/splat-aide-jeux.test.mjs
+     la recalcule à partir de splat_univers.html et échoue si les deux diffèrent. Chaque étape :
+     parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
+  const AIDES = {
+    m1e1: "intro", m1e2: "dessine", m1e3: "intro", m1e4: "intro", m1e5: "intro", m1e6: "dessine",
+    m2e1: "paquets", m2e4: "paquets", m2e5: "paquets",
+    m3e1: "equasplat", m3e2: "equasplat", m3e4: "equasplat"
+  };
+  const URL_FILMS = "/outils/splat_intro.html";
+  /* le retour : l'adresse du jeu lui-même (la même série, donc la même reprise — deux livrets peuvent
+     partager un parcours avec des cartes différentes), seulement une page du site ; au-delà de 6 000
+     caractères (les séries d'ÉquaSplat font 3,5 ko), la carte qui relance le jeu de l'étape (?jouer=) */
+  const RETOUR_MAX = 6000;
+  function aide(parcours, retour) {
+    if (!Object.prototype.hasOwnProperty.call(AIDES, parcours)) return null;
+    const suite = typeof retour === "string" && /^\/[^\/\\]/.test(retour) && retour.length <= RETOUR_MAX
+      ? retour
+      : "/outils/splat_univers.html?jouer=" + encodeURIComponent(parcours);
+    return URL_FILMS + "?film=" + AIDES[parcours] + "&suite=" + encodeURIComponent(suite) + "&depuis=jeu";
+  }
+
   function echapper(texte) {
     return String(texte).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
@@ -232,5 +259,5 @@
     };
   }
 
-  window.MathsGoSplatEtapes = { ETAPES, BONUS, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
+  window.MathsGoSplatEtapes = { ETAPES, BONUS, AIDES, aide, MONDES_EN_PREPARATION, CLE_ESSAI, cle: CLE, mondeCache, mondesOuverts, mondeFerme, estBonus, suivante, sousTitre, bouton };
 })();

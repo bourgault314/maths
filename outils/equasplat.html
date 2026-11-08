@@ -4758,6 +4758,15 @@
   #eleveBarre a.eleveMondes{color:#dbeafe;text-decoration:none;font-size:13px;font-weight:800;background:rgba(255,255,255,.14);
     border-radius:999px;padding:4px 9px;white-space:nowrap}
   #eleveBarre a.eleveMondes:hover{background:rgba(255,255,255,.26)}
+  /* « ? Aide » (lot 3 « aides et carte », 08/11/2026) : collé à « ◀ Carte des mondes », même pastille ; au téléphone,
+     « ? » seul, comme « ◀ » (planches 7 et 8) */
+  #eleveBarre a.eleveAide{color:#dbeafe;text-decoration:none;font-size:13px;font-weight:800;background:rgba(255,255,255,.14);
+    border-radius:999px;padding:4px 9px;white-space:nowrap;margin-left:-4px}
+  #eleveBarre a.eleveAide:hover{background:rgba(255,255,255,.26)}
+  #eleveBarre a.eleveMondes:focus-visible,#eleveBarre a.eleveAide:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+  /* « Comment faire » écrit en entier seulement à partir de 900 px ; dessous, « ? » seul (à 768 px, la barre passait sur
+     deux lignes) */
+  @media (max-width:899px){#eleveBarre a.eleveAide .txt{display:none}}
   /* marges négatives (21/10/2026) : le bouton garde sa taille au doigt, mais ne fait plus grandir la
      barre quand il apparaît (avant : 40 → 48 px au bout de 90 s, et tout le jeu descendait d'autant) */
   /* « Passer ▶ » DISCRET (25/10/2026, choix de Gwenaël) : il est là dès le début, donc plus de gros
@@ -4777,7 +4786,7 @@
   @media (max-width:760px){
     body.importMode.eleveMode{display:flex;flex-direction:column}
     body.importMode.eleveMode #eleveBarre{flex:0 0 auto;padding:5px 10px;font-size:14px;gap:8px}
-    body.importMode.eleveMode #eleveBarre a.eleveMondes .txt{display:none}
+    body.importMode.eleveMode #eleveBarre a.eleveMondes .txt,body.importMode.eleveMode #eleveBarre a.eleveAide .txt{display:none}
     /* la barre doit tenir sur UNE seule ligne : une deuxième rangée repousse le
        jeu et coupe le bouton Valider dès que « Passer » ou « Équation suivante »
        apparaît (mesuré à 390×600 : la zone d'action tombait de 594 à 634 px). */
@@ -4793,6 +4802,16 @@
     body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille{margin-left:-4px;padding:2px 5px;gap:0}
     body.importMode.eleveMode #eleveBarre #elevePasser + .suivi-pastille .nom,
     body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille .nom{display:none}
+  }
+  /* « ? Aide » (lot 3 « aides et carte », 08/11/2026) : sous 380 px (360, 375), la barre se resserre d'autant que le
+     bouton prend, pour rester sur UNE ligne comme avant (mesuré à 360 et 375 px, douze pastilles, élève suivi). Tous
+     les mondes, avec ou sans « ? » : la barre garde le même air partout */
+  @media (max-width:380px){
+    body.importMode.eleveMode #eleveBarre{gap:6px}
+    body.importMode.eleveMode #eleveBarre a.eleveMondes,body.importMode.eleveMode #eleveBarre a.eleveAide{padding:4px 7px}
+    body.importMode.eleveMode #eleveBarre a.eleveAide{margin-left:-2px}
+    body.importMode.eleveMode #eleveBarre .elevePastilles{gap:2px}
+    body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 10px}
   }
   /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » quand il est là,
      au lieu de partager avec lui la place libre */
@@ -4881,7 +4900,7 @@
   .actionZone > .btnrow{margin-top:0}
 </style>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261108-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261107-1"></script>
@@ -10467,8 +10486,19 @@
     return `<a class="${classe}" href="${ELEVE_URL_MONDES}" title="Retour \u00e0 la carte des mondes">` +
       (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
   }
+  /* « ? Aide » (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : collé à « ◀ Carte des mondes », il ouvre
+     l'aide de l'étape (assets/js/splat-etapes.js : son tutoriel) ; « Retour au jeu › » sous le
+     tutoriel rouvre CETTE adresse (la série est dans #data=), et la reprise remet l'élève sur son équation. Rien sans
+     parcours ni sans aide (le monde 6 n'en a pas encore). */
+  function eleveLienAideHtml(){
+    const E = window.MathsGoSplatEtapes;
+    const href = eleveParcours && E && typeof E.aide === "function"
+      ? E.aide(eleveParcours, location.pathname + location.search + location.hash) : null;
+    if(!href) return "";
+    return `<a class="eleveAide" href="${href.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" title="Comment faire : le tutoriel" aria-label="Comment faire">? <span class="txt">Comment faire</span></a>`;
+  }
   function eleveBarreHtml(message){
-    return eleveLienMondesHtml("eleveMondes") +
+    return eleveLienMondesHtml("eleveMondes") + eleveLienAideHtml() +
            `<span class="eleveBarreTexte"><span class="mot">\u00c9quation </span>${Math.min(eleveIdx + 1, eleveEqs.length)} / ${eleveEqs.length}</span>` +
            elevePastillesHtml() +
            (message && !(eleveAttenteSuivante && eleveEcranEtroit()) ? `<span class="eleveBarreNote">${message}</span>` : "") +

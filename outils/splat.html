@@ -748,7 +748,18 @@
   .eleveTete > span{white-space:nowrap}
   .eleveTete a.eleveMondes{font-size:13px;font-weight:800;color:#1e40af;text-decoration:none;white-space:nowrap;padding:4px 8px;border-radius:999px;background:#e0e7ff;margin-right:auto}
   .eleveTete a.eleveMondes:hover{background:#c7d2fe}
-  @media (max-width:520px){.eleveTete a.eleveMondes .txt{display:none}.eleveTete a.eleveMondes{padding:3px 7px}.eleveTete{font-size:15px;gap:8px}.elevePastilles{gap:3px}.elevePastilles .p{width:9px;height:9px}}
+  /* « ? Aide » (lot 3 « aides et carte », 08/11/2026) : collé à « ◀ Carte des mondes », même pastille ; c'est lui qui
+     pousse le reste à droite. Au téléphone, « ? » seul, comme « ◀ » (planches 7 et 8) */
+  .eleveTete a.eleveMondes.avecAide{margin-right:0}
+  .eleveTete a.eleveAide{font-size:13px;font-weight:800;color:#1e40af;text-decoration:none;white-space:nowrap;padding:4px 8px;border-radius:999px;background:#e0e7ff;margin:0 auto 0 -4px}
+  .eleveTete a.eleveAide:hover{background:#c7d2fe}
+  .eleveTete a.eleveMondes:focus-visible,.eleveTete a.eleveAide:focus-visible{outline:3px solid #1e40af;outline-offset:2px}
+  /* téléphone (≤ 400 px) : « Carte » s'efface devant « 1 / 12 », comme « Équation » dans ÉquaSplat — avec le « ? », les
+     douze pastilles passaient sur deux rangées (390 px, élève suivi), voire trois (320 px) */
+  @media (max-width:400px){.eleveTete .mot{display:none}}
+  /* « Comment faire » écrit en entier seulement à partir de 900 px (ordinateur, projection) ; dessous, « ? » seul */
+  @media (max-width:899px){.eleveTete a.eleveAide .txt{display:none}}
+  @media (max-width:520px){.eleveTete a.eleveMondes .txt,.eleveTete a.eleveAide .txt{display:none}.eleveTete a.eleveMondes,.eleveTete a.eleveAide{padding:3px 7px}.eleveTete{font-size:15px;gap:8px}.elevePastilles{gap:3px}.elevePastilles .p{width:9px;height:9px}}
   .eleveCase.montre input.eleveChamp{color:#b91c1c}
   .eleveActions button.secondaire{background:#fde68a;color:#78350f}
   .eleveActions button.suivant{background:#16a34a}
@@ -938,7 +949,7 @@
     body.eleve-mode #elevePanel.enquete .eleveDiag.vraies .ligneBas .eleveCase{min-width:min(96px, calc(100% / var(--n, 1)))}
     body.eleve-mode .eleveConsigne{font-size:17px;margin:2px 0 10px}
     body.eleve-mode .eleveTete{font-size:21px;gap:10px} /* les pastilles ne touchent plus le compteur */
-    body.eleve-mode .eleveTete a.eleveMondes{font-size:15px;padding:5px 11px}
+    body.eleve-mode .eleveTete a.eleveMondes,body.eleve-mode .eleveTete a.eleveAide{font-size:15px;padding:5px 11px}
     body.eleve-mode .eleveActions button{font-size:19px;padding:14px 30px}
   }
   /* « ◀ » du pas à pas (03/10/2026) : petit, à gauche de « Étape suivante », jamais étiré comme
@@ -1004,7 +1015,7 @@
      le pavé doit déjà exister à ce moment-là. -->
 <script src="../assets/js/mathsgo-pave-chiffres.js?v=20261015-1"></script>
 <!-- Le texte du bouton « Étape suivante ▶ » de l'écran de fin (lot A). -->
-<script src="../assets/js/splat-etapes.js?v=20261023-1"></script>
+<script src="../assets/js/splat-etapes.js?v=20261108-1"></script>
 <!-- Le parcours de l'élève (moteur partagé avec la carte des mondes et le serveur de suivi), et
      l'habillage du suivi de classe (pastille, garde) : lot 2 « outils + carte », 08/10/2026 -->
 <script src="../assets/js/splat-parcours.js?v=20261107-1"></script>
@@ -15338,7 +15349,7 @@ function renderEleveSplat(){
     return;
   }
   tete.style.display = "";
-  tete.innerHTML = eleveLienMondesHtml("eleveMondes") + `<span>Carte ${eleveIdx + 1} / ${eleveSerie.length}</span>` +
+  tete.innerHTML = (eleveLienAideHtml() ? eleveLienMondesHtml("eleveMondes avecAide") + eleveLienAideHtml() : eleveLienMondesHtml("eleveMondes")) + `<span><span class="mot">Carte </span>${eleveIdx + 1} / ${eleveSerie.length}</span>` +
     elevePastillesHtml() + eleveSuiviPastilleHtml(); /* « ● Léa » au bout de la barre, sous un code (lot 2 du suivi) */
   eleveCarteFautee = false;
   eleveEchecs = 0;
@@ -16041,6 +16052,18 @@ function eleveLienMondesHtml(classe, libelle){
   const ancre = bonus ? (bonus[4] === 4 ? "#sys-bonus" : "#enq-bonus") : "";
   return `<a class="${classe}" href="${ELEVE_URL_MONDES}${ancre}" title="Retour \u00e0 la carte des mondes">` +
     (libelle || '\u25c0 <span class="txt">Carte des mondes</span>') + `</a>`;
+}
+
+/* « ? Aide » (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : collé à « ◀ Carte des mondes », il ouvre
+   l'aide de l'étape (assets/js/splat-etapes.js : son film, sinon le film du monde) ; « Retour au jeu › » sous le
+   film rouvre CETTE adresse, et la reprise remet l'élève sur sa carte. Rien sans parcours ni sans aide (Enquête,
+   Système et leurs Bonus n'en ont pas encore). */
+function eleveLienAideHtml(){
+  const E = window.MathsGoSplatEtapes;
+  const href = parcoursId && E && typeof E.aide === "function"
+    ? E.aide(parcoursId, location.pathname + location.search + location.hash) : null;
+  if(!href) return "";
+  return `<a class="eleveAide" href="${href.replace(/&/g, "&amp;").replace(/"/g, "&quot;")}" title="Comment faire : le film" aria-label="Comment faire">? <span class="txt">Comment faire</span></a>`;
 }
 
 /* Empreinte de la série affichée : les réglages de l'adresse qui déterminent

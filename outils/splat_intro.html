@@ -94,6 +94,11 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
   .pied{gap:0 10px}
   .pied .credit{order:3;flex-basis:100%}
   .pied.avecPasser #carte .long{display:none}
+  /* ouvert par « ? Aide » (lot 3, 08/11/2026) : « ‹ Carte » · « 🎬 Voir le film » · « Retour au jeu › », plus long que
+     « Passer › » — on resserre les pastilles pour garder UNE ligne (mesuré : de 360 à 430 px) */
+  .pied.serre{gap:0 6px}
+  .pied.serre .carte,.pied.serre .passer{padding:9px 12px}
+  .pied.serre #autre{padding:10px 2px}
   .bigplay{width:56px;height:56px}
   .bigplay svg{width:24px;height:24px}
 }
@@ -213,12 +218,15 @@ function lancerLecteur(film,autre){
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
-  if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;}
+  if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;
+    if(DEPUIS_JEU)$('passer').textContent='Retour au jeu ›';}
   if(!PRESENTATION){$('carte').href=CARTE;$('carte').hidden=false;}
   $('pied').classList.toggle('avecPasser',!$('passer').hidden);
   if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
   /* le lien vers l'autre façon de voir (le film ou « À toi de faire »), sous le cadre */
   if(autre){const a=$('autre');a.href=autre.href;a.textContent=autre.txt;a.hidden=false;}
+  /* ouvert par « ? Aide » avec « 🎬 Voir le film » au milieu : au téléphone, la ligne se resserre (voir le CSS) */
+  $('pied').classList.toggle('serre',DEPUIS_JEU&&!!autre&&!$('passer').hidden);
   const D=film.duration,C=film.chapters;
   let t=0,playing=false,last=null,fresh=true,enArret=false;
   /* le film s'arrête toujours aux questions : on cherche, puis on relance (bulle, clic sur le film ou espace) */
@@ -327,6 +335,10 @@ const PRESENTATION=!new URLSearchParams(location.search).has('suite');
      monde retenu au départ (retenirMonde, côté carte).
    La vue prof (?suite=…?prof=1) revient à la vue prof. */
 const DEPUIS_CARTE=new URLSearchParams(location.search).get('depuis')==='carte';
+/* ouvert par « ? Aide » d'un jeu (&depuis=jeu, lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : la pastille de
+   droite dit « Retour au jeu › » au lieu de « Passer le film › » — ?suite= est alors le jeu lui-même, l'élève retrouve sa
+   carte (la reprise des outils) ; « ‹ Carte des mondes » reste à gauche, « Je joue ▶ » à la fin ramène aussi au jeu */
+const DEPUIS_JEU=new URLSearchParams(location.search).get('depuis')==='jeu';
 const CARTE=(()=>{const base=/^\/outils\/splat_univers\.html\?prof=1(&|#|$)/.test(SUITE)?'/outils/splat_univers.html?prof=1':'/outils/splat_univers.html';
   const e=new URLSearchParams(location.search).get('etape')||'';return base+(/^[A-Za-z0-9_-]{1,40}$/.test(e)?'#'+e:'');})();
 const RETOUR_PAGE='/outils/?domain=algebre&collection=splat';

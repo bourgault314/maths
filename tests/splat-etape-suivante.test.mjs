@@ -283,7 +283,7 @@ test("les trois outils chargent splat-etapes.js (sans defer, même version)", ()
   for (const [page, nom] of [[splat, "splat.html"], [petit, "splat_tache_barre.html"], [equa, "equasplat.html"]]) {
     const m = page.match(/<script src="\.\.\/assets\/js\/splat-etapes\.js\?v=([\w-]+)"><\/script>/);
     assert.ok(m, `${nom} ne charge pas splat-etapes.js`);
-    assert.equal(m[1], "20261023-1", `${nom} : ?v= de splat-etapes.js`);
+    assert.equal(m[1], "20261108-1", `${nom} : ?v= de splat-etapes.js`);
     // dans <head>, avant tout script de la page
     assert.ok(page.indexOf(m[0]) < page.indexOf("</head>"), `${nom} : le script doit être dans <head>`);
     // la petite ligne a son style
