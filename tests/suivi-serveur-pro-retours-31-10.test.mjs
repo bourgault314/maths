@@ -253,7 +253,7 @@ for (const moment of ["api/eleve.php", "lireJauges"]) test(`ouvrir — « Se dé
   let rendreJauges;
   const source = `${constante("ATTENTE_JAUGES")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\n${fonction("revenirAuCode")}\nreturn {ouvrir, revenirAuCode};`;
   const {ouvrir, revenirAuCode} = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
-    "lireJauges", "surveillerDirect", "afficherErreur", "dessinerCases", "arreterDirect", "oublierCopie", source)(
+    "lireJauges", "surveillerDirect", "afficherErreur", "dessinerCases", "arreterDirect", "oublierCopie", "poserSemaine", source)(
     {setTimeout}, {documentElement: {classList: classes()}, body: {classList: classes()}},
     () => new Promise(ok => { repondre = ok; }),
     id => (zones[id] ||= {classList: classes()}),
@@ -264,7 +264,7 @@ for (const moment of ["api/eleve.php", "lireJauges"]) test(`ouvrir — « Se dé
     () => codeGarde,
     () => new Promise(ok => { rendreJauges = ok; }),
     () => Promise.resolve(0),
-    () => {}, () => {}, () => {}, () => {});
+    () => {}, () => {}, () => {}, () => {}, () => {});
   const fini = ouvrir("ABC234", true);
   assert.deepEqual(journal, [["dessin", "Rania (copie)"]], "la copie est à l'écran, le bouton aussi");
   const reponse = {ok: true, status: 200, json: () => Promise.resolve(OK.corps)};

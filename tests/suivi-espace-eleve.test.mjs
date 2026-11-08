@@ -193,21 +193,24 @@ function executerPageshow({persisted, codeEnMemoire}) {
   // la séance et retire sa tuile — sinon la tuile « Séance en direct » de la
   // classe du précédent élève resterait posée sur l'écran du code.
   const directs = {arrets: 0};
+  // Lot S3 : le ménage vide aussi « Ma semaine » (poserSemaine(null)).
+  const semaines = [];
   new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
-               "dessinerCases", "document", "arreterDirect", "ouverture", source)(
+               "dessinerCases", "document", "arreterDirect", "ouverture", "poserSemaine", source)(
     $, fenetre, () => {}, () => codeEnMemoire, nettoyer, () => {},
-    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0);
+    () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0, espace => semaines.push(espace));
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
-  return {$, elements, classesCorps, classesHtml, dessins, directs};
+  return {$, elements, classesCorps, classesHtml, dessins, directs, semaines};
 }
 
 // Le bouton et le retour de cache doivent faire EXACTEMENT le même ménage :
 // c'est la raison d'être de la fonction commune. Ce test exécute l'autre
 // chemin, celui du bouton, sur le même écran de départ.
 test("« Se déconnecter » fait le même ménage que le retour de cache", () => {
-  const {$, classesCorps, classesHtml, dessins, directs} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
+  const {$, classesCorps, classesHtml, dessins, directs, semaines} = executerPageshow({persisted: false, codeEnMemoire: "ABC123"});
   $("changer").ecouteurs.click();
+  assert.deepEqual(semaines, [null], "« Ma semaine » est vidée (lot S3)");
   assert.ok(!classesHtml.has("retour"), "l'écran du code n'est plus caché par la classe du retour (lot 8)");
   assert.equal(directs.arrets, 1, "la surveillance de la séance en direct s'arrête, sa tuile part");
   assert.ok(classesCorps.has("sur-code"), "l'écran du code retrouve sa mise en page (sans en-tête)");

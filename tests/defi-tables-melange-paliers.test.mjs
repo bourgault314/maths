@@ -537,7 +537,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis Défi calcul, la relecture 2 (08/11/2026) : la copie
   // prof/defi_calcul_core.js change (titres des niveaux, J'apprends d'A1,
   // M1, A2, A11, l'ordre de l'entraînement) (avant : suivre-les-eleves-S2-classe-et-fiche).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-relecture-2$/m);
+  // Puis « Suivre ses élèves », lot S3 « Mon espace côté élève » (08/11/2026) :
+  // index.php (Mon espace) seul change (avant : defi-calcul-relecture-2).
+  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S3-mon-espace$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
