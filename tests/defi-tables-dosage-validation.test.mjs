@@ -279,7 +279,7 @@ test("« Comme le test, en 2 min » reste proposée sur une table passée", () =
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, parcours de référence à jour", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261107-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261108-1/);
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "_serveur/public/prof/defi_tables_mon_parcours.js : la copie octet pour octet (dépôt FTP)");

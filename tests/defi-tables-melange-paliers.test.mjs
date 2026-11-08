@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261107-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261108-1"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -541,7 +541,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // index.php (Mon espace) seul change (avant : defi-calcul-relecture-2).
   // Puis « Suivre ses élèves », lot S2bis « les jours pas connus » (08/11/2026) :
   // prof/index.php seul change (avant : suivre-les-eleves-S3-mon-espace).
-  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S2bis-jours-pas-connus$/m);
+  // Puis « Suivre ses élèves », un jour de travail dès le premier geste
+  // (08/11/2026) : les copies prof/coffres-parcours.js,
+  // prof/defi_tables_mon_parcours.js et prof/defi_calcul_mon_parcours.js
+  // changent (avant : suivre-les-eleves-S2bis-jours-pas-connus).
+  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-jour-premier-geste$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

@@ -2148,6 +2148,24 @@
     const debut = ajouterJours(lundi, -21);
     const nombre = valeur => (valeur >= 0 ? valeur : null);
     const passees = pairesDe(parcours).filter(paire => paire.jour <= aujourdhui);
+    // Lot « un jour de travail dès le premier geste » (choix de Gwenaël,
+    // 08/11/2026, « l'élève a fait quelque chose ») : la séance ouverte (pas
+    // finie) compte aussi son jour dès un calcul du jour ou une étape faite —
+    // sans rien changer aux données (« seance » garde déjà son jour et ce
+    // qu'elle a fait) ; sa ligne se lit comme celle d'une séance finie.
+    const ouverte = parcours.seance;
+    if (ouverte.jour && ouverte.jour <= aujourdhui && ouverte.p[PLAN.ouverte] === 1
+      && (ouverte.etape > 0 || ouverte.j[EN_COURS.calculs] > 0)
+      && !passees.some(paire => paire.jour === ouverte.jour)) {
+      const entree = JOURNAL.map(() => -1);
+      entree[JOURNAL.indexOf("calculs")] = ouverte.j[EN_COURS.calculs];
+      entree[JOURNAL.indexOf("justes")] = ouverte.j[EN_COURS.justes];
+      entree[JOURNAL.indexOf("nouveautes")] = ouverte.j[EN_COURS.nouveautes];
+      entree[JOURNAL.indexOf("prouvees")] = ouverte.j[EN_COURS.prouvees];
+      entree[JOURNAL.indexOf("rouges")] = ouverte.j[EN_COURS.rouges];
+      passees.push({jour: ouverte.jour, entree});
+      passees.sort((x, y) => (x.jour < y.jour ? -1 : x.jour > y.jour ? 1 : 0));
+    }
     const jours = [];
     passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
       const ligne = {};
