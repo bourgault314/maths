@@ -292,7 +292,8 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.match(univers, /\(m\.volets\|\|\[\]\)\.map\(\(v,vi\)=>partieBtnHtml\(partieCle\(v,vi\),partieRang\(m,v,vi\),'stars'\+mi\+'-'\+vi,v\.ech\?' ech':''\)\)/);
   assert.match(univers, /function partieRang\(m,v,vi\)\{return v\.ech\?"Échauffement":"Partie "\+partieNum\(m,vi\);\}/);
   assert.match(univers, /function partieId\(m,v,vi\)\{return m\.idp\+\(v\.ech\?"-echauffement":"-partie-"\+partieNum\(m,vi\)\);\}/);
-  assert.match(univers, /return volet\+'<li class="etape'\+\(e\.code\?' code':''\)\+'" id="'\+ids\[ei\]\+'"'\+\(clePartie!==null\?' data-partie="'\+clePartie\+'"':''\)\+'>'/);
+  /* lot 5b (08/11/2026) : au monde 4, « sansTitre » (la partie « Les étapes », sans titre) vient devant */
+  assert.match(univers, /return sansTitre\+volet\+'<li class="etape'\+\(e\.code\?' code':''\)\+'" id="'\+ids\[ei\]\+'"'\+\(clePartie!==null\?' data-partie="'\+clePartie\+'"':''\)\+'>'/);
   /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
   assert.match(univers, /'<span class="stars" id="'\+idStars\+'"><\/span><\/button>'/);
   assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);

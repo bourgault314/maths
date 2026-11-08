@@ -47,7 +47,8 @@ test("une partie : un bouton « Partie 2 ⭐ x/y » en haut, et son titre (nom, 
   // la ligne des boutons : les parties dans l'ordre, puis le Bonus ; rien pour un monde sans partie
   const ligne = (m) => [...partiesHtml(m, MONDES.indexOf(m)).matchAll(/data-volet="(\w+)" aria-pressed="false">([^<]+)<span class="stars" id="([\w-]+)">/g)].map((x) => x.slice(1).join("|"));
   assert.deepEqual(ligne(MONDE_ENQUETE), ["0|Partie 1|stars2-0", "1|Partie 2|stars2-1", "2|Partie 3|stars2-2", "bonus|Bonus|starsBonus"]);
-  assert.deepEqual(ligne(MONDE_SYSTEME), ["bonus|Bonus|starsBonusSys"]);
+  // lot 5b (08/11/2026) : le monde 4, sans partie, a un premier bouton pour ses étapes avant son Bonus
+  assert.deepEqual(ligne(MONDE_SYSTEME), ["etapes|Les étapes|stars3-etapes", "bonus|Bonus|starsBonusSys"]);
   assert.deepEqual(ligne(MONDES[5]), ["ech|Échauffement|stars5-0", "1|Partie 1|stars5-1", "2|Partie 2|stars5-2"]);
   assert.ok(partiesHtml(MONDES[5], 5).includes('class="partieBtn ech"'), "l'échauffement en pointillés");
   [0, 1, 4].forEach((mi) => assert.equal(partiesHtml(MONDES[mi], mi), "", MONDES[mi].nom));
