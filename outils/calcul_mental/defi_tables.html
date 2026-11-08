@@ -2696,10 +2696,22 @@
     .suivi-repere.lecture-seule .repere-lecture > span { display: inline-block; white-space: nowrap; }
     .suivi-repere.lecture-seule b { font-weight: 800; }
     .parcours-prof { min-height: 0; margin-top: 18px; }
-    .parcours-prof .fiche-prof { padding: 4px 6px; border: 0; }
-    .parcours-prof-defile { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .parcours-prof .fiche-prof table { min-width: 640px; }
-    .parcours-prof .fiche-prof tbody th { position: sticky; left: 0; background: #fff; }
+    /* Lot S4c « les onglets d'appli » (08/11/2026) : la carte dit ses
+       séances au format « Activité » de la fiche du professeur — un jour par
+       bloc, une séance par ligne, les calculs du jour à droite (en orange
+       sous la moitié). */
+    .seances-prof { padding: 4px 6px; }
+    .seances-prof h2 { margin: 0 0 6px; color: var(--ink); font-size: 1.25rem; font-weight: 900; }
+    .seances-prof .sp-jour { padding: 8px 0; border-top: 1px solid var(--line); }
+    .seances-prof .sp-jour-titre { margin: 0 0 4px; color: var(--ink); font-weight: 800; }
+    .seances-prof ul { list-style: none; margin: 0; padding: 0; }
+    .seances-prof li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; padding: 2px 0; color: var(--ink); }
+    .seances-prof .sp-chiffres { flex: none; color: var(--muted); font-size: .92rem; white-space: nowrap; }
+    .seances-prof .sp-chiffres.faible { color: #a15c11; font-weight: 800; }
+    .seances-prof .sp-vide, .seances-prof .sp-note { margin: 8px 0 0; color: var(--muted); font-size: .92rem; }
+    .seances-prof .sp-plus { width: 100%; min-height: 44px; margin-top: 10px; padding: 8px 16px; border: 2px solid #c5d9e6; border-radius: 12px;
+                             background: #fff; color: var(--blue); font: inherit; font-weight: 800; cursor: pointer; }
+    .seances-prof .sp-plus:hover { border-color: var(--blue); }
     body.mesure-cadre #parcours-prof { display: none !important; }
 
     /* ---- En-tête commun des applis suivies (variante A, planches du
@@ -3228,12 +3240,13 @@
     </section>
     <!-- Lot « Ma classe : le parcours de Léa » (21/10/2026) : dans la vue du
          professeur (body.mode-prof), une seconde carte blanche sous le cadre du
-         parcours — « Pour le professeur », la copie du cadre de la page 2 de
-         la fiche (#fiche-prof), remplie par renderCarteProf. Vide et cachée
+         parcours, remplie par renderCarteProf — depuis le lot S4c (08/11/2026),
+         « Ses séances » au format « Activité » (avant : la copie du tableau
+         de la page 2 de la fiche, qui s'imprime toujours). Vide et cachée
          pour tout le monde d'autre. Hors de la mesure de l'échelle
          (body.mesure-cadre) : c'est le cadre du parcours seul qui doit tenir
          dans l'écran, comme chez l'élève. -->
-    <section id="parcours-prof" class="panel parcours-prof" aria-label="Pour le professeur" hidden></section>
+    <section id="parcours-prof" class="panel parcours-prof" aria-label="Ses séances" hidden></section>
   </main>
   <!-- Lot « le cadre qui dépasse » (11/10/2026, choix N1 de Gwenaël) : sur
        ordinateur, « Comment ça marche ? » (accueil et Mon parcours) s'ouvre
@@ -5630,22 +5643,99 @@
         renderCarteProf();
       }
 
-      // « Pour le professeur », à l'écran : une copie du cadre de la page 2
-      // (#fiche-prof, rempli par renderFicheProf), dans une carte sous le
-      // parcours. Le tableau y défile de côté (640 px au moins), la colonne
-      // « Table de … » reste à gauche.
+      // « Ses séances », à l'écran, sous le parcours (lot S4c « les onglets
+      // d'appli », choix de Gwenaël du 08/11/2026) : à la place du tableau
+      // « Pour le professeur » (les activités table par table), ses séances
+      // au format « Activité » de la fiche du professeur — un jour par bloc,
+      // du plus récent au plus ancien, une ligne par séance : « table de 7 ·
+      // test réussi ✓ », et à droite « calculs du jour 8/10 » (en orange
+      // sous la moitié). Six jours, puis « Voir les jours précédents » (sept
+      // de plus), jusqu'à la limite du parcours (ses 60 dernières séances).
+      // Les mots sont ceux de texteLigne dans la page du professeur
+      // (prof/index.php) : un test les compare. La page 2 de la fiche
+      // imprimée ne change pas. Tout est posé par textContent.
+      const JOURS_CARTE_PROF = 6;
+      let joursCarteProf = JOURS_CARTE_PROF;
+
+      function texteSeanceProf(l) {
+        const connu = v => typeof v === "number" && v >= 0;
+        const morceaux = [l.table ? `table de ${l.table}` : connu(l.table) ? "révisions" : "une séance"];
+        if (l.test === 1) morceaux.push("test réussi ✓");
+        else if (l.test === 2) morceaux.push("test pas encore");
+        let chiffres = "";
+        let faible = false;
+        if (connu(l.calculs) && l.calculs > 0) {
+          chiffres = `calculs du jour ${connu(l.justes) ? l.justes : "?"}/${l.calculs}`;
+          faible = connu(l.justes) && l.justes * 2 < l.calculs;
+        }
+        return [morceaux.join(" · "), chiffres, faible];
+      }
+
+      // Ses jours de séance, du plus récent au plus ancien, autant qu'il en
+      // faut : les 4 dernières semaines (resumeSuivi), puis les 4 qui
+      // finissent à la séance d'avant… (le moteur relu « comme si on était »
+      // à la fin de la période, comme la fiche du professeur).
+      function joursSeancesProf(brut, aujourdhui, besoin) {
+        const jours = [];
+        let fin = aujourdhui;
+        let connuDepuis = null;
+        while (fin) {
+          const suivi = PARCOURS.resumeSuivi(brut, {aujourdhui: fin});
+          if (!connuDepuis) connuDepuis = suivi.connuDepuis;
+          suivi.jours.slice().reverse().forEach(j => { if (j.jour <= fin) jours.push(j); });
+          if (jours.length > besoin) break;
+          const avant = PARCOURS.resumeSuivi(brut, {aujourdhui: PARCOURS.ajouterJours(suivi.debut, -1)});
+          fin = avant.dernier && avant.dernier < suivi.debut ? avant.dernier : null;
+        }
+        return {jours: jours.slice(0, besoin), encore: jours.length > besoin, connuDepuis};
+      }
+
+      function jourSeanceProf(jour) {
+        const d = new Date(`${jour}T12:00:00Z`);
+        if (isNaN(d)) return String(jour);
+        const texte = d.toLocaleDateString("fr-FR", {timeZone: "UTC", weekday: "long", day: "numeric", month: "short"});
+        return texte.charAt(0).toUpperCase() + texte.slice(1);
+      }
+
       function renderCarteProf() {
         const carte = $("parcours-prof");
         if (!carte) return;
         if (!VUE_PROF || !parcoursProf) { carte.hidden = true; return; }
-        const copie = $("fiche-prof").querySelector(".fiche-prof").cloneNode(true);
-        copie.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
-        const tableau = copie.querySelector("table");
-        const defile = document.createElement("div");
-        defile.className = "parcours-prof-defile";
-        tableau.replaceWith(defile);
-        defile.append(tableau);
-        carte.replaceChildren(copie);
+        const noeud = (balise, classe, texte) => {
+          const n = document.createElement(balise);
+          if (classe) n.className = classe;
+          if (texte) n.textContent = texte;
+          return n;
+        };
+        const bloc = noeud("div", "seances-prof");
+        bloc.append(noeud("h2", "", "Ses séances"));
+        const {jours, encore, connuDepuis} = joursSeancesProf(parcoursProf, PARCOURS.jourLocal(), joursCarteProf);
+        if (!jours.length) bloc.append(noeud("p", "sp-vide", "Aucune séance pour l’instant."));
+        jours.forEach(({jour, lignes}) => {
+          const blocJour = noeud("div", "sp-jour");
+          blocJour.append(noeud("p", "sp-jour-titre", jourSeanceProf(jour)));
+          const ul = document.createElement("ul");
+          lignes.forEach(ligne => {
+            const [quoi, chiffres, faible] = texteSeanceProf(ligne);
+            const li = document.createElement("li");
+            li.append(noeud("span", "", quoi));
+            if (chiffres) li.append(noeud("span", `sp-chiffres${faible ? " faible" : ""}`, chiffres));
+            ul.append(li);
+          });
+          blocJour.append(ul);
+          bloc.append(blocJour);
+        });
+        if (encore) {
+          const plus = noeud("button", "sp-plus", "Voir les jours précédents");
+          plus.type = "button";
+          plus.addEventListener("click", () => { joursCarteProf += 7; renderCarteProf(); });
+          bloc.append(plus);
+        } else if (connuDepuis && jours.length) {
+          const d = new Date(`${connuDepuis}T12:00:00Z`);
+          const quand = isNaN(d) ? "" : d.toLocaleDateString("fr-FR", {timeZone: "UTC", day: "2-digit", month: "2-digit"});
+          bloc.append(noeud("p", "sp-note", `Les séances d’avant le ${quand} ne sont plus gardées.`));
+        }
+        carte.replaceChildren(bloc);
         carte.hidden = false;
       }
 

@@ -484,7 +484,11 @@ test("plus de « Trier par » : chaque titre qui trie a sa clé dans TRIS, et TR
   for (const [id, cle] of [["entete-defi-tables", "defi-tables"], ["entete-coffres", "coffres"], ["entete-anzan", "flash-anzan"], ["entete-splat", "splat"]]) {
     const debut = page.indexOf(`<tr id="${id}"`);
     const rangee = page.slice(debut, page.indexOf("</tr>", debut));
-    assert.deepEqual([...rangee.matchAll(/data-tri="(\w+)"/g)].map(m => m[1]), TRIS[cle], `${cle} : les titres et TRIS disent la même chose`);
+    // Lot S4c : Coffres a deux rangées de titres (« Depuis le début », « Cette semaine ») ;
+    // TRIS les dit toutes les deux, le prénom une fois.
+    const autre = id === "entete-coffres" ? page.slice(page.indexOf('<tr id="entete-coffres-semaine"'), page.indexOf("</tr>", page.indexOf('<tr id="entete-coffres-semaine"'))) : "";
+    const cles = [...rangee.matchAll(/data-tri="([\w-]+)"/g), ...autre.matchAll(/data-tri="([\w-]+)"/g)].map(m => m[1]);
+    assert.deepEqual([...new Set(cles)], TRIS[cle], `${cle} : les titres et TRIS disent la même chose`);
   }
   // poserTris : une colonne que l'appli ne connaît pas repart au prénom ; aria-sort sur le seul titre trié.
   const titres = ["prenom", "acquises", null, "date"].map(cle => {

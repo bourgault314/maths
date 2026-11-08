@@ -143,7 +143,10 @@ const TOM = parcours({m1e1: etape(false, 0, 5)});
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
   "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "elementSvg", "pastilleMonde", "contenuSplat", "dessinerTableauSplat", "objectifSplat",
-  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts", "mondesDeLEleve"].map(fonction).join("\n");
+  "dessinerObjectifSplat", "resumeDeLaClasse", "lireSplat", "mondesOuverts", "mondesDeLEleve",
+  // Lot S4c : la bulle d'une étape (la carte « Par monde » a son test : suivi-s4c-onglets-d-appli).
+  "texteEtapeSplat", "jourCourtSemaine", "pluriel", "el", "montrerBulleCase", "cacherBulleCase"].map(fonction).join("\n")
+  + "\nfunction dessinerMondesSplat() {}";
 const CONSTANTES = ["COULEURS_MONDES", "ETATS_MONDE", "GRIS_FERME", "CASES_ETAPE", "SVG", "NOMBRE_MONDES"].map(constante).join("\n");
 
 function ongletSplat(liste, options = {}) {
@@ -275,7 +278,8 @@ test("la fenêtre de l'élève (lot 5c, l'ancien Détail) : ses chiffres, une ra
   assert.equal(b3["12d"], "et bonus");
   assert.equal(Object.keys(cases(rangees[7])).join(","), "25d,26d,27d,28d");
   assert.deepEqual(detail.premier(n => aClasse(n, "legende-detail")).children.map(s => s.textContent),
-    ["réussie", "réussie avec des réponses vues", "en cours", "pas encore faite", "bonus"]);
+    ["réussie", "réussie avec des réponses vues", "en cours", "pas encore faite", "bonus", "· toucher une étape : son détail"],
+    "lot S4c : la légende dit qu'une étape se touche");
 });
 
 // Échauffement du monde 6 (14/10/2026, décision de Gwenaël : « dans le total »).
@@ -343,8 +347,14 @@ test("c'est le moteur qui lit le parcours : la page ne touche jamais aux étapes
   const lecteur = fonction("lireSplat");
   assert.match(lecteur, /SPLAT\.resumeProf\(brut \|\| null\)/);
   const splat = lecteur + sectionSplat;
-  assert.doesNotMatch(splat, /(?:brut|parcours)\.etapes|\.etapes\[/, "pas de lecture de parcours.etapes dans la page");
-  assert.doesNotMatch(splat, /\.(?:vues|idx|etoiles|essais|cartes)\b/, "les champs d'une étape ne sont lus que par le moteur");
+  // Lot S4c : une seule lecture d'étape, dans le parcours RELU par le moteur
+  // (SPLAT.normaliser), pour la bulle d'une case.
+  assert.match(splat, /const normalise = SPLAT\.normaliser\(eleve\.parcours \|\| null\);/);
+  assert.doesNotMatch(splat.replace("normalise.etapes[etape[0]]", ""), /(?:brut|parcours)\.etapes|\.etapes\[/, "pas de lecture de parcours.etapes dans la page");
+  // Lot S4c : les champs d'une étape ne se lisent que dans texteEtapeSplat
+  // (la bulle), sur l'étape relue par le moteur ; « Par monde » lit les
+  // réponses vues du journal rendu par le moteur (resumeSuivi).
+  assert.doesNotMatch(splat.replace(fonction("texteEtapeSplat"), "").replace(fonction("dessinerMondesSplat"), ""), /\.(?:vues|idx|etoiles|essais|cartes)\b/, "les champs d'une étape ne sont lus que par le moteur");
   assert.doesNotMatch(splat, /innerHTML/, "rien de ce que renvoie le serveur ne devient du HTML");
   // Exécuté : un parcours vide, un parcours illisible, pas de moteur.
   const {f} = ongletSplat([]);
@@ -426,7 +436,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const TRIS = {"defi-tables": ["prenom", "acquises", "date"], "splat": ["prenom", "etapes", "date"]};
   const lus = {records: 0, evaluations: 0, quiVoit: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
-    `let tri = triInitial;\nlet vue = vueInitiale;\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction garderPopEleves() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    `let tri = triInitial;\nlet vue = vueInitiale;\nlet periodeCoffres = "debut";\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction garderPopEleves() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
   const vus = boutons.map(b => [b.hidden, b.attributs["aria-pressed"], b.classList.contains("eteint") ? "gris" : "clair", (b.premier(n => n.classList.contains("compte-plus")) || {textContent: ""}).textContent]);
   return {$, boutons, vus, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
