@@ -1491,8 +1491,13 @@ function renderProf(main){
   const som=document.createElement("nav"); som.className="sommaire"; som.setAttribute("aria-label","Les six mondes");
   som.innerHTML=sommaireProfHtml(plages);
   hero.after(som);
+  /* un monde à la fois (lot 2 « la carte des mondes », 08/11/2026) : la case met son monde à l'écran,
+     SOUS le sommaire, sans faire défiler la page (relevé par Code : le lien #monde-N sautait au bandeau
+     et le sommaire sortait de l'écran) ; l'adresse garde #monde-N pour qu'on puisse la copier */
   som.addEventListener("click",ev=>{ const a=ev.target.closest("a[data-mi]"); if(!a) return;
-    const mi=+a.dataset.mi; if(MONDES[mi].cache) return; ouvrirMonde(mi); retenirMonde(mi); });
+    ev.preventDefault();
+    const mi=+a.dataset.mi; if(MONDES[mi].cache) return; ouvrirMonde(mi); retenirMonde(mi);
+    try{ history.replaceState(null,"",a.getAttribute("href")); }catch(e){} });
   MONDES.forEach((m,mi)=>{
     const sec=document.createElement("section");
     sec.id="monde-"+(mi+1);

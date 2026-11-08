@@ -267,6 +267,8 @@ test("CSS : un monde replié ne montre que son bandeau ; les deux retouches tél
   /* vue prof (lot 2) : le sommaire choisit le monde à l'écran, comme la carte de l'élève ; le bandeau sans flèche */
   assert.match(univers, /\.sommaire a\.choisi\{border-color:var\(--c\);box-shadow:inset 0 0 0 1px var\(--c\);background:#fbfcfe\}/);
   assert.match(univers, /return teteProfHtml\(m,mi,plage,''\)\+/);
+  /* (correctif du lot 2, relevé par Code sur la PR #1123) : un clic dans le sommaire ne fait plus défiler la page */
+  assert.match(univers, /som\.addEventListener\("click",ev=>\{ const a=ev\.target\.closest\("a\[data-mi\]"\); if\(!a\) return;\s*ev\.preventDefault\(\);\s*const mi=\+a\.dataset\.mi; if\(MONDES\[mi\]\.cache\) return; ouvrirMonde\(mi\); retenirMonde\(mi\);\s*try\{ history\.replaceState\(null,"",a\.getAttribute\("href"\)\); \}catch\(e\)\{\} \}\);/);
   /* les anciens encadrés de la vue prof sont partis du CSS */
   assert.doesNotMatch(univers, /\.noteProf\{|\.eqListeProf\{|\.descProf|\.introLien\.livret|\.introNote\{/);
 });
