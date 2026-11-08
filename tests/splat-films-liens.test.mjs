@@ -21,15 +21,15 @@ function retour(search, suite) {
   return new Function("location", "SUITE", `${dep}${car}return {DEPUIS_CARTE,CARTE};`)({ search }, suite);
 }
 
-test("lecteur : la pastille « ‹ Carte des mondes » ouvre la ligne du bas, cachée par défaut", () => {
-  assert.match(page, /<div class="pied" id="pied">\n\s*<a class="lien carte" id="carte" href="\/outils\/splat_univers\.html" hidden><span>‹ Carte<span class="long">&nbsp;des mondes<\/span><\/span><\/a>\n\s*<button class="lien" id="fs"/);
+test("lecteur : la pastille « ‹ Carte des mondes » ouvre la ligne des boutons (en haut du cadre depuis le lot 3b), cachée par défaut", () => {
+  assert.match(page, /<div class="barre" id="barre">\n\s*<a class="lien carte" id="carte" href="\/outils\/splat_univers\.html" hidden><span>‹ Carte<span class="long">&nbsp;des mondes<\/span><\/span><\/a>\n\s*<button class="lien" id="fs"/);
   assert.match(page, /\.carte\{color:var\(--accent\);background:var\(--accent-soft\);border-radius:999px;padding:9px 18px;font-size:16px;font-weight:800\}/);
 });
 
 test("lecteur : depuis la carte, pas de « Passer » ; sur le chemin de l'élève, toujours la carte ; en présentation, rien", () => {
   assert.match(page, /if\(film\.passer&&!PRESENTATION&&!DEPUIS_CARTE\)\{\$\('passer'\)\.href=film\.passer;\$\('passer'\)\.hidden=false;/);
   assert.match(page, /if\(!PRESENTATION\)\{\$\('carte'\)\.href=CARTE;\$\('carte'\)\.hidden=false;\}/);
-  assert.match(page, /\$\('pied'\)\.classList\.toggle\('avecPasser',!\$\('passer'\)\.hidden\);/);
+  assert.match(page, /\$\('barre'\)\.classList\.toggle\('avecPasser',!\$\('passer'\)\.hidden\);/);
 });
 
 test("lecteur : la carte rouverte sur l'étape (ancre), la vue prof sur la vue prof, rien d'autre dans l'adresse", () => {
@@ -47,8 +47,9 @@ test("lecteur : la carte rouverte sur l'étape (ancre), la vue prof sur la vue p
 test("lecteur au téléphone : une seule ligne, plus de « Plein écran », « Carte » tout court à côté de « Passer »", () => {
   const m = page.match(/@media \(max-width:640px\)\{([\s\S]*?)\n\}/)[1];
   assert.match(m, /#fs\{display:none\}/);
-  assert.match(m, /\.pied \.credit\{order:3;flex-basis:100%\}/);
-  assert.match(m, /\.pied\.avecPasser #carte \.long\{display:none\}/);
+  // le crédit n'est plus sous le film : il est sur le carton de titre (lot 3b, 08/11/2026)
+  assert.doesNotMatch(m, /credit/);
+  assert.match(m, /\.barre\.avecPasser #carte \.long\{display:none\}/);
   // en dehors du téléphone, « Plein écran » reste dans la ligne
   assert.doesNotMatch(page.replace(m, ""), /#fs\{display:none\}/);
 });

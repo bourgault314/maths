@@ -442,11 +442,11 @@ test("le lecteur ne saute plus un arrêt quand une image tombe juste avant lui",
   assert.equal(stops.find((x) => x > 13.8), 13.8 + 1.3);
 });
 
-test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutoriel, la page Splat le film ; un lien passe de l'un à l'autre", () => {
+test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutoriel, la page Splat le film ; pour le prof, un lien passe de l'un à l'autre", () => {
   const code = sansCommentaires(page);
   assert.match(page, /<a class="lien" id="autre" href="#" hidden><\/a>\n\s*<a class="lien passer" id="passer"/);
   assert.match(code, /const aToi=!!film\.aToi&&\(voir==='atoi'\|\|\(voir!=='film'&&!PRESENTATION\)\);/);
-  assert.match(code, /u\.searchParams\.set\('voir',aToi\?'film':'atoi'\);/);
+  assert.match(code, /if\(film\.aToi&&PRESENTATION\)\{const u=new URL\(location\.href\);u\.searchParams\.set\('voir',aToi\?'film':'atoi'\);/);
   assert.match(code, /autre=\{href:u\.pathname\+u\.search,txt:aToi\?'🎬 Voir le film':'✋ À toi de faire'\};/);
   assert.match(code, /if\(autre\)\{const a=\$\('autre'\);a\.href=autre\.href;a\.textContent=autre\.txt;a\.hidden=false;\}/);
   // seul le film des billes a son tutoriel pour l'instant (les jetons numérotés viendront après)
