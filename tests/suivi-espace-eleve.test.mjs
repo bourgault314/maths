@@ -106,7 +106,13 @@ test("le pied de l'espace ne propose qu'une chose, et elle reste dans l'espace",
   assert.ok(pied, "la page doit avoir un pied");
   const adresses = [...pied[0].matchAll(/href="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(adresses, ["infos.php"], "un seul lien, vers la page Infos de l'espace");
-  assert.doesNotMatch(page, /https?:\/\/mathsgo\.re/,
+  // 08/11/2026 : une seule exception, qui n'est pas un lien — le passage de
+  // « Se déconnecter » par l'accueil du site, qui vide la mémoire de l'onglet
+  // côté mathsgo.re et revient aussitôt sur l'écran du code, sans rien montrer
+  // (assets/js/eleve-retour-espace.js, tests/eleve-retour-espace.test.mjs).
+  const passage = /^ *const SORTIE_PAR_LE_SITE = "https:\/\/mathsgo\.re\/\?sortie=1";\r?$/m;
+  assert.equal(page.split("https://mathsgo.re/?sortie=1").length - 1, 1, "l'adresse de passage n'est écrite qu'une fois");
+  assert.doesNotMatch(page.replace(passage, ""), /https?:\/\/mathsgo\.re/,
     "plus aucune adresse du site dans la page de l'espace élève");
 });
 

@@ -584,8 +584,12 @@ verifier("le pied de l'espace élève ne renvoie plus sur le site", function () 
     vrai((bool)preg_match('#<footer class="pied">(.*?)</footer>#s', $r['texte'], $m), 'la page doit avoir un pied');
     preg_match_all('/href="([^"]+)"/', $m[1], $liens);
     egal(['infos.php'], $liens[1], 'un seul lien dans le pied, et il reste dans l’espace');
-    vrai(!str_contains($r['texte'], 'https://mathsgo.re'),
-        'plus aucune adresse du site dans la page de l’espace élève');
+    // 08/11/2026 : une seule adresse du site permise, celle de passage de
+    // « Se déconnecter » (départ invisible, pas un lien), écrite une seule fois.
+    egal(1, substr_count($r['texte'], 'https://mathsgo.re'),
+        'une seule adresse du site dans la page de l’espace élève');
+    egal(1, substr_count($r['texte'], 'https://mathsgo.re/?sortie=1'),
+        'et c’est l’adresse de passage de « Se déconnecter »');
 });
 
 verifier("la page Infos répond, sans une seule porte de sortie", function () {

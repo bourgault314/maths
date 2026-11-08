@@ -3504,6 +3504,25 @@
       let codeSuivi = codeInitial(ENTREE);
       PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
       let parcours = codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
+
+      // Retour par le cache arrière/avant (08/11/2026, relecture de Codex) : la
+      // page revient telle qu'on l'avait laissée, prénom et case compris. Or,
+      // entre-temps, « Se déconnecter » a pu vider l'onglet, ou un autre élève
+      // a pu y entrer. Sous un code (celui que la page suivait, ou celui que
+      // l'onglet garde maintenant), on recharge : tout repart de l'onglet,
+      // comme dans SPLAT! (assets/js/splat-suivi.js). Cet écouteur est posé
+      // AVANT tous les autres « pageshow » de la page : il passe le premier et
+      // les arrête, pour que rien de périmé ne parte. Sans code, rien à faire.
+      try {
+        window.addEventListener("pageshow", evenement => {
+          if (!evenement || !evenement.persisted) return;
+          let codeOnglet = "";
+          try { codeOnglet = PARCOURS.chargerCode(stockageSession()); } catch (_) { codeOnglet = ""; }
+          if (!codeSuivi && !codeOnglet) return;
+          if (typeof evenement.stopImmediatePropagation === "function") evenement.stopImmediatePropagation();
+          try { window.location.reload(); } catch (_) {}
+        });
+      } catch (_) {}
       // L'état de synchronisation de la case active : dernière révision connue
       // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
       // Il survit à la fermeture de la page : ce qui n'est pas parti partira.

@@ -348,13 +348,19 @@ try {
 (() => {
   "use strict";
   const CLE = "mathsgo-suivi-code";
+  // « Se déconnecter » vide aussi la mémoire de l'onglet côté mathsgo.re
+  // (08/11/2026) : l'accueil du site, avec ?sortie=1, la vide et renvoie ici
+  // avec ?oublier=1 (assets/js/eleve-retour-espace.js). Adresse fixe.
+  const SORTIE_PAR_LE_SITE = "https://mathsgo.re/?sortie=1";
   const $ = id => document.getElementById(id);
 
   // Le code n'est retenu que le temps de l'onglet (sessionStorage), pas d'une
   // visite à l'autre : sur un poste partagé au collège, l'espace ne doit pas
   // rouvrir « Bonjour Léa » au camarade suivant. Retaper six caractères est
-  // le geste qui dit « c'est moi ». (L'appli, elle, garde le code sur
-  // l'appareil : c'est là que vit « Se déconnecter ».)
+  // le geste qui dit « c'est moi ». Les applis, sur mathsgo.re, gardent leur
+  // propre copie du code dans la mémoire de LEUR onglet (sessionStorage du
+  // site, que cette page ne peut pas toucher) : « Se déconnecter » vide les
+  // deux, ici par revenirAuCode, là-bas par le passage par ?sortie=1.
   function stockage() {
     try { return window.sessionStorage; } catch (_) { return null; }
   }
@@ -1663,9 +1669,22 @@ try {
 
   // « Se déconnecter » (lot 7 : le même mot que dans l'appli, un seul geste à
   // apprendre).
+  //
+  // 08/11/2026 (défaut confirmé par une relecture indépendante) : vider CETTE
+  // page ne suffit pas. Les applis gardent le code dans la mémoire de l'onglet
+  // côté mathsgo.re, que cette page ne peut pas toucher : après « Se
+  // déconnecter », un Retour rouvrait l'appli au nom de l'élève précédent, et
+  // l'élève suivant — même après avoir tapé SON code — pouvait travailler dans
+  // le parcours de l'autre. Le ménage d'ici reste fait tout de suite (rien du
+  // précédent élève à l'écran, même si le site ne répond pas), puis l'onglet
+  // passe par l'accueil du site (?sortie=1), qui vide sa mémoire et revient
+  // aussitôt sur l'écran du code (?oublier=1) — voir assets/js/eleve-retour-espace.js.
+  // replace : ni l'espace refermé ni le passage par le site ne restent dans
+  // l'historique.
   $("changer").addEventListener("click", () => {
     revenirAuCode();
     $("code").focus();
+    try { window.location.replace(SORTIE_PAR_LE_SITE); } catch (_) {}
   });
 
   // Le bouton « précédent » après une déconnexion (08/09/2026). Chrome garde
