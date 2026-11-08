@@ -41,7 +41,9 @@ test("les films des étapes : pas d'arrêt, format téléphone pris par le lecte
   // 18/10/2026 : au téléphone, la fenêtre a une ligne de plus (le bouton d'action du pavé seul sur sa ligne)
   assert.match(jetons, /F:\{w:352,h:664,r:20,el:\[\['titre','Regrouper',/);
   assert.doesNotMatch(jetons, /Fusionner/);
-  assert.ok(jetons.includes("{g:'3𝑝',d:'12 + 9'},{g:'3𝑝',d:'21',t:T.fusionne+.05}"));
+  assert.ok(jetons.includes("{g:'3𝑝',d:'12 + 9'},{g:'3𝑝',d:'21',t:TM.fusionne+.05}"));
+  // lot 4 : le film et le tutoriel partagent l'écran (construire) ; le film le construit avec son déroulé T
+  assert.match(jetons, /build\(svg,mode\)\{construire\(this,svg,mode,T,false\);\}/);
   // le lecteur règle le rapport largeur / hauteur du portrait d'après le film (3:4 pour l'introduction)
   assert.match(page, /player\.style\.setProperty\('--k',\(dim\.w\/dim\.h\)\.toFixed\(4\)\)/);
   assert.match(page, /\.player\.portrait \.stage\{aspect-ratio:var\(--k,\.75\)\}/);
@@ -127,7 +129,8 @@ test("le caractère ▶ est toujours suivi de U+FE0E (sinon l'iPhone le dessine 
 });
 
 test("carte des mondes : les films sous les étapes 1, 2, « paquets » et 35, qui reviennent au jeu de l'étape", () => {
-  assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés",40\]\],/);
+  // lot 4 (08/11/2026) : les deux boutons de l'étape 35 ouvrent un tutoriel « À toi de faire » (le film reste au prof)
+  assert.match(carte, /p:"m3e1",id:"e2-0",\n\s*films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés","toi"\]\],/);
   // le lien : le lecteur, le film, et ?suite= = la carte avec ?jouer=<parcours>, qui renvoie aussitôt au jeu de
   // l'étape (11/10/2026 : avant, ?suite= portait le lien du jeu en entier, #data= compris — une adresse de plusieurs Ko)
   // (08/11/2026 : + &depuis=carte&etape=<id>, le film ramène à la carte sur cette étape)
@@ -449,11 +452,11 @@ test("« À toi de faire » ou le film : le chemin de l'élève ouvre le tutorie
   assert.match(code, /if\(film\.aToi&&PRESENTATION\)\{const u=new URL\(location\.href\);u\.searchParams\.set\('voir',aToi\?'film':'atoi'\);/);
   assert.match(code, /autre=\{href:u\.pathname\+u\.search,txt:aToi\?'🎬 Voir le film':'✋ À toi de faire'\};/);
   assert.match(code, /if\(autre\)\{const a=\$\('autre'\);a\.href=autre\.href;a\.textContent=autre\.txt;a\.hidden=false;\}/);
-  // seul le film des billes a son tutoriel pour l'instant (les jetons numérotés viendront après)
-  assert.equal((code.match(/film\.aToi=aToi;/g) || []).length, 1);
+  // les deux films de l'étape 35 ont leur tutoriel (les jetons numérotés depuis le lot 4, 08/11/2026)
+  assert.equal((code.match(/film\.aToi=aToi;/g) || []).length, 2);
   assert.match(blocBilles(), /passer:SUITE, passerTexte:'Passer ›', credit:film\.credit,/);
   // le bouton sous l'étape 35 ouvre ?film=equasplat&suite=… : il s'appelle « ✋ À toi de faire » (08/11/2026)
-  assert.match(carte, /films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés",40\]\]/);
+  assert.match(carte, /films:\[\["equasplat","À toi de faire","toi"\],\["equasplat-jetons","Les jetons numérotés","toi"\]\]/);
 });
 
 test("le film des billes range toujours les jetons, mais ne le dit plus", () => {
