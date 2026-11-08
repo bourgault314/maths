@@ -274,7 +274,8 @@ test("la page : le cadre « Les records » de l'accueil (planche R1) et la séan
   assert.match(html, /\[\["Cette semaine", recordsEtat\.rangSemaine\], \["De tous les temps", recordsEtat\.rangToujours\]\]/);
   assert.match(html, /sousTitre: `\$\{PARCOURS\.SEUILS\.course\.total\}\\u00a0questions · le chrono monte`,/);
   assert.match(html, /go: "Jouer\\u00a0→"/);
-  assert.match(html, /voir\.textContent = "Voir les records";\s*voir\.addEventListener\("click", ouvrirRecords\);/);
+  // Lot « une tentative n'est pas une séance » (08/11/2026, choix C) : un vrai bouton.
+  assert.match(html, /voir\.className = "secondary rec-classement";\s*voir\.id = "acc-voir-records";\s*voir\.textContent = "🏆 Voir le classement";\s*voir\.addEventListener\("click", ouvrirRecords\);/);
   // Le chemin (décision 8) : au premier appui, le nom, une seule fois.
   assert.match(html, /function avecLeNomChoisi\(suite\) \{\s*if \(recordConnu\(\)\.nom === null && recordsOuverts\(\)\) \{/);
   // L'escalier reste dans Mon parcours : la page ne le retire pas.
