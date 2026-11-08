@@ -6997,13 +6997,22 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // le premier jour qu’ils ont noté quand c'est simplement le premier jour
   // joué : rien n'est coupé s'ils ne connaissent aucun travail d'avant —
   // sauf leur borne de 60 jours, qui coupe au moins 59 jours en arrière.
+  //
+  // Lot S2bis « les jours pas connus » (choix de Gwenaël, 08/11/2026) : les
+  // jours que SPLAT! et Coffres ne notaient pas encore (avant le lot S1, le
+  // 07/11) ne sont plus « pas connus » — ni « ? », ni « ≥ », ni « au moins »,
+  // ni phrase : des cases vides et des chiffres simples, ce qu'on sait. Seule
+  // leur borne des 60 jours reste une coupure : les 60 jours gardés sont
+  // pleins et le plus ancien est APRÈS le premier jour noté (`depuis` du
+  // parcours) — des jours notés ont été oubliés.
   function coupureDe(cle, eleve, aujourdhui) {
     const suivi = suiviApp(cle, eleve, aujourdhui);
     const depuis = suivi && suivi.connuDepuis;
     if (!depuis) return null;
     if (cle === "splat" || cle === "coffres") {
-      const avant = suiviApp(cle, eleve, jourPlus(depuis, -1));
-      if ((!avant || !avant.dernier) && joursEntre(depuis, aujourdhui) < 59) return null;
+      const brut = eleve && eleve.parcours;
+      const note = brut && typeof brut === "object" && typeof brut.depuis === "string" ? brut.depuis : "";
+      if (!note || depuis <= note) return null;
     }
     return depuis;
   }
