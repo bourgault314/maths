@@ -42,18 +42,21 @@ body{margin:0}
 [hidden]{display:none!important}
 body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .page{min-height:100%;box-sizing:border-box;padding-block:16px;padding-inline:16px;display:flex;align-items:center;justify-content:center}
-.player{width:100%;max-width:1440px;display:flex;flex-direction:column;align-items:center;gap:12px}
-/* --reserve : la hauteur gardée sous le film (ligne du bas + écart + marges de la page), mesurée par le lecteur */
-.stage{position:relative;width:min(100%, calc((100dvh - var(--reserve,80px)) * 1.7778));min-width:min(100%,320px);aspect-ratio:16/9;max-width:100%;
-  background:var(--paper);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.08),0 14px 40px rgba(15,23,42,.12);cursor:pointer;container-type:inline-size}
+.player{width:100%;max-width:1440px;display:flex;flex-direction:column;align-items:center}
+/* Lot 3b « aides et carte » (08/11/2026, choix de Gwenaël) : UN cadre blanc — en haut, la ligne des boutons ; dessous,
+   séparée par un trait fin gris (comme l'en-tête commun des applis suivies), l'image du film. Plus rien sous le film.
+   Pas de bouton PAR-DESSUS l'image : les sous-titres des films s'écrivent en haut de l'image.
+   --reserve : la hauteur gardée en dehors de l'image (ligne des boutons + marges de la page), mesurée par le lecteur */
+.cadre{width:min(100%, calc((100dvh - var(--reserve,80px)) * 1.7778));min-width:min(100%,320px);max-width:100%;
+  background:var(--paper);border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.08),0 14px 40px rgba(15,23,42,.12)}
+.stage{position:relative;width:100%;aspect-ratio:16/9;background:var(--paper);overflow:hidden;cursor:pointer;container-type:inline-size}
 .stage svg{display:block;width:100%;height:100%;font-family:var(--ui)}
 .bigplay{position:absolute;right:3%;bottom:5%;width:88px;height:88px;border-radius:50%;border:none;
   background:rgba(37,99,235,.92);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 30px rgba(37,99,235,.35)}
 .bigplay svg{width:40px;height:40px}
 .bigplay:focus-visible{outline:4px solid #93c5fd;outline-offset:4px}
-/* sous le film, une seule ligne discrète : la carte, plein écran, crédit, passer le film */
-.pied{width:min(100%, calc((100dvh - var(--reserve,80px)) * 1.7778));min-width:min(100%,320px);max-width:100%;
-  display:flex;align-items:center;justify-content:space-between;gap:0 16px;flex-wrap:wrap}
+/* en haut du cadre, une seule ligne : la carte, plein écran (et le son), passer le film ; le crédit est sur le carton de titre */
+.barre{display:flex;align-items:center;justify-content:space-between;gap:0 16px;padding:4px 6px;border-bottom:1px solid #e3ebf0}
 .lien{font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:none;border:none;padding:10px 4px;cursor:pointer;
   display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap}
 .lien svg{width:16px;height:16px}
@@ -67,16 +70,14 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
    « Passer le film › », toujours à gauche — on peut toujours revenir à la carte sans passer par le jeu */
 .carte{color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:9px 18px;font-size:16px;font-weight:800}
 .carte:hover{color:var(--accent);background:var(--accent-soft-hover)}
-.credit{flex:1 1 auto;font-size:12px;color:var(--muted);text-align:center}
-.credit a{color:var(--accent)}
 .player.fs{position:fixed;inset:0;z-index:10;max-width:none;background:var(--page);justify-content:center;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
 .player:fullscreen{max-width:none;background:var(--page);justify-content:center;padding:12px 16px;box-sizing:border-box}
-.player:fullscreen .stage,.player:fullscreen .pied,.player.fs .stage,.player.fs .pied{width:min(100%, calc((100vh - var(--reserve,80px)) * 1.7778))}
+.player:fullscreen .cadre,.player.fs .cadre{width:min(100%, calc((100vh - var(--reserve,80px)) * 1.7778))}
 /* portrait : 3:4 pour le film d'introduction ; un film peut demander un autre format (--k = largeur / hauteur,
    posé par le lecteur d'après film.modes.portrait) — le film d'ÉquaSplat est en 9:16, comme l'écran du téléphone */
 .player.portrait .stage{aspect-ratio:var(--k,.75)}
-.player.portrait .stage,.player.portrait .pied{width:min(100%, calc((100dvh - var(--reserve,80px)) * var(--k,.75)))}
-.player.portrait:fullscreen .stage,.player.portrait:fullscreen .pied,.player.portrait.fs .stage,.player.portrait.fs .pied{width:min(100%, calc((100vh - var(--reserve,80px)) * var(--k,.75)))}
+.player.portrait .cadre{width:min(100%, calc((100dvh - var(--reserve,80px)) * var(--k,.75)))}
+.player.portrait:fullscreen .cadre,.player.portrait.fs .cadre{width:min(100%, calc((100vh - var(--reserve,80px)) * var(--k,.75)))}
 .film-lien{cursor:pointer}
 .pill{position:absolute;left:2.5%;top:3.5%;background:#fef3c7;color:#78350f;border:2px solid #f59e0b;border-radius:999px;
   padding:.45em 1em;font:inherit;font-size:clamp(13px,1.6vw,20px);font-size:clamp(8px,1.75cqw,32px);line-height:1.2;text-align:center;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(120,53,15,.18)}
@@ -87,13 +88,17 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 .player.portrait .pill br{display:none}
 @media (max-width:640px){
   /* téléphone (08/11/2026, choix de Gwenaël, planche 6b) : UNE ligne — « ‹ Carte » à gauche, « Passer le film › » à
-     droite, même hauteur — et le crédit dessous, centré. Plus de « Plein écran » : mesuré, il ne faisait rien gagner
-     (cadre 358 × 477 avant comme après pour l'intro), et l'iPhone ne le proposait déjà pas. « Carte » tout court
-     quand « Passer le film › » est là ; « Carte des mondes » en entier sinon. */
+     droite, même hauteur. Plus de « Plein écran » : mesuré, il ne faisait rien gagner (cadre 358 × 477 avant comme après
+     pour l'intro), et l'iPhone ne le proposait déjà pas. « Carte » tout court quand « Passer le film › » est là ;
+     « Carte des mondes » en entier sinon. Lot 3b : marges du bord 16 → 8 px, c'est ce qui grandit vraiment le film au
+     téléphone (sa largeur y est la limite) : +9 à +10 % de surface. */
+  .page{padding-block:8px;padding-inline:8px}
+  .cadre{border-radius:14px}
   #fs{display:none}
-  .pied{gap:0 10px}
-  .pied .credit{order:3;flex-basis:100%}
-  .pied.avecPasser #carte .long{display:none}
+  .barre{gap:0 8px}
+  .barre.avecPasser #carte .long{display:none}
+  /* le prof au téléphone (venu de la page Splat) : pas de carte, pas de « Passer », pas de plein écran — pas de ligne vide */
+  .barre.vide{display:none}
   .bigplay{width:56px;height:56px}
   .bigplay svg{width:24px;height:24px}
 }
@@ -103,19 +108,20 @@ body{background:var(--page);color:var(--ink);font-family:var(--ui)}
 <body>
 <div class="page">
   <div class="player" id="player">
+   <div class="cadre" id="cadre">
+    <div class="barre" id="barre">
+      <a class="lien carte" id="carte" href="/outils/splat_univers.html" hidden><span>‹ Carte<span class="long">&nbsp;des mondes</span></span></a>
+      <button class="lien" id="fs" type="button" title="Plein écran (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span id="fsTxt">Plein écran</span></button>
+      <button class="lien" id="son" type="button" hidden aria-pressed="true" title="Couper le son"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path class="on" d="M16.5 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M17 9.5l5 5M22 9.5l-5 5" style="display:none"/></svg><span id="sonTxt">Son</span></button>
+      <a class="lien" id="autre" href="#" hidden></a>
+      <a class="lien passer" id="passer" href="#" hidden>Passer l’intro ›</a>
+    </div>
     <div class="stage" id="stage">
       <svg id="svg" viewBox="0 0 1600 900" role="img" aria-label="Film : comment on joue à SPLAT!, du comptage des jetons au schéma en barres"></svg>
       <button class="pill" id="pill" type="button" hidden>À toi de chercher…<br> puis <b>▶&#xFE0E;</b></button>
       <button class="bigplay" id="bigplay" type="button" aria-label="Lancer le film"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg></button>
     </div>
-    <div class="pied" id="pied">
-      <a class="lien carte" id="carte" href="/outils/splat_univers.html" hidden><span>‹ Carte<span class="long">&nbsp;des mondes</span></span></a>
-      <button class="lien" id="fs" type="button" title="Plein écran (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span id="fsTxt">Plein écran</span></button>
-      <button class="lien" id="son" type="button" hidden aria-pressed="true" title="Couper le son"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path class="on" d="M16.5 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/><path class="off" d="M17 9.5l5 5M22 9.5l-5 5" style="display:none"/></svg><span id="sonTxt">Son</span></button>
-      <div class="credit" id="credit" hidden></div>
-      <a class="lien" id="autre" href="#" hidden></a>
-      <a class="lien passer" id="passer" href="#" hidden>Passer l’intro ›</a>
-    </div>
+   </div>
   </div>
 </div>
 <script>
@@ -209,16 +215,32 @@ function lancerLecteur(film,autre){
     while(svg.firstChild)svg.removeChild(svg.firstChild);
     const dim=film.modes?film.modes[m]:{w:1600,h:900};svg.setAttribute('viewBox',`0 0 ${dim.w} ${dim.h}`);
     if(m==='portrait')player.style.setProperty('--k',(dim.w/dim.h).toFixed(4));
-    player.classList.toggle('portrait',m==='portrait');film.build(svg,m);return true;}
+    player.classList.toggle('portrait',m==='portrait');film.build(svg,m);poserCredit();return true;}
+  /* le crédit (lot 3b, 08/11/2026, choix de Gwenaël) : sur le carton de titre, sous le sous-titre (« Comment on joue ? »),
+     comme le générique d'un film — on le voit sur l'image d'attente, avant ▶, et il ne prend aucune place pendant le
+     film. Il suit le sous-titre : il apparaît et part avec lui (copié à chaque image, voir film.render plus bas).
+     Le nom reste un lien vers le site de Steve Wyborney (un clic sur un lien ne lance pas le film). */
+  let credit=null;
+  function poserCredit(){credit=null;
+    const o=film.o,sous=o&&o.titreSous;if(!film.credit||!sous)return;
+    const m=/^([^<]*)<a href="(https:\/\/[^"]+)"[^>]*>([^<]+)<\/a>([^<]*)$/.exec(film.credit);if(!m)return;
+    const fs=+sous.getAttribute('font-size'),k=.8;
+    credit=F.E('text',{x:sous.getAttribute('x'),y:(+sous.getAttribute('y')+fs*1.3).toFixed(1),'text-anchor':'middle','font-size':(fs*k).toFixed(1),'font-weight':600,fill:'#64748b'},sous.parentNode);
+    credit.appendChild(document.createTextNode(m[1]));
+    const a=F.E('a',{href:m[2],target:'_blank',rel:'noopener'},credit);
+    F.E('tspan',{fill:'#2563eb','text-decoration':'underline'},a).textContent=m[3];
+    if(m[4])credit.appendChild(document.createTextNode(m[4]));}
+  function suivreSous(){if(!credit)return;const sous=film.o.titreSous;
+    credit.setAttribute('opacity',sous.getAttribute('opacity')||'1');credit.style.display=sous.style.display;}
+  const dessiner=film.render.bind(film);film.render=x=>{dessiner(x);suivreSous();};
   if(film.aria)svg.setAttribute('aria-label',film.aria);
   if(film.titre)document.title=film.titre;
   construire();
   if(film.passer&&!PRESENTATION&&!DEPUIS_CARTE){$('passer').href=film.passer;$('passer').hidden=false;if(film.passerTexte)$('passer').textContent=film.passerTexte;
     if(DEPUIS_JEU)$('passer').textContent='Retour au jeu ›';}
   if(!PRESENTATION){$('carte').href=CARTE;$('carte').hidden=false;}
-  $('pied').classList.toggle('avecPasser',!$('passer').hidden);
-  if(film.credit){$('credit').innerHTML=film.credit;$('credit').hidden=false;}
-  /* le lien vers l'autre façon de voir (le film ou « À toi de faire »), sous le cadre */
+  $('barre').classList.toggle('avecPasser',!$('passer').hidden);
+  /* le lien vers l'autre façon de voir (le film ou « À toi de faire »), dans la ligne du haut — pour le prof seulement */
   if(autre){const a=$('autre');a.href=autre.href;a.textContent=autre.txt;a.hidden=false;}
   const D=film.duration,C=film.chapters;
   let t=0,playing=false,last=null,fresh=true,enArret=false;
@@ -268,6 +290,9 @@ function lancerLecteur(film,autre){
   if(film.anime){const anim=()=>{if(!playing&&film.anime())film.render(t);requestAnimationFrame(anim);};requestAnimationFrame(anim);}
   /* plein écran (avec repli si le navigateur refuse) ; l'iPhone ne sait pas le faire : on n'affiche pas le lien */
   if(!(document.fullscreenEnabled||document.webkitFullscreenEnabled))fsBtn.hidden=true;
+  /* rien d'autre que le plein écran dans la ligne du haut (le prof, sans film « À toi de faire ») : au téléphone, où le
+     plein écran n'est pas proposé, la ligne disparaît (CSS) ; partout, si le navigateur ne sait pas le plein écran */
+  {const b=$('barre'),vide=['carte','son','autre','passer'].every(id=>$(id).hidden);b.classList.toggle('vide',vide);if(vide&&fsBtn.hidden)b.hidden=true;}
   function fsToggle(){
     const on=document.fullscreenElement||player.classList.contains('fs');
     if(on){if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});player.classList.remove('fs');majFs();return;}
@@ -289,8 +314,10 @@ function lancerLecteur(film,autre){
   });
   /* image d'attente : une image complète, pas un écran vide */
   t=film.poster||0;film.render(t);ui();
-  /* la place gardée sous le film suit la hauteur réelle de la ligne du bas (elle passe sur deux lignes sur téléphone) */
-  function caleReserve(){player.style.setProperty('--reserve',($('pied').offsetHeight+12+32+4)+'px');}
+  /* la place gardée en dehors de l'image : la ligne du haut (avec son trait) et les marges de la page (8 px au téléphone,
+     16 ailleurs ; celles du lecteur en plein écran) */
+  function caleReserve(){const plein=!!document.fullscreenElement||player.classList.contains('fs'),c=getComputedStyle(plein?player:player.parentNode);
+    player.style.setProperty('--reserve',($('barre').offsetHeight+parseFloat(c.paddingTop)+parseFloat(c.paddingBottom)+4)+'px');}
   caleReserve();
   addEventListener('resize',()=>{if(construire())film.render(t);caleReserve();});
   window.__film={seek:x=>{fresh=false;enArret=false;setT(x);ui();},D,etat:()=>({t,playing,enArret}),cible:()=>film.cible?film.cible(t):null};
@@ -2342,10 +2369,11 @@ return film;
   const film=Object.prototype.hasOwnProperty.call(FILMS,nom)&&nom!=='intro'?FILMS[nom]:FILMS.intro;
   const aToi=!!film.aToi&&(voir==='atoi'||(voir!=='film'&&!PRESENTATION));
   let autre=null;
-  /* ouvert par « ? Comment faire » d'un jeu (&depuis=jeu, choix de Gwenaël du 08/11/2026) : l'élève a demandé UNE aide, pas
-     un choix entre deux — pas de lien « 🎬 Voir le film » sous le tutoriel ; la ligne du bas garde « ‹ Carte » et
-     « Retour au jeu › » (par « Continuer » ou depuis la carte, le lien reste) */
-  if(film.aToi&&!DEPUIS_JEU){const u=new URL(location.href);u.searchParams.set('voir',aToi?'film':'atoi');
+  /* « 🎬 Voir le film » sous le tutoriel : plus jamais sur le chemin de l'élève (lot 3b, 08/11/2026, Gwenaël : « si un élève
+     a cliqué sur À toi de faire, c'est qu'il ne veut pas voir le film ») — ni par « ? Comment faire », ni par
+     « Continuer », ni depuis la carte. Le prof, venu de la page Splat (sans ?suite=), garde le lien qui passe du film au
+     tutoriel et retour. */
+  if(film.aToi&&PRESENTATION){const u=new URL(location.href);u.searchParams.set('voir',aToi?'film':'atoi');
     autre={href:u.pathname+u.search,txt:aToi?'🎬 Voir le film':'✋ À toi de faire'};}
   lancerLecteur(aToi?film.aToi:film,autre);})();
 </script>

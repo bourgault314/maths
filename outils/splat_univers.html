@@ -121,6 +121,20 @@ header .modeOpt:not(.actif):hover{color:var(--ink)}
    espace ; sans code, rien ne change. */
 html.suivi-eleve header .brand,html.suivi-eleve header .modeBar{display:none}
 html.suivi-eleve body>footer{display:none}
+/* Lot 3c « aides et carte » (08/11/2026, choix de Gwenaël, planches 3c, variante A) : plus de bande blanche vide
+   au-dessus de la page — la flèche ronde descend sur la ligne du grand titre, à gauche, comme dans Défi tables (modèle
+   commun des applis suivies : « plus de barre au-dessus du cadre »). Le même lien <header .back> (son adresse vers Mon
+   espace est posée par majLiensRetour) ; seulement sa place change. « Continuer » remonte de 77 px au téléphone.
+   Sans code, rien ne change.
+   La flèche est centrée sur la ligne du titre : --h1 est la taille du titre (celle d'avant), la flèche (44 px) se pose à
+   mi-hauteur de sa ligne (1,2 × --h1). Au téléphone étroit, le titre rapetisse juste assez pour ne jamais passer sous la
+   flèche ni sur deux lignes (au-dessous de 360 px de large). */
+html.suivi-eleve{--h1:clamp(28px,6vw,44px)}
+html.suivi-eleve body>header{position:absolute;top:calc(16px + var(--h1) * .6 - 22px);left:14px;z-index:3;background:none;border:0;padding:0}
+html.suivi-eleve .hero{padding-top:16px}
+html.suivi-eleve .hero h1{font-size:var(--h1);line-height:1.2;padding-inline:46px;white-space:nowrap}
+@media(max-width:400px){html.suivi-eleve{--h1:min(28px, calc((100vw - 132px) / 9))}}
+@media(min-width:1000px){html.suivi-eleve{--h1:52px}}
 
 /* ---------- bandeau titre ---------- */
 .hero{max-width:980px;margin:0 auto;padding:26px 16px 8px;text-align:center;position:relative}

@@ -167,8 +167,9 @@ test("les trois outils : le bouton suit « ◀ Carte des mondes » dans la barre
 test("lecteur : ouvert par « ? Aide » (&depuis=jeu), la pastille de droite dit « Retour au jeu › » ; les autres entrées ne changent pas", () => {
   assert.match(intro, /const DEPUIS_JEU=new URLSearchParams\(location\.search\)\.get\('depuis'\)==='jeu';/);
   assert.match(intro, /if\(film\.passer&&!PRESENTATION&&!DEPUIS_CARTE\)\{\$\('passer'\)\.href=film\.passer;\$\('passer'\)\.hidden=false;if\(film\.passerTexte\)\$\('passer'\)\.textContent=film\.passerTexte;\n\s*if\(DEPUIS_JEU\)\$\('passer'\)\.textContent='Retour au jeu ›';\}/);
-  // (choix du 08/11, après la PR #1128) : ouvert par « ? », pas de lien « 🎬 Voir le film » sous le tutoriel
-  assert.match(intro, /let autre=null;\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*if\(film\.aToi&&!DEPUIS_JEU\)\{/);
+  // (choix du 08/11, après la PR #1128) : ouvert par « ? », pas de lien « 🎬 Voir le film » sous le tutoriel —
+  // et depuis le lot 3b, plus jamais sur le chemin de l'élève : le lien n'existe que pour le prof (sans ?suite=)
+  assert.match(intro, /let autre=null;\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*if\(film\.aToi&&PRESENTATION\)\{/);
   assert.doesNotMatch(intro, /\.pied\.serre|classList\.toggle\('serre'/);
   const dep = intro.match(/const DEPUIS_JEU=[^\n]*\n/)[0];
   const val = (s) => new Function("location", dep + "return DEPUIS_JEU;")({ search: s });
