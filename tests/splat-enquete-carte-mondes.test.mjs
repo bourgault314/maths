@@ -283,16 +283,18 @@ test("six mondes : les parties sont des intertitres dans la liste, un par livret
   assert.doesNotMatch(univers, /groupeTitre|Les enquêtes additives|Les enquêtes multiplicatives/);
   assert.match(univers, /const v=\(m\.volets\|\|\[\]\)\.find\(x=>x\.de===ei\), vi=\(m\.volets\|\|\[\]\)\.indexOf\(v\);/);
   /* depuis le 04/10/2026, chaque partie est un menu déroulant (voletHtml, vue élève) : même id,
-     même pastille, mêmes fiches, mêmes étoiles ; ses étapes portent data-partie */
+     même pastille, mêmes fiches, mêmes étoiles ; ses étapes portent data-partie. Depuis le lot 2
+     « la carte des mondes » (08/11/2026) : la pastille et les étoiles sont sur le BOUTON de la
+     partie (partieBtnHtml), le <li class="volet"> garde l'id, le titre, les fiches et la phrase */
   /* lot 3 de l'échauffement (14/10/2026) : l'id, la pastille et les fiches de la partie viennent de
      partieId / partieRang / partieFiches — « Partie N » ne compte pas l'échauffement (monde 6) */
-  assert.match(univers, /const volet=!v\?'':voletHtml\(partieId\(m,v,vi\),partieCle\(v,vi\),partieRang\(m,v,vi\),v\.nom,\s*partieFiches\(m,v,compteur\),v\.o,'stars'\+mi\+'-'\+vi,v\.ech\?' ech':''\);/);
+  assert.match(univers, /const volet=!v\?'':voletHtml\(partieId\(m,v,vi\),partieCle\(v,vi\),v\.nom,\s*partieFiches\(m,v,compteur\),v\.o,v\.ech\?' ech':''\);/);
+  assert.match(univers, /\(m\.volets\|\|\[\]\)\.map\(\(v,vi\)=>partieBtnHtml\(partieCle\(v,vi\),partieRang\(m,v,vi\),'stars'\+mi\+'-'\+vi,v\.ech\?' ech':''\)\)/);
   assert.match(univers, /function partieRang\(m,v,vi\)\{return v\.ech\?"Échauffement":"Partie "\+partieNum\(m,vi\);\}/);
   assert.match(univers, /function partieId\(m,v,vi\)\{return m\.idp\+\(v\.ech\?"-echauffement":"-partie-"\+partieNum\(m,vi\)\);\}/);
-  assert.match(univers, /'<span class="rang">'\+rang\+'<\/span>'/);
   assert.match(univers, /return volet\+'<li class="etape'\+\(e\.code\?' code':''\)\+'" id="'\+ids\[ei\]\+'"'\+\(clePartie!==null\?' data-partie="'\+clePartie\+'"':''\)\+'>'/);
   /* les étoiles de la partie : comptées sur ses étapes (de ≤ ei < a), dans majAffichage */
-  assert.match(univers, /'<span class="stars" id="'\+idStars\+'"><\/span>'\+CHEV_P/);
+  assert.match(univers, /'<span class="stars" id="'\+idStars\+'"><\/span><\/button>'/);
   assert.match(univers, /for\(let ei=v\.de;ei<v\.a;ei\+\+\)\{ if\(document\.getElementById\(idEtape\(m,m\.etapes\[ei\],ei\)\)\.classList\.contains\("done"\)\) fv\+\+; \}/);
   assert.match(univers, /sv\.textContent="\u2b50 "\+fv\+" \/ "\+\(v\.a-v\.de\);/);
   /* le monde ne compte que des parties de 5 fiches : un livret chacune */

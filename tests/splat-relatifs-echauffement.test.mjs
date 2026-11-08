@@ -119,10 +119,11 @@ test("carte : la partie « Échauffement » avant la Partie 1 — pointillés, p
 });
 
 test("carte : à l'arrivée, l'échauffement ouvert tant qu'il n'est pas fini et qu'aucune étoile 38-43 n'est gagnée", () => {
-  const f = bloc(univers, "function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const v=");
+  const f = bloc(univers, "function ouvrirParties(){", "document.addEventListener(\"click\",ev=>{\n  const btn=");
   assert.match(f, /if\(premiere&&premiere\.dataset\.partie==="ech"&&\s*sec\.querySelector\('\.etapes>li\.etape\.done\[data-partie\]:not\(\[data-partie="ech"\]\):not\(\.bonus\)'\)\)\s*premiere=sec\.querySelector\('\.etapes>li\.etape\[data-partie\]:not\(\.done\):not\(\.bonus\):not\(\[data-partie="ech"\]\)'\);/);
   // le reste ne change pas : la partie visée par l'adresse, le Bonus retenu, sinon la partie en cours
-  assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|null;/);
+  // (et depuis le lot 2 du 08/11/2026, sinon la première : une partie est toujours ouverte)
+  assert.match(f, /const ouverte=vise\|\|\(bonus&&bonusRetenu\(bonusDeSection\(sec\)\)\?bonus:null\)\|\|\[\.\.\.volets\]\.find\(v=>v\.dataset\.volet===enCours\)\|\|volets\[0\];/);
 });
 
 test("carte : les liens de la vue prof — Projeter, Fiche « Fiche É1 — … » 6/page, Correction, les 12 équations", () => {

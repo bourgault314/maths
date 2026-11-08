@@ -11,7 +11,8 @@
 //    une mise en page de jeu ne bouge) ; la mention « Sans cookie ni traceur ·
 //    Confidentialité », qui mène au site, n'y est plus pour l'élève à code ;
 //  - la mémoire du monde ouvert (et du Bonus ouvert) : celle de l'ÉLÈVE, pas de
-//    l'appareil, sans le code en clair ; « tout fermé » respecté au retour.
+//    l'appareil, sans le code en clair. (« Tout fermé » respecté au retour : du temps de
+//    l'accordéon ; depuis la carte des mondes du 08/11/2026, il y a toujours un monde à l'écran.)
 //
 // Ces tests EXÉCUTENT l'habillage (assets/js/splat-suivi.js) et les fonctions
 // de mémoire de la carte telles qu'elles sont écrites dans la page, dans un
@@ -47,7 +48,7 @@ function memoireCarte(onglet, {suivi, prof = false, hash = ""} = {}) {
     if (!m) throw new Error(`${nom} introuvable`);
     return m[0];
   }).join("\n");
-  const fonctions = ["cleMemoire", "retenirMonde", "retenirToutFerme", "mondeRetenu", "mondeEnCours", "retenirBonus", "bonusRetenu"]
+  const fonctions = ["cleMemoire", "retenirMonde", "mondeRetenu", "mondeEnCours", "retenirBonus", "bonusRetenu"]
     .map(nom => fonction(page, nom)).join("\n");
   const code = `
     const PROF = ${prof};
@@ -58,7 +59,7 @@ function memoireCarte(onglet, {suivi, prof = false, hash = ""} = {}) {
     const document = {getElementById: () => null, querySelectorAll: () => []};
     ${consts}
     ${fonctions}
-    return {retenirMonde, retenirToutFerme, mondeRetenu, mondeEnCours, retenirBonus, bonusRetenu, cleMemoire, TOUT_FERME, MONDES};`;
+    return {retenirMonde, mondeRetenu, mondeEnCours, retenirBonus, bonusRetenu, cleMemoire, TOUT_FERME, MONDES};`;
   return new Function("localStorage", "suivi", code)(onglet.local, suivi);
 }
 
@@ -109,21 +110,21 @@ test("mémoire : sans code, la clé de l'appareil d'aujourd'hui ; en vue prof (p
   assert.equal(o.local.getItem(CLE_MONDE), "3");
 });
 
-test("mémoire : l'élève qui referme tout retrouve tout fermé — avec ou sans code", async () => {
+test("mémoire : un « tout fermé » retenu du temps de l'accordéon ne laisse plus la carte vide (carte des mondes, 08/11/2026)", async () => {
   for (const avecCode of [false, true]) {
     const {o, s} = avecCode ? await suiviDe(A, LEA) : (() => { const o = fauxOnglet({}); return {o, s: o.fenetre.MathsGoSplatSuivi.creer({})}; })();
     const carte = memoireCarte(o, {suivi: s});
     carte.retenirMonde(1);
     assert.equal(carte.mondeEnCours({mi: 0}), 1, "le monde retenu se rouvre");
-    carte.retenirToutFerme();
+    // l'ancienne valeur « -1 » (l'élève avait tout refermé, avant le lot 2) : le monde en cours
+    o.local.setItem(carte.cleMemoire(CLE_MONDE), "-1");
     assert.equal(carte.mondeRetenu(), carte.TOUT_FERME);
-    assert.equal(carte.mondeEnCours({mi: 0}), -1, "tout fermé au retour, pas le monde en cours");
-    // une adresse précise l'emporte toujours
-    assert.equal(memoireCarte(o, {suivi: s, hash: "monde-3"}).mondeEnCours({mi: 0}), -1, "ancre sans section (faux document) : rien d'autre ne rouvre");
+    assert.equal(carte.mondeEnCours({mi: 0}), 0, "le monde en cours, jamais une carte sans monde");
+    assert.equal(carte.mondeEnCours(null), 5, "tout gagné : le dernier monde jouable");
     carte.retenirMonde(4);
-    assert.equal(carte.mondeEnCours({mi: 0}), 4, "rouvrir un monde efface « tout fermé »");
+    assert.equal(carte.mondeEnCours({mi: 0}), 4, "rouvrir un monde efface l'ancien « tout fermé »");
   }
-  // retenirMonde ignore un indice introuvable (?apres= sans étape suivante) : jamais « tout fermé » par erreur
+  // retenirMonde ignore un indice introuvable (?apres= sans étape suivante)
   const o = fauxOnglet({});
   const carte = memoireCarte(o, {suivi: o.fenetre.MathsGoSplatSuivi.creer({})});
   carte.retenirMonde(2);
@@ -142,7 +143,6 @@ test("mémoire : pendant l'échange d'un billet (on ne sait pas qui entre), rien
   assert.equal(carte.cleMemoire(CLE_MONDE), null);
   assert.equal(carte.mondeRetenu(), -1, "pas le monde de l'appareil, peut-être celui d'un autre");
   carte.retenirMonde(2);
-  carte.retenirToutFerme();
   assert.deepEqual(local.cles().filter(c => c.startsWith(CLE_MONDE)), [CLE_MONDE]);
   assert.equal(local.getItem(CLE_MONDE), "5");
   await s.lancer();
