@@ -1436,6 +1436,7 @@
     .setting-group { margin: 0; padding: 0; border: 0; }
     .setting-group + .setting-group { margin-top: 14px; padding-top: 13px; border-top: 1px solid #d8e7f0; }
     .setting-title { width: 100%; padding: 0 0 9px; color: var(--ink); font-size: 1rem; font-weight: 950; text-align: center; }
+    .setting-aide { display: block; margin-top: 2px; color: var(--muted); font-size: .86rem; font-weight: 700; }
     .table-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
     .all-tables { grid-column: 1 / -1; }
 
@@ -2931,11 +2932,14 @@
             </div>
           </fieldset>
           <fieldset id="question-settings" class="setting-group" hidden>
-            <legend class="setting-title">Quelles questions&nbsp;?</legend>
+            <!-- 08/11/2026 (Gwenaël) : les trois boutons se cumulent — toutes
+                 les tables + les trois = le mélange de la Légende — mais rien
+                 ne le disait. -->
+            <legend class="setting-title">Quelles questions&nbsp;?<span class="setting-aide">Plusieurs choix possibles</span></legend>
             <div class="type-options">
               <button class="type-button is-selected" type="button" data-question-type="direct" aria-pressed="true"><strong>Produits directs</strong><small>7 × 8 = ?</small></button>
               <button class="type-button" type="button" data-question-type="missing" aria-pressed="false"><strong>Trouver le nombre manquant</strong><small>? × 8 = 56</small></button>
-              <button class="type-button" type="button" data-question-type="division" aria-pressed="false"><strong>Divisions liées</strong><small>24 ÷ 4 = ?</small></button>
+              <button class="type-button" type="button" data-question-type="division" aria-pressed="false"><strong>Divisions liées</strong><small>24 ÷ 4 = ? · 24 ÷ ? = 6</small></button>
             </div>
           </fieldset>
           <fieldset id="test-level-settings" class="setting-group" hidden>
