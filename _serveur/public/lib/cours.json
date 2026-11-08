@@ -1,0 +1,173 @@
+{
+ "LISEZ-MOI": "Fabriqué par build.py site (Livret de cours\\_moteur) : ne pas modifier à la main. Les chapitres dans l'ordre de la progression ; une fiche = son identifiant (le premier du référentiel).",
+ "chapitres": [
+  {
+   "id": "4e-TRI",
+   "niveau": "4e",
+   "chapitre": "Le triangle rectangle",
+   "titre": "Le théorème de Pythagore et sa réciproque",
+   "fiches": [
+    {
+     "id": "4e-TRI-01",
+     "n": 1,
+     "ids": "4e-TRI-01",
+     "h1": "Je sais reconnaître l'hypoténuse d'un triangle rectangle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-01.html"
+    },
+    {
+     "id": "4e-TRI-02",
+     "n": 2,
+     "ids": "4e-TRI-02",
+     "h1": "Je connais le théorème de Pythagore et j'écris l'égalité de Pythagore",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-02.html"
+    },
+    {
+     "id": "4e-TRI-03",
+     "n": 3,
+     "ids": "4e-TRI-03 · 3e-PYT-01",
+     "h1": "Je sais calculer une longueur dans un triangle rectangle avec le théorème de Pythagore",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-03.html"
+    },
+    {
+     "id": "4e-TRI-04",
+     "n": 4,
+     "ids": "4e-TRI-04 · 3e-PYT-03",
+     "h1": "Je sais prouver qu'un triangle est rectangle… ou qu'il ne l'est pas",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-04.html"
+    },
+    {
+     "id": "4e-TRI-05",
+     "n": 5,
+     "ids": "4e-TRI-05",
+     "h1": "Je sais ce que sont un théorème, sa réciproque et sa contraposée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-05.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PYT-brevet",
+    "page": "/cours/3e/3e-PYT-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-TRI-imprimable.html"
+  },
+  {
+   "id": "3e-PYT",
+   "niveau": "3e",
+   "chapitre": "Le triangle rectangle",
+   "titre": "Théorème de Pythagore et sa réciproque",
+   "fiches": [
+    {
+     "id": "4e-TRI-01",
+     "n": 1,
+     "ids": "4e-TRI-01",
+     "h1": "Je sais reconnaître l'hypoténuse d'un triangle rectangle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-01.html"
+    },
+    {
+     "id": "4e-TRI-02",
+     "n": 2,
+     "ids": "4e-TRI-02",
+     "h1": "Je connais le théorème de Pythagore et j'écris l'égalité de Pythagore",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-02.html"
+    },
+    {
+     "id": "4e-TRI-03",
+     "n": 3,
+     "ids": "4e-TRI-03 · 3e-PYT-01",
+     "h1": "Je sais calculer une longueur dans un triangle rectangle avec le théorème de Pythagore",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-03.html"
+    },
+    {
+     "id": "3e-PYT-02",
+     "n": 4,
+     "ids": "3e-PYT-02",
+     "h1": "Je sais trouver le triangle rectangle caché dans une figure ou dans un solide",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PYT-02.html"
+    },
+    {
+     "id": "4e-TRI-04",
+     "n": 5,
+     "ids": "4e-TRI-04 · 3e-PYT-03",
+     "h1": "Je sais prouver qu'un triangle est rectangle… ou qu'il ne l'est pas",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-04.html"
+    },
+    {
+     "id": "4e-TRI-05",
+     "n": 6,
+     "ids": "4e-TRI-05",
+     "h1": "Je sais ce que sont un théorème, sa réciproque et sa contraposée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-TRI-05.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PYT-brevet",
+    "page": "/cours/3e/3e-PYT-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-PYT-imprimable.html"
+  }
+ ]
+}

@@ -375,12 +375,15 @@ test("APPLIS : ce que la page sait montrer est disponible au catalogue, proposé
   // Coffres magiques entre les deux (lot « Coffres magiques sur le suivi », 21/10/2026),
   // puis Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026), comme au catalogue.
   // Défi calcul (lot 2b, 31/10/2026) après Anzan, comme au catalogue.
-  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "splat"]);
+  // L'appli Cours (lot « cours-appli », 08/11/2026) après SPLAT!, comme au catalogue.
+  assert.deepEqual(APPLIS.map(a => a.cle), ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "splat", "cours"]);
   APPLIS.forEach(appli => {
     const entree = catalogue.slice(catalogue.indexOf(`'${appli.cle}' => [`));
     const bloc = entree.slice(0, entree.indexOf("\n    ],"));
     assert.match(bloc, /'disponible' => true,/, `${appli.cle} disponible au catalogue`);
     assert.ok(proposables.includes(appli.cle), `${appli.cle} proposée par l'API`);
+    // L'appli Cours ne suit rien : pas de compteur, rien à « Revenir à… ».
+    if (appli.sansSuivi) { assert.match(bloc, /'compteur' => null,/, `${appli.cle} : rien à compter`); return; }
     const compteur = bloc.match(/'compteur' => '(\w+)'/)[1];
     assert.equal({calculs: "calculs", etapes: "étapes", niveaux: "niveaux commencés", seances: "séances"}[compteur], appli.unite[1], "« Revenir à… » compte ce que compte le serveur");
   });
@@ -436,7 +439,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const TRIS = {"defi-tables": ["prenom", "acquises", "date"], "splat": ["prenom", "etapes", "date"]};
   const lus = {records: 0, evaluations: 0, quiVoit: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
-    `let tri = triInitial;\nlet vue = vueInitiale;\nlet periodeCoffres = "debut";\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction garderPopEleves() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    `let tri = triInitial;\nlet vue = vueInitiale;\nlet periodeCoffres = "debut";\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction garderPopEleves() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nfunction poserCours() {}\nposerAppli();\nreturn {tri, vue};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
   const vus = boutons.map(b => [b.hidden, b.attributs["aria-pressed"], b.classList.contains("eteint") ? "gris" : "clair", (b.premier(n => n.classList.contains("compte-plus")) || {textContent: ""}).textContent]);
   return {$, boutons, vus, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};

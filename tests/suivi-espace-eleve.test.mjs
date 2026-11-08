@@ -77,7 +77,7 @@ test("l'ordre d'affichage du catalogue est celui décidé le 07/09/2026", () => 
   // « splat-equations » est devenu « splat » le 07/10/2026 (lot splat-suivi-3), à la même place ;
   // Coffres magiques juste après Défi tables (lot « Coffres magiques sur le suivi », 21/10/2026),
   // puis Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026 : les applis de calcul mental ensemble).
-  assert.deepEqual(cles, ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "automatismes", "splat", "soley"],
+  assert.deepEqual(cles, ["defi-tables", "coffres", "flash-anzan", "defi-calcul", "automatismes", "splat", "cours", "soley"],
     "l'ordre du tableau CATALOGUE_APPLIS est l'ordre des tuiles chez l'élève");
 });
 

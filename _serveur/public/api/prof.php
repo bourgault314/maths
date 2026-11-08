@@ -30,7 +30,10 @@ const MAX_ELEVES_PAR_LOT = 60;
 // absente d'ici est retirée EN SILENCE de la liste d'une classe à sa création
 // ou à sa modification (vérifié au banc, 21/10/2026) : toute appli ouverte au
 // catalogue doit y être.
-const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'];
+// « cours » (lot « cours-appli », 08/11/2026) : l'appli Cours se propose à
+// une classe comme les autres ; elle n'a pas de progression (le tableau de
+// son onglet n'a que les prénoms) et ne se donne pas par élève.
+const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 
 // ------------------------------------------------------------------- quotas

@@ -45,6 +45,11 @@ $versionCore = is_file($moteurCore) ? substr(md5_file($moteurCore), 0, 10) : '0'
 // et une ancienne ne se mélange pas à une nouvelle page.
 $charte = __DIR__ . '/../suivi.css';
 $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
+// Lot « cours-appli » (08/11/2026) : le catalogue du livret de cours (chapitres,
+// fiches, adresses), pour l'onglet « Cours » et sa fenêtre de réglage. Posé
+// dans la page en données (un bloc « script » de type application/json, jamais exécuté).
+require_once __DIR__ . '/../lib/cours.php';
+$coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
 ?>
 <!doctype html>
 <html lang="fr">
@@ -1162,6 +1167,38 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   #ecran-connexion .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
   #ecran-connexion .carte { max-width: 420px; margin: 0 auto; text-align: left; }
   #ecran-connexion .actions button { flex: 1 1 100%; }
+  /* Lot « cours-appli » (08/11/2026) : l'onglet Cours n'a pas de tableau. Tout
+     ce qui sert aux applis suivies (cartes, outils, tableau) s'efface ; restent
+     la ligne « qui voit », la carte d'un onglet grisé, le message et le panneau. */
+  #vue-appli.vue-cours > :not(#qui-voit):not(#appli-fermee):not(#message-appli):not(#cours-prof) { display: none !important; }
+  .cours-prof h2 { margin: 0 0 2px; }
+  .cours-prof > .sous { margin: 0 0 10px; }
+  .cours-chap { margin: 14px 0 0; }
+  .cours-chap > p { margin: 0 0 2px; font-weight: 700; color: var(--blue-dark); }
+  .cours-chap > p span { font-weight: 400; color: var(--muted); font-size: var(--texte-secondaire); }
+  .cours-niv { display: inline-block; margin-right: 6px; padding: 0 6px; border: 1.5px solid var(--teal-texte); border-radius: 6px;
+               color: var(--teal-texte); font-size: 12.5px; font-weight: 700; }
+  .cours-fiche { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-top: 1px solid var(--filet-doux); }
+  .cours-fiche .marque { flex: 0 0 1.1em; font-weight: 800; color: var(--vert); }
+  .cours-fiche.fermee { color: var(--indice); }
+  .cours-fiche.fermee .marque { color: var(--indice); }
+  .cours-fiche .t { flex: 1 1 auto; min-width: 0; }
+  .cours-fiche small { color: var(--muted); font-size: 13px; }
+  .cours-fiche a { flex: 0 0 auto; font-size: var(--texte-secondaire); white-space: nowrap; }
+  .cours-nouveau { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: var(--orange-pale);
+                   border: 1px solid #f0d2b0; color: var(--orange-texte); font-size: 12.5px; font-weight: 700; }
+  .regler .cours-niveaux { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 2px; }
+  .regler .cours-niveaux button { min-width: 56px; }
+  .regler .cours-niveaux button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .regler .cours-boite { margin: 8px 0 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--arrondi-carte); }
+  .regler .cours-boite-tete { display: flex; align-items: center; gap: 8px; }
+  .regler .cours-boite-tete .case-a-cocher { flex: 1 1 auto; font-weight: 700; color: var(--blue-dark); }
+  .regler .cours-boite-tete button { flex: 0 0 auto; }
+  .regler .cours-fiches { margin: 6px 0 0 30px; }
+  .regler .cours-fiches .cours-fiche { align-items: center; }
+  .regler .cours-fiches .case-a-cocher { flex: 1 1 auto; }
+  .regler .cours-fiches.eteintes .case-a-cocher { opacity: .55; }
+  .regler .cours-fiches .case-a-cocher .mots { font-weight: 400; }
 </style>
 </head>
 <body>
@@ -1305,6 +1342,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         <button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan</button>
         <button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul</button>
         <button type="button" data-appli="splat" aria-pressed="false">SPLAT!</button>
+        <button type="button" data-appli="cours" aria-pressed="false">Cours</button>
       </div>
       <div class="onglets onglets-classe" role="group" aria-label="La classe">
       <button type="button" class="onglet-eleves" id="onglet-eleves" aria-pressed="false" aria-label="Élèves" title="Élèves : prénoms, codes, papiers" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="mot">Élèves</span></button>
@@ -1374,6 +1412,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         <button type="button" id="af-toute"></button>
       </div>
     </div>
+    <!-- Lot « cours-appli » (08/11/2026) : l'onglet Cours n'a pas de tableau
+         (rien n'est enregistré pour les élèves) ; il montre ce que voient les
+         élèves de la classe, chapitre par chapitre (dessinerCoursProf). -->
+    <div class="carte cours-prof" id="cours-prof" hidden></div>
 
     <!-- Serveur pro, lot 5c (choix de Gwenaël, maquette 8 du 25/10/2026) : les
          trois cartes du haut de Défi tables côte à côte, de la même largeur
@@ -1996,6 +2038,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      outils/calcul_mental/defi_tables_mon_parcours.js, gardée identique par un test du
      dépôt) : un script chargé d'un autre domaine s'exécuterait avec les droits de la
      session du professeur, la politique de contenu ne l'autorise plus. -->
+<script type="application/json" id="cours-catalogue" nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>"><?= $coursCatalogue ?: '[]' ?></script>
 <script src="defi_tables_core.js?v=<?= htmlspecialchars($versionCore, ENT_QUOTES) ?>"></script>
 <script src="defi_tables_mon_parcours.js?v=<?= htmlspecialchars($versionMoteur, ENT_QUOTES) ?>"></script>
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
@@ -2064,7 +2107,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Défi calcul (lot 2b, 31/10/2026) : après Anzan, comme au catalogue. Le
     // serveur compte les séances finies (son compteur).
     {cle: "defi-calcul", nom: "Défi calcul", unite: ["séance", "séances"]},
-    {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]}
+    {cle: "splat", nom: "SPLAT!", unite: ["étape", "étapes"]},
+    // L'appli Cours (lot « cours-appli », 08/11/2026) : un onglet comme les
+    // autres, mais SANS SUIVI — aucune progression, rien dans « La classe »,
+    // le bilan ou la fiche d'un élève (sansSuivi). Son onglet montre ce que
+    // voient les élèves ; « Régler les cours » ouvre chapitres et fiches.
+    {cle: "cours", nom: "Cours", unite: ["fiche", "fiches"], sansSuivi: true}
   ];
   // Le dernier choix, retenu le temps de l'onglet.
   const CLE_APPLI = "mathsgo-suivi-prof-appli";
@@ -2096,7 +2144,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Défi calcul (lot 2b) : les compétences sues, ce qui est à revoir, les
     // séances des 4 dernières semaines, le dernier jour.
     "defi-calcul": ["prenom", "sues", "revoir", "seances", "date"],
-    "splat": ["prenom", "etapes", "date"]
+    "splat": ["prenom", "etapes", "date"],
+    "cours": ["prenom"]
   };
   let SPLAT = window.MathsGoSplatParcours || null;
   let chargementSplat = null;
@@ -3095,6 +3144,199 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let reglage = null;          // le brouillon de la fenêtre ouverte, ou null
   let reglageEnCours = false;  // un « Enregistrer » est en route
 
+  // ------------------------------------------------ l'appli Cours (lot « cours-appli », 08/11/2026)
+  //
+  // Le catalogue du livret (lib/cours.json, posé dans la page par PHP) et le
+  // réglage de la classe (classes.reglages.cours) : les chapitres ouverts, les
+  // fiches fermées (« sans »), les fiches du nouveau programme ouvertes
+  // (« avec »). Rien d'ouvert au départ (choix de Gwenaël du 08/11/2026).
+  // Une fiche commune à deux chapitres (4e-TRI-03 en 4e et en 3e) a un seul
+  // identifiant : la fermer la ferme dans les deux.
+  const COURS = (() => {
+    try {
+      const brut = JSON.parse(document.getElementById("cours-catalogue").textContent || "[]");
+      return Array.isArray(brut) ? brut.filter(c => c && typeof c.id === "string" && Array.isArray(c.fiches)) : [];
+    } catch (_) { return []; }
+  })();
+  const NIVEAUX_COURS = ["CM2", "6e", "5e", "4e", "3e"].filter(n => COURS.some(c => c.niveau === n));
+
+  function coursDeLaClasse() {
+    const brut = (classe && classe.reglages && classe.reglages.cours) || {};
+    const liste = nom => new Set(Array.isArray(brut[nom]) ? brut[nom].filter(x => typeof x === "string") : []);
+    return {chapitres: liste("chapitres"), sans: liste("sans"), avec: liste("avec")};
+  }
+  function copierCours(c) {
+    return {chapitres: new Set(c.chapitres), sans: new Set(c.sans), avec: new Set(c.avec)};
+  }
+  // Les listes dans l'ordre du catalogue (celui que range le serveur).
+  function coursEnvoye(c) {
+    const chapitres = COURS.map(ch => ch.id).filter(id => c.chapitres.has(id));
+    const fiches = [];
+    COURS.forEach(ch => {
+      ch.fiches.forEach(f => { if (!fiches.includes(f.id)) fiches.push(f.id); });
+      if (ch.brevet && !fiches.includes(ch.brevet.id)) fiches.push(ch.brevet.id);
+    });
+    return {chapitres, sans: fiches.filter(id => c.sans.has(id)), avec: fiches.filter(id => c.avec.has(id))};
+  }
+  function memesCours(a, b) {
+    if (!a || !b) return a === b;
+    return JSON.stringify(coursEnvoye(a)) === JSON.stringify(coursEnvoye(b));
+  }
+  function ficheOuverte(c, fiche) {
+    return fiche.nouveau ? c.avec.has(fiche.id) : !c.sans.has(fiche.id);
+  }
+  function texteCoursOuverts(c) {
+    const n = COURS.filter(ch => c.chapitres.has(ch.id)).length;
+    if (!n) return "aucun chapitre ouvert : la tuile « Mes cours » n’apparaît pas encore";
+    return `${n} chapitre${n > 1 ? "s" : ""} ouvert${n > 1 ? "s" : ""}`;
+  }
+  // Le niveau proposé en premier dans la fenêtre : celui du premier chapitre
+  // ouvert, sinon le chiffre du nom de la classe (« 306 » → 3e), sinon le
+  // premier niveau du livret. Ce n'est qu'un filtre d'affichage.
+  function niveauDeDepart(c) {
+    const ouvert = COURS.find(ch => c.chapitres.has(ch.id));
+    if (ouvert) return ouvert.niveau;
+    const chiffre = /^\s*([3-6])/.exec((classe && classe.libelle) || "");
+    if (chiffre && NIVEAUX_COURS.includes(`${chiffre[1]}e`)) return `${chiffre[1]}e`;
+    return NIVEAUX_COURS[NIVEAUX_COURS.length - 1] || "";
+  }
+  // « 4e-TRI-01 » ne se coupe pas au tiret (trait d'union insécable).
+  function insecable(texte) {
+    return String(texte || "").replace(/-/g, "\u2011");
+  }
+  function lienVoir(url) {
+    const lien = el("a", "", "Voir ↗");
+    lien.href = url;
+    lien.target = "_blank";
+    lien.rel = "noopener";
+    return lien;
+  }
+  function etiquetteCoursNiveau(niveau) {
+    return el("span", "cours-niv", niveau);
+  }
+
+  // L'onglet Cours, à chaque changement d'onglet, de vue ou de classe : seuls
+  // y restent la ligne « qui voit », la carte d'un onglet grisé, le message
+  // et le panneau des cours (le reste de la vue de l'activité est caché par
+  // la feuille de style, classe « vue-cours »).
+  function poserCours() {
+    $("vue-appli").classList.toggle("vue-cours", appliAffichee === "cours");
+    dessinerCoursProf();
+  }
+
+  // L'onglet Cours : ce que voient les élèves, chapitre par chapitre (les
+  // fiches fermées en gris, « Voir ↗ » ouvre la fiche dans un nouvel onglet).
+  function dessinerCoursProf() {
+    const panneau = $("cours-prof");
+    const montrer = Boolean(classe) && vue === "appli" && appliAffichee === "cours" && parLaClasse("cours");
+    panneau.hidden = !montrer;
+    panneau.textContent = "";
+    if (!montrer) return;
+    const c = coursDeLaClasse();
+    panneau.append(el("h2", "", `Ce que voient les élèves de la ${classe.libelle}`),
+      el("p", "sous", "Rien n’est enregistré : on ne sait pas qui a ouvert quoi."));
+    const ouverts = COURS.filter(ch => c.chapitres.has(ch.id));
+    if (!ouverts.length) {
+      panneau.append(el("p", "", droitClasse === "proprietaire"
+        ? "Aucun chapitre ouvert. « Régler les cours » pour en ouvrir un."
+        : "Aucun chapitre ouvert."));
+      return;
+    }
+    ouverts.forEach(ch => {
+      const bloc = el("div", "cours-chap");
+      const total = ch.fiches.length;
+      const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
+      const ligne = el("p", "");
+      ligne.append(etiquetteCoursNiveau(ch.niveau), ch.titre, " ",
+        el("span", "", `· ${vus} fiche${vus > 1 ? "s" : ""} sur ${total}`));
+      bloc.append(ligne);
+      const rangees = ch.fiches.map(f => ({titre: `${f.n}. ${f.h1}`, ids: insecable(f.ids), type: f.type, nouveau: f.nouveau, url: f.url, ouverte: ficheOuverte(c, f)}));
+      if (ch.brevet) rangees.push({titre: "🎯 Entraînement brevet", ids: "", type: "", nouveau: false, url: ch.brevet.url, ouverte: !c.sans.has(ch.brevet.id)});
+      rangees.forEach(r => {
+        const rangee = el("div", `cours-fiche${r.ouverte ? "" : " fermee"}`);
+        const marque = el("span", "marque", r.ouverte ? "✓" : "–");
+        marque.setAttribute("aria-label", r.ouverte ? "ouverte" : "fermée");
+        const t = el("span", "t", r.titre);
+        if (r.nouveau) t.append(el("span", "cours-nouveau", "Nouveau programme"));
+        const precision = [r.type, r.ids].filter(Boolean).join(" · ");
+        if (precision) t.append(" ", el("small", "", `· ${precision}`));
+        rangee.append(marque, t, lienVoir(r.url));
+        bloc.append(rangee);
+      });
+      panneau.append(bloc);
+    });
+  }
+
+  // La fenêtre « Régler les cours » : le niveau (un filtre), puis les
+  // chapitres de ce niveau, chacun avec ses fiches à déplier. Rien ne part
+  // avant « Enregistrer ».
+  function dessinerReglerCours(corps, b) {
+    const c = b.cours;
+    if (!reglage.niveauCours) reglage.niveauCours = niveauDeDepart(c);
+    const niveau = reglage.niveauCours;
+    if (NIVEAUX_COURS.length > 1) {
+      corps.append(el("h3", "", "Niveau"));
+      const rangee = el("div", "cours-niveaux");
+      rangee.setAttribute("role", "group");
+      rangee.setAttribute("aria-label", "Niveau");
+      NIVEAUX_COURS.forEach(n => {
+        const bouton = el("button", "secondaire", n);
+        bouton.type = "button";
+        bouton.setAttribute("aria-pressed", String(n === niveau));
+        const ouverts = COURS.filter(ch => ch.niveau === n && c.chapitres.has(ch.id)).length;
+        if (ouverts) bouton.textContent = `${n} · ${ouverts}`;
+        bouton.addEventListener("click", () => { reglage.niveauCours = n; dessinerRegler(); });
+        rangee.append(bouton);
+      });
+      corps.append(rangee);
+    }
+    corps.append(el("h3", "", `Chapitres de ${niveau}`));
+    const chapitres = COURS.filter(ch => ch.niveau === niveau);
+    if (!chapitres.length) corps.append(el("p", "aide", "Pas encore de chapitre écrit pour ce niveau."));
+    chapitres.forEach(ch => {
+      const boite = el("div", "cours-boite");
+      const tete = el("div", "cours-boite-tete");
+      const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
+      const caseChapitre = caseACocher(ch.titre, c.chapitres.has(ch.id), coche => {
+        if (coche) c.chapitres.add(ch.id); else c.chapitres.delete(ch.id);
+        dessinerRegler();
+      }, `${insecable(ch.id)} · ${vus} fiche${vus > 1 ? "s" : ""} sur ${ch.fiches.length}`);
+      const deplie = reglage.deplies.has(`cours:${ch.id}`);
+      const bouton = el("button", "secondaire", deplie ? "Les fiches ▴" : "Les fiches ▾");
+      bouton.type = "button";
+      bouton.setAttribute("aria-expanded", String(deplie));
+      bouton.addEventListener("click", () => {
+        if (deplie) reglage.deplies.delete(`cours:${ch.id}`); else reglage.deplies.add(`cours:${ch.id}`);
+        dessinerRegler();
+      });
+      tete.append(caseChapitre, bouton);
+      boite.append(tete);
+      if (deplie) {
+        const fiches = el("div", `cours-fiches${c.chapitres.has(ch.id) ? "" : " eteintes"}`);
+        const rangees = ch.fiches.map(f => ({id: f.id, nouveau: f.nouveau, titre: `${f.n}. ${f.h1}`, precision: [f.type, insecable(f.ids)].filter(Boolean).join(" · "), url: f.url}));
+        if (ch.brevet) rangees.push({id: ch.brevet.id, nouveau: false, titre: "🎯 Entraînement brevet", precision: "", url: ch.brevet.url});
+        rangees.forEach(r => {
+          const rangee = el("div", "cours-fiche");
+          const texte = document.createDocumentFragment();
+          texte.append(r.titre);
+          if (r.nouveau) texte.append(" ", el("span", "cours-nouveau", "Nouveau programme"));
+          const ouverte = r.nouveau ? c.avec.has(r.id) : !c.sans.has(r.id);
+          rangee.append(caseACocher(texte, ouverte, coche => {
+            if (r.nouveau) { if (coche) c.avec.add(r.id); else c.avec.delete(r.id); }
+            else if (coche) c.sans.delete(r.id); else c.sans.add(r.id);
+            dessinerRegler();
+          }, r.precision), lienVoir(r.url));
+          fiches.append(rangee);
+        });
+        boite.append(fiches);
+      }
+      corps.append(boite);
+    });
+    corps.append(el("p", "aide", "Un chapitre coché s’ouvre avec toutes ses fiches, sauf celles du nouveau programme (à cocher une par une). "
+      + "Une fiche commune à la 4e et à la 3e se ferme dans les deux chapitres."));
+  }
+
+
   function nomDeLAppli(cle) {
     return (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom;
   }
@@ -3137,6 +3379,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       classeOuverte: parLaClasse(cle),
       records: cle === "defi-tables" ? recordsOuvertsPourLaClasse() : null,
       nouveautes: cle === "defi-calcul" ? nouveautesPourLaClasse() : null,
+      cours: cle === "cours" ? coursDeLaClasse() : null,
       listes, entiers, parNumero
     };
   }
@@ -3146,8 +3389,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     Object.keys(etat.listes).forEach(nom => { listes[nom] = new Set(etat.listes[nom]); });
     const parNumero = {};
     Object.keys(etat.parNumero).forEach(cle => { parNumero[cle] = new Set(etat.parNumero[cle]); });
-    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, nouveautes: etat.nouveautes, listes,
-            entiers: new Set(etat.entiers), parNumero};
+    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, nouveautes: etat.nouveautes,
+            cours: etat.cours ? copierCours(etat.cours) : null, listes, entiers: new Set(etat.entiers), parNumero};
   }
 
   // La ligne en haut de l'onglet : « ● Ouvert à toute la 405 · … » ou
@@ -3158,7 +3401,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const ligne = $("qui-voit");
     const fermee = $("appli-fermee");
     const bouton = $("regler-appli");
-    if (!classe || vue !== "appli") { ligne.hidden = true; fermee.hidden = true; return; }
+    if (!classe || vue !== "appli") { ligne.hidden = true; fermee.hidden = true; $("cours-prof").hidden = true; return; }
     const cle = appliAffichee;
     // Lot S2 : « Ouvrir Défi calcul en mode professeur » (rien n'y est
     // enregistré : tous les droits l'ont).
@@ -3167,8 +3410,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const proprietaire = droitClasse === "proprietaire";
     const etat = $("qui-voit-etat");
     etat.textContent = "";
-    $("regler-appli-mot").textContent = `Régler ${nom}`;
-    bouton.setAttribute("aria-label", `Régler ${nom}`);
+    $("regler-appli-mot").textContent = cle === "cours" ? "Régler les cours" : `Régler ${nom}`;
+    bouton.setAttribute("aria-label", cle === "cours" ? "Régler les cours" : `Régler ${nom}`);
     bouton.hidden = !proprietaire;
     const point = el("i", "point");
     point.setAttribute("aria-hidden", "true");
@@ -3199,6 +3442,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       : `Aucun élève de la ${classe.libelle} ne le voit dans son espace.`;
     $("af-toute").textContent = `Ouvrir à toute la ${classe.libelle}`;
     $("af-actions").hidden = !proprietaire;
+    // L'appli Cours s'ouvre à toute la classe, jamais à un élève.
+    $("af-quelques").hidden = cle === "cours";
+    if (cle === "cours") $("af-texte").textContent = `Les élèves de la ${classe.libelle} n’ont pas « Mes cours » dans leur espace.`;
     // Pendant un enregistrement (le raccourci lui-même, ou la fenêtre), les
     // deux boutons attendent (correctif, point 2 : une seule écriture à la fois).
     ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = reglageEnCours; });
@@ -3219,6 +3465,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const details = [];
     if (cle === "defi-tables") details.push(recordsOuvertsPourLaClasse() ? "les records sont ouverts" : "sans les records");
     if (cle === "defi-calcul") details.push(texteNouveautes(nouveautesPourLaClasse()));
+    if (cle === "cours") details.push(texteCoursOuverts(coursDeLaClasse()));
     (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
       const ouverts = numerosOuverts(classe.reglages, cle, liste);
       if (!ouverts) return;
@@ -3299,8 +3546,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const cle = b.cle;
     const nom = nomDeLAppli(cle);
     const listes = LISTES_PAR_ELEVE[cle] || [];
-    $("regler-titre").textContent = `Régler ${nom}`;
-    $("regler-sous").textContent = `Ce que trouvent les élèves de la ${classe.libelle} dans leur espace.`;
+    $("regler-titre").textContent = cle === "cours" ? "Régler les cours" : `Régler ${nom}`;
+    $("regler-sous").textContent = cle === "cours"
+      ? `Les chapitres et les fiches que trouvent les élèves de la ${classe.libelle} dans « Mes cours ».`
+      : `Ce que trouvent les élèves de la ${classe.libelle} dans leur espace.`;
     const corps = $("regler-corps");
     corps.textContent = "";
     corps.append(caseACocher(`Ouvert à toute la ${classe.libelle}`, b.classeOuverte, coche => {
@@ -3308,6 +3557,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       dessinerRegler();
     }));
     corps.lastChild.classList.add("case-classe");
+    // L'appli Cours : chapitres et fiches, pour la classe seulement.
+    if (cle === "cours") {
+      messager("regler-message", "", "");
+      if (!b.classeOuverte) corps.append(el("p", "aide", `Les élèves de la ${classe.libelle} n’ont pas « Mes cours » dans leur espace.`));
+      else dessinerReglerCours(corps, b);
+      return;
+    }
     if (!b.classeOuverte) {
       // La classe ne l'a pas : l'appli ENTIÈRE pour quelques élèves (D3).
       corps.append(el("h3", "", "Ou seulement pour quelques élèves"));
@@ -3514,6 +3770,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const pourLAppli = {};
       if (b.cle === "defi-tables" && b.records !== depart.records) pourLAppli.records = b.records;
       if (b.cle === "defi-calcul" && b.nouveautes !== depart.nouveautes) pourLAppli.nouveautes = b.nouveautes;
+      // L'appli Cours : les trois listes partent ensemble dès que l'une change.
+      if (b.cle === "cours" && !memesCours(b.cours, depart.cours)) Object.assign(pourLAppli, coursEnvoye(b.cours));
       (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => {
         const avant = [...depart.listes[liste.nom]].sort((x, y) => x - y);
         const apres = [...b.listes[liste.nom]].sort((x, y) => x - y);
@@ -3587,8 +3845,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!voulu) return true;
     if ("records" in voulu && neuf.records !== b.records) return false;
     if ("nouveautes" in voulu && neuf.nouveautes !== b.nouveautes) return false;
+    if ("chapitres" in voulu && !memesCours(neuf.cours, b.cours)) return false;
     return Object.keys(voulu).every(nom => {
-      if (nom === "records" || nom === "nouveautes") return true;
+      if (nom === "records" || nom === "nouveautes" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
       const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
       const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
       return a === c;
@@ -3682,7 +3941,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (pourLaClasse && pourLaClasse.applis && !b.classeOuverte && !await demander(
       `Retirer ${nom} de la classe ${libelle} ? La tuile disparaît de l’espace des élèves`
       + `${aChanger.length || depart.entiers.size ? " (sauf ceux qui l’ont en plus)" : ""}. `
-      + `Leur travail reste enregistré : rien n’est effacé.`,
+      + (b.cle === "cours" ? "" : `Leur travail reste enregistré : rien n’est effacé.`),
       null, {oui: "Retirer de la classe"})) {
       return;
     }
@@ -3863,7 +4122,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (!encoreLa() || !memeClasse()) return;
       const ouverte = ((classe.applis) || []).includes(cle);
       if (relu && ouverte) {
-        messager("message-appli", `${nom} ouvert à toute la ${classe.libelle} : la tuile apparaît dans l’espace des élèves.`, "ok");
+        messager("message-appli", cle === "cours"
+          ? `Cours ouvert à toute la ${classe.libelle} : coche maintenant les chapitres dans « Régler les cours ».`
+          : `${nom} ouvert à toute la ${classe.libelle} : la tuile apparaît dans l’espace des élèves.`, "ok");
       } else if (erreur && erreur.statut === 409) {
         messager("message-appli", relu
           ? `La ${classe.libelle} a été changée ailleurs : l’onglet montre l’état actuel, réessaie.`
@@ -6901,6 +7162,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Serveur pro, lot 5b : la ligne « qui voit » (ou la carte d'un onglet
     // grisé) en haut de l'onglet.
     poserQuiVoit();
+    // Lot « cours-appli » : l'onglet Cours (sa vue et son panneau).
+    poserCours();
     // Lot « Les records » : la carte, Défi tables seulement (relue à chaque
     // ouverture de la classe). Pas dans les Réglages : elle n'y est pas.
     chargerRecords();
@@ -7270,7 +7533,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // garde le travail déjà fait (modèle commun) — il compte toujours « toutes
   // applis confondues ». Ce sont les mêmes listes « tableau » qu'avant.
   function applisDuBilan() {
-    return APPLIS.map(appli => appli.cle);
+    return APPLIS.filter(appli => !appli.sansSuivi).map(appli => appli.cle);
   }
 
   // Les colonnes de « La classe » : les applis de la classe, celles qu'un
@@ -7840,7 +8103,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const base = eleveParId(id);
     const voit = new Set((classe && classe.applis) || []);
     if (base) accesDe(base).applis.forEach(cle => voit.add(cle));
-    return ["ensemble"].concat(APPLIS.map(a => a.cle).filter(cle => {
+    return ["ensemble"].concat(APPLIS.filter(a => !a.sansSuivi).map(a => a.cle).filter(cle => {
       if (voit.has(cle)) return true;
       const eleve = eleveDe(cle, id);
       return Boolean(eleve && aDuTravail(eleve));

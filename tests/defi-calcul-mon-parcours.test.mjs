@@ -484,7 +484,7 @@ test("lib/applis.php déclare pour « defi-calcul » les clés du moteur, les 74
   // nouveautés par séance (1 à 3, 1 par défaut).
   assert.match(bloc, /'reglages' => \['nouveautes' => \['de' => 1, 'a' => 3\]\],/, "le réglage « nouveautes », de 1 à 3");
   assert.match(await lire("../_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
-  assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
+  assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours'\];/);
   // La référence écrite pour le serveur est bien celle du générateur.
   const ecrite = JSON.parse(await lire("../_serveur/tests/parcours-reference-defi-calcul.json"));
   assert.deepEqual(ecrite, parcoursComplet(), "_serveur/tests/parcours-reference-defi-calcul.json est à regénérer : node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire");
