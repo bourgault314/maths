@@ -2576,6 +2576,8 @@
     .rec-bas { display: grid; gap: 8px; margin-top: 14px; justify-items: center; }
     .rec-bas .primary { width: min(100%, 340px); }
     .rec-bas .rec-voir { margin: 0; }
+    /* Lot « une tentative n'est pas une séance » (08/11/2026, choix C) : « 🏆 Voir le classement », un vrai bouton sur toute la largeur du cadre jaune. */
+    #acc-expert .rec-classement { display: flex; width: 100%; margin-top: 12px; }
     .rec-attente { margin: 10px 0 0; text-align: center; color: var(--muted); font-size: .9rem; font-weight: 800; }
     .rec-choix { display: grid; gap: 10px; margin: 16px 0 10px; }
     .rec-choix button { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 72px; padding: 10px 14px; border: 2px solid #c5d9e6; border-radius: 16px; background: #fff; box-shadow: 0 3px 0 #c3d8e5; font: inherit; text-align: left; color: var(--ink); cursor: pointer; }
@@ -7657,6 +7659,10 @@
         $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente\u00a0: ${previousScore} sur ${TOTAL}.`;
         renderCorrections();
         $("result-reglages").hidden = state.origin !== "reglages";
+        // Lot « une tentative n'est pas une séance » (08/11/2026) : le temps
+        // de la course, pour le bilan de la séance (« 55,5 s » plutôt que
+        // « 25 sur 25 », qui se lisait comme un record battu).
+        tempsDerniereCourse = state.configuration.course === "records" ? Math.round(elapsed / 100) : null;
         if (enSeance()) noterEtapeDeSeance(suivi);
         else if (state.apresMelange && suivi.classement && suivi.classement.type === "melange") renderSuiteApresMelange();
         if (state.origin === "decouverte") renderSuiteDecouverte(suivi);
@@ -9683,7 +9689,7 @@
         zone.querySelector(".eyebrow").textContent = "Je deviens expert";
         zone.classList.remove("is-records");
         zone.querySelector(".rec-chiffres")?.remove();
-        zone.querySelector(".rec-voir")?.remove();
+        zone.querySelector("#acc-voir-records")?.remove();
         // Lot « Les records » : une Légende aux records ouverts a son propre cadre.
         if (recordsOuverts()) { renderRecordsAccueil(etat, conseil); return; }
         $("acc-expert-titre").textContent = "Toutes les tables, de plus en plus vite";
@@ -9706,7 +9712,15 @@
         action.replaceChildren();
         // Ma séance du jour (lot 2) : les 9 tables passées ont aussi leur
         // séance — Mes calculs du jour, puis l'étoile suivante.
-        if (PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours)).etapes.length) {
+        // Lot « une tentative n'est pas une séance » (08/11/2026, planche 1) :
+        // la séance du jour faite et plus aucun calcul du jour, plus de carte
+        // « Encore une séance » (elle n'aurait été que l'étoile) : la ligne
+        // « Tente ★★★ » ci-dessous, hors séance — comme la course d'une Légende.
+        const ouverte = PARCOURS.ouvrirSeance(parcours);
+        const programme = PARCOURS.programmeDeSeance(parcours, ouverte);
+        const faite = PARCOURS.bilanSeances(parcours).aujourdhui > 0 && !ouverte.faites.length && !state.encoreOuverte;
+        const resteDesCalculs = programme.etapes.some(etape => etape.type === "revision");
+        if (programme.etapes.length && (!faite || resteDesCalculs)) {
           action.append(carteDeSeance(null));
           return;
         }
@@ -9728,7 +9742,9 @@
           // « Mes calculs du jour » qui l'a, pas la marche (lot mémoire).
           conseille: conseil === "expert",
           aria: `Tente ${suivante.symbole} : 25 questions, produits, trous et divisions, toutes les tables, en ${suivante.libelleDuree}.`,
-          action: () => launchFromParcours(suivante.config, "menu")
+          action: () => launchFromParcours(suivante.config, "menu"),
+          // Comme la course de la Légende (planche 1 du 08/11/2026).
+          go: "Jouer\u00a0→"
         }));
       }
 
@@ -9798,9 +9814,11 @@
         }
         const voir = document.createElement("button");
         voir.type = "button";
-        voir.className = "rec-voir";
+        // Lot « une tentative n'est pas une séance » (08/11/2026, choix C de
+        // Gwenaël) : un vrai bouton sur toute la largeur, plus un petit lien.
+        voir.className = "secondary rec-classement";
         voir.id = "acc-voir-records";
-        voir.textContent = "Voir les records";
+        voir.textContent = "🏆 Voir le classement";
         voir.addEventListener("click", ouvrirRecords);
         action.after(voir);
       }
@@ -10186,11 +10204,15 @@
         return laSeance.faites.length + PARCOURS.programmeDeSeance(source, laSeance, PARCOURS.jourLocal(), optionsSeance()).etapes.length;
       }
 
+      let tempsDerniereCourse = null;
       function noterEtapeDeSeance(suivi) {
         const fete = suivi ? feteDuResultat(suivi.evenements) : {principal: null};
         const chronometree = ["validation", "melange", "etoile", "course"].includes(etapeEnCours.type);
         const avant = etapesPrevues(parcours, seance);
         const note = PARCOURS.noterEtape(parcours, seance, etapeEnCours, resultatDeLEtape(suivi));
+        // Le temps de la course, pour ce bilan seulement (il n'est pas rangé
+        // dans le parcours : coderSeance ne le garde pas).
+        if (note.faite.type === "course") note.faite.dixiemes = tempsDerniereCourse;
         parcours = note.parcours;
         seance = note.seance;
         etapeEnCours = null;
@@ -10391,7 +10413,9 @@
         result.classList.remove("is-fete", "is-rate", "is-temps", "is-neutre", "is-revision");
         $("result-verdict").classList.remove("is-champion");
         $("result-icon").textContent = "✓";
-        $("result-title").textContent = "Séance du jour faite";
+        // « Séance du jour faite » pour la première de la journée ; les
+        // suivantes, « Séance faite » (lot « une tentative n'est pas une séance »).
+        $("result-title").textContent = PARCOURS.bilanSeances(parcours).aujourdhui > 1 ? "Séance faite" : "Séance du jour faite";
         $("result-score").hidden = true;
         $("result-detail").textContent = "";
         $("result-rang").hidden = true;
@@ -10410,6 +10434,13 @@
           nom.textContent = faite.nom;
           const score = document.createElement("span");
           score.textContent = faite.type === "revision" && faite.reussi === false ? "temps écoulé" : soude(`${faite.juste} sur ${faite.total}`);
+          // La course des records : une erreur y est reposée, elle ne finit
+          // donc à moins de 25 que si elle a été arrêtée (3 erreurs sur le
+          // même calcul) ; finie, c'est son temps qui compte, pas « 25 sur 25 ».
+          if (faite.type === "course") {
+            score.textContent = faite.juste < faite.total ? "course arrêtée"
+              : Number.isInteger(faite.dixiemes) ? PARCOURS.formatTemps(faite.dixiemes) : soude(`${faite.juste} sur ${faite.total}`);
+          }
           ligne.append(marque, nom, score);
           liste.append(ligne);
         });
@@ -10460,7 +10491,23 @@
         // (lot « Encore une séance », planche 13). Les boîtes, elles, ne
         // montent toujours qu'une fois par jour.
         const prochaineTable = tableDeLaSeance();
-        if (prochaineTable !== undefined) {
+        // Lot « une tentative n'est pas une séance » (08/11/2026, décision de
+        // Gwenaël) : les 9 tables passées et plus aucun calcul du jour, la
+        // séance suivante ne serait qu'une étoile ou une course — ce n'est pas
+        // une séance. Le bouton la lance directement, hors séance (planches 1
+        // et 3) : « Retenter ★★★ · 1 min 30 », « 🏆 Je bats mon record ».
+        const tentative = tentativeSansSeance(seance.faites[seance.faites.length - 1]);
+        if (tentative) {
+          const essai = document.createElement("button");
+          essai.type = "button";
+          essai.className = "secondary";
+          essai.textContent = tentative.libelle;
+          essai.addEventListener("click", () => {
+            quitterSeance();
+            tentative.lancer();
+          });
+          boutons.append(essai);
+        } else if (prochaineTable !== undefined) {
           const encore = document.createElement("button");
           encore.type = "button";
           encore.className = "secondary";
@@ -10545,6 +10592,31 @@
         // plus de bouton qui propose Mon mélange ici — il attend l'élève sur
         // l'accueil, à côté de « Je passe le test ».
         return cadre;
+      }
+
+      // Lot « une tentative n'est pas une séance » (08/11/2026) : ce que la
+      // séance suivante serait, quand les 9 tables sont passées (aucune table
+      // choisie) et qu'il ne reste plus aucun calcul du jour — une étoile ou
+      // une course seule. Rend {libelle, lancer} pour la lancer HORS séance
+      // (elle ne compte pas comme une séance), ou null (il reste des calculs
+      // du jour, une table est choisie, ou l'escalier n'est pas ouvert).
+      // derniere : l'étape qu'il vient de jouer (« Retenter » si c'était cette
+      // étoile, ratée).
+      function tentativeSansSeance(derniere = null) {
+        if (!PARCOURS.toutesAcquises(parcours) || lireTableChoisie()) return null;
+        const programme = PARCOURS.programmeDeSeance(parcours, PARCOURS.ouvrirSeance(parcours), PARCOURS.jourLocal(), optionsSeance());
+        if (programme.etapes.some(etape => etape.type === "revision")) return null;
+        if (recordsOuverts()) {
+          const titre = recordConnu().meilleur === null ? "Ma première course" : "Je bats mon record";
+          return {libelle: `🏆 ${titre}`, lancer: () => lancerCourse("menu")};
+        }
+        const suivante = PARCOURS.etatAffichage(parcours).expert.suivante;
+        if (!suivante) return null;
+        const rate = Boolean(derniere) && derniere.type === "etoile" && derniere.etoile === suivante.etoile && derniere.reussi === false;
+        return {
+          libelle: soude(`${rate ? "Retenter" : "Tente"} ${suivante.symbole} · ${suivante.libelleDuree}`),
+          lancer: () => launchFromParcours(suivante.config, "menu")
+        };
       }
 
       // La table de la prochaine séance : celle que l'accueil affiche (null =
@@ -10679,7 +10751,7 @@
         if (!acc) return;
         acc.querySelectorAll(".acc-retenir").forEach(noeud => noeud.remove());
         if (acc.querySelector(".carte-seance.est-faite")) return;
-        const ancre = acc.querySelector(".carte-seance") || acc.querySelector("#acc-expert.is-records:not([hidden]) #acc-expert-action > .expert-tenter");
+        const ancre = acc.querySelector(".carte-seance") || acc.querySelector("#acc-expert:not([hidden]) #acc-expert-action > .expert-tenter");
         if (!ancre) return;
         const cadre = cadreARetenir(aRetenirAffiche(), ancre.classList.contains("est-reprise") ? "À retenir" : undefined);
         if (!cadre) return;

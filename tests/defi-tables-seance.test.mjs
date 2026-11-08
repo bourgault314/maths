@@ -512,7 +512,8 @@ test("la page : la séance est l'accueil de tous — la clé ?seance=1 est retir
   // Lot « la flèche de retour » (14/10/2026, choix de Gwenaël) : « Arrêter la
   // séance » devient « ← Ma table », à gauche du bouton de l'étape suivante.
   assert.match(html, /arreter\.className = "secondary retour-flechee";\s*arreter\.id = "seance-arreter";\s*arreter\.textContent = "Ma table";\s*arreter\.addEventListener\("click", backToModes\);\s*const ligne = document\.createElement\("div"\);\s*ligne\.className = "suite-boutons";\s*ligne\.append\(arreter, suite\);\s*zone\.append\(ligne\);/);
-  assert.match(html, /\$\("result-title"\)\.textContent = "Séance du jour faite";/);
+  // Lot « une tentative n'est pas une séance » (08/11/2026) : « Séance faite » pour les suivantes du jour.
+  assert.match(html, /\$\("result-title"\)\.textContent = PARCOURS\.bilanSeances\(parcours\)\.aujourdhui > 1 \? "Séance faite" : "Séance du jour faite";/);
   assert.match(html, /encore\.textContent = "Encore une séance";/);
   // La rangée : une case vide reste sans nombre. Lot « Mon parcours » (décision
   // 13) : aux couleurs du tableau — « vide » = entrée dans aucune boîte.
@@ -790,7 +791,8 @@ test("lot 2a : la page — premier écran, Mon parcours, notice, séance des 9 t
   // La table de la dernière séance.
   assert.match(html, /if \(etat\.tableSeance\) return etat\.tableSeance;/);
   // Les 9 tables : la carte de la séance dans « Je deviens expert ».
-  assert.match(html, /if \(PARCOURS\.programmeDeSeance\(parcours, PARCOURS\.ouvrirSeance\(parcours\)\)\.etapes\.length\) \{\s*action\.append\(carteDeSeance\(null\)\);/);
+  // Lot « une tentative n'est pas une séance » (08/11/2026) : la séance faite et plus aucun calcul du jour, la ligne « Tente ★★★ » au lieu de la carte.
+  assert.match(html, /if \(programme\.etapes\.length && \(!faite \|\| resteDesCalculs\)\) \{\s*action\.append\(carteDeSeance\(null\)\);/);
   // La notice de la séance : six lignes, la seule notice.
   const debut = html.indexOf('<template id="notice-seance">');
   const notice = html.slice(debut, html.indexOf("</template>", debut));
