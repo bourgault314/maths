@@ -337,7 +337,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
   .fragiles li { display: flex; align-items: baseline; gap: 6px; padding: 6px 12px; border-radius: 999px;
                  background: #fdf0e3; color: #8a4c0a; font-weight: 800; }
-  .fragiles li span { font-size: .82rem; font-weight: 600; color: #a15c11; }
+  .fragiles li span, .fragiles li .bouton-nombre { font-size: .82rem; font-weight: 600; color: #a15c11; }
   .barre-outils { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
   /* Lot « Ma classe : réglages » (17/10/2026, planches 1 à 5 validées par
      Gwenaël) : sous le nom de la classe, une rangée d'onglets TOUJOURS
@@ -903,6 +903,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                      background: repeating-linear-gradient(-45deg, var(--gris-pale) 0 4px, var(--paper) 4px 7px); }
   .fe-case.aujourdhui { box-shadow: 0 0 0 2px var(--blue); }
   .fe-case .lc-puce { width: 8px; height: 8px; margin: 0; }
+  /* Lot S4b : un jour de travail se touche — il est mis en avant dans
+     « Activité » (la liste reste, rien ne bouge). */
+  button.fe-case { min-height: 0; width: auto; padding: 0; color: inherit; font: inherit; cursor: pointer; }
+  button.fe-case:hover { background: var(--paper); border-color: var(--blue); }
+  button.fe-case[aria-pressed="true"] { border-color: var(--blue-dark); box-shadow: 0 0 0 2px var(--blue-dark); background: #e8f1fa; }
+  .fe-col.colle { position: sticky; top: 0; align-self: start; }
+  .fe-jour-bloc.choisi { background: #e8f1fa; box-shadow: 0 0 0 6px #e8f1fa; border-radius: 2px; }
+  .fe-jour-bloc.choisi .fe-jour-titre { color: var(--blue-dark); }
   .fe-resume { margin: 8px 0 4px; }
   .fe-legende { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: var(--muted); font-size: .84rem; }
   .fe-avoir li { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: baseline; padding: 6px 0; }
@@ -938,6 +946,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .dc-case.revoir { background: var(--rouge-pale); border-color: var(--rouge); }
   .dc-case.classe { background: var(--rouge); border-color: var(--rouge); }
   .dc-legende .dc-case { width: 12px; height: 12px; }
+  /* Lot S4b : une case se touche (ou se survole) — le nom de la
+     compétence, dans une bulle au-dessus de la ligne (rien ne bouge). */
+  .dc-cases-ligne { position: relative; }
+  button.dc-case { min-height: 0; padding: 0; gap: 0; font: inherit; cursor: pointer; }
+  button.dc-case:hover { border-color: var(--ink); }
+  button.dc-case.gris:hover { background: var(--paper); }
+  button.dc-case.choisie { box-shadow: 0 0 0 2px var(--ink); }
+  .dc-bulle { position: absolute; right: 0; bottom: calc(100% - 2px); z-index: 3; max-width: min(320px, 100%);
+              padding: 5px 9px; border-radius: 6px; background: var(--ink); color: #fff; font-size: .84rem; line-height: 1.3;
+              pointer-events: none; }
   /* Défi calcul, dans l'onglet de la classe. */
   .dc-ouest, .dc-qui { position: relative; margin-top: 16px; }
   .dc-tete { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; }
@@ -969,6 +987,22 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                   box-shadow: var(--ombre-fenetre); font-size: .9rem; }
   .dc-ouest-pop strong { display: block; margin-bottom: 6px; color: var(--blue-dark); }
   .dc-ouest-pop p { margin: 4px 0 0; line-height: 1.4; }
+  /* Lot S4b « des chiffres aux élèves » (08/11/2026) : « 5 élèves » se
+     touche et montre les prénoms PAR-DESSUS la page (comme les barres de
+     Défi calcul) ; un prénom ouvre la fiche. */
+  .bouton-nombre { min-height: 0; padding: 0; gap: 0; color: inherit; background: none; border: 0; font: inherit;
+                   font-weight: inherit; text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+  .bouton-nombre:hover, .bouton-nombre[aria-expanded="true"] { color: var(--blue-dark); background: none; border: 0; text-decoration-style: solid; }
+  .pop-eleves { position: absolute; z-index: 30; width: min(420px, calc(100vw - 16px)); padding: 12px 14px;
+                background: var(--paper); border: 1px solid var(--line); border-radius: var(--arrondi-carte);
+                box-shadow: var(--ombre-fenetre); font-size: .9rem; text-align: left; }
+  .pop-eleves strong { display: block; margin-bottom: 6px; color: var(--blue-dark); }
+  .pop-eleves p { margin: 4px 0 0; line-height: 1.6; }
+  .pop-eleves ul { list-style: none; max-height: min(60vh, 460px); margin: 0; padding: 0; overflow: auto; }
+  .pop-eleves li { display: grid; grid-template-columns: minmax(80px, auto) 1fr; gap: 2px 12px; align-items: baseline; padding: 6px 0; }
+  .pop-eleves li + li { border-top: 1px solid var(--filet-doux); }
+  .pop-eleves li .pastille { font-size: .76rem; padding: 0 7px; margin-right: 6px; }
+  .pop-eleves .lc-lien, .dc-ouest-pop .lc-lien { font-weight: 700; }
   .dc-qui-barres { display: grid; grid-template-columns: repeat(28, minmax(0, 1fr)); gap: 3px; align-items: end; margin: 14px 0 8px; }
   .dc-qui-jour { display: flex; flex-direction: column; align-items: stretch; gap: 3px; text-align: center; }
   .dc-qui-jour.lundi { margin-left: 8px; }
@@ -1400,7 +1434,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th><button type="button" data-tri="prenom">Élève</button></th>
             <th><button type="button" data-tri="acquises">Tables passées</button></th>
             <th class="large"><button type="button" data-tri="encours">En cours</button></th>
-            <th class="large"><button type="button" data-tri="semaine">4 dernières semaines</button></th>
+            <th class="large"><button type="button" data-tri="semaine">Séances · 4 semaines</button></th>
             <th class="large"><button type="button" data-tri="retard">En retard</button></th>
             <th><button type="button" data-tri="date">Dernière activité</button></th>
             <th></th>
@@ -1830,6 +1864,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
      billet de lecture d'avant), en grand, au téléphone comme à l'ordinateur.
      ‹ › passent au suivant sans ouvrir d'onglet, ✕ ferme. « Revenir à… » est
      retourné dans le « ⋯ » de la ligne. -->
+<!-- Lot S4b « des chiffres aux élèves » (08/11/2026) : la liste des prénoms
+     d'un « 5 élèves » (calculs qui coincent, À reprendre en classe) ou d'un
+     « Et 12 autres » (À aider, À féliciter, avec leurs raisons), posée
+     PAR-DESSUS la page sous ce qu'on a touché. Un prénom ouvre la fiche ; la
+     fiche fermée, la liste est toujours là. Remplie par textContent. -->
+<div class="pop-eleves" id="pop-eleves" hidden></div>
 <dialog id="fenetre-eleve" class="fenetre fenetre-eleve" aria-labelledby="fe-titre">
   <div class="fenetre-tete">
     <div class="naviguer">
@@ -2202,7 +2242,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Lot S2 : « La classe » (cartes et tableau), la fiche (ses onglets), et
     // les deux cartes de Défi calcul (des prénoms).
     "lc-aider-liste", "lc-aider-plus", "lc-feliciter-liste", "lc-feliciter-plus", "lc-entete", "lc-corps",
-    "fe-onglets", "dc-ouest-liste", "dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-pop", "dc-qui-barres", "dc-qui-texte"];
+    "fe-onglets", "dc-ouest-liste", "dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-pop", "dc-qui-barres", "dc-qui-texte",
+    // Lot S4b : la liste des prénoms (sous « 5 élèves »).
+    "pop-eleves"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-premiere-classe", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
@@ -2214,7 +2256,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "bandeau-echues", "bloc-records", "bloc-evaluations", "vue-reglages", "onglet-reglages",
     "vue-eleves", "onglet-eleves", "menu-classes",
     // Lot S2 : la vue « La classe », les deux cartes de Défi calcul.
-    "vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop",
+    "vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop", "pop-eleves",
     // Serveur pro, lot 5b : la ligne « qui voit » et la carte d’un onglet grisé.
     "qui-voit", "appli-fermee"];
 
@@ -3930,6 +3972,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       zone.append(nombre);
       dates.push(`${index === derniere ? "cette semaine" : `semaine du ${dateCourteSemaine(semaine.lundi)}`}\u00a0: ${PARCOURS.texteSemaine(semaine)}`);
     });
+    // Lot S4b : l'unité, comme « jours » dans La classe — ici, des séances
+    // (deux séances le même jour comptent deux).
+    const unite = document.createElement("span");
+    unite.className = "lc-unite";
+    unite.textContent = " séances";
+    zone.append(unite);
     zone.title = `Séances finies — ${dates.join(" · ")}`;
     return zone;
   }
@@ -4050,6 +4098,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     ongletFiche = onglet || (vue === "classe" ? "ensemble" : appliAffichee);
     joursFiche = 6;
     seancesFiche = 6;
+    jourChoisiFiche = null;
     fenetreEleveId = eleve.id;
     messager("fe-message", "", "");
     dessinerFenetreEleve();
@@ -4103,6 +4152,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     fenetreEleveId = autre.id;
     joursFiche = 6;
     seancesFiche = 6;
+    jourChoisiFiche = null;
     messager("fe-message", "", "");
     dessinerFenetreEleve();
     // Au bout du tableau, la flèche qui a le focus se désactive : le focus
@@ -4425,6 +4475,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const bloc = $("fragiles");
     const liste = $("fragiles-liste");
     liste.textContent = "";
+    garderPopEleves();
     if (!PARCOURS || !PARCOURS.fragilesDeLaClasse) { bloc.hidden = true; return; }
     const parcoursDeLaClasse = eleves.map(eleve => eleve.lu.parcours).filter(Boolean);
     const fragiles = PARCOURS.fragilesDeLaClasse(parcoursDeLaClasse, {max: Infinity})
@@ -4432,12 +4483,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!fragiles.length) { bloc.hidden = true; return; }
     $("fragiles-sous").textContent =
       `Sur ${parcoursDeLaClasse.length} élèves qui ont commencé · ${SEUIL_FRAGILES} élèves au moins par calcul.`;
+    // Lot S4b : « 5 élèves » se touche — les prénoms, chacun ouvre sa fiche.
+    // Le même moteur, élève par élève (rien de plus n'est lu).
+    const aTravailler = eleves.filter(eleve => eleve.lu.parcours).map(eleve => ({eleve,
+      cles: new Set(PARCOURS.fragilesDeLaClasse([eleve.lu.parcours], {max: Infinity}).map(f => f.cle))}));
     fragiles.forEach(fragile => {
       const li = document.createElement("li");
       const nom = document.createElement("b");
       nom.textContent = fragile.libelle;
-      const combien = document.createElement("span");
-      combien.textContent = `${fragile.eleves} élève${fragile.eleves > 1 ? "s" : ""}`;
+      const qui = ordreDeLaFeuille(aTravailler.filter(a => a.cles.has(fragile.cle)).map(a => a.eleve));
+      const combien = boutonNombre(`${fragile.eleves} élève${fragile.eleves > 1 ? "s" : ""}`, pop => {
+        pop.append(el("strong", "", `${fragile.libelle} · à travailler`));
+        pop.append(prenomsEnLiens(qui));
+      });
       li.append(nom, combien);
       liste.appendChild(li);
     });
@@ -5380,10 +5438,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (!lu || !lu.lisible) return;
       (lu.revoir || []).forEach(c => {
         const cle = `${c.module}-${c.niveau}`;
-        const entree = parCompetence.get(cle) || {module: c.module, niveau: c.niveau, eleves: 0, classe: 0, lus: []};
+        const entree = parCompetence.get(cle) || {module: c.module, niveau: c.niveau, eleves: 0, classe: 0, lus: [], qui: []};
         entree.eleves += 1;
         if (c.etat === "classe") entree.classe += 1;
         entree.lus.push(lu);
+        // Lot S4b : qui, et dans quel état (pour la liste des prénoms).
+        entree.qui.push({eleve, c});
         parCompetence.set(cle, entree);
       });
     });
@@ -5398,6 +5458,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const bloc = $("dc-reprendre");
     const liste = $("dc-reprendre-liste");
     liste.textContent = "";
+    garderPopEleves();
     const lignes = reprendreEnClasse();
     if (!lignes.length) { bloc.hidden = true; return; }
     $("dc-reprendre-sous").textContent = "Les compétences qui coincent chez plusieurs élèves, ou mises de côté par l’appli · un exemple par cause, regénéré";
@@ -5414,7 +5475,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (cause) quoi.append(cause);
       const nombre = document.createElement("span");
       nombre.className = "dc-nombre";
-      nombre.append(document.createTextNode(`${c.eleves} élève${c.eleves > 1 ? "s" : ""}`));
+      // Lot S4b : « 2 élèves » se touche — les prénoms, par état.
+      nombre.append(boutonNombre(`${c.eleves} élève${c.eleves > 1 ? "s" : ""}`, pop => {
+        pop.append(el("strong", "", nomCompetenceCalcul(c.module, c.niveau)));
+        [["À voir en classe", q => q.c.etat === "classe"], ["Mise de côté", q => q.c.etat !== "classe" && q.c.deCote],
+          ["À revoir", q => q.c.etat !== "classe" && !q.c.deCote]].forEach(([mot, garde]) => {
+          const qui = ordreDeLaFeuille(c.qui.filter(garde).map(q => q.eleve));
+          if (!qui.length) return;
+          const p = prenomsEnLiens(qui);
+          p.prepend(el("b", "", `${mot} (${qui.length}) : `));
+          pop.append(p);
+        });
+      }));
       if (c.classe) {
         const petit = document.createElement("small");
         petit.textContent = `${c.classe} à voir en classe`;
@@ -6658,6 +6730,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     $("vue-reglages").hidden = vue !== "reglages";
     $("onglet-eleves").setAttribute("aria-pressed", String(vue === "eleves"));
     $("onglet-reglages").setAttribute("aria-pressed", String(vue === "reglages"));
+    garderPopEleves();
   }
 
   function ouvrirEleves() {
@@ -6804,6 +6877,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   let ongletFiche = "ensemble";
   let joursFiche = 6;
   let seancesFiche = 6;
+  // Lot S4b : le jour touché dans son calendrier (mis en avant dans
+  // « Activité »), oublié avec l'élève ou l'onglet.
+  let jourChoisiFiche = null;
 
   // Les zones de La classe et des cartes de Défi calcul qui portent des
   // prénoms : vidées dès qu'elles ne sont plus redessinées (correctif après
@@ -7244,27 +7320,49 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     aider.sort((p, q) => p.raison.rang - q.raison.rang);
     feliciter.sort((p, q) => p.raison.rang - q.raison.rang || (q.raison.nombre || 0) - (p.raison.nombre || 0));
     const etiquettes = {absent: ["absence", "rouge"], bloque: ["blocage", "orange"], revoir: ["à revoir", "orange"], aide: ["aide", ""]};
+    const texteRaison = raison => {
+      const texte = el("span", "lc-texte");
+      if (raison.appli) {
+        texte.append(puceAppli(raison.appli), el("b", "", nomDeLAppli(raison.appli)), document.createTextNode(` · ${raison.texte}`));
+      } else {
+        texte.append(document.createTextNode(raison.texte));
+      }
+      return texte;
+    };
     const remplir = (id, lignes, vide, dessinerLigne) => {
       const ul = $(`${id}-liste`);
       ul.textContent = "";
       const plus = $(`${id}-plus`);
       plus.textContent = "";
       plus.hidden = true;
+      garderPopEleves();
       if (enLecture) { ul.append(el("li", "lc-vide", "Lecture des applis…")); return; }
       if (!lignes.length) { ul.append(el("li", "lc-vide", vide)); return; }
       lignes.slice(0, LIGNES_CARTE).forEach(ligne => ul.append(dessinerLigne(ligne)));
       const reste = lignes.slice(LIGNES_CARTE);
+      // Lot S4b : « Et 12 autres » se touche — la liste complète des
+      // autres, chacun avec sa raison, par-dessus la page ; un prénom
+      // ouvre la fiche (avant : les prénoms seuls, sans raison).
       if (reste.length) {
         plus.hidden = false;
-        plus.append(document.createTextNode(`Et ${reste.length} autre${reste.length > 1 ? "s" : ""} : `));
-        reste.forEach((ligne, i) => {
-          const bouton = el("button", "lc-lien", nomAffiche(ligne.eleve) || "sans prénom");
-          bouton.type = "button";
-          bouton.addEventListener("click", () => ouvrirFenetreEleve(ligne.eleve, "ensemble"));
-          plus.append(bouton);
-          if (i < reste.length - 1) plus.append(document.createTextNode(", "));
-        });
-        plus.append(document.createTextNode("."));
+        plus.append(boutonNombre(`Et ${reste.length} autre${reste.length > 1 ? "s" : ""}`, pop => {
+          pop.append(el("strong", "", `${id === "lc-aider" ? "À aider" : "À féliciter"} · ${pluriel(reste.length, "autre")}`));
+          const autres = document.createElement("ul");
+          reste.forEach(({eleve, raison}) => {
+            const li = document.createElement("li");
+            const qui = el("span", "");
+            qui.append(lienFiche(eleve, "ensemble"));
+            const pourquoi = el("span", "");
+            if (id === "lc-aider") {
+              const [mot, couleur] = etiquettes[raison.genre];
+              pourquoi.append(el("span", `pastille ${couleur}`, mot));
+            }
+            pourquoi.append(texteRaison(raison));
+            li.append(qui, pourquoi);
+            autres.append(li);
+          });
+          pop.append(autres);
+        }));
       }
     };
     const ligneDeCarte = (eleve, pastille, couleur, raison, faire) => {
@@ -7273,13 +7371,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       bouton.type = "button";
       const nom = el("b", "lc-nom", nomAffiche(eleve) || "sans prénom");
       const chip = el("span", `pastille ${couleur}`, pastille);
-      const texte = el("span", "lc-texte");
-      if (raison.appli) {
-        texte.append(puceAppli(raison.appli), el("b", "", nomDeLAppli(raison.appli)), document.createTextNode(` · ${raison.texte}`));
-      } else {
-        texte.append(document.createTextNode(raison.texte));
-      }
-      bouton.append(nom, chip, texte);
+      bouton.append(nom, chip, texteRaison(raison));
       if (faire) bouton.append(el("small", "lc-faire", faire));
       bouton.addEventListener("click", () => ouvrirFenetreEleve(eleve, "ensemble"));
       li.append(bouton);
@@ -7480,6 +7572,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function changerOngletFiche(cle) {
     if (cle === ongletFiche) return;
     ongletFiche = cle;
+    jourChoisiFiche = null;
     // Un billet de parcours encore en route (Défi tables) ne vaut plus pour
     // l'onglet suivant, même son erreur (correctif après Codex, point 5).
     demandeParcours += 1;
@@ -7512,7 +7605,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Son calendrier.
     gauche.append(el("h3", "", "Ses 4 dernières semaines"));
     const grille = el("div", "fe-calendrier");
-    grille.setAttribute("role", "img");
+    // Lot S4b : un jour de travail est un bouton (le mettre en avant dans
+    // « Activité ») ; la grille est un groupe, son étiquette dit les jours.
+    grille.setAttribute("role", "group");
     grille.append(el("span", "", ""));
     ["L", "M", "M", "J", "V", "S", "D"].forEach(l => grille.append(el("span", "fe-jour-nom", l)));
     const dits = [];
@@ -7523,8 +7618,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         const jour = jourPlus(lundi, d);
         const applis = bilan.jours.get(jour) || [];
         const inconnu = !applis.length && jour <= aujourdhui && Boolean(bilan.coupure && jour < bilan.coupure);
-        const c = el("span", `fe-case${jour > aujourdhui ? " futur" : ""}${jour === aujourdhui ? " aujourdhui" : ""}${applis.length ? " fait" : ""}${inconnu ? " inconnu" : ""}`);
+        const c = el(applis.length ? "button" : "span", `fe-case${jour > aujourdhui ? " futur" : ""}${jour === aujourdhui ? " aujourdhui" : ""}${applis.length ? " fait" : ""}${inconnu ? " inconnu" : ""}`);
         if (inconnu) c.textContent = "?";
+        if (applis.length) {
+          c.type = "button";
+          c.dataset.jour = jour;
+          c.setAttribute("aria-pressed", String(jour === jourChoisiFiche));
+          c.setAttribute("aria-label", `${jourEnClair(jour)} : ${applis.map(nomDeLAppli).join(", ")}`);
+          c.addEventListener("click", () => choisirJourFiche(id, jour));
+        }
         applis.forEach(cle => c.append(puceAppli(cle)));
         if (applis.length) dits.push(`${jourEnClair(jour)} : ${applis.map(nomDeLAppli).join(", ")}`);
         grille.append(c);
@@ -7597,7 +7699,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const {jours, encore, notes} = joursDeLaFiche(id, aujourdhui, joursFiche);
     if (!jours.length) droite.append(paragrapheVide(bilan.recu ? "Aucun jour de travail pour l’instant." : "Rien reçu pour l’instant."));
     jours.forEach(({jour, lignes}) => {
-      const bloc = el("div", "fe-jour-bloc");
+      const bloc = el("div", `fe-jour-bloc${jour === jourChoisiFiche ? " choisi" : ""}`);
+      bloc.dataset.jour = jour;
       bloc.append(el("p", "fe-jour-titre", jourEnClair(jour)));
       const ul = el("ul", "fe-lignes");
       lignes.forEach(({cle, ligne}) => {
@@ -7621,6 +7724,41 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     notes.forEach(note => droite.append(el("p", "fe-note", note)));
     zone.append(gauche, droite);
     return zone;
+  }
+
+  // Lot S4b : toucher un jour de son calendrier le met en avant dans
+  // « Activité » — la liste reste, rien ne bouge ; le toucher de nouveau
+  // l'oublie. Un jour plus ancien que ceux montrés : « Activité » en montre
+  // assez pour l'atteindre (comme « Voir les jours précédents » ; le
+  // calendrier a 4 semaines, donc 28 jours au plus). Puis, s'il est hors de
+  // la vue, la fiche défile pour le montrer au milieu (choix de Gwenaël du
+  // 08/11, planches Q4).
+  function choisirJourFiche(id, jour) {
+    jourChoisiFiche = jourChoisiFiche === jour ? null : jour;
+    const corps = $("fe-corps");
+    const blocDuJour = () => [...corps.querySelectorAll(".fe-jour-bloc")].find(b => b.dataset.jour === jour) || null;
+    if (jourChoisiFiche && !blocDuJour()) {
+      const {jours} = joursDeLaFiche(id, aujourdhuiSuivi(), 28);
+      const rang = jours.findIndex(j => j.jour === jour);
+      if (rang >= 0) joursFiche = Math.max(joursFiche, rang + 1);
+      const haut = corps.scrollTop;
+      dessinerFenetreEleve();
+      corps.scrollTop = haut;
+    } else {
+      corps.querySelectorAll(".fe-case[data-jour]").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.jour === jourChoisiFiche)));
+      corps.querySelectorAll(".fe-jour-bloc").forEach(b => b.classList.toggle("choisi", b.dataset.jour === jourChoisiFiche));
+    }
+    const bloc = jourChoisiFiche ? blocDuJour() : null;
+    if (!bloc) return;
+    // À l'ordinateur (deux colonnes), la colonne du calendrier reste en
+    // place pendant que la fiche défile jusqu'au jour — si elle tient dans
+    // la fenêtre (sinon sa fin ne se lirait plus).
+    const [gauche, droite] = corps.querySelectorAll(".fe-ensemble > .fe-col");
+    const hauteur = colonne => colonne.lastElementChild ? colonne.lastElementChild.getBoundingClientRect().bottom - colonne.getBoundingClientRect().top : 0;
+    if (gauche && droite && gauche.offsetTop === droite.offsetTop && hauteur(gauche) <= corps.clientHeight) gauche.classList.add("colle");
+    const r = bloc.getBoundingClientRect();
+    const rc = corps.getBoundingClientRect();
+    if (r.top < rc.top || r.bottom > rc.bottom) bloc.scrollIntoView({block: "center", behavior: "smooth"});
   }
 
   // Les jours de travail d'un élève, du plus récent au plus ancien, autant
@@ -7790,19 +7928,84 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     bloc.hidden = false;
   }
 
+  // ----- Lot S4b « des chiffres aux élèves » (08/11/2026) : un « 5 élèves »
+  // se touche et montre les prénoms, PAR-DESSUS la page, sous ce qu'on a
+  // touché (rien ne descend) ; un prénom ouvre sa fiche ; la fiche fermée,
+  // la liste est toujours là, au même endroit. Une seule liste à la fois :
+  // elle se ferme d'un clic ailleurs (hors de la fiche), d'Échap (fiche
+  // fermée), en touchant de nouveau le nombre, ou quand ce qu'elle montre
+  // est redessiné. Tout est posé par textContent.
+  let ancrePopEleves = null;
+  function ouvrirPopEleves(ancre, remplir) {
+    const pop = $("pop-eleves");
+    if (!pop.hidden && ancrePopEleves === ancre) { fermerPopEleves(); return; }
+    fermerPopEleves();
+    fermerPopOuEnEst();
+    remplir(pop);
+    ancrePopEleves = ancre;
+    ancre.setAttribute("aria-expanded", "true");
+    pop.hidden = false;
+    const r = ancre.getBoundingClientRect();
+    const large = document.documentElement.clientWidth;
+    const gauche = Math.max(8, Math.min(r.left, large - pop.offsetWidth - 8));
+    pop.style.left = `${Math.round(gauche + window.scrollX)}px`;
+    pop.style.top = `${Math.round(r.bottom + window.scrollY + 6)}px`;
+  }
+
+  function fermerPopEleves() {
+    const pop = $("pop-eleves");
+    if (!pop) return;
+    pop.hidden = true;
+    pop.textContent = "";
+    if (ancrePopEleves) ancrePopEleves.setAttribute("aria-expanded", "false");
+    ancrePopEleves = null;
+  }
+
+  // Ce qu'on avait touché a été redessiné, ou n'est plus à l'écran (une
+  // autre appli, une autre vue) : la liste part avec.
+  function garderPopEleves() {
+    if (ancrePopEleves && (!ancrePopEleves.isConnected || !ancrePopEleves.getClientRects().length)) fermerPopEleves();
+  }
+
+  // Le nombre qui se touche (« 5 élèves », « Et 12 autres »).
+  function boutonNombre(texte, remplir) {
+    const bouton = el("button", "bouton-nombre", texte);
+    bouton.type = "button";
+    bouton.setAttribute("aria-expanded", "false");
+    bouton.addEventListener("click", evenement => { evenement.stopPropagation(); ouvrirPopEleves(bouton, remplir); });
+    return bouton;
+  }
+
+  // Un prénom qui ouvre la fiche (sur l'onglet d'où l'on vient).
+  function lienFiche(eleve, onglet) {
+    const bouton = el("button", "lc-lien", nomAffiche(eleve) || "sans prénom");
+    bouton.type = "button";
+    bouton.addEventListener("click", () => ouvrirFenetreEleve(eleve, onglet));
+    return bouton;
+  }
+
+  function prenomsEnLiens(liste, onglet) {
+    const p = el("p", "");
+    liste.forEach((eleve, i) => { if (i) p.append(document.createTextNode(", ")); p.append(lienFiche(eleve, onglet)); });
+    return p;
+  }
+
   // La liste des élèves de chaque couleur, sous la barre touchée, PAR-DESSUS
   // la page (rien ne descend).
   function ouvrirPopOuEnEst(barre, id, groupes) {
     const pop = $("dc-ouest-pop");
     if (!pop.hidden && pop.dataset.module === id) { fermerPopOuEnEst(); return; }
+    fermerPopEleves();
     pop.textContent = "";
     pop.dataset.module = id;
     pop.append(el("strong", "", nomModuleCalcul(id)));
     [["su", "Sue"], ["route", "En route"], ["revoir", "À revoir"], ["gris", "Pas commencé"]].forEach(([etat, mot]) => {
       if (!groupes[etat].length) return;
       const p = el("p", "");
-      p.append(el("i", `dc-ouest-puce ${etat}`), el("b", "", `${mot} (${groupes[etat].length}) : `),
-        document.createTextNode(groupes[etat].map(e => nomAffiche(e) || "sans prénom").join(", ")));
+      // Lot S4b : chaque prénom ouvre la fiche ; la fiche fermée, la liste
+      // est toujours là.
+      p.append(el("i", `dc-ouest-puce ${etat}`), el("b", "", `${mot} (${groupes[etat].length}) : `));
+      groupes[etat].forEach((e, i) => { if (i) p.append(document.createTextNode(", ")); p.append(lienFiche(e)); });
       pop.append(p);
     });
     const carte = $("dc-ouest");
@@ -7940,6 +8143,23 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return bloc;
   }
 
+  // Lot S4b : la bulle d'une case de compétence, au-dessus de sa ligne
+  // (position absolue : rien ne bouge). Touchée, la case reste marquée
+  // jusqu'à un clic ailleurs ; survolée, la bulle part avec la souris.
+  function montrerBulleCase(c, texte, touchee) {
+    const ligne = c.closest(".dc-cases-ligne");
+    if (!ligne) return;
+    if (touchee && c.classList.contains("choisie")) { cacherBulleCase(); return; }
+    cacherBulleCase();
+    if (touchee) c.classList.add("choisie");
+    ligne.append(el("span", "dc-bulle", texte));
+  }
+
+  function cacherBulleCase() {
+    document.querySelectorAll(".dc-bulle").forEach(bulle => bulle.remove());
+    document.querySelectorAll(".dc-case.choisie").forEach(c => c.classList.remove("choisie"));
+  }
+
   function competencesEnCases(lu, ouvert) {
     const fragment = document.createDocumentFragment();
     const carte = CALCUL_CORE.carte();
@@ -7963,11 +8183,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         const cases = el("span", "dc-cases");
         m.etats.forEach((etat, index) => {
           if (m.paliers[index] !== numero) return;
-          const c = el("i", `dc-case ${etat}`);
+          // Lot S4b : la case se touche (ou se survole) — le nom de la
+          // compétence dans une bulle (avant : au survol seulement).
+          const c = el("button", `dc-case ${etat}`);
+          c.type = "button";
           const nom = `${nomCompetenceCalcul(m.id, index + 1)} : ${ETATS_CALCUL[etat]}`;
-          c.title = nom;
           c.setAttribute("aria-label", nom);
-          c.setAttribute("role", "img");
+          c.addEventListener("click", evenement => { evenement.stopPropagation(); montrerBulleCase(c, nom, true); });
+          c.addEventListener("mouseenter", () => montrerBulleCase(c, nom, false));
+          c.addEventListener("mouseleave", () => { if (!c.classList.contains("choisie")) cacherBulleCase(); });
           cases.append(c);
         });
         ligne.append(cases);
@@ -7975,13 +8199,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       });
       fragment.append(grille);
     });
-    if (replies.length) fragment.append(el("p", "dc-note", `Pas encore commencé : ${replies.join(", ")}. Survoler une case : le nom de la compétence.`));
+    if (replies.length) fragment.append(el("p", "dc-note", `Pas encore commencé : ${replies.join(", ")}.`));
     const legende = el("div", "dc-legende");
     ["su", "route", "revoir", "classe", "gris"].forEach(etat => {
       const morceau = el("span", "");
       morceau.append(el("i", `dc-case ${etat}`), document.createTextNode(ETATS_CALCUL[etat]));
       legende.append(morceau);
     });
+    legende.append(el("span", "", "· toucher une case : le nom de la compétence"));
     fragment.append(legende);
     return fragment;
   }
@@ -9499,15 +9724,41 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   });
   $("choix-appli").addEventListener("scroll", marquerSuiteOnglets, {passive: true});
   window.addEventListener("resize", () => { if (classe) { marquerBarreCollee(); montrerOngletChoisi(); } });
+  // Lot S4b : la liste des prénoms est placée sous ce qu'on a touché ; une
+  // autre largeur (la fenêtre, le téléphone tourné) la ferme. Au téléphone,
+  // la barre d'adresse qui se cache change la hauteur seulement : elle reste.
+  let largeurPop = window.innerWidth;
+  window.addEventListener("resize", () => {
+    if (window.innerWidth === largeurPop) return;
+    largeurPop = window.innerWidth;
+    fermerPopEleves();
+  });
   $("onglet-eleves").addEventListener("click", ouvrirEleves);
   // Lot S2 : « La classe ».
   $("onglet-classe").addEventListener("click", () => { remonterALaBarre(); ouvrirLaClasse(); });
   // La liste des élèves d'une barre de « Où en est la classe » se ferme d'un
   // clic ailleurs, d'Échap, ou quand la page défile.
+  // Lot S4b : un clic DANS la fiche ne la ferme pas (on revient à la liste
+  // en fermant la fiche) ; Échap ferme d'abord la fiche ; même chose pour
+  // la liste des prénoms d'un « 5 élèves ». La bulle d'une case de
+  // compétence se ferme d'un clic ailleurs ou d'Échap.
+  // Le chemin du clic est celui du moment où il a eu lieu : un bouton que
+  // son propre clic redessine (un jour du calendrier) compte toujours comme
+  // « dans la fiche ».
   document.addEventListener("click", evenement => {
-    if (!evenement.target.closest || !evenement.target.closest("#dc-ouest-pop, .dc-ouest-barre")) fermerPopOuEnEst();
+    const chemin = typeof evenement.composedPath === "function" ? evenement.composedPath() : [evenement.target];
+    const dans = choix => chemin.some(noeud => noeud && typeof noeud.matches === "function" && noeud.matches(choix));
+    if (!dans("#dc-ouest-pop, .dc-ouest-barre, dialog")) fermerPopOuEnEst();
+    if (!dans("#pop-eleves, dialog")) fermerPopEleves();
+    if (!dans(".dc-case")) cacherBulleCase();
   });
-  document.addEventListener("keydown", evenement => { if (evenement.key === "Escape") fermerPopOuEnEst(); });
+  document.addEventListener("keydown", evenement => {
+    if (evenement.key !== "Escape") return;
+    cacherBulleCase();
+    if (document.querySelector("dialog[open]")) return;
+    fermerPopOuEnEst();
+    fermerPopEleves();
+  });
   $("onglet-reglages").addEventListener("click", ouvrirReglages);
   // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
   // le seul nom — les activités et leurs réglages ne bougent pas. Le serveur
