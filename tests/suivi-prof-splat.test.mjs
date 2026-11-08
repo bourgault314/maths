@@ -418,6 +418,7 @@ test("l'activité montrée : le dernier choix si la classe l'a, sinon la premiè
 
 // Serveur pro, lot 5b : chaque appli a TOUJOURS son onglet — en clair si la
 // classe ou un élève l'a, grisé sinon ; « Anzan 1 » quand un seul élève l'a.
+// (Lot S4b : poserVue ferme aussi la liste des prénoms — garderPopEleves, ici sans effet.)
 function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvant = {colonne: "acquises", sens: -1}, reglages = {}, vueAvant = "appli", eleves = []) {
   const {$} = creerZones();
   const boutons = ["defi-tables", "coffres", "flash-anzan", "splat"].map(cle => Object.assign(new NoeudBanc("button"), {dataset: {appli: cle}}));
@@ -425,7 +426,7 @@ function poserAppliRejoue(applis, appliAffichee, droit = "proprietaire", triAvan
   const TRIS = {"defi-tables": ["prenom", "acquises", "date"], "splat": ["prenom", "etapes", "date"]};
   const lus = {records: 0, evaluations: 0, quiVoit: 0};
   const etat = new Function("document", "$", "classe", "appliAffichee", "droitClasse", "TRIS", "APPLIS", "triInitial", "vueInitiale", "lus", "eleves",
-    `let tri = triInitial;\nlet vue = vueInitiale;\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
+    `let tri = triInitial;\nlet vue = vueInitiale;\n${["el", "nomDeLAppli", "parLaClasse", "accesDe", "lesApplisConnues", "applisDeLaClasse", "applisAMontrer", "poserOnglets", "poserAppli", "poserVue", "poserTris"].map(fonction).join("\n")}\nfunction montrerOngletChoisi() {}\nfunction garderPopEleves() {}\nfunction chargerRecords() { lus.records += 1; }\nfunction poserEvaluations() { lus.evaluations += 1; }\nfunction poserQuiVoit() { lus.quiVoit += 1; }\nposerAppli();\nreturn {tri, vue};`)(
     doc, $, {applis, reglages}, appliAffichee, droit, TRIS, [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}], triAvant, vueAvant === true ? "reglages" : vueAvant, lus, eleves);
   const vus = boutons.map(b => [b.hidden, b.attributs["aria-pressed"], b.classList.contains("eteint") ? "gris" : "clair", (b.premier(n => n.classList.contains("compte-plus")) || {textContent: ""}).textContent]);
   return {$, boutons, vus, tri: etat.tri, vue: etat.vue, vueReglages: etat.vue === "reglages", lus};
