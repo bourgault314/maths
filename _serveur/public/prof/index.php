@@ -173,6 +173,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .outils-tableau { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 0; }
   .outils-tableau .chercher { position: relative; flex: 0 1 300px; }
   .outils-tableau .chercher input { padding-left: 40px; }
+  .outils-tableau .periode-coffres { margin: 0 0 0 auto; }
   .outils-tableau .chercher svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
   #tableau th[aria-sort="ascending"] button::after { content: " ▲"; font-size: .8em; }
   #tableau th[aria-sort="descending"] button::after { content: " ▼"; font-size: .8em; }
@@ -332,6 +333,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                       margin: 10px 0 0; padding: 0; color: var(--muted); font-size: .9rem; }
   .objectif .lignes b { color: var(--ink); }
   .objectif .lignes .insecable { white-space: nowrap; }
+  /* Lot S4c : SPLAT!, « Par monde ». */
+  .splat-mondes strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
+  .splat-mondes ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  .splat-mondes li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 5px 0; border-top: 1px solid var(--filet-doux); font-size: .9rem; color: var(--muted); }
+  .splat-mondes li:first-child { border-top: 0; }
+  .splat-mondes li > b { flex: 0 0 4.6em; color: var(--ink); }
+  .splat-mondes li .bouton-nombre { color: var(--ink); font-weight: 800; }
+  .splat-mondes .sous { margin: 8px 0 0; color: var(--muted); font-size: .88rem; }
+  .splat-mondes .sous .bouton-nombre { color: var(--ink); font-weight: 800; }
   .fragiles strong { display: block; color: var(--blue-dark); font-family: Georgia, serif; font-size: 1.05rem; }
   .fragiles p { margin: 4px 0 10px; color: var(--muted); font-size: .88rem; }
   .fragiles ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; }
@@ -458,6 +468,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   .pa-compte { margin: 0 0 12px; color: var(--ink); font-weight: 700; }
   /* Lot « grades » (07/11/2026) : le plus haut grade réussi, sous le compte. */
   .pa-grade { margin: -6px 0 12px; color: var(--ink); font-weight: 800; }
+  .pa-filtres { margin: 0 0 12px; }
+  h3.fe-periode { margin: 4px 0 8px; }
+  h3.fe-periode ~ h3.fe-periode { margin-top: 18px; }
   .anzan-grade { display: block; margin-top: 2px; font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
   .pa-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; }
   .pa-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
@@ -491,6 +504,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
                     margin-top: 10px; color: var(--muted); font-size: .8rem; }
   .legende-detail span { display: inline-flex; align-items: center; gap: 6px; }
   .legende-detail .et { min-width: 18px; width: 18px; height: 18px; padding: 0; border-radius: 5px; }
+  /* Lot S4c : les étapes se touchent (leur détail dans une bulle). */
+  .detail-monde { position: relative; }
+  button.et { min-height: 0; gap: 0; font: inherit; font-size: .72rem; font-weight: 800; cursor: pointer; }
+  button.et:hover { border-color: var(--ink); background: #fff; color: var(--muted); }
+  button.et.ok:hover { background: var(--vert); color: #fff; }
+  button.et.aide:hover { background: #c2570c; color: #fff; }
+  button.et.cours:hover { background: #eaf2fb; color: #0b67b2; }
+  button.et.bonus.ok:hover { background: #f9bf3b; color: #4a3600; }
+  button.et.choisie { box-shadow: 0 0 0 2px var(--ink); }
   /* Lot « splat-suivi-5 » (choix de Gwenaël sur maquettes, 08/10/2026) : sous SPLAT!,
      les mondes ouverts à la classe, monde par monde. Ouvert : bordure et rond de la
      couleur du monde (celle de la carte) ; fermé : pointillés gris. */
@@ -1055,6 +1077,26 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     .dc-qui-jour.lundi { margin-left: 4px; }
     .dc-qui-jour small { font-size: .6rem; }
   }
+  /* Lot S4c : jusqu'à 380 px de large (iPhone SE, petits Android), « Mon
+     compte » devient un bouton carré à icône (le mot reste pour les lecteurs
+     d'écran) : avec « Se déconnecter » en entier, l'en-tête tient sur une
+     ligne sans sortir de l'écran (la page faisait 378 px à 320). */
+  @media (max-width: 380px) {
+    /* Et les tableaux des applis tiennent dans la largeur, sans défiler de
+       côté (Défi tables : 290 px pour 286, Défi calcul : 310) : titres et
+       chiffres un cran plus petits, le prénom coupé « … » un peu plus tôt. */
+    #tableau th { font-size: .78rem; }
+    #tableau td { font-size: .9rem; }
+    #tableau th, #tableau td { padding-left: 3px; padding-right: 3px; }
+    #tableau th:first-child, #tableau td:first-child { padding-left: 8px; }
+    #tableau td.nom { max-width: 30vw; }
+    /* « 12 séances dessus » passe à la ligne plutôt que d'être coupé. */
+    #tableau .indice-tel { white-space: normal; }
+    .entete #mon-compte { position: relative; width: var(--cible); padding: 0; font-size: 0; }
+    .entete #mon-compte::before { content: ""; position: absolute; inset: 0; width: 20px; height: 20px; margin: auto; background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") center / contain no-repeat;
+              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") center / contain no-repeat; }
+  }
   @media print {
     @page { margin: 12mm; }
     .barre, header, footer, .barre-outils, .actions, .rec-plein,
@@ -1347,6 +1389,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <ul class="lignes" id="objectif-lignes"></ul>
     </div>
 
+    <!-- Lot S4c « les onglets d'appli » : SPLAT!, « Par monde » — pour chaque
+         monde ouvert à la classe, combien l'ont fini, en cours, pas commencé
+         (chaque nombre se touche : les prénoms, par-dessus la page), et qui a
+         vu des réponses cette semaine. -->
+    <div class="carte splat-mondes" id="splat-mondes" hidden>
+      <strong>Par monde</strong>
+      <ul id="splat-mondes-liste"></ul>
+      <p class="sous" id="splat-mondes-vues"></p>
+    </div>
+
     <!-- Vue d'ensemble : ce qu'il faut revoir au tableau, pas élève par élève.
          Calculé dans le navigateur à partir des progressions déjà chargées. -->
     <div class="carte fragiles" id="fragiles" hidden>
@@ -1419,6 +1471,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       <!-- Défi calcul (lot 2b) : la grille de la classe, en noir et blanc. -->
       <button type="button" class="secondaire" id="dc-imprimer-grille" title="La grille de la classe, module par module, en noir et blanc" hidden>Imprimer la grille</button>
       <div class="chercher"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="chercher-eleve" placeholder="Chercher un élève" aria-label="Chercher un élève" autocomplete="off" spellcheck="false" maxlength="40"></div>
+      <!-- Lot S4c : Coffres magiques, « Depuis le début » ou « Cette semaine ». -->
+      <div class="dc-paliers-choix periode-coffres" id="periode-coffres" role="group" aria-label="Période" hidden>
+        <button type="button" data-periode="debut" aria-pressed="true">Depuis le début</button>
+        <button type="button" data-periode="semaine" aria-pressed="false">Cette semaine</button>
+      </div>
     </div>
     <!-- Le message de l'activité (fiche, version restaurée, moteur absent) :
          au-dessus du tableau, pas sous trente lignes. -->
@@ -1453,15 +1510,32 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
             <th></th>
             <th class="fin"></th>
           </tr>
+          <!-- Lot S4c : Coffres magiques, « Cette semaine » — ce que son
+               relevé jour par jour garde depuis lundi : trésors, parfaits, aides,
+               solutions vues, jours. -->
+          <tr id="entete-coffres-semaine" hidden>
+            <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th><button type="button" data-tri="s-tresors">Trésors</button></th>
+            <th class="large"><button type="button" data-tri="s-parfaits">Parfaits</button></th>
+            <th class="large"><button type="button" data-tri="s-aides">Aides</button></th>
+            <th><button type="button" data-tri="s-solutions">Solutions vues</button></th>
+            <th class="large"><button type="button" data-tri="s-jours">Jours</button></th>
+            <th></th>
+            <th class="fin"></th>
+          </tr>
           <!-- L'onglet Anzan (lot « Qui voit quoi », lot 4b, 24/10/2026) : le
                compte en calculs et en jours (on compte des calculs, pas des
                séances : une séance en fait 5, 10 ou 20), le jour de la
                dernière séance, et « Parcours » (ses dix dernières séances). -->
+          <!-- Lot S4c : par mode — Flash, Colonne (les calculs, et dessous le
+               plus haut grade réussi dans ce mode). Au téléphone, le jour de
+               la dernière séance passe sous le prénom. -->
           <tr id="entete-anzan" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
-            <th><button type="button" data-tri="calculs">Calculs</button></th>
+            <th><button type="button" data-tri="flash">Flash</button></th>
+            <th><button type="button" data-tri="colonne">Colonne</button></th>
             <th class="large"><button type="button" data-tri="jours">Jours</button></th>
-            <th><button type="button" data-tri="date">Dernière séance</button></th>
+            <th class="large"><button type="button" data-tri="date">Dernière séance</button></th>
             <th></th>
             <th class="fin"></th>
           </tr>
@@ -1893,6 +1967,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <div id="fe-anzan" hidden>
       <p class="pa-compte" id="pa-compte"></p>
       <p class="pa-grade" id="pa-grade" hidden></p>
+      <!-- Lot S4c : ses séances par mode — Toutes, Flash, Colonne, Grades. -->
+      <div class="dc-paliers-choix pa-filtres" id="pa-filtres" role="group" aria-label="Ses séances" hidden></div>
       <ol class="pa-liste" id="pa-liste" aria-label="Ses dernières séances"></ol>
       <p class="pa-note" id="pa-note"></p>
       <button type="button" class="secondaire pa-plus" id="pa-plus" hidden>Voir les séances précédentes</button>
@@ -2013,8 +2089,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // (le total, colonne du téléphone) et chaque niveau ; Anzan : les jours.
   const TRIS = {
     "defi-tables": ["prenom", "acquises", "encours", "semaine", "retard", "date"],
-    "coffres": ["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date"],
-    "flash-anzan": ["prenom", "calculs", "jours", "date"],
+    "coffres": ["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date",
+      // Lot S4c : « Cette semaine ».
+      "s-tresors", "s-parfaits", "s-aides", "s-solutions", "s-jours"],
+    "flash-anzan": ["prenom", "flash", "colonne", "jours", "date"],
     // Défi calcul (lot 2b) : les compétences sues, ce qui est à revoir, les
     // séances des 4 dernières semaines, le dernier jour.
     "defi-calcul": ["prenom", "sues", "revoir", "seances", "date"],
@@ -2036,6 +2114,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // précédentes », comme l'écran « Mon historique » de l'élève).
   let parcoursAnzanEleve = null;
   let parcoursAnzanAffiches = 10;
+  // Lot S4c : le mode montré dans la fiche Anzan (null : toutes).
+  let parcoursAnzanFiltre = null;
   let appliAffichee = "defi-tables";
   // La vue sous les onglets : "appli" (le tableau de l'activité), "eleves"
   // (lot « Ma classe : élèves », 18/10/2026 : propriétaire et collègues en
@@ -2243,6 +2323,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // les deux cartes de Défi calcul (des prénoms).
     "lc-aider-liste", "lc-aider-plus", "lc-feliciter-liste", "lc-feliciter-plus", "lc-entete", "lc-corps",
     "fe-onglets", "dc-ouest-liste", "dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-pop", "dc-qui-barres", "dc-qui-texte",
+    // Lot S4c : la carte « Par monde » de SPLAT!.
+    "splat-mondes-liste", "splat-mondes-vues",
     // Lot S4b : la liste des prénoms (sous « 5 élèves »).
     "pop-eleves"];
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-premiere-classe", "message-classe", "message-appli",
@@ -2257,6 +2339,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     "vue-eleves", "onglet-eleves", "menu-classes",
     // Lot S2 : la vue « La classe », les deux cartes de Défi calcul.
     "vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop", "pop-eleves",
+    // Lot S4c : la carte « Par monde » de SPLAT!.
+    "splat-mondes",
     // Serveur pro, lot 5b : la ligne « qui voit » et la carte d’un onglet grisé.
     "qui-voit", "appli-fermee"];
 
@@ -2674,9 +2758,19 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (tri.colonne === "jours") return (eleve.lu.jours || 0) * 100000 + (eleve.lu.calculs || 0);
       // « Dernier trésor » : le jour du dernier trésor, pas la dernière activité.
       if (tri.colonne === "date" && appliAffichee === "coffres") return eleve.lu.dernier || "";
+      // Lot S4c : Coffres, « Cette semaine ».
+      if (/^s-/.test(tri.colonne)) {
+        const semaine = semaineCoffres(eleve);
+        return semaine ? semaine[tri.colonne.slice(2)] : -1;
+      }
       // Anzan (lot 4b) : les calculs faits, puis les jours d'entraînement ;
       // « Dernière séance » : le jour de la dernière séance.
       if (tri.colonne === "calculs") return (eleve.lu.calculs || 0) * 1000 + (eleve.lu.jours || 0);
+      // Lot S4c : Flash, Colonne — le plus haut grade du mode, puis ses calculs.
+      if (tri.colonne === "flash" || tri.colonne === "colonne") {
+        const grade = tri.colonne === "flash" ? eleve.lu.grade : eleve.lu.gradeColonne;
+        return (grade || 0) * 1e7 + calculsParModeAnzan(eleve.lu || {})[tri.colonne];
+      }
       if (tri.colonne === "date" && appliAffichee === "flash-anzan") return eleve.lu.dernier || "";
       // Défi calcul (lot 2b) : les compétences sues, puis les entrées ; « À
       // revoir » : à voir en classe d'abord, puis les rouges ; les séances
@@ -4572,6 +4666,35 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // SPLAT! dans la fenêtre de l'élève (serveur pro, lot 5c ; avant, le
   // « Détail ▾ » déplié sous la ligne) : ses chiffres, puis une rangée de
   // cases par monde, les Bonus, la légende.
+  // Lot S4c : ce que le parcours garde d'une étape (une date, les séries
+  // commencées, les cartes réussies du premier coup, les réponses vues) — le
+  // relevé des jours ne dit pas QUELLE étape a été jouée : la bulle s'en
+  // tient à l'étape. Réussie : le jour de la première réussite ; en cours :
+  // le dernier jour joué et la carte atteinte.
+  function texteEtapeSplat(numero, bonus, etat, etape) {
+    const nom = bonus ? `Bonus ${numero}` : `Étape ${numero}`;
+    if (!etape || etat === "vide" || !etat) return `${nom} · pas encore commencée`;
+    const morceaux = [];
+    const series = etape.essais > 0 ? pluriel(etape.essais, "série") : "";
+    const vues = etape.vues > 0 ? pluriel(etape.vues, "réponse vue", "réponses vues") : "";
+    if (etat === "reussie" || etat === "aide") {
+      morceaux.push(`${nom} · réussie${etape.date ? ` le ${jourCourtSemaine(etape.date)}` : ""}`);
+      if (etape.cartes > 0) morceaux.push(`${etape.etoiles} sur ${etape.cartes} du premier coup`);
+    } else {
+      morceaux.push(`${nom} · en cours${etape.idx && etape.cartes ? ` : carte ${Math.min(etape.idx, etape.cartes)} sur ${etape.cartes}` : ""}`);
+      if (etape.date) morceaux.push(`le ${jourCourtSemaine(etape.date)}`);
+    }
+    if (series) morceaux.push(series);
+    if (vues) morceaux.push(vues);
+    return morceaux.join(" · ");
+  }
+
+  // « mer. 04/11 » : un jour du parcours, sans heure.
+  function jourCourtSemaine(jour) {
+    const d = new Date(`${jour}T12:00:00Z`);
+    return isNaN(d) ? "" : d.toLocaleDateString("fr-FR", {timeZone: "UTC", weekday: "short", day: "2-digit", month: "2-digit"});
+  }
+
   function contenuSplat(eleve) {
     const cellule = document.createElement("div");
     const lu = eleve.lu || {};
@@ -4588,6 +4711,11 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Les mondes de L'ÉLÈVE (lot « Qui voit quoi ») : un monde ouvert à lui
     // seul n'a ni cadenas ni pâleur.
     const ouverts = mondesDeLEleve(eleve);
+    // Lot S4c : chaque case se touche (ou se survole) — ce que le parcours
+    // garde de l'étape, dans une bulle au-dessus de sa rangée (rien ne bouge).
+    // Le parcours est relu par le moteur (normaliser : bornes, champs connus)
+    // avant qu'on y lise l'étape.
+    const normalise = SPLAT.normaliser(eleve.parcours || null);
     const rangee = (titre, etapes, bonus) => {
       if (!etapes.length) return;
       const div = document.createElement("div");
@@ -4599,9 +4727,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       if (ferme) nom.title = "Monde fermé pour la classe";
       div.append(nom);
       etapes.forEach(etape => {
-        const caseEtape = document.createElement("span");
+        const caseEtape = document.createElement("button");
+        caseEtape.type = "button";
         caseEtape.className = ["et", bonus ? "bonus" : "", CASES_ETAPE[etats[etape[0]]] || ""].filter(Boolean).join(" ");
         caseEtape.textContent = String(etape[1]);
+        const texte = texteEtapeSplat(etape[1], bonus, etats[etape[0]], normalise.etapes[etape[0]]);
+        caseEtape.setAttribute("aria-label", texte);
+        caseEtape.addEventListener("click", evenement => { evenement.stopPropagation(); montrerBulleCase(caseEtape, texte, true); });
+        caseEtape.addEventListener("mouseenter", () => montrerBulleCase(caseEtape, texte, false));
+        caseEtape.addEventListener("mouseleave", () => { if (!caseEtape.classList.contains("choisie")) cacherBulleCase(); });
         div.append(caseEtape);
       });
       cellule.append(div);
@@ -4621,6 +4755,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       morceau.append(pastille, document.createTextNode(texte));
       legende.append(morceau);
     });
+    legende.append(el("span", "", "· toucher une étape : son détail"));
     cellule.append(legende);
     return cellule;
   }
@@ -4663,6 +4798,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     });
 
     dessinerObjectifSplat();
+    dessinerMondesSplat();
 
     $("resume-classe").textContent = resumeDeLaClasse(eleves);
     if (!SPLAT) {
@@ -4695,6 +4831,71 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         finis: lus.filter(lu => lu.mondes.some(monde => monde.numero === numero && monde.etat === "fini")).length
       }))
     };
+  }
+
+  // Lot S4c « les onglets d'appli » : « Par monde ». Pour chaque monde ouvert
+  // à la classe : combien l'ont fini, combien l'ont en cours, combien ne l'ont
+  // pas commencé — chaque nombre se touche (les prénoms, par-dessus la page,
+  // chacun ouvre sa fiche sur SPLAT!). Dessous : qui a vu des réponses cette
+  // semaine (les jours de SPLAT!, lot S1). Rien de plus n'est lu.
+  function dessinerMondesSplat() {
+    const bloc = $("splat-mondes");
+    const liste = $("splat-mondes-liste");
+    const vues = $("splat-mondes-vues");
+    liste.textContent = "";
+    vues.textContent = "";
+    garderPopEleves();
+    const lus = elevesDeLOnglet().filter(eleve => eleve.lu && eleve.lu.lisible);
+    if (!SPLAT || !lus.some(eleve => eleve.lu.faits || eleve.lu.cours)) { bloc.hidden = true; return; }
+    const ouverts = mondesOuverts();
+    SPLAT.CARTE.MONDES.filter(([numero]) => !ouverts || ouverts.includes(numero)).forEach(([numero, nom]) => {
+      const groupes = {fini: [], cours: [], vide: []};
+      lus.forEach(eleve => {
+        const monde = eleve.lu.mondes.find(m => m.numero === numero);
+        const etat = monde && (monde.etat === "fini" || monde.etat === "cours") ? monde.etat : "vide";
+        groupes[etat].push(eleve);
+      });
+      const li = document.createElement("li");
+      const titre = el("b", "", `Monde ${numero}`);
+      titre.title = nom;
+      li.append(titre);
+      [["fini", "fini"], ["cours", "en cours"], ["vide", "pas commencé"]].forEach(([etat, mot]) => {
+        const qui = ordreDeLaFeuille(groupes[etat]);
+        const morceau = el("span", "");
+        morceau.append(document.createTextNode(`${mot} `));
+        if (qui.length) {
+          morceau.append(boutonNombre(String(qui.length), pop => {
+            pop.append(el("strong", "", `Monde ${numero} · ${mot}`));
+            pop.append(prenomsEnLiens(qui, "splat"));
+          }));
+        } else morceau.append(el("b", "", "0"));
+        li.append(morceau);
+      });
+      liste.append(li);
+    });
+    // Les réponses vues cette semaine (le lundi : celles du jour).
+    const aujourdhui = aujourdhuiSuivi();
+    const lundi = lundiDuJour(aujourdhui);
+    const aides = [];
+    lus.forEach(eleve => {
+      const suivi = suiviApp("splat", eleve, aujourdhui);
+      if (!suivi) return;
+      const n = suivi.jours.filter(j => j.jour >= lundi).reduce((t, j) => t + j.lignes.reduce((u, l) => u + (l.vues > 0 ? l.vues : 0), 0), 0);
+      if (n > 0) aides.push({eleve, n});
+    });
+    if (aides.length) {
+      const qui = ordreDeLaFeuille(aides.map(a => a.eleve));
+      vues.append(document.createTextNode("Des réponses vues cette semaine : "), boutonNombre(pluriel(aides.length, "élève"), pop => {
+        pop.append(el("strong", "", "Réponses vues cette semaine"));
+        const p = el("p", "");
+        qui.forEach((eleve, i) => {
+          if (i) p.append(document.createTextNode(", "));
+          p.append(lienFiche(eleve, "splat"), document.createTextNode(` (${aides.find(a => a.eleve === eleve).n})`));
+        });
+        pop.append(p);
+      }));
+    } else vues.textContent = "Aucune réponse vue cette semaine.";
+    bloc.hidden = false;
   }
 
   function dessinerObjectifSplat() {
@@ -4785,6 +4986,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!lu.lisible || !eleve.maj_le) { cellule.append(paragrapheVide("Rien reçu pour l’instant.")); return cellule; }
     const niveaux = lu.niveaux || [];
     const tresors = lu.tresors || 0;
+    // Lot S4c : d'abord sa semaine (ses jours), puis tout depuis le début.
+    const semaine = semaineCoffres(eleve);
+    cellule.append(el("h3", "fe-periode", "Cette semaine"));
+    if (semaine && semaine.jours) {
+      cellule.append(ficheChiffres([
+        ["Trésors", String(semaine.tresors), semaine.parfaits ? `dont ${semaine.parfaits} parfait${semaine.parfaits > 1 ? "s" : ""}` : ""],
+        ["Aides", String(semaine.aides)],
+        ["Solutions vues", String(semaine.solutions)],
+        ["Jours", String(semaine.jours)]
+      ]));
+    } else cellule.append(paragrapheVide("Rien cette semaine."));
+    cellule.append(el("h3", "fe-periode", "Depuis le début"));
     cellule.append(ficheChiffres([
       ["Trésors", `${tresors} trésor${tresors > 1 ? "s" : ""}`, lu.parfaits ? `dont ${lu.parfaits} parfait${lu.parfaits > 1 ? "s" : ""}` : ""],
       ...[1, 2, 3].map(numero => {
@@ -4838,9 +5051,54 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     return cellule;
   }
 
+  // Lot S4c « les onglets d'appli » : ce que Coffres note jour par jour (lot S1)
+  // garde depuis lundi — trésors, parfaits, aides, solutions vues, jours.
+  // null : rien de connu (l'appli ne rend aucun jour).
+  let periodeCoffres = "debut";
+  function semaineCoffres(eleve, aujourdhui = aujourdhuiSuivi()) {
+    const suivi = suiviApp("coffres", eleve, aujourdhui);
+    if (!suivi) return null;
+    const lundi = lundiDuJour(aujourdhui);
+    const jours = suivi.jours.filter(j => j.jour >= lundi && j.jour <= aujourdhui);
+    const somme = {tresors: 0, parfaits: 0, aides: 0, solutions: 0, jours: jours.length};
+    jours.forEach(j => j.lignes.forEach(l => {
+      ["tresors", "parfaits", "aides", "solutions"].forEach(champ => { if (l[champ] > 0) somme[champ] += l[champ]; });
+    }));
+    return somme;
+  }
+
+  function choisirPeriodeCoffres(periode) {
+    if (periode === periodeCoffres) return;
+    periodeCoffres = periode;
+    document.querySelectorAll("#periode-coffres button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.periode === periode)));
+    poserAppli();
+    dessinerTableau();
+  }
+
   function dessinerTableauCoffres(corps, ecriture, lignes = eleves) {
     $("fragiles").hidden = true;
     $("objectif").hidden = true;
+    if (periodeCoffres === "semaine") {
+      lignes.forEach(eleve => {
+        const ligne = document.createElement("tr");
+        const cNom = celluleNomTexte(eleve);
+        const semaine = semaineCoffres(eleve);
+        const cellules = ["tresors", "parfaits", "aides", "solutions", "jours"].map(champ => {
+          const td = document.createElement("td");
+          const n = semaine ? semaine[champ] : 0;
+          if (n > 0) td.append(el(champ === "tresors" ? "b" : "span", "", String(n)));
+          else { td.textContent = "—"; td.className = "sans"; }
+          return td;
+        });
+        [cellules[1], cellules[2], cellules[4]].forEach(large);
+        ligne.append(cNom, ...cellules);
+        finirLigne(ligne, eleve, cNom);
+        corps.appendChild(ligne);
+      });
+      $("resume-classe").textContent = resumeDeLaClasse(eleves);
+      dessinerPapier();
+      return;
+    }
     lignes.forEach(eleve => {
       const ligne = document.createElement("tr");
       const cNom = celluleNomTexte(eleve);
@@ -4895,45 +5153,36 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       const ligne = document.createElement("tr");
       const cNom = celluleNomTexte(eleve);
       const lu = eleve.lu || {};
-      const cCalculs = document.createElement("td");
+      // Lot S4c « les onglets d'appli » : par mode. Chaque colonne dit les
+      // calculs faits dans ce mode (passages et entraînements aux grades
+      // compris) et, dessous, le plus haut grade réussi dans ce mode (lots
+      // « grades » et « grades-colonne » du 07/11/2026).
+      const parMode = calculsParModeAnzan(lu);
+      const cellule = (calculs, grade) => {
+        const td = document.createElement("td");
+        if (!lu.commence || !calculs) { td.textContent = "—"; td.className = "sans"; return td; }
+        td.append(el("b", "", `${calculs} calcul${calculs > 1 ? "s" : ""}`));
+        if (grade && ANZAN && ANZAN.nomGrade) td.append(el("small", "anzan-grade", `🥋 ${ANZAN.nomGrade(grade)}`));
+        return td;
+      };
+      const cFlash = cellule(parMode.flash, lu.grade);
+      const cColonne = cellule(parMode.colonne, lu.gradeColonne);
       const cJours = document.createElement("td");
-      if (lu.commence) {
-        const compte = document.createElement("b");
-        compte.textContent = `${lu.calculs} calcul${lu.calculs > 1 ? "s" : ""}`;
-        cCalculs.append(compte);
-        // Lot « grades » (07/11/2026) : le plus haut grade réussi, sous le
-        // compte — visible sans ouvrir la fenêtre (demande de Gwenaël).
-        if (lu.grade && ANZAN && ANZAN.nomGrade) {
-          const grade = document.createElement("small");
-          grade.className = "anzan-grade";
-          grade.textContent = `🥋 ${ANZAN.nomGrade(lu.grade)}`;
-          cCalculs.append(grade);
-        }
-        // Lot « grades-colonne » (07/11/2026) : le plus haut grade réussi en
-        // Colonne, sous celui du Flash.
-        if (lu.gradeColonne && ANZAN && ANZAN.nomGrade) {
-          const grade = document.createElement("small");
-          grade.className = "anzan-grade";
-          grade.textContent = `🥋 ${ANZAN.nomGrade(lu.gradeColonne)} · Colonne`;
-          cCalculs.append(grade);
-        }
-        cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
-      } else {
-        cCalculs.textContent = "—";
-        cCalculs.className = "sans";
-        cJours.textContent = "—";
-        cJours.className = "sans";
-      }
+      if (lu.commence) cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
+      else { cJours.textContent = "—"; cJours.className = "sans"; }
       const cDate = document.createElement("td");
       const quand = jourCourt(lu.dernier);
       cDate.textContent = quand || "—";
       if (!quand) cDate.className = "sans";
 
       // Lot 5c : plus de « Parcours » — la ligne ouvre la fenêtre de l'élève,
-      // avec ses dernières séances. Au téléphone, les jours se cachent.
+      // avec ses dernières séances. Au téléphone, les jours et le jour de la
+      // dernière séance se cachent ; le jour passe sous le prénom (lot S4c).
       large(cJours);
-      ligne.append(cNom, cCalculs, cJours, cDate);
+      large(cDate);
+      ligne.append(cNom, cFlash, cColonne, cJours, cDate);
       finirLigne(ligne, eleve, cNom);
+      if (lu.commence && lu.dernier) indiceTelephone(cNom, jourAnzan(lu.dernier), "");
       corps.appendChild(ligne);
     });
 
@@ -4985,10 +5234,32 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // de l'élève, rendue par le moteur), les `combien` dernières séances (10 au
   // départ), combien il y en a en tout quand il y en a plus, et combien il en
   // reste à montrer.
-  function parcoursAnzanDe(eleve, aujourdhui, combien = 10) {
+  // Lot S4c « les onglets d'appli » : le mode d'une séance — « flash »,
+  // « colonne », ou « grade » (un passage de grade ou un entraînement au
+  // grade, Flash ou Colonne).
+  const FILTRES_ANZAN = [["flash", "⚡ Flash"], ["colonne", "📝 Colonne"], ["grade", "🥋 Grades"]];
+  function modeAnzan(s) {
+    if (s.mode === "grade" || s.mode === "entrainement") return "grade";
+    return s.mode === "colonne" ? "colonne" : "flash";
+  }
+
+  // Par mode, pour l'onglet de la classe : les calculs faits en Flash et en
+  // Colonne, passages et entraînements aux grades compris (le grade dit son
+  // mode), sur les séances gardées.
+  function calculsParModeAnzan(lu) {
+    const compte = {flash: 0, colonne: 0};
+    (lu.historique || []).forEach(s => {
+      const colonne = s.mode === "colonne" || ((s.mode === "grade" || s.mode === "entrainement") && ANZAN && ANZAN.estGradeColonne && ANZAN.estGradeColonne(s.grade));
+      compte[colonne ? "colonne" : "flash"] += s.faits > 0 ? s.faits : 0;
+    });
+    return compte;
+  }
+
+  function parcoursAnzanDe(eleve, aujourdhui, combien = 10, filtre = null) {
     const lu = (eleve && eleve.lu) || {};
     const prenom = prenomCourt(eleve);
-    const toutes = lu.historique || lu.dernieres || [];
+    const gardees = lu.historique || lu.dernieres || [];
+    const toutes = filtre ? gardees.filter(s => modeAnzan(s) === filtre) : gardees;
     const seances = toutes.slice(0, combien).map(s => {
       // Un grade (lot « grades », 07/11/2026) : les mots du moteur,
       // « 🥋 13e kyu · Passage · réussi » ou « 🎯 13e kyu · Entraînement au grade ».
@@ -5006,8 +5277,13 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       compte: lu.texte || `${prenom[0].toUpperCase()}${prenom.slice(1)} n’a pas encore fait de séance.`,
       grade: lu.texteGrade || "",
       seances,
-      note: lu.seances > seances.length ? `Les ${seances.length} dernières séances, sur ${lu.seances}.` : "",
-      reste: Math.max(0, toutes.length - seances.length)
+      note: filtre
+        ? (toutes.length > seances.length ? `Les ${seances.length} dernières, sur ${toutes.length}.` : "")
+        : (lu.seances > seances.length ? `Les ${seances.length} dernières séances, sur ${lu.seances}.` : ""),
+      reste: Math.max(0, toutes.length - seances.length),
+      // Combien de séances gardées dans chaque mode (le filtre ne montre que
+      // les modes où il y en a).
+      parMode: FILTRES_ANZAN.map(([cle]) => [cle, gardees.filter(s => modeAnzan(s) === cle).length])
     };
   }
 
@@ -5018,6 +5294,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!classe || !eleve || !ANZAN) return;
     parcoursAnzanEleve = eleve;
     parcoursAnzanAffiches = 10;
+    parcoursAnzanFiltre = null;
     dessinerParcoursAnzan();
   }
 
@@ -5031,8 +5308,25 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function dessinerParcoursAnzan() {
     const eleve = parcoursAnzanEleve;
     if (!eleve) return;
-    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
+    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches, parcoursAnzanFiltre);
     $("pa-compte").textContent = vu.compte;
+    // Lot S4c : Toutes · ⚡ Flash · 📝 Colonne · 🥋 Grades — seulement quand
+    // il y a au moins deux modes ; le choix garde la place (rien ne bouge
+    // au-dessus de la liste).
+    const filtres = $("pa-filtres");
+    filtres.textContent = "";
+    const modes = vu.parMode.filter(([, n]) => n > 0);
+    filtres.hidden = modes.length < 2;
+    if (modes.length >= 2) {
+      [[null, "Toutes"], ...FILTRES_ANZAN.filter(([cle]) => modes.some(([m]) => m === cle))].forEach(([cle, mot]) => {
+        const n = cle ? modes.find(([m]) => m === cle)[1] : null;
+        const bouton = el("button", "", n === null ? mot : `${mot} (${n})`);
+        bouton.type = "button";
+        bouton.setAttribute("aria-pressed", String(cle === parcoursAnzanFiltre));
+        bouton.addEventListener("click", () => { parcoursAnzanFiltre = cle; parcoursAnzanAffiches = 10; dessinerParcoursAnzan(); });
+        filtres.append(bouton);
+      });
+    }
     $("pa-grade").textContent = vu.grade;
     $("pa-grade").hidden = !vu.grade;
     const liste = $("pa-liste");
@@ -5078,6 +5372,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   function fermerParcoursAnzan() {
     parcoursAnzanEleve = null;
     parcoursAnzanAffiches = 10;
+    parcoursAnzanFiltre = null;
     ["pa-compte", "pa-grade", "pa-liste", "pa-note"].forEach(id => { $(id).textContent = ""; });
     $("pa-grade").hidden = true;
     $("pa-plus").hidden = true;
@@ -5092,8 +5387,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (!eleve) return false;
     quitterImpressions();
     const numero = ++numeroImpression;
-    // Les séances que montre la fenêtre (10, ou plus après « Voir les séances précédentes »).
-    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches);
+    // Les séances que montre la fenêtre (10, ou plus après « Voir les séances
+    // précédentes » ; lot S4c : du mode choisi).
+    const vu = parcoursAnzanDe(eleve, undefined, parcoursAnzanAffiches, parcoursAnzanFiltre);
     $("fa-titre").textContent = vu.titre;
     $("fa-compte").textContent = vu.compte;
     $("fa-grade").textContent = vu.grade;
@@ -6588,13 +6884,16 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const calcul = appliAffichee === "defi-calcul";
     $("entete-defi-tables").hidden = splat || coffres || anzan || calcul;
     $("entete-splat").hidden = !splat;
-    $("entete-coffres").hidden = !coffres;
+    $("entete-coffres").hidden = !coffres || periodeCoffres === "semaine";
+    $("entete-coffres-semaine").hidden = !coffres || periodeCoffres !== "semaine";
+    $("periode-coffres").hidden = !coffres;
     $("entete-anzan").hidden = !anzan;
     $("entete-defi-calcul").hidden = !calcul;
     $("note-coffres").hidden = !coffres;
     $("bloc-imprimer").hidden = splat || coffres || anzan || calcul;
     if (splat || coffres || anzan || calcul) $("fragiles").hidden = true;
     if (coffres || anzan) $("objectif").hidden = true;
+    if (!splat) $("splat-mondes").hidden = true;
     // Défi calcul (lot 2b) : sa carte « À reprendre en classe » et son bouton
     // « Imprimer la grille » n'existent que dans son onglet.
     if (!calcul) { $("dc-reprendre").hidden = true; $("dc-imprimer-grille").hidden = true; $("dc-ouest").hidden = true; $("dc-qui").hidden = true; }
@@ -8147,17 +8446,27 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   // (position absolue : rien ne bouge). Touchée, la case reste marquée
   // jusqu'à un clic ailleurs ; survolée, la bulle part avec la souris.
   function montrerBulleCase(c, texte, touchee) {
-    const ligne = c.closest(".dc-cases-ligne");
+    const ligne = c.closest(".dc-cases-ligne, .detail-monde");
     if (!ligne) return;
     if (touchee && c.classList.contains("choisie")) { cacherBulleCase(); return; }
     cacherBulleCase();
     if (touchee) c.classList.add("choisie");
-    ligne.append(el("span", "dc-bulle", texte));
+    const bulle = el("span", "dc-bulle", texte);
+    ligne.append(bulle);
+    // Lot S4c : une étape de SPLAT! — la bulle au-dessus de SA case, dans
+    // la largeur de la rangée.
+    if (ligne.classList.contains("detail-monde")) {
+      const large = ligne.clientWidth;
+      const gauche = Math.max(0, Math.min(c.offsetLeft + c.offsetWidth / 2 - bulle.offsetWidth / 2, large - bulle.offsetWidth));
+      bulle.style.left = `${Math.round(gauche)}px`;
+      bulle.style.right = "auto";
+      bulle.style.bottom = `${Math.round(ligne.clientHeight - c.offsetTop + 4)}px`;
+    }
   }
 
   function cacherBulleCase() {
     document.querySelectorAll(".dc-bulle").forEach(bulle => bulle.remove());
-    document.querySelectorAll(".dc-case.choisie").forEach(c => c.classList.remove("choisie"));
+    document.querySelectorAll(".dc-case.choisie, .et.choisie").forEach(c => c.classList.remove("choisie"));
   }
 
   function competencesEnCases(lu, ouvert) {
@@ -9750,7 +10059,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const dans = choix => chemin.some(noeud => noeud && typeof noeud.matches === "function" && noeud.matches(choix));
     if (!dans("#dc-ouest-pop, .dc-ouest-barre, dialog")) fermerPopOuEnEst();
     if (!dans("#pop-eleves, dialog")) fermerPopEleves();
-    if (!dans(".dc-case")) cacherBulleCase();
+    if (!dans(".dc-case, .detail-monde .et")) cacherBulleCase();
   });
   document.addEventListener("keydown", evenement => {
     if (evenement.key !== "Escape") return;
@@ -9792,6 +10101,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   $("af-toute").addEventListener("click", ouvrirATouteLaClasse);
   $("records-plein-ecran").addEventListener("click", ouvrirRecordsPleinEcran);
 
+  // Lot S4c : Coffres, « Depuis le début » ou « Cette semaine ».
+  document.querySelectorAll("#periode-coffres button").forEach(bouton => {
+    bouton.addEventListener("click", () => choisirPeriodeCoffres(bouton.dataset.periode));
+  });
   document.querySelectorAll("th button[data-tri]").forEach(bouton => {
     bouton.addEventListener("click", () => {
       const colonne = bouton.dataset.tri;

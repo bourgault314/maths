@@ -153,7 +153,9 @@ const TOM = COFFRES.commencerPartie(COFFRES.creer(), {niveau: 1, ops: [1], serie
 // ------------------------------------------------------------ la page, exécutée
 
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
-  "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres"].map(n => fonction(n)).join("\n");
+  "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres",
+  // Lot S4c : « Cette semaine » (le journal de Coffres, lu par le moteur).
+  "semaineCoffres", "suiviApp", "moteurSuivi", "lundiDuJour", "jourPlus", "aujourdhuiSuivi", "el"].map(n => fonction(n)).join("\n");
 
 function ongletCoffres(liste, options = {}) {
   const {zones, $} = creerZones();
@@ -163,7 +165,7 @@ function ongletCoffres(liste, options = {}) {
   const moteur = options.sansMoteur ? null : COFFRES;
   const fabrique = new Function("document", "$", "COFFRES", "droitClasse", "messager",
     "dessinerPapier", "classe", "ouvrirFenetreEleve", "appliAffichee", "revenirA", "voirFiche",
-    `let eleves = [];\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
+    `let eleves = [];\nlet periodeCoffres = "debut";\nconst PARCOURS = null, CALCUL = null, SPLAT = null, ANZAN = null;\nconst memoSuivi = new WeakMap();\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
   // Lot 5f : la ligne de Coffres ouvre toujours la fenêtre (voirFiche, le
   // parcours de Défi tables, ne doit jamais partir d'ici).
   const f = fabrique(document, $, moteur, options.droit || "proprietaire",
@@ -268,7 +270,7 @@ test("le tri « Trésors » : les trésors, puis les parfaits, puis une partie e
   const lus = classe5().map((e, i) => Object.assign({id: i + 1, code: `C${i}`}, e, {lu: COFFRES.resumeProf(e.parcours)}));
   assert.deepEqual(trier(lus.slice(), {colonne: "tresors", sens: -1}, "coffres", l => l), ["Léa", "Zoé", "Lucas", "Malo", "Tom"]);
   assert.deepEqual(trier(lus.slice(), {colonne: "date", sens: -1}, "coffres", l => l).slice(0, 2), ["Zoé", "Léa"], "Zoé (21 oct.) avant Léa (20 oct.) même si Léa a joué après");
-  assert.match(constante("TRIS"), /"coffres": \["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date"\]/);
+  assert.match(constante("TRIS"), /"coffres": \["prenom", "tresors", "niveau1", "niveau2", "niveau3", "date",\s*\/\/ Lot S4c : « Cette semaine »\.\s*"s-tresors", "s-parfaits", "s-aides", "s-solutions", "s-jours"\]/);
   // Lot 5c : chaque niveau trie sur ses trésors, puis ses parfaits ; un niveau jamais joué en bas.
   assert.deepEqual(trier(lus.slice(), {colonne: "niveau2", sens: -1}, "coffres", l => l).slice(0, 2), ["Léa", "Zoé"], "Léa : 2 trésors au niveau 2, Zoé : 1");
   assert.deepEqual(trier(lus.slice(), {colonne: "niveau3", sens: -1}, "coffres", l => l)[0], "Zoé");
@@ -283,7 +285,7 @@ test("APPLIS, l'onglet, l'en-tête, la note « Parfait : … » : Coffres magiqu
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
     ["Élève:prenom", "Trésors:tresors", "Niveau 1:niveau1 (large)", "Niveau 2:niveau2 (large)", "Niveau 3:niveau3 (large)", "Dernier trésor:date", "", " (fin)"]);
   assert.match(page, /<p class="sous note-coffres" id="note-coffres" hidden>Parfait : sans erreur ni solution montrée\.<\/p>/);
-  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("entete-defi-calcul"\)\.hidden = !calcul;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan \|\| calcul;/);
+  assert.match(fonction("poserAppli"), /\$\("entete-coffres"\)\.hidden = !coffres \|\| periodeCoffres === "semaine";\s*\$\("entete-coffres-semaine"\)\.hidden = !coffres \|\| periodeCoffres !== "semaine";\s*\$\("periode-coffres"\)\.hidden = !coffres;\s*\$\("entete-anzan"\)\.hidden = !anzan;\s*\$\("entete-defi-calcul"\)\.hidden = !calcul;\s*\$\("note-coffres"\)\.hidden = !coffres;\s*\$\("bloc-imprimer"\)\.hidden = splat \|\| coffres \|\| anzan \|\| calcul;/);
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "coffres"\) \{ dessinerTableauCoffres\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("elevesLus"), /cle === "coffres" \? lireCoffres/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "coffres"\) return chargerMoteurCoffres\(\);/);

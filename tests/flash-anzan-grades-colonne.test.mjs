@@ -203,7 +203,9 @@ test("Ma classe : le grade en Colonne à côté de celui du Flash", () => {
   assert.equal(PARCOURS.resumeProf(deux).texteGrade, "🥋 Grades réussis : 20e kyu en Flash · 10e kyu en Colonne");
   // La page prof écrit la ligne du tableau avec nomGrade du moteur.
   const prof = readFileSync(new URL("../_serveur/public/prof/index.php", import.meta.url), "utf8");
-  assert.match(prof, /lu\.gradeColonne && ANZAN && ANZAN\.nomGrade/);
+  // Lot S4c : la colonne « Colonne » de l'onglet Anzan porte le grade Colonne.
+  assert.match(prof, /const cColonne = cellule\(parMode\.colonne, lu\.gradeColonne\);/);
+  assert.match(prof, /if \(grade && ANZAN && ANZAN\.nomGrade\) td\.append\(el\("small", "anzan-grade", `🥋 \$\{ANZAN\.nomGrade\(grade\)\}`\)\);/);
 });
 
 test("le serveur connaît la clé gradeColonne (lib/applis.php)", () => {

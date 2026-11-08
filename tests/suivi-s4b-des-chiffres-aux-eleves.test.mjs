@@ -202,7 +202,8 @@ test("1 — fermer la fiche revient au même endroit : un clic DANS la fiche ne 
   assert.match(ecoute, /const chemin = typeof evenement\.composedPath === "function" \? evenement\.composedPath\(\) : \[evenement\.target\];/);
   assert.match(ecoute, /if \(!dans\("#dc-ouest-pop, \.dc-ouest-barre, dialog"\)\) fermerPopOuEnEst\(\);/);
   assert.match(ecoute, /if \(!dans\("#pop-eleves, dialog"\)\) fermerPopEleves\(\);/);
-  assert.match(ecoute, /if \(!dans\("\.dc-case"\)\) cacherBulleCase\(\);/);
+  // Lot S4c : les étapes de SPLAT! ont la même bulle.
+  assert.match(ecoute, /if \(!dans\("\.dc-case, \.detail-monde \.et"\)\) cacherBulleCase\(\);/);
   assert.match(ecoute, /cacherBulleCase\(\);\s*if \(document\.querySelector\("dialog\[open\]"\)\) return;\s*fermerPopOuEnEst\(\);\s*fermerPopEleves\(\);/);
   assert.doesNotMatch(fonction("surFermetureFenetre"), /scroll|redessin|fermerPop/, "fermer la fiche ne touche ni à la page ni à la liste");
   // Une autre largeur (le téléphone tourné) ferme la liste ; la barre d'adresse qui se cache, non.
@@ -211,7 +212,7 @@ test("1 — fermer la fiche revient au même endroit : un clic DANS la fiche ne 
 });
 
 test("1 et 3 — la liste des prénoms est vidée et cachée à la déconnexion ; tout passe par textContent", () => {
-  assert.match(script, /"dc-qui-texte",\s*\/\/[^\n]*\n\s*"pop-eleves"\];/);
+  assert.match(script, /"dc-qui-texte",\s*\/\/[^\n]*\n\s*"splat-mondes-liste", "splat-mondes-vues",\s*\/\/[^\n]*\n\s*"pop-eleves"\];/);
   assert.match(script, /"vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop", "pop-eleves",/);
   assert.match(page, /<div class="pop-eleves" id="pop-eleves" hidden><\/div>\s*<dialog id="fenetre-eleve"/);
   for (const nom of ["ouvrirPopEleves", "fermerPopEleves", "boutonNombre", "lienFiche", "prenomsEnLiens", "dessinerFragiles", "dessinerReprendre", "dessinerCartesClasse", "montrerBulleCase", "choisirJourFiche"]) {
@@ -265,7 +266,7 @@ test("2 — Défi calcul, la fiche : chaque case est un bouton ; la toucher (ou 
   // La bulle elle-même.
   const r = documentFactice([]);
   const bulles = [];
-  r.document.querySelectorAll = choix => (choix === ".dc-bulle" ? bulles.filter(b => b.parent) : choix === ".dc-case.choisie" ? [c1, c2].filter(c => c.classList.contains("choisie")) : []);
+  r.document.querySelectorAll = choix => (choix === ".dc-bulle" ? bulles.filter(b => b.parent) : choix === ".dc-case.choisie, .et.choisie" ? [c1, c2].filter(c => c.classList.contains("choisie")) : []);
   const f = new Function("document", `${fonction("el")} ${fonction("montrerBulleCase")} ${fonction("cacherBulleCase")} return {montrerBulleCase, cacherBulleCase};`)(r.document);
   const ligne = new Noeud("div");
   const c1 = new Noeud("button"), c2 = new Noeud("button");

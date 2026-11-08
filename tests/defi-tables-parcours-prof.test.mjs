@@ -267,14 +267,11 @@ test("la page : l'écran Mon parcours de l'élève, « Le parcours de Léa », s
   assert.doesNotMatch(html, /<script[^>]*mention-confidentialite\.js/);
 });
 
-test("la page : « Pour le professeur » dans une seconde carte sous le parcours — le même rendu que la page 2, le tableau défile de côté, colonne fixe, pas de hauteur mini ; hors de la mesure de l'échelle", () => {
-  assert.match(html, /<\/section>\s*\n\s*<!--[\s\S]*?-->\s*\n\s*<section id="parcours-prof" class="panel parcours-prof" aria-label="Pour le professeur" hidden><\/section>\s*\n\s*<\/main>/);
-  assert.match(html, /function renderCarteProf\(\) \{[\s\S]*?const copie = \$\("fiche-prof"\)\.querySelector\("\.fiche-prof"\)\.cloneNode\(true\);\s*\n\s*copie\.querySelectorAll\("\[id\]"\)\.forEach\(element => element\.removeAttribute\("id"\)\);[\s\S]*?defile\.className = "parcours-prof-defile";[\s\S]*?carte\.replaceChildren\(copie\);\s*\n\s*carte\.hidden = false;/);
+test("la page : « Ses séances » dans une seconde carte sous le parcours (lot S4c : à la place du tableau « Pour le professeur ») — format « Activité », pas de hauteur mini ; hors de la mesure de l'échelle", () => {
+  assert.match(html, /<\/section>\s*\n\s*<!--[\s\S]*?-->\s*\n\s*<section id="parcours-prof" class="panel parcours-prof" aria-label="Ses séances" hidden><\/section>\s*\n\s*<\/main>/);
+  assert.match(html, /function renderCarteProf\(\) \{[\s\S]*?bloc\.append\(noeud\("h2", "", "Ses séances"\)\);[\s\S]*?joursSeancesProf\(parcoursProf, PARCOURS\.jourLocal\(\), joursCarteProf\)[\s\S]*?carte\.replaceChildren\(bloc\);\s*\n\s*carte\.hidden = false;/);
+  assert.doesNotMatch(html, /parcours-prof-defile/, "plus de copie du tableau de la page 2 à l'écran");
   assert.match(html, /\.parcours-prof \{ min-height: 0; margin-top: 18px; \}/);
-  assert.match(html, /\.parcours-prof \.fiche-prof \{ padding: 4px 6px; border: 0; \}/);
-  assert.match(html, /\.parcours-prof-defile \{ overflow-x: auto; -webkit-overflow-scrolling: touch; \}/);
-  assert.match(html, /\.parcours-prof \.fiche-prof table \{ min-width: 640px; \}/);
-  assert.match(html, /\.parcours-prof \.fiche-prof tbody th \{ position: sticky; left: 0; background: #fff; \}/);
   // L'échelle : ajusterEchelle mesure le corps ; la carte en est retirée le
   // temps de la mesure — le cadre du parcours seul doit tenir, comme chez l'élève.
   assert.match(html, /body\.mesure-cadre #parcours-prof \{ display: none !important; \}/);
