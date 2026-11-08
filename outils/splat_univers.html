@@ -158,22 +158,21 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde .head h2{margin:1px 0 0;font-size:clamp(19px,4vw,25px);line-height:1.15}
 .monde .head .stars{font-size:15px;font-weight:800;white-space:nowrap;background:rgba(255,255,255,.18);
   border-radius:12px;padding:6px 10px}
-/* Chaque monde se replie sur son bandeau (accordéon, lot « six mondes ») : avec six
-   mondes et 43 étapes, la page dépliée fait 9 000 px sur téléphone. Le bandeau est un
-   bouton ; un chevron dit l'état ; seul le monde en cours est ouvert à l'arrivée. */
-.monde>.head{cursor:pointer;user-select:none}
-.monde>.head .chev{flex:0 0 auto;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.2);
-  display:flex;align-items:center;justify-content:center;transition:transform .25s}
-.monde>.head .chev svg{width:18px;height:18px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.monde.replie>.head .chev{transform:rotate(-90deg)}
-.monde.replie>.desc,.monde.replie>.intro,.monde.replie>.etapes{display:none}
+/* Un seul monde à l'écran (lot 2 « la carte des mondes », 08/11/2026, choix de Gwenaël) : on le
+   choisit sur la carte (vue élève) ou dans le sommaire (vue prof) ; les autres sections restent
+   dans la page (ids, ancres, étoiles), cachées. Le monde choisi GARDE sa grande bande de couleur,
+   avec ses étoiles, sans la petite flèche : la bande n'est plus un bouton. Avant, c'était un
+   accordéon (lot « six mondes ») : 9 000 px dépliés au téléphone. */
+.monde.replie>.desc,.monde.replie>.intro,.monde.replie>.etapes,.monde.replie>.parties{display:none}
+main>.monde:not(.choisi){display:none}
+main>.monde.choisi{margin-top:22px}
 /* Un monde que le professeur n'a pas ouvert à la classe de l'élève (lot « splat-suivi-5 »,
    08/10/2026, choix de Gwenaël sur maquettes) : le bandeau reste à sa place, grisé, sans
    étapes ni lien, avec un cadenas (« pas encore ouvert » sur grand écran, le cadenas seul
    au téléphone) ; les étoiles déjà gagnées dans ce monde restent écrites à côté (rien
    n'est effacé), mais le total du haut ne compte que les mondes ouverts. */
 .monde.verrouille>.head{filter:saturate(.35);opacity:.85;cursor:default}
-.monde.verrouille>.desc,.monde.verrouille>.intro,.monde.verrouille>.etapes,.monde.verrouille>.head .chev{display:none}
+.monde.verrouille>.desc,.monde.verrouille>.intro,.monde.verrouille>.etapes,.monde.verrouille>.parties{display:none}
 .monde .head .verrou{display:none;align-items:center;gap:5px;font-size:15px;font-weight:800;white-space:nowrap;
   background:rgba(255,255,255,.18);border-radius:12px;padding:6px 9px}
 .monde .head .verrou svg{width:15px;height:15px;flex:0 0 auto}
@@ -181,9 +180,7 @@ main{max-width:980px;margin:0 auto;padding:10px 14px 60px}
 .monde.verrouille .head .stars[hidden]{display:none}
 @media(max-width:559px){.monde .head .verrou .mot{display:none}}
 /* pendant l'échange du billet (amorce du <head>) : la liste des mondes attend */
-html.suivi-attente main#univers{visibility:hidden}
-.monde.replie{box-shadow:0 4px 12px rgba(22,47,82,.08)}
-.monde.replie+.monde{margin-top:12px}
+html.suivi-attente main#univers,html.suivi-attente #carteMondes{visibility:hidden}
 /* « Continuer » : la prochaine étoile à gagner, sous la barre de progression */
 .continuer{max-width:560px;margin:14px auto 0;padding:0 16px;text-align:center}
 .continuer a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800;font-size:15px;
@@ -191,6 +188,87 @@ html.suivi-attente main#univers{visibility:hidden}
 .continuer a small{font-weight:650;opacity:.9}
 .continuer a:hover{filter:brightness(1.06)}
 .monde .desc{padding:12px 18px 0;color:var(--muted);font-size:14px}
+
+/* ---------- la carte des mondes (lot 2 « aides et carte », 08/11/2026, planches 1 et 2, proposition B) ----------
+   Six taches reliées par un chemin en pointillés, dans l'ordre de l'univers. Ordinateur : une ligne
+   en zigzag ; téléphone : deux rangées, le chemin fait une boucle (1 2 3, puis 4 5 6 de droite à
+   gauche). Le monde choisi est en pleine couleur, cerclé de pointillés, son nom à sa couleur ; un
+   monde fini est en pleine couleur avec une étoile d'or ; les autres en teinte claire. Fermé à la
+   classe : grisé avec un cadenas ; en préparation : grisé avec 🚧. Rien ne bouge quand on change
+   de monde : seul ce qui est dessous change. Le chemin est dessiné par placerChemin() à partir de la
+   position réelle des taches (il suit la mise en page à toutes les largeurs). */
+.carteMondes{position:relative;max-width:980px;margin:22px auto 0;padding:0 10px;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:4px;align-items:start}
+.carteMondes svg.chemin{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.carteMondes svg.chemin path{fill:none;stroke:#b7c4d4;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:.1 8.5}
+.tm{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font:inherit;color:var(--ink);background:none;border:none;padding:4px 2px 6px;cursor:pointer;border-radius:16px;min-width:0}
+.tm:nth-child(even){margin-top:34px}           /* zigzag : mondes 1, 3 et 5 plus bas (le <svg> du chemin est le 1er enfant) */
+.tm:focus-visible{outline:3px solid var(--c-monde);outline-offset:2px}
+.tm .tache{position:relative;width:72px;height:72px;display:grid;place-items:center}
+.tm .tache svg.forme{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  filter:drop-shadow(2px 2.5px 2px rgba(16,41,74,.20));transition:transform .2s}
+.tm:nth-child(3n) .tache svg.forme{transform:rotate(-10deg)}
+.tm:nth-child(3n+1) .tache svg.forme{transform:rotate(12deg)}
+.tm .tache use.fond{fill:var(--teinte);stroke:rgba(0,0,0,.14);stroke-width:2;transition:fill .2s}
+.tm .tache .n{position:relative;font-size:27px;font-weight:900;color:var(--c);transform:translateY(-1.3px);line-height:1}
+.tm .anneau{position:absolute;inset:-9px;border-radius:50%;border:2.5px dotted var(--c-monde);display:none}
+.tm .or{position:absolute;right:-6px;bottom:-4px;width:26px;height:26px;display:none;filter:drop-shadow(0 2px 3px rgba(22,47,82,.35))}
+.tm .cad{position:absolute;right:-4px;bottom:-2px;width:24px;height:24px;border-radius:50%;background:#7b8796;
+  display:none;place-items:center}
+.tm .cad svg{width:14px;height:14px}
+.tm .nom{margin-top:6px;font-size:14.5px;font-weight:800;line-height:1.2;text-align:center}
+.tm .nom .court{display:none}
+.tm .et{font-size:13px;font-weight:750;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tm.fini .tache use.fond,.tm.choisi .tache use.fond{fill:var(--c-monde)}
+.tm.fini .tache .n,.tm.choisi .tache .n{color:#fff}
+.tm.fini .or{display:block}
+.tm.choisi .anneau{display:block}
+.tm.choisi .nom{color:var(--c)}
+.tm:not(.choisi):hover .tache svg.forme{transform:scale(1.06)}
+.tm.ferme .tache,.tm.prepa .tache{filter:saturate(.15);opacity:.75}
+.tm.ferme .cad{display:grid}
+.tm.ferme .tache use.fond,.tm.prepa .tache use.fond{fill:var(--teinte)}
+.tm.ferme .tache .n,.tm.prepa .tache .n{color:var(--c)}
+.m1{--teinte:#fbcda6}.m2{--teinte:#9dc2e0}.menq{--teinte:#f2c4d6}.m3{--teinte:#9cdddb}.msys{--teinte:#edcbb3}.m4{--teinte:#dcc8f0}
+@media(min-width:1000px){
+  .carteMondes{max-width:1080px}
+  .tm .tache{width:80px;height:80px}
+  .tm .tache .n{font-size:30px}
+  .tm .nom{font-size:16px}
+  .tm .et{font-size:14px}
+}
+/* téléphone : deux rangées, la boucle (planche 2) */
+@media(max-width:599px){
+  .carteMondes{grid-template-columns:repeat(3,1fr);row-gap:14px;padding:0 4px}
+  .tm:nth-child(even){margin-top:0}
+  .tm:nth-child(2){grid-row:1;grid-column:1;margin-top:18px}
+  .tm:nth-child(3){grid-row:1;grid-column:2}
+  .tm:nth-child(4){grid-row:1;grid-column:3;margin-top:18px}
+  .tm:nth-child(5){grid-row:2;grid-column:3}
+  .tm:nth-child(6){grid-row:2;grid-column:2;margin-top:18px}
+  .tm:nth-child(7){grid-row:2;grid-column:1}
+  .tm .tache{width:64px;height:64px}
+  .tm .tache .n{font-size:25px}
+  .tm .nom .long{display:none}
+  .tm .nom .court{display:inline}
+}
+
+/* ---------- les parties d'un monde en boutons (lot 2, planche 5 ; mondes 3, 4 et 6) ----------
+   Une ligne de boutons sous la description, comme sur la page des livrets : « Partie 1 ⭐ 0/5 »… et
+   le Bonus au bout, en pointillés. Le bouton de la partie ouverte est plein ; sous les boutons, le
+   titre de cette partie et sa phrase, puis ses étapes. Une partie est TOUJOURS ouverte. */
+.parties{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 0}
+.partieBtn{font:inherit;font-size:14px;font-weight:800;display:inline-flex;align-items:center;gap:7px;min-height:40px;
+  padding:6px 14px;border-radius:999px;cursor:pointer;background:#fff;color:var(--c);border:2px solid var(--c)}
+.partieBtn .stars{font-size:12.5px;font-weight:750;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.partieBtn.ech,.partieBtn.bonus{border-style:dashed}
+.partieBtn[aria-pressed=true]{background:var(--c);color:#fff;border-style:solid}
+.partieBtn[aria-pressed=true] .stars{color:#fff;opacity:.92}
+.partieBtn:not([aria-pressed=true]):hover{background:#f6f8fb}
+.partieBtn:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+@media(min-width:1000px){.partieBtn{font-size:15.5px}.partieBtn .stars{font-size:14px}}
+@media(max-width:480px){.parties{padding:12px 14px 0;gap:7px}.partieBtn{padding:6px 11px;font-size:13.5px}}
 
 /* ---------- étapes ---------- */
 .etapes{list-style:none;margin:0;padding:10px 14px 20px;position:relative}
@@ -256,19 +334,14 @@ html.suivi-attente main#univers{visibility:hidden}
 /* monde 6, les Relatifs (lot R2) : ses deux parties dans son violet */
 .m4 .volet{background:#f7f1fc;border-color:#dcc8ef}
 .m4 .volet .rang{background:var(--violet)}
-/* Vue élève (04/10/2026, maquettes « bonus » validées par Gwenaël) : chaque partie est un menu
-   déroulant. Fermée, elle ne montre que « Partie N · titre · ⭐ x/y » et son chevron ; à
-   l'arrivée, seule la partie en cours est ouverte. Les étapes d'une partie fermée sont
-   masquées (.replieP), pas retirées : les ids et la numérotation ne bougent pas. */
-.volet[role=button]{cursor:pointer;user-select:none}
-.volet[role=button]:hover{filter:brightness(.985)}
-.volet .chevP{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;transition:transform .25s}
-.volet .chevP svg{width:16px;height:16px;stroke:var(--c);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
-.volet.ferme .chevP{transform:rotate(-90deg)}
-.volet.ferme .fiches,.volet.ferme p{display:none}
-.volet.ferme{padding-top:8px;padding-bottom:8px}
-.etapes>li.replieP{display:none}
+/* Vue élève (lot 2 « la carte des mondes », 08/11/2026, planche 5) : on choisit la partie avec
+   les boutons du haut (.parties) ; dans la liste, l'en-tête de la partie ouverte devient le titre
+   de la partie (son nom, ses fiches, sa phrase), sans boîte ; les autres en-têtes et les étapes
+   des autres parties sont masqués (.replieP), pas retirés : ids et numérotation ne bougent pas.
+   (Du 04/10 au 08/11/2026, chaque partie était un menu déroulant.) */
+.etapes>li.replieP,.etapes>.volet.ferme[data-volet]{display:none}
+main>.monde>.etapes>.volet[data-volet]{background:none;border:none;border-radius:0;margin:2px 0 0;padding:6px 4px 2px}
+main>.monde>.etapes>.volet[data-volet] h4{color:var(--c)}
 /* le Bonus des mondes 3 et 4 (monde 4 : lot M4-4) : un menu de plus sous les étapes, fermé par défaut, en pointillés ;
    ses fiches sont des taches blanches cerclées de framboise, dorées ✨ une fois réussies,
    avec leur compteur à elles (hors des étoiles du haut) */
@@ -297,17 +370,13 @@ html.suivi-attente main#univers{visibility:hidden}
 .m4 .volet.ech{background:#fff;border:1.5px dashed #c6a9e6}
 .m4 .volet.ech .rang{background:#fff;color:var(--c);border:1.5px solid var(--c);padding:3.5px 8.5px}
 .etape.code .badge .n{font-size:16px;transform:translateY(.2px)}
-/* téléphone : la pastille « Partie N » et les étoiles sur une première ligne, le
-   titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) ;
-   une partie fermée tient sur une ligne : pastille, titre, étoiles, chevron */
+/* téléphone (vue prof) : la pastille « Partie N » et les étoiles sur une première ligne, le
+   titre et la phrase en dessous sur toute la largeur (sinon la phrase est en colonne) */
 @media(max-width:480px){
   .volet{gap:6px 10px;padding:9px 11px}
   .volet .rang{order:1}
   .volet .stars{order:2;margin-left:auto;font-size:13px;padding:4px 8px}
-  .volet .chevP{order:2}
   .volet .t{order:3;flex:1 0 100%}
-  .volet.ferme .t{order:1;flex:1 1 0}
-  .volet.ferme .stars{margin-left:0}
   .volet .fiches{margin-left:6px}
 }
 
@@ -416,6 +485,9 @@ body.prof .hero p.sub{margin:8px 0 0;max-width:720px;font-size:15.5px;color:#465
 .sommaire .st{display:block;font-weight:700;font-size:15px;line-height:1.25;margin:2px 0 3px;color:var(--ink)}
 .sommaire .sf{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sommaire a.cache{opacity:.55}
+/* le monde à l'écran (lot 2, 08/11/2026) : le sommaire choisit le monde affiché dessous, comme la carte de l'élève */
+.sommaire a.choisi{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:#fbfcfe}
+.sommaire a.choisi .st{color:var(--c)}
 @media(max-width:900px){.sommaire{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.sommaire{grid-template-columns:repeat(2,1fr);gap:8px}
   .sommaire a{padding:8px 10px}.sommaire .st{font-size:14px}}
@@ -1366,15 +1438,14 @@ function teteProfHtml(m,mi,plage,attrs){
   return '<div class="head"'+attrs+'>'+
     '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
     '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
-    '<span class="fichesTete">'+(m.cache?'en préparation':'fiches '+plage[0]+'–'+plage[1])+'</span>'+
-    (m.cache?'':'<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>')+'</div>';
+    '<span class="fichesTete">'+(m.cache?'en préparation':'fiches '+plage[0]+'–'+plage[1])+'</span></div>';
 }
 /* Tout un monde en vue prof (le contenu de sa <section>). Un monde en préparation : le
    bandeau, qui ne s'ouvre pas, et la phrase — ni note, ni lien. */
 function mondeProfHtml(m,mi,plage){
   if(m.cache) return teteProfHtml(m,mi,plage,'')+'<p class="prepa">'+PREPA_PHRASE+'</p>';
   let n=plage[0]-1;
-  return teteProfHtml(m,mi,plage,' role="button" tabindex="0" aria-expanded="true"')+
+  return teteProfHtml(m,mi,plage,'')+
     '<div class="intro pIntro"><div><p class="lab">L’intention</p>'+intentionHtml(mi)+'</div>'+ressourcesHtml(m,mi)+'</div>'+
     '<ol class="etapes">'+m.etapes.map((e,ei)=>{
       if(!e.code) n++;
@@ -1420,8 +1491,13 @@ function renderProf(main){
   const som=document.createElement("nav"); som.className="sommaire"; som.setAttribute("aria-label","Les six mondes");
   som.innerHTML=sommaireProfHtml(plages);
   hero.after(som);
+  /* un monde à la fois (lot 2 « la carte des mondes », 08/11/2026) : la case met son monde à l'écran,
+     SOUS le sommaire, sans faire défiler la page (relevé par Code : le lien #monde-N sautait au bandeau
+     et le sommaire sortait de l'écran) ; l'adresse garde #monde-N pour qu'on puisse la copier */
   som.addEventListener("click",ev=>{ const a=ev.target.closest("a[data-mi]"); if(!a) return;
-    const mi=+a.dataset.mi; if(MONDES[mi].cache) return; ouvrirMonde(mi); retenirMonde(mi); });
+    ev.preventDefault();
+    const mi=+a.dataset.mi; if(MONDES[mi].cache) return; ouvrirMonde(mi); retenirMonde(mi);
+    try{ history.replaceState(null,"",a.getAttribute("href")); }catch(e){} });
   MONDES.forEach((m,mi)=>{
     const sec=document.createElement("section");
     sec.id="monde-"+(mi+1);
@@ -1437,23 +1513,35 @@ function renderProf(main){
   });
 }
 
-/* ============ vue élève : les parties en menus déroulants, le Bonus du monde 3 ============
-   (04/10/2026, maquettes « bonus » 1 à 6 validées par Gwenaël) */
-const CHEV_P='<span class="chevP" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>';
-/* L'en-tête d'un menu : la pastille, le titre (et, ouvert, ses fiches et sa phrase), le
-   compteur et le chevron. Il naît fermé ; ouvrirPartie() décide, une fois les étoiles lues. */
-function voletHtml(id,cle,rang,nom,fiches,phrase,idStars,cls){
-  return '<li class="volet ferme'+cls+'" id="'+id+'" data-volet="'+cle+'" role="button" tabindex="0" aria-expanded="false">'+
-    '<span class="rang">'+rang+'</span>'+
-    '<div class="t"><h4>'+nom+'<span class="fiches">'+fiches+'</span></h4><p>'+phrase+'</p></div>'+
-    '<span class="stars" id="'+idStars+'"></span>'+CHEV_P+'</li>';
+/* ============ vue élève : les parties en boutons, le Bonus des mondes 3 et 4 ============
+   (04/10/2026, maquettes « bonus » 1 à 6 ; en boutons depuis le lot 2 « la carte des mondes »,
+   08/11/2026, planche 5 — mondes 3, 4 et 6, choix de Gwenaël : « boutons partout ») */
+/* Le titre d'une partie, dans la liste des étapes : son nom, ses fiches, sa phrase. Il naît
+   fermé (caché) ; ouvrirPartie() montre celui de la partie choisie, sous les boutons. Il garde
+   l'ancre de la partie (#enq-partie-2, #enq-bonus…). */
+function voletHtml(id,cle,nom,fiches,phrase,cls){
+  return '<li class="volet ferme'+cls+'" id="'+id+'" data-volet="'+cle+'">'+
+    '<div class="t"><h4>'+nom+'<span class="fiches">'+fiches+'</span></h4><p>'+phrase+'</p></div></li>';
+}
+/* Le bouton d'une partie : « Partie 2 ⭐ 0 / 5 » (ses étoiles s'écrivent dans majAffichage). */
+function partieBtnHtml(cle,rang,idStars,cls){
+  return '<button type="button" class="partieBtn'+cls+'" data-volet="'+cle+'" aria-pressed="false">'+rang+
+    '<span class="stars" id="'+idStars+'"></span></button>';
+}
+/* La ligne des boutons d'un monde : ses parties, puis son Bonus. Rien pour un monde sans partie. */
+function partiesHtml(m,mi){
+  const b=bonusDe(m);
+  if(!(m.volets||[]).length&&!b) return '';
+  return '<div class="parties" role="group" aria-label="Les parties du monde">'+
+    (m.volets||[]).map((v,vi)=>partieBtnHtml(partieCle(v,vi),partieRang(m,v,vi),'stars'+mi+'-'+vi,v.ech?' ech':'')).join('')+
+    (b?partieBtnHtml('bonus','Bonus',b.stars,' bonus'):'')+'</div>';
 }
 /* Le Bonus d'un monde (BONUS_MONDES : le monde 3, et le monde 4 depuis le lot M4-4) : ses livrets
    « Deuxième tour », dans leur ordre, un « Je joue » par fiche, sans phrase. Chaque fiche a son
    parcours (enq11d…, sys25d…) : elle allume SA tache, dorée ✨. */
 function bonusHtml(m){
   const b=bonusDe(m); if(!b) return '';
-  return voletHtml(b.volet,'bonus','Bonus',b.nom,b.fichesTxt,b.phrase,b.stars,' bonus')+
+  return voletHtml(b.volet,'bonus',b.nom,b.fichesTxt,b.phrase,' bonus')+
     b.livrets.map(([titre,de,a])=>'<li class="livretBonus" data-partie="bonus">'+titre+'</li>'+
       b.fiches.slice(de,a).map(f=>'<li class="etape bonus" id="'+b.li+f.code+'" data-partie="bonus">'+
         '<button class="badge" type="button" disabled>'+
@@ -1466,6 +1554,44 @@ function bonusHtml(m){
 }
 
 const main=document.getElementById("univers");
+/* ============ la carte des mondes (lot 2 « aides et carte », 08/11/2026, proposition B) ============
+   Six taches reliées par un chemin, au-dessus du monde choisi. Une tache = un bouton : elle met
+   son monde à l'écran (ouvrirMonde) et le retient. Vue élève seulement ; la vue prof a son sommaire. */
+const NOMS_COURTS=["Petit SPLAT!","Classique","Enquête","Système","Équations","Relatifs"];
+const ETOILE_OR='<svg class="or" viewBox="0 0 24 24" aria-hidden="true"><use href="#etoile" fill="#f9bf3b" stroke="#b8860b" stroke-width="1"/></svg>';
+function carteHtml(){
+  return '<svg class="chemin" aria-hidden="true"><path/></svg>'+MONDES.map((m,mi)=>
+    '<button type="button" class="tm '+m.cls+'" data-mi="'+mi+'" aria-pressed="false" aria-controls="monde-'+(mi+1)+'">'+
+      '<span class="tache"><span class="anneau"></span>'+
+        '<svg class="forme" viewBox="0 0 110 110" aria-hidden="true"><use class="fond" href="#tacheEtoile" width="110" height="110"/></svg>'+
+        '<span class="n" aria-hidden="true">'+(mi+1)+'</span>'+ETOILE_OR+
+        '<span class="cad" aria-hidden="true">'+VERROU_SVG+'</span></span>'+
+      '<span class="nom"><span class="long">'+m.nom+'</span><span class="court" aria-hidden="true">'+NOMS_COURTS[mi]+'</span></span>'+
+      '<span class="et" id="carteEt'+mi+'"></span></button>').join('');
+}
+/* le chemin passe par le centre des six taches, dans l'ordre (courbe de Catmull-Rom) ; refait à
+   chaque changement de largeur, puisque la carte passe d'une ligne à deux rangées */
+function placerChemin(){
+  const nav=document.getElementById("carteMondes"); if(!nav) return;
+  const o=nav.getBoundingClientRect();
+  const p=[...nav.querySelectorAll(".tm .tache")].map(t=>{const r=t.getBoundingClientRect();return [r.left-o.left+r.width/2,r.top-o.top+r.height/2];});
+  if(p.length<2||!o.width) return;
+  let d="M"+p[0][0].toFixed(1)+" "+p[0][1].toFixed(1);
+  for(let i=0;i<p.length-1;i++){
+    const a=p[Math.max(i-1,0)],b=p[i],c=p[i+1],e=p[Math.min(i+2,p.length-1)];
+    const c1=[b[0]+(c[0]-a[0])/6,b[1]+(c[1]-a[1])/6],c2=[c[0]-(e[0]-b[0])/6,c[1]-(e[1]-b[1])/6];
+    d+=" C"+c1.map(x=>x.toFixed(1)).join(" ")+" "+c2.map(x=>x.toFixed(1)).join(" ")+" "+c.map(x=>x.toFixed(1)).join(" ");
+  }
+  nav.querySelector("svg.chemin path").setAttribute("d",d);
+}
+if(!PROF){
+  const nav=document.createElement("nav");
+  nav.className="carteMondes"; nav.id="carteMondes"; nav.setAttribute("aria-label","Les six mondes");
+  nav.innerHTML=carteHtml();
+  main.before(nav);
+  window.addEventListener("resize",placerChemin);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placerChemin);
+}
 let compteur=0;
 /* vue élève : la boucle d'origine ; la vue prof a son propre rendu (renderProf, plus haut) */
 if(PROF) renderProf(main);
@@ -1490,23 +1616,22 @@ else MONDES.forEach((m,mi)=>{
   }
   const ids=m.etapes.map((e,ei)=>idEtape(m,e,ei));
   sec.innerHTML=
-   '<div class="head" role="button" tabindex="0" aria-expanded="true" aria-controls="corps'+mi+'">'+
+   '<div class="head">'+
      '<svg class="blob" viewBox="0 0 110 110"><use href="#tacheEtoile" width="110" height="110" fill="rgba(255,255,255,.92)"/></svg>'+
      '<div class="t"><div class="num">Monde '+(mi+1)+'</div><h2>'+m.nom+'</h2></div>'+
      (m.actif?'<div class="stars" id="stars'+mi+'"></div>':'<div class="stars">\ud83d\udea7 en pr\u00e9paration</div>')+
      (m.actif?'<span class="verrou" role="img" aria-label="pas encore ouvert">'+VERROU_SVG+'<span class="mot" aria-hidden="true">pas encore ouvert</span></span>':'')+
-     '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>'+
    '</div>'+
-   '<p class="desc">'+m.desc+'</p>'+
+   '<p class="desc">'+m.desc+'</p>'+partiesHtml(m,mi)+
    '<ol class="etapes">'+m.etapes.map((e,ei)=>{
      /* une étape à code (l'échauffement du monde 6, « É1 ») n'avance pas la numérotation */
      if(!e.code) compteur++;
      /* la partie qui commence à cette étape (lot « six mondes ») : un intertitre
-        dans la liste, avec ses étoiles et sa phrase (ses livrets : en vue prof) ;
-        depuis le 04/10/2026, un menu déroulant (voletHtml) */
+        dans la liste, avec sa phrase (ses livrets : en vue prof) ; depuis le 08/11/2026, le
+        titre sous les boutons des parties (voletHtml ; les étoiles sont sur le bouton) */
      const v=(m.volets||[]).find(x=>x.de===ei), vi=(m.volets||[]).indexOf(v);
-     const volet=!v?'':voletHtml(partieId(m,v,vi),partieCle(v,vi),partieRang(m,v,vi),v.nom,
-       partieFiches(m,v,compteur),v.o,'stars'+mi+'-'+vi,v.ech?' ech':'');
+     const volet=!v?'':voletHtml(partieId(m,v,vi),partieCle(v,vi),v.nom,
+       partieFiches(m,v,compteur),v.o,v.ech?' ech':'');
      /* l'étape et sa partie (data-partie : le menu qui la montre ou la cache) */
      const partie=(m.volets||[]).findIndex(x=>ei>=x.de&&ei<x.a);
      const clePartie=partie>=0?partieCle(m.volets[partie],partie):null;
@@ -1584,6 +1709,7 @@ function majAffichage(){
     const sb=document.getElementById(b.stars);
     if(sb) sb.textContent="\u2728 "+fb+" / "+b.fiches.length;
   });
+  majCarte();
   document.getElementById("totalTxt").textContent=fait+" / "+total+" étoiles";
   document.getElementById("totalFill").style.width=(total?100*fait/total:0)+"%";
   /* « Continuer » : la première étoile qui reste à gagner, dans l'ordre de l'univers */
@@ -1595,7 +1721,24 @@ function majAffichage(){
   }
   return prochaine;
 }
-/* ============ accordéon : un monde ouvert à la fois ============ */
+/* la carte des mondes : sous chaque tache ses étoiles (comme dans la bande), pleine couleur et
+   étoile d'or quand le monde est fini ; grisée et cadenas s'il est fermé à la classe ; 🚧 s'il est
+   en préparation */
+function majCarte(){
+  const nav=document.getElementById("carteMondes"); if(!nav) return;
+  MONDES.forEach((m,mi)=>{
+    const b=nav.querySelector('.tm[data-mi="'+mi+'"]'), et=document.getElementById("carteEt"+mi), st=document.getElementById("stars"+mi);
+    if(!b) return;
+    const sec=document.getElementById("monde-"+(mi+1));
+    const f=sec?sec.querySelectorAll(".etapes>li.etape.done:not(.bonus)").length:0;
+    b.classList.toggle("prepa",!!m.cache||!m.actif);
+    b.classList.toggle("ferme",!!m.verrouille);
+    b.classList.toggle("fini",!m.cache&&m.actif&&!m.verrouille&&f===m.etapes.length&&f>0);
+    et.textContent=m.cache||!m.actif?"\ud83d\udea7":(m.verrouille&&!f?"":(st?st.textContent:""));
+    b.setAttribute("aria-label","Monde "+(mi+1)+", "+m.nom+(m.cache?", en préparation":m.verrouille?", pas encore ouvert":", "+f+" étoiles sur "+m.etapes.length));
+  });
+}
+/* ============ un monde à la fois (la carte des mondes, lot 2 du 08/11/2026) ============ */
 /* Six mondes et 43 étapes dépliés, c'est 9 000 px sur téléphone : chaque monde se
    replie sur son bandeau. À l'arrivée, un seul est ouvert — celui que l'adresse
    désigne (#monde-4, ou l'identifiant d'une étape), sinon le dernier monde ouvert
@@ -1620,10 +1763,6 @@ function retenirMonde(mi){
   const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return;
   try{ localStorage.setItem(cle,String(mi)); }catch(e){}
 }
-function retenirToutFerme(){
-  const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return;
-  try{ localStorage.setItem(cle,"-1"); }catch(e){}
-}
 function mondeRetenu(){
   const cle=cleMemoire(CLE_MONDE_OUVERT); if(!cle) return -1;
   try{
@@ -1637,8 +1776,13 @@ function ouvrirMonde(mi){
   document.querySelectorAll("main>.monde").forEach((sec,i)=>{
     const ouvert=i===mi&&!sec.classList.contains("verrouille");
     sec.classList.toggle("replie",!ouvert);
-    if(!sec.classList.contains("cache")&&!sec.classList.contains("verrouille")) sec.querySelector(".head").setAttribute("aria-expanded",ouvert?"true":"false");
+    /* le monde à l'écran, même fermé à la classe (sa bande grisée et son cadenas) ou en préparation */
+    sec.classList.toggle("choisi",i===mi);
   });
+  document.querySelectorAll("#carteMondes .tm").forEach(b=>{
+    const c=+b.dataset.mi===mi; b.classList.toggle("choisi",c); b.setAttribute("aria-pressed",c?"true":"false"); });
+  document.querySelectorAll(".sommaire a[data-mi]").forEach(a=>{
+    const c=+a.dataset.mi===mi; a.classList.toggle("choisi",c); if(c) a.setAttribute("aria-current","true"); else a.removeAttribute("aria-current"); });
 }
 function mondeEnCours(prochaine){
   const cible=(location.hash||"").slice(1);
@@ -1647,7 +1791,8 @@ function mondeEnCours(prochaine){
     if(sec&&!sec.classList.contains("verrouille")) return [...document.querySelectorAll("main>.monde")].indexOf(sec);
   }
   const retenu=mondeRetenu();
-  if(retenu===TOUT_FERME) return -1; /* tout était refermé : tout reste fermé (lot 6) */
+  /* « tout refermé » (TOUT_FERME, retenu du temps de l'accordéon) ne veut plus rien dire : il y a
+     toujours un monde à l'écran ; on prend le monde en cours */
   /* un monde passé en préparation, ou fermé à la classe, ne se rouvre pas seul */
   if(retenu>=0&&!MONDES[retenu].cache&&!MONDES[retenu].verrouille) return retenu;
   if(PROF) return 0; /* vue prof : le monde 1, sauf adresse précise ou monde retenu */
@@ -1655,17 +1800,17 @@ function mondeEnCours(prochaine){
   const jouables=MONDES.map((m,mi)=>jouable(m)?mi:-1).filter(mi=>mi>=0);
   return jouables.length?jouables[jouables.length-1]:MONDES.length-1;
 }
+/* une tache de la carte : son monde à l'écran, retenu (s'il est jouable) ; ses parties comme à
+   l'arrivée. Au téléphone, si la bande du monde tombe sous l'écran, on la remonte juste assez pour
+   la voir avec le début de ses étapes ; la carte ne bouge pas sinon. */
 document.addEventListener("click",ev=>{
-  const head=ev.target.closest("main>.monde:not(.cache):not(.verrouille)>.head");
-  if(!head) return;
-  const sec=head.parentElement, mondes=[...document.querySelectorAll("main>.monde")];
-  const mi=sec.classList.contains("replie")?mondes.indexOf(sec):-1;
+  const b=ev.target.closest("#carteMondes .tm");
+  if(!b) return;
+  const mi=+b.dataset.mi;
   ouvrirMonde(mi);
-  if(mi>=0) retenirMonde(mi); else retenirToutFerme(); /* refermer le monde ouvert : tout est fermé */
-  /* 27/09/2026 (retour de Gwenaël) : le monde du dessus se replie, la page remonte, et on
-     se retrouvait en bas du monde qu'on vient d'ouvrir. On ramène son bandeau en haut de
-     l'écran, seulement s'il n'y est plus. */
-  if(mi>=0){ const r=head.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
+  if(!MONDES[mi].cache&&!MONDES[mi].verrouille) retenirMonde(mi);
+  const sec=document.getElementById("monde-"+(mi+1)), r=sec.getBoundingClientRect();
+  if(r.top>innerHeight-170) window.scrollTo({top:scrollY+r.top-(innerHeight-260),behavior:"smooth"});
 });
 /* une étape (ou un lien) lancée depuis un monde, ou « Continuer » : on retient ce monde
    (et, pour une fiche du Bonus, que le Bonus était ouvert) */
@@ -1676,9 +1821,6 @@ document.addEventListener("click",ev=>{
   const sec=a.closest("main>.monde");
   if(sec) retenirMonde([...document.querySelectorAll("main>.monde")].indexOf(sec));
   if(a.closest("li.etape.bonus")) retenirBonus(true,bonusDeSection(sec));
-});
-document.addEventListener("keydown",ev=>{
-  if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main>.monde>.head")){ ev.preventDefault(); ev.target.click(); }
 });
 /* ============ les parties d'un monde : des menus déroulants (vue élève, 04/10/2026) ============
    Une seule partie ouverte à la fois dans un monde, comme les mondes (05/10/2026, Gwenaël) : en
@@ -1704,9 +1846,10 @@ function bonusRetenu(b){
 }
 function ouvrirPartie(volet,ouvert){
   volet.classList.toggle("ferme",!ouvert);
-  volet.setAttribute("aria-expanded",ouvert?"true":"false");
-  const cle=volet.dataset.volet;
+  const cle=volet.dataset.volet, sec=volet.closest("main>.monde");
   volet.parentElement.querySelectorAll(':scope>li[data-partie="'+cle+'"]').forEach(li=>li.classList.toggle("replieP",!ouvert));
+  const btn=sec&&sec.querySelector('.parties>.partieBtn[data-volet="'+cle+'"]');
+  if(btn) btn.setAttribute("aria-pressed",ouvert?"true":"false");
 }
 function ouvrirParties(){
   const cible=(location.hash||"").slice(1), elCible=cible?document.getElementById(cible):null;
@@ -1724,29 +1867,27 @@ function ouvrirParties(){
     const enCours=premiere?premiere.dataset.partie:null;
     const vise=[...volets].find(v=>elCible&&(elCible===v||(sec.contains(elCible)&&elCible.dataset.partie===v.dataset.volet)));
     const bonus=[...volets].find(v=>v.dataset.volet==="bonus");
-    const ouverte=vise||(bonus&&bonusRetenu(bonusDeSection(sec))?bonus:null)||[...volets].find(v=>v.dataset.volet===enCours)||null;
+    /* tout est gagné : la première partie (avec les boutons, une partie est toujours ouverte) */
+    const ouverte=vise||(bonus&&bonusRetenu(bonusDeSection(sec))?bonus:null)||[...volets].find(v=>v.dataset.volet===enCours)||volets[0];
     volets.forEach(v=>ouvrirPartie(v,v===ouverte));
   });
 }
+/* un bouton de partie : cette partie à l'écran, les autres du monde se referment (le Bonus refermé
+   est oublié, le Bonus ouvert est retenu) ; recliquer la partie ouverte ne fait rien. Les boutons ne
+   bougent pas : rien à faire défiler. */
 document.addEventListener("click",ev=>{
-  const v=ev.target.closest("main .etapes>.volet[data-volet]");
-  if(!v) return;
-  const o=v.classList.contains("ferme");
-  const sec=v.closest("main>.monde");
-  /* une à la fois : les autres parties du monde se referment (le Bonus refermé est oublié) */
-  if(o) v.parentElement.querySelectorAll(':scope>.volet[data-volet]').forEach(w=>{
+  const btn=ev.target.closest("main>.monde>.parties>.partieBtn[data-volet]");
+  if(!btn) return;
+  const sec=btn.closest("main>.monde");
+  const v=sec.querySelector('.etapes>.volet[data-volet="'+btn.dataset.volet+'"]');
+  if(!v||!v.classList.contains("ferme")) return;
+  sec.querySelectorAll('.etapes>.volet[data-volet]').forEach(w=>{
     if(w===v||w.classList.contains("ferme")) return;
     ouvrirPartie(w,false);
     if(w.dataset.volet==="bonus") retenirBonus(false,bonusDeSection(sec));
   });
-  ouvrirPartie(v,o);
-  if(v.dataset.volet==="bonus") retenirBonus(o,bonusDeSection(sec));
-  /* la partie du dessus s'est refermée : la page a remonté sous la partie ouverte ; on ramène
-     son en-tête en haut de l'écran, seulement s'il n'y est plus (comme pour les mondes, 27/09) */
-  if(o){ const r=v.getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) window.scrollTo({top:scrollY+r.top-8,behavior:"smooth"}); }
-});
-document.addEventListener("keydown",ev=>{
-  if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches("main .etapes>.volet[data-volet]")){ ev.preventDefault(); ev.target.click(); }
+  ouvrirPartie(v,true);
+  if(v.dataset.volet==="bonus") retenirBonus(true,bonusDeSection(sec));
 });
 document.addEventListener("click",ev=>{
   const b=ev.target.closest("[data-id]");
@@ -1827,16 +1968,14 @@ let APRES_REDIRIGE=false; /* la carte part aussitôt : le suivi n'a pas à déma
 function poserVerrous(){
   document.querySelectorAll("main>.monde").forEach((sec,i)=>{
     const m=MONDES[i]; if(!m||m.cache||!m.actif) return;
-    const avant=sec.classList.contains("verrouille");
     sec.classList.toggle("verrouille",!!m.verrouille);
-    const head=sec.querySelector(".head");
-    if(m.verrouille){ sec.classList.add("replie"); head.removeAttribute("role"); head.removeAttribute("tabindex"); head.removeAttribute("aria-expanded"); }
-    else if(avant){ head.setAttribute("role","button"); head.setAttribute("tabindex","0"); head.setAttribute("aria-expanded",sec.classList.contains("replie")?"false":"true"); }
+    if(m.verrouille) sec.classList.add("replie");
   });
 }
 poserVerrous();
 ouvrirMonde(mondeEnCours(majAffichage()));
 if(!PROF) ouvrirParties();
+placerChemin();
 /* au retour d'une partie (autre onglet ou bouton retour), on rallume les étoiles gagnées */
 window.addEventListener("pageshow",majAffichage);
 window.addEventListener("focus",majAffichage);

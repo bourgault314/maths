@@ -94,7 +94,8 @@ test("Système : le livret cycle 4 (25d à 28d) est le Bonus du monde 4, comme a
   /* son nom (lot M4-7) : « Cycle 4 » au monde 4 ; le monde 3 garde « Deuxième tour » */
   assert.deepEqual(BONUS_MONDES.map((b) => b.nom), ["Deuxième tour", "Cycle 4"]);
   assert.deepEqual(BONUS_MONDES[1].prof, [["", "SPLAT! Système · cycle 4", "25d", "28d", 0, 4]]);
-  assert.match(univers, /return voletHtml\(b\.volet,'bonus','Bonus',b\.nom,b\.fichesTxt,b\.phrase,b\.stars,' bonus'\)\+/);
+  assert.match(univers, /return voletHtml\(b\.volet,'bonus',b\.nom,b\.fichesTxt,b\.phrase,' bonus'\)\+/);
+  assert.match(univers, /\(b\?partieBtnHtml\('bonus','Bonus',b\.stars,' bonus'\):''\)/);
   /* la remarque « deux chemins » de la fiche 26d (choix de Gwenaël du 14/10) */
   assert.match(SYS_TOUR2[1].n, /deux chemins/);
   /* le Bonus s'écrit pour chaque monde qui en a un (vue élève et vue prof) */
@@ -163,17 +164,21 @@ test("Système : la page courte des QR vise exactement les liens de la carte des
   assert.match(courte, /: "\/outils\/splat_univers\.html#monde-4";/);
 });
 
-test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, l'adresse peut en désigner un", () => {
+test("un monde à la fois (la carte des mondes, lot 2 du 08/11/2026) : le monde en cours à l'arrivée, l'adresse peut en désigner un", () => {
   assert.match(univers, /sec\.id="monde-"\+\(mi\+1\);/);
-  assert.match(univers, /'<div class="head" role="button" tabindex="0" aria-expanded="true" aria-controls="corps'\+mi\+'">'/);
-  assert.match(univers, /'<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"\/><\/svg><\/span>'/);
-  assert.match(univers, /\.monde\.replie>\.desc,\.monde\.replie>\.intro,\.monde\.replie>\.etapes\{display:none\}/);
-  assert.match(univers, /\.monde\.replie>\.head \.chev\{transform:rotate\(-90deg\)\}/);
-  /* ouvrirMonde replie tous les autres ; un clic sur le bandeau ouvert referme tout */
-  /* (lot « splat-suivi-5 ») un monde fermé à la classe reste replié */
-  assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi&&!sec\.classList\.contains\("verrouille"\);\s*sec\.classList\.toggle\("replie",!ouvert\);/);
-  /* (lot 6, 08/10/2026) refermer le monde ouvert retient « tout fermé » */
-  assert.match(univers, /const mi=sec\.classList\.contains\("replie"\)\?mondes\.indexOf\(sec\):-1;\s*ouvrirMonde\(mi\);\s*if\(mi>=0\) retenirMonde\(mi\); else retenirToutFerme\(\);/);
+  /* la grande bande du monde reste (choix de Gwenaël du 08/11), sans la petite flèche : ce n'est plus un bouton */
+  assert.match(univers, /   '<div class="head">'\+\n     '<svg class="blob"/);
+  assert.doesNotMatch(univers, /class="chev"|\.head \.chev|role="button" tabindex="0" aria-expanded="true"/);
+  assert.match(univers, /\.monde\.replie>\.desc,\.monde\.replie>\.intro,\.monde\.replie>\.etapes,\.monde\.replie>\.parties\{display:none\}/);
+  assert.match(univers, /main>\.monde:not\(\.choisi\)\{display:none\}/);
+  /* ouvrirMonde : le monde choisi à l'écran (même fermé à la classe : sa bande grisée), les autres cachés ;
+     (lot « splat-suivi-5 ») un monde fermé à la classe reste replié ; la carte et le sommaire suivent */
+  assert.match(univers, /function ouvrirMonde\(mi\)\{\s*document\.querySelectorAll\("main>\.monde"\)\.forEach\(\(sec,i\)=>\{\s*const ouvert=i===mi&&!sec\.classList\.contains\("verrouille"\);\s*sec\.classList\.toggle\("replie",!ouvert\);[^\n]*\n[^\n]*\n\s*sec\.classList\.toggle\("choisi",i===mi\);/);
+  assert.match(univers, /document\.querySelectorAll\("#carteMondes \.tm"\)\.forEach\(b=>\{/);
+  assert.match(univers, /document\.querySelectorAll\("\.sommaire a\[data-mi\]"\)\.forEach\(a=>\{/);
+  /* une tache de la carte : son monde, retenu s'il est jouable ; plus de « tout fermé » */
+  assert.match(univers, /const b=ev\.target\.closest\("#carteMondes \.tm"\);\s*if\(!b\) return;\s*const mi=\+b\.dataset\.mi;\s*ouvrirMonde\(mi\);\s*if\(!MONDES\[mi\]\.cache&&!MONDES\[mi\]\.verrouille\) retenirMonde\(mi\);/);
+  assert.doesNotMatch(univers, /retenirToutFerme|if\(retenu===TOUT_FERME\) return -1;/);
   /* relecture du monde 1 (25/09/2026) : le monde ouvert ou lancé est retenu sur l'appareil
      (une clé élève, une clé prof) et rouvert au retour, avant le monde en cours */
   assert.match(univers, /const CLE_MONDE_OUVERT="mathsgo-splat-monde-ouvert"\+\(PROF\?"-prof":""\);/);
@@ -182,7 +187,7 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
   assert.match(univers, /const cle=cleMemoire\(CLE_MONDE_OUVERT\); if\(!cle\) return;\s*try\{ localStorage\.setItem\(cle,String\(mi\)\); \}catch\(e\)\{\}/);
   /* (26/09/2026) un monde passé « en préparation » ne se rouvre pas tout seul */
   /* (08/10/2026, lot « splat-suivi-5 ») ni un monde fermé à la classe */
-  assert.match(univers, /const retenu=mondeRetenu\(\);\s*if\(retenu===TOUT_FERME\) return -1;[^\n]*\s*(?:\/\*[^\n]*\*\/\s*)?if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
+  assert.match(univers, /const retenu=mondeRetenu\(\);\s*(?:\/\*[^*]*\*\/\s*)?(?:\/\*[^\n]*\*\/\s*)?if\(retenu>=0&&!MONDES\[retenu\]\.cache&&!MONDES\[retenu\]\.verrouille\) return retenu;[^\n]*\s*if\(PROF\) return 0;/);
   assert.match(univers, /const sec=a\.closest\("main>\.monde"\);\s*if\(sec\) retenirMonde\(/);
   /* le monde en cours : celui de l'adresse (#monde-N ou un identifiant d'étape), sinon celui
      de la prochaine étoile, sinon le dernier monde jouable (26/09/2026 : pas un monde en
@@ -191,8 +196,9 @@ test("accordéon : un monde ouvert à la fois, le monde en cours à l'arrivée, 
   assert.match(univers, /if\(PROF\) return 0;/);
   assert.match(univers, /if\(prochaine\) return prochaine\.mi;\s*const jouables=MONDES\.map\(\(m,mi\)=>jouable\(m\)\?mi:-1\)\.filter\(mi=>mi>=0\);\s*return jouables\.length\?jouables\[jouables\.length-1\]:MONDES\.length-1;/);
   assert.match(univers, /ouvrirMonde\(mondeEnCours\(majAffichage\(\)\)\);/);
-  /* clavier : Entrée ou Espace sur le bandeau */
-  assert.match(univers, /if\(\(ev\.key==="Enter"\|\|ev\.key===" "\)&&ev\.target\.matches\("main>\.monde>\.head"\)\)/);
+  /* clavier : les taches de la carte sont des <button> (Entrée, Espace) ; le bandeau n'écoute plus rien */
+  assert.match(univers, /'<button type="button" class="tm '\+m\.cls\+'" data-mi="'\+mi\+'" aria-pressed="false"/);
+  assert.doesNotMatch(univers, /ev\.target\.matches\("main>\.monde>\.head"\)/);
   /* sans JavaScript, rien n'est replié : la classe « replie » n'est jamais écrite dans le HTML */
   assert.doesNotMatch(univers, /class="monde [^"]*replie/);
   /* la page courte du Système renvoie sur une ancre qui existe : #monde-4 */

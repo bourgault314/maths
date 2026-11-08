@@ -260,8 +260,15 @@ test("CSS : un monde replié ne montre que son bandeau ; les deux retouches tél
   assert.match(tel, /@media\(max-width:520px\)\{/);
   assert.match(tel, /body:not\(\.prof\) \.heroBlob\.b1,body:not\(\.prof\) \.heroBlob\.b3,body:not\(\.prof\) \.heroBlob\.b4,body:not\(\.prof\) \.heroBlob\.b6\{display:none\}/);
   assert.match(tel, /body:not\(\.prof\) \.monde>\.head\{gap:10px;padding:14px 14px\}/);
-  /* 27/09/2026 : un monde qu'on ouvre remonte en haut de l'écran (le monde du dessus se replie) */
-  assert.match(univers, /if\(mi>=0\)\{ const r=head\.getBoundingClientRect\(\); if\(r\.top<0\|\|r\.top>innerHeight\*0\.6\) window\.scrollTo\(\{top:scrollY\+r\.top-8,behavior:"smooth"\}\); \}/);
+  /* 27/09/2026 : un monde qu'on ouvre remontait en haut de l'écran (le monde du dessus se repliait).
+     Depuis la carte des mondes (lot 2, 08/11/2026) rien ne se replie au-dessus : seulement, au
+     téléphone, la bande du monde choisi est remontée si elle tombe sous l'écran */
+  assert.match(univers, /if\(r\.top>innerHeight-170\) window\.scrollTo\(\{top:scrollY\+r\.top-\(innerHeight-260\),behavior:"smooth"\}\);/);
+  /* vue prof (lot 2) : le sommaire choisit le monde à l'écran, comme la carte de l'élève ; le bandeau sans flèche */
+  assert.match(univers, /\.sommaire a\.choisi\{border-color:var\(--c\);box-shadow:inset 0 0 0 1px var\(--c\);background:#fbfcfe\}/);
+  assert.match(univers, /return teteProfHtml\(m,mi,plage,''\)\+/);
+  /* (correctif du lot 2, relevé par Code sur la PR #1123) : un clic dans le sommaire ne fait plus défiler la page */
+  assert.match(univers, /som\.addEventListener\("click",ev=>\{ const a=ev\.target\.closest\("a\[data-mi\]"\); if\(!a\) return;\s*ev\.preventDefault\(\);\s*const mi=\+a\.dataset\.mi; if\(MONDES\[mi\]\.cache\) return; ouvrirMonde\(mi\); retenirMonde\(mi\);\s*try\{ history\.replaceState\(null,"",a\.getAttribute\("href"\)\); \}catch\(e\)\{\} \}\);/);
   /* les anciens encadrés de la vue prof sont partis du CSS */
   assert.doesNotMatch(univers, /\.noteProf\{|\.eqListeProf\{|\.descProf|\.introLien\.livret|\.introNote\{/);
 });
