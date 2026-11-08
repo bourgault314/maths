@@ -248,7 +248,11 @@ test("« Revenir à… » dans un « ⋯ » discret au bout de la ligne : en éc
 
 // ------------------------------------------------------------ la fenêtre
 
+// Lot S2 « Suivre ses élèves » : la fenêtre est la FICHE de l'élève (un
+// onglet par appli) ; ici, l'onglet de l'appli d'où on l'ouvre — la « Vue
+// d'ensemble » et les onglets ont leurs propres contrôles (suivi-s2-classe-et-fiche).
 const FENETRE = ["nomAffiche", "peutRevenir", "ouvrirFenetreEleve", "fermerFenetreEleve", "surFermetureFenetre", "eleveDeLaFenetre",
+  "eleveParId", "eleveDe", "poserPiedFiche", "nomDeLAppli",
   "voisinDeLaFenetre", "changerEleveDeLaFenetre", "dessinerFenetreEleve", "paragrapheVide", "seElide", "deNom", "montrerParcours"].map(n => fonction(n)).join("\n");
 
 function fenetre({eleves, ids, appli = "defi-tables", droit = "proprietaire", anzan = true, api = null} = {}) {
@@ -261,6 +265,12 @@ function fenetre({eleves, ids, appli = "defi-tables", droit = "proprietaire", an
   const apiPoche = api || ((action, corps) => new Promise((ok, non) => demandes.push({action, corps, ok, non})));
   const f = new Function("document", "$", "classe", "droitClasse", "appliAffichee", "APPLIS", "ANZAN", "journal", "listes", "api",
     `let eleves = listes.eleves, idsAffiches = listes.ids, fenetreEleveId = null, parcoursAnzanEleve = null, demandeParcours = 0;
+     let vue = "appli", tableaux = {[appliAffichee]: listes.eleves}, ongletFiche = "ensemble", joursFiche = 6, seancesFiche = 6;
+     function ongletsDeLaFiche() { return ["ensemble", appliAffichee]; }
+     function dessinerOngletsFiche() {}
+     function moteurSuivi() { return {}; }
+     function chargerApplis() { return Promise.resolve(); }
+     function contenuEnsemble(id) { journal.push("ensemble " + id); return document.createElement("div"); }
      function surErreur(e, zone) { journal.push("surErreur " + zone + " " + e.statut); }
      function raisonDe(e) { return e.message; }
      function contenuCoffres(e) { journal.push("coffres " + e.id); return document.createElement("div"); }
@@ -271,7 +281,7 @@ function fenetre({eleves, ids, appli = "defi-tables", droit = "proprietaire", an
      function messager(id, texte, type) { const bloc = $(id); bloc.textContent = texte || ""; bloc.className = "message " + (type || ""); bloc.hidden = !texte; }
      ${FENETRE}
      boite_ = $("fenetre-eleve"); boite_.addEventListener("close", surFermetureFenetre);
-     return {ouvrirFenetreEleve, changerEleveDeLaFenetre, fermerFenetreEleve, dessinerFenetreEleve, id: () => fenetreEleveId, poserIds: l => { idsAffiches = l; }, poserEleves: l => { eleves = l; }};`)(
+     return {ouvrirFenetreEleve, changerEleveDeLaFenetre, fermerFenetreEleve, dessinerFenetreEleve, id: () => fenetreEleveId, poserIds: l => { idsAffiches = l; }, poserEleves: l => { eleves = l; tableaux = {[appliAffichee]: l}; /* comme reporterEleve : un élève supprimé quitte toutes les listes */ }};`)(
     document, $, {id: 7, libelle: "405"}, droit, appli,
     [{cle: "defi-tables", nom: "Défi tables"}, {cle: "coffres", nom: "Coffres magiques"}, {cle: "flash-anzan", nom: "Anzan"}, {cle: "splat", nom: "SPLAT!"}],
     anzan ? {} : null, journal, {eleves, ids}, apiPoche);
@@ -291,11 +301,11 @@ test("la fenêtre : le prénom, « appli · classe · 2 sur 3 », ‹ › dans l
   r.f.ouvrirFenetreEleve(TROIS()[0]);
   assert.equal(r.boite.open, true);
   assert.equal(r.$("fe-titre").textContent, "Léa");
-  assert.equal(r.$("fe-sous").textContent, "Défi tables · 405 · 2 sur 3", "Léa est la deuxième ligne du tableau (tri ou recherche)");
+  assert.equal(r.$("fe-sous").textContent, "405 · 2 sur 3", "Léa est la deuxième ligne du tableau (tri ou recherche)");
   assert.deepEqual([r.$("fe-precedent").disabled, r.$("fe-suivant").disabled], [false, false]);
   r.f.changerEleveDeLaFenetre(1);
   assert.equal(r.$("fe-titre").textContent, "<b>Lucas</b>", "un prénom piégé reste du texte");
-  assert.equal(r.$("fe-sous").textContent, "Défi tables · 405 · 3 sur 3");
+  assert.equal(r.$("fe-sous").textContent, "405 · 3 sur 3");
   assert.deepEqual([r.$("fe-precedent").disabled, r.$("fe-suivant").disabled], [false, true], "le dernier : › désactivé");
   r.f.changerEleveDeLaFenetre(1);
   assert.equal(r.f.id(), 2, "au bout, › ne fait rien");
@@ -306,7 +316,7 @@ test("la fenêtre : le prénom, « appli · classe · 2 sur 3 », ‹ › dans l
   // Un seul élève à l'écran (une recherche) : pas de « 1 sur 1 », ni ‹ ni ›.
   const seul = fenetre({eleves: TROIS(), ids: [1]});
   seul.f.ouvrirFenetreEleve(TROIS()[0]);
-  assert.equal(seul.$("fe-sous").textContent, "Défi tables · 405");
+  assert.equal(seul.$("fe-sous").textContent, "405");
   assert.deepEqual([seul.$("fe-precedent").disabled, seul.$("fe-suivant").disabled], [true, true]);
 });
 
@@ -368,7 +378,8 @@ test("la fenêtre : ce que montre chaque appli ; Défi tables, la grande fenêtr
     assert.deepEqual([a.$("fe-parcours").hidden, a.$("fe-anzan").hidden], [true, true]);
     assert.equal(a.boite.classList.contains("avec-parcours"), false, `${appli} : la fenêtre de toujours`);
     assert.equal(a.demandes.length, 0, `${appli} : rien demandé au serveur`);
-    assert.equal(a.$("fe-sous").textContent.startsWith(appli === "splat" ? "SPLAT! · 405" : "Coffres magiques · 405"), true);
+    // Lot S2 : le nom de l'appli est dans l'onglet de la fiche, plus sous le prénom.
+    assert.equal(a.$("fe-sous").textContent, "405");
   }
   const anzan = fenetre({eleves: TROIS(), ids: [1, 3], appli: "flash-anzan"});
   anzan.f.ouvrirFenetreEleve({id: 1});
@@ -518,8 +529,10 @@ test("au téléphone : le tableau compact (trois colonnes et le « ⋯ »), plus
     assert.match(page.slice(debut, page.indexOf("</tr>", debut)), /<th><\/th>\s*<th class="fin"><\/th>\s*$/, `${id} : la case du « ⋯ » puis celle de la flèche`);
   }
   // Lot 5f : le parcours d'un élève prend tout l'écran du téléphone ; à l'ordinateur, une grande fenêtre.
-  assert.match(telephone, /dialog\.fenetre-eleve\.avec-parcours \{ width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;\s*margin: 0; border-radius: 0; \}/);
-  assert.match(style, /dialog\.fenetre-eleve\.avec-parcours \{ max-width: 1180px; height: calc\(100vh - 32px\); \}/);
+  // Lot S2 : la FICHE, la même taille pour tous ses onglets (rien ne bouge
+  // d'un onglet à l'autre) ; au téléphone, tout l'écran.
+  assert.match(telephone, /dialog\.fenetre-eleve, dialog\.fenetre-eleve\.avec-parcours \{ width: 100%; max-width: none; height: 100vh; height: 100dvh; max-height: none;\s*margin: 0; border-radius: 0; \}/);
+  assert.match(style, /dialog\.fenetre-eleve \{ max-width: 1080px; height: calc\(100vh - 32px\); \}/);
   assert.match(style, /\.avec-parcours \.fenetre-pied \{ display: none; \}/, "le ✕ suffit : le parcours garde la place");
   assert.match(style, /#tableau \.seul-telephone \{ display: none; \}/, "« Trésors » (Coffres) n'existe qu'au téléphone");
   assert.doesNotMatch(style, /#tableau td::before \{ content: attr\(data-libelle\)/, "plus de cartes d'élèves");

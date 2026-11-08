@@ -256,13 +256,19 @@ test("la vue Élèves : propriétaire et collègue en écriture ; un collègue �
 
 test("une classe s'ouvre sur son tableau, jamais sur ses codes — sauf une classe vide, qui s'ouvre sur Élèves", () => {
   const ouvrir = fonction("ouvrirClasse");
-  assert.match(ouvrir, /if \(!memeClasse\) \{\s*\/\/[^\n]*\n\s*oublierRecherche\(\);\s*fermerFenetreEleve\(\);\s*vue = \(donnees\.eleves \|\| \[\]\)\.length === 0 && droitClasse !== "lecture" \? "eleves" : "appli";\s*\}/);
-  // La règle, rejouée : 0 élève en écriture → Élèves ; sinon (ou en lecture) → l'activité.
-  const regle = (n, droitClasse) => (new Array(n).length === 0 && droitClasse !== "lecture" ? "eleves" : "appli");
+  // Lot S2 « Suivre ses élèves » (07/11/2026) : sur « La classe », le premier
+  // onglet — ou sur l'appli regardée la dernière fois (retenue le temps de
+  // l'onglet du navigateur). Jamais sur les codes.
+  assert.match(ouvrir, /if \(!memeClasse\) \{\s*\/\/[^\n]*\n\s*oublierRecherche\(\);\s*fermerFenetreEleve\(\);\s*vue = \(donnees\.eleves \|\| \[\]\)\.length === 0 && droitClasse !== "lecture" \? "eleves"\s*(?:\/\/[^\n]*\n\s*)*: \(\["", "classe"\]\.includes\(lireChoixAppli\(\)\) \? "classe" : "appli"\);\s*\}/);
+  // La règle, rejouée : 0 élève en écriture → Élèves ; sinon (ou en lecture) → La classe, ou l'appli choisie.
+  const regle = (n, droitClasse, choix = "") => (new Array(n).length === 0 && droitClasse !== "lecture" ? "eleves"
+    : (["", "classe"].includes(choix) ? "classe" : "appli"));
   assert.equal(regle(0, "proprietaire"), "eleves");
   assert.equal(regle(0, "ecriture"), "eleves");
-  assert.equal(regle(0, "lecture"), "appli");
-  assert.equal(regle(26, "proprietaire"), "appli");
+  assert.equal(regle(0, "lecture"), "classe");
+  assert.equal(regle(26, "proprietaire"), "classe");
+  assert.equal(regle(26, "proprietaire", "splat"), "appli");
+  assert.equal(regle(26, "lecture", "classe"), "classe");
   assert.doesNotMatch(script, /sessionStorage\.setItem\([^)]*vue/i, "la vue ne se retient pas d'une ouverture à l'autre");
   // Revenir à la MÊME classe : ouvrirClasse la croit « même classe » (elle
   // garde sa vue) — le retour remet donc la vue. Serveur pro, lot 5d : plus de

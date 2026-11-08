@@ -362,7 +362,7 @@ test("point 5 — « Voir son parcours » refusé, la fenêtre de l'élève ouve
     [false, "Le parcours d’Inès n’a pas pu s’ouvrir. Cet élève n’est plus dans tes classes."], "fenêtre fermée entre-temps : au-dessus du tableau");
   assert.deepEqual(fermee.messages, []);
   // Lot 5f : en haut du corps de la fenêtre, au-dessus du cadre du parcours.
-  assert.match(page, /<div class="fenetre-corps">\s*<!--[^>]*-->\s*<p class="message" id="fe-message" hidden><\/p>\s*<div id="fe-contenu"><\/div>/);
+  assert.match(page, /<div class="fenetre-corps"(?: id="fe-corps")?>\s*<!--[^>]*-->\s*<p class="message" id="fe-message" hidden><\/p>\s*<div id="fe-contenu"><\/div>/);
   assert.match(constante("ZONES_MESSAGE"), /"fe-message"/, "il part à la déconnexion");
 });
 
