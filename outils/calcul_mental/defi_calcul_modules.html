@@ -394,6 +394,25 @@
       if (ENTREE.billet) PARCOURS.effacerCode(stockageSession());
       let codeSuivi = codeInitial(ENTREE);
 
+      // Retour par le cache arrière/avant (08/11/2026, relecture de Codex) : la
+      // page revient telle qu'on l'avait laissée, prénom et case compris. Or,
+      // entre-temps, « Se déconnecter » a pu vider l'onglet, ou un autre élève
+      // a pu y entrer. Sous un code (celui que la page suivait, ou celui que
+      // l'onglet garde maintenant), on recharge : tout repart de l'onglet,
+      // comme dans SPLAT! (assets/js/splat-suivi.js). Cet écouteur est posé
+      // AVANT tous les autres « pageshow » de la page : il passe le premier et
+      // les arrête, pour que rien de périmé ne parte. Sans code, rien à faire.
+      try {
+        window.addEventListener("pageshow", evenement => {
+          if (!evenement || !evenement.persisted) return;
+          let codeOnglet = "";
+          try { codeOnglet = PARCOURS.chargerCode(stockageSession()); } catch (_) { codeOnglet = ""; }
+          if (!codeSuivi && !codeOnglet) return;
+          if (typeof evenement.stopImmediatePropagation === "function") evenement.stopImmediatePropagation();
+          try { window.location.reload(); } catch (_) {}
+        });
+      } catch (_) {}
+
       // Le mode professeur : la clé « ?prof=1 », gardée dans l'onglet. Tous
       // les menus, et RIEN n'est enregistré : la progression vit en mémoire
       // (ni stockage de l'appareil, ni envoi), elle disparaît à la fermeture.

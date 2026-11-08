@@ -547,7 +547,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // changent (avant : suivre-les-eleves-S2bis-jours-pas-connus).
   // Puis « Suivre ses élèves », lot S4a « trouver vite » (08/11/2026) :
   // prof/index.php seul change (avant : suivre-les-eleves-jour-premier-geste).
-  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S4a-trouver-vite$/m);
+  // Puis « l'élève reste dans le suivi » (08/11/2026) : index.php (Mon
+  // espace) seul change, « Se déconnecter » passe par mathsgo.re/?sortie=1
+  // (avant : suivre-les-eleves-S4a-trouver-vite).
+  assert.match(lire("_serveur/public/VERSION"), /^lot eleve-retour-espace-deconnexion$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

@@ -203,16 +203,34 @@ Défi tables est la référence.
   suivie, ses jeux et ses films, aucun lien visible ne mène au site (logo,
   « ← Calcul mental », catalogue, licence, pied) ; la flèche, « Se
   déconnecter », « Non, ce n'est pas moi », un billet expiré ou un serveur
-  muet mènent tous à Mon espace. Et les pages de navigation du site (celles
-  qui chargent `mention-confidentialite.js`) chargent aussi
+  muet mènent tous à Mon espace. Les pages de navigation du site (celles
+  qui chargent `mention-confidentialite.js`) ET les carrefours (page des
+  livrets SPLAT!, boîte à jeux courts) chargent
   `assets/js/eleve-retour-espace.js`, premier script du `<head>`, sans
   `defer` : un onglet qui garde le code d'un élève repart vers Mon espace sans
   montrer la page (un Retour de trop, un détour). Jamais dans une appli
-  suivie. Gardé par `tests/eleve-retour-espace.test.mjs`. Une nouvelle appli
-  suivie se vérifie élève connecté, au téléphone et à l'ordinateur, liens
-  cachés compris. Ce que le site ne peut pas régler : l'appli rouverte dans
-  un autre onglet (favori, historique, icône) n'a pas de code et s'ouvre en
-  visiteur — les familles repartent toujours de suivi.mathsgo.re.
+  suivie ni dans une page qu'elle ouvre pour l'élève (les films), ni dans
+  les pages courtes des QR des livrets (`splat/*/livret/`), qui envoient
+  sur un jeu et n'ont aucun lien vers le site.
+- « Se déconnecter » de Mon espace passe par `https://mathsgo.re/?sortie=1`,
+  qui vide l'onglet côté site (tout le sessionStorage de mathsgo.re ; le
+  localStorage, où les parcours sont rangés sous une empreinte, n'est pas
+  touché) puis revient sur Mon espace avec `?oublier=1` — deux `replace`,
+  aucune entrée en trop dans l'historique. Sans ce passage, le code des
+  applis survivait et un Retour rouvrait l'appli au nom de l'élève
+  précédent (poste partagé). Toute nouvelle façon de se déconnecter vide
+  les DEUX domaines. Une appli suivie ressortie du cache arrière/avant sous
+  un code se recharge avant tout autre traitement (SPLAT!, Défi tables,
+  Défi calcul : un écouteur « pageshow » posé avant tous les autres).
+  Gardé par `tests/eleve-retour-espace.test.mjs`. Une nouvelle appli suivie
+  se vérifie élève connecté, au téléphone et à l'ordinateur, liens cachés
+  compris.
+- Ce que le site ne peut pas régler : le code vit dans la mémoire de
+  l'ONGLET. Un onglet vierge (favori, historique, icône sur l'écran du
+  téléphone) n'en a pas : l'appli s'ouvre en visiteur, les familles
+  repartent toujours de suivi.mathsgo.re. Mais un onglet ouvert par un lien
+  depuis l'onglet de l'élève peut en recevoir une copie, et fermer un
+  onglet ne déconnecte pas les autres.
 - Mémoire de l'appli (monde ouvert, table choisie…) : celle de l'élève, pas
   celle de l'appareil (clé portant l'empreinte du code, jamais le code en
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
