@@ -205,6 +205,41 @@ h1 {
 
 .btn-start svg { width: 20px; height: 20px; }
 
+/* « Mon espace » (08/11/2026) : l'entrée des élèves à code, à gauche
+   d'« Explorer les outils ». Les deux boutons ont la même largeur et
+   tiennent sur une ligne, sur ordinateur comme sur téléphone, sans
+   allonger la carte. */
+.home-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 260px));
+  justify-content: center;
+  gap: 14px;
+  margin-top: clamp(19px, 2.5vw, 25px);
+}
+
+.home-actions .btn-start {
+  min-width: 0;
+  margin-top: 0;
+  padding-inline: 18px;
+}
+
+.btn-espace {
+  color: #063f86;
+  background: #fff;
+  border: 2px solid #0b55a5;
+  box-shadow: none;
+}
+
+.btn-espace:hover {
+  box-shadow: 0 12px 22px rgba(6, 63, 134, 0.14);
+}
+
+.btn-start:focus-visible {
+  outline: 3px solid #14b8a6;
+  outline-offset: 3px;
+}
+
 .home-footer {
   width: 100%;
   min-height: 24px;
@@ -389,7 +424,19 @@ h1 {
   .brand-logo { width: min(82vw, 330px); margin-bottom: 0; }
   .subtitle,
   .maths-scene,
+  .home-actions,
   .btn-start { margin-top: 0; }
+  .home-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .home-actions .btn-start {
+    gap: 8px;
+    padding: 13px 10px;
+    font-size: 0.98rem;
+  }
+  .home-actions .btn-start svg { flex: none; width: 18px; height: 18px; }
+  .home-actions .btn-start span { text-align: center; }
   .maths-scene {
     width: calc(100% + 4px);
     aspect-ratio: 560 / 230;
@@ -415,6 +462,14 @@ h1 {
     gap: clamp(4px, 1.8vw, 6px);
   }
   .modal-content { padding: 2rem 1.35rem 1.5rem; }
+}
+
+/* Très petits téléphones (iPhone SE…) : « Mon espace » passe sur deux
+   lignes, comme « Explorer les outils » à côté ; le texte prend la largeur
+   de son plus long mot pour que la silhouette reste collée à lui au lieu
+   de flotter au bord du bouton. */
+@media (max-width: 340px) {
+  .btn-espace span { width: min-content; }
 }
 
 @media (prefers-reduced-motion: reduce) {
