@@ -39,34 +39,25 @@ const ctxU = vm.createContext({ encodeURIComponent });
 }
 const MONDES = ctxU.X;
 
-/* la règle de Gwenaël (08/11/2026), appliquée aux films de la carte */
+/* la règle de Gwenaël (08/11/2026) : seulement les étapes qui ont LEUR film ou tutoriel (le premier sur la carte) */
 function aidesDeLaCarte() {
   const out = {};
   for (const m of MONDES) {
     if (!m.actif) continue;
-    const avecFilm = m.etapes.filter((e) => e.films && e.films.length);
-    if (!avecFilm.length) continue; /* pas d'aide dans ce monde : pas de bouton */
-    const filmDuMonde = avecFilm[0].films[0][0];
-    const filmDessin = (avecFilm.find((e) => e.dessin) || {}).films;
-    for (const e of m.etapes) {
-      out[e.p] = e.films && e.films.length ? e.films[0][0]
-        : e.dessin && filmDessin ? filmDessin[0][0]
-        : filmDuMonde;
-    }
+    for (const e of m.etapes) if (e.films && e.films.length) out[e.p] = e.films[0][0];
   }
   return out;
 }
 
-test("splat-etapes.js : AIDES est la copie des films de la carte (le film de l'étape, sinon « dessine » pour une étape de dessin, sinon le film du monde)", () => {
+test("splat-etapes.js : AIDES est la copie des films de la carte (seulement les étapes qui ont leur propre film ou tutoriel)", () => {
   const attendu = aidesDeLaCarte();
   assert.deepEqual({ ...E.AIDES }, attendu,
     "les films de la carte ont changé : recopier dans assets/js/splat-etapes.js (AIDES) :\n" + JSON.stringify(attendu, null, 1) +
     "\npuis bumper son ?v= partout où il est chargé");
   // les choix du 08/11, écrits en clair
-  assert.equal(E.AIDES.m1e6, "dessine", "étape 6 « Dessine en expert » : le film « Dessine les jetons »");
-  assert.equal(E.AIDES.m1e3, "intro");
-  assert.equal(E.AIDES.m2e1, "paquets");
-  assert.equal(E.AIDES.m3e4, "equasplat");
+  assert.deepEqual({ ...E.AIDES }, { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat" });
+  // une aide « à peu près » décourage : pas de bouton aux étapes sans leur propre aide
+  for (const p of ["m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e5", "m3e2", "m3e4"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
   // Enquête, Système (et leurs Bonus), Relatifs : rien
   for (const p of ["enq10", "enq24", "enq11d", "sys25", "sys28d", "ech1", "m4e1", "m4e6"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
   // chaque aide est une étape de la carte, et un film du lecteur
@@ -78,8 +69,8 @@ test("splat-etapes.js : AIDES est la copie des films de la carte (le film de l'�
 });
 
 test("aide() : le film, le retour au jeu lui-même, &depuis=jeu ; une adresse hors du site ou trop longue repasse par la carte", () => {
-  const j = "/outils/splat_tache_barre.html?support=eleve&problem=classic&parcours=m1e3";
-  assert.equal(E.aide("m1e3", j), "/outils/splat_intro.html?film=intro&suite=" + encodeURIComponent(j) + "&depuis=jeu");
+  const j = "/outils/splat_tache_barre.html?support=eleve&problem=classic&parcours=m1e1";
+  assert.equal(E.aide("m1e1", j), "/outils/splat_intro.html?film=intro&suite=" + encodeURIComponent(j) + "&depuis=jeu");
   const eq = "/outils/equasplat.html?eleve=1&parcours=m3e1#data=" + "A".repeat(3600);
   const u = new URL(E.aide("m3e1", eq), "https://mathsgo.re");
   assert.equal(u.pathname, "/outils/splat_intro.html");
@@ -116,9 +107,9 @@ const CLASSES = { "Petit SPLAT!": "eleve-aide", "SPLAT! Classique": "eleveAide",
 
 test("les trois outils : « ? Aide » pointe vers l'aide de l'étape (& échappés), rien sans parcours ni dans un monde sans aide", () => {
   const cas = [
-    ["Petit SPLAT!", "m1e6", "/outils/splat_tache_barre.html?support=eleve&splats=mix&exercise=construct&parcours=m1e6", "dessine"],
-    ["SPLAT! Classique", "m2e1", "/outils/splat.html?mode=A&eleve=1&parcours=m2e1&suite=x%3Dy", "paquets"],
-    ["ÉquaSplat", "m3e2", "/outils/equasplat.html?eleve=1&parcours=m3e2#data=eyJzb3VyY2Ui", "equasplat"]
+    ["Petit SPLAT!", "m1e2", "/outils/splat_tache_barre.html?support=eleve&splats=1&exercise=construct&parcours=m1e2", "dessine"],
+    ["SPLAT! Classique", "m2e4", "/outils/splat.html?mode=U&eleve=1&parcours=m2e4&suite=x%3Dy", "paquets"],
+    ["ÉquaSplat", "m3e1", "/outils/equasplat.html?eleve=1&parcours=m3e1#data=eyJzb3VyY2Ui", "equasplat"]
   ];
   for (const [o, p, adr, film] of cas) {
     const html = lienAide(o, VARS[o], p, adr);
@@ -131,6 +122,8 @@ test("les trois outils : « ? Aide » pointe vers l'aide de l'étape (& échapp�
     assert.equal(lienAide(o, VARS[o], "", adr), "", `${o} sans parcours`);
   }
   assert.equal(lienAide("SPLAT! Classique", "parcoursId", "enq12", "/outils/splat.html?eleve=1&parcours=enq12"), "");
+  assert.equal(lienAide("Petit SPLAT!", "parcoursId", "m1e4", "/outils/splat_tache_barre.html?support=eleve&parcours=m1e4"), "");
+  assert.equal(lienAide("ÉquaSplat", "eleveParcours", "m3e4", "/outils/equasplat.html?eleve=1&parcours=m3e4"), "");
   assert.equal(lienAide("SPLAT! Classique", "parcoursId", "sys27d", "/outils/splat.html?eleve=1&parcours=sys27d"), "");
   assert.equal(lienAide("ÉquaSplat", "eleveParcours", "m4e3", "/outils/equasplat.html?eleve=1&parcours=m4e3"), "");
   // sans splat-etapes.js (fichier pas chargé) : rien, et pas d'erreur
@@ -158,31 +151,25 @@ test("les trois outils : le bouton suit « ◀ Carte des mondes » dans la barre
   assert.match(c, /@media \(max-width:899px\)\{\.eleveTete a\.eleveAide \.txt\{display:none\}\}/);
   assert.match(q, /@media \(max-width:899px\)\{#eleveBarre a\.eleveAide \.txt\{display:none\}\}/);
   // au téléphone, la place du « ? » est reprise ailleurs : la barre reste sur une ligne (mesuré au navigateur, voir la notice)
-  assert.match(t, /@media \(max-width: 400px\) \{ \.eleve-tete \.mot \{ display: none; \} \}/);
-  assert.match(c, /@media \(max-width:400px\)\{\.eleveTete \.mot\{display:none\}\}/);
+  // … seulement quand le « ? » est là : ailleurs, « Carte 1 / 12 » comme avant
+  assert.match(t, /@media \(max-width: 400px\) \{ \.eleve-tete \.eleve-aide ~ span \.mot \{ display: none; \} \}/);
+  assert.match(c, /@media \(max-width:400px\)\{\.eleveTete a\.eleveAide ~ span \.mot\{display:none\}\}/);
+  assert.doesNotMatch(t + c, /\.eleve-tete \.mot \{|\.eleveTete \.mot\{/);
   const serre = q.match(/@media \(max-width:380px\)\{([\s\S]*?)\n  \}/);
   assert.ok(serre, "ÉquaSplat : la barre resserrée sous 380 px");
-  assert.match(serre[1], /#eleveBarre\{gap:6px\}/);
-  assert.match(serre[1], /\.elevePastilles\{gap:2px\}/);
-  assert.match(serre[1], /#elevePasser\{padding:6px 10px\}/);
+  // … seulement quand le « ? » est là (sans lui, la barre ne change pas)
+  assert.match(serre[1], /#eleveBarre:has\(a\.eleveAide\)\{gap:6px\}/);
+  assert.match(serre[1], /#eleveBarre a\.eleveAide ~ \.elevePastilles\{gap:2px\}/);
+  assert.match(serre[1], /#eleveBarre a\.eleveAide ~ #elevePasser\{padding:6px 10px\}/);
+  assert.doesNotMatch(serre[1], /#eleveBarre\{gap|#eleveBarre \.elevePastilles\{|#eleveBarre #elevePasser\{/);
 });
 
 test("lecteur : ouvert par « ? Aide » (&depuis=jeu), la pastille de droite dit « Retour au jeu › » ; les autres entrées ne changent pas", () => {
   assert.match(intro, /const DEPUIS_JEU=new URLSearchParams\(location\.search\)\.get\('depuis'\)==='jeu';/);
   assert.match(intro, /if\(film\.passer&&!PRESENTATION&&!DEPUIS_CARTE\)\{\$\('passer'\)\.href=film\.passer;\$\('passer'\)\.hidden=false;if\(film\.passerTexte\)\$\('passer'\)\.textContent=film\.passerTexte;\n\s*if\(DEPUIS_JEU\)\$\('passer'\)\.textContent='Retour au jeu ›';\}/);
-  // le tutoriel d'ÉquaSplat a aussi « 🎬 Voir le film » au milieu : au téléphone, la ligne se resserre pour tenir
-  assert.match(intro, /\$\('pied'\)\.classList\.toggle\('serre',DEPUIS_JEU&&!!autre&&!\$\('passer'\)\.hidden\);/);
-  const tel = intro.match(/@media \(max-width:640px\)\{([\s\S]*?)\n\}/)[1];
-  assert.match(tel, /\.pied\.serre\{gap:0 6px\}\n\s*\.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 12px\}\n\s*\.pied\.serre #autre\{padding:10px 2px\}/);
-  // (correctif, relevé par Code sur la PR #1128) : de 641 à 960 px, « Plein écran » en icône seule et les pastilles resserrées ;
-  // sous 400 px, encore un peu plus serré
-  const moyen = intro.match(/@media \(min-width:641px\) and \(max-width:960px\)\{([\s\S]*?)\n\}/);
-  assert.ok(moyen, "la ligne du tutoriel resserrée de 641 à 960 px");
-  assert.match(moyen[1], /\.pied\.serre #fsTxt\{display:none\}/);
-  assert.match(moyen[1], /\.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 14px\}/);
-  // de 641 à 699 px tenu droit, le tutoriel est en portrait : la mise en page du téléphone (une ligne, le crédit dessous)
-  assert.match(intro, /@media \(min-width:641px\)\{\n\s*\.player\.portrait \.pied\.serre\{gap:0 8px\}\n\s*\.player\.portrait \.pied\.serre \.credit\{order:3;flex-basis:100%\}\n\s*\.player\.portrait \.pied\.serre #carte \.long,\.player\.portrait \.pied\.serre #fsTxt\{display:none\}/);
-  assert.match(tel, /@media \(max-width:400px\)\{ \.pied\.serre\{gap:0 4px\} \.pied\.serre \.carte,\.pied\.serre \.passer\{padding:9px 9px\} \}/);
+  // (choix du 08/11, après la PR #1128) : ouvert par « ? », pas de lien « 🎬 Voir le film » sous le tutoriel
+  assert.match(intro, /let autre=null;\n(?:\s*\/\*[\s\S]*?\*\/\n)?\s*if\(film\.aToi&&!DEPUIS_JEU\)\{/);
+  assert.doesNotMatch(intro, /\.pied\.serre|classList\.toggle\('serre'/);
   const dep = intro.match(/const DEPUIS_JEU=[^\n]*\n/)[0];
   const val = (s) => new Function("location", dep + "return DEPUIS_JEU;")({ search: s });
   assert.equal(val("?film=intro&suite=%2Fx&depuis=jeu"), true);

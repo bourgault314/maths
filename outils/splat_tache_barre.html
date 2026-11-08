@@ -466,9 +466,9 @@
     .eleve-tete .eleve-aide { font-size: 13px; font-weight: 800; color: #1e40af; text-decoration: none; white-space: nowrap; padding: 4px 8px; border-radius: 999px; background: #e0e7ff; margin: 0 auto 0 -4px; }
     .eleve-tete .eleve-aide:hover { background: #c7d2fe; }
     .eleve-tete .eleve-mondes:focus-visible, .eleve-tete .eleve-aide:focus-visible { outline: 3px solid #1e40af; outline-offset: 2px; }
-    /* téléphone (≤ 400 px) : « Carte » s'efface devant « 1 / 12 », comme « Équation » dans ÉquaSplat — avec le « ? », les
-       douze pastilles passaient sur deux rangées (390 px, élève suivi), voire trois (320 px) */
-    @media (max-width: 400px) { .eleve-tete .mot { display: none; } }
+    /* téléphone (≤ 400 px), seulement quand le « ? » est là : « Carte » s'efface devant « 1 / 12 », comme « Équation » dans
+       ÉquaSplat — avec le « ? », les douze pastilles passaient sur deux rangées (390 px, élève suivi), voire trois (320 px) */
+    @media (max-width: 400px) { .eleve-tete .eleve-aide ~ span .mot { display: none; } }
     /* « Comment faire » écrit en entier seulement à partir de 900 px (ordinateur, projection) ; dessous, « ? » seul :
        sinon les pastilles passaient sur plusieurs rangées (mesuré de 521 à 899 px) */
     @media (max-width: 899px) { .eleve-tete .eleve-aide .txt { display: none; } }
@@ -3466,7 +3466,7 @@ function eleveLienMondesHtml(classe, libelle) {
 }
 
 /* « ? Aide » (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : collé à « ◀ Carte des mondes », il ouvre
-   l'aide de l'étape (assets/js/splat-etapes.js : son film, sinon le film du monde) ; « Retour au jeu › » sous le
+   l'aide de l'étape (assets/js/splat-etapes.js : seulement les étapes qui ont leur propre film) ; « Retour au jeu › » sous le
    film rouvre CETTE adresse, et la reprise remet l'élève sur sa carte. Rien sans parcours ni sans aide. */
 function eleveLienAideHtml() {
     const E = window.MathsGoSplatEtapes;

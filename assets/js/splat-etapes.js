@@ -138,20 +138,16 @@
     return BONUS.some((b) => b[0] === parcours);
   }
 
-  /* « ? Aide » des trois outils (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : à côté de
-     « ◀ Carte des mondes », le bouton ouvre l'aide de l'étape — son film ou son tutoriel, sinon le
-     film de son monde — puis ramène l'élève sur SA carte (« Retour au jeu › » sous le film, ou
-     « Je joue ▶ » à la fin). Une étape qui « dessine » ouvre le film « Dessine les jetons » (choix du
-     08/11 pour l'étape 6). Les mondes sans film ni tutoriel (Enquête, Système, Relatifs) n'ont pas de
-     bouton : il viendra tout seul quand ils auront une aide (choix du 08/11).
-     C'EST UNE COPIE des films de la carte (MONDES, champ « films ») : tests/splat-aide-jeux.test.mjs
-     la recalcule à partir de splat_univers.html et échoue si les deux diffèrent. Chaque étape :
-     parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
-  const AIDES = {
-    m1e1: "intro", m1e2: "dessine", m1e3: "intro", m1e4: "intro", m1e5: "intro", m1e6: "dessine",
-    m2e1: "paquets", m2e4: "paquets", m2e5: "paquets",
-    m3e1: "equasplat", m3e2: "equasplat", m3e4: "equasplat"
-  };
+  /* « ? Comment faire » des trois outils (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : à
+     côté de « ◀ Carte des mondes », le bouton ouvre le film ou le tutoriel DE L'ÉTAPE, puis ramène
+     l'élève sur SA carte (« Retour au jeu › » sous le film, ou « Je joue ▶ » à la fin). Seulement les
+     étapes qui ont leur propre aide (choix du 08/11 : « l'aide doit être pertinente sur ce qu'il fait ») :
+     une aide « à peu près » (le film d'une autre étape) décourage plus qu'elle n'aide. Une étape qui
+     reçoit son film ou son tutoriel sur la carte (lots 4 à 7) aura son bouton : on l'ajoute ici.
+     C'EST UNE COPIE des films de la carte (MONDES, champ « films », le premier de l'étape) :
+     tests/splat-aide-jeux.test.mjs la recalcule à partir de splat_univers.html et échoue si les deux
+     diffèrent. Chaque étape : parcours → nom du film (?film= du lecteur outils/splat_intro.html). */
+  const AIDES = { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat" };
   const URL_FILMS = "/outils/splat_intro.html";
   /* le retour : l'adresse du jeu lui-même (la même série, donc la même reprise — deux livrets peuvent
      partager un parcours avec des cartes différentes), seulement une page du site ; au-delà de 6 000

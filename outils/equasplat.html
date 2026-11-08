@@ -4803,15 +4803,15 @@
     body.importMode.eleveMode #eleveBarre #elevePasser + .suivi-pastille .nom,
     body.importMode.eleveMode #eleveBarre .eleveBarreNote + .suivi-pastille .nom{display:none}
   }
-  /* « ? Aide » (lot 3 « aides et carte », 08/11/2026) : sous 380 px (360, 375), la barre se resserre d'autant que le
-     bouton prend, pour rester sur UNE ligne comme avant (mesuré à 360 et 375 px, douze pastilles, élève suivi). Tous
-     les mondes, avec ou sans « ? » : la barre garde le même air partout */
+  /* « ? Comment faire » (lot 3 « aides et carte », 08/11/2026) : sous 380 px (360, 375), quand le « ? » est là, la barre
+     se resserre d'autant que le bouton prend, pour rester sur UNE ligne comme avant (mesuré à 360 et 375 px, douze
+     pastilles, élève suivi). Sans « ? », la barre ne change pas */
   @media (max-width:380px){
-    body.importMode.eleveMode #eleveBarre{gap:6px}
-    body.importMode.eleveMode #eleveBarre a.eleveMondes,body.importMode.eleveMode #eleveBarre a.eleveAide{padding:4px 7px}
+    body.importMode.eleveMode #eleveBarre:has(a.eleveAide){gap:6px}
+    body.importMode.eleveMode #eleveBarre:has(a.eleveAide) a.eleveMondes,body.importMode.eleveMode #eleveBarre a.eleveAide{padding:4px 7px}
     body.importMode.eleveMode #eleveBarre a.eleveAide{margin-left:-2px}
-    body.importMode.eleveMode #eleveBarre .elevePastilles{gap:2px}
-    body.importMode.eleveMode #eleveBarre #elevePasser{padding:6px 10px}
+    body.importMode.eleveMode #eleveBarre a.eleveAide ~ .elevePastilles{gap:2px}
+    body.importMode.eleveMode #eleveBarre a.eleveAide ~ #elevePasser{padding:6px 10px}
   }
   /* la pastille « ● Léa » (lot 2 du suivi) suit le bouton « Passer ▶ » quand il est là,
      au lieu de partager avec lui la place libre */
@@ -10489,7 +10489,7 @@
   /* « ? Aide » (lot 3 « aides et carte », 08/11/2026, choix de Gwenaël) : collé à « ◀ Carte des mondes », il ouvre
      l'aide de l'étape (assets/js/splat-etapes.js : son tutoriel) ; « Retour au jeu › » sous le
      tutoriel rouvre CETTE adresse (la série est dans #data=), et la reprise remet l'élève sur son équation. Rien sans
-     parcours ni sans aide (le monde 6 n'en a pas encore). */
+     parcours ni sans aide propre à l'étape (36, 37 et le monde 6 n'en ont pas encore). */
   function eleveLienAideHtml(){
     const E = window.MathsGoSplatEtapes;
     const href = eleveParcours && E && typeof E.aide === "function"
