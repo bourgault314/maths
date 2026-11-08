@@ -163,7 +163,7 @@ test("absent : rien depuis 7 jours TOUTES APPLIS confondues — une appli seule 
   assert.equal(louis.aider[0].texte, "Rien depuis 9 jours, dans aucune appli");
   assert.ok(louis.aider[0].faire, "une phrase « que faire »");
   assert.deepEqual(p.bilanEleve(3, JEUDI).absent, {jamais: true});
-  assert.equal(p.bilanEleve(3, JEUDI).aider[0].texte, "Jamais venu, dans aucune appli");
+  assert.equal(p.bilanEleve(3, JEUDI).aider[0].texte, "Rien reçu, dans aucune appli");
   assert.deepEqual(p.bilanEleve(4, JEUDI).absent, {jours: 7}, "7 jours pile : absent");
   // Le lundi : l'absence compte 7 jours, pas la semaine — elle reste (question 3).
   assert.equal(pageRejouee(listes, LUNDI_SUIVANT).bilanEleve(2, LUNDI_SUIVANT).aider[0].genre, "absent");

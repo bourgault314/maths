@@ -208,6 +208,9 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   #tableau td.va .fleche { display: inline-block; width: 28px; vertical-align: middle;
                            color: var(--blue); font-size: var(--titre-carte); text-align: right; }
   #tableau .seul-telephone { display: none; }
+  /* Lot S4a (08/11/2026) : au téléphone, ce que disent les colonnes cachées
+     tient en une ligne sous le prénom (« table de 7 », « 1 à voir en classe »). */
+  #tableau .indice-tel { display: none; }
   #tableau td.aucun { color: var(--muted); font-style: italic; white-space: normal; }
   /* Les trois cartes du haut de Défi tables, côte à côte, de la même largeur
      (charte : .grille-cartes), sans filet de couleur. */
@@ -808,6 +811,8 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
        (avec la même phrase) dans la fenêtre. */
     p.sous.note-coffres { display: none; }
     .outils-tableau .chercher { flex: 1 1 100%; }
+    #tableau .indice-tel { display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: .8rem; font-weight: 600; line-height: 1.25; }
+    #tableau .indice-tel.fort { color: var(--rouge); }
     /* La liste de l'onglet Élèves reste un tableau : quatre colonnes courtes. */
     #tableau-eleves th, #tableau-eleves td { padding: 6px 4px; }
     #tableau-eleves td input { width: 100%; min-width: 0; min-height: 44px; }
@@ -3875,6 +3880,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       [cEnCours, cSemaine, cRetard].forEach(large);
       ligne.append(cNom, cAcquises, cEnCours, cSemaine, cRetard, cDate);
       finirLigne(ligne, eleve, cNom);
+      // Lot S4a : au téléphone, « En cours » est caché — sa ligne courte
+      // passe sous le prénom (« table de 7 »), avec les séances qui durent.
+      indiceTelephone(cNom, enCours.type === "table" ? `table de ${enCours.tables[0]}` : enCours.type === "rien" ? "" : enCours.texte, "");
+      if (eleve.lu.longue) indiceTelephone(cNom, `${eleve.lu.longue.seances} séances dessus`, "fort");
       corps.appendChild(ligne);
     });
 
@@ -3999,6 +4008,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     recherche = "";
     const champ = $("chercher-eleve");
     if (champ) champ.value = "";
+  }
+
+  // Lot S4a (08/11/2026) : au téléphone, une colonne cachée garde une ligne
+  // courte sous le prénom (« table de 7 », « 1 à voir en classe ») ; à
+  // l'ordinateur, rien (la colonne est là). Posé par textContent.
+  function indiceTelephone(cNom, texte, genre) {
+    if (!texte) return;
+    cNom.append(el("span", `indice-tel${genre ? ` ${genre}` : ""}`, texte));
   }
 
   // Personne ne correspond : une ligne le dit, sous les titres de colonnes.
@@ -5267,6 +5284,10 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       [cRevoir, cSeances].forEach(large);
       ligne.append(cNom, cSues, cRevoir, cSeances, cDate);
       finirLigne(ligne, eleve, cNom);
+      // Lot S4a : au téléphone, « À revoir » est caché — ce qui demande le
+      // professeur (les mises de côté) passe sous le prénom. Les rouges, que
+      // l'appli redonne elle-même, restent dans la fiche (choix du 08/11).
+      if (lu.commence && lu.aVoir) indiceTelephone(cNom, `${lu.aVoir} à voir en classe`, "fort");
       corps.appendChild(ligne);
     });
 
@@ -7081,15 +7102,17 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     const liste = [];
     const ajouter = (genre, appli, texte, faire, lien) => liste.push({genre, appli, texte, faire, lien, rang: RANGS_AIDER[genre]});
     if (bilan.absent) {
-      if (bilan.absent.jamais) ajouter("absent", "", "Jamais venu, dans aucune appli", "Vérifier qu’il a son code et qu’il sait se connecter.");
-      else if (bilan.absent.aucun) ajouter("absent", "", "Rien de fini, dans aucune appli", "Faire avec lui une première séance.");
+      // Lot S4a (remarque de Gwenaël du 08/11/2026) : des mots sans genre —
+      // la classe a des filles et des garçons (« ensemble », pas « avec lui »).
+      if (bilan.absent.jamais) ajouter("absent", "", "Rien reçu, dans aucune appli", "Vérifier ensemble le code et la connexion.");
+      else if (bilan.absent.aucun) ajouter("absent", "", "Rien de fini, dans aucune appli", "Faire une première séance ensemble.");
       else ajouter("absent", "", `Rien depuis ${bilan.absent.jours} jours, dans aucune appli`, "Lui demander ce qui l’empêche de travailler : son code, un appareil, le temps.");
     }
     Object.keys(bilan.parApp).forEach(cle => {
       const {eleve, suivi} = bilan.parApp[cle];
       (suivi.aider || []).forEach(a => {
         if (cle === "defi-tables" && a.type === "seances-longues") {
-          ajouter("bloque", cle, `table de ${a.table} : ${a.seances} séances dessus`, "La reprendre avec lui : la bande, puis 5 calculs.");
+          ajouter("bloque", cle, `table de ${a.table} : ${a.seances} séances dessus`, "La reprendre ensemble : la bande, puis 5 calculs.");
         } else if (cle === "defi-calcul" && (a.type === "a-reprendre" || a.type === "rouges")) {
           const etat = a.type === "a-reprendre" ? "classe" : "revoir";
           const comps = ((eleve.lu && eleve.lu.revoir) || []).filter(c => c.etat === etat);
@@ -7097,14 +7120,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
           const nom = premiere && CALCUL_CORE ? `« ${nomCompetenceCalcul(premiere.module, premiere.niveau)} »` : pluriel(a.competences, "compétence");
           const plus = comps.length > 1 ? ` et ${comps.length - 1} autre${comps.length > 2 ? "s" : ""}` : "";
           if (etat === "classe") {
-            ajouter("bloque", cle, `${nom}${plus} mise${comps.length > 1 ? "s" : ""} de côté`, "La reprendre en classe avec lui.", premiere ? {module: premiere.module, niveau: premiere.niveau} : null);
+            ajouter("bloque", cle, `${nom}${plus} mise${comps.length > 1 ? "s" : ""} de côté`, "La reprendre en classe, ensemble.", premiere ? {module: premiere.module, niveau: premiere.niveau} : null);
           } else {
             ajouter("revoir", cle, `${nom}${plus} à revoir`, "L’appli la lui redonne, avec l’aide, à sa prochaine séance.");
           }
         } else if (cle === "splat" && a.type === "reponses-vues") {
-          ajouter("aide", cle, `${pluriel(a.vues, "réponse vue", "réponses vues")} cette semaine`, "Refaire l’étape avec lui, sans regarder la réponse.");
+          ajouter("aide", cle, `${pluriel(a.vues, "réponse vue", "réponses vues")} cette semaine`, "Refaire l’étape ensemble, sans regarder la réponse.");
         } else if (cle === "coffres" && a.type === "solutions-vues") {
-          ajouter("aide", cle, `${pluriel(a.solutions, "solution vue", "solutions vues")} cette semaine`, "Ouvrir un trésor avec lui, pas à pas.");
+          ajouter("aide", cle, `${pluriel(a.solutions, "solution vue", "solutions vues")} cette semaine`, "Ouvrir un trésor ensemble, pas à pas.");
         }
       });
     });
@@ -7141,6 +7164,18 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
         f.filter(x => x.type === "grade").forEach(x => liste.push({appli: cle, texte: `${ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(x.grade) : `grade ${x.grade}`} réussi`, rang: 2}));
       } else if (cle === "defi-calcul") {
         f.filter(x => x.type === "competences").forEach(x => liste.push({appli: cle, texte: `${x.competences} compétences sues cette semaine`, rang: 3, nombre: x.competences}));
+      } else if (cle === "coffres") {
+        // Lot S4a : Coffres n'avait aucune règle. Un trésor, c'est 10 clés
+        // (une bonne séance) : 2 trésors ou plus dans la semaine, c'est
+        // l'équivalent des 5 compétences sues de Défi calcul — un vrai pas,
+        // pas le rythme ordinaire. Lu dans resumeSuivi (les trésors de chaque
+        // jour), sans rien changer au moteur ni à ce que voit l'élève. Le
+        // lundi, avec la semaine d'avant, comme les autres.
+        const FELICITER_TRESORS = 2;
+        const depuis = lundi ? jourPlus(bilan.lundi, -7) : bilan.lundi;
+        const n = (morceau.suivi.jours || []).filter(j => j.jour >= depuis && j.jour <= bilan.aujourdhui)
+          .reduce((somme, j) => somme + (j.lignes || []).reduce((t, l) => t + (Number.isInteger(l.tresors) && l.tresors > 0 ? l.tresors : 0), 0), 0);
+        if (n >= FELICITER_TRESORS) liste.push({appli: cle, texte: `${n} trésors ouverts cette semaine`, rang: 4, nombre: n});
       }
     });
     return liste.sort((p, q) => p.rang - q.rang);
@@ -7208,7 +7243,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     });
     aider.sort((p, q) => p.raison.rang - q.raison.rang);
     feliciter.sort((p, q) => p.raison.rang - q.raison.rang || (q.raison.nombre || 0) - (p.raison.nombre || 0));
-    const etiquettes = {absent: ["absent", "rouge"], bloque: ["bloqué", "orange"], revoir: ["à revoir", "orange"], aide: ["aidé", ""]};
+    const etiquettes = {absent: ["absence", "rouge"], bloque: ["blocage", "orange"], revoir: ["à revoir", "orange"], aide: ["aide", ""]};
     const remplir = (id, lignes, vide, dessinerLigne) => {
       const ul = $(`${id}-liste`);
       ul.textContent = "";
@@ -7250,13 +7285,15 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
       li.append(bouton);
       return li;
     };
-    remplir("lc-aider", aider, "Personne à aider cette semaine.", ({eleve, raison}) => {
+    // Lot S4a : des libellés vides courts et justes — ils disent qu'aucune
+    // règle ne s'est allumée, pas que tout va bien.
+    remplir("lc-aider", aider, "Rien à signaler cette semaine.", ({eleve, raison}) => {
       const [mot, couleur] = etiquettes[raison.genre];
       return ligneDeCarte(eleve, mot, couleur, raison, raison.faire);
     });
     const lundi = aujourdhuiSuivi() === lundiDuJour(aujourdhuiSuivi());
     $("lc-feliciter-sous").textContent = lundi ? "Ce qui a été gagné la semaine dernière, et aujourd’hui." : "Ce qui a été gagné cette semaine.";
-    remplir("lc-feliciter", feliciter, "Rien de gagné cette semaine, pour l’instant.", ({eleve, raison}) =>
+    remplir("lc-feliciter", feliciter, lundi ? "Pas de bravo la semaine dernière." : "Pas encore de bravo cette semaine.", ({eleve, raison}) =>
       ligneDeCarte(eleve, "bravo", "vert", raison, ""));
   }
 
@@ -7510,7 +7547,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // À voir.
     gauche.append(el("h3", "", "À voir"));
     const aVoir = el("ul", "fe-avoir");
-    const etiquettes = {absent: ["absent", "rouge"], bloque: ["bloqué", "orange"], revoir: ["à revoir", "orange"], aide: ["aidé", ""]};
+    const etiquettes = {absent: ["absence", "rouge"], bloque: ["blocage", "orange"], revoir: ["à revoir", "orange"], aide: ["aide", ""]};
     bilan.aider.forEach(raison => {
       const li = document.createElement("li");
       const [mot, couleur] = etiquettes[raison.genre];
@@ -7535,7 +7572,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     // Où il en est.
     const onglets = ongletsDeLaFiche(id).filter(cle => cle !== "ensemble");
     if (onglets.length) {
-      gauche.append(el("h3", "", "Où il en est"));
+      gauche.append(el("h3", "", "Progression"));
       const ul = el("ul", "fe-ou");
       onglets.forEach(cle => {
         const li = document.createElement("li");
@@ -7556,7 +7593,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     }
 
     // Ce qu'il a fait, jour par jour.
-    droite.append(el("h3", "", "Ce qu’il a fait"));
+    droite.append(el("h3", "", "Activité"));
     const {jours, encore, notes} = joursDeLaFiche(id, aujourdhui, joursFiche);
     if (!jours.length) droite.append(paragrapheVide(bilan.recu ? "Aucun jour de travail pour l’instant." : "Rien reçu pour l’instant."));
     jours.forEach(({jour, lignes}) => {
@@ -7829,7 +7866,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     if (aujourdhui !== lundi) {
       const absents = ordreDeLaFeuille(lignes).filter(e => !cetteSemaine.has(e.id));
       if (absents.length) {
-        texte.append(document.createTextNode(` Pas venus cette semaine : ${absents.map(e => {
+        texte.append(document.createTextNode(` Pas de séance cette semaine : ${absents.map(e => {
           const dernier = e.lu && e.lu.dernier;
           return `${nomAffiche(e) || "sans prénom"} (${dernier ? `dernière séance le ${jourCourtChiffres(dernier)}` : "jamais"})`;
         }).join(", ")}.`));

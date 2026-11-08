@@ -545,7 +545,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // (08/11/2026) : les copies prof/coffres-parcours.js,
   // prof/defi_tables_mon_parcours.js et prof/defi_calcul_mon_parcours.js
   // changent (avant : suivre-les-eleves-S2bis-jours-pas-connus).
-  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-jour-premier-geste$/m);
+  // Puis « Suivre ses élèves », lot S4a « trouver vite » (08/11/2026) :
+  // prof/index.php seul change (avant : suivre-les-eleves-jour-premier-geste).
+  assert.match(lire("_serveur/public/VERSION"), /^lot suivre-les-eleves-S4a-trouver-vite$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
