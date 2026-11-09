@@ -146,6 +146,7 @@ for (const [nom, page, fonction, etoile, sous, action, sorties, lien] of PAGES) 
       ${source(page, "eleveMeilleureSerieTexte")}
       ${source(page, "eleveAdresseNouvellesCartes")}
       ${nom === "splat.html" ? source(page, "eleveGraineNeuve") + source(page, "eleveGraineSansTacheVide").replace(/appliquerConfiguration\(q\);\n\s*generate\(\);\n\s*return [^\n]*/, "return true;") : ""}
+      ${source(page, "eleveRouvrirNouvellesCartes")}
       ${source(page, fonction)}
       ${fonction}(${nom === "splat.html" ? "panneau" : "main"});`)(fenetre, doc, main, panneau, etape);
     const texte = nom === "splat.html" ? panneau.innerHTML : main.enfants[0].innerHTML;
@@ -175,6 +176,8 @@ for (const [nom, page, fonction, etoile, sous, action, sorties, lien] of PAGES) 
     assert.equal(q.get("nouvelles"), "1");
     assert.notEqual(q.get("seed"), "974");
     assert.match(source(page, fonction), /^(?![\s\S]*(ecrire\(|eleveEffacerEnCours|eleveSauver|localStorage))/, "aucune écriture");
+    // le clic passe par eleveRouvrirNouvellesCartes (partagée avec la fin d'une série réussie, 09/11/2026)
+    assert.match(source(page, "eleveRouvrirNouvellesCartes"), /^(?![\s\S]*(ecrire\(|eleveEffacerEnCours|eleveSauver|localStorage))/, "aucune écriture");
   });
   if (nom === "splat.html") {
     test("splat.html : une fiche bonus dit ✨ et « ta tache bonus reste dorée », comme son écran de fin", () => {
@@ -249,7 +252,8 @@ test("splat.html : une fiche qui tirerait une carte « tache vide » reprend une
   let m = 0;
   const t = adresseSplat.adresse("?seed=974", () => 500 + (m++), () => false);
   assert.equal(new URLSearchParams(t).get("seed"), "539");
-  assert.match(source(html, "renderEleveEtapeReussieSplat"), /eleveAdresseNouvellesCartes\(window\.location\.search, eleveGraineNeuve, eleveGraineSansTacheVide\)/);
+  assert.match(source(html, "eleveRouvrirNouvellesCartes"), /eleveAdresseNouvellesCartes\(window\.location\.search, eleveGraineNeuve, eleveGraineSansTacheVide\)/);
+  assert.match(source(html, "renderEleveEtapeReussieSplat"), /getElementById\("eleveNouvellesCartes"\)\.onclick = eleveRouvrirNouvellesCartes;/);
 });
 
 /* ---------- les nombres changent vraiment (Petit SPLAT!, les six étapes du monde 1) ---------- */

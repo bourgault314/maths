@@ -3679,18 +3679,24 @@ function renderEleveFin(main) {
             `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? 's' : ''} sur ${total} du premier coup.` +
             (parcoursId ? ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes\u00a0!` : ``) + `</p>` +
             /* dans le parcours : « Étape suivante ▶ » en gros, rejouer et la carte en liens
-               dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change */
+               dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change.
+               Le lien rejoue avec de NOUVELLES cartes (lot « fin de série », 09/11/2026) : le
+               même chemin que « Étape réussie ! » (avant : les mêmes cartes) */
             (parcoursId
                 ? `<div class="fin-action"><button id="eleveEtapeSuivante" type="button">${suite.html}</button></div>` +
-                  `<div class="fin-sorties"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>` +
+                  `<div class="fin-sorties"><button id="eleveFinNouvellesCartes" type="button">Rejouer avec de nouvelles cartes</button>` +
                   `${suite.versCarte ? '' : eleveLienMondesHtml('fin-lien', 'Retour \u00e0 la carte des mondes')}</div>`
                 : `<div class="eleve-actions"><button class="eleve-valider" id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>${eleveLienMondesHtml('eleve-lien')}</div>`) +
             `</div>`;
         main.appendChild(scene);
         const suivante = document.getElementById('eleveEtapeSuivante');
         if (suivante) suivante.onclick = () => { window.location.href = suite.href; };
+        const nouvelles = document.getElementById('eleveFinNouvellesCartes');
+        if (nouvelles) nouvelles.onclick = eleveRouvrirNouvellesCartes;
     }
-    document.getElementById('eleveRejouer').onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleve(main); };
+    /* « Rejouer toute la série » (cartes rouges) et « Rejouer la série » hors parcours : les mêmes cartes */
+    const rejouer = document.getElementById('eleveRejouer');
+    if (rejouer) rejouer.onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleve(main); };
 }
 
 /* ===== Une étape déjà réussie (lot « rejouer », décidé avec Gwenaël le 09/11/2026) =====
@@ -3729,6 +3735,11 @@ function eleveAdresseNouvellesCartes(search, tirer) {
     q.set('nouvelles', '1');
     return '?' + q.toString();
 }
+/* Le clic « nouvelles cartes » (écran « Étape réussie ! » et fin d'une série réussie) : la page se
+   recharge sur l'adresse des nouvelles cartes ; rien n'est écrit. */
+function eleveRouvrirNouvellesCartes() {
+    window.location.replace(window.location.pathname + eleveAdresseNouvellesCartes(window.location.search, makeAutoSeed) + window.location.hash);
+}
 function renderEleveEtapeReussie(main) {
     const meilleure = eleveMeilleureSerieTexte(eleveAccueilReussie, 'carte');
     const scene = document.createElement('div');
@@ -3741,9 +3752,7 @@ function renderEleveEtapeReussie(main) {
         `<div class="fin-sorties">${eleveLienMondesHtml('fin-lien', 'Retour \u00e0 la carte des mondes')}</div>` +
         `</div>`;
     main.appendChild(scene);
-    document.getElementById('eleveNouvellesCartes').onclick = () => {
-        window.location.replace(window.location.pathname + eleveAdresseNouvellesCartes(window.location.search, makeAutoSeed) + window.location.hash);
-    };
+    document.getElementById('eleveNouvellesCartes').onclick = eleveRouvrirNouvellesCartes;
 }
 
 window.onload = () => {
