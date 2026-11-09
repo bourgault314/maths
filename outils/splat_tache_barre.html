@@ -3413,7 +3413,7 @@ function eleveValider(main) {
         /* carte finie : plus rien à valider, le Valider s'efface (il restait éteint à côté de
            « Carte suivante » sur ordinateur ; 05/10/2026, Gwenaël) */
         bouton.hidden = true;
-        msg.textContent = eleveCarteFautee ? 'Juste ! Regarde sous la tache\u2026' : 'Bravo, du premier coup ! Regarde sous la tache\u2026';
+        msg.textContent = eleveMessageJuste(eleveCarteFautee, eleveItemCourant && Array.isArray(eleveItemCourant.splats) ? eleveItemCourant.splats.length : 1);
         msg.className = 'eleve-msg bravo';
         cases.forEach(c => { const i = c.querySelector('.eleve-input'); if (i) i.readOnly = true; });
         eleveSauverEnCours();
@@ -3450,6 +3450,13 @@ function eleveValider(main) {
 
 /* Vérification : la tache devient transparente et laisse voir les jetons
    qu'elle cachait, comme quand on clique sur une carte en usage libre. */
+/* « Regarde sous la tache… » avec une tache, « sous les taches… » dès qu'il y en a deux (étapes 4 à 6 ;
+   09/11/2026, Gwenaël — la phrase restait au singulier avec deux taches et plus). */
+function eleveMessageJuste(apresErreur, nbTaches) {
+    return (apresErreur ? 'Juste ! ' : 'Bravo, du premier coup ! ') +
+        (nbTaches > 1 ? 'Regarde sous les taches\u2026' : 'Regarde sous la tache\u2026');
+}
+
 function eleveDevoilerTache() {
     const part = document.querySelector('.eleve-scene .part-splat');
     if (part) part.classList.add('devoile');

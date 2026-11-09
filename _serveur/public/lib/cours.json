@@ -80,6 +80,121 @@
    "imprimable": "/cours/4e/4e-TRI-imprimable.html"
   },
   {
+   "id": "3e-ARI",
+   "niveau": "3e",
+   "chapitre": "Arithmétique",
+   "titre": "Multiples, diviseurs, nombres premiers et fractions irréductibles",
+   "fiches": [
+    {
+     "id": "4e-ARI-01",
+     "n": 1,
+     "ids": "4e-ARI-01 · 3e-ARI-01 · 3e-ARI-02",
+     "h1": "Je sais dire si un nombre est multiple ou diviseur d'un autre, avec la division euclidienne et les critères de divisibilité",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-01.html"
+    },
+    {
+     "id": "3e-ARI-03",
+     "n": 2,
+     "ids": "3e-ARI-03",
+     "h1": "Je sais trouver tous les diviseurs d'un nombre",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ARI-03.html"
+    },
+    {
+     "id": "4e-ARI-02",
+     "n": 3,
+     "ids": "4e-ARI-02 · 3e-ARI-04",
+     "h1": "Je sais ce qu'est un nombre premier et je sais retrouver les nombres premiers jusqu'à 100",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-02.html"
+    },
+    {
+     "id": "4e-ARI-03",
+     "n": 4,
+     "ids": "4e-ARI-03 · 3e-ARI-04",
+     "h1": "Je sais dire si un nombre est premier ou non",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-03.html"
+    },
+    {
+     "id": "4e-ARI-04",
+     "n": 5,
+     "ids": "4e-ARI-04 · 3e-ARI-05",
+     "h1": "Je sais décomposer un nombre en produit de facteurs premiers avec un arbre, et vérifier ma décomposition",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-04.html"
+    },
+    {
+     "id": "4e-ARI-05",
+     "n": 6,
+     "ids": "4e-ARI-05 · 3e-ARI-06",
+     "h1": "Je sais simplifier une fraction et la rendre irréductible avec les facteurs premiers",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-05.html"
+    },
+    {
+     "id": "4e-ARI-06",
+     "n": 7,
+     "ids": "4e-ARI-06 · 3e-ARI-07",
+     "h1": "Je sais résoudre un problème de partage en lots identiques (le plus grand diviseur commun)",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-06.html"
+    },
+    {
+     "id": "3e-ARI-08",
+     "n": 8,
+     "ids": "3e-ARI-08",
+     "h1": "Je sais résoudre un problème « ensemble à nouveau » (le plus petit multiple commun)",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ARI-08.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-ARI-brevet",
+    "page": "/cours/3e/3e-ARI-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-ARI-imprimable.html"
+  },
+  {
    "id": "3e-PYT",
    "niveau": "3e",
    "chapitre": "Le triangle rectangle",
@@ -161,6 +276,18 @@
      "type": "savoir",
      "nouveau": false,
      "page": "/cours/4e/4e-TRI-05.html"
+    },
+    {
+     "id": "3e-THA-04",
+     "n": 7,
+     "ids": "3e-THA-04",
+     "h1": "Je sais choisir le bon outil : Pythagore, Thalès, deux perpendiculaires ou la trigonométrie",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode · toute la géométrie",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-04.html"
     }
    ],
    "brevet": {
@@ -168,6 +295,358 @@
     "page": "/cours/3e/3e-PYT-brevet.html"
    },
    "imprimable": "/cours/3e/3e-PYT-imprimable.html"
+  },
+  {
+   "id": "3e-THA",
+   "niveau": "3e",
+   "chapitre": "Théorème de Thalès",
+   "titre": "Théorème de Thalès, sa réciproque et sa contraposée",
+   "fiches": [
+    {
+     "id": "4e-THA-01",
+     "n": 1,
+     "ids": "4e-THA-01 · 3e-THA-01",
+     "h1": "Je sais calculer une longueur avec le théorème de Thalès",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-01.html"
+    },
+    {
+     "id": "4e-THA-02",
+     "n": 2,
+     "ids": "4e-THA-02 · 3e-THA-02",
+     "h1": "Je sais prouver que deux droites sont parallèles… ou qu'elles ne le sont pas",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-02.html"
+    },
+    {
+     "id": "3e-THA-03",
+     "n": 3,
+     "ids": "3e-THA-03",
+     "h1": "Je sais prouver que deux droites sont parallèles parce qu'elles sont perpendiculaires à une même droite",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-03.html"
+    },
+    {
+     "id": "3e-THA-04",
+     "n": 4,
+     "ids": "3e-THA-04",
+     "h1": "Je sais choisir le bon outil : Pythagore, Thalès, deux perpendiculaires ou la trigonométrie",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode · toute la géométrie",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-04.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-THA-brevet",
+    "page": "/cours/3e/3e-THA-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-THA-imprimable.html"
+  },
+  {
+   "id": "3e-LIT",
+   "niveau": "3e",
+   "chapitre": "Calcul littéral",
+   "titre": "Réduire, développer, factoriser, démontrer",
+   "fiches": [
+    {
+     "id": "4e-LIT-06",
+     "n": 1,
+     "ids": "4e-LIT-06 · 3e-LIT-01",
+     "h1": "Je sais réduire une expression : 3𝑥 + 2𝑥 = (3 + 2) × 𝑥 = 5𝑥",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-06.html"
+    },
+    {
+     "id": "3e-LIT-02",
+     "n": 2,
+     "ids": "3e-LIT-02",
+     "h1": "Je sais écrire l'opposé d'une expression et enlever des parenthèses précédées d'un signe −",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-02.html"
+    },
+    {
+     "id": "4e-LIT-01",
+     "n": 3,
+     "ids": "4e-LIT-01 · 3e-LIT-03",
+     "h1": "Je sais multiplier des expressions simples : 3 × 2𝑥 = 6𝑥 ; 𝑥 × 𝑥 = 𝑥² ; 3𝑥 × 2𝑥 = 6𝑥²",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-01.html"
+    },
+    {
+     "id": "4e-LIT-05",
+     "n": 4,
+     "ids": "4e-LIT-05 · 3e-LIT-04",
+     "h1": "Je sais dire si une expression est une somme ou un produit",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · ajout 3e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-05.html"
+    },
+    {
+     "id": "4e-LIT-07",
+     "n": 5,
+     "ids": "4e-LIT-07 · 3e-LIT-05",
+     "h1": "Je sais développer avec la distributivité simple : 𝑘(𝑎 + 𝑏) = 𝑘𝑎 + 𝑘𝑏, même quand 𝑘 est négatif ou contient 𝑥",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-07.html"
+    },
+    {
+     "id": "4e-LIT-08",
+     "n": 6,
+     "ids": "4e-LIT-08 · 3e-LIT-06",
+     "h1": "Je sais factoriser une somme par un facteur commun",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-08.html"
+    },
+    {
+     "id": "3e-LIT-07",
+     "n": 7,
+     "ids": "3e-LIT-07",
+     "h1": "Je sais développer un produit de deux sommes avec la double distributivité",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-07.html"
+    },
+    {
+     "id": "3e-LIT-08",
+     "n": 8,
+     "ids": "3e-LIT-08",
+     "h1": "Je sais développer et réduire une expression qui contient plusieurs produits, même précédés d'un signe −, et vérifier avec un nombre",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-08.html"
+    },
+    {
+     "id": "3e-LIT-09",
+     "n": 9,
+     "ids": "3e-LIT-09",
+     "h1": "Je sais factoriser quand le facteur commun est une parenthèse",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/3e/3e-LIT-09.html"
+    },
+    {
+     "id": "3e-LIT-10",
+     "n": 10,
+     "ids": "3e-LIT-10",
+     "h1": "Je sais développer (𝑎 + 𝑏)(𝑎 − 𝑏) et factoriser une différence de deux carrés 𝑎² − 𝑏²",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-10.html"
+    },
+    {
+     "id": "3e-LIT-11",
+     "n": 11,
+     "ids": "3e-LIT-11",
+     "h1": "Je sais développer (𝑎 + 𝑏)² et (𝑎 − 𝑏)² sans oublier le double produit",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/3e/3e-LIT-11.html"
+    },
+    {
+     "id": "4e-LIT-04",
+     "n": 12,
+     "ids": "4e-LIT-04 · 3e-LIT-13",
+     "h1": "Je sais calculer la valeur d'une expression en remplaçant la lettre par un nombre, même négatif ou avec un carré",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-04.html"
+    },
+    {
+     "id": "4e-LIT-03",
+     "n": 13,
+     "ids": "4e-LIT-03 · 3e-LIT-14",
+     "h1": "Je sais appliquer un programme de calcul à un nombre, puis à 𝑥 pour écrire l'expression qu'il calcule",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-03.html"
+    },
+    {
+     "id": "4e-LIT-09",
+     "n": 14,
+     "ids": "4e-LIT-09 · 3e-LIT-14",
+     "h1": "Je sais prouver que deux programmes de calcul ont toujours le même résultat",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · revu de 4e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-09.html"
+    },
+    {
+     "id": "4e-LIT-10",
+     "n": 15,
+     "ids": "4e-LIT-10 · 3e-LIT-15",
+     "h1": "Je sais démontrer avec des lettres qu'une propriété est vraie pour tous les entiers, ou qu'elle est fausse avec un contre-exemple",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · ajout 3e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-10.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-LIT-brevet",
+    "page": "/cours/3e/3e-LIT-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-LIT-imprimable.html"
+  },
+  {
+   "id": "3e-TRG",
+   "niveau": "3e",
+   "chapitre": "Trigonométrie",
+   "titre": "Cosinus, sinus et tangente",
+   "fiches": [
+    {
+     "id": "3e-TRG-01",
+     "n": 1,
+     "ids": "3e-TRG-01",
+     "h1": "Je sais nommer l'hypoténuse, le côté adjacent et le côté opposé à un angle aigu",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-TRG-01.html"
+    },
+    {
+     "id": "3e-TRG-02",
+     "n": 2,
+     "ids": "3e-TRG-02",
+     "h1": "Je connais le cosinus, le sinus et la tangente d'un angle aigu, et je sais pourquoi ils ne dépendent que de l'angle",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-TRG-02.html"
+    },
+    {
+     "id": "4e-COS-02",
+     "n": 3,
+     "ids": "4e-COS-02 · 3e-TRG-04",
+     "h1": "Je sais calculer une longueur avec le cosinus (en 3e, aussi avec le sinus ou la tangente)",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · ajout de 3e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-COS-02.html"
+    },
+    {
+     "id": "4e-COS-03",
+     "n": 4,
+     "ids": "4e-COS-03 · 3e-TRG-05",
+     "h1": "Je sais calculer un angle avec le cosinus (en 3e, aussi avec le sinus ou la tangente)",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode · ajout de 3e",
+     "nouveau": false,
+     "page": "/cours/4e/4e-COS-03.html"
+    },
+    {
+     "id": "3e-TRG-03",
+     "n": 5,
+     "ids": "3e-TRG-03",
+     "h1": "Je sais choisir la bonne formule : cosinus, sinus, tangente… ou le théorème de Pythagore",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-TRG-03.html"
+    },
+    {
+     "id": "3e-THA-04",
+     "n": 6,
+     "ids": "3e-THA-04",
+     "h1": "Je sais choisir le bon outil : Pythagore, Thalès, deux perpendiculaires ou la trigonométrie",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode · toute la géométrie",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-04.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-TRG-brevet",
+    "page": "/cours/3e/3e-TRG-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-TRG-imprimable.html"
   }
  ]
 }

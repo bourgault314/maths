@@ -3582,12 +3582,14 @@ const CARTE={total:13,visible:3,cache:10,n:2,trouve:true,forme:4,rot:64,
   places:[{x:75,y:115,s:.6},{x:185,y:115,s:.6}],
   caches:[[77,83],[100,118],[98,144],[58,138],[57,115],[183,79],[208,123],[185,142],[162,116],[171,101]],
   visibles:[[24,40],[256,96],[270,170]]};
-/* ce que l'étape 4 a de différent dans l'outil (find_hidden, deux taches) */
+/* ce que l'étape 4 a de différent dans l'outil (find_hidden, deux taches ; « Regarde sous les taches… » au pluriel, 09/11/2026) */
 const AJOUT={
   paysage:{badge:{x:985,y:111,w:72,h:72,fs:36,ring:3},
-    consigne:{x:720,ys:[86.5],fs:21,lignes:['Observe la carte et complète le schéma en barres, puis Valider.']}},
+    consigne:{x:720,ys:[86.5],fs:21,lignes:['Observe la carte et complète le schéma en barres, puis Valider.']},
+    msg:{x:720,ys:[763],fs:16,lignes:['Bravo, du premier coup ! Regarde sous les taches…']}},
   portrait:{badge:{x:322,y:98,w:38,h:38,fs:18,ring:3},
-    consigne:{x:195,ys:[58.5,77.5],fs:15,lignes:['Observe la carte et complète le schéma en','barres, puis Valider.']}}};
+    consigne:{x:195,ys:[58.5,77.5],fs:15,lignes:['Observe la carte et complète le schéma en','barres, puis Valider.']},
+    msg:{x:195,ys:[557,577],fs:16,lignes:['Bravo, du premier coup !','Regarde sous les taches…']}}};
 /* après l'arrêt (lot 7b) : rep = la correction commence ; hach/retire = le 3 hachuré qui sort ; barre = la barre « 10 » ;
    part = le partage (phrase) ; coupe = le trait du milieu ; split = 10 devient 5 et 5 ; tombe = les deux parts tombent dans
    les cases grises ; puis le doigt écrit 5 et 5, vite, et on valide */

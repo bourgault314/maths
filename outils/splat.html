@@ -15439,7 +15439,8 @@ function eleveValiderSplat(){
     /* carte finie : plus rien à valider, le Valider s'efface aussi aux mondes 1-2 sur ordinateur
        (il y restait éteint à côté de « Carte suivante » ; 05/10/2026, Gwenaël) */
     bouton.hidden = true;
-    msg.textContent = eleveMessageJuste(eleveCarteFautee);
+    const carteJuste = eleveSerie[eleveIdx];
+    msg.textContent = eleveMessageJuste(eleveCarteFautee, carteJuste && Array.isArray(carteJuste._splats) ? carteJuste._splats.length : 1);
     msg.className = "eleveMsg bravo";
     casesE.forEach(c => c.querySelectorAll(".eleveChamp").forEach(i => { i.readOnly = true; }));
     eleveSauverEnCours();
@@ -15518,10 +15519,11 @@ function eleveDevoilerTache(){
   }
 }
 
-/* « Bravo… Regarde sous la tache… » ; l'Enquête a plusieurs taches à regarder. */
-function eleveMessageJuste(apresErreur){
+/* « Bravo… Regarde sous la tache… » ; « sous les taches… » dès que la carte en a deux ou plus
+   (monde 2 : 2 à 5 taches ; 09/11/2026, Gwenaël — avant, seule l'Enquête passait au pluriel). */
+function eleveMessageJuste(apresErreur, nbTaches){
   const enquete = !!document.querySelector("#elevePanel.enquete");
-  return (apresErreur ? "Juste ! " : "Bravo, du premier coup ! ") + (enquete ? "Regarde sous les taches…" : "Regarde sous la tache…");
+  return (apresErreur ? "Juste ! " : "Bravo, du premier coup ! ") + (enquete || nbTaches > 1 ? "Regarde sous les taches…" : "Regarde sous la tache…");
 }
 
 /* ===== Enquête : « Voir le schéma » (lot E2) =====
