@@ -144,7 +144,7 @@ test("carte des mondes : les films sous les étapes 1, 2, « paquets » et 35, q
   assert.match(carte, /p:"m1e1",\n\s*films:\[\["intro","Le film",43\]\],/);
   assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Le film",36\]\],/);
   assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Le film",47\]\],/);
-  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 6);   // + l'étape 37 (lot 5, 08/11/2026), l'étape É1 (lot 6a)
+  assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 9);   // + l'étape 37 (lot 5, 08/11/2026), l'étape É1 (lot 6a), les fiches 38 et 40 (lot 6b-6c), l'étape 4 (lot 7)
 });
 
 /* Ouvert depuis la page Splat du catalogue (sans ?suite=), le film est présenté par le prof : il ne mène pas
@@ -216,7 +216,7 @@ test("film et diaporama : « jetons cachés » et « Jeu SPLAT! »", () => {
   assert.match(page, /\['#cbd5e1',ENCRE,'cachés'\]/);
   assert.equal((diapo.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
   assert.equal((source.match(/Le nombre de jetons <b>cachés<\/b>/g) || []).length, 4);
-  assert.equal((page.match(/credit:'Jeu SPLAT! créé par/g) || []).length, 7);
+  assert.equal((page.match(/credit:'Jeu SPLAT! créé par/g) || []).length, 9);   // + les tutoriels des fiches 38 et 40 (un seul bloc, lot 6b-6c), « Deux taches » (lot 7)
   assert.doesNotMatch(page, /Jeu Splat!/);
   assert.match(diapo, /Jeu SPLAT! créé par/);
 });

@@ -66,10 +66,10 @@ test("carte : les boutons des films, au contour de la couleur du monde, avec leu
 test("carte : la durée écrite sur chaque bouton est celle du film (arrondie)", () => {
   const blocs = page.split("<script>").slice(1).map((b) => b.split("</script>")[0]);
   const duree = (marque) => Number(blocs.find((b) => b.includes(marque)).match(/duration:([\d.]+)/)[1]);
-  const vrai = { intro: duree("FILMS.intro=film;"), dessine: duree("FILMS.dessine="), paquets: duree("FILMS.paquets="), "equasplat-jetons": duree("FILMS['equasplat-jetons']=") };
+  const vrai = { intro: duree("FILMS.intro=film;"), dessine: duree("FILMS.dessine="), paquets: duree("FILMS.paquets="), "equasplat-jetons": duree("FILMS['equasplat-jetons']="), "deux-taches": duree("FILMS['deux-taches']=") };
   const ecrits = [...carte.matchAll(/\["([a-z-]+)","[^"]+",(\d+)\]/g)];
-  // trois films ont leur durée sur la carte ; les deux boutons de l'étape 35 sont des tutoriels (lot 4, 08/11/2026)
-  assert.equal(ecrits.length, 3);
+  // quatre films ont leur durée sur la carte (« Deux taches », lot 7) ; les boutons « À toi de faire » sont des tutoriels (lot 4, 08/11/2026)
+  assert.equal(ecrits.length, 4);
   for (const [, f, s] of ecrits) assert.equal(Number(s), Math.round(vrai[f]), f);
 });
 

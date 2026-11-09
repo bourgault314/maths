@@ -89,7 +89,7 @@ test("films : la barre n'a plus de bouton « Équation suivante », le bandeau p
   assert.match(intro, /function barre\(o,Y,t,tr,tCache\)\{/);
   assert.match(intro, /const AVANCE_FIGE=1\.0,APRES_BRAVO=\.4;/, "1,4 s entre les boutons figés et le bandeau, comme ELEVE_PAUSE_SOLUTION");
   assert.match(intro, /if\(G\)\{op\(G,vu\?0:1-\.65\*f\);if\(f>0&&!vu\)G\.setAttribute\('filter','url\(#fsGris\)'\)/);
-  assert.equal((intro.match(/Q\.grouperOutils\(o,S,/g) || []).length, 5);   // + le tutoriel de l'étape É1 (lot 6a)
+  assert.equal((intro.match(/Q\.grouperOutils\(o,S,/g) || []).length, 6);   // + le tutoriel de l'étape É1 (lot 6a), ceux des fiches 38 et 40 (un seul bloc, lot 6b-6c)
   // 5 rendus : le film des billes, son tutoriel, le film des jetons numérotés et son tutoriel (lot 4, 08/11/2026 ; les deux
   // derniers partagent l'écran, d'où un grouperOutils pour eux deux), le tutoriel de l'étape 37 (lot 5), celui de l'étape É1 (lot 6a)
   assert.equal((intro.match(/const bv=enA\?Q\.bravo\(o,t,o\.bravoA,/g) || []).length, 6);

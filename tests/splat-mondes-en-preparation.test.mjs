@@ -21,7 +21,7 @@ const moduleEtapes = lire("assets/js/splat-etapes.js");
 const univers = lire("outils/splat_univers.html");
 const livrets = lire("outils/livrets_splat.html");
 const URL_CARTE = "/outils/splat_univers.html";
-const VERSION = "20261108-4";   // l’aide de l’étape É1 (AIDES, lot 6a « aides et carte », 08/11/2026)
+const VERSION = "20261108-6";   // les aides des fiches 38 et 40 et le film « Deux taches » (AIDES, lot 6b-6c-7 « aides et carte », 08/11/2026)
 
 // ---------- le module, exécuté avec une fausse fenêtre ----------
 function stockage(initial = {}) {

@@ -55,16 +55,16 @@ test("splat-etapes.js : AIDES est la copie des films de la carte (seulement les 
     "les films de la carte ont changé : recopier dans assets/js/splat-etapes.js (AIDES) :\n" + JSON.stringify(attendu, null, 1) +
     "\npuis bumper son ?v= partout où il est chargé");
   // les choix du 08/11, écrits en clair
-  assert.deepEqual({ ...E.AIDES }, { m1e1: "intro", m1e2: "dessine", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches", ech1: "equasplat-relatifs" });
+  assert.deepEqual({ ...E.AIDES }, { m1e1: "intro", m1e2: "dessine", m1e4: "deux-taches", m2e4: "paquets", m3e1: "equasplat", m3e4: "equasplat-taches", ech1: "equasplat-relatifs", m4e1: "equasplat-rouges", m4e3: "equasplat-oppose" });
   // une aide « à peu près » décourage : pas de bouton aux étapes sans leur propre aide
-  for (const p of ["m1e3", "m1e4", "m1e5", "m1e6", "m2e1", "m2e5", "m3e2"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
-  // Enquête, Système (et leurs Bonus), Relatifs hors de l'étape É1 (lot 6a, 08/11/2026) : rien
-  for (const p of ["enq10", "enq24", "enq11d", "sys25", "sys28d", "ech2", "ech3", "m4e1", "m4e6"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
+  for (const p of ["m1e3", "m1e5", "m1e6", "m2e1", "m2e5", "m3e2"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
+  // Enquête, Système (et leurs Bonus), Relatifs hors de l'étape É1 et des fiches 38 et 40 (lots 6a, 6b-6c, 08/11/2026) : rien
+  for (const p of ["enq10", "enq24", "enq11d", "sys25", "sys28d", "ech2", "ech3", "m4e2", "m4e4", "m4e5", "m4e6"]) assert.equal(E.aide(p, "/outils/splat.html"), null, p);
   // chaque aide est une étape de la carte, et un film du lecteur
   const parcours = E.ETAPES.map((e) => e[0]);
   for (const [p, f] of Object.entries(E.AIDES)) {
     assert.ok(parcours.includes(p), `${p} n'est pas une étape de la carte`);
-    assert.ok(f === "intro" ? /FILMS\.intro=film;/.test(intro) : intro.includes(`FILMS.${f}=(function(){`) || intro.includes(`FILMS['${f}']=(function(){`), `film « ${f} » inconnu du lecteur`);
+    assert.ok(f === "intro" ? /FILMS\.intro=film;/.test(intro) : intro.includes(`FILMS.${f}=(function(){`) || intro.includes(`FILMS['${f}']=(function(){`) || intro.includes(`FILMS['${f}']=tutoriel(`), `film « ${f} » inconnu du lecteur`);
   }
 });
 
@@ -122,10 +122,10 @@ test("les trois outils : « ? Aide » pointe vers l'aide de l'étape (& échapp�
     assert.equal(lienAide(o, VARS[o], "", adr), "", `${o} sans parcours`);
   }
   assert.equal(lienAide("SPLAT! Classique", "parcoursId", "enq12", "/outils/splat.html?eleve=1&parcours=enq12"), "");
-  assert.equal(lienAide("Petit SPLAT!", "parcoursId", "m1e4", "/outils/splat_tache_barre.html?support=eleve&parcours=m1e4"), "");
+  assert.equal(lienAide("Petit SPLAT!", "parcoursId", "m1e5", "/outils/splat_tache_barre.html?support=eleve&parcours=m1e5"), "");   // l'étape 4 a son film depuis le lot 7
   assert.equal(lienAide("ÉquaSplat", "eleveParcours", "m3e2", "/outils/equasplat.html?eleve=1&parcours=m3e2"), "");
   assert.equal(lienAide("SPLAT! Classique", "parcoursId", "sys27d", "/outils/splat.html?eleve=1&parcours=sys27d"), "");
-  assert.equal(lienAide("ÉquaSplat", "eleveParcours", "m4e3", "/outils/equasplat.html?eleve=1&parcours=m4e3"), "");
+  assert.equal(lienAide("ÉquaSplat", "eleveParcours", "m4e2", "/outils/equasplat.html?eleve=1&parcours=m4e2"), "");   // la fiche 40 (m4e3) a son tutoriel depuis le lot 6b-6c
   // sans splat-etapes.js (fichier pas chargé) : rien, et pas d'erreur
   const f = new Function("window", "location", "parcoursId", fonction(OUTILS["Petit SPLAT!"], "eleveLienAideHtml") + "; return eleveLienAideHtml();");
   assert.equal(f({}, { pathname: "/x", search: "", hash: "" }, "m1e1"), "");
