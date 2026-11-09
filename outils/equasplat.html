@@ -10734,7 +10734,37 @@
        les pastilles disent déjà où il en est. À l'ordinateur, le message tient sur la ligne : il reste. */
     if(ok && reprise && !eleveEcranEtroit()) eleveMajBarre(reprise);
     window.setInterval(eleveSurveillerResolution, 400);
+    /* étape déjà réussie, rien à reprendre : « Étape réussie ! » posé sur l'équation 1 */
+    if(ok && !reprise && entree && entree.fait) eleveEtapeReussie(entree);
     return ok;
+  }
+
+  /* ===== Une étape déjà réussie (lot « rejouer », décidé avec Gwenaël le 09/11/2026) =====
+     L'élève qui rouvre une étape à l'étoile allumée ne retombe plus directement sur l'équation 1 :
+     le carton « Étape réussie ! » est posé dessus (planche-3-monde5.png, validée telle quelle),
+     avec sa meilleure série et « Je rejoue la série ▶ », qui relance les MÊMES équations
+     (décision du 09/11 : pas de générateur d'équations pour l'instant). Rien n'est écrit au clic :
+     la série rejouée s'enregistre comme toutes les autres, « la meilleure série gagne ». Ici une
+     équation passée puis rejouée devient verte : « du premier coup » = les équations moins
+     celles passées. Seulement dans le parcours (sans parcours, pas de case : rien ne change). */
+  function eleveMeilleureSerieTexte(e, mot){
+    const cartes = Number(e && e.cartes) || 0;
+    if(!(cartes > 0)) return "";
+    const n = Math.max(0, Math.min(Number(e.etoiles) || 0, cartes - (Number(e.vues) || 0)));
+    return `Ta meilleure s\u00e9rie\u00a0: ${n} ${mot}${n > 1 ? "s" : ""} sur ${cartes} du premier coup.`;
+  }
+  function eleveEtapeReussie(entree){
+    const voile = document.createElement("div");
+    voile.className = "eleveVoile";
+    const meilleure = eleveMeilleureSerieTexte(entree, "\u00e9quation");
+    voile.innerHTML = `<div class="eleveCarton"><div class="finEtoile on">\u2B50</div>` +
+      `<h2>\u00c9tape r\u00e9ussie\u00a0!</h2>` +
+      `<p class="finSous">${meilleure ? meilleure + "<br>" : ""}Rejoue quand tu veux\u00a0: ton \u00e9toile reste allum\u00e9e.</p>` +
+      `<div class="finAction"><button type="button" id="eleveRejouerSerie">Je rejoue la s\u00e9rie \u25b6</button></div>` +
+      `<div class="finSorties">${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
+    voile.querySelector("#eleveRejouerSerie").addEventListener("click", () => voile.remove());
+    eleveHote().appendChild(voile); /* en plein écran : dans la scène, sinon invisible */
+    voile.querySelector("button").focus();
   }
 
   /* « Résolue ? » — l'équation courante, ou, avec les billes unitaires
