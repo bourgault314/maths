@@ -3561,11 +3561,15 @@ return film;
    la série de l'étape 4 ; le film s'arrête sur la question SANS montrer comment partager (choix du 09/10 : c'est à
    l'élève de trouver), puis on vérifie : on tape 5 et 5, on valide, les deux taches s'éclaircissent et on compte 5
    jetons sous chacune. Un film, pas un tutoriel (au monde 1, les étapes n'ont que « Le film »).
-   La correction en barres (choix du 08/11, 22 h 30 ; lot 7b, 09/11) : APRÈS l'arrêt seulement, et dans le schéma de
-   Petit SPLAT! lui-même — le 3 de la case bleue se hachure (les hachures du film des paquets et du pas à pas du jeu)
-   et sort vers la gauche, une barre « 10 » se pose sur les deux cases grises, un trait la coupe au milieu, et 5 et 5
-   tombent dans les cases grises ; sous-titres en mots et en calculs (13 − 3 = 10 ; 10 en deux parts égales : 5 et 5).
-   Avant l'arrêt, rien ne change : l'élève cherche d'abord.
+   La correction en barres (lot 9, 09/11/2026, croquis validé par Gwenaël ; elle remplace celle du lot 7b, qui ne coupait
+   jamais le 13) : APRÈS l'arrêt seulement, la méthode de SPLAT! et d'ÉquaBarre, comme la scène en barres du film des
+   paquets (FILMS.paquets) — une scène « en barres » à part (« La même situation, en barres. ») : le schéma de Petit
+   SPLAT! grandit (13 ; 3, ?, ?), 13 se décompose en 3 et 10 (le 3 du haut au-dessus du 3 du bas), les deux 3 sont
+   hachurés puis retirés (les hachures et le rythme du film des paquets), 10 se partage en deux parts égales, 5 et 5
+   (« Partager équitablement » d'ÉquaBarre), les « ? » restent des « ? » et on écrit à part « ? = 5 » ; puis retour à
+   l'écran du jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache. AUCUN crochet au-dessus des barres
+   décomposées (choix du 09/11, 20 h 55 : pas de « 13 » en accolade). Avant l'arrêt, rien ne change : l'élève cherche
+   d'abord.
    Comme le film de l'étape 2 : chaque jeton compté s'allume (anneau doré) et un compteur monte — jamais de chiffre sur
    un jeton ; une courte pause après chaque geste ; chaque sous-titre reste au moins 3 s ; un arrêt à la question
    (« À toi de chercher… puis ▶ »), comme le film de l'étape 1.
@@ -3590,30 +3594,44 @@ const AJOUT={
   portrait:{badge:{x:322,y:98,w:38,h:38,fs:18,ring:3},
     consigne:{x:195,ys:[58.5,77.5],fs:15,lignes:['Observe la carte et complète le schéma en','barres, puis Valider.']},
     msg:{x:195,ys:[557,577],fs:16,lignes:['Bravo, du premier coup !','Regarde sous les taches…']}}};
-/* après l'arrêt (lot 7b) : rep = la correction commence ; hach/retire = le 3 hachuré qui sort ; barre = la barre « 10 » ;
-   part = le partage (phrase) ; coupe = le trait du milieu ; split = 10 devient 5 et 5 ; tombe = les deux parts tombent dans
-   les cases grises ; puis le doigt écrit 5 et 5, vite, et on valide */
+/* après l'arrêt (lot 9) : chaque phrase arrive, puis son geste un peu après (une pause après chaque geste) —
+   rep / barres = « La même situation, en barres. » et le schéma du jeu qui grandit en scène à part ;
+   dec / decoupe = 13 se décompose en 3 et 10 ; hachTxt / hachure = les deux 3 hachurés ; retTxt / retire = ils sont
+   retirés (la colonne du 10 vient au milieu, comme la colonne du 22 du film des paquets) ;
+   part / coupe / split = le trait du milieu, puis 10 devient 5 et 5 ; cache / egal = « ? = 5 » ;
+   retour = la scène s'en va, l'écran du jeu revient ; puis le doigt écrit 5 et 5 et on valide */
 const T={ecran:2.7,taches:3.6,lit:6.4,badge:6.8,caseT:7.9,t1:8.5,t3:8.9,
   vis:10.2,cptV:10.4,v0:10.9,pasV:.6,ecrisV:13.2,caseV:13.9,tapeV:14.5,cptVOut:15.6,
   gris:16.4,g1:16.8,g2:17.9,question:19.6,q:19.9,stop:21.2,
-  rep:22.8,hach:23.6,retire:24.6,barre:26.8,part:28.3,coupe:28.8,split:29.5,tombe:30.6,
-  caseG1:31.9,tapeG1:32.4,caseG2:32.9,tapeG2:33.4,
-  valideTxt:34.2,valide:34.9,
-  compte1:37.4,cpt1:37.6,c1:38.1,pasC:.5,cpt1Out:40.6,
-  compte2:40.8,cpt2:41.0,c2:41.5,cpt2Out:45.2,bravo:44.2,fin:47.6};
-/* les durées des transformations : hachure et retrait comme le film des paquets (FILMS.paquets, DUR) */
-const DUR={hachure:.6,retire:1.8,barre:.45,coupe:.5,split:.45,tombe:.6};
+  rep:22.8,barres:23.2,dec:26.4,decoupe:26.9,hachTxt:29.8,hachure:30.2,retTxt:32.8,retire:33.3,
+  part:36.6,coupe:37.1,split:37.8,cache:40.0,egal:40.4,retour:43.2,
+  caseG1:45.9,tapeG1:46.4,caseG2:46.9,tapeG2:47.4,
+  valideTxt:48.2,valide:48.9,
+  compte1:51.4,cpt1:51.6,c1:52.1,pasC:.5,cpt1Out:54.6,
+  compte2:54.8,cpt2:55.0,c2:55.5,cpt2Out:59.2,bravo:58.2,fin:61.6};
+/* les durées des transformations : celles du film des paquets (FILMS.paquets, DUR : morph, split, hachure, retire) ;
+   coupe et parts : le partage d'ÉquaBarre (le nombre devient deux parts égales, côte à côte) ; egal : le « ? = 5 » ;
+   retour : le schéma s'efface (0,7 s), l'écran du jeu revient (1 s, 0,5 s après), comme le retour au plateau des paquets */
+const DUR={morph:2.4,split:2.0,hachure:.6,retire:1.8,coupe:.5,parts:.6,egal:.4,sOut:.7,pIn:1.0};
 /* chaque phrase reste au moins 3 s (lot 4, 08/11/2026) ; la question reste à l'écran pendant l'arrêt ; la correction
-   en mots et en calculs (choix du 08/11, 22 h 30) */
+   en mots et en calculs, les phrases du croquis validé le 09/11 */
 const SOUS_TITRES=[[3.0,'Deux taches : elles cachent le même nombre de jetons.'],
   [T.lit,'13 jetons en tout : on l’écrit en haut du schéma.'],[T.vis,'On compte les jetons visibles.'],
   [T.ecrisV,'3 jetons visibles : on l’écrit.'],[T.gris,'Une case grise pour chaque tache.'],
-  [T.question,'Combien de jetons sous chaque tache ?'],[T.rep,'On retire les 3 jetons visibles : 13 − 3 = 10.'],
-  [T.part,'On partage 10 en deux parts égales : 5 et 5.'],
+  [T.question,'Combien de jetons sous chaque tache ?'],[T.rep,'La même situation, en barres.'],
+  [T.dec,'On décompose 13 en 3 et 10.'],[T.hachTxt,'On hachure les deux morceaux de 3.'],
+  [T.retTxt,'On retire les deux morceaux de 3 : 13 − 3 = 10.'],
+  [T.part,'On partage 10 en deux parts égales : 5 et 5.'],[T.cache,'Chaque tache cache 5.'],
   [T.valideTxt,'Valide, puis regarde sous les taches…'],[T.compte1,'Sous la première tache…'],
   [T.compte2,'… et sous la deuxième.'],[T.bravo,'Il y a bien 5 jetons sous chaque tache !'],[T.fin,'']];
+/* la scène en barres : la mise en page du film des paquets (LAY.paysage.S et LAY.portrait.S), à la même place dans le
+   cadre ; egal = la ligne du « ? = 5 », sous le schéma */
+const SCENE={paysage:{x0:300,x1:1300,y1:320,ym:470,y2:620,val:64,egal:720},
+  portrait:{x0:60,x1:840,y1:520,ym:650,y2:780,val:54,egal:870}};
+/* les couleurs de la scène : celles du film des paquets (C de FILMS.paquets) */
+const CB={encre:'#0b1220',bleuTxt:'#1d4ed8',gris:'#d4deea',vertTxt:'#15803d'};
 const film={
-  duration:51.0, poster:2.4,   /* T.fin + 3,4 s pour le carton de fin ; la durée écrite sur la carte (tests/splat-films-liens) */
+  duration:65.0, poster:2.4,   /* T.fin + 3,4 s pour le carton de fin ; la durée écrite sur la carte (tests/splat-films-liens) */
   /* l'arrêt à la question : on cherche, puis on relance (« À toi de chercher… puis ▶ ») */
   stops:[{t:T.stop}],
   /* au téléphone, la bulle de l'arrêt dans le blanc entre les taches et le schéma (y = 395 dans l'outil : 128 + 395 × 1,832
@@ -3621,10 +3639,11 @@ const film={
   bulleHaut:53.2,
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
-  aria:'Film : dans Petit SPLAT!, deux taches cachent le même nombre de jetons : recopier le total, compter les jetons visibles, chercher combien de jetons cache chaque tache, puis la correction en barres (on retire les 3 jetons visibles : 13 − 3 = 10, on partage 10 en deux parts égales : 5 et 5) et la vérification sous les taches',
+  aria:'Film : dans Petit SPLAT!, deux taches cachent le même nombre de jetons : recopier le total, compter les jetons visibles, chercher combien de jetons cache chaque tache, puis la correction en barres, dans une scène à part (on décompose 13 en 3 et 10, on hachure et on retire les deux morceaux de 3 : 13 − 3 = 10, on partage 10 en deux parts égales : 5 et 5, chaque tache cache 5) et la vérification dans le jeu, sous les taches',
   titre:'Deux taches — Petit SPLAT! — maths&go',
   chapters:[{t:0,name:'SPLAT!'},{t:3.0,name:'Deux taches'},{t:T.lit,name:'Le total'},{t:T.vis,name:'Les jetons visibles'},
-    {t:T.gris,name:'Une case grise par tache'},{t:T.question,name:'La question'},{t:T.rep,name:'La correction en barres'},{t:T.part,name:'Le partage'},
+    {t:T.gris,name:'Une case grise par tache'},{t:T.question,name:'La question'},{t:T.rep,name:'La même situation, en barres'},{t:T.dec,name:'Décomposer 13'},
+    {t:T.hachTxt,name:'Retirer les deux morceaux de 3'},{t:T.part,name:'Le partage'},{t:T.cache,name:'Chaque tache cache 5'},
     {t:T.valideTxt,name:'Vérifier sous les taches'},{t:T.fin,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=Z.mise(mode,AJOUT),o=this.o={port};
@@ -3641,26 +3660,49 @@ const film={
     /* chaque case grise s'entoure de doré avec sa tache (« une case grise pour chaque tache ») */
     o.cadresGris=k.gris.map(cs=>{const b=cs.b,w=Y.schema.ring*1.6;
       return E('rect',{x:b.x+w/2,y:b.y+w/2,width:b.w-w,height:b.h-w,fill:'none',stroke:Z.C.or,'stroke-width':w},k.g);});
-    /* ---- la correction en barres, après l'arrêt : dans le schéma même (choix du 08/11, 22 h 30) ---- */
+    /* ---- la correction en barres, après l'arrêt : une scène à part, comme le film des paquets (lot 9, 09/11/2026) ---- */
     /* les hachures du retrait : celles du film des paquets et du pas à pas du jeu (enqG3Retire) */
     const defs=E('defs',{},svg),pat=E('pattern',{id:'dtHachures',patternUnits:'userSpaceOnUse',width:20,height:20,patternTransform:'rotate(135)'},defs);
     E('rect',{width:20,height:20,fill:'#e5e7eb'},pat);E('rect',{width:10,height:20,fill:'rgba(15,23,42,0.30)'},pat);
-    const H=Y.schema,bv=k.vis.b,g0=k.gris[0].b,g1=k.gris[1].b;
-    /* le 3 hachuré : une copie de la case bleue, estompée comme dans le jeu, qui sort vers la gauche ; la case bleue garde
-       son 3, pâle pendant le partage (l'élève l'a écrit, et Valider en a besoin) */
-    o.hach=E('g',{},k.g);
-    E('rect',{x:bv.x,y:bv.y,width:bv.w,height:bv.h,fill:'url(#dtHachures)',stroke:'#111827','stroke-width':2.5},o.hach);
-    Z.chiffre(o.hach,bv.x+bv.w/2,bv.y+bv.h/2,H.fs,'#111827',{'font-weight':800}).textContent=String(CARTE.visible);
-    /* la barre « 10 » posée sur les deux cases grises (un peu soulevée), le trait qui la coupe au milieu — juste sur la
-       séparation des deux cases grises —, puis les deux parts « 5 » qui tombent chacune dans sa case */
-    const bx=g0.x,bw=g1.x+g1.w-g0.x,xm=bx+bw/2;o.lev=.2*g0.h;o.ecart=H.fs*.1;
-    o.barre=E('g',{filter:'url(#psOmbre)'},k.g);o.barreC=[xm,g0.y+g0.h/2];
-    E('rect',{x:bx,y:g0.y,width:bw,height:g0.h,fill:Z.C.gris,stroke:Z.C.encre,'stroke-width':2.5},o.barre);
-    o.dix=Z.chiffre(o.barre,xm,g0.y+g0.h/2,H.fs,Z.C.encre);o.dix.textContent=String(CARTE.cache);
-    o.coupe=E('line',{x1:xm,y1:g0.y,x2:xm,y2:g0.y,stroke:Z.C.encre,'stroke-width':2.5},k.g);o.coupeY=[g0.y,g0.y+g0.h];
-    o.parts=k.gris.map(cs=>{const b=cs.b,g=E('g',{filter:'url(#psOmbre)'},k.g);
-      const r=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,fill:Z.C.gris,stroke:Z.C.encre,'stroke-width':2.5},g);
-      Z.chiffre(g,b.x+b.w/2,b.y+b.h/2,H.fs,Z.C.encre).textContent=String(CARTE.cache/CARTE.n);return {g,r};});
+    /* les cases, en coordonnées du cadre : la largeur dit la quantité (13 en tout ; 3 visibles ; 5 sous chaque tache), comme
+       le schéma du film des paquets */
+    const B=this.B=SCENE[mode]||SCENE.paysage,u=(B.x1-B.x0)/CARTE.total,h=B.ym-B.y1,V=CARTE.visible,M=CARTE.cache/CARTE.n;
+    const R=(x,y,w)=>({x,y,w,h});
+    o.R={haut:R(B.x0,B.y1,CARTE.total*u),h3:R(B.x0,B.y1,V*u),h10:R(B.x0+V*u,B.y1,CARTE.cache*u),
+      h5a:R(B.x0+V*u,B.y1,M*u),h5b:R(B.x0+(V+M)*u,B.y1,M*u),b3:R(B.x0,B.ym,V*u),q1:R(B.x0+V*u,B.ym,M*u),q2:R(B.x0+(V+M)*u,B.ym,M*u)};
+    /* après le retrait, la colonne du 10 vient au milieu (comme la colonne du 22 du film des paquets) */
+    o.dc=(B.x0+B.x1)/2-(o.R.h10.x+o.R.h10.w/2);
+    o.barres=E('g',{},svg);
+    /* un cache blanc posé sur le schéma du jeu : les cases qui grandissent ne laissent pas voir l'ancien schéma dessous */
+    {const H=Y.schema,m=4;   /* 4 de marge : les traits du bord du schéma ne dépassent pas */
+      o.cache=E('rect',{x:Y.ox+Y.s*(H.x-Y.x0)-m,y:Y.oy+Y.s*(H.y-Y.y0)-m,width:Y.s*H.w+2*m,height:Y.s*H.h+2*m,fill:'#ffffff'},o.barres);}
+    /* une case du schéma : le dessin du film des paquets (traits noirs de 3, nombre au milieu) */
+    const cse=(Rc,fond,txt,coul)=>{const g=E('g',{},o.barres);
+      const r=E('rect',{x:Rc.x,y:Rc.y,width:Rc.w,height:Rc.h,fill:fond,stroke:CB.encre,'stroke-width':3},g);
+      const tx=Z.chiffre(g,Rc.x+Rc.w/2,Rc.y+Rc.h/2,B.val,coul);tx.textContent=txt;return {g,r,t:tx,R:Rc};};
+    o.sHaut=cse(o.R.haut,'#ffffff',String(CARTE.total),CB.encre);
+    /* 13 = 3 + 10 : le 3 du haut juste au-dessus du 3 du bas ; AUCUN crochet au-dessus (choix du 09/11, 20 h 55) */
+    o.sH3=cse(o.R.h3,'#ffffff',String(V),CB.encre);o.sH10=cse(o.R.h10,'#ffffff',String(CARTE.cache),CB.encre);
+    /* 10 partagé en deux parts égales : 5 et 5, côte à côte (« Partager équitablement » d'ÉquaBarre) */
+    o.sH5=[o.R.h5a,o.R.h5b].map(Rc=>cse(Rc,'#ffffff',String(M),CB.encre));
+    o.sB3=cse(o.R.b3,'#ffffff',String(V),CB.bleuTxt);
+    /* les cases grises (une par tache), avec la petite tache du schéma ; leurs « ? » restent des « ? » */
+    const mr=h*.13;
+    o.sQ=[o.R.q1,o.R.q2].map(Rc=>{const c=cse(Rc,CB.gris,'?',CB.encre);
+      c.mini=E('path',{d:Q.blob(Rc.x+mr*1.5+6,Rc.y+mr*1.5+6,mr),fill:CB.encre,opacity:.8},c.g);return c;});
+    /* le trait du partage, au milieu du 10 (sur la séparation des deux cases grises) */
+    o.coupe=E('line',{x1:o.R.h10.x+o.R.h10.w/2,y1:B.y1,x2:o.R.h10.x+o.R.h10.w/2,y2:B.y1,stroke:CB.encre,'stroke-width':3},o.barres);
+    /* les deux morceaux de 3 hachurés, comme dans le pas à pas du jeu (estompés, le nombre posé dessus) */
+    o.hach=[o.R.h3,o.R.b3].map(Rc=>{const g=E('g',{},o.barres);
+      E('rect',{x:Rc.x,y:Rc.y,width:Rc.w,height:Rc.h,fill:'url(#dtHachures)',stroke:'#111827','stroke-width':3.5},g);
+      Z.chiffre(g,Rc.x+Rc.w/2,Rc.y+Rc.h/2,B.val,'#111827',{'font-weight':800}).textContent=String(V);return g;});
+    /* « ? = 5 », écrit à part, sous le schéma (le vert d'une case juste dans le jeu) */
+    o.egalC=[(B.x0+B.x1)/2,B.egal];
+    o.egal=Z.chiffre(o.barres,o.egalC[0],o.egalC[1],B.val,CB.vertTxt);o.egal.textContent='? = '+M;
+    /* le schéma de Petit SPLAT! grandit et devient celui de la scène : chaque case part de sa place dans l'écran du jeu
+       (comme la case TOTAL du film des paquets devient la barre du haut) */
+    const ecr=b=>({x:Y.ox+Y.s*(b.x-Y.x0),y:Y.oy+Y.s*(b.y-Y.y0),w:Y.s*b.w,h:Y.s*b.h,fs:Y.schema.fs*Y.s,sw:2*Y.s});
+    o.morphe=[[o.sHaut,k.total],[o.sB3,k.vis],[o.sQ[0],k.gris[0]],[o.sQ[1],k.gris[1]]].map(([c,cs])=>({c,de:ecr(cs.b)}));
     o.cpt=Z.compteur(Y,S);
     o.btn=Z.boutons(Y,S);
     o.pave=Z.pave(Y,S);
@@ -3686,37 +3728,52 @@ const film={
     /* les jetons comptés s'allument ; l'anneau s'éteint quand le compteur s'en va */
     for(const j of [...o.vis,...o.c1,...o.c2]){const vu=t>=j.tc;op(j.an,vu?1-P(t,j.tOut,.4,F.lin):0);
       if(vu)j.an.setAttribute('r',L(18,11.5,F.out(clamp((t-j.tc)/.35))).toFixed(2));}
-    /* ---- la correction en barres (après l'arrêt seulement) ---- */
-    /* le 3 se hachure (estompé, comme dans le jeu), puis la copie hachurée sort vers la gauche ; la case bleue garde son 3,
-       pâle, jusqu'à ce que le doigt revienne écrire 5 et 5 */
-    const hc=P(t,T.hach,DUR.hachure,F.io),rm=P(t,T.retire,DUR.retire,F.io);
-    op(o.hach,.4*hc*(1-rm));o.hach.setAttribute('transform',`translate(${(-1.2*k.vis.b.w*rm).toFixed(1)},0)`);
-    const pale=(1-hc)+.3*P(t,T.retire+DUR.retire,.4,F.lin);   /* le 3 s'efface sous la copie hachurée, revient pâle une fois la copie sortie */
-    op(k.vis.txt,pale+(1-pale)*P(t,T.caseG1-.6,.4,F.io));
-    /* la barre « 10 » : elle arrive sur les cases grises, un peu soulevée ; le trait du milieu ; 10 devient 5 et 5 ; les
-       deux parts s'écartent à peine, puis tombent chacune dans sa case grise et s'y fondent */
-    const ba=P(t,T.barre,DUR.barre,F.out),cu=P(t,T.coupe,DUR.coupe,F.io),sp=P(t,T.split,DUR.split,F.io),
-      tb=P(t,T.tombe,DUR.tombe,F.io),lev=-o.lev*(1-tb),fondu=P(t,T.tombe+DUR.tombe,.3,F.lin);
-    op(o.barre,ba*(1-sp));op(o.dix,1-P(t,T.coupe-.3,.3,F.lin));   /* le 10 s'efface : le trait ne le coupe pas */
-    o.barre.setAttribute('transform',`translate(0,${lev.toFixed(2)}) translate(${o.barreC[0]},${o.barreC[1]}) scale(${L(.9,1,ba).toFixed(3)}) translate(${-o.barreC[0]},${-o.barreC[1]})`);
-    op(o.coupe,cu>0?1-sp:0);o.coupe.setAttribute('y2',L(o.coupeY[0],o.coupeY[1],cu).toFixed(2));o.coupe.setAttribute('transform',`translate(0,${lev.toFixed(2)})`);
-    o.parts.forEach((pt,i)=>{op(pt.g,sp*(1-fondu));
-      pt.g.setAttribute('transform',`translate(${((i?1:-1)*o.ecart*sp*(1-tb)).toFixed(2)},${lev.toFixed(2)})`);});
+    /* ---- la correction en barres (après l'arrêt seulement) : une scène à part, comme le film des paquets ---- */
+    const B=this.B,R=o.R,mo=P(t,T.barres,DUR.morph,F.io),sOut=P(t,T.retour,DUR.sOut,F.lin),pIn=P(t,T.retour+.5,DUR.pIn,F.io);
+    /* l'écran du jeu s'efface pendant que son schéma grandit, puis revient au retour (comme le plateau des paquets) */
+    if(t>=T.barres)op(o.ecran,t<T.retour?1-mo:pIn);
+    const vuScene=t>=T.barres&&sOut<1;
+    op(o.barres,vuScene?1-sOut:0);
+    if(vuScene){
+      /* le schéma du jeu grandit : 13 ; 3, ?, ? */
+      for(const m of o.morphe){const a=m.de,b=m.c.R,x=L(a.x,b.x,mo),y=L(a.y,b.y,mo),w=L(a.w,b.w,mo),hh=L(a.h,b.h,mo),fs=L(a.fs,B.val,mo);
+        const r=m.c.r;r.setAttribute('x',x.toFixed(2));r.setAttribute('y',y.toFixed(2));r.setAttribute('width',w.toFixed(2));
+        r.setAttribute('height',hh.toFixed(2));r.setAttribute('stroke-width',L(a.sw,3,mo).toFixed(2));
+        m.c.t.setAttribute('x',(x+w/2).toFixed(2));m.c.t.setAttribute('y',(y+hh/2+fs*.355).toFixed(2));m.c.t.setAttribute('font-size',fs.toFixed(2));}
+      for(const q of o.sQ)op(q.mini,P(t,T.barres+DUR.morph,.4,F.lin));
+      /* 13 se décompose en 3 et 10 : la barre du haut se coupe (sans crochet au-dessus) */
+      const dp=P(t,T.decoupe,DUR.split,F.io),hc=P(t,T.hachure,DUR.hachure,F.io),rm=P(t,T.retire,DUR.retire,F.io);
+      op(o.cache,1);   /* blanc sur blanc : la carte du jeu est blanche, et le cadre aussi quand elle est partie */
+      /* le 13 s'efface d'abord, puis 3 et 10 apparaissent (les nombres ne se chevauchent jamais) */
+      const dIn=clamp((dp-.4)/.6);op(o.sHaut.t,1-clamp(dp/.4));op(o.sHaut.g,dp<1?1:0);
+      /* les deux 3 hachurés (estompés comme dans le jeu), puis retirés vers la gauche */
+      const dx=-1.2*R.b3.w*rm,vu3=1-rm,tr=`translate(${dx.toFixed(1)},0)`;
+      o.hach.forEach(g=>{op(g,.4*hc*vu3);g.setAttribute('transform',tr);});
+      o.sH3.g.setAttribute('transform',tr);o.sB3.g.setAttribute('transform',tr);
+      op(o.sH3.g,dIn*(1-hc)*vu3);op(o.sB3.g,(1-hc)*vu3);
+      /* il reste 10 au-dessus de ? et ? : la colonne vient au milieu */
+      const cx=`translate(${(o.dc*rm).toFixed(1)},0)`;
+      for(const g of [o.sH10.g,...o.sH5.map(c=>c.g),...o.sQ.map(c=>c.g),o.coupe])g.setAttribute('transform',cx);
+      /* 10 se partage en deux parts égales : le 10 s'efface (le trait ne le coupe pas), le trait du milieu, puis 5 et 5 */
+      const cu=P(t,T.coupe,DUR.coupe,F.io),pa=P(t,T.split,DUR.parts,F.io);
+      op(o.sH10.g,dIn*(1-pa));op(o.sH10.t,1-P(t,T.coupe-.3,.3,F.lin));
+      op(o.coupe,cu>0?1-pa:0);o.coupe.setAttribute('y2',L(B.y1,B.ym,cu).toFixed(2));
+      o.sH5.forEach(c=>op(c.g,pa));
+      /* « ? = 5 » à part, sous le schéma ; les « ? » du bas restent des « ? » */
+      const eg=P(t,T.egal,DUR.egal,F.back);op(o.egal,t<T.egal?0:1);Z.echelle(o.egal,o.egalC,L(.4,1,eg));
+    }
     /* les nombres tapés (petit rebond à l'arrivée) ; « ? » dans les cases grises à la question */
     const ecrit=(cs,v,tt)=>{cs.txt.textContent=v;Z.echelle(cs.txt,cs.c,Z.rebond(t,tt));};
     ecrit(k.total,t>=T.t3?'13':t>=T.t1?'1':'',t>=T.t3?T.t3:T.t1);
     ecrit(k.vis,t>=T.tapeV?'3':'',T.tapeV);
-    /* les cases grises : « ? » à la question (il s'efface quand la barre « 10 » arrive), puis 5, tombé du partage ; le
-       doigt l'écrit (petit rebond) */
-    const pose=T.tombe+DUR.tombe;
-    k.gris.forEach((cs,i)=>{const tt=i?T.tapeG2:T.tapeG1;ecrit(cs,t>=pose?'5':(t>=T.q?'?':''),t>=tt?tt:T.q+i*.2);
-      op(cs.txt,t>=pose?1:1-P(t,T.barre,.3,F.lin));});
+    /* les cases grises : « ? » à la question, puis 5 quand le doigt l'écrit, de retour dans le jeu (petit rebond) */
+    k.gris.forEach((cs,i)=>{const tt=i?T.tapeG2:T.tapeG1;ecrit(cs,t>=tt?'5':(t>=T.q?'?':''),t>=tt?tt:T.q+i*.2);});
     Z.echelle(k.badge.txt,k.badge.c,Z.rebond(t,T.badge,.16));
     for(const cs of [k.total,...k.parts])Z.juste(cs,ok);
     /* la case active : le total d'abord (comme dans l'outil), puis la case touchée ; au téléphone, le cadre reste sur la
        dernière case après Valider ; à l'ordinateur, le curseur part sur « Carte suivante » */
     let act=k.total;for(const [cs,ta] of [[k.vis,T.caseV],[k.gris[0],T.caseG1],[k.gris[1],T.caseG2]])if(t>=ta)act=cs;
-    /* pendant la correction, le doigt ne touche rien : aucune case active */
+    /* pendant la correction (la scène en barres, puis le retour au jeu), le doigt ne touche rien : aucune case active */
     const corr=t>=T.rep&&t<T.caseG1;
     for(const cs of [k.badge,k.total,...k.parts])Z.activer(cs,cs===act&&!(ok&&!port)&&!corr,port);
     /* le compteur : les jetons visibles, puis ceux de la première tache, puis ceux de la deuxième */
