@@ -555,8 +555,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « Suivre ses élèves », lot S4c « les onglets d'appli » (08/11/2026) :
   // prof/index.php seul change sur le serveur. Puis l'appli Cours (lot
   // « cours-appli », 08/11/2026) : lib/cours.php et lib/cours.json, l'espace
-  // élève, Ma classe, les API, verifier.php.
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-appli$/m);
+  // élève, Ma classe, les API, verifier.php. Puis le livret en ligne (lot
+  // « livret-telephone », 09/11/2026) : lib/cours.json seul change sur le serveur.
+  assert.match(lire("_serveur/public/VERSION"), /^lot livret-telephone$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
