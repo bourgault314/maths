@@ -210,13 +210,19 @@ test("la consigne de l'Enquête est la question de la fiche ; celle du monde 2 n
   assert.equal(consigne([], false, 1280), "Complète le schéma en barres : le total, les jetons visibles, et ce que cache chaque tache. Puis Valider.");
 });
 
-test("« Regarde sous les taches… » pour l'Enquête, « sous la tache… » ailleurs", () => {
-  const message = (classes, apresErreur) => new Function("document", `${fn("eleveMessageJuste")} return eleveMessageJuste(${apresErreur});`)(docAvecPanneau(classes));
-  assert.equal(message(["enquete"], false), "Bravo, du premier coup ! Regarde sous les taches…");
-  assert.equal(message(["enquete"], true), "Juste ! Regarde sous les taches…");
-  assert.equal(message([], false), "Bravo, du premier coup ! Regarde sous la tache…");
-  assert.equal(message([], true), "Juste ! Regarde sous la tache…");
-  assert.match(fn("eleveValiderSplat"), /msg\.textContent = eleveMessageJuste\(eleveCarteFautee\);/);
+test("« Regarde sous les taches… » pour l'Enquête et dès deux taches, « sous la tache… » avec une seule (09/11/2026)", () => {
+  const message = (classes, apresErreur, nb) => new Function("document", `${fn("eleveMessageJuste")} return eleveMessageJuste(${apresErreur}, ${nb});`)(docAvecPanneau(classes));
+  assert.equal(message(["enquete"], false, 1), "Bravo, du premier coup ! Regarde sous les taches…");
+  assert.equal(message(["enquete"], true, 3), "Juste ! Regarde sous les taches…");
+  assert.equal(message([], false, 1), "Bravo, du premier coup ! Regarde sous la tache…");
+  assert.equal(message([], true, 1), "Juste ! Regarde sous la tache…");
+  // monde 2 : 2 à 5 taches sur une carte
+  for (const nb of [2, 3, 4, 5]) {
+    assert.equal(message([], false, nb), "Bravo, du premier coup ! Regarde sous les taches…");
+    assert.equal(message([], true, nb), "Juste ! Regarde sous les taches…");
+  }
+  // le nombre de taches vient de la carte jouée
+  assert.match(fn("eleveValiderSplat"), /const carteJuste = eleveSerie\[eleveIdx\];\s*msg\.textContent = eleveMessageJuste\(eleveCarteFautee, carteJuste && Array\.isArray\(carteJuste\._splats\) \? carteJuste\._splats\.length : 1\);/);
 });
 
 // --- « Voir le schéma » ----------------------------------------------------------------------
