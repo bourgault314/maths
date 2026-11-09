@@ -8032,7 +8032,7 @@ verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fi
     egal('https://mathsgo.re/cours/3e/3e-PYT-brevet.html#ch=3e-PYT', $cours[0]['brevet'], 'le brevet');
     egal('https://mathsgo.re/cours/3e/3e-PYT-imprimable.html#ch=3e-PYT', $cours[0]['imprimable'], 'l’imprimable : toutes les fiches sont ouvertes');
     foreach ($cours[0]['fiches'] as $fiche) {
-        egal(['n', 'h1', 'niveaux', 'type', 'url'], array_keys($fiche), 'une fiche : rien d’autre que ce que la page affiche');
+        egal(['n', 'h1', 'type', 'url'], array_keys($fiche), 'une fiche : rien d’autre que ce que la page affiche (plus de niveaux depuis le 09/11/2026)');
     }
     $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['3e-PYT-02', '3e-PYT-brevet']]]], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'une fiche et le brevet fermés');
