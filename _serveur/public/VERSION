@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot cours-appli
-genere_le 2026-11-08
+lot livret-telephone
+genere_le 2026-11-09
 fichiers 67
-manifeste 09bc35259d0c15984d1d7b4a44c0166e4c3dca86e7d29d9decbed477ed6665cc
+manifeste a464dff77ed6777c157640600d08c351ecf722fda0af487e639293899808172c
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 2ca53786cc3978fb92d799b99d742ea7b1248808ca4e9e0482b4e9e2e6605459  api/eleve.php
@@ -24,7 +24,7 @@ e948d2eb3eeda38fdd467f524e07ae3030853acfb2d2f1e5218765d9b09848ca  lib/archives.p
 88a97ce1ae439217c52d8c6a1581818ad5e7a8dfed99d6fefa22620df7070cb1  lib/bd.php
 ad381df64403dfb7762b0d0545775bacdd6f3d2bb3b4e1bca622536360e787e7  lib/billets.php
 1840c6b0380a848669050fa054ce4607036e42f798de7b9fa4bad1749ef8785d  lib/codes.php
-550d0ee5e7a43307f7762b44d1ba682a5c160c52b2f37510efe703717da601e5  lib/cours.json
+dd4752b15d71495a156d221c82e9b466a88cc12d30b7ea9e34f1c31ff8064ec2  lib/cours.json
 6203d81b6dc8a4868b69daa3b2af680031c788d34511f57a2e8eeb02211f91f8  lib/cours.php
 d04d4ca1b4af56814ff97030eabe62910880af3554d9afe7fb1073b3aa35281a  lib/direct.php
 78f6b81c88112a4e3df45b7f80b9466e54e95bb0d269300007ac699db49cbe69  lib/entetes.php
