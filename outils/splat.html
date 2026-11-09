@@ -16410,10 +16410,12 @@ function renderEleveFinSplat(panneau){
       `<p>${eleveEtoiles} carte${eleveEtoiles > 1 ? "s" : ""} sur ${total} du premier coup.` +
       (parcoursId ? (bonus ? ` Ta tache bonus est dor\u00e9e sur la carte des mondes\u00a0!` : ` Ton \u00e9toile est allum\u00e9e sur la carte des mondes\u00a0!`) : ``) + `</p>` +
       /* dans le parcours : « Étape suivante ▶ » en gros, rejouer et la carte en liens
-         dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change */
+         dessous (comme l'écran des cartes rouges) ; hors parcours, rien ne change.
+         Le lien rejoue avec de NOUVELLES cartes (lot « fin de série », 09/11/2026) : le même
+         chemin que « Étape réussie ! », toutes les fiches de l'étape (avant : les mêmes cartes) */
       (parcoursId
         ? `<div class="finAction"><button id="eleveEtapeSuivante" type="button">${suite.html}</button></div>` +
-          `<div class="finSorties"><button id="eleveRejouer" type="button">Rejouer la s\u00e9rie</button>` +
+          `<div class="finSorties"><button id="eleveFinNouvellesCartes" type="button">Rejouer avec de nouvelles cartes</button>` +
           `${suite.versCarte ? "" : eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`
         : `<div class="eleveActions">${eleveNouvellesCartesPossible()
             ? `<button id="eleveNouvelles" type="button">Nouvelles cartes \u25b6</button>`
@@ -16422,7 +16424,10 @@ function renderEleveFinSplat(panneau){
     if(nouvelles) nouvelles.onclick = eleveNouvellesCartes;
     const suivante = document.getElementById("eleveEtapeSuivante");
     if(suivante) suivante.onclick = () => { window.location.href = suite.href; };
+    const nouvellesFin = document.getElementById("eleveFinNouvellesCartes");
+    if(nouvellesFin) nouvellesFin.onclick = eleveRouvrirNouvellesCartes;
   }
+  /* « Rejouer toute la série » (cartes rouges) et « Rejouer la série » hors parcours : les mêmes cartes */
   const rejouer = document.getElementById("eleveRejouer");
   if(rejouer) rejouer.onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleveSplat(); };
 }
@@ -16485,6 +16490,11 @@ function eleveAdresseNouvellesCartes(search, tirer, accepte){
   q.set("nouvelles", "1");
   return "?" + q.toString();
 }
+/* Le clic « nouvelles cartes » (écran « Étape réussie ! » et fin d'une série réussie) : la page se
+   recharge sur l'adresse des nouvelles cartes ; rien n'est écrit. */
+function eleveRouvrirNouvellesCartes(){
+  window.location.replace(window.location.pathname + eleveAdresseNouvellesCartes(window.location.search, eleveGraineNeuve, eleveGraineSansTacheVide) + window.location.hash);
+}
 /* une graine de « chiffres » chiffres, sans zéro devant */
 function eleveGraineNeuve(chiffres){
   const bas = Math.pow(10, Math.max(1, chiffres) - 1);
@@ -16517,9 +16527,7 @@ function renderEleveEtapeReussieSplat(panneau){
     (bonus ? `ta tache bonus reste dor\u00e9e.` : `ton \u00e9toile reste allum\u00e9e.`) + `</p>` +
     `<div class="finAction"><button id="eleveNouvellesCartes" type="button">Je rejoue avec de nouvelles cartes \u25b6</button></div>` +
     `<div class="finSorties">${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
-  document.getElementById("eleveNouvellesCartes").onclick = () => {
-    window.location.replace(window.location.pathname + eleveAdresseNouvellesCartes(window.location.search, eleveGraineNeuve, eleveGraineSansTacheVide) + window.location.hash);
-  };
+  document.getElementById("eleveNouvellesCartes").onclick = eleveRouvrirNouvellesCartes;
 }
 
 /* Fin d'une série du dos des livrets (lot du 08/10/2026) : hors parcours, sans graine imposée et

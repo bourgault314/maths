@@ -152,6 +152,7 @@ function finSplat({ parcours, resultats, avecModule = true, graine = "", suite =
     ${source(splat, "eleveLienMondesHtml")}
     ${source(splat, "eleveNouvellesCartesPossible")}
     ${source(splat, "eleveRejouePhrase")}
+    ${source(splat, "eleveRouvrirNouvellesCartes")}
     ${source(splat, "renderEleveFinSplat")}
     renderEleveFinSplat(panneau);`;
   new Function("document", "window", "localStorage", "panneau", "resultats", code)(d.document, w, stockage(), panneau, resultats);
@@ -171,6 +172,7 @@ function finPetit({ parcours, resultats, avecModule = true, jumelles = false }) 
     ${source(petit, "eleveEtapeSuivante")}
     ${source(petit, "eleveLienMondesHtml")}
     ${source(petit, "eleveRejouePhrase")}
+    ${source(petit, "eleveRouvrirNouvellesCartes")}
     ${source(petit, "renderEleveFin")}
     renderEleveFin(main);`;
   new Function("document", "window", "localStorage", "main", "resultats", code)(d.document, w, stockage(), main, resultats);
@@ -211,9 +213,11 @@ for (const [nom, fin, parcours, , mot] of OUTILS) {
     assert.ok(attendu.html.includes("finSuiteOu"), "le bouton doit porter sa petite ligne");
     // le gros bouton vert (même classe que « Je rejoue mes cartes rouges »), en premier
     assert.match(html, new RegExp(`<div class="fin-?[aA]ction"><button[^>]*id="eleveEtapeSuivante"[^>]*>${attendu.html.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</button></div>`));
-    assert.ok(html.indexOf("eleveEtapeSuivante") < html.indexOf("eleveRejouer"), "« Étape suivante » avant « Rejouer »");
-    // dessous, en liens : rejouer, et la carte
-    assert.match(html, /<div class="fin-?[sS]orties"><button[^>]*id="eleveRejouer"[^>]*>Rejouer la s\u00e9rie<\/button>/);
+    // dessous, en liens : rejouer, et la carte. Mondes 1 à 4 : rejouer avec de NOUVELLES cartes (lot
+    // « fin de série », 09/11/2026 : tests/splat-rejouer-fin-de-serie.test.mjs) ; ÉquaSplat : les mêmes équations
+    const rejouer = fin === finEqua ? ["eleveRejouer", "Rejouer la s\u00e9rie"] : ["eleveFinNouvellesCartes", "Rejouer avec de nouvelles cartes"];
+    assert.ok(html.indexOf("eleveEtapeSuivante") < html.indexOf(rejouer[0]), "« Étape suivante » avant « Rejouer »");
+    assert.match(html, new RegExp(`<div class="fin-?[sS]orties"><button[^>]*id="${rejouer[0]}"[^>]*>${rejouer[1]}</button>`));
     assert.match(html, /Retour \u00e0 la carte des mondes<\/a><\/div>/);
     // « bravo ! » ne laisse plus son point d'exclamation seul sur une ligne
     assert.match(html, /bravo\u00a0!/);
