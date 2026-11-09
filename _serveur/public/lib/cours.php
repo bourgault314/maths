@@ -144,7 +144,8 @@ function cours_de_l_eleve(array $reglage): array
         foreach ($c['fiches'] as $f) {
             $ouverte = $f['nouveau'] ? isset($avec[$f['id']]) : !isset($sans[$f['id']]);
             if (!$ouverte) continue;
-            $fiches[] = ['n' => $f['n'], 'h1' => $f['h1'], 'niveaux' => $f['niveaux'], 'type' => $f['type'],
+            // Pas de « niveaux » pour l'élève : l'espace élève ne les affiche plus (09/11/2026).
+            $fiches[] = ['n' => $f['n'], 'h1' => $f['h1'], 'type' => $f['type'],
                 'url' => COURS_SITE . $f['page'] . $ancre];
         }
         $brevet = $c['brevet'] !== null && !isset($sans[$c['brevet']['id']]) ? COURS_SITE . $c['brevet']['page'] . $ancre : null;

@@ -282,8 +282,6 @@ try {
   .cours-tete h1 { position: absolute; left: 54px; right: 54px; margin: 0; text-align: center; font-size: 24px; }
   .cours-sur { display: block; margin: 0 0 3px; color: var(--teal-texte); font-size: 13px; font-weight: 700;
                letter-spacing: .05em; text-transform: uppercase; }
-  .niv, .appli .niv { display: inline-block; margin: 0 4px 0 2px; padding: 0 6px; border: 1.5px solid var(--teal-texte); border-radius: 6px;
-         color: var(--teal-texte); font-size: 12.5px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1.5; }
   #cours-corps ul { grid-template-columns: 1fr; margin-top: 0; }
   #cours-corps .appli { height: auto; }
   .cours-titre { margin: 2px 0 14px; font: 400 26px/1.25 var(--serif); color: var(--blue-dark); }
@@ -1606,8 +1604,7 @@ try {
         id: c.id, niveau: texteDe(c.niveau), chapitre: texteDe(c.chapitre), titre: texteDe(c.titre),
         fiches: (Array.isArray(c.fiches) ? c.fiches : [])
           .filter(f => f && typeof f === "object" && adresseCours(f.url))
-          .map(f => ({n: Number.isInteger(f.n) && f.n > 0 ? f.n : 0, h1: texteDe(f.h1), type: texteDe(f.type), url: f.url,
-                      niveaux: (Array.isArray(f.niveaux) ? f.niveaux : []).filter(n => typeof n === "string" && /^[0-9]e$/.test(n))})),
+          .map(f => ({n: Number.isInteger(f.n) && f.n > 0 ? f.n : 0, h1: texteDe(f.h1), type: texteDe(f.type), url: f.url})),
         brevet: adresseCours(c.brevet),
         imprimable: adresseCours(c.imprimable)
       }))
@@ -1632,18 +1629,17 @@ try {
     liste.prepend(li);
   }
 
-  function etiquetteNiveau(niveau) {
-    const etiquette = document.createElement("span");
-    etiquette.className = "niv";
-    etiquette.textContent = niveau;
-    return etiquette;
-  }
-  // « LE TRIANGLE RECTANGLE 3e », au-dessus d'un titre de chapitre.
+  // « LE TRIANGLE RECTANGLE », au-dessus d'un titre de chapitre. Pas d'étiquette
+  // « 3e / 4e » (choix de Gwenaël, 09/11/2026 : l'élève est dans SON chapitre).
   function surTitre(chapitre) {
     const sur = document.createElement("small");
     sur.className = "cours-sur";
-    sur.append(chapitre.chapitre + " ", etiquetteNiveau(chapitre.niveau));
+    sur.textContent = chapitre.chapitre;
     return sur;
+  }
+  // En 4e, pas de brevet : la page des sujets s'appelle « Exercices type » (09/11/2026).
+  function nomBrevet(chapitre) {
+    return chapitre.niveau === "4e" ? "Exercices type" : "Entraînement brevet";
   }
   function lienAutre(href, titre, precision) {
     const lien = document.createElement("a");
@@ -1672,8 +1668,8 @@ try {
       texte.prepend(surTitre(chapitre));
       lien.querySelector("strong").textContent = chapitre.titre;
       const n = chapitre.fiches.length;
-      lien.querySelector("span:not(.niv)").textContent =
-        [n ? `${n} fiche${n > 1 ? "s" : ""}` : "", chapitre.brevet ? "Entraînement brevet" : ""].filter(Boolean).join(" · ");
+      lien.querySelector(".texte span").textContent =
+        [n ? `${n} fiche${n > 1 ? "s" : ""}` : "", chapitre.brevet ? nomBrevet(chapitre) : ""].filter(Boolean).join(" · ");
       li.append(lien);
       liste.append(li);
     });
@@ -1701,12 +1697,13 @@ try {
       lien.querySelector(".n").textContent = fiche.n ? String(fiche.n) : "•";
       lien.querySelector("b").textContent = fiche.h1;
       const petit = lien.querySelector("small");
-      fiche.niveaux.forEach(niveau => petit.append(etiquetteNiveau(niveau)));
-      if (fiche.type) petit.append(" " + fiche.type);
+      if (fiche.type) petit.append(fiche.type);
       liste.append(lien);
     });
     corps.append(surTitre(chapitre), titre, liste);
-    if (chapitre.brevet) corps.append(lienAutre(chapitre.brevet, "🎯 Entraînement brevet", "De vrais sujets du brevet, corrigés pas à pas."));
+    if (chapitre.brevet) corps.append(chapitre.niveau === "4e"
+      ? lienAutre(chapitre.brevet, "🎯 Exercices type", "De vrais problèmes, corrigés pas à pas.")
+      : lienAutre(chapitre.brevet, "🎯 Entraînement brevet", "De vrais sujets du brevet, corrigés pas à pas."));
     if (chapitre.imprimable) corps.append(lienAutre(chapitre.imprimable, "🖨 Tout le chapitre à imprimer", "Toutes les fiches, avec les exemples rédigés et les réponses."));
   }
 
