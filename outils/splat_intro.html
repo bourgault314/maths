@@ -3561,6 +3561,11 @@ return film;
    la série de l'étape 4 ; le film s'arrête sur la question SANS montrer comment partager (choix du 09/10 : c'est à
    l'élève de trouver), puis on vérifie : on tape 5 et 5, on valide, les deux taches s'éclaircissent et on compte 5
    jetons sous chacune. Un film, pas un tutoriel (au monde 1, les étapes n'ont que « Le film »).
+   La correction en barres (choix du 08/11, 22 h 30 ; lot 7b, 09/11) : APRÈS l'arrêt seulement, et dans le schéma de
+   Petit SPLAT! lui-même — le 3 de la case bleue se hachure (les hachures du film des paquets et du pas à pas du jeu)
+   et sort vers la gauche, une barre « 10 » se pose sur les deux cases grises, un trait la coupe au milieu, et 5 et 5
+   tombent dans les cases grises ; sous-titres en mots et en calculs (13 − 3 = 10 ; 10 en deux parts égales : 5 et 5).
+   Avant l'arrêt, rien ne change : l'élève cherche d'abord.
    Comme le film de l'étape 2 : chaque jeton compté s'allume (anneau doré) et un compteur monte — jamais de chiffre sur
    un jeton ; une courte pause après chaque geste ; chaque sous-titre reste au moins 3 s ; un arrêt à la question
    (« À toi de chercher… puis ▶ »), comme le film de l'étape 1.
@@ -3583,22 +3588,30 @@ const AJOUT={
     consigne:{x:720,ys:[86.5],fs:21,lignes:['Observe la carte et complète le schéma en barres, puis Valider.']}},
   portrait:{badge:{x:322,y:98,w:38,h:38,fs:18,ring:3},
     consigne:{x:195,ys:[58.5,77.5],fs:15,lignes:['Observe la carte et complète le schéma en','barres, puis Valider.']}}};
+/* après l'arrêt (lot 7b) : rep = la correction commence ; hach/retire = le 3 hachuré qui sort ; barre = la barre « 10 » ;
+   part = le partage (phrase) ; coupe = le trait du milieu ; split = 10 devient 5 et 5 ; tombe = les deux parts tombent dans
+   les cases grises ; puis le doigt écrit 5 et 5, vite, et on valide */
 const T={ecran:2.7,taches:3.6,lit:6.4,badge:6.8,caseT:7.9,t1:8.5,t3:8.9,
   vis:10.2,cptV:10.4,v0:10.9,pasV:.6,ecrisV:13.2,caseV:13.9,tapeV:14.5,cptVOut:15.6,
   gris:16.4,g1:16.8,g2:17.9,question:19.6,q:19.9,stop:21.2,
-  rep:22.8,caseG1:23.5,tapeG1:24.1,caseG2:24.8,tapeG2:25.4,
-  valideTxt:26.2,valide:26.9,
-  compte1:29.4,cpt1:29.6,c1:30.1,pasC:.5,cpt1Out:32.6,
-  compte2:32.8,cpt2:33.0,c2:33.5,cpt2Out:37.2,bravo:36.2,fin:39.6};
-/* chaque phrase reste au moins 3 s (lot 4, 08/11/2026) ; la question reste à l'écran pendant l'arrêt */
+  rep:22.8,hach:23.6,retire:24.6,barre:26.8,part:28.3,coupe:28.8,split:29.5,tombe:30.6,
+  caseG1:31.9,tapeG1:32.4,caseG2:32.9,tapeG2:33.4,
+  valideTxt:34.2,valide:34.9,
+  compte1:37.4,cpt1:37.6,c1:38.1,pasC:.5,cpt1Out:40.6,
+  compte2:40.8,cpt2:41.0,c2:41.5,cpt2Out:45.2,bravo:44.2,fin:47.6};
+/* les durées des transformations : hachure et retrait comme le film des paquets (FILMS.paquets, DUR) */
+const DUR={hachure:.6,retire:1.8,barre:.45,coupe:.5,split:.45,tombe:.6};
+/* chaque phrase reste au moins 3 s (lot 4, 08/11/2026) ; la question reste à l'écran pendant l'arrêt ; la correction
+   en mots et en calculs (choix du 08/11, 22 h 30) */
 const SOUS_TITRES=[[3.0,'Deux taches : elles cachent le même nombre de jetons.'],
   [T.lit,'13 jetons en tout : on l’écrit en haut du schéma.'],[T.vis,'On compte les jetons visibles.'],
   [T.ecrisV,'3 jetons visibles : on l’écrit.'],[T.gris,'Une case grise pour chaque tache.'],
-  [T.question,'Combien de jetons sous chaque tache ?'],[T.rep,'Ta réponse : 5 sous chaque tache.'],
+  [T.question,'Combien de jetons sous chaque tache ?'],[T.rep,'On retire les 3 jetons visibles : 13 − 3 = 10.'],
+  [T.part,'On partage 10 en deux parts égales : 5 et 5.'],
   [T.valideTxt,'Valide, puis regarde sous les taches…'],[T.compte1,'Sous la première tache…'],
   [T.compte2,'… et sous la deuxième.'],[T.bravo,'Il y a bien 5 jetons sous chaque tache !'],[T.fin,'']];
 const film={
-  duration:43.0, poster:2.4,   /* T.fin + 3,4 s pour le carton de fin ; la durée écrite sur la carte (tests/splat-films-liens) */
+  duration:51.0, poster:2.4,   /* T.fin + 3,4 s pour le carton de fin ; la durée écrite sur la carte (tests/splat-films-liens) */
   /* l'arrêt à la question : on cherche, puis on relance (« À toi de chercher… puis ▶ ») */
   stops:[{t:T.stop}],
   /* au téléphone, la bulle de l'arrêt dans le blanc entre les taches et le schéma (y = 395 dans l'outil : 128 + 395 × 1,832
@@ -3606,10 +3619,10 @@ const film={
   bulleHaut:53.2,
   modes:{paysage:{w:1600,h:900},portrait:{w:900,h:1600}},
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
-  aria:'Film : dans Petit SPLAT!, deux taches cachent le même nombre de jetons : recopier le total, compter les jetons visibles, chercher combien de jetons cache chaque tache, puis vérifier sous les taches',
+  aria:'Film : dans Petit SPLAT!, deux taches cachent le même nombre de jetons : recopier le total, compter les jetons visibles, chercher combien de jetons cache chaque tache, puis la correction en barres (on retire les 3 jetons visibles : 13 − 3 = 10, on partage 10 en deux parts égales : 5 et 5) et la vérification sous les taches',
   titre:'Deux taches — Petit SPLAT! — maths&go',
   chapters:[{t:0,name:'SPLAT!'},{t:3.0,name:'Deux taches'},{t:T.lit,name:'Le total'},{t:T.vis,name:'Les jetons visibles'},
-    {t:T.gris,name:'Une case grise par tache'},{t:T.question,name:'La question'},{t:T.rep,name:'Répondre'},
+    {t:T.gris,name:'Une case grise par tache'},{t:T.question,name:'La question'},{t:T.rep,name:'La correction en barres'},{t:T.part,name:'Le partage'},
     {t:T.valideTxt,name:'Vérifier sous les taches'},{t:T.fin,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=Z.mise(mode,AJOUT),o=this.o={port};
@@ -3626,6 +3639,26 @@ const film={
     /* chaque case grise s'entoure de doré avec sa tache (« une case grise pour chaque tache ») */
     o.cadresGris=k.gris.map(cs=>{const b=cs.b,w=Y.schema.ring*1.6;
       return E('rect',{x:b.x+w/2,y:b.y+w/2,width:b.w-w,height:b.h-w,fill:'none',stroke:Z.C.or,'stroke-width':w},k.g);});
+    /* ---- la correction en barres, après l'arrêt : dans le schéma même (choix du 08/11, 22 h 30) ---- */
+    /* les hachures du retrait : celles du film des paquets et du pas à pas du jeu (enqG3Retire) */
+    const defs=E('defs',{},svg),pat=E('pattern',{id:'dtHachures',patternUnits:'userSpaceOnUse',width:20,height:20,patternTransform:'rotate(135)'},defs);
+    E('rect',{width:20,height:20,fill:'#e5e7eb'},pat);E('rect',{width:10,height:20,fill:'rgba(15,23,42,0.30)'},pat);
+    const H=Y.schema,bv=k.vis.b,g0=k.gris[0].b,g1=k.gris[1].b;
+    /* le 3 hachuré : une copie de la case bleue, estompée comme dans le jeu, qui sort vers la gauche ; la case bleue garde
+       son 3, pâle pendant le partage (l'élève l'a écrit, et Valider en a besoin) */
+    o.hach=E('g',{},k.g);
+    E('rect',{x:bv.x,y:bv.y,width:bv.w,height:bv.h,fill:'url(#dtHachures)',stroke:'#111827','stroke-width':2.5},o.hach);
+    Z.chiffre(o.hach,bv.x+bv.w/2,bv.y+bv.h/2,H.fs,'#111827',{'font-weight':800}).textContent=String(CARTE.visible);
+    /* la barre « 10 » posée sur les deux cases grises (un peu soulevée), le trait qui la coupe au milieu — juste sur la
+       séparation des deux cases grises —, puis les deux parts « 5 » qui tombent chacune dans sa case */
+    const bx=g0.x,bw=g1.x+g1.w-g0.x,xm=bx+bw/2;o.lev=.2*g0.h;o.ecart=H.fs*.1;
+    o.barre=E('g',{filter:'url(#psOmbre)'},k.g);o.barreC=[xm,g0.y+g0.h/2];
+    E('rect',{x:bx,y:g0.y,width:bw,height:g0.h,fill:Z.C.gris,stroke:Z.C.encre,'stroke-width':2.5},o.barre);
+    o.dix=Z.chiffre(o.barre,xm,g0.y+g0.h/2,H.fs,Z.C.encre);o.dix.textContent=String(CARTE.cache);
+    o.coupe=E('line',{x1:xm,y1:g0.y,x2:xm,y2:g0.y,stroke:Z.C.encre,'stroke-width':2.5},k.g);o.coupeY=[g0.y,g0.y+g0.h];
+    o.parts=k.gris.map(cs=>{const b=cs.b,g=E('g',{filter:'url(#psOmbre)'},k.g);
+      const r=E('rect',{x:b.x,y:b.y,width:b.w,height:b.h,fill:Z.C.gris,stroke:Z.C.encre,'stroke-width':2.5},g);
+      Z.chiffre(g,b.x+b.w/2,b.y+b.h/2,H.fs,Z.C.encre).textContent=String(CARTE.cache/CARTE.n);return {g,r};});
     o.cpt=Z.compteur(Y,S);
     o.btn=Z.boutons(Y,S);
     o.pave=Z.pave(Y,S);
@@ -3651,17 +3684,39 @@ const film={
     /* les jetons comptés s'allument ; l'anneau s'éteint quand le compteur s'en va */
     for(const j of [...o.vis,...o.c1,...o.c2]){const vu=t>=j.tc;op(j.an,vu?1-P(t,j.tOut,.4,F.lin):0);
       if(vu)j.an.setAttribute('r',L(18,11.5,F.out(clamp((t-j.tc)/.35))).toFixed(2));}
+    /* ---- la correction en barres (après l'arrêt seulement) ---- */
+    /* le 3 se hachure (estompé, comme dans le jeu), puis la copie hachurée sort vers la gauche ; la case bleue garde son 3,
+       pâle, jusqu'à ce que le doigt revienne écrire 5 et 5 */
+    const hc=P(t,T.hach,DUR.hachure,F.io),rm=P(t,T.retire,DUR.retire,F.io);
+    op(o.hach,.4*hc*(1-rm));o.hach.setAttribute('transform',`translate(${(-1.2*k.vis.b.w*rm).toFixed(1)},0)`);
+    const pale=(1-hc)+.3*P(t,T.retire+DUR.retire,.4,F.lin);   /* le 3 s'efface sous la copie hachurée, revient pâle une fois la copie sortie */
+    op(k.vis.txt,pale+(1-pale)*P(t,T.caseG1-.6,.4,F.io));
+    /* la barre « 10 » : elle arrive sur les cases grises, un peu soulevée ; le trait du milieu ; 10 devient 5 et 5 ; les
+       deux parts s'écartent à peine, puis tombent chacune dans sa case grise et s'y fondent */
+    const ba=P(t,T.barre,DUR.barre,F.out),cu=P(t,T.coupe,DUR.coupe,F.io),sp=P(t,T.split,DUR.split,F.io),
+      tb=P(t,T.tombe,DUR.tombe,F.io),lev=-o.lev*(1-tb),fondu=P(t,T.tombe+DUR.tombe,.3,F.lin);
+    op(o.barre,ba*(1-sp));op(o.dix,1-P(t,T.coupe-.3,.3,F.lin));   /* le 10 s'efface : le trait ne le coupe pas */
+    o.barre.setAttribute('transform',`translate(0,${lev.toFixed(2)}) translate(${o.barreC[0]},${o.barreC[1]}) scale(${L(.9,1,ba).toFixed(3)}) translate(${-o.barreC[0]},${-o.barreC[1]})`);
+    op(o.coupe,cu>0?1-sp:0);o.coupe.setAttribute('y2',L(o.coupeY[0],o.coupeY[1],cu).toFixed(2));o.coupe.setAttribute('transform',`translate(0,${lev.toFixed(2)})`);
+    o.parts.forEach((pt,i)=>{op(pt.g,sp*(1-fondu));
+      pt.g.setAttribute('transform',`translate(${((i?1:-1)*o.ecart*sp*(1-tb)).toFixed(2)},${lev.toFixed(2)})`);});
     /* les nombres tapés (petit rebond à l'arrivée) ; « ? » dans les cases grises à la question */
     const ecrit=(cs,v,tt)=>{cs.txt.textContent=v;Z.echelle(cs.txt,cs.c,Z.rebond(t,tt));};
     ecrit(k.total,t>=T.t3?'13':t>=T.t1?'1':'',t>=T.t3?T.t3:T.t1);
     ecrit(k.vis,t>=T.tapeV?'3':'',T.tapeV);
-    k.gris.forEach((cs,i)=>{const tt=i?T.tapeG2:T.tapeG1;ecrit(cs,t>=tt?'5':(t>=T.q?'?':''),t>=tt?tt:T.q+i*.2);});
+    /* les cases grises : « ? » à la question (il s'efface quand la barre « 10 » arrive), puis 5, tombé du partage ; le
+       doigt l'écrit (petit rebond) */
+    const pose=T.tombe+DUR.tombe;
+    k.gris.forEach((cs,i)=>{const tt=i?T.tapeG2:T.tapeG1;ecrit(cs,t>=pose?'5':(t>=T.q?'?':''),t>=tt?tt:T.q+i*.2);
+      op(cs.txt,t>=pose?1:1-P(t,T.barre,.3,F.lin));});
     Z.echelle(k.badge.txt,k.badge.c,Z.rebond(t,T.badge,.16));
     for(const cs of [k.total,...k.parts])Z.juste(cs,ok);
     /* la case active : le total d'abord (comme dans l'outil), puis la case touchée ; au téléphone, le cadre reste sur la
        dernière case après Valider ; à l'ordinateur, le curseur part sur « Carte suivante » */
     let act=k.total;for(const [cs,ta] of [[k.vis,T.caseV],[k.gris[0],T.caseG1],[k.gris[1],T.caseG2]])if(t>=ta)act=cs;
-    for(const cs of [k.badge,k.total,...k.parts])Z.activer(cs,cs===act&&!(ok&&!port),port);
+    /* pendant la correction, le doigt ne touche rien : aucune case active */
+    const corr=t>=T.rep&&t<T.caseG1;
+    for(const cs of [k.badge,k.total,...k.parts])Z.activer(cs,cs===act&&!(ok&&!port)&&!corr,port);
     /* le compteur : les jetons visibles, puis ceux de la première tache, puis ceux de la deuxième */
     const phases=[[T.cptV,T.cptVOut,o.vis],[T.cpt1,T.cpt1Out,o.c1],[T.cpt2,T.cpt2Out,o.c2]];
     let ph=phases[0];for(const p of phases)if(t>=p[0])ph=p;
