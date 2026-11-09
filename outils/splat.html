@@ -14607,6 +14607,9 @@ let eleveVues = 0;
 let eleveSerieNotee = false;
 /* parties supplémentaires d'une étape composée (voir « suite » dans l'adresse) */
 let eleveSuite = [];
+/* l'étape déjà réussie que l'élève rouvre (09/11/2026) : « Étape réussie ! » d'abord, voir
+   renderEleveEtapeReussieSplat ; null : la série commence (ou reprend) comme avant */
+let eleveAccueilReussie = null;
 /* échecs sur la carte en cours (au 3e, la réponse s'écrit dans les cases) et file des cartes rouges à rejouer */
 let eleveEchecs = 0, eleveRejeu = null;
 /* cartes jumelles (voir carteJumelle) : les cartes de la série telles que tirées, combien de fois
@@ -15317,8 +15320,11 @@ function renderEleveSplat(){
           eleveVues = eleveVuesReprise(entree, eleveResultats);
         }
       }catch(_e){ /* stockage indisponible */ }
+      /* étape déjà réussie, rien à reprendre : « Étape réussie ! » au lieu de la carte 1 */
+      eleveAccueilReussie = eleveIdx === 0 ? eleveEtapeReussieLue() : null;
     }
   }
+  if(eleveAccueilReussie){ renderEleveEtapeReussieSplat(panneau); elevePaveSynchroniser(); return; }
   /* fin de série : plus rien à saisir, le pavé s'efface (il revient avec une carte) */
   if(eleveIdx >= eleveSerie.length){ renderEleveFinSplat(panneau); elevePaveSynchroniser(); return; }
 
@@ -16418,6 +16424,102 @@ function renderEleveFinSplat(panneau){
   const rejouer = document.getElementById("eleveRejouer");
   if(rejouer) rejouer.onclick = () => { eleveEffacerEnCours(); eleveIdx = 0; eleveEtoiles = 0; eleveSerie = []; eleveResultats = []; eleveVues = 0; eleveRejeu = null; renderEleveSplat(); };
 }
+/* ===== Une étape déjà réussie (lot « rejouer », décidé avec Gwenaël le 09/11/2026) =====
+   L'élève qui rouvre une étape à l'étoile allumée ne retombe plus sur la carte 1 : il voit
+   d'abord « Étape réussie ! », sa meilleure série et « Je rejoue avec de nouvelles cartes ▶ »
+   (planche-2-monde2.png, validée telle quelle ; mondes 2 à 4). Nouvelles cartes = la MÊME
+   adresse, une autre graine pour CHAQUE partie (celle de l'adresse et celles de « suite » : toutes
+   les fiches de l'étape changent) et nouvelles=1 ; la page se recharge sur cette adresse : les
+   réglages de chaque partie se relisent comme au premier chargement (une partie ne déteint pas
+   sur une autre), et une série commencée là reprend si l'élève recharge ou revient du film
+   « Comment faire » (l'empreinte de la série lit l'adresse). Rien de nouveau n'est enregistré :
+   cette série s'écrit comme toutes les autres, « la meilleure série gagne » (moteur partagé).
+   Seulement dans le parcours, quand rien n'est à reprendre, et jamais sur une adresse déjà
+   « nouvelles cartes ». Sans code : sa case locale. Une fiche bonus (✨) dit « ta tache bonus »,
+   comme son écran de fin. */
+function eleveNouvellesCartesAdresse(){
+  try{ return new URLSearchParams(window.location.search).get("nouvelles") === "1"; }
+  catch(_e){ return false; }
+}
+function eleveEtapeReussieLue(){
+  if(!parcoursId || eleveNouvellesCartesAdresse()) return null;
+  try{ const e = eleveEtapeLue(); return e && e.fait ? e : null; }
+  catch(_e){ return null; }
+}
+/* « Ta meilleure série : N cartes sur M du premier coup. » ; rien sans nombre de cartes
+   (anciennes entrées). N ne dépasse jamais les cartes moins les réponses vues. */
+function eleveMeilleureSerieTexte(e, mot){
+  const cartes = Number(e && e.cartes) || 0;
+  if(!(cartes > 0)) return "";
+  const n = Math.max(0, Math.min(Number(e.etoiles) || 0, cartes - (Number(e.vues) || 0)));
+  return `Ta meilleure s\u00e9rie\u00a0: ${n} ${mot}${n > 1 ? "s" : ""} sur ${cartes} du premier coup.`;
+}
+/* L'adresse des nouvelles cartes : tout pareil, sauf la graine de chaque partie (jamais la même)
+   et nouvelles=1. Les parties de « suite » gardent leur ordre et leurs réglages. Chaque graine
+   neuve a AUTANT DE CHIFFRES que celle qu'elle remplace (3 au moins) : l'empreinte de la série
+   garde sa longueur, et le moteur n'en garde que 400 caractères — celle de l'étape 7 en fait 394 ;
+   avec des graines plus longues, la reprise d'une série neuve ne se serait jamais faite.
+   « accepte » (facultatif) juge une partie avec sa graine neuve : la page refuse une graine qui
+   tirerait une carte « tache vide » (la série jouée l'écarterait : 11 cartes au lieu de 12 dans
+   un tiers des séries de l'étape 7) ; après 40 refus, la dernière graine tirée est gardée. */
+function eleveAdresseNouvellesCartes(search, tirer, accepte){
+  const regraine = (texte) => {
+    const q = new URLSearchParams(texte);
+    const avant = q.get("seed");
+    const chiffres = Math.max(3, /^\d+$/.test(avant || "") ? avant.length : 3);
+    for(let essai = 0; essai < 40; essai++){
+      let g = String(tirer(chiffres));
+      for(let i = 0; i < 50 && g === avant; i++) g = String(tirer(chiffres));
+      q.set("seed", g);
+      if(!accepte || accepte(new URLSearchParams(q))) break;
+    }
+    return q;
+  };
+  const q = regraine(search);
+  if(q.has("suite")){
+    q.set("suite", String(q.get("suite") || "").split(";").map(part => part.trim()).filter(Boolean)
+      .map(part => regraine(part).toString()).join(";"));
+  }
+  q.set("nouvelles", "1");
+  return "?" + q.toString();
+}
+/* une graine de « chiffres » chiffres, sans zéro devant */
+function eleveGraineNeuve(chiffres){
+  const bas = Math.pow(10, Math.max(1, chiffres) - 1);
+  return bas + Math.floor(Math.random() * 9 * bas);
+}
+/* Une partie, avec sa graine neuve, tire-t-elle une carte « tache vide » ? On la tire pour de bon
+   (la page se recharge juste après, ses réglages ne servent plus) ; dans le doute, on accepte. */
+function eleveGraineSansTacheVide(q){
+  try{
+    appliquerConfiguration(q);
+    generate();
+    return cards.every(c => { const i = eleveInfosCarte(c); return !i || i.H > 0; });
+  }catch(_e){ return true; }
+}
+function renderEleveEtapeReussieSplat(panneau){
+  const tete = document.getElementById("eleveTeteHaut");
+  if(tete) tete.style.display = "none";
+  /* comme l'écran de fin : la dernière carte de la série, couverte, sous le carton */
+  eleveEnqueteDevoile = false; eleveSchemaEtape = 0;
+  eleveIndicesTel = false; eleveIndicesAfficher(null);
+  renderCard(eleveSerie[eleveSerie.length - 1], 0);
+  eleveCadrerScene();
+  const bonus = !!(parcoursId && window.MathsGoSplatEtapes && window.MathsGoSplatEtapes.estBonus &&
+    window.MathsGoSplatEtapes.estBonus(parcoursId));
+  const meilleure = eleveMeilleureSerieTexte(eleveAccueilReussie, "carte");
+  panneau.innerHTML = `<div class="eleveFin">` +
+    `<div class="finEtoile on">${bonus ? "\u2728" : "\u2B50"}</div>` +
+    `<h2>\u00c9tape r\u00e9ussie\u00a0!</h2>` +
+    `<p class="finSous">${meilleure ? meilleure + "<br>" : ""}Rejoue avec d\u2019autres nombres\u00a0: ` +
+    (bonus ? `ta tache bonus reste dor\u00e9e.` : `ton \u00e9toile reste allum\u00e9e.`) + `</p>` +
+    `<div class="finAction"><button id="eleveNouvellesCartes" type="button">Je rejoue avec de nouvelles cartes \u25b6</button></div>` +
+    `<div class="finSorties">${eleveLienMondesHtml("finLien", "Retour \u00e0 la carte des mondes")}</div></div>`;
+  document.getElementById("eleveNouvellesCartes").onclick = () => {
+    window.location.replace(window.location.pathname + eleveAdresseNouvellesCartes(window.location.search, eleveGraineNeuve, eleveGraineSansTacheVide) + window.location.hash);
+  };
+}
+
 /* Fin d'une série du dos des livrets (lot du 08/10/2026) : hors parcours, sans graine imposée et
    sans « suite », « Nouvelles cartes ▶ » remplace « Rejouer la série » (qui rejouait les MÊMES
    cartes) : le jeu tire d'autres cartes du même réglage — generate() prend une graine neuve —,
