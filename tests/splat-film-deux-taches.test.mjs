@@ -1,10 +1,11 @@
 // Le film « Deux taches » de Petit SPLAT!, étape 4 (lot 7 « aides et carte », 08/11/2026) : l'exemple 2𝑥 + 3 = 13 choisi
 // par Gwenaël, hors de la série de l'étape ; un arrêt sur la question SANS montrer comment partager (choix du 09/10),
 // puis la vérification : 5 et 5, les deux taches s'éclaircissent, on compte 5 jetons sous chacune. Un film, pas un
-// tutoriel. Sur la carte (« Le film », 51 s) et derrière « ? Comment faire » dans Petit SPLAT! à l'étape 4.
-// Lot 7b (choix du 08/11, 22 h 30 ; codé le 09/11) : APRÈS l'arrêt, la correction en barres dans le schéma même — le 3
-// hachuré (les hachures du film des paquets) sort, une barre « 10 » sur les deux cases grises, coupée au milieu, 5 et 5 —
-// avec deux sous-titres en mots et en calculs. Avant l'arrêt, rien du partage.
+// tutoriel. Sur la carte (« Le film », 65 s) et derrière « ? Comment faire » dans Petit SPLAT! à l'étape 4.
+// Lot 9 (09/11/2026, croquis validé par Gwenaël ; remplace la correction du lot 7b, qui ne coupait jamais le 13) : APRÈS
+// l'arrêt, une scène « en barres » à part, comme le film des paquets — 13 se décompose en 3 et 10, les deux 3 hachurés
+// puis retirés, 10 partagé en deux parts égales (5 et 5), les « ? » restent des « ? » et « ? = 5 » s'écrit à part ; AUCUN
+// crochet au-dessus des barres ; puis retour au jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -21,19 +22,19 @@ const paquets = blocs.find((b) => b.includes("FILMS.paquets=(function(){"));
 
 /* les données du film (CARTE, T, DUR, SOUS_TITRES), lues telles quelles dans son bloc */
 function donnees() {
-  const src = ["CARTE", "T", "DUR", "SOUS_TITRES"].map((n) => {
+  const src = ["CARTE", "T", "DUR", "SOUS_TITRES", "SCENE", "CB"].map((n) => {
     const a = bloc.indexOf(`const ${n}=`);
     const b = bloc.indexOf(";\n", a);
     return bloc.slice(a, b + 1);
   }).join("\n");
-  return new Function(`${src}; return {CARTE,T,DUR,SOUS_TITRES};`)();
+  return new Function(`${src}; return {CARTE,T,DUR,SOUS_TITRES,SCENE,CB};`)();
 }
-const { CARTE, T, DUR, SOUS_TITRES } = donnees();
+const { CARTE, T, DUR, SOUS_TITRES, SCENE, CB } = donnees();
 const sansCommentaires = (b) => b.replace(/\/\*[\s\S]*?\*\//g, "");
 
 test("le film s'inscrit dans le lecteur, sur la carte sous l'étape 4, et derrière « ? Comment faire »", () => {
   assert.ok(bloc, "FILMS['deux-taches'] dans outils/splat_intro.html");
-  assert.match(carte, /p:"m1e4",\n\s*films:\[\["deux-taches","Le film",51\]\],/);
+  assert.match(carte, /p:"m1e4",\n\s*films:\[\["deux-taches","Le film",65\]\],/);
   const E = (() => {
     const ctx = { window: {}, localStorage: { getItem: () => null, setItem() {} }, location: { search: "" } };
     vm.runInNewContext(lire("assets/js/splat-etapes.js"), ctx);
@@ -49,7 +50,7 @@ test("le film s'inscrit dans le lecteur, sur la carte sous l'étape 4, et derri�
   assert.match(bloc, /modes:\{paysage:\{w:1600,h:900\},portrait:\{w:900,h:1600\}\}/);
   // la durée de la carte est celle du film
   const duree = Number(bloc.match(/duration:([\d.]+)/)[1]);
-  assert.equal(duree, 51);
+  assert.equal(duree, 65);
   assert.equal(T.fin + 3.4, duree);
   assert.equal(Number(carte.match(/films:\[\["deux-taches","Le film",(\d+)\]\]/)[1]), Math.round(duree), "la durée de la carte = la durée du film");
 });
@@ -87,56 +88,98 @@ test("un seul arrêt, sur la question ; AVANT l'arrêt, le film ne montre jamais
     assert.doesNotMatch(s, /\b10\b|÷|:\s*2|moitié|partag|divis|−|\bmoins\b|retir/, s);
   assert.doesNotMatch(sansCommentaires(bloc), /10 ÷ 2|÷/);
   // tout ce que la correction montre commence après l'arrêt (et après la reprise)
-  for (const n of ["rep", "hach", "retire", "barre", "part", "coupe", "split", "tombe", "caseG1", "tapeG1", "caseG2", "tapeG2"])
+  for (const n of ["rep", "barres", "dec", "decoupe", "hachTxt", "hachure", "retTxt", "retire", "part", "coupe", "split", "cache", "egal",
+    "retour", "caseG1", "tapeG1", "caseG2", "tapeG2"])
     assert.ok(T[n] > T.stop, `T.${n} après l'arrêt`);
-  assert.ok(T.rep < T.hach && T.hach + DUR.hachure <= T.retire && T.retire + DUR.retire <= T.barre && T.barre < T.part
-    && T.part < T.coupe && T.coupe + DUR.coupe <= T.split && T.split + DUR.split <= T.tombe && T.tombe + DUR.tombe <= T.caseG1,
-    "le 3 hachuré, puis il sort, la barre « 10 », la coupe, 5 et 5, ils tombent, puis le doigt");
-  // les 5 n'arrivent dans les cases grises qu'en tombant du partage (après l'arrêt)
-  assert.match(bloc, /const pose=T\.tombe\+DUR\.tombe;/);
-  assert.match(bloc, /ecrit\(cs,t>=pose\?'5':\(t>=T\.q\?'\?':''\)/);
+  // chaque phrase, puis son geste ; chaque geste fini avant la phrase suivante
+  const suite = [["rep", "barres", "morph"], ["dec", "decoupe", "split"], ["hachTxt", "hachure", "hachure"], ["retTxt", "retire", "retire"],
+    ["part", "coupe", "coupe"], ["cache", "egal", "egal"]];
+  for (let i = 0; i < suite.length; i++) {
+    const [ph, ge, d] = suite[i];
+    assert.ok(T[ph] < T[ge], `${ph} avant ${ge}`);
+    const finGeste = ge === "coupe" ? T.split + DUR.parts : T[ge] + DUR[d];
+    const prochaine = i + 1 < suite.length ? T[suite[i + 1][0]] : T.retour;
+    assert.ok(finGeste + .4 <= prochaine + 1e-9, `une pause après « ${ph} »`);
+  }
+  assert.ok(T.coupe + DUR.coupe <= T.split, "le trait, puis 5 et 5");
+  // retour au jeu avant que le doigt arrive (il entre 0,6 s avant de toucher la première case grise)
+  assert.ok(T.retour + .5 + DUR.pIn <= T.caseG1 - .6 + 1e-9);
+  // les 5 n'arrivent dans les cases grises du jeu que quand le doigt les écrit (après la scène)
+  assert.match(bloc, /ecrit\(cs,t>=tt\?'5':\(t>=T\.q\?'\?':''\),t>=tt\?tt:T\.q\+i\*\.2\);/);
+  // rien de la scène avant l'arrêt : elle n'est visible qu'à partir de T.barres
+  assert.match(bloc, /const vuScene=t>=T\.barres&&sOut<1;\s*op\(o\.barres,vuScene\?1-sOut:0\);/);
 });
 
-test("après l'arrêt, la correction en barres : 13 − 3 = 10, puis 10 en deux parts égales : 5 et 5 (mots et calculs)", () => {
-  const apres = SOUS_TITRES.filter((s) => s[0] > T.stop);
-  assert.deepEqual(apres.slice(0, 2), [[T.rep, "On retire les 3 jetons visibles : 13 − 3 = 10."],
-    [T.part, "On partage 10 en deux parts égales : 5 et 5."]]);
+test("après l'arrêt, la correction en barres du croquis : décomposer 13, hachurer et retirer les 3, partager 10, « ? = 5 »", () => {
+  const apres = SOUS_TITRES.filter((s) => s[0] > T.stop).slice(0, 6);
+  assert.deepEqual(apres, [[T.rep, "La même situation, en barres."], [T.dec, "On décompose 13 en 3 et 10."],
+    [T.hachTxt, "On hachure les deux morceaux de 3."], [T.retTxt, "On retire les deux morceaux de 3 : 13 − 3 = 10."],
+    [T.part, "On partage 10 en deux parts égales : 5 et 5."], [T.cache, "Chaque tache cache 5."]]);
   // les nombres des phrases sont ceux de la carte
-  const [, tot, vis, reste] = apres[0][1].match(/(\d+) − (\d+) = (\d+)/).map(Number);
-  assert.deepEqual([tot, vis, reste], [CARTE.total, CARTE.visible, CARTE.total - CARTE.visible]);
-  assert.equal(reste, CARTE.cache);
-  const [, dix, a, b] = apres[1][1].match(/partage (\d+) en deux parts égales : (\d+) et (\d+)/).map(Number);
+  const [, d13, d3, d10] = apres[1][1].match(/décompose (\d+) en (\d+) et (\d+)/).map(Number);
+  assert.deepEqual([d13, d3, d10], [CARTE.total, CARTE.visible, CARTE.cache]);
+  const [, tot, vis, reste] = apres[3][1].match(/(\d+) − (\d+) = (\d+)/).map(Number);
+  assert.deepEqual([tot, vis, reste], [CARTE.total, CARTE.visible, CARTE.cache]);
+  const [, dix, a, b] = apres[4][1].match(/partage (\d+) en deux parts égales : (\d+) et (\d+)/).map(Number);
   assert.deepEqual([dix, a, b], [CARTE.cache, CARTE.cache / CARTE.n, CARTE.cache / CARTE.n]);
   assert.equal(CARTE.n, 2, "« deux parts » : deux taches");
-  // ce que le schéma dessine : le 3 hachuré, la barre « 10 », les deux parts « 5 »
-  assert.match(bloc, /\.textContent=String\(CARTE\.visible\);/);
-  assert.match(bloc, /o\.dix\.textContent=String\(CARTE\.cache\);/);
-  assert.match(bloc, /\.textContent=String\(CARTE\.cache\/CARTE\.n\);return \{g,r\};\}\);/);
-  // la barre « 10 » couvre exactement les deux cases grises ; le trait la coupe au milieu, sur leur séparation
-  assert.match(bloc, /const bx=g0\.x,bw=g1\.x\+g1\.w-g0\.x,xm=bx\+bw\/2;/);
-  assert.match(bloc, /o\.coupe=E\('line',\{x1:xm,y1:g0\.y,x2:xm,/);
-  assert.match(bloc, /o\.parts=k\.gris\.map\(/, "une part par case grise");
-  // dans le schéma de Petit SPLAT! du film (k.g), pas un grand schéma à part
-  for (const n of ["o.hach=E('g',{},k.g)", "o.barre=E('g',{filter:'url(#psOmbre)'},k.g)", "E('g',{filter:'url(#psOmbre)'},k.g);"]) assert.ok(bloc.includes(n), n);
-  // la case bleue garde son 3 (pâle pendant le partage) : Valider en a besoin
-  assert.match(bloc, /op\(k\.vis\.txt,pale\+\(1-pale\)\*P\(t,T\.caseG1-\.6,\.4,F\.io\)\);/);
-  // le doigt écrit encore 5 et 5 (le geste du jeu), une pause après chaque geste
-  assert.ok(T.tapeG2 < T.valide);
+  // une scène à part (o.barres, dans le cadre), pas dans le schéma du jeu ; l'écran du jeu s'efface puis revient
+  assert.match(bloc, /o\.barres=E\('g',\{\},svg\);/);
+  assert.match(bloc, /if\(t>=T\.barres\)op\(o\.ecran,t<T\.retour\?1-mo:pIn\);/);
+  // le schéma : 13 en haut ; 3 (bleu), ?, ? en bas ; les largeurs disent les quantités
+  assert.match(bloc, /o\.sHaut=cse\(o\.R\.haut,'#ffffff',String\(CARTE\.total\),CB\.encre\);/);
+  assert.match(bloc, /o\.sB3=cse\(o\.R\.b3,'#ffffff',String\(V\),CB\.bleuTxt\);/);
+  assert.match(bloc, /o\.sQ=\[o\.R\.q1,o\.R\.q2\]\.map\(Rc=>\{const c=cse\(Rc,CB\.gris,'\?',CB\.encre\);/);
+  // 13 se décompose en 3 et 10, le 3 du haut juste au-dessus du 3 du bas
+  assert.match(bloc, /o\.sH3=cse\(o\.R\.h3,'#ffffff',String\(V\),CB\.encre\);o\.sH10=cse\(o\.R\.h10,'#ffffff',String\(CARTE\.cache\),CB\.encre\);/);
+  assert.match(bloc, /h3:R\(B\.x0,B\.y1,V\*u\),h10:R\(B\.x0\+V\*u,B\.y1,CARTE\.cache\*u\)/);
+  assert.match(bloc, /b3:R\(B\.x0,B\.ym,V\*u\)/);
+  // les DEUX morceaux de 3 sont hachurés, puis retirés
+  assert.match(bloc, /o\.hach=\[o\.R\.h3,o\.R\.b3\]\.map\(/);
+  assert.match(bloc, /op\(o\.sH3\.g,dIn\*\(1-hc\)\*vu3\);op\(o\.sB3\.g,\(1-hc\)\*vu3\);/);
+  // 10 se partage en deux parts égales, côte à côte, chacune au-dessus de sa case grise
+  assert.match(bloc, /h5a:R\(B\.x0\+V\*u,B\.y1,M\*u\),h5b:R\(B\.x0\+\(V\+M\)\*u,B\.y1,M\*u\)/);
+  assert.match(bloc, /q1:R\(B\.x0\+V\*u,B\.ym,M\*u\),q2:R\(B\.x0\+\(V\+M\)\*u,B\.ym,M\*u\)/);
+  assert.match(bloc, /o\.sH5=\[o\.R\.h5a,o\.R\.h5b\]\.map\(Rc=>cse\(Rc,'#ffffff',String\(M\),CB\.encre\)\);/);
+  // les « ? » du bas restent des « ? » : rien n'écrit dans les cases grises de la scène ; « ? = 5 » à part, en vert
+  const sQ = bloc.slice(bloc.indexOf("o.sQ=[o.R.q1,o.R.q2]"), bloc.indexOf("return c;});", bloc.indexOf("o.sQ=[o.R.q1,o.R.q2]")));
+  assert.doesNotMatch(sQ, /textContent/, "les cases grises de la scène gardent leur « ? »");
+  assert.doesNotMatch(bloc.slice(bloc.indexOf("render(t){")), /o\.sQ[\s\S]{0,80}textContent|\.t\.textContent=/, "rien ne réécrit les « ? » pendant le film");
+  assert.match(bloc, /o\.egal\.textContent='\? = '\+M;/);
+  assert.equal(CB.vertTxt, "#15803d");
+  // AUCUN crochet au-dessus des barres décomposées (choix du 09/11, 20 h 55)
+  assert.doesNotMatch(sansCommentaires(bloc), /acc|accolade|crochet/i);
 });
 
-test("les hachures et le rythme du retrait sont ceux du film des paquets (et du pas à pas du jeu, enqG3Retire)", () => {
+test("la scène en barres copie le film des paquets : mise en page, couleurs, hachures, rythme du retrait", () => {
+  // la mise en page du schéma (ordinateur et téléphone) = celle du film des paquets
+  const LAY = new Function(`${paquets.match(/const LAY=\{[\s\S]*?\n\};/)[0]} return LAY;`)();
+  for (const m of ["paysage", "portrait"]) {
+    const { x0, x1, y1, ym, y2, val } = LAY[m].S;
+    assert.deepEqual({ x0, x1, y1, ym, y2, val }, (({ x0, x1, y1, ym, y2, val }) => ({ x0, x1, y1, ym, y2, val }))(SCENE[m]), m);
+    assert.ok(SCENE[m].egal > SCENE[m].y2, "« ? = 5 » sous le schéma");
+  }
+  // les couleurs = celles du film des paquets
+  const Cp = new Function(`${paquets.match(/const C=\{[^;]*\};/)[0]} return C;`)();
+  for (const c of ["encre", "bleuTxt", "gris", "vertTxt"]) assert.equal(CB[c], Cp[c], c);
+  // les hachures
   const motif = (b, id) => {
     const m = b.match(new RegExp(`pat=E\\('pattern',\\{id:'${id}',([^}]*)\\},defs\\);\\s*(E\\('rect'[^\\n]*)`));
     assert.ok(m, id);
     return [m[1], m[2].replaceAll(id, "ID")];
   };
   assert.deepEqual(motif(bloc, "dtHachures"), motif(paquets, "paqHachures"));
-  assert.match(bloc, /fill:'url\(#dtHachures\)',stroke:'#111827'/);
-  assert.match(bloc, /op\(o\.hach,\.4\*hc\*\(1-rm\)\);/, "estompé à 40 % comme dans le jeu, puis retiré");
-  assert.match(bloc, /translate\(\$\{\(-1\.2\*k\.vis\.b\.w\*rm\)\.toFixed\(1\)\},0\)/, "retiré vers la gauche, comme le film des paquets");
+  assert.match(bloc, /fill:'url\(#dtHachures\)',stroke:'#111827','stroke-width':3\.5/);
+  assert.match(bloc, /o\.hach\.forEach\(g=>\{op\(g,\.4\*hc\*vu3\);/, "estompé à 40 % comme dans le jeu, puis retiré");
+  assert.match(bloc, /const dx=-1\.2\*R\.b3\.w\*rm/, "retiré vers la gauche, comme le film des paquets");
+  // le rythme : morph, découpe, hachure, retrait, retour
   const DURp = new Function(`${paquets.match(/const DUR=\{[^}]*\};/)[0]} return DUR;`)();
-  assert.equal(DUR.hachure, DURp.hachure);
-  assert.equal(DUR.retire, DURp.retire);
+  for (const d of ["morph", "split", "hachure", "retire"]) assert.equal(DUR[d], DURp[d], d);
+  assert.match(paquets, /sOut=P\(t,T\.retour,\.7,F\.lin\),pIn=P\(t,T\.retour\+\.5,1\.0,F\.io\)/);
+  assert.equal(DUR.sOut, .7);
+  assert.equal(DUR.pIn, 1.0);
+  // la colonne qui reste vient au milieu, comme la colonne du 22
+  assert.match(bloc, /o\.dc=\(B\.x0\+B\.x1\)\/2-\(o\.R\.h10\.x\+o\.R\.h10\.w\/2\);/);
 });
 
 test("on vérifie : on valide, les deux taches s'éclaircissent, on compte 5 jetons sous chacune", () => {
@@ -152,7 +195,7 @@ test("on vérifie : on valide, les deux taches s'éclaircissent, on compte 5 jet
 test("les règles des films du monde 1 : pas de chiffre sur un jeton, « cachés », 3 s par phrase, une pause après chaque geste", () => {
   // compter = un anneau doré qui s'allume, et le compteur ; aucun texte posé sur un jeton
   assert.match(bloc, /stroke:Z\.C\.or,'stroke-width':3\}/);
-  assert.doesNotMatch(bloc, /E\('text'/);
+  assert.doesNotMatch(bloc, /E\('text'/);   // les nombres du schéma passent par Z.chiffre
   assert.doesNotMatch(bloc, /invisible/i);
   // chaque phrase reste au moins 3 s
   for (let i = 0; i < SOUS_TITRES.length - 1; i++)
