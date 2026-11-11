@@ -458,7 +458,7 @@ test("serveur : version_min 5 (6 depuis le correctif du lot S1), les clés du jo
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261108-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261108-1/, "la feuille ne change pas");
+  assert.match(page, /defi_calcul\.css\?v=20261111-1/, "la feuille a changé au lot « code en cases »");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
   // « N fois cette semaine ».

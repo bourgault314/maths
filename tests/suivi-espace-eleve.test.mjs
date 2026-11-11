@@ -207,10 +207,14 @@ function executerPageshow({persisted, codeEnMemoire, codeAffiche = "ABC123"}) {
   const ouvertures = [];
   new Function("$", "window", "ecrireCode", "lireCode", "nettoyer", "afficherErreur",
                "dessinerCases", "document", "arreterDirect", "ouverture", "poserSemaine",
-               "codeAffiche", "jourAffiche", "appliEvaluation", "ouvrir", source)(
+               "codeAffiche", "jourAffiche", "appliEvaluation", "ouvrir",
+               // Lot « code en cases » : « Se déconnecter » (seDeconnecter) referme
+               // aussi la question « C'est toujours toi ? » si elle est posée.
+               "gardeVisible", "cacherGarde", source)(
     $, fenetre, code => codesEcrits.push(code), () => codeEnMemoire, nettoyer, () => {},
     () => { dessins.n += 1; }, documentFactice, () => { directs.arrets += 1; }, 0, espace => semaines.push(espace),
-    codeAffiche, "2026-11-12", {cle: "defi-tables"}, (code, silencieux) => ouvertures.push([code, silencieux]));
+    codeAffiche, "2026-11-12", {cle: "defi-tables"}, (code, silencieux) => ouvertures.push([code, silencieux]),
+    false, () => {});
   assert.ok(gestionnaire, "le gestionnaire de « pageshow » doit être posé");
   gestionnaire({persisted});
   return {$, elements, classesCorps, classesHtml, dessins, directs, semaines, codesEcrits, ouvertures};

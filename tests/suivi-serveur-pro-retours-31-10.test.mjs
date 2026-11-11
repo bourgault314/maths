@@ -74,7 +74,10 @@ test("a) la page enlève la classe dès qu'elle montre l'écran du code : ménag
   assert.match(fonction("revenirAuCode"), /document\.documentElement\.classList\.remove\("retour"\);/);
   const ouvrir = fonction("ouvrir");
   assert.equal((ouvrir.match(/document\.documentElement\.classList\.remove\("retour"\);/g) || []).length, 2, "les deux messages d'erreur");
-  assert.match(script, /if \(oublierSiDemande\(\)\) \{\s*document\.documentElement\.classList\.remove\("retour"\);\s*\$\("code"\)\.focus\(\);\s*\} else \{\s*const memorise = nettoyer\(lireCode\(\)\);\s*if \(memorise\.length === 6\) ouvrir\(memorise, true\);\s*else document\.documentElement\.classList\.remove\("retour"\);\s*\}/);
+  // Lot « code en cases » : entre la mémoire et ouvrir(), le retour d'une appli
+  // (?retour=1) remet le compteur de « C'est toujours toi ? » à zéro ; ouvrir()
+  // pose la question au lieu de rouvrir si l'absence a duré.
+  assert.match(script, /if \(oublierSiDemande\(\)\) \{\s*document\.documentElement\.classList\.remove\("retour"\);\s*\$\("code"\)\.focus\(\);\s*\} else \{\s*const memorise = nettoyer\(lireCode\(\)\);\s*if \(memorise\.length === 6\) \{\s*if \(revenuDUneAppli\) noterGeste\(Date\.now\(\)\);[\s\S]*?ouvrir\(memorise, true\);\s*\} else document\.documentElement\.classList\.remove\("retour"\);\s*\}/);
 });
 
 // ------------------------------------------------------------ b) la copie de l'espace
@@ -82,7 +85,7 @@ test("a) la page enlève la classe dès qu'elle montre l'écran du code : ménag
 function copieRejouee(depart = {}) {
   const stock = memoire(depart);
   let hautCourant = null;
-  const f = new Function("stockage", "lireHaut", `const CLE = "mathsgo-suivi-code";\n${constante("CLE_COPIE")}\n${["lireCode", "ecrireCode", "oublierCopie", "lireCopie", "ecrireCopie", "garderCopie", "noterHaut"].map(fonction).join("\n")}\nlet hautCourant = null;\nreturn {lireCode, ecrireCode, lireCopie, garderCopie, noterHaut, poserHaut: h => { hautCourant = h; }};`)(() => stock);
+  const f = new Function("stockage", "lireHaut", `const CLE = "mathsgo-suivi-code";\n${constante("CLE_COPIE")}\n${constante("CLE_GESTE")}\n${["lireCode", "ecrireCode", "oublierCopie", "oublierGeste", "lireCopie", "ecrireCopie", "garderCopie", "noterHaut"].map(fonction).join("\n")}\nlet hautCourant = null;\nreturn {lireCode, ecrireCode, lireCopie, garderCopie, noterHaut, poserHaut: h => { hautCourant = h; }};`)(() => stock);
   return {stock, ...f};
 }
 const DONNEES = {ok: true, prenom: "Rania", classe: "405", billet: "b".repeat(32), reglages: {splat: {mondes: [1]}},
@@ -163,7 +166,9 @@ function jouerOuvrir({copie = null, copieCassee = false, reponse, jauges = Promi
   let codeGarde = code;
   const source = `${constante("ATTENTE_JAUGES").replace("1000", "40")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\nreturn ouvrir;`;
   const ouvrir = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
-    "lireJauges", "surveillerDirect", "revenirAuCode", "afficherErreur", "dessinerCases", "oublierCopie", source)(
+    "lireJauges", "surveillerDirect", "revenirAuCode", "afficherErreur", "dessinerCases", "oublierCopie",
+    // Lot « code en cases » : l'élève est actif (pas de question), et le code tapé note un geste.
+    "verifierGarde", "noterGeste", source)(
     {setTimeout}, {documentElement: {classList: html}},
     () => (reponse instanceof Error ? Promise.reject(reponse) : Promise.resolve({ok: reponse.status === 200, status: reponse.status, json: () => Promise.resolve(reponse.corps)})),
     id => zones[id],
@@ -180,7 +185,8 @@ function jouerOuvrir({copie = null, copieCassee = false, reponse, jauges = Promi
     () => journal.push(["menage"]),
     m => { if (m) journal.push(["erreur", m]); },
     () => {},
-    () => journal.push(["oubli-copie"]));
+    () => journal.push(["oubli-copie"]),
+    () => false, () => {});
   html.add("retour");
   return {fini: ouvrir(code, silencieux), journal, zones, html, deconnecter: () => { codeGarde = ""; }};
 }
@@ -253,7 +259,8 @@ for (const moment of ["api/eleve.php", "lireJauges"]) test(`ouvrir — « Se dé
   let rendreJauges;
   const source = `${constante("ATTENTE_JAUGES")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\n${fonction("revenirAuCode")}\nreturn {ouvrir, revenirAuCode};`;
   const {ouvrir, revenirAuCode} = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
-    "lireJauges", "surveillerDirect", "afficherErreur", "dessinerCases", "arreterDirect", "oublierCopie", "poserSemaine", source)(
+    "lireJauges", "surveillerDirect", "afficherErreur", "dessinerCases", "arreterDirect", "oublierCopie", "poserSemaine",
+    "verifierGarde", "noterGeste", source)(
     {setTimeout}, {documentElement: {classList: classes()}, body: {classList: classes()}},
     () => new Promise(ok => { repondre = ok; }),
     id => (zones[id] ||= {classList: classes()}),
@@ -264,7 +271,7 @@ for (const moment of ["api/eleve.php", "lireJauges"]) test(`ouvrir — « Se dé
     () => codeGarde,
     () => new Promise(ok => { rendreJauges = ok; }),
     () => Promise.resolve(0),
-    () => {}, () => {}, () => {}, () => {}, () => {});
+    () => {}, () => {}, () => {}, () => {}, () => {}, () => false, () => {});
   const fini = ouvrir("ABC234", true);
   assert.deepEqual(journal, [["dessin", "Rania (copie)"]], "la copie est à l'écran, le bouton aussi");
   const reponse = {ok: true, status: 200, json: () => Promise.resolve(OK.corps)};

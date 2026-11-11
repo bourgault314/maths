@@ -601,7 +601,7 @@ test("garde-fou de temps : la page qui redevient visible après une longue absen
   assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi ?");
   assert.match(html, /<div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>/);
   assert.match(html, /window\.setInterval\(verifierGarde, 60000\)/, "un contrôle par minute dans le navigateur");
-  assert.match(html, /\["pointerdown", "keydown", "touchstart"\]\.forEach\(type => \{\s*document\.addEventListener\(type, noterActivite, true\);/, "les gestes sont écoutés en capture");
+  assert.match(html, /\["pointerdown", "keydown", "touchstart", "click", "auxclick"\]\.forEach\(type => \{\s*document\.addEventListener\(type, noterActivite, true\);/, "les gestes sont écoutés en capture (clic et clic du milieu compris, lot « code en cases »)");
   assert.match(html, /<input id="suivi-garde-code"[^>]*maxlength="6"/, "un champ de six caractères, pas un bouton");
   assert.match(html, /Si c’est toi, retape ton code/, "et la note dit quoi faire");
   assert.doesNotMatch(html, /Oui, c’est moi/, "le bouton qui ne vérifiait rien a disparu");

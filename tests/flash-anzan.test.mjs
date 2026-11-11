@@ -168,7 +168,7 @@ test("jamais le clavier du téléphone : aucune case de saisie dans la page", ()
 test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du suivi le fait, et seulement sous un code", () => {
   const script = PAGE.slice(PAGE.lastIndexOf("<script>"), PAGE.lastIndexOf("</script>"));
   assert.doesNotMatch(script, /fetch\(|XMLHttpRequest|sendBeacon/, "aucun appel réseau dans le script de la page");
-  assert.match(PAGE, /<script src="\.\/flash_anzan_parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\/flash_anzan_suivi\.js\?v=\d{8}-\d+"><\/script>/,
+  assert.match(PAGE, /<script src="\.\/flash_anzan_parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/code-en-cases\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\/flash_anzan_suivi\.js\?v=\d{8}-\d+"><\/script>/,
     "le moteur du parcours et l'habillage du suivi, avec une version, après le moteur des calculs");
   assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
   assert.match(script, /function suiviActif\(\) \{\s*return Boolean\(SUIVI && SUIVI\.actif\(\)\);/);

@@ -67,7 +67,7 @@ test("un code tapé dans l'adresse n'ouvre rien, il est seulement effacé ; un #
 // ------------------------------------------------------------------ la page
 
 test("la page charge le moteur et l'habillage du suivi, avec une version, après le moteur des plateaux", () => {
-  assert.match(PAGE, /<script src="\.\.\/\.\.\/assets\/js\/coffres-moteur\.js\?v=\d+"><\/script>\s*<!--[\s\S]*?-->\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>/);
+  assert.match(PAGE, /<script src="\.\.\/\.\.\/assets\/js\/coffres-moteur\.js\?v=\d+"><\/script>\s*<!--[\s\S]*?-->\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/code-en-cases\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>/);
   assert.doesNotMatch(PAGE, /<script[^>]+src="https?:\/\//, "aucun script d'un autre domaine");
 });
 
@@ -134,7 +134,7 @@ test("les textes validés par Gwenaël : le choix, le mémo, les réglages chang
   assert.match(source("appliquerReglagesEleve"), /document\.querySelector\("#mode-title"\)\.textContent = "Coffres magiques";/);
   assert.match(source("appliquerReglagesEleve"), /\.textContent = "Continuer";/);
   // « Trésor ouvert ! » : le lien ramène à Mon espace (choix de Gwenaël, 21/10/2026).
-  assert.match(source("majLiensRetour"), /link\.href = ADRESSE_ESPACE;[\s\S]*"Mon espace"/);
+  assert.match(source("majLiensRetour"), /link\.href = adresseEspace\(\);[\s\S]*"Mon espace"/);
 });
 
 test("chaque geste du jeu est noté dans la case de l'élève par le moteur, jamais les calculs", () => {

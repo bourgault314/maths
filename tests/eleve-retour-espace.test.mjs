@@ -267,9 +267,12 @@ test("le script ne lit le code que dans l'onglet et ne l'envoie nulle part ; le 
 test("« Se déconnecter » de Mon espace fait son ménage puis mène à https://mathsgo.re/?sortie=1", () => {
   const espace = readFileSync(join(racine, "_serveur/public/index.php"), "utf8");
   assert.match(espace, /const SORTIE_PAR_LE_SITE = "https:\/\/mathsgo\.re\/\?sortie=1";/);
-  const debut = espace.indexOf('$("changer").addEventListener("click"');
+  // Lot « code en cases » : « Se déconnecter » est une fonction (seDeconnecter),
+  // appelée par le bouton ET par « Non, ce n'est pas moi » de la question.
+  assert.match(espace, /\$\("changer"\)\.addEventListener\("click", seDeconnecter\);/);
+  const debut = espace.indexOf("function seDeconnecter()");
   assert.ok(debut > 0);
-  const bloc = espace.slice(debut, espace.indexOf("});", debut));
+  const bloc = espace.slice(debut, espace.indexOf("\n  }", debut));
   const menage = bloc.indexOf("revenirAuCode();");
   const depart = bloc.indexOf("window.location.replace(SORTIE_PAR_LE_SITE)");
   assert.ok(menage >= 0, "le ménage de la page reste fait sur place, d'abord (même si le site ne répond pas)");

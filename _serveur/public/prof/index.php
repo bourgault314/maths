@@ -902,7 +902,20 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .lc-jour.rien { background: var(--gris-pale); }
   .lc-jour.futur { border: 1.5px dashed var(--line); }
   .lc-jour.inconnu { color: var(--muted); font-size: 11px; background: repeating-linear-gradient(-45deg, var(--gris-pale) 0 4px, var(--paper) 4px 7px); }
-  .lc-jour.aujourdhui { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--blue); }
+  /* Lot « code en cases » (planche validée par Gwenaël le 09/11/2026) : le
+     cadre bleu d'aujourd'hui est DANS la case — l'anneau extérieur d'avant
+     (3,5 px) mordait sur la case suivante, les cases n'ayant que 1 à 2 px
+     d'écart. Sur ordinateur (1000 px et plus : à 820 px, la tablette, le
+     tableau défile déjà de côté, il ne s'élargit pas), des cases plus grandes
+     et plus espacées ; au
+     téléphone, l'écart de 1 px reste (avec 3 px, la 7e case sortait de la
+     colonne à 390 px). La petite case de la légende suit la même règle. */
+  .lc-jour.aujourdhui { box-shadow: inset 0 0 0 2px var(--blue); }
+  .lc-jour.ok.aujourdhui { box-shadow: inset 0 0 0 2px var(--blue-dark), inset 0 0 0 3.5px #fff; }
+  @media (min-width: 1000px) {
+    .lc-jour { width: 24px; height: 24px; font-size: 14px; }
+    .lc-semaine { gap: 5px; }
+  }
   .lc-note .lc-jour { width: 16px; height: 16px; font-size: 10px; vertical-align: -3px; margin: 0 2px; }
   .lc-note { margin-top: 10px; }
   .lc-unite { color: var(--muted); font-weight: 400; font-size: .86rem; }

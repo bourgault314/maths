@@ -1229,15 +1229,17 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(sansCode.etiquette.textContent, "Calcul mental");
   assert.equal(sansCode.attributs["aria-label"], "Retour au calcul mental");
 
+  // Lot « code en cases » : sous un code actif, ?retour=1 — Mon espace reprend
+  // l'activité vue dans l'appli au lieu de reposer « C'est toujours toi ? ».
   const avecCode = executer(true).lien;
-  assert.equal(avecCode.href, "https://suivi.mathsgo.re/");
+  assert.equal(avecCode.href, "https://suivi.mathsgo.re/?retour=1");
   assert.equal(avecCode.etiquette.textContent, "Mon espace");
   assert.equal(avecCode.attributs["aria-label"], "Retour à mon espace");
 
   // Lot 3 : un billet refusé laisse l'élève sans code, mais il vient de son
   // espace — c'est là qu'il doit pouvoir repartir.
   const billetRefuse = executer(false, "expire").lien;
-  assert.equal(billetRefuse.href, "https://suivi.mathsgo.re/");
+  assert.equal(billetRefuse.href, "https://suivi.mathsgo.re/", "un billet refusé n'a vu aucune activité : pas de ?retour=1");
   assert.equal(billetRefuse.etiquette.textContent, "Mon espace");
 
   // Le logo était la dernière porte de sortie : il ramenait toujours à
@@ -1245,7 +1247,7 @@ test("le lien du haut ramène l’élève suivi à son espace, les autres au cat
   assert.equal(executer(false).logo.href, "/",
     "pour un visiteur ordinaire, le logo ramène à l'accueil du site");
   assert.equal(executer(false).logo.attributs["aria-label"], "Accueil maths&go");
-  assert.equal(executer(true).logo.href, "https://suivi.mathsgo.re/",
+  assert.equal(executer(true).logo.href, "https://suivi.mathsgo.re/?retour=1",
     "pour un élève suivi, le logo ramène à son espace");
   assert.equal(executer(true).logo.attributs["aria-label"], "Retour à mon espace");
 

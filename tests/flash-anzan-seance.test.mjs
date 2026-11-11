@@ -901,7 +901,7 @@ test("sous un code : le bloc de suivi, la flèche vers Mon espace, les réglages
   await p.souffler();
   assert.equal(p.$("suivi-repere").hidden, false, "le bloc de suivi est là");
   assert.equal(texte(p.$("suivi-repere")), "Suivi · Rania · 405 · Se déconnecter", "le modèle commun (en-tête commun, 31/10/2026 : « Suivi », sous le titre)");
-  assert.equal(p.$("lien-retour").getAttribute("href"), "https://suivi.mathsgo.re/", "la flèche du cadre mène à Mon espace");
+  assert.equal(p.$("lien-retour").getAttribute("href"), "https://suivi.mathsgo.re/?retour=1", "la flèche du cadre mène à Mon espace (?retour=1 sous un code actif, lot « code en cases »)");
   assert.equal(p.$("lien-retour").getAttribute("aria-label"), "Retour à mon espace");
   assert.equal(p.$("ecran-reglages").querySelector("[data-mode=colonne]").getAttribute("aria-pressed"), "true", "le mode du compte");
   p.$("ecran-reglages").querySelector("[data-mode=flash]").click();

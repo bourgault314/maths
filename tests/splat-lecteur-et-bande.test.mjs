@@ -69,5 +69,5 @@ test("3c : élève connecté, plus de bande au-dessus — la flèche sur la lign
   const bloc = c.slice(c.indexOf("/* Lot 3c"), c.indexOf("/* ---------- bandeau titre"));
   for (const r of bloc.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").filter((l) => l.includes("{"))) assert.match(r, /html\.suivi-eleve/, r);
   // la flèche reste le même lien (majLiensRetour lui donne l'adresse de Mon espace)
-  assert.match(carte, /const b=document\.querySelector\("header \.back"\),l=document\.querySelector\("header \.brand"\);\n\s*if\(b\)\{ b\.setAttribute\("href",espace\?SUIVI\.ADRESSE_ESPACE:RETOUR_SITE\.back\);/);
+  assert.match(carte, /const b=document\.querySelector\("header \.back"\),l=document\.querySelector\("header \.brand"\);\n\s*if\(b\)\{ b\.setAttribute\("href",espace\?SUIVI\.adresseEspace\(\):RETOUR_SITE\.back\);/);
 });

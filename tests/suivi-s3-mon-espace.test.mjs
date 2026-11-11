@@ -368,9 +368,11 @@ test("un clic d'activité quand le serveur ne connaît plus le code : pas de dé
   const essayer = async statut => {
     const departs = [];
     const menages = [];
-    const ouvrirAppli = new Function("fetch", "window", "lireCode", "revenirAuCode", source)(
+    // Lot « code en cases » : ouvrirAppli consulte la question « C'est
+    // toujours toi ? » (verifierGarde, gardeVisible) — ici, l'élève est actif.
+    const ouvrirAppli = new Function("fetch", "window", "lireCode", "revenirAuCode", "verifierGarde", "gardeVisible", source)(
       () => Promise.resolve({ok: statut === 200, status: statut, json: () => Promise.resolve(statut === 200 ? {ok: true, billet: "neuf"} : {ok: false})}),
-      {location: {assign: a => departs.push(a)}, setTimeout: () => 0}, () => "ABC234", () => menages.push(1));
+      {location: {assign: a => departs.push(a)}, setTimeout: () => 0}, () => "ABC234", () => menages.push(1), () => false, false);
     const lien = {dataset: {}};
     await ouvrirAppli({button: 0, preventDefault() {}}, lien, {url: "https://mathsgo.re/x.html", ancre: null}, "ABC234", "ancien");
     return {departs, menages: menages.length, enCours: "enCours" in lien.dataset};
