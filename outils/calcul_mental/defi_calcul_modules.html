@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261108-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261111-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -108,7 +108,10 @@
           <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;»&nbsp;: ton camarade retrouvera son parcours avec son code.</p>
           <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
             <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
-            <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
+            <div class="cec suivi-garde-cases">
+              <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
+              <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
+            </div>
             <p id="suivi-garde-erreur" class="suivi-garde-erreur" role="alert" hidden></p>
             <div class="suivi-garde-boutons">
               <button id="suivi-garde-oui" class="primary" type="button">C’est moi</button>
@@ -286,6 +289,7 @@
     </section>
   </main>
 
+  <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
   <script src="./defi_calcul_core.js?v=20261108-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261108-1"></script>
   <script src="./defi_calcul_aides.js?v=20261108-1"></script>
@@ -520,13 +524,17 @@
         logoHref: "/",
         logoAria: "Accueil maths&go"
       };
+      // Lot « code en cases » : ?retour=1 — Mon espace reprend l'activité vue
+      // ici au lieu de reposer « C'est toujours toi ? ». Seulement sous un code
+      // actif : un billet refusé n'a vu aucune activité (RETOUR_ESPACE_NU).
       const RETOUR_ESPACE = {
-        href: SUIVI_URL + "/",
+        href: SUIVI_URL + "/?retour=1",
         texte: "Mon espace",
         aria: "Retour à mon espace",
-        logoHref: SUIVI_URL + "/",
+        logoHref: SUIVI_URL + "/?retour=1",
         logoAria: "Retour à mon espace"
       };
+      const RETOUR_ESPACE_NU = Object.assign({}, RETOUR_ESPACE, {href: SUIVI_URL + "/", logoHref: SUIVI_URL + "/"});
       // Plus de pied de page dans les applis (24/10/2026, choix de Gwenaël) :
       // ni celui du site pour le visiteur, ni « Mon espace » pour l'élève à
       // code — son chemin de retour est en haut (« ← Mon espace »), et
@@ -598,7 +606,7 @@
 
       function majLienRetour() {
         // Un élève dont le billet a été refusé vient quand même de son espace.
-        const vers = suiviActif() || entreeRefusee ? RETOUR_ESPACE : RETOUR_CATALOGUE;
+        const vers = suiviActif() ? RETOUR_ESPACE : entreeRefusee ? RETOUR_ESPACE_NU : RETOUR_CATALOGUE;
         // Comme dans Défi tables : l'élève à code (body.mode-eleve) n'a qu'une
         // barre fine en haut, sans logo, « Se déconnecter » dans le bandeau.
         if (document.body) document.body.classList.toggle("mode-eleve", Boolean(suiviActif() || entreeRefusee));
@@ -696,7 +704,17 @@
       }
 
       function envoiPossible() {
-        return suiviActif() && !sync.detache && !erreurDefinitive;
+        // Lot « code en cases » (exigence de l'audit GPT, F01) : pendant que
+        // « C'est toujours toi ? » est posée — ou dès que l'absence a assez duré
+        // pour qu'elle le soit —, RIEN ne part : ni envoi groupé, ni relance, ni
+        // envoi de fermeture d'onglet. Le travail reste rangé ici et part quand
+        // l'élève a retapé son code (ou à sa prochaine entrée sur cet appareil).
+        return suiviActif() && !sync.detache && !erreurDefinitive && !envoisRetenus();
+      }
+
+      // try : appelée avant que la garde soit déclarée plus bas, elle répond « non ».
+      function envoisRetenus() {
+        try { return gardeVisible || absenceTropLongue(); } catch (_) { return false; }
       }
 
       // Envoi groupé : les réponses d'une série arrivent toutes les secondes, on
@@ -1120,7 +1138,7 @@
       let gardeErreur = "";
 
       function absenceTropLongue() {
-        return suiviActif() && Date.now() - derniereActivite > GARDE_INACTIVITE_MS;
+        return suiviActif() && Date.now() - derniereActivite >= GARDE_INACTIVITE_MS;
       }
 
       function verifierGarde() {
@@ -1128,8 +1146,7 @@
         gardeVisible = true;
         gardeEssais = 0;
         gardeErreur = "";
-        const champ = document.getElementById("suivi-garde-code");
-        if (champ) champ.value = "";
+        viderChampGarde();
         renderGarde();
         return true;
       }
@@ -1172,7 +1189,7 @@
         }
         const champ = document.getElementById("suivi-garde-code");
         if (!gardeVisible) {
-          if (champ) champ.value = "";
+          viderChampGarde();
         } else if (champ && typeof champ.focus === "function") {
           try { champ.focus({preventScroll: true}); } catch (_) {}
         }
@@ -1208,6 +1225,10 @@
           gardeEssais = 0;
           noterDernierGeste(Date.now());
           renderGarde();
+          // Ce qui attendait pendant la question part maintenant (le démarrage
+          // remis à après la question relit le serveur et envoie lui-même).
+          if (demarrageEnAttente) demarrerSuivi();
+          else if (sync.dirty) envoyerParcours();
           return true;
         }
         gardeEssais += 1;
@@ -1222,13 +1243,25 @@
         return false;
       }
 
+      // Le code en six cases (lot « code en cases ») : le module commun dessine
+      // les cases et tient la saisie, avec la règle de nettoyage du moteur. Sans
+      // le module (fichier pas encore à jour dans le cache), le champ d'avant.
+      var casesGarde = null; // var : renderGarde peut passer avant cette ligne
+      function viderChampGarde() {
+        if (casesGarde) { casesGarde.vider(); return; }
+        const champ = document.getElementById("suivi-garde-code");
+        if (champ) champ.value = "";
+      }
+
       try {
         const champ = document.getElementById("suivi-garde-code");
         const form = document.getElementById("suivi-garde-form");
         const oui = document.getElementById("suivi-garde-oui");
         const non = document.getElementById("suivi-garde-non");
         const valider = () => repondreGarde(true, champ ? champ.value : "");
-        if (champ) champ.addEventListener("input", () => {
+        if (champ && window.MathsGoCodeEnCases) {
+          casesGarde = window.MathsGoCodeEnCases.monter(champ, {nettoyer: nettoyerCodeSaisi});
+        } else if (champ) champ.addEventListener("input", () => {
           const propre = nettoyerCodeSaisi(champ.value);
           if (champ.value !== propre) champ.value = propre;
         });
@@ -1239,7 +1272,9 @@
         });
         if (oui) oui.addEventListener("click", valider);
         if (non) non.addEventListener("click", () => repondreGarde(false));
-        ["pointerdown", "keydown", "touchstart"].forEach(type => {
+        // Lot « code en cases » : le clic et le clic du milieu aussi (un lien
+        // s'ouvre parfois sans « pointerdown » ; repris de l'audit GPT).
+        ["pointerdown", "keydown", "touchstart", "click", "auxclick"].forEach(type => {
           document.addEventListener(type, noterActivite, true);
         });
         document.addEventListener("visibilitychange", () => {
@@ -1288,6 +1323,9 @@
         if (!state.running) renderParcours();
       }
 
+      // Démarrage remis à après la question (relecture GPT, D01) ; var : lue
+      // avant que cette ligne ne soit passée, elle vaut « non ».
+      var demarrageEnAttente = false;
       function demarrerSuivi() {
         if (!suiviActif()) { finAttente(); return; }
         PARCOURS.sauverCode(stockageSession(), codeSuivi);
@@ -1299,6 +1337,12 @@
         }
         renderRepere();
         if (sync.detache) { finAttente(); return; }
+        // Lot « code en cases », relecture GPT (D01) : rouverte (F5, adresse
+        // retapée) alors que la question est due, l'appli ne relit RIEN au serveur
+        // — ni l'identité, ni le parcours, ni l'évaluation : le démarrage attend le
+        // bon code (repondreGarde le relance).
+        if (envoisRetenus()) { demarrageEnAttente = true; finAttente(); return; }
+        demarrageEnAttente = false;
         rafraichirReglages();
         const code = codeSuivi;
         // Appareil neuf (case vide) : l'accueil attend la lecture du parcours.

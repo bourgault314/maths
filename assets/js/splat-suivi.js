@@ -40,6 +40,12 @@
   // pages jouent comme avant, sans rien enregistrer.
 
   const ADRESSE_ESPACE = "https://suivi.mathsgo.re/";
+  // Lot « code en cases » : le RETOUR vers Mon espace d'un élève suivi porte
+  // ?retour=1 — Mon espace reprend alors l'activité vue ici au lieu de reposer
+  // « C'est toujours toi ? » (voir _serveur/public/index.php, retourDepuisAppli).
+  // Seulement sous un code actif : un billet refusé (« Ce lien a expiré »)
+  // n'a vu aucune activité, son lien reste l'adresse nue.
+  const ADRESSE_RETOUR = ADRESSE_ESPACE + "?retour=1";
   const ID_STYLE = "suivi-splat-style";
   const ID_GARDE = "suivi-garde";
 
@@ -102,6 +108,13 @@
     ".suivi-garde-code:focus{outline:3px solid #7fb3e0;outline-offset:1px}",
     ".suivi-garde-erreur{margin:0;color:#b3261e;font-size:.9rem;font-weight:700}",
     ".suivi-garde-erreur[hidden]{display:none}",
+    // Lot « code en cases » (11/2026) : le code en six cases (assets/js/code-en-cases.js) ;
+    // la ligne d'erreur garde sa place même vide (la carte ne grandit pas) ; au téléphone,
+    // la carte en haut de l'écran : le clavier couvre le bas.
+    ".suivi-garde-cases{margin:2px 0}",
+    ".suivi-garde .suivi-garde-erreur[hidden]{display:block !important;visibility:hidden}",
+    ".suivi-garde-erreur{min-height:1.3em;line-height:1.3}",
+    "@media (max-width:700px),(max-height:560px){.suivi-garde{align-items:flex-start;padding-top:max(16px,min(9vh,80px));overflow-y:auto}}",
     ".suivi-garde-boutons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px}",
     ".suivi-garde-boutons button{font:inherit;font-weight:800;font-size:1rem;min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer}",
     ".suivi-garde-oui{color:#fff;background:#0b67b2;border:2px solid #0b67b2}",
@@ -363,7 +376,14 @@
       racineGarde.append(carte);
       doc.body.appendChild(racineGarde);
       const valider = () => client.repondreGarde(true, champ.value || "");
-      champ.addEventListener("input", () => {
+      // Le code en six cases : le module commun (chargé par la page avant ce
+      // fichier) pose les cases autour du champ et tient la saisie. Sans lui,
+      // le champ d'avant.
+      const outilCases = racine.MathsGoCodeEnCases;
+      const cases = outilCases && typeof outilCases.monter === "function"
+        ? outilCases.monter(champ, {nettoyer: nettoyerCodeSaisi}) : null;
+      if (cases && champ.parentNode && champ.parentNode.classList) champ.parentNode.classList.add("suivi-garde-cases");
+      if (!cases) champ.addEventListener("input", () => {
         const propre = nettoyerCodeSaisi(champ.value || "");
         if (champ.value !== propre) champ.value = propre;
       });
@@ -374,7 +394,7 @@
       });
       oui.addEventListener("click", valider);
       non.addEventListener("click", () => client.repondreGarde(false));
-      return {racine: racineGarde, titre, erreur, champ, oui, non, form};
+      return {racine: racineGarde, titre, erreur, champ, cases, oui, non, form};
     }
 
     function dessinerGarde() {
@@ -382,7 +402,8 @@
       if (!client.gardeVisible) {
         if (garde) {
           garde.racine.hidden = true;
-          garde.champ.value = "";
+          if (garde.cases) garde.cases.vider();
+          else garde.champ.value = "";
         }
         return;
       }
@@ -432,6 +453,7 @@
       client,
       moteur: P,
       ADRESSE_ESPACE,
+      adresseEspace: () => (client.suiviActif() ? ADRESSE_RETOUR : ADRESSE_ESPACE),
       attente,
       lire,
       ecrire,

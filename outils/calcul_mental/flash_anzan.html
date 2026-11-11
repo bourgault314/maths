@@ -1192,8 +1192,9 @@
   <script src="./flash_anzan_core.js?v=20261107-5"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261107-3"></script>
-  <script src="./flash_anzan_suivi.js?v=20261031-1"></script>
+  <script src="./flash_anzan_parcours.js?v=20261111-1"></script>
+  <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
+  <script src="./flash_anzan_suivi.js?v=20261111-1"></script>
   <script>
     (function () {
       "use strict";
@@ -1225,7 +1226,8 @@
       const SUIVI = PARCOURS && window.MathsGoFlashAnzanSuivi
         ? window.MathsGoFlashAnzanSuivi.creer({surRepere: majSuivi, surParcours: surParcoursChange, enJeu: () => corps.classList.contains("en-seance")})
         : null;
-      const ADRESSE_ESPACE = SUIVI ? SUIVI.ADRESSE_ESPACE : "https://suivi.mathsgo.re/";
+      // Lot « code en cases » : ?retour=1 sous un code actif (voir flash_anzan_suivi.js).
+      const adresseEspace = () => (SUIVI ? SUIVI.adresseEspace() : "https://suivi.mathsgo.re/");
 
       // L'élève venu de son espace : sous un code, pendant l'échange de son
       // billet, ou quand ce billet a été refusé (il vient quand même de là).
@@ -2188,7 +2190,7 @@
         const eleve = modeEleve();
         racine.classList.toggle("suivi-eleve", eleve);
         if (eleve) {
-          lienRetour.href = ADRESSE_ESPACE;
+          lienRetour.href = adresseEspace();
           lienRetour.setAttribute("aria-label", "Retour à mon espace");
           lienRetour.title = "Mon espace";
         }

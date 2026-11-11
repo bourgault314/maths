@@ -1442,7 +1442,17 @@
     }
 
     function envoiPossible() {
-      return suiviActif() && !sync.detache && !erreurDefinitive;
+      // Lot « code en cases » (exigence de l'audit GPT, F01) : pendant que
+      // « C'est toujours toi ? » est posée — ou dès que l'absence a assez duré
+      // pour qu'elle le soit —, RIEN ne part : ni envoi groupé, ni relance, ni
+      // envoi de fermeture d'onglet. Le travail reste rangé ici et part quand
+      // l'élève a retapé son code (ou à sa prochaine entrée sur cet appareil).
+      return suiviActif() && !sync.detache && !erreurDefinitive && !envoisRetenus();
+    }
+
+    // try : appelée avant que la garde soit déclarée plus bas, elle répond « non ».
+    function envoisRetenus() {
+      try { return gardeVisible || absenceTropLongue(); } catch (_) { return false; }
     }
 
     // Envoi groupé : jamais plus d'une fois par 700 ms, jamais deux en même temps.
@@ -1762,7 +1772,7 @@
     let gardeErreur = "";
 
     function absenceTropLongue() {
-      return suiviActif() && maintenant() - derniereActivite > GARDE_INACTIVITE_MS;
+      return suiviActif() && maintenant() - derniereActivite >= GARDE_INACTIVITE_MS;
     }
 
     function verifierGarde() {
@@ -1816,6 +1826,10 @@
         gardeEssais = 0;
         noterDernierGeste(maintenant());
         rendre.garde();
+        // Ce qui attendait pendant la question part maintenant (le démarrage
+        // remis à après la question relit le serveur et envoie lui-même).
+        if (demarrageEnAttente) demarrerSuivi();
+        else if (sync.dirty) envoyerParcours();
         return true;
       }
       gardeEssais += 1;
@@ -1848,7 +1862,9 @@
             if (doc.visibilityState === "hidden") envoyerAvantDeFermer();
             if (doc.visibilityState === "visible") verifierGarde();
           });
-          ["pointerdown", "keydown", "touchstart"].forEach(type => {
+          // Lot « code en cases » : le clic et le clic du milieu aussi (un lien
+      // s'ouvre parfois sans « pointerdown » ; repris de l'audit GPT).
+      ["pointerdown", "keydown", "touchstart", "click", "auxclick"].forEach(type => {
             doc.addEventListener(type, evenement => {
               const cible = evenement && evenement.target;
               const dansLaGarde = Boolean(cible && typeof cible.closest === "function" && cible.closest("[data-suivi-garde]"));
@@ -1864,6 +1880,9 @@
 
     // Au démarrage sous un code : le serveur fait foi, fusion D3 avec la case du
     // code, renvoi seulement si cet appareil apporte quelque chose.
+    // Démarrage remis à après la question (relecture GPT, D01) ; var : lue
+    // avant que cette ligne ne soit passée, elle vaut « non ».
+    var demarrageEnAttente = false;
     function demarrerSuivi() {
       if (!suiviActif()) { direPret(false); return; }
       sauverCode(stockageSession(), codeSuivi);
@@ -1874,6 +1893,12 @@
       }
       rendre.repere();
       if (sync.detache) { direPret(false); return; }
+      // Lot « code en cases », relecture GPT (D01) : rouverte (F5, adresse
+      // retapée) alors que la question est due, l'appli ne relit RIEN au serveur
+      // — ni l'identité, ni le parcours, ni l'évaluation : le démarrage attend le
+      // bon code (repondreGarde le relance).
+      if (envoisRetenus()) { demarrageEnAttente = true; direPret(false); return; }
+      demarrageEnAttente = false;
       chargerIdentite(codeSuivi);
       const code = codeSuivi;
       lireParcoursDuServeur(code).then(reponse => {

@@ -81,8 +81,9 @@
 <script src="../assets/js/splat-etapes.js?v=20261108-6"></script>
 <!-- Le parcours de l'élève (moteur partagé avec les trois outils et le serveur de suivi), et
      l'habillage du suivi de classe (bloc de suivi, garde) : lots 2 et 6, 08/10/2026 -->
-<script src="../assets/js/splat-parcours.js?v=20261107-1"></script>
-<script src="../assets/js/splat-suivi.js?v=20261031-1"></script>
+<script src="../assets/js/splat-parcours.js?v=20261111-1"></script>
+<script src="../assets/js/code-en-cases.js?v=20261111-1"></script>
+<script src="../assets/js/splat-suivi.js?v=20261111-1"></script>
 <style>
 :root{
   --page:#f6f8fb; --paper:#ffffff; --ink:#10294a; --muted:#5c6c82; --line:#d9e2ec;
@@ -2022,8 +2023,8 @@ const RETOUR_SITE=(()=>{const b=document.querySelector("header .back"),l=documen
 function majLiensRetour(){
   const espace=!!(SUIVI&&(SUIVI.actif()||SUIVI.client.entreeRefusee));
   const b=document.querySelector("header .back"),l=document.querySelector("header .brand");
-  if(b){ b.setAttribute("href",espace?SUIVI.ADRESSE_ESPACE:RETOUR_SITE.back); b.setAttribute("title",espace?"Mon espace":RETOUR_SITE.title); }
-  if(l){ l.setAttribute("href",espace?SUIVI.ADRESSE_ESPACE:RETOUR_SITE.brand); l.setAttribute("aria-label",espace?"Mon espace":RETOUR_SITE.aria); }
+  if(b){ b.setAttribute("href",espace?SUIVI.adresseEspace():RETOUR_SITE.back); b.setAttribute("title",espace?"Mon espace":RETOUR_SITE.title); }
+  if(l){ l.setAttribute("href",espace?SUIVI.adresseEspace():RETOUR_SITE.brand); l.setAttribute("aria-label",espace?"Mon espace":RETOUR_SITE.aria); }
 }
 function majSuivi(){
   majLiensRetour();

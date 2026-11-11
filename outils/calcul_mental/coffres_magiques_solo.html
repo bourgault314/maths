@@ -2124,8 +2124,9 @@
   <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
-  <script src="../../assets/js/coffres-parcours.js?v=20261111-1"></script>
-  <script src="../../assets/js/coffres-suivi.js?v=20261031-1"></script>
+  <script src="../../assets/js/coffres-parcours.js?v=20261111-2"></script>
+  <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
+  <script src="../../assets/js/coffres-suivi.js?v=20261111-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2326,7 +2327,8 @@
       const confirmZero = document.querySelector("#confirm-zero");
       const lienRetour = document.querySelector("#lien-retour");
       const pastilleSlot = document.querySelector("#suivi-pastille-slot");
-      const ADRESSE_ESPACE = SUIVI ? SUIVI.ADRESSE_ESPACE : "https://suivi.mathsgo.re/";
+      // Lot « code en cases » : ?retour=1 sous un code actif (voir coffres-suivi.js).
+      const adresseEspace = () => (SUIVI ? SUIVI.adresseEspace() : "https://suivi.mathsgo.re/");
       // « Ton professeur a changé les réglages. » (maquette 09) : vrai depuis
       // l'abandon de la partie jusqu'au début de la suivante.
       let reglagesChanges = false;
@@ -2376,7 +2378,7 @@
       function majLiensRetour() {
         if (!modeEleve()) return;
         document.querySelectorAll("[data-origin-link]").forEach(link => {
-          link.href = ADRESSE_ESPACE;
+          link.href = adresseEspace();
           link.setAttribute("aria-label", "Retour à mon espace");
           const shortCopy = link.querySelector("[data-origin-copy]");
           const returnCopy = link.querySelector("[data-origin-return-copy]");
@@ -2389,6 +2391,7 @@
         const eleve = modeEleve();
         document.documentElement.classList.toggle("suivi-eleve", eleve);
         lienRetour.hidden = !eleve;
+        if (eleve) lienRetour.href = adresseEspace();
         if (!SUIVI) return;
         SUIVI.dessinerBloc(document.getElementById("suivi-repere"));
         poserPastille();

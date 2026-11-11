@@ -644,8 +644,10 @@ verifier("le manifeste connaît la page Infos", function () {
     // et le catalogue du livret, lib/cours.json.
     // 68 depuis les ouvertures des fiches (lot « cours-ouvertures »,
     // 10/11/2026) : api/cours.php.
-    vrai((bool)preg_match('/^fichiers 68$/m', $manifeste),
-        'le serveur compte 68 fichiers depuis les ouvertures des fiches');
+    // 69 depuis le code en six cases (lot « code en cases », 11/2026) :
+    // code-en-cases.js, copie du module commun du site.
+    vrai((bool)preg_match('/^fichiers 69$/m', $manifeste),
+        'le serveur compte 69 fichiers depuis le module des six cases');
     foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
               'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json', 'api/cours.php',
@@ -1848,10 +1850,16 @@ verifier("aucune réponse de l’API ne peut rester dans un cache : Cache-Contro
     }
 });
 
-verifier("l’espace élève ne parle plus de « Ce n’est pas moi », même dans ses commentaires", function () {
+verifier("l’espace élève ne parle plus de « Ce n’est pas moi », même dans ses commentaires — sauf dans la question « C’est toujours toi ? »", function () {
     $r = page('/');
     egal(200, $r['code']);
-    vrai(!str_contains($r['texte'], 'pas moi'), 'aucun « pas moi » dans le HTML envoyé à l’élève');
+    // Lot « code en cases » (11/2026) : la question des applis arrive sur Mon
+    // espace avec ses mots (« Non, ce n’est pas moi »), dans sa carte #garde.
+    // Partout ailleurs, le geste de sortie s’appelle « Se déconnecter ».
+    $sansQuestion = preg_replace('~<div id="garde" class="garde".*?</form>\s*</div>\s*</div>~s', '', $r['texte']);
+    vrai($sansQuestion !== $r['texte'], 'la carte de la question est bien là');
+    vrai(substr_count($r['texte'], 'pas moi') === 1, 'un seul « pas moi » : le bouton « Non » de la question');
+    vrai(!str_contains($sansQuestion, 'pas moi'), 'aucun « pas moi » ailleurs dans le HTML envoyé à l’élève');
     vrai(str_contains($r['texte'], 'Se déconnecter'), 'le mot est « Se déconnecter »');
 });
 

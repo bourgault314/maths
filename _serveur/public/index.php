@@ -27,6 +27,11 @@ $versionCalcul = version_moteur('defi_calcul_mon_parcours.js');
 // page, avec son empreinte dans l'adresse (comme prof/index.php).
 $charte = __DIR__ . '/suivi.css';
 $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
+// Lot « code en cases » : le dessin du code en six cases, commun avec les
+// applis (copie octet pour octet de assets/js/code-en-cases.js), chargé dans
+// <head> pour que les cases soient dessinées dès le premier rendu.
+$cases = __DIR__ . '/code-en-cases.js';
+$versionCases = is_file($cases) ? substr(md5_file($cases), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -57,6 +62,7 @@ try {
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Mon espace | maths&amp;go</title>
 <link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
+<script src="code-en-cases.js?v=<?= htmlspecialchars($versionCases, ENT_QUOTES) ?>"></script>
 <style>
   /* Serveur pro (31/10/2026) : la charte (suivi.css) donne les couleurs, le
      texte, l'en-tête, la carte, les boutons, le message et le pied ; ne
@@ -103,23 +109,14 @@ try {
      milieu du code. */
   .pour-lecteur { position: absolute; width: 1px; height: 1px; overflow: hidden;
                   clip: rect(0 0 0 0); white-space: nowrap; }
-  .cases { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
-           max-width: 372px; margin: 0 auto; }
-  .case { height: 62px; display: grid; place-items: center; background: #fff;
-          border: 2px solid var(--line); border-radius: 12px;
-          font-size: 1.75rem; font-weight: 800; line-height: 1; color: var(--blue-dark); }
-  .case.pleine { border-color: #b8c7da; background: #f5f8fc; }
-  .cases.actif .case.active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(11,103,178,.22); }
-  .cases.actif .case.active:empty::after { content: ""; width: 2px; height: 28px; background: var(--blue);
-                                            animation: clignote 1s steps(1) infinite; }
-  @keyframes clignote { 50% { opacity: 0; } }
-  .cases input[type=text] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0;
-                            padding: 0; border: 0; opacity: 0; font-size: 16px; letter-spacing: 0;
-                            color: transparent; caret-color: transparent; }
-  @media (max-width: 360px) {
-    .cases { gap: 5px; }
-    .case { height: 56px; font-size: 1.45rem; }
-  }
+  /* Lot « code en cases » (11/2026) : le dessin vit dans le module commun
+     code-en-cases.js (le même que la question « C'est toujours toi ? » des
+     applis) ; ici, seulement ses mesures et la charte — l'entrée garde
+     exactement sa taille d'avant. Ce que le module ajoute : toucher une case
+     pleine la choisit, la lettre tapée la remplace. */
+  #cases { --cec-max: 372px; --cec-ecart: 8px; --cec-hauteur: 62px; --cec-police: 1.75rem;
+           --cec-ecart-etroit: 5px; --cec-hauteur-etroite: 56px; --cec-police-etroite: 1.45rem;
+           --cec-ligne: var(--line); --cec-bleu: var(--blue); --cec-encre: var(--blue-dark); }
   /* Une seule mise en page pour toutes les tailles de liste : une colonne tant
      qu'il n'y a qu'une ou deux activités (la tuile reste large et la page ne
      paraît pas vide), deux ou trois dès qu'il y en a plus — sans rien réécrire
@@ -309,6 +306,28 @@ try {
   .som-autre { display: block; margin: 12px 0 0; padding: 12px 14px; background: var(--paper); border: 1.5px solid var(--ink);
                border-radius: 14px; color: var(--blue-dark); font-weight: 700; text-decoration: none; }
   .som-autre small { display: block; font-weight: 400; color: var(--muted); font-size: var(--texte-secondaire); }
+  /* « C'est toujours toi ? » (lot « code en cases », 11/2026) : la même
+     question que dans les applis, après dix minutes sans geste. La carte est
+     posée PAR-DESSUS l'écran : rien ne bouge dessous, et tout ce qui est
+     dessous est inerte tant qu'elle est là. La ligne d'erreur garde sa place
+     même vide (la carte ne grandit pas). Au téléphone, la carte est en haut :
+     le clavier couvre le bas. */
+  .garde { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+           padding: 16px; background: rgba(20, 52, 81, .55); }
+  .garde[hidden] { display: none; }
+  .garde-carte { width: 100%; max-width: 420px; padding: 22px 20px; background: #fff; color: var(--ink);
+                 border-radius: 16px; box-shadow: 0 18px 40px rgba(20, 52, 81, .3); text-align: center; }
+  .garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
+  .garde-note { margin: 0 0 16px; color: var(--muted); font-size: var(--texte-secondaire); line-height: 1.4; }
+  .garde-form { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .garde-label { margin: 0; font-size: var(--texte-secondaire); font-weight: 700; color: var(--muted); }
+  #garde-cases { margin: 2px 0; --cec-ligne: var(--line); --cec-bleu: var(--blue); --cec-encre: var(--blue-dark); }
+  .garde-erreur { margin: 0; min-height: 1.3em; line-height: 1.3; color: var(--rouge); font-size: var(--texte-secondaire); font-weight: 700; }
+  .garde .garde-erreur[hidden] { display: block !important; visibility: hidden; }
+  .garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 4px; }
+  @media (max-width: 700px), (max-height: 560px) {
+    .garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
+  }
 </style>
 </head>
 <body class="sur-code">
@@ -332,10 +351,10 @@ try {
            et en GET le code de l'élève se retrouverait dans la barre d'adresse. -->
       <form id="form-code" method="post" autocomplete="off">
         <label for="code" class="pour-lecteur">Ton code, 6 caractères</label>
-        <div class="cases" id="cases">
-          <input id="code" name="code" type="text" inputmode="latin" maxlength="6"
+        <div class="cec" id="cases">
+          <input id="code" class="cec-champ" name="code" type="text" inputmode="latin" maxlength="6"
                  spellcheck="false" autocapitalize="characters" autocorrect="off" required>
-          <span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span><span class="case" aria-hidden="true"></span>
+          <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
         </div>
         <div class="actions">
           <button type="submit" id="valider">Entrer</button>
@@ -399,6 +418,28 @@ try {
   <a href="infos.php">Infos et confidentialité</a>
 </footer>
 
+<!-- « C'est toujours toi ? » : hors de <main>, de l'en-tête et du pied, qui
+     deviennent inertes tant qu'elle est posée. Les mots sont ceux des applis. -->
+<div id="garde" class="garde" role="dialog" aria-modal="true" aria-labelledby="garde-titre" hidden>
+  <div class="garde-carte">
+    <p id="garde-titre" class="garde-titre">C’est toujours toi&nbsp;?</p>
+    <p class="garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;»&nbsp;: ton camarade ouvrira son espace avec son code.</p>
+    <form id="garde-form" class="garde-form" method="post" autocomplete="off">
+      <label class="garde-label" for="garde-code">Ton code</label>
+      <div class="cec" id="garde-cases">
+        <input id="garde-code" class="cec-champ" type="text" inputmode="latin" maxlength="6" autocapitalize="characters"
+               autocomplete="off" autocorrect="off" spellcheck="false" aria-describedby="garde-erreur">
+        <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
+      </div>
+      <p id="garde-erreur" class="garde-erreur" role="alert" hidden></p>
+      <div class="garde-boutons">
+        <button type="submit" id="garde-oui">C’est moi</button>
+        <button type="button" class="secondaire" id="garde-non">Non, ce n’est pas moi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script nonce="<?= htmlspecialchars($nonce, ENT_QUOTES) ?>">
 (() => {
   "use strict";
@@ -426,7 +467,7 @@ try {
     try { code ? stockage()?.setItem(CLE, code) : stockage()?.removeItem(CLE); } catch (_) {}
     // Lot 8 : la copie de l'espace part avec le code (« Se déconnecter »,
     // ?oublier=1, un code que le serveur ne connaît plus).
-    if (!code) oublierCopie();
+    if (!code) { oublierCopie(); oublierGeste(); }
   }
 
   // Lot 8 (retours du 31/10/2026) : la DERNIÈRE COPIE de l'espace — prénom,
@@ -484,29 +525,186 @@ try {
   function nettoyer(brut) {
     return (brut || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
   }
-  // Les six cases dessinées recopient la vraie case de saisie. La case
-  // suivante à remplir est entourée de bleu ; quand les six sont pleines,
-  // aucune ne l'est (le geste suivant, c'est « Entrer »).
-  function dessinerCases() {
-    const valeur = nettoyer($("code").value);
-    $("cases").querySelectorAll(".case").forEach((carre, i) => {
-      carre.textContent = valeur[i] || "";
-      carre.classList.toggle("pleine", i < valeur.length);
-      carre.classList.toggle("active", i === valeur.length);
-    });
-  }
-  // Toujours au bout : la case de saisie est invisible, un doigt posé sur la
-  // 1re case y mettrait le curseur au début et la lettre suivante entrerait
-  // au milieu du code.
-  function curseurAuBout() {
-    const champ = $("code");
-    const fin = champ.value.length;
-    try { champ.setSelectionRange(fin, fin); } catch (_) {}
-  }
+  // Les six cases (module commun code-en-cases.js, lot « code en cases ») :
+  // elles recopient la vraie case de saisie, invisible ; la case suivante à
+  // remplir est entourée de bleu, et quand les six sont pleines aucune ne
+  // l'est (le geste suivant, c'est « Entrer »). Toucher une case pleine la
+  // choisit : la lettre tapée la remplace. Le curseur du navigateur, lui,
+  // reste toujours au bout (loupe et double-tap de l'iPhone compris).
+  const casesCode = window.MathsGoCodeEnCases.monter($("code"), {nettoyer});
+  function dessinerCases() { casesCode.dessiner(); }
   function afficherErreur(message) {
     $("erreur").textContent = message;
     $("erreur").hidden = !message;
   }
+
+  // ------------------------------------------------ « C'est toujours toi ? »
+  //
+  // Lot « code en cases » (décidé par Gwenaël le 09/11/2026 ; constat F01 de
+  // l'audit GPT du 09/11). Jusqu'ici, Mon espace n'avait AUCUN délai : laissé
+  // ouvert, n'importe qui ouvrait une appli sous le nom de l'élève (une tuile
+  // demande un billet neuf, et l'appli repart avec dix minutes devant elle).
+  // Désormais, la même question que dans les applis : après dix minutes sans
+  // geste, la carte « C'est toujours toi, Léa ? » couvre l'écran ; le bon code
+  // (comparé ICI, aucun appel au serveur) rend l'écran, « Non » ou trois
+  // erreurs font exactement « Se déconnecter ».
+  //
+  // Tant que la question est posée, rien ne part : pas de billet (les tuiles
+  // et le reste de la page sont inertes, et chaque geste est retenu avant
+  // qu'il n'arrive à une tuile), pas d'ouverture de fiche notée, plus de
+  // lecture de la séance en direct. Le même contrôle est fait au chargement
+  // (avant de dessiner quoi que ce soit), au retour dans l'onglet, au retour
+  // par « précédent », et chaque minute.
+  //
+  // L'instant du dernier geste vit dans la mémoire de l'ONGLET, à côté du code :
+  // un F5 ne remet pas le compteur à zéro. Un code sans instant (onglet ouvert
+  // avant ce lot, mémoire abîmée, instant venu du futur) vaut « trop vieux » :
+  // la question, jamais « actif depuis maintenant » (repris de l'audit GPT).
+  // Dix minutes pile suffisent (>=, repris de l'audit GPT : les applis
+  // disaient « plus de dix minutes »).
+  const GARDE_INACTIVITE_MS = 10 * 60 * 1000;
+  const GARDE_ESSAIS_MAX = 3;
+  const CLE_GESTE = "mathsgo-suivi-dernier-geste";
+  let gardeVisible = false;
+  let gardeEssais = 0;
+
+  function lireGeste() {
+    let brut = null;
+    try { brut = stockage()?.getItem(CLE_GESTE); } catch (_) { return 0; }
+    const lu = Number(brut);
+    return Number.isSafeInteger(lu) && lu > 0 && lu <= Date.now() ? lu : 0;
+  }
+  function noterGeste(instant) {
+    try { stockage()?.setItem(CLE_GESTE, String(instant)); } catch (_) {}
+  }
+  function oublierGeste() {
+    try { stockage()?.removeItem(CLE_GESTE); } catch (_) {}
+  }
+  function absenceTropLongue() {
+    return nettoyer(lireCode()).length === 6 && Date.now() - lireGeste() >= GARDE_INACTIVITE_MS;
+  }
+
+  // Le RETOUR D'UNE APPLI (la flèche ←, ou le lien « Mon espace » de la ligne
+  // de suivi) : l'élève y travaillait, Mon espace ne l'a pas vu. Le compteur
+  // repart de zéro au chargement SEULEMENT si les trois choses sont vraies :
+  //  — l'adresse porte ?retour=1 (seuls les liens de retour DES APPLIS le
+  //    mettent ; pas le bouton « Mon espace » de l'accueil du site, ni les
+  //    fiches de cours) ;
+  //  — on arrive par un lien (navigation « navigate ») : ni F5, ni précédent ;
+  //  — la page d'avant est sur le site (l'origine de SORTIE_PAR_LE_SITE) :
+  //    une adresse tapée à la main n'a pas de page d'avant.
+  // Ces liens ne se touchent que dans une appli qui ne pose pas sa propre
+  // question (elle retient tous les gestes tant qu'elle la pose). L'adresse
+  // est nettoyée tout de suite : un F5 ou un retour arrière ne la rejoue pas.
+  // Ce n'est pas une preuve d'identité (l'audit GPT le rappelle) : c'est
+  // l'activité vue par l'appli qu'on reprend ; voir « Et un pirate ? » de la
+  // notice pour les cas qui restent.
+  function retourDepuisAppli() {
+    let demande = false;
+    try { demande = new URLSearchParams(window.location.search).get("retour") === "1"; } catch (_) {}
+    if (!demande) return false;
+    try { window.history.replaceState(null, "", window.location.pathname + window.location.hash); } catch (_) {}
+    let type = "";
+    try { type = (performance.getEntriesByType("navigation")[0] || {}).type || ""; } catch (_) {}
+    let origine = "";
+    try { origine = document.referrer ? new URL(document.referrer).origin : ""; } catch (_) {}
+    let site = "";
+    try { site = new URL(SORTIE_PAR_LE_SITE).origin; } catch (_) { return false; }
+    return type === "navigate" && origine !== "" && origine === site;
+  }
+
+  // Tout ce qui est sous la carte devient inerte : ni doigt, ni clavier, ni
+  // lecteur d'écran n'y arrivent, et rien n'y bouge.
+  function poserInerte(oui) {
+    document.querySelectorAll("header.entete, main, footer.pied").forEach(bloc => { bloc.inert = oui; });
+  }
+
+  const casesGarde = window.MathsGoCodeEnCases.monter($("garde-code"), {nettoyer});
+  function erreurGarde(message) {
+    $("garde-erreur").textContent = message;
+    $("garde-erreur").hidden = !message;
+  }
+
+  function montrerGarde() {
+    if (gardeVisible) return;
+    gardeVisible = true;
+    gardeEssais = 0;
+    // Une ouverture encore en route ne redessine plus rien, et la séance en
+    // direct n'est plus lue (ses tuiles restent où elles sont, dessous).
+    ouverture += 1;
+    directTour += 1;
+    window.clearTimeout(directMinuteur);
+    poserInerte(true);
+    const copie = lireCopie(nettoyer(lireCode()));
+    const prenom = copie && typeof copie.prenom === "string" ? copie.prenom : "";
+    $("garde-titre").textContent = prenom ? `C’est toujours toi, ${prenom} ?` : "C’est toujours toi ?";
+    erreurGarde("");
+    casesGarde.vider();
+    $("garde").hidden = false;
+    try { $("garde-code").focus({preventScroll: true}); } catch (_) {}
+  }
+
+  function cacherGarde() {
+    gardeVisible = false;
+    gardeEssais = 0;
+    erreurGarde("");
+    casesGarde.vider();
+    $("garde").hidden = true;
+    poserInerte(false);
+  }
+
+  function verifierGarde() {
+    if (!gardeVisible && absenceTropLongue()) montrerGarde();
+    return gardeVisible;
+  }
+
+  // « C'est moi » : le code tapé doit être celui de l'onglet. Bon : l'écran
+  // revient, relu depuis le serveur (billets neufs, séance en direct).
+  // « Non », ou trois erreurs : « Se déconnecter », exactement.
+  function repondreGarde(cestMoi) {
+    if (!gardeVisible) return;
+    if (!cestMoi) { seDeconnecter(); return; }
+    const code = nettoyer(lireCode());
+    if (code.length === 6 && casesGarde.valeur() === code) {
+      noterGeste(Date.now());
+      cacherGarde();
+      ouvrir(code, true);
+      return;
+    }
+    gardeEssais += 1;
+    if (gardeEssais >= GARDE_ESSAIS_MAX) { seDeconnecter(); return; }
+    erreurGarde("Ce n’est pas le bon code.");
+  }
+
+  $("garde-form").addEventListener("submit", event => {
+    event.preventDefault();
+    repondreGarde(true);
+  });
+  $("garde-non").addEventListener("click", () => repondreGarde(false));
+
+  // Chaque geste passe d'abord ici, avant d'arriver à ce qu'il touche (phase
+  // de capture). Question posée : seuls les gestes DANS la carte passent.
+  // Absence trop longue : le geste est retenu et la question posée — il
+  // n'ouvre rien. Sinon : il compte comme activité. Le clic et le clic du
+  // milieu sont regardés aussi : un lien s'ouvre parfois sans « pointerdown »
+  // (clavier, clic du milieu ; repris de l'audit GPT).
+  function retenir(event) {
+    if (event.cancelable) event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+  function noterActivite(event) {
+    const cible = event.target;
+    const dansLaGarde = cible && typeof cible.closest === "function" && cible.closest("#garde");
+    if (gardeVisible) { if (!dansLaGarde) retenir(event); return; }
+    if (absenceTropLongue()) { retenir(event); montrerGarde(); return; }
+    if (nettoyer(lireCode()).length === 6) noterGeste(Date.now());
+  }
+  ["pointerdown", "touchstart", "keydown", "click", "auxclick"].forEach(type => {
+    document.addEventListener(type, noterActivite, {capture: true, passive: false});
+  });
+  // Un contrôle par minute : la question est déjà là quand la classe
+  // suivante s'installe.
+  window.setInterval(verifierGarde, 60000);
 
   // « Se déconnecter » dans l'appli renvoie ici avec ?oublier=1 : l'espace
   // oublie à son tour le code de cet onglet — les deux domaines ont chacun
@@ -649,9 +847,14 @@ try {
   async function ouvrirAppli(event, lien, appli, code, billetEntree) {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
+    // Défense en profondeur : le geste a déjà été retenu plus haut.
+    if (verifierGarde()) return;
     if (lien.dataset.enCours) return;
     lien.dataset.enCours = "1";
     const billet = await billetFrais(code);
+    // La question a pu être posée, ou l'élève a pu partir, pendant l'attente :
+    // on ne part pas.
+    if (gardeVisible || lireCode() !== code) { delete lien.dataset.enCours; return; }
     // Correctif S3 (Codex, nº 4) : le serveur ne connaît plus ce code — on
     // ne part pas avec l'ancien billet, on fait le ménage.
     if (billet === null) {
@@ -1412,7 +1615,7 @@ try {
     const moi = ++directTour;
     const tour = async () => {
       if (directCode !== code || moi !== directTour) return;
-      if (document.visibilityState === "hidden") return;
+      if (document.visibilityState === "hidden" || gardeVisible) return;
       const attente = await demanderDirect(code);
       if (directCode !== code || moi !== directTour || !attente) return;
       directMinuteur = window.setTimeout(tour, attente);
@@ -1421,6 +1624,9 @@ try {
   }
 
   document.addEventListener("visibilitychange", () => {
+    // L'onglet revient au premier plan après une longue absence : la question
+    // d'abord, rien d'autre.
+    if (document.visibilityState === "visible" && verifierGarde()) { window.clearTimeout(directMinuteur); return; }
     if (document.visibilityState === "visible" && directCode) surveillerDirect(directCode);
     else window.clearTimeout(directMinuteur);
     // Correctif S3 (Codex, nº 3) : la page laissée ouverte (veille, autre
@@ -1707,6 +1913,7 @@ try {
   // que CET élève voit, et prend son propre jour. La version imprimable n'est
   // pas une fiche : rien n'est noté.
   function noterOuverture(url) {
+    if (gardeVisible || absenceTropLongue()) return;
     const code = lireCode();
     if (!code || code !== codeAffiche) return;
     let page = "";
@@ -1815,6 +2022,9 @@ try {
   }
 
   async function ouvrir(code, silencieux) {
+    // Une réouverture (retour dans l'onglet, précédent, fin de la question)
+    // ne demande rien au serveur si l'absence a duré : la question d'abord.
+    if (silencieux && verifierGarde()) return;
     const moi = ++ouverture;
     afficherErreur("");
     // Lot 8 : au retour dans l'onglet, la dernière copie de l'espace est
@@ -1857,6 +2067,10 @@ try {
         return;
       }
       ecrireCode(code);
+      // Le code vient d'être tapé (ou l'élève vient de répondre « C'est
+      // moi ») : l'activité part de maintenant. Une réouverture silencieuse
+      // garde l'instant de l'onglet.
+      if (!silencieux) noterGeste(Date.now());
       const lecture = lireJauges(donnees, code).catch(() => ({}));
       // Première entrée : les tuiles du haut (séance en direct, évaluation)
       // sont lues en même temps, pour arriver dans le même dessin.
@@ -1878,36 +2092,8 @@ try {
     }
   }
 
-  $("code").addEventListener("input", event => {
-    event.target.value = nettoyer(event.target.value);
-    curseurAuBout();
-    dessinerCases();
-  });
-  $("code").addEventListener("focus", () => {
-    $("cases").classList.add("actif");
-    dessinerCases();
-    curseurAuBout();
-    // iOS place le curseur APRÈS l'événement « focus » : on repasse derrière.
-    setTimeout(curseurAuBout, 0);
-  });
-  $("code").addEventListener("blur", () => $("cases").classList.remove("actif"));
-  $("code").addEventListener("click", curseurAuBout);
-  // Les flèches et « début » déplaceraient le curseur dans un code qu'on ne
-  // voit pas : on les neutralise, le code se tape et s'efface depuis le bout.
-  $("code").addEventListener("keydown", event => {
-    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
-      event.preventDefault();
-      curseurAuBout();
-    }
-  });
-  // L'iPhone déplace aussi le curseur sans clic ni touche : appui long (la
-  // loupe), barre d'espace glissée, double-tap qui sélectionne tout le code.
-  // Le navigateur ne le dit que par « selectionchange » : on le ramène au bout,
-  // sinon la lettre suivante entrerait au début ou remplacerait le code.
-  document.addEventListener("selectionchange", () => {
-    const champ = $("code");
-    if (document.activeElement === champ && champ.selectionStart !== champ.value.length) curseurAuBout();
-  });
+  // La saisie elle-même (lettres, ⌫, collage, flèches, curseur de l'iPhone)
+  // est tenue par le module : voir code-en-cases.js.
 
   $("form-code").addEventListener("submit", event => {
     event.preventDefault();
@@ -1971,11 +2157,13 @@ try {
   // aussitôt sur l'écran du code (?oublier=1) — voir assets/js/eleve-retour-espace.js.
   // replace : ni l'espace refermé ni le passage par le site ne restent dans
   // l'historique.
-  $("changer").addEventListener("click", () => {
+  function seDeconnecter() {
+    if (gardeVisible) cacherGarde();
     revenirAuCode();
     $("code").focus();
     try { window.location.replace(SORTIE_PAR_LE_SITE); } catch (_) {}
-  });
+  }
+  $("changer").addEventListener("click", seDeconnecter);
 
   // Le bouton « précédent » après une déconnexion (08/09/2026). Chrome garde
   // une page entière dans un cache arrière/avant et la RESSORT telle quelle,
@@ -2003,17 +2191,23 @@ try {
       // s'ouvre (comme à l'arrivée d'un onglet qui garde un code).
       document.documentElement.classList.add("retour");
     }
+    // ouvrir() pose la question au lieu de rouvrir si l'absence a duré.
     ouvrir(memorise, true);
   });
 
   dessinerCases();
+  const revenuDUneAppli = retourDepuisAppli();
   if (oublierSiDemande()) {
     document.documentElement.classList.remove("retour");
     $("code").focus();
   } else {
     const memorise = nettoyer(lireCode());
-    if (memorise.length === 6) ouvrir(memorise, true);
-    else document.documentElement.classList.remove("retour");
+    if (memorise.length === 6) {
+      if (revenuDUneAppli) noterGeste(Date.now());
+      // Absence trop longue : la question, et rien d'autre — ni la copie de
+      // l'espace, ni un appel au serveur — tant que le code n'est pas retapé.
+      ouvrir(memorise, true);
+    } else document.documentElement.classList.remove("retour");
   }
 })();
 </script>

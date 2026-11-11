@@ -562,7 +562,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « cours-ouvertures » (10/11/2026) : le jour d'ouverture des fiches (api/cours.php, table
   // cours_ouvertures), Ma classe, l'espace élève, Infos, verifier.php, migrer, sauvegarde.
   // Puis « coffres-chemin-gloubi » (11/11/2026) : index.php, prof/index.php, prof/coffres-parcours.js, lib/applis.php.
-  assert.match(lire("_serveur/public/VERSION"), /^lot coffres-chemin-gloubi$/m);
+  // Puis « code-en-cases » (11/11/2026) : le code en six cases (code-en-cases.js), « C'est toujours
+  // toi ? » sur Mon espace, direct.php, la colonne « Cette semaine » de La classe.
+  assert.match(lire("_serveur/public/VERSION"), /^lot code-en-cases$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

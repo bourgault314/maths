@@ -29,7 +29,8 @@ test("page élève : chaque lecture de la séance passe le réglage au moteur", 
     "en mémoire d'abord, rangé ensuite");
   assert.match(page, /async function lancerSeance\(\) \{\s*if \(ouvertureEnCours\) return;\s*\/\/[^\n]*\n\s*if \(!PARCOURS\.fileSeance\(parcours, CARTE, optionsSeance\(\)\)\.ouverte && suiviActif\(\) && !suiviHorsLigne\) \{/);
   assert.match(page, /await Promise\.race\(\[rafraichirReglages\(\), new Promise\(fini => window\.setTimeout\(fini, 2000\)\)\]\);/);
-  assert.match(page, /if \(sync\.detache\) \{ finAttente\(\); return; \}\s*rafraichirReglages\(\);/, "la lecture du démarrage est celle qu'on attend");
+  // Lot « code en cases » (relecture GPT, D01) : sous la question, le démarrage attend le bon code.
+  assert.match(page, /if \(sync\.detache\) \{ finAttente\(\); return; \}(?:\s*\/\/[^\n]*)*\s*if \(envoisRetenus\(\)\) \{ demarrageEnAttente = true; finAttente\(\); return; \}\s*demarrageEnAttente = false;\s*rafraichirReglages\(\);/, "la lecture du démarrage est celle qu'on attend");
   // « Comment ça marche ? »
   assert.match(page, /puis <span id="notice-nouveautes">une chose nouvelle<\/span>\./);
   assert.match(page, /\$\("notice-nouveautes"\)\.textContent = n > 1 \? `\$\{n\}\\u00a0choses nouvelles` : "une chose nouvelle";/);

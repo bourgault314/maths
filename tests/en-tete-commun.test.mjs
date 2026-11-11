@@ -169,7 +169,7 @@ test("plus de barre au-dessus du cadre : la flèche et le plein écran sont dans
           pleinHaut: pr ? pr.top : null, pleinBas: pr ? pr.bottom : null};
       }, [APPLIS[nom].cadre, FLECHE[nom]]);
       assert.ok(m.flecheHaut >= m.cadreHaut && m.flecheBas <= m.cadreBas, `${nom} : la flèche est dans le cadre`);
-      assert.equal(m.href, "https://suivi.mathsgo.re/", `${nom} : la flèche mène à Mon espace`);
+      assert.equal(m.href, "https://suivi.mathsgo.re/?retour=1", `${nom} : la flèche mène à Mon espace (?retour=1, lot « code en cases »)`);
       assert.ok(m.pleinHaut !== null && m.pleinHaut >= m.cadreHaut, `${nom} : le plein écran est dans le cadre`);
       // « Se déconnecter » : le bouton de la ligne fait ce qu'il faisait (l'espace oublie le code).
       const depart = page.waitForRequest(r => r.url().startsWith("https://suivi.mathsgo.re/?oublier=1"), {timeout: 5000}).catch(() => null);

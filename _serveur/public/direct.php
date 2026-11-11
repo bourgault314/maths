@@ -108,9 +108,32 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     try { window.sessionStorage.removeItem(CLE); } catch (_) {}
   }
 
+  // Lot « code en cases » : la même mémoire du dernier geste que Mon espace
+  // (index.php). Cette page s'ouvre depuis Mon espace ; une adresse tapée
+  // (ou un retour dans l'onglet) après dix minutes sans geste ne la rouvre
+  // pas au nom de l'élève : retour à Mon espace, qui pose « C'est toujours
+  // toi ? ». Chaque geste ici compte comme activité (l'élève qui répond
+  // revient à Mon espace sans question).
+  const CLE_GESTE = "mathsgo-suivi-dernier-geste";
+  const GARDE_INACTIVITE_MS = 10 * 60 * 1000;
+  function absenceTropLongue() {
+    let lu = 0;
+    try { lu = Number(window.sessionStorage.getItem(CLE_GESTE)); } catch (_) { lu = 0; }
+    if (!Number.isSafeInteger(lu) || lu <= 0 || lu > Date.now()) return true;
+    return Date.now() - lu >= GARDE_INACTIVITE_MS;
+  }
+
   const code = lireCode();
   // Pas de code dans cet onglet : c'est à l'espace de le demander.
   if (code.length !== 6) { window.location.replace("./"); return; }
+  if (absenceTropLongue()) { window.location.replace("./"); return; }
+  // Pendant la séance, la page ne coupe personne : le professeur est là, et
+  // une explication de dix minutes ne doit pas renvoyer la classe au code.
+  ["pointerdown", "touchstart", "keydown"].forEach(type => {
+    document.addEventListener(type, () => {
+      try { window.sessionStorage.setItem(CLE_GESTE, String(Date.now())); } catch (_) {}
+    }, true);
+  });
 
   let direct = null;          // le dernier état reçu du serveur
   let connu = false;          // au moins une réponse du serveur est arrivée
@@ -303,13 +326,14 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   }
   document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState !== "visible") { window.clearTimeout(minuteur); return; }
+    if (absenceTropLongue()) { window.location.replace("./"); return; }
     await interroger();
     planifier();
   });
   // Retour d'un cache arrière/avant sans code dans l'onglet (« Se déconnecter »
   // est passé par là) : on ne remontre rien.
   window.addEventListener("pageshow", event => {
-    if (event.persisted && lireCode().length !== 6) window.location.replace("./");
+    if (event.persisted && (lireCode().length !== 6 || absenceTropLongue())) window.location.replace("./");
   });
 
   redessinerSiBesoin();

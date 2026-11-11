@@ -231,6 +231,28 @@ Défi tables est la référence.
   repartent toujours de suivi.mathsgo.re. Mais un onglet ouvert par un lien
   depuis l'onglet de l'élève peut en recevoir une copie, et fermer un
   onglet ne déconnecte pas les autres.
+- « C'EST TOUJOURS TOI ? » PARTOUT OÙ L'ÉLÈVE EST CONNECTÉ (lot « code en
+  cases », novembre 2026, constat F01 de l'audit GPT du 09/11) : les applis
+  ET Mon espace posent la question après dix minutes sans geste (>= 10 min ;
+  instant du dernier geste rangé dans la mémoire de l'onglet, un F5 ne le
+  remet pas à zéro ; un code sans instant valide vaut « trop vieux »). Bon
+  code comparé sur place ; « Non » ou trois erreurs = « Se déconnecter ».
+  Pendant la question, RIEN NE PART : envoi groupé, relance, envoi de
+  fermeture d'onglet, records, évaluation, billet de Mon espace, ouverture de
+  fiche notée — le travail reste rangé et part après le bon code. Les gestes
+  (pointerdown, touchstart, keydown, click, auxclick, en capture) sont retenus
+  hors de la carte. Les liens de RETOUR d'une appli vers Mon espace (flèche,
+  logo, « ← Mon espace ») portent `?retour=1` SOUS UN CODE ACTIF seulement
+  (`adresseEspace()` des habillages, `RETOUR_ESPACE` de Défi tables / Défi
+  calcul ; un billet refusé garde l'adresse nue) : Mon espace ne remet son
+  compteur à zéro que si `?retour=1` + navigation « navigate » + page d'avant
+  sur https://mathsgo.re. Jamais `?retour=1` ailleurs (accueil du site,
+  `eleve-retour-espace.js`, fiches de cours). `direct.php` renvoie à Mon espace
+  quand l'absence a duré. Le code se tape TOUJOURS en six cases, avec le module
+  commun `assets/js/code-en-cases.js` (copie octet pour octet
+  `_serveur/public/code-en-cases.js`, gardée par
+  `tests/code-en-cases.test.mjs`) : une nouvelle appli suivie charge le module
+  avant son habillage et ne dessine jamais son propre champ de code.
 - Mémoire de l'appli (monde ouvert, table choisie…) : celle de l'élève, pas
   celle de l'appareil (clé portant l'empreinte du code, jamais le code en
   clair) ; si l'élève ferme tout, il retrouve tout fermé.
