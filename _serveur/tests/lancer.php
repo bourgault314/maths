@@ -1886,7 +1886,9 @@ verifier("l’espace élève ne parle plus de « Ce n’est pas moi », même da
     // Lot « code en cases » (11/2026) : la question des applis arrive sur Mon
     // espace avec ses mots (« Non, ce n’est pas moi »), dans sa carte #garde.
     // Partout ailleurs, le geste de sortie s’appelle « Se déconnecter ».
-    $sansQuestion = preg_replace('~<div id="garde" class="garde".*?</form>\s*</div>\s*</div>~s', '', $r['texte']);
+    // Lot « toujours toi » (11/11/2026) : « Non » est sous le cadre du code,
+    // hors du formulaire, toujours dans la carte.
+    $sansQuestion = preg_replace('~<div id="garde" class="garde".*?id="garde-non"[^>]*>[^<]*</button>\s*</div>\s*</div>~s', '', $r['texte']);
     vrai($sansQuestion !== $r['texte'], 'la carte de la question est bien là');
     vrai(substr_count($r['texte'], 'pas moi') === 1, 'un seul « pas moi » : le bouton « Non » de la question');
     vrai(!str_contains($sansQuestion, 'pas moi'), 'aucun « pas moi » ailleurs dans le HTML envoyé à l’élève');
@@ -7772,8 +7774,8 @@ verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il f
     egal(404, appel('/api/eleve.php', ['billet' => $ticketEleve])['code'], 'un ticket de course n’ouvre pas la porte d’entrée');
     egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticketEleve) . "'")->fetchColumn(), 'et il n’a pas été consommé par cet essai');
     // La vraie course : le départ est vieilli dans la base du temps qu'elle
-    // aurait duré. La marge au plus juste : 49 s mesurées → 51,0 s annoncées
-    // passent (490 + 20 dixièmes), 51,1 s non.
+    // aurait duré. 49 s mesurées → 51,0 s annoncées passent (490 + 20
+    // dixièmes) ; 55,0 s non.
     // La scène de l'audit GPT du 09/11 (F04, preuves\05-record-local.py) : un
     // ticket pris, dix VRAIES secondes d'attente, puis « 25 justes en 10 s »
     // sans avoir joué. Acceptée jusqu'au 11/11 ; refusée depuis par le
@@ -7784,9 +7786,18 @@ verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il f
     egal(400, $r['code'], '25 justes en 10 s, ticket de dix secondes : refusé (plancher)');
     egal('Le temps ne compte pas.', $r['json']['erreur'] ?? null);
     egal(null, bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn() ?: null, 'aucun record écrit');
-    vieillir_ticket($ticketEleve, 49);
-    $r = records_api($code, ['temps' => 511, 'justes' => 25, 'course' => $ticketEleve]);
-    egal(400, $r['code'], '51,1 s annoncées pour 49 s mesurées : au-delà de la marge de 2 s, refusé');
+    // Lot « toujours toi » (11/11/2026) : le serveur compte en SECONDES
+    // ENTIÈRES (time()). Chaque seconde d'horloge franchie entre la prise du
+    // ticket et l'envoi s'ajoute au temps mesuré : avec 51,1 s annoncées, une
+    // seule suffisait à faire passer la course (vu sur la CI « serveur
+    // (MySQL) », plus lente, à la fusion de #1166). Le ticket est donc pris
+    // JUSTE AVANT, et 55,0 s laissent quatre secondes de jeu. La limite au
+    // dixième près (51,0 oui, 51,1 non) est tenue par le test suivant
+    // (temps_plausible_depuis, horloge fixée) ; le serveur ne change pas.
+    $ticketRefuse = ticket_de_course($code, 49);
+    $r = records_api($code, ['temps' => 550, 'justes' => 25, 'course' => $ticketRefuse]);
+    egal(400, $r['code'], '55,0 s annoncées pour 49 s mesurées : au-delà de la marge de 2 s, refusé');
+    egal('Le temps ne compte pas.', $r['json']['erreur'] ?? null);
     $ticketEleve = ticket_de_course($code, 49);
     $r = records_api($code, ['temps' => 510, 'justes' => 25, 'course' => $ticketEleve]);
     egal(200, $r['code'], '51,0 s pour 49 s mesurées : dans la marge, accepté');

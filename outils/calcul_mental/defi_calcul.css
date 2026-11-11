@@ -119,24 +119,15 @@ body.ecran-interne #lien-retour { display: none; }
 .suivi-garde { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
   padding: 16px; background: rgba(20, 52, 81, .55); }
 .suivi-garde[hidden] { display: none; }
-.suivi-garde-carte { background: #fff; color: var(--ink); border-radius: 16px; padding: 22px 20px; max-width: 420px; width: 100%;
-  box-shadow: 0 18px 40px rgba(20, 52, 81, .3); text-align: center; }
-.suivi-garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; }
-.suivi-garde-note { margin: 0 0 16px; color: var(--muted); font-size: .95rem; line-height: 1.4; }
-.suivi-garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.suivi-garde-form { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.suivi-garde-label { font-size: .9rem; font-weight: 700; color: var(--muted); }
 .suivi-garde-code { font-family: inherit; font-size: 1.5rem; font-weight: 700; line-height: 1.2; letter-spacing: .18em; text-align: center; text-transform: uppercase;
   width: 9em; max-width: 100%; min-height: 48px; padding: 6px 8px; border: 2px solid #c9d8e6; border-radius: 12px; color: var(--ink); background: #f7fbff; }
 .suivi-garde-code:focus { outline: 3px solid #7fb3e0; outline-offset: 1px; }
-.suivi-garde-erreur { margin: 0; color: #b3261e; font-size: .9rem; font-weight: 700; }
-.suivi-garde-erreur[hidden] { display: none; }
-/* Lot « code en cases » (11/2026) : le code en six cases (assets/js/code-en-cases.js) ;
-   la ligne d'erreur garde sa place même vide (la carte ne grandit pas) ; au
-   téléphone, la carte en haut de l'écran : le clavier couvre le bas. */
-.suivi-garde-cases { margin: 2px 0; }
-.suivi-garde .suivi-garde-erreur[hidden] { display: block !important; visibility: hidden; }
-.suivi-garde-erreur { min-height: 1.3em; line-height: 1.3; }
+/* Lot « toujours toi » (11/11/2026, choix de Gwenaël) : la carte est une petite
+   copie de l'écran d'entrée de Mon espace (titre, une ligne, le cadre blanc des
+   six cases avec « Entrer », « Non, ce n'est pas moi » en lien dessous) ; son
+   dessin vit dans le module commun (assets/js/code-en-cases.js, .cec-garde).
+   Ici, le voile seulement ; au téléphone, la carte en haut de l'écran : le
+   clavier couvre le bas. */
 @media (max-width: 700px), (max-height: 560px) {
   .suivi-garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
 }

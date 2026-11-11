@@ -209,27 +209,17 @@
     .suivi-garde { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
       padding: 16px; background: rgba(20, 52, 81, .55); }
     .suivi-garde[hidden] { display: none; }
-    .suivi-garde-carte { background: #fff; color: var(--ink); border-radius: 16px; padding: 22px 20px; max-width: 420px; width: 100%;
-      box-shadow: 0 18px 40px rgba(20, 52, 81, .3); text-align: center; }
-    .suivi-garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; }
-    .suivi-garde-note { margin: 0 0 16px; color: var(--muted); font-size: .95rem; line-height: 1.4; }
-    .suivi-garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .suivi-garde-form { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .suivi-garde-label { font-size: .9rem; font-weight: 700; color: var(--muted); }
     .suivi-garde-code { font-family: inherit; font-size: 1.5rem; font-weight: 700; line-height: 1.2; letter-spacing: .18em; text-align: center; text-transform: uppercase;
       width: 9em; max-width: 100%; min-height: 48px; padding: 6px 8px; border: 2px solid #c9d8e6; border-radius: 12px; color: var(--ink); background: #f7fbff; }
     .suivi-garde-code:focus { outline: 3px solid #7fb3e0; outline-offset: 1px; }
-    .suivi-garde-erreur { margin: 0; color: #b3261e; font-size: .9rem; font-weight: 700; }
-    .suivi-garde-erreur[hidden] { display: none; }
-    /* Lot « code en cases » (11/2026) : le code en six cases, comme à l'entrée
-       de Mon espace (module commun assets/js/code-en-cases.js ; sans lui, le
-       champ d'avant reste). La ligne « Ce n'est pas le bon code. » garde sa
-       place même vide : la carte ne grandit pas à la première erreur. Au
-       téléphone, la carte est en HAUT de l'écran : le clavier couvre le bas,
-       la case reste visible sans que la page saute. */
-    .suivi-garde-cases { margin: 2px 0; }
-    .suivi-garde .suivi-garde-erreur[hidden] { display: block !important; visibility: hidden; }
-    .suivi-garde-erreur { min-height: 1.3em; line-height: 1.3; }
+    /* Lot « toujours toi » (11/11/2026, choix de Gwenaël) : la carte est une
+       petite copie de l'écran d'entrée de Mon espace — le titre, une ligne
+       (« Retape ton code pour continuer. », remplacée par « Ce n'est pas le
+       bon code. » au même endroit), le cadre blanc des six cases avec
+       « Entrer », et « Non, ce n'est pas moi » en lien dessous. Le dessin vit
+       dans le module commun (assets/js/code-en-cases.js, .cec-garde), le même
+       partout ; ici, le voile seulement. Au téléphone, la carte est en HAUT de
+       l'écran : le clavier couvre le bas. */
     @media (max-width: 700px), (max-height: 560px) {
       .suivi-garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
     }
@@ -2842,21 +2832,21 @@
            est dans le cadre (en-tête commun, 31/10/2026). -->
       <p id="suivi-repere" class="suivi-repere" hidden></p>
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
-        <div class="suivi-garde-carte">
-          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi ?</p>
-          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;» : ton camarade retrouvera son parcours avec son code.</p>
-          <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
-            <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
+        <div class="suivi-garde-carte cec-garde">
+          <p id="suivi-garde-titre" class="cec-garde-titre">C’est toujours toi&nbsp;?</p>
+          <div class="cec-garde-ligne">
+            <p id="suivi-garde-erreur" class="cec-garde-erreur" role="alert" hidden></p>
+            <p class="cec-garde-consigne">Retape ton code pour continuer.</p>
+          </div>
+          <form id="suivi-garde-form" class="cec-garde-cadre" autocomplete="off">
+            <label class="cec-garde-lecteur" for="suivi-garde-code">Ton code, 6 caractères</label>
             <div class="cec suivi-garde-cases">
               <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
               <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
             </div>
-            <p id="suivi-garde-erreur" class="suivi-garde-erreur" role="alert" hidden></p>
-            <div class="suivi-garde-boutons">
-              <button id="suivi-garde-oui" class="primary" type="button">C’est moi</button>
-              <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
-            </div>
+            <button id="suivi-garde-oui" class="cec-garde-entrer" type="button">Entrer</button>
           </form>
+          <button id="suivi-garde-non" class="cec-garde-non" type="button">Non, ce n’est pas moi</button>
         </div>
       </div>
     </header>
@@ -3366,7 +3356,7 @@
     <p><b>Les étoiles et mon rang.</b> Mes 9&nbsp;tables passées&nbsp;: toutes les tables, de plus en plus vite. Bronze… Légende&nbsp;: on ne redescend jamais.</p>
   </template>
 
-  <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
+  <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
   <script src="./defi_tables_core.js?v=20261015-1"></script>
   <script src="./defi_tables_mon_parcours.js?v=20261111-3"></script>
   <script>
@@ -4440,7 +4430,7 @@
         const titre = document.getElementById("suivi-garde-titre");
         if (titre) {
           const qui = prenomAffiche();
-          titre.textContent = qui ? `C’est toujours toi, ${qui} ?` : "C’est toujours toi ?";
+          titre.textContent = qui ? `C’est toujours toi, ${qui}\u00a0?` : "C’est toujours toi\u00a0?";
         }
         const erreur = document.getElementById("suivi-garde-erreur");
         if (erreur) {

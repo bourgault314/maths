@@ -66,7 +66,7 @@ test("Défi calcul : ni élève à code, ni élève qui arrive de son espace, ni
   assert.match(CALCUL, /<div id="acc-bas" class="acc-bas">\s*<button id="acc-notice-bouton"[^>]*>Comment ça marche&nbsp;\?<\/button>\s*<button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique<\/button>/);
   assert.match(corps(CALCUL, "marquerEffacer"), /pied\.classList\.toggle\("est-ouverte", !\$\("acc-confirm"\)\.hidden\);/);
   assert.match(CALCUL_CSS, /\.acc-pied > \* \{ grid-area: 1 \/ 1; min-width: 0; \}/, "la question et le pied dans la même case");
-  assert.match(CALCUL, /defi_calcul\.css\?v=2026111[01]-1/, "la feuille modifiée change d'adresse (cache)");
+  assert.match(CALCUL, /defi_calcul\.css\?v=2026111[01]-[0-9]+/, "la feuille modifiée change d'adresse (cache)");
 });
 
 test("Défi tables : la remise à zéro n'existe plus sous un code, même par un clic forcé", () => {

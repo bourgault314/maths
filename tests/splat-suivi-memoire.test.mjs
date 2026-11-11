@@ -237,9 +237,9 @@ test("habillage : chaque fonction que la carte et les outils appellent existe �
   const s = o.fenetre.MathsGoSplatSuivi.creer({});
   appels.forEach(nom => assert.equal(typeof s[nom], "function", nom));
   // une page neuve avec l'ancien habillage en cache (sans dessinerBloc) casserait la carte :
-  // la version bouge avec le fichier (lot 6 : 20261008-3 ; plus de pied : 20261024-1 ; en-tête commun : 20261031-1 ; code en cases : 20261111-1)
+  // la version bouge avec le fichier (lot 6 : 20261008-3 ; plus de pied : 20261024-1 ; en-tête commun : 20261031-1 ; code en cases : 20261111-1 ; toujours toi : 20261111-2)
   const versions = Object.values(PAGES).map(p => (p.match(/assets\/js\/splat-suivi\.js\?v=([0-9-]+)/) || [])[1]);
-  assert.deepEqual(versions, ["20261111-1", "20261111-1", "20261111-1", "20261111-1"]);
+  assert.deepEqual(versions, ["20261111-2", "20261111-2", "20261111-2", "20261111-2"]);
 });
 
 test("étapes : la pastille « ● Léa » reste, rien du bloc ; la mention du site ne s'affiche plus pour l'élève à code", () => {

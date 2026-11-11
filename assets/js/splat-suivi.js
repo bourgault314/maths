@@ -97,28 +97,15 @@
     ".suivi-garde{position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;",
     "padding:16px;background:rgba(20,52,81,.55);font-family:\"Segoe UI\",system-ui,-apple-system,BlinkMacSystemFont,sans-serif}",
     ".suivi-garde[hidden]{display:none}",
-    ".suivi-garde-carte{background:#fff;color:#10294a;border-radius:16px;padding:22px 20px;max-width:420px;width:100%;",
-    "box-shadow:0 18px 40px rgba(20,52,81,.3);text-align:center}",
-    ".suivi-garde-titre{margin:0 0 8px;font-size:1.35rem;font-weight:700}",
-    ".suivi-garde-note{margin:0 0 16px;color:#5c6c82;font-size:.95rem;line-height:1.4}",
-    ".suivi-garde-form{display:flex;flex-direction:column;align-items:center;gap:8px}",
-    ".suivi-garde-label{font-size:.9rem;font-weight:700;color:#5c6c82}",
     ".suivi-garde-code{font-family:inherit;font-size:1.5rem;font-weight:700;line-height:1.2;letter-spacing:.18em;text-align:center;text-transform:uppercase;",
     "width:9em;max-width:100%;min-height:48px;padding:6px 8px;border:2px solid #c9d8e6;border-radius:12px;color:#10294a;background:#f7fbff}",
     ".suivi-garde-code:focus{outline:3px solid #7fb3e0;outline-offset:1px}",
-    ".suivi-garde-erreur{margin:0;color:#b3261e;font-size:.9rem;font-weight:700}",
-    ".suivi-garde-erreur[hidden]{display:none}",
-    // Lot « code en cases » (11/2026) : le code en six cases (assets/js/code-en-cases.js) ;
-    // la ligne d'erreur garde sa place même vide (la carte ne grandit pas) ; au téléphone,
-    // la carte en haut de l'écran : le clavier couvre le bas.
-    ".suivi-garde-cases{margin:2px 0}",
-    ".suivi-garde .suivi-garde-erreur[hidden]{display:block !important;visibility:hidden}",
-    ".suivi-garde-erreur{min-height:1.3em;line-height:1.3}",
-    "@media (max-width:700px),(max-height:560px){.suivi-garde{align-items:flex-start;padding-top:max(16px,min(9vh,80px));overflow-y:auto}}",
-    ".suivi-garde-boutons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:4px}",
-    ".suivi-garde-boutons button{font:inherit;font-weight:800;font-size:1rem;min-height:44px;padding:0 18px;border-radius:999px;cursor:pointer}",
-    ".suivi-garde-oui{color:#fff;background:#0b67b2;border:2px solid #0b67b2}",
-    ".suivi-garde-non{color:#10294a;background:#fff;border:2px solid #c9d8e6}"
+    // Lot « toujours toi » (11/11/2026, choix de Gwenaël) : la carte est une petite copie de
+    // l'écran d'entrée de Mon espace (titre, une ligne, le cadre blanc des six cases avec
+    // « Entrer », « Non, ce n'est pas moi » en lien dessous) ; son dessin vit dans le module
+    // commun (assets/js/code-en-cases.js, .cec-garde). Ici, le voile seulement ; au
+    // téléphone, la carte en haut de l'écran : le clavier couvre le bas.
+    "@media (max-width:700px),(max-height:560px){.suivi-garde{align-items:flex-start;padding-top:max(16px,min(9vh,80px));overflow-y:auto}}"
   ].join("");
 
   function echapper(texte) {
@@ -356,23 +343,24 @@
       const racineGarde = el("div", {id: ID_GARDE, class: "suivi-garde", role: "dialog", "aria-modal": "true",
         "aria-labelledby": "suivi-garde-titre", "data-suivi-garde": ""});
       racineGarde.hidden = true;
-      const carte = el("div", {class: "suivi-garde-carte"});
-      const titre = el("p", {id: "suivi-garde-titre", class: "suivi-garde-titre"}, "C’est toujours toi ?");
-      const note = el("p", {class: "suivi-garde-note"},
-        "Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur « Non » : ton camarade retrouvera son parcours avec son code.");
-      const form = el("form", {id: "suivi-garde-form", class: "suivi-garde-form", autocomplete: "off"});
-      const label = el("label", {class: "suivi-garde-label", for: "suivi-garde-code"}, "Ton code");
+      const carte = el("div", {class: "suivi-garde-carte cec-garde"});
+      const titre = el("p", {id: "suivi-garde-titre", class: "cec-garde-titre"}, "C’est toujours toi\u00a0?");
+      // La consigne et l'erreur sur la même ligne : l'erreur, écrite avant, prend
+      // la place de la consigne (rien ne bouge).
+      const ligne = el("div", {class: "cec-garde-ligne"});
+      const erreur = el("p", {id: "suivi-garde-erreur", class: "cec-garde-erreur", role: "alert"});
+      erreur.hidden = true;
+      const consigne = el("p", {class: "cec-garde-consigne"}, "Retape ton code pour continuer.");
+      ligne.append(erreur, consigne);
+      const form = el("form", {id: "suivi-garde-form", class: "cec-garde-cadre", autocomplete: "off"});
+      const label = el("label", {class: "cec-garde-lecteur", for: "suivi-garde-code"}, "Ton code, 6 caractères");
       const champ = el("input", {id: "suivi-garde-code", class: "suivi-garde-code", type: "text", inputmode: "latin",
         autocapitalize: "characters", autocomplete: "off", autocorrect: "off", spellcheck: "false", maxlength: "6", size: "6",
         "aria-describedby": "suivi-garde-erreur"});
-      const erreur = el("p", {id: "suivi-garde-erreur", class: "suivi-garde-erreur", role: "alert"});
-      erreur.hidden = true;
-      const boutons = el("div", {class: "suivi-garde-boutons"});
-      const oui = el("button", {id: "suivi-garde-oui", class: "suivi-garde-oui", type: "button"}, "C’est moi");
-      const non = el("button", {id: "suivi-garde-non", class: "suivi-garde-non", type: "button"}, "Non, ce n’est pas moi");
-      boutons.append(oui, non);
-      form.append(label, champ, erreur, boutons);
-      carte.append(titre, note, form);
+      const oui = el("button", {id: "suivi-garde-oui", class: "cec-garde-entrer", type: "button"}, "Entrer");
+      const non = el("button", {id: "suivi-garde-non", class: "cec-garde-non", type: "button"}, "Non, ce n’est pas moi");
+      form.append(label, champ, oui);
+      carte.append(titre, ligne, form, non);
       racineGarde.append(carte);
       doc.body.appendChild(racineGarde);
       const valider = () => client.repondreGarde(true, champ.value || "");
@@ -410,7 +398,7 @@
       if (!garde) garde = construireGarde();
       garde.racine.hidden = false;
       const prenom = client.prenomAffiche();
-      garde.titre.textContent = prenom ? "C’est toujours toi, " + prenom + " ?" : "C’est toujours toi ?";
+      garde.titre.textContent = prenom ? "C’est toujours toi, " + prenom + "\u00a0?" : "C’est toujours toi\u00a0?";
       garde.erreur.textContent = client.gardeErreur;
       garde.erreur.hidden = !client.gardeErreur;
       if (typeof garde.champ.focus === "function") {

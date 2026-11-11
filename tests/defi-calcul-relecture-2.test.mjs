@@ -183,7 +183,7 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261111-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261111-2/);
   assert.match(PAGE, /defi_calcul_core\.js\?v=20261108-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261108-1/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");

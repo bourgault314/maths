@@ -485,7 +485,7 @@ test("garde-fou de temps : après dix minutes sans un geste, « C’est toujours
   assert.equal(appli.api.verifierGarde(), true);
   assert.equal(appli.api.gardeVisible, true);
   assert.equal(appli.garde().hidden, false);
-  assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi, Léa ?");
+  assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi, Léa\u00a0?");
   assert.equal(appli.document.declencher("pointerdown").retenu, true, "pendant la question, rien ne passe à l’appli");
 
   // Un mauvais code ne rouvre rien, et la question reste posée.
@@ -598,12 +598,12 @@ test("garde-fou de temps : la page qui redevient visible après une longue absen
   appli.document.visibilityState = "visible";
   appli.document.declencher("visibilitychange");
   assert.equal(appli.api.gardeVisible, true, "douze minutes sans geste, page de retour : la question");
-  assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi ?");
+  assert.equal(appli.document.getElementById("suivi-garde-titre").textContent, "C’est toujours toi\u00a0?");
   assert.match(html, /<div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>/);
   assert.match(html, /window\.setInterval\(verifierGarde, 60000\)/, "un contrôle par minute dans le navigateur");
   assert.match(html, /\["pointerdown", "keydown", "touchstart", "click", "auxclick"\]\.forEach\(type => \{\s*document\.addEventListener\(type, noterActivite, true\);/, "les gestes sont écoutés en capture (clic et clic du milieu compris, lot « code en cases »)");
   assert.match(html, /<input id="suivi-garde-code"[^>]*maxlength="6"/, "un champ de six caractères, pas un bouton");
-  assert.match(html, /Si c’est toi, retape ton code/, "et la note dit quoi faire");
+  assert.match(html, /<p class="cec-garde-consigne">Retape ton code pour continuer\.<\/p>/, "et la ligne dit quoi faire (lot « toujours toi » : une ligne courte)");
   assert.doesNotMatch(html, /Oui, c’est moi/, "le bouton qui ne vérifiait rien a disparu");
 });
 

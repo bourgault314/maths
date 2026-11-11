@@ -304,7 +304,7 @@ test("habillage : la garde — après dix minutes, « C'est toujours toi, Léa ?
   const g = s.elementsGarde();
   assert.equal(g.racine.hidden, false);
   assert.equal(g.racine.getAttribute("data-suivi-garde"), "", "le moteur reconnaît la question");
-  assert.equal(g.titre.textContent, "C’est toujours toi, Léa ?");
+  assert.equal(g.titre.textContent, "C’est toujours toi, Léa\u00a0?");
   g.champ.value = "ax kq-7t";
   g.champ.declencher("input");
   assert.equal(g.champ.value, A, "majuscules, sans espace ni tiret");
