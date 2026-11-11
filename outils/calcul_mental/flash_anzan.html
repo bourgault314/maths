@@ -811,13 +811,13 @@
       body:not(.en-seance) .bandeau .onglets { margin-top: 4px; }
       .onglet { min-height: 44px; padding-top: 6px; padding-bottom: 10px; }
       .onglet[aria-pressed="true"] { padding-top: 12px; padding-bottom: 12px; }
-      .reglages-corps { padding-top: var(--t-corps); padding-bottom: var(--t-corps); }
-      #grille { gap: var(--t-gap) 14px; }
+      .reglages-corps { padding-top: calc(var(--t-corps) + var(--t-extra, 0px) / 8); padding-bottom: var(--t-corps); }
+      #grille { gap: calc(var(--t-gap) + var(--t-extra, 0px) / 8) 14px; }
       .bloc { gap: var(--t-bloc); }
       .pas, .option, .bascule { height: var(--t-case); }
       .pas button { height: 38px; }
       .resume { min-height: calc(1.3em + 4px); padding: var(--t-resume) 8px; }
-      .bas-pile { margin-top: var(--t-pile); gap: var(--t-pile); }
+      .bas-pile { margin-top: calc(var(--t-pile) + var(--t-extra, 0px) / 8); gap: calc(var(--t-pile) + var(--t-extra, 0px) / 8); }
       .reglages-corps .bas-pile .bas .primary.partir { min-height: var(--t-partir); }
       .bandeau-grades { min-height: var(--t-bas); }
       /* « C'est parti » sur toute la largeur, puis « Les grades » et
@@ -841,6 +841,13 @@
       .reglages-corps .bas-pile .bandeau-grades .bg-point { display: none; }
       .reglages-corps .bas-pile .bandeau-grades .bg-fleche { display: none; }
     }
+    /* 11/11/2026 (après #1155, photos Safari et Chrome de Gwenaël) : le
+       menu s'ÉTIRE jusqu'au bas de la zone visible. --t-extra (posé par
+       etirerMenu(), voir le script) est réparti dans huit espaces : les
+       cinq entre les rangées, le haut du corps, au-dessus de « C'est
+       parti » et entre « C'est parti » et la paire. La sonde mesure la
+       zone visible barres affichées (100svh). */
+    #sonde-hauteur { position: fixed; top: 0; left: 0; width: 1px; height: 100vh; height: 100svh; visibility: hidden; pointer-events: none; }
     /* Petit téléphone : le résumé de la Colonne passe sur deux lignes ; la
        place des deux lignes est gardée en Flash aussi, pour que le menu ne
        bouge pas d'un onglet à l'autre (lot « menu immobile »). */
@@ -901,6 +908,7 @@
 </head>
 <body>
   <main class="shell">
+    <div id="sonde-hauteur" aria-hidden="true"></div>
     <section class="panel" id="panel">
       <!-- Les réglages : un réglage par ligne, communs aux deux modes, puis
            ceux du mode choisi. -->
@@ -3070,9 +3078,38 @@
       // réduit jusqu'à × 0,75 s'il le faut, jamais agrandi (comme Défi
       // tables). En séance, le cadre prend la hauteur de l'écran : ×1.
       // -----------------------------------------------------------------
+      // -----------------------------------------------------------------
+      // Au téléphone (≤ 620 px), hors séance : le menu s'étire jusqu'au bas
+      // de la zone visible (11/11/2026). La sonde #sonde-hauteur fait 100svh,
+      // la hauteur visible quand les barres du navigateur sont affichées ;
+      // on garde 8 px au-dessus. GARDE-FOU : jamais plus de 48 px en tout —
+      // si un navigateur annonce une hauteur trop grande (barre flottante de
+      // Safari comptée dedans), le menu ne peut pas redescendre sous la
+      // barre (il restait environ 50 px libres sur l'iPhone de Gwenaël).
+      // -----------------------------------------------------------------
+      const ETIRER_MAX = 48;
+      const ETIRER_MARGE = 8;
+      function etirerMenu() {
+        racine.style.setProperty("--t-extra", "0px");
+        const telephone = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 620px)").matches;
+        if (!telephone || corps.classList.contains("en-seance") || $("ecran-reglages").hidden) return;
+        const sonde = $("sonde-hauteur");
+        const visible = sonde ? sonde.offsetHeight : 0;
+        const bas = () => $("panel").getBoundingClientRect().bottom + window.scrollY;
+        const libre = visible - ETIRER_MARGE - bas();
+        if (!(visible > 0) || libre <= 1) return;
+        let extra = Math.min(ETIRER_MAX, Math.floor(libre));
+        racine.style.setProperty("--t-extra", extra + "px");
+        const deborde = bas() - (visible - ETIRER_MARGE);
+        if (deborde > 0) {
+          extra = Math.max(0, extra - Math.ceil(deborde));
+          racine.style.setProperty("--t-extra", extra + "px");
+        }
+      }
       function ajusterEchelle() {
         if (window.innerWidth < 1024 || corps.classList.contains("en-seance")) {
           racine.style.setProperty("--echelle", "1");
+          etirerMenu();
           return;
         }
         corps.classList.add("mesure-cadre");
@@ -3102,6 +3139,18 @@
         if (seance.phase === "reponse" && seance.mode === "colonne") tailleColonne();
       }
       window.addEventListener("resize", () => { ajusterEchelle(); surRedimension(); });
+      // Les polices arrivent après le premier dessin : on remesure.
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ajusterEchelle());
+      // Le menu change de hauteur sans redimensionnement (ligne « Suivi »
+      // qui arrive, retour des grades ou d'une séance) : on réétire. Stable :
+      // etirerMenu() repart de 0 et retrouve la même valeur.
+      if (window.ResizeObserver) {
+        let attente = 0;
+        new ResizeObserver(() => {
+          if (attente) return;
+          attente = window.requestAnimationFrame(() => { attente = 0; etirerMenu(); });
+        }).observe($("ecran-reglages"));
+      }
 
       dessinerReglages();
       if (SUIVI && (SUIVI.attente() || SUIVI.actif())) {

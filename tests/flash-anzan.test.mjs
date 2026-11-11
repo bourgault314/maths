@@ -381,3 +381,17 @@ test("iPhone (10/11/2026) : au téléphone, hors séance, le menu est resserré 
   // Côte à côte, « Historique » prend le cadre des grades (bord encre, papier crème, ombre beige).
   assert.match(bloc, /\.historique-bouton \{ padding: 5px 10px; border: 2px solid var\(--ink\); border-radius: 14px; background: #fdfbf6;\s*box-shadow: 0 4px 0 #d8c89c;/);
 });
+
+test("iPhone (11/11/2026) : au téléphone, le menu s'étire jusqu'au bas de la zone visible, 48 px au plus (garde-fou)", () => {
+  assert.match(PAGE, /<div id="sonde-hauteur" aria-hidden="true"><\/div>\s*<section class="panel" id="panel">/);
+  assert.match(PAGE, /#sonde-hauteur \{ position: fixed;[^}]*height: 100vh; height: 100svh; visibility: hidden; pointer-events: none; \}/);
+  assert.match(PAGE, /const ETIRER_MAX = 48;/);
+  assert.match(PAGE, /const ETIRER_MARGE = 8;/);
+  // L'espace en plus est réparti en huit : cinq entre les rangées, le haut du corps, deux autour de « C'est parti ».
+  assert.match(PAGE, /#grille \{ gap: calc\(var\(--t-gap\) \+ var\(--t-extra, 0px\) \/ 8\) 14px; \}/);
+  assert.match(PAGE, /\.reglages-corps \{ padding-top: calc\(var\(--t-corps\) \+ var\(--t-extra, 0px\) \/ 8\);/);
+  assert.match(PAGE, /\.bas-pile \{ margin-top: calc\(var\(--t-pile\) \+ var\(--t-extra, 0px\) \/ 8\); gap: calc\(var\(--t-pile\) \+ var\(--t-extra, 0px\) \/ 8\); \}/);
+  // Hors téléphone, en séance ou ailleurs que dans les réglages : rien.
+  assert.match(PAGE, /const telephone = typeof window\.matchMedia === "function" && window\.matchMedia\("\(max-width: 620px\)"\)\.matches;/);
+  assert.match(PAGE, /if \(!telephone \|\| corps\.classList\.contains\("en-seance"\) \|\| \$\("ecran-reglages"\)\.hidden\) return;/);
+});
