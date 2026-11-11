@@ -120,15 +120,15 @@ test("tableau produit : un facteur de gauche d'un seul terme s'écrit 2(x + 1), 
   assert.match(methode("generateProductFrameLatex() {"), /return leftSeul \? `\$\{leftStr\}\(\$\{topStr\}\)` : `\(\$\{leftStr\}\)\(\$\{topStr\}\)`;/);
 });
 
-test("Pivoter : un outil comme la corbeille, seulement pour 𝑥, hors tableau produit et paire nulle", () => {
-  assert.match(page, /id="tool-rotate"/);
-  const bouton = page.slice(page.indexOf('id="tool-rotate"'), page.indexOf("</button>", page.indexOf('id="tool-rotate"')));
+test("Pivoter (lot 8 : dans la bulle d'une tuile), seulement pour 𝑥, hors tableau produit et paire nulle", () => {
+  assert.match(page, /data-action="pivoter"/);
+  const bouton = page.slice(page.indexOf('data-action="pivoter"'), page.indexOf("</button>", page.indexOf('data-action="pivoter"')));
   // icône sans flèche ronde (ne pas ressembler à ↶ ni à ⟳) : rectangles et segments droits seulement
   const traces = [...bouton.matchAll(/ d="([^"]*)"/g)].map((m) => m[1]);
   assert.ok(traces.length >= 1);
   for (const d of traces) assert.doesNotMatch(d, /[aAcCsSqQtT]/, `tracé courbe : ${d}`);
   assert.doesNotMatch(bouton, /<circle|<ellipse/);
-  assert.match(methode("handleDragStart(e) {"), /if \(this\.currentTool === 'rotate'\) \{[\s\S]*?this\.pivoterTuile\(/);
+  assert.match(methode("actionBulle(action) {"), /if \(action === 'pivoter'\) this\.pivoterTuile\(t\);/);
   const pivoter = methode("pivoterTuile(t) {");
   // lot 5 : dans une case du rectangle à factoriser, Pivoter marche ; ailleurs dans un tableau, toujours refusé
   assert.match(pivoter, /const caseFacto = t\.productZone === 'cell' && this\.productFrame\?\.mode === 'facto';/);

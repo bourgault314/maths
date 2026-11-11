@@ -41,8 +41,8 @@ test("Tout recommencer s'annule et rend la main", () => {
   assert.match(reset, /this\.setTool\('hand'\);/);
 });
 
-test("la corbeille est dans le même groupe que la main et le stylo", () => {
-  const groupe = page.match(/<!-- OUTILS : [\s\S]*?id="tile-trash-zone"/)[0];
-  assert.match(groupe, /id="tool-hand"/);
+test("lot 8 : la barre garde le stylo et sa gomme ; la main, Pivoter et la corbeille sont passés dans la bulle", () => {
+  const groupe = page.match(/<!-- OUTILS \(lot 8\)[\s\S]*?id="btn-clear-drawing"/)[0];
   assert.match(groupe, /id="tool-pen"/);
+  assert.doesNotMatch(page, /id="tool-hand"|id="tile-trash-zone"|id="tool-rotate"/);
 });
