@@ -977,10 +977,23 @@
     return copie;
   }
 
+  // L'époque d'une remise à zéro ne dépasse jamais EPOQUE_APPAREIL_MAX (100),
+  // le seuil sous lequel le serveur range une époque telle quelle
+  // (lib/progression.php, EPOQUE_LIBRE_MAX — un test compare les deux).
+  // Relecture Codex du 11/11/2026 (D1, lot « petits correctifs de
+  // sécurité ») : un visiteur SANS code qui effaçait 105 fois son historique,
+  // puis rattachait son travail à un code, envoyait l'époque 105 ; le
+  // serveur la ramenait à 100 sans le dire, l'appareil gardait 105, et à la
+  // réouverture suivante sa copie repassait devant une restauration du
+  // professeur (101). Plafonnée ici, une copie honnête n'est jamais ramenée
+  // par le serveur. Au plafond, la remise à zéro remplace toujours la case
+  // de l'appareil (elle ne fusionne pas) : elle efface comme avant.
+  const EPOQUE_APPAREIL_MAX = 100;
+
   function remettreAZero(parcours) {
     const neuf = creerParcours();
     neuf.prenom = parcours && typeof parcours.prenom === "string" ? nettoyerPrenom(parcours.prenom) : "";
-    neuf.epoque = entier(parcours && parcours.epoque, 0, 1000000) + 1;
+    neuf.epoque = Math.min(entier(parcours && parcours.epoque, 0, 1000000) + 1, EPOQUE_APPAREIL_MAX);
     return neuf;
   }
 
@@ -3950,6 +3963,7 @@
     nettoyerPrenom,
     definirPrenom,
     remettreAZero,
+    EPOQUE_APPAREIL_MAX,
     tablesAcquises,
     toutesAcquises,
     classerSerie,

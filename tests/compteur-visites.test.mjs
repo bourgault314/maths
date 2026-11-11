@@ -203,6 +203,23 @@ test("un élève qui arrive par un billet (avant l'échange) : rien ne part ; le
   assert.deepEqual(navigateur({ adresse: "https://mathsgo.re/outils/calcul_mental/defi_tables.html", billet: "fedcba9876543210fedcba9876543210" }).envoyes, []);
 });
 
+test("un outil SPLAT! ouvert avec le billet dans l'adresse, sans MATHSGO_ENTREE, avant l'échange : rien ne part (relecture Codex D4)", () => {
+  const billet = "0123456789abcdef0123456789abcdef";
+  for (const adresse of [
+    `https://mathsgo.re/outils/splat.html?eleve=1&parcours=m1e1#b=${billet}`,
+    `https://mathsgo.re/outils/splat.html?eleve=1&parcours=m1e1#vue=x&b=${billet}`,
+  ]) {
+    const n = navigateur({ adresse });
+    assert.deepEqual(n.envoyes, [], adresse);
+    n.cliquer("https://mathsgo.re/outils/fiche.pdf");
+    assert.deepEqual(n.envoyes, [], "ni une fiche PDF pendant l'échange");
+  }
+  // Une ancre ordinaire, un « b= » vide ou un autre nom finissant par b : on compte.
+  for (const ancre of ["#monde-3", "#b=", "#ab=12", "#enq-bonus"]) {
+    assert.equal(navigateur({ adresse: `https://mathsgo.re/outils/splat.html${ancre}` }).envoyes.length, 1, ancre);
+  }
+});
+
 test("cas témoins : un visiteur, un code mal formé, un billet vide ou un onglet illisible — la visite part, une fois", () => {
   const cas = [
     {},                                           // visiteur ordinaire

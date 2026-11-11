@@ -42,7 +42,10 @@
 //   - l'arrivée par un billet (#b=…), AVANT que l'appli l'ait échangé contre
 //     le code : le script du <head> de chaque appli suivie le range dans
 //     window.MATHSGO_ENTREE.billet et efface l'adresse avant que ce fichier,
-//     chargé en « defer », ne tourne.
+//     chargé en « defer », ne tourne ; les pages sans ce script (les outils
+//     SPLAT! ouverts par « ?eleve=1&parcours=…#b=… ») gardent le billet dans
+//     l'adresse le temps de l'échange : il est lu là aussi (relecture Codex
+//     du 11/11/2026, D4).
 // Le professeur qui ouvre une fiche depuis Ma classe (#b=…&vue=fiche) n'est
 // pas compté non plus : c'est aussi un billet.
 (function () {
@@ -114,6 +117,13 @@
       if (entree && typeof entree.billet === "string" && entree.billet !== "") return true;
     } catch (_erreur) {
       // Rien à lire : on regarde la mémoire de l'onglet.
+    }
+    try {
+      // Le billet encore dans l'adresse : « b=… » non vide, en tête du
+      // fragment ou après un « & » (la même lecture que splat-parcours.js).
+      if (/(?:^#|&)b=[^&]/.test(String(window.location.hash || ""))) return true;
+    } catch (_erreur) {
+      // Adresse illisible : on regarde la mémoire de l'onglet.
     }
     var brut = "";
     try {

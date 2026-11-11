@@ -776,7 +776,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
     assert.match(await lire(page), /splat-parcours\.js\?v=20261111-1"/, page);
   }
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-2"/);
-  assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-1"/);
+  assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-2"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-1"/);
   assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);
 });
@@ -785,6 +785,6 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
 
 test("la page Défi tables ne change pas : seule l'adresse du moteur monte ; elle ne mesure aucun temps", async () => {
   const page = await lire("../outils/calcul_mental/defi_tables.html");
-  assert.match(page, /defi_tables_mon_parcours\.js\?v=20261111-1"/);
+  assert.match(page, /defi_tables_mon_parcours\.js\?v=20261111-2"/);
   assert.doesNotMatch(page, /TROU_ACTIF_MS|verserTempsActif|noterTemps/);
 });

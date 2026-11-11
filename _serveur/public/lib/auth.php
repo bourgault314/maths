@@ -226,7 +226,7 @@ function supprimer_prof(PDO $pdo, int $profId): void
                 effacer_classe_dans_la_transaction($pdo, (int)$classe['id']);
             }
             // Ses billets de fiche en cours tombent avec ses partages (F06).
-            oublier_billets_de_fiche_des_partages_du_prof($pdo, $profId);
+            oublier_billets_de_fiche_du_prof($pdo, $profId);
             $pdo->prepare('DELETE FROM partages WHERE prof_id = ?')->execute([$profId]);
             $pdo->prepare('DELETE FROM sessions_prof WHERE prof_id = ?')->execute([$profId]);
             oublier_modeles_du_prof($pdo, $profId);

@@ -2653,16 +2653,70 @@ verifier("F06 — retirer un partage, ou désactiver le collègue, annule ses bi
     egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => 999999], ['jeton' => $jetonS1])['code'], 'aucun partage à ce nom');
     egal(200, echanger($billetProprietaire)['code'], 'rien n’a été retiré : le billet du propriétaire sert');
 
-    // La désactivation du compte du collègue.
+    // La désactivation du compte du collègue : ses billets sur une classe
+    // qu'on lui partage, ET sur ses propres classes (relecture Codex, D2).
     $partager();
     $billetClaire = $fiche($jetonClaire);
+    $saClasse = (int)appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F06-D2'], ['jeton' => $jetonClaire])['json']['id'];
+    $sonEleve = (int)appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $saClasse, 'nombre' => 1], ['jeton' => $jetonClaire])['json']['eleves'][0]['id'];
+    $billetSaClasse = (string)appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $sonEleve], ['jeton' => $jetonClaire])['json']['billet'];
     egal(200, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'Claire désactivée');
-    egal(404, echanger($billetClaire)['code'], 'son billet de fiche tombe avec ses sessions');
+    egal(404, echanger($billetClaire)['code'], 'son billet de fiche (classe partagée) tombe avec ses sessions');
+    egal(404, echanger($billetSaClasse)['code'], 'celui pris sur SA propre classe aussi (D2)');
     egal(200, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'Claire réactivée');
     $r = connexion('claire', 'mdp-collegue-definitif-2026');
     egal(200, $r['code'], 'elle se reconnecte');
     $jetonClaire = $r['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $saClasse], ['jeton' => $jetonClaire])['code'], 'sa classe d’essai retirée');
     egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'on remet la classe comme avant');
+});
+
+// Relecture Codex du 11/11/2026, D3 : « Voir sa fiche » contrôle le droit,
+// PUIS range le billet. Un retrait de partage glissé entre les deux laissait
+// un billet neuf derrière la purge. Le test rejoue la course : il tient la
+// base (comme une écriture en cours), retire le partage et purge DANS cette
+// transaction ; la demande de fiche du collègue lit encore l'ancien état (le
+// partage), puis attend pour écrire son billet. Une fois la transaction
+// validée, le billet est rangé APRÈS la purge : seul le second contrôle
+// (fiche_encore_permise) peut l'arrêter. Sabotage : retirer ce second
+// contrôle dans « eleves.fiche » (api/prof.php). La course n'est jouée que sur
+// SQLite (le verrou de toute la base s'y pose simplement) ; la fonction est
+// vérifiée sur les deux bases.
+verifier("F06 (D3) — un billet de fiche émis pendant le retrait du partage est retiré aussitôt : 404, aucun billet en base", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeBillets, &$elevesBillets) {
+    vider_compteurs();
+    $eleve = (int)$elevesBillets[0]['id'];
+    egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeBillets,
+        'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'classe partagée à Claire');
+    vrai(fiche_encore_permise(bd_test(), $claireId, $eleve), 'partagée : permis');
+    $gwenaelId = (int)bd_test()->query("SELECT id FROM profs WHERE identifiant = 'gwenael'")->fetchColumn();
+    vrai(fiche_encore_permise(bd_test(), $gwenaelId, $eleve), 'sa classe : permis');
+    vrai(!fiche_encore_permise(bd_test(), $claireId, 999999), 'élève inconnu : non');
+    $fichesEnBase = fn() => (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'fiche' AND eleve_id = $eleve")->fetchColumn();
+
+    if (pilote_test() !== 'mysql') {
+        bd_test()->exec("DELETE FROM billets WHERE type = 'fiche'");
+        $bd = bd_test();
+        $bd->exec('BEGIN IMMEDIATE');
+        $vol = lancer_appel_en_vol('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $eleve], $jetonClaire);
+        $repondu = avancer_appel_en_vol($vol, 700);
+        // Le retrait, comme « partages.supprimer » : le partage, puis la purge.
+        $bd->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')->execute([$classeBillets, $claireId]);
+        oublier_billets_de_fiche_de_la_classe($bd, $classeBillets);
+        $bd->exec('COMMIT');
+        $r = terminer_appel_en_vol($vol);
+        vrai(!$repondu, 'la demande de fiche attendait pour ranger son billet');
+        egal(404, $r['code'], 'le billet rangé après la purge est retiré : « Introuvable. »');
+        egal(0, $fichesEnBase(), 'aucun billet de fiche ne reste en base');
+    } else {
+        egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'partage retiré');
+    }
+    vrai(!fiche_encore_permise(bd_test(), $claireId, $eleve), 'partage retiré : non');
+    egal(404, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $eleve], ['jeton' => $jetonClaire])['code'], 'et la demande suivante est refusée d’emblée');
+    // Un compte désactivé n'est plus permis, même sur sa propre classe.
+    bd_test()->exec("UPDATE profs SET actif = 0 WHERE id = $gwenaelId");
+    $desactive = fiche_encore_permise(bd_test(), $gwenaelId, $eleve);
+    bd_test()->exec("UPDATE profs SET actif = 1 WHERE id = $gwenaelId");
+    vrai(!$desactive, 'compte désactivé : non');
 });
 
 verifier("un nouveau code, ou la suppression de l'élève, emporte ses billets", function () use (&$jetonS1, &$elevesBillets) {
