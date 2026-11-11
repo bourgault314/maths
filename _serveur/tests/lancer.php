@@ -8315,6 +8315,62 @@ verifier("cours-ouvertures — l'espace élève note l'ouverture (fiches et brev
     vrai(str_contains($infos, 'Pour les cours, seul le jour de la dernière ouverture de chaque fiche est conservé'), 'Infos : la phrase pour les familles');
 });
 
+// Correctif « cours-ouvertures » après la relecture Codex du 11/11/2026.
+
+verifier("cours-ouvertures, correctif Codex 1 — une page mal formée n'écrit RIEN, même avec des codes inventés tous différents ; un code inconnu compte toujours un échec pour l'adresse ; la limite par code ne vise que les vrais codes", function () use (&$jetonS1) {
+    vider_compteurs();
+    for ($i = 0; $i < 40; $i++) {
+        $corps = match ($i % 3) {
+            0 => ['code' => code_inconnu(500 + $i)],
+            1 => ['code' => code_inconnu(500 + $i), 'page' => ['/cours/4e/4e-TRI-01.html']],
+            default => ['code' => code_inconnu(500 + $i), 'page' => str_repeat('x', 300)],
+        };
+        egal(400, appel('/api/cours.php', $corps)['code'], "demande $i : refusée");
+    }
+    egal([], compteurs(), 'quarante codes inventés, pages mal formées : aucun compteur écrit');
+    // Un code inconnu avec une page bien formée : un échec pour l'adresse,
+    // et aucun compteur à son nom.
+    egal(404, ouvrir_fiche(code_inconnu(900), '/cours/4e/4e-TRI-01.html')['code']);
+    $lignes = compteurs();
+    egal(1, count($lignes), 'une seule ligne : l’échec de l’adresse');
+    egal(cle_compteur_test('echec-ip:127.0.0.1', 300), $lignes[0]['cle'], 'c’est bien l’échec de l’adresse');
+    // Un vrai code : sa limite est comptée.
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O5', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]], ['jeton' => $jetonS1]);
+    vider_compteurs();
+    egal(200, ouvrir_fiche($eleve['code'], '/cours/4e/4e-TRI-01.html')['code']);
+    egal([cle_compteur_test('cours:' . $eleve['code'], 300)], array_column(compteurs(), 'cle'), 'la limite du vrai code');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-ouvertures, correctif Codex 2 — l'écriture reprend l'élève sous verrou et n'écrit rien s'il a disparu ; les suppressions effacent les ouvertures APRÈS l'élève", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O6', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    // L'entrelacement de Codex, rejoué à la main : la demande a lu l'élève,
+    // le professeur le supprime, puis la demande écrit.
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleves[0]['id']], ['jeton' => $jetonS1])['code']);
+    vrai(noter_ouverture_cours(bd_test(), (int)$eleves[0]['id'], '4e-TRI-01', '2026-11-11') === false, 'élève disparu : rien d’écrit');
+    egal([], ouvertures_en_base((int)$eleves[0]['id']), 'aucune ligne recréée');
+    vrai(noter_ouverture_cours(bd_test(), (int)$eleves[1]['id'], '4e-TRI-01', '2026-11-11') === true, 'élève présent : écrit');
+    egal(1, count(ouvertures_en_base((int)$eleves[1]['id'])));
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    egal([], ouvertures_en_base((int)$eleves[1]['id']), 'la classe supprimée emporte la ligne');
+    // L'ordre qui ferme la course, des deux côtés.
+    $prof = file_get_contents(dirname(__DIR__) . '/public/api/prof.php');
+    $bloc = substr($prof, strpos($prof, "case 'eleves.supprimer':"), 2500);
+    vrai(strpos($bloc, "DELETE FROM eleves WHERE id = ?") < strpos($bloc, 'oublier_cours_de_l_eleve('), 'eleves.supprimer : l’élève d’abord, ses ouvertures ensuite');
+    $archives = file_get_contents(dirname(__DIR__) . '/public/lib/archives.php');
+    $bloc = substr($archives, strpos($archives, 'function effacer_classe_dans_la_transaction'), 3000);
+    vrai(strpos($bloc, "DELETE FROM eleves WHERE classe_id = ?") < strpos($bloc, 'oublier_cours_de_l_eleve('), 'la classe : les élèves d’abord, leurs ouvertures ensuite');
+    $cours = file_get_contents(dirname(__DIR__) . '/public/lib/cours.php');
+    $bloc = substr($cours, strpos($cours, 'function noter_ouverture_cours'), 1200);
+    vrai(str_contains($bloc, 'transaction_ouvrir($pdo)') && str_contains($bloc, "SELECT id FROM eleves WHERE id = ?' . pour_mise_a_jour(\$pdo)"), 'l’élève est repris sous verrou dans la transaction');
+    vider_compteurs();
+});
+
 // ---------------------------------------------------------------------- résultat
 
 echo "\n";

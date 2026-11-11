@@ -44,13 +44,16 @@ try {
     if (!code_valide($code)) {
         erreur("Code élève invalide.", 400);
     }
-    // Comme eleve.php et records.php : les échecs par adresse (un collège
-    // sort par une seule adresse), et une limite large par code — un élève
-    // qui feuillette ses fiches n'en ouvre pas cent vingt en cinq minutes.
+    // Les échecs par adresse, comme eleve.php (un collège sort par une seule
+    // adresse) : lus ici, comptés plus bas si le code est inconnu.
     $adresse = adresse_limitee();
     freiner_adresse($adresse);
-    limiter('cours:' . $code, 120, 300);
 
+    // Correctif après la relecture Codex du 11/11/2026 (défaut 1) : la forme
+    // de la page se contrôle AVANT toute écriture. Avant, limiter() créait un
+    // compteur « cours:<code> » puis la page mal formée répondait 400 avant
+    // la recherche du code : des codes inventés, tous différents, écrivaient
+    // chacun un compteur sans jamais compter un échec pour l'adresse.
     $page = $corps['page'] ?? null;
     if (!is_string($page) || strlen($page) > 120) {
         erreur("Fiche inconnue.", 400);
@@ -71,6 +74,9 @@ try {
         compter_echec_adresse($adresse);
         erreur("Code inconnu.", 404);
     }
+    // La limite par code, seulement pour un code qui existe : un élève qui
+    // feuillette ses fiches n'en ouvre pas cent vingt en cinq minutes.
+    limiter('cours:' . $code, 120, 300);
     if (!cours_ouvertures_disponibles($pdo)) {
         erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
     }

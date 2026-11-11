@@ -223,7 +223,38 @@ function cours_ouvertures_disponibles(PDO $pdo): bool
 
 // Le jour de la dernière ouverture remplace le précédent : une ligne par
 // élève et par fiche, jamais plus.
-function noter_ouverture_cours(PDO $pdo, int $eleveId, string $fiche, string $jour): void
+//
+// Correctif après la relecture Codex du 11/11/2026 (défaut 2) : l'élève lu
+// par api/cours.php pouvait être supprimé (seul, ou avec sa classe) entre
+// cette lecture et l'écriture, qui recréait alors une ligne pour un élève
+// qui n'existe plus. L'écriture se fait donc dans une transaction qui
+// reprend l'élève sous verrou (SELECT … FOR UPDATE sur MySQL, BEGIN
+// IMMEDIATE sur SQLite) et n'écrit rien s'il n'est plus là. De l'autre côté,
+// les suppressions effacent cours_ouvertures APRÈS la ligne de l'élève
+// (api/prof.php, lib/archives.php) : si l'ouverture passe la première, la
+// suppression attend sa fin puis emporte la ligne ; sinon l'ouverture
+// attend, ne trouve plus l'élève et n'écrit rien. Rend vrai si la ligne est
+// écrite.
+function noter_ouverture_cours(PDO $pdo, int $eleveId, string $fiche, string $jour): bool
+{
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $fiche, $jour): bool {
+        transaction_ouvrir($pdo);
+        try {
+            $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ?' . pour_mise_a_jour($pdo));
+            $requete->execute([$eleveId]);
+            $existe = $requete->fetchColumn() !== false;
+            $requete->closeCursor();
+            if ($existe) ecrire_ouverture_cours($pdo, $eleveId, $fiche, $jour);
+            transaction_valider($pdo);
+            return $existe;
+        } catch (Throwable $e) {
+            transaction_annuler($pdo);
+            throw $e;
+        }
+    });
+}
+
+function ecrire_ouverture_cours(PDO $pdo, int $eleveId, string $fiche, string $jour): void
 {
     if (pilote($pdo) === 'mysql') {
         $sql = 'INSERT INTO cours_ouvertures (eleve_id, fiche, jour) VALUES (?, ?, ?)
@@ -258,6 +289,8 @@ function ouvertures_cours_des_eleves(PDO $pdo, array $eleveIds): array
     return $sortie;
 }
 
+// Appelée APRÈS la suppression de la ligne de l'élève (voir
+// noter_ouverture_cours : c'est l'ordre qui ferme la course).
 function oublier_cours_de_l_eleve(PDO $pdo, int $eleveId): void
 {
     if (!cours_ouvertures_disponibles($pdo)) return;

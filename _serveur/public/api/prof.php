@@ -978,10 +978,11 @@ try {
                 // et son record (lot « Les records »).
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
-                // Et le jour d'ouverture de ses fiches de « Mes cours » (lot
-                // « cours-ouvertures », 10/11/2026).
-                oublier_cours_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
+                // Et le jour d'ouverture de ses fiches de « Mes cours » (lot
+                // « cours-ouvertures ») — APRÈS l'élève : une ouverture en
+                // cours d'écriture ne peut plus en recréer une (lib/cours.php).
+                oublier_cours_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
                 // Ses réponses à la séance en direct du moment, s'il y en a une.
