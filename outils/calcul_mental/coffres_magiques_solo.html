@@ -1842,6 +1842,84 @@
     }
   </style>
   <link rel="stylesheet" href="../../assets/css/coffres-learning.css?v=6">
+  <style>
+    /* Correction : « Sur ton plateau » (11/11/2026). Copie réduite du plateau qui vient d'être joué :
+       ton essai en rouge, la solution en vert, même épaisseur de contour (la couleur suffit à les distinguer),
+       une case commune aux deux est coupée en deux. Les autres cases sont grisées. */
+    .correction-calculs { display: grid; gap: 10px; align-content: center; min-width: 0; }
+    .correction-board {
+      --mini-board: 150px;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      padding: 10px 10px 12px;
+      border: 1px solid #d2e2eb;
+      border-radius: 12px;
+      background: #fbfdff;
+    }
+    .correction-board .correction-label { color: #193b59; }
+    .correction-board-grid {
+      width: var(--mini-board);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      padding: 6px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #a77b50, #6d4b32);
+    }
+    .correction-board-grid span {
+      min-width: 0;
+      display: grid;
+      place-items: center;
+      border: 3px solid #cfdbe2;
+      border-radius: 8px;
+      color: #7d93a2;
+      background: #e8eef1;
+      font-size: calc(var(--mini-board) * .115);
+      font-weight: 950;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    /* Nombres à trois chiffres (niveaux 2 et 3) : plus petits pour tenir dans la case. */
+    .correction-board-grid span.long { font-size: calc(var(--mini-board) * .08); letter-spacing: -.03em; }
+    .correction-board-grid span.essai { border-color: #b83a3a; color: #7d2323; background: #ffd4cf; }
+    .correction-board-grid span.solution { border-color: #087a55; color: #0b4a37; background: #bff0d8; }
+    .correction-board-grid span.essai.solution {
+      border-color: #087a55;
+      color: #0b4a37;
+      background: linear-gradient(135deg, #ffd4cf 0 50%, #bff0d8 50% 100%);
+    }
+
+    @media (max-width: 350px) {
+      .correction-board { --mini-board: 132px; }
+    }
+
+    /* Grand écran : le petit plateau à gauche, les calculs à droite, le schéma dessous sur toute la largeur. */
+    @media (min-width: 900px) {
+      .correction-card .correction-content {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas: "plateau calculs" "schema schema";
+        column-gap: 14px;
+      }
+      .correction-card .correction-calculs { grid-area: calculs; }
+      .correction-card .correction-board { grid-area: plateau; --mini-board: 230px; padding: 10px 12px 14px; }
+      .correction-card #correction-visual { grid-area: schema; }
+    }
+    @media (min-width: 900px) and (max-height: 800px) {
+      .correction-card .correction-board { --mini-board: 190px; }
+    }
+    /* Écrans bas : le petit plateau rétrécit pour que le schéma reste en vue. */
+    @media (max-width: 899px) and (max-height: 640px) {
+      .correction-card .correction-board { --mini-board: 128px; gap: 4px; padding: 6px 8px 8px; }
+      .correction-card .correction-board-grid { gap: 4px; padding: 5px; }
+      .correction-card .correction-board-grid span { border-width: 2px; border-radius: 6px; font-size: calc(var(--mini-board) * .105); }
+      .correction-card .correction-board-grid span.long { font-size: calc(var(--mini-board) * .078); }
+    }
+    @media (min-width: 900px) and (max-height: 640px) {
+      .correction-card .correction-board { --mini-board: 160px; }
+    }
+  </style>
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -2049,8 +2127,15 @@
     <div class="dialog-card correction-card">
       <h2 id="correction-title" tabindex="-1">Une solution</h2>
       <div class="correction-content" role="region" aria-label="Calculs et schéma de correction" tabindex="0">
-        <div id="correction-choice" class="correction-choice"></div>
-        <div id="correction-solution" class="correction-solution"></div>
+        <div class="correction-calculs">
+          <div id="correction-choice" class="correction-choice"></div>
+          <div id="correction-solution" class="correction-solution"></div>
+        </div>
+        <!-- Où étaient les cases (11/11/2026) : une copie réduite du plateau, ton essai en rouge, la solution en vert. -->
+        <div id="correction-board" class="correction-board" role="img">
+          <span class="correction-label" aria-hidden="true">Sur ton plateau</span>
+          <div class="correction-board-grid" aria-hidden="true"></div>
+        </div>
         <div id="correction-visual" class="learning-panel"></div>
       </div>
       <div class="dialog-actions">
@@ -2161,6 +2246,7 @@
       const helpVisual = document.querySelector("#help-visual");
       const correctionChoice = document.querySelector("#correction-choice");
       const correctionSolution = document.querySelector("#correction-solution");
+      const correctionBoard = document.querySelector("#correction-board");
       const correctionVisual = document.querySelector("#correction-visual");
       const nextButton = document.querySelector("#next-button");
       const levelLabel = document.querySelector("#level-label");
@@ -3508,7 +3594,25 @@
         }
       }
 
-      function openCorrection({ chosenPair = null, trigger = document.activeElement } = {}) {
+      // « Sur ton plateau » : on recopie le plateau en petit pour que l'élève voie où étaient les cases.
+      function placeLabel(position) {
+        return `${values[position]} (ligne ${row(position) + 1}, colonne ${column(position) + 1})`;
+      }
+
+      function renderCorrectionBoard(solutionPositions, chosenPositions) {
+        const grid = correctionBoard.querySelector(".correction-board-grid");
+        grid.replaceChildren(...values.map((value, position) => {
+          const cell = makeElement("span", value >= 100 ? "long" : "", String(value));
+          if (chosenPositions && chosenPositions.includes(position)) cell.classList.add("essai");
+          if (solutionPositions.includes(position)) cell.classList.add("solution");
+          return cell;
+        }));
+        const solutionText = `la solution est ${placeLabel(solutionPositions[0])} et ${placeLabel(solutionPositions[1])}`;
+        const chosenText = chosenPositions ? `, ton essai était ${placeLabel(chosenPositions[0])} et ${placeLabel(chosenPositions[1])}` : "";
+        correctionBoard.setAttribute("aria-label", `Sur ton plateau : ${solutionText}${chosenText}.`);
+      }
+
+      function openCorrection({ chosenPair = null, chosenPositions = null, trigger = document.activeElement } = {}) {
         const found = findSolutionPair(mode, target, values);
         if (!found) {
           makeChallenge(mode, { target });
@@ -3523,6 +3627,7 @@
         correctionChoice.replaceChildren();
         if (chosenPair) renderCorrectionCalculation(correctionChoice, "Ton essai", chosenPair[0], chosenPair[1]);
         renderCorrectionCalculation(correctionSolution, "Une solution", solutionFirst, solutionSecond);
+        renderCorrectionBoard(found.positions, chosenPair ? chosenPositions : null);
         renderLearningPanel(correctionVisual, mode, solutionFirst, solutionSecond);
         locked = true;
         dialogs.open(correctionDialog, {
@@ -3618,10 +3723,11 @@
         } else {
           suiviEcrire((P, avant) => P.noterErreur(avant, mode));
           const resolvedBoard = boardId;
+          const chosenPositions = [Number(firstButton.dataset.index), secondPosition];
           pendingTimer = window.setTimeout(() => {
             pendingTimer = null;
             if (boardId !== resolvedBoard) return;
-            openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
+            openCorrection({ chosenPair: [firstValue, secondValue], chosenPositions, trigger: secondButton });
           }, 1150);
         }
       }

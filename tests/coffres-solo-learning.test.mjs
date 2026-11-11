@@ -143,7 +143,7 @@ test("l’aide reprend exactement la carte du cours et les corrections restent p
   assert.doesNotMatch(html, /renderLearningPanel\(helpVisual|learningNotes\[mode\]\.help|learningNotes\[mode\]\.example/);
   assert.match(html, /function openCorrection\([\s\S]*?renderLearningPanel\(correctionVisual, mode, solutionFirst, solutionSecond\)/);
   assert.match(html, /function showSolution\(\)[\s\S]*?openCorrection\(\{ trigger \}\)/);
-  assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
+  assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], chosenPositions, trigger: secondButton \}\)/);
 });
 
 test("la recherche de correction renvoie une vraie paire voisine", () => {
@@ -166,7 +166,7 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /id="help-visual" class="operation-grid help-operation-grid" role="region" aria-label="Cours de l’opération en cours" tabindex="0"/);
   assert.doesNotMatch(html, /id="help-copy"/);
   assert.match(html, /id="correction-dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
-  assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
+  assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], chosenPositions, trigger: secondButton \}\)/);
   assert.match(html, /const retryMode = mode;\s*const retryTarget = target;[\s\S]*makeChallenge\(retryMode, \{ target: retryTarget \}\)/);
   assert.match(html, /const operationTitles = \{ sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" \}/);
   assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
@@ -174,6 +174,17 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /correctionChoice.hidden = !chosenPair/);
   assert.match(html, /renderCorrectionCalculation\(correctionSolution, "Une solution", solutionFirst, solutionSecond\)/);
   assert.match(html, /onEscape: retryAfterLearning/);
+});
+
+test("la correction montre où étaient les cases : « Sur ton plateau »", () => {
+  // Copie réduite du plateau (11/11/2026) : ton essai en rouge, la solution en vert, même épaisseur de contour.
+  assert.match(html, /<div class="correction-calculs">\s*<div id="correction-choice"[^>]*><\/div>\s*<div id="correction-solution"[^>]*><\/div>\s*<\/div>\s*<!--[^>]*-->\s*<div id="correction-board" class="correction-board" role="img">\s*<span class="correction-label" aria-hidden="true">Sur ton plateau<\/span>\s*<div class="correction-board-grid" aria-hidden="true"><\/div>\s*<\/div>\s*<div id="correction-visual"/);
+  assert.match(html, /const chosenPositions = \[Number\(firstButton\.dataset\.index\), secondPosition\];/);
+  assert.match(html, /renderCorrectionBoard\(found\.positions, chosenPair \? chosenPositions : null\)/);
+  const css = html.slice(html.indexOf("coffres-learning.css"));
+  assert.match(css, /\.correction-board-grid span \{[^}]*border: 3px solid/);
+  assert.doesNotMatch(css, /\.correction-board-grid span\.(?:essai|solution)[^{]*\{[^}]*(?:border-width|box-shadow|border:)/, "Le vert et le rouge gardent le même contour : seule la couleur change.");
+  assert.match(css, /\.correction-board-grid span\.essai\.solution \{[^}]*linear-gradient/);
 });
 
 test("le cours garde la définition mathématique de chaque résultat sans long paragraphe", () => {
