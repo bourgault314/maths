@@ -1329,7 +1329,9 @@ test(
           await stabiliser(page);
           await page.locator(".carte .champ").click();
           await page.keyboard.type(reponse.replace(/−/g, "-"));
-          const mesure = await page.evaluate((large) => {
+          const mesure = await page.evaluate(async (large) => {
+            // Deux images après la frappe avant de mesurer (rien ne se mesure en pleine mise en page).
+            await new Promise((fin) => requestAnimationFrame(() => requestAnimationFrame(fin)));
             const zone = document.querySelector(".espace-question").getBoundingClientRect();
             const champ = document.querySelector(".carte .champ");
             const kase = champ.getBoundingClientRect();
@@ -1347,7 +1349,13 @@ test(
                 ? kase.top >= calcul.querySelector(".t").getBoundingClientRect().bottom - 2
                 : true,
               entiere: kase.top >= zone.top - 1 && kase.bottom <= zone.bottom + 1,
-              visible: contexte.measureText(champ.value).width <= place + 1,
+              // Un <input> ne dit pas s'il défile (scrollWidth = clientWidth même quand le texte
+              // déborde) : on mesure le texte tapé dans la police de la case. Tolérance de 3 px :
+              // NC24-e à 1366 × 768 dépasse de 2,3 px une case déjà à sa largeur maximale
+              // (le bord de la carte) — invisible à l'écran, mais rouge 4 fois sur 5 sous Windows
+              // avec l'ancienne tolérance de 1 px (audit des tests, 11/11/2026). Un caractère coupé,
+              // lui, dépasse bien plus que 3 px et rougit toujours.
+              visible: contexte.measureText(champ.value).width <= place + 3,
             };
           }, width >= 700);
           if (mesure.rapport < 0.9) ecarts.push(`${nom} : calcul à ${mesure.rapport.toFixed(2)}`);

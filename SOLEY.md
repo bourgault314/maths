@@ -189,7 +189,6 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
 `soley-atelier.html` ou `atelier.js` :**
 ```
 python tests/soley/test_atelier.py --root .      # 18 contrôles A1→A13
-node tests/soley/verifier-atelier.mjs            # le jeu n'a pas bougé d'un octet
 node tests/soley/rejouer-bloc.mjs <fichier>      # rejoue un bloc exporté (harnais)
 ```
 Le contrôle A8 est le garde-fou du lot : une fausse progression est semée dans
@@ -227,6 +226,11 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   une promesse datée.** Il devient faux dès qu'un monde s'intercale (« Nouveau : DEUX
   soleils » au 45 a été démenti par la canne, qui en montre deux au 16). Tout lot qui
   déplace des niveaux doit relire les « Nouveau » qui suivent.
+- **Un vérificateur de lot ne sert que le temps de son lot** (11/11/2026, nettoyage
+  des tests : les seize `verifier-*.mjs` de `tests/soley/` ont été RETIRÉS du dépôt ;
+  chacun se relit avec `git show 603f902e:tests/soley/<nom>`, la liste est dans
+  `tests/soley/README.md`). Un nouveau vérificateur vit dans le dossier du lot, pas
+  dans le dépôt. Ce qui suit reste vrai pendant le lot :
 - **Un vérificateur de lot est une ARCHIVE : on le laisse mourir, on ne le répare
   pas** (17/08, lot H). Les `tests/soley/verifier-*.mjs` comparent le dépôt à une
   référence git datée ; ils échouent légitimement dès que la suite avance, et aucun
@@ -483,7 +487,8 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
      verifier-lot1-comprendre.mjs (mort avec l'insertion de la canne :
      comparaison par index) et verifier-decoupage.mjs (mort avant) restent dans
      tests/soley/ comme preuves datées de leur lot — ni retirés, ni réparés,
-     jamais en CI. Chaque nouveau lot apporte SON vérificateur (modèle :
+     jamais en CI. *(11/11/2026 : retirés avec les quatorze autres, voir plus
+     haut ; toujours lisibles dans l'historique git.)* Chaque nouveau lot apporte SON vérificateur (modèle :
      verifier-lot-canne.mjs).
   10. **L'atelier s'atteint par son URL, et par rien d'autre** (Gwenael, 15/08,
      choix explicite parmi trois options). `soley-atelier.html` n'a aucun lien

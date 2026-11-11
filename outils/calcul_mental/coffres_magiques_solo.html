@@ -1512,16 +1512,20 @@
       .correction-card .packet { font-size: clamp(.8rem, calc(10rem * var(--packet-share)), 1.35rem); }
     }
 
-    /* Grand écran peu haut (vidéoprojecteur 1280 × 720) : sous Windows, Segoe UI a des lignes plus hautes
-       et le bas des règles d'ordre passait sous le bouton. On resserre les marges du cours, jamais le texte ni les schémas. */
+    /* Grand écran peu haut (vidéoprojecteur 1280 × 720, portable 1366 × 768) : sous Windows, Segoe UI a des
+       lignes plus hautes et le bas des règles d'ordre passait sous le bouton (encore 48 px le 11/11/2026).
+       On resserre les marges du cours, jamais le texte ni les schémas. */
     @media (min-width: 900px) and (max-height: 800px) {
-      .learn-card { padding-block: 12px; }
-      .learn-card > h2 { margin: 0 0 6px; }
-      .learn-card > p { margin: 0 0 4px; }
-      .learn-card > .operation-grid { margin-block: 6px; }
-      #lesson-course { gap: 10px; }
-      #lesson-course article { padding-block: 10px; }
-      #lesson-course .operation-conventions { padding-block: 7px; }
+      #lesson.overlay { padding: 6px; }
+      #lesson .dialog-card { max-height: calc(100svh - 12px); }
+      .learn-card { padding-block: 8px; }
+      .learn-card > h2 { margin: 0 0 2px; }
+      .learn-card > p { margin: 0 0 2px; }
+      .learn-card > .operation-grid { margin-block: 4px; }
+      #lesson-course { gap: 8px; }
+      #lesson-course article { padding-block: 6px; row-gap: 3px; }
+      #lesson-course .operation-conventions { padding-block: 4px; gap: 5px; }
+      #lesson-course .operation-conventions p { padding-block: 4px; }
     }
 
     @media (max-width: 520px) {

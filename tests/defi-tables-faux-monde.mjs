@@ -149,6 +149,12 @@ export function fauxServeur({identite = {prenom: "Léa", classe: "405"}} = {}) {
   const appels = [];
   const serveur = {
     cases, appels, mode: "ok", delai: 0, forcer: null,
+    // `retenir` : les réponses attendent `relacher()` au lieu d'une vraie minuterie — une
+    // réponse « en vol » le reste aussi longtemps que le test le veut, même sur une
+    // machine chargée (avant le 11/11/2026, `delai: 30` en vraies millisecondes rendait
+    // « réponse tardive de Léa » instable).
+    retenir: false, retenues: [],
+    relacher() { const r = serveur.retenues.splice(0); r.forEach(fin => fin()); return r.length; },
     etat(code) { return cases.get(code) || null; },
     poser(code, parcours, revision = 1) { cases.set(code, {parcours, revision}); },
     fetch(url, options) {
@@ -178,6 +184,7 @@ export function fauxServeur({identite = {prenom: "Léa", classe: "405"}} = {}) {
           r = reponseHttp(200, {ok: true, maj_le: "2026-08-30", revision});
         }
       }
+      if (serveur.retenir) return new Promise(res => serveur.retenues.push(() => res(r)));
       return serveur.delai ? new Promise(res => setTimeout(() => res(r), serveur.delai)) : Promise.resolve(r);
     }
   };
