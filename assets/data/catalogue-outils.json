@@ -125,6 +125,17 @@
       "audiences": ["enseignant", "classe"]
     },
     {
+      "id": "cps-module-attention",
+      "title": "Module Attention",
+      "description": "Deux séances de neurosciences pour comprendre ce qu’est l’attention, ce qui la fait perdre et comment la garder : diaporamas à projeter, fiches à coller et feuilles de route pour la co-animation.",
+      "path": "cps/module-attention.html",
+      "kind": "document",
+      "status": "published",
+      "themes": ["cps"],
+      "uses": ["projeter", "imprimer"],
+      "audiences": ["enseignant", "classe"]
+    },
+    {
       "id": "conversions",
       "title": "Conversions",
       "description": "Matériel réel et virtuel pour fabriquer, projeter et s’exercer.",

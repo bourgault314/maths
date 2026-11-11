@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Module Attention | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta name="description" content="Deux séances de neurosciences pour comprendre ce qu’est l’attention, ce qui la fait perdre et comment la garder : diaporamas à projeter, fiches à coller et feuilles de route pour la co-animation.">
+  <link rel="canonical" href="https://mathsgo.re/cps/module-attention.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="maths&amp;go">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Module Attention">
+  <meta property="og:description" content="Deux séances de neurosciences (4e, 55 min) pour comprendre ce qu’est l’attention, ce qui la fait perdre et comment la garder : diaporamas, fiches à coller et feuilles de route pour la co-animation.">
+  <meta property="og:image" content="https://mathsgo.re/cps/assets/module-attention/carte-catalogue.webp">
+  <meta property="og:image:type" content="image/webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="675">
+  <meta property="og:image:alt" content="Couverture du module Attention">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Module Attention">
+  <meta name="twitter:description" content="Deux séances de neurosciences (4e, 55 min) pour comprendre ce qu’est l’attention, ce qui la fait perdre et comment la garder : diaporamas, fiches à coller et feuilles de route pour la co-animation.">
+  <meta name="twitter:image" content="https://mathsgo.re/cps/assets/module-attention/carte-catalogue.webp">
+  <link rel="stylesheet" href="../assets/css/entry-alignment.css?v=cartes-alignees-20260719-4">
+  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=breadcrumb-parent-20260913-1">
+  <style>
+    .catalogue-breadcrumb a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #d8e4ef;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #f7fafc;
+      font-weight: 760;
+      text-align: left;
+      white-space: normal;
+      text-decoration: none;
+    }
+    .catalogue-breadcrumb a:hover,
+    .catalogue-breadcrumb a:focus-visible {
+      border-color: #a9c9e8;
+      background: #edf5fc;
+    }
+    .hero .page-lead {
+      max-width: 900px;
+      margin: 6px 0 0;
+      color: #5c6f86;
+      font-size: .95rem;
+      line-height: 1.5;
+    }
+    .pack-card {
+      min-height: 92px;
+      margin-bottom: 14px;
+      border-top-color: #654e9d;
+      background: linear-gradient(135deg, #fff 0%, #f6f2fd 100%);
+    }
+    .pack-card .resource-type-icon {
+      color: #564090;
+      background: #f0eafb;
+    }
+    .pack-card .resource-arrow { color: #564090; }
+    .resource-group-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 1100px) { .resource-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 860px) { .resource-group-grid { grid-template-columns: 1fr; } }
+    .page-resource { cursor: default; }
+    .page-resource .resource-copy {
+      grid-column: 1 / -1;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+    }
+    .page-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .page-heading h3 { margin: 0; }
+    .page-badge {
+      flex: 0 0 auto;
+      min-width: 42px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--accent, var(--blue));
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 900;
+    }
+    .page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 13px;
+    }
+    .page-action {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 38%, #d7e0e9);
+      border-radius: 10px;
+      color: color-mix(in srgb, var(--accent, var(--blue)) 86%, #16304f);
+      background: color-mix(in srgb, var(--accent, var(--blue)) 7%, #fff);
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 850;
+    }
+    .page-action:hover,
+    .page-action:focus-visible {
+      border-color: var(--accent, var(--blue));
+      background: color-mix(in srgb, var(--accent, var(--blue)) 12%, #fff);
+    }
+    .page-action svg { width: 16px; height: 16px; }
+    .use-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr);
+      gap: 14px;
+    }
+    .use-grid + .use-grid { margin-top: 14px; }
+    .info-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid #d7e0e9;
+      border-top: 5px solid var(--accent, var(--teal));
+      border-radius: 15px;
+      background: #fff;
+      box-shadow: 0 3px 8px rgba(15, 40, 72, .045);
+    }
+    .info-card h3 {
+      margin: 0;
+      color: #16304f;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+    .info-card p {
+      margin: 8px 0 0;
+      color: #637287;
+      font-size: .88rem;
+      line-height: 1.48;
+    }
+    .info-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: #637287;
+      font-size: .86rem;
+      line-height: 1.5;
+    }
+    .info-card li { margin-bottom: 5px; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 14px;
+      margin-top: 14px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #586d83;
+      font-size: .83rem;
+      line-height: 1.38;
+    }
+    .step strong {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #149b95;
+      font-size: .72rem;
+    }
+    .cps-card {
+      --accent: #f58220;
+      background: linear-gradient(145deg, #fff 0%, #fff9ef 100%);
+    }
+    .warn-card { --accent: #b84f7b; }
+    @media (max-width: 680px) {
+      .hero .page-lead { font-size: .91rem; line-height: 1.46; }
+      .use-grid, .steps { grid-template-columns: 1fr; }
+      .page-actions { flex-wrap: nowrap; }
+      .page-action { min-width: 0; flex: 1 1 0; padding-inline: 8px; }
+    }
+      .def-list { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .def-list li { display: flex; gap: 10px; align-items: baseline; color: #3c5068; font-size: .92rem; }
+    .def-list b { color: #0f7b76; }
+    .def-list strong { flex: 0 0 auto; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #149b95; font-size: .74rem; }
+    .video-note { margin-top: 6px; font-size: .8rem; color: #4f6178; }
+    .page-resource { display: flex; flex-direction: column; }
+    .page-resource .resource-copy { flex: 1 1 auto; }
+  </style>
+<script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
+</head>
+<body class="catalogue-is-deep">
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand-link" href="../index.html" aria-label="Accueil maths&go">
+        <img src="../assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      </a>
+      <nav class="catalogue-breadcrumb" aria-label="Fil d’Ariane">
+        <a class="breadcrumb-back" href="../outils/index.html?domain=cps" title="Revenir à Vie de classe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+          Vie de classe
+        </a>
+        <a class="breadcrumb-parent" href="../outils/index.html?domain=cps&amp;notion=competences-psychosociales" title="Revenir à Compétences psychosociales">Compétences psychosociales</a>
+      </nav>
+      <a class="header-home" href="../index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v9h-5v-6H9v6H4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Accueil</span>
+      </a>
+    </header>
+    <main class="main-panel catalogue-deep-view" id="contenu">
+      <section class="hero" aria-labelledby="page-title">
+        <h1 id="page-title" tabindex="-1">Module Attention</h1>
+        <p class="page-lead">Deux séances de 55 minutes, pensées pour la 4e et la co-animation, pour comprendre ce qu’est l’attention, ce qui nous la fait perdre et comment la garder. Les élèves vivent une expérience, on en tire la notion, puis ils collent une trace courte et claire.</p>
+      </section>
+      <div class="resource-grid">
+        <a class="resource-card pack-card" href="assets/module-attention/module-attention.zip" download style="--accent:#654e9d;--soft:#f3effb">
+          <span class="resource-type-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 4h12l5 5v19H8Z M20 4v6h6M16 12v9m-4-4 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="resource-copy"><h3>Télécharger tout le module</h3><span class="resource-meta">ZIP · 2 diaporamas, 2 fiches à coller, 2 feuilles de route</span></span>
+          <span class="resource-arrow" aria-hidden="true">↓</span>
+        </a>
+
+        <section class="resource-group" aria-labelledby="g-s1">
+          <div class="resource-group-heading">
+            <h2 id="g-s1">Séance 1 · Faire attention, c’est quoi ?</h2>
+            <span>55 min · co-animation</span>
+          </div>
+          <div class="resource-group-grid">
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#1f4e79;--soft:#eaf2fa">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s1-diaporama.webp" width="1100" height="500" alt="Aperçu : Le diaporama"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>Le diaporama</h3><span class="page-badge">En ligne</span></div>
+                <span class="resource-description">Images à analyser (« attention à quoi ? »), deux dessins, vidéo du gorille, vraies consignes de cours, définition en 3 points, attitude d’attention.</span>
+                <span class="resource-meta resource-uses">37 diapos · à projeter en ligne ou à télécharger (PowerPoint, avec les notes)</span><span class="video-note">La vidéo du gorille (D. Simons, 2010) se lance d’un clic : elle s’ouvre sur YouTube.</span>
+                <div class="page-actions"><a class="page-action" href="module-attention-diaporama.html?seance=1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg> Projeter</a><a class="page-action" href="assets/module-attention/Attention-seance-1.pptx" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#f58220;--soft:#fff4e8">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s1-fiche.webp" width="1100" height="500" alt="Aperçu : La fiche à coller"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>La fiche à coller</h3><span class="page-badge">A5 ×2</span></div>
+                <span class="resource-description">La définition en 3 points (cible, intention, mettre le reste de côté), le schéma, l’attitude d’attention et « Moi, je perds mon attention quand… ».</span>
+                <span class="resource-meta resource-uses">1 A4 paysage = 2 fiches à découper</span>
+                <div class="page-actions"><a class="page-action" href="assets/module-attention/Attention-seance-1-fiche-a-coller.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> Ouvrir</a><a class="page-action" href="assets/module-attention/Attention-seance-1-fiche-a-coller.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#654e9d;--soft:#f3effb">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s1-fdr.webp" width="1100" height="500" alt="Aperçu : La feuille de route"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>La feuille de route</h3><span class="page-badge">Animateurs</span></div>
+                <span class="resource-description">Le minutage diapo par diapo, qui fait quoi en co-animation, les réponses attendues et ce qu’on dit à l’oral.</span>
+                <span class="resource-meta resource-uses">A4 · pour les deux animateurs</span>
+                <div class="page-actions"><a class="page-action" href="assets/module-attention/Attention-seance-1-feuille-de-route.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> Ouvrir</a><a class="page-action" href="assets/module-attention/Attention-seance-1-feuille-de-route.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="resource-group" aria-labelledby="g-s2">
+          <div class="resource-group-heading">
+            <h2 id="g-s2">Séance 2 · Qu’est-ce qui nous distrait ?</h2>
+            <span>55 min · co-animation</span>
+          </div>
+          <div class="resource-group-grid">
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#1f4e79;--soft:#eaf2fa">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s2-diaporama.webp" width="1100" height="500" alt="Aperçu : Le diaporama"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>Le diaporama</h3><span class="page-badge">En ligne</span></div>
+                <span class="resource-description">Rappel en 5 questions, vidéo du salon, distracteurs externes et internes, étoile rouge, pensoscope, double tâche en deux groupes.</span>
+                <span class="resource-meta resource-uses">36 diapos · à projeter en ligne ou à télécharger (PowerPoint, avec les notes)</span><span class="video-note">Le pensoscope se joue dans la diapo ; la vidéo du salon s’ouvre sur YouTube.</span>
+                <div class="page-actions"><a class="page-action" href="module-attention-diaporama.html?seance=2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7Z" fill="currentColor"/></svg> Projeter</a><a class="page-action" href="assets/module-attention/Attention-seance-2.pptx" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#f58220;--soft:#fff4e8">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s2-fiche.webp" width="1100" height="500" alt="Aperçu : La fiche à coller"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>La fiche à coller</h3><span class="page-badge">A5 ×2</span></div>
+                <span class="resource-description">La trace écrite, le schéma des distracteurs et mon plan anti-distraction à compléter.</span>
+                <span class="resource-meta resource-uses">1 A4 paysage = 2 fiches à découper</span>
+                <div class="page-actions"><a class="page-action" href="assets/module-attention/Attention-seance-2-fiche-a-coller.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> Ouvrir</a><a class="page-action" href="assets/module-attention/Attention-seance-2-fiche-a-coller.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+            <article class="resource-card resource-card-visual page-resource" style="--accent:#654e9d;--soft:#f3effb">
+              <span class="resource-thumbnail"><img src="assets/module-attention/apercu-s2-fdr.webp" width="1100" height="500" alt="Aperçu : La feuille de route"></span>
+              <div class="resource-copy">
+                <div class="page-heading"><h3>La feuille de route</h3><span class="page-badge">Animateurs</span></div>
+                <span class="resource-description">Le minutage, la co-animation, le texte des étoiles à lire avec ses questions et les réponses.</span>
+                <span class="resource-meta resource-uses">A4 · pour les deux animateurs</span>
+                <div class="page-actions"><a class="page-action" href="assets/module-attention/Attention-seance-2-feuille-de-route.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg> Ouvrir</a><a class="page-action" href="assets/module-attention/Attention-seance-2-feuille-de-route.pdf" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Télécharger</a></div>
+              </div>
+            </article>
+          </div>
+        </section>
+        <section class="resource-group" aria-labelledby="g-reperes">
+          <div class="resource-group-heading"><h2 id="g-reperes">Repères pédagogiques</h2><span>neurosciences</span></div>
+          <div class="use-grid">
+            <article class="info-card" style="--accent:#149b95">
+              <h3>Ce que les élèves retiennent</h3>
+              <p>Faire attention, c’est :</p>
+              <ul class="def-list">
+                <li><strong>1</strong><span>choisir une <b>cible</b> ;</span></li>
+                <li><strong>2</strong><span>savoir ce que je dois en faire : mon <b>intention</b> ;</span></li>
+                <li><strong>3</strong><span>mettre le <b>reste</b> de côté.</span></li>
+              </ul>
+              <p>On ne fait jamais attention « tout court » : on fait attention <em>à quelque chose</em>, <em>pour en faire quelque chose</em>.</p>
+            </article>
+            <aside class="info-card cps-card">
+              <h3>Objectif CPS</h3>
+              <p>Mieux se connaître comme apprenant : repérer ce qui capte mon attention, ce qui me distrait, et me donner un plan pour la garder.</p>
+            </aside>
+          </div>
+          <div class="use-grid">
+            <article class="info-card warn-card">
+              <h3>Points de vigilance</h3>
+              <ul>
+                <li>Vidéo du gorille : ne rien annoncer avant, et la mettre en pause à « N’avez-vous rien remarqué d’étrange ? », avant les révélations.</li>
+                <li>Les deux vidéos externes sont sur YouTube : tester le lien et la connexion avant la séance.</li>
+                <li>Les corrections se font diapo par diapo, juste après chaque question.</li>
+              </ul>
+            </article>
+            <aside class="info-card" style="--accent:#3489c2">
+              <h3>Sources</h3>
+              <ul>
+                <li>J.-P. Lachaux, <em>Les petites bulles de l’attention</em> (programme ATOLE).</li>
+                <li>D. Simons, « The Monkey Business Illusion » (2010) ; le test du salon : chaîne « Cerveau, mode d’emploi ».</li>
+                <li>S. Dehaene, les quatre piliers de l’apprentissage.</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

@@ -33,6 +33,7 @@ const cases = [
     file: 'cps/' + page + '.html', labels: ['Vie de classe', 'Rentrée et cohésion'],
     href: '/outils/index.html?domain=cps&notion=rentree-cohesion'
   })),
+  { file: 'cps/module-attention.html', labels: ['Vie de classe', 'Compétences psychosociales'], href: '/outils/index.html?domain=cps&notion=competences-psychosociales' },
   { file: 'outils/chat/index.html', labels: ['Tous les domaines', domain], href: '/outils/index.html?domain=jeux-recherches' },
   { file: 'outils/plateaux_manipulation/moulin_pythagore_fiches.html', labels: ['Tous les domaines', 'Pythagore'], href: '/outils/index.html?domain=geometrie&notion=pythagore' }
 ];

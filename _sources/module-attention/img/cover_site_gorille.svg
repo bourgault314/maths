@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="855" viewBox="0 0 1600 855">
+<rect width="1600" height="855" rx="18" fill="#141B2D"/>
+<circle cx="800" cy="360" r="120" fill="#EF6F6C"/><path d="M760 295 L760 425 L870 360 Z" fill="#fff"/>
+<text x="800" y="560" text-anchor="middle" font-family="Carlito" font-weight="bold" font-size="58" fill="#fff">Le test vidéo · Daniel Simons, 2010</text>
+<text x="800" y="628" text-anchor="middle" font-family="Carlito" font-size="38" fill="#B9C3D6">Cliquer pour lancer la vidéo (elle s’ouvre sur YouTube)</text>
+<rect x="60" y="770" width="1480" height="10" rx="5" fill="#3A4560"/><rect x="60" y="770" width="40" height="10" rx="5" fill="#EF6F6C"/>
+<path d="M66 735 L66 755 L84 745 Z" fill="#B9C3D6"/><text x="104" y="754" font-family="Carlito" font-size="26" fill="#B9C3D6">0:00</text>
+<text x="1540" y="754" text-anchor="end" font-family="Carlito" font-size="26" fill="#B9C3D6">YouTube ↗</text></svg>

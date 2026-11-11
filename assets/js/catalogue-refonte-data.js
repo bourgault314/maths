@@ -256,6 +256,15 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Défi du Portrait chinois",
       "cardDescription": "Douze « Si j’étais… » pour apprendre à se connaître, puis un retour réflexif avec une échelle de ressenti."
     },
+    "cps/module-attention.html": {
+      "primaryNotion": "competences-psychosociales",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["cps", "attention", "neurosciences", "distracteurs", "concentration", "diaporama", "imprimer", "college"],
+      "thumbnail": "cps/assets/module-attention/carte-catalogue.webp",
+      "cardTitle": "Module Attention",
+      "cardDescription": "Deux séances de 55 min pour comprendre l’attention et les distracteurs : diaporamas, fiches à coller, feuilles de route."
+    },
     "cps/quiz-decouverte.html": {
       "primaryNotion": "competences-psychosociales",
       "primaryGroup": "activites",
@@ -7486,6 +7495,46 @@ window.MATHSGO_CATALOGUE = {
         "besoins",
         "forces de caractère",
         "vie de classe",
+        "collège"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "cps-module-attention-html",
+      "title": "Module Attention",
+      "description": "Deux séances de neurosciences pour comprendre ce qu’est l’attention, ce qui la fait perdre et comment la garder : diaporamas à projeter, fiches à coller et feuilles de route pour la co-animation.",
+      "path": "cps/module-attention.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "competences-psychosociales"
+      ],
+      "uses": [
+        "projeter",
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "attention",
+        "concentration",
+        "distracteurs",
+        "neurosciences",
+        "apprendre à apprendre",
+        "gorille",
+        "ATOLE",
+        "Lachaux",
+        "CPS",
+        "vie de classe",
+        "diaporama",
         "collège"
       ],
       "kind": "document",

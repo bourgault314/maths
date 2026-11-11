@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>Module Attention — le diaporama en ligne | maths&amp;go</title>
+<meta name="description" content="Les diaporamas du module Attention, à projeter directement depuis le navigateur : on avance au clic ou avec les flèches.">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<style>
+  :root{--navy:#1D2B4F;--corail:#EF6F6C;--fond:#eef2f7}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--fond);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--navy)}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px}
+  .haut{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));display:flex;align-items:center;gap:10px;min-height:44px}
+  .haut a{min-width:44px;min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 12px 0 8px;border:1px solid #d8e4ef;border-radius:999px;background:#fff;color:var(--navy);font-weight:800;text-decoration:none;font-size:.92rem}
+  .haut a svg{width:20px;height:20px}
+  .haut h1{margin:0;font-size:1rem;font-weight:800;line-height:1.2}
+  .cadre{position:relative;width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));aspect-ratio:16/9;background:#fff;border-radius:14px;box-shadow:0 10px 26px rgba(15,23,42,.10);overflow:hidden;cursor:pointer;user-select:none}
+  .cadre>img{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .media{position:absolute;display:none}
+  .media.on{display:block}
+  a.media{cursor:pointer;border-radius:1.2%}
+  a.media:focus-visible{outline:4px solid var(--corail);outline-offset:2px}
+  video.media{background:#141B2D;object-fit:contain;cursor:default}
+  .barre{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));display:flex;align-items:center;justify-content:center;gap:10px}
+  .barre button{min-height:44px;min-width:44px;padding:0 16px;border:1px solid #c9d6e4;border-radius:10px;background:#fff;color:var(--navy);font:inherit;font-weight:800;cursor:pointer}
+  .barre button:disabled{opacity:.4;cursor:default}
+  .barre .num{min-width:72px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+  .barre .plein{margin-left:auto}
+  .barre .notes{margin-right:auto}
+  .barre .notes[aria-pressed="true"]{background:#fff4e8;border-color:#f58220}
+  .note{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));background:#fff;border:1px solid #d8e4ef;border-radius:12px;padding:10px 14px;font-size:.92rem;line-height:1.45;white-space:pre-line;max-height:22vh;overflow:auto}
+  .note[hidden]{display:none}
+  :fullscreen body{padding:0;gap:0;background:#000}
+  :fullscreen .cadre{width:min(100vw,calc(100vh * 16 / 9));border-radius:0;box-shadow:none}
+  :fullscreen .barre,:fullscreen .haut,:fullscreen .note{display:none}
+  @media (max-width:600px){ .barre button{padding:0 10px} .barre .txt{display:none} .haut h1{font-size:.9rem} }
+</style>
+<script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
+</head>
+<body>
+<div class="haut">
+  <a href="module-attention.html" title="Revenir au module Attention"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Module Attention</a>
+  <h1 id="titre"></h1>
+</div>
+<div class="cadre" id="cadre"><img id="diapo" alt=""></div>
+<div class="barre">
+  <button id="notes" class="notes" type="button" aria-pressed="false" title="Notes des animateurs (N)">Notes</button>
+  <button id="prec" type="button" aria-label="Diapo précédente">◀&#xFE0E;<span class="txt"> Précédent</span></button>
+  <span class="num" id="num" aria-live="polite"></span>
+  <button id="suiv" type="button" aria-label="Diapo suivante"><span class="txt">Suivant </span>▶&#xFE0E;</button>
+  <button id="plein" class="plein" type="button" title="Plein écran (F)">⛶</button>
+</div>
+<div class="note" id="note" hidden></div>
+<script>
+(function(){
+  const SEANCES = {"1":{"titre":"Faire attention, c’est quoi ?","count":37,"media":[{"slide":22,"type":"youtube","url":"https://www.youtube.com/watch?v=-VnhNf9DeQA","x":1.33,"y":1.35,"w":10.67,"h":5.7}],"notes":["DURÉE : 55 min, dont 50 programmées et 5 de marge. A mène le diaporama ; B tient le tableau (mots du début, puis CIBLE et INTENTION au fur et à mesure, scores), chronomètre et circule.\nAnnonce (A) : « Aujourd'hui, on fait des expériences sur votre cerveau. À la fin, vous saurez ce que veut dire \"faire attention\", et pourquoi c'est la porte d'entrée de tout ce qu'on apprend. »","4 min. On fait écrire AVANT pour confronter à la fin. Les ardoises seront effacées : c'est le relevé du tableau qu'on relira. B relève au tableau, dans un coin qu'on n'efface pas, 5-6 mots par question (souvent : se taire, écouter, être calme, regarder le prof) et compte les OUI à la question 3.\nLa question 3 est le « pari » : posée maintenant, loin de la vidéo, elle ne met pas les élèves en alerte pour l'expérience 4. Presque tous répondent oui… et la vidéo leur donnera tort.","8 min. Une image = 30 s d'ardoise, on lève les ardoises, puis la diapo de correction juste après. La 1re question est un piège voulu : pour le conducteur et l'élève, beaucoup répondent NON… puis ils écrivent eux-mêmes à quoi ils font attention. C'est ce conflit qui fait comprendre qu'on fait TOUJOURS attention à quelque chose.","Attendu : à son TÉLÉPHONE (sa tête est penchée, ses yeux regardent le téléphone). Il devrait l'être à la ROUTE : un enfant traverse. Il n'est pas « inattentif » : il fait attention… à la mauvaise cible.\n30 s d'ardoise, ardoises levées, puis diapo suivante (correction).","C'est LE moment clé : beaucoup ont répondu « non, il n'est pas attentif ». Or il fait attention… à son téléphone. Le pointillé = « le fil de l'attention », il va des yeux à la cible. Pour les images suivantes, ils appliquent l'idée.","Attendu : au PANIER. C'est la bonne cible : son regard, sa tête et ses bras vont vers le panier.\n30 s d'ardoise, ardoises levées, puis diapo suivante (correction).","Correction rapide.","Attendu : à l'ÉCRAN, au jeu. Il fait TRÈS attention (il tire même la langue). Bonne cible… pour jouer. Débat possible : et si c'était l'heure des devoirs ? Message important : vous SAVEZ faire attention.\n30 s d'ardoise, ardoises levées, puis diapo suivante (correction).","Message important : vous SAVEZ faire attention. Débat possible : et si c'était l'heure des devoirs ?","Attendu : à l'OISEAU dehors. Il devrait écouter le professeur et regarder le tableau. Il est calme, il ne dérange personne… et pourtant il risque de manquer l'explication.\n30 s d'ardoise, ardoises levées, puis diapo suivante (correction).","Correction rapide.","On construit la définition morceau par morceau : elle grandit à chaque expérience. B écrit au tableau : « Faire attention, c'est : 1. choisir une CIBLE ».","9 min. Deux essais à comparer. Au 1er dessin on dit SEULEMENT « regardez bien » : aucune mission précise de recherche.","10 secondes, puis diapo suivante.","B compte au tableau : combien ont écrit 4 ? combien de réponses sûres ?","Pas d'explication maintenant. B note : « Dessin 1 : … élèves ont trouvé 4 ». On compare après le dessin 2.","Cette fois, on donne une mission précise AVANT de montrer. Même durée, même type de question : ce qui change surtout, c'est qu'on sait ce qu'on cherche.","10 secondes, puis diapo suivante.","B compte : combien ont trouvé 5 ? combien de réponses sûres ?","B remplit les deux nombres au tableau (ou on les dit). Normalement : peu au dessin 1, presque tous au dessin 2. Demander « Qu'est-ce qui a changé ? » sans dire que c'était plus facile → on savait ce qu'on cherchait. Diapo suivante : on connaissait sa mission, c'est l'INTENTION.","La cible, c'est CE QUE je regarde ; la mission, c'est CE QUE JE DOIS EN FAIRE. Même cible, deux missions : on ne voit pas les mêmes choses. On a parlé de « mission » pour comprendre ; on retient le vrai mot : l'INTENTION. B complète au tableau : « 2. savoir ce que je dois en faire : mon INTENTION ».","8 min. On a les deux premiers morceaux de la définition (la cible, l'intention) : la vidéo donne le troisième. Cible = le ballon des blanches, intention = compter… et tout le reste ? Avant de lancer, sans rien nommer : « Si tu penses connaître cette vidéo, ne dis rien et compte quand même. » Cette version (Daniel Simons, 2010) a été faite pour ceux qui connaissent la première : même ceux qui attendent une surprise ratent presque tous les deux autres changements.","Cliquer sur le lecteur : la vidéo s'ouvre sur YouTube (Internet nécessaire). Lien : https://www.youtube.com/watch?v=-VnhNf9DeQA\nLancer la vidéo (2 min 17). Elle donne la consigne, puis le nombre de passes, puis demande « N'avez-vous rien remarqué d'étrange ? » : METTRE EN PAUSE à ce moment-là, AVANT les révélations. Recueillir ce que chacun a remarqué (mains levées, sans rien nommer), puis laisser finir : la vidéo montre ce qu'il fallait voir.","Mains levées pour chacun des 3. Puis : « Qui avait écrit OUI à la question 3 ? » (B a noté le nombre au tableau au début). Nom savant si un élève le demande : la cécité d'inattention. Cible = le ballon de l'équipe blanche ; intention = compter ; le reste a été mis de côté : c'est le 3ᵉ morceau de la définition.","B complète : « 3. mettre le RESTE de côté ». La définition est complète : on la relit ensemble. Le schéma est celui de la fiche à coller. En classe : si je regarde mon téléphone ou la fenêtre, je risque de ne pas voir ce qui se passe au tableau. Ce n'est pas de la mauvaise volonté, c'est le cerveau.","6 min. On passe des expériences à la classe : la définition sert à quelque chose dès le prochain cours.","1 min 30 par consigne environ, ardoises levées après chacune ou à la fin. On accepte les formulations proches.","Faire remarquer que « écoute » tout seul ne dit pas l'intention : écouter POUR quoi faire ? En cours, l'adulte donne la mission ; l'élève peut aussi se la demander. C'est le point 4 de l'attitude d'attention, qu'on voit juste après.","7 min avec l'attitude d'attention. Le cœur du lien avec la classe : le regard et la posture.","Attendu : le 2. Indices : le regard sur le tableau, le corps tourné vers le tableau, assise droite, rien dans les mains. Débat sur le 3 : il a l'air de faire attention… peut-on le savoir ? Que ne peut-on pas savoir en regardant seulement ? (ce qui se passe dans la tête)","À dire à l'oral : 1 allongé sur sa table, il pense à sa console ; 2 regard et corps tournés vers le tableau : tout indique qu'elle est sur la bonne cible ; 3 son regard est sur le tableau… mais sa tête est au foot ; 4 tourné vers son voisin, il bavarde (sa cible, c'est la discussion).\nPourquoi la posture compte (Lachaux) : quand l'attention part, le regard et le corps partent avec elle. Garder le regard et le corps vers la cible protège l'attention. Mais l'élève 3 montre qu'on peut être bien assis et ailleurs : ce qui se passe dans la tête, on le travaille la semaine prochaine.","Faire le lien avec les mots du début : « être calme », « se taire »… ça ne suffit pas.","C'est une ROUTINE de classe : un signal court et toujours le même. Quand un adulte dit « Attitude d'attention ! », les élèves prennent l'attitude en quelques secondes. Les 3 premiers points reprennent l'expérience 5 (regard, posture, mains). Le 4e reprend l'expérience 2 (l'intention) : la posture seule ne suffit pas, il faut savoir ce qu'on attend d'eux. L'adulte donne donc TOUJOURS la mission juste après (« écoutez la consigne », « regardez l'exemple »).\nOn parle d'ATTITUDE (et pas seulement de position) parce qu'elle comprend aussi ce qui se passe dans la tête.\nÇa ressemble à des routines connues (par exemple SLANT, du livre Teach Like a Champion de Doug Lemov), avec en plus le point 4 (l'intention) tiré de Lachaux. Ne pas l'imposer de façon rigide à un élève qui écoute mieux en bougeant un peu : le but est la tête sur la cible, pas l'immobilité.\nOn la fait prendre à toute la classe 20 s, en silence, le regard sur un point du tableau. Proposition : toute l'équipe utilise le même signal dans toutes les matières.","1 min, en une phrase par carte. Les 4 piliers de l'apprentissage (Stanislas Dehaene) : attention, engagement actif, retour sur l'erreur, consolidation. Plasticité : le cerveau peut apprendre toute la vie ; on s'entraîne à orienter et à ramener son attention.","5 min avec le collage. On distribue la fiche (même texte, le schéma et l'attitude d'attention). Les élèves la collent ; un volontaire lit chaque phrase.","2 min. Comparer avec les mots notés au début : il manquait la cible et l'intention. Les phrases « je perds mon attention quand… » servent d'entrée à la séance 2.","Fin."]},"2":{"titre":"Qu’est-ce qui nous distrait ?","count":36,"media":[{"slide":7,"type":"youtube","url":"https://www.youtube.com/watch?v=218RAvd4e7g","x":1.33,"y":1.35,"w":10.67,"h":5.7},{"slide":23,"type":"video","src":"pensoscope.mp4","x":0.6,"y":1.4,"w":7.6,"h":4.275},{"slide":24,"type":"video","src":"pensoscope.mp4","x":0.6,"y":1.4,"w":7.6,"h":4.275}],"notes":["DURÉE : 55 min, dont 50 programmées et 5 de marge. A mène le diaporama ; B tient le tableau (tri des distracteurs, scores des groupes), lit le texte de l'expérience 3 et circule.\nLes élèves gardent leur cahier FERMÉ pour le rappel : on le rouvre ensuite.","5 min. Rappel SANS le cahier : c'est l'effort de se souvenir qui fait retenir (on le dit aux élèves). 5 réponses sur l'ardoise, puis on corrige : chaque clic fait apparaître la réponse suivante.","Réponse 1.","Réponse 2.","Réponse 3.","Réponse 4.","Faire rouvrir le cahier pour vérifier sur la fiche collée.","Cliquer sur le lecteur : la vidéo s'ouvre sur YouTube (Internet nécessaire). Lien : https://www.youtube.com/watch?v=218RAvd4e7g\n4 min (2 min 46 de vidéo, puis une seule question). EN RÉSERVE : à couper en premier si on manque de temps. Un nouvel exemple de « on ne peut pas tout voir » : la vidéo donne elle-même la consigne et les réponses. Demander ensuite : « Combien de changements avez-vous vus ? »","3 min. B relève 6-8 réponses au tableau en DEUX colonnes, SANS donner les titres (ce qui vient de l'extérieur à gauche, de l'intérieur de soi à droite). Les élèves devineront le classement avec la diapo suivante.","4 min avec la diapo suivante. Puis B donne les titres des deux colonnes du tableau : EXTÉRIEUR / INTÉRIEUR. Les mots « externe / interne » viennent après, à partir de leurs exemples.","D (faim) et H (peur) : une sensation du corps et une émotion, elles viennent de l'intérieur. Accepter un débat : le téléphone qui vibre est externe, mais « j'ai envie de regarder mon téléphone » est interne.","7 min. A fait défiler les 7 diapos suivantes assez vite (environ 2 secondes chacune), sans rien dire. Chaque intrus n'apparaît que sur une seule diapo.","2 secondes, puis clic.","2 secondes, puis clic.","2 secondes, puis clic.","2 secondes, puis clic.","2 secondes, puis clic.","2 secondes, puis clic.","Dernière image : passer à la question.","Demander séparément : « As-tu bougé les yeux ? As-tu remarqué quelque chose tout en fixant l'étoile ? » Ce qui apparaît peut attirer l'attention même sans bouger les yeux. Ce n'est pas une faute : c'est le système d'alerte du cerveau (diapo d'après).","Réponses.","Exemples de classe : quelqu'un passe dans la coursive, une règle tombe, on se retourne : c'est l'alerte. On ne peut pas l'éteindre, mais on peut ramener son attention vite. « Système d'alerte » est un mot simplifié (Lachaux) pour la capture automatique de l'attention.","8 min. Deux tours de 30 secondes. Silence complet dans la classe.","Lancer la vidéo (30 s). Puis : qui a réussi à ne penser qu'au point du début à la fin ? (souvent peu). Qu'est-ce qui s'est passé dans votre tête ? Une petite voix (« j'ai faim », « c'est long ») ou une image ?","Relancer la même vidéo. Quelques volontaires montrent leur ardoise ; on ne demande pas le contenu des pensées. Le trait est un repère, pas une note. Message : une pensée arrive toute seule ; l'important est de la REMARQUER (le trait), puis de revenir au point.","Image possible : la pensée est comme un chiot qui part dans tous les sens ; on ne le gronde pas, on le ramène.","12 min. Deux groupes au hasard (par exemple un rang sur deux), à peu près le même nombre d'élèves : on note les effectifs au tableau. « Groupe 1 / groupe 2 » pour ne pas confondre avec les adultes A et B.","Idée reprise d'une autre proposition reçue : comparer deux groupes. Le groupe 1 sert de comparaison.","LE TEXTE À LIRE EST AUSSI SUR LA FEUILLE DE ROUTE (encadré). Laisser le groupe 2 commencer à copier (15 s), puis l'adulte B (ou A) lit LENTEMENT, une seule fois :\n« Les étoiles brillent dans le ciel chaque nuit. Elles sont si loin de nous que leur lumière met des années à nous atteindre. Certaines étoiles que nous voyons aujourd'hui sont peut-être déjà éteintes. Le ciel nous raconte toujours l'histoire du passé. »\nPuis tout le monde pose le stylo. Le groupe 2 N'EFFACE PAS sa copie : on la regarde au bilan. Les réponses aux 3 questions s'écrivent dans le cahier, pour tout le monde.","Une réponse courte par question.","B compte à main levée dans chaque groupe et écrit « …… sur …… » (effectif du groupe). Normalement le groupe 1 réussit mieux. Si les résultats sont proches, le dire honnêtement : notre essai ne montre pas de grande différence aujourd'hui. Demander au groupe 2 ce qu'il a ressenti : on passe de l'un à l'autre, on perd des morceaux, et la copie a des erreurs (on la regarde).","Pour l'équipe aussi : on ne parle pas d'autre chose pendant que les élèves copient.","7 min avec le collage et le plan. On distribue la fiche, on la colle, un volontaire lit chaque phrase.","Les exemples restent au tableau ; chaque élève écrit les siens. Quelques volontaires lisent leur plan.","Récapitulatif des deux séances. À afficher en classe si l'équipe le souhaite.","Fin : rappeler le signal commun de l'équipe."]}};
+  const BASE = 'assets/module-attention/';
+  const s = new URLSearchParams(location.search).get('seance') === '2' ? 2 : 1;
+  const D = SEANCES[s];
+  document.title = 'Séance ' + s + ' · ' + D.titre + ' — Module Attention | maths&go';
+  document.getElementById('titre').textContent = 'Séance ' + s + ' · ' + D.titre;
+  const cadre = document.getElementById('cadre'), img = document.getElementById('diapo');
+  const note = document.getElementById('note'), btnNotes = document.getElementById('notes');
+  const src = k => BASE + 'diapos/s' + s + '/' + String(k + 1).padStart(2, '0') + '.webp';
+  /* les vidéos : la nôtre (pensoscope) se joue dans la diapo ; celles des autres s'ouvrent sur YouTube */
+  const pc = (v, t) => (100 * v / t) + '%';
+  const medias = D.media.map(m => {
+    let el;
+    if (m.type === 'youtube') {
+      el = document.createElement('a'); el.href = m.url; el.target = '_blank'; el.rel = 'noopener';
+      el.setAttribute('aria-label', 'Lancer la vidéo (elle s’ouvre sur YouTube)');
+    } else {
+      el = document.createElement('video'); el.src = BASE + m.src; el.controls = true; el.preload = 'none';
+      el.poster = BASE + 'pensoscope-couverture.webp'; el.playsInline = true;
+    }
+    el.className = 'media';
+    Object.assign(el.style, { left: pc(m.x, 13.333), top: pc(m.y, 7.5), width: pc(m.w, 13.333), height: pc(m.h, 7.5) });
+    cadre.appendChild(el); return { slide: m.slide, el };
+  });
+  let i = 0;
+  function montrer(n){
+    i = Math.max(0, Math.min(D.count - 1, n));
+    img.src = src(i); img.alt = 'Diapo ' + (i + 1);
+    medias.forEach(m => { const on = m.slide === i; m.el.classList.toggle('on', on); if (!on && m.el.pause) m.el.pause(); });
+    document.getElementById('num').textContent = (i + 1) + ' / ' + D.count;
+    document.getElementById('prec').disabled = i === 0;
+    document.getElementById('suiv').disabled = i === D.count - 1;
+    note.textContent = D.notes[i] || '';
+    if (i + 1 < D.count) new Image().src = src(i + 1);
+    try { history.replaceState(null, '', '?seance=' + s + '#' + (i + 1)); } catch (e) {}
+  }
+  document.getElementById('prec').onclick = () => montrer(i - 1);
+  document.getElementById('suiv').onclick = () => montrer(i + 1);
+  /* même comportement que le diaporama SPLAT! : un clic avance ; en plein écran, au doigt, le quart gauche recule */
+  let pointeur = 'mouse';
+  cadre.addEventListener('pointerdown', ev => { pointeur = ev.pointerType || 'mouse'; });
+  cadre.addEventListener('click', ev => { if (ev.target.closest('a,button,video')) return;
+    const r = cadre.getBoundingClientRect();
+    if (document.fullscreenElement && pointeur !== 'mouse' && ev.clientX < r.left + r.width / 4) { montrer(i - 1); return; }
+    montrer(i + 1); });
+  function basculerNotes(){ note.hidden = !note.hidden; btnNotes.setAttribute('aria-pressed', String(!note.hidden)); }
+  btnNotes.onclick = basculerNotes;
+  document.addEventListener('keydown', ev => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.target && ev.target.closest && ev.target.closest('video')) return;
+    if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { ev.preventDefault(); montrer(i + 1); return; }
+    if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { ev.preventDefault(); montrer(i - 1); return; }
+    if (ev.key === 'Home') { montrer(0); return; }
+    if (ev.key === 'End') { montrer(D.count - 1); return; }
+    if (ev.key === 'f' || ev.key === 'F') { pleinEcran(); return; }
+    if (ev.key === 'n' || ev.key === 'N') { basculerNotes(); return; }
+    if (ev.target && ev.target.closest && ev.target.closest('a,button')) return;
+    if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); montrer(i + 1); }
+  });
+  function pleinEcran(){ if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); }
+  if (!document.fullscreenEnabled) document.getElementById('plein').hidden = true;
+  document.getElementById('plein').onclick = pleinEcran;
+  const depart = parseInt(location.hash.slice(1), 10);
+  montrer(Number.isFinite(depart) ? depart - 1 : 0);
+})();
+</script>
+</body>
+</html>
