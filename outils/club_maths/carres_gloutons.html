@@ -833,7 +833,7 @@
 
   <!-- Le cadeau du coffre d'or de Coffres magiques (09/11/2026) : le parcours de l'élève, son
        suivi de classe et les quatre Gloubi. Sans « ?cadeau= » et sans code, rien ne change. -->
-  <script src="../../assets/js/coffres-parcours.js?v=20261109-1"></script>
+  <script src="../../assets/js/coffres-parcours.js?v=20261111-1"></script>
   <script src="../../assets/js/coffres-suivi.js?v=20261031-1"></script>
   <script src="../../assets/js/gloubi-ia.js?v=20261109-1"></script>
   <script>
@@ -1254,7 +1254,7 @@
 
       nextRound.addEventListener("click", () => {
         if (cadeau && matchOver) {
-          cadeau.match += 1;
+          cadeau.match = cadeau.suivant || cadeau.match + 1;
           poserEnTeteCadeau();
         }
         if (matchOver) {
@@ -1360,10 +1360,12 @@
       const GLOUBI = window.MathsGoGloubi || null;
       const PARCOURS_COFFRES = window.MathsGoCoffresParcours || null;
       const niveauCadeau = Number(new URLSearchParams(window.location.search).get("cadeau"));
+      // `surParcours` : le serveur a répondu après les six secondes d'attente
+      // (relecture Codex du 11/11/2026) — on relit ce qui reste à jouer.
       const SUIVI_COFFRES = GLOUBI && PARCOURS_COFFRES && window.MathsGoCoffresSuivi && [1, 2, 3].includes(niveauCadeau)
-        ? window.MathsGoCoffresSuivi.creer({}) : null;
+        ? window.MathsGoCoffresSuivi.creer({ surParcours: () => relireCadeau() }) : null;
       const cadeau = SUIVI_COFFRES && (SUIVI_COFFRES.actif() || SUIVI_COFFRES.attente())
-        ? { niveau: niveauCadeau, cran: 1, match: 1, pret: false, bilan: { gagne: 0, nul: 0, perdu: 0 } } : null;
+        ? { niveau: niveauCadeau, cran: 1, match: 1, pret: false, termine: false, bilan: { gagne: 0, nul: 0, perdu: 0 } } : null;
       const ADRESSE_COFFRES = "../calcul_mental/coffres_magiques_solo.html";
       const PHRASES_GLOUBI = {
         distrait: "Gloubi distrait : il mange les carrés, mais il oublie de se méfier.",
@@ -1393,14 +1395,20 @@
       function finDeMatchCadeau(outcome) {
         const issue = outcome === PLAYER ? "gagne" : outcome === AI ? "perdu" : "nul";
         cadeau.bilan[issue] += 1;
-        SUIVI_COFFRES.ecrire((P, avant) => P.noterMatchGloubi(avant, cadeau.niveau, issue));
+        // Le Gloubi vraiment affronté (cadeau.cran) : le suivant se calcule à
+        // partir de lui, même si un autre onglet a joué entre-temps.
+        const cranJoue = cadeau.cran;
+        SUIVI_COFFRES.ecrire((P, avant) => P.noterMatchGloubi(avant, cadeau.niveau, issue, cranJoue));
         const parcours = SUIVI_COFFRES.lire();
         const restants = PARCOURS_COFFRES.matchsRestants(parcours, cadeau.niveau);
         cadeau.cran = PARCOURS_COFFRES.cranGloubi(parcours, cadeau.niveau);
+        // Le numéro du prochain match vient du parcours (deux onglets comptent
+        // chacun leur match).
+        cadeau.suivant = PARCOURS_COFFRES.MATCHS_GLOUBI - restants + 1;
         const total = `Total du match : ${playerMatchSquares} à ${aiMatchSquares}.`;
         if (restants > 0) {
           resultText.textContent = `${total} ${restants > 1 ? `Il te reste ${restants} matchs` : "Il te reste 1 match"} contre Gloubi.`;
-          nextRound.textContent = `Jouer le match ${cadeau.match + 1}`;
+          nextRound.textContent = `Jouer le match ${cadeau.suivant}`;
           nextRound.hidden = false;
           statusText.textContent = `Match ${cadeau.match} terminé.`;
           return;
@@ -1422,6 +1430,7 @@
       // Plus de match à jouer (déjà joués ailleurs, ou pas de coffre d'or) : on
       // le dit, et on rend l'élève à ses coffres.
       function cadeauTermine() {
+        cadeau.termine = true;
         started = false;
         overlay.hidden = true;
         gameOver = true;
@@ -1432,6 +1441,24 @@
         document.querySelector(".result-actions a").className = "primary";
         result.hidden = false;
         statusText.textContent = "Pas de match en attente.";
+      }
+
+      // Le parcours a changé après la préparation (le serveur a répondu tard,
+      // ou une fusion) : avant le premier coup seulement, on relit le Gloubi et
+      // le numéro du match ; si l'écran disait « joués » à tort, on recharge
+      // la page (elle relit la case, désormais à jour).
+      function relireCadeau() {
+        if (!cadeau || !cadeau.pret || !SUIVI_COFFRES.actif()) return;
+        const parcours = SUIVI_COFFRES.lire();
+        const restants = PARCOURS_COFFRES.matchsRestants(parcours, cadeau.niveau);
+        if (cadeau.termine) {
+          if (restants > 0) window.location.reload();
+          return;
+        }
+        if (started || restants <= 0) return;
+        cadeau.match = PARCOURS_COFFRES.MATCHS_GLOUBI - restants + 1;
+        cadeau.cran = PARCOURS_COFFRES.cranGloubi(parcours, cadeau.niveau);
+        poserEnTeteCadeau();
       }
 
       function preparerCadeau() {

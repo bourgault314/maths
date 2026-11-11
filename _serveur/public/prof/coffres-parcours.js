@@ -88,7 +88,13 @@
   // « version_min » 2) : elle ne connaît pas le journal et l'effacerait en
   // renvoyant le parcours ; elle garde son travail sur l'appareil, et la page
   // rechargée le renvoie, fusionné.
-  const VERSION = 2;
+  // Version 3 (lot « le chemin des coffres et le cadeau Gloubi », relecture
+  // Codex du 11/11/2026) : `gloubi` et `cran` par niveau. Une page de version 2
+  // ne les connaît pas : en renvoyant le parcours après un conflit, elle les
+  // effacerait (et rendrait des matchs déjà joués). Le serveur refuse donc son
+  // envoi (lib/applis.php, « version_min » 3) ; elle garde son travail sur
+  // l'appareil, et la page rechargée le renvoie, fusionné.
+  const VERSION = 3;
   const APPLI = "coffres";
   const SUIVI_URL = "https://suivi.mathsgo.re";
 
@@ -430,7 +436,21 @@
     });
     const dernier = dateLaPlusRecente(a.dernier || null, b.dernier || null);
     if (dernier) fusion.dernier = dernier;
-    const partie = meilleurePartie(a.partie || null, b.partie || null);
+    // Une partie ne survit que du côté qui connaît TOUS les trésors de son
+    // niveau : la copie qui en a moins est d'avant un trésor gagné ailleurs, et
+    // sa partie a fini en trésor (relecture Codex du 11/11/2026 — sinon une
+    // vieille copie ressuscitait une partie terminée, et ses clés se
+    // recomptaient en un second trésor). Le prix, accepté : une partie
+    // commencée hors ligne pendant qu'un autre appareil gagnait un trésor du
+    // même niveau repart à zéro (ses clés restent dans les cumuls).
+    const aJour = (partie, cote) => {
+      if (!partie) return null;
+      const cle = String(partie.niveau);
+      const ici = cote.niveaux[cle] ? cote.niveaux[cle].tresors : 0;
+      const tous = fusion.niveaux[cle] ? fusion.niveaux[cle].tresors : 0;
+      return ici >= tous ? partie : null;
+    };
+    const partie = meilleurePartie(aJour(a.partie || null, a), aJour(b.partie || null, b));
     if (partie) fusion.partie = cloner(partie);
     // Le journal (lot S1) : l'union des jours, le plus grand de chaque
     // colonne le même jour, et le plus ancien `depuis`.
@@ -592,15 +612,19 @@
 
   // Un match contre Gloubi est FINI (deux manches) : un match joué de plus
   // dans ce niveau et le Gloubi du suivant. `issue` : « gagne », « perdu » ou
-  // « nul » (pour l'élève). Rien ne bouge sans match restant. Un match
+  // « nul » (pour l'élève). `cranJoue` : le Gloubi vraiment affronté (1 à 4) —
+  // le suivant se calcule à partir de LUI, pas du cran rangé entre-temps par
+  // un autre onglet (relecture Codex du 11/11/2026). Rien ne bouge sans match
+  // restant. Un match
   // abandonné en route n'est jamais noté : il se rejoue en entier. Ce n'est
   // pas un jour de travail (le journal ne bouge pas, la partie non plus).
-  function noterMatchGloubi(parcours, niveau, issue) {
+  function noterMatchGloubi(parcours, niveau, issue, cranJoue) {
     const p = normaliser(parcours);
     const numero = entier(niveau, 0, NOMBRE_NIVEAUX + 1, 0);
     if (!niveauValide(numero) || matchsRestants(p, numero) <= 0) return p;
     const n = p.niveaux[String(numero)];
-    const cran = n.gloubi ? n.cran : cranDeDepart(numero);
+    const joue = entier(cranJoue, 1, CRANS_GLOUBI.length, 0);
+    const cran = joue ? bornerCran(numero, joue) : n.gloubi ? n.cran : cranDeDepart(numero);
     n.gloubi = (n.gloubi || 0) + 1;
     n.cran = cranSuivant(numero, cran, issue === "gagne" || issue === "perdu" ? issue : "nul");
     return p;

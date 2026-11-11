@@ -2124,7 +2124,7 @@
   <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
-  <script src="../../assets/js/coffres-parcours.js?v=20261109-1"></script>
+  <script src="../../assets/js/coffres-parcours.js?v=20261111-1"></script>
   <script src="../../assets/js/coffres-suivi.js?v=20261031-1"></script>
   <script>
     (() => {
@@ -2688,7 +2688,19 @@
 
       // Jouer au niveau choisi, avec les opérations du moment : le cours au
       // premier passage, sinon droit au plateau.
+      // On quitte le plateau (« ← Coffres », un coffre, Gloubi, l'entraînement
+      // libre) : le délai de 0,75 s d'une réussite ne doit plus rien faire
+      // (relecture Codex du 11/11/2026 — sinon la dixième clé d'un entraînement
+      // libre ouvrait, une fois revenu dans le chemin, un VRAI trésor). Une
+      // partie du chemin arrêtée à dix clés garde ses dix clés dans le
+      // parcours ; « Ouvrir le trésor » la termine.
+      function arreterAttente() {
+        if (pendingTimer) window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
+
       function jouerAuNiveau(niveau) {
+        arreterAttente();
         libre = false;
         dialogs.close(chemin, { restoreFocus: false });
         dialogs.close(tresor, { restoreFocus: false });
@@ -2702,9 +2714,21 @@
       }
 
       function reprendre(partie) {
+        arreterAttente();
         const depuisLibre = libre;
         libre = false;
         dialogs.close(chemin, { restoreFocus: false });
+        // Dix clés déjà gagnées (on avait quitté avant « Ouvrir le trésor ») :
+        // le trésor s'ouvre, sans plateau (il n'y a plus de coffre à jouer).
+        if (partie.cles >= GOAL) {
+          level = gameLevel = partie.niveau;
+          gameStarted = true;
+          keys = GOAL;
+          syncLevelUi();
+          updateCounter();
+          complete();
+          return;
+        }
         // Le plateau de la partie est encore là (retour par « ← Coffres ») : on y revient
         // — jamais celui d'un entraînement libre.
         if (!depuisLibre && gameStarted && !locked && keys === partie.cles && gameLevel === partie.niveau) {
@@ -2716,6 +2740,7 @@
       }
 
       function allerVersGloubi(niveau) {
+        arreterAttente();
         window.location.assign(`${ADRESSE_GLOUBI}?cadeau=${niveau}`);
       }
 
@@ -2726,6 +2751,7 @@
       }
 
       function ouvrirChemin() {
+        arreterAttente();
         const reglages = reglagesClasse();
         const c = PARCOURS.cheminDesCoffres(parcoursEleve(), reglages);
         const opsDuChemin = operationsOuvertes();
@@ -2753,7 +2779,7 @@
         const ouverts = c.niveaux.filter(n => n.debloque).map(n => n.numero);
         let jouer;
         if (partie) {
-          jouer = [`Reprendre · ${partie.cles} clé${partie.cles > 1 ? "s" : ""} sur ${GOAL}`, () => reprendre(partie)];
+          jouer = [partie.cles >= GOAL ? "Ouvrir le trésor" : `Reprendre · ${partie.cles} clé${partie.cles > 1 ? "s" : ""} sur ${GOAL}`, () => reprendre(partie)];
         } else if (c.prochain) {
           const nom = NOMS_COFFRE[c.prochain.coffre];
           jouer = [`Gagner le ${nom}${matchs ? ` · niveau ${c.prochain.niveau}` : ""}`, () => jouerAuNiveau(c.prochain.niveau)];

@@ -209,3 +209,21 @@ test("le serveur : gloubi et cran sont déclarés, et le parcours de référence
   assert.equal(reference.niveaux["1"].cran, 2);
   memeJSON(P.pourServeur(reference), reference);
 });
+
+// Relecture Codex du 11/11/2026 : deux onglets jouent chacun contre le distrait ;
+// le second ne doit pas appliquer sa victoire au cran rangé entre-temps.
+test("Gloubi : le cran suivant part du Gloubi VRAIMENT affronté (deux onglets)", () => {
+  const or = avecTresors(3);
+  const onglet1 = P.noterMatchGloubi(or, 1, "gagne", 1);
+  assert.equal(onglet1.niveaux["1"].cran, 2);
+  const onglet2 = P.noterMatchGloubi(onglet1, 1, "gagne", 1);
+  assert.equal(onglet2.niveaux["1"].gloubi, 2, "deux matchs joués");
+  assert.equal(onglet2.niveaux["1"].cran, 2, "gagné contre le distrait : le gourmand, pas le malin");
+  assert.equal(P.noterMatchGloubi(onglet1, 1, "gagne").niveaux["1"].cran, 3, "sans le cran joué : l'ancien comportement (cran rangé)");
+  assert.equal(P.noterMatchGloubi(avecTresors(0, 0, 3), 3, "perdu", 1).niveaux["3"].cran, 3, "niveau 3 : jamais sous le malin, même avec un cran joué illisible");
+});
+
+test("version 3 : gloubi et cran exigent une page qui les connaît (le serveur refuse la version 2)", () => {
+  assert.equal(P.VERSION, 3);
+  assert.match(readFileSync(new URL("../_serveur/public/lib/applis.php", import.meta.url), "utf8"), /'gloubi', 'cran'\],[\s\S]*?'version_min' => 3,\s*\],\s*\/\/ Anzan/);
+});

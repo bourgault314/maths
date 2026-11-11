@@ -157,7 +157,10 @@ const CATALOGUE_APPLIS = [
         // page de version 1 effacerait le journal en renvoyant la progression,
         // son envoi est refusé (400). SI UN JOUR ON REVIENT EN ARRIÈRE sur le
         // moteur, il faut aussi revenir en arrière ici.
-        'version_min' => 2,
+        // Version 3 (lot « coffres-chemin-gloubi », 11/11/2026) : `gloubi` et
+        // `cran` ; une page de version 2 les effacerait en renvoyant le
+        // parcours (elle rendrait des matchs déjà joués) : refusée.
+        'version_min' => 3,
     ],
     // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026 — l'appli de Flash
     // Anzan / Colonne du soroban, faite pour une élève et donnée élève par

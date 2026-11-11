@@ -568,9 +568,9 @@ function tresorC(p, jour, {aide = false, solution = false} = {}) {
 }
 
 test("Coffres magiques, version 2 : le journal du jour — trésors, parfaits, aides, solutions", () => {
-  assert.equal(C.VERSION, 2);
+  assert.equal(C.VERSION, 3, "version 3 depuis le lot coffres-chemin-gloubi (gloubi et cran)");
   assert.deepEqual(C.JOURNAL, ["tresors", "parfaits", "aides", "solutions"]);
-  assert.deepEqual(C.creer(), {version: 2, epoque: 0, niveaux: {}, operations: {}});
+  assert.deepEqual(C.creer(), {version: 3, epoque: 0, niveaux: {}, operations: {}});
   let p = tresorC(C.creer(), MERCREDI);
   p = tresorC(p, MERCREDI, {aide: true});
   p = tresorC(p, MERCREDI, {aide: true, solution: true});
@@ -744,7 +744,7 @@ test("le pire cas de chaque appli tient sous les bornes du serveur (2 000 clés,
   });
 });
 
-test("serveur : version_min 4 (Défi tables), 6 (Défi calcul) et 2 (SPLAT!, Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
+test("serveur : version_min 4 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 3 (Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = (debut, fin) => applis.slice(applis.indexOf(`'${debut}' => [`), applis.indexOf(`'${fin}' => [`));
   const tables = bloc("defi-tables", "coffres");
@@ -752,7 +752,7 @@ test("serveur : version_min 4 (Défi tables), 6 (Défi calcul) et 2 (SPLAT!, Cof
   ["journal", ...T.JOURNAL].forEach(cle => assert.match(tables, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const clesTables = tables.slice(tables.indexOf("'cles' => ["), tables.indexOf("'mots' =>"));
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
-  assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 2,/);
+  assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 3,/, "Coffres : version 3 depuis le lot coffres-chemin-gloubi");
   const calcul = bloc("defi-calcul", "automatismes");
   assert.match(calcul, /'version_min' => 6,/, "Défi calcul : une page de version 5 effacerait les numéros");
   ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
@@ -775,7 +775,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   for (const page of ["../outils/splat.html", "../outils/splat_tache_barre.html", "../outils/equasplat.html", "../outils/splat_univers.html"]) {
     assert.match(await lire(page), /splat-parcours\.js\?v=20261107-1"/, page);
   }
-  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261109-1"/);
+  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-1"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261108-1"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261107-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);

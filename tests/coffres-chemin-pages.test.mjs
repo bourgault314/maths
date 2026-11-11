@@ -37,7 +37,7 @@ test("solo : « Tes coffres » et le trésor de l'élève sont des fenêtres à 
   assert.match(SOLO, /<button id="chemin-autre" class="chemin-autre" type="button">Entraînement libre<\/button>/);
   assert.match(SOLO, /<section id="tresor" class="overlay" hidden role="dialog"/);
   assert.match(SOLO, /<h2 id="result-title" tabindex="-1">Trésor ouvert !<\/h2>\s*<p>Tu as ouvert les dix coffres\.<\/p>/, "le visiteur : inchangé");
-  assert.match(SOLO, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261109-1"><\/script>/);
+  assert.match(SOLO, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-1"><\/script>/);
 });
 
 test("solo : le chemin des coffres est pour l'élève connecté SEULEMENT (code dans l'onglet, moteur chargé)", () => {
@@ -49,7 +49,7 @@ test("solo : le chemin des coffres est pour l'élève connecté SEULEMENT (code 
 test("solo : le gros bouton — Gloubi d'abord s'il attend, sinon reprendre la partie, sinon le prochain coffre", () => {
   const chemin = fonction(SOLO, "ouvrirChemin");
   assert.match(chemin, /const c = PARCOURS\.cheminDesCoffres\(parcoursEleve\(\), reglages\);/);
-  assert.match(chemin, /jouer = \[`Reprendre · \$\{partie\.cles\} clé\$\{partie\.cles > 1 \? "s" : ""\} sur \$\{GOAL\}`, \(\) => reprendre\(partie\)\];/);
+  assert.match(chemin, /jouer = \[partie\.cles >= GOAL \? "Ouvrir le trésor" : `Reprendre · \$\{partie\.cles\} clé\$\{partie\.cles > 1 \? "s" : ""\} sur \$\{GOAL\}`, \(\) => reprendre\(partie\)\];/);
   assert.match(chemin, /jouer = \[`Gagner le \$\{nom\}\$\{matchs \? ` · niveau \$\{c\.prochain\.niveau\}` : ""\}`, \(\) => jouerAuNiveau\(c\.prochain\.niveau\)\];/);
   assert.match(chemin, /if \(matchs\) \{\s*poserBouton\(principal, "Jouer contre Gloubi", \(\) => allerVersGloubi\(c\.gloubi\[0\]\.niveau\)\);\s*poserBouton\(second, jouer\[0\], jouer\[1\]\);/);
   assert.match(chemin, /document\.querySelector\("#chemin-cadeau"\)\.hidden = !matchs;/, "rien de Gloubi avant un coffre d'or (la surprise)");
@@ -80,8 +80,8 @@ test("solo : le trésor gagné — bronze et argent annoncent le suivant ; l'or 
 // -------------------------------------------------------- les Carrés gloutons
 
 test("Carrés gloutons : le mode cadeau demande « ?cadeau=1 à 3 » ET un élève suivi ; sinon la page de tout le monde", () => {
-  assert.match(CARRES, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261109-1"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/gloubi-ia\.js\?v=20261109-1"><\/script>\s*<script>/);
-  assert.match(CARRES, /const SUIVI_COFFRES = GLOUBI && PARCOURS_COFFRES && window\.MathsGoCoffresSuivi && \[1, 2, 3\]\.includes\(niveauCadeau\)\s*\? window\.MathsGoCoffresSuivi\.creer\(\{\}\) : null;/);
+  assert.match(CARRES, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-1"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/gloubi-ia\.js\?v=20261109-1"><\/script>\s*<script>/);
+  assert.match(CARRES, /const SUIVI_COFFRES = GLOUBI && PARCOURS_COFFRES && window\.MathsGoCoffresSuivi && \[1, 2, 3\]\.includes\(niveauCadeau\)\s*\? window\.MathsGoCoffresSuivi\.creer\(\{ surParcours: \(\) => relireCadeau\(\) \}\) : null;/);
   assert.match(CARRES, /const cadeau = SUIVI_COFFRES && \(SUIVI_COFFRES\.actif\(\) \|\| SUIVI_COFFRES\.attente\(\)\)/);
   assert.match(CARRES, /html\.gloubi-cadeau \.site-header \{ display: none; \}/, "pas de lien vers le catalogue du site en cadeau");
   assert.match(CARRES, /const move = cadeau \? coupDuGloubi\(\) : chooseAiMove\(\);/, "le visiteur garde le Gloubi d'origine");
@@ -163,4 +163,20 @@ test("solo : l'entraînement libre — niveaux débloqués, opérations au choix
   assert.doesNotMatch(fonction(SOLO, "ouvrirTresorLibre"), /suiviEcrire|coffreSvg|allerVersGloubi/, "rien de gagné pour les coffres");
   assert.match(SOLO, /<p id="libre-titre" class="libre-titre" hidden><strong>Entraînement libre<\/strong>Ça ne compte pas pour tes coffres\.<\/p>/);
   assert.match(fonction(SOLO, "syncLevelUi"), /prefixe\.textContent = libre \? "Entraînement libre · " : "Solo · ";\s*levelLabel\.textContent = `niveau \$\{gameLevel\}`;/);
+});
+
+// Relecture Codex du 11/11/2026.
+test("solo : quitter le plateau annule le délai de la dixième clé ; une partie à dix clés ouvre son trésor", () => {
+  assert.match(fonction(SOLO, "arreterAttente"), /if \(pendingTimer\) window\.clearTimeout\(pendingTimer\);\s*pendingTimer = null;/);
+  ["jouerAuNiveau", "reprendre", "allerVersGloubi", "ouvrirChemin"].forEach(nom =>
+    assert.match(fonction(SOLO, nom), /\{\s*arreterAttente\(\);/, `${nom} commence par arrêter l'attente`));
+  assert.match(fonction(SOLO, "reprendre"), /if \(partie\.cles >= GOAL\) \{\s*level = gameLevel = partie\.niveau;\s*gameStarted = true;\s*keys = GOAL;[\s\S]*?complete\(\);\s*return;\s*\}/);
+});
+
+test("Carrés gloutons : le match est noté avec le Gloubi affronté ; une réponse tardive du serveur est relue", () => {
+  assert.match(fonction(CARRES, "finDeMatchCadeau"), /const cranJoue = cadeau\.cran;\s*SUIVI_COFFRES\.ecrire\(\(P, avant\) => P\.noterMatchGloubi\(avant, cadeau\.niveau, issue, cranJoue\)\);/);
+  assert.match(fonction(CARRES, "finDeMatchCadeau"), /nextRound\.textContent = `Jouer le match \$\{cadeau\.suivant\}`;/, "le numéro vient du parcours");
+  const relire = fonction(CARRES, "relireCadeau");
+  assert.match(relire, /if \(cadeau\.termine\) \{\s*if \(restants > 0\) window\.location\.reload\(\);\s*return;\s*\}/);
+  assert.match(relire, /if \(started \|\| restants <= 0\) return;/, "jamais pendant un match");
 });
