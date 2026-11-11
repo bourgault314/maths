@@ -15,10 +15,20 @@
   //  1. LE FORMAT du parcours (ce que le serveur enregistre, une ligne par
   //     élève) — rien que des nombres, des booléens et des dates :
   //       { version, epoque,
-  //         niveaux:    { "1": {tresors, parfaits}, "2": …, "3": … }
+  //         niveaux:    { "1": {tresors, parfaits, gloubi, cran}, "2": …, "3": … }
   //                     — par niveau, les trésors ouverts (dix clés) et, parmi
   //                     eux, les trésors PARFAITS (sans erreur ni solution
-  //                     montrée) ; seuls les niveaux commencés y figurent ;
+  //                     montrée) ; seuls les niveaux commencés y figurent.
+  //                     Lot « le chemin des coffres et le cadeau Gloubi »
+  //                     (09/11/2026) : les trois premiers trésors d'un niveau
+  //                     sont ses coffres bronze, argent et or (rien de stocké :
+  //                     ils se lisent dans `tresors`) ; le coffre d'or offre 3
+  //                     matchs contre Gloubi : `gloubi` compte les matchs
+  //                     JOUÉS (1 à 3, absent avant le premier — il ne fait que
+  //                     monter, jamais un « restants » qui descendrait et
+  //                     qu'une fusion par maximum ressusciterait) et `cran` le
+  //                     Gloubi du match suivant (1 distrait, 2 gourmand,
+  //                     3 malin, 4 champion), présent avec `gloubi` ;
   //         operations: { sum: {cles, aides, solutions, erreurs}, difference…,
   //                     product…, quotient… } — par opération, les CLÉS
   //                     gagnées (cumul, parties abandonnées comprises), les
@@ -111,13 +121,22 @@
   // Dix clés par trésor : la série 3/3/2/2 et les familles sont construites
   // sur dix (assets/js/coffres-settings.js, coffres-moteur.js).
   const CLES_PAR_TRESOR = 10;
+  // Les coffres d'un niveau : le 1er trésor donne le bronze, le 2e l'argent,
+  // le 3e l'or (30 clés dans le niveau). Les trésors suivants comptent encore,
+  // sans nouveau coffre.
+  const COFFRES = Object.freeze(["bronze", "argent", "or"]);
+  // Le cadeau du coffre d'or : trois matchs contre Gloubi (Carrés gloutons).
+  const MATCHS_GLOUBI = 3;
+  // Les quatre Gloubi, du plus faible au plus fort (assets/js/gloubi-ia.js).
+  const CRANS_GLOUBI = Object.freeze(["distrait", "gourmand", "malin", "champion"]);
 
   // Ce que lib/applis.php doit déclarer pour « coffres » : les clés (à toute
   // profondeur) et le motif des niveaux. Un test compare le texte du
   // catalogue à ces deux listes.
   const CLES_SERVEUR = Object.freeze(["version", "epoque", "niveaux", "tresors", "parfaits", "operations",
     "sum", "difference", "product", "quotient", "cles", "aides", "solutions", "erreurs",
-    "dernier", "partie", "niveau", "ops", "serie", "familles", "parfait", "jour", "jours", "journal", "depuis"]);
+    "dernier", "partie", "niveau", "ops", "serie", "familles", "parfait", "jour", "jours", "journal", "depuis",
+    "gloubi", "cran"]);
   const MOTIF_NIVEAUX_PHP = "/^[1-3]$/";
   const COMPTE_MAX = 1000000;
 
@@ -200,11 +219,24 @@
     return {cles: 0, aides: 0, solutions: 0, erreurs: 0};
   }
 
-  function normaliserNiveau(brut) {
+  // Le cadeau Gloubi d'un niveau : des matchs joués seulement après son
+  // coffre d'or ; le cran ramené aux bornes du niveau (niveaux 1 et 2 :
+  // distrait à malin ; niveau 3 : malin ou champion).
+  function bornerCran(niveau, cran) {
+    const c = entier(cran, 1, CRANS_GLOUBI.length, cranDeDepart(niveau));
+    return niveau === 3 ? Math.max(3, c) : Math.min(3, c);
+  }
+
+  function normaliserNiveau(brut, numero) {
     if (!brut || typeof brut !== "object") return null;
     const n = niveauVide();
     n.tresors = entier(brut.tresors, 0, COMPTE_MAX, 0);
     n.parfaits = Math.min(n.tresors, entier(brut.parfaits, 0, COMPTE_MAX, 0));
+    const joues = n.tresors >= COFFRES.length ? entier(brut.gloubi, 0, MATCHS_GLOUBI, 0) : 0;
+    if (joues) {
+      n.gloubi = joues;
+      n.cran = bornerCran(numero, brut.cran);
+    }
     return n.tresors ? n : null;
   }
 
@@ -250,7 +282,7 @@
     p.epoque = entier(brut.epoque, 0, COMPTE_MAX, 0);
     const niveaux = brut.niveaux && typeof brut.niveaux === "object" ? brut.niveaux : {};
     NIVEAUX.forEach(numero => {
-      const n = normaliserNiveau(niveaux[String(numero)]);
+      const n = normaliserNiveau(niveaux[String(numero)], numero);
       if (n) p.niveaux[String(numero)] = n;
     });
     const operations = brut.operations && typeof brut.operations === "object" ? brut.operations : {};
@@ -377,6 +409,14 @@
       const n = niveauVide();
       n.tresors = Math.max(na ? na.tresors : 0, nb ? nb.tresors : 0);
       n.parfaits = Math.min(n.tresors, Math.max(na ? na.parfaits : 0, nb ? nb.parfaits : 0));
+      // Le cadeau Gloubi : les matchs joués montent (le plus grand) ; le cran
+      // suit la copie qui en a joué le plus — à égalité, le plus fort (un
+      // ordre fixe : le même résultat dans les deux sens).
+      const ja = na && na.gloubi ? na.gloubi : 0, jb = nb && nb.gloubi ? nb.gloubi : 0;
+      if (ja || jb) {
+        n.gloubi = Math.max(ja, jb);
+        n.cran = ja > jb ? na.cran : jb > ja ? nb.cran : Math.max(na.cran, nb.cran);
+      }
       fusion.niveaux[cle] = n;
     });
     CLES_OPERATIONS.forEach(cle => {
@@ -504,6 +544,137 @@
     return p;
   }
 
+  // ------------------------------------- le chemin des coffres et Gloubi
+  //
+  // Lot « Coffres magiques : le chemin des coffres et le cadeau Gloubi »
+  // (09/11/2026, décisions de Gwenaël). Pour l'élève connecté seulement.
+
+  // Le Gloubi du premier match : distrait au niveau 1, gourmand au niveau 2,
+  // malin au niveau 3.
+  function cranDeDepart(niveau) {
+    return niveau === 3 ? 3 : niveau === 2 ? 2 : 1;
+  }
+
+  // Le Gloubi du match suivant. Niveaux 1 et 2 : il s'adapte — match gagné,
+  // un cran plus fort ; perdu, un plus faible ; nul, le même ; entre distrait
+  // et malin. Niveau 3 (« un peu plus dur ») : jamais sous le malin ; un match
+  // gagné contre le malin fait passer au champion, et on y reste.
+  function cranSuivant(niveau, cran, issue) {
+    const c = bornerCran(niveau, cran);
+    if (niveau === 3) return c >= 4 || issue === "gagne" ? 4 : 3;
+    if (issue === "gagne") return Math.min(3, c + 1);
+    if (issue === "perdu") return Math.max(1, c - 1);
+    return c;
+  }
+
+  // Les coffres gagnés d'un niveau : 0 à 3.
+  function coffresDuNiveau(parcours, niveau) {
+    const p = normaliser(parcours);
+    const n = p.niveaux[String(niveau)];
+    return n ? Math.min(COFFRES.length, n.tresors) : 0;
+  }
+
+  // Les matchs contre Gloubi qui restent à jouer dans un niveau : 3 − joués
+  // si son coffre d'or est gagné, 0 sinon.
+  function matchsRestants(parcours, niveau) {
+    const p = normaliser(parcours);
+    const n = p.niveaux[String(niveau)];
+    if (!n || n.tresors < COFFRES.length) return 0;
+    return MATCHS_GLOUBI - (n.gloubi || 0);
+  }
+
+  // Le Gloubi du prochain match d'un niveau (1 à 4).
+  function cranGloubi(parcours, niveau) {
+    const p = normaliser(parcours);
+    const n = p.niveaux[String(niveau)];
+    return n && n.gloubi ? n.cran : cranDeDepart(niveau);
+  }
+
+  // Un match contre Gloubi est FINI (deux manches) : un match joué de plus
+  // dans ce niveau et le Gloubi du suivant. `issue` : « gagne », « perdu » ou
+  // « nul » (pour l'élève). Rien ne bouge sans match restant. Un match
+  // abandonné en route n'est jamais noté : il se rejoue en entier. Ce n'est
+  // pas un jour de travail (le journal ne bouge pas, la partie non plus).
+  function noterMatchGloubi(parcours, niveau, issue) {
+    const p = normaliser(parcours);
+    const numero = entier(niveau, 0, NOMBRE_NIVEAUX + 1, 0);
+    if (!niveauValide(numero) || matchsRestants(p, numero) <= 0) return p;
+    const n = p.niveaux[String(numero)];
+    const cran = n.gloubi ? n.cran : cranDeDepart(numero);
+    n.gloubi = (n.gloubi || 0) + 1;
+    n.cran = cranSuivant(numero, cran, issue === "gagne" || issue === "perdu" ? issue : "nul");
+    return p;
+  }
+
+  // La progression (décision de Gwenaël du 11/11/2026) : un niveau s'ouvre
+  // quand l'élève a le coffre d'or du niveau ouvert juste en dessous. Le
+  // premier niveau que le professeur a ouvert à la classe l'est d'office (une
+  // classe sans le niveau 1 commence au niveau 2). Un niveau où l'élève a déjà
+  // un trésor ou sa partie en cours reste ouvert : on ne lui retire jamais ce
+  // qu'il a gagné (les trésors gardés depuis le 21/10/2026). Un niveau fermé
+  // par le professeur n'est jamais débloqué.
+  //   → pour chaque niveau : {numero, ouvert (professeur), debloque, apres}
+  //     — `apres` : le niveau dont le coffre d'or l'ouvrira (null si débloqué
+  //     ou fermé par le professeur).
+  function progressionDesNiveaux(parcours, reglages) {
+    const p = normaliser(parcours);
+    const r = reglages || reglagesDeClasse(null);
+    let precedent = null;
+    return NIVEAUX.map(numero => {
+      const n = p.niveaux[String(numero)];
+      const ouvert = niveauOuvert(r, numero);
+      let debloque = false;
+      let apres = null;
+      if (ouvert) {
+        const dejaLa = Boolean(n && n.tresors) || Boolean(p.partie && p.partie.niveau === numero);
+        const orDessous = precedent === null || coffresDuNiveau(p, precedent) >= COFFRES.length;
+        debloque = dejaLa || orDessous;
+        if (!debloque) apres = precedent;
+        precedent = numero;
+      }
+      return {numero, ouvert, debloque, apres};
+    });
+  }
+
+  // Les niveaux où l'élève connecté peut jouer (le chemin et l'entraînement
+  // libre) : ouverts par le professeur ET débloqués.
+  function niveauxDebloques(parcours, reglages) {
+    return progressionDesNiveaux(parcours, reglages).filter(n => n.debloque).map(n => n.numero);
+  }
+
+  // Tout ce que la carte « Tes coffres » affiche : les trois niveaux (coffres
+  // gagnés, ouvert ou fermé par le professeur, débloqué ou pas encore), le
+  // PROCHAIN coffre conseillé (le premier niveau débloqué qui n'a pas son or ;
+  // null quand tous l'ont), le prochain cadenas à ouvrir (`verrou` :
+  // {niveau, apres} ou null), les matchs de Gloubi qui attendent (niveau par
+  // niveau) et la partie en cours.
+  function cheminDesCoffres(parcours, reglages) {
+    const p = normaliser(parcours);
+    const progression = progressionDesNiveaux(p, reglages || reglagesDeClasse(null));
+    const niveaux = progression.map(etat => {
+      const n = p.niveaux[String(etat.numero)];
+      return {
+        numero: etat.numero,
+        tresors: n ? n.tresors : 0,
+        coffres: n ? Math.min(COFFRES.length, n.tresors) : 0,
+        ouvert: etat.ouvert,
+        debloque: etat.debloque,
+        apres: etat.apres
+      };
+    });
+    const suivant = niveaux.find(n => n.debloque && n.coffres < COFFRES.length);
+    const ferme = niveaux.find(n => n.ouvert && !n.debloque);
+    const gloubi = NIVEAUX.map(numero => ({niveau: numero, restants: matchsRestants(p, numero), cran: cranGloubi(p, numero)}))
+      .filter(g => g.restants > 0);
+    return {
+      niveaux,
+      prochain: suivant ? {niveau: suivant.numero, coffre: COFFRES[suivant.coffres]} : null,
+      verrou: ferme ? {niveau: ferme.numero, apres: ferme.apres} : null,
+      gloubi,
+      partie: p.partie ? cloner(p.partie) : null
+    };
+  }
+
   // La partie en cours s'abandonne (réglages changés par le professeur,
   // « Repartir à 0 clé ») : les clés gagnées restent dans le cumul, les
   // trésors restent.
@@ -614,7 +785,7 @@
     const p = normaliser(parcours);
     const niveaux = NIVEAUX.map(numero => {
       const n = p.niveaux[String(numero)] || niveauVide();
-      return {numero, tresors: n.tresors, parfaits: n.parfaits};
+      return {numero, tresors: n.tresors, parfaits: n.parfaits, coffres: Math.min(COFFRES.length, n.tresors)};
     });
     const operations = OPERATIONS.map(o => {
       const c = p.operations[o.cle] || operationVide();
@@ -636,6 +807,8 @@
   // La tuile de l'espace élève : une ligne par niveau commencé (un trésor, ou
   // la partie en cours à partir d'une clé), et la partie en cours au bout de
   // la ligne de son niveau. Rien tant que l'élève n'a ni trésor ni partie.
+  // Lot « le chemin des coffres » (choix A de Gwenaël, 09/11/2026) : la ligne
+  // montre les trois coffres du niveau (`coffres`, 0 à 3) ; rien de Gloubi.
   function resumeTuile(parcours) {
     const r = resumeProf(parcours);
     const lignes = r.niveaux
@@ -643,6 +816,7 @@
       .map(n => ({
         niveau: n.numero,
         tresors: n.tresors,
+        coffres: n.coffres,
         cles: r.partie && r.partie.niveau === n.numero ? r.partie.cles : null,
         total: CLES_PAR_TRESOR
       }));
@@ -1767,6 +1941,9 @@
     NOMBRE_NIVEAUX,
     NOMBRE_OPERATIONS,
     CLES_PAR_TRESOR,
+    COFFRES,
+    MATCHS_GLOUBI,
+    CRANS_GLOUBI,
     CLES_SERVEUR,
     MOTIF_NIVEAUX_PHP,
     TEXTES,
@@ -1794,6 +1971,15 @@
     noterSolution,
     noterTresor,
     oublierPartie,
+    cranDeDepart,
+    cranSuivant,
+    coffresDuNiveau,
+    matchsRestants,
+    cranGloubi,
+    noterMatchGloubi,
+    cheminDesCoffres,
+    progressionDesNiveaux,
+    niveauxDebloques,
     pourServeur,
     resumeProf,
     resumeTuile,

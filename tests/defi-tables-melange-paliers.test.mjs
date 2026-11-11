@@ -561,7 +561,8 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « livret-corrections » (09/11/2026) : lib/cours.json seul change sur le serveur (« revu de 4e »).
   // Puis « cours-ouvertures » (10/11/2026) : le jour d'ouverture des fiches (api/cours.php, table
   // cours_ouvertures), Ma classe, l'espace élève, Infos, verifier.php, migrer, sauvegarde.
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-ouvertures$/m);
+  // Puis « coffres-chemin-gloubi » (11/11/2026) : index.php, prof/index.php, prof/coffres-parcours.js, lib/applis.php.
+  assert.match(lire("_serveur/public/VERSION"), /^lot coffres-chemin-gloubi$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

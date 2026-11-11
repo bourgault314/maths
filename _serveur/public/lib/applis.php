@@ -111,9 +111,13 @@ const CATALOGUE_APPLIS = [
     // assets/js/coffres-parcours.js (copie dans prof/) — rien que des nombres,
     // des booléens et des dates :
     //   { version, epoque,
-    //     niveaux: { "1": {tresors, parfaits}, "2", "3" }   — par niveau, les
-    //              trésors ouverts et, parmi eux, les PARFAITS (sans erreur ni
-    //              solution montrée) ; le motif /^[1-3]$/ accepte ces clés ;
+    //     niveaux: { "1": {tresors, parfaits, gloubi, cran}, "2", "3" } — par
+    //              niveau, les trésors ouverts et, parmi eux, les PARFAITS (sans
+    //              erreur ni solution montrée) ; le motif /^[1-3]$/ accepte ces
+    //              clés ; lot « le chemin des coffres et le cadeau Gloubi »
+    //              (09/11/2026) : après le coffre d'or (3 trésors), les matchs
+    //              contre Gloubi JOUÉS (1 à 3) et le Gloubi du suivant (cran 1
+    //              à 4) ;
     //     operations: { sum | difference | product | quotient :
     //              {cles, aides, solutions, erreurs} }       — par opération, les
     //              CLÉS gagnées, les aides ouvertes, les solutions montrées,
@@ -132,7 +136,8 @@ const CATALOGUE_APPLIS = [
         'disponible' => true,
         'cles' => ['version', 'epoque', 'niveaux', 'tresors', 'parfaits', 'operations',
             'sum', 'difference', 'product', 'quotient', 'cles', 'aides', 'solutions', 'erreurs',
-            'dernier', 'partie', 'niveau', 'ops', 'serie', 'familles', 'parfait', 'jour', 'jours', 'journal', 'depuis'],
+            'dernier', 'partie', 'niveau', 'ops', 'serie', 'familles', 'parfait', 'jour', 'jours', 'journal', 'depuis',
+            'gloubi', 'cran'],
         'mots' => [],
         'motifs' => ['/^[1-3]$/'],
         // « Revenir à… » nomme une version par ce compte : les niveaux

@@ -160,7 +160,8 @@ test("le parcours de référence du serveur est à jour (node scripts/generer-pa
     "le moteur a changé la forme du parcours : relance « node scripts/generer-parcours-reference-coffres.mjs », puis complète 'cles'/'motifs' de « coffres » dans _serveur/public/lib/applis.php (le test PHP le vérifie)");
   assert.deepEqual(chainesLibres(reference), []);
   assert.equal(reference.partie.cles, 6);
-  assert.deepEqual(reference.niveaux["1"], {tresors: 5, parfaits: 3}, "les chiffres de la maquette 01 (Léa)");
+  // Lot « le chemin des coffres et le cadeau Gloubi » (09/11/2026) : deux matchs de Gloubi joués au niveau 1.
+  assert.deepEqual(reference.niveaux["1"], {tresors: 5, parfaits: 3, gloubi: 2, cran: 2}, "les chiffres de la maquette 01 (Léa)");
   assert.equal(reference.operations.sum.cles, 28);
 });
 
@@ -224,14 +225,14 @@ test("resumeTuile : une ligne par niveau commencé, la partie en cours au bout d
   assert.deepEqual(PARCOURS.resumeTuile(null), {lignes: [], vide: true});
   const reference = JSON.parse(readFileSync(CHEMIN, "utf8"));
   assert.deepEqual(PARCOURS.resumeTuile(reference).lignes, [
-    {niveau: 1, tresors: 5, cles: null, total: 10},
-    {niveau: 2, tresors: 2, cles: 6, total: 10},
-    {niveau: 3, tresors: 1, cles: null, total: 10}
+    {niveau: 1, tresors: 5, coffres: 3, cles: null, total: 10},
+    {niveau: 2, tresors: 2, coffres: 2, cles: 6, total: 10},
+    {niveau: 3, tresors: 1, coffres: 1, cles: null, total: 10}
   ]);
   // Niveau 3 commencé sans trésor : « pas encore de trésor » et 4 / 10.
   let p = PARCOURS.commencerPartie(parcoursAvecTresors(), {niveau: 3, ops: [4], serie: new Array(10).fill(4)}, "2026-10-21");
   for (let i = 0; i < 4; i += 1) p = PARCOURS.noterCle(p, 4, "2026-10-21");
-  assert.deepEqual(PARCOURS.resumeTuile(p).lignes, [{niveau: 1, tresors: 2, cles: null, total: 10}, {niveau: 3, tresors: 0, cles: 4, total: 10}]);
+  assert.deepEqual(PARCOURS.resumeTuile(p).lignes, [{niveau: 1, tresors: 2, coffres: 2, cles: null, total: 10}, {niveau: 3, tresors: 0, coffres: 0, cles: 4, total: 10}]);
   // Une partie à 0 clé ne fait pas de ligne.
   const zero = PARCOURS.commencerPartie(PARCOURS.creer(), {niveau: 2, ops: [1], serie: new Array(10).fill(1)});
   assert.equal(PARCOURS.resumeTuile(zero).vide, true);

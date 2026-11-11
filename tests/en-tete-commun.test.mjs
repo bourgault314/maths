@@ -51,7 +51,8 @@ after(() => serveur && serveur.close());
 const APPLIS = {
   "Anzan": {page: "/outils/calcul_mental/flash_anzan.html", cadre: "#panel", titre: "#titre"},
   "Défi tables": {page: "/outils/calcul_mental/defi_tables.html", cadre: ".shell > .panel", titre: ".topbar .ec-nom"},
-  "Coffres magiques": {page: "/outils/calcul_mental/coffres_magiques_solo.html", cadre: ".mode-dialog-card", titre: ".mode-dialog-card .ec-nom"},
+  "Coffres magiques": {page: "/outils/calcul_mental/coffres_magiques_solo.html", cadre: ".chemin-card", titre: ".chemin-card .ec-nom"},
+  // Coffres : depuis le chemin des coffres (11/11/2026), l'accueil de l'élève connecté est « Tes coffres ».
   "Défi calcul": {page: "/outils/calcul_mental/defi_calcul_modules.html", cadre: ".shell > .panel", titre: ".topbar .ec-nom"},
   "SPLAT! carte": {page: "/outils/splat_univers.html", cadre: ".hero", titre: ".hero h1"}
 };
@@ -292,7 +293,7 @@ test("le haut du cadre blanc, un trait fin gris sous le titre et la ligne, dans 
   await demarrerServeur();
   const nav = await navigateur.launch();
   try {
-    const CADRES = {"Anzan": "#ecran-reglages .bandeau", "Défi tables": ".shell > .panel", "Coffres magiques": ".mode-dialog-card", "Défi calcul": ".shell > .panel"};
+    const CADRES = {"Anzan": "#ecran-reglages .bandeau", "Défi tables": ".shell > .panel", "Coffres magiques": ".chemin-card", "Défi calcul": ".shell > .panel"};
     for (const [largeur, hauteur, telephone] of [[1366, 650, false], [390, 844, true]]) {
       for (const nom of Object.keys(CADRES)) {
         const {ctx, page} = await ouvrir(nav, nom, {largeur, hauteur, telephone});

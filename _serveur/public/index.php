@@ -225,6 +225,12 @@ try {
      dorée (« 🔑 6 / 10 »). Le minimum, rien d'autre. */
   .appli .jauge.niveaux { margin-top: 2px; }
   .appli .jauge.niveaux .jauge-ligne { margin-top: 4px; min-height: 24px; }
+  /* Lot « le chemin des coffres » (09/11/2026, choix A de Gwenaël) : « Niveau 1 »
+     puis ses trois coffres, la pastille « 🔑 6 / 10 » au bout ; les coffres
+     d'une ligne à l'autre l'un sous l'autre. */
+  .appli .jauge.niveaux .compte { min-width: 68px; }
+  .coffres-niveau { display: inline-flex; gap: 2px; }
+  .coffres-niveau svg { display: block; flex: 0 0 auto; }
   /* La séance en direct (07/10/2026) : une tuile de plus, AU-DESSUS des
      activités, qui n'existe que pendant que le professeur mène une séance
      avec la classe. Même dessin qu'une activité, liseré orange. */
@@ -783,10 +789,14 @@ try {
       lecteur: (P, brut) => {
         const resume = P.resumeTuile(brut);
         if (resume.vide) return null;
+        // Lot « le chemin des coffres et le cadeau Gloubi » (09/11/2026,
+        // choix A de Gwenaël) : « Niveau 1 » puis ses trois coffres (bronze,
+        // argent, or : gagnés en couleur, à gagner en pointillés), comme sur la
+        // carte « Tes coffres » de l'appli ; rien de Gloubi.
         return {
           lignes: resume.lignes.map(ligne => ({
-            texte: `Niveau ${ligne.niveau} : ` + (ligne.tresors
-              ? `${ligne.tresors} trésor${ligne.tresors > 1 ? "s" : ""}` : "pas encore de trésor"),
+            texte: `Niveau ${ligne.niveau}`,
+            coffres: Math.max(0, Math.min(3, ligne.coffres || 0)),
             bonus: ligne.cles !== null ? `\u{1F511} ${ligne.cles} / ${ligne.total}` : ""
           }))
         };
@@ -978,6 +988,33 @@ try {
   // chiffre. Sur la pastille à moitié, le chiffre est blanc cerné de la
   // couleur du monde : il se lit d'un seul tenant des deux côtés (essayé :
   // un chiffre de couleur cerné de blanc se lisait en deux morceaux).
+  // Coffres magiques (lot « le chemin des coffres », 09/11/2026) : les trois
+  // coffres d'un niveau, le dessin de l'appli (couvercle bombé, ferrure,
+  // serrure) ; à gagner, en pointillés gris. Lu « 2 coffres sur 3 ».
+  const COULEURS_COFFRES = [["#c98446", "#7a4520", "#e7a96b"], ["#c4ccd6", "#5d6b7a", "#eef2f6"], ["#f6c13d", "#9a5b06", "#ffe08a"]];
+  function coffresDuNiveau(gagnes) {
+    const groupe = document.createElement("span");
+    groupe.className = "coffres-niveau";
+    groupe.setAttribute("role", "img");
+    groupe.setAttribute("aria-label", `${gagnes} coffre${gagnes > 1 ? "s" : ""} sur 3`);
+    COULEURS_COFFRES.forEach(([fond, bord, clair], index) => {
+      const dessin = elementSvg("svg", {width: "30", height: "30", viewBox: "0 0 46 46", "aria-hidden": "true", focusable: "false"});
+      if (index >= gagnes) {
+        const trait = {fill: "#f4f7fb", stroke: "#b7c3d1", "stroke-width": "1.8", "stroke-dasharray": "3 2.4", "stroke-linejoin": "round"};
+        dessin.append(elementSvg("path", Object.assign({d: "M9 20a14 9 0 0 1 28 0Z"}, trait)));
+        dessin.append(elementSvg("rect", Object.assign({x: "9", y: "20", width: "28", height: "16", rx: "2.5"}, trait)));
+      } else {
+        dessin.append(elementSvg("path", {d: "M9 20a14 9 0 0 1 28 0Z", fill: fond, stroke: bord, "stroke-width": "1.8", "stroke-linejoin": "round"}));
+        dessin.append(elementSvg("rect", {x: "9", y: "20", width: "28", height: "16", rx: "2.5", fill: fond, stroke: bord, "stroke-width": "1.8"}));
+        dessin.append(elementSvg("rect", {x: "9", y: "18.5", width: "28", height: "4", fill: clair, stroke: bord, "stroke-width": "1.4"}));
+        dessin.append(elementSvg("rect", {x: "19.5", y: "20.5", width: "7", height: "9", rx: "1.6", fill: clair, stroke: bord, "stroke-width": "1.4"}));
+        dessin.append(elementSvg("path", {d: "M23 23.4v3.2", stroke: bord, "stroke-width": "1.8", "stroke-linecap": "round"}));
+      }
+      groupe.append(dessin);
+    });
+    return groupe;
+  }
+
   function pastilleMonde(monde) {
     const etat = Object.prototype.hasOwnProperty.call(ETATS_MONDE, monde.etat) ? monde.etat : "vide";
     const couleur = COULEURS_MONDES[monde.numero] || "#063f86";
@@ -1052,6 +1089,7 @@ try {
         compte.className = "compte";
         compte.textContent = ligneNiveau.texte;
         ligne.append(compte);
+        if (typeof ligneNiveau.coffres === "number") ligne.append(coffresDuNiveau(ligneNiveau.coffres));
         if (ligneNiveau.bonus) {
           const bonus = document.createElement("span");
           bonus.className = "bonus";

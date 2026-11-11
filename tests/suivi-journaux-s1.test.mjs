@@ -775,7 +775,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   for (const page of ["../outils/splat.html", "../outils/splat_tache_barre.html", "../outils/equasplat.html", "../outils/splat_univers.html"]) {
     assert.match(await lire(page), /splat-parcours\.js\?v=20261107-1"/, page);
   }
-  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261108-1"/);
+  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261109-1"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261108-1"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261107-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);

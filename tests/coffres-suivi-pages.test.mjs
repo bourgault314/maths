@@ -113,9 +113,13 @@ test("l'en-tête commun : sur l'accueil, la flèche, le titre, le plein écran e
   const ecran = source("majEcran");
   assert.match(ecran, /classList\.toggle\("accueil-appli", eleve && \(!choixPossible \|\| surLeChoix\)\)/);
   assert.match(ecran, /classList\.toggle\("retour-dans-cadre", choixPossible && !surLeChoix\)/);
-  // « ← Mon espace » est un simple lien : plus aucun clic intercepté dessus
-  assert.doesNotMatch(PAGE, /lienRetour\.addEventListener\("click"/);
-  assert.match(PAGE, /document\.querySelectorAll\("\[data-retour-choix\]"\)\.forEach\(bouton => \{\s*bouton\.addEventListener\("click", \(\) => \{\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;/);
+  // Lot « le chemin des coffres » (09/11/2026) : « Tes coffres » est l'accueil de l'élève
+  // connecté ; le choix du niveau s'ouvre de là, et sa flèche y ramène (seul clic
+  // intercepté sur le lien) ; « ← Coffres » dans le cadre du mémo et du jeu.
+  assert.match(ecran, /if \(cheminActif\(\)\) \{[\s\S]*?const accueil = !chemin\.hidden \|\| surLeChoix;\s*document\.body\.classList\.toggle\("accueil-appli", accueil\);\s*document\.body\.classList\.toggle\("retour-dans-cadre", !accueil\);/);
+  assert.match(PAGE, /lienRetour\.addEventListener\("click", event => \{\s*if \(!cheminActif\(\) \|\| !chemin\.hidden \|\| modeDialog\.hidden && confirmZero\.hidden\) return;\s*event\.preventDefault\(\);/,
+    "le lien n'est détourné QUE sur le choix du niveau ouvert depuis « Tes coffres »");
+  assert.match(PAGE, /document\.querySelectorAll\("\[data-retour-choix\]"\)\.forEach\(bouton => \{\s*bouton\.addEventListener\("click", \(\) => \{\s*if \(cheminActif\(\)\) \{\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*ouvrirChemin\(\);\s*return;\s*\}\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;/);
 });
 
 test("les textes validés par Gwenaël : le choix, le mémo, les réglages changés, la confirmation", () => {
@@ -140,7 +144,7 @@ test("chaque geste du jeu est noté dans la case de l'élève par le moteur, jam
   assert.match(source("showSolution"), /suiviEcrire\(\(P, avant\) => P\.noterSolution\(avant, mode\)\);/);
   assert.match(source("complete"), /suiviEcrire\(\(P, avant\) => P\.noterTresor\(avant, null, \{ niveau: gameLevel \}\)\);/);
   assert.match(source("start"), /suiviEcrire\(\(P, avant\) => P\.commencerPartie\(avant, \{ niveau: level, ops: selectedOperations, serie: modes, familles: familyPlan \}\)\);/);
-  assert.match(source("suiviEcrire"), /if \(SUIVI && SUIVI\.actif\(\)\) SUIVI\.ecrire\(maj\);/, "rien sans code");
+  assert.match(source("suiviEcrire"), /if \(SUIVI && SUIVI\.actif\(\) && !libre\) SUIVI\.ecrire\(maj\);/, "rien sans code, rien en entraînement libre");
   assert.doesNotMatch(source("resolve"), /noterCle\(avant, mode, [^)]*values/, "jamais les nombres du plateau");
 });
 
@@ -152,9 +156,10 @@ test("la reprise reprend la partie telle quelle (série, familles, clés) sur un
   assert.match(s, /makeChallenge\(\);/, "un plateau neuf");
 });
 
-test("« ← Niveaux » ramène au choix (s'il y a un choix) ; « ← Mon espace » mène à Mon espace", () => {
-  assert.match(PAGE, /bouton\.addEventListener\("click", \(\) => \{\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*openModeDialog\(\{ mandatory: !gameStarted \}\);/);
-  assert.doesNotMatch(PAGE, /lienRetour\.addEventListener/, "le lien du haut n'est jamais détourné");
+test("« ← Coffres » ramène à « Tes coffres » (élève connecté) ; sinon « ← Niveaux » au choix ; « ← Mon espace » mène à Mon espace", () => {
+  assert.match(PAGE, /if \(cheminActif\(\)\) \{\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*ouvrirChemin\(\);\s*return;\s*\}\s*if \(!modeEleve\(\) \|\| !aUnChoix\(\)\) return;\s*dialogs\.close\(lesson, \{ restoreFocus: false \}\);\s*openModeDialog\(\{ mandatory: !gameStarted \}\);/);
+  assert.match(source("majEcran"), /texte\.textContent = cheminActif\(\) \? "Coffres" : "Niveaux";/);
+  assert.equal((PAGE.match(/lienRetour\.addEventListener/g) || []).length, 1, "un seul détour du lien du haut : le choix du niveau");
 });
 
 // ------------------------------------------------- le démarrage de l'élève, exécuté
@@ -177,23 +182,26 @@ function demarrage({partie = null, reglages = {niveaux: null, operations: null},
     function start(o) { journal.push("start:" + JSON.stringify(o)); }
     function openModeDialog(o) { journal.push("choix:" + JSON.stringify(o)); }
     function openLesson() { journal.push("memo"); }
-    ${["modeEleve", "reglagesClasse", "niveauxOuverts", "operationsOuvertes", "aUnChoix", "suiviEcrire", "ramenerAuxReglages", "demarrerEleve"].map(n => source(n)).join("\n")}
+    function ouvrirChemin() { journal.push("chemin"); }
+    ${["cheminActif", "modeEleve", "reglagesClasse", "niveauxOuverts", "operationsOuvertes", "aUnChoix", "suiviEcrire", "ramenerAuxReglages", "demarrerEleve"].map(n => source(n)).join("\n")}
     demarrerEleve();
     return {level, selectedOperations, reglagesChanges};`;
-  const etat = new Function("moteur", "settings", "SUIVI", "journal", code.replace("let level =", "let reglagesChanges = false;\n    let level ="))(
+  const etat = new Function("moteur", "settings", "SUIVI", "journal", code.replace("let level =", "let reglagesChanges = false, libre = false;\n    let level ="))(
     PARCOURS, {OPERATIONS: PARCOURS.CLES_OPERATIONS.slice()}, SUIVI, journal);
   return {journal, ecrits, etat};
 }
 
-test("démarrage : une partie en cours compatible reprend telle quelle, directement sur le plateau", () => {
+// Lot « le chemin des coffres » (09/11/2026) : l'élève connecté arrive TOUJOURS sur
+// « Tes coffres » (une partie en cours s'y reprend : « Reprendre · 6 clés sur 10 »).
+test("démarrage : une partie en cours compatible est gardée ; l'élève arrive sur ses coffres", () => {
   const d = demarrage({partie: partieSix(), reglages: {niveaux: [1, 2], operations: [1, 3]}});
-  assert.deepEqual(d.journal, ["retire:suivi-attente", "majSuivi", `start:${JSON.stringify({reprise: partieSix()})}`]);
-  assert.equal(d.ecrits.length, 0);
+  assert.deepEqual(d.journal, ["retire:suivi-attente", "majSuivi", "chemin"]);
+  assert.equal(d.ecrits.length, 0, "rien n'est oublié ni réécrit");
 });
 
-test("démarrage : le niveau fermé (ou une opération retirée) — la partie est abandonnée, l'élève le lira, puis le choix", () => {
+test("démarrage : le niveau fermé (ou une opération retirée) — la partie est abandonnée, l'élève le lira, puis ses coffres", () => {
   const d = demarrage({partie: partieSix(), reglages: {niveaux: [1, 3], operations: null}});
-  assert.deepEqual(d.journal.slice(2), ['choix:{"mandatory":true}']);
+  assert.deepEqual(d.journal.slice(2), ["chemin"]);
   assert.equal(d.ecrits.length, 1, "la partie est oubliée dans la case");
   assert.equal("partie" in d.ecrits[0], false);
   assert.equal(d.etat.reglagesChanges, true);
@@ -201,20 +209,19 @@ test("démarrage : le niveau fermé (ou une opération retirée) — la partie e
   const retiree = demarrage({partie: partieSix(), reglages: {niveaux: null, operations: [1, 2]}, level: 2, operations: ["sum", "product"]});
   assert.equal(retiree.etat.reglagesChanges, true);
   assert.deepEqual(retiree.etat.selectedOperations, ["sum"], "les opérations ramenées à ce qui est ouvert");
-  assert.deepEqual(retiree.journal.slice(2), ['choix:{"mandatory":true}']);
+  assert.deepEqual(retiree.journal.slice(2), ["chemin"]);
 });
 
-test("démarrage : sans partie — le choix s'il y a un choix, droit le mémo sinon (un seul niveau, une seule opération)", () => {
+test("démarrage : sans partie — ses coffres, avec les réglages ramenés à ce que la classe a d'ouvert", () => {
   const choix = demarrage({reglages: {niveaux: [1, 2], operations: [1, 3]}});
-  assert.deepEqual(choix.journal.slice(2), ['choix:{"mandatory":true}']);
+  assert.deepEqual(choix.journal.slice(2), ["chemin"]);
   assert.deepEqual(choix.etat.selectedOperations, ["sum", "product"]);
-  const memo = demarrage({reglages: {niveaux: [2], operations: [1]}, level: 1});
-  assert.deepEqual(memo.journal.slice(2), ["memo"]);
-  assert.equal(memo.etat.level, 2, "le seul niveau ouvert, sélectionné d'office");
-  assert.deepEqual(memo.etat.selectedOperations, ["sum"]);
-  assert.equal(memo.etat.reglagesChanges, false);
+  const seul = demarrage({reglages: {niveaux: [2], operations: [1]}, level: 1});
+  assert.deepEqual(seul.journal.slice(2), ["chemin"], "même sans rien à choisir : ses coffres d'abord");
+  assert.equal(seul.etat.level, 2, "le seul niveau ouvert, sélectionné d'office");
+  assert.deepEqual(seul.etat.selectedOperations, ["sum"]);
+  assert.equal(seul.etat.reglagesChanges, false);
   const unNiveau = demarrage({reglages: {niveaux: [3], operations: null}});
-  assert.deepEqual(unNiveau.journal.slice(2), ['choix:{"mandatory":true}'], "un seul niveau mais quatre opérations : il reste un choix");
   assert.equal(unNiveau.etat.level, 3);
 });
 
