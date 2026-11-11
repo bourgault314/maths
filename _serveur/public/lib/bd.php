@@ -180,6 +180,17 @@ function schema(string $pilote): array
   maj_le VARCHAR(25) NOT NULL
 )$fin",
 
+        // Lot « cours-ouvertures » (10/11/2026) : le JOUR de la dernière
+        // ouverture de chaque fiche du livret, par élève (lib/cours.php). Une
+        // ligne par élève et par fiche, le jour remplacé à chaque ouverture :
+        // ni nombre de fois, ni durée, ni heure. Effacée avec l'élève.
+        "CREATE TABLE IF NOT EXISTS cours_ouvertures (
+  eleve_id INTEGER NOT NULL,
+  fiche VARCHAR(24) NOT NULL,
+  jour VARCHAR(10) NOT NULL"
+        . ($mysql ? ",\n  UNIQUE KEY cours_ouvertures_eleve_fiche (eleve_id, fiche)" : "")
+        . "\n)$fin",
+
         // Lot serveur A (06/09/2026) : le journal des actions du professeur.
         // Douze mois, purgés par menage.php. AUCUN prénom, AUCUN code, AUCUNE
         // adresse, aucun texte libre : des identifiants de lignes et des mots
@@ -278,6 +289,7 @@ function schema(string $pilote): array
         'CREATE UNIQUE INDEX IF NOT EXISTS directs_reponses_eleve ON directs_reponses (direct_id, numero, eleve_id)',
         'CREATE INDEX IF NOT EXISTS directs_reponses_par_eleve ON directs_reponses (eleve_id)',
         'CREATE INDEX IF NOT EXISTS modeles_evaluation_prof ON modeles_evaluation (prof_id)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS cours_ouvertures_eleve_fiche ON cours_ouvertures (eleve_id, fiche)',
     ]);
 }
 
@@ -400,6 +412,9 @@ function migrer_schema(?PDO $pdo = null): array
     $directsAbsente = !table_existe($pdo, 'directs');
     // Lot E1 (15/10/2026) : les modèles d'évaluation.
     $modelesAbsente = !table_existe($pdo, 'modeles_evaluation');
+    // Lot « cours-ouvertures » (10/11/2026) : le jour de la dernière
+    // ouverture de chaque fiche du livret, par élève.
+    $coursAbsente = !table_existe($pdo, 'cours_ouvertures');
     installer_tables($pdo);
     if ($billetsAbsente) {
         $faits[] = "Table « billets » créée (liens d'entrée à usage unique, lot 3).";
@@ -418,6 +433,9 @@ function migrer_schema(?PDO $pdo = null): array
     }
     if ($modelesAbsente) {
         $faits[] = "Table « modeles_evaluation » créée (les modèles d'évaluation des tables de chaque professeur).";
+    }
+    if ($coursAbsente) {
+        $faits[] = "Table « cours_ouvertures » créée (le jour où chaque élève a ouvert chaque fiche de « Mes cours » pour la dernière fois).";
     }
     // Lot « correctifs de l'audit Codex » (29/10/2026, défaut 5) : l'index
     // par jour de « versions », pour la purge des sept jours de tous les

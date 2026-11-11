@@ -17,6 +17,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/records.php';
+require_once __DIR__ . '/cours.php';
 
 require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
@@ -209,6 +210,8 @@ function effacer_classe_dans_la_transaction(PDO $pdo, int $classeId): void
         // supprimée ne doit rien laisser derrière elle (06/09/2026).
         oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
         oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
+        // Le jour d'ouverture de chaque fiche de « Mes cours » (10/11/2026).
+        oublier_cours_de_l_eleve($pdo, (int)$eleve['id']);
         oublier_compteurs_du_code($pdo, (string)$eleve['code']);
         oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
     }

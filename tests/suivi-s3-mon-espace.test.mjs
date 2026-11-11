@@ -255,7 +255,9 @@ test("gains : Coffres n'a rien à féliciter ; Anzan, le grade réussi par son n
 
 test("rien de nouveau n'est demandé au serveur : les mêmes trois adresses qu'avant le lot", () => {
   const adresses = [...page.matchAll(/fetch\("([^"]+)"/g)].map(m => m[1]);
-  assert.deepEqual([...new Set(adresses)].sort(), ["api/direct.php", "api/eleve.php", "api/parcours.php"]);
+  // Lot « cours-ouvertures » (10/11/2026) : une quatrième, api/cours.php, qui ne fait que noter
+  // le jour où l'élève touche une fiche de « Mes cours » (rien n'en revient à la page).
+  assert.deepEqual([...new Set(adresses)].sort(), ["api/cours.php", "api/direct.php", "api/eleve.php", "api/parcours.php"]);
   assert.equal(adresses.filter(a => a === "api/parcours.php").length, 1, "une seule lecture de parcours, celle des jauges");
 });
 

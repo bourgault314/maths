@@ -1185,6 +1185,21 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .cours-fiche .t { flex: 1 1 auto; min-width: 0; }
   .cours-fiche small { color: var(--muted); font-size: 13px; }
   .cours-fiche a { flex: 0 0 auto; font-size: var(--texte-secondaire); white-space: nowrap; }
+  /* Lot « cours-ouvertures » (10/11/2026) : sous les fiches d'un chapitre,
+     « Ouverte le » — une ligne par élève, une colonne par fiche que voit la
+     classe (son numéro, 🎯 pour l'Entraînement brevet), le jour de la
+     dernière ouverture ou rien. Au téléphone, le tableau glisse de côté et
+     les prénoms restent en place. */
+  .cours-ouv-env { margin: 10px 0 2px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cours-ouv { width: auto; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  .cours-ouv th, .cours-ouv td { padding: 5px 6px; border-bottom: 1px solid var(--filet-doux); text-align: center; white-space: nowrap; }
+  .cours-ouv tr:last-child > * { border-bottom: 0; }
+  .cours-ouv thead th { min-width: 3.6em; }
+  .cours-ouv th:first-child { position: sticky; left: 0; z-index: 1; text-align: left; padding-right: 14px; }
+  .cours-ouv tbody th { background: var(--paper); font-size: 13.5px; font-weight: 600; color: var(--ink);
+                        max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; }
+  .cours-ouv td span { display: inline-block; padding: 1px 6px; border-radius: 6px; background: var(--teal-pale); color: var(--teal-texte); font-weight: 700; }
+  .cours-personne { margin: 8px 0 0; color: var(--muted); font-size: var(--texte-secondaire); }
   .cours-nouveau { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px; background: var(--orange-pale);
                    border: 1px solid #f0d2b0; color: var(--orange-texte); font-size: 12.5px; font-weight: 700; }
   .regler .cours-niveaux { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 2px; }
@@ -1413,8 +1428,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       </div>
     </div>
     <!-- Lot « cours-appli » (08/11/2026) : l'onglet Cours n'a pas de tableau
-         (rien n'est enregistré pour les élèves) ; il montre ce que voient les
-         élèves de la classe, chapitre par chapitre (dessinerCoursProf). -->
+         de progression ; il montre ce que voient les élèves de la classe,
+         chapitre par chapitre (dessinerCoursProf), et depuis le lot
+         « cours-ouvertures » (10/11/2026) le jour où chaque élève a ouvert
+         chaque fiche pour la dernière fois. -->
     <div class="carte cours-prof" id="cours-prof" hidden></div>
 
     <!-- Serveur pro, lot 5c (choix de Gwenaël, maquette 8 du 25/10/2026) : les
@@ -3234,7 +3251,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!montrer) return;
     const c = coursDeLaClasse();
     panneau.append(el("h2", "", `Ce que voient les élèves de la ${classe.libelle}`),
-      el("p", "sous", "Rien n’est enregistré : on ne sait pas qui a ouvert quoi."));
+      el("p", "sous", "« Ouverte le » : le dernier jour où chaque élève a ouvert la fiche depuis « Mes cours »."));
     const ouverts = COURS.filter(ch => c.chapitres.has(ch.id));
     if (!ouverts.length) {
       panneau.append(el("p", "", droitClasse === "proprietaire"
@@ -3263,8 +3280,68 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         rangee.append(marque, t, lienVoir(r.url));
         bloc.append(rangee);
       });
+      // Lot « cours-ouvertures » : les colonnes sont les fiches que voit la
+      // classe, sous le numéro que voient les élèves.
+      const colonnes = ch.fiches.filter(f => ficheOuverte(c, f)).map(f => ({id: f.id, n: String(f.n), titre: f.h1}));
+      if (ch.brevet && !c.sans.has(ch.brevet.id)) colonnes.push({id: ch.brevet.id, n: "🎯", titre: "Entraînement brevet"});
+      const ouvertures = tableauOuvertures(colonnes);
+      if (ouvertures) bloc.append(ouvertures);
       panneau.append(bloc);
     });
+  }
+
+  // Lot « cours-ouvertures » (10/11/2026, décidé par Gwenaël) : pour chaque
+  // élève et chaque fiche, « ouverte le … » (le jour de la dernière
+  // ouverture depuis « Mes cours ») ou rien — ni nombre de fois, ni durée,
+  // jamais « lue ». Le jour vient du serveur (tableau, champ « ouvertes »),
+  // c'est celui de La Réunion. Personne dans le chapitre : une phrase, pas
+  // une grille vide.
+  const JOUR_ISO = /^\d{4}-\d{2}-\d{2}$/;
+  function jourOuvert(eleve, fiche) {
+    const jour = eleve && eleve.ouvertes && typeof eleve.ouvertes === "object" ? eleve.ouvertes[fiche] : null;
+    return typeof jour === "string" && JOUR_ISO.test(jour) ? jour : null;
+  }
+  function tableauOuvertures(colonnes) {
+    const liste = appliAffichee === "cours" ? ordreDeLaFeuille(eleves || []) : [];
+    if (!liste.length || !colonnes.length) return null;
+    if (!liste.some(eleve => colonnes.some(col => jourOuvert(eleve, col.id)))) {
+      return el("p", "cours-personne", "Personne n’a encore ouvert de fiche de ce chapitre.");
+    }
+    const enveloppe = el("div", "cours-ouv-env");
+    const table = el("table", "cours-ouv");
+    const tete = el("tr", "");
+    const coin = el("th", "", "Ouverte le");
+    coin.scope = "col";
+    tete.append(coin);
+    colonnes.forEach(col => {
+      const th = el("th", "", col.n);
+      th.scope = "col";
+      th.title = col.n === "🎯" ? col.titre : `${col.n}. ${col.titre}`;
+      th.setAttribute("aria-label", col.n === "🎯" ? col.titre : `Fiche ${col.n}`);
+      tete.append(th);
+    });
+    const thead = el("thead", "");
+    thead.append(tete);
+    const tbody = el("tbody", "");
+    liste.forEach(eleve => {
+      const ligne = el("tr", "");
+      const nom = el("th", "", nomAffiche(eleve) || "sans prénom");
+      nom.scope = "row";
+      ligne.append(nom);
+      colonnes.forEach(col => {
+        const jour = jourOuvert(eleve, col.id);
+        const td = el("td", "");
+        if (jour) {
+          td.append(el("span", "", `${jour.slice(8, 10)}/${jour.slice(5, 7)}`));
+          td.title = `ouverte le ${jourLisible(jour)}`;
+        }
+        ligne.append(td);
+      });
+      tbody.append(ligne);
+    });
+    table.append(thead, tbody);
+    enveloppe.append(table);
+    return enveloppe;
   }
 
   // La fenêtre « Régler les cours » : le niveau (un filtre), puis les

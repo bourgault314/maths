@@ -172,7 +172,8 @@ try {
     ] + acces_affichable($eleve);
     // Lot « cours-appli » (08/11/2026) : l'appli Cours — les chapitres et les
     // fiches ouverts par le professeur, avec leurs adresses (lib/cours.php).
-    // Rien n'est enregistré de ce que l'élève y ouvre.
+    // Ce que l'élève y ouvre est noté par api/cours.php (le jour seulement,
+    // lot « cours-ouvertures », 10/11/2026), pas ici.
     $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null);
     if (in_array('cours', $acces['applis'], true)) {
         $reponse['cours'] = cours_de_l_eleve($acces['reglages']['cours'] ?? []);

@@ -316,9 +316,11 @@ const CATALOGUE_APPLIS = [
         'version_min' => 2,
     ],
     // L'appli « Cours » (lot « cours-appli », 08/11/2026, lib/cours.php) :
-    // le livret de cours de Gwenaël, une fiche par savoir-faire. Rien n'est
-    // enregistré pour l'élève : pas de progression (api/parcours.php ne la
-    // connaît pas), pas de jauge, pas d'ajout par élève (« par_eleve »). Ce
+    // le livret de cours de Gwenaël, une fiche par savoir-faire. Pas de
+    // progression (api/parcours.php ne la connaît pas), pas de jauge, pas
+    // d'ajout par élève (« par_eleve ») ; depuis le lot « cours-ouvertures »
+    // (10/11/2026), seulement le jour de la dernière ouverture de chaque
+    // fiche, dans sa propre table (lib/cours.php, api/cours.php). Ce
     // qui se règle pour la classe : les chapitres ouverts, les fiches
     // fermées, les fiches du nouveau programme ouvertes — des identifiants
     // du catalogue (« cours »). Au départ, RIEN n'est ouvert (choix de

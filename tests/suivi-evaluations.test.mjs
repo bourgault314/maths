@@ -56,7 +56,7 @@ test("la table des modèles ne porte que des réglages : ni nom d'élève, ni qu
 });
 
 test("les modèles sont sauvegardés, les séances (présences, réponses) jamais", () => {
-  assert.match(sauvegarde, /const TABLES_SAUVEGARDEES = \[[^\]]*'modeles_evaluation'\]/, "les modèles vont dans la sauvegarde");
+  assert.match(sauvegarde, /const TABLES_SAUVEGARDEES = \[[^\]]*'modeles_evaluation'[^\]]*\]/, "les modèles vont dans la sauvegarde");
   assert.match(sauvegarde, /const TABLES_STRUCTURE_SEULE = \[[^\]]*'directs', 'directs_questions', 'directs_reponses'\]/, "les directs restent en structure seule");
   assert.ok(!/TABLES_SAUVEGARDEES = \[[^\]]*'directs/.test(sauvegarde), "aucune table directs* n'est sauvegardée");
 });

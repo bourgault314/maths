@@ -484,7 +484,7 @@ test("le serveur : la table « records », son API, le réglage par classe, ce q
   assert.match(apiProf, /oublier_record_de_l_eleve\(\$pdo, \(int\)\$eleve\['id'\]\);/, "eleves.supprimer");
   assert.match(archives, /oublier_record_de_l_eleve\(\$pdo, \(int\)\$eleve\['id'\]\);/, "supprimer_classe");
   assert.match(apiEleve, /'record' => \$appli === 'defi-tables' && records_disponibles\(\$pdo\) \? record_affichable\(record_de\(\$pdo, \(int\)\$eleve\['id'\]\)\) : null,/, "la fiche");
-  assert.match(sauvegarde, /'journal', 'records', 'modeles_evaluation'\]/);
+  assert.match(sauvegarde, /'journal', 'records', 'modeles_evaluation', 'cours_ouvertures'\]/);
   assert.match(verifier, /verif\(\$lignes, "Les records \(Défi tables\)", function \(\) \{/);
 });
 

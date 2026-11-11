@@ -88,6 +88,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
     <h2>Ce qui est enregistré</h2>
     <p>Ton prénom et l’initiale de ton nom (écrits par ton professeur), ta classe, ta progression dans chaque activité, et le jour de ta dernière activité. Rien d’autre : pas ton nom de famille, pas d’adresse.</p>
     <p>Dans chaque activité, ta progression, ce sont aussi les jours où tu travailles et le nombre de tes réussites.</p>
+    <p>Dans « Mes cours », seulement le jour où tu as ouvert chaque fiche pour la dernière fois : pas combien de fois, ni combien de temps.</p>
     <p>Pendant une évaluation ou une séance en direct, tes réponses et l’heure où tu commences sont gardées le temps que ton professeur les récupère, puis effacées au plus tard le lendemain.</p>
     <p>Tout est effacé à la fin de l’année scolaire. Tu peux aussi demander à ton professeur de l’effacer avant.</p>
   </section>
@@ -110,6 +111,7 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
   <section class="carte parents">
     <h2>Pour les parents</h2>
     <p>Vous pouvez consulter la progression de votre enfant avec son code. Pour la faire corriger ou effacer, ou pour toute question, adressez-vous à son professeur de mathématiques, qui est votre interlocuteur pour ce suivi.</p>
+    <p>Pour les cours, seul le jour de la dernière ouverture de chaque fiche est conservé, afin que le professeur sache si elle a été consultée : ni le nombre d’ouvertures, ni le temps passé.</p>
     <p>Le texte complet de la politique de confidentialité de maths&amp;go est à l’adresse mathsgo.re/confidentialite.html</p>
   </section>
 

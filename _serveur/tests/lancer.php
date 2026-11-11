@@ -70,7 +70,7 @@ function bd_test(): PDO
     return $pdo;
 }
 if (getenv('SUIVI_TEST_DSN')) {
-    foreach (['modeles_evaluation', 'directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
+    foreach (['cours_ouvertures', 'modeles_evaluation', 'directs_reponses', 'directs_questions', 'directs', 'records', 'journal', 'versions', 'billets', 'partages', 'sessions_prof', 'compteurs', 'progressions', 'eleves', 'classes', 'profs'] as $table) {
         bd_test()->exec("DROP TABLE IF EXISTS $table");
     }
     echo "Base de test : " . $bdTest['dsn'] . "\n";
@@ -642,11 +642,13 @@ verifier("le manifeste connaît la page Infos", function () {
     // prof/defi_calcul_core.js et prof/defi_calcul_mon_parcours.js.
     // 67 depuis l'appli Cours (lot « cours-appli », 08/11/2026) : lib/cours.php
     // et le catalogue du livret, lib/cours.json.
-    vrai((bool)preg_match('/^fichiers 67$/m', $manifeste),
-        'le serveur compte 67 fichiers depuis l’appli Cours');
+    // 68 depuis les ouvertures des fiches (lot « cours-ouvertures »,
+    // 10/11/2026) : api/cours.php.
+    vrai((bool)preg_match('/^fichiers 68$/m', $manifeste),
+        'le serveur compte 68 fichiers depuis les ouvertures des fiches');
     foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
-              'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json',
+              'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json', 'api/cours.php',
               'vendor/katex-0.18.2/katex.min.js', 'vendor/katex-0.18.2/katex.min.css',
               'vendor/katex-0.18.2/fonts/KaTeX_Main-Regular.woff2'] as $fichier) {
         vrai((bool)preg_match('/^[0-9a-f]{64}  ' . preg_quote($fichier, '/') . '$/m', $manifeste),
@@ -8156,6 +8158,161 @@ verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.p
     egal(0, (int)$n, 'aucune ligne « cours » en base');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
+});
+
+// ------------------------------------------ les ouvertures de fiches (lot « cours-ouvertures », 10/11/2026)
+//
+// Gwenaël : pour chaque élève et chaque fiche, « ouverte le … » (le jour de la
+// dernière ouverture) ou rien — ni nombre de fois, ni durée, jamais « lue » ;
+// rien pour un visiteur sans code. L'espace élève envoie {code, page} à
+// api/cours.php quand l'élève touche une fiche de « Mes cours ».
+
+function ouvrir_fiche(string $code, mixed $page): array
+{
+    return appel('/api/cours.php', ['code' => $code, 'page' => $page]);
+}
+function ouvertures_en_base(?int $eleveId = null): array
+{
+    $sql = 'SELECT eleve_id, fiche, jour FROM cours_ouvertures' . ($eleveId === null ? '' : ' WHERE eleve_id = ' . $eleveId) . ' ORDER BY eleve_id, fiche';
+    return bd_test()->query($sql)->fetchAll();
+}
+function jour_reunion(): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone('Indian/Reunion')))->format('Y-m-d');
+}
+
+verifier("cours-ouvertures — toucher une fiche note le jour du serveur (La Réunion), le remplace à l'ouverture suivante, une ligne par élève et par fiche ; l'Entraînement brevet compte ; l'onglet Cours le rend au professeur, et rien d'autre", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O1', 'applis' => ['defi-tables', 'cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT']]]], ['jeton' => $jetonS1]);
+    $code = $eleves[0]['code'];
+    $r = ouvrir_fiche($code, '/cours/4e/4e-TRI-03.html');
+    egal(200, $r['code'], 'une fiche du chapitre ouvert (commune avec la 4e) : ' . $r['texte']);
+    egal(['ok' => true], $r['json'], 'la réponse ne dit rien de plus');
+    $jour = jour_reunion();
+    egal([['eleve_id' => $eleves[0]['id'], 'fiche' => '4e-TRI-03', 'jour' => $jour]], ouvertures_en_base($eleves[0]['id']), 'le jour de La Réunion, l’identifiant de la fiche');
+    // Une ouverture plus ancienne : remplacée, pas ajoutée.
+    bd_test()->prepare('UPDATE cours_ouvertures SET jour = ? WHERE eleve_id = ?')->execute(['2026-10-01', $eleves[0]['id']]);
+    egal(200, ouvrir_fiche($code, '/cours/4e/4e-TRI-03.html')['code'], 'la même fiche, rouverte');
+    egal(200, ouvrir_fiche($code, '/cours/4e/4e-TRI-03.html')['code'], 'et encore');
+    egal([['eleve_id' => $eleves[0]['id'], 'fiche' => '4e-TRI-03', 'jour' => $jour]], ouvertures_en_base($eleves[0]['id']), 'une seule ligne, le jour remplacé, pas de compte');
+    egal(200, ouvrir_fiche($code, '/cours/3e/3e-PYT-brevet.html')['code'], 'l’Entraînement brevet');
+    // La table ne garde QUE l'élève, la fiche et le jour.
+    $colonnes = array_keys(bd_test()->query('SELECT * FROM cours_ouvertures LIMIT 1')->fetch());
+    egal(['eleve_id', 'fiche', 'jour'], $colonnes, 'ni heure, ni nombre, ni durée');
+    // L'onglet Cours de Ma classe : le jour par fiche, pour chaque élève.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'le tableau de l’onglet Cours');
+    $parId = array_column($t['json']['eleves'], null, 'id');
+    egal(['3e-PYT-brevet' => $jour, '4e-TRI-03' => $jour], $parId[$eleves[0]['id']]['ouvertes'], 'ses deux fiches, et leur jour');
+    vrai(str_contains($t['texte'], '"ouvertes":{}'), 'l’autre élève : un objet vide, pas une liste');
+    // Les autres onglets n'en savent rien.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-tables'], ['jeton' => $jetonS1]);
+    vrai(!str_contains($t['texte'], '"ouvertes"'), 'Défi tables : pas de jours d’ouverture');
+    // Ce que voit l'élève de lui-même n'a pas changé : api/eleve.php ne rend aucun jour.
+    vrai(!str_contains(identite($code)['texte'], $jour), 'l’espace élève ne montre aucun jour');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-ouvertures — rien n'est noté pour une fiche que l'élève ne voit pas (fermée, chapitre fermé, imprimable, adresse complète ou bricolée), ni sans le Cours, ni sans code, ni par GET", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O2', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['3e-PYT-02', '3e-PYT-brevet']]]], ['jeton' => $jetonS1]);
+    $avant = count(ouvertures_en_base());
+    foreach ([
+        '/cours/3e/3e-PYT-02.html' => 'une fiche fermée par le professeur',
+        '/cours/3e/3e-PYT-brevet.html' => 'le brevet fermé',
+        '/cours/3e/3e-THA-01.html' => 'une fiche d’un chapitre fermé',
+        '/cours/3e/3e-PYT-imprimable.html' => 'la version imprimable (pas une fiche)',
+        'https://mathsgo.re/cours/4e/4e-TRI-01.html' => 'l’adresse complète',
+        '/cours/4e/4e-TRI-01.html#ch=3e-PYT' => 'avec l’ancre',
+        '/cours/4e/../4e/4e-TRI-01.html' => 'un chemin bricolé',
+        '/cours/4e/4e-TRI-99.html' => 'une fiche qui n’existe pas',
+        '' => 'vide',
+    ] as $page => $quoi) {
+        $r = ouvrir_fiche($eleve['code'], $page);
+        egal(400, $r['code'], "$quoi : refusé");
+    }
+    egal(400, ouvrir_fiche($eleve['code'], ['/cours/4e/4e-TRI-01.html'])['code'], 'une liste : refusé');
+    egal(400, ouvrir_fiche($eleve['code'], str_repeat('a', 200))['code'], 'trop long : refusé');
+    egal(400, appel('/api/cours.php', ['code' => $eleve['code']])['code'], 'sans page : refusé');
+    egal(400, ouvrir_fiche('AB', '/cours/4e/4e-TRI-01.html')['code'], 'code mal formé');
+    egal(404, ouvrir_fiche(code_inconnu(7), '/cours/4e/4e-TRI-01.html')['code'], 'code inconnu');
+    egal(405, appel('/api/cours.php', null)['code'], 'GET : refusé');
+    egal($avant, count(ouvertures_en_base()), 'rien d’écrit');
+    // La classe sans le Cours : 403, rien d'écrit.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
+    egal(403, ouvrir_fiche($eleve['code'], '/cours/4e/4e-TRI-01.html')['code'], 'sans l’appli Cours : refusé');
+    egal($avant, count(ouvertures_en_base()), 'toujours rien');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-ouvertures — les jours partent avec l'élève et avec la classe ; sans la table (avant migrer.php), rien ne tombe en panne et migrer.php la crée", function () use (&$jetonS1, $travail) {
+    // verifier.php a été retiré de la copie par un test plus haut (audit
+    // Codex 1) : on le remet le temps de ce test.
+    copy(dirname(__DIR__) . '/public/verifier.php', $travail . '/verifier.php');
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O3', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]], ['jeton' => $jetonS1]);
+    foreach ($eleves as $e) egal(200, ouvrir_fiche($e['code'], '/cours/4e/4e-TRI-01.html')['code']);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleves[0]['id']], ['jeton' => $jetonS1])['code']);
+    egal([], ouvertures_en_base($eleves[0]['id']), 'l’élève supprimé : ses jours partent');
+    egal(1, count(ouvertures_en_base($eleves[1]['id'])), 'l’autre garde les siens');
+    egal(200, appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1])['code']);
+    egal([], ouvertures_en_base($eleves[1]['id']), 'la classe supprimée : plus rien');
+    // Avant migrer.php : la table n'existe pas.
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'O4', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]], ['jeton' => $jetonS1]);
+    bd_test()->exec('DROP TABLE cours_ouvertures');
+    $r = ouvrir_fiche($eleve['code'], '/cours/4e/4e-TRI-01.html');
+    egal(503, $r['code'], 'sans la table : 503');
+    vrai(str_contains($r['json']['erreur'] ?? '', 'migrer.php'), 'le message dit quoi faire');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    egal(200, $t['code'], 'l’onglet Cours s’ouvre quand même');
+    vrai(str_contains($t['texte'], '"ouvertes":{}'), 'sans aucun jour');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.supprimer', 'eleve_id' => $eleve['id']], ['jeton' => $jetonS1])['code'], 'supprimer un élève marche sans la table');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'manque la table « cours_ouvertures »'), 'verifier.php la réclame');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Table « cours_ouvertures » créée'), 'migrer.php annonce la table créée');
+    $r = formulaire('/migrer.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(!str_contains($r['texte'], 'cours_ouvertures'), 'un second passage n’annonce plus rien');
+    $r = formulaire('/verifier.php', ['jeton' => 'JETON-DE-TEST']);
+    vrai(str_contains($r['texte'], 'Ouvertures des fiches (Mes cours)') && str_contains($r['texte'], 'en place'), 'verifier.php : la ligne est verte');
+    // La clé unique est bien là (une seconde ouverture remplace).
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    egal(200, ouvrir_fiche($eleve['code'], '/cours/4e/4e-TRI-01.html')['code']);
+    egal(200, ouvrir_fiche($eleve['code'], '/cours/4e/4e-TRI-01.html')['code']);
+    egal(1, count(ouvertures_en_base($eleve['id'])), 'une ligne après migrer.php aussi');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    @unlink($travail . '/verifier.php');
+    vider_compteurs();
+});
+
+verifier("cours-ouvertures — l'espace élève note l'ouverture (fiches et brevet, sendBeacon) ; Ma classe montre « Ouverte le » ; la page Infos le dit ; le survol des cartes seulement à la souris", function () {
+    $eleve = page('/')['texte'];
+    vrai(str_contains($eleve, 'function noterOuverture(url)') && str_contains($eleve, 'navigator.sendBeacon("api/cours.php"'), 'l’espace élève envoie l’ouverture');
+    vrai(substr_count($eleve, 'suivreOuverture(') >= 3, 'les fiches et le brevet sont suivis');
+    $lignes = explode("\n", $eleve);
+    foreach ($lignes as $i => $ligne) {
+        if (!str_contains($ligne, ':hover')) continue;
+        vrai(str_contains($ligne, '@media (hover: hover)') || str_contains($lignes[$i - 1] ?? '', '@media (hover: hover)'),
+            'un survol hors @media (hover: hover) : ' . trim($ligne));
+    }
+    vrai(substr_count($eleve, '@media (hover: hover)') >= 3, 'les survols sont sous @media (hover: hover)');
+    $prof = page('/prof/')['texte'];
+    vrai(str_contains($prof, '« Ouverte le » : le dernier jour où chaque élève a ouvert la fiche depuis « Mes cours ».'), 'Ma classe explique la colonne');
+    vrai(!str_contains($prof, 'on ne sait pas qui a ouvert quoi'), 'l’ancienne phrase est partie');
+    vrai(!preg_match('/\blue\b/u', substr($prof, strpos($prof, 'function tableauOuvertures'), 2500)), 'jamais « lue »');
+    $infos = page('/infos.php')['texte'];
+    vrai(str_contains($infos, 'Dans « Mes cours », seulement le jour où tu as ouvert chaque fiche pour la dernière fois'), 'Infos : la phrase pour l’élève');
+    vrai(str_contains($infos, 'Pour les cours, seul le jour de la dernière ouverture de chaque fiche est conservé'), 'Infos : la phrase pour les familles');
 });
 
 // ---------------------------------------------------------------------- résultat

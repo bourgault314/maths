@@ -298,8 +298,18 @@ Défi tables est la référence.
   l'espace élève de suivi.mathsgo.re (tuile « Mes cours », en haut). Un élève
   qui tape l'adresse d'une fiche fermée peut la lire : accepté (un cours sous
   licence libre, aucune donnée d'élève derrière).
-- Rien n'est enregistré de ce que l'élève ouvre ou répond : ni serveur, ni
-  stockage du navigateur, ni compteur. Le bouton « ◀ Mes cours » (barre
+- Une seule chose est enregistrée (lot « cours-ouvertures », 10/11/2026) :
+  le JOUR de la dernière ouverture de chaque fiche (et de l'Entraînement
+  brevet), par élève, table `cours_ouvertures` — ni nombre de fois, ni durée,
+  ni heure, jamais le mot « lue ». C'est l'espace élève qui la note, quand
+  l'élève touche la fiche dans « Mes cours » (`noterOuverture` → sendBeacon
+  vers `api/cours.php` avec le CHEMIN de la page ; le serveur retrouve la
+  fiche parmi celles que cet élève voit et prend son propre jour). Les pages
+  `cours/` ne savent rien de l'élève et n'envoient rien : un visiteur sans
+  code ne laisse rien, et le moteur du livret n'a pas à le savoir. Rien de
+  ce que l'élève répond aux questions éclair, rien dans le stockage du
+  navigateur. Dans Ma classe, l'onglet Cours montre « Ouverte le » sous
+  chaque chapitre. Le bouton « ◀ Mes cours » (barre
   collée en haut de chaque page) ramène au chapitre d'où l'élève vient parce
   que l'adresse le dit (`#ch=3e-PYT`), pas parce que le téléphone l'a retenu.
 - Le professeur règle, classe par classe, les chapitres ouverts (rien au
@@ -307,10 +317,10 @@ Défi tables est la référence.
   (fermées par défaut) : `classes.reglages.cours`, des identifiants du
   catalogue seulement (`lib/cours.php`). Pas d'ajout par élève, pas de
   progression (`api/parcours.php` ne connaît pas « cours »). Dans Ma classe,
-  l'onglet Cours n'a pas de tableau et n'entre ni dans La classe ni dans la
-  fiche d'un élève (`sansSuivi`).
-- Gardé par `tests/cours-appli.test.mjs` et les tests « cours-appli » de
-  `_serveur/tests/lancer.php`. Ajouter un chapitre : le refaire avec le
+  l'onglet Cours n'a pas de tableau de progression et n'entre ni dans La
+  classe ni dans la fiche d'un élève (`sansSuivi`).
+- Gardé par `tests/cours-appli.test.mjs` et les tests « cours-appli » et
+  « cours-ouvertures » de `_serveur/tests/lancer.php`. Ajouter un chapitre : le refaire avec le
   moteur, puis déposer par FTP `lib/cours.json` et `VERSION`.
 
 ## Fusion des données : modèle commun

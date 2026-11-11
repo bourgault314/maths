@@ -260,6 +260,20 @@ if ($autorise) {
         $fiches = array_sum(array_map(fn ($c) => count($c['fiches']), $chapitres));
         return count($chapitres) . " chapitre(s), $fiches fiche(s) au catalogue";
     });
+    // Lot « cours-ouvertures » (10/11/2026) : le jour où chaque élève a
+    // ouvert chaque fiche de « Mes cours » pour la dernière fois, dans une
+    // table ajoutée par migrer.php. Sans elle, rien ne tombe en panne : rien
+    // n'est noté, et l'onglet Cours de « Ma classe » n'a pas de dates.
+    verif($lignes, "Ouvertures des fiches (Mes cours)", function () {
+        $pdo = bd();
+        if (!table_existe($pdo, 'cours_ouvertures')) {
+            throw new RuntimeException("manque la table « cours_ouvertures » — ouvre migrer.php avec ton mot de passe d'installation.");
+        }
+        $lignesCours = (int)$pdo->query('SELECT COUNT(*) FROM cours_ouvertures')->fetchColumn();
+        return $lignesCours === 0
+            ? "en place (aucune fiche ouverte pour le moment)"
+            : "en place ($lignesCours ligne(s) : une par élève et par fiche ouverte, le jour seulement)";
+    });
     // Lot « Qui voit quoi » (22/10/2026) : ce qu'un professeur ouvre à un
     // élève en plus de sa classe vit dans eleves.ajouts, ajoutée par
     // migrer.php. Sans elle, rien ne tombe en panne (chacun voit ce que voit
