@@ -367,8 +367,17 @@ test("iPhone (10/11/2026) : au téléphone, hors séance, le menu est resserré 
   assert.match(bloc, /\.bas-pile \.historique-bouton \{ flex: 1 1 0;/);
   assert.match(bloc, /\.bg-point \{ display: none; \}/, "le détail des grades sur deux lignes, sans le point du milieu");
   assert.match(style, /@media \(max-width: 380px\) \{\s*\.resume \{ min-height: calc\(2\.6em \+ 4px\); \}/, "petit téléphone : le menu ne bouge pas entre Flash et Colonne");
-  // Les boutons du menu ne descendent jamais sous 44 px (les − / + gardent 38 px dans leur case, comme avant).
-  for (const [, h] of bloc.matchAll(/(?:\.pas, \.option, \.bascule|\.primary\.partir|\.bandeau-grades|\.historique-bouton|\.onglet) \{[^}]*?(?:min-)?height: (\d+)px/g)) {
-    assert.ok(Number(h) >= 44, `hauteur ${h} px`);
+  // 11/11/2026 : les tailles suivent la hauteur de l'écran (trois paliers dans --t-*) ;
+  // les boutons du menu ne descendent jamais sous 44 px (les − / + gardent 38 px dans leur case).
+  const paliers = [...bloc.matchAll(/@media \(max-width: 620px\)(?: and \(min-height: (\d+)px\))? \{\s*:root \{([^}]*)\}/g)];
+  assert.deepEqual(paliers.map(m => m[1] || "0"), ["0", "770", "860"], "trois paliers : serré, un peu d'air, les tailles d'avant");
+  for (const [, , vars] of paliers) {
+    for (const nom of ["--t-case", "--t-partir", "--t-bas"]) {
+      const v = vars.match(new RegExp(nom + ": (\\d+)px"));
+      if (v) assert.ok(Number(v[1]) >= 44, `${nom} ${v[1]} px`);
+    }
   }
+  assert.match(bloc, /\.pas, \.option, \.bascule \{ height: var\(--t-case\); \}/);
+  // Côte à côte, « Historique » prend le cadre des grades (bord encre, papier crème, ombre beige).
+  assert.match(bloc, /\.historique-bouton \{ padding: 5px 10px; border: 2px solid var\(--ink\); border-radius: 14px; background: #fdfbf6;\s*box-shadow: 0 4px 0 #d8c89c;/);
 });

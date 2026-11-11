@@ -784,24 +784,42 @@
        téléphone et hors séance seulement (la séance garde ses tailles).
        Boutons : jamais sous 44 px. La marge du dessus reste pour les
        petits iPhone (SE) où tout ne peut pas tenir. */
+    /* 11/11/2026 (photo de Gwenaël, iPhone) : le menu tenait, mais un grand
+       vide restait sous le cadre. Les tailles suivent maintenant la HAUTEUR
+       de l'écran (que la page connaît — la barre de Safari, elle, ne se
+       mesure pas) : serré sur un petit écran, un peu plus d'air sur un écran
+       haut, les tailles d'avant sur un très grand. Toujours une marge
+       au-dessus de la barre. Les valeurs sont dans les variables --t-*. */
     @media (max-width: 620px) {
-      body:not(.en-seance) .shell { padding-top: 4px; }
+      :root { --t-haut: 4px; --t-h1: 1.6rem; --t-suivi: 6px; --t-corps: 8px; --t-gap: 7px; --t-bloc: 3px;
+        --t-case: 46px; --t-resume: 2px; --t-pile: 8px; --t-partir: 52px; --t-bas: 50px; }
+    }
+    @media (max-width: 620px) and (min-height: 770px) {
+      :root { --t-h1: 1.65rem; --t-suivi: 9px; --t-corps: 10px; --t-gap: 8px;
+        --t-case: 50px; --t-resume: 4px; --t-pile: 9px; --t-partir: 54px; --t-bas: 52px; }
+    }
+    @media (max-width: 620px) and (min-height: 860px) {
+      :root { --t-haut: 10px; --t-h1: 1.75rem; --t-suivi: 14px; --t-corps: 12px; --t-gap: 10px; --t-bloc: 4px;
+        --t-case: 52px; --t-resume: 8px; --t-pile: 12px; --t-partir: 58px; --t-bas: 56px; }
+    }
+    @media (max-width: 620px) {
+      body:not(.en-seance) .shell { padding-top: var(--t-haut); }
       body:not(.en-seance) .panel { --bandeau-haut: 8px; --rangee-h: 44px; }
-      body:not(.en-seance) h1 { font-size: 1.6rem; }
+      body:not(.en-seance) h1 { font-size: var(--t-h1); }
       body:not(.en-seance) .cadre-haut .eyebrow { margin-bottom: 0; }
-      body:not(.en-seance) .suivi-repere { margin-top: 6px; }
+      body:not(.en-seance) .suivi-repere { margin-top: var(--t-suivi); }
       body:not(.en-seance) .bandeau .onglets { margin-top: 4px; }
       .onglet { min-height: 44px; padding-top: 6px; padding-bottom: 10px; }
       .onglet[aria-pressed="true"] { padding-top: 12px; padding-bottom: 12px; }
-      .reglages-corps { padding-top: 8px; padding-bottom: 8px; }
-      #grille { gap: 7px 14px; }
-      .bloc { gap: 3px; }
-      .pas, .option, .bascule { height: 46px; }
+      .reglages-corps { padding-top: var(--t-corps); padding-bottom: var(--t-corps); }
+      #grille { gap: var(--t-gap) 14px; }
+      .bloc { gap: var(--t-bloc); }
+      .pas, .option, .bascule { height: var(--t-case); }
       .pas button { height: 38px; }
-      .resume { min-height: calc(1.3em + 4px); padding: 2px 8px; }
-      .bas-pile { margin-top: 8px; gap: 8px; }
-      .reglages-corps .bas-pile .bas .primary.partir { min-height: 52px; }
-      .bandeau-grades { min-height: 50px; }
+      .resume { min-height: calc(1.3em + 4px); padding: var(--t-resume) 8px; }
+      .bas-pile { margin-top: var(--t-pile); gap: var(--t-pile); }
+      .reglages-corps .bas-pile .bas .primary.partir { min-height: var(--t-partir); }
+      .bandeau-grades { min-height: var(--t-bas); }
       /* « C'est parti » sur toute la largeur, puis « Les grades » et
          « Historique » CÔTE À CÔTE, de la même taille (idée de Gwenaël,
          10/11/2026). Sans historique (visiteur sans séance), les grades
@@ -809,7 +827,12 @@
       .reglages-corps .bas-pile { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
       .reglages-corps .bas-pile .bas .primary.partir { flex: 1 1 100%; }
       .reglages-corps .bas-pile .bandeau-grades { flex: 1 1 0; width: auto; min-width: 0; padding: 5px 10px 5px 6px; gap: 6px; }
-      .reglages-corps .bas-pile .historique-bouton { flex: 1 1 0; width: auto; max-width: none; align-self: stretch; min-height: 50px; margin: 0; }
+      .reglages-corps .bas-pile .historique-bouton { flex: 1 1 0; width: auto; max-width: none; align-self: stretch; min-height: var(--t-bas); margin: 0; }
+      /* 11/11/2026 : côte à côte, les deux boutons forment une PAIRE —
+         « Historique » prend le cadre des grades (bord encre, papier crème,
+         ombre beige, titre en Georgia). Le bandeau des grades ne change pas. */
+      .reglages-corps .bas-pile .historique-bouton { padding: 5px 10px; border: 2px solid var(--ink); border-radius: 14px; background: #fdfbf6;
+        box-shadow: 0 4px 0 #d8c89c; color: var(--ink); font-family: Georgia, "Noto Serif", "Times New Roman", serif; font-weight: 700; font-size: 1.05rem; }
       .reglages-corps .bas-pile .bandeau-grades .bg-kimono { width: 30px; height: 38px; font-size: 1.7rem; }
       .reglages-corps .bas-pile .bandeau-grades .bg-titre { font-size: 1.05rem; }
       .reglages-corps .bas-pile .bandeau-grades .bg-det { font-size: .8rem; }
