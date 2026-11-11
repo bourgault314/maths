@@ -802,7 +802,8 @@
   // Anzan : un jour de travail = une séance avec au moins un calcul fait ;
   // une ligne par séance, dans l'ordre {mode (le code : flash, colonne,
   // grade, entrainement), calculs (faits), justes, prevus, grade (le numéro,
-  // 0 hors des grades)} ; à aider : rien (aucune règle décidée) ; à
+  // 0 hors des grades), reussi (lot « le jour vert » : 1 ou 0 pour un
+  // passage de grade, null sinon)} ; à aider : rien (aucune règle décidée) ; à
   // féliciter : un grade réussi cette semaine ({type: "grade", grade}, le
   // plus haut).
   function jourPlus(jour, nombre) {
@@ -832,7 +833,10 @@
       .sort((x, y) => (x.jour < y.jour ? -1 : x.jour > y.jour ? 1 : 0));
     const jours = [];
     faites.filter(s => s.jour >= debut).forEach(s => {
-      const ligne = {mode: s.mode, calculs: s.faits, justes: s.score, prevus: s.calculs, grade: s.grade || 0};
+      // Lot « le jour vert » (11/11/2026) : un passage de grade dit aussi
+      // s'il est réussi (1) ou pas encore (0) ; null hors des grades.
+      const ligne = {mode: s.mode, calculs: s.faits, justes: s.score, prevus: s.calculs, grade: s.grade || 0,
+        reussi: s.mode === "grade" ? (s.reussi ? 1 : 0) : null};
       const dernierJour = jours[jours.length - 1];
       if (dernierJour && dernierJour.jour === s.jour) dernierJour.lignes.push(ligne);
       else jours.push({jour: s.jour, lignes: [ligne]});

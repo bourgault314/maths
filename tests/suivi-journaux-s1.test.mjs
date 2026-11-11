@@ -107,7 +107,7 @@ function jouerSeanceT(p, jour, {table = null, resultat = () => null, finJour = j
 }
 
 test("Défi tables, version 4 : un journal vide au départ, aligné sur les séances ; jamais de temps passé", () => {
-  assert.equal(T.VERSION, 4);
+  assert.equal(T.VERSION, 5); // 5 depuis le lot « le jour vert » (le travail hors séance)
   const p = T.creerParcours();
   assert.deepEqual(T.JOURNAL, ["table", "etapes", "calculs", "justes", "test", "numero"]);
   assert.deepEqual(p.journal, {table: [], etapes: [], calculs: [], justes: [], test: [], numero: []});
@@ -186,7 +186,7 @@ test("Défi tables : la séance reprise (rechargée, ou sur un autre appareil) g
 test("Défi tables : une progression de version 3 se relit sans rien perdre — ses séances ont un journal « pas connu »", () => {
   const v3 = {version: 3, seances: ["2026-11-02", "2026-11-03", "2026-11-03"], tables: {2: {acquise: "2026-11-01"}}};
   const p = T.normaliserParcours(v3);
-  assert.equal(p.version, 4);
+  assert.equal(p.version, 5);
   assert.deepEqual(p.seances, v3.seances);
   assert.deepEqual(p.journal.test, [-1, -1, -1]);
   assert.equal(p.tables[2].acquise, "2026-11-01");
@@ -568,15 +568,15 @@ function tresorC(p, jour, {aide = false, solution = false} = {}) {
 }
 
 test("Coffres magiques, version 2 : le journal du jour — trésors, parfaits, aides, solutions", () => {
-  assert.equal(C.VERSION, 3, "version 3 depuis le lot coffres-chemin-gloubi (gloubi et cran)");
-  assert.deepEqual(C.JOURNAL, ["tresors", "parfaits", "aides", "solutions"]);
-  assert.deepEqual(C.creer(), {version: 3, epoque: 0, niveaux: {}, operations: {}});
+  assert.equal(C.VERSION, 4, "version 4 depuis le lot « le jour vert » (les clés du jour au journal)");
+  assert.deepEqual(C.JOURNAL, ["tresors", "parfaits", "aides", "solutions", "cles"]);
+  assert.deepEqual(C.creer(), {version: 4, epoque: 0, niveaux: {}, operations: {}});
   let p = tresorC(C.creer(), MERCREDI);
   p = tresorC(p, MERCREDI, {aide: true});
   p = tresorC(p, MERCREDI, {aide: true, solution: true});
   p = C.noterAide(p, "product", plus(MERCREDI, 1));
   assert.deepEqual(p.jours, [MERCREDI, plus(MERCREDI, 1)]);
-  assert.deepEqual(p.journal, {tresors: [3, 0], parfaits: [2, 0], aides: [2, 1], solutions: [1, 0]}, "une aide ne casse pas le parfait, une solution si");
+  assert.deepEqual(p.journal, {tresors: [3, 0], parfaits: [2, 0], aides: [2, 1], solutions: [1, 0], cles: [30, 0]}, "une aide ne casse pas le parfait, une solution si ; les clés du jour (lot « le jour vert »)");
   assert.equal(p.depuis, MERCREDI);
   assert.deepEqual(C.pourServeur(p).journal, p.journal);
   // Une erreur ou une clé seules ne font pas un jour du journal.
@@ -624,9 +624,11 @@ test("resumeSuivi, Défi tables : les jours de travail (une ligne par séance), 
   p.tables[7].seance = {depart: 3, n: 9, dernier: LUNDI};
   p = T.normaliserParcours(p);
   const r = T.resumeSuivi(p, {aujourdhui: MERCREDI});
-  assert.deepEqual(r.jours.map(j => j.jour), ["2026-10-20", LUNDI], "dans les 4 semaines, jusqu'à aujourd'hui");
-  assert.deepEqual(r.jours[1].lignes, [{table: 7, etapes: 4, calculs: 3, justes: 3, test: 0}, {table: 7, etapes: 4, calculs: 4, justes: 4, test: 0}]);
-  assert.equal(r.dernier, LUNDI, "le 20 novembre n'est pas encore venu");
+  // Lot « le jour vert » : les jours où une table a été passée sans séance
+  // (02/11, 10/11) sont rattrapés à la lecture.
+  assert.deepEqual(r.jours.map(j => j.jour), ["2026-10-20", "2026-11-02", LUNDI, "2026-11-10"], "dans les 4 semaines, jusqu'à aujourd'hui");
+  assert.deepEqual(r.jours[2].lignes, [{table: 7, etapes: 4, calculs: 3, justes: 3, test: 0}, {table: 7, etapes: 4, calculs: 4, justes: 4, test: 0}]);
+  assert.equal(r.dernier, "2026-11-10", "le 20 novembre n'est pas encore venu");
   assert.deepEqual(r.aider, [{type: "seances-longues", table: 7, seances: 9}]);
   assert.deepEqual(r.feliciter, [{type: "table", table: 5}], "seulement cette semaine");
   assert.equal(r.connuDepuis, null);
@@ -645,7 +647,7 @@ test("resumeSuivi, SPLAT! : un jour joué = un jour de travail ; à aider : des 
   p = S.enregistrerEnCours(p, "m2e1", {sig: "a", idx: 2, etoiles: 0, res: [false, "ko"], vues: 1, cartes: 4}, MERCREDI);
   const r = S.resumeSuivi(p, {aujourdhui: MERCREDI});
   assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", "2026-11-10", MERCREDI]);
-  assert.deepEqual(r.jours[2].lignes, [{series: 1, reussies: 0, vues: 1}]);
+  assert.deepEqual(r.jours[2].lignes, [{series: 1, reussies: 0, vues: 1, etapes: [], bonus: 0}]);
   assert.deepEqual(r.aider, [{type: "reponses-vues", vues: 1}]);
   assert.deepEqual(r.feliciter, [{type: "monde", monde: 1}], "le monde 1 fini mardi");
   assert.deepEqual(S.resumeSuivi(p, {aujourdhui: plus(MERCREDI, 7)}).feliciter, [], "la semaine d'après : plus rien");
@@ -664,7 +666,7 @@ test("resumeSuivi, Coffres : un trésor ouvert = un jour de travail ; à aider :
   p = tresorC(p, MERCREDI, {solution: true});
   const r = C.resumeSuivi(p, {aujourdhui: MERCREDI});
   assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", MERCREDI], "une aide seule n'est pas un jour de travail");
-  assert.deepEqual(r.jours[1].lignes, [{tresors: 1, parfaits: 0, aides: 0, solutions: 1}]);
+  assert.deepEqual(r.jours[1].lignes, [{tresors: 1, parfaits: 0, aides: 0, solutions: 1, cles: 10}]);
   assert.deepEqual(r.aider, [{type: "solutions-vues", solutions: 1}]);
   assert.deepEqual(r.feliciter, []);
   assert.equal(r.dernier, MERCREDI);
@@ -679,7 +681,7 @@ test("resumeSuivi, Anzan : une séance avec un calcul fait = un jour de travail 
   p = A.noterSeance(p, {id: 13, mode: "grade", reglages: {operations: "plus", chiffresMin: grade.chiffres, chiffresMax: grade.chiffres, nombres: grade.nombres, grade: 1, calculs: 10}, faits: 10, score: 9}, MERCREDI).parcours;
   const r = A.resumeSuivi(p, {aujourdhui: MERCREDI});
   assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", LUNDI, MERCREDI]);
-  assert.deepEqual(r.jours[1].lignes, [{mode: "flash", calculs: 4, justes: 4, prevus: 10, grade: 0}]);
+  assert.deepEqual(r.jours[1].lignes, [{mode: "flash", calculs: 4, justes: 4, prevus: 10, grade: 0, reussi: null}]);
   assert.deepEqual(r.aider, []);
   assert.equal(A.gradeReussi(p), 1);
   assert.deepEqual(r.feliciter, [{type: "grade", grade: 1}]);
@@ -696,7 +698,7 @@ test("resumeSuivi, Défi calcul : les séances du journal ; à aider : à repren
   const r = D.resumeSuivi(p, {aujourdhui: MERCREDI});
   assert.deepEqual(r.jours.map(j => j.jour), [LUNDI, MERCREDI]);
   // Les minutes que Défi calcul garde ne sont pas rendues : la page ne les montrera pas (07/11/2026).
-  assert.deepEqual(r.jours[1].lignes, [{calculs: 8, justes: 8, nouveautes: 0, prouvees: 2, rouges: 1}]);
+  assert.deepEqual(r.jours[1].lignes, [{calculs: 8, justes: 8, nouveautes: 0, prouvees: 2, rouges: 1, modules: ["A2"]}]);
   assert.ok(r.aider.some(a => a.type === "rouges" && a.competences >= 1), JSON.stringify(r.aider));
   assert.deepEqual(r.feliciter, [{type: "competences", competences: 5}]);
 });
@@ -744,15 +746,15 @@ test("le pire cas de chaque appli tient sous les bornes du serveur (2 000 clés,
   });
 });
 
-test("serveur : version_min 4 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 3 (Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
+test("serveur : version_min 5 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 4 (Coffres), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = (debut, fin) => applis.slice(applis.indexOf(`'${debut}' => [`), applis.indexOf(`'${fin}' => [`));
   const tables = bloc("defi-tables", "coffres");
-  assert.match(tables, /'version_min' => 4,/);
+  assert.match(tables, /'version_min' => 5,/);
   ["journal", ...T.JOURNAL].forEach(cle => assert.match(tables, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const clesTables = tables.slice(tables.indexOf("'cles' => ["), tables.indexOf("'mots' =>"));
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
-  assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 3,/, "Coffres : version 3 depuis le lot coffres-chemin-gloubi");
+  assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 4,/, "Coffres : version 4 depuis le lot « le jour vert »");
   const calcul = bloc("defi-calcul", "automatismes");
   assert.match(calcul, /'version_min' => 6,/, "Défi calcul : une page de version 5 effacerait les numéros");
   ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
@@ -773,18 +775,18 @@ test("serveur : version_min 4 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 3 
 
 test("les moteurs changent d'adresse dans toutes les pages qui les chargent", async () => {
   for (const page of ["../outils/splat.html", "../outils/splat_tache_barre.html", "../outils/equasplat.html", "../outils/splat_univers.html"]) {
-    assert.match(await lire(page), /splat-parcours\.js\?v=20261111-1"/, page);
+    assert.match(await lire(page), /splat-parcours\.js\?v=20261111-2"/, page);
   }
-  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-2"/);
-  assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-2"/);
-  assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-1"/);
-  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);
+  assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
+  assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
+  assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261111-1"/);
 });
 
 // ============================================================ la page Défi tables
 
 test("la page Défi tables ne change pas : seule l'adresse du moteur monte ; elle ne mesure aucun temps", async () => {
   const page = await lire("../outils/calcul_mental/defi_tables.html");
-  assert.match(page, /defi_tables_mon_parcours\.js\?v=20261111-2"/);
+  assert.match(page, /defi_tables_mon_parcours\.js\?v=20261111-3"/);
   assert.doesNotMatch(page, /TROU_ACTIF_MS|verserTempsActif|noterTemps/);
 });

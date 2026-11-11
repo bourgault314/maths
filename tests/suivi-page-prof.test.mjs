@@ -614,7 +614,7 @@ test("« En cours » : une ligne courte — table et cases pleines, deux tables,
   assert.deepEqual({...resume(melange).enCours}, {...resume(lea).enCours}, "mélange joué ou non : la même ligne, la table en cours");
   assert.equal(resume(melange).enCours.texte, "table de 3 · 2 sur 10");
   const source = readFileSync(MOTEUR_PROF, "utf8");
-  assert.doesNotMatch(source.slice(source.indexOf("function resumeProf("), source.indexOf("// ---------------------------------------------------- le rangement par code")), /mélange|melange/, "resumeProf ne parle plus du mélange");
+  assert.doesNotMatch(source.slice(source.indexOf("function resumeProf("), source.indexOf("// --------------------------------------- pour « Suivre ses élèves » (S2)")), /mélange|melange/, "resumeProf ne parle plus du mélange");
   const toutes = eleveProf({acquises: [...MON_PARCOURS.TABLES]});
   assert.equal(resume(toutes).enCours.texte, "les 9 tables");
   const etoiles = MON_PARCOURS.normaliserParcours({...toutes, expert: {...toutes.expert, etoiles: 2}});

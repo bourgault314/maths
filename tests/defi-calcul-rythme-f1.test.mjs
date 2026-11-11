@@ -38,7 +38,7 @@ test("page élève : chaque lecture de la séance passe le réglage au moteur", 
   assert.match(page, /etape\.rang \? `Une \$\{etape\.rang\}e chose nouvelle` : "Une chose nouvelle"/);
   assert.match(page, /const DETAIL_NOUVEAU_RANG = "si l’entraînement est réussi";/);
   // Lot G1 : 20261107-2 ; son correctif (relecture de Codex) : 20261107-3.
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261108-1/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261111-1/, "le moteur change d'adresse");
 });
 
 test("page prof : « Nouveautés par séance » dans Régler Défi calcul, envoyé comme réglage de classe", async () => {

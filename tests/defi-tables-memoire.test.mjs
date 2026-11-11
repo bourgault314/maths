@@ -50,7 +50,7 @@ test("migration d’une grille d’avant (version 2) : cases 0/1/2/3 → boîtes
     "2-6": {cases: 3, vu: "2026-09-08", erreur: null}
   }};
   const p = P.normaliserParcours(v2);
-  assert.equal(p.version, 4, "relu dans la version du moteur (4 depuis le lot S1 « les journaux »)");
+  assert.equal(p.version, 5, "relu dans la version du moteur (5 depuis le lot « le jour vert »)");
   assert.equal(p.rang, 1, "la migration du lot 3 ne rejoue pas : le rang et les jours restent");
   assert.deepEqual(p.jours, ["2026-09-10"]);
   assert.deepEqual(p.calculs["2-2"], {boite: 1, cases: 0, vu: "2026-09-10", erreur: "2026-09-10", gagne: null, echeance: "2026-09-10"}, "un rouge est dû tout de suite");
@@ -228,7 +228,7 @@ test("la page : le bloc du jour en tête et conseillé, l’unique rond bleu, le
   assert.match(html, /\} else \{\s*actions\.append\(maTable\);[\s\S]{0,260}const voir = document\.createElement\("button"\);/, "sur le résultat, quand plus rien n’est dû");
   assert.doesNotMatch(html, /calculs-encore|libelleEncoreLibre|Rien ne monte : ces calculs n’étaient pas encore à revoir/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-3/);
 });
 
 test("le serveur : « boite » et « echeance » acceptés, « cases » toujours ; la page du professeur compte les calculs en retard", async () => {

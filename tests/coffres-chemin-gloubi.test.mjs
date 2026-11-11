@@ -224,6 +224,6 @@ test("Gloubi : le cran suivant part du Gloubi VRAIMENT affronté (deux onglets)"
 });
 
 test("version 3 : gloubi et cran exigent une page qui les connaît (le serveur refuse la version 2)", () => {
-  assert.equal(P.VERSION, 3);
-  assert.match(readFileSync(new URL("../_serveur/public/lib/applis.php", import.meta.url), "utf8"), /'gloubi', 'cran'\],[\s\S]*?'version_min' => 3,\s*\],\s*\/\/ Anzan/);
+  assert.equal(P.VERSION, 4); // 4 depuis le lot « le jour vert » (les clés du jour au journal)
+  assert.match(readFileSync(new URL("../_serveur/public/lib/applis.php", import.meta.url), "utf8"), /'gloubi', 'cran'\],[\s\S]*?'version_min' => 4,\s*\],\s*\/\/ Anzan/);
 });

@@ -41,7 +41,7 @@ test("le parcours couvre les tables 2 à 10 et conseille les faciles d’abord",
   assert.deepEqual([...parcours.TABLES], [2, 3, 4, 5, 6, 7, 8, 9, 10]);
   assert.deepEqual([...parcours.ORDRE_CONSEIL], [2, 10, 5, 3, 4, 6, 7, 8, 9]);
   const vide = parcours.creerParcours();
-  assert.equal(vide.version, 4, "lot S1 « les journaux » : version 4 du parcours (le journal des séances ; 3 = lot mémoire, 2 = lot 3)");
+  assert.equal(vide.version, 5, "lot « le jour vert » : version 5 du parcours (le travail hors séance ; 4 = lot S1, le journal des séances ; 3 = lot mémoire, 2 = lot 3)");
   assert.equal(vide.prenom, "");
   assert.deepEqual(Object.keys(vide.tables).map(Number), [...parcours.TABLES]);
   assert.ok(parcours.estVide(vide));

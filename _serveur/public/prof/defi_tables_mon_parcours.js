@@ -240,7 +240,11 @@
   // « version_min » 4) : elle ne connaît pas le journal et l'effacerait en
   // renvoyant le parcours ; elle garde son travail sur l'appareil, et la page
   // rechargée le renvoie, fusionné.
-  const VERSION = 4;
+  // Version 5 (lot « le jour vert », 11/11/2026) : le travail hors séance
+  // (`horsSeance`, voir plus bas). Le serveur refuse l'envoi d'une page de
+  // version 4 (lib/applis.php, « version_min » 5) : elle ne connaît pas ce
+  // champ et l'effacerait en renvoyant sa progression.
+  const VERSION = 5;
   const CLE_STOCKAGE = "mathsgo-defi-tables-parcours";
   const TABLES = Object.freeze(Array.from({length: 9}, (_, index) => index + 2));
   const ORDRE_CONSEIL = Object.freeze([2, 10, 5, 3, 4, 6, 7, 8, 9]);
@@ -440,6 +444,28 @@
   const JOURNAL_MAX = Object.freeze([10, SEUILS.journal.etapes, SEUILS.journal.calculs, SEUILS.journal.calculs, 2, NUMERO_MAX]);
   const TEST = Object.freeze({aucun: 0, reussi: 1, pasEncore: 2});
 
+  // Le travail HORS SÉANCE (lot « le jour vert », 11/11/2026, chantier
+  // « Suivre ses élèves »). Choix de Gwenaël (09/11/2026) : un jour de
+  // travail, c'est TOUT travail sur une table — Mes calculs du jour, une
+  // étape, le test (même pas encore réussi), un entraînement, Mon mélange —
+  // en séance OU depuis l'accueil ; une tentative d'étoile ou de record seule
+  // ne compte pas (règle du 08/11, « une tentative n'est pas une séance »).
+  // Le nombre de SÉANCES ne change pas : ceci n'en est pas une.
+  // Une entrée par jour et par table (0 : sans table — Mes calculs du jour,
+  // Mon mélange), trois listes alignées, triées par (jour, table) :
+  //   jours  le jour (« AAAA-MM-JJ ») ;
+  //   table  0, ou 2 à 10 ;
+  //   fait   ce qui a été fait ce jour-là sur cette table, en drapeaux
+  //          (HORS_SEANCE) — jamais combien de fois, ni une heure, ni un
+  //          temps passé, ni un calcul (« aider l'élève, pas le fliquer »).
+  // Fusion entre appareils : l'union des entrées, les drapeaux d'une même
+  // entrée réunis (OU) ; puis les 60 plus récentes. Le résultat ne dépend ni
+  // du sens ni de l'ordre des fusions (une entrée coupée d'un côté est plus
+  // ancienne que les 60 gardées, elle ne peut pas revenir).
+  const HORS_SEANCE = Object.freeze({calculs: 1, entraine: 2, reussi: 4, pasEncore: 8, melange: 16, apprends: 32});
+  const HORS_SEANCE_TOUS = 63;
+  const HORS_SEANCE_GARDER = SEUILS.seance.garder;
+
   // Les clés du compteur « fois » : les cinq activités de J'apprends et les
   // trois entraînements (noms distincts, un seul objet plat par table).
   const CLES_FOIS = Object.freeze([...ACTIVITES_APPRENDS, ...ENTRAINEMENTS]);
@@ -521,8 +547,69 @@
       // Le jour où Mes calculs du jour a été joué pour la dernière fois (la
       // porte de la journée) ; null : jamais.
       calculsDuJour: null,
+      // Le travail hors séance (lot « le jour vert ») : trois listes
+      // alignées, voir HORS_SEANCE.
+      horsSeance: horsSeanceVide(),
       calculs: {}
     };
+  }
+
+  function horsSeanceVide() {
+    return {jours: [], table: [], fait: []};
+  }
+
+  // Des entrées {jour, table, fait} → la forme rangée : une par (jour,
+  // table), drapeaux réunis, triées, les 60 plus récentes. Une entrée
+  // abîmée (pas un vrai jour, une table inconnue, des drapeaux hors bornes
+  // ou nuls) est écartée.
+  function rangerHorsSeance(entrees) {
+    const parCle = new Map();
+    entrees.forEach(({jour, table, fait}) => {
+      const j = jourReel(jour);
+      const t = Number(table);
+      const f = Number(fait);
+      if (!j || !(t === 0 || TABLES.includes(t)) || !Number.isInteger(f) || f < 1 || f > HORS_SEANCE_TOUS) return;
+      const cle = `${j} ${String(t).padStart(2, "0")}`;
+      parCle.set(cle, (parCle.get(cle) || 0) | f);
+    });
+    const cles = [...parCle.keys()].sort().slice(-HORS_SEANCE_GARDER);
+    const rangee = horsSeanceVide();
+    cles.forEach(cle => {
+      rangee.jours.push(cle.slice(0, 10));
+      rangee.table.push(Number(cle.slice(11)));
+      rangee.fait.push(parCle.get(cle));
+    });
+    return rangee;
+  }
+
+  function entreesHorsSeance(brut) {
+    const source = brut && typeof brut === "object" && !Array.isArray(brut) ? brut : {};
+    const jours = Array.isArray(source.jours) ? source.jours : [];
+    const tables = Array.isArray(source.table) ? source.table : [];
+    const faits = Array.isArray(source.fait) ? source.fait : [];
+    return jours.map((jour, index) => ({jour, table: tables[index], fait: faits[index]}));
+  }
+
+  // Ce qu'une série finie HORS séance ajoute au jour (lot « le jour vert ») :
+  // la page l'appelle après appliquerSerie quand l'élève n'est pas dans une
+  // séance, et après Mes calculs du jour joué depuis l'accueil
+  // ({type: "revision", table: null}). « classement » : celui que rend
+  // appliquerSerie ; « reussi » : le verdict du test (réussi ou pas encore).
+  // Une étoile, une course des records, une série qui ne compte pas : rien.
+  function noterHorsSeance(parcours, classement, {reussi = null, date = null} = {}) {
+    if (!classement || typeof classement !== "object") return parcours;
+    const jour = dateOuNull(date) || jourLocal();
+    let table = TABLES.includes(Number(classement.table)) ? Number(classement.table) : 0;
+    let fait = 0;
+    if (classement.type === "revision") fait = table ? HORS_SEANCE.entraine : HORS_SEANCE.calculs;
+    else if (classement.type === "apprends") fait = HORS_SEANCE.apprends;
+    else if (["entraine", "preparation"].includes(classement.type)) fait = HORS_SEANCE.entraine;
+    else if (classement.type === "validation") fait = reussi ? HORS_SEANCE.reussi : HORS_SEANCE.pasEncore;
+    else if (classement.type === "melange") { fait = HORS_SEANCE.melange; table = 0; }
+    if (!fait || (fait !== HORS_SEANCE.calculs && fait !== HORS_SEANCE.melange && !table)) return parcours;
+    const copie = cloner(parcours);
+    copie.horsSeance = rangerHorsSeance([...entreesHorsSeance(copie.horsSeance), {jour, table, fait}]);
+    return copie;
   }
 
   // Plafond du compteur « fois » (un élève qui refait une activité mille fois
@@ -861,6 +948,7 @@
     parcours.enCours = normaliserEnCours(brut.enCours);
     parcours.retenir = normaliserRetenir(brut.retenir);
     parcours.calculsDuJour = dateOuNull(brut.calculsDuJour);
+    parcours.horsSeance = rangerHorsSeance(entreesHorsSeance(brut.horsSeance));
     if (brut.calculs && typeof brut.calculs === "object") {
       FAITS.forEach(cle => {
         const source = brut.calculs[cle];
@@ -2931,6 +3019,18 @@
   // toujours pas passée ({type: "seances-longues", table, seances} — le seuil
   // de la page prof, SEUILS.prof.seancesLongues) ; à féliciter : une table
   // passée cette semaine ({type: "table", table}).
+  // Lot « le jour vert » (11/11/2026, choix de Gwenaël du 09/11) : AUSSI
+  // les jours de travail hors séance, une ligne par table travaillée ce
+  // jour-là, après les séances : {hors: 1, table (0 : sans table), mesCalculs,
+  // apprends, entraine, melange (0 ou 1), test (0 pas passé, 1 réussi, 2 pas
+  // encore), et le jour du dernier Mon mélange, son score (sur 20 ; null
+  // sinon : seul le dernier est gardé)}.
+  // Le passé d'avant le lot, rattrapé à la lecture sans rien écrire : la date
+  // où une table a été passée, le dernier jour de Mes calculs du jour et de
+  // Mon mélange deviennent des jours de travail — seulement un jour sans
+  // séance (une séance dit déjà ce qu'elle a fait). Un test pas encore
+  // réussi ou un entraînement d'avant le lot n'a laissé aucune date : ces
+  // jours-là restent vides.
   function resumeSuivi(brut, options) {
     const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
     const aujourdhui = jourReel(o.aujourdhui) || jourLocal();
@@ -2946,21 +3046,47 @@
       passees.push({jour: code.jour, entree: entreeDeSeance(parcours, decoderSeance(code))});
       passees.sort((a, b) => (a.jour < b.jour ? -1 : a.jour > b.jour ? 1 : 0));
     }
-    const jours = [];
-    passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
+    const parJour = new Map();
+    passees.forEach(({jour, entree}) => {
       const ligne = {};
       JOURNAL.forEach((champ, index) => { if (champ !== "numero") ligne[champ] = nombre(entree[index]); });
-      const dernierJour = jours[jours.length - 1];
-      if (dernierJour && dernierJour.jour === jour) dernierJour.lignes.push(ligne);
-      else jours.push({jour, lignes: [ligne]});
+      if (!parJour.has(jour)) parJour.set(jour, []);
+      parJour.get(jour).push(ligne);
     });
+    // Hors séance : ce qui est noté, puis le rattrapage des jours sans séance.
+    const hors = entreesHorsSeance(parcours.horsSeance);
+    const sansSeance = jour => jour && jour <= aujourdhui && !parJour.has(jour);
+    TABLES.forEach(table => {
+      const acquise = parcours.tables[table].acquise;
+      if (sansSeance(acquise)) hors.push({jour: acquise, table, fait: HORS_SEANCE.reussi});
+    });
+    if (sansSeance(parcours.calculsDuJour)) hors.push({jour: parcours.calculsDuJour, table: 0, fait: HORS_SEANCE.calculs});
+    if (sansSeance(parcours.melange.dernier)) hors.push({jour: parcours.melange.dernier, table: 0, fait: HORS_SEANCE.melange});
+    const rangee = rangerHorsSeance(hors);
+    const lignesHors = rangee.jours.map((jour, index) => ({jour, table: rangee.table[index], fait: rangee.fait[index]}))
+      .filter(entree => entree.jour <= aujourdhui)
+      .sort((x, y) => (x.jour !== y.jour ? (x.jour < y.jour ? -1 : 1) : (x.table || 99) - (y.table || 99)));
+    lignesHors.forEach(({jour, table, fait}) => {
+      if (!parJour.has(jour)) parJour.set(jour, []);
+      parJour.get(jour).push({
+        hors: 1, table,
+        mesCalculs: fait & HORS_SEANCE.calculs ? 1 : 0,
+        apprends: fait & HORS_SEANCE.apprends ? 1 : 0,
+        entraine: fait & HORS_SEANCE.entraine ? 1 : 0,
+        melange: fait & HORS_SEANCE.melange ? 1 : 0,
+        score: fait & HORS_SEANCE.melange && jour === parcours.melange.dernier && parcours.melange.score !== null ? parcours.melange.score : null,
+        test: fait & HORS_SEANCE.reussi ? TEST.reussi : fait & HORS_SEANCE.pasEncore ? TEST.pasEncore : TEST.aucun
+      });
+    });
+    const tousLesJours = [...parJour.keys()].sort();
+    const jours = tousLesJours.filter(jour => jour >= debut).map(jour => ({jour, lignes: parJour.get(jour)}));
     const longue = resumeProf(parcours, aujourdhui).longue;
     return {
       appli: "defi-tables",
       aujourdhui,
       debut,
       connuDepuis: parcours.seances.length >= SEUILS.seance.garder ? parcours.seances[0] : null,
-      dernier: passees.length ? passees[passees.length - 1].jour : null,
+      dernier: tousLesJours.length ? tousLesJours[tousLesJours.length - 1] : null,
       jours,
       aider: longue ? [{type: "seances-longues", table: longue.table, seances: longue.seances}] : [],
       feliciter: TABLES.filter(table => {
@@ -3749,6 +3875,9 @@
     // Mes calculs du jour : joué d'un côté aujourd'hui, il l'est (le jour le
     // plus récent).
     fusion.calculsDuJour = dateLaPlusRecente(a.calculsDuJour, b.calculsDuJour);
+    // Le travail hors séance (lot « le jour vert ») : l'union, drapeaux
+    // réunis, les 60 plus récentes après la réunion.
+    fusion.horsSeance = rangerHorsSeance([...entreesHorsSeance(a.horsSeance), ...entreesHorsSeance(b.horsSeance)]);
 
     // Les étoiles prennent le meilleur des deux, la couronne sa première date ;
     // le rang ne redescend jamais ; les jours travaillés se réunissent.
@@ -3947,6 +4076,7 @@
   return Object.freeze({
     VERSION,
     CLE_STOCKAGE,
+    HORS_SEANCE,
     TABLES,
     ORDRE_CONSEIL,
     ACTIVITES_APPRENDS,
@@ -4055,6 +4185,7 @@
     resumeProf,
     JOURNAL,
     resumeSuivi,
+    noterHorsSeance,
     commencerApresDecouverte,
     departApresDecouverte,
     MARCHE_APRES_DECOUVERTE,

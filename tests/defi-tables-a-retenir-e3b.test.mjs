@@ -210,7 +210,7 @@ const SI_TEST = (() => {
 
 test("e) le test de la table passé hors séance met ses erreurs dans « À retenir » ; pas « Comme le test, en 2 min », ni le test de bienvenue, ni pendant une séance (noterEtape s'en charge)", () => {
   const corps = source("finish");
-  assert.ok(corps.indexOf("parcours = suivi.parcours;") < corps.indexOf(SI_TEST) && corps.indexOf(SI_TEST) < corps.indexOf("sauverParcours();"), "après appliquerSerie, avant l'enregistrement");
+  assert.ok(corps.indexOf("parcours = suivi.parcours;") < corps.indexOf(SI_TEST) && corps.indexOf(SI_TEST) < corps.indexOf("sauverParcours();", corps.indexOf(SI_TEST)) && corps.lastIndexOf("sauverParcours();", corps.indexOf(SI_TEST)) < corps.indexOf("parcours = suivi.parcours;"), "après appliquerSerie, avant l'enregistrement (celui de Mes calculs du jour, lot « le jour vert », vient plus haut)");
   const AUJ = P.jourLocal();
   const depart = P.normaliserParcours({});
   const jouer = ({config, origin = "menu", seance = false}) => {

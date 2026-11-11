@@ -69,7 +69,8 @@ const CATALOGUE_APPLIS = [
             'acquise', 'melange', 'aJour', 'aRefaireAvec', 'expert', 'niveau', 'champion',
             'etoiles', 'couronne', 'rang', 'jours',
             'calculs', 'boite', 'cases', 'vu', 'erreur', 'gagne', 'echeance',
-            'journal', 'etapes', 'justes', 'test', 'numero'],
+            'journal', 'etapes', 'justes', 'test', 'numero',
+            'horsSeance', 'fait'],
         'mots' => ['desordre', 'trous', 'mixte'],
         'motifs' => ['/^(?:[2-9]|10)$/', '/^\d{1,2}-\d{1,2}$/'],
         // Lot serveur A (06/09/2026) : la SEULE chose que le serveur compte
@@ -102,7 +103,15 @@ const CATALOGUE_APPLIS = [
         // les tables, les 36 calculs, 60 séances au journal plein, une séance
         // en cours pleine) : sous 2 000 clés et 40 000 octets
         // (tests/suivi-journaux-s1.test.mjs).
-        'version_min' => 4,
+        // Lot « le jour vert » (11/11/2026, chantier « Suivre ses élèves ») :
+        // le travail fait depuis l'accueil, sans séance — `horsSeance`, trois
+        // listes alignées : `jours` (des dates), `table` (0 à 10) et `fait`
+        // (des drapeaux, 1 à 63 : Mes calculs du jour, entraînement, test
+        // réussi, test pas encore, Mon mélange, J'apprends) ; les 60 plus récentes. Ni
+        // heure, ni temps passé, ni calcul. Version 5 du moteur : une page de
+        // version 4 l'effacerait en renvoyant la progression, son envoi est
+        // refusé (400) ; la page rechargée renvoie tout, fusionné.
+        'version_min' => 5,
     ],
     // Coffres magiques, version SOLO (lot « Coffres magiques sur le suivi »,
     // 21/10/2026, pour un professeur des écoles qui la teste avec ses élèves ;
@@ -160,7 +169,10 @@ const CATALOGUE_APPLIS = [
         // Version 3 (lot « coffres-chemin-gloubi », 11/11/2026) : `gloubi` et
         // `cran` ; une page de version 2 les effacerait en renvoyant le
         // parcours (elle rendrait des matchs déjà joués) : refusée.
-        'version_min' => 3,
+        // Version 4 (lot « le jour vert », 11/11/2026) : une cinquième liste
+        // au journal, `cles` (les clés gagnées ce jour-là, la clé est déjà
+        // déclarée) ; une page de version 3 l'effacerait : refusée.
+        'version_min' => 4,
     ],
     // Anzan (lot « Qui voit quoi », lot 4a, 23/10/2026 — l'appli de Flash
     // Anzan / Colonne du soroban, faite pour une élève et donnée élève par
