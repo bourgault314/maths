@@ -34,10 +34,23 @@ Code retour 0 = tout est vert. `--headed` ouvre le navigateur pour observer.
 | T8 | Progression verrouillée (chantier 1) : seuils ⌈5/8⌉ exacts par monde (lagon à 9 niveaux → forêt à 6), accueil neuf tout fermé sauf le lagon, clic sur monde fermé sans effet + condition lisible (seuil + découvertes), déblocage après 6 réussites semées dont les 3 découvertes, étoiles sur les cartes, mode classe `?classe` (tout ouvert + badge), zéro défilement horizontal téléphone | API SOLEY + `localStorage` semé avant chargement + clics réels |
 | T9 | Chantier « Comprendre » (lot 1) : « Les quatre quarts » gagne par sa `sol` (1/4 exact dans chaque maison), le point de cours s'affiche après la victoire d'une découverte (pas d'un niveau ordinaire), panneau C3 avec QUATRE rayons terminaux + carte de savoir, prédire à révélation (réponse absente avant le toucher), « Revoir » rejoue, « J'ai compris ! » mène à la fenêtre de victoire, pas de réaffichage au rejeu + « Revoir le cours » sur la carte, condition « dont ses 3 découvertes », mode classe cours compris, vieille sauvegarde sans champ `cours` chargée telle quelle, stabilité 320 px et 402 px (cours + chaînes CALC corrigées R1) | victoires réelles via `solve`, clics réels, `SOLEY.montrerCours` |
 
-La preuve structurelle du lot 1 (les 60 niveaux historiques intacts à l'octet, hors
-champs autorisés par SPEC-COMPRENDRE-LOT1.md §8) se rejoue avec :
-`node tests/soley/verifier-lot1-comprendre.mjs` (référence git figée, comme
-`verifier-decoupage.mjs`).
+## Vérificateurs de lots : retirés le 11/11/2026
+
+Les seize `verifier-*.mjs` comparaient le dépôt à une référence git datée pour
+prouver qu'UN lot ne touchait que ce qu'il annonçait. Ils échouaient tous depuis
+les lots suivants (audit des tests du 11/11/2026) : ils ont quitté le dépôt. Pour
+en relire un : `git show 603f902e:tests/soley/<nom>`.
+
+`verifier-atelier.mjs`, `verifier-decoupage.mjs`, `verifier-lot-canne.mjs`,
+`verifier-lot-cours-repartis.mjs`, `verifier-lot-cueillette.mjs`,
+`verifier-lot-moitie-du-quart.mjs`, `verifier-lot-niveaux-durs.mjs`,
+`verifier-lot-pitons-cours.mjs`, `verifier-lot-pitons-demenagement.mjs`,
+`verifier-lot-pitons-etoffage.mjs`, `verifier-lot-porte.mjs`,
+`verifier-lot-recouper.mjs`, `verifier-lot-sixieme.mjs`, `verifier-lot-verite.mjs`,
+`verifier-lot-vocabulaire.mjs`, `verifier-lot1-comprendre.mjs`.
+
+Ce qui doit rester vrai du jeu est gardé par `test_soley.py` et `test_atelier.py`
+(lancés par `npm run verifier:navigateur`) et par les `*.test.mjs` de Solèy.
 
 ## Mesurer la difficulté (lot du 15/08, SOLEY.md §5 point 13)
 
@@ -51,8 +64,8 @@ Deux familles à ne pas confondre :
 # rendent un PLANCHER (« Le grand tri » : 15 522 au lieu de 21 249).
 node tests/soley/solveur-etalon.mjs --monde canne --sans-libre --budget 1600000
 
-# PROUVER — le lot ne touche que ce qu'il annonce (appariement par monde:nom).
-node tests/soley/verifier-lot-niveaux-durs.mjs
+# PROUVER — le lot ne touche que ce qu'il annonce : un vérificateur de lot, écrit
+# dans le dossier du lot (modèle : git show 603f902e:tests/soley/verifier-lot-niveaux-durs.mjs).
 ```
 
 `atelier-niveaux.mjs` (carte ASCII + plans trouvés), `carte-fruits.mjs` (où poser un

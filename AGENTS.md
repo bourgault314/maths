@@ -22,6 +22,16 @@ Automatismes V2, lire dans cet ordre :
 - Ne jamais fusionner une pull request sans validation explicite de Gwenaël.
 - JavaScript moderne, sans dépendance externe ni compilation.
 - Toute logique testable doit fonctionner avec `node --test`, sans navigateur.
+- Les recettes au navigateur (les `tests/*.cjs` sans « .test. » dans le nom, les
+  batteries Python de `tests/soley/`) ne sont pas découvertes par `node --test`.
+  Elles sont listées dans `scripts/verifier-navigateur.mjs`, que `npm run verifier`
+  lance à la fin pour les applis touchées par la branche (comparée à `origin/main`).
+  Une nouvelle recette s'y ajoute, sinon `tests/verifier-navigateur.test.mjs` rougit.
+  Passage complet : `npm run verifier:navigateur -- --tout` (≈ 30 min). Playwright
+  1.65.0, jsdom 26.1.0 et `@napi-rs/canvas` viennent du dossier `outils-tests` posé à
+  côté du dépôt ;
+  s'ils manquent, la suite échoue au lieu de passer en silence. Pas en CI : les
+  machines de GitHub n'ont ni navigateur ni les polices de Windows.
 - Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne
   tournent en CI que si la pull request touche `_serveur/`, les workflows, ou
   l'un des fichiers du dépôt que `_serveur/tests/lancer.php` compare octet pour

@@ -302,16 +302,19 @@ test("un nouveau code arrive après un code refusé : l’ancienne case reste en
 test("réponse tardive de Léa après « Ce n’est pas moi » : rien ne bouge", async () => {
   const serveur = fauxServeur();
   serveur.poser(B, parcoursAvecTravail("", 5), 1);
-  serveur.delai = 30;
+  serveur.retenir = true;         // aucune réponse ne revient avant relacher()
   const a = appli(serveur);
-  a.api.demarrerSuivi();          // lecture et identité en vol (30 ms)
+  a.api.demarrerSuivi();          // lecture et identité en vol
   travailler(a, 2);
   await a.temps.avancer(700);     // l'envoi part (base 0 → 409 attendu), en vol lui aussi
   // Lot E2 : la lecture de l'évaluation (api/direct.php) part aussi ; elle ne compte pas ici.
   assert.equal(serveur.appels.filter(x => !x.url.endsWith("/api/direct.php")).length, 3, "trois demandes en vol sous le code de Léa");
+  assert.equal(serveur.retenues.length, serveur.appels.length, "aucune réponse n’est encore revenue");
   a.api.quitterSuivi();           // Sam prend l'appareil
   assert.equal(a.api.codeSuivi, "");
-  await tic(80);                  // les trois réponses arrivent, trop tard
+  serveur.retenir = false;
+  assert.ok(serveur.relacher() >= 3, "les trois réponses arrivent, trop tard");
+  await tic(20);
   await a.temps.avancer(5000);
   assert.equal(a.api.codeSuivi, "");
   assert.equal(PARCOURS.estVide(PARCOURS.charger(a.local, "")), true, "la case sans code n’a rien reçu de Léa (ni du serveur, ni du 409)");

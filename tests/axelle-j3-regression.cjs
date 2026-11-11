@@ -222,7 +222,9 @@ async function playLevel(page, levelIndex) {
   links.on("pageerror", error => errors.push(`liens: ${error.message}`));
   await links.goto("http://127.0.0.1:4174/axelle/", {waitUntil:"networkidle"});
   const deskHrefs = await links.locator(".days > a").evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
-  assert(JSON.stringify(deskHrefs) === JSON.stringify(["/axelle/j1/","/axelle/j2/","/axelle/j3/","/axelle/j4/","/axelle/j5/","/axelle/j6/","/axelle/j7/"]), `Le Bureau n’affiche pas exactement J1 à J7 : ${deskHrefs}.`);
+  // Depuis le lot J4–J10, le Bureau commence à J4 (règle gardée par axelle-j4-j7-regression.cjs) ;
+  // J1 à J3 ne sont plus listés mais restent ouverts par leur adresse : la suite les visite un par un.
+  assert(JSON.stringify(deskHrefs) === JSON.stringify(["/axelle/j4/","/axelle/j5/","/axelle/j6/","/axelle/j7/","/axelle/j8/","/axelle/j9/","/axelle/j10/"]), `Le Bureau n’affiche pas exactement J4 à J10 : ${deskHrefs}.`);
   await links.screenshot({path:path.join(OUTPUT,"bureau-desktop.png"),fullPage:true});
   await links.goto("http://127.0.0.1:4174/axelle/j1/", {waitUntil:"networkidle"});
   assert(await links.locator("#start-button").count() === 1 && await links.locator('a[href="../"]').count() >= 1, "J1 ou son retour au Bureau manque.");
