@@ -570,7 +570,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « jour-vert » (11/11/2026) : lib/applis.php et la fiche élève (ce qui a été fait chaque jour).
   // Puis « toujours-toi » (11/11/2026) : la question « C'est toujours toi ? » allégée (index.php,
   // code-en-cases.js).
-  assert.match(lire("_serveur/public/VERSION"), /^lot toujours-toi$/m);
+  // Puis « cours-chapitres-4e » (11/11/2026) : lib/cours.json seul change (les quatre chapitres de 4e
+  // du livret en ligne).
+  assert.match(lire("_serveur/public/VERSION"), /^lot cours-chapitres-4e$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
