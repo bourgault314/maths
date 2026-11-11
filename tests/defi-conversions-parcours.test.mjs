@@ -145,6 +145,9 @@ test("À toi : l'outil 2 justes, l'image 2 justes, puis 5 justes de suite ; 25 a
   r.push(j("aucun"));
   assert.equal(P.suivreEntrainement(r).reussi, true);
   assert.equal(P.suivreEntrainement([j("outil"), j("outil"), j("image", false)]).outil, "image", "une erreur ramène l'image");
+  assert.equal(P.suivreEntrainement([j("outil", false)]).outil, "outil", "une erreur avec l'outil garde l'outil");
+  assert.equal(P.suivreEntrainement([j("outil"), j("outil", false), j("outil", false)]).outil, "outil");
+  assert.equal(P.suivreEntrainement([j("outil", false), j("outil"), j("outil")]).outil, "image", "puis 2 justes avec l'outil : l'image");
   assert.equal(P.suivreEntrainement([j("outil"), j("outil"), j("image", false), j("image", false)]).outil, "outil", "deux de suite, l'outil");
   const longue = Array.from({length: 25}, (_, i) => j("image", i % 2 === 0));
   assert.equal(P.suivreEntrainement(longue).fini, true);

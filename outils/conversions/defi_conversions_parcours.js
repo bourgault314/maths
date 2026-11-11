@@ -535,8 +535,13 @@
         erreursDeSuite += 1;
         justesAvecAide = 0;
         justesSansAide = 0;
-        outilDuDebut = false;
-        outil = erreursDeSuite >= erreurs ? "outil" : "image";
+        // Une erreur avec l'outil sous les yeux garde l'outil (choix de
+        // Gwenaël du 11/11 au soir : moins d'aide après une erreur n'a pas
+        // de sens). Ailleurs : une erreur ramène l'image, deux l'outil.
+        if (outil !== "outil") {
+          outilDuDebut = false;
+          outil = erreursDeSuite >= erreurs ? "outil" : "image";
+        }
       }
     });
     const reussi = justesSansAide >= sansOutil;
