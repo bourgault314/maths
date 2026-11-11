@@ -93,7 +93,7 @@ test("rien ne change aux données : le parcours envoyé au serveur est le même 
 
 test("le moteur est copié octet pour octet au serveur ; la page de Coffres le recharge (nouveau numéro)", () => {
   assert.equal(lire("../_serveur/public/prof/coffres-parcours.js"), lire("../assets/js/coffres-parcours.js"));
-  assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261108-1"/);
+  assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-1"/);
 });
 
 // ============================================================ Défi tables

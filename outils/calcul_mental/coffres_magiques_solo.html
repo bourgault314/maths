@@ -1737,7 +1737,8 @@
     html.suivi-eleve body.sur-choix .solo-page,
     html.suivi-eleve.suivi-attente .solo-page,
     html.suivi-eleve.suivi-attente #mode-dialog,
-    html.suivi-eleve.suivi-attente #lesson { display: none !important; }
+    html.suivi-eleve.suivi-attente #lesson,
+    html.suivi-eleve.suivi-attente #chemin { display: none !important; }
     html.suivi-eleve #mode-dialog,
     html.suivi-eleve #lesson {
       position: static;
@@ -1781,6 +1782,55 @@
     .confirm-card strong { color: #143e62; }
     .confirm-actions { display: grid; gap: 10px; justify-items: center; margin-top: 16px; }
     .confirm-actions .reset-button, .confirm-actions .primary-button { width: min(100%, 260px); }
+    /* ---------- l'élève à code : le chemin des coffres (lot « Coffres magiques : le chemin
+       des coffres et le cadeau Gloubi », 09/11/2026, planches validées par Gwenaël) ----------
+       « Tes coffres » est l'ACCUEIL de l'appli pour l'élève connecté (une page, comme le choix
+       du niveau) : trois niveaux, trois coffres chacun (bronze, argent, or — gagnés en couleur,
+       à gagner en pointillés), le prochain encadré en bleu, un gros bouton. Un niveau fermé
+       par le professeur reste visible, grisé, avec 🔒. Le trésor ouvert montre le coffre
+       gagné. Le visiteur sans code ne voit rien de tout cela. */
+    html.suivi-eleve #chemin {
+      position: static;
+      inset: auto;
+      z-index: auto;
+      min-height: 0;
+      padding: 4px 15px 14px;
+      background: none;
+      backdrop-filter: none;
+      place-items: start center;
+    }
+    html.suivi-eleve #chemin .dialog-card { max-height: none; box-shadow: 0 16px 45px rgba(28, 69, 101, .12); }
+    .chemin-card, .tresor-card { width: min(100%, 470px); }
+    .chemin-card h2, .tresor-card h2 { margin: .1em 0 .2em; }
+    .chemin-sous { margin: 0 0 14px; color: #49677b; font-weight: 800; }
+    .chemin-niveaux { display: grid; gap: 8px; max-width: 340px; margin: 6px auto 16px; padding: 0; list-style: none; }
+    .chemin-ligne { display: grid; grid-template-columns: 86px repeat(3, 1fr); align-items: center; gap: 6px;
+      padding: 6px 10px; border: 1px solid #dbe5ef; border-radius: 14px; background: #fff; }
+    .chemin-ligne.ferme { opacity: .45; }
+    .chemin-verrou { margin: -6px auto 14px; max-width: 340px; color: #49677b; font-size: .9rem; font-weight: 800; }
+    .chemin-verrou[hidden], .libre-titre[hidden] { display: none; }
+    .libre-titre { margin: 0 0 12px; text-align: center; color: #49677b; font-weight: 800; }
+    .libre-titre strong { display: block; color: #143e62; font-size: 1.35rem; font-weight: 900; }
+    .chemin-ligne b { color: #10294a; font-size: .92rem; text-align: left; }
+    .chemin-c { display: grid; place-items: center; padding: 2px 0; border-radius: 12px; }
+    .chemin-c svg { display: block; }
+    .chemin-c.suivant { outline: 3px solid #0f6cf9; outline-offset: -1px; background: #eef5ff; }
+    .chemin-cadeau { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; margin: 8px 0 16px;
+      padding: 12px 14px; border: 2px solid #f2b45b; border-radius: 16px; background: #fff6e8; text-align: left; }
+    .chemin-cadeau-g { font-size: 2.3rem; line-height: 1; }
+    .chemin-cadeau strong { display: block; color: #7a3d00; font-size: 1.02rem; }
+    .chemin-cadeau span { color: #5b4a35; font-size: .9rem; }
+    .chemin-actions { display: grid; gap: 8px; justify-items: center; }
+    .chemin-actions .primary-button { flex: none; width: min(100%, 300px); }
+    .chemin-actions .secondary-button { min-width: min(100%, 200px); }
+    .chemin-autre { margin-top: 2px; padding: 8px; border: 0; background: none; color: #24415f; font: inherit;
+      font-size: .9rem; font-weight: 800; text-decoration: underline; cursor: pointer; }
+    .chemin-autre[hidden], .chemin-actions [hidden], .chemin-cadeau[hidden], .tresor-coffre[hidden] { display: none; }
+    .tresor-coffre { display: block; margin: 2px auto 8px; width: max-content; }
+    .tresor-texte { margin: 0 0 12px; color: #49677b; font-weight: 800; }
+    .chemin-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+    html.suivi-eleve body.ec-dans-carte #chemin .dialog-card.haut-teinte { position: relative;
+      box-shadow: inset 0 var(--haut-teinte) 0 0 #fff, inset 0 calc(var(--haut-teinte) + 1px) 0 0 #e3ebf0, 0 16px 45px rgba(28, 69, 101, .12); }
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -1846,6 +1896,8 @@
         <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
       </div>
       <div class="mode-settings-scroll" role="region" aria-label="Mode, niveau et opérations" tabindex="0">
+      <!-- l'élève à code, depuis « Tes coffres » (11/11/2026) : l'entraînement libre ne compte pas -->
+      <p id="libre-titre" class="libre-titre" hidden><strong>Entraînement libre</strong>Ça ne compte pas pour tes coffres.</p>
       <!-- l'élève à code, à la prochaine ouverture (maquette 09) : son niveau a été fermé ou une
            de ses opérations retirée par le professeur -->
       <div id="reglages-changes-choix" class="reglages-changes" role="status" hidden><strong>Ton professeur a changé les réglages.</strong>Ta partie repart à 0 clé.<br>Tu gardes tes trésors.</div>
@@ -2020,6 +2072,41 @@
     </div>
   </section>
 
+  <!-- l'élève à code : « Tes coffres », l'accueil de l'appli (lot « le chemin des coffres et le
+       cadeau Gloubi », 09/11/2026) — les coffres de chaque niveau, le prochain encadré, les matchs
+       contre Gloubi qui attendent, un gros bouton -->
+  <section id="chemin" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="chemin-title">
+    <div class="dialog-card chemin-card">
+      <h2 id="chemin-title" tabindex="-1">Tes coffres</h2>
+      <p id="chemin-sous" class="chemin-sous"></p>
+      <div id="reglages-changes-chemin" class="reglages-changes" role="status" hidden><strong>Ton professeur a changé les réglages.</strong>Ta partie repart à 0 clé.<br>Tu gardes tes trésors.</div>
+      <ol id="chemin-niveaux" class="chemin-niveaux" aria-label="Tes coffres, niveau par niveau"></ol>
+      <p id="chemin-verrou" class="chemin-verrou" hidden></p>
+      <div id="chemin-cadeau" class="chemin-cadeau" hidden><span class="chemin-cadeau-g" aria-hidden="true">😋</span><div><strong id="chemin-cadeau-titre"></strong><span>Ton cadeau du coffre d’or.</span></div></div>
+      <div class="chemin-actions">
+        <button id="chemin-principal" class="primary-button" type="button"></button>
+        <button id="chemin-second" class="secondary-button" type="button" hidden></button>
+        <button id="chemin-autre" class="chemin-autre" type="button">Entraînement libre</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- l'élève à code : le trésor ouvert devient un coffre gagné (bronze, argent, or) -->
+  <section id="tresor" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="tresor-title">
+    <div class="dialog-card tresor-card">
+      <span id="tresor-coffre" class="tresor-coffre" aria-hidden="true"></span>
+      <h2 id="tresor-title" tabindex="-1">Trésor ouvert !</h2>
+      <p id="tresor-texte" class="tresor-texte"></p>
+      <ol id="tresor-niveau" class="chemin-niveaux" aria-label="Les coffres de ce niveau"></ol>
+      <div id="tresor-cadeau" class="chemin-cadeau" hidden><span class="chemin-cadeau-g" aria-hidden="true">😋</span><div><strong>Ton cadeau : 3 matchs contre Gloubi</strong><span>Ferme plus de carrés que lui.</span></div></div>
+      <div class="chemin-actions">
+        <button id="tresor-principal" class="primary-button" type="button"></button>
+        <a id="tresor-espace" class="secondary-button" href="https://suivi.mathsgo.re/">Mon espace</a>
+        <button id="tresor-second" class="secondary-button" type="button" hidden></button>
+      </div>
+    </div>
+  </section>
+
   <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
@@ -2037,7 +2124,7 @@
   <script src="../../assets/js/coffres-moteur.js?v=1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Coffres magiques sur le suivi », 21/10/2026 -->
-  <script src="../../assets/js/coffres-parcours.js?v=20261108-1"></script>
+  <script src="../../assets/js/coffres-parcours.js?v=20261111-1"></script>
   <script src="../../assets/js/coffres-suivi.js?v=20261031-1"></script>
   <script>
     (() => {
@@ -2077,6 +2164,8 @@
       const nextButton = document.querySelector("#next-button");
       const levelLabel = document.querySelector("#level-label");
       const result = document.querySelector("#result");
+      const chemin = document.querySelector("#chemin");
+      const tresor = document.querySelector("#tresor");
       // Grand écran (ordinateur, projection) : après une clé gagnée, l'égalité reste affichée
       // et c'est le bouton « Coffre suivant » qui fait avancer. Petit écran : passage automatique.
       const largeScreen = window.matchMedia("(min-width: 900px)");
@@ -2097,6 +2186,12 @@
       let pendingTimer = null;
       let boardId = 0;
       let modeDialogMandatory = false;
+      // L'entraînement libre de l'élève connecté (décision de Gwenaël du
+      // 11/11/2026) : niveau et opérations au choix parmi ce qu'il a débloqué,
+      // et RIEN n'est enregistré (ni partie, ni clé, ni trésor) — comme un
+      // visiteur. Le chemin des coffres, lui, joue toutes les opérations
+      // ouvertes à la classe.
+      let libre = false;
       let gameStarted = false;
       let lastResolvedPosition = null;
       // Niveau des nombres (1, 2 ou 3) : la nature du calcul change, pas la taille du résultat.
@@ -2248,6 +2343,10 @@
       }
 
       function niveauxOuverts() {
+        if (libre && cheminActif()) {
+          const debloques = PARCOURS.niveauxDebloques(parcoursEleve(), reglagesClasse());
+          if (debloques.length) return debloques;
+        }
         return PARCOURS ? PARCOURS.niveauxOuverts(reglagesClasse()) : [1, 2, 3];
       }
 
@@ -2263,7 +2362,7 @@
 
       // Un geste noté dans la case de l'élève (puis envoyé). Rien sans code.
       function suiviEcrire(maj) {
-        if (SUIVI && SUIVI.actif()) SUIVI.ecrire(maj);
+        if (SUIVI && SUIVI.actif() && !libre) SUIVI.ecrire(maj);
       }
 
       function poserPastille() {
@@ -2301,7 +2400,7 @@
       // cadre du jeu caché dessous), ou le jeu (la pastille et Plein écran).
       function majEcran() {
         const eleve = modeEleve();
-        const surChoix = !modeDialog.hidden || !lesson.hidden || !confirmZero.hidden;
+        const surChoix = !modeDialog.hidden || !lesson.hidden || !confirmZero.hidden || !chemin.hidden;
         document.body.classList.toggle("sur-choix", eleve && surChoix);
         document.body.classList.toggle("ecran-jeu", eleve && !surChoix);
         // L'accueil de l'appli (le choix du niveau, ou tout quand il n'y a rien à
@@ -2309,8 +2408,23 @@
         // vers le choix, en haut à gauche du cadre blanc (modèle commun, 14/10).
         const choixPossible = eleve && aUnChoix();
         const surLeChoix = !modeDialog.hidden || !confirmZero.hidden;
-        document.body.classList.toggle("accueil-appli", eleve && (!choixPossible || surLeChoix));
-        document.body.classList.toggle("retour-dans-cadre", choixPossible && !surLeChoix);
+        if (cheminActif()) {
+          // Le chemin des coffres (09/11/2026) : « Tes coffres » est l'accueil ; le
+          // choix du niveau s'ouvre de là et sa flèche y ramène ; le mémo et le jeu
+          // ont leur retour « ← Coffres » en haut à gauche du cadre.
+          const accueil = !chemin.hidden || surLeChoix;
+          document.body.classList.toggle("accueil-appli", accueil);
+          document.body.classList.toggle("retour-dans-cadre", !accueil);
+          lienRetour.setAttribute("aria-label", chemin.hidden && surLeChoix ? "Retour à mes coffres" : "Retour à mon espace");
+        } else {
+          document.body.classList.toggle("accueil-appli", eleve && (!choixPossible || surLeChoix));
+          document.body.classList.toggle("retour-dans-cadre", choixPossible && !surLeChoix);
+        }
+        document.querySelectorAll("[data-retour-choix]").forEach(bouton => {
+          bouton.setAttribute("aria-label", cheminActif() ? "Retour à mes coffres" : "Retour au choix du niveau");
+          const texte = bouton.querySelector(".retour-cadre-texte");
+          if (texte) texte.textContent = cheminActif() ? "Coffres" : "Niveaux";
+        });
         if (eleve) poserPastille();
         placerEnTete();
       }
@@ -2349,7 +2463,7 @@
         const repere = document.getElementById("suivi-repere");
         if (!enTete || !barreHaut || !actionsHaut || !pleinEcran || !repere) return;
         const accueil = modeEleve() && document.body.classList.contains("accueil-appli");
-        const dialogue = ["#mode-dialog", "#confirm-zero", "#lesson"].map(id => document.querySelector(id)).find(d => d && !d.hidden);
+        const dialogue = ["#chemin", "#mode-dialog", "#confirm-zero", "#lesson"].map(id => document.querySelector(id)).find(d => d && !d.hidden);
         const carte = accueil && dialogue ? dialogue.querySelector(".dialog-card") : null;
         document.body.classList.toggle("ec-dans-carte", Boolean(carte));
         document.querySelectorAll(".dialog-card.haut-teinte").forEach(c => { if (c !== carte) c.classList.remove("haut-teinte"); });
@@ -2366,7 +2480,7 @@
         if (pleinEcran.parentNode !== actionsHaut) actionsHaut.append(pleinEcran);
         if (enTete.parentNode !== document.body) barreHaut.after(enTete);
       }
-      [modeDialog, lesson, confirmZero].forEach(dialog => {
+      [modeDialog, lesson, confirmZero, chemin].forEach(dialog => {
         new MutationObserver(majEcran).observe(dialog, { attributes: true, attributeFilter: ["hidden"] });
       });
 
@@ -2388,7 +2502,8 @@
         });
         document.querySelector("#mode-title").textContent = "Coffres magiques";
         document.querySelector("#continue-current-mode").textContent = "Continuer";
-        document.querySelector("#reglages-changes-choix").hidden = !reglagesChanges;
+        document.querySelector("#reglages-changes-choix").hidden = !reglagesChanges || libre;
+        document.querySelector("#libre-titre").hidden = !libre;
       }
       ["click", "change"].forEach(type => modeDialog.addEventListener(type, () => {
         if (modeEleve()) document.querySelector("#continue-current-mode").textContent = "Continuer";
@@ -2436,6 +2551,11 @@
       // simple lien : il n'est montré que sur l'accueil de l'appli.
       document.querySelectorAll("[data-retour-choix]").forEach(bouton => {
         bouton.addEventListener("click", () => {
+          if (cheminActif()) {
+            dialogs.close(lesson, { restoreFocus: false });
+            ouvrirChemin();
+            return;
+          }
           if (!modeEleve() || !aUnChoix()) return;
           dialogs.close(lesson, { restoreFocus: false });
           openModeDialog({ mandatory: !gameStarted });
@@ -2450,18 +2570,317 @@
         document.documentElement.classList.remove("suivi-attente");
         majSuivi();
         const partie = SUIVI.actif() ? SUIVI.client.partieEnCours() : null;
-        if (partie && PARCOURS.partieCompatible(partie, reglagesClasse())) {
+        const compatible = Boolean(partie && PARCOURS.partieCompatible(partie, reglagesClasse()));
+        if (partie && compatible && !cheminActif()) {
           start({ reprise: partie });
           return;
         }
-        if (partie) {
+        if (partie && !compatible) {
           reglagesChanges = true;
           suiviEcrire((P, avant) => P.oublierPartie(avant));
         }
         ramenerAuxReglages();
+        // Le chemin des coffres (09/11/2026) : l'élève connecté arrive sur ses
+        // coffres ; une partie en cours s'y reprend (« Reprendre · 6 clés sur 10 »).
+        if (cheminActif()) {
+          ouvrirChemin();
+          return;
+        }
         if (aUnChoix()) openModeDialog({ mandatory: true });
         else openLesson();
       }
+
+      // --------------------------------------------- le chemin des coffres et Gloubi
+      //
+      // Lot « Coffres magiques : le chemin des coffres et le cadeau Gloubi »
+      // (09/11/2026, décisions de Gwenaël). Pour l'élève connecté seulement :
+      //   - l'appli s'ouvre sur « Tes coffres » : par niveau, ses coffres bronze,
+      //     argent et or (ses trois premiers trésors), le prochain encadré, et un
+      //     gros bouton (« Gagner le coffre d'argent », ou « Reprendre · 6 clés
+      //     sur 10 ») ; « Choisir un autre niveau » ouvre le choix d'aujourd'hui ;
+      //     pas de cadenas de progression, l'appli conseille ;
+      //   - le cours ne s'ouvre qu'au premier passage dans un niveau ; « Aide »
+      //     reste dans le jeu ;
+      //   - le trésor ouvert montre le coffre gagné ; le coffre d'or offre trois
+      //     matchs contre Gloubi (les Carrés gloutons), que « Plus tard » garde.
+      //     Rien ne l'annonce avant le premier coffre d'or : c'est une surprise.
+      const COULEURS_COFFRE = {
+        bronze: ["#c98446", "#7a4520", "#e7a96b"],
+        argent: ["#c4ccd6", "#5d6b7a", "#eef2f6"],
+        or: ["#f6c13d", "#9a5b06", "#ffe08a"]
+      };
+      const NOMS_COFFRE = { bronze: "coffre de bronze", argent: "coffre d’argent", or: "coffre d’or" };
+      const TITRES_COFFRE = { bronze: "Coffre de bronze !", argent: "Coffre d’argent !", or: "Coffre d’or !" };
+      const ADRESSE_GLOUBI = "../club_maths/carres_gloutons.html";
+
+      function cheminActif() {
+        return Boolean(SUIVI && SUIVI.actif() && PARCOURS && PARCOURS.cheminDesCoffres);
+      }
+
+      function parcoursEleve() {
+        return SUIVI && SUIVI.actif() ? SUIVI.lire() : null;
+      }
+
+      // Le coffre dessiné : couvercle bombé, ferrure, serrure ; à gagner, en
+      // pointillés gris. Rien que des formes : il reste lisible imprimé en noir.
+      function coffreSvg(couleur, taille, plein) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", String(taille));
+        svg.setAttribute("height", String(taille));
+        svg.setAttribute("viewBox", "0 0 46 46");
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        const forme = (balise, attributs) => {
+          const n = document.createElementNS("http://www.w3.org/2000/svg", balise);
+          Object.entries(attributs).forEach(([nom, valeur]) => n.setAttribute(nom, String(valeur)));
+          svg.append(n);
+        };
+        if (!plein) {
+          const trait = { fill: "#f4f7fb", stroke: "#b7c3d1", "stroke-width": 1.8, "stroke-dasharray": "3 2.4", "stroke-linejoin": "round" };
+          forme("path", { d: "M9 20a14 9 0 0 1 28 0Z", ...trait });
+          forme("rect", { x: 9, y: 20, width: 28, height: 16, rx: 2.5, ...trait });
+          return svg;
+        }
+        const [fond, bord, clair] = COULEURS_COFFRE[couleur];
+        forme("path", { d: "M9 20a14 9 0 0 1 28 0Z", fill: fond, stroke: bord, "stroke-width": 1.8, "stroke-linejoin": "round" });
+        forme("rect", { x: 9, y: 20, width: 28, height: 16, rx: 2.5, fill: fond, stroke: bord, "stroke-width": 1.8 });
+        forme("rect", { x: 9, y: 18.5, width: 28, height: 4, fill: clair, stroke: bord, "stroke-width": 1.4 });
+        forme("rect", { x: 19.5, y: 20.5, width: 7, height: 9, rx: 1.6, fill: clair, stroke: bord, "stroke-width": 1.4 });
+        forme("path", { d: "M23 23.4v3.2", stroke: bord, "stroke-width": 1.8, "stroke-linecap": "round" });
+        return svg;
+      }
+
+      // Une rangée « Niveau 1 · bronze · argent · or » ; `vise` : l'indice du
+      // coffre encadré (le prochain), ou -1.
+      // `ouvert` : faux pour un niveau fermé par le professeur ; `verrou` : vrai
+      // pour un niveau pas encore débloqué (son cadenas s'ouvre avec le coffre
+      // d'or du niveau d'en dessous).
+      function rangeeNiveau(numero, coffres, ouvert, vise, verrou = false) {
+        const ligne = document.createElement("li");
+        ligne.className = `chemin-ligne${ouvert && !verrou ? "" : " ferme"}`;
+        ligne.dataset.niveau = String(numero);
+        const nom = document.createElement("b");
+        nom.textContent = `${ouvert && !verrou ? "" : "🔒 "}Niveau ${numero}`;
+        ligne.append(nom);
+        PARCOURS.COFFRES.forEach((couleur, index) => {
+          const place = document.createElement("span");
+          place.className = `chemin-c${index === vise ? " suivant" : ""}`;
+          place.dataset.coffre = couleur;
+          place.dataset.gagne = String(index < coffres);
+          place.append(coffreSvg(couleur, 40, index < coffres));
+          ligne.append(place);
+        });
+        const lu = document.createElement("span");
+        lu.className = "chemin-sr";
+        lu.textContent = ` : ${coffres ? PARCOURS.COFFRES.slice(0, coffres).map(c => NOMS_COFFRE[c]).join(", ") : "aucun coffre"}${ouvert ? (verrou ? " (pas encore ouvert)" : "") : " (fermé par ton professeur)"}.`;
+        ligne.append(lu);
+        return ligne;
+      }
+
+      const majuscule = texte => texte ? texte[0].toUpperCase() + texte.slice(1) : "";
+
+      // Le premier passage dans un niveau : aucun trésor encore (une partie en
+      // cours, elle, se reprend sans cours).
+      function premierPassage(niveau) {
+        const p = parcoursEleve();
+        return !p || !p.niveaux[String(niveau)];
+      }
+
+      // Jouer au niveau choisi, avec les opérations du moment : le cours au
+      // premier passage, sinon droit au plateau.
+      // On quitte le plateau (« ← Coffres », un coffre, Gloubi, l'entraînement
+      // libre) : le délai de 0,75 s d'une réussite ne doit plus rien faire
+      // (relecture Codex du 11/11/2026 — sinon la dixième clé d'un entraînement
+      // libre ouvrait, une fois revenu dans le chemin, un VRAI trésor). Une
+      // partie du chemin arrêtée à dix clés garde ses dix clés dans le
+      // parcours ; « Ouvrir le trésor » la termine.
+      function arreterAttente() {
+        if (pendingTimer) window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
+
+      function jouerAuNiveau(niveau) {
+        arreterAttente();
+        libre = false;
+        dialogs.close(chemin, { restoreFocus: false });
+        dialogs.close(tresor, { restoreFocus: false });
+        level = gameLevel = niveau;
+        ramenerAuxReglages();
+        selectedOperations = operationsOuvertes();
+        syncSettingsUrl();
+        syncLevelUi();
+        if (premierPassage(niveau)) openLesson();
+        else start({ moveFocus: true });
+      }
+
+      function reprendre(partie) {
+        arreterAttente();
+        const depuisLibre = libre;
+        libre = false;
+        dialogs.close(chemin, { restoreFocus: false });
+        // Dix clés déjà gagnées (on avait quitté avant « Ouvrir le trésor ») :
+        // le trésor s'ouvre, sans plateau (il n'y a plus de coffre à jouer).
+        if (partie.cles >= GOAL) {
+          level = gameLevel = partie.niveau;
+          gameStarted = true;
+          keys = GOAL;
+          syncLevelUi();
+          updateCounter();
+          complete();
+          return;
+        }
+        // Le plateau de la partie est encore là (retour par « ← Coffres ») : on y revient
+        // — jamais celui d'un entraînement libre.
+        if (!depuisLibre && gameStarted && !locked && keys === partie.cles && gameLevel === partie.niveau) {
+          majEcran();
+          focusAfterReset(null);
+          return;
+        }
+        start({ reprise: partie, moveFocus: true });
+      }
+
+      function allerVersGloubi(niveau) {
+        arreterAttente();
+        window.location.assign(`${ADRESSE_GLOUBI}?cadeau=${niveau}`);
+      }
+
+      function poserBouton(bouton, texte, action) {
+        bouton.hidden = !texte;
+        bouton.textContent = texte || "";
+        bouton.onclick = texte ? action : null;
+      }
+
+      function ouvrirChemin() {
+        arreterAttente();
+        const reglages = reglagesClasse();
+        const c = PARCOURS.cheminDesCoffres(parcoursEleve(), reglages);
+        const opsDuChemin = operationsOuvertes();
+        document.querySelector("#chemin-sous").textContent = opsDuChemin.length === 4
+          ? "Les quatre opérations" : majuscule(PARCOURS.nommerOperations(opsDuChemin));
+        const partie = c.partie && PARCOURS.partieCompatible(c.partie, reglages) && c.partie.cles > 0 ? c.partie : null;
+        // Le coffre encadré : celui de la partie en cours, sinon le prochain conseillé.
+        let vise = null;
+        if (partie) {
+          const n = c.niveaux[partie.niveau - 1];
+          if (n.coffres < PARCOURS.COFFRES.length) vise = { niveau: partie.niveau, index: n.coffres };
+        } else if (c.prochain) {
+          vise = { niveau: c.prochain.niveau, index: PARCOURS.COFFRES.indexOf(c.prochain.coffre) };
+        }
+        const liste = document.querySelector("#chemin-niveaux");
+        liste.replaceChildren(...c.niveaux.map(n => rangeeNiveau(n.numero, n.coffres, n.ouvert, vise && vise.niveau === n.numero ? vise.index : -1, n.ouvert && !n.debloque)));
+        const verrou = document.querySelector("#chemin-verrou");
+        verrou.hidden = !(c.verrou && c.verrou.apres);
+        verrou.textContent = verrou.hidden ? "" : `🔒 Le niveau ${c.verrou.niveau} s’ouvre avec le coffre d’or du niveau ${c.verrou.apres}.`;
+        // Les matchs de Gloubi gardés (« Plus tard ») passent devant.
+        const matchs = c.gloubi.reduce((somme, g) => somme + g.restants, 0);
+        document.querySelector("#chemin-cadeau").hidden = !matchs;
+        document.querySelector("#chemin-cadeau-titre").textContent = matchs > 1
+          ? `${matchs} matchs contre Gloubi t’attendent` : "1 match contre Gloubi t’attend";
+        const ouverts = c.niveaux.filter(n => n.debloque).map(n => n.numero);
+        let jouer;
+        if (partie) {
+          jouer = [partie.cles >= GOAL ? "Ouvrir le trésor" : `Reprendre · ${partie.cles} clé${partie.cles > 1 ? "s" : ""} sur ${GOAL}`, () => reprendre(partie)];
+        } else if (c.prochain) {
+          const nom = NOMS_COFFRE[c.prochain.coffre];
+          jouer = [`Gagner le ${nom}${matchs ? ` · niveau ${c.prochain.niveau}` : ""}`, () => jouerAuNiveau(c.prochain.niveau)];
+        } else {
+          const niveau = ouverts.includes(level) ? level : ouverts[ouverts.length - 1] || 1;
+          jouer = [`Jouer au niveau ${niveau}`, () => jouerAuNiveau(niveau)];
+        }
+        const principal = document.querySelector("#chemin-principal");
+        const second = document.querySelector("#chemin-second");
+        if (matchs) {
+          poserBouton(principal, "Jouer contre Gloubi", () => allerVersGloubi(c.gloubi[0].niveau));
+          poserBouton(second, jouer[0], jouer[1]);
+        } else {
+          poserBouton(principal, jouer[0], jouer[1]);
+          poserBouton(second, "", null);
+        }
+        // L'entraînement libre : un niveau débloqué et des opérations au choix.
+        const autre = document.querySelector("#chemin-autre");
+        autre.hidden = !(ouverts.length > 1 || opsDuChemin.length > 1);
+        autre.onclick = () => {
+          libre = true;
+          openModeDialog({ mandatory: true });
+        };
+        document.querySelector("#reglages-changes-chemin").hidden = !reglagesChanges;
+        dialogs.open(chemin, { trigger: null, initialFocus: "#chemin-principal" });
+        majEcran();
+      }
+
+      // Le trésor ouvert de l'élève connecté : le coffre qu'il vient de gagner.
+      function ouvrirTresor() {
+        if (libre) {
+          ouvrirTresorLibre();
+          return;
+        }
+        document.querySelector("#tresor-niveau").hidden = false;
+        const p = parcoursEleve();
+        const n = p && p.niveaux[String(gameLevel)];
+        const tresors = n ? n.tresors : 0;
+        const coffres = Math.min(PARCOURS.COFFRES.length, tresors);
+        const couleur = tresors >= 1 && tresors <= PARCOURS.COFFRES.length ? PARCOURS.COFFRES[tresors - 1] : null;
+        const image = document.querySelector("#tresor-coffre");
+        image.replaceChildren();
+        if (couleur) image.append(coffreSvg(couleur, couleur === "or" ? 92 : 84, true));
+        image.hidden = !couleur;
+        document.querySelector("#tresor-niveau").replaceChildren(rangeeNiveau(gameLevel, coffres, true, -1));
+        const titre = document.querySelector("#tresor-title");
+        const texte = document.querySelector("#tresor-texte");
+        const cadeau = document.querySelector("#tresor-cadeau");
+        const principal = document.querySelector("#tresor-principal");
+        const second = document.querySelector("#tresor-second");
+        const espace = document.querySelector("#tresor-espace");
+        const matchs = PARCOURS.matchsRestants(p, gameLevel);
+        cadeau.hidden = true;
+        espace.hidden = false;
+        poserBouton(second, "", null);
+        if (couleur && couleur !== "or") {
+          const suivant = PARCOURS.COFFRES[tresors];
+          titre.textContent = TITRES_COFFRE[couleur];
+          texte.textContent = `Tu as ouvert les dix coffres. Encore ${GOAL} clés pour le ${NOMS_COFFRE[suivant]}.`;
+          poserBouton(principal, `Continuer vers le ${NOMS_COFFRE[suivant]}`, () => jouerAuNiveau(gameLevel));
+        } else if (couleur === "or" && matchs > 0) {
+          titre.textContent = TITRES_COFFRE.or;
+          texte.textContent = `Tu as fini le niveau ${gameLevel}.`;
+          cadeau.hidden = false;
+          espace.hidden = true;
+          poserBouton(principal, "Jouer contre Gloubi", () => allerVersGloubi(gameLevel));
+          poserBouton(second, "Plus tard", () => { dialogs.close(tresor, { restoreFocus: false }); ouvrirChemin(); });
+        } else {
+          // Au-delà du coffre d'or (ou sans parcours lisible) : les trésors comptent encore.
+          titre.textContent = couleur === "or" ? TITRES_COFFRE.or : "Trésor ouvert !";
+          texte.textContent = tresors > 1
+            ? `Tu as ouvert les dix coffres. ${tresors} trésors au niveau ${gameLevel}.`
+            : "Tu as ouvert les dix coffres.";
+          espace.hidden = true;
+          poserBouton(principal, "Rejouer avec de nouveaux coffres", () => jouerAuNiveau(gameLevel));
+          poserBouton(second, "Mes coffres", () => { dialogs.close(tresor, { restoreFocus: false }); ouvrirChemin(); });
+        }
+        dialogs.open(tresor, { trigger: null, initialFocus: "#tresor-principal" });
+      }
+
+      // Le trésor d'un entraînement libre : rien n'est gagné pour les coffres.
+      function ouvrirTresorLibre() {
+        document.querySelector("#tresor-coffre").hidden = true;
+        document.querySelector("#tresor-niveau").hidden = true;
+        document.querySelector("#tresor-cadeau").hidden = true;
+        document.querySelector("#tresor-espace").hidden = true;
+        document.querySelector("#tresor-title").textContent = "Trésor ouvert !";
+        document.querySelector("#tresor-texte").textContent = "Tu as ouvert les dix coffres.";
+        poserBouton(document.querySelector("#tresor-principal"), "Rejouer avec de nouveaux coffres", () => start({ moveFocus: true }));
+        poserBouton(document.querySelector("#tresor-second"), "Mes coffres", () => { dialogs.close(tresor, { restoreFocus: false }); ouvrirChemin(); });
+        dialogs.open(tresor, { trigger: null, initialFocus: "#tresor-principal" });
+      }
+
+      // La flèche du choix du niveau ramène à « Tes coffres » (pas à Mon espace).
+      lienRetour.addEventListener("click", event => {
+        if (!cheminActif() || !chemin.hidden || modeDialog.hidden && confirmZero.hidden) return;
+        event.preventDefault();
+        dialogs.close(confirmZero, { restoreFocus: false });
+        closeModeDialog({ force: true, restoreFocus: false });
+        ouvrirChemin();
+      });
 
       function resolveOrigin() {
         const candidate = new URLSearchParams(window.location.search).get("from");
@@ -2502,7 +2921,11 @@
         if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url.href);
       }
 
+      // « Solo · niveau 2 » ; en entraînement libre « Entraînement libre · niveau 2 »
+      // (sans « Solo · », pour tenir sur une ligne au téléphone).
       function syncLevelUi() {
+        const prefixe = levelLabel.previousSibling;
+        if (prefixe && prefixe.nodeType === 3) prefixe.textContent = libre ? "Entraînement libre · " : "Solo · ";
         levelLabel.textContent = `niveau ${gameLevel}`;
       }
 
@@ -2533,6 +2956,14 @@
           window.location.replace(modeUrl(config.mode, config.operations, config.level));
           return;
         }
+        if (libre && cheminActif()) {
+          level = gameLevel = config.level;
+          selectedOperations = config.operations;
+          syncSettingsUrl();
+          closeModeDialog({ force: true, restoreFocus: false });
+          start({ moveFocus: true });
+          return;
+        }
         const changed = config.level !== gameLevel || !settingsCore.sameOperations(config.operations, selectedOperations);
         // L'élève à code qui change ses choix avec des clés en main : on demande
         // d'abord (maquette 10) ; « Garder ma partie » ne change rien.
@@ -2545,7 +2976,9 @@
         syncSettingsUrl();
         syncLevelUi();
         closeModeDialog({ force: true, restoreFocus: gameStarted && !changed });
-        if (!gameStarted || changed) openLesson();
+        // Le chemin des coffres : le cours ne s'ouvre qu'au premier passage dans un niveau.
+        if ((!gameStarted || changed) && cheminActif() && !premierPassage(level)) start({ moveFocus: true });
+        else if (!gameStarted || changed) openLesson();
       }
 
       function setupFullscreen() {
@@ -3136,6 +3569,10 @@
         locked = true;
         hideNextButton();
         suiviEcrire((P, avant) => P.noterTresor(avant, null, { niveau: gameLevel }));
+        if (cheminActif()) {
+          ouvrirTresor();
+          return;
+        }
         document.querySelector("#result-score").textContent = `${GOAL} clés trouvées`;
         dialogs.open(result, { initialFocus: "#play-again" });
       }
@@ -3282,6 +3719,8 @@
         pendingTimer = null;
         hideNextButton();
         dialogs.close(result, { restoreFocus: false });
+        dialogs.close(tresor, { restoreFocus: false });
+        dialogs.close(chemin, { restoreFocus: false });
         dialogs.close(lesson, { restoreFocus: false });
         dialogs.close(helpDialog, { restoreFocus: false });
         dialogs.close(correctionDialog, { restoreFocus: false });

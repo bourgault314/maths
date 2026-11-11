@@ -86,6 +86,7 @@ class Noeud {
   get textContent() { return this.enfants.length ? this.enfants.map(e => e.textContent).join("") : this._texte; }
   append(...noeuds) { noeuds.forEach(n => { const x = typeof n === "string" ? texte(n) : n; x.parent = this; this.enfants.push(x); }); }
   appendChild(n) { this.append(n); return n; }
+  prepend(n) { n.parent = this; this.enfants.unshift(n); }
   after(n) { if (!this.parent) return; const i = this.parent.enfants.indexOf(this); n.parent = this.parent; this.parent.enfants.splice(i + 1, 0, n); }
   remove() { if (!this.parent) return; this.parent.enfants.splice(this.parent.enfants.indexOf(this), 1); this.parent = null; }
   setAttribute(k, v) { this.attributs[k] = String(v); if (k === "class") this.className = String(v); }
@@ -155,7 +156,9 @@ const TOM = COFFRES.commencerPartie(COFFRES.creer(), {niveau: 1, ops: [1], serie
 const SOURCES_TABLEAU = ["nomAffiche", "dateLisible", "celluleNomTexte", "celluleDate", "large", "finirLigne", "ficheChiffres", "paragrapheVide",
   "peutRevenir", "boutonGeste", "menuGestes", "placerMenu", "jourCourt", "celluleNiveau", "contenuCoffres", "dessinerTableauCoffres", "resumeDeLaClasse", "lireCoffres",
   // Lot S4c : « Cette semaine » (le journal de Coffres, lu par le moteur).
-  "semaineCoffres", "suiviApp", "moteurSuivi", "lundiDuJour", "jourPlus", "aujourdhuiSuivi", "el"].map(n => fonction(n)).join("\n");
+  "semaineCoffres", "suiviApp", "moteurSuivi", "lundiDuJour", "jourPlus", "aujourdhuiSuivi", "el",
+  // Lot « le chemin des coffres » (09/11/2026) : les trois coffres de chaque niveau.
+  "elementSvg", "coffresDuNiveau"].map(n => fonction(n)).join("\n");
 
 function ongletCoffres(liste, options = {}) {
   const {zones, $} = creerZones();
@@ -165,7 +168,7 @@ function ongletCoffres(liste, options = {}) {
   const moteur = options.sansMoteur ? null : COFFRES;
   const fabrique = new Function("document", "$", "COFFRES", "droitClasse", "messager",
     "dessinerPapier", "classe", "ouvrirFenetreEleve", "appliAffichee", "revenirA", "voirFiche",
-    `let eleves = [];\nlet periodeCoffres = "debut";\nconst PARCOURS = null, CALCUL = null, SPLAT = null, ANZAN = null;\nconst memoSuivi = new WeakMap();\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
+    `let eleves = [];\nlet periodeCoffres = "debut";\nconst PARCOURS = null, CALCUL = null, SPLAT = null, ANZAN = null;\nconst memoSuivi = new WeakMap();\n${constante("SVG")}\n${constante("COULEURS_COFFRES")}\n${SOURCES_TABLEAU}\nreturn {poser: liste => { eleves = liste; }, lireCoffres, dessinerTableauCoffres, contenuCoffres};`);
   // Lot 5f : la ligne de Coffres ouvre toujours la fenêtre (voirFiche, le
   // parcours de Défi tables, ne doit jamais partir d'ici).
   const f = fabrique(document, $, moteur, options.droit || "proprietaire",
@@ -199,6 +202,11 @@ test("l'onglet Coffres magiques : un niveau par colonne, « dont N parfaits » s
   assert.deepEqual(niveauLu(cellules(lea)[C_N1]), {b: "5 trésors", small: "dont 3 parfaits", texte: "5 trésorsdont 3 parfaits"});
   assert.deepEqual(niveauLu(cellules(lea)[C_N2]), {b: "2 trésors", small: "dont 1 parfait", texte: "2 trésorsdont 1 parfait"});
   assert.deepEqual(niveauLu(cellules(lea)[C_N3]), {b: null, small: null, texte: "—"});
+  // Lot « le chemin des coffres » (09/11/2026, choix A) : les trois coffres au-dessus du compte.
+  const coffresLus = td => td.premier(n => aClasse(n, "coffres-niveau"))?.attributs["aria-label"] || null;
+  assert.deepEqual([C_N1, C_N2, C_N3].map(c => coffresLus(cellules(lea)[c])), ["3 coffres sur 3", "2 coffres sur 3", null]);
+  assert.equal(coffresLus(cellules(lucas)[C_N1]), "1 coffre sur 3");
+  assert.equal(cellules(lea)[C_N1].children[0].children.filter(n => n.tag === "svg").length, 3);
   assert.equal(cellules(lea)[C_DATE].textContent, "20 oct. 2026", "le jour du dernier trésor, pas de la dernière activité");
   assert.deepEqual(niveauLu(cellules(lucas)[C_N1]), {b: "1 trésor", small: null, texte: "1 trésor"}, "au singulier, sans « dont 0 parfait »");
   assert.equal(cellules(lucas)[C_DATE].textContent, "19 oct. 2026");
@@ -229,6 +237,9 @@ test("la fenêtre de l'élève (lot 5c) : ses trésors et ses niveaux, la partie
   const chiffres = cellule.premier(n => n.tag === "dl").children.map(div => div.children.map(x => x.textContent));
   assert.deepEqual(chiffres, [["Trésors", "7 trésorsdont 4 parfaits"], ["Niveau 1", "5 trésorsdont 3 parfaits"], ["Niveau 2", "2 trésorsdont 1 parfait"],
     ["Niveau 3", "—"], ["Dernier trésor", "20 oct. 2026"]]);
+  assert.deepEqual(cellule.premier(n => n.tag === "dl").children.map(div => div.children[1].premier(n => aClasse(n, "coffres-niveau"))?.attributs["aria-label"] || null),
+    [null, "3 coffres sur 3", "2 coffres sur 3", null, null], "les coffres dans les cartes des niveaux commencés, rien de Gloubi");
+  assert.equal(cellule.textContent.includes("Gloubi"), false);
   const partie = cellule.premier(n => aClasse(n, "partie-en-cours"));
   assert.equal(partie.textContent, "Partie en cours : niveau 2 · addition et multiplication · 6 clés sur 10");
   const table = cellule.premier(n => n.tag === "table");
@@ -385,7 +396,7 @@ test("la dernière case cochée d'un groupe ne se décoche pas : refusée sans a
 
 // ------------------------------------------------------------ l'espace élève : la tuile
 
-test("la tuile Coffres : une ligne par niveau commencé, « 🔑 6 / 10 » au bout de la ligne de la partie en cours, rien avant", () => {
+test("la tuile Coffres : une ligne par niveau commencé et ses trois coffres, « 🔑 6 / 10 » au bout de la ligne de la partie en cours, rien avant", () => {
   // JAUGES, de « const JAUGES = { » à « \n  }; » (ses commentaires portent des apostrophes).
   const debut = scriptEspace.indexOf("  const JAUGES = {");
   const sourceJauges = scriptEspace.slice(debut, scriptEspace.indexOf("\n  };", debut) + 5).replace(/<\?= htmlspecialchars\(\$\w+, ENT_QUOTES\) \?>/g, "x");
@@ -395,35 +406,41 @@ test("la tuile Coffres : une ligne par niveau commencé, « 🔑 6 / 10 » au bo
   assert.equal(JAUGES.coffres.url, "prof/coffres-parcours.js?v=x");
   assert.equal(lecteur(COFFRES, null), null, "rien tant que l'élève n'a ni trésor ni partie");
   assert.equal(lecteur(COFFRES, TOM), null, "une partie à 0 clé non plus");
+  // Lot « le chemin des coffres » (09/11/2026, choix A) : « Niveau 1 » et ses coffres (0 à 3).
   assert.deepEqual(lecteur(COFFRES, LEA).lignes, [
-    {texte: "Niveau 1 : 5 trésors", bonus: ""},
-    {texte: "Niveau 2 : 2 trésors", bonus: "🔑 6 / 10"}
+    {texte: "Niveau 1", coffres: 3, bonus: ""},
+    {texte: "Niveau 2", coffres: 2, bonus: "🔑 6 / 10"}
   ]);
   let tom = COFFRES.commencerPartie(LEA, {niveau: 3, ops: [4], serie: new Array(10).fill(4)}, "2026-10-21");
   for (let i = 0; i < 4; i += 1) tom = COFFRES.noterCle(tom, 4, "2026-10-21");
   assert.deepEqual(lecteur(COFFRES, tom).lignes, [
-    {texte: "Niveau 1 : 5 trésors", bonus: ""},
-    {texte: "Niveau 2 : 2 trésors", bonus: ""},
-    {texte: "Niveau 3 : pas encore de trésor", bonus: "🔑 4 / 10"}
-  ], "planche validée : « pas encore de trésor » et 4 / 10");
-  assert.deepEqual(lecteur(COFFRES, LUCAS).lignes, [{texte: "Niveau 1 : 1 trésor", bonus: ""}], "au singulier");
-  // Rien d'autre : ni total, ni ronds, ni étoiles (refusés par Gwenaël).
+    {texte: "Niveau 1", coffres: 3, bonus: ""},
+    {texte: "Niveau 2", coffres: 2, bonus: ""},
+    {texte: "Niveau 3", coffres: 0, bonus: "🔑 4 / 10"}
+  ], "un niveau commencé sans trésor : trois coffres à gagner et 4 / 10");
+  assert.deepEqual(lecteur(COFFRES, LUCAS).lignes, [{texte: "Niveau 1", coffres: 1, bonus: ""}]);
+  // Rien d'autre : ni total, ni ronds, ni étoiles (refusés par Gwenaël), ni Gloubi (choix du 09/11).
   const sortie = lecteur(COFFRES, LEA);
   assert.deepEqual(Object.keys(sortie), ["lignes"]);
 });
 
 test("la tuile est posée par createElement et textContent : une ligne par niveau, la pastille dorée au bout", () => {
   // Lot S3 : poserJauge pose aussi le gain de la semaine (poserGain).
-  const poserJauge = new Function("document", `${fonction("poserGain", scriptEspace)}\n${fonction("poserJauge", scriptEspace)}\nreturn poserJauge;`)(document);
+  const poserJauge = new Function("document", `${constante("SVG", scriptEspace)}\n${constante("COULEURS_COFFRES", scriptEspace)}\n${fonction("elementSvg", scriptEspace)}\n${fonction("coffresDuNiveau", scriptEspace)}\n${fonction("poserGain", scriptEspace)}\n${fonction("poserJauge", scriptEspace)}\nreturn poserJauge;`)(document);
   const tuile = new Noeud("a");
-  poserJauge(tuile, {lignes: [{texte: "Niveau 1 : 5 trésors", bonus: ""}, {texte: "Niveau 2 : 2 trésors", bonus: "🔑 6 / 10"}]});
+  poserJauge(tuile, {lignes: [{texte: "Niveau 1", coffres: 3, bonus: ""}, {texte: "Niveau 2", coffres: 1, bonus: "🔑 6 / 10"}]});
   assert.ok(aClasse(tuile, "a-jauge"));
   const bloc = tuile.children[0];
   assert.equal(bloc.className, "jauge niveaux");
-  assert.deepEqual(bloc.children.map(l => l.children.map(s => [s.className, s.textContent])),
-    [[["compte", "Niveau 1 : 5 trésors"]], [["compte", "Niveau 2 : 2 trésors"], ["bonus", "🔑 6 / 10"]]]);
+  assert.deepEqual(bloc.children.map(l => l.children.map(s => [s.className, s.className === "coffres-niveau" ? s.attributs["aria-label"] : s.textContent])),
+    [[["compte", "Niveau 1"], ["coffres-niveau", "3 coffres sur 3"]], [["compte", "Niveau 2"], ["coffres-niveau", "1 coffre sur 3"], ["bonus", "🔑 6 / 10"]]]);
+  const coffres = bloc.children[1].children[1].children;
+  assert.equal(coffres.length, 3, "trois coffres par niveau");
+  assert.ok(coffres.every(c => c.tag === "svg"));
+  assert.equal(coffres[0].children.length, 5, "le bronze gagné : couvercle, coffre, ferrure, serrure, trait");
+  assert.equal(coffres[1].children.length, 2, "l'argent à gagner : deux formes en pointillés");
+  assert.equal(coffres[1].children[0].attributs["stroke-dasharray"], "3 2.4");
   assert.equal(bloc.premier(n => aClasse(n, "jauge-barre")), null, "pas de barre");
-  assert.equal(bloc.premier(n => n.tag === "svg"), null, "pas de pastilles de mondes");
   assert.match(espace, /"coffres":\s*'<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'/, "le coffre, dans ICONES");
   assert.match(espace, /\.appli \.jauge\.niveaux \.jauge-ligne \{ margin-top: 4px; min-height: 24px; \}/);
 });

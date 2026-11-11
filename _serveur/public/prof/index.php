@@ -545,6 +545,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
      partie en cours sur une ligne, puis un tableau par opération (clés
      gagnées, aides ouvertes, solutions montrées, erreurs). */
   .tresors b { display: block; color: var(--ink); }
+  /* Lot « le chemin des coffres » (09/11/2026, choix A de Gwenaël) : les trois coffres du niveau
+     au-dessus du compte des trésors (onglet Coffres et fiche de l'élève). */
+  .coffres-niveau { display: flex; gap: 1px; margin: 0 0 2px; }
+  .coffres-niveau svg { display: block; flex: 0 0 auto; }
   .tresors small { display: block; margin-top: 1px; color: var(--muted); font-size: .8rem; }
   .partie-en-cours { margin: 0 0 8px; color: var(--ink); font-size: .9rem; }
   .partie-en-cours b { color: var(--ink); }
@@ -5295,6 +5299,34 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return date.toLocaleDateString("fr-FR", {timeZone: "Indian/Reunion", day: "numeric", month: "short", year: "numeric"});
   }
 
+  // Lot « le chemin des coffres et le cadeau Gloubi » (09/11/2026, choix A
+  // de Gwenaël) : au-dessus de « 5 trésors », les trois coffres du niveau
+  // (bronze, argent, or : ses trois premiers trésors), le dessin de l'appli ;
+  // à gagner, en pointillés. Rien de Gloubi côté professeur (choix du 09/11).
+  const COULEURS_COFFRES = [["#c98446", "#7a4520", "#e7a96b"], ["#c4ccd6", "#5d6b7a", "#eef2f6"], ["#f6c13d", "#9a5b06", "#ffe08a"]];
+  function coffresDuNiveau(gagnes, taille = 24) {
+    const groupe = document.createElement("span");
+    groupe.className = "coffres-niveau";
+    groupe.setAttribute("role", "img");
+    groupe.setAttribute("aria-label", `${gagnes} coffre${gagnes > 1 ? "s" : ""} sur 3`);
+    COULEURS_COFFRES.forEach(([fond, bord, clair], index) => {
+      const dessin = elementSvg("svg", {width: String(taille), height: String(taille), viewBox: "0 0 46 46", "aria-hidden": "true", focusable: "false"});
+      if (index >= gagnes) {
+        const trait = {fill: "#f4f7fb", stroke: "#b7c3d1", "stroke-width": "1.8", "stroke-dasharray": "3 2.4", "stroke-linejoin": "round"};
+        dessin.append(elementSvg("path", Object.assign({d: "M9 20a14 9 0 0 1 28 0Z"}, trait)));
+        dessin.append(elementSvg("rect", Object.assign({x: "9", y: "20", width: "28", height: "16", rx: "2.5"}, trait)));
+      } else {
+        dessin.append(elementSvg("path", {d: "M9 20a14 9 0 0 1 28 0Z", fill: fond, stroke: bord, "stroke-width": "1.8", "stroke-linejoin": "round"}));
+        dessin.append(elementSvg("rect", {x: "9", y: "20", width: "28", height: "16", rx: "2.5", fill: fond, stroke: bord, "stroke-width": "1.8"}));
+        dessin.append(elementSvg("rect", {x: "9", y: "18.5", width: "28", height: "4", fill: clair, stroke: bord, "stroke-width": "1.4"}));
+        dessin.append(elementSvg("rect", {x: "19.5", y: "20.5", width: "7", height: "9", rx: "1.6", fill: clair, stroke: bord, "stroke-width": "1.4"}));
+        dessin.append(elementSvg("path", {d: "M23 23.4v3.2", stroke: bord, "stroke-width": "1.8", "stroke-linecap": "round"}));
+      }
+      groupe.append(dessin);
+    });
+    return groupe;
+  }
+
   function celluleNiveau(niveau) {
     const cellule = document.createElement("td");
     cellule.className = "tresors";
@@ -5303,6 +5335,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       cellule.classList.add("sans");
       return cellule;
     }
+    cellule.append(coffresDuNiveau(Math.min(3, niveau.tresors)));
     const compte = document.createElement("b");
     compte.textContent = `${niveau.tresors} trésor${niveau.tresors > 1 ? "s" : ""}`;
     cellule.append(compte);
@@ -5336,7 +5369,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       ]));
     } else cellule.append(paragrapheVide("Rien cette semaine."));
     cellule.append(el("h3", "fe-periode", "Depuis le début"));
-    cellule.append(ficheChiffres([
+    const depuis = ficheChiffres([
       ["Trésors", `${tresors} trésor${tresors > 1 ? "s" : ""}`, lu.parfaits ? `dont ${lu.parfaits} parfait${lu.parfaits > 1 ? "s" : ""}` : ""],
       ...[1, 2, 3].map(numero => {
         const niveau = niveaux.find(n => n.numero === numero);
@@ -5345,7 +5378,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           niveau.parfaits > 0 ? `dont ${niveau.parfaits} parfait${niveau.parfaits > 1 ? "s" : ""}` : ""];
       }),
       ["Dernier trésor", jourCourt(lu.dernier) || "—"]
-    ]));
+    ]);
+    // Les coffres de chaque niveau commencé, au-dessus de « 5 trésors » (lot du 09/11/2026).
+    Array.from(depuis.children).forEach(bloc => {
+      const m = /^Niveau ([1-3])$/.exec(bloc.children[0] && bloc.children[0].textContent || "");
+      const niveau = m ? niveaux.find(n => n.numero === Number(m[1])) : null;
+      if (niveau && niveau.tresors) bloc.children[1].prepend(coffresDuNiveau(Math.min(3, niveau.tresors), 28));
+    });
+    cellule.append(depuis);
     if (lu.partie) {
       const partie = document.createElement("p");
       partie.className = "partie-en-cours";

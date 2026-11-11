@@ -1,10 +1,12 @@
 {
-  "version": 2,
+  "version": 3,
   "epoque": 2,
   "niveaux": {
     "1": {
       "tresors": 5,
-      "parfaits": 3
+      "parfaits": 3,
+      "gloubi": 2,
+      "cran": 2
     },
     "2": {
       "tresors": 2,

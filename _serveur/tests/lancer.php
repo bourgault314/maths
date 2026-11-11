@@ -461,7 +461,7 @@ verifier("saisie du prénom et de l'initiale", function () use (&$codes, &$jeton
 // (lib/applis.php « version_min »). Les progressions de ces tests portent
 // donc la version du moteur d'aujourd'hui.
 const VERSION_TABLES = 4;
-const VERSION_COFFRES = 2;
+const VERSION_COFFRES = 3;
 $parcours = ['version' => VERSION_TABLES, 'tables' => ['7' => ['acquise' => '2026-08-29']]];
 
 verifier("code inconnu refusé", function () {
@@ -7970,7 +7970,8 @@ verifier("lot S1 — Défi tables, SPLAT! et Coffres : une page d'avant le journ
     $cas = [
         'defi-tables' => ['fichier' => 'parcours-reference.json', 'min' => 4, 'avant' => [3, 2, 1]],
         'splat' => ['fichier' => 'parcours-reference-splat.json', 'min' => 2, 'avant' => [1, 0]],
-        'coffres' => ['fichier' => 'parcours-reference-coffres.json', 'min' => 2, 'avant' => [1, 0]],
+        // Coffres : version 3 depuis le lot « coffres-chemin-gloubi » (gloubi et cran) — une page de version 2 est refusée aussi.
+        'coffres' => ['fichier' => 'parcours-reference-coffres.json', 'min' => 3, 'avant' => [2, 1, 0]],
     ];
     foreach ($cas as $appli => $c) {
         $reference = json_decode((string)file_get_contents(__DIR__ . '/' . $c['fichier']), true);

@@ -450,7 +450,7 @@ test("4 — Coffres, la fiche : « Cette semaine » (ou « Rien cette semaine. �
   const contenu = fonction("contenuCoffres");
   assert.match(contenu, /cellule\.append\(el\("h3", "fe-periode", "Cette semaine"\)\);[\s\S]*?\["Trésors", String\(semaine\.tresors\), semaine\.parfaits \? `dont \$\{semaine\.parfaits\} parfait/);
   assert.match(contenu, /\["Aides", String\(semaine\.aides\)\],\s*\["Solutions vues", String\(semaine\.solutions\)\],\s*\["Jours", String\(semaine\.jours\)\]/);
-  assert.match(contenu, /else cellule\.append\(paragrapheVide\("Rien cette semaine\."\)\);\s*cellule\.append\(el\("h3", "fe-periode", "Depuis le début"\)\);\s*cellule\.append\(ficheChiffres\(\[/);
+  assert.match(contenu, /else cellule\.append\(paragrapheVide\("Rien cette semaine\."\)\);\s*cellule\.append\(el\("h3", "fe-periode", "Depuis le début"\)\);\s*const depuis = ficheChiffres\(\[/);
 });
 
 test("ni HTML ni code d'élève dans ce que le lot ajoute à la page", () => {

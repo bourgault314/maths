@@ -135,7 +135,7 @@ function gameFixture() {
     const symbols = { sum: "+", difference: "−", product: "×", quotient: "÷" };
     const largeScreen = { matches: false };
     const modeDialog = { hidden: true }, lesson = { hidden: true };
-    const result = {}, helpDialog = {}, correctionDialog = {};
+    const result = {}, helpDialog = {}, correctionDialog = {}, tresor = {}, chemin = {};
     const dialogs = { close() {}, trigger() { return null; } };
     let mode = "sum", target = 11, keys = 3, boardId = 1;
     let values = [7, 9, 2, 8, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 7, 8];

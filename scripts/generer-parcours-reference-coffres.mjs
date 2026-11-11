@@ -1,6 +1,7 @@
 // Le parcours de référence de Coffres magiques : un parcours COMPLET tel que
 // assets/js/coffres-parcours.js l'ENVOIE au serveur (pourServeur) — les trois
-// niveaux commencés (trésors et trésors parfaits), les quatre opérations
+// niveaux commencés (trésors et trésors parfaits, et les matchs de Gloubi du
+// coffre d'or du niveau 1), les quatre opérations
 // touchées (clés gagnées, aides, solutions montrées, erreurs), le jour du
 // dernier trésor, et une partie en cours à 6 clés sur 10. Il sert de garde-fou
 // entre l'appli et le serveur : le serveur ne garde que ce qu'il connaît
@@ -59,6 +60,11 @@ export function parcoursComplet() {
     if (index === 2) p = PARCOURS.noterErreur(p, operation, "2026-10-21");
     p = PARCOURS.noterCle(p, operation, "2026-10-21");
   });
+  // Lot « le chemin des coffres et le cadeau Gloubi » (09/11/2026) : le
+  // niveau 1 a son coffre d'or ; deux matchs contre Gloubi joués (gagné
+  // contre le distrait, puis nul contre le gourmand) : cran 2 pour le 3e.
+  p = PARCOURS.noterMatchGloubi(p, 1, "gagne");
+  p = PARCOURS.noterMatchGloubi(p, 1, "nul");
   // Lot S1 « les journaux » : le journal s'est rempli tout seul, un jour par
   // jour joué ; un vieux jour venu d'une copie abîmée (des valeurs pas
   // connues, -1) s'y ajoute par la fusion.

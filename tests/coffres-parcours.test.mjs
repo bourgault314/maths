@@ -18,8 +18,9 @@ const SERIE = ["sum", "sum", "sum", "difference", "difference", "difference", "p
 // ------------------------------------------------------------------ le format
 
 test("un parcours neuf est vide ; normaliser borne tout, ne garde que ce qui compte", () => {
-  // Version 2 depuis le lot S1 « les journaux » (le journal des jours joués).
-  assert.deepEqual(PARCOURS.creer(), {version: 2, epoque: 0, niveaux: {}, operations: {}});
+  // Version 2 depuis le lot S1 « les journaux » (le journal des jours joués) ;
+  // version 3 depuis le lot « coffres-chemin-gloubi » (gloubi et cran).
+  assert.deepEqual(PARCOURS.creer(), {version: 3, epoque: 0, niveaux: {}, operations: {}});
   assert.equal(PARCOURS.estVide(PARCOURS.creer()), true);
   const p = PARCOURS.normaliser({
     epoque: "3",
@@ -113,9 +114,11 @@ test("les gestes rendent un parcours neuf : le reçu n'est pas modifié", () => 
 // ------------------------------------------------------------------ la fusion
 
 test("fusion : le maximum de chaque compteur, la date la plus récente, la partie la plus récente puis la plus avancée", () => {
-  const a = {version: 1, epoque: 0, niveaux: {"1": {tresors: 3, parfaits: 2}}, operations: {sum: {cles: 10, aides: 1, solutions: 0, erreurs: 2}}, dernier: "2026-10-10",
+  // Chaque côté connaît tous les trésors du niveau de SA partie (sinon sa partie
+  // est d'avant un trésor gagné ailleurs : voir le test suivant).
+  const a = {version: 1, epoque: 0, niveaux: {"1": {tresors: 3, parfaits: 2}, "2": {tresors: 1, parfaits: 0}}, operations: {sum: {cles: 10, aides: 1, solutions: 0, erreurs: 2}}, dernier: "2026-10-10",
     partie: partieSix({cles: 6, jour: "2026-10-20"})};
-  const b = {version: 1, epoque: 0, niveaux: {"1": {tresors: 2, parfaits: 2}, "2": {tresors: 1, parfaits: 0}}, operations: {sum: {cles: 8, aides: 3, solutions: 1, erreurs: 1}, product: {cles: 4, aides: 0, solutions: 0, erreurs: 0}}, dernier: "2026-10-12",
+  const b = {version: 1, epoque: 0, niveaux: {"1": {tresors: 3, parfaits: 2}, "2": {tresors: 1, parfaits: 0}}, operations: {sum: {cles: 8, aides: 3, solutions: 1, erreurs: 1}, product: {cles: 4, aides: 0, solutions: 0, erreurs: 0}}, dernier: "2026-10-12",
     partie: partieSix({cles: 2, jour: "2026-10-21", niveau: 1, ops: [1], serie: new Array(10).fill(1)})};
   const f = PARCOURS.fusionner(a, b);
   assert.deepEqual(f.niveaux, {"1": {tresors: 3, parfaits: 2}, "2": {tresors: 1, parfaits: 0}});
@@ -130,6 +133,22 @@ test("fusion : le maximum de chaque compteur, la date la plus récente, la parti
   // Une seule partie : elle reste.
   assert.equal(PARCOURS.fusionner(a, PARCOURS.creer()).partie.cles, 6);
   assert.equal("partie" in PARCOURS.fusionner(PARCOURS.oublierPartie(a), PARCOURS.oublierPartie(b)), false);
+});
+
+// Relecture Codex du 11/11/2026 : une vieille copie (une partie à 6 clés) revient
+// après que l'autre appareil a fini cette partie en trésor ; la partie ne doit pas
+// ressusciter (ses clés se recompteraient en un second trésor).
+test("fusion : une partie finie en trésor ailleurs ne ressuscite pas — dans les deux sens", () => {
+  const vieux = PARCOURS.normaliser({version: 3, epoque: 0, niveaux: {"2": {tresors: 1, parfaits: 0}}, operations: {},
+    partie: partieSix({cles: 6, jour: "2026-11-10"})});
+  const fini = PARCOURS.noterTresor(Object.assign({}, vieux, {partie: Object.assign({}, vieux.partie, {cles: 10})}), "2026-11-11");
+  assert.equal(fini.niveaux["2"].tresors, 2);
+  assert.equal("partie" in PARCOURS.fusionner(vieux, fini), false);
+  assert.equal("partie" in PARCOURS.fusionner(fini, vieux), false);
+  assert.equal(PARCOURS.fusionner(vieux, fini).niveaux["2"].tresors, 2, "le trésor reste, compté une fois");
+  // Une partie d'un AUTRE niveau, elle, reste.
+  const ailleurs = PARCOURS.normaliser(Object.assign({}, vieux, {partie: partieSix({cles: 4, jour: "2026-11-10", niveau: 1, ops: [1], serie: new Array(10).fill(1)})}));
+  assert.equal(PARCOURS.fusionner(ailleurs, fini).partie.cles, 4);
 });
 
 test("fusion : à époque différente, la plus haute gagne en bloc (restauration par le professeur)", () => {
@@ -160,7 +179,8 @@ test("le parcours de référence du serveur est à jour (node scripts/generer-pa
     "le moteur a changé la forme du parcours : relance « node scripts/generer-parcours-reference-coffres.mjs », puis complète 'cles'/'motifs' de « coffres » dans _serveur/public/lib/applis.php (le test PHP le vérifie)");
   assert.deepEqual(chainesLibres(reference), []);
   assert.equal(reference.partie.cles, 6);
-  assert.deepEqual(reference.niveaux["1"], {tresors: 5, parfaits: 3}, "les chiffres de la maquette 01 (Léa)");
+  // Lot « le chemin des coffres et le cadeau Gloubi » (09/11/2026) : deux matchs de Gloubi joués au niveau 1.
+  assert.deepEqual(reference.niveaux["1"], {tresors: 5, parfaits: 3, gloubi: 2, cran: 2}, "les chiffres de la maquette 01 (Léa)");
   assert.equal(reference.operations.sum.cles, 28);
 });
 
@@ -224,14 +244,14 @@ test("resumeTuile : une ligne par niveau commencé, la partie en cours au bout d
   assert.deepEqual(PARCOURS.resumeTuile(null), {lignes: [], vide: true});
   const reference = JSON.parse(readFileSync(CHEMIN, "utf8"));
   assert.deepEqual(PARCOURS.resumeTuile(reference).lignes, [
-    {niveau: 1, tresors: 5, cles: null, total: 10},
-    {niveau: 2, tresors: 2, cles: 6, total: 10},
-    {niveau: 3, tresors: 1, cles: null, total: 10}
+    {niveau: 1, tresors: 5, coffres: 3, cles: null, total: 10},
+    {niveau: 2, tresors: 2, coffres: 2, cles: 6, total: 10},
+    {niveau: 3, tresors: 1, coffres: 1, cles: null, total: 10}
   ]);
   // Niveau 3 commencé sans trésor : « pas encore de trésor » et 4 / 10.
   let p = PARCOURS.commencerPartie(parcoursAvecTresors(), {niveau: 3, ops: [4], serie: new Array(10).fill(4)}, "2026-10-21");
   for (let i = 0; i < 4; i += 1) p = PARCOURS.noterCle(p, 4, "2026-10-21");
-  assert.deepEqual(PARCOURS.resumeTuile(p).lignes, [{niveau: 1, tresors: 2, cles: null, total: 10}, {niveau: 3, tresors: 0, cles: 4, total: 10}]);
+  assert.deepEqual(PARCOURS.resumeTuile(p).lignes, [{niveau: 1, tresors: 2, coffres: 2, cles: null, total: 10}, {niveau: 3, tresors: 0, coffres: 0, cles: 4, total: 10}]);
   // Une partie à 0 clé ne fait pas de ligne.
   const zero = PARCOURS.commencerPartie(PARCOURS.creer(), {niveau: 2, ops: [1], serie: new Array(10).fill(1)});
   assert.equal(PARCOURS.resumeTuile(zero).vide, true);
