@@ -389,7 +389,7 @@ test("la page : les textes — la notice dit le passage avant le test, la fiche 
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; la fiche vierge et sa vignette refaites", () => {
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261108-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261111-2"><\/script>/);
   assert.match(html, /<script src="\.\/defi_tables_core\.js\?v=20261015-1"><\/script>/, "le noyau n'a pas bougé");
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
   // Lot « après l'audit GPT » (14/10/2026) : lib/records.php, api/records.php,
@@ -564,7 +564,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « coffres-chemin-gloubi » (11/11/2026) : index.php, prof/index.php, prof/coffres-parcours.js, lib/applis.php.
   // Puis « code-en-cases » (11/11/2026) : le code en six cases (code-en-cases.js), « C'est toujours
   // toi ? » sur Mon espace, direct.php, la colonne « Cette semaine » de La classe.
-  assert.match(lire("_serveur/public/VERSION"), /^lot code-en-cases$/m);
+  // Puis « securite-petits-correctifs » (11/11/2026, audit GPT) : l'époque bornée (api/parcours.php,
+  // lib/progression.php), les billets de fiche (lib/billets.php, api/prof.php, lib/auth.php), le
+  // plancher des records (lib/records.php) et la copie du moteur.
+  assert.match(lire("_serveur/public/VERSION"), /^lot securite-petits-correctifs$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });

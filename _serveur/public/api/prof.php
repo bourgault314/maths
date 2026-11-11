@@ -493,6 +493,7 @@ try {
             // connexion lui répondra exactement comme à un mauvais mot de passe.
             $pdo->prepare('UPDATE profs SET actif = 0 WHERE id = ?')->execute([$autre['id']]);
             fermer_sessions_du_prof($pdo, $autre['id']);
+            oublier_billets_de_fiche_du_prof($pdo, $autre['id']);
             journaliser($pdo, $profId, 'profs.desactiver', 'compte', $autre['id']);
             repondre(['ok' => true]);
 
@@ -833,8 +834,11 @@ try {
 
         case 'partages.supprimer':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')
-                ->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            $retrait = $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?');
+            $retrait->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            // Un billet de fiche déjà pris par le collègue ne survit pas au
+            // retrait (constat F06 de l'audit GPT, lib/billets.php).
+            if ($retrait->rowCount() > 0) oublier_billets_de_fiche_de_la_classe($pdo, (int)$classe['id']);
             journaliser($pdo, $profId, 'partages.supprimer', 'partage', (int)($corps['prof_id'] ?? 0));
             repondre(['ok' => true]);
 
@@ -936,7 +940,15 @@ try {
             // suffit : un collègue à qui la classe est partagée voit la fiche
             // sans jamais recevoir le code.
             $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
-            repondre(['ok' => true, 'billet' => emettre_billet($pdo, (int)$eleve['id'], 'fiche')]);
+            $billet = emettre_billet($pdo, (int)$eleve['id'], 'fiche');
+            // Le droit est relu APRÈS le billet rangé (relecture Codex D3,
+            // lib/billets.php) : un retrait de partage arrivé entre-temps ne
+            // laisse pas de billet derrière lui.
+            if (!fiche_encore_permise($pdo, $profId, (int)$eleve['id'])) {
+                oublier_billet($pdo, $billet);
+                erreur("Introuvable.", 404);
+            }
+            repondre(['ok' => true, 'billet' => $billet]);
 
         case 'eleves.restaurer':
             // « Revenir à… » : couvre l'écrasement par quelqu'un qui

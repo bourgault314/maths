@@ -48,8 +48,8 @@ function presqueLegende() {
 
 // ------------------------------------------------------------------- le moteur
 
-test("SEUILS.course : 25 questions, aucune erreur (décision du 09/10), 10 s au moins, une heure au plus", () => {
-  assert.deepEqual(P.SEUILS.course, {total: 25, erreursMax: 0, dixiemesMin: 100, dixiemesMax: 36000});
+test("SEUILS.course : 25 questions, aucune erreur (décision du 09/10), 15 s au moins (11/11, audit GPT F04), une heure au plus", () => {
+  assert.deepEqual(P.SEUILS.course, {total: 25, erreursMax: 0, dixiemesMin: 150, dixiemesMax: 36000});
 });
 
 test("la couronne exige 25 sur 25 ; les quatre étoiles gardent leurs 2 erreurs ; une couronne gagnée avant reste gagnée", () => {
@@ -100,9 +100,10 @@ test("appliquerSerie : une course ne change RIEN au parcours — l'événement d
 
 test("courseCompte : 25 sur 25 et un temps humain, sinon la raison", () => {
   assert.deepEqual(P.courseCompte(25, 25, 498), {compte: true, raison: null});
-  assert.deepEqual(P.courseCompte(25, 25, 100), {compte: true, raison: null}, "10,0 s : juste au seuil, ça compte");
+  assert.deepEqual(P.courseCompte(25, 25, 150), {compte: true, raison: null}, "15,0 s : juste au seuil, ça compte");
   assert.deepEqual(P.courseCompte(24, 25, 498), {compte: false, raison: "erreurs"});
-  assert.deepEqual(P.courseCompte(25, 25, 99), {compte: false, raison: "rapide"}, "9,9 s : un robot");
+  assert.deepEqual(P.courseCompte(25, 25, 149), {compte: false, raison: "rapide"}, "14,9 s : pas un élève (plancher remonté le 11/11, audit GPT F04)");
+  assert.deepEqual(P.courseCompte(25, 25, 100), {compte: false, raison: "rapide"}, "les 10,0 s fabriqués par GPT ne comptent plus");
   assert.deepEqual(P.courseCompte(25, 25, 36001), {compte: false, raison: "long"});
   assert.deepEqual(P.courseCompte(25, 20, 498), {compte: false, raison: "erreurs"}, "pas 25 questions");
 });
@@ -205,7 +206,7 @@ test("la case d'envoi : une course en attente et le record connu, seulement quan
 
 test("le moteur copié sur le serveur est le même octet pour octet, et son numéro a monté", () => {
   assert.equal(moteurCopie, moteur);
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261108-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-2/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau est resté à celui du lot « trois divisions »");
 });
 
@@ -475,7 +476,7 @@ test("le serveur : la table « records », son API, le réglage par classe, ce q
   assert.match(apiRecords, /if \(\$temps < SEUIL_COURSE_DIXIEMES \|\| \$temps > COURSE_MAX_DIXIEMES\) \{/);
   assert.match(apiRecords, /if \(!est_legende\(\$pdo, \$eleveId\)\) \{[\s\S]*?repondre\(\['ok' => false, 'legende' => false, 'erreur' => "Pas encore Légende des tables\."\], 409\);/);
   assert.match(apiRecords, /erreur\("Les records ne sont pas ouverts à ta classe\.", 403\);/);
-  assert.match(serveurRecords, /const COURSE_TOTAL = 25;\s*const SEUIL_COURSE_DIXIEMES = 100;\s*const COURSE_MAX_DIXIEMES = 36000;\s*const RECORDS_TOP = 10;/);
+  assert.match(serveurRecords, /const COURSE_TOTAL = 25;\s*(?:\/\/[^\n]*\n\s*)*const SEUIL_COURSE_DIXIEMES = 150;\s*const COURSE_MAX_DIXIEMES = 36000;\s*const RECORDS_TOP = 10;/);
   assert.match(serveurRecords, /if \(\(int\)\(\$ligne\['nom'\] \?\? 0\) !== 1\) \{ \$noms\[\$id\] = 'Mystère'; continue; \}/, "pas de choix, ou Mystère : Mystère");
   assert.match(serveurRecords, /\$noms\[\$id\] = \$homonyme && \$initiale !== '' \? "\$prenom \$initiale\." : \$prenom;/, "l'initiale pour les homonymes, jamais la classe");
   assert.match(serveurRecords, /WHERE c\.prof_id = \? AND r\.meilleur IS NOT NULL/, "la ligue du propriétaire des classes");
@@ -489,7 +490,7 @@ test("le serveur : la table « records », son API, le réglage par classe, ce q
 });
 
 test("les bornes du serveur sont celles du moteur (SEUILS.course)", () => {
-  const m = serveurRecords.match(/const COURSE_TOTAL = (\d+);\s*const SEUIL_COURSE_DIXIEMES = (\d+);\s*const COURSE_MAX_DIXIEMES = (\d+);/);
+  const m = serveurRecords.match(/const COURSE_TOTAL = (\d+);\s*(?:\/\/[^\n]*\n\s*)*const SEUIL_COURSE_DIXIEMES = (\d+);\s*const COURSE_MAX_DIXIEMES = (\d+);/);
   assert.ok(m);
   assert.equal(Number(m[1]), P.SEUILS.course.total);
   assert.equal(Number(m[2]), P.SEUILS.course.dixiemesMin);
@@ -632,11 +633,11 @@ test("relecture Codex R5 : le refus définitif (400) d'une vieille course n'effa
   appli.api.noterCourse(200, ANCIEN);
   await new Promise(r => setTimeout(r, 5));
   assert.equal(envoyes.length, 1, "l'ancienne course est partie (en vol)");
-  appli.api.noterCourse(120, NEUF);
-  assert.deepEqual(appli.api.sync.course, {temps: 120, jour: P.jourLocal(), ticket: NEUF}, "la neuve, meilleure, prend la place dans la case");
+  appli.api.noterCourse(170, NEUF);
+  assert.deepEqual(appli.api.sync.course, {temps: 170, jour: P.jourLocal(), ticket: NEUF}, "la neuve, meilleure, prend la place dans la case");
   tenirLAncien();
   await new Promise(r => setTimeout(r, 10));
   assert.deepEqual(envoyes.map(c => c.course), [ANCIEN, NEUF], "le 400 de l'ancienne n'a pas effacé la neuve : elle est partie");
   assert.equal(appli.api.sync.course, undefined, "acceptée : plus rien en attente");
-  assert.equal(appli.api.recordConnu().meilleur, 120);
+  assert.equal(appli.api.recordConnu().meilleur, 170);
 });

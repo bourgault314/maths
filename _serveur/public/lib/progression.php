@@ -167,13 +167,65 @@ function epoque_de(string $donneesJson): int
 // Si l'appli ne déclare pas « epoque » dans son catalogue, le filtre la retire
 // et la restauration se comporte comme avant — c'est voulu : l'époque est une
 // notion de l'appli, pas du serveur.
+//
+// Lot « petits correctifs de sécurité » (11/11/2026, constat F03 de l'audit
+// GPT du 09/11) : l'époque relevée ne dépasse jamais PROGRESSION_ENTIER_MAX.
+// Avant, un état courant à 1 000 000 (posé par quelqu'un qui connaît le code)
+// donnait 1 000 001 ; le filtre retirait cette valeur hors bornes, la version
+// restaurée repartait SANS époque, et la mauvaise copie gagnait toutes les
+// fusions : le bouton du professeur ne servait plus à rien. Depuis ce lot,
+// une écriture d'élève ne peut plus faire monter l'époque que d'un cran
+// passé 100 (epoque_bornee, api/parcours.php) : l'état courant reste loin du
+// plafond, et « courant + 1 » gagne. Le plafond ne joue que pour un état d'AVANT ce lot
+// déjà à 1 000 000 (aucun connu) : la version restaurée garde alors son
+// époque au plafond, à égalité — la fusion additionne au lieu de trancher,
+// mais rien n'est plus perdu en silence.
 function version_avec_epoque_relevee(string $appli, string $versJson, string $courantJson): string
 {
     $vers = json_decode($versJson, false);
     if (!is_object($vers)) return $versJson;
-    $vers->epoque = max(epoque_de($versJson), epoque_de($courantJson)) + 1;
+    $vers->epoque = min(max(epoque_de($versJson), epoque_de($courantJson)) + 1, PROGRESSION_ENTIER_MAX);
     $encode = json_encode(filtrer_progression($appli, $vers), JSON_UNESCAPED_UNICODE);
     return is_string($encode) ? $encode : $versJson;
+}
+
+// Une écriture d'ÉLÈVE ne fait monter l'époque que d'un cran au plus, passé
+// 100 (lot « petits correctifs de sécurité », 11/11/2026, constat F03).
+//
+// L'époque ne sert qu'à départager deux copies : la plus haute gagne EN BLOC
+// (« fusionner » de chaque moteur). Seul l'ORDRE compte, jamais l'écart. Or
+// un client bricolé pouvait poser 1 000 000 d'un coup : le serveur gardait la
+// valeur, et plus aucune restauration du professeur ne pouvait la dépasser
+// (voir version_avec_epoque_relevee). Une époque reçue plus haute que
+// « courante + 1 » est donc ramenée à « courante + 1 » : elle gagne toujours
+// contre l'état du serveur (l'ordre est le même), mais elle ne peut plus
+// monter que d'un cran par écriture.
+//
+// Sous EPOQUE_LIBRE_MAX (100), une époque passe telle quelle : c'est ce que
+// portent les vrais appareils (quelques remises à zéro), et l'appli relit
+// alors exactement ce qu'elle a envoyé. Au-delà, un cran par écriture : pour
+// atteindre le plafond, il faudrait près d'un million d'écritures acceptées
+// (à 300 par tranche de cinq minutes et par code, une douzaine de jours sans
+// s'arrêter) — et chaque restauration repasse devant.
+//
+// Qui monte l'époque, côté appli ? Seule la remise à zéro (« Effacer mon
+// historique »), réservée depuis le 06/11 au visiteur SANS code : elle
+// n'arrive jamais au serveur. Une époque plus haute peut encore arriver en
+// une fois quand le travail d'une case sans code (remise à zéro plusieurs
+// fois) est rattaché à un code (« c'est toi ? ») : ramenée à « courante + 1 »,
+// elle gagne pareil. Le reste du JSON n'est pas touché ; il n'est réécrit
+// que si l'époque change.
+const EPOQUE_LIBRE_MAX = 100;
+
+function epoque_bornee(string $donneesJson, int $courante): string
+{
+    $plafond = min(max(max($courante, 0) + 1, EPOQUE_LIBRE_MAX), PROGRESSION_ENTIER_MAX);
+    if (epoque_de($donneesJson) <= $plafond) return $donneesJson;
+    $objet = json_decode($donneesJson, false);
+    if (!is_object($objet)) return $donneesJson;
+    $objet->epoque = $plafond;
+    $encode = json_encode($objet, JSON_UNESCAPED_UNICODE);
+    return is_string($encode) ? $encode : $donneesJson;
 }
 
 // Combien d'éléments sous la clé que l'appli DÉCLARE comme comptable

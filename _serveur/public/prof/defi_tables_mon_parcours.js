@@ -291,11 +291,14 @@
     etoile: Object.freeze({total: 25, erreursMax: 2, erreursMaxCouronne: 0, durees: Object.freeze([120, 105, 90, 75, 60])}),
     // Les records (09/10/2026) : les 25 questions de la couronne, chrono qui
     // monte, 25 sur 25 obligatoire (« erreursMax » 0, décision de Gwenaël),
-    // temps en dixièmes de seconde ; « dixiemesMin » : en dessous de 10 s
-    // (0,4 s par question), ce n'est pas un élève — le temps ne compte pas,
-    // ici et sur le serveur (lib/records.php, même valeur) ; « dixiemesMax » :
-    // une heure, au-delà c'est un onglet oublié.
-    course: Object.freeze({total: 25, erreursMax: 0, dixiemesMin: 100, dixiemesMax: 36000}),
+    // temps en dixièmes de seconde ; « dixiemesMin » : en dessous de 15 s
+    // (0,6 s par question : lire, se souvenir, taper deux chiffres et valider),
+    // ce n'est pas un élève — le temps ne compte pas, ici et sur le serveur
+    // (lib/records.php, même valeur). Il était à 10 s ; remonté au lot
+    // « petits correctifs de sécurité » (11/11/2026, constat F04 de l'audit
+    // GPT : « 25 justes en 10 s » déclarés sans jouer étaient acceptés) ;
+    // « dixiemesMax » : une heure, au-delà c'est un onglet oublié.
+    course: Object.freeze({total: 25, erreursMax: 0, dixiemesMin: 150, dixiemesMax: 36000}),
     // La révision : 10 calculs à la fois ; cinq boîtes par calcul, et le
     // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
     // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise
@@ -974,10 +977,23 @@
     return copie;
   }
 
+  // L'époque d'une remise à zéro ne dépasse jamais EPOQUE_APPAREIL_MAX (100),
+  // le seuil sous lequel le serveur range une époque telle quelle
+  // (lib/progression.php, EPOQUE_LIBRE_MAX — un test compare les deux).
+  // Relecture Codex du 11/11/2026 (D1, lot « petits correctifs de
+  // sécurité ») : un visiteur SANS code qui effaçait 105 fois son historique,
+  // puis rattachait son travail à un code, envoyait l'époque 105 ; le
+  // serveur la ramenait à 100 sans le dire, l'appareil gardait 105, et à la
+  // réouverture suivante sa copie repassait devant une restauration du
+  // professeur (101). Plafonnée ici, une copie honnête n'est jamais ramenée
+  // par le serveur. Au plafond, la remise à zéro remplace toujours la case
+  // de l'appareil (elle ne fusionne pas) : elle efface comme avant.
+  const EPOQUE_APPAREIL_MAX = 100;
+
   function remettreAZero(parcours) {
     const neuf = creerParcours();
     neuf.prenom = parcours && typeof parcours.prenom === "string" ? nettoyerPrenom(parcours.prenom) : "";
-    neuf.epoque = entier(parcours && parcours.epoque, 0, 1000000) + 1;
+    neuf.epoque = Math.min(entier(parcours && parcours.epoque, 0, 1000000) + 1, EPOQUE_APPAREIL_MAX);
     return neuf;
   }
 
@@ -3947,6 +3963,7 @@
     nettoyerPrenom,
     definirPrenom,
     remettreAZero,
+    EPOQUE_APPAREIL_MAX,
     tablesAcquises,
     toutesAcquises,
     classerSerie,

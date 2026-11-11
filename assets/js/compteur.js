@@ -18,7 +18,9 @@
 //   s  la largeur de l'écran ;
 //   e  et t pour une fiche PDF : « true » et le nom du fichier.
 // Jamais : le titre de la page (Défi tables y met le prénom), ce qui suit « ? »,
-// l'adresse précédente sur le site, ni aucune donnée du stockage du navigateur.
+// l'adresse précédente sur le site, ni aucune donnée du stockage du navigateur
+// (il en LIT une, le code de l'onglet, pour savoir s'il doit se taire — voir
+// plus bas ; elle ne part jamais).
 //
 // Rien n'est écrit sur l'appareil du visiteur. Une seule exception, pour
 // l'auteur du site : ouvrir une page avec #ne-pas-me-compter range une case
@@ -28,12 +30,32 @@
 // Le compteur ne compte que sur mathsgo.re : ni en local, ni dans un cadre
 // (iframe), ni pour un navigateur piloté par un robot, ni sur suivi.mathsgo.re
 // (aucune page du serveur de suivi ne charge ce fichier).
+//
+// Ni pour un ÉLÈVE CONNECTÉ (lot « petits correctifs de sécurité », 11/11/2026,
+// constat F07 de l'audit GPT du 09/11). La règle tient depuis le 30/08 :
+// aucune mesure d'audience dès qu'un élève est identifié par un code. Le
+// compteur de novembre ne la regardait pas — une appli ouverte par un élève
+// connecté envoyait sa visite. Deux signes, lus dans l'onglet et nulle part
+// ailleurs, et jamais envoyés :
+//   - le code rangé par les applis suivies dans la mémoire de l'onglet
+//     (sessionStorage, « mathsgo-suivi-code », lu comme eleve-retour-espace.js) ;
+//   - l'arrivée par un billet (#b=…), AVANT que l'appli l'ait échangé contre
+//     le code : le script du <head> de chaque appli suivie le range dans
+//     window.MATHSGO_ENTREE.billet et efface l'adresse avant que ce fichier,
+//     chargé en « defer », ne tourne ; les pages sans ce script (les outils
+//     SPLAT! ouverts par « ?eleve=1&parcours=…#b=… ») gardent le billet dans
+//     l'adresse le temps de l'échange : il est lu là aussi (relecture Codex
+//     du 11/11/2026, D4).
+// Le professeur qui ouvre une fiche depuis Ma classe (#b=…&vue=fiche) n'est
+// pas compté non plus : c'est aussi un billet.
 (function () {
   "use strict";
 
   var ADRESSE = "https://mathsgo.goatcounter.com/count";
   var HOTES_COMPTES = ["mathsgo.re", "www.mathsgo.re"];
   var CASE_IGNORER = "mathsgo-compteur-ignorer";
+  var CASE_CODE_ELEVE = "mathsgo-suivi-code";
+  var ALPHABET_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
   function lireCaseIgnorer() {
     try {
@@ -86,11 +108,43 @@
     }
   }
 
+  // Un élève connecté dans cet onglet ? (Voir l'en-tête.) Le code est lu
+  // comme le lisent les moteurs des applis : majuscules, signes retirés, six
+  // caractères de l'alphabet des codes. Il ne sort pas de cette fonction.
+  function eleveConnecte() {
+    try {
+      var entree = window.MATHSGO_ENTREE;
+      if (entree && typeof entree.billet === "string" && entree.billet !== "") return true;
+    } catch (_erreur) {
+      // Rien à lire : on regarde la mémoire de l'onglet.
+    }
+    try {
+      // Le billet encore dans l'adresse : « b=… » non vide, en tête du
+      // fragment ou après un « & » (la même lecture que splat-parcours.js).
+      if (/(?:^#|&)b=[^&]/.test(String(window.location.hash || ""))) return true;
+    } catch (_erreur) {
+      // Adresse illisible : on regarde la mémoire de l'onglet.
+    }
+    var brut = "";
+    try {
+      brut = window.sessionStorage.getItem(CASE_CODE_ELEVE) || "";
+    } catch (_erreur) {
+      return false;
+    }
+    var code = String(brut).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    if (code.length !== 6) return false;
+    for (var i = 0; i < code.length; i += 1) {
+      if (ALPHABET_CODES.indexOf(code.charAt(i)) === -1) return false;
+    }
+    return true;
+  }
+
   function aNePasCompter() {
     if (HOTES_COMPTES.indexOf(window.location.hostname) === -1) return true;
     if (dansUnCadre()) return true;
     if (document.visibilityState === "prerender") return true;
     if (estUnRobot()) return true;
+    if (eleveConnecte()) return true;
     if (lireCaseIgnorer()) return true;
     return false;
   }

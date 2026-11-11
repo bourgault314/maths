@@ -145,3 +145,55 @@ function oublier_billets_de_l_eleve(PDO $pdo, int $eleveId): void
 {
     $pdo->prepare('DELETE FROM billets WHERE eleve_id = ?')->execute([$eleveId]);
 }
+
+// Les billets de FICHE en cours d'une classe (lot « petits correctifs de
+// sécurité », 11/11/2026, constat F06 de l'audit GPT du 09/11). Un collègue
+// en lecture prend un billet de fiche, le propriétaire retire le partage : le
+// tableau lui est aussitôt refusé, mais le billet déjà émis ouvrait encore la
+// fiche, une fois, pendant ses deux minutes. Le billet ne garde pas qui l'a
+// demandé (il faudrait changer le schéma) : au retrait d'un partage, on
+// efface donc TOUS les billets de fiche de la classe, ceux du propriétaire
+// compris. Un professeur qui avait justement cliqué « Voir sa fiche » à ce
+// moment-là n'a qu'à recliquer. Les billets d'entrée des élèves et les
+// tickets de course ne sont pas touchés.
+function oublier_billets_de_fiche_de_la_classe(PDO $pdo, int $classeId): void
+{
+    $pdo->prepare("DELETE FROM billets WHERE type = 'fiche' AND eleve_id IN (SELECT id FROM eleves WHERE classe_id = ?)")
+        ->execute([$classeId]);
+}
+
+// La même chose pour toutes les classes qu'un professeur peut lire — les
+// SIENNES et celles qu'il reçoit en partage : quand son compte est désactivé
+// ou supprimé, ses billets de fiche en cours tombent avec ses sessions.
+// (Relecture Codex du 11/11/2026, D2 : la première version oubliait ses
+// propres classes — un billet pris juste avant la désactivation ouvrait
+// encore la fiche.)
+function oublier_billets_de_fiche_du_prof(PDO $pdo, int $profId): void
+{
+    $pdo->prepare("DELETE FROM billets WHERE type = 'fiche' AND eleve_id IN (SELECT e.id FROM eleves e JOIN classes c ON c.id = e.classe_id WHERE c.prof_id = ? OR c.id IN (SELECT classe_id FROM partages WHERE prof_id = ?))")
+        ->execute([$profId, $profId]);
+}
+
+// Un billet de fiche tout juste émis, retiré (D3, ci-dessous).
+function oublier_billet(PDO $pdo, string $billet): void
+{
+    $pdo->prepare('DELETE FROM billets WHERE hash = ?')->execute([empreinte_billet($billet)]);
+}
+
+// Ce professeur peut-il ENCORE lire cet élève ? Compte actif, et classe à lui
+// ou partagée avec lui. Relecture Codex du 11/11/2026 (D3) : « Voir sa fiche »
+// contrôle le droit, PUIS émet le billet ; un retrait de partage (ou une
+// désactivation) glissé entre les deux laissait un billet neuf derrière la
+// purge. api/prof.php refait donc ce contrôle APRÈS avoir rangé le billet, et
+// le retire s'il n'est plus permis. Aucun ordre ne laisse passer un billet :
+// s'il est rangé avant la purge, la purge l'emporte ; s'il est rangé après,
+// la purge suit le retrait du droit, et ce second contrôle le voit.
+function fiche_encore_permise(PDO $pdo, int $profId, int $eleveId): bool
+{
+    $requete = $pdo->prepare('SELECT 1 FROM eleves e JOIN classes c ON c.id = e.classe_id JOIN profs p ON p.id = ? AND p.actif = 1
+        WHERE e.id = ? AND (c.prof_id = p.id OR EXISTS (SELECT 1 FROM partages s WHERE s.classe_id = c.id AND s.prof_id = p.id))');
+    $requete->execute([$profId, $eleveId]);
+    $permis = $requete->fetchColumn() !== false;
+    $requete->closeCursor();
+    return $permis;
+}

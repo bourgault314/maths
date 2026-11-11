@@ -503,7 +503,7 @@ test("la page : « Reprendre ma séance », ses étapes cochées, « Reprendre �
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261108-1/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-2/);
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau n'a pas changé : son numéro reste");
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
