@@ -777,6 +777,53 @@
     @media (max-width: 1023px) and (pointer: coarse), (max-width: 620px) {
       body:not(.en-seance) .shell { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
     }
+    /* Retour iPhone du 10/11/2026 (photo de Gwenaël) : faire défiler ne
+       suffit pas — « Les grades » et « Historique » doivent se voir DÈS
+       L'OUVERTURE, au-dessus de la barre de Safari. Choix A (planche du
+       10/11) : rien ne change de place, tout est un peu resserré, au
+       téléphone et hors séance seulement (la séance garde ses tailles).
+       Boutons : jamais sous 44 px. La marge du dessus reste pour les
+       petits iPhone (SE) où tout ne peut pas tenir. */
+    @media (max-width: 620px) {
+      body:not(.en-seance) .shell { padding-top: 4px; }
+      body:not(.en-seance) .panel { --bandeau-haut: 8px; --rangee-h: 44px; }
+      body:not(.en-seance) h1 { font-size: 1.6rem; }
+      body:not(.en-seance) .cadre-haut .eyebrow { margin-bottom: 0; }
+      body:not(.en-seance) .suivi-repere { margin-top: 6px; }
+      body:not(.en-seance) .bandeau .onglets { margin-top: 4px; }
+      .onglet { min-height: 44px; padding-top: 6px; padding-bottom: 10px; }
+      .onglet[aria-pressed="true"] { padding-top: 12px; padding-bottom: 12px; }
+      .reglages-corps { padding-top: 8px; padding-bottom: 8px; }
+      #grille { gap: 7px 14px; }
+      .bloc { gap: 3px; }
+      .pas, .option, .bascule { height: 46px; }
+      .pas button { height: 38px; }
+      .resume { min-height: calc(1.3em + 4px); padding: 2px 8px; }
+      .bas-pile { margin-top: 8px; gap: 8px; }
+      .reglages-corps .bas-pile .bas .primary.partir { min-height: 52px; }
+      .bandeau-grades { min-height: 50px; }
+      /* « C'est parti » sur toute la largeur, puis « Les grades » et
+         « Historique » CÔTE À CÔTE, de la même taille (idée de Gwenaël,
+         10/11/2026). Sans historique (visiteur sans séance), les grades
+         gardent toute la ligne. */
+      .reglages-corps .bas-pile { flex-direction: row; flex-wrap: wrap; align-items: stretch; }
+      .reglages-corps .bas-pile .bas .primary.partir { flex: 1 1 100%; }
+      .reglages-corps .bas-pile .bandeau-grades { flex: 1 1 0; width: auto; min-width: 0; padding: 5px 10px 5px 6px; gap: 6px; }
+      .reglages-corps .bas-pile .historique-bouton { flex: 1 1 0; width: auto; max-width: none; align-self: stretch; min-height: 50px; margin: 0; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-kimono { width: 30px; height: 38px; font-size: 1.7rem; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-titre { font-size: 1.05rem; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-det { font-size: .8rem; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-tete,
+      .reglages-corps .bas-pile .bandeau-grades .bg-compte { display: block; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-point { display: none; }
+      .reglages-corps .bas-pile .bandeau-grades .bg-fleche { display: none; }
+    }
+    /* Petit téléphone : le résumé de la Colonne passe sur deux lignes ; la
+       place des deux lignes est gardée en Flash aussi, pour que le menu ne
+       bouge pas d'un onglet à l'autre (lot « menu immobile »). */
+    @media (max-width: 380px) {
+      .resume { min-height: calc(2.6em + 4px); }
+    }
     /* Ordinateur à écran court (portable 1366 × 768, 1024 × 600) : le cadre
        se resserre pour tenir sans réduire les boutons sous 44 px. La
        réduction (× 0,75 au plus) ne reste qu'en dernier recours. */
@@ -2792,6 +2839,19 @@
       // le kimono (toujours le même depuis le 08/11/2026), le grade à passer
       // et le compte des cartes. Rien de nouveau n'est lu : l'état des
       // grades, comme la liste.
+      // « À toi : le 20e kyu · 0 carte sur 40 » en trois morceaux (posés par
+      // textContent) : au téléphone, les grades sont à côté d'« Historique »
+      // (10/11/2026) et le détail passe sur deux lignes propres, sans le
+      // point du milieu ; ailleurs, une seule ligne comme avant.
+      function poserDetailGrades(tete, compte) {
+        const morceau = (texte, classe) => {
+          const s = document.createElement("span");
+          s.className = classe;
+          s.textContent = texte;
+          return s;
+        };
+        $("bg-det").replaceChildren(morceau(tete, "bg-tete"), morceau(" · ", "bg-point"), morceau(compte, "bg-compte"));
+      }
       function dessinerBandeauGrades() {
         // En Colonne (lot « grades-colonne ») : le grade à passer et « N sur 13 ».
         if (memoire.mode === "colonne") {
@@ -2800,7 +2860,7 @@
           const reussis = etat.filter(g => g.reussi);
           const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
           const compte = `${reussis.length} sur ${etat.length}`;
-          $("bg-det").textContent = `${tete} · ${compte}`;
+          poserDetailGrades(tete, compte);
           $("vers-grades").setAttribute("aria-label", `Les grades en Colonne. ${tete}. ${reussis.length} grade${reussis.length > 1 ? "s" : ""} réussi${reussis.length > 1 ? "s" : ""} sur ${etat.length}.`);
           return;
         }
@@ -2810,7 +2870,7 @@
         const gagnees = etat.filter(g => g.reussi && CORE.carteDuGrade(g.numero)).length;
         const tete = actuel ? `À toi : le ${CORE.nomGrade(actuel.numero)}` : "Tous les grades sont réussis";
         const cartes = `${gagnees}\u00a0carte${gagnees > 1 ? "s" : ""} sur ${total}`;
-        $("bg-det").textContent = `${tete} · ${cartes}`;
+        poserDetailGrades(tete, cartes);
         $("vers-grades").setAttribute("aria-label", `Les grades. ${tete}. ${cartes}.`);
       }
       $("grades-retour").addEventListener("click", () => {
