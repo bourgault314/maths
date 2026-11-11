@@ -645,7 +645,13 @@
   // L'absence (rien depuis 7 jours, toutes applis confondues) se calcule
   // dans la page : une appli seule ne le sait pas.
   // SPLAT! : un jour de travail = un jour du journal (une série y a été
-  // jouée) ; une ligne par jour {series, reussies, vues} ; à aider : des
+  // jouée) ; une ligne par jour {series, reussies, vues, etapes, bonus} —
+  // lot « le jour vert » (11/11/2026, choix de Gwenaël) : `etapes`, les
+  // numéros des étapes réussies POUR LA PREMIÈRE FOIS ce jour-là (la date
+  // d'une étape faite est celle de sa première réussite), `bonus`, le nombre
+  // d'étapes bonus dans ce cas ; le reste des réussies du jour (reussies
+  // moins ces deux-là) sont des étapes REFAITES. Rien de nouveau n'est
+  // enregistré ; à aider : des
   // réponses vues cette semaine ({type: "reponses-vues", vues}) ; à
   // féliciter : un monde fini cette semaine ({type: "monde", monde}).
   function jourPlus(jour, nombre) {
@@ -674,9 +680,11 @@
     const lundi = lundiDu(aujourdhui);
     const lignes = lignesDuJournal(p.jours, p.journal).filter(l => l.jour <= aujourdhui);
     const nombre = valeur => (valeur >= 0 ? valeur : null);
+    const premieres = jour => CARTE.ETAPES.filter(e => p.etapes[e[0]] && p.etapes[e[0]].fait && p.etapes[e[0]].date === jour).map(e => e[1]);
+    const bonusDu = jour => CARTE.BONUS.filter(b => p.etapes[b[0]] && p.etapes[b[0]].fait && p.etapes[b[0]].date === jour).length;
     const jours = lignes.filter(l => l.jour >= debut).map(l => ({
       jour: l.jour,
-      lignes: [{series: nombre(l.entree[0]), reussies: nombre(l.entree[1]), vues: nombre(l.entree[2])}]
+      lignes: [{series: nombre(l.entree[0]), reussies: nombre(l.entree[1]), vues: nombre(l.entree[2]), etapes: premieres(l.jour), bonus: bonusDu(l.jour)}]
     }));
     // Le dernier jour : le journal, ou à défaut les dates des étapes (le jour
     // de la première étoile, ou du dernier passage) — un élève qui n'a rien

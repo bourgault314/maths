@@ -8514,12 +8514,33 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       chiffres = `${mot}${connu(justes) ? justes : "?"}/${total}`;
       faible = connu(justes) && justes * 2 < total;
     };
-    if (cle === "defi-tables") {
+    // « 3 », « 3 et 4 », « 2, 3 et 4 ».
+    const enListe = nombres => (nombres.length > 1 ? `${nombres.slice(0, -1).join(", ")} et ${nombres[nombres.length - 1]}` : String(nombres[0]));
+    if (cle === "defi-tables" && l.hors === 1) {
+      // Lot « le jour vert » (11/11/2026) : ce qui a été fait depuis
+      // l'accueil, sans séance — une ligne par table, écrite comme une
+      // ligne de séance (choix de Gwenaël : pas de mention « hors séance »).
+      if (l.table) morceaux.push(`table de ${l.table}`);
+      if (l.mesCalculs === 1) morceaux.push("Mes calculs du jour");
+      if (l.apprends === 1) morceaux.push("J’apprends");
+      if (l.entraine === 1) morceaux.push("entraînement");
+      if (l.test === 1) morceaux.push("test réussi ✓");
+      else if (l.test === 2) morceaux.push("test pas encore");
+      if (l.melange === 1) morceaux.push("Mon mélange");
+      if (l.melange === 1 && connu(l.score)) chiffres = `${l.score}/20`;
+    } else if (cle === "defi-tables") {
       morceaux.push(l.table ? `table de ${l.table}` : connu(l.table) ? "révisions" : "une séance");
+      // Lot « le jour vert » : le nombre d'étapes de la séance.
+      if (connu(l.etapes) && l.etapes > 0) morceaux.push(pluriel(l.etapes, "étape"));
       if (l.test === 1) morceaux.push("test réussi ✓");
       else if (l.test === 2) morceaux.push("test pas encore");
       score(l.justes, l.calculs, "calculs du jour ");
     } else if (cle === "defi-calcul") {
+      // Lot « le jour vert » : les modules avancés ce jour-là, par leur nom
+      // (jamais leur code : un module sans nom connu n'est pas écrit).
+      const modules = Array.isArray(l.modules) && CALCUL_CORE
+        ? l.modules.map(id => { const fiche = CALCUL_CORE.moduleDe(id); return fiche ? fiche.nom : ""; }).filter(Boolean) : [];
+      if (modules.length) morceaux.push(modules.join(", "));
       if (connu(l.nouveautes) && l.nouveautes > 0) morceaux.push(pluriel(l.nouveautes, "nouveauté réussie", "nouveautés réussies"));
       if (connu(l.prouvees) && l.prouvees > 0) morceaux.push(`${pluriel(l.prouvees, "compétence prouvée", "compétences prouvées")} au test`);
       if (!morceaux.length) morceaux.push(connu(l.calculs) ? "révisions seulement" : "une séance");
@@ -8528,15 +8549,38 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       const grade = l.grade && ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(l.grade) : "";
       const mode = l.mode === "colonne" ? "Colonne" : l.mode === "grade" ? `grade ${grade}`.trim() : l.mode === "entrainement" ? `entraînement${grade ? ` au ${grade}` : ""}` : "Flash";
       morceaux.push(mode);
+      // Lot « le jour vert » : un passage de grade dit son verdict.
+      if (l.mode === "grade" && l.reussi === 1) morceaux.push("réussi ✓");
+      else if (l.mode === "grade" && l.reussi === 0) morceaux.push("pas encore");
       score(l.justes, l.calculs, "");
       if (chiffres) chiffres += l.justes > 1 ? " justes" : " juste";
     } else if (cle === "splat") {
-      if (connu(l.series)) morceaux.push(pluriel(l.series, "série"));
-      if (connu(l.reussies) && l.reussies > 0) morceaux.push(pluriel(l.reussies, "étape réussie", "étapes réussies"));
+      // Lot « le jour vert » : l'étape réussie pour la première fois ce
+      // jour-là, par son numéro ; les autres réussites du jour sont des
+      // étapes refaites ; une série sans réussite, « pas encore réussie ».
+      if (!Array.isArray(l.etapes)) {
+        // Une ligne sans le détail (un moteur d'avant le lot) : comme avant.
+        if (connu(l.series)) morceaux.push(pluriel(l.series, "série"));
+        if (connu(l.reussies) && l.reussies > 0) morceaux.push(pluriel(l.reussies, "étape réussie", "étapes réussies"));
+        if (connu(l.vues) && l.vues > 0) chiffres = pluriel(l.vues, "réponse vue", "réponses vues");
+        return [morceaux.join(" · "), chiffres, faible];
+      }
+      const etapes = l.etapes.filter(n => typeof n === "number");
+      const bonus = connu(l.bonus) ? l.bonus : 0;
+      if (etapes.length) morceaux.push(`${etapes.length > 1 ? "étapes" : "étape"} ${enListe(etapes)} ${etapes.length > 1 ? "réussies" : "réussie"}`);
+      if (bonus > 0) morceaux.push(pluriel(bonus, "bonus réussi", "bonus réussis"));
+      const refaites = connu(l.reussies) ? Math.max(0, l.reussies - etapes.length - bonus) : 0;
+      if (refaites > 0) morceaux.push(pluriel(refaites, "étape refaite", "étapes refaites"));
+      if (!morceaux.length && connu(l.series)) morceaux.push(`${pluriel(l.series, "série")} · pas encore réussie`);
       if (connu(l.vues) && l.vues > 0) chiffres = pluriel(l.vues, "réponse vue", "réponses vues");
     } else if (cle === "coffres") {
-      if (connu(l.tresors)) morceaux.push(pluriel(l.tresors, "trésor"));
+      if (connu(l.tresors) && l.tresors > 0) morceaux.push(pluriel(l.tresors, "trésor"));
       if (connu(l.parfaits) && l.parfaits > 0) morceaux.push(pluriel(l.parfaits, "parfait"));
+      // Lot « le jour vert » : les clés gagnées ce jour-là sans trésor, ou
+      // la partie pas finie (ses clés sur 10, son niveau).
+      if (!morceaux.length && connu(l.cles) && l.cles > 0) morceaux.push(pluriel(l.cles, "clé"));
+      if (connu(l.partie) && l.partie > 0) morceaux.push(`partie en cours : ${l.partie} clé${l.partie > 1 ? "s" : ""} sur 10${connu(l.niveau) ? ` · niveau ${l.niveau}` : ""}`);
+      if (!morceaux.length) morceaux.push("une partie");
       if (connu(l.solutions) && l.solutions > 0) chiffres = pluriel(l.solutions, "solution vue", "solutions vues");
       else if (connu(l.aides) && l.aides > 0) chiffres = pluriel(l.aides, "aide");
     }

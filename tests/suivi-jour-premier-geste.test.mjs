@@ -26,7 +26,6 @@ const partie = (p, jour) => C.commencerPartie(p, {niveau: 1, ops: [1, 2, 3, 4], 
 const cles = (p, n, jour) => { for (let i = 0; i < n; i += 1) p = C.noterCle(p, SERIE[i % SERIE.length], jour); return p; };
 const tresor = (p, jour) => C.noterTresor(cles(partie(p, jour), 10, jour), jour);
 const JEUDI = "2026-11-12";
-const VIDE = {tresors: null, parfaits: null, aides: null, solutions: null};
 
 test("une partie commencée sans clé : pas un jour de travail (une connexion seule ne compte pas)", () => {
   const r = C.resumeSuivi(C.pourServeur(partie(C.creer(), "2026-11-10")), {aujourdhui: JEUDI});
@@ -37,7 +36,9 @@ test("une partie commencée sans clé : pas un jour de travail (une connexion se
 test("UNE clé gagnée : ce jour-là est un jour de travail ; sa ligne ne dit pas de trésor", () => {
   const p = cles(partie(C.creer(), "2026-11-10"), 1, "2026-11-11");
   const r = C.resumeSuivi(C.pourServeur(p), {aujourdhui: JEUDI});
-  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [VIDE]}]);
+  // Lot « le jour vert » (11/11/2026) : le journal note les clés du jour, et
+  // la ligne du jour de la partie pas finie dit ses clés et son niveau.
+  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [{tresors: 0, parfaits: 0, aides: 0, solutions: 0, cles: 1, partie: 1, niveau: 1}]}]);
   assert.equal(r.dernier, "2026-11-11", "il n'est plus « absent » : il a travaillé ce jour-là");
   assert.deepEqual(r.feliciter, [], "toujours rien à féliciter pour Coffres");
 });
@@ -48,7 +49,7 @@ test("le jour de clés avec une aide ou une solution vue : la ligne les garde (l
   p = C.noterSolution(p, "sum", "2026-11-11");
   p = cles(p, 3, "2026-11-11");
   const r = C.resumeSuivi(C.pourServeur(p), {aujourdhui: JEUDI});
-  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [{tresors: null, parfaits: null, aides: 1, solutions: 1}]}]);
+  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [{tresors: 0, parfaits: 0, aides: 1, solutions: 1, cles: 3, partie: 3, niveau: 1}]}]);
   assert.deepEqual(r.aider, [{type: "solutions-vues", solutions: 1}]);
 });
 
@@ -62,7 +63,7 @@ test("un trésor le lundi, des clés le mercredi : deux jours, dans l'ordre ; le
   let q = tresor(C.creer(), "2026-11-11");
   q = cles(partie(q, "2026-11-11"), 2, "2026-11-11");
   r = C.resumeSuivi(C.pourServeur(q), {aujourdhui: JEUDI});
-  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [{tresors: 1, parfaits: 1, aides: 0, solutions: 0}]}]);
+  assert.deepEqual(r.jours, [{jour: "2026-11-11", lignes: [{tresors: 1, parfaits: 1, aides: 0, solutions: 0, cles: 12, partie: 2, niveau: 1}]}]);
 });
 
 test("un jour à venir (horloge d'un autre appareil) ne compte pas ; un jour d'il y a plus de 4 semaines : dernier jour, pas dans les jours", () => {
@@ -76,24 +77,25 @@ test("un jour à venir (horloge d'un autre appareil) ne compte pas ; un jour d'i
   assert.equal(rv.dernier, "2026-09-01");
 });
 
-test("limite acceptée : la même partie reprise un autre jour ne garde que ce jour-là", () => {
+test("la même partie reprise un autre jour : les DEUX jours (lot « le jour vert » : les clés de chaque jour sont au journal ; avant, seul le dernier restait)", () => {
   let p = cles(partie(C.creer(), "2026-11-09"), 3, "2026-11-09");
   p = cles(p, 2, "2026-11-11");
   const r = C.resumeSuivi(C.pourServeur(p), {aujourdhui: JEUDI});
-  assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-11"]);
+  assert.deepEqual(r.jours.map(j => [j.jour, j.lignes[0].cles, j.lignes[0].partie]), [["2026-11-09", 3, undefined], ["2026-11-11", 2, 5]]);
 });
 
-test("rien ne change aux données : le parcours envoyé au serveur est le même qu'avant le lot", () => {
+test("les données : la partie garde ses clés et son jour ; depuis le lot « le jour vert », une clé écrit aussi le journal du jour", () => {
   const p = cles(partie(C.creer(), "2026-11-11"), 3, "2026-11-11");
   const envoye = C.pourServeur(p);
   assert.equal(envoye.partie.cles, 3);
   assert.equal(envoye.partie.jour, "2026-11-11");
-  assert.equal("jours" in envoye, false, "pas de journal créé par une clé");
+  assert.deepEqual(envoye.jours, ["2026-11-11"]);
+  assert.deepEqual(envoye.journal.cles, [3]);
 });
 
 test("le moteur est copié octet pour octet au serveur ; la page de Coffres le recharge (nouveau numéro)", () => {
   assert.equal(lire("../_serveur/public/prof/coffres-parcours.js"), lire("../assets/js/coffres-parcours.js"));
-  assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-2"/);
+  assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
 });
 
 // ============================================================ Défi tables
@@ -158,6 +160,6 @@ test("Défi calcul : une séance ouverte, pas finie, avec une étape faite compt
 test("les moteurs de Défi tables et Défi calcul sont copiés octet pour octet ; leurs pages les rechargent", () => {
   assert.equal(lire("../_serveur/public/prof/defi_tables_mon_parcours.js"), lire("../outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.equal(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-2"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261111-1"/);
 });

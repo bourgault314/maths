@@ -20,7 +20,7 @@ const SERIE = ["sum", "sum", "sum", "difference", "difference", "difference", "p
 test("un parcours neuf est vide ; normaliser borne tout, ne garde que ce qui compte", () => {
   // Version 2 depuis le lot S1 « les journaux » (le journal des jours joués) ;
   // version 3 depuis le lot « coffres-chemin-gloubi » (gloubi et cran).
-  assert.deepEqual(PARCOURS.creer(), {version: 3, epoque: 0, niveaux: {}, operations: {}});
+  assert.deepEqual(PARCOURS.creer(), {version: 4, epoque: 0, niveaux: {}, operations: {}});
   assert.equal(PARCOURS.estVide(PARCOURS.creer()), true);
   const p = PARCOURS.normaliser({
     epoque: "3",

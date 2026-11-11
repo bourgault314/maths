@@ -117,7 +117,7 @@ test("la table de 10 a sa rangée (10 à 100) : dix bouts ; « prête » = les d
 });
 
 test("le parcours : des clés en plus, sans changer de version ; une clé absente vaut son départ ; un JSON forgé est nettoyé", () => {
-  assert.equal(P.VERSION, 4, "pas de migration : la version ne change pas (4 : le lot S1 « les journaux », plus tard)");
+  assert.equal(P.VERSION, 5, "pas de migration : la version ne change pas (4 : le lot S1 « les journaux », 5 : le lot « le jour vert », plus tard)");
   const neuf = P.creerParcours();
   assert.deepEqual(neuf.tables[7].bouts, []);
   assert.deepEqual(departN(neuf.tables[7].seance), {depart: 1, n: 0});
@@ -644,7 +644,7 @@ test("« Cette semaine » : « 3 fois cette semaine », rien à zéro, plus de r
 });
 
 test("le moteur a changé : nouveau numéro de cache, copie serveur identique, serveur qui accepte les nouvelles clés", () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-2/);
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-3/);
   const moteur = readFileSync(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = readFileSync(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));
   assert.ok(moteur.equals(copie), "cp outils/calcul_mental/defi_tables_mon_parcours.js _serveur/public/prof/");

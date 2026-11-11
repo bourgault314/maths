@@ -149,8 +149,8 @@ test("1 — Défi tables, « Ses séances » : les MÊMES mots que « Activité 
     {table: 4, etapes: 2, calculs: 10, justes: null, test: 0}
   ];
   lignes.forEach(l => assert.deepEqual(texteSeanceProf(l), texteLigne("defi-tables", l), JSON.stringify(l)));
-  assert.deepEqual(texteSeanceProf(lignes[2]), ["table de 8 · test pas encore", "calculs du jour 4/10", true]);
-  assert.deepEqual(texteSeanceProf(lignes[3]), ["révisions", "calculs du jour 3/6", false]);
+  assert.deepEqual(texteSeanceProf(lignes[2]), ["table de 8 · 5\u00a0étapes · test pas encore", "calculs du jour 4/10", true]);
+  assert.deepEqual(texteSeanceProf(lignes[3]), ["révisions · 2\u00a0étapes", "calculs du jour 3/6", false]);
   assert.deepEqual(texteSeanceProf({table: 3, calculs: 10, justes: 4}), ["table de 3", "calculs du jour 4/10", true], "sous la moitié : en orange");
 });
 

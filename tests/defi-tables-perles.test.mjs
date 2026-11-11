@@ -349,7 +349,7 @@ test("un parcours d’avant garde ses cases : rien ne glisse d’un cran", () =>
   ].forEach(brut => {
     const relu = parcours.normaliserParcours(brut);
     assert.deepEqual(relu.tables[7].apprends, {beads: 0, construct: 2, gaps: 1, ordered: 2, random: 0}, `parcours ${brut.version || "sans version"}`);
-    assert.equal(relu.version, 4, "lot S1 « les journaux » : version 4");
+    assert.equal(relu.version, 5, "lot « le jour vert » : version 5");
     const ligne = parcours.etatAffichage(relu).lignes.find(item => item.table === 7);
     assert.deepEqual(ligne.apprends.map(item => item.etat), [0, 2, 1, 2, 0], "l’accueil montre ○ ✓ ◔ ✓ ○ : les perles à faire, le reste tel quel");
     assert.equal(ligne.apprends.filter(item => item.etat === 2).length, 2, "« 2 activités sur 5 »");
@@ -399,7 +399,7 @@ test("le rond bleu : J’apprends tant que les cinq ne sont pas terminées et qu
 });
 
 test("le moteur épinglé a changé : nouveau numéro, copie serveur identique, serveur qui accepte « beads »", async () => {
-  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-2/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
+  assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-3/, "le moteur a changé : son numéro monte (et un dépôt FTP suit)");
   assert.match(html, /defi_tables_core\.js\?v=20261015-1/, "le noyau aussi (« la bande » dans ses libellés)");
   const moteur = await readFile(new URL("../outils/calcul_mental/defi_tables_mon_parcours.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_tables_mon_parcours.js", import.meta.url));

@@ -238,8 +238,8 @@ test("aucun temps passé : resumeSuivi ne rend pas les minutes de Défi calcul, 
 
 test("« Ce qu'il a fait » : une phrase par appli, des nombres seulement (null : pas connu) ; « juste » au singulier", () => {
   const p = pageRejouee({}, JEUDI);
-  assert.deepEqual(p.texteLigne("defi-tables", {table: 4, etapes: 4, calculs: 10, justes: 9, test: 1}), ["table de 4 · test réussi ✓", "calculs du jour 9/10", false]);
-  assert.deepEqual(p.texteLigne("defi-tables", {table: 0, etapes: 1, calculs: 3, justes: 1, test: 0}), ["révisions", "calculs du jour 1/3", true]);
+  assert.deepEqual(p.texteLigne("defi-tables", {table: 4, etapes: 4, calculs: 10, justes: 9, test: 1}), ["table de 4 · 4\u00a0étapes · test réussi ✓", "calculs du jour 9/10", false]); // « 4 étapes » : lot « le jour vert »
+  assert.deepEqual(p.texteLigne("defi-tables", {table: 0, etapes: 1, calculs: 3, justes: 1, test: 0}), ["révisions · 1\u00a0étape", "calculs du jour 1/3", true]);
   assert.deepEqual(p.texteLigne("defi-tables", {table: null, etapes: null, calculs: null, justes: null, test: null}), ["une séance", "", false], "une séance d'avant le lot S1");
   assert.deepEqual(p.texteLigne("defi-calcul", {calculs: 6, justes: 5, nouveautes: 1, prouvees: 0, rouges: 1}), ["1 nouveauté réussie", "calculs du jour 5/6", false]);
   assert.deepEqual(p.texteLigne("defi-calcul", {calculs: 3, justes: 2, nouveautes: 0, prouvees: 0, rouges: 0}), ["révisions seulement", "calculs du jour 2/3", false]);

@@ -459,9 +459,11 @@ verifier("saisie du prénom et de l'initiale", function () use (&$codes, &$jeton
 // Lot S1 « les journaux » (07/11/2026) : Défi tables (version 4), SPLAT! et
 // Coffres magiques (version 2) refusent l'écriture d'une page plus ancienne
 // (lib/applis.php « version_min »). Les progressions de ces tests portent
-// donc la version du moteur d'aujourd'hui.
-const VERSION_TABLES = 4;
-const VERSION_COFFRES = 3;
+// donc la version du moteur d'aujourd'hui. Lot « le jour vert » (11/11/2026) :
+// Défi tables en version 5 (le travail hors séance), Coffres en version 4
+// (les clés du jour au journal).
+const VERSION_TABLES = 5;
+const VERSION_COFFRES = 4;
 $parcours = ['version' => VERSION_TABLES, 'tables' => ['7' => ['acquise' => '2026-08-29']]];
 
 verifier("code inconnu refusé", function () {
@@ -1596,8 +1598,8 @@ verifier("sans base_revision, l’écriture est refusée (400) et rien ne bouge"
     vrai(str_contains((string)$r['json']['erreur'], 'Révision'), "le message dit ce qui manque");
     egal(3, lire($codesA2[0]['code'])['json']['revision'], 'la révision n’a pas bougé');
     egal(400, ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES], -3)['code'], 'une révision négative est refusée');
-    egal(400, ecrire_brut($codesA2[0]['code'], '{"version":4}', null)['code'], 'même en JSON brut');
-    $r = appel('/api/parcours.php', '{"code":' . json_encode($codesA2[0]['code']) . ',"base_revision":"3","parcours":{"version":4}}');
+    egal(400, ecrire_brut($codesA2[0]['code'], '{"version":5}', null)['code'], 'même en JSON brut');
+    $r = appel('/api/parcours.php', '{"code":' . json_encode($codesA2[0]['code']) . ',"base_revision":"3","parcours":{"version":5}}');
     egal(400, $r['code'], 'une révision en texte est refusée');
     $r = ecrire($codesA2[0]['code'], ['version' => VERSION_TABLES, 'tables' => ['2' => ['acquise' => '2026-09-01']]], 3);
     egal(200, $r['code'], 'avec la bonne révision, ça passe');
@@ -1617,7 +1619,7 @@ verifier("vingt premières créations simultanées : une seule passe, les autres
 
 verifier("le serveur ne garde ni prénom, ni texte libre, ni clé inconnue, à aucune profondeur", function () use (&$codesA2) {
     $code = $codesA2[2]['code'];
-    $r = ecrire_brut($code, '{"version":4,"prenom":"Léa Dupont","commentaire":"n\'importe quoi","tables":{"7":{"prenom":"Alice","acquise":"2026-09-01","commentaire":"x","apprends":{"construct":2,"information":"médicale"}},"11":{"acquise":"2026-09-01"}},"expert":{"niveau":2,"dernier":"' . str_repeat('x', 300) . '"},"calculs":{"3-7":{"cases":2,"vu":"' . str_repeat('y', 300) . '","gagne":"2026-09-01"}},"melange":{"tables":[2,"abc",5],"aJour":true}}', 0);
+    $r = ecrire_brut($code, '{"version":5,"prenom":"Léa Dupont","commentaire":"n\'importe quoi","tables":{"7":{"prenom":"Alice","acquise":"2026-09-01","commentaire":"x","apprends":{"construct":2,"information":"médicale"}},"11":{"acquise":"2026-09-01"}},"expert":{"niveau":2,"dernier":"' . str_repeat('x', 300) . '"},"calculs":{"3-7":{"cases":2,"vu":"' . str_repeat('y', 300) . '","gagne":"2026-09-01"}},"melange":{"tables":[2,"abc",5],"aJour":true}}', 0);
     egal(200, $r['code']);
     $lu = lire($code)['json']['parcours'];
     egal(['version', 'tables', 'expert', 'calculs', 'melange'], array_keys($lu), 'clés de premier niveau');
@@ -1630,7 +1632,7 @@ verifier("le serveur ne garde ni prénom, ni texte libre, ni clé inconnue, à a
     $texte = lire($code)['texte'];
     vrai(!str_contains($texte, 'Dupont') && !str_contains($texte, 'médicale') && !str_contains($texte, 'xxxx'), 'aucun texte libre ne ressort');
     // Un objet vide reste un objet vide : l'appli relit ce qu'elle a envoyé.
-    ecrire_brut($code, '{"version":4,"calculs":{},"melange":{"tables":[]}}', 1);
+    ecrire_brut($code, '{"version":5,"calculs":{},"melange":{"tables":[]}}', 1);
     vrai(str_contains(lire($code)['texte'], '"calculs":{}'), '{} reste {}');
     vrai(str_contains(lire($code)['texte'], '"tables":[]'), '[] reste []');
 });
@@ -8208,10 +8210,11 @@ verifier("lot S1 — Défi tables, SPLAT! et Coffres : une page d'avant le journ
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $eleve['code'];
     $cas = [
-        'defi-tables' => ['fichier' => 'parcours-reference.json', 'min' => 4, 'avant' => [3, 2, 1]],
+        // Lot « le jour vert » : Défi tables en version 5, Coffres en version 4.
+        'defi-tables' => ['fichier' => 'parcours-reference.json', 'min' => 5, 'avant' => [4, 3, 2, 1]],
         'splat' => ['fichier' => 'parcours-reference-splat.json', 'min' => 2, 'avant' => [1, 0]],
         // Coffres : version 3 depuis le lot « coffres-chemin-gloubi » (gloubi et cran) — une page de version 2 est refusée aussi.
-        'coffres' => ['fichier' => 'parcours-reference-coffres.json', 'min' => 3, 'avant' => [2, 1, 0]],
+        'coffres' => ['fichier' => 'parcours-reference-coffres.json', 'min' => 4, 'avant' => [3, 2, 1, 0]],
     ];
     foreach ($cas as $appli => $c) {
         $reference = json_decode((string)file_get_contents(__DIR__ . '/' . $c['fichier']), true);

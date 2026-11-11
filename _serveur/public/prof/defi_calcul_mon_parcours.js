@@ -2131,7 +2131,12 @@
   // l'appellera au lot S2 ; rien ne l'affiche encore. Des nombres, des dates
   // et des codes, jamais une phrase.
   // Défi calcul : un jour de travail = une séance finie ; une ligne par
-  // séance {calculs, justes, nouveautes, prouvees, rouges} — les minutes
+  // séance {calculs, justes, nouveautes, prouvees, rouges} (lot « le jour
+  // vert », 11/11/2026, choix de Gwenaël : la DERNIÈRE ligne d'un jour porte
+  // aussi `modules`, les codes des modules où une compétence a été réussie
+  // pour la première fois ou est devenue sue ce jour-là — lus dans ce que le
+  // parcours garde déjà, dans l'ordre de la carte ; la page écrit leur nom)
+  // — les minutes
   // gardées au journal ne sont PAS rendues (décision de Gwenaël, 07/11/2026 :
   // aider l'élève, pas le fliquer ; la page prof ne montre aucun temps) ; à
   // aider : des compétences à reprendre en classe (mises de côté, {type:
@@ -2173,6 +2178,14 @@
       const dernierJour = jours[jours.length - 1];
       if (dernierJour && dernierJour.jour === jour) dernierJour.lignes.push(ligne);
       else jours.push({jour, lignes: [ligne]});
+    });
+    jours.forEach(j => {
+      const modules = Object.keys(parcours.modules).sort().filter(id => {
+        if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return false;
+        const ligne = ligneDe(parcours, id);
+        return ligne.d.includes(j.jour) || ligne.s.includes(j.jour);
+      });
+      j.lignes[j.lignes.length - 1].modules = modules;
     });
     let classe = 0;
     let rougesVues = 0;

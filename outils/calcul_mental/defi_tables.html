@@ -3368,7 +3368,7 @@
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
   <script src="./defi_tables_core.js?v=20261015-1"></script>
-  <script src="./defi_tables_mon_parcours.js?v=20261111-2"></script>
+  <script src="./defi_tables_mon_parcours.js?v=20261111-3"></script>
   <script>
     (() => {
       "use strict";
@@ -5723,6 +5723,8 @@
       function texteSeanceProf(l) {
         const connu = v => typeof v === "number" && v >= 0;
         const morceaux = [l.table ? `table de ${l.table}` : connu(l.table) ? "révisions" : "une séance"];
+        // Lot « le jour vert » (11/11/2026) : le nombre d'étapes, comme la fiche.
+        if (connu(l.etapes) && l.etapes > 0) morceaux.push(`${l.etapes}\u00a0étape${l.etapes > 1 ? "s" : ""}`);
         if (l.test === 1) morceaux.push("test réussi ✓");
         else if (l.test === 2) morceaux.push("test pas encore");
         let chiffres = "";
@@ -5745,7 +5747,13 @@
         while (fin) {
           const suivi = PARCOURS.resumeSuivi(brut, {aujourdhui: fin});
           if (!connuDepuis) connuDepuis = suivi.connuDepuis;
-          suivi.jours.slice().reverse().forEach(j => { if (j.jour <= fin) jours.push(j); });
+          // Lot « le jour vert » : resumeSuivi rend aussi le travail fait
+          // depuis l'accueil (lignes « hors ») ; « Ses séances » ne montre
+          // que les séances.
+          suivi.jours.slice().reverse().forEach(j => {
+            const seances = j.lignes.filter(l => !l.hors);
+            if (j.jour <= fin && seances.length) jours.push({jour: j.jour, lignes: seances});
+          });
           if (jours.length > besoin) break;
           const avant = PARCOURS.resumeSuivi(brut, {aujourdhui: PARCOURS.ajouterJours(suivi.debut, -1)});
           fin = avant.dernier && avant.dernier < suivi.debut ? avant.dernier : null;
@@ -7785,6 +7793,14 @@
         $("result").classList.remove("avec-entraine");
         if (state.configuration.mode === "revision") {
           finishRevision();
+          // Lot « le jour vert » (11/11/2026) : Mes calculs du jour (ou la
+          // révision d'une table) joué depuis l'accueil fait un jour de
+          // travail — dès qu'un calcul a été répondu. Dans une séance, c'est
+          // la séance qui le note.
+          if (!enSeance() && !VUE_PROF && state.revisionPremierTotal > 0) {
+            parcours = PARCOURS.noterHorsSeance(parcours, {type: "revision", table: state.configuration.revisionTable}, {date: PARCOURS.jourLocal()});
+            sauverParcours();
+          }
           // Dans une séance, la fin de « Mes calculs du jour » mène à l'étape
           // suivante (lot « Ma séance du jour »).
           if (enSeance()) {
@@ -7819,6 +7835,14 @@
         // tables ? », ni Mon mélange, ni les entraînements.
         if (!enSeance() && state.origin !== "decouverte" && suivi.classement && suivi.classement.type === "validation") {
           parcours = PARCOURS.retenirErreurs(parcours, erreursDeLEtape());
+        }
+        // Lot « le jour vert » (11/11/2026, choix de Gwenaël du 09/11) : hors
+        // séance, le test (réussi ou pas encore), un entraînement, une
+        // activité de J'apprends, Mon mélange — et le test de bienvenue —
+        // font un jour de travail. Le moteur écarte l'étoile et la course.
+        if (!enSeance() && !VUE_PROF && suivi.classement) {
+          const verdict = suivi.evenements.find(evenement => typeof evenement.reussi === "boolean");
+          parcours = PARCOURS.noterHorsSeance(parcours, suivi.classement, {reussi: Boolean(verdict && verdict.reussi), date: PARCOURS.jourLocal()});
         }
         sauverParcours();
         renderVerdict(suivi, elapsed);

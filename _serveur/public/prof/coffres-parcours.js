@@ -94,7 +94,11 @@
   // effacerait (et rendrait des matchs déjà joués). Le serveur refuse donc son
   // envoi (lib/applis.php, « version_min » 3) ; elle garde son travail sur
   // l'appareil, et la page rechargée le renvoie, fusionné.
-  const VERSION = 3;
+  // Version 4 (lot « le jour vert », 11/11/2026, choix de Gwenaël) : une
+  // cinquième colonne au journal, `cles` (les clés gagnées ce jour-là) ; une
+  // page de version 3 l'effacerait en renvoyant le parcours : refusée
+  // (« version_min » 4).
+  const VERSION = 4;
   const APPLI = "coffres";
   const SUIVI_URL = "https://suivi.mathsgo.re";
 
@@ -313,7 +317,12 @@
   //   tresors    les trésors ouverts ce jour-là ;
   //   parfaits   parmi eux, les parfaits ;
   //   aides      les aides ouvertes ce jour-là ;
-  //   solutions  les solutions montrées ce jour-là.
+  //   solutions  les solutions montrées ce jour-là ;
+  //   cles       les clés gagnées ce jour-là (lot « le jour vert », 11/11/2026,
+  //              choix de Gwenaël : un jour où l'élève a gagné des clés sans
+  //              ouvrir de trésor — la partie finie un autre jour — était vide
+  //              dans sa fiche). Un journal d'avant ce lot n'a pas la colonne :
+  //              -1, pas connu.
   // -1 : pas connu (une donnée abîmée). Ni heure, ni calcul, ni réponse.
   // `depuis` : le premier jour où ce parcours a tenu son journal.
   // Fusion : un jour vu de deux appareils prend le PLUS GRAND de chaque
@@ -322,7 +331,7 @@
   // récents. Refusionner avec l'une ou l'autre copie ne change plus rien.
   // Le léger sous-compte quand deux appareils servent le même jour est
   // accepté. Pas de journal tant que rien n'a été fait depuis le lot S1.
-  const JOURNAL = Object.freeze(["tresors", "parfaits", "aides", "solutions"]);
+  const JOURNAL = Object.freeze(["tresors", "parfaits", "aides", "solutions", "cles"]);
   const JOURNAL_JOURS = 60;
   const JOURNAL_MAX = 9999;
 
@@ -371,13 +380,14 @@
   }
 
   // Ce qu'un geste ajoute au journal du jour : [trésors, parfaits, aides,
-  // solutions]. Une colonne « pas connue » le reste tant qu'on n'y ajoute rien.
+  // solutions, clés]. Une colonne « pas connue » le reste tant qu'on n'y ajoute rien.
   function ajouterAuJournal(p, aujourdhui, ajouts) {
     const jour = dateOuNull(aujourdhui) || jourLocal();
     const lignes = lignesDuJournal(p.jours, p.journal);
     const ligne = lignes.find(l => l.jour === jour);
-    if (ligne) ligne.entree = ligne.entree.map((valeur, index) => (ajouts[index] > 0 ? Math.min(JOURNAL_MAX, Math.max(0, valeur) + ajouts[index]) : valeur));
-    else lignes.push({jour, entree: ajouts.map(n => Math.min(JOURNAL_MAX, Math.max(0, n)))});
+    const complets = JOURNAL.map((_, index) => ajouts[index] || 0);
+    if (ligne) ligne.entree = ligne.entree.map((valeur, index) => (complets[index] > 0 ? Math.min(JOURNAL_MAX, Math.max(0, valeur) + complets[index]) : valeur));
+    else lignes.push({jour, entree: complets.map(n => Math.min(JOURNAL_MAX, Math.max(0, n)))});
     return poserJournal(p, lignes, dateLaPlusAncienne(p.depuis || null, jour));
   }
 
@@ -507,6 +517,7 @@
       p.partie.cles = Math.min(CLES_PAR_TRESOR, p.partie.cles + 1);
       toucherPartie(p, aujourdhui);
     }
+    ajouterAuJournal(p, aujourdhui, [0, 0, 0, 0, 1]);
     return p;
   }
 
@@ -860,7 +871,8 @@
   // acceptée : la même partie reprise un autre jour ne garde que ce jour-là.
   // Ce jour-là, sa ligne ne dit pas de trésor (null) — l'aide et les
   // solutions vues, si le journal les a notées ;
-  // une ligne par jour {tresors, parfaits, aides, solutions} ; à aider : des
+  // une ligne par jour {tresors, parfaits, aides, solutions, cles, et pour le
+  // jour de la partie pas finie : partie (ses clés), niveau} ; à aider : des
   // solutions vues cette semaine ({type: "solutions-vues", solutions}) ; à
   // féliciter : rien (aucune règle décidée pour Coffres).
   function jourPlus(jour, nombre) {
@@ -890,20 +902,27 @@
     const lignes = lignesDuJournal(p.jours, p.journal).filter(l => l.jour <= aujourdhui);
     const nombre = valeur => (valeur >= 0 ? valeur : null);
     // Un trésor ouvert (une valeur pas connue compte : le jour est dans le
-    // journal, on ne sait pas ce qui s'y est fait).
-    const travail = lignes.filter(l => l.entree[0] !== 0);
+    // journal, on ne sait pas ce qui s'y est fait) ; lot « le jour vert »
+    // (11/11/2026) : ou des clés gagnées ce jour-là, même sans trésor.
+    const travail = lignes.filter(l => l.entree[0] !== 0 || l.entree[4] > 0);
     // Le jour de la partie en cours, dès sa première clé (pas un jour à
     // venir : horloge fausse d'un autre appareil).
     const partie = p.partie && p.partie.cles >= 1 ? dateOuNull(p.partie.jour) : null;
     if (partie && partie <= aujourdhui && !travail.some(l => l.jour === partie)) {
       const duJour = lignes.find(l => l.jour === partie);
-      travail.push({jour: partie, entree: [-1, -1, duJour ? duJour.entree[2] : -1, duJour ? duJour.entree[3] : -1]});
+      travail.push({jour: partie, entree: [-1, -1, duJour ? duJour.entree[2] : -1, duJour ? duJour.entree[3] : -1, -1]});
       travail.sort((a, b) => (a.jour < b.jour ? -1 : a.jour > b.jour ? 1 : 0));
     }
     const jours = travail.filter(l => l.jour >= debut).map(l => ({
       jour: l.jour,
-      lignes: [{tresors: nombre(l.entree[0]), parfaits: nombre(l.entree[1]), aides: nombre(l.entree[2]), solutions: nombre(l.entree[3])}]
+      lignes: [{tresors: nombre(l.entree[0]), parfaits: nombre(l.entree[1]), aides: nombre(l.entree[2]), solutions: nombre(l.entree[3]), cles: nombre(l.entree[4])}]
     }));
+    // La partie pas finie (lot « le jour vert ») : sur la ligne de son
+    // dernier jour joué, ses clés (sur 10) et son niveau.
+    if (partie) {
+      const j = jours.find(x => x.jour === partie);
+      if (j) Object.assign(j.lignes[0], {partie: p.partie.cles, niveau: p.partie.niveau});
+    }
     let dernier = travail.length ? travail[travail.length - 1].jour : null;
     if (p.dernier && p.dernier <= aujourdhui && (!dernier || p.dernier > dernier)) dernier = p.dernier;
     let connuDepuis = null;

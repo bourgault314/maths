@@ -38,7 +38,7 @@ test("solo : « Tes coffres » et le trésor de l'élève sont des fenêtres à 
   assert.match(SOLO, /<section id="tresor" class="overlay" hidden role="dialog"/);
   assert.match(SOLO, /<h2 id="result-title" tabindex="-1">Trésor ouvert !<\/h2>\s*<p>Tu as ouvert les dix coffres\.<\/p>/, "le visiteur : inchangé");
   // Lot « code en cases » : le moteur change encore (la question arrête les envois) → -2.
-  assert.match(SOLO, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-2"><\/script>/);
+  assert.match(SOLO, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-3"><\/script>/);
 });
 
 test("solo : le chemin des coffres est pour l'élève connecté SEULEMENT (code dans l'onglet, moteur chargé)", () => {
@@ -81,7 +81,7 @@ test("solo : le trésor gagné — bronze et argent annoncent le suivant ; l'or 
 // -------------------------------------------------------- les Carrés gloutons
 
 test("Carrés gloutons : le mode cadeau demande « ?cadeau=1 à 3 » ET un élève suivi ; sinon la page de tout le monde", () => {
-  assert.match(CARRES, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-2"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/code-en-cases\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/gloubi-ia\.js\?v=20261109-1"><\/script>\s*<script>/);
+  assert.match(CARRES, /<script src="\.\.\/\.\.\/assets\/js\/coffres-parcours\.js\?v=20261111-3"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/code-en-cases\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/coffres-suivi\.js\?v=\d{8}-\d+"><\/script>\s*<script src="\.\.\/\.\.\/assets\/js\/gloubi-ia\.js\?v=20261109-1"><\/script>\s*<script>/);
   assert.match(CARRES, /const SUIVI_COFFRES = GLOUBI && PARCOURS_COFFRES && window\.MathsGoCoffresSuivi && \[1, 2, 3\]\.includes\(niveauCadeau\)\s*\? window\.MathsGoCoffresSuivi\.creer\(\{ surParcours: \(\) => relireCadeau\(\) \}\) : null;/);
   assert.match(CARRES, /const cadeau = SUIVI_COFFRES && \(SUIVI_COFFRES\.actif\(\) \|\| SUIVI_COFFRES\.attente\(\)\)/);
   assert.match(CARRES, /html\.gloubi-cadeau \.site-header \{ display: none; \}/, "pas de lien vers le catalogue du site en cadeau");
