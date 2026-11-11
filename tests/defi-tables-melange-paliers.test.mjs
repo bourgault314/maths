@@ -572,5 +572,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // code-en-cases.js).
   assert.match(lire("_serveur/public/VERSION"), /^lot toujours-toi$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=module-attention-20261111-1/);
 });

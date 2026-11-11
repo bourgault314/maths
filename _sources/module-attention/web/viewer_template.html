@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>Module Attention — le diaporama en ligne | maths&amp;go</title>
+<meta name="description" content="Les diaporamas du module Attention, à projeter directement depuis le navigateur : on avance au clic ou avec les flèches.">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<style>
+  :root{--navy:#1D2B4F;--corail:#EF6F6C;--fond:#eef2f7}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--fond);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--navy)}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:8px}
+  .haut{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));display:flex;align-items:center;gap:10px;min-height:44px}
+  .haut a{min-width:44px;min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 12px 0 8px;border:1px solid #d8e4ef;border-radius:999px;background:#fff;color:var(--navy);font-weight:800;text-decoration:none;font-size:.92rem}
+  .haut a svg{width:20px;height:20px}
+  .haut h1{margin:0;font-size:1rem;font-weight:800;line-height:1.2}
+  .cadre{position:relative;width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));aspect-ratio:16/9;background:#fff;border-radius:14px;box-shadow:0 10px 26px rgba(15,23,42,.10);overflow:hidden;cursor:pointer;user-select:none}
+  .cadre>img{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .media{position:absolute;display:none}
+  .media.on{display:block}
+  a.media{cursor:pointer;border-radius:1.2%}
+  a.media:focus-visible{outline:4px solid var(--corail);outline-offset:2px}
+  video.media{background:#141B2D;object-fit:contain;cursor:default}
+  .barre{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));display:flex;align-items:center;justify-content:center;gap:10px}
+  .barre button{min-height:44px;min-width:44px;padding:0 16px;border:1px solid #c9d6e4;border-radius:10px;background:#fff;color:var(--navy);font:inherit;font-weight:800;cursor:pointer}
+  .barre button:disabled{opacity:.4;cursor:default}
+  .barre .num{min-width:72px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+  .barre .plein{margin-left:auto}
+  .barre .notes{margin-right:auto}
+  .barre .notes[aria-pressed="true"]{background:#fff4e8;border-color:#f58220}
+  .note{width:min(100%,1400px,calc((100vh - 128px) * 16 / 9));background:#fff;border:1px solid #d8e4ef;border-radius:12px;padding:10px 14px;font-size:.92rem;line-height:1.45;white-space:pre-line;max-height:22vh;overflow:auto}
+  .note[hidden]{display:none}
+  :fullscreen body{padding:0;gap:0;background:#000}
+  :fullscreen .cadre{width:min(100vw,calc(100vh * 16 / 9));border-radius:0;box-shadow:none}
+  :fullscreen .barre,:fullscreen .haut,:fullscreen .note{display:none}
+  @media (max-width:600px){ .barre button{padding:0 10px} .barre .txt{display:none} .haut h1{font-size:.9rem} }
+</style>
+<script src="/assets/js/compteur.js?v=COMPTEUR" defer></script>
+</head>
+<body>
+<div class="haut">
+  <a href="module-attention.html" title="Revenir au module Attention"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Module Attention</a>
+  <h1 id="titre"></h1>
+</div>
+<div class="cadre" id="cadre"><img id="diapo" alt=""></div>
+<div class="barre">
+  <button id="notes" class="notes" type="button" aria-pressed="false" title="Notes des animateurs (N)">Notes</button>
+  <button id="prec" type="button" aria-label="Diapo précédente">◀&#xFE0E;<span class="txt"> Précédent</span></button>
+  <span class="num" id="num" aria-live="polite"></span>
+  <button id="suiv" type="button" aria-label="Diapo suivante"><span class="txt">Suivant </span>▶&#xFE0E;</button>
+  <button id="plein" class="plein" type="button" title="Plein écran (F)">⛶</button>
+</div>
+<div class="note" id="note" hidden></div>
+<script>
+(function(){
+  const SEANCES = /*DATA*/null;
+  const BASE = 'assets/module-attention/';
+  const s = new URLSearchParams(location.search).get('seance') === '2' ? 2 : 1;
+  const D = SEANCES[s];
+  document.title = 'Séance ' + s + ' · ' + D.titre + ' — Module Attention | maths&go';
+  document.getElementById('titre').textContent = 'Séance ' + s + ' · ' + D.titre;
+  const cadre = document.getElementById('cadre'), img = document.getElementById('diapo');
+  const note = document.getElementById('note'), btnNotes = document.getElementById('notes');
+  const src = k => BASE + 'diapos/s' + s + '/' + String(k + 1).padStart(2, '0') + '.webp';
+  /* les vidéos : la nôtre (pensoscope) se joue dans la diapo ; celles des autres s'ouvrent sur YouTube */
+  const pc = (v, t) => (100 * v / t) + '%';
+  const medias = D.media.map(m => {
+    let el;
+    if (m.type === 'youtube') {
+      el = document.createElement('a'); el.href = m.url; el.target = '_blank'; el.rel = 'noopener';
+      el.setAttribute('aria-label', 'Lancer la vidéo (elle s’ouvre sur YouTube)');
+    } else {
+      el = document.createElement('video'); el.src = BASE + m.src; el.controls = true; el.preload = 'none';
+      el.poster = BASE + 'pensoscope-couverture.webp'; el.playsInline = true;
+    }
+    el.className = 'media';
+    Object.assign(el.style, { left: pc(m.x, 13.333), top: pc(m.y, 7.5), width: pc(m.w, 13.333), height: pc(m.h, 7.5) });
+    cadre.appendChild(el); return { slide: m.slide, el };
+  });
+  let i = 0;
+  function montrer(n){
+    i = Math.max(0, Math.min(D.count - 1, n));
+    img.src = src(i); img.alt = 'Diapo ' + (i + 1);
+    medias.forEach(m => { const on = m.slide === i; m.el.classList.toggle('on', on); if (!on && m.el.pause) m.el.pause(); });
+    document.getElementById('num').textContent = (i + 1) + ' / ' + D.count;
+    document.getElementById('prec').disabled = i === 0;
+    document.getElementById('suiv').disabled = i === D.count - 1;
+    note.textContent = D.notes[i] || '';
+    if (i + 1 < D.count) new Image().src = src(i + 1);
+    try { history.replaceState(null, '', '?seance=' + s + '#' + (i + 1)); } catch (e) {}
+  }
+  document.getElementById('prec').onclick = () => montrer(i - 1);
+  document.getElementById('suiv').onclick = () => montrer(i + 1);
+  /* même comportement que le diaporama SPLAT! : un clic avance ; en plein écran, au doigt, le quart gauche recule */
+  let pointeur = 'mouse';
+  cadre.addEventListener('pointerdown', ev => { pointeur = ev.pointerType || 'mouse'; });
+  cadre.addEventListener('click', ev => { if (ev.target.closest('a,button,video')) return;
+    const r = cadre.getBoundingClientRect();
+    if (document.fullscreenElement && pointeur !== 'mouse' && ev.clientX < r.left + r.width / 4) { montrer(i - 1); return; }
+    montrer(i + 1); });
+  function basculerNotes(){ note.hidden = !note.hidden; btnNotes.setAttribute('aria-pressed', String(!note.hidden)); }
+  btnNotes.onclick = basculerNotes;
+  document.addEventListener('keydown', ev => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.target && ev.target.closest && ev.target.closest('video')) return;
+    if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { ev.preventDefault(); montrer(i + 1); return; }
+    if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { ev.preventDefault(); montrer(i - 1); return; }
+    if (ev.key === 'Home') { montrer(0); return; }
+    if (ev.key === 'End') { montrer(D.count - 1); return; }
+    if (ev.key === 'f' || ev.key === 'F') { pleinEcran(); return; }
+    if (ev.key === 'n' || ev.key === 'N') { basculerNotes(); return; }
+    if (ev.target && ev.target.closest && ev.target.closest('a,button')) return;
+    if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); montrer(i + 1); }
+  });
+  function pleinEcran(){ if (document.fullscreenElement) document.exitFullscreen(); else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {}); }
+  if (!document.fullscreenEnabled) document.getElementById('plein').hidden = true;
+  document.getElementById('plein').onclick = pleinEcran;
+  const depart = parseInt(location.hash.slice(1), 10);
+  montrer(Number.isFinite(depart) ? depart - 1 : 0);
+})();
+</script>
+</body>
+</html>

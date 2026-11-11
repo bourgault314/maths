@@ -63,13 +63,13 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
     donnees: 2,
     informatique: 0,
     "jeux-recherches": 12,
-    cps: 5
+    cps: 6 // + le Module Attention (11/11/2026)
   };
   for (const [domain, count] of Object.entries(expected)) {
     assert.equal(context.domainResourceCount(domain), count, domain);
   }
   assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 8);
-  assert.equal(context.resourceCount(published), 179, "Automatismes reste compté une fois dans le total du catalogue.");
+  assert.equal(context.resourceCount(published), 180, "Automatismes reste compté une fois dans le total du catalogue.");
 });
 
 test("Triangles compte ses descendants et les rubriques vides restent à zéro", () => {

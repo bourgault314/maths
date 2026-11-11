@@ -16,6 +16,8 @@ const lire = (chemin) => readFileSync(join(racine, chemin), "utf8");
 const SANS_PIED = [
   "cps/bilan-s1.html",
   "cps/bingos-rentree.html",
+  "cps/module-attention-diaporama.html",
+  "cps/module-attention.html",
   "cps/portrait-chinois.html",
   "jeux-cadeaux/dodo.html",
   "jeux-cadeaux/galets.html",

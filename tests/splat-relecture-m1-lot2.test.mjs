@@ -101,7 +101,7 @@ test("C. catalogue : la carte de la progression masquée, la vignette de l'unive
     assert.ok(Math.abs(+n[2] - (+taches[i][2] + 0.36 * +n[3])) < 0.1, `numéro ${i + 1} centré en y`);
   });
   // le cache-buster du catalogue suit
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=module-attention-20261111-1/);
 });
 
 // D. le texte lu, sans les commentaires (HTML, CSS, JS) : plus un seul « ou » sans insécable
