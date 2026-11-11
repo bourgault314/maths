@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Défi conversions | maths&amp;go</title>
+  <meta name="description" content="Apprendre à convertir des mesures, palier par palier : repères, relations, conversions, durées et problèmes.">
+  <!-- Lot 1 (11/11/2026) : en ligne par lien direct, HORS catalogue (ni
+       vignette, ni sitemap, ni moteur de recherche) tant que le serveur de
+       suivi et la page prof (lot 2) ne sont pas là. Le code d'élève est
+       ignoré : tout le monde est visiteur, la progression reste sur
+       l'appareil. -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261111-1">
+  <script>
+    // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
+    // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
+    // tableau.
+    (function (w) {
+      try {
+        var h = String(w.location.hash || "");
+        if (/(^#|&)(code|fiche|b)=/.test(h)) w.history.replaceState(null, "", w.location.pathname + w.location.search);
+      } catch (e) {}
+    })(window);
+  </script>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="hautv">
+      <a href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
+      <a class="rond" id="retour-site" href="/outils/?domain=proportionnalite-mesures&amp;notion=conversions" aria-label="Retour aux conversions">←</a>
+    </header>
+    <main class="cadre" id="cadre" aria-live="polite"></main>
+    <div class="voile" id="voile" hidden></div>
+  </div>
+
+  <script src="./conversions_carte.js?v=20261111-1"></script>
+  <script src="./conversions_generateurs.js?v=20261111-2"></script>
+  <script src="./defi_conversions_parcours.js?v=20261111-2"></script>
+  <script src="./defi_conversions_aides.js?v=20261111-1"></script>
+  <script>
+  (function () {
+    "use strict";
+    const CARTE = window.MATHSGO_CONVERSIONS_CARTE;
+    const G = window.MATHSGO_CONVERSIONS;
+    const P = window.MATHSGO_DEFI_CONVERSIONS_PARCOURS;
+    const AIDES = window.MATHSGO_DEFI_CONVERSIONS_AIDES;
+    const NB = " ";
+    const T = CARTE.typo;
+
+    const params = new URLSearchParams(window.location.search);
+    const PROF = params.get("prof") === "1";
+
+    // Les étapes prêtes (lot 1 : le palier 1), dans l'ordre du parcours.
+    const PRETS = CARTE.ORDRE.filter(code => CARTE.etape(code).pret);
+    const REPERES_PAR_ETAPE = {};
+    CARTE.ETAPES.forEach(e => { if (e.reperes && e.reperes.length) REPERES_PAR_ETAPE[e.code] = e.reperes; });
+    const PALIERS_CODES = {};
+    CARTE.PALIERS.forEach(p => { PALIERS_CODES[p.n] = CARTE.etapesDuPalier(p.n).map(e => e.code); });
+
+    function stockage() {
+      try { return window.localStorage; } catch (e) { return null; }
+    }
+
+    const etat = {
+      jour: P.jourLocal(),
+      parcours: PROF ? P.creer() : P.charger(stockage()),
+      seance: null,
+      profEtape: PRETS[0],
+      profSerie: {usage: "valide", graine: 0}
+    };
+
+    const cadre = document.getElementById("cadre");
+    const voile = document.getElementById("voile");
+    const retourSite = document.getElementById("retour-site");
+
+    // ------------------------------------------------------------ outils DOM
+    function el(tag, classe, texte) {
+      const e = document.createElement(tag);
+      if (classe) e.className = classe;
+      if (texte !== undefined && texte !== null) e.textContent = texte;
+      return e;
+    }
+    function bouton(texte, classe, action) {
+      const b = el("button", `btn${classe ? ` ${classe}` : ""}`, texte);
+      b.type = "button";
+      b.addEventListener("click", action);
+      return b;
+    }
+    function lien(texte, action, classe) {
+      const b = el("button", `lien${classe ? ` ${classe}` : ""}`, texte);
+      b.type = "button";
+      b.addEventListener("click", action);
+      return b;
+    }
+    function ecran({rond = false, serre = false} = {}) {
+      cadre.textContent = "";
+      cadre.className = `cadre${serre ? " serre" : ""}`;
+      cadre.style.removeProperty("--q-h");
+      retourSite.hidden = !rond;
+      voile.hidden = true;
+      voile.textContent = "";
+      cadre.scrollTop = 0;
+      return cadre;
+    }
+    function ajouter(...enfants) {
+      enfants.filter(Boolean).forEach(e => cadre.appendChild(e));
+    }
+    function espace() {
+      return el("div", "espace");
+    }
+    function texteLignes(classe, texte) {
+      return AIDES.lignes(classe, texte);
+    }
+    function medaille(n, gagnee, taille = 40, police = 17) {
+      const m = el("span", `med${gagnee ? " gagne" : ""}`, String(n));
+      m.style.width = `${taille}px`;
+      m.style.height = `${taille}px`;
+      m.style.fontSize = `${police}px`;
+      if (gagnee) {
+        const c = CARTE.palier(n).couleur;
+        m.style.background = c;
+        m.style.boxShadow = `0 0 0 2.5px ${c}`;
+      }
+      return m;
+    }
+    function teteEcran(titre, retour) {
+      const t = el("div", "tete-ecran");
+      const r = el("button", "rond", "←");
+      r.type = "button";
+      r.setAttribute("aria-label", "Retour");
+      r.addEventListener("click", retour);
+      t.appendChild(r);
+      t.appendChild(el("b", "", titre));
+      return t;
+    }
+
+    // ------------------------------------------------------------ données
+    function sauver() {
+      if (!PROF) P.sauver(stockage(), etat.parcours);
+    }
+    function nouvelleSeance() {
+      etat.seance = {id: P.idLibre(etat.parcours), ordre: null, jour: etat.jour, etape: null, montre: 0, atoi: 0, valide: 0,
+        posees: 0, justes: 0, ratees: [], test: 0};
+    }
+    function noterSeance(changement) {
+      if (!etat.seance) nouvelleSeance();
+      Object.assign(etat.seance, changement || {});
+      if (PROF) return;
+      const r = P.noterSeance(etat.parcours, etat.seance, etat.jour);
+      etat.parcours = r.parcours;
+      if (r.ordre) { etat.seance.ordre = r.ordre; etat.seance.jour = r.jour; }
+      sauver();
+    }
+    function changer(fonction) {
+      etat.parcours = fonction(etat.parcours);
+      sauver();
+    }
+    function graine() {
+      return 1 + Math.floor(Math.random() * 99998);
+    }
+    function nomEtape(code) {
+      return CARTE.etape(code).nom;
+    }
+    function carnet() {
+      return P.carnet(etat.parcours, REPERES_PAR_ETAPE);
+    }
+    function medailles() {
+      return P.medailles(etat.parcours, PALIERS_CODES);
+    }
+    function suivante(code) {
+      const i = PRETS.indexOf(code);
+      return PRETS.slice(i + 1).find(c => !P.estValidee(etat.parcours, c)) || null;
+    }
+
+    // ============================================================ L'ACCUEIL
+    function accueil() {
+      if (PROF) { accueilProf(); return; }
+      etat.seance = null;
+      ecran({rond: true});
+      const p = etat.parcours;
+      const code = P.monEtape(p, PRETS);
+      const palierN = code ? CARTE.etape(code).palier : 1;
+      const codesPalier = PALIERS_CODES[palierN];
+      const valideesPalier = codesPalier.filter(c => P.estValidee(p, c)).length;
+      const gagnees = medailles();
+
+      const haut = el("div", "acc-palier");
+      haut.appendChild(medaille(palierN, gagnees.includes(palierN), 46, 19));
+      const info = el("div", "info");
+      info.appendChild(el("span", "eti", `Palier ${palierN} · ${CARTE.palier(palierN).nom}`));
+      info.appendChild(el("b", "", T(`${valideesPalier} ${valideesPalier > 1 ? "étapes validées" : "étape validée"} sur ${codesPalier.length}`)));
+      const prog = el("div", "prog");
+      const barre = el("i");
+      barre.style.width = `${(100 * valideesPalier) / codesPalier.length}%`;
+      prog.appendChild(barre);
+      info.appendChild(prog);
+      haut.appendChild(info);
+      ajouter(haut);
+
+      const du = P.echauffementDu(p, etat.jour, PRETS);
+      const carteEtape = el("div", "carte bleue");
+      carteEtape.appendChild(el("div", "eti", "Mon étape"));
+      if (!code) {
+        carteEtape.appendChild(el("h2", "", `Le palier ${palierN + 1} arrive bientôt`));
+        carteEtape.appendChild(el("div", "petit", "Tu as fini tout ce qui est prêt. En attendant, ton échauffement revient chaque jour : il garde tout en mémoire."));
+        if (du) carteEtape.appendChild(bouton("Mon échauffement →", "", () => lancerSeance()));
+        else carteEtape.appendChild(el("div", "petit centre", "Ton échauffement revient demain."));
+      } else {
+        const action = P.actionDe(p, code, etat.jour);
+        carteEtape.appendChild(el("h2", "", nomEtape(code)));
+        const pastilles = el("div", "etape3");
+        const appris = action === "valide" || action === "demain";
+        const a = el("div", appris ? "fait" : "ici");
+        a.appendChild(el("em", "", appris ? "✓" : "①"));
+        a.appendChild(document.createTextNode("J'apprends"));
+        const b = el("div", action === "valide" ? "ici" : "");
+        b.appendChild(el("em", "", "②"));
+        b.appendChild(document.createTextNode("Je valide"));
+        pastilles.append(a, b);
+        carteEtape.appendChild(pastilles);
+        if (action === "demain") {
+          carteEtape.appendChild(el("div", "petit centre", "Je valide s'ouvre demain, après ton échauffement."));
+          if (du) carteEtape.appendChild(bouton("Mon échauffement →", "", () => lancerSeance()));
+          const apres = suivante(code);
+          if (apres) carteEtape.appendChild(bouton("Je connais peut-être la suite →", "cl", () => introTest(apres)));
+        } else {
+          if (du) carteEtape.appendChild(el("div", "petit centre", `Aujourd'hui : l'échauffement, puis ${action === "valide" ? "Je valide" : "J'apprends"}.`));
+          carteEtape.appendChild(bouton(P.estVide(p) ? "Commencer →" : "C'est parti →", "", () => lancerSeance()));
+        }
+      }
+      ajouter(carteEtape);
+
+      if (code && !P.etapeDe(p, code)[0]) {
+        const test = el("button", "test-carte");
+        test.type = "button";
+        test.appendChild(el("span", "", "🪜")).style.fontSize = "26px";
+        const t = el("div");
+        t.appendChild(el("b", "", T("Tu connais déjà ?")));
+        t.appendChild(el("span", "petit", "Un petit test : tu sautes les étapes que tu sais."));
+        test.appendChild(t);
+        test.appendChild(el("span", "fl", "→"));
+        test.addEventListener("click", () => introTest(code));
+        ajouter(test);
+      }
+
+      const meds = el("div", "carte");
+      meds.style.padding = "9px 12px";
+      const ligneMeds = el("div");
+      ligneMeds.style.cssText = "display:flex;justify-content:space-between;align-items:center";
+      const bm = el("b", "", "Mes médailles");
+      bm.style.fontSize = "15px";
+      ligneMeds.append(bm, el("span", "petit", T(`${gagnees.length} sur 6`)));
+      meds.appendChild(ligneMeds);
+      const rang = el("div", "med-row");
+      for (let n = 1; n <= 6; n += 1) rang.appendChild(medaille(n, gagnees.includes(n), 38, 16));
+      meds.appendChild(rang);
+      ajouter(meds);
+
+      const nbValidees = P.validees(p).length;
+      const nbReperes = carnet().length;
+      const tuiles = el("div", "tuiles");
+      const tParcours = el("button", "tuile");
+      tParcours.type = "button";
+      const ic = el("span", "ic");
+      ic.appendChild(iconeCarte());
+      tParcours.append(ic, el("b", "", "Mon parcours"), el("span", "petit", T(nbValidees ? `${nbValidees} ${nbValidees > 1 ? "étapes" : "étape"} sur 48` : "6 paliers, 48 étapes")));
+      tParcours.addEventListener("click", () => monParcours(palierN));
+      const tCarnet = el("button", "tuile");
+      tCarnet.type = "button";
+      tCarnet.append(el("span", "ic", "📒"), el("b", "", "Mon carnet"), el("span", "petit", nbReperes ? T(`${nbReperes} ${nbReperes > 1 ? "repères" : "repère"}`) : "tes repères"));
+      tCarnet.addEventListener("click", monCarnet);
+      tuiles.append(tParcours, tCarnet);
+      ajouter(tuiles, espace());
+
+      const vide = P.estVide(p);
+      const liens = el("div", "liens2");
+      liens.appendChild(lien(T("Comment ça marche ?"), commentCaMarche));
+      if (vide) liens.appendChild(lien("Mode professeur", allerProf));
+      else liens.appendChild(lien("Effacer mon historique", confirmerEffacer));
+      ajouter(liens);
+      if (!vide) {
+        const l2 = el("div", "liens2 un");
+        l2.appendChild(lien("Mode professeur", allerProf));
+        ajouter(l2);
+      }
+    }
+
+    function iconeCarte() {
+      const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      s.setAttribute("width", "34");
+      s.setAttribute("height", "30");
+      s.setAttribute("viewBox", "0 0 34 30");
+      s.setAttribute("aria-hidden", "true");
+      const p1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p1.setAttribute("d", "M2 5l9-3 12 4 9-3v22l-9 3-12-4-9 3z");
+      p1.setAttribute("fill", "none");
+      p1.setAttribute("stroke", "#087a71");
+      p1.setAttribute("stroke-width", "2.5");
+      p1.setAttribute("stroke-linejoin", "round");
+      const p2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p2.setAttribute("d", "M11 2v22M23 6v22");
+      p2.setAttribute("stroke", "#087a71");
+      p2.setAttribute("stroke-width", "2.5");
+      s.append(p1, p2);
+      return s;
+    }
+
+    function allerProf() {
+      window.location.href = `${window.location.pathname}?prof=1`;
+    }
+
+    // « Effacer mon historique » : la question posée par-dessus l'écran,
+    // rien ne bouge derrière (choix de Gwenaël du 06/11).
+    function confirmerEffacer() {
+      voile.textContent = "";
+      const boite = el("div", "boite");
+      boite.setAttribute("role", "dialog");
+      boite.setAttribute("aria-modal", "true");
+      boite.append(el("b", "", "Effacer tout ton historique ?".replace(" ?", `${NB}?`)),
+        el("div", "petit", "Tes étapes validées, tes médailles et ton carnet seront effacés sur cet appareil. On ne peut pas revenir en arrière."));
+      boite.lastChild.style.fontSize = "15px";
+      const oui = bouton("Oui, tout effacer", "rouge", () => {
+        etat.parcours = P.effacer(stockage());
+        accueil();
+      });
+      const non = bouton("Non, je garde tout", "cl", () => { voile.hidden = true; voile.textContent = ""; });
+      boite.append(oui, non);
+      voile.appendChild(boite);
+      voile.hidden = false;
+      non.focus();
+    }
+
+    // ============================================================ LA SÉANCE
+    // Une séance = l'échauffement (une fois par jour) + une étape.
+    function lancerSeance() {
+      nouvelleSeance();
+      if (P.echauffementDu(etat.parcours, etat.jour, PRETS)) echauffement(apresEchauffement);
+      else monEtape();
+    }
+    function apresEchauffement() {
+      const revoir = P.aRevoir(etat.parcours, PRETS);
+      if (revoir) annonceRevoir(revoir);
+      else monEtape();
+    }
+    function monEtape(code) {
+      const c = code || P.monEtape(etat.parcours, PRETS);
+      if (!c) { accueil(); return; }
+      const action = PROF ? "apprends" : P.actionDe(etat.parcours, c, etat.jour);
+      if (action === "validee" || action === "demain") { accueil(); return; }
+      noterSeance({etape: c});
+      if (action === "valide") { jeValide(c); return; }
+      changer(p => P.marquerVue(p, c, etat.jour));
+      if (action === "apprends") onTeMontre(c, () => aToi(c));
+      else aToi(c);
+    }
+
+    // --------------------------------------------------- l'écran d'une question
+    // Bandeau, chemin, question (hauteur fixe pour la séance), zone d'aide
+    // (même place, même taille), pavé ou choix, bouton.
+    function ecranQuestion({petit, titre, chip, chemin, retour, hauteur}) {
+      ecran({serre: true});
+      if (hauteur) cadre.style.setProperty("--q-h", `${hauteur}px`);
+      const b = el("div", "bseance");
+      const r = el("button", "rond", "←");
+      r.type = "button";
+      r.setAttribute("aria-label", "Retour à l'accueil");
+      r.addEventListener("click", retour || accueil);
+      const t = el("div", "t");
+      t.append(el("small", "", petit), el("b", "", titre));
+      const c = el("span", "chip", chip || "");
+      b.append(r, t, c);
+      const ch = el("div", "chemin");
+      chemin.noms.forEach((n, i) => {
+        if (i) ch.appendChild(el("s"));
+        ch.appendChild(el("i", i < chemin.ici ? "fait" : i === chemin.ici ? "ici" : "", n));
+      });
+      const q = el("div", "q");
+      const zone = el("div", "zone vide");
+      const bas = el("div", "bas");
+      const action = bouton("Valider", "", () => {});
+      ajouter(b, ch, q, zone, bas, action);
+      return {q, zone, bas, action, chip: c};
+    }
+
+    // La hauteur de la question est FIXE pendant toute la séance d'une
+    // étape (rien ne bouge d'une question à l'autre) : celle de sa forme la
+    // plus haute.
+    function hauteurQuestion(code) {
+      return CARTE.etape(code).famille === "problemes" ? 178 : 124;
+    }
+
+    function remplirZone(zone, classe, etiquette) {
+      zone.textContent = "";
+      zone.className = `zone ${classe}`;
+      if (etiquette) zone.appendChild(el("span", `etiq ${etiquette[0]}`, etiquette[1]));
+    }
+
+    // Pose une question et attend la réponse. `avant(zone)` remplit la zone
+    // avant la réponse ; `apres(verdict)` est appelé après « Valider ».
+    function interroger(ui, question, {avant, apres}) {
+      const saisie = {cases: ["", ""], focus: 0, fige: false};
+      const nbCases = question.forme === "deux-cases" ? 2 : 1;
+      const casesEl = [];
+      ui.q.textContent = "";
+      ui.q.classList.toggle("long", Boolean(question.morceaux.long));
+      const m = question.morceaux;
+      const nouvelleCase = (i, petite) => {
+        const c = el("span", `case${petite ? " petite" : ""}${i === 0 ? " focus" : ""}`, "");
+        c.setAttribute("role", "textbox");
+        c.setAttribute("aria-label", "Ta réponse");
+        c.addEventListener("click", () => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
+        casesEl.push(c);
+        return c;
+      };
+      if (question.forme === "qcm" || question.forme === "vrai-faux") {
+        if (m.enonce) ui.q.appendChild(el("div", "enonce", m.enonce));
+        if (m.proposition) ui.q.appendChild(el("div", "prop", m.proposition));
+        if (m.phrase) ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        if (question.forme === "vrai-faux") ui.q.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
+      } else if (m.enonce) {
+        ui.q.appendChild(el("div", "enonce", m.enonce));
+        const l = el("div", "l1");
+        l.append(el("span", "", m.avant), nouvelleCase(0), el("span", "", m.apres));
+        ui.q.appendChild(l);
+      } else if (m.phrase) {
+        ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        const l = el("div", "l1");
+        l.append(nouvelleCase(0), el("span", "", m.apres));
+        ui.q.appendChild(l);
+      } else if (nbCases === 2) {
+        ui.q.appendChild(el("div", "phrase-t", m.avant));
+        const l = el("div", "l1");
+        l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true), el("span", "", m.cases[1]));
+        ui.q.appendChild(l);
+      } else {
+        const l = el("div", "l1");
+        l.append(el("span", "", m.avant), nouvelleCase(0), el("span", "", m.apres));
+        ui.q.appendChild(l);
+      }
+      function peindre() {
+        casesEl.forEach((c, i) => {
+          c.textContent = saisie.cases[i].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+          if (!saisie.fige) c.className = `case${nbCases === 2 ? " petite" : ""}${i === saisie.focus ? " focus" : ""}`;
+        });
+      }
+      function taper(touche) {
+        if (saisie.fige) return;
+        let v = saisie.cases[saisie.focus];
+        if (touche === "⌫") v = v.slice(0, -1);
+        else if (touche === ",") { if (!v.includes(",")) v = (v || "0") + ","; }
+        else if (/^\d$/.test(touche) && v.replace(",", "").length < 9) v = v === "0" ? touche : v + touche;
+        saisie.cases[saisie.focus] = v;
+        peindre();
+      }
+      ui.bas.textContent = "";
+      let choixEl = null;
+      if (question.choix) {
+        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}`);
+        question.choix.forEach((texte, i) => {
+          const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));
+          b.type = "button";
+          b.addEventListener("click", () => repondre(i));
+          choixEl.appendChild(b);
+        });
+        ui.bas.appendChild(choixEl);
+        ui.action.style.visibility = "hidden";
+      } else {
+        const pave = el("div", "pave4");
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"].forEach(t => {
+          const b = el("button", t === "⌫" ? "gris" : "", t);
+          b.type = "button";
+          if (t === "⌫") b.setAttribute("aria-label", "Effacer");
+          b.addEventListener("click", () => taper(t));
+          pave.appendChild(b);
+        });
+        ui.bas.appendChild(pave);
+        ui.action.style.visibility = "";
+        ui.action.textContent = "Valider";
+        ui.action.disabled = false;
+        ui.action.onclick = () => repondre(null);
+      }
+      clavier = ev => {
+        if (saisie.fige) { if (ev.key === "Enter" && !ui.action.disabled && ui.action.style.visibility !== "hidden") { ev.preventDefault(); ui.action.click(); } return; }
+        if (question.choix) {
+          const n = Number(ev.key);
+          if (n >= 1 && n <= question.choix.length) repondre(n - 1);
+          return;
+        }
+        if (/^\d$/.test(ev.key)) taper(ev.key);
+        else if (ev.key === "," || ev.key === ".") taper(",");
+        else if (ev.key === "Backspace") { ev.preventDefault(); taper("⌫"); }
+        else if (ev.key === "Tab" && nbCases === 2) { ev.preventDefault(); saisie.focus = 1 - saisie.focus; peindre(); }
+        else if (ev.key === "Enter") { ev.preventDefault(); repondre(null); }
+      };
+      avant(ui.zone);
+
+      function repondre(choix) {
+        if (saisie.fige) return;
+        let reponse;
+        if (question.choix) reponse = choix;
+        else {
+          if (saisie.cases.slice(0, nbCases).some(v => v === "" || v === ",")) {
+            saisie.focus = saisie.cases.findIndex(v => v === "" || v === ",");
+            peindre();
+            return;
+          }
+          reponse = nbCases === 2 ? saisie.cases.slice(0, 2) : saisie.cases[0];
+        }
+        saisie.fige = true;
+        const verdict = G.verifier(question, reponse);
+        verdict.tape = question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
+        if (choixEl) {
+          choixEl.classList.add("fige");
+          [...choixEl.children].forEach((b, i) => {
+            if (i === choix) b.classList.add(verdict.juste ? "bon" : "faux");
+            else if (!verdict.juste && i === question.bon && apres.montrerBon !== false) b.classList.add("bon");
+            else b.classList.add("eteint");
+          });
+        } else {
+          casesEl.forEach(c => { c.className = `case${nbCases === 2 ? " petite" : ""} ${verdict.juste ? "vert" : "rouge"}`; });
+          const pave = ui.bas.querySelector(".pave4");
+          if (pave) pave.classList.add("pale");
+        }
+        apres.fait(verdict, {montrerBon: () => {
+          if (choixEl) [...choixEl.children].forEach((b, i) => { if (i === question.bon) { b.classList.remove("eteint"); b.classList.add("bon"); } });
+        }});
+      }
+      peindre();
+    }
+
+    let clavier = null;
+    document.addEventListener("keydown", ev => {
+      if (!voile.hidden) { if (ev.key === "Escape") { voile.hidden = true; voile.textContent = ""; } return; }
+      if (clavier && !ev.ctrlKey && !ev.metaKey && !ev.altKey) clavier(ev);
+    });
+
+    function suiteRonds(n, total = 5, legende = true) {
+      const s = el("div", "suite");
+      for (let i = 0; i < total; i += 1) s.appendChild(el("i", i < n ? "ok" : ""));
+      if (legende) s.appendChild(el("span", "", "justes de suite"));
+      return s;
+    }
+    function dixCases(resultats, ici) {
+      const d = el("div", "dix");
+      for (let i = 0; i < 10; i += 1) {
+        const r = resultats[i];
+        d.appendChild(el("i", r === true ? "ok" : r === false ? "ko" : i === ici ? "ici" : "", r === true ? "✓" : r === false ? "✗" : String(i + 1)));
+      }
+      return d;
+    }
+    function bonneReponse(zone, question) {
+      if (question.forme === "qcm" || question.forme === "vrai-faux") {
+        zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        return;
+      }
+      const g = el("div", "grosse");
+      const gauche = question.resume.slice(0, question.resume.length - question.reponseTexte.length);
+      g.append(document.createTextNode(gauche), el("span", "v", question.reponseTexte));
+      zone.appendChild(g);
+    }
+    function apresDelai(fonction, ms = 650) {
+      clavier = null;
+      setTimeout(fonction, ms);
+    }
+
+    // ---------------------------------------------------------- On te montre
+    function onTeMontre(code, ensuite, {retour} = {}) {
+      const etape = CARTE.etape(code);
+      let i = 0;
+      const temps = () => {
+        const ex = etape.apprends[i];
+        const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `${i + 1} / 3`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
+          retour, hauteur: ex.question.enonce ? 160 : (ex.question.avant || "").length > 14 ? 112 : 70});
+        ui.bas.remove();
+        ui.zone.className = "zone outil";
+        // La question, sa case remplie quand le geste est fait.
+        const q = ui.q;
+        let caseEl = null;
+        if (ex.question.vraisemblable) {
+          q.appendChild(el("div", "enonce", ex.question.enonce));
+        } else {
+          if (ex.question.enonce) q.appendChild(el("div", "enonce", ex.question.enonce));
+          const l = el("div", "l1");
+          caseEl = el("span", "case", "");
+          // Une phrase longue sur sa ligne, la case dessous (rien ne déborde).
+          if (ex.question.avant.length > 14 && !ex.question.enonce) {
+            q.appendChild(el("div", "phrase-t", ex.question.avant));
+            l.append(caseEl, el("span", "", ex.question.apres));
+          } else l.append(el("span", "", ex.question.avant), caseEl, el("span", "", ex.question.apres));
+          q.appendChild(l);
+        }
+        const consigne = ex.relation ? texteLignes("rel", ex.relation.join("\n")) : texteLignes("consigne2", ex.consigne || "");
+        ui.zone.before(consigne);
+        ui.zone.appendChild(el("span", "etiq outil", `On te montre · ${ex.etiquette}`));
+        const fini = () => {
+          if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = "case vert"; }
+          if (ex.apres && !ui.zone.querySelector(".apres")) {
+            // La somme qui s'est construite laisse sa place à l'écriture finale.
+            const somme = ui.zone.querySelector(".barres .somme");
+            if (somme) somme.remove();
+            const a = el("div", "apres");
+            ex.apres.forEach((ligne, k) => {
+              if (k) a.appendChild(el("br"));
+              const vert = ex.apres.length > 1 && k === ex.apres.length - 1 && /^=/.test(ligne);
+              a.appendChild(vert ? el("span", "v", ligne) : document.createTextNode(ligne));
+            });
+            ui.zone.appendChild(a);
+          }
+        };
+        AIDES.montrer(ui.zone, ex.aide, {fini});
+        if (ex.legende) ui.zone.appendChild(texteLignes("note", ex.legende));
+        ui.action.textContent = "Suivant →";
+        ui.action.onclick = () => {
+          i += 1;
+          if (i < 3) temps();
+          else {
+            noterSeance({montre: 1});
+            ensuite();
+          }
+        };
+        clavier = ev => { if (ev.key === "Enter") { ev.preventDefault(); ui.action.click(); } };
+      };
+      temps();
+    }
+
+    // ---------------------------------------------------------------- À toi
+    function aToi(code, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      const serie = G.serie(code, {usage: "entraine", graine: graine()});
+      const reponses = [];
+      let i = 0;
+      noterSeance({atoi: 2});
+      const question = () => {
+        const suivi = P.suivreEntrainement(reponses);
+        if (suivi.reussi) {
+          noterSeance({atoi: 1});
+          changer(p => P.marquerEntrainee(p, code, etat.jour));
+          aRetenir(code, {retour, fin});
+          return;
+        }
+        if (suivi.fini || i >= serie.length) { finAToiSansReussir(code, {retour, fin}); return; }
+        const qn = serie[i];
+        const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `à toi · ${i + 1}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
+          retour, hauteur: hauteurQuestion(code)});
+        const phase = suivi.outil;
+        interroger(ui, qn, {
+          avant(zone) {
+            if (phase === "outil") { remplirZone(zone, "outil", ["outil", "L'outil"]); AIDES.outil(zone, qn); }
+            else if (phase === "image") { remplirZone(zone, "image", ["image", "L'image"]); AIDES.image(zone, qn); }
+            else { remplirZone(zone, "vide"); zone.append(el("div", "calme", "Sans aide : à toi !"), suiteRonds(suivi.justesDeSuite)); }
+          },
+          apres: {fait(v) {
+            reponses.push({juste: v.juste, outil: phase});
+            i += 1;
+            if (v.juste) {
+              if (phase === "aucun") { const s = ui.zone.querySelector(".suite"); if (s) s.replaceWith(suiteRonds(suivi.justesDeSuite + 1)); }
+              apresDelai(question);
+              return;
+            }
+            const apresErreur = P.suivreEntrainement(reponses);
+            remplirZone(ui.zone, "ko");
+            bonneReponse(ui.zone, qn);
+            if (v.retour) ui.zone.appendChild(el("div", "verd ko", v.retour));
+            ui.zone.appendChild(el("div", "note", phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient."));
+            ui.zone.appendChild(suiteRonds(0));
+            ui.action.style.visibility = "";
+            ui.action.textContent = "Suivant →";
+            ui.action.onclick = question;
+          }}
+        });
+      };
+      question();
+    }
+
+    function finAToiSansReussir(code, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
+      ajouter(el("div", "gros-emoji", "💪"));
+      const t = el("div", "titre-fin", "On continue la prochaine fois");
+      t.appendChild(el("small", "", "25 questions aujourd'hui : c'est beaucoup ! Tu reprendras « À toi » à ta prochaine séance.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
+      ajouter(t, espace(), bouton("Accueil", "", fin || accueil));
+    }
+
+    function ecranQuestionFin(petit, titre, ici, retour, noms = ["J'apprends", "Je valide"]) {
+      ecran({serre: false});
+      const b = el("div", "bseance");
+      const r = el("button", "rond", "←");
+      r.type = "button";
+      r.setAttribute("aria-label", "Retour à l'accueil");
+      r.addEventListener("click", retour || accueil);
+      const t = el("div", "t");
+      t.append(el("small", "", petit), el("b", "", titre));
+      b.append(r, t, el("span", "chip", "fini"));
+      const ch = el("div", "chemin");
+      noms.forEach((n, i) => {
+        if (i) ch.appendChild(el("s"));
+        ch.appendChild(el("i", i < ici ? "fait" : i === ici ? "ici" : "", n));
+      });
+      ajouter(b, ch);
+      clavier = null;
+    }
+
+    // ------------------------------------------------------------- À retenir
+    function blocRetenir(code) {
+      const etape = CARTE.etape(code);
+      const r = el("div", "retenir");
+      r.appendChild(el("div", "eti", "À retenir"));
+      const p = el("p");
+      etape.retenir.split("\n").forEach((l, i) => { if (i) p.appendChild(el("br")); p.appendChild(document.createTextNode(l)); });
+      r.appendChild(p);
+      return r;
+    }
+    function aRetenir(code, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
+      const defile = el("div", "ecran-defile");
+      defile.appendChild(blocRetenir(code));
+      defile.appendChild(el("div", "cahier", `✏️ ${etape.cahier}`));
+      if (etape.relations) {
+        const c = el("div", "carte");
+        c.style.padding = "10px 12px";
+        const e = el("div", "eti", "Les relations de cette étape");
+        e.style.marginBottom = "4px";
+        c.appendChild(e);
+        const g = el("div", "relations");
+        etape.relations.forEach(rel => g.appendChild(el("span", "", rel)));
+        c.appendChild(g);
+        defile.appendChild(c);
+      }
+      if (etape.reperes && etape.reperes.length) {
+        const liste = el("div", "carnet refs");
+        etape.reperes.forEach(rc => liste.appendChild(AIDES.carteRepere(rc)));
+        defile.appendChild(liste);
+      }
+      ajouter(defile);
+      if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
+      ajouter(el("div", "verd neutre", "Je valide s'ouvre demain, après ton échauffement."));
+      const apres = suivante(code);
+      if (apres) ajouter(bouton("Je connais peut-être la suite →", "cl", () => introTest(apres)));
+      ajouter(bouton("Accueil", "", accueil));
+    }
+
+    // ------------------------------------------------------------- Je valide
+    function jeValide(code, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      const serie = G.serie(code, {usage: "valide", graine: graine()});
+      const resultats = [];
+      const erreurs = [];
+      const avantMedailles = medailles();
+      let i = 0;
+      const question = () => {
+        const suivi = P.suivreValidation(resultats);
+        if (suivi.fini) { finValidation(code, suivi, erreurs, avantMedailles, resultats, {retour, fin}); return; }
+        const qn = serie[i];
+        const ui = ecranQuestion({petit: etape.nom, titre: "Je valide", chip: `${i + 1} / 10`, chemin: {noms: ["J'apprends", "Je valide"], ici: 1},
+          retour, hauteur: hauteurQuestion(code)});
+        interroger(ui, qn, {
+          avant(zone) {
+            remplirZone(zone, "vide");
+            zone.appendChild(dixCases(resultats, i));
+            zone.appendChild(texteLignes("calme", "Sans aide.\n8 justes sur 10 pour valider l'étape."));
+          },
+          apres: {montrerBon: false, fait(v) {
+            resultats.push(v.juste);
+            if (!v.juste) erreurs.push({question: qn, tape: v.tape});
+            i += 1;
+            remplirZone(ui.zone, "vide");
+            ui.zone.appendChild(dixCases(resultats, -1));
+            if (v.juste) { apresDelai(question, 500); return; }
+            const c = texteLignes("calme rouge", "Ce n'est pas ça.\nTu verras la correction à la fin.");
+            c.style.marginTop = "10px";
+            ui.zone.appendChild(c);
+            ui.action.style.visibility = "";
+            ui.action.textContent = "Suivant →";
+            ui.action.onclick = question;
+          }}
+        });
+      };
+      question();
+    }
+
+    function blocCorrection(erreurs) {
+      const c = el("div", "corr");
+      erreurs.forEach(({question, tape}) => {
+        const ligne = el("div");
+        const gauche = el("span");
+        if (question.forme === "qcm" || question.forme === "vrai-faux") gauche.textContent = question.resume;
+        else {
+          gauche.appendChild(document.createTextNode(question.resume.slice(0, question.resume.length - question.reponseTexte.length)));
+          gauche.appendChild(el("span", "v", question.reponseTexte));
+        }
+        ligne.append(gauche, el("small", "", question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
+        c.appendChild(ligne);
+      });
+      return c;
+    }
+
+    function finValidation(code, suivi, erreurs, avantMedailles, resultats, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      const reussie = suivi.reussie;
+      const avantRatees = P.etapeDe(etat.parcours, code)[4];
+      if (!PROF) {
+        noterSeance({valide: reussie ? 1 : 2});
+        changer(p => P.noterValidation(p, code, reussie, etat.jour));
+      }
+      ecranQuestionFin(etape.nom, "Je valide", reussie ? 2 : 1, retour);
+      if (reussie) {
+        ajouter(el("div", "gros-emoji", "🎉"));
+        const t = el("div", "titre-fin", "Étape validée !".replace(" !", `${NB}!`));
+        t.appendChild(el("small", "", T(`${suivi.justes} justes sur 10 · « ${etape.nom} »`)));
+        ajouter(t);
+      } else {
+        const t = el("div", "titre-fin", `Pas encore : ${suivi.erreurs} erreurs`.replace(" :", `${NB}:`));
+        t.style.fontSize = "23px";
+        t.appendChild(el("small", "", "8 sur 10 n'est plus possible, on s'arrête là."));
+        ajouter(t);
+      }
+      ajouter(dixCases(resultats, -1));
+      if (erreurs.length) {
+        const e = el("div", "eti", "La correction");
+        ajouter(e, blocCorrection(erreurs));
+      }
+      if (fin) { ajouter(espace(), bouton("Accueil", "", fin)); return; }
+      if (reussie) {
+        const nouvelles = medailles().filter(n => !avantMedailles.includes(n));
+        ajouter(espace());
+        if (nouvelles.length) { ajouter(bouton("Continuer →", "", () => ecranMedaille(nouvelles[0], `${suivi.justes} justes sur 10 : étape validée`, accueil))); return; }
+        const apres = suivante(code);
+        if (apres) ajouter(bouton("Étape suivante →", "", () => { nouvelleSeance(); monEtape(apres); }));
+        ajouter(bouton("Accueil", apres ? "cl" : "", accueil));
+      } else {
+        const enEntier = avantRatees + 1 === P.SEUILS.ratees.apprendsEnEntier;
+        ajouter(el("div", "verd neutre", enEntier ? "Tu refais J'apprends en entier. Tu revalideras le lendemain." : "Tu refais « À toi » dans J'apprends. Tu revalideras le lendemain.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
+        ajouter(espace(), bouton(enEntier ? "J'apprends →" : "J'apprends : À toi →", "", () => { nouvelleSeance(); monEtape(code); }));
+      }
+    }
+
+    // ------------------------------------------------------------ la médaille
+    function dessinMedaille(n) {
+      const ns = "http://www.w3.org/2000/svg";
+      const c = CARTE.palier(n).couleur;
+      const s = document.createElementNS(ns, "svg");
+      s.setAttribute("viewBox", "0 0 160 200");
+      s.setAttribute("class", "medaille-gde");
+      s.setAttribute("role", "img");
+      s.setAttribute("aria-label", `Médaille du palier ${n}`);
+      const ajout = (tag, a, texte) => {
+        const e = document.createElementNS(ns, tag);
+        Object.keys(a).forEach(k => e.setAttribute(k, a[k]));
+        if (texte) e.textContent = texte;
+        s.appendChild(e);
+      };
+      ajout("path", {d: "M52 120 L38 190 L62 176 L74 196 L84 128 Z", fill: c, opacity: ".75"});
+      ajout("path", {d: "M108 120 L122 190 L98 176 L86 196 L76 128 Z", fill: c, opacity: ".75"});
+      ajout("circle", {cx: 80, cy: 80, r: 74, fill: "#fff", stroke: c, "stroke-width": 8});
+      ajout("circle", {cx: 80, cy: 80, r: 60, fill: c});
+      ajout("text", {x: 80, y: 92, "text-anchor": "middle", "font-size": 52, "font-weight": 900, fill: "#fff", "font-family": "inherit"}, String(n));
+      ajout("text", {x: 80, y: 118, "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: "#fff", "font-family": "inherit", "letter-spacing": "1"},
+        CARTE.palier(n).nom.toUpperCase());
+      return s;
+    }
+    function ecranMedaille(n, sousTitre, ensuite) {
+      ecran({serre: false});
+      clavier = null;
+      const t = el("div", "titre-fin", `Bravo${NB}!`);
+      t.style.marginTop = "10px";
+      const s = el("div", "consigne2", T(sousTitre));
+      s.style.fontSize = "19px";
+      const r = el("div", "titre-fin", `Palier ${n} réussi${NB}!`);
+      r.style.cssText = `color:${CARTE.palier(n).couleur};font-size:22px`;
+      const nb = PALIERS_CODES[n].length;
+      ajouter(t, s, dessinMedaille(n), r, texteLignes("note", `Tu as validé les ${nb} étapes du palier.\nTa médaille est sur ton accueil.`), espace(),
+        bouton("Continuer", "", ensuite));
+    }
+
+    // ---------------------------------------------------------- l'échauffement
+    function questionEchauffement(item) {
+      if (item.type === "repere") return G.questionRepere(item.code, graine());
+      return G.serie(item.code, {usage: "echauffement", graine: graine()})[0];
+    }
+    function echauffement(ensuite, {parcours, retour} = {}) {
+      const source = parcours || etat.parcours;
+      const items = P.tirerEchauffement(source, etat.jour, PRETS, P.carnet(source, REPERES_PAR_ETAPE));
+      const questions = items.map(questionEchauffement);
+      const bilan = [];
+      const ratees = [];
+      let i = 0;
+      const chemin = () => ({noms: ["Échauffement", "Mon étape"], ici: 0});
+      const question = () => {
+        if (i >= questions.length) { finEchauffement(bilan, ensuite, retour); return; }
+        const qn = questions[i];
+        const item = items[i];
+        const ui = ecranQuestion({petit: "Ma séance du jour", titre: "Échauffement", chip: `${i + 1} / ${questions.length}`, chemin: chemin(), retour,
+          hauteur: item.type === "etape" ? hauteurQuestion(item.code) : 124});
+        interroger(ui, qn, {
+          avant(zone) { remplirZone(zone, "vide"); },
+          apres: {fait(v) {
+            bilan.push({juste: v.juste, texte: qn.resume});
+            i += 1;
+            if (!PROF) {
+              if (item.type === "repere") changer(p => P.noterEchauffementRepere(p, item.code, v.juste, etat.jour));
+              else changer(p => P.noterEchauffementEtape(p, item.code, v.juste, etat.jour));
+              if (!v.juste) ratees.push(item.type === "repere" ? item.etape : item.code);
+              noterSeance({posees: i, justes: bilan.filter(b => b.juste).length, ratees: ratees.slice()});
+            }
+            if (v.juste) { apresDelai(question); return; }
+            remplirZone(ui.zone, "ok", ["image", "La bonne réponse"]);
+            const carteQ = G.carteDe(qn);
+            if (carteQ.type === "repere") {
+              const c = AIDES.carteRepere(carteQ.repere);
+              ui.zone.appendChild(c);
+              ui.zone.appendChild(el("div", "note", "C'est un repère de ton carnet."));
+            } else {
+              bonneReponse(ui.zone, qn);
+              if (qn.relation) ui.zone.appendChild(el("div", "rel", qn.relation));
+            }
+            ui.action.style.visibility = "";
+            ui.action.textContent = "Suivant →";
+            ui.action.onclick = question;
+          }}
+        });
+      };
+      if (!questions.length) { ensuite(); return; }
+      question();
+    }
+    function finEchauffement(bilan, ensuite, retour) {
+      const justes = bilan.filter(b => b.juste).length;
+      const revoir = PROF ? null : P.aRevoir(etat.parcours, PRETS);
+      ecranQuestionFin("Ma séance du jour", "Échauffement", 1, retour, revoir ? ["Échauffement", "On revoit", "Mon étape"] : ["Échauffement", "Mon étape"]);
+      const t = el("div", "titre-fin", "Échauffement fini");
+      t.style.marginTop = "14px";
+      t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur ${bilan.length}`)));
+      const liste = el("div", "listev");
+      bilan.forEach(b => {
+        const d = el("div", b.juste ? "ok" : "ko");
+        d.append(el("span", "r", b.juste ? "✓" : "✗"), document.createTextNode(b.texte));
+        liste.appendChild(d);
+      });
+      ajouter(t, liste);
+      if (justes < bilan.length) ajouter(el("div", "verd neutre", "Une erreur ne t'enlève rien : tes étapes restent validées."));
+      ajouter(espace());
+      if (PROF) { ajouter(bouton("Accueil", "", ensuite)); return; }
+      const code = P.monEtape(etat.parcours, PRETS);
+      const action = code ? P.actionDe(etat.parcours, code, etat.jour) : null;
+      if (revoir) ajouter(bouton("Suivant →", "", ensuite));
+      else if (action === "valide") ajouter(bouton("Mon étape : Je valide →", "", ensuite));
+      else if (action === "apprends" || action === "a-toi") ajouter(bouton("Mon étape : J'apprends →", "", ensuite));
+      else ajouter(bouton("Accueil", "", accueil));
+    }
+
+    // -------------------------------------------------------------- On revoit
+    function annonceRevoir(code) {
+      ecranQuestionFin("Ma séance du jour", "Échauffement", 1, null, ["Échauffement", "On revoit", "Mon étape"]);
+      ajouter(el("div", "gros-emoji", "🔁"));
+      const t = el("div", "titre-fin", "On revoit une étape");
+      t.style.fontSize = "23px";
+      t.appendChild(el("small", "", T(`« ${nomEtape(code)} » t'a échappé deux échauffements de suite.`)));
+      const c = texteLignes("carte", "3 questions, avec l'aide.\nL'étape reste validée.");
+      c.style.cssText = "font-size:16px;font-weight:700;line-height:1.5;text-align:center";
+      ajouter(t, c, espace(), bouton("On la revoit →", "", () => revoir(code)));
+    }
+    function revoir(code) {
+      const etape = CARTE.etape(code);
+      const serie = G.serie(code, {usage: "aide", graine: graine()});
+      const noms = ["Échauffement", "On revoit", "Mon étape"];
+      let i = 0;
+      let justes = 0;
+      const question = () => {
+        if (i >= serie.length) { finRevoir(code, justes); return; }
+        const qn = serie[i];
+        const ui = ecranQuestion({petit: etape.nom, titre: "On revoit", chip: `${i + 1} / 3`, chemin: {noms, ici: 1}, hauteur: hauteurQuestion(code)});
+        interroger(ui, qn, {
+          avant(zone) { remplirZone(zone, "outil", ["outil", "L'aide"]); AIDES.outil(zone, qn); },
+          apres: {fait(v) {
+            i += 1;
+            if (v.juste) { justes += 1; apresDelai(question); return; }
+            remplirZone(ui.zone, "ko");
+            bonneReponse(ui.zone, qn);
+            if (v.retour) ui.zone.appendChild(el("div", "verd ko", v.retour));
+            ui.action.style.visibility = "";
+            ui.action.textContent = "Suivant →";
+            ui.action.onclick = question;
+          }}
+        });
+      };
+      question();
+    }
+    function finRevoir(code, justes) {
+      changer(p => P.noterRevue(p, code));
+      ecranQuestionFin(nomEtape(code), "On revoit", 2, null, ["Échauffement", "On revoit", "Mon étape"]);
+      ajouter(el("div", "gros-emoji", "👍"));
+      const t = el("div", "titre-fin", "C'est revu");
+      t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur 3`)));
+      ajouter(t, blocRetenir(code), espace(), bouton("Mon étape →", "", () => monEtape()));
+    }
+
+    // ------------------------------------------------------ Tu connais déjà ?
+    function introTest(depart, {retour, fin} = {}) {
+      const palierN = CARTE.etape(depart).palier;
+      ecranQuestionFin(`Palier ${palierN} · ${CARTE.palier(palierN).nom}`, T("Tu connais déjà ?"), -1, retour, []);
+      cadre.querySelector(".chemin").remove();
+      cadre.querySelector(".chip").textContent = "";
+      const e = el("div", "gros-emoji", "🪜");
+      e.style.cssText = "font-size:46px;margin-top:10px";
+      const t = el("div", "titre-fin", T("Tu connais déjà ?"));
+      t.appendChild(el("small", "", "On monte marche par marche, une marche par étape."));
+      const c = texteLignes("carte", "• 3 questions par étape, sans aide.\n• 3 justes : l'étape est validée, tu montes.\n• Une erreur : une 4e question.\n• Tu t'arrêtes quand tu veux : ce qui est validé reste validé.");
+      c.style.cssText = "font-size:16px;font-weight:700;line-height:1.5";
+      ajouter(e, t, c, espace(), bouton("Je commence →", "", () => test(depart, {retour, fin})), bouton("Plus tard", "cl", fin || accueil));
+    }
+
+    function test(depart, {retour, fin} = {}) {
+      if (!PROF) nouvelleSeance();
+      const sur = PROF ? P.creer() : null;
+      const valideeIci = code => (PROF ? P.estValidee(sur, code) : P.estValidee(etat.parcours, code));
+      const avantMedailles = medailles();
+      const marches = PRETS.slice(PRETS.indexOf(depart)).filter(c => !valideeIci(c));
+      const faites = [];
+      let ratee = null;
+      let k = 0;
+      const marche = () => {
+        if (k >= marches.length) { finTest(faites, null, avantMedailles, {retour, fin}); return; }
+        const code = marches[k];
+        const serie = G.serie(code, {usage: "test", graine: graine()});
+        const resultats = [];
+        const question = () => {
+          const suivi = P.suivreMarche(resultats);
+          if (suivi.fini) {
+            if (suivi.reussie) {
+              faites.push(code);
+              if (!PROF) {
+                changer(p => P.noterTest(p, code, etat.jour));
+                noterSeance({test: faites.length});
+              }
+              k += 1;
+              marche();
+            } else { ratee = code; finTest(faites, ratee, avantMedailles, {retour, fin}); }
+            return;
+          }
+          const qn = serie[resultats.length];
+          const etape = CARTE.etape(code);
+          const palierN = etape.palier;
+          const dansPalier = PALIERS_CODES[palierN];
+          const ui = ecranQuestion({petit: `Palier ${palierN} · ${CARTE.palier(palierN).nom}`, titre: T("Tu connais déjà ?"),
+            chip: `marche ${dansPalier.indexOf(code) + 1}`, chemin: {noms: [], ici: 0}, retour: () => finTest(faites, null, avantMedailles, {retour, fin}),
+            hauteur: hauteurQuestion(code)});
+          cadre.querySelector(".chemin").remove();
+          interroger(ui, qn, {
+            avant(zone) {
+              remplirZone(zone, "vide");
+              zone.appendChild(escalier(dansPalier, faites.concat(PROF ? [] : dansPalier.filter(c => P.estValidee(etat.parcours, c))), code, null));
+              const m = el("div", "", `Marche ${dansPalier.indexOf(code) + 1} : ${etape.nom}`.replace(" :", `${NB}:`));
+              m.style.cssText = "font-weight:900;font-size:16px;text-align:center;margin-top:4px";
+              zone.appendChild(m);
+              const s = suiteRonds(resultats.filter(Boolean).length, suivi.total, false);
+              s.appendChild(el("span", "", `question ${resultats.length + 1} sur ${suivi.total}`));
+              zone.appendChild(s);
+            },
+            apres: {montrerBon: false, fait(v) {
+              resultats.push(v.juste);
+              apresDelai(question, v.juste ? 450 : 900);
+            }}
+          });
+          // « Je m'arrête là » à côté de Valider, toujours à la même place.
+          const duo = el("div", "duo");
+          ui.action.replaceWith(duo);
+          duo.append(ui.action, bouton("Je m'arrête là", "cl", () => finTest(faites, null, avantMedailles, {retour, fin})));
+          if (qn.choix) { ui.action.style.visibility = "hidden"; }
+        };
+        question();
+      };
+      marche();
+    }
+
+    function escalier(codes, ok, ici, ko) {
+      const hs = [22, 30, 38, 46, 54, 62, 70, 78];
+      const e = el("div", "esc");
+      codes.forEach((c, i) => {
+        const etatM = ok.includes(c) ? "ok" : c === ko ? "ko" : c === ici ? "ici" : "";
+        const b = el("i", etatM, etatM === "ok" ? "✓" : etatM === "ko" ? "✗" : String(i + 1));
+        b.style.height = `${hs[Math.min(i, hs.length - 1)]}px`;
+        e.appendChild(b);
+      });
+      return e;
+    }
+
+    function finTest(faites, ratee, avantMedailles, {retour, fin} = {}) {
+      const nouvelles = PROF ? [] : medailles().filter(n => !avantMedailles.includes(n));
+      const resultat = () => {
+        const premier = faites[0] || ratee || PRETS[0];
+        const palierN = CARTE.etape(premier).palier;
+        ecranQuestionFin(`Palier ${palierN} · ${CARTE.palier(palierN).nom}`, T("Tu connais déjà ?"), -1, retour, []);
+        cadre.querySelector(".chemin").remove();
+        const t = el("div", "titre-fin");
+        t.style.marginTop = "6px";
+        if (faites.length) {
+          t.textContent = `${faites.length} ${faites.length > 1 ? "étapes validées" : "étape validée"}${NB}!`;
+          t.appendChild(el("small", "", "Tu as sauté ce que tu savais déjà."));
+        } else {
+          t.textContent = "On commence par cette étape";
+          t.appendChild(el("small", "", "Tu vas l'apprendre pas à pas."));
+        }
+        ajouter(t);
+        const dansPalier = PALIERS_CODES[palierN];
+        const okPalier = PROF ? faites : dansPalier.filter(c => P.estValidee(etat.parcours, c));
+        ajouter(escalier(dansPalier, okPalier, null, ratee));
+        const liste = el("div", "listev");
+        faites.forEach(c => {
+          const d = el("div", "ok");
+          d.append(el("span", "r", "✓"), document.createTextNode(nomEtape(c)));
+          liste.appendChild(d);
+        });
+        if (ratee) {
+          const d = el("div", "ko");
+          d.append(el("span", "r", "✗"), document.createTextNode(nomEtape(ratee)), el("small", "", "ton étape"));
+          liste.appendChild(d);
+        }
+        ajouter(liste, espace());
+        if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
+        if (ratee) ajouter(bouton(`J'apprends : ${nomEtape(ratee)} →`.replace(" :", `${NB}:`), "", () => { nouvelleSeance(); monEtape(ratee); }));
+        else ajouter(bouton("Accueil", "", accueil));
+      };
+      if (nouvelles.length) ecranMedaille(nouvelles[0], "Tu connais déjà ce palier", resultat);
+      else resultat();
+    }
+
+    // ------------------------------------------------------------ Mon parcours
+    function monParcours(palierN) {
+      ecran();
+      const p = etat.parcours;
+      ajouter(teteEcran("Mon parcours", accueil));
+      const n = P.validees(p).length;
+      const s = el("div", "petit");
+      s.appendChild(el("b", "", T(`${n} ${n > 1 ? "étapes validées" : "étape validée"} sur 48`))).style.color = "var(--ink)";
+      ajouter(s);
+      const tabs = el("div", "pal-tabs");
+      CARTE.PALIERS.forEach(pal => {
+        const pret = CARTE.palierPret(pal.n);
+        const b = el("button", `${pret ? "" : "prep"}${pal.n === palierN ? " ici" : ""}`, String(pal.n));
+        b.type = "button";
+        b.setAttribute("aria-label", `Palier ${pal.n}`);
+        const codes = PALIERS_CODES[pal.n];
+        b.appendChild(el("small", "", pret ? `${codes.filter(c => P.estValidee(p, c)).length}/${codes.length}` : "bientôt"));
+        b.addEventListener("click", () => monParcours(pal.n));
+        tabs.appendChild(b);
+      });
+      ajouter(tabs);
+      const pal = CARTE.palier(palierN);
+      ajouter(el("div", "palier-titre", `Palier ${palierN} · ${pal.nom}`));
+      const defile = el("div", "ecran-defile");
+      const pret = CARTE.palierPret(palierN);
+      if (!pret) defile.appendChild(el("div", "bandeau-prep", "🛠️ Ce palier est en préparation : ses étapes arrivent bientôt. Tu peux déjà voir leurs noms."));
+      defile.appendChild(listeEtapes(palierN, {prep: !pret, cours: P.monEtape(p, PRETS), validee: c => P.estValidee(p, c)}));
+      ajouter(defile);
+    }
+
+    function listeEtapes(palierN, {prep, cours, validee, choisir}) {
+      const bloc = el("div");
+      bloc.style.cssText = "display:flex;flex-direction:column;gap:3px";
+      CARTE.famillesDuPalier(palierN).forEach(f => {
+        bloc.appendChild(el("div", "fam", f.nom));
+        f.etapes.forEach(e => {
+          const classe = prep ? "prep" : validee && validee(e.code) ? "ok" : e.code === cours ? "cours" : "";
+          const ligne = el(choisir ? "button" : "div", `li2 ${classe}`);
+          if (choisir) { ligne.type = "button"; ligne.addEventListener("click", () => choisir(e.code)); }
+          ligne.append(el("span", "r"), el("span", "", e.nomCourt), el("small", "", e.exemple));
+          bloc.appendChild(ligne);
+        });
+      });
+      return bloc;
+    }
+
+    // ------------------------------------------------------------ Mon carnet
+    function monCarnet() {
+      ecran();
+      ajouter(teteEcran("Mon carnet de repères", accueil));
+      const reps = carnet();
+      ajouter(el("div", "petit", "Les repères de tes étapes validées. Je les recopie dans mon cahier et je les apprends par cœur."));
+      const defile = el("div", "ecran-defile carnet");
+      if (!reps.length) defile.appendChild(el("div", "bandeau-prep", "Ton carnet se remplit quand tu valides une étape de repères. La première : « Mes premiers repères ».".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
+      reps.forEach(r => defile.appendChild(AIDES.carteRepere(r.code)));
+      ajouter(defile, el("div", "note", T(`${reps.length} ${reps.length > 1 ? "repères" : "repère"} sur ${CARTE.REPERES.length}`)));
+    }
+
+    // ----------------------------------------------------- Comment ça marche ?
+    function commentCaMarche() {
+      ecran();
+      ajouter(teteEcran(T("Comment ça marche ?"), PROF ? accueilProf : accueil));
+      const d = el("div", "ecran-defile aide-texte");
+      const titre = t => d.appendChild(el("h3", "", T(t)));
+      const para = t => d.appendChild(el("p", "", T(t)));
+      titre("Un parcours d'étapes");
+      para("Les conversions s'apprennent étape par étape, en 6 paliers, des bases du CE1 jusqu'à la 3e. Chaque étape se valide une fois pour toutes. Un palier fini, c'est une médaille. Les 6 médailles : « Légende des conversions ».");
+      titre("Une étape");
+      para("① J'apprends : on te montre, puis c'est à toi, d'abord avec l'outil, puis avec l'image, puis sans aide. ② Je valide, le lendemain : 8 justes sur 10, sans aide.");
+      titre("L'échauffement");
+      para("À la première séance du jour : 3 questions sur ce que tu sais déjà. Une erreur ne t'enlève rien.");
+      titre("Tu connais déjà ?");
+      para("Un petit test pour sauter les étapes que tu sais déjà. Tu t'arrêtes quand tu veux.");
+      titre("Mon carnet");
+      para("Les repères de tes étapes validées : une voiture mesure environ 4 m, une brique de lait contient 1 L… Recopie-les dans ton cahier.");
+      const prof = el("div", "prof");
+      prof.appendChild(el("h3", "", "Pour le professeur : lancer l'appli en classe"));
+      const ol = el("ol");
+      ["Une première séance projetée en mode professeur : une étape faite devant les élèves, ensemble.",
+        "Puis chaque élève passe « Tu connais déjà ? » : il saute ce qu'il sait.",
+        "Ensuite, 10 minutes en rituel ou à la maison : l'échauffement, puis son étape."].forEach(t => ol.appendChild(el("li", "", T(t))));
+      prof.appendChild(ol);
+      const p2 = el("p", "", "Le mode professeur ouvre toutes les étapes, sans rien enregistrer, et montre les séries avec leurs réponses.");
+      p2.style.marginTop = "6px";
+      prof.appendChild(p2);
+      d.appendChild(prof);
+      ajouter(d);
+    }
+
+    // ============================================================ MODE PROFESSEUR
+    // Toutes les étapes, rien n'est enregistré (comme Défi calcul).
+    function bandeauProf() {
+      const b = el("div", "bprof");
+      b.appendChild(document.createTextNode("Mode professeur · "));
+      const q = el("a", "", "Quitter");
+      q.href = window.location.pathname;
+      b.appendChild(q);
+      b.appendChild(el("br"));
+      const s = el("span", "", "toutes les étapes, rien n'est enregistré");
+      s.style.fontWeight = "600";
+      b.appendChild(s);
+      return b;
+    }
+    // Un élève fictif, pour l'échauffement : les étapes avant celle choisie
+    // validées les jours d'avant.
+    function parcoursFictif(code) {
+      let p = P.creer();
+      const avant = PRETS.slice(0, Math.max(1, PRETS.indexOf(code)));
+      avant.forEach((c, i) => {
+        const jour = P.ajouterJours(etat.jour, -(avant.length - i) * 2);
+        p = P.noterTest(p, c, jour);
+      });
+      return p;
+    }
+    function accueilProf() {
+      ecran({rond: true, serre: true});
+      clavier = null;
+      const code = etat.profEtape;
+      const e = CARTE.etape(code);
+      ajouter(bandeauProf());
+      const c = el("div", "carte");
+      c.style.padding = "10px 12px";
+      const l = el("div");
+      l.style.cssText = "display:flex;justify-content:space-between;align-items:baseline";
+      l.append(el("span", "eti", `Palier ${e.palier} · ${CARTE.palier(e.palier).nom}`), lien("Changer d'étape", changerEtapeProf, "bleu"));
+      const h = el("h2", "", e.nom);
+      h.style.cssText = "font-size:22px;margin:4px 0 0";
+      c.append(l, h);
+      ajouter(c);
+      const fin = accueilProf;
+      const acts = [
+        ["1", "J'apprends : on te montre", "les trois temps", () => onTeMontre(code, fin, {retour: fin})],
+        ["2", "J'apprends : à toi", "l'outil, l'image, puis sans rien, et « À retenir »", () => aToi(code, {retour: fin, fin})],
+        ["3", "Je valide", "10 questions, sans aide (sans attendre demain)", () => jeValide(code, {retour: fin, fin})],
+        ["4", "Tu connais déjà ?", "l'escalier, à partir de cette étape", () => introTest(code, {retour: fin, fin})],
+        ["5", "L'échauffement", "3 questions tirées comme pour un élève", () => echauffement(fin, {parcours: parcoursFictif(code), retour: fin})],
+        ["👁", "Voir une série", "10 questions et leurs réponses", () => { etat.profSerie = {usage: "valide", graine: graine()}; voirSerie(); }]
+      ];
+      const d = el("div", "ecran-defile");
+      acts.forEach(([n, t, p, action], i) => {
+        const b = el("button", `act${i === 5 ? " violet" : ""}`);
+        b.type = "button";
+        const txt = el("div");
+        txt.append(el("b", "", T(t)), el("span", "petit", T(p)));
+        b.append(el("span", "n", n), txt, el("span", "fl", "→"));
+        b.addEventListener("click", action);
+        d.appendChild(b);
+      });
+      const lc = el("div", "liens2 un");
+      lc.appendChild(lien(T("Comment ça marche ?"), commentCaMarche));
+      d.appendChild(lc);
+      ajouter(d);
+    }
+    function changerEtapeProf() {
+      ecran({rond: true, serre: true});
+      ajouter(bandeauProf());
+      const t = teteEcran("Changer d'étape", accueilProf);
+      t.querySelector("b").style.cssText = "font-size:21px;text-align:left;margin:0";
+      ajouter(t);
+      const d = el("div", "ecran-defile");
+      CARTE.PALIERS.forEach(pal => {
+        const pret = CARTE.palierPret(pal.n);
+        const titre = el("div", "palier-titre", `Palier ${pal.n} · ${pal.nom}`);
+        if (!pret) titre.style.color = "#8ea1af";
+        d.appendChild(titre);
+        if (pret) d.appendChild(listeEtapes(pal.n, {cours: etat.profEtape, choisir: c => { etat.profEtape = c; accueilProf(); }}));
+        else {
+          const b = el("div", "bandeau-prep", T(`En préparation · ${pal.etapes} étapes`));
+          b.style.cssText = "font-size:13px;padding:6px 10px";
+          d.appendChild(b);
+        }
+      });
+      ajouter(d);
+    }
+    const USAGES_PROF = [["valide", "Je valide · 10"], ["entraine", "J'apprends · 25"], ["test", "Test"]];
+    function voirSerie() {
+      ecran({rond: true, serre: true});
+      const code = etat.profEtape;
+      const {usage, graine: g} = etat.profSerie;
+      ajouter(bandeauProf());
+      const t = el("div", "tete-ecran");
+      const r = el("button", "rond", "←");
+      r.type = "button";
+      r.setAttribute("aria-label", "Retour");
+      r.addEventListener("click", accueilProf);
+      const tt = el("div");
+      const b = el("b", "", "Voir une série");
+      b.style.cssText = "font-size:20px;display:block;text-align:left;margin:0";
+      tt.append(b, el("span", "petit", nomEtape(code)));
+      t.append(r, tt);
+      ajouter(t);
+      const onglets = el("div", "onglets");
+      USAGES_PROF.forEach(([u, nom]) => {
+        const o = el("button", u === usage ? "ici" : "", T(nom));
+        o.type = "button";
+        o.addEventListener("click", () => { etat.profSerie = {usage: u, graine: g}; voirSerie(); });
+        onglets.appendChild(o);
+      });
+      ajouter(onglets);
+      const serie = G.serie(code, {usage, graine: g});
+      const d = el("div", "ecran-defile");
+      const table = el("table", "serie");
+      serie.forEach((qn, i) => {
+        const tr = el("tr", i + 1 < serie.length && serie[i + 1].degre !== qn.degre ? "sep" : "");
+        tr.append(el("td", "n", String(i + 1)), el("td", "dg", `d${qn.degre}`), el("td", "", qn.texte), el("td", "rp", qn.reponseTexte));
+        table.appendChild(tr);
+      });
+      d.appendChild(table);
+      const note = el("div", "note", T(`Série n° ${String(g).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} : ce numéro redonne exactement la même série.`));
+      note.style.textAlign = "left";
+      d.appendChild(note);
+      const ret = el("form", "retrouver");
+      const label = el("label", "", "Retrouver la série n°");
+      const champ = el("input");
+      champ.inputMode = "numeric";
+      champ.id = "retrouver-serie";
+      label.htmlFor = "retrouver-serie";
+      const ok = el("button", "lien bleu", "Voir");
+      ok.type = "submit";
+      ret.append(label, champ, ok);
+      ret.addEventListener("submit", ev => {
+        ev.preventDefault();
+        const n = Number(String(champ.value).replace(/\D/g, ""));
+        if (n >= 1 && n <= 99999) { etat.profSerie = {usage, graine: n}; voirSerie(); }
+      });
+      d.appendChild(ret);
+      ajouter(d, bouton("Une autre série ↻", "", () => { etat.profSerie = {usage, graine: graine()}; voirSerie(); }));
+    }
+
+    accueil();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+// Défi conversions, lot 1 : les écrans au navigateur, à 390 × 844 et 1440 × 900.
+//
+// Hors CI : « npm run verifier » la lance quand la branche touche l'appli
+// (scripts/verifier-navigateur.mjs), ou à la main :
+//   node tests/defi-conversions-ecrans.cjs
+//   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome node tests/defi-conversions-ecrans.cjs
+//   DEFI_CONVERSIONS_CAPTURES=/dossier node tests/defi-conversions-ecrans.cjs   (dépose les captures)
+//
+// Ce qui est joué (hasard figé : Math.random = 0,5, donc chaque série a la
+// graine 50 000, que ce test recalcule avec les générateurs pour répondre) :
+//   - l'accueil d'un nouveau visiteur, sans pied de page ;
+//   - « Mes premiers repères » de bout en bout : On te montre, À toi (une
+//     erreur), À retenir ; le lendemain n'est pas encore là : « Je valide
+//     s'ouvre demain » ;
+//   - une séance du lendemain : l'échauffement (une erreur), Je valide
+//     (une erreur, la correction à la fin), l'étape suivante ;
+//   - « Effacer mon historique » posé par-dessus l'écran ;
+//   - Mon parcours, Mon carnet, Comment ça marche ?, le mode professeur et
+//     « Voir une série ».
+// À chaque écran : le cadre tient entier dans la fenêtre. Pendant une
+// séance : RIEN NE BOUGE — question, zone d'aide, pavé et bouton gardent leur
+// place et leur taille pendant la frappe, quand la zone d'aide se remplit ou
+// se vide, et d'une question à l'autre.
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const http = require("node:http");
+const path = require("node:path");
+const {chromium} = require("playwright");
+
+const RACINE = path.resolve(__dirname, "..");
+const G = require(path.join(RACINE, "outils/conversions/conversions_generateurs.js"));
+const P = require(path.join(RACINE, "outils/conversions/defi_conversions_parcours.js"));
+const CARTE = require(path.join(RACINE, "outils/conversions/conversions_carte.js"));
+const PAGE = "/outils/conversions/defi_conversions.html";
+const CAPTURES = process.env.DEFI_CONVERSIONS_CAPTURES || "";
+const GRAINE = 50000;
+const JOUR = "2026-11-11";
+const TAILLES = [{nom: "390x844", largeur: 390, hauteur: 844}, {nom: "1440x900", largeur: 1440, hauteur: 900}];
+const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
+  ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon"};
+
+function servir() {
+  const serveur = http.createServer((requete, reponse) => {
+    const chemin = decodeURIComponent(new URL(requete.url, "http://x").pathname);
+    const fichier = path.join(RACINE, chemin);
+    if (!fichier.startsWith(RACINE) || !fs.existsSync(fichier) || fs.statSync(fichier).isDirectory()) { reponse.writeHead(404); reponse.end(); return; }
+    reponse.writeHead(200, {"Content-Type": TYPES[path.extname(fichier)] || "application/octet-stream"});
+    fs.createReadStream(fichier).pipe(reponse);
+  });
+  return new Promise(resolve => serveur.listen(0, "127.0.0.1", () => resolve(serveur)));
+}
+
+async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} = {}) {
+  const contexte = await navigateur.newContext({viewport: {width: taille.largeur, height: taille.hauteur}});
+  const page = await contexte.newPage();
+  const erreurs = [];
+  page.on("pageerror", e => erreurs.push(String(e)));
+  page.on("console", m => { if (m.type() === "error") erreurs.push(m.text()); });
+  await page.clock.setFixedTime(new Date(`${JOUR}T10:00:00`));
+  await page.addInitScript(([p]) => {
+    Math.random = () => 0.5;
+    if (p && !sessionStorage.getItem("pose")) { localStorage.setItem("mathsgo-defi-conversions-parcours", p); sessionStorage.setItem("pose", "1"); }
+  }, [parcours ? JSON.stringify(parcours) : null]);
+  await page.goto(`${base}${PAGE}${prof ? "?prof=1" : ""}`);
+  await page.waitForSelector("#cadre > *");
+  return {page, contexte, erreurs};
+}
+
+async function capture(page, taille, nom) {
+  if (!CAPTURES) return;
+  fs.mkdirSync(CAPTURES, {recursive: true});
+  await page.screenshot({path: path.join(CAPTURES, `${taille.nom}-${nom}.png`)});
+}
+
+// Le cadre tient entier : dans la fenêtre, et rien ne déborde de lui.
+async function tientEntier(page, ou) {
+  const m = await page.evaluate(() => {
+    const c = document.getElementById("cadre");
+    const r = c.getBoundingClientRect();
+    return {bas: r.bottom, haut: window.innerHeight, deborde: c.scrollHeight - c.clientHeight, larg: r.right, l: window.innerWidth};
+  });
+  assert.ok(m.bas <= m.haut + 0.5, `${ou} : le cadre sort de la fenêtre (${m.bas} > ${m.haut})`);
+  assert.ok(m.deborde <= 1, `${ou} : le contenu déborde du cadre de ${m.deborde} px`);
+  assert.ok(m.larg <= m.l, `${ou} : le cadre sort en largeur`);
+}
+
+// Les places des blocs d'une séance.
+async function places(page) {
+  return page.evaluate(() => {
+    const r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(Math.round); };
+    return {q: r(".q"), zone: r(".zone"), bas: r(".bas"), case: r(".case"), bouton: r("#cadre > .btn, #cadre > .duo")};
+  });
+}
+function memesPlaces(a, b, ou) {
+  for (const k of ["q", "zone", "bas", "bouton"]) assert.deepEqual(b[k], a[k], `${ou} : « ${k} » a bougé`);
+}
+
+async function repondre(page, q, juste = true) {
+  if (q.choix) {
+    const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
+    await page.locator(".choix button").nth(i).click();
+  } else {
+    const r = Array.isArray(q.reponse) ? q.reponse : [q.reponse];
+    const valeurs = juste ? r : r.map(x => `${x}1`);
+    for (let k = 0; k < valeurs.length; k += 1) {
+      if (k) await page.keyboard.press("Tab");
+      for (const c of valeurs[k]) await page.keyboard.press(c === "," ? "Comma" : c);
+    }
+    await page.keyboard.press("Enter");
+  }
+  await page.waitForTimeout(juste ? 850 : 200);
+}
+
+async function scenarioPremierJour(navigateur, base, taille) {
+  const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
+  const ou = `${taille.nom} premier jour`;
+  await tientEntier(page, `${ou}, accueil`);
+  assert.equal(await page.locator("footer, .site-footer").count(), 0, "pas de pied de page");
+  assert.equal(await page.getByText("Mes premiers repères").count(), 1);
+  assert.equal(await page.getByText("Tu connais déjà").count(), 1);
+  await capture(page, taille, "01-accueil");
+  await page.getByText("Commencer").click();
+  for (let i = 0; i < 3; i += 1) {
+    await tientEntier(page, `${ou}, on te montre ${i + 1}`);
+    if (i === 0) await capture(page, taille, "02-on-te-montre");
+    await page.getByText("Suivant").click();
+  }
+  // À toi : une erreur, puis juste jusqu'au bout. Rien ne bouge.
+  const serie = G.serie("R1", {usage: "entraine", graine: GRAINE});
+  const avant = await places(page);
+  await tientEntier(page, `${ou}, à toi`);
+  await capture(page, taille, "03-a-toi-outil");
+  await repondre(page, serie[0], false);
+  memesPlaces(avant, await places(page), `${ou}, après une erreur`);
+  await capture(page, taille, "04-a-toi-erreur");
+  await page.getByText("Suivant").click();
+  let i = 1;
+  while (await page.locator(".retenir").count() === 0 && i < 25) {
+    memesPlaces(avant, await places(page), `${ou}, question ${i + 1}`);
+    await repondre(page, serie[i]);
+    i += 1;
+  }
+  assert.ok(await page.locator(".retenir").count(), "À retenir après « À toi »");
+  await tientEntier(page, `${ou}, à retenir`);
+  assert.equal(await page.getByText("Je valide s'ouvre demain, après ton échauffement.").count(), 1);
+  await capture(page, taille, "05-a-retenir");
+  const stocke = await page.evaluate(() => JSON.parse(localStorage.getItem("mathsgo-defi-conversions-parcours")));
+  assert.equal(stocke.etapes.R1[1], JOUR, "« À toi » réussi enregistré");
+  assert.equal(stocke.etapes.R1[2], null, "pas encore validée");
+  const s = Object.values(stocke.seances);
+  assert.equal(s.length, 1);
+  assert.deepEqual([s[0][1], s[0][2], s[0][3]], [1, 1, 1], "séance : étape R1, On te montre vu, À toi réussi");
+  // Revenu à l'accueil le même jour : Je valide attend demain.
+  await page.getByText("Accueil", {exact: true}).click();
+  await page.reload();
+  await page.waitForSelector("#cadre > *");
+  assert.equal(await page.locator(".carte.bleue").getByText("Je valide s'ouvre demain").count(), 1);
+  assert.equal(await page.getByText("Tu connais déjà ?").count(), 0, "la carte du test disparaît une fois l'étape ouverte");
+  await tientEntier(page, `${ou}, accueil le même jour`);
+  // Effacer mon historique : par-dessus, rien ne bouge derrière.
+  const cadreAvant = await page.locator("#cadre").boundingBox();
+  await page.getByText("Effacer mon historique").click();
+  assert.ok(await page.locator("#voile").isVisible());
+  assert.deepEqual(await page.locator("#cadre").boundingBox(), cadreAvant, "le cadre ne bouge pas sous la question");
+  await capture(page, taille, "06-effacer");
+  await page.getByText("Oui, tout effacer").click();
+  assert.equal(await page.getByText("Commencer").count(), 1);
+  const efface = await page.evaluate(() => JSON.parse(localStorage.getItem("mathsgo-defi-conversions-parcours")));
+  assert.deepEqual(efface, {version: 1, epoque: 1, etapes: {}, reperes: {}, seances: {}});
+  assert.deepEqual(erreurs, []);
+  await contexte.close();
+}
+
+async function scenarioLendemain(navigateur, base, taille) {
+  let p = P.creer();
+  [["R1", "2026-11-05"], ["R2", "2026-11-06"], ["P1", "2026-11-07"], ["C1", "2026-11-09"]].forEach(([c, d]) => {
+    p = P.marquerEntrainee(p, c, d);
+    p = P.noterValidation(p, c, true, P.ajouterJours(d, 1));
+  });
+  p = P.marquerEntrainee(p, "C2", "2026-11-10");
+  const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
+  const ou = `${taille.nom} lendemain`;
+  assert.equal(await page.getByText("Aujourd'hui : l'échauffement, puis Je valide.").count(), 1);
+  await capture(page, taille, "07-accueil-lendemain");
+  const prets = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+  const reps = {R1: CARTE.etape("R1").reperes};
+  const items = P.tirerEchauffement(p, JOUR, prets, P.carnet(p, reps));
+  assert.equal(items.length, 3);
+  const qs = items.map(it => (it.type === "repere" ? G.questionRepere(it.code, GRAINE) : G.serie(it.code, {usage: "echauffement", graine: GRAINE})[0]));
+  await page.getByText("C'est parti").click();
+  await repondre(page, qs[0], false);
+  await tientEntier(page, `${ou}, échauffement`);
+  await capture(page, taille, "08-echauffement-erreur");
+  await page.getByText("Suivant").click();
+  await repondre(page, qs[1]);
+  await repondre(page, qs[2]);
+  assert.equal(await page.getByText("Échauffement fini").count(), 1);
+  assert.equal(await page.getByText("Une erreur ne t'enlève rien : tes étapes restent validées.").count(), 1);
+  await tientEntier(page, `${ou}, fin de l'échauffement`);
+  await page.getByText("Mon étape : Je valide").click();
+  // Je valide : une erreur à la 4e, la correction à la fin.
+  const v = G.serie("C2", {usage: "valide", graine: GRAINE});
+  const avant = await places(page);
+  for (let i = 0; i < 10; i += 1) {
+    memesPlaces(avant, await places(page), `${ou}, Je valide ${i + 1}`);
+    if (i === 3) {
+      await repondre(page, v[i], false);
+      memesPlaces(avant, await places(page), `${ou}, Je valide après l'erreur`);
+      assert.equal(await page.getByText("Tu verras la correction à la fin.").count(), 1);
+      await capture(page, taille, "09-je-valide-erreur");
+      await page.getByText("Suivant").click();
+    } else await repondre(page, v[i]);
+  }
+  assert.equal(await page.getByText("Étape validée").count(), 1);
+  assert.equal(await page.locator(".corr div").count(), 1, "une ligne de correction");
+  await tientEntier(page, `${ou}, validée`);
+  await capture(page, taille, "10-validee");
+  const stocke = await page.evaluate(() => JSON.parse(localStorage.getItem("mathsgo-defi-conversions-parcours")));
+  assert.equal(stocke.etapes.C2[2], JOUR);
+  assert.equal(stocke.etapes.C2[3], 1);
+  const s = Object.values(stocke.seances);
+  assert.equal(s.length, 1);
+  assert.deepEqual([s[0][1], s[0][4], s[0][5], s[0][6]], [5, 1, 3, 2], "séance : C2, Je valide réussie, 3 questions d'échauffement, 2 justes");
+  // L'étape suivante enchaîne sur J'apprends, sans échauffement.
+  await page.getByText("Étape suivante").click();
+  assert.equal(await page.locator(".bseance").getByText("Heures et minutes").count(), 1);
+  await tientEntier(page, `${ou}, étape suivante`);
+  // Mon parcours, Mon carnet, Comment ça marche ?
+  await page.locator(".bseance .rond").click();
+  await page.getByText("Mon parcours").click();
+  await tientEntier(page, `${ou}, mon parcours`);
+  assert.equal(await page.locator(".li2.ok").count(), 5);
+  await capture(page, taille, "11-mon-parcours");
+  await page.locator(".pal-tabs button").nth(3).click();
+  assert.equal(await page.getByText("Ce palier est en préparation").count(), 1);
+  await page.locator(".tete-ecran .rond").click();
+  await page.getByText("Mon carnet").click();
+  await tientEntier(page, `${ou}, carnet`);
+  assert.equal(await page.locator(".carnet .carte-rep").count(), 9);
+  await capture(page, taille, "12-carnet");
+  await page.locator(".tete-ecran .rond").click();
+  await page.getByText("Comment ça marche ?").click();
+  await tientEntier(page, `${ou}, comment ça marche`);
+  assert.equal(await page.getByText("Pour le professeur : lancer l'appli en classe").count(), 1);
+  assert.deepEqual(erreurs, []);
+  await contexte.close();
+}
+
+async function scenarioProf(navigateur, base, taille) {
+  const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {prof: true});
+  const ou = `${taille.nom} prof`;
+  await tientEntier(page, `${ou}, accueil`);
+  assert.equal(await page.getByText("toutes les étapes, rien n'est enregistré").count(), 1);
+  await page.getByText("Changer d'étape").click();
+  await tientEntier(page, `${ou}, changer d'étape`);
+  await page.getByText("Vers une unité plus petite").click();
+  await page.getByText("Voir une série").click();
+  await tientEntier(page, `${ou}, voir une série`);
+  assert.equal(await page.locator("table.serie tr").count(), 10);
+  const v = G.serie("C1", {usage: "valide", graine: GRAINE});
+  assert.equal(await page.locator("table.serie tr").first().locator(".rp").textContent(), v[0].reponseTexte);
+  await capture(page, taille, "13-voir-une-serie");
+  await page.locator(".tete-ecran .rond").click();
+  // À toi en mode prof : rien n'est enregistré ; les places tiennent.
+  await page.getByText("J'apprends : à toi").click();
+  const avant = await places(page);
+  const caseAvant = (await places(page)).case;
+  await page.keyboard.press("4");
+  await page.keyboard.press("5");
+  assert.deepEqual((await places(page)).case, caseAvant, "la case ne change pas de taille pendant la frappe");
+  await page.locator(".gu .u button").last().click();
+  memesPlaces(avant, await places(page), `${ou}, glisse-unité`);
+  await tientEntier(page, `${ou}, à toi`);
+  assert.equal(await page.evaluate(() => localStorage.getItem("mathsgo-defi-conversions-parcours")), null, "rien n'est enregistré");
+  assert.deepEqual(erreurs, []);
+  await contexte.close();
+}
+
+(async () => {
+  const serveur = await servir();
+  const base = `http://127.0.0.1:${serveur.address().port}`;
+  const navigateur = await chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
+  let echec = null;
+  try {
+    for (const taille of TAILLES) {
+      await scenarioPremierJour(navigateur, base, taille);
+      await scenarioLendemain(navigateur, base, taille);
+      await scenarioProf(navigateur, base, taille);
+      console.log(`✓ ${taille.nom}`);
+    }
+  } catch (e) {
+    echec = e;
+  } finally {
+    await navigateur.close();
+    serveur.close();
+  }
+  if (echec) { console.error(echec); process.exitCode = 1; } else console.log("Défi conversions : écrans verts.");
+})();
