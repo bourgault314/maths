@@ -50,6 +50,7 @@ const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul"];
 const SPLAT = ["outils/splat.html", "assets/js/splat-", "assets/fonts/SplatLettres"];
 const AXELLE = ["axelle/"];
 const SOLEY = ["outils/club_maths/soley"];
+const DEFI_CONVERSIONS = ["outils/conversions/defi_conversions", "outils/conversions/conversions_carte.js", "outils/conversions/conversions_generateurs.js"];
 
 /*
  * appli   : le nom donné à --appli ;
@@ -83,6 +84,8 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-relecture-2-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-modules-lot-2-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+
+  { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
 
   { fichier: "tests/splat-enquete-eleve-boutons-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
   { fichier: "tests/splat-enquete-eleve-pas-a-pas-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
