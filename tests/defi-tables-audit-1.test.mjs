@@ -176,7 +176,10 @@ test("8. les ronds gris lisibles, les sous-titres courts, « Tape » et « appui
   assert.match(html, /detail: "20 questions · 2 min · avant le test",/);
   assert.match(html, /Mon parcours<small>tables, mélange, étoiles<\/small>/);
   assert.match(html, /"Tape une réponse ou appuie sur «\\u00a0Passer\\u00a0»\."/);
-  assert.match(html, /Sinon, appuie sur «&nbsp;Non&nbsp;»/);
+  // Lot « toujours toi » (11/11/2026) : la longue explication de la question
+  // « C'est toujours toi ? » (« … Sinon, appuie sur « Non » … ») est retirée ;
+  // il reste une ligne courte.
+  assert.match(html, /<p class="cec-garde-consigne">Retape ton code pour continuer\.<\/p>/);
 });
 
 test("8. « ! ? : » ne se retrouvent jamais seuls en début de ligne dans les verdicts", () => {

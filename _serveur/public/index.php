@@ -315,16 +315,13 @@ try {
   .garde { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
            padding: 16px; background: rgba(20, 52, 81, .55); }
   .garde[hidden] { display: none; }
-  .garde-carte { width: 100%; max-width: 420px; padding: 22px 20px; background: #fff; color: var(--ink);
-                 border-radius: 16px; box-shadow: 0 18px 40px rgba(20, 52, 81, .3); text-align: center; }
-  .garde-titre { margin: 0 0 8px; font-size: 1.35rem; font-weight: 700; color: var(--ink); }
-  .garde-note { margin: 0 0 16px; color: var(--muted); font-size: var(--texte-secondaire); line-height: 1.4; }
-  .garde-form { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .garde-label { margin: 0; font-size: var(--texte-secondaire); font-weight: 700; color: var(--muted); }
-  #garde-cases { margin: 2px 0; --cec-ligne: var(--line); --cec-bleu: var(--blue); --cec-encre: var(--blue-dark); }
-  .garde-erreur { margin: 0; min-height: 1.3em; line-height: 1.3; color: var(--rouge); font-size: var(--texte-secondaire); font-weight: 700; }
-  .garde .garde-erreur[hidden] { display: block !important; visibility: hidden; }
-  .garde-boutons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 4px; }
+  /* Lot « toujours toi » (11/11/2026, choix de Gwenaël) : la carte est une
+     petite copie de l'écran d'entrée (titre, une ligne, le cadre blanc des six
+     cases avec « Entrer »). Son dessin vit dans le module commun
+     code-en-cases.js (.cec-garde), le même que dans les applis ; ici, le titre
+     dans la police des titres de Mon espace et les couleurs de la charte. */
+  .garde-carte .cec-garde-titre { font-family: var(--serif); font-weight: 700; color: var(--blue-dark); }
+  #garde-cases { --cec-ligne: var(--line); --cec-bleu: var(--blue); --cec-encre: var(--blue-dark); }
   @media (max-width: 700px), (max-height: 560px) {
     .garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
   }
@@ -421,22 +418,22 @@ try {
 <!-- « C'est toujours toi ? » : hors de <main>, de l'en-tête et du pied, qui
      deviennent inertes tant qu'elle est posée. Les mots sont ceux des applis. -->
 <div id="garde" class="garde" role="dialog" aria-modal="true" aria-labelledby="garde-titre" hidden>
-  <div class="garde-carte">
-    <p id="garde-titre" class="garde-titre">C’est toujours toi&nbsp;?</p>
-    <p class="garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;»&nbsp;: ton camarade ouvrira son espace avec son code.</p>
-    <form id="garde-form" class="garde-form" method="post" autocomplete="off">
-      <label class="garde-label" for="garde-code">Ton code</label>
+  <div class="garde-carte cec-garde">
+    <p id="garde-titre" class="cec-garde-titre">C’est toujours toi&nbsp;?</p>
+    <div class="cec-garde-ligne">
+      <p id="garde-erreur" class="cec-garde-erreur" role="alert" hidden></p>
+      <p class="cec-garde-consigne">Retape ton code pour continuer.</p>
+    </div>
+    <form id="garde-form" class="cec-garde-cadre" method="post" autocomplete="off">
+      <label class="pour-lecteur" for="garde-code">Ton code, 6 caractères</label>
       <div class="cec" id="garde-cases">
         <input id="garde-code" class="cec-champ" type="text" inputmode="latin" maxlength="6" autocapitalize="characters"
                autocomplete="off" autocorrect="off" spellcheck="false" aria-describedby="garde-erreur">
         <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
       </div>
-      <p id="garde-erreur" class="garde-erreur" role="alert" hidden></p>
-      <div class="garde-boutons">
-        <button type="submit" id="garde-oui">C’est moi</button>
-        <button type="button" class="secondaire" id="garde-non">Non, ce n’est pas moi</button>
-      </div>
+      <button type="submit" id="garde-oui" class="cec-garde-entrer">Entrer</button>
     </form>
+    <button type="button" id="garde-non" class="cec-garde-non">Non, ce n’est pas moi</button>
   </div>
 </div>
 

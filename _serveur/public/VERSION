@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot jour-vert
+lot toujours-toi
 genere_le 2026-11-11
 fichiers 69
-manifeste c5003aadf305fe55ec8924dee205802224141edacc2bcb42e1e79df9e01150d5
+manifeste b23382a526e67e481064d5443a213edf7d9024c62d99ea9dd85b4f186b6f6dc6
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -13,11 +13,11 @@ a5100452e1016c2d7e60bca618a44c43ef0bf0507990517eaa7dadf9938aff83  api/parcours.p
 2bf16c4c9e24fadbb29cd230398b1c66cb228f79cbc963303503fdf84e3ecb47  api/prof.php
 4be4936350764446caa45b5da6f91bcbf6529c545d351adc930e9fcf72c78a4f  api/records.php
 94ac7a5f0a2a898be85b74095b42754e7b1d31b73f2498ebce4771ad48554992  apple-touch-icon.png
-3d555cc1389f2127aea7317c6a4a0cc9b61c23349128ba75a1f09c5f571fd94a  code-en-cases.js
+44fe8d01adf97cac29822f5bff90ca76c1fc17a7efd721a32226ae130cfcdded  code-en-cases.js
 df015c613df736321d80cfd8962fc9457106e6b7ac55eeb9def6ffa24684d6c4  direct.php
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-1a08e61f61294066103356c5b07396f6cd887c86dc9388587cdc118cf34ab352  index.php
+76f66520af29994311a076bbe5f142c667a1a4e0798a56c7385844bd3bf495c1  index.php
 8735a6e6f36def32bcf0b114bce2563b7a1bc23059dab95f6a1561f5cda17706  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 9eff2d6ad41ba9eb9b64e6755d5734d4301e9e102f942f1a90e55d6e6dfad66f  lib/applis.php

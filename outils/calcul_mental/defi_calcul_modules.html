@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261111-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261111-2">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -103,21 +103,21 @@
            cadre (en-tête commun, 31/10/2026). -->
       <p id="suivi-repere" class="suivi-repere" hidden></p>
       <div id="suivi-garde" class="suivi-garde" role="dialog" aria-modal="true" aria-labelledby="suivi-garde-titre" hidden>
-        <div class="suivi-garde-carte">
-          <p id="suivi-garde-titre" class="suivi-garde-titre">C’est toujours toi&nbsp;?</p>
-          <p class="suivi-garde-note">Personne n’a touché à cet écran depuis un moment. Si c’est toi, retape ton code (il est sur ta bandelette). Sinon, appuie sur «&nbsp;Non&nbsp;»&nbsp;: ton camarade retrouvera son parcours avec son code.</p>
-          <form id="suivi-garde-form" class="suivi-garde-form" autocomplete="off">
-            <label class="suivi-garde-label" for="suivi-garde-code">Ton code</label>
+        <div class="suivi-garde-carte cec-garde">
+          <p id="suivi-garde-titre" class="cec-garde-titre">C’est toujours toi&nbsp;?</p>
+          <div class="cec-garde-ligne">
+            <p id="suivi-garde-erreur" class="cec-garde-erreur" role="alert" hidden></p>
+            <p class="cec-garde-consigne">Retape ton code pour continuer.</p>
+          </div>
+          <form id="suivi-garde-form" class="cec-garde-cadre" autocomplete="off">
+            <label class="cec-garde-lecteur" for="suivi-garde-code">Ton code, 6 caractères</label>
             <div class="cec suivi-garde-cases">
               <input id="suivi-garde-code" class="suivi-garde-code" type="text" inputmode="latin" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="6" size="6" aria-describedby="suivi-garde-erreur">
               <span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span><span class="cec-case" aria-hidden="true"></span>
             </div>
-            <p id="suivi-garde-erreur" class="suivi-garde-erreur" role="alert" hidden></p>
-            <div class="suivi-garde-boutons">
-              <button id="suivi-garde-oui" class="primary" type="button">C’est moi</button>
-              <button id="suivi-garde-non" class="secondary" type="button">Non, ce n’est pas moi</button>
-            </div>
+            <button id="suivi-garde-oui" class="cec-garde-entrer" type="button">Entrer</button>
           </form>
+          <button id="suivi-garde-non" class="cec-garde-non" type="button">Non, ce n’est pas moi</button>
         </div>
       </div>
     </header>
@@ -289,7 +289,7 @@
     </section>
   </main>
 
-  <script src="../../assets/js/code-en-cases.js?v=20261111-1"></script>
+  <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
   <script src="./defi_calcul_core.js?v=20261108-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261111-1"></script>
   <script src="./defi_calcul_aides.js?v=20261108-1"></script>

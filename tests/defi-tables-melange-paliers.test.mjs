@@ -567,7 +567,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « securite-petits-correctifs » (11/11/2026, audit GPT) : l'époque bornée (api/parcours.php,
   // lib/progression.php), les billets de fiche (lib/billets.php, api/prof.php, lib/auth.php), le
   // plancher des records (lib/records.php) et la copie du moteur.
-  assert.match(lire("_serveur/public/VERSION"), /^lot jour-vert$/m);
+  // Puis « jour-vert » (11/11/2026) : lib/applis.php et la fiche élève (ce qui a été fait chaque jour).
+  // Puis « toujours-toi » (11/11/2026) : la question « C'est toujours toi ? » allégée (index.php,
+  // code-en-cases.js).
+  assert.match(lire("_serveur/public/VERSION"), /^lot toujours-toi$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=livret-litteral-20261106-1/);
 });
