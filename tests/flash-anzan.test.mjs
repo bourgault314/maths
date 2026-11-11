@@ -354,3 +354,21 @@ test("menu immobile : les blocs cachés de Flash/Colonne gardent leur place", ()
   assert.match(PAGE, /\.onglet \{ position: relative; min-height: 50px; margin-top: 8px; padding: 9px 8px 13px;/);
   assert.match(PAGE, /\.onglet\[aria-pressed="true"\] \{ z-index: 1; margin-top: 0; padding-top: 15px; padding-bottom: 15px;/);
 });
+
+test("iPhone (10/11/2026) : au téléphone, hors séance, le menu est resserré et « Les grades » / « Historique » sont côte à côte", () => {
+  const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
+  const i = style.indexOf("Retour iPhone du 10/11/2026");
+  assert.ok(i > 0, "le bloc du 10/11 est là");
+  const bloc = style.slice(i, style.indexOf("@media (max-width: 380px)", i));
+  assert.match(bloc, /@media \(max-width: 620px\)/);
+  assert.match(bloc, /body:not\(\.en-seance\) \.panel \{ --bandeau-haut: 8px; --rangee-h: 44px; \}/, "la séance garde ses tailles");
+  assert.match(bloc, /\.reglages-corps \.bas-pile \{ flex-direction: row; flex-wrap: wrap;/);
+  assert.match(bloc, /\.bas-pile \.bandeau-grades \{ flex: 1 1 0;/);
+  assert.match(bloc, /\.bas-pile \.historique-bouton \{ flex: 1 1 0;/);
+  assert.match(bloc, /\.bg-point \{ display: none; \}/, "le détail des grades sur deux lignes, sans le point du milieu");
+  assert.match(style, /@media \(max-width: 380px\) \{\s*\.resume \{ min-height: calc\(2\.6em \+ 4px\); \}/, "petit téléphone : le menu ne bouge pas entre Flash et Colonne");
+  // Les boutons du menu ne descendent jamais sous 44 px (les − / + gardent 38 px dans leur case, comme avant).
+  for (const [, h] of bloc.matchAll(/(?:\.pas, \.option, \.bascule|\.primary\.partir|\.bandeau-grades|\.historique-bouton|\.onglet) \{[^}]*?(?:min-)?height: (\d+)px/g)) {
+    assert.ok(Number(h) >= 44, `hauteur ${h} px`);
+  }
+});
