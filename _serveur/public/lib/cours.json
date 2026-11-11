@@ -80,6 +80,365 @@
    "imprimable": "/cours/4e/4e-TRI-imprimable.html"
   },
   {
+   "id": "4e-ARI",
+   "niveau": "4e",
+   "chapitre": "Arithmétique",
+   "titre": "Multiples, diviseurs et nombres premiers",
+   "fiches": [
+    {
+     "id": "4e-ARI-01",
+     "n": 1,
+     "ids": "4e-ARI-01 · 3e-ARI-01 · 3e-ARI-02",
+     "h1": "Je sais dire si un nombre est multiple ou diviseur d'un autre, avec la division euclidienne et les critères de divisibilité",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-01.html"
+    },
+    {
+     "id": "4e-ARI-02",
+     "n": 2,
+     "ids": "4e-ARI-02 · 3e-ARI-04",
+     "h1": "Je sais ce qu'est un nombre premier et je sais retrouver les nombres premiers jusqu'à 100",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-02.html"
+    },
+    {
+     "id": "4e-ARI-03",
+     "n": 3,
+     "ids": "4e-ARI-03 · 3e-ARI-04",
+     "h1": "Je sais dire si un nombre est premier ou non",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-03.html"
+    },
+    {
+     "id": "4e-ARI-04",
+     "n": 4,
+     "ids": "4e-ARI-04 · 3e-ARI-05",
+     "h1": "Je sais décomposer un nombre en produit de facteurs premiers avec un arbre, et vérifier ma décomposition",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-04.html"
+    },
+    {
+     "id": "4e-ARI-05",
+     "n": 5,
+     "ids": "4e-ARI-05 · 3e-ARI-06",
+     "h1": "Je sais simplifier une fraction et la rendre irréductible avec les facteurs premiers",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-05.html"
+    },
+    {
+     "id": "4e-ARI-06",
+     "n": 6,
+     "ids": "4e-ARI-06 · 3e-ARI-07",
+     "h1": "Je sais résoudre un problème de partage en lots identiques (le plus grand diviseur commun)",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-ARI-06.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-ARI-brevet",
+    "page": "/cours/3e/3e-ARI-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-ARI-imprimable.html"
+  },
+  {
+   "id": "4e-LIT",
+   "niveau": "4e",
+   "chapitre": "Calcul littéral",
+   "titre": "Écrire, calculer, réduire, développer, démontrer",
+   "fiches": [
+    {
+     "id": "4e-LIT-02",
+     "n": 1,
+     "ids": "4e-LIT-02",
+     "h1": "Je sais écrire avec une lettre le double, le triple, la moitié et le carré d'un nombre, le successeur et le prédécesseur d'un entier",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-02.html"
+    },
+    {
+     "id": "4e-LIT-01",
+     "n": 2,
+     "ids": "4e-LIT-01 · 3e-LIT-03",
+     "h1": "Je sais multiplier des expressions simples : 3 × 2𝑥 = 6𝑥 ; 𝑥 × 𝑥 = 𝑥² ; 3𝑥 × 2𝑥 = 6𝑥²",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-01.html"
+    },
+    {
+     "id": "4e-LIT-04",
+     "n": 3,
+     "ids": "4e-LIT-04 · 3e-LIT-13",
+     "h1": "Je sais calculer la valeur d'une expression en remplaçant la lettre par un nombre, même négatif ou avec un carré",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-04.html"
+    },
+    {
+     "id": "4e-LIT-05",
+     "n": 4,
+     "ids": "4e-LIT-05 · 3e-LIT-04",
+     "h1": "Je sais dire si une expression est une somme ou un produit",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-05.html"
+    },
+    {
+     "id": "4e-LIT-07",
+     "n": 5,
+     "ids": "4e-LIT-07 · 3e-LIT-05",
+     "h1": "Je sais développer avec la distributivité simple : 𝑘(𝑎 + 𝑏) = 𝑘𝑎 + 𝑘𝑏, même quand 𝑘 est négatif ou contient 𝑥",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-07.html"
+    },
+    {
+     "id": "4e-LIT-08",
+     "n": 6,
+     "ids": "4e-LIT-08 · 3e-LIT-06",
+     "h1": "Je sais factoriser une somme par un facteur commun",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-08.html"
+    },
+    {
+     "id": "4e-LIT-06",
+     "n": 7,
+     "ids": "4e-LIT-06 · 3e-LIT-01",
+     "h1": "Je sais réduire une expression : 3𝑥 + 2𝑥 = (3 + 2) × 𝑥 = 5𝑥",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-06.html"
+    },
+    {
+     "id": "4e-LIT-03",
+     "n": 8,
+     "ids": "4e-LIT-03 · 3e-LIT-14",
+     "h1": "Je sais appliquer un programme de calcul à un nombre, puis à 𝑥 pour écrire l'expression qu'il calcule",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-03.html"
+    },
+    {
+     "id": "4e-LIT-09",
+     "n": 9,
+     "ids": "4e-LIT-09 · 3e-LIT-14",
+     "h1": "Je sais prouver que deux programmes de calcul ont toujours le même résultat",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-09.html"
+    },
+    {
+     "id": "4e-LIT-10",
+     "n": 10,
+     "ids": "4e-LIT-10 · 3e-LIT-15",
+     "h1": "Je sais démontrer avec des lettres qu'une propriété est vraie pour tous les entiers, ou qu'elle est fausse avec un contre-exemple",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-10.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-LIT-brevet",
+    "page": "/cours/3e/3e-LIT-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-LIT-imprimable.html"
+  },
+  {
+   "id": "4e-THA",
+   "niveau": "4e",
+   "chapitre": "Agrandissement et Thalès",
+   "titre": "Agrandir, réduire et le théorème de Thalès",
+   "fiches": [
+    {
+     "id": "4e-THA-03",
+     "n": 1,
+     "ids": "4e-THA-03",
+     "h1": "Je sais reconnaître un agrandissement ou une réduction, trouver son rapport 𝑘 et calculer une longueur",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-03.html"
+    },
+    {
+     "id": "4e-THA-04",
+     "n": 2,
+     "ids": "4e-THA-04",
+     "h1": "Je sais construire l'agrandissement ou la réduction d'une figure avec un rapport 𝑘 donné",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-04.html"
+    },
+    {
+     "id": "4e-THA-05",
+     "n": 3,
+     "ids": "4e-THA-05",
+     "h1": "Je sais ce que deviennent une aire et un volume dans un agrandissement ou une réduction",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-05.html"
+    },
+    {
+     "id": "4e-THA-01",
+     "n": 4,
+     "ids": "4e-THA-01 · 3e-THA-01",
+     "h1": "Je sais calculer une longueur avec le théorème de Thalès",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-01.html"
+    },
+    {
+     "id": "4e-THA-02",
+     "n": 5,
+     "ids": "4e-THA-02 · 3e-THA-02",
+     "h1": "Je sais prouver que deux droites sont parallèles… ou qu'elles ne le sont pas",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-THA-02.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-THA-brevet",
+    "page": "/cours/3e/3e-THA-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-THA-imprimable.html"
+  },
+  {
+   "id": "4e-COS",
+   "niveau": "4e",
+   "chapitre": "Cosinus",
+   "titre": "Le cosinus d'un angle aigu",
+   "fiches": [
+    {
+     "id": "4e-COS-01",
+     "n": 1,
+     "ids": "4e-COS-01",
+     "h1": "Je connais le cosinus d'un angle aigu dans un triangle rectangle",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-COS-01.html"
+    },
+    {
+     "id": "4e-COS-02",
+     "n": 2,
+     "ids": "4e-COS-02 · 3e-TRG-04",
+     "h1": "Je sais calculer une longueur avec le cosinus",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-COS-02.html"
+    },
+    {
+     "id": "4e-COS-03",
+     "n": 3,
+     "ids": "4e-COS-03 · 3e-TRG-05",
+     "h1": "Je sais calculer un angle avec le cosinus",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-COS-03.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-TRG-brevet",
+    "page": "/cours/3e/3e-TRG-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-COS-imprimable.html"
+  },
+  {
    "id": "3e-ARI",
    "niveau": "3e",
    "chapitre": "Arithmétique",
@@ -595,7 +954,7 @@
      "id": "4e-COS-02",
      "n": 3,
      "ids": "4e-COS-02 · 3e-TRG-04",
-     "h1": "Je sais calculer une longueur avec le cosinus (en 3e, aussi avec le sinus ou la tangente)",
+     "h1": "Je sais calculer une longueur avec le cosinus, le sinus ou la tangente",
      "niveaux": [
       "4e",
       "3e"
@@ -608,7 +967,7 @@
      "id": "4e-COS-03",
      "n": 4,
      "ids": "4e-COS-03 · 3e-TRG-05",
-     "h1": "Je sais calculer un angle avec le cosinus (en 3e, aussi avec le sinus ou la tangente)",
+     "h1": "Je sais calculer un angle avec le cosinus, le sinus ou la tangente",
      "niveaux": [
       "4e",
       "3e"
