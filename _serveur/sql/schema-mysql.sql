@@ -86,7 +86,8 @@ CREATE TABLE IF NOT EXISTS versions (
   donnees MEDIUMTEXT NOT NULL,
   maj_le VARCHAR(25) NOT NULL,
   UNIQUE KEY versions_eleve_appli_jour (eleve_id, appli, jour),
-  KEY versions_eleve (eleve_id)
+  KEY versions_eleve (eleve_id),
+  KEY versions_jour (jour)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS records (
@@ -97,6 +98,13 @@ CREATE TABLE IF NOT EXISTS records (
   semaine_lundi VARCHAR(10) NULL,
   nom INTEGER NULL,
   maj_le VARCHAR(25) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cours_ouvertures (
+  eleve_id INTEGER NOT NULL,
+  fiche VARCHAR(24) NOT NULL,
+  jour VARCHAR(10) NOT NULL,
+  UNIQUE KEY cours_ouvertures_eleve_fiche (eleve_id, fiche)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS journal (

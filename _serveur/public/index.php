@@ -129,7 +129,12 @@ try {
   .appli { display: flex; align-items: center; gap: 13px; padding: 15px 16px; height: 100%;
            background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--teal);
            border-radius: 12px; text-decoration: none; color: inherit; min-height: 44px; }
-  .appli:hover { border-color: var(--blue); border-left-color: var(--blue); background: var(--survol); }
+  /* Lot « cours-ouvertures » (10/11/2026) : le survol seulement avec une
+     souris. Sur iPhone, un toucher pose le survol et l’y laisse — la dernière
+     carte touchée restait bleue au retour d'une fiche. */
+  @media (hover: hover) {
+    .appli:hover { border-color: var(--blue); border-left-color: var(--blue); background: var(--survol); }
+  }
   .appli .texte { min-width: 0; }
   .appli strong { display: block; font-size: var(--texte); color: var(--blue-dark); }
   .appli span { color: var(--muted); font-size: var(--texte-secondaire); }
@@ -278,7 +283,7 @@ try {
   .cours-tete { position: relative; display: flex; align-items: center; min-height: 44px; margin: 0 0 16px; }
   .cours-tete .rond { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
                       background: var(--paper); border: 1.5px solid var(--line); color: var(--blue); }
-  .cours-tete .rond:hover { background: var(--survol); }
+  @media (hover: hover) { .cours-tete .rond:hover { background: var(--survol); } }
   .cours-tete h1 { position: absolute; left: 54px; right: 54px; margin: 0; text-align: center; font-size: 24px; }
   .cours-sur { display: block; margin: 0 0 3px; color: var(--teal-texte); font-size: 13px; font-weight: 700;
                letter-spacing: .05em; text-transform: uppercase; }
@@ -288,7 +293,7 @@ try {
   .som-liste { display: grid; gap: 10px; }
   .som-carte { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--paper);
                border: 1px solid var(--line); border-radius: 14px; color: inherit; text-decoration: none; }
-  .som-carte:hover, .som-autre:hover { border-color: var(--blue); background: var(--survol); }
+  @media (hover: hover) { .som-carte:hover, .som-autre:hover { border-color: var(--blue); background: var(--survol); } }
   .som-carte .n { flex: 0 0 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
                   background: var(--ink); color: #fff; font-weight: 800; }
   .som-carte .t { flex: 1 1 auto; min-width: 0; }
@@ -366,7 +371,8 @@ try {
        chapitre (#cours=3e-PYT), dessinés par la page (dessinerCours) avec
        textContent : rien du serveur ne devient du HTML. Une fiche s'ouvre sur
        mathsgo.re, dans le même onglet ; son bouton « ◀ Mes cours » ramène ici,
-       au chapitre (#cours=…). Rien n'est enregistré. -->
+       au chapitre (#cours=…). Seul le JOUR où l'élève touche une fiche est
+       noté pour son professeur (lot « cours-ouvertures », noterOuverture). -->
   <section id="ecran-cours" hidden>
     <div class="cours-tete">
       <a class="rond" id="cours-retour" href="#" aria-label="Mon espace"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></a>
@@ -1580,8 +1586,10 @@ try {
   //
   // api/eleve.php rend `cours` : les chapitres que le professeur a ouverts à
   // la classe, dans l'ordre de la progression, avec leurs fiches ouvertes et
-  // les adresses toutes faites (lib/cours.php). Rien n'est enregistré de ce
-  // que l'élève ouvre : ni ici, ni sur le serveur, ni dans le téléphone.
+  // les adresses toutes faites (lib/cours.php). Depuis le lot
+  // « cours-ouvertures » (10/11/2026), le serveur note le JOUR où l'élève
+  // touche une fiche (noterOuverture) — rien d'autre, et rien dans le
+  // téléphone.
   // L'écran suit l'adresse : #cours (la liste), #cours=3e-PYT (un chapitre) ;
   // le bouton « ◀ Mes cours » d'une fiche ramène à #cours=<son chapitre>.
   // Ce qui vient du serveur (ou de la copie de l'onglet) est relu ici : une
@@ -1651,6 +1659,37 @@ try {
     return lien;
   }
 
+  // Lot « cours-ouvertures » (10/11/2026, décidé par Gwenaël) : toucher une
+  // fiche (ou l'Entraînement brevet) dans « Mes cours » note le JOUR de cette
+  // ouverture pour le professeur — « ouverte le … », ni nombre de fois, ni
+  // durée. La page part tout de suite vers la fiche : l'envoi est un
+  // sendBeacon (il survit au départ de la page), sinon un fetch « keepalive »,
+  // et personne n'attend sa réponse — un échec ne retient jamais l'élève. On
+  // n'envoie que le chemin de la fiche : le serveur la retrouve parmi celles
+  // que CET élève voit, et prend son propre jour. La version imprimable n'est
+  // pas une fiche : rien n'est noté.
+  function noterOuverture(url) {
+    const code = lireCode();
+    if (!code || code !== codeAffiche) return;
+    let page = "";
+    try { page = new URL(url).pathname; } catch (_) { return; }
+    const corps = JSON.stringify({code, page});
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon("api/cours.php", corps)) return;
+    } catch (_) {}
+    try {
+      fetch("api/cours.php", {method: "POST", headers: {"Content-Type": "text/plain;charset=UTF-8"},
+        body: corps, keepalive: true, cache: "no-store"}).catch(() => {});
+    } catch (_) {}
+  }
+  // Le clic ordinaire, le clic du milieu (nouvel onglet) et la touche
+  // Entrée (un clic pour le navigateur) ; pas le clic droit.
+  function suivreOuverture(lien) {
+    lien.addEventListener("click", () => noterOuverture(lien.href));
+    lien.addEventListener("auxclick", event => { if (event.button === 1) noterOuverture(lien.href); });
+    return lien;
+  }
+
   // La liste des chapitres (#cours) : le retour mène à Mon espace.
   function dessinerListeCours() {
     $("cours-retour").href = "#";
@@ -1698,12 +1737,12 @@ try {
       lien.querySelector("b").textContent = fiche.h1;
       const petit = lien.querySelector("small");
       if (fiche.type) petit.append(fiche.type);
-      liste.append(lien);
+      liste.append(suivreOuverture(lien));
     });
     corps.append(surTitre(chapitre), titre, liste);
-    if (chapitre.brevet) corps.append(chapitre.niveau === "4e"
+    if (chapitre.brevet) corps.append(suivreOuverture(chapitre.niveau === "4e"
       ? lienAutre(chapitre.brevet, "🎯 Exercices type", "De vrais problèmes, corrigés pas à pas.")
-      : lienAutre(chapitre.brevet, "🎯 Entraînement brevet", "De vrais sujets du brevet, corrigés pas à pas."));
+      : lienAutre(chapitre.brevet, "🎯 Entraînement brevet", "De vrais sujets du brevet, corrigés pas à pas.")));
     if (chapitre.imprimable) corps.append(lienAutre(chapitre.imprimable, "🖨 Tout le chapitre à imprimer", "Toutes les fiches, avec les exemples rédigés et les réponses."));
   }
 

@@ -67,6 +67,9 @@ try {
     //    de compte, partent aussi.
     $versions = table_existe($pdo, 'versions') ? purger_versions_anciennes($pdo) : 0;
     $orphelins = purger_records_orphelins($pdo);
+    // Lot « cours-ouvertures » (10/11/2026) : pareil pour le jour
+    // d'ouverture des fiches de « Mes cours » — rien ne devrait en laisser.
+    $coursOrphelins = purger_cours_orphelins($pdo);
     $restantes = count($attente) - count($supprimees);
     echo gmdate('Y-m-d\TH:i:s\Z') . " — ménage de fin d'année\n";
     echo "  année scolaire en cours : " . annee_scolaire_courante() . "\n";
@@ -87,6 +90,9 @@ try {
         : "  historique : rien à effacer (sept jours de conservation).\n";
     if ($orphelins > 0) {
         echo "  records : $orphelins record(s) sans élève effacé(s).\n";
+    }
+    if ($coursOrphelins > 0) {
+        echo "  cours : $coursOrphelins ouverture(s) de fiche sans élève effacée(s).\n";
     }
     exit(0);
 } catch (Throwable $e) {

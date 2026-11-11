@@ -5,9 +5,8 @@
 // Ce que Gwenaël a demandé : une tuile « Mes cours » → la liste des
 // chapitres → le sommaire d'un chapitre (les « Je sais… ») → la fiche ; et
 // dans « Ma classe », choisir quels cours ses élèves voient, par niveau, par
-// chapitre, par fiche. AUCUNE donnée d'élève n'est enregistrée : ni ce qu'il
-// ouvre, ni ses réponses aux questions éclair. Le serveur ne garde que le
-// RÉGLAGE DE LA CLASSE, dans classes.reglages :
+// chapitre, par fiche. Le serveur garde le RÉGLAGE DE LA CLASSE, dans
+// classes.reglages :
 //
 //     {"cours": {"chapitres": ["3e-PYT"], "sans": ["4e-TRI-05"], "avec": ["3e-PYT-04"]}}
 //
@@ -20,6 +19,19 @@
 // Une fiche commune à deux chapitres (4e-TRI-03 sert en 4e et en 3e) a un
 // seul identifiant : la fermer la ferme dans les deux.
 //
+// Lot « cours-ouvertures » (10/11/2026, décidé par Gwenaël) : pour chaque
+// élève et chaque fiche, le JOUR de la dernière ouverture, et rien d'autre —
+// ni le nombre de fois, ni la durée, ni l'heure, et jamais « lue » (ouvrir
+// n'est pas lire). Table « cours_ouvertures » : une ligne par élève et par
+// fiche (l'Entraînement brevet compte comme une fiche), le jour remplacé à
+// chaque ouverture. L'ouverture est notée par l'espace élève, au moment où
+// l'élève touche la fiche dans « Mes cours » (api/cours.php) : les pages des
+// fiches, sur mathsgo.re, ne savent toujours rien de l'élève, et un visiteur
+// sans code ne laisse rien. Ce qui ne passe pas par « Mes cours » (adresse
+// tapée, marque-page, lien d'une fiche à l'autre) n'est pas noté. Effacée
+// avec l'élève et avec la classe (fin d'année comprise), comme le reste.
+// Ses réponses aux questions éclair ne sont toujours pas enregistrées.
+//
 // Le catalogue (lib/cours.json) est FABRIQUÉ par le moteur du livret
 // (« python build.py site <dépôt> », dossier Livret de cours\_moteur de
 // Gwenaël), en même temps que les pages du dossier cours/ de mathsgo.re : ne
@@ -30,7 +42,10 @@
 // son professeur a fermée peut la lire — accepté par Gwenaël le 08/11/2026
 // (un cours sous licence libre, aucune donnée d'élève derrière). Ce qui est
 // gardé ici : on ne range que des identifiants qui existent au catalogue, et
-// les adresses données à l'élève sont fabriquées ici, jamais reçues.
+// les adresses données à l'élève sont fabriquées ici, jamais reçues. Une
+// ouverture n'est notée que pour une fiche que CET élève voit (retrouvée par
+// son adresse dans ce que le serveur lui donne) ; le jour est celui du
+// serveur, jamais celui de l'appareil.
 
 declare(strict_types=1);
 
@@ -131,7 +146,11 @@ function cours_liste_recue(string $nom, mixed $liste): array
 // (le chapitre d'où il vient est dans l'adresse, #ch=, pour que « ◀ Mes
 // cours » l'y ramène). La version imprimable n'est donnée que si TOUTES les
 // fiches du chapitre sont ouvertes : elle les contient toutes.
-function cours_de_l_eleve(array $reglage): array
+// Lot « cours-ouvertures » : la règle « qui voit quoi » vit dans
+// cours_ouverts_a_l_eleve(), qui garde aussi l'identifiant et la page de
+// chaque fiche ; cours_de_l_eleve() n'en donne que ce que la page affiche, et
+// cours_page_vers_fiche() s'en sert pour reconnaître une fiche ouverte.
+function cours_ouverts_a_l_eleve(array $reglage): array
 {
     $chapitres = array_flip(cours_liste_lue('chapitres', $reglage['chapitres'] ?? null) ?? []);
     $sans = array_flip(cours_liste_lue('fiches', $reglage['sans'] ?? null) ?? []);
@@ -139,28 +158,153 @@ function cours_de_l_eleve(array $reglage): array
     $sortie = [];
     foreach (cours_catalogue() as $c) {
         if (!isset($chapitres[$c['id']])) continue;
-        $ancre = '#ch=' . $c['id'];
         $fiches = [];
         foreach ($c['fiches'] as $f) {
             $ouverte = $f['nouveau'] ? isset($avec[$f['id']]) : !isset($sans[$f['id']]);
-            if (!$ouverte) continue;
-            // Pas de « niveaux » pour l'élève : l'espace élève ne les affiche plus (09/11/2026).
-            $fiches[] = ['n' => $f['n'], 'h1' => $f['h1'], 'type' => $f['type'],
-                'url' => COURS_SITE . $f['page'] . $ancre];
+            if ($ouverte) $fiches[] = $f;
         }
-        $brevet = $c['brevet'] !== null && !isset($sans[$c['brevet']['id']]) ? COURS_SITE . $c['brevet']['page'] . $ancre : null;
+        $brevet = $c['brevet'] !== null && !isset($sans[$c['brevet']['id']]) ? $c['brevet'] : null;
         if ($fiches === [] && $brevet === null) continue;
+        $sortie[] = ['chapitre' => $c, 'fiches' => $fiches, 'brevet' => $brevet,
+            'imprimable' => $c['imprimable'] !== null && count($fiches) === count($c['fiches']) ? $c['imprimable'] : null];
+    }
+    return $sortie;
+}
+
+function cours_de_l_eleve(array $reglage): array
+{
+    $sortie = [];
+    foreach (cours_ouverts_a_l_eleve($reglage) as $o) {
+        $c = $o['chapitre'];
+        $ancre = '#ch=' . $c['id'];
+        // Pas de « niveaux » pour l'élève : l'espace élève ne les affiche plus (09/11/2026).
+        $fiches = array_map(fn ($f) => ['n' => $f['n'], 'h1' => $f['h1'], 'type' => $f['type'],
+            'url' => COURS_SITE . $f['page'] . $ancre], $o['fiches']);
         $sortie[] = [
             'id' => $c['id'],
             'niveau' => $c['niveau'],
             'chapitre' => $c['chapitre'],
             'titre' => $c['titre'],
             'fiches' => $fiches,
-            'brevet' => $brevet,
-            'imprimable' => $c['imprimable'] !== null && count($fiches) === count($c['fiches']) ? COURS_SITE . $c['imprimable'] . $ancre : null,
+            'brevet' => $o['brevet'] !== null ? COURS_SITE . $o['brevet']['page'] . $ancre : null,
+            'imprimable' => $o['imprimable'] !== null ? COURS_SITE . $o['imprimable'] . $ancre : null,
         ];
     }
     return $sortie;
+}
+
+// Lot « cours-ouvertures » : l'identifiant de la fiche (ou de
+// l'Entraînement brevet) dont la page est $page — « /cours/3e/3e-PYT-02.html »,
+// sans domaine ni ancre — parmi celles que CET élève voit ; null sinon (fiche
+// fermée, page inconnue, version imprimable : elle n'est pas une fiche).
+function cours_page_vers_fiche(array $reglage, string $page): ?string
+{
+    if (preg_match(COURS_MOTIF_PAGE, $page) !== 1) return null;
+    foreach (cours_ouverts_a_l_eleve($reglage) as $o) {
+        foreach ($o['fiches'] as $f) {
+            if ($f['page'] === $page) return $f['id'];
+        }
+        if ($o['brevet'] !== null && $o['brevet']['page'] === $page) return $o['brevet']['id'];
+    }
+    return null;
+}
+
+// ------------------------------------------- les ouvertures (lot « cours-ouvertures »)
+
+// La table n'existe qu'après migrer.php : avant, rien n'est noté, rien n'est
+// lu, et rien ne tombe en panne.
+function cours_ouvertures_disponibles(PDO $pdo): bool
+{
+    static $vu = [];
+    $cle = spl_object_id($pdo);
+    if (!array_key_exists($cle, $vu)) $vu[$cle] = table_existe($pdo, 'cours_ouvertures');
+    return $vu[$cle];
+}
+
+// Le jour de la dernière ouverture remplace le précédent : une ligne par
+// élève et par fiche, jamais plus.
+//
+// Correctif après la relecture Codex du 11/11/2026 (défaut 2) : l'élève lu
+// par api/cours.php pouvait être supprimé (seul, ou avec sa classe) entre
+// cette lecture et l'écriture, qui recréait alors une ligne pour un élève
+// qui n'existe plus. L'écriture se fait donc dans une transaction qui
+// reprend l'élève sous verrou (SELECT … FOR UPDATE sur MySQL, BEGIN
+// IMMEDIATE sur SQLite) et n'écrit rien s'il n'est plus là. De l'autre côté,
+// les suppressions effacent cours_ouvertures APRÈS la ligne de l'élève
+// (api/prof.php, lib/archives.php) : si l'ouverture passe la première, la
+// suppression attend sa fin puis emporte la ligne ; sinon l'ouverture
+// attend, ne trouve plus l'élève et n'écrit rien. Rend vrai si la ligne est
+// écrite.
+function noter_ouverture_cours(PDO $pdo, int $eleveId, string $fiche, string $jour): bool
+{
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $fiche, $jour): bool {
+        transaction_ouvrir($pdo);
+        try {
+            $requete = $pdo->prepare('SELECT id FROM eleves WHERE id = ?' . pour_mise_a_jour($pdo));
+            $requete->execute([$eleveId]);
+            $existe = $requete->fetchColumn() !== false;
+            $requete->closeCursor();
+            if ($existe) ecrire_ouverture_cours($pdo, $eleveId, $fiche, $jour);
+            transaction_valider($pdo);
+            return $existe;
+        } catch (Throwable $e) {
+            transaction_annuler($pdo);
+            throw $e;
+        }
+    });
+}
+
+function ecrire_ouverture_cours(PDO $pdo, int $eleveId, string $fiche, string $jour): void
+{
+    if (pilote($pdo) === 'mysql') {
+        $sql = 'INSERT INTO cours_ouvertures (eleve_id, fiche, jour) VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE jour = ?';
+    } else {
+        $sql = 'INSERT INTO cours_ouvertures (eleve_id, fiche, jour) VALUES (?, ?, ?)
+                ON CONFLICT(eleve_id, fiche) DO UPDATE SET jour = ?';
+    }
+    // Le jour est passé une seconde fois pour le remplacement (même raison
+    // que lib/direct.php : ni « VALUES() » ni « excluded » sur les deux moteurs).
+    $pdo->prepare($sql)->execute([$eleveId, $fiche, $jour, $jour]);
+}
+
+// Pour l'onglet Cours de « Ma classe » : [eleve_id => [fiche => jour]].
+function ouvertures_cours_des_eleves(PDO $pdo, array $eleveIds): array
+{
+    $ids = array_values(array_unique(array_map('intval', $eleveIds)));
+    if ($ids === [] || !cours_ouvertures_disponibles($pdo)) return [];
+    $connues = array_flip(cours_identifiants('fiches'));
+    $sortie = [];
+    foreach (array_chunk($ids, 500) as $paquet) {
+        $marques = implode(',', array_fill(0, count($paquet), '?'));
+        $requete = $pdo->prepare("SELECT eleve_id, fiche, jour FROM cours_ouvertures WHERE eleve_id IN ($marques)");
+        $requete->execute($paquet);
+        foreach ($requete->fetchAll() as $ligne) {
+            // Une fiche retirée du livret, ou un jour mal formé : oublié.
+            if (!isset($connues[$ligne['fiche']]) || preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$ligne['jour']) !== 1) continue;
+            $sortie[(int)$ligne['eleve_id']][$ligne['fiche']] = $ligne['jour'];
+        }
+        $requete->closeCursor();
+    }
+    return $sortie;
+}
+
+// Appelée APRÈS la suppression de la ligne de l'élève (voir
+// noter_ouverture_cours : c'est l'ordre qui ferme la course).
+function oublier_cours_de_l_eleve(PDO $pdo, int $eleveId): void
+{
+    if (!cours_ouvertures_disponibles($pdo)) return;
+    $pdo->prepare('DELETE FROM cours_ouvertures WHERE eleve_id = ?')->execute([$eleveId]);
+}
+
+// Les lignes dont l'élève n'existe plus (menage.php, par principe : plus
+// rien ne devrait en laisser). Rend le nombre effacé.
+function purger_cours_orphelins(PDO $pdo): int
+{
+    if (!table_existe($pdo, 'cours_ouvertures')) return 0;
+    $requete = $pdo->prepare('DELETE FROM cours_ouvertures WHERE eleve_id NOT IN (SELECT id FROM eleves)');
+    $requete->execute();
+    return $requete->rowCount();
 }
 
 // Le catalogue pour la page « Ma classe » : tout, avec les adresses des

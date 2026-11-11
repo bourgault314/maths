@@ -113,7 +113,11 @@ test("le serveur : l'appli « cours » sans progression ni ajout par élève ; l
   assert.match(espace, /const ADRESSE_COURS = \/\^https:\\\/\\\/mathsgo\\\.re\\\/cours\\\//, "une adresse de fiche vérifiée");
   const blocEspace = espace.slice(espace.indexOf("// ------------------------------------------- l'appli Cours"), espace.indexOf("// Lot 8 : à la première entrée"));
   assert.ok(blocEspace.length > 1000, "le bloc de l'appli Cours");
-  assert.doesNotMatch(blocEspace, /localStorage|sessionStorage|fetch\(/, "l'appli Cours ne retient rien et ne demande rien de plus");
+  // Lot « cours-ouvertures » (10/11/2026) : une seule demande, celle qui note le jour d'ouverture
+  // d'une fiche (api/cours.php) ; toujours rien dans la mémoire du téléphone.
+  assert.doesNotMatch(blocEspace, /localStorage|sessionStorage/, "l'appli Cours ne retient rien dans le téléphone");
+  assert.deepEqual([...blocEspace.matchAll(/(?:fetch|sendBeacon)\("([^"]*)"/g)].map(m => m[1]), ["api/cours.php", "api/cours.php"],
+    "et ne demande rien d'autre que de noter l'ouverture");
   const gabarits = [...blocEspace.matchAll(/innerHTML = `([^`]*)`/g)].map(m => m[1]);
   assert.ok(gabarits.length >= 2, "les gabarits des cartes");
   gabarits.forEach(g => assert.ok([...g.matchAll(/\$\{([^}]*)\}/g)].every(m => ["FLECHE", 'icone("cours")'].includes(m[1])),

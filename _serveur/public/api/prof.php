@@ -979,6 +979,10 @@ try {
                 oublier_versions_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_record_de_l_eleve($pdo, (int)$eleve['id']);
                 $pdo->prepare('DELETE FROM eleves WHERE id = ?')->execute([(int)$eleve['id']]);
+                // Et le jour d'ouverture de ses fiches de « Mes cours » (lot
+                // « cours-ouvertures ») — APRÈS l'élève : une ouverture en
+                // cours d'écriture ne peut plus en recréer une (lib/cours.php).
+                oublier_cours_de_l_eleve($pdo, (int)$eleve['id']);
                 oublier_compteurs_du_code($pdo, (string)$eleve['code']);
                 oublier_billets_de_l_eleve($pdo, (int)$eleve['id']);
                 // Ses réponses à la séance en direct du moment, s'il y en a une.
@@ -1120,6 +1124,10 @@ try {
                 foreach ($lecture->fetchAll() as $record) $recordsParEleve[(int)$record['eleve_id']] = record_affichable($record, $lundi);
                 $lecture->closeCursor();
             }
+            // Lot « cours-ouvertures » (10/11/2026) : dans l'onglet Cours, le
+            // jour de la dernière ouverture de chaque fiche, par élève — et
+            // rien d'autre (ni nombre de fois, ni durée). Rien avant migrer.php.
+            $ouverturesCours = $appli === 'cours' ? ouvertures_cours_des_eleves($pdo, array_column($brutes, 'id')) : [];
             $lignes = [];
             foreach ($brutes as $ligne) {
                 $journees = [];
@@ -1149,6 +1157,10 @@ try {
                     'ajouts' => ajouts_json(ajouts_lus($avecAjouts ? $ligne['ajouts'] : null)),
                     'acces' => acces_json(acces_de_l_eleve($classe, $avecAjouts ? $ligne['ajouts'] : null)),
                 ];
+                if ($appli === 'cours') {
+                    $ouvertes = $ouverturesCours[(int)$ligne['id']] ?? [];
+                    $lignes[count($lignes) - 1]['ouvertes'] = $ouvertes === [] ? new stdClass() : $ouvertes;
+                }
             }
             repondre([
                 'ok' => true,

@@ -17,6 +17,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/records.php';
+require_once __DIR__ . '/cours.php';
 
 require_once __DIR__ . '/bd.php';
 require_once __DIR__ . '/limite.php';
@@ -203,7 +204,8 @@ function effacer_classe_dans_la_transaction(PDO $pdo, int $classeId): void
 {
     $requete = $pdo->prepare('SELECT id, code FROM eleves WHERE classe_id = ?');
     $requete->execute([$classeId]);
-    foreach ($requete->fetchAll() as $eleve) {
+    $eleves = $requete->fetchAll();
+    foreach ($eleves as $eleve) {
         $pdo->prepare('DELETE FROM progressions WHERE eleve_id = ?')->execute([(int)$eleve['id']]);
         // L'historique des sept jours part avec le reste : une classe
         // supprimée ne doit rien laisser derrière elle (06/09/2026).
@@ -216,6 +218,12 @@ function effacer_classe_dans_la_transaction(PDO $pdo, int $classeId): void
     // questions et réponses partent avec elle (07/10/2026).
     oublier_direct_de_la_classe($pdo, $classeId);
     $pdo->prepare('DELETE FROM eleves WHERE classe_id = ?')->execute([$classeId]);
+    // Le jour d'ouverture de chaque fiche de « Mes cours » (10/11/2026),
+    // APRÈS les élèves : une ouverture en cours d'écriture ne peut plus en
+    // recréer une (relecture Codex du 11/11, voir lib/cours.php).
+    foreach ($eleves as $eleve) {
+        oublier_cours_de_l_eleve($pdo, (int)$eleve['id']);
+    }
     $pdo->prepare('DELETE FROM partages WHERE classe_id = ?')->execute([$classeId]);
     $pdo->prepare('DELETE FROM classes WHERE id = ?')->execute([$classeId]);
 }
