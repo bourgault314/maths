@@ -352,6 +352,37 @@ test("trois étapes, une par appui ; à la dernière le bouton s'efface et « Ca
   assert.match(fn("enqueteNbEtapes"), /return card\._rel\.sansTotal \? 2 : 3;/);
 });
 
+test("11/11/2026 (Gwenaël) : pendant la correction, « Étape suivante » est vert et « Carte suivante » caché ; il revient à la dernière étape et après un retour en arrière il se recache", () => {
+  const h = harnaisSchema();
+  h.suivant.classes = new Set(["secondaire"]);
+  h.suivant.classList = { toggle: (k, v) => (v ? h.suivant.classes.add(k) : h.suivant.classes.delete(k)), contains: (k) => h.suivant.classes.has(k) };
+  h.ctx.proposer(h.valider);
+  const bouton = h.boutons[0];
+  assert.ok(!bouton.classes.has("principal"), "avant le pas à pas, « Voir la correction » reste jaune");
+  bouton.onclick();
+  assert.ok(bouton.classes.has("principal"), "1re étape : « Étape suivante » en vert");
+  assert.equal(h.suivant.hidden, true, "1re étape : « Carte suivante » caché");
+  bouton.onclick();
+  assert.equal(h.suivant.hidden, true, "2e étape : toujours caché");
+  bouton.onclick();
+  assert.equal(h.suivant.hidden, false, "dernière étape : « Carte suivante » revient");
+  assert.ok(!h.suivant.classes.has("secondaire"), "… en vert, même après 3 erreurs");
+  assert.equal(h.document.activeElement, h.suivant, "… et prend le focus");
+  h.par("eleveSchemaPrec").onclick();
+  assert.equal(h.suivant.hidden, true, "retour à l'avant-dernière : recaché");
+  assert.ok(h.par("eleveSchema").classes.has("principal"), "et « Étape suivante » revient en vert");
+  // le vert l'emporte sur le jaune (règles écrites après .secondaire et .suivant)
+  assert.match(feuille, /\.eleveActions button\.secondaire\{background:#fde68a;color:#78350f\}\n  \.eleveActions button\.suivant\{background:#16a34a\}\n[\s\S]*?\.eleveActions button\.principal\{background:#16a34a;color:#fff\}\n  \.eleveActions button\.suivant\.secondaire\{background:#fde68a;color:#78350f\}/);
+});
+
+test("11/11/2026 (Gwenaël) : après 3 erreurs, « Voir la correction » en vert (focus) et « Carte suivante » en jaune ; sans correction (mondes 1-2), rien ne change", () => {
+  const r = fn("eleveMontrerReponse");
+  assert.match(r, /bouton\.parentNode\.appendChild\(suivant\);\n[\s\S]*?const voirCorrection = document\.getElementById\("eleveSchema"\);\n  if\(voirCorrection\)\{\n    voirCorrection\.classList\.toggle\("principal", true\);\n    suivant\.classList\.toggle\("secondaire", true\);\n    voirCorrection\.focus\(\);\n  \}else suivant\.focus\(\);/);
+  // une réponse juste ne touche pas aux couleurs : « Carte suivante » reste vert
+  const v = fn("eleveValiderSplat");
+  assert.doesNotMatch(v, /principal/);
+});
+
 test("« ◀ » (03/10/2026) : sa place est prise dès la 1re étape, il se montre à la 2e, reste à la dernière, et ramène une étape en arrière jusqu'à la 1re", () => {
   const h = harnaisSchema();
   h.ctx.avecPlan();

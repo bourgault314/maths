@@ -763,6 +763,13 @@
   .eleveCase.montre input.eleveChamp{color:#b91c1c}
   .eleveActions button.secondaire{background:#fde68a;color:#78350f}
   .eleveActions button.suivant{background:#16a34a}
+  /* Correction pas à pas, mondes 3-4 (11/11/2026, Gwenaël) : le bouton vert est celui qu'il faut
+     suivre. Pendant les étapes, « Étape suivante ▶ » est vert et « Carte suivante » est caché
+     (il revient, vert, à la dernière étape) ; après 3 erreurs, « Voir la correction » est vert et
+     « Carte suivante » jaune. Avant, « Carte suivante » restait vert à côté de l'étape suivante
+     jaune, et on quittait la correction sans le vouloir. */
+  .eleveActions button.principal{background:#16a34a;color:#fff}
+  .eleveActions button.suivant.secondaire{background:#fde68a;color:#78350f}
   .eleveActions a.eleveLien{font:inherit;font-weight:900;border-radius:12px;padding:12px 22px;min-height:48px;display:inline-flex;align-items:center;background:#e0e7ff;color:#1e40af;text-decoration:none}
   .finPastilles{display:flex;justify-content:center;margin:2px 0 8px}
   .eleveTete{display:flex;justify-content:space-between;align-items:center;font-weight:900;color:var(--ink);margin:2px 0 6px}
@@ -15666,9 +15673,9 @@ function eleveSchemaMontrerEtape(card){
   eleveSchemaBoutons(card);
 }
 /* Les boutons du pas à pas : « ◀ » (dès la 1re étape, invisible à la 1re pour que les autres
-   boutons ne bougent plus d'un appui à l'autre), « Étape suivante ▶ » sauf à la dernière,
-   « Carte suivante ▶ ». Le bouton appuyé garde le focus (Entrée le rejoue) ; à la dernière
-   étape, c'est « Carte suivante ». */
+   boutons ne bougent plus d'un appui à l'autre), « Étape suivante ▶ » (vert) sauf à la dernière,
+   « Carte suivante ▶ » seulement à la dernière (11/11/2026). Le bouton appuyé garde le focus
+   (Entrée le rejoue) ; à la dernière étape, c'est « Carte suivante ». */
 function eleveSchemaBoutons(card){
   const actions = document.querySelector("#elevePanel .eleveActions");
   if(!actions) return;
@@ -15685,6 +15692,13 @@ function eleveSchemaBoutons(card){
       actions.insertBefore(voir, suivant || null);
     }
     voir.textContent = "\u00c9tape suivante \u25b6";
+    voir.classList.toggle("principal", true); /* le vert, pendant les étapes (11/11/2026) */
+  }
+  /* « Carte suivante » : caché pendant les étapes, de retour à la dernière, vert (11/11/2026,
+     Gwenaël : on appuyait dessus au lieu d'« Étape suivante » et la correction était perdue) */
+  if(suivant){
+    suivant.hidden = !derniere;
+    if(derniere && suivant.classList) suivant.classList.toggle("secondaire", false);
   }
   let prec = document.getElementById("eleveSchemaPrec");
   if(!prec){
@@ -16360,7 +16374,14 @@ function eleveMontrerReponse(){
   suivant.textContent = "Carte suivante \u25b6";
   suivant.onclick = eleveCarteSuivante;
   bouton.parentNode.appendChild(suivant);
-  suivant.focus();
+  /* Après 3 erreurs (11/11/2026, Gwenaël) : c'est la correction qu'on montre en vert, « Carte
+     suivante » passe en jaune — rien n'est obligatoire. Mondes 1-2 : pas de correction, rien ne change. */
+  const voirCorrection = document.getElementById("eleveSchema");
+  if(voirCorrection){
+    voirCorrection.classList.toggle("principal", true);
+    suivant.classList.toggle("secondaire", true);
+    voirCorrection.focus();
+  }else suivant.focus();
   const pastilles = document.querySelector("#eleveTeteHaut .elevePastilles");
   if(pastilles) pastilles.outerHTML = elevePastillesHtml();
 }
