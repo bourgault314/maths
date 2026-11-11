@@ -3567,8 +3567,9 @@ return film;
    SPLAT! grandit (13 ; 3, ?, ?), 13 se décompose en 3 et 10 (le 3 du haut au-dessus du 3 du bas), les deux 3 sont
    hachurés puis retirés (les hachures et le rythme du film des paquets), 10 se partage en deux parts égales, 5 et 5
    (« Partager équitablement » d'ÉquaBarre), les « ? » restent des « ? » et on écrit à part « ? = 5 » ; puis retour à
-   l'écran du jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache. AUCUN crochet au-dessus des barres
-   décomposées (choix du 09/11, 20 h 55 : pas de « 13 » en accolade). Avant l'arrêt, rien ne change : l'élève cherche
+   l'écran du jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache. Le 13 monte au-dessus de 3 et 10, dans
+   une accolade, comme le 60 des paquets, et part avec le retrait des deux 3 (lot 10, choix du 10/11 redit le 11/11 : il
+   remplace le « aucun crochet » du 09/11). Avant l'arrêt, rien ne change : l'élève cherche
    d'abord.
    Comme le film de l'étape 2 : chaque jeton compté s'allume (anneau doré) et un compteur monte — jamais de chiffre sur
    un jeton ; une courte pause après chaque geste ; chaque sous-titre reste au moins 3 s ; un arrêt à la question
@@ -3625,9 +3626,10 @@ const SOUS_TITRES=[[3.0,'Deux taches : elles cachent le même nombre de jetons.'
   [T.valideTxt,'Valide, puis regarde sous les taches…'],[T.compte1,'Sous la première tache…'],
   [T.compte2,'… et sous la deuxième.'],[T.bravo,'Il y a bien 5 jetons sous chaque tache !'],[T.fin,'']];
 /* la scène en barres : la mise en page du film des paquets (LAY.paysage.S et LAY.portrait.S), à la même place dans le
-   cadre ; egal = la ligne du « ? = 5 », sous le schéma */
-const SCENE={paysage:{x0:300,x1:1300,y1:320,ym:470,y2:620,val:64,egal:720},
-  portrait:{x0:60,x1:840,y1:520,ym:650,y2:780,val:54,egal:870}};
+   cadre — juste sous le texte depuis le lot 10 (11/11/2026) ; acc = la taille du nombre de l'accolade ; egal = la ligne du
+   « ? = 5 », sous le schéma */
+const SCENE={paysage:{x0:300,x1:1300,y1:250,ym:400,y2:550,val:64,acc:54,egal:650},
+  portrait:{x0:60,x1:840,y1:240,ym:370,y2:500,val:54,acc:48,egal:590}};
 /* les couleurs de la scène : celles du film des paquets (C de FILMS.paquets) */
 const CB={encre:'#0b1220',bleuTxt:'#1d4ed8',gris:'#d4deea',vertTxt:'#15803d'};
 const film={
@@ -3681,7 +3683,13 @@ const film={
       const r=E('rect',{x:Rc.x,y:Rc.y,width:Rc.w,height:Rc.h,fill:fond,stroke:CB.encre,'stroke-width':3},g);
       const tx=Z.chiffre(g,Rc.x+Rc.w/2,Rc.y+Rc.h/2,B.val,coul);tx.textContent=txt;return {g,r,t:tx,R:Rc};};
     o.sHaut=cse(o.R.haut,'#ffffff',String(CARTE.total),CB.encre);
-    /* 13 = 3 + 10 : le 3 du haut juste au-dessus du 3 du bas ; AUCUN crochet au-dessus (choix du 09/11, 20 h 55) */
+    /* 13 = 3 + 10 : le 3 du haut juste au-dessus du 3 du bas ; le 13 monte au-dessus, dans l'accolade, exactement comme le
+       60 du film des paquets (même trait, même taille ; choix de Gwenaël du 10/11, redit le 11/11 : il remplace le « aucun
+       crochet » du 09/11) */
+    o.acc=E('g',{},o.barres);
+    E('path',{d:`M${B.x0},${B.y1-12}V${B.y1-24}H${B.x1}V${B.y1-12}`,fill:'none',stroke:'#475569','stroke-width':3},o.acc);
+    o.accC=[(B.x0+B.x1)/2,B.y1-24-B.acc*.62];
+    Z.chiffre(o.acc,o.accC[0],o.accC[1],B.acc,CB.encre).textContent=String(CARTE.total);
     o.sH3=cse(o.R.h3,'#ffffff',String(V),CB.encre);o.sH10=cse(o.R.h10,'#ffffff',String(CARTE.cache),CB.encre);
     /* 10 partagé en deux parts égales : 5 et 5, côte à côte (« Partager équitablement » d'ÉquaBarre) */
     o.sH5=[o.R.h5a,o.R.h5b].map(Rc=>cse(Rc,'#ffffff',String(M),CB.encre));
@@ -3741,11 +3749,18 @@ const film={
         r.setAttribute('height',hh.toFixed(2));r.setAttribute('stroke-width',L(a.sw,3,mo).toFixed(2));
         m.c.t.setAttribute('x',(x+w/2).toFixed(2));m.c.t.setAttribute('y',(y+hh/2+fs*.355).toFixed(2));m.c.t.setAttribute('font-size',fs.toFixed(2));}
       for(const q of o.sQ)op(q.mini,P(t,T.barres+DUR.morph,.4,F.lin));
-      /* 13 se décompose en 3 et 10 : la barre du haut se coupe (sans crochet au-dessus) */
+      /* 13 se décompose en 3 et 10 : la barre du haut se coupe, le 13 monte au-dessus (accolade), comme le 60 des paquets */
       const dp=P(t,T.decoupe,DUR.split,F.io),hc=P(t,T.hachure,DUR.hachure,F.io),rm=P(t,T.retire,DUR.retire,F.io);
       op(o.cache,1);   /* blanc sur blanc : la carte du jeu est blanche, et le cadre aussi quand elle est partie */
-      /* le 13 s'efface d'abord, puis 3 et 10 apparaissent (les nombres ne se chevauchent jamais) */
-      const dIn=clamp((dp-.4)/.6);op(o.sHaut.t,1-clamp(dp/.4));op(o.sHaut.g,dp<1?1:0);
+      /* comme le film des paquets : le cadre du 13 s'efface, 3 et 10 apparaissent, le 13 monte à la place du nombre de
+         l'accolade (même taille à l'arrivée), puis l'accolade prend le relais ; elle part avec le retrait des deux 3 */
+      op(o.sHaut.g,1);op(o.sHaut.r,1-dp);
+      if(dp>0){const c=o.sHaut.R;o.sHaut.t.setAttribute('y',L(c.y+c.h/2+B.val*.355,o.accC[1]+B.acc*.355,dp).toFixed(2));
+        o.sHaut.t.setAttribute('font-size',L(B.val,B.acc,dp).toFixed(2));}
+      op(o.sHaut.t,dp>=1?0:1);op(o.acc,dp>=1?1-rm:0);
+      /* 3 et 10 arrivent dans la seconde moitié du geste, quand le 13 a quitté la barre : le 10 naît à côté du 13 (moins
+         d'écart que 22 et 60 chez les paquets), et à mi-chemin on lisait « 13 10 » */
+      const dIn=clamp((dp-.45)/.55);
       /* les deux 3 hachurés (estompés comme dans le jeu), puis retirés vers la gauche */
       const dx=-1.2*R.b3.w*rm,vu3=1-rm,tr=`translate(${dx.toFixed(1)},0)`;
       o.hach.forEach(g=>{op(g,.4*hc*vu3);g.setAttribute('transform',tr);});
@@ -3850,41 +3865,53 @@ const DEPART=[-40,720],ELAN=[190,720];
    paquet s'allume jusqu'à coupe (la tache est déjà en l'air), puis se resserre juste avant l'impact : la tache se
    pose au moment où le jeton naîtrait. */
 /* 15/10/2026, après son visionnage : la tache prend le temps de marcher (2 s de petits bonds), la fusion 18 + 20 et
-   chaque étape des barres sont plus lentes. */
-const T={ecran:2.7,pop:3.0,popPas:.02,range:5.2,comptes:[6.9,9.5,13.0],comptePas:.075,fonds:[8.5,11.1,14.55],coupe:14.2,
-  impact:15.4,question:16.1,stop:17.4,barres:17.5,regroupe:20.9,split:24.6,hachure:27.8,retire:29.8,solve:32.2,
-  retour:35.0,revele:37.2,total:39.8,fin:43.6};
+   chaque étape des barres sont plus lentes.
+   11/11/2026 (lot 10 aides et carte, « on a du mal à lire et en même temps suivre ») : le film est ralenti comme celui
+   des jetons numérotés (lot 4) — chaque phrase reste au moins 3 s, et une courte pause suit chaque geste. Les gestes
+   eux-mêmes ne changent pas (mêmes durées, même ordre, même saut de la tache) : on ajoute seulement du temps entre eux.
+   Les phrases qui annoncent un geste ont leur propre instant (txt…) : la phrase arrive, puis le geste. La tache entre
+   juste après « Et le dernier paquet… » (dernier) ; tout ce qui suit sa marche (le comptage du troisième paquet, la coupe,
+   l'impact) garde exactement son écart avec elle. L'arrêt reste sur « Que cache la tache ? ». 47,1 s → 65 s. */
+const T={ecran:2.7,pop:3.0,popPas:.02,txtRange:6.0,range:6.2,txt18:9.0,txt20:15.0,comptes:[9.1,15.1,23.0],comptePas:.075,
+  fonds:[12.0,18.0,24.55],dernier:21.0,coupe:24.2,arrive:24.0,
+  impact:25.4,question:27.0,stop:28.3,barres:30.0,regroupe:33.4,split:37.1,hachure:40.3,retire:43.3,solve:46.3,
+  retour:49.5,revele:52.5,total:55.5,bien:58.5,fin:61.5};
 const VOL=2;                   /* la marche : petits bonds ; puis l'élan (0,65 s) et le saut (1,4 s) */
 /* durées des transformations des barres */
 const DUR={morph:2.4,fusion:2.4,split:2.0,hachure:.6,retire:1.8,solve:1.0};
 T.hop=T.impact-VOL-2.05;
-const SOUS_TITRES=[[3.0,'Le total de tous les jetons est 60.'],[5.0,'On range les jetons en paquets.'],
-  [6.8,'Un paquet de 18 jetons…'],[8.5,'…devient un seul jeton, qui vaut 18.'],
-  [9.4,'Un paquet de 20 jetons…'],[11.1,'…devient un seul jeton, qui vaut 20.'],
-  [12.6,'Et le dernier paquet…'],[14.0,'La tache arrive !'],[16.1,'Que cache la tache ?'],
-  [17.5,'La même situation, en barres.'],[20.9,'18 + 20 = 38'],[24.6,'60 = 38 + 22'],
-  [27.8,'On hachure les deux morceaux de 38.'],[29.8,'On retire les deux morceaux de 38.'],
-  [32.2,'La tache cache 22 : 60 − 38 = 22.'],[35.0,'Vérifions sur le plateau.'],[37.2,'Sous la tache : le jeton 22.'],
-  [39.8,'18 + 20 + 22 = 60'],[41.5,'La tache cachait bien 22.'],[43.6,'']];
+/* chaque phrase reste au moins 3 s (lot 10, 11/11/2026, comme le lot 4) ; la question reste à l'écran pendant l'arrêt */
+const SOUS_TITRES=[[T.pop,'Le total de tous les jetons est 60.'],[T.txtRange,'On range les jetons en paquets.'],
+  [T.txt18,'Un paquet de 18 jetons…'],[T.fonds[0],'…devient un seul jeton, qui vaut 18.'],
+  [T.txt20,'Un paquet de 20 jetons…'],[T.fonds[1],'…devient un seul jeton, qui vaut 20.'],
+  [T.dernier,'Et le dernier paquet…'],[T.arrive,'La tache arrive !'],[T.question,'Que cache la tache ?'],
+  [T.barres,'La même situation, en barres.'],[T.regroupe,'18 + 20 = 38'],[T.split,'60 = 38 + 22'],
+  [T.hachure,'On hachure les deux morceaux de 38.'],[T.retire,'On retire les deux morceaux de 38.'],
+  [T.solve,'La tache cache 22 : 60 − 38 = 22.'],[T.retour,'Vérifions sur le plateau.'],[T.revele,'Sous la tache : le jeton 22.'],
+  [T.total,'18 + 20 + 22 = 60'],[T.bien,'La tache cachait bien 22.'],[T.fin,'']];
 
-/* mises en page : ordinateur (16:9) et téléphone tenu droit (3:4, comme le film d'introduction) */
+/* mises en page : ordinateur (16:9) et téléphone tenu droit (3:4, comme le film d'introduction).
+   S, le schéma en barres (lot 10, 11/11/2026) : juste sous le texte, qui ne bouge pas — le nombre de l'accolade à environ
+   100 de la ligne du texte (y1 − 76 : le haut du nombre), la même règle à l'ordinateur (y1 320 → 250) et au téléphone
+   (y1 520 → 240 : un tiers de l'écran était vide entre le texte et le schéma). Même place dans le film « Deux taches »
+   (SCENE). */
 const LAY={
   paysage:{W:1600,H:900,cap:{x:800,y:76,size:38,max:1500,gap:0},
     J:{x:296,y:112,s:1.05},
-    S:{x0:300,x1:1300,y1:320,ym:470,y2:620,val:64,acc:54},
+    S:{x0:300,x1:1300,y1:250,ym:400,y2:550,val:64,acc:54},
     titre:{tx:800,ty:300,tr:118,y:600,size:150,sy:680,ssize:42,logo:{h:110,y:28,xl:36,xr:1564}},
     fin:{x:800,ty:300,tr:62,my:520,size:104,sy:600,ssize:36,jy:720,jw:330,jh:88,js:44,
       lignes:['Additionne les jetons, remplis le schéma, puis vérifie sous la tache.']}},
   portrait:{W:900,H:1200,cap:{x:450,y:70,size:36,max:840,gap:44},
     J:{x:26.6,y:231.8,s:.882},
-    S:{x0:60,x1:840,y1:520,ym:650,y2:780,val:54,acc:48},
+    S:{x0:60,x1:840,y1:240,ym:370,y2:500,val:54,acc:48},
     titre:{tx:450,ty:400,tr:140,y:720,size:150,sy:810,ssize:40,logo:{h:120,y:30,xl:30,xr:870}},
     fin:{x:450,ty:360,tr:62,my:600,size:84,sy:690,ssize:34,jy:880,jw:340,jh:96,js:46,
       lignes:['Additionne les jetons, remplis le schéma,','puis vérifie sous la tache.']}}
 };
 
 const film={
-  duration:47.1, poster:2.4,
+  duration:65.0, poster:2.4,   /* T.fin + 3,5 s pour le carton de fin ; la durée écrite sur la carte (tests/splat-films-liens) */
   /* l'arrêt de sa vidéo : la question, avant la résolution (« À toi de chercher… puis ▶ ») */
   stops:[{t:T.stop}],
   /* ses bruitages (evenements-sonores.json de sa vidéo v6, mêmes fichiers et mêmes volumes), calés sur ce film : un pop
@@ -3898,8 +3925,8 @@ const film={
   passer:SUITE, passerTexte:'Passer le film ›', credit:'Jeu SPLAT! créé par <a href="https://stevewyborney.com" target="_blank" rel="noopener">Steve Wyborney</a>',
   aria:'Film : des jetons rangés en paquets deviennent des jetons numérotés, la tache en cache un, on cherche ce qu’elle cache avec un schéma en barres, puis on vérifie sur le plateau',
   titre:'Avec des paquets de jetons — SPLAT! — maths&go',
-  chapters:[{t:0,name:'SPLAT!'},{t:2.7,name:'Les paquets de jetons'},{t:12.6,name:'La tache arrive'},{t:17.5,name:'Le schéma en barres'},
-    {t:27.8,name:'On retire 38'},{t:35.0,name:'Vérifier sur le plateau'},{t:43.6,name:'À toi de jouer'}],
+  chapters:[{t:0,name:'SPLAT!'},{t:T.ecran,name:'Les paquets de jetons'},{t:T.dernier,name:'La tache arrive'},{t:T.barres,name:'Le schéma en barres'},
+    {t:T.hachure,name:'On retire 38'},{t:T.retour,name:'Vérifier sur le plateau'},{t:T.fin,name:'À toi de jouer'}],
   build(svg,mode){
     const port=mode==='portrait',Y=this.Y=LAY[mode]||LAY.paysage,o=this.o={port},J=Y.J,S=Y.S,ks=J.s*.7;
     svg.style.fontFamily=Q.POLICE;

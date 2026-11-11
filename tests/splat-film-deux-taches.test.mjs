@@ -4,8 +4,10 @@
 // tutoriel. Sur la carte (« Le film », 65 s) et derrière « ? Comment faire » dans Petit SPLAT! à l'étape 4.
 // Lot 9 (09/11/2026, croquis validé par Gwenaël ; remplace la correction du lot 7b, qui ne coupait jamais le 13) : APRÈS
 // l'arrêt, une scène « en barres » à part, comme le film des paquets — 13 se décompose en 3 et 10, les deux 3 hachurés
-// puis retirés, 10 partagé en deux parts égales (5 et 5), les « ? » restent des « ? » et « ? = 5 » s'écrit à part ; AUCUN
-// crochet au-dessus des barres ; puis retour au jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache.
+// puis retirés, 10 partagé en deux parts égales (5 et 5), les « ? » restent des « ? » et « ? = 5 » s'écrit à part ; puis
+// retour au jeu : le doigt écrit 5 et 5, Valider, on compte 5 sous chaque tache.
+// Lot 10 (choix de Gwenaël du 10/11, redit le 11/11 ; il remplace le « aucun crochet » du 09/11) : le 13 monte au-dessus
+// de 3 et 10, dans une accolade, exactement comme le 60 du film des paquets, et part avec le retrait des deux 3.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -147,16 +149,41 @@ test("après l'arrêt, la correction en barres du croquis : décomposer 13, hach
   assert.doesNotMatch(bloc.slice(bloc.indexOf("render(t){")), /o\.sQ[\s\S]{0,80}textContent|\.t\.textContent=/, "rien ne réécrit les « ? » pendant le film");
   assert.match(bloc, /o\.egal\.textContent='\? = '\+M;/);
   assert.equal(CB.vertTxt, "#15803d");
-  // AUCUN crochet au-dessus des barres décomposées (choix du 09/11, 20 h 55)
-  assert.doesNotMatch(sansCommentaires(bloc), /acc|accolade|crochet/i);
+});
+
+test("l'accolade du 13 : comme le 60 du film des paquets (même trait, même taille, même rythme), partie avec les deux 3", () => {
+  const code = sansCommentaires(bloc), codeP = sansCommentaires(paquets);
+  // le même trait : trois segments au-dessus de toute la barre, gris ardoise, épaisseur 3
+  assert.ok(code.includes("E('path',{d:`M${B.x0},${B.y1-12}V${B.y1-24}H${B.x1}V${B.y1-12}`,fill:'none',stroke:'#475569','stroke-width':3},o.acc);"));
+  assert.ok(codeP.includes("E('path',{d:`M${S.x0},${S.y1-12}V${S.y1-24}H${S.x1}V${S.y1-12}`,fill:'none',stroke:'#475569','stroke-width':3},o.acc);"));
+  // son nombre : le total, à la même hauteur et à la même taille que le 60
+  assert.match(code, /o\.accC=\[\(B\.x0\+B\.x1\)\/2,B\.y1-24-B\.acc\*\.62\];/);
+  assert.match(codeP, /y:S\.y1-24-S\.acc\*\.62,/);
+  assert.match(code, /Z\.chiffre\(o\.acc,o\.accC\[0\],o\.accC\[1\],B\.acc,CB\.encre\)\.textContent=String\(CARTE\.total\);/);
+  const LAY = new Function(`${paquets.match(/const LAY=\{[\s\S]*?\n\};/)[0]} return LAY;`)();
+  for (const m of ["paysage", "portrait"]) assert.equal(SCENE[m].acc, LAY[m].S.acc, m);
+  // le même rythme : le 13 monte pendant la découpe (DUR.split, comme le 60) et grandit/rapetisse jusqu'à la taille de
+  // l'accolade ; l'accolade prend le relais à la fin du geste
+  assert.equal(DUR.split, 2.0);
+  assert.match(code, /o\.sHaut\.t\.setAttribute\('y',L\(c\.y\+c\.h\/2\+B\.val\*\.355,o\.accC\[1\]\+B\.acc\*\.355,dp\)/);
+  assert.match(code, /o\.sHaut\.t\.setAttribute\('font-size',L\(B\.val,B\.acc,dp\)/);
+  assert.match(codeP, /o\.sHaut\.t\.setAttribute\('font-size',L\(S\.val,S\.acc,sp\)\);op\(o\.sHaut\.t,sp>=1\?0:1\);/);
+  assert.match(code, /op\(o\.sHaut\.t,dp>=1\?0:1\);op\(o\.acc,dp>=1\?1-rm:0\);/);
+  // 3 et 10 n'arrivent qu'une fois le 13 sorti de la barre (à mi-chemin, on lisait « 13 10 » : le 10 naît juste à côté)
+  assert.match(code, /const dIn=clamp\(\(dp-\.45\)\/\.55\);/);
+  assert.match(code, /op\(o\.sH10\.g,dIn\*\(1-pa\)\);/);
+  // elle part avec le retrait des deux 3 (comme celle du 60 avec le retrait des deux 38), et pas après
+  assert.match(codeP, /op\(o\.acc,sp>=1\?1-rm:0\);/);
+  // la découpe se fait pendant « On décompose 13 en 3 et 10. » ; le retrait, pendant « On retire… »
+  assert.ok(T.dec < T.decoupe && T.decoupe + DUR.split <= T.hachTxt && T.retTxt < T.retire);
 });
 
 test("la scène en barres copie le film des paquets : mise en page, couleurs, hachures, rythme du retrait", () => {
   // la mise en page du schéma (ordinateur et téléphone) = celle du film des paquets
   const LAY = new Function(`${paquets.match(/const LAY=\{[\s\S]*?\n\};/)[0]} return LAY;`)();
   for (const m of ["paysage", "portrait"]) {
-    const { x0, x1, y1, ym, y2, val } = LAY[m].S;
-    assert.deepEqual({ x0, x1, y1, ym, y2, val }, (({ x0, x1, y1, ym, y2, val }) => ({ x0, x1, y1, ym, y2, val }))(SCENE[m]), m);
+    const { x0, x1, y1, ym, y2, val, acc } = LAY[m].S;
+    assert.deepEqual({ x0, x1, y1, ym, y2, val, acc }, (({ x0, x1, y1, ym, y2, val, acc }) => ({ x0, x1, y1, ym, y2, val, acc }))(SCENE[m]), m);
     assert.ok(SCENE[m].egal > SCENE[m].y2, "« ? = 5 » sous le schéma");
   }
   // les couleurs = celles du film des paquets
