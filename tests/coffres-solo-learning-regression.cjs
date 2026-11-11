@@ -64,6 +64,35 @@ async function state(page) {
   return page.evaluate(() => window.MATHSGO_COFFRES_SOLO.getState());
 }
 
+// « Sur ton plateau » (11/11/2026) : la copie réduite reprend le plateau courant case par case,
+// la solution en vert, l'essai en rouge, et chaque nombre tient dans sa case.
+async function assertMiniBoard(page, board, solutionPositions, essaiPositions, label) {
+  const mini = await page.evaluate(() => [...document.querySelectorAll("#correction-board .correction-board-grid span")].map(cell => {
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    const text = range.getBoundingClientRect();
+    const box = cell.getBoundingClientRect();
+    const border = parseFloat(getComputedStyle(cell).borderLeftWidth);
+    return {
+      value: Number(cell.textContent),
+      solution: cell.classList.contains("solution"),
+      essai: cell.classList.contains("essai"),
+      margin: Math.min(text.left - (box.left + border), (box.right - border) - text.right),
+      border: getComputedStyle(cell).borderTopWidth
+    };
+  }));
+  assert(await page.locator("#correction-board").isVisible(), `${label} : « Sur ton plateau » n'est pas visible.`);
+  assert(mini.length === 16, `${label} : le petit plateau n'a pas 16 cases.`);
+  assert(JSON.stringify(mini.map(cell => cell.value)) === JSON.stringify(board.values), `${label} : le petit plateau ne recopie pas le plateau joué.`);
+  const solutions = mini.flatMap((cell, index) => cell.solution ? [index] : []);
+  const essais = mini.flatMap((cell, index) => cell.essai ? [index] : []);
+  assert(JSON.stringify(solutions) === JSON.stringify([...solutionPositions].sort((a, b) => a - b)), `${label} : les cases vertes ne sont pas celles de la solution.`);
+  assert(JSON.stringify(essais) === JSON.stringify([...essaiPositions].sort((a, b) => a - b)), `${label} : les cases rouges ne sont pas celles de l'essai.`);
+  assert(new Set(mini.map(cell => cell.border)).size === 1, `${label} : le vert et le rouge n'ont pas le même contour.`);
+  const tight = mini.find(cell => cell.margin < 0.5);
+  assert(!tight, `${label} : le nombre ${tight && tight.value} sort de sa case dans le petit plateau.`);
+}
+
 async function assertNoHorizontalOverflow(page, label) {
   const measure = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth }));
   assert(measure.scrollWidth <= measure.width, `${label} déborde horizontalement : ${measure.scrollWidth}px pour ${measure.width}px.`);
@@ -413,6 +442,8 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
     assert((await page.locator("#correction-choice").innerText()).startsWith("Ton essai"), `La correction d’erreur ${expectedMode} n’annonce pas le calcul.`);
     await assertPointVisual(page, "#correction-visual .learning-demo", expectedMode, `Correction après erreur ${expectedMode}`);
+    const mistakeSolution = await page.evaluate(({ mode, target, values }) => window.MATHSGO_COFFRES_SOLO.findSolutionPair(mode, target, values), beforeMistake);
+    await assertMiniBoard(page, beforeMistake, mistakeSolution.positions, [wrongFirst, wrongSecond], `Correction ${expectedMode} à 320 px`);
     await assertNoHorizontalOverflow(page, `Correction ${expectedMode} à 320 px`);
     await page.screenshot({ path: path.join(CAPTURES, `correction-${expectedMode}-320.png`) });
   } finally {
@@ -1264,6 +1295,8 @@ async function auditChoixDuNiveau(browser, base, errors) {
     assert(await page.evaluate(() => document.activeElement.id === "close-correction"), "Tab ne rejoint pas l’action de la correction.");
     await page.keyboard.press("Tab");
     assert(await page.evaluate(() => document.activeElement.classList.contains("correction-content")), "Tab sort du dialogue de correction.");
+    const revealSolution = await page.evaluate(({ mode, target, values }) => window.MATHSGO_COFFRES_SOLO.findSolutionPair(mode, target, values), duringReveal);
+    await assertMiniBoard(page, duringReveal, revealSolution.positions, [], "Solution demandée à 390 px");
     await page.screenshot({ path: path.join(CAPTURES, "solution-mobile-390.png") });
     await page.locator("#close-correction").click();
     await page.waitForFunction(previous => window.MATHSGO_COFFRES_SOLO.getState().boardId > previous, beforeHelp.boardId);
@@ -1279,6 +1312,8 @@ async function auditChoixDuNiveau(browser, base, errors) {
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
     assert((await page.locator("#correction-choice").innerText()).startsWith("Ton essai"), "Le calcul choisi n’est pas annoncé.");
     assert((await state(page)).keys === beforeMistake.keys, "Une paire fausse offre une clé.");
+    const mistakeSolution = await page.evaluate(({ mode, target, values }) => window.MATHSGO_COFFRES_SOLO.findSolutionPair(mode, target, values), beforeMistake);
+    await assertMiniBoard(page, beforeMistake, mistakeSolution.positions, [wrongFirst, wrongSecond], "Correction après erreur à 390 px");
     await page.screenshot({ path: path.join(CAPTURES, "correction-erreur-mobile-390.png") });
     await page.keyboard.press("Escape");
     await page.locator("#correction-dialog").waitFor({ state: "hidden" });
