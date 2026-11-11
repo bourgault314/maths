@@ -143,7 +143,7 @@ test("carte des mondes : les films sous les étapes 1, 2, « paquets » et 35, q
   // au monde 2, « Avec des paquets de jetons »
   assert.match(carte, /p:"m1e1",\n\s*films:\[\["intro","Le film",43\]\],/);
   assert.match(carte, /p:"m1e2",dessin:true,\n\s*films:\[\["dessine","Le film",36\]\],/);
-  assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Le film",47\]\],/);
+  assert.match(carte, /p:"m2e4",\n\s*films:\[\["paquets","Le film",65\]\],/);
   assert.equal((carte.match(/\bfilms:\[\[/g) || []).length, 9);   // + l'étape 37 (lot 5, 08/11/2026), l'étape É1 (lot 6a), les fiches 38 et 40 (lot 6b-6c), l'étape 4 (lot 7)
 });
 
@@ -249,8 +249,8 @@ test("« Avec des paquets de jetons » : l'exemple de Gwenaël, hors des séries
   assert.doesNotMatch(code, /Splat arrive/);
   // son arrêt à la question, comme dans sa vidéo ; le format téléphone en 3:4, comme le film d'introduction
   assert.match(code, /stops:\[\{t:T\.stop\}\]/);
-  assert.match(code, /\[16\.1,'Que cache la tache \?'\]/);
-  assert.match(code, /question:16\.1,stop:17\.4,/);
+  assert.match(code, /\[T\.question,'Que cache la tache \?'\]/);
+  assert.match(code, /question:27\.0,stop:28\.3,/);
   // on compte 18, puis 20 ; le troisième paquet, on commence à le compter, mais la tache se pose dessus au moment où il
   // deviendrait un jeton : le 22 n'est jamais visible avant la vérification, et son compteur s'arrête bien avant 22
   const T = new Function(`const T=${code.match(/const T=(\{[\s\S]*?\});/)[1]};return T;`)();
