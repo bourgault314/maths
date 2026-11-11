@@ -11,7 +11,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {PARCOURS, B, fauxServeur, fauxTemps, tic, demarrerClient} from "./splat-faux-monde.mjs";
+import {PARCOURS, B, fauxServeur, fauxTemps, fauxStockage, tic, demarrerClient} from "./splat-faux-monde.mjs";
 
 const lire = f => readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
 
@@ -42,6 +42,30 @@ test("SPLAT! : sous la question (ou dès qu'elle est due), le travail reste ici 
   assert.equal(serveur.etat(B).parcours.etapes.m1e1.fait, true);
 });
 
+test("SPLAT! : rouverte (F5) sous la question, l'appli ne relit RIEN au serveur ; le bon code relance le démarrage (relecture GPT, D01)", async () => {
+  const temps = fauxTemps();
+  const serveur = fauxServeur();
+  const session = fauxStockage();
+  await temps.avancer(60 * 60 * 1000);
+  // L'onglet de Léa : son code, et un dernier geste vieux de onze minutes.
+  session.setItem("mathsgo-suivi-dernier-geste", String(temps.maintenant - 11 * 60 * 1000));
+  const appli = demarrerClient({codeOnglet: B, session, reseau: serveur, minuteries: temps});
+  await appli.client.demarrer();
+  await tic();
+  await temps.avancer(5000);
+  await tic();
+  assert.ok(appli.rendus.includes("garde"), "la question est posée dès la réouverture");
+  assert.equal(appli.client.verifierGarde(), false, "déjà posée");
+  assert.equal(appli.corps.length, 0, "ni identité, ni parcours relus sous la question");
+  assert.equal(appli.client.repondreGarde(true, B), true);
+  await tic();
+  await temps.avancer(1000);
+  await tic();
+  const lus = appli.corps.map(c => c.url);
+  assert.ok(lus.some(u => /api\/eleve\.php$/.test(u)), "l'identité est relue après le bon code");
+  assert.ok(lus.some(u => /api\/parcours\.php$/.test(u)), "le parcours aussi");
+});
+
 test("SPLAT! : « Non, ce n'est pas moi » n'envoie pas ce qui attendait sous le code de l'élève absent", async () => {
   const temps = fauxTemps();
   const appli = demarrerClient({codeOnglet: B, reseau: fauxServeur(), minuteries: temps});
@@ -66,7 +90,8 @@ test("les cinq applis : envoiPossible regarde la question, le clic et le clic du
     assert.match(s, /function envoisRetenus\(\) \{\s*try \{ return gardeVisible \|\| absenceTropLongue\(\); \} catch \(_\) \{ return false; \}/, f);
     assert.match(s, /- derniereActivite >= GARDE_INACTIVITE_MS/, `${f} : dix minutes pile suffisent`);
     assert.match(s, /\["pointerdown", "keydown", "touchstart", "click", "auxclick"\]\.forEach/, f);
-    assert.match(s, /\/\/ Ce qui attendait pendant la question part maintenant\.\s*if \(sync\.dirty\) envoyerParcours\(\);/, f);
+    assert.match(s, /if \(demarrageEnAttente\) demarrerSuivi\(\);\s*else if \(sync\.dirty\) envoyerParcours\(\);/, `${f} : après le bon code, le démarrage remis ou l'envoi en attente`);
+    assert.match(s, /if \(envoisRetenus\(\)\) \{ demarrageEnAttente = true; (finAttente\(\); |direPret\(false\); )?return; \}/, `${f} : F5 sous la question, aucune lecture (D01)`);
   }
   const tables = lire("outils/calcul_mental/defi_tables.html");
   assert.equal((tables.match(/if \(envoisRetenus\(\)\) return Promise\.resolve\(\{statut: 0, donnees: null\}\);/g) || []).length, 2,

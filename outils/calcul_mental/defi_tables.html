@@ -4485,8 +4485,10 @@
           gardeEssais = 0;
           noterDernierGeste(Date.now());
           renderGarde();
-          // Ce qui attendait pendant la question part maintenant.
-          if (sync.dirty) envoyerParcours();
+          // Ce qui attendait pendant la question part maintenant (le démarrage
+          // remis à après la question relit le serveur et envoie lui-même).
+          if (demarrageEnAttente) demarrerSuivi();
+          else if (sync.dirty) envoyerParcours();
           return true;
         }
         gardeEssais += 1;
@@ -4592,6 +4594,9 @@
         if (!state.running) renderParcours();
       }
 
+      // Démarrage remis à après la question (relecture GPT, D01) ; var : lue
+      // avant que cette ligne ne soit passée, elle vaut « non ».
+      var demarrageEnAttente = false;
       function demarrerSuivi() {
         // La vue du professeur n'y passe jamais (l'aiguillage va à
         // ouvrirFicheParBillet) ; si on l'appelait quand même : rien.
@@ -4606,6 +4611,12 @@
         }
         renderRepere();
         if (sync.detache) { finAttente(); return; }
+        // Lot « code en cases », relecture GPT (D01) : rouverte (F5, adresse
+        // retapée) alors que la question est due, l'appli ne relit RIEN au serveur
+        // — ni l'identité, ni le parcours, ni l'évaluation : le démarrage attend le
+        // bon code (repondreGarde le relance).
+        if (envoisRetenus()) { demarrageEnAttente = true; finAttente(); return; }
+        demarrageEnAttente = false;
         chargerIdentite(codeSuivi);
         // Lot E2 : l'évaluation de la classe, lue tout de suite puis de temps
         // en temps (api/direct.php).

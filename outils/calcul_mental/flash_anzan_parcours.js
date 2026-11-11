@@ -1742,8 +1742,10 @@
         gardeEssais = 0;
         noterDernierGeste(maintenant());
         rendre.garde();
-        // Ce qui attendait pendant la question part maintenant.
-        if (sync.dirty) envoyerParcours();
+        // Ce qui attendait pendant la question part maintenant (le démarrage
+        // remis à après la question relit le serveur et envoie lui-même).
+        if (demarrageEnAttente) demarrerSuivi();
+        else if (sync.dirty) envoyerParcours();
         return true;
       }
       gardeEssais += 1;
@@ -1794,6 +1796,9 @@
 
     // Au démarrage sous un code : le serveur fait foi, fusion avec la case du
     // code, renvoi seulement si cet appareil apporte quelque chose.
+    // Démarrage remis à après la question (relecture GPT, D01) ; var : lue
+    // avant que cette ligne ne soit passée, elle vaut « non ».
+    var demarrageEnAttente = false;
     function demarrerSuivi() {
       if (!suiviActif()) { direPret(false); return; }
       sauverCode(stockageSession(), codeSuivi);
@@ -1804,6 +1809,12 @@
       }
       rendre.repere();
       if (sync.detache) { direPret(false); return; }
+      // Lot « code en cases », relecture GPT (D01) : rouverte (F5, adresse
+      // retapée) alors que la question est due, l'appli ne relit RIEN au serveur
+      // — ni l'identité, ni le parcours, ni l'évaluation : le démarrage attend le
+      // bon code (repondreGarde le relance).
+      if (envoisRetenus()) { demarrageEnAttente = true; direPret(false); return; }
+      demarrageEnAttente = false;
       chargerIdentite(codeSuivi);
       const code = codeSuivi;
       lireParcoursDuServeur(code).then(reponse => {
