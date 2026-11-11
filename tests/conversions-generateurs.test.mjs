@@ -154,6 +154,11 @@ function controlerSerie(code, usage, nombre, s, ou) {
     assert.deepEqual(v.map(q => q.place), [4, 8]);
     assert.deepEqual(v.map(q => q.reponse).sort(), ["Non", "Oui"], `${ou} : un Oui et un Non`);
   }
+  if (code === "R1" && (usage === "valide" || usage === "test")) {
+    const reps = s.map(q => q.repere);
+    const doubles = reps.filter((r, i) => reps.indexOf(r) !== i);
+    assert.ok(usage === "test" ? doubles.length === 0 : doubles.length <= 1, `${ou} : repères répétés ${JSON.stringify(doubles)}`);
+  }
   if ((code === "C1" || code === "C2") && usage === "valide") {
     const n = g => s.filter(q => q.grandeur === g).length;
     assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);

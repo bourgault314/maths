@@ -301,6 +301,26 @@
 
   ETAPES.R1 = {
     exclureExemples: false,
+    // 9 repères pour 10 questions : dans Je valide, un seul repère peut
+    // revenir (posé dans l'autre sens) ; dans le test, aucun (choix de
+    // Gwenaël du 11/11 au soir).
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      const deja = serie.filter(x => x.repere === question.repere).length;
+      if (usage === "test") return deja === 0;
+      if (deja >= 2) return false;
+      if (deja === 1) {
+        const doubles = new Set(serie.map(x => x.repere).filter((r, i, t) => t.indexOf(r) !== i));
+        return doubles.size === 0;
+      }
+      return true;
+    },
+    valide(serie, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      const reps = serie.map(x => x.repere);
+      const doubles = reps.filter((r, i) => reps.indexOf(r) !== i).length;
+      return usage === "test" ? doubles === 0 : doubles <= 1;
+    },
     tirer(rng, degre) {
       const reps = CARTE.etape("R1").reperes;
       const forme = degre === 1 ? "unite" : degre === 3 ? "valeur" : choisir(rng, ["unite", "valeur"]);

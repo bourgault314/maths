@@ -40,7 +40,7 @@
   </div>
 
   <script src="./conversions_carte.js?v=20261111-1"></script>
-  <script src="./conversions_generateurs.js?v=20261111-1"></script>
+  <script src="./conversions_generateurs.js?v=20261111-2"></script>
   <script src="./defi_conversions_parcours.js?v=20261111-1"></script>
   <script src="./defi_conversions_aides.js?v=20261111-1"></script>
   <script>
@@ -667,7 +667,7 @@
             remplirZone(ui.zone, "ko");
             bonneReponse(ui.zone, qn);
             if (v.retour) ui.zone.appendChild(el("div", "verd ko", v.retour));
-            ui.zone.appendChild(el("div", "note", apresErreur.outil === "outil" ? "Au prochain calcul, l'outil revient." : "Au prochain calcul, l'image revient."));
+            ui.zone.appendChild(el("div", "note", apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient."));
             ui.zone.appendChild(suiteRonds(0));
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
