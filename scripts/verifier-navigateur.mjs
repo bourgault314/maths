@@ -21,7 +21,8 @@
  * une ERREUR, jamais un vert par omission. Ces dépendances ne sont pas dans le dépôt (la CI
  * ne fait pas d'installation) : elles se cherchent dans l'installation de Node, dans
  * NODE_PATH, puis dans le dossier « outils-tests » posé À CÔTÉ du dépôt (le même pour le
- * dossier principal et pour chaque worktree), ou dans MATHSGO_OUTILS_TESTS. Version de
+ * dossier principal et pour chaque worktree), puis dans ~/Developer/MathsGo-Code/outils-tests
+ * (pour un worktree rangé ailleurs), ou dans MATHSGO_OUTILS_TESTS. Version de
  * Playwright : 1.65.0 (celle de l'audit) — avec 1.63, l'horloge de page.clock ne fait pas
  * avancer la séance de defi-calcul-g1-ecrans.cjs, qui rougit sans défaut de l'appli.
  *
@@ -33,6 +34,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
+import { homedir } from "node:os";
 import { delimiter, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -130,7 +132,10 @@ function dossiersOutils() {
   const dossiers = [];
   if (process.env.MATHSGO_OUTILS_TESTS) dossiers.push(resolve(process.env.MATHSGO_OUTILS_TESTS, "node_modules"));
   dossiers.push(resolve(RACINE, "..", "outils-tests", "node_modules"));
-  return dossiers.filter((d) => existsSync(d));
+  // Les worktrees de Claude Code ne sont pas toujours à côté du dépôt (dossier temporaire) :
+  // l'emplacement installé chez Gwenaël sert de repli (correctif du 11/11/2026, PR #1165).
+  dossiers.push(resolve(homedir(), "Developer", "MathsGo-Code", "outils-tests", "node_modules"));
+  return [...new Set(dossiers)].filter((d) => existsSync(d));
 }
 
 /* Le NODE_PATH donné aux recettes : celui de l'utilisateur, puis le dossier outils-tests. */
@@ -227,7 +232,9 @@ async function principal() {
   }
 
   /* Dans « npm run verifier », node --test vient de jouer les fichiers nodeTest : si Playwright
-     était trouvable sans le dossier outils-tests, leurs cas au navigateur ont déjà tourné. */
+     était trouvable sans le dossier outils-tests, leurs cas au navigateur ont déjà tourné.
+     (Ne vaut que DANS « npm run verifier » : relancée seule avec un NODE_PATH ajouté, la suite
+     se joue sans --depuis-verifier, sinon elle croirait ces quatre fichiers déjà joués.) */
   if (depuisVerifier && trouverModule("playwright", { seulementNode: true })) {
     choisies = choisies.filter((r) => !r.nodeTest);
   }

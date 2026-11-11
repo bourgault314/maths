@@ -29,7 +29,7 @@ Automatismes V2, lire dans cet ordre :
   Une nouvelle recette s'y ajoute, sinon `tests/verifier-navigateur.test.mjs` rougit.
   Passage complet : `npm run verifier:navigateur -- --tout` (≈ 30 min). Playwright
   1.65.0, jsdom 26.1.0 et `@napi-rs/canvas` viennent du dossier `outils-tests` posé à
-  côté du dépôt ;
+  côté du dépôt (ou, pour un worktree rangé ailleurs, de `~/Developer/MathsGo-Code/outils-tests`) ;
   s'ils manquent, la suite échoue au lieu de passer en silence. Pas en CI : les
   machines de GitHub n'ont ni navigateur ni les polices de Windows.
 - Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne
