@@ -145,3 +145,28 @@ function oublier_billets_de_l_eleve(PDO $pdo, int $eleveId): void
 {
     $pdo->prepare('DELETE FROM billets WHERE eleve_id = ?')->execute([$eleveId]);
 }
+
+// Les billets de FICHE en cours d'une classe (lot « petits correctifs de
+// sécurité », 11/11/2026, constat F06 de l'audit GPT du 09/11). Un collègue
+// en lecture prend un billet de fiche, le propriétaire retire le partage : le
+// tableau lui est aussitôt refusé, mais le billet déjà émis ouvrait encore la
+// fiche, une fois, pendant ses deux minutes. Le billet ne garde pas qui l'a
+// demandé (il faudrait changer le schéma) : au retrait d'un partage, on
+// efface donc TOUS les billets de fiche de la classe, ceux du propriétaire
+// compris. Un professeur qui avait justement cliqué « Voir sa fiche » à ce
+// moment-là n'a qu'à recliquer. Les billets d'entrée des élèves et les
+// tickets de course ne sont pas touchés.
+function oublier_billets_de_fiche_de_la_classe(PDO $pdo, int $classeId): void
+{
+    $pdo->prepare("DELETE FROM billets WHERE type = 'fiche' AND eleve_id IN (SELECT id FROM eleves WHERE classe_id = ?)")
+        ->execute([$classeId]);
+}
+
+// La même chose pour toutes les classes qu'un professeur reçoit en partage :
+// quand son compte est désactivé ou supprimé, ses billets de fiche en cours
+// tombent avec ses sessions.
+function oublier_billets_de_fiche_des_partages_du_prof(PDO $pdo, int $profId): void
+{
+    $pdo->prepare("DELETE FROM billets WHERE type = 'fiche' AND eleve_id IN (SELECT e.id FROM eleves e JOIN partages p ON p.classe_id = e.classe_id WHERE p.prof_id = ?)")
+        ->execute([$profId]);
+}

@@ -493,6 +493,7 @@ try {
             // connexion lui répondra exactement comme à un mauvais mot de passe.
             $pdo->prepare('UPDATE profs SET actif = 0 WHERE id = ?')->execute([$autre['id']]);
             fermer_sessions_du_prof($pdo, $autre['id']);
+            oublier_billets_de_fiche_des_partages_du_prof($pdo, $autre['id']);
             journaliser($pdo, $profId, 'profs.desactiver', 'compte', $autre['id']);
             repondre(['ok' => true]);
 
@@ -833,8 +834,11 @@ try {
 
         case 'partages.supprimer':
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?')
-                ->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            $retrait = $pdo->prepare('DELETE FROM partages WHERE classe_id = ? AND prof_id = ?');
+            $retrait->execute([(int)$classe['id'], (int)($corps['prof_id'] ?? 0)]);
+            // Un billet de fiche déjà pris par le collègue ne survit pas au
+            // retrait (constat F06 de l'audit GPT, lib/billets.php).
+            if ($retrait->rowCount() > 0) oublier_billets_de_fiche_de_la_classe($pdo, (int)$classe['id']);
             journaliser($pdo, $profId, 'partages.supprimer', 'partage', (int)($corps['prof_id'] ?? 0));
             repondre(['ok' => true]);
 

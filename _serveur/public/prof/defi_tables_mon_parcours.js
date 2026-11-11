@@ -291,11 +291,14 @@
     etoile: Object.freeze({total: 25, erreursMax: 2, erreursMaxCouronne: 0, durees: Object.freeze([120, 105, 90, 75, 60])}),
     // Les records (09/10/2026) : les 25 questions de la couronne, chrono qui
     // monte, 25 sur 25 obligatoire (« erreursMax » 0, décision de Gwenaël),
-    // temps en dixièmes de seconde ; « dixiemesMin » : en dessous de 10 s
-    // (0,4 s par question), ce n'est pas un élève — le temps ne compte pas,
-    // ici et sur le serveur (lib/records.php, même valeur) ; « dixiemesMax » :
-    // une heure, au-delà c'est un onglet oublié.
-    course: Object.freeze({total: 25, erreursMax: 0, dixiemesMin: 100, dixiemesMax: 36000}),
+    // temps en dixièmes de seconde ; « dixiemesMin » : en dessous de 15 s
+    // (0,6 s par question : lire, se souvenir, taper deux chiffres et valider),
+    // ce n'est pas un élève — le temps ne compte pas, ici et sur le serveur
+    // (lib/records.php, même valeur). Il était à 10 s ; remonté au lot
+    // « petits correctifs de sécurité » (11/11/2026, constat F04 de l'audit
+    // GPT : « 25 justes en 10 s » déclarés sans jouer étaient acceptés) ;
+    // « dixiemesMax » : une heure, au-delà c'est un onglet oublié.
+    course: Object.freeze({total: 25, erreursMax: 0, dixiemesMin: 150, dixiemesMax: 36000}),
     // La révision : 10 calculs à la fois ; cinq boîtes par calcul, et le
     // nombre de jours avant qu'un calcul revienne, par boîte (boîte 1 : le
     // jour même). « aRevoirMin » : dès 2 calculs rouges, une table acquise

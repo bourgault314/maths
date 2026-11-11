@@ -7,9 +7,17 @@
 # Si une vérification échoue, le site en ligne reste sur sa version
 # précédente : rien de cassé ne peut plus être publié.
 #
-# L'assemblage reproduit à l'identique ce que GitHub Pages publiait :
-# tout le dépôt, sauf les fichiers commençant par « . » ou « _ »
-# (sources LaTeX, fichiers techniques) que l'ancien système excluait déjà.
+# L'assemblage reprend ce que GitHub Pages publiait : tout le dépôt, sauf
+# les fichiers commençant par « . » ou « _ » (sources LaTeX, serveur de
+# suivi, fichiers techniques) que l'ancien système excluait déjà. Depuis le
+# lot « petits correctifs de sécurité » (11/11/2026, constat F09 de l'audit
+# GPT du 09/11), les dossiers techniques de la RACINE (tests/, scripts/,
+# docs/), AGENTS.md et tous les fichiers de test (*.test.js, .mjs, .cjs)
+# n'entrent plus non plus : un test du dépôt privé se lisait sur
+# https://mathsgo.re/tests/…. Les exclusions sont ANCRÉES (« /scripts/ ») :
+# auto/scripts/, que les Automatismes chargent, reste publié. L'archive
+# assemblée est ensuite contrôlée par scripts/verifier-publication.mjs, qui
+# tourne depuis le dépôt (il n'est pas publié) et tient la même liste.
 #
 # Ce workflow ne prend effet que lorsque le réglage GitHub Pages du dépôt
 # est positionné sur « GitHub Actions » (au lieu de « Deploy from a
@@ -78,11 +86,15 @@ jobs:
         run: |
           mkdir _site
           rsync -a --exclude '.*' --exclude '_*' \
-            --exclude 'node_modules' --exclude '*.test.js' \
+            --exclude '/tests/' --exclude '/scripts/' --exclude '/docs/' \
+            --exclude '/AGENTS.md' \
+            --exclude 'node_modules' \
+            --exclude '*.test.js' --exclude '*.test.mjs' --exclude '*.test.cjs' \
             --exclude 'package.json' --exclude 'package-lock.json' \
             --exclude 'axelle/daily/template-index.html' \
             ./ _site/
           test ! -e _site/axelle/daily/template-index.html
+          node scripts/verifier-publication.mjs _site
           echo "Fichiers assemblés : $(find _site -type f | wc -l)"
 
       - name: Empaqueter pour publication

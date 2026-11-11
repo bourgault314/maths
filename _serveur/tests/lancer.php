@@ -1231,6 +1231,34 @@ verifier("préparation : une classe et quatre élèves pour les tests de seuils"
     egal(4, count($codesS1), 'quatre codes');
 });
 
+// Lot « petits correctifs de sécurité » (11/11/2026), constat F08 de l'audit
+// GPT du 09/11 : rendre l'expiration d'une session prof inopérante
+// (lib/auth.php, prof_de_session) ne faisait rougir AUCUN test de
+// comportement — seulement le manifeste VERSION, qui rougit pour tout
+// fichier changé. Ce test-ci le voit. Sabotage : « if (false && $session[…] ».
+verifier("F08 — une session prof périmée est refusée ET effacée ; une session en cours passe", function () {
+    vider_compteurs();
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'gwenael', 'motdepasse' => 'motdepasse-de-test-2026']);
+    egal(200, $r['code'], 'connexion');
+    $jeton = (string)$r['json']['jeton'];
+    $empreinte = hash('sha256', $jeton);
+    egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['code'], 'session en cours : acceptée');
+    // Une seconde de trop : l'échéance est dépassée.
+    bd_test()->prepare('UPDATE sessions_prof SET expire_le = ? WHERE jeton_hash = ?')
+        ->execute([gmdate('Y-m-d\\TH:i:s\\Z', time() - 1), $empreinte]);
+    egal(401, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['code'], 'session périmée : refusée');
+    egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM sessions_prof WHERE jeton_hash = ' . bd_test()->quote($empreinte))->fetchColumn(),
+        'et effacée de la base au passage');
+    egal(401, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['code'], 'elle ne revient pas');
+    // Le témoin : une échéance dans une minute passe encore.
+    $r = appel('/api/prof.php', ['action' => 'connexion', 'identifiant' => 'gwenael', 'motdepasse' => 'motdepasse-de-test-2026']);
+    $jeton = (string)$r['json']['jeton'];
+    bd_test()->prepare('UPDATE sessions_prof SET expire_le = ? WHERE jeton_hash = ?')
+        ->execute([gmdate('Y-m-d\\TH:i:s\\Z', time() + 60), hash('sha256', $jeton)]);
+    egal(200, appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jeton])['code'], 'une minute avant l’échéance : acceptée');
+    appel('/api/prof.php', ['action' => 'deconnexion'], ['jeton' => $jeton]);
+});
+
 verifier("GET est refusé sur les deux API élève (405), même avec un bon code", function () use (&$codesS1) {
     egal(405, appel('/api/parcours.php?code=' . $codesS1[0])['code'], 'parcours.php en GET');
     egal(405, appel('/api/parcours.php?code=' . $codesS1[0] . '&appli=defi-tables')['code'], 'avec appli');
@@ -2417,6 +2445,14 @@ verifier("supprimer un compte qui possède des classes exige un oui explicite, p
     vrai(str_contains($r['json']['erreur'], '2 classe') && str_contains($r['json']['erreur'], '4 élève'), 'le refus dit ce qui partirait');
     egal(200, lire($e1[0]['code'])['code'], 'rien n’a bougé');
 
+    // F06 (lot « petits correctifs de sécurité », 11/11/2026) : un billet de
+    // fiche pris par le partant sur la classe qu'on lui partage tombe avec son
+    // compte.
+    $eleveMien = (int)bd_test()->query("SELECT id FROM eleves WHERE classe_id = $mienne ORDER BY id LIMIT 1")->fetchColumn();
+    vrai($eleveMien > 0, 'un élève dans la classe partagée au partant');
+    $billetPartant = (string)(appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $eleveMien], ['jeton' => $jp])['json']['billet'] ?? '');
+    vrai($billetPartant !== '', 'le partant a pris un billet de fiche');
+
     $avantEleves = (int)bd_test()->query('SELECT COUNT(*) FROM eleves')->fetchColumn();
     $r = appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => $partantId, 'avec_classes' => true], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'avec le oui : supprimé');
@@ -2436,6 +2472,7 @@ verifier("supprimer un compte qui possède des classes exige un oui explicite, p
     egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM partages WHERE prof_id = $partantId OR classe_id IN ($c1, $c2)")->fetchColumn(), 'aucun partage orphelin, reçu ou donné');
     egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM sessions_prof WHERE prof_id = $partantId")->fetchColumn(), 'aucune session');
     egal(401, connexion('partant', 'le-mdp-du-collegue-qui-sen-va')['code'], 'il ne se connecte plus');
+    egal(404, echanger($billetPartant)['code'], 'son billet de fiche déjà pris ne sert plus (F06)');
     // Les autres n'ont rien perdu : la classe de Gwenaël est là, celle partagée à Claire par le partant a disparu de sa liste sans erreur.
     egal(200, appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $mienne], ['jeton' => $jetonS1])['code'], 'la classe de Gwenaël est intacte');
     $deClaire = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonClaire]);
@@ -2585,6 +2622,47 @@ verifier("la fiche suit le cloisonnement : Claire (lecture) l'obtient, un collè
     egal(404, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']], ['jeton' => $jetonClaire])['code'], 'sans partage : introuvable, comme le reste');
     egal(404, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => 999999], ['jeton' => $jetonS1])['code'], 'élève inexistant');
     egal(401, appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $elevesBillets[0]['id']])['code'], 'sans session');
+});
+
+// Lot « petits correctifs de sécurité » (11/11/2026), constat F06 de l'audit
+// GPT du 09/11 : un billet de fiche pris par un collègue en lecture ouvrait
+// encore la fiche, une fois, après le retrait du partage (deux minutes au
+// plus). Sabotage : retirer l'appel d'oublier_billets_de_fiche_de_la_classe
+// dans « partages.supprimer », ou celui d'oublier_billets_de_fiche_des_partages_du_prof
+// dans « profs.desactiver ».
+verifier("F06 — retirer un partage, ou désactiver le collègue, annule ses billets de fiche déjà pris ; les billets d'entrée des élèves restent", function () use (&$jetonS1, &$jetonClaire, &$claireId, &$classeBillets, &$elevesBillets) {
+    vider_compteurs();
+    $eleve = (int)$elevesBillets[0]['id'];
+    $partager = fn() => egal(200, appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $classeBillets,
+        'prof_id' => $claireId, 'droit' => 'lecture'], ['jeton' => $jetonS1])['code'], 'classe partagée à Claire en lecture');
+    $fiche = fn(string $jeton) => (string)appel('/api/prof.php', ['action' => 'eleves.fiche', 'eleve_id' => $eleve], ['jeton' => $jeton])['json']['billet'];
+
+    // Le retrait du partage.
+    $partager();
+    $billetClaire = $fiche($jetonClaire);
+    $billetProprietaire = $fiche($jetonS1);
+    $entree = (string)appel('/api/eleve.php', ['code' => $elevesBillets[0]['code'], 'billet' => true])['json']['billet'];
+    egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'partage retiré');
+    egal(404, echanger($billetClaire)['code'], 'le billet de fiche déjà pris par Claire ne sert plus');
+    egal(404, echanger($billetProprietaire)['code'], 'celui du propriétaire non plus (le billet ne dit pas qui l’a pris : il reclique)');
+    egal(200, echanger($entree)['code'], 'le billet d’entrée de l’élève, lui, n’est pas touché');
+    egal(200, echanger($fiche($jetonS1))['code'], 'et le propriétaire en reprend un sans peine');
+
+    // Retirer un partage qui n'existe pas ne touche à rien.
+    $billetProprietaire = $fiche($jetonS1);
+    egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => 999999], ['jeton' => $jetonS1])['code'], 'aucun partage à ce nom');
+    egal(200, echanger($billetProprietaire)['code'], 'rien n’a été retiré : le billet du propriétaire sert');
+
+    // La désactivation du compte du collègue.
+    $partager();
+    $billetClaire = $fiche($jetonClaire);
+    egal(200, appel('/api/prof.php', ['action' => 'profs.desactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'Claire désactivée');
+    egal(404, echanger($billetClaire)['code'], 'son billet de fiche tombe avec ses sessions');
+    egal(200, appel('/api/prof.php', ['action' => 'profs.reactiver', 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'Claire réactivée');
+    $r = connexion('claire', 'mdp-collegue-definitif-2026');
+    egal(200, $r['code'], 'elle se reconnecte');
+    $jetonClaire = $r['json']['jeton'];
+    egal(200, appel('/api/prof.php', ['action' => 'partages.supprimer', 'classe_id' => $classeBillets, 'prof_id' => $claireId], ['jeton' => $jetonS1])['code'], 'on remet la classe comme avant');
 });
 
 verifier("un nouveau code, ou la suppression de l'élève, emporte ses billets", function () use (&$jetonS1, &$elevesBillets) {
@@ -3959,6 +4037,94 @@ verifier("lot B — une restauration repose une époque plus haute que les DEUX 
         'appli' => 'defi-tables', 'jour' => $jour], ['jeton' => $jetonS1])['code'], 'restauration');
     $filtre = (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id")->fetchColumn();
     vrai(!str_contains($filtre, 'Léa'), 'aucun texte libre ne peut entrer par la restauration');
+
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
+});
+
+// Lot « petits correctifs de sécurité » (11/11/2026), constat F03 de l'audit
+// GPT du 09/11 : quelqu'un qui connaît le code envoyait « epoque: 1000000 » ;
+// la restauration du professeur relevait à 1 000 001, le filtre retirait la
+// valeur hors bornes, et la mauvaise copie gagnait toutes les fusions. Passé
+// 100, une écriture d'élève ne monte plus l'époque que d'un cran ; la
+// restauration gagne donc toujours. Sabotages : retirer l'un des deux appels
+// d'epoque_bornee dans api/parcours.php, ou le min() de
+// version_avec_epoque_relevee.
+require_once dirname(__DIR__) . '/public/lib/progression.php';
+
+verifier("F03 — passé 100, une écriture d'élève ne fait monter l'époque que d'un cran, la valeur maximale comprise ; la restauration du professeur gagne toujours", function () use (&$jetonS1) {
+    $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F03-epoque'], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $id = (int)$eleves[0]['id'];
+    $code = (string)$eleves[0]['code'];
+    $donnees = fn() => (string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $id AND appli = 'defi-tables'")->fetchColumn();
+    $tables = fn(string $json) => array_map('strval', array_keys(json_decode($json, true)['tables'] ?? []));
+    $neuf = ['2' => ['acquise' => '2026-11-02'], '3' => ['acquise' => '2026-11-03'], '9' => ['acquise' => '2026-11-09']];
+
+    // Léa travaille (trois tables suffisent ici). Une époque ordinaire, même
+    // au-dessus de « 0 + 1 », passe telle quelle : sous 100, rien ne change.
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 3, 'tables' => $neuf], 0)['code'], 'Léa enregistre');
+    egal(3, epoque_json($donnees()), 'une époque ordinaire passe telle quelle');
+
+    // Tom, qui a photographié la bandelette, écrase avec l'époque maximale.
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => PROGRESSION_ENTIER_MAX, 'tables' => new stdClass()], 1)['code'],
+        'l’écriture est acceptée (un code permet d’écrire : limite assumée du modèle)');
+    $abime = $donnees();
+    egal(100, epoque_json($abime), 'mais l’époque s’arrête à 100, pas à 1 000 000');
+    egal([], $tables($abime), 'le reste de l’envoi est rangé tel quel');
+    egal(100, epoque_json((string)bd_test()->query("SELECT donnees FROM versions WHERE eleve_id = $id AND appli = 'defi-tables' ORDER BY jour DESC LIMIT 1")->fetchColumn()),
+        'la version du jour garde la même époque bornée');
+
+    // Le professeur restaure : l'époque passe au-dessus de l'état abîmé, et
+    // l'appareil de Léa, qui a pris la copie abîmée (100), l'adoptera.
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $jetonS1])['code'], 'restauration');
+    $restaure = $donnees();
+    egal(101, epoque_json($restaure), 'la version restaurée porte une époque (101) plus haute que la copie abîmée (100)');
+    egal(['2', '3', '9'], $tables($restaure), 'les tables de Léa sont revenues');
+
+    // Tom recommence : passé 100, chaque écriture ne gagne qu'un cran, et une
+    // nouvelle restauration repasse devant.
+    $base = (int)lire($code)['json']['revision'];
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 999999, 'tables' => new stdClass()], $base)['code'], 'Tom réécrit');
+    egal(102, epoque_json($donnees()), '101 → 102');
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $jetonS1])['code'], 'nouvelle restauration');
+    egal(103, epoque_json($donnees()), 'elle gagne encore');
+
+    // Une époque égale ou plus basse n'est pas touchée (l'appli a fusionné).
+    $base = (int)lire($code)['json']['revision'];
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 103, 'tables' => $neuf], $base)['code'], 'écriture ordinaire');
+    egal(103, epoque_json($donnees()), 'même époque : gardée');
+    // Un saut de plusieurs crans au-dessus de 100 : ramené à « + 1 », il
+    // gagne pareil contre l'état du serveur.
+    $base = (int)lire($code)['json']['revision'];
+    egal(200, ecrire($code, ['version' => VERSION_TABLES, 'epoque' => 107, 'tables' => $neuf], $base)['code'], 'saut de quatre');
+    egal(104, epoque_json($donnees()), '103 → 104 : toujours au-dessus de l’état du serveur');
+
+    // Première écriture d'un élève neuf, directement au maximum : 100.
+    egal(200, ecrire((string)$eleves[1]['code'], ['version' => VERSION_TABLES, 'epoque' => PROGRESSION_ENTIER_MAX, 'tables' => $neuf], 0)['code'], 'premier envoi');
+    $autre = (int)$eleves[1]['id'];
+    egal(100, epoque_json((string)bd_test()->query("SELECT donnees FROM progressions WHERE eleve_id = $autre")->fetchColumn()), 'le serveur n’avait rien : au plus 100');
+
+    // Un état d'AVANT ce lot déjà au maximum (posé à la main) : la
+    // restauration garde une époque, au plafond, au lieu de la perdre.
+    bd_test()->prepare("UPDATE progressions SET donnees = ?, donnees_avant = ? WHERE eleve_id = ? AND appli = 'defi-tables'")
+        ->execute(['{"version":4,"epoque":' . PROGRESSION_ENTIER_MAX . ',"tables":{}}', '{"version":4,"epoque":3,"tables":{"7":{"acquise":"2026-11-07"}}}', $id]);
+    egal(200, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $id, 'appli' => 'defi-tables'],
+        ['jeton' => $jetonS1])['code'], 'restauration depuis un état au plafond');
+    egal(PROGRESSION_ENTIER_MAX, epoque_json($donnees()), 'l’époque reste au plafond : elle n’est plus retirée par le filtre');
+
+    // Les deux fonctions, seules.
+    $json = '{"version":4,"epoque":500,"tables":{"7":{"acquise":"2026-11-07"}},"calculs":{}}';
+    egal('{"version":4,"epoque":201,"tables":{"7":{"acquise":"2026-11-07"}},"calculs":{}}', epoque_bornee($json, 200),
+        'seule l’époque change, l’ordre des clés et « {} » sont gardés');
+    egal($json, epoque_bornee($json, 499), '500 = 499 + 1 : rien à changer');
+    egal($json, epoque_bornee($json, 800), 'plus bas que l’état courant : rien à changer');
+    egal('{"epoque":100}', epoque_bornee('{"epoque":5000}', 0), 'depuis rien : 100 au plus');
+    egal('{"epoque":42}', epoque_bornee('{"epoque":42}', 0), 'sous 100 : telle quelle');
+    egal('{"version":4}', epoque_bornee('{"version":4}', 5), 'sans époque : rien à changer');
+    egal(PROGRESSION_ENTIER_MAX, epoque_json(version_avec_epoque_relevee('defi-tables', '{"version":4,"epoque":2}', '{"epoque":' . PROGRESSION_ENTIER_MAX . '}')),
+        'la restauration ne dépasse jamais le plafond');
 
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $classe], ['jeton' => $jetonS1]);
 });
@@ -5391,7 +5557,8 @@ verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapi
     foreach ([
         [['temps' => 498, 'justes' => 24], 'Le temps ne compte pas : il faut tout juste.', 'une erreur'],
         [['temps' => 498, 'justes' => 26], 'Le temps ne compte pas : il faut tout juste.', 'plus de 25'],
-        [['temps' => 99, 'justes' => 25], 'Le temps ne compte pas.', 'sous le seuil de 10 s (robot)'],
+        [['temps' => 149, 'justes' => 25], 'Le temps ne compte pas.', 'sous le seuil de 15 s (robot)'],
+        [['temps' => 100, 'justes' => 25], 'Le temps ne compte pas.', '10 s : accepté jusqu’au 11/11, refusé depuis (audit GPT F04)'],
         [['temps' => 36001, 'justes' => 25], 'Le temps ne compte pas.', 'plus d’une heure'],
         [['temps' => '498', 'justes' => 25], 'Temps illisible.', 'un texte'],
         [['temps' => 49.8, 'justes' => 25], 'Temps illisible.', 'un nombre à virgule'],
@@ -5403,7 +5570,7 @@ verifier("records — une course refusée pour de bon : pas 25 sur 25, trop rapi
         egal(400, $r['code'], "$quoi : refusé");
         egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
     }
-    egal(100, SEUIL_COURSE_DIXIEMES, 'le seuil : 10 secondes (décision de Gwenaël, 09/10/2026)');
+    egal(150, SEUIL_COURSE_DIXIEMES, 'le seuil : 15 secondes (10 s le 09/10/2026 ; remonté le 11/11/2026, audit GPT F04)');
     egal(0, (int)bd_test()->query('SELECT COUNT(*) FROM records')->fetchColumn(), 'rien n’est écrit');
 });
 
@@ -7509,8 +7676,9 @@ verifier("audit Codex 1 — installer.php sur une base neuve : dix mauvais mots 
 verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il faut un ticket de départ, et un temps au moins égal à ce que le serveur a mesuré", function () use (&$jetonS1) {
     vider_compteurs();
     // Un pirate avec son code : il écrit la couronne dans sa progression
-    // (choix assumé), puis annonce 25 justes en 10 secondes — la preuve de
-    // Codex, « record_etape_2_sans_course ».
+    // (choix assumé), puis annonce 25 justes en 16 secondes (10 s dans la preuve de
+    // Codex, « record_etape_2_sans_course » ; sous le plancher de 15 s depuis
+    // le 11/11, elles seraient refusées avant même le ticket).
     $classe = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => '3A', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $pirate = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $pirate['code'];
@@ -7518,24 +7686,24 @@ verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il f
     egal(200, appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-tables', 'base_revision' => 0, 'parcours' => $couronne])['code'], 'la couronne forgée entre (assumé)');
     egal(true, records_api($code, ['lire' => true])['json']['legende'], 'il est Légende aux yeux du serveur (assumé)');
     // Sans ticket : refusé.
-    $r = records_api($code, ['temps' => 100, 'justes' => 25]);
+    $r = records_api($code, ['temps' => 160, 'justes' => 25]);
     egal(400, $r['code'], 'sans ticket : refusé net');
     egal("Le temps ne compte pas : la course n'a pas de ticket de départ.", $r['json']['erreur'] ?? null);
     foreach (['', 'pas-un-ticket', str_repeat('0', 32), 42, null, ['a']] as $faux) {
-        egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $faux])['code'], 'ticket illisible ou inconnu : ' . json_encode($faux));
+        egal(400, records_api($code, ['temps' => 160, 'justes' => 25, 'course' => $faux])['code'], 'ticket illisible ou inconnu : ' . json_encode($faux));
     }
     egal(null, bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn() ?: null, 'rien n’est écrit');
-    // Avec un ticket tout frais : 10 s annoncées, 0 s écoulée → refusé, et le ticket est brûlé.
+    // Avec un ticket tout frais : 16 s annoncées, 0 s écoulée → refusé, et le ticket est brûlé.
     $ticket = ticket_de_course($code);
-    $r = records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticket]);
-    egal(400, $r['code'], '10 s annoncées une seconde après le départ : refusé');
+    $r = records_api($code, ['temps' => 160, 'justes' => 25, 'course' => $ticket]);
+    egal(400, $r['code'], '16 s annoncées une seconde après le départ : refusé');
     egal('Le temps ne compte pas.', $r['json']['erreur'] ?? null);
     egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$pirate['id'])->fetchColumn(), 'le ticket menteur est brûlé');
-    egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticket])['code'], 'et ne sert plus');
+    egal(400, records_api($code, ['temps' => 160, 'justes' => 25, 'course' => $ticket])['code'], 'et ne sert plus');
     // Le ticket d'un AUTRE élève ne vaut rien.
     $autre = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $classe, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $ticketAutre = ticket_de_course($autre['code'], 60);
-    $r = records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticketAutre]);
+    $r = records_api($code, ['temps' => 160, 'justes' => 25, 'course' => $ticketAutre]);
     egal(400, $r['code'], 'le ticket d’un autre élève : refusé');
     egal("Le temps ne compte pas : la course n'a pas de ticket de départ.", $r['json']['erreur'] ?? null, 'refusé dès la lecture, pas seulement à la consommation');
     egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE type = 'course' AND eleve_id = " . (int)$autre['id'])->fetchColumn(), 'et il reste à son propriétaire');
@@ -7543,13 +7711,23 @@ verifier("audit Codex 2 — un record ne se fabrique plus en une requête : il f
     // n'entre pas par api/eleve.php.
     $billetEntree = appel('/api/eleve.php', ['code' => $code, 'billet' => true])['json']['billet'] ?? null;
     vrai(is_string($billetEntree), 'un billet d’entrée pour le test');
-    egal(400, records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $billetEntree])['code'], 'un billet d’entrée ne date aucune course');
+    egal(400, records_api($code, ['temps' => 160, 'justes' => 25, 'course' => $billetEntree])['code'], 'un billet d’entrée ne date aucune course');
     $ticketEleve = ticket_de_course($code);
     egal(404, appel('/api/eleve.php', ['billet' => $ticketEleve])['code'], 'un ticket de course n’ouvre pas la porte d’entrée');
     egal(1, (int)bd_test()->query("SELECT COUNT(*) FROM billets WHERE hash = '" . hash('sha256', $ticketEleve) . "'")->fetchColumn(), 'et il n’a pas été consommé par cet essai');
     // La vraie course : le départ est vieilli dans la base du temps qu'elle
     // aurait duré. La marge au plus juste : 49 s mesurées → 51,0 s annoncées
     // passent (490 + 20 dixièmes), 51,1 s non.
+    // La scène de l'audit GPT du 09/11 (F04, preuves\05-record-local.py) : un
+    // ticket pris, dix VRAIES secondes d'attente, puis « 25 justes en 10 s »
+    // sans avoir joué. Acceptée jusqu'au 11/11 ; refusée depuis par le
+    // plancher de 15 s (0,6 s par calcul), même avec un ticket honnête.
+    $ticketGpt = ticket_de_course($code);
+    vieillir_ticket($ticketGpt, 11);
+    $r = records_api($code, ['temps' => 100, 'justes' => 25, 'course' => $ticketGpt]);
+    egal(400, $r['code'], '25 justes en 10 s, ticket de dix secondes : refusé (plancher)');
+    egal('Le temps ne compte pas.', $r['json']['erreur'] ?? null);
+    egal(null, bd_test()->query("SELECT meilleur FROM records WHERE eleve_id = " . (int)$pirate['id'])->fetchColumn() ?: null, 'aucun record écrit');
     vieillir_ticket($ticketEleve, 49);
     $r = records_api($code, ['temps' => 511, 'justes' => 25, 'course' => $ticketEleve]);
     egal(400, $r['code'], '51,1 s annoncées pour 49 s mesurées : au-delà de la marge de 2 s, refusé');

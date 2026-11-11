@@ -76,6 +76,9 @@ function navigateur({
   robot = false,
   ignorer = false,
   stockageRefuse = false,
+  codeOnglet = null,
+  billet = null,
+  ongletRefuse = false,
 } = {}) {
   const url = new URL(adresse);
   const envoyes = [];
@@ -89,13 +92,26 @@ function navigateur({
     setItem(cle, valeur) { accesStockage.push(["écrire", cle]); if (stockageRefuse) throw new Error("refusé"); stock.set(cle, String(valeur)); },
     removeItem(cle) { accesStockage.push(["effacer", cle]); stock.delete(cle); },
   };
+  // La mémoire de l'onglet : là, et seulement là, les applis suivies rangent
+  // le code de l'élève connecté (« mathsgo-suivi-code »).
+  const accesOnglet = [];
+  const onglet = new Map(codeOnglet === null ? [] : [["mathsgo-suivi-code", codeOnglet]]);
+  const sessionStorage = {
+    getItem(cle) { accesOnglet.push(["lire", cle]); if (ongletRefuse) throw new Error("refusé"); return onglet.has(cle) ? onglet.get(cle) : null; },
+    setItem(cle) { accesOnglet.push(["écrire", cle]); },
+    removeItem(cle) { accesOnglet.push(["effacer", cle]); },
+    clear() { accesOnglet.push(["vider", ""]); },
+  };
   const fenetre = {
     location: { href: url.href, hostname: url.hostname, pathname: url.pathname, search: url.search, hash: url.hash },
     navigator: { webdriver: robot, sendBeacon(u) { envoyes.push(u); return true; } },
     screen: { width: 1366 },
     localStorage,
+    sessionStorage,
     alert(message) { alertes.push(message); },
   };
+  // Ce que le script du <head> d'une appli suivie pose avant ce fichier (defer).
+  if (billet !== null) fenetre.MATHSGO_ENTREE = { billet, vue: "", ouvrir: "" };
   fenetre.top = cadre ? {} : fenetre;
   fenetre.self = fenetre;
   const document = {
@@ -110,7 +126,7 @@ function navigateur({
     const lien = { getAttribute: () => href };
     for (const f of ecouteurs[type] ?? []) f({ type, button, target: { closest: () => lien } });
   };
-  return { envoyes, alertes, accesStockage, stock, cliquer };
+  return { envoyes, alertes, accesStockage, accesOnglet, stock, cliquer };
 }
 
 const parametres = (u) => Object.fromEntries(new URL(u).searchParams);
@@ -165,6 +181,71 @@ test("le compteur ne lit et n'écrit qu'une seule case du stockage : la sienne",
   }
   const visite = navigateur();
   assert.ok(visite.accesStockage.every(([action]) => action === "lire"), "une visite ordinaire n'écrit rien");
+});
+
+// ---------------------------------------------------------------------------
+// 3. Un élève connecté n'est pas compté (lot « petits correctifs de sécurité »,
+//    11/11/2026, constat F07 de l'audit GPT : la règle du 30/08 — aucune
+//    mesure d'audience dès qu'un élève est identifié — ne tenait plus pour le
+//    compteur de novembre).
+// ---------------------------------------------------------------------------
+test("un élève connecté (son code dans l'onglet) : rien ne part, ni la visite ni une fiche PDF", () => {
+  for (const code of ["AB2CD3", "ab2cd3", "AB2-CD3"]) {
+    const eleve = navigateur({ adresse: "https://mathsgo.re/outils/calcul_mental/defi_tables.html", codeOnglet: code });
+    assert.deepEqual(eleve.envoyes, [], `code « ${code} » dans l'onglet : la visite ne doit pas partir`);
+    eleve.cliquer("https://mathsgo.re/outils/fiche.pdf");
+    assert.deepEqual(eleve.envoyes, [], "ni le téléchargement d'une fiche");
+  }
+});
+
+test("un élève qui arrive par un billet (avant l'échange) : rien ne part ; le professeur qui ouvre une fiche non plus", () => {
+  assert.deepEqual(navigateur({ adresse: "https://mathsgo.re/outils/splat_univers.html", billet: "0123456789abcdef0123456789abcdef" }).envoyes, []);
+  assert.deepEqual(navigateur({ adresse: "https://mathsgo.re/outils/calcul_mental/defi_tables.html", billet: "fedcba9876543210fedcba9876543210" }).envoyes, []);
+});
+
+test("cas témoins : un visiteur, un code mal formé, un billet vide ou un onglet illisible — la visite part, une fois", () => {
+  const cas = [
+    {},                                           // visiteur ordinaire
+    { codeOnglet: "" },                           // case vide
+    { codeOnglet: "AB2C" },                       // trop court
+    { codeOnglet: "AB2CD1" },                     // « 1 » n'est pas dans l'alphabet des codes
+    { codeOnglet: "OOOOOO" },                     // ni « O »
+    { billet: "" },                               // appli sans billet : MATHSGO_ENTREE.billet vide
+    { ongletRefuse: true },                       // mémoire de l'onglet refusée
+  ];
+  for (const options of cas) {
+    assert.equal(navigateur(options).envoyes.length, 1, `devrait compter : ${JSON.stringify(options)}`);
+  }
+});
+
+test("le code lu dans l'onglet ne sort jamais, et l'onglet n'est jamais modifié", () => {
+  const eleve = navigateur({ codeOnglet: "AB2CD3" });
+  assert.ok(eleve.accesOnglet.every(([action, cle]) => action === "lire" && cle === "mathsgo-suivi-code"),
+    `seule la case du code est LUE : ${JSON.stringify(eleve.accesOnglet)}`);
+  // Un code invalide laisse compter : la visite part, sans le code.
+  const visiteur = navigateur({ codeOnglet: "AB2CD1" });
+  assert.equal(visiteur.envoyes.length, 1);
+  assert.ok(!visiteur.envoyes[0].includes("AB2CD1"));
+});
+
+test("les cinq applis suivies posent MATHSGO_ENTREE dans le <head>, avant le compteur chargé en defer", () => {
+  const applis = [
+    "outils/calcul_mental/defi_tables.html",
+    "outils/calcul_mental/defi_calcul_modules.html",
+    "outils/calcul_mental/flash_anzan.html",
+    "outils/calcul_mental/coffres_magiques_solo.html",
+    "outils/splat_univers.html",
+  ];
+  for (const relatif of applis) {
+    const html = readFileSync(join(racine, relatif), "utf8");
+    const pose = html.indexOf("window.MATHSGO_ENTREE = entree;");
+    const balise = html.search(/<script\b[^>]*compteur\.js[^>]*>/i);
+    assert.ok(pose > 0, `${relatif} : MATHSGO_ENTREE n'est plus posé`);
+    assert.ok(html.slice(0, pose).includes("<head") && !html.slice(0, pose).includes("</head>"), `${relatif} : MATHSGO_ENTREE doit être posé dans le <head>`);
+    assert.ok(balise > 0, `${relatif} : le compteur manque`);
+    assert.match(html.slice(balise, html.indexOf(">", balise) + 1), /\bdefer\b/, `${relatif} : le compteur doit rester en defer`);
+    assert.match(html, /cle === "b"\) entree\.billet = valeur/, `${relatif} : le billet doit être rangé dans entree.billet`);
+  }
 });
 
 test("un clic sur une fiche PDF du site est compté comme événement, avec le nom du fichier", () => {

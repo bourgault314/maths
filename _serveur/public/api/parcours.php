@@ -77,16 +77,19 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
     $maj = aujourdhui();
 
     if ($base === 0) {
+        // Première écriture : le serveur n'a rien, l'époque part de 0
+        // (lib/progression.php, epoque_bornee : au plus 100 d'un coup).
+        $premiere = epoque_bornee($donnees, 0);
         try {
             $pdo->prepare('INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, ?, ?, ?, 1, NULL)')
-                ->execute([$eleveId, $appli, $donnees, $maj]);
+                ->execute([$eleveId, $appli, $premiere, $maj]);
             // La version du jour (lot serveur A). Cette première écriture se
             // fait exprès HORS transaction (voir ci-dessus) : l'historique est
             // un confort, la progression est la donnée. S'il ne peut pas
             // s'écrire, l'élève garde quand même son travail et l'ennui part
             // au journal d'erreurs.
             try {
-                enregistrer_version($pdo, $eleveId, $appli, $donnees, 1);
+                enregistrer_version($pdo, $eleveId, $appli, $premiere, 1);
             } catch (Throwable $e) {
                 error_log('parcours (version du jour) : ' . $e->getMessage());
             }
@@ -121,6 +124,9 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
             'revision' => $revision,
         ]];
     }
+    // L'époque reçue ne dépasse pas d'un cran (passé 100) celle qu'on vient
+    // de lire SOUS LE VERROU (lot « petits correctifs de sécurité », F03).
+    $donnees = epoque_bornee($donnees, epoque_de((string)$ligne['donnees']));
     $requete = $pdo->prepare('UPDATE progressions SET donnees_avant = ?, donnees = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
     $requete->execute([$ligne['donnees'], $donnees, $revision + 1, $maj, (int)$ligne['id'], $revision]);
     if ($requete->rowCount() !== 1) {

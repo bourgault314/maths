@@ -158,6 +158,6 @@ test("Défi calcul : une séance ouverte, pas finie, avec une étape faite compt
 test("les moteurs de Défi tables et Défi calcul sont copiés octet pour octet ; leurs pages les rechargent", () => {
   assert.equal(lire("../_serveur/public/prof/defi_tables_mon_parcours.js"), lire("../outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.equal(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261108-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-1"/);
   assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261108-1"/);
 });

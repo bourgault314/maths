@@ -13,7 +13,7 @@
 // Ce que le serveur juge (le reste de l'appli lui fait confiance, ici non) :
 //  - seule une LÉGENDE court : la progression Défi tables de l'élève porte
 //    « expert.couronne » (c'est l'appli qui l'écrit, le serveur la relit) ;
-//  - le temps est un entier de dixièmes, entre SEUIL_COURSE_DIXIEMES (10 s :
+//  - le temps est un entier de dixièmes, entre SEUIL_COURSE_DIXIEMES (15 s :
 //    en dessous ce n'est pas un élève, l'appli n'a aucun plancher) et
 //    COURSE_MAX_DIXIEMES (une heure) ; l'appli n'envoie que des courses à
 //    25 sur 25 — elle le dit (« justes »), et le serveur le vérifie ;
@@ -35,7 +35,9 @@ require_once __DIR__ . '/applis.php';
 // Les mêmes bornes que le moteur (defi_tables_mon_parcours.js, SEUILS.course) :
 // un test du dépôt les compare.
 const COURSE_TOTAL = 25;
-const SEUIL_COURSE_DIXIEMES = 100;
+// 15 s (0,6 s par calcul) depuis le lot « petits correctifs de sécurité »
+// (11/11/2026, constat F04 de l'audit GPT) ; c'était 10 s.
+const SEUIL_COURSE_DIXIEMES = 150;
 const COURSE_MAX_DIXIEMES = 36000;
 const RECORDS_TOP = 10;
 

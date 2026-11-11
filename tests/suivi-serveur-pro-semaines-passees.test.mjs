@@ -189,7 +189,7 @@ test("Mon parcours : « Mes 4 dernières semaines : … séances » sous ma tabl
   assert.equal(dessiner(P.creerParcours(), true), "Mes 4 dernières semaines : 0 · 0 · 0 · [0] séances", "le professeur la lit toujours");
   // Le moteur est bien rechargé par les navigateurs (cache-buster) et la
   // page prof sert la même copie (test suivi-moteur-copie).
-  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261108-1"><\/script>/);
+  assert.match(html, /<script src="\.\/defi_tables_mon_parcours\.js\?v=20261111-1"><\/script>/);
   // Ordinateur : la ligne prend la rangée 2 de la colonne de droite, le tableau
   // couvre les quatre rangées.
   assert.match(html, /\.parcours-corps > \.parcours-semaines \{ grid-column: 2; grid-row: 2;/);
