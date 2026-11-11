@@ -148,7 +148,7 @@ test("l'équation : départ = produit, « … » tant qu'un côté n'est pas fin
 test("l'équation trop longue rapetisse pour tenir dans sa boîte (13 px au moins), d'un coup", () => {
   assert.match(methode("ajusterEquation() {"), /Math\.max\(13,/);
   assert.match(methode("updateEquation() {"), /this\.ajusterEquation\(\);/);
-  assert.match(page, /#equation-display \{ font-size: clamp\(20px, 2\.4vw, 46px\); transition-property: opacity; \}/);
+  assert.match(page, /#equation-display \{ font-size: clamp\(20px, 3\.3vw, 52px\); transition-property: opacity; \}/); // lot 8 : plus grande
 });
 
 test("le tableau à factoriser tient dans son cadre (bord de 3 px compté)", () => {

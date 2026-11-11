@@ -142,12 +142,6 @@
             width: 0; height: 0; 
         }
         #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 30; }
-        #tile-trash-zone.trash-active,
-        #tile-trash-zone.tool-active {
-            background-color: #fecdd3 !important;
-            color: #9f1239 !important;
-            border-color: #fda4af !important;
-        }
 
         .product-frame {
             position: absolute;
@@ -315,7 +309,10 @@
         #barre-outils a.mathsgo-back .mathsgo-back-label { display: none; }
 
         /* Équation : plus grande sur grand écran (projection), inchangée au téléphone. */
-        #equation-display { font-size: clamp(20px, 2.4vw, 46px); transition-property: opacity; } /* la taille se règle d'un coup (ajusterEquation) */
+        /* Lot 8 : plus grande (47 px sur un écran de 1440, 52 px en 1920) dans une boîte un peu plus haute (80 px au lieu de 72,
+           sinon l'exposant de 𝑥² et les parenthèses touchent le bord) ; trop longue, elle rapetisse toute seule (ajusterEquation). */
+        #equation-display { font-size: clamp(20px, 3.3vw, 52px); transition-property: opacity; } /* la taille se règle d'un coup (ajusterEquation) */
+        #eq-boite { height: 80px; }
         /* Au téléphone, l'équation prend toute une ligne au lieu d'être coupée par les boutons de vue. */
         header .eq-zone { min-width: 280px; }
         /* --- TAPER UNE EXPRESSION (lot 4) : bouton, pavé, champ. Styles écrits ici (la feuille Tailwind
@@ -362,8 +359,26 @@
         }
 
         /* --- PIVOTER (lot 4) --- */
-        #board-container.tool-rotate .token { cursor: pointer; }
         .token.pivot-refus { animation: productShake 0.26s ease-in-out 0s 2; }
+
+        /* --- LOT 8 : la bulle d'une tuile (toucher une tuile sans la bouger, ou clic droit) --- */
+        #bulle-tuile { position: fixed; z-index: 55; display: flex; gap: 4px; padding: 5px; background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; box-shadow: 0 8px 22px rgba(15,23,42,.22); user-select: none; }
+        #bulle-tuile[hidden] { display: none; }
+        #bulle-tuile button { width: 62px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 10px; background: transparent; color: #334155; font: 700 11px/1 'Fredoka', system-ui, sans-serif; cursor: pointer; touch-action: manipulation; }
+        #bulle-tuile button:hover { background: #f1f5f9; }
+        #bulle-tuile button:active { background: #e2e8f0; }
+        #bulle-tuile button[hidden] { display: none; }
+        #bulle-tuile button svg { width: 24px; height: 24px; }
+        #bulle-tuile .bulle-suppr { color: #be123c; }
+        /* Glisser une tuile dans la colonne de gauche l'enlève (elle retourne dans la boîte) : la colonne s'allume. */
+        #colonne-tuiles.rangement { background-color: #ffe4e6 !important; box-shadow: inset 0 0 0 3px #fda4af; }
+
+        /* --- LOT 8 : tableau produit, une croix noire sépare les facteurs (ligne du haut, colonne de gauche)
+           des produits ; entre les produits, des traits fins et clairs (le bloc des produits = le rectangle). --- */
+        .product-slot, .product-cell, .product-corner { border-right-width: 1.5px; border-bottom-width: 1.5px; border-right-color: rgba(51,65,85,0.22); border-bottom-color: rgba(51,65,85,0.22); }
+        .product-slot.top { border-bottom: 0; box-shadow: inset 0 -4px 0 #1e293b; }
+        .product-slot.left { border-right: 0; box-shadow: inset -4px 0 0 #1e293b; }
+        .product-corner { border-right: 0; border-bottom: 0; box-shadow: inset -4px -4px 0 #1e293b; }
     </style>
 <script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 <link rel="stylesheet" href="../../assets/vendor/tailwind/tailwind-outils.css?v=scripts-tiers-20260904-1">
@@ -399,25 +414,11 @@
 
             <div class="h-8 w-px bg-slate-200 mx-1"></div>
 
-            <!-- OUTILS : main, stylo, gomme du stylo, supprimer une tuile (côte à côte pour voir lequel est actif) -->
+            <!-- OUTILS (lot 8) : le stylo s'allume et s'éteint d'un clic (Échap l'éteint aussi), la gomme efface
+                 ses traits. La main, Pivoter et la corbeille sont partis : toucher une tuile ouvre sa bulle
+                 (Pivoter, Dupliquer, Opposé, Supprimer), et une tuile glissée dans la colonne de gauche s'enlève. -->
             <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
-            <button onclick="app.setTool('hand')" id="tool-hand" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-gray-200" title="Main (déplacer les tuiles)">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
-                </svg>
-            </button>
-
-            <!-- PIVOTER (lot 4) : une tuile 𝑥 touchée passe de couchée à debout et inversement.
-                 Icône sans flèche ronde, pour ne pas ressembler à ↶ (précédent) ni à ⟳ (tout recommencer). -->
-            <button onclick="app.setTool(app.currentTool === 'rotate' ? 'hand' : 'rotate')" id="tool-rotate" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Pivoter une tuile 𝑥 : cliquer puis toucher une tuile" aria-label="Pivoter une tuile 𝑥">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="1" y="13" width="9" height="5" stroke-width="2" stroke-linejoin="round"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15.5h4.5M13.8 13.5l2 2-2 2"/>
-                    <rect x="17.5" y="3" width="5" height="17" stroke-width="2" stroke-linejoin="round"/>
-                </svg>
-            </button>
-
-            <button onclick="app.setTool('pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo (annoter)">
+            <button onclick="app.setTool(app.currentTool === 'pen' ? 'hand' : 'pen')" id="tool-pen" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Stylo : un clic pour écrire, un autre pour revenir aux tuiles" aria-label="Stylo" aria-pressed="false">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20l4.2-1.1L19.1 8a2.1 2.1 0 00-3-3L5.2 15.9 4 20z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.5 6.5l3 3"/>
@@ -430,15 +431,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.8 9.7l5.5 5.5" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.8 20h16.4" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M6.2 5.7h3.2M7.8 4.1v3.2" opacity=".65" />
-                </svg>
-            </button>
-
-            <div class="h-6 w-px bg-slate-200 mx-1"></div>
-
-            <!-- SUPPRIMER UNE TUILE : un outil comme la main et le stylo (et zone où lâcher une tuile) -->
-            <button id="tile-trash-zone" onclick="app.setTool(app.currentTool === 'erase' ? 'hand' : 'erase')" class="p-2 rounded text-rose-600 hover:bg-gray-200" title="Supprimer une tuile : cliquer puis toucher une tuile, ou glisser une tuile ici" aria-label="Supprimer une tuile">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
                 </svg>
             </button>
             </div>
@@ -463,7 +455,7 @@
 
         <div class="eq-zone flex-1 flex flex-col items-center justify-center min-w-[200px] px-2">
             <div class="relative w-full">
-                <div class="flex items-center gap-2 bg-slate-50 pl-4 pr-12 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar h-[72px]">
+                <div id="eq-boite" class="flex items-center gap-2 bg-slate-50 pl-4 pr-12 py-2 rounded-xl border border-slate-200 shadow-inner mb-1 w-full justify-start overflow-x-auto no-scrollbar">
                     <div id="equation-display" class="text-xl sm:text-3xl font-bold text-slate-600 tracking-tight flex items-center gap-1 font-mono whitespace-nowrap transition-all duration-300">(...)</div>
                 </div>
                 <button id="btn-toggle-eye" onclick="app.toggleVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 shadow-sm border border-slate-200 transition z-10" title="Afficher/Masquer l'équation">
@@ -519,7 +511,7 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden relative">
-        <aside class="w-28 bg-slate-50 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto select-none">
+        <aside id="colonne-tuiles" class="w-28 bg-slate-50 border-r border-slate-300 flex flex-col items-center py-4 gap-4 z-20 shadow-lg shrink-0 overflow-y-auto select-none">
             
             <span class="text-[9px] font-bold text-slate-400 uppercase leading-tight">Tuiles</span>
             <div class="flex flex-col gap-2 w-full px-1 items-center">
@@ -581,13 +573,27 @@
         <main id="board" class="flex-1 relative bg-white overflow-hidden">
             <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#94a3b8 1px, transparent 1px), linear-gradient(90deg, #94a3b8 1px, transparent 1px); background-size: 40px 40px;"></div>
             <div id="board-container">
-                <div id="board-world">
-                    <canvas id="drawing-canvas"></canvas>
-                </div>
+                <div id="board-world"></div>
+                <!-- Lot 8 : le stylo dessine sur une toile de la taille de l'écran, posée sur le plateau
+                     (avant : une toile de 12 000 × 12 000 points dans le plateau zoomé → trait saccadé). -->
+                <canvas id="drawing-canvas"></canvas>
             </div>
         </main>
     </div>
 
+
+    <!-- LOT 8 : la bulle d'une tuile (toucher une tuile sans la bouger, ou clic droit). Les boutons qui ne
+         s'appliquent pas à la tuile touchée sont cachés (ex. Pivoter sur un carré). -->
+    <div id="bulle-tuile" role="toolbar" aria-label="Actions sur la tuile" hidden>
+        <button type="button" data-action="pivoter" title="Pivoter la tuile 𝑥 (couchée ↔ debout)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="1" y="13" width="9" height="5" stroke-width="2" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15.5h4.5M13.8 13.5l2 2-2 2"/><rect x="17.5" y="3" width="5" height="17" stroke-width="2" stroke-linejoin="round"/></svg>Pivoter</button>
+        <button type="button" data-action="dupliquer" title="Poser une tuile pareille à côté">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="1" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8V4a1 1 0 00-1-1H4a1 1 0 00-1 1v11a1 1 0 001 1h4"/></svg>Dupliquer</button>
+        <button type="button" data-action="oppose" title="Remplacer la tuile par son opposé">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18L3 21z" fill="#72c475" stroke="#2f7f35" stroke-width="1.5" stroke-linejoin="round"/><path d="M21 3v18H3z" fill="#ef3f35" stroke="#a61f18" stroke-width="1.5" stroke-linejoin="round"/></svg>Opposé</button>
+        <button type="button" data-action="supprimer" class="bulle-suppr" title="Enlever la tuile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16"/></svg>Supprimer</button>
+    </div>
 
     <!-- TAPER UNE EXPRESSION (lot 4, 06/11/2026) : le pavé, posé sur le plateau -->
     <div id="taper-panneau" role="dialog" aria-label="Taper une expression" hidden>
@@ -617,8 +623,6 @@
         const FLIP_HALF_MS = 170;   // « Ajouter l'opposé » : durée d'un demi-retournement
         const FLIP_STAGGER_MS = 230; // délai entre deux tuiles retournées
         const PEN_SCREEN_WIDTH = 2.2; // Épaisseur visuelle du stylo, compensée selon le zoom
-        const CANVAS_WORLD_MIN = -1000;
-        const CANVAS_WORLD_SIZE = 6000;
         const MAX_CANVAS_DPR = 2;
         const PACK_GAP = 25; // Espace constant de 25px
         const SIZES = { 'unit': { w: 34, h: 34 }, 'x': { w: 110, h: 34 }, 'x2': { w: 110, h: 110 } };
@@ -1054,6 +1058,7 @@
                 this.updateSoundButton();
                 this.updateFullscreenButton();
                 this.initTaper();
+                this.initBulle();
                 document.addEventListener('fullscreenchange', () => { this.updateFullscreenButton(); });
                 window.addEventListener('resize', () => this.ajusterEquation());
             }
@@ -1985,6 +1990,7 @@
                 if (this.history.length === 0) return;
                 const state = this.history.pop();
                 this.stopFlip();
+                this.fermerBulle();
                 
                 this.tokens.forEach(t => t.element && t.element.remove());
                 document.querySelectorAll('.zero-badge').forEach(b => b.remove());
@@ -2063,7 +2069,7 @@
                 }, { passive: false });
                 this.boardContainer.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
-                    if (this.currentTool === 'pen' || this.currentTool === 'erase' || e.target.closest('.token') || e.target.closest('.product-frame')) return;
+                    if (this.currentTool === 'pen' || e.target.closest('.token') || e.target.closest('.product-frame')) return;
                     this.isPanning = true; this.viewTouched = true;
                     this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
                     this.boardContainer.classList.add('panning');
@@ -2111,7 +2117,9 @@
                     if (!this.isDrawing || this.currentTool !== 'pen') return;
                     if (this.activePointerId !== null && e.pointerId !== this.activePointerId) return;
                     e.preventDefault();
-                    this.draw(e);
+                    // Lot 8 : tous les points reçus depuis la dernière image (souris rapide, stylet), pas seulement le dernier.
+                    const lot = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
+                    this.draw(lot.length ? lot : [e]);
                 }, { passive: false });
 
                 const stopPointerDraw = (e) => {
@@ -2120,6 +2128,7 @@
                     this.activePointerId = null;
                     this.isDrawing = false;
                     this.currentStroke = null;
+                    this.redrawPen(); // le dernier demi-bout du trait, et la même courbe que plus tard
                     try { this.boardContainer.releasePointerCapture(e.pointerId); } catch (err) {}
                 };
                 window.addEventListener('pointerup', stopPointerDraw);
@@ -2187,7 +2196,9 @@
 
             updateTransform() {
                 this.boardWorld.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.scale})`;
-                if (this.ctx && !this.isDrawing) this.ctx.lineWidth = this.getPenWorldWidth();
+                // Lot 8 : la toile du stylo est à la taille de l'écran ; elle suit la vue en redessinant ses traits.
+                if (this.ctx) this.redrawPen();
+                this.fermerBulle();
             }
             getWorldPos(cx, cy) {
                 const r = this.boardContainer.getBoundingClientRect();
@@ -2256,33 +2267,13 @@
                 btn.title = isFs ? 'Quitter le plein écran' : 'Plein écran';
             }
             updateToolButtons() {
-                const handBtn = document.getElementById('tool-hand');
+                // Lot 8 : un seul outil à allumer, le stylo (la main est l'état normal, sans bouton).
                 const penBtn = document.getElementById('tool-pen');
-                const trashBtn = document.getElementById('tile-trash-zone');
-                const rotateBtn = document.getElementById('tool-rotate');
-                if (!handBtn || !penBtn) return;
-
-                const setActive = (btn) => {
-                    btn.classList.add('bg-white', 'shadow', 'text-gray-700');
-                    btn.classList.remove('text-gray-500');
-                };
-                const setInactive = (btn) => {
-                    btn.classList.remove('bg-white', 'shadow', 'text-gray-700');
-                    btn.classList.add('text-gray-500');
-                };
-
-                setInactive(handBtn);
-                setInactive(penBtn);
-                if (rotateBtn) setInactive(rotateBtn);
-                if (trashBtn) trashBtn.classList.remove('tool-active');
-
-                if (this.currentTool === 'pen') setActive(penBtn);
-                else if (this.currentTool === 'rotate' && rotateBtn) setActive(rotateBtn);
-                else if (this.currentTool === 'erase') {
-                    if (trashBtn) trashBtn.classList.add('tool-active');
-                } else {
-                    setActive(handBtn);
-                }
+                if (!penBtn) return;
+                const on = this.currentTool === 'pen';
+                penBtn.classList.toggle('bg-white', on); penBtn.classList.toggle('shadow', on);
+                penBtn.classList.toggle('text-gray-700', on); penBtn.classList.toggle('text-gray-500', !on);
+                penBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
             }
 
             // --- STYLO (undo + persistance après resize) ---
@@ -2296,9 +2287,14 @@
             }
 
             getPenWorldWidth() {
-                // Le plateau est zoomé par CSS. On réduit donc l'épaisseur en coordonnées plateau
-                // pour éviter un trait énorme quand le zoom de départ est supérieur à 100%.
+                // Épaisseur en coordonnées de plateau : à l'écran, le trait garde PEN_SCREEN_WIDTH quel que soit le zoom.
                 return PEN_SCREEN_WIDTH / Math.max(this.scale || 1, 0.5);
+            }
+
+            // Lot 8 : la toile couvre l'écran ; on y dessine en coordonnées de plateau (pan + zoom de la vue).
+            applyPenTransform() {
+                const d = this.canvasPixelRatio || 1;
+                this.ctx.setTransform(d * this.scale, 0, 0, d * this.scale, d * this.pan.x, d * this.pan.y);
             }
 
             clearPenCanvas() {
@@ -2308,33 +2304,34 @@
                 this.ctx.restore();
             }
 
+            // Un trait passe par les milieux de ses points (courbes) : l'écriture est arrondie, pas en zigzag.
+            tracerTrait(pts) {
+                const c = this.ctx;
+                if (pts.length === 1) { c.beginPath(); c.arc(pts[0].x, pts[0].y, c.lineWidth / 2, 0, Math.PI * 2); c.fillStyle = c.strokeStyle; c.fill(); return; }
+                c.beginPath();
+                c.moveTo(pts[0].x, pts[0].y);
+                for (let i = 1; i < pts.length - 1; i++) {
+                    const mx = (pts[i].x + pts[i + 1].x) / 2, my = (pts[i].y + pts[i + 1].y) / 2;
+                    c.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+                }
+                const z = pts[pts.length - 1];
+                c.lineTo(z.x, z.y);
+                c.stroke();
+            }
+
             redrawPen() {
+                if (!this.ctx) return;
                 this.clearPenCanvas();
                 if (!this.penStrokes || this.penStrokes.length === 0) return;
-
-                const prevWidth = this.ctx.lineWidth;
-                const prevColor = this.ctx.strokeStyle;
-                const prevCap = this.ctx.lineCap;
-
-                this.ctx.lineCap = 'round';
-
+                this.applyPenTransform();
+                this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
                 for (const stroke of this.penStrokes) {
                     const pts = stroke.points || [];
-                    if (pts.length < 2) continue;
-
+                    if (!pts.length) continue;
                     this.ctx.strokeStyle = stroke.color || '#2563eb';
-                    this.ctx.lineWidth = stroke.screenWidth ? (stroke.screenWidth / Math.max(this.scale || 1, 0.5)) : (stroke.width || this.getPenWorldWidth());
-
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(pts[0].x, pts[0].y);
-                    for (let i = 1; i < pts.length; i++) this.ctx.lineTo(pts[i].x, pts[i].y);
-                    this.ctx.stroke();
+                    this.ctx.lineWidth = (stroke.screenWidth || PEN_SCREEN_WIDTH) / Math.max(this.scale || 1, 0.5);
+                    this.tracerTrait(pts);
                 }
-
-                // Restore style
-                this.ctx.lineWidth = prevWidth;
-                this.ctx.strokeStyle = prevColor;
-                this.ctx.lineCap = prevCap;
             }
 
             addTile(type, sign, x = null, y = null, withSound = true, orientation = 'h') {
@@ -3523,6 +3520,152 @@
                 this.updateEquation();
             }
 
+            // --- LOT 8 : LA BULLE D'UNE TUILE ---
+            // Toucher une tuile sans la bouger (ou clic droit) ouvre une petite bulle au-dessus d'elle :
+            // Pivoter, Dupliquer, Opposé, Supprimer. Seuls les boutons qui s'appliquent à cette tuile sont montrés.
+            initBulle() {
+                this.bulle = document.getElementById('bulle-tuile');
+                this.bulleTuile = null;
+                if (!this.bulle) return;
+                this.bulle.addEventListener('click', (e) => {
+                    const b = e.target.closest('button[data-action]');
+                    if (b) this.actionBulle(b.dataset.action);
+                });
+                // Clic droit (ou appui long) sur une tuile : la même bulle.
+                this.boardContainer.addEventListener('contextmenu', (e) => {
+                    const el = e.target.closest && e.target.closest('.token');
+                    if (!el) return;
+                    e.preventDefault();
+                    if (this.currentTool !== 'hand') return;
+                    const t = this.tokens.find(x => x.element === el);
+                    if (t) this.ouvrirBulle(t);
+                });
+                // Toucher ailleurs ferme la bulle.
+                document.addEventListener('pointerdown', (e) => {
+                    if (this.bulleTuile && !this.bulle.contains(e.target)) this.fermerBulle();
+                }, true);
+                window.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.fermerBulle(); });
+                window.addEventListener('resize', () => this.fermerBulle());
+            }
+
+            // Ce que la bulle propose pour une tuile.
+            actionsBulle(t) {
+                const facto = this.productFrame?.mode === 'facto';
+                const step = this.steps[this.stepIndexOfToken(t)];
+                // Dupliquer et Opposé : seulement une tuile « libre » de l'expression (pas dans le tableau,
+                // pas dans une paire nulle, pas une copie d'un facteur 2(…) pas encore développé).
+                const libre = !!step && !t.productZone && t.pairId === null && !t._canceling && !facto
+                    && !(t.ghostIds && t.ghostIds.length) && !(step.type === 'multiplication' && !step.distributed);
+                return {
+                    pivoter: t.type === 'x' && t.pairId === null && (!t.productZone || (t.productZone === 'cell' && facto)),
+                    dupliquer: libre,
+                    // une parenthèse « − » pas encore retournée : c'est « Ajouter l'opposé » qui s'en charge
+                    oppose: libre && !this.isFlipPending(t) && !(step.type === 'subtraction' && !step.oppositeApplied) && !this.flippingSteps.size,
+                    supprimer: true
+                };
+            }
+
+            ouvrirBulle(t) {
+                if (!this.bulle || !t || !t.element || !t.element.isConnected) return;
+                this.bulleTuile = t;
+                const a = this.actionsBulle(t);
+                this.bulle.querySelectorAll('button[data-action]').forEach(b => { b.hidden = !a[b.dataset.action]; });
+                this.bulle.hidden = false;
+                this.placerBulle();
+            }
+
+            placerBulle() {
+                const t = this.bulleTuile; if (!t || !t.element) return;
+                const r = t.element.getBoundingClientRect();
+                const zone = this.boardContainer.getBoundingClientRect();
+                const bw = this.bulle.offsetWidth, bh = this.bulle.offsetHeight, ecart = 10;
+                let x = r.left + r.width / 2 - bw / 2;
+                x = Math.max(zone.left + 6, Math.min(x, zone.right - bw - 6));
+                let y = r.top - bh - ecart; // au-dessus de la tuile…
+                if (y < zone.top + 6) y = r.bottom + ecart; // …ou dessous s'il n'y a pas la place
+                this.bulle.style.left = Math.round(x) + 'px';
+                this.bulle.style.top = Math.round(y) + 'px';
+            }
+
+            fermerBulle() {
+                if (!this.bulle) return;
+                this.bulleTuile = null;
+                this.bulle.hidden = true;
+            }
+
+            actionBulle(action) {
+                const t = this.bulleTuile;
+                if (!t || !this.tokens.includes(t)) { this.fermerBulle(); return; }
+                if (!this.actionsBulle(t)[action]) return;
+                if (action === 'supprimer') { this.fermerBulle(); this.deleteToken(t, true); return; }
+                if (action === 'pivoter') this.pivoterTuile(t);
+                else if (action === 'dupliquer') this.dupliquerTuile(t);
+                else if (action === 'oppose') this.opposeTuile(t);
+                // la bulle reste ouverte sur la tuile (pivoter deux fois, dupliquer trois fois…)
+                if (this.tokens.includes(t)) this.ouvrirBulle(t); else this.fermerBulle();
+            }
+
+            // Une place libre à côté de la tuile, à droite d'abord, puis dessous.
+            placeLibrePres(t) {
+                const s = getTileSize(t.type, t.orientation);
+                const occupe = (x, y) => this.tokens.some(o => {
+                    if (!o.element || o.productZone) return false;
+                    const q = getTileSize(o.type, o.orientation);
+                    return x < o.x + q.w + 3 && o.x < x + s.w + 3 && y < o.y + q.h + 3 && o.y < y + s.h + 3;
+                }) || (() => {
+                    const f = this.productFrame?.element; if (!f) return false;
+                    const fx = this.productFrame.x, fy = this.productFrame.y, fw = f.offsetWidth, fh = f.offsetHeight;
+                    return x < fx + fw + 6 && fx < x + s.w + 6 && y < fy + fh + 6 && fy < y + s.h + 6;
+                })();
+                for (let k = 1; k <= 30; k++) { const x = t.x + k * (s.w + 4); if (!occupe(x, t.y)) return { x, y: t.y }; }
+                for (let k = 1; k <= 30; k++) { const y = t.y + k * (s.h + 8); if (!occupe(t.x, y)) return { x: t.x, y }; }
+                return { x: t.x + s.w + 4, y: t.y };
+            }
+
+            // Dupliquer : la même tuile, dans le même groupe de l'expression (𝑥 devient 2𝑥).
+            dupliquerTuile(t) {
+                this.saveState();
+                playSound('pop');
+                if (this.displayMode !== 'normal') { this.displayMode = 'normal'; this.isReduced = false; }
+                const shown = this.shownSign(t);
+                const pos = this.placeLibrePres(t);
+                const id = this.nextId++;
+                const el = document.createElement('div');
+                ['token', `type-${t.type}`, 'in-bracket'].forEach(c => { if (c !== 'in-bracket' || t.element.classList.contains('in-bracket')) el.classList.add(c); });
+                if (t.type === 'x' && t.orientation === 'v') el.classList.add('orient-v');
+                el.classList.add(shown === 1 ? 'green' : 'red');
+                el.innerHTML = `<span style="pointer-events:none;">${getTileLabel(t.type, shown)}</span>`;
+                this.styleTileElement(el, t.type, shown);
+                el.id = `t-${id}`;
+                el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px';
+                el.addEventListener('mousedown', (e) => this.handleDragStart(e));
+                el.addEventListener('touchstart', (e) => this.handleDragStart(e), {passive: false});
+                this.boardWorld.appendChild(el);
+                const copie = { id, type: t.type, orientation: t.orientation, originalOrientation: t.originalOrientation || t.orientation,
+                    sign: t.sign, displaySign: t.displaySign, element: el, x: pos.x, y: pos.y, pairId: null, packId: t.packId, ghostIds: [] };
+                this.tokens.push(copie);
+                const step = this.steps[this.stepIndexOfToken(t)];
+                step.tokenIds.splice(step.tokenIds.indexOf(t.id) + 1, 0, id);
+                el.animate([{ transform: 'scale(0.6)', opacity: 0.3 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180, easing: 'ease-out' });
+                this.updateEquation();
+            }
+
+            // Opposé : la tuile se retourne (𝑥 ↔ −𝑥). Elle passe en fin de son groupe : 𝑥 + 𝑥 + 𝑥 → 2𝑥 − 𝑥.
+            opposeTuile(t) {
+                this.saveState();
+                if (this.displayMode !== 'normal') { this.displayMode = 'normal'; this.isReduced = false; }
+                const avant = this.shownSign(t);
+                t.sign = -t.sign; t.displaySign = t.sign;
+                const step = this.steps[this.stepIndexOfToken(t)];
+                step.tokenIds = step.tokenIds.filter(i => i !== t.id); step.tokenIds.push(t.id);
+                t.packId = this.nextPackId++; this.packMeta[t.packId] = { order: this.nextPackOrder++ };
+                this.lastPack = null;
+                this.flipShown.set(t.id, avant);
+                this.flipTileVisual(t, this.flipRun);
+                this.checkOppositeAvailable();
+                this.updateEquation();
+            }
+
             // --- EQUATION TEXT ---
             updateEquation() {
                 let displayString = "";
@@ -3728,16 +3871,17 @@
                 return { x: src.clientX, y: src.clientY };
             }
 
+            // Lot 8 : la colonne de gauche (d'où viennent les tuiles) remplace la corbeille.
             isOverTileTrash(cx, cy) {
-                const zone = document.getElementById('tile-trash-zone');
+                const zone = document.getElementById('colonne-tuiles');
                 if (!zone) return false;
                 const r = zone.getBoundingClientRect();
                 return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
             }
 
             setTileTrashActive(active) {
-                const zone = document.getElementById('tile-trash-zone');
-                if (zone) zone.classList.toggle('trash-active', !!active);
+                const zone = document.getElementById('colonne-tuiles');
+                if (zone) zone.classList.toggle('rangement', !!active);
             }
 
             deleteToken(token, save = true) {
@@ -3805,20 +3949,11 @@
             handleDragStart(e) { 
                 const el = e.target.closest('.token'); if(!el) return;
                 const id = parseInt(el.id.split('-')[1]);
-                if (this.currentTool === 'erase') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const token = this.tokens.find(t => t.id === id);
-                    this.deleteToken(token);
-                    return;
-                }
-                if (this.currentTool === 'rotate') { // outil Pivoter : la tuile touchée pivote, elle ne se déplace pas
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.pivoterTuile(this.tokens.find(t => t.id === id));
-                    return;
-                }
                 if (this.currentTool !== 'hand') return; e.stopPropagation();
+                if (e.button !== undefined && e.button !== 0) return; // clic droit : c'est la bulle (contextmenu)
+                // Lot 8 : toucher une tuile SANS la bouger ouvre sa bulle (voir end()).
+                const depart = this.getClientPoint(e);
+                const toucher = { x: depart.x, y: depart.y, historique: this.history.length };
                 // Factoriser : chaque tuile rangée (ou sortie) du rectangle s'annule avec ↶
                 if (this.productFrame?.mode === 'facto') this.saveState();
                 this.draggedToken = this.tokens.find(t => t.id === id);
@@ -3882,9 +4017,17 @@
                             this.deleteToken(tokenToDelete, true);
                             return;
                         }
+                        const tuile = this.draggedToken;
+                        // Lot 8 : simple toucher (moins de 6 px) → la tuile reste où elle était et sa bulle s'ouvre.
+                        const touche = Math.hypot(pt.x - toucher.x, pt.y - toucher.y) < 6;
+                        if (touche && this.dragStartState) this.moveToken(tuile, this.dragStartState.x, this.dragStartState.y);
                         const productHandled = this.snapTokenToProductFrame(this.draggedToken);
-                        if (!productHandled) this.checkSnapAndFinalize(this.draggedToken);
+                        if (!productHandled) this.checkSnapAndFinalize(this.draggedToken); // une paire nulle touchée se reforme
                         this.draggedToken=null; this.dragStartState=null; this.setTileTrashActive(false); this.updateEquation();
+                        if (touche) {
+                            this.history.length = Math.min(this.history.length, toucher.historique); // rien à annuler avec ↶
+                            this.ouvrirBulle(tuile);
+                        }
                     } else {
                         this.setTileTrashActive(false);
                     }
@@ -3894,10 +4037,11 @@
             }
 
             setTool(t) {
+                if (t !== 'pen') t = 'hand'; // lot 8 : plus d'outil Pivoter ni Supprimer, la bulle les remplace
                 this.currentTool = t;
                 const p = t === 'pen';
+                this.fermerBulle();
                 this.boardContainer.classList.toggle('hide-cursor', p);
-                this.boardContainer.classList.toggle('tool-rotate', t === 'rotate');
                 document.getElementById('custom-cursor').style.display = p ? 'block' : 'none';
                 this.updateToolButtons();
             }
@@ -3905,38 +4049,42 @@
             startDraw(e) {
                 // Undo doit aussi annuler le stylo : on snapshot au début du trait
                 this.saveState();
+                this.fermerBulle();
                 this.isDrawing = true;
-
-                const cx = e.touches ? e.touches[0].clientX : e.clientX;
-                const cy = e.touches ? e.touches[0].clientY : e.clientY;
-                const p = this.getWorldPos(cx, cy);
-
-                const penWidth = this.getPenWorldWidth();
-                this.ctx.lineWidth = penWidth;
-                this.currentStroke = { color: this.ctx.strokeStyle, screenWidth: PEN_SCREEN_WIDTH, width: penWidth, points: [p] };
+                const p = this.getWorldPos(e.clientX, e.clientY);
+                this.currentStroke = { color: '#2563eb', screenWidth: PEN_SCREEN_WIDTH, points: [p] };
                 this.penStrokes.push(this.currentStroke);
-
-                this.lastDrawPos = p;
-                this.ctx.beginPath();
-                this.ctx.moveTo(p.x, p.y);
+                this.applyPenTransform();
+                this.ctx.strokeStyle = this.currentStroke.color;
+                this.ctx.lineWidth = this.getPenWorldWidth();
+                this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
+                this.tracerTrait([p]);
             }
 
-            draw(e) {
-                e.preventDefault();
-                if (!this.isDrawing) return;
-
-                const cx = e.touches ? e.touches[0].clientX : e.clientX;
-                const cy = e.touches ? e.touches[0].clientY : e.clientY;
-                const p = this.getWorldPos(cx, cy);
-
-                if (this.currentStroke) {
-                    this.currentStroke.points.push(p);
-                    this.ctx.lineWidth = (this.currentStroke.screenWidth || PEN_SCREEN_WIDTH) / Math.max(this.scale || 1, 0.5);
+            // Lot 8 : on ne dessine que le nouveau bout du trait (avant : tout le trait, à chaque mouvement,
+            // sur une toile de 12 000 × 12 000 points → saccadé). Même courbe que redrawPen.
+            draw(events) {
+                if (!this.isDrawing || !this.currentStroke) return;
+                const pts = this.currentStroke.points;
+                const c = this.ctx;
+                this.applyPenTransform();
+                c.strokeStyle = this.currentStroke.color;
+                c.lineWidth = this.getPenWorldWidth();
+                c.lineCap = 'round'; c.lineJoin = 'round';
+                for (const ev of events) {
+                    const p = this.getWorldPos(ev.clientX, ev.clientY);
+                    const a = pts[pts.length - 1];
+                    if (Math.abs(p.x - a.x) < 0.3 && Math.abs(p.y - a.y) < 0.3) continue;
+                    pts.push(p);
+                    const n = pts.length;
+                    // du milieu (n-3, n-2) au milieu (n-2, n-1), en passant par le point n-2
+                    const m0 = n >= 3 ? { x: (pts[n - 3].x + pts[n - 2].x) / 2, y: (pts[n - 3].y + pts[n - 2].y) / 2 } : pts[0];
+                    const m1 = { x: (pts[n - 2].x + p.x) / 2, y: (pts[n - 2].y + p.y) / 2 };
+                    c.beginPath();
+                    c.moveTo(m0.x, m0.y);
+                    c.quadraticCurveTo(pts[n - 2].x, pts[n - 2].y, m1.x, m1.y);
+                    c.stroke();
                 }
-
-                this.ctx.lineTo(p.x, p.y);
-                this.ctx.stroke();
-                this.lastDrawPos = p;
             }
 
             clearDrawing(saveToHistory = true) {
@@ -3947,25 +4095,16 @@
             }
 
             resizeCanvas() {
-                // Canvas HiDPI en coordonnées de plateau.
-                // Le canvas commence maintenant avant l'origine (CANVAS_WORLD_MIN négatif),
-                // sinon, après un dézoom, la partie haute visible du plateau peut correspondre
-                // à des coordonnées négatives : le stylo écrit bien, mais hors du canvas.
+                // Lot 8 : toile HiDPI de la taille du plateau à l'écran (avant : 12 000 × 12 000 points dans le
+                // plateau zoomé, que le navigateur repeignait à chaque mouvement du stylo → trait saccadé).
                 const dpr = Math.min(window.devicePixelRatio || 1, MAX_CANVAS_DPR);
+                const w = Math.max(1, this.boardContainer.clientWidth), h = Math.max(1, this.boardContainer.clientHeight);
                 this.canvasPixelRatio = dpr;
-                this.canvas.width = Math.round(CANVAS_WORLD_SIZE * dpr);
-                this.canvas.height = Math.round(CANVAS_WORLD_SIZE * dpr);
-                this.canvas.style.left = CANVAS_WORLD_MIN + 'px';
-                this.canvas.style.top = CANVAS_WORLD_MIN + 'px';
-                this.canvas.style.width = CANVAS_WORLD_SIZE + 'px';
-                this.canvas.style.height = CANVAS_WORLD_SIZE + 'px';
-                this.ctx.setTransform(dpr, 0, 0, dpr, -CANVAS_WORLD_MIN * dpr, -CANVAS_WORLD_MIN * dpr);
-                this.ctx.lineWidth = this.getPenWorldWidth();
-                this.ctx.lineCap = 'round';
-                this.ctx.lineJoin = 'round';
-                this.ctx.strokeStyle = '#2563eb';
-
-                // IMPORTANT : resize efface le canvas -> on redessine les traits
+                this.canvas.width = Math.round(w * dpr);
+                this.canvas.height = Math.round(h * dpr);
+                this.canvas.style.width = w + 'px';
+                this.canvas.style.height = h + 'px';
+                // IMPORTANT : resize efface la toile -> on redessine les traits
                 this.redrawPen();
             }
 
