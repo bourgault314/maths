@@ -14,8 +14,9 @@
 //   AIDES.carteRepere(code)             la carte d'un repère du carnet
 //
 // Le glisse-unité est celui du matériel virtuel de Gwenaël
-// (conversions_materiel_virtuel.html) : le nombre ne bouge pas, la fenêtre
-// de l'unité glisse. Le glisse-nombre est celui de Défi calcul, simplifié :
+// (conversions_materiel_virtuel.html), refait fidèlement au lot A2 : le
+// nombre ne bouge pas, les deux poignées « L'unité de mesure » et « Le
+// chiffre des unités » glissent ensemble. Le glisse-nombre est celui de Défi calcul, simplifié :
 // les chiffres glissent, la virgule reste. Le schéma en barres suit les
 // conventions de Gwenaël : angles droits, parts collées, une seule part
 // verte, « ? » sur la part cherchée, pas de vert quand les parts sont
@@ -483,80 +484,186 @@
   }
 
   // ----------------------------------------------------------- le glisse-unité
-  // Les unités en titre de colonne ; le chiffre des unités du nombre sous
-  // l'unité de départ. La fenêtre (l'unité choisie) glisse : on touche une
-  // unité, ou on fait glisser le doigt sur la rangée. Arrivée à l'unité
-  // voulue, les zéros remplissent les colonnes entre les deux.
-  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true}, arrivee) {
+  // Celui de Gwenaël (conversions_materiel_virtuel.html), refait fidèlement
+  // au lot A2 (12/11/2026) : les unités en titre de colonne, les chiffres
+  // dessous, qui NE BOUGENT PAS ; deux poignées qui glissent ENSEMBLE,
+  // « L'unité de mesure » en haut et « Le chiffre des unités » en bas, avec
+  // la virgule ; ses couleurs par grandeur. Ce qu'il gagne : il se glisse au
+  // doigt (ou on touche une unité, ou les flèches du clavier), l'unité de
+  // départ est marquée d'une punaise (son « Figer le départ »), les colonnes
+  // hors programme du palier sont en pâle. Les zéros remplissent les colonnes
+  // entre les chiffres et la poignée, comme chez lui. Il n'écrit jamais la
+  // mesure trouvée : c'est l'élève qui lit les chiffres.
+  const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"]};
+  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true}, arrivee = () => {}) {
     const G = gen();
+    const [entier, decimales = ""] = String(valeur).replace(/\s/g, "").replace(".", ",").split(",");
+    const avant = entier.replace(/\D/g, "").replace(/^0+(?=\d)/, "").split("");
+    const apres = decimales.replace(/\D/g, "").split("").filter(Boolean);
     let colonnes = G.COLONNES[grandeur].slice();
-    const chiffres = String(valeur).replace(/\D/g, "").split("");
+    // Des colonnes sans nom à gauche (ou à droite) si le nombre en a besoin.
     const iDe0 = colonnes.indexOf(de);
-    // Des colonnes sans nom à gauche si le nombre en a besoin.
-    const manque = Math.max(0, chiffres.length - 1 - iDe0);
-    colonnes = Array(manque).fill("").concat(colonnes);
+    const manqueG = Math.max(0, avant.length - 1 - iDe0);
+    const manqueD = Math.max(0, apres.length - (colonnes.length - 1 - iDe0));
+    colonnes = Array(manqueG).fill("").concat(colonnes, Array(manqueD).fill(""));
+    const n = colonnes.length;
     const iDe = colonnes.indexOf(de);
     const iVers = colonnes.indexOf(vers);
-    let fenetre = iDe;
+    // Les chiffres posés une fois pour toutes : le chiffre des unités sous
+    // l'unité de départ.
+    const poses = Array(n).fill("");
+    avant.forEach((c, k) => { poses[iDe - (avant.length - 1 - k)] = c; });
+    apres.forEach((c, k) => { poses[iDe + 1 + k] = c; });
+    const premier = poses.findIndex(c => c !== "");
+    const dernier = n - 1 - poses.slice().reverse().findIndex(c => c !== "");
+    let cible = iDe;
     let fini = false;
-    const boite = el("div", "gu");
-    const rangU = el("div", "u");
-    const rangD = el("div", "d");
-    const modele = `repeat(${colonnes.length}, 1fr)`;
-    rangU.style.gridTemplateColumns = modele;
-    rangD.style.gridTemplateColumns = modele;
+    const [acc, accF] = THEMES_GLISSE[grandeur] || THEMES_GLISSE.longueur;
+
+    const boite = el("div", "gu2");
+    boite.style.setProperty("--acc", acc);
+    boite.style.setProperty("--acc-f", accF);
+    boite.style.setProperty("--n", String(n));
+    const piste = el("div", "gu2-piste");
+    const curseur = el("div", "gu2-curseur");
+    curseur.setAttribute("aria-hidden", "true");
+    const virgule = el("span", "gu2-virgule", ",");
+    curseur.appendChild(virgule);
+    const poignee = (classe, texte) => {
+      const p = el("div", `gu2-poignee ${classe}`);
+      p.setAttribute("role", "slider");
+      p.tabIndex = classe === "dessus" ? 0 : -1;
+      p.setAttribute("aria-label", texte);
+      p.appendChild(el("span", "gu2-mots", texte));
+      return p;
+    };
+    const haut = poignee("dessus", "L'unité de mesure");
+    const bas = poignee("dessous", "Le chiffre des unités");
+    const flecheH = el("span", "gu2-pointe dessus");
+    const flecheB = el("span", "gu2-pointe dessous");
+    const tete = el("div", "gu2-tete");
+    const ligne = el("div", "gu2-chiffres");
     const boutons = colonnes.map((u, i) => {
-      const b = el("button", "", u || NB);
+      const b = el("button", u ? "" : "sans-nom");
       b.type = "button";
-      b.disabled = !u;
-      if (u && pale && G.HORS_CYCLE_2.includes(u)) b.classList.add("pale");
-      if (!u) b.classList.add("sans-nom");
-      b.setAttribute("aria-label", u ? `Mettre l'unité sur ${u}` : "colonne sans nom");
+      b.appendChild(el("span", "", u || NB));
+      if (!u) { b.disabled = true; b.setAttribute("aria-hidden", "true"); b.tabIndex = -1; }
+      else {
+        b.setAttribute("aria-label", `Mettre l'unité sur ${u}`);
+        b.tabIndex = -1;
+        if (pale && G.HORS_CYCLE_2.includes(u)) b.classList.add("pale");
+      }
+      if (i === iDe) {
+        b.classList.add("depart");
+        const pin = el("span", "gu2-pin", "📌");
+        pin.setAttribute("aria-hidden", "true");
+        b.appendChild(pin);
+        b.title = "L'unité de départ";
+      }
       b.addEventListener("click", () => aller(i));
-      rangU.appendChild(b);
+      tete.appendChild(b);
       return b;
     });
-    const cases = colonnes.map(() => { const c = el("span", ""); rangD.appendChild(c); return c; });
-    boite.appendChild(rangU);
-    boite.appendChild(rangD);
+    const cases = colonnes.map(() => { const c = el("span", ""); ligne.appendChild(c); return c; });
+    piste.append(curseur, haut, flecheH, tete, ligne, bas, flecheB);
+    boite.appendChild(piste);
     zone.appendChild(boite);
 
-    function dessiner() {
-      boutons.forEach((b, i) => {
-        b.classList.toggle("on", i === fenetre);
-        b.classList.toggle("dep", i === iDe && i !== fenetre);
-      });
-      cases.forEach((c, i) => {
-        const rang = iDe - i;
-        let t = "";
-        let cl = "";
-        if (rang >= 0 && rang < chiffres.length) t = chiffres[chiffres.length - 1 - rang];
-        else if (i > iDe && i <= fenetre) { t = "0"; cl = "z"; }
-        if (i > fenetre && t) cl = "apres";
-        c.textContent = t;
-        c.className = `${cl}${i === fenetre ? " on" : ""}`;
+    // La place des poignées : centrées sur la colonne (ou sur le doigt
+    // pendant le glissé), sans sortir de la piste ; leur pointe, elle, reste
+    // pile sur la colonne.
+    function placer(centre) {
+      const W = piste.clientWidth || 1;
+      const x = Math.max(0, Math.min(1, centre)) * W;
+      const largeurCol = W / n;
+      curseur.style.left = `${((x - largeurCol / 2) / W) * 100}%`;
+      curseur.style.width = `${100 / n}%`;
+      [flecheH, flecheB].forEach(f => { f.style.left = `${(x / W) * 100}%`; });
+      [haut, bas].forEach(p => {
+        const demi = p.offsetWidth / 2;
+        const c = Math.max(demi, Math.min(W - demi, x));
+        p.style.left = `${(c / W) * 100}%`;
       });
     }
+    function dessiner() {
+      const debut = Math.min(premier, cible);
+      const fin = Math.max(dernier, cible);
+      cases.forEach((c, i) => {
+        let t = poses[i];
+        let cl = "";
+        if (!t && i >= debut && i <= fin) { t = "0"; cl = "zero"; }
+        c.textContent = t;
+        c.className = `${cl}${i === cible ? " unite" : ""}`;
+      });
+      boutons.forEach((b, i) => b.classList.toggle("on", i === cible));
+      [haut, bas].forEach(p => p.setAttribute("aria-valuetext", colonnes[cible]));
+      placer((cible + 0.5) / n);
+    }
     function aller(i) {
-      if (!colonnes[i] || i === fenetre) return;
-      fenetre = i;
+      if (i < 0 || i >= n || !colonnes[i]) return;
+      cible = i;
       dessiner();
       if (i === iVers && !fini) { fini = true; arrivee(); }
     }
-    // Toucher une unité, ou glisser le doigt sur la rangée : la colonne
-    // sous le doigt devient la fenêtre. (Pas de capture du pointeur : elle
-    // détournait le « click » des boutons.) Le clavier passe par « click ».
-    const colonneSous = ev => {
-      const r = rangU.getBoundingClientRect();
-      return Math.floor(((ev.clientX - r.left) / r.width) * colonnes.length);
-    };
-    rangU.addEventListener("pointerdown", ev => { const i = colonneSous(ev); if (i >= 0 && i < colonnes.length) aller(i); });
-    rangU.addEventListener("pointermove", ev => {
-      if (!ev.buttons) return;
-      const i = colonneSous(ev);
-      if (i >= 0 && i < colonnes.length) aller(i);
+    // La colonne nommée la plus proche d'une position (0 à 1).
+    function plusProche(pos) {
+      let meilleur = cible;
+      let ecart = Infinity;
+      colonnes.forEach((u, i) => {
+        if (!u) return;
+        const d = Math.abs((i + 0.5) / n - pos);
+        if (d < ecart) { ecart = d; meilleur = i; }
+      });
+      return meilleur;
+    }
+    // Glisser une poignée : elle suit le doigt, l'autre aussi ; la colonne
+    // sous le doigt devient l'unité (les zéros suivent) ; au lâcher, elle se
+    // pose pile sur sa colonne.
+    // Le glissé part de la colonne où est la poignée (une poignée du bord,
+    // décalée pour rester dans la piste, ne saute pas sous le doigt).
+    let glisse = null;
+    let depart = {x: 0, pos: 0};
+    const position = ev => depart.pos + (ev.clientX - depart.x) / (piste.getBoundingClientRect().width || 1);
+    [haut, bas].forEach(p => {
+      p.addEventListener("pointerdown", ev => {
+        ev.preventDefault();
+        glisse = ev.pointerId;
+        depart = {x: ev.clientX, pos: (cible + 0.5) / n};
+        try { p.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ }
+        boite.classList.add("glisse");
+        haut.focus({preventScroll: true});
+      });
+      p.addEventListener("pointermove", ev => {
+        if (glisse !== ev.pointerId) return;
+        const pos = position(ev);
+        const i = plusProche(pos);
+        if (i !== cible) aller(i);
+        placer(pos);
+      });
+      const lacher = ev => {
+        if (glisse !== ev.pointerId) return;
+        glisse = null;
+        boite.classList.remove("glisse");
+        aller(plusProche(position(ev)));
+        dessiner();
+      };
+      p.addEventListener("pointerup", lacher);
+      p.addEventListener("pointercancel", lacher);
+      p.addEventListener("keydown", ev => {
+        const pas = ev.key === "ArrowLeft" ? -1 : ev.key === "ArrowRight" ? 1 : 0;
+        if (!pas) return;
+        ev.preventDefault();
+        for (let i = cible + pas; i >= 0 && i < n; i += pas) if (colonnes[i]) { aller(i); break; }
+      });
     });
+    // À l'arrivée de l'écran, les poignées sont posées d'un coup (sans
+    // glisser depuis le milieu) ; les glissés suivants sont animés.
+    boite.classList.add("pose");
     dessiner();
+    const poser = () => { placer((cible + 0.5) / n); root.setTimeout(() => boite.classList.remove("pose"), 30); };
+    // La largeur n'est connue qu'une fois la piste à l'écran.
+    if (root.requestAnimationFrame) root.requestAnimationFrame(poser); else poser();
+    if (root.ResizeObserver) new root.ResizeObserver(() => { if (glisse === null) placer((cible + 0.5) / n); }).observe(piste);
     return boite;
   }
 
@@ -623,7 +730,7 @@
     if (aide.type === "glisse-nombre") { glisseNombre(zone, aide, f); return; }
     if (aide.type === "glisse-unite") {
       glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
-      zone.appendChild(el("div", "note", "Glisse l'unité avec ton doigt."));
+      zone.appendChild(el("div", "note", "Fais glisser une poignée, ou touche une unité."));
       return;
     }
     if (aide.type === "heure") {
@@ -644,8 +751,8 @@
     if (question.outil === "glisse-unite" && question.glisse) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
       const g = question.glisse;
-      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur.replace(",", ""), de: g.de, vers: g.vers}, fini);
-      zone.appendChild(el("div", "note", question.plus ? carte().typo(`Glisse l'unité avec ton doigt, puis ajoute ${question.plus}.`) : "Glisse l'unité avec ton doigt."));
+      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers}, fini);
+      if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       return;
     }
     if (question.outil === "barre-heure" && question.heure) {
