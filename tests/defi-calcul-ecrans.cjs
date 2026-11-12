@@ -470,11 +470,11 @@ async function premierJour(navigateur, base, taille) {
   await page.getByText("Commencer").first().click();
   await page.waitForTimeout(600);
   assert.equal(await genre(page), "test");
-  // Marche 1 : 2 justes.
-  for (let i = 0; i < 2; i += 1) { const c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100); }
+  // Marche 1 : 3 justes (lot 1 « la séance » : 3 calculs par marche).
+  for (let i = 0; i < 3; i += 1) { const c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100); }
   assert.equal((await escalier(page)).marche, 2, "marche 1 montée");
   await ecran("test-marche-2", {jeu: true, pave: true});
-  // Marche 2 : un juste, un faux → le 3e calcul ; le faux : ✗, jamais la bonne réponse.
+  // Marche 2 : un juste, un faux → un calcul de plus (4) ; le faux : ✗, jamais la bonne réponse.
   let c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100);
   c = await calcul(page); await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(250);
   const retour = await texte(page, "#answer-feedback");
@@ -482,9 +482,9 @@ async function premierJour(navigateur, base, taille) {
   assert.doesNotMatch(await texte(page, "#expression"), new RegExp(`\\b${c.reponse}\\b`), "la bonne réponse n'est pas écrite dans le calcul");
   await ecran("test-faux", {jeu: true});
   await page.waitForTimeout(1200);
-  assert.equal((await escalier(page)).courante.length, 2, "on passe tout seul au 3e calcul");
-  c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100);
-  assert.equal((await escalier(page)).marche, 3, "marche 2 montée, à 2 sur 3");
+  assert.equal((await escalier(page)).courante.length, 2, "on passe tout seul au calcul suivant");
+  for (let i = 0; i < 2; i += 1) { c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100); }
+  assert.equal((await escalier(page)).marche, 3, "marche 2 montée, à 3 sur 4");
   // Marche 3 : deux faux → arrêt.
   for (let i = 0; i < 2; i += 1) { c = await calcul(page); await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(1300); }
   await page.waitForTimeout(800);
@@ -522,8 +522,11 @@ async function premierJour(navigateur, base, taille) {
   // 5 justes de suite sans outil (et toutes les écritures vues).
   for (let i = 0; i < 25 && await genre(page) === "entraine"; i += 1) await repondreEntrainement(page, true);
   await page.waitForTimeout(800);
-  assert.equal(await texte(page, "#result-title"), "Séance du jour faite", "une nouveauté par séance : la séance est finie");
-  await ecran("fin-de-seance");
+  // Lot 1 « la séance » : le temps n'est pas passé (l'horloge de la page est
+  // arrêtée) — la séance continue avec le module suivant, testé.
+  assert.notEqual(await texte(page, "#result-title"), "Séance terminée");
+  assert.equal(await boutonSuite(page), "Étape 4 : tu connais déjà ? →", "le module suivant (A10) est testé");
+  await ecran("fin-entrainement");
   const p = await parcours(page);
   assert.deepEqual(p.modules.A1.b, [4, 3, 2]);
   assert.deepEqual(p.modules.A1.a, [1, 1, 1], "les marches prouvées comptent comme J'apprends fait");

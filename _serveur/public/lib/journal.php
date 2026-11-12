@@ -42,6 +42,9 @@ const ACTIONS_JOURNAL = [
     // élève — la cible est l'élève, par son identifiant ; ce qui a été ouvert
     // est dans sa ligne (eleves.ajouts), pas dans le journal.
     'eleves.acces',
+    // Lot 1 « la séance » de Défi calcul (12/11/2026) : qui a réglé quoi pour
+    // quel élève — la cible est l'élève ; le réglage est dans sa ligne.
+    'eleves.reglages',
     'partages.ajouter', 'partages.supprimer',
     // Lot « après l'audit GPT » (D4, 14/10/2026) : un temps retiré des records.
     'records.retirer',

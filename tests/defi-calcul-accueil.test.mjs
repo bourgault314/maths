@@ -54,9 +54,11 @@ test("la pastille des soirs : dans la tête de Mon module, sur une ligne de haut
   assert.match(PAGE, /const semaine = \(\) => PARCOURS\.semaineEleve\(parcours, CARTE, jourCourant\(\)\);/);
 });
 
-test("la porte de Mon parcours : le compte et les gains de la semaine en vert ; elle ouvre un écran à part", () => {
+test("la porte de Mon parcours : le palier (lot 1) et les gains de la semaine en vert ; elle ouvre un écran à part", () => {
   const rendu = corps(PAGE, "renderSemaine");
-  assert.match(rendu, /note\.replaceChildren\(document\.createTextNode\(texteCompte\(PARCOURS\.compter\(parcours, CARTE\)\)\)\);/);
+  // Lot 1 « la séance » (planche 1) : plus de « N compétences sues sur 125 ».
+  assert.match(rendu, /note\.replaceChildren\(document\.createTextNode\(textePalier\(\)\)\);/);
+  assert.doesNotMatch(PAGE, /sues? sur \$\{compte\.total\}/);
   assert.match(rendu, /const gains = texteGains\(s\.sues\);/);
   assert.match(PAGE, /const texteGains = sues => sues \? `\+\$\{sues\} cette semaine` : "";/);
   assert.match(CSS, /\.acc-porte small b \{ color: var\(--green\); font-weight: 950; white-space: nowrap; \}/);
@@ -100,7 +102,7 @@ test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché 
   assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-parcours:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261111-3/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261112-1/);
 });
 
 test("la question « Effacer » s'ouvre dans la même case que la porte et les liens", () => {

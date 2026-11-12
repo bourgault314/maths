@@ -61,7 +61,16 @@
   // la fusion réunit les séances par leur numéro. Une entrée de version 5
   // reçoit le sien en se relisant ; le serveur refuse l'écriture d'une page
   // de version 5 (« version_min » 6), qui effacerait les numéros.
-  const VERSION = 6;
+  // Version 7 (lot 1 « la séance », 12/11/2026) : la séance au temps (10 ou
+  // 15 minutes, plus de « nouveautés par séance »), le 2e calcul après un
+  // faux dans Mes calculs du jour, le « lent » deux fois de suite (`l`), le
+  // test à 3 calculs par marche. Le plan de séance passe à 11 nombres. Une
+  // progression de version 6 se relit : ses boîtes ne bougent pas, `l` vaut
+  // 0, et une séance ouverte en version 6 continue avec 10 minutes (son plan
+  // à 7 nombres se relit, ses nombres 4 à 6 remis à zéro : leur sens a
+  // changé). Le serveur refuse l'écriture d'une page de version 6
+  // (« version_min » 7) : elle effacerait `l` et tronquerait le plan.
+  const VERSION = 7;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -113,22 +122,33 @@
     // l'image, 2 erreurs de suite l'outil à manipuler ; au bout de 25
     // calculs sans y arriver, c'est raté.
     entraine: Object.freeze({avecOutil: 2, sansOutil: 5, erreurs: 2, maximum: 25}),
-    // Le test d'entrée en escalier : 2 calculs par marche, un 3e si un faux
-    // (2 sur 3 pour monter) ; 8 tests au plus dans une séance (lot F1,
-    // 07/11/2026 ; 4 avant).
-    test: Object.freeze({parMarche: 2, departage: 3, parSeance: 8}),
+    // Le test d'entrée en escalier (lot 1 « la séance », 12/11/2026, choix
+    // de Gwenaël) : un calcul par sorte, 3 au moins par marche (4 pour un
+    // niveau à 4 sortes) ; dès un faux, un calcul de plus, de la sorte
+    // ratée. La marche est montée avec au plus un faux ; 2 faux, le test
+    // s'arrête. 12 tests au plus dans une séance (garde-fou).
+    test: Object.freeze({parMarche: 3, fauxPermis: 1, parSeance: 12}),
     // Les boîtes : délais de retour 1, 1, 3, 7, 14, 30, 60 jours (lot F1,
     // 07/11/2026 : les boîtes 6 et 7 ; avant, la boîte 5 revenait tous les
     // 14 jours sans fin). Une compétence entre en boîte 2 (entraînement), 3
     // (la marche la plus haute prouvée au test) ou 4 (les marches en
     // dessous) ; elle est sue en boîte 4, et le reste jusqu'à la 7.
     revision: Object.freeze({boites: 7, delais: Object.freeze([1, 1, 3, 7, 14, 30, 60]), entraine: 2, test: 3, dessous: 4, su: 4}),
-    // Les nouveautés d'une séance (lot F1, 07/11/2026) : 1, 2 ou 3, réglé
-    // par le professeur pour la classe (« Régler Défi calcul ») ; 1 par
-    // défaut et sans code. Une nouveauté = un entraînement réussi ; la
-    // suivante vient dans la même séance, jusqu'au nombre réglé. Un
-    // entraînement raté arrête les nouveautés jusqu'au lendemain.
-    nouveautes: Object.freeze({defaut: 1, maximum: 3}),
+    // La séance au temps (lot 1, décisions 1 et 2 de « fonctionnement 3 ») :
+    // 10 minutes, ou 15 au choix du professeur (pour la classe ou pour un
+    // élève). Toujours : Mes calculs du jour, les rouges, et l'avancée
+    // jusqu'au premier apprentissage compris (les tests, puis J'apprends et
+    // son entraînement). Ensuite, une étape ne commence que si le temps
+    // actif plus sa durée habituelle tient dans les minutes prévues, plus
+    // une minute. Les durées habituelles sont celles du simulateur
+    // (fonctionnement 3) : test 1,5 min, J'apprends 4, Je m'entraîne 3, Je
+    // m'entraîne encore 2,5 (en secondes ici).
+    // `paliers` : jusqu'où va l'appli (1 les bases, 2 CM1, 3 CM2, 4 vers la
+    // 6e : tout), réglé par le professeur ; au-delà, ni test ni leçon.
+    seance: Object.freeze({garder: 60, etapes: 99, minutes: Object.freeze([10, 15]), defaut: 10, tolerance: 60,
+      durees: Object.freeze({test: 90, apprends: 240, entraine: 180, rattrape: 150}), paliers: 4}),
+    // Les nouveautés réussies d'une séance, au journal (lot G1) : un compte.
+    nouveautes: Object.freeze({maximum: 99}),
     // Mes calculs du jour : seulement ce qui est dû (31/10 : plus de calculs
     // d'entretien), 20 au plus, un par compétence. Pour un niveau de faits,
     // un calcul juste au-delà de 5 s ne fait pas monter.
@@ -141,7 +161,6 @@
     // (boîte 1, pas rouge pendant ces jours, signalée au professeur), puis
     // elle revient par J'apprends et « Je m'entraîne encore ».
     rattrapage: Object.freeze({echecs: 2, deCote: 3, joursDeCote: 3, parSeance: 3, sansOutil: 3, maximum: 20}),
-    seance: Object.freeze({garder: 60, etapes: 99}),
     // Le journal d'une séance (lot G1) : des comptes bornés, la durée en
     // minutes de temps actif (90 au plus). La séance ouverte compte ses
     // secondes (90 minutes au plus).
@@ -151,22 +170,30 @@
     causes: 12
   });
 
-  // Le plan de la séance en cours, `seance.p` : sept nombres.
+  // Le plan de la séance en cours, `seance.p` : onze nombres (lot 1 « la
+  // séance », 12/11/2026 ; sept avant).
   //   [0] 1 si la séance est ouverte (commencée, pas finie) ;
   //   [1] 1 si Mes calculs du jour restent à jouer ;
   //   [2] rang + 1 de la compétence rouge à entraîner (décidé après Mes
   //       calculs du jour), 0 s'il n'y en a pas (ou plus) ;
   //   [3] le nombre de tests d'entrée joués ;
-  //   [4] la nouveauté : 0 à faire, 2 faite, 3 arrêtée après un entraînement
-  //       raté (rien de nouveau avant demain). (1 n'est plus utilisé.)
-  //   [5] les nouveautés prévues pour cette séance, 1 à 3 (le réglage de la
-  //       classe à l'ouverture ; 0, un plan d'avant le lot F1, vaut 1) ;
-  //   [6] les nouveautés réussies dans cette séance.
-  // Un plan à cinq nombres (une page d'avant le lot F1) se relit avec 0 et
-  // 0 : une seule nouveauté, comme avant.
-  const PLAN = Object.freeze({ouverte: 0, jour: 1, rattrapage: 2, tests: 3, nouveaute: 4, prevues: 5, reussies: 6});
-  const NOUVEAUTE = Object.freeze({aFaire: 0, faite: 2, arretee: 3});
-  const PLAN_MAX = Object.freeze([1, 1, RANGS.total, SEUILS.test.parSeance, 3, SEUILS.nouveautes.maximum, SEUILS.nouveautes.maximum]);
+  //   [4] les apprentissages : 0 libres, 3 arrêtés (un entraînement raté :
+  //       rien de nouveau avant demain) ;
+  //   [5] les minutes prévues, 10 ou 15 (le réglage à l'ouverture ; 0, un
+  //       plan de version 6, vaut 10) ;
+  //   [6] les apprentissages commencés dans cette séance (J'apprends fait,
+  //       ou Je m'entraîne joué) : tant qu'il vaut 0, l'avancée est garantie ;
+  //   [7] le 2e calcul en attente : rang + 1 de la compétence ratée dans Mes
+  //       calculs du jour (0 : aucun) ;
+  //   [8] sa boîte d'avant le faux, [9] ses échecs `x` d'avant, [10] son
+  //       « J'apprends fait » `a` d'avant — rendus si le 2e calcul est juste.
+  // Un plan de version 6 (sept nombres) se relit : ses nombres 4 à 6 sont
+  // remis à zéro (leur sens a changé), la séance continue avec 10 minutes.
+  const PLAN = Object.freeze({ouverte: 0, jour: 1, rattrapage: 2, tests: 3, nouveaute: 4, minutes: 5, commences: 6,
+    second: 7, secondBoite: 8, secondEchecs: 9, secondAppris: 10});
+  const NOUVEAUTE = Object.freeze({aFaire: 0, arretee: 3});
+  const PLAN_MAX = Object.freeze([1, 1, RANGS.total, SEUILS.test.parSeance, 3, SEUILS.seance.minutes[SEUILS.seance.minutes.length - 1], 99,
+    RANGS.total, SEUILS.revision.boites, SEUILS.rattrapage.deCote, 1]);
 
   // Le journal des séances (lot G1 « journal + accueil », 07/11/2026). Pour
   // chaque séance FINIE, rangée comme `seances` (la même place dans chaque
@@ -212,15 +239,20 @@
   const EN_COURS_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte,
     SEUILS.journal.compte, SEUILS.journal.secondes, SEUILS.nouveautes.maximum]);
 
-  // Le nombre de nouveautés d'une séance : 1, 2 ou 3 (un vrai nombre, pas
-  // « 2 » en texte) ; tout le reste vaut 1.
-  function nombreDeNouveautes(valeur) {
-    return Number.isInteger(valeur) && valeur >= 1 && valeur <= SEUILS.nouveautes.maximum ? valeur : SEUILS.nouveautes.defaut;
+  // Les minutes d'une séance : 10 ou 15 (un vrai nombre, pas « 15 » en
+  // texte) ; tout le reste vaut 10.
+  function minutesDeSeance(valeur) {
+    return Number.isInteger(valeur) && SEUILS.seance.minutes.includes(valeur) ? valeur : SEUILS.seance.defaut;
   }
 
-  // Les nouveautés prévues d'un plan (0 : un plan d'avant le lot F1).
-  function prevuesDuPlan(plan) {
-    return nombreDeNouveautes(plan[PLAN.prevues]);
+  // Jusqu'à quel palier va l'appli : 1 à 4 ; tout le reste vaut 4 (tout).
+  function palierDeSeance(valeur) {
+    return Number.isInteger(valeur) && valeur >= 1 && valeur <= SEUILS.seance.paliers ? valeur : SEUILS.seance.paliers;
+  }
+
+  // Les minutes prévues d'un plan (0 : un plan de version 6).
+  function minutesDuPlan(plan) {
+    return minutesDeSeance(plan[PLAN.minutes]);
   }
 
   function cloner(valeur) {
@@ -502,14 +534,17 @@
   // boîte 3 à la boîte 4, ou entrée sue par le test). Chacune est posée UNE
   // fois et ne bouge plus : une compétence redescendue puis remontée ne
   // compte pas une seconde fois.
+  // Lot 1 « la séance » : `l`, 1 quand le dernier calcul du jour d'un niveau
+  // « par cœur » était juste mais lent (décision 9 de « fonctionnement 3 » :
+  // lent deux fois de suite = rouge) ; 0 sinon.
   function moduleVide(id) {
     const k = NIVEAUX[id];
     return {vu: null, ok: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), f: listeDe(k), x: listeDe(k), t: listeDe(k),
-      d: listeDe(k, null), s: listeDe(k, null), c: {}};
+      l: listeDe(k), d: listeDe(k, null), s: listeDe(k, null), c: {}};
   }
 
   function planVide() {
-    return [0, 0, 0, 0, 0, 0, 0];
+    return PLAN_MAX.map(() => 0);
   }
 
   function creerParcours() {
@@ -541,6 +576,7 @@
     ligne.f = normaliserListe(brut.f, k, SEUILS.compteur);
     ligne.x = normaliserListe(brut.x, k, SEUILS.rattrapage.deCote);
     ligne.t = normaliserListe(brut.t, k, 1);
+    ligne.l = normaliserListe(brut.l, k, 1);
     const echeances = Array.isArray(brut.e) ? brut.e : [];
     const entrees = Array.isArray(brut.d) ? brut.d : [];
     const sues = Array.isArray(brut.s) ? brut.s : [];
@@ -552,7 +588,7 @@
         ligne.e[i] = dateOuNull(echeances[i]) || ligne.vu || jourLocal();
         ligne.d[i] = dateOuNull(entrees[i]);
         ligne.s[i] = dateOuNull(sues[i]);
-      } else { ligne.x[i] = 0; ligne.t[i] = 0; }
+      } else { ligne.x[i] = 0; ligne.t[i] = 0; ligne.l[i] = 0; }
     }
     if (brut.c && typeof brut.c === "object" && !Array.isArray(brut.c)) {
       Object.keys(brut.c).filter(cause => /^\d{1,2}$/.test(cause)).sort((x, y) => Number(x) - Number(y))
@@ -564,9 +600,20 @@
     return ligne;
   }
 
-  function normaliserPlan(brut) {
+  // `version` : celle de la progression relue. Un plan de version 6 (sept
+  // nombres) garde ses quatre premiers ; les suivants avaient un autre sens.
+  function normaliserPlan(brut, version = VERSION) {
     const liste = Array.isArray(brut) ? brut : [];
-    return PLAN_MAX.map((maximum, index) => entier(liste[index], 0, maximum));
+    const plan = PLAN_MAX.map((maximum, index) => entier(liste[index], 0, maximum));
+    // (L'arrêt après un entraînement raté, 3, garde son sens.)
+    if (version < 7) for (let i = PLAN.nouveaute; i < plan.length; i += 1) if (i !== PLAN.nouveaute || plan[i] !== NOUVEAUTE.arretee) plan[i] = 0;
+    // Les minutes : 10 ou 15, sinon 0 (lu 10).
+    if (!SEUILS.seance.minutes.includes(plan[PLAN.minutes])) plan[PLAN.minutes] = 0;
+    // Un 2e calcul en attente vient avec ce qu'il faut rendre ; sinon rien.
+    if (plan[PLAN.second] && !competenceDeRang(plan[PLAN.second] - 1)) plan[PLAN.second] = 0;
+    if (!plan[PLAN.second]) [PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
+    if (plan[PLAN.second] && !plan[PLAN.secondBoite]) plan[PLAN.second] = 0;
+    return plan;
   }
 
   // La reprise des boîtes de la version 2 (lot « couverture », 06/11/2026) :
@@ -636,7 +683,7 @@
       jour: ancienne ? null : dateOuNull(seance.jour),
       etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: ancienne ? planVide() : normaliserPlan(seance.p),
+      p: ancienne ? planVide() : normaliserPlan(seance.p, entier(brut.version, 0, 999)),
       j: enCoursVide()
     };
     // Ce que la séance ouverte a fait (lot G1) : rien quand elle n'est pas
@@ -745,9 +792,13 @@
   // 3, tu vas l'apprendre maintenant », c'est lui qui vient (31/10) ; sinon
   // la première compétence grise de l'ordre de la carte. null quand tout est
   // entré.
-  function competenceCourante(parcours, carte) {
+  // `palier` (lot 1 « la séance ») : jusqu'où va l'appli — au-delà, aucune
+  // compétence n'est « la courante » (ni test ni leçon). 4 : tout.
+  function competenceCourante(parcours, carte, palier = SEUILS.seance.paliers) {
     let premiere = null;
+    const jusqua = palierDeSeance(palier);
     for (const {module: id, niveau} of parcoursConstruit(carte)) {
+      if (jusqua < SEUILS.seance.paliers && palierDe(carte, id, niveau) > jusqua) continue;
       const ligne = ligneDe(parcours, id);
       if (ligne.b[niveau - 1]) continue;
       if (ligne.f[niveau - 1] || ligne.a[niveau - 1]) return {module: id, niveau};
@@ -756,8 +807,8 @@
     return premiere;
   }
 
-  function moduleCourant(parcours, carte) {
-    const courante = competenceCourante(parcours, carte);
+  function moduleCourant(parcours, carte, palier = SEUILS.seance.paliers) {
+    const courante = competenceCourante(parcours, carte, palier);
     return courante ? courante.module : null;
   }
 
@@ -806,10 +857,10 @@
   //   revoir   su, mais une de ses compétences est rouge ;
   //   encours  commencé ;
   //   libre    pas commencé.
-  function etatModule(parcours, id, carte) {
+  function etatModule(parcours, id, carte, palier = SEUILS.seance.paliers) {
     const fiche = ficheCarte(carte, id);
     const ligne = ligneDe(parcours, id);
-    const courante = competenceCourante(parcours, carte);
+    const courante = competenceCourante(parcours, carte, palier);
     const base = {
       id,
       niveaux: NIVEAUX[id],
@@ -935,24 +986,26 @@
   // compétence rouge à entraîner n'est décidée qu'après Mes calculs du jour
   // (c'est là que les rouges apparaissent) ; sans calculs du jour, tout de
   // suite.
-  // `nouveautes` : le réglage de la classe (1, 2 ou 3), rangé dans le plan :
-  // la séance garde ce nombre jusqu'au bout, ici ou sur un autre appareil.
-  function planNeuf(parcours, carte, aujourdhui, nouveautes) {
+  // `minutes` : le réglage (10 ou 15), rangé dans le plan : la séance garde
+  // cette durée jusqu'au bout, ici ou sur un autre appareil.
+  function planNeuf(parcours, carte, aujourdhui, minutes) {
     const jour = calculsDeSeance(parcours, carte, aujourdhui).calculs ? 1 : 0;
     const rouge = jour ? null : aEntrainer(parcours, carte, aujourdhui);
-    return [
-      0,
-      jour,
-      rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0,
-      0,
-      nouveauteArretee(parcours, aujourdhui) ? NOUVEAUTE.arretee : NOUVEAUTE.aFaire,
-      nombreDeNouveautes(nouveautes),
-      0
-    ];
+    const plan = planVide();
+    plan[PLAN.jour] = jour;
+    plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
+    plan[PLAN.nouveaute] = nouveauteArretee(parcours, aujourdhui) ? NOUVEAUTE.arretee : NOUVEAUTE.aFaire;
+    plan[PLAN.minutes] = minutesDeSeance(minutes);
+    return plan;
   }
 
-  function planDe(parcours, carte, aujourdhui, nouveautes) {
-    return seanceOuverte(parcours, aujourdhui) ? parcours.seance.p.slice() : planNeuf(parcours, carte, aujourdhui, nouveautes);
+  function planDe(parcours, carte, aujourdhui, minutes) {
+    return seanceOuverte(parcours, aujourdhui) ? parcours.seance.p.slice() : planNeuf(parcours, carte, aujourdhui, minutes);
+  }
+
+  // Le temps actif de la séance ouverte, en secondes (0 si elle ne l'est pas).
+  function secondesDeSeance(parcours, aujourdhui) {
+    return seanceOuverte(parcours, aujourdhui) ? parcours.seance.j[EN_COURS.secondes] : 0;
   }
 
   // La file de la séance : les étapes qui RESTENT, d'après le plan et l'état.
@@ -960,30 +1013,37 @@
   //   {type: "apprends", module, niveau}  J'apprends (nouveauté, ou rouge ratée deux fois)
   //   {type: "rattrape", module, niveau}  Je m'entraîne encore (une compétence rouge)
   //   {type: "test", module}              Tu connais déjà ? (le test en escalier)
-  //   {type: "nouveau"}                   « une chose nouvelle », après un test
-  //   {type: "nouveau", rang}             la 2e (3e) nouveauté prévue, tant
-  //                                       que la précédente n'est pas réussie
   //   {type: "entraine", module, niveau}  Je m'entraîne
+  //   {type: "avance"}                    « Puis j'avance dans mon parcours » :
+  //                                       la dernière ligne, qui ne se joue pas,
+  //                                       tant que le temps n'est pas épuisé.
+  // La séance au temps (lot 1, 12/11/2026) : Mes calculs du jour, les rouges
+  // (3 au plus), puis l'avancée — un module jamais commencé est TOUJOURS
+  // testé (jamais de leçon d'office), ce qu'il rate, il l'apprend (J'apprends
+  // puis Je m'entraîne, qui ne sont jamais séparés), puis les tests
+  // reprennent. L'avancée est garantie jusqu'au premier apprentissage
+  // compris ; ensuite, un bloc ne commence que s'il tient dans le temps.
+  // Une étape commencée se finit toujours : le temps n'est versé qu'à la fin
+  // d'une étape, la file ne change pas pendant qu'elle se joue.
   // Rend aussi `faites` (les étapes déjà jouées), `ouverte`, `finie` (une
-  // séance a fini aujourd'hui) et `minutes`.
-  const MINUTES = Object.freeze({jour: 2, rattrape: 3, test: 2, nouveau: 6, apprends: 3, entraine: 3});
-
-  // `nouveautes` : le réglage de la classe, pour une séance pas encore
-  // ouverte (une séance ouverte suit son plan).
-  function fileSeance(parcours, carte, {aujourdhui = jourLocal(), nouveautes = SEUILS.nouveautes.defaut} = {}) {
+  // séance a fini aujourd'hui, ou un entraînement raté a tout arrêté),
+  // `minutes` (la durée prévue) et `aFermer` (une séance ouverte qui n'a plus
+  // rien à jouer : le temps est passé pendant une étape quittée au milieu).
+  // `minutes` et `palier` : les réglages, pour une séance pas encore ouverte
+  // (une séance ouverte garde ses minutes ; le palier est relu à chaque fois).
+  function fileSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut, palier = SEUILS.seance.paliers} = {}) {
     const ouverte = seanceOuverte(parcours, aujourdhui);
-    const plan = planDe(parcours, carte, aujourdhui, nouveautes);
+    const plan = planDe(parcours, carte, aujourdhui, minutes);
     const etapes = [];
-    if (plan[PLAN.jour]) {
-      const {calculs} = calculsDeSeance(parcours, carte, aujourdhui);
-      if (calculs) {
-        // Après les calculs du jour : la nouveauté, qui vient toujours (les
-        // rouges ne sont connues qu'après les calculs ; elles s'intercalent
-        // alors avant elle).
-        etapes.push({type: "jour", calculs});
-        nouveaute();
-        return resultat();
-      }
+    const budget = minutesDuPlan(plan) * 60 + SEUILS.seance.tolerance;
+    const secondes = secondesDeSeance(parcours, aujourdhui);
+    let garanti = plan[PLAN.commences] === 0;
+    if (plan[PLAN.jour] && calculsDeSeance(parcours, carte, aujourdhui).calculs) {
+      // Après les calculs du jour : l'avancée (les rouges ne sont connues
+      // qu'après les calculs ; elles s'intercalent alors avant elle).
+      etapes.push({type: "jour", calculs: calculsDeSeance(parcours, carte, aujourdhui).calculs});
+      avancee();
+      return resultat();
     }
     if (plan[PLAN.rattrapage]) {
       const rouge = competenceDeRang(plan[PLAN.rattrapage] - 1);
@@ -992,34 +1052,52 @@
       if (!ligne.a[rouge.niveau - 1]) etapes.push({type: "apprends", module: rouge.module, niveau: rouge.niveau});
       etapes.push({type: "rattrape", module: rouge.module, niveau: rouge.niveau});
     }
-    // Le rouge d'abord (3 au plus, une à la fois), puis la nouveauté vient
-    // TOUJOURS (31/10) : une compétence rouge ne bloque plus rien.
-    nouveaute();
+    avancee();
     return resultat();
 
-    function nouveaute() {
-      const courante = competenceCourante(parcours, carte);
-      if (!courante || plan[PLAN.nouveaute] !== NOUVEAUTE.aFaire) return;
+    // Le prochain bloc d'avancée, s'il a le temps ; puis la ligne « Puis
+    // j'avance… ». Avant les calculs du jour ou une rouge, le temps de ce
+    // qui vient d'abord n'est pas connu : le bloc est montré s'il est garanti
+    // ou si le temps déjà passé le permet (il sera revu à son tour).
+    function avancee() {
+      if (plan[PLAN.nouveaute] !== NOUVEAUTE.aFaire) return;
+      const courante = competenceCourante(parcours, carte, palier);
+      if (!courante) return;
       const ligne = ligneDe(parcours, courante.module);
-      if (estIntact(ligne) && plan[PLAN.tests] < SEUILS.test.parSeance) {
-        etapes.push({type: "test", module: courante.module}, {type: "nouveau"});
+      const bloc = [];
+      let duree = 0;
+      if (estIntact(ligne)) {
+        // Un module jamais commencé est toujours testé ; plus de test
+        // possible dans cette séance : il attend la suivante.
+        if (plan[PLAN.tests] >= SEUILS.test.parSeance) return;
+        bloc.push({type: "test", module: courante.module});
+        duree = SEUILS.seance.durees.test;
       } else {
-        if (!ligne.a[courante.niveau - 1]) etapes.push({type: "apprends", module: courante.module, niveau: courante.niveau});
-        etapes.push({type: "entraine", module: courante.module, niveau: courante.niveau});
+        const appris = ligne.a[courante.niveau - 1] === 1;
+        // J'apprends est fait et la séance a commencé un apprentissage :
+        // c'est la suite du même, l'entraînement vient sans regarder l'heure.
+        if (appris && plan[PLAN.commences] > 0) garanti = true;
+        if (!appris) bloc.push({type: "apprends", module: courante.module, niveau: courante.niveau});
+        bloc.push({type: "entraine", module: courante.module, niveau: courante.niveau});
+        duree = appris ? SEUILS.seance.durees.entraine : SEUILS.seance.durees.apprends;
       }
-      // Les nouveautés prévues après celle-ci (lot F1) : une ligne chacune,
-      // qui ne se joue pas — elle devient la vraie étape quand la précédente
-      // est réussie, et disparaît si l'entraînement est raté.
-      for (let rang = plan[PLAN.reussies] + 2; rang <= prevuesDuPlan(plan); rang += 1) etapes.push({type: "nouveau", rang});
+      if (!garanti && secondes + duree > budget) return;
+      etapes.push(...bloc);
+      // « Puis j'avance… » : s'il restera du temps après ce bloc (sans la
+      // minute de tolérance).
+      if (secondes + duree < minutesDuPlan(plan) * 60) etapes.push({type: "avance"});
     }
 
     function resultat() {
+      const jouables = etapes.filter(etape => etape.type !== "avance");
       return {
         etapes,
+        jouables: jouables.length,
         faites: ouverte ? parcours.seance.etape : 0,
         ouverte,
         finie: aujourdhuiFinie(parcours, aujourdhui) || nouveauteArretee(parcours, aujourdhui),
-        minutes: etapes.reduce((somme, etape) => somme + MINUTES[etape.type], 0)
+        aFermer: ouverte && !jouables.length,
+        minutes: minutesDuPlan(plan)
       };
     }
   }
@@ -1028,26 +1106,38 @@
   // la séance est finie et comptée. `changer(plan)` dit ce que l'étape change.
   // Le plan est décidé sur l'état d'AVANT l'étape (`avant`).
   // Une séance commencée hier et continuée après minuit repart sur un plan
-  // neuf, avec les nouveautés prévues hier (relecture de Codex, lot F1 : pas
-  // le défaut 1).
-  function avancerSeance(copie, avant, carte, aujourdhui, changer) {
-    const plan = planDe(avant, carte, aujourdhui, avant.seance.p[PLAN.prevues] || SEUILS.nouveautes.defaut);
+  // neuf, avec les minutes prévues hier (relecture de Codex, lot F1).
+  // `palier` : le réglage (la file ne regarde pas au-delà).
+  function avancerSeance(copie, avant, carte, aujourdhui, changer, palier = SEUILS.seance.paliers) {
+    const plan = planDe(avant, carte, aujourdhui, minutesDuPlan(avant.seance.p));
     const etape = seanceOuverte(avant, aujourdhui) ? avant.seance.etape : 0;
+    // Ce qui a été fait avant minuit suit la séance (lot G1) ; après minuit,
+    // le plan neuf ne garantit plus rien de ce qui l'était hier.
+    if (!seanceOuverte(avant, aujourdhui) && avant.seance.p[PLAN.ouverte] === 1) plan[PLAN.commences] = avant.seance.p[PLAN.commences];
     changer(plan);
     plan[PLAN.ouverte] = 1;
     // Ce que la séance a fait la suit, même après minuit (lot G1) : elle
     // compte pour le jour où elle finit.
     const fait = copie.seance.j.slice();
     copie.seance = {jour: aujourdhui, etape: Math.min(SEUILS.seance.etapes, etape + 1), n: copie.seance.n, p: plan, j: fait};
-    if (fileSeance(copie, carte, {aujourdhui}).etapes.length) return false;
-    // Finie : elle compte, et le plan se referme. L'arrêt après un
-    // entraînement raté reste noté jusqu'à demain. Son journal est écrit à
-    // la place de la séance (lot G1).
+    if (fileSeance(copie, carte, {aujourdhui, palier}).jouables) return false;
+    fermer(copie, aujourdhui);
+    return true;
+  }
+
+  // La séance ouverte est finie : elle compte, et le plan se referme.
+  // L'arrêt après un entraînement raté reste noté jusqu'à demain. Son
+  // journal est écrit à la place de la séance (lot G1).
+  function fermer(copie, aujourdhui) {
+    const plan = copie.seance.p;
+    const fait = copie.seance.j.slice();
+    const ferme = planVide();
+    ferme[PLAN.nouveaute] = plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0;
     copie.seance = {
       jour: aujourdhui,
       etape: 0,
       n: Math.min(SEUILS.compteur, copie.seance.n + 1),
-      p: [0, 0, 0, 0, plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0, 0, 0],
+      p: ferme,
       j: enCoursVide()
     };
     const secondes = fait[EN_COURS.secondes];
@@ -1059,7 +1149,16 @@
     const rangees = rangerSeances([...dejaFinies, {jour: aujourdhui, entree: propre}]);
     copie.seances = rangees.seances;
     copie.journal = rangees.journal;
-    return true;
+  }
+
+  // Une séance ouverte qui n'a plus rien à jouer (`aFermer` : le temps est
+  // passé pendant une étape quittée au milieu) se ferme et compte. Rien
+  // d'autre ne change.
+  function fermerSeance(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
+    const copie = normaliserParcours(parcours);
+    if (!fileSeance(copie, carte, {aujourdhui, palier}).aFermer) return {parcours: copie, fermee: false};
+    fermer(copie, aujourdhui);
+    return {parcours: copie, fermee: true};
   }
 
   // Le temps actif d'une étape (lot G1) : la page le mesure (les gestes de
@@ -1179,7 +1278,7 @@
   //    aujourd'hui ; sa boîte ne bouge pas, ses échecs non plus (ce sont les
   //    calculs du jour qui jugent).
   // Une erreur ne fait JAMAIS descendre ici.
-  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false} = {}) {
+  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
     const avant = normaliserParcours(parcours);
     const copie = cloner(avant);
     const id = serie && serie.module;
@@ -1191,8 +1290,13 @@
     toucher(ligne, aujourdhui);
     let finie = false;
     if (serie.genre === "apprends") {
+      // J'apprends d'une compétence pas encore entrée : un apprentissage
+      // commence (lot 1) ; celui d'une rouge ratée deux fois n'en est pas un.
+      const nouveau = !ligne.b[n - 1];
       ligne.a[n - 1] = 1;
-      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, () => {});
+      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
+        if (nouveau) plan[PLAN.commences] = Math.min(PLAN_MAX[PLAN.commences], plan[PLAN.commences] + 1);
+      }, palier);
       return {parcours: copie, verdict: null, evenements, finie};
     }
     const verdict = verdictEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre: serie.genre});
@@ -1206,7 +1310,7 @@
       if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
         const suivante = aEntrainer(copie, carte, aujourdhui);
         plan[PLAN.rattrapage] = suivante ? rangDe(suivante.module, suivante.niveau) + 1 : 0;
-      });
+      }, palier);
       return {parcours: copie, verdict, evenements, finie};
     }
     const nouvelle = !ligne.b[n - 1];
@@ -1222,17 +1326,13 @@
     if (seance) {
       // Raté : demain repart de « J'apprends », rien de nouveau aujourd'hui.
       if (!verdict.reussi) ligne.a[n - 1] = 0;
-      // Réussi : une nouveauté de plus ; la suivante vient tant que la
-      // séance en prévoit (lot F1). Raté : plus rien de nouveau aujourd'hui.
-      // Une compétence déjà entrée (l'autre appareil a fini le même
-      // entraînement, et la fusion l'a apporté pendant la série) ne compte
-      // pas une 2e fois : la nouveauté suivante vient quand même (relecture
-      // de Codex, lot F1).
+      // Un apprentissage a été commencé (s'il ne l'était pas par J'apprends)
+      // ; réussi, la séance continue tant qu'elle a le temps (lot 1) ; raté,
+      // plus rien de nouveau aujourd'hui.
       finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-        if (!verdict.reussi) { plan[PLAN.nouveaute] = NOUVEAUTE.arretee; return; }
-        if (nouvelle) plan[PLAN.reussies] = Math.min(SEUILS.nouveautes.maximum, plan[PLAN.reussies] + 1);
-        plan[PLAN.nouveaute] = plan[PLAN.reussies] < prevuesDuPlan(plan) ? NOUVEAUTE.aFaire : NOUVEAUTE.faite;
-      });
+        plan[PLAN.commences] = Math.max(1, plan[PLAN.commences]);
+        if (!verdict.reussi) plan[PLAN.nouveaute] = NOUVEAUTE.arretee;
+      }, palier);
     }
     return {parcours: copie, verdict, evenements, finie};
   }
@@ -1246,7 +1346,7 @@
   // 4 (sues, reviennent dans 7 jours) ; les autres restent à apprendre. Le
   // test ne fait qu'entrer : il ne descend rien, ne touche pas une
   // compétence déjà entrée.
-  function appliquerTest(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false} = {}) {
+  function appliquerTest(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
     const avant = normaliserParcours(parcours);
     const copie = cloner(avant);
     const id = test && test.module;
@@ -1262,9 +1362,11 @@
       return {total, justes: entier(resultat.justes, 0, total)};
     });
     // La marche annoncée ne dépasse jamais ce que les résultats prouvent :
-    // des marches montées l'une après l'autre, chacune avec 2 justes.
+    // des marches montées l'une après l'autre, chacune avec 3 justes au
+    // moins et un faux au plus (lot 1 : « 3 justes sur 4 pour monter »).
+    const montee = r => r.justes >= SEUILS.test.parMarche && r.total - r.justes <= SEUILS.test.fauxPermis;
     let prouvee = 0;
-    while (prouvee < NIVEAUX[id] && resultats[prouvee].justes >= SEUILS.test.parMarche) prouvee += 1;
+    while (prouvee < NIVEAUX[id] && montee(resultats[prouvee])) prouvee += 1;
     const marche = Math.min(entier(test.marche, 0, NIVEAUX[id]), prouvee);
     const bilan = resultats.map(({total, justes}, index) => {
       const connu = index + 1 <= marche;
@@ -1288,7 +1390,7 @@
     const tout = marche === NIVEAUX[id];
     let finie = false;
     if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
-    if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); });
+    if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); }, palier);
     return {parcours: copie, bilan, tout, marche, finie};
   }
 
@@ -1297,16 +1399,27 @@
   // UNE réponse de Mes calculs du jour — le seul moment qui compte. `retour` :
   //   {module, niveau, juste, ms, type: "F" | "P", cause}
   //  - juste et due : la boîte monte (7 au plus), nouvelle échéance ;
-  //    pour un niveau de faits, juste mais au-delà de 5 s : la boîte reste,
-  //    l'échéance passe à demain ;
   //  - juste et pas due : rien ;
-  //  - fausse ou passée : la boîte descend (1 au moins), échéance demain, un
-  //    échec consécutif de plus ; au deuxième échec de suite, « J'apprends »
-  //    est à refaire ; au troisième, la compétence est mise de côté 3 jours
-  //    (boîte 1) et signalée au professeur.
+  //  - fausse ou « Je ne sais pas » : la boîte descend (1 au moins), échéance
+  //    demain, un échec consécutif de plus ; au deuxième échec de suite,
+  //    « J'apprends » est à refaire ; au troisième, la compétence est mise de
+  //    côté 3 jours (boîte 1) et signalée au professeur.
+  // Le faux s'applique TOUT DE SUITE (quitter avant le 2e calcul ne fait
+  // rien gagner) ; dans une séance ouverte, ce qu'il a changé est rangé dans
+  // le plan pour le 2e calcul (`deuxieme`, lot 1, décision 4 de
+  // « fonctionnement 3 », choix de Gwenaël) :
+  //  - `{deuxieme: true}` juste : c'était un accident — la boîte, les échecs
+  //    et « J'apprends fait » d'avant sont rendus, la compétence revient
+  //    demain ; le faux ne compte pas comme un échec ;
+  //  - `{deuxieme: true}` faux : rien de plus (le 1er faux compte déjà).
+  //  Un 2e calcul d'une autre compétence que celle qui attend ne rend rien.
+  // Le « lent » (niveaux « par cœur », juste et due au-delà de 5 s ; lot 1,
+  // décision 9) : la 1re fois, la boîte reste et la compétence revient
+  // demain ; lent deux fois de suite, c'est un faux (elle descend, rouge),
+  // sans 2e calcul — événement « lent2 ». Juste rapide ou faux : remis à 0.
   // Une compétence ne monte pas deux fois le même jour : montée ou descendue,
   // elle n'est plus due aujourd'hui.
-  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal()} = {}) {
+  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), deuxieme = false} = {}) {
     const copie = normaliserParcours(parcours);
     const id = retour && retour.module;
     const evenements = [];
@@ -1319,21 +1432,60 @@
     toucher(ligne, aujourdhui);
     noterJour(copie, aujourdhui);
     // Le journal (lot G1) : un calcul du jour de plus dans la séance ouverte,
-    // juste ou pas.
+    // juste ou pas — le 2e calcul compte aussi.
     compterEnCours(copie, EN_COURS.calculs, 1);
     if (retour.juste) compterEnCours(copie, EN_COURS.justes, 1);
+    const ouverte = copie.seance.p[PLAN.ouverte] === 1;
+    const plan = copie.seance.p;
+    const rang = rangDe(id, index + 1) + 1;
+    if (deuxieme) {
+      const attendu = ouverte && plan[PLAN.second] === rang;
+      let rendu = false;
+      if (attendu && retour.juste) {
+        ligne.b[index] = plan[PLAN.secondBoite];
+        ligne.x[index] = plan[PLAN.secondEchecs];
+        ligne.a[index] = plan[PLAN.secondAppris];
+        ligne.e[index] = ajouterJours(aujourdhui, 1);
+        rendu = true;
+      }
+      if (attendu) [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
+      const apres = ligne.b[index];
+      return {
+        parcours: copie,
+        mouvement: {
+          module: id, niveau: index + 1, avant: boite, apres, due: false, deuxieme: true, rendu,
+          sens: apres > boite ? "monte" : "reste",
+          couleur: couleurDeBoite(apres),
+          rouge: estRouge(ligne, index, aujourdhui),
+          deCote: estDeCote(ligne, index, aujourdhui),
+          jours: ecartJours(aujourdhui, ligne.e[index])
+        },
+        evenements
+      };
+    }
     const due = ligne.e[index] <= aujourdhui;
-    if (retour.juste) {
-      const lent = retour.type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
-      if (due && lent) ligne.e[index] = ajouterJours(aujourdhui, 1);
+    const lent = retour.juste && due && retour.type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
+    const lent2 = lent && ligne.l[index] === 1;
+    const faux = !retour.juste || lent2;
+    if (!faux) {
+      if (due && lent) { ligne.e[index] = ajouterJours(aujourdhui, 1); ligne.l[index] = 1; }
       else if (due) {
         ligne.b[index] = Math.min(SEUILS.revision.boites, boite + 1);
         ligne.e[index] = echeanceDeBoite(ligne.b[index], aujourdhui);
         // Lot G1 : la boîte 4 atteinte pour la première fois — sue.
         if (boite < SEUILS.revision.su && ligne.b[index] >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
+        ligne.l[index] = 0;
       }
       ligne.x[index] = 0;
     } else {
+      // Ce que le faux change, rangé pour le 2e calcul (pas après un lent).
+      if (ouverte && !lent2) {
+        plan[PLAN.second] = rang;
+        plan[PLAN.secondBoite] = boite;
+        plan[PLAN.secondEchecs] = ligne.x[index];
+        plan[PLAN.secondAppris] = ligne.a[index];
+      }
+      ligne.l[index] = 0;
       ligne.x[index] = Math.min(SEUILS.rattrapage.deCote, ligne.x[index] + 1);
       if (ligne.x[index] >= SEUILS.rattrapage.echecs) ligne.a[index] = 0;
       if (ligne.x[index] >= SEUILS.rattrapage.deCote) {
@@ -1343,7 +1495,8 @@
         ligne.b[index] = Math.max(1, boite - 1);
         ligne.e[index] = ajouterJours(aujourdhui, 1);
       }
-      if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
+      if (retour.cause && !retour.juste) ajouterCauses(ligne, {[retour.cause]: 1});
+      if (lent2) evenements.push({type: "lent2", module: id, niveau: index + 1});
     }
     // Le module devient su : la date est posée une fois, elle ne s'efface pas.
     if (!ligne.ok && toutSu(ligne)) {
@@ -1354,8 +1507,10 @@
     return {
       parcours: copie,
       mouvement: {
-        module: id, niveau: index + 1, avant: boite, apres, due,
-        sens: apres > boite ? "monte" : !retour.juste ? "descend" : "reste",
+        module: id, niveau: index + 1, avant: boite, apres, due, lent: lent && !lent2, lent2,
+        // Un 2e calcul suit : un faux (pas un lent) dans une séance ouverte.
+        deuxiemeAVenir: faux && !lent2 && ouverte,
+        sens: apres > boite ? "monte" : faux ? "descend" : "reste",
         couleur: couleurDeBoite(apres),
         rouge: estRouge(ligne, index, aujourdhui),
         deCote: estDeCote(ligne, index, aujourdhui),
@@ -1365,27 +1520,38 @@
     };
   }
 
+  // Le 2e calcul qui attend dans la séance ouverte (la page rechargée entre
+  // le faux et lui) : {module, niveau}, ou null.
+  function deuxiemeEnAttente(parcours, aujourdhui = jourLocal()) {
+    const p = normaliserParcours(parcours);
+    if (!seanceOuverte(p, aujourdhui) || !p.seance.p[PLAN.second]) return null;
+    return competenceDeRang(p.seance.p[PLAN.second] - 1);
+  }
+
   // Mes calculs du jour sont finis : l'étape est faite, et la suite se
   // décide — la première compétence rouge à entraîner, s'il y en a une.
-  function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null} = {}) {
+  function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
     const avant = normaliserParcours(parcours);
     const copie = cloner(avant);
     const rouge = aEntrainer(copie, carte, aujourdhui);
+    // Un 2e calcul resté en attente (la page fermée entre les deux) : la
+    // compétence garde son faux.
     const finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
       plan[PLAN.jour] = 0;
       plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
-    });
+      [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
+    }, palier);
     return {parcours: copie, finie, rouge};
   }
 
   // « Commencer » : le plan de la séance est décidé et rangé, pour qu'elle se
   // reprenne telle quelle le jour même, ici ou sur un autre appareil. Une
   // séance déjà ouverte aujourd'hui n'est pas touchée.
-  // `nouveautes` : le réglage de la classe (1, 2 ou 3), rangé dans le plan.
-  function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal(), nouveautes = SEUILS.nouveautes.defaut} = {}) {
+  // `minutes` : le réglage (10 ou 15), rangé dans le plan.
+  function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut} = {}) {
     const copie = normaliserParcours(parcours);
     if (seanceOuverte(copie, aujourdhui)) return copie;
-    const plan = planNeuf(copie, carte, aujourdhui, nouveautes);
+    const plan = planNeuf(copie, carte, aujourdhui, minutes);
     plan[PLAN.ouverte] = 1;
     // Une séance NEUVE part de zéro (lot G1) : ce qu'avait fait une séance
     // laissée ouverte un autre jour ne la suit pas.
@@ -1395,11 +1561,11 @@
 
   // « Demain : … » : la compétence qui vient (ou la rouge à reprendre), et
   // les calculs qui reviennent.
-  function demain(parcours, carte, {aujourdhui = jourLocal()} = {}) {
+  function demain(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
     const lendemain = ajouterJours(aujourdhui, 1);
     const rougesDemain = rouges(parcours, carte, lendemain);
     return {
-      prochaine: competenceCourante(parcours, carte),
+      prochaine: competenceCourante(parcours, carte, palier),
       rouge: rougesDemain.length ? {module: rougesDemain[0].module, niveau: rougesDemain[0].niveau} : null,
       reviennent: tirerCalculsDuJour(parcours, carte, {aujourdhui: lendemain}).length
     };
@@ -1846,28 +2012,35 @@
     }
   }
 
-  // Le réglage de la classe (lot F1, 07/11/2026) : le nombre de nouveautés
-  // par séance, que le serveur rend avec l'identité (api/eleve.php,
-  // « reglages » : {"defi-calcul": {"nouveautes": 2}} ; rien = 1). Rangé
-  // dans l'ONGLET, lié au code, comme l'identité ; sans code, ou illisible :
-  // 1. Le réglage par élève (lot F2) viendra par le même chemin.
+  // Les réglages de la séance (lot 1 « la séance », 12/11/2026 ; lot F1 avant
+  // pour les nouveautés) : les minutes (10 ou 15) et jusqu'à quel palier va
+  // l'appli (1 à 4), que le serveur rend avec l'identité (api/eleve.php,
+  // « reglages » : {"defi-calcul": {"minutes": 15, "palier": 2}}, ceux de
+  // la classe et ceux de l'élève déjà réunis — l'élève l'emporte ; rien =
+  // 10 minutes, tout). Rangés dans l'ONGLET, liés au code, comme
+  // l'identité ; sans code, ou illisibles : les défauts.
   const CLE_REGLAGES = "mathsgo-defi-calcul-reglages";
 
-  function nouveautesDeReglages(reglages) {
+  function reglagesParDefaut() {
+    return {minutes: SEUILS.seance.defaut, palier: SEUILS.seance.paliers};
+  }
+
+  function reglagesDeSeance(reglages) {
     const r = reglages && typeof reglages === "object" && !Array.isArray(reglages) ? reglages["defi-calcul"] : null;
-    return nombreDeNouveautes(r && typeof r === "object" ? r.nouveautes : null);
+    const lu = r && typeof r === "object" && !Array.isArray(r) ? r : {};
+    return {minutes: minutesDeSeance(lu.minutes), palier: palierDeSeance(lu.palier)};
   }
 
   function chargerReglagesOnglet(stockage, code) {
     try {
       const propre = normaliserCode(code || "");
       const brut = stockage && codeValide(propre) ? stockage.getItem(CLE_REGLAGES) : null;
-      if (!brut) return SEUILS.nouveautes.defaut;
+      if (!brut) return reglagesParDefaut();
       const lu = JSON.parse(brut);
-      if (!lu || typeof lu !== "object" || lu.code !== propre) return SEUILS.nouveautes.defaut;
-      return nombreDeNouveautes(lu.nouveautes);
+      if (!lu || typeof lu !== "object" || lu.code !== propre) return reglagesParDefaut();
+      return {minutes: minutesDeSeance(lu.minutes), palier: palierDeSeance(lu.palier)};
     } catch (_) {
-      return SEUILS.nouveautes.defaut;
+      return reglagesParDefaut();
     }
   }
 
@@ -1877,9 +2050,10 @@
     try {
       const propre = normaliserCode(code || "");
       if (!stockage || !codeValide(propre) || !reglages || typeof reglages !== "object" || Array.isArray(reglages)) return false;
-      const nouveautes = nouveautesDeReglages(reglages);
-      if (nouveautes === SEUILS.nouveautes.defaut) stockage.removeItem(CLE_REGLAGES);
-      else stockage.setItem(CLE_REGLAGES, JSON.stringify({code: propre, nouveautes}));
+      const lus = reglagesDeSeance(reglages);
+      const defaut = reglagesParDefaut();
+      if (lus.minutes === defaut.minutes && lus.palier === defaut.palier) stockage.removeItem(CLE_REGLAGES);
+      else stockage.setItem(CLE_REGLAGES, JSON.stringify({code: propre, minutes: lus.minutes, palier: lus.palier}));
       return true;
     } catch (_) {
       return false;
@@ -1946,6 +2120,8 @@
       ligne.b[i] = source.b[i];
       ligne.e[i] = source.e[i];
       ligne.x[i] = source.x[i];
+      // Le « lent » (lot 1) suit le bloc, comme les échecs.
+      ligne.l[i] = ligne.b[i] ? source.l[i] : 0;
       ligne.t[i] = ligne.b[i] ? Math.max(a.vu === ligne.vu ? a.t[i] : 0, b.vu === ligne.vu ? b.t[i] : 0) : 0;
       // Les deux dates (lot G1) : le premier jour connu d'un côté ou de
       // l'autre — elles ne sont posées qu'une fois, la plus ancienne est la
@@ -1994,12 +2170,13 @@
     // d'avant F1 ne fait pas perdre le réglage, ni revenir le compteur des
     // tests à 0 ; un entraînement raté d'un côté arrête aussi l'autre. Le
     // nombre réglé atteint : plus de nouveauté.
+    // Lot 1 : les minutes prévues et les apprentissages commencés aussi ; le
+    // 2e calcul en attente reste celui du côté gardé.
     if (ra[0] === rb[0] && ra[1] === rb[1] && fusion.seance.jour) {
       const p = fusion.seance.p;
-      [PLAN.tests, PLAN.nouveaute, PLAN.prevues, PLAN.reussies].forEach(i => {
+      [PLAN.tests, PLAN.nouveaute, PLAN.minutes, PLAN.commences].forEach(i => {
         p[i] = Math.max(a.seance.p[i], b.seance.p[i]);
       });
-      if (p[PLAN.nouveaute] === NOUVEAUTE.aFaire && p[PLAN.reussies] >= prevuesDuPlan(p)) p[PLAN.nouveaute] = NOUVEAUTE.faite;
       // Ce que la séance a fait (lot G1) : le plus grand des deux, compte
       // par compte, comme le plan. Ouverte d'un côté seulement : celui-là.
       if (p[PLAN.ouverte] === 1) {
@@ -2284,6 +2461,8 @@
     ouvrirSeance,
     seanceOuverte,
     fileSeance,
+    fermerSeance,
+    deuxiemeEnAttente,
     demain,
     bilanSeances,
     seancesParSemaine,
@@ -2324,8 +2503,10 @@
     chargerIdentiteOnglet,
     sauverIdentiteOnglet,
     CLE_REGLAGES,
-    nombreDeNouveautes,
-    nouveautesDeReglages,
+    minutesDeSeance,
+    palierDeSeance,
+    reglagesParDefaut,
+    reglagesDeSeance,
     chargerReglagesOnglet,
     sauverReglagesOnglet,
     effacerReglagesOnglet,

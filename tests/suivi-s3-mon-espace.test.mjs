@@ -139,18 +139,20 @@ function coffresTresor(jour) {
 // Défi calcul : une séance jouée jusqu'au bout, tout juste (comme le test S2).
 const CARTE_CALCUL = (() => { const c = DCORE.carte(); return {modules: c.modules.map(f => Object.assign({}, f, {construit: f.paliers.some(Boolean)})), ordre: c.ordre}; })();
 function seanceD(p, jour) {
-  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour, nouveautes: 1});
+  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour});
   const avant = p.seance.n;
   for (let tour = 0; tour < 30 && p.seance.n === avant; tour += 1) {
     const etape = D.fileSeance(p, CARTE_CALCUL, {aujourdhui: jour}).etapes[0];
-    if (!etape) break;
+    if (!etape || etape.type === "avance") break;
+    // Lot 1 « la séance » : la séance au temps — 2 min 30 par étape.
+    p = D.noterTemps(p, 150);
     if (etape.type === "jour") {
       D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour}).forEach(c => {
         p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: true, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
       });
       p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
     } else if (etape.type === "test") {
-      p = D.appliquerTest(p, {module: etape.module, marche: 2, niveaux: [{niveau: 1, justes: 2, total: 2}, {niveau: 2, justes: 2, total: 2}]}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
+      p = D.appliquerTest(p, {module: etape.module, marche: 2, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 3, total: 3}]}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     } else if (etape.type === "apprends") {
       p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     } else {

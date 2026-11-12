@@ -82,7 +82,8 @@ function schema(string $pilote): array
   prenom VARCHAR(40) NOT NULL DEFAULT '',
   initiale VARCHAR(4) NOT NULL DEFAULT '',
   cree_le VARCHAR(25) NOT NULL,
-  ajouts TEXT NULL"
+  ajouts TEXT NULL,
+  reglages_eleve TEXT NULL"
         . ($mysql ? ",\n  UNIQUE KEY eleves_code (code),\n  KEY eleves_classe (classe_id)" : "")
         . "\n)$fin",
 
@@ -395,6 +396,14 @@ function migrer_schema(?PDO $pdo = null): array
     if (table_existe($pdo, 'eleves') && !colonne_existe($pdo, 'eleves', 'ajouts')) {
         $pdo->exec('ALTER TABLE eleves ADD COLUMN ajouts TEXT NULL');
         $faits[] = "Colonne « ajouts » ajoutée aux élèves (ce qu'un professeur ouvre à un élève en plus de sa classe).";
+    }
+    // Lot 1 « la séance » de Défi calcul (12/11/2026) : ce qu'un professeur
+    // règle pour UN élève autrement que pour sa classe (la durée d'une
+    // séance, jusqu'à quel palier). Vide pour tous les élèves existants :
+    // chacun suit sa classe, comme avant.
+    if (table_existe($pdo, 'eleves') && !colonne_existe($pdo, 'eleves', 'reglages_eleve')) {
+        $pdo->exec('ALTER TABLE eleves ADD COLUMN reglages_eleve TEXT NULL');
+        $faits[] = "Colonne « reglages_eleve » ajoutée aux élèves (une durée de séance ou un palier de Défi calcul différents de la classe).";
     }
 
     // Puis les tables et index absents (dont « partages »), sans toucher au reste.

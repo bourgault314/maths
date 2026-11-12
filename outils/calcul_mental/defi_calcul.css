@@ -501,6 +501,10 @@ body.challenge-playing .question { touch-action: manipulation; }
 .question.no-skip .actions { grid-template-columns: 1fr; }
 .question.suivant-seul .actions { grid-template-columns: 1fr; }
 .question.suivant-seul #skip { display: none; }
+/* Lot 1 « la séance » (planche 6, variante B) : « Je ne sais pas », un petit
+   lien gris souligné dans la troisième colonne, centré. */
+.actions .lien-ne-sais-pas { justify-self: center; height: auto; min-height: 44px; padding: 0 4px; border: 0; background: none; box-shadow: none; color: #5b7286; font-size: .86rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.actions .lien-ne-sais-pas:hover { color: var(--ink); }
 
 /* Les corrections viennent APRÈS les boutons : les erreurs seules, en
    lignes courtes (le calcul avec sa bonne réponse, la réponse donnée barrée
@@ -754,6 +758,13 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .dc-comp i.r { border-color: #c62828; background: #c62828; }
 .dc-comp i.b { border-color: var(--blue); background: var(--blue); }
 .dc-comp i.v { border-color: var(--teal); background: var(--teal); }
+/* Lot 1 « la séance » (12/11/2026, planche 2) : une coche dans le carré —
+   ✓ appris (boîtes 2 et 3), ★ solide (boîte 4 et plus), ↻ à revoir. La
+   forme dit l'état sans la couleur (impression en noir et blanc). */
+.dc-comp i { display: inline-grid; place-items: center; color: #fff; font-style: normal; font-weight: 950; line-height: 1; }
+.dc-comp i.b::after { content: "✓"; font-size: 10px; }
+.dc-comp i.v::after { content: "★"; font-size: 10px; }
+.dc-comp i.r::after { content: "↻"; font-size: 10px; }
 .dc-mod .dc-comp { justify-self: end; }
 div.dc-mod { cursor: default; }
 .dc-legende { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 2px 0; color: #5b7286; font-size: .74rem; font-weight: 800; }
@@ -1331,6 +1342,10 @@ body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
 .dc-escalier .marche.ici b { border: 3px solid var(--blue); background: #fff; color: var(--blue); }
 .dc-escalier .marche.ratee b { border-color: #c62828; border-style: dashed; background: #fff; color: #c62828; }
 .dc-escalier .points { display: flex; gap: 4px; min-height: 10px; }
+/* Lot 1 : 4 ou 5 points (un niveau à 4 sortes, un calcul de plus après un
+   faux) tiennent sous la marche. */
+.dc-escalier .points:has(i:nth-child(4)) { gap: 3px; }
+.dc-escalier .points:has(i:nth-child(5)) i { width: 9px; height: 9px; }
 .dc-escalier .points i { width: 10px; height: 10px; border: 2px solid #c5d9e6; border-radius: 50%; background: #fff; box-sizing: border-box; }
 .dc-escalier .points i.juste { border-color: var(--teal); background: var(--teal); }
 .dc-escalier .points i.faux { border-color: #c62828; background: #c62828; }

@@ -1,5 +1,7 @@
-// Défi calcul, lot F1 « rythme » (07/11/2026) : le réglage « nouveautés par
-// séance » dans la VRAIE page, au navigateur (relecture de Codex, points 4 et 6).
+// Défi calcul, lot F1 « rythme » (07/11/2026) : le réglage de la classe dans
+// la VRAIE page, au navigateur (relecture de Codex, points 4 et 6). Lot 1 « la
+// séance » (12/11/2026) : le réglage est désormais la DURÉE (10 ou 15
+// minutes), rangée dans le plan de la séance (seance.p[5]).
 //
 // Hors CI : ni « npm run verifier » ni « node --test » ne lancent ce fichier.
 //   npm install --no-save playwright
@@ -7,13 +9,13 @@
 //
 // Ce qui est vérifié (un faux serveur de suivi répond) :
 //   lent       la première lecture de l'identité met 1,2 s ; l'élève clique
-//              tout de suite : la séance attend le réglage (3), pas le 1 de
+//              tout de suite : la séance attend le réglage (15), pas le 10 de
 //              l'onglet ;
-//   change     le professeur passe de 1 à 3 pendant que la page est ouverte :
-//              « Encore une séance » ouvre la séance suivante avec 3 ;
+//   change     le professeur passe de 10 à 15 pendant que la page est ouverte :
+//              la séance s'ouvre avec 15 ;
 //   muet       le serveur ne répond plus : la séance s'ouvre quand même, en
-//              2 s au plus, avec le dernier réglage reçu (3) ;
-//   stockage   l'onglet refuse d'écrire : le réglage reçu (3) vaut quand même ;
+//              2 s au plus, avec le dernier réglage reçu (15) ;
+//   stockage   l'onglet refuse d'écrire : le réglage reçu (15) vaut quand même ;
 //   ancienne   le serveur refuse l'envoi (400, « page ancienne ») : rien ne
 //              casse, le travail reste dans l'appareil.
 
@@ -51,16 +53,16 @@ function parcoursDeDepart() {
   return p;
 }
 
-async function ouvrir(nav, base, {nouveautes, delai = 0, muet = () => false, stockageCasse = false, refuserEnvoi = false, rangeDansOnglet = null}) {
+async function ouvrir(nav, base, {minutes, delai = 0, muet = () => false, stockageCasse = false, refuserEnvoi = false, rangeDansOnglet = null}) {
   const ctx = await nav.newContext({viewport: {width: 390, height: 664}, timezoneId: "Indian/Reunion"});
   const page = await ctx.newPage();
   await page.clock.install({time: new Date(`${JOUR}T17:00:00+04:00`)});
   const erreurs = [];
   page.on("pageerror", e => erreurs.push(e.message));
-  const etat = {nouveautes, envois: 0, refus: 0};
+  const etat = {minutes, envois: 0, refus: 0};
   await page.addInitScript(([code, range, casse]) => {
     sessionStorage.setItem("mathsgo-suivi-code", code);
-    if (range) sessionStorage.setItem("mathsgo-defi-calcul-reglages", JSON.stringify({code, nouveautes: range}));
+    if (range) sessionStorage.setItem("mathsgo-defi-calcul-reglages", JSON.stringify({code, minutes: range, palier: 4}));
     if (casse) {
       const ecrire = Storage.prototype.setItem;
       Storage.prototype.setItem = function (cle, valeur) {
@@ -76,7 +78,7 @@ async function ouvrir(nav, base, {nouveautes, delai = 0, muet = () => false, sto
     if (route.request().url().endsWith("/api/eleve.php")) {
       if (muet()) return route.abort("timedout");
       if (delai) await new Promise(fini => setTimeout(fini, delai));
-      return rendre({ok: true, prenom: "Léa", classe: "405", applis: [], reglages: etat.nouveautes > 1 ? {"defi-calcul": {nouveautes: etat.nouveautes}} : {}});
+      return rendre({ok: true, prenom: "Léa", classe: "405", applis: [], reglages: etat.minutes !== 10 ? {"defi-calcul": {minutes: etat.minutes}} : {}});
     }
     if (corps.lire) return rendre({ok: true, existe: true, parcours: parcoursDeDepart(), revision: 1});
     etat.envois += 1;
@@ -99,31 +101,31 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
     try { await fn(); console.log(`ok      ${nom}`); } catch (e) { echecs += 1; console.log(`ÉCHEC   ${nom} : ${e.message}`); }
   };
 
-  await cas("lent : la séance attend la première lecture du réglage (3), pas le 1 de l'onglet", async () => {
-    const s = await ouvrir(nav, base, {nouveautes: 3, delai: 1200});
+  await cas("lent : la séance attend la première lecture du réglage (15), pas le 10 de l'onglet", async () => {
+    const s = await ouvrir(nav, base, {minutes: 15, delai: 1200});
     await s.page.waitForSelector("#acc-carte", {state: "visible"});
     await s.page.click("#acc-carte");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
-    assert.equal(await prevues(s.page), 3);
+    assert.equal(await prevues(s.page), 15);
     assert.deepEqual(s.erreurs, []);
     await s.ctx.close();
   });
 
-  await cas("change : le professeur passe de 1 à 3, la séance suivante a 3", async () => {
-    const s = await ouvrir(nav, base, {nouveautes: 1});
+  await cas("change : le professeur passe de 10 à 15 minutes, la séance suivante a 15", async () => {
+    const s = await ouvrir(nav, base, {minutes: 10});
     await s.page.waitForSelector("#acc-carte", {state: "visible"});
     await s.page.waitForTimeout(400);
-    s.etat.nouveautes = 3;
+    s.etat.minutes = 15;
     await s.page.click("#acc-carte");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
-    assert.equal(await prevues(s.page), 3);
+    assert.equal(await prevues(s.page), 15);
     assert.deepEqual(s.erreurs, []);
     await s.ctx.close();
   });
 
-  await cas("muet : sans réponse, la séance s'ouvre en 2 s au plus avec le dernier réglage reçu (3)", async () => {
+  await cas("muet : sans réponse, la séance s'ouvre en 2 s au plus avec le dernier réglage reçu (15)", async () => {
     let coupe = false;
-    const s = await ouvrir(nav, base, {nouveautes: 3, rangeDansOnglet: 2, muet: () => coupe});
+    const s = await ouvrir(nav, base, {minutes: 15, rangeDansOnglet: 10, muet: () => coupe});
     await s.page.waitForSelector("#acc-carte", {state: "visible"});
     await s.page.waitForTimeout(600);
     coupe = true;
@@ -131,25 +133,25 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
     await s.page.click("#acc-carte");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 6000});
     assert.ok(Date.now() - debut < 4000, `ouverte en ${Date.now() - debut} ms`);
-    assert.equal(await prevues(s.page), 3, "le dernier réglage reçu, pas un défaut");
+    assert.equal(await prevues(s.page), 15, "le dernier réglage reçu, pas un défaut");
     assert.equal(await ouverte(s.page), 1);
     await s.ctx.close();
   });
 
-  await cas("stockage : l'onglet refuse d'écrire, le réglage reçu (3) vaut quand même", async () => {
-    const s = await ouvrir(nav, base, {nouveautes: 3, stockageCasse: true});
+  await cas("stockage : l'onglet refuse d'écrire, le réglage reçu (15) vaut quand même", async () => {
+    const s = await ouvrir(nav, base, {minutes: 15, stockageCasse: true});
     await s.page.waitForSelector("#acc-carte", {state: "visible"});
     await s.page.waitForTimeout(400);
     const texte = await s.page.evaluate(() => document.getElementById("acc-carte").innerText);
-    assert.match(texte, /Une 3e chose nouvelle/, texte);
+    assert.match(texte, /15\s?minutes/, texte);
     await s.page.click("#acc-carte");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
-    assert.equal(await prevues(s.page), 3);
+    assert.equal(await prevues(s.page), 15);
     await s.ctx.close();
   });
 
   await cas("ancienne : un envoi refusé (400) ne casse rien, le travail reste dans l'appareil", async () => {
-    const s = await ouvrir(nav, base, {nouveautes: 2, refuserEnvoi: true});
+    const s = await ouvrir(nav, base, {minutes: 15, refuserEnvoi: true});
     await s.page.waitForSelector("#acc-carte", {state: "visible"});
     await s.page.click("#acc-carte");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
@@ -164,5 +166,5 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
   await nav.close();
   serveur.close();
   if (echecs) { console.log(`${echecs} échec(s).`); process.exit(1); }
-  console.log("Défi calcul, lot F1 : le réglage des nouveautés est conforme au navigateur.");
+  console.log("Défi calcul, lots F1 et 1 : le réglage de la durée est conforme au navigateur.");
 })();

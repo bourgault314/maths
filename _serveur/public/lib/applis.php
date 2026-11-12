@@ -253,7 +253,10 @@ const CATALOGUE_APPLIS = [
         // dates d'une compétence, des listes de dates ou null), `j` (ce que
         // la séance ouverte a fait, une liste d'entiers) et `journal` (six
         // listes d'entiers alignées sur `seances`, -1 = pas connu).
-        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'd', 's', 'c',
+        // Lot 1 « la séance » (12/11/2026) : `l` (le « lent » d'une
+        // compétence, une liste de 0 et de 1) ; le plan `p` passe à 11 nombres
+        // (rien à déclarer : une liste d'entiers).
+        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'l', 'd', 's', 'c',
             'seance', 'jour', 'etape', 'n', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'jours', 'numero'],
         'mots' => [],
@@ -261,14 +264,17 @@ const CATALOGUE_APPLIS = [
         // « Revenir à… » nomme une version par ce compte : les séances finies
         // (une liste de dates, 60 au plus).
         'compteur' => 'seances',
-        // Lot F1 « rythme » (07/11/2026, décision de Gwenaël) : ce qu'un
-        // professeur règle pour SA classe — « nouveautes », le nombre de
-        // choses nouvelles par séance, UN NOMBRE de 1 à 3 (déclaré
-        // ['de' => 1, 'a' => 3] : le premier est le défaut). 1 = rien d'écrit ;
-        // sinon {"defi-calcul": {"nouveautes": 2}}. Voir reglages_recus().
-        // Pas par élève (lot F2, plus tard) : un nombre ne se donne pas
-        // « en plus » comme un monde ; listes_declarees() ne le voit pas.
-        'reglages' => ['nouveautes' => ['de' => 1, 'a' => 3]],
+        // Lot 1 « la séance » (12/11/2026, décisions de « fonctionnement 3 ») :
+        // ce qu'un professeur règle pour SA classe, puis, s'il veut, pour un
+        // élève — « minutes », la durée d'une séance (10 ou 15), et
+        // « palier », jusqu'où va l'appli (1 les bases, 2 CM1, 3 CM2, 4 vers
+        // la 6e : tout). Deux CHOIX fermés (déclarés ['choix' => [...]] : le
+        // premier est le défaut, qui ne s'écrit pas) : {"defi-calcul":
+        // {"minutes": 15, "palier": 2}}. Voir reglages_recus() et, pour un
+        // élève, reglages_eleve_recus(). « nouveautes » (lot F1) n'existe
+        // plus : relu dans une vieille ligne, il est ignoré, et disparaît au
+        // prochain enregistrement de la classe.
+        'reglages' => ['minutes' => ['choix' => [10, 15]], 'palier' => ['choix' => [4, 1, 2, 3]]],
         // Lot F1 « rythme » (07/11/2026, relecture de Codex) : la version la
         // plus basse qu'on accepte À L'ÉCRITURE (api/parcours.php). Une page
         // d'avant F1 (version 3), restée ouverte dans un onglet, lirait une
@@ -283,7 +289,9 @@ const CATALOGUE_APPLIS = [
         // Correctif du lot S1 « les journaux » (07/11/2026, relecture de
         // Codex) : 6. Chaque séance du journal a son numéro (`numero`) ; une
         // page de version 5 ne le connaît pas et l'effacerait.
-        'version_min' => 6,
+        // Lot 1 « la séance » (12/11/2026) : 7. Une page de version 6 ne
+        // connaît ni `l` ni le plan à 11 nombres : elle les effacerait.
+        'version_min' => 7,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
@@ -513,11 +521,17 @@ function reglages_lus(?string $json, ?array $applis = null): array
             // Un réglage booléen (lot « Les records ») : seul « false » est
             // gardé, « true » est le défaut et ne s'écrit pas.
             if ($defaut === true && ($reglageBrut[$nom] ?? null) === false) $reglage[$nom] = false;
-            // Un nombre (lot F1, les nouveautés de Défi calcul) : un entier
-            // dans ses bornes, autre que le défaut ; sinon, le défaut (rien).
+            // Un nombre (lot F1) : un entier dans ses bornes, autre que le
+            // défaut ; sinon, le défaut (rien).
             if (est_reglage_nombre($defaut)) {
                 $valeur = $reglageBrut[$nom] ?? null;
                 if (is_int($valeur) && $valeur > $defaut['de'] && $valeur <= $defaut['a']) $reglage[$nom] = $valeur;
+            }
+            // Un choix fermé (lot 1 « la séance ») : une des valeurs déclarées,
+            // autre que le défaut (la première) ; sinon, le défaut (rien).
+            if (est_reglage_choix($defaut)) {
+                $valeur = $reglageBrut[$nom] ?? null;
+                if (is_int($valeur) && $valeur !== $defaut['choix'][0] && in_array($valeur, $defaut['choix'], true)) $reglage[$nom] = $valeur;
             }
             // Une liste d'identifiants du livret (l'appli Cours, lib/cours.php) :
             // ceux qui existent encore au catalogue ; rien quand la liste est vide.
@@ -537,6 +551,28 @@ function est_reglage_nombre(mixed $declare): bool
 {
     return is_array($declare) && array_keys($declare) === ['de', 'a']
         && is_int($declare['de']) && is_int($declare['a']) && $declare['de'] >= 1 && $declare['de'] < $declare['a'];
+}
+
+// Un réglage « choix » (lot 1 « la séance ») est déclaré ['choix' => [...]] :
+// deux entiers au moins, tous différents ; le premier est le défaut, qui ne
+// s'écrit pas. Il peut aussi se donner à un élève (reglages_eleve_recus).
+function est_reglage_choix(mixed $declare): bool
+{
+    if (!is_array($declare) || array_keys($declare) !== ['choix']) return false;
+    $choix = $declare['choix'];
+    if (!is_array($choix) || !array_is_list($choix) || count($choix) < 2) return false;
+    foreach ($choix as $valeur) if (!is_int($valeur)) return false;
+    return count(array_unique($choix)) === count($choix);
+}
+
+// Les réglages « choix » d'une appli : ['minutes' => [10, 15], …].
+function choix_declares(string $cle): array
+{
+    $sortie = [];
+    foreach (CATALOGUE_APPLIS[$cle]['reglages'] ?? [] as $nom => $defaut) {
+        if (est_reglage_choix($defaut)) $sortie[$nom] = $defaut['choix'];
+    }
+    return $sortie;
 }
 
 // Ce qu'on renvoie en JSON : toujours un objet (« {} » et non « [] » quand rien
@@ -603,6 +639,17 @@ function reglages_recus(mixed $recus, array $actuels): array
                     throw new InvalidArgumentException("Nombre hors des choix.");
                 }
                 if ($valeur === $defaut['de']) unset($nouveau[$nom]);
+                else $nouveau[$nom] = $valeur;
+                continue;
+            }
+            // Un choix fermé (lot 1 « la séance ») : une des valeurs déclarées,
+            // rien d'autre (ni « 15 » en texte, ni 12) ; le défaut = rien d'écrit.
+            if (est_reglage_choix($defaut)) {
+                $valeur = $reglage[$nom];
+                if (!is_int($valeur) || !in_array($valeur, $defaut['choix'], true)) {
+                    throw new InvalidArgumentException("Valeur hors des choix.");
+                }
+                if ($valeur === $defaut['choix'][0]) unset($nouveau[$nom]);
                 else $nouveau[$nom] = $valeur;
                 continue;
             }
@@ -896,10 +943,16 @@ function ajouts_pour_la_base(array $ajouts): ?string
 //     entière) ouvre tout ; une appli qui ne vient que d'un ajout ouvre tout
 //     ce que l'ajout ne nomme pas (un ajout n'a jamais rien fermé).
 //     « Tous » = rien d'écrit dans reglages, la convention d'aujourd'hui.
-//  3. Les réglages booléens (records) et les nombres (les nouveautés de
-//     Défi calcul, lot F1) suivent la classe telle quelle.
-function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
+//  3. Les réglages booléens (records) et les nombres suivent la classe
+//     telle quelle.
+//  4. Lot 1 « la séance » (12/11/2026) : les réglages « choix » (minutes et
+//     palier de Défi calcul) suivent la classe, SAUF ceux que le professeur
+//     a donnés à CET élève ($reglagesEleveJson, la colonne
+//     eleves.reglages_eleve) : le choix de l'élève l'emporte, même s'il est
+//     le défaut (il est alors écrit, pour l'emporter sur la classe).
+function acces_de_l_eleve(array $classe, ?string $ajoutsJson, ?string $reglagesEleveJson = null): array
 {
+    $propres = reglages_eleve_lus($reglagesEleveJson);
     $clesClasse = array_column(applis_de_classe((string)($classe['applis'] ?? '')), 'cle');
     $reglagesClasse = reglages_de_classe($classe, true);
     $ajouts = ajouts_lus($ajoutsJson);
@@ -927,6 +980,7 @@ function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
             // L'appli Cours : les listes du livret suivent la classe telles quelles.
             if (is_array($valeur) && (CATALOGUE_APPLIS[$cle]['reglages'][$nom] ?? null) === 'cours') $reglage[$nom] = $valeur;
         }
+        foreach ($propres[$cle] ?? [] as $nom => $valeur) $reglage[$nom] = $valeur;
         if ($reglage !== []) $reglages[$cle] = $reglage;
     }
     return ['applis' => $applis, 'reglages' => $reglages];
@@ -937,4 +991,79 @@ function acces_de_l_eleve(array $classe, ?string $ajoutsJson): array
 function acces_json(array $acces): array
 {
     return ['applis' => $acces['applis'], 'reglages' => reglages_json($acces['reglages'])];
+}
+
+// ------------------------------------------- réglages d'un élève (lot 1 « la séance »)
+//
+// Lot 1 « la séance » (12/11/2026, planche 7 validée par Gwenaël) : pour
+// quelques élèves, une autre durée de séance ou un autre palier que ceux de
+// la classe (« Autrement pour quelques élèves »). Rangés à part, dans
+// eleves.reglages_eleve — PAS dans eleves.ajouts : un ajout ouvre l'appli à
+// l'élève, un réglage ne fait que la régler. {"defi-calcul": {"minutes": 15,
+// "palier": 1}} : seulement des réglages « choix » déclarés, avec une de
+// leurs valeurs. Écrit seulement par le propriétaire de la classe
+// (eleves.reglages), avec le même « avant » (409) que eleves.acces.
+
+// La colonne eleves.reglages_eleve existe-t-elle ? Elle arrive par
+// migrer.php ; tant qu'elle manque, aucun élève n'a de réglage à lui.
+function reglages_eleve_disponibles(PDO $pdo): bool
+{
+    static $vu = [];
+    $cle = spl_object_id($pdo);
+    if (!array_key_exists($cle, $vu)) $vu[$cle] = colonne_existe($pdo, 'eleves', 'reglages_eleve');
+    return $vu[$cle];
+}
+
+// La colonne lue (jamais d'erreur) : ce qui est déclaré et valide, le reste
+// ignoré ; rangé appli par appli dans l'ordre du catalogue, réglage par
+// réglage dans l'ordre de la déclaration.
+function reglages_eleve_lus(?string $json): array
+{
+    if ($json === null || $json === '') return [];
+    $brut = json_decode($json, true);
+    if (!is_array($brut)) return [];
+    $sortie = [];
+    foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
+        if (!isset($brut[$cle]) || !is_array($brut[$cle])) continue;
+        $reglage = [];
+        foreach (choix_declares($cle) as $nom => $choix) {
+            $valeur = $brut[$cle][$nom] ?? null;
+            if (is_int($valeur) && in_array($valeur, $choix, true)) $reglage[$nom] = $valeur;
+        }
+        if ($reglage !== []) $sortie[$cle] = $reglage;
+    }
+    return $sortie;
+}
+
+// Ce que le professeur envoie (eleves.reglages, et son « avant ») : lecture
+// STRICTE — une appli sans réglage « choix », un nom inconnu, une valeur hors
+// des choix sont refusés avec un message. « {} » : plus rien pour cet élève.
+// Rend la forme canonique (celle de reglages_eleve_lus).
+function reglages_eleve_recus(mixed $recus): array
+{
+    if (!is_array($recus) || ($recus !== [] && array_is_list($recus))) {
+        throw new InvalidArgumentException("Réglages de l'élève illisibles.");
+    }
+    foreach ($recus as $cle => $reglage) {
+        $choix = is_string($cle) && appli_connue($cle) ? choix_declares($cle) : [];
+        if ($choix === [] || !is_array($reglage) || ($reglage !== [] && array_is_list($reglage))) {
+            throw new InvalidArgumentException("Réglage inconnu.");
+        }
+        foreach ($reglage as $nom => $valeur) {
+            if (!is_string($nom) || !array_key_exists($nom, $choix)) throw new InvalidArgumentException("Réglage inconnu.");
+            if (!is_int($valeur) || !in_array($valeur, $choix[$nom], true)) throw new InvalidArgumentException("Valeur hors des choix.");
+        }
+    }
+    return reglages_eleve_lus(json_encode($recus));
+}
+
+// Pour la base : null quand il n'y a rien (la colonne reste vide).
+function reglages_eleve_pour_la_base(array $reglages): ?string
+{
+    return $reglages === [] ? null : json_encode($reglages, JSON_UNESCAPED_UNICODE);
+}
+
+function reglages_eleve_json(array $reglages): array|object
+{
+    return $reglages === [] ? new stdClass() : $reglages;
 }

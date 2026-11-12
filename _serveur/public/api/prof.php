@@ -87,6 +87,10 @@ const DROIT_PAR_ACTION = [
     // propriétaire seulement. Un collègue en écriture voit la colonne
     // « En plus » (tableau), sans pouvoir la changer.
     'eleves.acces' => 'proprietaire',
+    // Lot 1 « la séance » de Défi calcul (12/11/2026) : régler pour UN élève
+    // la durée d'une séance ou le palier, autrement que pour sa classe — le
+    // propriétaire seulement, comme eleves.acces.
+    'eleves.reglages' => 'proprietaire',
     // Lot « après l'audit GPT » (D4, 14/10/2026) : effacer le temps d'une
     // Légende dans les records — ça efface : propriétaire.
     'records.retirer' => 'proprietaire',
@@ -298,6 +302,18 @@ function acces_classe(PDO $pdo, int $profId, mixed $classeIdBrut, string $besoin
 // le droit que la matrice exige pour cette action — jamais le classe_id envoyé
 // par le navigateur. La classe vérifiée est rendue sous « classe » (lot « Qui
 // voit quoi » : eleves.acces calcule « classe + ajouts » sans relire la base).
+// La colonne eleves.reglages_eleve d'un élève (null : rien, ou pas encore de
+// colonne) — pour que « acces » dise vrai après un eleves.acces.
+function reglages_eleve_de(PDO $pdo, int $eleveId): ?string
+{
+    if (!reglages_eleve_disponibles($pdo)) return null;
+    $requete = $pdo->prepare('SELECT reglages_eleve FROM eleves WHERE id = ?');
+    $requete->execute([$eleveId]);
+    $valeur = $requete->fetchColumn();
+    $requete->closeCursor();
+    return is_string($valeur) ? $valeur : null;
+}
+
 function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $action): array
 {
     $eleveId = (int)$eleveIdBrut;
@@ -1082,14 +1098,83 @@ try {
                     'ok' => false,
                     'erreur' => "Ce que voit $qui a changé ailleurs : la fenêtre est à jour, refais ton clic.",
                     'ajouts' => ajouts_json(ajouts_lus($resultat['en_base'])),
-                    'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['en_base'])),
+                    'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['en_base'], reglages_eleve_de($pdo, (int)$eleve['id']))),
                 ], 409);
             }
             journaliser($pdo, $profId, 'eleves.acces', 'eleve', $eleveId);
             repondre([
                 'ok' => true,
                 'ajouts' => ajouts_json($ajouts),
-                'acces' => acces_json(acces_de_l_eleve($eleve['classe'], ajouts_pour_la_base($ajouts))),
+                'acces' => acces_json(acces_de_l_eleve($eleve['classe'], ajouts_pour_la_base($ajouts), reglages_eleve_de($pdo, $eleveId))),
+            ]);
+
+        case 'eleves.reglages':
+            // Lot 1 « la séance » de Défi calcul (12/11/2026, planche 7) :
+            // {eleve_id, avant, reglages} remplace la colonne
+            // eleves.reglages_eleve ENTIÈRE (« {} » : l'élève suit sa classe).
+            // Mêmes gardes que eleves.acces : l'élève est remonté à SA classe
+            // (propriétaire seulement) ; lecture STRICTE (lib/applis.php,
+            // reglages_eleve_recus : des réglages « choix » déclarés, une de
+            // leurs valeurs) ; « avant », l'état rangé tel que la page le
+            // connaît, comparé sous le verrou de la ligne — sinon 409 avec
+            // l'état actuel. Répond le rangé (« reglages ») et le calculé
+            // (« acces ») — jamais un code.
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            if (!reglages_eleve_disponibles($pdo)) {
+                erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+            }
+            if (!array_key_exists('avant', $corps)) {
+                erreur("Il manque l'état d'avant : recharge la page et refais ton clic.", 400);
+            }
+            try {
+                $avant = reglages_eleve_recus($corps['avant']);
+            } catch (InvalidArgumentException $e) {
+                erreur("État d'avant illisible : recharge la page et refais ton clic.", 400);
+            }
+            try {
+                $reglagesEleve = reglages_eleve_recus($corps['reglages'] ?? null);
+            } catch (InvalidArgumentException $e) {
+                erreur($e->getMessage(), 400);
+            }
+            $eleveId = (int)$eleve['id'];
+            $resultat = avec_reprise($pdo, function () use ($pdo, $eleveId, $avant, $reglagesEleve): array {
+                transaction_ouvrir($pdo);
+                $requete = $pdo->prepare('SELECT reglages_eleve, prenom' . (ajouts_disponibles($pdo) ? ', ajouts' : '') . ' FROM eleves WHERE id = ?' . pour_mise_a_jour($pdo));
+                $requete->execute([$eleveId]);
+                $ligne = $requete->fetch();
+                $requete->closeCursor();
+                if ($ligne === false) {
+                    transaction_annuler($pdo);
+                    return ['disparu' => true];
+                }
+                $enBase = $ligne['reglages_eleve'] === null ? null : (string)$ligne['reglages_eleve'];
+                $ajouts = isset($ligne['ajouts']) ? (string)$ligne['ajouts'] : null;
+                if (reglages_eleve_lus($enBase) !== $avant) {
+                    transaction_annuler($pdo);
+                    return ['conflit' => true, 'en_base' => $enBase, 'ajouts' => $ajouts, 'prenom' => (string)($ligne['prenom'] ?? '')];
+                }
+                $pdo->prepare('UPDATE eleves SET reglages_eleve = ? WHERE id = ?')
+                    ->execute([reglages_eleve_pour_la_base($reglagesEleve), $eleveId]);
+                transaction_valider($pdo);
+                return ['ecrit' => true, 'ajouts' => $ajouts];
+            });
+            if (isset($resultat['disparu'])) erreur("Introuvable.", 404);
+            if (isset($resultat['conflit'])) {
+                // Rien n'est écrit : l'état actuel part avec le refus, pour
+                // que la fenêtre se redessine juste. Pas de ligne au journal.
+                $qui = $resultat['prenom'] !== '' ? $resultat['prenom'] : 'cet élève';
+                repondre([
+                    'ok' => false,
+                    'erreur' => "Les réglages de $qui ont changé ailleurs : la fenêtre est à jour, refais ton réglage.",
+                    'reglages' => reglages_eleve_json(reglages_eleve_lus($resultat['en_base'])),
+                    'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['ajouts'], $resultat['en_base'])),
+                ], 409);
+            }
+            journaliser($pdo, $profId, 'eleves.reglages', 'eleve', $eleveId);
+            repondre([
+                'ok' => true,
+                'reglages' => reglages_eleve_json($reglagesEleve),
+                'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['ajouts'], reglages_eleve_pour_la_base($reglagesEleve))),
             ]);
 
         // ------------------------------------------------------------------ tableau
@@ -1102,9 +1187,11 @@ try {
             // qu'après migrer.php ; avant, on ne la demande pas et chaque
             // élève se lit « rien en plus ».
             $avecAjouts = ajouts_disponibles($pdo);
+            // Lot 1 « la séance » : de même pour eleves.reglages_eleve.
+            $avecReglagesEleve = reglages_eleve_disponibles($pdo);
             $requete = $pdo->prepare(
                 'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le, p.revision,
-                        (p.donnees_avant IS NOT NULL) AS restaurable' . ($avecAjouts ? ', e.ajouts' : '') . '
+                        (p.donnees_avant IS NOT NULL) AS restaurable' . ($avecAjouts ? ', e.ajouts' : '') . ($avecReglagesEleve ? ', e.reglages_eleve' : '') . '
                  FROM eleves e
                  LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
                  WHERE e.classe_id = ?
@@ -1167,7 +1254,11 @@ try {
                     // « En plus » et l'onglet SPLAT! (mondes par élève) s'en
                     // servent (lot 3).
                     'ajouts' => ajouts_json(ajouts_lus($avecAjouts ? $ligne['ajouts'] : null)),
-                    'acces' => acces_json(acces_de_l_eleve($classe, $avecAjouts ? $ligne['ajouts'] : null)),
+                    // Lot 1 « la séance » : ce qu'on a réglé pour lui
+                    // autrement que pour sa classe (le rangé), pris en compte
+                    // dans « acces » (le calculé).
+                    'reglages' => reglages_eleve_json(reglages_eleve_lus($avecReglagesEleve ? $ligne['reglages_eleve'] : null)),
+                    'acces' => acces_json(acces_de_l_eleve($classe, $avecAjouts ? $ligne['ajouts'] : null, $avecReglagesEleve ? $ligne['reglages_eleve'] : null)),
                 ];
                 if ($appli === 'cours') {
                     $ouvertes = $ouverturesCours[(int)$ligne['id']] ?? [];
