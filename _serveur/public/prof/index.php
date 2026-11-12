@@ -3673,6 +3673,18 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         return seulement.length ? `seulement : ${seulement.join(" · ")}` : "";
       }));
       direQuiVoit();
+      // Relecture Codex (point 3) : Défi calcul ouvert à quelques élèves
+      // seulement — leur durée et leur palier se voient et se changent ici
+      // (sinon, ceux de la classe).
+      if (cle === "defi-calcul") {
+        const c = b.calcul;
+        // Fermée à la classe, sa durée et son palier ne se changent pas ici :
+        // ceux du départ (les lignes se lisent par rapport à eux).
+        c.minutes = reglage.depart.calcul.minutes;
+        c.palier = reglage.depart.calcul.palier;
+        corps.append(...autrementPourQuelquesEleves());
+        corps.append(el("p", "aide", `Les autres : ${c.minutes} minutes, ${PALIERS_CALCUL[c.palier - 1][2].replace(/^J/, "j")}.`));
+      }
       return;
     }
     messager("regler-message", "", "");
@@ -3890,13 +3902,27 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return ligne;
   }
 
-  // Ce que la fenêtre veut pour un élève (ses réglages Défi calcul, sans ce
-  // qui est la valeur de la classe), et le paquet complet de sa colonne.
-  function reglagesVoulus(eleve, c) {
-    const propre = {};
-    if (c.eleveMinutes.has(eleve.id) && c.eleveMinutes.get(eleve.id) !== c.minutes) propre.minutes = c.eleveMinutes.get(eleve.id);
-    if (c.elevePalier.has(eleve.id) && c.elevePalier.get(eleve.id) !== c.palier) propre.palier = c.elevePalier.get(eleve.id);
-    const tout = Object.assign({}, eleve.reglages && typeof eleve.reglages === "object" && !Array.isArray(eleve.reglages) ? eleve.reglages : {});
+  // La valeur propre d'un élève dans un état de la fenêtre (undefined : il
+  // suit la classe).
+  function valeurPropre(c, nom, id) {
+    const table = nom === "minutes" ? c.eleveMinutes : c.elevePalier;
+    return table.has(id) && table.get(id) !== c[nom] ? table.get(id) : undefined;
+  }
+
+  // Ce que la fenêtre envoie pour un élève : le paquet complet de sa colonne.
+  // Relecture Codex (point 1) : seul ce que la fenêtre a CHANGÉ (brouillon
+  // différent du départ) part, posé sur ses réglages ACTUELS (eleve.reglages,
+  // remis à jour par un 409) — un palier donné dans un autre onglet n'est
+  // pas effacé par une fenêtre qui ne touchait que la durée.
+  function reglagesVoulus(eleve, c, d) {
+    const actuels = eleve.reglages && typeof eleve.reglages === "object" && !Array.isArray(eleve.reglages) ? eleve.reglages : {};
+    const propre = Object.assign({}, actuels["defi-calcul"] && typeof actuels["defi-calcul"] === "object" ? actuels["defi-calcul"] : {});
+    ["minutes", "palier"].forEach(nom => {
+      const voulu = valeurPropre(c, nom, eleve.id);
+      if (voulu === valeurPropre(d, nom, eleve.id)) return;
+      if (voulu === undefined) delete propre[nom]; else propre[nom] = voulu;
+    });
+    const tout = Object.assign({}, actuels);
     if (Object.keys(propre).length) tout["defi-calcul"] = propre; else delete tout["defi-calcul"];
     return tout;
   }
@@ -4157,8 +4183,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       .filter(({gestes}) => gestes.length);
     // Lot 1 « la séance » : les élèves de Défi calcul réglés autrement (ou
     // rendus à la classe) — eleves.reglages, un appel chacun.
-    const aRegler = b.cle === "defi-calcul" && b.classeOuverte
-      ? (eleves || []).map(eleve => ({eleve, reglages: reglagesVoulus(eleve, b.calcul)}))
+    // Relecture Codex (point 3) : aussi quand l'appli n'est ouverte qu'à
+    // quelques élèves.
+    const aRegler = b.cle === "defi-calcul"
+      ? (eleves || []).map(eleve => ({eleve, reglages: reglagesVoulus(eleve, b.calcul, depart.calcul)}))
         .filter(({eleve, reglages}) => reglagesCanoniques(reglages) !== reglagesCanoniques(eleve.reglages))
       : [];
     if (!pourLaClasse && !aChanger.length && !aRegler.length) { $("regler").close(); return; }
@@ -4264,7 +4292,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           // élèves, eux, n'ont pas été envoyés (la classe n'avait pas
           // répondu) : ils restent à faire, la fenêtre le dit.
           fait.push(`la ${libelle}`);
-          if (aChanger.length) manques.push(`Pas enregistré pour ${aChanger.map(({eleve}) => prenomDe(eleve)).join(", ")} : la ${libelle} n’avait pas répondu.`);
+          // Relecture Codex (point 2) : les réglages des élèves aussi.
+          const pasEnvoyes = [];
+          aChanger.concat(aRegler).forEach(({eleve}) => { if (!pasEnvoyes.includes(eleve)) pasEnvoyes.push(eleve); });
+          if (pasEnvoyes.length) manques.push(`Pas enregistré pour ${pasEnvoyes.map(prenomDe).join(", ")} : la ${libelle} n’avait pas répondu.`);
         }
         else if (erreurClasse && erreurClasse.statut === 409) {
           // Un autre onglet a changé la classe (point 1) : rien n'est parti,

@@ -62,6 +62,14 @@ test("page prof : « Régler Défi calcul » — la durée et le palier pour la 
   const page = await lire("../_serveur/public/prof/index.php");
   assert.match(page, /if \(cle === "defi-calcul"\) corps\.append\(\.\.\.choixCalcul\(\)\);/);
   assert.match(page, /if \(cle === "defi-calcul"\) \{ corps\.append\(\.\.\.autrementPourQuelquesEleves\(\)\); return; \}/);
+  // Relecture Codex du lot 1 : fusion à trois (seul ce que la fenêtre a changé
+  // part, posé sur l'état actuel de l'élève) ; les réglages aussi quand l'appli
+  // n'est ouverte qu'à quelques élèves ; le bilan nomme les élèves non envoyés.
+  assert.match(page, /if \(voulu === valeurPropre\(d, nom, eleve\.id\)\) return;/);
+  assert.match(page, /reglages: reglagesVoulus\(eleve, b\.calcul, depart\.calcul\)/);
+  assert.doesNotMatch(page, /b\.cle === "defi-calcul" && b\.classeOuverte/);
+  assert.match(page, /aChanger\.concat\(aRegler\)\.forEach/);
+  assert.match(page, /`Les autres : \$\{c\.minutes\} minutes, /);
   assert.match(page, /"Durée d’une séance"/);
   assert.match(page, /"Jusqu’où va l’appli"/);
   assert.match(page, /"15 minutes : plus de temps pour apprendre, pour une classe qui en a besoin\."/);
