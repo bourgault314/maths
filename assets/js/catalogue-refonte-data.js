@@ -195,6 +195,26 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
+    "outils/papiers-imprimer/index.html": {
+      "primaryNotion": "construction-geometrique",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": [
+        "papier",
+        "feuille",
+        "carreaux",
+        "quadrillage",
+        "millimetre",
+        "seyes",
+        "pointille",
+        "pointe",
+        "isometrique",
+        "repere",
+        "imprimer"
+      ],
+      "thumbnail": "outils/papiers-imprimer/apercus/catalogue.svg?v=1",
+      "cardDescription": "Petits carreaux, millimétré, papier pointé, repères et Seyès : choisissez parmi 15 modèles A4 à imprimer."
+    },
     "outils/inconnues-en-barres/index.html": {
       "primaryNotion": "schemas-barres",
       "primaryGroup": "generer",
@@ -2035,6 +2055,50 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resources": [
+    {
+      "id": "outils-papiers-imprimer-index-html",
+      "title": "Papiers à imprimer",
+      "description": "Choisissez votre papier à imprimer : petits carreaux de 5 mm, millimétré, pointé, isométrique, repères, Seyès et lignes. 15 modèles A4 en PDF.",
+      "path": "outils/papiers-imprimer/index.html",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "construction-geometrique"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "papier",
+        "feuille",
+        "petits carreaux",
+        "5 mm",
+        "5x5",
+        "quadrillage",
+        "millimétré",
+        "Seyès",
+        "pointé",
+        "isométrique",
+        "triangulaire",
+        "repère",
+        "lignes",
+        "portées",
+        "musique",
+        "PDF",
+        "A4"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
     {
       "id": "inconnues-en-barres",
       "title": "Inconnues en barres",

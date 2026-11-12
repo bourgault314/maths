@@ -105,6 +105,7 @@ const PAGES_AVEC_MENTION = [
   "outils/multiplication-posee/index.html",
   // les fiches du Moulin de Pythagore : une page du site (une liste de PDF), pas une
   // appli — rangée par erreur parmi les applis le 23/10, remise le 24/10 (Gwenaël)
+  "outils/papiers-imprimer/index.html",
   "outils/plateaux_manipulation/moulin_pythagore_fiches.html",
   "outils/soustraction-posee/index.html",
   "outils/toutes-les-ressources.html",

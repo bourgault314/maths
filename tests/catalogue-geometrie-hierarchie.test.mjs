@@ -53,9 +53,9 @@ test("la géométrie présente six rubriques remplies sans Pythagore ni Thalès 
   assert.equal(notions.get("thales").parent, "triangles");
 });
 
-test("les vingt ressources géométriques ont exactement une place dans les six rubriques", () => {
+test("les vingt et une ressources géométriques ont exactement une place dans les six rubriques", () => {
   const expectedCounts = new Map([
-    ["construction-geometrique", 1],
+    ["construction-geometrique", 2],
     ["angles", 3],
     ["triangles", 11],
     ["reperage", 2],
@@ -70,7 +70,7 @@ test("les vingt ressources géométriques ont exactement une place dans les six 
     resources.forEach((resource) => placements.get(resource.path).push(rootId));
   }
 
-  assert.equal(publishedGeometry.length, 20);
+  assert.equal(publishedGeometry.length, 21);
   for (const [path, roots] of placements) {
     assert.equal(roots.length, 1, `${path} doit avoir une seule rubrique géométrique, reçu : ${roots.join(", ")}`);
   }

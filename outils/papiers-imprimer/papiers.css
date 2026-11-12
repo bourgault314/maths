@@ -1,0 +1,80 @@
+.papers-page .hero { max-width: none; margin: 8px 0 22px; text-align: left; }
+.papers-page .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.papers-page .hero-lead { max-width: 650px; margin: 10px auto 0; line-height: 1.5; }
+.papers-page .hero h1 { font-size: clamp(1.85rem, 4vw, 2.7rem); }
+.paper-print-note {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 15px 18px; margin-bottom: 28px; border: 1px solid #c5dfdf;
+  border-radius: 15px; background: #eef8f7; color: #24485b;
+}
+.paper-print-note p { margin: 0; font-size: .94rem; line-height: 1.5; }
+.paper-print-note strong { display: block; color: #154961; }
+.paper-print-note a { flex-shrink: 0; font-size: .88rem; }
+.papers-page a { text-underline-offset: 3px; }
+.paper-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+.paper-section-heading h2 { margin: 0; font-size: 1.22rem; color: var(--blue-dark); }
+.paper-section-heading a { color: var(--blue); font-size: .88rem; }
+.paper-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.paper-card {
+  min-width: 0; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 17px; background: #fff;
+}
+.paper-card:first-child { border-color: #93bbb8; }
+.paper-preview { padding: 16px 18px; background: #f2f5f8; border-bottom: 1px solid #e3eaf0; }
+.paper-preview img { display: block; width: 100%; height: 148px; object-fit: contain; background: #fff; border: 1px solid #dce3e8; border-radius: 3px; }
+.paper-copy { display: flex; flex-direction: column; flex: 1; padding: 17px; }
+.paper-card h3 { margin: 0 0 7px; color: var(--blue-dark); font-size: 1.08rem; line-height: 1.3; }
+.paper-description { min-height: 2.8em; margin: 0 0 13px; color: var(--muted); font-size: .88rem; line-height: 1.4; }
+.paper-options { margin-bottom: 14px; }
+.paper-options label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 700; color: #43576a; }
+.paper-options select { min-height: 44px; width: 100%; max-width: 100%; padding: 8px 9px; border: 1px solid #bccbda; border-radius: 8px; background: #fff; color: var(--ink); font-size: .88rem; }
+.paper-actions { display: flex; gap: 10px; align-items: center; margin-top: auto; }
+.paper-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border-radius: 9px; background: var(--blue); color: #fff; text-decoration: none; font-size: .88rem; font-weight: 700; }
+.paper-button:hover { background: var(--blue-dark); }
+.paper-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.paper-open { display: inline-flex; min-height: 44px; padding: 10px 4px; align-items: center; color: var(--blue); font-size: .88rem; }
+.papers-page :is(a, select):focus-visible { outline: 3px solid #e8862d; outline-offset: 3px; }
+.paper-other { margin-top: 34px; }
+.paper-other .paper-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.paper-other .paper-card { display: grid; grid-template-columns: 140px minmax(0, 1fr); border-color: var(--line); }
+.paper-other .paper-preview { padding: 14px; border-bottom: 0; border-right: 1px solid #e3eaf0; display: grid; align-content: center; }
+.paper-other .paper-preview img { height: 130px; object-fit: cover; }
+.paper-pack { display: flex; flex-wrap: wrap; align-items: center; gap: 15px 24px; margin: 32px 0 12px; padding: 22px; border: 1px solid var(--line); border-radius: 15px; background: #f7fafc; }
+.paper-pack-copy { flex: 1 1 280px; }
+.paper-pack h2 { margin: 0 0 6px; font-size: 1.16rem; color: var(--blue-dark); }
+.paper-pack p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.5; }
+.paper-pack-links { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.paper-pack-links .paper-open { padding: 10px; }
+.paper-related { margin: 20px 2px 8px; color: var(--muted); font-size: .88rem; line-height: 1.65; }
+.paper-related a { color: var(--blue); }
+.paper-fallback { padding-left: 18px; font-size: .85rem; line-height: 1.6; }
+@media (max-width: 1000px) {
+  .paper-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paper-other .paper-card { display: flex; }
+  .paper-other .paper-preview { border-right: 0; border-bottom: 1px solid #e3eaf0; }
+}
+@media (max-width: 680px) {
+  .papers-page .hero { margin: 10px 0 18px; }
+  .papers-page .hero-lead { font-size: .94rem; }
+  .paper-print-note { display: block; padding: 13px 14px; margin-bottom: 24px; }
+  .paper-print-note a { display: inline-flex; align-items: center; min-height: 44px; }
+  .paper-section-heading { align-items: start; flex-direction: column; gap: 5px; }
+  .paper-section-heading a { display: inline-flex; min-height: 44px; align-items: center; }
+  .paper-grid, .paper-other .paper-grid { grid-template-columns: 1fr; gap: 16px; }
+  .paper-preview img { height: 138px; }
+  .paper-description { min-height: 0; }
+  .paper-copy { padding: 16px; }
+  .paper-actions { flex-wrap: wrap; gap: 6px; }
+  .paper-other .paper-card { display: grid; grid-template-columns: 94px minmax(0, 1fr); }
+  .paper-other .paper-preview { border-right: 1px solid #e3eaf0; border-bottom: 0; padding: 10px; }
+  .paper-other .paper-actions { gap: 6px; flex-wrap: wrap; }
+  .paper-other .paper-button { padding-inline: 10px; font-size: .82rem; }
+  .paper-other .paper-open { font-size: .82rem; }
+  .paper-other .paper-preview img { height: 120px; }
+  .paper-pack { padding: 17px; }
+}
+@media print {
+  .papers-page .site-header, .papers-page .site-footer, .paper-grid, .paper-pack, .paper-related, .paper-section-heading { display: none; }
+  .papers-page .paper-print-note { display: block; background: #fff; border: 1px solid #777; }
+  .papers-page .paper-print-note::after { content: "Pour imprimer une feuille, ouvrez le PDF du modèle choisi, puis imprimez ce PDF à 100 %."; display: block; margin-top: 12px; font-weight: 700; }
+}
