@@ -489,7 +489,7 @@
   });
   const DROITE_BOULIER_SERREE = Object.freeze(Object.assign({}, DROITE_BOULIER, {sautMin: 52, serree: true}));
   const geometrieDroite = o => (!o.boulier ? DROITE : o.sauts.length > 4 ? DROITE_BOULIER_SERREE : DROITE_BOULIER);
-  const ESPACE_FINE = " ";
+  const ESPACE_FINE = " ";
 
   function nombre(n) {
     const texte = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ESPACE_FINE);
@@ -566,7 +566,12 @@
       const xb = plan.x[index + 1];
       const x1 = retour ? xa - 15 : xa;
       const x2 = retour ? xb + 6 : xb - 4;
-      const h = Math.max(g.arcMin, Math.min(g.arcMax, 8 + Math.abs(x2 - x1) * .095));
+      // Relecture 2b (11/11/2026, remarque 45) : le petit saut d'un détour
+      // (+ 10 puis − 1 ; − 10 puis + 1) a un arc plus grand, et son
+      // étiquette juste au-dessus de lui (avant : un arc minuscule et
+      // l'étiquette posée au bout de la droite, loin de lui).
+      const detour = index > 0 && Math.sign(saut.val) !== Math.sign(o.sauts[0].val);
+      const h = Math.max(detour && !o.boulier ? 28 : g.arcMin, Math.min(g.arcMax, 8 + Math.abs(x2 - x1) * .095));
       const mx = (x1 + x2) / 2;
       const couleur = retour ? "#9a4a00" : "#0755b8";
       const gras = o.gras === index + 1;
@@ -581,12 +586,12 @@
       // Sur la droite du boulier (les sauts y sont serrés), le petit saut du
       // détour garde son étiquette au-dessus de son arc, une pilule plus haut
       // que celle du saut d'avant.
-      const detour = index > 0 && Math.sign(saut.val) !== Math.sign(o.sauts[0].val);
-      const aCote = detour && !o.boulier;
+      // Hors du boulier, l'étiquette du petit saut est posée juste au-dessus
+      // de son arc (sur l'arc, elle cacherait la pointe du grand saut).
+      const dessus = detour && !o.boulier;
       const audessus = detour && o.boulier;
-      const lx = aCote ? (retour ? Math.min(W - lw / 2 - 2, xa + 55) : Math.max(lw / 2 + 2, xa - 55))
-        : audessus ? Math.max(lw / 2 + 2, Math.min(W - lw / 2 - 2, mx)) : mx;
-      const ly = aCote ? y - 8 - h - 2 : audessus ? y - 8 - h - T.haut - 4 : y - 8 - h;
+      const lx = dessus || audessus ? Math.max(lw / 2 + 2, Math.min(W - lw / 2 - 2, mx)) : mx;
+      const ly = dessus ? y - 8 - h - T.haut / 2 - 4 : audessus ? y - 8 - h - T.haut - 4 : y - 8 - h;
       s += `<rect x="${lx - lw / 2}" y="${ly - T.haut / 2 - 2}" width="${lw}" height="${T.haut}" rx="${T.haut / 2}" fill="${retour ? "#fff3e0" : "#eaf2ff"}" stroke="${couleur}" stroke-width="${gras ? 3 : 2}"/>`
         + `<text x="${lx}" y="${ly + (g.serree ? 3 : 4)}" text-anchor="middle" font-size="${T.saut}" fill="${couleur}">${texte}</text>`;
     });
@@ -1540,18 +1545,31 @@
   // ------------------------------------------ la bande de la table (M4, lot 3)
 
   // La bande de Défi tables : les 11 multiples de la table (0, 7, 14 … 70),
-  // les rangs au-dessus (× 0 … × 10), les sauts « + 7 » dessous.
+  // les rangs au-dessus (0×7 … 10×7, n × table, collé, comme Défi tables —
+  // lot 2b, 12/11/2026 ; avant : « × 0 … × 10 », qui se lit à l'envers),
+  // les sauts « + 7 » dessous.
   //   o : {table, cherche : le rang dont le multiple est cherché (7 × 8 :
   //        8), ou `rang` : le rang cherché d'un multiple montré (56 ÷ 7,
   //        7 × ? = 56 : rang 8, écrit « × ? »), masque, fini}
   const BANDE = Object.freeze({largeur: 560, gauche: 10, droite: 550, haut: 38, rang: 48});
+  // Lot 2b (12/11/2026, demande de Gwenaël) : chaque saut « + 7 » finit par
+  // une petite pointe — on avance de gauche à droite.
+  let compteurBandes = 0;
+  const pointeBande = (id, taille) => `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="userSpaceOnUse" markerWidth="${taille}" markerHeight="${taille}" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7d93a6"/></marker></defs>`;
+  // Relecture 2b (11/11/2026, remarque 50) : au téléphone (`deuxLignes`),
+  // la bande se range sur deux lignes (× 0 à × 5, × 6 à × 10) : des cases
+  // deux fois plus larges, des nombres deux fois plus grands (avant : des
+  // chiffres d'environ 6 px, et de la place libre dessous).
   function bandeTable(o) {
+    if (o.deuxLignes) return bandeDeuxLignes(o);
     const {largeur: W, gauche, droite, haut, rang: R} = BANDE;
     const w = (droite - gauche) / 11;
     const H = haut + R + 44;
     const cache = Boolean(o.masque);
     const vu = !cache || Boolean(o.fini);
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBandeTable(o)}">`;
+    compteurBandes += 1;
+    const id = `dc-bt-${compteurBandes}`;
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBandeTable(o)}">${pointeBande(id, 9)}`;
     for (let k = 0; k <= 10; k += 1) {
       const x = gauche + k * w;
       const cx = x + w / 2;
@@ -1562,17 +1580,59 @@
       const etatCase = estCherche ? (cache ? (vu ? "trouve" : "cherche") : "repere") : estRang ? "repere" : "";
       const fond = etatCase === "trouve" ? "#e5f7eb" : etatCase === "repere" ? "#eaf2ff" : "#fff";
       const bord = etatCase === "trouve" ? "#147447" : etatCase === "cherche" || etatCase === "repere" ? "#0755b8" : "#143451";
-      const rangTexte = estRang && cache && !vu ? "× ?" : `× ${k}`;
+      const rangTexte = estRang && cache && !vu ? `?×${o.table}` : `${k}×${o.table}`;
       const rangCouleur = estRang ? (cache && vu ? "#147447" : "#0755b8") : "#5b7286";
-      s += `<text x="${cx}" y="${haut - 10}" text-anchor="middle" font-size="${estRang ? 17 : 15}"${estRang ? ' font-weight="700"' : ""} fill="${rangCouleur}">${rangTexte}</text>`;
+      s += `<text x="${cx}" y="${haut - 10}" text-anchor="middle" font-size="${estRang ? 15 : 14}"${estRang ? ' font-weight="700"' : ""} fill="${rangCouleur}">${rangTexte}</text>`;
       s += `<rect x="${x}" y="${haut}" width="${w}" height="${R}" fill="${fond}" stroke="${bord}" stroke-width="${etatCase ? 3 : 2}"/>`;
       const texte = estCherche && cache && !vu ? "?" : nombre(k * o.table);
       s += `<text x="${cx}" y="${haut + 30}" text-anchor="middle" font-size="${texte.length > 2 ? 17 : 20}"${etatCase ? ' font-weight="700"' : ""} fill="${etatCase === "trouve" ? "#147447" : etatCase === "cherche" ? "#0755b8" : "#143451"}">${texte}</text>`;
       if (k < 10) {
         const xa = cx + 4;
         const xb = cx + w - 4;
-        s += `<path d="M${xa} ${haut + R + 4} Q${(xa + xb) / 2} ${haut + R + 20} ${xb} ${haut + R + 4}" fill="none" stroke="#7d93a6" stroke-width="1.6"/>`;
+        s += `<path d="M${xa} ${haut + R + 4} Q${(xa + xb) / 2} ${haut + R + 20} ${xb} ${haut + R + 4}" fill="none" stroke="#7d93a6" stroke-width="1.6" marker-end="url(#${id})"/>`;
         if (k % 2 === 0) s += `<text x="${(xa + xb) / 2}" y="${haut + R + 36}" text-anchor="middle" font-size="14" fill="#5b7286">+ ${o.table}</text>`;
+      }
+    }
+    return s + "</svg>";
+  }
+
+  function bandeDeuxLignes(o) {
+    const W = BANDE.largeur;
+    const parLigne = 6;
+    const w = (W - 20) / parLigne;
+    const haut = 30;
+    const R = 62;
+    const ligneH = haut + R + 48;
+    const cache = Boolean(o.masque);
+    const vu = !cache || Boolean(o.fini);
+    compteurBandes += 1;
+    const id = `dc-bt-${compteurBandes}`;
+    let s = `<svg viewBox="0 0 ${W} ${ligneH * 2 + 4}" role="img" aria-label="${decrireBandeTable(o)}">${pointeBande(id, 12)}`;
+    for (let k = 0; k <= 10; k += 1) {
+      const ligne = k < parLigne ? 0 : 1;
+      const rangDansLigne = k - ligne * parLigne;
+      const y0 = ligne * (ligneH + 4);
+      const x = 10 + rangDansLigne * w;
+      const cx = x + w / 2;
+      const estCherche = o.cherche === k;
+      const estRang = o.rang === k;
+      const etatCase = estCherche ? (cache ? (vu ? "trouve" : "cherche") : "repere") : estRang ? "repere" : "";
+      const fond = etatCase === "trouve" ? "#e5f7eb" : etatCase === "repere" ? "#eaf2ff" : "#fff";
+      const bord = etatCase === "trouve" ? "#147447" : etatCase === "cherche" || etatCase === "repere" ? "#0755b8" : "#143451";
+      const rangTexte = estRang && cache && !vu ? `?×${o.table}` : `${k}×${o.table}`;
+      const rangCouleur = estRang ? (cache && vu ? "#147447" : "#0755b8") : "#5b7286";
+      s += `<text x="${cx}" y="${y0 + haut - 8}" text-anchor="middle" font-size="${estRang ? 24 : 22}"${estRang ? ' font-weight="700"' : ""} fill="${rangCouleur}">${rangTexte}</text>`;
+      s += `<rect x="${x}" y="${y0 + haut}" width="${w}" height="${R}" fill="${fond}" stroke="${bord}" stroke-width="${etatCase ? 4 : 2.5}"/>`;
+      const texte = estCherche && cache && !vu ? "?" : nombre(k * o.table);
+      s += `<text x="${cx}" y="${y0 + haut + 42}" text-anchor="middle" font-size="${texte.length > 2 ? 30 : 34}"${etatCase ? ' font-weight="700"' : ""} fill="${etatCase === "trouve" ? "#147447" : etatCase === "cherche" ? "#0755b8" : "#143451"}">${texte}</text>`;
+      // Les sauts « + 7 » sous la ligne (le dernier de la 1re ligne mène à
+      // la 2e : pas d'arc, la ligne suivante continue).
+      if (k < 10 && rangDansLigne < parLigne - 1) {
+        const xa = cx + 6;
+        const xb = cx + w - 6;
+        const yb = y0 + haut + R + 4;
+        s += `<path d="M${xa} ${yb} Q${(xa + xb) / 2} ${yb + 22} ${xb} ${yb}" fill="none" stroke="#7d93a6" stroke-width="2" marker-end="url(#${id})"/>`
+          + `<text x="${(xa + xb) / 2}" y="${yb + 38}" text-anchor="middle" font-size="19" fill="#5b7286">+ ${o.table}</text>`;
       }
     }
     return s + "</svg>";
@@ -1707,15 +1767,19 @@
     // c'est lui qu'on montre ; un groupe à calculer (23 × 2) reste « ? ».
     const groupeVu = !cache || (ecrit ? Boolean(o.trouves) : o.groupeConnu !== false);
     const finiVu = !cache || (ecrit && Boolean(o.fini));
-    const yAvant = 26;
-    const y1 = (o.avant ? 50 : 0) + 74;
+    // Relecture 2b (11/11/2026, remarque 69) : le calcul de départ (« 28 ×
+    // 25 = ») s'écrit sur la ligne des facteurs, devant eux (« 28 × 25 = 7
+    // × 4 × 25 ») ; seul au-dessus, son « = » restait sans suite.
+    const y1 = 74;
+    const avantTexte = o.avant ? `${o.avant} =` : "";
+    const avantLargeur = avantTexte ? avantTexte.length * 12.4 + 10 : 0;
     const y2 = y1 + 92;
     const H = y2 + 104;
     const largeurTuile = t => Math.max(tuile, String(t).length * 15 + 26);
-    const rangee = (valeurs, y, etats) => {
+    const rangee = (valeurs, y, etats, decale = 0) => {
       const ws = valeurs.map(largeurTuile);
       const total = ws.reduce((a, b) => a + b, 0) + signe * (valeurs.length - 1);
-      let x = (W - total) / 2;
+      let x = (W - total) / 2 + decale;
       const centres = [];
       let s = "";
       valeurs.forEach((v, i) => {
@@ -1727,26 +1791,26 @@
         x += ws[i];
         if (i < valeurs.length - 1) { s += `<text x="${x + signe / 2}" y="${y + 33}" text-anchor="middle" font-size="24" fill="#143451">×</text>`; x += signe; }
       });
-      return {s, centres, gauche: (W - total) / 2, droite: (W + total) / 2};
+      return {s, centres, gauche: (W - total) / 2 + decale, droite: (W + total) / 2 + decale};
     };
     // À sa taille, comme l'escalier de C1 : étroit, il deviendrait trop haut.
     let s = `<svg class="dc-escalier" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireFacteurs(o)}">`;
-    if (o.avant) s += `<text x="${W / 2}" y="${yAvant + 8}" text-anchor="middle" font-size="22" fill="#5b7286">${o.avant} =</text>`;
     const [i, j] = o.paire;
-    const haut = rangee(o.facteurs.map(nombre), y1, o.facteurs.map((_, k) => (k === i || k === j ? "groupe" : "")));
+    const haut = rangee(o.facteurs.map(nombre), y1, o.facteurs.map((_, k) => (k === i || k === j ? "groupe" : "")), avantLargeur / 2);
     s += haut.s;
+    if (avantTexte) s += `<text x="${haut.gauche - 10}" y="${y1 + 33}" text-anchor="end" font-size="22" font-weight="700" fill="#5b7286">${avantTexte}</text>`;
     // L'arc au-dessus des deux facteurs qui vont ensemble.
     const xa = haut.centres[i];
     const xb = haut.centres[j];
     s += `<path d="M${xa} ${y1 - 4} C${xa} ${y1 - 46} ${xb} ${y1 - 46} ${xb} ${y1 - 4}" fill="none" stroke="#0755b8" stroke-width="3"/>`;
     s += pastille((xa + xb) / 2, y1 - 38, `${nombre(o.facteurs[i])} × ${nombre(o.facteurs[j])} = ${groupeVu ? nombre(o.groupe) : "?"}`, cache && !groupeVu ? "cherche" : ecrit && groupeVu ? "trouve" : "", 18);
     // Dessous : le produit rangé, le groupe à part.
-    s += `<text x="${W / 2}" y="${y2 - 14}" text-anchor="middle" font-size="22" fill="#5b7286">=</text>`;
+    s += `<text x="${W / 2 + avantLargeur / 2}" y="${y2 - 14}" text-anchor="middle" font-size="22" fill="#5b7286">=</text>`;
     const tuileGroupe = groupeVu ? nombre(o.groupe) : "?";
     const etatGroupe = cache && !groupeVu ? "cherche" : "groupe";
     const bas = o.groupeDevant
-      ? rangee([tuileGroupe, nombre(o.reste)], y2, [etatGroupe, ""])
-      : rangee([nombre(o.reste), tuileGroupe], y2, ["", etatGroupe]);
+      ? rangee([tuileGroupe, nombre(o.reste)], y2, [etatGroupe, ""], avantLargeur / 2)
+      : rangee([nombre(o.reste), tuileGroupe], y2, ["", etatGroupe], avantLargeur / 2);
     s += bas.s;
     s += accolade(bas.gauche + 2, bas.droite - 2, y2 + 54, finiVu ? nombre(o.reste * o.groupe) : "?", !finiVu, ecrit && finiVu);
     return s + "</svg>";
@@ -2170,14 +2234,29 @@
   // numérateur. Un lecteur d'écran lit « 2 sur 10 ».
   // Modules lot 6 : la case peut être au dénominateur (« 4/7 = 12/□ »).
   const MOTIF_FRACTION = /(\d[\d\u202f\u00a0]*|□|\?)\/(\d[\d\u202f\u00a0]*\d|\d|□|\?)/g;
-  function noeudsCalcul(texte, {caseReponse = null, insecable = t => t} = {}) {
+  // Relecture 2b (11/11/2026, remarque 62) : `signes` — dans un calcul qui
+  // a une fraction, les signes (=, +, −, ×, ÷) s'écrivent à la taille des
+  // fractions (avant : un « = » très grand à côté de « 3/4 »).
+  function noeudsCalcul(texte, {caseReponse = null, insecable = t => t, signes = false} = {}) {
     const chaine = String(texte == null ? "" : texte);
     const morceaux = [];
+    const petits = signes && new RegExp(MOTIF_FRACTION.source).test(chaine);
+    const ecrire = part => {
+      if (!petits) { morceaux.push(document.createTextNode(insecable(part))); return; }
+      part.split(/([=+−×÷])/).forEach(bout => {
+        if (!bout) return;
+        if (!/^[=+−×÷]$/.test(bout)) { morceaux.push(document.createTextNode(insecable(bout))); return; }
+        const signe = document.createElement("span");
+        signe.className = "dc-signe";
+        signe.textContent = bout;
+        morceaux.push(signe);
+      });
+    };
     const ajouterTexte = t => {
       if (!t) return;
       const parts = t.split("□");
       parts.forEach((part, i) => {
-        if (part) morceaux.push(document.createTextNode(insecable(part)));
+        if (part) ecrire(part);
         if (i < parts.length - 1) morceaux.push(caseReponse ? caseReponse() : document.createTextNode("□"));
       });
     };
@@ -2840,7 +2919,7 @@
     let s = `<line x1="${G}" y1="${y}" x2="${G + L + 12}" y2="${y}" stroke="${encre}" stroke-width="2.4"/>`
       + `<path d="M${G + L + 12} ${y - 6} L${G + L + 22} ${y} L${G + L + 12} ${y + 6}" fill="${encre}"/>`;
     if (d > 1 && u / d >= 5) {
-      for (let k = entiers * d + 1; k < a * d; k += 1) if (k % d) s += `<line x1="${(G + k * u / d).toFixed(2)}" y1="${y - 6}" x2="${(G + k * u / d).toFixed(2)}" y2="${y + 6}" stroke="${encre}" stroke-width="1.4"/>`;
+      for (let k = entiers * d + 1; k < a * d; k += 1) if (k % d) s += `<line x1="${(G + k * u / d).toFixed(2)}" y1="${y - 7}" x2="${(G + k * u / d).toFixed(2)}" y2="${y + 7}" stroke="${encre}" stroke-width="2"/>`;
     }
     if (nombres) {
       for (let k = 0; k <= a; k += 1) s += `<line x1="${(G + k * u).toFixed(2)}" y1="${y - 11}" x2="${(G + k * u).toFixed(2)}" y2="${y + 11}" stroke="${encre}" stroke-width="3"/>`;
@@ -2909,10 +2988,16 @@
       else if (k < pris) s += hachuresSvg(x, yb, w, R);
       else s += `<rect x="${x.toFixed(2)}" y="${yb}" width="${w.toFixed(2)}" height="${R}" fill="#fff"/>`;
     }
+    // Relecture 2b (11/11/2026, remarque 63 : « les petites bandes des
+    // douzièmes se voient mal ») : entre deux parts bleues, le trait fin est
+    // BLANC (un trait sombre fin sur le bleu ne se voyait pas) ; sur le
+    // blanc, il est un peu plus épais.
     for (let k = 1; k < a * d; k += 1) {
       if (k < entiers * d && k % d) continue;
-      const epais = k % d === 0 ? 4 : o.gros && k % o.gros === 0 ? 3.4 : 1.3;
-      s += `<line x1="${(G + k * w).toFixed(2)}" y1="${yb}" x2="${(G + k * w).toFixed(2)}" y2="${yb + R}" stroke="${encre}" stroke-width="${epais}"/>`;
+      const fin = !(k % d === 0) && !(o.gros && k % o.gros === 0);
+      const epais = k % d === 0 ? 4 : o.gros && k % o.gros === 0 ? 3.4 : 1.8;
+      const surBleu = fin && k < pris - retire;
+      s += `<line x1="${(G + k * w).toFixed(2)}" y1="${yb}" x2="${(G + k * w).toFixed(2)}" y2="${yb + R}" stroke="${surBleu ? "#fff" : encre}" stroke-width="${surBleu ? 2.4 : epais}"/>`;
     }
     s += `<rect x="${G}" y="${yb}" width="${L}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
     haut.forEach(h => {

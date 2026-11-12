@@ -11,7 +11,7 @@
 //              entrée de journal : 2 calculs, 2 justes, une minute au moins ;
 //              les deux compétences passées en boîte 4 ont leur date `s` ;
 //   accueil    (refait au lot « accueil », 07/11/2026) la pastille
-//              « N soirs cette semaine », les gains sur la porte et dans
+//              « N jours cette semaine », les gains sur la porte et dans
 //              Mon parcours, « ↑ cette semaine » sur A2, au téléphone et sur
 //              l'ordinateur (cadre entier) ;
 //   arrêter    une étape arrêtée au milieu : son temps compte quand même ;
@@ -143,7 +143,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   });
 
   // Lot « accueil » (07/11/2026) : l'accueil refait lit la semaine du moteur.
-  await cas("accueil : la pastille des soirs, les gains sur la porte et dans Mon parcours, « ↑ cette semaine »", async () => {
+  await cas("accueil : la pastille des jours, les gains sur la porte et dans Mon parcours, « ↑ cette semaine »", async () => {
     assert.ok(apresSeance, "la séance a été jouée");
     for (const [largeur, hauteur] of [[390, 844], [1366, 657]]) {
       const s = await ouvrir(nav, base, {parcours: apresSeance, largeur, hauteur});

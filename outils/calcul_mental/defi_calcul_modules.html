@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261111-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261111-3">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -232,7 +232,7 @@
           <div id="escalier" class="dc-escalier" hidden></div>
           <p id="annonce" class="dc-annonce-forme" hidden></p>
           <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
-          <p id="answer-feedback" class="answer-feedback" role="status" aria-live="polite"></p>
+          <div class="answer-feedback"><p id="answer-feedback" class="dc-bulle" role="status" aria-live="polite"></p></div>
           <div id="aide" class="dc-aide" hidden></div>
           <div id="touches" class="dc-touches" hidden><button type="button" data-key="," aria-label="Virgule">,</button></div>
           <div class="keypad" role="group" aria-label="Clavier numérique">
@@ -290,9 +290,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261108-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261111-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261108-1"></script>
+  <script src="./defi_calcul_core.js?v=20261111-2"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261111-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261111-2"></script>
   <script>
     (() => {
       "use strict";
@@ -1502,10 +1502,15 @@
         }
         const carte = $("question-card");
         const enJeu = corps.classList.contains("challenge-playing");
+        // Le dessin agrandi (grandirDessin) reprend sa taille pour la mesure.
+        if (window.innerWidth >= ECHELLE.largeurMin) $("aide").style.zoom = "";
         // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
         // hauteur de la fenêtre : seul le cadre du jeu peut déborder. Ailleurs,
         // c'est la hauteur du corps (sans le pied de page) qui compte.
-        const fige = enJeu && (telephone || window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches);
+        // Relecture 2b (11/11/2026) : en plein écran, quelle que soit sa
+        // hauteur, la colonne a la hauteur de la fenêtre (defi_calcul.css).
+        const fige = enJeu && (telephone || window.matchMedia("(min-width: 621px) and (max-height: 900px)").matches
+          || (pleinEcran && window.innerWidth > ECHELLE.telephone));
         const limite = window.innerHeight - (pleinEcran ? ECHELLE.basCadre : 0);
         const tient = z => {
           racine.style.setProperty("--echelle", z.toFixed(3));
@@ -1518,7 +1523,9 @@
           }
           if (!fige && corps.offsetHeight > limite) return false;
           if (telephone && imageTropPetite()) return false;
-          return !(enJeu && carte && carte.scrollHeight > carte.clientHeight + 1);
+          // (Relecture 2b, remarque 66 : sans tolérance — un pixel de trop
+          // faisait déborder le cadre de J'écris de D1 sur ordinateur.)
+          return !(enJeu && carte && carte.scrollHeight > carte.clientHeight);
         };
         const defilement = window.scrollY;
         corps.classList.add("mesure-cadre");
@@ -1550,7 +1557,68 @@
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
         if (state.manip) state.manip.mesurer();
+        ajusterCalcul();
+        grandirDessin();
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
+      }
+
+      // Relecture 2b (11/11/2026, remarque 51 : « au tableau, on lit mal du
+      // fond de la classe ») : sur ordinateur, une fois la taille du cadre
+      // choisie, le dessin (la droite, les barres, le tableau…) grandit dans
+      // la place que son écran laisse libre (Je représente : souvent 100 à
+      // 200 px de vide sous Valider), sans toucher au cadre de la leçon. Il
+      // garde sa taille pendant tout le temps (la ligne de retour qui
+      // arrive, J'écris fini : rien ne bouge) ; la place de la ligne de
+      // retour est gardée quand elle est cachée (Je représente).
+      const DESSIN_GRANDI = new WeakMap();
+      function grandirDessin() {
+        const aide = $("aide");
+        const carte = $("question-card");
+        const serie = state.serie;
+        // (Au téléphone et sur tablette, rien : le zoom du glisse-nombres
+        // y appartient à ajusterGlisseTelephone.)
+        if (window.innerWidth < ECHELLE.largeurMin) return;
+        const image = aide.hidden ? null : aide.querySelector(":scope > svg");
+        if (!image || !serie || !state.running
+          || !document.body.classList.contains("challenge-playing") || !carte.classList.contains("aide-image")) { aide.style.zoom = ""; return; }
+        const fenetre = cleFenetre();
+        const garde = DESSIN_GRANDI.get(serie);
+        const deborde = () => carte.scrollHeight > carte.clientHeight;
+        if (garde && garde.index === serie.index && garde.fenetre === fenetre) {
+          aide.style.zoom = garde.f > 1 ? String(garde.f) : "";
+          if (!deborde()) return;
+        }
+        aide.style.zoom = "";
+        if (deborde()) { DESSIN_GRANDI.set(serie, {index: serie.index, fenetre, f: 1}); return; }
+        // La largeur : celle de la carte, moins ses marges.
+        const style = window.getComputedStyle(carte);
+        const place = carte.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        const largeur = aide.offsetWidth || 1;
+        const reserve = carte.classList.contains("sans-retour") ? 48 : 0;
+        // La place libre sous le dernier élément visible de la carte, en
+        // pixels du cadre (le cadre peut être zoomé).
+        const libre = () => {
+          const boite = carte.getBoundingClientRect();
+          const zoom = boite.height / (carte.offsetHeight || 1) || 1;
+          const enfants = [...carte.children].filter(e => e.getClientRects().length && window.getComputedStyle(e).visibility !== "hidden");
+          const bas = Math.max(...enfants.map(e => e.getBoundingClientRect().bottom));
+          return (boite.bottom - parseFloat(style.paddingBottom) * zoom - bas) / zoom;
+        };
+        const tient = f => {
+          aide.style.zoom = String(f);
+          return !deborde() && libre() >= reserve + 2;
+        };
+        let bas = 1;
+        let haut = Math.max(1, Math.min(2, place / largeur));
+        if (haut > 1.02 && !tient(haut)) {
+          while (haut - bas > 0.01) {
+            const milieu = (bas + haut) / 2;
+            if (tient(milieu)) bas = milieu; else haut = milieu;
+          }
+        } else bas = haut;
+        const f = bas > 1.02 ? Math.floor(bas * 100) / 100 : 1;
+        aide.style.zoom = f > 1 ? String(f) : "";
+        DESSIN_GRANDI.set(serie, {index: serie.index, fenetre, f});
       }
       window.addEventListener("resize", ajusterEchelle);
       window.addEventListener("resize", () => ajusterRetenir());
@@ -2340,6 +2408,7 @@
         const aide = $("aide");
         aide.replaceChildren();
         aide.style.zoom = "";
+        aide.style.removeProperty("--dessin-h");
         aide.classList.remove("sans-tableau");
         aide.hidden = true;
         $("touches").hidden = true;
@@ -2388,8 +2457,59 @@
         $("touches").hidden = !CORE.virguleDuTexte(id, texte, niveau);
       }
 
+      // Relecture 2b (11/11/2026, remarque 56) : la case a, dès le début, la
+      // largeur de la plus longue réponse du niveau (CORE.modeleReponse) ;
+      // taper ne fait plus bouger le calcul. Dans J'apprends, les réponses
+      // de la leçon comptent aussi ; toutes les cases d'un J'écris ont la
+      // même largeur (la case est sous la case).
+      function modeleCase() {
+        const serie = state.serie;
+        if (!serie) return [];
+        if (serie.genre === "apprends" && serie.base) {
+          const base = serie.base;
+          const enPlus = [];
+          [base.represente, base.ecris].forEach(temps => {
+            if (!temps) return;
+            if (typeof temps.reponse === "number") enPlus.push(temps.reponse);
+            (temps.etapes || []).forEach(etape => enPlus.push(etape.reponse));
+          });
+          return CORE.modelesReponse(`${serie.module}-${serie.niveau}`, enPlus);
+        }
+        const question = serie.questions && serie.questions[serie.index];
+        const calcul = question && question.calcul;
+        return calcul ? CORE.modelesReponse(`${calcul.module}-${calcul.niveau}`) : [];
+      }
+      function fixerLargeurCases() {
+        const expression = $("expression");
+        if (!expression) return;
+        const modeles = modeleCase();
+        const cle = modeles.join("|");
+        expression.querySelectorAll(".inline-answer").forEach(laCase => {
+          if (!modeles.length) { laCase.style.minWidth = ""; delete laCase.dataset.modele; return; }
+          if (laCase.dataset.modele === cle) return;
+          const texte = laCase.textContent;
+          laCase.style.minWidth = "";
+          const taille = parseFloat(window.getComputedStyle(laCase).fontSize) || 16;
+          // Chaque forme de réponse du niveau, mesurée : la plus large.
+          // (En pixels du cadre : le cadre peut être zoomé.)
+          const zoom = (expression.getBoundingClientRect().width / (expression.offsetWidth || 1)) || 1;
+          let largeur = 0;
+          modeles.forEach(modele => {
+            laCase.textContent = insecable(modele);
+            largeur = Math.max(largeur, laCase.getBoundingClientRect().width / zoom);
+          });
+          laCase.textContent = texte;
+          if (!largeur) return;
+          // En « em » : la case suit le calcul quand il s'écrit plus petit.
+          // (+ 1 px de marge : les mesures sont arrondies.)
+          laCase.style.minWidth = `${((largeur + 1) / taille).toFixed(3)}em`;
+          laCase.dataset.modele = cle;
+        });
+      }
+
       function renderInlineAnswer(status = "") {
         const slot = $("inline-answer");
+        fixerLargeurCases();
         // Un calcul sans case (l'exemple du glisse-nombres) se mesure aussi :
         // la taille d'avant ne doit pas rester.
         if (!slot) { ajusterCalcul(); return; }
@@ -2442,7 +2562,7 @@
       // s'écrivent comme sur le cahier ; dans « 0,3 = □/10 », la case est le
       // numérateur.
       function avecCase(texte) {
-        return AIDES.noeudsCalcul(texte, {caseReponse, insecable});
+        return AIDES.noeudsCalcul(texte, {caseReponse, insecable, signes: true});
       }
 
       function renderExpression(texte, classe = "") {
@@ -2461,12 +2581,15 @@
         $("skip").disabled = !enabled;
         $("skip").style.visibility = enabled ? "" : "hidden";
         $("validate").textContent = enabled ? "Valider" : "Suivant";
+        // Relecture 2b (11/11/2026) : « Suivant » prend toute la ligne, comme
+        // « Valider » (avant : les 2/3, la place de « Passer » restait vide).
+        $("question-card").classList.toggle("suivant-seul", !enabled);
       }
 
       function clearAnswerFeedback() {
         state.waitingForContinue = false;
         $("answer-feedback").textContent = "";
-        $("answer-feedback").className = "answer-feedback";
+        $("answer-feedback").className = "dc-bulle";
         $("validate").style.visibility = "";
         setAnswerControlsEnabled(true);
         renderInlineAnswer();
@@ -2476,13 +2599,13 @@
         $("inline-answer")?.classList.remove("is-invalid");
         if (!state.waitingForContinue) {
           $("answer-feedback").textContent = "";
-          $("answer-feedback").className = "answer-feedback";
+          $("answer-feedback").className = "dc-bulle";
         }
       }
 
       function showAnswerError() {
         $("inline-answer")?.classList.add("is-invalid");
-        $("answer-feedback").className = "answer-feedback is-wrong";
+        $("answer-feedback").className = "dc-bulle is-wrong";
         $("answer-feedback").textContent = $("question-card").classList.contains("no-skip")
           ? "Tape une réponse."
           : "Tape une réponse ou appuie sur « Passer ».";
@@ -2498,6 +2621,25 @@
       }
 
       // L'image d'une aide (la droite à sauts), avec ou sans consigne.
+      // Relecture 2b : au téléphone, la bande de la table sur deux lignes.
+      function pourEcran(image) {
+        return image && image.outil === "bande" && window.innerWidth <= ECHELLE.telephone ? Object.assign({}, image, {deuxLignes: true}) : image;
+      }
+      // Relecture 2b (11/11/2026, remarque 50) : au téléphone, quand J'écris
+      // est fini (le pavé s'en va), le dessin garde la taille qu'il avait
+      // pendant les étapes (avant : le rectangle de points de M4 doublait
+      // d'un coup au petit iPhone).
+      function figerDessin() {
+        const aide = $("aide");
+        const image = aide.hidden ? null : aide.querySelector(":scope > svg");
+        aide.style.removeProperty("--dessin-h");
+        if (!image || window.innerWidth > ECHELLE.telephone) return;
+        const carte = $("question-card");
+        const zoom = carte.getBoundingClientRect().height / (carte.offsetHeight || 1) || 1;
+        const hauteur = image.getBoundingClientRect().height / zoom;
+        if (hauteur > 0) aide.style.setProperty("--dessin-h", `${Math.round(hauteur)}px`);
+      }
+
       function montrerImage(image, consigne = "") {
         const aide = $("aide");
         const morceaux = [];
@@ -2508,7 +2650,7 @@
           morceaux.push(p);
         }
         const dessin = document.createElement("div");
-        dessin.innerHTML = AIDES.dessinerImage(image);
+        dessin.innerHTML = AIDES.dessinerImage(pourEcran(image));
         morceaux.push(dessin.firstChild);
         aide.replaceChildren(...morceaux);
         aide.hidden = false;
@@ -2528,7 +2670,7 @@
         const ancien = $("aide").querySelector(":scope > svg");
         if (!ancien) return;
         const dessin = document.createElement("div");
-        dessin.innerHTML = AIDES.dessinerImage(dessinEcris(faites));
+        dessin.innerHTML = AIDES.dessinerImage(pourEcran(dessinEcris(faites)));
         ancien.replaceWith(dessin.firstChild);
       }
 
@@ -2849,9 +2991,11 @@
             vide.className = "cel";
             ligne.append(vide);
           }
+          // Relecture 2b : une étape à fractions écrit ses signes à leur taille.
+          if (/[\d□?]\/[\d□?]/.test(etape.texte)) ligne.classList.add("avec-frac");
           morceaux.forEach(morceau => {
             const cellule = document.createElement("span");
-            cellule.className = "cel";
+            cellule.className = /^[=+−×÷]$/.test(morceau) ? "cel dc-op" : "cel";
             cellule.append(...AIDES.noeudsCalcul(morceau, {caseReponse: laCase, insecable}));
             ligne.append(cellule);
           });
@@ -2884,13 +3028,13 @@
           renderEtapes({revelees: true});
         }
         carte.classList.remove("sans-retour", "ecrit");
-        if (aEtapes(nom)) carte.classList.add("ecrit-fini");
+        if (aEtapes(nom)) { figerDessin(); carte.classList.add("ecrit-fini"); }
         // J'écris : le même dessin, tout rempli (sans le vert : c'est la
         // réponse donnée), à la même place, sous la même consigne.
         montrerImage(temps.solution.image, aEtapes(nom) ? (serie.apprends.ecris.consigne || "") : "");
         $("touches").hidden = true;
         const feedback = $("answer-feedback");
-        feedback.className = "answer-feedback is-wrong";
+        feedback.className = "dc-bulle is-wrong";
         AIDES.ecrireTexte(feedback, temps.solution.phrase);
         setAnswerControlsEnabled(false);
         $("validate").focus?.({preventScroll: true});
@@ -2953,9 +3097,10 @@
           if (ecris) {
             renderEtapes({revelees: true});
             majDessinEcris(serie.apprends.ecris.etapes.length);
+            figerDessin();
             $("question-card").classList.add("ecrit-fini");
           }
-          $("answer-feedback").className = "answer-feedback is-correct";
+          $("answer-feedback").className = "dc-bulle is-correct";
           $("answer-feedback").textContent = soude("Bravo !");
           setAnswerControlsEnabled(false);
           if (ecris) {
@@ -3210,12 +3355,21 @@
       // L'outil d'un calcul d'entraînement : « image » (la droite, le
       // tableau, avec ses « ? »), « manip » (les perles, le glisse-nombres :
       // on manipule, puis on tape la réponse), « aucun ».
-      function montrerOutil(question) {
+      // Relecture 2b (11/11/2026, remarque 48) : le premier calcul d'une
+      // écriture nouvelle (« Nouveau : c'est une division. ») a toujours son
+      // image, même quand l'élève n'a plus d'outil (M4 : la première
+      // division sans le rectangle de points). Juste, ce rappel ne compte ni
+      // avec ni sans outil (suivreEntrainement).
+      function montrerOutil(question, {nouveau = false} = {}) {
         const serie = state.serie;
         const carte = $("question-card");
         let outil = serie.outil;
         const manipulation = outil === "manip" ? CORE.manipulationDe(question.calcul) : null;
         if (outil === "manip" && !manipulation) outil = "image";
+        if (outil === "aucun" && nouveau && CORE.aideDe(question.calcul)) {
+          outil = "image";
+          question.rappel = true;
+        }
         const aide = outil !== "aucun" ? CORE.aideDe(question.calcul) : null;
         if (outil === "image" && !aide) outil = "aucun";
         question.outil = outil;
@@ -3279,11 +3433,12 @@
           const precedente = serie.index ? serie.questions[serie.index - 1].calcul.forme : null;
           const vue = serie.questions.slice(0, serie.index).some(q => q.calcul.forme === question.calcul.forme);
           const annonce = $("annonce");
-          if (precedente !== null && !vue) {
+          const nouveau = precedente !== null && !vue;
+          if (nouveau) {
             annonce.textContent = CORE.annonceDe(question.calcul);
             annonce.hidden = false;
           }
-          montrerOutil(question);
+          montrerOutil(question, {nouveau});
         }
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -3293,6 +3448,9 @@
         // Au téléphone, toujours : une annonce « Nouveau : … » prend aussi de la place.
         if (avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule) || window.innerWidth <= ECHELLE.telephone) ajusterEchelle();
         serie.virgule = virgule;
+        // Relecture 2b : le calcul se remesure une fois l'écran posé (l'image,
+        // l'annonce, l'échelle) ; sinon il rapetissait à la première touche.
+        ajusterCalcul();
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
       }
@@ -3352,7 +3510,7 @@
         state.waitingForContinue = true;
         state.correctionAfficheeA = juste || auTest ? 0 : Date.now();
         const feedback = $("answer-feedback");
-        feedback.className = `answer-feedback ${juste ? "is-correct" : "is-wrong"}`;
+        feedback.className = `dc-bulle ${juste ? "is-correct" : "is-wrong"}`;
         const attendue = CORE.formaterNombre(question.calcul.reponse);
         if (juste) {
           renderInlineAnswer("is-correct");
@@ -3416,7 +3574,7 @@
         // d'être corrigé sous les yeux de l'élève.
         if (!question.retour) {
           if (cause) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
-          serie.reponses.push({juste, ms, valeur, passe, calcul: question.calcul, outil: question.outil || "aucun"});
+          serie.reponses.push(Object.assign({juste, ms, valeur, passe, calcul: question.calcul, outil: question.outil || "aucun"}, question.rappel ? {rappel: true} : {}));
           if (serie.genre === "jour") noterRetour(serie, question.calcul, juste, ms, cause);
           if (serie.genre === "test") { serie.courante.push(juste); renderEscalier(); }
         }
@@ -3489,7 +3647,7 @@
         } else {
           suivi = PARCOURS.appliquerSerie(parcours, {
             module: serie.module, niveau: serie.niveau, genre: serie.genre,
-            reponses: serie.reponses.map(reponse => ({juste: reponse.juste, outil: reponse.outil})), causes: serie.causes
+            reponses: serie.reponses.map(reponse => Object.assign({juste: reponse.juste, outil: reponse.outil}, reponse.rappel ? {rappel: true} : {})), causes: serie.causes
           }, options);
           noterEtape(suivi.evenements.some(evenement => evenement.type === "entree") ? `${sur} · en route` : suivi.verdict.reussi ? `${sur} · réussi` : sur);
         }
@@ -3864,6 +4022,8 @@
               ? Object.assign({outil: (state.serie.questions[state.serie.index] || {}).outil || null, joues: state.serie.reponses.length}, PARCOURS.suivreEntrainement(state.serie.reponses, reglesEntrainement(state.serie))) : null),
             escalier: () => (state.running && state.serie && state.serie.genre === "test" ? {marche: state.serie.marche + 1, prouvee: state.serie.prouvee, courante: state.serie.courante.slice()} : null),
             prof: () => MODE_PROF,
+            // Les échelles de chaque temps d'une leçon (relecture 2b).
+            lecon: () => (state.lecon ? {echelles: state.lecon.echelles.slice(), plus: state.lecon.plus} : null),
             perles: () => (state.manip && state.manip.outil === "perles" ? {etape: state.manip.etape, total: state.manip.total, fini: state.manip.fini} : null),
             glisse: () => (state.manip && state.manip.outil === "glisse" ? {decalage: state.manip.decalage, fini: state.manip.fini} : null),
             // C1 (modules lot 4) : les jetons touchés, et le geste fini.

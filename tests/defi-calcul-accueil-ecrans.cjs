@@ -14,7 +14,7 @@
 //              en largeur ;
 //   chargement le cadre est caché tant que le serveur n'a pas répondu, puis
 //              ne bouge plus (taille et positions relevées à trois instants) ;
-//   pastille   « 1 soir cette semaine » ; sans aucun soir, pas de pastille et
+//   pastille   « 1 jour cette semaine » ; sans aucun jour, pas de pastille et
 //              la tête de Mon module garde la même hauteur ;
 //   test       « Tu connais déjà ce module ? » dans la carte de la séance ;
 //   parcours   la porte ouvre l'écran ; d'un palier à l'autre, le cadre et les
@@ -196,7 +196,7 @@ const texte = (page, s) => page.evaluate(sel => { const e = document.querySelect
     });
   }
 
-  await cas("pastille : « N soirs cette semaine » ; sans aucun soir, rien, et la tête garde sa hauteur ; le test dit « ce module »", async () => {
+  await cas("pastille : « N jours cette semaine » ; sans aucun jour, rien, et la tête garde sa hauteur ; le test dit « ce module »", async () => {
     const avec = await ouvrir(nav, base, {parcours: NOAH});
     await attendreAccueil(avec.page);
     assert.equal(await texte(avec.page, "#acc-soirs"), `✓${sem.soirs} jour${sem.soirs > 1 ? "s" : ""} cette semaine` /* relecture 2 : « jours » */);
@@ -278,7 +278,7 @@ const texte = (page, s) => page.evaluate(sel => { const e = document.querySelect
     assert.equal(await s.page.isVisible("#acc-changer"), true);
     assert.equal(await s.page.isVisible("#acc-liens"), true);
     assert.equal(await s.page.isVisible("#acc-porte"), true);
-    assert.equal(await texte(s.page, "#acc-soirs"), null, "rien n'est enregistré : pas de soirs");
+    assert.equal(await texte(s.page, "#acc-soirs"), null, "rien n'est enregistré : pas de jours");
     const cadre = await boite(s.page, ".panel");
     assert.ok(cadre.bas <= 657.5 && await s.page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1), "cadre entier, la page ne défile pas");
     await s.page.click("#acc-changer");

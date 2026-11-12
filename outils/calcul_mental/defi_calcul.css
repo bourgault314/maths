@@ -401,6 +401,7 @@ body.challenge-playing .question { touch-action: manipulation; }
 }
 
 .inline-answer {
+  font-variant-numeric: tabular-nums;
   min-width: 1.45em;
   min-height: 1.18em;
   display: inline-grid;
@@ -418,17 +419,23 @@ body.challenge-playing .question { touch-action: manipulation; }
 .inline-answer.is-correct { border-color: var(--green); color: var(--green); background: var(--green-soft); }
 .inline-answer.is-corrected { border-color: var(--green); color: var(--green); background: #fff7dc; }
 .inline-answer.is-wrong { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+/* La ligne de retour (« Bravo ! », « Ta réponse… »). Relecture 2b
+   (11/11/2026, remarque 55, vu sur iPhone) : la place reste réservée (rien
+   ne saute quand le retour arrive), mais la bulle colorée n'entoure que son
+   texte, au milieu de cette place — avant, elle prenait toute la place et
+   Safari collait le texte en haut. */
 .answer-feedback {
   min-height: 42px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 6px auto 0;
-  padding: 7px 12px;
-  border-radius: 12px;
   font-weight: 900;
 }
-.answer-feedback.is-correct { color: var(--green); background: var(--green-soft); }
-.answer-feedback.is-wrong { color: var(--red); background: var(--red-soft); }
+.dc-bulle { max-width: 100%; margin: 0; padding: 7px 12px; border-radius: 12px; line-height: 1.25; text-align: center; }
+.dc-bulle:empty { display: none; }
+.dc-bulle.is-correct { color: var(--green); background: var(--green-soft); }
+.dc-bulle.is-wrong { color: var(--red); background: var(--red-soft); }
 
 /* Le pavé numérique (lot 1 « clavier », 07/09/2026) : les mêmes touches
    partout, mais à la taille de l'écran. Les mesures vivent sur #play pour
@@ -492,6 +499,8 @@ body.challenge-playing .question { touch-action: manipulation; }
 .actions { width: min(100%, var(--pave-largeur)); display: grid; grid-template-columns: 2fr 1fr; gap: var(--touche-gap); margin: var(--valider-gap) auto 0; }
 .actions button { min-width: 0; min-height: 44px; height: var(--touche-h); padding: 0 10px; font-size: var(--valider-police); }
 .question.no-skip .actions { grid-template-columns: 1fr; }
+.question.suivant-seul .actions { grid-template-columns: 1fr; }
+.question.suivant-seul #skip { display: none; }
 
 /* Les corrections viennent APRÈS les boutons : les erreurs seules, en
    lignes courtes (le calcul avec sa bonne réponse, la réponse donnée barrée
@@ -612,7 +621,8 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
   /* Le calcul s'écrit aussi gros que la largeur le permet ; il se pose
      juste au-dessus du pavé, la place libre passe en haut. */
   .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: auto 0 6px; padding: 7px; font-size: clamp(2rem, min(12.4vw, 8dvh), 3.4rem); }
-  .challenge-playing .answer-feedback { min-height: 56px; margin-top: 2px; padding: 5px 10px; font-size: .95rem; }
+  .challenge-playing .answer-feedback { min-height: 56px; margin-top: 2px; font-size: .95rem; }
+  .challenge-playing .dc-bulle { padding: 5px 10px; }
   .challenge-playing .keypad { margin: 6px auto 0; }
   .challenge-playing .actions { margin-bottom: 0; }
   .challenge-playing footer { display: none; }
@@ -903,7 +913,8 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 }
 @media (min-width: 621px) and (max-height: 900px) {
   .challenge-playing .question.aide-image .dc-aide { width: min(100%, 470px); margin: 2px auto 0; }
-  .challenge-playing .question.aide-image .answer-feedback { min-height: 34px; margin-top: 2px; padding: 5px 12px; }
+  .challenge-playing .question.aide-image .answer-feedback { min-height: 34px; margin-top: 2px; }
+  .challenge-playing .question.aide-image .dc-bulle { padding: 5px 12px; }
   .challenge-playing .question.aide-image .expression { min-height: 64px; margin: 2px 0 4px; padding: 6px 10px; }
 }
 /* « Je représente » : pas de ligne de retour — la case passe au vert ou au
@@ -972,7 +983,7 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
   .challenge-playing .question.aide-perles { padding-right: 3px; padding-left: 3px; }
 }
 @media (min-width: 621px) and (min-height: 901px) {
-  .challenge-playing .question.aide-perles { height: min(76dvh, 860px); }
+  body:not(.fullscreen-active).challenge-playing .question.aide-perles { height: min(76dvh, 860px); }
 }
 @media (max-width: 620px) {
   .challenge-playing .expression.dc-long { flex-wrap: nowrap; font-size: clamp(1.9rem, min(9.6vw, 8dvh), 2.35rem); }
@@ -1011,6 +1022,13 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-frac > .dc-frac-num { min-width: 1.2em; padding: 0 .14em .07em; border-bottom: .1em solid currentColor; text-align: center; }
 .dc-frac > .dc-frac-den { padding: .07em .14em 0; text-align: center; }
 .dc-frac .inline-answer { margin: 0 0 .08em; font-size: 1.2em; }
+/* Relecture 2b (11/11/2026, remarque 62) : à côté d'une fraction, le signe
+   « = » (et +, −, ×, ÷) à la taille des fractions, plus à celle du texte. */
+.dc-signe { font-size: .72em; margin: 0 .08em; }
+.expression.dc-lignes .lg > span.avec-frac .cel.dc-op { font-size: .78em; }
+@media (min-width: 621px) {
+  .expression.dc-lignes .lg > span.avec-frac .cel.dc-op { font-size: .66em; }
+}
 .correction-expression .dc-frac, .answer-feedback .dc-frac, .consigne .dc-frac, .dc-trace .dc-frac,
 .dc-retenir .phrase .dc-frac, .annonce .dc-frac { font-size: .8em; }
 .expression.dc-lignes .lg .cel .dc-frac .inline-answer { display: inline-grid; }
@@ -1325,7 +1343,7 @@ body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
    fait, et on tape la réponse. */
 .question.manip-entraine.est-finie .keypad { display: grid; }
 .question.manip-entraine.est-finie .dc-touches:not([hidden]) { display: grid; }
-.question.manip-entraine.est-finie .answer-feedback { display: block; }
+.question.manip-entraine.est-finie .answer-feedback { display: flex; }
 .question.manip-entraine .dc-aide { flex: 0 1 auto; }
 .question.manip-entraine .perles-scene { min-height: 110px; max-height: 36dvh; }
 /* Les modules qui viennent, dans un palier : une liste compacte. */
@@ -1480,6 +1498,14 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
   .challenge-playing .question.aide-glisse.manip-entraine.est-finie > .dc-aide.sans-tableau .place-value-tool { display: none; }
 }
 
+/* Relecture 2b (11/11/2026, remarque 49) : au téléphone, la bulle
+   « Nouveau : … » se pose juste au-dessus du calcul (avant : tout en haut du
+   cadre, le calcul au milieu, un grand vide entre les deux). */
+@media (max-width: 620px) {
+  .challenge-playing .question > .dc-annonce-forme:not([hidden]) { margin-top: auto; }
+  .challenge-playing .question > .dc-annonce-forme:not([hidden]) + .expression { margin-top: 0; }
+}
+
 /* Modules lot 6 (04/11/2026) : les fractions. Le schéma en barres sur la
    droite graduée (Je représente, l'aide, J'écris, « À retenir ») : des
    parts à compter, comme le tableau de numération. */
@@ -1528,3 +1554,47 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
   .challenge-playing .question.aide-image:not(.ecrit-fini) > .dc-touches:not([hidden]) { margin-top: auto; }
   .challenge-playing .question.aide-image:not(.ecrit-fini) > .dc-touches:not([hidden]) + .keypad { margin-top: 0; }
 }
+
+/* Relecture 2b (11/11/2026, remarques 24 et 51 : « au tableau, on lit mal
+   du fond de la classe ») : en plein écran, quelle que soit la hauteur de
+   l'écran, le jeu prend la hauteur de la fenêtre (comme sous 900 px) et le
+   cadre grandit jusqu'à la remplir. Avant, sur un écran de 1 080 px, le
+   cadre gardait la taille d'un ordinateur portable (765 px de large sur
+   1 920) et le boulier 504 px. Mêmes règles que le bloc « max-height:
+   900px », pour le plein écran (même poids : « :where »). */
+@media (min-width: 621px) and (min-height: 901px) {
+  :where(body.fullscreen-active).challenge-playing { height: 100dvh; overflow: hidden; }
+  :where(body.fullscreen-active).challenge-playing .shell { height: calc((100dvh - var(--bas-cadre, 0px)) / var(--echelle, 1)); display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0; }
+  :where(body.fullscreen-active).challenge-playing .topbar { min-height: 50px; }
+  :where(body.fullscreen-active).challenge-playing .panel { min-height: 0; height: auto; padding: 12px 36px; overflow: hidden; }
+  :where(body.fullscreen-active).challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
+  :where(body.fullscreen-active).challenge-playing .status { min-height: 38px; }
+  :where(body.fullscreen-active).challenge-playing .progress-track { height: 7px; margin: 5px 0 7px; }
+  :where(body.fullscreen-active).challenge-playing .question { flex: 1; min-height: 0; justify-content: flex-start; padding: 10px 28px 12px; overflow-y: auto; overscroll-behavior: contain; }
+  :where(body.fullscreen-active).challenge-playing .expression { min-height: 84px; margin: 4px 0 8px; padding: 10px; font-size: clamp(2.2rem, min(7vw, 8.5dvh), 4rem); }
+  :where(body.fullscreen-active).challenge-playing .answer-feedback { min-height: 38px; margin-top: 4px; }
+  :where(body.fullscreen-active).challenge-playing .keypad { margin: 6px auto 0; }
+  :where(body.fullscreen-active).challenge-playing .actions { margin-bottom: auto; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image .dc-aide { width: min(100%, 470px); margin: 2px auto 0; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image .answer-feedback { min-height: 34px; margin-top: 2px; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image .dc-bulle { padding: 5px 12px; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image .expression { min-height: 64px; margin: 2px 0 4px; padding: 6px 10px; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image:not(.ecrit) .dc-aide svg.dc-escalier { max-height: 27dvh; }
+  :where(body.fullscreen-active).challenge-playing .question.aide-image .dc-aide svg.dc-tableau { max-height: 25dvh; }
+}
+
+/* Relecture 2b (11/11/2026, remarque 50) : au téléphone, J'écris fini
+   (le pavé s'en va) : le dessin garde la hauteur qu'il avait pendant les
+   étapes (figerDessin). */
+@media (max-width: 620px) {
+  .challenge-playing .question.aide-image.ecrit-fini > .dc-aide > svg[viewBox] { max-height: var(--dessin-h, none); }
+}
+
+/* Relecture 2b (11/11/2026, remarque 43 : « 1200 − 400 », « Dans 21462 »,
+   « 8 × 1000 » semblaient écrits sans espace). Les nombres s'écrivent avec
+   une espace insécable (plus l'espace fine, invisible en gros caractères
+   gras) ; et dans le jeu, les espaces sont un peu plus larges : dans la
+   police du site, en gras, une espace ne fait qu'un cinquième de la
+   hauteur d'un chiffre. (Pas dans « À retenir » : son calcul tient sur une
+   ligne, il rapetissait.) */
+.question { word-spacing: .12em; }
