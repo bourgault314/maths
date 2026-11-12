@@ -1120,6 +1120,11 @@
     let justesSansOutil = 0;
     let erreursDeSuite = 0;
     liste.forEach(reponse => {
+      // Relecture 2b (11/11/2026) : l'image rendue au premier calcul d'une
+      // écriture nouvelle est un rappel. Juste, il ne compte ni avec ni sans
+      // outil (la suite de justes ne repart pas de zéro) ; faux, c'est une
+      // erreur comme une autre.
+      if (reponse.juste && reponse.rappel) return;
       if (reponse.juste) {
         erreursDeSuite = 0;
         if (reponse.outil === "aucun") justesSansOutil += 1;

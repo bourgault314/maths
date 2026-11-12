@@ -574,7 +574,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // du livret en ligne).
   // Puis « cours-t1 » (12/11/2026) : lib/cours.json seul change (les chapitres Inégalité triangulaire,
   // Nombres relatifs et Fractions de 4e, et Fractions de 3e, du livret en ligne).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-t1$/m);
+  // Puis Défi calcul, la relecture 2b (11-12/11/2026) : les copies
+  // prof/defi_calcul_core.js et prof/defi_calcul_mon_parcours.js changent
+  // (l'espace des milliers, la case de la réponse, le rappel d'une écriture
+  // nouvelle, le sens de la bande des tables) (avant : cours-t1).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-relecture-2b$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

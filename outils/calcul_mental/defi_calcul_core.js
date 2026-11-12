@@ -79,7 +79,7 @@
 
   // ----------------------------------------------------------------- nombres
 
-  const ESPACE_FINE = " ";
+  const ESPACE_FINE = " ";
 
   // « 2 700 », « 3,6 » : l'espace fine insécable des milliers, la virgule.
   // Jusqu'aux millionièmes (3,6 ÷ 1 000 = 0,0036 est une erreur à montrer
@@ -245,7 +245,7 @@
     ];
   }
 
-  // Niveau 4 : à 1\u202f000 sur des dizaines entières, et à la centaine suivante.
+  // Niveau 4 : à 1\u00a0000 sur des dizaines entières, et à la centaine suivante.
   // Lot « couverture » (06/11/2026) : aussi à une centaine plus loin, depuis
   // des dizaines entières (180 + ? = 300, calcul de l'ancienne appli).
   function a2Niveau4(rng, total, imposes) {
@@ -263,8 +263,8 @@
         return a;
       }, dejaLa)
     ];
-    // Les formes des calculs vers 1\u202f000 : 4 compléments, 1 complément à
-    // gauche, 2 différences (l'imposé « 650 + ? = 1\u202f000 » est un complément).
+    // Les formes des calculs vers 1\u00a0000 : 4 compléments, 1 complément à
+    // gauche, 2 différences (l'imposé « 650 + ? = 1\u00a0000 » est un complément).
     const [nC, nG] = repartir(versMille, [4, 1, 2]);
     const formes = melanger(rng, nombres.map((_, i) => {
       const rang = i + imposeMille.length;
@@ -278,7 +278,7 @@
       return n;
     }, [...dejaLa, ...nombres]).map(n => a2Complement(4, n, centaineSuivante(n), {suivante: true}));
     // Une centaine plus loin : de 110 à 880 (pas une centaine entière), vers
-    // la 2e à la 4e centaine d'après, sans dépasser 1\u202f000.
+    // la 2e à la 4e centaine d'après, sans dépasser 1\u00a0000.
     const plusLoin = tirerDistincts(rng, loin, r => {
       let n = entierEntre(r, 11, 58) * 10;
       while (n % 100 === 0) n = entierEntre(r, 11, 58) * 10;
@@ -292,11 +292,11 @@
 
   // Niveau 5 (lot « couverture », CM1) : compléter un nombre quelconque —
   // les unités ne sont pas nulles — jusqu'à la centaine suivante
-  // (266 + ? = 300), jusqu'à 1\u202f000 (368 + ? = 1\u202f000), jusqu'au
-  // millier suivant (2\u202f371 + ? = 3\u202f000) ou jusqu'à une centaine plus
-  // loin (748 + ? = 1\u202f200). Programme de cycle 3 (« compléments à la
-  // centaine »), progression de CM1 (273 → 300 ; 2\u202f371 → 3\u202f000),
-  // égalités à trous de CM1 (748 + ? = 1\u202f200). Sur la droite : la
+  // (266 + ? = 300), jusqu'à 1\u00a0000 (368 + ? = 1\u00a0000), jusqu'au
+  // millier suivant (2\u00a0371 + ? = 3\u00a0000) ou jusqu'à une centaine plus
+  // loin (748 + ? = 1\u00a0200). Programme de cycle 3 (« compléments à la
+  // centaine »), progression de CM1 (273 → 300 ; 2\u00a0371 → 3\u00a0000),
+  // égalités à trous de CM1 (748 + ? = 1\u00a0200). Sur la droite : la
   // dizaine, la centaine, puis le bout (trois sauts au plus).
   function a2Niveau5(rng, total, imposes) {
     const [suivantes, mille, milliers, loin] = repartir(total, [3, 3, 2, 2]);
@@ -353,8 +353,8 @@
   // ne sont pas nulles), jusqu'à la centaine suivante, puis jusqu'à la
   // cible ; on ne s'arrête qu'avant la cible. Un seul saut quand il n'y a
   // rien à passer (433 → 440 ; 230 → 300). Lot « couverture » : jusqu'à
-  // trois sauts (748 → 750 → 800 → 1\u202f200) ; pour les niveaux 1 à 4, les
-  // mêmes sauts qu'avant (37 → 40 → 100 ; 730 → 800 → 1\u202f000).
+  // trois sauts (748 → 750 → 800 → 1\u00a0200) ; pour les niveaux 1 à 4, les
+  // mêmes sauts qu'avant (37 → 40 → 100 ; 730 → 800 → 1\u00a0000).
   // `paliers` : les arrêts ; `palier` : le premier (ou null).
   function a2Sauts(calcul) {
     const {a, cible} = calcul.donnees;
@@ -372,7 +372,7 @@
   }
 
   // Le rang perdu ou ajouté de trop dans une erreur de complément : 10 vers
-  // 100 (et depuis un nombre aux unités non nulles), 100 vers 1\u202f000
+  // 100 (et depuis un nombre aux unités non nulles), 100 vers 1\u00a0000
   // depuis des dizaines entières.
   const a2Rang = calcul => {
     const {a, cible} = calcul.donnees;
@@ -1293,7 +1293,7 @@
   ]);
 
   const A2 = {
-    id: "A2", nom: "Compléments à la dizaine, à 100, à 1\u202f000", exemple: "37 + ? = 100",
+    id: "A2", nom: "Compléments à la dizaine, à 100, à 1\u00a0000", exemple: "37 + ? = 100",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
     erreurs: A2_ERREURS, image: a2Image, aide: a2Aide, manipulation: calcul => a2Perles(calcul), difficulte: a2Difficulte,
@@ -1333,13 +1333,13 @@
         })
       },
       {
-        n: 4, titre: "à 1\u202f000 et à la centaine suivante", nom: "Compléments à 1\u202f000", palier: 2, type: "P",
+        n: 4, titre: "à 1\u00a0000 et à la centaine suivante", nom: "Compléments à 1\u00a0000", palier: 2, type: "P",
         composer: a2Niveau4,
         imposes: [a2Complement(4, 650, 1000), a2Complement(4, 230, 300, {suivante: true})],
         apprends: a2Apprends({
           manipule: null, represente: {a: 650, cible: 1000}, ecris: {a: 370, cible: 1000},
-          consigne: "Je vais à la centaine, puis à 1\u202f000.",
-          bilan: "Pour aller à 1\u202f000, je vais d’abord à la centaine, puis à 1\u202f000\u00a0: 50 + 300 = 350."
+          consigne: "Je vais à la centaine, puis à 1\u00a0000.",
+          bilan: "Pour aller à 1\u00a0000, je vais d’abord à la centaine, puis à 1\u00a0000\u00a0: 50 + 300 = 350."
         })
       },
       {
@@ -1351,8 +1351,8 @@
         imposes: [a2Complement(5, 266, 300), a2Complement(5, 748, 1200)],
         apprends: a2Apprends({
           manipule: null, represente: {a: 368, cible: 1000}, ecris: {a: 748, cible: 1200},
-          consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u202f000.",
-          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u202f000\u00a0: 2 + 30 + 600 = 632."
+          consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000.",
+          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000\u00a0: 2 + 30 + 600 = 632."
         })
       }
     ]
@@ -1397,13 +1397,13 @@
   const etapeDe = (texte, reponse) => ({texte, reponse});
 
   const M2 = {
-    id: "M2", nom: "× 10, × 100, × 1\u202f000 (entiers)", exemple: "27 × 100",
+    id: "M2", nom: "× 10, × 100, × 1\u00a0000 (entiers)", exemple: "27 × 100",
     famille: "M", construit: true,
     aide_entraine: "tableau-fleches",
     erreurs: M2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "multiplier par 10, 100, 1 000", nom: "× 10, × 100, × 1\u202f000", palier: 1, type: "P",
+        n: 1, titre: "multiplier par 10, 100, 1 000", nom: "× 10, × 100, × 1\u00a0000", palier: 1, type: "P",
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
@@ -1434,7 +1434,7 @@
   };
   // Les modules à décimales ont la touche « , » au-dessus du pavé.
   const D2 = {
-    id: "D2", nom: "× 10, × 100, × 1\u202f000 avec virgule", exemple: "7,54 × 100",
+    id: "D2", nom: "× 10, × 100, × 1\u00a0000 avec virgule", exemple: "7,54 × 100",
     famille: "D", construit: true, virgule: true,
     aide_entraine: "tableau-fleches",
     erreurs: D2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
@@ -1454,14 +1454,14 @@
         })
       },
       {
-        n: 2, titre: "× 100, × 1\u202f000 sans zéro à écrire", nom: "Décimal × 100, × 1\u202f000", palier: 3, type: "P",
+        n: 2, titre: "× 100, × 1\u00a0000 sans zéro à écrire", nom: "Décimal × 100, × 1\u00a0000", palier: 3, type: "P",
         composer: d2Niveau2,
         imposes: [produit("D2", 2, 7.54, 100), produit("D2", 2, 4.107, 1000)],
         apprends: glisseApprends({
           calcul: produit("D2", 2, 7.54, 100), exemple: "7,54 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 2, 4.107, 1000),
           ecris: {calcul: produit("D2", 2, 3.24, 100), etapes: [etapeDe(`3,24 × 100 = ${CASE}`, 324)]},
-          consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u202f000 fois plus.",
+          consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u00a0000 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
           bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
@@ -2647,7 +2647,7 @@
     erreurs: A4_ERREURS,
     niveaux: [
       {
-        n: 1, titre: "deux chiffres, sans retenue", nom: "Additionner sans passer la dizaine", palier: 1, type: "P",
+        n: 1, titre: "deux chiffres, sans passer la dizaine", nom: "Additionner sans passer la dizaine", palier: 1, type: "P",
         composer: a4Niveau1,
         imposes: [ligneChemin("A4", 1, 53, 24), ligneChemin("A4", 1, 26, 42)],
         apprends: cheminApprends({
@@ -2661,7 +2661,7 @@
         })
       },
       {
-        n: 2, titre: "deux chiffres, avec retenue", nom: "Additionner en passant la dizaine", palier: 1, type: "P",
+        n: 2, titre: "deux chiffres, en passant la dizaine", nom: "Additionner en passant la dizaine", palier: 1, type: "P",
         composer: a4Niveau2,
         imposes: [ligneChemin("A4", 2, 36, 47), ligneChemin("A4", 2, 28, 56)],
         apprends: cheminApprends({
@@ -2710,7 +2710,7 @@
     erreurs: A7_ERREURS,
     niveaux: [
       {
-        n: 1, titre: "sans retenue", nom: "Soustraire sans passer la dizaine", palier: 1, type: "P",
+        n: 1, titre: "sans passer la dizaine", nom: "Soustraire sans passer la dizaine", palier: 1, type: "P",
         composer: a7Niveau1,
         imposes: [ligneChemin("A7", 1, 576, -34), ligneChemin("A7", 1, 95, -42)],
         apprends: cheminApprends({
@@ -3076,7 +3076,9 @@
   // à moins de 10 l'un de l'autre (73 − 68 ; 52 − 47).
   const a8Niveau1 = a8Niveau(1, rng => {
     const petit = entierEntre(rng, 11, 88);
-    const grand = petit + entierEntre(rng, 2, 9);
+    // Relecture 2b (11/11/2026, remarque 54) : « proches » = un écart de 5
+    // au plus (21 − 12, écart 9, n'est pas proche).
+    const grand = petit + entierEntre(rng, 2, 5);
     return grand <= 99 && grand % 10 !== 0 && Math.floor(grand / 10) !== Math.floor(petit / 10) ? [petit, grand, "ecart"] : null;
   });
   // A8-2 : de part et d'autre d'une centaine (402 − 397 ; 103 − 97) ou,
@@ -3135,7 +3137,7 @@
       {
         n: 1, titre: "deux chiffres proches", nom: "Écart entre deux nombres proches", palier: 1, type: "P",
         composer: a8Niveau1,
-        imposes: [ligneEcart(1, "ecart", 86, 91), ligneEcart(1, "ecart", 57, 63)],
+        imposes: [ligneEcart(1, "ecart", 86, 91), ligneEcart(1, "ecart", 58, 62)],
         apprends: a8Apprends({
           manipule: ecart(68, 73),
           represente: ecart(47, 52),
@@ -3384,7 +3386,7 @@
         })
       },
       {
-        n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", nom: "Doubles et moitiés des nombres usuels", palier: 1, type: "F",
+        n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", nom: "Doubles et moitiés des nombres usuels", palier: 1, type: "F",
         composer: m1Niveau(2, [5, 5, 2]),
         imposes: [m1Calcul(2, "moitie", 1200), m1Calcul(2, "double-fois", 250)],
         apprends: m1Apprends({
@@ -3394,7 +3396,7 @@
           etapesRepresente: [["100 ÷ 2 = ?", 50], ["50 ÷ 2 = ?", 25], ["moitié de 150 = ?", 75]],
           consigneEcris: "double de 75 = 2 × 75",
           etapes: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
-          bilan: "Double de 25 = 50, double de 75 = 150, moitié de 150 = 150 ÷ 2 = 75, moitié de 1 200 = 600 : ces nombres-là, je les sais par cœur."
+          bilan: "Double de 25 = 50, double de 75 = 150, moitié de 150 = 150 ÷ 2 = 75, moitié de 1 200 = 600 : ces nombres-là, je les sais par cœur."
         })
       },
       {
@@ -3551,24 +3553,30 @@
   // ---- M4 : la bande de la table, le rectangle de points
   //
   // Décision du 01/11 (planche « choix-6 ») : un produit se lit sur la bande
-  // de la table (7 × 8 : on compte de 7 en 7 jusqu'à « × 8 » ; la table est
-  // tirée au moment d'écrire, 8 × 7 se lit sur la même bande). Une division
+  // de la table (8 × 7 : on compte de 7 en 7 jusqu'à « 8 × 7 » ; voir plus
+  // bas, lot 2b du 12/11). Une division
   // ou un nombre manquant se lit sur le rectangle de points : 56 ÷ 7, « dans
   // 56, combien de fois 7 ? », 56 points rangés par 7.
+  //
+  // Lot 2b (12/11/2026, demande de Gwenaël) : 8 × 7, c'est « 8 fois 7 » —
+  // on compte de 7 en 7 jusqu'à 8 × 7, comme la bande de Défi tables
+  // (n × table). La bande d'un produit a × b est donc celle de b, et on y
+  // cherche le rang a (avant : celle de la petite table, quel que soit son
+  // côté : 7 × 8 se comptait de 7 en 7).
   function m4Image(calcul) {
-    const {a, b, p, table} = calcul.donnees;
+    const {a, b, p} = calcul.donnees;
     // × 1 (lot « couverture ») : une colonne de points — la bande de la
-    // table écrirait la réponse (« × 4 », « + 4 »).
+    // table écrirait la réponse (« 4 × 1 », « + 1 »).
     if (calcul.forme === "produit" && (a === 1 || b === 1)) return {outil: "points", rangees: p, parRangee: 1};
     return calcul.forme === "produit"
-      ? {outil: "bande", table, cherche: p / table}
+      ? {outil: "bande", table: b, cherche: a}
       : {outil: "points", rangees: p / a, parRangee: a};
   }
   const m4Aide = calcul => Object.assign(m4Image(calcul), {masque: true});
   function m4Phrase(calcul) {
-    const {a, p, table} = calcul.donnees;
+    const {a, b, p} = calcul.donnees;
     if (calcul.forme !== "produit") return fr(`Regarde : dans ${f(p)}, il y a ${f(p / a)} fois ${f(a)}.`);
-    return fr(`Regarde : ${f(table)} × ${f(p / table)} = ${f(p)}.`);
+    return fr(`Regarde : ${f(a)} × ${f(b)} = ${f(p)}.`);
   }
 
   // M4-1 : au moins un facteur de 2 à 5, l'autre de 2 à 10. M4-2 : les deux
@@ -3582,6 +3590,16 @@
       const ok = niveau === 1 ? petit <= 5 : petit >= 6;
       if (ok) paires.push([a, b]);
     }
+    // Relecture 2b (11/11/2026, remarque 47) : au niveau 2, × 10 est rare
+    // (9 paires sur 25 avant : trois × 10 dans les quatre premiers calculs)
+    // — les tables de 6 à 9 d'abord. On garde 10 × 10, 7 × 10 et 10 × 8 ;
+    // pour ÷ et le nombre manquant, aucun, sauf « 70 = 7 × □ » (un imposé).
+    const avecDix = ([a, b]) => a === 10 || b === 10;
+    const dixGardes = niveau === 2 ? [[10, 10], [7, 10], [10, 8]] : null;
+    const garder = (liste, gardes) => (niveau === 2 ? liste.filter(paire => !avecDix(paire) || gardes.some(([x, y]) => x === paire[0] && y === paire[1])) : liste);
+    const pairesProduit = garder(paires, dixGardes || []);
+    const pairesAutres = garder(paires.filter(([a]) => a <= 9), []);
+    const pairesEgal = garder(paires.filter(([a]) => a <= 9), [[7, 10]]);
     // La table d'un produit : niveau 1, le facteur de 2 à 5 (le plus grand
     // des deux s'ils le sont tous les deux) ; niveau 2, le facteur de 6 à 9.
     const tableDe = (a, b) => {
@@ -3589,11 +3607,11 @@
       return candidates.length ? Math.max(...candidates) : 10;
     };
     return Object.freeze({
-      produit: paires.map(([a, b]) => faitCalcul("M4", niveau, "produit", a, b, tableDe(a, b))),
-      division: paires.filter(([a]) => a <= 9).map(([a, b]) => faitCalcul("M4", niveau, "division", a, b)),
-      "trou-facteur": paires.filter(([a]) => a <= 9).map(([a, b]) => faitCalcul("M4", niveau, "trou-facteur", a, b)),
-      "trou-egal": paires.filter(([a]) => a <= 9).map(([a, b]) => faitCalcul("M4", niveau, "trou-egal", a, b)),
-      "trou-egal-gauche": paires.filter(([a]) => a <= 9).map(([a, b]) => faitCalcul("M4", niveau, "trou-egal-gauche", a, b)),
+      produit: pairesProduit.map(([a, b]) => faitCalcul("M4", niveau, "produit", a, b, tableDe(a, b))),
+      division: pairesAutres.map(([a, b]) => faitCalcul("M4", niveau, "division", a, b)),
+      "trou-facteur": pairesAutres.map(([a, b]) => faitCalcul("M4", niveau, "trou-facteur", a, b)),
+      "trou-egal": pairesEgal.map(([a, b]) => faitCalcul("M4", niveau, "trou-egal", a, b)),
+      "trou-egal-gauche": pairesAutres.map(([a, b]) => faitCalcul("M4", niveau, "trou-egal-gauche", a, b)),
       // Lot « couverture » (relecture Codex) : la table avec 1 (CE1), au
       // niveau 1, de temps en temps. (Pas × 0 : aucune réponse de l'appli
       // n'est 0.)
@@ -3633,7 +3651,10 @@
     id: "M4", nom: "Les tables dans tous les sens", exemple: "4 × 7",
     famille: "M", construit: true,
     aide_entraine: "bande",
-    erreurs: FAITS_ERREURS, image: m4Image, aide: m4Aide, phrase: m4Phrase, manipulation: () => null, difficulte: faitDifficulte
+    // (Relecture 2b : un × 10 du niveau 2 passe après les tables de 6 à 9.)
+    erreurs: FAITS_ERREURS, image: m4Image, aide: m4Aide, phrase: m4Phrase, manipulation: () => null,
+    difficulte: calcul => faitDifficulte(calcul) + (M4.tardif(calcul) ? 500 : 0),
+    tardif: calcul => calcul.niveau === 2 && (calcul.donnees.a === 10 || calcul.donnees.b === 10)
   };
   M4.niveaux = [
     {
@@ -3642,9 +3663,9 @@
       imposes: [m4Fait(1, "trou-facteur", 3, 8), m4Fait(1, "trou-egal", 4, 3)],
       apprends: apprendsSansManip({
         fiche: M4,
-        represente: faitCalcul("M4", 0, "produit", 4, 7, 4),
+        represente: faitCalcul("M4", 0, "produit", 7, 4, 4),
         ecris: faitCalcul("M4", 0, "division", 5, 4),
-        consigne: "Je compte de 4 en 4 jusqu’à « × 7 ».",
+        consigne: "Je compte de 4 en 4 jusqu’à « 7 × 4 ».",
         consigneEcris: "20 ÷ 5 : combien de fois 5 dans 20 ?",
         etapes: [["5 × ? = 20", 4], ["20 ÷ 5 = ?", 4]],
         dessins: (calcul, n) => finiDessins(m4Image(calcul), n),
@@ -3658,9 +3679,9 @@
       imposes: [m4Fait(2, "division", 7, 8), m4Fait(2, "trou-facteur", 6, 9), m4Fait(2, "trou-egal", 7, 10)],
       apprends: apprendsSansManip({
         fiche: M4,
-        represente: faitCalcul("M4", 0, "produit", 7, 8, 7),
+        represente: faitCalcul("M4", 0, "produit", 8, 7, 7),
         ecris: faitCalcul("M4", 0, "division", 6, 9),
-        consigne: "Je compte de 7 en 7 jusqu’à « × 8 ».",
+        consigne: "Je compte de 7 en 7 jusqu’à « 8 × 7 ».",
         consigneEcris: "54 ÷ 6 : combien de fois 6 dans 54 ?",
         etapes: [["6 × ? = 54", 9], ["54 ÷ 6 = ?", 9]],
         dessins: (calcul, n) => finiDessins(m4Image(calcul), n),
@@ -4000,11 +4021,12 @@
         fiche: M8,
         represente: m8Calcul(0, 7, 23),
         ecris: m8Calcul(0, 6, 47, true),
-        consigne: "Je coupe 23 en 20 et 3.",
+        // (Relecture 2b, remarque 68 : plus de « Je coupe », l'égalité.)
+        consigne: "23 × 7 = 20 × 7 + 3 × 7",
         consigneEcris: "6 × 47 = 40 × 6 + 7 × 6",
         etapes: [["40 × 6 = ?", 240], ["7 × 6 = ?", 42], ["6 × 47 = ?", 282]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
-        bilan: "Je coupe le nombre en dizaines et unités : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
+        bilan: "23 fois 7, c’est 20 fois 7 plus 3 fois 7 : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
       })
     },
     {
@@ -4061,10 +4083,17 @@
   }
   // Le glisse-nombres, après la table : le résultat de la table glisse de
   // autant de colonnes qu'il y a de zéros.
+  // Relecture 2b (11/11/2026, remarque 46, vu en jouant M3-3) : le
+  // glisse-nombres ne glisse que de 3 colonnes (× 1 000) et n'a que six
+  // colonnes ; « 4 000 × 70 » (× 10 000) était refusé sans fin, l'élève
+  // restait bloqué. Au-delà, pas de geste : l'outil de l'entraînement est
+  // l'image (le tableau à flèches), comme pour un trou.
+  const GLISSE_MAX = 3;
   function m3Manipulation(calcul) {
     if (calcul.forme === "trou-facteur") return null;
     const {c1, c2, t, p, r} = calcul.donnees;
     const k = m3Rangs(calcul);
+    if (k > GLISSE_MAX || r >= 1000000) return null;
     return Object.freeze({
       outil: "glisse", depart: t, colonnes: COLONNES_M2, decalage: k,
       texte: calcul.texte.replace(` = ${CASE}`, ""),
@@ -4128,7 +4157,11 @@
       // attendu en fin de 6e, Éduscol).
       const trous = [];
       [10, 100].forEach(q => chiffres29.forEach(a => chiffres29.forEach(c => trous.push(m3Trou(3, a * q, c)))));
-      return Object.freeze({produit: [...v.produit, ...v["produit-gauche"]], "trou-facteur": trous});
+      // Relecture 2b (11/11/2026, remarque 46) : pas de produit d'un
+      // million ou plus — le glisse-nombres n'a que six colonnes, l'élève
+      // restait bloqué (500 × 7 000, 9 000 × 2 000…).
+      const tient = c => c.reponse < 1000000;
+      return Object.freeze({produit: [...v.produit, ...v["produit-gauche"]].filter(tient), "trou-facteur": trous.filter(tient)});
     }
     return Object.freeze(v);
   }
@@ -5803,7 +5836,7 @@
   ]);
 
   const D3 = {
-    id: "D3", nom: "÷ 10, ÷ 100, ÷ 1 000", exemple: "45,2 ÷ 10",
+    id: "D3", nom: "÷ 10, ÷ 100, ÷ 1 000", exemple: "45,2 ÷ 10",
     famille: "D", construit: true, virgule: true,
     aide_entraine: "tableau-fleches",
     erreurs: D3_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
@@ -5823,14 +5856,14 @@
         })
       },
       {
-        n: 2, titre: "décimal ÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
+        n: 2, titre: "décimal ÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
         composer: d3Niveau2,
         imposes: [d3Division(2, 2.83, 100), d3Division(2, 4.125, 1000)],
         apprends: glisseApprends({
           calcul: d3Division(2, 4.56, 100), exemple: "456 ÷ 100", colonnes: COLONNES_D2,
           represente: d3Division(2, 3.718, 1000),
           ecris: {calcul: d3Division(2, 8.45, 100), etapes: [etapeDe(`845 ÷ 100 = ${CASE}`, 8.45)]},
-          consigne: "Chaque chiffre vaut 100 fois moins.", consigneTableau: "Chaque chiffre vaut 1 000 fois moins.",
+          consigne: "Chaque chiffre vaut 100 fois moins.", consigneTableau: "Chaque chiffre vaut 1 000 fois moins.",
           refus: "Chaque chiffre doit valoir 100 fois moins : 2 colonnes.",
           trace: ["456 ÷ 100 = …", "456 ÷ 100 = 4,56"],
           bilan: frBilan("Quand je divise par 100, chaque chiffre prend une valeur 100 fois plus petite : 456 ÷ 100 = 4,56.")
@@ -7526,7 +7559,7 @@
         })
       },
       {
-        n: 2, titre: "1/1\u202f000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", nom: "Demis, quarts, millième\u00a0: en décimal", palier: 3, type: "F",
+        n: 2, titre: "1/1\u00a0000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", nom: "Demis, quarts, millième\u00a0: en décimal", palier: 3, type: "F",
         composer: vivierNiveau(F1_VIVIERS[2], [4, 3, 2, 3]),
         imposes: [f1(2, "1/4 = □"), f1(2, "0,5 = 1/□")],
         apprends: f1Apprends({
@@ -8019,7 +8052,10 @@
   function ordonnerSerie(calculs) {
     const tries = calculs.map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
     const formes = [...new Set(tries.map(calcul => calcul.forme))];
-    const premiere = tries.filter(calcul => calcul.forme === formes[0]);
+    // Relecture 2b : un calcul qu'une fiche dit « tardif » (M4-2 : × 10)
+    // n'entre pas dans les premiers calculs de l'étendue.
+    const tardif = calcul => { const fiche = moduleDe(calcul.module); return Boolean(fiche && typeof fiche.tardif === "function" && fiche.tardif(calcul)); };
+    const premiere = tries.filter(calcul => calcul.forme === formes[0] && !tardif(calcul));
     const place = Math.max(ORDRE_SERIE.premiereMini, ORDRE_SERIE.fenetre - (formes.length - 1));
     const debut = etales(premiere, Math.min(place, premiere.length));
     const pris = new Set(debut);
@@ -8055,6 +8091,37 @@
     const formes = [...new Set(serie.map(calcul => calcul.forme))].sort();
     const voulue = formes[((tour % formes.length) + formes.length) % formes.length];
     return serie.find(calcul => calcul.forme === voulue) || serie[0];
+  }
+
+  // Relecture 2b (11/11/2026, remarque 56 de Gwenaël : « tout se décale »
+  // pendant la frappe) : la case de la réponse a, dès le début, la largeur
+  // de la plus longue réponse DU NIVEAU — pas celle de la réponse cherchée,
+  // qui dirait le nombre de chiffres. `modelesReponse` rend les FORMES des
+  // réponses du niveau, chiffres remplacés par des 0, écrites comme l'appli
+  // écrit un nombre (« 0 000 », « 0,000 ») : la page les mesure toutes et
+  // garde la plus large. Lues sur cinq grands tirages et les imposés,
+  // gardées une fois lues. `enPlus` : d'autres réponses (celles de
+  // J'apprends, au niveau 0). `modeleReponse` : la plus longue (en
+  // caractères), pour les tests.
+  const REPONSES_DU_NIVEAU = new Map();
+  function modelesReponse(cleNiveau, enPlus = []) {
+    if (!REPONSES_DU_NIVEAU.has(cleNiveau)) {
+      const trouve = niveauDe(cleNiveau);
+      const reponses = [];
+      if (trouve && typeof trouve.niveau.composer === "function") {
+        for (let graine = 1; graine <= 5; graine += 1) trouve.niveau.composer(mulberry32(graine * 7919), 60, []).forEach(calcul => reponses.push(calcul.reponse));
+        (trouve.niveau.imposes || []).forEach(calcul => reponses.push(calcul.reponse));
+      }
+      REPONSES_DU_NIVEAU.set(cleNiveau, reponses);
+    }
+    const formes = new Set();
+    REPONSES_DU_NIVEAU.get(cleNiveau).concat(enPlus).forEach(r => {
+      if (typeof r === "number" && Number.isFinite(r)) formes.add(formaterNombre(r).replace(/\d/g, "0"));
+    });
+    return [...formes].sort((a, b) => b.length - a.length || (a < b ? -1 : 1));
+  }
+  function modeleReponse(cleNiveau, enPlus = []) {
+    return modelesReponse(cleNiveau, enPlus)[0] || "";
   }
 
   // L'outil du début de l'entraînement, et ce qui revient après une erreur
@@ -8228,6 +8295,8 @@
     genererSerie,
     genererTest,
     genererUn,
+    modeleReponse,
+    modelesReponse,
     aideDe,
     manipulationDe,
     annonceDe,

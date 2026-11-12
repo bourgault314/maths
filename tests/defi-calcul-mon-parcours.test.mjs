@@ -342,7 +342,7 @@ test("la page : au catalogue à sa propre adresse, sans menus pour l'élève, sa
   // le schéma en barres a des parts à compter (le pavé rapetisse avant lui).
   assert.match(page, /if \(options\.outil === "bandes"\) return AIDES\.bandesManip\(zone, options\);/);
   assert.match(page, /image\.matches\("svg\.dc-numeration, svg\.dc-carre, svg\.dc-fractions"\)/);
-  assert.match(page, /return AIDES\.noeudsCalcul\(texte, \{caseReponse, insecable\}\);/, "le calcul : ses fractions");
+  assert.match(page, /return AIDES\.noeudsCalcul\(texte, \{caseReponse, insecable, signes: true\}\);/, "le calcul : ses fractions");
   // Relecture 1 (06/11/2026) : la phrase, puis le calcul sur sa ligne ; les
   // deux passent toujours par ecrireTexte (leurs fractions).
   assert.match(page, /AIDES\.ecrireTexte\(\$\("retenir-phrase"\), AIDES\.souderCalculs\(serie\.apprends\.bilan\)\);/, "« À retenir » : ses fractions");
@@ -606,5 +606,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261111-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261111-3/);
 });

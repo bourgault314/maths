@@ -30,7 +30,7 @@ const MILLION = 1000000n;
 
 // La réponse d'un calcul, recalculée à partir de son TEXTE seulement.
 function resoudre(texte) {
-  const m = texte.replace(/\u202f/g, "");
+  const m = texte.replace(/[\u202f\u00a0]/g, "");
   const nb = "([\\d,]+)";
   const motif = forme => new RegExp(`^${forme.replace(/[+]/g, "\\+").replace(/N/g, nb)}$`);
   let r;
@@ -219,8 +219,8 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.type), ["P", "P"]);
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
-  assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.titre), ["multiplier par 10, 100, 1\u202f000", "nombres en 0, nombre manquant, divisions"]);
-  assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.titre.replace(/\u202f/g, " ")), ["décimal × 10", "× 100, × 1 000 sans zéro à écrire", "des zéros à écrire", "le nombre manquant"]);
+  assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.titre), ["multiplier par 10, 100, 1\u00a0000", "nombres en 0, nombre manquant, divisions"]);
+  assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.titre.replace(/[\u202f\u00a0]/g, " ")), ["décimal × 10", "× 100, × 1 000 sans zéro à écrire", "des zéros à écrire", "le nombre manquant"]);
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.titre.replace(/[\u202f\u00a0]/g, " ")), ["à la dizaine suivante", "à 100 : dizaines et nombres en 5", "à 100 : tous les nombres", "à 1 000 et à la centaine suivante", "de n’importe quel nombre jusqu’à une centaine, un millier"]);
   // La touche « , » : les modules à décimales seulement (D1, D2, D3, D4) ;
   // pas quand la case est un numérateur (« 0,3 = □/10 », décision du 04/11).
@@ -304,7 +304,7 @@ test("les imposés sont dans chaque validation, à une place qui change", () => 
     });
     assert.ok(places.size >= 6, `${cle} : les imposés sont placés au hasard`);
   });
-  const textes = cle => CORE.niveauDe(cle).niveau.imposes.map(c => c.texte.replace(/\u202f/g, " "));
+  const textes = cle => CORE.niveauDe(cle).niveau.imposes.map(c => c.texte.replace(/[\u202f\u00a0]/g, " "));
   assert.deepEqual(textes("A2-1"), ["433 + □ = 440"]);
   assert.deepEqual(textes("A2-2"), ["75 + □ = 100", "100 − 35 = □"]);
   assert.deepEqual(textes("A2-3"), ["61 + □ = 100", "29 + □ = 100", "13 + □ = 100"]);
@@ -518,7 +518,7 @@ function calculDe(cle, critere) {
   }
   throw new Error(`aucun calcul ${cle} ne convient`);
 }
-const impose = (cle, texte) => CORE.niveauDe(cle).niveau.imposes.find(c => c.texte.replace(/\u202f/g, " ") === texte);
+const impose = (cle, texte) => CORE.niveauDe(cle).niveau.imposes.find(c => c.texte.replace(/[\u202f\u00a0]/g, " ") === texte);
 const somme = (n, a) => ({module: "A5", niveau: 0, texte: `${n} + ${a} = □`, reponse: n + a, forme: "somme", donnees: {n, a}});
 const complement = (a, cible, suivante = false) => ({module: "A2", niveau: 0, texte: `${a} + □ = ${cible}`, reponse: cible - a, forme: "complement", donnees: suivante ? {a, cible, suivante} : {a, cible}});
 
@@ -554,9 +554,9 @@ test("A2 : les erreurs connues de la fiche sont reconnues, dans l'ordre 3, 1, 4,
     [complement(37, 100), 53, 2, "37 + 53 = 90. Il manque 10 : de 40 à 100, c’est + 60."],
     [complement(433, 440, true), 440, 3, "Tu as écrit l’arrivée. Combien faut-il ajouter à 433 pour arriver à 440 ?"],
     [complement(37, 100), 3, 4, "37 + 3 = 40, tu n’es pas encore à 100. Continue : de 40 à 100."],
-    [complement(650, 1000), 450, 1, "650 + 450 = 1 100, c’est trop. Va d’abord à 700, puis à 1 000."],
-    [complement(650, 1000), 50, 4, "650 + 50 = 700, tu n’es pas encore à 1 000. Continue : de 700 à 1 000."],
-    [complement(650, 1000), 250, 2, "650 + 250 = 900. Il manque 100 : de 700 à 1 000, c’est + 300."],
+    [complement(650, 1000), 450, 1, "650 + 450 = 1 100, c’est trop. Va d’abord à 700, puis à 1 000."],
+    [complement(650, 1000), 50, 4, "650 + 50 = 700, tu n’es pas encore à 1 000. Continue : de 700 à 1 000."],
+    [complement(650, 1000), 250, 2, "650 + 250 = 900. Il manque 100 : de 700 à 1 000, c’est + 300."],
     [complement(37, 100), 100, 3, "Tu as écrit l’arrivée. Combien faut-il ajouter à 37 pour arriver à 100 ?"]
   ];
   cas.forEach(([calcul, reponse, cause, phrase]) => {
@@ -661,7 +661,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // « 3/7 = □/21 → 3 » (F6 : le numérateur recopié, et aussi le nombre par
   // lequel on multiplie) ; « 10/16 = □/8 → 2 » (F6 : 10 − 8, et aussi ÷ 2)
   // — la première cause de la fiche parle.
-  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D1:3+1", "D1:4+1", "D2:1+2", "D3:1+2", "D4:1+2", "D4:3+4", "F2:1+2+3", "F2:1+3", "F6:1+3", "F6:2+3", "M10:1+3", "M3:1+3", "M4:1+3"], "les seules coïncidences connues");
+  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D1:3+1", "D1:4+1", "D2:1+2", "D3:1+2", "D4:1+2", "D4:3+4", "F2:1+2+3", "F2:1+3", "F6:1+3", "F6:2+3", "M10:1+3", "M4:1+3"], "les seules coïncidences connues (relecture 2b : M3:1+3 venait des produits d’un million, retirés)");
 });
 
 // Les réponses fausses à essayer : toutes de 0 au double de la bonne pour
@@ -881,7 +881,9 @@ test("l'entraînement : 20 calculs du simple au difficile, chaque écriture dans
       // y voit chaque écriture (formes.length ≤ 6 partout aujourd'hui)...
       formes.forEach(forme => assert.ok(serie.slice(0, 7).some(c => c.forme === forme), `${cle} graine ${graine} : ${forme} dans les 7 premiers`));
       // ... et la première écriture y montre son plus dur.
-      const dePremiere = serie.filter(c => c.forme === formes[0]).map(CORE.difficulte);
+      // (Relecture 2b : sauf un calcul « tardif » — M4-2, × 10 — qui vient après.)
+      const tardif = c => { const fiche = CORE.moduleDe(c.module); return Boolean(fiche.tardif && fiche.tardif(c)); };
+      const dePremiere = serie.filter(c => c.forme === formes[0] && !tardif(c)).map(CORE.difficulte);
       if (place >= 2) assert.equal(Math.max(...difficultes), Math.max(...dePremiere), `${cle} graine ${graine} : le plus dur de la 1re écriture dans les 7 premiers`);
     }
   });
@@ -982,7 +984,8 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
       // L'outil à manipuler : les perles jusqu'à 100, le glisse-nombres toujours.
       const m = CORE.manipulationDe(c);
       // M3-3 « 200 × □ = 1 400 » (lot « couverture ») : pas d'outil à manipuler.
-      if (fiche.id === "M3" && c.forme === "trou-facteur") assert.equal(m, null, `${cle} : ${c.texte}`);
+      // Relecture 2b : M3 au-delà de × 1 000 (« 4 000 × 70 ») non plus.
+      if (fiche.id === "M3" && (c.forme === "trou-facteur" || c.donnees.p > 1000)) assert.equal(m, null, `${cle} : ${c.texte}`);
       else if (fiche.id === "M2" || fiche.id === "D2" || fiche.id === "M3") {
         assert.equal(m.outil, "glisse");
         const apres = AIDES.bandeApres(AIDES.chiffresDansColonnes(m.depart, m.colonnes), m.decalage, m.colonnes.indexOf(0));
@@ -1215,7 +1218,7 @@ test("la droite à sauts : un petit saut garde une largeur lisible, le saut dire
   // Le saut en gras, l'étiquette masquée, les milliers.
   assert.equal((AIDES.droiteSauts(Object.assign({}, detour, {gras: 2})).match(/stroke-width="5.5"/g) || []).length, 1);
   assert.match(AIDES.droiteSauts({depart: 67, sauts: [{val: 3, masque: true}]}), /\+ \?/);
-  assert.match(AIDES.droiteSauts({depart: 650, sauts: [{val: 50}, {val: 300}]}), />1 000</);
+  assert.match(AIDES.droiteSauts({depart: 650, sauts: [{val: 50}, {val: 300}]}), />1 000</);
   // Deux droites dans la même page n'ont pas les mêmes identifiants de flèche.
   const ids = texte => texte.match(/id="[^"]+"/g);
   assert.notDeepEqual(ids(AIDES.droiteSauts(detour)), ids(AIDES.droiteSauts(detour)));
@@ -1243,10 +1246,10 @@ test("lire une réponse, écrire un nombre, la clé d'un calcul", () => {
   assert.equal(CORE.lireReponse(","), null);
   assert.equal(CORE.lireReponse("12a"), null);
   assert.equal(CORE.memeNombre(CORE.lireReponse("360,0"), 360), true);
-  assert.equal(CORE.formaterNombre(2700), "2 700");
+  assert.equal(CORE.formaterNombre(2700), "2 700");
   assert.equal(CORE.formaterNombre(999), "999");
   assert.equal(CORE.formaterNombre(3.6), "3,6");
-  assert.equal(CORE.formaterNombre(1082.5), "1 082,5");
+  assert.equal(CORE.formaterNombre(1082.5), "1 082,5");
   assert.equal(CORE.formaterNombre(0.25), "0,25");
   assert.equal(CORE.cleNombre(3.6), "36d1");
   assert.equal(CORE.cleNombre(47), "47");
@@ -1566,7 +1569,7 @@ test("modules lot 2 : les erreurs connues, reconnues avec leur phrase, sans la r
     assert.ok(![c.donnees.a, Math.ceil(c.donnees.a / 10) * 10].includes(c.reponse), `${c.texte} : la réponse est citée par les phrases`);
   }));
   // Aucune phrase ne donne la réponse, ni ne dit « NaN ».
-  const nombresDe = texte => (texte.replace(/à 1 près/g, "").match(/\d+(?: \d{3})*/g) || []).map(x => Number(x.replace(/ /g, "")));
+  const nombresDe = texte => (texte.replace(/à 1 près/g, "").match(/\d+(?:[ \u00a0\u202f]\d{3})*/g) || []).map(x => Number(x.replace(/[ \u00a0\u202f]/g, "")));
   ["A3", "A4", "A6", "A7", "A8"].forEach(id => CORE.moduleDe(id).niveaux.forEach(niveau => {
     for (let graine = 1; graine <= 25; graine += 1) CORE.genererSerie(`${id}-${niveau.n}`, {graine}).forEach(c => {
       reponsesAEssayer(c).forEach(reponse => {
@@ -1608,15 +1611,18 @@ test("modules lot 2 : les perles retirent une rangée entière, la dernière ; r
   assert.deepEqual(AIDES.gesteAttendu(AIDES.etatsDe(57), -1), {rangees: [5], ecart: -1});
 });
 
-test("modules lot 2 : la droite d'A6 garde l'étiquette du petit retour à gauche, A4 a trois sauts lisibles", () => {
+test("modules lot 2 : la droite d'A6 a l'étiquette du petit saut au-dessus de son arc (relecture 2b), A4 a trois sauts lisibles", () => {
   const image = CORE.niveauDe("A6-1").niveau.apprends.represente.image;
   const plan = AIDES.planDroite(image);
   assert.deepEqual(plan.valeurs, [85, 75, 76]);
   const svg = AIDES.droiteSauts(image);
   const rects = [...svg.matchAll(/<rect x="([\d.-]+)" y="([\d.-]+)" width="([\d.]+)" height="26"/g)].map(m => ({x: Number(m[1]), w: Number(m[3])}));
-  // Les étiquettes « − 10 » (sur l'arc), « + 1 » (à gauche du 75), « − 9 » (le saut direct).
+  // Les étiquettes « − 10 » (sur l'arc), « + 1 » (relecture 2b, remarque
+  // 45 : au-dessus de son arc, entre le 75 et le 76, plus haut que l'arc),
+  // « − 9 » (le saut direct).
   assert.equal(rects.length, 3);
-  assert.ok(rects[1].x + rects[1].w <= plan.x[1] + 2, "« + 1 » à gauche du 75");
+  const centre = rects[1].x + rects[1].w / 2;
+  assert.ok(centre > plan.x[1] && centre < plan.x[2], "« + 1 » au-dessus de son arc, entre le 75 et le 76");
   assert.ok(rects.every(r => r.x >= 0 && r.x + r.w <= AIDES.DROITE.largeur), "dans le dessin");
   const a4 = AIDES.planDroite(CORE.niveauDe("A4-2").niveau.apprends.image);
   assert.deepEqual(a4.valeurs, [47, 67, 70, 75]);
@@ -1724,7 +1730,7 @@ test("modules lot 3 : chaque niveau tient sa règle, et ses calculs ne sont pas 
 });
 
 test("modules lot 3 : les erreurs connues, reconnues avec leur phrase, sans la réponse", () => {
-  const trouver = (cle, texte) => impose(cle, texte) || lot3(cle).find(c => c.texte.replace(/\u202f/g, " ") === texte);
+  const trouver = (cle, texte) => impose(cle, texte) || lot3(cle).find(c => c.texte.replace(/[\u202f\u00a0]/g, " ") === texte);
   // [niveau, calcul, réponse fausse, cause]
   const cas = [
     ["M3-1", "6 × 70 = □", 4200, 1], ["M3-1", "6 × 70 = □", 42, 1], ["M3-1", "6 × 70 = □", 480, 2], ["M3-1", "6 × 70 = □", 490, 2], ["M3-1", "6 × 70 = □", 76, 3],
@@ -1754,7 +1760,7 @@ test("modules lot 3 : les erreurs connues, reconnues avec leur phrase, sans la r
   // Aucune cause sur un trou d'M8-3 (12 × 42 = 10 × 42 + □ × 42).
   lot3("M8-3").filter(c => c.forme === "trou").slice(0, 40).forEach(c => fauxLot3(c).forEach(x => assert.equal(CORE.diagnostiquer(c, x), null)));
   // Aucune phrase ne donne la réponse, ni ne dit « NaN ».
-  const nombresDe = texte => (texte.replace(/à 1 près/g, "").match(/\d+(?: \d{3})*/g) || []).map(x => Number(x.replace(/ /g, "")));
+  const nombresDe = texte => (texte.replace(/à 1 près/g, "").match(/\d+(?:[ \u00a0\u202f]\d{3})*/g) || []).map(x => Number(x.replace(/[ \u00a0\u202f]/g, "")));
   LOT3.forEach(id => CORE.moduleDe(id).niveaux.forEach(niveau => {
     for (let graine = 1; graine <= 20; graine += 1) CORE.genererSerie(`${id}-${niveau.n}`, {graine}).forEach(c => {
       fauxLot3(c).forEach(reponse => {
@@ -1786,8 +1792,10 @@ test("modules lot 3 : M4 renvoie vers Défi tables la table ratée 2 fois dans u
 test("modules lot 3 : M3 change de rang sans « ajouter de zéro » ; les images tiennent leurs promesses", () => {
   // Le glisse-nombres d'M3 part de la table et glisse d'autant de colonnes
   // que de zéros.
+  // (Relecture 2b : au-delà de 3 colonnes — × 10 000 —, pas de geste.)
   lot3("M3-3").filter(c => c.forme !== "trou-facteur").slice(0, 200).forEach(c => {
     const m = CORE.manipulationDe(c);
+    if (c.donnees.p > 1000) { assert.equal(m, null, c.texte); return; }
     assert.equal(m.depart, c.donnees.t);
     assert.equal(10 ** m.decalage, c.donnees.p, c.texte);
     assert.doesNotMatch(m.consigne + m.refus, /zéro/i);
@@ -1805,10 +1813,11 @@ test("modules lot 3 : M3 change de rang sans « ajouter de zéro » ; les images
   // Les parts : 6 × 25 prolonge la barre de 100 de deux parts en pointillés.
   const parts = AIDES.dessinerImage({outil: "parts", total: 100, parts: 4, cherche: "nombre", pris: 6, masque: true});
   assert.equal((parts.match(/stroke-dasharray="7 5"/g) || []).length, 2);
-  // La bande : « × ? » au rang cherché, la réponse nulle part.
+  // La bande : « ?×7 » au rang cherché, la réponse nulle part ; les rangs
+  // écrits n × table, comme Défi tables (lot 2b, 12/11).
   const bande = AIDES.dessinerImage({outil: "bande", table: 7, rang: 8, masque: true});
-  assert.ok(bande.includes(">× ?<") && !bande.includes(">× 8<"));
-  assert.ok(AIDES.dessinerImage({outil: "bande", table: 7, rang: 8}).includes(">× 8<"));
+  assert.ok(bande.includes(">?×7<") && !bande.includes(">8×7<"));
+  assert.ok(AIDES.dessinerImage({outil: "bande", table: 7, rang: 8}).includes(">8×7<"));
   // Le rectangle de points (M4, décision du 01/11) : 56 ÷ 7, 8 rangées de 7,
   // « ? fois » à trouver, le total dans un cadre (« 56 points en tout »).
   const pts = AIDES.dessinerImage({outil: "points", rangees: 8, parRangee: 7, masque: true});
@@ -1833,7 +1842,7 @@ const ditLaReponse = (textes, reponse) => {
   const r = avecEspaces(CORE.formaterNombre(reponse));
   return textes.some(t => avecEspaces(t) === r || avecEspaces(t).endsWith(`= ${r}`));
 };
-const nombresDuTexte = texte => (avecEspaces(texte).match(/\d+(?: \d{3})*/g) || []).map(x => Number(x.replace(/ /g, "")));
+const nombresDuTexte = texte => (avecEspaces(texte).match(/\d+(?:[ \u00a0\u202f]\d{3})*/g) || []).map(x => Number(x.replace(/[ \u00a0\u202f]/g, "")));
 const ariaDe = svg => (svg.match(/aria-label="([^"]*)"/) || [, ""])[1];
 
 // L'outil de l'entraînement d'un calcul du lot 4 : l'image et ses « ? »,
@@ -2050,7 +2059,7 @@ test("modules lot 4 : les dessins nouveaux tiennent leurs promesses", () => {
 const LOT5 = ["D1", "D3", "D4"];
 const lot5 = cle => Array.from({length: 60}, (_, g) => ["valide", "entraine"].flatMap(genre => CORE.genererSerie(cle, {graine: g * 37 + 11, genre}))).flat();
 // Les nombres d'un texte, décimaux compris (« 0,48 », « 1 000 »).
-const decimauxDuTexte = texte => (avecEspaces(texte).match(/\d+(?: \d{3})*(?:,\d+)?/g) || []).map(x => Number(x.replace(/ /g, "").replace(",", ".")));
+const decimauxDuTexte = texte => (avecEspaces(texte).match(/\d+(?:[ \u00a0\u202f]\d{3})*(?:,\d+)?/g) || []).map(x => Number(x.replace(/ /g, "").replace(",", ".")));
 // Les réponses fausses vraisemblables d'un décimal : la bonne à un rang
 // près, à quelques unités d'un rang près, et les nombres que le calcul
 // garde (ses réponses fausses connues), à un rang près.
@@ -2399,8 +2408,8 @@ test("modules lot 5 : les dessins nouveaux tiennent leurs promesses", () => {
   };
   assert.deepEqual(fractionsDe("3 + 2/10 = □"), [["2", "10"]]);
   assert.deepEqual(fractionsDe("0,3 = □/10"), [["CASE", "10"]]);
-  assert.deepEqual(fractionsDe("4 + 107/1\u202f000 = □"), [["107", "1\u202f000"]]);
-  assert.deepEqual(fractionsDe("8/100 + 4/10 + 3/1\u202f000"), [["8", "100"], ["4", "10"], ["3", "1\u202f000"]]);
+  assert.deepEqual(fractionsDe("4 + 107/1\u00a0000 = □"), [["107", "1\u00a0000"]]);
+  assert.deepEqual(fractionsDe("8/100 + 4/10 + 3/1\u00a0000"), [["8", "100"], ["4", "10"], ["3", "1\u00a0000"]]);
   // Le niveau 3 de D1 (les millièmes) : le tableau seul, jamais le carré.
   // (« 4,107 = 4 + □/10 + 7/1 000 », lot « couverture » : pas d'aide.)
   lot5("D1-3").forEach(c => (c.decompose ? assert.equal(CORE.aideDe(c), null, c.texte) : assert.equal(CORE.aideDe(c).outil, "numeration", c.texte)));

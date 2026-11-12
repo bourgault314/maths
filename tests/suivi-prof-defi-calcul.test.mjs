@@ -189,7 +189,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   const o = outils([]);
   assert.equal(o.nomCompetenceCalcul("A2", 3), "Compléments à 100");
   assert.equal(o.nomCompetenceCalcul("A5", 1), "ajouter 9");
-  assert.equal(o.nomModuleCalcul("M2"), "× 10, × 100, × 1 000 (entiers)");
+  assert.equal(o.nomModuleCalcul("M2"), "× 10, × 100, × 1 000 (entiers)");
   assert.equal(o.nomPalierCalcul(1), "Les bases (CP · CE1 · CE2)");
   assert.equal(o.nomPalierCalcul(2), "Le CM1", "les classes ne sont pas répétées quand le nom les dit");
   assert.equal(o.nomPalierCalcul(4), "Vers la 6e");
@@ -220,7 +220,7 @@ test("exempleErreur : un calcul regénéré pour chacune des 123 causes des 32 m
   });
   assert.equal(trouves, 123);
   // Le niveau qui coince d'abord : A2 cause 2 au niveau 4 donne un complément à 1 000.
-  assert.match(o.exempleErreur("A2", 2, 4).texte, /1 000|centaine|[0-9]{3}/);
+  assert.match(o.exempleErreur("A2", 2, 4).texte, /1 000|centaine|[0-9]{3}/);
   // Une cause inconnue : null, sans erreur.
   assert.equal(o.exempleErreur("A2", 42), null);
   assert.equal(o.exempleErreur("ZZ9", 1), null);
