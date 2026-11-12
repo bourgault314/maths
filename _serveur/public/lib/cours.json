@@ -2,6 +2,183 @@
  "LISEZ-MOI": "Fabriqué par build.py site (Livret de cours\\_moteur) : ne pas modifier à la main. Les chapitres dans l'ordre de la progression ; une fiche = son identifiant (le premier du référentiel).",
  "chapitres": [
   {
+   "id": "4e-INE",
+   "niveau": "4e",
+   "chapitre": "Inégalité triangulaire",
+   "titre": "Trois longueurs, un triangle, et ce qu'un dessin ne prouve pas",
+   "fiches": [
+    {
+     "id": "4e-INE-01",
+     "n": 1,
+     "ids": "4e-INE-01 · 3e-ANG-08",
+     "h1": "Je sais dire si trois longueurs permettent de construire un triangle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-INE-01.html"
+    },
+    {
+     "id": "4e-INE-02",
+     "n": 2,
+     "ids": "4e-INE-02",
+     "h1": "Je sais construire un triangle dont je connais les trois longueurs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-INE-02.html"
+    },
+    {
+     "id": "4e-INE-03",
+     "n": 3,
+     "ids": "4e-INE-03",
+     "h1": "Je sais qu'un dessin ne prouve rien : ce que je vois ou ce que je mesure n'est pas une preuve",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-INE-03.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/4e/4e-INE-imprimable.html"
+  },
+  {
+   "id": "4e-REL",
+   "niveau": "4e",
+   "chapitre": "Nombres relatifs",
+   "titre": "Additionner, soustraire, multiplier et diviser des nombres relatifs",
+   "fiches": [
+    {
+     "id": "4e-REL-01",
+     "n": 1,
+     "ids": "4e-REL-01",
+     "h1": "Je sais repérer, comparer et ranger des nombres relatifs, en m'aidant de la droite graduée",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-01.html"
+    },
+    {
+     "id": "4e-REL-02",
+     "n": 2,
+     "ids": "4e-REL-02",
+     "h1": "Je connais l'opposé d'un nombre : la somme d'un nombre et de son opposé est égale à 0",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-02.html"
+    },
+    {
+     "id": "4e-REL-03",
+     "n": 3,
+     "ids": "4e-REL-03",
+     "h1": "Je sais additionner deux nombres relatifs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-03.html"
+    },
+    {
+     "id": "4e-REL-04",
+     "n": 4,
+     "ids": "4e-REL-04",
+     "h1": "Je sais soustraire un nombre relatif : soustraire un nombre, c'est ajouter son opposé",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-04.html"
+    },
+    {
+     "id": "4e-REL-05",
+     "n": 5,
+     "ids": "4e-REL-05",
+     "h1": "Je sais calculer une suite d'additions et de soustractions de nombres relatifs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-05.html"
+    },
+    {
+     "id": "4e-REL-06",
+     "n": 6,
+     "ids": "4e-REL-06",
+     "h1": "Je sais multiplier deux nombres relatifs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-06.html"
+    },
+    {
+     "id": "4e-REL-07",
+     "n": 7,
+     "ids": "4e-REL-07",
+     "h1": "Je sais trouver le signe d'un produit de plusieurs facteurs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-07.html"
+    },
+    {
+     "id": "4e-REL-08",
+     "n": 8,
+     "ids": "4e-REL-08",
+     "h1": "Je sais diviser deux nombres relatifs",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-08.html"
+    },
+    {
+     "id": "4e-REL-09",
+     "n": 9,
+     "ids": "4e-REL-09",
+     "h1": "Je sais calculer un enchaînement d'opérations avec des nombres relatifs en respectant les priorités",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-09.html"
+    },
+    {
+     "id": "4e-REL-10",
+     "n": 10,
+     "ids": "4e-REL-10",
+     "h1": "Je sais nommer un calcul et écrire un programme de calcul en une seule expression",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-10.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/4e/4e-REL-imprimable.html"
+  },
+  {
    "id": "4e-TRI",
    "niveau": "4e",
    "chapitre": "Le triangle rectangle",
@@ -78,6 +255,188 @@
     "page": "/cours/3e/3e-PYT-brevet.html"
    },
    "imprimable": "/cours/4e/4e-TRI-imprimable.html"
+  },
+  {
+   "id": "4e-FRA",
+   "niveau": "4e",
+   "chapitre": "Fractions",
+   "titre": "Fractions et nombres rationnels",
+   "fiches": [
+    {
+     "id": "4e-FRA-01",
+     "n": 1,
+     "ids": "4e-FRA-01 · 3e-FRA-01",
+     "h1": "Je sais qu'une fraction est un nombre",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-01.html"
+    },
+    {
+     "id": "4e-FRA-02",
+     "n": 2,
+     "ids": "4e-FRA-02 · 3e-FRA-01",
+     "h1": "Je sais passer d'une fraction à son écriture décimale, et inversement",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-02.html"
+    },
+    {
+     "id": "4e-FRA-03",
+     "n": 3,
+     "ids": "4e-FRA-03 · 3e-FRA-02",
+     "h1": "Je sais reconnaître et fabriquer des fractions égales",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-03.html"
+    },
+    {
+     "id": "4e-FRA-04",
+     "n": 4,
+     "ids": "4e-FRA-04 · 3e-FRA-03",
+     "h1": "Je sais comparer, ranger et encadrer des fractions, et les placer sur une droite graduée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-04.html"
+    },
+    {
+     "id": "4e-FRA-05",
+     "n": 5,
+     "ids": "4e-FRA-05 · 3e-FRA-04",
+     "h1": "Je sais additionner et soustraire des fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-05.html"
+    },
+    {
+     "id": "4e-FRA-06",
+     "n": 6,
+     "ids": "4e-FRA-06",
+     "h1": "Je sais écrire le signe d'une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-06.html"
+    },
+    {
+     "id": "4e-FRA-07",
+     "n": 7,
+     "ids": "4e-FRA-07 · 3e-FRA-05",
+     "h1": "Je sais multiplier deux fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-07.html"
+    },
+    {
+     "id": "4e-FRA-08",
+     "n": 8,
+     "ids": "4e-FRA-08 · 3e-FRA-06",
+     "h1": "Je sais prendre une fraction d'une quantité, d'un nombre ou d'une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-08.html"
+    },
+    {
+     "id": "4e-FRA-09",
+     "n": 9,
+     "ids": "4e-FRA-09 · 3e-FRA-07",
+     "h1": "Je connais l'inverse d'un nombre et je ne le confonds pas avec son opposé",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-09.html"
+    },
+    {
+     "id": "4e-FRA-10",
+     "n": 10,
+     "ids": "4e-FRA-10 · 3e-FRA-07",
+     "h1": "Je sais diviser par une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-10.html"
+    },
+    {
+     "id": "4e-FRA-11",
+     "n": 11,
+     "ids": "4e-FRA-11 · 3e-FRA-08",
+     "h1": "Je sais calculer une expression avec plusieurs opérations sur des fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-11.html"
+    },
+    {
+     "id": "4e-FRA-12",
+     "n": 12,
+     "ids": "4e-FRA-12",
+     "h1": "Je sais ce qu'est un nombre rationnel, et qu'un quotient de deux décimaux n'est pas toujours décimal",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-12.html"
+    },
+    {
+     "id": "4e-FRA-13",
+     "n": 13,
+     "ids": "4e-FRA-13 · 3e-FRA-09",
+     "h1": "Je sais résoudre un problème avec des fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-13.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-FRA-brevet",
+    "page": "/cours/3e/3e-FRA-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-FRA-imprimable.html"
   },
   {
    "id": "4e-ARI",
@@ -654,6 +1013,188 @@
     "page": "/cours/3e/3e-PYT-brevet.html"
    },
    "imprimable": "/cours/3e/3e-PYT-imprimable.html"
+  },
+  {
+   "id": "3e-FRA",
+   "niveau": "3e",
+   "chapitre": "Fractions",
+   "titre": "Opérations sur les fractions",
+   "fiches": [
+    {
+     "id": "4e-FRA-01",
+     "n": 1,
+     "ids": "4e-FRA-01 · 3e-FRA-01",
+     "h1": "Je sais qu'une fraction est un nombre",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-01.html"
+    },
+    {
+     "id": "4e-FRA-02",
+     "n": 2,
+     "ids": "4e-FRA-02 · 3e-FRA-01",
+     "h1": "Je sais passer d'une fraction à son écriture décimale, et inversement",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-02.html"
+    },
+    {
+     "id": "4e-FRA-03",
+     "n": 3,
+     "ids": "4e-FRA-03 · 3e-FRA-02",
+     "h1": "Je sais reconnaître et fabriquer des fractions égales",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-03.html"
+    },
+    {
+     "id": "4e-FRA-04",
+     "n": 4,
+     "ids": "4e-FRA-04 · 3e-FRA-03",
+     "h1": "Je sais comparer, ranger et encadrer des fractions, et les placer sur une droite graduée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-04.html"
+    },
+    {
+     "id": "4e-FRA-05",
+     "n": 5,
+     "ids": "4e-FRA-05 · 3e-FRA-04",
+     "h1": "Je sais additionner et soustraire des fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-05.html"
+    },
+    {
+     "id": "4e-FRA-06",
+     "n": 6,
+     "ids": "4e-FRA-06",
+     "h1": "Je sais écrire le signe d'une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-06.html"
+    },
+    {
+     "id": "4e-FRA-07",
+     "n": 7,
+     "ids": "4e-FRA-07 · 3e-FRA-05",
+     "h1": "Je sais multiplier deux fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-07.html"
+    },
+    {
+     "id": "4e-FRA-08",
+     "n": 8,
+     "ids": "4e-FRA-08 · 3e-FRA-06",
+     "h1": "Je sais prendre une fraction d'une quantité, d'un nombre ou d'une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-08.html"
+    },
+    {
+     "id": "4e-FRA-09",
+     "n": 9,
+     "ids": "4e-FRA-09 · 3e-FRA-07",
+     "h1": "Je connais l'inverse d'un nombre et je ne le confonds pas avec son opposé",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-09.html"
+    },
+    {
+     "id": "4e-FRA-10",
+     "n": 10,
+     "ids": "4e-FRA-10 · 3e-FRA-07",
+     "h1": "Je sais diviser par une fraction",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-10.html"
+    },
+    {
+     "id": "4e-FRA-11",
+     "n": 11,
+     "ids": "4e-FRA-11 · 3e-FRA-08",
+     "h1": "Je sais calculer une expression avec plusieurs opérations sur des fractions, et écrire le résultat sous forme irréductible",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-11.html"
+    },
+    {
+     "id": "4e-FRA-12",
+     "n": 12,
+     "ids": "4e-FRA-12",
+     "h1": "Je sais ce qu'est un nombre rationnel, et qu'un quotient de deux décimaux n'est pas toujours décimal",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-12.html"
+    },
+    {
+     "id": "4e-FRA-13",
+     "n": 13,
+     "ids": "4e-FRA-13 · 3e-FRA-09",
+     "h1": "Je sais résoudre un problème avec des fractions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-13.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-FRA-brevet",
+    "page": "/cours/3e/3e-FRA-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-FRA-imprimable.html"
   },
   {
    "id": "3e-THA",
