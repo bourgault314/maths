@@ -37,7 +37,7 @@ const expectedGroupCounts = {
   manipuler: 43,
   entrainer: 31, // + Flash Anzan (22/10/2026)
   generer: 34,
-  imprimer: 29,
+  imprimer: 30,
   activites: 15, // + le Module Attention (11/11/2026)
   cours: 12, // la progression SPLAT! cycle 3 (Digipad) masquée le 25/09/2026 : « ça on enlève » ; livrets bleu/jaune et Mathigon retirés le 06/11/2026
   jeux: 12,
@@ -48,7 +48,7 @@ const expectedVisibleCardCounts = {
   manipuler: 39,
   entrainer: 29,
   generer: 34,
-  imprimer: 26,
+  imprimer: 27,
   activites: 13, // + le Module Attention (11/11/2026)
   cours: 8,
   jeux: 12,
@@ -67,10 +67,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 190 entrées dont 180 publiées", () => {
+test("le catalogue conserve 191 entrées dont 181 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 190); // 191 − les livrets bleu/jaune et Mathigon (lot 7 des tuiles, 06/11/2026) + le Module Attention (11/11/2026)
-  assert.equal(published.length, 180);
+  assert.equal(resources.length, 191); // + la page Papiers à imprimer (12/11/2026)
+  assert.equal(published.length, 181);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -146,7 +146,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 180 ressources reste stable", () => {
+test("la répartition arbitrée des 181 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -430,6 +430,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 162, "Les 180 ressources doivent être représentées par 162 cartes après regroupement.");
+  assert.equal(visibleCardCount, 163, "Les 181 ressources doivent être représentées par 163 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

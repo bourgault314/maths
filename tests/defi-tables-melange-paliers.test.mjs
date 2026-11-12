@@ -574,5 +574,5 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // du livret en ligne).
   assert.match(lire("_serveur/public/VERSION"), /^lot cours-chapitres-4e$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=module-attention-20261111-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

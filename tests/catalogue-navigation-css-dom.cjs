@@ -10,6 +10,7 @@ const root = path.resolve(__dirname, '..');
 const widths = [320, 390, 680, 681, 1024, 1440];
 const domain = 'Jeux, recherches et explorations';
 const cases = [
+  { file: 'outils/papiers-imprimer/index.html', labels: ['Tous les domaines', 'Espace et géométrie', 'Construire et manipuler'], href: '/outils/index.html?domain=geometrie&notion=construction-geometrique' },
   { file: 'outils/index.html', query: '', labels: [], target: null },
   { file: 'outils/index.html', query: '?domain=jeux-recherches', labels: ['Tous les domaines'], target: 'entry' },
   { file: 'outils/index.html', query: '?domain=jeux-recherches&notion=jeux-courts', labels: ['Tous les domaines', domain], target: 'domain' },

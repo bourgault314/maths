@@ -67,6 +67,7 @@ const PAGES = [
   "outils/division-posee/index.html",
   "outils/index.html",
   "outils/multiplication-posee/index.html",
+  "outils/papiers-imprimer/index.html",
   "outils/plateaux_manipulation/moulin_pythagore_fiches.html",
   "outils/soustraction-posee/index.html",
   "outils/toutes-les-ressources.html",

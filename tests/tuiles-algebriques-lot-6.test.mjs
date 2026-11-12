@@ -60,7 +60,7 @@ test("le catalogue annonce qu'on peut taper, développer et factoriser", () => {
   assert.match(cat, /"description": "Tapez ou composez une expression avec les tuiles x², x et 1, puis réduisez-la, développez-la ou factorisez-la\."/);
   assert.doesNotMatch(cat, /Composez, ordonnez et simplifiez des expressions/);
   assert.match(page, /<meta name="description" content="Tapez ou composez une expression[^"]*factorisez-la\.">/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=module-attention-20261111-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });
 
 // Audit des générateurs (choix de Gwenaël du 06/11/2026, questions à choix) : vert/rouge en tête et par défaut,
