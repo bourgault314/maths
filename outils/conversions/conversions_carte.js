@@ -17,6 +17,25 @@
 // 6 / 7 / 5 étapes ; « Les relations des bases » a 10 relations (1 m =
 // 1 000 mm).
 //
+// Carte v3 (12/11/2026, lot A1 « inventaire et étude ») : 4 étapes de plus,
+// rangs 49 à 52, pour couvrir le programme (BO de cycle 2 du 31/10/2024,
+// programme de cycle 3 de 2025) et l'exerciseur :
+//   E1 « Les euros et les centimes » (palier 1, CE1 · CE2) ;
+//   D7 « Combien de temps entre deux heures ? » (palier 1, CE1 · CE2) ;
+//   Q10 « Problèmes : durées et horaires » (palier 2, CM1) ;
+//   A5 « L'aire en carreaux » (palier 2, CM1).
+// Renommées : A4 « Toutes les unités d'aire » (ex « mm² et km² ») ; Q9
+// « Problèmes : vitesses et débits » (3e : grandeurs composées).
+// 8 repères de plus (le corps, l'eau, le verre, le dé) → 36 repères.
+// Une étape `cachee` existe dans les données (son code et son rang sont
+// réservés, le moteur l'accepte) mais l'élève ne la voit pas encore : elle
+// n'entre ni dans l'ORDRE, ni dans les étapes d'un palier. Sert aux étapes
+// ajoutées à un palier déjà en ligne, tant qu'elles ne sont pas construites
+// (E1 et D7 : lot A2 bis).
+// Le détail de chaque étape (ce que l'élève fait, les questions, les aides,
+// les nombres) est dans le cahier des charges de la carte v3 :
+// C:\Users\gwena\Claude cowork\defi-conversions\inventaire\defi-conversions-carte-v3.md
+//
 // Typographie : tous les textes passent par typo() au chargement — espace
 // fine insécable (U+202F) dans les milliers, espace insécable (U+00A0) entre
 // un nombre et son unité et devant « ? ! : ; », jamais un point décimal.
@@ -29,7 +48,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|mètres?|grammes?|litres?|centimètres?|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|mètres?|grammes?|litres?|centimètres?|€|bouteilles";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -135,7 +154,7 @@
     {code: "Q5", rang: 35, palier: 4, famille: "problemes", classe: "6e", nom: "Problèmes : périmètres et aires", nomCourt: "Périmètres et aires", exemple: ""},
     {code: "Q6", rang: 36, palier: 4, famille: "problemes", classe: "6e", nom: "Problèmes : horaires et durées", nomCourt: "Horaires et durées", exemple: ""},
     // Palier 5 · La 5e
-    {code: "A4", rang: 37, palier: 5, famille: "aires", classe: "5e", nom: "mm² et km²", exemple: "1 cm² = 100 mm²"},
+    {code: "A4", rang: 37, palier: 5, famille: "aires", classe: "5e", nom: "Toutes les unités d'aire", exemple: "1 m² = 10 000 cm²"},
     {code: "R10", rang: 38, palier: 5, famille: "volumes", classe: "5e", nom: "Mes repères de volume", exemple: "cuve : 1 m³"},
     {code: "V2", rang: 39, palier: 5, famille: "volumes", classe: "5e", nom: "1 dm³ = 1 000 cm³", exemple: "1 dm³ = 1 000 cm³"},
     {code: "V3", rang: 40, palier: 5, famille: "volumes", classe: "5e", nom: "Volume et contenance", exemple: "1 L = 1 dm³"},
@@ -147,12 +166,19 @@
     {code: "G1", rang: 45, palier: 6, famille: "grandeurs", classe: "4e", nom: "km/h et m/s", exemple: "36 km/h = 10 m/s"},
     {code: "P5", rang: 46, palier: 6, famille: "grandeurs", classe: "4e", nom: "Les préfixes de nano à giga", exemple: "1 Go = 1 000 Mo"},
     {code: "P6", rang: 47, palier: 6, famille: "grandeurs", classe: "3e", nom: "Les préfixes en puissances de 10", exemple: ""},
-    {code: "Q9", rang: 48, palier: 6, famille: "problemes", classe: "4e", nom: "Problèmes : vitesses", nomCourt: "Vitesses", exemple: ""}
+    {code: "Q9", rang: 48, palier: 6, famille: "problemes", classe: "4e", nom: "Problèmes : vitesses et débits", nomCourt: "Vitesses et débits", exemple: ""},
+    // Carte v3 (12/11) : les ajouts du programme.
+    {code: "E1", rang: 49, palier: 1, famille: "convertir", classe: "CE1 · CE2", nom: "Les euros et les centimes", exemple: "1 € = 100 centimes", cachee: true},
+    {code: "D7", rang: 50, palier: 1, famille: "durees", classe: "CE1 · CE2", nom: "Combien de temps entre deux heures ?", nomCourt: "Entre deux heures", exemple: "de 8 h 30 à 10 h", cachee: true},
+    {code: "Q10", rang: 51, palier: 2, famille: "problemes", classe: "CM1", nom: "Problèmes : durées et horaires", nomCourt: "Durées et horaires", exemple: ""},
+    {code: "A5", rang: 52, palier: 2, famille: "aires", classe: "CM1", nom: "L'aire en carreaux", exemple: "6 carreaux = 6 cm²"}
   ];
 
   // ------------------------------------------------------------ les repères
-  // Les 28 repères (carte v1, § 3, sources comprises ; la ligne « 1 g »
-  // devient la feuille ET la pièce). Codes figés. `etape` : l'étape dont la
+  // Les 28 repères de la carte v1 (§ 3, sources comprises ; la ligne « 1 g »
+  // devient la feuille ET la pièce), plus les 8 de la carte v3 (le corps,
+  // l'eau, le verre, le dé : les « actions en classe » et les « ponts » de
+  // l'exerciseur). Codes figés. `etape` : l'étape dont la
   // validation le met au carnet. Pour les questions : `debut` + nombre +
   // unité + `fin` forment la phrase (« Une voiture mesure environ 4 m de
   // long. »). `local` : repère réunionnais.
@@ -184,7 +210,16 @@
     {code: "v1", grandeur: "volume", etape: "R10", emoji: "🧊", objet: "Le petit cube unité", valeur: "1 cm³ = 1 mL", debut: "Le petit cube unité a un volume de", nombre: "1", unite: "cm³", fin: ""},
     {code: "v2", grandeur: "volume", etape: "R10", emoji: "🥛", objet: "Une brique de lait", valeur: "1 L = 1 dm³", debut: "Une brique de lait a un volume de", nombre: "1", unite: "dm³", fin: ""},
     {code: "v3", grandeur: "volume", etape: "R10", emoji: "🛢️", objet: "Une cuve de récupération d'eau de pluie", valeur: "1 000 L = 1 m³", debut: "Une cuve de récupération d'eau de pluie a un volume de", nombre: "1", unite: "m³", fin: "", local: true},
-    {code: "v4", grandeur: "volume", etape: "R10", emoji: "🏊", objet: "Une piscine olympique", valeur: "2 500 m³", debut: "Une piscine olympique a un volume de", nombre: "2500", unite: "m³", fin: ""}
+    {code: "v4", grandeur: "volume", etape: "R10", emoji: "🏊", objet: "Une piscine olympique", valeur: "2 500 m³", debut: "Une piscine olympique a un volume de", nombre: "2500", unite: "m³", fin: ""},
+    // Carte v3 (12/11)
+    {code: "l10", grandeur: "longueur", etape: "R3", emoji: "🤙", objet: "La largeur de mon petit doigt", valeur: "environ 1 cm", debut: "Mon petit doigt a une largeur d'environ", nombre: "1", unite: "cm", fin: ""},
+    {code: "l11", grandeur: "longueur", etape: "R3", emoji: "🦶", objet: "Un très grand pas", valeur: "environ 1 m", debut: "Un très grand pas mesure environ", nombre: "1", unite: "m", fin: ""},
+    {code: "m7", grandeur: "masse", etape: "R4", emoji: "📎", objet: "Un trombone", valeur: "environ 1 g", debut: "Un trombone pèse environ", nombre: "1", unite: "g", fin: ""},
+    {code: "m8", grandeur: "masse", etape: "R4", emoji: "💧", objet: "Une bouteille de 1 L d'eau", valeur: "1 kg (sans la bouteille)", debut: "Un litre d'eau pèse", nombre: "1", unite: "kg", fin: ""},
+    {code: "c5", grandeur: "contenance", etape: "R5", emoji: "🥛", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
+    {code: "a6", grandeur: "aire", etape: "R8", emoji: "👍", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
+    {code: "a7", grandeur: "aire", etape: "R8", emoji: "✋", objet: "La paume de ma main", valeur: "environ 1 dm²", debut: "La paume de ma main a une aire d'environ", nombre: "1", unite: "dm²", fin: ""},
+    {code: "v5", grandeur: "volume", etape: "V1", emoji: "🎲", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""}
   ];
 
   // ------------------------------------------------- le contenu du palier 1
@@ -380,17 +415,19 @@
     const etape = Object.assign({}, typographier(e), {
       code: e.code,
       nomCourt: typo(e.nomCourt || e.nom),
-      pret: Boolean(contenu && contenu.pret)
+      pret: Boolean(contenu && contenu.pret),
+      cachee: Boolean(e.cachee)
     });
     if (contenu) Object.assign(etape, typographier(contenu));
     else etape.reperes = REPERES.filter(r => r.etape === e.code).map(r => r.code);
     if (contenu && !contenu.reperes.length) etape.reperes = [];
     return etape;
   });
-  ETAPES_T.forEach(e => { PALIERS_T[e.palier - 1].etapes += 1; });
+  // Le nombre d'étapes d'un palier : celles que l'élève voit.
+  ETAPES_T.forEach(e => { if (!e.cachee) PALIERS_T[e.palier - 1].etapes += 1; });
 
-  // L'ordre du parcours : palier, famille, rang.
-  const ORDRE = ETAPES_T.slice().sort((a, b) => a.palier - b.palier
+  // L'ordre du parcours : palier, famille, rang. Sans les étapes cachées.
+  const ORDRE = ETAPES_T.filter(e => !e.cachee).sort((a, b) => a.palier - b.palier
     || FAMILLE_RANG[a.famille] - FAMILLE_RANG[b.famille] || a.rang - b.rang).map(e => e.code);
 
   const PAR_CODE = {};
