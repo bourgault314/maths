@@ -36,6 +36,12 @@
 // les nombres) est dans le cahier des charges de la carte v3 :
 // C:\Users\gwena\Claude cowork\defi-conversions\inventaire\defi-conversions-carte-v3.md
 //
+// Lot A2 bis (12/11/2026, « le palier 1 complété ») : E1 et D7 sont
+// construites et ne sont plus cachées (le palier 1 passe à 10 étapes) ;
+// « associer » (R1), « qu'est-ce qu'on mesure ? » et « h, min ou jours »
+// (R2), « ranger » (C2) et le tableau heures / minutes (D1) arrivent ; le
+// 3e temps de « Quelle unité choisir ? » devient la récréation (une durée).
+//
 // Typographie : tous les textes passent par typo() au chargement — espace
 // fine insécable (U+202F) dans les milliers, espace insécable (U+00A0) entre
 // un nombre et son unité et devant « ? ! : ; », jamais un point décimal.
@@ -48,7 +54,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|mètres?|grammes?|litres?|centimètres?|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|mètres?|grammes?|litres?|centimètres?|€|bouteilles";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -168,8 +174,8 @@
     {code: "P6", rang: 47, palier: 6, famille: "grandeurs", classe: "3e", nom: "Les préfixes en puissances de 10", exemple: ""},
     {code: "Q9", rang: 48, palier: 6, famille: "problemes", classe: "4e", nom: "Problèmes : vitesses et débits", nomCourt: "Vitesses et débits", exemple: ""},
     // Carte v3 (12/11) : les ajouts du programme.
-    {code: "E1", rang: 49, palier: 1, famille: "convertir", classe: "CE1 · CE2", nom: "Les euros et les centimes", exemple: "1 € = 100 centimes", cachee: true},
-    {code: "D7", rang: 50, palier: 1, famille: "durees", classe: "CE1 · CE2", nom: "Combien de temps entre deux heures ?", nomCourt: "Entre deux heures", exemple: "de 8 h 30 à 10 h", cachee: true},
+    {code: "E1", rang: 49, palier: 1, famille: "convertir", classe: "CE1 · CE2", nom: "Les euros et les centimes", exemple: "1 € = 100 c"},
+    {code: "D7", rang: 50, palier: 1, famille: "durees", classe: "CE1 · CE2", nom: "Combien de temps entre deux heures ?", nomCourt: "Entre deux heures", exemple: "de 8 h 30 à 10 h 50"},
     {code: "Q10", rang: 51, palier: 2, famille: "problemes", classe: "CM1", nom: "Problèmes : durées et horaires", nomCourt: "Durées et horaires", exemple: ""},
     {code: "A5", rang: 52, palier: 2, famille: "aires", classe: "CM1", nom: "L'aire en carreaux", exemple: "6 carreaux = 6 cm²"}
   ];
@@ -265,11 +271,13 @@
         {etiquette: "Je vois", question: {avant: "Un bébé à la naissance :", reponse: "3", apres: "kg"},
           consigne: "Je compare à mes repères.", aide: {type: "unites", grandeur: "masse", unites: ["g", "kg", "t"], bonne: "kg"},
           legende: "Un bébé pèse autant que 3 paquets de riz : 3 kg.\n3 g, c'est moins qu'une pièce de 1 €."},
-        {etiquette: "Je vois", question: {avant: "De Saint-Denis à Saint-Paul :", reponse: "30", apres: "km"},
-          consigne: "Je compare à mes repères.", aide: {type: "unites", grandeur: "longueur", unites: ["mm", "cm", "m", "km"], bonne: "km"},
-          legende: "30 m, ce n'est même pas la longueur de 8 voitures.\nUne route entre deux villes se compte en km."}
+        // Lot A2 bis : la récréation remplace « De Saint-Denis à Saint-Paul »
+        // (revenu dans les séries) : d'abord ce qu'on mesure, puis l'unité.
+        {etiquette: "Je vois", question: {avant: "La récréation :", reponse: "15", apres: "min"},
+          consigne: "D'abord, je me demande ce que je mesure.\nPuis je choisis l'unité.", aide: {type: "grandeurs", bonne: "duree"},
+          legende: "La récréation, c'est une durée : 15 min.\n15 h, ce serait plus qu'une journée d'école !"}
       ],
-      retenir: "Pour choisir l'unité, je compare à mes repères : un crayon mesure 15 cm, pas 15 m ni 15 mm ; un bébé pèse 3 kg, pas 3 g.",
+      retenir: "Pour choisir l'unité, je me demande d'abord ce que je mesure : une longueur, une masse, une contenance ou une durée. Puis je compare à mes repères : un crayon mesure 15 cm, pas 15 m ni 15 mm ; un bébé pèse 3 kg, pas 3 g ; la récréation dure 15 min, pas 15 h.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -334,14 +342,15 @@
           aide: {type: "glisse-unite", grandeur: "longueur", nombre: "40", de: "mm", vers: "cm"},
           apres: ["Je glisse l'unité de mm à cm.", "Le 4 est sous cm : 40 mm = 4 cm."]}
       ],
-      retenir: "Pour passer à une unité plus grande, il en faut moins : je divise. 1 m = 100 cm, donc 600 cm = 600 ÷ 100 m = 6 m.",
+      retenir: "Pour passer à une unité plus grande, il en faut moins : je divise. 1 m = 100 cm, donc 600 cm = 600 ÷ 100 m = 6 m.\nPour ranger des mesures, je les écris d'abord dans la même unité : 2 kg = 2 000 g, donc 1 500 g < 2 kg.",
       cahier: "Je recopie cela dans mon cahier.",
       relations: RELATIONS_BASES,
       reperes: []
     },
     D1: {
       pret: true,
-      aide: {outil: "barre-heure", image: "relation"},
+      // L'image de « À toi » : le tableau 1 h → 60 min, 2 h → 120 min… (lot A2 bis).
+      aide: {outil: "barre-heure", image: "tableau"},
       apprends: [
         {etiquette: "Je vois", question: {avant: "1 h =", reponse: "60", apres: "min"},
           consigne: "Touche l'horloge : la grande aiguille avance d'un quart d'heure.",
@@ -400,6 +409,57 @@
           apres: ["Oui : il reste un peu moins que le ruban entier."]}
       ],
       retenir: "Avant d'ajouter ou de retirer des mesures, je les écris dans la même unité : 2 m − 50 cm = 200 cm − 50 cm = 150 cm.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Lot A2 bis : la monnaie (programme de CE1 et de CE2 ; Singapour,
+    // Primary 2). Le concret : la pièce de 1 € qu'on échange contre 100
+    // pièces de 1 c, les pièces d'un prix, l'étiquette. La virgule n'apparaît
+    // que sur les prix (« 2,50 € ») : la réponse est toujours un entier.
+    E1: {
+      pret: true,
+      aide: {outil: "monnaie", image: "pieces"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 € =", reponse: "100", apres: "c"},
+          consigne: "Touche la pièce de 1 € : on l'échange contre des pièces de 1 centime.",
+          aide: {type: "echange"}, apres: ["10 rangées de 10 pièces de 1 c", "= 100 c"],
+          legende: "c, c'est le centime : 1 c est le centième de 1 €."},
+        {etiquette: "Je représente", question: {avant: "3 € 50 c =", reponse: "350", apres: "c"},
+          relation: ["1 € = 100 c", "donc 3 € 50 c = 3 × 100 c + 50 c"],
+          aide: {type: "pieces", pieces: [100, 100, 100, 50]},
+          apres: ["100 c + 100 c + 100 c + 50 c", "= 350 c"]},
+        {etiquette: "Je lis un prix", question: {avant: "2,50 € =", reponse: "2 € 50", apres: "c"},
+          consigne: "Sur une étiquette, la virgule sépare\nles euros et les centimes.",
+          aide: {type: "etiquette", euros: 2, centimes: 50},
+          apres: ["2,50 € = 2 € 50 c"],
+          legende: "Et 0,85 €, c'est 0 € 85 c : 85 c."}
+      ],
+      retenir: "1 € = 100 c (100 centimes). 3 € 50 c = 3 × 100 c + 50 c = 350 c.\nSur une étiquette, la virgule sépare les euros et les centimes : 2,50 € = 2 € 50 c ; 3,05 € = 3 € 5 c ; 0,85 € = 85 c.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Lot A2 bis : la durée entre deux instants (programme de CE1, CE2 et
+    // CM1 ; Singapour, Primary 3 ; Ontario). Deux horloges, puis l'axe du
+    // temps : un bond d'heures, un bond de minutes, et le bond jusqu'à
+    // l'heure pile.
+    D7: {
+      pret: true,
+      aide: {outil: "axe-temps", image: "horloges"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "De 8 h à 11 h :", reponse: "3", apres: "h"},
+          consigne: "Touche l'horloge de départ : sa petite aiguille avance d'une heure.",
+          aide: {type: "horloges", depart: 480, arrivee: 660},
+          apres: ["1 h + 1 h + 1 h", "= 3 h"]},
+        {etiquette: "Je représente", question: {avant: "De 8 h 30 à 10 h 50 :", reponse: "2 h 20", apres: "min"},
+          consigne: "Touche l'axe du temps :\nun bond d'heures, puis un bond de minutes.",
+          aide: {type: "axe", depart: 510, bonds: [120, 20]},
+          apres: ["2 h + 20 min", "= 2 h 20 min"]},
+        {etiquette: "Je représente", question: {enonce: "Le bus part à 10 h 40. Le trajet dure 35 min.", avant: "Arrivée :", reponse: "11 h 15", apres: ""},
+          consigne: "Je fais un bond jusqu'à l'heure pile,\npuis le reste.",
+          aide: {type: "axe", depart: 640, bonds: [20, 15], cherche: "arrivee"},
+          apres: ["10 h 40 + 20 min = 11 h", "11 h + 15 min = 11 h 15"]}
+      ],
+      retenir: "Pour trouver une durée, je fais des bonds sur l'axe du temps : d'abord les heures, puis les minutes. De 8 h 30 à 10 h 50 : 2 h, puis 20 min, soit 2 h 20 min.\nPour passer une heure pile, je fais un bond jusqu'à elle : 10 h 40 + 35 min = 10 h 40 + 20 min + 15 min = 11 h 15.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     }

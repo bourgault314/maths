@@ -269,8 +269,8 @@ table.gn td.z { color: #9aa9b4; }
 .listev div.ko { border-color: #f0c6c6; background: #fffafa; }
 .listev div.ko .r { background: var(--red); }
 .listev small { margin-left: auto; font-size: .75rem; color: var(--muted); font-weight: 700; }
-.esc { display: flex; align-items: flex-end; gap: .1875rem; justify-content: center; height: 4.875rem; flex: 0 0 auto; }
-.esc i { box-sizing: border-box; width: 2.125rem; border-radius: .4375rem .4375rem .125rem .125rem; border: .125rem solid #c3d4e0; background: #f6f9fb; font-style: normal; display: flex; align-items: flex-start;
+.esc { display: flex; align-items: flex-end; gap: .1875rem; justify-content: center; height: 4.875rem; flex: 0 0 auto; align-self: stretch; }
+.esc i { box-sizing: border-box; width: 2.125rem; flex: 0 1 2.125rem; min-width: 0; border-radius: .4375rem .4375rem .125rem .125rem; border: .125rem solid #c3d4e0; background: #f6f9fb; font-style: normal; display: flex; align-items: flex-start;
   justify-content: center; font-weight: 900; font-size: .78125rem; color: #9aaab6; padding-top: .1875rem; }
 .esc i.ok { background: var(--teal); border-color: var(--teal); color: #fff; }
 .esc i.ici { border: .15625rem solid var(--blue); background: #eef5ff; color: var(--blue); }
@@ -348,6 +348,10 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .bseance { margin: -.625rem -.625rem 0; padding: .25rem .5rem; }
   .bas { height: 11rem; }
   .pave4 { gap: .3125rem; padding: .3125rem; }
+  /* Safari donne aux touches un bord intérieur plus haut : la rangée « , 0 ⌫ »
+     dépassait de 2 px. Les quatre rangées se partagent la hauteur (lot A2 bis). */
+  .pave4 { grid-auto-rows: minmax(0, 1fr); }
+  .pave4 button { padding: 0; min-height: 0; }
   .hautv { min-height: 2.75rem; padding-top: .25rem; }
   .hautv img { height: 1.75rem; }
   /* Petit téléphone (375 × 667) : le chemin « J'apprends — Je valide »
@@ -358,7 +362,7 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .bas { height: 9.875rem; }
   .cadre.serre { gap: .375rem; }
   /* La relation de l'outil monte à côté de l'étiquette. */
-  .zone > .rel.petite:first-of-type { position: absolute; top: .25rem; right: .5rem; padding: .125rem .5rem; font-size: .875rem; }
+  .zone > .rel.petite:not(.libre):first-of-type { position: absolute; top: .25rem; right: .5rem; padding: .125rem .5rem; font-size: .875rem; }
   .gu2 { --pp: 1.375rem; --pointe: .3125rem; }
   .gu2-tete button { min-height: 1.5rem; font-size: .8125rem; }
   .gu2-chiffres span { height: 2.25rem; font-size: 1.5rem; }
@@ -367,6 +371,13 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .ref { padding: .125rem .5625rem; font-size: .875rem; }
   .ref .emoji { font-size: 1.0625rem; }
   .esc { height: 3.5rem; }
+  /* Trois réponses empilées tiennent dans la zone (lot A2 bis : elles
+     dépassaient de quelques pixels, vu par le robot). */
+  .choix { gap: .375rem; }
+  .choix button { padding: .25rem; font-size: 1.25rem; }
+  .assoc .obj { font-size: .8125rem; }
+  .assoc .obj .emoji { font-size: 1.125rem; }
+  .ranger button { font-size: 1.25rem; }
   .zone { padding-bottom: .375rem; gap: .375rem; }
   .cadre { margin: .25rem .5rem .5rem; }
   .hautv { min-height: 2.5rem; }
@@ -431,6 +442,57 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .gu2-poignee, .gu2-pointe, .gu2-curseur { transition: none; }
 }
 
+/* ------------------------------------------------------- lot A2 bis
+   Le palier 1 complété : les pièces et les billets, l'étiquette, les deux
+   horloges, l'axe du temps, le tableau heures / minutes ; relier et ranger
+   au doigt (à la place du pavé, à sa hauteur : rien ne bouge). */
+.q .pieces-q { display: block; height: 3.375rem; width: auto; max-width: 100%; flex: 0 0 auto; }
+.q .consigne2 { font-size: .9375rem; }
+.dessin.pieces { max-height: 4.5rem; }
+.dessin.pieces.grande { max-height: 6.25rem; }
+.dessin.pieces .a-toucher, .dessin .a-toucher { cursor: pointer; }
+.dessin.echange, .dessin.etiquette, .dessin.horloges, .dessin.axe { cursor: pointer; }
+.dessin.monnaie { max-height: 5.5rem; }
+.dessin.horloges.petite { max-height: 8.75rem; cursor: default; }
+.horl-ligne { display: flex; align-items: center; gap: .5rem; align-self: stretch; min-height: 0; }
+.horl-ligne .dessin.horloges { flex: 1 1 58%; min-width: 0; }
+.horl-ligne .rel { flex: 1 1 42%; }
+.zone .dessin.axe { max-height: min(9rem, 20vh); }
+.dessin-boite .somme .touche { color: #8ea1af; font-size: .8125rem; font-weight: 700; }
+.note.reste { font-size: 1rem; color: var(--ink); font-weight: 900; }
+table.tab-hm { border-collapse: collapse; font-weight: 900; font-size: 1.25rem; }
+table.tab-hm th { font-size: .9375rem; color: var(--muted); padding: .25rem .625rem; text-align: right; border: 0; }
+table.tab-hm td { border: .125rem solid #9fb6c7; background: #fff; text-align: center; min-width: 3.75rem; padding: .25rem .5rem; }
+table.tab-hm tr + tr td { color: var(--blue); }
+table.tab-hm td.trou { color: #a93030; background: #fffafa; }
+/* Relier : les objets à gauche (avec leur lettre), les mesures à droite. */
+.assoc { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: .375rem .5rem; height: 100%; }
+.assoc button, .ranger button { border: .15625rem solid #9fbbd0; border-radius: .75rem; background: #fff; display: flex; align-items: center; gap: .375rem; padding: .25rem .5rem;
+  font-weight: 900; line-height: 1.15; text-align: left; cursor: pointer; min-width: 0; min-height: 0; touch-action: manipulation; }
+.assoc .obj { font-size: .875rem; }
+.assoc .obj .emoji { font-size: 1.375rem; line-height: 1; flex: 0 0 auto; }
+.assoc .obj .t { min-width: 0; }
+.assoc .mes { justify-content: center; font-size: 1.25rem; white-space: nowrap; }
+.assoc .lettre, .ranger .rang { flex: 0 0 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8125rem; color: #fff; font-weight: 900; }
+.assoc .lettre.l0 { background: var(--blue); }
+.assoc .lettre.l1 { background: var(--teal); }
+.assoc .lettre.l2 { background: var(--violet); }
+.assoc .lettre.vide, .ranger .rang { border: .125rem dashed #b8c9d6; background: #fff; color: var(--ink); }
+.ranger .rang.pris { border: 0; background: var(--blue); color: #fff; }
+.assoc button.sel, .ranger button.sel { border-color: var(--blue); box-shadow: 0 0 0 .1875rem #d5e5fb; }
+.assoc button.lie { border-color: #6f97c4; }
+.assoc button.bon, .ranger button.bon { border-color: var(--green); background: var(--green-soft); }
+.assoc button.faux, .ranger button.faux { border-color: var(--red); background: var(--red-soft); }
+.assoc.fige button, .ranger.fige button { pointer-events: none; }
+/* Ranger : quatre mesures, deux par ligne. */
+.ranger { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .5rem; height: 100%; }
+.ranger button { justify-content: center; font-size: 1.375rem; white-space: nowrap; }
+.ranger .rang { position: relative; }
+/* Quatre réponses (qu'est-ce qu'on mesure ? ; mm, cm, m, km) : deux par
+   ligne, pour tenir dans la zone des réponses au petit téléphone. */
+.choix.quatre { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+.choix.quatre button { font-size: 1.125rem; max-height: none; padding: .375rem; display: flex; align-items: center; justify-content: center; }
+
 /* ------------------------------------------------------- un grand écran
    Ordinateur, projection, tablette couchée : un vrai cadre large. Tout
    grandit d'un coup (html), et chaque écran se range en deux colonnes. */
@@ -461,6 +523,14 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   /* La question, plus grande : elle a toute la largeur. */
   .cadre[data-forme="seance"] .q .enonce, .cadre[data-forme="seance"] .q .prop { font-size: 1.3125rem; line-height: 1.3; }
   .cadre[data-forme="seance"] .q .phrase-t { font-size: 1.4375rem; }
+  .cadre[data-forme="seance"] .q .pieces-q { height: 4rem; }
+  .cadre[data-forme="seance"] .zone .dessin.axe { max-height: 10rem; }
+  /* Les dessins de l'image (lot A2 bis) : à la taille du reste, pas plus. */
+  .cadre[data-forme="seance"] .zone .dessin.horloges.petite { max-height: 8rem; }
+  .cadre[data-forme="seance"] .zone .dessin.etiquette { max-height: 7rem; }
+  .cadre[data-forme="seance"] .zone .dessin.pieces { max-height: 4.5rem; }
+  .cadre[data-forme="seance"] .zone .dessin.pieces.grande { max-height: 7.5rem; }
+  .cadre[data-forme="seance"] .zone .dessin.monnaie { max-height: 5rem; }
   /* Sans zone (l'échauffement) : le pavé sous la question, au milieu. */
   .cadre[data-forme="seance"].sans-aide { grid-template-columns: minmax(0, 1fr) 21rem minmax(0, 1fr); grid-template-areas: "b b b" "c c c" "q q q" ". y ." ". a ."; }
 

@@ -1,6 +1,6 @@
 // Défi conversions, lot 1 : la carte et la progression (sans navigateur).
-//   - la carte : 52 codes (carte v3), rangs uniques, paliers 8 / 16 / 8 / 6 / 7 / 5
-//     vus par l'élève (E1 et D7, au palier 1, cachés jusqu'au lot A2 bis) ;
+//   - la carte : 52 codes (carte v3), rangs uniques, paliers 10 / 16 / 8 / 6 / 7 / 5
+//     vus par l'élève (E1 et D7, au palier 1, construits au lot A2 bis) ;
 //   - le format version 1 et sa renormalisation ;
 //   - la règle du lendemain (Je valide s'ouvre le jour d'après « À toi ») ;
 //   - la fusion : la check-list du modèle commun (AGENTS.md, fiche § 3.3).
@@ -16,23 +16,23 @@ const PRETS = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
 const J = "2026-11-11";
 const hier = P.ajouterJours(J, -1);
 
-test("la carte v3 : 52 étapes, codes et rangs figés, paliers 8/16/8/6/7/5 vus par l'élève", () => {
+test("la carte v3 : 52 étapes, codes et rangs figés, paliers 10/16/8/6/7/5 vus par l'élève", () => {
   assert.equal(CARTE.ETAPES.length, 52);
   assert.deepEqual(CARTE.ETAPES.map(e => e.rang), Array.from({length: 52}, (_, i) => i + 1));
   assert.deepEqual(CARTE.ETAPES.map(e => e.code), [...P.CODES], "même liste que le moteur (copie du serveur au lot 2)");
   assert.equal(new Set(CARTE.ETAPES.map(e => e.code)).size, 52);
   CARTE.ETAPES.forEach(e => assert.match(e.code, P.MOTIF_ETAPE));
-  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [8, 16, 8, 6, 7, 5]);
+  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [10, 16, 8, 6, 7, 5]);
   assert.equal(CARTE.etape("D2").palier, 1, "La demi-heure, le quart d'heure : palier 1 (BO de cycle 2)");
   assert.equal(CARTE.etape("D2").rang, 21, "son rang ne bouge pas");
   // Les ajouts de la carte v3 : rangs 49 à 52, jamais réutilisés.
   assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).rang), [49, 50, 51, 52]);
   assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).palier), [1, 1, 2, 2]);
-  // E1 et D7 sont cachées : le palier 1, en ligne, ne change pas pour l'élève.
-  assert.deepEqual(CARTE.ETAPES.filter(e => e.cachee).map(e => e.code), ["E1", "D7"]);
-  assert.ok(!CARTE.ORDRE.includes("E1") && !CARTE.ORDRE.includes("D7"));
-  assert.equal(CARTE.ORDRE.length, 50);
-  assert.deepEqual(CARTE.etapesDuPalier(1).map(e => e.code), ["R1", "R2", "P1", "C1", "C2", "D1", "D2", "Q1"]);
+  // Lot A2 bis : E1 et D7 ne sont plus cachées. Elles prennent leur place
+  // dans leur famille (Convertir, Durées), après les étapes déjà en ligne.
+  assert.deepEqual(CARTE.ETAPES.filter(e => e.cachee).map(e => e.code), []);
+  assert.equal(CARTE.ORDRE.length, 52);
+  assert.deepEqual(CARTE.etapesDuPalier(1).map(e => e.code), ["R1", "R2", "P1", "C1", "C2", "E1", "D1", "D2", "D7", "Q1"]);
   assert.ok(CARTE.palierPret(1), "le palier 1 reste prêt");
   assert.ok(CARTE.famillesDuPalier(1).every(f => f.etapes.every(e => !e.cachee)));
   assert.ok(CARTE.etapesDuPalier(2).some(e => e.code === "A5") && CARTE.etapesDuPalier(2).some(e => e.code === "Q10"));
@@ -47,8 +47,8 @@ test("la carte v3 : 52 étapes, codes et rangs figés, paliers 8/16/8/6/7/5 vus 
   assert.equal(CARTE.etape("R1").reperes.length, 9);
 });
 
-test("la carte : le palier 1 est entier (8 étapes prêtes, textes complets)", () => {
-  assert.deepEqual(PRETS, ["R1", "R2", "P1", "C1", "C2", "D1", "D2", "Q1"]);
+test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", () => {
+  assert.deepEqual(PRETS, ["R1", "R2", "P1", "C1", "C2", "E1", "D1", "D2", "D7", "Q1"]);
   PRETS.forEach(code => {
     const e = CARTE.etape(code);
     assert.equal(e.apprends.length, 3, code);
