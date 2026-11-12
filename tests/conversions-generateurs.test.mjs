@@ -12,7 +12,11 @@
 //   5. les choix (tous différents, la bonne réponse une fois) ;
 //   6. le français (ni « il » ni « elle » pour une personne…) ;
 //   7. le déterminisme ;
-//   8. les erreurs connues (chacune déclenchée, retour bien écrit).
+//   8. les erreurs connues (chacune déclenchée, retour bien écrit) ;
+//   9. (audit du 12/11) le programme de CE2 au palier 1 : des nombres
+//      jusqu'à 10 000, pas de nombre à virgule (sauf le repère 7,5 g) ;
+//      les aides qui ne donnent pas la réponse ; l'image dessinée ; Oui et
+//      Non à parts égales.
 // BANC_GRAINES=200 node --test tests/conversions-generateurs.test.mjs : plus court.
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -131,6 +135,25 @@ function controlerQuestion(q, ou) {
     assert.ok(rec[0] > 0n, `${ou} : reste négatif ou nul`);
     if (d.op === "-") assert.ok(rec[0] < versUnite(lire(d.a), d.ua, d.vers), `${ou} : il reste plus que le tout`);
   }
+  // 9. le programme de CE2 (palier 1)
+  if (CARTE.etape(q.code).palier === 1) {
+    const t = [q.texte, q.reponseTexte, ...(q.choix || [])].join(" ").replace(new RegExp(FINE, "g"), "");
+    (t.match(/\d+(?:,\d+)?/g) || []).forEach(n => {
+      assert.ok(Number(n.replace(",", ".")) <= 10000, `${ou} : ${n} dépasse 10 000 dans « ${q.texte} »`);
+      assert.ok(!n.includes(",") || n === "7,5", `${ou} : nombre à virgule ${n} au palier 1`);
+    });
+  }
+  // L'outil des relations ne recopie pas la relation (c'est la réponse).
+  if (q.code === "P1") assert.equal(q.outilSansRelation, true, `${ou} : l'outil montrerait la relation`);
+  // L'image dessinée : n paquets, n = le nombre d'unités de la grande unité.
+  if (q.paquets) {
+    const d = q.donnees;
+    const n = q.code === "C1" ? G.milli(d.valeur) : G.milli(q.reponse);
+    assert.equal(BigInt(q.paquets.n) * 1000n, n, `${ou} : ${q.paquets.n} paquets`);
+    assert.ok(q.paquets.n >= 1 && q.paquets.n <= 9, `${ou} : trop de paquets`);
+  }
+  // Un objet : la phrase dit l'objet, la mesure et la question.
+  if (q.morceaux.objet) assert.match(q.texte, /^(Un|Une) [^.]+ de [\d\u202f]+\u00a0[a-zA-Z]+\. Combien de [a-zéè]+\u00a0\?$/, `${ou} : « ${q.texte} »`);
   // 5. les choix
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
@@ -144,7 +167,7 @@ function controlerSerie(code, usage, nombre, s, ou) {
   assert.equal(s.length, plan.length, `${ou} : longueur`);
   assert.deepEqual(s.map(q => q.degre), plan, `${ou} : degrés`);
   const exemples = new Set(G.clesExemples(code));
-  s.forEach(q => assert.ok(!exemples.has(q.cle), `${ou} : exemple de J'apprends repris (${q.cle})`));
+  s.forEach(q => assert.ok(!exemples.has(q.cle) && !exemples.has(q.cleBase), `${ou} : exemple de J'apprends repris (${q.cle})`));
   const cles = s.map(q => q.cle);
   if (usage !== "entraine" && usage !== "exerciseur") assert.equal(new Set(cles).size, cles.length, `${ou} : deux fois la même question`);
   else cles.forEach((c, i) => assert.ok(i === 0 || c !== cles[i - 1], `${ou} : la même question deux fois de suite`));
@@ -163,7 +186,9 @@ function controlerSerie(code, usage, nombre, s, ou) {
     const n = g => s.filter(q => q.grandeur === g).length;
     assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
     assert.equal(s[2].forme, "phrase");
+    assert.ok(!s[2].morceaux.objet, `${ou} : une phrase en 3e`);
     assert.equal(s[6].forme, "phrase");
+    assert.ok(s[6].morceaux.objet || s[6].somme || s[6].deux, `${ou} : un objet en 7e`);
     assert.ok(s[9].somme || s[9].deux, `${ou} : une mesure à deux unités en dernier`);
   }
 }
@@ -184,6 +209,36 @@ for (const code of PRETES) {
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
+
+test("banc d'essai : audit du 12/11 — variété, Oui et Non, exemples", () => {
+  // Les trois façons de demander une conversion dans À toi (C1, C2).
+  for (const code of ["C1", "C2"]) {
+    let objet = 0; let phrase = 0; let total = 0;
+    for (let g = 1; g <= 400; g += 1) {
+      G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
+        if (q.donnees.type !== "conv") return;
+        total += 1;
+        if (q.morceaux.objet) objet += 1;
+        else if (q.forme === "phrase") phrase += 1;
+      });
+    }
+    assert.ok(objet / total > 0.18 && objet / total < 0.32, `${code} : ${objet}/${total} avec un objet`);
+    assert.ok(phrase / total > 0.18 && phrase / total < 0.32, `${code} : ${phrase}/${total} en phrase`);
+  }
+  // « Est-ce vraisemblable ? » : Oui et Non à parts presque égales.
+  let oui = 0; let n = 0;
+  for (let g = 1; g <= 1000; g += 1) {
+    G.serie("Q1", {usage: "entraine", graine: g}).filter(q => q.forme === "vrai-faux").forEach(q => { n += 1; if (q.bon === 0) oui += 1; });
+  }
+  assert.ok(oui / n > 0.45 && oui / n < 0.55, `Oui ${oui}/${n}`);
+  // Un exemple de J'apprends ne revient sous aucune forme.
+  const ex = new Set(G.clesExemples("Q1"));
+  for (let g = 1; g <= 2000; g += 1) {
+    for (const u of ["valide", "entraine", "test", "echauffement"]) {
+      G.serie("Q1", {usage: u, graine: g}).forEach(q => assert.ok(!ex.has(q.cleBase || q.cle), `Q1 ${u} ${g} : ${q.cle}`));
+    }
+  }
+});
 
 test("banc d'essai : le déterminisme (même graine, même série)", () => {
   for (const code of PRETES) {

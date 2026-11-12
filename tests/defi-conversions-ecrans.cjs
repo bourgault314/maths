@@ -1,4 +1,5 @@
-// Défi conversions, lot 1 : les écrans au navigateur, à 390 × 844 et 1440 × 900.
+// Défi conversions, lot 1 : les écrans au navigateur, à 390 × 844, 375 × 667
+// et 1440 × 900 (375 × 667 ajouté à l'audit du 12/11).
 //
 // Hors CI : « npm run verifier » la lance quand la branche touche l'appli
 // (scripts/verifier-navigateur.mjs), ou à la main :
@@ -16,7 +17,10 @@
 //     (une erreur, la correction à la fin), l'étape suivante ;
 //   - « Effacer mon historique » posé par-dessus l'écran ;
 //   - Mon parcours, Mon carnet, Comment ça marche ?, le mode professeur et
-//     « Voir une série ».
+//     « Voir une série » ;
+//   - (audit du 12/11) le concret de On te montre : le verre doseur, la
+//     balance (10 tablettes), l'horloge ; et dans À toi des durées, chaque
+//     question tient dans sa largeur (elles sortaient de l'écran).
 // À chaque écran : le cadre tient entier dans la fenêtre. Pendant une
 // séance : RIEN NE BOUGE — question, zone d'aide, pavé et bouton gardent leur
 // place et leur taille pendant la frappe, quand la zone d'aide se remplit ou
@@ -35,7 +39,7 @@ const PAGE = "/outils/conversions/defi_conversions.html";
 const CAPTURES = process.env.DEFI_CONVERSIONS_CAPTURES || "";
 const GRAINE = 50000;
 const JOUR = "2026-11-11";
-const TAILLES = [{nom: "390x844", largeur: 390, hauteur: 844}, {nom: "1440x900", largeur: 1440, hauteur: 900}];
+const TAILLES = [{nom: "390x844", largeur: 390, hauteur: 844}, {nom: "375x667", largeur: 375, hauteur: 667}, {nom: "1440x900", largeur: 1440, hauteur: 900}];
 const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon"};
 
@@ -82,6 +86,30 @@ async function tientEntier(page, ou) {
   assert.ok(m.bas <= m.haut + 0.5, `${ou} : le cadre sort de la fenêtre (${m.bas} > ${m.haut})`);
   assert.ok(m.deborde <= 1, `${ou} : le contenu déborde du cadre de ${m.deborde} px`);
   assert.ok(m.larg <= m.l, `${ou} : le cadre sort en largeur`);
+}
+
+// La question tient dans sa largeur : rien ne sort du bloc « .q ».
+async function questionEntiere(page, ou) {
+  const sort = await page.evaluate(() => {
+    const q = document.querySelector(".q");
+    const r = q.getBoundingClientRect();
+    return [...q.querySelectorAll("*")].filter(e => {
+      const b = e.getBoundingClientRect();
+      return b.width && (b.left < r.left - 0.5 || b.right > r.right + 0.5 || b.top < r.top - 0.5 || b.bottom > r.bottom + 0.5);
+    }).map(e => e.textContent);
+  });
+  assert.deepEqual(sort, [], `${ou} : la question sort de son cadre`);
+}
+
+// Un dessin de On te montre est entier : dans sa zone, sous l'étiquette.
+async function dessinEntier(page, ou) {
+  const m = await page.evaluate(() => {
+    const d = document.querySelector(".zone .dessin").getBoundingClientRect();
+    const z = document.querySelector(".zone").getBoundingClientRect();
+    const e = document.querySelector(".zone .etiq").getBoundingClientRect();
+    return {haut: d.top - e.bottom, bas: z.bottom - d.bottom, g: d.left - z.left, dr: z.right - d.right};
+  });
+  Object.entries(m).forEach(([k, v]) => assert.ok(v >= -0.5, `${ou} : le dessin sort de sa zone (${k} ${v})`));
 }
 
 // Les places des blocs d'une séance.
@@ -276,6 +304,70 @@ async function scenarioProf(navigateur, base, taille) {
   await contexte.close();
 }
 
+// Le concret de On te montre (audit du 12/11) et les durées au téléphone.
+async function scenarioConcret(navigateur, base, taille) {
+  const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {prof: true});
+  const ou = `${taille.nom} concret`;
+  const choisir = async nom => {
+    await page.getByText("Changer d'étape").click();
+    await page.locator("#cadre").getByText(nom, {exact: true}).first().click();
+  };
+  const caseRemplie = async attendu => {
+    const t = await page.locator(".q .case").first().textContent();
+    assert.equal(t.replace(/\s/g, ""), attendu, `${ou} : la case de On te montre`);
+  };
+  // Les relations des bases : la règle, le verre doseur, la balance.
+  await choisir("Les relations des bases");
+  await page.getByText("J'apprends : on te montre").click();
+  await page.getByText("Suivant").click();
+  assert.equal(await page.locator(".dessin.verre").count(), 1, "le verre doseur");
+  await tientEntier(page, `${ou}, verre doseur`);
+  await page.locator(".dessin.verre").click();
+  await caseRemplie("100");
+  await dessinEntier(page, `${ou}, verre doseur`);
+  await tientEntier(page, `${ou}, verre doseur gradué`);
+  await capture(page, taille, "14-verre-doseur");
+  await page.getByText("Suivant").click();
+  for (let k = 0; k < 9; k += 1) await page.locator(".dessin.balance").click();
+  assert.equal((await page.locator(".q .case").first().textContent()).trim(), "", `${ou} : 9 tablettes, pas encore`);
+  await page.locator(".dessin.balance").click();
+  await caseRemplie("1000");
+  await dessinEntier(page, `${ou}, balance`);
+  await tientEntier(page, `${ou}, balance`);
+  await capture(page, taille, "15-balance");
+  await page.getByText("Suivant").click();
+  // Heures et minutes : l'horloge, 4 quarts d'heure.
+  await choisir("Heures et minutes");
+  await page.getByText("J'apprends : on te montre").click();
+  for (let k = 0; k < 3; k += 1) await page.locator(".dessin.horloge").click();
+  assert.equal((await page.locator(".q .case").first().textContent()).trim(), "", `${ou} : 3 quarts d'heure, pas encore`);
+  await page.locator(".dessin.horloge").click();
+  await caseRemplie("60");
+  await dessinEntier(page, `${ou}, horloge`);
+  await tientEntier(page, `${ou}, horloge`);
+  await capture(page, taille, "16-horloge");
+  await page.getByText("Suivant").click();
+  await page.getByText("Suivant").click();
+  await questionEntiere(page, `${ou}, 1 h 10 min`);
+  // À toi des durées : chaque question tient dans sa largeur, rien ne bouge.
+  for (const [nom, code] of [["Heures et minutes", "D1"], ["La demi-heure, le quart d'heure", "D2"]]) {
+    await page.locator(".bseance .rond").click();
+    await choisir(nom);
+    await page.getByText("J'apprends : à toi").click();
+    const serie = G.serie(code, {usage: "entraine", graine: GRAINE});
+    const avant = await places(page);
+    for (let i = 0; i < 6; i += 1) {
+      await questionEntiere(page, `${ou}, ${code} question ${i + 1} « ${serie[i].texte} »`);
+      memesPlaces(avant, await places(page), `${ou}, ${code} question ${i + 1}`);
+      await tientEntier(page, `${ou}, ${code} question ${i + 1}`);
+      if (i === 0) await capture(page, taille, `17-${code}-a-toi`);
+      await repondre(page, serie[i]);
+    }
+  }
+  assert.deepEqual(erreurs, []);
+  await contexte.close();
+}
+
 (async () => {
   const serveur = await servir();
   const base = `http://127.0.0.1:${serveur.address().port}`;
@@ -286,6 +378,7 @@ async function scenarioProf(navigateur, base, taille) {
       await scenarioPremierJour(navigateur, base, taille);
       await scenarioLendemain(navigateur, base, taille);
       await scenarioProf(navigateur, base, taille);
+      await scenarioConcret(navigateur, base, taille);
       console.log(`✓ ${taille.nom}`);
     }
   } catch (e) {

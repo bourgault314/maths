@@ -23,8 +23,19 @@ button { font: inherit; color: inherit; }
 .hautv { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 2px; min-height: 52px; }
 .hautv img { height: 34px; width: auto; display: block; }
 .rond { width: 42px; height: 42px; border: 1.5px solid #c9dbe7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 900; font-size: 20px; background: #fff; color: var(--ink); text-decoration: none; cursor: pointer; padding: 0; flex: 0 0 auto; }
+  background: #fff; color: #24415f; text-decoration: none; cursor: pointer; padding: 0; flex: 0 0 auto; }
 .rond[hidden] { display: none; }
+.fleche { display: grid; place-items: center; flex: 0 0 auto; }
+.fleche svg { display: block; width: 20px; height: 20px; }
+/* Le lien vers le site, comme « ← Calcul mental » de Défi tables : une pilule
+   avec le mot sur ordinateur, un rond au téléphone. */
+.retour-site { min-height: 42px; min-width: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 0 14px 0 11px;
+  border: 1px solid #d5e1ec; border-radius: 999px; background: #fff; color: #24415f; font-size: 13px; font-weight: 900; text-decoration: none; flex: 0 0 auto; }
+.retour-site[hidden] { display: none; }
+@media (max-width: 400px) {
+  .retour-site { padding: 0; width: 42px; border: 1.5px solid #c9dbe7; }
+  .retour-site-mot { display: none; }
+}
 .cadre { flex: 1 1 auto; min-height: 0; margin: 6px 10px 10px; background: #fff; border: 2px solid #dbe8f1; border-radius: 22px; padding: 12px;
   display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; }
 .cadre.serre { gap: 9px; }
@@ -47,7 +58,7 @@ h2 { margin: 2px 0 6px; font-size: 23px; line-height: 1.15; }
 .btn.cl { background: #fff; color: var(--blue); border: 2px solid #c9dbe7; padding: 10px; }
 .btn.rouge { background: var(--red); }
 .btn:disabled { opacity: .45; cursor: default; }
-.btn:focus-visible, .rond:focus-visible, .lien:focus-visible, .pave4 button:focus-visible, .choix button:focus-visible { outline: 3px solid #f2c94c; outline-offset: 2px; }
+.btn:focus-visible, .rond:focus-visible, .retour-site:focus-visible, .lien:focus-visible, .pave4 button:focus-visible, .choix button:focus-visible { outline: 3px solid #f2c94c; outline-offset: 2px; }
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 0 0 auto; }
 .lien { background: none; border: 0; color: var(--muted); font-weight: 800; text-decoration: underline; font-size: 14px; text-underline-offset: 2px; cursor: pointer; padding: 2px; }
 .lien.bleu { color: var(--blue); }
@@ -321,3 +332,16 @@ table.serie tr.sep td { border-bottom: 2px solid #c3d4e0; }
   table.gn tr.glisse td.u, table.gn tr.glisse td.z { animation: arrive .45s ease-out; }
   @keyframes arrive { from { opacity: 0; transform: translateX(40%); } to { opacity: 1; transform: none; } }
 }
+
+/* les dessins concrets (audit du 12/11) : verre doseur, balance, horloge,
+   paquets de l'image */
+.dessin-boite { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.dessin { width: 100%; max-width: 330px; height: auto; max-height: 200px; font-family: inherit; display: block; }
+.dessin.verre, .dessin.balance, .dessin.horloge { cursor: pointer; }
+.dessin.paquets { max-height: 66px; }
+.dessin-boite .somme { font-size: 17px; font-weight: 900; text-align: center; min-height: 22px; }
+.dessin:focus { outline: none; }
+.dessin:focus-visible { outline: 3px solid #9bc0e6; outline-offset: 2px; border-radius: 8px; }
+/* Sur un petit écran (375 × 667), le dessin se réduit pour rester entier
+   sous l'étiquette de la zone. */
+.zone .dessin { max-height: min(200px, 24vh); }
