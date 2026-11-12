@@ -39,9 +39,9 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261112-1"></script>
+  <script src="./conversions_carte.js?v=20261112-2"></script>
   <script src="./conversions_generateurs.js?v=20261112-1"></script>
-  <script src="./defi_conversions_parcours.js?v=20261111-2"></script>
+  <script src="./defi_conversions_parcours.js?v=20261112-1"></script>
   <script src="./defi_conversions_aides.js?v=20261112-1"></script>
   <script>
   (function () {
@@ -277,7 +277,7 @@
       tParcours.type = "button";
       const ic = el("span", "ic");
       ic.appendChild(iconeCarte());
-      tParcours.append(ic, el("b", "", "Mon parcours"), el("span", "petit", T(nbValidees ? `${nbValidees} ${nbValidees > 1 ? "étapes" : "étape"} sur 48` : "6 paliers, 48 étapes")));
+      tParcours.append(ic, el("b", "", "Mon parcours"), el("span", "petit", T(nbValidees ? `${nbValidees} ${nbValidees > 1 ? "étapes" : "étape"} sur ${CARTE.ORDRE.length}` : `6 paliers, ${CARTE.ORDRE.length} étapes`)));
       tParcours.addEventListener("click", () => monParcours(palierN));
       const tCarnet = el("button", "tuile");
       tCarnet.type = "button";
@@ -1173,7 +1173,7 @@
       ajouter(teteEcran("Mon parcours", accueil));
       const n = P.validees(p).length;
       const s = el("div", "petit");
-      s.appendChild(el("b", "", T(`${n} ${n > 1 ? "étapes validées" : "étape validée"} sur 48`))).style.color = "var(--ink)";
+      s.appendChild(el("b", "", T(`${n} ${n > 1 ? "étapes validées" : "étape validée"} sur ${CARTE.ORDRE.length}`))).style.color = "var(--ink)";
       ajouter(s);
       const tabs = el("div", "pal-tabs");
       CARTE.PALIERS.forEach(pal => {

@@ -1,5 +1,6 @@
 // Défi conversions, lot 1 : la carte et la progression (sans navigateur).
-//   - la carte : 48 codes, rangs uniques, paliers 8 / 14 / 8 / 6 / 7 / 5 ;
+//   - la carte : 52 codes (carte v3), rangs uniques, paliers 8 / 16 / 8 / 6 / 7 / 5
+//     vus par l'élève (E1 et D7, au palier 1, cachés jusqu'au lot A2 bis) ;
 //   - le format version 1 et sa renormalisation ;
 //   - la règle du lendemain (Je valide s'ouvre le jour d'après « À toi ») ;
 //   - la fusion : la check-list du modèle commun (AGENTS.md, fiche § 3.3).
@@ -15,16 +16,33 @@ const PRETS = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
 const J = "2026-11-11";
 const hier = P.ajouterJours(J, -1);
 
-test("la carte : 48 étapes, codes et rangs figés, paliers 8/14/8/6/7/5", () => {
-  assert.equal(CARTE.ETAPES.length, 48);
-  assert.deepEqual(CARTE.ETAPES.map(e => e.rang), Array.from({length: 48}, (_, i) => i + 1));
+test("la carte v3 : 52 étapes, codes et rangs figés, paliers 8/16/8/6/7/5 vus par l'élève", () => {
+  assert.equal(CARTE.ETAPES.length, 52);
+  assert.deepEqual(CARTE.ETAPES.map(e => e.rang), Array.from({length: 52}, (_, i) => i + 1));
   assert.deepEqual(CARTE.ETAPES.map(e => e.code), [...P.CODES], "même liste que le moteur (copie du serveur au lot 2)");
-  assert.equal(new Set(CARTE.ETAPES.map(e => e.code)).size, 48);
+  assert.equal(new Set(CARTE.ETAPES.map(e => e.code)).size, 52);
   CARTE.ETAPES.forEach(e => assert.match(e.code, P.MOTIF_ETAPE));
-  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [8, 14, 8, 6, 7, 5]);
+  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [8, 16, 8, 6, 7, 5]);
   assert.equal(CARTE.etape("D2").palier, 1, "La demi-heure, le quart d'heure : palier 1 (BO de cycle 2)");
   assert.equal(CARTE.etape("D2").rang, 21, "son rang ne bouge pas");
-  assert.equal(CARTE.REPERES.length, 28);
+  // Les ajouts de la carte v3 : rangs 49 à 52, jamais réutilisés.
+  assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).rang), [49, 50, 51, 52]);
+  assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).palier), [1, 1, 2, 2]);
+  // E1 et D7 sont cachées : le palier 1, en ligne, ne change pas pour l'élève.
+  assert.deepEqual(CARTE.ETAPES.filter(e => e.cachee).map(e => e.code), ["E1", "D7"]);
+  assert.ok(!CARTE.ORDRE.includes("E1") && !CARTE.ORDRE.includes("D7"));
+  assert.equal(CARTE.ORDRE.length, 50);
+  assert.deepEqual(CARTE.etapesDuPalier(1).map(e => e.code), ["R1", "R2", "P1", "C1", "C2", "D1", "D2", "Q1"]);
+  assert.ok(CARTE.palierPret(1), "le palier 1 reste prêt");
+  assert.ok(CARTE.famillesDuPalier(1).every(f => f.etapes.every(e => !e.cachee)));
+  assert.ok(CARTE.etapesDuPalier(2).some(e => e.code === "A5") && CARTE.etapesDuPalier(2).some(e => e.code === "Q10"));
+  // Le moteur accepte les nouveaux codes (rang 52 compris).
+  const p = P.creer();
+  const {parcours} = P.noterSeance(p, {id: 7, etape: "A5", montre: true}, J);
+  const relu = P.normaliser(JSON.parse(JSON.stringify(parcours)));
+  assert.equal(Object.values(relu.seances)[0][1], 52, "le rang 52 passe la normalisation");
+  assert.equal(P.RANG.A5, 52);
+  assert.equal(CARTE.REPERES.length, 36);
   CARTE.REPERES.forEach(r => assert.match(r.code, P.MOTIF_REPERE));
   assert.equal(CARTE.etape("R1").reperes.length, 9);
 });
@@ -83,7 +101,7 @@ test("la renormalisation : code inconnu, date fausse, entier hors bornes, séanc
   assert.deepEqual(p.etapes.C2, [J, null, null, 0, 2, 0, null], "mode 0 sans validation");
   assert.deepEqual(p.reperes, {c2: [J, 1]});
   assert.deepEqual(Object.values(p.seances).map(s => s[11]), [12, 15], "identifiant 0, mauvaise longueur, date fausse, clé non numérique : jetées");
-  assert.deepEqual(p.seances["2"], [J, 48, 1, 2, 0, 3, 3, 0, 0, 0, 48, 15, 5]);
+  assert.deepEqual(p.seances["2"], [J, 52, 1, 2, 0, 3, 3, 0, 0, 0, 52, 15, 5], "ramenés au rang le plus grand (52 depuis la carte v3)");
 });
 
 test("la règle du lendemain : Je valide s'ouvre le jour d'après « À toi »", () => {
@@ -289,8 +307,8 @@ test("le pire cas tient dans les bornes du serveur (2 000 clés, 40 000 octets)"
   CARTE.REPERES.forEach(r => { p.reperes[r.code] = ["2026-12-31", 1]; });
   for (let k = 1; k <= 150; k += 1) p.seances[String(k)] = ["2026-12-31", 48, 1, 2, 2, 3, 3, 48, 48, 48, 48, 999000 + k, 999000 + k];
   const m = P.mesurer(p);
-  assert.equal(m.cles, 231);
-  assert.ok(m.octets <= 13000, `${m.octets} octets`);
+  assert.equal(m.cles, 243, "231 avec la carte v2 ; + 4 étapes et 8 repères (carte v3)");
+  assert.ok(m.octets <= 14000, `${m.octets} octets (13 133 avec la carte v3 ; le serveur accepte 40 000)`);
 });
 
 test("sans code : stocké sur l'appareil, Effacer monte l'époque", () => {
