@@ -23,6 +23,10 @@
 // Il fabrique une PLANCHE DE REVUE par étape et par taille (tous les écrans
 // sur une seule image, chacun avec son verdict), et `verdicts.json`.
 //
+// Lot A2 bis : il relie (associer) et range au doigt, puis touche
+// « Valider » ; dans On te montre, il touche ce qui reste à toucher (la pièce
+// de 1 €, les pièces, l'étiquette, l'horloge de départ, l'axe du temps).
+//
 // Hors CI. « npm run verifier » le lance quand la branche touche l'appli
 // (scripts/verifier-navigateur.mjs), ou à la main :
 //   node tests/defi-conversions-robot.cjs
@@ -117,6 +121,28 @@ async function controler(page, taille) {
       });
       if (sort.length) defauts.push(`la question est coupée : « ${sort[0].textContent.trim().slice(0, 30)} »`);
     }
+    // Les réponses : rien ne sort de leur zone, et aucun bouton n'est
+    // recouvert (lot A2 bis : quatre choix empilés passaient sous l'image au
+    // petit téléphone ; le milieu du bouton restait libre chez Claude, pas
+    // chez Code). On teste cinq points de chaque bouton.
+    const basEl = cadre.querySelector(".bas");
+    if (basEl && visible(basEl)) {
+      const r = basEl.getBoundingClientRect();
+      const sort = [...basEl.querySelectorAll("*")].filter(visible).filter(e => {
+        const b = e.getBoundingClientRect();
+        return b.left < r.left - 0.5 || b.right > r.right + 0.5 || b.top < r.top - 0.5 || b.bottom > r.bottom + 0.5;
+      });
+      if (sort.length) defauts.push(`les réponses sortent de leur zone : « ${(sort[0].textContent || sort[0].tagName).trim().slice(0, 30)} »`);
+    }
+    // (Un bouton figé après la réponse ne se touche plus : il ne compte pas.)
+    const couverts = [...cadre.querySelectorAll(".bas button, #cadre > .btn, #cadre > .duo > .btn")].filter(visible)
+      .filter(b => getComputedStyle(b).pointerEvents !== "none").filter(b => {
+      const c = b.getBoundingClientRect();
+      // Le centre et quatre points aux quarts (pas les coins : ils sont arrondis).
+      return [[0.5, 0.5], [0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]].map(([u, v]) => [c.left + u * c.width, c.top + v * c.height])
+        .some(([x, y]) => { const e = document.elementFromPoint(x, y); return e && e !== b && !b.contains(e); });
+    });
+    if (couverts.length) defauts.push(`un bouton est recouvert : « ${couverts[0].textContent.trim().slice(0, 20)} »`);
     // L'aide : rien de coupé dans sa zone.
     const z = cadre.querySelector(".zone");
     if (z && visible(z)) {
@@ -211,7 +237,20 @@ async function cliquerTexte(page, texte, exact = false) {
   await attendre(page, 50);
 }
 async function repondre(page, q, juste = true) {
-  if (q.choix) {
+  if (q.forme === "associer") {
+    // Au doigt : un objet, puis sa mesure (lot A2 bis). Faux : deux mesures échangées.
+    const lien = juste ? q.bonnes : [q.bonnes[1], q.bonnes[0], q.bonnes[2]];
+    for (let i = 0; i < 3; i += 1) {
+      await page.locator(".assoc .obj").nth(i).click();
+      await page.locator(".assoc .mes").nth(lien[i]).click();
+    }
+    await page.locator("#cadre .action").click();
+  } else if (q.forme === "ranger") {
+    // Au doigt : les mesures dans l'ordre. Faux : les deux premières échangées.
+    const ordre = juste ? q.ordre : [q.ordre[1], q.ordre[0], ...q.ordre.slice(2)];
+    for (const k of ordre) await page.locator(".ranger button").nth(k).click();
+    await page.locator("#cadre .action").click();
+  } else if (q.choix) {
     const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
     await page.locator(".choix button").nth(i).click();
   } else {
@@ -265,6 +304,12 @@ async function faireLeGeste(page, aide) {
       await b.first().click();
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await page.locator(".zone .dessin").first().click();
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe"].includes(aide.type)) {
+      // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
+      // l'étiquette, l'horloge de départ, l'axe du temps).
+      const a = page.locator(".zone .a-toucher");
+      if (!(await a.count())) return [`rien à toucher dans « ${aide.type} »`];
+      await a.first().click();
     } else return [];
     await attendre(page, 50);
   }

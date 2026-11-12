@@ -126,7 +126,17 @@ function memesPlaces(a, b, ou) {
 }
 
 async function repondre(page, q, juste = true) {
-  if (q.choix) {
+  // Relier, ranger (lot A2 bis) : au doigt, puis Valider.
+  if (q.forme === "associer" || q.forme === "ranger") {
+    if (q.forme === "associer") {
+      const lien = juste ? q.bonnes : [q.bonnes[1], q.bonnes[0], q.bonnes[2]];
+      for (let i = 0; i < 3; i += 1) { await page.locator(".assoc .obj").nth(i).click(); await page.locator(".assoc .mes").nth(lien[i]).click(); }
+    } else {
+      const ordre = juste ? q.ordre : [q.ordre[1], q.ordre[0], ...q.ordre.slice(2)];
+      for (const k of ordre) await page.locator(".ranger button").nth(k).click();
+    }
+    await page.locator("#cadre .action").click();
+  } else if (q.choix) {
     const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
     await page.locator(".choix button").nth(i).click();
   } else {
@@ -266,7 +276,8 @@ async function scenarioLendemain(navigateur, base, taille) {
   assert.deepEqual([s[0][1], s[0][4], s[0][5], s[0][6]], [5, 1, 3, 2], "séance : C2, Je valide réussie, 3 questions d'échauffement, 2 justes");
   // L'étape suivante enchaîne sur J'apprends, sans échauffement.
   await page.getByText("Étape suivante").click();
-  assert.equal(await page.locator(".bseance").getByText("Heures et minutes").count(), 1);
+  // Lot A2 bis : après « Vers une unité plus grande », « Les euros et les centimes ».
+  assert.equal(await page.locator(".bseance").getByText("Les euros et les centimes").count(), 1);
   await tientEntier(page, `${ou}, étape suivante`);
   // Mon parcours, Mon carnet, Comment ça marche ?
   await page.locator(".bseance .rond").click();

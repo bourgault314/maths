@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261112-a2">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261112-a2bis2">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261112-2"></script>
-  <script src="./conversions_generateurs.js?v=20261112-1"></script>
+  <script src="./conversions_carte.js?v=20261112-a2bis"></script>
+  <script src="./conversions_generateurs.js?v=20261112-a2bis"></script>
   <script src="./defi_conversions_parcours.js?v=20261112-1"></script>
-  <script src="./defi_conversions_aides.js?v=20261112-a2"></script>
+  <script src="./defi_conversions_aides.js?v=20261112-a2bis"></script>
   <script>
   (function () {
     "use strict";
@@ -447,6 +447,7 @@
     // Les retours possibles après une erreur (pour réserver leur place) :
     // un zéro de trop ou de moins, un mauvais choix.
     function retoursPossibles(question) {
+      if (question.forme === "associer" || question.forme === "ranger") return [];
       const essais = [];
       if (question.choix) question.choix.forEach((c, i) => { if (i !== question.bon) essais.push(i); });
       else {
@@ -470,7 +471,10 @@
     // étape (rien ne bouge d'une question à l'autre) : celle de sa forme la
     // plus haute.
     function hauteurQuestion(code) {
-      return CARTE.etape(code).famille === "problemes" ? 178 : 124;
+      // Lot A2 bis : la durée entre deux heures a un énoncé (comme un
+      // problème) ; les euros ont des pièces à compter dans la question.
+      if (CARTE.etape(code).famille === "problemes" || code === "D7") return 178;
+      return code === "E1" ? 156 : 124;
     }
 
     function remplirZone(zone, classe, etiquette) {
@@ -514,25 +518,43 @@
         casesEl.push(c);
         return c;
       };
+      // Les pièces à compter (lot A2 bis), sous la phrase de la question.
+      const pieces = () => { if (m.pieces) ui.q.appendChild(AIDES.rangeePieces(m.pieces, {classe: "pieces-q"})); };
+      const deuxCases = l => {
+        l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
+        if (m.cases[1]) l.appendChild(el("span", "", m.cases[1]));
+      };
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
         if (m.enonce) ui.q.appendChild(el("div", "enonce", m.enonce));
         if (m.proposition) ui.q.appendChild(el("div", "prop", m.proposition));
         if (m.phrase) ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        if (m.consigne) ui.q.appendChild(el("div", "consigne2", m.consigne));
         if (question.forme === "vrai-faux") ui.q.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
+      } else if (question.forme === "associer" || question.forme === "ranger") {
+        // Lot A2 bis : relier, ranger. La consigne ; les objets et les
+        // mesures sont à la place du pavé.
+        ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        if (m.consigne) ui.q.appendChild(el("div", "consigne2", m.consigne));
       } else if (m.enonce) {
         ui.q.appendChild(el("div", "enonce", m.enonce));
         const l = el("div", "l1");
-        l.append(el("span", "", m.avant), nouvelleCase(0), el("span", "", m.apres));
+        const avantEl = el("span", "", m.avant);
+        l.appendChild(avantEl);
+        if (m.cases) deuxCases(l);
+        else l.append(nouvelleCase(0), el("span", "", m.apres));
         ui.q.appendChild(l);
+        if (m.cases) couperSiTropLarge(ui.q, l, avantEl);
       } else if (m.phrase) {
         ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        pieces();
         const l = el("div", "l1");
         l.append(nouvelleCase(0), el("span", "", m.apres));
         ui.q.appendChild(l);
       } else if (nbCases === 2) {
         ui.q.appendChild(el("div", "phrase-t", m.avant));
+        pieces();
         const l = el("div", "l1");
-        l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true), el("span", "", m.cases[1]));
+        deuxCases(l);
         ui.q.appendChild(l);
       } else {
         const l = el("div", "l1");
@@ -558,8 +580,87 @@
       }
       ui.bas.textContent = "";
       let choixEl = null;
-      if (question.choix) {
-        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}`);
+      // Relier, ranger (lot A2 bis) : au doigt, rien ne bouge. Relier : on
+      // touche un objet, puis sa mesure (ou l'inverse) ; la mesure prend la
+      // lettre de l'objet. Ranger : on touche les mesures dans l'ordre, elles
+      // prennent leur numéro ; on touche un numéro pour l'enlever.
+      const relie = {lien: [null, null, null], sel: null};
+      const range = [];
+      let gesteEl = null;
+      const complet = () => (question.forme === "associer" ? relie.lien.every(x => x !== null) : range.length === 4);
+      function peindreGeste() {
+        if (!gesteEl) return;
+        if (question.forme === "associer") {
+          [...gesteEl.querySelectorAll(".obj")].forEach((b, i) => {
+            b.classList.toggle("sel", Boolean(relie.sel && relie.sel[0] === "obj" && relie.sel[1] === i));
+            b.classList.toggle("lie", relie.lien[i] !== null);
+          });
+          [...gesteEl.querySelectorAll(".mes")].forEach((b, j) => {
+            const i = relie.lien.indexOf(j);
+            const lettre = b.querySelector(".lettre");
+            lettre.textContent = i >= 0 ? "ABC"[i] : "";
+            lettre.className = `lettre ${i >= 0 ? `l${i}` : "vide"}`;
+            b.classList.toggle("sel", Boolean(relie.sel && relie.sel[0] === "mes" && relie.sel[1] === j));
+            b.classList.toggle("lie", i >= 0);
+          });
+        } else {
+          [...gesteEl.children].forEach((b, k) => {
+            const n = range.indexOf(k);
+            const rang = b.querySelector(".rang");
+            rang.textContent = n >= 0 ? String(n + 1) : "";
+            rang.className = `rang${n >= 0 ? " pris" : ""}`;
+          });
+        }
+        if (!saisie.fige) ui.action.disabled = !complet();
+      }
+      function toucherGeste(sorte, k) {
+        if (saisie.fige) return;
+        if (question.forme === "ranger") {
+          const n = range.indexOf(k);
+          if (n >= 0) range.splice(n, 1); else range.push(k);
+        } else if (relie.sel && relie.sel[0] !== sorte) {
+          const [i, j] = sorte === "obj" ? [k, relie.sel[1]] : [relie.sel[1], k];
+          relie.lien = relie.lien.map(x => (x === j ? null : x));
+          relie.lien[i] = j;
+          relie.sel = null;
+        } else relie.sel = relie.sel && relie.sel[0] === sorte && relie.sel[1] === k ? null : [sorte, k];
+        peindreGeste();
+      }
+      if (question.forme === "associer") {
+        gesteEl = el("div", "assoc");
+        question.objets.forEach((o, i) => {
+          const b = el("button", "obj");
+          b.type = "button";
+          b.append(el("span", `lettre l${i}`, "ABC"[i]), el("span", "emoji", o.emoji), el("span", "t", o.texte));
+          b.addEventListener("click", () => toucherGeste("obj", i));
+          const mb = el("button", "mes");
+          mb.type = "button";
+          mb.append(el("span", "lettre vide", ""), el("span", "t", question.mesures[i]));
+          mb.addEventListener("click", () => toucherGeste("mes", i));
+          gesteEl.append(b, mb);
+        });
+      } else if (question.forme === "ranger") {
+        gesteEl = el("div", "ranger");
+        question.mesures.forEach((t, k) => {
+          const b = el("button", "");
+          b.type = "button";
+          b.append(el("span", "rang", ""), el("span", "t", t));
+          b.addEventListener("click", () => toucherGeste("mes", k));
+          gesteEl.appendChild(b);
+        });
+      }
+      if (gesteEl) {
+        ui.bas.appendChild(gesteEl);
+        ui.action.style.visibility = "";
+        ui.action.textContent = "Valider";
+        ui.action.disabled = true;
+        ui.action.onclick = () => repondre(null);
+        peindreGeste();
+      } else if (question.choix) {
+        // Quatre réponses : deux par ligne, toujours (empilées, elles
+        // débordaient de la zone au petit téléphone ; vu par le robot dans
+        // WebKit, lot A2 bis).
+        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}`);
         question.choix.forEach((texte, i) => {
           const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));
           b.type = "button";
@@ -585,6 +686,7 @@
       }
       clavier = ev => {
         if (saisie.fige) { if (ev.key === "Enter" && !ui.action.disabled && ui.action.style.visibility !== "hidden") { ev.preventDefault(); ui.action.click(); } return; }
+        if (gesteEl) { if (ev.key === "Enter" && complet()) { ev.preventDefault(); repondre(null); } return; }
         if (question.choix) {
           const n = Number(ev.key);
           if (n >= 1 && n <= question.choix.length) repondre(n - 1);
@@ -601,7 +703,10 @@
       function repondre(choix) {
         if (saisie.fige) return;
         let reponse;
-        if (question.choix) reponse = choix;
+        if (gesteEl) {
+          if (!complet()) return;
+          reponse = question.forme === "associer" ? relie.lien.slice() : range.slice();
+        } else if (question.choix) reponse = choix;
         else {
           if (saisie.cases.slice(0, nbCases).some(v => v === "" || v === ",")) {
             saisie.focus = saisie.cases.findIndex(v => v === "" || v === ",");
@@ -612,8 +717,19 @@
         }
         saisie.fige = true;
         const verdict = G.verifier(question, reponse);
-        verdict.tape = question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
-        if (choixEl) {
+        verdict.tape = gesteEl ? "" : question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
+        if (gesteEl) {
+          // Chaque objet relié (ou chaque mesure rangée) : juste ou faux.
+          gesteEl.classList.add("fige");
+          if (question.forme === "associer") {
+            relie.lien.forEach((j, i) => {
+              const ok = j === question.bonnes[i];
+              gesteEl.querySelectorAll(".obj")[i].classList.add(ok ? "bon" : "faux");
+              gesteEl.querySelectorAll(".mes")[j].classList.add(ok ? "bon" : "faux");
+            });
+          } else range.forEach((k, n) => gesteEl.children[k].classList.add(k === question.ordre[n] ? "bon" : "faux"));
+          ui.action.disabled = false;
+        } else if (choixEl) {
           choixEl.classList.add("fige");
           [...choixEl.children].forEach((b, i) => {
             if (i === choix) b.classList.add(verdict.juste ? "bon" : "faux");
@@ -653,7 +769,7 @@
       return d;
     }
     function bonneReponse(zone, question) {
-      if (question.forme === "qcm" || question.forme === "vrai-faux") {
+      if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") {
         zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
         return;
       }
@@ -906,12 +1022,13 @@
       erreurs.forEach(({question, tape}) => {
         const ligne = el("div");
         const gauche = el("span");
-        if (question.forme === "qcm" || question.forme === "vrai-faux") gauche.textContent = question.resume;
+        if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") gauche.textContent = question.resume;
         else {
           gauche.appendChild(document.createTextNode(question.resume.slice(0, question.resume.length - question.reponseTexte.length)));
           gauche.appendChild(el("span", "v", question.reponseTexte));
         }
-        ligne.append(gauche, el("small", "", question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
+        const geste = question.forme === "associer" || question.forme === "ranger";
+        ligne.append(gauche, el("small", "", geste ? "à revoir" : question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
         c.appendChild(ligne);
       });
       return c;
@@ -1217,12 +1334,13 @@
     }
 
     function escalier(codes, ok, ici, ko) {
-      const hs = [22, 30, 38, 46, 54, 62, 70, 78];
+      // Les marches montent régulièrement, quel que soit leur nombre (le
+      // palier 1 en a 10 depuis le lot A2 bis).
       const e = el("div", "esc");
       codes.forEach((c, i) => {
         const etatM = ok.includes(c) ? "ok" : c === ko ? "ko" : c === ici ? "ici" : "";
         const b = el("i", etatM, etatM === "ok" ? "✓" : etatM === "ko" ? "✗" : String(i + 1));
-        b.style.height = `${(100 * hs[Math.min(i, hs.length - 1)]) / 78}%`;
+        b.style.height = `${(100 * (22 + (56 * i) / Math.max(1, codes.length - 1))) / 78}%`;
         e.appendChild(b);
       });
       return e;
