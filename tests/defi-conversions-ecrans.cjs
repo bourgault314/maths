@@ -1,5 +1,7 @@
 // Défi conversions, lot 1 : les écrans au navigateur, à 390 × 844, 375 × 667
-// et 1440 × 900 (375 × 667 ajouté à l'audit du 12/11).
+// et 1440 × 900 (375 × 667 ajouté à l'audit du 12/11). Le robot de
+// vérification du lot A2 (tests/defi-conversions-robot.cjs) joue en plus
+// TOUS les écrans de chaque étape, à 4 tailles et dans 2 moteurs.
 //
 // Hors CI : « npm run verifier » la lance quand la branche touche l'appli
 // (scripts/verifier-navigateur.mjs), ou à la main :
@@ -137,6 +139,19 @@ async function repondre(page, q, juste = true) {
     await page.keyboard.press("Enter");
   }
   await page.waitForTimeout(juste ? 850 : 200);
+}
+
+// Faire glisser la poignée du haut du glisse-unité jusqu'à une unité.
+async function glisserPoignee(page, cible) {
+  const p = await page.locator(".gu2-poignee.dessus").boundingBox();
+  const ici = await page.locator(".gu2-tete button.on").boundingBox();
+  const c = await cible.boundingBox();
+  const x0 = p.x + p.width / 2;
+  await page.mouse.move(x0, p.y + p.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(x0 + (c.x - ici.x), p.y + p.height / 2, {steps: 8});
+  await page.mouse.up();
+  await page.waitForTimeout(250);
 }
 
 async function scenarioPremierJour(navigateur, base, taille) {
@@ -296,7 +311,13 @@ async function scenarioProf(navigateur, base, taille) {
   await page.keyboard.press("4");
   await page.keyboard.press("5");
   assert.deepEqual((await places(page)).case, caseAvant, "la case ne change pas de taille pendant la frappe");
-  await page.locator(".gu .u button").last().click();
+  // Le glisse-unité de Gwenaël (lot A2) : on fait glisser la poignée
+  // « L'unité de mesure » jusqu'à la dernière unité, au doigt (souris) ; les
+  // deux poignées vont ensemble, les zéros remplissent, rien ne bouge autour.
+  await glisserPoignee(page, page.locator(".gu2-tete button:not([disabled])").last());
+  assert.equal(await page.locator(".gu2-tete button:not([disabled])").last().evaluate(b => b.classList.contains("on")), true, `${ou} : la poignée est arrivée`);
+  const [x1, x2] = await page.evaluate(() => [...document.querySelectorAll(".gu2-pointe")].map(e => Math.round(e.getBoundingClientRect().x)));
+  assert.equal(x1, x2, `${ou} : les deux poignées glissent ensemble`);
   memesPlaces(avant, await places(page), `${ou}, glisse-unité`);
   await tientEntier(page, `${ou}, à toi`);
   assert.equal(await page.evaluate(() => localStorage.getItem("mathsgo-defi-conversions-parcours")), null, "rien n'est enregistré");

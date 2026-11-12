@@ -55,6 +55,7 @@ const DEFI_CONVERSIONS = ["outils/conversions/defi_conversions", "outils/convers
 /*
  * appli   : le nom donné à --appli ;
  * garde   : préfixes de chemins ; la recette tourne si la branche touche l'un d'eux (ou la recette elle-même) ;
+ * plafond : minutes avant de l'arrêter (15 par défaut) ;
  * toujours: rapide, joue à chaque « npm run verifier » ;
  * besoin  : modules Node exigés ; python : batterie Python (Playwright pour Python) ;
  * serveur : la recette attend le site servi à MATHSGO_URL (le script le sert lui-même) ;
@@ -86,6 +87,9 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
+  // Le robot du lot A2 : tous les écrans de chaque étape, à 4 tailles, dans Chromium ET WebKit
+  // (WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit).
+  { fichier: "tests/defi-conversions-robot.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS, plafond: 30 },
 
   { fichier: "tests/splat-enquete-eleve-boutons-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
   { fichier: "tests/splat-enquete-eleve-pas-a-pas-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
@@ -286,7 +290,7 @@ async function principal() {
           res = { code: 1, sortie: `${res.sortie}\n${sautes[1]} cas sautés alors que Playwright est là : ce n'est pas un vert.` };
         }
       } else {
-        res = await lancer(process.execPath, [r.fichier], env, 15 * 60000);
+        res = await lancer(process.execPath, [r.fichier], env, (r.plafond || 15) * 60000);
       }
       const duree = `${Math.round((Date.now() - t0) / 1000)} s`;
       if (res.code === 0) console.log(`  ✓ ${r.fichier} (${duree})`);
