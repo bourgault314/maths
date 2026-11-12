@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261111-1">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261112-1">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -33,16 +33,16 @@
   <div class="app" id="app">
     <header class="hautv">
       <a href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
-      <a class="rond" id="retour-site" href="/outils/?domain=proportionnalite-mesures&amp;notion=conversions" aria-label="Retour aux conversions">←</a>
+      <a class="retour-site" id="retour-site" href="/outils/?domain=proportionnalite-mesures&amp;notion=conversions" aria-label="Retour aux conversions"><span class="fleche" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="retour-site-mot">Conversions</span></a>
     </header>
     <main class="cadre" id="cadre" aria-live="polite"></main>
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261111-1"></script>
-  <script src="./conversions_generateurs.js?v=20261111-2"></script>
+  <script src="./conversions_carte.js?v=20261112-1"></script>
+  <script src="./conversions_generateurs.js?v=20261112-1"></script>
   <script src="./defi_conversions_parcours.js?v=20261111-2"></script>
-  <script src="./defi_conversions_aides.js?v=20261111-1"></script>
+  <script src="./defi_conversions_aides.js?v=20261112-1"></script>
   <script>
   (function () {
     "use strict";
@@ -129,9 +129,17 @@
       }
       return m;
     }
+    // La flèche de retour du site (le trait épais des autres applis), jamais le
+    // caractère « ← », trop maigre (règle de Gwenaël, Défi tables).
+    function fleche() {
+      const f = el("span", "fleche");
+      f.setAttribute("aria-hidden", "true");
+      f.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      return f;
+    }
     function teteEcran(titre, retour) {
       const t = el("div", "tete-ecran");
-      const r = el("button", "rond", "←");
+      const r = el("button", "rond"); r.appendChild(fleche());
       r.type = "button";
       r.setAttribute("aria-label", "Retour");
       r.addEventListener("click", retour);
@@ -367,7 +375,7 @@
       ecran({serre: true});
       if (hauteur) cadre.style.setProperty("--q-h", `${hauteur}px`);
       const b = el("div", "bseance");
-      const r = el("button", "rond", "←");
+      const r = el("button", "rond"); r.appendChild(fleche());
       r.type = "button";
       r.setAttribute("aria-label", "Retour à l'accueil");
       r.addEventListener("click", retour || accueil);
@@ -399,6 +407,24 @@
       zone.textContent = "";
       zone.className = `zone ${classe}`;
       if (etiquette) zone.appendChild(el("span", `etiq ${etiquette[0]}`, etiquette[1]));
+    }
+
+    // Une ligne « avant = case unité » trop large pour l'écran (« 1 h 20 min
+    // = … min », « une demi-heure = … min » au téléphone) : le début passe
+    // sur sa propre ligne, la case et l'unité dessous, comme pour une
+    // phrase. Mesuré au rendu ; la hauteur de la question ne change pas
+    // (audit du 12/11 : ces questions sortaient de l'écran).
+    function couperSiTropLarge(q, ligne, avantEl) {
+      const style = getComputedStyle(ligne);
+      const ecart = parseFloat(style.columnGap || style.gap) || 0;
+      const enfants = [...ligne.children];
+      const besoin = enfants.reduce((a, c) => a + c.getBoundingClientRect().width, 0) + ecart * (enfants.length - 1);
+      const place = q.clientWidth - parseFloat(getComputedStyle(q).paddingLeft) - parseFloat(getComputedStyle(q).paddingRight);
+      if (besoin <= place) return false;
+      const p = el("div", "phrase-t", avantEl.textContent);
+      avantEl.remove();
+      ligne.before(p);
+      return true;
     }
 
     // Pose une question et attend la réponse. `avant(zone)` remplit la zone
@@ -440,8 +466,10 @@
         ui.q.appendChild(l);
       } else {
         const l = el("div", "l1");
-        l.append(el("span", "", m.avant), nouvelleCase(0), el("span", "", m.apres));
+        const avantEl = el("span", "", m.avant);
+        l.append(avantEl, nouvelleCase(0), el("span", "", m.apres));
         ui.q.appendChild(l);
+        couperSiTropLarge(ui.q, l, avantEl);
       }
       function peindre() {
         casesEl.forEach((c, i) => {
@@ -592,8 +620,16 @@
           if (ex.question.avant.length > 14 && !ex.question.enonce) {
             q.appendChild(el("div", "phrase-t", ex.question.avant));
             l.append(caseEl, el("span", "", ex.question.apres));
-          } else l.append(el("span", "", ex.question.avant), caseEl, el("span", "", ex.question.apres));
-          q.appendChild(l);
+          } else {
+            const avantEl = el("span", "", ex.question.avant);
+            l.append(avantEl, caseEl, el("span", "", ex.question.apres));
+            q.appendChild(l);
+            // Coupée en deux lignes : la question prend la hauteur des
+            // phrases longues (On te montre change de hauteur d'un temps à
+            // l'autre ; pendant À toi, rien ne bouge).
+            if (!ex.question.enonce && couperSiTropLarge(q, l, avantEl)) cadre.style.setProperty("--q-h", "112px");
+          }
+          if (!l.parentNode) q.appendChild(l);
         }
         const consigne = ex.relation ? texteLignes("rel", ex.relation.join("\n")) : texteLignes("consigne2", ex.consigne || "");
         ui.zone.before(consigne);
@@ -602,7 +638,7 @@
           if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = "case vert"; }
           if (ex.apres && !ui.zone.querySelector(".apres")) {
             // La somme qui s'est construite laisse sa place à l'écriture finale.
-            const somme = ui.zone.querySelector(".barres .somme");
+            const somme = ui.zone.querySelector(".barres .somme, .dessin-boite .somme");
             if (somme) somme.remove();
             const a = el("div", "apres");
             ex.apres.forEach((ligne, k) => {
@@ -690,7 +726,7 @@
     function ecranQuestionFin(petit, titre, ici, retour, noms = ["J'apprends", "Je valide"]) {
       ecran({serre: false});
       const b = el("div", "bseance");
-      const r = el("button", "rond", "←");
+      const r = el("button", "rond"); r.appendChild(fleche());
       r.type = "button";
       r.setAttribute("aria-label", "Retour à l'accueil");
       r.addEventListener("click", retour || accueil);
@@ -1311,7 +1347,7 @@
       const {usage, graine: g} = etat.profSerie;
       ajouter(bandeauProf());
       const t = el("div", "tete-ecran");
-      const r = el("button", "rond", "←");
+      const r = el("button", "rond"); r.appendChild(fleche());
       r.type = "button";
       r.setAttribute("aria-label", "Retour");
       r.addEventListener("click", accueilProf);

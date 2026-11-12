@@ -44,10 +44,13 @@
     if (texte !== undefined) e.textContent = texte;
     return e;
   }
-  // Des lignes de texte (« \n » coupe la ligne), sans HTML.
+  // Des lignes de texte (« \n » coupe la ligne), sans HTML. Les espaces
+  // des nombres, des unités et devant « : » passent par typo() (sinon « : »
+  // pouvait commencer une ligne).
   function lignes(classe, texte) {
     const bloc = el("div", classe);
     String(texte).split("\n").forEach((ligne, i) => {
+      ligne = carte().typo(ligne);
       if (i) bloc.appendChild(el("br"));
       bloc.appendChild(root.document.createTextNode(ligne));
     });
@@ -135,12 +138,225 @@
     dessiner();
   }
 
+  // ------------------------------------------------------- le verre doseur
+  // Un verre doseur de 1 L, plein. On le touche : ses traits apparaissent,
+  // de 10 en 10 cL (petits traits de 5 cL), et le trait du haut dit
+  // « 100 cL » — à la hauteur de l'eau, qui dit « 1 L » (audit du 12/11 :
+  // le litre ne se montre pas sur une règle).
+  function verre(zone, aide, fini) {
+    const boite = el("div", "dessin-boite");
+    const dessin = svg("svg", {viewBox: "0 0 300 214", class: "dessin verre", role: "img", tabindex: 0,
+      "aria-label": `Un verre doseur de 1${NB}L`});
+    const etat = {gradue: false};
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    const haut = 34;
+    const bas = 196;
+    const yDe = cl => bas - ((bas - haut) * cl) / aide.facteur;
+    // Les bords du verre (un peu plus large en haut), x en fonction de y.
+    const gauche = y => 96 - ((bas - y) * 10) / (bas - haut);
+    const droite = y => 204 + ((bas - y) * 10) / (bas - haut);
+    function dessiner() {
+      dessin.textContent = "";
+      const yEau = yDe(aide.facteur);
+      dessin.appendChild(svg("path", {d: `M${gauche(yEau)} ${yEau} L${droite(yEau)} ${yEau} L${droite(bas)} ${bas} L${gauche(bas)} ${bas} Z`, fill: "#cfe2fb"}));
+      // l'anse
+      dessin.appendChild(svg("path", {d: `M${droite(70)} 62 C 262 62 262 150 ${droite(150)} 150`, fill: "none", stroke: "#143451", "stroke-width": 7, "stroke-linecap": "round"}));
+      // le verre, ouvert en haut, avec son bec
+      dessin.appendChild(svg("path", {d: `M${gauche(haut) - 10} ${haut - 14} L${gauche(haut)} ${haut - 6} L${gauche(bas)} ${bas} L${droite(bas)} ${bas} L${droite(haut)} ${haut - 6}`,
+        fill: "none", stroke: "#143451", "stroke-width": 3, "stroke-linejoin": "round"}));
+      if (!etat.gradue) {
+        dessin.appendChild(svg("text", {x: 150, y: 128, "text-anchor": "middle", "font-size": 34, "font-weight": 900, fill: "#0755b8"}, `1${NB}${aide.grande}`));
+        dessin.appendChild(svg("text", {x: 150, y: 210, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "#8ea1af"}, "touche-moi"));
+        return;
+      }
+      for (let cl = 5; cl <= aide.facteur; cl += 5) {
+        const y = yDe(cl);
+        const long = cl % 10 === 0;
+        const x0 = gauche(y);
+        dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x0 + (long ? 30 : 16), y2: y, stroke: "#143451", "stroke-width": long ? 2 : 1.2}));
+        if (long) {
+          const dernier = cl === aide.facteur;
+          dessin.appendChild(svg("text", {x: x0 + 35, y: y + 4.5, "font-size": dernier ? 15 : 12.5, "font-weight": dernier ? 900 : 700,
+            fill: dernier ? "#0755b8" : "#143451"}, dernier ? `${cl}${NB}${aide.petite}` : String(cl)));
+        }
+      }
+      dessin.appendChild(svg("text", {x: droite(yDe(aide.facteur)) - 8, y: yDe(aide.facteur) + 22, "text-anchor": "end", "font-size": 17, "font-weight": 900, fill: "#0755b8"}, `1${NB}${aide.grande}`));
+    }
+    const toucher = () => {
+      if (etat.gradue) return;
+      etat.gradue = true;
+      dessiner();
+      fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    dessiner();
+  }
+
+  // ------------------------------------------------------------- la balance
+  // Une balance à deux plateaux : à gauche un paquet de riz de 1 kg ; on
+  // touche le plateau de droite, une tablette de chocolat de 100 g s'y pose
+  // à chaque fois. À la 10e, la balance est d'aplomb : 1 kg = 1 000 g.
+  function balance(zone, aide, fini) {
+    const boite = el("div", "dessin-boite");
+    const dessin = svg("svg", {viewBox: "0 0 330 206", class: "dessin balance", role: "img", tabindex: 0,
+      "aria-label": "Une balance à deux plateaux"});
+    const somme = el("div", "somme");
+    boite.appendChild(dessin);
+    boite.appendChild(somme);
+    zone.appendChild(boite);
+    const total = aide.nombre || 10;
+    let poses = 0;
+    function dessiner() {
+      dessin.textContent = "";
+      const cx = 165;
+      const py = 58;
+      const demi = 112;
+      // L'angle : penché du côté du riz, d'aplomb quand c'est égal.
+      const angle = (14 * (total - poses)) / total * Math.PI / 180;
+      const xg = cx - demi * Math.cos(angle);
+      const yg = py + demi * Math.sin(angle);
+      const xd = cx + demi * Math.cos(angle);
+      const yd = py - demi * Math.sin(angle);
+      // le pied
+      dessin.appendChild(svg("path", {d: `M${cx} ${py} L${cx} 186 M${cx - 46} 192 L${cx + 46} 192`, stroke: "#143451", "stroke-width": 6, "stroke-linecap": "round"}));
+      dessin.appendChild(svg("line", {x1: xg, y1: yg, x2: xd, y2: yd, stroke: "#143451", "stroke-width": 6, "stroke-linecap": "round"}));
+      dessin.appendChild(svg("circle", {cx, cy: py, r: 6, fill: "#f2c94c", stroke: "#143451", "stroke-width": 2}));
+      const plateau = (x, y, cote) => {
+        const yp = y + 62;
+        dessin.appendChild(svg("path", {d: `M${x} ${y} L${x - 38} ${yp} M${x} ${y} L${x + 38} ${yp}`, stroke: "#8ea1af", "stroke-width": 1.5}));
+        dessin.appendChild(svg("path", {d: `M${x - 52} ${yp} L${x + 52} ${yp} L${x + 40} ${yp + 9} L${x - 40} ${yp + 9} Z`,
+          fill: "#e9eef3", stroke: "#143451", "stroke-width": 2.5, "stroke-linejoin": "round", class: cote === "d" ? "plateau-d" : ""}));
+        return yp;
+      };
+      const ypg = plateau(xg, yg, "g");
+      const ypd = plateau(xd, yd, "d");
+      // le paquet de riz
+      dessin.appendChild(svg("rect", {x: xg - 30, y: ypg - 50, width: 60, height: 50, rx: 4, fill: "#fff", stroke: "#143451", "stroke-width": 2.5}));
+      dessin.appendChild(svg("text", {x: xg, y: ypg - 30, "text-anchor": "middle", "font-size": 13, "font-weight": 800, fill: "#143451"}, "riz"));
+      dessin.appendChild(svg("text", {x: xg, y: ypg - 11, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: "#0755b8"}, `1${NB}kg`));
+      // les tablettes, en deux piles de 5
+      for (let k = 0; k < poses; k += 1) {
+        const col = k % 2;
+        const rang = Math.floor(k / 2);
+        dessin.appendChild(svg("rect", {x: xd - 40 + col * 41, y: ypd - 10 - rang * 10, width: 38, height: 9, rx: 1.5,
+          fill: "#a93030", stroke: "#143451", "stroke-width": 1}));
+      }
+      dessin.appendChild(svg("text", {x: 250, y: 16, "text-anchor": "middle", "font-size": 12.5, "font-weight": 800, fill: "#143451"}, `1 tablette = 100${NB}g`));
+      if (!poses) dessin.appendChild(svg("text", {x: xd, y: ypd + 26, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "#8ea1af"}, "touche-moi"));
+      somme.textContent = "";
+      if (poses) somme.appendChild(el("span", "", poses === 1 ? `1 tablette : 100${NB}g` : carte().typo(`${poses} tablettes : ${poses * 100} g`)));
+    }
+    const toucher = () => {
+      if (poses >= total) return;
+      poses += 1;
+      dessiner();
+      if (poses === total) fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    dessiner();
+  }
+
+  // -------------------------------------------------------------- l'horloge
+  // Une horloge à aiguilles qui part de 8 h. À chaque toucher, la grande
+  // aiguille avance de `pas` minutes ; le chemin parcouru se colorie. Elle
+  // s'arrête à `fin` minutes (60 : un tour complet, la petite aiguille est
+  // passée de 8 à 9).
+  function horloge(zone, aide, fini) {
+    const boite = el("div", "dessin-boite");
+    const dessin = svg("svg", {viewBox: "0 0 300 224", class: "dessin horloge", role: "img", tabindex: 0,
+      "aria-label": "Une horloge à aiguilles"});
+    const somme = el("div", "somme");
+    boite.appendChild(dessin);
+    boite.appendChild(somme);
+    zone.appendChild(boite);
+    const pas = aide.pas || 15;
+    const fin = aide.fin || 60;
+    const cx = 150;
+    const cy = 112;
+    const R = 76;
+    let minutes = 0;
+    const point = (angle, r) => [cx + r * Math.sin(angle), cy - r * Math.cos(angle)];
+    function dessiner() {
+      dessin.textContent = "";
+      dessin.appendChild(svg("circle", {cx, cy, r: R, fill: "#fff", stroke: "#143451", "stroke-width": 4}));
+      if (minutes) {
+        const a = (2 * Math.PI * minutes) / 60;
+        if (minutes >= 60) dessin.appendChild(svg("circle", {cx, cy, r: R - 4, fill: "#cfe2fb"}));
+        else {
+          const [x, y] = point(a, R - 4);
+          dessin.appendChild(svg("path", {d: `M${cx} ${cy} L${cx} ${cy - R + 4} A${R - 4} ${R - 4} 0 ${minutes > 30 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`, fill: "#cfe2fb"}));
+        }
+      }
+      for (let m = 0; m < 60; m += 1) {
+        const a = (2 * Math.PI * m) / 60;
+        const [x1, y1] = point(a, R - 3);
+        const [x2, y2] = point(a, m % 5 === 0 ? R - 13 : R - 8);
+        dessin.appendChild(svg("line", {x1: x1.toFixed(2), y1: y1.toFixed(2), x2: x2.toFixed(2), y2: y2.toFixed(2), stroke: "#143451", "stroke-width": m % 5 === 0 ? 2.4 : 1}));
+      }
+      for (let h = 1; h <= 12; h += 1) {
+        const [x, y] = point((2 * Math.PI * h) / 12, R - 25);
+        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 5.5).toFixed(1), "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: "#143451"}, String(h)));
+      }
+      // les minutes parcourues, de quart d'heure en quart d'heure
+      for (let m = 15; m <= minutes; m += 15) {
+        const [x, y] = point((2 * Math.PI * m) / 60, R + 28);
+        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 5).toFixed(1), "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: "#0755b8"}, `${m}${NB}min`));
+      }
+      // la petite aiguille (8 h, puis elle avance) et la grande
+      const [hx, hy] = point((2 * Math.PI * (8 + minutes / 60)) / 12, R - 40);
+      dessin.appendChild(svg("line", {x1: cx, y1: cy, x2: hx.toFixed(2), y2: hy.toFixed(2), stroke: "#143451", "stroke-width": 7, "stroke-linecap": "round"}));
+      const [mx, my] = point((2 * Math.PI * minutes) / 60, R - 14);
+      dessin.appendChild(svg("line", {x1: cx, y1: cy, x2: mx.toFixed(2), y2: my.toFixed(2), stroke: "#0755b8", "stroke-width": 4.5, "stroke-linecap": "round"}));
+      dessin.appendChild(svg("circle", {cx, cy, r: 6, fill: "#143451"}));
+      if (!minutes) dessin.appendChild(svg("text", {x: cx, y: 220, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "#8ea1af"}, "touche-moi"));
+      somme.textContent = "";
+      if (minutes) {
+        const morceaux = Array(minutes / pas).fill(`${pas}${NB}min`);
+        somme.appendChild(el("span", "", morceaux.length > 1 ? morceaux.join(" + ") : `La grande aiguille a avancé de ${pas}${NB}min.`));
+      }
+    }
+    const toucher = () => {
+      if (minutes >= fin) return;
+      minutes += pas;
+      dessiner();
+      if (minutes >= fin) fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    dessiner();
+  }
+
+  // ------------------------------------------------- les paquets (l'image)
+  // L'image de « À toi » pour une conversion simple : n paquets dessinés,
+  // chacun avec ce qu'il vaut dans les deux unités (« 1 m » dedans,
+  // « 100 cm » dessous). On les compte d'un coup d'œil (9 au plus).
+  function paquets(zone, {n, dans, sous}) {
+    const W = 330;
+    const ecart = 4;
+    const w = Math.min(64, (W - ecart * (n - 1)) / n);
+    const x0 = (W - (w * n + ecart * (n - 1))) / 2;
+    const petit = w < 40;
+    const dessin = svg("svg", {viewBox: `0 0 ${W} 62`, class: "dessin paquets", role: "img", "aria-label": `${n} paquets`});
+    for (let i = 0; i < n; i += 1) {
+      const x = x0 + i * (w + ecart);
+      dessin.appendChild(svg("rect", {x: x.toFixed(1), y: 4, width: w.toFixed(1), height: 30, rx: 3, fill: "#eef5fd", stroke: "#0755b8", "stroke-width": 2}));
+      dessin.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: 24, "text-anchor": "middle", "font-size": petit ? 11 : 13, "font-weight": 900, fill: "#143451"}, dans));
+      dessin.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: 52, "text-anchor": "middle", "font-size": petit ? 10 : 12.5, "font-weight": 900, fill: "#0755b8"}, sous));
+    }
+    zone.appendChild(dessin);
+  }
+
   // ----------------------------------------------------------- la barre de l'heure
   // `heures` barres d'une heure ; la première coupée en `parts` (4 quarts de
   // 15 min, 2 moitiés) ; `verte` : une seule part verte ; `compte` : une
   // accolade qui compte des parts (« 3 parts : 3 × 15 min = 45 min ») ;
   // `plus` : des minutes après les heures. Interactif si `touche`.
-  function barreHeure(zone, {heures = 1, parts = 4, verte = false, compte = 0, plus = 0, touche = false}, fini) {
+  // `total` : la ligne « 80 min en tout » (jamais dans l'outil de « À toi » :
+  // ce serait la réponse).
+  function barreHeure(zone, {heures = 1, parts = 4, verte = false, compte = 0, plus = 0, touche = false, total: avecTotal = true}, fini) {
     const boite = el("div", "heure");
     zone.appendChild(boite);
     let coupee = !touche;
@@ -173,8 +389,9 @@
         const acc = el("div", "accolade");
         acc.style.width = `${(100 * compte) / parts / (heures + plus / 60)}%`;
         boite.appendChild(acc);
-        boite.appendChild(el("div", "accolade-texte", `${compte} parts : ${compte} × ${60 / parts}${NB}min = ${compte * 60 / parts}${NB}min`));
-      } else if (heures > 1 || plus) {
+        // Le nom des parts seulement : le calcul est écrit dessous.
+        boite.appendChild(el("div", "accolade-texte", parts === 4 ? `${compte} quarts d'heure` : `${compte} parts`));
+      } else if (avecTotal && (heures > 1 || plus)) {
         boite.appendChild(el("div", "heure-total", `${total}${NB}min en tout`));
       }
       if (touche && !coupee) {
@@ -400,6 +617,9 @@
       return;
     }
     if (aide.type === "barres") { barres(zone, aide, f); return; }
+    if (aide.type === "verre") { verre(zone, aide, f); return; }
+    if (aide.type === "balance") { balance(zone, aide, f); return; }
+    if (aide.type === "horloge") { horloge(zone, aide, f); return; }
     if (aide.type === "glisse-nombre") { glisseNombre(zone, aide, f); return; }
     if (aide.type === "glisse-unite") {
       glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
@@ -422,7 +642,7 @@
 
   function outil(zone, question, {fini = () => {}} = {}) {
     if (question.outil === "glisse-unite" && question.glisse) {
-      if (question.relation) zone.appendChild(el("div", "rel petite", question.relation));
+      if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
       const g = question.glisse;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur.replace(",", ""), de: g.de, vers: g.vers}, fini);
       zone.appendChild(el("div", "note", question.plus ? carte().typo(`Glisse l'unité avec ton doigt, puis ajoute ${question.plus}.`) : "Glisse l'unité avec ton doigt."));
@@ -433,7 +653,12 @@
       if (h.quarts !== undefined || h.demis !== undefined) {
         barreHeure(zone, {heures: 1, parts: 4, verte: true});
         zone.appendChild(el("div", "note", carte().typo("une demi-heure = 2 quarts d'heure")));
-      } else barreHeure(zone, {heures: Math.max(1, h.h), parts: 1, plus: h.m});
+      } else if (h.versHeures) {
+        // Des minutes vers les heures : la barre d'une heure, pour compter
+        // les paquets de 60 min (pas la réponse toute faite).
+        barreHeure(zone, {heures: 1, parts: 1, total: false});
+        zone.appendChild(el("div", "note", carte().typo("Je compte les paquets de 60 min.")));
+      } else barreHeure(zone, {heures: Math.max(1, h.h), parts: 1, plus: h.m, total: false});
       return;
     }
     if (question.outil === "schema" && question.schema) {
@@ -448,9 +673,14 @@
 
   function image(zone, question) {
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
+    if (question.paquets) {
+      zone.appendChild(lignes("rel petite", question.relation));
+      paquets(zone, question.paquets);
+      return;
+    }
     if (question.image && question.image.length) zone.appendChild(lignes("rel", question.image.join("\n")));
     else if (question.relation) zone.appendChild(el("div", "rel", question.relation));
   }
 
-  return Object.freeze({montrer, outil, image, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, lignes, REFERENCES});
+  return Object.freeze({montrer, outil, image, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES});
 });

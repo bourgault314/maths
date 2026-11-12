@@ -224,8 +224,7 @@
   function questionConversion(code, degre, forme, valeur, de, vers, extra = {}) {
     const rep = convertir(valeur, de, vers);
     const gauche = mes(valeur, de);
-    const texte = forme === "phrase" ? `Combien de ${MOTS[vers]} dans ${gauche}${NB}?` : `${gauche} = ${CASE}${NB}${vers}`;
-    const morceaux = forme === "phrase" ? {phrase: `Combien de ${MOTS[vers]} dans ${gauche}${NB}?`, apres: vers} : {avant: `${gauche} =`, apres: vers};
+    const {texte, morceaux} = ecrireConversion(forme, valeur, de, vers);
     return q(Object.assign({
       code, degre, forme, texte, morceaux,
       reponse: brut(rep), reponseTexte: mes(rep, vers), unite: vers,
@@ -233,6 +232,41 @@
       donnees: {type: "conv", valeur: brut(valeur), de, vers},
       cle: `${code}:${brut(valeur)}${de}>${vers}`
     }, extra));
+  }
+
+  // Les trois écritures d'une même conversion (audit du 12/11) :
+  //   nombre « 3 m = … cm » ; phrase « Combien de centimètres dans 3 m ? » ;
+  //   objet  « Une corde de 3 m. Combien de centimètres ? » (un objet réel,
+  //   choisi pour que la mesure reste vraisemblable).
+  function ecrireConversion(forme, valeur, de, vers) {
+    const gauche = mes(valeur, de);
+    if (forme === "phrase") {
+      const phrase = `Combien de ${MOTS[vers]} dans ${gauche}${NB}?`;
+      return {texte: phrase, morceaux: {phrase, apres: vers}};
+    }
+    if (forme === "objet") {
+      const phrase = `${objetDe(valeur, de)} de ${gauche}. Combien de ${MOTS[vers]}${NB}?`;
+      return {texte: phrase, morceaux: {phrase, apres: vers, objet: true}};
+    }
+    return {texte: `${gauche} = ${CASE}${NB}${vers}`, morceaux: {avant: `${gauche} =`, apres: vers}};
+  }
+  // L'objet d'une mesure, selon son unité de départ et sa taille.
+  function objetDe(valeur, de) {
+    const n = valeur / MILLE;
+    switch (de) {
+      case "mm": return n < 150n ? "Un clou" : n < 1000n ? "Un bâton" : "Un tuyau";
+      case "cm": return "Un ruban";
+      case "dm": return "Une planche";
+      case "m": return n < 1000n ? "Une corde" : "Un sentier";
+      case "km": return "Une course à vélo";
+      case "g": return "Un colis";
+      case "kg": return n < 1000n ? "Une caisse" : "Un chargement";
+      case "t": return "Un chargement";
+      case "L": return "Un aquarium";
+      case "dL": return "Une marmite";
+      case "cL": return "Une bassine";
+      default: return "Une mesure";
+    }
   }
 
   // Ce qui rend une conversion facile ou dure à lire pour le glisse-unité.
@@ -282,7 +316,9 @@
         candidats.push(v * p);
         if (v % p === 0n) candidats.push(v / p);
       });
-      const propres = candidats.filter(c => c >= 1n && c < 100000n * MILLE && c !== v);
+      // Des nombres entiers jusqu'à 10 000, comme au CE2 (audit du 12/11 :
+      // « 33 000 » ou « 0,4 » sortaient du programme).
+      const propres = candidats.filter(c => c >= MILLE && c <= 10000n * MILLE && c % MILLE === 0n && c !== v);
       const autres = melanger(rng, propres).slice(0, 2);
       choix = melanger(rng, [v, ...autres]).map(ecrire);
       bon = choix.indexOf(ecrire(v));
@@ -405,7 +441,9 @@
       const forme = choisir(rng, ["nombre", "nombre", "phrase"]);
       const [valeur, de, vers] = sens === "bas" ? [MILLE, g, p] : [facteur(g, p) * MILLE, p, g];
       return questionConversion("P1", degre, forme, valeur, de, vers, {
-        relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, de, vers),
+        // L'outil ne recopie pas la relation au-dessus du glisse-unité :
+        // dans cette étape, elle EST la réponse (audit du 12/11).
+        relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, de, vers), outilSansRelation: true,
         image: [sensDuPrefixe(g, p)],
         correction: sens === "bas" ? [relationTexte(g, p)] : [relationTexte(g, p), `donc ${mes(valeur, de)} = ${mes(MILLE, g)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`
@@ -434,6 +472,15 @@
     "2b": [["m", "dm"], ["dm", "cm"], ["cm", "mm"], ["L", "dL"]],
     3: [["m", "cm"], ["L", "cL"], ["m", "mm"], ["km", "m"], ["kg", "g"], ["t", "kg"]]
   };
+  // Le nombre d'une conversion de degré 3. Au CE2, les nombres vont
+  // jusqu'à 10 000 (programme de cycle 2, BO n° 41 du 31/10/2024) : × 100
+  // avec un nombre de deux chiffres (19 L = 1 900 cL), × 1 000 avec un
+  // nombre de 2 à 10 (7 kg = 7 000 g). Avant l'audit du 12/11, « 66 m =
+  // 66 000 mm » sortait du programme (18 % des questions).
+  function nombreDegre3(rng, [g, p]) {
+    return facteur(g, p) >= 1000n ? entre(rng, 2, 10) : entre(rng, 10, 99);
+  }
+
   // Les mesures à deux unités, en nombres entiers (BO de CE2 : « 2 m + 15 cm »,
   // « 5 km + 750 m »).
   const SOMMES = [["m", "cm"], ["km", "m"], ["kg", "g"], ["t", "kg"], ["L", "cL"]];
@@ -473,6 +520,25 @@
     return n("longueur") >= 1 && n("masse") >= 2 && n("contenance") >= 2;
   }
 
+  // Les écritures d'une conversion dans une série (audit du 12/11) :
+  // Je valide : une phrase (place 3) et un objet (place 7) ; À toi : une
+  // question sur quatre en phrase, une sur quatre avec un objet ;
+  // l'échauffement : l'une des trois, au hasard.
+  function formesConvertir(usage, rng) {
+    if (usage === "valide") return {2: "phrase", 6: "objet"};
+    if (usage === "entraine") {
+      const f = {};
+      for (let i = 0; i < 25; i += 1) {
+        const r = rng();
+        if (r < 0.25) f[i] = "phrase";
+        else if (r < 0.5) f[i] = "objet";
+      }
+      return f;
+    }
+    if (usage === "echauffement") return {0: choisir(rng, ["nombre", "phrase", "objet"])};
+    return {};
+  }
+
   ETAPES.C1 = {
     clesExemples: ["C1:3m>cm", "C1:4kg>g", "C1:5L>cL"],
     tirer(rng, degre, i, usage) {
@@ -483,21 +549,22 @@
       else if (degre === 2) {
         if (rng() < 0.5) { rel = choisir(rng, C1_RELATIONS["2a"]); v = entre(rng, 1, 9); }
         else { rel = choisir(rng, C1_RELATIONS["2b"]); v = entre(rng, 10, 99); }
-      } else { rel = choisir(rng, C1_RELATIONS[3]); v = entre(rng, 10, 99); }
+      } else { rel = choisir(rng, C1_RELATIONS[3]); v = nombreDegre3(rng, rel); }
       const [g, p] = rel;
       const forme = "nombre";
       const valeur = milli(v);
       const rep = convertir(valeur, g, p);
       return questionConversion("C1", degre, forme, valeur, g, p, {
         relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, g, p),
+        // L'image dessinée (audit du 12/11) : v paquets « 1 m » de 100 cm,
+        // tant qu'on peut les compter d'un coup d'œil (9 au plus).
+        paquets: v <= 9 ? {n: v, dans: `1${NB}${g}`, sous: mes(facteur(g, p) * MILLE, p)} : null,
         image: [relationTexte(g, p), `donc ${mes(valeur, g)} = ${ecrire(valeur)} × ${mes(facteur(g, p) * MILLE, p)}`],
         correction: [relationTexte(g, p), `donc ${mes(valeur, g)} = ${ecrire(valeur)} × ${mes(facteur(g, p) * MILLE, p)} = ${mes(rep, p)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`
       });
     },
-    formes(usage) {
-      return usage === "valide" ? {2: "phrase", 6: "phrase"} : {};
-    },
+    formes: formesConvertir,
     accepte: contraintesConvertir,
     valide: serieConvertirBonne,
     erreurs(question, lu) {
@@ -558,20 +625,20 @@
       else if (degre === 2) {
         if (rng() < 0.5) { rel = choisir(rng, C1_RELATIONS["2a"]); r = entre(rng, 1, 9); }
         else { rel = choisir(rng, C1_RELATIONS["2b"]); r = entre(rng, 10, 99); }
-      } else { rel = choisir(rng, C1_RELATIONS[3]); r = entre(rng, 10, 99); }
+      } else { rel = choisir(rng, C1_RELATIONS[3]); r = nombreDegre3(rng, rel); }
       const [g, p] = rel;
       const f = facteur(g, p);
       const valeur = milli(r) * f;
       return questionConversion("C2", degre, "nombre", valeur, p, g, {
         relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, p, g),
+        // L'image dessinée : r paquets de 100 cm, chacun fait 1 m.
+        paquets: r <= 9 ? {n: r, dans: mes(f * MILLE, p), sous: `1${NB}${g}`} : null,
         image: [`${relationTexte(g, p)} : je regroupe ${mes(f * MILLE, p)} en 1${NB}${g}.`, `donc ${mes(valeur, p)} = ${ecrire(valeur)} ÷ ${ecrire(f * MILLE)}${NB}${g}`],
         correction: [relationTexte(g, p), `donc ${mes(valeur, p)} = ${ecrire(valeur)} ÷ ${ecrire(f * MILLE)}${NB}${g} = ${mes(milli(r), g)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`
       });
     },
-    formes(usage) {
-      return usage === "valide" ? {2: "phrase", 6: "phrase"} : {};
-    },
+    formes: formesConvertir,
     accepte: contraintesConvertir,
     valide: serieConvertirBonne,
     erreurs(question, lu) {
@@ -615,7 +682,7 @@
     return questionDuree(code, degre, {
       forme: "nombre", texte: `${total}${NB}min = ${CASE}${NB}h`, morceaux: {avant: `${total}${NB}min =`, apres: "h"},
       reponse: String(h), reponseTexte: `${h}${NB}h`, unite: "h", resume: `${total}${NB}min = ${h}${NB}h`,
-      relation: `1${NB}h = 60${NB}min`, heure: {h, m: 0},
+      relation: `1${NB}h = 60${NB}min`, heure: {h, m: 0, versHeures: true},
       image: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")}`],
       correction: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} = ${h}${NB}h`],
       donnees: {type: "duree", h: 0, m: total, vers: "h"},
@@ -629,7 +696,7 @@
     return questionDuree(code, degre, {
       forme: "deux-cases", texte: `${total}${NB}min = ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${total}${NB}min =`, cases: ["h", "min"]},
       reponse: [String(h), String(m)], reponseTexte: hm(h, m), unite: "min", resume: `${total}${NB}min = ${h}${NB}h ${m}${NB}min`,
-      relation: `1${NB}h = 60${NB}min`, heure: {h, m},
+      relation: `1${NB}h = 60${NB}min`, heure: {h, m, versHeures: true},
       image: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} + ${m}${NB}min`],
       correction: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} + ${m}${NB}min = ${h}${NB}h ${m}${NB}min`],
       donnees: {type: "duree-deux", m: total},
@@ -808,8 +875,9 @@
     const vrai = vraisemblable === "oui";
     let propose = rep;
     if (!vrai) {
-      const essais = [rep * 10n, rep * 100n].concat(rep % 10000n === 0n ? [rep / 10n] : []);
-      propose = choisir(rng, essais);
+      // Au plus 10 000 (le programme de CE2) : sinon ÷ 10.
+      const essais = [rep * 10n, rep * 100n].filter(x => x <= 10000n * MILLE).concat(rep % 10000n === 0n ? [rep / 10n] : []);
+      propose = essais.length ? choisir(rng, essais) : rep * 10n;
     }
     const auteur = choisir(rng, PRENOMS.filter(p => p !== m.prenom));
     const dit = m.op === "-" ? `${auteur} trouve qu'il reste ${mes(propose, m.vers)}.` : `${auteur} trouve ${mes(propose, m.vers)} en tout.`;
@@ -824,7 +892,7 @@
       resume: `${dit} ${vrai ? "Vraisemblable." : "Pas vraisemblable."}`,
       correction: [lignes[0], raison],
       donnees: Object.assign({}, base.donnees, {type: "vrai", propose: brut(propose), vrai}),
-      cle: `${base.cle}:v${vrai ? 1 : 0}`
+      cle: `${base.cle}:v${vrai ? 1 : 0}`, cleBase: base.cle
     }));
   }
 
@@ -840,7 +908,12 @@
         const [x, y] = rng() < 0.5 ? ["vrai-oui", "vrai-non"] : ["vrai-non", "vrai-oui"];
         return {3: x, 7: y};
       }
-      if (usage === "entraine") return {3: "vrai-oui", 8: "vrai-non", 13: "vrai-oui", 18: "vrai-non", 23: "vrai-oui"};
+      // Oui et Non alternent ; le premier est tiré (audit du 12/11 : Oui
+      // revenait 3 fois sur 5, toujours à la même place).
+      if (usage === "entraine") {
+        const [a, b] = rng() < 0.5 ? ["vrai-oui", "vrai-non"] : ["vrai-non", "vrai-oui"];
+        return {3: a, 8: b, 13: a, 18: b, 23: rng() < 0.5 ? "vrai-oui" : "vrai-non"};
+      }
       return {};
     },
     erreurs(question, lu) {
@@ -905,11 +978,14 @@
       const epuise = {};
       degres.forEach((degre, i) => {
         const forme = formes[i] || null;
-        const accepte = (x, strict) => !interdits.has(x.cle) && !s.some(y => y.cle === x.cle)
+        // `cleBase` : un même problème posé autrement (« Est-ce
+        // vraisemblable ? ») reste le même problème.
+        const base = x => x.cleBase || x.cle;
+        const accepte = (x, strict) => !interdits.has(base(x)) && !s.some(y => y.cle === x.cle || base(y) === base(x))
           && (!strict || !etape.accepte || etape.accepte(s, x, usage));
         const tirer = d => {
           const x = etape.tirer(rng, d, i, usage, forme);
-          if (x && forme && (forme === "phrase" || forme === "nombre") && x.forme !== "deux-cases" && !x.somme && x.forme !== "qcm") {
+          if (x && forme && (forme === "phrase" || forme === "nombre" || forme === "objet") && x.forme !== "deux-cases" && !x.somme && x.forme !== "qcm") {
             return reformer(x, forme);
           }
           return x;
@@ -937,7 +1013,7 @@
         }
         for (let essai = 0; essai < 50 && !choisie && usage !== "valide" && usage !== "test"; essai += 1) {
           const x = tirer(degre);
-          if (x && !interdits.has(x.cle) && (!s.length || s[s.length - 1].cle !== x.cle)) choisie = x;
+          if (x && !interdits.has(base(x)) && (!s.length || base(s[s.length - 1]) !== base(x))) choisie = x;
         }
         if (choisie) s.push(choisie);
       });
@@ -947,16 +1023,12 @@
   }
 
   // Une conversion posée en phrase ou en nombre (la forme imposée).
+  // (« objet » s'affiche comme une phrase : sa forme reste « phrase ».)
   function reformer(x, forme) {
-    if (x.forme === forme || x.donnees.type !== "conv") return x;
+    if (x.donnees.type !== "conv" || (x.forme === forme && forme !== "objet")) return x;
     const d = x.donnees;
-    const valeur = milli(d.valeur);
-    const gauche = mes(valeur, d.de);
-    if (forme === "phrase") {
-      const phrase = `Combien de ${MOTS[d.vers]} dans ${gauche}${NB}?`;
-      return Object.assign(x, {forme: "phrase", texte: phrase, morceaux: {phrase, apres: d.vers}});
-    }
-    return Object.assign(x, {forme: "nombre", texte: `${gauche} = ${CASE}${NB}${d.vers}`, morceaux: {avant: `${gauche} =`, apres: d.vers}});
+    const {texte, morceaux} = ecrireConversion(forme, milli(d.valeur), d.de, d.vers);
+    return Object.assign(x, {forme: forme === "nombre" ? "nombre" : "phrase", texte, morceaux});
   }
 
   // ---------------------------------------------------------- la vérification
