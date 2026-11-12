@@ -32,7 +32,8 @@ cors();
 // se lit « rien en plus ».
 function colonnes_reglages(PDO $pdo): string
 {
-    return (reglages_disponibles($pdo) ? ', c.reglages' : '') . (ajouts_disponibles($pdo) ? ', e.ajouts' : '');
+    return (reglages_disponibles($pdo) ? ', c.reglages' : '') . (ajouts_disponibles($pdo) ? ', e.ajouts' : '')
+        . (reglages_eleve_disponibles($pdo) ? ', e.reglages_eleve' : '');
 }
 
 function identite_eleve(PDO $pdo, int $eleveId): array|false
@@ -53,7 +54,8 @@ function identite_eleve(PDO $pdo, int $eleveId): array|false
 // catalogue ; les réglages, « {} » quand tout est ouvert.
 function acces_affichable(array $eleve): array
 {
-    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null);
+    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null,
+        isset($eleve['reglages_eleve']) ? (string)$eleve['reglages_eleve'] : null);
     return [
         'applis' => array_map('appli_affichable', $acces['applis']),
         'reglages' => reglages_json($acces['reglages']),
@@ -174,7 +176,8 @@ try {
     // fiches ouverts par le professeur, avec leurs adresses (lib/cours.php).
     // Ce que l'élève y ouvre est noté par api/cours.php (le jour seulement,
     // lot « cours-ouvertures », 10/11/2026), pas ici.
-    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null);
+    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null,
+        isset($eleve['reglages_eleve']) ? (string)$eleve['reglages_eleve'] : null);
     if (in_array('cours', $acces['applis'], true)) {
         $reponse['cours'] = cours_de_l_eleve($acces['reglages']['cours'] ?? []);
     }

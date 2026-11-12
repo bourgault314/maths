@@ -440,7 +440,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .regler .cases-ligne { display: flex; flex-wrap: wrap; gap: 0 18px; }
   .regler .cases-ligne .case-a-cocher { font-weight: 400; }
   .regler .titre-liste { margin: 10px 0 0; font-size: .88rem; font-weight: 700; color: var(--ink); }
-  /* Lot F1 (Défi calcul) : « Nouveautés par séance », trois choix ronds. */
+  /* Défi calcul (lot 1 « la séance ») : la durée et le palier, des choix ronds. */
   .regler .choix-nombre .case-a-cocher { min-width: 52px; }
   .regler .choix-nombre + .aide { margin-top: 2px; }
   .regler .puces-mondes { margin-top: 6px; }
@@ -3472,7 +3472,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       cle,
       classeOuverte: parLaClasse(cle),
       records: cle === "defi-tables" ? recordsOuvertsPourLaClasse() : null,
-      nouveautes: cle === "defi-calcul" ? nouveautesPourLaClasse() : null,
+      // Lot 1 « la séance » (planche 7) : la durée et le palier de la classe,
+      // puis ceux que le professeur a donnés à quelques élèves (eleve.reglages).
+      calcul: cle === "defi-calcul" ? calculDeLaClasse() : null,
       cours: cle === "cours" ? coursDeLaClasse() : null,
       listes, entiers, parNumero
     };
@@ -3483,7 +3485,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     Object.keys(etat.listes).forEach(nom => { listes[nom] = new Set(etat.listes[nom]); });
     const parNumero = {};
     Object.keys(etat.parNumero).forEach(cle => { parNumero[cle] = new Set(etat.parNumero[cle]); });
-    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, nouveautes: etat.nouveautes,
+    return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, calcul: etat.calcul ? copierCalcul(etat.calcul) : null,
             cours: etat.cours ? copierCours(etat.cours) : null, listes, entiers: new Set(etat.entiers), parNumero};
   }
 
@@ -3558,7 +3560,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   function detailsDeLaClasse(cle) {
     const details = [];
     if (cle === "defi-tables") details.push(recordsOuvertsPourLaClasse() ? "les records sont ouverts" : "sans les records");
-    if (cle === "defi-calcul") details.push(texteNouveautes(nouveautesPourLaClasse()));
+    if (cle === "defi-calcul") details.push(...texteCalcul(calculDeLaClasse()));
     if (cle === "cours") details.push(texteCoursOuverts(coursDeLaClasse()));
     (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
       const ouverts = numerosOuverts(classe.reglages, cle, liste);
@@ -3681,12 +3683,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       corps.append(caseACocher("🏆 Les records", b.records, coche => { b.records = coche; },
         `Le concours de temps des Légendes des tables. Décoché : la ${classe.libelle} ne le voit pas et n’y apparaît pas.`));
     }
-    if (cle === "defi-calcul") corps.append(...choixNouveautes());
+    if (cle === "defi-calcul") corps.append(...choixCalcul());
     listes.forEach(liste => corps.append(...casesDeLaClasse(cle, liste)));
     const fermes = [];
     listes.forEach(liste => liste.numeros.forEach(([numero]) => {
       if (!b.listes[liste.nom].has(numero)) fermes.push({liste, numero});
     }));
+    if (cle === "defi-calcul") { corps.append(...autrementPourQuelquesEleves()); return; }
     if (!listes.length) {
       corps.append(el("p", "deja", `Toute la ${classe.libelle} le voit déjà.`));
       return;
@@ -3750,41 +3753,164 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return [titre, groupe];
   }
 
-  // Lot F1 (07/11/2026) : « Nouveautés par séance », 1, 2 ou 3 — trois
-  // boutons ronds (un seul choix), et ce que ça change, en une phrase.
-  function choixNouveautes() {
-    const b = reglage.brouillon;
-    const titre = el("p", "titre-liste", "Nouveautés par séance");
-    titre.id = "regler-defi-calcul-nouveautes";
+  // Lot 1 « la séance » de Défi calcul (12/11/2026, planche 7 validée) :
+  // « Pour la classe », la durée d'une séance (10 ou 15 minutes) et jusqu'où
+  // va l'appli (les bases, CM1, CM2, vers la 6e) ; puis « Autrement pour
+  // quelques élèves » : une ligne par valeur différente de celle de la
+  // classe, sur le modèle de lignePlus. Le choix de l'élève l'emporte.
+  // « Nouveautés par séance » (lot F1) n'existe plus.
+  const MINUTES_CALCUL = [10, 15];
+  const PALIERS_CALCUL = [[1, "Les bases", "Jusqu’aux bases"], [2, "CM1", "Jusqu’au CM1"], [3, "CM2", "Jusqu’au CM2"], [4, "Vers la 6e (tout)", "Jusqu’à la 6e"]];
+  const minutesValable = n => (MINUTES_CALCUL.includes(n) ? n : 10);
+  const palierValable = n => (Number.isInteger(n) && n >= 1 && n <= 4 ? n : 4);
+
+  // Ce que la classe a (classe.reglages), et ce que chaque élève a de
+  // différent (eleve.reglages, rangé à part par le serveur) : deux tables
+  // élève → valeur. Un élève dont le choix est celui de la classe la suit.
+  function calculDeLaClasse() {
+    const r = (classe && classe.reglages && classe.reglages["defi-calcul"]) || {};
+    const minutes = minutesValable(r.minutes);
+    const palier = palierValable(r.palier);
+    const eleveMinutes = new Map();
+    const elevePalier = new Map();
+    (eleves || []).forEach(eleve => {
+      const propre = (eleve.reglages && eleve.reglages["defi-calcul"]) || {};
+      if (MINUTES_CALCUL.includes(propre.minutes) && propre.minutes !== minutes) eleveMinutes.set(eleve.id, propre.minutes);
+      if (Number.isInteger(propre.palier) && propre.palier >= 1 && propre.palier <= 4 && propre.palier !== palier) elevePalier.set(eleve.id, propre.palier);
+    });
+    return {minutes, palier, eleveMinutes, elevePalier};
+  }
+
+  function copierCalcul(c) {
+    return {minutes: c.minutes, palier: c.palier, eleveMinutes: new Map(c.eleveMinutes), elevePalier: new Map(c.elevePalier)};
+  }
+
+  // Les élèves réglés autrement que la classe (dans un état de la fenêtre).
+  function autrementQueLaClasse(c) {
+    const ids = new Set();
+    c.eleveMinutes.forEach((valeur, id) => { if (valeur !== c.minutes) ids.add(id); });
+    c.elevePalier.forEach((valeur, id) => { if (valeur !== c.palier) ids.add(id); });
+    return ids;
+  }
+
+  // La ligne de l'onglet : « 10 minutes · jusqu'à la 6e · autrement pour 2 élèves ».
+  function texteCalcul(c) {
+    const morceaux = [`${c.minutes} minutes`, PALIERS_CALCUL[c.palier - 1][2].replace(/^J/, "j")];
+    const autrement = autrementQueLaClasse(c).size;
+    if (autrement) morceaux.push(`autrement pour ${autrement} élève${autrement > 1 ? "s" : ""}`);
+    return morceaux;
+  }
+
+  // Un groupe de boutons ronds (un seul choix), son titre et son aide.
+  function choixRonds(id, titreTexte, options, valeur, quandChange, aideTexte) {
+    const titre = el("p", "titre-liste", titreTexte);
+    titre.id = id;
     const groupe = el("div", "cases-ligne choix-nombre");
     groupe.setAttribute("role", "radiogroup");
-    groupe.setAttribute("aria-labelledby", titre.id);
-    [1, 2, 3].forEach(nombre => {
+    groupe.setAttribute("aria-labelledby", id);
+    options.forEach(([nombre, libelle]) => {
       const etiquette = el("label", "case-a-cocher");
       const rond = document.createElement("input");
       rond.type = "radio";
-      rond.name = "regler-nouveautes";
+      rond.name = id;
       rond.value = String(nombre);
-      rond.checked = b.nouveautes === nombre;
-      rond.addEventListener("change", () => { if (rond.checked) b.nouveautes = nombre; });
-      const mots = el("span", "mots", String(nombre));
-      etiquette.append(rond, mots);
+      rond.checked = valeur === nombre;
+      rond.addEventListener("change", () => { if (rond.checked) quandChange(nombre); });
+      etiquette.append(rond, el("span", "mots", libelle));
       groupe.append(etiquette);
     });
-    const aide = el("p", "aide", "Une nouveauté : une chose apprise et réussie à l’entraînement. Avec 2 ou 3, la classe avance plus vite, mais la séance dure 15 à 25 min au lieu de 10 à 15.");
-    return [titre, groupe, aide];
+    return [titre, groupe, el("p", "aide", aideTexte)];
   }
 
-  // Les nouveautés par séance de la classe ouverte (classe.reglages) : 1
-  // quand rien n'est écrit, ou quand ce qui est écrit n'est pas 2 ou 3.
-  function nouveautesPourLaClasse() {
-    const reglages = classe && classe.reglages;
-    const n = reglages && reglages["defi-calcul"] && reglages["defi-calcul"].nouveautes;
-    return n === 2 || n === 3 ? n : 1;
+  function choixCalcul() {
+    const c = reglage.brouillon.calcul;
+    // Changer la valeur de la classe redessine : les lignes « autrement »
+    // sont les valeurs différentes de la nouvelle.
+    return [
+      ...choixRonds("regler-defi-calcul-minutes", "Durée d’une séance", MINUTES_CALCUL.map(n => [n, `${n} minutes`]), c.minutes,
+        n => { c.minutes = n; dessinerReglerEnGardant("regler-defi-calcul-minutes"); },
+        "15 minutes : plus de temps pour apprendre, pour une classe qui en a besoin."),
+      ...choixRonds("regler-defi-calcul-palier", "Jusqu’où va l’appli", PALIERS_CALCUL.map(([n, libelle]) => [n, libelle]), c.palier,
+        n => { c.palier = n; dessinerReglerEnGardant("regler-defi-calcul-palier"); },
+        "Au-delà, ni test ni leçon. Ce qui est déjà appris continue de revenir.")
+    ];
   }
 
-  function texteNouveautes(n) {
-    return `${n} nouveauté${n > 1 ? "s" : ""} par séance`;
+  // Redessine la fenêtre et rend le focus au rond (ou à la case) touché.
+  function dessinerReglerEnGardant(nom, valeur = null) {
+    const actif = document.activeElement;
+    const valeurActive = actif && actif.value;
+    dessinerRegler();
+    const selecteur = valeur !== null ? `input[data-ligne="${nom}"][data-eleve="${valeur}"]` : `input[name="${nom}"][value="${valeurActive}"]`;
+    const pareil = $("regler-corps").querySelector(selecteur);
+    if (pareil) pareil.focus();
+  }
+
+  function autrementPourQuelquesEleves() {
+    const c = reglage.brouillon.calcul;
+    const lignes = [];
+    MINUTES_CALCUL.filter(n => n !== c.minutes).forEach(n => lignes.push(ligneAutrement("minutes", n, `${n} minutes`, c.eleveMinutes)));
+    PALIERS_CALCUL.filter(([n]) => n !== c.palier).forEach(([n, , libelle]) => lignes.push(ligneAutrement("palier", n, libelle, c.elevePalier)));
+    return [el("h3", "", "Autrement pour quelques élèves"), el("p", "aide", "Le choix de l’élève l’emporte sur celui de la classe."), ...lignes];
+  }
+
+  // « 15 minutes · Rania, Lucas · Choisir… » : les élèves qui ont cette
+  // valeur. Un élève n'a qu'une valeur par réglage : le cocher ici le retire
+  // de l'autre ligne ; le décocher le rend à la classe.
+  function ligneAutrement(nom, valeur, libelle, table) {
+    const cleLigne = `calcul:${nom}:${valeur}`;
+    const qui = new Set([...table.entries()].filter(([, v]) => v === valeur).map(([id]) => id));
+    const ligne = el("details", "plus-ligne");
+    ligne.open = reglage.deplies.has(cleLigne);
+    ligne.addEventListener("toggle", () => {
+      if (ligne.open) reglage.deplies.add(cleLigne); else reglage.deplies.delete(cleLigne);
+    });
+    const resume = document.createElement("summary");
+    const quoi = el("span", "quoi", libelle);
+    const quiTexte = el("span", "qui");
+    const noms = ordreDeLaFeuille(eleves || []).filter(eleve => qui.has(eleve.id));
+    quiTexte.textContent = noms.length ? listeDePrenoms(noms) : "personne";
+    quiTexte.classList.toggle("quelquun", noms.length > 0);
+    resume.append(quoi, quiTexte, el("span", "choisir", "Choisir…"));
+    const grille = grilleDesEleves(qui, () => {
+      (eleves || []).forEach(eleve => {
+        if (qui.has(eleve.id)) table.set(eleve.id, valeur);
+        else if (table.get(eleve.id) === valeur) table.delete(eleve.id);
+      });
+      const touchee = document.activeElement;
+      const idTouche = touchee && touchee.dataset ? touchee.dataset.eleve : null;
+      dessinerReglerEnGardant(cleLigne, idTouche);
+    });
+    grille.querySelectorAll("input").forEach((uneCase, index) => {
+      const eleve = ordreDeLaFeuille(eleves || [])[index];
+      uneCase.dataset.ligne = cleLigne;
+      if (eleve) uneCase.dataset.eleve = String(eleve.id);
+    });
+    ligne.append(resume, grille);
+    return ligne;
+  }
+
+  // Ce que la fenêtre veut pour un élève (ses réglages Défi calcul, sans ce
+  // qui est la valeur de la classe), et le paquet complet de sa colonne.
+  function reglagesVoulus(eleve, c) {
+    const propre = {};
+    if (c.eleveMinutes.has(eleve.id) && c.eleveMinutes.get(eleve.id) !== c.minutes) propre.minutes = c.eleveMinutes.get(eleve.id);
+    if (c.elevePalier.has(eleve.id) && c.elevePalier.get(eleve.id) !== c.palier) propre.palier = c.elevePalier.get(eleve.id);
+    const tout = Object.assign({}, eleve.reglages && typeof eleve.reglages === "object" && !Array.isArray(eleve.reglages) ? eleve.reglages : {});
+    if (Object.keys(propre).length) tout["defi-calcul"] = propre; else delete tout["defi-calcul"];
+    return tout;
+  }
+
+  function reglagesCanoniques(r) {
+    const sortie = {};
+    Object.keys(r || {}).sort().forEach(cle => {
+      const reglage = r[cle];
+      if (!reglage || typeof reglage !== "object") return;
+      const copie = {};
+      Object.keys(reglage).sort().forEach(nom => { copie[nom] = reglage[nom]; });
+      if (Object.keys(copie).length) sortie[cle] = copie;
+    });
+    return JSON.stringify(sortie);
   }
 
   const DERNIER_NUMERO = {
@@ -3863,7 +3989,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (b.classeOuverte) {
       const pourLAppli = {};
       if (b.cle === "defi-tables" && b.records !== depart.records) pourLAppli.records = b.records;
-      if (b.cle === "defi-calcul" && b.nouveautes !== depart.nouveautes) pourLAppli.nouveautes = b.nouveautes;
+      if (b.cle === "defi-calcul" && b.calcul.minutes !== depart.calcul.minutes) pourLAppli.minutes = b.calcul.minutes;
+      if (b.cle === "defi-calcul" && b.calcul.palier !== depart.calcul.palier) pourLAppli.palier = b.calcul.palier;
       // L'appli Cours : les trois listes partent ensemble dès que l'une change.
       if (b.cle === "cours" && !memesCours(b.cours, depart.cours)) Object.assign(pourLAppli, coursEnvoye(b.cours));
       (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => {
@@ -3938,10 +4065,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const voulu = pourLaClasse.reglages && pourLaClasse.reglages[b.cle];
     if (!voulu) return true;
     if ("records" in voulu && neuf.records !== b.records) return false;
-    if ("nouveautes" in voulu && neuf.nouveautes !== b.nouveautes) return false;
+    if ("minutes" in voulu && neuf.calcul.minutes !== b.calcul.minutes) return false;
+    if ("palier" in voulu && neuf.calcul.palier !== b.calcul.palier) return false;
     if ("chapitres" in voulu && !memesCours(neuf.cours, b.cours)) return false;
     return Object.keys(voulu).every(nom => {
-      if (nom === "records" || nom === "nouveautes" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
+      if (nom === "records" || nom === "minutes" || nom === "palier" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
       const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
       const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
       return a === c;
@@ -4027,7 +4155,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const pourLaClasse = changementsDeLaClasse(depart, b);
     const aChanger = (eleves || []).map(eleve => ({eleve, gestes: gestesDe(eleve, depart, b)}))
       .filter(({gestes}) => gestes.length);
-    if (!pourLaClasse && !aChanger.length) { $("regler").close(); return; }
+    // Lot 1 « la séance » : les élèves de Défi calcul réglés autrement (ou
+    // rendus à la classe) — eleves.reglages, un appel chacun.
+    const aRegler = b.cle === "defi-calcul" && b.classeOuverte
+      ? (eleves || []).map(eleve => ({eleve, reglages: reglagesVoulus(eleve, b.calcul)}))
+        .filter(({eleve, reglages}) => reglagesCanoniques(reglages) !== reglagesCanoniques(eleve.reglages))
+      : [];
+    if (!pourLaClasse && !aChanger.length && !aRegler.length) { $("regler").close(); return; }
     if (pourLaClasse && pourLaClasse.applis && !lesApplisConnues(pourLaClasse.applis).length) {
       messager("regler-message", "Une classe garde au moins une activité.", "erreur");
       return;
@@ -4087,6 +4221,17 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
             rates.push({eleve, erreur, ajouts});
           }
         }
+        for (const {eleve, reglages} of aRegler) {
+          if (coupe || !encoreLa() || !memeClasse()) break;
+          try {
+            await appelBorne("eleves.reglages", {eleve_id: eleve.id, avant: eleve.reglages || {}, reglages});
+            if (!reussis.includes(eleve)) reussis.push(eleve);
+          } catch (erreur) {
+            if (erreur.statut === 401) { coupe = erreur; break; }
+            if (erreur.statut === 409 && encoreLa() && erreur.donnees && erreur.donnees.reglages) eleve.reglages = erreur.donnees.reglages;
+            rates.push({eleve, erreur, reglages});
+          }
+        }
       }
       // Déconnecté (et peut-être reconnecté) pendant l'envoi : cette réponse
       // n'est plus à cette page. Elle ne touche ni la fenêtre, ni l'état, ni
@@ -4134,11 +4279,12 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         else { incertain = true; manques.push(`Peut-être enregistré pour la ${libelle} (le serveur n’a pas répondu).`); }
       }
       const confirmes = reussis.slice();
-      rates.forEach(({eleve, erreur, ajouts}) => {
+      rates.forEach(({eleve, erreur, ajouts, reglages}) => {
         const sansReponse = !erreur.statut;
         if (sansReponse && neuf) {
           const relue = (eleves || []).find(autre => autre.id === eleve.id);
-          if (relue && memesAjouts(relue.ajouts || {}, ajouts)) { confirmes.push(eleve); return; }
+          const enPlace = relue && (reglages ? reglagesCanoniques(relue.reglages) === reglagesCanoniques(reglages) : memesAjouts(relue.ajouts || {}, ajouts));
+          if (enPlace) { if (!confirmes.includes(eleve)) confirmes.push(eleve); return; }
         }
         if (!sansReponse) {
           manques.push(phrase(`Pas enregistré pour ${prenomDe(eleve)} : ${erreur.statut === 409 ? "un autre onglet l’a changé entre-temps" : raisonDe(erreur)}`));
@@ -7502,6 +7648,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           if (autre.id !== frais.id || autre === frais) return;
           autre.ajouts = frais.ajouts;
           autre.acces = frais.acces;
+          autre.reglages = frais.reglages;
           if (cle === "splat") autre.lu = lireSplat(autre.parcours, autre);
         });
       });

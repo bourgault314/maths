@@ -838,24 +838,37 @@ test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 ca
   // Chaque compétence construite a un nom différent : le bilan les nomme sans le module.
   const tous = NIVEAUX_CONSTRUITS.map(({fiche, niveau}) => CORE.nomCompetence(fiche.id, niveau.n));
   assert.equal(new Set(tous).size, tous.length);
-  // Le test en escalier : une marche par niveau, dans l'ordre ; 3 calculs
-  // par marche — le plus simple, le plus dur, celui du milieu — déterministe,
-  // sans doublon, sans imposé.
+  // Le test en escalier : une marche par niveau, dans l'ordre. Lot 1 « la
+  // séance » (règle des sortes) : un calcul PAR SORTE, du plus simple au plus
+  // dur, 3 au moins (4 pour un niveau à 4 sortes) ; une réserve par sorte
+  // pour le calcul de plus après un faux — déterministe, sans doublon, sans
+  // imposé.
   CONSTRUITS.forEach(id => {
     const k = CORE.moduleDe(id).niveaux.length;
     for (let graine = 1; graine <= 40; graine += 1) {
       const marches = CORE.genererTest(id, {graine});
       assert.deepEqual(marches.map(m => m.niveau), Array.from({length: k}, (_, i) => i + 1), `${id} : une marche par niveau`);
       marches.forEach(marche => {
-        assert.equal(marche.calculs.length, 3, `${id} marche ${marche.niveau} : 3 calculs`);
+        const cle = `${id}-${marche.niveau}`;
+        const sortes = CORE.sortesDe(cle).map(sorte => sorte.n);
+        assert.equal(marche.calculs.length, Math.max(3, sortes.length), `${cle} : un calcul par sorte, 3 au moins`);
         assert.ok(marche.calculs.every(c => c.module === id && c.niveau === marche.niveau));
-        const [simple, dur, milieu] = marche.calculs.map(CORE.difficulte);
-        assert.ok(simple <= milieu && milieu <= dur, `${id}-${marche.niveau} graine ${graine} : simple ${simple}, milieu ${milieu}, dur ${dur}`);
+        assert.ok(sortes.every(n => marche.calculs.some(c => c.sorte === n)), `${cle} graine ${graine} : toutes les sortes`);
+        const rangs = marche.calculs.map(c => sortes.indexOf(c.sorte));
+        assert.deepEqual(rangs, rangs.slice().sort((x, y) => x - y), `${cle} : de la sorte la plus simple à la plus dure`);
+        sortes.forEach(n => assert.ok(marche.reserves[n], `${cle} : une réserve pour la sorte ${n}`));
+        assert.ok(Object.values(marche.reserves).every(r => !marche.calculs.some(c => c.cle === r.cle)), `${cle} : la réserve n'est pas déjà dans la marche`);
       });
       const cles = marches.flatMap(m => m.calculs.map(c => c.cle));
       assert.equal(new Set(cles).size, cles.length, `${id} graine ${graine} : pas de doublon`);
       assert.deepEqual(CORE.genererTest(id, {graine}).flatMap(m => m.calculs.map(c => c.cle)), cles);
     }
+  });
+  // Les sortes : 2 à 4 pour chacun des 95 niveaux construits ; chaque calcul en a une.
+  NIVEAUX_CONSTRUITS.forEach(({fiche, niveau}) => {
+    const sortes = CORE.sortesDe(`${fiche.id}-${niveau.n}`);
+    assert.ok(sortes.length >= 2 && sortes.length <= 4, `${fiche.id}-${niveau.n} : ${sortes.length} sortes`);
+    assert.ok(sortes.every(sorte => sorte.nom), `${fiche.id}-${niveau.n} : chaque sorte a un nom`);
   });
   assert.deepEqual(CORE.genererTest("M9", {graine: 1}), [], "un module pas construit n'a pas de test");
   assert.deepEqual(noms("A1").length, 3);

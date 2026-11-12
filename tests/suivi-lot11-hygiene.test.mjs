@@ -79,6 +79,7 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     // élève, c'est décider ce qu'il voit — propriétaire, comme ⚙ Réglages
     // pour la classe (Q2, décision de Gwenaël).
     "eleves.acces": "proprietaire",
+    "eleves.reglages": "proprietaire",
     // Lot « après l'audit GPT » (D4, 14/10/2026) : retirer un temps des
     // records efface : propriétaire.
     "records.retirer": "proprietaire",

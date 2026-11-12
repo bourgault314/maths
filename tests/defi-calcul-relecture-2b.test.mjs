@@ -219,10 +219,12 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
 test("les copies pour la page prof, les adresses de cache", async () => {
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_core.js"), SOURCES.core);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(PAGE, /defi_calcul\.css\?v=20261111-3/);
-  for (const f of ["defi_calcul_core\\.js", "defi_calcul_mon_parcours\\.js", "defi_calcul_aides\\.js"]) {
-    assert.match(PAGE, new RegExp(`${f}\\?v=20261111-2`), f);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261112-1/);
+  // Lot 1 « la séance » : le cœur et le moteur changent encore (20261112-1).
+  for (const f of ["defi_calcul_core\\.js", "defi_calcul_mon_parcours\\.js"]) {
+    assert.match(PAGE, new RegExp(`${f}\\?v=20261112-1`), f);
   }
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261111-2/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

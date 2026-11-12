@@ -17,20 +17,22 @@ const eleve = lire("_serveur/public/api/eleve.php");
 const journal = lire("_serveur/public/lib/journal.php");
 
 test("la colonne eleves.ajouts est dans le schéma des bases neuves, dans la mise à niveau, et dans le SQL généré", () => {
-  assert.match(bd, /initiale VARCHAR\(4\) NOT NULL DEFAULT '',\n  cree_le VARCHAR\(25\) NOT NULL,\n  ajouts TEXT NULL"/, "schema() : la colonne des élèves");
+  // Lot 1 « la séance » de Défi calcul : reglages_eleve vient juste après.
+  assert.match(bd, /initiale VARCHAR\(4\) NOT NULL DEFAULT '',\n  cree_le VARCHAR\(25\) NOT NULL,\n  ajouts TEXT NULL,\n  reglages_eleve TEXT NULL"/, "schema() : la colonne des élèves");
   assert.match(bd, /if \(table_existe\(\$pdo, 'eleves'\) && !colonne_existe\(\$pdo, 'eleves', 'ajouts'\)\) \{\n\s+\$pdo->exec\('ALTER TABLE eleves ADD COLUMN ajouts TEXT NULL'\);/, "migrer_schema() l'ajoute");
-  assert.match(lire("_serveur/sql/schema-mysql.sql"), /cree_le VARCHAR\(25\) NOT NULL,\n  ajouts TEXT NULL,\n  UNIQUE KEY eleves_code/, "sql/schema-mysql.sql régénéré (php _serveur/outils/generer-sql.php)");
+  assert.match(lire("_serveur/sql/schema-mysql.sql"), /cree_le VARCHAR\(25\) NOT NULL,\n  ajouts TEXT NULL,\n  reglages_eleve TEXT NULL,\n  UNIQUE KEY eleves_code/, "sql/schema-mysql.sql régénéré (php _serveur/outils/generer-sql.php)");
 });
 
 test("la règle « classe + ajouts » est à un seul endroit, et les deux API y passent", () => {
-  assert.match(applis, /function acces_de_l_eleve\(array \$classe, \?string \$ajoutsJson\): array/, "lib/applis.php la définit");
+  assert.match(applis, /function acces_de_l_eleve\(array \$classe, \?string \$ajoutsJson, \?string \$reglagesEleveJson = null\): array/, "lib/applis.php la définit");
   assert.equal((applis.match(/function acces_de_l_eleve\(/g) || []).length, 1);
   for (const fn of ["ajouts_disponibles", "ajouts_lus", "ajouts_recus", "ajouts_json", "ajouts_pour_la_base", "acces_json"]) {
     assert.match(applis, new RegExp(`function ${fn}\\(`), `${fn}() dans lib/applis.php`);
   }
   // api/eleve.php : par le code et à l'échange du billet, jamais la classe seule.
   assert.equal((eleve.match(/acces_affichable\(\$eleve\)/g) || []).length, 2, "deux fois : par le code, par le billet");
-  assert.match(eleve, /acces_de_l_eleve\(\$eleve, isset\(\$eleve\['ajouts'\]\) \? \(string\)\$eleve\['ajouts'\] : null\)/);
+  // Lot 1 « la séance » de Défi calcul : avec les réglages propres à l'élève.
+  assert.match(eleve, /acces_de_l_eleve\(\$eleve, isset\(\$eleve\['ajouts'\]\) \? \(string\)\$eleve\['ajouts'\] : null,\s*isset\(\$eleve\['reglages_eleve'\]\) \? \(string\)\$eleve\['reglages_eleve'\] : null\)/);
   assert.match(eleve, /\(ajouts_disponibles\(\$pdo\) \? ', e\.ajouts' : ''\)/, "la colonne n'est demandée que si elle existe (avant migrer.php, rien ne casse)");
   assert.doesNotMatch(eleve, /applis_de_classe\(|reglages_de_classe\(/, "plus de calcul « classe seule » dans l'API élève");
   // api/prof.php : eleves.acces et le tableau.
@@ -44,7 +46,8 @@ test("la règle « classe + ajouts » est à un seul endroit, et les deux API y 
   assert.match(prof, /SELECT ajouts, prenom FROM eleves WHERE id = \?' \. pour_mise_a_jour\(\$pdo\)/, "la ligne de l'élève verrouillée");
   assert.match(prof, /if \(!memes_ajouts\(ajouts_lus\(\$enBase\), \$avant\)\) \{\n\s+transaction_annuler\(\$pdo\);/, "différent : rien d'écrit");
   assert.match(prof, /\], 409\);/, "409");
-  assert.match(prof, /'ajouts' => ajouts_json\(ajouts_lus\(\$avecAjouts \? \$ligne\['ajouts'\] : null\)\),\n\s+'acces' => acces_json\(acces_de_l_eleve\(\$classe, \$avecAjouts \? \$ligne\['ajouts'\] : null\)\),/, "tableau : le rangé et le calculé par élève");
+  // Lot 1 « la séance » de Défi calcul : les réglages propres à l'élève, rangés à part, entrent dans le calculé.
+  assert.match(prof, /'ajouts' => ajouts_json\(ajouts_lus\(\$avecAjouts \? \$ligne\['ajouts'\] : null\)\),[\s\S]{0,400}'acces' => acces_json\(acces_de_l_eleve\(\$classe, \$avecAjouts \? \$ligne\['ajouts'\] : null, \$avecReglagesEleve \? \$ligne\['reglages_eleve'\] : null\)\),/, "tableau : le rangé et le calculé par élève");
   assert.match(prof, /\$eleve\['classe'\] = acces_classe\(\$pdo, \$profId, \(int\)\$eleve\['classe_id'\], droit_requis\(\$action\), \$action\);/, "eleve_pour_action rend la classe vérifiée");
 });
 

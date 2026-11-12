@@ -7962,6 +7962,165 @@
     return trouve ? trouve.niveau.nom || trouve.niveau.titre || "" : "";
   }
 
+  // ------------------------------------------------------------------ les sortes
+  //
+  // Lot 1 « la séance » (12/11/2026, règle des « sortes », décidée par Claude
+  // après la question de Gwenaël « un calcul, ça suffit ? ») : chaque niveau
+  // déclare ses SORTES de calculs, 2 à 4, du plus simple au plus dur, avec un
+  // nom court (« × 10 », « × 100 », « × 1 000 »). Une sorte n'est pas une
+  // écriture (`forme`) : « 37 + □ = 100 » et « □ + 37 = 100 » sont la même
+  // sorte quand la méthode est la même ; « + 19 » et « + 39 » en sont deux.
+  //  - le test « Tu connais déjà ? » prend un calcul par sorte, du plus
+  //    simple au plus dur (3 au moins) ; après un faux, un de la sorte ratée ;
+  //  - Je m'entraîne n'est réussi que si les justes « seul » de la fin
+  //    couvrent toutes les sortes ;
+  //  - Mes calculs du jour : la sorte change d'un retour à l'autre.
+  // Chaque sorte : [nom, test(calcul, donnees)] ; un calcul est de la
+  // première sorte dont le test répond vrai (la dernière prend le reste).
+  const toutes = () => true;
+  const formeEst = (...formes) => calcul => formes.includes(calcul.forme);
+  const decimales = x => { const t = String(x); return t.includes(".") ? t.split(".")[1].length : 0; };
+  const centaineFranchie = (a, b) => Math.floor(a / 100) !== Math.floor(b / 100);
+  const parFormes = (...paires) => paires.map(([nom, ...formes], i) => [nom, i === paires.length - 1 ? toutes : formeEst(...formes)]);
+  const SORTES = Object.freeze({
+    "A1-1": parFormes(["a + b", "somme"], ["a + □ = 10", "complement"], ["10 = a + □", "complement-egal"]),
+    "A1-2": [["un nombre est 10", (c, d) => d.n === 10 || d.d === 10], ["on passe 10", toutes]],
+    "A1-3": parFormes(["a − b", "difference"], ["a + □ = b", "complement"], ["b = a + □", "complement-egal"]),
+    "A10-1": [["jusqu’à la dizaine", (c, d) => d.m % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "A11-1": [["jusqu’à la dizaine", (c, d) => d.m % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "A10-2": [["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "A11-2": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "A10-3": [["jusqu’à la centaine", (c, d) => d.m % 100 === 0], ["après la centaine", (c, d) => d.m < 1000], ["après 1 000", toutes]],
+    "A11-3": [["depuis une centaine", (c, d) => d.n % 100 === 0], ["à 3 chiffres", (c, d) => d.n < 1000], ["à 4 chiffres", toutes]],
+    "M1-1": parFormes(["double", "double"], ["moitié", "moitie"], ["double de □", "trou-double"], ["moitié de □", "moitie-de-trou"]),
+    "A2-1": [["à 2 chiffres", (c, d) => d.a < 100], ["à 3 chiffres", toutes]],
+    "A3-1": [["+ dizaines", (c, d) => c.forme === "somme" && d.d < 100], ["− dizaines", (c, d) => c.forme === "difference" && d.d < 100],
+      ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
+    "M4-1": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = □ × b", "trou-egal"], ["c ÷ b", "division"]),
+    "A2-2": [["dizaines", (c, d) => d.a % 10 === 0], ["en 5", toutes]],
+    "M2-1": [["× 10", (c, d) => d.p === 10], ["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
+    "A4-1": [["+ 1 dizaine et des unités", (c, d) => d.d < 20], ["+ des dizaines et des unités", toutes]],
+    "A4-2": [["sans 9 aux unités", (c, d) => d.n % 10 !== 9 && d.d % 10 !== 9], ["un nombre en 9", toutes]],
+    "A5-1": [["en passant la centaine", (c, d) => centaineFranchie(d.n, d.n + d.a)], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "A6-1": [["en passant la centaine", (c, d) => centaineFranchie(d.n, d.n - d.a)], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "M4-2": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = □ × b", "trou-egal"], ["c ÷ b", "division"]),
+    "A2-3": parFormes(["a + □ = 100", "complement", "complement-gauche"], ["100 − a", "difference"]),
+    "A3-2": parFormes(["+ dizaines", "somme"], ["− dizaines", "difference"]),
+    "F8-1": parFormes(["a/b + c/b", "somme"], ["deux fois la même", "fois"], ["parts une à une", "unitaires"], ["a/b − c/b", "difference"]),
+    "A7-1": [["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "M1-2": parFormes(["double", "double", "double-fois"], ["moitié", "moitie"]),
+    "F8-2": parFormes(["1 − a/b", "un-moins"], ["a/b + □ = 1", "complement"], ["1 − a/b − c/b", "un-moins-plusieurs"]),
+    "A5-2": [["+ 19", (c, d) => d.a === 19], ["+ 29", (c, d) => d.a === 29], ["+ 39", toutes]],
+    "A6-2": [["− 19", (c, d) => d.a === 19], ["− 29", (c, d) => d.a === 29], ["− 39", toutes]],
+    "M3-1": [["petit produit", (c, d) => d.t < 10], ["produit à 2 chiffres", toutes]],
+    "A7-2": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    "M5-1": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = a × □", "trou-egal"], ["c ÷ b", "division"]),
+    "A4-3": [["les unités font 10", (c, d) => (d.n % 10) + (d.d % 10) === 10], ["sans retenue aux unités", (c, d) => (d.n % 10) + (d.d % 10) < 10],
+      ["avec retenue aux unités", toutes]],
+    "M6-1": [["jusqu’à 25", (c, d) => d.n <= 25], ["au-delà de 25", toutes]],
+    "A8-1": [["écart de 1 à 3", (c, d) => d.d <= 3], ["écart de 4 et plus", toutes]],
+    "F6-1": [["× 2", (c, d) => d.k === 2], ["× 3 ou × 4", (c, d) => d.k <= 4], ["× 5 et plus", toutes]],
+    "A5-3": [["+ 8", (c, d) => d.a === 8], ["+ 18", (c, d) => d.a === 18], ["+ 28", (c, d) => d.a === 28], ["+ 38", toutes]],
+    "M8-1": [["× 11", (c, d) => d.b === 11], ["× 12 à 19", toutes]],
+    "M1-3": parFormes(["double", "double"], ["moitié", "moitie", "division"]),
+    "M6-2": [["jusqu’à 25", (c, d) => d.n <= 25], ["au-delà de 25", toutes]],
+    "M8-2": [["jusqu’à 50", (c, d) => d.b <= 50], ["au-delà de 50", toutes]],
+    "A2-4": parFormes(["a + □ = 1 000", "complement", "complement-gauche"], ["1 000 − a", "difference"]),
+    "A6-3": [["− 8", (c, d) => d.a === 8], ["− 18", (c, d) => d.a === 18], ["− 28", (c, d) => d.a === 28], ["− 38", toutes]],
+    "D1-1": parFormes(["a/10 en décimal", "fraction"], ["a + b/10", "entier-fraction"], ["décimal en dixièmes", "numerateur"]),
+    "M2-2": parFormes(["a × 10", "produit"], ["a ÷ 10", "division"], ["□ × 10 = b", "trou-nombre"], ["a × □ = b", "trou-facteur"]),
+    "F2-1": parFormes(["demis, quarts égaux", "egale"], ["a + b", "somme"], ["1 − a", "difference"]),
+    "A3-3": [["+ dizaines", (c, d) => c.forme === "somme" && d.d < 100], ["− dizaines", (c, d) => c.forme === "difference" && d.d < 100],
+      ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
+    "D2-1": [["1 décimale", (c, d) => decimales(d.n) <= 1], ["2 décimales", (c, d) => decimales(d.n) === 2], ["3 décimales", toutes]],
+    "D3-1": [["un entier", (c, d) => Number.isInteger(d.m)], ["un décimal", toutes]],
+    "M7-1": [["jusqu’à 50", (c, d) => d.n <= 50], ["au-delà de 50", toutes]],
+    "A7-3": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["en passant la centaine", toutes]],
+    "F1-1": parFormes(["fraction en décimal", "decimal"], ["le dénominateur", "denominateur"]),
+    "A2-5": parFormes(["jusqu’à une centaine", "complement", "complement-gauche"], ["la soustraction", "difference"]),
+    "M3-2": [["× centaines", (c, d) => Math.max(d.x, d.y) < 1000], ["× milliers", toutes]],
+    "D1-2": parFormes(["a/100 en décimal", "fraction"], ["a + b/100", "entier-fraction"], ["dixièmes + centièmes", "fractions"], ["décimal en centièmes", "numerateur"]),
+    "F3-1": parFormes(["1/2 de", "part-2"], ["1/4 de", "part-4"], ["1/10 de", "part-10"]),
+    "A4-4": [["sans retenue", (c, d) => (d.n % 10) + (d.d % 10) < 10], ["retenue aux unités", toutes]],
+    "M7-2": [["un nombre pair", (c, d) => d.n % 2 === 0], ["un nombre impair", toutes]],
+    "D4-1": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
+    "F3-2": parFormes(["1/3 de", "part-3"], ["1/5 de", "part-5"], ["1/6 de", "part-6"], ["1/8 de", "part-8"]),
+    "C1-1": parFormes(["a × (b − c)", "fois-par"], ["(b − c) × a", "par-fois"], ["a − (b − c)", "moins-par"]),
+    "A8-2": [["autour d’une centaine", (c, d) => c.forme === "ecart" && Math.max(d.n, d.m) < 1000], ["autour d’un millier", formeEst("ecart")],
+      ["a − □ = b", toutes]],
+    "F5-1": [["1 + □", (c, d) => d.quotient === 1], ["2 et plus", toutes]],
+    "M8-3": [["× 11", (c, d) => c.forme !== "trou" && (d.a === 11 || d.b === 11)], ["× 12, × 21, × 31", (c, d) => c.forme !== "trou"], ["à compléter", toutes]],
+    "C3-1": parFormes(["a = b + □", "egal"], ["□ − b = a", "depart"], ["a − □ = b", "retire"]),
+    "M10-1": parFormes(["2 × a × 5", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["2 × a × 5 = a × □", "trou-regroupe"]),
+    "F3-3": parFormes(["1/2 de", "part-2"], ["1/4 de", "part-4"], ["1/5 de", "part-5"], ["1/10 de", "part-10"]),
+    "C3-2": parFormes(["a + b = c + □", "egalite-somme"], ["a − b = □ − c", "egalite-difference"], ["un calcul de chaque côté", "difference-quotient", "retire-produit"]),
+    "F5-2": parFormes(["a + b/c = □/c", "recomposer"], ["a/b = □ + c/b", "entier"], ["encadrer", "encadrer", "encadrer-bas"]),
+    "M12-1": [["dizaines ÷ a", (c, d) => c.forme === "division" && d.n < 1000], ["centaines ÷ a", formeEst("division")], ["a × □ = b", toutes]],
+    "A5-4": [["+ …9", (c, d) => d.a % 10 === 9], ["+ …8", toutes]],
+    "A6-4": [["− …9", (c, d) => d.a % 10 === 9], ["− …8", toutes]],
+    "D2-2": [["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
+    "D3-2": [["÷ 100", (c, d) => d.p === 100], ["÷ 1 000", toutes]],
+    "M3-3": [["dizaines × dizaines", (c, d) => c.forme === "produit" && Math.max(d.x, d.y) < 100], ["centaines, milliers", formeEst("produit")], ["a × □ = b", toutes]],
+    "F2-2": parFormes(["a + b", "somme"], ["1 − a", "difference"], ["a + □ = b", "complement"]),
+    "D1-3": parFormes(["a/1 000 en décimal", "fraction"], ["a + b/1 000", "entier-fraction"], ["en désordre", "fractions"], ["décimal en millièmes", "numerateur"]),
+    "D2-3": [["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
+    "D3-3": [["÷ 10", (c, d) => d.p === 10], ["÷ 100", (c, d) => d.p === 100], ["÷ 1 000", toutes]],
+    "F1-2": parFormes(["fraction en décimal", "decimal"], ["décimal en fraction", "numerateur"], ["en centièmes", "centiemes"], ["le dénominateur", "denominateur"]),
+    "M7-3": [["un nombre pair", (c, d) => d.n % 2 === 0], ["un nombre impair", toutes]],
+    "D4-2": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
+    "F6-2": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["vers une plus grande", "multiplier"]),
+    "A3-4": [["dizaines", (c, d) => d.d < 100], ["centaines", (c, d) => d.d < 1000], ["milliers", toutes]],
+    "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
+    "C1-2": parFormes(["(a − b) × (c + d)", "fois-paires"], ["(a × b) − (c + d)", "moins-paires"]),
+    "M10-2": parFormes(["4 × a × 25", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["4 × a × 25 = a × □", "trou-regroupe"]),
+    "F8-3": parFormes(["entier − a/b", "entier-moins"], ["a/b − entier", "moins-entier"]),
+    "F6-3": parFormes(["a/b = c/□", "denominateur"], ["a/□ = c/d", "denominateur-gauche"]),
+    "C3-3": parFormes(["a + b = □ + c", "egalite-somme-grande"], ["a − b = □ − c", "egalite-difference-grande"]),
+    "M12-2": [["dividende à 2 chiffres", (c, d) => c.forme === "division" && d.n < 100], ["dividende à 3 chiffres", formeEst("division")], ["a × □ = b", toutes]],
+    "C1-3": parFormes(["a × (b − (c + d))", "fois-emboite"], ["a − (b × (c − d))", "moins-emboite"]),
+    "D2-4": parFormes(["on cherche le nombre", "trou-nombre", "trou-nombre-gauche"], ["on cherche par combien", "trou-facteur"], ["l’égalité à l’envers", "trou-egal"]),
+    "F1-3": parFormes(["fraction en décimal", "decimal"], ["décimal en fraction", "numerateur"], ["en centièmes", "centiemes"], ["le dénominateur", "denominateur"]),
+    "M10-3": [["jusqu’à 50", (c, d) => d.xy <= 50], ["au-delà de 50", toutes]],
+    "M12-3": parFormes(["a ÷ b", "division"], ["a × □ = b", "trou-facteur"])
+  });
+
+  // Les sortes d'un niveau (« A5-2 ») : [{n, nom}], du plus simple au plus
+  // dur — et celles qu'on voit vraiment (lues sur un grand tirage : une sorte
+  // déclarée que le niveau ne tire jamais est retirée). Sans déclaration, une
+  // seule sorte : le niveau.
+  const SORTES_VUES = new Map();
+  function sortesDe(cleNiveau) {
+    if (SORTES_VUES.has(cleNiveau)) return SORTES_VUES.get(cleNiveau);
+    const declarees = SORTES[cleNiveau] || [];
+    const trouve = niveauDe(cleNiveau);
+    let liste = [];
+    if (declarees.length && trouve && typeof trouve.niveau.composer === "function") {
+      const vues = new Set();
+      for (let graine = 1; graine <= 5; graine += 1) {
+        trouve.niveau.composer(mulberry32((graine * 2654435761) >>> 0), 60, []).forEach(calcul => vues.add(sorteBrute(cleNiveau, calcul)));
+      }
+      liste = declarees.map(([nom], n) => ({n, nom})).filter(sorte => vues.has(sorte.n));
+    }
+    if (!liste.length) liste = [{n: 0, nom: ""}];
+    const figee = Object.freeze(liste.map(sorte => Object.freeze(sorte)));
+    SORTES_VUES.set(cleNiveau, figee);
+    return figee;
+  }
+
+  function sorteBrute(cleNiveau, calcul) {
+    const declarees = SORTES[cleNiveau];
+    if (!declarees || !calcul) return 0;
+    const donnees = calcul.donnees || {};
+    const n = declarees.findIndex(([, test]) => test(calcul, donnees));
+    return n < 0 ? declarees.length - 1 : n;
+  }
+
+  // La sorte d'un calcul : son numéro dans les sortes déclarées de son niveau.
+  function sorteDe(calcul) {
+    if (!calcul) return 0;
+    return sorteBrute(`${calcul.module}-${calcul.niveau}`, calcul);
+  }
+
   // Ce que le moteur de la progression a besoin de savoir de la carte, sans
   // les textes ni les générateurs : les modules (ce qui est construit, le
   // palier et le type de chaque niveau) et l'ordre du parcours, compétence
@@ -8065,32 +8224,80 @@
   }
 
   // Le test d'entrée en escalier (« Tu connais déjà ? ») : une marche par
-  // niveau, trois calculs par marche, sans imposé — le plus simple, puis le
-  // plus dur, puis celui du milieu qui départage. Chaque calcul porte son
-  // niveau. Rend [{niveau, calculs}].
+  // niveau, sans imposé. Lot 1 « la séance » : un calcul PAR SORTE, du plus
+  // simple au plus dur (la sorte la plus simple d'abord, son calcul le plus
+  // simple), complété jusqu'à 3 par d'autres calculs du niveau ; et, pour
+  // chaque sorte, un calcul de RÉSERVE (le calcul de plus après un faux, de
+  // la sorte ratée). Chaque calcul porte son niveau. Rend
+  // [{niveau, calculs, reserves: {sorte: calcul}}] ; `calculs[i].sorte` dit
+  // sa sorte.
   function genererTest(id, {graine = 1} = {}) {
     const fiche = moduleDe(id);
     if (!fiche || !fiche.construit) return [];
     return fiche.niveaux.map(niveau => {
-      const serie = genererSerie(`${id}-${niveau.n}`, {graine: (graine + niveau.n * 7919) >>> 0, genre: "entraine", total: 12, ordonne: false})
-        .map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
-      const calculs = serie.length < 3 ? serie : [serie[0], serie[serie.length - 1], serie[Math.floor(serie.length / 2)]];
-      return {niveau: niveau.n, calculs};
+      const cle = `${id}-${niveau.n}`;
+      const sortes = sortesDe(cle).map(sorte => sorte.n);
+      // Une sorte rare (A11-3 : les nombres à 4 chiffres) peut manquer à un
+      // tirage : d'autres tirages, de la même graine, jusqu'à les avoir toutes.
+      let brut = genererSerie(cle, {graine: (graine + niveau.n * 7919) >>> 0, genre: "entraine", total: 30, ordonne: false});
+      for (let essai = 1; essai <= 8 && sortes.some(n => !brut.some(calcul => sorteDe(calcul) === n)); essai += 1) {
+        const vus = new Set(brut.map(calcul => calcul.cle));
+        brut = brut.concat(genererSerie(cle, {graine: (graine + niveau.n * 7919 + essai * 104729) >>> 0, genre: "entraine", total: 30, ordonne: false})
+          .filter(calcul => !vus.has(calcul.cle) && sortes.some(n => sorteDe(calcul) === n && !brut.some(autre => sorteDe(autre) === n))));
+      }
+      const serie = brut
+        .map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang)
+        .map(({calcul}) => Object.assign({}, calcul, {sorte: sorteDe(calcul)}));
+      const pris = new Set();
+      const calculs = [];
+      sortes.forEach(n => {
+        // Le calcul du milieu de sa sorte : ni le plus facile ni le plus dur.
+        const deLaSorte = serie.filter(calcul => calcul.sorte === n);
+        const choisi = deLaSorte[Math.floor((deLaSorte.length - 1) / 2)];
+        if (choisi) { calculs.push(choisi); pris.add(choisi); }
+      });
+      // Moins de 3 sortes tirées : on complète, de la plus simple à la plus dure.
+      for (let tour = 0; calculs.length < TEST_MINIMUM && tour < sortes.length * 4; tour += 1) {
+        const n = sortes[tour % sortes.length];
+        const autre = serie.filter(calcul => calcul.sorte === n && !pris.has(calcul)).slice(-1)[0];
+        if (autre) { calculs.push(autre); pris.add(autre); }
+      }
+      if (calculs.length < TEST_MINIMUM) serie.filter(calcul => !pris.has(calcul)).slice(0, TEST_MINIMUM - calculs.length).forEach(calcul => { calculs.push(calcul); pris.add(calcul); });
+      calculs.sort((a, b) => sortes.indexOf(a.sorte) - sortes.indexOf(b.sorte) || difficulte(a) - difficulte(b));
+      const reserves = {};
+      sortes.forEach(n => {
+        const reserve = serie.find(calcul => calcul.sorte === n && !pris.has(calcul)) || serie.find(calcul => !pris.has(calcul));
+        if (reserve) reserves[n] = reserve;
+      });
+      return {niveau: niveau.n, calculs, reserves};
     });
   }
+  const TEST_MINIMUM = 3;
 
   // Un seul calcul d'un niveau (Mes calculs du jour en tirent un par
   // compétence), tiré au hasard dans le niveau — pas le plus simple.
-  // `tour` (un entier, le jour) choisit l'écriture à tour de rôle : d'un
-  // retour à l'autre, « 37 + ? = 100 », puis « ? + 37 = 100 », puis
-  // « 100 − 37 »… (31/10).
-  function genererUn(cleNiveau, graine, {tour = null} = {}) {
+  // `tour` (un entier, le jour) choisit la SORTE à tour de rôle (lot 1 : de
+  // retour en retour, chaque sorte revient), puis, dans la sorte, l'écriture
+  // à tour de rôle (31/10 : « 37 + ? = 100 », puis « ? + 37 = 100 »…).
+  // `autreQue` (le 2e calcul après un faux) : un calcul d'une autre sorte que
+  // celui-là, sinon d'une autre écriture, sinon un autre calcul.
+  function genererUn(cleNiveau, graine, {tour = null, autreQue = null} = {}) {
     const serie = genererSerie(cleNiveau, {graine, genre: "entraine", total: TOTAUX.P, ordonne: false});
     if (!serie.length) return null;
+    if (autreQue) {
+      const sorte = sorteDe(autreQue);
+      return serie.find(calcul => sorteDe(calcul) !== sorte)
+        || serie.find(calcul => calcul.forme !== autreQue.forme)
+        || serie.find(calcul => calcul.texte !== autreQue.texte) || serie[0];
+    }
     if (!Number.isInteger(tour)) return serie[0];
-    const formes = [...new Set(serie.map(calcul => calcul.forme))].sort();
-    const voulue = formes[((tour % formes.length) + formes.length) % formes.length];
-    return serie.find(calcul => calcul.forme === voulue) || serie[0];
+    const sortes = sortesDe(cleNiveau).map(sorte => sorte.n);
+    const voulue = sortes[((tour % sortes.length) + sortes.length) % sortes.length];
+    const dansLaSorte = serie.filter(calcul => sorteDe(calcul) === voulue);
+    const liste = dansLaSorte.length ? dansLaSorte : serie;
+    const formes = [...new Set(liste.map(calcul => calcul.forme))].sort();
+    const forme = formes[((Math.floor(tour / sortes.length) % formes.length) + formes.length) % formes.length];
+    return liste.find(calcul => calcul.forme === forme) || liste[0];
   }
 
   // Relecture 2b (11/11/2026, remarque 56 de Gwenaël : « tout se décale »
@@ -8295,6 +8502,8 @@
     genererSerie,
     genererTest,
     genererUn,
+    sortesDe,
+    sorteDe,
     modeleReponse,
     modelesReponse,
     aideDe,

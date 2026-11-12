@@ -112,6 +112,9 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   await cas("journal : une séance jouée sur la page arrive au serveur avec son entrée", async () => {
     const s = await ouvrir(nav, base);
     await s.page.click("#acc-carte");
+    // Attendre que la série ait démarré : sinon calcul() rend null et la boucle
+    // sort sans rien jouer (course vue par Code, aussi sur main).
+    await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 8000});
     for (let i = 0; i < 6; i += 1) {
       const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
       if (!c) break;
@@ -124,7 +127,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     }
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seances.length === 2, null, {timeout: 8000});
     const p = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours());
-    assert.equal(p.version, 6, "version 6 depuis le correctif du lot S1 (le numéro des séances)");
+    assert.equal(p.version, 7, "version 7 depuis le lot 1 « la séance » (6 au correctif S1 : le numéro des séances)");
     assert.deepEqual(p.seances, [MERCREDI, MERCREDI]);
     assert.equal(p.journal.numero[0], -1, "la séance d'avant le journal : pas de numéro");
     assert.equal(Math.floor(p.journal.numero[1] / 10000), 2, "la séance jouée : la 2e de la journée");

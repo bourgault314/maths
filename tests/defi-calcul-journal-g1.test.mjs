@@ -32,12 +32,14 @@ const entree = (p, i) => SIX.map(champ => p.journal[champ][i]);
 // son temps actif (noterTemps), puis le moteur. `juste(module, niveau)` : la
 // réponse à un calcul du jour ; `marche(module)` : ce que prouve le test ;
 // `entrainement` : "reussi" ou "rate".
-function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () => 0, entrainement = "reussi", nouveautes = 1} = {}) {
-  p = P.ouvrirSeance(p, CARTE, {aujourdhui: jour, nouveautes});
+// Lot 1 « la séance » : la séance au temps (10 minutes) ; `nouveautes` ne
+// règle plus rien.
+function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () => 0, entrainement = "reussi", minutes = 10} = {}) {
+  p = P.ouvrirSeance(p, CARTE, {aujourdhui: jour, minutes});
   const n = p.seance.n;
   for (let tour = 0; tour < 30 && p.seance.n === n; tour += 1) {
     const etape = P.fileSeance(p, CARTE, {aujourdhui: jour}).etapes[0];
-    if (!etape) break;
+    if (!etape || etape.type === "avance") break;
     p = P.noterTemps(p, secondes);
     if (etape.type === "jour") {
       P.tirerCalculsDuJour(p, CARTE, {aujourdhui: jour}).forEach(c => {
@@ -46,7 +48,7 @@ function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () =
       p = P.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE}).parcours;
     } else if (etape.type === "test") {
       const m = marche(etape.module);
-      const niveaux = Array.from({length: Math.min(P.NIVEAUX[etape.module], m + 1)}, (_, i) => ({niveau: i + 1, justes: i < m ? 2 : 0, total: 2}));
+      const niveaux = Array.from({length: Math.min(P.NIVEAUX[etape.module], m + 1)}, (_, i) => ({niveau: i + 1, justes: i < m ? 3 : 0, total: 3}));
       p = P.appliquerTest(p, {module: etape.module, marche: m, niveaux}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
     } else if (etape.type === "apprends") {
       p = P.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
@@ -58,8 +60,8 @@ function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () =
   return p;
 }
 
-test("version 5 (6 depuis le correctif du lot S1) : le journal est vide au départ, ce que la séance a fait aussi", () => {
-  assert.equal(P.VERSION, 6);
+test("version 5 (7 depuis le lot 1 « la séance ») : le journal est vide au départ, ce que la séance a fait aussi", () => {
+  assert.equal(P.VERSION, 7);
   const neuf = P.creerParcours();
   assert.deepEqual(neuf.journal, vide());
   assert.deepEqual(neuf.seance.j, [0, 0, 0, 0, 0, 0]);
@@ -68,21 +70,23 @@ test("version 5 (6 depuis le correctif du lot S1) : le journal est vide au dépa
 
 test("le journal d'une séance : calculs du jour, justes, nouveautés, compétences prouvées, rouges, minutes", () => {
   // Jour 1 : le test du premier module prouve 2 marches (la 1re en boîte 4,
-  // la 2e en boîte 3), puis la 3e s'apprend et s'entraîne.
+  // la 2e en boîte 3), puis la 3e s'apprend et s'entraîne ; il reste du
+  // temps (lot 1 « la séance au temps ») : le module suivant aussi.
   let p = jouerSeance(P.creerParcours(), "2026-11-02", {marche: () => 2, secondes: 100});
   assert.deepEqual(p.seances, ["2026-11-02"]);
-  // 3 étapes (test, J'apprends, Je m'entraîne) à 100 s : 5 minutes.
-  assert.deepEqual(entree(p, 0), [0, 0, 1, 2, 0, 5]);
+  // 6 étapes (deux fois test, J'apprends, Je m'entraîne) à 100 s : 10 minutes ;
+  // la 7e (un test, 90 s) ne tient plus dans 10 minutes + 1.
+  assert.deepEqual(entree(p, 0), [0, 0, 2, 4, 0, 10]);
   assert.deepEqual(p.seance.j, [0, 0, 0, 0, 0, 0], "la séance finie repart de zéro");
   // Jour 2 : la compétence entrée en boîte 2 revient dans Mes calculs du
   // jour ; ratée, elle est rouge : « Je m'entraîne encore », puis une
   // nouveauté.
   p = jouerSeance(p, "2026-11-03", {juste: () => false, secondes: 61});
   const deux = entree(p, 1);
-  assert.equal(deux[0], 1, "un calcul du jour");
+  assert.equal(deux[0], 2, "deux calculs du jour (les deux compétences apprises la veille)");
   assert.equal(deux[1], 0, "faux");
-  assert.equal(deux[4], 1, "une rouge entraînée");
-  assert.equal(deux[2], 1, "une nouveauté");
+  assert.equal(deux[4], 2, "deux rouges entraînées");
+  assert.ok(deux[2] >= 1, "au moins une nouveauté");
   assert.equal(deux[3], 0);
   assert.ok(deux[5] >= 4, "la durée suit les étapes");
   assert.equal(p.journal.calculs.length, p.seances.length, "une entrée par séance");
@@ -98,19 +102,22 @@ test("le temps actif : seulement dans une séance ouverte, en minutes, 90 au plu
   p = P.noterTemps(p, 5000);
   p = P.noterTemps(p, 5000);
   assert.equal(p.seance.j[4], 5400, "90 minutes au plus");
-  const court = jouerSeance(P.creerParcours(), MERCREDI, {secondes: 7});
-  assert.equal(court.journal.minutes[0], 1, "quelques secondes : 1 minute, pas 0");
+  // Lot 1 (la séance au temps) : une séance sur une carte vide n'a rien à
+  // jouer — elle se ferme (fermerSeance) avec le temps qu'elle a compté.
+  const VIDE = {modules: [], ordre: []};
+  const fermee = secondes => P.fermerSeance(P.noterTemps(P.ouvrirSeance(P.creerParcours(), VIDE, {aujourdhui: MERCREDI}), secondes), VIDE, {aujourdhui: MERCREDI}).parcours;
+  assert.equal(fermee(7).journal.minutes[0], 1, "quelques secondes : 1 minute, pas 0");
+  assert.equal(fermee(5400).journal.minutes[0], 90);
+  assert.equal(fermee(0).journal.minutes[0], 0);
   const long = jouerSeance(P.creerParcours(), MERCREDI, {secondes: 3000});
   assert.equal(long.journal.minutes[0], 90);
-  const sansTemps = jouerSeance(P.creerParcours(), MERCREDI, {secondes: 0});
-  assert.equal(sansTemps.journal.minutes[0], 0);
 });
 
 test("après minuit : la séance compte pour le jour où elle finit, avec tout ce qu'elle a fait la veille", () => {
   let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: "2026-11-10"});
   p = P.noterTemps(p, 240);
   // Le test se joue mardi soir…
-  p = P.appliquerTest(p, {module: "A2", marche: 1, niveaux: [{niveau: 1, justes: 2, total: 2}, {niveau: 2, justes: 0, total: 2}]}, {aujourdhui: "2026-11-10", carte: CARTE, seance: true}).parcours;
+  p = P.appliquerTest(p, {module: "A2", marche: 1, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 0, total: 2}]}, {aujourdhui: "2026-11-10", carte: CARTE, seance: true}).parcours;
   assert.deepEqual(p.seance.j, [0, 0, 1, 0, 240, 0]);
   // … la suite après minuit, sans rouvrir la séance.
   for (let tour = 0; tour < 5 && !p.seances.length; tour += 1) {
@@ -122,7 +129,8 @@ test("après minuit : la séance compte pour le jour où elle finit, avec tout c
   }
   assert.deepEqual(p.seances, [MERCREDI], "le jour où elle a fini");
   assert.equal(p.journal.prouvees[0], 1, "le test de la veille compte");
-  assert.equal(p.journal.minutes[0], 6, "4 minutes la veille + 2 après minuit");
+  // Lot 1 : après minuit, la séance continue tant qu'elle a le temps.
+  assert.ok(p.journal.minutes[0] >= 6, "4 minutes la veille, puis une minute par étape après minuit");
   // Une séance laissée ouverte un autre jour, puis une séance NEUVE : elle
   // part de zéro.
   let q = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: "2026-11-08"});
@@ -150,7 +158,7 @@ test("Mes calculs du jour : chaque première réponse compte, juste ou pas ; hor
 test("les deux dates : d le jour où elle entre, s le jour où elle devient sue — posées une fois", () => {
   // Le test : la marche la plus haute en boîte 3 (entrée, pas sue), celles
   // d'en dessous en boîte 4 (entrées ET sues le même jour).
-  let p = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 3, niveaux: [1, 2, 3].map(n => ({niveau: n, justes: 2, total: 2})).concat([{niveau: 4, justes: 0, total: 2}])},
+  let p = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 3, niveaux: [1, 2, 3].map(n => ({niveau: n, justes: 3, total: 3})).concat([{niveau: 4, justes: 0, total: 2}])},
     {aujourdhui: LUNDI, carte: CARTE}).parcours;
   assert.deepEqual(p.modules.A2.d, [LUNDI, LUNDI, LUNDI, null, null]);
   assert.deepEqual(p.modules.A2.s, [LUNDI, LUNDI, null, null, null]);
@@ -183,12 +191,12 @@ test("une progression de version 4 se relit sans rien perdre : journal « pas co
     seances: ["2026-11-03", "2026-11-04", "2026-11-05"], jours: ["2026-11-05"]
   };
   const p = P.normaliserParcours(v4);
-  assert.equal(p.version, 6);
+  assert.equal(p.version, 7);
   assert.deepEqual(p.seances, v4.seances);
   assert.deepEqual(p.journal.calculs, [-1, -1, -1]);
   assert.deepEqual(p.modules.A2.d, [null, null, null, null, null]);
   assert.deepEqual(p.modules.A2.s, [null, null, null, null, null]);
-  assert.deepEqual(p.seance, {jour: "2026-11-06", etape: 1, n: 3, p: [1, 0, 0, 1, 0, 1, 0], j: [0, 0, 0, 0, 0, 0]}, "la séance ouverte continue, de zéro");
+  assert.deepEqual(p.seance, {jour: "2026-11-06", etape: 1, n: 3, p: [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, "la séance ouverte continue, de zéro (lot 1 : le plan à 11 nombres, 10 minutes)");
   assert.deepEqual(P.normaliserParcours(p), p, "idempotente");
   // La séance qui finit ensuite a un vrai journal ; les anciennes restent « pas connu ».
   const suite = jouerSeance(p, "2026-11-06");
@@ -233,7 +241,9 @@ test("donnée abîmée : dates impossibles, entiers hors bornes, listes trop cou
 
 test("la borne : 60 séances, le journal suit les plus récentes", () => {
   let p = P.creerParcours();
-  for (let i = 0; i < 70; i += 1) p = jouerSeance(p, plus("2026-09-01", Math.floor(i / 2)), {secondes: 60 + i});
+  // Lot 1 : des étapes longues (au moins 4 minutes) — une avancée par séance,
+  // pour que les 125 compétences ne soient pas toutes apprises avant la fin.
+  for (let i = 0; i < 70; i += 1) p = jouerSeance(p, plus("2026-09-01", Math.floor(i / 2)), {secondes: 240 + i});
   assert.equal(p.seances.length, 60);
   P.JOURNAL.forEach(champ => assert.equal(p.journal[champ].length, 60, champ));
   assert.equal(p.seances[0], plus("2026-09-01", 5), "les 10 plus anciennes sont parties");
@@ -311,7 +321,7 @@ test("fusion : la borne de 60 atteinte, le même jour et des jours différents",
   let a = P.creerParcours();
   let b = null;
   for (let i = 0; i < 64; i += 1) {
-    a = jouerSeance(a, plus("2026-09-01", Math.floor(i / 2)), {secondes: 60});
+    a = jouerSeance(a, plus("2026-09-01", Math.floor(i / 2)), {secondes: 240});
     if (i === 57) b = JSON.parse(JSON.stringify(a));
   }
   const f = deuxSens(a, b);
@@ -414,7 +424,8 @@ test("semaineEleve : rien à montrer sans séance dans les 4 dernières semaines
 test("resumeProf rend le journal, les 4 semaines et les deux dates (pour le lot G2) — rien ne change d'autre", () => {
   const p = jouerSeance(P.creerParcours(), LUNDI, {marche: () => 2, secondes: 120});
   const r = P.resumeProf(p, CARTE, MERCREDI);
-  assert.deepEqual(r.journal, [{jour: LUNDI, calculs: 0, justes: 0, nouveautes: 1, prouvees: 2, rouges: 0, minutes: 6}]);
+  // Lot 1 : 10 minutes à 2 minutes l'étape — deux tests, un apprentissage.
+  assert.deepEqual(r.journal, [{jour: LUNDI, calculs: 0, justes: 0, nouveautes: 1, prouvees: 4, rouges: 0, minutes: 8}]);
   assert.deepEqual(r.semaines.map(P.texteSemaine), ["0", "0", "0", "1"]);
   // Le premier module de la carte : 2 marches prouvées, la 3e apprise.
   const premier = r.modules.find(m => m.id === P.parcoursConstruit(CARTE)[0].module);
@@ -437,10 +448,10 @@ test("taille : un élève qui a tout rempli tient sous les bornes du serveur", a
   assert.ok(complet.modules.A2.d.every(Boolean));
 });
 
-test("serveur : version_min 5 (6 depuis le correctif du lot S1), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
+test("serveur : version_min 5 (7 depuis le lot 1 « la séance »), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 6,/);
+  assert.match(bloc, /'version_min' => 7,/);
   ["d", "s", "j", "journal", ...P.JOURNAL].forEach(cle => assert.match(bloc, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const infos = await lire("../_serveur/public/infos.php");
   // Lot S1 « les journaux » : la phrase vaut désormais pour toutes les applis.
@@ -457,8 +468,8 @@ test("serveur : version_min 5 (6 depuis le correctif du lot S1), les clés du jo
 
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261111-2/);
-  assert.match(page, /defi_calcul\.css\?v=20261111-3/, "la feuille a changé au lot « code en cases »");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261112-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261112-1/, "la feuille a changé au lot 1 « la séance »");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
   // « N fois cette semaine ».
@@ -588,7 +599,7 @@ function jouerEtape(p, jour, etape, {entrainement = "reussi"} = {}) {
     return P.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE}).parcours;
   }
   if (etape.type === "test") {
-    return P.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
+    return P.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: 1, justes: 0, total: 3}]}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
   }
   if (etape.type === "apprends") return P.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
   const reponses = etape.type === "entraine" && entrainement === "rate" ? ratee() : reussie();
@@ -596,15 +607,14 @@ function jouerEtape(p, jour, etape, {entrainement = "reussi"} = {}) {
 }
 
 test("Codex 3 : une nouveauté réussie avant minuit compte, même si la séance continue (et rate) après minuit", () => {
-  // Trois nouveautés prévues ; la première réussie mardi soir.
-  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: "2026-11-10", nouveautes: 3});
+  // La première nouveauté réussie mardi soir.
+  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: "2026-11-10"});
   for (let tour = 0; tour < 6 && !Object.values(p.modules).some(m => m.b.some(Boolean)); tour += 1) {
     p = jouerEtape(p, "2026-11-10", P.fileSeance(p, CARTE, {aujourdhui: "2026-11-10"}).etapes[0]);
   }
-  assert.equal(p.seance.p[6], 1, "une nouveauté réussie mardi");
   assert.equal(p.seance.j[5], 1, "comptée dans ce que la séance a fait");
   // Après minuit : « J'apprends » de la suivante, puis l'entraînement raté.
-  for (let tour = 0; tour < 6 && !p.seances.length; tour += 1) {
+  for (let tour = 0; tour < 8 && !p.seances.length; tour += 1) {
     p = jouerEtape(p, MERCREDI, P.fileSeance(p, CARTE, {aujourdhui: MERCREDI}).etapes[0], {entrainement: "rate"});
   }
   assert.deepEqual(p.seances, [MERCREDI]);
@@ -612,9 +622,9 @@ test("Codex 3 : une nouveauté réussie avant minuit compte, même si la séance
   // Un `j` déjà enregistré à 5 nombres se relit avec 0 nouveauté.
   const ancien = P.normaliserParcours({version: 5, seance: {jour: MERCREDI, etape: 1, n: 0, p: [1, 0, 0, 0, 0, 1, 0], j: [4, 3, 0, 1, 90]}});
   assert.deepEqual(ancien.seance.j, [4, 3, 0, 1, 90, 0]);
-  // 3 au plus ; trafiqué (hors bornes), il vaut 0, comme les autres comptes.
+  // 99 au plus (lot 1) ; trafiqué (hors bornes), il vaut 0, comme les autres comptes.
   const relu = n => P.normaliserParcours({version: 5, seance: {jour: MERCREDI, etape: 1, n: 0, p: [1, 0, 0, 0, 0, 3, 0], j: [0, 0, 0, 0, 0, n]}}).seance.j[5];
-  assert.deepEqual([relu(3), relu(50), relu(-1)], [3, 0, 0]);
+  assert.deepEqual([relu(3), relu(50), relu(120), relu(-1)], [3, 50, 0, 0]);
 });
 
 test("Codex 5 : semaineEleve ne coche pas un jour qui n'est pas encore venu", () => {

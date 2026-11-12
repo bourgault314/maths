@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS eleves (
   initiale VARCHAR(4) NOT NULL DEFAULT '',
   cree_le VARCHAR(25) NOT NULL,
   ajouts TEXT NULL,
+  reglages_eleve TEXT NULL,
   UNIQUE KEY eleves_code (code),
   KEY eleves_classe (classe_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
