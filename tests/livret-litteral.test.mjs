@@ -35,7 +35,7 @@ test("deux versions seulement : vert/rouge en premier, puis blanc/gris", () => {
   const chemins = groupe.slice(groupe.indexOf('"paths"'), groupe.indexOf("]")).match(/livret_litteral_\w+\.pdf/g);
   assert.deepEqual(chemins, ["livret_litteral_vert_rouge.pdf", "livret_litteral_blanc_gris.pdf"]);
   assert.match(groupe, /livrets\.png\?v=2/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=module-attention-20261111-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });
 
 test("le dépôt sait que le livret a une source", () => {

@@ -247,7 +247,8 @@ test("la mention écrite dans un pied de page respecte la règle « un seul lien
   }
   // 26 au lot 10b ; 12 depuis le 23/10/2026 (les applis ne l'écrivent plus, les anciens index sont des redirections) ;
   // 13 depuis le 24/10/2026 (les fiches du Moulin de Pythagore, une page du site, la retrouvent).
-  assert.equal(mentions, 13, `${mentions} mentions écrites`);
+  // 14 depuis le 12/11/2026 : la page de téléchargement des papiers est une page de navigation.
+  assert.equal(mentions, 14, `${mentions} mentions écrites`);
 });
 
 test("les trois pages légales et l'annuaire écrivent la mention dans leur pied", () => {
