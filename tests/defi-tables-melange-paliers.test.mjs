@@ -592,7 +592,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Équations et problèmes et Fonctions de 3e ; Une grandeur en fonction d'une autre de 4e complété ;
   // Calcul littéral de 4e et Préparer la seconde de 3e reçoivent des fiches, du livret en ligne)
   // (avant : cours-lot2).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-lot3$/m);
+  // Puis le lot 3a « Une leçon, une méthode » de Défi calcul (13/11/2026) : le
+  // cœur copié dans prof/ change (avant : cours-lot3).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-3a-lecons$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

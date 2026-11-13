@@ -115,7 +115,10 @@ async function jusquaEcris(page, cle) {
         // Lot 2 : une seule exception, A1-2 au plus petit téléphone (390 × 664) —
         // la table d'addition, la règle et la deuxième façon de voir ; à
         // reprendre au lot 3 « Les leçons ».
-        const minimum = cle === "A1-2" && taille[1] < 700 ? 12 : 15;
+        // Lot 3a : M1-2 aussi (sa carte a tous les doubles que l'appli
+        // demande) ; les deux sont à reprendre au lot 3b (À retenir des
+        // niveaux « par cœur »).
+        const minimum = ["A1-2", "M1-2"].includes(cle) && taille[1] < 700 ? 12 : 15;
         assert.ok(taillePolice >= minimum, `${cle} : la phrase fait ${taillePolice} px`);
       }
       assert.deepEqual(trop, [], `l'écran défile : ${trop.join(", ")}`);

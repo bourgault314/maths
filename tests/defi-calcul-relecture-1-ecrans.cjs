@@ -233,7 +233,7 @@ function outilFini([cle, outil, sansReponse]) {
 
     await essai(`ecris ${taille.join("x")} : J'écris fini reste à l'écran avec « Suivant »`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
-      for (const cle of ["M1-1", "A8-2"]) {
+      for (const cle of ["M1-2", "A8-2"]) {
         const [id, n] = cle.split("-");
         await page.evaluate(([i, k]) => window.__MATHSGO_DEFI_CALCUL_TEST__.apprendre(i, k), [id, Number(n)]);
         await page.waitForTimeout(300);
@@ -291,7 +291,10 @@ function outilFini([cle, outil, sansReponse]) {
             })() : null,
             ligne};
         });
-        const attendu = Boolean(AIDES.bilanEnDeux(CORE.niveauDe(cle).niveau.apprends.bilan));
+        // (Lot 3a : un bilan de plusieurs égalités, une par ligne, en a aussi.)
+        const bilan = CORE.niveauDe(cle).niveau.apprends.bilan;
+        const parties = String(bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
+        const attendu = Boolean(AIDES.bilanEnDeux(bilan)) || (parties.length > 1 && parties.every(Boolean));
         if (m.defile > 1) fautes.push(`${cle} défile de ${m.defile} px`);
         if (m.phrase > 1) fautes.push(`${cle} : la phrase dépasse de ${m.phrase} px`);
         if (attendu !== Boolean(m.calcul)) fautes.push(`${cle} : calcul sur sa ligne ${Boolean(m.calcul)}, attendu ${attendu}`);
@@ -372,7 +375,8 @@ function outilFini([cle, outil, sansReponse]) {
     const bords = await page.evaluate(() => [...document.querySelectorAll(".dc-niveaux button")].map(b => `${b.className}:${getComputedStyle(b).borderTopWidth}`));
     assert.ok(bords.length >= 2 && bords.some(b => b.startsWith("ici")), `un niveau choisi (${bords})`);
     bords.forEach(b => assert.match(b, /:2px$/, `même bord pour tous (${b})`));
-    await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.apprendre("M1", 1));
+    // (Lot 3a : M1-1 commence par le boulier ; M1-2, par le schéma.)
+    await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.apprendre("M1", 2));
     await page.waitForTimeout(300);
     // Une seule ligne de pastilles (celle de la séance) ; le temps en cours
     // se nomme au-dessus de la barre.

@@ -61,7 +61,8 @@ test("A1-1 : les compléments à 10, en barres ; l'aide de l'entraînement aussi
 
 test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virgules", () => {
   const a = apprends("A1-1");
-  assert.equal(a.bilan, "Pour faire 10, je connais ces paires par cœur.");
+  // Lot 3a : avec le calcul montré (3 + ? = 10).
+  assert.equal(espaces(a.bilan), "Pour faire 10, je connais ces paires par cœur : 3 + 7 = 10.");
   assert.deepEqual(a.image, {outil: "paires", total: 10, perles: true, paires: [[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]]});
   const svg = AIDES.dessinerImage(a.image);
   assert.deepEqual(textesSvg(svg), ["1 + 9 = 10", "2 + 8 = 10", "3 + 7 = 10", "4 + 6 = 10", "5 + 5 = 10"]);
@@ -80,7 +81,8 @@ test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virg
 test("M1 : « Je représente » par étapes dans les trois niveaux (le double comme la moitié)", () => {
   const attendus = {
     "M1-1": ["double de 17 = 17 + 17", ["10 + 10", "7 + 7", "double de 17"], 34],
-    "M1-2": ["moitié de 150 = 150 ÷ 2", ["100 ÷ 2", "50 ÷ 2", "moitié de 150"], 75],
+    // (Lot 3a, décision 5 : la leçon sur le double, double de 75.)
+    "M1-2": ["double de 75 = 2 × 75", ["2 × 70", "2 × 5", "double de 75"], 150],
     "M1-3": ["double de 470 = 2 × 470", ["2 × 400", "2 × 70", "double de 470"], 940]
   };
   Object.entries(attendus).forEach(([cle, [consigne, etapes, reponse]]) => {
@@ -112,14 +114,15 @@ test("A11-2 : J'écris garde la méthode de la leçon", () => {
 });
 
 test("A2 : chaque « À retenir » écrit son calcul ; A2-2, les paires de dizaines", () => {
-  const calculs = {"A2-1": "48 + 2 = 50", "A2-3": "2 + 40 = 42", "A2-4": "50 + 300 = 350", "A2-5": "2 + 30 + 600 = 632"};
+  // Lot 3a : le calcul montré (67 + ? = 70, 37 + ? = 100…).
+  const calculs = {"A2-1": "67 + 3 = 70", "A2-2": "40 + 60 = 100", "A2-3": "37 + 63 = 37 + 3 + 60 = 100", "A2-4": "650 + 350 = 650 + 50 + 300 = 1 000", "A2-5": "368 + 632 = 368 + 2 + 30 + 600 = 1 000"};
   Object.entries(calculs).forEach(([cle, calcul]) => {
     const deux = AIDES.bilanEnDeux(apprends(cle).bilan);
     assert.ok(deux, cle);
     assert.equal(espaces(deux.calcul), calcul, cle);
   });
   const a = apprends("A2-2");
-  assert.equal(a.bilan, "Les dizaines qui font 100, je les sais par cœur.");
+  assert.equal(espaces(a.bilan), "Les dizaines qui font 100, je les sais par cœur : 40 + 60 = 100.");
   assert.deepEqual(textesSvg(AIDES.dessinerImage(a.image)), ["10 + 90 = 100", "20 + 80 = 100", "30 + 70 = 100", "40 + 60 = 100", "50 + 50 = 100"]);
   assert.ok(!/\d et \d/.test(a.bilan));
   // « jusqu'au bout » : vague, remplacé par le nombre visé.
@@ -186,9 +189,9 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261113-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-1/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261111-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261113-3/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-3/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-3/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

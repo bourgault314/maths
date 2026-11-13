@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-3">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -297,9 +297,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261113-1"></script>
+  <script src="./defi_calcul_core.js?v=20261113-3"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261113-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261111-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261113-3"></script>
   <script>
     (() => {
       "use strict";
@@ -1905,11 +1905,12 @@
       function ajusterCalculRetenir() {
         // La règle, et la deuxième façon de voir (lot « couverture »).
         ["retenir-phrase", "retenir-autre"].forEach(id => {
-          const calcul = $(id).querySelector(".dc-retenir-calcul");
-          if (!calcul) return;
-          calcul.style.removeProperty("font-size");
-          const place = $(id).clientWidth;
-          if (calcul.scrollWidth > place) calcul.style.fontSize = `${(Math.floor(place / calcul.scrollWidth * 100) / 100).toFixed(2)}em`;
+          // (Lot 3a : les tables ont un calcul par ligne.)
+          $(id).querySelectorAll(".dc-retenir-calcul").forEach(calcul => {
+            calcul.style.removeProperty("font-size");
+            const place = $(id).clientWidth;
+            if (calcul.scrollWidth > place) calcul.style.fontSize = `${(Math.floor(place / calcul.scrollWidth * 100) / 100).toFixed(2)}em`;
+          });
         });
       }
 
@@ -2992,7 +2993,8 @@
           // Le boulier reporte chaque geste sur une droite, au-dessus (lot
           // « relier ») ; le glisse-nombres a déjà son tableau.
           const options = Object.assign({}, apprends.manipule, {
-            droite: !glisse,
+            // Le double (lot 3a) : les rangées suffisent, pas de droite.
+            droite: !glisse && !apprends.manipule.rangees,
             surFini() {
               carte.classList.add("est-finie");
               state.waitingForContinue = true;
@@ -3306,7 +3308,20 @@
         // ne tient pas dans la largeur).
         // Un calcul qui reste dans la phrase ne se coupe pas non plus.
         const deux = AIDES.bilanEnDeux(serie.apprends.bilan);
-        if (deux) {
+        // Lot 3a : une égalité par ligne — chaque phrase, puis son calcul
+        // seul sur sa ligne (les tables ; « 100 = 4 × 25. 3 × 25 = 75. »,
+        // choix de Gwenaël du 13/11 : une égalité s'écrit en maths).
+        const lignes = String(serie.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(texte => AIDES.bilanEnDeux(texte));
+        if (lignes.length > 1 && lignes.every(Boolean)) {
+          $("retenir-phrase").replaceChildren();
+          lignes.forEach(({phrase, calcul: texte}, i) => {
+            if (phrase) $("retenir-phrase").append(...(i ? [" "] : []), AIDES.souderCalculs(phrase));
+            const calcul = document.createElement("span");
+            calcul.className = "dc-retenir-calcul";
+            AIDES.ecrireTexte(calcul, texte);
+            $("retenir-phrase").append(calcul);
+          });
+        } else if (deux) {
           AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(deux.phrase));
           const calcul = document.createElement("span");
           calcul.className = "dc-retenir-calcul";
@@ -3363,6 +3378,9 @@
         coeur.blocs.forEach(bloc => {
           if (bloc.table) {
             const table = document.createElement("table");
+            // (Lot 3a : « sous chaque nombre, son double » n'a pas de coin
+            // « × » : le premier nombre a la taille des autres.)
+            if (bloc.ligneTete) table.className = "sans-coin";
             bloc.table.forEach((ligne, i) => {
               const tr = document.createElement("tr");
               ligne.forEach((valeur, j) => {

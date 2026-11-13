@@ -14,7 +14,7 @@
 //   dessin     au téléphone (390 × 844), le dessin de J'écris prend la place
 //              (M1-1 : le schéma de la moitié, au moins 120 px de haut) et ne
 //              bouge pas quand J'écris est fini ;
-//   m1         Je représente de M1-1 par étapes, le schéma se remplit ;
+//   m1         Je représente de M1-2 par étapes, le schéma se remplit ;
 //   a1         Je représente d'A1-1 : le schéma en barres ; « À retenir » :
 //              les cinq paires en rangées du boulier ;
 //   prof       la bande « Mode professeur » au téléphone : deux lignes, la
@@ -133,12 +133,13 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
 
   await essai("dessin 390x844 : le dessin de J'écris prend la place, et ne bouge pas à la fin", async () => {
     const b = await ouvrir(navigateur, base, [390, 844]);
-    await apprendre(b.page, "M1-1");
-    const m1 = CORE.niveauDe("M1-1").niveau.apprends;
+    // (Lot 3a : M1-1 commence par le boulier ; M1-2 garde le schéma par étapes.)
+    await apprendre(b.page, "M1-2");
+    const m1 = CORE.niveauDe("M1-2").niveau.apprends;
     for (const etape of m1.represente.etapes) { await taper(b.page, etape.reponse); await b.page.click("#validate"); await b.page.waitForTimeout(300); }
     await b.page.click("#validate");
     await b.page.waitForSelector("#question-card.ecrit", {timeout: 8000});
-    assert.ok(await hauteurDessin(b.page) >= 120, "le schéma de la moitié est grand");
+    assert.ok(await hauteurDessin(b.page) >= 120, "le schéma du double est grand");
     const haut = await hautDessin(b.page);
     for (const etape of m1.ecris.etapes) { await taper(b.page, etape.reponse); await b.page.click("#validate"); await b.page.waitForTimeout(300); }
     await b.page.waitForTimeout(500);
@@ -147,19 +148,20 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
     await b.contexte.close();
   });
 
-  await essai("m1 : Je représente de M1-1 par étapes, le schéma se remplit", async () => {
+  await essai("m1 : Je représente de M1-2 par étapes, le schéma se remplit", async () => {
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, [390, 844]);
-    await apprendre(page, "M1-1");
+    // (Lot 3a : M1-1 commence par le boulier ; M1-2 garde le schéma par étapes.)
+    await apprendre(page, "M1-2");
     const nom = () => page.evaluate(() => document.getElementById("seance-fil").textContent);
     assert.match(await nom(), /Je représente/);
     assert.ok(await page.isVisible("#question-card.ecrit"), "joué comme J'écris");
-    const r = CORE.niveauDe("M1-1").niveau.apprends.represente;
+    const r = CORE.niveauDe("M1-2").niveau.apprends.represente;
     const verts = () => page.evaluate(() => [...document.querySelectorAll("#aide > svg text")].filter(t => t.getAttribute("fill") === "#147447").map(t => t.textContent));
     assert.deepEqual(await verts(), []);
     await taper(page, r.etapes[0].reponse);
     await page.click("#validate");
     await page.waitForTimeout(300);
-    assert.ok((await verts()).includes("20"), "10 + 10 = 20 remplit sa case");
+    assert.ok((await verts()).includes("140"), "2 × 70 = 140 remplit sa case");
     assert.deepEqual(erreurs, []);
     await contexte.close();
   });

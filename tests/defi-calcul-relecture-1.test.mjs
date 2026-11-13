@@ -31,7 +31,7 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // d'utile et l'égalité n'aurait pas de sens), et les niveaux sans ligne
 // (une seule étape, ou le calcul cherché est déjà la 1re ligne écrite).
 const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3"]);
-const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3", "M5-1"]);
+const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
 // « moitié de 28 », « 1/2 de 6 L » (l'unité s'en va), « 58 × 10 ÷ 2 ».
@@ -119,7 +119,8 @@ test("J'écris : les égalités d'exemple de la décision du 05/11", () => {
   assert.equal(ligne("A5-1"), "28 + 9 = 28 + 10 − 1");
   assert.equal(ligne("A2-3"), "24 + ? = 100");
   assert.equal(ligne("A8-1"), "81 − 76 = ?");
-  assert.equal(ligne("M1-1"), "moitié de 28 = 28 ÷ 2");
+  // Lot 3a (décision 5) : la leçon et J'écris sur le double.
+  assert.equal(ligne("M1-1"), "double de 14 = 10 + 10 + 4 + 4");
 });
 
 test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne change pas)", () => {
@@ -142,13 +143,15 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
     assert.equal(espaces(`${deux.phrase.slice(0, -1)} : ${deux.calcul}.`), espaces(bilan), `${cle} : rien ne se perd`);
   });
   // Relecture 2 (08/11/2026) : + 3, A2-1, A2-3 et A2-4 écrivent leur calcul.
-  assert.equal(coupes, 61, "les 59 bilans qui finissent par « : calcul. », et les 2 qui ne sont qu'un calcul (M12-2, M12-3)");
+  // Lot 3a : À retenir reprend toujours le calcul montré (76 bilans).
+  assert.equal(coupes, 76, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   const deux = AIDES.bilanEnDeux(CORE.niveauDe("A10-2").niveau.apprends.bilan);
   assert.deepEqual([espaces(deux.phrase), espaces(deux.calcul)],
     ["Pour passer la dizaine, je vais d’abord à la dizaine, puis j’ajoute le reste.", "47 + 8 = 47 + 3 + 5 = 55"]);
   // Inchangés : pas de calcul au bout, un calcul déjà dans la phrase, une
   // phrase après le calcul.
-  ["A1-1", "A2-2", "M4-1", "M1-3", "M10-1"].forEach(cle => assert.equal(AIDES.bilanEnDeux(CORE.niveauDe(cle).niveau.apprends.bilan), null, cle));
+  // (Lot 3a : A1-1, A2-2 et M1-3 écrivent maintenant leur calcul au bout.)
+  ["M4-1", "M10-1", "C3-1"].forEach(cle => assert.equal(AIDES.bilanEnDeux(CORE.niveauDe(cle).niveau.apprends.bilan), null, cle));
 });
 
 test("« À retenir » : un calcul resté dans la phrase ne se coupe pas", () => {
