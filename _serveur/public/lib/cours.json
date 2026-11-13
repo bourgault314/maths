@@ -49,6 +49,133 @@
    "imprimable": "/cours/4e/4e-INE-imprimable.html"
   },
   {
+   "id": "4e-PCT",
+   "niveau": "4e",
+   "chapitre": "Pourcentages",
+   "titre": "Les pourcentages",
+   "fiches": [
+    {
+     "id": "4e-PCT-01",
+     "n": 1,
+     "ids": "4e-PCT-01 · 3e-PCT-02",
+     "h1": "Je sais ce que veut dire « pour cent » et écrire un même nombre en décimal, en fraction et en pourcentage",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-01.html"
+    },
+    {
+     "id": "4e-PCT-02",
+     "n": 2,
+     "ids": "4e-PCT-02 · 3e-PCT-01",
+     "h1": "Je sais calculer 100 %, 50 %, 25 %, 20 %, 10 % et 1 % d'une quantité",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-02.html"
+    },
+    {
+     "id": "4e-PCT-03",
+     "n": 3,
+     "ids": "4e-PCT-03 · 3e-PCT-01",
+     "h1": "Je sais calculer n'importe quel pourcentage d'une quantité en l'assemblant avec les repères",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-03.html"
+    },
+    {
+     "id": "4e-PCT-04",
+     "n": 4,
+     "ids": "4e-PCT-04",
+     "h1": "Je sais retrouver le tout quand je connais un pourcentage repère de ce tout",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-04.html"
+    },
+    {
+     "id": "4e-PCT-06",
+     "n": 5,
+     "ids": "4e-PCT-06 · 3e-PCT-03",
+     "h1": "Je sais trouver quel pourcentage une part représente du tout, et comparer deux proportions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-06.html"
+    },
+    {
+     "id": "4e-PCT-08",
+     "n": 6,
+     "ids": "4e-PCT-08 · 3e-PCT-04",
+     "h1": "Je sais augmenter ou diminuer d'un pourcentage, en deux étapes puis en une multiplication",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/4e/4e-PCT-08.html"
+    },
+    {
+     "id": "4e-PCT-07",
+     "n": 7,
+     "ids": "4e-PCT-07",
+     "h1": "Je sais calculer un pourcentage dans un groupe formé de deux groupes",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/4e/4e-PCT-07.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PCT-brevet",
+    "page": "/cours/3e/3e-PCT-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-PCT-imprimable.html"
+  },
+  {
+   "id": "4e-CAL",
+   "niveau": "4e",
+   "chapitre": "Calcul",
+   "titre": "Calcul numérique",
+   "fiches": [
+    {
+     "id": "4e-CAL-04",
+     "n": 1,
+     "ids": "4e-CAL-04 · 3e-CAL-04",
+     "h1": "Je sais multiplier et diviser un nombre par 10, 100 ou 1 000",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/4e/4e-CAL-imprimable.html"
+  },
+  {
    "id": "4e-REL",
    "niveau": "4e",
    "chapitre": "Nombres relatifs",
@@ -177,6 +304,68 @@
    ],
    "brevet": null,
    "imprimable": "/cours/4e/4e-REL-imprimable.html"
+  },
+  {
+   "id": "4e-RAC",
+   "niveau": "4e",
+   "chapitre": "Racine carrée",
+   "titre": "Carrés parfaits et racine carrée",
+   "fiches": [
+    {
+     "id": "4e-RAC-01",
+     "n": 1,
+     "ids": "4e-RAC-01 · 3e-PUI-02",
+     "h1": "Je connais par cœur les carrés des nombres entiers de 0 à 12, et je reconnais un carré parfait",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-01.html"
+    },
+    {
+     "id": "4e-RAC-02",
+     "n": 2,
+     "ids": "4e-RAC-02 · 3e-RAC-01",
+     "h1": "Je sais ce qu'est la racine carrée d'un nombre positif, et je la trouve quand ce nombre est le carré d'un nombre que je connais",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "définition",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-02.html"
+    },
+    {
+     "id": "4e-RAC-03",
+     "n": 3,
+     "ids": "4e-RAC-03",
+     "h1": "Je sais encadrer une racine carrée entre deux nombres entiers consécutifs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-03.html"
+    },
+    {
+     "id": "4e-RAC-04",
+     "n": 4,
+     "ids": "4e-RAC-04 · 4e-RAC-05 · 3e-RAC-02",
+     "h1": "Je sais écrire la valeur exacte d'une longueur avec √, puis une valeur approchée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/4e/4e-RAC-imprimable.html"
   },
   {
    "id": "4e-TRI",
@@ -1063,6 +1252,68 @@
    "imprimable": "/cours/3e/3e-PYT-imprimable.html"
   },
   {
+   "id": "3e-RAC",
+   "niveau": "3e",
+   "chapitre": "Racine carrée",
+   "titre": "Carrés parfaits et racine carrée",
+   "fiches": [
+    {
+     "id": "4e-RAC-01",
+     "n": 1,
+     "ids": "4e-RAC-01 · 3e-PUI-02",
+     "h1": "Je connais par cœur les carrés des nombres entiers de 0 à 12, et je reconnais un carré parfait",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-01.html"
+    },
+    {
+     "id": "4e-RAC-02",
+     "n": 2,
+     "ids": "4e-RAC-02 · 3e-RAC-01",
+     "h1": "Je sais ce qu'est la racine carrée d'un nombre positif, et je la trouve quand ce nombre est le carré d'un nombre que je connais",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "définition",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-02.html"
+    },
+    {
+     "id": "4e-RAC-03",
+     "n": 3,
+     "ids": "4e-RAC-03",
+     "h1": "Je sais encadrer une racine carrée entre deux nombres entiers consécutifs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-03.html"
+    },
+    {
+     "id": "4e-RAC-04",
+     "n": 4,
+     "ids": "4e-RAC-04 · 4e-RAC-05 · 3e-RAC-02",
+     "h1": "Je sais écrire la valeur exacte d'une longueur avec √, puis une valeur approchée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-RAC-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/3e/3e-RAC-imprimable.html"
+  },
+  {
    "id": "3e-FRA",
    "niveau": "3e",
    "chapitre": "Fractions",
@@ -1633,6 +1884,146 @@
    "imprimable": "/cours/3e/3e-TRG-imprimable.html"
   },
   {
+   "id": "3e-PCT",
+   "niveau": "3e",
+   "chapitre": "Pourcentages",
+   "titre": "Les pourcentages",
+   "fiches": [
+    {
+     "id": "4e-PCT-01",
+     "n": 1,
+     "ids": "4e-PCT-01 · 3e-PCT-02",
+     "h1": "Je sais ce que veut dire « pour cent » et écrire un même nombre en décimal, en fraction et en pourcentage",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-01.html"
+    },
+    {
+     "id": "4e-PCT-02",
+     "n": 2,
+     "ids": "4e-PCT-02 · 3e-PCT-01",
+     "h1": "Je sais calculer 100 %, 50 %, 25 %, 20 %, 10 % et 1 % d'une quantité",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-02.html"
+    },
+    {
+     "id": "4e-PCT-03",
+     "n": 3,
+     "ids": "4e-PCT-03 · 3e-PCT-01",
+     "h1": "Je sais calculer n'importe quel pourcentage d'une quantité en l'assemblant avec les repères",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-03.html"
+    },
+    {
+     "id": "4e-PCT-04",
+     "n": 4,
+     "ids": "4e-PCT-04",
+     "h1": "Je sais retrouver le tout quand je connais un pourcentage repère de ce tout",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-04.html"
+    },
+    {
+     "id": "4e-PCT-06",
+     "n": 5,
+     "ids": "4e-PCT-06 · 3e-PCT-03",
+     "h1": "Je sais trouver quel pourcentage une part représente du tout, et comparer deux proportions",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-06.html"
+    },
+    {
+     "id": "4e-PCT-08",
+     "n": 6,
+     "ids": "4e-PCT-08 · 3e-PCT-04",
+     "h1": "Je sais augmenter ou diminuer d'un pourcentage, en deux étapes puis en une multiplication",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-08.html"
+    },
+    {
+     "id": "3e-PCT-05",
+     "n": 7,
+     "ids": "3e-PCT-05",
+     "h1": "Je sais passer d'une évolution en pourcentage à son coefficient multiplicateur, et inversement, et enchaîner deux évolutions",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PCT-05.html"
+    },
+    {
+     "id": "3e-PCT-06",
+     "n": 8,
+     "ids": "3e-PCT-06",
+     "h1": "Je sais calculer de combien de pour cent une quantité augmente ou diminue : le taux d'évolution",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PCT-06.html"
+    },
+    {
+     "id": "3e-PCT-07",
+     "n": 9,
+     "ids": "3e-PCT-07",
+     "h1": "Je sais retrouver la valeur de départ après une hausse ou une baisse en pourcentage",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PCT-07.html"
+    },
+    {
+     "id": "4e-PCT-07",
+     "n": 10,
+     "ids": "4e-PCT-07",
+     "h1": "Je sais calculer un pourcentage dans un groupe formé de deux groupes",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-07.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PCT-brevet",
+    "page": "/cours/3e/3e-PCT-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-PCT-imprimable.html"
+  },
+  {
    "id": "3e-ANG",
    "niveau": "3e",
    "chapitre": "Angles",
@@ -1804,14 +2195,50 @@
    "imprimable": "/cours/3e/3e-REP-imprimable.html"
   },
   {
+   "id": "3e-CAL",
+   "niveau": "3e",
+   "chapitre": "Calcul",
+   "titre": "Calcul numérique",
+   "fiches": [
+    {
+     "id": "4e-CAL-04",
+     "n": 1,
+     "ids": "4e-CAL-04 · 3e-CAL-04",
+     "h1": "Je sais multiplier et diviser un nombre par 10, 100 ou 1 000",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/3e/3e-CAL-imprimable.html"
+  },
+  {
    "id": "3e-SEC",
    "niveau": "3e",
    "chapitre": "Pour la seconde",
    "titre": "Préparer la seconde",
    "fiches": [
     {
-     "id": "3e-PYT-04",
+     "id": "4e-PCT-07",
      "n": 1,
+     "ids": "4e-PCT-07",
+     "h1": "Je sais calculer un pourcentage dans un groupe formé de deux groupes",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-07.html"
+    },
+    {
+     "id": "3e-PYT-04",
+     "n": 2,
      "ids": "3e-PYT-04",
      "h1": "Je sais utiliser la propriété du triangle rectangle et de son cercle circonscrit",
      "niveaux": [
@@ -1823,7 +2250,7 @@
     },
     {
      "id": "3e-THA-05",
-     "n": 2,
+     "n": 3,
      "ids": "3e-THA-05",
      "h1": "Je sais utiliser la droite des milieux pour prouver que des droites sont parallèles, calculer une longueur ou prouver qu'un point est un milieu",
      "niveaux": [
@@ -1835,7 +2262,7 @@
     },
     {
      "id": "3e-LIT-11",
-     "n": 3,
+     "n": 4,
      "ids": "3e-LIT-11",
      "h1": "Je sais développer (𝑎 + 𝑏)² et (𝑎 − 𝑏)² sans oublier le double produit",
      "niveaux": [
@@ -1847,7 +2274,7 @@
     },
     {
      "id": "3e-LIT-12",
-     "n": 4,
+     "n": 5,
      "ids": "3e-LIT-12",
      "h1": "Je sais simplifier un produit ou un quotient d'expressions qui ont des facteurs communs",
      "niveaux": [
@@ -1859,7 +2286,7 @@
     },
     {
      "id": "3e-TRG-06",
-     "n": 5,
+     "n": 6,
      "ids": "3e-TRG-06",
      "h1": "Je sais démontrer que (cos Â)² + (sin Â)² = 1, et m'en servir pour calculer un sinus ou un cosinus sans calculer l'angle",
      "niveaux": [
