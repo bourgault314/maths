@@ -78,7 +78,7 @@ function zone() {
 }
 
 const LECTURES = ["applisDuBilan", "applisDeLaVue", "elevesDeLaVue", "listesManquantes", "sansSupprimes", "chargerApplis",
-  "lectureAJour", "chargerLaClasse", "lectureDeLaClasse", "textePanne", "reporterEleve", "moteurSuivi",
+  "lectureAJour", "coursALire", "listesALire", "chargerLaClasse", "lectureDeLaClasse", "textePanne", "reporterEleve", "moteurSuivi",
   "fermerPopOuEnEst", "viderZonesIds", "viderZonesClasse", "viderZonesCalcul"].map(n => fonction(n)).join("\n");
 const CONSTANTES = ["APPLIS", "ZONES_LA_CLASSE", "ZONES_CALCUL_CLASSE"].map(constante).join("\n");
 
