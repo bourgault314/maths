@@ -54,6 +54,35 @@ const COURS_MOTIF_CHAPITRE = '/^[0-9]e-[A-Z]{2,8}$/';
 const COURS_MOTIF_FICHE = '/^[0-9]e-[A-Z]{2,8}-(?:[0-9]{2}|brevet)$/';
 const COURS_MOTIF_PAGE = '#^/cours/[0-9]e/[0-9]e-[A-Z]{2,8}-(?:[0-9]{2}|brevet|imprimable)\.html$#';
 
+// Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël : « Mes cours », version 1
+// des planches) : le DOMAINE de chaque chapitre, pour la bande de couleur et le
+// petit nom écrit au-dessus du chapitre dans « Mes cours ». Les domaines sont
+// ceux du catalogue du site (outils/index.html, mêmes couleurs), sous leurs
+// noms courts (choix du 13/11) ; la couleur et le nom vivent dans l'espace
+// élève (index.php, DOMAINES_COURS), ici seulement la clé. Rangé par le code
+// du chapitre (« 3e-PYT » → « PYT ») : le même chapitre est dans le même
+// domaine en 4e et en 3e. Un code absent (« Préparer la seconde », un
+// chapitre nouveau) : pas de domaine, la tuile garde sa bande d'avant.
+// Les codes des lots à venir (carte 4e-3e) sont déjà rangés ; Grandeurs (GRA,
+// lot 7) attend son nom : à décider avec Gwenaël quand le chapitre existera.
+const COURS_DOMAINES = [
+    'CAL' => 'nombres', 'REL' => 'nombres', 'RAC' => 'nombres', 'FRA' => 'nombres', 'ARI' => 'nombres', 'PUI' => 'nombres',
+    'LIT' => 'algebre', 'EQU' => 'algebre',
+    'PCT' => 'proportionnalite', 'FON' => 'proportionnalite', 'PRP' => 'proportionnalite',
+    'INE' => 'geometrie', 'TRI' => 'geometrie', 'PYT' => 'geometrie', 'THA' => 'geometrie', 'COS' => 'geometrie',
+    'TRG' => 'geometrie', 'ANG' => 'geometrie', 'REP' => 'geometrie', 'GEO' => 'geometrie', 'TRS' => 'geometrie',
+    'TRA' => 'geometrie', 'ESP' => 'geometrie',
+    'STA' => 'donnees', 'PRO' => 'donnees',
+    'ALG' => 'informatique',
+];
+
+// « 3e-PYT » → « geometrie » ; null si le chapitre n'a pas de domaine.
+function cours_domaine(string $chapitre): ?string
+{
+    $code = substr($chapitre, 3);
+    return COURS_DOMAINES[$code] ?? null;
+}
+
 // Le catalogue, relu et vérifié une fois par appel : ce qui n'a pas la bonne
 // forme est écarté (une page mal nommée n'atteint jamais un élève).
 function cours_catalogue(): array
@@ -185,6 +214,8 @@ function cours_de_l_eleve(array $reglage): array
             'niveau' => $c['niveau'],
             'chapitre' => $c['chapitre'],
             'titre' => $c['titre'],
+            // Lot « cours-appli-2 » : la clé du domaine (ou null), jamais un nom ni une couleur.
+            'domaine' => cours_domaine($c['id']),
             'fiches' => $fiches,
             'brevet' => $o['brevet'] !== null ? COURS_SITE . $o['brevet']['page'] . $ancre : null,
             'imprimable' => $o['imprimable'] !== null ? COURS_SITE . $o['imprimable'] . $ancre : null,

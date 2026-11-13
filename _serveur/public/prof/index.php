@@ -1231,6 +1231,47 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .regler .cours-fiches .case-a-cocher { flex: 1 1 auto; }
   .regler .cours-fiches.eteintes .case-a-cocher { opacity: .55; }
   .regler .cours-fiches .case-a-cocher .mots { font-weight: 400; }
+  /* Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël) : « Tout ouvrir » et
+     « Tout fermer » pour le niveau affiché, à droite du titre des chapitres ;
+     rien ne part avant « Enregistrer ». */
+  .regler .cours-tous { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 16px 0 6px; }
+  .regler .cours-tous h3 { flex: 1 0 100%; margin: 0 0 2px; }
+  .regler .cours-tous button { min-height: 40px; padding: 6px 12px; font-size: var(--texte-secondaire); }
+  /* Lot « cours-appli-2 » : l'onglet Cours devient un RÉSUMÉ (la grille élèves
+     × fiches devenait illisible) — en tête, les élèves de la semaine ; une
+     ligne par chapitre, « ouvert par N élèves sur M », qui se déplie : ses
+     fiches avec le nombre d'élèves qui ont ouvert chacune, puis la grille
+     complète, à déplier encore. */
+  .cours-semaine { margin: 6px 0 2px; font-size: var(--texte); color: var(--ink); }
+  .cours-semaine b { color: var(--blue-dark); }
+  .cours-prof .cours-chap { margin: 0; border-top: 1px solid var(--filet-doux); }
+  .cours-prof .cours-chap:first-of-type { margin-top: 10px; }
+  .cours-chap-tete { display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: baseline; gap: 2px 12px; width: 100%; min-height: 44px; margin: 0; padding: 10px 2px;
+                     background: none; border: 0; border-radius: 0; color: var(--blue-dark); font: inherit; text-align: left; cursor: pointer; }
+  .cours-chap-tete:hover { background: var(--survol); color: var(--blue-dark); border: 0; }
+  .cours-chap-tete .nom { flex: 1 1 16em; min-width: 0; font-weight: 700; }
+  .cours-chap-tete .nom::before { content: "▸"; display: inline-block; width: 1.1em; color: var(--blue); }
+  .cours-chap-tete[aria-expanded="true"] .nom::before { content: "▾"; }
+  .cours-chap-tete .nom small { font-weight: 400; color: var(--muted); font-size: var(--texte-secondaire); }
+  .cours-chap-tete .combien { flex: 0 0 auto; margin-left: 1.1em; color: var(--ink); font-size: var(--texte-secondaire); }
+  .cours-chap-tete .combien b { color: var(--teal-texte); }
+  .cours-chap-corps { padding: 0 0 12px 1.1em; }
+  .cours-chap-corps > .titre-long { margin: 0 0 4px; color: var(--muted); font-size: var(--texte-secondaire); }
+  .cours-fiche .ouvreurs { flex: 0 0 auto; color: var(--teal-texte); font-size: var(--texte-secondaire); font-weight: 700; white-space: nowrap; }
+  .cours-fiche .ouvreurs.personne { color: var(--indice); font-weight: 400; }
+  .cours-grille-bouton { margin: 8px 0 0; min-height: 40px; padding: 6px 12px; font-size: var(--texte-secondaire); }
+  /* Au téléphone, le nombre d'élèves et « Voir ↗ » passent sous le titre de
+     la fiche (le titre garde toute la largeur). */
+  @media (max-width: 600px) {
+    .cours-prof .cours-fiche { flex-wrap: wrap; row-gap: 2px; }
+    .cours-prof .cours-fiche .t { flex: 1 0 calc(100% - 2.2em); }
+    .cours-prof .cours-fiche .ouvreurs { margin-left: calc(1.1em + 10px); }
+    .cours-prof .cours-fiche a { margin-left: auto; }
+  }
+  /* Lot « cours-appli-2 » : dans la fiche d'un élève, une fiche de cours
+     ouverte est dans « Activité », avec un rond VIDE — ce n'est pas un jour
+     de travail (choix de Gwenaël du 13/11) : rien dans le calendrier. */
+  .lc-puce.cours { background: #fff !important; border: 2px solid #063f86; box-sizing: border-box; }
 </style>
 </head>
 <body>
@@ -3260,6 +3301,33 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
 
   // L'onglet Cours : ce que voient les élèves, chapitre par chapitre (les
   // fiches fermées en gris, « Voir ↗ » ouvre la fiche dans un nouvel onglet).
+  //
+  // Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël : la grille élèves ×
+  // fiches devenait illisible) : un RÉSUMÉ. En tête, combien d'élèves ont
+  // ouvert au moins une fiche cette semaine (depuis lundi, jour de La
+  // Réunion) ; puis une ligne par chapitre, « ouvert par N élèves sur M »
+  // (au moins une de ses fiches, ou son Entraînement brevet, depuis qu'on
+  // les note), qui se déplie : ses fiches, chacune avec le nombre d'élèves
+  // qui l'ont ouverte ; puis la grille complète (« Élève par élève »), à
+  // déplier encore. Rien n'est déplié au départ ; ce qui l'est le reste tant
+  // que la page est ouverte (par classe). « Ouvert » n'est ni « lu » ni
+  // « compris » : la page ne dit jamais « lu ».
+  const coursDeplies = new Set();
+  const coursGrilles = new Set();
+  function elevesDuCours() {
+    return appliAffichee === "cours" ? ordreDeLaFeuille(eleves || []) : [];
+  }
+  // Combien de ces élèves ont ouvert au moins une de ces fiches (un jour
+  // `depuis` ou après, si on le donne).
+  function combienOntOuvert(liste, fiches, depuis) {
+    return liste.filter(eleve => fiches.some(id => {
+      const jour = jourOuvert(eleve, id);
+      return Boolean(jour) && (!depuis || jour >= depuis);
+    })).length;
+  }
+  function ouvertesDeLEleve(eleve) {
+    return eleve && eleve.ouvertes && typeof eleve.ouvertes === "object" ? Object.keys(eleve.ouvertes) : [];
+  }
   function dessinerCoursProf() {
     const panneau = $("cours-prof");
     const montrer = Boolean(classe) && vue === "appli" && appliAffichee === "cours" && parLaClasse("cours");
@@ -3267,8 +3335,22 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     panneau.textContent = "";
     if (!montrer) return;
     const c = coursDeLaClasse();
-    panneau.append(el("h2", "", `Ce que voient les élèves de la ${classe.libelle}`),
-      el("p", "sous", "« Ouverte le » : le dernier jour où chaque élève a ouvert la fiche depuis « Mes cours »."));
+    const liste = elevesDuCours();
+    const total = liste.length;
+    panneau.append(el("h2", "", `Ce que voient les élèves de la ${classe.libelle}`));
+    if (total) {
+      const lundi = lundiDuJour(aujourdhuiSuivi());
+      const semaine = liste.filter(eleve => ouvertesDeLEleve(eleve).some(id => {
+        const jour = jourOuvert(eleve, id);
+        return Boolean(jour) && jour >= lundi;
+      })).length;
+      const phrase = el("p", "cours-semaine");
+      if (semaine) phrase.append("Cette semaine, ", el("b", "", `${semaine} élève${semaine > 1 ? "s" : ""} sur ${total}`),
+        semaine > 1 ? " ont ouvert au moins une fiche." : " a ouvert au moins une fiche.");
+      else phrase.append("Cette semaine, personne n’a encore ouvert de fiche.");
+      panneau.append(phrase);
+    }
+    panneau.append(el("p", "sous", "Pour chaque élève et chaque fiche, seul le dernier jour où la fiche a été ouverte depuis « Mes cours » est gardé. Ouvrir une fiche n’est pas la lire."));
     const ouverts = COURS.filter(ch => c.chapitres.has(ch.id));
     if (!ouverts.length) {
       panneau.append(el("p", "", droitClasse === "proprietaire"
@@ -3277,34 +3359,76 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       return;
     }
     ouverts.forEach(ch => {
+      const cleChap = `${classe.id}:${ch.id}`;
+      const deplie = coursDeplies.has(cleChap);
       const bloc = el("div", "cours-chap");
-      const total = ch.fiches.length;
+      const nb = ch.fiches.length;
       const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
-      const ligne = el("p", "");
-      ligne.append(etiquetteCoursNiveau(ch.niveau), ch.titre, " ",
-        el("span", "", `· ${vus} fiche${vus > 1 ? "s" : ""} sur ${total}`));
-      bloc.append(ligne);
-      const rangees = ch.fiches.map(f => ({titre: `${f.n}. ${f.h1}`, ids: insecable(f.ids), type: f.type, nouveau: f.nouveau, url: f.url, ouverte: ficheOuverte(c, f)}));
-      if (ch.brevet) rangees.push({titre: "🎯 Entraînement brevet", ids: "", type: "", nouveau: false, url: ch.brevet.url, ouverte: !c.sans.has(ch.brevet.id)});
-      rangees.forEach(r => {
-        const rangee = el("div", `cours-fiche${r.ouverte ? "" : " fermee"}`);
-        const marque = el("span", "marque", r.ouverte ? "✓" : "–");
-        marque.setAttribute("aria-label", r.ouverte ? "ouverte" : "fermée");
-        const t = el("span", "t", r.titre);
-        if (r.nouveau) t.append(el("span", "cours-nouveau", "Nouveau programme"));
-        const precision = [r.type, r.ids].filter(Boolean).join(" · ");
-        if (precision) t.append(" ", el("small", "", `· ${precision}`));
-        rangee.append(marque, t, lienVoir(r.url));
-        bloc.append(rangee);
-      });
-      // Lot « cours-ouvertures » : les colonnes sont les fiches que voit la
-      // classe, sous le numéro que voient les élèves.
+      // Les fiches que voit la classe, sous le numéro que voient les élèves.
       const colonnes = ch.fiches.filter(f => ficheOuverte(c, f)).map(f => ({id: f.id, n: String(f.n), titre: f.h1}));
-      if (ch.brevet && !c.sans.has(ch.brevet.id)) colonnes.push({id: ch.brevet.id, n: "🎯", titre: "Entraînement brevet"});
-      const ouvertures = tableauOuvertures(colonnes);
-      if (ouvertures) bloc.append(ouvertures);
+      if (ch.brevet && !c.sans.has(ch.brevet.id)) colonnes.push({id: ch.brevet.id, n: "🎯", titre: nomBrevetProf(ch)});
+      const tete = el("button", "cours-chap-tete");
+      tete.type = "button";
+      tete.setAttribute("aria-expanded", String(deplie));
+      const nom = el("span", "nom");
+      nom.append(etiquetteCoursNiveau(ch.niveau), ch.chapitre || ch.titre, " ", el("small", "", `· ${vus} fiche${vus > 1 ? "s" : ""} sur ${nb}`));
+      tete.append(nom);
+      if (total) {
+        const combien = el("span", "combien");
+        const n = combienOntOuvert(liste, colonnes.map(col => col.id));
+        if (n) combien.append("ouvert par ", el("b", "", `${n} élève${n > 1 ? "s" : ""}`), ` sur ${total}`);
+        else combien.append("pas encore ouvert");
+        tete.append(combien);
+      }
+      tete.addEventListener("click", () => {
+        if (coursDeplies.has(cleChap)) coursDeplies.delete(cleChap); else coursDeplies.add(cleChap);
+        dessinerCoursProf();
+      });
+      bloc.append(tete);
+      if (deplie) {
+        const corps = el("div", "cours-chap-corps");
+        if (ch.titre && ch.titre !== ch.chapitre) corps.append(el("p", "titre-long", ch.titre));
+        const rangees = ch.fiches.map(f => ({id: f.id, titre: `${f.n}. ${f.h1}`, ids: insecable(f.ids), type: f.type, nouveau: f.nouveau, url: f.url, ouverte: ficheOuverte(c, f)}));
+        if (ch.brevet) rangees.push({id: ch.brevet.id, titre: `🎯 ${nomBrevetProf(ch)}`, ids: "", type: "", nouveau: false, url: ch.brevet.url, ouverte: !c.sans.has(ch.brevet.id)});
+        rangees.forEach(r => {
+          const rangee = el("div", `cours-fiche${r.ouverte ? "" : " fermee"}`);
+          const marque = el("span", "marque", r.ouverte ? "✓" : "–");
+          marque.setAttribute("aria-label", r.ouverte ? "ouverte à la classe" : "fermée à la classe");
+          const t = el("span", "t", r.titre);
+          if (r.nouveau) t.append(el("span", "cours-nouveau", "Nouveau programme"));
+          const precision = [r.type, r.ids].filter(Boolean).join(" · ");
+          if (precision) t.append(" ", el("small", "", `· ${precision}`));
+          rangee.append(marque, t);
+          if (r.ouverte && total) {
+            const n = combienOntOuvert(liste, [r.id]);
+            rangee.append(el("span", `ouvreurs${n ? "" : " personne"}`, n ? `${n} élève${n > 1 ? "s" : ""}` : "personne"));
+          }
+          rangee.append(lienVoir(r.url));
+          corps.append(rangee);
+        });
+        if (total && colonnes.length && combienOntOuvert(liste, colonnes.map(col => col.id))) {
+          const grille = coursGrilles.has(cleChap);
+          const bouton = el("button", "secondaire cours-grille-bouton", grille ? "Élève par élève ▴" : "Élève par élève ▾");
+          bouton.type = "button";
+          bouton.setAttribute("aria-expanded", String(grille));
+          bouton.addEventListener("click", () => {
+            if (coursGrilles.has(cleChap)) coursGrilles.delete(cleChap); else coursGrilles.add(cleChap);
+            dessinerCoursProf();
+          });
+          corps.append(bouton);
+          if (grille) {
+            const ouvertures = tableauOuvertures(colonnes);
+            if (ouvertures) corps.append(ouvertures);
+          }
+        }
+        bloc.append(corps);
+      }
       panneau.append(bloc);
     });
+  }
+  // En 4e, pas de brevet : « Exercices type » (comme l'espace élève, 09/11/2026).
+  function nomBrevetProf(ch) {
+    return ch.niveau === "4e" ? "Exercices type" : "Entraînement brevet";
   }
 
   // Lot « cours-ouvertures » (10/11/2026, décidé par Gwenaël) : pour chaque
@@ -3319,7 +3443,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return typeof jour === "string" && JOUR_ISO.test(jour) ? jour : null;
   }
   function tableauOuvertures(colonnes) {
-    const liste = appliAffichee === "cours" ? ordreDeLaFeuille(eleves || []) : [];
+    const liste = elevesDuCours();
     if (!liste.length || !colonnes.length) return null;
     if (!liste.some(eleve => colonnes.some(col => jourOuvert(eleve, col.id)))) {
       return el("p", "cours-personne", "Personne n’a encore ouvert de fiche de ce chapitre.");
@@ -3384,14 +3508,34 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       });
       corps.append(rangee);
     }
-    corps.append(el("h3", "", `Chapitres de ${niveau}`));
     const chapitres = COURS.filter(ch => ch.niveau === niveau);
+    // Lot « cours-appli-2 » (choix de Gwenaël du 13/11/2026) : « Tout ouvrir »
+    // et « Tout fermer » cochent ou décochent les chapitres du niveau affiché
+    // — les cases des fiches ne bougent pas (celles du nouveau programme
+    // restent à cocher une par une) ; rien ne part avant « Enregistrer ».
+    const tous = el("div", "cours-tous");
+    tous.append(el("h3", "", `Chapitres de ${niveau}`));
+    if (chapitres.length) {
+      const ouverts = chapitres.filter(ch => c.chapitres.has(ch.id)).length;
+      [["Tout ouvrir", true, ouverts === chapitres.length], ["Tout fermer", false, ouverts === 0]].forEach(([mot, ouvrir, inutile]) => {
+        const bouton = el("button", "secondaire", mot);
+        bouton.type = "button";
+        bouton.disabled = inutile;
+        bouton.addEventListener("click", () => {
+          chapitres.forEach(ch => { if (ouvrir) c.chapitres.add(ch.id); else c.chapitres.delete(ch.id); });
+          dessinerRegler();
+        });
+        tous.append(bouton);
+      });
+    }
+    corps.append(tous);
     if (!chapitres.length) corps.append(el("p", "aide", "Pas encore de chapitre écrit pour ce niveau."));
     chapitres.forEach(ch => {
       const boite = el("div", "cours-boite");
       const tete = el("div", "cours-boite-tete");
       const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
-      const caseChapitre = caseACocher(ch.titre, c.chapitres.has(ch.id), coche => {
+      // Lot « cours-appli-2 » : le nom court du chapitre, celui que voient les élèves.
+      const caseChapitre = caseACocher(ch.chapitre || ch.titre, c.chapitres.has(ch.id), coche => {
         if (coche) c.chapitres.add(ch.id); else c.chapitres.delete(ch.id);
         dessinerRegler();
       }, `${insecable(ch.id)} · ${vus} fiche${vus > 1 ? "s" : ""} sur ${ch.fiches.length}`);
@@ -3408,7 +3552,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (deplie) {
         const fiches = el("div", `cours-fiches${c.chapitres.has(ch.id) ? "" : " eteintes"}`);
         const rangees = ch.fiches.map(f => ({id: f.id, nouveau: f.nouveau, titre: `${f.n}. ${f.h1}`, precision: [f.type, insecable(f.ids)].filter(Boolean).join(" · "), url: f.url}));
-        if (ch.brevet) rangees.push({id: ch.brevet.id, nouveau: false, titre: "🎯 Entraînement brevet", precision: "", url: ch.brevet.url});
+        if (ch.brevet) rangees.push({id: ch.brevet.id, nouveau: false, titre: `🎯 ${nomBrevetProf(ch)}`, precision: "", url: ch.brevet.url});
         rangees.forEach(r => {
           const rangee = el("div", "cours-fiche");
           const texte = document.createDocumentFragment();
@@ -3427,6 +3571,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       corps.append(boite);
     });
     corps.append(el("p", "aide", "Un chapitre coché s’ouvre avec toutes ses fiches, sauf celles du nouveau programme (à cocher une par une). "
+      + "« Tout ouvrir » et « Tout fermer » ne changent que les chapitres de ce niveau. "
       + "Une fiche commune à la 4e et à la 3e se ferme dans les deux chapitres."));
   }
 
@@ -7923,12 +8068,24 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       && tableaux === marque.tableaux && generation === marque.session && Boolean(jeton);
   }
 
+  // Lot « cours-appli-2 » (13/11/2026) : la fiche d'un élève montre aussi
+  // les fiches de cours ouvertes (« Activité ») ; leur liste (« tableau » de
+  // Cours, les jours d'ouverture) se lit avec les autres quand la classe a
+  // l'appli Cours. Elle n'entre pas dans le bilan (jours de travail, absent,
+  // La classe) : Cours reste sansSuivi.
+  function coursALire() {
+    return Boolean(classe) && !tableaux.cours && ((classe && classe.applis) || []).includes("cours");
+  }
+  function listesALire() {
+    return listesManquantes().concat(coursALire() ? ["cours"] : []);
+  }
+
   function chargerLaClasse() {
     if (!classe) return;
     const marque = {classeId: classe.id, tableaux, session: generation, fini: false, raison: ""};
     lectureClasse = marque;
     messager("lc-message", "", "");
-    chargerApplis(listesManquantes())
+    chargerApplis(listesALire())
       .catch(erreur => {
         if (!lectureAJour(marque)) return;
         if (erreur && erreur.statut === 401) { surErreur(erreur, "lc-message"); return; }
@@ -7943,7 +8100,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // La lecture de la classe ouverte : lancée si rien n'a été tenté pour elle.
   // null : rien ne manque.
   function lectureDeLaClasse() {
-    if (!classe || !listesManquantes().length) return null;
+    if (!classe || !listesALire().length) return null;
     if (!lectureAJour(lectureClasse)) chargerLaClasse();
     return lectureClasse;
   }
@@ -8163,7 +8320,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   }
 
   function puceAppli(cle) {
-    const puce = el("i", "lc-puce");
+    // Lot « cours-appli-2 » : Cours a un rond vide (pas un jour de travail).
+    const puce = el("i", cle === "cours" ? "lc-puce cours" : "lc-puce");
     puce.style.background = COULEURS_APPLIS[cle] || "#5c6c82";
     puce.setAttribute("aria-hidden", "true");
     return puce;
@@ -8461,7 +8619,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     // panne se dit ICI, dans le dessin de cette fiche (correctif après
     // Codex, points 3 et 5) : jamais relancée, jamais chez un autre élève.
     const lecture = lectureDeLaClasse();
-    const manquantes = listesManquantes();
+    const manquantes = listesALire();
     if (manquantes.length && !(lecture && lecture.fini)) {
       zone.append(paragrapheVide("Lecture des applis…"));
       return zone;
@@ -8631,6 +8789,41 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (r.top < rc.top || r.bottom > rc.bottom) bloc.scrollIntoView({block: "center", behavior: "smooth"});
   }
 
+  // Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël) : les fiches de
+  // cours qu'un élève a ouvertes, rangées par jour — Map jour → lignes
+  // {chapitre, niveau, fiches: [numéros], brevet}, une ligne par chapitre,
+  // dans l'ordre du livret. Une fiche commune à deux chapitres (4e-TRI-03)
+  // est rangée dans celui que la classe a ouvert, sinon dans le premier du
+  // livret. Une fiche inconnue du catalogue, un jour mal formé : oubliés.
+  function joursCoursDe(eleve) {
+    const parJour = new Map();
+    const ouvertes = eleve && eleve.ouvertes && typeof eleve.ouvertes === "object" ? eleve.ouvertes : {};
+    const reglage = coursDeLaClasse();
+    const place = new Map();
+    COURS.filter(ch => reglage.chapitres.has(ch.id)).concat(COURS).forEach(ch => {
+      ch.fiches.forEach(f => { if (!place.has(f.id)) place.set(f.id, {ch, n: f.n}); });
+      if (ch.brevet && !place.has(ch.brevet.id)) place.set(ch.brevet.id, {ch, n: 0});
+    });
+    Object.keys(ouvertes).forEach(fiche => {
+      const jour = jourOuvert(eleve, fiche);
+      const ou = place.get(fiche);
+      if (!jour || !ou) return;
+      if (!parJour.has(jour)) parJour.set(jour, new Map());
+      const parChapitre = parJour.get(jour);
+      if (!parChapitre.has(ou.ch.id)) {
+        parChapitre.set(ou.ch.id, {chapitre: ou.ch.chapitre || ou.ch.titre, niveau: ou.ch.niveau, rang: COURS.indexOf(ou.ch), fiches: [], brevet: false});
+      }
+      const ligne = parChapitre.get(ou.ch.id);
+      if (ou.n) ligne.fiches.push(ou.n); else ligne.brevet = true;
+    });
+    const sortie = new Map();
+    parJour.forEach((parChapitre, jour) => {
+      sortie.set(jour, [...parChapitre.values()].sort((a, b) => a.rang - b.rang)
+        .map(l => ({chapitre: l.chapitre, niveau: l.niveau, fiches: l.fiches.sort((a, b) => a - b), brevet: l.brevet})));
+    });
+    return sortie;
+  }
+
   // Les jours de travail d'un élève, du plus récent au plus ancien, autant
   // qu'il en faut : les 4 dernières semaines, puis les 4 qui finissent au
   // jour de travail le plus récent d'avant… (chaque moteur relu « comme si on
@@ -8643,6 +8836,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const applis = applisDuBilan().filter(cle => eleveDe(cle, id));
     const tous = [];
     const notes = [];
+    // Lot « cours-appli-2 » : ses fiches de cours ouvertes, rangées par jour
+    // (le dernier jour d'ouverture de chaque fiche : c'est tout ce qu'on garde).
+    const eleveCours = eleveDe("cours", id);
+    const cours = eleveCours ? joursCoursDe(eleveCours) : new Map();
+    if (cours.size) notes.push("Cours : pour chaque fiche, seul le dernier jour où elle a été ouverte est gardé ; ouvrir une fiche ne compte pas comme un jour de travail.");
     applis.forEach(cle => {
       const depuis = coupureDe(cle, eleveDe(cle, id), aujourdhui);
       if (!depuis) return;
@@ -8668,6 +8866,12 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         // Le jour de travail le plus récent d'avant cette période.
         const avant = suiviApp(cle, eleve, jourPlus(debut, -1));
         if (avant && avant.dernier && avant.dernier < debut && (!suivant || avant.dernier > suivant)) suivant = avant.dernier;
+      });
+      cours.forEach((lignes, jour) => {
+        if (jour > fin) return;
+        if (jour < debut) { if (!suivant || jour > suivant) suivant = jour; return; }
+        if (!parJour.has(jour)) parJour.set(jour, []);
+        lignes.forEach(ligne => parJour.get(jour).push({cle: "cours", ligne}));
       });
       [...parJour.keys()].sort().reverse().forEach(jour => {
         const lignes = parJour.get(jour);
@@ -8751,6 +8955,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (refaites > 0) morceaux.push(pluriel(refaites, "étape refaite", "étapes refaites"));
       if (!morceaux.length && connu(l.series)) morceaux.push(`${pluriel(l.series, "série")} · pas encore réussie`);
       if (connu(l.vues) && l.vues > 0) chiffres = pluriel(l.vues, "réponse vue", "réponses vues");
+    } else if (cle === "cours") {
+      // Lot « cours-appli-2 » : « Pourcentages : ouverture des fiches 2 et 5 »
+      // (le nom, pas le participe : aucun accord à faire, et jamais « lue »).
+      const fiches = Array.isArray(l.fiches) ? l.fiches.filter(n => typeof n === "number") : [];
+      const quoi = [];
+      // « fiche 10 » ne se coupe pas entre le mot et le numéro (espace insécable).
+      if (fiches.length) quoi.push(fiches.length > 1 ? `des fiches\u00a0${enListe(fiches)}` : `de la fiche\u00a0${fiches[0]}`);
+      if (l.brevet) quoi.push(l.niveau === "4e" ? "des Exercices type" : "de l’Entraînement brevet");
+      if (quoi.length) morceaux.push(`${l.chapitre || "un chapitre"} : ouverture ${quoi.join(" et ")}`);
     } else if (cle === "coffres") {
       if (connu(l.tresors) && l.tresors > 0) morceaux.push(pluriel(l.tresors, "trésor"));
       if (connu(l.parfaits) && l.parfaits > 0) morceaux.push(pluriel(l.parfaits, "parfait"));

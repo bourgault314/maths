@@ -290,8 +290,25 @@ try {
   .cours-tete h1 { position: absolute; left: 54px; right: 54px; margin: 0; text-align: center; font-size: 24px; }
   .cours-sur { display: block; margin: 0 0 3px; color: var(--teal-texte); font-size: 13px; font-weight: 700;
                letter-spacing: .05em; text-transform: uppercase; }
-  #cours-corps ul { grid-template-columns: 1fr; margin-top: 0; }
+  #cours-corps ul { grid-template-columns: 1fr; margin-top: 0; gap: 10px; }
   #cours-corps .appli { height: auto; }
+  /* Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël sur planches, version 1) :
+     dans la liste des chapitres, la bande de gauche prend la couleur du DOMAINE
+     (celles du catalogue du site), le nom du domaine est écrit au-dessus, en
+     petites capitales, et le chapitre porte son nom court, en gros (le titre
+     long reste en haut de l'écran du chapitre). Le domaine est ÉCRIT : la
+     couleur n'est qu'un repère en plus. Une classe à plusieurs niveaux : la
+     liste est rangée sous « 4e », puis « 3e ». */
+  .cours-niveau { display: flex; align-items: center; gap: 10px; margin: 22px 0 10px;
+                  font: 400 22px/1.2 var(--serif); color: var(--blue-dark); }
+  .cours-niveau:first-child { margin-top: 4px; }
+  .cours-niveau::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--line); }
+  #cours-corps .cours-chap { border-left: 6px solid var(--domaine, var(--teal)); padding: 13px 14px 13px 15px; }
+  @media (hover: hover) { #cours-corps .cours-chap:hover { border-left-color: var(--domaine, var(--blue)); } }
+  .cours-chap .cours-domaine { display: block; margin: 0 0 2px; color: var(--domaine-texte); font-size: 12.5px; font-weight: 800;
+                               letter-spacing: .05em; text-transform: uppercase; }
+  .cours-chap .cours-domaine:empty { display: none; }
+  .cours-chap strong { font-size: 19px; line-height: 1.25; }
   .cours-titre { margin: 2px 0 14px; font: 400 26px/1.25 var(--serif); color: var(--blue-dark); }
   .som-liste { display: grid; gap: 10px; }
   .som-carte { display: flex; align-items: center; gap: 12px; padding: 13px 14px; background: var(--paper);
@@ -1840,6 +1857,31 @@ try {
   const ADRESSE_COURS = /^https:\/\/mathsgo\.re\/cours\/[0-9]e\/[0-9]e-[A-Z]{2,8}-(?:[0-9]{2}|brevet|imprimable)\.html#ch=[0-9]e-[A-Z]{2,8}$/;
   let coursOuverts = null;   // null : la classe n'a pas l'appli Cours
 
+  // Lot « cours-appli-2 » (13/11/2026, choix de Gwenaël) : les domaines du
+  // catalogue du site (outils/index.html : mêmes couleurs), sous leurs noms
+  // courts. `texte` : la couleur du nom écrit, assez foncée pour se lire
+  // (l'orange du catalogue est trop clair en petit : celui des textes orange
+  // de cette page). Le serveur ne donne que la clé (lib/cours.php).
+  const DOMAINES_COURS = {
+    nombres: {nom: "Nombres et calculs", couleur: "#0b67b2", texte: "#0b67b2"},
+    algebre: {nom: "Algèbre", couleur: "#7b42b4", texte: "#7b42b4"},
+    proportionnalite: {nom: "Proportionnalité et fonctions", couleur: "#d86b16", texte: "#a15c11"},
+    geometrie: {nom: "Espace et géométrie", couleur: "#087f78", texte: "#087f78"},
+    donnees: {nom: "Données et probabilités", couleur: "#be3e68", texte: "#be3e68"},
+    informatique: {nom: "Pensée informatique", couleur: "#4f5fb3", texte: "#4f5fb3"}
+  };
+  // L'ordre des niveaux sous lesquels la liste se range (« 4e » puis « 3e »).
+  const ORDRE_NIVEAUX = ["CM2", "6e", "5e", "4e", "3e", "2de"];
+  function chapitresParNiveau(chapitres) {
+    const niveaux = [];
+    chapitres.forEach(c => { if (!niveaux.includes(c.niveau)) niveaux.push(c.niveau); });
+    const rang = n => (ORDRE_NIVEAUX.includes(n) ? ORDRE_NIVEAUX.indexOf(n) : ORDRE_NIVEAUX.length);
+    // Tri stable : un niveau inconnu garde sa place d'arrivée, après les connus.
+    return niveaux.map((n, i) => [n, i]).sort((a, b) => rang(a[0]) - rang(b[0]) || a[1] - b[1])
+      .map(([n]) => ({niveau: n, chapitres: chapitres.filter(c => c.niveau === n)}));
+  }
+
+
   function texteDe(valeur) {
     return typeof valeur === "string" ? valeur : "";
   }
@@ -1851,6 +1893,8 @@ try {
     return brut.filter(c => c && typeof c === "object" && typeof c.id === "string" && MOTIF_CHAPITRE.test(c.id))
       .map(c => ({
         id: c.id, niveau: texteDe(c.niveau), chapitre: texteDe(c.chapitre), titre: texteDe(c.titre),
+        // Lot « cours-appli-2 » : une clé connue de la page, sinon rien.
+        domaine: Object.prototype.hasOwnProperty.call(DOMAINES_COURS, c.domaine) ? c.domaine : "",
         fiches: (Array.isArray(c.fiches) ? c.fiches : [])
           .filter(f => f && typeof f === "object" && adresseCours(f.url))
           .map(f => ({n: Number.isInteger(f.n) && f.n > 0 ? f.n : 0, h1: texteDe(f.h1), type: texteDe(f.type), url: f.url})),
@@ -1933,28 +1977,45 @@ try {
   }
 
   // La liste des chapitres (#cours) : le retour mène à Mon espace.
+  // Lot « cours-appli-2 » : une classe qui a des chapitres de plusieurs
+  // niveaux voit sa liste rangée sous « 4e » puis « 3e » (une classe à un
+  // seul niveau n'a pas de titre) ; chaque chapitre : le domaine écrit en
+  // petit, le nom court du chapitre en gros, le nombre de fiches dessous.
   function dessinerListeCours() {
     $("cours-retour").href = "#";
     $("cours-retour").setAttribute("aria-label", "Mon espace");
     const corps = $("cours-corps");
     corps.textContent = "";
-    const liste = document.createElement("ul");
-    coursOuverts.forEach(chapitre => {
-      const li = document.createElement("li");
-      const lien = document.createElement("a");
-      lien.className = "appli";
-      lien.href = `#cours=${chapitre.id}`;
-      lien.innerHTML = `<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
-      const texte = lien.querySelector(".texte");
-      texte.prepend(surTitre(chapitre));
-      lien.querySelector("strong").textContent = chapitre.titre;
-      const n = chapitre.fiches.length;
-      lien.querySelector(".texte span").textContent =
-        [n ? `${n} fiche${n > 1 ? "s" : ""}` : "", chapitre.brevet ? nomBrevet(chapitre) : ""].filter(Boolean).join(" · ");
-      li.append(lien);
-      liste.append(li);
+    const groupes = chapitresParNiveau(coursOuverts);
+    groupes.forEach(groupe => {
+      if (groupes.length > 1) {
+        const titre = document.createElement("h2");
+        titre.className = "cours-niveau";
+        titre.textContent = groupe.niveau;
+        corps.append(titre);
+      }
+      const liste = document.createElement("ul");
+      groupe.chapitres.forEach(chapitre => {
+        const li = document.createElement("li");
+        const lien = document.createElement("a");
+        lien.className = "appli cours-chap";
+        lien.href = `#cours=${chapitre.id}`;
+        lien.innerHTML = `<div class="texte"><small class="cours-domaine"></small><strong></strong><span></span></div>${FLECHE}`;
+        const domaine = DOMAINES_COURS[chapitre.domaine];
+        if (domaine) {
+          lien.style.setProperty("--domaine", domaine.couleur);
+          lien.style.setProperty("--domaine-texte", domaine.texte);
+          lien.querySelector(".cours-domaine").textContent = domaine.nom;
+        }
+        lien.querySelector("strong").textContent = chapitre.chapitre || chapitre.titre;
+        const n = chapitre.fiches.length;
+        lien.querySelector(".texte span").textContent =
+          [n ? `${n} fiche${n > 1 ? "s" : ""}` : "", chapitre.brevet ? nomBrevet(chapitre) : ""].filter(Boolean).join(" · ");
+        li.append(lien);
+        liste.append(li);
+      });
+      corps.append(liste);
     });
-    corps.append(liste);
   }
 
   // Le sommaire d'un chapitre (#cours=3e-PYT) : le retour mène à la liste.

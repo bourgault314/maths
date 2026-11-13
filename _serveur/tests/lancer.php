@@ -8343,6 +8343,10 @@ verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fi
     $cours = identite($eleve['code'])['json']['cours'];
     egal(1, count($cours), 'un chapitre');
     egal('3e-PYT', $cours[0]['id'], 'le chapitre');
+    // Lot « cours-appli-2 » (13/11/2026) : la clé du domaine, pour la bande de couleur de « Mes cours ».
+    egal('geometrie', $cours[0]['domaine'] ?? 'absent', 'le domaine du chapitre (une clé, jamais un nom ni une couleur)');
+    egal(['nombres', 'algebre', 'proportionnalite', 'geometrie', null], [cours_domaine('3e-ARI'), cours_domaine('4e-EQU'), cours_domaine('3e-FON'), cours_domaine('4e-INE'), cours_domaine('3e-SEC')],
+        'les domaines : « Préparer la seconde » n’en a pas');
     // Depuis le lot « livret-telephone » (09/11/2026), 3e-PYT a sept fiches : « Choisir le bon outil » (3e-THA-04) est la 7e.
     // Depuis « cours-lot1-b26 » (13/11/2026), huit : « Le triangle rectangle et son cercle » (3e-PYT-04, pour la seconde)
     // est la 8e ; en 3e, le nouveau programme s'ouvre avec le chapitre comme le reste (catalogue : « nouveau » faux).
@@ -8645,7 +8649,9 @@ verifier("cours-ouvertures — l'espace élève note l'ouverture (fiches et brev
     }
     vrai(substr_count($eleve, '@media (hover: hover)') >= 3, 'les survols sont sous @media (hover: hover)');
     $prof = page('/prof/')['texte'];
-    vrai(str_contains($prof, '« Ouverte le » : le dernier jour où chaque élève a ouvert la fiche depuis « Mes cours ».'), 'Ma classe explique la colonne');
+    // Lot « cours-appli-2 » (13/11/2026) : l'onglet Cours devient un résumé ; la phrase dit ce qui est gardé.
+    vrai(str_contains($prof, 'Pour chaque élève et chaque fiche, seul le dernier jour où la fiche a été ouverte depuis « Mes cours » est gardé. Ouvrir une fiche n’est pas la lire.'), 'Ma classe dit ce qui est gardé');
+    vrai(str_contains($prof, 'const coin = el("th", "", "Ouverte le");'), 'la grille « Ouverte le » reste, à déplier');
     vrai(!str_contains($prof, 'on ne sait pas qui a ouvert quoi'), 'l’ancienne phrase est partie');
     vrai(!preg_match('/\blue\b/u', substr($prof, strpos($prof, 'function tableauOuvertures'), 2500)), 'jamais « lue »');
     $infos = page('/infos.php')['texte'];
