@@ -561,6 +561,9 @@ body.fullscreen-active .shell { min-height: calc((100dvh - var(--bas-cadre, 0px)
 .perles-montant.droite { right: 0; border-radius: 0 10px 10px 0; }
 .perles-interieur { position: relative; overflow: hidden; touch-action: none; cursor: grab; }
 .perles-rangee { position: relative; width: 100%; }
+/* Lot 3b : la rangée de 10 finie par le geste, entourée, « 10 » à côté. */
+.perles-dix { position: absolute; left: -3px; top: 6%; height: 88%; border: 3px solid #147447; border-radius: 999px; pointer-events: none; }
+.perles-dix b { position: absolute; left: calc(100% + 6px); top: 50%; transform: translateY(-50%); padding: 0 .35em; border-radius: 999px; background: #147447; color: #fff; font-size: .95rem; font-weight: 900; line-height: 1.5; }
 .perles-tige { position: absolute; top: 50%; right: 0; left: 0; height: 2px; transform: translateY(-50%); background: #a98352; }
 .perle {
   position: absolute;
@@ -1223,6 +1226,9 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 /* Lot 2 (décision 8, planche 5) : la carte « par cœur », tous les calculs
    du niveau, à la place du dessin. Lisible imprimée en noir et blanc. */
 .dc-retenir .dc-aide.dc-coeur-zone { max-width: 520px; }
+/* Lot 3b : le rectangle de points des tables, dans « À retenir » (les
+   égalités y prennent déjà cinq lignes). */
+.dc-retenir .dc-aide svg.dc-points { max-height: calc(24dvh * var(--retenir-z, 1)); }
 .dc-coeur { margin: 6px auto 0; padding: .5em .5em .35em; border: 2px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(.88rem, 3.4vw, 1.2rem)); font-weight: 850; line-height: 1.2; }
 .dc-coeur-titre { margin: 0 0 .4em; font-size: .9em; font-weight: 900; }
 .dc-coeur table { margin: 0 auto .35em; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -1231,6 +1237,10 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-coeur th:first-child:not(:only-child) { font-size: .85em; }
 .dc-coeur table.sans-coin th:first-child { font-size: inherit; }
 .dc-coeur th { background: #eef4f8; color: #506b7d; font-weight: 850; }
+/* Lot 3b : les cases vides d'une table (les sommes au-delà de 10) ; un sous-titre. */
+.dc-coeur td:empty { border-color: transparent; }
+.dc-coeur td.fort { background: #ffe1c2; color: #8a4c0a; font-weight: 950; }
+.dc-coeur-sous { margin-top: .5em; }
 .dc-coeur-liste { display: grid; grid-template-columns: repeat(var(--colonnes, 2), auto); justify-content: center; gap: .3em 1.5em; margin: 0 0 .3em; }
 .dc-coeur-liste > span { white-space: nowrap; }
 

@@ -118,19 +118,18 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.deepEqual(d2.map(d => d.trouves.filter(r => r >= -1 && r <= 2)), [[], [2, 1, 0, -1]]);
   assert.equal((AIDES.dessinerImage(d2[0]).match(/>\?</g) || []).length, 4);
   assert.equal((AIDES.dessinerImage(d2[1]).match(/>\?</g) || []).length, 0);
-  // D2-3 : 4,5 × 1 000 = 4 500, les zéros avec le reste.
-  assert.deepEqual(ecris("D2-3").dessins[1].trouves.filter(r => r >= 0 && r <= 3), [3, 2, 1, 0]);
+  // D2-3 (lot 3b : × 100, comme la leçon) : 4,5 × 100 = 450, le zéro avec le reste.
+  assert.deepEqual(ecris("D2-3").dessins[1].trouves.filter(r => r >= 0 && r <= 2), [2, 1, 0]);
   // D3-1, 52,7 ÷ 10 : de même, d'un coup.
   assert.deepEqual(ecris("D3-1").dessins.map(d => d.trouves.filter(r => r >= -2 && r <= 1)), [[], [1, 0, -1, -2]]);
   // Modules lot 5 : le tableau de numération. D1-1, 4 + 6/10 : « 6/10 = 0,6 »
   // écrit les dixièmes, « 4 + 6/10 = 4,6 » les unités.
   assert.deepEqual(ecris("D1-1").dessins.map(d => d.trouves), [[], [-1], [0, -1]]);
   assert.deepEqual(ecris("D1-3").dessins.map(d => d.trouves), [[], [-1, -2, -3], [0, -1, -2, -3]]);
-  // D4-2, 1,624 + 5/1 000 : « 5/1 000 = 0,005 » écrit la fraction en
-  // décimal (sa ligne), « 0,004 + 0,005 = 0,009 » les millièmes, puis tout.
+  // D4-2 (lot 3b : on ajoute un décimal, comme la leçon), 1,624 + 0,005 :
+  // « 0,004 + 0,005 = 0,009 » les millièmes, puis tout.
   const d4 = ecris("D4-2").dessins;
-  assert.deepEqual(d4.map(d => [d.lignes[1].cherche, Boolean(d.lignes[1].trouvee)]), [[true, false], [false, true], [false, true], [false, true]]);
-  assert.deepEqual(d4.map(d => d.trouves), [[], [], [-3], [0, -1, -2, -3]]);
+  assert.deepEqual(d4.map(d => d.trouves), [[], [-3], [0, -1, -2, -3]]);
   assert.deepEqual(d4[0].garder.sort(), [-1, -2, 0], "les chiffres qui ne changent pas, en gris dès le début");
   // M2-2 (lot 3a : J'écris 3 500 ÷ 100, comme la leçon sur ÷ 10) : les
   // chiffres glissent vers la droite, « ? » puis le résultat.

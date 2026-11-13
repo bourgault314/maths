@@ -597,7 +597,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « cours-appli-2 » (13/11/2026) : l'espace élève (« Mes cours » rangé par niveau, le domaine
   // de chaque chapitre), Ma classe (onglet Cours en résumé, « Tout ouvrir / Tout fermer », les fiches
   // ouvertes dans la fiche de l'élève) et lib/cours.php (la clé du domaine) (avant : defi-calcul-lot-3a-lecons).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-appli-2$/m);
+  // Puis le lot 3b « Chaque sorte annoncée » de Défi calcul (13/11/2026) : le
+  // cœur copié dans prof/ change (avant : cours-appli-2).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-3b-sortes$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

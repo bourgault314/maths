@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-3">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-4">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -297,9 +297,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261113-3"></script>
+  <script src="./defi_calcul_core.js?v=20261113-4"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261113-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261113-3"></script>
+  <script src="./defi_calcul_aides.js?v=20261113-4"></script>
   <script>
     (() => {
       "use strict";
@@ -3290,7 +3290,7 @@
       // au-dessus ; `finDeSeance` : la séance s'est finie avec cette étape,
       // le bouton mène à son bilan. Un niveau « par cœur » (décision 8) : la
       // carte de tous ses calculs à la place du dessin.
-      function renderRetenir(serie, {reussi = null, finDeSeance = null} = {}) {
+      function renderRetenir(serie, {reussi = null, finDeSeance = null, carte = false} = {}) {
         const result = $("result");
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         $("result-verdict").hidden = true;
@@ -3329,14 +3329,27 @@
           $("retenir-phrase").append(...(deux.phrase ? [" "] : []), calcul);
         } else AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(serie.apprends.bilan));
         const coeur = CORE.carteParCoeur(`${serie.module}-${serie.niveau}`);
-        if (coeur) $("retenir-image").replaceChildren(carteParCoeur(coeur));
-        else $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
-        $("retenir-image").classList.toggle("dc-coeur-zone", Boolean(coeur));
-        $("retenir-cahier").textContent = soude(coeur ? "Je les note dans mon cahier et je les apprends par cœur." : "Je recopie cela dans mon cahier.");
+        // Lot 3b (demande de Gwenaël du 13/11) : aux niveaux « par cœur », À
+        // retenir a son petit schéma, comme les autres ; la carte vient sur
+        // l'écran suivant, « Ma carte à apprendre ».
+        const surCarte = Boolean(coeur) && carte;
+        if (surCarte) {
+          $("retenir-phrase").textContent = soude(coeur.titre);
+          const laCarte = carteParCoeur(coeur);
+          laCarte.querySelector(".dc-coeur-titre:not(.dc-coeur-sous)").remove();
+          $("retenir-image").replaceChildren(laCarte);
+          ligneReussi.hidden = true;
+        } else if (coeur) {
+          const schema = CORE.schemaParCoeur(serie.apprends);
+          $("retenir-image").innerHTML = schema ? AIDES.dessinerImage(schema) : "";
+        } else $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
+        $("retenir-image").classList.toggle("dc-coeur-zone", surCarte);
+        $("result-retenir").querySelector(".eyebrow").textContent = surCarte ? "Ma carte à apprendre" : "À retenir";
+        $("retenir-cahier").textContent = soude(surCarte ? "Je la note dans mon cahier et je l’apprends par cœur." : "Je recopie cela dans mon cahier.");
         // Lot « couverture » (06/11/2026) : une deuxième façon de voir (A1-2 :
         // le presque-double ; A3-2 : les dizaines), sous le dessin, la phrase
         // puis le calcul seul sur sa ligne.
-        const autre = serie.apprends.autre;
+        const autre = surCarte ? null : serie.apprends.autre;
         $("retenir-autre").hidden = !autre;
         $("retenir-autre").replaceChildren();
         if (autre) {
@@ -3348,7 +3361,12 @@
         }
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
-        if (finDeSeance) {
+        if (coeur && !surCarte) {
+          $("result-suite").replaceChildren(boutonsDeSuite(["Ma carte à apprendre →", "primary", () => {
+            renderRetenir(serie, {finDeSeance, carte: true});
+            show("result");
+          }], revoir));
+        } else if (finDeSeance) {
           $("result-suite").replaceChildren(boutonsDeSuite(["Suivant →", "primary", finDeSeance], revoir));
         } else if (enSeance()) {
           const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
@@ -3376,6 +3394,13 @@
         titre.textContent = soude(coeur.titre);
         carte.append(titre);
         coeur.blocs.forEach(bloc => {
+          // (Lot 3b : un bloc peut avoir son sous-titre — A1-1.)
+          if (bloc.titre) {
+            const sous = document.createElement("p");
+            sous.className = "dc-coeur-titre dc-coeur-sous";
+            sous.textContent = soude(bloc.titre);
+            carte.append(sous);
+          }
           if (bloc.table) {
             const table = document.createElement("table");
             // (Lot 3a : « sous chaque nombre, son double » n'a pas de coin
@@ -3385,7 +3410,11 @@
               const tr = document.createElement("tr");
               ligne.forEach((valeur, j) => {
                 const cellule = document.createElement(i === 0 || (j === 0 && !bloc.ligneTete) ? "th" : "td");
-                cellule.textContent = typeof valeur === "number" ? CORE.formaterNombre(valeur) : soude(valeur);
+                // (Lot 3b : une case {texte, fort} — les paires qui font 10.)
+                if (valeur && typeof valeur === "object") {
+                  cellule.textContent = soude(valeur.texte);
+                  cellule.classList.toggle("fort", Boolean(valeur.fort));
+                } else cellule.textContent = typeof valeur === "number" ? CORE.formaterNombre(valeur) : soude(valeur);
                 tr.append(cellule);
               });
               table.append(tr);
@@ -3669,8 +3698,18 @@
           const precedente = serie.index ? serie.questions[serie.index - 1].calcul.forme : null;
           const vue = serie.questions.slice(0, serie.index).some(q => q.calcul.forme === question.calcul.forme);
           const annonce = $("annonce");
-          const nouveau = precedente !== null && !vue;
-          if (nouveau) {
+          let nouveau = precedente !== null && !vue;
+          // Lot 3b « Chaque sorte annoncée » : une sorte nouvelle qui change
+          // la méthode (« Nouveau : × 100, chaque chiffre glisse de 2
+          // colonnes. ») est annoncée, et son dessin revient, même au premier
+          // calcul de J'apprends quand la leçon montrait une autre sorte. Son
+          // texte passe avant celui d'une écriture nouvelle.
+          const sorteNouvelle = nouveauteNouvelle(serie, question);
+          if (sorteNouvelle) {
+            annonce.textContent = sorteNouvelle;
+            annonce.hidden = false;
+            nouveau = true;
+          } else if (nouveau) {
             annonce.textContent = CORE.annonceDe(question.calcul);
             annonce.hidden = false;
           }
@@ -3690,6 +3729,19 @@
         ajusterCalcul();
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
+      }
+
+      // Lot 3b : le texte de la sorte nouvelle d'un calcul d'entraînement, ou
+      // "" (sorte pas annoncée, déjà vue, ou premier calcul sans leçon).
+      function nouveauteNouvelle(serie, question) {
+        const cle = `${serie.module}-${serie.niveau}`;
+        const nouveaute = CORE.nouveauteDe(question.calcul, cle);
+        if (!nouveaute) return "";
+        const lecon = serie.lecon && serie.lecon.calculs ? serie.lecon.calculs.montre : null;
+        if (!serie.index && !lecon) return "";
+        const vues = serie.questions.slice(0, serie.index).map(q => q.calcul);
+        if (lecon) vues.push(lecon);
+        return vues.some(calcul => (CORE.nouveauteDe(calcul, cle) || {}).cle === nouveaute.cle) ? "" : nouveaute.texte;
       }
 
       function avancerSerie() {
@@ -4395,14 +4447,41 @@
               lancerEcris({module: id, niveau: n, lecon: trouve.niveau.apprends, essai: true});
               return true;
             },
+            // Lot 3b : le calcul d'entraînement de J'apprends qui annonce une
+            // sorte nouvelle (`quoi` : un bout de son annonce), à l'écran,
+            // avec l'outil voulu (« manip », « image », « aucun »). Rien n'est
+            // enregistré.
+            nouveaute: (id, n, quoi, outil = "aucun") => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve || !trouve.niveau.apprends) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              state.origine = "seance";
+              commencerPratique({module: id, niveau: n, base: trouve.niveau.apprends});
+              const serie = state.serie;
+              const cle = `${id}-${n}`;
+              const lecon = trouve.niveau.apprends.calculs.montre;
+              const memeQueLecon = q => (CORE.nouveauteDe(q.calcul, cle) || {}).cle === (CORE.nouveauteDe(lecon, cle) || {}).cle;
+              const i = serie.questions.findIndex(q => (CORE.nouveauteDe(q.calcul, cle) || {texte: ""}).texte.includes(quoi));
+              if (i < 0) return false;
+              const vise = serie.questions.splice(i, 1)[0];
+              const avant = serie.questions.filter(memeQueLecon).slice(0, 1);
+              serie.questions = [...avant, vise, ...serie.questions.filter(q => !avant.includes(q))];
+              serie.index = avant.length;
+              serie.outil = outil;
+              serie.reponses = avant.map(q => ({calcul: q.calcul, juste: true, outil, rappel: false}));
+              renderQuestion();
+              ajusterEchelle();
+              return true;
+            },
             // « À retenir » d'un niveau, tout de suite (la fin de J'apprends),
             // pour mesurer qu'il tient dans l'écran (modules lot 2).
-            retenir: (id, n) => {
+            // (Lot 3b : `reussi`, la ligne « ✓ Réussi ! » du vrai écran.)
+            retenir: (id, n, reussi = null, carte = false) => {
               if (!CORE.niveauDe(`${id}-${n}`)) return false;
               state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
               lancerApprends(id, n, "seance", {toute: true});
               arreterActivite();
-              renderRetenir(state.serie);
+              renderRetenir(state.serie, {reussi, carte});
               show("result");
               return true;
             }
