@@ -347,7 +347,14 @@ Défi tables est la référence.
 - Le professeur règle, classe par classe, les chapitres ouverts (rien au
   départ), les fiches fermées et les fiches du nouveau programme ouvertes
   (fermées par défaut) : `classes.reglages.cours`, des identifiants du
-  catalogue seulement (`lib/cours.php`). Pas d'ajout par élève, pas de
+  catalogue seulement (`lib/cours.php`). « Nouveau programme » = le champ `nouveau` du
+  catalogue, posé par le moteur : en 3e, il est FAUX cette année (lot
+  « cours-lot1-b26 », 13/11/2026 : SECONDE_3E du moteur, décision de Gwenaël
+  du 12/11 — le nouveau programme de 3e est montré « tout pareil », rangé dans
+  « Pour la seconde » et dans le chapitre « Préparer la seconde ») ; en 4e, il
+  reste vrai pour les fiches du nouveau programme. Un statut qui CITE le
+  nouveau programme (« programme 2020 (retiré du nouveau programme…) ») n'en
+  fait pas une fiche nouvelle. Pas d'ajout par élève, pas de
   progression (`api/parcours.php` ne connaît pas « cours »). Dans Ma classe,
   l'onglet Cours n'a pas de tableau de progression et n'entre ni dans La
   classe ni dans la fiche d'un élève (`sansSuivi`).
