@@ -148,7 +148,9 @@ test("Défi calcul : une séance ouverte, pas finie, avec une étape faite compt
   if (etape.type === "test") {
     p = D.appliquerTest(p, {module: etape.module, marche: 1, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
   } else {
-    p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
+    // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
+    const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
+    p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
   }
   assert.equal(D.normaliserParcours(p).seances.length, 0, "la séance n'est pas finie");
   r = D.resumeSuivi(p, {aujourdhui: JEUDI});
@@ -161,5 +163,5 @@ test("les moteurs de Défi tables et Défi calcul sont copiés octet pour octet 
   assert.equal(lire("../_serveur/public/prof/defi_tables_mon_parcours.js"), lire("../outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.equal(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
   assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261112-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261113-1"/);
 });

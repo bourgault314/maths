@@ -141,12 +141,16 @@
     // son entraînement). Ensuite, une étape ne commence que si le temps
     // actif plus sa durée habituelle tient dans les minutes prévues, plus
     // une minute. Les durées habituelles sont celles du simulateur
-    // (fonctionnement 3) : test 1,5 min, J'apprends 4, Je m'entraîne 3, Je
-    // m'entraîne encore 2,5 (en secondes ici).
+    // (fonctionnement 3) : test 1,5 min, Je m'entraîne encore 2,5 (en
+    // secondes ici). Lot 2 « J'apprends en une étape » (12/11/2026,
+    // décision 7) : J'apprends et Je m'entraîne ne font plus qu'une étape,
+    // 4 minutes (simulateur du lot 2, la médiane d'une étape : 2,7 min
+    // pour le très bon élève, 4,3 pour l'élève moyen, 9,4 pour l'élève en
+    // difficulté).
     // `paliers` : jusqu'où va l'appli (1 les bases, 2 CM1, 3 CM2, 4 vers la
     // 6e : tout), réglé par le professeur ; au-delà, ni test ni leçon.
     seance: Object.freeze({garder: 60, etapes: 99, minutes: Object.freeze([10, 15]), defaut: 10, tolerance: 60,
-      durees: Object.freeze({test: 90, apprends: 240, entraine: 180, rattrape: 150}), paliers: 4}),
+      durees: Object.freeze({test: 90, apprends: 240, rattrape: 150}), paliers: 4}),
     // Les nouveautés réussies d'une séance, au journal (lot G1) : un compte.
     nouveautes: Object.freeze({maximum: 99}),
     // Mes calculs du jour : seulement ce qui est dû (31/10 : plus de calculs
@@ -181,8 +185,9 @@
   //       rien de nouveau avant demain) ;
   //   [5] les minutes prévues, 10 ou 15 (le réglage à l'ouverture ; 0, un
   //       plan de version 6, vaut 10) ;
-  //   [6] les apprentissages commencés dans cette séance (J'apprends fait,
-  //       ou Je m'entraîne joué) : tant qu'il vaut 0, l'avancée est garantie ;
+  //   [6] les apprentissages commencés dans cette séance (J'apprends joué,
+  //       réussi ou non ; avant le lot 2, aussi Je m'entraîne) : tant qu'il
+  //       vaut 0, l'avancée est garantie ;
   //   [7] le 2e calcul en attente : rang + 1 de la compétence ratée dans Mes
   //       calculs du jour (0 : aucun) ;
   //   [8] sa boîte d'avant le faux, [9] ses échecs `x` d'avant, [10] son
@@ -1010,17 +1015,19 @@
 
   // La file de la séance : les étapes qui RESTENT, d'après le plan et l'état.
   //   {type: "jour", calculs}             Mes calculs du jour
-  //   {type: "apprends", module, niveau}  J'apprends (nouveauté, ou rouge ratée deux fois)
+  //   {type: "apprends", module, niveau}  J'apprends, en une seule étape (lot 2) :
+  //                                       on montre, puis l'élève fait jusqu'à 5
+  //                                       justes de suite sans aide (nouveauté,
+  //                                       ou rouge ratée deux fois)
   //   {type: "rattrape", module, niveau}  Je m'entraîne encore (une compétence rouge)
   //   {type: "test", module}              Tu connais déjà ? (le test en escalier)
-  //   {type: "entraine", module, niveau}  Je m'entraîne
   //   {type: "avance"}                    « Puis j'avance dans mon parcours » :
   //                                       la dernière ligne, qui ne se joue pas,
   //                                       tant que le temps n'est pas épuisé.
   // La séance au temps (lot 1, 12/11/2026) : Mes calculs du jour, les rouges
   // (3 au plus), puis l'avancée — un module jamais commencé est TOUJOURS
-  // testé (jamais de leçon d'office), ce qu'il rate, il l'apprend (J'apprends
-  // puis Je m'entraîne, qui ne sont jamais séparés), puis les tests
+  // testé (jamais de leçon d'office), ce qu'il rate, il l'apprend (J'apprends,
+  // une seule étape depuis le lot 2), puis les tests
   // reprennent. L'avancée est garantie jusqu'au premier apprentissage
   // compris ; ensuite, un bloc ne commence que s'il tient dans le temps.
   // Une étape commencée se finit toujours : le temps n'est versé qu'à la fin
@@ -1048,9 +1055,9 @@
     if (plan[PLAN.rattrapage]) {
       const rouge = competenceDeRang(plan[PLAN.rattrapage] - 1);
       const ligne = ligneDe(parcours, rouge.module);
-      // Ratée deux fois de suite : elle refait J'apprends d'abord.
-      if (!ligne.a[rouge.niveau - 1]) etapes.push({type: "apprends", module: rouge.module, niveau: rouge.niveau});
-      etapes.push({type: "rattrape", module: rouge.module, niveau: rouge.niveau});
+      // Ratée deux fois de suite : elle refait J'apprends, qui contient
+      // l'entraînement (lot 2) ; sinon Je m'entraîne encore.
+      etapes.push({type: ligne.a[rouge.niveau - 1] ? "rattrape" : "apprends", module: rouge.module, niveau: rouge.niveau});
     }
     avancee();
     return resultat();
@@ -1073,13 +1080,9 @@
         bloc.push({type: "test", module: courante.module});
         duree = SEUILS.seance.durees.test;
       } else {
-        const appris = ligne.a[courante.niveau - 1] === 1;
-        // J'apprends est fait et la séance a commencé un apprentissage :
-        // c'est la suite du même, l'entraînement vient sans regarder l'heure.
-        if (appris && plan[PLAN.commences] > 0) garanti = true;
-        if (!appris) bloc.push({type: "apprends", module: courante.module, niveau: courante.niveau});
-        bloc.push({type: "entraine", module: courante.module, niveau: courante.niveau});
-        duree = appris ? SEUILS.seance.durees.entraine : SEUILS.seance.durees.apprends;
+        // Lot 2 : J'apprends en une étape (on montre, puis l'élève fait).
+        bloc.push({type: "apprends", module: courante.module, niveau: courante.niveau});
+        duree = SEUILS.seance.durees.apprends;
       }
       if (!garanti && secondes + duree > budget) return;
       etapes.push(...bloc);
@@ -1191,8 +1194,10 @@
   // premières réponses données, {juste, outil} où `outil` dit ce qui était
   // affiché pour ce calcul : "image" (la droite, le tableau), "manip" (les
   // perles, le glisse-nombres) ou "aucun". Options :
-  //   genre             "entraine" (Je m'entraîne) ou "rattrape" (Je
-  //                     m'entraîne encore, une compétence rouge) ;
+  //   genre             "apprends" (J'apprends en une étape, lot 2),
+  //                     "entraine" (Je m'entraîne, l'écran d'un module du
+  //                     professeur) ou "rattrape" (Je m'entraîne encore, une
+  //                     compétence rouge) ;
   //   manip             false quand le niveau n'a pas d'outil à manipuler
   //                     (au-delà de 100 perles) : on commence à l'image ;
   //   toutesFormesVues  la page dit si toutes les écritures ont été vues.
@@ -1269,7 +1274,11 @@
   //   {module, niveau, genre: "apprends" | "entraine" | "rattrape",
   //    reponses: [{juste, outil}], causes: {cause: nombre}}
   // Avec `seance: true`, la série est une étape de la séance du jour.
-  //  - apprends : « J'apprends » est fait pour ce niveau ;
+  //  - apprends (lot 2, J'apprends en une étape : on montre, puis l'élève
+  //    fait, jusqu'à 5 justes de suite sans outil) : une compétence pas
+  //    encore entrée, comme « entraine » ci-dessous, et « J'apprends fait »
+  //    quand c'est réussi ; une compétence rouge ratée deux fois de suite,
+  //    comme « rattrape » (sa boîte ne bouge pas), et « J'apprends fait » ;
   //  - entraine : réussi (5 justes de suite sans outil), la compétence entre
   //    en boîte 2 et revient demain ; raté (20 calculs), rien ne bouge —
   //    dans la séance, rien de nouveau avant demain, et demain repart de
@@ -1289,21 +1298,16 @@
     copie.modules[id] = ligne;
     toucher(ligne, aujourdhui);
     let finie = false;
-    if (serie.genre === "apprends") {
-      // J'apprends d'une compétence pas encore entrée : un apprentissage
-      // commence (lot 1) ; celui d'une rouge ratée deux fois n'en est pas un.
-      const nouveau = !ligne.b[n - 1];
-      ligne.a[n - 1] = 1;
-      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-        if (nouveau) plan[PLAN.commences] = Math.min(PLAN_MAX[PLAN.commences], plan[PLAN.commences] + 1);
-      }, palier);
-      return {parcours: copie, verdict: null, evenements, finie};
-    }
-    const verdict = verdictEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre: serie.genre});
+    const genre = ["apprends", "entraine", "rattrape"].includes(serie.genre) ? serie.genre : "entraine";
+    const verdict = verdictEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre});
     ligne.f[n - 1] = Math.min(SEUILS.compteur, ligne.f[n - 1] + 1);
     ajouterCauses(ligne, serie.causes);
     noterJour(copie, aujourdhui);
-    if (serie.genre === "rattrape") {
+    // J'apprends d'une compétence rouge (ratée deux fois de suite) : c'est
+    // son rattrapage ; J'apprends est fait, même raté (lot 2).
+    const rouge = genre === "apprends" && ligne.b[n - 1] > 0;
+    if (rouge) ligne.a[n - 1] = 1;
+    if (genre === "rattrape" || rouge) {
       if (ligne.b[n - 1]) ligne.t[n - 1] = 1;
       if (seance) compterEnCours(copie, EN_COURS.rouges, 1);
       // La rouge suivante (3 par séance au plus), sinon la nouveauté.
@@ -1314,6 +1318,8 @@
       return {parcours: copie, verdict, evenements, finie};
     }
     const nouvelle = !ligne.b[n - 1];
+    // J'apprends en une étape réussi : J'apprends est fait (lot 2).
+    if (genre === "apprends" && verdict.reussi) ligne.a[n - 1] = 1;
     if (verdict.reussi && nouvelle) {
       ligne.b[n - 1] = SEUILS.revision.entraine;
       ligne.e[n - 1] = echeanceDeBoite(SEUILS.revision.entraine, aujourdhui);
@@ -1330,7 +1336,9 @@
       // ; réussi, la séance continue tant qu'elle a le temps (lot 1) ; raté,
       // plus rien de nouveau aujourd'hui.
       finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-        plan[PLAN.commences] = Math.max(1, plan[PLAN.commences]);
+        plan[PLAN.commences] = genre === "apprends"
+          ? Math.min(PLAN_MAX[PLAN.commences], plan[PLAN.commences] + 1)
+          : Math.max(1, plan[PLAN.commences]);
         if (!verdict.reussi) plan[PLAN.nouveaute] = NOUVEAUTE.arretee;
       }, palier);
     }

@@ -12,10 +12,10 @@
 // Ce qui est joué :
 //   premier-jour  l'accueil ; le test en escalier (monter, 3e calcul, ✗ sans
 //                 la bonne réponse, arrêt) ; J'apprends du niveau raté TOUT
-//                 DE SUITE (trois calculs, 2e essai faux → « Suivant ») ;
-//                 Je m'entraîne (perles 2 justes → droite 2 justes → rien ;
-//                 une erreur ramène la droite, deux les perles ; réussi à 5
-//                 justes de suite) ; la fin de séance ;
+//                 DE SUITE, en une étape (lot 2 : on te montre ; perles 2
+//                 justes → droite 2 justes → J'écris une fois → rien ; une
+//                 erreur ramène la droite, deux les perles ; réussi à 5
+//                 justes de suite) ; « ✓ Réussi ! » et À retenir ;
 //   rouges        deux compétences ratées dans Mes calculs du jour : deux
 //                 « Je m'entraîne encore » (droite d'abord, fini à 3 justes de
 //                 suite), puis la nouveauté ;
@@ -387,10 +387,18 @@ async function repondreEntrainement(page, juste, {apresGeste = null} = {}) {
   return avant;
 }
 
-// J'apprends (lot 3) : trois calculs différents — je manipule, je
-// représente (ici : un 2e essai faux, la réponse s'affiche, « Suivant »),
-// j'écris (les étapes, puis la réponse).
-async function jouerApprendsTroisCalculs(page, cle, ecran) {
+// J'apprends en une étape (lot 2, 12/11/2026, planches validées) : ① on te
+// montre — le premier temps de la leçon, sur son exemple (ici, au téléphone
+// et à l'ordinateur : les perles) ; ② des calculs qui changent avec les
+// perles, 2 justes ; ③ avec la droite, 2 justes ; ④ J'écris de la leçon, une
+// fois (les étapes, le dessin qui se remplit) ; ⑤ sans aide (une erreur : la
+// droite revient ; deux : les perles), 5 justes de suite ; ⑥ « ✓ Réussi ! »
+// et À retenir sur le même écran.
+const moment = page => page.evaluate(() => {
+  const f = document.getElementById("seance-fil");
+  return f.hidden ? "" : (f.querySelector("b") || f).textContent.trim();
+});
+async function jouerApprendsEnUneEtape(page, cle, ecran) {
   const a = await page.evaluate(c => {
     const x = window.MATHSGO_DEFI_CALCUL_CORE.niveauDe(c).niveau.apprends;
     return {
@@ -399,33 +407,36 @@ async function jouerApprendsTroisCalculs(page, cle, ecran) {
       ecris: {etapes: (x.ecris.etapes || []).map(e => e.reponse), reponse: x.ecris.reponse, texte: x.ecris.texte}
     };
   }, cle);
-  const textes = [a.manipule && a.manipule.texte, a.represente.texte, a.ecris.texte].filter(Boolean);
-  assert.equal(new Set(textes).size, textes.length, `${cle} : J'apprends pose trois calculs différents`);
-  // Lot « relier » : le boulier de « Je manipule » reporte chaque geste sur
-  // une droite au-dessus — rien avant le geste, un saut par geste après.
+  // ① On te montre. Lot « relier » : le boulier reporte chaque geste sur une
+  // droite au-dessus — rien avant le geste, un saut par geste après.
   const sautsDuBoulier = () => page.evaluate(() => document.querySelectorAll(".perles-droite path[marker-end]").length);
-  if (a.manipule) {
-    await ecran("apprends-manipule", {jeu: true});
-    if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), 0, `${cle} : la droite du boulier attend le premier geste`);
-    await manipuler(page, a.manipule);
-    if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), a.manipule.gestes.length, `${cle} : un saut par geste sur la droite du boulier`);
-    await valider(page);
-    await page.waitForTimeout(400);
-  }
-  await ecran("apprends-represente", {jeu: true, pave: true, image: true});
-  // Deux essais faux : la réponse s'affiche sur l'outil, « Suivant ».
-  for (let essai = 0; essai < 2; essai += 1) {
-    await taper(page, a.represente.reponse + 11, {clavier: true});
-    await valider(page, {clavier: true});
-    await page.waitForTimeout(500);
-  }
-  assert.equal((await texte(page, "#validate")), "Suivant", `${cle} : au 2e essai faux, « Suivant » (jamais bloqué)`);
-  await ecran("apprends-represente-revele", {jeu: true, image: true});
+  assert.equal(await moment(page), "On te montre", `${cle} : ① on te montre`);
+  await ecran("apprends-montre", {jeu: true});
+  if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), 0, `${cle} : la droite du boulier attend le premier geste`);
+  await manipuler(page, a.manipule);
+  if (a.manipule.outil === "perles") assert.equal(await sautsDuBoulier(), a.manipule.gestes.length, `${cle} : un saut par geste sur la droite du boulier`);
   await valider(page);
   await page.waitForTimeout(400);
+  // ② et ③ : des calculs qui changent, jamais ceux de la leçon.
+  assert.equal(await genre(page), "apprends");
+  const outils = [];
+  const vus = [];
+  await ecran("apprends-perles", {jeu: true});
+  assert.equal(await moment(page), "Avec les perles");
+  for (let i = 0; i < 4; i += 1) {
+    if (i === 2) assert.equal(await moment(page), "Avec le dessin");
+    // Au téléphone, le geste fait, le pavé arrive sous les perles (le bug
+    // vu sur iPhone le 31/10 : le boulier restait grand, sur le pavé).
+    const apresGeste = i === 1 && ecran.telephone ? () => ecran("apprends-perles-apres-geste", {jeu: true, pave: true}) : null;
+    vus.push((await calcul(page)).texte);
+    outils.push((await repondreEntrainement(page, true, {apresGeste})).outil);
+  }
+  assert.deepEqual(outils, ["manip", "manip", "image", "image"], "perles 2 justes, puis la droite 2 justes");
+  assert.ok(!vus.includes(a.represente.texte) && !vus.includes(a.ecris.texte), `${cle} : jamais un calcul de la leçon`);
+  // ④ J'écris, une fois : les étapes de la leçon, le dessin qui se remplit.
+  assert.equal(await entrainement(page), null, `${cle} : J'écris n'est pas un calcul de la série`);
+  assert.equal(await moment(page), "J’écris");
   await ecran("apprends-ecris", {jeu: true, pave: true, image: true});
-  // Lot « relier » : le dessin au-dessus des étapes se remplit à chaque
-  // égalité juste ; il est au-dessus du calcul, à toutes les tailles.
   const dessin = () => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.dessin());
   const dessins = [await dessin()];
   assert.ok(dessins[0], `${cle} : J'écris montre son dessin`);
@@ -440,13 +451,28 @@ async function jouerApprendsTroisCalculs(page, cle, ecran) {
   }
   assert.notEqual(dessins[dessins.length - 1], dessins[0], `${cle} : le dessin s'est rempli`);
   await ecran("apprends-ecris-fini", {image: true});
-  // Relecture 1 (05/11/2026) : J'écris fini reste à l'écran, avec tout le
-  // travail ; plus de passage tout seul, « Suivant » mène à « À retenir ».
   await page.waitForTimeout(1200);
   assert.equal(await texte(page, "#validate"), "Suivant", `${cle} : J'écris fini, « Suivant »`);
   assert.equal(await page.isVisible("#question-card.ecrit-fini"), true, `${cle} : J'écris fini reste à l'écran`);
   await valider(page);
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(600);
+  // ⑤ Sans aide.
+  assert.equal((await entrainement(page)).outil, "aucun", "puis plus rien");
+  assert.equal(await moment(page), "Sans aide");
+  await ecran("apprends-sans-aide", {jeu: true, pave: true});
+  // Une erreur : la droite revient ; deux de suite : les perles.
+  await repondreEntrainement(page, false);
+  assert.equal((await entrainement(page)).outil, "image");
+  await repondreEntrainement(page, false);
+  assert.equal((await entrainement(page)).outil, "manip");
+  await ecran("apprends-perles-apres-erreurs", {jeu: true});
+  await repondreEntrainement(page, true);
+  assert.equal((await entrainement(page)).outil, "image", "après ces perles-là, un juste : la droite");
+  await repondreEntrainement(page, true);
+  assert.notEqual(await moment(page), "J’écris", "J'écris ne revient pas");
+  // 5 justes de suite sans outil (et toutes les sortes vues).
+  for (let i = 0; i < 25 && await genre(page) === "apprends" && await entrainement(page); i += 1) await repondreEntrainement(page, true);
+  await page.waitForTimeout(800);
 }
 
 async function boutonSuite(page) {
@@ -494,39 +520,20 @@ async function premierJour(navigateur, base, taille) {
   await ecran("test-bilan");
   await cliquerSuite(page);
   // Modules lot 1 (31/10) : le vrai premier module du parcours est A1.
-  await jouerApprendsTroisCalculs(page, "A1-3", (nom, options) => ecran(nom, options));
-  await ecran("apprends-retenir");
-  await cliquerSuite(page);
-  // Je m'entraîne : perles, perles, droite, droite, rien…
-  assert.equal(await genre(page), "entraine");
-  const outils = [];
-  await ecran("entraine-perles", {jeu: true});
-  for (let i = 0; i < 4; i += 1) {
-    // Au téléphone, le geste fait, le pavé arrive sous les perles (le bug
-    // vu sur iPhone le 31/10 : le boulier restait grand, sur le pavé).
-    const apresGeste = i === 1 && taille.telephone ? () => ecran("entraine-perles-apres-geste", {jeu: true, pave: true}) : null;
-    outils.push((await repondreEntrainement(page, true, {apresGeste})).outil);
-  }
-  assert.deepEqual(outils, ["manip", "manip", "image", "image"], "perles 2 justes, puis la droite 2 justes");
-  assert.equal((await entrainement(page)).outil, "aucun", "puis plus rien");
-  await ecran("entraine-sans-outil", {jeu: true, pave: true});
-  // Une erreur : la droite revient ; deux de suite : les perles.
-  await repondreEntrainement(page, false);
-  assert.equal((await entrainement(page)).outil, "image");
-  await repondreEntrainement(page, false);
-  assert.equal((await entrainement(page)).outil, "manip");
-  await ecran("entraine-perles-apres-erreurs", {jeu: true});
-  await repondreEntrainement(page, true);
-  assert.equal((await entrainement(page)).outil, "image", "après ces perles-là, un juste : la droite");
-  await repondreEntrainement(page, true);
-  // 5 justes de suite sans outil (et toutes les écritures vues).
-  for (let i = 0; i < 25 && await genre(page) === "entraine"; i += 1) await repondreEntrainement(page, true);
-  await page.waitForTimeout(800);
+  // Lot 2 : J'apprends en une étape.
+  const ecranApprends = (nom, options) => ecran(nom, options);
+  ecranApprends.telephone = taille.telephone;
+  await jouerApprendsEnUneEtape(page, "A1-3", ecranApprends);
+  // ⑥ Réussi : « ✓ Réussi ! » et À retenir sur le même écran (planche 3).
+  assert.equal(await texte(page, "#retenir-reussi"), "✓ Réussi ! Différences et trous jusqu’à 20 revient demain.");
+  assert.equal(await page.isVisible("#result-retenir"), true);
+  assert.equal(await page.isVisible("#result-verdict"), false, "plus d'écran « Entraînement réussi ! »");
+  assert.equal(await texte(page, "#retenir-cahier"), "Je les note dans mon cahier et je les apprends par cœur.", "A1-3 est un niveau « par cœur »");
+  assert.equal(await page.locator("#retenir-image .dc-coeur table").count(), 1, "la carte : la table d'addition");
   // Lot 1 « la séance » : le temps n'est pas passé (l'horloge de la page est
   // arrêtée) — la séance continue avec le module suivant, testé.
-  assert.notEqual(await texte(page, "#result-title"), "Séance terminée");
-  assert.equal(await boutonSuite(page), "Étape 4 : tu connais déjà ? →", "le module suivant (A10) est testé");
-  await ecran("fin-entrainement");
+  assert.equal(await boutonSuite(page), "Étape 3 : tu connais déjà ? →", "le module suivant (A10) est testé");
+  await ecran("apprends-retenir");
   const p = await parcours(page);
   assert.deepEqual(p.modules.A1.b, [4, 3, 2]);
   assert.deepEqual(p.modules.A1.a, [1, 1, 1], "les marches prouvées comptent comme J'apprends fait");
@@ -624,7 +631,7 @@ const voulu = nom => !SEULEMENT || SEULEMENT.split(",").includes(nom);
   let echec = null;
   try {
     for (const taille of TAILLES) {
-      if (voulu("premier-jour")) { await premierJour(navigateur, base, taille); console.log(`ok — premier jour (test, J'apprends tout de suite, entraînement à couches) à ${taille.nom}`); }
+      if (voulu("premier-jour")) { await premierJour(navigateur, base, taille); console.log(`ok — premier jour (test, J'apprends en une étape tout de suite) à ${taille.nom}`); }
       if (voulu("rouges")) { await deuxRouges(navigateur, base, taille); console.log(`ok — deux « encore » puis la nouveauté à ${taille.nom}`); }
       if (voulu("de-cote")) { await deCote(navigateur, base, taille); console.log(`ok — la mise de côté à ${taille.nom}`); }
     }

@@ -20,8 +20,8 @@ const types = (p, jour = J, options = {}) => P.fileSeance(p, CARTE, Object.assig
 const tester = (p, module, marche, jour = J, options = {}) => P.appliquerTest(p, {module, marche,
   niveaux: Array.from({length: Math.min(P.NIVEAUX[module], marche + 1)}, (_, i) => ({niveau: i + 1, justes: i < marche ? 3 : 1, total: 3}))},
   Object.assign({aujourdhui: jour, carte: CARTE, seance: true}, options));
-const apprendre = (p, module, niveau, jour = J) => P.appliquerSerie(p, {module, niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE, seance: true});
-const entrainer = (p, module, niveau, reponses, jour = J, genre = "entraine") => P.appliquerSerie(p, {module, niveau, genre, reponses}, {aujourdhui: jour, carte: CARTE, seance: true});
+// Lot 2 « J'apprends en une étape » : J'apprends contient l'entraînement.
+const apprendre = (p, module, niveau, jour = J, reponses = reussie()) => P.appliquerSerie(p, {module, niveau, genre: "apprends", reponses}, {aujourdhui: jour, carte: CARTE, seance: true});
 
 // Un élève qui sait A1 (test passé il y a une semaine), tout dû aujourd'hui.
 function eleveA1() {
@@ -52,21 +52,19 @@ test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissa
   p = P.noterTemps(p, 20 * 60);
   assert.deepEqual(types(p), ["test"], "le test du premier module, même après 20 minutes ; pas de « Puis j'avance »");
   p = tester(p, "A1", 1).parcours;
-  assert.deepEqual(types(p), ["apprends", "entraine"], "le premier apprentissage, quoi qu'il arrive");
-  p = apprendre(p, "A1", 2).parcours;
-  assert.equal(p.seance.p[P.PLAN.commences], 1);
-  assert.deepEqual(types(p), ["entraine"], "J'apprends et son entraînement ne sont jamais séparés");
-  const r = entrainer(p, "A1", 2, reussie());
+  assert.deepEqual(types(p), ["apprends"], "le premier apprentissage, quoi qu'il arrive (lot 2 : une seule étape)");
+  const r = apprendre(p, "A1", 2);
+  assert.equal(r.parcours.seance.p[P.PLAN.commences], 0, "la séance est refermée");
   assert.equal(r.finie, true, "le temps est passé : la séance est finie");
   assert.deepEqual(r.parcours.seances, [J]);
   // Avec du temps : le module suivant est testé, et ainsi de suite.
   let q = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J});
   q = tester(q, "A1", 1).parcours;
-  q = apprendre(q, "A1", 2).parcours;
   q = P.noterTemps(q, 4 * 60);
-  q = entrainer(q, "A1", 2, reussie()).parcours;
+  q = apprendre(q, "A1", 2).parcours;
   assert.equal(q.seance.p[P.PLAN.ouverte], 1, "4 minutes : la séance continue");
-  assert.deepEqual(types(q), ["apprends", "entraine", "avance"], "A1-3, commencé au test : on l'apprend ; il restera du temps");
+  assert.equal(q.seance.p[P.PLAN.commences], 1);
+  assert.deepEqual(types(q), ["apprends", "avance"], "A1-3, commencé au test : on l'apprend ; il restera du temps");
   // 9 minutes passées : J'apprends (4 min) ne tient plus — la séance attend.
   q = P.noterTemps(q, 5 * 60);
   assert.deepEqual(types(q), []);
@@ -82,9 +80,8 @@ test("15 minutes : plus de temps, plus d'avancée ; une tolérance d'une minute"
   let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 15});
   p = tester(p, "A1", 1).parcours;
   p = apprendre(p, "A1", 2).parcours;
-  p = entrainer(p, "A1", 2, reussie()).parcours;
   p = P.noterTemps(p, 11 * 60);
-  assert.deepEqual(types(p), ["apprends", "entraine"], "11 min + 4 min = 15 : ça tient (sans « Puis j'avance »)");
+  assert.deepEqual(types(p), ["apprends"], "11 min + 4 min = 15 : ça tient (sans « Puis j'avance »)");
   p = P.noterTemps(p, 61);
   assert.deepEqual(types(p), [], "12 min + 4 min > 16 : rien ne commence");
 });
@@ -113,7 +110,7 @@ test("le palier : au-delà du réglage, ni test ni leçon ; le validé continue 
   assert.equal(P.palierDe(CARTE, P.competenceCourante(q, CARTE, 4).module, P.competenceCourante(q, CARTE, 4).niveau), 2, "tout : le palier 2 vient");
   assert.deepEqual(types(q, J, {palier: 1}), ["jour"], "les calculs du jour, rien de nouveau");
   assert.equal(P.fileSeance(q, CARTE, {aujourdhui: J, palier: 1}).etapes[0].calculs, 20, "le validé revient (20 au plus)");
-  assert.deepEqual(types(q, J, {palier: 2}).slice(0, 3), ["jour", "apprends", "entraine"], "palier 2 : A2-4 (son module est commencé : J’apprends)");
+  assert.deepEqual(types(q, J, {palier: 2}).slice(0, 3), ["jour", "apprends", "avance"], "palier 2 : A2-4 (son module est commencé : J’apprends)");
   assert.deepEqual([P.palierDeSeance(2), P.palierDeSeance(0), P.palierDeSeance("2"), P.palierDeSeance(5)], [2, 4, 4, 4]);
   assert.equal(P.etatModule(q, P.competenceCourante(q, CARTE, 4).module, CARTE, 1).ici, 0, "pas de « Mon niveau » au-delà");
 });

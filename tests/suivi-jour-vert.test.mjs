@@ -214,7 +214,6 @@ test("Défi calcul : la dernière ligne d'un jour porte les modules avancés ce 
     const et = f.etapes[0];
     if (et.type === "jour") p = D.terminerCalculsDuJour(p, {aujourdhui: MARDI, carte}).parcours;
     else if (et.type === "test") p = D.appliquerTest(p, {module: et.module, marche: 1, niveaux: [{niveau: 1, justes: 2, total: 2}]}, {aujourdhui: MARDI, carte, seance: true}).parcours;
-    else if (et.type === "apprends") p = D.appliquerSerie(p, {module: et.module, niveau: et.niveau, genre: "apprends"}, {aujourdhui: MARDI, carte, seance: true}).parcours;
     else p = D.appliquerSerie(p, {module: et.module, niveau: et.niveau, genre: et.type, reponses: Array(8).fill({juste: true, outil: "aucun"}), causes: {}}, {aujourdhui: MARDI, carte, seance: true}).parcours;
   }
   const r = D.resumeSuivi(p, VENDREDI);
@@ -284,5 +283,5 @@ test("Copies du moteur dans prof/ : identiques octet pour octet ; cache-busters 
   assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(lire("../outils/splat.html"), /splat-parcours\.js\?v=20261111-2"/);
   assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261112-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261113-1"/);
 });

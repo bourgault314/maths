@@ -1216,6 +1216,22 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-retenir .dc-retenir-autre { margin: 8px 0 0; padding-top: 8px; border-top: 2px dashed #9fd3cb; color: var(--ink); font-size: calc(var(--retenir-p, 1) * var(--retenir-z, 1) * clamp(1.05rem, 4vw, 1.35rem)); font-weight: 850; line-height: 1.25; }
 .dc-retenir .dc-retenir-autre .dc-retenir-calcul { font-size: 1.15em; }
 .dc-retenir .cahier { margin: 8px 0 0; color: #5b7286; font-size: .9rem; font-weight: 800; }
+/* Lot 2 « J'apprends en une étape » (12/11/2026, planche 3) : J'apprends
+   réussi, une ligne au-dessus d'« À retenir » (un seul écran). */
+.dc-reussi { max-width: 560px; margin: 0 auto 8px; color: #3d4a5a; font-size: 1rem; font-weight: 800; line-height: 1.3; text-align: center; }
+.dc-reussi b { color: #147447; }
+/* Lot 2 (décision 8, planche 5) : la carte « par cœur », tous les calculs
+   du niveau, à la place du dessin. Lisible imprimée en noir et blanc. */
+.dc-retenir .dc-aide.dc-coeur-zone { max-width: 520px; }
+.dc-coeur { margin: 6px auto 0; padding: .5em .5em .35em; border: 2px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); font-size: calc(var(--retenir-z, 1) * clamp(.88rem, 3.4vw, 1.2rem)); font-weight: 850; line-height: 1.2; }
+.dc-coeur-titre { margin: 0 0 .4em; font-size: .9em; font-weight: 900; }
+.dc-coeur table { margin: 0 auto .35em; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.dc-coeur th, .dc-coeur td { min-width: 1.45em; padding: .05em .16em; border: 1px solid #b9cbd8; line-height: 1.1; text-align: center; }
+/* Une ligne d'en-tête en mots (« nombre », « double ») : un peu plus petite. */
+.dc-coeur th:first-child:not(:only-child) { font-size: .85em; }
+.dc-coeur th { background: #eef4f8; color: #506b7d; font-weight: 850; }
+.dc-coeur-liste { display: grid; grid-template-columns: repeat(var(--colonnes, 2), auto); justify-content: center; gap: .3em 1.5em; margin: 0 0 .3em; }
+.dc-coeur-liste > span { white-space: nowrap; }
 
 /* ---- le bilan : « Juste, mais trop long » ---- */
 .result .seance-suite .cadre { max-width: 520px; text-align: center; }

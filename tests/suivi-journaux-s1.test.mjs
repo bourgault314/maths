@@ -45,9 +45,8 @@ function jouerSeanceD(p, jour, n = 0) {
       const m = Math.min(n % 3, D.NIVEAUX[etape.module]);
       const niveaux = Array.from({length: Math.min(D.NIVEAUX[etape.module], m + 1)}, (_, i) => ({niveau: i + 1, justes: i < m ? 2 : 0, total: 2}));
       p = D.appliquerTest(p, {module: etape.module, marche: m, niveaux}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    } else if (etape.type === "apprends") {
-      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     } else {
+      // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
       const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
       p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     }
@@ -780,7 +779,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
-  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261112-1"/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261113-1"/);
 });
 
 // ============================================================ la page Défi tables

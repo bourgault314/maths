@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261112-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -262,13 +262,17 @@
           <h1 id="result-title" tabindex="-1"></h1>
           <p id="result-score" class="result-score"></p>
         </div>
+        <!-- Lot 2 « J'apprends en une étape » (12/11/2026, planche 3, choix de
+             Gwenaël : un seul écran) : J'apprends réussi, une ligne verte
+             au-dessus d'« À retenir ». -->
+        <p id="retenir-reussi" class="dc-reussi" hidden></p>
         <div id="result-retenir" class="dc-retenir" hidden>
           <p class="eyebrow">À retenir</p>
           <p id="retenir-phrase" class="phrase" tabindex="-1"></p>
           <div id="retenir-image" class="dc-aide"></div>
           <p id="retenir-autre" class="dc-retenir-autre" hidden></p>
           <!-- Relecture 2 (08/11/2026, Gwenaël) : « cela » — la phrase, le calcul et le dessin. -->
-          <p class="cahier">Je recopie cela dans mon cahier.</p>
+          <p id="retenir-cahier" class="cahier">Je recopie cela dans mon cahier.</p>
         </div>
         <div id="result-suite" class="seance-suite"></div>
         <section id="corrections" class="corrections" aria-live="polite"></section>
@@ -285,7 +289,7 @@
           <p><b>Ma séance du jour.</b> <span id="notice-minutes">10&nbsp;minutes</span>&nbsp;: mes calculs du jour, puis j’avance dans mon parcours, à mon rythme. Au bout du temps, la séance est terminée. Je peux en refaire une si je veux.</p>
           <p><b>Mes calculs du jour.</b> Les calculs qui reviennent&nbsp;: c’est là que ça compte. Un calcul raté&nbsp;? Un autre, pour vérifier. Raté encore, je le retravaille avec l’aide le jour même.</p>
           <p><b>Tu connais déjà&nbsp;?</b> À l’entrée d’un module, un escalier&nbsp;: une marche par niveau, 3&nbsp;calculs par marche, un de plus si je me trompe. Ce que je sais déjà est validé tout de suite.</p>
-          <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes de suite, seul. Ici, se tromper ne compte pas.</p>
+          <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes de suite, sans aide. Ici, se tromper ne compte pas.</p>
           <p><b>Mes coches.</b> ✓&nbsp;appris. ★&nbsp;solide&nbsp;: encore réussi quand il est revenu. ↻&nbsp;à revoir.</p>
         </div>
       </div>
@@ -293,8 +297,8 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261112-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261112-1"></script>
+  <script src="./defi_calcul_core.js?v=20261113-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261113-1"></script>
   <script src="./defi_calcul_aides.js?v=20261111-2"></script>
   <script>
     (() => {
@@ -1640,7 +1644,7 @@
       function mesurerLecon() {
         const serie = state.serie;
         state.lecon = null;
-        if (!serie || serie.genre !== "apprends" || window.innerWidth <= ECHELLE.telephone) return;
+        if (!serie || !estTemps(serie) || window.innerWidth <= ECHELLE.telephone) return;
         const echelles = [];
         for (let i = 0; i < serie.temps.length; i += 1) {
           serie.index = i;
@@ -1886,7 +1890,10 @@
         const deborde = () => racine.scrollHeight > window.innerHeight + 1 || phrase.scrollWidth > phrase.clientWidth + 1;
         // Relecture 2 : la phrase rapetisse d'abord (jusqu'à 80 %), le
         // dessin seulement ensuite — c'est lui qu'on doit bien voir.
-        for (let p = .95; p >= .8 && deborde(); p -= .05) {
+        // Lot 2 : une carte « par cœur » est ce qu'il faut bien lire ; la
+        // phrase rapetisse un peu plus (jusqu'à 75 %, 15 px au moins) avant elle.
+        const plancherPhrase = $("retenir-image").classList.contains("dc-coeur-zone") ? .75 : .8;
+        for (let p = .95; p >= plancherPhrase - 1e-9 && deborde(); p -= .05) {
           racine.style.setProperty("--retenir-p", p.toFixed(2));
           ajusterCalculRetenir();
         }
@@ -1978,11 +1985,13 @@
 
       const DETAIL_ENTRAINE = `jusqu’à ${PARCOURS.SEUILS.entraine.sansOutil} justes de suite`;
       const DETAIL_ENCORE = `avec l’aide, jusqu’à ${PARCOURS.SEUILS.rattrapage.sansOutil} justes de suite`;
+      const DETAIL_APPRENDS_SEANCE = `on me montre, puis à moi · ${DETAIL_ENTRAINE}`;
       function detailEtape(etape) {
         if (etape.type === "jour") return `${pluriel(etape.calculs, "calcul")} · ça compte`;
         if (etape.type === "test") return `une marche par niveau, ${PARCOURS.SEUILS.test.parMarche} calculs`;
         if (etape.type === "avance") return `à mon rythme, jusqu’à la fin des ${reglagesSeance().minutes}\u00a0minutes`;
-        if (etape.type === "apprends") return `${tempsDe(etape.module, etape.niveau).length} temps`;
+        // Lot 2 (planche 1) : J'apprends en une étape.
+        if (etape.type === "apprends") return DETAIL_APPRENDS_SEANCE;
         if (etape.type === "entraine") return DETAIL_ENTRAINE;
         return DETAIL_ENCORE;
       }
@@ -2874,18 +2883,44 @@
         $("game-menu").setAttribute("aria-label", versModule ? "Arrêter et revenir à Mon module" : "Arrêter et revenir à l’accueil");
       }
 
-      // ------------------------------------------------- J'apprends, en trois temps
+      // ------------------------------------------------- J'apprends, en une étape
+      //
+      // Lot 2 (12/11/2026, décision 7 de « fonctionnement 3 », planches 2 à 4
+      // validées) : ① « On te montre » — le premier temps de la leçon, sur
+      // son exemple fixe, guidé (choix de Gwenaël : l'élève fait le geste) ;
+      // puis des calculs QUI CHANGENT, une série d'entraînement de genre
+      // « apprends » : ② avec l'outil à manipuler, 2 justes ; ③ avec le
+      // dessin, 2 justes ; ④ « J'écris » de la leçon, une fois (le calcul de
+      // la leçon : il ne change pas encore, lot 3) ; ⑤ sans aide, 5 justes de
+      // suite qui couvrent toutes les sortes du niveau. ⑥ Réussi : « À
+      // retenir », sur un seul écran avec la ligne « ✓ Réussi ! ».
 
       const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", "represente-ecrit": "Je représente", ecris: "J’écris"});
+      // Le nom du moment, en haut à droite (planches 2 et 3).
+      const NOM_MONTRE = "On te montre";
+      const NOMS_OUTIL = Object.freeze({perles: "Avec les perles", glisse: "Avec le glisse-nombres", toucher: "Je touche le calcul", carre: "Avec le carré de 100",
+        jetons: "Avec le tableau à jetons", bandes: "Avec les bandes", billes: "Avec les billes"});
+      const NOM_DESSIN = "Avec le dessin";
+      const NOM_SANS_AIDE = "Sans aide";
+      // La barre de J'apprends : une seule pour toute l'étape (en %).
+      const BARRE_APPRENDS = Object.freeze({montre: 8, outil: 15, dessin: 35, ecris: 58, sansAide: 65});
       // Les temps à étapes : J'écris, et « Je représente » à étapes (M1).
       const aEtapes = nom => nom === "ecris" || nom === "represente-ecrit";
+      // La série d'un temps de la leçon (on te montre, J'écris).
+      const estTemps = serie => Boolean(serie && serie.genre === "apprends" && serie.temps);
 
-      function lancerApprends(id, n, origine, {revoir = false} = {}) {
+      // `revoir` : « Revoir l'exemple » (depuis À retenir) — on te montre,
+      // puis À retenir de nouveau ; rien ne compte.
+      // `toute` (crochet de test seulement) : les trois temps de la leçon,
+      // comme avant le lot 2, pour mesurer leurs écrans.
+      function lancerApprends(id, n, origine, {revoir = false, toute = false} = {}) {
         const trouve = CORE.niveauDe(`${id}-${n}`);
         if (!trouve || !trouve.niveau.apprends) return;
         arreterActivite();
         const apprends = trouve.niveau.apprends;
-        state.serie = {genre: "apprends", module: id, niveau: n, apprends, base: apprends, temps: tempsDe(id, n), index: 0, revoir};
+        state.serie = toute
+          ? {genre: "apprends", module: id, niveau: n, apprends, base: apprends, temps: tempsDe(id, n), index: 0, revoir: true}
+          : {genre: "apprends", module: id, niveau: n, apprends, base: apprends, temps: tempsDe(id, n).slice(0, 1), index: 0, revoir, montre: true};
         state.origine = origine;
         state.running = true;
         show("play");
@@ -2909,7 +2944,7 @@
         titre.textContent = "J’apprends ·";
         titre.hidden = enSeance();
         const nom = document.createElement("b");
-        nom.textContent = NOMS_TEMPS[serie.temps[serie.index]];
+        nom.textContent = serie.montre ? NOM_MONTRE : NOMS_TEMPS[serie.temps[serie.index]];
         fil.replaceChildren(titre, nom);
         fil.setAttribute("aria-label", `J’apprends, temps ${serie.index + 1} sur ${serie.temps.length} : ${nom.textContent}`);
       }
@@ -2942,7 +2977,7 @@
         state.answer = "";
         state.effacerAuProchain = false;
         renderFilApprends();
-        majBarre({avance: (serie.index + .45) / serie.temps.length * 100});
+        majBarre({avance: serie.montre ? BARRE_APPRENDS.montre : serie.pratique ? BARRE_APPRENDS.ecris : (serie.index + .45) / serie.temps.length * 100});
         carte.classList.add("no-skip");
         clearAnswerFeedback();
         if (nom === "manipule") {
@@ -3080,19 +3115,64 @@
           ajusterEchelle();
           return;
         }
-        // Les trois temps sont faits : la phrase-bilan, sur un écran à elle.
-        // « Revoir l'exemple » ne compte pas une seconde fois.
-        arreterActivite();
-        if (!serie.revoir) {
-          verserTempsActif();
-          const suivi = PARCOURS.appliquerSerie(parcours, {module: serie.module, niveau: serie.niveau, genre: "apprends"},
-            {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance(), palier: palierRegle()});
-          parcours = suivi.parcours;
-          sauverParcours();
-          noterEtape("✓");
+        // ④ J'écris est fait : les calculs qui changent reprennent, sans aide.
+        if (serie.pratique) { reprendrePratique(serie.pratique); return; }
+        // « Revoir l'exemple » : de nouveau À retenir, rien ne compte.
+        if (serie.revoir) {
+          arreterActivite();
+          renderRetenir(serie);
+          show("result");
+          return;
         }
-        renderRetenir(serie);
-        show("result");
+        // ① On te montre est fait : à toi, des calculs qui changent.
+        commencerPratique(serie);
+      }
+
+      // ② à ⑤ : la série d'entraînement de J'apprends (genre « apprends »),
+      // comme Je m'entraîne : l'outil à manipuler, 2 justes ; le dessin, 2
+      // justes ; puis sans aide, 5 justes de suite et toutes les sortes.
+      // Jamais un calcul déjà vu dans la leçon. Rien n'est enregistré avant
+      // la fin (une étape quittée au milieu se recommence).
+      function commencerPratique(lecon) {
+        const {module: id, niveau: n} = lecon;
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: PARCOURS.SEUILS.entraine.maximum, exclure: lecon.base.textes});
+        if (!calculs.length) return;
+        const manip = calculs.some(calcul => CORE.manipulationDe(calcul));
+        demarrerSerie({
+          genre: "apprends", module: id, niveau: n, total: calculs.length, manip, lecon: lecon.base, ecrisFait: false, barre: 0,
+          formes: [...new Set(calculs.map(calcul => calcul.forme))],
+          outil: PARCOURS.suivreEntrainement([], {genre: "apprends", manip}).outil,
+          questions: calculs.map(calcul => ({calcul, retour: false}))
+        }, state.origine);
+      }
+
+      // ④ J'écris, au moment où le dessin s'en va : le temps « J'écris » de
+      // la leçon, une fois. Ses réponses ne comptent pas dans la série.
+      function lancerEcris(pratique) {
+        arreterActivite();
+        const base = pratique.lecon;
+        state.serie = {genre: "apprends", module: pratique.module, niveau: pratique.niveau, apprends: base, base,
+          temps: tempsDe(pratique.module, pratique.niveau).slice(-1), index: 0, revoir: false, pratique};
+        state.lecon = null;
+        state.running = true;
+        renderTemps();
+        ajusterEchelle();
+      }
+      function reprendrePratique(pratique) {
+        arreterActivite();
+        // Le crochet de test « ecrire » : J'écris seul, puis À retenir ; rien ne compte.
+        if (pratique.essai) {
+          renderRetenir({module: pratique.module, niveau: pratique.niveau, apprends: pratique.lecon});
+          show("result");
+          return;
+        }
+        state.serie = pratique;
+        state.running = true;
+        pratique.ecrisFait = true;
+        pratique.index += 1;
+        if (pratique.index >= pratique.questions.length) { finish(); return; }
+        renderQuestion();
+        ajusterEchelle();
       }
 
       // Une réponse dans « je représente » ou « j'écris ». Juste : le temps
@@ -3203,11 +3283,24 @@
 
       // La phrase-bilan de « J'apprends ». Trois sorties : la suite, revoir
       // l'exemple, et un lien discret pour s'arrêter là.
-      function renderRetenir(serie) {
+      // Lot 2 : à la fin de J'apprends réussi (`reussi` : « … revient
+      // demain. », ou "" pour une compétence à revoir), la ligne « ✓ Réussi ! »
+      // au-dessus ; `finDeSeance` : la séance s'est finie avec cette étape,
+      // le bouton mène à son bilan. Un niveau « par cœur » (décision 8) : la
+      // carte de tous ses calculs à la place du dessin.
+      function renderRetenir(serie, {reussi = null, finDeSeance = null} = {}) {
         const result = $("result");
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
+        const ligneReussi = $("retenir-reussi");
+        ligneReussi.hidden = reussi === null;
+        ligneReussi.replaceChildren();
+        if (reussi !== null) {
+          const fort = document.createElement("b");
+          fort.textContent = soude("✓ Réussi !");
+          ligneReussi.append(fort, ...(reussi ? [" ", soude(reussi)] : []));
+        }
         // Relecture 1 (05/11/2026) : la règle en phrase, puis le calcul seul
         // sur sa ligne, d'un seul tenant (ajusterRetenir le rapetisse s'il
         // ne tient pas dans la largeur).
@@ -3220,7 +3313,11 @@
           AIDES.ecrireTexte(calcul, deux.calcul);
           $("retenir-phrase").append(...(deux.phrase ? [" "] : []), calcul);
         } else AIDES.ecrireTexte($("retenir-phrase"), AIDES.souderCalculs(serie.apprends.bilan));
-        $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
+        const coeur = CORE.carteParCoeur(`${serie.module}-${serie.niveau}`);
+        if (coeur) $("retenir-image").replaceChildren(carteParCoeur(coeur));
+        else $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
+        $("retenir-image").classList.toggle("dc-coeur-zone", Boolean(coeur));
+        $("retenir-cahier").textContent = soude(coeur ? "Je les note dans mon cahier et je les apprends par cœur." : "Je recopie cela dans mon cahier.");
         // Lot « couverture » (06/11/2026) : une deuxième façon de voir (A1-2 :
         // le presque-double ; A3-2 : les dizaines), sous le dessin, la phrase
         // puis le calcul seul sur sa ligne.
@@ -3236,7 +3333,9 @@
         }
         majFilDeBilan();
         const revoir = ["Revoir l’exemple", "secondary", () => lancerApprends(serie.module, serie.niveau, state.origine, {revoir: true})];
-        if (enSeance()) {
+        if (finDeSeance) {
+          $("result-suite").replaceChildren(boutonsDeSuite(["Suivant →", "primary", finDeSeance], revoir));
+        } else if (enSeance()) {
           const file = PARCOURS.fileSeance(parcours, CARTE, optionsSeance());
           const etape = file.jouables ? file.etapes[0] : null;
           $("result-suite").replaceChildren(
@@ -3244,11 +3343,49 @@
             lienDiscret("Arrêter la séance", quitterSeance));
         } else {
           $("result-suite").replaceChildren(
-            boutonsDeSuite(["Je m’entraîne →", "primary", () => lancerSerie(serie.module, serie.niveau, "entraine", state.origine)], revoir),
+            boutonsDeSuite(["Mon module", "primary", () => ouvrirModule(serie.module)], revoir),
             lienDiscret("Accueil", versAccueil));
         }
         $("corrections").replaceChildren();
         state.titreResultat = "retenir-phrase";
+      }
+
+      // La carte « par cœur » (lot 2, décision 8, planche 5) : tous les calculs
+      // du niveau, en tableau (les tables, les doubles) ou en liste. Le
+      // contenu vient du cœur (CORE.carteParCoeur).
+      function carteParCoeur(coeur) {
+        const carte = document.createElement("div");
+        carte.className = "dc-coeur";
+        const titre = document.createElement("p");
+        titre.className = "dc-coeur-titre";
+        titre.textContent = soude(coeur.titre);
+        carte.append(titre);
+        coeur.blocs.forEach(bloc => {
+          if (bloc.table) {
+            const table = document.createElement("table");
+            bloc.table.forEach((ligne, i) => {
+              const tr = document.createElement("tr");
+              ligne.forEach((valeur, j) => {
+                const cellule = document.createElement(i === 0 || (j === 0 && !bloc.ligneTete) ? "th" : "td");
+                cellule.textContent = typeof valeur === "number" ? CORE.formaterNombre(valeur) : soude(valeur);
+                tr.append(cellule);
+              });
+              table.append(tr);
+            });
+            carte.append(table);
+            return;
+          }
+          const liste = document.createElement("div");
+          liste.className = "dc-coeur-liste";
+          liste.style.setProperty("--colonnes", String(bloc.colonnes || 2));
+          bloc.liste.forEach(calcul => {
+            const ligne = document.createElement("span");
+            AIDES.ecrireTexte(ligne, calcul, {insecable});
+            liste.append(ligne);
+          });
+          carte.append(liste);
+        });
+        return carte;
       }
 
       // ------------------------------------------------- les séries de calculs
@@ -3353,7 +3490,10 @@
         demarrerSerie({genre: "jour", total: questions.filter(question => !question.deuxieme).length || 1, questions, mouvements: [], sus: []}, "seance");
       }
 
-      const estEntrainement = serie => serie.genre === "entraine" || serie.genre === "rattrape";
+      // Lot 2 : J'apprends en une étape. Ses temps (« on te montre », puis
+      // « J'écris ») ont une liste `temps` ; ses calculs qui changent sont une
+      // série d'entraînement de genre « apprends ».
+      const estEntrainement = serie => serie.genre === "entraine" || serie.genre === "rattrape" || (serie.genre === "apprends" && !serie.temps);
       // Ce que le moteur doit savoir d'un entraînement : « Je m'entraîne » ou
       // « encore », et si le niveau a un outil à manipuler.
       const reglesEntrainement = (serie, plus = {}) => Object.assign({genre: serie.genre, manip: serie.manip !== false}, plus);
@@ -3436,6 +3576,30 @@
         }
       }
 
+      // J'apprends (lot 2, planches 2 et 3) : en haut à droite, le nom du
+      // moment (« Avec les perles », « Avec le dessin », « Sans aide ») ; à
+      // gauche, « Calcul 3 », et sans aide les justes de suite ; une seule
+      // barre pour l'étape, qui ne redescend plus sous J'écris une fois fait.
+      function majMomentApprends(question) {
+        const serie = state.serie;
+        const suivi = PARCOURS.suivreEntrainement(serie.reponses, reglesEntrainement(serie));
+        const outil = question.rappel ? "aucun" : question.outil;
+        const manipulation = outil === "manip" ? CORE.manipulationDe(question.calcul) : null;
+        const nom = outil === "manip" ? NOMS_OUTIL[manipulation && manipulation.outil] || NOMS_OUTIL.perles : outil === "image" ? NOM_DESSIN : NOM_SANS_AIDE;
+        const faits = serie.reponses.length + 1;
+        const deSuite = outil === "aucun" && suivi.justesDeSuite ? ` · ${suivi.justesDeSuite} juste${suivi.justesDeSuite > 1 ? "s" : ""} de suite` : "";
+        let avance = outil === "manip" ? BARRE_APPRENDS.outil : outil === "image" ? (serie.manip ? BARRE_APPRENDS.dessin : BARRE_APPRENDS.outil) : BARRE_APPRENDS.sansAide;
+        if (outil === "aucun") avance += (100 - BARRE_APPRENDS.sansAide) * suivi.justesDeSuite / suivi.objectif;
+        if (serie.ecrisFait) avance = Math.max(BARRE_APPRENDS.sansAide, avance);
+        majBarre({compte: `Calcul ${faits}${deSuite}`, pastille: "", avance});
+        const fil = $("seance-fil");
+        const fort = document.createElement("b");
+        fort.textContent = nom;
+        fil.replaceChildren(fort);
+        fil.hidden = false;
+        fil.setAttribute("aria-label", `J’apprends : ${nom}`);
+      }
+
       function renderQuestion() {
         const serie = state.serie;
         const question = serie.questions[serie.index];
@@ -3445,6 +3609,9 @@
         if (serie.genre === "test") {
           renderEscalier();
           majBarre({compte: `Marche ${serie.marche + 1} sur ${serie.marches.length}`, pastille: "Tu connais déjà\u00a0?", avance: (serie.marche + serie.courante.length / serie.aJouer.length) / serie.marches.length * 100});
+        } else if (serie.genre === "apprends") {
+          // Lot 2 : le nom du moment et la barre de J'apprends sont posés
+          // une fois l'outil choisi (montrerOutil), plus bas.
         } else if (estEntrainement(serie)) {
           const suivi = PARCOURS.suivreEntrainement(serie.reponses, reglesEntrainement(serie));
           const faits = serie.reponses.length + 1;
@@ -3490,6 +3657,7 @@
             annonce.hidden = false;
           }
           montrerOutil(question, {nouveau});
+          if (serie.genre === "apprends") majMomentApprends(question);
         }
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -3514,7 +3682,10 @@
           const suivi = PARCOURS.suivreEntrainement(serie.reponses, reglesEntrainement(serie, {toutesFormesVues: toutesFormesVues() && toutesSortesCouvertes()}));
           serie.outil = suivi.outil;
           if (suivi.fini || serie.index + 1 >= serie.questions.length) { finish(); return; }
-          if (serie.genre === "entraine" && suivi.outil === "aucun") amenerSorteManquante();
+          if (serie.genre !== "rattrape" && suivi.outil === "aucun") amenerSorteManquante();
+          // J'apprends (lot 2) : le dessin s'en va pour la première fois —
+          // ④ J'écris, une fois, avant « sans aide ».
+          if (serie.genre === "apprends" && !serie.ecrisFait && suivi.outil === "aucun") { lancerEcris(serie); return; }
         }
         serie.index += 1;
         if (serie.index >= serie.questions.length) finish();
@@ -3545,7 +3716,7 @@
       }
       function toutesSortesCouvertes() {
         const serie = state.serie;
-        if (serie.genre !== "entraine") return true;
+        if (serie.genre !== "entraine" && serie.genre !== "apprends") return true;
         const vues = sortesDeLaFin();
         return CORE.sortesDe(`${serie.module}-${serie.niveau}`).every(sorte => vues.has(sorte.n));
       }
@@ -3718,7 +3889,7 @@
 
       function next(passe) {
         if (!state.running || !state.serie) return;
-        if (state.serie.genre === "apprends") { if (!passe) repondreTemps(); }
+        if (estTemps(state.serie)) { if (!passe) repondreTemps(); }
         else repondreSerie(passe);
       }
 
@@ -3775,8 +3946,22 @@
         }
         parcours = suivi.parcours;
         sauverParcours();
-        // Un entraînement raté (20 calculs) : la séance s'arrête là.
-        const arretee = enSeance() && suivi.finie && serie.genre === "entraine" && !suivi.verdict.reussi;
+        // Lot 2 : J'apprends réussi — « À retenir », sur le même écran que
+        // « ✓ Réussi ! » (planche 3, choix de Gwenaël). La séance finie avec
+        // cette étape : « Suivant → » mène à son bilan.
+        if (serie.genre === "apprends" && suivi.verdict.reussi) {
+          const entree = suivi.evenements.some(evenement => evenement.type === "entree");
+          const fin = enSeance() && suivi.finie ? () => { renderFinDeSeance(serie, sur, false); majFilDeBilan(); renderCorrections(serie); show("result"); } : null;
+          renderRetenir({module: serie.module, niveau: serie.niveau, apprends: serie.lecon},
+            {reussi: entree ? `${nomCompetence(serie.module, serie.niveau)} revient demain.` : "", finDeSeance: fin});
+          $("corrections").replaceChildren();
+          show("result");
+          return;
+        }
+        // Un entraînement raté (25 calculs) : la séance s'arrête là (lot 2 :
+        // J'apprends aussi, sauf celui d'une compétence à revoir).
+        const arretee = enSeance() && suivi.finie && (serie.genre === "entraine" || serie.genre === "apprends") && !suivi.verdict.reussi
+          && suivi.parcours.seance.p[PARCOURS.PLAN.nouveaute] === PARCOURS.NOUVEAUTE.arretee;
         if (enSeance() && suivi.finie) renderFinDeSeance(serie, sur, arretee);
         else if (serie.genre === "jour") renderBilanDuJour(serie, sur);
         else if (serie.genre === "test") renderBilanTest(serie, suivi, sur);
@@ -3795,6 +3980,7 @@
         if (classe) result.classList.add(classe);
         $("result-verdict").hidden = false;
         $("result-retenir").hidden = true;
+        $("retenir-reussi").hidden = true;
         $("result-icon").textContent = icone;
         $("result-icon").hidden = !icone;
         $("result-title").textContent = soude(titre);
@@ -3936,8 +4122,11 @@
           $("result-suite").replaceChildren(...morceaux, ...suiteDeSeance());
           return;
         }
+        // Lot 2 : J'apprends raté (hors séance, l'écran d'un module) se recommence.
+        const encore = serie.genre === "apprends" ? ["Je recommence", "primary", () => lancerApprends(id, n, state.origine)]
+          : ["Je m’entraîne encore", "primary", () => lancerSerie(id, n, serie.genre, state.origine)];
         $("result-suite").replaceChildren(...morceaux, boutonsDeSuite(
-          verdict.reussi ? ["Mon module", "primary", () => ouvrirModule(id)] : ["Je m’entraîne encore", "primary", () => lancerSerie(id, n, serie.genre, state.origine)],
+          verdict.reussi ? ["Mon module", "primary", () => ouvrirModule(id)] : encore,
           verdict.reussi ? ["Accueil", "secondary", versAccueil] : ["Mon module", "secondary", () => ouvrirModule(id)]));
       }
 
@@ -4164,13 +4353,28 @@
               const image = $("aide").querySelector(":scope > svg");
               return image && !$("aide").hidden ? image.getAttribute("aria-label") : null;
             },
-            // J'apprends d'un niveau, comme à l'étape 2 d'une séance (le fil,
-            // la ligne de suivi), pour regarder ses écrans. Il ne compte pas
-            // (« Revoir l'exemple ») : rien n'est enregistré.
+            // La leçon d'un niveau, comme à l'étape 2 d'une séance (le fil,
+            // la ligne de suivi), pour regarder ses écrans : ses trois temps,
+            // puis À retenir. Rien n'est enregistré. Depuis le lot 2, l'élève
+            // n'en voit que le premier (on te montre) et J'écris (voir
+            // « ecrire ») ; ces écrans gardent leur mise en page.
             apprendre: (id, n) => {
               if (!CORE.niveauDe(`${id}-${n}`)) return false;
               state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
-              lancerApprends(id, n, "seance", {revoir: true});
+              lancerApprends(id, n, "seance", {toute: true});
+              return true;
+            },
+            // Lot 2 : « J'écris » d'un niveau (④ de J'apprends en une étape),
+            // tout de suite, pour regarder son écran. Rien n'est enregistré.
+            ecrire: (id, n) => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve || !trouve.niveau.apprends) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              state.origine = "seance";
+              show("play");
+              majFilDeJeu();
+              majBoutonRetour();
+              lancerEcris({module: id, niveau: n, lecon: trouve.niveau.apprends, essai: true});
               return true;
             },
             // « À retenir » d'un niveau, tout de suite (la fin de J'apprends),
@@ -4178,7 +4382,7 @@
             retenir: (id, n) => {
               if (!CORE.niveauDe(`${id}-${n}`)) return false;
               state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
-              lancerApprends(id, n, "seance", {revoir: true});
+              lancerApprends(id, n, "seance", {toute: true});
               arreterActivite();
               renderRetenir(state.serie);
               show("result");

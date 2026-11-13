@@ -97,7 +97,11 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
         await page.waitForTimeout(120);
         const z = await page.evaluate(() => Number(getComputedStyle(document.documentElement).getPropertyValue("--retenir-z")) || 1);
         assert.ok(await defile(page) <= 1, `${cle} : rien ne défile`);
-        if (z < plancher - 1e-9) petits.push(`${cle} : ${z}`);
+        // Lot 2 : un niveau « par cœur » a sa carte (tous ses calculs) ; à la
+        // hauteur d'un iPhone dans Safari, elle peut rapetisser jusqu'à 65 %
+        // (la table d'addition d'A1-2 et A1-3).
+        const plancherDuNiveau = CORE.carteParCoeur(cle) && plancher < 1 ? .65 : plancher;
+        if (z < plancherDuNiveau - 1e-9) petits.push(`${cle} : ${z}`);
       }
       assert.deepEqual(petits, [], "le dessin d'« À retenir » ne rapetisse pas");
       assert.deepEqual(erreurs, []);
@@ -160,18 +164,23 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
     await contexte.close();
   });
 
-  await essai("a1 : A1-1 en barres ; « À retenir », les paires en rangées du boulier", async () => {
+  // Lot 2 (décision 8, planche 5) : A1-1 est un niveau « par cœur » — À
+  // retenir montre la carte des paires qui font 10, à la place du boulier.
+  await essai("a1 : A1-1 « À retenir », la carte des paires qui font 10", async () => {
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, [390, 844]);
     assert.ok(await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.retenir("A1", 1)));
     await page.waitForTimeout(300);
     const r = await page.evaluate(() => ({
-      perles: document.querySelectorAll("#retenir-image circle").length,
+      lignes: [...document.querySelectorAll("#retenir-image .dc-coeur-liste > span")].map(e => e.textContent.replace(/\s+/g, " ").trim()),
+      titre: document.querySelector("#retenir-image .dc-coeur-titre").textContent,
       cahier: document.querySelector("#result-retenir .cahier").textContent,
-      large: Math.round(document.querySelector("#retenir-image svg").getBoundingClientRect().width / document.querySelector("#result-retenir").getBoundingClientRect().width * 100)
+      large: Math.round(document.querySelector("#retenir-image .dc-coeur").getBoundingClientRect().width / document.querySelector("#result-retenir").getBoundingClientRect().width * 100)
     }));
-    assert.equal(r.perles, 50);
-    assert.equal(r.cahier, "Je recopie cela dans mon cahier.");
-    assert.ok(r.large >= 85, `le dessin prend la largeur (${r.large} %)`);
+    assert.equal(r.titre, "Les paires qui font 10");
+    assert.equal(r.lignes.length, 11);
+    assert.equal(r.lignes[3], "3 + 7 = 10");
+    assert.equal(r.cahier, "Je les note dans mon cahier et je les apprends par cœur.");
+    assert.ok(r.large >= 85, `la carte prend la largeur (${r.large} %)`);
     assert.deepEqual(erreurs, []);
     await contexte.close();
   });

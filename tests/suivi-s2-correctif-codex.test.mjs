@@ -310,9 +310,8 @@ function seanceD(p, jour) {
       p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
     } else if (etape.type === "test") {
       p = D.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    } else if (etape.type === "apprends") {
-      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     } else {
+      // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
       const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
       p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
     }

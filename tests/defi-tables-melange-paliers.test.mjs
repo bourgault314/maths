@@ -583,7 +583,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « cours-lot1-b26 » (13/11/2026) : lib/cours.json seul change (les chapitres Une grandeur
   // en fonction d'une autre de 4e, Angles et triangles semblables, Coordonnées et graphiques et
   // Préparer la seconde de 3e, du livret en ligne) (avant : defi-calcul-lot-1-la-seance).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-lot1-b26$/m);
+  // Puis le lot 2 « J'apprends en une étape » de Défi calcul (13/11/2026) : les deux moteurs
+  // de prof/ changent (avant : cours-lot1-b26).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-2-japprends$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });
