@@ -3,6 +3,9 @@
 (function () {
   "use strict";
   const { hasard } = window.EN;
+  // Interrupteur unique des boutons « Je m'entraîne » du bilan. Éteint tant que les automatismes et les cours
+  // vers lesquels ils mènent ne sont pas prêts ; chaque question garde son champ `entrainement` pour le jour où on le rallume.
+  const ENTRAINEMENT_VISIBLE = false;
   const params = new URLSearchParams(location.search);
   const sujet = window.EN_SUJETS[params.get("sujet")] || window.EN_SUJETS["6e-automatismes"];
   const vueProf = params.get("prof") === "1";
@@ -67,9 +70,13 @@
     $("#compteur").textContent = `Question ${i + 1} / ${items.length}`;
     $("#progres").style.width = `${(i / items.length) * 100}%`;
     $("#q-num").textContent = passation.reprise ? `Question ${it.q.num} du sujet` : `Question ${i + 1}`;
-    $("#q-enonce").innerHTML = it.g.enonce;
+    // Espace insécable avant « ? : ; ! » et après « : le signe ne part jamais seul à la ligne.
+    const typo = (t) => t.replace(/ ([?:;!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+    $("#q-enonce").innerHTML = typo(it.g.enonce);
     $("#q-figure").innerHTML = it.g.figure || "";
     $("#q-figure").hidden = !it.g.figure;
+    $("#q-apres").innerHTML = typo(it.g.apres || "");
+    $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
     const disposition = it.g.disposition || it.q.disposition || "grille";
     zone.className = "choix " + disposition;
@@ -77,7 +84,7 @@
     it.choix.forEach((ch, k) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "choix-btn";
+      b.className = "choix-btn" + (it.g.choixFigures ? " choix-figure" : "");
       b.setAttribute("aria-pressed", "false");
       b.innerHTML = `<span class="case" aria-hidden="true"></span><span class="choix-texte">${ch.html}${it.g.suffixe || ""}</span>`;
       b.addEventListener("click", () => {
@@ -143,6 +150,7 @@
       parAutomatisme.get(e.url).nums.push(x.it.q.num);
     }
     $("#a-revoir").hidden = rates.length === 0;
+    $("#bloc-entrainement").hidden = !ENTRAINEMENT_VISIBLE || rates.length === 0;
     $("#liens-entrainement").innerHTML = [...parAutomatisme.values()].map(({ e, nums }) =>
       `<li><a class="entrainer" href="${e.url}"><span><strong>${e.libelle}</strong><small>${nums.length > 1 ? "Questions " + nums.slice(0, -1).join(", ") + " et " + nums[nums.length - 1] : "Question " + nums[0]}</small></span><span aria-hidden="true">→</span></a></li>`).join("");
     const minuscule = (t) => t.charAt(0).toLowerCase() + t.slice(1);

@@ -76,8 +76,18 @@
     .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;line-height:1.05;font-size:.92em}
     .frac>span:first-child{padding:0 3px 2px;border-bottom:2px solid currentColor}
     .frac>span:last-child{padding:2px 3px 0}
+    /* Le chapeau reste dans la hauteur de la ligne : sur une deuxième ligne, il ne touche plus la ligne du dessus. */
     .chapeau{position:relative;display:inline-block;font-weight:inherit}
-    .chapeau::before{content:"";position:absolute;left:50%;top:-.12em;width:.5em;height:.22em;transform:translateX(-50%);background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 5'%3E%3Cpath d='M1 4.5L5 1l4 3.5' fill='none' stroke='%23143451' stroke-width='1.4'/%3E%3C/svg%3E")}
+    .chapeau::before{content:"";position:absolute;left:50%;top:-.02em;width:.5em;height:.2em;transform:translateX(-50%);background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 5'%3E%3Cpath d='M1 4.5L5 1l4 3.5' fill='none' stroke='%23143451' stroke-width='1.4'/%3E%3C/svg%3E")}
+    .chapeau.long::before{width:92%;height:.22em;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 5' preserveAspectRatio='none'%3E%3Cpath d='M1 4.5L15 1l14 3.5' fill='none' stroke='%23143451' stroke-width='1.4' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E")}
+    .q-enonce,.choix-texte{line-height:1.5}
+    #q-apres{margin-top:6px}
+    .lettre{font-family:"Cambria Math","Times New Roman",Times,serif;font-style:italic;font-weight:inherit;font-size:1.1em}
+    .tableau-prop{margin:12px auto 2px;border-collapse:collapse;font-size:1.15rem;font-weight:850}
+    .tableau-prop td{min-width:58px;height:44px;padding:4px 10px;border:2px solid var(--ink);text-align:center}
+    .choix-figure .choix-texte{display:flex;align-items:center}
+    .fig-choix{display:block;width:auto;height:64px;max-width:100%}
+    .revoir-reponses .fig-choix{display:inline-block;height:44px;vertical-align:middle;margin-left:4px}
 
     /* Bilan */
     .bilan{max-width:680px;margin:6px auto}
@@ -106,6 +116,7 @@
     .entrainer>span:last-child{color:var(--blue);font-size:1.3rem;font-weight:950}
     .fin-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
 
+    @media(min-width:621px){.fig-choix{height:80px}}
     @media(max-width:620px){
       .shell{width:100%}
       .topbar{min-height:56px;padding:4px 10px}
@@ -162,6 +173,7 @@
           <p id="q-num" class="q-num">Question 1</p>
           <p id="q-enonce" class="q-enonce"></p>
           <div id="q-figure" class="q-figure"></div>
+          <p id="q-apres" class="q-enonce" hidden></p>
           <div id="q-choix" class="choix" role="group" aria-label="Réponses proposées"></div>
           <div class="actions">
             <button id="passer" class="lien" type="button">Je ne sais pas</button>
@@ -186,9 +198,11 @@
         </div>
         <ul id="domaines" class="domaines"></ul>
         <div id="a-revoir" class="a-revoir">
-          <h2>Je m’entraîne</h2>
-          <p>Entraîne-toi sur ces automatismes, puis reviens refaire tes questions ratées.</p>
-          <ul id="liens-entrainement" class="liens-entrainement"></ul>
+          <div id="bloc-entrainement" hidden>
+            <h2>Je m’entraîne</h2>
+            <p>Entraîne-toi sur ces automatismes, puis reviens refaire tes questions ratées.</p>
+            <ul id="liens-entrainement" class="liens-entrainement"></ul>
+          </div>
           <h2>Mes erreurs</h2>
           <ul id="liste-revoir" class="liste-revoir"></ul>
         </div>
@@ -200,8 +214,10 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261112-1"></script>
+  <script src="./en_commun.js?v=20261113-1"></script>
   <script src="./sujets/6e_automatismes.js?v=20261112-1"></script>
-  <script src="./evaluation.js?v=20261112-1"></script>
+  <script src="./sujets/5e_automatismes.js?v=20261113-1"></script>
+  <script src="./sujets/4e_automatismes.js?v=20261113-1"></script>
+  <script src="./evaluation.js?v=20261113-1"></script>
 </body>
 </html>

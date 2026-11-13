@@ -62,8 +62,12 @@
 
   // Fraction empilée.
   const frac = (n, d) => `<span class="frac"><span>${n}</span><span>${d}</span></span>`;
-  // Angle avec son chapeau.
+  // Angle avec son chapeau ; angLong pour un angle nommé par trois lettres (chapeau sur les trois).
   const ang = (lettre) => `<span class="chapeau">${lettre}</span>`;
+  const angLong = (lettres) => `<span class="chapeau long">${lettres}</span>`;
+  // Lettre du calcul littéral, en italique (𝑥 rond).
+  const lettre = (l) => `<i class="lettre">${l}</i>`;
+  const MOINS = "−"; // signe moins typographique
 
   // Nombres en lettres (orthographe rectifiée de 1990 : traits d'union partout), de 0 à 999 999.
   const UNITES = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
@@ -94,8 +98,8 @@
   // ---------- Figures (SVG) ----------
   const COUL = { trait: "#143451", lettre: "#0d6e45", grille: "#c3ccd4", bleu: "#7b83f0", bleuBord: "#2626c9" };
 
-  function svg(largeur, hauteur, contenu, etiquette) {
-    return `<svg class="figure" viewBox="0 0 ${largeur} ${hauteur}" style="max-width:${Math.round(Math.max(largeur * 1.15, 340))}px" role="img" aria-label="${etiquette || "Figure"}" xmlns="http://www.w3.org/2000/svg">${contenu}</svg>`;
+  function svg(largeur, hauteur, contenu, etiquette, largeurMax) {
+    return `<svg class="figure" viewBox="0 0 ${largeur} ${hauteur}" style="max-width:${largeurMax || Math.round(Math.max(largeur * 1.15, 340))}px" role="img" aria-label="${etiquette || "Figure"}" xmlns="http://www.w3.org/2000/svg">${contenu}</svg>`;
   }
 
   function quadrillage(x0, y0, colonnes, lignes, pas, couleur, tirets) {
@@ -107,5 +111,5 @@
     return s;
   }
 
-  racine.EN = { hasard, nb, nombreVersTexte, decaler, frac, ang, enLettres, svg, quadrillage, COUL, ESP };
+  racine.EN = { hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
 })(typeof window !== "undefined" ? window : globalThis);
