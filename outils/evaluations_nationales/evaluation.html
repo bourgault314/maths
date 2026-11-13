@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Évaluations nationales | maths&amp;go</title>
+  <meta name="description" content="Repasser les tests publiés des évaluations nationales de mathématiques, sujet officiel ou sujet jumeau, sans aide, avec un bilan selon les repères officiels.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <style>
+    :root{--ink:#143451;--muted:#506b7d;--line:#d4e3ed;--blue:#0755b8;--teal:#087a71;--green:#147447;--green-soft:#e5f7eb;--red:#a93030;--red-soft:#ffebeb;--orange:#9a5a00;--orange-soft:#fff3dc;color-scheme:light;font-family:Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif}
+    *{box-sizing:border-box}[hidden]{display:none!important}
+    html{min-height:100%;background:#edf5fb;-webkit-text-size-adjust:100%}
+    body{min-height:100vh;margin:0;color:var(--ink);background:radial-gradient(circle at 8% 5%,rgba(8,168,159,.14),transparent 26rem),radial-gradient(circle at 92% 7%,rgba(250,204,21,.18),transparent 24rem),linear-gradient(#fbfdff,#edf5fb)}
+    button,a{font:inherit;-webkit-tap-highlight-color:transparent}
+    button:focus-visible,a:focus-visible{outline:3px solid rgba(15,108,249,.3);outline-offset:3px}
+    .shell{width:min(860px,calc(100% - 28px));margin:auto;padding-bottom:28px}
+    .topbar{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand img{display:block;width:105px;height:auto}
+    .retour{min-height:39px;display:inline-flex;align-items:center;gap:6px;padding:0 13px;border:1px solid #d5e1ec;border-radius:999px;color:#24415f;background:#fff;font-size:.8rem;font-weight:900;text-decoration:none}
+    .retour svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .panel{padding:clamp(18px,4.5vw,40px);border:1px solid var(--line);border-radius:28px;background:rgba(255,255,255,.97);box-shadow:0 18px 55px rgba(26,66,100,.12)}
+    .eyebrow{margin:0 0 6px;color:var(--teal);font-size:.8rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+    h1{margin:0;font-size:clamp(2rem,6vw,3.1rem);line-height:1.05}
+    p{line-height:1.45}
+    .primary,.secondary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:11px 18px 9px;border-radius:13px;font-weight:950;text-decoration:none;cursor:pointer}
+    .primary{color:#fff;border:0;background:var(--blue);box-shadow:0 5px 0 #043f8c}
+    .primary:disabled{background:#9fb6cf;box-shadow:0 5px 0 #8199b3;cursor:default}
+    .secondary{color:var(--blue);border:1px solid #c5d9e6;background:#fff}
+    .lien{min-height:44px;padding:0 4px;border:0;background:none;color:var(--blue);font-weight:850;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+    /* Accueil */
+    .accueil{max-width:640px;margin:18px auto;text-align:center}
+    .accueil .descr{margin:10px 0 22px;color:var(--muted);font-weight:700}
+    .cartes{display:grid;gap:12px;text-align:left}
+    .carte{width:100%;display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:12px;padding:16px;border:2px solid var(--line);border-radius:18px;background:#fff;color:var(--ink);box-shadow:0 3px 0 #c9dbe6;text-align:left;cursor:pointer}
+    .carte:hover{border-color:#9fc0d8}
+    .carte .ico{width:52px;height:52px;display:grid;place-items:center;border-radius:14px;font-size:1.7rem}
+    .carte.officiel .ico{background:#eef2ff}.carte.jumeau .ico{background:#e7f8f5}
+    .carte strong{display:block;font-size:1.15rem;line-height:1.2}
+    .carte small{display:block;margin-top:3px;color:var(--muted);font-size:.88rem;font-weight:700;line-height:1.3}
+    .carte .go{padding:9px 14px 7px;border-radius:999px;background:var(--blue);color:#fff;font-weight:950;white-space:nowrap}
+    .dernier{margin:16px 0 0;padding:10px 14px;border-radius:13px;background:#f3f8fb;color:var(--ink);font-weight:850}
+    .source{margin:22px 0 0;color:var(--muted);font-size:.78rem}
+    .source a{color:var(--muted)}
+
+    /* Passation */
+    .barre{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
+    .barre strong{min-width:76px;padding:6px 12px;border-radius:999px;color:var(--teal);background:#e7f8f5;text-align:center;font-variant-numeric:tabular-nums}
+    .piste{height:8px;margin:10px 0 14px;overflow:hidden;border-radius:99px;background:#dfebf3}
+    .piste b{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}
+    .q-carte{padding:clamp(16px,3.5vw,28px);border:2px solid var(--line);border-radius:22px;background:#fff}
+    .q-num{margin:0 0 8px;color:var(--teal);font-size:.78rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    .q-enonce{margin:0;font-size:clamp(1.12rem,3.6vw,1.35rem);font-weight:850;line-height:1.4}
+    .insecable{white-space:nowrap}
+    .calcul{display:inline-block;margin:6px 0 0;font-size:1.15em;font-weight:950;white-space:nowrap}
+    .q-figure{display:flex;justify-content:center;margin:14px 0 4px}
+    .figure{display:block;width:100%;height:auto;max-height:260px}
+    .figure text{font-family:Inter,"Segoe UI",Arial,sans-serif}
+    .choix{display:grid;gap:10px;margin-top:16px}
+    .choix.grille{grid-template-columns:1fr 1fr}
+    .choix-btn{min-height:58px;display:flex;align-items:center;gap:12px;padding:10px 14px;border:2px solid #c9dbe6;border-radius:14px;background:#f8fcff;color:var(--ink);font-size:clamp(1.05rem,3.4vw,1.2rem);font-weight:850;text-align:left;box-shadow:0 2px 0 #c3d8e5;cursor:pointer}
+    .choix-btn .case{flex:0 0 22px;width:22px;height:22px;border:2.5px solid #7d9cb3;border-radius:5px;background:#fff}
+    .choix-btn[aria-pressed="true"]{border-color:var(--blue);background:#eaf2ff;box-shadow:0 0 0 3px rgba(7,85,184,.16)}
+    .choix-btn[aria-pressed="true"] .case{border-color:var(--blue);background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat}
+    .actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+    .actions .primary{min-width:150px}
+    .confirmation{margin-top:12px;padding:12px 14px;border:1px solid #efc9c9;border-radius:14px;background:#fffafa;text-align:center;font-weight:850}
+    .confirmation p{margin:0 0 10px}
+    .confirmation div{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+    .pied-passe{display:flex;justify-content:center;margin-top:8px}
+
+    /* Fractions et angles */
+    .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;line-height:1.05;font-size:.92em}
+    .frac>span:first-child{padding:0 3px 2px;border-bottom:2px solid currentColor}
+    .frac>span:last-child{padding:2px 3px 0}
+    .chapeau{position:relative;display:inline-block;font-weight:inherit}
+    .chapeau::before{content:"";position:absolute;left:50%;top:-.12em;width:.5em;height:.22em;transform:translateX(-50%);background:no-repeat center/100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 5'%3E%3Cpath d='M1 4.5L5 1l4 3.5' fill='none' stroke='%23143451' stroke-width='1.4'/%3E%3C/svg%3E")}
+
+    /* Bilan */
+    .bilan{max-width:680px;margin:6px auto}
+    .verdict{padding:20px;border-radius:20px;background:#f6f9fb;border:2px solid var(--line);text-align:center}
+    .score{margin:2px 0 0;font-size:clamp(2.6rem,9vw,3.6rem);font-weight:950;line-height:1}
+    .duree{margin:4px 0 10px;color:var(--muted);font-weight:800}
+    .groupe{display:inline-block;padding:8px 16px 6px;border-radius:999px;font-size:1.15rem;font-weight:950}
+    .groupe.g0{color:var(--red);background:var(--red-soft)}.groupe.g1{color:var(--orange);background:var(--orange-soft)}.groupe.g2{color:var(--green);background:var(--green-soft)}
+    .seuils{margin:10px 0 0;color:var(--muted);font-size:.82rem;font-weight:700}
+    .domaines{display:grid;gap:6px;margin:14px 0 0;padding:0;list-style:none}
+    .domaines li{display:flex;justify-content:space-between;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:850}
+    .a-revoir h2{margin:22px 0 4px;font-size:1.25rem}
+    .a-revoir>p{margin:0 0 10px;color:var(--muted);font-weight:700}
+    .liste-revoir{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+    .liste-revoir li{padding:13px;border:1px solid #efd5d5;border-radius:14px;background:#fffafa}
+    .revoir-titre{display:flex;gap:9px;align-items:flex-start;margin:0 0 9px;font-weight:900;line-height:1.3}
+    .pastille{flex:0 0 28px;height:28px;display:grid;place-items:center;border-radius:50%;background:#e4edf5;font-size:.85rem}
+    .revoir-reponses{display:flex;flex-wrap:wrap;gap:7px}
+    .revoir-reponses span{padding:6px 10px;border-radius:9px;font-weight:850}
+    .donnee{color:var(--red);background:var(--red-soft)}.attendue{color:var(--green);background:var(--green-soft)}
+    .erreur-prof{margin:8px 0 0;padding:8px 10px;border-left:4px solid #e0a400;background:#fffbea;font-size:.9rem;font-weight:750}
+    .liens-entrainement{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+    .entrainer{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:2px solid var(--blue);border-radius:14px;background:#fff;color:var(--ink);text-decoration:none;box-shadow:0 3px 0 #b7cfe8}
+    .entrainer strong{display:block;color:var(--blue);font-size:1.05rem}
+    .entrainer small{display:block;margin-top:2px;color:var(--muted);font-weight:750}
+    .entrainer>span:last-child{color:var(--blue);font-size:1.3rem;font-weight:950}
+    .fin-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
+
+    @media(max-width:620px){
+      .shell{width:100%}
+      .topbar{min-height:56px;padding:4px 10px}
+      .brand img{width:82px}
+      .panel{padding:16px 12px 22px;border-left:0;border-right:0;border-radius:20px}
+      .carte{grid-template-columns:44px 1fr;padding:13px}
+      .carte .ico{width:44px;height:44px;font-size:1.4rem}
+      .carte .go{grid-column:1 / -1;text-align:center}
+      .choix-btn{min-height:52px;padding:8px 11px;gap:9px}
+      .choix.ligne .choix-btn{min-height:48px}
+      .actions .primary{min-width:130px}
+      .en-passation .panel{padding:12px 8px 18px}
+      .q-carte{padding:14px 10px}
+      .fin-actions{flex-direction:column}
+    }
+    @media(max-width:360px){.choix.grille{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
+      <a class="retour" href="/outils/index.html" aria-label="Retour aux outils"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Outils</span></a>
+    </header>
+
+    <section class="panel">
+      <!-- Accueil -->
+      <div id="accueil" class="accueil">
+        <p id="niveau" class="eyebrow">Évaluation nationale</p>
+        <h1 id="titre">Automatismes</h1>
+        <p id="descriptif" class="descr"></p>
+        <div class="cartes">
+          <button id="lancer-officiel" class="carte officiel" type="button">
+            <span class="ico" aria-hidden="true">📄</span>
+            <span><strong>Le sujet officiel 2026</strong><small>Les vraies questions de septembre 2026.</small></span>
+            <span class="go">Commencer</span>
+          </button>
+          <button id="lancer-jumeau" class="carte jumeau" type="button">
+            <span class="ico" aria-hidden="true">🔁</span>
+            <span><strong>Un sujet jumeau</strong><small>Les mêmes questions avec d’autres nombres. Un nouveau sujet à chaque fois.</small></span>
+            <span class="go">Commencer</span>
+          </button>
+        </div>
+        <p id="dernier" class="dernier" hidden></p>
+        <p id="source" class="source"></p>
+      </div>
+
+      <!-- Passation -->
+      <div id="passe" hidden>
+        <div class="barre"><span id="compteur">Question 1 / 23</span><strong id="chrono" aria-label="Temps écoulé">0:00</strong></div>
+        <div class="piste" aria-hidden="true"><b id="progres"></b></div>
+        <article id="q-carte" class="q-carte">
+          <p id="q-num" class="q-num">Question 1</p>
+          <p id="q-enonce" class="q-enonce"></p>
+          <div id="q-figure" class="q-figure"></div>
+          <div id="q-choix" class="choix" role="group" aria-label="Réponses proposées"></div>
+          <div class="actions">
+            <button id="passer" class="lien" type="button">Je ne sais pas</button>
+            <button id="valider" class="primary" type="button" disabled>Valider</button>
+          </div>
+        </article>
+        <div class="pied-passe"><button id="abandonner" class="lien" type="button">Arrêter le test</button></div>
+        <div id="confirmation" class="confirmation" hidden>
+          <p>Arrêter maintenant ? Tes réponses ne seront pas gardées.</p>
+          <div><button id="garder" class="secondary" type="button">Je continue</button><button id="quitter" class="primary" type="button">J’arrête</button></div>
+        </div>
+      </div>
+
+      <!-- Bilan -->
+      <div id="bilan" class="bilan" hidden>
+        <div class="verdict">
+          <p class="eyebrow">Ton résultat</p>
+          <p id="score" class="score"></p>
+          <p id="duree" class="duree"></p>
+          <span id="groupe" class="groupe"></span>
+          <p id="seuils" class="seuils"></p>
+        </div>
+        <ul id="domaines" class="domaines"></ul>
+        <div id="a-revoir" class="a-revoir">
+          <h2>Je m’entraîne</h2>
+          <p>Entraîne-toi sur ces automatismes, puis reviens refaire tes questions ratées.</p>
+          <ul id="liens-entrainement" class="liens-entrainement"></ul>
+          <h2>Mes erreurs</h2>
+          <ul id="liste-revoir" class="liste-revoir"></ul>
+        </div>
+        <div class="fin-actions">
+          <button id="refaire-rates" class="primary" type="button">Refaire mes questions ratées</button>
+          <button id="nouveau-jumeau" class="secondary" type="button">Nouveau sujet jumeau</button>
+          <button id="retour-accueil" class="secondary" type="button">Accueil</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="./en_commun.js?v=20261112-1"></script>
+  <script src="./sujets/6e_automatismes.js?v=20261112-1"></script>
+  <script src="./evaluation.js?v=20261112-1"></script>
+</body>
+</html>
