@@ -8388,8 +8388,9 @@ verifier("cours-appli — en 3e, « Préparer la seconde » et les fiches « pou
     egal(['3e-ANG', '3e-SEC'], array_column($cours, 'id'), 'les deux chapitres, dans l’ordre du livret');
     egal(8, count($cours[0]['fiches']), 'Angles : toutes ses fiches, la 7e (triangles semblables) comprise');
     vrai(in_array('https://mathsgo.re/cours/3e/3e-ANG-07.html#ch=3e-ANG', array_column($cours[0]['fiches'], 'url'), true), '3e-ANG-07 ouverte');
-    // (lot « cours-lot2 », 13/11/2026 : une sixième fiche, « Deux groupes réunis », pourcentages)
-    egal([1, 2, 3, 4, 5, 6], array_column($cours[1]['fiches'], 'n'), 'Préparer la seconde : ses six fiches');
+    // (lot « cours-lot2 », 13/11/2026 : une sixième fiche, « Deux groupes réunis », pourcentages ;
+    // lot « cours-lot3 », 13/11/2026 : trois de plus, les inégalités, les inéquations et la fonction carré)
+    egal([1, 2, 3, 4, 5, 6, 7, 8, 9], array_column($cours[1]['fiches'], 'n'), 'Préparer la seconde : ses neuf fiches');
     egal('https://mathsgo.re/cours/3e/3e-SEC-imprimable.html#ch=3e-SEC', $cours[1]['imprimable'], 'et sa version imprimable');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
