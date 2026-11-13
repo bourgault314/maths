@@ -142,8 +142,14 @@
   // quand on joue au clavier.
   function perles100(zone, options) {
     const {depart, gestes, consigne: texteConsigne, traces = [], surFini = null, droite: avecDroite = false, sansReponse = false} = options;
+    // `rangees` (lot 3a, 13/11/2026 : le double, choix de Gwenaël) : les
+    // perles poussées rangée par rangée — double de 17 : 10, 7, 10, 7. Sans
+    // geste à faire, le boulier est fini dès le départ : on le lit.
+    const etatsDepart = Array.isArray(options.rangees)
+      ? Array.from({length: PERLES.rangees}, (_, r) => Math.max(0, Math.min(PERLES.parRangee, options.rangees[r] || 0)))
+      : etatsDe(depart);
     const boulier = {
-      taille: 0, ecart: PERLES.ecart, etats: etatsDe(depart), etape: 0, finie: false,
+      taille: 0, ecart: PERLES.ecart, etats: etatsDepart, etape: 0, finie: !gestes.length,
       drag: null, dom: null, observer: null, refus: 0, curseur: null
     };
     compteurAides += 1;
@@ -453,6 +459,11 @@
     }
     ecrireTraces();
     mesurer();
+    // Rien à pousser : fini tout de suite (après que la page a rangé l'outil).
+    if (boulier.finie) {
+      bloc.classList.add("est-finie");
+      if (typeof surFini === "function") Promise.resolve().then(surFini);
+    }
 
     return {
       detruire() {

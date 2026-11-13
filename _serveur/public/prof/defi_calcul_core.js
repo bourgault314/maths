@@ -784,6 +784,8 @@
       }, droiteDessins({depart: cE.donnees.n, sauts: [r, -d], direct: a, trou: false, etapes: 3})),
       bilan,
       image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: r}, {val: -d}], direct: a, acquis: [2]}),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: cE}),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
@@ -815,7 +817,10 @@
       }, a2Etapes(cE).length > 1 ? {consigne: cE.texte.replace(CASE, "?")} : {}), a2Dessins(cE)),
       bilan,
       // Relecture 2 : A2-2 retient les paires de dizaines (comme A1-1).
-      image: Object.freeze(imageRetenir || a2Image(cR)),
+      // Lot 3a : sinon, le calcul montré.
+      image: Object.freeze(imageRetenir || a2Image(premier)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: cE}),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
@@ -1245,6 +1250,8 @@
       }, tableauDessins(glisseAide(ecris.calcul), tableauDe(ecris.calcul), ecris.etapes)),
       bilan,
       image: Object.freeze(tableauDe(calcul)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: calcul, ecris: ecris.calcul}),
       textes: Object.freeze([calcul.texte, represente.texte, ecris.calcul.texte])
     });
   }
@@ -1306,7 +1313,7 @@
           manipule: {a: 67, cible: 70}, represente: {a: 48, cible: 50}, ecris: {a: 433, cible: 440},
           consigneManipule: "Finis la rangée d’un coup.",
           consigne: "Pour aller à la dizaine suivante, je complète les unités.",
-          bilan: "Pour aller à la dizaine suivante, je complète les unités\u00a0: 48 + 2 = 50."
+          bilan: "Pour aller à la dizaine suivante, je complète les unités : 67 + 3 = 70."
         })
       },
       {
@@ -1317,7 +1324,7 @@
           manipule: {a: 40, cible: 100}, represente: {a: 65, cible: 100}, ecris: {a: 20, cible: 100},
           consigneManipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
           consigne: "Je vais à la dizaine, puis je compte les dizaines jusqu’à 100.",
-          bilan: "Les dizaines qui font 100, je les sais par cœur.",
+          bilan: "Les dizaines qui font 100, je les sais par cœur : 40 + 60 = 100.",
           imageRetenir: {outil: "paires", total: 100, perles: false, paires: [[10, 90], [20, 80], [30, 70], [40, 60], [50, 50]]}
         })
       },
@@ -1329,7 +1336,7 @@
           manipule: {a: 37, cible: 100}, represente: {a: 58, cible: 100}, ecris: {a: 24, cible: 100},
           consigneManipule: "Finis la rangée d’un coup, puis pousse les rangées qui manquent.",
           consigne: "Je vais à la dizaine, puis à 100.",
-          bilan: "Pour aller à 100, je vais d’abord à la dizaine, puis à 100\u00a0: 2 + 40 = 42."
+          bilan: "Pour aller à 100, je vais d’abord à la dizaine, puis à 100 : 37 + 63 = 37 + 3 + 60 = 100."
         })
       },
       {
@@ -1339,7 +1346,7 @@
         apprends: a2Apprends({
           manipule: null, represente: {a: 650, cible: 1000}, ecris: {a: 370, cible: 1000},
           consigne: "Je vais à la centaine, puis à 1\u00a0000.",
-          bilan: "Pour aller à 1\u00a0000, je vais d’abord à la centaine, puis à 1\u00a0000\u00a0: 50 + 300 = 350."
+          bilan: "Pour aller à 1\u00a0000, je vais d’abord à la centaine, puis à 1\u00a0000 : 650 + 350 = 650 + 50 + 300 = 1\u00a0000."
         })
       },
       {
@@ -1352,7 +1359,7 @@
         apprends: a2Apprends({
           manipule: null, represente: {a: 368, cible: 1000}, ecris: {a: 748, cible: 1200},
           consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000.",
-          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000\u00a0: 2 + 30 + 600 = 632."
+          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000 : 368 + 632 = 368 + 2 + 30 + 600 = 1\u00a0000."
         })
       }
     ]
@@ -1368,25 +1375,25 @@
         n: 1, titre: "ajouter 9", palier: 1, type: "P",
         composer: a5Niveau(1, [9]),
         imposes: [a5Somme(1, 31, 9), a5Somme(1, 94, 9)],
-        apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1.")
+        apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1 : 47 + 9 = 47 + 10 − 1 = 56.")
       },
       {
         n: 2, titre: "ajouter 19, 29, 39", palier: 1, type: "P",
         composer: a5Niveau(2, [19, 29, 39]),
         imposes: [a5Somme(2, 31, 19), a5Somme(2, 285, 19)],
-        apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1.")
+        apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1 : 47 + 19 = 47 + 20 − 1 = 66.")
       },
       {
         n: 3, titre: "ajouter 8, 18, 28, 38", palier: 1, type: "P",
         composer: a5Niveau(3, [8, 18, 28, 38]),
         imposes: [a5Somme(3, 53, 38), a5Somme(3, 147, 18)],
-        apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2.")
+        apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2 : 53 + 38 = 53 + 40 − 2 = 91.")
       },
       {
         n: 4, titre: "ajouter 48, 49… 98, 99", palier: 3, type: "P",
         composer: a5Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a5Somme(4, 152, 98), a5Somme(4, 126, 99)],
-        apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1.")
+        apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1 : 126 + 99 = 126 + 100 − 1 = 225.")
       }
     ]
   };
@@ -1407,13 +1414,15 @@
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
-          calcul: produit("M2", 1, 27, 100), exemple: "27 × 100", colonnes: COLONNES_M2,
-          represente: produit("M2", 1, 45, 10),
-          ecris: {calcul: produit("M2", 1, 8, 1000), etapes: [etapeDe(`8 × ${MILLE} = 8 milliers = ${CASE}`, 8000)]},
-          consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 10 fois plus.",
-          refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
-          trace: ["27 × 100 = …", `27 × 100 = 2${ESPACE_FINE}700`],
-          bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
+          // Lot 3a (décision 6) : la leçon sur × 10 ; × 100, × 1 000 viennent
+          // à l'entraînement.
+          calcul: produit("M2", 1, 45, 10), exemple: "45 × 10", colonnes: COLONNES_M2,
+          represente: produit("M2", 1, 62, 10),
+          ecris: {calcul: produit("M2", 1, 38, 10), etapes: [etapeDe(`38 × 10 = 38 dizaines = ${CASE}`, 380)]},
+          consigne: "Chaque chiffre vaut 10 fois plus.",
+          refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
+          trace: ["45 × 10 = …", "45 × 10 = 450"],
+          bilan: "Quand je multiplie par 10, chaque chiffre prend une valeur 10 fois plus grande\u00a0: 45 × 10 = 450."
         })
       },
       {
@@ -1423,11 +1432,11 @@
         apprends: glisseApprends({
           calcul: division("M2", 2, 48, 10), exemple: "480 ÷ 10", colonnes: COLONNES_M2,
           represente: produit("M2", 2, 30, 100),
-          ecris: {calcul: trouFacteur("M2", 2, 35, 100), etapes: [etapeDe(`35 × ${CASE} = 3${ESPACE_FINE}500`, 100)]},
+          ecris: {calcul: division("M2", 2, 35, 100), etapes: [etapeDe(`3${ESPACE_FINE}500 ÷ 100 = ${CASE}`, 35)]},
           consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois moins\u00a0: 1 colonne.",
           trace: ["480 ÷ 10 = …", "480 ÷ 10 = 48"],
-          bilan: "Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite."
+          bilan: "Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite : 480 ÷ 10 = 48."
         })
       }
     ]
@@ -1450,7 +1459,7 @@
           consigne: "Chaque chiffre vaut 10 fois plus.",
           refus: "Chaque chiffre doit valoir 10 fois plus\u00a0: 1 colonne.",
           trace: ["2,5 × 10 = …", "2,5 × 10 = 25"],
-          bilan: "Quand je multiplie par 10, chaque chiffre prend une valeur 10 fois plus grande. La virgule ne bouge pas, ce sont les chiffres qui glissent."
+          bilan: "Chaque chiffre prend une valeur 10 fois plus grande, la virgule ne bouge pas : 2,5 × 10 = 25."
         })
       },
       {
@@ -1464,7 +1473,7 @@
           consigne: "Chaque chiffre vaut 100 fois plus.", consigneTableau: "Chaque chiffre vaut 1\u00a0000 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["7,54 × 100 = …", "7,54 × 100 = 754"],
-          bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande."
+          bilan: "Quand je multiplie par 100, chaque chiffre prend une valeur 100 fois plus grande : 7,54 × 100 = 754."
         })
       },
       {
@@ -1486,13 +1495,13 @@
         composer: d2Niveau4,
         imposes: [trouFacteur("D2", 4, 3.6, 100), trouNombre("D2", 4, 0.45, 100), trouEgal("D2", 4, 1.2, 1000)],
         apprends: glisseApprends({
-          calcul: trouEgal("D2", 4, 1.2, 1000), exemple: `1${ESPACE_FINE}200 = 1,2 × ?`, colonnes: COLONNES_D2,
-          represente: trouFacteur("D2", 4, 0.45, 100),
+          calcul: trouFacteur("D2", 4, 0.45, 100), exemple: "0,45 × ? = 45", colonnes: COLONNES_D2,
+          represente: trouEgal("D2", 4, 1.2, 1000),
           ecris: {calcul: trouFacteur("D2", 4, 3.6, 100), etapes: [etapeDe(`3,6 × ${CASE} = 360`, 100)]},
-          consigne: `Glisse jusqu’à lire 1${ESPACE_FINE}200.`, consigneTableau: "Je compte les colonnes.",
+          consigne: "Glisse jusqu’à lire 45.", consigneTableau: "Je compte les colonnes.",
           refus: null,
-          trace: [`1,2 × … = 1${ESPACE_FINE}200`, `1,2 × ${MILLE} = 1${ESPACE_FINE}200`],
-          bilan: "Pour trouver par combien on a multiplié, je compte les colonnes."
+          trace: ["0,45 × … = 45", "0,45 × 100 = 45"],
+          bilan: "Pour trouver par combien on a multiplié, je compte les colonnes : 0,45 × 100 = 45."
         })
       }
     ]
@@ -1674,6 +1683,8 @@
       bilan,
       ...autreDe(autre),
       image: Object.freeze(plusImage(premier)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: ecris}),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
     });
   }
@@ -1968,7 +1979,7 @@
           etapes: etapesDe(["8 + ? = 10", 2], ["10 = 8 + ?", 2]),
           consigneEcris: "10 = 8 + ?",
           consigne: "En haut, 10. En bas, 4 et ce qui manque.",
-          bilan: "Pour faire 10, je connais ces paires par cœur."
+          bilan: "Pour faire 10, je connais ces paires par cœur : 3 + 7 = 10."
         }))
       },
       {
@@ -1995,9 +2006,9 @@
         apprends: plusApprends({
           manipule: ligne("A1", 0, 15, -7),
           represente: ligne("A1", 0, 13, -5),
-          ecris: lignePlus("A1", 0, "complement", 6, 7),
-          etapes: etapesDe(["6 + ? = 10", 4], ["10 + ? = 13", 3], ["6 + ? = 13", 7]),
-          consigneEcris: "6 + ? = 13",
+          ecris: ligne("A1", 0, 14, -6),
+          etapes: etapesDe(["14 − 4 = ?", 10], ["10 − 2 = ?", 8], ["14 − 6 = ?", 8]),
+          consigneEcris: "14 − 6 = 14 − 4 − 2",
           consigne: "Je recule jusqu’à 10, puis je retire le reste.",
           bilan: "Pour passer 10 en reculant, je recule d’abord jusqu’à 10, puis je retire le reste : 15 − 7 = 15 − 5 − 2 = 8."
         })
@@ -2259,6 +2270,8 @@
       bilan,
       ...autreDe(autre),
       image: Object.freeze(cheminImage(premier)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: ecris}),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
     });
   }
@@ -2478,35 +2491,25 @@
     if (rang % 5 === 3) { n = entierEntre(rng, 1, 9) * 100 + entierEntre(rng, 0, 9); d = -10 * k; }
     return franchit(n, d, 100) && !franchit(n, d, 1000) && n + d < 1000 ? [n, d] : null;
   });
-  // A3-3 : les nombres à 4 chiffres (lot « couverture », CM1). 4 calculs
-  // sur 10 passent le millier sur des nombres ronds, avec des dizaines
-  // (950 + 70, 1 030 − 50) ou des centaines (2 800 + 400, 1 200 − 400) ;
-  // 2 ajoutent ou retirent des dizaines en passant une centaine (1 510 − 20,
-  // 2 460 + 70), 1 sans passage (3 213 + 10) ; 2 des centaines sans passage
-  // (1 462 + 300) ; 1 des centaines en passant le millier (2 657 + 500).
+  // A3-3 : passer le millier (lot 3a, décision 7 de Gwenaël, 13/11/2026),
+  // quatre sortes à parts égales : + dizaines (950 + 70, 1 985 + 30),
+  // + centaines (2 657 + 500), − dizaines (1 030 − 50), − centaines
+  // (1 200 − 400). Toujours au moins un millier dans le calcul, jamais
+  // au-delà de 9 999.
   const a3Niveau3 = cheminNiveau("A3", 3, (rng, rang) => {
-    const sorte = rang % 10;
-    const s = Math.floor(rang / 2) % 2 ? -1 : 1;
-    if (sorte < 4) {
-      const u = rang % 2 ? 100 : 10;
-      const millier = entierEntre(rng, 1, 9) * 1000;
-      const n = millier - s * u * entierEntre(rng, 1, 9);
-      const d = s * u * entierEntre(rng, 1, 9);
-      return franchit(n, d, 1000) && n + d < 10000 ? [n, d] : null;
-    }
-    const n = entierEntre(rng, 1001, 9989);
-    if (sorte < 6) {
-      const d = s * 10 * entierEntre(rng, 1, 9);
-      return franchit(n, d, 100) && !franchit(n, d, 1000) ? [n, d] : null;
-    }
-    // (Des dizaines sans passage aussi, 3 213 + 10 : le champ du CE2.)
-    if (sorte === 6) {
-      const d = s * 10 * entierEntre(rng, 1, 9);
-      return !franchit(n, d, 100) ? [n, d] : null;
-    }
-    const d = (sorte === 9 ? 1 : s) * 100 * entierEntre(rng, 1, 9);
-    if (n + d >= 10000) return null;
-    return (sorte === 9) === franchit(n, d, 1000) ? [n, d] : null;
+    const sorte = rang % 4;
+    const plus = sorte < 2;
+    const u = sorte % 2 === 0 ? 10 : 100;
+    const millier = entierEntre(rng, 1, 9) * 1000;
+    // Le reste sous le saut : la moitié du temps rond (950), sinon des
+    // unités (1 985) ou des dizaines et unités (2 657).
+    const reste = rng() < .5 ? 0 : entierEntre(rng, 1, u - 1);
+    const n = plus ? millier - u * entierEntre(rng, 1, 9) + reste : millier + u * entierEntre(rng, 0, 8) + reste;
+    const d = (plus ? 1 : -1) * u * entierEntre(rng, 1, 9);
+    const m = n + d;
+    // (Partir pile d'un millier, 1 000 − 100, ce n'est pas le passer.)
+    if (n < 100 || m < 100 || m >= 10000 || n % 1000 === 0 || Math.floor(n / 1000) === Math.floor(m / 1000)) return null;
+    return franchit(n, d, 1000) ? [n, d] : null;
   });
   // A3-4 : les grands nombres, à 4 ou 5 chiffres. La moitié ajoute ou
   // retire des milliers (21 462 + 3 000 ; 47 530 + 6 000, en passant la
@@ -2514,13 +2517,16 @@
   // passage (1 462 + 300 ; 6 780 − 50). Un sur trois en retirant.
   // (Lot « couverture » : les centaines et les dizaines sur des nombres à 4
   // chiffres sont dans A3-3 ; ici, sur des nombres à 5 chiffres.)
+  // Lot 3a (décision 7) : toujours SANS passage — « je repère le chiffre
+  // qui change » (21 462 + 3 000 ; 51 503 − 200). Passer le millier, c'est
+  // le niveau d'avant.
   const a3Niveau4 = cheminNiveau("A3", 4, (rng, rang) => {
     const u = rang % 2 === 0 ? 1000 : rang % 4 === 1 ? 100 : 10;
-    const n = entierEntre(rng, u < 1000 ? 10001 : 1001, 99999);
+    const n = entierEntre(rng, 10001, 99999);
     const d = (rang % 3 === 2 ? -1 : 1) * u * entierEntre(rng, 1, 9);
     const m = n + d;
-    if (m < 1000 || m >= 100000) return null;
-    return u < 1000 && franchit(n, d, 10 * u) ? null : [n, d];
+    if (m < 10000 || m >= 100000) return null;
+    return franchit(n, d, 10 * u) ? null : [n, d];
   });
 
   const deuxChiffres = rng => 10 * entierEntre(rng, 1, 9) + entierEntre(rng, 1, 9);
@@ -2585,13 +2591,13 @@
         composer: a3Niveau1,
         imposes: [ligneChemin("A3", 1, 541, -20), ligneChemin("A3", 1, 765, -200)],
         apprends: cheminApprends({
-          manipule: chemin("A3", 76, -30),
+          manipule: chemin("A3", 46, 30),
           represente: chemin("A3", 354, 500),
           ecris: chemin("A3", 234, 60),
           etapes: [["3 + 6 = ?", 9], ["234 + 60 = ?", 294]],
           consigneEcris: "Dans 234, le chiffre des dizaines est 3.",
           consigne: "J’avance de 5 centaines : seul le chiffre des centaines change.",
-          bilan: "Quand j’ajoute ou que je retire des dizaines, seul le chiffre des dizaines change : 76 − 30 = 46."
+          bilan: "Quand j’ajoute des dizaines, seul le chiffre des dizaines change : 46 + 30 = 76."
         })
       },
       {
@@ -2601,26 +2607,25 @@
         apprends: cheminApprends({
           manipule: null,
           represente: chemin("A3", 746, 80),
-          ecris: chemin("A3", 715, -30),
-          etapes: [["715 − 10 = ?", 705], ["705 − 20 = ?", 685], ["715 − 30 = ?", 685]],
-          consigneEcris: "715 − 30 = 715 − 10 − 20",
+          ecris: chemin("A3", 768, 50),
+          etapes: [["768 + 40 = ?", 808], ["808 + 10 = ?", 818], ["768 + 50 = ?", 818]],
+          consigneEcris: "768 + 50 = 768 + 40 + 10",
           consigne: "Je complète la centaine avec des dizaines, puis j’ajoute le reste.",
-          bilan: "Pour passer la centaine, je la complète avec des dizaines, puis j’ajoute le reste : 746 + 80 = 746 + 60 + 20 = 826.",
-          // Décision du 06/11 (audit de couverture) : le texte de CE1 compte
-          // en dizaines ; deuxième façon de voir, la droite reste.
-          autre: {phrase: "Je peux aussi compter les dizaines : 746, c’est 74 dizaines et 6 unités.", calcul: "74 dizaines + 8 dizaines = 82 dizaines"}
+          bilan: "Pour passer la centaine, je la complète avec des dizaines, puis j’ajoute le reste : 746 + 80 = 746 + 60 + 20 = 826."
+          // (Lot 3, décision 4 : la ligne « 74 dizaines + 8 dizaines » est
+          // retirée, le même calcul vu autrement.)
         })
       },
       {
         n: 3, titre: "nombres à 4 chiffres", nom: "Dizaines, centaines sur les nombres à 4 chiffres", palier: 2, type: "P",
         composer: a3Niveau3,
-        imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 1510, -20), ligneChemin("A3", 3, 1462, 300)],
+        imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 2657, 500), ligneChemin("A3", 3, 3970, 60)],
         apprends: cheminApprends({
           manipule: null,
           represente: chemin("A3", 950, 70),
-          ecris: chemin("A3", 1200, -400),
-          etapes: [[`1${ESPACE_FINE}200 − 200 = ?`, 1000], [`1${ESPACE_FINE}000 − 200 = ?`, 800], [`1${ESPACE_FINE}200 − 400 = ?`, 800]],
-          consigneEcris: `1${ESPACE_FINE}200 − 400 = 1${ESPACE_FINE}200 − 200 − 200`,
+          ecris: chemin("A3", 980, 60),
+          etapes: [["980 + 20 = ?", 1000], [`1${ESPACE_FINE}000 + 40 = ?`, 1040], ["980 + 60 = ?", 1040]],
+          consigneEcris: "980 + 60 = 980 + 20 + 40",
           consigne: "Je vais au millier, puis j’ajoute le reste.",
           bilan: `Pour passer le millier, je vais d’abord au millier, puis j’ajoute le reste : 950 + 70 = 950 + 50 + 20 = 1${ESPACE_FINE}020.`
         })
@@ -2631,12 +2636,12 @@
         imposes: [ligneChemin("A3", 4, 31462, 4000), ligneChemin("A3", 4, 16780, -50)],
         apprends: cheminApprends({
           manipule: null,
-          represente: chemin("A3", 47530, 6000),
+          represente: chemin("A3", 47530, 2000),
           ecris: chemin("A3", 21462, 3000),
           etapes: [["1 + 3 = ?", 4], [`21${ESPACE_FINE}462 + 3${ESPACE_FINE}000 = ?`, 24462]],
           consigneEcris: `Dans 21${ESPACE_FINE}462, le chiffre des milliers est 1.`,
-          consigne: "Je vais à la dizaine de mille, puis j’ajoute le reste.",
-          bilan: `Dans un grand nombre, je repère le chiffre qui change : 47${ESPACE_FINE}530 + 6${ESPACE_FINE}000 = 47${ESPACE_FINE}530 + 3${ESPACE_FINE}000 + 3${ESPACE_FINE}000 = 53${ESPACE_FINE}530.`
+          consigne: "J’avance de 2 milliers : seul le chiffre des milliers change.",
+          bilan: `Dans un grand nombre, je repère le chiffre qui change : 47${ESPACE_FINE}530 + 2${ESPACE_FINE}000 = 49${ESPACE_FINE}530.`
         })
       }
     ]
@@ -2933,6 +2938,8 @@
       }, droiteDessins({depart: cE.donnees.n, sauts: [-r, d], direct: -a, trou: false, etapes: a6Etapes(cE).length})),
       bilan,
       image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: -r}, {val: d}], direct: -a, acquis: [2]}),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: cE}),
       textes: Object.freeze([premier.texte, cR.texte, cE.texte])
     });
   }
@@ -3122,6 +3129,8 @@
       }, plusDessins(ecris, etapes.length)),
       bilan,
       image: Object.freeze(plusImage(premier)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: premier, ecris: ecris}),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
     });
   }
@@ -3242,6 +3251,32 @@
     return `Regarde : ${morceaux.map(m => f(2 * m)).join(" et ")}, ça fait ${f(r)}.`;
   }
 
+  // Le double sur le boulier (lot 3a, 13/11/2026, idée et choix de
+  // Gwenaël : « les deux 17 déjà poussés ») : le nombre, et encore le nombre
+  // en dessous, rangée par rangée — double de 17 : 10, 7, puis 10, 7. Rien
+  // à pousser : on lit les rangées. Dans la leçon, les égalités sont
+  // écrites dessous (10 + 10, 7 + 7, puis 20 + 14, comme le schéma en
+  // barres) ; à l'entraînement, rien n'est écrit, l'élève lit le boulier.
+  // Seulement le double, jusqu'à 50 (100 perles) ; la moitié garde le
+  // schéma en barres.
+  function m1Perles(calcul) {
+    if (calcul.forme !== "double") return null;
+    const {n, r} = calcul.donnees;
+    if (n > 50) return null;
+    const k = Math.floor(n / 10);
+    const u = n % 10;
+    const t = 10 * k;
+    const moitie = [...Array.from({length: k}, () => 10), ...(u ? [u] : [])];
+    const fait = (debut, fin) => Object.freeze({apres: 0, attente: `${debut} = …`, texte: `${debut} = ${fin}`});
+    const traces = k && u
+      ? [fait(`${t} + ${t}`, 2 * t), fait(`${u} + ${u}`, 2 * u), fait(`double de ${n} = ${2 * t} + ${2 * u}`, r)]
+      : [fait(`double de ${n} = ${n} + ${n}`, r)];
+    return Object.freeze({
+      outil: "perles", depart: r, rangees: Object.freeze([...moitie, ...moitie]), texte: `double de ${n}`,
+      gestes: Object.freeze([]), consigne: `${n}, et encore ${n} en dessous.`, traces: Object.freeze(traces)
+    });
+  }
+
   // Du plus simple au plus dur : le double, puis la moitié, puis les autres
   // écritures ; un morceau de plus ; un morceau impair (moitié de 30) ; la
   // taille.
@@ -3339,7 +3374,7 @@
   // la moitié suivent le même chemin. « Je représente » a aussi ses étapes
   // (`etapesRepresente`) : le schéma en barres au-dessus se remplit à chaque
   // égalité, comme dans J'écris (double de 17 : 10 + 10, 7 + 7, 20 + 14).
-  function m1Apprends({represente, ecris, consigne, consigneEcris, etapes, etapesRepresente = null, bilan}) {
+  function m1Apprends({manipule = false, represente, ecris, consigne, consigneEcris, etapes, etapesRepresente = null, bilan, autre = null}) {
     const enEtapes = liste => Object.freeze(liste.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse})));
     const representeSimple = Object.freeze({
       outil: "barres", consigne,
@@ -3349,7 +3384,8 @@
     });
     return Object.freeze({
       exemple: Object.freeze({texte: represente.texte.replace(` = ${CASE}`, "").replace(CASE, "?"), reponse: represente.reponse}),
-      manipule: null,
+      // Lot 3a : le boulier (M1-1), sur le calcul du schéma.
+      manipule: manipule ? m1Perles(represente) : null,
       represente: etapesRepresente
         ? ecrisAvecDessins(Object.assign({}, representeSimple, {etapes: enEtapes(etapesRepresente)}), barresDessins(m1Image(represente), etapesRepresente.length))
         : representeSimple,
@@ -3360,7 +3396,11 @@
         solution: Object.freeze({image: m1Image(ecris), phrase: m1Phrase(ecris)})
       }, barresDessins(m1Image(ecris), etapes.length)),
       bilan,
-      image: Object.freeze(m1Image(ecris)),
+      ...autreDe(autre),
+      // Lot 3a : À retenir dessine le calcul montré.
+      image: Object.freeze(m1Image(represente)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: represente, ecris: ecris}),
       textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
     });
   }
@@ -3369,20 +3409,26 @@
     id: "M1", nom: "Doubles et moitiés", exemple: "double de 17",
     famille: "M", construit: true,
     aide_entraine: "barres",
-    erreurs: M1_ERREURS, image: m1Image, aide: m1Aide, manipulation: () => null, difficulte: m1Difficulte,
+    erreurs: M1_ERREURS, image: m1Image, aide: m1Aide,
+    // Lot 3a : le boulier pour le double, au niveau 1 seulement.
+    manipulation: calcul => (calcul.niveau === 1 ? m1Perles(calcul) : null), difficulte: m1Difficulte,
     niveaux: [
       {
         n: 1, titre: "doubles de 1 à 20, moitiés des pairs jusqu’à 40, dizaines", nom: "Doubles et moitiés jusqu’à 40", palier: 1, type: "F",
         composer: m1Niveau(1, [4, 4, 2, 1, 1]),
         imposes: [m1Calcul(1, "moitie", 60), m1Calcul(1, "trou-double", 70)],
         apprends: m1Apprends({
+          manipule: true,
           represente: m1Calcul(0, "double", 17),
-          ecris: m1Calcul(0, "moitie", 28),
+          ecris: m1Calcul(0, "double", 14),
           consigne: "double de 17 = 17 + 17",
           etapesRepresente: [["10 + 10 = ?", 20], ["7 + 7 = ?", 14], ["double de 17 = ?", 34]],
-          consigneEcris: "moitié de 28 = 28 ÷ 2",
-          etapes: [["20 ÷ 2 = ?", 10], ["8 ÷ 2 = ?", 4], ["moitié de 28 = ?", 14]],
-          bilan: "Le double, c’est 2 fois le nombre. La moitié, c’est le nombre divisé par 2 : moitié de 28 = 28 ÷ 2 = 14."
+          consigneEcris: "double de 14 = 10 + 10 + 4 + 4",
+          etapes: [["10 + 10 = ?", 20], ["4 + 4 = ?", 8], ["double de 14 = ?", 28]],
+          bilan: "Le double, c’est le nombre et encore le nombre : double de 17 = 17 + 17 = 34.",
+          // Décision 5 du lot 3 : la leçon sur le double ; la moitié arrive
+          // à l'entraînement (« Nouveau : on cherche la moitié »).
+          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 34 = 17"}
         })
       },
       {
@@ -3390,13 +3436,14 @@
         composer: m1Niveau(2, [5, 5, 2]),
         imposes: [m1Calcul(2, "moitie", 1200), m1Calcul(2, "double-fois", 250)],
         apprends: m1Apprends({
-          represente: m1Calcul(0, "moitie", 150),
-          ecris: m1Calcul(0, "double", 75),
-          consigne: "moitié de 150 = 150 ÷ 2",
-          etapesRepresente: [["100 ÷ 2 = ?", 50], ["50 ÷ 2 = ?", 25], ["moitié de 150 = ?", 75]],
-          consigneEcris: "double de 75 = 2 × 75",
-          etapes: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
-          bilan: "Double de 25 = 50, double de 75 = 150, moitié de 150 = 150 ÷ 2 = 75, moitié de 1 200 = 600 : ces nombres-là, je les sais par cœur."
+          represente: m1Calcul(0, "double", 75),
+          ecris: m1Calcul(0, "double", 250),
+          consigne: "double de 75 = 2 × 75",
+          etapesRepresente: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
+          consigneEcris: "double de 250 = 2 × 250",
+          etapes: [["2 × 200 = ?", 400], ["2 × 50 = ?", 100], ["double de 250 = ?", 500]],
+          bilan: "Ces doubles-là, je les sais par cœur : double de 75 = 150.",
+          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 150 = 75"}
         })
       },
       {
@@ -3405,12 +3452,13 @@
         imposes: [m1Calcul(3, "moitie", 470), m1Calcul(3, "double", 136), m1Calcul(3, "division", 92)],
         apprends: m1Apprends({
           represente: m1Calcul(0, "double", 470),
-          ecris: m1Calcul(0, "moitie", 46),
+          ecris: m1Calcul(0, "double", 36),
           consigne: "double de 470 = 2 × 470",
           etapesRepresente: [["2 × 400 = ?", 800], ["2 × 70 = ?", 140], ["double de 470 = ?", 940]],
-          consigneEcris: "moitié de 46 = 46 ÷ 2",
-          etapes: [["40 ÷ 2 = ?", 20], ["6 ÷ 2 = ?", 3], ["moitié de 46 = ?", 23]],
-          bilan: "Pour la moitié, je coupe chaque morceau en deux : moitié de 46 = 46 ÷ 2 = 20 + 3 = 23. Pour le double, je double chaque morceau."
+          consigneEcris: "double de 36 = 2 × 30 + 2 × 6",
+          etapes: [["2 × 30 = ?", 60], ["2 × 6 = ?", 12], ["double de 36 = ?", 72]],
+          bilan: "Pour le double, je double chaque morceau : double de 470 = 2 × 400 + 2 × 70 = 940.",
+          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 940 = 470"}
         })
       }
     ]
@@ -3455,7 +3503,9 @@
   // Les étapes de J'écris (« 8 × 4 = ? » → « 8 × 4 = □ »).
   const etapesEcris = etapes => Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse})));
   // L'exemple d'un J'apprends : le calcul sans sa case.
-  const exempleDe = calcul => Object.freeze({texte: calcul.texte.replace(` = ${CASE}`, "").replace(CASE, "?"), reponse: calcul.reponse});
+  // (Lot 3a : « = □ » s'efface seulement à la fin — « 144 + 237 = □ + 239 »
+  // devenait « 144 + 237 + 239 ».)
+  const exempleDe = calcul => Object.freeze({texte: (calcul.texte.endsWith(` = ${CASE}`) ? calcul.texte.slice(0, -` = ${CASE}`.length) : calcul.texte).replace(CASE, "?"), reponse: calcul.reponse});
 
   // Un J'apprends sans manipulation (M4, M5, M6, M8, comme M1) : l'image
   // de « je représente », puis les étapes de « j'écris » avec leurs dessins.
@@ -3477,6 +3527,8 @@
       // « À retenir » : l'image du calcul de « je représente », sauf quand
       // la fiche en donne une autre (M4 : la famille de faits en points).
       image: Object.freeze(retenir || fiche.image(represente)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: represente, ecris: ecris}),
       textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
     });
   }
@@ -3669,8 +3721,9 @@
         consigneEcris: "20 ÷ 5 : combien de fois 5 dans 20 ?",
         etapes: [["5 × ? = 20", 4], ["20 ÷ 5 = ?", 4]],
         dessins: (calcul, n) => finiDessins(m4Image(calcul), n),
-        retenir: {outil: "points", rangees: 4, parRangee: 5, colonnes: true},
-        bilan: "4 × 5 = 5 × 4 = 20. Dans 20, il y a 4 fois 5 : 20 ÷ 5 = 4. Il y a aussi 5 fois 4 : 20 ÷ 4 = 5."
+        retenir: {outil: "points", rangees: 7, parRangee: 4, colonnes: true},
+        // Lot 3a : le calcul montré, une égalité par ligne.
+        bilan: "7 × 4 = 4 × 7 = 28. Dans 28, il y a 7 fois 4 : 28 ÷ 4 = 7. Il y a aussi 4 fois 7 : 28 ÷ 7 = 4."
       })
     },
     {
@@ -3685,8 +3738,8 @@
         consigneEcris: "54 ÷ 6 : combien de fois 6 dans 54 ?",
         etapes: [["6 × ? = 54", 9], ["54 ÷ 6 = ?", 9]],
         dessins: (calcul, n) => finiDessins(m4Image(calcul), n),
-        retenir: {outil: "points", rangees: 9, parRangee: 6, colonnes: true},
-        bilan: "6 × 9 = 9 × 6 = 54. Dans 54, il y a 9 fois 6 : 54 ÷ 6 = 9. Il y a aussi 6 fois 9 : 54 ÷ 9 = 6."
+        retenir: {outil: "points", rangees: 8, parRangee: 7, colonnes: true},
+        bilan: "8 × 7 = 7 × 8 = 56. Dans 56, il y a 8 fois 7 : 56 ÷ 7 = 8. Il y a aussi 7 fois 8 : 56 ÷ 8 = 7."
       })
     }
   ];
@@ -3713,10 +3766,12 @@
     const {a, b, p} = calcul.donnees;
     return fr(`Regarde : ${f(a)} × ${f(b)} = ${f(p)}.`);
   }
-  function partsDessins(image, etapes) {
+  // `aLaFin` (lot 3a, M5-1 : 6 × 25 = 4 × 25 + 2 × 25) : la réponse
+  // n'apparaît qu'à la dernière étape, pas dès la première.
+  function partsDessins(image, etapes, aLaFin = false) {
     const dessin = (vus, revele = false) => (revele
       ? Object.freeze(Object.assign({}, image))
-      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length > 0, fini: vus.length > 0})));
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: vus.length > 0, fini: aLaFin ? vus.length >= etapes : vus.length > 0})));
     return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
   }
 
@@ -3738,9 +3793,7 @@
       }
     }));
     [3, 6, 8].forEach(k => v["trou-facteur"].push(faitCalcul("M5", 1, "trou-facteur", k, 25, 25)));
-    // Lot « couverture » : 1 × 25 et 60 = 1 × □ (listes fermées du CE1, CE2).
-    v.produit.push(faitCalcul("M5", 1, "produit", 1, 25, 25));
-    v["trou-egal"].push(faitCalcul("M5", 1, "trou-egal", 1, 60, 60));
+    // (Lot 3a, décision 12 : plus de « × 1 », 1 × 25 ni 60 = 1 × □.)
     return Object.freeze(v);
   })();
   const m5Fait = (forme, a, b) => M5_VIVIER[forme].find(c => c.donnees.a === a && c.donnees.b === b);
@@ -3759,11 +3812,13 @@
       apprends: apprendsSansManip({
         fiche: M5,
         represente: faitCalcul("M5", 0, "produit", 3, 25, 25),
-        ecris: faitCalcul("M5", 0, "trou-egal", 4, 15, 60),
+        ecris: faitCalcul("M5", 0, "produit", 6, 25, 25),
         consigne: "100, c’est 4 fois 25.",
-        etapes: [["60 = 4 × ?", 15], ["60 ÷ 4 = ?", 15]],
-        dessins: (calcul, n) => partsDessins(m5Image(calcul), n),
-        bilan: "100 = 4 × 25, donc 3 × 25 = 75. Je sais par cœur : 100 = 2 × 50 = 5 × 20 et 60 = 4 × 15 = 5 × 12 = 6 × 10."
+        consigneEcris: "6 × 25 = 4 × 25 + 2 × 25",
+        // (4 × 25 = 100 est sur le dessin : on ne le redemande pas.)
+        etapes: [["2 × 25 = ?", 50], ["6 × 25 = ?", 150]],
+        dessins: (calcul, n) => partsDessins(m5Image(calcul), n, true),
+        bilan: "100 = 4 × 25. 3 × 25 = 75."
       })
     }
   ];
@@ -3870,7 +3925,7 @@
         consigneEcris: "4 × 37 = 2 × 2 × 37",
         etapes: [["2 × 37 = ?", 74], ["4 × 37 = ?", 148]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
-        bilan: "× 4, c’est le double du double : 23 × 4 = 46 × 2 = 92."
+        bilan: "× 4, c’est le double du double : 23 × 4 = 46 × 2 = 92."
       })
     },
     {
@@ -3885,7 +3940,7 @@
         consigneEcris: "8 × 27 = 2 × 2 × 2 × 27",
         etapes: [["2 × 27 = ?", 54], ["4 × 27 = ?", 108], ["8 × 27 = ?", 216]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
-        bilan: "× 8, c’est doubler trois fois : 15 × 8 = 30 × 4 = 60 × 2 = 120."
+        bilan: "× 8, c’est doubler trois fois : 15 × 8 = 30 × 4 = 60 × 2 = 120."
       })
     }
   ];
@@ -4010,7 +4065,7 @@
         consigneEcris: "6 × 14 = 10 × 6 + 4 × 6",
         etapes: [["10 × 6 = ?", 60], ["4 × 6 = ?", 24], ["6 × 14 = ?", 84]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
-        bilan: "13 fois 7, c’est 10 fois 7 plus 3 fois 7 : 13 × 7 = 70 + 21 = 91."
+        bilan: "13 fois 7, c’est 10 fois 7 plus 3 fois 7 : 13 × 7 = 70 + 21 = 91."
       })
     },
     {
@@ -4026,7 +4081,7 @@
         consigneEcris: "6 × 47 = 40 × 6 + 7 × 6",
         etapes: [["40 × 6 = ?", 240], ["7 × 6 = ?", 42], ["6 × 47 = ?", 282]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
-        bilan: "23 fois 7, c’est 20 fois 7 plus 3 fois 7 : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
+        bilan: "23 fois 7, c’est 20 fois 7 plus 3 fois 7 : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
       })
     },
     {
@@ -4041,7 +4096,7 @@
         consigneEcris: "12 × 35 = 10 × 35 + 2 × 35",
         etapes: [["10 × 35 = ?", 350], ["2 × 35 = ?", 70], ["12 × 35 = ?", 420]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
-        bilan: "21 fois 43, c’est 20 fois 43 plus 1 fois 43 : 21 × 43 = 860 + 43 = 903."
+        bilan: "21 fois 43, c’est 20 fois 43 plus 1 fois 43 : 21 × 43 = 860 + 43 = 903."
       })
     }
   ];
@@ -4206,6 +4261,8 @@
       }, m3Dessins(ecris, etapes.length)),
       bilan: frBilan(bilan),
       image: Object.freeze(m3Image(manipule)),
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule, ecris: ecris}),
       textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
     });
   }
@@ -4227,7 +4284,7 @@
           consigne: "6 × 70 = 6 × 7 × 10",
           consigneEcris: "8 × 40 = 8 × 4 × 10",
           etapes: [["8 × 4 = ?", 32], ["8 × 40 = ?", 320]],
-          bilan: "Pour 9 × 40, je fais la table : 9 × 4 = 36. Puis × 10 : chaque chiffre vaut 10 fois plus. 9 × 40 = 360."
+          bilan: "Je fais la table, puis chaque chiffre vaut 10 fois plus : 9 × 40 = 9 × 4 × 10 = 360."
         })
       },
       {
@@ -4237,11 +4294,11 @@
         apprends: m3Apprends({
           manipule: m3Calcul(0, 6, 300),
           represente: m3Calcul(0, 7, 400),
-          ecris: m3Calcul(0, 3, 2000),
+          ecris: m3Calcul(0, 4, 700),
           consigne: "7 × 400 = 7 × 4 × 100",
-          consigneEcris: `3 × 2${ESPACE_FINE}000 = 3 × 2 × 1${ESPACE_FINE}000`,
-          etapes: [["3 × 2 = ?", 6], [`3 × 2${ESPACE_FINE}000 = ?`, 6000]],
-          bilan: `6 × 300 = 6 × 3 × 100 : je fais la table, 18, puis chaque chiffre vaut 100 fois plus. 6 × 300 = 1${ESPACE_FINE}800.`
+          consigneEcris: "4 × 700 = 4 × 7 × 100",
+          etapes: [["4 × 7 = ?", 28], ["4 × 700 = ?", 2800]],
+          bilan: `Je fais la table, puis chaque chiffre vaut 100 fois plus : 6 × 300 = 6 × 3 × 100 = 1${ESPACE_FINE}800.`
         })
       },
       {
@@ -4251,11 +4308,11 @@
         apprends: m3Apprends({
           manipule: m3Calcul(0, 90, 20),
           represente: m3Calcul(0, 400, 30),
-          ecris: m3Calcul(0, 3000, 20),
+          ecris: m3Calcul(0, 30, 80),
           consigne: `400 × 30 = 4 × 3 × 1${ESPACE_FINE}000`,
-          consigneEcris: `3${ESPACE_FINE}000 × 20 = 3 × 2 × 10${ESPACE_FINE}000`,
-          etapes: [["3 × 2 = ?", 6], [`3${ESPACE_FINE}000 × 20 = ?`, 60000]],
-          bilan: `90 × 20 = 9 × 2 × 100 : je fais la table, 18, puis chaque chiffre vaut 100 fois plus. 90 × 20 = 1${ESPACE_FINE}800.`
+          consigneEcris: "30 × 80 = 3 × 8 × 100",
+          etapes: [["3 × 8 = ?", 24], ["30 × 80 = ?", 2400]],
+          bilan: `Je fais la table, puis chaque chiffre vaut 100 fois plus : 90 × 20 = 9 × 2 × 100 = 1${ESPACE_FINE}800.`
         })
       }
     ]
@@ -4390,7 +4447,9 @@
         solution: Object.freeze({image: m7Image(ecris), phrase: m7Phrase(ecris)})
       }, dixFoisDessins(m7Image(ecris), etapes.length)),
       bilan: frBilan(bilan),
-      image: Object.freeze(m7Image(represente)),
+      image: Object.freeze(m7Image(manipule || represente)),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule, ecris: ecris}),
       textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
     });
   }
@@ -4412,7 +4471,7 @@
           consigne: "34 × 5, c’est la moitié de 34 × 10.",
           consigneEcris: "5 × 58 = 58 × 10 ÷ 2",
           etapes: [["58 × 10 = ?", 580], ["5 × 58 = ?", 290]],
-          bilan: "× 5, c’est × 10 puis la moitié : 34 × 5 = 340 ÷ 2 = 170."
+          bilan: "× 5, c’est × 10 puis la moitié : 46 × 5 = 460 ÷ 2 = 230."
         })
       },
       {
@@ -4426,7 +4485,7 @@
           consigne: "143 × 5, c’est la moitié de 143 × 10.",
           consigneEcris: "5 × 89 = 89 × 10 ÷ 2",
           etapes: [["89 × 10 = ?", 890], ["5 × 89 = ?", 445]],
-          bilan: `× 5, c’est × 10 puis la moitié : 143 × 5 = 1${ESPACE_FINE}430 ÷ 2 = 715.`
+          bilan: "× 5, c’est × 10 puis la moitié : 37 × 5 = 370 ÷ 2 = 185."
         })
       },
       {
@@ -4440,7 +4499,7 @@
           consigne: "18 × 50, c’est la moitié de 18 × 100.",
           consigneEcris: "50 × 37 = 37 × 100 ÷ 2",
           etapes: [["37 × 100 = ?", 3700], ["50 × 37 = ?", 1850]],
-          bilan: `× 50, c’est × 100 puis la moitié : 18 × 50 = 1${ESPACE_FINE}800 ÷ 2 = 900.`
+          bilan: `× 50, c’est × 100 puis la moitié : 24 × 50 = 2${ESPACE_FINE}400 ÷ 2 = 1${ESPACE_FINE}200.`
         })
       }
     ]
@@ -4626,7 +4685,7 @@
         consigneEcris: "2 × 38 × 5 = 2 × 5 × 38",
         etapes: [["2 × 5 = ?", 10], ["38 × 10 = ?", 380]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
-        bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430."
+        bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430."
       })
     },
     {
@@ -4641,7 +4700,7 @@
         consigneEcris: "25 × 18 × 4 = 25 × 4 × 18",
         etapes: [["25 × 4 = ?", 100], ["18 × 100 = ?", 1800]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
-        bilan: `4 × 25 = 100 : je les calcule ensemble. 4 × 37 × 25 = 37 × 100 = 3${ESPACE_FINE}700.`
+        bilan: `4 × 25 = 100 : je les calcule ensemble. 4 × 37 × 25 = 37 × 100 = 3${ESPACE_FINE}700.`
       })
     },
     {
@@ -4656,7 +4715,7 @@
         consigneEcris: "25 × 28 = 7 × 4 × 25",
         etapes: [["4 × 25 = ?", 100], ["7 × 100 = ?", 700]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
-        bilan: "16, c’est 4 × 4 : 16 × 25 = 4 × 4 × 25 = 4 × 100 = 400."
+        bilan: "16, c’est 4 × 4 : 16 × 25 = 4 × 4 × 25 = 4 × 100 = 400."
       })
     }
   ];
@@ -4770,12 +4829,12 @@
       apprends: apprendsSansManip({
         fiche: M12,
         represente: m12Calcul(0, "division", 240, 6),
-        ecris: m12Calcul(0, "division", 3600, 9),
+        ecris: m12Calcul(0, "division", 350, 7),
         consigne: "240, c’est 24 dizaines.",
-        consigneEcris: `3${ESPACE_FINE}600 ÷ 9 = 36 ÷ 9 × 100`,
-        etapes: [["36 ÷ 9 = ?", 4], [`3${ESPACE_FINE}600 ÷ 9 = ?`, 400]],
+        consigneEcris: "350 ÷ 7 = 35 ÷ 7 × 10",
+        etapes: [["35 ÷ 7 = ?", 5], ["350 ÷ 7 = ?", 50]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
-        bilan: "240, c’est 24 dizaines : 24 ÷ 6 = 4, donc 240 ÷ 6 = 40."
+        bilan: "240, c’est 24 dizaines : 240 ÷ 6 = 24 ÷ 6 × 10 = 40."
       })
     },
     {
@@ -5038,7 +5097,9 @@
         solution: Object.freeze({image: c1Image(ecris), phrase: c1Phrase(ecris)})
       }, escalierDessins(c1Image(ecris), etapes.length)),
       bilan: frBilan(bilan),
-      image: Object.freeze(c1Image(represente)),
+      image: Object.freeze(c1Image(manipule || represente)),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule, ecris: ecris}),
       textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
     });
   }
@@ -5058,7 +5119,7 @@
           ecris: c1Calcul(0, "fois-par", op("×", 5, op("−", 12, 4, true))),
           consigne: "Je calcule d’abord ce qui est entre parenthèses.",
           consigneEcris: "D’abord la parenthèse.",
-          bilan: "Je calcule d’abord ce qui est entre parenthèses : 20 − (6 + 3) = 20 − 9 = 11."
+          bilan: "Je calcule d’abord ce qui est entre parenthèses : 3 × (10 − 6) = 3 × 4 = 12."
         })
       },
       {
@@ -5071,7 +5132,7 @@
           ecris: c1Calcul(0, "fois-paires", op("×", op("+", 5, 3, true), op("−", 10, 4, true))),
           consigne: "Chaque parenthèse d’abord.",
           consigneEcris: "Chaque parenthèse d’abord.",
-          bilan: "Chaque parenthèse d’abord : (2 × 9) − (3 + 4) = 18 − 7 = 11."
+          bilan: "Chaque parenthèse d’abord : (4 + 2) × (12 − 5) = 6 × 7 = 42."
         })
       },
       {
@@ -5084,7 +5145,7 @@
           ecris: c1Calcul(0, "fois-emboite", op("×", 6, op("−", 20, op("+", 8, 5, true), true))),
           consigne: "La parenthèse la plus à l’intérieur d’abord.",
           consigneEcris: "La parenthèse la plus à l’intérieur d’abord.",
-          bilan: "La parenthèse la plus à l’intérieur d’abord : 50 − (4 × (9 − 2)) = 50 − 28 = 22."
+          bilan: "La parenthèse la plus à l’intérieur d’abord : 37 − (3 × (14 − 6)) = 37 − (3 × 8) = 37 − 24 = 13."
         })
       }
     ]
@@ -5198,7 +5259,15 @@
         if (chiffreAuRang(n, u) > k) retire.push(c3Retire(1, n, n - k * u));
         if (chiffreAuRang(n, u) + k <= 9) depart.push(c3Depart(1, k * u, n));
       }));
-      return Object.freeze({egal, retire, depart});
+      // Lot 3a (décision 9) : « un calcul de l'autre côté » (173 − □ = 3 × 8,
+      // 28 − 18 = □ ÷ 5) vient de « Garder l'égalité » : une 4e sorte ici.
+      const produits = [];
+      for (let n = 101; n <= 199; n += 6) entre(2, 9).forEach(a => entre(a, 9).forEach(b => { if (a * b <= n - 11 && ![a, b, a * b].includes(n - a * b)) produits.push(c3RetireProduit(1, n, a, b)); }));
+      const quotients = [];
+      entre(2, 10).forEach(q => entre(2, 9).forEach(k => entre(11, 39).filter(y => y % 10 !== 0 && y % 3 === q % 3).forEach(y => {
+        if (![y + q, y, k, q].includes(q * k)) quotients.push(c3DifferenceQuotient(1, y + q, y, k));
+      })));
+      return Object.freeze({egal, retire, depart, "retire-produit": produits, "difference-quotient": quotients});
     }
     const sommes = [];
     const differences = [];
@@ -5210,14 +5279,7 @@
       for (let a = 121; a <= 989; a += 29) entre(11, 49).filter(b => b % 10 !== 0).forEach(b => decalages.forEach(e => {
         if (b + e > 10) differences.push(c3Difference(2, a, b, b + e, false));
       }));
-      const produits = [];
-      // (La réponse n'est aucun des nombres écrits.)
-      for (let n = 101; n <= 199; n += 6) entre(2, 9).forEach(a => entre(a, 9).forEach(b => { if (a * b <= n - 11 && ![a, b, a * b].includes(n - a * b)) produits.push(c3RetireProduit(2, n, a, b)); }));
-      const quotients = [];
-      entre(2, 10).forEach(q => entre(2, 9).forEach(k => entre(11, 39).filter(y => y % 10 !== 0 && y % 3 === q % 3).forEach(y => {
-        if (![y + q, y, k, q].includes(q * k)) quotients.push(c3DifferenceQuotient(2, y + q, y, k));
-      })));
-      return Object.freeze({"egalite-somme": sommes, "egalite-difference": differences, "retire-produit": produits, "difference-quotient": quotients});
+      return Object.freeze({"egalite-somme": sommes, "egalite-difference": differences});
     }
     for (let a = 112; a <= 989; a += 31) [137, 158, 179, 216, 237, 245, 263, 318, 342, 376, 425, 457, 482].forEach(b => decalages.forEach(e => {
       if (a + b - (b + e) > 0) sommes.push(c3Somme(3, a, b, null, b + e, true));
@@ -5250,32 +5312,32 @@
   C3.niveaux = [
     {
       n: 1, titre: "un nombre manquant", nom: "Égalités à trou simples", palier: 2, type: "P",
-      composer: vivierNiveau(C3_VIVIERS[1], [4, 3, 3]),
+      composer: vivierNiveau(C3_VIVIERS[1], [4, 2, 2, 1, 1]),
       imposes: [c3Egal(1, 657, 40), c3Depart(1, 300, 4250)],
       apprends: apprendsSansManip({
         fiche: C3,
         represente: c3Egal(0, 347, 20),
-        ecris: c3Retire(0, 5760, 5360),
+        ecris: c3Egal(0, 684, 300),
         consigne: "Les deux barres ont la même longueur.",
-        consigneEcris: `5${ESPACE_FINE}760 − ? = 5${ESPACE_FINE}360`,
-        etapes: [[`5${ESPACE_FINE}760 − 5${ESPACE_FINE}360 = ?`, 400]],
+        consigneEcris: "684 = 300 + ?",
+        etapes: [["684 − 300 = ?", 384]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
-        bilan: "Les deux barres ont la même longueur : 347 = 20 + 327, et 347 − 20 = 327."
+        bilan: "Les deux barres ont la même longueur : 347 = 20 + 327, et 347 − 20 = 327."
       })
     },
     {
       n: 2, titre: "garder l’égalité", nom: "Garder l’égalité", palier: 2, type: "P",
-      composer: vivierNiveau(C3_VIVIERS[2], [5, 3, 1, 1]),
+      composer: vivierNiveau(C3_VIVIERS[2], [6, 4]),
       imposes: [c3Somme(2, 236, 8, 233, null, false), c3Difference(2, 175, 26, 28, false)],
       apprends: apprendsSansManip({
         fiche: C3,
         represente: c3Somme(0, 144, 7, 142, null, false),
-        ecris: c3Difference(0, 253, 18, 21, false),
+        ecris: c3Somme(0, 365, 9, 362, null, false),
         consigne: "142, c’est 2 de moins que 144.",
-        consigneEcris: "253 − 18 = ? − 21",
-        etapes: [["21 − 18 = ?", 3], ["253 + 3 = ?", 256]],
+        consigneEcris: "365 + 9 = 362 + ?",
+        etapes: [["365 − 362 = ?", 3], ["9 + 3 = ?", 12]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
-        bilan: "142, c’est 2 de moins que 144 : de l’autre côté, il faut 2 de plus. 144 + 7 = 142 + 9."
+        bilan: "142, c’est 2 de moins que 144 ; de l’autre côté, il faut 2 de plus : 144 + 7 = 142 + 9."
       })
     },
     {
@@ -5285,12 +5347,12 @@
       apprends: apprendsSansManip({
         fiche: C3,
         represente: c3Somme(0, 144, 237, null, 239, true),
-        ecris: c3Difference(0, 342, 56, 59, true),
+        ecris: c3Somme(0, 256, 198, null, 200, true),
         consigne: "239, c’est 2 de plus que 237.",
-        consigneEcris: "342 − 56 = ? − 59",
-        etapes: [["59 − 56 = ?", 3], ["342 + 3 = ?", 345]],
+        consigneEcris: "256 + 198 = ? + 200",
+        etapes: [["200 − 198 = ?", 2], ["256 − 2 = ?", 254]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
-        bilan: "239, c’est 2 de plus que 237 : de l’autre côté, il faut 2 de moins. 144 + 237 = 142 + 239."
+        bilan: "239, c’est 2 de plus que 237 ; de l’autre côté, il faut 2 de moins : 144 + 237 = 142 + 239."
       })
     }
   ];
@@ -5682,7 +5744,9 @@
       }, numerationDessins(d1Tableau(ecris, {inconnue: true}), rangs.map(liste => ({rangs: liste})))),
       bilan: frBilan(bilan),
       // « À retenir » : le tableau du calcul de « je représente », rempli.
-      image: Object.freeze(d1Image(represente)),
+      image: Object.freeze(d1Image(manipule || represente)),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule || represente, ecris: ecris}),
       textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
     });
   }
@@ -5705,7 +5769,7 @@
           consigneEcris: "Chaque morceau va dans sa colonne.",
           etapes: [["6/10 = ?", 0.6], ["4 + 6/10 = ?", 4.6]],
           rangs: [[-1], [0, -1]],
-          bilan: "27 dixièmes, c’est 2 unités et 7 dixièmes : 27/10 = 2,7."
+          bilan: "Les unités avant la virgule, les dixièmes juste après : 3 + 2/10 = 3,2."
         })
       },
       {
@@ -5720,7 +5784,7 @@
           consigneEcris: "Chaque morceau va dans sa colonne.",
           etapes: [["5/100 = ?", 0.05], ["3 + 5/100 = ?", 3.05]],
           rangs: [[-1, -2], [0, -1, -2]],
-          bilan: "245 centièmes, c’est 2 unités, 4 dixièmes et 5 centièmes : 245/100 = 2,45."
+          bilan: "Les dixièmes juste après la virgule, puis les centièmes : 4/10 + 8/100 = 0,48."
         })
       },
       {
@@ -5734,7 +5798,7 @@
           consigneEcris: "Chaque morceau va dans sa colonne.",
           etapes: [[`107/1${ESPACE_FINE}000 = ?`, 0.107], [`4 + 107/1${ESPACE_FINE}000 = ?`, 4.107]],
           rangs: [[-1, -2, -3], [0, -1, -2, -3]],
-          bilan: `Je range chaque morceau dans sa colonne : 8/100 + 4/10 + 3/1${ESPACE_FINE}000 = 0,483.`
+          bilan: `Je range chaque morceau dans sa colonne : 8/100 + 4/10 + 3/1${ESPACE_FINE}000 = 0,483.`
         })
       }
     ]
@@ -6133,7 +6197,9 @@
         solution: Object.freeze({image: Object.freeze(d4Image(ecris)), phrase: d4Phrase(ecris)})
       }, numerationDessins(d4Tableau(ecris, {inconnue: true, ligneCachee}), morceaux)),
       bilan: frBilan(bilan),
-      image: Object.freeze(d4Image(represente)),
+      image: Object.freeze(d4Image(manipule || represente)),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule, ecris: ecris}),
       textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
     });
   }
@@ -6156,7 +6222,7 @@
           consigneEcris: "6,24 + 0,5 = 6,04 + 0,2 + 0,5",
           etapes: [["0,2 + 0,5 = ?", 0.7], ["6,24 + 0,5 = ?", 6.74]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
-          bilan: "Seul le chiffre des centièmes change : 0,45 + 3/100 = 0,48."
+          bilan: "Seul le chiffre des dixièmes change : 4,45 + 0,3 = 4,75."
         })
       },
       {
@@ -6164,14 +6230,14 @@
         composer: vivierNiveau(D4_VIVIERS[2], [4, 2, 2, 1, 1]),
         imposes: [d4Fraction(2, 2.315, -3, 4), d4Moins(2, 8.476, -1, 2)],
         apprends: d4Apprends({
-          manipule: d4Plus(0, 2.435, -2, 4),
+          manipule: d4Plus(0, 2.435, -3, 4),
           represente: d4Moins(0, 7.152, -2, 3),
           ecris: d4Fraction(0, 1.624, -3, 5),
           consigne: "0,03, c’est 3 centièmes.",
           consigneEcris: `1,624 + 5/1${ESPACE_FINE}000 = 1,62 + 0,004 + 5/1${ESPACE_FINE}000`,
           etapes: [[`5/1${ESPACE_FINE}000 = ?`, 0.005], ["0,004 + 0,005 = ?", 0.009], [`1,624 + 5/1${ESPACE_FINE}000 = ?`, 1.629]],
           morceaux: [{lignes: [1]}, {rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
-          bilan: "Seul le chiffre des centièmes change : 7,152 − 0,03 = 7,122."
+          bilan: "Seul le chiffre des millièmes change : 2,435 + 0,004 = 2,439."
         })
       },
       {
@@ -6179,14 +6245,14 @@
         composer: vivierNiveau(D4_VIVIERS[3], [6, 4]),
         imposes: [d4Plus(3, 2.58, -1, 7), d4Fraction(3, 6.97, -2, 5)],
         apprends: d4Apprends({
-          manipule: d4Plus(0, 3.96, -2, 5),
-          represente: d4Plus(0, 4.45, -1, 8),
+          manipule: d4Plus(0, 4.45, -1, 8),
+          represente: d4Plus(0, 3.96, -2, 5),
           ecris: d4Plus(0, 5.73, -1, 6),
           consigne: "10 dixièmes font 1 unité.",
           consigneEcris: "5,73 + 0,6 = 5,03 + 0,7 + 0,6",
           etapes: [["0,7 + 0,6 = ?", 1.3], ["5,73 + 0,6 = ?", 6.33]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
-          bilan: "10 dixièmes font 1 unité : 4,45 + 0,8 = 5,25."
+          bilan: "10 dixièmes font 1 unité : 4,45 + 0,8 = 5,25."
         })
       }
     ]
@@ -6594,7 +6660,9 @@
         solution: Object.freeze({image: fracImage(ecris), phrase: fracPhrase(ecris)})
       }, fracEcrisDessins(ecris, etapes, morceaux, {haut})),
       bilan: frBilan(bilan),
-      image: fracImage(represente),
+      image: fracImage(manipule || represente),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule || represente, ecris: ecris}),
       textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
     });
   }
@@ -6733,7 +6801,7 @@
           consigneEcris: "1/2 = ?/4",
           etapes: [["1 = ?/4", 4], ["1/2 = ?/4", 2]],
           morceaux: [{ecrit: 1, texte: "4/4"}, {bas: true}],
-          bilan: "Une unité, c’est 2 demis : 1 − 1/2 = 1/2."
+          bilan: "1/4 + 1/4 = 2/4 = 1/2."
         })
       },
       {
@@ -6744,12 +6812,12 @@
           fiche: "F2",
           manipule: pourApprendre(f2(2, "1/2 + 1/4 = □/4")),
           represente: pourApprendre(f2(2, "1 − 1/4 = □/4")),
-          ecris: pourApprendre(f2(2, "3/4 − 1/2 = □/4")),
+          ecris: pourApprendre(f2(2, "1/4 + 1/2 = □/4")),
           consigne: "Une unité, c’est 4 quarts.",
-          consigneEcris: "3/4 − 1/2 = ?/4",
-          etapes: [["1/2 = ?/4", 2], ["3/4 − 2/4 = ?/4", 1]],
-          morceaux: [{haut: 0, texte: "2/4"}, {bas: true}],
-          bilan: "4 quarts moins 1 quart, c’est 3 quarts : 1 − 1/4 = 3/4."
+          consigneEcris: "1/4 + 1/2 = ?/4",
+          etapes: [["1/2 = ?/4", 2], ["1/4 + 2/4 = ?/4", 3]],
+          morceaux: [{haut: 1, texte: "2/4"}, {bas: true}],
+          bilan: "1/2 = 2/4. 1/2 + 1/4 = 2/4 + 1/4 = 3/4."
         })
       }
     ]
@@ -6915,7 +6983,7 @@
           consigneEcris: "23/6 = 3 + ?/6",
           etapes: [["3 = ?/6", 18], ["23/6 = 18/6 + ?/6", 5], ["23/6 = 3 + ?/6", 5]],
           morceaux: [{ecrit: 3, texte: "18/6"}, {bas: true}, {}],
-          bilan: "11 quarts, c’est 2 unités (8 quarts) et 3 quarts : 11/4 = 2 + 3/4."
+          bilan: "15/5 = 3. 17/5 = 15/5 + 2/5 = 3 + 2/5."
         })
       },
       {
@@ -6931,7 +6999,7 @@
           consigneEcris: "3 + 4/5 = ?/5",
           etapes: [["3 = ?/5", 15], ["15/5 + 4/5 = ?/5", 19]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
-          bilan: "9 quarts, c’est 2 unités et 1 quart : 9/4 = 2 + 1/4."
+          bilan: "2 = 6/3. 2 + 2/3 = 6/3 + 2/3 = 8/3."
         })
       }
       // (Lot « couverture », 06/11/2026 : l'ancien niveau 3, encadrer, est
@@ -7046,7 +7114,7 @@
           consigneEcris: "3/5 = ?/20",
           etapes: [["1/5 = ?/20", 4], ["3/5 = ?/20", 12]],
           morceaux: [{gros: 4}, {bas: true}],
-          bilan: "Chaque tiers coupé en 5 : 2/3 = 10/15 (× 5 en haut et en bas)."
+          bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
         })
       },
       {
@@ -7211,7 +7279,7 @@
           consigneEcris: "4/9 + 3/9 = ?/9",
           etapes: [["4 + 3 = ?", 7], ["4/9 + 3/9 = ?/9", 7]],
           morceaux: [{}, {bas: true}],
-          bilan: "5 huitièmes − 2 huitièmes = 3 huitièmes : 5/8 − 2/8 = 3/8."
+          bilan: "3 huitièmes et 3 huitièmes, c’est 6 huitièmes : 3/8 + 3/8 = 6/8."
         })
       },
       {
@@ -7227,7 +7295,7 @@
           consigneEcris: "1 − 5/12 = ?/12",
           etapes: [["1 = ?/12", 12], ["12/12 − 5/12 = ?/12", 7]],
           morceaux: [{ecrit: 1, texte: "12/12"}, {bas: true}],
-          bilan: "1 = 8/8 : 1 − 3/8 = 5/8."
+          bilan: "1 = 3/3. 1 − 2/3 = 3/3 − 2/3 = 1/3."
         })
       },
       {
@@ -7242,7 +7310,7 @@
           consigneEcris: "3 − 2/5 = ?/5",
           etapes: [["3 = ?/5", 15], ["15/5 − 2/5 = ?/5", 13]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
-          bilan: "2 = 8/4 : 2 − 1/4 = 7/4."
+          bilan: "2 = 8/4. 2 − 1/4 = 8/4 − 1/4 = 7/4."
         })
       }
     ]
@@ -7352,7 +7420,8 @@
       viviers.numerateur.push(f1Num(2, 1, 1000), f1Num(2, 2, 2));
       viviers.centiemes.push(f1Cent(2, 1, 2, 1000), f1Cent(2, 1, 4, 1000), f1Cent(2, 3, 4, 1000));
     }
-    if (niveau === 3) viviers.fois = [f1Calcul(3, "fois", {v: 1, d: 10}), f1Calcul(3, "fois", {v: 1, d: 100}), f1Calcul(3, "fois", {v: 0.1, d: 100, ecrit: "1/10"}), f1Calcul(3, "fois", {v: 1, d: 1000})];
+    // (Lot 3a, décision 11 : plus de « 1 = □ × 1/10 » ici — combien de
+    // dixièmes dans 1, c'est « Écritures d'un décimal ».)
     return Object.freeze(viviers);
   }
   const F1_VIVIERS = Object.freeze({1: f1Vivier(1), 2: f1Vivier(2), 3: f1Vivier(3)});
@@ -7527,7 +7596,9 @@
         solution: Object.freeze({image: f1Image(ecris), phrase: f1Phrase(ecris)})
       }, {dessins: Object.freeze(liste), revele: Object.freeze(dessins(n, true))}),
       bilan: frBilan(bilan),
-      image: f1Image(represente),
+      image: f1Image(manipule || represente),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule, ecris: ecris}),
       textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
     });
   }
@@ -7545,17 +7616,17 @@
         apprends: f1Apprends({
           manipule: pourApprendre(f1(1, "3/10 = □")),
           represente: pourApprendre(f1(1, "1/100 = □")),
-          ecris: pourApprendre(f1(1, "0,03 = 3/□")),
+          ecris: pourApprendre(f1(1, "0,7 = 7/□")),
           consigne: "Un petit carré sur 100.",
-          consigneEcris: "0,03 = 3/?",
-          etapes: [["3/100 = ?", 0.03], ["0,03 = 3/?", 100]],
-          // Le tableau : la ligne de 0,03, le 3 rangé aux centièmes ; la
-          // 2e étape écrit « 3/100 » en vert.
+          consigneEcris: "0,7 = 7/?",
+          etapes: [["7/10 = ?", 0.7], ["0,7 = 7/?", 10]],
+          // Le tableau : la ligne de 0,7, le 7 rangé aux dixièmes ; la
+          // 2e étape écrit « 7/10 » en vert (lot 3a : des dixièmes, comme la leçon).
           dessins: (k, revele) => {
-            const tableau = f1Tableau(pourApprendre(f1(1, "0,03 = 3/□")), revele || k >= 2);
+            const tableau = f1Tableau(pourApprendre(f1(1, "0,7 = 7/□")), revele || k >= 2);
             return k >= 2 && !revele ? Object.assign(tableau, {resultat: Object.assign({}, tableau.resultat, {trouve: true})}) : tableau;
           },
-          bilan: "Un centième, c’est un petit carré sur 100 : 1/100 = 0,01."
+          bilan: "1/10 = 0,1. 3/10 = 0,3."
         })
       },
       {
@@ -7565,34 +7636,37 @@
         apprends: f1Apprends({
           manipule: pourApprendre(f1(2, "3/4 = □")),
           represente: pourApprendre(f1(2, "5/2 = □")),
-          ecris: pourApprendre(f1(2, "1/4 = □/100")),
+          ecris: pourApprendre(f1(2, "3/4 = □/100")),
           consigne: "2 demis font une unité.",
-          consigneEcris: "1/4 = ?/100",
-          etapes: [["1/2 = ?/100", 50], ["1/4 = ?/100", 25]],
-          // Le carré de 100 : vide, puis la moitié coloriée, puis le quart.
-          dessins: (k, revele) => (revele || k >= 2 ? d1Carre(0.25) : k === 1 ? d1Carre(0.5) : d1Carre(0)),
-          bilan: "5 demis, c’est 2 unités et 1 demi : 5/2 = 2,5."
+          consigneEcris: "3/4 = ?/100",
+          etapes: [["1/4 = ?/100", 25], ["3/4 = ?/100", 75]],
+          // Le carré de 100 (lot 3a : J'écris sur 3/4) : vide, puis le quart
+          // colorié, puis les trois quarts.
+          dessins: (k, revele) => (revele || k >= 2 ? d1Carre(0.75) : k === 1 ? d1Carre(0.25) : d1Carre(0)),
+          bilan: "3/4 = 75/100 = 0,75."
         })
       },
       {
         n: 3, titre: "cinquièmes", nom: "Cinquièmes\u00a0: en décimal", palier: 4, type: "F",
-        composer: vivierNiveau(F1_VIVIERS[3], [4, 3, 2, 2, 1]),
+        composer: vivierNiveau(F1_VIVIERS[3], [4, 3, 2, 2]),
         imposes: [f1(3, "3/5 = □"), f1(3, "1/5 = □/10")],
         apprends: f1Apprends({
           manipule: pourApprendre(f1(3, "2/5 = □")),
           represente: pourApprendre(f1(3, "6/5 = □")),
-          ecris: pourApprendre(f1(3, "0,4 = □/5")),
+          ecris: pourApprendre(f1(3, "3/5 = □")),
           consigne: "5 cinquièmes font une unité.",
-          consigneEcris: "0,4 = ?/5",
-          etapes: [["1/5 = ?", 0.2], ["0,4 = ?/5", 2]],
-          // La barre de 0,4 : la 1re étape écrit 0,2 sous sa graduation, la
-          // 2e remplit l'accolade.
+          consigneEcris: "3/5 = 3 × 1/5",
+          etapes: [["1/5 = ?", 0.2], ["3/5 = ?", 0.6]],
+          // La barre de 3/5 (lot 3a) : la 1re étape écrit 0,2 sous la
+          // première graduation, la 2e remplit l'accolade (0,6).
           dessins: (k, revele) => {
-            const barre = f1Barre(pourApprendre(f1(3, "0,4 = □/5")), revele || k >= 2);
-            const nombres = [{k: 0, texte: "0"}, ...(revele || k >= 1 ? [{k: 1, texte: "0,2", trouve: !revele}] : []), {k: 2, texte: "0,4"}, {k: 5, texte: "1"}];
-            return Object.assign(barre, {nombres: Object.freeze(nombres.map(Object.freeze)), bas: Object.freeze(Object.assign({}, barre.bas, k >= 2 && !revele ? {trouve: true} : {}))});
+            const fini = revele || k >= 2;
+            const nombres = [{k: 0, texte: "0"}, ...(revele || k >= 1 ? [{k: 1, texte: "0,2", trouve: !revele}] : []), {k: 5, texte: "1"}];
+            return {outil: "barre-droite", a: 1, d: 5, pris: 3, retire: 0, haut: Object.freeze([]), cache: null,
+              bas: Object.freeze(Object.assign({de: 0, a: 3, texte: fini ? "0,6" : "?", cherche: !revele}, k >= 2 && !revele ? {trouve: true} : {})),
+              nombres: Object.freeze(nombres.map(Object.freeze))};
           },
-          bilan: "6 cinquièmes, c’est 1 unité et 1 cinquième : 6/5 = 1,2."
+          bilan: "1/5 = 0,2. 2/5 = 0,4."
         })
       }
     ]
@@ -7747,7 +7821,9 @@
         solution: Object.freeze({image: f3Image(ecris), phrase: f3Phrase(ecris)})
       }, {dessins: Object.freeze(Array.from({length: n + 1}, (_, k) => dessin(k, false))), revele: dessin(n, true)}),
       bilan: frBilan(bilan),
-      image: f3Image(represente),
+      image: f3Image(manipule || represente),  // lot 3a : le calcul montré
+      // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
+      calculs: Object.freeze({montre: manipule || represente, ecris: ecris}),
       textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
     });
   }
@@ -7769,7 +7845,7 @@
           consigne: "18 billes partagées en 2 parts égales.",
           consigneEcris: "1/10 de 500 g = 500 g ÷ 10",
           etapes: [["500\u00a0g ÷ 10 = ? g", 50], ["1/10 de 500\u00a0g = ? g", 50]],
-          bilan: "1/2 de 18 billes, c’est 18 ÷ 2 = 9 billes."
+          bilan: "1/4 de 12 billes, c’est 12 ÷ 4 = 3 billes."
         })
       },
       {
@@ -7783,7 +7859,7 @@
           consigne: "60 kg partagés en 5 parts égales.",
           consigneEcris: "1/6 de 42 € = 42 € ÷ 6",
           etapes: [["42\u00a0€ ÷ 6 = ? €", 7], ["1/6 de 42\u00a0€ = ? €", 7]],
-          bilan: "1/5 de 60 kg, c’est 60 ÷ 5 = 12 kg."
+          bilan: "1/3 de 18 billes, c’est 18 ÷ 3 = 6 billes."
         })
       },
       {
@@ -7794,8 +7870,8 @@
           represente: pourApprendre(f3Calcul(3, 4, 10, "m")),
           ecris: pourApprendre(f3Calcul(3, 2, 7, "L")),
           consigne: "10 m partagés en 4 parts égales.",
-          consigneEcris: "1/2 de 7 L = 1/2 de 6 L + 1/2 de 1 L",
-          etapes: [["1/2 de 6\u00a0L = ? L", 3], ["1/2 de 1\u00a0L = ? L", 0.5], ["1/2 de 7\u00a0L = ? L", 3.5]],
+          consigneEcris: "1/2 de 7 L = 7 L ÷ 2",
+          etapes: [["6\u00a0L ÷ 2 = ? L", 3], ["1\u00a0L ÷ 2 = ? L", 0.5], ["1/2 de 7\u00a0L = ? L", 3.5]],
           bilan: "1/4 de 10 m, c’est 10 ÷ 4 = 2,5 m."
         })
       }
@@ -7994,7 +8070,7 @@
     "A11-3": [["depuis une centaine", (c, d) => d.n % 100 === 0], ["à 3 chiffres", (c, d) => d.n < 1000], ["à 4 chiffres", toutes]],
     "M1-1": parFormes(["double", "double"], ["moitié", "moitie"], ["double de □", "trou-double"], ["moitié de □", "moitie-de-trou"]),
     "A2-1": [["à 2 chiffres", (c, d) => d.a < 100], ["à 3 chiffres", toutes]],
-    "A3-1": [["+ dizaines", (c, d) => c.forme === "somme" && d.d < 100], ["− dizaines", (c, d) => c.forme === "difference" && d.d < 100],
+    "A3-1": [["+ dizaines", (c, d) => c.forme === "somme" && Math.abs(d.d) < 100], ["− dizaines", (c, d) => c.forme === "difference" && Math.abs(d.d) < 100],
       ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
     "M4-1": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = □ × b", "trou-egal"], ["c ÷ b", "division"]),
     "A2-2": [["dizaines", (c, d) => d.a % 10 === 0], ["en 5", toutes]],
@@ -8030,8 +8106,9 @@
     "D1-1": parFormes(["a/10 en décimal", "fraction"], ["a + b/10", "entier-fraction"], ["décimal en dixièmes", "numerateur"]),
     "M2-2": parFormes(["a × 10", "produit"], ["a ÷ 10", "division"], ["□ × 10 = b", "trou-nombre"], ["a × □ = b", "trou-facteur"]),
     "F2-1": parFormes(["demis, quarts égaux", "egale"], ["a + b", "somme"], ["1 − a", "difference"]),
-    "A3-3": [["+ dizaines", (c, d) => c.forme === "somme" && d.d < 100], ["− dizaines", (c, d) => c.forme === "difference" && d.d < 100],
-      ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
+    // (Lot 3a : passer le millier ; les sortes lisent le saut sans son signe.)
+    "A3-3": [["+ dizaines", (c, d) => c.forme === "somme" && Math.abs(d.d) < 100], ["+ centaines", (c, d) => c.forme === "somme"],
+      ["− dizaines", (c, d) => Math.abs(d.d) < 100], ["− centaines", toutes]],
     "D2-1": [["1 décimale", (c, d) => decimales(d.n) <= 1], ["2 décimales", (c, d) => decimales(d.n) === 2], ["3 décimales", toutes]],
     "D3-1": [["un entier", (c, d) => Number.isInteger(d.m)], ["un décimal", toutes]],
     "M7-1": [["jusqu’à 50", (c, d) => d.n <= 50], ["au-delà de 50", toutes]],
@@ -8050,10 +8127,10 @@
       ["a − □ = b", toutes]],
     "F5-1": [["1 + □", (c, d) => d.quotient === 1], ["2 et plus", toutes]],
     "M8-3": [["× 11", (c, d) => c.forme !== "trou" && (d.a === 11 || d.b === 11)], ["× 12, × 21, × 31", (c, d) => c.forme !== "trou"], ["à compléter", toutes]],
-    "C3-1": parFormes(["a = b + □", "egal"], ["□ − b = a", "depart"], ["a − □ = b", "retire"]),
+    "C3-1": parFormes(["a = b + □", "egal"], ["□ − b = a", "depart"], ["a − □ = b", "retire"], ["un calcul de l’autre côté", "retire-produit", "difference-quotient"]),
     "M10-1": parFormes(["2 × a × 5", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["2 × a × 5 = a × □", "trou-regroupe"]),
     "F3-3": parFormes(["1/2 de", "part-2"], ["1/4 de", "part-4"], ["1/5 de", "part-5"], ["1/10 de", "part-10"]),
-    "C3-2": parFormes(["a + b = c + □", "egalite-somme"], ["a − b = □ − c", "egalite-difference"], ["un calcul de chaque côté", "difference-quotient", "retire-produit"]),
+    "C3-2": parFormes(["a + b = c + □", "egalite-somme"], ["a − b = □ − c", "egalite-difference"]),
     "F5-2": parFormes(["a + b/c = □/c", "recomposer"], ["a/b = □ + c/b", "entier"], ["encadrer", "encadrer", "encadrer-bas"]),
     "M12-1": [["dizaines ÷ a", (c, d) => c.forme === "division" && d.n < 1000], ["centaines ÷ a", formeEst("division")], ["a × □ = b", toutes]],
     "A5-4": [["+ …9", (c, d) => d.a % 10 === 9], ["+ …8", toutes]],
@@ -8069,7 +8146,7 @@
     "M7-3": [["un nombre pair", (c, d) => d.n % 2 === 0], ["un nombre impair", toutes]],
     "D4-2": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
     "F6-2": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["vers une plus grande", "multiplier"]),
-    "A3-4": [["dizaines", (c, d) => d.d < 100], ["centaines", (c, d) => d.d < 1000], ["milliers", toutes]],
+    "A3-4": [["dizaines", (c, d) => Math.abs(d.d) < 100], ["centaines", (c, d) => Math.abs(d.d) < 1000], ["milliers", toutes]],
     "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
     "C1-2": parFormes(["(a − b) × (c + d)", "fois-paires"], ["(a × b) − (c + d)", "moins-paires"]),
     "M10-2": parFormes(["4 × a × 25", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["4 × a × 25 = a × □", "trou-regroupe"]),
@@ -8106,13 +8183,17 @@
     "M1-1": {titre: "Sous chaque nombre, son double", blocs: [
       {table: [rangee(1, 10), rangee(1, 10).map(n => 2 * n)], ligneTete: true},
       {table: [rangee(11, 20), rangee(11, 20).map(n => 2 * n)], ligneTete: true},
-      {table: [[30, 40, 50], [60, 80, 100]], ligneTete: true}]},
-    "M1-2": {titre: "Les doubles des nombres usuels (et leurs moitiés)", blocs: [{liste: [25, 150, 35, 250, 45, 350, 75, 450, 60, 500, 80, 1500, 90, 2500]
-      .map(n => `double de ${nb(n)} = ${nb(2 * n)}`), colonnes: 2}]},
+      // (Lot 3a : 25, 35, 45 aussi — l'appli demande la moitié de 50, 70, 90.)
+      {table: [[25, 30, 35, 40, 45, 50], [50, 60, 70, 80, 90, 100]], ligneTete: true}]},
+    // Lot 3a : tous les doubles que l'appli demande (70, les centaines, 750,
+    // 1 000…), comme la carte du niveau 1 : sous chaque nombre, son double.
+    "M1-2": {titre: "Sous chaque nombre, son double", blocs: [
+      [25, 35, 45, 75, 60, 70, 80, 90], [100, 200, 300, 400, 500], [600, 700, 800, 900, 1000],
+      [150, 250, 350, 450, 750, 1500, 2500]].map(ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true}))},
     "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: [{table: tableFois([2, 3, 4, 5], rangee(1, 10))}]},
     "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: [{table: tableFois([6, 7, 8, 9], [6, 7, 8, 9])}]},
     "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
-      {table: tableFois([25], rangee(1, 8))},
+      {table: tableFois([25], rangee(2, 8))},
       {liste: ["60 = 2 × 30 = 3 × 20 = 4 × 15 = 5 × 12 = 6 × 10", "100 = 2 × 50 = 4 × 25 = 5 × 20"], colonnes: 1}]},
     "F2-1": {titre: "Demis et quarts", blocs: [{liste: ["1 = 2/2 = 4/4", "1/2 = 2/4", "1/4 + 1/4 = 1/2", "1/2 + 1/2 = 1", "1 − 1/2 = 1/2", "1 − 1/4 − 1/4 = 1/2"], colonnes: 2}]},
     "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4"], colonnes: 2}]},
@@ -8545,6 +8626,8 @@
     genererUn,
     sortesDe,
     sorteDe,
+    // Lot 3a : la sorte d'un calcul de leçon (niveau 0) dans un niveau donné.
+    sorteDansNiveau: sorteBrute,
     carteParCoeur,
     modeleReponse,
     modelesReponse,

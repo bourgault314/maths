@@ -1229,6 +1229,7 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-coeur th, .dc-coeur td { min-width: 1.45em; padding: .05em .16em; border: 1px solid #b9cbd8; line-height: 1.1; text-align: center; }
 /* Une ligne d'en-tête en mots (« nombre », « double ») : un peu plus petite. */
 .dc-coeur th:first-child:not(:only-child) { font-size: .85em; }
+.dc-coeur table.sans-coin th:first-child { font-size: inherit; }
 .dc-coeur th { background: #eef4f8; color: #506b7d; font-weight: 850; }
 .dc-coeur-liste { display: grid; grid-template-columns: repeat(var(--colonnes, 2), auto); justify-content: center; gap: .3em 1.5em; margin: 0 0 .3em; }
 .dc-coeur-liste > span { white-space: nowrap; }

@@ -98,21 +98,20 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.equal(a2[3].direct, 76);
   assert.match(AIDES.dessinerImage(a2[2]), /^(?![\s\S]*\+ 76)/, "+ 76 n'est pas écrit avant la dernière égalité");
   assert.match(AIDES.dessinerImage(a2[3]), /\+ 76/);
-  // M1-3, moitié de 46 : 20 et 20 sous le 40, puis 3 et 3 sous le 6, puis
-  // l'accolade (23).
+  // M1-3, double de 36 (lot 3a, décision 5 : J'écris sur le double) :
+  // 60 sous les deux 30, puis 12 sous les deux 6, puis l'accolade (72).
   const m1 = ecris("M1-3").dessins;
   assert.deepEqual(m1.map(d => [d.trouves, d.fini]), [[[], false], [[0], false], [[0, 1], false], [[0, 1], true]]);
   const m1svg = m1.map(AIDES.dessinerImage);
   assert.ok(vertsDe(m1svg[1]) > vertsDe(m1svg[0]) && vertsDe(m1svg[2]) > vertsDe(m1svg[1]), "ce que l'élève trouve s'écrit en vert");
-  assert.equal((m1svg[0].match(/>20</g) || []).length, 0);
-  assert.equal((m1svg[1].match(/>20</g) || []).length, 2, "les deux cases sous le 40");
-  assert.equal((m1svg[1].match(/>3</g) || []).length, 0);
-  assert.equal((m1svg[2].match(/>3</g) || []).length, 2, "les deux cases sous le 6");
-  assert.equal((m1svg[2].match(/>23</g) || []).length, 0);
-  assert.equal((m1svg[3].match(/>23</g) || []).length, 1, "la dernière égalité remplit l'accolade");
+  const compte = (svg, n) => (svg.match(new RegExp(`>${n}<`, "g")) || []).length;
+  assert.deepEqual(m1svg.map(svg => compte(svg, 60)), [0, 1, 1, 1], "2 × 30 = 60 sous les deux 30");
+  assert.deepEqual(m1svg.map(svg => compte(svg, 12)), [0, 0, 1, 1], "2 × 6 = 12 sous les deux 6");
+  assert.deepEqual(m1svg.map(svg => compte(svg, 72)), [0, 0, 0, 1], "la dernière égalité remplit l'accolade");
   // M1-2, double de 75 : 140, puis 10, puis l'accolade (150).
+  // (Lot 3a : M1-2 écrit double de 250 — 400, 100, puis 500.)
   const m12 = ecris("M1-2").dessins.map(AIDES.dessinerImage);
-  assert.deepEqual(m12.map(s => [/>140</.test(s), />10</.test(s), />150</.test(s)]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
+  assert.deepEqual(m12.map(s => [/>400</.test(s), />100</.test(s), />500</.test(s)]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
   // D2-1, 72,41 × 10 : une seule étape (décision du 04/11, modules lot 5) —
   // tous les chiffres glissent ensemble, le tableau se remplit d'un coup.
   const d2 = ecris("D2-1").dessins;
@@ -133,17 +132,19 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.deepEqual(d4.map(d => [d.lignes[1].cherche, Boolean(d.lignes[1].trouvee)]), [[true, false], [false, true], [false, true], [false, true]]);
   assert.deepEqual(d4.map(d => d.trouves), [[], [], [-3], [0, -1, -2, -3]]);
   assert.deepEqual(d4[0].garder.sort(), [-1, -2, 0], "les chiffres qui ne changent pas, en gris dès le début");
-  // M2-2, un trou : « × ? », puis « × 100 ».
+  // M2-2 (lot 3a : J'écris 3 500 ÷ 100, comme la leçon sur ÷ 10) : les
+  // chiffres glissent vers la droite, « ? » puis le résultat.
   const m2 = ecris("M2-2").dessins.map(AIDES.dessinerImage);
-  assert.match(m2[0], /× \?/);
-  assert.match(m2[1], /× 100/);
+  assert.match(m2[0], /÷ 100/);
+  assert.match(m2[0], />\?</);
+  assert.doesNotMatch(m2[1], />\?</);
 });
 
 test("J'écris des modules lot 2 (A3, A4, A6, A7, A8) : les morceaux attendus", () => {
   const dessins = cle => CORE.niveauDe(cle).niveau.apprends.ecris.dessins;
   const vus = d => d.sauts.map(s => (s.cache ? "·" : s.masque ? "?" : s.val));
-  // A3-2, 715 − 30 : − 10 (705), puis − 20 (685), puis − 30 dessous.
-  assert.deepEqual(dessins("A3-2").map(vus), [["·", "·"], [-10, "·"], [-10, -20], [-10, -20]]);
+  // A3-2, 768 + 50 (lot 3a : une addition) : + 40 (808), puis + 10 (818), puis + 50 dessous.
+  assert.deepEqual(dessins("A3-2").map(vus), [["·", "·"], [40, "·"], [40, 10], [40, 10]]);
   assert.deepEqual(dessins("A3-2").map(d => Boolean(d.directCache)), [true, true, true, false]);
   // A3-1, 234 + 60 : « 3 + 6 = 9 » dessine le saut, « 234 + 60 = 294 » son point.
   assert.deepEqual(dessins("A3-1").map(d => [vus(d), d.inconnues]), [[["·"], [1]], [[60], [1]], [[60], []]]);
