@@ -588,7 +588,11 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « cours-lot2 » (13/11/2026) : lib/cours.json seul change (les chapitres Carrés parfaits et
   // racine carrée, Les pourcentages, Calcul numérique de 4e et de 3e, du livret en ligne)
   // (avant : defi-calcul-lot-2-japprends).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-lot2$/m);
+  // Puis « cours-lot3 » (13/11/2026) : lib/cours.json seul change (les chapitres Équations de 4e,
+  // Équations et problèmes et Fonctions de 3e ; Une grandeur en fonction d'une autre de 4e complété ;
+  // Calcul littéral de 4e et Préparer la seconde de 3e reçoivent des fiches, du livret en ligne)
+  // (avant : cours-lot2).
+  assert.match(lire("_serveur/public/VERSION"), /^lot cours-lot3$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

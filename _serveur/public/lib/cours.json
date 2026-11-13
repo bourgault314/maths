@@ -815,8 +815,21 @@
      "page": "/cours/4e/4e-LIT-06.html"
     },
     {
-     "id": "4e-LIT-03",
+     "id": "3e-LIT-02",
      "n": 8,
+     "ids": "3e-LIT-02",
+     "h1": "Je sais écrire l'opposé d'une expression et enlever des parenthèses précédées d'un signe −",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/3e/3e-LIT-02.html"
+    },
+    {
+     "id": "4e-LIT-03",
+     "n": 9,
      "ids": "4e-LIT-03 · 3e-LIT-14",
      "h1": "Je sais appliquer un programme de calcul à un nombre, puis à 𝑥 pour écrire l'expression qu'il calcule",
      "niveaux": [
@@ -829,7 +842,7 @@
     },
     {
      "id": "4e-LIT-09",
-     "n": 9,
+     "n": 10,
      "ids": "4e-LIT-09 · 3e-LIT-14",
      "h1": "Je sais prouver que deux programmes de calcul ont toujours le même résultat",
      "niveaux": [
@@ -842,7 +855,7 @@
     },
     {
      "id": "4e-LIT-10",
-     "n": 10,
+     "n": 11,
      "ids": "4e-LIT-10 · 3e-LIT-15",
      "h1": "Je sais démontrer avec des lettres qu'une propriété est vraie pour tous les entiers, ou qu'elle est fausse avec un contre-exemple",
      "niveaux": [
@@ -859,6 +872,84 @@
     "page": "/cours/3e/3e-LIT-brevet.html"
    },
    "imprimable": "/cours/4e/4e-LIT-imprimable.html"
+  },
+  {
+   "id": "4e-EQU",
+   "niveau": "4e",
+   "chapitre": "Équations",
+   "titre": "Équations",
+   "fiches": [
+    {
+     "id": "4e-EQU-01",
+     "n": 1,
+     "ids": "4e-EQU-01 · 3e-EQU-01",
+     "h1": "Je sais tester si un nombre est solution d'une équation",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-01.html"
+    },
+    {
+     "id": "4e-FON-05",
+     "n": 2,
+     "ids": "4e-FON-05",
+     "h1": "Je sais retrouver le nombre de départ d'un programme de calcul",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-05.html"
+    },
+    {
+     "id": "4e-EQU-02",
+     "n": 3,
+     "ids": "4e-EQU-02 · 3e-EQU-02",
+     "h1": "Je sais résoudre 𝑥 + 𝑏 = 𝑐, 𝑎𝑥 = 𝑐 et 𝑎𝑥 + 𝑏 = 𝑐",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-02.html"
+    },
+    {
+     "id": "4e-EQU-03",
+     "n": 4,
+     "ids": "4e-EQU-03 · 3e-EQU-03",
+     "h1": "Je sais résoudre une équation quand 𝑥 est des deux côtés",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-03.html"
+    },
+    {
+     "id": "4e-EQU-04",
+     "n": 5,
+     "ids": "4e-EQU-04 · 3e-EQU-08",
+     "h1": "Je sais mettre un problème en équation et le résoudre",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-04.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-EQU-brevet",
+    "page": "/cours/3e/3e-EQU-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-EQU-imprimable.html"
   },
   {
    "id": "4e-THA",
@@ -1006,8 +1097,32 @@
      "page": "/cours/4e/4e-REP-01.html"
     },
     {
-     "id": "4e-FON-04",
+     "id": "4e-FON-01",
      "n": 2,
+     "ids": "4e-FON-01",
+     "h1": "Je sais écrire une formule qui exprime une grandeur en fonction d'une autre",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-01.html"
+    },
+    {
+     "id": "4e-FON-03",
+     "n": 3,
+     "ids": "4e-FON-03 · 4e-FON-02",
+     "h1": "Je sais faire le tableau de valeurs d'une formule et la représenter par un graphique",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-03.html"
+    },
+    {
+     "id": "4e-FON-04",
+     "n": 4,
      "ids": "4e-FON-04 · 3e-REP-03",
      "h1": "Je sais lire un graphique dans les deux sens",
      "niveaux": [
@@ -1017,6 +1132,19 @@
      "type": "méthode",
      "nouveau": false,
      "page": "/cours/4e/4e-FON-04.html"
+    },
+    {
+     "id": "4e-FON-05",
+     "n": 5,
+     "ids": "4e-FON-05",
+     "h1": "Je sais retrouver le nombre de départ d'un programme de calcul",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-05.html"
     }
    ],
    "brevet": null,
@@ -1595,6 +1723,7 @@
      "ids": "3e-LIT-02",
      "h1": "Je sais écrire l'opposé d'une expression et enlever des parenthèses précédées d'un signe −",
      "niveaux": [
+      "4e",
       "3e"
      ],
      "type": "méthode",
@@ -1785,6 +1914,168 @@
    "imprimable": "/cours/3e/3e-LIT-imprimable.html"
   },
   {
+   "id": "3e-EQU",
+   "niveau": "3e",
+   "chapitre": "Équations",
+   "titre": "Équations et problèmes",
+   "fiches": [
+    {
+     "id": "4e-EQU-01",
+     "n": 1,
+     "ids": "4e-EQU-01 · 3e-EQU-01",
+     "h1": "Je sais tester si un nombre est solution d'une équation",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-01.html"
+    },
+    {
+     "id": "4e-FON-05",
+     "n": 2,
+     "ids": "4e-FON-05",
+     "h1": "Je sais retrouver le nombre de départ d'un programme de calcul",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-05.html"
+    },
+    {
+     "id": "4e-EQU-02",
+     "n": 3,
+     "ids": "4e-EQU-02 · 3e-EQU-02",
+     "h1": "Je sais résoudre 𝑥 + 𝑏 = 𝑐, 𝑎𝑥 = 𝑐 et 𝑎𝑥 + 𝑏 = 𝑐",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-02.html"
+    },
+    {
+     "id": "4e-EQU-03",
+     "n": 4,
+     "ids": "4e-EQU-03 · 3e-EQU-03",
+     "h1": "Je sais résoudre une équation quand 𝑥 est des deux côtés",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-03.html"
+    },
+    {
+     "id": "3e-EQU-04",
+     "n": 5,
+     "ids": "3e-EQU-04",
+     "h1": "Je sais quelles opérations ne changent pas les solutions d'une équation",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-04.html"
+    },
+    {
+     "id": "3e-EQU-05",
+     "n": 6,
+     "ids": "3e-EQU-05",
+     "h1": "Je sais résoudre une équation avec des parenthèses et donner la valeur exacte",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-05.html"
+    },
+    {
+     "id": "3e-EQU-06",
+     "n": 7,
+     "ids": "3e-EQU-06",
+     "h1": "Je sais résoudre une équation produit nul",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-06.html"
+    },
+    {
+     "id": "3e-EQU-07",
+     "n": 8,
+     "ids": "3e-EQU-07",
+     "h1": "Je sais résoudre une équation 𝑥² = 𝑎",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-07.html"
+    },
+    {
+     "id": "4e-EQU-04",
+     "n": 9,
+     "ids": "4e-EQU-04 · 3e-EQU-08",
+     "h1": "Je sais mettre un problème en équation et le résoudre",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-EQU-04.html"
+    },
+    {
+     "id": "3e-EQU-11",
+     "n": 10,
+     "ids": "3e-EQU-11",
+     "h1": "Je sais choisir comment résoudre une équation",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-11.html"
+    },
+    {
+     "id": "3e-EQU-09",
+     "n": 11,
+     "ids": "3e-EQU-09",
+     "h1": "Je sais comment une inégalité change quand j'ajoute ou quand je multiplie",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-09.html"
+    },
+    {
+     "id": "3e-EQU-10",
+     "n": 12,
+     "ids": "3e-EQU-10",
+     "h1": "Je sais résoudre une inéquation 𝑎𝑥 ⩾ 𝑏 par le calcul et sur un graphique",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-10.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-EQU-brevet",
+    "page": "/cours/3e/3e-EQU-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-EQU-imprimable.html"
+  },
+  {
    "id": "3e-TRG",
    "niveau": "3e",
    "chapitre": "Trigonométrie",
@@ -1882,6 +2173,175 @@
     "page": "/cours/3e/3e-TRG-brevet.html"
    },
    "imprimable": "/cours/3e/3e-TRG-imprimable.html"
+  },
+  {
+   "id": "3e-FON",
+   "niveau": "3e",
+   "chapitre": "Fonctions",
+   "titre": "Fonctions",
+   "fiches": [
+    {
+     "id": "3e-FON-01",
+     "n": 1,
+     "ids": "3e-FON-01",
+     "h1": "Je sais ce qu'est une fonction et je lis 𝑓(𝑥)",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-01.html"
+    },
+    {
+     "id": "3e-FON-02",
+     "n": 2,
+     "ids": "3e-FON-02 · 3e-FON-04",
+     "h1": "Je sais ce que sont une image et un antécédent, et je les lis dans un tableau",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-02.html"
+    },
+    {
+     "id": "3e-FON-03",
+     "n": 3,
+     "ids": "3e-FON-03",
+     "h1": "Je sais calculer l'image d'un nombre",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-03.html"
+    },
+    {
+     "id": "3e-FON-05",
+     "n": 4,
+     "ids": "3e-FON-05",
+     "h1": "Je sais lire une image et des antécédents sur une courbe",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-05.html"
+    },
+    {
+     "id": "3e-FON-06",
+     "n": 5,
+     "ids": "3e-FON-06",
+     "h1": "Je sais trouver un antécédent par le calcul",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-06.html"
+    },
+    {
+     "id": "3e-FON-07",
+     "n": 6,
+     "ids": "3e-FON-07",
+     "h1": "Je sais passer d'une représentation d'une fonction à une autre",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-07.html"
+    },
+    {
+     "id": "3e-FON-08",
+     "n": 7,
+     "ids": "3e-FON-08 · 3e-FON-09",
+     "h1": "Je sais reconnaître une fonction linéaire et l'utiliser pour une situation de proportionnalité",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-08.html"
+    },
+    {
+     "id": "3e-FON-10",
+     "n": 8,
+     "ids": "3e-FON-10",
+     "h1": "Je sais reconnaître une fonction affine et ce que sont 𝑎 et 𝑏",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-10.html"
+    },
+    {
+     "id": "3e-FON-11",
+     "n": 9,
+     "ids": "3e-FON-11",
+     "h1": "Je sais tracer la droite d'une fonction linéaire ou affine",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-11.html"
+    },
+    {
+     "id": "3e-FON-12",
+     "n": 10,
+     "ids": "3e-FON-12",
+     "h1": "Je sais lire sur une droite le coefficient directeur et l'ordonnée à l'origine",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-12.html"
+    },
+    {
+     "id": "3e-FON-13",
+     "n": 11,
+     "ids": "3e-FON-13",
+     "h1": "Je sais résoudre graphiquement 𝑓(𝑥) = 𝑔(𝑥) et conclure",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-13.html"
+    },
+    {
+     "id": "3e-FON-14",
+     "n": 12,
+     "ids": "3e-FON-14",
+     "h1": "Je sais modéliser une situation par une fonction et m'en servir",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-14.html"
+    },
+    {
+     "id": "3e-FON-15",
+     "n": 13,
+     "ids": "3e-FON-15",
+     "h1": "Je sais représenter la fonction carré et m'en servir pour 𝑥² = 𝑎",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-15.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-FON-brevet",
+    "page": "/cours/3e/3e-FON-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-FON-imprimable.html"
   },
   {
    "id": "3e-PCT",
@@ -2295,6 +2755,42 @@
      "type": "propriété",
      "nouveau": false,
      "page": "/cours/3e/3e-TRG-06.html"
+    },
+    {
+     "id": "3e-EQU-09",
+     "n": 7,
+     "ids": "3e-EQU-09",
+     "h1": "Je sais comment une inégalité change quand j'ajoute ou quand je multiplie",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-09.html"
+    },
+    {
+     "id": "3e-EQU-10",
+     "n": 8,
+     "ids": "3e-EQU-10",
+     "h1": "Je sais résoudre une inéquation 𝑎𝑥 ⩾ 𝑏 par le calcul et sur un graphique",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-EQU-10.html"
+    },
+    {
+     "id": "3e-FON-15",
+     "n": 9,
+     "ids": "3e-FON-15",
+     "h1": "Je sais représenter la fonction carré et m'en servir pour 𝑥² = 𝑎",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-FON-15.html"
     }
    ],
    "brevet": null,
