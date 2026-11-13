@@ -577,12 +577,14 @@
     niveau: "6e",
     titre: "Automatismes",
     annee: 2026,
-    source: "DEPP — Évaluation nationale de début de sixième, septembre 2026 (test spécifique « Automatismes »), Eduscol, licence Etalab 2.0.",
+    source: "DEPP — Évaluation nationale de début de sixième, septembre 2024, 2025 et 2026 (test spécifique « Automatismes »), Eduscol, licence Etalab 2.0.",
     lienSource: "https://eduscol.education.gouv.fr/evaluations-nationales-6e",
     consignes: "Sans calculatrice. Pour chaque question, une seule réponse est juste.",
     domaines: { NC: "Nombres et calculs", GM: "Grandeurs et mesures" },
     // Groupes de maîtrise publiés par la DEPP pour ce test (sur 23).
     seuils: [{ max: 6, nom: "À besoins" }, { max: 12, nom: "Fragile" }, { max: 23, nom: "Satisfaisant" }],
+    // Le même sujet est tombé en 2024, 2025 et 2026 (PDF Eduscol comparés : mêmes questions, réponses, figures et repères).
+    officiels: [{ cle: "2026", annee: 2026, titre: "Le sujet officiel", detail: "Les vraies questions. Le même sujet est tombé en 2024, 2025 et 2026." }],
     questions: Q,
   };
 })(typeof window !== "undefined" ? window : globalThis);
