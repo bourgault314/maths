@@ -76,7 +76,9 @@
     $("#progres").style.width = `${(i / items.length) * 100}%`;
     $("#q-num").textContent = passation.reprise ? `Question ${it.q.num} du sujet` : `Question ${i + 1}`;
     // Espace insécable avant « ? : ; ! » et après « : le signe ne part jamais seul à la ligne.
-    const typo = (t) => t.replace(/ ([?:;!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0");
+    // Une fraction empilée reste collée au signe qui la suit (« 4/100 ? » ne laisse pas le « ? » seul à la ligne).
+    const typo = (t) => t.replace(/ ([?:;!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0")
+      .replace(/(<span class="frac"><span>[^<]*<\/span><span>[^<]*<\/span><\/span>)(\u00a0[?:;!»])/g, '<span class="insecable">$1$2</span>');
     $("#q-enonce").innerHTML = typo(it.g.enonce);
     $("#q-figure").innerHTML = it.g.figure || "";
     $("#q-figure").hidden = !it.g.figure;
@@ -103,7 +105,7 @@
     passation.selection = null;
     $("#valider").disabled = true;
     $("#valider").textContent = i === items.length - 1 ? "Terminer" : "Valider";
-    $("#q-carte").scrollTop = 0;
+    $("#q-corps").scrollTop = 0;
   }
 
   function repondre(k) {

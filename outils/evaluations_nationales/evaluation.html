@@ -51,7 +51,8 @@
     .barre strong{min-width:76px;padding:6px 12px;border-radius:999px;color:var(--teal);background:#e7f8f5;text-align:center;font-variant-numeric:tabular-nums}
     .piste{height:8px;margin:10px 0 14px;overflow:hidden;border-radius:99px;background:#dfebf3}
     .piste b{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}
-    .q-carte{padding:clamp(16px,3.5vw,28px);border:2px solid var(--line);border-radius:22px;background:#fff}
+    .q-carte{display:flex;flex-direction:column;border:2px solid var(--line);border-radius:22px;background:#fff;overflow:hidden}
+    .q-corps{padding:clamp(16px,3.5vw,28px) clamp(16px,3.5vw,28px) 6px}
     .q-num{margin:0 0 8px;color:var(--teal);font-size:.78rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
     .q-enonce{margin:0;font-size:clamp(1.12rem,3.6vw,1.35rem);font-weight:850;line-height:1.4}
     .insecable{white-space:nowrap}
@@ -65,15 +66,18 @@
     .choix-btn .case{flex:0 0 22px;width:22px;height:22px;border:2.5px solid #7d9cb3;border-radius:5px;background:#fff}
     .choix-btn[aria-pressed="true"]{border-color:var(--blue);background:#eaf2ff;box-shadow:0 0 0 3px rgba(7,85,184,.16)}
     .choix-btn[aria-pressed="true"] .case{border-color:var(--blue);background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat}
-    .actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+    .actions{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px clamp(16px,3.5vw,28px) clamp(14px,3vw,22px);border-top:1px solid #e3ebf0;background:#fff}
     .actions .primary{min-width:150px}
-    .confirmation{margin-top:12px;padding:12px 14px;border:1px solid #efc9c9;border-radius:14px;background:#fffafa;text-align:center;font-weight:850}
+    /* La question d'arrêt s'ouvre par-dessus, sans rien pousser. */
+    .confirmation{position:fixed;z-index:20;left:50%;bottom:24px;width:min(440px,calc(100% - 24px));transform:translateX(-50%);padding:14px;border:1px solid #efc9c9;border-radius:16px;background:#fffafa;box-shadow:0 12px 40px rgba(26,66,100,.25);text-align:center;font-weight:850}
     .confirmation p{margin:0 0 10px}
     .confirmation div{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
     .pied-passe{display:flex;justify-content:center;margin-top:8px}
 
     /* Fractions et angles */
-    .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 2px;line-height:1.05;font-size:.92em}
+    /* Les deux nombres prennent la largeur du plus long : la barre couvre toujours toute la fraction (4/100, 7/1 000…). */
+    .frac{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;margin:0 2px;line-height:1.05;font-size:.92em;text-align:center}
+    .frac>span{display:block;white-space:nowrap}
     .frac>span:first-child{padding:0 3px 2px;border-bottom:2px solid currentColor}
     .frac>span:last-child{padding:2px 3px 0}
     /* Le chapeau reste dans la hauteur de la ligne : sur une deuxième ligne, il ne touche plus la ligne du dessus. */
@@ -117,7 +121,18 @@
     .entrainer>span:last-child{color:var(--blue);font-size:1.3rem;font-weight:950}
     .fin-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
 
-    @media(min-width:621px){.fig-choix{height:80px}}
+    @media(min-width:621px){
+      .fig-choix{height:80px}
+      /* Même hauteur pour toutes les questions (elle ne dépend que de la fenêtre) ; une question plus longue défile dedans,
+         une ombre en bas le signale. */
+      .en-passation .panel{padding:18px 28px 10px}
+      .en-passation .pied-passe{margin-top:2px}
+      .en-passation .figure{max-height:min(260px,31vh)}
+      .q-carte{height:clamp(380px,calc(100vh - 236px),680px);height:clamp(380px,calc(100dvh - 236px),680px)}
+      .q-corps{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+        background:linear-gradient(#fff 40%,rgba(255,255,255,0)) top/100% 28px no-repeat local,linear-gradient(rgba(255,255,255,0),#fff 60%) bottom/100% 28px no-repeat local,
+          radial-gradient(farthest-side at 50% 0,rgba(20,52,81,.16),transparent) top/100% 10px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(20,52,81,.16),transparent) bottom/100% 10px no-repeat scroll}
+    }
     @media(max-width:620px){
       .shell{width:100%}
       .topbar{min-height:56px;padding:4px 10px}
@@ -130,7 +145,11 @@
       .choix.ligne .choix-btn{min-height:48px}
       .actions .primary{min-width:130px}
       .en-passation .panel{padding:12px 8px 18px}
-      .q-carte{padding:14px 10px}
+      .q-corps{padding:14px 10px 4px}
+      /* Téléphone : la barre des boutons est collée en bas de l'écran, toujours visible ; la page garde de la place dessous. */
+      .en-passation .shell{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+      .actions{position:fixed;z-index:10;left:0;right:0;bottom:0;padding:10px max(14px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));border-top:1px solid var(--line);box-shadow:0 -8px 22px rgba(26,66,100,.12)}
+      .confirmation{bottom:calc(86px + env(safe-area-inset-bottom))}
       .fin-actions{flex-direction:column}
     }
     @media(max-width:360px){.choix.grille{grid-template-columns:1fr}}
@@ -167,12 +186,16 @@
       <div id="passe" hidden>
         <div class="barre"><span id="compteur">Question 1 / 23</span><strong id="chrono" aria-label="Temps écoulé">0:00</strong></div>
         <div class="piste" aria-hidden="true"><b id="progres"></b></div>
+        <!-- Le cadre ne change jamais de taille : sur ordinateur, la question défile dedans (q-corps) et les boutons restent
+             au même endroit ; sur téléphone, la barre des boutons est collée en bas de l'écran. -->
         <article id="q-carte" class="q-carte">
-          <p id="q-num" class="q-num">Question 1</p>
-          <p id="q-enonce" class="q-enonce"></p>
-          <div id="q-figure" class="q-figure"></div>
-          <p id="q-apres" class="q-enonce" hidden></p>
-          <div id="q-choix" class="choix" role="group" aria-label="Réponses proposées"></div>
+          <div id="q-corps" class="q-corps">
+            <p id="q-num" class="q-num">Question 1</p>
+            <p id="q-enonce" class="q-enonce"></p>
+            <div id="q-figure" class="q-figure"></div>
+            <p id="q-apres" class="q-enonce" hidden></p>
+            <div id="q-choix" class="choix" role="group" aria-label="Réponses proposées"></div>
+          </div>
           <div class="actions">
             <button id="passer" class="lien" type="button">Je ne sais pas</button>
             <button id="valider" class="primary" type="button" disabled>Valider</button>
@@ -213,10 +236,10 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261113-2"></script>
-  <script src="./sujets/6e_automatismes.js?v=20261113-2"></script>
-  <script src="./sujets/5e_automatismes.js?v=20261113-2"></script>
-  <script src="./sujets/4e_automatismes.js?v=20261113-2"></script>
-  <script src="./evaluation.js?v=20261113-2"></script>
+  <script src="./en_commun.js?v=20261113-4"></script>
+  <script src="./sujets/6e_automatismes.js?v=20261113-4"></script>
+  <script src="./sujets/5e_automatismes.js?v=20261113-4"></script>
+  <script src="./sujets/4e_automatismes.js?v=20261113-4"></script>
+  <script src="./evaluation.js?v=20261113-4"></script>
 </body>
 </html>
