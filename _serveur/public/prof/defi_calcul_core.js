@@ -8084,6 +8084,47 @@
     "M12-3": parFormes(["a ÷ b", "division"], ["a × □ = b", "trou-facteur"])
   });
 
+  // Les cartes « par cœur » (lot 2 « J'apprends en une étape », 12/11/2026,
+  // décision 8 de « fonctionnement 3 », planche 5 ; les 15 niveaux « par
+  // cœur » choisis par Gwenaël) : À retenir montre TOUS les calculs du
+  // niveau sur une seule carte, à la place du dessin. Une carte : un titre et
+  // des blocs — un tableau (`table` : la première ligne et la première
+  // colonne sont les en-têtes ; `ligneTete` : seulement la première ligne)
+  // ou une liste de calculs (`liste`, en `colonnes`). Contenu de leçon : à revoir au lot 3 « Les leçons ».
+  const rangee = (a, b) => Array.from({length: b - a + 1}, (_, i) => a + i);
+  const tableFois = (lignes, colonnes) => [["×", ...colonnes], ...lignes.map(l => [l, ...colonnes.map(c => l * c)])];
+  const tablePlus = (lignes, colonnes) => [["+", ...colonnes], ...lignes.map(l => [l, ...colonnes.map(c => l + c)])];
+  const paires10 = avecZero => rangee(avecZero ? 0 : 1, avecZero ? 10 : 9).map(a => `${a} + ${10 - a} = 10`);
+  const nb = formaterNombre;
+  const gele = objet => { Object.values(objet).forEach(v => { if (v && typeof v === "object") gele(v); }); return Object.freeze(objet); };
+  const PAR_COEUR = gele({
+    "A1-1": {titre: "Les paires qui font 10", blocs: [{liste: paires10(true), colonnes: 2}]},
+    "A1-2": {titre: "La table d’addition", blocs: [{table: tablePlus(rangee(2, 9), rangee(2, 9))}]},
+    "A1-3": {titre: "La table d’addition, aussi à l’envers", blocs: [{table: tablePlus(rangee(2, 9), rangee(2, 9))}]},
+    "A2-1": {titre: "Les unités qui font 10", blocs: [{liste: paires10(false), colonnes: 2}]},
+    "A2-2": {titre: "Ce qui fait 100", blocs: [{liste: [10, 5, 20, 15, 30, 25, 40, 35, 50, 45].map(a => `${a} + ${100 - a} = 100`), colonnes: 2}]},
+    "M1-1": {titre: "Sous chaque nombre, son double", blocs: [
+      {table: [rangee(1, 10), rangee(1, 10).map(n => 2 * n)], ligneTete: true},
+      {table: [rangee(11, 20), rangee(11, 20).map(n => 2 * n)], ligneTete: true},
+      {table: [[30, 40, 50], [60, 80, 100]], ligneTete: true}]},
+    "M1-2": {titre: "Les doubles des nombres usuels (et leurs moitiés)", blocs: [{liste: [25, 150, 35, 250, 45, 350, 75, 450, 60, 500, 80, 1500, 90, 2500]
+      .map(n => `double de ${nb(n)} = ${nb(2 * n)}`), colonnes: 2}]},
+    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: [{table: tableFois([2, 3, 4, 5], rangee(1, 10))}]},
+    "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: [{table: tableFois([6, 7, 8, 9], [6, 7, 8, 9])}]},
+    "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
+      {table: tableFois([25], rangee(1, 8))},
+      {liste: ["60 = 2 × 30 = 3 × 20 = 4 × 15 = 5 × 12 = 6 × 10", "100 = 2 × 50 = 4 × 25 = 5 × 20"], colonnes: 1}]},
+    "F2-1": {titre: "Demis et quarts", blocs: [{liste: ["1 = 2/2 = 4/4", "1/2 = 2/4", "1/4 + 1/4 = 1/2", "1/2 + 1/2 = 1", "1 − 1/2 = 1/2", "1 − 1/4 − 1/4 = 1/2"], colonnes: 2}]},
+    "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4"], colonnes: 2}]},
+    "F1-1": {titre: "Dixièmes et centièmes", blocs: [{liste: rangee(1, 9).map(n => `${n}/10 = 0,${n}`), colonnes: 3}, {liste: rangee(1, 9).map(n => `${n}/100 = 0,0${n}`), colonnes: 3}]},
+    "F1-2": {titre: "Demis, quarts, millième", blocs: [{liste: ["1/2 = 0,5", "3/2 = 1,5", "1/4 = 0,25", "5/2 = 2,5", "3/4 = 0,75", "7/2 = 3,5", `1/${nb(1000)} = 0,001`, "9/2 = 4,5"], colonnes: 2}]},
+    "F1-3": {titre: "Cinquièmes", blocs: [{liste: [1, 6, 2, 7, 3, 8, 4, 9].map(n => `${n}/5 = ${nb(n / 5)}`), colonnes: 2}]}
+  });
+  // La carte d'un niveau « par cœur » (« M4-1 »), ou null.
+  function carteParCoeur(cleNiveau) {
+    return Object.prototype.hasOwnProperty.call(PAR_COEUR, cleNiveau) ? PAR_COEUR[cleNiveau] : null;
+  }
+
   // Les sortes d'un niveau (« A5-2 ») : [{n, nom}], du plus simple au plus
   // dur — et celles qu'on voit vraiment (lues sur un grand tirage : une sorte
   // déclarée que le niveau ne tire jamais est retirée). Sans déclaration, une
@@ -8504,6 +8545,7 @@
     genererUn,
     sortesDe,
     sorteDe,
+    carteParCoeur,
     modeleReponse,
     modelesReponse,
     aideDe,

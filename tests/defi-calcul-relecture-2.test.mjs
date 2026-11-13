@@ -144,7 +144,8 @@ test("« 2 jours cette semaine » sur l'accueil et à la fin de la séance ; « 
   assert.match(PAGE, /function texteSemaine\(\) \{\s*return texteSoirs\(semaine\(\)\.soirs\);\s*\}/);
   assert.doesNotMatch(PAGE, /fois cette semaine` : ""/);
   assert.doesNotMatch(PAGE, /soir\$\{/);
-  assert.match(PAGE, /<p class="cahier">Je recopie cela dans mon cahier\.<\/p>/);
+  // Lot 2 : la ligne a un nom (un niveau « par cœur » dit autre chose).
+  assert.match(PAGE, /<p id="retenir-cahier" class="cahier">Je recopie cela dans mon cahier\.<\/p>/);
   assert.doesNotMatch(PAGE, /Je recopie cette phrase/);
 });
 
@@ -154,7 +155,9 @@ test("téléphone : « À retenir » sans vide sous ses boutons, la phrase rapet
   const p = corps.indexOf('setProperty("--retenir-p"');
   const z = corps.indexOf('setProperty("--retenir-z"');
   assert.ok(p > 0 && z > p, "la phrase avant le dessin");
-  assert.match(corps, /for \(let p = \.95; p >= \.8 && deborde\(\); p -= \.05\)/);
+  // Lot 2 : avec une carte « par cœur », la phrase descend jusqu'à 75 %.
+  assert.match(corps, /const plancherPhrase = \$\("retenir-image"\)\.classList\.contains\("dc-coeur-zone"\) \? \.75 : \.8;/);
+  assert.match(corps, /for \(let p = \.95; p >= plancherPhrase - 1e-9 && deborde\(\); p -= \.05\)/);
   assert.match(CSS, /html\.retenir-ouvert \.shell \{ padding-bottom: max\(8px, env\(safe-area-inset-bottom\)\); \}/);
   assert.match(CSS, /html\.retenir-ouvert \.shell > \.panel \{ padding-bottom: 12px; \}/);
   assert.match(CSS, /html\.retenir-ouvert #result \{ margin-bottom: 0; \}/);
@@ -183,8 +186,8 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261112-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261112-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261113-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261111-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

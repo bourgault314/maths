@@ -309,7 +309,8 @@ function outilFini([cle, outil, sansReponse]) {
     const vu = async adresse => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, adresse, [390, 664]);
       const tailles = {};
-      for (const cle of ["A10-2", "M1-1", "D2-1", "F3-1", "A11-3", "M4-2"]) {
+      // Lot 2 : M1-1 et M4-2 ont une carte « par cœur » (pas de dessin) : M1-3 et M8-1.
+      for (const cle of ["A10-2", "M1-3", "D2-1", "F3-1", "A11-3", "M8-1"]) {
         const [id, n] = cle.split("-");
         await page.evaluate(([i, k]) => window.__MATHSGO_DEFI_CALCUL_TEST__.retenir(i, k), [id, Number(n)]);
         await page.waitForTimeout(200);

@@ -88,9 +88,8 @@ function noah() {
           if (justes >= 2) marche = i + 1; else break;
         }
         p = P.appliquerTest(p, {module: et.module, marche, niveaux}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
-      } else if (et.type === "apprends") {
-        p = P.appliquerSerie(p, {module: et.module, niveau: et.niveau, genre: "apprends"}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
       } else {
+        // Lot 2 : J'apprends en une étape reçoit les réponses, comme Je m'entraîne.
         const reponses = [];
         let suite = P.suivreEntrainement([]);
         for (;;) { reponses.push({juste: rng() < .82, outil: suite.outil}); suite = P.suivreEntrainement(reponses); if (suite.fini) break; }
