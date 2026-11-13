@@ -2,7 +2,7 @@
    Aucune donnée ne sort de l'appareil : le dernier résultat est gardé dans le navigateur seulement. */
 (function () {
   "use strict";
-  const { hasard } = window.EN;
+  const { hasard, construire } = window.EN;
   // Interrupteur unique des boutons « Je m'entraîne » du bilan. Éteint tant que les automatismes et les cours
   // vers lesquels ils mènent ne sont pas prêts ; chaque question garde son champ `entrainement` pour le jour où on le rallume.
   const ENTRAINEMENT_VISIBLE = false;
@@ -12,15 +12,19 @@
   const $ = (s) => document.querySelector(s);
   const CLE = "mathsgo-en-" + sujet.id;
 
-  let passation = null; // { type, graine, items:[{q, g, choix(ordre affiché)}], reponses:[], debut, i }
+  let passation = null; // { type, officiel, graine, items:[{q, t, g, choix(ordre affiché)}], reponses:[], debut, i }
   let minuteur = null;
 
   const lire = () => { try { return JSON.parse(localStorage.getItem(CLE) || "null"); } catch (e) { return null; } };
   const ecrire = (v) => { try { localStorage.setItem(CLE, JSON.stringify(v)); } catch (e) { /* stockage indisponible : tant pis */ } };
   const nouvelleGraine = () => 1 + Math.floor(Math.random() * 2147483646);
-  const groupe = (score, total) => {
-    const s = sujet.seuils.find((x) => score <= x.max * (total / sujet.questions.length) + 1e-9) || sujet.seuils[sujet.seuils.length - 1];
-    return { nom: s.nom, rang: sujet.seuils.indexOf(s) };
+  // Sujets officiels jouables ; un sujet sans liste n'a que son sujet le plus récent.
+  const officiels = sujet.officiels || [{ cle: String(sujet.annee), annee: sujet.annee, titre: `Le sujet officiel ${sujet.annee}`, detail: "" }];
+  // Repères d'un passage : ceux de son sujet officiel ; un sujet généré prend ceux du sujet officiel le plus récent.
+  const seuilsDe = (officiel) => (officiel && officiel.seuils) || sujet.seuils;
+  const groupe = (score, seuils) => {
+    const s = seuils.find((x) => score <= x.max) || seuils[seuils.length - 1];
+    return { nom: s.nom, rang: seuils.indexOf(s) };
   };
   const duree = (ms) => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} s`; };
 
@@ -36,24 +40,25 @@
     $("#niveau").textContent = `Évaluation nationale · ${sujet.niveau}`;
     $("#titre").textContent = sujet.titre;
     $("#descriptif").textContent = `${sujet.questions.length} questions · ${sujet.consignes}`;
+    $("#officiels").innerHTML = officiels.map((o, k) => `<button class="carte officiel" type="button" data-officiel="${k}">
+            <span class="ico" aria-hidden="true">📄</span>
+            <span><strong>${o.titre}</strong>${o.detail ? `<small>${o.detail}</small>` : ""}</span>
+            <span class="go">Commencer</span>
+          </button>`).join("");
+    $("#officiels").querySelectorAll("[data-officiel]").forEach((b) => b.addEventListener("click", () => lancer("officiel", null, officiels[Number(b.dataset.officiel)])));
     $("#source").innerHTML = `Questions : ${sujet.source.replace(/, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
     const dernier = lire();
     $("#dernier").hidden = !dernier;
-    if (dernier) $("#dernier").textContent = `Ton dernier sujet (${dernier.type === "officiel" ? "officiel" : "jumeau"}) : ${dernier.score} / ${dernier.total} — ${dernier.groupe}`;
+    if (dernier) $("#dernier").textContent = `Ton dernier sujet (${dernier.type === "officiel" ? (officiels.length > 1 && dernier.officiel ? "officiel " + dernier.officiel.replace("-", " et ") : "officiel") : "jumeau"}) : ${dernier.score} / ${dernier.total} — ${dernier.groupe}`;
     montrer("#accueil");
   }
 
   // ---------- Passation ----------
-  function lancer(type, numeros) {
+  function lancer(type, numeros, officiel) {
     const graine = type === "officiel" ? 1 : nouvelleGraine();
-    const r = hasard(graine);
-    const qs = numeros ? sujet.questions.filter((q) => numeros.includes(q.num)) : sujet.questions;
-    const items = qs.map((q) => {
-      const g = q.generer(r, type === "officiel");
-      const melange = g.melange ?? q.melange ?? true;
-      return { q, g, choix: melange ? r.melanger(g.choix) : g.choix.slice() };
-    });
-    passation = { type, graine, items, reponses: [], debut: Date.now(), i: 0, reprise: Boolean(numeros) };
+    officiel = type === "officiel" ? officiel || officiels[0] : null;
+    const items = construire(sujet, hasard(graine), officiel, numeros);
+    passation = { type, officiel, graine, items, reponses: [], debut: Date.now(), i: 0, reprise: Boolean(numeros) };
     $("#chrono").textContent = "0:00";
     clearInterval(minuteur);
     minuteur = setInterval(() => {
@@ -127,13 +132,16 @@
       zoneGroupe.textContent = score === total ? "Toutes tes questions ratées sont réussies !" : "Questions ratées refaites";
       zoneGroupe.className = "groupe " + (score === total ? "g2" : "g1");
     } else {
-      const g = groupe(score, total);
+      const g = groupe(score, seuilsDe(passation.officiel));
       zoneGroupe.textContent = g.nom;
       zoneGroupe.className = "groupe g" + g.rang;
-      ecrire({ type: passation.type, score, total, groupe: g.nom, date: new Date().toISOString() });
+      ecrire({ type: passation.type, officiel: passation.officiel ? passation.officiel.cle : null, score, total, groupe: g.nom, date: new Date().toISOString() });
     }
+    const seuils = seuilsDe(passation.officiel);
     $("#seuils").hidden = passation.reprise;
-    $("#seuils").textContent = `Repères officiels sur ${sujet.questions.length} : ${sujet.seuils.map((s, i) => `${s.nom.toLowerCase()} ${i === 0 ? `jusqu’à ${s.max}` : i === sujet.seuils.length - 1 ? `à partir de ${sujet.seuils[i - 1].max + 1}` : `de ${sujet.seuils[i - 1].max + 1} à ${s.max}`}`).join(" · ")}.`;
+    $("#seuils").textContent = `Repères officiels sur ${sujet.questions.length} : ${seuils.map((s, i) => `${s.nom.toLowerCase()} ${i === 0 ? `jusqu’à ${s.max}` : i === seuils.length - 1 ? `à partir de ${seuils[i - 1].max + 1}` : `de ${seuils[i - 1].max + 1} à ${s.max}`}`).join(" · ")}.`;
+    // Sujet généré : le groupe s'affiche, avec la mention que les repères ont été fixés pour le vrai sujet.
+    $("#indication").hidden = passation.reprise || passation.type === "officiel";
 
     const parDomaine = Object.entries(sujet.domaines).map(([code, nom]) => {
       const r = resultats.filter((x) => x.it.q.domaine === code);
@@ -145,7 +153,7 @@
     // D'abord où s'entraîner (un lien par automatisme), puis le détail question par question.
     const parAutomatisme = new Map();
     for (const x of rates) {
-      const e = x.it.q.entrainement;
+      const e = x.it.t.entrainement || x.it.q.entrainement;
       if (!parAutomatisme.has(e.url)) parAutomatisme.set(e.url, { e, nums: [] });
       parAutomatisme.get(e.url).nums.push(x.it.q.num);
     }
@@ -157,7 +165,7 @@
     $("#liste-revoir").innerHTML = rates.map(({ it, choisi }) => {
       const bonne = it.choix.find((c) => c.juste);
       return `<li>
-        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${it.q.competence}</p>
+        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${it.t.competence || it.q.competence}</p>
         <div class="revoir-reponses">
           <span class="donnee">${choisi ? "Ta réponse : " + choisi.html : "Pas de réponse"}</span>
           <span class="attendue">Bonne réponse : ${bonne.html}</span>
@@ -171,7 +179,6 @@
   }
 
   // ---------- Branchements ----------
-  $("#lancer-officiel").addEventListener("click", () => lancer("officiel"));
   $("#lancer-jumeau").addEventListener("click", () => lancer("jumeau"));
   $("#nouveau-jumeau").addEventListener("click", () => lancer("jumeau"));
   $("#retour-accueil").addEventListener("click", accueil);
@@ -186,14 +193,14 @@
   $("#garder").addEventListener("click", () => { $("#confirmation").hidden = true; });
   $("#quitter").addEventListener("click", () => { $("#confirmation").hidden = true; accueil(); });
 
-  // Recette : ?graine=… rejoue un sujet jumeau précis, ?q=… ouvre directement une question.
+  // Recette : ?graine=… rejoue un sujet jumeau précis (graine=1 : le sujet officiel, ?officiel=<clé> pour en choisir un),
+  // ?q=… ouvre directement une question.
   accueil();
   const g = Number(params.get("graine"));
   if (Number.isInteger(g) && g > 0) {
-    const r = hasard(g);
-    passation = null;
-    const items = sujet.questions.map((q) => { const gen = q.generer(r, g === 1); const m = gen.melange ?? q.melange ?? true; return { q, g: gen, choix: m ? r.melanger(gen.choix) : gen.choix.slice() }; });
-    passation = { type: g === 1 ? "officiel" : "jumeau", graine: g, items, reponses: [], debut: Date.now(), i: Math.max(0, Math.min(items.length - 1, (Number(params.get("q")) || 1) - 1)), reprise: false };
+    const officiel = g === 1 ? officiels.find((o) => o.cle === params.get("officiel")) || officiels[0] : null;
+    const items = construire(sujet, hasard(g), officiel, null);
+    passation = { type: officiel ? "officiel" : "jumeau", officiel, graine: g, items, reponses: [], debut: Date.now(), i: Math.max(0, Math.min(items.length - 1, (Number(params.get("q")) || 1) - 1)), reprise: false };
     montrer("#passe");
     afficherQuestion();
   }

@@ -98,7 +98,8 @@
     .groupe.g0{color:var(--red);background:var(--red-soft)}.groupe.g1{color:var(--orange);background:var(--orange-soft)}.groupe.g2{color:var(--green);background:var(--green-soft)}
     .seuils{margin:10px 0 0;color:var(--muted);font-size:.82rem;font-weight:700}
     .domaines{display:grid;gap:6px;margin:14px 0 0;padding:0;list-style:none}
-    .domaines li{display:flex;justify-content:space-between;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:850}
+    .domaines li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:850}
+    .domaines b{white-space:nowrap}
     .a-revoir h2{margin:22px 0 4px;font-size:1.25rem}
     .a-revoir>p{margin:0 0 10px;color:var(--muted);font-weight:700}
     .liste-revoir{display:grid;gap:10px;margin:0;padding:0;list-style:none}
@@ -150,11 +151,8 @@
         <h1 id="titre">Automatismes</h1>
         <p id="descriptif" class="descr"></p>
         <div class="cartes">
-          <button id="lancer-officiel" class="carte officiel" type="button">
-            <span class="ico" aria-hidden="true">📄</span>
-            <span><strong>Le sujet officiel 2026</strong><small>Les vraies questions de septembre 2026.</small></span>
-            <span class="go">Commencer</span>
-          </button>
+          <!-- Une carte par sujet officiel jouable (sujet.officiels), écrite au chargement. -->
+          <div id="officiels" class="cartes"></div>
           <button id="lancer-jumeau" class="carte jumeau" type="button">
             <span class="ico" aria-hidden="true">🔁</span>
             <span><strong>Un sujet jumeau</strong><small>Les mêmes questions avec d’autres nombres. Un nouveau sujet à chaque fois.</small></span>
@@ -195,6 +193,7 @@
           <p id="duree" class="duree"></p>
           <span id="groupe" class="groupe"></span>
           <p id="seuils" class="seuils"></p>
+          <p id="indication" class="seuils" hidden>Indication : les repères officiels valent pour le vrai sujet.</p>
         </div>
         <ul id="domaines" class="domaines"></ul>
         <div id="a-revoir" class="a-revoir">
@@ -214,10 +213,10 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261113-1"></script>
-  <script src="./sujets/6e_automatismes.js?v=20261112-1"></script>
-  <script src="./sujets/5e_automatismes.js?v=20261113-1"></script>
-  <script src="./sujets/4e_automatismes.js?v=20261113-1"></script>
-  <script src="./evaluation.js?v=20261113-1"></script>
+  <script src="./en_commun.js?v=20261113-2"></script>
+  <script src="./sujets/6e_automatismes.js?v=20261113-2"></script>
+  <script src="./sujets/5e_automatismes.js?v=20261113-2"></script>
+  <script src="./sujets/4e_automatismes.js?v=20261113-2"></script>
+  <script src="./evaluation.js?v=20261113-2"></script>
 </body>
 </html>

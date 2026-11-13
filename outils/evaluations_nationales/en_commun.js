@@ -111,5 +111,33 @@
     return s;
   }
 
-  racine.EN = { hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
+
+  // ---------- Banque de tâches ----------
+  // Une question du sujet = une case de compétence. Elle a sa tâche principale (ses propres champs, sujet le plus récent)
+  // et parfois d'autres tâches connues pour la même case (`variantes`), par exemple la question d'une autre année.
+  function taches(q) {
+    return [q].concat((q.variantes || []).map((v) => Object.assign({ domaine: q.domaine, num: q.num }, v)));
+  }
+  // La tâche d'un sujet officiel : celle dont les années contiennent l'année demandée (sans années : toutes).
+  function tacheOfficielle(q, annee) {
+    return taches(q).find((t) => !t.annees || t.annees.includes(annee)) || q;
+  }
+  // Un sujet généré garde la structure (même nombre de questions, même ordre) et tire, dans chaque case, une des tâches
+  // connues. On ne tire au hasard que s'il y a le choix : les sujets sans variantes gardent exactement leur suite de hasard.
+  function tirerTache(q, r) {
+    const t = taches(q);
+    return t.length > 1 ? r.parmi(t) : q;
+  }
+  // Construit les questions d'un passage. officiel : l'entrée de sujet.officiels jouée, ou null pour un sujet généré.
+  function construire(sujet, r, officiel, numeros) {
+    const qs = numeros ? sujet.questions.filter((q) => numeros.includes(q.num)) : sujet.questions;
+    return qs.map((q) => {
+      const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r);
+      const g = t.generer(r, Boolean(officiel));
+      const melange = g.melange ?? t.melange ?? q.melange ?? true;
+      return { q, t, g, choix: melange ? r.melanger(g.choix) : g.choix.slice() };
+    });
+  }
+
+  racine.EN = { taches, tacheOfficielle, tirerTache, construire, hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -1,4 +1,5 @@
-/* maths&go — Évaluation nationale de début de 4e, test spécifique « Automatismes » (DEPP, septembre 2026).
+/* maths&go — Évaluation nationale de début de 4e, test spécifique « Automatismes » (DEPP, septembre 2024, 2025 et 2026).
+   Les questions 1 et 6 ont deux tâches : celle de 2026 (generer) et celle de 2024-2025 (variantes).
    Source : https://eduscol.education.gouv.fr/evaluations-nationales-4e — licence Etalab 2.0.
    Chaque question existe en version officielle (les valeurs du sujet 2026) et en version « jumelle » :
    même tâche, mêmes pièges (les distracteurs suivent l'analyse publiée par la DEPP, section 11.4 du document
@@ -147,6 +148,28 @@
     },
   });
 
+  // 1 (sujets 2024 et 2025) — soustraire deux entiers en passant la dizaine : 14 − 6
+  Q[0].annees = [2026];
+  Q[0].variantes = [{
+    id: "4e-soustraire", annees: [2024, 2025],
+    competence: "Soustraire des nombres entiers sans poser l’opération",
+    entrainement: AUTO("NC04", "Calcul mental positif"),
+    generer(r, officiel) {
+      let a = 14, b = 6;
+      // Les pièges de la DEPP : la moitié de a, la moitié du nombre pair juste en dessous, a − (b − 1).
+      if (!officiel) do { a = r.parmi([12, 14, 16, 18]); b = r.entier(a - 9, 9); } while (new Set([a - b, a / 2, a / 2 - 1, a - b + 1]).size < 4 || (a === 14 && b === 6));
+      return {
+        enonce: `${a} ${MOINS} ${b} = …`,
+        choix: [
+          c(String(a / 2 - 1), false, `Prend la moitié de ${a - 2} : ne maîtrise pas les tables d’addition ou les moitiés, ou fait une erreur de calcul.`),
+          c(String(a - b + 1), false, `Calcule ${a} ${MOINS} ${b - 1} : ne maîtrise pas les tables d’addition ou fait une erreur de calcul.`),
+          c(String(a - b), true),
+          c(String(a / 2), false, `Prend la moitié de ${a} : ne maîtrise pas les tables d’addition ou fait une erreur de calcul.`),
+        ],
+      };
+    },
+  }];
+
   // 2 — moitié d'un nombre pair de dizaines impaires
   Q.push({
     num: 2, domaine: "NC", competence: "Calculer la moitié d’un nombre entier pair",
@@ -245,6 +268,29 @@
       };
     },
   });
+
+  // 6 (sujets 2024 et 2025) — réduire 2n + 3n
+  Q[5].annees = [2026];
+  Q[5].variantes = [{
+    id: "4e-reduire-somme", annees: [2024, 2025],
+    competence: "Réduire une expression littérale",
+    entrainement: AUTO("NC20", "Réduire et simplifier une expression"),
+    generer(r, officiel) {
+      const l = officiel ? "n" : r.parmi(["n", "x", "a", "y", "t"]);
+      let p = 2, q = 3;
+      if (!officiel) do { p = r.entier(2, 7); q = r.entier(2, 7); } while (p === q || p + q === p * q || (p === 2 && q === 3));
+      const L = lettre(l);
+      return {
+        enonce: `Si l’on réduit l’expression ${p}${L} + ${q}${L} alors on obtient :`,
+        choix: [
+          c(`${p + q}${L}²`, false, `Repère le facteur commun et additionne bien ${p} et ${q}, mais met ${l}² en facteur au lieu de ${l}.`),
+          c(`${p * q}${L}²`, false, `Confond somme et produit : il calcule ${p}${l} × ${q}${l}.`),
+          c(`${p + q}${L}`, true),
+          c(`${p * q}${L}`, false, `Met bien ${l} en facteur mais multiplie ${p} et ${q} au lieu de les additionner.`),
+        ],
+      };
+    },
+  }];
 
   // 7 — convertir des minutes en heures et minutes
   const SPECTACLES = [["Max assiste à un spectacle qui dure", "Max"], ["Léa regarde un film qui dure", "Léa"], ["Un match de rugby dure, avec la mi-temps,", ""], ["Une randonnée dure", ""]];
@@ -593,12 +639,19 @@
     niveau: "4e",
     titre: "Automatismes",
     annee: 2026,
-    source: "DEPP — Évaluation nationale de début de quatrième, septembre 2026 (test spécifique « Automatismes »), Eduscol, licence Etalab 2.0.",
+    source: "DEPP — Évaluation nationale de début de quatrième, septembre 2024, 2025 et 2026 (test spécifique « Automatismes »), Eduscol, licence Etalab 2.0.",
     lienSource: "https://eduscol.education.gouv.fr/evaluations-nationales-4e",
     consignes: "Sans calculatrice. Pour chaque question, une seule réponse est juste.",
     domaines: { NC: "Nombres et calculs", GM: "Grandeurs et mesures", OGD: "Organisation et gestion de données, fonctions", EG: "Espace et géométrie" },
     // Groupes de maîtrise publiés par la DEPP pour ce test (sur 22), section 11.2.
     seuils: [{ max: 6, nom: "À besoins" }, { max: 12, nom: "Fragile" }, { max: 22, nom: "Satisfaisant" }],
+    // Les sujets officiels jouables. 2024 et 2025 : le même sujet (PDF Eduscol identiques), questions 1 et 6 différentes de 2026,
+    // repères de la DEPP différents (document « Présentation des exercices » 2024 et 2025, section 11.2 : 7 / 8 à 12 / 13).
+    officiels: [
+      { cle: "2026", annee: 2026, titre: "Le sujet officiel 2026", detail: "Les vraies questions de septembre 2026." },
+      { cle: "2024-2025", annee: 2025, titre: "Le sujet officiel 2024 et 2025", detail: "Le même sujet ces deux années. Deux questions changent par rapport à 2026.",
+        seuils: [{ max: 7, nom: "À besoins" }, { max: 12, nom: "Fragile" }, { max: 22, nom: "Satisfaisant" }] },
+    ],
     questions: Q,
   };
 })(typeof window !== "undefined" ? window : globalThis);
