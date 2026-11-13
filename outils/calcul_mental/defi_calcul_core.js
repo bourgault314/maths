@@ -1483,7 +1483,8 @@
         apprends: glisseApprends({
           calcul: produit("D2", 3, 3.6, 100), exemple: "3,6 × 100", colonnes: COLONNES_D2,
           represente: produit("D2", 3, 72.4, 100),
-          ecris: {calcul: produit("D2", 3, 4.5, 1000), etapes: [etapeDe(`4,5 × ${MILLE} = ${CASE}`, 4500)]},
+          // (Lot 3b : J'écris × 100, comme la leçon ; × 1 000 est annoncé.)
+          ecris: {calcul: produit("D2", 3, 4.5, 100), etapes: [etapeDe(`4,5 × 100 = ${CASE}`, 450)]},
           consigne: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
@@ -1652,6 +1653,9 @@
     else consigne = palier === null ? `Retire ${-d} perle${d < -1 ? "s" : ""}${coup(d)}.` : `Vide la rangée${coup(sauts[0])}, puis retire le reste.`;
     return Object.freeze({
       outil: "perles", depart: n,
+      // Lot 3b (idée de Gwenaël) : passer 10 dans « Sommes jusqu'à 20 » — la
+      // rangée finie s'entoure, « 10 », le reste se lit dessous.
+      entourerDix: calcul.module === "A1" && d > 0 && palier === 10,
       texte: trou ? calcul.texte.replace(CASE, "?") : `${n} ${op} ${Math.abs(d)}`,
       gestes: Object.freeze(sauts.slice()), consigne, traces: Object.freeze(traces)
     });
@@ -1927,12 +1931,38 @@
   const a1Barres = calcul => Object.freeze({outil: "deux-barres", sorte: "tout",
     haut: Object.freeze([calcul.donnees.m]), bas: Object.freeze([calcul.donnees.n, calcul.donnees.d]), cherche: Object.freeze(["bas", 1])});
   const a1EnBarres = calcul => calcul.niveau === 1 && estTrou(calcul);
+  // Lot 3b (décision 4 du lot 3, idée de Gwenaël du 13/11/2026) : les
+  // presque-doubles de « Sommes jusqu'à 20 » (7 + 8 : les deux nombres se
+  // suivent) sont une sorte à part, avec leur dessin sur le rekenrek : 7
+  // perles sur une rangée, 7 sur la suivante (le double, 14 se voit), puis 1
+  // perle de plus, sur la rangée du plus grand nombre.
+  const presqueDouble = calcul => calcul.module === "A1" && calcul.forme === "somme"
+    && Math.abs(calcul.donnees.n - calcul.donnees.d) === 1 && calcul.donnees.m > 10;
+  const presqueDoubleImage = (calcul, revele) => {
+    const {n, d, m} = calcul.donnees;
+    return Object.freeze({outil: "presque-double", a: Math.min(n, d), plus: n > d ? 0 : 1, total: m, texte: `${n} + ${d}`, revele});
+  };
+  // (Choix de Gwenaël sur la planche du 13/11 : 8 en haut, 7 en dessous,
+  // déjà poussés ; l'élève y repère 7 + 7 + 1.)
+  function presqueDoublePerles(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const a = Math.min(n, d);
+    return Object.freeze({
+      outil: "perles", depart: m, rangees: Object.freeze([n, d]),
+      texte: `${n} + ${d}`, gestes: Object.freeze([]),
+      consigne: `${n} en haut, ${d} en dessous\u00a0: repère le double.`,
+      traces: Object.freeze([Object.freeze({apres: 1, attente: `${a} + ${a} + 1 = …`, texte: `${n} + ${d} = ${a} + ${a} + 1 = ${m}`})])
+    });
+  }
   function a1Image(calcul, gras) {
+    if (presqueDouble(calcul)) return presqueDoubleImage(calcul, true);
     return a1EnBarres(calcul) ? a1Barres(calcul) : plusImage(calcul, gras);
   }
   function a1Aide(calcul) {
+    if (presqueDouble(calcul)) return presqueDoubleImage(calcul, false);
     return a1EnBarres(calcul) ? Object.freeze(Object.assign({}, a1Barres(calcul), {masque: true})) : plusAide(calcul);
   }
+  const a1Perles = calcul => (presqueDouble(calcul) ? presqueDoublePerles(calcul) : plusPerles(calcul));
   const PAIRES_DIX = Object.freeze([[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]].map(p => Object.freeze(p)));
   function a1Niveau1Apprends(apprends) {
     const barresDe = (n, d) => Object.freeze({outil: "deux-barres", sorte: "tout", haut: Object.freeze([n + d]), bas: Object.freeze([n, d]), cherche: Object.freeze(["bas", 1])});
@@ -1961,7 +1991,7 @@
     id: "A1", nom: "Sommes et différences jusqu’à 20", exemple: "6 + 4",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A1_ERREURS, image: a1Image, aide: a1Aide, manipulation: plusPerles, difficulte: plusDifficulte,
+    erreurs: A1_ERREURS, image: a1Image, aide: a1Aide, manipulation: a1Perles, difficulte: plusDifficulte,
     niveaux: [
       {
         n: 1, titre: "compléments à 10, sommes jusqu’à 10", nom: "Sommes jusqu’à 10", palier: 1, type: "F",
@@ -1987,16 +2017,19 @@
         composer: composerViviers("A1", 2, [{forme: "somme", liste: A1_SOMMES_20}, {forme: "somme", liste: A1_DIX}], [9, 1]),
         imposes: [ligne("A1", 2, 9, 6), ligne("A1", 2, 5, 8)],
         apprends: plusApprends({
-          manipule: ligne("A1", 0, 8, 7),
+          // Lot 3b : la leçon passe 10 sur 8 + 5 (8 + 7 est un presque-double,
+          // une autre sorte, annoncée à l'entraînement).
+          manipule: ligne("A1", 0, 8, 5),
           represente: ligne("A1", 0, 9, 4),
           ecris: ligne("A1", 0, 7, 5),
           etapes: etapesDe(["7 + 3 = ?", 10], ["10 + 2 = ?", 12], ["7 + 5 = ?", 12]),
           consigneEcris: "7 + 5 = 7 + 3 + 2",
           consigne: "Je vais à 10, puis j’ajoute le reste.",
-          bilan: "Pour dépasser 10, je vais d’abord à 10, puis j’ajoute le reste : 8 + 7 = 8 + 2 + 5 = 15.",
+          bilan: "Pour dépasser 10, je vais d’abord à 10, puis j’ajoute le reste : 8 + 5 = 8 + 2 + 3 = 13.",
           // Décision du 06/11 (audit de couverture) : les presque-doubles,
           // deuxième façon de faire quand les nombres se suivent.
-          autre: {phrase: "Quand les deux nombres se suivent, je peux aussi passer par le double :", calcul: "6 + 7 = 6 + 6 + 1 = 13"}
+          // (Lot 3b : sur le calcul du dessin des presque-doubles, 7 + 8.)
+          autre: {phrase: "Quand les deux nombres se suivent, je peux aussi passer par le double :", calcul: "7 + 8 = 7 + 7 + 1 = 15"}
         })
       },
       {
@@ -5940,7 +5973,8 @@
         apprends: glisseApprends({
           calcul: d3Division(3, 0.06, 10), exemple: "0,6 ÷ 10", colonnes: COLONNES_D2,
           represente: d3Division(3, 0.036, 100),
-          ecris: {calcul: d3Division(3, 0.056, 1000), etapes: [etapeDe(`56 ÷ ${MILLE} = ${CASE}`, 0.056)]},
+          // (Lot 3b : J'écris ÷ 10, comme la leçon ; ÷ 100 et ÷ 1 000 sont annoncés.)
+          ecris: {calcul: d3Division(3, 0.09, 10), etapes: [etapeDe(`0,9 ÷ 10 = ${CASE}`, 0.09)]},
           consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois moins.",
           refus: "Chaque chiffre doit valoir 10 fois moins : 1 colonne.",
           trace: ["0,6 ÷ 10 = …", "0,6 ÷ 10 = 0,06"],
@@ -6232,11 +6266,13 @@
         apprends: d4Apprends({
           manipule: d4Plus(0, 2.435, -3, 4),
           represente: d4Moins(0, 7.152, -2, 3),
-          ecris: d4Fraction(0, 1.624, -3, 5),
+          // (Lot 3b : J'écris ajoute un décimal, comme la leçon ; la fraction
+          // ajoutée est annoncée à l'entraînement.)
+          ecris: d4Plus(0, 1.624, -3, 5),
           consigne: "0,03, c’est 3 centièmes.",
-          consigneEcris: `1,624 + 5/1${ESPACE_FINE}000 = 1,62 + 0,004 + 5/1${ESPACE_FINE}000`,
-          etapes: [[`5/1${ESPACE_FINE}000 = ?`, 0.005], ["0,004 + 0,005 = ?", 0.009], [`1,624 + 5/1${ESPACE_FINE}000 = ?`, 1.629]],
-          morceaux: [{lignes: [1]}, {rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
+          consigneEcris: "1,624 + 0,005 = 1,62 + 0,004 + 0,005",
+          etapes: [["0,004 + 0,005 = ?", 0.009], ["1,624 + 0,005 = ?", 1.629]],
+          morceaux: [{rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
           bilan: "Seul le chiffre des millièmes change : 2,435 + 0,004 = 2,439."
         })
       },
@@ -6796,11 +6832,12 @@
           fiche: "F2",
           manipule: pourApprendre(f2(1, "1/4 + 1/4 = □/2")),
           represente: pourApprendre(f2(1, "1 − 1/2 = □/2")),
-          ecris: pourApprendre(f2(1, "1/2 = □/4")),
+          // Lot 3b : J'écris est une addition, comme la leçon.
+          ecris: pourApprendre(f2(1, "1/2 + 2/4 = □")),
           consigne: "Une unité, c’est 2 demis.",
-          consigneEcris: "1/2 = ?/4",
-          etapes: [["1 = ?/4", 4], ["1/2 = ?/4", 2]],
-          morceaux: [{ecrit: 1, texte: "4/4"}, {bas: true}],
+          consigneEcris: "1/2 + 2/4 = 2/4 + 2/4",
+          etapes: [["1/2 = ?/4", 2], ["2/4 + 2/4 = ?/4", 4], ["1/2 + 2/4 = ?", 1]],
+          morceaux: [{haut: 0, texte: "2/4"}, {}, {bas: true}],
           bilan: "1/4 + 1/4 = 2/4 = 1/2."
         })
       },
@@ -7093,59 +7130,96 @@
       gras: 0
     })
   ]);
+  // Lot 3b (règle de Gwenaël du 12/11/2026) : au-delà de 12 parts, plus de
+  // barre ; le calcul « × 4 en haut et en bas » se dessine (deux flèches, le
+  // même nombre). `vus` : ce qui est écrit (J'écris) — haut, bas, la case.
+  const F6_PLACES = Object.freeze({multiplier: "dn", diviser: "dn", "diviser-den": "dd", denominateur: "dd", "denominateur-gauche": "gd"});
+  function f6Schema(calcul, {revele = false, haut = revele, bas = revele, trouve = false, trouveHaut = false, trouveBas = false} = {}) {
+    const {a, d, k} = calcul.donnees;
+    const petit = [a, d];
+    const grand = [k * a, k * d];
+    const divise = calcul.forme === "diviser" || calcul.forme === "diviser-den";
+    return Object.freeze({
+      outil: "fois-fraction", op: divise ? "÷" : "×", k,
+      gauche: Object.freeze(divise ? grand : petit), droite: Object.freeze(divise ? petit : grand),
+      cache: F6_PLACES[calcul.forme], montre: revele || trouve, trouve, haut, bas, trouveHaut, trouveBas
+    });
+  }
+  const f6Image = calcul => (f6Grand(calcul) ? f6Schema(calcul, {revele: true}) : fracImage(calcul));
+  const f6Aide = calcul => (f6Grand(calcul) ? f6Schema(calcul) : fracAide(calcul));
+  // J'écris au-delà de 12 parts : le schéma se remplit étape par étape —
+  // `morceaux` : {bas: true} (la flèche du dénominateur), {haut: true}, {case: true}.
+  function f6EcrisSchema(apprends, calcul, morceaux) {
+    const dessin = (vus, revele = false) => {
+      const vu = cle => revele || vus.some(m => m[cle]);
+      return f6Schema(calcul, {haut: vu("haut"), bas: vu("bas"), trouve: vu("case") && !revele, revele,
+        trouveHaut: vu("haut") && !revele, trouveBas: vu("bas") && !revele});
+    };
+    const relier = dessinsDe(morceaux, morceaux.length, dessin);
+    return Object.freeze(Object.assign({}, apprends, {
+      ecris: Object.freeze(Object.assign({}, apprends.ecris, {
+        dessins: relier.dessins,
+        solution: Object.freeze(Object.assign({}, apprends.ecris.solution, {image: relier.revele}))
+      }))
+    }));
+  }
+
   const F6 = {
     id: "F6", nom: "Fractions égales", exemple: "2/3 = ?/15",
     famille: "F", construit: true,
     aide_entraine: "barre-droite",
-    erreurs: F6_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, difficulte: f6Difficulte,
-    // Les niveaux 2 et 3 n'ont pas de bandes à manipuler (décision du 04/11).
-    manipulation: calcul => (calcul.niveau === 1 ? fracManipulation(calcul) : null),
+    erreurs: F6_ERREURS, image: f6Image, aide: f6Aide, phrase: fracPhrase, difficulte: f6Difficulte,
+    // Les niveaux 2 et 3 n'ont pas de bandes à manipuler (décision du 04/11) ;
+    // lot 3b : ni au-delà de 12 parts (le dessin du calcul à la place).
+    manipulation: calcul => (calcul.niveau === 1 && !f6Grand(calcul) ? fracManipulation(calcul) : null),
     niveaux: [
       {
         n: 1, titre: "en multipliant", nom: "Fractions égales : multiplier", palier: 1, type: "P",
         composer: vivierNiveau(F6_VIVIERS[1], [10]),
         imposes: [f6(1, "2/5 = □/15"), f6(1, "5/6 = □/12")],
-        apprends: fracApprends({
+        // Lot 3b (règle du 12/11) : le dessin jusqu'à 12 parts ; J'écris
+        // au-delà, sur le calcul « × 4 en haut et en bas ».
+        apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
           manipule: pourApprendre(f6(1, "3/4 = □/12")),
-          represente: pourApprendre(f6(1, "2/3 = □/15")),
+          represente: pourApprendre(f6(1, "2/3 = □/12")),
           ecris: pourApprendre(f6(1, "3/5 = □/20")),
-          consigne: "Chaque tiers est coupé en 5.",
-          consigneEcris: "3/5 = ?/20",
-          etapes: [["1/5 = ?/20", 4], ["3/5 = ?/20", 12]],
-          morceaux: [{gros: 4}, {bas: true}],
-          bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
-        })
+          consigne: "Chaque tiers est coupé en 4.",
+          consigneEcris: "3/5 = (3 × 4)/(5 × 4)",
+          etapes: [["5 × ? = 20", 4], ["3 × 4 = ?", 12], ["3/5 = ?/20", 12]],
+          morceaux: [{}, {}, {bas: true}],
+          bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
+        }), pourApprendre(f6(1, "3/5 = □/20")), [{bas: true}, {haut: true}, {case: true}])
       },
       {
         n: 2, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[2], [5, 3, 2]),
         imposes: [f6(2, "6/9 = □/3"), f6(2, "8/12 = 2/□")],
-        apprends: fracApprends({
+        apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(2, "12/16 = □/4")),
-          ecris: pourApprendre(f6(2, "10/15 = 2/□")),
-          consigne: "4 seizièmes font un quart.",
-          consigneEcris: "10/15 = 2/?",
-          etapes: [["10 ÷ ? = 2", 5], ["15 ÷ 5 = ?", 3], ["10/15 = 2/?", 3]],
-          morceaux: [{gros: 5}, {}, {bas: true}],
-          bilan: "12/16 = 3/4 (÷ 4 en haut et en bas)."
-        })
+          represente: pourApprendre(f6(2, "9/12 = □/4")),
+          ecris: pourApprendre(f6(2, "10/15 = □/3")),
+          consigne: "3 douzièmes font un quart.",
+          consigneEcris: "10/15 = (10 ÷ 5)/(15 ÷ 5)",
+          etapes: [["15 ÷ ? = 3", 5], ["10 ÷ 5 = ?", 2], ["10/15 = ?/3", 2]],
+          morceaux: [{}, {}, {bas: true}],
+          bilan: "9/12 = 3/4 (÷ 3 en haut et en bas)."
+        }), pourApprendre(f6(2, "10/15 = □/3")), [{bas: true}, {haut: true}, {case: true}])
       },
       {
         n: 3, titre: "le dénominateur manquant", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[3], [5, 3, 2]),
         imposes: [f6(3, "2/3 = 8/□"), f6(3, "3/□ = 9/15")],
-        apprends: fracApprends({
+        apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(3, "4/7 = 12/□")),
-          ecris: pourApprendre(f6(3, "5/□ = 15/24")),
-          consigne: "Chaque septième est coupé en 3.",
-          consigneEcris: "5/? = 15/24",
-          etapes: [["15 = 5 × ?", 3], ["24 ÷ 3 = ?", 8], ["5/? = 15/24", 8]],
-          morceaux: [{gros: 3}, {}, {bas: true}],
-          bilan: "4/7 = 12/21 (× 3 en haut et en bas)."
-        })
+          represente: pourApprendre(f6(3, "2/3 = 6/□")),
+          ecris: pourApprendre(f6(3, "5/8 = 15/□")),
+          consigne: "Chaque tiers est coupé en 3.",
+          consigneEcris: "5/8 = (5 × 3)/(8 × 3)",
+          etapes: [["5 × ? = 15", 3], ["8 × 3 = ?", 24], ["5/8 = 15/?", 24]],
+          morceaux: [{}, {}, {bas: true}],
+          bilan: "2/3 = 6/9 (× 3 en haut et en bas)."
+        }), pourApprendre(f6(3, "5/8 = 15/□")), [{haut: true}, {bas: true}, {case: true}])
       }
     ]
   };
@@ -8060,7 +8134,9 @@
   const parFormes = (...paires) => paires.map(([nom, ...formes], i) => [nom, i === paires.length - 1 ? toutes : formeEst(...formes)]);
   const SORTES = Object.freeze({
     "A1-1": parFormes(["a + b", "somme"], ["a + □ = 10", "complement"], ["10 = a + □", "complement-egal"]),
-    "A1-2": [["un nombre est 10", (c, d) => d.n === 10 || d.d === 10], ["on passe 10", toutes]],
+    // (Lot 3b : les presque-doubles, une sorte à part — décision 4 du lot 3.)
+    "A1-2": [["un nombre est 10", (c, d) => d.n === 10 || d.d === 10], ["on passe 10", (c, d) => Math.abs(d.n - d.d) !== 1],
+      ["les deux nombres se suivent", toutes]],
     "A1-3": parFormes(["a − b", "difference"], ["a + □ = b", "complement"], ["b = a + □", "complement-egal"]),
     "A10-1": [["jusqu’à la dizaine", (c, d) => d.m % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
     "A11-1": [["jusqu’à la dizaine", (c, d) => d.m % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
@@ -8095,7 +8171,8 @@
       ["avec retenue aux unités", toutes]],
     "M6-1": [["jusqu’à 25", (c, d) => d.n <= 25], ["au-delà de 25", toutes]],
     "A8-1": [["écart de 1 à 3", (c, d) => d.d <= 3], ["écart de 4 et plus", toutes]],
-    "F6-1": [["× 2", (c, d) => d.k === 2], ["× 3 ou × 4", (c, d) => d.k <= 4], ["× 5 et plus", toutes]],
+    // (Lot 3b, règle du 12/11 : le dessin jusqu'à 12 parts, puis le calcul.)
+    "F6-1": [["jusqu’à 12 parts", c => !f6Grand(c)], ["plus de 12 parts", toutes]],
     "A5-3": [["+ 8", (c, d) => d.a === 8], ["+ 18", (c, d) => d.a === 18], ["+ 28", (c, d) => d.a === 28], ["+ 38", toutes]],
     "M8-1": [["× 11", (c, d) => d.b === 11], ["× 12 à 19", toutes]],
     "M1-3": parFormes(["double", "double"], ["moitié", "moitie", "division"]),
@@ -8175,9 +8252,15 @@
   const nb = formaterNombre;
   const gele = objet => { Object.values(objet).forEach(v => { if (v && typeof v === "object") gele(v); }); return Object.freeze(objet); };
   const PAR_COEUR = gele({
-    "A1-1": {titre: "Les paires qui font 10", blocs: [{liste: paires10(true), colonnes: 2}]},
-    "A1-2": {titre: "La table d’addition", blocs: [{table: tablePlus(rangee(2, 9), rangee(2, 9))}]},
-    "A1-3": {titre: "La table d’addition, aussi à l’envers", blocs: [{table: tablePlus(rangee(2, 9), rangee(2, 9))}]},
+    // Lot 3b (écarts relevés par le 3a) : chaque carte montre tous les
+    // calculs que le niveau demande — les sommes jusqu'à 10 (4 + 3), « + 10 »,
+    // les différences de 1 (7 − 6) ; × 1 et × 10 aux tables ; les sommes
+    // de quarts qui passent 1 ; les centièmes, millièmes, dixièmes.
+    // (A1-1 : la table jusqu'à 10, les paires qui font 10 en couleur.)
+    "A1-1": {titre: "Les sommes jusqu’à 10", blocs: [{liste: ["En orange, les paires qui font 10."], colonnes: 1},
+      {table: tablePlus(rangee(0, 10), rangee(0, 10)).map((l, i) => l.map((v, j) => (!i || !j ? v : v > 10 ? "" : v === 10 ? {texte: "10", fort: true} : v)))}]},
+    "A1-2": {titre: "La table d’addition", blocs: [{table: tablePlus(rangee(1, 10), rangee(1, 10))}]},
+    "A1-3": {titre: "La table d’addition, aussi à l’envers", blocs: [{table: tablePlus(rangee(1, 10), rangee(1, 10))}]},
     "A2-1": {titre: "Les unités qui font 10", blocs: [{liste: paires10(false), colonnes: 2}]},
     "A2-2": {titre: "Ce qui fait 100", blocs: [{liste: [10, 5, 20, 15, 30, 25, 40, 35, 50, 45].map(a => `${a} + ${100 - a} = 100`), colonnes: 2}]},
     "M1-1": {titre: "Sous chaque nombre, son double", blocs: [
@@ -8190,17 +8273,37 @@
     "M1-2": {titre: "Sous chaque nombre, son double", blocs: [
       [25, 35, 45, 75, 60, 70, 80, 90], [100, 200, 300, 400, 500], [600, 700, 800, 900, 1000],
       [150, 250, 350, 450, 750, 1500, 2500]].map(ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true}))},
-    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: [{table: tableFois([2, 3, 4, 5], rangee(1, 10))}]},
-    "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: [{table: tableFois([6, 7, 8, 9], [6, 7, 8, 9])}]},
+    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: [{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7"], colonnes: 1}]},
+    "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: [{table: tableFois([6, 7, 8, 9, 10], [6, 7, 8, 9, 10])}]},
     "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
       {table: tableFois([25], rangee(2, 8))},
       {liste: ["60 = 2 × 30 = 3 × 20 = 4 × 15 = 5 × 12 = 6 × 10", "100 = 2 × 50 = 4 × 25 = 5 × 20"], colonnes: 1}]},
     "F2-1": {titre: "Demis et quarts", blocs: [{liste: ["1 = 2/2 = 4/4", "1/2 = 2/4", "1/4 + 1/4 = 1/2", "1/2 + 1/2 = 1", "1 − 1/2 = 1/2", "1 − 1/4 − 1/4 = 1/2"], colonnes: 2}]},
-    "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4"], colonnes: 2}]},
+    "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4",
+      "3/4 + 1/2 = 5/4", "3/4 + 3/4 = 6/4"], colonnes: 2}]},
     "F1-1": {titre: "Dixièmes et centièmes", blocs: [{liste: rangee(1, 9).map(n => `${n}/10 = 0,${n}`), colonnes: 3}, {liste: rangee(1, 9).map(n => `${n}/100 = 0,0${n}`), colonnes: 3}]},
-    "F1-2": {titre: "Demis, quarts, millième", blocs: [{liste: ["1/2 = 0,5", "3/2 = 1,5", "1/4 = 0,25", "5/2 = 2,5", "3/4 = 0,75", "7/2 = 3,5", `1/${nb(1000)} = 0,001`, "9/2 = 4,5"], colonnes: 2}]},
-    "F1-3": {titre: "Cinquièmes", blocs: [{liste: [1, 6, 2, 7, 3, 8, 4, 9].map(n => `${n}/5 = ${nb(n / 5)}`), colonnes: 2}]}
+    "F1-2": {titre: "Demis, quarts, millième", blocs: [{liste: ["1/2 = 0,5", "3/2 = 1,5", "1/4 = 0,25", "5/2 = 2,5", "3/4 = 0,75", "7/2 = 3,5", `1/${nb(1000)} = 0,001`, "9/2 = 4,5", "4/2 = 2"], colonnes: 2},
+      {liste: [`1/2 = 5/10 = 50/100 = 500/${nb(1000)}`, `1/4 = 25/100 = 250/${nb(1000)}`, `3/4 = 75/100 = 750/${nb(1000)}`], colonnes: 1}]},
+    "F1-3": {titre: "Cinquièmes", blocs: [{liste: [1, 6, 2, 7, 3, 8, 4, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2},
+      {liste: ["1/5 = 2/10 = 20/100"], colonnes: 1}]}
   });
+  // Lot 3b (demande de Gwenaël du 13/11/2026) : le petit schéma d'À retenir
+  // d'un niveau « par cœur », au-dessus de sa carte — le dessin du calcul
+  // montré ; des paires du boulier, seulement la sienne.
+  function schemaParCoeur(apprends) {
+    const image = apprends && apprends.image;
+    if (!image) return null;
+    // Le double sur le rekenrek (M1-1, lot 3a) : ses rangées déjà poussées.
+    const manipule = apprends.manipule;
+    if (manipule && manipule.rangees && !(manipule.gestes || []).length) return Object.freeze({outil: "rekenrek", rangees: manipule.rangees.slice()});
+    if (image.outil !== "paires") return image;
+    // Des paires : seulement celle du calcul montré, en perles (une perle
+    // pour 10 quand le tout est 100).
+    const montre = apprends.calculs && apprends.calculs.montre;
+    const cherche = montre ? [montre.reponse, image.total - montre.reponse] : [];
+    const paire = image.paires.find(([a, b]) => cherche.includes(a) && cherche.includes(b));
+    return Object.freeze(Object.assign({}, image, {perles: true, pas: image.total / 10, paires: Object.freeze([paire || image.paires[0]])}));
+  }
   // La carte d'un niveau « par cœur » (« M4-1 »), ou null.
   function carteParCoeur(cleNiveau) {
     return Object.prototype.hasOwnProperty.call(PAR_COEUR, cleNiveau) ? PAR_COEUR[cleNiveau] : null;
@@ -8241,6 +8344,60 @@
   function sorteDe(calcul) {
     if (!calcul) return 0;
     return sorteBrute(`${calcul.module}-${calcul.niveau}`, calcul);
+  }
+
+  // Lot 3b « Chaque sorte annoncée » (13/11/2026, cahier du lot 3) : une
+  // SORTE qui change la méthode est annoncée à l'entraînement, comme une
+  // écriture nouvelle (« Nouveau : × 100, chaque chiffre glisse de 2
+  // colonnes. »), et l'aide revient pour son premier calcul. Les sortes où
+  // seuls les nombres grandissent ne le sont pas. Une ligne : [la sorte (son
+  // nom dans SORTES) ou un test (calcul) => vrai, le texte]. Le premier
+  // calcul vu d'une sorte annoncée l'annonce ; la sorte de la leçon est déjà
+  // vue.
+  // Fractions égales (règle du 12/11) : le dessin tant qu'il a 12 parts au
+  // plus, puis le calcul « × 4 en haut et en bas ».
+  const F6_PARTS_DESSIN = 12;
+  const f6Parts = calcul => {
+    const {a, d, k} = calcul.donnees;
+    return Math.max(1, Math.ceil(a / d - 1e-9)) * k * d;
+  };
+  const f6Grand = calcul => calcul.module === "F6" && f6Parts(calcul) > F6_PARTS_DESSIN;
+  const f6Verbe = calcul => (F6_MULTIPLIE[calcul.forme] ? "je multiplie" : "je divise");
+  const glisseDe = (signe, p, colonnes) => `${signe} ${formaterNombre(p)}, chaque chiffre glisse de ${colonnes} colonnes`;
+  const NOUVEAUTES = Object.freeze({
+    "A1-2": [["un nombre est 10", "on ajoute 10 : le chiffre des unités ne change pas"], ["les deux nombres se suivent", "les deux nombres se suivent"]],
+    "A2-2": [["en 5", "un nombre en 5 : je vais d’abord à la dizaine"]],
+    "A3-1": [["+ centaines", "on ajoute des centaines : seul le chiffre des centaines change"],
+      ["− dizaines", "on retire des dizaines : seul le chiffre des dizaines change"],
+      ["− centaines", "on retire des centaines : seul le chiffre des centaines change"]],
+    "A3-2": [["− dizaines", "on retire des dizaines : je recule jusqu’à la centaine, puis je retire le reste"]],
+    "A3-3": [["+ centaines", "on ajoute des centaines et on passe le millier"],
+      ["− dizaines", "on retire des dizaines et on passe sous le millier"],
+      ["− centaines", "on retire des centaines et on passe sous le millier"]],
+    "M2-1": [["× 100", glisseDe("×", 100, 2)], ["× 1 000", glisseDe("×", 1000, 3)]],
+    "D2-2": [["× 1 000", glisseDe("×", 1000, 3)]],
+    "D2-3": [["× 1 000", glisseDe("×", 1000, 3)]],
+    "D3-2": [["÷ 1 000", glisseDe("÷", 1000, 3)]],
+    "D3-3": [["÷ 100", glisseDe("÷", 100, 2)], ["÷ 1 000", glisseDe("÷", 1000, 3)]],
+    "C3-1": [["un calcul de l’autre côté", "un calcul de l’autre côté : je le calcule d’abord"]],
+    "F6-1": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    "F6-2": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    "F6-3": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]]
+  });
+  const memeNom = (a, b) => String(a).replace(/\s/g, " ") === String(b).replace(/\s/g, " ");
+  // La nouveauté d'un calcul dans un niveau (« M2-1 ») : {cle, texte}, ou
+  // null quand sa sorte n'est pas annoncée. Le niveau est celui du calcul,
+  // ou celui qu'on donne (les calculs de la leçon sont au niveau 0).
+  function nouveauteDe(calcul, cleNiveau = null) {
+    if (!calcul) return null;
+    const cle = cleNiveau || `${calcul.module}-${calcul.niveau}`;
+    const lignes = NOUVEAUTES[cle];
+    if (!lignes) return null;
+    const sorte = (SORTES[cle] || [])[sorteBrute(cle, calcul)];
+    const i = lignes.findIndex(([qui]) => (typeof qui === "function" ? qui(calcul) : Boolean(sorte) && memeNom(sorte[0], qui)));
+    if (i < 0) return null;
+    const texte = lignes[i][1];
+    return Object.freeze({cle: `${cle}:${i}`, texte: `Nouveau : ${typeof texte === "function" ? texte(calcul) : texte}.`});
   }
 
   // Ce que le moteur de la progression a besoin de savoir de la carte, sans
@@ -8628,7 +8785,10 @@
     sorteDe,
     // Lot 3a : la sorte d'un calcul de leçon (niveau 0) dans un niveau donné.
     sorteDansNiveau: sorteBrute,
+    // Lot 3b : ce qu'on annonce quand une sorte nouvelle arrive.
+    nouveauteDe,
     carteParCoeur,
+    schemaParCoeur,
     modeleReponse,
     modelesReponse,
     aideDe,

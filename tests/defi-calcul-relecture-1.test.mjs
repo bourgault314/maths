@@ -95,6 +95,15 @@ test("J'écris annonce le but : une ligne pour chaque niveau construit, en égal
     if (GARDEES.has(cle)) return;
     assert.match(consigne, /=/, `${cle} : une égalité`);
     assert.doesNotMatch(consigne.replace(/moitié de|double de|\bde\b|\b(g|€|L)\b/g, ""), /[A-Za-zÀ-ÖØ-öø-ÿ]/, `${cle} : sans mot (« ${consigne} »)`);
+    // Lot 3b (fractions égales) : la ligne est le calcul « × 4 en haut et en
+    // bas » — « 3/5 = (3 × 4)/(5 × 4) » —, vraie, sans la réponse.
+    if (/^F6-/.test(cle)) {
+      const [gauche, droite] = consigne.split(" = ");
+      assert.match(droite, /^\(\d+ [×÷] \d+\)\/\(\d+ [×÷] \d+\)$/, `${cle} : « ${consigne} »`);
+      assert.ok(Math.abs(evaluer(gauche) - evaluer(droite)) < 1e-9, `${cle} : « ${consigne} » est vraie`);
+      assert.ok(cherche(apprends).startsWith(gauche) || cherche(apprends).endsWith(gauche), `${cle} : la fraction donnée`);
+      return;
+    }
     if (apprends.textes) assert.ok(consigne.startsWith(cherche(apprends)), `${cle} : la ligne commence par le calcul cherché (« ${consigne} »)`);
     if (consigne.includes("?")) {
       // Un trou, un complément, un écart : le calcul cherché seul, avec son « ? ».

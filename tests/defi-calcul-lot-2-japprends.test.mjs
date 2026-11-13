@@ -117,11 +117,16 @@ test("les cartes disent vrai : chaque calcul de la carte est juste", () => {
       if (bloc.table) {
         const [tete, ...lignes] = bloc.table;
         if (bloc.ligneTete) { assert.deepEqual(lignes[0], tete.map(n => 2 * n), `${cle} : les doubles`); return; }
-        if (tete[0] === "×" || tete[0] === "+") lignes.forEach(l => l.slice(1).forEach((v, j) => assert.equal(v, tete[0] === "×" ? l[0] * tete[j + 1] : l[0] + tete[j + 1], `${cle} ${l[0]} ${tete[0]} ${tete[j + 1]}`)));
+        // (Lot 3b : une case vide — au-delà de 10 —, une case {texte, fort}.)
+        const lire = v => (v && typeof v === "object" ? Number(v.texte) : v);
+        if (tete[0] === "×" || tete[0] === "+") lignes.forEach(l => l.slice(1).forEach((v, j) => v === "" || assert.equal(lire(v), tete[0] === "×" ? l[0] * tete[j + 1] : l[0] + tete[j + 1], `${cle} ${l[0]} ${tete[0]} ${tete[j + 1]}`)));
         else assert.deepEqual(lignes[0].slice(1), tete.slice(1).map(n => 2 * n), `${cle} : les doubles`);
         return;
       }
-      bloc.liste.forEach(texte => {
+      bloc.liste.forEach(ligne => {
+        // (Lot 3b : une phrase, puis son calcul après « : » ; une phrase seule.)
+        const texte = ligne.split(/\s:\s/).pop();
+        if (!texte.includes("=")) return;
         const membres = texte.split(" = ").map(calculer);
         membres.forEach(v => assert.ok(Math.abs(v - membres[0]) < 1e-9, `${cle} : ${texte}`));
       });
@@ -153,7 +158,8 @@ test("la page : J'apprends réussi — « ✓ Réussi ! » et À retenir sur un 
   assert.match(PAGE, /fort\.textContent = soude\("✓ Réussi !"\);/);
   assert.match(PAGE, /\{reussi: entree \? `\$\{nomCompetence\(serie\.module, serie\.niveau\)\} revient demain\.` : "", finDeSeance: fin\}/);
   assert.ok(!PAGE.includes('"Je m’entraîne →"'), "plus de bouton « Je m'entraîne → » sous À retenir");
-  assert.match(PAGE, /"Je les note dans mon cahier et je les apprends par cœur\." : "Je recopie cela dans mon cahier\."/);
+  // (Lot 3b : la carte vient sur son écran, « Ma carte à apprendre ».)
+  assert.match(PAGE, /"Je la note dans mon cahier et je l’apprends par cœur\." : "Je recopie cela dans mon cahier\."/);
   assert.match(PAGE, /const coeur = CORE\.carteParCoeur\(`\$\{serie\.module\}-\$\{serie\.niveau\}`\);/);
   assert.match(CSS, /\.dc-reussi b \{ color: #147447; \}/);
   assert.match(CSS, /\.dc-coeur \{[^}]*border: 2px solid var\(--ink\);/);

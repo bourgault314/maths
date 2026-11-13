@@ -528,7 +528,14 @@ async function premierJour(navigateur, base, taille) {
   assert.equal(await texte(page, "#retenir-reussi"), "✓ Réussi ! Différences et trous jusqu’à 20 revient demain.");
   assert.equal(await page.isVisible("#result-retenir"), true);
   assert.equal(await page.isVisible("#result-verdict"), false, "plus d'écran « Entraînement réussi ! »");
-  assert.equal(await texte(page, "#retenir-cahier"), "Je les note dans mon cahier et je les apprends par cœur.", "A1-3 est un niveau « par cœur »");
+  // Lot 3b (choix de Gwenaël) : un niveau « par cœur » a deux écrans — À
+  // retenir avec son schéma, puis « Ma carte à apprendre ».
+  assert.equal(await texte(page, "#retenir-cahier"), "Je recopie cela dans mon cahier.", "① À retenir, avec son schéma");
+  assert.equal(await page.locator("#retenir-image > svg").count(), 1, "le schéma du calcul montré");
+  assert.equal(await boutonSuite(page), "Ma carte à apprendre →");
+  await cliquerSuite(page);
+  await page.waitForTimeout(300);
+  assert.equal(await texte(page, "#retenir-cahier"), "Je la note dans mon cahier et je l’apprends par cœur.", "② la carte, A1-3 est un niveau « par cœur »");
   assert.equal(await page.locator("#retenir-image .dc-coeur table").count(), 1, "la carte : la table d'addition");
   // Lot 1 « la séance » : le temps n'est pas passé (l'horloge de la page est
   // arrêtée) — la séance continue avec le module suivant, testé.
@@ -586,7 +593,11 @@ async function deuxRouges(navigateur, base, taille) {
     await ecran(`encore-${nom}`, {jeu: true, pave: true, image: true});
     const outils = [];
     for (let i = 0; i < 20 && await genre(page) === "rattrape"; i += 1) outils.push((await repondreEntrainement(page, true)).outil);
-    assert.deepEqual(outils, ["image", "image", "aucun", "aucun", "aucun"], "fini à 3 justes de suite sans aide");
+    // (Lot 3b : « un nombre en 5 » annoncé dans Compléments à 100 — son
+    // dessin revient une fois, ce rappel ne compte pas : un calcul de plus.)
+    assert.deepEqual(outils.slice(0, 2), ["image", "image"], "deux justes avec la droite");
+    assert.deepEqual(outils.slice(-3), ["aucun", "aucun", "aucun"], "fini à 3 justes de suite sans aide");
+    assert.ok(outils.length <= 6, `au plus un rappel (${outils})`);
     await page.waitForTimeout(600);
     assert.equal(await texte(page, "#result-title"), "Entraînement réussi !");
     if (n === 1) assert.equal(await boutonSuite(page), "Étape 3 : je m’entraîne encore →", "la seconde rouge, dans la même séance");

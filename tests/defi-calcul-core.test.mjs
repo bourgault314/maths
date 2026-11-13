@@ -979,6 +979,10 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
         const etiquettes = textesSvg(AIDES.dessinerImage(aide));
         assert.deepEqual(etiquettes, [String(c.donnees.m), String(c.donnees.n), "?"], `${cle} : ${c.texte} — ${etiquettes.join(" ")}`);
         assert.deepEqual([...aide.haut], [c.donnees.m]);
+      } else if (aide.outil === "presque-double") {
+        // Lot 3b : les presque-doubles de « Sommes jusqu'à 20 » (7 + 7 + 1 = ?).
+        assert.ok(cle === "A1-2" && !aide.revele, `${cle} : ${c.texte}`);
+        assert.ok(!AIDES.dessinerImage(aide).includes(`= ${reponse}<`), `${cle} : ${c.texte} — pas la réponse`);
       } else {
         assert.equal(aide.outil, "tableau-fleches");
         const texte = AIDES.decrireTableau(aide);
@@ -2604,6 +2608,16 @@ function verifierOutilLot6(c) {
     assert.equal(CORE.manipulationDe(c), null, c.texte);
     return;
   }
+  // Lot 3b (règle du 12/11) : une fraction égale de plus de 12 parts se
+  // dessine en calcul (« × 4 en haut et en bas »), sans bandes ; la case
+  // reste « ? » dans l'aide, la correction l'écrit.
+  if (CORE.aideDe(c) && CORE.aideDe(c).outil === "fois-fraction") {
+    assert.equal(c.module, "F6", c.texte);
+    assert.equal(CORE.manipulationDe(c), null, c.texte);
+    assert.ok(!CORE.aideDe(c).montre && CORE.imageDe(c).montre, c.texte);
+    assert.match(AIDES.dessinerImage(CORE.aideDe(c)), />\?</, c.texte);
+    return;
+  }
   verifierBarre(c, CORE.aideDe(c), CORE.imageDe(c), c.texte);
   const m = CORE.manipulationDe(c);
   // (Lot « couverture » : « encadrer », l'ancien F5-3, est dans F5-2 ; sans
@@ -2729,14 +2743,16 @@ test("modules lot 6 : les erreurs connues, reconnues avec leur phrase, sans la r
         sansLaCase(d.texte, c, `${c.texte} → ${reponse}`);
         // (F5 au-delà de la barre, lot « couverture » : pas de dessin.)
         if (CORE.aideDe(c) === null) assert.equal(d.image, null, `${c.texte} → ${reponse}`);
-        else assert.ok(d.image && d.image.outil === "barre-droite", `${c.texte} → ${reponse} : l'image de la correction`);
+        // (Lot 3b : au-delà de 12 parts, les fractions égales se dessinent en calcul.)
+        else assert.ok(d.image && d.image.outil === (CORE.aideDe(c).outil === "fois-fraction" ? "fois-fraction" : "barre-droite"), `${c.texte} → ${reponse} : l'image de la correction`);
       }
     });
   }));
 });
 
 test("modules lot 6 : la barre sur la droite et J'écris — le « ? » reste jusqu'à son étape", () => {
-  ["F2", "F5", "F6", "F8"].forEach(id => CORE.moduleDe(id).niveaux.forEach(niveau => {
+  // (Lot 3b : J'écris des fractions égales se fait sur le calcul — test à part.)
+  ["F2", "F5", "F8"].forEach(id => CORE.moduleDe(id).niveaux.forEach(niveau => {
     const cle = `${id}-${niveau.n}`;
     const a = niveau.apprends;
     const dessins = a.ecris.dessins;
@@ -2765,16 +2781,18 @@ test("modules lot 6 : la barre sur la droite et J'écris — le « ? » reste ju
     const montre = trouverCalcul(cle, a.textes[0]);
     verifierBarre(montre, a.manipule ? CORE.aideDe(montre) : a.represente.image, a.image, `${cle} À retenir`);
   }));
-  // F2-1, 1/2 = □/4 : « 1 = 4/4 » s'écrit à la graduation 1, puis « 2/4 » dessous.
+  // F2-1 (lot 3b : une addition, comme la leçon), 1/2 + 2/4 = □ : le
+  // crochet « 1/2 » devient « 2/4 », puis 1 s'écrit à la graduation.
   const f21 = CORE.niveauDe("F2-1").niveau.apprends.ecris.dessins;
-  assert.deepEqual([f21[0].ecrits[1], f21[1].ecrits[1].texte, f21[2].bas.texte], [undefined, "4/4", "2/4"]);
+  assert.deepEqual([f21[0].haut[0].texte, f21[1].haut[0].texte, f21[1].haut[0].trouve, f21[0].cache, f21[3].ecrits[1].texte], ["1/2", "2/4", true, 1, "1"]);
   // F2-2, 1/4 + 1/2 = □/4 (lot 3a : une addition, comme la leçon) : le
   // crochet « 1/2 » devient « 2/4 ».
   const f22 = CORE.niveauDe("F2-2").niveau.apprends.ecris.dessins;
   assert.deepEqual([f22[0].haut[1].texte, f22[1].haut[1].texte, f22[1].haut[1].trouve, f22[1].haut[0].texte], ["1/2", "2/4", true, "1/4"]);
-  // F6-1 : les traits épais (chaque cinquième, 4 vingtièmes) arrivent à la 1re étape.
+  // F6-1 (lot 3b) : J'écris sur le calcul — la flèche du bas, puis celle du
+  // haut, puis la case.
   const f61 = CORE.niveauDe("F6-1").niveau.apprends.ecris.dessins;
-  assert.deepEqual(f61.map(d => d.gros), [0, 4, 4]);
+  assert.deepEqual(f61.map(d => [d.bas, d.haut, d.trouve]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
   // « Encadrer » (F5-2 depuis le lot « couverture ») : l'entier cherché porte
   // « ? », les unités entières sont des blocs pleins.
   const f53 = CORE.aideDe(lot6("F5-2").find(c => c.lu.entre && c.lu.a === 43 && c.lu.d === 8) || CORE.genererSerie("F5-2", {graine: 1}).find(c => c.lu.entre));
@@ -3215,8 +3233,9 @@ test("lot « couverture » : une deuxième façon sous « À retenir », sur A1-
   assert.deepEqual(avec, ["A1-2", "M1-1", "M1-2", "M1-3"], "A1-2 (presque-double), M1 (la moitié)");
   const a1 = CORE.niveauDe("A1-2").niveau.apprends.autre;
   assert.match(a1.phrase, /passer par le double/);
-  assert.equal(a1.calcul, "6 + 7 = 6 + 6 + 1 = 13");
-  assert.deepEqual(a1.calcul.split(" = ").map(t => Function(`return ${t}`)()), [13, 13, 13], "l'égalité est vraie");
+  // (Lot 3b : sur le calcul du dessin des presque-doubles.)
+  assert.equal(a1.calcul, "7 + 8 = 7 + 7 + 1 = 15");
+  assert.deepEqual(a1.calcul.split(" = ").map(t => Function(`return ${t}`)()), [15, 15, 15], "l'égalité est vraie");
   assert.equal(CORE.niveauDe("A3-2").niveau.apprends.autre, undefined, "lot 3a : plus de « 74 dizaines »");
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
   assert.match(page, /<p id="retenir-autre" class="dc-retenir-autre" hidden><\/p>/, "la ligne sous le dessin, cachée par défaut");

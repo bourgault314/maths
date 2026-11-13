@@ -166,22 +166,37 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
     await contexte.close();
   });
 
-  // Lot 2 (décision 8, planche 5) : A1-1 est un niveau « par cœur » — À
-  // retenir montre la carte des paires qui font 10, à la place du boulier.
-  await essai("a1 : A1-1 « À retenir », la carte des paires qui font 10", async () => {
+  // Lot 2 (décision 8, planche 5) : A1-1 est un niveau « par cœur ». Lot 3b
+  // (choix de Gwenaël, planches 3b-5 à 3b-7) : À retenir montre son schéma
+  // (la paire 3 | 7 sur le boulier), puis « Ma carte à apprendre » : la
+  // table jusqu'à 10, les paires qui font 10 en orange.
+  await essai("a1 : A1-1 « À retenir » avec son schéma, puis « Ma carte à apprendre »", async () => {
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, [390, 844]);
     assert.ok(await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.retenir("A1", 1)));
     await page.waitForTimeout(300);
-    const r = await page.evaluate(() => ({
-      lignes: [...document.querySelectorAll("#retenir-image .dc-coeur-liste > span")].map(e => e.textContent.replace(/\s+/g, " ").trim()),
-      titre: document.querySelector("#retenir-image .dc-coeur-titre").textContent,
+    const un = await page.evaluate(() => ({
+      dessin: (document.querySelector("#retenir-image > svg") || {}).outerHTML || "",
+      carte: Boolean(document.querySelector("#retenir-image .dc-coeur")),
       cahier: document.querySelector("#result-retenir .cahier").textContent,
+      bouton: [...document.querySelectorAll("#result-suite button")].map(b => b.textContent.replace(/\s/g, " "))
+    }));
+    assert.match(un.dessin, /3 \+ 7 = 10/);
+    assert.equal(un.carte, false, "pas encore la carte");
+    assert.equal(un.cahier, "Je recopie cela dans mon cahier.");
+    assert.equal(un.bouton[0], "Ma carte à apprendre →");
+    await page.locator("#result-suite button", {hasText: "Ma carte à apprendre"}).click();
+    await page.waitForTimeout(300);
+    const r = await page.evaluate(() => ({
+      titre: document.getElementById("retenir-phrase").textContent,
+      oranges: [...document.querySelectorAll("#retenir-image .dc-coeur td.fort")].map(e => e.textContent),
+      cahier: document.querySelector("#result-retenir .cahier").textContent,
+      defile: document.documentElement.scrollHeight - innerHeight,
       large: Math.round(document.querySelector("#retenir-image .dc-coeur").getBoundingClientRect().width / document.querySelector("#result-retenir").getBoundingClientRect().width * 100)
     }));
-    assert.equal(r.titre, "Les paires qui font 10");
-    assert.equal(r.lignes.length, 11);
-    assert.equal(r.lignes[3], "3 + 7 = 10");
-    assert.equal(r.cahier, "Je les note dans mon cahier et je les apprends par cœur.");
+    assert.equal(r.titre, "Les sommes jusqu’à 10");
+    assert.equal(r.oranges.length, 11, "les 11 paires qui font 10 (0 + 10 … 10 + 0)");
+    assert.equal(r.cahier, "Je la note dans mon cahier et je l’apprends par cœur.");
+    assert.ok(r.defile <= 1, `rien ne défile (${r.defile})`);
     assert.ok(r.large >= 85, `la carte prend la largeur (${r.large} %)`);
     assert.deepEqual(erreurs, []);
     await contexte.close();

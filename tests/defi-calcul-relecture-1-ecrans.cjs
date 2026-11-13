@@ -219,7 +219,10 @@ function outilFini([cle, outil, sansReponse]) {
           await gestesPerles(page, m);
           await page.waitForTimeout(400);
           const apres = await page.evaluate(() => document.querySelector("#aide .dc-trace").textContent);
-          assert.equal(apres, "", `${c.texte} : après le geste, rien sous le boulier`);
+          // Lot 3b : un presque-double (6 + 5) n'a pas de geste — les deux
+          // nombres sont déjà poussés ; dessous, la méthode à lire, jamais la réponse.
+          if (!m.gestes.length) assert.equal(apres.replace(/[\u00a0\u202f]/g, " "), `${Math.min(c.donnees.n, c.donnees.d)} + ${Math.min(c.donnees.n, c.donnees.d)} + 1 = …`, `${c.texte} : le presque-double, la méthode sans la réponse`);
+          else assert.equal(apres, "", `${c.texte} : après le geste, rien sous le boulier`);
           vus += 1;
         }
         await taper(page, c.reponse);

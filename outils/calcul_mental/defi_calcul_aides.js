@@ -149,7 +149,7 @@
       ? Array.from({length: PERLES.rangees}, (_, r) => Math.max(0, Math.min(PERLES.parRangee, options.rangees[r] || 0)))
       : etatsDe(depart);
     const boulier = {
-      taille: 0, ecart: PERLES.ecart, etats: etatsDepart, etape: 0, finie: !gestes.length,
+      taille: 0, ecart: PERLES.ecart, etats: etatsDepart, etape: 0, finie: !gestes.length, dix: new Set(),
       drag: null, dom: null, observer: null, refus: 0, curseur: null
     };
     compteurAides += 1;
@@ -194,8 +194,15 @@
         rangee.append(perle);
         liste.push(perle);
       }
+      // Lot 3b (idée de Gwenaël du 13/11 : « entourer le 10 ») : la rangée
+      // que le geste finit s'entoure, avec « 10 » à côté.
+      const dix = document.createElement("span");
+      dix.className = "perles-dix";
+      dix.hidden = true;
+      dix.innerHTML = "<b>10</b>";
+      rangee.append(dix);
       interieur.append(rangee);
-      rangees.push({element: rangee, perles: liste});
+      rangees.push({element: rangee, perles: liste, dix});
     }
     cadre.append(montants[0], montants[1], interieur);
     scene.append(cadre);
@@ -227,6 +234,8 @@
       montants.forEach(element => { element.style.width = `${montant}px`; });
       rangees.forEach((rangee, r) => {
         rangee.element.style.height = `${hauteurRangee}px`;
+        rangee.dix.hidden = !boulier.dix.has(r);
+        rangee.dix.style.width = `${taille * PERLES.parRangee + 6}px`;
         rangee.perles.forEach((perle, i) => {
           perle.style.width = `${taille}px`;
           perle.style.height = `${taille}px`;
@@ -361,14 +370,25 @@
 
     // Un geste fini (au doigt ou au clavier) : la rangée passe de son état
     // à `nouvel` perles poussées, si c'est le geste attendu.
+    // Lot 3b (le presque-double, 7 + 8) : `rangeeGeste`, la rangée imposée
+    // au premier geste (celle du plus grand nombre) ; deux rangées entamées,
+    // la règle commune prendrait la première.
+    const rangeeImposee = Number.isInteger(options.rangeeGeste) ? options.rangeeGeste : null;
+    function refusDe(numero, ecart) {
+      const geste = gestes[boulier.etape];
+      if (rangeeImposee === null || boulier.etape || !ecart) return verifierGeste(boulier.etats, geste, numero, ecart);
+      if (numero !== rangeeImposee || ecart < 0) return {motif: "ailleurs"};
+      return ecart > geste ? {motif: "trop"} : ecart < geste ? {motif: "peu"} : null;
+    }
     function jouer(numero, nouvel) {
       const ecart = nouvel - boulier.etats[numero];
-      const refus = verifierGeste(boulier.etats, gestes[boulier.etape], numero, ecart);
+      const refus = refusDe(numero, ecart);
       if (refus) {
         dessiner(true);
         refuser(refus);
         return;
       }
+      if (options.entourerDix && ecart > 0 && nouvel === PERLES.parRangee) boulier.dix.add(numero);
       boulier.etats[numero] = nouvel;
       dessiner(true);
       if (!ecart) return;
@@ -414,7 +434,7 @@
     // pleine), sur la première perle au repos.
     function placerCurseur() {
       if (boulier.curseur) return;
-      let rangee = rangeeEntamee(boulier.etats);
+      let rangee = rangeeImposee !== null && !boulier.etape ? rangeeImposee : rangeeEntamee(boulier.etats);
       if (rangee < 0) rangee = boulier.etats.findIndex(valeur => valeur < PERLES.parRangee);
       if (rangee < 0) rangee = PERLES.rangees - 1;
       boulier.curseur = {rangee, index: Math.min(PERLES.parRangee - 1, boulier.etats[rangee])};
@@ -2244,7 +2264,10 @@
   // la case « □ » devient `caseReponse()` — dans « □/10 », elle est le
   // numérateur. Un lecteur d'écran lit « 2 sur 10 ».
   // Modules lot 6 : la case peut être au dénominateur (« 4/7 = 12/□ »).
-  const MOTIF_FRACTION = /(\d[\d\u202f\u00a0]*|□|\?)\/(\d[\d\u202f\u00a0]*\d|\d|□|\?)/g;
+  // (Lot 3b, fractions égales : « 3/5 = (3 × 4)/(5 × 4) » — un numérateur
+  // ou un dénominateur entre parenthèses s'écrit sans elles, sur la fraction.)
+  const MOTIF_FRACTION = /(\([\d\u202f\u00a0 ×÷?]+\)|\d[\d\u202f\u00a0]*|□|\?)\/(\([\d\u202f\u00a0 ×÷?]+\)|\d[\d\u202f\u00a0]*\d|\d|□|\?)/g;
+  const sansParentheses = t => String(t).replace(/^\((.*)\)$/, "$1");
   // Relecture 2b (11/11/2026, remarque 62) : `signes` — dans un calcul qui
   // a une fraction, les signes (=, +, −, ×, ÷) s'écrivent à la taille des
   // fractions (avant : un « = » très grand à côté de « 3/4 »).
@@ -2279,14 +2302,14 @@
       const num = document.createElement("span");
       num.className = "dc-frac-num";
       if (m[1] === "□" && caseReponse) num.append(caseReponse());
-      else num.textContent = insecable(m[1]);
+      else num.textContent = insecable(sansParentheses(m[1]));
       const sur = document.createElement("span");
       sur.className = "sr-only";
       sur.textContent = " sur ";
       const den = document.createElement("span");
       den.className = "dc-frac-den";
       if (m[2] === "□" && caseReponse) den.append(caseReponse());
-      else den.textContent = insecable(m[2]);
+      else den.textContent = insecable(sansParentheses(m[2]));
       fraction.append(num, sur, den);
       morceaux.push(fraction);
       dernier = m.index + m[0].length;
@@ -3527,15 +3550,98 @@
       if (o.perles) {
         for (let k = 0; k < 10; k += 1) {
           const rouge = k < 5;
-          const cx = x + 13 + k * 24 + (k >= a ? 10 : 0);
+          const coupe = o.pas ? a / o.pas : a;
+          const cx = x + 13 + k * 24 + (k >= coupe ? 10 : 0);
           s += `<circle cx="${cx}" cy="${y + 15}" r="10.5" fill="${rouge ? "#d64545" : "#f4f1ea"}" stroke="${rouge ? "#a32c2c" : "#8a8f96"}" stroke-width="2"/>`;
         }
-        s += `<line x1="${x + 13 + a * 24 - 6}" y1="${y - 2}" x2="${x + 13 + a * 24 - 6}" y2="${y + 32}" stroke="#143451" stroke-width="3"/>`;
+        const trait = o.pas ? a / o.pas : a;
+        s += `<line x1="${x + 13 + trait * 24 - 6}" y1="${y - 2}" x2="${x + 13 + trait * 24 - 6}" y2="${y + 32}" stroke="#143451" stroke-width="3"/>`;
         x = 268;
       } else x = o.total >= 100 ? 50 : 70;
       s += `<text x="${x}" y="${y + 23}" font-size="24" font-weight="900" fill="#143451">${a} + ${b} = ${o.total}</text>`;
     });
     return `<svg viewBox="0 0 ${W} ${lignes.length * h + 12}" role="img" aria-label="${lignes.map(([a, b]) => `${a} + ${b} = ${o.total}`).join(", ")}">${s}</svg>`;
+  }
+
+  // Lot 3b (décision 4 du lot 3, idée de Gwenaël du 13/11/2026) : le
+  // presque-double sur le rekenrek, en dessin. 7 + 8 : 7 perles sur une
+  // rangée, 7 sur la suivante (le double), puis 1 perle de plus, entourée en
+  // vert, sur la rangée du plus grand nombre. Dessous : « 7 + 7 + 1 = ? »,
+  // ou le calcul fini.
+  //   o : {a (le plus petit nombre), plus (la rangée de la perle en plus :
+  //        0 ou 1), total, texte (« 7 + 8 »), revele}
+  function presqueDouble(o) {
+    const ligne = o.revele ? `${o.texte} = ${o.a} + ${o.a} + 1 = ${o.total}` : `${o.a} + ${o.a} + 1 = ?`;
+    return rekenrekImage({rangees: [o.a + (o.plus === 0 ? 1 : 0), o.a + (o.plus === 1 ? 1 : 0)], entoure: {rangee: o.plus, perle: o.a}, ligne,
+      label: `${o.a} perles sur une rangée, ${o.a} sur la suivante, puis 1 de plus : ${ligne}`});
+  }
+  // Le rekenrek en dessin (lot 3b) : quelques rangées, leurs perles
+  // poussées à gauche (5 rouges, 5 blanches), une perle entourée en vert
+  // avec « + 1 », une ligne de calcul dessous.
+  //   o : {rangees: [7, 8], entoure: {rangee, perle} | null, ligne, label}
+  function rekenrekImage(o) {
+    const pas = 24, r = 10.5, vide = 74, x0 = 18, W = 352, h = 40, n = o.rangees.length;
+    const bas = 4 + n * h + 2;
+    let s = `<rect x="6" y="4" width="8" height="${n * h + 2}" rx="3" fill="#c8a06a"/><rect x="${W - 14}" y="4" width="8" height="${n * h + 2}" rx="3" fill="#c8a06a"/>`;
+    o.rangees.forEach((poussees, rangee) => {
+      const y = 25 + rangee * h;
+      s += `<line x1="10" y1="${y}" x2="${W - 10}" y2="${y}" stroke="#8a6d4a" stroke-width="2.4"/>`;
+      for (let k = 0; k < 10; k += 1) {
+        const rouge = k < 5;
+        const cx = x0 + 6 + k * pas + (k >= poussees ? vide : 0);
+        s += `<circle cx="${cx}" cy="${y}" r="${r}" fill="${rouge ? "#d64545" : "#f4f1ea"}" stroke="${rouge ? "#a32c2c" : "#8a8f96"}" stroke-width="2"/>`;
+        if (o.entoure && o.entoure.rangee === rangee && o.entoure.perle === k) s += `<circle cx="${cx}" cy="${y}" r="${r + 4.5}" fill="none" stroke="#147447" stroke-width="3.4"/>`
+          + `<text x="${cx + 38}" y="${y + 7}" text-anchor="middle" font-size="19" font-weight="900" fill="#147447">+ 1</text>`;
+      }
+    });
+    const hauteur = o.ligne ? bas + 42 : bas + 4;
+    if (o.ligne) s += `<text x="${W / 2}" y="${bas + 32}" text-anchor="middle" font-size="22" font-weight="900" fill="#143451">${String(o.ligne).replace(/ /g, " ")}</text>`;
+    return `<svg viewBox="0 0 ${W} ${hauteur}" role="img" aria-label="${o.label || `Boulier : ${o.rangees.join(", ")} perles poussées`}">${s}</svg>`;
+  }
+
+  // Lot 3b (règle de Gwenaël du 12/11/2026) : une fraction égale dont le
+  // dessin aurait plus de 12 parts ne se dessine plus en barre ; le calcul
+  // « × 4 en haut et en bas » se dessine : les deux fractions, une flèche au
+  // numérateur, une au dénominateur, le même « × 4 » (« ÷ 4 ») sur les deux.
+  //   o : {op (« × » ou « ÷ »), k, gauche: [n, d], droite: [n, d] (une case
+  //        inconnue : « ? »), haut, bas (le « × 4 » de la flèche est écrit ;
+  //        sinon « × ? »), trouve (la case est trouvée : en vert),
+  //        trouveHaut, trouveBas (en vert : J'écris)}
+  function foisFraction(o) {
+    const W = 300, xg = 82, xd = 218, yb = 104, taille = 30;
+    const vert = "#147447", bleu = "#0755b8", encre = "#143451", orange = "#c86a12";
+    const nombre = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    const ecrire = (x, y, v, place) => {
+      if (place === o.cache && !o.montre) return `<rect x="${x - 19}" y="${y - 27}" width="38" height="36" rx="7" fill="#fff" stroke="${bleu}" stroke-width="2.4" stroke-dasharray="5 4"/><text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${bleu}">?</text>`;
+      return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${place === o.cache && o.trouve ? vert : encre}">${nombre(v)}</text>`;
+    };
+    const fraction = (x, [n, d], cote) => {
+      const w = Math.max(nombre(n).length, nombre(d).length, 1) * taille * .62 + 12;
+      return ecrire(x, yb - 9, n, `${cote}n`) + `<line x1="${x - w / 2}" y1="${yb}" x2="${x + w / 2}" y2="${yb}" stroke="${encre}" stroke-width="3" stroke-linecap="round"/>` + ecrire(x, yb + 34, d, `${cote}d`);
+    };
+    // Une flèche en arc, du nombre de gauche au nombre de droite, au-dessus
+    // des numérateurs ou sous les dénominateurs ; son « × 4 » au sommet.
+    const fleche = (enHaut, ecrit, trouve) => {
+      const sens = enHaut ? -1 : 1;
+      const y1 = enHaut ? yb - 44 : yb + 46;
+      const yc = y1 + sens * 72;
+      const couleur = trouve ? vert : orange;
+      const xa = xg + 4, xb = xd - 4;
+      // La pointe suit la tangente au bout de l'arc.
+      const dx = xb - W / 2, dy = y1 - yc, l = Math.hypot(dx, dy);
+      const ux = dx / l, uy = dy / l, c = Math.cos(.5), sn = Math.sin(.5), L = 13;
+      const p1 = [xb - L * (ux * c - uy * sn), y1 - L * (uy * c + ux * sn)];
+      const p2 = [xb - L * (ux * c + uy * sn), y1 - L * (uy * c - ux * sn)];
+      const pointe = `M ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${xb} ${y1} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+      const texte = ecrit ? `${o.op} ${nombre(o.k)}` : `${o.op} ?`;
+      const ym = (y1 + yc) / 2;
+      return `<path d="M ${xa} ${y1} Q ${W / 2} ${yc} ${xb} ${y1}" fill="none" stroke="${couleur}" stroke-width="3"/><path d="${pointe}" fill="none" stroke="${couleur}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        + `<rect x="${W / 2 - 36}" y="${ym - 14}" width="72" height="28" rx="14" fill="#fff" stroke="${ecrit ? couleur : bleu}" stroke-width="2"/><text x="${W / 2}" y="${ym + 7.5}" text-anchor="middle" font-size="21" font-weight="900" fill="${ecrit ? couleur : bleu}">${texte}</text>`;
+    };
+    let s = fraction(xg, o.gauche, "g") + `<text x="${W / 2}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>` + fraction(xd, o.droite, "d");
+    s += fleche(true, o.haut, o.trouveHaut) + fleche(false, o.bas, o.trouveBas);
+    const lire = ([n, d], cote) => `${`${cote}n` === o.cache && !o.montre ? "?" : n} sur ${`${cote}d` === o.cache && !o.montre ? "?" : d}`;
+    return `<svg viewBox="0 0 ${W} 228" role="img" aria-label="${lire(o.gauche, "g")} égale ${lire(o.droite, "d")} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
   }
 
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
@@ -3559,6 +3665,9 @@
     if (image.outil === "bandes-droite") return bandesImage(image);
     if (image.outil === "tout-parts") return toutParts(image);
     if (image.outil === "paires") return pairesDix(image);
+    if (image.outil === "presque-double") return presqueDouble(image);
+    if (image.outil === "rekenrek") return rekenrekImage(image);
+    if (image.outil === "fois-fraction") return foisFraction(image);
     return droiteSauts(image);
   }
 
@@ -3569,6 +3678,9 @@
     gesteAttendu,
     verifierGeste,
     perles100,
+    presqueDouble,
+    rekenrekImage,
+    foisFraction,
     DROITE,
     planDroite,
     droiteSauts,
