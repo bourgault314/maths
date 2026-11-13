@@ -8344,7 +8344,9 @@ verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fi
     egal(1, count($cours), 'un chapitre');
     egal('3e-PYT', $cours[0]['id'], 'le chapitre');
     // Depuis le lot « livret-telephone » (09/11/2026), 3e-PYT a sept fiches : « Choisir le bon outil » (3e-THA-04) est la 7e.
-    egal([1, 2, 3, 4, 5, 6, 7], array_column($cours[0]['fiches'], 'n'), 'sept fiches, numérotées');
+    // Depuis « cours-lot1-b26 » (13/11/2026), huit : « Le triangle rectangle et son cercle » (3e-PYT-04, pour la seconde)
+    // est la 8e ; en 3e, le nouveau programme s'ouvre avec le chapitre comme le reste (catalogue : « nouveau » faux).
+    egal([1, 2, 3, 4, 5, 6, 7, 8], array_column($cours[0]['fiches'], 'n'), 'huit fiches, numérotées');
     egal('https://mathsgo.re/cours/4e/4e-TRI-03.html#ch=3e-PYT', $cours[0]['fiches'][2]['url'], 'une fiche de 4e, avec le chapitre d’où l’on vient');
     egal('https://mathsgo.re/cours/3e/3e-PYT-brevet.html#ch=3e-PYT', $cours[0]['brevet'], 'le brevet');
     egal('https://mathsgo.re/cours/3e/3e-PYT-imprimable.html#ch=3e-PYT', $cours[0]['imprimable'], 'l’imprimable : toutes les fiches sont ouvertes');
@@ -8354,14 +8356,14 @@ verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fi
     $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['3e-PYT-02', '3e-PYT-brevet']]]], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'une fiche et le brevet fermés');
     $cours = identite($eleve['code'])['json']['cours'];
-    egal([1, 2, 3, 5, 6, 7], array_column($cours[0]['fiches'], 'n'), 'la fiche 4 s’en va, les numéros restent');
+    egal([1, 2, 3, 5, 6, 7, 8], array_column($cours[0]['fiches'], 'n'), 'la fiche 4 s’en va, les numéros restent');
     egal(null, $cours[0]['brevet'], 'plus de brevet');
     egal(null, $cours[0]['imprimable'], 'plus d’imprimable : il contiendrait la fiche fermée');
     // Le même chapitre en 4e : la fiche commune fermée l'est aussi (un seul identifiant).
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT', '4e-TRI'], 'sans' => ['4e-TRI-03']]]], ['jeton' => $jetonS1]);
     $cours = identite($eleve['code'])['json']['cours'];
     egal(['4e-TRI', '3e-PYT'], array_column($cours, 'id'), 'deux chapitres, dans l’ordre du livret (la progression)');
-    egal([[1, 2, 4, 5], [1, 2, 4, 5, 6, 7]], [array_column($cours[0]['fiches'], 'n'), array_column($cours[1]['fiches'], 'n')], 'la fiche commune fermée dans les deux');
+    egal([[1, 2, 4, 5], [1, 2, 4, 5, 6, 7, 8]], [array_column($cours[0]['fiches'], 'n'), array_column($cours[1]['fiches'], 'n')], 'la fiche commune fermée dans les deux');
     // Tous les chapitres fermés : la clé reste, vide ; l'appli retirée : plus de clé.
     $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => [], 'sans' => []]]], ['jeton' => $jetonS1]);
     vrai(str_contains($r['texte'], '"reglages":{}'), 'tout fermé : « {} »');
@@ -8369,6 +8371,25 @@ verifier("cours-appli — rien d'ouvert au départ ; un chapitre ouvert : ses fi
     egal([], identite($eleve['code'])['json']['cours'], 'tout fermé : vide');
     appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables']], ['jeton' => $jetonS1]);
     vrai(!array_key_exists('cours', identite($eleve['code'])['json']), 'sans l’appli Cours : pas de clé « cours »');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// Lot « cours-lot1-b26 » (13/11/2026) : en 3e, le nouveau programme est montré « tout pareil » cette année (décision
+// de Gwenaël du 12/11) — « Préparer la seconde » s'ouvre avec ses fiches, sans les cocher une par une ; et une fiche du
+// programme 2020 dont le statut CITE le nouveau programme (« retiré du nouveau programme… », 3e-ANG-07) n'en est pas une.
+verifier("cours-appli — en 3e, « Préparer la seconde » et les fiches « pour la seconde » s'ouvrent avec leur chapitre ; 3e-ANG-07 (programme 2020) aussi", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C1', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-ANG', '3e-SEC']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'deux chapitres ouverts');
+    $cours = identite($eleve['code'])['json']['cours'];
+    egal(['3e-ANG', '3e-SEC'], array_column($cours, 'id'), 'les deux chapitres, dans l’ordre du livret');
+    egal(8, count($cours[0]['fiches']), 'Angles : toutes ses fiches, la 7e (triangles semblables) comprise');
+    vrai(in_array('https://mathsgo.re/cours/3e/3e-ANG-07.html#ch=3e-ANG', array_column($cours[0]['fiches'], 'url'), true), '3e-ANG-07 ouverte');
+    egal([1, 2, 3, 4, 5], array_column($cours[1]['fiches'], 'n'), 'Préparer la seconde : ses cinq fiches');
+    egal('https://mathsgo.re/cours/3e/3e-SEC-imprimable.html#ch=3e-SEC', $cours[1]['imprimable'], 'et sa version imprimable');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });
@@ -8407,7 +8428,7 @@ verifier("cours-appli — lecture stricte du réglage (chapitre ou fiche inconnu
     bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?')->execute(['{"cours":{"chapitres":["3e-PYT","5e-ZZZ"],"sans":["3e-PYT-99",4,"4e-TRI-01"],"avec":"x"}}', $id]);
     $cours = identite($eleve['code'])['json']['cours'];
     egal(['3e-PYT'], array_column($cours, 'id'), 'le chapitre disparu est oublié');
-    egal([2, 3, 4, 5, 6, 7], array_column($cours[0]['fiches'], 'n'), 'la fiche fermée reste fermée, le reste est oublié');
+    egal([2, 3, 4, 5, 6, 7, 8], array_column($cours[0]['fiches'], 'n'), 'la fiche fermée reste fermée, le reste est oublié');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

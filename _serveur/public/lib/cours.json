@@ -798,6 +798,42 @@
    "imprimable": "/cours/4e/4e-COS-imprimable.html"
   },
   {
+   "id": "4e-FON",
+   "niveau": "4e",
+   "chapitre": "Fonctions",
+   "titre": "Une grandeur en fonction d'une autre",
+   "fiches": [
+    {
+     "id": "4e-REP-01",
+     "n": 1,
+     "ids": "4e-REP-01 · 3e-REP-02",
+     "h1": "Je sais lire les coordonnées d'un point et placer un point dans un repère",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REP-01.html"
+    },
+    {
+     "id": "4e-FON-04",
+     "n": 2,
+     "ids": "4e-FON-04 · 3e-REP-03",
+     "h1": "Je sais lire un graphique dans les deux sens",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/4e/4e-FON-imprimable.html"
+  },
+  {
    "id": "3e-ARI",
    "niveau": "3e",
    "chapitre": "Arithmétique",
@@ -1006,6 +1042,18 @@
      "type": "méthode · toute la géométrie",
      "nouveau": false,
      "page": "/cours/3e/3e-THA-04.html"
+    },
+    {
+     "id": "3e-PYT-04",
+     "n": 8,
+     "ids": "3e-PYT-04",
+     "h1": "Je sais utiliser la propriété du triangle rectangle et de son cercle circonscrit",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PYT-04.html"
     }
    ],
    "brevet": {
@@ -1251,6 +1299,18 @@
      "type": "méthode · toute la géométrie",
      "nouveau": false,
      "page": "/cours/3e/3e-THA-04.html"
+    },
+    {
+     "id": "3e-THA-05",
+     "n": 5,
+     "ids": "3e-THA-05",
+     "h1": "Je sais utiliser la droite des milieux pour prouver que des droites sont parallèles, calculer une longueur ou prouver qu'un point est un milieu",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "théorèmes",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-05.html"
     }
    ],
    "brevet": {
@@ -1375,7 +1435,7 @@
       "3e"
      ],
      "type": "méthode",
-     "nouveau": true,
+     "nouveau": false,
      "page": "/cours/3e/3e-LIT-09.html"
     },
     {
@@ -1399,7 +1459,7 @@
       "3e"
      ],
      "type": "méthode",
-     "nouveau": true,
+     "nouveau": false,
      "page": "/cours/3e/3e-LIT-11.html"
     },
     {
@@ -1453,6 +1513,18 @@
      "type": "méthode · revu de 4e",
      "nouveau": false,
      "page": "/cours/4e/4e-LIT-10.html"
+    },
+    {
+     "id": "3e-LIT-12",
+     "n": 16,
+     "ids": "3e-LIT-12",
+     "h1": "Je sais simplifier un produit ou un quotient d'expressions qui ont des facteurs communs",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-12.html"
     }
    ],
    "brevet": {
@@ -1540,6 +1612,18 @@
      "type": "méthode · toute la géométrie",
      "nouveau": false,
      "page": "/cours/3e/3e-THA-04.html"
+    },
+    {
+     "id": "3e-TRG-06",
+     "n": 7,
+     "ids": "3e-TRG-06",
+     "h1": "Je sais démontrer que (cos Â)² + (sin Â)² = 1, et m'en servir pour calculer un sinus ou un cosinus sans calculer l'angle",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-TRG-06.html"
     }
    ],
    "brevet": {
@@ -1547,6 +1631,247 @@
     "page": "/cours/3e/3e-TRG-brevet.html"
    },
    "imprimable": "/cours/3e/3e-TRG-imprimable.html"
+  },
+  {
+   "id": "3e-ANG",
+   "niveau": "3e",
+   "chapitre": "Angles",
+   "titre": "Angles et triangles semblables",
+   "fiches": [
+    {
+     "id": "3e-ANG-01",
+     "n": 1,
+     "ids": "3e-ANG-01",
+     "h1": "Je connais les noms des angles et la bissectrice, et je sais que deux angles opposés par le sommet ont la même mesure",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-01.html"
+    },
+    {
+     "id": "3e-ANG-02",
+     "n": 2,
+     "ids": "3e-ANG-02",
+     "h1": "Je sais reconnaître des angles alternes-internes et correspondants, et calculer un angle quand les droites sont parallèles",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-02.html"
+    },
+    {
+     "id": "3e-ANG-03",
+     "n": 3,
+     "ids": "3e-ANG-03",
+     "h1": "Je sais prouver avec des angles que deux droites sont parallèles, ou qu'elles ne le sont pas",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-03.html"
+    },
+    {
+     "id": "3e-ANG-04",
+     "n": 4,
+     "ids": "3e-ANG-04",
+     "h1": "Je sais calculer le troisième angle d'un triangle",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-04.html"
+    },
+    {
+     "id": "3e-ANG-05",
+     "n": 5,
+     "ids": "3e-ANG-05",
+     "h1": "Je sais utiliser les angles des triangles isocèle, équilatéral et rectangle",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-05.html"
+    },
+    {
+     "id": "3e-ANG-06",
+     "n": 6,
+     "ids": "3e-ANG-06",
+     "h1": "Je connais le polygone régulier et je calcule son angle au centre",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-06.html"
+    },
+    {
+     "id": "3e-ANG-07",
+     "n": 7,
+     "ids": "3e-ANG-07",
+     "h1": "Je sais reconnaître deux triangles semblables et leurs côtés homologues",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-ANG-07.html"
+    },
+    {
+     "id": "4e-INE-01",
+     "n": 8,
+     "ids": "4e-INE-01 · 3e-ANG-08",
+     "h1": "Je sais dire si trois longueurs permettent de construire un triangle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-INE-01.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-ANG-brevet",
+    "page": "/cours/3e/3e-ANG-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-ANG-imprimable.html"
+  },
+  {
+   "id": "3e-REP",
+   "niveau": "3e",
+   "chapitre": "Repérage",
+   "titre": "Coordonnées et graphiques",
+   "fiches": [
+    {
+     "id": "4e-REL-01",
+     "n": 1,
+     "ids": "4e-REL-01",
+     "h1": "Je sais repérer, comparer et ranger des nombres relatifs, en m'aidant de la droite graduée",
+     "niveaux": [
+      "4e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-01.html"
+    },
+    {
+     "id": "4e-FRA-04",
+     "n": 2,
+     "ids": "4e-FRA-04 · 3e-FRA-03",
+     "h1": "Je sais comparer, ranger et encadrer des fractions, et les placer sur une droite graduée",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FRA-04.html"
+    },
+    {
+     "id": "4e-REP-01",
+     "n": 3,
+     "ids": "4e-REP-01 · 3e-REP-02",
+     "h1": "Je sais lire les coordonnées d'un point et placer un point dans un repère, même quand les deux axes n'ont pas la même graduation",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REP-01.html"
+    },
+    {
+     "id": "4e-FON-04",
+     "n": 4,
+     "ids": "4e-FON-04 · 3e-REP-03",
+     "h1": "Je sais lire un graphique dans les deux sens, et pendant combien de temps une grandeur dépasse une valeur",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-FON-04.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/3e/3e-REP-imprimable.html"
+  },
+  {
+   "id": "3e-SEC",
+   "niveau": "3e",
+   "chapitre": "Pour la seconde",
+   "titre": "Préparer la seconde",
+   "fiches": [
+    {
+     "id": "3e-PYT-04",
+     "n": 1,
+     "ids": "3e-PYT-04",
+     "h1": "Je sais utiliser la propriété du triangle rectangle et de son cercle circonscrit",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PYT-04.html"
+    },
+    {
+     "id": "3e-THA-05",
+     "n": 2,
+     "ids": "3e-THA-05",
+     "h1": "Je sais utiliser la droite des milieux pour prouver que des droites sont parallèles, calculer une longueur ou prouver qu'un point est un milieu",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "théorèmes",
+     "nouveau": false,
+     "page": "/cours/3e/3e-THA-05.html"
+    },
+    {
+     "id": "3e-LIT-11",
+     "n": 3,
+     "ids": "3e-LIT-11",
+     "h1": "Je sais développer (𝑎 + 𝑏)² et (𝑎 − 𝑏)² sans oublier le double produit",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-11.html"
+    },
+    {
+     "id": "3e-LIT-12",
+     "n": 4,
+     "ids": "3e-LIT-12",
+     "h1": "Je sais simplifier un produit ou un quotient d'expressions qui ont des facteurs communs",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-LIT-12.html"
+    },
+    {
+     "id": "3e-TRG-06",
+     "n": 5,
+     "ids": "3e-TRG-06",
+     "h1": "Je sais démontrer que (cos Â)² + (sin Â)² = 1, et m'en servir pour calculer un sinus ou un cosinus sans calculer l'angle",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-TRG-06.html"
+    }
+   ],
+   "brevet": null,
+   "imprimable": "/cours/3e/3e-SEC-imprimable.html"
   }
  ]
 }
