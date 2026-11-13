@@ -48,6 +48,16 @@
 
     /* Passation */
     .barre{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:950}
+    .barre-droite{display:flex;align-items:center;gap:8px}
+    .arreter{min-height:40px;padding:0 10px;border:0;background:none;color:var(--muted);font-size:.85rem;font-weight:850;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+    .rond{width:40px;height:40px;border-radius:50%;border:1px solid #c5d9e6;background:#fff;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0;cursor:pointer}
+    .rond svg{width:19px;height:19px}
+    .plein-ecran svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .fullscreen-collapse{display:none}
+    body.fullscreen-active .fullscreen-expand{display:none}
+    body.fullscreen-active .fullscreen-collapse{display:block}
+    html.fullscreen-fallback{width:100%;height:100%;overflow:hidden}
+    html.fullscreen-fallback body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;overflow:auto;overscroll-behavior:none}
     .barre strong{min-width:76px;padding:6px 12px;border-radius:999px;color:var(--teal);background:#e7f8f5;text-align:center;font-variant-numeric:tabular-nums}
     .piste{height:8px;margin:10px 0 14px;overflow:hidden;border-radius:99px;background:#dfebf3}
     .piste b{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}
@@ -72,7 +82,6 @@
     .confirmation{position:fixed;z-index:20;left:50%;bottom:24px;width:min(440px,calc(100% - 24px));transform:translateX(-50%);padding:14px;border:1px solid #efc9c9;border-radius:16px;background:#fffafa;box-shadow:0 12px 40px rgba(26,66,100,.25);text-align:center;font-weight:850}
     .confirmation p{margin:0 0 10px}
     .confirmation div{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
-    .pied-passe{display:flex;justify-content:center;margin-top:8px}
 
     /* Fractions et angles */
     /* Les deux nombres prennent la largeur du plus long : la barre couvre toujours toute la fraction (4/100, 7/1 000…). */
@@ -126,14 +135,44 @@
       /* Même hauteur pour toutes les questions (elle ne dépend que de la fenêtre) ; une question plus longue défile dedans,
          une ombre en bas le signale. */
       .en-passation .panel{padding:18px 28px 10px}
-      .en-passation .pied-passe{margin-top:2px}
       .en-passation .figure{max-height:min(260px,31vh)}
-      .q-carte{height:clamp(380px,calc(100vh - 236px),680px);height:clamp(380px,calc(100dvh - 236px),680px)}
+      .q-carte{height:clamp(380px,calc(100vh - 196px),700px);height:clamp(380px,calc(100dvh - 196px),700px)}
       .q-corps{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
         background:linear-gradient(#fff 40%,rgba(255,255,255,0)) top/100% 28px no-repeat local,linear-gradient(rgba(255,255,255,0),#fff 60%) bottom/100% 28px no-repeat local,
           radial-gradient(farthest-side at 50% 0,rgba(20,52,81,.16),transparent) top/100% 10px no-repeat scroll,radial-gradient(farthest-side at 50% 100%,rgba(20,52,81,.16),transparent) bottom/100% 10px no-repeat scroll}
     }
+    /* Ordinateur : une question avec une figure se met sur deux colonnes (figure à gauche, réponses à droite) : tout tient
+       dans le cadre sans défiler, et la figure garde sa taille. */
+    @media(min-width:900px){
+      .q-carte.avec-figure .q-corps{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(250px,1fr);grid-template-areas:"num num" "enonce enonce" "figure apres" "figure choix";column-gap:22px;align-content:start}
+      .q-carte.avec-figure #q-num{grid-area:num}
+      .q-carte.avec-figure #q-enonce{grid-area:enonce}
+      .q-carte.avec-figure #q-figure{grid-area:figure;align-self:start;margin-top:10px}
+      .q-carte.avec-figure #q-apres{grid-area:apres;margin-top:10px}
+      .q-carte.avec-figure #q-choix{grid-area:choix;grid-template-columns:1fr;align-content:start;margin-top:10px}
+      .q-carte.avec-figure .figure{max-height:min(330px,calc(100vh - 470px))}
+    }
+    /* Tablette et ordinateur : les réponses longues aussi sur deux colonnes, la place ne manque pas en largeur. */
+    @media(min-width:621px){.choix.ligne{grid-template-columns:1fr 1fr}}
+    /* Fenêtre basse (portable, navigateur avec ses barres) : tout se resserre un peu pour que la question tienne. */
+    @media(min-width:621px) and (max-height:760px){
+      .topbar{min-height:52px}
+      .brand img{width:88px}
+      .en-passation .panel{padding:10px 24px 8px}
+      .piste{margin:7px 0 9px}
+      .q-carte{height:clamp(360px,calc(100vh - 156px),700px);height:clamp(360px,calc(100dvh - 156px),700px)}
+      .q-corps{padding:14px 22px 4px}
+      .q-num{margin-bottom:4px}
+      .q-enonce{font-size:1.08rem}
+      .q-figure{margin:8px 0 2px}
+      .choix{margin-top:10px;gap:8px}
+      .choix-btn{min-height:46px;padding:7px 12px}
+      .actions{padding:8px 22px 10px}
+      .en-passation .figure{max-height:min(240px,calc(100vh - 400px))}
+      .q-carte.avec-figure .figure{max-height:calc(100vh - 410px)}
+    }
     @media(max-width:620px){
+      .plein-ecran{display:none}
       .shell{width:100%}
       .topbar{min-height:56px;padding:4px 10px}
       .brand img{width:82px}
@@ -184,7 +223,10 @@
 
       <!-- Passation -->
       <div id="passe" hidden>
-        <div class="barre"><span id="compteur">Question 1 / 23</span><strong id="chrono" aria-label="Temps écoulé">0:00</strong></div>
+        <!-- « Arrêter » vit en petit sur la ligne du haut (pas sous la question) ; le plein écran rond comme Défi tables et Anzan
+             (pas au téléphone). -->
+        <div class="barre"><span id="compteur">Question 1 / 23</span>
+          <span class="barre-droite"><button id="abandonner" class="arreter" type="button">✕ Arrêter</button><strong id="chrono" aria-label="Temps écoulé">0:00</strong><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span></div>
         <div class="piste" aria-hidden="true"><b id="progres"></b></div>
         <!-- Le cadre ne change jamais de taille : sur ordinateur, la question défile dedans (q-corps) et les boutons restent
              au même endroit ; sur téléphone, la barre des boutons est collée en bas de l'écran. -->
@@ -201,7 +243,6 @@
             <button id="valider" class="primary" type="button" disabled>Valider</button>
           </div>
         </article>
-        <div class="pied-passe"><button id="abandonner" class="lien" type="button">Arrêter le test</button></div>
         <div id="confirmation" class="confirmation" hidden>
           <p>Arrêter maintenant ? Tes réponses ne seront pas gardées.</p>
           <div><button id="garder" class="secondary" type="button">Je continue</button><button id="quitter" class="primary" type="button">J’arrête</button></div>
@@ -236,10 +277,10 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261113-4"></script>
-  <script src="./sujets/6e_automatismes.js?v=20261113-4"></script>
-  <script src="./sujets/5e_automatismes.js?v=20261113-4"></script>
-  <script src="./sujets/4e_automatismes.js?v=20261113-4"></script>
-  <script src="./evaluation.js?v=20261113-4"></script>
+  <script src="./en_commun.js?v=20261113-5"></script>
+  <script src="./sujets/6e_automatismes.js?v=20261113-5"></script>
+  <script src="./sujets/5e_automatismes.js?v=20261113-5"></script>
+  <script src="./sujets/4e_automatismes.js?v=20261113-5"></script>
+  <script src="./evaluation.js?v=20261113-5"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
    Aucune donnée ne sort de l'appareil : le dernier résultat est gardé dans le navigateur seulement. */
 (function () {
   "use strict";
-  const { hasard, construire } = window.EN;
+  const { hasard, construire, typo } = window.EN;
   // Interrupteur unique des boutons « Je m'entraîne » du bilan. Éteint tant que les automatismes et les cours
   // vers lesquels ils mènent ne sont pas prêts ; chaque question garde son champ `entrainement` pour le jour où on le rallume.
   const ENTRAINEMENT_VISIBLE = false;
@@ -75,13 +75,15 @@
     $("#compteur").textContent = `Question ${i + 1} / ${items.length}`;
     $("#progres").style.width = `${(i / items.length) * 100}%`;
     $("#q-num").textContent = passation.reprise ? `Question ${it.q.num} du sujet` : `Question ${i + 1}`;
-    // Espace insécable avant « ? : ; ! » et après « : le signe ne part jamais seul à la ligne.
-    // Une fraction empilée reste collée au signe qui la suit (« 4/100 ? » ne laisse pas le « ? » seul à la ligne).
-    const typo = (t) => t.replace(/ ([?:;!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0")
-      .replace(/(<span class="frac"><span>[^<]*<\/span><span>[^<]*<\/span><\/span>)(\u00a0[?:;!»])/g, '<span class="insecable">$1$2</span>');
+    // Typographie (EN.typo) : « ? » jamais seul à la ligne, un nombre et son unité jamais séparés (1 cm, 18 km/h…).
     $("#q-enonce").innerHTML = typo(it.g.enonce);
     $("#q-figure").innerHTML = it.g.figure || "";
     $("#q-figure").hidden = !it.g.figure;
+    // Sur ordinateur, une question avec figure se met sur deux colonnes (figure à gauche, réponses à droite).
+    // Une figure très large (droite graduée, bande) reste au-dessus des réponses : à côté, elle deviendrait minuscule.
+    const vb = (it.g.figure || "").match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
+    const large = vb && Number(vb[1]) / Number(vb[2]) > 2.2;
+    $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large);
     $("#q-apres").innerHTML = typo(it.g.apres || "");
     $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
@@ -93,7 +95,7 @@
       b.type = "button";
       b.className = "choix-btn" + (it.g.choixFigures ? " choix-figure" : "");
       b.setAttribute("aria-pressed", "false");
-      b.innerHTML = `<span class="case" aria-hidden="true"></span><span class="choix-texte">${ch.html}${it.g.suffixe || ""}</span>`;
+      b.innerHTML = `<span class="case" aria-hidden="true"></span><span class="choix-texte">${typo(ch.html + (it.g.suffixe || ""))}</span>`;
       b.addEventListener("click", () => {
         zone.querySelectorAll(".choix-btn").forEach((x) => x.setAttribute("aria-pressed", "false"));
         b.setAttribute("aria-pressed", "true");
@@ -167,10 +169,10 @@
     $("#liste-revoir").innerHTML = rates.map(({ it, choisi }) => {
       const bonne = it.choix.find((c) => c.juste);
       return `<li>
-        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${it.t.competence || it.q.competence}</p>
+        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
         <div class="revoir-reponses">
-          <span class="donnee">${choisi ? "Ta réponse : " + choisi.html : "Pas de réponse"}</span>
-          <span class="attendue">Bonne réponse : ${bonne.html}</span>
+          <span class="donnee">${choisi ? "Ta réponse : " + typo(choisi.html) : "Pas de réponse"}</span>
+          <span class="attendue">Bonne réponse : ${typo(bonne.html)}</span>
         </div>
         ${vueProf && choisi ? `<p class="erreur-prof">Ce choix montre souvent que l’élève ${minuscule(choisi.erreur).replace(/^ne /, "ne ").replace(/\.$/, "")}.</p>` : ""}
       </li>`;
@@ -179,6 +181,37 @@
     $("#refaire-rates").onclick = () => lancer("jumeau", rates.map((x) => x.it.q.num));
     montrer("#bilan");
   }
+
+  // ---------- Plein écran (comme Défi tables et Anzan ; le bouton est caché au téléphone) ----------
+  (function pleinEcran() {
+    const racine = document.documentElement, boutons = [...document.querySelectorAll("[data-fullscreen-toggle]")];
+    const natif = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const actif = () => Boolean(natif()) || racine.classList.contains("fullscreen-fallback");
+    const sync = () => {
+      document.body.classList.toggle("fullscreen-active", actif());
+      boutons.forEach((b) => {
+        b.setAttribute("aria-pressed", String(actif()));
+        b.setAttribute("aria-label", actif() ? "Quitter le plein écran" : "Passer en plein écran");
+        b.title = actif() ? "Quitter le plein écran" : "Plein écran";
+      });
+    };
+    const sortir = async () => {
+      racine.classList.remove("fullscreen-fallback");
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (natif() && exit) { try { await exit.call(document); } catch (e) { /* rien */ } }
+      sync();
+    };
+    const entrer = async () => {
+      const demande = racine.requestFullscreen || racine.webkitRequestFullscreen;
+      if (demande) { try { await demande.call(racine); sync(); return; } catch (e) { /* repli CSS */ } }
+      racine.classList.add("fullscreen-fallback");
+      sync();
+    };
+    boutons.forEach((b) => b.addEventListener("click", () => (actif() ? sortir() : entrer())));
+    document.addEventListener("fullscreenchange", sync);
+    document.addEventListener("webkitfullscreenchange", sync);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && racine.classList.contains("fullscreen-fallback")) { e.preventDefault(); sortir(); } });
+  })();
 
   // ---------- Branchements ----------
   $("#lancer-jumeau").addEventListener("click", () => lancer("jumeau"));

@@ -4,8 +4,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+const require = createRequire(import.meta.url);
+require("../outils/evaluations_nationales/en_commun.js");
+for (const n of ["6e", "5e", "4e"]) require(`../outils/evaluations_nationales/sujets/${n}_automatismes.js`);
+const { typo, construire, hasard } = globalThis.EN;
 const html = readFileSync(new URL("../outils/evaluations_nationales/evaluation.html", import.meta.url), "utf8");
 const js = readFileSync(new URL("../outils/evaluations_nationales/evaluation.js", import.meta.url), "utf8");
+const commun = readFileSync(new URL("../outils/evaluations_nationales/en_commun.js", import.meta.url), "utf8");
 
 test("la question vit dans q-corps, les boutons en dehors (dans le cadre)", () => {
   const carte = html.match(/<article id="q-carte" class="q-carte">([\s\S]*?)<\/article>/)[1];
@@ -18,7 +24,7 @@ test("la question vit dans q-corps, les boutons en dehors (dans le cadre)", () =
 
 test("ordinateur : même hauteur de cadre pour toutes les questions, la question défile dedans", () => {
   const ordi = html.match(/@media\(min-width:621px\)\{([\s\S]*?)\n    \}/)[1];
-  assert.match(ordi, /\.q-carte\{height:clamp\(380px,calc\(100vh - 236px\),680px\);height:clamp\(380px,calc\(100dvh - 236px\),680px\)\}/);
+  assert.match(ordi, /\.q-carte\{height:clamp\(380px,calc\(100vh - 196px\),700px\);height:clamp\(380px,calc\(100dvh - 196px\),700px\)\}/);
   assert.match(ordi, /\.q-corps\{flex:1 1 auto;min-height:0;overflow-y:auto/);
 });
 
@@ -34,5 +40,42 @@ test("fraction : les deux nombres prennent la largeur du plus long (la barre cou
   assert.match(html, /\.frac>span\{display:block;white-space:nowrap\}/);
   assert.match(html, /\.frac>span:first-child\{[^}]*border-bottom:2px solid currentColor/);
   // et le « ? » ne part pas seul à la ligne après une fraction
-  assert.match(js, /<span class="insecable">\$1\$2<\/span>/);
+  assert.match(commun, /<span class="insecable">\$1\$2<\/span>/);
+});
+
+test("EN4a-bis : « Arrêter » en petit sur la ligne du haut, plein écran rond (caché au téléphone), plus de pied sous la question", () => {
+  const barre = html.match(/<div class="barre">([\s\S]*?)<\/div>/)[1];
+  assert.match(barre, /<button id="abandonner" class="arreter" type="button">✕ Arrêter<\/button>/);
+  assert.match(barre, /data-fullscreen-toggle/);
+  assert.ok(!html.includes("pied-passe"));
+  assert.match(html, /@media\(max-width:620px\)\{\s*\.plein-ecran\{display:none\}/);
+  assert.match(js, /requestFullscreen/);
+});
+
+test("EN4a-bis : sur ordinateur, une question avec figure passe sur deux colonnes", () => {
+  assert.match(html, /@media\(min-width:900px\)\{\s*\.q-carte\.avec-figure \.q-corps\{display:grid;/);
+  assert.match(js, /\$\("#q-carte"\)\.classList\.toggle\("avec-figure", Boolean\(it\.g\.figure\) && !large\)/);
+});
+
+test("EN4a-bis : un nombre et son unité ne se séparent jamais (énoncés, réponses, bilan), 3 niveaux × 300 sujets", () => {
+  // Tout ce qui s'affiche passe par EN.typo dans la page.
+  for (const m of ["enonce", "apres"]) assert.ok(js.includes(`typo(it.g.${m}`), m);
+  assert.match(js, /typo\(ch\.html/);
+  assert.match(js, /typo\(choisi\.html\)/);
+  assert.match(js, /typo\(bonne\.html\)/);
+  const RESTE = /(\d) (km\/h|cm²|cm³|m²|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|°|%)(?![\p{L}\d²³])/u;
+  for (const id of ["6e-automatismes", "5e-automatismes", "4e-automatismes"]) {
+    const S = globalThis.EN_SUJETS[id];
+    for (let graine = 1; graine <= 300; graine++) {
+      for (const it of construire(S, hasard(graine), graine === 1 ? S.officiels[0] : null, null)) {
+        for (const morceau of [it.g.enonce, it.g.apres || "", ...it.choix.map((c) => c.html + (it.g.suffixe || ""))]) {
+          const texte = typo(morceau).split(/<[^>]+>/).join("|");
+          assert.ok(!RESTE.test(texte), `${id} graine ${graine} q${it.q.num} : ${texte.match(RESTE)}`);
+        }
+      }
+    }
+  }
+  assert.equal(typo("Chaque carreau fait 1 cm de côté."), "Chaque carreau fait 1\u00a0cm de côté.");
+  assert.equal(typo('<svg viewBox="0 0 4 m"></svg> 2 h 15 min'), '<svg viewBox="0 0 4 m"></svg> 2\u00a0h 15\u00a0min');
+  assert.equal(typo("2 mois"), "2 mois");
 });
