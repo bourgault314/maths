@@ -89,16 +89,20 @@ test("4e : 2 000 sujets générés — chaque case tire une tâche connue ; 4 ch
       const e = texte(g.enonce), j = juste(g);
       let m;
       if (it.t.id === "4e-soustraire") {
-        m = e.match(/^(\d+) − (\d) = …$/); assert.ok(m, e);
-        assert.equal(Number(j), m[1] - m[2]);
-        assert.ok(Number(m[2]) > m[1] - 10, "on passe la dizaine");
+        // Lot EN4 : la différence, ou le même calcul posé en complément (b + … = a).
+        m = e.match(/^(\d+) − (\d) = …$/) || e.match(/^(\d) \+ … = (\d+)$/);
+        const [a, b] = /^(\d+) − (\d)/.test(e) ? e.match(/^(\d+) − (\d)/).slice(1).map(Number) : [Number(e.match(/= (\d+)$/)[1]), Number(e.match(/^(\d)/)[1])];
+        assert.ok(m, e);
+        assert.equal(Number(j), a - b);
+        assert.ok(b > a - 10, "on passe la dizaine");
         assert.notEqual(e, "14 − 6 = …", "un sujet généré ne redonne pas le calcul officiel");
       }
       if (it.t.id === "4e-reduire-somme") {
-        m = e.match(/l’expression (\d)(\w) \+ (\d)(\w) alors/); assert.ok(m, e);
-        assert.equal(m[2], m[4]);
-        assert.equal(j, `${Number(m[1]) + Number(m[3])}${m[2]}`);
-        assert.ok(!(m[1] === "2" && m[3] === "3"), "un sujet généré ne redonne pas 2n + 3n");
+        // Lot EN4 : une somme ou une différence de deux termes en n.
+        m = e.match(/l’expression (\d)(\w) ([+−]) (\d)(\w) alors/); assert.ok(m, e);
+        assert.equal(m[2], m[5]);
+        assert.equal(j, `${m[3] === "+" ? Number(m[1]) + Number(m[4]) : m[1] - m[4]}${m[2]}`);
+        assert.ok(!(m[1] === "2" && m[4] === "3" && m[3] === "+"), "un sujet généré ne redonne pas 2n + 3n");
       }
     });
   }

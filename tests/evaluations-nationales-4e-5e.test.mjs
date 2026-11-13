@@ -91,37 +91,7 @@ for (const [niv, S, OFF] of [[4, S4, OFFICIEL_4E], [5, S5, OFFICIEL_5E]]) {
   });
 }
 
-test("4e : les bonnes réponses des jumeaux sont mathématiquement justes", () => {
-  for (let graine = 2; graine <= 2001; graine++) {
-    const r = hasard(graine);
-    for (const q of S4.questions) {
-      const g = q.generer(r, false), j = juste(g), e = texte(g.enonce), n = q.num;
-      let m;
-      if (n === 2) { m = e.match(/moitié de (\d+)/); assert.equal(num(j) * 2, Number(m[1])); }
-      if (n === 4) { m = e.match(/(\d+) \+ (\d+)/); assert.equal(num(j), Number(m[1]) + Number(m[2])); }
-      if (n === 5) { m = e.match(/−(\d) \+ (\d)/); assert.equal(num(j), -Number(m[1]) + Number(m[2])); }
-      if (n === 7) { m = e.match(/(\d+) minutes/); const [, h, mn] = j.match(/(\d) h (\d+) min/); assert.equal(60 * h + Number(mn), Number(m[1])); }
-      if (n === 8) { m = e.match(/(\d+) × (\d) \+ \d+ × (\d)/); assert.equal(num(j), m[1] * m[2] + m[1] * m[3]); }
-      if (n === 9) { const angles = [...g.figure.matchAll(/>(\d+)°</g)].map((x) => Number(x[1])); assert.equal(num(j), 180 - angles[0] - angles[1]); }
-      if (n === 10) { m = e.match(/(\d+) \+ (\d)\/10 \+ (\d)\/1000/); assert.ok(Math.abs(num(j) - (m[1] * 1 + m[2] / 10 + m[3] / 1000)) < 1e-9); }
-      if (n === 11) { m = e.match(/(\d+) km\/h/); assert.equal(num(j), Number(m[1]) / 2); }
-      if (n === 12) { m = e.match(/(\d+) (\S+) = … (\S+)/); const rang = { dixièmes: -1, centièmes: -2, unités: 0, dizaines: 1, centaines: 2, milliers: 3 }; assert.equal(num(j), m[1] * 10 ** (rang[m[2]] - rang[m[3]])); }
-      if (n === 14) { m = e.match(/(\d) − \(−(\d)\)/); assert.equal(num(j), Number(m[1]) + Number(m[2])); }
-      if (n === 15) { const ticks = (g.figure.match(/<line /g) || []).length - 1; const d = (ticks - 1) / 3; const xA = Number(g.figure.match(/<text x="([\d.]+)"[^>]*>A</)[1]); const [a, b] = j.split("/").map(Number); assert.equal(b, d); assert.ok(Math.abs(xA - (24 + (a * 150) / b)) < 0.2); }
-      if (n === 16) { m = e.match(/0,(\d)/); assert.equal(j, `${m[1]}/10`); }
-      if (n === 17) { m = e.match(/A = (\d) \+ (\d)x\. Quelle est la valeur de A pour x = (\d)/); assert.equal(num(j), m[1] * 1 + m[2] * m[3]); }
-      if (n === 18) { m = e.match(/(\d+) (\S+) = … (\S+)/); assert.equal(num(j), m[1] * 100); }
-      if (n === 19) { const v = [...g.figure.matchAll(/<td>(\d*)<\/td>/g)].map((x) => x[1]); assert.equal(v[2], ""); assert.equal(num(j) * Number(v[1]), Number(v[0]) * Number(v[3])); }
-      if (n === 21) { const [, b, h] = j.match(/^(\d+) × (\d+)\/2$/); const etiquettes = [...g.figure.matchAll(/>(\d+)</g)].map((x) => Number(x[1])); assert.ok(etiquettes.includes(Number(b)) && etiquettes.includes(Number(h))); }
-      if (n === 22) { m = e.match(/de (\d+)\/10/); const [, a, b] = j.match(/^(\d+) < \d+\/10 < (\d+)$/); assert.ok(a < m[1] / 10 && m[1] / 10 < b && b - a === 1); }
-      if (n === 20) { // le bon point est bien dessiné aux coordonnées demandées
-        m = e.match(/\((\d) ; (\d)\)/); const nom = j.slice(-1);
-        const X = (v) => 40 + v * 34, Y = (v) => 214 - v * 34;
-        assert.ok(g.figure.includes(`<text x="${X(Number(m[1])) + 7}" y="${Y(Number(m[2])) - 8}" font-size="15" fill="#2747b0">${nom}</text>`), `q20 graine ${graine}`);
-      }
-    }
-  }
-});
+// 4e : les jumeaux (et leurs formes, lot EN4) sont contrôlés dans evaluations-nationales-4e-variete.test.mjs.
 
 test("5e : les bonnes réponses des jumeaux sont mathématiquement justes (et les pièges sont faux)", () => {
   for (let graine = 2; graine <= 2001; graine++) {
