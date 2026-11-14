@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-2">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -586,7 +586,10 @@
       // (« ← Comment ça marche ? ») ou le fil de la séance (les étapes ①②③④
       // et le nom de l'activité), la barre se range JUSTE DESSOUS. Sans titre
       // (une activité hors séance, son bilan), elle reste en haut du cadre.
-      const TETES_ECRAN = ["#fil-seance", "#result-fil", "#notice > .settings-toolbar"];
+      // Lot 5 « revue » (14/11/2026) : Mon parcours, arrivé comme écran à
+      // part après cette règle (lot « accueil », 07/11), avait été oublié —
+      // la ligne restait AU-DESSUS de « ← Mon parcours ».
+      const TETES_ECRAN = ["#fil-seance", "#result-fil", "#notice > .settings-toolbar", "#ecran-parcours > .settings-toolbar"];
       function teteEcran() {
         if (!document.body.classList.contains("ecran-interne")) return null;
         for (const selecteur of TETES_ECRAN) {
@@ -1865,6 +1868,9 @@
         $("prof-refus").hidden = !(PROF_REFUSE && suiviActif() && name === "intro");
       }
 
+      // Mon parcours : la précision du titre d'un palier (voir renderParcoursPaliers).
+      const PRECISION_PALIER = Object.freeze({1: "CP · CE1 · CE2"});
+
       function show(name) {
         ECRANS.forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
@@ -1877,6 +1883,10 @@
         if (name !== "intro") document.body.classList.remove("accueil-en-attente");
         // Mon parcours : le même bas de cadre que l'accueil.
         document.body.classList.toggle("sur-parcours", name === "ecran-parcours");
+        // Lot 5 « revue » : « Comment ça marche ? » aussi prend la hauteur de
+        // l'écran à l'ordinateur (avant : 650 px fixes, le cadre dépassait de
+        // 3 px pour l'élève, de 63 px pour le visiteur, en 1366 × 657).
+        document.body.classList.toggle("sur-notice", name === "notice");
         majPilule(name);
         window.scrollTo({top: 0, behavior: "auto"});
         if (TITRES[name]) $(TITRES[name]).focus?.({preventScroll: true});
@@ -2349,7 +2359,14 @@
           return bouton;
         }));
         const palier = CORE.PALIERS.find(p => p.n === state.palier);
-        $("parcours-titre").textContent = soude(`Palier ${palier.n} · ${palier.nom} (${palier.classes})`);
+        // Lot 5 « revue » (14/11/2026, choix de Gwenaël) : la parenthèse
+        // seulement quand elle apprend quelque chose à l'élève — « Palier 1 ·
+        // Les bases (CP · CE1 · CE2) », mais « Palier 2 · Le CM1 » (plus de
+        // « (CM1) » répété) et « Palier 4 · Vers la 6e » (« choix
+        // pédagogiques » est un mot de professeur). Une ligne partout, au
+        // téléphone compris : la liste ne bouge plus d'un palier à l'autre.
+        const precision = PRECISION_PALIER[palier.n];
+        $("parcours-titre").textContent = soude(`Palier ${palier.n} · ${palier.nom}${precision ? ` (${precision})` : ""}`);
         $("parcours-ceinture").replaceChildren(...ligneCeinture(palier.n, ceintures));
         // Les modules du palier, dans l'ordre où leurs compétences y arrivent.
         const vus = new Set();
