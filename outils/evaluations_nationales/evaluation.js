@@ -89,9 +89,11 @@
     const vb = (it.g.figure || "").match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
     const large = vb && Number(vb[1]) / Number(vb[2]) > 2.2;
     // Une figure « à côté » (le diagramme de l'œuf) se range à droite de l'énoncé : les réponses gardent toute la largeur.
-    $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large && !it.g.figureACote);
+    // Une question à long énoncé (6e, positionnement, la voiture) : l'énoncé à gauche, la figure puis les réponses à droite.
+    $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large && !it.g.figureACote && !it.g.choixACote);
     $("#q-carte").classList.toggle("figure-a-cote", Boolean(it.g.figure && it.g.figureACote));
     $("#q-carte").classList.toggle("figure-grande", it.g.figureACote === "grande");
+    $("#q-carte").classList.toggle("choix-a-cote", Boolean(it.g.figure && it.g.choixACote));
     $("#q-apres").innerHTML = typo(it.g.apres || "");
     $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
