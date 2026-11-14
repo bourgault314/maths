@@ -961,11 +961,16 @@
 
   // Donne les ceintures que les boîtes méritent (dans l'ordre, à la suite
   // de celles déjà gagnées). Modifie `copie` ; rend les paliers gagnés.
-  function gagnerCeintures(copie, carte, aujourdhui) {
+  // Correctif Codex (14/11/2026) : jamais au-delà du palier réglé par le
+  // professeur (`palierMax`) — une classe ramenée aux bases ne reçoit pas
+  // l'orange, même si le CM1 était déjà solide ; elle viendra à la première
+  // étape finie après que le palier aura été relevé.
+  function gagnerCeintures(copie, carte, aujourdhui, palierMax = SEUILS.seance.paliers) {
     const gagnees = [];
     if (!carte) return gagnees;
     if (!Array.isArray(copie.ceintures)) copie.ceintures = ceinturesVides();
-    for (let palier = 1; palier <= SEUILS.ceintures.nombre; palier += 1) {
+    const jusqua = Math.min(SEUILS.ceintures.nombre, palierDeSeance(palierMax));
+    for (let palier = 1; palier <= jusqua; palier += 1) {
       if (copie.ceintures[palier - 1]) continue;
       const liste = competencesDuPalier(copie, carte, palier);
       if (!liste.length || !liste.every(c => c.ligne.b[c.niveau - 1] >= SEUILS.revision.su)) break;
@@ -1397,7 +1402,7 @@
         const suivante = aEntrainer(copie, carte, aujourdhui);
         plan[PLAN.rattrapage] = suivante ? rangDe(suivante.module, suivante.niveau) + 1 : 0;
       }, palier);
-      return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
+      return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
     }
     const nouvelle = !ligne.b[n - 1];
     // J'apprends en une étape réussi : J'apprends est fait (lot 2).
@@ -1424,7 +1429,7 @@
         if (!verdict.reussi) plan[PLAN.nouveaute] = NOUVEAUTE.arretee;
       }, palier);
     }
-    return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
+    return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
   }
 
   // ------------------------------------------------------------ le test d'entrée
@@ -1477,7 +1482,7 @@
       return {niveau: index + 1, justes, total, connu, entre, boite: connu ? boite : 0, jouee: total > 0};
     });
     if (!ligne.ok && toutSu(ligne)) ligne.ok = aujourdhui;
-    const ceintures = gagnerCeintures(copie, carte, aujourdhui);
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui, palier);
     const tout = marche === NIVEAUX[id];
     let finie = false;
     if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
@@ -1632,7 +1637,7 @@
       plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
       [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
     }, palier);
-    return {parcours: copie, finie, rouge, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
+    return {parcours: copie, finie, rouge, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
   }
 
   // « Commencer » : le plan de la séance est décidé et rangé, pour qu'elle se

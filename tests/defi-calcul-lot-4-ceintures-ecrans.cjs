@@ -14,7 +14,8 @@
 //   deux       les bases et le CM1 finis le même jour : la jaune, puis
 //              l'orange, puis le bilan ;
 //   réglage    l'appli réglée jusqu'aux bases : « Tu as fini tout ce que ton
-//              professeur a ouvert. » ;
+//              professeur a ouvert. » ; et, le CM1 déjà solide, pas d'orange
+//              (correctif de la relecture Codex) ;
 //   barrette   la 3e barrette : une ligne dans le bilan, pas d'écran ;
 //   parcours   les onglets ont leur ceinture et comptent ce qui est construit ;
 //              la ligne de ceinture de chaque palier ; d'un palier à l'autre,
@@ -193,6 +194,23 @@ async function cadreTient(page, largeur, hauteur) {
     const s = await ouvrir(nav, base, {largeur: 390, hauteur: 844, parcours: LEA(), reglages: {"defi-calcul": {palier: 1}}});
     await calculsDuJour(s.page);
     assert.equal(await texte(s.page, "#ceinture-fin"), "Tu as fini tout ce que ton professeur a ouvert.");
+    assert.deepEqual(s.erreurs, []);
+    await s.ctx.close();
+  });
+
+  // Correctif Codex : la classe réglée jusqu'aux bases, le CM1 déjà solide :
+  // la jaune seulement, puis le bilan (pas d'orange).
+  await cas("réglée jusqu'aux bases avec le CM1 déjà solide : la jaune seulement, puis le bilan", async () => {
+    const s = await ouvrir(nav, base, {largeur: 390, hauteur: 844, parcours: LEO(), reglages: {"defi-calcul": {palier: 1}}});
+    await calculsDuJour(s.page);
+    assert.equal(await texte(s.page, "#ceinture-titre"), "Ceinture jaune !");
+    assert.equal(await texte(s.page, "#ceinture-fin"), "Tu as fini tout ce que ton professeur a ouvert.");
+    await s.page.click("#ceinture-suite");
+    await pause(s.page);
+    assert.equal(await visible(s.page, "#result-ceinture"), false, "pas d'écran pour l'orange");
+    // Tout ce qui est ouvert est fini : la séance s'arrête là.
+    assert.equal(await texte(s.page, "#result-title"), "Séance terminée");
+    assert.deepEqual(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().ceintures), [JOUR, null, null, null]);
     assert.deepEqual(s.erreurs, []);
     await s.ctx.close();
   });

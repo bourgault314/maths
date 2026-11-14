@@ -120,6 +120,31 @@ test("dans l'ordre : le CM1 fini avant les bases attend ; les deux viennent ense
   assert.deepEqual(r.parcours.ceintures, [J, J, null, null]);
 });
 
+// Correctif de la relecture Codex (14/11/2026) : une classe ramenée aux bases
+// ne reçoit pas l'orange, même avec le CM1 déjà solide.
+test("jamais au-delà du palier réglé par le professeur, aux trois endroits où une ceinture se gagne", () => {
+  const tout = () => parcoursOu(c => (c.palier <= 2 ? {b: 4} : null));
+  const r1 = P.terminerCalculsDuJour(tout(), {aujourdhui: J, carte: CARTE, palier: 1});
+  assert.deepEqual(r1.ceintures, [1], "jusqu'aux bases : la jaune seulement");
+  assert.deepEqual(r1.parcours.ceintures, [J, null, null, null]);
+  // Le professeur relève le palier : l'orange vient à la première étape finie.
+  const r2 = P.terminerCalculsDuJour(r1.parcours, {aujourdhui: "2026-11-14", carte: CARTE, palier: 2});
+  assert.deepEqual(r2.ceintures, [2]);
+  assert.deepEqual(r2.parcours.ceintures, [J, "2026-11-14", null, null]);
+  // Sans palier donné : tous les paliers (comme avant).
+  assert.deepEqual(P.terminerCalculsDuJour(tout(), {aujourdhui: J, carte: CARTE}).ceintures, [1, 2]);
+  // Une valeur abîmée vaut « tous les paliers », comme pour la séance.
+  assert.deepEqual(P.terminerCalculsDuJour(tout(), {aujourdhui: J, carte: CARTE, palier: "2"}).ceintures, [1, 2]);
+  // Le test d'entrée et la fin d'un apprentissage suivent la même borne.
+  const module = COMPETENCES.find(c => c.palier === 1).module;
+  const test1 = P.appliquerTest(tout(), {module, marche: 1, niveaux: [{niveau: 1, justes: 3, total: 3}]}, {aujourdhui: J, carte: CARTE, palier: 1});
+  assert.deepEqual(test1.ceintures, [1]);
+  const c = duPalier(2)[0];
+  const serie = P.appliquerSerie(tout(), {module: c.module, niveau: c.niveau, genre: "apprends", reponses: Array(5).fill({juste: true, outil: "aucun"})}, {aujourdhui: J, carte: CARTE, palier: 1});
+  assert.deepEqual(serie.ceintures, [1]);
+  assert.equal(serie.parcours.ceintures[1], null, "pas d'orange");
+});
+
 test("gagnée = gardée : un niveau redevenu « à revoir », une carte qui grandit, une fusion ne la reprennent pas", () => {
   const tout = parcoursOu(c => (c.palier === 1 ? {b: 4} : null));
   let p = P.terminerCalculsDuJour(tout, {aujourdhui: J, carte: CARTE}).parcours;
