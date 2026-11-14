@@ -104,8 +104,10 @@ test("grilles : les lignes de l'outil, dans son ordre, les colonnes du papier et
 
 test("une grille ne compte que si toutes ses lignes sont justes ; « Valider » attend une case par ligne", () => {
   const js = readFileSync(new URL("../outils/evaluations_nationales/evaluation.js", import.meta.url), "utf8");
-  // Le point : chaque ligne juste (k[j] === l.juste pour toutes les lignes).
-  assert.match(js, /juste: Array\.isArray\(k\) && it\.g\.grille\.lignes\.every\(\(l, j\) => k\[j\] === l\.juste\)/);
+  // Le point : chaque ligne juste (ligneJuste pour toutes les lignes ; lot EN8b : une ligne peut aussi avoir une case à
+  // remplir, sans case c'est k[j] === l.juste).
+  assert.match(js, /juste: Boolean\(colonnesDe\(k\)\) && it\.g\.grille\.lignes\.every\(\(l, j\) => ligneJuste\(it\.g\.grille, j, colonnesDe\(k\), k\.textes\)\)/);
+  assert.match(js, /if \(!cols \|\| cols\[j\] !== l\.juste\) return false;\n    if \(!grille\.saisie \|\| l\.juste !== grille\.saisie\.si\) return true;/);
   // « Valider » : allumé seulement quand aucune ligne n'est vide.
   assert.match(js, /passation\.selection\.every\(\(k\) => k !== null\)/);
   // Rejouer la règle sur la grille de N&C Q12 : 4 lignes justes → 1 point, 3 sur 4 → 0.
