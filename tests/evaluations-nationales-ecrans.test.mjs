@@ -147,7 +147,7 @@ test("ordinateur : la page fait la hauteur de la fenêtre ; réponses trop large
   assert.match(bas, /\.en-passation \.shell\{padding-bottom:20px\}/);
   assert.match(html, /#q-choix\.une-colonne\{grid-template-columns:minmax\(0,1fr\)!important\}/);
   assert.match(js, /function ajusterColonnes\(\)/);
-  assert.match(js, /ajusterColonnes\(\);\n    \/\/ Grille : une case par ligne/);
+  assert.match(js, /\n    ajusterColonnes\(\);\n    \$\("#valider"\)\.disabled = true;/); // après les réponses, avant le pavé
   assert.match(js, /if \(!zone\.querySelector\("\.choix-btn"\)\) return;/);
   assert.match(js, /window\.addEventListener\("resize", remesurer\)/);
   assert.match(js, /document\.fonts\.addEventListener\("loadingdone", remesurer\)/);

@@ -96,7 +96,9 @@
     // Sur ordinateur, une question avec figure se met sur deux colonnes (figure à gauche, réponses à droite).
     // Une figure très large (droite graduée, bande) reste au-dessus des réponses : à côté, elle deviendrait minuscule.
     const vb = (it.g.figure || "").match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
-    const large = vb && Number(vb[1]) / Number(vb[2]) > 2.2;
+    // Exemples Eduscol de 4e (lot EN8b) : une question peut le forcer (figureDessus : les deux programmes de calcul de NC Q7
+    // restent au-dessus ; figureAGauche : le triangle de EA Q7 se met à gauche du pavé, sinon la question défilerait).
+    const large = it.g.figureDessus ? true : it.g.figureAGauche ? false : vb && Number(vb[1]) / Number(vb[2]) > 2.2;
     // Une figure « à côté » (le diagramme de l'œuf) se range à droite de l'énoncé : les réponses gardent toute la largeur.
     // Une question à long énoncé (6e, positionnement, la voiture) : l'énoncé à gauche, la figure puis les réponses à droite.
     $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large && !it.g.figureACote && !it.g.choixACote);
@@ -107,12 +109,17 @@
     $("#q-carte").classList.toggle("serre", Boolean(it.g.figure && (it.g.saisie || it.g.serre)));
     $("#q-carte").classList.toggle("long", Boolean(it.g.long)); // énoncé long : un peu plus petit sur ordinateur
     $("#q-carte").classList.toggle("avec-grille", Boolean(it.g.grille));
+    // NC Q7 de 4e : les questions a) et b) à gauche, les cases et le pavé à droite (sous les programmes).
+    $("#q-carte").classList.toggle("reponse-a-droite", Boolean(it.g.reponseADroite));
     $("#q-apres").innerHTML = typo(it.g.apres || "");
     $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
     const disposition = it.g.disposition || it.q.disposition || "grille";
     zone.className = "choix " + disposition;
     zone.innerHTML = "";
+    fermerSaisie();
+    // Grille : une case par ligne ; « Valider » s'allume quand chaque ligne a sa réponse.
+    passation.selection = it.g.grille ? it.g.grille.lignes.map(() => null) : null;
     if (it.g.grille) afficherGrille(it.g.grille, zone);
     else it.choix.forEach((ch, k) => {
       const b = document.createElement("button");
@@ -129,13 +136,10 @@
       zone.appendChild(b);
     });
     ajusterColonnes();
-    // Grille : une case par ligne ; « Valider » s'allume quand chaque ligne a sa réponse.
-    passation.selection = it.g.grille ? it.g.grille.lignes.map(() => null) : null;
     $("#valider").disabled = true;
     $("#valider").textContent = i === items.length - 1 ? "Terminer" : "Valider";
     // Exemples Eduscol (lot EN8a) : réponse tapée sur le pavé de l'appli, réponse sur la feuille (pas comptée),
     // ou réponse donnée ici avec l'argumentation sur la feuille.
-    fermerSaisie();
     if (it.g.saisie) saisieEnCours = window.ENSaisie.monter(zone, it.g.saisie, typo, (pret) => { $("#valider").disabled = !pret; });
     if (it.g.feuille) {
       zone.className = "choix feuille";
@@ -152,22 +156,51 @@
   // Question en grille (lot EN5b, comme sur le papier : Vrai / Faux, Aigu / Droit / Obtus…) : un tableau, une ligne par
   // affirmation, une case à cocher par colonne. Une seule case par ligne ; le point n'est donné que si toutes les lignes
   // sont justes (choix de Gwenaël, 14/11/2026).
+  // Lot EN8b (4e NC Q4) : une grille peut avoir, sur chaque ligne, une case à remplir au pavé (grille.saisie : « Écriture
+  // décimale : □ »). La case est toujours là, grisée tant que la colonne grille.saisie.si (« oui ») n'est pas cochée,
+  // vidée si on coche l'autre colonne : rien ne bouge à l'écran.
   function afficherGrille(grille, zone) {
     const n = grille.colonnes.length;
-    zone.className = "choix tvf";
-    const largeur = n === 2 ? 21 : 15.5; // % de chaque colonne de cases ; le reste pour la ligne
-    zone.innerHTML = `<table><colgroup><col style="width:${100 - n * largeur}%">${grille.colonnes.map(() => `<col style="width:${largeur}%">`).join("")}</colgroup>
-      <thead><tr><td></td>${grille.colonnes.map((c) => `<th scope="col">${typo(c)}</th>`).join("")}</tr></thead>
+    const avecCases = Boolean(grille.saisie);
+    zone.className = "choix tvf" + (avecCases ? " tvf-cases" : "");
+    const largeur = avecCases ? 12 : n === 2 ? 21 : 15.5; // % de chaque colonne de cases ; le reste pour la ligne
+    const largeurCase = avecCases ? 48 : 0; // % de la colonne « Écriture décimale : □ »
+    const caseHtml = (j) => typo(grille.saisie.modele).replace(window.ENSaisie.MARQUE, `<button type="button" class="saisie-case" data-case="${j}" aria-pressed="false" aria-label="${(grille.lignes[j].texte || "").replace(/<[^>]+>/g, "")} : ${grille.saisie.modele.replace(/[□:]/g, "").trim()}"></button>`);
+    zone.innerHTML = `<table><colgroup><col style="width:${100 - n * largeur - largeurCase}%">${grille.colonnes.map(() => `<col style="width:${largeur}%">`).join("")}${avecCases ? `<col style="width:${largeurCase}%">` : ""}</colgroup>
+      <thead><tr><td></td>${grille.colonnes.map((c) => `<th scope="col">${typo(c)}</th>`).join("")}${avecCases ? "<td></td>" : ""}</tr></thead>
       <tbody>${grille.lignes.map((l, j) => `<tr><th scope="row">${typo(l.html)}</th>${grille.colonnes.map((c, k) =>
-        `<td><button type="button" class="tvf-case" data-ligne="${j}" data-colonne="${k}" aria-pressed="false" aria-label="${(l.texte || l.html).replace(/<[^>]+>/g, "")} : ${c}"><span class="case" aria-hidden="true"></span></button></td>`).join("")}</tr>`).join("")}</tbody></table>`;
+        `<td><button type="button" class="tvf-case" data-ligne="${j}" data-colonne="${k}" aria-pressed="false" aria-label="${(l.texte || l.html).replace(/<[^>]+>/g, "")} : ${c}"><span class="case" aria-hidden="true"></span></button></td>`).join("")}${avecCases ? `<td class="tvf-saisie"><span class="tvf-saisie-in">${caseHtml(j)}</span></td>` : ""}</tr>`).join("")}</tbody></table>${avecCases ? window.ENSaisie.pave(grille.lignes.map(() => "nombre")) : ""}`;
+    if (avecCases) {
+      saisieEnCours = window.ENSaisie.brancher(zone, grille.lignes.map(() => "nombre"), () => { $("#valider").disabled = !pret(); }, grille.lignes.map(() => false));
+    }
     zone.querySelectorAll(".tvf-case").forEach((b) => b.addEventListener("click", () => {
       const j = Number(b.dataset.ligne), k = Number(b.dataset.colonne);
       zone.querySelectorAll(`.tvf-case[data-ligne="${j}"]`).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      const avant = passation.selection[j];
       passation.selection[j] = k;
+      if (avecCases && avant !== k) saisieEnCours.allumer(j, k === grille.saisie.si);
       $("#valider").disabled = !pret();
     }));
   }
-  const pret = () => (Array.isArray(passation.selection) ? passation.selection.every((k) => k !== null) : passation.selection !== null);
+  // Prêt à valider : une réponse choisie ; une grille : une case par ligne (et, si la grille a des cases à remplir,
+  // chaque case allumée écrite jusqu'au bout).
+  const pret = () => {
+    if (!Array.isArray(passation.selection)) return passation.selection !== null;
+    if (!passation.selection.every((k) => k !== null)) return false;
+    const it = passation.items[passation.i];
+    if (!it.g.grille || !it.g.grille.saisie || !saisieEnCours) return true;
+    const g = it.g.grille.saisie;
+    return saisieEnCours.valeurs().every((v, j) => passation.selection[j] !== g.si || window.ENSaisie.lireNombre(v) !== null);
+  };
+  // Une ligne de grille est-elle juste ? (colonne juste ; avec une case à remplir : le bon nombre, toute écriture égale.)
+  const ligneJuste = (grille, j, cols, textes) => {
+    const l = grille.lignes[j];
+    if (!cols || cols[j] !== l.juste) return false;
+    if (!grille.saisie || l.juste !== grille.saisie.si) return true;
+    return window.ENSaisie.caseJuste((textes || [])[j] || "", l.attendu, "nombre");
+  };
+  // La réponse d'une grille : la colonne de chaque ligne, ou (grille avec cases) { cols, textes }.
+  const colonnesDe = (k) => (Array.isArray(k) ? k : k && k.cols ? k.cols : null);
   // Lot EN-C1 : une expression ne se coupe jamais (EN.typo). Si une réponse ne tient plus dans sa colonne (téléphone :
   // « 4 × 4 × 4 × 4 × 4 » sur une demi-largeur), les réponses passent sur une seule colonne : rien ne déborde.
   function ajusterColonnes() {
@@ -201,7 +234,7 @@
     // « sur la feuille » ne sont pas comptées.
     const tous = items.map((it, i) => {
       const k = reponses[i];
-      if (it.g.grille) return { it, choisi: k, juste: Array.isArray(k) && it.g.grille.lignes.every((l, j) => k[j] === l.juste) };
+      if (it.g.grille) return { it, choisi: k, juste: Boolean(colonnesDe(k)) && it.g.grille.lignes.every((l, j) => ligneJuste(it.g.grille, j, colonnesDe(k), k.textes)) };
       const choisi = k === null ? null : typeof k === "object" ? k : it.choix[k];
       return { it, choisi, juste: Boolean(choisi && choisi.juste) };
     });
@@ -294,17 +327,30 @@
   }
 
   // Une grille ratée : combien de lignes justes, la bonne grille ; la vue prof dit chaque ligne fausse et ce qu'elle montre.
+  // Grille avec cases (4e NC Q4) : la bonne grille donne aussi le nombre attendu (« 30/60 → oui : 0,5 ») ; une ligne dont
+  // la colonne est juste mais le nombre faux est dite à part, avec son piège s'il est connu.
   function revoirGrille(it, choisi, minuscule) {
-    const { colonnes, lignes } = it.g.grille;
-    const justes = Array.isArray(choisi) ? lignes.filter((l, j) => choisi[j] === l.juste).length : 0;
-    const fausses = Array.isArray(choisi) ? lignes.map((l, j) => ({ l, k: choisi[j] })).filter(({ l, k }) => k !== l.juste) : [];
+    const grille = it.g.grille, { colonnes, lignes } = grille;
+    const cols = colonnesDe(choisi), textes = (choisi && choisi.textes) || [];
+    const SA = window.ENSaisie;
+    const justes = cols ? lignes.filter((l, j) => ligneJuste(grille, j, cols, textes)).length : 0;
+    const fausses = cols ? lignes.map((l, j) => ({ l, j, k: cols[j] })).filter(({ j }) => !ligneJuste(grille, j, cols, textes)) : [];
+    const nombreAttendu = (l) => (grille.saisie && l.juste === grille.saisie.si ? ` : ${SA.ecrire(l.attendu)}` : "");
+    const phrase = ({ l, j, k }) => {
+      const nom = typo(l.texte || l.html);
+      if (k !== l.juste) return `« ${nom} » : « ${colonnes[k]} » au lieu de « ${colonnes[l.juste]} ». Ce choix montre souvent que l’élève ${minuscule(l.erreurs[k]).replace(/\.$/, "")}.`;
+      // La colonne est juste, le nombre écrit est faux.
+      const tape = SA.ecrireTape(textes[j] || "", "nombre");
+      const piege = SA.piegeDe({ attendus: [l.attendu], pieges: l.pieges || [] }, [textes[j] || ""]);
+      return `« ${nom} » : ${typo(grille.saisie.modele.replace(/\s*:\s*□/, "").toLowerCase())} « ${tape} » au lieu de « ${SA.ecrire(l.attendu)} ».${piege ? ` Cette réponse montre souvent que l’élève ${minuscule(piege.erreur).replace(/\.$/, "")}.` : ""}`;
+    };
     return `<li class="revoir-grille">
         <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
         <div class="revoir-reponses">
-          <span class="donnee">${Array.isArray(choisi) ? `Ta grille : ${justes} ${justes > 1 ? "lignes justes" : "ligne juste"} sur ${lignes.length}` : "Pas de réponse"}</span>
-          <span class="attendue grille-bonne">Bonne grille :${lignes.map((l) => `<span>${typo(l.texte || l.html)} <b>→\u00a0${colonnes[l.juste]}</b></span>`).join("")}</span>
+          <span class="donnee">${cols ? `Ta grille : ${justes} ${justes > 1 ? "lignes justes" : "ligne juste"} sur ${lignes.length}` : "Pas de réponse"}</span>
+          <span class="attendue grille-bonne">Bonne grille :${lignes.map((l) => `<span>${typo(l.texte || l.html)} <b>→ ${colonnes[l.juste]}${nombreAttendu(l)}</b></span>`).join("")}</span>
         </div>
-        ${vueProf ? fausses.map(({ l, k }) => `<p class="erreur-prof">« ${typo(l.texte || l.html)} » : « ${colonnes[k]} » au lieu de « ${colonnes[l.juste]} ». Ce choix montre souvent que l’élève ${minuscule(l.erreurs[k]).replace(/\.$/, "")}.</p>`).join("") : ""}
+        ${vueProf ? fausses.map((f) => `<p class="erreur-prof">${phrase(f)}</p>`).join("") : ""}
       </li>`;
   }
 
@@ -411,7 +457,9 @@
     const it = passation.items[passation.i];
     if (it.g.feuille) return repondre(null); // sur la feuille : pas comptée
     if (it.g.saisie) return saisieEnCours && repondre(window.ENSaisie.corriger(it.g.saisie, saisieEnCours.valeurs()));
-    if (pret()) repondre(passation.selection);
+    if (!pret()) return;
+    if (it.g.grille && it.g.grille.saisie) return repondre({ cols: passation.selection.slice(), textes: saisieEnCours.valeurs() });
+    repondre(passation.selection);
   });
   $("#passer").addEventListener("click", () => repondre(null));
   $("#abandonner").addEventListener("click", () => { if (confirmerAbandon()) accueil(); });
