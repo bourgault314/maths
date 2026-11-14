@@ -67,6 +67,11 @@ a:focus-visible {
 }
 
 h1[tabindex="-1"]:focus { outline: none; }
+/* Lot 5 « revue » (14/11/2026) : le calcul reçoit le focus à chaque question
+   (pour les lecteurs d'écran : il est annoncé). Il ne se touche pas, ne
+   s'utilise pas au clavier : pas de trait noir autour quand l'élève tape ses
+   réponses au clavier de l'ordinateur. */
+.expression:focus { outline: none; }
 
 .shell { width: min(850px, calc(100% - 28px)); margin: auto; padding-bottom: 30px; }
 /* Audit 3 (01/10/2026) : sur ordinateur, le cadre blanc tient toujours
@@ -827,11 +832,11 @@ div.dc-mod { cursor: default; }
    du cadre : d'un palier à l'autre, le cadre ne change pas de taille. */
 @media (min-width: 1024px) {
   body:not(.ecran-interne):not(.challenge-playing) .shell,
-  body.sur-parcours .shell { display: flex; flex-direction: column; }
+  body.sur-parcours .shell, body.sur-notice .shell { display: flex; flex-direction: column; }
   body:not(.ecran-interne):not(.challenge-playing):not(.fullscreen-active) .shell,
-  body.sur-parcours:not(.fullscreen-active) .shell { box-sizing: border-box; min-height: calc(100svh / var(--echelle, 1)); }
+  body.sur-parcours:not(.fullscreen-active) .shell, body.sur-notice:not(.fullscreen-active) .shell { box-sizing: border-box; min-height: calc(100svh / var(--echelle, 1)); }
   body:not(.ecran-interne):not(.challenge-playing) .shell > .panel,
-  body.sur-parcours .shell > .panel { flex: 1 1 auto; min-height: 0; }
+  body.sur-parcours .shell > .panel, body.sur-notice .shell > .panel { flex: 1 1 auto; min-height: 0; }
   body:not(.ecran-interne):not(.challenge-playing) .shell > .panel { display: flex; flex-direction: column; }
   body:not(.ecran-interne):not(.challenge-playing) .panel > #intro { width: 100%; margin: auto; padding-top: 14px; }
   body.en-tete-cadre:not(.ecran-interne):not(.challenge-playing) .shell > .panel,
@@ -1337,6 +1342,14 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .mouv > span > span:last-child { text-align: right; }
 .mouv .monte { color: var(--teal); }
 .mouv .descend { color: #c62828; }
+/* Lot 5 « revue » : au téléphone, le nom de la compétence sur sa ligne, ce
+   qui lui arrive dessous (avant : le nom serré sur trois lignes à gauche,
+   « → ✓ appris, revient dans 3 jours » d'un seul tenant à droite). */
+@media (max-width: 620px) {
+  .mouv { gap: 9px; }
+  .mouv > span { grid-template-columns: minmax(0, 1fr); gap: 1px; }
+  .mouv > span > span:last-child { text-align: left; font-size: .88rem; }
+}
 
 /* Comme dans Défi tables : l'élève à code
    (body.mode-eleve) n'a plus qu'UNE barre fine en haut — « ← Mon

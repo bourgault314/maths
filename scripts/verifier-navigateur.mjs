@@ -88,6 +88,7 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-3c-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-4-ceintures-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  { fichier: "tests/defi-calcul-lot-5-revue-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
   // Le robot du lot A2 : tous les écrans de chaque étape, à 4 tailles, dans Chromium ET WebKit
