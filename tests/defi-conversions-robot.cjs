@@ -5,12 +5,16 @@
 // Safari et de l'iPhone) :
 //   On te montre (les 3 temps, geste fait), À toi (l'outil, une erreur,
 //   l'image, sans aide), À retenir, Je valide (une question, une erreur, la
-//   fin), Tu connais déjà ? (l'annonce, une marche), l'échauffement (une
-//   question, une erreur, la fin).
-// Puis les écrans communs : accueil (nouveau, en cours), Mon parcours, Mon
-// carnet, Comment ça marche ?, Effacer mon historique, On revoit (annonce,
-// question, fin), la médaille, la fin du test, « À toi » sans réussir, le
-// mode professeur (accueil, Changer d'étape, Voir une série).
+//   fin), Tu connais déjà ? (l'annonce, une marche), Je me souviens (une
+//   question, une erreur, la fin), Avant de partir.
+// Lot 3a (le nouveau rythme) : « Je ne sais pas » dans À toi, Je valide et
+// Je me souviens ; Je valide mêlé et corrigé tout de suite ; le glisse-unité
+// et ses deux poignées au téléphone.
+// Puis les écrans communs : accueil (nouveau, en cours, avec des étoiles et
+// une ceinture), Mon parcours (avec ses étoiles), Mon carnet, Comment ça
+// marche ?, Effacer mon historique, Je me souviens et Avant de partir d'un
+// élève, la ceinture gagnée, la fin du test, « À toi » sans réussir, le mode
+// professeur (accueil, Changer d'étape, Voir une série).
 //
 // À chaque écran, il vérifie et note :
 //   - le cadre blanc tient ENTIER dans la fenêtre, rien ne déborde de lui ;
@@ -34,12 +38,15 @@
 //   DEFI_CONVERSIONS_MOTEURS=chromium      (un seul moteur ; par défaut : chromium,webkit)
 //   DEFI_CONVERSIONS_ETAPES=R1,C1          (quelques étapes ; « commun » pour les écrans communs)
 //   DEFI_CONVERSIONS_TAILLES=1440x900      (quelques tailles)
+//   DEFI_CONVERSIONS_POLICE="DejaVu Sans"   (une autre police, plus large)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome
 // WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit
 //
-// Le hasard est figé (Math.random = 0,5 : chaque série a la graine 50 000,
-// que le robot recalcule avec les générateurs pour répondre) et l'horloge
-// aussi (le 11/11/2026 à 10 h ; les délais se sautent, rien n'attend).
+// Le hasard est figé (Math.random = 0,5) et l'horloge aussi (le 11/11/2026 à
+// 10 h ; les délais se sautent, rien n'attend). Pour répondre, la page donne
+// la question à l'écran (MATHSGO_DEFI_CONVERSIONS_ECRAN.question(), lot 3a :
+// les séries mêlées et sans les questions déjà vues ne se recalculent plus
+// de l'extérieur).
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
@@ -76,6 +83,10 @@ const TOUTES_TAILLES = [
 // de travail de Claude) : DEFI_CONVERSIONS_IPHONE_CHROMIUM=1. Code, lui, les
 // joue dans WebKit.
 const IPHONE_CHROMIUM = process.env.DEFI_CONVERSIONS_IPHONE_CHROMIUM === "1";
+// Lot 3a (retour de Code : sans Inter, l'accueil dépassait) : jouer avec une
+// autre police, plus large, DEFI_CONVERSIONS_POLICE="DejaVu Sans" (Claude
+// vérifie ainsi dans son espace, où Inter est installée).
+const POLICE = (process.env.DEFI_CONVERSIONS_POLICE || "").replace(/[^\w \-]/g, "");
 const tailleDans = (taille, moteur) => !taille.moteurs || taille.moteurs.includes(moteur)
   || (IPHONE_CHROMIUM && moteur === "chromium" && taille.moteurs.includes("webkit"));
 const filtre = (variable, liste, cle) => {
@@ -234,7 +245,7 @@ async function controler(page, taille) {
       rg.selectNodeContents(n);
       [...rg.getClientRects()].forEach(b => { if (b.height) morceaux.push([b.top, b.bottom]); });
     }
-    cadre.querySelectorAll("svg, img, button, input, .case, .btn, .dix i, .esc i, .med, .pave4, .choix, .gu, .gu2, .ecran-defile, .heure, .schema, .prog").forEach(e => {
+    cadre.querySelectorAll("svg, img, button, input, .case, .btn, .dix i, .esc i, .ceinture, .pave4, .choix, .gu, .gu2, .ecran-defile, .heure, .schema, .prog").forEach(e => {
       if (!visible(e)) return;
       const b = e.getBoundingClientRect();
       morceaux.push([b.top, b.bottom]);
@@ -287,7 +298,7 @@ async function controler(page, taille) {
 async function places(page) {
   return page.evaluate(() => {
     const r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(Math.round); };
-    return {question: r(".q"), zone: r(".zone"), "pavé": r(".bas"), bouton: r("#cadre .duo, #cadre .btn")};
+    return {question: r(".q"), zone: r(".zone"), "pavé": r(".bas"), bouton: r("#cadre .duo, #cadre .btn"), "je ne sais pas": r("#cadre .jnsp")};
   });
 }
 function ecarts(a, b) {
@@ -305,10 +316,17 @@ async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} 
   page.on("pageerror", e => erreurs.push(String(e)));
   page.on("console", m => { if (m.type() === "error") erreurs.push(m.text()); });
   await page.clock.install({time: new Date(`${JOUR}T10:00:00`)});
-  await page.addInitScript(([p, cle]) => {
+  await page.addInitScript(([p, cle, police]) => {
     Math.random = () => 0.5;
     if (p && !sessionStorage.getItem("pose")) { localStorage.setItem(cle, p); sessionStorage.setItem("pose", "1"); }
-  }, [parcours ? JSON.stringify(parcours) : null, CLE]);
+    // Lot 3a : une autre police que celle de la machine (les vrais appareils
+    // n'ont pas Inter : Segoe UI sur PC, la police du système sur iPhone).
+    if (police) document.addEventListener("DOMContentLoaded", () => {
+      const s = document.createElement("style");
+      s.textContent = `*{font-family:"${police}",sans-serif !important}`;
+      document.head.appendChild(s);
+    });
+  }, [parcours ? JSON.stringify(parcours) : null, CLE, POLICE]);
   await page.goto(`${base}${PAGE}${prof ? "?prof=1" : ""}`);
   await page.waitForSelector("#cadre > *");
   return {page, contexte, erreurs};
@@ -359,7 +377,11 @@ async function cliquerTexte(page, texte, exact = false) {
   await appuyer(page, page.locator("#cadre, #voile").getByText(texte, {exact}).first());
   await attendre(page, 50);
 }
-async function repondre(page, q, juste = true) {
+// Répondre à la question à l'écran, juste ou faux (`_q` : plus utilisé, la
+// page donne la question).
+async function repondre(page, _q, juste = true) {
+  const q = await page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question());
+  if (!q) throw new Error("pas de question à l'écran");
   if (q.forme === "associer") {
     // Au doigt : un objet, puis sa mesure (lot A2 bis). Faux : deux mesures échangées.
     const lien = juste ? q.bonnes : [q.bonnes[1], q.bonnes[0], q.bonnes[2]];
@@ -395,6 +417,11 @@ async function repondre(page, q, juste = true) {
     }
   }
   await attendre(page, juste ? 1000 : 50);
+}
+// « Je ne sais pas » (lot 3a).
+async function jeNeSaisPas(page) {
+  await appuyer(page, page.locator("#cadre .jnsp"));
+  await attendre(page, 50);
 }
 async function suivant(page) {
   await appuyer(page, page.locator("#cadre").getByText("Suivant", {exact: false}).first());
@@ -582,24 +609,33 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
       await attendre(page, 3000);
       await carnet.photo(page, "À toi · une erreur", ecarts(reference, await places(page)));
       await suivant(page);
+    } else if (i === 1) {
+      // Lot 3a : « Je ne sais pas » : la correction, sans reproche ; rien ne bouge.
+      await jeNeSaisPas(page);
+      await attendre(page, 3000);
+      await carnet.photo(page, "À toi · Je ne sais pas", ecarts(reference, await places(page)));
+      await suivant(page);
     } else await repondre(page, serie[i]);
   }
   await carnet.photo(page, "À retenir", bouge);
   await accueilProf();
 
-  // Je valide : une erreur à la 4e, la correction à la fin.
-  await cliquerTexte(page, "Je valide", true);
-  const v = G.serie(code, {usage: "valide", graine: GRAINE});
+  // Je valide (lot 3a : mêlé aux étapes d'avant, corrigé tout de suite) :
+  // une erreur à la 4e, « Je ne sais pas » à la 6e, la liste à la fin.
+  await appuyer(page, page.locator("#cadre .act").filter({hasText: "Je valide"}).first());
+  await attendre(page, 50);
   const refV = await places(page);
   bouge = [];
-  for (let i = 0; i < 10; i += 1) {
+  for (let i = 0; i < 10 && !(await page.locator(".titre-fin").count()); i += 1) {
     bouge = bouge.concat(ecarts(refV, await places(page)).map(e => `${e} (question ${i + 1})`));
     if (i === 0) await carnet.photo(page, "Je valide · question");
-    if (i === 3) {
-      await repondre(page, v[i], false);
-      await carnet.photo(page, "Je valide · une erreur", ecarts(refV, await places(page)));
+    if (i === 2) await carnet.photo(page, "Je valide · une question d'une étape d'avant");
+    if (i === 3 || i === 5) {
+      if (i === 3) await repondre(page, null, false); else await jeNeSaisPas(page);
+      await attendre(page, 3000);
+      await carnet.photo(page, i === 3 ? "Je valide · une erreur, corrigée tout de suite" : "Je valide · Je ne sais pas", ecarts(refV, await places(page)));
       await suivant(page);
-    } else await repondre(page, v[i]);
+    } else await repondre(page, null);
   }
   await carnet.photo(page, "Je valide · la fin", bouge);
   await accueilProf();
@@ -613,25 +649,43 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   await carnet.photo(page, "Tu connais déjà ? · la fin");
   await accueilProf();
 
-  // L'échauffement (l'élève fictif du mode professeur) : une erreur.
-  let fictif = P.creer();
-  const avant = PRETS.slice(0, Math.max(1, PRETS.indexOf(code)));
-  avant.forEach((c, i) => { fictif = P.noterTest(fictif, c, P.ajouterJours(JOUR, -(avant.length - i) * 2)); });
-  const items = P.tirerEchauffement(fictif, JOUR, PRETS, P.carnet(fictif, REPERES_PAR_ETAPE));
-  const qs = items.map(it => (it.type === "repere" ? G.questionRepere(it.code, GRAINE) : G.serie(it.code, {usage: "echauffement", graine: GRAINE})[0]));
-  await cliquerTexte(page, "L'échauffement");
-  if (qs.length) {
+  // Je me souviens (l'élève fictif du mode professeur : les étapes d'avant
+  // reviennent) : une erreur, « Je ne sais pas », la fin, puis Avant de partir.
+  await appuyer(page, page.locator("#cadre .act").filter({hasText: "Je me souviens"}).first());
+  await attendre(page, 50);
+  if (await page.locator(".bseance").count()) {
     const refE = await places(page);
-    await carnet.photo(page, "Échauffement · question");
-    await repondre(page, qs[0], false);
-    await carnet.photo(page, "Échauffement · une erreur");
+    await carnet.photo(page, "Je me souviens · question");
+    await repondre(page, null, false);
+    await attendre(page, 3000);
+    await carnet.photo(page, "Je me souviens · une erreur", ecarts(refE, await places(page)));
     await suivant(page);
     bouge = [];
-    for (let i = 1; i < qs.length; i += 1) {
-      bouge = bouge.concat(ecarts(refE, await places(page)).filter(() => items[i].type === items[0].type).map(e => `${e} (question ${i + 1})`));
-      await repondre(page, qs[i]);
+    let n = 1;
+    if (!(await page.locator(".titre-fin").count())) {
+      await jeNeSaisPas(page);
+      await attendre(page, 3000);
+      await carnet.photo(page, "Je me souviens · Je ne sais pas", ecarts(refE, await places(page)));
+      await suivant(page);
+      n = 2;
     }
-    await carnet.photo(page, "Échauffement · la fin", bouge);
+    for (let i = n; i < 12 && !(await page.locator(".titre-fin").count()); i += 1) {
+      bouge = bouge.concat(ecarts(refE, await places(page)).map(e => `${e} (question ${i + 1})`));
+      await repondre(page, null);
+    }
+    await carnet.photo(page, "Je me souviens · la fin", bouge);
+    await appuyer(page, page.locator("#cadre > .btn").last());
+    await attendre(page, 50);
+    if (await page.locator(".bseance").getByText("Avant de partir").count() && await page.locator(".q").count()) {
+      const refA = await places(page);
+      await carnet.photo(page, "Avant de partir · question");
+      bouge = [];
+      for (let i = 0; i < 3 && !(await page.locator(".titre-fin").count()); i += 1) {
+        bouge = bouge.concat(ecarts(refA, await places(page)).map(e => `${e} (question ${i + 1})`));
+        await repondre(page, null);
+      }
+      await carnet.photo(page, "Avant de partir · la fin", bouge);
+    }
   }
   if (erreurs.length) carnet.ecrans.push({nom: "Erreurs de la page", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
   await contexte.close();
@@ -647,7 +701,7 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     // alignés, le 1 est décalé ») : le rond de la flèche des écrans à titre
     // prend la place exacte du rond du palier de l'accueil (même centre, même
     // taille) ; en passant de l'un à l'autre, rien ne saute.
-    const rondAccueil = await page.locator(".acc-palier .med").first().boundingBox();
+    const rondAccueil = await page.locator(".acc-palier .acc-ceinture").first().boundingBox();
     const memePlace = async () => {
       const r = await page.locator(".tete-ecran .rond").first().boundingBox();
       if (!r || !rondAccueil) return [];
@@ -666,16 +720,17 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (nouveau)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
-  // Un élève en cours (5 étapes validées, Je valide aujourd'hui).
+  // Un élève en cours : 4 étapes validées les jours d'avant (elles
+  // reviennent), « À toi » de la 5e réussi ce matin (Je valide juste après).
   {
     let p = P.creer();
     [["R1", "2026-11-05"], ["R2", "2026-11-06"], ["P1", "2026-11-07"], ["C1", "2026-11-09"]].forEach(([c, d]) => {
       p = P.marquerEntrainee(p, c, d);
-      p = P.noterValidation(p, c, true, P.ajouterJours(d, 1));
+      p = P.noterValidation(p, c, true, d);
     });
-    p = P.marquerEntrainee(p, "C2", "2026-11-10");
+    p = P.marquerEntrainee(p, "C2", JOUR);
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
-    await carnet.photo(page, "Accueil · en cours");
+    await carnet.photo(page, "Accueil · en cours (Je me souviens)");
     await cliquerTexte(page, "Mon parcours");
     await carnet.photo(page, "Mon parcours · en cours");
     await appuyer(page, page.locator(".pal-tabs button").nth(3));
@@ -688,51 +743,80 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     await cliquerTexte(page, "Effacer mon historique");
     await carnet.photo(page, "Effacer mon historique");
     await page.keyboard.press("Escape");
-    // La fin de l'échauffement.
-    const carnetP = P.carnet(p, REPERES_PAR_ETAPE);
-    const items = P.tirerEchauffement(p, JOUR, PRETS, carnetP);
-    const qs = items.map(it => (it.type === "repere" ? G.questionRepere(it.code, GRAINE) : G.serie(it.code, {usage: "echauffement", graine: GRAINE})[0]));
+    // La séance : Je me souviens (une erreur), Je valide, Avant de partir.
     await cliquerTexte(page, "C'est parti");
-    for (const q of qs) await repondre(page, q);
-    await carnet.photo(page, "Échauffement fini (élève)");
+    await repondre(page, null, false);
+    await suivant(page);
+    for (let i = 1; i < 12 && !(await page.locator(".titre-fin").count()); i += 1) await repondre(page, null);
+    await carnet.photo(page, "Je me souviens · la fin (élève)");
+    await appuyer(page, page.locator("#cadre > .btn").last());
+    await attendre(page, 50);
+    for (let i = 0; i < 10 && !(await page.locator(".titre-fin").count()); i += 1) await repondre(page, null);
+    await carnet.photo(page, "Je valide · la fin, avant de partir (élève)");
+    await cliquerTexte(page, "Avant de partir");
+    await carnet.photo(page, "Avant de partir · question (élève)");
+    await repondre(page, null, false);
+    await attendre(page, 3000);
+    await carnet.photo(page, "Avant de partir · une erreur (élève)");
+    await suivant(page);
+    for (let i = 1; i < 3 && !(await page.locator(".titre-fin").count()); i += 1) await repondre(page, null);
+    await carnet.photo(page, "Avant de partir · la fin (élève)");
     if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (en cours)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
-  // On revoit : C1 ratée à deux échauffements de suite.
+  // Correctif « polices » (14/11) : l'accueil le plus chargé, une étape pas
+  // commencée (« Tu connais déjà ? ») et des étapes qui reviennent (trois
+  // pastilles) ; il dépassait du cadre sans la police Inter.
   {
     let p = P.creer();
-    [["R1", "2026-11-01"], ["R2", "2026-11-02"], ["P1", "2026-11-03"], ["C1", "2026-11-04"]].forEach(([c, d]) => { p = P.noterTest(p, c, d); });
-    p = P.noterEchauffementEtape(p, "C1", false, "2026-11-08");
-    p = P.noterEchauffementEtape(p, "C1", false, "2026-11-09");
+    [["R1", "2026-11-05"], ["R2", "2026-11-06"], ["P1", "2026-11-07"], ["C1", "2026-11-09"]].forEach(([c, d]) => {
+      p = P.marquerEntrainee(p, c, d);
+      p = P.noterValidation(p, c, true, d);
+    });
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
-    const items = P.tirerEchauffement(p, JOUR, PRETS, P.carnet(p, REPERES_PAR_ETAPE));
-    const qs = items.map(it => (it.type === "repere" ? G.questionRepere(it.code, GRAINE) : G.serie(it.code, {usage: "echauffement", graine: GRAINE})[0]));
-    await cliquerTexte(page, "C'est parti");
-    for (const q of qs) { await repondre(page, q, false); await suivant(page); }
-    await cliquerTexte(page, "Suivant");
-    await carnet.photo(page, "On revoit · l'annonce");
-    await cliquerTexte(page, "On la revoit");
-    const serie = G.serie("C1", {usage: "aide", graine: GRAINE});
-    await carnet.photo(page, "On revoit · une question");
-    for (const q of serie) await repondre(page, q);
-    await carnet.photo(page, "On revoit · la fin");
-    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (on revoit)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
+    await carnet.photo(page, "Accueil · étape pas commencée, des étapes qui reviennent");
+    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (étape pas commencée)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
-  // La médaille : tout le palier 1 sauf la dernière étape, puis le test.
+  // Les étoiles et la ceinture jaune : 9 étapes validées depuis longtemps
+  // (6 solides), « À toi » de la dernière réussi ce matin.
   {
     let p = P.creer();
-    const dernier = PRETS[PRETS.length - 1];
-    PRETS.slice(0, -1).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(20 - i))); });
+    PRETS.slice(0, 9).forEach((c, i) => {
+      const d = P.ajouterJours(JOUR, -(40 - i));
+      p = P.noterTest(p, c, d);
+      [1, 4, 11].forEach((n, k) => { if (k < 2 || i < 6) p = P.noterRetour(p, c, true, P.ajouterJours(d, n), 100 + k); });
+      p = P.noterRetour(p, c, true, P.ajouterJours(d, 25), 104);
+    });
+    p = P.marquerEntrainee(p, PRETS[9], JOUR);
+    const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
+    await carnet.photo(page, "Accueil · des étoiles");
+    await cliquerTexte(page, "Mon parcours");
+    await carnet.photo(page, "Mon parcours · des étoiles");
+    await appuyer(page, page.locator(".tete-ecran .rond"));
+    await cliquerTexte(page, "C'est parti");
+    for (let i = 0; i < 14 && !(await page.locator(".titre-fin").count()); i += 1) await repondre(page, null);
+    if (await page.locator(".bseance").getByText("Je me souviens").count()) { await appuyer(page, page.locator("#cadre > .btn").last()); await attendre(page, 50); }
+    for (let i = 0; i < 10 && !(await page.locator(".titre-fin").count()); i += 1) await repondre(page, null);
+    await cliquerTexte(page, "Continuer");
+    await carnet.photo(page, "La ceinture gagnée");
+    await cliquerTexte(page, "Continuer");
+    await carnet.photo(page, "Accueil · la ceinture jaune");
+    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (ceinture)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
+    await contexte.close();
+  }
+  // La ceinture par le test : tout le palier 1 sauf la dernière étape.
+  {
+    let p = P.creer();
+    PRETS.slice(0, -1).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(20 - i))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(19 - i)), 9); });
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
     await cliquerTexte(page, "Tu connais déjà ?");
     await cliquerTexte(page, "Je commence");
-    const serie = G.serie(dernier, {usage: "test", graine: GRAINE});
-    for (let i = 0; i < 3; i += 1) await repondre(page, serie[i]);
-    await carnet.photo(page, "La médaille");
+    for (let i = 0; i < 3; i += 1) await repondre(page, null);
+    await carnet.photo(page, "La ceinture · par le test");
     await cliquerTexte(page, "Continuer");
-    await carnet.photo(page, "Tu connais déjà ? · fin avec médaille");
-    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (médaille)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
+    await carnet.photo(page, "Tu connais déjà ? · fin avec ceinture");
+    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (test)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
   // Le mode professeur, et « À toi » sans réussir (25 erreurs).

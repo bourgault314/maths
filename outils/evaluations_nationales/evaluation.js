@@ -71,8 +71,11 @@
   function lancer(type, numeros, officiel) {
     const graine = type === "officiel" ? 1 : nouvelleGraine();
     officiel = type === "officiel" ? officiel || officiels[0] : null;
-    const items = construire(sujet, hasard(graine), officiel, numeros);
-    passation = { type, officiel, graine, items, reponses: [], debut: Date.now(), i: 0, reprise: Boolean(numeros) };
+    // Lot EN10 : un jumeau est le jumeau d'UN sujet officiel et ne tire que ses tâches : le plus récent, ou, pour refaire
+    // ses questions ratées, celui du passage qu'on vient de faire (4e : le sujet 2024-2025 garde « 14 − 6 »).
+    const modele = officiel || (numeros && passation && passation.modele) || officiels[0];
+    const items = construire(sujet, hasard(graine), officiel, numeros, modele);
+    passation = { type, officiel, modele, graine, items, reponses: [], debut: Date.now(), i: 0, reprise: Boolean(numeros) };
     $("#chrono").textContent = "0:00";
     clearInterval(minuteur);
     minuteur = setInterval(() => {
@@ -476,9 +479,11 @@
   accueil();
   const g = Number(params.get("graine"));
   if (Number.isInteger(g) && g > 0) {
-    const officiel = g === 1 || !avecJumeaux ? officiels.find((o) => o.cle === params.get("officiel")) || officiels[0] : null;
-    const items = construire(sujet, hasard(g), officiel, null);
-    passation = { type: officiel ? "officiel" : "jumeau", officiel, graine: g, items, reponses: [], debut: Date.now(), i: Math.max(0, Math.min(items.length - 1, (Number(params.get("q")) || 1) - 1)), reprise: false };
+    const choisi = officiels.find((o) => o.cle === params.get("officiel")) || officiels[0];
+    const officiel = g === 1 || !avecJumeaux ? choisi : null;
+    // Lot EN10 : ?officiel=<clé> avec une graine > 1 rejoue le jumeau de ce sujet officiel (4e : ?officiel=2024-2025).
+    const items = construire(sujet, hasard(g), officiel, null, choisi);
+    passation = { type: officiel ? "officiel" : "jumeau", officiel, modele: choisi, graine: g, items, reponses: [], debut: Date.now(), i: Math.max(0, Math.min(items.length - 1, (Number(params.get("q")) || 1) - 1)), reprise: false };
     montrer("#passe");
     afficherQuestion();
   }

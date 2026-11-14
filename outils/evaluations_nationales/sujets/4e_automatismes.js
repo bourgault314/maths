@@ -894,6 +894,26 @@
     },
   });
 
+  // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
+  // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
+  // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  const HORS_STRICT = {
+    1: { formes: ["revient-1", "revient-2", "revient-3", "complement"], pourquoi: "« revient à diviser » : autre tournure. Sujet 2024-2025 : « 6 + … = 14 » (complément) au lieu de « 14 − 6 ». La tâche de 2024-2025 n'est tirée que pour le jumeau du sujet 2024-2025 (tirerTache)" },
+    2: { formes: ["division", "double"], pourquoi: "130 : 2 ou « quel nombre a pour double » : autre écriture" },
+    5: { formes: ["positif-dabord-negatif", "positif-dabord-positif"], pourquoi: "5 + (−4) : écriture avec parenthèses" },
+    6: { formes: ["difference"], pourquoi: "Sujet 2024-2025 : « 8a − 3a » au lieu d'une somme (« 2n + 3n »). La tâche de 2024-2025 n'est tirée que pour le jumeau du sujet 2024-2025 (tirerTache)" },
+    7: { formes: ["en-minutes-2h", "en-minutes-3h"], pourquoi: "l'autre sens (h min → min)" },
+    9: { formes: ["sommet-milieu", "sommet-premier", "sommet-dernier", "sommet-milieu-retourne", "sommet-premier-retourne", "sommet-dernier-retourne"], pourquoi: "angle cherché aigu : le sujet cherche un angle obtus" },
+    11: { formes: ["15min", "1h30"], pourquoi: "un quart d'heure ou 1 h 30 au lieu d'une demi-heure" },
+    12: { formes: ["vers-petit-dixièmes", "vers-petit-unités", "vers-grand-milliers", "vers-grand-centaines", "vers-grand-dizaines", "vers-grand-unités", "vers-grand-dixièmes"], pourquoi: "unités décimales ou conversion vers une unité plus grande" },
+    14: { formes: ["premier-negatif-grand", "premier-negatif-petit"], pourquoi: "premier nombre négatif : autre cas" },
+    15: { formes: ["entre-1-et-2", "entre-2-et-3"], pourquoi: "fraction plus grande que 1" },
+    16: { formes: ["centiemes", "deux-chiffres"], pourquoi: "centièmes au lieu de dixièmes" },
+    17: { formes: ["moins"], pourquoi: "46 − 3y : soustraction" },
+    18: { formes: ["vers-grand"], pourquoi: "conversion dans l'autre sens" },
+    22: { formes: ["centiemes"], pourquoi: "centièmes au lieu de dixièmes" },
+  };
+
   racine.EN_SUJETS = racine.EN_SUJETS || {};
   racine.EN_SUJETS["4e-automatismes"] = {
     id: "4e-automatismes",
@@ -914,5 +934,6 @@
         seuils: [{ max: 7, nom: "À besoins" }, { max: 12, nom: "Fragile" }, { max: 22, nom: "Satisfaisant" }] },
     ],
     questions: Q,
+    horsStrict: HORS_STRICT,
   };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -9,7 +9,7 @@ require("../outils/evaluations_nationales/en_commun.js");
 require("../outils/evaluations_nationales/sujets/6e_automatismes.js");
 require("../outils/evaluations_nationales/sujets/5e_automatismes.js");
 require("../outils/evaluations_nationales/sujets/4e_automatismes.js");
-const { hasard, construire, taches, tacheOfficielle } = globalThis.EN;
+const { hasard, construire, taches, tacheOfficielle, genererJumeau } = globalThis.EN;
 const S = globalThis.EN_SUJETS;
 
 const texte = (h) => h
@@ -62,7 +62,8 @@ test("6e et 5e : un seul sujet officiel (le même en 2024, 2025 et 2026), sans v
     for (let graine = 1; graine <= 300; graine++) {
       const avant = hasard(graine), apres = construire(s, hasard(graine), graine === 1 ? s.officiels[0] : null, null);
       s.questions.forEach((q, i) => {
-        const g = q.generer(avant, graine === 1);
+        // Lot EN10 : un jumeau ne garde que les formes strictes (genererJumeau) ; le sujet officiel ne change pas.
+        const g = graine === 1 ? q.generer(avant, true) : genererJumeau(s, q, q, avant);
         // Lot EN-C1 : le sujet officiel (graine 1) garde l'ordre du PDF, seuls les jumeaux mélangent.
         const m = graine !== 1 && (g.melange ?? q.melange ?? true);
         const ordre = m ? avant.melanger(g.choix) : g.choix.slice();
@@ -72,11 +73,13 @@ test("6e et 5e : un seul sujet officiel (le même en 2024, 2025 et 2026), sans v
   }
 });
 
-test("4e : 2 000 sujets générés — chaque case tire une tâche connue ; 4 choix distincts, une seule bonne réponse juste", () => {
+test("4e : 2 000 sujets générés — chaque case tire une tâche de son sujet officiel ; 4 choix distincts, une seule bonne réponse juste", () => {
   const S4 = S["4e-automatismes"];
-  const vus = { 1: new Set(), 6: new Set() };
+  // Lot EN10 : le jumeau du sujet 2026 ne tire que les tâches de 2026, celui du sujet 2024-2025 que celles de 2024-2025.
+  const vus = { 2026: { 1: new Set(), 6: new Set() }, "2024-2025": { 1: new Set(), 6: new Set() } };
   for (let graine = 2; graine <= 2001; graine++) {
-    const items = construire(S4, hasard(graine), null, null);
+    const modele = S4.officiels[graine % 2];
+    const items = construire(S4, hasard(graine), null, null, graine % 2 ? modele : undefined);
     assert.equal(items.length, 22);
     items.forEach((it, i) => {
       assert.equal(it.q.num, i + 1, "même ordre que le sujet");
@@ -86,7 +89,7 @@ test("4e : 2 000 sujets générés — chaque case tire une tâche connue ; 4 ch
       for (const x of g.choix) if (!x.juste) assert.ok(x.erreur && !/undefined|NaN/.test(x.erreur), `q${it.q.num} : piège sans explication`);
       assert.ok(!/NaN|undefined|Infinity|null/.test(t.join() + g.enonce + (g.figure || "")), `q${it.q.num} graine ${graine}`);
       assert.ok((it.t.entrainement || it.q.entrainement).url.startsWith("/automatismes/?notions="));
-      if (it.q.num === 1 || it.q.num === 6) vus[it.q.num].add(it.t.id || "2026");
+      if (it.q.num === 1 || it.q.num === 6) vus[modele.cle][it.q.num].add(it.t.id || "2026");
       const e = texte(g.enonce), j = juste(g);
       let m;
       if (it.t.id === "4e-soustraire") {
@@ -107,8 +110,10 @@ test("4e : 2 000 sujets générés — chaque case tire une tâche connue ; 4 ch
       }
     });
   }
-  assert.deepEqual([...vus[1]].sort(), ["2026", "4e-soustraire"]);
-  assert.deepEqual([...vus[6]].sort(), ["2026", "4e-reduire-somme"]);
+  assert.deepEqual([...vus[2026][1]], ["2026"]);
+  assert.deepEqual([...vus[2026][6]], ["2026"]);
+  assert.deepEqual([...vus["2024-2025"][1]], ["4e-soustraire"]);
+  assert.deepEqual([...vus["2024-2025"][6]], ["4e-reduire-somme"]);
 });
 
 test("la page : une carte par sujet officiel, repères du sujet joué, mention sur le bilan d'un sujet généré", () => {

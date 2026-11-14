@@ -6,7 +6,7 @@
    de cet outil : les explications de la vue prof sont écrites par maths&go (sans mot genré). */
 (function (racine) {
   "use strict";
-  const { nb, frac, lettre, svg, MOINS } = racine.EN;
+  const { nb, frac, lettre, svg, MOINS, de } = racine.EN;
 
   const c = (html, juste, erreur) => ({ html, juste: Boolean(juste), erreur: erreur || "" });
   const AUTO = (notion, libelle) => ({ appli: "Automatismes", notion, libelle, url: `/automatismes/?notions=${notion}&nombre=8` });
@@ -99,7 +99,7 @@
       const { moy, med, et } = stats();
       return {
         forme,
-        enonce: `Voici les notes de ${prenom} en mathématiques ce trimestre : ${notes.join(" – ")}<br>Quelle est sa moyenne ?`,
+        enonce: `Voici les notes ${de(prenom)} en mathématiques ce trimestre : ${notes.join(" – ")}<br>Quelle est sa moyenne ?`,
         choix: [
           c(String(n), false, `Donne le nombre de notes (${n}).`),
           c(String(et), false, `Calcule l’écart entre la plus grande et la plus petite note (${Math.max(...notes)} − ${Math.min(...notes)}).`),
@@ -938,6 +938,29 @@
     },
   });
 
+  // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
+  // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
+  // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  const HORS_STRICT = {
+    3: { formes: ["produit-vers-puissance"], pourquoi: "l'autre sens" },
+    4: { formes: ["divisible"], pourquoi: "« 80 est divisible par… » : autre tournure" },
+    5: { formes: ["college"], pourquoi: "50 % au lieu de 40 % : plus facile" },
+    6: { formes: ["b-plus-moins-a"], pourquoi: "14 + (−9) : écriture avec parenthèses" },
+    8: { formes: ["ajouter-puis-multiplier"], pourquoi: "Lot EN10 : « ajouter 7 » au lieu de « soustraire 3 » : le piège « soustraction à l'envers » (3 − x) disparaît (même raison que Q23 et Q31)" },
+    7: { formes: ["carre"], pourquoi: "un carré au lieu d'un rectangle" },
+    11: { formes: ["moins-a-plus-moins-b"], pourquoi: "−7 + (−12) : autre écriture" },
+    12: { formes: ["nombre-vers-puissance"], pourquoi: "l'autre sens" },
+    13: { formes: ["valeur-negative"], pourquoi: "valeur négative : plus dur" },
+    15: { formes: ["carre"], pourquoi: "un carré au lieu d'un rectangle" },
+    18: { formes: ["resultat-positif"], pourquoi: "résultat positif : le piège « −1 » disparaît" },
+    19: { formes: ["nombre-vers-puissance"], pourquoi: "l'autre sens" },
+    21: { formes: ["quelconque", "rectangle", "isocele"], pourquoi: "la bonne réponse n'est plus « équilatéral »" },
+    23: { formes: ["moins"], pourquoi: "6(a − 9) : différence au lieu d'une somme" },
+    27: { formes: ["sans-parentheses"], pourquoi: "−6² au lieu de (−6)² : le piège s'inverse" },
+    29: { formes: ["premier"], pourquoi: "79 est premier : la bonne réponse change de nature" },
+    31: { formes: ["moins"], pourquoi: "5a(a − 7) : différence au lieu d'une somme" },
+  };
+
   racine.EN_SUJETS = racine.EN_SUJETS || {};
   racine.EN_SUJETS["3e-automatismes"] = {
     id: "3e-automatismes",
@@ -953,5 +976,6 @@
     seuils: [{ max: 9, nom: "À besoins" }, { max: 17, nom: "Fragile" }, { max: 32, nom: "Satisfaisant" }],
     officiels: [{ cle: "outil", annee: 2026, titre: "Le test officiel", detail: "Les 32 vraies questions de l’outil de positionnement Eduscol." }],
     questions: Q,
+    horsStrict: HORS_STRICT,
   };
 })(typeof window !== "undefined" ? window : globalThis);
