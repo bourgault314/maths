@@ -297,9 +297,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261113-4"></script>
+  <script src="./defi_calcul_core.js?v=20261113-5"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261113-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261113-4"></script>
+  <script src="./defi_calcul_aides.js?v=20261113-5"></script>
   <script>
     (() => {
       "use strict";
@@ -3150,9 +3150,14 @@
 
       // ④ J'écris, au moment où le dessin s'en va : le temps « J'écris » de
       // la leçon, une fois. Ses réponses ne comptent pas dans la série.
-      function lancerEcris(pratique) {
+      // Lot 3c : sur un calcul tiré à chaque fois, de la sorte de la leçon,
+      // jamais un calcul de la leçon ni un de la série (`graine` : le
+      // crochet de test, pour un tirage choisi ; null : celui de la leçon).
+      function lancerEcris(pratique, graine = nouvelleGraine()) {
         arreterActivite();
-        const base = pratique.lecon;
+        const tire = graine === null ? null : CORE.ecrisTire(`${pratique.module}-${pratique.niveau}`, {graine,
+          exclure: (pratique.questions || []).map(question => question.calcul.texte)});
+        const base = tire ? Object.assign({}, pratique.lecon, {ecris: tire.ecris}) : pratique.lecon;
         state.serie = {genre: "apprends", module: pratique.module, niveau: pratique.niveau, apprends: base, base,
           temps: tempsDe(pratique.module, pratique.niveau).slice(-1), index: 0, revoir: false, pratique};
         state.lecon = null;
@@ -4418,6 +4423,12 @@
             billes: () => (state.manip && state.manip.outil === "billes" ? {tours: state.manip.tours, fini: state.manip.fini} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
             arrets: () => arretsDeLaBande.slice(),
+            // Lot 3c : le J'écris à l'écran (tiré) — ses étapes, leurs réponses.
+            ecrisEnCours: () => {
+              const serie = state.serie;
+              if (!state.running || !serie || !serie.temps || !serie.apprends || !serie.apprends.ecris) return null;
+              return serie.apprends.ecris.etapes.map(etape => ({texte: etape.texte, reponse: etape.reponse}));
+            },
             // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.
             dessin: () => {
               const image = $("aide").querySelector(":scope > svg");
@@ -4436,7 +4447,9 @@
             },
             // Lot 2 : « J'écris » d'un niveau (④ de J'apprends en une étape),
             // tout de suite, pour regarder son écran. Rien n'est enregistré.
-            ecrire: (id, n) => {
+            // (Lot 3c : `graine` choisit le calcul tiré ; « lecon » : le
+            // calcul de la leçon, comme avant.)
+            ecrire: (id, n, graine) => {
               const trouve = CORE.niveauDe(`${id}-${n}`);
               if (!trouve || !trouve.niveau.apprends) return false;
               state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
@@ -4444,7 +4457,7 @@
               show("play");
               majFilDeJeu();
               majBoutonRetour();
-              lancerEcris({module: id, niveau: n, lecon: trouve.niveau.apprends, essai: true});
+              lancerEcris({module: id, niveau: n, lecon: trouve.niveau.apprends, essai: true}, graine === undefined ? undefined : graine === "lecon" ? null : graine >>> 0);
               return true;
             },
             // Lot 3b : le calcul d'entraînement de J'apprends qui annonce une

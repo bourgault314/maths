@@ -599,7 +599,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // ouvertes dans la fiche de l'élève) et lib/cours.php (la clé du domaine) (avant : defi-calcul-lot-3a-lecons).
   // Puis le lot 3b « Chaque sorte annoncée » de Défi calcul (13/11/2026) : le
   // cœur copié dans prof/ change (avant : cours-appli-2).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-3b-sortes$/m);
+  // Puis le lot 3c « J'écris sur des calculs qui changent » de Défi calcul
+  // (13/11/2026) : le cœur copié dans prof/ change (avant : defi-calcul-lot-3b-sortes).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-3c-ecris$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

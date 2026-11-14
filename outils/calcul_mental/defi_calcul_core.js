@@ -8758,6 +8758,588 @@
     return fiche && typeof fiche.image === "function" ? fiche.image(calcul, gras) : null;
   }
 
+
+  // ------------------------------------------------------------------
+  // Lot 3c « J'écris sur des calculs qui changent » (13/11/2026, décision 10
+  // du lot 3) : J'écris tire son calcul à chaque fois, dans la sorte de la
+  // leçon (celle du J'écris de la leçon) et dans la même écriture, jamais
+  // celui de « On te montre » ni un calcul déjà vu dans la série. Une
+  // recette par niveau (rangées par famille de dessin) donne, pour ce
+  // calcul, la consigne en égalité, les étapes et leurs réponses, et les
+  // dessins étape par étape. Sur le calcul de la leçon, chaque recette
+  // redonne exactement le J'écris de la leçon (tests du lot 3c).
+  const etapeT = (texte, reponse) => Object.freeze({texte, reponse});
+  const f3c = formaterNombre;
+  function ecrisFait({consigne = null, etapes, reponse, image, phrase}, relier) {
+    return ecrisAvecDessins(Object.assign({
+      etapes: Object.freeze(etapes), reponse,
+      solution: Object.freeze({image, phrase})
+    }, consigne ? {consigne} : {}), relier);
+  }
+  const avecQuestion = calcul => calcul.texte.replace(CASE, "?");
+
+  // La droite, deux sauts par la dizaine (la centaine…) : 236 + 7 = 236 + 4 + 3.
+  function recettePlus(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const {palier, sauts} = sautsDuCalcul(calcul);
+    if (palier === null || estTrou(calcul) || sauts.length !== 2) return null;
+    const op = signe(d);
+    const [s0, s1] = sauts.map(s => f3c(Math.abs(s)));
+    return ecrisFait({
+      consigne: `${f3c(n)} ${op} ${f3c(Math.abs(d))} = ${f3c(n)} ${op} ${s0} ${op} ${s1}`,
+      etapes: [etapeT(`${f3c(n)} ${op} ${s0} = ${CASE}`, palier), etapeT(`${f3c(palier)} ${op} ${s1} = ${CASE}`, m), etapeT(calcul.texte, m)],
+      reponse: m, image: plusImage(calcul), phrase: plusPhrase(calcul)
+    }, plusDessins(calcul, 3));
+  }
+  // Sans passage : seul le chiffre des unités change (254 + 3 = 250 + 4 + 3).
+  function recetteUnites(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const {palier} = sautsDuCalcul(calcul);
+    const u = n % 10;
+    if (palier !== null || estTrou(calcul) || u === 0 || u + d < 0 || u + d > 9) return null;
+    const op = signe(d);
+    return ecrisFait({
+      consigne: `${f3c(n)} ${op} ${Math.abs(d)} = ${f3c(n - u)} + ${u} ${op} ${Math.abs(d)}`,
+      etapes: [etapeT(`${u} ${op} ${Math.abs(d)} = ${CASE}`, u + d), etapeT(calcul.texte, m)],
+      reponse: m, image: plusImage(calcul), phrase: plusPhrase(calcul)
+    }, plusDessins(calcul, 2));
+  }
+  // Sommes jusqu'à 10 : 10 = 8 + □, sur le schéma en barres.
+  function recetteDixBarres(calcul) {
+    const {n, d, m} = calcul.donnees;
+    if (m !== 10 || n <= 0 || d <= 0) return null;
+    const barres = Object.freeze({outil: "deux-barres", sorte: "tout", haut: Object.freeze([10]), bas: Object.freeze([n, d]), cherche: Object.freeze(["bas", 1])});
+    const relier = dessinsDe([{}, {}], 2, (vus, revele = false) => (revele
+      ? barres
+      : Object.freeze(Object.assign({}, barres, {masque: true, trouves: vus.length, fini: vus.length >= 1}))));
+    return ecrisFait({
+      consigne: avecQuestion(calcul),
+      etapes: [etapeT(`${n} + ${CASE} = 10`, d), etapeT(calcul.texte, d)],
+      reponse: d, image: barres, phrase: `${n} + ${d} = 10.`
+    }, relier);
+  }
+  // Les compléments (A2) : déjà écrits sur le calcul (a2Etapes).
+  function recetteComplement(calcul) {
+    const etapes = a2Etapes(calcul);
+    return ecrisFait({
+      consigne: etapes.length > 1 ? avecQuestion(calcul) : null,
+      etapes: [...etapes], reponse: calcul.reponse, image: a2Image(calcul), phrase: a2Phrase(calcul)
+    }, a2Dessins(calcul));
+  }
+  // Ajouter 9, 19… (A5) et retrancher 9, 19… (A6) : le détour par la dizaine ronde.
+  function recetteNeuf(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    return ecrisFait({
+      consigne: `${f3c(n)} + ${a} = ${f3c(n)} + ${r} − ${r - a}`,
+      etapes: [...a5Etapes(calcul)], reponse: calcul.reponse, image: a5Image(calcul), phrase: a5Phrase(calcul)
+    }, droiteDessins({depart: n, sauts: [r, -(r - a)], direct: a, trou: false, etapes: 3}));
+  }
+  function recetteMoinsNeuf(calcul) {
+    const {n, a} = calcul.donnees;
+    const r = a5Arrondi(a);
+    const etapes = a6Etapes(calcul);
+    return ecrisFait({
+      consigne: `${f3c(n)} − ${a} = ${f3c(n)} − ${r} + ${r - a}`,
+      etapes: [...etapes], reponse: calcul.reponse, image: a6Image(calcul), phrase: a6Phrase(calcul)
+    }, droiteDessins({depart: n, sauts: [-r, r - a], direct: -a, trou: false, etapes: etapes.length}));
+  }
+  // Garder le premier nombre (A4, A7) : les dizaines, puis les unités.
+  function recetteChemin(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const dz = dizainesDe(d);
+    const u = d - dz;
+    if (!dz || !u) return null;
+    const op = signe(d);
+    return ecrisFait({
+      consigne: `${f3c(n)} ${op} ${f3c(Math.abs(d))} = ${f3c(n)} ${op} ${f3c(Math.abs(dz))} ${op} ${Math.abs(u)}`,
+      etapes: [etapeT(`${f3c(n)} ${op} ${f3c(Math.abs(dz))} = ${CASE}`, n + dz), etapeT(`${f3c(n + dz)} ${op} ${Math.abs(u)} = ${CASE}`, m), etapeT(calcul.texte, m)],
+      reponse: m, image: cheminImage(calcul), phrase: cheminPhrase(calcul)
+    }, cheminDessins(calcul, 3));
+  }
+  // A3 en passant le rang : on complète la centaine (le millier), puis le reste.
+  function recetteRang(calcul) {
+    const {n, d, m, sauts} = calcul.donnees;
+    if (sauts.length !== 2) return null;
+    const op = signe(d);
+    const [s0, s1] = sauts.map(s => f3c(Math.abs(s)));
+    return ecrisFait({
+      consigne: `${f3c(n)} ${op} ${f3c(Math.abs(d))} = ${f3c(n)} ${op} ${s0} ${op} ${s1}`,
+      etapes: [etapeT(`${f3c(n)} ${op} ${s0} = ${CASE}`, n + sauts[0]), etapeT(`${f3c(n + sauts[0])} ${op} ${s1} = ${CASE}`, m), etapeT(calcul.texte, m)],
+      reponse: m, image: cheminImage(calcul), phrase: cheminPhrase(calcul)
+    }, cheminDessins(calcul, 3));
+  }
+  // A3 sans passage : seul le chiffre du rang change (« Dans 234, le chiffre
+  // des dizaines est 3. »).
+  const NOMS_CHIFFRE = Object.freeze({10: "dizaines", 100: "centaines", 1000: "milliers"});
+  function recetteChiffre(calcul) {
+    const {n, d, m, sauts} = calcul.donnees;
+    const u = rangDe(d);
+    const c = chiffreDe(n, u);
+    const k = Math.abs(d) / u;
+    if (sauts.length !== 1 || n < u || !Number.isInteger(k) || c + Math.sign(d) * k < 0 || c + Math.sign(d) * k > 9) return null;
+    const op = signe(d);
+    return ecrisFait({
+      consigne: `Dans ${f3c(n)}, le chiffre des ${NOMS_CHIFFRE[u]} est ${c}.`,
+      etapes: [etapeT(`${c} ${op} ${k} = ${CASE}`, c + Math.sign(d) * k), etapeT(calcul.texte, m)],
+      reponse: m, image: cheminImage(calcul), phrase: cheminPhrase(calcul)
+    }, cheminDessins(calcul, 2));
+  }
+  // L'écart (A8) : du petit au grand, par la dizaine (la centaine…).
+  function recetteEcart(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const {palier, sauts} = sautsDuCalcul(calcul);
+    if (palier === null || sauts.length !== 2) return null;
+    return ecrisFait({
+      consigne: avecQuestion(calcul),
+      etapes: [etapeT(`${f3c(n)} + ${CASE} = ${f3c(palier)}`, sauts[0]), etapeT(`${f3c(palier)} + ${CASE} = ${f3c(m)}`, sauts[1]), etapeT(calcul.texte, d)],
+      reponse: d, image: plusImage(calcul), phrase: plusPhrase(calcul)
+    }, plusDessins(calcul, 3));
+  }
+
+  // Les niveaux « sans manipulation » (M4, M5, M6, M8, M10, M12, C3) : la
+  // consigne, les étapes (« ? » pour la case), et le dessin de la fiche.
+  function ecrisSansManip(fiche, calcul, consigne, etapes, dessins) {
+    return ecrisAvecDessins(Object.assign({
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: fiche.image(calcul), phrase: fiche.phrase(calcul)})
+    }, consigne ? {consigne: fr(consigne)} : {}), dessins(calcul, etapes.length));
+  }
+  // Les tables : une division se lit « combien de fois » (54 ÷ 6 : 6 × □ = 54).
+  function recetteDivisionTable(calcul) {
+    const {a, b, p} = calcul.donnees;
+    if (calcul.forme !== "division") return null;
+    return ecrisSansManip(M4, calcul, `${f(p)} ÷ ${a} : combien de fois ${a} dans ${f(p)} ?`,
+      [[`${a} × ? = ${f(p)}`, b], [`${f(p)} ÷ ${a} = ?`, b]], (c, n) => finiDessins(m4Image(c), n));
+  }
+  // Repères : 100 = 4 × 25 (6 × 25 = 4 × 25 + 2 × 25). Au-delà de 4 fois 25
+  // seulement, et pas 8 fois (4 × 25 + 4 × 25 : la barre écrit déjà 100).
+  function recetteVingtCinq(calcul) {
+    const {a, b} = calcul.donnees;
+    const devant = a !== 25;
+    const k = devant ? a : b;
+    if (k <= 4 || k >= 8) return null;
+    const fois = x => (devant ? `${x} × 25` : `25 × ${x}`);
+    return ecrisSansManip(M5, calcul, `${fois(k)} = ${fois(4)} + ${fois(k - 4)}`,
+      [[`${fois(k - 4)} = ?`, (k - 4) * 25], [`${fois(k)} = ?`, k * 25]], (c, n) => partsDessins(m5Image(c), n, true));
+  }
+  // × 4, × 8 : le double du double (4 × 37 = 2 × 2 × 37).
+  function recetteDoubleDouble(calcul) {
+    const {n, fois} = calcul.donnees;
+    const deux = Array.from({length: Math.log2(fois)}, () => "2").join(" × ");
+    const etapes = [];
+    for (let k = 2; k < fois; k *= 2) etapes.push([`${k} × ${f(n)} = ?`, k * n]);
+    etapes.push([`${fois} × ${f(n)} = ?`, fois * n]);
+    return ecrisSansManip(M6, calcul, `${fois} × ${f(n)} = ${deux} × ${f(n)}`, etapes, (c, k) => barresFoisDessins(m6Image(c), k));
+  }
+  // Décomposer (M8) : 6 × 14 = 10 × 6 + 4 × 6 ; 12 × 35 = 10 × 35 + 2 × 35.
+  function recetteDecomposer(calcul) {
+    const {a, b, r} = calcul.donnees;
+    const [d, u] = [b - b % 10, b % 10];
+    // (« 1 × 9 » n'est pas une étape : aux niveaux 1 et 2, pas de 41 ; au
+    // niveau 3, × 21 et × 31 sont la leçon — « 21 fois 43, c'est 20 fois 43
+    // plus 1 fois 43 ».)
+    if (!d || !u || (u === 1 && calcul.niveau !== 3)) return null;
+    const texte = calcul.forme === "produit-gauche" ? `${f(a)} × ${f(b)}` : `${f(b)} × ${f(a)}`;
+    return ecrisSansManip(M8, calcul, `${texte} = ${f(d)} × ${f(a)} + ${u} × ${f(a)}`,
+      [[`${f(d)} × ${f(a)} = ?`, d * a], [`${u} × ${f(a)} = ?`, u * a], [`${texte} = ?`, r]], (c, n) => rectangleDessins(m8Image(c), n));
+  }
+  // Regrouper (M10) : 2 × 38 × 5 = 2 × 5 × 38 ; 25 × 28 = 7 × 4 × 25.
+  function recetteRegrouper(calcul) {
+    const {facteurs, groupe, reste} = calcul.image || {};
+    if (calcul.forme !== "regrouper" || !facteurs) return null;
+    const [x, y, z] = facteurs.map(f);
+    return ecrisSansManip(M10, calcul, `${x} × ${y} × ${z} = ${x} × ${z} × ${y}`,
+      [[`${x} × ${z} = ?`, groupe], [`${y} × ${f(groupe)} = ?`, reste * groupe]], (c, n) => facteursDessins(m10Image(c), n));
+  }
+  function recetteQuart(calcul) {
+    const {reste: q} = calcul.image;
+    const a = q * 4;
+    if (calcul.forme !== "produit-gauche" || !Number.isInteger(q)) return null;
+    return ecrisSansManip(M10, calcul, `25 × ${f(a)} = ${f(q)} × 4 × 25`,
+      [["4 × 25 = ?", 100], [`${f(q)} × 100 = ?`, q * 100]], (c, n) => facteursDessins(m10Image(c), n));
+  }
+  // Diviser en décomposant (M12) : 350 ÷ 7 = 35 ÷ 7 × 10 ; 135 ÷ 5 = 100 ÷ 5 + 35 ÷ 5.
+  function recetteDizainesDivisees(calcul) {
+    const {n, d, q, t, unite} = calcul.donnees;
+    if (unite !== 10 || calcul.forme !== "division") return null;
+    return ecrisSansManip(M12, calcul, `${f(n)} ÷ ${d} = ${f(t)} ÷ ${d} × 10`,
+      [[`${f(t)} ÷ ${d} = ?`, t / d], [`${f(n)} ÷ ${d} = ?`, q]], (c, k) => partageDessins(m12Image(c), k));
+  }
+  function recettePartage(calcul) {
+    const {n, d, q} = calcul.donnees;
+    if (calcul.forme !== "division" || calcul.morceaux.length !== 2) return null;
+    const [x, y] = calcul.morceaux;
+    return ecrisSansManip(M12, calcul, `${f(n)} ÷ ${d} = ${f(x)} ÷ ${d} + ${f(y)} ÷ ${d}`,
+      [[`${f(x)} ÷ ${d} = ?`, x / d], [`${f(y)} ÷ ${d} = ?`, y / d], [`${f(n)} ÷ ${d} = ?`, q]], (c, k) => partageDessins(m12Image(c), k));
+  }
+  // Égalités à trou (C3) : 684 = 300 + □ ; 365 + 9 = 362 + □ ; 256 + 198 = □ + 200.
+  const c3Dessins = (c, n) => deuxBarresDessins(c3Image(c), n);
+  function recetteEgal(calcul) {
+    const {n, a} = calcul.donnees;
+    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(n)} − ${f(a)} = ?`, n - a]], c3Dessins);
+  }
+  function recetteGarder(calcul) {
+    const {a, b, c} = calcul.donnees;
+    if (!(a > c)) return null;
+    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(a)} − ${f(c)} = ?`, a - c], [`${f(b)} + ${f(a - c)} = ?`, calcul.reponse]], c3Dessins);
+  }
+  function recetteGarderGrand(calcul) {
+    const {a, b, d} = calcul.donnees;
+    if (!(d > b)) return null;
+    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(d)} − ${f(b)} = ?`, d - b], [`${f(a)} − ${f(d - b)} = ?`, calcul.reponse]], c3Dessins);
+  }
+  // Le tableau à flèches (M2, D2, D3) : une seule égalité, le calcul.
+  function recetteGlisse(calcul, texte = calcul.texte) {
+    const etapes = [etapeDe(texte, calcul.reponse)];
+    return ecrisAvecDessins({
+      etapes: Object.freeze(etapes.map(e => Object.freeze(Object.assign({}, e)))), reponse: calcul.reponse,
+      solution: Object.freeze({image: tableauDe(calcul), phrase: glissePhrase(calcul)})
+    }, tableauDessins(glisseAide(calcul), tableauDe(calcul), etapes));
+  }
+  // × 10 (M2-1) : 38 × 10 = 38 dizaines.
+  function recetteDizaines(calcul) {
+    const {n, p} = calcul.donnees;
+    if (p !== 10 || calcul.forme !== "produit") return null;
+    return recetteGlisse(calcul, `${f(n)} × 10 = ${f(n)} dizaines = ${CASE}`);
+  }
+  // Tables étendues (M3) : 8 × 40 = 8 × 4 × 10.
+  function recetteTableEtendue(calcul) {
+    const {x, y, c1, c2, t, p, r} = calcul.donnees;
+    const etapes = [[`${c1} × ${c2} = ?`, t], [`${f(x)} × ${f(y)} = ?`, r]];
+    return ecrisAvecDessins({
+      consigne: fr(`${f(x)} × ${f(y)} = ${c1} × ${c2} × ${f(p)}`),
+      etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: m3Image(calcul), phrase: m3Phrase(calcul)})
+    }, m3Dessins(calcul, etapes.length));
+  }
+  // × 5, × 50 (M7) : 5 × 58 = 58 × 10 ÷ 2.
+  function recetteDixFois(calcul) {
+    const {n, fois, p, dix, r} = calcul.donnees;
+    if (calcul.forme !== "produit-gauche") return null;
+    const etapes = [[`${f(n)} × ${f(p)} = ?`, dix], [`${fois} × ${f(n)} = ?`, r]];
+    return ecrisAvecDessins({
+      consigne: fr(`${fois} × ${f(n)} = ${f(n)} × ${f(p)} ÷ 2`),
+      etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: m7Image(calcul), phrase: m7Phrase(calcul)})
+    }, dixFoisDessins(m7Image(calcul), etapes.length));
+  }
+  // Les doubles (M1) : chaque morceau doublé (double de 36 = 2 × 30 + 2 × 6).
+  function recetteDouble(calcul, ecriture) {
+    const {n, r} = calcul.donnees;
+    const morceaux = morceauxDe(n);
+    if (calcul.forme !== "double" || morceaux.length !== 2) return null;
+    const consigne = {
+      plus: `double de ${f(n)} = ${morceaux.map(m => `${f(m)} + ${f(m)}`).join(" + ")}`,
+      fois: `double de ${f(n)} = 2 × ${f(n)}`,
+      morceaux: `double de ${f(n)} = ${morceaux.map(m => `2 × ${f(m)}`).join(" + ")}`
+    }[ecriture];
+    const etapes = [...morceaux.map(m => [ecriture === "plus" ? `${f(m)} + ${f(m)} = ?` : `2 × ${f(m)} = ?`, 2 * m]), [`double de ${f(n)} = ?`, r]];
+    return ecrisAvecDessins({
+      consigne, etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: m1Image(calcul), phrase: m1Phrase(calcul)})
+    }, barresDessins(m1Image(calcul), etapes.length));
+  }
+
+  // Écritures d'un décimal (D1) : 4 + 6/10 = □ — la fraction, puis le tout.
+  function recetteEntierFraction(calcul) {
+    const [entier, fraction] = calcul.termes || [];
+    if (calcul.forme !== "entier-fraction" || !fraction || fraction.k < 1 || entier.k !== 0) return null;
+    const k = fraction.k;
+    const unites = Array.from({length: String(entier.num).length}, (_, i) => String(entier.num).length - 1 - i);
+    const decimales = Array.from({length: k}, (_, i) => -(i + 1));
+    const etapes = [[`${ecrireTerme(fraction)} = ?`, exact(fraction.num / 10 ** k)], [`${f(entier.num)} + ${ecrireTerme(fraction)} = ?`, calcul.reponse]];
+    return ecrisAvecDessins({
+      consigne: fr("Chaque morceau va dans sa colonne."),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(d1Image(calcul)), phrase: d1Phrase(calcul)})
+    }, numerationDessins(d1Tableau(calcul, {inconnue: true}), [{rangs: decimales}, {rangs: [...unites, ...decimales]}]));
+  }
+  // Un rang qui change (D4) : 6,24 + 0,5 = 6,04 + 0,2 + 0,5 — le chiffre du
+  // rang d'abord. (Une seule retenue, comme la leçon.)
+  function recetteRang10(calcul) {
+    const {n, d, rang, r} = calcul.donnees;
+    if (calcul.forme !== "plus" || rang >= 0 || calcul.retenues.length > 1) return null;
+    const c = chiffreAuRangDecimal(n, rang);
+    const morceau = exact(c * 10 ** rang);
+    const reste = exact(n - morceau);
+    // (0,7 + 0,3 = 1 : la retenue dessinée écrirait la réponse, et un zéro
+    // à écrire en plus — pas comme la leçon.)
+    if (!c || !reste || Number.isInteger(exact((morceau + d) * 10 ** (-rang - 1)))) return null;
+    const k = Math.max(decimalesDe(n), -rang);
+    const entiers = String(Math.floor(r)).length;
+    const rangs = [...Array.from({length: entiers}, (_, i) => entiers - 1 - i), ...Array.from({length: k}, (_, i) => -(i + 1))];
+    const etapes = [[`${f(morceau)} + ${f(d)} = ?`, exact(morceau + d)], [`${f(n)} + ${f(d)} = ?`, r]];
+    return ecrisAvecDessins({
+      consigne: fr(`${f(n)} + ${f(d)} = ${f(reste)} + ${f(morceau)} + ${f(d)}`),
+      etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: Object.freeze(d4Image(calcul)), phrase: d4Phrase(calcul)})
+    }, numerationDessins(d4Tableau(calcul, {inconnue: true, ligneCachee: false}), [{rangs: [rang]}, {rangs}]));
+  }
+  // Parenthèses (C1) : les étapes viennent du calcul (c1Etapes).
+  function recetteParentheses(calcul, consigne) {
+    const etapes = c1Etapes(calcul);
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: c1Image(calcul), phrase: c1Phrase(calcul)})
+    }, escalierDessins(c1Image(calcul), etapes.length));
+  }
+  // Les fractions sur la barre (F2, F5, F8).
+  function ecrisFraction(calcul, consigne, etapes, morceaux) {
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: fracImage(calcul), phrase: fracPhrase(calcul)})
+    }, fracEcrisDessins(calcul, etapes, morceaux));
+  }
+  const termesDe = calcul => (calcul.lu ? calcul.lu.cotes : [[], []]);
+  const fracTexte = t => `${f(t.n)}/${f(t.d)}`;
+  // a/d + b/d = □/d : les numérateurs s'ajoutent.
+  function recetteMemeDenominateur(calcul) {
+    const [gauche, droite] = termesDe(calcul);
+    if (gauche.length !== 2 || gauche.some(t => t.s < 0 || t.d !== gauche[0].d || t.d === 1) || droite.length !== 1 || droite[0].d !== gauche[0].d) return null;
+    const [x, y] = gauche;
+    return ecrisFraction(calcul, avecQuestion(calcul), [[`${x.n} + ${y.n} = ?`, x.n + y.n], [avecQuestion(calcul), x.n + y.n]], [{}, {bas: true}]);
+  }
+  // e − a/d = □/d (1 − 5/12) : l'entier en parts, puis on retire.
+  function recetteEntierMoins(calcul) {
+    const [gauche, droite] = termesDe(calcul);
+    if (gauche.length !== 2 || gauche[0].d !== 1 || gauche[1].s >= 0 || droite.length !== 1 || droite[0].d !== gauche[1].d) return null;
+    const e = gauche[0].n;
+    const {n: a, d} = gauche[1];
+    return ecrisFraction(calcul, avecQuestion(calcul),
+      [[`${e} = ?/${d}`, e * d], [`${e * d}/${d} − ${a}/${d} = ?/${d}`, e * d - a]],
+      [{ecrit: e, texte: `${e * d}/${d}`}, {bas: true}]);
+  }
+  // e + a/d = □/d (F5-2) : l'entier en parts, puis on ajoute.
+  function recetteRecomposer(calcul) {
+    const [gauche, droite] = termesDe(calcul);
+    if (gauche.length !== 2 || gauche[0].d !== 1 || gauche[1].s < 0 || droite.length !== 1 || droite[0].d !== gauche[1].d) return null;
+    const e = gauche[0].n;
+    const {n: a, d} = gauche[1];
+    return ecrisFraction(calcul, avecQuestion(calcul),
+      [[`${e} = ?/${d}`, e * d], [`${e * d}/${d} + ${a}/${d} = ?/${d}`, e * d + a]],
+      [{ecrit: e, texte: `${e * d}/${d}`}, {bas: true}]);
+  }
+  // N/d = q + □/d (F5-1) : les parts de l'entier, puis ce qui reste.
+  function recetteDecomposerFraction(calcul) {
+    const [gauche, droite] = termesDe(calcul);
+    if (gauche.length !== 1 || droite.length !== 2 || droite[0].d !== 1) return null;
+    const {n: N, d} = gauche[0];
+    const q = droite[0].n;
+    if (q < 1 || N - q * d <= 0 || N - q * d >= d) return null;
+    return ecrisFraction(calcul, avecQuestion(calcul),
+      [[`${q} = ?/${d}`, q * d], [`${N}/${d} = ${q * d}/${d} + ?/${d}`, N - q * d], [avecQuestion(calcul), N - q * d]],
+      [{ecrit: q, texte: `${q * d}/${d}`}, {bas: true}, {}]);
+  }
+  // Demis et quarts (F2) : 1/2 s'écrit 2/4, puis on ajoute les quarts.
+  function recetteDemiEnQuarts(calcul) {
+    const [gauche, droite] = termesDe(calcul);
+    if (gauche.length !== 2 || droite.length !== 1 || gauche.some(t => t.s < 0)) return null;
+    const i = gauche.findIndex(t => t.d === 2 && t.n === 1);
+    const autre = gauche[1 - i];
+    if (i < 0 || autre.d !== 4) return null;
+    const somme = autre.n + 2;
+    const enQuarts = gauche.map((t, k) => (k === i ? "2/4" : fracTexte(t))).join(" + ");
+    if (droite[0].d === 1) {
+      if (somme !== 4) return null;
+      return ecrisFraction(calcul, `${ecrireCote(gauche)} = ${enQuarts}`,
+        [["1/2 = ?/4", 2], [`${enQuarts} = ?/4`, 4], [avecQuestion(calcul), 1]],
+        [{haut: i, texte: "2/4"}, {}, {bas: true}]);
+    }
+    if (droite[0].d !== 4) return null;
+    return ecrisFraction(calcul, avecQuestion(calcul),
+      [["1/2 = ?/4", 2], [`${enQuarts} = ?/4`, somme]],
+      [{haut: i, texte: "2/4"}, {bas: true}]);
+  }
+  // Fractions égales au-delà de 12 parts (F6) : « × 4 en haut et en bas ».
+  function recetteFoisFraction(calcul) {
+    if (!f6Grand(calcul)) return null;
+    const {a, d, k} = calcul.donnees;
+    let consigne;
+    let etapes;
+    let morceaux;
+    if (calcul.forme === "multiplier") {
+      consigne = `${a}/${d} = (${a} × ${k})/(${d} × ${k})`;
+      etapes = [[`${d} × ? = ${d * k}`, k], [`${a} × ${k} = ?`, a * k], [avecQuestion(calcul), a * k]];
+      morceaux = [{bas: true}, {haut: true}, {case: true}];
+    } else if (calcul.forme === "diviser") {
+      consigne = `${a * k}/${d * k} = (${a * k} ÷ ${k})/(${d * k} ÷ ${k})`;
+      etapes = [[`${d * k} ÷ ? = ${d}`, k], [`${a * k} ÷ ${k} = ?`, a], [avecQuestion(calcul), a]];
+      morceaux = [{bas: true}, {haut: true}, {case: true}];
+    } else if (calcul.forme === "denominateur") {
+      consigne = `${a}/${d} = (${a} × ${k})/(${d} × ${k})`;
+      etapes = [[`${a} × ? = ${a * k}`, k], [`${d} × ${k} = ?`, d * k], [avecQuestion(calcul), d * k]];
+      morceaux = [{haut: true}, {bas: true}, {case: true}];
+    } else return null;
+    const dessin = (vus, revele = false) => {
+      const vu = cle => revele || vus.some(m => m[cle]);
+      return f6Schema(calcul, {haut: vu("haut"), bas: vu("bas"), trouve: vu("case") && !revele, revele,
+        trouveHaut: vu("haut") && !revele, trouveBas: vu("bas") && !revele});
+    };
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: fracImage(calcul), phrase: fracPhrase(calcul)})
+    }, dessinsDe(morceaux, morceaux.length, dessin));
+  }
+  // Fraction d'une quantité (F3) : 1/6 de 42 € = 42 € ÷ 6 ; au niveau 3,
+  // ce qui se partage juste, puis le reste (1/2 de 7 L : 6 L ÷ 2, 1 L ÷ 2).
+  function recetteQuantite(calcul, decimal = false) {
+    const {d, N, unite, objet} = calcul.f3 || {};
+    if (!d) return null;
+    const avec = x => `${f(x)} ${unite}`;
+    const apres = objet ? "" : ` ${unite}`;
+    const q = Math.floor(N / d);
+    const reste = N - q * d;
+    let etapes;
+    if (decimal) {
+      if (!reste || !q) return null;
+      etapes = [[`${avec(q * d)} ÷ ${d} = ?${apres}`, q], [`${avec(reste)} ÷ ${d} = ?${apres}`, exact(reste / d)]];
+    } else {
+      if (reste) return null;
+      etapes = [[`${avec(N)} ÷ ${d} = ?${apres}`, q]];
+    }
+    etapes.push([`1/${d} de ${avec(N)} = ?${apres}`, calcul.reponse]);
+    const n = etapes.length;
+    const dessin = (k, revele) => Object.freeze(Object.assign({}, f3Aide(calcul), revele || k >= n ? {trouve: Object.freeze({texte: f(calcul.reponse), vert: !revele})} : {}));
+    return ecrisAvecDessins({
+      consigne: fr(`1/${d} de ${avec(N)} = ${avec(N)} ÷ ${d}`),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: f3Image(calcul), phrase: f3Phrase(calcul)})
+    }, {dessins: Object.freeze(Array.from({length: n + 1}, (_, k) => dessin(k, false))), revele: dessin(n, true)});
+  }
+  // Fractions usuelles et décimaux (F1).
+  function ecrisF1(calcul, consigne, etapes, dessins) {
+    const n = etapes.length;
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: f1Image(calcul), phrase: f1Phrase(calcul)})
+    }, {dessins: Object.freeze(Array.from({length: n + 1}, (_, k) => Object.freeze(dessins(k, false)))), revele: Object.freeze(dessins(n, true))});
+  }
+  // 0,7 = 7/□ : des dixièmes, comme la leçon.
+  function recetteDixiemes(calcul) {
+    const {v, n} = calcul.f1 || {};
+    if (calcul.forme !== "denominateur" || calcul.reponse !== 10 || !n) return null;
+    return ecrisF1(calcul, avecQuestion(calcul), [[`${n}/10 = ?`, v], [avecQuestion(calcul), 10]], (k, revele) => {
+      const tableau = f1Tableau(calcul, revele || k >= 2);
+      return k >= 2 && !revele ? Object.assign(tableau, {resultat: Object.assign({}, tableau.resultat, {trouve: true})}) : tableau;
+    });
+  }
+  // 3/4 = □/100 : la fraction unitaire d'abord (1/4 = 25/100), sur le carré de 100.
+  function recetteCentiemes(calcul) {
+    const {a, d} = calcul.f1 || {};
+    if (calcul.forme !== "centiemes" || !a || a < 2 || !/□\/100$/.test(calcul.texte)) return null;
+    const unite = exact(1 / d);
+    // Plus d'une unité (5/2) : la place de tous les carrés dès le début.
+    const places = Math.ceil(a / d);
+    const carre = v => (places > 1 ? Object.assign(d1Carre(v), {places}) : d1Carre(v));
+    return ecrisF1(calcul, avecQuestion(calcul), [[`1/${d} = ?/100`, Math.round(100 / d)], [avecQuestion(calcul), calcul.reponse]],
+      (k, revele) => (revele || k >= 2 ? carre(exact(a / d)) : k === 1 ? carre(unite) : carre(0)));
+  }
+  // 3/5 = □ : 3 × 1/5 (1/5 = 0,2), sur la barre des cinquièmes.
+  function recetteCinquiemes(calcul) {
+    const {a, d} = calcul.f1 || {};
+    if (calcul.forme !== "decimal" || d !== 5 || !a || a < 2 || !/^\d+\/5 = □$/.test(calcul.texte)) return null;
+    const unites = Math.ceil(a / 5);
+    const r = calcul.reponse;
+    return ecrisF1(calcul, `${a}/5 = ${a} × 1/5`, [["1/5 = ?", 0.2], [avecQuestion(calcul), r]], (k, revele) => {
+      const fini = revele || k >= 2;
+      const nombres = [{k: 0, texte: "0"}, ...(revele || k >= 1 ? [{k: 1, texte: "0,2", trouve: !revele}] : []),
+        ...Array.from({length: unites}, (_, j) => ({k: 5 * (j + 1), texte: String(j + 1)}))];
+      return {outil: "barre-droite", a: unites, d: 5, pris: a, retire: 0, haut: Object.freeze([]), cache: null,
+        bas: Object.freeze(Object.assign({de: 0, a, texte: fini ? f(r) : "?", cherche: !revele}, k >= 2 && !revele ? {trouve: true} : {})),
+        nombres: Object.freeze(nombres.map(Object.freeze))};
+    });
+  }
+
+  // Les recettes, niveau par niveau.
+  const RECETTES_ECRIS = Object.freeze({
+    "A1-1": recetteDixBarres, "A1-2": recettePlus, "A1-3": recettePlus,
+    "A10-1": recetteUnites, "A10-2": recettePlus, "A10-3": recettePlus,
+    "A11-1": recetteUnites, "A11-2": recettePlus, "A11-3": recettePlus,
+    "A2-1": recetteComplement, "A2-2": recetteComplement, "A2-3": recetteComplement, "A2-4": recetteComplement, "A2-5": recetteComplement,
+    "A5-1": recetteNeuf, "A5-2": recetteNeuf, "A5-3": recetteNeuf, "A5-4": recetteNeuf,
+    "A6-1": recetteMoinsNeuf, "A6-2": recetteMoinsNeuf, "A6-3": recetteMoinsNeuf, "A6-4": recetteMoinsNeuf,
+    "A3-1": recetteChiffre, "A3-2": recetteRang, "A3-3": recetteRang, "A3-4": recetteChiffre,
+    "A4-1": recetteChemin, "A4-2": recetteChemin, "A4-3": recetteChemin, "A4-4": recetteChemin,
+    "A7-1": recetteChemin, "A7-2": recetteChemin, "A7-3": recetteChemin,
+    "A8-1": recetteEcart, "A8-2": recetteEcart,
+    "M1-1": c => recetteDouble(c, "plus"), "M1-2": c => recetteDouble(c, "fois"), "M1-3": c => recetteDouble(c, "morceaux"),
+    "M4-1": recetteDivisionTable, "M4-2": recetteDivisionTable, "M5-1": recetteVingtCinq,
+    "M6-1": recetteDoubleDouble, "M6-2": recetteDoubleDouble,
+    "M8-1": recetteDecomposer, "M8-2": recetteDecomposer, "M8-3": recetteDecomposer,
+    "M10-1": recetteRegrouper, "M10-2": recetteRegrouper, "M10-3": recetteQuart,
+    "M12-1": recetteDizainesDivisees, "M12-2": recettePartage, "M12-3": recettePartage,
+    "C3-1": recetteEgal, "C3-2": recetteGarder, "C3-3": recetteGarderGrand,
+    "M2-1": recetteDizaines, "M2-2": c => recetteGlisse(c), "D2-1": c => recetteGlisse(c), "D2-2": c => recetteGlisse(c),
+    "D2-3": c => recetteGlisse(c), "D2-4": c => recetteGlisse(c), "D3-1": c => recetteGlisse(c), "D3-2": c => recetteGlisse(c), "D3-3": c => recetteGlisse(c),
+    "M3-1": recetteTableEtendue, "M3-2": recetteTableEtendue, "M3-3": recetteTableEtendue,
+    "M7-1": recetteDixFois, "M7-2": recetteDixFois, "M7-3": recetteDixFois,
+    "D1-1": recetteEntierFraction, "D1-2": recetteEntierFraction, "D1-3": recetteEntierFraction,
+    "D4-1": recetteRang10, "D4-2": recetteRang10, "D4-3": recetteRang10,
+    "C1-1": c => recetteParentheses(c, "D’abord la parenthèse."), "C1-2": c => recetteParentheses(c, "Chaque parenthèse d’abord."),
+    "C1-3": c => recetteParentheses(c, "La parenthèse la plus à l’intérieur d’abord."),
+    "F8-1": recetteMemeDenominateur, "F8-2": recetteEntierMoins, "F8-3": recetteEntierMoins,
+    "F5-1": recetteDecomposerFraction, "F5-2": recetteRecomposer,
+    "F2-1": recetteDemiEnQuarts, "F2-2": recetteDemiEnQuarts,
+    "F6-1": recetteFoisFraction, "F6-2": recetteFoisFraction, "F6-3": recetteFoisFraction,
+    "F3-1": c => recetteQuantite(c), "F3-2": c => recetteQuantite(c), "F3-3": c => recetteQuantite(c, true),
+    "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes
+  });
+
+  // Le J'écris d'un calcul dans un niveau (« A10-2 »), ou null quand la
+  // recette ne s'applique pas à ce calcul.
+  function ecrisDuCalcul(cleNiveau, calcul) {
+    const recette = RECETTES_ECRIS[cleNiveau];
+    return recette && calcul ? recette(calcul) : null;
+  }
+  // Même écriture : les nombres comptent pas, les mots et les signes oui
+  // (« 1/10 de 500 g = □ g » et « 1/10 de 30 billes = □ » ne s'écrivent pas
+  // pareil).
+  // (Fraction d'une quantité : l'unité peut changer, la méthode est la même.)
+  const UNITES_LIBRES = new Set(["F3-1", "F3-2", "F3-3"]);
+  const gabaritDe = texte => String(texte).replace(/\d+(?:[\s  ]\d{3})*(?:,\d+)?/g, "#");
+  // Une consigne ou une étape qui écrirait la réponse, par hasard (13 − 8 =
+  // 13 − 3 − 5 : le saut vaut la réponse) : ce calcul n'est pas pris.
+  const nombresDuTexte = texte => (String(texte).match(/\d+(?:[\s\u202f\u00a0]\d{3})*(?:,\d+)?/g) || [])
+    .map(x => Number(x.replace(/[\s\u202f\u00a0]/g, "").replace(",", ".")));
+  function devoile(calcul, ecris) {
+    const r = Number(calcul.reponse);
+    if (nombresDuTexte(calcul.texte).some(x => memeNombre(x, r))) return false;
+    return [ecris.consigne || "", ...ecris.etapes.map(etape => etape.texte)].some(texte => nombresDuTexte(texte).some(x => memeNombre(x, r)));
+  }
+  // J'écris tiré : {calcul, ecris}, un calcul du niveau dans la sorte et
+  // l'écriture du J'écris de la leçon, jamais un calcul de la leçon ni un
+  // de `exclure` (textes ou clés : la série en cours). La même graine rend
+  // le même calcul. null : le niveau n'a pas de recette (on garde le
+  // J'écris de la leçon).
+  function ecrisTire(cleNiveau, {graine = 1, exclure = []} = {}) {
+    const trouve = niveauDe(cleNiveau);
+    const lecon = trouve && trouve.niveau.apprends;
+    if (!lecon || !lecon.calculs || !RECETTES_ECRIS[cleNiveau] || typeof trouve.niveau.composer !== "function") return null;
+    const modele = lecon.calculs.ecris;
+    const sorte = sorteBrute(cleNiveau, modele);
+    const gabarit = gabaritDe(modele.texte);
+    const interdits = new Set([...exclure, ...lecon.textes, lecon.calculs.montre.texte]);
+    // (F1-1, « 0,7 = 7/□ » : la première étape, 7/10 = 0,7, écrit le 10
+    // cherché — c'est la leçon qui le veut.)
+    const voulu = devoile(modele, lecon.ecris);
+    const rng = mulberry32(graine >>> 0);
+    for (let essai = 0; essai < 12; essai += 1) {
+      for (const calcul of melanger(rng, trouve.niveau.composer(rng, 40, []))) {
+        if (interdits.has(calcul.texte) || interdits.has(calcul.cle)) continue;
+        if (calcul.forme !== modele.forme || sorteBrute(cleNiveau, calcul) !== sorte) continue;
+        if (!UNITES_LIBRES.has(cleNiveau) && gabaritDe(calcul.texte) !== gabarit) continue;
+        const ecris = ecrisDuCalcul(cleNiveau, calcul);
+        if (ecris && (voulu || !devoile(calcul, ecris))) return Object.freeze({calcul, ecris});
+      }
+    }
+    return null;
+  }
+
   return Object.freeze({
     PALIERS,
     TOTAUX,
@@ -8799,6 +9381,9 @@
     diagnostiquer,
     imageDe,
     tableARevoir,
-    a2Sauts
+    a2Sauts,
+    // Lot 3c : J'écris sur un calcul tiré.
+    ecrisDuCalcul,
+    ecrisTire
   });
 });

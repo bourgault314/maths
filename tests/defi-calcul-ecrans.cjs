@@ -404,7 +404,8 @@ async function jouerApprendsEnUneEtape(page, cle, ecran) {
     return {
       manipule: x.manipule ? {outil: x.manipule.outil, depart: x.manipule.depart, gestes: x.manipule.gestes, decalage: x.manipule.decalage, texte: x.manipule.texte} : null,
       represente: {reponse: x.represente.reponse, texte: x.represente.texte},
-      ecris: {etapes: (x.ecris.etapes || []).map(e => e.reponse), reponse: x.ecris.reponse, texte: x.ecris.texte}
+      ecris: {etapes: (x.ecris.etapes || []).map(e => e.reponse), reponse: x.ecris.reponse, texte: x.ecris.texte,
+        derniere: x.ecris.etapes.length ? x.ecris.etapes[x.ecris.etapes.length - 1].texte : ""}
     };
   }, cle);
   // ① On te montre. Lot « relier » : le boulier reporte chaque geste sur une
@@ -433,7 +434,7 @@ async function jouerApprendsEnUneEtape(page, cle, ecran) {
   }
   assert.deepEqual(outils, ["manip", "manip", "image", "image"], "perles 2 justes, puis la droite 2 justes");
   assert.ok(!vus.includes(a.represente.texte) && !vus.includes(a.ecris.texte), `${cle} : jamais un calcul de la leçon`);
-  // ④ J'écris, une fois : les étapes de la leçon, le dessin qui se remplit.
+  // ④ J'écris, une fois : ses étapes (lot 3c : sur un calcul tiré), le dessin qui se remplit.
   assert.equal(await entrainement(page), null, `${cle} : J'écris n'est pas un calcul de la série`);
   assert.equal(await moment(page), "J’écris");
   await ecran("apprends-ecris", {jeu: true, pave: true, image: true});
@@ -442,7 +443,12 @@ async function jouerApprendsEnUneEtape(page, cle, ecran) {
   assert.ok(dessins[0], `${cle} : J'écris montre son dessin`);
   assert.ok(await page.evaluate(() => document.getElementById("aide").getBoundingClientRect().bottom <= document.getElementById("expression").getBoundingClientRect().top + 1),
     `${cle} : le dessin est au-dessus des étapes`);
-  const reponses = a.ecris.etapes.length ? a.ecris.etapes : [a.ecris.reponse];
+  // Lot 3c : J'écris tire son calcul (de la sorte de la leçon) — on lit
+  // ses étapes à l'écran ; ce n'est pas celui de la leçon.
+  const enCours = await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.ecrisEnCours());
+  assert.ok(enCours && enCours.length, `${cle} : J'écris a ses étapes`);
+  assert.notEqual(enCours[enCours.length - 1].texte, a.ecris.derniere, `${cle} : J'écris tire un autre calcul que la leçon`);
+  const reponses = enCours.map(etape => etape.reponse);
   for (const r of reponses) {
     await taper(page, r, {clavier: true});
     await valider(page, {clavier: true});
