@@ -124,16 +124,44 @@
   }
   // Un sujet généré garde la structure (même nombre de questions, même ordre) et tire, dans chaque case, une des tâches
   // connues. On ne tire au hasard que s'il y a le choix : les sujets sans variantes gardent exactement leur suite de hasard.
-  function tirerTache(q, r) {
-    const t = taches(q);
-    return t.length > 1 ? r.parmi(t) : q;
+  // Lot EN10 : avec une année, seules les tâches de ce sujet officiel sont tirées (le jumeau du sujet 2026 de 4e ne pose
+  // plus « 14 − 6 », la question de 2024-2025) ; sans année, toutes les tâches connues (la future banque).
+  function tirerTache(q, r, annee) {
+    const t = annee === undefined ? taches(q) : taches(q).filter((x) => !x.annees || x.annees.includes(annee));
+    return t.length > 1 ? r.parmi(t) : t[0] || q;
   }
+
+  // ---------- Jumeau strict (lot EN10, décidé avec Gwenaël le 14/11) ----------
+  // Un jumeau strict ne change que les nombres et la présentation (ordre des termes, figure tournée, prénom, contexte), avec
+  // les mêmes pièges de la DEPP. Les formes qui changent le cas, le sens, l'écriture, la difficulté ou la nature de la bonne
+  // réponse restent dans le code (la banque par compétence les reprendra) : `sujet.horsStrict[num].formes` les nomme, et le
+  // jumeau les écarte. Le sujet officiel ne passe jamais par ici.
+  function horsStrict(sujet, q) {
+    const h = sujet && sujet.horsStrict && sujet.horsStrict[q.num];
+    return h ? h.formes : [];
+  }
+  function genererJumeau(sujet, q, t, r) {
+    const hors = horsStrict(sujet, q);
+    for (let essai = 0; essai < 500; essai++) {
+      const g = t.generer(r, false);
+      if (!hors.includes(g.forme)) return g;
+    }
+    throw new Error(`Jumeau strict impossible à tirer (${sujet.id} Q${q.num})`);
+  }
+  // La banque (plus tard) : toutes les formes connues, toutes les tâches.
+  function genererBanque(q, r) {
+    return tirerTache(q, r).generer(r, false);
+  }
+
   // Construit les questions d'un passage. officiel : l'entrée de sujet.officiels jouée, ou null pour un sujet généré.
-  function construire(sujet, r, officiel, numeros) {
+  // modele (lot EN10) : le sujet officiel dont le sujet généré est le jumeau (par défaut le plus récent) ; il ne tire que
+  // les tâches de ce sujet-là.
+  function construire(sujet, r, officiel, numeros, modele) {
     const qs = numeros ? sujet.questions.filter((q) => numeros.includes(q.num)) : sujet.questions;
+    const annee = (officiel || modele || (sujet.officiels || [])[0] || { annee: sujet.annee }).annee;
     return qs.map((q) => {
-      const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r);
-      const g = t.generer(r, Boolean(officiel));
+      const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r, annee);
+      const g = officiel ? t.generer(r, true) : genererJumeau(sujet, q, t, r);
       // Lot EN-C1 (choix de Gwenaël, 14/11) : le sujet officiel garde l'ordre des réponses du PDF ; seuls les jumeaux mélangent.
       const melange = !officiel && (g.melange ?? t.melange ?? q.melange ?? true);
       // Une question en grille (une case à cocher par ligne : Vrai / Faux…) n'a pas de liste de réponses : ses lignes
@@ -142,6 +170,21 @@
       return { q, t, g, choix: melange ? r.melanger(g.choix) : g.choix.slice() };
     });
   }
+
+  // ---------- Élision (lot EN10) ----------
+  // « de », « que », « le », « la » s'élident devant une voyelle ou un h muet : d’Inès, qu’Emma, d’oranges, d’huile,
+  // d’élèves. Un prénom en H ou en Y suivi d'une voyelle ne s'élide pas (de Hugo, de Yanis, comme dans le reste du site),
+  // ni un nom en h aspiré (de huit, la hauteur) : seuls les noms en h muet de la liste s'élident.
+  const H_MUET = /^h(?:uile|eure|abit|abitant|erbe|istoire|iver|ôpita|ôte|omme|onneur|orloge|uître|ectare|ectomètre|ectolitre|ectogramme)/;
+  function sElide(mot) {
+    const m = String(mot).replace(/^<[^>]*>/, "");
+    return /^(?:[aeiouàâéèêëîïôöùûüœæ]|y(?![aeiouyàâéèêëîïôöùûü]))/i.test(m) || H_MUET.test(m);
+  }
+  function elider(petit, mot) {
+    if (!sElide(mot)) return `${petit} ${mot}`;
+    return `${petit.replace(/[ea]$/, "")}’${mot}`;
+  }
+  const de = (mot) => elider("de", mot), que = (mot) => elider("que", mot);
 
   // ---------- Typographie française ----------
   // Espace insécable avant « ? : ; ! » et après « ; une fraction empilée reste collée au signe qui la suit ;
@@ -267,5 +310,5 @@
     return t === "-0" ? "0" : t.replace(".", ",").replace("-", "−");
   }
 
-  racine.EN = { calculer, ecrireCalcul, typo, taches, tacheOfficielle, tirerTache, construire, hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
+  racine.EN = { calculer, ecrireCalcul, typo, taches, tacheOfficielle, tirerTache, construire, horsStrict, genererJumeau, genererBanque, elider, de, que, hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
 })(typeof window !== "undefined" ? window : globalThis);

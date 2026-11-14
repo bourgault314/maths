@@ -213,9 +213,13 @@
       const [forme, n] = officiel ? FORMES[0] : r.parmi(FORMES);
       const k = officiel ? 1 : n === 4 ? r.parmi([1, 3]) : n === 6 ? r.parmi([1, 5]) : r.parmi([1, 3, 5, 7]);
       const coloriees = officiel ? [0] : r.melanger([...Array(n).keys()]).slice(0, k);
+      // Lot EN10 : un jumeau n'est jamais le sujet officiel lui-même (triangle, part du milieu seule coloriée).
+      if (!officiel && forme === "triangle" && k === 1 && coloriees[0] === 0) coloriees[0] = r.entier(1, 3);
       const f = (a, b) => `${a}/${b}`;
       return {
-        forme,
+        // Lot EN10 : une seule part coloriée (comme le sujet officiel, 1/4) = le jumeau strict, « une-part-… » ; plusieurs parts
+        // coloriées (3/4, 5/6, 3/8…) = plus dur, gardé pour la banque (HORS_STRICT).
+        forme: k === 1 ? `une-part-${forme}` : forme,
         enonce: "Quelle fraction de la surface est coloriée ?",
         figure: partage(forme, coloriees),
         choix: [
@@ -860,6 +864,28 @@
   });
 
 
+  // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
+  // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
+  // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  const HORS_STRICT = {
+    2: { formes: ["produit-dabord-3-chiffres", "somme-dabord-3-chiffres"], pourquoi: "26 361 : pas de zéro à écrire (35 064 en a un)" },
+    3: { formes: ["ecrire"], pourquoi: "l'autre sens (écrire au lieu de lire)" },
+    4: { formes: ["division"], pourquoi: "72 : 8 au lieu d'un facteur manquant" },
+    5: { formes: ["soustraction"], pourquoi: "100 − 54 au lieu d'un complément" },
+    6: { formes: ["triangle", "carre", "hexagone", "disque"], pourquoi: "3/4, 5/6, 3/8… au lieu d'une seule part coloriée (1/4) : plus dur. Le jumeau strict : une seule part (formes « une-part-… »)" },
+    7: { formes: ["plus-98"], pourquoi: "+ 98 au lieu de + 99" },
+    12: { formes: ["dixiemes", "milliemes"], pourquoi: "autre rang" },
+    13: { formes: ["milliemes"], pourquoi: "droite graduée en millièmes au lieu de dix-millièmes" },
+    15: { formes: ["dizaines-milliemes"], pourquoi: "millièmes au lieu de centièmes" },
+    16: { formes: ["entier-moins-decimal"], pourquoi: "15 − 9,7 : autre cas" },
+    18: { formes: ["chiffre-du-rang"], pourquoi: "l'autre sens (le chiffre au lieu du rang)" },
+    20: { formes: ["quart"], pourquoi: "25 % au lieu de 50 %" },
+    24: { formes: ["avant-1"], pourquoi: "fraction plus petite que 1" },
+    25: { formes: ["une-decimale", "deux-decimales"], pourquoi: "moins de décimales : plus facile" },
+    27: { formes: ["trois-termes"], pourquoi: "trois termes" },
+    28: { formes: ["0,5"], pourquoi: "× 0,5 revient à ÷ 2 : autre cas" },
+  };
+
   racine.EN_SUJETS = racine.EN_SUJETS || {};
   racine.EN_SUJETS["5e-automatismes"] = {
     id: "5e-automatismes",
@@ -875,5 +901,6 @@
     // Le même sujet est tombé en 2024, 2025 et 2026 (PDF Eduscol comparés : mêmes questions, réponses, figures et repères).
     officiels: [{ cle: "2026", annee: 2026, titre: "Le sujet officiel", detail: "Les vraies questions. Le même sujet est tombé en 2024, 2025 et 2026." }],
     questions: Q,
+    horsStrict: HORS_STRICT,
   };
 })(typeof window !== "undefined" ? window : globalThis);
