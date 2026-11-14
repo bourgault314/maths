@@ -53,20 +53,5 @@ test("2 000 sujets jumeaux : 4 choix distincts, une seule bonne réponse, un pi�
   }
 });
 
-test("les bonnes réponses des jumeaux sont mathématiquement justes", () => {
-  const num = (s) => Number(s.replace(/[\s a-zA-Z²³]+/g, "").replace(",", "."));
-  for (let graine = 1; graine <= 2000; graine++) {
-    const r = hasard(graine);
-    const sujet = S.questions.map((q) => [q.num, q.generer(r, false)]);
-    for (const [n, g] of sujet) {
-      const juste = texte(g.choix.find((x) => x.juste).html);
-      const e = texte(g.enonce);
-      if (n === 3) { const [, a, b] = e.match(/(\d) \+ (\d)\/10/); assert.equal(num(juste), Number(a) + Number(b) / 10); }
-      if (n === 12) { const [, a, b] = e.replace(/ /g, "").match(/(\d+) \+ … = (\d+)/); assert.equal(Number(a) + num(juste), Number(b)); assert.equal(Number(b) % 10, 0); }
-      if (n === 13) { const [, a] = e.match(/de ([\d,]+) est/); assert.equal(num(juste) * 2, num(a)); }
-      if (n === 14) { const [, a] = e.replace(/ /g, "").match(/([\d,]+) × 10/); assert.ok(Math.abs(num(juste) - num(a) * 10) < 1e-9); }
-      if (n === 15) { const [, a, k] = e.match(/([\d,]+) × (\d)/); assert.ok(Math.abs(num(juste) - num(a) * Number(k)) < 1e-9); }
-      if (n === 10) { const v = g.choix.map((x) => num(texte(x.html))); assert.equal(num(juste), Math.min(...v)); }
-    }
-  }
-});
+// Les bonnes réponses des jumeaux (et la variété de leurs formes) sont contrôlées depuis le lot EN4c dans
+// tests/evaluations-nationales-6e-variete.test.mjs : la réponse y est recalculée depuis l'énoncé ou la figure.
