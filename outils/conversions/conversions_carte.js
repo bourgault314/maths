@@ -189,7 +189,10 @@
   // unité + `fin` forment la phrase (« Une voiture mesure environ 4 m de
   // long. »). `local` : repère réunionnais.
   const REPERES = [
-    {code: "l1", grandeur: "longueur", etape: "R3", emoji: "📏", objet: "La plus petite graduation de la règle", valeur: "1 mm", debut: "La plus petite graduation de la règle mesure", nombre: "1", unite: "mm", fin: ""},
+    // Lot A2 ter : la règle passe à « Mes premiers repères » (palier 1). Le
+    // millimètre est au programme de CE2, l'élève le voit sur sa règle, et
+    // les aides du palier 1 le citaient sans qu'il l'ait appris.
+    {code: "l1", grandeur: "longueur", etape: "R1", emoji: "📏", objet: "La plus petite graduation de la règle", valeur: "1 mm", debut: "La plus petite graduation de la règle mesure", nombre: "1", unite: "mm", fin: ""},
     {code: "l2", grandeur: "longueur", etape: "R3", emoji: "🪙", objet: "Une pièce de 1 centime", valeur: "un peu plus de 1,5 cm de large", debut: "Une pièce de 1 centime mesure un peu plus de", nombre: "1,5", unite: "cm", fin: "de large"},
     {code: "l3", grandeur: "longueur", etape: "R1", emoji: "📄", objet: "Une feuille A4", valeur: "21 cm sur 29,7 cm", debut: "Une feuille A4 mesure", nombre: "21", unite: "cm", fin: "de large"},
     {code: "l4", grandeur: "longueur", etape: "R1", emoji: "🚗", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
@@ -257,9 +260,12 @@
           consigne: "Un repère, c'est un objet que je connais bien : il m'aide à imaginer une mesure.",
           aide: {type: "repere", repere: "c3"}, legende: "Une brique de lait : 1 L.\nUne canette : 33 cL, un tiers de litre."}
       ],
-      retenir: "Mes premiers repères : une feuille A4 mesure 21 cm de large ; une voiture mesure environ 4 m de long ; de Saint-Pierre à Saint-Denis, il y a environ 80 km. Une pièce de 1 € pèse 7,5 g ; un paquet de riz pèse 1 kg ; un pack de 6 bouteilles d'eau pèse environ 9 kg ; une voiture pèse environ 1 t. Une brique de lait contient 1 L ; une canette contient 33 cL.",
+      // Lot A2 ter (choix de Gwenaël, le 13/11 : « ça fait beaucoup à lire
+      // là-haut ; on laisse que les trucs que tu as mis en dessous ») : les
+      // cartes des repères disent tout, le texte s'en va.
+      retenir: "",
       cahier: "Je les note dans mon cahier et je les apprends par cœur.",
-      reperes: ["l3", "l4", "l7", "m3", "m4", "m5", "m6", "c3", "c2"]
+      reperes: ["l1", "l3", "l4", "l7", "m3", "m4", "m5", "m6", "c3", "c2"]
     },
     R2: {
       pret: true,
@@ -277,7 +283,7 @@
           consigne: "D'abord, je me demande ce que je mesure.\nPuis je choisis l'unité.", aide: {type: "grandeurs", bonne: "duree"},
           legende: "La récréation, c'est une durée : 15 min.\n15 h, ce serait plus qu'une journée d'école !"}
       ],
-      retenir: "Pour choisir l'unité, je me demande d'abord ce que je mesure : une longueur, une masse, une contenance ou une durée. Puis je compare à mes repères : un crayon mesure 15 cm, pas 15 m ni 15 mm ; un bébé pèse 3 kg, pas 3 g ; la récréation dure 15 min, pas 15 h.",
+      retenir: "Je me demande d'abord ce que je mesure : une longueur, une masse, une contenance ou une durée.\nPuis je compare à mes repères : un crayon mesure 15 cm, pas 15 m.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -298,7 +304,8 @@
           aide: {type: "balance", nombre: 10}, apres: ["10 tablettes de 100 g", "= 1 000 g"],
           legende: "kilo veut dire mille : 1 kilogramme = 1 000 grammes."}
       ],
-      retenir: "1 m = 10 dm = 100 cm = 1 000 mm ; 1 dm = 10 cm ; 1 cm = 10 mm ; 1 km = 1 000 m. 1 kg = 1 000 g ; 1 t = 1 000 kg. 1 L = 10 dL = 100 cL.",
+      // Lot A2 ter : le tableau des relations dit tout (choix de Gwenaël).
+      retenir: "",
       cahier: "Je recopie cela dans mon cahier.",
       relations: RELATIONS_BASES,
       reperes: []
@@ -320,7 +327,7 @@
           aide: {type: "glisse-unite", grandeur: "contenance", nombre: "5", de: "L", vers: "cL"},
           apres: ["Je glisse l'unité de L à cL.", "Le 5 reste sous L, les 0 remplissent dL et cL."]}
       ],
-      retenir: "Pour passer à une unité plus petite, il en faut plus : je multiplie.\n1 m = 100 cm, donc 3 m = 3 × 100 cm = 300 cm.",
+      retenir: "Vers une unité plus petite, il en faut plus : je multiplie.\n3 m = 3 × 100 cm = 300 cm.",
       cahier: "Je recopie cela dans mon cahier.",
       relations: RELATIONS_BASES,
       reperes: []
@@ -342,7 +349,7 @@
           aide: {type: "glisse-unite", grandeur: "longueur", nombre: "40", de: "mm", vers: "cm"},
           apres: ["Je glisse l'unité de mm à cm.", "Le 4 est sous cm : 40 mm = 4 cm."]}
       ],
-      retenir: "Pour passer à une unité plus grande, il en faut moins : je divise. 1 m = 100 cm, donc 600 cm = 600 ÷ 100 m = 6 m.\nPour ranger des mesures, je les écris d'abord dans la même unité : 2 kg = 2 000 g, donc 1 500 g < 2 kg.",
+      retenir: "Vers une unité plus grande, il en faut moins : je divise. 600 cm = 600 ÷ 100 m = 6 m.\nPour ranger des mesures, je les écris dans la même unité.",
       cahier: "Je recopie cela dans mon cahier.",
       relations: RELATIONS_BASES,
       reperes: []
@@ -366,7 +373,7 @@
           aide: {type: "heure", heures: 1, parts: 1, plus: 10},
           apres: ["60 min + 10 min = 70 min"]}
       ],
-      retenir: "1 h = 60 min (et pas 100 min). 2 h = 2 × 60 min = 120 min ; 1 h 10 min = 60 min + 10 min = 70 min.",
+      retenir: "1 h = 60 min, pas 100 min.\n1 h 10 min = 60 min + 10 min = 70 min.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -387,7 +394,7 @@
           aide: {type: "heure", heures: 1, parts: 4, verte: true, compte: 3},
           apres: ["3 quarts : 3 × 15 min = 45 min"]}
       ],
-      retenir: "Une heure, c'est 60 min. Une demi-heure = 30 min ; un quart d'heure = 15 min ; trois quarts d'heure = 3 × 15 min = 45 min.",
+      retenir: "Une demi-heure = 30 min ; un quart d'heure = 15 min.\nTrois quarts d'heure = 3 × 15 min = 45 min.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -434,7 +441,7 @@
           apres: ["2,50 € = 2 € 50 c"],
           legende: "Et 0,85 €, c'est 0 € 85 c : 85 c."}
       ],
-      retenir: "1 € = 100 c (100 centimes). 3 € 50 c = 3 × 100 c + 50 c = 350 c.\nSur une étiquette, la virgule sépare les euros et les centimes : 2,50 € = 2 € 50 c ; 3,05 € = 3 € 5 c ; 0,85 € = 85 c.",
+      retenir: "1 € = 100 c : 3 € 50 c = 350 c.\nSur une étiquette, la virgule sépare les euros et les centimes : 2,50 € = 2 € 50 c.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -459,7 +466,7 @@
           aide: {type: "axe", depart: 640, bonds: [20, 15], cherche: "arrivee"},
           apres: ["10 h 40 + 20 min = 11 h", "11 h + 15 min = 11 h 15"]}
       ],
-      retenir: "Pour trouver une durée, je fais des bonds sur l'axe du temps : d'abord les heures, puis les minutes. De 8 h 30 à 10 h 50 : 2 h, puis 20 min, soit 2 h 20 min.\nPour passer une heure pile, je fais un bond jusqu'à elle : 10 h 40 + 35 min = 10 h 40 + 20 min + 15 min = 11 h 15.",
+      retenir: "Je fais des bonds sur l'axe du temps : les heures, puis les minutes, en passant par l'heure pile.\nDe 8 h 30 à 10 h 50 : 2 h + 20 min = 2 h 20 min.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     }

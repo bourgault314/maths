@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261112-a2bis2">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261113-a2ter">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261112-a2bis"></script>
-  <script src="./conversions_generateurs.js?v=20261112-a2bis"></script>
+  <script src="./conversions_carte.js?v=20261113-a2ter"></script>
+  <script src="./conversions_generateurs.js?v=20261113-a2ter"></script>
   <script src="./defi_conversions_parcours.js?v=20261112-1"></script>
-  <script src="./defi_conversions_aides.js?v=20261112-a2bis"></script>
+  <script src="./defi_conversions_aides.js?v=20261113-a2ter"></script>
   <script>
   (function () {
     "use strict";
@@ -75,6 +75,7 @@
       profSerie: {usage: "valide", graine: 0}
     };
 
+    const app = document.getElementById("app");
     const cadre = document.getElementById("cadre");
     const voile = document.getElementById("voile");
     const retourSite = document.getElementById("retour-site");
@@ -111,6 +112,9 @@
       cadre.textContent = "";
       cadre.className = `cadre${serre ? " serre" : ""}`;
       cadre.dataset.forme = forme;
+      // Lot A2 ter : la forme de l'écran sur l'appli entière (au téléphone
+      // peu haut, la ligne du logo laisse sa place pendant une séance).
+      app.dataset.forme = forme;
       cadre.style.removeProperty("--q-h");
       cadre.style.removeProperty("--z-h");
       retourSite.hidden = !rond;
@@ -395,10 +399,14 @@
     // connais déjà ? : ce qu'il y a à dire, sans boîte), « montre » (On te
     // montre : à la hauteur du dessin), ou « aucune » (l'échauffement : la
     // correction vient à la place du pavé).
-    function ecranQuestion({petit, titre, chip, chemin, retour, hauteur, zone: sorteZone = "aide", hauteurZone}) {
+    function ecranQuestion({petit, titre, chip, chemin, retour, hauteur, hauteurPx, zone: sorteZone = "aide", hauteurZone}) {
       ecran({serre: true, forme: "seance"});
       if (sorteZone === "aucune") cadre.classList.add("sans-aide");
-      if (hauteur) cadre.style.setProperty("--q-h", rem(hauteur));
+      // Une aide à côté du pavé (À toi, On revoit) ou l'escalier (Tu connais
+      // déjà ?) : sur un écran peu haut, le pavé se fait plus court.
+      if (sorteZone === "aide") cadre.classList.add("bas-court");
+      if (hauteurPx) cadre.style.setProperty("--q-h", `${hauteurPx}px`);
+      else if (hauteur) cadre.style.setProperty("--q-h", rem(hauteur));
       if (hauteurZone) cadre.style.setProperty("--z-h", `${hauteurZone}px`);
       const b = el("div", "bseance");
       const r = el("button", "rond"); r.appendChild(fleche());
@@ -444,29 +452,56 @@
       if (style === null) zone.removeAttribute("style"); else zone.setAttribute("style", style);
       return Math.ceil(max + 1);
     }
-    // Les retours possibles après une erreur (pour réserver leur place) :
-    // un zéro de trop ou de moins, un mauvais choix.
-    function retoursPossibles(question) {
-      if (question.forme === "associer" || question.forme === "ranger") return [];
-      const essais = [];
-      if (question.choix) question.choix.forEach((c, i) => { if (i !== question.bon) essais.push(i); });
-      else {
-        const r = Array.isArray(question.reponse) ? question.reponse : [question.reponse];
-        const n = String(r[0]).replace(/\s/g, "");
-        const variantes = [`${n}0`, `${n}00`, n.length > 1 ? n.slice(0, -1) : "7", `${n}1`];
-        variantes.forEach(v => essais.push(r.length > 1 ? [v, String(r[1]).replace(/\s/g, "")] : v));
-      }
-      const textes = essais.map(e => { try { return G.verifier(question, e).retour || ""; } catch (err) { return ""; } });
-      return textes.sort((a, b) => b.length - a.length).slice(0, 2);
-    }
-    // Le contenu de la zone après une erreur dans « À toi » ou « On revoit ».
-    function remplirErreur(zone, qn, retour, note) {
+    // Après une erreur dans « À toi » ou « On revoit » (lot A2 ter) :
+    // - la zone dit la bonne réponse ; pour une conversion, le glisse-unité
+    //   de la question glisse tout seul de l'unité de départ à celle de la
+    //   réponse, comme le glisse-unité animé de l'exerciseur, puis la réponse
+    //   s'écrit dessous ;
+    // - le pourquoi (l'erreur reconnue), la suite et les ronds viennent à la
+    //   place des réponses, qui ne servent plus (comme à l'échauffement) :
+    //   les ronds ne passent plus jamais sous les réponses (Gwenaël, le 13/11).
+    function remplirErreurZone(zone, qn, {animer = false} = {}) {
       remplirZone(zone, "ko", ["ko", "La bonne réponse"]);
-      bonneReponse(zone, qn);
-      if (retour) zone.appendChild(el("div", "verd ko", retour));
-      if (note) zone.appendChild(el("div", "note", note));
+      const reponse = el("div", "reponse-bonne");
+      // Un repère : sa carte, comme à l'échauffement (l'objet et sa mesure).
+      if (qn.repere && qn.forme === "qcm") reponse.appendChild(AIDES.carteRepere(qn.repere, {grande: true}));
+      // « Qu'est-ce que je mesure ? » : les quatre grandeurs, la bonne en vert.
+      else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur});
+      else bonneReponse(reponse, qn);
+      if (AIDES.correctionGlisse(zone, qn, {ensuite: () => { reponse.style.visibility = ""; }})) {
+        if (animer) reponse.style.visibility = "hidden";
+      } else if (!qn.choix && !qn.objets && !qn.ordre && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume) {
+        // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
+        reponse.appendChild(el("div", "rel petite", qn.correction[0]));
+      }
+      zone.appendChild(reponse);
+    }
+    function remplirErreurBas(bas, retour, note, ronds) {
+      bas.textContent = "";
+      const panneau = el("div", "zone ko panneau pourquoi");
+      if (retour) panneau.appendChild(el("div", "verd ko", retour));
+      if (note) panneau.appendChild(el("div", "note", note));
+      if (ronds) panneau.appendChild(ronds);
+      if (!retour) panneau.prepend(el("div", "verd ko", "Ce n'est pas ça."));
+      bas.appendChild(panneau);
+      ajusterZone(panneau);
+    }
+    function remplirErreur(ui, qn, retour, note, ronds) {
+      remplirErreurZone(ui.zone, qn, {animer: true});
+      ajusterZone(ui.zone);
+      remplirErreurBas(ui.bas, retour, note, ronds);
     }
 
+    // La hauteur de la question d'une série (en px) : au moins celle de sa
+    // question la plus haute (lot A2 ter) ; quand l'écran a de la place (plus
+    // de 800 px de haut, ou un grand écran de plus de 700 px), celle d'avant,
+    // fixe par étape (rien ne change à l'ordinateur ni au téléphone haut).
+    function hauteurSerie(qEl, code, questions) {
+      const mesure = mesurerQuestions(qEl, questions);
+      const px = hauteurQuestion(code) * parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+      const haut = window.innerHeight > 800 || (window.innerWidth >= 900 && window.innerHeight > 700);
+      return haut ? Math.max(mesure, Math.round(px)) : mesure;
+    }
     // La hauteur de la question est FIXE pendant toute la séance d'une
     // étape (rien ne bouge d'une question à l'autre) : celle de sa forme la
     // plus haute.
@@ -476,6 +511,43 @@
       if (CARTE.etape(code).famille === "problemes" || code === "D7") return 178;
       return code === "E1" ? 156 : 124;
     }
+
+    // Lot A2 ter : l'aide tient toujours dans sa zone. Au téléphone peu haut
+    // (375 × 548, le petit iPhone), la zone a moins de place que l'aide
+    // la plus haute de la série : son contenu se réduit d'un seul tenant, à
+    // la place qu'il a, au lieu de passer sous l'étiquette « L'OUTIL » ou sous
+    // les réponses (vu par Gwenaël sur son iPhone, le 13/11). L'étiquette (et
+    // la relation posée à côté d'elle) ne bougent pas.
+    function ajusterZone(zone) {
+      if (!zone || !zone.isConnected || zone.classList.contains("info")) return;
+      // La relation posée à côté de l'étiquette : trop longue pour la place
+      // (« 1 € = 100 c, donc 7 € = 7 × 100 c » au petit téléphone), elle
+      // revient dans l'aide, sous l'étiquette.
+      const rel = zone.querySelector(":scope > .rel.petite:not(.libre)");
+      const etiq = zone.querySelector(":scope > .etiq");
+      if (rel && etiq && getComputedStyle(rel).position === "absolute") {
+        const a = rel.getBoundingClientRect();
+        const b = etiq.getBoundingClientRect();
+        if (a.left < b.right + 4 && a.bottom > b.top && a.top < b.bottom) rel.classList.add("libre");
+      }
+      const libre = n => n.nodeType === 1 && (n.classList.contains("etiq") || n.classList.contains("zone-in")
+        || (n === zone.querySelector(":scope > .rel.petite:not(.libre)") && getComputedStyle(n).position === "absolute"));
+      let dedans = zone.querySelector(":scope > .zone-in");
+      if (!dedans) { dedans = el("div", "zone-in"); zone.appendChild(dedans); }
+      [...zone.childNodes].filter(n => !libre(n)).forEach(n => dedans.appendChild(n));
+      dedans.style.transform = "";
+      dedans.style.marginBottom = "";
+      const s = getComputedStyle(zone);
+      const place = zone.clientHeight - parseFloat(s.paddingTop) - parseFloat(s.paddingBottom);
+      const besoin = dedans.scrollHeight;
+      if (place > 0 && besoin > place + 1) {
+        const k = Math.max(0.5, place / besoin);
+        dedans.style.transform = `scale(${k.toFixed(3)})`;
+        dedans.style.marginBottom = `${(-(besoin * (1 - k))).toFixed(1)}px`;
+      }
+      dedans.dataset.echelle = besoin > place + 1 && place > 0 ? (place / besoin).toFixed(2) : "1";
+    }
+    if (window.ResizeObserver) new ResizeObserver(() => ajusterZone(cadre.querySelector(".zone"))).observe(cadre);
 
     function remplirZone(zone, classe, etiquette) {
       zone.textContent = "";
@@ -503,66 +575,92 @@
 
     // Pose une question et attend la réponse. `avant(zone)` remplit la zone
     // avant la réponse ; `apres(verdict)` est appelé après « Valider ».
-    function interroger(ui, question, {avant, apres}) {
-      const saisie = {cases: ["", ""], focus: 0, fige: false};
+    // La question dans son bloc (lot A2 ter : à part, pour mesurer d'avance
+    // la question la plus haute d'une série, à la largeur de l'écran).
+    // `toucherCase(i)` : une case touchée. Rend les cases.
+    function poserQuestion(qEl, question, toucherCase = () => {}) {
       const nbCases = question.forme === "deux-cases" ? 2 : 1;
       const casesEl = [];
-      ui.q.textContent = "";
-      ui.q.classList.toggle("long", Boolean(question.morceaux.long));
+      qEl.textContent = "";
+      qEl.classList.toggle("long", Boolean(question.morceaux.long));
       const m = question.morceaux;
       const nouvelleCase = (i, petite) => {
         const c = el("span", `case${petite ? " petite" : ""}${i === 0 ? " focus" : ""}`, "");
         c.setAttribute("role", "textbox");
         c.setAttribute("aria-label", "Ta réponse");
-        c.addEventListener("click", () => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
+        c.addEventListener("click", () => toucherCase(i));
         casesEl.push(c);
         return c;
       };
       // Les pièces à compter (lot A2 bis), sous la phrase de la question.
-      const pieces = () => { if (m.pieces) ui.q.appendChild(AIDES.rangeePieces(m.pieces, {classe: "pieces-q"})); };
+      const pieces = () => { if (m.pieces) qEl.appendChild(AIDES.rangeePieces(m.pieces, {classe: "pieces-q"})); };
       const deuxCases = l => {
         l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
         if (m.cases[1]) l.appendChild(el("span", "", m.cases[1]));
       };
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
-        if (m.enonce) ui.q.appendChild(el("div", "enonce", m.enonce));
-        if (m.proposition) ui.q.appendChild(el("div", "prop", m.proposition));
-        if (m.phrase) ui.q.appendChild(el("div", "phrase-t", m.phrase));
-        if (m.consigne) ui.q.appendChild(el("div", "consigne2", m.consigne));
-        if (question.forme === "vrai-faux") ui.q.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
+        if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
+        if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
+        if (m.phrase) qEl.appendChild(el("div", "phrase-t", m.phrase));
+        if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
+        if (question.forme === "vrai-faux") qEl.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
       } else if (question.forme === "associer" || question.forme === "ranger") {
         // Lot A2 bis : relier, ranger. La consigne ; les objets et les
         // mesures sont à la place du pavé.
-        ui.q.appendChild(el("div", "phrase-t", m.phrase));
-        if (m.consigne) ui.q.appendChild(el("div", "consigne2", m.consigne));
+        qEl.appendChild(el("div", "phrase-t", m.phrase));
+        if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
       } else if (m.enonce) {
-        ui.q.appendChild(el("div", "enonce", m.enonce));
+        qEl.appendChild(el("div", "enonce", m.enonce));
         const l = el("div", "l1");
         const avantEl = el("span", "", m.avant);
         l.appendChild(avantEl);
         if (m.cases) deuxCases(l);
         else l.append(nouvelleCase(0), el("span", "", m.apres));
-        ui.q.appendChild(l);
-        if (m.cases) couperSiTropLarge(ui.q, l, avantEl);
+        qEl.appendChild(l);
+        if (m.cases) couperSiTropLarge(qEl, l, avantEl);
       } else if (m.phrase) {
-        ui.q.appendChild(el("div", "phrase-t", m.phrase));
+        qEl.appendChild(el("div", "phrase-t", m.phrase));
         pieces();
         const l = el("div", "l1");
         l.append(nouvelleCase(0), el("span", "", m.apres));
-        ui.q.appendChild(l);
+        qEl.appendChild(l);
       } else if (nbCases === 2) {
-        ui.q.appendChild(el("div", "phrase-t", m.avant));
+        qEl.appendChild(el("div", "phrase-t", m.avant));
         pieces();
         const l = el("div", "l1");
         deuxCases(l);
-        ui.q.appendChild(l);
+        qEl.appendChild(l);
       } else {
         const l = el("div", "l1");
         const avantEl = el("span", "", m.avant);
         l.append(avantEl, nouvelleCase(0), el("span", "", m.apres));
-        ui.q.appendChild(l);
-        couperSiTropLarge(ui.q, l, avantEl);
+        qEl.appendChild(l);
+        couperSiTropLarge(qEl, l, avantEl);
       }
+      return casesEl;
+    }
+    // La hauteur de la question pour toute une série : celle de la plus
+    // haute, mesurée à la largeur de l'écran (lot A2 ter ; avant, une
+    // hauteur fixe par étape, pensée pour 375 × 667, prenait la place de
+    // l'aide au petit téléphone). Jamais moins que `mini` (en px).
+    function mesurerQuestions(qEl, questions, mini = 0) {
+      const style = qEl.getAttribute("style");
+      qEl.style.cssText = "height:auto;flex:0 0 auto";
+      let max = mini;
+      questions.filter(Boolean).forEach(x => {
+        poserQuestion(qEl, x);
+        max = Math.max(max, qEl.getBoundingClientRect().height);
+      });
+      qEl.textContent = "";
+      if (style === null) qEl.removeAttribute("style"); else qEl.setAttribute("style", style);
+      return Math.ceil(max + 1);
+    }
+
+    function interroger(ui, question, {avant, apres}) {
+      const saisie = {cases: ["", ""], focus: 0, fige: false};
+      const nbCases = question.forme === "deux-cases" ? 2 : 1;
+      const m = question.morceaux;
+      const casesEl = poserQuestion(ui.q, question, i => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
       function peindre() {
         casesEl.forEach((c, i) => {
           c.textContent = saisie.cases[i].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -699,6 +797,7 @@
         else if (ev.key === "Enter") { ev.preventDefault(); repondre(null); }
       };
       avant(ui.zone);
+      ajusterZone(ui.zone);
 
       function repondre(choix) {
         if (saisie.fige) return;
@@ -754,6 +853,14 @@
       if (clavier && !ev.ctrlKey && !ev.metaKey && !ev.altKey) clavier(ev);
     });
 
+    // « 💪 C'est à toi ! » sur une seule ligne (lot A2 ter : la zone sans
+    // aide était la plus haute de la série, et laissait un grand vide sous
+    // l'outil au téléphone).
+    function cEstAToi() {
+      const l = el("div", "calme grand ligne-toi");
+      l.append(el("span", "emoji-calme", "💪"), document.createTextNode(T("C'est à toi !")));
+      return l;
+    }
     function suiteRonds(n, total = 5, legende = true, grand = false) {
       const s = el("div", `suite${grand ? " grand" : ""}`);
       for (let i = 0; i < total; i += 1) s.appendChild(el("i", i < n ? "ok" : ""));
@@ -770,7 +877,9 @@
     }
     function bonneReponse(zone, question) {
       if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") {
-        zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        // Une seule ligne (« Je mesure une masse. ») : en grand ; plusieurs
+        // (relier, ranger) : à la taille d'une phrase.
+        zone.appendChild(texteLignes(question.correction.length > 1 ? "grosse petite-grosse" : "grosse", question.correction.join("\n")));
         return;
       }
       const g = el("div", "grosse");
@@ -820,7 +929,9 @@
         consigne.classList.add("consigne-montre");
         ui.zone.before(consigne);
         ui.zone.appendChild(el("span", "etiq outil", `On te montre · ${ex.etiquette}`));
+        let geste = false;
         const fini = () => {
+          geste = true;
           if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = "case vert"; }
           if (ex.apres && !ui.zone.querySelector(".apres")) {
             // La somme qui s'est construite laisse sa place à l'écriture finale.
@@ -834,11 +945,22 @@
             });
             ui.zone.appendChild(a);
           }
+          ajusterZone(ui.zone);
         };
-        AIDES.montrer(ui.zone, ex.aide, {fini});
+        // Lot A2 ter : « Suivant » sans avoir fait le geste le joue à la
+        // place de l'élève (on voit l'animation, la case se remplit,
+        // l'explication apparaît) ; le second appui passe au temps suivant.
+        // On peut toujours toucher soi-même.
+        const jouer = AIDES.montrer(ui.zone, ex.aide, {fini});
         if (ex.legende) ui.zone.appendChild(texteLignes("note", ex.legende));
+        ajusterZone(ui.zone);
+        let joue = false;
         ui.action.textContent = "Suivant →";
         ui.action.onclick = () => {
+          if (!geste && jouer) {
+            if (!joue) { joue = true; ui.zone.classList.add("joue"); jouer(); }
+            return;
+          }
           i += 1;
           if (i < 3) temps();
           else {
@@ -858,6 +980,7 @@
       const reponses = [];
       let i = 0;
       let hauteurZone = 0;
+      let hauteurQ = 0;
       noterSeance({atoi: 2});
       const question = () => {
         const suivi = P.suivreEntrainement(reponses);
@@ -870,16 +993,16 @@
         if (suivi.fini || i >= serie.length) { finAToiSansReussir(code, {retour, fin}); return; }
         const qn = serie[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `à toi · ${i + 1}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
-          retour, hauteur: hauteurQuestion(code), hauteurZone});
+          retour, hauteurPx: hauteurQ, hauteurZone});
+        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
         // La première fois : la hauteur de l'aide la plus haute de la série
         // (l'outil, l'image, une erreur), pour que rien ne bouge ensuite.
         if (!hauteurZone) {
-          const notes = ["À la prochaine question, tu gardes l'outil.", "À la prochaine question, l'image revient."];
           hauteurZone = mesurerZone(ui.zone, serie.flatMap(qn => [
             z => { remplirZone(z, "outil", ["outil", "L'outil"]); AIDES.outil(z, qn); },
             z => { remplirZone(z, "image", ["image", "L'image"]); AIDES.image(z, qn); },
-            ...retoursPossibles(qn).map(r => z => { remplirErreur(z, qn, r, notes[1]); z.appendChild(suiteRonds(0)); })
-          ]).concat(z => { remplirZone(z, "vide", ["sans", "Sans aide"]); z.append(el("div", "emoji-calme", "💪"), el("div", "calme grand", "C'est à toi !"), suiteRonds(4, 5, true, true)); }));
+            z => remplirErreurZone(z, qn)
+          ]).concat(z => { remplirZone(z, "vide", ["sans", "Sans aide"]); z.append(cEstAToi(), suiteRonds(4, 5, true, true)); }));
           cadre.style.setProperty("--z-h", `${hauteurZone}px`);
         }
         const phase = suivi.outil;
@@ -887,7 +1010,7 @@
           avant(zone) {
             if (phase === "outil") { remplirZone(zone, "outil", ["outil", "L'outil"]); AIDES.outil(zone, qn); }
             else if (phase === "image") { remplirZone(zone, "image", ["image", "L'image"]); AIDES.image(zone, qn); }
-            else { remplirZone(zone, "vide", ["sans", "Sans aide"]); zone.append(el("div", "emoji-calme", "💪"), el("div", "calme grand", "C'est à toi !"), suiteRonds(suivi.justesDeSuite, 5, true, true)); }
+            else { remplirZone(zone, "vide", ["sans", "Sans aide"]); zone.append(cEstAToi(), suiteRonds(suivi.justesDeSuite, 5, true, true)); }
           },
           apres: {fait(v) {
             reponses.push({juste: v.juste, outil: phase});
@@ -898,8 +1021,8 @@
               return;
             }
             const apresErreur = P.suivreEntrainement(reponses);
-            remplirErreur(ui.zone, qn, v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.");
-            ui.zone.appendChild(suiteRonds(0));
+            remplirErreur(ui, qn, v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.",
+              suiteRonds(0));
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
             ui.action.onclick = question;
@@ -947,28 +1070,41 @@
       r.appendChild(p);
       return r;
     }
-    function aRetenir(code, {retour, fin} = {}) {
+    // Les cases de « À retenir » : le tableau des relations, les cartes des
+    // repères. Lot A2 ter (choix de Gwenaël, le 13/11 : « ça fait beaucoup à
+    // lire là-haut ; on laisse que les trucs que tu as mis en dessous, dans
+    // les cases ») : quand les cases disent tout, il n'y a plus de texte
+    // au-dessus ; sinon, le texte dit en une ou deux phrases la règle ou la
+    // méthode, que les cases ne disent pas.
+    function casesRetenir(code) {
       const etape = CARTE.etape(code);
-      ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
-      const defile = el("div", "ecran-defile");
-      defile.appendChild(blocRetenir(code));
-      defile.appendChild(el("div", "cahier", `✏️ ${etape.cahier}`));
+      const cases = [];
       if (etape.relations) {
         const c = el("div", "carte");
         c.style.padding = `${rem(10)} ${rem(12)}`;
-        const e = el("div", "eti", "Les relations de cette étape");
+        const e = el("div", "eti", etape.retenir ? "Les relations de cette étape" : "À retenir : les relations");
         e.style.marginBottom = rem(4);
         c.appendChild(e);
         const g = el("div", "relations");
         etape.relations.forEach(rel => g.appendChild(el("span", "", rel)));
         c.appendChild(g);
-        defile.appendChild(c);
+        cases.push(c);
       }
       if (etape.reperes && etape.reperes.length) {
+        if (!etape.retenir) cases.push(el("div", "eti", "À retenir : mes repères"));
         const liste = el("div", "carnet refs");
         etape.reperes.forEach(rc => liste.appendChild(AIDES.carteRepere(rc)));
-        defile.appendChild(liste);
+        cases.push(liste);
       }
+      return cases;
+    }
+    function aRetenir(code, {retour, fin} = {}) {
+      const etape = CARTE.etape(code);
+      ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
+      const defile = el("div", "ecran-defile");
+      if (etape.retenir) defile.appendChild(blocRetenir(code));
+      casesRetenir(code).forEach(c => defile.appendChild(c));
+      defile.appendChild(el("div", "cahier", `✏️ ${etape.cahier}`));
       ajouter(defile);
       if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
       ajouter(el("div", "verd neutre", "Je valide s'ouvre demain, après ton échauffement."));
@@ -985,6 +1121,7 @@
       const erreurs = [];
       const avantMedailles = medailles();
       let i = 0;
+      let hauteurQ = 0;
       const question = () => {
         const suivi = P.suivreValidation(resultats);
         if (suivi.fini) { finValidation(code, suivi, erreurs, avantMedailles, resultats, {retour, fin}); return; }
@@ -992,7 +1129,8 @@
         // Pas d'aide : pas de boîte vide. Les 10 cases et la consigne, juste
         // sous la question (lot A2, le « grand vide » vu par Gwenaël).
         const ui = ecranQuestion({petit: etape.nom, titre: "Je valide", chip: `${i + 1} / 10`, chemin: {noms: ["J'apprends", "Je valide"], ici: 1},
-          retour, hauteur: hauteurQuestion(code), zone: "info"});
+          retour, hauteurPx: hauteurQ, zone: "info"});
+        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
         interroger(ui, qn, {
           avant(zone) {
             remplirZone(zone, "info");
@@ -1132,7 +1270,8 @@
         // Pas d'aide, pas de zone : la question, puis le pavé. Après une
         // erreur, la bonne réponse vient à la place du pavé (lot A2).
         const ui = ecranQuestion({petit: "Ma séance du jour", titre: "Échauffement", chip: `${i + 1} / ${questions.length}`, chemin: chemin(), retour,
-          hauteur: item.type === "etape" ? hauteurQuestion(item.code) : 124, zone: "aucune"});
+          zone: "aucune"});
+        cadre.style.setProperty("--q-h", `${hauteurSerie(ui.q, item.type === "etape" ? item.code : "R1", [qn])}px`);
         interroger(ui, qn, {
           avant() {},
           apres: {montrerBon: false, fait(v) {
@@ -1158,6 +1297,7 @@
             }
             ui.bas.textContent = "";
             ui.bas.appendChild(panneau);
+            ajusterZone(panneau);
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
             ui.action.onclick = question;
@@ -1210,14 +1350,16 @@
       let i = 0;
       let justes = 0;
       let hauteurZone = 0;
+      let hauteurQ = 0;
       const question = () => {
         if (i >= serie.length) { finRevoir(code, justes); return; }
         const qn = serie[i];
-        const ui = ecranQuestion({petit: etape.nom, titre: "On revoit", chip: `${i + 1} / 3`, chemin: {noms, ici: 1}, hauteur: hauteurQuestion(code), hauteurZone});
+        const ui = ecranQuestion({petit: etape.nom, titre: "On revoit", chip: `${i + 1} / 3`, chemin: {noms, ici: 1}, hauteurPx: hauteurQ, hauteurZone});
+        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
         if (!hauteurZone) {
           hauteurZone = mesurerZone(ui.zone, serie.flatMap(x => [
             z => { remplirZone(z, "outil", ["outil", "L'aide"]); AIDES.outil(z, x); },
-            ...retoursPossibles(x).map(r => z => remplirErreur(z, x, r))
+            z => remplirErreurZone(z, x)
           ]));
           cadre.style.setProperty("--z-h", `${hauteurZone}px`);
         }
@@ -1226,7 +1368,7 @@
           apres: {fait(v) {
             i += 1;
             if (v.juste) { justes += 1; apresDelai(question); return; }
-            remplirErreur(ui.zone, qn, v.retour);
+            remplirErreur(ui, qn, v.retour);
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
             ui.action.onclick = question;
@@ -1241,7 +1383,9 @@
       ajouter(el("div", "gros-emoji", "👍"));
       const t = el("div", "titre-fin", "C'est revu");
       t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur 3`)));
-      ajouter(t, blocRetenir(code), espace(), bouton("Mon étape →", "", () => monEtape()));
+      const defile = el("div", "ecran-defile");
+      (CARTE.etape(code).retenir ? [blocRetenir(code)] : casesRetenir(code)).forEach(c => defile.appendChild(c));
+      ajouter(t, defile, bouton("Mon étape →", "", () => monEtape()));
     }
 
     // ------------------------------------------------------ Tu connais déjà ?
@@ -1274,8 +1418,7 @@
         const dansPalier = PALIERS_CODES[etape.palier];
         remplirZone(zone, "info");
         zone.appendChild(escalier(dansPalier, faites.concat(PROF ? [] : dansPalier.filter(c => P.estValidee(etat.parcours, c))), code, null));
-        const m = el("div", "", `Marche ${dansPalier.indexOf(code) + 1} : ${etape.nom}`.replace(" :", `${NB}:`));
-        m.style.cssText = `font-weight:900;font-size:${rem(16)};text-align:center;margin-top:${rem(4)}`;
+        const m = el("div", "marche-nom", `Marche ${dansPalier.indexOf(code) + 1} : ${etape.nom}`.replace(" :", `${NB}:`));
         zone.appendChild(m);
         const s = suiteRonds(resultats.filter(Boolean).length, total, false);
         s.appendChild(el("span", "", `question ${resultats.length + 1} sur ${total}`));
@@ -1306,7 +1449,9 @@
           const dansPalier = PALIERS_CODES[palierN];
           const ui = ecranQuestion({petit: `Palier ${palierN} · ${CARTE.palier(palierN).nom}`, titre: T("Tu connais déjà ?"),
             chip: `marche ${dansPalier.indexOf(code) + 1}`, chemin: {noms: [], ici: 0}, retour: () => finTest(faites, null, avantMedailles, {retour, fin}),
-            hauteur: hauteurQuestion(code), zone: "info", hauteurZone});
+            zone: "info", hauteurZone});
+          cadre.style.setProperty("--q-h", `${hauteurSerie(ui.q, code, serie)}px`);
+          cadre.classList.add("bas-court");
           cadre.querySelector(".chemin").remove();
           // La même hauteur pour toutes les marches (un nom d'étape long
           // passe sur deux lignes) : rien ne bouge en montant.
@@ -1458,7 +1603,7 @@
       titre("Une étape");
       para("① J'apprends : on te montre, puis c'est à toi, d'abord avec l'outil, puis avec l'image, puis sans aide. ② Je valide, le lendemain : 8 justes sur 10, sans aide.");
       titre("L'échauffement");
-      para("À la première séance du jour : 3 questions sur ce que tu sais déjà. Une erreur ne t'enlève rien.");
+      para("À la première séance du jour : une question par étape déjà validée, 3 au plus (un repère de ton carnet, ta dernière étape validée, une plus ancienne). Avec une seule étape validée, il n'y en a qu'une. Une erreur ne t'enlève rien.");
       titre("Tu connais déjà ?");
       para("Un petit test pour sauter les étapes que tu sais déjà. Tu t'arrêtes quand tu veux.");
       titre("Mon carnet");

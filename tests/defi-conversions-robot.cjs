@@ -54,12 +54,30 @@ const CLE = "mathsgo-defi-conversions-parcours";
 const PLANCHES = process.env.DEFI_CONVERSIONS_PLANCHES || "";
 const GRAINE = 50000;
 const JOUR = "2026-11-11";
+// Lot A2 ter (13/11/2026, après l'essai de Gwenaël sur son iPhone) : cinq
+// tailles de plus, les fenêtres RÉELLES des téléphones des élèves (barres du
+// navigateur déduites), qui encadrent presque tous les téléphones. Les iPhone
+// se jouent dans WebKit, les Android dans Chromium, au doigt (`tactile` :
+// hasTouch, isMobile ; on touche, on glisse avec de vrais événements
+// tactiles, pas avec la souris). Aucune règle CSS ne vise une de ces tailles :
+// si un écran tient à 375 × 548 et à 360 × 640, il tient sur les plus grands.
 const TOUTES_TAILLES = [
   {nom: "375x667", largeur: 375, hauteur: 667, tel: true},
   {nom: "390x844", largeur: 390, hauteur: 844, tel: true},
   {nom: "1440x900", largeur: 1440, hauteur: 900},
-  {nom: "1920x1080", largeur: 1920, hauteur: 1080, projection: true}
+  {nom: "1920x1080", largeur: 1920, hauteur: 1080, projection: true},
+  {nom: "375x548", appareil: "petit iPhone (SE)", largeur: 375, hauteur: 548, tel: true, tactile: true, moteurs: ["webkit"]},
+  {nom: "393x660", appareil: "iPhone courant (12 à 16)", largeur: 393, hauteur: 660, tel: true, tactile: true, moteurs: ["webkit"]},
+  {nom: "430x740", appareil: "grand iPhone (Plus, Pro Max)", largeur: 430, hauteur: 740, tel: true, tactile: true, moteurs: ["webkit"]},
+  {nom: "360x640", appareil: "petit Android", largeur: 360, hauteur: 640, tel: true, tactile: true, moteurs: ["chromium"]},
+  {nom: "412x780", appareil: "Android courant (Galaxy A, Pixel)", largeur: 412, hauteur: 780, tel: true, tactile: true, moteurs: ["chromium"]}
 ];
+// Les tailles iPhone dans Chromium, quand WebKit ne s'installe pas (l'espace
+// de travail de Claude) : DEFI_CONVERSIONS_IPHONE_CHROMIUM=1. Code, lui, les
+// joue dans WebKit.
+const IPHONE_CHROMIUM = process.env.DEFI_CONVERSIONS_IPHONE_CHROMIUM === "1";
+const tailleDans = (taille, moteur) => !taille.moteurs || taille.moteurs.includes(moteur)
+  || (IPHONE_CHROMIUM && moteur === "chromium" && taille.moteurs.includes("webkit"));
 const filtre = (variable, liste, cle) => {
   const v = (process.env[variable] || "").split(",").map(s => s.trim()).filter(Boolean);
   return v.length ? liste.filter(x => v.includes(cle(x))) : liste;
@@ -143,6 +161,57 @@ async function controler(page, taille) {
         .some(([x, y]) => { const e = document.elementFromPoint(x, y); return e && e !== b && !b.contains(e); });
     });
     if (couverts.length) defauts.push(`un bouton est recouvert : « ${couverts[0].textContent.trim().slice(0, 20)} »`);
+    // Lot A2 ter : aucun chevauchement. Deux textes visibles (ou un texte et
+    // une étiquette, un rond, une carte, un bouton, un dessin) ne se
+    // recouvrent pas, dans la question, la zone et les réponses (Gwenaël, le
+    // 13/11 : « le mot L'OUTIL est sur le texte », « les petits cercles sont
+    // cachés par les propositions »). Les boîtes se testent deux à deux ; une
+    // boîte ne se compare pas à ce qu'elle contient. Un dessin (svg) et le
+    // glisse-unité comptent pour une seule boîte.
+    {
+      const blocs = [".q", ".zone", ".bas", ".consigne-montre"].map(sel => cadre.querySelector(sel)).filter(e => e && visible(e));
+      const boites = [];
+      const dansBloc = e => blocs.some(b => b.contains(e));
+      const tropDedans = e => Boolean(e.closest("svg, .gu2, .pave4"));
+      blocs.forEach(bloc => {
+        const m = document.createTreeWalker(bloc, NodeFilter.SHOW_TEXT);
+        while (m.nextNode()) {
+          const n = m.currentNode;
+          const e = n.parentElement;
+          if (!n.textContent.trim() || !visible(e) || tropDedans(e)) continue;
+          const rg = document.createRange();
+          rg.selectNodeContents(n);
+          [...rg.getClientRects()].filter(b => b.width > 1 && b.height > 1).forEach(b => boites.push({e, texte: n.textContent.trim().slice(0, 24), b}));
+        }
+      });
+      const SEL = ".etiq, .suite i, .carte-rep, .ref, .dix i, .esc i, .case, svg, .gu2, .pave4, .bas button, .rel, .verd, table";
+      cadre.querySelectorAll(SEL).forEach(e => {
+        if (!dansBloc(e) || !visible(e) || (e.tagName.toLowerCase() === "svg" ? Boolean(e.parentElement.closest("svg, .gu2")) : tropDedans(e) && !e.matches(".gu2, .pave4"))) return;
+        boites.push({e, texte: (e.textContent || e.getAttribute("aria-label") || e.className.baseVal || e.className || e.tagName).toString().trim().slice(0, 24) || e.tagName, b: e.getBoundingClientRect()});
+      });
+      // Le bouton « Valider / Suivant » aussi : rien ne passe dessous.
+      cadre.querySelectorAll("#cadre > .btn, #cadre > .duo > .btn").forEach(e => { if (visible(e)) boites.push({e, texte: e.textContent.trim().slice(0, 24), b: e.getBoundingClientRect()}); });
+      let trouve = null;
+      for (let i = 0; i < boites.length && !trouve; i += 1) {
+        for (let j = i + 1; j < boites.length && !trouve; j += 1) {
+          const A = boites[i];
+          const B = boites[j];
+          if (A.e === B.e || A.e.contains(B.e) || B.e.contains(A.e)) continue;
+          const l = Math.max(A.b.left, B.b.left);
+          const r = Math.min(A.b.right, B.b.right);
+          const h = Math.max(A.b.top, B.b.top);
+          const bb = Math.min(A.b.bottom, B.b.bottom);
+          if (r - l > 1.5 && bb - h > 1.5) trouve = [A.texte, B.texte];
+        }
+      }
+      if (trouve) defauts.push(`deux textes se chevauchent : « ${trouve[0]} » et « ${trouve[1]} »`);
+    }
+    // Lot A2 ter : une aide trop à l'étroit se réduit d'un seul tenant
+    // (.zone-in) ; au-delà d'un cinquième, elle devient trop petite à lire.
+    cadre.querySelectorAll(".zone-in").forEach(z => {
+      const k = Number(z.dataset.echelle || 1);
+      if (visible(z) && k < 0.8) defauts.push(`l'aide est réduite à ${Math.round(k * 100)} % pour tenir dans sa zone`);
+    });
     // L'aide : rien de coupé dans sa zone.
     const z = cadre.querySelector(".zone");
     if (z && visible(z)) {
@@ -169,6 +238,19 @@ async function controler(page, taille) {
       if (!visible(e)) return;
       const b = e.getBoundingClientRect();
       morceaux.push([b.top, b.bottom]);
+    });
+    // Lot A2 ter : la zone d'aide garde la hauteur de sa série, un contenu court y est centré : ce n'est pas un vide.
+    cadre.querySelectorAll(".zone").forEach(z => {
+      if (!visible(z) || dansDefile(z)) return;
+      const contenu = [...z.children].filter(e => !e.classList.contains("etiq") && visible(e)).map(e => e.getBoundingClientRect());
+      if (!contenu.length) return;
+      const s = getComputedStyle(z);
+      const b = z.getBoundingClientRect();
+      const haut = b.top + z.clientTop + parseFloat(s.paddingTop);
+      const basZ = b.bottom - (b.height - z.clientTop - z.clientHeight) - parseFloat(s.paddingBottom);
+      const dessus = Math.min(...contenu.map(r => r.top)) - haut;
+      const dessous = basZ - Math.max(...contenu.map(r => r.bottom));
+      if (Math.abs(dessus - dessous) <= 20) morceaux.push([b.top, b.bottom]);
     });
     morceaux.sort((a, b) => a[0] - b[0]);
     let bas = rc.top + parseFloat(getComputedStyle(cadre).paddingTop);
@@ -214,8 +296,11 @@ function ecarts(a, b) {
 
 // ------------------------------------------------------------ jouer
 async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} = {}) {
-  const contexte = await navigateur.newContext({viewport: {width: taille.largeur, height: taille.hauteur}, deviceScaleFactor: 1});
+  const contexte = await navigateur.newContext(Object.assign({viewport: {width: taille.largeur, height: taille.hauteur}, deviceScaleFactor: 1},
+    taille.tactile ? {hasTouch: true, isMobile: true} : {}));
   const page = await contexte.newPage();
+  page.tactile = Boolean(taille.tactile);
+  page.moteur = navigateur.browserType().name();
   const erreurs = [];
   page.on("pageerror", e => erreurs.push(String(e)));
   page.on("console", m => { if (m.type() === "error") erreurs.push(m.text()); });
@@ -232,8 +317,46 @@ async function attendre(page, ms = 1000) {
   await page.clock.runFor(ms);
   await page.waitForTimeout(30);
 }
+// Toucher (au téléphone, au doigt : un vrai toucher) ou cliquer.
+async function appuyer(page, locator) {
+  if (page.tactile) await locator.tap();
+  else await locator.click();
+}
+// Glisser d'un point à un autre. Au doigt : de vrais événements tactiles
+// (Chromium : Input.dispatchTouchEvent, le chemin d'un vrai doigt, avec
+// touch-action). WebKit n'a pas d'entrée tactile glissée dans Playwright
+// (seulement tap) : le doigt y est joué par des événements de pointeur
+// « touch » envoyés à la page. À la souris, sinon.
+async function glisser(page, x0, y0, x1, y1, pas = 10) {
+  if (page.tactile && page.moteur === "chromium") {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", {type: "touchStart", touchPoints: [{x: x0, y: y0, id: 1}]});
+    for (let k = 1; k <= pas; k += 1) {
+      await cdp.send("Input.dispatchTouchEvent", {type: "touchMove", touchPoints: [{x: x0 + ((x1 - x0) * k) / pas, y: y0 + ((y1 - y0) * k) / pas, id: 1}]});
+    }
+    await cdp.send("Input.dispatchTouchEvent", {type: "touchEnd", touchPoints: []});
+    await cdp.detach();
+  } else if (page.tactile) {
+    await page.evaluate(([a, b, c, d, n]) => {
+      const cible = document.elementFromPoint(a, b);
+      const ev = (type, x, y) => new PointerEvent(type, {bubbles: true, cancelable: true, composed: true, pointerId: 7, pointerType: "touch", isPrimary: true,
+        clientX: x, clientY: y, buttons: type === "pointerup" ? 0 : 1});
+      if (!cible) return;
+      cible.dispatchEvent(ev("pointerdown", a, b));
+      // Après pointerdown, le pointeur appartient à l'élément qui l'a capturé.
+      for (let k = 1; k <= n; k += 1) cible.dispatchEvent(ev("pointermove", a + ((c - a) * k) / n, b + ((d - b) * k) / n));
+      cible.dispatchEvent(ev("pointerup", c, d));
+    }, [x0, y0, x1, y1, pas]);
+  } else {
+    await page.mouse.move(x0, y0);
+    await page.mouse.down();
+    await page.mouse.move(x1, y1, {steps: pas});
+    await page.mouse.up();
+  }
+  await attendre(page, 300);
+}
 async function cliquerTexte(page, texte, exact = false) {
-  await page.locator("#cadre, #voile").getByText(texte, {exact}).first().click();
+  await appuyer(page, page.locator("#cadre, #voile").getByText(texte, {exact}).first());
   await attendre(page, 50);
 }
 async function repondre(page, q, juste = true) {
@@ -241,32 +364,64 @@ async function repondre(page, q, juste = true) {
     // Au doigt : un objet, puis sa mesure (lot A2 bis). Faux : deux mesures échangées.
     const lien = juste ? q.bonnes : [q.bonnes[1], q.bonnes[0], q.bonnes[2]];
     for (let i = 0; i < 3; i += 1) {
-      await page.locator(".assoc .obj").nth(i).click();
-      await page.locator(".assoc .mes").nth(lien[i]).click();
+      await appuyer(page, page.locator(".assoc .obj").nth(i));
+      await appuyer(page, page.locator(".assoc .mes").nth(lien[i]));
     }
-    await page.locator("#cadre .action").click();
+    await appuyer(page, page.locator("#cadre .action"));
   } else if (q.forme === "ranger") {
     // Au doigt : les mesures dans l'ordre. Faux : les deux premières échangées.
     const ordre = juste ? q.ordre : [q.ordre[1], q.ordre[0], ...q.ordre.slice(2)];
-    for (const k of ordre) await page.locator(".ranger button").nth(k).click();
-    await page.locator("#cadre .action").click();
+    for (const k of ordre) await appuyer(page, page.locator(".ranger button").nth(k));
+    await appuyer(page, page.locator("#cadre .action"));
   } else if (q.choix) {
     const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
-    await page.locator(".choix button").nth(i).click();
+    await appuyer(page, page.locator(".choix button").nth(i));
   } else {
     const r = Array.isArray(q.reponse) ? q.reponse : [q.reponse];
     const valeurs = juste ? r : r.map(x => `${x}1`);
-    for (let k = 0; k < valeurs.length; k += 1) {
-      if (k) await page.keyboard.press("Tab");
-      for (const c of String(valeurs[k]).replace(/\s/g, "")) await page.keyboard.press(c === "," ? "Comma" : c);
+    if (page.tactile) {
+      // Au doigt : les touches du pavé, la 2e case touchée, puis « Valider ».
+      for (let k = 0; k < valeurs.length; k += 1) {
+        if (k) await appuyer(page, page.locator(".q .case").nth(k));
+        for (const c of String(valeurs[k]).replace(/\s/g, "")) await appuyer(page, page.locator(".pave4 button").filter({hasText: new RegExp(`^${c === "," ? "," : c}$`)}).first());
+      }
+      await appuyer(page, page.locator("#cadre .action"));
+    } else {
+      for (let k = 0; k < valeurs.length; k += 1) {
+        if (k) await page.keyboard.press("Tab");
+        for (const c of String(valeurs[k]).replace(/\s/g, "")) await page.keyboard.press(c === "," ? "Comma" : c);
+      }
+      await page.keyboard.press("Enter");
     }
-    await page.keyboard.press("Enter");
   }
   await attendre(page, juste ? 1000 : 50);
 }
 async function suivant(page) {
-  await page.locator("#cadre").getByText("Suivant", {exact: false}).first().click();
+  await appuyer(page, page.locator("#cadre").getByText("Suivant", {exact: false}).first());
   await attendre(page, 50);
+}
+// Glisser le glisse-unité au doigt, de sa colonne marquée jusqu'à l'unité
+// `vers` (ou d'une colonne). Renvoie un défaut, ou rien.
+async function glisserUnite(page, vers = null) {
+  const ici = await page.locator(".zone .gu2-chiffres span.unite").first().boundingBox();
+  const tete = await page.locator(".zone .gu2-tete button.on").first().boundingBox();
+  if (!ici || !tete) return "le glisse-unité n'est pas à l'écran";
+  let cible;
+  if (vers) cible = await page.locator(`.zone [aria-label="Mettre l'unité sur ${vers}"]`).first().boundingBox();
+  else {
+    // Une colonne plus loin (à droite, sinon à gauche), qui a un nom.
+    const noms = await page.locator(".zone .gu2-tete button:not(.sans-nom)").evaluateAll(bs => bs.map(b => b.classList.contains("on")));
+    const k = noms.indexOf(true);
+    const j = k + 1 < noms.length ? k + 1 : k - 1;
+    cible = await page.locator(".zone .gu2-tete button:not(.sans-nom)").nth(j).boundingBox();
+  }
+  if (!cible) return `le glisse-unité n'a pas l'unité ${vers}`;
+  const avant = await page.locator(".zone .gu2-tete button.on").first().textContent();
+  const y = ici.y + ici.height / 2;
+  await glisser(page, ici.x + ici.width / 2, y, cible.x + cible.width / 2, y);
+  const apres = await page.locator(".zone .gu2-tete button.on").first().textContent();
+  if (apres === avant) return "le glisse-unité ne glisse pas au doigt";
+  return "";
 }
 // Le geste de On te montre : ouvrir les barres, toucher le dessin, glisser
 // l'unité, jusqu'à ce que la case se remplisse (ou rien à faire).
@@ -277,39 +432,30 @@ async function faireLeGeste(page, aide) {
     }));
     if (etat.fait) return [];
     if (aide.type === "glisse-unite") {
-      // Au doigt : on fait glisser la poignée « L'unité de mesure » jusqu'à
-      // l'unité voulue (comme un élève), pas un simple toucher.
-      // Le doigt se pose sur la poignée et se déplace de la colonne de
-      // départ jusqu'à l'unité voulue.
-      const poignee = await page.locator(".zone .gu2-poignee.dessus").boundingBox();
-      const ici = await page.locator(".zone .gu2-tete button.on").first().boundingBox();
-      const cible = await page.locator(`.zone [aria-label="Mettre l'unité sur ${aide.vers}"]`).first().boundingBox();
-      if (!poignee || !cible || !ici) return [`le glisse-unité n'a pas ses poignées`];
-      const x0 = poignee.x + poignee.width / 2;
-      await page.mouse.move(x0, poignee.y + poignee.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(x0 + (cible.x - ici.x), poignee.y + poignee.height / 2, {steps: 10});
-      await page.mouse.up();
-      await attendre(page, 50);
+      // Au doigt, comme un élève : le doigt se pose sur la colonne marquée
+      // (le cadre de couleur, là où sont les chiffres) et glisse jusqu'à
+      // l'unité voulue (lot A2 ter : au téléphone, « le truc ne glisse pas »).
+      const erreur = await glisserUnite(page, aide.vers);
+      if (erreur) return [erreur];
       if (!(await page.locator(".q .case.vert").count())) return [`le glisse-unité ne se glisse pas jusqu'à ${aide.vers}`];
       return [];
     } else if (aide.type === "glisse-nombre") {
-      await page.locator(".zone .ope").first().click();
+      await appuyer(page, page.locator(".zone .ope").first());
     } else if (aide.type === "barres") {
       const n = await page.locator(".zone .barre").count();
-      await page.locator(".zone .barre").nth(Math.min(essai, n - 1)).click();
+      await appuyer(page, page.locator(".zone .barre").nth(Math.min(essai, n - 1)));
     } else if (aide.type === "heure") {
       const b = page.locator(".zone .a-toucher");
       if (!(await b.count())) return [];
-      await b.first().click();
+      await appuyer(page, b.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
-      await page.locator(".zone .dessin").first().click();
+      await appuyer(page, page.locator(".zone .dessin").first());
     } else if (["echange", "pieces", "etiquette", "horloges", "axe"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
       if (!(await a.count())) return [`rien à toucher dans « ${aide.type} »`];
-      await a.first().click();
+      await appuyer(page, a.first());
     } else return [];
     await attendre(page, 50);
   }
@@ -322,6 +468,8 @@ class Carnet {
     Object.assign(this, {moteur, taille, etape, ecrans: []});
   }
   async photo(page, nom, extra = []) {
+    // Les petites transitions (le glisse-unité qui glisse) vont à leur fin.
+    await page.waitForTimeout(250);
     const defauts = extra.concat(await controler(page, this.taille));
     const png = await page.screenshot();
     this.ecrans.push({nom, defauts, png});
@@ -360,23 +508,49 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {prof: true});
   const choisir = async () => {
     await cliquerTexte(page, "Changer d'étape");
-    await page.locator("#cadre .li2").filter({hasText: etape.nomCourt}).first().click();
+    await appuyer(page, page.locator("#cadre .li2").filter({hasText: etape.nomCourt}).first());
     await attendre(page, 50);
   };
   const accueilProf = async () => {
     const b = page.locator("#cadre").getByText("Accueil", {exact: true});
-    if (await b.count()) await b.first().click();
-    else await page.locator(".bseance .rond").first().click();
+    if (await b.count()) await appuyer(page, b.first());
+    else await appuyer(page, page.locator(".bseance .rond").first());
     await attendre(page, 50);
   };
   await choisir();
 
   // On te montre : les 3 temps, le geste fait.
+  // Lot A2 ter : au 1er temps, l'élève appuie sur « Suivant » sans faire le
+  // geste (Gwenaël, le 13/11 : « Est-ce que l'élève va penser à toucher ? »).
+  // Ce premier appui joue le geste à sa place : la case se remplit,
+  // l'explication apparaît, et on reste sur ce temps. Aux 2e et 3e temps, le
+  // robot fait le geste lui-même.
   await cliquerTexte(page, "J'apprends : on te montre");
   for (let t = 0; t < 3; t += 1) {
+    const nomT = `On te montre ${t + 1} · ${etape.apprends[t].etiquette}`;
+    const aFaire = Boolean(await page.locator(".q .case").count()) && !(await page.locator(".q .case.vert").count());
+    if (t === 0 && aFaire) {
+      await suivant(page);
+      await attendre(page, 4000);
+      const ici = (await page.locator(".bseance .chip").textContent()).replace(/\s/g, "");
+      const rempli = await page.evaluate(() => Boolean(document.querySelector(".q .case.vert")) && Boolean(document.querySelector(".zone .apres, .zone .note")));
+      if (ici !== "1/3") {
+        await carnet.photo(page, `${nomT} (Suivant sans le geste)`, ["« Suivant » sans le geste : on passe au temps suivant sans rien voir"]);
+        continue;
+      }
+      if (rempli) {
+        await carnet.photo(page, `${nomT} (Suivant sans le geste)`);
+        await suivant(page);
+        continue;
+      }
+      const geste = ["« Suivant » sans le geste : la case reste vide"].concat(await faireLeGeste(page, etape.apprends[t].aide));
+      await carnet.photo(page, `${nomT} (Suivant sans le geste)`, geste);
+      await suivant(page);
+      continue;
+    }
     const geste = await faireLeGeste(page, etape.apprends[t].aide);
     await page.waitForTimeout(600); // la fin des petites animations (le glisse-nombre)
-    await carnet.photo(page, `On te montre ${t + 1} · ${etape.apprends[t].etiquette}`, geste);
+    await carnet.photo(page, nomT, geste);
     await suivant(page);
   }
 
@@ -386,7 +560,7 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   const reference = await places(page);
   const vus = new Set();
   let bouge = [];
-  for (let i = 0; i < 25 && !(await page.locator(".retenir").count()); i += 1) {
+  for (let i = 0; i < 25 && !(await page.locator(".retenir, .cahier").count()); i += 1) {
     const phase = await page.evaluate(() => {
       const z = document.querySelector(".zone");
       return z ? (z.classList.contains("outil") ? "outil" : z.classList.contains("image") ? "image" : "seul") : null;
@@ -394,11 +568,18 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
     bouge = bouge.concat(ecarts(reference, await places(page)).map(e => `${e} (question ${i + 1})`));
     if (!vus.has(phase)) {
       vus.add(phase);
+      // L'outil glisse-unité : il se glisse au doigt (lot A2 ter).
+      if (phase === "outil" && await page.locator(".zone .gu2").count()) {
+        const e = await glisserUnite(page);
+        if (e) bouge.push(e);
+      }
       await carnet.photo(page, `À toi · ${phase === "outil" ? "l'outil" : phase === "image" ? "l'image" : "sans aide"}`, bouge);
       bouge = [];
     }
     if (i === 0) {
       await repondre(page, serie[i], false);
+      // La correction se joue (le glisse-unité glisse jusqu'à la réponse).
+      await attendre(page, 3000);
       await carnet.photo(page, "À toi · une erreur", ecarts(reference, await places(page)));
       await suivant(page);
     } else await repondre(page, serie[i]);
@@ -462,14 +643,26 @@ async function jouerCommun(navigateur, base, taille, carnet) {
   {
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
     await carnet.photo(page, "Accueil · nouveau");
+    // Lot A2 ter (Gwenaël, le 13/11 : « les deux cercles ne sont pas
+    // alignés, le 1 est décalé ») : le rond de la flèche des écrans à titre
+    // prend la place exacte du rond du palier de l'accueil (même centre, même
+    // taille) ; en passant de l'un à l'autre, rien ne saute.
+    const rondAccueil = await page.locator(".acc-palier .med").first().boundingBox();
+    const memePlace = async () => {
+      const r = await page.locator(".tete-ecran .rond").first().boundingBox();
+      if (!r || !rondAccueil) return [];
+      const ecart = Math.max(Math.abs(r.x + r.width / 2 - rondAccueil.x - rondAccueil.width / 2), Math.abs(r.y + r.height / 2 - rondAccueil.y - rondAccueil.height / 2),
+        Math.abs(r.width - rondAccueil.width));
+      return ecart > 1 ? [`le rond de la flèche n'est pas à la place du rond du palier (${Math.round(ecart)} px d'écart)`] : [];
+    };
     await cliquerTexte(page, "Comment ça marche ?");
-    await carnet.photo(page, "Comment ça marche ?");
-    await page.locator(".tete-ecran .rond").click();
+    await carnet.photo(page, "Comment ça marche ?", await memePlace());
+    await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "Mon parcours");
-    await carnet.photo(page, "Mon parcours · nouveau");
-    await page.locator(".tete-ecran .rond").click();
+    await carnet.photo(page, "Mon parcours · nouveau", await memePlace());
+    await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "Mon carnet");
-    await carnet.photo(page, "Mon carnet · vide");
+    await carnet.photo(page, "Mon carnet · vide", await memePlace());
     if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (nouveau)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
@@ -485,13 +678,13 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     await carnet.photo(page, "Accueil · en cours");
     await cliquerTexte(page, "Mon parcours");
     await carnet.photo(page, "Mon parcours · en cours");
-    await page.locator(".pal-tabs button").nth(3).click();
+    await appuyer(page, page.locator(".pal-tabs button").nth(3));
     await attendre(page, 50);
     await carnet.photo(page, "Mon parcours · palier en préparation");
-    await page.locator(".tete-ecran .rond").click();
+    await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "Mon carnet");
-    await carnet.photo(page, "Mon carnet · 9 repères");
-    await page.locator(".tete-ecran .rond").click();
+    await carnet.photo(page, "Mon carnet · 10 repères");
+    await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "Effacer mon historique");
     await carnet.photo(page, "Effacer mon historique");
     await page.keyboard.press("Escape");
@@ -548,10 +741,10 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     await carnet.photo(page, "Mode professeur · accueil");
     await cliquerTexte(page, "Changer d'étape");
     await carnet.photo(page, "Mode professeur · Changer d'étape");
-    await page.locator("#cadre .li2").filter({hasText: CARTE.etape("C1").nomCourt}).first().click();
+    await appuyer(page, page.locator("#cadre .li2").filter({hasText: CARTE.etape("C1").nomCourt}).first());
     await cliquerTexte(page, "Voir une série");
     await carnet.photo(page, "Mode professeur · Voir une série");
-    await page.locator(".tete-ecran .rond").click();
+    await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "J'apprends : à toi");
     const serie = G.serie("C1", {usage: "entraine", graine: GRAINE});
     for (let i = 0; i < 25 && !(await page.getByText("On continue la prochaine fois").count()); i += 1) {
@@ -578,7 +771,7 @@ async function jouerCommun(navigateur, base, taille, carnet) {
         throw new Error(`${moteur} ne démarre pas. À installer une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install ${moteur}\n${e.message.split("\n")[0]}`);
       }
       try {
-        for (const taille of TAILLES) {
+        for (const taille of TAILLES.filter(t => tailleDans(t, moteur))) {
           for (const code of ETAPES) {
             const carnet = new Carnet(moteur, taille, code);
             try {

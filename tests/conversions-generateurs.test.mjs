@@ -103,7 +103,8 @@ function ecriture(texte, ou) {
   assert.doesNotMatch(texte, /\d[  ]\d{3}(?!\d)/, `${ou} : milliers sans espace fine dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
-  assert.doesNotMatch(texte, /[a-zà-ÿ,;] [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
+  // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une.)
+  assert.doesNotMatch(texte, /(?<=[a-zà-ÿ,;])(?<!\b(?:de|du|au|en)) [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
 }
 // Un nombre de 4 chiffres ou plus doit avoir son espace fine (2 600, 1 500).
 function milliers(texte, ou) {
@@ -200,6 +201,12 @@ function controlerQuestion(q, ou) {
       assert.ok(!n.includes(",") || n === "7,5", `${ou} : nombre à virgule ${n} au palier 1`);
     });
   }
+  // Lot A2 ter : l'image de « Entre deux heures » n'écrit jamais la réponse
+  // (le premier bond était toute la réponse quand il n'y avait que des heures).
+  if (q.code === "D7" && q.image) {
+    const rep = q.reponseTexte.replace(/\u00a0/g, " ").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    q.image.forEach(l => assert.doesNotMatch(l.replace(/\u00a0/g, " "), new RegExp(`[=:] ${rep}\\.?$`), `${ou} : l'image « ${l} » donne la réponse ${q.reponseTexte}`));
+  }
   // L'outil des relations ne recopie pas la relation (c'est la réponse).
   if (q.code === "P1") assert.equal(q.outilSansRelation, true, `${ou} : l'outil montrerait la relation`);
   // L'image dessinée : n paquets, n = le nombre d'unités de la grande unité.
@@ -235,11 +242,24 @@ function controlerSerie(code, usage, nombre, s, ou) {
     assert.deepEqual(v.map(q => q.place), [4, 8]);
     assert.deepEqual(v.map(q => q.reponse).sort(), ["Non", "Oui"], `${ou} : un Oui et un Non`);
   }
-  if (code === "R1" && (usage === "valide" || usage === "test")) {
-    const reps = s.map(q => q.repere);
-    const doubles = reps.filter((r, i) => reps.indexOf(r) !== i);
-    assert.ok(usage === "test" ? doubles.length === 0 : doubles.length <= 1, `${ou} : repères répétés ${JSON.stringify(doubles)}`);
+  // Lot A2 ter (Gwenaël, le 13/11 : « Une voiture pèse environ … », puis
+  // « Une voiture pèse environ … t ») : dans Je valide, le test, On revoit,
+  // jamais deux fois le même repère (la question à relier en reprend trois,
+  // il n'y en a que 9) ; dans À toi, pas deux fois à moins de 5 questions.
+  if (code === "R1") {
+    const reps = q => (q.forme === "associer" ? q.reperes : [q.repere]);
+    if (usage === "entraine" || usage === "exerciseur") {
+      s.forEach((q, i) => s.slice(Math.max(0, i - 4), i).forEach(y => {
+        const communs = reps(y).filter(r => reps(q).includes(r));
+        assert.equal(communs.length, 0, `${ou} : le repère ${communs} revient à la question ${i + 1}, moins de 5 questions après`);
+      }));
+    } else {
+      const choix = s.filter(q => q.forme !== "associer").map(q => q.repere);
+      assert.equal(new Set(choix).size, choix.length, `${ou} : un repère deux fois ${JSON.stringify(choix)}`);
+    }
   }
+  // Relier : jamais les trois mesures en face de leur objet (Gwenaël, le 13/11).
+  s.filter(q => q.forme === "associer").forEach(q => assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : les trois mesures en face de leur objet`));
   // Lot A2 bis : la place des nouvelles questions dans Je valide.
   if (code === "R1" && usage === "valide") assert.equal(s[9].forme, "associer", `${ou} : associer en dernier`);
   if (code === "R2" && usage === "valide") {

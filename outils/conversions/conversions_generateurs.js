@@ -210,6 +210,10 @@
     lentilles: {nom: "des lentilles", grandeur: "masse", unite: "g", min: "100", max: "900", pas: "100"},
     pommes: {nom: "des pommes", grandeur: "masse", unite: "kg", min: "0,5", max: "5", pas: "0,1"},
     jus: {nom: "une bouteille de jus", grandeur: "contenance", unite: "L", min: "1", max: "2", pas: "0,25"},
+    // Lot A2 ter : La Réunion.
+    letchis: {nom: "des letchis", grandeur: "masse", unite: "kg", min: "1", max: "3", pas: "1"},
+    longanis: {nom: "des longanis", grandeur: "masse", unite: "g", min: "100", max: "900", pas: "100"},
+    sentierBelouve: {nom: "le sentier du Trou de Fer", grandeur: "longueur", unite: "km", min: "2", max: "5", pas: "1"},
     verre: {nom: "un verre", grandeur: "contenance", unite: "cL", min: "15", max: "30", pas: "5"}
   };
   function dansBornes(objet, m) {
@@ -254,9 +258,21 @@
     }
     return {texte: `${gauche} = ${CASE}${NB}${vers}`, morceaux: {avant: `${gauche} =`, apres: vers}};
   }
-  // L'objet d'une mesure, selon son unité de départ et sa taille.
+  // L'objet d'une mesure, selon son unité de départ et sa taille. Lot A2
+  // ter : une fois sur deux (selon le nombre), un objet de La Réunion, quand
+  // la mesure lui va (bornes en unités entières : [objet, unité, min, max]).
+  const OBJETS_REUNION = [
+    ["Un régime de bananes", "kg", 10, 40], ["Un sac de letchis", "kg", 1, 5], ["Un samoussa", "g", 30, 80],
+    ["Un sachet de bonbons piment", "g", 100, 500], ["Une marmite de cari", "L", 3, 12], ["Un Car Jaune", "m", 10, 14],
+    ["Un bassin de baignade", "m", 15, 60], ["Un sentier du volcan", "m", 300, 900], ["Un trajet en Car Jaune", "km", 10, 90],
+    ["Un sentier de Bélouve", "km", 2, 5]
+  ];
   function objetDe(valeur, de) {
     const n = valeur / MILLE;
+    if (valeur % MILLE === 0n && n % 2n === 0n) {
+      const local = OBJETS_REUNION.filter(([, u, a, b]) => u === de && n >= BigInt(a) && n <= BigInt(b));
+      if (local.length) return local[Number(n % BigInt(local.length))][0];
+    }
     switch (de) {
       case "mm": return n < 150n ? "Un clou" : n < 1000n ? "Un bâton" : "Un tuyau";
       case "cm": return "Un ruban";
@@ -344,13 +360,18 @@
   // différentes ; degré 3 : la même grandeur (il faut connaître le repère,
   // l'unité ne suffit pas). Jamais deux fois le même objet (« Une voiture »
   // mesure 4 m ET pèse 1 t), jamais deux fois la même mesure.
-  function questionAssocier(code, degre, rng) {
-    const reps = CARTE.etape(code).reperes.map(c => CARTE.repere(c));
+  // `eviter` : les repères des questions juste avant (lot A2 ter : pas deux
+  // fois le même repère à moins de 5 questions dans À toi).
+  function questionAssocier(code, degre, rng, eviter = []) {
+    const tous = CARTE.etape(code).reperes.map(c => CARTE.repere(c));
+    const libres = tous.filter(r => !eviter.includes(r.code));
+    const reps = libres.length >= 3 ? libres : tous;
     let trois = [];
     for (let essai = 0; essai < 60; essai += 1) {
       if (degre === 3) {
-        const g = choisir(rng, ["longueur", "masse"]);
-        trois = melanger(rng, reps.filter(r => r.grandeur === g)).slice(0, 3);
+        const possibles = ["longueur", "masse"].filter(g => reps.filter(r => r.grandeur === g).length >= 3);
+        const g = choisir(rng, possibles.length ? possibles : ["longueur", "masse"]);
+        trois = melanger(rng, (possibles.length ? reps : tous).filter(r => r.grandeur === g)).slice(0, 3);
       } else trois = melanger(rng, reps).slice(0, 3);
       const objets = new Set(trois.map(r => r.objet));
       const mesures = new Set(trois.map(r => `${r.nombre}${r.unite}`));
@@ -358,7 +379,10 @@
       if (trois.length === 3 && objets.size === 3 && mesures.size === 3 && (degre === 3 || grandeurs.size === 3)) break;
     }
     const mesureDe = r => CARTE.typo(`${ecrire(milli(r.nombre))} ${r.unite}`);
-    const ordreMesures = melanger(rng, [0, 1, 2]);
+    // Lot A2 ter (Gwenaël, le 13/11 : « chacun est en face de chacun, c'est
+    // normal ? ») : jamais les trois mesures en face de leur objet.
+    let ordreMesures = melanger(rng, [0, 1, 2]);
+    while (ordreMesures.every((k, j) => k === j)) ordreMesures = melanger(rng, [0, 1, 2]);
     const mesures = ordreMesures.map(k => mesureDe(trois[k]));
     const bonnes = trois.map((r, k) => ordreMesures.indexOf(k));
     const consigne = "Relie chaque objet à sa mesure.";
@@ -385,29 +409,41 @@
       if (usage === "entraine") return {7: "associer", 15: "associer", 22: "associer"};
       return {};
     },
-    // 9 repères pour 10 questions : dans Je valide, un seul repère peut
-    // revenir (posé dans l'autre sens) ; dans le test, aucun (choix de
-    // Gwenaël du 11/11 au soir).
-    accepte(serie, question, usage) {
-      if (usage !== "valide" && usage !== "test") return true;
-      const deja = serie.filter(x => x.repere === question.repere).length;
-      if (usage === "test") return deja === 0;
-      if (deja >= 2) return false;
-      if (deja === 1) {
-        const doubles = new Set(serie.map(x => x.repere).filter((r, i, t) => t.indexOf(r) !== i));
-        return doubles.size === 0;
+    // Lot A2 ter (Gwenaël, le 13/11 : « Une voiture pèse environ … » puis
+    // « Une voiture pèse environ … t » dans la même série) : dans Je valide
+    // (et le test, On revoit), JAMAIS deux fois le même repère — les 9
+    // questions à choix ont 9 repères différents ; la question à relier, la
+    // 10e, en reprend forcément trois. Dans À toi, pas deux fois le même
+    // repère à moins de 5 questions d'écart (relier compris). Remplace le
+    // « un seul repère peut revenir » du 11/11 au soir.
+    jamais(serie, question, usage) {
+      const reps = x => (x.forme === "associer" ? x.reperes : [x.repere]);
+      if (usage === "entraine" || usage === "exerciseur") {
+        return !serie.slice(-4).some(y => reps(y).some(r => reps(question).includes(r)));
       }
-      return true;
+      if (question.forme === "associer") return true;
+      return !serie.some(y => y.forme !== "associer" && y.repere === question.repere);
     },
-    valide(serie, usage) {
-      if (usage !== "valide" && usage !== "test") return true;
-      const reps = serie.map(x => x.repere);
-      const doubles = reps.filter((r, i) => reps.indexOf(r) !== i).length;
-      return usage === "test" ? doubles === 0 : doubles <= 1;
-    },
-    tirer(rng, degre, i, usage, forme) {
-      if (forme === "associer") return questionAssocier("R1", degre, rng);
-      const reps = CARTE.etape("R1").reperes;
+    tirer(rng, degre, i, usage, forme, serie = []) {
+      const recents = serie.slice(-4).flatMap(x => (x.forme === "associer" ? x.reperes : [x.repere]));
+      if (forme === "associer") return questionAssocier("R1", degre, rng, recents);
+      let reps = CARTE.etape("R1").reperes;
+      // Avant une question à relier de À toi, les quatre questions à choix
+      // laissent libre ce qu'il lui faudra : un repère de chaque grandeur
+      // avant celle de degré 2 (place 8), trois repères d'une même grandeur
+      // avant celles de degré 3 (places 16 et 23).
+      if (usage === "entraine") {
+        [[8, 2], [16, 3], [23, 3]].forEach(([j, d]) => {
+          const ecart = j - (i + 1);
+          if (ecart < 1 || ecart > 4) return;
+          const dejaLa = serie.slice(Math.max(0, j - 5)).flatMap(x => (x.forme === "associer" ? x.reperes : [x.repere]));
+          const libres = pris => {
+            const n = g => CARTE.etape("R1").reperes.filter(c => CARTE.repere(c).grandeur === g && !pris.includes(c)).length;
+            return d === 2 ? ["longueur", "masse", "contenance"].every(g => n(g) >= 1) : n("longueur") >= 3 || n("masse") >= 3;
+          };
+          reps = reps.filter(c => libres(dejaLa.concat(c)));
+        });
+      }
       const sorte = degre === 1 ? "unite" : degre === 3 ? "valeur" : choisir(rng, ["unite", "valeur"]);
       return questionRepereInterne("R1", degre, choisir(rng, reps), sorte, rng);
     }
@@ -436,7 +472,11 @@
     ["La longueur d'un lit :", "2", "m", 1], ["Un œuf :", "60", "g", 1], ["Une baguette de pain :", "250", "g", 1],
     ["Un gros dictionnaire :", "1", "kg", 1], ["Un grand arrosoir plein :", "10", "L", 1],
     ["De la maison à l'école : environ", "1", "km", 2], ["L'épaisseur d'une carte bancaire :", "1", "mm", 3],
-    ["L'altitude d'un avion en vol : environ", "10", "km", 3], ["Une baleine bleue : environ", "150", "t", 3]
+    ["L'altitude d'un avion en vol : environ", "10", "km", 3], ["Une baleine bleue : environ", "150", "t", 3],
+    // Lot A2 ter : La Réunion (Gwenaël, le 13/11 : « Des trucs de La Réunion ? »).
+    ["Une bouteille de jus de goyavier :", "1", "L", 1], ["Un sac de letchis :", "2", "kg", 1], ["La longueur d'un Car Jaune :", "12", "m", 1],
+    ["Un régime de bananes : environ", "20", "kg", 2], ["Un samoussa :", "50", "g", 2], ["La longueur d'un bassin de baignade :", "25", "m", 2],
+    ["Un bonbon piment : environ", "10", "g", 3], ["Une marmite de cari :", "5", "L", 3], ["La largeur d'une feuille de bananier :", "50", "cm", 3]
   ];
   // « Qu'est-ce qu'on mesure ? » (programme de CE2 ; la question « Quelle
   // grandeur ? » de l'exerciseur, lot A2 bis). Degré 1 : l'instrument est
@@ -452,7 +492,11 @@
     ["Je veux savoir quelle distance il y a de chez moi à l'école.", "longueur", 2], ["Je veux savoir combien de temps je mets pour aller à l'école.", "duree", 2],
     ["Je veux savoir combien de farine il faut pour le gâteau.", "masse", 3], ["Je veux savoir combien de sirop il reste dans la bouteille.", "contenance", 3],
     ["Je veux savoir combien de temps cuisent les pâtes.", "duree", 3], ["Je veux savoir quel sac de pommes de terre est le plus lourd.", "masse", 3],
-    ["Je veux savoir quelle bouteille contient le plus de jus.", "contenance", 3], ["Je veux savoir si la table rentre dans la voiture.", "longueur", 3]
+    ["Je veux savoir quelle bouteille contient le plus de jus.", "contenance", 3], ["Je veux savoir si la table rentre dans la voiture.", "longueur", 3],
+    // Lot A2 ter : La Réunion.
+    ["Je pèse le sac de letchis au marché.", "masse", 1], ["Je verse le jus de goyavier dans le verre doseur.", "contenance", 1],
+    ["Je veux savoir combien de temps dure le trajet en Car Jaune.", "duree", 2], ["Je veux savoir si la planche de surf rentre dans la voiture.", "longueur", 2],
+    ["Je veux savoir combien d'eau tient dans la marmite du cari.", "contenance", 3], ["Je veux savoir quel régime de bananes est le plus lourd.", "masse", 3]
   ];
   // « h, min ou jours » (le programme de CE1 : heure, minute, jour).
   const DUREES_CHOIX = ["min", "h", "jours"];
@@ -464,7 +508,11 @@
     ["Un match de football :", "90", "min", 2], ["De Saint-Pierre à Saint-Denis en voiture : environ", "1", "h", 2],
     ["Monter à pied au sommet du Piton des Neiges : environ", "5", "h", 3], ["Faire bouillir l'eau des pâtes :", "8", "min", 3],
     ["De La Réunion à Paris en avion : environ", "11", "h", 3], ["Un mois : environ", "30", "jours", 3], ["Une chanson :", "3", "min", 3],
-    ["Laisser lever la pâte à pain :", "2", "h", 3]
+    ["Laisser lever la pâte à pain :", "2", "h", 3],
+    // Lot A2 ter : La Réunion.
+    ["Manger un samoussa :", "2", "min", 1], ["Faire cuire un cari : environ", "1", "h", 2],
+    ["Le trajet en Car Jaune de Saint-Pierre à Saint-Denis : environ", "2", "h", 2], ["La marche jusqu'au Trou de Fer : environ", "2", "h", 3],
+    ["Le Grand Raid, pour les derniers coureurs : environ", "3", "jours", 3]
   ];
   const CHOIX_UNITE = {longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]};
 
@@ -1021,12 +1069,28 @@
         avant: "En tout,", objetBorne: "planche", partBorne: "morceauPlanche"};
     }
     if (degre === 2) {
-      if (rng() < 0.5) {
+      const r = rng();
+      // Lot A2 ter : au marché de Saint-Pierre (letchis et longanis).
+      if (r < 0.25) {
+        const a = entre(rng, 1, 3);
+        const b = entre(rng, 100, 900, 100);
+        return {modele: "marche", objet: "letchis", prenom, a, ua: "kg", b, ub: "g", vers: "g", op: "+",
+          enonce: `Au marché, ${prenom} achète ${a}${NB}kg de letchis et ${b}${NB}g de longanis. Quelle est la masse de fruits en tout, en g${NB}?`,
+          avant: "En tout,", objetBorne: "letchis", partBorne: "longanis"};
+      }
+      if (r < 0.5) {
         const a = entre(rng, 1, 3);
         const b = entre(rng, 100, 900, 100);
         return {modele: "bout", objet: "riz", prenom, a, ua: "kg", b, ub: "g", vers: "g", op: "+",
           enonce: `${prenom} achète ${a}${NB}kg de riz et ${b}${NB}g de lentilles. Quelle est la masse en tout, en g${NB}?`,
           avant: "En tout,", objetBorne: "riz", partBorne: "lentilles"};
+      }
+      if (r < 0.75) {
+        const a = entre(rng, 1, 2);
+        const b = entre(rng, 15, 30, 5);
+        return {modele: "goyavier", objet: "jus", prenom, a, ua: "L", b, ub: "cL", vers: "cL", op: "-",
+          enonce: `Une bouteille contient ${a}${NB}L de jus de goyavier. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de centilitres de jus reste-t-il${NB}?`,
+          avant: "Il reste", objetBorne: "jus", partBorne: "verre"};
       }
       const a = entre(rng, 1, 2);
       const b = entre(rng, 15, 30, 5);
@@ -1034,7 +1098,16 @@
         enonce: `Une bouteille contient ${a}${NB}L de jus. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de centilitres de jus reste-t-il dans la bouteille${NB}?`,
         avant: "Il reste", objetBorne: "jus", partBorne: "verre"};
     }
-    if (rng() < 0.5) {
+    const r3 = rng();
+    // Lot A2 ter : le sentier du Trou de Fer (forêt de Bélouve).
+    if (r3 < 0.25) {
+      const a = entre(rng, 2, 5);
+      const b = entre(rng, 100, 1900, 100);
+      return {modele: "troudefer", objet: "sentierBelouve", prenom, a, ua: "km", b, ub: "m", vers: "m", op: "-",
+        enonce: `Le sentier du Trou de Fer mesure ${a}${NB}km. ${prenom} a déjà marché ${mes(milli(b), "m")}. Combien de mètres reste-t-il à marcher${NB}?`,
+        avant: "Il reste", objetBorne: "sentierBelouve", partBorne: "marche"};
+    }
+    if (r3 < 0.6) {
       const a = entre(rng, 2, 9);
       const b = entre(rng, 100, 1900, 100);
       return {modele: "couper", objet: "sentier", prenom, a, ua: "km", b, ub: "m", vers: "m", op: "-",
@@ -1154,7 +1227,10 @@
   // Les objets à acheter : leurs prix, en centimes.
   const ACHATS = [
     ["Une baguette de pain", 90, 150], ["Un croissant", 90, 150], ["Un cahier", 150, 400], ["Un stylo", 80, 300], ["Une glace", 200, 450],
-    ["Un ballon", 500, 1500], ["Un livre", 500, 1800], ["Une bouteille de jus", 150, 350], ["Une boîte de crayons", 300, 900], ["Un paquet de bonbons", 100, 250]
+    ["Un ballon", 500, 1500], ["Un livre", 500, 1800], ["Une bouteille de jus", 150, 350], ["Une boîte de crayons", 300, 900], ["Un paquet de bonbons", 100, 250],
+    // Lot A2 ter : La Réunion.
+    ["Un sachet de samoussas", 250, 600], ["Un sachet de bonbons piment", 150, 400], ["Un kilo de letchis", 300, 800],
+    ["Une bouteille de jus de goyavier", 200, 450], ["Une barquette de bouchons", 300, 700], ["Une barquette de cari", 600, 1200]
   ];
   // Les pièces et les billets dessinés, en centimes.
   const CENTIMES = [50, 20, 10, 5, 2, 1];
@@ -1316,7 +1392,10 @@
     ["La récréation", 10, 30, 570, 960], ["La séance de piscine", 30, 60, 480, 960], ["Le trajet en car", 15, 180, 420, 1020],
     ["Le film", 80, 150, 540, 1020], ["La sortie au parc", 60, 240, 480, 900], ["Le spectacle de l'école", 45, 120, 540, 1020],
     ["L'atelier de peinture", 30, 90, 480, 960], ["Le match de basket", 40, 90, 480, 1020], ["La sieste", 30, 120, 720, 900],
-    ["Le pique-nique", 30, 120, 690, 840]
+    ["Le pique-nique", 30, 120, 690, 840],
+    // Lot A2 ter : La Réunion.
+    ["Le trajet en Car Jaune", 30, 150, 420, 1020], ["La marche jusqu'au Trou de Fer", 60, 180, 420, 780], ["La baignade au bassin", 30, 120, 540, 960],
+    ["La cuisson du cari", 45, 90, 540, 1080]
   ];
   //   heure cherchée : [heure connue → phrase, durée → phrase, la case,
   //   durée min, durée max, début au plus tôt, au plus tard]
@@ -1325,14 +1404,22 @@
     [t => `Le film commence à ${t}.`, d => `Le film dure ${d}.`, "Fin :", 80, 150, 540, 1020],
     [t => `Le gâteau entre dans le four à ${t}.`, d => `La cuisson dure ${d}.`, "Sortie du four :", 20, 60, 480, 1080],
     [t => `La randonnée commence à ${t}.`, d => `La randonnée dure ${d}.`, "Fin :", 60, 300, 420, 840],
-    [t => `L'entraînement de football commence à ${t}.`, d => `L'entraînement dure ${d}.`, "Fin :", 45, 120, 480, 1020]
+    [t => `L'entraînement de football commence à ${t}.`, d => `L'entraînement dure ${d}.`, "Fin :", 45, 120, 480, 1020],
+    // Lot A2 ter : La Réunion.
+    [t => `Le Car Jaune part de Saint-Pierre à ${t}.`, d => `Le trajet dure ${d}.`, "Arrivée :", 30, 150, 420, 1020],
+    [t => `Le cari est mis à cuire à ${t}.`, d => `La cuisson dure ${d}.`, "Fin de la cuisson :", 45, 90, 540, 1080],
+    [t => `La marche jusqu'au Trou de Fer commence à ${t}.`, d => `La marche dure ${d}.`, "Arrivée :", 60, 180, 420, 780]
   ];
   const DEPARTS = [
     [t => `Le bus arrive à ${t}.`, d => `Le trajet a duré ${d}.`, "Départ :", 10, 180, 420, 1020],
     [t => `Le film finit à ${t}.`, d => `Le film a duré ${d}.`, "Début :", 80, 150, 540, 1020],
     [t => `Le gâteau sort du four à ${t}.`, d => `La cuisson a duré ${d}.`, "Mise au four :", 20, 60, 480, 1080],
     [t => `La randonnée finit à ${t}.`, d => `La randonnée a duré ${d}.`, "Départ :", 60, 300, 420, 840],
-    [t => `L'entraînement de football finit à ${t}.`, d => `L'entraînement a duré ${d}.`, "Début :", 45, 120, 480, 1020]
+    [t => `L'entraînement de football finit à ${t}.`, d => `L'entraînement a duré ${d}.`, "Début :", 45, 120, 480, 1020],
+    // Lot A2 ter : La Réunion.
+    [t => `Le Car Jaune arrive à Saint-Denis à ${t}.`, d => `Le trajet a duré ${d}.`, "Départ :", 30, 150, 420, 1020],
+    [t => `Le cari a fini de cuire à ${t}.`, d => `La cuisson a duré ${d}.`, "Début de la cuisson :", 45, 90, 540, 1080],
+    [t => `La marche jusqu'au Trou de Fer finit à ${t}.`, d => `La marche a duré ${d}.`, "Départ :", 60, 180, 420, 780]
   ];
   // Deux instants, selon le degré. Degré 1 : des heures pile, ou dans la
   // même heure ; degré 2 : on passe une heure pile, moins d'une heure ;
@@ -1417,6 +1504,12 @@
       else bond = H ? `${heureTexte(dep)} + ${H}${NB}h = ${heureTexte(dep + H * 60)}` : `${heureTexte(dep)} + ${duree}${NB}min`;
     } else if (arr % 60 && (arr % 60) < (duree % 60)) bond = `${heureTexte(arr)} − ${arr % 60}${NB}min = ${heureTexte(arr - (arr % 60))}`;
     else bond = H ? `${heureTexte(arr)} − ${H}${NB}h = ${heureTexte(arr - H * 60)}` : `${heureTexte(arr)} − ${duree}${NB}min`;
+    // Lot A2 ter : quand le premier bond est déjà toute la réponse (des
+    // heures pile), l'image ne l'écrit pas (« 16 h + 2 h = 18 h » donnait la
+    // réponse ; l'aide ne la donne jamais).
+    const fin = cherche === "duree" ? null : heureTexte(cherche === "arrivee" ? arr : dep);
+    if (fin && bond.endsWith(`= ${fin}`)) bond = `${bond.slice(0, -fin.length)}${CASE}`;
+    if (cherche === "duree" && bond === `De ${heureTexte(dep)} à ${heureTexte(arr)} : ${H}${NB}h.`) bond = `Je compte les heures, de ${heureTexte(dep)} à ${heureTexte(arr)}.`;
     const resume = `${enonce} ${avant} ${reponseTexte}`;
     const lignes = cherche === "duree" ? [`De ${heureTexte(dep)} à ${heureTexte(arr)} : ${dureeTexte(duree)}`]
       : cherche === "arrivee" ? [`${heureTexte(dep)} + ${dureeTexte(duree)} = ${heureTexte(arr)}`] : [`${heureTexte(arr)} − ${dureeTexte(duree)} = ${heureTexte(dep)}`];
@@ -1523,10 +1616,13 @@
         // `cleBase` : un même problème posé autrement (« Est-ce
         // vraisemblable ? ») reste le même problème.
         const base = x => x.cleBase || x.cle;
+        // `jamais` : une contrainte de l'étape qui tient toujours, même quand
+        // le vivier s'épuise (lot A2 ter : un repère ne revient pas).
+        const jamais = x => !etape.jamais || etape.jamais(s, x, usage);
         const accepte = (x, strict) => !interdits.has(base(x)) && !s.some(y => y.cle === x.cle || base(y) === base(x))
-          && (!strict || !etape.accepte || etape.accepte(s, x, usage));
+          && jamais(x) && (!strict || !etape.accepte || etape.accepte(s, x, usage));
         const tirer = d => {
-          const x = etape.tirer(rng, d, i, usage, forme);
+          const x = etape.tirer(rng, d, i, usage, forme, s);
           if (x && forme && (forme === "phrase" || forme === "nombre" || forme === "objet") && x.forme !== "deux-cases" && !x.somme && x.forme !== "qcm") {
             return reformer(x, forme);
           }
@@ -1547,7 +1643,9 @@
         // fois de suite.
         if (!choisie && !epuise[`v${degre}`]) {
           for (let essai = 0; essai < 50 && !choisie; essai += 1) {
-            const d = degre === 3 ? 2 : degre + 1;
+            // (Relier garde son degré : au degré 3, trois objets de la même
+            // grandeur ; un degré voisin mélangerait les grandeurs.)
+            const d = forme === "associer" ? degre : degre === 3 ? 2 : degre + 1;
             const x = tirer(essai % 2 ? d : degre);
             if (x && accepte(x, false)) choisie = Object.assign(x, {degre});
           }
@@ -1555,7 +1653,7 @@
         }
         for (let essai = 0; essai < 50 && !choisie && usage !== "valide" && usage !== "test"; essai += 1) {
           const x = tirer(degre);
-          if (x && !interdits.has(base(x)) && (!s.length || base(s[s.length - 1]) !== base(x))) choisie = x;
+          if (x && !interdits.has(base(x)) && (!s.length || base(s[s.length - 1]) !== base(x)) && jamais(x)) choisie = x;
         }
         if (choisie) s.push(choisie);
       });

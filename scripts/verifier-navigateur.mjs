@@ -91,7 +91,8 @@ export const RECETTES = [
   { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
   // Le robot du lot A2 : tous les écrans de chaque étape, à 4 tailles, dans Chromium ET WebKit
   // (WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit).
-  { fichier: "tests/defi-conversions-robot.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS, plafond: 30 },
+  // lot A2 ter : le robot joue 9 tailles dans deux moteurs (environ 40 min)
+  { fichier: "tests/defi-conversions-robot.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS, plafond: 60 },
 
   { fichier: "tests/splat-enquete-eleve-boutons-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
   { fichier: "tests/splat-enquete-eleve-pas-a-pas-regression.cjs", appli: "splat", besoin: ["playwright"], serveur: true, garde: SPLAT },
