@@ -135,6 +135,9 @@
       const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r);
       const g = t.generer(r, Boolean(officiel));
       const melange = g.melange ?? t.melange ?? q.melange ?? true;
+      // Une question en grille (une case à cocher par ligne : Vrai / Faux…) n'a pas de liste de réponses : ses lignes
+      // restent dans l'ordre de l'outil, sans tirage (la suite du hasard des autres questions ne bouge pas).
+      if (g.grille) return { q, t, g, choix: [] };
       return { q, t, g, choix: melange ? r.melanger(g.choix) : g.choix.slice() };
     });
   }
