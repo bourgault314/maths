@@ -103,3 +103,31 @@ test("4e : le triangle de la question 9 a vraiment l'angle cherché au milieu de
     for (const x of g.choix.filter((c) => !c.juste && /sommet/.test(c.erreur))) assert.match(x.erreur, new RegExp(`de sommet [${nom[0]}${nom[2]}] et non à celui de sommet ${nom[1]}`));
   }
 });
+
+// Lot EN4d (14/11/2026) : en 4e Q13, la bonne figure n'est plus la seule en parts égales dans les jumeaux.
+test("4e Q13 (jumeaux) : un piège « p pour q » en parts égales, d'une autre forme que la bonne figure ; l'officiel ne change pas", () => {
+  const Q13 = S4.questions.find((q) => q.num === 13);
+  const forme = (html) => (/<path /.test(html) ? "disque" : "rectangle");
+  const vus = new Set();
+  for (let graine = 2; graine <= 2001; graine++) {
+    const g = Q13.generer(hasard(graine), false);
+    const [, p, q] = texte(g.enonce).match(/colorié (\d)\/(\d)/).map(Number);
+    const egales = g.choix.filter((x) => /parts égales/.test(x.html));
+    assert.equal(egales.length, 2, `graine ${graine} : la bonne figure et le piège p pour q`);
+    const piege = egales.find((x) => !x.juste), juste = egales.find((x) => x.juste);
+    const [, tot, col] = piege.html.match(/en (\d+) parts égales, (\d+) coloriées/).map(Number);
+    assert.equal(tot, p + q, `graine ${graine}`);
+    assert.equal(col, p, `graine ${graine}`);
+    assert.equal((piege.html.match(/fill="#(5a64c8|9b9bd6)"/g) || []).length, p, `graine ${graine} : parts coloriées comptées dans le dessin`);
+    assert.ok(Math.abs(p / (p + q) - p / q) > 1e-9);
+    assert.notEqual(forme(piege.html), forme(juste.html), `graine ${graine} : formes différentes`);
+    assert.match(piege.erreur, new RegExp(`${p} parts coloriées pour ${q} parts blanches`));
+    assert.ok(!/\b(il|elle)\b/.test(piege.erreur));
+    vus.add(forme(piege.html));
+  }
+  assert.deepEqual([...vus].sort(), ["disque", "rectangle"]);
+  // Sujet officiel : toujours les trois figures en parts inégales et le disque en 8 parts.
+  const o = Q13.generer(hasard(1), true);
+  assert.equal(o.choix.filter((x) => /parts égales/.test(x.html)).length, 1);
+  assert.match(o.choix[1].html, /rectangle en 4 bandes inégales, 3 coloriées/);
+});
