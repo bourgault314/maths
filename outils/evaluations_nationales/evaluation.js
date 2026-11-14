@@ -11,6 +11,9 @@
   const vueProf = params.get("prof") === "1";
   const $ = (s) => document.querySelector(s);
   const CLE = "mathsgo-en-" + sujet.id;
+  // Un test sans sujet jumeau (lot EN9, Résolution de problèmes : la variété se décidera problème par problème) n'affiche
+  // ni « Un sujet jumeau » ni « Refaire mes questions ratées » : refaire le même sujet après avoir vu le bilan n'apprend rien.
+  const avecJumeaux = sujet.jumeaux !== false;
 
   let passation = null; // { type, officiel, graine, items:[{q, t, g, choix(ordre affiché)}], reponses:[], debut, i }
   let minuteur = null;
@@ -37,6 +40,7 @@
   // ---------- Accueil ----------
   function accueil() {
     clearInterval(minuteur);
+    calculatrice.question(false);
     $("#niveau").textContent = `${sujet.famille || "Évaluation nationale"} · ${sujet.niveau}`;
     $("#titre").textContent = sujet.titre;
     $("#descriptif").textContent = `${sujet.questions.length} questions · ${sujet.consignes}`;
@@ -46,6 +50,7 @@
             <span class="go">Commencer</span>
           </button>`).join("");
     $("#officiels").querySelectorAll("[data-officiel]").forEach((b) => b.addEventListener("click", () => lancer("officiel", null, officiels[Number(b.dataset.officiel)])));
+    $("#lancer-jumeau").hidden = !avecJumeaux;
     $("#source").innerHTML = `Questions : ${sujet.source.replace(/(, Eduscol)?, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
     const dernier = lire();
     $("#dernier").hidden = !dernier;
@@ -83,7 +88,10 @@
     // Une figure très large (droite graduée, bande) reste au-dessus des réponses : à côté, elle deviendrait minuscule.
     const vb = (it.g.figure || "").match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/);
     const large = vb && Number(vb[1]) / Number(vb[2]) > 2.2;
-    $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large);
+    // Une figure « à côté » (le diagramme de l'œuf) se range à droite de l'énoncé : les réponses gardent toute la largeur.
+    $("#q-carte").classList.toggle("avec-figure", Boolean(it.g.figure) && !large && !it.g.figureACote);
+    $("#q-carte").classList.toggle("figure-a-cote", Boolean(it.g.figure && it.g.figureACote));
+    $("#q-carte").classList.toggle("figure-grande", it.g.figureACote === "grande");
     $("#q-apres").innerHTML = typo(it.g.apres || "");
     $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
@@ -108,6 +116,7 @@
     $("#valider").disabled = true;
     $("#valider").textContent = i === items.length - 1 ? "Terminer" : "Valider";
     $("#q-corps").scrollTop = 0;
+    calculatrice.question(sujet.calculatrice && it.q.calculatrice !== false);
   }
 
   function repondre(k) {
@@ -120,6 +129,7 @@
   // ---------- Bilan ----------
   function bilan() {
     clearInterval(minuteur);
+    calculatrice.question(false);
     const { items, reponses } = passation;
     const temps = Date.now() - passation.debut;
     const resultats = items.map((it, i) => {
@@ -158,6 +168,7 @@
     const parAutomatisme = new Map();
     for (const x of rates) {
       const e = x.it.t.entrainement || x.it.q.entrainement;
+      if (!e) continue; // Résolution de problèmes : pas d'automatisme associé
       if (!parAutomatisme.has(e.url)) parAutomatisme.set(e.url, { e, nums: [] });
       parAutomatisme.get(e.url).nums.push(x.it.q.num);
     }
@@ -177,10 +188,75 @@
         ${vueProf && choisi ? `<p class="erreur-prof">Ce choix montre souvent que l’élève ${minuscule(choisi.erreur).replace(/^ne /, "ne ").replace(/\.$/, "")}.</p>` : ""}
       </li>`;
     }).join("");
-    $("#refaire-rates").hidden = rates.length === 0;
+    $("#refaire-rates").hidden = rates.length === 0 || !avecJumeaux;
+    $("#nouveau-jumeau").hidden = !avecJumeaux;
     $("#refaire-rates").onclick = () => lancer("jumeau", rates.map((x) => x.it.q.num));
     montrer("#bilan");
   }
+
+  // ---------- Calculatrice (tests « Résolution de problèmes ») ----------
+  // Comme dans le vrai test, elle est intégrée à la question : un bouton dans la barre des boutons l'ouvre par-dessus la
+  // page (rien ne bouge), elle repart à zéro à chaque question. Les calculs restent dans l'appareil, rien n'est gardé.
+  const calculatrice = (function () {
+    const panneau = $("#calculatrice"), bouton = $("#calc-ouvrir");
+    let saisie = "", avant = "", fini = false;
+    const OPS = "+−×÷";
+    const ecran = () => {
+      $("#calc-avant").textContent = avant;
+      $("#calc-ecran").textContent = saisie || "0";
+    };
+    const ouvrir = (oui) => {
+      panneau.hidden = !oui;
+      bouton.setAttribute("aria-expanded", String(oui));
+      document.body.classList.toggle("calc-ouverte", oui); // téléphone : place gardée sous la page pour lire la question
+    };
+    function touche(t) {
+      if (t === "C") { saisie = ""; avant = ""; fini = false; }
+      else if (t === "←") { if (fini) { saisie = ""; avant = ""; fini = false; } else saisie = saisie.slice(0, -1); }
+      else if (t === "=") {
+        if (!saisie || fini) return ecran();
+        const v = window.EN.calculer(saisie);
+        avant = saisie + " =";
+        saisie = window.EN.ecrireCalcul(v);
+        fini = true;
+        if (v === null) saisie = "Erreur";
+      } else if (OPS.includes(t)) {
+        if (fini) { saisie = saisie === "Erreur" ? "" : saisie; avant = ""; fini = false; }
+        // Deux signes de suite : le second remplace le premier (sauf « − » pour un nombre négatif).
+        if (saisie && OPS.includes(saisie.slice(-1)) && t !== "−") saisie = saisie.slice(0, -1);
+        if (saisie.length < 40) saisie += t;
+      } else {
+        if (fini) { saisie = ""; avant = ""; fini = false; }
+        if (saisie.length < 40) saisie += t;
+      }
+      ecran();
+    }
+    panneau.querySelectorAll("[data-touche]").forEach((b) => b.addEventListener("click", () => touche(b.dataset.touche)));
+    bouton.addEventListener("click", () => ouvrir(panneau.hidden));
+    $("#calc-fermer").addEventListener("click", () => { ouvrir(false); bouton.focus(); });
+    // Au clavier (ordinateur) : chiffres, virgule ou point, + - * / x : ( ), Entrée ou =, retour arrière, Échap.
+    const CLAVIER = { "+": "+", "-": "−", "*": "×", "x": "×", "X": "×", "/": "÷", ":": "÷", ",": ",", ".": ",", "(": "(", ")": ")", "=": "=", "Enter": "=", "Backspace": "←", "Delete": "C" };
+    document.addEventListener("keydown", (e) => {
+      if (panneau.hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "Escape") { e.preventDefault(); ouvrir(false); bouton.focus(); return; }
+      const t = /^[0-9]$/.test(e.key) ? e.key : CLAVIER[e.key];
+      if (!t) return;
+      e.preventDefault();
+      touche(t);
+    });
+    return {
+      // Nouvelle question : la calculatrice repart à zéro, fermée ; le bouton n'est là que si la question l'a.
+      question(avec) {
+        saisie = ""; avant = ""; fini = false;
+        ecran();
+        ouvrir(false);
+        // visibility (pas display) : « Je ne sais pas » et « Valider » ne bougent pas quand le bouton n'est pas là.
+        bouton.style.visibility = avec ? "visible" : "hidden";
+        bouton.disabled = !avec;
+        bouton.hidden = !sujet.calculatrice;
+      },
+    };
+  })();
 
   // ---------- Plein écran (comme Défi tables et Anzan ; le bouton est caché au téléphone) ----------
   (function pleinEcran() {
@@ -233,7 +309,7 @@
   accueil();
   const g = Number(params.get("graine"));
   if (Number.isInteger(g) && g > 0) {
-    const officiel = g === 1 ? officiels.find((o) => o.cle === params.get("officiel")) || officiels[0] : null;
+    const officiel = g === 1 || !avecJumeaux ? officiels.find((o) => o.cle === params.get("officiel")) || officiels[0] : null;
     const items = construire(sujet, hasard(g), officiel, null);
     passation = { type: officiel ? "officiel" : "jumeau", officiel, graine: g, items, reponses: [], debut: Date.now(), i: Math.max(0, Math.min(items.length - 1, (Number(params.get("q")) || 1) - 1)), reprise: false };
     montrer("#passe");
