@@ -253,12 +253,14 @@ const CATALOGUE_APPLIS = [
         // dates d'une compétence, des listes de dates ou null), `j` (ce que
         // la séance ouverte a fait, une liste d'entiers) et `journal` (six
         // listes d'entiers alignées sur `seances`, -1 = pas connu).
+        // Lot 4 « les ceintures » (14/11/2026) : `ceintures` (quatre dates ou
+        // null, une par palier : les ceintures gagnées).
         // Lot 1 « la séance » (12/11/2026) : `l` (le « lent » d'une
         // compétence, une liste de 0 et de 1) ; le plan `p` passe à 11 nombres
         // (rien à déclarer : une liste d'entiers).
         'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'l', 'd', 's', 'c',
             'seance', 'jour', 'etape', 'n', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
-            'rouges', 'minutes', 'jours', 'numero'],
+            'rouges', 'minutes', 'jours', 'numero', 'ceintures'],
         'mots' => [],
         'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances finies
@@ -291,7 +293,9 @@ const CATALOGUE_APPLIS = [
         // page de version 5 ne le connaît pas et l'effacerait.
         // Lot 1 « la séance » (12/11/2026) : 7. Une page de version 6 ne
         // connaît ni `l` ni le plan à 11 nombres : elle les effacerait.
-        'version_min' => 7,
+        // Lot 4 « les ceintures » (14/11/2026) : 8. Une page de version 7 ne
+        // connaît pas `ceintures` (les ceintures gagnées) : elle l'effacerait.
+        'version_min' => 8,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',

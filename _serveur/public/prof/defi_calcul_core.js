@@ -30,6 +30,77 @@
     Object.freeze({n: 4, nom: "Vers la 6e", classes: "6e et choix pédagogiques"})
   ]);
 
+  // Les ceintures (lot 4, 14/11/2026, choix de Gwenaël) : une par palier
+  // fini, comme au judo ; tout le monde part en ceinture blanche. Les
+  // couleurs sont celles de maths&go (le dégradé du site : or #f9bf3b,
+  // orange #f58220, bleu #0b67b2 ; le vert de l'appli #147447). Le nom est
+  // toujours écrit à côté du dessin : imprimés en noir et blanc, la verte
+  // et la bleue se ressemblent.
+  const CEINTURES = Object.freeze([
+    Object.freeze({n: 0, nom: "Ceinture blanche", court: "blanche", couleur: "#ffffff"}),
+    Object.freeze({n: 1, nom: "Ceinture jaune", court: "jaune", couleur: "#f9bf3b"}),
+    Object.freeze({n: 2, nom: "Ceinture orange", court: "orange", couleur: "#f58220"}),
+    Object.freeze({n: 3, nom: "Ceinture verte", court: "verte", couleur: "#147447"}),
+    Object.freeze({n: 4, nom: "Ceinture bleue", court: "bleue", couleur: "#0b67b2"})
+  ]);
+
+  // Le dessin d'une ceinture nouée (SVG en texte : la page, la tuile de Mon
+  // espace et la page du professeur le posent tel quel). `barrettes` : 0 à
+  // 3, des bandes blanches bordées d'encre sur le pan droit, comme les
+  // barrettes du judo. `vide` : une ceinture pas encore gagnée, en
+  // pointillés gris. `taille` : la largeur en pixels (hauteur 5/8).
+  function formeCeinture(n, {barrettes = 0, vide = false, taille = 64, titre = ""} = {}) {
+    const ceinture = CEINTURES[Math.max(0, Math.min(CEINTURES.length - 1, Math.floor(Number(n) || 0)))];
+    const largeur = Math.max(8, Math.min(400, Math.round(Number(taille) || 64)));
+    const nombre = vide ? 0 : Math.max(0, Math.min(3, Math.floor(Number(barrettes) || 0)));
+    const racine = {"class": "ceinture", viewBox: "0 0 64 40", width: String(largeur), height: String(Math.round(largeur * 40 / 64)), focusable: "false"};
+    if (titre) { racine.role = "img"; racine["aria-label"] = String(titre); } else racine["aria-hidden"] = "true";
+    const groupe = {fill: vide ? "#ffffff" : ceinture.couleur, stroke: vide ? "#9fb4c4" : "#143451", "stroke-width": "1.7", "stroke-linejoin": "round"};
+    if (vide) groupe["stroke-dasharray"] = "3 2.4";
+    const pans = [
+      ["path", {d: "M27 17L33 18.5L23.5 37.5L16.5 35.5Z"}], ["path", {d: "M31 18.5L37 17L47.5 35.5L40.5 37.5Z"}],
+      ["rect", {x: "2", y: "9", width: "60", height: "9", rx: "2.2"}], ["rect", {x: "24.5", y: "5.5", width: "15", height: "15.5", rx: "3"}]
+    ];
+    const bandes = [];
+    for (let k = 0; k < nombre; k += 1) {
+      const t = .44 + k * .16;
+      const cx = 34 + 10 * t;
+      const cy = 18 + 18.5 * t;
+      const [px, py] = [.889 * 4.6, -.457 * 4.6];
+      const trait = (f, epaisseur, couleur) => ["path", {d: `M${(cx - px * f).toFixed(2)} ${(cy - py * f).toFixed(2)}L${(cx + px * f).toFixed(2)} ${(cy + py * f).toFixed(2)}`, stroke: couleur, "stroke-width": epaisseur}];
+      bandes.push(trait(1, "3.6", "#143451"), trait(.82, "1.6", "#ffffff"));
+    }
+    return {racine, groupe, pans, bandes};
+  }
+
+  // Le dessin en texte SVG (la page de l'appli, les planches) : rien que des
+  // nombres bornés et les couleurs ci-dessus ; le titre est échappé.
+  function dessinCeinture(n, options = {}) {
+    const {racine, groupe, pans, bandes} = formeCeinture(n, options);
+    const echapper = valeur => String(valeur).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+    const attributs = objet => Object.keys(objet).map(cle => ` ${cle}="${echapper(objet[cle])}"`).join("");
+    const element = ([nom, objet]) => `<${nom}${attributs(objet)}/>`;
+    return `<svg${attributs(racine)}><g${attributs(groupe)}>${pans.map(element).join("")}</g>${bandes.map(element).join("")}</svg>`;
+  }
+
+  // Le même dessin en éléments (createElementNS, aucun HTML) : pour la page
+  // du professeur et la tuile de Mon espace, où rien ne passe par innerHTML.
+  function elementCeinture(doc, n, options = {}) {
+    const {racine, groupe, pans, bandes} = formeCeinture(n, options);
+    const NS = "http://www.w3.org/2000/svg";
+    const creer = (nom, objet) => {
+      const noeud = doc.createElementNS(NS, nom);
+      Object.keys(objet).forEach(cle => noeud.setAttribute(cle, objet[cle]));
+      return noeud;
+    };
+    const svg = creer("svg", racine);
+    const g = creer("g", groupe);
+    pans.forEach(([nom, objet]) => g.appendChild(creer(nom, objet)));
+    svg.appendChild(g);
+    bandes.forEach(([nom, objet]) => svg.appendChild(creer(nom, objet)));
+    return svg;
+  }
+
   // Une validation (mode professeur) : 12 calculs pour un fait, 10 pour une
   // procédure. Un entraînement : jusqu'à 20 calculs, rangés du plus simple
   // au plus dur (la série s'arrête avant, le plus souvent).
@@ -9342,6 +9413,9 @@
 
   return Object.freeze({
     PALIERS,
+    CEINTURES,
+    dessinCeinture,
+    elementCeinture,
     TOTAUX,
     MODULES,
     ORDRE,

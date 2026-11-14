@@ -119,10 +119,11 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.match(page, /<button type="button" data-appli="flash-anzan" aria-pressed="false">Anzan<\/button>\s*<button type="button" data-appli="defi-calcul" aria-pressed="false">Défi calcul<\/button>\s*<button type="button" data-appli="splat"/);
   const entete = page.slice(page.indexOf('<tr id="entete-defi-calcul" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-defi-calcul" hidden>')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
-    ["Élève:prenom", "Compétences sues:sues", "À revoir:revoir (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", "", " (fin)"],
+    // Lot 4 « les ceintures » : la colonne « Ceinture », cachée au téléphone.
+    ["Élève:prenom", "Ceinture:ceinture (large)", "Compétences sues:sues", "À revoir:revoir (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", "", " (fin)"],
     "au téléphone : l'élève, les compétences sues, le dernier jour");
   const TRIS = new Function(`${constante("TRIS")}\nreturn TRIS;`)();
-  assert.deepEqual(TRIS["defi-calcul"], ["prenom", "sues", "revoir", "seances", "date"]);
+  assert.deepEqual(TRIS["defi-calcul"], ["prenom", "ceinture", "sues", "revoir", "seances", "date"]);
   assert.match(fonction("elevesLus"), /cle === "defi-calcul" \? lireCalcul/);
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "defi-calcul"\) \{ dessinerTableauCalcul\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "defi-calcul"\) return chargerMoteurCalcul\(\);/);
@@ -166,7 +167,10 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.doesNotMatch(sectionCalcul.replace(/\/\/.*$/gm, ""), /\b129\b|\b14\b/);
 });
 
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « N compétences sues sur 125 » dès la première", () => {
+// Lot 4 « les ceintures » (14/11/2026) : la ceinture devant le compte, et le
+// compte sur ce que l'appli propose (les modules construits, 95), jusqu'au
+// palier réglé pour l'élève — plus sur les 125 de la carte.
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 95 » dès la première", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
@@ -178,9 +182,14 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
   assert.equal(jauge.lecteur(CALCUL, p), null, "en route mais rien de su : pas de jauge (une barre vide ressemble à un reproche)");
   p.modules.A2.b = [4, 5, 0, 0];
   p.modules.A2.e = ["2026-12-04", "2026-12-11", null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 125, compte: "2 compétences sues sur 125", bonus: ""}, "sur toute la carte, comme l'accueil de l'appli");
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 95, compte: "Ceinture blanche · 2 compétences sues sur 95", ceinture: {n: 0, barrettes: 0}, bonus: ""},
+    "sur ce que l'appli propose (les 95 compétences construites)");
   p.modules.A2.b = [4, 0, 0, 0];
-  assert.equal(jauge.lecteur(CALCUL, p).compte, "1 compétence sue sur 125");
+  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 95");
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche · 1 compétence sue sur 40", "jusqu'au palier réglé : les bases");
+  p.ceintures = ["2026-11-02", null, null, null];
+  assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, barrettes: 0});
+  assert.match(jauge.lecteur(CALCUL, p).compte, /^Ceinture jaune · /);
   assert.match(fonction("chargerMoteur", espace), /jauge\.avant \? chargerScript\(jauge\.avant\.url, jauge\.avant\.global\)/, "le script d'avant, puis le moteur");
   assert.match(fonction("chargerMoteur", espace), /prealable \? chargerScript\(jauge\.url, jauge\.global\) : null/, "sans le noyau, pas de moteur ni de jauge");
 });

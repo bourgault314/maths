@@ -168,6 +168,10 @@ try {
   .jauge-barre i { display: block; height: 100%; border-radius: 999px;
                    background: linear-gradient(90deg, #08aaa5, #0b67b2); }
   .jauge-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  /* Défi calcul (lot 4) : la ceinture devant le compte. */
+  .jauge-ligne .ceinture-tuile { display: flex; flex: none; }
+  .jauge-ligne:has(.ceinture-tuile) { flex-wrap: nowrap; }
+  .jauge-ligne:has(.ceinture-tuile) .compte { min-width: 0; }
   .appli .jauge-ligne .compte { color: var(--ink); font-size: var(--texte-secondaire); font-weight: 800; }
   .appli .jauge-note { display: block; margin-top: 4px; color: #a15c11;
                        font-size: var(--texte-secondaire); font-weight: 700; }
@@ -1043,14 +1047,24 @@ try {
       avant: {url: "prof/defi_calcul_core.js?v=<?= htmlspecialchars($versionCalculCore, ENT_QUOTES) ?>", global: "MATHSGO_DEFI_CALCUL_CORE"},
       url: "prof/defi_calcul_mon_parcours.js?v=<?= htmlspecialchars($versionCalcul, ENT_QUOTES) ?>",
       global: "MATHSGO_DEFI_CALCUL_MON_PARCOURS",
-      lecteur: (P, brut) => {
+      // Lot 4 « les ceintures » (14/11/2026) : la ceinture qu'il porte, avec
+      // ses barrettes, devant le compte ; le compte sur ce que l'appli
+      // propose (les modules construits) jusqu'au palier réglé pour l'élève.
+      lecteur: (P, brut, reglages) => {
         const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
         if (!CORE) return null;
         const resume = P.resumeProf(brut, CORE.carte());
-        if (!resume.sues) return null;
+        const jusqua = typeof P.reglagesDeSeance === "function" ? P.reglagesDeSeance(reglages).palier : 4;
+        const paliers = ((resume.ouvert && resume.ouvert.paliers) || []).filter(p => p.palier <= jusqua);
+        const sues = paliers.reduce((somme, p) => somme + p.sues, 0);
+        const total = paliers.reduce((somme, p) => somme + p.total, 0);
+        if (!sues) return null;
+        const c = resume.ceintures || {porte: 0, barrettes: 0};
+        const ceinture = CORE.CEINTURES && CORE.CEINTURES[c.porte];
         return {
-          fait: resume.sues, total: resume.total,
-          compte: `${resume.sues} compétence${resume.sues > 1 ? "s" : ""} sue${resume.sues > 1 ? "s" : ""} sur ${resume.total}`,
+          fait: sues, total,
+          compte: `${ceinture ? `${ceinture.nom} · ` : ""}${sues} compétence${sues > 1 ? "s" : ""} sue${sues > 1 ? "s" : ""} sur ${total}`,
+          ceinture: ceinture && typeof CORE.elementCeinture === "function" ? {n: c.porte, barrettes: c.barrettes} : null,
           bonus: ""
         };
       }
@@ -1352,6 +1366,19 @@ try {
     const compte = document.createElement("span");
     compte.className = "compte";
     compte.textContent = jauge.compte;
+    // Défi calcul (lot 4) : le dessin de la ceinture devant le compte. Le
+    // dessin vient du noyau de l'appli servi par ce serveur, fait par
+    // createElementNS (aucun HTML) avec des nombres bornés (la ceinture 0 à
+    // 4, les barrettes 0 à 3) : rien de l'élève.
+    if (jauge.ceinture && window.MATHSGO_DEFI_CALCUL_CORE) {
+      const dessin = document.createElement("span");
+      dessin.className = "ceinture-tuile";
+      dessin.setAttribute("aria-hidden", "true");
+      const n = Math.max(0, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 0)));
+      const barrettes = Math.max(0, Math.min(3, Math.floor(Number(jauge.ceinture.barrettes) || 0)));
+      dessin.replaceChildren(window.MATHSGO_DEFI_CALCUL_CORE.elementCeinture(document, n, {barrettes, taille: 34}));
+      ligne.append(dessin);
+    }
     ligne.append(compte);
     if (jauge.rang) ligne.append(badgeRang(jauge.rang));
     if (jauge.bonus) {

@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261113-4">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -158,7 +158,7 @@
                bouge. -->
           <div id="acc-pied" class="acc-pied">
             <div class="acc-pied-normal">
-              <button id="acc-porte" class="acc-porte" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 9 4l6 2.5 6-2.5v13l-6 2.5-6-2.5-6 2.5z" fill="#e7f8f5" stroke="#087a71" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 4v13M15 6.5v13" stroke="#087a71" stroke-width="1.8"/><circle cx="12" cy="10" r="1.8" fill="#e0771a"/></svg><span>Mon parcours<small id="acc-porte-note"></small></span></button>
+              <button id="acc-porte" class="acc-porte" type="button"><span id="acc-ceinture" class="ico ico-ceinture" aria-hidden="true"></span><span>Mon parcours<small id="acc-porte-note"></small></span></button>
               <!-- « Comment ça marche ? » et, pour le visiteur SANS code seulement,
                    « Effacer mon historique » (06/11/2026) et « Mode professeur » :
                    sur la même ligne, centrés. -->
@@ -197,6 +197,9 @@
           <div class="dc-ptete"><p class="dc-compte"><small id="parcours-compte"></small><b id="parcours-gains" class="dc-gains" hidden></b></p><p class="dc-legende"><span><span class="dc-comp" aria-hidden="true"><i></i></span>à apprendre</span><span><span class="dc-comp" aria-hidden="true"><i class="b"></i></span>appris</span><span><span class="dc-comp" aria-hidden="true"><i class="v"></i></span>solide</span><span><span class="dc-comp" aria-hidden="true"><i class="r"></i></span>à revoir</span></p></div>
           <div id="parcours-paliers" class="dc-paliers" role="group" aria-label="Les paliers"></div>
           <p id="parcours-titre" class="dc-ptitre"></p>
+          <!-- Lot 4 « les ceintures » : la ceinture du palier ouvert (gagnée,
+               à gagner avec ses ★ qui manquent, ou plus tard). -->
+          <p id="parcours-ceinture" class="dc-pceinture"></p>
           <div id="parcours-modules" class="dc-mods" role="list"></div>
         </section>
       </div>
@@ -257,6 +260,17 @@
              les erreurs en dernier. À la fin de « J'apprends », le verdict
              laisse la place à la phrase-bilan. -->
         <div id="result-fil" class="seance-fil centre" hidden></div>
+        <!-- Lot 4 « les ceintures » (choix de Gwenaël, 14/11/2026) : à la fin
+             de l'étape qui la fait gagner, un écran pour la ceinture, puis la
+             séance continue. -->
+        <div id="result-ceinture" class="dc-ceinture-gagnee" hidden>
+          <p class="eyebrow">Nouvelle ceinture</p>
+          <div id="ceinture-dessin" class="dessin"></div>
+          <h1 id="ceinture-titre" tabindex="-1"></h1>
+          <p id="ceinture-phrase" class="phrase"></p>
+          <p id="ceinture-fin" class="fin" hidden></p>
+          <button id="ceinture-suite" class="primary" type="button">Continuer&nbsp;→</button>
+        </div>
         <div id="result-verdict" class="result-verdict">
           <span id="result-icon" class="hero-icon" aria-hidden="true">✓</span>
           <h1 id="result-title" tabindex="-1"></h1>
@@ -291,14 +305,15 @@
           <p><b>Tu connais déjà&nbsp;?</b> À l’entrée d’un module, un escalier&nbsp;: une marche par niveau, 3&nbsp;calculs par marche, un de plus si je me trompe. Ce que je sais déjà est validé tout de suite.</p>
           <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes de suite, sans aide. Ici, se tromper ne compte pas.</p>
           <p><b>Mes coches.</b> ✓&nbsp;appris. ★&nbsp;solide&nbsp;: encore réussi quand il est revenu. ↻&nbsp;à revoir.</p>
+          <p><b>Mes ceintures.</b> Quand tous les calculs d’un palier sont solides&nbsp;★, je gagne sa ceinture&nbsp;: jaune, orange, verte, puis bleue. En chemin, une barrette à chaque quart du palier.</p>
         </div>
       </div>
     </section>
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261113-5"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261113-1"></script>
+  <script src="./defi_calcul_core.js?v=20261114-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261114-1"></script>
   <script src="./defi_calcul_aides.js?v=20261113-5"></script>
   <script>
     (() => {
@@ -313,6 +328,11 @@
       // L'ordre, les paliers, ce qui est construit : la carte que le moteur
       // de la progression lit sans connaître les textes.
       const CARTE = CORE.carte();
+      // Lot 4 : ce que l'appli propose aujourd'hui (les modules construits).
+      // Mon parcours compte là-dessus : un palier où des modules manquent
+      // encore peut être fini (et sa ceinture gagnée) ; les autres sont
+      // listés « Bientôt ».
+      const CARTE_CONSTRUITE = Object.freeze({modules: CARTE.modules.filter(fiche => fiche.construit), ordre: CARTE.ordre});
       const $ = id => document.getElementById(id);
 
       // Deux stockages, deux durées de vie. Les parcours (une case par code,
@@ -348,7 +368,11 @@
         // Mode professeur : le module ouvert, le niveau choisi dans chacun.
         module: null,
         niveauxProf: {},
-        titreResultat: "result-title"
+        titreResultat: "result-title",
+        // Lot 4 : les ceintures au début de l'étape (pour voir une barrette
+        // gagnée), et la barrette gagnée par l'étape qui vient de finir.
+        ceinturesAvant: null,
+        barretteGagnee: null
       };
 
       // ------------------------------------------------- suivi de classe
@@ -2096,6 +2120,89 @@
         const palier = CORE.PALIERS.find(p => p.n === n) || CORE.PALIERS[0];
         return soude(`Palier ${palier.n} · ${palier.nom.replace(/^Le /, "")}`);
       }
+
+      // ------------------------------------------------- les ceintures (lot 4)
+      //
+      // Choix de Gwenaël (14/11/2026) : une ceinture par palier fini (tout
+      // solide ★), jaune, orange, verte, bleue ; tout le monde part en
+      // blanche ; des barrettes en chemin ; la ceinture se remet à la fin de
+      // l'étape qui la fait gagner. Le moteur décide (etatCeintures) ; la
+      // page dessine (CORE.elementCeinture) et écrit.
+      const etatCeintures = () => PARCOURS.etatCeintures(parcours, CARTE, palierRegle());
+      const nomCeinture = n => CORE.CEINTURES[n].nom;
+      const MOIS = Object.freeze(["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]);
+      function jourEnMots(jour) {
+        const [, mois, j] = String(jour).split("-").map(Number);
+        return mois ? soude(`${j === 1 ? "1er" : j} ${MOIS[mois - 1]}`) : "";
+      }
+      // « Tous les calculs des bases sont solides ★. »
+      const DU_PALIER = Object.freeze({1: "des bases", 2: "du CM1", 3: "du CM2", 4: "de « Vers la 6e »"});
+      function texteBarrettes(n) {
+        return n ? `${n} barrette${n > 1 ? "s" : ""}` : "";
+      }
+
+      // L'écran de la ceinture gagnée (une à la fois ; deux le même jour, la
+      // seconde après « Continuer »), puis le bilan de l'étape.
+      function montrerCeintures(liste, ensuite) {
+        const n = liste[0];
+        const etat = etatCeintures();
+        const result = $("result");
+        result.classList.remove("is-fete", "is-rate", "is-neutre");
+        ["result-verdict", "result-retenir", "retenir-reussi"].forEach(id => { $(id).hidden = true; });
+        $("result-suite").replaceChildren();
+        $("corrections").replaceChildren();
+        $("result-ceinture").hidden = false;
+        $("ceinture-dessin").replaceChildren(CORE.elementCeinture(document, n, {taille: 220, titre: nomCeinture(n)}));
+        $("ceinture-titre").textContent = soude(`${nomCeinture(n)} !`);
+        $("ceinture-phrase").textContent = soude(`Tous les calculs ${DU_PALIER[n]} sont solides\u00a0★`);
+        // La dernière ceinture que l'appli peut donner (le palier réglé par
+        // le professeur, ou la bleue).
+        const derniere = liste.length === 1 && etat.fini && n === etat.porte;
+        $("ceinture-fin").hidden = !derniere;
+        $("ceinture-fin").textContent = derniere
+          ? soude(palierRegle() >= PARCOURS.SEUILS.seance.paliers ? "Tu as fini Défi calcul !" : "Tu as fini tout ce que ton professeur a ouvert.")
+          : "";
+        $("ceinture-suite").onclick = () => {
+          if (liste.length > 1) { montrerCeintures(liste.slice(1), ensuite); return; }
+          $("result-ceinture").hidden = true;
+          ensuite();
+        };
+        state.titreResultat = "ceinture-titre";
+        majFilDeBilan();
+        show("result");
+      }
+
+      // « Nouvelle barrette ! » dans le bilan de l'étape qui l'a fait gagner.
+      function feteBarrette() {
+        const etat = state.barretteGagnee;
+        if (!etat) return [];
+        const dessin = document.createElement("span");
+        dessin.className = "dc-barrette-dessin";
+        dessin.replaceChildren(CORE.elementCeinture(document, etat.porte, {barrettes: etat.barrettes, taille: 48}));
+        const boite = cadre(dessin, phrase(gras("Nouvelle barrette !"), soude(` ${nomCeinture(etat.porte)}, ${texteBarrettes(etat.barrettes)} sur 3.`)));
+        boite.classList.add("dc-barrette");
+        return [boite];
+      }
+
+      // La ligne de la ceinture d'un palier, dans Mon parcours.
+      function ligneCeinture(palier, etat) {
+        const dessin = document.createElement("span");
+        dessin.className = "dc-pc-dessin";
+        const texte = document.createElement("span");
+        if (etat.dates[palier - 1]) {
+          dessin.replaceChildren(CORE.elementCeinture(document, palier, {taille: 40}));
+          texte.append(gras(nomCeinture(palier)), soude(` · gagnée le ${jourEnMots(etat.dates[palier - 1])}`));
+        } else if (palier === etat.prochaine) {
+          dessin.replaceChildren(CORE.elementCeinture(document, etat.porte, {barrettes: etat.barrettes, taille: 40}));
+          const manque = etat.total - etat.solides;
+          if (manque > 0) texte.append(soude("Encore "), gras(soude(`${manque} ★`)), soude(` pour la ${nomCeinture(palier).toLowerCase()}`));
+          else texte.append(soude(`Tout est solide ★ : la ${nomCeinture(palier).toLowerCase()} arrive à ta prochaine étape.`));
+        } else {
+          dessin.replaceChildren(CORE.elementCeinture(document, palier, {vide: true, taille: 40}));
+          texte.append(gras(nomCeinture(palier)), soude(` · après la ${nomCeinture(palier - 1).toLowerCase()}`));
+        }
+        return [dessin, texte];
+      }
       // En haut de Mon parcours : le réglage du professeur, seulement quand
       // l'appli ne va pas jusqu'au bout (« Jusqu'au palier 2 (CM1) »).
       function texteJusqua() {
@@ -2114,7 +2221,11 @@
         // La porte de Mon parcours : le compte, et ce qui a été gagné depuis
         // lundi, en vert.
         const note = $("acc-porte-note");
-        note.replaceChildren(document.createTextNode(textePalier()));
+        // Lot 4 : la ceinture qu'on porte, avec ses barrettes, à la place de
+        // la carte ; son nom en tête de la ligne.
+        const ceintures = etatCeintures();
+        $("acc-ceinture").replaceChildren(CORE.elementCeinture(document, ceintures.porte, {barrettes: ceintures.barrettes, taille: 46}));
+        note.replaceChildren(document.createTextNode(soude(`${nomCeinture(ceintures.porte)} · `) + textePalier()));
         const gains = texteGains(s.sues);
         if (gains) {
           const b = document.createElement("b");
@@ -2196,7 +2307,9 @@
       // palier), et dans le palier ouvert, une ligne par module qui y a des
       // niveaux, dans l'ordre de la carte.
       function renderParcoursPaliers(id) {
-        const compte = PARCOURS.compter(parcours, CARTE);
+        // Lot 4 : sur ce qui est construit (« 0/22 » et non « 0/42 » au CM2).
+        const compte = PARCOURS.compter(parcours, CARTE_CONSTRUITE);
+        const ceintures = etatCeintures();
         $("parcours-compte").textContent = texteJusqua();
         $("parcours-compte").hidden = !texteJusqua();
         const s = semaine();
@@ -2214,11 +2327,19 @@
           bouton.className = [ici ? "ici" : "", palier.sues === palier.total ? "fini" : ""].filter(Boolean).join(" ");
           const numero = document.createElement("b");
           numero.textContent = String(palier.palier);
+          // Lot 4 : la ceinture du palier, pleine si elle est gagnée.
+          const gagnee = Boolean(ceintures.dates[palier.palier - 1]);
+          const tete = document.createElement("span");
+          tete.className = "dc-ponglet";
+          const dessin = document.createElement("span");
+          dessin.className = "dc-ponglet-ceinture";
+          dessin.replaceChildren(CORE.elementCeinture(document, palier.palier, {vide: !gagnee, taille: 30}));
+          tete.append(numero, dessin);
           const petit = document.createElement("small");
           petit.textContent = `${palier.sues}/${palier.total}`;
-          bouton.append(numero, petit);
+          bouton.append(tete, petit);
           const fiche = CORE.PALIERS.find(p => p.n === palier.palier);
-          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${fiche.nom} : ${palier.sues} sur ${palier.total}`);
+          bouton.setAttribute("aria-label", `Palier ${palier.palier}, ${fiche.nom} : ${palier.sues} sur ${palier.total}${gagnee ? `, ${nomCeinture(palier.palier).toLowerCase()} gagnée` : ""}`);
           bouton.setAttribute("aria-pressed", String(ici));
           bouton.addEventListener("click", () => {
             state.palier = palier.palier;
@@ -2229,6 +2350,7 @@
         }));
         const palier = CORE.PALIERS.find(p => p.n === state.palier);
         $("parcours-titre").textContent = soude(`Palier ${palier.n} · ${palier.nom} (${palier.classes})`);
+        $("parcours-ceinture").replaceChildren(...ligneCeinture(palier.n, ceintures));
         // Les modules du palier, dans l'ordre où leurs compétences y arrivent.
         const vus = new Set();
         const modules = [];
@@ -3298,6 +3420,7 @@
       function renderRetenir(serie, {reussi = null, finDeSeance = null, carte = false} = {}) {
         const result = $("result");
         result.classList.remove("is-fete", "is-rate", "is-neutre");
+        $("result-ceinture").hidden = true;
         $("result-verdict").hidden = true;
         $("result-retenir").hidden = false;
         const ligneReussi = $("retenir-reussi");
@@ -3462,6 +3585,7 @@
       function demarrerSerie(serie, origine) {
         arreterActivite();
         state.serie = Object.assign({index: 0, reponses: [], causes: {}, debut: 0}, serie);
+        state.ceinturesAvant = MODE_PROF ? null : etatCeintures();
         state.origine = origine;
         state.running = true;
         $("seance-fil").hidden = true;
@@ -4021,6 +4145,19 @@
         }
         parcours = suivi.parcours;
         sauverParcours();
+        // Lot 4 : une ceinture gagnée a son écran d'abord ; une barrette
+        // gagnée, sa ligne dans le bilan.
+        const gagnees = MODE_PROF ? [] : (suivi.ceintures || []);
+        const apres = MODE_PROF ? null : etatCeintures();
+        const avant = state.ceinturesAvant;
+        state.barretteGagnee = avant && apres && !gagnees.length && apres.porte === avant.porte && apres.barrettes > avant.barrettes ? apres : null;
+        state.ceinturesAvant = apres;
+        if (gagnees.length) { montrerCeintures(gagnees, () => suiteDuBilan(serie, suivi, sur)); return; }
+        suiteDuBilan(serie, suivi, sur);
+      }
+
+      // Le bilan d'une étape finie (avant le lot 4, la fin de finish()).
+      function suiteDuBilan(serie, suivi, sur) {
         // Lot 2 : J'apprends réussi — « À retenir », sur le même écran que
         // « ✓ Réussi ! » (planche 3, choix de Gwenaël). La séance finie avec
         // cette étape : « Suivant → » mène à son bilan.
@@ -4053,6 +4190,7 @@
         const result = $("result");
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         if (classe) result.classList.add(classe);
+        $("result-ceinture").hidden = true;
         $("result-verdict").hidden = false;
         $("result-retenir").hidden = true;
         $("retenir-reussi").hidden = true;
@@ -4127,6 +4265,7 @@
       function renderBilanDuJour(serie, sur) {
         poserVerdict({classe: serie.sus.length ? "is-fete" : "is-neutre", icone: "", titre: "Mes calculs du jour", score: sur});
         $("result-suite").replaceChildren(
+          ...feteBarrette(),
           ...fetesDeModule(serie),
           ...(serie.mouvements.length ? [cadre(listeMouvements(serie))] : []),
           ...phraseDeCote(serie),
@@ -4163,7 +4302,7 @@
           lignes.append(ligne);
         });
         const suite = enSeance() ? suiteDeSeance() : [boutonsDeSuite(["Mon module", "primary", () => ouvrirModule(serie.module)], ["Accueil", "secondary", versAccueil])];
-        $("result-suite").replaceChildren(cadre(lignes), ...suite);
+        $("result-suite").replaceChildren(...feteBarrette(), cadre(lignes), ...suite);
       }
 
       // Le bilan d'un entraînement ou d'un rattrapage, quand la séance
@@ -4233,7 +4372,7 @@
           ligne.append(nom, score);
           etapes.append(ligne);
         });
-        const morceaux = [cadre(etapes), ...renvoiTables(serie)];
+        const morceaux = [...feteBarrette(), cadre(etapes), ...renvoiTables(serie)];
         if (serie.genre === "jour") {
           morceaux.push(...fetesDeModule(serie));
           if (serie.mouvements.length) morceaux.push(cadre(listeMouvements(serie)));

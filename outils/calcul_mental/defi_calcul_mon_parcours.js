@@ -70,7 +70,14 @@
   // à 7 nombres se relit, ses nombres 4 à 6 remis à zéro : leur sens a
   // changé). Le serveur refuse l'écriture d'une page de version 6
   // (« version_min » 7) : elle effacerait `l` et tronquerait le plan.
-  const VERSION = 7;
+  // Version 8 (lot 4 « les ceintures », 14/11/2026, choix de Gwenaël) : les
+  // ceintures gagnées (`ceintures`, quatre dates ou null : jaune, orange,
+  // verte, bleue — une par palier). Une ceinture gagnée ne se reprend
+  // jamais. Une progression de version 7 se relit sans rien perdre (aucune
+  // ceinture) ; la première étape qui finit la redonne si le palier est
+  // déjà tout solide. Le serveur refuse l'écriture d'une page de version 7
+  // (« version_min » 8) : elle ne connaît pas `ceintures` et l'effacerait.
+  const VERSION = 8;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -171,7 +178,11 @@
     journal: Object.freeze({compte: 999, minutes: 90, secondes: 5400}),
     jours: Object.freeze({garder: 14}),
     compteur: 9999,
-    causes: 12
+    causes: 12,
+    // Les ceintures (lot 4) : une par palier, dans l'ordre ; 3 barrettes au
+    // plus sur la ceinture qu'on porte, une par quart du palier suivant déjà
+    // rendu solide un jour.
+    ceintures: Object.freeze({nombre: 4, barrettes: 3})
   });
 
   // Le plan de la séance en cours, `seance.p` : onze nombres (lot 1 « la
@@ -561,8 +572,14 @@
       seance: {jour: null, etape: 0, n: 0, p: planVide(), j: enCoursVide()},
       seances: [],
       journal: journalVide(),
-      jours: []
+      jours: [],
+      ceintures: ceinturesVides()
     };
+  }
+
+  // Lot 4 : les ceintures gagnées, une date par palier (null : pas gagnée).
+  function ceinturesVides() {
+    return Array.from({length: SEUILS.ceintures.nombre}, () => null);
   }
 
   function normaliserListe(brut, nombre, maximum) {
@@ -701,6 +718,9 @@
     parcours.seances = rangees.seances;
     parcours.journal = rangees.journal;
     parcours.jours = normaliserJours(brut.jours);
+    // Lot 4 : une date par palier ; tout le reste vaut null.
+    const ceintures = Array.isArray(brut.ceintures) ? brut.ceintures : [];
+    parcours.ceintures = ceinturesVides().map((_, index) => dateOuNull(ceintures[index]));
     return parcours;
   }
 
@@ -914,6 +934,68 @@
       modules,
       competences
     };
+  }
+
+  // ------------------------------------------------------------ les ceintures
+  //
+  // Lot 4 « les ceintures » (14/11/2026, choix de Gwenaël) : une ceinture
+  // par palier — jaune (les bases), orange (CM1), verte (CM2), bleue (vers
+  // la 6e) ; tout le monde part en ceinture blanche. Un palier est FINI
+  // quand toutes ses compétences CONSTRUITES sont solides (boîte 4 ou plus)
+  // en même temps : le même « fini » que l'onglet du palier dans Mon
+  // parcours. Les ceintures se gagnent dans l'ordre : l'orange attend la
+  // jaune (un élève fort peut finir le CM1 avant les bases : les deux
+  // viennent ensemble). Une ceinture gagnée ne se reprend JAMAIS — ni quand
+  // un niveau redevient « à revoir », ni quand de nouveaux modules
+  // arrivent dans son palier.
+  // Les barrettes (choix de Gwenaël) : sur la ceinture qu'on porte, une par
+  // quart du palier suivant rendu solide UN JOUR (la date `s`, qui ne bouge
+  // plus) — 3 au plus ; elles ne se perdent donc pas. Rien n'est rangé pour
+  // elles : elles se recomptent.
+
+  // Les compétences construites d'un palier : [{module, niveau, ligne}].
+  function competencesDuPalier(parcours, carte, palier) {
+    return parcoursConstruit(carte).filter(({module: id, niveau}) => palierDe(carte, id, niveau) === palier)
+      .map(({module: id, niveau}) => ({module: id, niveau, ligne: ligneDe(parcours, id)}));
+  }
+
+  // Donne les ceintures que les boîtes méritent (dans l'ordre, à la suite
+  // de celles déjà gagnées). Modifie `copie` ; rend les paliers gagnés.
+  function gagnerCeintures(copie, carte, aujourdhui) {
+    const gagnees = [];
+    if (!carte) return gagnees;
+    if (!Array.isArray(copie.ceintures)) copie.ceintures = ceinturesVides();
+    for (let palier = 1; palier <= SEUILS.ceintures.nombre; palier += 1) {
+      if (copie.ceintures[palier - 1]) continue;
+      const liste = competencesDuPalier(copie, carte, palier);
+      if (!liste.length || !liste.every(c => c.ligne.b[c.niveau - 1] >= SEUILS.revision.su)) break;
+      copie.ceintures[palier - 1] = aujourdhui;
+      gagnees.push(palier);
+    }
+    return gagnees;
+  }
+
+  // Où en est l'élève : la ceinture qu'il porte (0 blanche, 1 jaune…, 4
+  // bleue), la prochaine (null : plus rien à gagner jusqu'au palier réglé
+  // par le professeur), ses barrettes, et pour la prochaine : combien de
+  // compétences sont solides maintenant sur combien, et combien l'ont été
+  // un jour.
+  function etatCeintures(parcours, carte, palierMax = SEUILS.seance.paliers) {
+    const p = normaliserParcours(parcours);
+    const dates = p.ceintures.slice();
+    let porte = 0;
+    while (porte < SEUILS.ceintures.nombre && dates[porte]) porte += 1;
+    const jusqua = palierDeSeance(palierMax);
+    const suivante = porte + 1;
+    const liste = suivante <= jusqua ? competencesDuPalier(p, carte, suivante) : [];
+    if (!liste.length) {
+      return {porte, dates, prochaine: null, barrettes: 0, solides: 0, unJour: 0, total: 0,
+        fini: porte >= jusqua || !construits(carte).length};
+    }
+    const solides = liste.filter(c => c.ligne.b[c.niveau - 1] >= SEUILS.revision.su).length;
+    const unJour = liste.filter(c => c.ligne.b[c.niveau - 1] && c.ligne.s[c.niveau - 1]).length;
+    const barrettes = Math.min(SEUILS.ceintures.barrettes, Math.floor(SEUILS.ceintures.nombre * unJour / liste.length));
+    return {porte, dates, prochaine: suivante, barrettes, solides, unJour, total: liste.length, fini: false};
   }
 
   // ------------------------------------------------------------ la séance guidée
@@ -1315,7 +1397,7 @@
         const suivante = aEntrainer(copie, carte, aujourdhui);
         plan[PLAN.rattrapage] = suivante ? rangDe(suivante.module, suivante.niveau) + 1 : 0;
       }, palier);
-      return {parcours: copie, verdict, evenements, finie};
+      return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
     }
     const nouvelle = !ligne.b[n - 1];
     // J'apprends en une étape réussi : J'apprends est fait (lot 2).
@@ -1342,7 +1424,7 @@
         if (!verdict.reussi) plan[PLAN.nouveaute] = NOUVEAUTE.arretee;
       }, palier);
     }
-    return {parcours: copie, verdict, evenements, finie};
+    return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
   }
 
   // ------------------------------------------------------------ le test d'entrée
@@ -1395,11 +1477,12 @@
       return {niveau: index + 1, justes, total, connu, entre, boite: connu ? boite : 0, jouee: total > 0};
     });
     if (!ligne.ok && toutSu(ligne)) ligne.ok = aujourdhui;
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui);
     const tout = marche === NIVEAUX[id];
     let finie = false;
     if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
     if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); }, palier);
-    return {parcours: copie, bilan, tout, marche, finie};
+    return {parcours: copie, bilan, tout, marche, finie, ceintures};
   }
 
   // -------------------------------------------------------- Mes calculs du jour
@@ -1549,7 +1632,7 @@
       plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
       [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
     }, palier);
-    return {parcours: copie, finie, rouge};
+    return {parcours: copie, finie, rouge, ceintures: gagnerCeintures(copie, carte, aujourdhui)};
   }
 
   // « Commencer » : le plan de la séance est décidé et rangé, pour qu'elle se
@@ -2203,6 +2286,9 @@
     fusion.seances = rangees.seances;
     fusion.journal = rangees.journal;
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
+    // Lot 4 : une ceinture gagnée d'un côté l'est des deux ; le jour le plus
+    // ancien.
+    fusion.ceintures = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.ceintures[index], b.ceintures[index]));
     return normaliserParcours(fusion);
   }
 
@@ -2308,6 +2394,13 @@
         JOURNAL.forEach((champ, index) => { if (champ !== "numero") ligne[champ] = entree[index] >= 0 ? entree[index] : null; });
         return ligne;
       }),
+      // Lot 4 : la ceinture portée, les jours où chacune a été gagnée, les
+      // barrettes vers la suivante (tous les paliers : la page du professeur
+      // ne lit pas le réglage de l'élève ici).
+      ceintures: (() => {
+        const etat = etatCeintures(parcours, carte);
+        return {porte: etat.porte, dates: etat.dates, barrettes: etat.barrettes, prochaine: etat.prochaine, solides: etat.solides, total: etat.total};
+      })(),
       dernier: dernier && vus.length ? (dernier >= vus[vus.length - 1] ? dernier : vus[vus.length - 1]) : dernier || (vus.length ? vus[vus.length - 1] : null)
     };
   }
@@ -2459,6 +2552,8 @@
     estDeCote,
     aVoirEnClasse,
     compter,
+    competencesDuPalier,
+    etatCeintures,
     suivreEntrainement,
     verdictEntrainement,
     appliquerSerie,

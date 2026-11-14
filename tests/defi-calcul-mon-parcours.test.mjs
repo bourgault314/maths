@@ -45,8 +45,9 @@ test("le format : version 5 (lot G1 ; 4 au lot F1, 3 au lot « couverture »), r
   // listes alignées sur `seances` ; sept depuis le correctif du lot S1 : le
   // numéro de chaque séance, version 6).
   // Lot 1 « la séance » : version 7, le plan à 11 nombres, `l` par module.
-  assert.deepEqual(neuf, {version: 7, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [],
-    journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: []}, jours: []});
+  // Lot 4 « les ceintures » : version 8, `ceintures` (quatre null).
+  assert.deepEqual(neuf, {version: 8, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [],
+    journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: []}, jours: [], ceintures: [null, null, null, null]});
   assert.equal(P.estVide(neuf), true);
   const {parcours} = entrainer(neuf, "A5", 1);
   assert.deepEqual(parcours.modules.A5, {
@@ -89,7 +90,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   };
   const propre = P.normaliserParcours(forge);
   assert.deepEqual(P.normaliserParcours(propre), propre, "idempotente");
-  assert.equal(propre.version, 7, "lot 1 « la séance » : version 7 (6 au correctif S1, 5 au lot G1)");
+  assert.equal(propre.version, 8, "lot 4 « les ceintures » : version 8 (7 au lot 1, 6 au correctif S1, 5 au lot G1)");
   assert.equal(propre.epoque, 0);
   assert.equal(propre.prenom.length, 20);
   assert.equal("test" in propre, false, "`test` (version 1) n'est plus gardé : le test d'entrée est toujours proposé");
@@ -130,8 +131,9 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // 21 107 octets avant ; 28 851 octets avant le correctif, où `j` a pris
   // un 6e nombre, les nouveautés ; 1 795 clés et 28 853 octets avant le
   // numéro des séances, correctif du lot S1).
-  // Lot 1 : `l` (74 clés) et le plan à 11 nombres.
-  assert.deepEqual(pire, {cles: 1870, octets: 30217}, "la mesure du pire cas, à la clé et à l'octet près");
+  // Lot 1 : `l` (74 clés) et le plan à 11 nombres. Lot 4 : `ceintures`
+  // (une clé, quatre dates : 1 870 clés et 30 217 octets avant).
+  assert.deepEqual(pire, {cles: 1871, octets: 30267}, "la mesure du pire cas, à la clé et à l'octet près");
   // Une compétence pas entrée n'a pas d'échéance : null, jamais "" (le serveur
   // retire d'une liste toute chaîne qui n'est pas une date, et les échéances
   // suivantes glisseraient d'un rang). La référence en porte.
@@ -374,10 +376,11 @@ test("la page : au catalogue à sa propre adresse, sans menus pour l'élève, sa
   assert.match(page, /<div id="acc-liens" class="seance-liens" hidden>/);
   assert.match(page, /<div id="acc-droite" class="matable-droite" hidden>/);
   assert.match(page, /<p id="prof-pilule" class="prof-pilule" hidden>/);
-  // « Comment ça marche ? » : les cinq lignes du lot 1 « la séance » (12/11/2026).
+  // « Comment ça marche ? » : les cinq lignes du lot 1 « la séance » (12/11/2026),
+  // plus « Mes ceintures. » (lot 4, 14/11/2026).
   const notice = page.slice(page.indexOf('<div class="notice">'), page.indexOf("</div>", page.indexOf('<div class="notice">')));
   assert.deepEqual([...notice.matchAll(/<p><b>([^<]+)<\/b>/g)].map(m => m[1].replace(/&nbsp;/g, " ")),
-    ["Ma séance du jour.", "Mes calculs du jour.", "Tu connais déjà ?", "J’apprends.", "Mes coches."]);
+    ["Ma séance du jour.", "Mes calculs du jour.", "Tu connais déjà ?", "J’apprends.", "Mes coches.", "Mes ceintures."]);
   // Les restes de Défi tables : plus de « #calculs » dans l'adresse.
   assert.equal(/brut === "calculs"/.test(page), false);
   // Ni code de module ni niveau de classe côté élève : la page ne les écrit nulle part en dur.
@@ -407,7 +410,7 @@ test("une progression de version 1 : les boîtes restent, la séance en cours se
     seance: {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1]}, seances: ["2026-10-29", "2026-10-30"], jours: ["2026-10-30"]
   };
   const propre = P.normaliserParcours(v1);
-  assert.equal(propre.version, 7);
+  assert.equal(propre.version, 8);
   assert.deepEqual(propre.modules.A2.b, [4, 3, 0, 0, 0]);
   assert.deepEqual(propre.modules.A2.a, [0, 0, 1, 0, 0]);
   assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, "le plan de version 1 ne vaut plus ; le compte de séances reste");
@@ -443,7 +446,7 @@ test("une progression de version 2 : A8-3 et F5-3 réunis, A2 a un niveau de plu
     seance: {jour: "2026-11-06", etape: 2, n: 5, p: [1, 0, 40, 1, 0]}, seances: ["2026-11-06"], jours: []
   };
   const propre = P.normaliserParcours(v2);
-  assert.equal(propre.version, 7);
+  assert.equal(propre.version, 8);
   assert.deepEqual(propre.modules.A8, {vu: "2026-11-01", ok: "2026-11-01", b: [4, 2], e: ["2026-11-05", "2026-11-02"], a: [1, 1], f: [3, 6], x: [0, 1], t: [0, 1], l: [0, 0],
     d: [null, null], s: [null, null], c: {1: 2}});
   // Seule l'ancienne marche du haut entrée : elle prend la place.
@@ -611,5 +614,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261113-4/);
+  assert.match(page, /defi_calcul\.css\?v=20261114-1/);
 });
