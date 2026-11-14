@@ -4498,13 +4498,37 @@
       $("acc-confirm-oui").addEventListener("click", effacerHistorique);
       $("notice-back").addEventListener("click", versAccueil);
       $("game-menu").addEventListener("click", quitterSerie);
-      document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
+      // Lot « pavé au toucher » (14/11/2026, retour des élèves sur les
+      // records) : au téléphone, une touche du pavé agit dès que le doigt la
+      // TOUCHE, plus quand il se relève. Avant, un 2e pouce posé avant que le
+      // 1er se relève, ou un doigt qui glissait un peu, faisait perdre le
+      // chiffre. Le « touchend » annulé empêche le clic qui suivrait : ni
+      // chiffre en double, ni clic fantôme sur un bouton apparu sous le doigt.
+      // La souris, le clavier (Entrée, Espace sur la touche) et les lecteurs
+      // d'écran passent par le clic, comme avant.
+      function brancherAuToucher(bouton, action) {
+        let toucheA = 0;
+        bouton.addEventListener("pointerdown", event => {
+          if (event.pointerType !== "touch" || bouton.disabled) return;
+          toucheA = Date.now();
+          action();
+        });
+        bouton.addEventListener("touchend", event => {
+          if (toucheA && event.cancelable) event.preventDefault();
+        });
+        bouton.addEventListener("click", event => {
+          const memeAppui = toucheA && Date.now() - toucheA < 1000 && event.detail !== 0;
+          toucheA = 0;
+          if (!memeAppui) action();
+        });
+      }
+      document.querySelectorAll("[data-key]").forEach(button => brancherAuToucher(button, () => {
         const key = button.dataset.key;
         if (key === "clear") effacer(true);
         else if (key === "backspace") effacer(false);
         else enterDigit(key);
       }));
-      $("validate").addEventListener("click", () => next(false));
+      brancherAuToucher($("validate"), () => next(false));
       $("skip").addEventListener("click", () => next(true));
       setupFullscreen();
       document.addEventListener("keydown", event => {

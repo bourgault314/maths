@@ -1823,11 +1823,32 @@
         }
         dessinerReponse();
       }
-      $("keypad").addEventListener("click", e => {
-        const b = e.target.closest("button[data-key]");
-        if (b) touche(b.dataset.key);
-      });
-      $("valider").addEventListener("click", () => valider(false));
+      // Lot « pavé au toucher » (14/11/2026, retour des élèves sur les
+      // records) : au téléphone, une touche du pavé agit dès que le doigt la
+      // TOUCHE, plus quand il se relève. Avant, un 2e pouce posé avant que le
+      // 1er se relève, ou un doigt qui glissait un peu, faisait perdre le
+      // chiffre. Le « touchend » annulé empêche le clic qui suivrait : ni
+      // chiffre en double, ni clic fantôme sur un bouton apparu sous le doigt.
+      // La souris, le clavier (Entrée, Espace sur la touche) et les lecteurs
+      // d'écran passent par le clic, comme avant.
+      function brancherAuToucher(bouton, action) {
+        let toucheA = 0;
+        bouton.addEventListener("pointerdown", event => {
+          if (event.pointerType !== "touch" || bouton.disabled) return;
+          toucheA = Date.now();
+          action();
+        });
+        bouton.addEventListener("touchend", event => {
+          if (toucheA && event.cancelable) event.preventDefault();
+        });
+        bouton.addEventListener("click", event => {
+          const memeAppui = toucheA && Date.now() - toucheA < 1000 && event.detail !== 0;
+          toucheA = 0;
+          if (!memeAppui) action();
+        });
+      }
+      $("keypad").querySelectorAll("button[data-key]").forEach(b => brancherAuToucher(b, () => touche(b.dataset.key)));
+      brancherAuToucher($("valider"), () => valider(false));
 
       // « ↻ Revoir » : les mêmes nombres, à la même vitesse, après un nouveau
       // décompte. Ce qui est déjà tapé reste. Le score ne change pas (on est à
