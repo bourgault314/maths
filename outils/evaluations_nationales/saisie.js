@@ -108,6 +108,8 @@
         e.preventDefault();
         active = (active + (e.shiftKey ? boutons.length - 1 : 1)) % boutons.length;
         rafraichir();
+        // Si une case avait le focus (après un clic), il suit la case active : une seule case a l'air sélectionnée.
+        if (document.activeElement && document.activeElement.classList.contains("saisie-case")) boutons[active].focus({ preventScroll: true });
       }
     };
     document.addEventListener("keydown", clavier);

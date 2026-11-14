@@ -226,6 +226,8 @@ test("la page : scripts, réponses tapées branchées, rien de dangereux", () =>
   assert.match(html, /<div id="bloc-feuille" class="a-revoir" hidden>/);
   // Pas de champ du navigateur, pas d'eval : les cases sont des boutons, le pavé est celui de l'appli.
   assert.doesNotMatch(saisieJs, /<input|contenteditable|\beval\(|new Function/);
+  // EN8a-bis : avec Entrée, le focus d'une case cliquée suit la case active (pas deux cases qui ont l'air choisies).
+  assert.match(saisieJs, /boutons\[active\]\.focus\(\{ preventScroll: true \}\)/);
   // Les tests Automatismes et Problèmes ne changent pas : aucune de leurs questions n'a de saisie ni de feuille.
   require("../outils/evaluations_nationales/sujets/6e_automatismes.js");
   require("../outils/evaluations_nationales/sujets/4e_problemes.js");
