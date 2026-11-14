@@ -128,6 +128,7 @@
       });
       zone.appendChild(b);
     });
+    ajusterColonnes();
     // Grille : une case par ligne ; « Valider » s'allume quand chaque ligne a sa réponse.
     passation.selection = it.g.grille ? it.g.grille.lignes.map(() => null) : null;
     $("#valider").disabled = true;
@@ -167,6 +168,20 @@
     }));
   }
   const pret = () => (Array.isArray(passation.selection) ? passation.selection.every((k) => k !== null) : passation.selection !== null);
+  // Lot EN-C1 : une expression ne se coupe jamais (EN.typo). Si une réponse ne tient plus dans sa colonne (téléphone :
+  // « 4 × 4 × 4 × 4 × 4 » sur une demi-largeur), les réponses passent sur une seule colonne : rien ne déborde.
+  function ajusterColonnes() {
+    const zone = $("#q-choix");
+    zone.classList.remove("une-colonne");
+    if (!zone.querySelector(".choix-btn")) return; // grille, pavé, réponse sur la feuille : pas concernés
+    const deborde = zone.scrollWidth > zone.clientWidth + 1 || [...zone.children].some((b) => b.scrollWidth > b.clientWidth + 1);
+    zone.classList.toggle("une-colonne", deborde);
+  }
+  // Une police qui arrive après l'affichage change la largeur des réponses : on refait la mesure.
+  const remesurer = () => { if (passation && !$("#passe").hidden) ajusterColonnes(); };
+  window.addEventListener("resize", remesurer);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remesurer);
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", remesurer);
 
   function repondre(k) {
     passation.reponses.push(Array.isArray(k) ? k.slice() : k);

@@ -78,6 +78,8 @@ test("EN4a-bis : un nombre et son unité ne se séparent jamais (énoncés, rép
     }
   }
   assert.equal(typo("Chaque carreau fait 1 cm de côté."), "Chaque carreau fait 1\u00a0cm de côté.");
-  assert.equal(typo('<svg viewBox="0 0 4 m"></svg> 2 h 15 min'), '<svg viewBox="0 0 4 m"></svg> 2\u00a0h 15\u00a0min');
-  assert.equal(typo("2 mois"), "2 mois");
+  assert.equal(typo('<svg viewBox="0 0 4 m"></svg> 2 h 15 min'), '<svg viewBox="0 0 4 m"></svg> 2\u00a0h\u00a015\u00a0min'); // une durée d'un seul tenant (lot EN-C1)
+  // Lot EN-C1 : les unités écrites en mot aussi (choix de Gwenaël, 14/11) ; un nom ordinaire reste sécable.
+  assert.equal(typo("2 mois"), "2\u00a0mois");
+  assert.equal(typo("3 croissants"), "3 croissants");
 });
