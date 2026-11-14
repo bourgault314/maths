@@ -190,8 +190,9 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261113-4/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-4/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-4/);
+  // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-5/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-5/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

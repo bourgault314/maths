@@ -2510,7 +2510,9 @@
     const unites = o.unites || 0;
     const reste = (o.dixiemes || 0) > 0 || (o.centiemes || 0) > 0;
     const M = CARRE.marge;
-    const nb = Math.max(1, unites + (reste ? 1 : 0));
+    // `places` (lot 3c) : la place de plusieurs carrés dès le début (5/2 =
+    // □/100 : trois carrés, même vides), pour que rien ne bouge.
+    const nb = Math.max(1, unites + (reste ? 1 : 0), o.places || 0);
     const parRangee = nb > 5 ? Math.ceil(nb / 2) : nb;
     const rangees = Math.ceil(nb / parRangee);
     const cote = CARRE.cote;

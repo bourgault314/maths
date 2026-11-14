@@ -222,10 +222,11 @@ test("les copies pour la page prof, les adresses de cache", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261113-4/);
   // Lot 2 « J'apprends en une étape » : le moteur change (20261113-1) ;
   // lot 3a « Une leçon, une méthode » (20261113-3), lot 3b « Chaque sorte
-  // annoncée » : le cœur, les aides, la feuille (20261113-4).
+  // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
+  // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261113-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-4/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-4/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261113-5/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-5/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {
