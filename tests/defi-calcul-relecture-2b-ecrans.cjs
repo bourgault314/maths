@@ -80,6 +80,16 @@ async function entrainement(navigateur, base, taille, cle) {
   return o;
 }
 
+// Lot 7-0 : « Avec le dessin » à étapes — la case d'avant le résultat
+// (l'arrivée du premier saut), quand il y en a une.
+async function premiereCase(page) {
+  const c = await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.caseDuDessin());
+  if (!c) return;
+  await taper(page, c.reponse);
+  await page.keyboard.press("Enter");
+  await page.waitForTimeout(250);
+}
+
 (async () => {
   const serveur = await servir();
   const base = `http://127.0.0.1:${serveur.address().port}`;
@@ -113,6 +123,7 @@ async function entrainement(navigateur, base, taille, cle) {
   await essai("bulle 390x844 : « Bravo ! » entoure son texte au milieu de sa place ; après un faux, « Suivant » sur toute la ligne", async () => {
     const {page, contexte, erreurs} = await entrainement(navigateur, base, [390, 844], "A4-4");
     const calcul = await T(page, "calcul");
+    await premiereCase(page);
     await taper(page, calcul.reponse);
     await page.keyboard.press("Enter");
     await page.waitForTimeout(250);
@@ -126,6 +137,7 @@ async function entrainement(navigateur, base, taille, cle) {
     assert.ok(Math.abs((m.bulle[0] + m.bulle[1] / 2) - (m.place[0] + m.place[1] / 2)) <= 1.5, `centrée (${JSON.stringify(m)})`);
     await page.waitForTimeout(1500);
     const suivant = await T(page, "calcul");
+    await premiereCase(page);
     await taper(page, suivant.reponse + 1);
     await page.keyboard.press("Enter");
     await page.waitForTimeout(400);

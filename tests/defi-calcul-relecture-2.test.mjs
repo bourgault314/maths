@@ -101,8 +101,16 @@ test("M1 : « Je représente » par étapes dans les trois niveaux (le double co
   assert.match(PAGE, /const aEtapes = nom => nom === "ecris" \|\| nom === "represente-ecrit";/);
   assert.match(PAGE, /serie\.apprends = nom === "represente-ecrit" \? Object\.assign\(\{\}, serie\.base, \{ecris: serie\.base\.represente\}\) : serie\.base;/);
   assert.match(PAGE, /const ecris = aEtapes\(nom\);/);
-  // Les autres modules n'ont pas d'étapes dans Je représente.
-  NIVEAUX.filter(({fiche}) => fiche.id !== "M1").forEach(({niveau, cle}) => assert.equal(niveau.apprends.represente.etapes, undefined, cle));
+  // Les autres modules n'ont pas d'étapes dans Je représente — sauf, depuis
+  // le lot 7-0 (« le dessin à étapes », choix de Gwenaël), la droite à
+  // plusieurs sauts quand « On te montre » est le dessin : où j'arrive après
+  // le premier saut, puis le résultat.
+  NIVEAUX.filter(({fiche}) => fiche.id !== "M1").forEach(({niveau, cle}) => {
+    const r = niveau.apprends.represente;
+    const sauts = r.image && r.image.outil === "droite-sauts" ? r.image.sauts.length : 0;
+    if (sauts >= 2 && !niveau.apprends.manipule) assert.equal(r.etapes.length, 2, cle);
+    else assert.equal(r.etapes, undefined, cle);
+  });
 });
 
 test("A11-2 : J'écris garde la méthode de la leçon", () => {
@@ -189,10 +197,10 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261114-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261114-7/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261114-1/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261113-5/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261114-7/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261114-7/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

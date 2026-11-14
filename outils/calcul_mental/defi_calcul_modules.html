@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-7">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261114-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261114-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261113-5"></script>
+  <script src="./defi_calcul_core.js?v=20261114-7"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261114-7"></script>
+  <script src="./defi_calcul_aides.js?v=20261114-7"></script>
   <script>
     (() => {
       "use strict";
@@ -3169,9 +3169,10 @@
       // réponse (en vert), celle qui se joue a la case, les suivantes sont
       // grisées. Les morceaux de chaque ligne sont rangés en colonnes : la
       // case est toujours sous la case, le signe sous le signe.
-      function renderEtapes({revelees = false} = {}) {
-        const serie = state.serie;
-        const etapes = serie.apprends.ecris.etapes;
+      // Lot 7-0 : aussi pour « Avec le dessin » à étapes (`etapes`, `etape`
+      // de la question).
+      function renderEtapes({revelees = false, etapes = state.serie.apprends.ecris.etapes, etape = state.serie.etape, module = state.serie.module, niveau = state.serie.niveau, corrigees = []} = {}) {
+        const serie = {etape};
         const lignes = document.createElement("span");
         lignes.className = "lg";
         const colonnes = Math.max(...etapes.map(etape => etape.texte.split(" ").length));
@@ -3185,7 +3186,7 @@
           const laCase = () => {
             if (index === serie.etape && !revelees) return caseReponse();
             const reponse = document.createElement("b");
-            reponse.className = `inline-answer ${index < serie.etape ? "is-correct" : revelees ? "is-corrected" : "est-vide"}`;
+            reponse.className = `inline-answer ${index < serie.etape ? (corrigees.includes(index) ? "is-corrected" : "is-correct") : revelees ? "is-corrected" : "est-vide"}`;
             reponse.textContent = index < serie.etape || revelees ? CORE.formaterNombre(etape.reponse) : " ";
             return reponse;
           };
@@ -3209,7 +3210,7 @@
         });
         // La touche « , » suit l'étape qui se joue (une case de numérateur
         // n'en a pas).
-        if (!revelees) renderTouches(serie.module, (etapes[serie.etape] || etapes[0]).texte, serie.niveau);
+        if (!revelees) renderTouches(module, (etapes[serie.etape] || etapes[0]).texte, niveau);
         const expression = $("expression");
         expression.className = "expression dc-lignes";
         expression.replaceChildren(lignes);
@@ -3330,6 +3331,9 @@
         const nom = serie.temps[serie.index];
         if (nom === "manipule") {
           if (state.manip && state.manip.fini) avancerTemps();
+          // Lot 7-0 (choix de Gwenaël) : jamais bloqué — « Suivant » avant
+          // le geste compte comme un geste refusé ; au 3e, l'outil le montre.
+          else if (state.manip && typeof state.manip.refuserSansGeste === "function") state.manip.refuserSansGeste();
           return;
         }
         if (state.waitingForContinue) { avancerTemps(); return; }
@@ -3637,13 +3641,18 @@
 
       // Le test d'entrée : les marches (une par niveau), un calcul par sorte
       // (3 au moins) ; on joue la première. Lot 1 : seulement les niveaux des
-      // paliers ouverts par le professeur.
+      // paliers ouverts par le professeur. Lot 7-0 (choix de Gwenaël) : pas
+      // au-delà du palier où l'élève travaille ; et les marches d'un palier
+      // plus haut d'un module commencé ont leur test, de la marche suivante
+      // jusqu'au palier en cours. Le mode professeur teste tout.
       function lancerTest(id, origine) {
+        const bornes = MODE_PROF ? {de: 1, jusqua: Infinity} : PARCOURS.marchesDuTest(parcours, CARTE, id, palierRegle());
+        if (!bornes) return;
         const marches = CORE.genererTest(id, {graine: nouvelleGraine()})
-          .filter(marche => MODE_PROF || PARCOURS.palierDe(CARTE, id, marche.niveau) <= palierRegle());
+          .filter(marche => marche.niveau >= bornes.de && marche.niveau <= bornes.jusqua);
         if (!marches.length || marches.some(marche => marche.calculs.length < PARCOURS.SEUILS.test.parMarche)) return;
         demarrerSerie({
-          genre: "test", module: id, marches, marche: 0, prouvee: 0, resultats: [], courante: [], finie: false,
+          genre: "test", module: id, de: bornes.de, marches, marche: 0, prouvee: 0, resultats: [], courante: [], finie: false,
           aJouer: marches[0].calculs.slice(),
           total: marches.length,
           questions: [{calcul: marches[0].calculs[0], retour: false}]
@@ -3765,8 +3774,57 @@
           });
           state.manip = creerManip($("aide"), options);
         } else if (outil === "image") {
-          montrerImage(aide);
+          // Lot 7-0 (choix de Gwenaël) : la droite à plusieurs sauts se joue
+          // à étapes — où j'arrive après le premier saut, puis le résultat.
+          const etapes = CORE.dessinAEtapesDe(question.calcul);
+          if (etapes) {
+            question.dessinEtapes = etapes;
+            question.etape = 0;
+            question.essaisEtape = 0;
+            carte.classList.add("ecrit");
+            renderEtapesQuestion(question);
+            montrerImage(etapes.dessins[0]);
+          } else montrerImage(aide);
         }
+      }
+
+      // Lot 7-0 : les lignes d'une question « Avec le dessin » à étapes.
+      function renderEtapesQuestion(question, {revelees = false} = {}) {
+        renderEtapes({revelees, etapes: question.dessinEtapes.etapes, etape: question.etape, module: question.calcul.module, niveau: question.calcul.niveau,
+          corrigees: question.premierDonne ? [0] : []});
+      }
+      function majDessinQuestion(image) {
+        const ancien = $("aide").querySelector(":scope > svg");
+        if (!ancien) return;
+        const dessin = document.createElement("div");
+        dessin.innerHTML = AIDES.dessinerImage(pourEcran(image));
+        ancien.replaceWith(dessin.firstChild);
+      }
+      // Une case d'avant le résultat : juste, la case suivante ; faux une
+      // fois, la case rougit ; faux deux fois, la bonne valeur s'écrit (sans
+      // vert) et on passe au résultat. Rend vrai quand la réponse est prise.
+      function repondreEtapeQuestion(question) {
+        const etapes = question.dessinEtapes.etapes;
+        if (!(question.etape < etapes.length - 1)) return false;
+        const valeur = CORE.lireReponse(state.answer);
+        if (valeur === null) { showAnswerError(); return true; }
+        const juste = CORE.memeNombre(valeur, etapes[question.etape].reponse);
+        if (!juste && question.essaisEtape < 1) {
+          question.essaisEtape += 1;
+          renderInlineAnswer("is-invalid");
+          state.effacerAuProchain = true;
+          return true;
+        }
+        if (!juste) question.premierDonne = true;
+        question.etape += 1;
+        question.essaisEtape = 0;
+        state.answer = "";
+        state.effacerAuProchain = false;
+        renderEtapesQuestion(question);
+        majDessinQuestion(juste ? question.dessinEtapes.dessins[question.etape] : question.dessinEtapes.premier);
+        clearAnswerError();
+        ajusterCalcul();
+        return true;
       }
 
       // J'apprends (lot 2, planches 2 et 3) : en haut à droite, le nom du
@@ -4004,13 +4062,17 @@
         const attendue = CORE.formaterNombre(question.calcul.reponse);
         if (juste) {
           renderInlineAnswer("is-correct");
+          // Lot 7-0 : le dessin à étapes se remplit jusqu'au bout.
+          if (question.dessinEtapes) majDessinQuestion(question.dessinEtapes.dessins[question.dessinEtapes.etapes.length]);
           feedback.textContent = soude(auTest ? "✓ Juste" : texteJuste || "Bravo !");
         } else if (auTest) {
           renderInlineAnswer("is-wrong");
           feedback.textContent = soude(passe ? "✗ Je ne sais pas" : "✗ Pas juste");
         } else {
           state.answer = attendue;
-          renderInlineAnswer("is-corrected");
+          // Lot 7-0 : le dessin à étapes écrit ses réponses, ligne par ligne.
+          if (question.dessinEtapes) renderEtapesQuestion(question, {revelees: true});
+          else renderInlineAnswer("is-corrected");
           const image = serie.genre === "test" ? null : cause ? cause.image : CORE.imageDe(question.calcul);
           if (cause) AIDES.ecrireTexte(feedback, cause.texte);
           else {
@@ -4060,10 +4122,17 @@
           return;
         }
         // À l'entraînement avec l'outil à manipuler, on manipule d'abord.
-        if ($("question-card").classList.contains("manip-entraine") && !(state.manip && state.manip.fini)) return;
+        // Lot 7-0 (choix de Gwenaël) : jamais bloqué — « Valider » avant le
+        // geste compte comme un geste refusé ; au 3e, l'outil montre le geste.
+        if ($("question-card").classList.contains("manip-entraine") && !(state.manip && state.manip.fini)) {
+          if (state.manip && typeof state.manip.refuserSansGeste === "function") state.manip.refuserSansGeste();
+          return;
+        }
+        const question = serie.questions[serie.index];
+        // Lot 7-0 : « Avec le dessin » à étapes — la case d'avant le résultat.
+        if (!passe && question.dessinEtapes && repondreEtapeQuestion(question)) return;
         const valeur = passe ? null : CORE.lireReponse(state.answer);
         if (!passe && valeur === null) { showAnswerError(); return; }
-        const question = serie.questions[serie.index];
         const ms = Math.round(performance.now() - serie.debut);
         const juste = !passe && CORE.memeNombre(valeur, question.calcul.reponse);
         const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur, state.answer) : null;
@@ -4151,8 +4220,10 @@
         } else if (serie.genre === "test") {
           const niveaux = serie.resultats.filter(Boolean).map(resultat => ({niveau: resultat.niveau, justes: resultat.justes, total: resultat.total}));
           suivi = PARCOURS.appliquerTest(parcours, {module: serie.module, marche: serie.prouvee, niveaux, causes: serie.causes}, options);
-          const connus = suivi.marche;
-          noterEtape(`${connus} niveau${connus > 1 ? "x" : ""} sur ${suivi.bilan.length}`);
+          // Lot 7-0 : ce que le test a joué (il peut commencer plus haut et
+          // s'arrêter au palier en cours).
+          const connus = Math.max(0, suivi.marche - (serie.de || 1) + 1);
+          noterEtape(`${connus} niveau${connus > 1 ? "x" : ""} sur ${serie.marches.length}`);
         } else {
           suivi = PARCOURS.appliquerSerie(parcours, {
             module: serie.module, niveau: serie.niveau, genre: serie.genre,
@@ -4296,13 +4367,23 @@
         const fiche = CORE.moduleDe(serie.module);
         const connus = suivi.marche;
         const total = suivi.bilan.length;
-        const liste = n => (n === 1 ? "1" : n === 2 ? "1 et 2" : `1 à ${n}`);
-        if (suivi.tout) poserVerdict({classe: "is-fete", titre: `Tu connais déjà ${fiche.nom} !`, score: `${total} niveau${total > 1 ? "x" : ""} sur ${total}`});
-        else if (connus) poserVerdict({classe: "is-fete", titre: `Niveau${connus > 1 ? "x" : ""} ${liste(connus)} : déjà su${connus > 1 ? "s" : ""} !`, score: `Le niveau ${connus + 1}, tu vas l’apprendre maintenant · ${fiche.nom}`});
-        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `On commence au niveau 1 · ${fiche.nom}`});
+        // Lot 7-0 : un test peut commencer plus haut (les marches d'un palier
+        // plus haut d'un module commencé) et s'arrêter au palier en cours.
+        const de = serie.de || 1;
+        const liste = n => (n === de ? `${n}` : n === de + 1 ? `${de} et ${n}` : `${de} à ${n}`);
+        const suivant = suivi.bilan[connus] || null;
+        const apres = suivant && !suivant.jouee
+          ? `Le niveau ${connus + 1} viendra plus tard · ${fiche.nom}`
+          : `Le niveau ${connus + 1}, tu vas l’apprendre maintenant · ${fiche.nom}`;
+        const prouves = connus - de + 1;
+        if (suivi.tout && de === 1) poserVerdict({classe: "is-fete", titre: `Tu connais déjà ${fiche.nom} !`, score: `${total} niveau${total > 1 ? "x" : ""} sur ${total}`});
+        else if (suivi.tout) poserVerdict({classe: "is-fete", titre: `Niveau${prouves > 1 ? "x" : ""} ${liste(connus)} : déjà su${prouves > 1 ? "s" : ""} !`, score: `Tu connais déjà ${fiche.nom} !`});
+        else if (prouves > 0) poserVerdict({classe: "is-fete", titre: `Niveau${prouves > 1 ? "x" : ""} ${liste(connus)} : déjà su${prouves > 1 ? "s" : ""} !`, score: apres});
+        else poserVerdict({classe: "is-rate", icone: "✗", titre: "Pas encore", score: `On commence au niveau ${de} · ${fiche.nom}`});
         const lignes = document.createElement("div");
         lignes.className = "bilan-niveaux";
-        suivi.bilan.forEach(niveau => {
+        // Les niveaux d'en dessous, entrés avant ce test, ne s'y relisent pas.
+        suivi.bilan.filter(niveau => niveau.niveau >= de).forEach(niveau => {
           const ligne = document.createElement("span");
           ligne.className = niveau.connu ? "oui" : niveau.jouee ? "non" : "pas";
           const marque = document.createElement("i");
@@ -4640,6 +4721,45 @@
               lancerEcris({module: id, niveau: n, lecon: trouve.niveau.apprends, essai: true}, graine === undefined ? undefined : graine === "lecon" ? null : graine >>> 0);
               return true;
             },
+            // Lot 7-0 : « On te montre » d'un niveau, comme dans une séance
+            // (le perles, le glisse-nombres, ou « Je représente » à étapes).
+            // Rien n'est enregistré avant la fin de J'apprends.
+            montrer: (id, n) => {
+              if (!CORE.niveauDe(`${id}-${n}`)) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              lancerApprends(id, n, "seance");
+              return true;
+            },
+            // Lot 7-0 : « Avec le dessin » de J'apprends sur un calcul à droite
+            // de plusieurs sauts (le n-ième du niveau, `rang`), à l'écran.
+            // (`graine` : des calculs tirés toujours les mêmes, pour les planches.)
+            dessinEtapes: (id, n, rang = 0, graine = null) => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve || !trouve.niveau.apprends) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              state.origine = "seance";
+              commencerPratique({module: id, niveau: n, base: trouve.niveau.apprends});
+              const serie = state.serie;
+              if (graine !== null) serie.questions = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}).map(calcul => ({calcul, retour: false}));
+              const avec = serie.questions.filter(q => CORE.dessinAEtapesDe(q.calcul));
+              const vise = avec[Math.min(rang, avec.length - 1)];
+              if (!vise) return false;
+              serie.questions = [vise, ...serie.questions.filter(q => q !== vise)];
+              serie.index = 0;
+              serie.outil = "image";
+              renderQuestion();
+              ajusterEchelle();
+              return {texte: vise.calcul.texte, reponse: vise.calcul.reponse, etapes: CORE.dessinAEtapesDe(vise.calcul).etapes.map(e => ({texte: e.texte, reponse: e.reponse}))};
+            },
+            // Lot 7-0 : la case d'avant le résultat d'un calcul « Avec le
+            // dessin » à étapes (sa réponse), ou null.
+            caseDuDessin: () => {
+              const q = state.running && state.serie && state.serie.questions ? state.serie.questions[state.serie.index] : null;
+              if (!q || !q.dessinEtapes || state.waitingForContinue || q.etape >= q.dessinEtapes.etapes.length - 1) return null;
+              return {texte: q.dessinEtapes.etapes[q.etape].texte, reponse: q.dessinEtapes.etapes[q.etape].reponse};
+            },
+            // Lot 7-0 : l'outil montre-t-il le geste ? (et ce qui brille)
+            montre: () => (state.manip ? {montre: Boolean(state.manip.montre), brillent: document.querySelectorAll("#aide .dc-montre").length} : null),
             // Lot 3b : le calcul d'entraînement de J'apprends qui annonce une
             // sorte nouvelle (`quoi` : un bout de son annonce), à l'écran,
             // avec l'outil voulu (« manip », « image », « aucun »). Rien n'est

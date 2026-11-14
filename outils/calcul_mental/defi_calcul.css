@@ -1683,3 +1683,17 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
 /* « Nouvelle barrette ! » dans le bilan d'une étape. */
 .seance-suite .cadre.dc-barrette { display: flex; align-items: center; gap: 12px; text-align: left; }
 .dc-barrette-dessin { display: flex; }
+
+/* Lot 7-0 (14/11/2026, choix de Gwenaël : « jamais bloqué à l'outil ») :
+   après 3 gestes refusés, l'outil montre le geste — ce qu'il faut toucher
+   ou pousser brille (l'orange de la charte maths&go), jusqu'au geste réussi. */
+@keyframes dc-montre { 0%, 100% { box-shadow: 0 0 0 3px #f58220, 0 0 12px 4px rgba(245, 130, 32, .75); } 50% { box-shadow: 0 0 0 3px #f58220, 0 0 3px 1px rgba(245, 130, 32, .35); } }
+@keyframes dc-montre-svg { 0%, 100% { stroke-opacity: 1; } 50% { stroke-opacity: .35; } }
+.perle.dc-montre, .perle.rouge.dc-montre, .perle.blanche.dc-montre { background: radial-gradient(circle at 30% 30%, #ffe7c2, #f58220 70%); box-shadow: 0 0 0 3px #f58220, 0 0 12px 4px rgba(245, 130, 32, .75); animation: dc-montre 1.1s ease-in-out infinite; z-index: 3; }
+.place-value-head.dc-montre, .place-value-fixed-digit.dc-montre, .dc-jeton.dc-montre, .dc-carre-grand.dc-montre, .dc-pion-reserve.dc-montre, .dc-paquet.dc-montre {
+  border-radius: 10px; box-shadow: 0 0 0 3px #f58220, 0 0 12px 4px rgba(245, 130, 32, .75); animation: dc-montre 1.1s ease-in-out infinite;
+}
+svg .dc-montre { stroke: #f58220; animation: dc-montre-svg 1.1s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .perle.dc-montre, .place-value-head.dc-montre, .place-value-fixed-digit.dc-montre, .dc-jeton.dc-montre, .dc-carre-grand.dc-montre, .dc-pion-reserve.dc-montre, .dc-paquet.dc-montre, svg .dc-montre { animation: none; }
+}

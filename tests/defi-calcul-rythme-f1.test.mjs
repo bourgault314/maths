@@ -45,7 +45,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261114-1/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261114-7/, "le moteur change d'adresse");
 });
 
 test("page élève : Mon parcours n'a d'onglet que pour les paliers ouverts, et dit le réglage s'il n'est pas « tout »", async () => {
@@ -55,7 +55,9 @@ test("page élève : Mon parcours n'a d'onglet que pour les paliers ouverts, et 
   assert.match(page, /return soude\(`Jusqu’au palier \$\{n\} \(\$\{palier\.n === 1 \? "les bases" : palier\.classes\}\)`\);/);
   assert.match(page, /if \(n >= PARCOURS\.SEUILS\.seance\.paliers\) return "";/, "« tout » : rien d'écrit");
   // Le test ne prend que les niveaux des paliers ouverts (le mode professeur : tous).
-  assert.match(page, /\.filter\(marche => MODE_PROF \|\| PARCOURS\.palierDe\(CARTE, id, marche\.niveau\) <= palierRegle\(\)\);/);
+  // Lot 7-0 : et pas au-delà du palier en cours (PARCOURS.marchesDuTest).
+  assert.match(page, /const bornes = MODE_PROF \? \{de: 1, jusqua: Infinity\} : PARCOURS\.marchesDuTest\(parcours, CARTE, id, palierRegle\(\)\);/);
+  assert.match(page, /\.filter\(marche => marche\.niveau >= bornes\.de && marche\.niveau <= bornes\.jusqua\);/);
 });
 
 test("page prof : « Régler Défi calcul » — la durée et le palier pour la classe, autrement pour quelques élèves", async () => {

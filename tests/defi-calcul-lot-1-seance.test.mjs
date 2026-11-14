@@ -110,7 +110,9 @@ test("le palier : au-delà du réglage, ni test ni leçon ; le validé continue 
   assert.equal(P.palierDe(CARTE, P.competenceCourante(q, CARTE, 4).module, P.competenceCourante(q, CARTE, 4).niveau), 2, "tout : le palier 2 vient");
   assert.deepEqual(types(q, J, {palier: 1}), ["jour"], "les calculs du jour, rien de nouveau");
   assert.equal(P.fileSeance(q, CARTE, {aujourdhui: J, palier: 1}).etapes[0].calculs, 20, "le validé revient (20 au plus)");
-  assert.deepEqual(types(q, J, {palier: 2}).slice(0, 3), ["jour", "apprends", "avance"], "palier 2 : A2-4 (son module est commencé : J’apprends)");
+  // Lot 7-0 (choix de Gwenaël) : les marches d'un palier plus haut d'un
+  // module commencé ont leur test (avant : J'apprends d'office).
+  assert.deepEqual(types(q, J, {palier: 2}).slice(0, 3), ["jour", "test", "avance"], "palier 2 : A2-4 (son module est commencé : le test de ses marches du palier 2)");
   assert.deepEqual([P.palierDeSeance(2), P.palierDeSeance(0), P.palierDeSeance("2"), P.palierDeSeance(5)], [2, 4, 4, 4]);
   assert.equal(P.etatModule(q, P.competenceCourante(q, CARTE, 4).module, CARTE, 1).ici, 0, "pas de « Mon niveau » au-delà");
 });

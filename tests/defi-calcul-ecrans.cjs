@@ -380,6 +380,13 @@ async function repondreEntrainement(page, juste, {apresGeste = null} = {}) {
     if (apresGeste) await apresGeste();
   }
   const c = await calcul(page);
+  // Lot 7-0 : « Avec le dessin » à étapes — d'abord l'arrivée du premier saut.
+  const premiere = await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.caseDuDessin());
+  if (premiere) {
+    await taper(page, premiere.reponse, {clavier: true});
+    await valider(page, {clavier: true});
+    await page.waitForTimeout(250);
+  }
   await taper(page, juste ? c.reponse : await fausse(page), {clavier: true});
   await valider(page, {clavier: true});
   await page.waitForTimeout(juste ? 1000 : 800);

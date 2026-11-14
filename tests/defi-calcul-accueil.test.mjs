@@ -105,7 +105,7 @@ test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché 
   assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-parcours:not\(\.fullscreen-active\) \.shell, body\.sur-notice:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261114-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261114-7/);
 });
 
 test("la question « Effacer » s'ouvre dans la même case que la porte et les liens", () => {
