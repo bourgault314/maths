@@ -80,8 +80,16 @@ async function jusquaEcris(page, cle) {
   // Les niveaux choisis n'ont pas de boulier : le geste se teste dans
   // defi-calcul-ecrans.cjs.
   if (apprends.manipule) return false;
-  await taper(page, apprends.represente.reponse);
-  await page.click("#validate");
+  // Lot 7-0 : « Je représente » à étapes sur la droite à plusieurs sauts (la
+  // première case, puis le résultat ; l'écran reste, puis « Suivant »).
+  if (apprends.represente.etapes) {
+    for (const etape of apprends.represente.etapes) { await taper(page, etape.reponse); await page.click("#validate"); await page.waitForTimeout(300); }
+    await page.click("#validate");
+    await page.waitForFunction(() => /J’écris/.test(document.getElementById("seance-fil").textContent), null, {timeout: 8000});
+  } else {
+    await taper(page, apprends.represente.reponse);
+    await page.click("#validate");
+  }
   await page.waitForSelector("#question-card.ecrit", {timeout: 8000});
   await page.waitForTimeout(300);
   return true;

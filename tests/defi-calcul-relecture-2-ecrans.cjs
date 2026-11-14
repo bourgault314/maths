@@ -113,7 +113,9 @@ const hautDessin = page => page.evaluate(() => Math.round(document.querySelector
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, [1366, 768]);
     await apprendre(page, "A2-5");
     const ap = CORE.niveauDe("A2-5").niveau.apprends;
-    await taper(page, ap.represente.reponse);
+    // Lot 7-0 : « Je représente » à étapes sur la droite (la première case,
+    // puis le résultat), puis « Suivant ».
+    for (const etape of ap.represente.etapes) { await taper(page, etape.reponse); await page.click("#validate"); await page.waitForTimeout(300); }
     await page.click("#validate");
     await page.waitForSelector("#question-card.ecrit", {timeout: 8000});
     for (const etape of ap.ecris.etapes) {
