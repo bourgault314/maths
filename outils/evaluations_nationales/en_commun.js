@@ -134,7 +134,8 @@
     return qs.map((q) => {
       const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r);
       const g = t.generer(r, Boolean(officiel));
-      const melange = g.melange ?? t.melange ?? q.melange ?? true;
+      // Lot EN-C1 (choix de Gwenaël, 14/11) : le sujet officiel garde l'ordre des réponses du PDF ; seuls les jumeaux mélangent.
+      const melange = !officiel && (g.melange ?? t.melange ?? q.melange ?? true);
       // Une question en grille (une case à cocher par ligne : Vrai / Faux…) n'a pas de liste de réponses : ses lignes
       // restent dans l'ordre de l'outil, sans tirage (la suite du hasard des autres questions ne bouge pas).
       if (g.grille) return { q, t, g, choix: [] };
@@ -146,12 +147,64 @@
   // Espace insécable avant « ? : ; ! » et après « ; une fraction empilée reste collée au signe qui la suit ;
   // un nombre et son unité ne se séparent jamais (1 cm, 18 km/h, 2 h 15 min, 50°…). Seul le texte est touché,
   // jamais l'intérieur d'une balise (figures SVG).
-  const UNITES_MESURE = "km/h|km²|mm²|mm³|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°C|°|%|€";
-  const RE_UNITE = new RegExp(`(\\d) (${UNITES_MESURE})(?![\\p{L}\\d²³])`, "gu");
+  // Lot EN-C1 : aussi les unités écrites en mot (135 minutes, 12 euros, 3 pages…) — une liste fermée : « 3 croissants »
+  // reste sécable — et « 2 h 15 min » d'un seul tenant.
+  const UNITES_MOTS = "secondes?|minutes?|heures?|jours?|semaines?|mois|ans|années?|siècles?|euros?|centimes?|pages?"
+    + "|millimètres?|centimètres?|décimètres?|mètres?|kilomètres?|milligrammes?|grammes?|kilogrammes?|tonnes?"
+    + "|millilitres?|centilitres?|décilitres?|litres?|degrés?";
+  const UNITES_MESURE = "km/h|km²|mm²|mm³|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°C|°|%|€|" + UNITES_MOTS;
+  const RE_UNITE = new RegExp(`(\\d) (${UNITES_MESURE})(?![\\p{L}\\d²³'’])`, "gu");
+
+  // Lot EN-C1 : une expression mathématique ne se coupe jamais en fin de ligne (4 × 4 × 4 × 4 × 4, BC² = BA² + AC²,
+  // 563 < 564/100 < 565, 2n² + 3n² + 4n + 5) : elle est mise dans une <span class="insecable"> (white-space:nowrap).
+  // Le HTML est lu en « signes » : une fraction, une lettre en italique, un exposant comptent pour un seul signe ;
+  // toute autre balise est une frontière (jamais traversée), une figure SVG n'est jamais touchée.
+  const ATOME = /^(?:<span class="frac"><span>(?:[^<]|<(i|sup)\b[^>]*>[^<]*<\/\1>)*<\/span><span>(?:[^<]|<(i|sup)\b[^>]*>[^<]*<\/\2>)*<\/span><\/span>|<i class="lettre">[^<]*<\/i>|<sup>[^<]*<\/sup>|<sub>[^<]*<\/sub>|<span class="chapeau[^"]*">[^<]*<\/span>)/;
+  const ATOME_SIGNE = "", BORD = "", INF = "", SUP = ""; // atome, frontière, &lt; et &gt;
+  const NOMBRE = "\\d+(?:[\\u00a0\\u202f]\\d{3})*(?:,\\d+)?";
+  // Un terme : nombre, lettre seule ou majuscules (AC, BC), atome, « … » ; avec ses parenthèses, son signe moins, son carré
+  // et son unité (24 cm). « 2n² », « 4,5x », « 7(x + 2) », « (−5) » sont des termes ; un mot (« les », « Quelle ») n'en est pas.
+  const LETTRE = "(?<![\\p{L}])(?:[A-Z]{1,3}|[a-z])(?![\\p{L}'’])";
+  const BRIQUE = `(?:${NOMBRE}|${ATOME_SIGNE}|${LETTRE}|…|\\.\\.\\.)`;
+  // Un terme peut porter un mot après lui : son unité (24 cm) ou ce qu'il compte (« 100 unités = … », « … dizaines »).
+  const TERME = `(?:\\([ \\u00a0]?)*[−-]?${BRIQUE}(?:${BRIQUE}|[²³]|\\(|[ \\u00a0]?\\))*(?:[ \\u00a0](?:(?:${UNITES_MESURE})(?![\\p{L}\\d'’])|\\p{L}{2,}(?![\\p{L}'’])))?`;
+  const OPERATEUR = `[ \\u00a0]*[+−×÷=≈≤≥:${INF}${SUP}][ \\u00a0]*`;
+  const RE_EXPRESSION = new RegExp(`${TERME}(?:${OPERATEUR}${TERME})+(?:\\u00a0[?!;:»])?`, "gu");
+  function expressionsInsecables(html) {
+    const signes = [], vrais = []; // un signe par caractère (ou atome), et ce qu'il vaut dans le HTML
+    let i = 0;
+    while (i < html.length) {
+      const reste = html.slice(i);
+      let n = 0, signe = BORD;
+      const atome = reste.match(ATOME);
+      if (reste.startsWith("<svg")) { const f = reste.indexOf("</svg>"); n = f < 0 ? reste.length : f + 6; }
+      else if (atome) { n = atome[0].length; signe = ATOME_SIGNE; }
+      else if (reste[0] === "<") { const f = reste.indexOf(">"); n = f < 0 ? reste.length : f + 1; }
+      else if (reste.startsWith("&lt;")) { n = 4; signe = INF; }
+      else if (reste.startsWith("&gt;")) { n = 4; signe = SUP; }
+      else if (/^&#?\w+;/.test(reste)) n = reste.match(/^&#?\w+;/)[0].length;
+      else { signe = String.fromCodePoint(reste.codePointAt(0)); n = signe.length; }
+      signes.push(signe);
+      vrais.push(reste.slice(0, n));
+      i += n;
+    }
+    const chaine = signes.join(""), rang = []; // rang[position dans la chaîne] = numéro du signe
+    signes.forEach((s, k) => { for (let u = 0; u < s.length; u++) rang.push(k); });
+    let sortie = "", k = 0;
+    for (const m of chaine.matchAll(RE_EXPRESSION)) {
+      const debut = rang[m.index], fin = rang[m.index + m[0].length - 1] + 1;
+      sortie += vrais.slice(k, debut).join("") + '<span class="insecable">' + vrais.slice(debut, fin).join("") + "</span>";
+      k = fin;
+    }
+    return sortie + vrais.slice(k).join("");
+  }
+
   function typo(html) {
-    return String(html).split(/(<[^>]+>)/).map((morceau) => (morceau.startsWith("<") ? morceau
-      : morceau.replace(/ ([?:;!»])/g, "\u00a0$1").replace(/« /g, "«\u00a0").replace(RE_UNITE, "$1\u00a0$2"))).join("")
-      .replace(/(<span class="frac"><span>[^<]*<\/span><span>[^<]*<\/span><\/span>)(\u00a0[?:;!»])/g, '<span class="insecable">$1$2</span>');
+    const texte = String(html).split(/(<svg[\s\S]*?<\/svg>|<[^>]+>)/).map((morceau) => (morceau.startsWith("<") ? morceau
+      : morceau.replace(/ ([?:;!»])/g, " $1").replace(/« /g, "« ").replace(RE_UNITE, "$1 $2")
+        .replace(/(\d h) (\d)/g, "$1 $2"))).join("");
+    return expressionsInsecables(texte)
+      .replace(/(<span class="frac"><span>[^<]*<\/span><span>[^<]*<\/span><\/span>)( [?:;!»])/g, '<span class="insecable">$1$2</span>');
   }
 
   // ---------- Calculatrice (tests « Résolution de problèmes » : la DEPP l'intègre à la question) ----------

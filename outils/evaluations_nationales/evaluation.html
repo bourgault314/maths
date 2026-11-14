@@ -72,6 +72,8 @@
     .figure text{font-family:Inter,"Segoe UI",Arial,sans-serif}
     .choix{display:grid;gap:10px;margin-top:16px}
     .choix.grille{grid-template-columns:1fr 1fr}
+    /* Lot EN-C1 : une réponse qui ne tient pas dans sa colonne (expression insécable) fait passer les réponses sur une colonne. */
+    #q-choix.une-colonne{grid-template-columns:minmax(0,1fr)!important}
     .choix-btn{min-height:58px;display:flex;align-items:center;gap:12px;padding:10px 14px;border:2px solid #c9dbe6;border-radius:14px;background:#f8fcff;color:var(--ink);font-size:clamp(1.05rem,3.4vw,1.2rem);font-weight:850;text-align:left;box-shadow:0 2px 0 #c3d8e5;cursor:pointer}
     .choix-btn .case{flex:0 0 22px;width:22px;height:22px;border:2.5px solid #7d9cb3;border-radius:5px;background:#fff}
     .choix-btn[aria-pressed="true"]{border-color:var(--blue);background:#eaf2ff;box-shadow:0 0 0 3px rgba(7,85,184,.16)}
@@ -135,6 +137,9 @@
       /* Même hauteur pour toutes les questions (elle ne dépend que de la fenêtre) ; une question plus longue défile dedans,
          une ombre en bas le signale. */
       .en-passation .panel{padding:18px 28px 10px}
+      /* Lot EN-C1 : 196 px = tout ce qui n'est pas le cadre (en-tête 70, bordures 2, haut et bas du panneau 28, barre 40,
+         piste 32) + 24 px sous le panneau : la page fait exactement la hauteur de la fenêtre (elle dépassait de 4 px). */
+      .en-passation .shell{padding-bottom:24px}
       .en-passation .figure{max-height:min(260px,31vh)}
       .q-carte{height:clamp(380px,calc(100vh - 196px),700px);height:clamp(380px,calc(100dvh - 196px),700px)}
       .q-corps{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
@@ -159,6 +164,8 @@
       .topbar{min-height:52px}
       .brand img{width:88px}
       .en-passation .panel{padding:10px 24px 8px}
+      /* 156 px = en-tête 52 + bordures 2 + panneau 18 + barre 40 + piste 24 + 20 px sous le panneau (dépassait de 8 px). */
+      .en-passation .shell{padding-bottom:20px}
       .piste{margin:7px 0 9px}
       .q-carte{height:clamp(360px,calc(100vh - 156px),700px);height:clamp(360px,calc(100dvh - 156px),700px)}
       .q-corps{padding:14px 22px 4px}
@@ -458,8 +465,8 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261114-23"></script>
-  <script src="./sujets/3e_automatismes.js?v=20261114-1"></script>
+  <script src="./en_commun.js?v=20261114-71"></script>
+  <script src="./sujets/3e_automatismes.js?v=20261114-71"></script>
   <script src="./sujets/6e_automatismes.js?v=20261114-2"></script>
   <script src="./sujets/5e_automatismes.js?v=20261114-1"></script>
   <script src="./sujets/4e_automatismes.js?v=20261114-4"></script>
@@ -473,6 +480,6 @@
   <script src="./exemples_commun.js?v=20261114-21"></script>
   <script src="./sujets/3e_exemples_nombres.js?v=20261114-21"></script>
   <script src="./sujets/4e_exemples_geometrie.js?v=20261114-21"></script>
-  <script src="./evaluation.js?v=20261114-24"></script>
+  <script src="./evaluation.js?v=20261114-71"></script>
 </body>
 </html>

@@ -592,34 +592,53 @@
   // T (20) — image par une symétrie centrale (quadrillage)
   // Une figure est un polygone sur le quadrillage, coordonnées en carreaux, relatives à son coin haut-gauche (largeur 3, hauteur 2).
   const MOTIFS = [
-    [[0, 0], [3, 0], [3, 1], [0, 2]], // le motif du sujet : trapèze à côté oblique
+    [[0, 0], [3, 0], [3, 1], [2, 1], [0, 2]], // le motif du sujet : cinq sommets, le petit segment horizontal puis l'oblique
     [[0, 0], [2, 0], [3, 2], [0, 2]],
     [[0, 0], [3, 0], [3, 2], [2, 2], [2, 1], [0, 1]],
     [[0, 0.5], [1, 0], [3, 0], [3, 2], [0, 2]],
   ];
+  // Où écrire « Figure n » : au milieu de la bande d'un carreau de haut où la figure est la plus large (sur le sujet, la
+  // partie rectangulaire), pas au milieu de la boîte englobante, qui tombe sur un trait.
+  function placeEtiquette(pts) {
+    const ys = pts.map((q) => q[1]), haut = Math.min(...ys), bas = Math.max(...ys);
+    let meilleur = null;
+    for (let y = haut + 0.5; y < bas; y += 1) {
+      const xs = [];
+      pts.forEach((A, k) => {
+        const B = pts[(k + 1) % pts.length];
+        if ((A[1] - y) * (B[1] - y) < 0) xs.push(A[0] + ((y - A[1]) * (B[0] - A[0])) / (B[1] - A[1]));
+      });
+      xs.sort((a, b) => a - b);
+      for (let k = 0; k + 1 < xs.length; k += 2)
+        if (!meilleur || xs[k + 1] - xs[k] > meilleur.l) meilleur = { x: (xs[k] + xs[k + 1]) / 2, y, l: xs[k + 1] - xs[k] };
+    }
+    return meilleur;
+  }
   function symetrieCentrale(motif, places, miroirF) {
-    // Grille de 12 × 11 carreaux, O en (6 ; 4,5). F en haut à gauche (miroirF : retournée), les autres figures dans
-    // les trois autres coins ; places[k] = numéro (1 à 4) affiché sur la figure k : 0 = symétrique centrale (la bonne),
-    // 1 = symétrique par rapport à l'axe vertical, 2 = par rapport à l'axe horizontal, 3 = F simplement glissée.
-    const p = 26, x0 = 12, y0 = 12, O = [6, 4.5];
+    // Comme le sujet (BOP3 « Automatismes », page 6, item T) : quadrillage de 12 × 10 carreaux, O en (6 ; 4), F en haut
+    // à gauche (miroirF : retournée), les autres figures dans les trois autres coins ; places[k] = numéro (1 à 4) affiché
+    // sur la figure k : 0 = symétrique centrale (la bonne), 1 = symétrique par rapport à l'axe vertical, 2 = par rapport à
+    // l'axe horizontal, 3 = F simplement glissée, juste sous la symétrique centrale (elles partagent leur bord).
+    const p = 26, x0 = 12, y0 = 12, O = [6, 4], C = 12, L = 10;
     let s = "";
-    for (let i = 0; i <= 12; i++) s += `<line x1="${x0 + i * p}" y1="${y0}" x2="${x0 + i * p}" y2="${y0 + 11 * p}" stroke="${GRIS}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
-    for (let j = 0; j <= 11; j++) s += `<line x1="${x0}" y1="${y0 + j * p}" x2="${x0 + 12 * p}" y2="${y0 + j * p}" stroke="${GRIS}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
+    for (let i = 0; i <= C; i++) s += `<line x1="${x0 + i * p}" y1="${y0}" x2="${x0 + i * p}" y2="${y0 + L * p}" stroke="${GRIS}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
+    for (let j = 0; j <= L; j++) s += `<line x1="${x0}" y1="${y0 + j * p}" x2="${x0 + C * p}" y2="${y0 + j * p}" stroke="${GRIS}" stroke-width="0.8" stroke-dasharray="3 3"/>`;
     const base = motif.map(([x, y]) => [miroirF ? 3 - x : x, y]);
     const F = base.map(([x, y]) => [1 + x, 1 + y]);
     const images = [
       F.map(([x, y]) => [2 * O[0] - x, 2 * O[1] - y]), // symétrie centrale
       F.map(([x, y]) => [2 * O[0] - x, y]), // axe vertical
       F.map(([x, y]) => [x, 2 * O[1] - y]), // axe horizontal
-      F.map(([x, y]) => [x + 7, y + 8]), // glissée, sous la symétrique centrale, comme sur le sujet
+      F.map(([x, y]) => [x + 7, y + 6]), // glissée, collée sous la symétrique centrale, comme sur le sujet
     ];
     const P = (pts) => pts.map(([x, y]) => [x0 + x * p, y0 + y * p]);
-    const etiquette = (pts, t) => { const xs = pts.map((q) => q[0]), ys = pts.map((q) => q[1]); return txt(x0 + ((Math.min(...xs) + Math.max(...xs)) / 2) * p, y0 + ((Math.min(...ys) + Math.max(...ys)) / 2) * p + 5, t, 11, "middle", ' font-weight="700"'); };
-    s += polygone(P(F), "#fff") + etiquette(F, "Figure F");
-    images.forEach((pts, k) => { s += polygone(P(pts), "#fff") + etiquette(pts, `Figure ${places[k]}`); });
+    const etiquette = (pts, t, gras) => { const e = placeEtiquette(pts); return txt(x0 + e.x * p, y0 + e.y * p + 4, t, 11, "middle", gras ? ' font-weight="700"' : ""); };
+    // F : trait plus épais et nom en gras, comme sur le sujet.
+    s += polygone(P(F), "#fff").replace('stroke-width="1.8"', 'stroke-width="2.6"') + etiquette(F, "Figure F", true);
+    images.forEach((pts, k) => { s += polygone(P(pts), "#fff") + etiquette(pts, `Figure ${places[k]}`, false); });
     const Ox = x0 + O[0] * p, Oy = y0 + O[1] * p;
     s += ligne([Ox - 6, Oy - 6], [Ox + 6, Oy + 6], 2) + ligne([Ox - 6, Oy + 6], [Ox + 6, Oy - 6], 2) + txt(Ox + 12, Oy - 8, "O", 15, "start");
-    return svg(12 * p + 24, 11 * p + 24, s, "Quadrillage : figure F, point O et quatre figures numérotées", 420);
+    return svg(C * p + 24, L * p + 24, s, "Quadrillage : figure F, point O et quatre figures numérotées", 420);
   }
   Q.push({
     num: 20, domaine: "EG", competence: "Reconnaître l’image d’une figure par une symétrie centrale",

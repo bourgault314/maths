@@ -63,7 +63,8 @@ test("6e et 5e : un seul sujet officiel (le même en 2024, 2025 et 2026), sans v
       const avant = hasard(graine), apres = construire(s, hasard(graine), graine === 1 ? s.officiels[0] : null, null);
       s.questions.forEach((q, i) => {
         const g = q.generer(avant, graine === 1);
-        const m = g.melange ?? q.melange ?? true;
+        // Lot EN-C1 : le sujet officiel (graine 1) garde l'ordre du PDF, seuls les jumeaux mélangent.
+        const m = graine !== 1 && (g.melange ?? q.melange ?? true);
         const ordre = m ? avant.melanger(g.choix) : g.choix.slice();
         assert.deepEqual(apres[i].choix.map((x) => x.html), ordre.map((x) => x.html), `${id} graine ${graine} q${q.num}`);
       });
