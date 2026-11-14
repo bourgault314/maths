@@ -215,11 +215,9 @@
     ["Nathan", "il"], ["Jade", "elle"], ["Lucas", "il"], ["Chloé", "elle"], ["Enzo", "il"], ["Camillia", "elle"], ["Rayan", "il"]];
   const PAIRES = [["Tom", "Jade"], ["Malik", "Emma"], ["Zoé", "Adam"], ["Léa", "Yanis"], ["Nina", "Sacha"], ["Ethan", "Manon"]];
 
-  // « de » et « que » s'élident devant un prénom qui commence par une voyelle (d’Inès, qu’Emma ; mais de Hugo, de Yanis),
-  // comme dans le reste du site.
-  const voyelle = (nom) => /^([AEIOUÀÂÉÈÊËÎÏÔÖÙÛÜŒ]|Y(?![aeiouyàâéèêëîïôöùûü]))/i.test(nom);
-  const de = (nom) => (voyelle(nom) ? `d’${nom}` : `de ${nom}`);
-  const que = (nom) => (voyelle(nom) ? `qu’${nom}` : `que ${nom}`);
+  // « de » et « que » s'élident devant une voyelle (d’Inès, qu’Emma ; mais de Hugo, de Yanis) : depuis le lot EN10, la
+  // fonction commune d'en_commun.js (aussi devant un nom : d’oranges, d’élèves, d’huile).
+  const { de, que } = racine.EN;
 
   const GEN = {};
 
@@ -228,7 +226,7 @@
   GEN[1] = (r) => {
     const f = r.parmi(Q1_FRUITS), p = r.entier(2, 6), m = r.entier(3, 8);
     return {
-      enonce: `Dans un supermarché, les ${f} sont à ${p} € le kilogramme.<br><strong>Combien vais-je payer pour acheter ${m} kg de ${f} dans ce supermarché ?</strong>`,
+      enonce: `Dans un supermarché, les ${f} sont à ${p} € le kilogramme.<br><strong>Combien vais-je payer pour acheter ${m} kg ${de(f)} dans ce supermarché ?</strong>`,
       choix: [
         c(`${m} €`, false, `Reprend le ${m} de ${m} kg sans calculer.`),
         c(`${p + m - 1} €`, false, `Pense que la masse augmente de ${m - 1}, donc le prix aussi (${p} € + ${m - 1} €).`),
@@ -534,7 +532,7 @@
   GEN[17] = (r) => {
     const [X, matiere, produit] = r.parmi(Q17_CTX), m = 1000 / X;
     return {
-      enonce: `Il faut ${X} g de ${matiere} pour obtenir 1 g de ${produit}.<br><strong>Quelle masse de ${produit} un producteur pourra-t-il produire avec 1 kg de ${matiere} ?</strong>`,
+      enonce: `Il faut ${X} g ${de(matiere)} pour obtenir 1 g ${de(produit)}.<br><strong>Quelle masse ${de(produit)} un producteur pourra-t-il produire avec 1 kg ${de(matiere)} ?</strong>`,
       choix: [
         c(`${X} g`, false, `Associe 1 g et 1 kg sans tenir compte des unités, et reprend les ${X} g de l’énoncé.`),
         c(`${dec(m)} kg`, false, "A la bonne démarche, mais se trompe d’unité pour le résultat."),
@@ -551,20 +549,25 @@
     { groupe: (T) => `Dans une équipe de ${T} joueurs`, un: "un seul porte des lunettes", des: (m) => `${m} portent des lunettes`, fin: "les autres n’en portent pas", q: "Quel est le pourcentage de joueurs sans lunettes dans cette équipe ?", petit: "joueurs à lunettes", grand: "joueurs sans lunettes", T: [10, 20] },
     { groupe: (T) => `Dans un club de ${T} élèves`, un: "un seul rentre déjeuner chez lui", des: (m) => `${m} rentrent déjeuner chez eux`, fin: "les autres mangent à la cantine", q: "Quel est le pourcentage d’élèves du club qui mangent à la cantine ?", petit: "élèves qui rentrent déjeuner", grand: "élèves qui mangent à la cantine", T: [4, 5, 10, 20] },
   ];
-  GEN[18] = (r) => {
+  GEN[18] = (r, banque) => {
     const x = r.parmi(Q18_CTX), T = r.parmi(x.T), m = r.entier(1, Math.ceil(T / 2) - 1), g = T - m;
     const compare = (100 * m) / g;
+    // Lot EN10 : le jumeau strict garde le piège de la DEPP (« compare le petit groupe au grand, puis complément à 100 % ») :
+    // seuls les tirages où ce calcul tombe juste sont gardés (petit groupe = le quart du grand, comme 1 sur 4 dans le sujet),
+    // et jamais le sujet officiel lui-même (fratrie de 5, un gaucher). La branche ⚠ ci-dessous reste pour la banque
+    // (GEN[18](r, true)), jamais pour un jumeau.
+    if (!banque && (!Number.isInteger(compare) || (x === Q18_CTX[0] && T === 5 && m === 1))) return null;
     const piege = Number.isInteger(compare)
       ? c(`${100 - compare} %`, false, `Compare les ${x.petit} aux ${x.grand} (${m} sur ${g}, soit ${compare} %), puis prend le complément à 100 %.`)
       // ⚠ non DEPP : quand « comparer puis compléter » ne tombe pas juste, le nombre du petit groupe pris pour un pourcentage.
-      : c(`${100 - m} %`, false, `Prend le nombre de ${x.petit} (${m}) pour un pourcentage, puis le complète à 100 %.`);
+      : c(`${100 - m} %`, false, `Prend le nombre ${de(x.petit)} (${m}) pour un pourcentage, puis le complète à 100 %.`);
     return {
       enonce: `${x.groupe(T)}, ${m === 1 ? x.un : x.des(m)} et ${x.fin}.<br><strong>${x.q}</strong>`,
       choix: [
         c(`${(100 * g) / T} %`, true),
         piege,
-        c(`${g} %`, false, `Confond le nombre de ${x.grand} et le pourcentage.`),
-        c(`${(100 * m) / T} %`, false, `Calcule le pourcentage de ${x.petit} : lit mal la question, mais maitrise les pourcentages.`),
+        c(`${g} %`, false, `Confond le nombre ${de(x.grand)} et le pourcentage.`),
+        c(`${(100 * m) / T} %`, false, `Calcule le pourcentage ${de(x.petit)} : lit mal la question, mais maitrise les pourcentages.`),
       ],
     };
   };

@@ -330,7 +330,7 @@ const ATTENDU4 = {
     return { juste: `${(P / 10) * j} pages`, pieges: [`${10 * j} pages`, "10 pages", `${P / 10} pages`] };
   },
   17(e) {
-    const m = e.match(/^Il faut (\d+) g de .+? pour obtenir 1 g de .+?\. .* avec 1 kg de/);
+    const m = e.match(/^Il faut (\d+) g (?:de |d’).+? pour obtenir 1 g (?:de |d’).+?\. .* avec 1 kg (?:de |d’)/); // lot EN10 : d’huile
     assert.ok(m, e);
     const X = n(m[1]);
     assert.ok([80, 5, 4, 50].includes(X), e);
@@ -341,6 +341,8 @@ const ATTENDU4 = {
     assert.ok(m, e);
     const T = n(m[1]), k = m[2] === "un seul" ? 1 : n(m[2]), g = T - k, compare = (100 * k) / g;
     assert.ok(T >= 4 && T <= 20 && k < g && Number.isInteger((100 * g) / T), e);
+    // Lot EN10 : le piège de la DEPP (comparer le petit groupe au grand, puis compléter à 100 %) tombe toujours juste.
+    assert.ok(Number.isInteger(compare), `piège DEPP qui ne tombe pas juste : ${e}`);
     return { juste: `${(100 * g) / T} %`, pieges: [`${(100 * k) / T} %`, `${g} %`, Number.isInteger(compare) ? `${100 - compare} %` : `${100 - k} %`] };
   },
   19(e, choix, g) {

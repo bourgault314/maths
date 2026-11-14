@@ -150,11 +150,9 @@
     ["Nathan", "il"], ["Jade", "elle"], ["Tom", "il"], ["Chloé", "elle"], ["Enzo", "il"], ["Sarah", "elle"], ["Rayan", "il"]];
   const deuxPrenoms = (r) => { const l = r.melanger(PRENOMS); return [l[0], l[1]]; };
 
-  // « de » et « que » s'élident devant un prénom qui commence par une voyelle (d’Inès, qu’Emma ; mais de Hugo, de Yanis),
-  // comme dans le reste du site.
-  const voyelle = (nom) => /^([AEIOUÀÂÉÈÊËÎÏÔÖÙÛÜŒ]|Y(?![aeiouyàâéèêëîïôöùûü]))/i.test(nom);
-  const de = (nom) => (voyelle(nom) ? `d’${nom}` : `de ${nom}`);
-  const que = (nom) => (voyelle(nom) ? `qu’${nom}` : `que ${nom}`);
+  // « de » et « que » s'élident devant une voyelle (d’Inès, qu’Emma ; mais de Hugo, de Yanis) : depuis le lot EN10, la
+  // fonction commune d'en_commun.js (aussi devant un nom : d’oranges, d’élèves, d’huile).
+  const { de, que } = racine.EN;
 
   const GEN = {};
 

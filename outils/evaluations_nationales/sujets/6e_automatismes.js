@@ -727,6 +727,31 @@
     },
   });
 
+  // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
+  // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
+  // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  const HORS_STRICT = {
+    1: { formes: ["unites-deux-chiffres"], pourquoi: "92 063 n'a qu'un zéro intercalé (76 004 en a deux) : plus facile" },
+    2: { formes: ["centiemes-un-chiffre", "milliemes-un-chiffre"], pourquoi: "« sept centièmes », « six millièmes » : autre rang ou deux zéros" },
+    4: { formes: ["centiemes-deux-chiffres", "milliemes"], pourquoi: "73/100 n'a pas de zéro après la virgule ; 6/1000 en a deux" },
+    5: { formes: ["en-nombre"], pourquoi: "« 60 millièmes » au lieu de « 10 fois 6 millièmes » : autre écriture" },
+    6: { formes: ["dizaines-de-millions", "centaines-de-mille"], pourquoi: "autre ordre de grandeur sur la droite" },
+    8: { formes: ["plusieurs-graduations-apres-1"], pourquoi: "la droite continue après 1 : plus dur" },
+    9: { formes: ["decroissant"], pourquoi: "encadrement écrit avec « > »" },
+    10: { formes: ["dixiemes-non-nuls"], pourquoi: "le sujet a un 0 aux dixièmes (1,082) : c'est lui qui fait le piège" },
+    11: { formes: ["disque", "bande-parts-melangees"], pourquoi: "parts mêlées ou disque : plus dur que la bande coloriée à gauche" },
+    12: { formes: ["soustraction"], pourquoi: "730 − 727 : soustraction au lieu d'un complément" },
+    13: { formes: ["autres-centiemes"], pourquoi: "10,18 ÷ 2 : le piège « 8,10 lu 8 et 10 » change" },
+    14: { formes: ["fois-100", "fois-100-devant", "fois-1000", "fois-1000-devant"], pourquoi: "× 100 et × 1 000 : autre cas de la compétence" },
+    15: { formes: ["virgule-5", "virgule-5-entier-devant"], pourquoi: "7,5 × 2 : autre cas" },
+    16: { formes: ["mesure"], pourquoi: "on choisit la mesure, pas l'unité" },
+    18: { formes: ["combien-faut-il", "fois-plus-petit"], pourquoi: "autre sens ou autre tournure" },
+    19: { formes: ["vers-unite-plus-grande"], pourquoi: "conversion dans l'autre sens" },
+    21: { formes: ["deux-couches-cote-a-gauche", "deux-couches-cote-a-droite"], pourquoi: "deux couches de cubes : plus dur" },
+    22: { formes: ["courts-plus-ouverts-vers-la-droite", "courts-plus-ouverts-vers-la-gauche"], pourquoi: "la bonne réponse n'est plus « égaux »" },
+    23: { formes: ["mesure"], pourquoi: "on choisit la mesure, pas l'unité" },
+  };
+
   racine.EN_SUJETS = racine.EN_SUJETS || {};
   racine.EN_SUJETS["6e-automatismes"] = {
     id: "6e-automatismes",
@@ -742,5 +767,6 @@
     // Le même sujet est tombé en 2024, 2025 et 2026 (PDF Eduscol comparés : mêmes questions, réponses, figures et repères).
     officiels: [{ cle: "2026", annee: 2026, titre: "Le sujet officiel", detail: "Les vraies questions. Le même sujet est tombé en 2024, 2025 et 2026." }],
     questions: Q,
+    horsStrict: HORS_STRICT,
   };
 })(typeof window !== "undefined" ? window : globalThis);
