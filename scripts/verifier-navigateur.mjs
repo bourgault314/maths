@@ -114,6 +114,8 @@ export const RECETTES = [
   { fichier: "tests/automatismes-accueil-menu.test.mjs", appli: "automatismes", nodeTest: true, besoin: ["playwright"], garde: ["automatismes/"] },
   { fichier: "tests/effacer-historique.test.mjs", appli: "suivi", nodeTest: true, besoin: ["playwright"],
     garde: ["outils/calcul_mental/defi_tables", "outils/calcul_mental/defi_calcul", "outils/calcul_mental/flash_anzan", "assets/js/effacer-historique"] },
+  { fichier: "tests/pave-au-toucher.test.mjs", appli: "pave", nodeTest: true, besoin: ["playwright"],
+    garde: ["outils/calcul_mental/defi_tables.html", "outils/calcul_mental/defi_calcul", "outils/calcul_mental/flash_anzan.html"] },
   { fichier: "tests/en-tete-commun.test.mjs", appli: "suivi", nodeTest: true, besoin: ["playwright"],
     garde: ["outils/calcul_mental/defi_tables", "outils/calcul_mental/defi_calcul", "outils/calcul_mental/flash_anzan",
       "outils/calcul_mental/coffres_magiques_solo.html", "outils/splat_univers.html", "assets/js/en-tete-commun", "assets/css/en-tete-commun"] },
