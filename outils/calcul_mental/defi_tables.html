@@ -8020,6 +8020,19 @@
           verdict.icone = "⏱";
           verdict.titre = "Temps écoulé";
           verdict.config = rappelCourt();
+          // Lot « étoile ratée » (14/11/2026, choix de Gwenaël sur planches) :
+          // tout ce qui a été répondu est juste, seul le temps a manqué —
+          // étoile, test d'une table ou Mon mélange. Le titre devient « Tout
+          // est juste ! » (le ⏱ et le cadre ambre restent) et l'écran dit que
+          // le temps a manqué, au lieu de « il en faut 23 », qui se lisait
+          // comme « tu ne sais pas tes tables ». (Un calcul « raté deux fois »
+          // ne peut venir ici que de calculs pas atteints : il ne compte pas.)
+          if (state.answered === state.correct && calculsPasses() === 0) {
+            verdict.titre = "Tout est juste\u00a0!";
+            verdict.score = `${pluriel(state.correct, "juste")}, aucune erreur`;
+            verdict.detail = `Le temps a manqué pour ${remaining > 1 ? `les ${remaining} derniers calculs` : "le dernier calcul"}.`;
+            return verdict;
+          }
           // Audit 1 (30/09/2026) : le seuil compte des réponses JUSTES — le
           // score aussi (avant : « 15 réponses sur 20 … il en faut 18 », avec
           // les réponses données). Le détail compte aussi les calculs passés.
@@ -11686,6 +11699,18 @@
         // Mon mélange, libre : réussi, il n'ouvre rien — il rapporte une coupe.
         if (fete.melange) return fete.melange.trophee ? `Tu gagnes la coupe des ${fete.melange.trophee} tables\u00a0!` : "";
         if (fete.etoile) return fete.etoile.couronne ? "" : `Tente ${PARCOURS.symboleEtoile(fete.etoile.etoile + 1)} en ${PARCOURS.libelleDuree(PARCOURS.dureeEtoile(fete.etoile.etoile + 1))}.`;
+        // Lot « étoile ratée » (14/11/2026) : une étoile ratée dit aussi la
+        // suite. Tout juste mais le temps a manqué : c'est la vitesse (le
+        // titre dit déjà « Tout est juste ! ») ; avec des erreurs : elles
+        // reviennent demain, comme après un mélange raté — une erreur remet
+        // l'échéance du calcul au jour même, quelle que soit sa boîte.
+        const etoileRatee = liste.find(evenement => evenement.type === "etoile" && evenement.reussi === false);
+        if (etoileRatee) {
+          const symbole = PARCOURS.symboleEtoile(etoileRatee.etoile);
+          const erreurs = state.answered - state.correct + calculsPasses();
+          if (!erreurs) return `Il ne te manque que de la vitesse : retente ${symbole} !`;
+          return phraseErreursDemain();
+        }
         const validation = trouve("validation");
         const preparation = trouve("preparation");
         if (preparation) return preparation.reussi
@@ -11715,7 +11740,7 @@
         const erreurs = state.answered - state.correct + calculsPasses();
         if (erreurs) return "Entraîne‑toi, puis repasse le test.";
         const tempsEcoule = state.configuration.duration !== null && TOTAL - state.index > 0;
-        return tempsEcoule ? "Tu manques de temps : entraîne-toi, puis réessaie." : "";
+        return tempsEcoule ? "Il ne te manque que de la vitesse : entraîne-toi, puis réessaie." : "";
       }
 
       function phraseErreursDemain() {
@@ -11726,7 +11751,7 @@
         if (erreurs > 1) return `Tes ${erreurs} erreurs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.`;
         if (erreurs === 1) return "Ton erreur revient demain dans Mes calculs. D’ici là, entraîne‑toi.";
         const tempsEcoule = state.configuration.duration !== null && TOTAL - state.index > 0;
-        return tempsEcoule ? "Tu manques de temps : entraîne-toi, puis réessaie." : "";
+        return tempsEcoule ? "Il ne te manque que de la vitesse : entraîne-toi, puis réessaie." : "";
       }
 
       function renderResultParcours(suivi) {

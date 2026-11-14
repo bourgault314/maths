@@ -113,7 +113,7 @@ test("1. test ou mélange ratés : les erreurs d’une table passée reviennent 
   });
   assert.equal(testRate(rate(20, 15, 0, 20), 20), "Entraîne‑toi, puis repasse le test.", "des erreurs : pas de « demain », la table n’est pas passée");
   assert.equal(testRate(rate(14, 12, 2, 20), 20), "Entraîne‑toi, puis repasse le test.", "les calculs passés comptent");
-  assert.equal(testRate(rate(12, 12, 0, 12), 20), "Tu manques de temps : entraîne-toi, puis réessaie.", "sans erreur, le temps a manqué");
+  assert.equal(testRate(rate(12, 12, 0, 12), 20), "Il ne te manque que de la vitesse : entraîne-toi, puis réessaie.", "sans erreur, le temps a manqué");
   assert.equal(testRate(rate(20, 20, 0, 20), 20), "");
   const phrase = new Function("state", "TOTAL", `${fonction("calculsPasses")}\n${fonction("phraseErreursDemain")}; return phraseErreursDemain();`);
   const serie = (answered, correct, passees, index, duration = 90) => ({
@@ -124,7 +124,7 @@ test("1. test ou mélange ratés : les erreurs d’une table passée reviennent 
   assert.equal(phrase(serie(14, 12, 2, 20), 20), "Ces 4 calculs reviennent demain dans Mes calculs. D’ici là, entraîne‑toi.", "les calculs passés comptent — lot E2 : « ces calculs », un calcul passé n’est pas une erreur");
   assert.equal(phrase(serie(0, 0, 1, 1), 20), "Ce calcul revient demain dans Mes calculs. D’ici là, entraîne‑toi.", "lot E2 : un seul calcul, passé");
   assert.equal(phrase(serie(12, 11, 0, 12), 20), "Ton erreur revient demain dans Mes calculs. D’ici là, entraîne‑toi.");
-  assert.equal(phrase(serie(12, 12, 0, 12), 20), "Tu manques de temps : entraîne-toi, puis réessaie.");
+  assert.equal(phrase(serie(12, 12, 0, 12), 20), "Il ne te manque que de la vitesse : entraîne-toi, puis réessaie.");
 });
 
 test("1. validation ratée : « Je m’entraîne : … » en bouton bleu, l’entraînement que l’accueil conseille", () => {
