@@ -243,7 +243,7 @@
       const erreurs = !choisi ? [] : choisi.erreurs || (choisi.erreur ? [choisi.erreur] : []);
       const debut = it.g.saisie ? "Cette réponse" : "Ce choix";
       return `<li>
-        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
+        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.g.competence || it.t.competence || it.q.competence)}</p>
         <div class="revoir-reponses">
           <span class="donnee">${choisi ? "Ta réponse : " + typo(choisi.html) : "Pas de réponse"}</span>
           <span class="attendue">Bonne réponse : ${typo(bonneReponse(it))}</span>

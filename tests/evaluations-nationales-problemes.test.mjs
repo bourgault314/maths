@@ -1,5 +1,5 @@
 // Lot EN9 — tests « Résolution de problèmes » de 6e et de 4e (sujets officiels 2024-2025-2026, à l'identique) et la
-// calculatrice de l'appli. Les bonnes réponses sont recalculées ici depuis les énoncés et les données des figures.
+// calculatrice de l'appli. Les jumeaux (lot EN9b) sont contrôlés dans evaluations-nationales-problemes-jumeaux.test.mjs. Les bonnes réponses sont recalculées ici depuis les énoncés et les données des figures.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -51,7 +51,7 @@ test("19 questions par test, domaines et repères de la DEPP", () => {
   assert.equal(n("OGD").length, 11);
   assert.deepEqual(S4.seuils.map((s) => s.max), [4, 10, 19]);
   for (const S of [S6, S4]) {
-    assert.equal(S.jumeaux, false);
+    assert.equal(S.jumeaux, true); // lot EN9b
     assert.equal(S.calculatrice, true);
     assert.equal(S.officiels.length, 1);
     assert.match(S.officiels[0].detail, /2024, 2025 et 2026/);
@@ -68,11 +68,11 @@ test("sujets officiels : mêmes réponses, dans l'ordre du sujet, et la bonne r�
   }
 });
 
-test("sans sujet jumeau : la même question quelle que soit la graine, réponses jamais mélangées", () => {
+test("sujet officiel : aucun hasard, quelle que soit la suite de hasard, réponses jamais mélangées", () => {
   for (const S of [S6, S4]) {
     const ref = officiel(S).map((it) => [it.g.enonce, it.choix.map((c) => c.html).join("¦")]);
     for (let graine = 2; graine <= 60; graine++) {
-      const autre = construire(S, hasard(graine), null, null).map((it) => [it.g.enonce, it.choix.map((c) => c.html).join("¦")]);
+      const autre = construire(S, hasard(graine), S.officiels[0], null).map((it) => [it.g.enonce, it.choix.map((c) => c.html).join("¦")]);
       assert.deepEqual(autre, ref, `${S.id} graine ${graine}`);
     }
   }
@@ -187,7 +187,7 @@ test("calculatrice : priorités, parenthèses, virgule, erreurs", () => {
   for (const [e, r] of Object.entries(cas)) assert.equal(ecrireCalcul(calculer(e)), r, e);
 });
 
-test("la page : calculatrice dans la barre des boutons, par-dessus la page ; pas de jumeau pour ces tests", () => {
+test("la page : calculatrice dans la barre des boutons, par-dessus la page ; cartes des jumeaux selon le sujet", () => {
   const html = readFileSync(new URL("../outils/evaluations_nationales/evaluation.html", import.meta.url), "utf8");
   const js = readFileSync(new URL("../outils/evaluations_nationales/evaluation.js", import.meta.url), "utf8");
   for (const f of ["6e_problemes.js", "4e_problemes.js"]) assert.match(html, new RegExp(`<script src="\\./sujets/${f}\\?v=\\d{8}-\\d+"></script>`));
