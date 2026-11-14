@@ -781,6 +781,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .dc-reprendre li .dc-nombre small { color: var(--rouge); font-weight: 700; }
   .dc-reprendre li a { grid-column: 2; justify-self: end; font-size: .86rem; font-weight: 700; white-space: nowrap; }
   .dc-paliers { display: block; margin-top: 2px; color: var(--muted); font-size: .8rem; white-space: nowrap; }
+  /* Lot 4 « les ceintures » : le dessin et le nom en un mot. */
+  .dc-ceinture { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; white-space: nowrap; }
+  .dc-ceinture-dessin { display: flex; }
+  .dc-ceinture-dessin .ceinture { display: block; }
   td.dc-revoir .pastille + .pastille { margin-left: 4px; }
   .p-rouge { background: var(--rouge-pale); color: var(--rouge); }
   /* La fenêtre de l'élève. */
@@ -1661,6 +1665,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
                revoir, les séances des 4 dernières semaines, le dernier jour. -->
           <tr id="entete-defi-calcul" hidden>
             <th><button type="button" data-tri="prenom">Élève</button></th>
+            <th class="large"><button type="button" data-tri="ceinture">Ceinture</button></th>
             <th><button type="button" data-tri="sues">Compétences sues</button></th>
             <th class="large"><button type="button" data-tri="revoir">À revoir</button></th>
             <th class="large"><button type="button" data-tri="seances">Séances · 4 semaines</button></th>
@@ -2218,7 +2223,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     "flash-anzan": ["prenom", "flash", "colonne", "jours", "date"],
     // Défi calcul (lot 2b) : les compétences sues, ce qui est à revoir, les
     // séances des 4 dernières semaines, le dernier jour.
-    "defi-calcul": ["prenom", "sues", "revoir", "seances", "date"],
+    // Lot 4 : la ceinture (la ceinture portée, puis ses barrettes).
+    "defi-calcul": ["prenom", "ceinture", "sues", "revoir", "seances", "date"],
     "splat": ["prenom", "etapes", "date"],
     "cours": ["prenom"]
   };
@@ -2900,6 +2906,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // revoir » : à voir en classe d'abord, puis les rouges ; les séances
       // des 4 dernières semaines ; « Dernière activité » : le dernier jour
       // de travail lu dans le parcours.
+      if (tri.colonne === "ceinture") return eleve.lu.ceintures ? eleve.lu.ceintures.porte * 10 + eleve.lu.ceintures.barrettes : -1;
       if (tri.colonne === "sues") return ((eleve.lu.ouvert && eleve.lu.ouvert.sues) || 0) * 1000 + ((eleve.lu.ouvert && eleve.lu.ouvert.entrees) || 0);
       if (tri.colonne === "revoir") return (eleve.lu.aVoir || 0) * 1000 + (eleve.lu.rouges || 0);
       if (tri.colonne === "seances") return ((eleve.lu.seances && eleve.lu.seances.quatreSemaines) || 0) * 1000 + ((eleve.lu.seances && eleve.lu.seances.total) || 0);
@@ -6348,8 +6355,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       cDate.textContent = quand || "rien reçu";
       if (!quand) cDate.className = "sans";
 
-      [cRevoir, cSeances].forEach(large);
-      ligne.append(cNom, cSues, cRevoir, cSeances, cDate);
+      // Lot 4 « les ceintures » : la ceinture qu'il porte (le dessin, avec
+      // ses barrettes, et son nom en un mot) ; au survol, quand il l'a gagnée.
+      const cCeinture = celluleCeinture(lu);
+
+      // Au téléphone, la colonne se cache comme « À revoir » (le tableau
+      // tient en 356 px) : la ceinture se lit dans la fiche de l'élève.
+      [cCeinture, cRevoir, cSeances].forEach(large);
+      ligne.append(cNom, cCeinture, cSues, cRevoir, cSeances, cDate);
       finirLigne(ligne, eleve, cNom);
       // Lot S4a : au téléphone, « À revoir » est caché — ce qui demande le
       // professeur (les mises de côté) passe sous le prénom. Les rouges, que
@@ -6375,6 +6388,35 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         "erreur");
     }
     dessinerPapier();
+  }
+
+  // Lot 4 « les ceintures » : la cellule du tableau (« — » tant que rien
+  // n'est reçu), et la phrase de la fiche de l'élève.
+  function celluleCeinture(lu) {
+    const td = document.createElement("td");
+    const c = lu && lu.ceintures;
+    if (!lu || !lu.commence || !c || !CALCUL_CORE || !CALCUL_CORE.CEINTURES) { td.textContent = "—"; td.className = "sans"; return td; }
+    const porte = Math.max(0, Math.min(4, Math.floor(Number(c.porte) || 0)));
+    const barrettes = Math.max(0, Math.min(3, Math.floor(Number(c.barrettes) || 0)));
+    const bloc = document.createElement("span");
+    bloc.className = "dc-ceinture";
+    const dessin = document.createElement("span");
+    dessin.className = "dc-ceinture-dessin";
+    dessin.replaceChildren(CALCUL_CORE.elementCeinture(document, porte, {barrettes, taille: 34}));
+    const nom = document.createElement("span");
+    nom.textContent = CALCUL_CORE.CEINTURES[porte].court;
+    bloc.append(dessin, nom);
+    td.append(bloc);
+    td.title = texteCeinture(c);
+    return td;
+  }
+  function texteCeinture(c) {
+    if (!c || !CALCUL_CORE || !CALCUL_CORE.CEINTURES) return "";
+    const porte = Math.max(0, Math.min(4, Math.floor(Number(c.porte) || 0)));
+    const date = porte && Array.isArray(c.dates) ? jourCourtCalcul(c.dates[porte - 1]) : "";
+    const barrettes = Math.max(0, Math.min(3, Math.floor(Number(c.barrettes) || 0)));
+    return [CALCUL_CORE.CEINTURES[porte].nom + (date ? `, gagnée le ${date}` : ""),
+      c.prochaine && barrettes ? `${barrettes} barrette${barrettes > 1 ? "s" : ""} vers la ${CALCUL_CORE.CEINTURES[c.prochaine].nom.toLowerCase()}` : ""].filter(Boolean).join(" · ");
   }
 
   // « bases », « CM1 », « CM2 », « 6e » : le palier, en un mot, sous le compte.
@@ -6535,7 +6577,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!lu.lisible || !lu.commence) { cellule.append(paragrapheVide("Rien reçu pour l’instant.")); return cellule; }
     const revoir = (lu.revoir || []).length;
     const ouvert = lu.ouvert || {sues: 0, entrees: 0, total: 0, paliers: []};
+    const ceinture = lu.ceintures && CALCUL_CORE.CEINTURES ? lu.ceintures : null;
+    const ceintureDetail = ceinture ? texteCeinture(ceinture).split(" · ") : [];
     cellule.append(ficheChiffres([
+      ...(ceinture ? [["Ceinture", CALCUL_CORE.CEINTURES[Math.max(0, Math.min(4, Math.floor(Number(ceinture.porte) || 0)))].court,
+        [ceintureDetail[0].replace(/^Ceinture \S+(, )?/, ""), (ceintureDetail[1] || "").replace(/ vers la .*$/, "")].filter(Boolean).join(" · ")]] : []),
       ["Compétences sues", `${ouvert.sues} / ${ouvert.total}`, `${ouvert.entrees - ouvert.sues} en route · ${ouvert.total} ouverte${ouvert.total > 1 ? "s" : ""} sur ${lu.total}`],
       ["À revoir", String(revoir), lu.aVoir ? `dont ${lu.aVoir} à voir en classe` : ""],
       ["Séances · 4 semaines", String(lu.seances.quatreSemaines), lu.seances.semaine ? `${lu.seances.semaine} cette semaine` : "aucune cette semaine"],
