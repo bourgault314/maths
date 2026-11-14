@@ -188,12 +188,12 @@ async function scenarioPremierJour(navigateur, base, taille) {
   await capture(page, taille, "04-a-toi-erreur");
   await page.getByText("Suivant").click();
   let i = 1;
-  while (await page.locator(".retenir").count() === 0 && i < 25) {
+  while (await page.locator(".retenir, .cahier").count() === 0 && i < 25) {
     memesPlaces(avant, await places(page), `${ou}, question ${i + 1}`);
     await repondre(page, serie[i]);
     i += 1;
   }
-  assert.ok(await page.locator(".retenir").count(), "À retenir après « À toi »");
+  assert.ok(await page.locator(".retenir, .cahier").count(), "À retenir après « À toi »");
   await tientEntier(page, `${ou}, à retenir`);
   assert.equal(await page.getByText("Je valide s'ouvre demain, après ton échauffement.").count(), 1);
   await capture(page, taille, "05-a-retenir");
@@ -290,7 +290,7 @@ async function scenarioLendemain(navigateur, base, taille) {
   await page.locator(".tete-ecran .rond").click();
   await page.getByText("Mon carnet").click();
   await tientEntier(page, `${ou}, carnet`);
-  assert.equal(await page.locator(".carnet .carte-rep").count(), 9);
+  assert.equal(await page.locator(".carnet .carte-rep").count(), 10); // lot A2 ter : la règle (1 mm) en plus
   await capture(page, taille, "12-carnet");
   await page.locator(".tete-ecran .rond").click();
   await page.getByText("Comment ça marche ?").click();
@@ -327,8 +327,14 @@ async function scenarioProf(navigateur, base, taille) {
   // deux poignées vont ensemble, les zéros remplissent, rien ne bouge autour.
   await glisserPoignee(page, page.locator(".gu2-tete button:not([disabled])").last());
   assert.equal(await page.locator(".gu2-tete button:not([disabled])").last().evaluate(b => b.classList.contains("on")), true, `${ou} : la poignée est arrivée`);
-  const [x1, x2] = await page.evaluate(() => [...document.querySelectorAll(".gu2-pointe")].map(e => Math.round(e.getBoundingClientRect().x)));
-  assert.equal(x1, x2, `${ou} : les deux poignées glissent ensemble`);
+  // Lot A2 ter : au téléphone, une seule poignée (« L'unité de mesure ») ;
+  // le chiffre des unités est marqué dans la même colonne.
+  const pointes = await page.evaluate(() => [...document.querySelectorAll(".gu2-pointe")].filter(e => getComputedStyle(e).display !== "none").map(e => Math.round(e.getBoundingClientRect().x)));
+  if (pointes.length === 2) assert.equal(pointes[0], pointes[1], `${ou} : les deux poignées glissent ensemble`);
+  else {
+    const [xOn, xUnite] = await page.evaluate(() => [".gu2-tete button.on", ".gu2-chiffres span.unite"].map(s => Math.round(document.querySelector(s).getBoundingClientRect().x)));
+    assert.equal(xOn, xUnite, `${ou} : le chiffre des unités est marqué sous l'unité`);
+  }
   memesPlaces(avant, await places(page), `${ou}, glisse-unité`);
   await tientEntier(page, `${ou}, à toi`);
   assert.equal(await page.evaluate(() => localStorage.getItem("mathsgo-defi-conversions-parcours")), null, "rien n'est enregistré");
@@ -351,6 +357,13 @@ async function scenarioConcret(navigateur, base, taille) {
   // Les relations des bases : la règle, le verre doseur, la balance.
   await choisir("Les relations des bases");
   await page.getByText("J'apprends : on te montre").click();
+  // Lot A2 ter : « Suivant » sans avoir touché le mètre joue le geste (le
+  // mètre s'ouvre tout seul, la case se remplit) ; le second appui passe au
+  // temps suivant.
+  await page.getByText("Suivant").click();
+  await page.waitForTimeout(1200);
+  await caseRemplie("100");
+  assert.equal(await page.locator(".dessin.verre").count(), 0, "on reste sur le mètre");
   await page.getByText("Suivant").click();
   assert.equal(await page.locator(".dessin.verre").count(), 1, "le verre doseur");
   await tientEntier(page, `${ou}, verre doseur`);

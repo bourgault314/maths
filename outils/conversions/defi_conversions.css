@@ -331,7 +331,7 @@ table.serie { border-collapse: collapse; width: 100%; font-size: .84375rem; }
 table.serie td { border-bottom: .0625rem solid #e3ebf0; padding: .3125rem .1875rem; font-weight: 700; vertical-align: middle; }
 table.serie td.n { color: var(--muted); width: 1.25rem; text-align: right; padding-right: .375rem; }
 table.serie td.dg { font-size: .6875rem; font-weight: 900; color: var(--teal); width: 1.5rem; }
-table.serie td.rp { text-align: right; font-weight: 900; color: var(--green); white-space: nowrap; }
+table.serie td.rp { text-align: right; font-weight: 900; color: var(--green); white-space: normal; width: 34%; }
 table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
 .retrouver { display: flex; gap: .375rem; align-items: center; font-size: .8125rem; font-weight: 700; color: var(--muted); flex-wrap: wrap; }
 .retrouver input { width: 5.625rem; font: inherit; font-weight: 800; padding: .25rem .375rem; border: .125rem solid #c9dbe7; border-radius: .5rem; }
@@ -343,7 +343,9 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
 .aide-texte .prof { border: .125rem solid #c9b2e3; background: #faf6fe; border-radius: .875rem; padding: .625rem .75rem; margin-top: .5rem; }
 .aide-texte .prof h3 { color: var(--violet); margin-top: 0; }
 
-@media (max-height: 700px) {
+/* Peu haut : 700 px et moins, et au téléphone jusqu'à 800 px (lot A2 ter :
+   le grand iPhone, 430 × 740, n'entrait pas dans l'ancienne limite). */
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) {
   .cadre { gap: .4375rem; padding: .625rem; }
   .bseance { margin: -.625rem -.625rem 0; padding: .25rem .5rem; }
   .bas { height: 11rem; }
@@ -492,6 +494,119 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
    ligne, pour tenir dans la zone des réponses au petit téléphone. */
 .choix.quatre { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 .choix.quatre button { font-size: 1.125rem; max-height: none; padding: .375rem; display: flex; align-items: center; justify-content: center; }
+
+/* ------------------------------------------------------- lot A2 ter
+   Le palier 1 au doigt, sur les vrais téléphones (l'essai de Gwenaël sur
+   son iPhone, le 13/11). Aucune règle ne vise un téléphone en particulier :
+   l'appli s'adapte à la hauteur qu'elle a.
+   - L'aide se réduit d'un seul tenant si la zone manque de place (le script
+     pose .zone-in et son échelle) : jamais sous l'étiquette, jamais sous les
+     réponses.
+   - Pendant une séance, quand l'écran est peu haut, la ligne du logo laisse
+     sa place (le rond du bandeau ramène à l'accueil).
+   - Plus bas encore, le pavé passe sur deux rangées de six touches.
+   - Au téléphone, le glisse-unité garde la seule poignée « L'unité de
+     mesure » ; le chiffre des unités est marqué d'un trait. */
+.zone .ligne-toi { display: flex; align-items: center; justify-content: center; gap: .5rem; }
+.zone .ligne-toi .emoji-calme { font-size: 1.75rem; }
+.marche-nom { font-weight: 900; font-size: 1rem; text-align: center; margin-top: .25rem; line-height: 1.2; }
+.zone-in { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; width: 100%; flex: 0 0 auto;
+  transform-origin: top center; }
+.zone.panneau .zone-in, .zone.montre .zone-in { gap: .375rem; }
+.zone.montre { flex: 0 1 auto; min-height: 0; }
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) {
+  .app[data-forme="seance"] .hautv { display: none; }
+  .app[data-forme="seance"] .cadre { margin-top: .5rem; }
+  /* L'accueil, avec une police plus large que Inter (Safari sans Inter) :
+     « Tu connais déjà ? » passe sur une ligne de plus, les blocs se
+     rapprochent pour que les liens du bas restent dans le cadre. */
+  .cadre[data-forme="accueil"] { gap: .3125rem; }
+}
+@media (max-height: 640px) {
+  /* Le pavé : deux rangées de six touches (1 2 3 4 5 , / 6 7 8 9 0 ⌫). */
+  .bas { height: 8.25rem; }
+  .cadre.bas-court .bas { height: 6.75rem; }
+  .pave4 { grid-template-columns: repeat(6, 1fr); grid-auto-rows: minmax(0, 1fr); }
+  .pave4 button:nth-child(-n+5) { order: 1; }
+  .pave4 button:nth-child(10) { order: 2; }
+  .pave4 button:nth-child(n+6):nth-child(-n+9) { order: 3; }
+  .pave4 button:nth-child(11) { order: 4; }
+  .pave4 button:nth-child(12) { order: 5; }
+  /* Trois réponses côte à côte, quatre en deux rangées. */
+  .choix:not(.quatre) { flex-direction: row; align-items: center; }
+  .choix:not(.quatre) button { height: 100%; max-height: 4.375rem; padding: 0 .25rem; }
+  .choix button { font-size: 1.1875rem; }
+  .choix { gap: .375rem; }
+  /* Relier : les objets en haut, les mesures dessous. */
+  .assoc { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); grid-auto-flow: column; gap: .3125rem; }
+  .assoc .obj { flex-direction: column; justify-content: center; text-align: center; gap: .125rem; font-size: .75rem; line-height: 1.1; padding: .1875rem; position: relative; }
+  .assoc .obj .lettre { position: absolute; top: .1875rem; left: .1875rem; flex-basis: auto; width: 1.125rem; height: 1.125rem; font-size: .6875rem; }
+  .assoc .obj .emoji { font-size: 1.125rem; }
+  .assoc .mes { font-size: 1.0625rem; padding: .125rem .25rem; gap: .25rem; }
+  .assoc .mes .lettre { flex-basis: 1.125rem; height: 1.125rem; font-size: .6875rem; }
+  .ranger { gap: .3125rem; }
+  .ranger button { font-size: 1.125rem; }
+  .esc { height: 2.75rem; }
+  .zone.info.fixe .marche-nom { font-size: .875rem; }
+  .q .phrase-t { font-size: 1.125rem; line-height: 1.2; }
+  .cadre[data-forme="fin"] { gap: .3125rem; }
+  /* L'accueil tient entier : les tuiles et les médailles se font plus
+     basses (au petit iPhone, Mon parcours et Mon carnet passaient sous le
+     bord du cadre, déjà sur main). */
+  .cadre[data-forme="accueil"] { gap: .25rem; }
+  .carte.bleue { padding: .5rem .75rem; }
+  .carte.bleue h2 { font-size: 1.25rem; margin: 0; }
+  .etape3 div em { font-size: 1rem; }
+  .cadre[data-forme="accueil"] .carte:not(.bleue) { padding-top: .375rem !important; padding-bottom: .375rem !important; }
+  .carte.bleue .btn { margin-top: .375rem; padding: .5rem; }
+  .etape3 { margin: .3125rem 0 0; }
+  .etape3 div { padding: .1875rem .125rem; }
+  .test-carte { padding: .3125rem .625rem; }
+  .med-row { margin: .25rem 0 0; }
+  .med-row .med { width: 1.875rem !important; height: 1.875rem !important; font-size: .8125rem !important; }
+  .tuile { padding: .3125rem .5rem; gap: .0625rem; }
+  .tuile .ic { font-size: 1.25rem; line-height: 1.5rem; height: 1.5rem; }
+  .tuile .ic svg { width: 1.625rem; height: 1.5rem; }
+  .tuile b { font-size: 1rem; }
+  .test-carte .petit { font-size: .75rem; line-height: 1.2; display: block; }
+  .acc-palier .info b { font-size: .9375rem; }
+}
+/* Le glisse-unité au téléphone : une seule poignée, en haut. */
+@media (max-width: 600px), (max-height: 700px) {
+  .gu2-poignee.dessous, .gu2-pointe.dessous { display: none; }
+  .gu2-piste { padding-bottom: .375rem; }
+}
+.gu2-chiffres span.unite { box-shadow: inset 0 -.3125rem 0 var(--acc-f); }
+/* Peu haut, la relation de l'outil monte à côté de l'étiquette : la zone
+   lui laisse toute sa hauteur (elle touchait la poignée du glisse-unité). */
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) {
+  .zone:has(> .rel.petite:not(.libre)) { padding-top: 2.125rem; }
+}
+/* Il se glisse au doigt partout sur sa piste (pas seulement par la
+   poignée) : le navigateur ne fait rien défiler dessous. */
+.gu2-piste { touch-action: none; cursor: grab; }
+.gu2.glisse .gu2-piste { cursor: grabbing; }
+.gu2-legende { font-size: .78125rem; font-weight: 700; color: var(--muted); text-align: center; line-height: 1.25; }
+.gu2.fige { pointer-events: none; }
+/* Le bandeau des écrans à titre et l'accueil : le rond de la flèche et le
+   rond du palier ont la même taille et la même place (Gwenaël, le 13/11). */
+.hautv { height: 3.25rem; }
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) { .hautv { height: 3rem; min-height: 0; } }
+.tete-ecran { align-items: flex-start; }
+.tete-ecran b { align-self: center; }
+.acc-palier { align-items: flex-start; }
+.acc-palier .med { width: 2.625rem !important; height: 2.625rem !important; }
+/* Après une erreur : le pourquoi, la suite et les ronds à la place des
+   réponses (comme à l'échauffement). */
+.zone.panneau.pourquoi { padding: .5rem .625rem; gap: .375rem; }
+.zone.panneau.pourquoi > .zone-in { flex: 1 1 auto; justify-content: space-around; }
+.zone.panneau.pourquoi .verd { padding: .375rem .625rem; }
+/* La correction écrite d'une question à choix, à relier ou à ranger : à la
+   taille d'une phrase, pas d'un grand nombre. */
+.zone .grosse.petite-grosse { font-size: 1.125rem; line-height: 1.35; }
+.reponse-bonne { display: flex; flex-direction: column; align-items: center; gap: .25rem; align-self: stretch; }
+/* « Suivant » sans le geste : le geste se joue tout seul. */
+.zone.joue .a-toucher, .zone.joue .dessin { cursor: default; }
 
 /* ------------------------------------------------------- un grand écran
    Ordinateur, projection, tablette couchée : un vrai cadre large. Tout

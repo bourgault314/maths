@@ -58,6 +58,21 @@
     return bloc;
   }
 
+  // Lot A2 ter : « Suivant » sans avoir fait le geste de On te montre le
+  // joue à la place de l'élève (Gwenaël, le 13/11 : « Est-ce que l'élève va
+  // penser à toucher ? »). Chaque dessin à toucher rend sa fonction `jouer` :
+  // elle refait les touchers un par un, à un rythme qu'on voit.
+  function enChaine(un, encore, pas) {
+    return () => {
+      const suite = () => {
+        if (!encore()) return;
+        un();
+        root.setTimeout(suite, pas);
+      };
+      suite();
+    };
+  }
+
   // ------------------------------------------------------ la carte d'un repère
   function carteRepere(code, {grande = false} = {}) {
     const r = carte().repere(code);
@@ -137,6 +152,7 @@
       if (g && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); toucher(Number(g.getAttribute("data-i"))); }
     });
     dessiner();
+    return enChaine(() => toucher(etat.findIndex(x => x !== !aide.regrouper)), () => etat.some(x => x !== !aide.regrouper), 380);
   }
 
   // ------------------------------------------------------- le verre doseur
@@ -193,6 +209,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return toucher;
   }
 
   // ------------------------------------------------------------- la balance
@@ -258,6 +275,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return enChaine(toucher, () => poses < total, 260);
   }
 
   // -------------------------------------------------------------- l'horloge
@@ -328,6 +346,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return enChaine(toucher, () => minutes < fin, 520);
   }
 
   // ------------------------------------------------- les paquets (l'image)
@@ -361,6 +380,7 @@
     const boite = el("div", "heure");
     zone.appendChild(boite);
     let coupee = !touche;
+    let jouer = null;
     function dessiner() {
       boite.textContent = "";
       const total = heures * 60 + plus;
@@ -401,12 +421,14 @@
         b.setAttribute("role", "button");
         b.tabIndex = 0;
         boite.appendChild(el("div", "note", "touche la barre"));
-        const couper = () => { coupee = true; dessiner(); fini(); };
+        const couper = () => { if (coupee) return; coupee = true; dessiner(); fini(); };
+        jouer = couper;
         b.addEventListener("click", couper);
         b.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); couper(); } });
       }
     }
     dessiner();
+    return () => { if (jouer) jouer(); };
   }
 
   // ----------------------------------------------------------- le schéma en barres
@@ -473,14 +495,16 @@
     boite.appendChild(bouton);
     boite.appendChild(table);
     zone.appendChild(boite);
-    bouton.addEventListener("click", () => {
+    const jouer = () => {
       if (bouton.disabled) return;
       bouton.disabled = true;
       if (sens === "×") place(bas, chiffres, rangs, rangs, true);
       else place(bas, chiffres.slice(0, Math.max(1, chiffres.length - rangs)), 0, 0, true);
       bas.classList.add("glisse");
       fini();
-    });
+    };
+    bouton.addEventListener("click", jouer);
+    return jouer;
   }
 
   // ----------------------------------------------------------- le glisse-unité
@@ -495,7 +519,7 @@
   // entre les chiffres et la poignée, comme chez lui. Il n'écrit jamais la
   // mesure trouvée : c'est l'élève qui lit les chiffres.
   const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"]};
-  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true}, arrivee = () => {}) {
+  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false}, arrivee = () => {}) {
     const G = gen();
     const [entier, decimales = ""] = String(valeur).replace(/\s/g, "").replace(".", ",").split(",");
     const avant = entier.replace(/\D/g, "").replace(/^0+(?=\d)/, "").split("");
@@ -520,7 +544,7 @@
     let fini = false;
     const [acc, accF] = THEMES_GLISSE[grandeur] || THEMES_GLISSE.longueur;
 
-    const boite = el("div", "gu2");
+    const boite = el("div", `gu2${fige ? " fige" : ""}`);
     boite.style.setProperty("--acc", acc);
     boite.style.setProperty("--acc-f", accF);
     boite.style.setProperty("--n", String(n));
@@ -560,7 +584,7 @@
         b.appendChild(pin);
         b.title = "L'unité de départ";
       }
-      b.addEventListener("click", () => aller(i));
+      b.addEventListener("click", () => { if (!fige) aller(i); });
       tete.appendChild(b);
       return b;
     });
@@ -616,46 +640,76 @@
       });
       return meilleur;
     }
-    // Glisser une poignée : elle suit le doigt, l'autre aussi ; la colonne
-    // sous le doigt devient l'unité (les zéros suivent) ; au lâcher, elle se
-    // pose pile sur sa colonne.
-    // Le glissé part de la colonne où est la poignée (une poignée du bord,
-    // décalée pour rester dans la piste, ne saute pas sous le doigt).
+    // Glisser : la poignée suit le doigt, et la colonne sous le doigt
+    // devient l'unité (les zéros suivent) ; au lâcher, elle se pose pile
+    // sur sa colonne.
+    // Lot A2 ter (l'essai de Gwenaël sur son iPhone, le 13/11 : « le truc ne
+    // glisse pas ») : on glisse PARTOUT sur la piste, pas seulement par la
+    // poignée — le doigt d'un élève se pose sur le cadre de couleur, sur les
+    // chiffres ou sur les unités. Toute la piste a touch-action: none (le
+    // navigateur ne fait rien défiler dessous), et le toucher sans glisser
+    // pose l'unité sous le doigt.
+    // Parti de la poignée, le glissé part de la colonne où elle est (une
+    // poignée du bord, décalée pour rester dans la piste, ne saute pas sous
+    // le doigt) ; parti d'ailleurs, il suit la colonne sous le doigt.
     let glisse = null;
-    let depart = {x: 0, pos: 0};
-    const position = ev => depart.pos + (ev.clientX - depart.x) / (piste.getBoundingClientRect().width || 1);
-    [haut, bas].forEach(p => {
-      p.addEventListener("pointerdown", ev => {
-        ev.preventDefault();
-        glisse = ev.pointerId;
-        depart = {x: ev.clientX, pos: (cible + 0.5) / n};
-        try { p.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ }
-        boite.classList.add("glisse");
-        haut.focus({preventScroll: true});
-      });
-      p.addEventListener("pointermove", ev => {
-        if (glisse !== ev.pointerId) return;
-        const pos = position(ev);
-        const i = plusProche(pos);
-        if (i !== cible) aller(i);
-        placer(pos);
-      });
-      const lacher = ev => {
-        if (glisse !== ev.pointerId) return;
-        glisse = null;
-        boite.classList.remove("glisse");
-        aller(plusProche(position(ev)));
-        dessiner();
-      };
-      p.addEventListener("pointerup", lacher);
-      p.addEventListener("pointercancel", lacher);
-      p.addEventListener("keydown", ev => {
-        const pas = ev.key === "ArrowLeft" ? -1 : ev.key === "ArrowRight" ? 1 : 0;
-        if (!pas) return;
-        ev.preventDefault();
-        for (let i = cible + pas; i >= 0 && i < n; i += pas) if (colonnes[i]) { aller(i); break; }
-      });
+    let depart = {x: 0, pos: 0, relatif: false, bouge: false};
+    const largeurPiste = () => piste.getBoundingClientRect().width || 1;
+    const position = ev => (depart.relatif ? depart.pos + (ev.clientX - depart.x) / largeurPiste()
+      : (ev.clientX - piste.getBoundingClientRect().left) / largeurPiste());
+    piste.addEventListener("pointerdown", ev => {
+      if (fige || (ev.pointerType === "mouse" && ev.button !== 0)) return;
+      ev.preventDefault();
+      glisse = ev.pointerId;
+      const parPoignee = Boolean(ev.target.closest && ev.target.closest(".gu2-poignee"));
+      depart = {x: ev.clientX, pos: (cible + 0.5) / n, relatif: parPoignee, bouge: false};
+      try { piste.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ }
+      boite.classList.add("glisse");
+      haut.focus({preventScroll: true});
     });
+    piste.addEventListener("pointermove", ev => {
+      if (glisse !== ev.pointerId) return;
+      if (!depart.bouge && Math.abs(ev.clientX - depart.x) < 6) return;
+      depart.bouge = true;
+      const pos = position(ev);
+      const i = plusProche(pos);
+      if (i !== cible) aller(i);
+      placer(pos);
+    });
+    const lacher = ev => {
+      if (glisse !== ev.pointerId) return;
+      glisse = null;
+      boite.classList.remove("glisse");
+      // Un toucher sans glisser : l'unité sous le doigt (rien si c'était la poignée).
+      if (depart.bouge || !depart.relatif) aller(plusProche(position(ev)));
+      dessiner();
+    };
+    piste.addEventListener("pointerup", lacher);
+    piste.addEventListener("pointercancel", lacher);
+    // Safari (iPhone) : sans cela, un glissé un peu vertical fait défiler
+    // la page au lieu de la poignée.
+    piste.addEventListener("touchmove", ev => { if (glisse !== null && ev.cancelable) ev.preventDefault(); }, {passive: false});
+    haut.addEventListener("keydown", ev => {
+      const pas = ev.key === "ArrowLeft" ? -1 : ev.key === "ArrowRight" ? 1 : 0;
+      if (!pas || fige) return;
+      ev.preventDefault();
+      for (let i = cible + pas; i >= 0 && i < n; i += pas) if (colonnes[i]) { aller(i); break; }
+    });
+    // Le glisse-unité qui se glisse tout seul, colonne par colonne, jusqu'à
+    // l'unité `vers` (la correction de « À toi », comme le glisse-unité animé
+    // de l'exerciseur ; « Suivant » sans le geste dans On te montre).
+    // `ensuite()` quand il est arrivé.
+    boite.animer = (versU, {pas = 420, ensuite = () => {}} = {}) => {
+      const j = colonnes.indexOf(versU);
+      if (j < 0) { ensuite(); return; }
+      const avance = () => {
+        if (!boite.isConnected) return;
+        if (cible === j) { ensuite(); return; }
+        aller(cible + (j > cible ? 1 : -1));
+        root.setTimeout(avance, pas);
+      };
+      root.setTimeout(avance, pas);
+    };
     // À l'arrivée de l'écran, les poignées sont posées d'un coup (sans
     // glisser depuis le milieu) ; les glissés suivants sont animés.
     boite.classList.add("pose");
@@ -668,28 +722,43 @@
   }
 
   // --------------------------------------------- les repères des unités en jeu
+  // Lot A2 ter (Gwenaël, le 13/11 : « Je ne sais pas pourquoi on me parle de
+  // la poignée de porte (1 m), je ne l'ai jamais vue ») : chaque repère cité
+  // ici est un repère que l'élève a déjà vu au palier 1 — ses 10 premiers
+  // repères (R1, la règle comprise), la récréation de « Quelle unité
+  // choisir ? », « un grand pas » de « On te montre » — ou se déduit d'eux
+  // (4 récréations, trois canettes, le dixième d'une brique de lait). Plus de
+  // petit cube, de tour de piste, de cuillère à café ni de dessin animé :
+  // l'élève ne les rencontre qu'au palier 2.
   const REFERENCES = {
     mm: ["📏", "1 mm : la plus petite graduation de la règle"],
-    cm: ["🧊", "1 cm : le côté du petit cube de la classe"],
+    cm: ["📄", "une feuille A4 : 21 cm de large"],
     m: ["🚶", "1 m : un grand pas"],
-    km: ["🏃", "1 km : deux tours et demi de piste"],
-    g: ["📄", "1 g : bien moins qu'une feuille A4 (5 g)"],
-    kg: ["🍙", "1 kg : un paquet de riz"],
-    t: ["🚗", "1 t : une voiture"],
-    cL: ["🥄", "1 cL : deux cuillères à café"],
+    km: ["🛣️", "de Saint-Pierre à Saint-Denis : environ 80 km"],
+    g: ["🪙", "une pièce de 1 € : 7,5 g"],
+    kg: ["🍙", "un paquet de riz : 1 kg"],
+    t: ["🚗", "une voiture : environ 1 t"],
+    cL: ["🥤", "une canette : 33 cL"],
     dL: ["🥛", "1 dL : le dixième d'une brique de lait"],
-    L: ["🥛", "1 L : une brique de lait"],
-    // Les durées (lot A2 bis)
-    min: ["🧼", "1 min : le temps de bien se laver les mains"],
-    h: ["📺", "1 h : un long dessin animé"],
-    jours: ["🌞", "1 jour : du matin au matin suivant, 24 h"]
+    L: ["🥛", "une brique de lait : 1 L"],
+    // Les durées (lot A2 bis ; lot A2 ter : la récréation de « On te montre »)
+    min: ["🔔", "la récréation : 15 min"],
+    h: ["🔔", "1 h : 4 récréations de 15 min"],
+    jours: ["🌞", "1 jour : 24 h, du matin au matin suivant"]
   };
   // Quand l'objet de la question EST la référence d'une unité, une autre
-  // référence (sinon l'aide donnerait la réponse).
+  // référence, vue elle aussi au palier 1 (sinon l'aide donnerait la réponse).
   const AUTRES = {
-    "c3": {L: ["🥤", "1 L : trois canettes, un peu plus"]},
-    "m4": {kg: ["💧", "1 kg : un litre d'eau"]},
-    "m6": {t: ["🍙", "1 t : 1 000 paquets de riz"]}
+    l1: {mm: ["📏", "mm : pour les toutes petites longueurs"]},
+    l3: {cm: ["📏", "1 cm : de 0 à 1 sur la règle"]},
+    l4: {m: ["🚶", "1 m : un grand pas"]},
+    l7: {km: ["🚗", "km : pour les longs trajets en voiture"]},
+    m3: {g: ["🪶", "g : pour les objets très légers"]},
+    m4: {kg: ["💧", "un pack de 6 bouteilles d'eau : environ 9 kg"]},
+    m5: {kg: ["🍙", "un paquet de riz : 1 kg"]},
+    m6: {t: ["🍙", "1 t : 1 000 paquets de riz"]},
+    c2: {cL: ["🥛", "cL : pour les petites quantités de liquide"]},
+    c3: {L: ["🥤", "1 L : trois canettes, un peu plus"]}
   };
   function reperesUnites(zone, question) {
     const G = gen();
@@ -782,7 +851,7 @@
       d.setAttribute("tabindex", "0");
       boite.append(d, somme);
       somme.textContent = vues.size ? [...vues].sort().map(i => `${aide.pieces[i]}${NB}c`).join(" + ") : "";
-      const toucher = i => {
+      toucherP = i => {
         if (i === undefined) i = euros.find(k => !vues.has(k));
         if (i === undefined || vues.has(i) || !euros.includes(i)) return;
         vues.add(i);
@@ -791,11 +860,13 @@
       };
       d.addEventListener("click", ev => {
         const g = ev.target.closest && ev.target.closest("g[data-i]");
-        toucher(g ? Number(g.getAttribute("data-i")) : undefined);
+        toucherP(g ? Number(g.getAttribute("data-i")) : undefined);
       });
-      d.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+      d.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucherP(); } });
     }
+    let toucherP = () => {};
     dessiner();
+    return enChaine(() => toucherP(), () => vues.size < euros.length, 480);
   }
   // On te montre : la pièce de 1 € qu'on échange contre 100 pièces de 1 c
   // (10 rangées de 10).
@@ -825,6 +896,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return toucher;
   }
   // L'étiquette d'un prix : « 2,50 € ». Touchée, elle dit ce que valent les
   // chiffres avant et après la virgule. `muette` : sans les valeurs (l'image
@@ -865,6 +937,7 @@
       dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     }
     dessiner();
+    return toucher;
   }
   // L'outil de « À toi » : 1 € = 100 c, et les 100 pièces de 1 c.
   function monnaie(zone) {
@@ -950,6 +1023,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return enChaine(toucher, () => t < aide.arrivee, 600);
   }
   // L'image de « À toi » : les deux horloges de la question ; celle qu'on
   // cherche a un « ? ».
@@ -1067,6 +1141,7 @@
     dessin.addEventListener("click", toucher);
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     dessiner();
+    return enChaine(toucher, () => faits < aide.bonds.length, 750);
   }
   // L'outil de « À toi » : l'axe, les heures pile marquées, sans les bonds
   // (c'est à l'élève de les faire). Pour une heure cherchée : la flèche de la
@@ -1123,9 +1198,11 @@
 
   // ============================================================ les entrées
 
+  // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
+  // n'y a pas de geste à faire).
   function montrer(zone, aide, {fini = () => {}} = {}) {
     const f = () => fini();
-    if (aide.type === "repere") { zone.appendChild(carteRepere(aide.repere, {grande: true})); f(); return; }
+    if (aide.type === "repere") { zone.appendChild(carteRepere(aide.repere, {grande: true})); f(); return null; }
     if (aide.type === "unites") {
       const liste = el("div", "refs");
       aide.unites.forEach(u => {
@@ -1137,37 +1214,55 @@
       });
       zone.appendChild(liste);
       f();
-      return;
+      return null;
     }
-    if (aide.type === "barres") { barres(zone, aide, f); return; }
-    if (aide.type === "verre") { verre(zone, aide, f); return; }
-    if (aide.type === "balance") { balance(zone, aide, f); return; }
-    if (aide.type === "horloge") { horloge(zone, aide, f); return; }
-    if (aide.type === "glisse-nombre") { glisseNombre(zone, aide, f); return; }
+    if (aide.type === "barres") return barres(zone, aide, f);
+    if (aide.type === "verre") return verre(zone, aide, f);
+    if (aide.type === "balance") return balance(zone, aide, f);
+    if (aide.type === "horloge") return horloge(zone, aide, f);
+    if (aide.type === "glisse-nombre") return glisseNombre(zone, aide, f);
     if (aide.type === "glisse-unite") {
-      glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
-      zone.appendChild(el("div", "note", "Fais glisser une poignée, ou touche une unité."));
-      return;
+      const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
+      zone.appendChild(legendeGlisse());
+      return () => g.animer(aide.vers);
     }
     if (aide.type === "heure") {
-      barreHeure(zone, {heures: aide.heures, parts: aide.parts, verte: aide.verte, compte: aide.compte || 0, plus: aide.plus || 0,
-        touche: aide.parts > 1 && !aide.compte}, f);
-      if (!(aide.parts > 1 && !aide.compte)) f();
-      return;
+      const touche = aide.parts > 1 && !aide.compte;
+      const jouer = barreHeure(zone, {heures: aide.heures, parts: aide.parts, verte: aide.verte, compte: aide.compte || 0, plus: aide.plus || 0, touche}, f);
+      if (!touche) { f(); return null; }
+      return jouer;
     }
     if (aide.type === "schema") {
       schema(zone, {tout: aide.tout, parts: aide.parts, poids: aide.proportions || aide.parts.map(() => 1)});
       f();
-      return;
+      return null;
     }
-    if (aide.type === "phrase") { zone.appendChild(lignes("rel", aide.lignes.join("\n"))); f(); }
+    if (aide.type === "phrase") { zone.appendChild(lignes("rel", aide.lignes.join("\n"))); f(); return null; }
     // Lot A2 bis
-    if (aide.type === "echange") { echange(zone, aide, f); return; }
-    if (aide.type === "pieces") { piecesMontre(zone, aide, f); return; }
-    if (aide.type === "etiquette") { etiquette(zone, aide, f); return; }
-    if (aide.type === "horloges") { horloges(zone, aide, f); return; }
-    if (aide.type === "axe") { axe(zone, aide, f); return; }
+    if (aide.type === "echange") return echange(zone, aide, f);
+    if (aide.type === "pieces") return piecesMontre(zone, aide, f);
+    if (aide.type === "etiquette") return etiquette(zone, aide, f);
+    if (aide.type === "horloges") return horloges(zone, aide, f);
+    if (aide.type === "axe") return axe(zone, aide, f);
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
+    return null;
+  }
+  // La correction après une erreur (lot A2 ter, comme le glisse-unité animé
+  // de l'exerciseur) : le glisse-unité de la question, qu'on ne touche pas,
+  // glisse tout seul de l'unité de départ à l'unité de la réponse ; les
+  // chiffres et les zéros se placent. `ensuite()` quand il est arrivé (la
+  // réponse s'écrit alors). Rend false si la question n'a pas de glisse-unité.
+  function correctionGlisse(zone, question, {ensuite = () => {}} = {}) {
+    const g = question.glisse;
+    if (!g) return false;
+    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true});
+    gu.animer(g.vers, {pas: 380, ensuite});
+    return true;
+  }
+  // La ligne sous le glisse-unité (lot A2 ter : « Pourquoi il est fixé
+  // là ? », Gwenaël sur son iPhone) : la punaise marque l'unité de départ.
+  function legendeGlisse() {
+    return el("div", "gu2-legende", "📌 l'unité de départ");
   }
 
   function outil(zone, question, {fini = () => {}} = {}) {
@@ -1176,6 +1271,7 @@
       const g = question.glisse;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
+      else zone.appendChild(legendeGlisse());
       return;
     }
     if (question.outil === "barre-heure" && question.heure) {
@@ -1252,6 +1348,6 @@
     else if (question.relation) zone.appendChild(el("div", "rel", question.relation));
   }
 
-  return Object.freeze({montrer, outil, image, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs});
 });

@@ -44,7 +44,9 @@ test("la carte v3 : 52 étapes, codes et rangs figés, paliers 10/16/8/6/7/5 vus
   assert.equal(P.RANG.A5, 52);
   assert.equal(CARTE.REPERES.length, 36);
   CARTE.REPERES.forEach(r => assert.match(r.code, P.MOTIF_REPERE));
-  assert.equal(CARTE.etape("R1").reperes.length, 9);
+  // Lot A2 ter : la règle (1 mm) rejoint « Mes premiers repères ».
+  assert.equal(CARTE.etape("R1").reperes.length, 10);
+  assert.equal(CARTE.repere("l1").etape, "R1");
 });
 
 test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", () => {
@@ -52,7 +54,11 @@ test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", 
   PRETS.forEach(code => {
     const e = CARTE.etape(code);
     assert.equal(e.apprends.length, 3, code);
-    assert.ok(e.retenir.length > 20, code);
+    // Lot A2 ter (choix de Gwenaël, le 13/11) : « À retenir » n'a plus de
+    // texte quand ses cases (relations, repères) disent tout ; sinon, une ou
+    // deux phrases courtes.
+    if (e.relations || e.reperes.length) assert.ok(e.retenir === "" || e.retenir.length < 160, code);
+    else assert.ok(e.retenir.length > 20 && e.retenir.length < 170 && e.retenir.split(/[.!?](?:\s|$)/).filter(x => x.trim()).length <= 3, `${code} : ${e.retenir.length} signes`);
     assert.ok(e.cahier, code);
   });
   assert.equal(CARTE.etape("P1").relations.length, 10, "10 relations des bases (1 m = 1 000 mm)");
@@ -142,7 +148,7 @@ test("Mon étape, le test, les médailles, le carnet", () => {
   assert.equal(P.monEtape(p, PRETS), "P1");
   assert.equal(p.etapes.R1[3], 2, "validée au test");
   const reps = {R1: CARTE.etape("R1").reperes};
-  assert.equal(P.carnet(p, reps).length, 9);
+  assert.equal(P.carnet(p, reps).length, 10);
   const paliers = {1: PRETS};
   assert.deepEqual(P.medailles(p, paliers), []);
   PRETS.forEach(c => { p = P.noterTest(p, c, J); });
