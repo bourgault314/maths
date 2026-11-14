@@ -17,6 +17,11 @@
 //      jusqu'à 10 000, pas de nombre à virgule (sauf le repère 7,5 g) ;
 //      les aides qui ne donnent pas la réponse ; l'image dessinée ; Oui et
 //      Non à parts égales.
+//  11. (lot 3b, carte v4) les nouvelles façons de demander : le repère au
+//      pavé, l'unité sans nombre, « combien de fois ? », relier les
+//      relations, les réponses au choix tirées des vraies erreurs (C1, C2,
+//      D1, D2, D7), l'heure en mots, les quarts d'heure, 0,85 €, 4,05 €,
+//      « 1 € et 120 c » ; les objets bornés ; aucune question deux fois.
 //  10. (lot A2 bis) les euros et les centimes, la durée entre deux heures,
 //      « associer », « ranger », « qu'est-ce qu'on mesure ? », « h, min ou
 //      jours » : réponses recalculées à part ; la bonne réponse à TOUTES
@@ -85,6 +90,8 @@ function attendue(q) {
       if (Array.isArray(q.reponse)) return [BigInt(Math.floor(t / 60)) * 1000n, BigInt(t % 60) * 1000n];
       return [BigInt(d.cherche === "duree" && t < 60 ? t : t / 60) * 1000n];
     }
+    // Lot 3b
+    case "heure-mots": return [BigInt(d.h) * 1000n, BigInt(d.m) * 1000n];
     case "pb": case "vrai": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
       const b = versUnite(lire(d.b), d.ub, d.vers);
@@ -134,19 +141,68 @@ function controlerQuestion(q, ou) {
       const donnee = (Array.isArray(q.reponse) ? q.reponse : [q.reponse]).map(lire);
       assert.deepEqual(donnee, rec, `${ou} : réponse ${q.reponse} ≠ ${rec}`);
       rec.forEach(r => assert.ok(r > 0n || (q.forme === "deux-cases"), `${ou} : réponse nulle ou négative`));
-      assert.ok(G.verifier(q, Array.isArray(q.reponse) ? q.reponse : q.reponse).juste, `${ou} : la bonne réponse est refusée`);
+      // Lot 3b : une conversion ou une durée au choix — le bon choix dit la
+      // réponse recalculée, et lui seul.
+      if (q.forme === "qcm") {
+        assert.ok(G.verifier(q, q.bon).juste, `${ou} : le bon choix est refusé`);
+        const bonTexte = q.choix[q.bon].replace(/[\u00a0\u202f]/g, " ");
+        const d = q.donnees;
+        let attenduTexte;
+        if (d.type === "conv") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
+        else if (d.type === "duree-deux") attenduTexte = `${rec[0] / 1000n} h ${rec[1] / 1000n} min`;
+        else if (d.type === "entre") attenduTexte = q.reponseTexte.replace(/\u00a0/g, " ");
+        else attenduTexte = String(rec[0] / 1000n);
+        assert.equal(bonTexte, attenduTexte, `${ou} : le bon choix « ${bonTexte} » ≠ ${attenduTexte}`);
+      } else assert.ok(G.verifier(q, Array.isArray(q.reponse) ? q.reponse : q.reponse).juste, `${ou} : la bonne réponse est refusée`);
     }
+  }
+  // Lot 3b : les questions sans recalcul numérique.
+  if (q.donnees.type === "fois") {
+    const f = versUnite(1000n, q.donnees.grande, q.donnees.petite) / 1000n;
+    assert.equal(q.choix[q.bon].replace(/\u202f/g, ""), `${f} fois`, `${ou} : combien de fois`);
+    assert.deepEqual(q.choix.map(c => c.replace(/\u202f/g, "")), ["10 fois", "100 fois", "1000 fois"]);
+  }
+  if (q.donnees.type === "associer-rel") {
+    assert.equal(new Set(q.objets.map(o => o.texte)).size, 3); assert.equal(new Set(q.mesures).size, 3);
+    q.donnees.paires.forEach(([g, p], i) => {
+      const v = versUnite(1000n, g, p);
+      assert.equal(q.mesures[q.bonnes[i]].replace(/[\u00a0\u202f]/g, " "), `${G.ecrire(v).replace(/\u202f/g, " ")} ${p}`, `${ou} : 1 ${g} mal relié`);
+    });
+    assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : en face`);
+    assert.ok(G.verifier(q, q.bonnes).juste);
+  }
+  if (q.donnees.type === "unite-sans") {
+    assert.equal(q.choix[q.bon], q.donnees.unite);
+    assert.equal(q.choix.length, 3);
+    // Une seule unité de la bonne grandeur… ou deux, la fausse étant au
+    // mauvais ordre de grandeur (jamais deux qui pourraient convenir).
+    const g = FAMILLE[q.donnees.unite];
+    const memes = q.choix.filter(u => FAMILLE[u] === g);
+    assert.ok(memes.length <= 2, `${ou} : ${q.choix}`);
+    if (memes.length === 2) assert.ok(Math.abs(EXPOSANTS[memes[0]] - EXPOSANTS[memes[1]]) >= 3, `${ou} : ${memes} trop proches`);
+  }
+  if (q.donnees.type === "quarts") {
+    assert.equal(q.choix[q.bon], String(q.donnees.n));
+    assert.ok(q.correction.join(" ").includes(`${q.donnees.n} quarts d'heure`), `${ou} : ${q.correction}`);
   }
   // Les repères et « quelle unité » : la bonne réponse vient de la carte.
   if (q.donnees.type === "repere") {
     const r = CARTE.repere(q.donnees.repere);
-    const bonne = q.donnees.sorte === "unite" ? r.unite : G.ecrire(G.milli(r.nombre));
-    assert.equal(q.choix[q.bon], bonne, `${ou} : mauvais bon choix`);
+    if (q.donnees.sorte === "saisie") {
+      assert.equal(q.forme, "phrase"); assert.equal(q.reponse, r.nombre.replace(".", ","), `${ou} : ${q.reponse}`);
+      assert.ok(G.verifier(q, q.reponse).juste);
+    } else {
+      const bonne = q.donnees.sorte === "unite" ? r.unite : G.ecrire(G.milli(r.nombre));
+      assert.equal(q.choix[q.bon], bonne, `${ou} : mauvais bon choix`);
+    }
   }
   if (q.donnees.type === "unite") {
     const o = G.OBJETS_UNITE[q.donnees.objet];
     assert.equal(q.choix[q.bon], o[2]);
     assert.ok(o[3] > 0, `${ou} : un exemple de J'apprends tiré`);
+    // Lot 3b : quatre unités ; au plus une d'une autre grandeur.
+    assert.equal(q.choix.length, 4);
+    assert.ok(q.choix.filter(u => FAMILLE[u] !== FAMILLE[o[2]]).length <= 1, `${ou} : ${q.choix}`);
   }
   // Lot A2 bis : associer, ranger, qu'est-ce qu'on mesure, h/min/jours.
   if (q.donnees.type === "associer") {
@@ -183,6 +239,9 @@ function controlerQuestion(q, ou) {
     assert.ok(d.total > 0 && d.total < 10000, `${ou} : ${d.total} c`);
     if (Array.isArray(q.reponse)) assert.notEqual(q.reponse[1], "0", `${ou} : « 0 c » dans la réponse`);
     if (d.sorte === "objet") assert.ok(d.total > 100, `${ou} : un prix déjà en centimes`);
+    // Lot 3b : 0,85 € s'écrit avec ses deux chiffres de centimes.
+    if (d.sorte === "versEdec") assert.match(q.reponseTexte, /^\d+,\d\d\u00a0€$/, `${ou} : ${q.reponseTexte}`);
+    if (d.sorte === "plus") assert.ok(q.morceaux.plus[1] > 100 && q.morceaux.plus[1] < 200, `${ou} : ${q.texte}`);
   }
   // 3. les bornes des objets
   if (q.donnees.type === "pb" || q.donnees.type === "vrai") {
@@ -216,6 +275,17 @@ function controlerQuestion(q, ou) {
     const n = q.code === "C1" ? G.milli(d.valeur) : G.milli(q.reponse);
     assert.equal(BigInt(q.paquets.n) * 1000n, n, `${ou} : ${q.paquets.n} paquets`);
     assert.ok(q.paquets.n >= 1 && q.paquets.n <= 9, `${ou} : trop de paquets`);
+  }
+  // Lot 3b : un objet n'apparaît que dans ses bornes, dans une unité où on
+  // le mesure vraiment (jamais « un ruban de 9 000 cm », jamais en dL).
+  if (q.morceaux.objet && q.code !== "E1") {
+    const [, nom, n, u] = q.texte.match(/^((?:Un|Une) [^.]+) de ([\d\u202f]+)\u00a0([a-zA-Z]+)\./) || [];
+    assert.ok(nom, `${ou} : « ${q.texte} »`);
+    const o = G.OBJETS_MESURE.find(x => x[0] === nom && x[1] === u);
+    assert.ok(o, `${ou} : objet inconnu ${nom} en ${u}`);
+    const nb = Number(n.replace(/\u202f/g, ""));
+    assert.ok(nb >= o[2] && nb <= o[3], `${ou} : ${nom} de ${nb} ${u} hors de ses bornes`);
+    assert.notEqual(q.donnees.vers, "dL", `${ou} : un objet en dL`);
   }
   // Un objet : la phrase dit l'objet, la mesure et la question.
   if (q.morceaux.objet && q.code === "E1") assert.match(q.texte, /^(Un|Une) [^.]+ coûte [\d\u202f]+\u00a0(€|c)( \d+\u00a0c)?\. Combien de centimes\u00a0\?$/, `${ou} : « ${q.texte} »`);
@@ -265,12 +335,27 @@ function controlerSerie(code, usage, nombre, s, ou) {
   if (code === "R1" && usage === "valide") assert.equal(s[9].forme, "associer", `${ou} : associer en dernier`);
   if (code === "R2" && usage === "valide") {
     assert.equal(s[3].donnees.type, "grandeur"); assert.equal(s[7].donnees.type, "unite-duree");
-    assert.equal(s.filter(q => q.donnees.type === "unite").length, 8);
+    assert.equal(s[5].donnees.type, "unite-sans");
+    assert.equal(s.filter(q => q.donnees.type === "unite").length, 7);
   }
-  if (code === "C2" && usage === "valide") assert.equal(s[4].forme, "ranger");
+  if (code === "C2" && usage === "valide") { assert.equal(s[4].forme, "ranger"); assert.equal(s[5].forme, "qcm"); }
+  if (code === "C1" && usage === "valide") assert.equal(s[4].forme, "qcm");
   if (code === "E1" && usage === "valide") {
-    assert.deepEqual([...new Set(s.map(q => q.donnees.sorte))].sort(), ["deux", "objet", "pieces", "prix", "versC", "versE"], `${ou} : les six façons`);
+    assert.deepEqual([...new Set(s.map(q => q.donnees.sorte))].sort(), ["deux", "objet", "pieces", "prix", "versC", "versE", "versEdec"], `${ou} : les sept façons`);
   }
+  // Lot 3b : les étapes par cœur varient la forme.
+  if (code === "R1" && usage === "valide") assert.deepEqual([5, 7].map(i => s[i].morceaux.sorte), ["saisie", "saisie"]);
+  if (code === "P1" && usage === "valide") {
+    assert.deepEqual([s[4], s[8]].map(q => q.donnees.type), ["fois", "fois"]); assert.equal(s[9].forme, "associer");
+    // Plus jamais trois réponses « 1 » à la fin.
+    assert.ok(!s.slice(7, 9).every(q => q.reponse === "1"), `${ou} : les réponses « 1 » à la fin`);
+  }
+  if (code === "D1" && usage === "valide") assert.deepEqual([s[4].forme, s[8].forme], ["qcm", "qcm"]);
+  if (code === "D2" && usage === "valide") {
+    assert.equal(s[2].forme, "qcm"); assert.equal(s[4].donnees.type, "quarts");
+    assert.deepEqual([s[6].donnees.type, s[8].donnees.type], ["heure-mots", "heure-mots"]);
+  }
+  if (code === "D7" && usage === "valide") assert.deepEqual([s[4].forme, s[7].forme], ["qcm", "qcm"]);
   if (code === "D7" && usage === "valide") {
     assert.deepEqual([...new Set(s.map(q => q.donnees.cherche))].sort(), ["arrivee", "depart", "duree"], `${ou} : les trois questions`);
   }
@@ -296,8 +381,9 @@ for (const code of PRETES) {
         s.forEach(q => { controlerQuestion(q, ou); formes.add(q.forme); });
       }
     }
-    const prevues = {R1: ["qcm", "associer"], R2: ["qcm"], P1: ["nombre", "phrase"], C1: ["nombre", "phrase"], C2: ["nombre", "phrase", "deux-cases", "ranger"],
-      D1: ["nombre", "deux-cases"], D2: ["nombre", "deux-cases"], Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases"]}[code];
+    const prevues = {R1: ["qcm", "associer", "phrase"], R2: ["qcm"], P1: ["nombre", "phrase", "qcm", "associer"], C1: ["nombre", "phrase", "qcm"],
+      C2: ["nombre", "phrase", "deux-cases", "ranger", "qcm"], D1: ["nombre", "deux-cases", "qcm"], D2: ["nombre", "deux-cases", "qcm"],
+      Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -346,7 +432,7 @@ test("banc d'essai : lot A2 bis — la bonne réponse à toutes les places, aucu
     }
   }
   const attendu = {"R1 associer objet 0": 3, "R1 associer objet 1": 3, "R1 associer objet 2": 3, "R1 qcm unite": 3, "R1 qcm valeur": 3,
-    "R2 grandeur": 4, "R2 unite-duree": 3, "R2 unite": 4, "C2 ranger la plus petite": 4, "C2 ranger la plus grande": 4};
+    "R2 grandeur": 4, "R2 unite-duree": 3, "R2 unite": 4, "R2 unite-sans": 3, "C2 ranger la plus petite": 4, "C2 ranger la plus grande": 4};
   Object.keys(attendu).forEach(k => assert.equal(places[k] ? places[k].size : 0, attendu[k], `${k} : la bonne réponse aux places ${places[k] ? [...places[k]] : []}`));
   // Les exemples de « On te montre » ne reviennent jamais (E1, D7, R2).
   for (const code of ["E1", "D7", "R2"]) {
@@ -390,7 +476,11 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
           const v = G.milli(d.valeur);
           const f = G.facteur(G.exposant(d.de) > G.exposant(d.vers) ? d.de : d.vers, G.exposant(d.de) > G.exposant(d.vers) ? d.vers : d.de);
           essais.push(v, v * f, v * f * 10n, v * f / 10n, v * 1000n, v % f === 0n ? v / f : 1n, G.milli(q.reponse) * 10n, G.milli(q.reponse) / 10n);
-        } else if (d.type === "somme") essais.push(G.milli(d.a) + G.milli(d.b), G.lireMilli(`${d.a}${d.b}`));
+        } else if (d.type === "somme") essais.push(G.milli(d.a) + G.milli(d.b), G.lireMilli(`${d.a}${d.b}`), G.convertir(G.milli(d.a), d.ua, d.vers) + G.milli(d.b) * 10n);
+        else if (d.type === "deux") {
+          const f = G.facteur(d.grande, d.petite); const t = G.milli(d.valeur) / 1000n; const a = t / f; const b = t % f;
+          [[a, b / 10n], [a * 10n, b]].forEach(x => noter(code, G.verifier(q, x.map(String))));
+        } else if (d.type === "heure-mots") noter(code, G.verifier(q, [String(d.h + 1), "45"]));
         else if (d.type === "duree") essais.push(G.milli(d.h * 100 + d.m));
         else if (d.type === "duree-mots" && !d.deux) {
           essais.push(G.milli(d.h * 60 + d.demis * 30 + d.quarts * 25), G.milli(d.h * 60 + d.demis * 50 + d.quarts * 15), G.milli(d.h * 100 + d.demis * 30 + d.quarts * 15));
@@ -401,9 +491,9 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
         if (d.type === "argent") {
           const e = Math.floor(d.total / 100); const c = d.total % 100;
           if (Array.isArray(q.reponse)) {
-            [[e, c * 10], [e, c / 10], [Math.floor(d.total / 10), d.total % 10]].forEach(x => { if (x.every(Number.isInteger)) noter(code, G.verifier(q, x.map(String))); });
-          } else if (q.unite === "€") essais.push(G.milli(d.total * 100), G.milli(d.total / 10));
-          else essais.push(G.milli(e * 10 + c), G.milli(e * 100), G.milli(e || 1));
+            [[e, c * 10], [e, c / 10], [Math.floor(d.total / 10), d.total % 10], d.sorte === "plus" ? q.morceaux.plus : [-1]].forEach(x => { if (x.every(y => Number.isInteger(y) && y >= 0)) noter(code, G.verifier(q, x.map(String))); });
+          } else if (q.unite === "€") essais.push(G.milli(d.total * 100), ...(d.total % 10 ? [] : [G.milli(d.total / 10)]), G.milli(d.total), G.milli(d.total) / 10n);
+          else essais.push(G.milli(e * 10 + c), G.milli(e * 100), G.milli(e || 1), G.milli(e * 100 + c * 10));
         }
         if (d.type === "entre") {
           const cent = t => Math.floor(t / 60) * 100 + (t % 60);
@@ -424,7 +514,7 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
       });
     }
   }
-  const attendues = {P1: [1, 3], C1: [1, 2, 3, 4, 5, 6], C2: [1, 2, 3], D1: [1, 2], D2: [1, 2, 3], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5], D7: [1, 2, 3]};
+  const attendues = {P1: [1, 3], C1: [1, 2, 3, 4, 5, 6, 7], C2: [1, 2, 3, 4, 5], D1: [1, 2], D2: [1, 2, 3, 4], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5, 6, 7], D7: [1, 2, 3]};
   Object.keys(attendues).forEach(code => {
     attendues[code].forEach(c => assert.ok(vues[code] && vues[code].has(c), `${code} : l'erreur c${c} n'est jamais déclenchée`));
   });
