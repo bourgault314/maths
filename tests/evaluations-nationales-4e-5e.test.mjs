@@ -92,43 +92,7 @@ for (const [niv, S, OFF] of [[4, S4, OFFICIEL_4E], [5, S5, OFFICIEL_5E]]) {
 }
 
 // 4e : les jumeaux (et leurs formes, lot EN4) sont contrôlés dans evaluations-nationales-4e-variete.test.mjs.
-
-test("5e : les bonnes réponses des jumeaux sont mathématiquement justes (et les pièges sont faux)", () => {
-  for (let graine = 2; graine <= 2001; graine++) {
-    const r = hasard(graine);
-    for (const q of S5.questions) {
-      const g = q.generer(r, false), j = juste(g), e = texte(g.enonce), n = q.num;
-      const autres = g.choix.filter((x) => !x.juste).map((x) => texte(x.html));
-      const fr = (t) => { const [a, b] = t.split("/").map(Number); return a / b; };
-      let m;
-      if (n === 1) { const v = g.choix.map((x) => fr(texte(x.html))); assert.equal(fr(j), Math.max(...v)); assert.equal(v.filter((x) => x === fr(j)).length, 1); }
-      if (n === 2) { m = e.match(/(\d+) × 1 000 \+ (\d+)/); assert.equal(num(j), m[1] * 1000 + Number(m[2])); }
-      if (n === 4) { m = e.match(/(\d) × … = (\d+)/); assert.equal(num(j) * m[1], Number(m[2])); }
-      if (n === 5) { m = e.match(/(\d+) \+ … = 100/); assert.equal(num(j) + Number(m[1]), 100); }
-      if (n === 7) { m = e.match(/(\d+) \+ 99/); assert.equal(num(j), Number(m[1]) + 99); }
-      if (n === 8) { m = e.match(/5 × (\d+) × 2/); assert.equal(num(j), 10 * m[1]); }
-      if (n === 9) { assert.equal(num(j) % 50, 0); for (const a of autres) assert.notEqual(num(a) % 50, 0); }
-      if (n === 10) { m = e.match(/([\d,]+) \+ ([\d,]+)/); assert.ok(Math.abs(num(j) - num(m[1]) - num(m[2])) < 1e-9); }
-      if (n === 11) { m = e.match(/(\d+) : (\d)/); assert.equal(num(j) * m[2], Number(m[1])); }
-      if (n === 12) { m = e.match(/^(\d+)\/([\d ]+) =/); assert.ok(Math.abs(num(j) - m[1] / num(m[2])) < 1e-9); }
-      if (n === 13) { const [, a] = g.figure.match(/aria-label="Portion de droite graduée de ([\d,]+) à/); assert.ok(j.startsWith(a) && j.length === a.length + 1); }
-      if (n === 14) { m = e.match(/([\d,]+) × ([\d,]+)/); const p = num(m[1]) * num(m[2]); for (const x of ["10", "1 000", "10 000"]) assert.ok(Math.abs(num(j) - p) < Math.abs(num(x) - p)); }
-      if (n === 15) { m = e.match(/(\d) dizaines et (\d) centièmes/); assert.ok(Math.abs(num(j) - (m[1] * 10 + m[2] / 100)) < 1e-9); }
-      if (n === 16) { m = e.match(/([\d,]+) − ([\d,]+)/); assert.ok(Math.abs(num(j) - (num(m[1]) - num(m[2]))) < 1e-9); }
-      if (n === 17) { m = e.match(/de ([\d,]+) par/); const [, a, b] = j.match(/^([\d ]+) < [\d,]+ < ([\d ]+)$/); assert.ok(num(a) < num(m[1]) && num(m[1]) < num(b) && num(b) - num(a) === 1); }
-      if (n === 18) { m = e.match(/nombre (\d) (\d{3}),(\d{3}) (\d) est/); const pos = m[3].indexOf(m[4]); assert.equal(j, ["dixièmes.", "centièmes.", "millièmes."][pos]); }
-      if (n === 19) { m = e.match(/([\d,]+) × 100/); assert.ok(Math.abs(num(j) - num(m[1]) * 100) < 1e-9); }
-      if (n === 21) { m = e.match(/(\d)\/10 \+ (\d)\/100/); assert.ok(Math.abs(num(j) - (m[1] / 10 + m[2] / 100)) < 1e-9); }
-      if (n === 23) { m = e.match(/(\d) \+ (\d) × (\d)/); assert.equal(num(j), m[1] * 1 + m[2] * m[3]); }
-      if (n === 24) { assert.ok(Math.abs(fr(j) - (1 + (fr(j) * 10 - 10) / 10)) < 1e-9 && fr(j) > 1 && fr(j) < 1.5); }
-      if (n === 25) { m = e.match(/([\d,]+) < … < ([\d,]+)/); const dedans = (t) => num(m[1]) < num(t) && num(t) < num(m[2]); assert.ok(dedans(j)); for (const a of autres) assert.ok(!dedans(a), `q25 ${a}`); }
-      if (n === 26) { m = e.match(/(\d) cm, (\d) cm et (\d) cm/); assert.equal(num(j), m[1] * m[2] * m[3]); }
-      if (n === 27) { m = e.match(/(\d)\/(\d) \+ (\d)\/(\d)/); assert.ok(Math.abs(fr(j) - 2 * (m[1] / m[2])) < 1e-9); for (const a of autres) assert.ok(Math.abs(fr(a) - fr(j)) > 1e-9); }
-      if (n === 28) { m = e.match(/(\d+) × ([\d,]+)/); const [, a, d] = j.match(/(\d+) : ([\d ]+)/); assert.ok(Math.abs(a / num(d) - m[1] * num(m[2])) < 1e-9); }
-      if (n === 30) { m = e.match(/(\d) dizaines de milliards, (\d) centaines de millions et (\d+) dizaines/); assert.equal(num(j), m[1] * 1e10 + m[2] * 1e8 + m[3] * 10); }
-    }
-  }
-});
+// 5e : les jumeaux (et leurs formes, lot EN4b) sont contrôlés dans evaluations-nationales-5e-variete.test.mjs.
 
 test("la page charge les trois sujets et le bilan cache « Je m’entraîne » par un seul interrupteur éteint", () => {
   const html = readFileSync(new URL("../outils/evaluations_nationales/evaluation.html", import.meta.url), "utf8");
