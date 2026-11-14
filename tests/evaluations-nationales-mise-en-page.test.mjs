@@ -64,7 +64,7 @@ test("EN4a-bis : un nombre et son unité ne se séparent jamais (énoncés, rép
   for (const m of ["enonce", "apres"]) assert.ok(js.includes(`typo(it.g.${m}`), m);
   assert.match(js, /typo\(ch\.html/);
   assert.match(js, /typo\(choisi\.html\)/);
-  assert.match(js, /typo\(bonne\.html\)/);
+  assert.match(js, /typo\(bonneReponse\(it\)\)/); // lot EN8a : le choix juste, ou la réponse tapée attendue
   const RESTE = /(\d) (km\/h|cm²|cm³|m²|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|°|%)(?![\p{L}\d²³])/u;
   for (const id of ["6e-automatismes", "5e-automatismes", "4e-automatismes"]) {
     const S = globalThis.EN_SUJETS[id];

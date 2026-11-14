@@ -274,6 +274,61 @@
       .calc-touches button{min-height:40px}
       body.en-passation.calc-ouverte .shell{padding-bottom:calc(420px + env(safe-area-inset-bottom))}
     }
+    /* Exemples de questions Eduscol (lot EN8a) : réponses tapées sur le pavé de l'appli, réponses sur la feuille,
+       réponses en ligne de quatre, solides en réponse. */
+    .q-enonce ul.liste{margin:4px 0 6px;padding-left:22px}
+    .choix.ligne4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .choix.solides{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .choix.solides .choix-btn{flex-direction:column;align-items:center;gap:6px;padding:8px}
+    .choix.solides .choix-texte{width:100%;justify-content:center}
+    .choix.solides .fig-choix{width:100%;height:auto;max-height:118px}
+    .choix.saisie{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+    .saisie-lignes{display:grid;gap:8px}
+    .saisie-ligne{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0;font-size:1.2rem;font-weight:850;line-height:1.2;white-space:nowrap}
+    .saisie-case{min-width:3.6em;min-height:44px;padding:4px 10px;border:2px solid #9fbad0;border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums;text-align:center;cursor:pointer}
+    .saisie-case.vide{background:#f3f8fb}
+    .saisie-case[aria-pressed="true"]{border-color:var(--blue);background:#eaf2ff;box-shadow:0 0 0 3px rgba(7,85,184,.16)}
+    .saisie-case[aria-pressed="true"]::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-.15em;background:var(--blue);animation:clignote 1s steps(1) infinite}
+    @keyframes clignote{50%{opacity:0}}
+    .pave{display:grid;grid-template-columns:repeat(7,minmax(36px,46px));gap:5px}
+    .pave button{min-height:40px;padding:0;border:1px solid #c5d9e6;border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:1.1rem;font-weight:900;box-shadow:0 2px 0 #c9dbe6;cursor:pointer}
+    .pave button:active{transform:translateY(1px);box-shadow:none}
+    .sur-feuille{margin:0;padding:10px 14px;border:2px dashed #9fbad0;border-radius:14px;background:#f8fcff;color:var(--ink);font-weight:850}
+    .sur-feuille.petit{padding:6px 12px;border-width:1.5px;font-size:.92rem;font-weight:800}
+    .choix.ligne .sur-feuille.petit{grid-column:1/-1}
+    .feuille-attendu{margin:0 0 6px;font-weight:750;line-height:1.4}
+    .feuille-indic{margin:6px 0 4px;color:var(--muted);font-size:.86rem;font-weight:850}
+    .indicateurs{margin:0;padding-left:20px;font-size:.9rem;font-weight:700;line-height:1.4}
+    #liste-feuille li{border-color:var(--line);background:#f8fcff}
+    #liste-feuille .indicateurs li{padding:2px 0;border:0;border-radius:0;background:none}
+    @media(max-width:620px){
+      .choix.ligne4{grid-template-columns:1fr 1fr}
+      .choix.solides{gap:6px}
+      .choix.solides .choix-btn{padding:6px 4px}
+      .saisie-ligne{font-size:1.1rem}
+      .pave{grid-template-columns:repeat(7,minmax(0,1fr));width:100%}
+    }
+    @media(max-width:360px){.choix.solides{grid-template-columns:1fr}}
+    .q-carte.avec-figure #q-choix.deux{grid-template-columns:1fr 1fr}
+    .choix.deux{grid-template-columns:1fr 1fr}
+    @media(min-width:621px){
+      .choix.solides .fig-choix{max-height:96px}
+      .q-carte.avec-figure .figure.repere{max-height:min(250px,calc(100vh - 410px))}
+      .q-carte.avec-figure .figure.velo{max-height:min(220px,calc(100vh - 470px))}
+      .q-carte.avec-figure .figure.symetrie{max-height:min(310px,calc(100vh - 370px))}
+      .q-carte.serre .choix-btn{min-height:48px;padding-top:6px;padding-bottom:6px}
+      .q-carte.long .q-enonce{font-size:1.12rem}
+    }
+    @media(min-width:621px) and (max-height:760px){.choix.solides .fig-choix{max-height:86px}}
+    @media(min-width:621px) and (max-width:899px){
+      .q-carte.avec-figure.serre .q-corps{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,1fr);grid-template-areas:"num num" "enonce enonce" "figure apres" "figure choix";column-gap:18px;align-content:start}
+      .q-carte.avec-figure.serre #q-num{grid-area:num}
+      .q-carte.avec-figure.serre #q-enonce{grid-area:enonce}
+      .q-carte.avec-figure.serre #q-figure{grid-area:figure;align-self:start;margin-top:10px}
+      .q-carte.avec-figure.serre #q-apres{grid-area:apres;margin-top:10px}
+      .q-carte.avec-figure.serre #q-choix{grid-area:choix;grid-template-columns:1fr;align-content:start;margin-top:10px}
+      .q-carte.avec-figure.serre #q-choix.deux{grid-template-columns:1fr 1fr}
+    }
   </style>
 </head>
 <body>
@@ -363,6 +418,12 @@
           <h2>Mes erreurs</h2>
           <ul id="liste-revoir" class="liste-revoir"></ul>
         </div>
+        <!-- Exemples Eduscol : les questions sur la feuille (élève) ; la réponse attendue et les indicateurs (vue prof). -->
+        <div id="bloc-feuille" class="a-revoir" hidden>
+          <h2 id="feuille-titre">Sur ta feuille</h2>
+          <p id="feuille-eleve"></p>
+          <ul id="liste-feuille" class="liste-revoir"></ul>
+        </div>
         <div class="fin-actions">
           <button id="refaire-rates" class="primary" type="button">Refaire mes questions ratées</button>
           <button id="nouveau-jumeau" class="secondary" type="button">Nouveau sujet jumeau</button>
@@ -371,7 +432,7 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261114-3"></script>
+  <script src="./en_commun.js?v=20261114-21"></script>
   <script src="./sujets/3e_automatismes.js?v=20261114-1"></script>
   <script src="./sujets/6e_automatismes.js?v=20261114-2"></script>
   <script src="./sujets/5e_automatismes.js?v=20261114-1"></script>
@@ -380,6 +441,10 @@
   <script src="./sujets/4e_problemes.js?v=20261114-3"></script>
   <script src="./sujets/6e_pos_automatismes.js?v=20261114-5"></script>
   <script src="./sujets/6e_pos_geometrie.js?v=20261114-5"></script>
-  <script src="./evaluation.js?v=20261114-5"></script>
+  <script src="./saisie.js?v=20261114-21"></script>
+  <script src="./exemples_commun.js?v=20261114-21"></script>
+  <script src="./sujets/3e_exemples_nombres.js?v=20261114-21"></script>
+  <script src="./sujets/4e_exemples_geometrie.js?v=20261114-21"></script>
+  <script src="./evaluation.js?v=20261114-21"></script>
 </body>
 </html>

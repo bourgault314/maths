@@ -143,7 +143,7 @@
   // Espace insécable avant « ? : ; ! » et après « ; une fraction empilée reste collée au signe qui la suit ;
   // un nombre et son unité ne se séparent jamais (1 cm, 18 km/h, 2 h 15 min, 50°…). Seul le texte est touché,
   // jamais l'intérieur d'une balise (figures SVG).
-  const UNITES_MESURE = "km/h|km²|mm²|mm³|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°|%|€";
+  const UNITES_MESURE = "km/h|km²|mm²|mm³|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°C|°|%|€";
   const RE_UNITE = new RegExp(`(\\d) (${UNITES_MESURE})(?![\\p{L}\\d²³])`, "gu");
   function typo(html) {
     return String(html).split(/(<[^>]+>)/).map((morceau) => (morceau.startsWith("<") ? morceau

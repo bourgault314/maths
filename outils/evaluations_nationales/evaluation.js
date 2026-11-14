@@ -17,6 +17,9 @@
 
   let passation = null; // { type, officiel, graine, items:[{q, t, g, choix(ordre affiché)}], reponses:[], debut, i }
   let minuteur = null;
+  // Réponse tapée sur le pavé (lot EN8a, saisie.js) : la question en cours, ou null.
+  let saisieEnCours = null;
+  const fermerSaisie = () => { if (saisieEnCours) saisieEnCours.fermer(); saisieEnCours = null; };
 
   const lire = () => { try { return JSON.parse(localStorage.getItem(CLE) || "null"); } catch (e) { return null; } };
   const ecrire = (v) => { try { localStorage.setItem(CLE, JSON.stringify(v)); } catch (e) { /* stockage indisponible : tant pis */ } };
@@ -41,6 +44,7 @@
   function accueil() {
     clearInterval(minuteur);
     calculatrice.question(false);
+    fermerSaisie();
     $("#niveau").textContent = `${sujet.famille || "Évaluation nationale"} · ${sujet.niveau}`;
     $("#titre").textContent = sujet.titre;
     $("#descriptif").textContent = `${sujet.questions.length} questions · ${sujet.consignes}`;
@@ -54,7 +58,12 @@
     $("#source").innerHTML = `Questions : ${sujet.source.replace(/(, Eduscol)?, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
     const dernier = lire();
     $("#dernier").hidden = !dernier;
-    if (dernier) $("#dernier").textContent = `Ton dernier sujet (${dernier.type === "officiel" ? (officiels.length > 1 && dernier.officiel ? "officiel " + dernier.officiel.replace("-", " et ") : "officiel") : "jumeau"}) : ${dernier.score} / ${dernier.total} — ${dernier.groupe}`;
+    if (dernier) {
+      // Un sujet officiel peut avoir un nom court (4e Géométrie : « exercice 7 : l'étagère ») ; sans repères, pas de groupe.
+      const o = officiels.find((x) => x.cle === dernier.officiel);
+      const quoi = dernier.type !== "officiel" ? "jumeau" : o && o.court ? o.court : officiels.length > 1 && dernier.officiel ? "officiel " + dernier.officiel.replace("-", " et ") : "officiel";
+      $("#dernier").textContent = `Ton dernier sujet (${quoi}) : ${dernier.score} / ${dernier.total}${dernier.groupe ? " — " + dernier.groupe : ""}`;
+    }
     montrer("#accueil");
   }
 
@@ -94,6 +103,9 @@
     $("#q-carte").classList.toggle("figure-a-cote", Boolean(it.g.figure && it.g.figureACote));
     $("#q-carte").classList.toggle("figure-grande", it.g.figureACote === "grande");
     $("#q-carte").classList.toggle("choix-a-cote", Boolean(it.g.figure && it.g.choixACote));
+    // Exemples Eduscol : à partir de la tablette, une réponse tapée (ou une question « serrée ») garde sa figure à gauche.
+    $("#q-carte").classList.toggle("serre", Boolean(it.g.figure && (it.g.saisie || it.g.serre)));
+    $("#q-carte").classList.toggle("long", Boolean(it.g.long)); // énoncé long : un peu plus petit sur ordinateur
     $("#q-apres").innerHTML = typo(it.g.apres || "");
     $("#q-apres").hidden = !it.g.apres;
     const zone = $("#q-choix");
@@ -117,6 +129,18 @@
     passation.selection = null;
     $("#valider").disabled = true;
     $("#valider").textContent = i === items.length - 1 ? "Terminer" : "Valider";
+    // Exemples Eduscol (lot EN8a) : réponse tapée sur le pavé de l'appli, réponse sur la feuille (pas comptée),
+    // ou réponse donnée ici avec l'argumentation sur la feuille.
+    fermerSaisie();
+    if (it.g.saisie) saisieEnCours = window.ENSaisie.monter(zone, it.g.saisie, typo, (pret) => { $("#valider").disabled = !pret; });
+    if (it.g.feuille) {
+      zone.className = "choix feuille";
+      zone.innerHTML = `<p class="sur-feuille">✍️ Réponds sur ta feuille.</p>`;
+      $("#valider").disabled = false;
+      if (i < items.length - 1) $("#valider").textContent = "Suivant";
+    }
+    if (it.g.preuve) zone.insertAdjacentHTML("beforeend", `<p class="sur-feuille petit">✍️ L’argumentation s’écrit sur ta feuille.</p>`);
+    $("#passer").style.visibility = it.g.feuille ? "hidden" : "";
     $("#q-corps").scrollTop = 0;
     calculatrice.question(sujet.calculatrice && it.q.calculatrice !== false);
   }
@@ -132,30 +156,38 @@
   function bilan() {
     clearInterval(minuteur);
     calculatrice.question(false);
+    fermerSaisie();
     const { items, reponses } = passation;
     const temps = Date.now() - passation.debut;
-    const resultats = items.map((it, i) => {
+    // Une réponse est l'indice d'un choix, ou (réponse tapée) l'objet rendu par ENSaisie.corriger. Les questions
+    // « sur la feuille » ne sont pas comptées.
+    const tous = items.map((it, i) => {
       const k = reponses[i];
-      const choisi = k === null ? null : it.choix[k];
+      const choisi = k === null ? null : typeof k === "object" ? k : it.choix[k];
       return { it, choisi, juste: Boolean(choisi && choisi.juste) };
     });
+    const resultats = tous.filter((x) => !x.it.g.feuille);
     const score = resultats.filter((x) => x.juste).length;
-    const total = items.length;
+    const total = resultats.length;
     $("#score").textContent = `${score} / ${total}`;
     $("#duree").textContent = `en ${duree(temps)}`;
     const zoneGroupe = $("#groupe");
+    const seuils = seuilsDe(passation.officiel); // null : pas de repères publiés (exemples Eduscol), donc pas de groupe
+    zoneGroupe.hidden = !passation.reprise && !seuils;
     if (passation.reprise) {
       zoneGroupe.textContent = score === total ? "Toutes tes questions ratées sont réussies !" : "Questions ratées refaites";
       zoneGroupe.className = "groupe " + (score === total ? "g2" : "g1");
     } else {
-      const g = groupe(score, seuilsDe(passation.officiel));
-      zoneGroupe.textContent = g.nom;
-      zoneGroupe.className = "groupe g" + g.rang;
-      ecrire({ type: passation.type, officiel: passation.officiel ? passation.officiel.cle : null, score, total, groupe: g.nom, date: new Date().toISOString() });
+      const g = seuils ? groupe(score, seuils) : null;
+      if (g) {
+        zoneGroupe.textContent = g.nom;
+        zoneGroupe.className = "groupe g" + g.rang;
+      }
+      ecrire({ type: passation.type, officiel: passation.officiel ? passation.officiel.cle : null, score, total, groupe: g ? g.nom : null, date: new Date().toISOString() });
     }
-    const seuils = seuilsDe(passation.officiel);
     $("#seuils").hidden = passation.reprise;
-    $("#seuils").textContent = `Repères officiels sur ${sujet.questions.length} : ${seuils.map((s, i) => `${s.nom.toLowerCase()} ${i === 0 ? `jusqu’à ${s.max}` : i === seuils.length - 1 ? `à partir de ${seuils[i - 1].max + 1}` : `de ${seuils[i - 1].max + 1} à ${s.max}`}`).join(" · ")}.`;
+    $("#seuils").textContent = !seuils ? "Eduscol ne donne pas de repères pour ces exemples : pas de groupe."
+      : `Repères officiels sur ${sujet.questions.length} : ${seuils.map((s, i) => `${s.nom.toLowerCase()} ${i === 0 ? `jusqu’à ${s.max}` : i === seuils.length - 1 ? `à partir de ${seuils[i - 1].max + 1}` : `de ${seuils[i - 1].max + 1} à ${s.max}`}`).join(" · ")}.`;
     // Sujet généré : le groupe s'affiche, avec la mention que les repères ont été fixés pour le vrai sujet.
     $("#indication").hidden = passation.reprise || passation.type === "officiel";
 
@@ -179,15 +211,40 @@
     $("#liens-entrainement").innerHTML = [...parAutomatisme.values()].map(({ e, nums }) =>
       `<li><a class="entrainer" href="${e.url}"><span><strong>${e.libelle}</strong><small>${nums.length > 1 ? "Questions " + nums.slice(0, -1).join(", ") + " et " + nums[nums.length - 1] : "Question " + nums[0]}</small></span><span aria-hidden="true">→</span></a></li>`).join("");
     const minuscule = (t) => t.charAt(0).toLowerCase() + t.slice(1);
+    // La bonne réponse d'une question : son choix juste, ou (réponse tapée) les valeurs attendues.
+    const bonneReponse = (it) => (it.g.saisie ? window.ENSaisie.corriger(it.g.saisie, []).bonne : (it.choix.find((c) => c.juste) || {}).html || "");
     $("#liste-revoir").innerHTML = rates.map(({ it, choisi }) => {
-      const bonne = it.choix.find((c) => c.juste);
+      // Les pièges reconnus : celui du choix, ou ceux d'une réponse tapée (une ligne fausse peut en avoir un).
+      const erreurs = !choisi ? [] : choisi.erreurs || (choisi.erreur ? [choisi.erreur] : []);
+      const debut = it.g.saisie ? "Cette réponse" : "Ce choix";
       return `<li>
         <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
         <div class="revoir-reponses">
           <span class="donnee">${choisi ? "Ta réponse : " + typo(choisi.html) : "Pas de réponse"}</span>
-          <span class="attendue">Bonne réponse : ${typo(bonne.html)}</span>
+          <span class="attendue">Bonne réponse : ${typo(bonneReponse(it))}</span>
         </div>
-        ${vueProf && choisi ? `<p class="erreur-prof">Ce choix montre souvent que l’élève ${minuscule(choisi.erreur).replace(/^ne /, "ne ").replace(/\.$/, "")}.</p>` : ""}
+        ${vueProf ? erreurs.map((e) => `<p class="erreur-prof">${debut} montre souvent que l’élève ${minuscule(e).replace(/\.$/, "")}.</p>`).join("") : ""}
+      </li>`;
+    }).join("");
+    // Sur la feuille (exemples Eduscol) : l'élève voit quelles questions ne sont pas comptées ; la vue prof donne, pour
+    // chaque question à lire sur la feuille, la réponse attendue et les indicateurs de réussite de la fiche professeur.
+    const surFeuille = tous.filter((x) => x.it.g.feuille);
+    const aLire = tous.filter((x) => x.it.g.feuille || x.it.g.preuve);
+    const nums = (liste) => liste.map((x) => x.it.q.num);
+    const enMots = (n) => (n.length > 1 ? n.slice(0, -1).join(", ") + " et " + n[n.length - 1] : String(n[0]));
+    $("#bloc-feuille").hidden = vueProf ? aLire.length === 0 : surFeuille.length === 0;
+    $("#feuille-titre").textContent = vueProf ? "À lire sur la feuille" : "Sur ta feuille";
+    $("#feuille-eleve").textContent = !surFeuille.length ? "" : surFeuille.length > 1
+      ? `Questions ${enMots(nums(surFeuille))} : sur ta feuille, elles ne sont pas comptées ici.`
+      : `Question ${surFeuille[0].it.q.num} : sur ta feuille, elle n’est pas comptée ici.`;
+    $("#feuille-eleve").hidden = !surFeuille.length;
+    $("#liste-feuille").innerHTML = !vueProf ? "" : aLire.map(({ it }) => {
+      const indicateurs = it.t.indicateurs || it.q.indicateurs || [];
+      const attendu = it.t.attendu || it.q.attendu || bonneReponse(it);
+      return `<li>
+        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
+        <p class="feuille-attendu"><strong>Réponse attendue :</strong> ${typo(attendu)}</p>
+        ${indicateurs.length ? `<p class="feuille-indic">Indicateurs de réussite (fiche professeur) :</p><ul class="indicateurs">${indicateurs.map((x) => `<li>${typo(x)}</li>`).join("")}</ul>` : ""}
       </li>`;
     }).join("");
     $("#refaire-rates").hidden = rates.length === 0 || !avecJumeaux;
@@ -295,7 +352,12 @@
   $("#lancer-jumeau").addEventListener("click", () => lancer("jumeau"));
   $("#nouveau-jumeau").addEventListener("click", () => lancer("jumeau"));
   $("#retour-accueil").addEventListener("click", accueil);
-  $("#valider").addEventListener("click", () => passation.selection !== null && repondre(passation.selection));
+  $("#valider").addEventListener("click", () => {
+    const it = passation.items[passation.i];
+    if (it.g.feuille) return repondre(null); // sur la feuille : pas comptée
+    if (it.g.saisie) return saisieEnCours && repondre(window.ENSaisie.corriger(it.g.saisie, saisieEnCours.valeurs()));
+    if (passation.selection !== null) repondre(passation.selection);
+  });
   $("#passer").addEventListener("click", () => repondre(null));
   $("#abandonner").addEventListener("click", () => { if (confirmerAbandon()) accueil(); });
   function confirmerAbandon() {
