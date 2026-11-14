@@ -193,6 +193,56 @@
     }
     @media(max-width:360px){.choix.grille{grid-template-columns:1fr}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+    /* Résolution de problèmes (lot EN9) : figure à droite de l'énoncé, réponses en tableaux, calculatrice */
+    @media(min-width:621px){
+      .q-carte.figure-a-cote .q-corps{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"num figure" "enonce figure" "apres figure" "choix choix";column-gap:20px;align-content:start}
+      .q-carte.figure-a-cote #q-num{grid-area:num}
+      .q-carte.figure-a-cote #q-enonce{grid-area:enonce}
+      .q-carte.figure-a-cote #q-apres{grid-area:apres}
+      .q-carte.figure-a-cote #q-figure{grid-area:figure;align-self:start;margin:0}
+      .q-carte.figure-a-cote #q-choix{grid-area:choix}
+      .q-carte.figure-a-cote .figure{width:auto;height:clamp(120px,22vh,170px)}
+      .mot-tel{display:none}
+    }
+    @media(max-width:620px){.mot-ordi{display:none}}
+    /* Le diagramme de l'œuf (4e Q19) : plus grand quand la place le permet, ses étiquettes se lisent mieux. */
+    @media(min-width:900px){.q-carte.figure-a-cote.figure-grande .figure{height:clamp(150px,30vh,230px)}}
+    .choix.tableaux{grid-template-columns:1fr 1fr}
+    .choix.tableaux .choix-btn{padding:8px 10px}
+    .mini-tab{display:inline-grid;grid-template-columns:auto repeat(4,minmax(3em,auto));border-top:1.5px solid var(--ink);border-left:1.5px solid var(--ink);background:#fff;font-size:.8rem;font-weight:800;line-height:1.15;vertical-align:middle}
+    .mini-tab>span{padding:4px 6px;border-right:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);text-align:center;white-space:nowrap}
+    .mini-tab .mt-titre{font-weight:650}
+    .calc-ouvrir{min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:0 14px;border:2px solid #c5d9e6;border-radius:13px;background:#fff;color:var(--ink);font-weight:900;cursor:pointer}
+    .calc-ouvrir svg{width:22px;height:22px;flex:0 0 auto}
+    .calc-ouvrir[aria-expanded="true"]{border-color:var(--blue);background:#eaf2ff;color:var(--blue)}
+    /* La calculatrice s'ouvre par-dessus la page (rien ne bouge), au-dessus de la barre des boutons ; à partir de 1 340 px
+       de large (écran de 1 366 px du collège compris), à côté du cadre de la question, sans rien cacher. */
+    .calculatrice{position:fixed;z-index:15;right:max(16px,calc((100vw - 860px) / 2 + 28px));bottom:118px;width:232px;padding:10px;border:1px solid #c5d9e6;border-radius:18px;background:#fff;box-shadow:0 14px 44px rgba(26,66,100,.28)}
+    .calc-haut{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-left:4px;font-weight:900}
+    .calc-fermer{width:36px;height:36px;border:0;border-radius:50%;background:#f1f6fa;color:var(--ink);font-weight:900;cursor:pointer}
+    .calc-ecrans{min-height:62px;margin:6px 0 8px;padding:6px 10px;border-radius:10px;background:#f1f6fa;text-align:right}
+    .calc-avant{min-height:18px;margin:0;color:var(--muted);font-size:.8rem;font-weight:700;overflow-wrap:anywhere}
+    .calc-ecran{margin:0;font-size:1.45rem;font-weight:900;line-height:1.25;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+    .calc-touches{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+    .calc-touches button{min-height:42px;padding:0;border:1px solid #c9dbe6;border-radius:10px;background:#f8fcff;color:var(--ink);font-size:1.15rem;font-weight:850;cursor:pointer}
+    .calc-touches .op{background:#eaf2ff;color:var(--blue)}
+    .calc-touches .egal{border-color:var(--blue);background:var(--blue);color:#fff}
+    @media(min-width:1340px){.calculatrice{right:calc((100vw - 860px) / 2 - 242px);bottom:40px}}
+    /* Les tableaux de réponse (4e Q19) côte à côte seulement s'il y a la place : sinon « Coquille » sort de sa case. */
+    @media(max-width:899px){.choix.tableaux{grid-template-columns:1fr;gap:6px}.choix.tableaux .choix-btn{min-height:0;padding:5px 10px}}
+    @media(max-width:620px){
+      .calc-mot{display:none}
+      .calc-ouvrir{padding:0 12px}
+      /* Téléphone : collée au-dessus de la barre des boutons ; la page garde de la place dessous, pour faire remonter
+         la question au-dessus d'elle en la faisant défiler. */
+      .calculatrice{left:50%;right:auto;bottom:calc(76px + env(safe-area-inset-bottom));width:min(320px,calc(100% - 16px));padding:8px;transform:translateX(-50%)}
+      .calc-haut{font-size:.9rem}
+      .calc-fermer{width:34px;height:34px}
+      .calc-ecrans{min-height:54px;margin:4px 0 6px}
+      .calc-touches{gap:5px}
+      .calc-touches button{min-height:40px}
+      body.en-passation.calc-ouverte .shell{padding-bottom:calc(420px + env(safe-area-inset-bottom))}
+    }
   </style>
 </head>
 <body>
@@ -240,9 +290,22 @@
           </div>
           <div class="actions">
             <button id="passer" class="lien" type="button">Je ne sais pas</button>
+            <!-- Calculatrice : seulement dans les tests qui l'ont (Résolution de problèmes), comme le vrai test. -->
+            <button id="calc-ouvrir" class="calc-ouvrir" type="button" aria-expanded="false" aria-controls="calculatrice" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="2.5" width="15" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.5" y="5.5" width="9" height="4" rx="1" fill="currentColor"/><g fill="currentColor"><circle cx="8.6" cy="13" r="1.2"/><circle cx="12" cy="13" r="1.2"/><circle cx="15.4" cy="13" r="1.2"/><circle cx="8.6" cy="17" r="1.2"/><circle cx="12" cy="17" r="1.2"/><circle cx="15.4" cy="17" r="1.2"/></g></svg><span class="calc-mot">Calculatrice</span></button>
             <button id="valider" class="primary" type="button" disabled>Valider</button>
           </div>
         </article>
+        <div id="calculatrice" class="calculatrice" role="dialog" aria-label="Calculatrice" hidden>
+          <div class="calc-haut"><span>Calculatrice</span><button id="calc-fermer" class="calc-fermer" type="button" aria-label="Fermer la calculatrice">✕</button></div>
+          <div class="calc-ecrans" aria-live="polite"><p id="calc-avant" class="calc-avant"></p><p id="calc-ecran" class="calc-ecran">0</p></div>
+          <div class="calc-touches">
+            <button type="button" data-touche="C" aria-label="Tout effacer">C</button><button type="button" data-touche="(">(</button><button type="button" data-touche=")">)</button><button type="button" class="op" data-touche="÷" aria-label="divisé par">÷</button>
+            <button type="button" data-touche="7">7</button><button type="button" data-touche="8">8</button><button type="button" data-touche="9">9</button><button type="button" class="op" data-touche="×" aria-label="multiplié par">×</button>
+            <button type="button" data-touche="4">4</button><button type="button" data-touche="5">5</button><button type="button" data-touche="6">6</button><button type="button" class="op" data-touche="−" aria-label="moins">−</button>
+            <button type="button" data-touche="1">1</button><button type="button" data-touche="2">2</button><button type="button" data-touche="3">3</button><button type="button" class="op" data-touche="+" aria-label="plus">+</button>
+            <button type="button" data-touche="0">0</button><button type="button" data-touche=",">,</button><button type="button" data-touche="←" aria-label="Effacer le dernier signe">←</button><button type="button" class="egal" data-touche="=" aria-label="égal">=</button>
+          </div>
+        </div>
         <div id="confirmation" class="confirmation" hidden>
           <p>Arrêter maintenant ? Tes réponses ne seront pas gardées.</p>
           <div><button id="garder" class="secondary" type="button">Je continue</button><button id="quitter" class="primary" type="button">J’arrête</button></div>
@@ -277,11 +340,13 @@
       </div>
     </section>
   </main>
-  <script src="./en_commun.js?v=20261113-5"></script>
+  <script src="./en_commun.js?v=20261114-3"></script>
   <script src="./sujets/3e_automatismes.js?v=20261114-1"></script>
   <script src="./sujets/6e_automatismes.js?v=20261114-2"></script>
   <script src="./sujets/5e_automatismes.js?v=20261114-1"></script>
   <script src="./sujets/4e_automatismes.js?v=20261113-5"></script>
-  <script src="./evaluation.js?v=20261114-1"></script>
+  <script src="./sujets/6e_problemes.js?v=20261114-3"></script>
+  <script src="./sujets/4e_problemes.js?v=20261114-3"></script>
+  <script src="./evaluation.js?v=20261114-3"></script>
 </body>
 </html>

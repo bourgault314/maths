@@ -143,7 +143,7 @@
   // Espace insécable avant « ? : ; ! » et après « ; une fraction empilée reste collée au signe qui la suit ;
   // un nombre et son unité ne se séparent jamais (1 cm, 18 km/h, 2 h 15 min, 50°…). Seul le texte est touché,
   // jamais l'intérieur d'une balise (figures SVG).
-  const UNITES_MESURE = "km/h|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°|%|€";
+  const UNITES_MESURE = "km/h|km²|mm²|mm³|cm²|cm³|dm²|dm³|m²|m³|mm|cm|dm|dam|hm|km|m|mL|cL|dL|daL|hL|L|mg|cg|dg|dag|hg|kg|g|min|h|s|°|%|€";
   const RE_UNITE = new RegExp(`(\\d) (${UNITES_MESURE})(?![\\p{L}\\d²³])`, "gu");
   function typo(html) {
     return String(html).split(/(<[^>]+>)/).map((morceau) => (morceau.startsWith("<") ? morceau
@@ -151,5 +151,65 @@
       .replace(/(<span class="frac"><span>[^<]*<\/span><span>[^<]*<\/span><\/span>)(\u00a0[?:;!»])/g, '<span class="insecable">$1$2</span>');
   }
 
-  racine.EN = { typo, taches, tacheOfficielle, tirerTache, construire, hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
+  // ---------- Calculatrice (tests « Résolution de problèmes » : la DEPP l'intègre à la question) ----------
+  // Calcule « 3×1,2+2 », « (55−15)÷4 »… : + − × ÷, parenthèses (celles qui manquent à la fin sont fermées), priorités
+  // respectées, comme une calculatrice de collège. Renvoie un nombre, ou null si le calcul n'a pas de sens (division par
+  // zéro, signe en trop, nombre trop grand).
+  function calculer(expression) {
+    let s = String(expression).replace(/\s/g, "").replace(/,/g, ".").replace(/[×*]/g, "*").replace(/[÷/:]/g, "/").replace(/[−–]/g, "-");
+    const ouvertes = (s.match(/\(/g) || []).length - (s.match(/\)/g) || []).length;
+    if (ouvertes > 0) s += ")".repeat(ouvertes);
+    let i = 0;
+    const ERREUR = {};
+    const nombre = () => {
+      const m = /^(\d+(\.\d*)?|\.\d+)/.exec(s.slice(i));
+      if (!m) throw ERREUR;
+      i += m[0].length;
+      return parseFloat(m[0]);
+    };
+    const facteur = () => {
+      if (s[i] === "-") { i++; return -facteur(); }
+      if (s[i] === "(") {
+        i++;
+        const v = somme();
+        if (s[i] !== ")") throw ERREUR;
+        i++;
+        return v;
+      }
+      return nombre();
+    };
+    const produit = () => {
+      let v = facteur();
+      while (s[i] === "*" || s[i] === "/") {
+        const op = s[i++], w = facteur();
+        if (op === "/" && w === 0) throw ERREUR;
+        v = op === "*" ? v * w : v / w;
+      }
+      return v;
+    };
+    const somme = () => {
+      let v = produit();
+      while (s[i] === "+" || s[i] === "-") {
+        const op = s[i++], w = produit();
+        v = op === "+" ? v + w : v - w;
+      }
+      return v;
+    };
+    try {
+      if (!s) return null;
+      const v = somme();
+      if (i !== s.length || !Number.isFinite(v) || Math.abs(v) >= 1e12) return null;
+      return Number(v.toPrecision(12)) + 0; // 3 × 1,2 = 3,6 (et pas 3,5999999999999996) ; + 0 efface « −0 »
+    } catch (e) {
+      return null;
+    }
+  }
+  // Écran de la calculatrice : virgule, au plus 10 chiffres significatifs, pas d'espace entre les chiffres.
+  function ecrireCalcul(v) {
+    if (v === null) return "Erreur";
+    const t = Number(v.toPrecision(10)).toLocaleString("en-US", { maximumFractionDigits: 10, useGrouping: false });
+    return t === "-0" ? "0" : t.replace(".", ",").replace("-", "−");
+  }
+
+  racine.EN = { calculer, ecrireCalcul, typo, taches, tacheOfficielle, tirerTache, construire, hasard, nb, nombreVersTexte, decaler, frac, ang, angLong, lettre, MOINS, enLettres, svg, quadrillage, COUL, ESP };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -54,7 +54,8 @@ test("EN4a-bis : « Arrêter » en petit sur la ligne du haut, plein écran rond
 
 test("EN4a-bis : sur ordinateur, une question avec figure passe sur deux colonnes", () => {
   assert.match(html, /@media\(min-width:900px\)\{\s*\.q-carte\.avec-figure \.q-corps\{display:grid;/);
-  assert.match(js, /\$\("#q-carte"\)\.classList\.toggle\("avec-figure", Boolean\(it\.g\.figure\) && !large\)/);
+  // Lot EN9 : une figure « à côté » (diagramme de l'œuf, figures A et B) n'est pas mise en deux colonnes.
+  assert.match(js, /\$\("#q-carte"\)\.classList\.toggle\("avec-figure", Boolean\(it\.g\.figure\) && !large && !it\.g\.figureACote\)/);
 });
 
 test("EN4a-bis : un nombre et son unité ne se séparent jamais (énoncés, réponses, bilan), 3 niveaux × 300 sujets", () => {
