@@ -7,7 +7,8 @@
 //   C.serie(code, {usage, graine, nombre, exclure})
 //     usage : "valide" (10 : 3/4/3), "entraine" (25 : 6/9/10), "test"
 //     (4 : d2 d3 d3 d2), "echauffement" (1 : d2), "aide" (3 : d1 d2 d2),
-//     "exerciseur" (nombre au choix, ordre progressif)
+//     "retour" (2 : d2 d2 ; « Je me souviens » et « Avant de partir », lot
+//     3a : `nombre` 1 ou 2), "exerciseur" (nombre au choix, ordre progressif)
 //   C.verifier(question, saisie)  → {juste, erreur, retour}
 //   C.exemples(code)              → les 3 exemples de J'apprends
 //   C.graineDe(texte)             → une graine (code de série)
@@ -711,6 +712,12 @@
       return f;
     }
     if (usage === "echauffement") return {0: choisir(rng, ["nombre", "phrase", "objet"])};
+    // Lot 3a : un retour (« Je me souviens », « Avant de partir ») : deux
+    // écritures différentes, au hasard.
+    if (usage === "retour") {
+      const a = choisir(rng, ["nombre", "phrase", "objet"]);
+      return {0: a, 1: choisir(rng, ["nombre", "phrase", "objet"].filter(f => f !== a))};
+    }
     return {};
   }
 
@@ -1575,7 +1582,10 @@
     entraine: [...Array(6).fill(1), ...Array(9).fill(2), ...Array(10).fill(3)],
     test: [2, 3, 3, 2],
     echauffement: [2],
-    aide: [1, 2, 2]
+    aide: [1, 2, 2],
+    // Lot 3a (14/11/2026) : les questions d'un retour (« Je me souviens »,
+    // « Avant de partir ») : 2 au premier retour, 1 ensuite (`nombre`).
+    retour: [2, 2]
   };
 
   function plan(usage, nombre) {

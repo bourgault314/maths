@@ -33,7 +33,8 @@ const G = require("../outils/conversions/conversions_generateurs.js");
 
 const GRAINES = Number(process.env.BANC_GRAINES || 2000);
 const PRETES = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
-const USAGES = [["valide", null], ["entraine", null], ["test", null], ["echauffement", null], ["aide", null], ["exerciseur", 30]];
+// Lot 3a : « retour » (Je me souviens, Avant de partir : 2 questions de degré 2).
+const USAGES = [["valide", null], ["entraine", null], ["test", null], ["echauffement", null], ["aide", null], ["retour", null], ["exerciseur", 30]];
 const NB = " ";
 const FINE = " ";
 
@@ -325,7 +326,7 @@ test("banc d'essai : audit du 12/11 — variété, Oui et Non, exemples", () => 
   // Un exemple de J'apprends ne revient sous aucune forme.
   const ex = new Set(G.clesExemples("Q1"));
   for (let g = 1; g <= 2000; g += 1) {
-    for (const u of ["valide", "entraine", "test", "echauffement"]) {
+    for (const u of ["valide", "entraine", "test", "echauffement", "retour"]) {
       G.serie("Q1", {usage: u, graine: g}).forEach(q => assert.ok(!ex.has(q.cleBase || q.cle), `Q1 ${u} ${g} : ${q.cle}`));
     }
   }
@@ -352,7 +353,7 @@ test("banc d'essai : lot A2 bis — la bonne réponse à toutes les places, aucu
     const ex = new Set(G.clesExemples(code));
     assert.ok(ex.size === 3, code);
     for (let g = 1; g <= 2000; g += 1) {
-      for (const u of ["valide", "entraine", "test", "echauffement", "aide"]) {
+      for (const u of ["valide", "entraine", "test", "echauffement", "aide", "retour"]) {
         G.serie(code, {usage: u, graine: g}).forEach(q => assert.ok(!ex.has(q.cle), `${code} ${u} ${g} : exemple repris ${q.cle}`));
       }
     }

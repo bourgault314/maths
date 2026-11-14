@@ -90,14 +90,20 @@
   }
 
   // ------------------------------------------------------------ les paliers
-  // Couleurs : celles des médailles des planches (univers maths&go).
+  // Lot 3a (14/11/2026, choix de Gwenaël) : une CEINTURE par palier, de la
+  // jaune à la noire ; `couleur` est celle de la ceinture (elle remplace la
+  // couleur des anciennes médailles). Jaune, orange, verte et bleue : les
+  // mêmes que les ceintures de Défi calcul (univers maths&go). Son nom est
+  // toujours écrit à côté du dessin (imprimé en noir et blanc, la verte et la
+  // bleue se ressemblent) ; jamais une couleur de texte (le jaune ne se lit
+  // pas sur du blanc).
   const PALIERS = [
-    {n: 1, nom: "Les bases", classes: "CE1 · CE2", couleur: "#087a71"},
-    {n: 2, nom: "Le CM1", classes: "CM1", couleur: "#0755b8"},
-    {n: 3, nom: "Le CM2", classes: "CM2", couleur: "#147447"},
-    {n: 4, nom: "La 6e", classes: "6e", couleur: "#5b2a86"},
-    {n: 5, nom: "La 5e", classes: "5e", couleur: "#a93030"},
-    {n: 6, nom: "La 4e et la 3e", classes: "4e · 3e", couleur: "#143451"}
+    {n: 1, nom: "Les bases", classes: "CE1 · CE2", ceinture: "jaune", couleur: "#f9bf3b"},
+    {n: 2, nom: "Le CM1", classes: "CM1", ceinture: "orange", couleur: "#f58220"},
+    {n: 3, nom: "Le CM2", classes: "CM2", ceinture: "verte", couleur: "#147447"},
+    {n: 4, nom: "La 6e", classes: "6e", ceinture: "bleue", couleur: "#0b67b2"},
+    {n: 5, nom: "La 5e", classes: "5e", ceinture: "marron", couleur: "#7a4a24"},
+    {n: 6, nom: "La 4e et la 3e", classes: "4e · 3e", ceinture: "noire", couleur: "#1f2329"}
   ];
 
   // Les familles, dans l'ordre d'affichage d'un palier.

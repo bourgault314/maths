@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261113-a2ter">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261114-3a">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261113-a2ter"></script>
-  <script src="./conversions_generateurs.js?v=20261113-a2ter"></script>
-  <script src="./defi_conversions_parcours.js?v=20261112-1"></script>
-  <script src="./defi_conversions_aides.js?v=20261113-a2ter"></script>
+  <script src="./conversions_carte.js?v=20261114-3a"></script>
+  <script src="./conversions_generateurs.js?v=20261114-3a"></script>
+  <script src="./defi_conversions_parcours.js?v=20261114-3a"></script>
+  <script src="./defi_conversions_aides.js?v=20261114-3a"></script>
   <script>
   (function () {
     "use strict";
@@ -72,7 +72,12 @@
       parcours: PROF ? P.creer() : P.charger(stockage()),
       seance: null,
       profEtape: PRETS[0],
-      profSerie: {usage: "valide", graine: 0}
+      profSerie: {usage: "valide", graine: 0},
+      // Lot 3a : les questions déjà vues aujourd'hui (leurs clés), et ce
+      // qui a été raté dans « Je me souviens », à redemander « Avant de
+      // partir » (3 au plus).
+      vues: new Set(),
+      aRedemander: []
     };
 
     const app = document.getElementById("app");
@@ -132,17 +137,14 @@
     function texteLignes(classe, texte) {
       return AIDES.lignes(classe, texte);
     }
-    function medaille(n, gagnee, taille = 40, police = 17) {
-      const m = el("span", `med${gagnee ? " gagne" : ""}`, String(n));
-      m.style.width = rem(taille);
-      m.style.height = rem(taille);
-      m.style.fontSize = rem(police);
-      if (gagnee) {
-        const c = CARTE.palier(n).couleur;
-        m.style.background = c;
-        m.style.boxShadow = `0 0 0 ${rem(2.5)} ${c}`;
-      }
-      return m;
+    // La ceinture d'un palier (lot 3a, choix de Gwenaël du 14/11 : elle
+    // remplace la médaille) : à sa couleur quand elle est gagnée, avec un
+    // liseré doré quand toutes les étoiles du palier sont là, sinon en
+    // pointillés. Son nom est toujours écrit à côté par l'écran.
+    function ceintureEl(n, {gagnee = false, doree = false, taille = 64} = {}) {
+      const nom = CARTE.palier(n).ceinture;
+      return AIDES.ceinture(n, {etat: gagnee ? "gagnee" : "vide", doree, taille,
+        titre: `Ceinture ${nom}${gagnee ? (doree ? " dorée" : "") : ", pas encore gagnée"}`});
     }
     // La flèche de retour du site (le trait épais des autres applis), jamais le
     // caractère « ← », trop maigre (règle de Gwenaël, Défi tables).
@@ -193,8 +195,84 @@
     function carnet() {
       return P.carnet(etat.parcours, REPERES_PAR_ETAPE);
     }
-    function medailles() {
-      return P.medailles(etat.parcours, PALIERS_CODES);
+    function ceintures(source) {
+      return P.ceintures(source || etat.parcours, PALIERS_CODES);
+    }
+    // Ce qui vient d'être gagné entre deux états des ceintures (lot 3a) :
+    // une ceinture, un liseré doré, puis la Légende des conversions.
+    function recompensesGagnees(avant, legendeAvant) {
+      if (PROF) return [];
+      const liste = [];
+      ceintures().forEach((c, k) => {
+        const a = avant[k];
+        if (c.gagnee && !a.gagnee) liste.push({n: c.n, sorte: c.doree ? "doree" : "gagnee"});
+        else if (c.doree && !a.doree) liste.push({n: c.n, sorte: "doree"});
+      });
+      if (!legendeAvant && P.legende(etat.parcours)) liste.push({sorte: "legende"});
+      return liste;
+    }
+
+    // ------------------------------------------------- les questions vues
+    // Lot 3a : jamais deux fois la même question dans une séance, et « Je
+    // valide » ne reprend rien de « À toi » le même jour. Les clés des
+    // questions posées aujourd'hui (rien d'autre : ni réponse ni prénom),
+    // gardées le temps de l'onglet.
+    const CLE_VUES = "mathsgo-defi-conversions-vues";
+    function cleDe(q) {
+      return q.cleBase || q.cle;
+    }
+    function chargerVues() {
+      try {
+        const v = JSON.parse(window.sessionStorage.getItem(CLE_VUES) || "null");
+        if (v && v.jour === etat.jour && Array.isArray(v.cles)) return new Set(v.cles.filter(c => typeof c === "string" && c.length < 80).slice(-300));
+      } catch (e) { /* rien */ }
+      return new Set();
+    }
+    function voir(question) {
+      if (!question) return;
+      etat.vues.add(cleDe(question));
+      if (PROF) return;
+      try { window.sessionStorage.setItem(CLE_VUES, JSON.stringify({jour: etat.jour, cles: [...etat.vues].slice(-300)})); } catch (e) { /* rien */ }
+    }
+    etat.vues = PROF ? new Set() : chargerVues();
+    // Une série qui évite les questions déjà vues aujourd'hui. Une étape de
+    // faits à savoir par cœur (les 10 repères, les 20 relations) n'en a pas
+    // toujours assez : on évite alors les 10 dernières vues, puis les 4,
+    // puis la dernière, puis rien.
+    function serieSure(code, options) {
+      const vues = [...etat.vues];
+      const en = options.exclure || [];
+      for (const exclure of [vues, vues.slice(-10), vues.slice(-4), vues.slice(-1), []]) {
+        const s = G.serie(code, Object.assign({}, options, {exclure: exclure.concat(en)}));
+        if (s.length) return s;
+      }
+      return G.serie(code, Object.assign({}, options, {exclure: []}));
+    }
+    // Les questions d'un retour (« Je me souviens ») ou de « Avant de
+    // partir » : `n` (1 ou 2) d'une étape.
+    // - Une étape de repères : les repères à redemander (celui raté la
+    //   dernière fois d'abord, puis le plus ancien).
+    // - Sinon, la série « retour » d'une graine, toujours tirée sans rien
+    //   exclure (la même graine redonne les mêmes questions : le retour
+    //   suivant les évite), en prenant la première graine dont les questions
+    //   ne sont ni vues aujourd'hui ni celles du retour d'avant.
+    function questionsRetour(source, code, n, {avantDePartir = false} = {}) {
+      const reps = REPERES_PAR_ETAPE[code];
+      if (reps) {
+        const choisis = P.reperesARedemander(source, reps, n);
+        return {graine: 0, qs: choisis.map((r, k) => G.questionRepere(r, graine() + k)).filter(Boolean)};
+      }
+      const interdits = new Set(etat.vues);
+      const g0 = avantDePartir ? 0 : P.graineRetour(source, code);
+      if (g0) G.serie(code, {usage: "retour", graine: g0}).forEach(q => interdits.add(cleDe(q)));
+      let g = graine();
+      let qs = [];
+      for (let essai = 0; essai < 40; essai += 1) {
+        qs = G.serie(code, {usage: "retour", graine: g}).slice(0, n);
+        if (qs.length === n && qs.every(q => !interdits.has(cleDe(q)))) break;
+        g = g >= 99999 ? 1 : g + 1;
+      }
+      return {graine: g, qs};
     }
     function suivante(code) {
       const i = PRETS.indexOf(code);
@@ -206,7 +284,7 @@
       if (PROF) { accueilProf(); return; }
       etat.seance = null;
       ecran({rond: true, forme: "accueil"});
-      // Deux colonnes sur un grand écran (mon étape à gauche, mes médailles
+      // Deux colonnes sur un grand écran (mon étape à gauche, mes ceintures
       // et mes tuiles à droite) ; au téléphone, les colonnes s'effacent
       // (display: contents) et l'ordre reste le même.
       const gauche = el("div", "col col-g");
@@ -219,13 +297,21 @@
       const palierN = code ? CARTE.etape(code).palier : 1;
       const codesPalier = PALIERS_CODES[palierN];
       const valideesPalier = codesPalier.filter(c => P.estValidee(p, c)).length;
-      const gagnees = medailles();
+      const solidesPalier = codesPalier.filter(c => P.estSolide(p, c)).length;
+      const lesCeintures = ceintures();
+      const ici = lesCeintures[palierN - 1];
 
+      // Lot 3a : la ceinture du palier, à la place exacte du rond de la
+      // flèche des autres écrans (même boîte, même centre : rien ne saute).
       const haut = el("div", "acc-palier");
-      haut.appendChild(medaille(palierN, gagnees.includes(palierN), 46, 19));
+      const boite = el("span", "acc-ceinture");
+      boite.appendChild(ceintureEl(palierN, {gagnee: ici.gagnee, doree: ici.doree, taille: 40}));
+      haut.appendChild(boite);
       const info = el("div", "info");
       info.appendChild(el("span", "eti", `Palier ${palierN} · ${CARTE.palier(palierN).nom}`));
-      info.appendChild(el("b", "", T(`${valideesPalier} ${valideesPalier > 1 ? "étapes validées" : "étape validée"} sur ${codesPalier.length}`)));
+      const ligne = el("b", "", T(`${valideesPalier} ${valideesPalier > 1 ? "étapes validées" : "étape validée"} sur ${codesPalier.length}`));
+      if (solidesPalier) ligne.appendChild(el("span", "etoiles", ` · ${solidesPalier}${NB}★`));
+      info.appendChild(ligne);
       const prog = el("div", "prog");
       const barre = el("i");
       barre.style.width = `${(100 * valideesPalier) / codesPalier.length}%`;
@@ -234,36 +320,35 @@
       haut.appendChild(info);
       ajouterG(haut);
 
-      const du = P.echauffementDu(p, etat.jour, PRETS);
+      // Mon étape. Lot 3a : la séance du jour en pastilles — « Je me
+      // souviens » (s'il y a des étapes qui reviennent), J'apprends, Je
+      // valide (le jour même).
+      const souvenirs = P.tirerSouvenirs(p, etat.jour, PRETS);
       const carteEtape = el("div", "carte bleue");
       carteEtape.appendChild(el("div", "eti", "Mon étape"));
       if (!code) {
         carteEtape.appendChild(el("h2", "", `Le palier ${palierN + 1} arrive bientôt`));
-        carteEtape.appendChild(el("div", "petit", "Tu as fini tout ce qui est prêt. En attendant, ton échauffement revient chaque jour : il garde tout en mémoire."));
-        if (du) carteEtape.appendChild(bouton("Mon échauffement →", "", () => lancerSeance()));
-        else carteEtape.appendChild(el("div", "petit centre", "Ton échauffement revient demain."));
+        carteEtape.appendChild(el("div", "petit", souvenirs.length ? "Tu as fini tout ce qui est prêt. Tes étapes reviennent : elles restent en mémoire."
+          : "Tu as fini tout ce qui est prêt. Tes étapes reviendront dans les prochains jours."));
+        if (souvenirs.length) carteEtape.appendChild(bouton("Je me souviens →", "", () => lancerSeance()));
       } else {
         const action = P.actionDe(p, code, etat.jour);
         carteEtape.appendChild(el("h2", "", nomEtape(code)));
-        const pastilles = el("div", "etape3");
-        const appris = action === "valide" || action === "demain";
-        const a = el("div", appris ? "fait" : "ici");
-        a.appendChild(el("em", "", appris ? "✓" : "①"));
-        a.appendChild(document.createTextNode("J'apprends"));
-        const b = el("div", action === "valide" ? "ici" : "");
-        b.appendChild(el("em", "", "②"));
-        b.appendChild(document.createTextNode("Je valide"));
-        pastilles.append(a, b);
+        const pastilles = el("div", `etape3${souvenirs.length ? "" : " deux"}`);
+        const pastille = (classe, marque, texte) => {
+          const d = el("div", classe);
+          d.append(el("em", "", marque), document.createTextNode(texte));
+          return d;
+        };
+        const numeros = ["①", "②", "③"];
+        let k = 0;
+        if (souvenirs.length) pastilles.appendChild(pastille("ici", numeros[k++], "Je me souviens"));
+        const appris = action === "valide";
+        pastilles.appendChild(pastille(appris ? "fait" : souvenirs.length ? "" : "ici", appris ? "✓" : numeros[k], "J'apprends"));
+        k += 1;
+        pastilles.appendChild(pastille(appris && !souvenirs.length ? "ici" : "", numeros[k], "Je valide"));
         carteEtape.appendChild(pastilles);
-        if (action === "demain") {
-          carteEtape.appendChild(el("div", "petit centre", "Je valide s'ouvre demain, après ton échauffement."));
-          if (du) carteEtape.appendChild(bouton("Mon échauffement →", "", () => lancerSeance()));
-          const apres = suivante(code);
-          if (apres) carteEtape.appendChild(bouton("Je connais peut-être la suite →", "cl", () => introTest(apres)));
-        } else {
-          if (du) carteEtape.appendChild(el("div", "petit centre", `Aujourd'hui : l'échauffement, puis ${action === "valide" ? "Je valide" : "J'apprends"}.`));
-          carteEtape.appendChild(bouton(P.estVide(p) ? "Commencer →" : "C'est parti →", "", () => lancerSeance()));
-        }
+        carteEtape.appendChild(bouton(P.estVide(p) ? "Commencer →" : "C'est parti →", "", () => lancerSeance()));
       }
       ajouterG(carteEtape);
 
@@ -280,18 +365,23 @@
         ajouterG(test);
       }
 
-      const meds = el("div", "carte");
-      meds.style.padding = `${rem(9)} ${rem(12)}`;
-      const ligneMeds = el("div");
-      ligneMeds.style.cssText = "display:flex;justify-content:space-between;align-items:center";
-      const bm = el("b", "", "Mes médailles");
-      bm.style.fontSize = rem(15);
-      ligneMeds.append(bm, el("span", "petit", T(`${gagnees.length} sur 6`)));
-      meds.appendChild(ligneMeds);
-      const rang = el("div", "med-row");
-      for (let n = 1; n <= 6; n += 1) rang.appendChild(medaille(n, gagnees.includes(n), 38, 16));
-      meds.appendChild(rang);
-      ajouterD(meds);
+      // Mes ceintures (lot 3a) : les six, la gagnée à sa couleur, les autres
+      // en pointillés, chacune avec son nom (on voit la suite).
+      const nbGagnees = lesCeintures.filter(c => c.gagnee).length;
+      const legende = P.legende(p);
+      const carteC = el("div", "carte ceintures-carte");
+      const teteC = el("div", "cc-tete");
+      teteC.append(el("b", "", legende ? "Légende des conversions" : "Mes ceintures"), el("span", "petit", T(`${nbGagnees} sur 6`)));
+      carteC.appendChild(teteC);
+      const rangC = el("div", "cc-rang");
+      lesCeintures.forEach(c => {
+        const f = el("div", `cc${c.gagnee ? " gagnee" : ""}`);
+        f.appendChild(ceintureEl(c.n, {gagnee: c.gagnee, doree: c.doree, taille: 44}));
+        f.appendChild(el("span", "", c.doree ? `${CARTE.palier(c.n).ceinture}${NB}★` : CARTE.palier(c.n).ceinture));
+        rangC.appendChild(f);
+      });
+      carteC.appendChild(rangC);
+      ajouterD(carteC);
 
       const nbValidees = P.validees(p).length;
       const nbReperes = carnet().length;
@@ -354,7 +444,7 @@
       boite.setAttribute("role", "dialog");
       boite.setAttribute("aria-modal", "true");
       boite.append(el("b", "", "Effacer tout ton historique ?".replace(" ?", `${NB}?`)),
-        el("div", "petit", "Tes étapes validées, tes médailles et ton carnet seront effacés sur cet appareil. On ne peut pas revenir en arrière."));
+        el("div", "petit", "Tes étapes validées, tes étoiles, tes ceintures et ton carnet seront effacés sur cet appareil. On ne peut pas revenir en arrière."));
       boite.lastChild.style.fontSize = rem(15);
       const oui = bouton("Oui, tout effacer", "rouge", () => {
         etat.parcours = P.effacer(stockage());
@@ -368,41 +458,51 @@
     }
 
     // ============================================================ LA SÉANCE
-    // Une séance = l'échauffement (une fois par jour) + une étape.
+    // Lot 3a (choix de Gwenaël du 14/11) : une séance = « Je me souviens »
+    // (les étapes qui reviennent ; rien le premier jour), puis Mon étape (On
+    // te montre → À toi → Je valide, juste après), puis « Avant de partir »
+    // (ce qui a été raté au début, redemandé ; rien n'y est compté).
     function lancerSeance() {
       nouvelleSeance();
-      if (P.echauffementDu(etat.parcours, etat.jour, PRETS)) echauffement(apresEchauffement);
-      else monEtape();
-    }
-    function apresEchauffement() {
-      const revoir = P.aRevoir(etat.parcours, PRETS);
-      if (revoir) annonceRevoir(revoir);
+      if (P.tirerSouvenirs(etat.parcours, etat.jour, PRETS).length) jeMeSouviens(() => monEtape());
       else monEtape();
     }
     function monEtape(code) {
       const c = code || P.monEtape(etat.parcours, PRETS);
-      if (!c) { accueil(); return; }
+      // Plus d'étape prête (le palier est fini) : la séance finit par « Avant
+      // de partir » s'il y a quelque chose à redemander.
+      if (!c) { if (etat.aRedemander.length) avantDePartir([["Accueil", "", accueil]]); else accueil(); return; }
       const action = PROF ? "apprends" : P.actionDe(etat.parcours, c, etat.jour);
-      if (action === "validee" || action === "demain") { accueil(); return; }
+      if (action === "validee") { accueil(); return; }
       noterSeance({etape: c});
       if (action === "valide") { jeValide(c); return; }
       changer(p => P.marquerVue(p, c, etat.jour));
       if (action === "apprends") onTeMontre(c, () => aToi(c));
       else aToi(c);
     }
+    // Les boutons de la fin d'une étape : « Avant de partir → » d'abord s'il
+    // y a quelque chose à redemander (ses boutons viendront après), sinon
+    // les boutons eux-mêmes. `boutons` : [[texte, classe, action]…].
+    function ajouterSuite(boutons) {
+      if (etat.aRedemander.length) { ajouter(bouton("Avant de partir →", "", () => avantDePartir(boutons))); return; }
+      boutons.forEach(([texte, classe, action]) => ajouter(bouton(texte, classe, action)));
+    }
 
     // --------------------------------------------------- l'écran d'une question
     // Bandeau, chemin, question (hauteur fixe pour la séance), zone d'aide
     // (même place, même taille), pavé ou choix, bouton.
-    // `zone` : « aide » (À toi, On revoit : la place fixe de l'aide, à la
+    // `zone` : « aide » (À toi : la place fixe de l'aide, à la
     // hauteur `hauteurZone` mesurée pour la série), « info » (Je valide, Tu
     // connais déjà ? : ce qu'il y a à dire, sans boîte), « montre » (On te
-    // montre : à la hauteur du dessin), ou « aucune » (l'échauffement : la
-    // correction vient à la place du pavé).
-    function ecranQuestion({petit, titre, chip, chemin, retour, hauteur, hauteurPx, zone: sorteZone = "aide", hauteurZone}) {
+    // montre : à la hauteur du dessin), ou « aucune » (plus utilisée depuis
+    // le lot 3a : « Je me souviens » a sa zone, pour la correction dessinée).
+    // `jnsp` (lot 3a) : le bouton « Je ne sais pas », à gauche de
+    // « Valider », dans la même rangée : sa place est toujours là (il se
+    // cache sans rien faire bouger).
+    function ecranQuestion({petit, titre, chip, chemin, retour, hauteur, hauteurPx, zone: sorteZone = "aide", hauteurZone, jnsp = false}) {
       ecran({serre: true, forme: "seance"});
       if (sorteZone === "aucune") cadre.classList.add("sans-aide");
-      // Une aide à côté du pavé (À toi, On revoit) ou l'escalier (Tu connais
+      // Une aide à côté du pavé (À toi) ou l'escalier (Tu connais
       // déjà ?) : sur un écran peu haut, le pavé se fait plus court.
       if (sorteZone === "aide") cadre.classList.add("bas-court");
       if (hauteurPx) cadre.style.setProperty("--q-h", `${hauteurPx}px`);
@@ -427,8 +527,15 @@
       const bas = el("div", "bas");
       const action = bouton("Valider", "", () => {});
       action.classList.add("action");
-      ajouter(b, ch, q, zone, bas, action);
-      return {q, zone, bas, action, chip: c};
+      let jnspEl = null;
+      let rangee = action;
+      if (jnsp) {
+        jnspEl = bouton("Je ne sais pas", "cl jnsp", () => {});
+        rangee = el("div", "duo duo-jnsp");
+        rangee.append(jnspEl, action);
+      }
+      ajouter(b, ch, q, zone, bas, rangee);
+      return {q, zone, bas, action, chip: c, jnsp: jnspEl};
     }
 
     // La hauteur de la zone pour toute une série : celle du contenu le plus
@@ -452,18 +559,18 @@
       if (style === null) zone.removeAttribute("style"); else zone.setAttribute("style", style);
       return Math.ceil(max + 1);
     }
-    // Après une erreur dans « À toi » ou « On revoit » (lot A2 ter) :
+    // Après une erreur dans « À toi », « Je valide » ou « Je me souviens » (lot A2 ter ; lot 3a) :
     // - la zone dit la bonne réponse ; pour une conversion, le glisse-unité
     //   de la question glisse tout seul de l'unité de départ à celle de la
     //   réponse, comme le glisse-unité animé de l'exerciseur, puis la réponse
     //   s'écrit dessous ;
     // - le pourquoi (l'erreur reconnue), la suite et les ronds viennent à la
-    //   place des réponses, qui ne servent plus (comme à l'échauffement) :
+    //   place des réponses, qui ne servent plus :
     //   les ronds ne passent plus jamais sous les réponses (Gwenaël, le 13/11).
     function remplirErreurZone(zone, qn, {animer = false} = {}) {
       remplirZone(zone, "ko", ["ko", "La bonne réponse"]);
       const reponse = el("div", "reponse-bonne");
-      // Un repère : sa carte, comme à l'échauffement (l'objet et sa mesure).
+      // Un repère : sa carte (l'objet et sa mesure).
       if (qn.repere && qn.forme === "qcm") reponse.appendChild(AIDES.carteRepere(qn.repere, {grande: true}));
       // « Qu'est-ce que je mesure ? » : les quatre grandeurs, la bonne en vert.
       else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur});
@@ -476,29 +583,34 @@
       }
       zone.appendChild(reponse);
     }
-    function remplirErreurBas(bas, retour, note, ronds) {
+    // `neutre` (lot 3a) : après « Je ne sais pas », pas de rouge ni de
+    // reproche : la correction, et c'est tout.
+    function remplirErreurBas(bas, retour, note, ronds, {neutre = false} = {}) {
       bas.textContent = "";
-      const panneau = el("div", "zone ko panneau pourquoi");
-      if (retour) panneau.appendChild(el("div", "verd ko", retour));
+      const panneau = el("div", `zone ${neutre ? "neutre" : "ko"} panneau pourquoi`);
+      if (retour && !neutre) panneau.appendChild(el("div", "verd ko", retour));
       if (note) panneau.appendChild(el("div", "note", note));
       if (ronds) panneau.appendChild(ronds);
-      if (!retour) panneau.prepend(el("div", "verd ko", "Ce n'est pas ça."));
+      if (neutre) panneau.prepend(el("div", "verd neutre", "Regarde bien la correction."));
+      else if (!retour) panneau.prepend(el("div", "verd ko", "Ce n'est pas ça."));
       bas.appendChild(panneau);
       ajusterZone(panneau);
     }
-    function remplirErreur(ui, qn, retour, note, ronds) {
+    function remplirErreur(ui, qn, retour, note, ronds, options = {}) {
       remplirErreurZone(ui.zone, qn, {animer: true});
       ajusterZone(ui.zone);
-      remplirErreurBas(ui.bas, retour, note, ronds);
+      remplirErreurBas(ui.bas, retour, note, ronds, options);
     }
 
     // La hauteur de la question d'une série (en px) : au moins celle de sa
     // question la plus haute (lot A2 ter) ; quand l'écran a de la place (plus
     // de 800 px de haut, ou un grand écran de plus de 700 px), celle d'avant,
     // fixe par étape (rien ne change à l'ordinateur ni au téléphone haut).
-    function hauteurSerie(qEl, code, questions) {
+    // `codes` : le code de l'étape, ou les codes d'une série mêlée (lot 3a).
+    function hauteurSerie(qEl, codes, questions) {
       const mesure = mesurerQuestions(qEl, questions);
-      const px = hauteurQuestion(code) * parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+      const plusHaute = Math.max(...[].concat(codes).map(hauteurQuestion));
+      const px = plusHaute * parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
       const haut = window.innerHeight > 800 || (window.innerWidth >= 900 && window.innerHeight > 700);
       return haut ? Math.max(mesure, Math.round(px)) : mesure;
     }
@@ -656,11 +768,23 @@
       return Math.ceil(max + 1);
     }
 
+    // Pour le robot de vérification (tests/defi-conversions-*.cjs) : la
+    // question à l'écran, pour y répondre juste ou faux (lot 3a : les séries
+    // mêlées et sans les questions déjà vues ne se recalculent plus de
+    // l'extérieur). Rien qu'on ne puisse déjà trouver avec les générateurs.
+    let ici = null;
+    window.MATHSGO_DEFI_CONVERSIONS_ECRAN = Object.freeze({
+      question: () => (ici ? {forme: ici.forme, reponse: ici.reponse, choix: ici.choix || null, bon: ici.bon, bonnes: ici.bonnes || null,
+        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici)} : null)
+    });
+
     function interroger(ui, question, {avant, apres}) {
       const saisie = {cases: ["", ""], focus: 0, fige: false};
       const nbCases = question.forme === "deux-cases" ? 2 : 1;
       const m = question.morceaux;
       const casesEl = poserQuestion(ui.q, question, i => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
+      ici = question;
+      voir(question);
       function peindre() {
         casesEl.forEach((c, i) => {
           c.textContent = saisie.cases[i].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
@@ -796,13 +920,19 @@
         else if (ev.key === "Tab" && nbCases === 2) { ev.preventDefault(); saisie.focus = 1 - saisie.focus; peindre(); }
         else if (ev.key === "Enter") { ev.preventDefault(); repondre(null); }
       };
+      // « Je ne sais pas » (lot 3a) : la correction, comptée comme une erreur.
+      if (ui.jnsp) {
+        ui.jnsp.style.visibility = "";
+        ui.jnsp.onclick = () => repondre(null, true);
+      }
       avant(ui.zone);
       ajusterZone(ui.zone);
 
-      function repondre(choix) {
+      function repondre(choix, jeNeSaisPas = false) {
         if (saisie.fige) return;
-        let reponse;
-        if (gesteEl) {
+        let reponse = null;
+        if (jeNeSaisPas) reponse = null;
+        else if (gesteEl) {
           if (!complet()) return;
           reponse = question.forme === "associer" ? relie.lien.slice() : range.slice();
         } else if (question.choix) reponse = choix;
@@ -815,12 +945,13 @@
           reponse = nbCases === 2 ? saisie.cases.slice(0, 2) : saisie.cases[0];
         }
         saisie.fige = true;
-        const verdict = G.verifier(question, reponse);
-        verdict.tape = gesteEl ? "" : question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
+        if (ui.jnsp) ui.jnsp.style.visibility = "hidden";
+        const verdict = jeNeSaisPas ? {juste: false, erreur: null, retour: null, jnsp: true} : G.verifier(question, reponse);
+        verdict.tape = jeNeSaisPas || gesteEl ? "" : question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
         if (gesteEl) {
           // Chaque objet relié (ou chaque mesure rangée) : juste ou faux.
           gesteEl.classList.add("fige");
-          if (question.forme === "associer") {
+          if (jeNeSaisPas) { /* rien de relié : la correction dit tout */ } else if (question.forme === "associer") {
             relie.lien.forEach((j, i) => {
               const ok = j === question.bonnes[i];
               gesteEl.querySelectorAll(".obj")[i].classList.add(ok ? "bon" : "faux");
@@ -831,12 +962,12 @@
         } else if (choixEl) {
           choixEl.classList.add("fige");
           [...choixEl.children].forEach((b, i) => {
-            if (i === choix) b.classList.add(verdict.juste ? "bon" : "faux");
+            if (!jeNeSaisPas && i === choix) b.classList.add(verdict.juste ? "bon" : "faux");
             else if (!verdict.juste && i === question.bon && apres.montrerBon !== false) b.classList.add("bon");
             else b.classList.add("eteint");
           });
         } else {
-          casesEl.forEach(c => { c.className = `case${nbCases === 2 ? " petite" : ""} ${verdict.juste ? "vert" : "rouge"}`; });
+          casesEl.forEach(c => { c.className = `case${nbCases === 2 ? " petite" : ""}${jeNeSaisPas ? "" : verdict.juste ? " vert" : " rouge"}`; });
           const pave = ui.bas.querySelector(".pave4");
           if (pave) pave.classList.add("pale");
         }
@@ -976,7 +1107,8 @@
     // ---------------------------------------------------------------- À toi
     function aToi(code, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
-      const serie = G.serie(code, {usage: "entraine", graine: graine()});
+      // Lot 3a : sans les questions déjà vues aujourd'hui (« Je me souviens »).
+      const serie = serieSure(code, {usage: "entraine", graine: graine()});
       const reponses = [];
       let i = 0;
       let hauteurZone = 0;
@@ -993,7 +1125,7 @@
         if (suivi.fini || i >= serie.length) { finAToiSansReussir(code, {retour, fin}); return; }
         const qn = serie[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `à toi · ${i + 1}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
-          retour, hauteurPx: hauteurQ, hauteurZone});
+          retour, hauteurPx: hauteurQ, hauteurZone, jnsp: true});
         if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
         // La première fois : la hauteur de l'aide la plus haute de la série
         // (l'outil, l'image, une erreur), pour que rien ne bouge ensuite.
@@ -1013,7 +1145,7 @@
             else { remplirZone(zone, "vide", ["sans", "Sans aide"]); zone.append(cEstAToi(), suiteRonds(suivi.justesDeSuite, 5, true, true)); }
           },
           apres: {fait(v) {
-            reponses.push({juste: v.juste, outil: phase});
+            reponses.push({juste: v.juste, outil: phase, jnsp: Boolean(v.jnsp)});
             i += 1;
             if (v.juste) {
               if (phase === "aucun") { const s = ui.zone.querySelector(".suite"); if (s) s.replaceWith(suiteRonds(suivi.justesDeSuite + 1, 5, true, true)); }
@@ -1022,7 +1154,7 @@
             }
             const apresErreur = P.suivreEntrainement(reponses);
             remplirErreur(ui, qn, v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.",
-              suiteRonds(0));
+              suiteRonds(0), {neutre: v.jnsp});
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
             ui.action.onclick = question;
@@ -1038,7 +1170,9 @@
       ajouter(el("div", "gros-emoji", "💪"));
       const t = el("div", "titre-fin", "On continue la prochaine fois");
       t.appendChild(el("small", "", "25 questions aujourd'hui : c'est beaucoup ! Tu reprendras « À toi » à ta prochaine séance.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
-      ajouter(t, espace(), bouton("Accueil", "", fin || accueil));
+      ajouter(t, espace());
+      if (fin) ajouter(bouton("Accueil", "", fin));
+      else ajouterSuite([["Accueil", "", accueil]]);
     }
 
     function ecranQuestionFin(petit, titre, ici, retour, noms = ["J'apprends", "Je valide"]) {
@@ -1107,47 +1241,108 @@
       defile.appendChild(el("div", "cahier", `✏️ ${etape.cahier}`));
       ajouter(defile);
       if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
-      ajouter(el("div", "verd neutre", "Je valide s'ouvre demain, après ton échauffement."));
-      const apres = suivante(code);
-      if (apres) ajouter(bouton("Je connais peut-être la suite →", "cl", () => introTest(apres)));
-      ajouter(bouton("Accueil", "", accueil));
+      // Lot 3a : Je valide vient juste après, le jour même.
+      ajouter(bouton("Je valide →", "", () => jeValide(code)));
     }
 
     // ------------------------------------------------------------- Je valide
-    function jeValide(code, {retour, fin} = {}) {
+    // Lot 3a (choix de Gwenaël du 14/11) : le jour même, juste après « À
+    // toi ». 10 questions, 8 justes, arrêt à la 3e erreur.
+    // - Le mélange : 7 questions de l'étape et, aux places 3, 6 et 9, 3 des
+    //   étapes déjà validées du palier (P.planValidation).
+    // - La correction vient TOUT DE SUITE après une erreur : la bonne
+    //   réponse, la relation, le glisse-unité qui glisse, comme dans « À
+    //   toi » ; à la fin, la liste des erreurs est rappelée.
+    // - « Je ne sais pas » compte comme une erreur.
+    // - Aucune question vue aujourd'hui (dans « À toi » ou « Je me
+    //   souviens ») ne revient.
+
+    // La sorte d'une question (pour garder les questions à ranger, à relier,
+    // en phrase… quand on n'en garde que 7).
+    function sorteDe(q) {
+      const d = q.donnees || {};
+      return [q.forme, q.somme ? "somme" : "", d.type || "", d.sorte || "", d.cherche || ""].join("/");
+    }
+    // 7 questions de l'étape sur ses 10 : on retire une question de chaque
+    // degré (1, 2 et 3), celle dont la sorte est la plus répétée dans la
+    // série, jamais la dernière (une somme, deux cases, relier…).
+    function retirerTrois(s) {
+      if (s.length !== 10) return s.slice(0, 7);
+      const garde = s.map(() => true);
+      [[0, 1, 2], [3, 4, 5, 6], [7, 8]].forEach(groupe => {
+        const compte = q => s.filter((x, k) => garde[k] && sorteDe(x) === sorteDe(q)).length;
+        const milieu = (groupe[0] + groupe[groupe.length - 1]) / 2;
+        let meilleur = null;
+        groupe.forEach(k => {
+          const c = compte(s[k]);
+          if (!meilleur || c > meilleur.c || (c === meilleur.c && Math.abs(k - milieu) < Math.abs(meilleur.k - milieu))) meilleur = {k, c};
+        });
+        garde[meilleur.k] = false;
+      });
+      return s.filter((x, k) => garde[k]);
+    }
+    // Les 10 questions de Je valide, dans l'ordre du plan.
+    function questionsValidation(code, source) {
+      const plan = P.planValidation(source, code, PALIERS_CODES[CARTE.etape(code).palier]);
+      const g = graine();
+      const autres = plan.filter(c => c !== code);
+      const siennes = serieSure(code, {usage: "valide", graine: g});
+      const propres = autres.length ? retirerTrois(siennes) : siennes;
+      const series = {};
+      const deja = {};
+      let k = 0;
+      const questions = plan.map(c => {
+        if (c === code) return propres[k++];
+        // Une étape d'avant : une question de degré 2 de sa série (la 4e,
+        // puis la 5e et la 6e si elle revient).
+        series[c] = series[c] || serieSure(c, {usage: "valide", graine: g + 1});
+        deja[c] = (deja[c] || 0) + 1;
+        return series[c][2 + deja[c]] || series[c][deja[c]];
+      });
+      return {plan, questions: questions.every(Boolean) ? questions : siennes};
+    }
+
+    function jeValide(code, {retour, fin, source = null} = {}) {
       const etape = CARTE.etape(code);
-      const serie = G.serie(code, {usage: "valide", graine: graine()});
+      const {plan, questions} = questionsValidation(code, source || etat.parcours);
       const resultats = [];
       const erreurs = [];
-      const avantMedailles = medailles();
+      const avantC = ceintures();
+      const legendeAvant = P.legende(etat.parcours);
       let i = 0;
       let hauteurQ = 0;
+      let hauteurZone = 0;
+      // Sans aide : les 10 cases et la consigne, au milieu de leur zone.
+      const consigne = zone => {
+        remplirZone(zone, "info fixe centre");
+        zone.appendChild(dixCases(resultats, resultats.length < 10 ? resultats.length : -1));
+        zone.appendChild(texteLignes("calme", "Sans aide.\n8 justes sur 10 pour valider l'étape."));
+      };
       const question = () => {
         const suivi = P.suivreValidation(resultats);
-        if (suivi.fini) { finValidation(code, suivi, erreurs, avantMedailles, resultats, {retour, fin}); return; }
-        const qn = serie[i];
-        // Pas d'aide : pas de boîte vide. Les 10 cases et la consigne, juste
-        // sous la question (lot A2, le « grand vide » vu par Gwenaël).
+        if (suivi.fini) { finValidation(code, suivi, erreurs, avantC, legendeAvant, resultats, {retour, fin}); return; }
+        const qn = questions[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "Je valide", chip: `${i + 1} / 10`, chemin: {noms: ["J'apprends", "Je valide"], ici: 1},
-          retour, hauteurPx: hauteurQ, zone: "info"});
-        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
+          retour, hauteurPx: hauteurQ, zone: "info", hauteurZone, jnsp: true});
+        cadre.classList.add("bas-court");
+        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, plan, questions); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
+        // La place de la correction, mesurée une fois : rien ne bouge
+        // quand elle vient.
+        if (!hauteurZone) {
+          hauteurZone = mesurerZone(ui.zone, [consigne].concat(questions.map(x => z => remplirErreurZone(z, x))));
+          cadre.style.setProperty("--z-h", `${hauteurZone}px`);
+        }
         interroger(ui, qn, {
-          avant(zone) {
-            remplirZone(zone, "info");
-            zone.appendChild(dixCases(resultats, i));
-            zone.appendChild(texteLignes("calme", "Sans aide.\n8 justes sur 10 pour valider l'étape."));
-          },
-          apres: {montrerBon: false, fait(v) {
+          avant(zone) { consigne(zone); },
+          apres: {fait(v) {
             resultats.push(v.juste);
-            if (!v.juste) erreurs.push({question: qn, tape: v.tape});
             i += 1;
-            remplirZone(ui.zone, "info");
-            ui.zone.appendChild(dixCases(resultats, -1));
-            if (v.juste) { ui.zone.appendChild(texteLignes("calme", "Sans aide.\n8 justes sur 10 pour valider l'étape.")); apresDelai(question, 500); return; }
-            const c = texteLignes("calme rouge", "Ce n'est pas ça.\nTu verras la correction à la fin.");
-            ui.zone.appendChild(c);
+            if (v.juste) { consigne(ui.zone); apresDelai(question, 500); return; }
+            erreurs.push({question: qn, tape: v.tape, jnsp: Boolean(v.jnsp)});
+            remplirErreur(ui, qn, v.retour, choisi(qn, v), dixCases(resultats, -1), {neutre: v.jnsp});
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
+            ui.action.disabled = false;
             ui.action.onclick = question;
           }}
         });
@@ -1155,9 +1350,14 @@
       question();
     }
 
+    // Une réponse à choix ratée : ce qui a été choisi (les réponses ont
+    // laissé leur place à la correction).
+    function choisi(qn, v) {
+      return qn.choix && !v.jnsp && v.tape ? T(`Tu as choisi : ${v.tape}`) : null;
+    }
     function blocCorrection(erreurs) {
       const c = el("div", "corr");
-      erreurs.forEach(({question, tape}) => {
+      erreurs.forEach(({question, tape, jnsp}) => {
         const ligne = el("div");
         const gauche = el("span");
         if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") gauche.textContent = question.resume;
@@ -1166,16 +1366,16 @@
           gauche.appendChild(el("span", "v", question.reponseTexte));
         }
         const geste = question.forme === "associer" || question.forme === "ranger";
-        ligne.append(gauche, el("small", "", geste ? "à revoir" : question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
+        ligne.append(gauche, el("small", "", jnsp ? "je ne savais pas" : geste ? "à revoir" : question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
         c.appendChild(ligne);
       });
       return c;
     }
 
-    function finValidation(code, suivi, erreurs, avantMedailles, resultats, {retour, fin} = {}) {
+    function finValidation(code, suivi, erreurs, avantC, legendeAvant, resultats, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
       const reussie = suivi.reussie;
-      const avantRatees = P.etapeDe(etat.parcours, code)[4];
+      const avantRatees = P.etapeDe(etat.parcours, code)[P.E.ratees];
       if (!PROF) {
         noterSeance({valide: reussie ? 1 : 2});
         changer(p => P.noterValidation(p, code, reussie, etat.jour));
@@ -1193,199 +1393,222 @@
         ajouter(t);
       }
       ajouter(dixCases(resultats, -1));
-      if (erreurs.length) {
-        const e = el("div", "eti", "La correction");
-        ajouter(e, blocCorrection(erreurs));
-      }
+      // Lot 3a : la correction a été vue tout de suite ; la liste la rappelle.
+      if (erreurs.length) ajouter(el("div", "eti", erreurs.length > 1 ? "Mes erreurs, corrigées" : "Mon erreur, corrigée"), blocCorrection(erreurs));
       if (fin) { ajouter(espace(), bouton("Accueil", "", fin)); return; }
       if (reussie) {
-        const nouvelles = medailles().filter(n => !avantMedailles.includes(n));
-        ajouter(espace());
-        if (nouvelles.length) { ajouter(bouton("Continuer →", "", () => ecranMedaille(nouvelles[0], `${suivi.justes} justes sur 10 : étape validée`, accueil))); return; }
+        ajouter(el("div", "verd neutre", "Elle revient demain dans « Je me souviens ».".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)), espace());
         const apres = suivante(code);
-        if (apres) ajouter(bouton("Étape suivante →", "", () => { nouvelleSeance(); monEtape(apres); }));
-        ajouter(bouton("Accueil", apres ? "cl" : "", accueil));
+        const boutons = apres ? [["Étape suivante →", "", () => { nouvelleSeance(); monEtape(apres); }], ["Accueil", "cl", accueil]] : [["Accueil", "", accueil]];
+        const nouvelles = recompensesGagnees(avantC, legendeAvant);
+        if (nouvelles.length) { ajouter(bouton("Continuer →", "", () => montrerRecompenses(nouvelles, () => suiteSeule(boutons)))); return; }
+        ajouterSuite(boutons);
       } else {
         const enEntier = avantRatees + 1 === P.SEUILS.ratees.apprendsEnEntier;
-        ajouter(el("div", "verd neutre", enEntier ? "Tu refais J'apprends en entier. Tu revalideras le lendemain." : "Tu refais « À toi » dans J'apprends. Tu revalideras le lendemain.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
-        ajouter(espace(), bouton(enEntier ? "J'apprends →" : "J'apprends : À toi →", "", () => { nouvelleSeance(); monEtape(code); }));
+        ajouter(el("div", "verd neutre", enEntier ? "Tu refais J'apprends en entier, puis Je valide." : "Tu refais « À toi », puis Je valide.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)), espace());
+        ajouterSuite([[enEntier ? "J'apprends →" : "J'apprends : À toi →", "", () => { nouvelleSeance(); monEtape(code); }]]);
       }
     }
-
-    // ------------------------------------------------------------ la médaille
-    function dessinMedaille(n) {
-      const ns = "http://www.w3.org/2000/svg";
-      const c = CARTE.palier(n).couleur;
-      const s = document.createElementNS(ns, "svg");
-      s.setAttribute("viewBox", "0 0 160 200");
-      s.setAttribute("class", "medaille-gde");
-      s.setAttribute("role", "img");
-      s.setAttribute("aria-label", `Médaille du palier ${n}`);
-      const ajout = (tag, a, texte) => {
-        const e = document.createElementNS(ns, tag);
-        Object.keys(a).forEach(k => e.setAttribute(k, a[k]));
-        if (texte) e.textContent = texte;
-        s.appendChild(e);
-      };
-      ajout("path", {d: "M52 120 L38 190 L62 176 L74 196 L84 128 Z", fill: c, opacity: ".75"});
-      ajout("path", {d: "M108 120 L122 190 L98 176 L86 196 L76 128 Z", fill: c, opacity: ".75"});
-      ajout("circle", {cx: 80, cy: 80, r: 74, fill: "#fff", stroke: c, "stroke-width": 8});
-      ajout("circle", {cx: 80, cy: 80, r: 60, fill: c});
-      ajout("text", {x: 80, y: 92, "text-anchor": "middle", "font-size": 52, "font-weight": 900, fill: "#fff", "font-family": "inherit"}, String(n));
-      ajout("text", {x: 80, y: 118, "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: "#fff", "font-family": "inherit", "letter-spacing": "1"},
-        CARTE.palier(n).nom.toUpperCase());
-      return s;
+    // Après une ceinture : « Avant de partir » s'il le faut, sinon
+    // l'accueil, où elle est.
+    function suiteSeule(boutons) {
+      if (etat.aRedemander.length) avantDePartir(boutons);
+      else accueil();
     }
-    function ecranMedaille(n, sousTitre, ensuite) {
+
+    // ------------------------------------------------------------ les ceintures
+    // Lot 3a (choix de Gwenaël du 14/11) : une ceinture par palier (toutes
+    // ses étapes validées), de la jaune à la noire ; un liseré doré quand
+    // toutes ses étoiles sont là ; les six dorées : la Légende des
+    // conversions. Un écran pour chacune, à la place de l'ancienne médaille.
+    function montrerRecompenses(liste, ensuite) {
+      if (!liste.length) { ensuite(); return; }
+      ecranCeinture(liste[0], () => montrerRecompenses(liste.slice(1), ensuite));
+    }
+    function ecranCeinture(r, ensuite) {
       ecran({serre: false, forme: "fin"});
       clavier = null;
-      const t = el("div", "titre-fin", `Bravo${NB}!`);
-      t.style.marginTop = rem(10);
-      const s = el("div", "consigne2", T(sousTitre));
-      s.style.fontSize = rem(19);
-      const r = el("div", "titre-fin", `Palier ${n} réussi${NB}!`);
-      r.style.cssText = `color:${CARTE.palier(n).couleur};font-size:${rem(22)}`;
-      const nb = PALIERS_CODES[n].length;
-      ajouter(t, s, dessinMedaille(n), r, texteLignes("note", `Tu as validé les ${nb} étapes du palier.\nTa médaille est sur ton accueil.`), espace(),
-        bouton("Continuer", "", ensuite));
+      const haut = el("div", "eti centre");
+      const dessin = el("div", "ceinture-gde");
+      let titre;
+      let phrase;
+      if (r.sorte === "legende") {
+        haut.textContent = "Toutes les ceintures";
+        CARTE.PALIERS.forEach(pal => dessin.appendChild(ceintureEl(pal.n, {gagnee: true, doree: true, taille: 72})));
+        dessin.classList.add("six");
+        titre = `Légende des conversions${NB}!`;
+        phrase = "Toutes les étapes sont solides ★.\nTu sais convertir, du CE1 à la 3e.";
+      } else {
+        const pal = CARTE.palier(r.n);
+        haut.textContent = r.sorte === "doree" ? "Liseré doré" : "Nouvelle ceinture";
+        dessin.appendChild(ceintureEl(r.n, {gagnee: true, doree: r.sorte === "doree", taille: 220}));
+        titre = r.sorte === "doree" ? `Ceinture ${pal.ceinture} dorée${NB}!` : `Ceinture ${pal.ceinture}${NB}!`;
+        phrase = r.sorte === "doree" ? `Toutes les étapes du palier ${r.n} sont solides ★.\nTa ceinture est sur ton accueil.`
+          : `Tu as validé les ${PALIERS_CODES[r.n].length} étapes du palier ${r.n}.\nTa ceinture est sur ton accueil.`;
+      }
+      ajouter(haut, dessin, el("div", "titre-fin", titre), texteLignes("note", phrase), espace(), bouton("Continuer →", "", ensuite));
     }
 
-    // ---------------------------------------------------------- l'échauffement
-    function questionEchauffement(item) {
-      if (item.type === "repere") return G.questionRepere(item.code, graine());
-      return G.serie(item.code, {usage: "echauffement", graine: graine()})[0];
+    // ---------------------------------------------------------- Je me souviens
+    // Lot 3a (choix de Gwenaël du 14/11 : ses « trois choses à retenir »,
+    // dans l'ordre « demander d'abord ») : au début de la séance, les étapes
+    // qui reviennent (P.tirerSouvenirs : 6 au plus, les plus anciennes dues
+    // d'abord ; rien le premier jour), sans aide. 2 questions au premier
+    // retour d'une étape, 1 ensuite ; les étapes se mêlent. Une erreur (ou
+    // « Je ne sais pas ») : la correction tout de suite (la bonne réponse,
+    // la relation, le glisse-unité qui glisse) ; ce qui est raté revient
+    // « Avant de partir ». Un retour réussi (toutes ses questions justes)
+    // compte pour l'étoile ; un retour raté ne retire rien.
+    // La séance en cours : les petites cases de ses questions.
+    function casesSerie(resultats, total, ici) {
+      const d = el("div", `dix${total > 8 ? " serre" : ""}`);
+      for (let k = 0; k < total; k += 1) {
+        const r = resultats[k];
+        d.appendChild(el("i", r === true ? "ok" : r === false ? "ko" : k === ici ? "ici" : "", r === true ? "✓" : r === false ? "✗" : String(k + 1)));
+      }
+      return d;
     }
-    function echauffement(ensuite, {parcours, retour} = {}) {
-      const source = parcours || etat.parcours;
-      const items = P.tirerEchauffement(source, etat.jour, PRETS, P.carnet(source, REPERES_PAR_ETAPE));
-      const questions = items.map(questionEchauffement);
+    // Ce qui est écrit au-dessus de la question : l'étape qui revient, les
+    // cases, une phrase calme.
+    function zoneRetour(zone, code, resultats, total, phrase) {
+      remplirZone(zone, "info fixe centre");
+      const nom = el("div", "souv-nom");
+      nom.append(el("span", "eti", "Ça revient"), el("b", "", nomEtape(code)));
+      zone.append(nom, casesSerie(resultats, total, resultats.length < total ? resultats.length : -1), texteLignes("calme", phrase));
+    }
+    // Une série de questions de retour (Je me souviens, Avant de partir) :
+    // `liste` [{code, qn}], `noter(element, verdict)` après chaque réponse,
+    // `finir(bilan)` à la fin.
+    function serieRetours({liste, titre, chemin, retour, phrase, noter, finir}) {
       const bilan = [];
-      const ratees = [];
+      const resultats = [];
       let i = 0;
-      const chemin = () => ({noms: ["Échauffement", "Mon étape"], ici: 0});
+      let hauteurQ = 0;
+      let hauteurZone = 0;
+      const questions = liste.map(x => x.qn);
       const question = () => {
-        if (i >= questions.length) { finEchauffement(bilan, ensuite, retour); return; }
-        const qn = questions[i];
-        const item = items[i];
-        // Pas d'aide, pas de zone : la question, puis le pavé. Après une
-        // erreur, la bonne réponse vient à la place du pavé (lot A2).
-        const ui = ecranQuestion({petit: "Ma séance du jour", titre: "Échauffement", chip: `${i + 1} / ${questions.length}`, chemin: chemin(), retour,
-          zone: "aucune"});
-        cadre.style.setProperty("--q-h", `${hauteurSerie(ui.q, item.type === "etape" ? item.code : "R1", [qn])}px`);
+        if (i >= liste.length) { finir(bilan); return; }
+        const item = liste[i];
+        const qn = item.qn;
+        const ui = ecranQuestion({petit: "Ma séance du jour", titre, chip: `${i + 1} / ${liste.length}`, chemin, retour, hauteurPx: hauteurQ,
+          zone: "info", hauteurZone, jnsp: true});
+        cadre.classList.add("bas-court");
+        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, liste.map(x => x.code), questions); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
+        if (!hauteurZone) {
+          hauteurZone = mesurerZone(ui.zone, liste.map(x => z => zoneRetour(z, x.code, [], liste.length, phrase)).concat(questions.map(x => z => remplirErreurZone(z, x))));
+          cadre.style.setProperty("--z-h", `${hauteurZone}px`);
+        }
         interroger(ui, qn, {
-          avant() {},
-          apres: {montrerBon: false, fait(v) {
-            bilan.push({juste: v.juste, texte: qn.resume});
+          avant(zone) { zoneRetour(zone, item.code, resultats, liste.length, phrase); },
+          apres: {fait(v) {
+            resultats.push(v.juste);
+            bilan.push({juste: v.juste, texte: qn.resume, code: item.code});
             i += 1;
-            if (!PROF) {
-              if (item.type === "repere") changer(p => P.noterEchauffementRepere(p, item.code, v.juste, etat.jour));
-              else changer(p => P.noterEchauffementEtape(p, item.code, v.juste, etat.jour));
-              if (!v.juste) ratees.push(item.type === "repere" ? item.etape : item.code);
-              noterSeance({posees: i, justes: bilan.filter(b => b.juste).length, ratees: ratees.slice()});
-            }
-            if (v.juste) { apresDelai(question); return; }
-            const panneau = el("div", "zone ok panneau");
-            remplirZone(panneau, "ok panneau", ["image", "La bonne réponse"]);
-            if (qn.choix) panneau.appendChild(el("div", "choisi", T(`Tu as choisi : ${v.tape}`)));
-            const carteQ = G.carteDe(qn);
-            if (carteQ.type === "repere") {
-              panneau.appendChild(AIDES.carteRepere(carteQ.repere));
-              panneau.appendChild(el("div", "note", "C'est un repère de ton carnet."));
-            } else {
-              bonneReponse(panneau, qn);
-              if (qn.relation) panneau.appendChild(el("div", "rel petite", qn.relation));
-            }
-            ui.bas.textContent = "";
-            ui.bas.appendChild(panneau);
-            ajusterZone(panneau);
+            noter(item, v, bilan);
+            if (v.juste) { zoneRetour(ui.zone, item.code, resultats, liste.length, phrase); apresDelai(question); return; }
+            remplirErreur(ui, qn, v.retour, choisi(qn, v), casesSerie(resultats, liste.length, -1), {neutre: v.jnsp});
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
+            ui.action.disabled = false;
             ui.action.onclick = question;
           }}
         });
       };
-      if (!questions.length) { ensuite(); return; }
       question();
     }
-    function finEchauffement(bilan, ensuite, retour) {
-      const justes = bilan.filter(b => b.juste).length;
-      const revoir = PROF ? null : P.aRevoir(etat.parcours, PRETS);
-      ecranQuestionFin("Ma séance du jour", "Échauffement", 1, retour, revoir ? ["Échauffement", "On revoit", "Mon étape"] : ["Échauffement", "Mon étape"]);
-      const t = el("div", "titre-fin", "Échauffement fini");
-      t.style.marginTop = rem(14);
-      t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur ${bilan.length}`)));
+    function listeBilan(bilan) {
       const liste = el("div", "listev");
       bilan.forEach(b => {
         const d = el("div", b.juste ? "ok" : "ko");
         d.append(el("span", "r", b.juste ? "✓" : "✗"), document.createTextNode(b.texte));
         liste.appendChild(d);
       });
-      ajouter(t, liste);
-      if (justes < bilan.length) ajouter(el("div", "verd neutre", "Une erreur ne t'enlève rien : tes étapes restent validées."));
-      ajouter(espace());
-      if (PROF) { ajouter(bouton("Accueil", "", ensuite)); return; }
-      const code = P.monEtape(etat.parcours, PRETS);
-      const action = code ? P.actionDe(etat.parcours, code, etat.jour) : null;
-      if (revoir) ajouter(bouton("Suivant →", "", ensuite));
-      else if (action === "valide") ajouter(bouton("Mon étape : Je valide →", "", ensuite));
-      else if (action === "apprends" || action === "a-toi") ajouter(bouton("Mon étape : J'apprends →", "", ensuite));
-      else ajouter(bouton("Accueil", "", accueil));
+      return liste;
     }
 
-    // -------------------------------------------------------------- On revoit
-    function annonceRevoir(code) {
-      ecranQuestionFin("Ma séance du jour", "Échauffement", 1, null, ["Échauffement", "On revoit", "Mon étape"]);
-      ajouter(el("div", "gros-emoji", "🔁"));
-      const t = el("div", "titre-fin", "On revoit une étape");
-      t.style.fontSize = rem(23);
-      t.appendChild(el("small", "", T(`« ${nomEtape(code)} » t'a échappé deux échauffements de suite.`)));
-      const c = texteLignes("carte", "3 questions, avec l'aide.\nL'étape reste validée.");
-      c.style.cssText = `font-size:${rem(16)};font-weight:700;line-height:1.5;text-align:center`;
-      ajouter(t, c, espace(), bouton("On la revoit →", "", () => revoir(code)));
+    function jeMeSouviens(ensuite, {source = null, retour} = {}) {
+      const p0 = source || etat.parcours;
+      const items = P.tirerSouvenirs(p0, etat.jour, PRETS).map(it => Object.assign({code: it.code, resultats: []}, questionsRetour(p0, it.code, it.questions)));
+      // Les étapes se mêlent : la 1re question de chacune, puis les 2es.
+      const liste = [];
+      [0, 1].forEach(k => items.forEach(it => { if (it.qs[k]) liste.push({code: it.code, qn: it.qs[k], etape: it}); }));
+      if (!liste.length) { ensuite(); return; }
+      const avantC = ceintures();
+      const legendeAvant = P.legende(etat.parcours);
+      const etoiles = [];
+      const ratees = [];
+      serieRetours({
+        liste, titre: "Je me souviens", chemin: {noms: ["Je me souviens", "Mon étape"], ici: 0}, retour,
+        phrase: "Sans aide. Une erreur ne t'enlève rien.",
+        noter(item, v, bilan) {
+          const e = item.etape;
+          e.resultats.push(v.juste);
+          if (!v.juste) {
+            if (!ratees.includes(item.code)) ratees.push(item.code);
+            const deja = etat.aRedemander.some(x => x.code === item.code && x.repere === (item.qn.repere || null));
+            if (!deja && etat.aRedemander.length < P.SEUILS.avantDePartir) etat.aRedemander.push({code: item.code, repere: item.qn.repere || null});
+          }
+          if (PROF) return;
+          if (item.qn.repere) changer(p => P.noterRepere(p, item.qn.repere, v.juste, etat.jour));
+          // Le retour de l'étape est fini quand toutes ses questions le sont.
+          if (e.resultats.length === e.qs.length) {
+            const avant = P.estSolide(etat.parcours, e.code);
+            changer(p => P.noterRetour(p, e.code, e.resultats.every(Boolean), etat.jour, e.graine));
+            if (!avant && P.estSolide(etat.parcours, e.code)) etoiles.push(e.code);
+          }
+          noterSeance({posees: bilan.length, justes: bilan.filter(b => b.juste).length, ratees: ratees.slice(0, 3)});
+        },
+        finir(bilan) { finSouvenirs(bilan, etoiles, recompensesGagnees(avantC, legendeAvant), ensuite, retour); }
+      });
     }
-    function revoir(code) {
-      const etape = CARTE.etape(code);
-      const serie = G.serie(code, {usage: "aide", graine: graine()});
-      const noms = ["Échauffement", "On revoit", "Mon étape"];
-      let i = 0;
-      let justes = 0;
-      let hauteurZone = 0;
-      let hauteurQ = 0;
-      const question = () => {
-        if (i >= serie.length) { finRevoir(code, justes); return; }
-        const qn = serie[i];
-        const ui = ecranQuestion({petit: etape.nom, titre: "On revoit", chip: `${i + 1} / 3`, chemin: {noms, ici: 1}, hauteurPx: hauteurQ, hauteurZone});
-        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
-        if (!hauteurZone) {
-          hauteurZone = mesurerZone(ui.zone, serie.flatMap(x => [
-            z => { remplirZone(z, "outil", ["outil", "L'aide"]); AIDES.outil(z, x); },
-            z => remplirErreurZone(z, x)
-          ]));
-          cadre.style.setProperty("--z-h", `${hauteurZone}px`);
-        }
-        interroger(ui, qn, {
-          avant(zone) { remplirZone(zone, "outil", ["outil", "L'aide"]); AIDES.outil(zone, qn); },
-          apres: {fait(v) {
-            i += 1;
-            if (v.juste) { justes += 1; apresDelai(question); return; }
-            remplirErreur(ui, qn, v.retour);
-            ui.action.style.visibility = "";
-            ui.action.textContent = "Suivant →";
-            ui.action.onclick = question;
-          }}
-        });
-      };
-      question();
-    }
-    function finRevoir(code, justes) {
-      changer(p => P.noterRevue(p, code));
-      ecranQuestionFin(nomEtape(code), "On revoit", 2, null, ["Échauffement", "On revoit", "Mon étape"]);
-      ajouter(el("div", "gros-emoji", "👍"));
-      const t = el("div", "titre-fin", "C'est revu");
-      t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur 3`)));
+    function finSouvenirs(bilan, etoiles, recompenses, ensuite, retour) {
+      const justes = bilan.filter(b => b.juste).length;
+      ecranQuestionFin("Ma séance du jour", "Je me souviens", 1, retour, ["Je me souviens", "Mon étape"]);
+      const t = el("div", "titre-fin", justes === bilan.length ? `Tout est juste${NB}!` : "Je me souviens");
+      t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur ${bilan.length}`)));
       const defile = el("div", "ecran-defile");
-      (CARTE.etape(code).retenir ? [blocRetenir(code)] : casesRetenir(code)).forEach(c => defile.appendChild(c));
-      ajouter(t, defile, bouton("Mon étape →", "", () => monEtape()));
+      // Une nouvelle étoile : l'étape est solide (3 retours réussis de suite).
+      etoiles.forEach(code => {
+        const e = el("div", "etoile-nouvelle");
+        e.append(el("span", "etoile", "★"), el("span", "", T(`Nouvelle étoile : « ${nomEtape(code)} » est solide.`)));
+        defile.appendChild(e);
+      });
+      defile.appendChild(listeBilan(bilan));
+      ajouter(t, defile);
+      if (justes < bilan.length) ajouter(el("div", "verd neutre", !etat.aRedemander.length ? "Une erreur ne t'enlève rien."
+        : "Ce que tu as raté revient « Avant de partir ».".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
+      const code = PROF ? null : P.monEtape(etat.parcours, PRETS);
+      const action = code ? P.actionDe(etat.parcours, code, etat.jour) : null;
+      const texte = PROF ? "Suivant →" : action === "valide" ? "Mon étape : Je valide →" : code ? "Mon étape : J'apprends →" : etat.aRedemander.length ? "Avant de partir →" : "Accueil";
+      ajouter(bouton(texte, "", () => montrerRecompenses(recompenses, ensuite)));
+    }
+
+    // ---------------------------------------------------------- Avant de partir
+    // Lot 3a : ce qui a été raté dans « Je me souviens », redemandé en fin de
+    // séance, 3 au plus : une nouvelle question de la même étape (jamais deux
+    // fois la même question dans une séance), ou le même repère pour une
+    // étape de repères (c'est lui qu'on retient). Rien n'y est compté faux,
+    // rien n'est enregistré. `boutons` : la suite, à la fin.
+    function avantDePartir(boutons, {retour} = {}) {
+      const items = etat.aRedemander.slice(0, P.SEUILS.avantDePartir);
+      etat.aRedemander = [];
+      const liste = items.map(it => ({code: it.code, qn: it.repere ? G.questionRepere(it.repere, graine() + 7)
+        : questionsRetour(etat.parcours, it.code, 1, {avantDePartir: true}).qs[0]})).filter(x => x.qn);
+      const fin = bilan => {
+        ecranQuestionFin("Ma séance du jour", "Avant de partir", 3, retour, ["Je me souviens", "Mon étape", "Avant de partir"]);
+        const justes = bilan.filter(b => b.juste).length;
+        const t = el("div", "titre-fin", justes === bilan.length ? `Tu t'en souviens${NB}!` : "À retenir");
+        if (bilan.length) t.appendChild(el("small", "", T(`${justes} ${justes > 1 ? "justes" : "juste"} sur ${bilan.length} · rien n'est compté`)));
+        ajouter(t, listeBilan(bilan), espace());
+        boutons.forEach(([texte, classe, action]) => ajouter(bouton(texte, classe, action)));
+      };
+      if (!liste.length) { fin([]); return; }
+      serieRetours({
+        liste, titre: "Avant de partir", chemin: {noms: ["Je me souviens", "Mon étape", "Avant de partir"], ici: 2}, retour,
+        phrase: "Tout à l'heure, c'était raté.\nRien n'est compté : c'est pour retenir.",
+        noter() {},
+        finir: fin
+      });
     }
 
     // ------------------------------------------------------ Tu connais déjà ?
@@ -1407,7 +1630,7 @@
       if (!PROF) nouvelleSeance();
       const sur = PROF ? P.creer() : null;
       const valideeIci = code => (PROF ? P.estValidee(sur, code) : P.estValidee(etat.parcours, code));
-      const avantMedailles = medailles();
+      const avantRecompenses = {ceintures: ceintures(), legende: P.legende(etat.parcours)};
       const marches = PRETS.slice(PRETS.indexOf(depart)).filter(c => !valideeIci(c));
       const faites = [];
       let ratee = null;
@@ -1425,7 +1648,7 @@
         zone.appendChild(s);
       };
       const marche = () => {
-        if (k >= marches.length) { finTest(faites, null, avantMedailles, {retour, fin}); return; }
+        if (k >= marches.length) { finTest(faites, null, avantRecompenses, {retour, fin}); return; }
         const code = marches[k];
         const serie = G.serie(code, {usage: "test", graine: graine()});
         const resultats = [];
@@ -1440,7 +1663,7 @@
               }
               k += 1;
               marche();
-            } else { ratee = code; finTest(faites, ratee, avantMedailles, {retour, fin}); }
+            } else { ratee = code; finTest(faites, ratee, avantRecompenses, {retour, fin}); }
             return;
           }
           const qn = serie[resultats.length];
@@ -1448,7 +1671,7 @@
           const palierN = etape.palier;
           const dansPalier = PALIERS_CODES[palierN];
           const ui = ecranQuestion({petit: `Palier ${palierN} · ${CARTE.palier(palierN).nom}`, titre: T("Tu connais déjà ?"),
-            chip: `marche ${dansPalier.indexOf(code) + 1}`, chemin: {noms: [], ici: 0}, retour: () => finTest(faites, null, avantMedailles, {retour, fin}),
+            chip: `marche ${dansPalier.indexOf(code) + 1}`, chemin: {noms: [], ici: 0}, retour: () => finTest(faites, null, avantRecompenses, {retour, fin}),
             zone: "info", hauteurZone});
           cadre.style.setProperty("--q-h", `${hauteurSerie(ui.q, code, serie)}px`);
           cadre.classList.add("bas-court");
@@ -1470,7 +1693,7 @@
           // « Je m'arrête là » à côté de Valider, toujours à la même place.
           const duo = el("div", "duo");
           ui.action.replaceWith(duo);
-          duo.append(ui.action, bouton("Je m'arrête là", "cl", () => finTest(faites, null, avantMedailles, {retour, fin})));
+          duo.append(ui.action, bouton("Je m'arrête là", "cl", () => finTest(faites, null, avantRecompenses, {retour, fin})));
           if (qn.choix) { ui.action.style.visibility = "hidden"; }
         };
         question();
@@ -1491,8 +1714,8 @@
       return e;
     }
 
-    function finTest(faites, ratee, avantMedailles, {retour, fin} = {}) {
-      const nouvelles = PROF ? [] : medailles().filter(n => !avantMedailles.includes(n));
+    function finTest(faites, ratee, avantRecompenses, {retour, fin} = {}) {
+      const nouvelles = recompensesGagnees(avantRecompenses.ceintures, avantRecompenses.legende);
       const resultat = () => {
         const premier = faites[0] || ratee || PRETS[0];
         const palierN = CARTE.etape(premier).palier;
@@ -1527,8 +1750,7 @@
         if (ratee) ajouter(bouton(`J'apprends : ${nomEtape(ratee)} →`.replace(" :", `${NB}:`), "", () => { nouvelleSeance(); monEtape(ratee); }));
         else ajouter(bouton("Accueil", "", accueil));
       };
-      if (nouvelles.length) ecranMedaille(nouvelles[0], "Tu connais déjà ce palier", resultat);
-      else resultat();
+      montrerRecompenses(nouvelles, resultat);
     }
 
     // ------------------------------------------------------------ Mon parcours
@@ -1554,14 +1776,23 @@
       ajouter(tabs);
       const pal = CARTE.palier(palierN);
       ajouter(el("div", "palier-titre", `Palier ${palierN} · ${pal.nom}`));
+      // Lot 3a : la ceinture du palier, toujours avec son nom.
+      const c = ceintures()[palierN - 1];
+      const ligneC = el("div", "pceinture");
+      ligneC.appendChild(ceintureEl(palierN, {gagnee: c.gagnee, doree: c.doree, taille: 44}));
+      const nomC = `Ceinture ${pal.ceinture}`;
+      ligneC.appendChild(el("span", "", T(c.doree ? `${nomC} dorée : toutes les étapes sont solides ★`
+        : c.gagnee ? `${nomC} gagnée · ${c.solides} ★ sur ${c.total}` : `${nomC} : ${c.validees} ${c.validees > 1 ? "étapes validées" : "étape validée"} sur ${c.total}`)));
+      ajouter(ligneC);
       const defile = el("div", "ecran-defile");
       const pret = CARTE.palierPret(palierN);
       if (!pret) defile.appendChild(el("div", "bandeau-prep", "🛠️ Ce palier est en préparation : ses étapes arrivent bientôt. Tu peux déjà voir leurs noms."));
-      defile.appendChild(listeEtapes(palierN, {prep: !pret, cours: P.monEtape(p, PRETS), validee: c => P.estValidee(p, c)}));
+      defile.appendChild(listeEtapes(palierN, {prep: !pret, cours: P.monEtape(p, PRETS), validee: x => P.estValidee(p, x), solide: x => P.estSolide(p, x)}));
+      if (pret) defile.appendChild(el("div", "note legende-etapes", T("✓ étape validée · ★ étape solide : réussie trois fois de suite quand elle revient")));
       ajouter(defile);
     }
 
-    function listeEtapes(palierN, {prep, cours, validee, choisir}) {
+    function listeEtapes(palierN, {prep, cours, validee, solide, choisir}) {
       const bloc = el("div");
       bloc.className = "familles";
       CARTE.famillesDuPalier(palierN).forEach(f => {
@@ -1569,7 +1800,7 @@
         bloc.appendChild(groupe);
         groupe.appendChild(el("div", "fam", f.nom));
         f.etapes.forEach(e => {
-          const classe = prep ? "prep" : validee && validee(e.code) ? "ok" : e.code === cours ? "cours" : "";
+          const classe = prep ? "prep" : solide && solide(e.code) ? "ok solide" : validee && validee(e.code) ? "ok" : e.code === cours ? "cours" : "";
           const ligne = el(choisir ? "button" : "div", `li2 ${classe}`);
           if (choisir) { ligne.type = "button"; ligne.addEventListener("click", () => choisir(e.code)); }
           ligne.append(el("span", "r"), el("span", "", e.nomCourt), el("small", "", e.exemple));
@@ -1599,11 +1830,15 @@
       const titre = t => d.appendChild(el("h3", "", T(t)));
       const para = t => d.appendChild(el("p", "", T(t)));
       titre("Un parcours d'étapes");
-      para("Les conversions s'apprennent étape par étape, en 6 paliers, des bases du CE1 jusqu'à la 3e. Chaque étape se valide une fois pour toutes. Un palier fini, c'est une médaille. Les 6 médailles : « Légende des conversions ».");
-      titre("Une étape");
-      para("① J'apprends : on te montre, puis c'est à toi, d'abord avec l'outil, puis avec l'image, puis sans aide. ② Je valide, le lendemain : 8 justes sur 10, sans aide.");
-      titre("L'échauffement");
-      para("À la première séance du jour : une question par étape déjà validée, 3 au plus (un repère de ton carnet, ta dernière étape validée, une plus ancienne). Avec une seule étape validée, il n'y en a qu'une. Une erreur ne t'enlève rien.");
+      para("Les conversions s'apprennent étape par étape, en 6 paliers, des bases du CE1 jusqu'à la 3e.");
+      titre("Une séance");
+      para("① Je me souviens : les étapes qui reviennent, sans aide (pas le premier jour). ② Mon étape : on te montre, puis c'est à toi (avec l'outil, puis l'image, puis sans aide), puis Je valide, juste après : 8 justes sur 10, sans aide. ③ Avant de partir : ce que tu as raté au début, redemandé. Rien n'y est compté faux.");
+      titre("La coche, puis l'étoile");
+      para("Une étape validée reçoit sa coche ✓. Elle revient ensuite : le lendemain, 3 jours après, 1 semaine après, 2 semaines après, puis une fois par mois. Réussie trois fois de suite, elle devient solide : l'étoile ★. Une erreur ne t'enlève rien : l'étape revient le lendemain.");
+      titre("Les ceintures");
+      para("Un palier validé, c'est une ceinture : jaune, orange, verte, bleue, marron, puis noire. Toutes les étoiles du palier : un liseré doré. Les six ceintures dorées : « Légende des conversions ».");
+      titre("Je ne sais pas");
+      para("Tu ne sais pas ? Touche « Je ne sais pas » : tu vois la correction. Ça compte comme une erreur.");
       titre("Tu connais déjà ?");
       para("Un petit test pour sauter les étapes que tu sais déjà. Tu t'arrêtes quand tu veux.");
       titre("Mon carnet");
@@ -1613,7 +1848,7 @@
       const ol = el("ol");
       ["Une première séance projetée en mode professeur : une étape faite devant les élèves, ensemble.",
         "Puis chaque élève passe « Tu connais déjà ? » : il saute ce qu'il sait.",
-        "Ensuite, 10 minutes en rituel ou à la maison : l'échauffement, puis son étape."].forEach(t => ol.appendChild(el("li", "", T(t))));
+        "Ensuite, 10 minutes en rituel ou à la maison : « Je me souviens », puis son étape."].forEach(t => ol.appendChild(el("li", "", T(t))));
       prof.appendChild(ol);
       const p2 = el("p", "", "Le mode professeur ouvre toutes les étapes, sans rien enregistrer, et montre les séries avec leurs réponses.");
       p2.style.marginTop = rem(6);
@@ -1636,8 +1871,9 @@
       b.appendChild(s);
       return b;
     }
-    // Un élève fictif, pour l'échauffement : les étapes avant celle choisie
-    // validées les jours d'avant.
+    // Un élève fictif, pour « Je me souviens » et le mélange de Je valide :
+    // les étapes avant celle choisie validées les jours d'avant (elles
+    // reviennent toutes aujourd'hui).
     function parcoursFictif(code) {
       let p = P.creer();
       const avant = PRETS.slice(0, Math.max(1, PRETS.indexOf(code)));
@@ -1666,9 +1902,12 @@
       const acts = [
         ["1", "J'apprends : on te montre", "les trois temps", () => onTeMontre(code, fin, {retour: fin})],
         ["2", "J'apprends : à toi", "l'outil, l'image, puis sans rien, et « À retenir »", () => aToi(code, {retour: fin, fin})],
-        ["3", "Je valide", "10 questions, sans aide (sans attendre demain)", () => jeValide(code, {retour: fin, fin})],
+        ["3", "Je valide", "10 questions sans aide, dont 3 des étapes d'avant", () => jeValide(code, {retour: fin, fin, source: parcoursFictif(code)})],
         ["4", "Tu connais déjà ?", "l'escalier, à partir de cette étape", () => introTest(code, {retour: fin, fin})],
-        ["5", "L'échauffement", "3 questions tirées comme pour un élève", () => echauffement(fin, {parcours: parcoursFictif(code), retour: fin})],
+        ["5", "Je me souviens", "les étapes qui reviennent, pour un élève qui a fait les étapes d'avant", () => {
+          etat.aRedemander = [];
+          jeMeSouviens(() => (etat.aRedemander.length ? avantDePartir([["Accueil", "", fin]], {retour: fin}) : fin()), {source: parcoursFictif(code), retour: fin});
+        }],
         ["👁", "Voir une série", "10 questions et leurs réponses", () => { etat.profSerie = {usage: "valide", graine: graine()}; voirSerie(); }]
       ];
       const d = el("div", "ecran-defile acts");
