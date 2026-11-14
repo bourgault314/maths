@@ -604,7 +604,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis le lot 4 « les ceintures » de Défi calcul (14/11/2026) : le cœur et
   // le moteur copiés dans prof/, Mon espace, la page prof et applis.php
   // changent (avant : defi-calcul-lot-3c-ecris).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-4-ceintures$/m);
+  // Puis « cours-lot5 » (14/11/2026) : lib/cours.json seul change (les chapitres Les puissances et
+  // La proportionnalité de 4e et de 3e ; Calcul numérique de 4e et de 3e complété ; Préparer la seconde
+  // de 3e reçoit « Les formules des puissances », du livret en ligne) (avant : defi-calcul-lot-4-ceintures).
+  assert.match(lire("_serveur/public/VERSION"), /^lot cours-lot5$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

@@ -159,8 +159,34 @@
    "titre": "Calcul numérique",
    "fiches": [
     {
-     "id": "4e-CAL-04",
+     "id": "4e-CAL-05",
      "n": 1,
+     "ids": "4e-CAL-05 · 3e-CAL-05",
+     "h1": "Je sais comparer et ranger des nombres décimaux",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-05.html"
+    },
+    {
+     "id": "4e-CAL-06",
+     "n": 2,
+     "ids": "4e-CAL-06 · 3e-CAL-06",
+     "h1": "Je sais additionner et soustraire des nombres décimaux sans calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-06.html"
+    },
+    {
+     "id": "4e-CAL-04",
+     "n": 3,
      "ids": "4e-CAL-04 · 3e-CAL-04",
      "h1": "Je sais multiplier et diviser un nombre par 10, 100 ou 1 000",
      "niveaux": [
@@ -170,9 +196,51 @@
      "type": "propriété",
      "nouveau": false,
      "page": "/cours/4e/4e-CAL-04.html"
+    },
+    {
+     "id": "4e-CAL-08",
+     "n": 4,
+     "ids": "4e-CAL-08 · 3e-CAL-10",
+     "h1": "Je sais multiplier des nombres décimaux sans calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-08.html"
+    },
+    {
+     "id": "4e-CAL-07",
+     "n": 5,
+     "ids": "4e-CAL-07 · 3e-CAL-07",
+     "h1": "Je sais diviser par un nombre décimal",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-07.html"
+    },
+    {
+     "id": "4e-CAL-01",
+     "n": 6,
+     "ids": "4e-CAL-01 · 3e-CAL-09",
+     "h1": "Je sais contrôler un résultat avec un ordre de grandeur ou la calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-01.html"
     }
    ],
-   "brevet": null,
+   "brevet": {
+    "id": "3e-CAL-brevet",
+    "page": "/cours/3e/3e-CAL-brevet.html"
+   },
    "imprimable": "/cours/4e/4e-CAL-imprimable.html"
   },
   {
@@ -208,10 +276,11 @@
     {
      "id": "4e-REL-03",
      "n": 3,
-     "ids": "4e-REL-03",
+     "ids": "4e-REL-03 · 3e-CAL-02",
      "h1": "Je sais additionner deux nombres relatifs",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -220,10 +289,11 @@
     {
      "id": "4e-REL-04",
      "n": 4,
-     "ids": "4e-REL-04",
+     "ids": "4e-REL-04 · 3e-CAL-02",
      "h1": "Je sais soustraire un nombre relatif : soustraire un nombre, c'est ajouter son opposé",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -244,10 +314,11 @@
     {
      "id": "4e-REL-06",
      "n": 6,
-     "ids": "4e-REL-06",
+     "ids": "4e-REL-06 · 3e-CAL-03",
      "h1": "Je sais multiplier deux nombres relatifs",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -268,10 +339,11 @@
     {
      "id": "4e-REL-08",
      "n": 8,
-     "ids": "4e-REL-08",
+     "ids": "4e-REL-08 · 3e-CAL-03",
      "h1": "Je sais diviser deux nombres relatifs",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -280,10 +352,11 @@
     {
      "id": "4e-REL-09",
      "n": 9,
-     "ids": "4e-REL-09",
+     "ids": "4e-REL-09 · 3e-CAL-01",
      "h1": "Je sais calculer un enchaînement d'opérations avec des nombres relatifs en respectant les priorités",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -302,7 +375,10 @@
      "page": "/cours/4e/4e-REL-10.html"
     }
    ],
-   "brevet": null,
+   "brevet": {
+    "id": "3e-CAL-brevet",
+    "page": "/cours/3e/3e-CAL-brevet.html"
+   },
    "imprimable": "/cours/4e/4e-REL-imprimable.html"
   },
   {
@@ -628,6 +704,136 @@
    "imprimable": "/cours/4e/4e-FRA-imprimable.html"
   },
   {
+   "id": "4e-PUI",
+   "niveau": "4e",
+   "chapitre": "Puissances",
+   "titre": "Les puissances",
+   "fiches": [
+    {
+     "id": "4e-PUI-01",
+     "n": 1,
+     "ids": "4e-PUI-01 · 3e-PUI-01",
+     "h1": "Je sais écrire un produit de facteurs égaux avec une puissance et la calculer",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-01.html"
+    },
+    {
+     "id": "4e-PUI-02",
+     "n": 2,
+     "ids": "4e-PUI-02 · 3e-PUI-05",
+     "h1": "Je sais multiplier des puissances d'un même nombre en comptant les facteurs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-02.html"
+    },
+    {
+     "id": "4e-PUI-03",
+     "n": 3,
+     "ids": "4e-PUI-03",
+     "h1": "Je sais multiplier des puissances de même exposant : 2,5³ × 4³ = 10³",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": true,
+     "page": "/cours/4e/4e-PUI-03.html"
+    },
+    {
+     "id": "4e-PUI-04",
+     "n": 4,
+     "ids": "4e-PUI-04 · 4e-PUI-05 · 3e-PUI-03",
+     "h1": "Je connais les puissances de 10",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-04.html"
+    },
+    {
+     "id": "4e-PUI-06",
+     "n": 5,
+     "ids": "4e-PUI-06",
+     "h1": "Je sais multiplier par une puissance de 10 et écrire un nombre sous la forme 𝑎 × 10ⁿ",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-06.html"
+    },
+    {
+     "id": "4e-PUI-07",
+     "n": 6,
+     "ids": "4e-PUI-07 · 3e-PUI-06",
+     "h1": "Je connais les préfixes de nano à giga",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-07.html"
+    },
+    {
+     "id": "4e-PUI-08",
+     "n": 7,
+     "ids": "4e-PUI-08 · 3e-PUI-07",
+     "h1": "Je sais écrire un nombre en notation scientifique et revenir à son écriture décimale",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-08.html"
+    },
+    {
+     "id": "4e-PUI-09",
+     "n": 8,
+     "ids": "4e-PUI-09 · 4e-PUI-10 · 3e-PUI-08",
+     "h1": "Je sais comparer des nombres écrits avec des puissances de 10 et donner un ordre de grandeur",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-09.html"
+    },
+    {
+     "id": "4e-PUI-11",
+     "n": 9,
+     "ids": "4e-PUI-11 · 3e-PUI-10",
+     "h1": "Je sais résoudre un problème avec des puissances",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-11.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PUI-brevet",
+    "page": "/cours/3e/3e-PUI-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-PUI-imprimable.html"
+  },
+  {
    "id": "4e-ARI",
    "niveau": "4e",
    "chapitre": "Arithmétique",
@@ -719,6 +925,110 @@
    "imprimable": "/cours/4e/4e-ARI-imprimable.html"
   },
   {
+   "id": "4e-PRP",
+   "niveau": "4e",
+   "chapitre": "Proportionnalité",
+   "titre": "La proportionnalité",
+   "fiches": [
+    {
+     "id": "4e-PRP-01",
+     "n": 1,
+     "ids": "4e-PRP-01 · 3e-PRP-01",
+     "h1": "Je sais reconnaître si deux grandeurs sont proportionnelles",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-01.html"
+    },
+    {
+     "id": "4e-PRP-02",
+     "n": 2,
+     "ids": "4e-PRP-02 · 3e-PRP-06",
+     "h1": "Je sais reconnaître une situation de proportionnalité sur un graphique",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-02.html"
+    },
+    {
+     "id": "4e-PRP-03",
+     "n": 3,
+     "ids": "4e-PRP-03 · 3e-PRP-02",
+     "h1": "Je sais calculer une quatrième proportionnelle en choisissant mon chemin",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-03.html"
+    },
+    {
+     "id": "4e-PRP-08",
+     "n": 4,
+     "ids": "4e-PRP-08 · 3e-PRP-07",
+     "h1": "Je sais calculer une quatrième proportionnelle avec les produits en croix",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-08.html"
+    },
+    {
+     "id": "4e-PRP-05",
+     "n": 5,
+     "ids": "4e-PRP-05 · 3e-PRP-03",
+     "h1": "Je sais utiliser l'échelle d'une carte ou d'un plan",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-05.html"
+    },
+    {
+     "id": "4e-PRP-06",
+     "n": 6,
+     "ids": "4e-PRP-06 · 3e-PRP-04",
+     "h1": "Je sais ce que veut dire « dans le ratio 2 : 3 »",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-06.html"
+    },
+    {
+     "id": "4e-PRP-07",
+     "n": 7,
+     "ids": "4e-PRP-07 · 3e-PRP-05",
+     "h1": "Je sais partager une quantité selon un ratio",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-07.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PRP-brevet",
+    "page": "/cours/3e/3e-PRP-brevet.html"
+   },
+   "imprimable": "/cours/4e/4e-PRP-imprimable.html"
+  },
+  {
    "id": "4e-LIT",
    "niveau": "4e",
    "chapitre": "Calcul littéral",
@@ -727,10 +1037,11 @@
     {
      "id": "4e-LIT-02",
      "n": 1,
-     "ids": "4e-LIT-02",
+     "ids": "4e-LIT-02 · 3e-CAL-08",
      "h1": "Je sais écrire avec une lettre le double, le triple, la moitié et le carré d'un nombre, le successeur et le prédécesseur d'un entier",
      "niveaux": [
-      "4e"
+      "4e",
+      "3e"
      ],
      "type": "méthode",
      "nouveau": false,
@@ -2655,14 +2966,310 @@
    "imprimable": "/cours/3e/3e-REP-imprimable.html"
   },
   {
+   "id": "3e-PUI",
+   "niveau": "3e",
+   "chapitre": "Puissances",
+   "titre": "Les puissances",
+   "fiches": [
+    {
+     "id": "4e-PUI-01",
+     "n": 1,
+     "ids": "4e-PUI-01 · 3e-PUI-01",
+     "h1": "Je sais écrire un produit de facteurs égaux avec une puissance et la calculer",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-01.html"
+    },
+    {
+     "id": "4e-PUI-02",
+     "n": 2,
+     "ids": "4e-PUI-02 · 3e-PUI-05",
+     "h1": "Je sais multiplier des puissances d'un même nombre en comptant les facteurs, et les diviser",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-02.html"
+    },
+    {
+     "id": "4e-PUI-03",
+     "n": 3,
+     "ids": "4e-PUI-03",
+     "h1": "Je sais multiplier des puissances de même exposant : 2,5³ × 4³ = 10³",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-03.html"
+    },
+    {
+     "id": "4e-PUI-04",
+     "n": 4,
+     "ids": "4e-PUI-04 · 4e-PUI-05 · 3e-PUI-03",
+     "h1": "Je connais les puissances de 10",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-04.html"
+    },
+    {
+     "id": "3e-PUI-04",
+     "n": 5,
+     "ids": "3e-PUI-04",
+     "h1": "Je sais ce que veut dire un exposant négatif : 𝑎⁻ⁿ est l'inverse de 𝑎ⁿ",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PUI-04.html"
+    },
+    {
+     "id": "4e-PUI-06",
+     "n": 6,
+     "ids": "4e-PUI-06",
+     "h1": "Je sais multiplier par une puissance de 10 et écrire un nombre sous la forme 𝑎 × 10ⁿ",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-06.html"
+    },
+    {
+     "id": "4e-PUI-07",
+     "n": 7,
+     "ids": "4e-PUI-07 · 3e-PUI-06",
+     "h1": "Je connais les préfixes de nano à giga",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-07.html"
+    },
+    {
+     "id": "4e-PUI-08",
+     "n": 8,
+     "ids": "4e-PUI-08 · 3e-PUI-07",
+     "h1": "Je sais écrire un nombre en notation scientifique et revenir à son écriture décimale",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-08.html"
+    },
+    {
+     "id": "4e-PUI-09",
+     "n": 9,
+     "ids": "4e-PUI-09 · 4e-PUI-10 · 3e-PUI-08",
+     "h1": "Je sais comparer des nombres écrits avec des puissances de 10 et donner un ordre de grandeur",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-09.html"
+    },
+    {
+     "id": "3e-PUI-09",
+     "n": 10,
+     "ids": "3e-PUI-09",
+     "h1": "Je sais calculer sans calculatrice avec des puissances de 10",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PUI-09.html"
+    },
+    {
+     "id": "4e-PUI-11",
+     "n": 11,
+     "ids": "4e-PUI-11 · 3e-PUI-10",
+     "h1": "Je sais résoudre un problème avec des puissances",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PUI-11.html"
+    },
+    {
+     "id": "3e-PUI-12",
+     "n": 12,
+     "ids": "3e-PUI-12",
+     "h1": "Je sais calculer avec les formules des puissances",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PUI-12.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PUI-brevet",
+    "page": "/cours/3e/3e-PUI-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-PUI-imprimable.html"
+  },
+  {
+   "id": "3e-PRP",
+   "niveau": "3e",
+   "chapitre": "Proportionnalité",
+   "titre": "Proportionnalité, ratio, échelle",
+   "fiches": [
+    {
+     "id": "4e-PRP-01",
+     "n": 1,
+     "ids": "4e-PRP-01 · 3e-PRP-01",
+     "h1": "Je sais reconnaître si deux grandeurs sont proportionnelles",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-01.html"
+    },
+    {
+     "id": "4e-PRP-02",
+     "n": 2,
+     "ids": "4e-PRP-02 · 3e-PRP-06",
+     "h1": "Je sais reconnaître une situation de proportionnalité sur un graphique",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-02.html"
+    },
+    {
+     "id": "4e-PRP-03",
+     "n": 3,
+     "ids": "4e-PRP-03 · 3e-PRP-02",
+     "h1": "Je sais calculer une quatrième proportionnelle en choisissant mon chemin",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-03.html"
+    },
+    {
+     "id": "4e-PRP-08",
+     "n": 4,
+     "ids": "4e-PRP-08 · 3e-PRP-07",
+     "h1": "Je sais calculer une quatrième proportionnelle avec les produits en croix",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-08.html"
+    },
+    {
+     "id": "4e-PRP-05",
+     "n": 5,
+     "ids": "4e-PRP-05 · 3e-PRP-03",
+     "h1": "Je sais utiliser l'échelle d'une carte ou d'un plan",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-05.html"
+    },
+    {
+     "id": "4e-PRP-06",
+     "n": 6,
+     "ids": "4e-PRP-06 · 3e-PRP-04",
+     "h1": "Je sais ce que veut dire « dans le ratio 2 : 3 »",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "savoir",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-06.html"
+    },
+    {
+     "id": "4e-PRP-07",
+     "n": 7,
+     "ids": "4e-PRP-07 · 3e-PRP-05",
+     "h1": "Je sais partager une quantité selon un ratio",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PRP-07.html"
+    }
+   ],
+   "brevet": {
+    "id": "3e-PRP-brevet",
+    "page": "/cours/3e/3e-PRP-brevet.html"
+   },
+   "imprimable": "/cours/3e/3e-PRP-imprimable.html"
+  },
+  {
    "id": "3e-CAL",
    "niveau": "3e",
    "chapitre": "Calcul",
    "titre": "Calcul numérique",
    "fiches": [
     {
-     "id": "4e-CAL-04",
+     "id": "4e-CAL-05",
      "n": 1,
+     "ids": "4e-CAL-05 · 3e-CAL-05",
+     "h1": "Je sais comparer et ranger des nombres décimaux",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-05.html"
+    },
+    {
+     "id": "4e-CAL-06",
+     "n": 2,
+     "ids": "4e-CAL-06 · 3e-CAL-06",
+     "h1": "Je sais additionner et soustraire des nombres décimaux sans calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-06.html"
+    },
+    {
+     "id": "4e-CAL-04",
+     "n": 3,
      "ids": "4e-CAL-04 · 3e-CAL-04",
      "h1": "Je sais multiplier et diviser un nombre par 10, 100 ou 1 000",
      "niveaux": [
@@ -2672,9 +3279,129 @@
      "type": "propriété",
      "nouveau": false,
      "page": "/cours/4e/4e-CAL-04.html"
+    },
+    {
+     "id": "4e-CAL-08",
+     "n": 4,
+     "ids": "4e-CAL-08 · 3e-CAL-10",
+     "h1": "Je sais multiplier des nombres décimaux sans calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-08.html"
+    },
+    {
+     "id": "4e-CAL-07",
+     "n": 5,
+     "ids": "4e-CAL-07 · 3e-CAL-07",
+     "h1": "Je sais diviser par un nombre décimal",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-07.html"
+    },
+    {
+     "id": "4e-REL-03",
+     "n": 6,
+     "ids": "4e-REL-03 · 3e-CAL-02",
+     "h1": "Je sais additionner deux nombres relatifs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-03.html"
+    },
+    {
+     "id": "4e-REL-04",
+     "n": 7,
+     "ids": "4e-REL-04 · 3e-CAL-02",
+     "h1": "Je sais soustraire un nombre relatif : soustraire un nombre, c'est ajouter son opposé",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-04.html"
+    },
+    {
+     "id": "4e-REL-06",
+     "n": 8,
+     "ids": "4e-REL-06 · 3e-CAL-03",
+     "h1": "Je sais multiplier deux nombres relatifs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-06.html"
+    },
+    {
+     "id": "4e-REL-08",
+     "n": 9,
+     "ids": "4e-REL-08 · 3e-CAL-03",
+     "h1": "Je sais diviser deux nombres relatifs",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-08.html"
+    },
+    {
+     "id": "4e-REL-09",
+     "n": 10,
+     "ids": "4e-REL-09 · 3e-CAL-01",
+     "h1": "Je sais calculer un enchaînement d'opérations avec des nombres relatifs en respectant les priorités",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-REL-09.html"
+    },
+    {
+     "id": "4e-LIT-02",
+     "n": 11,
+     "ids": "4e-LIT-02 · 3e-CAL-08",
+     "h1": "Je sais écrire avec une lettre le double, le triple, la moitié et le carré d'un nombre, le successeur et le prédécesseur d'un entier, et calculer le quart et l'opposé d'un nombre",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-LIT-02.html"
+    },
+    {
+     "id": "4e-CAL-01",
+     "n": 12,
+     "ids": "4e-CAL-01 · 3e-CAL-09",
+     "h1": "Je sais contrôler un résultat avec un ordre de grandeur ou la calculatrice",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-CAL-01.html"
     }
    ],
-   "brevet": null,
+   "brevet": {
+    "id": "3e-CAL-brevet",
+    "page": "/cours/3e/3e-CAL-brevet.html"
+   },
    "imprimable": "/cours/3e/3e-CAL-imprimable.html"
   },
   {
@@ -2791,6 +3518,18 @@
      "type": "méthode",
      "nouveau": false,
      "page": "/cours/3e/3e-FON-15.html"
+    },
+    {
+     "id": "3e-PUI-12",
+     "n": 10,
+     "ids": "3e-PUI-12",
+     "h1": "Je sais calculer avec les formules des puissances",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "propriété",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PUI-12.html"
     }
    ],
    "brevet": null,
