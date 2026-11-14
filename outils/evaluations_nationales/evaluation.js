@@ -182,7 +182,7 @@
     $("#liste-revoir").innerHTML = rates.map(({ it, choisi }) => {
       const bonne = it.choix.find((c) => c.juste);
       return `<li>
-        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.t.competence || it.q.competence)}</p>
+        <p class="revoir-titre"><span class="pastille">${it.q.num}</span>${typo(it.g.competence || it.t.competence || it.q.competence)}</p>
         <div class="revoir-reponses">
           <span class="donnee">${choisi ? "Ta réponse : " + typo(choisi.html) : "Pas de réponse"}</span>
           <span class="attendue">Bonne réponse : ${typo(bonne.html)}</span>
