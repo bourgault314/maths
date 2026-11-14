@@ -7335,7 +7335,7 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(7, $reference->version, 'version 7 (lot 1 « la séance » : `l` et le plan à 11 nombres ; 6 au correctif du lot S1 : le numéro des séances ; 5 au lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
+    egal(8, $reference->version, 'version 8 (lot 4 « les ceintures » : `ceintures` ; 7 au lot 1 « la séance » : `l` et le plan à 11 nombres ; 6 au correctif du lot S1 : le numéro des séances ; 5 au lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
@@ -8230,9 +8230,10 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
     // Puis le correctif du lot S1 « les journaux » : 6 (le numéro de chaque
     // séance du journal) ; une page de version 5 est refusée à son tour.
     // Puis le lot 1 « la séance » : 7 (`l` et le plan à 11 nombres).
-    egal(7, $reference['version'], 'le parcours de référence est en version 7');
-    egal(7, CATALOGUE_APPLIS['defi-calcul']['version_min']);
-    foreach ([[6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['7', '« 7 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
+    // Puis le lot 4 « les ceintures » : 8 (`ceintures`).
+    egal(8, $reference['version'], 'le parcours de référence est en version 8');
+    egal(8, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[7, 'version 7'], [6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['8', '« 8 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
         $ancien = $reference;
         if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
         $w = ecrire($code, $ancien, 0, 'defi-calcul');
@@ -8241,17 +8242,19 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
         egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
     }
     $w = ecrire($code, $reference, 0, 'defi-calcul');
-    egal(200, $w['code'], 'version 7 : accepté');
+    egal(200, $w['code'], 'version 8 : accepté');
     $ancien = $reference;
-    $ancien['version'] = 6;
-    unset($ancien['journal']);
+    $ancien['version'] = 7;
+    unset($ancien['ceintures']);
     $w = ecrire($code, $ancien, 1, 'defi-calcul');
-    egal(400, $w['code'], 'par-dessus une version 7 : refusé, même avec la bonne révision');
+    egal(400, $w['code'], 'par-dessus une version 8 : refusé, même avec la bonne révision');
     $w = ecrire($code, $ancien, 0, 'defi-calcul');
     egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
     $r = lire($code, 'defi-calcul');
     egal(1, $r['json']['revision'], 'toujours la révision 1');
-    egal(7, $r['json']['parcours']['version'], 'la version 7 est restée');
+    egal(8, $r['json']['parcours']['version'], 'la version 8 est restée');
+    // Lot 4 : les ceintures reviennent telles quelles (des dates et des null, à leur place).
+    egal($reference['ceintures'], $r['json']['parcours']['ceintures'], 'les ceintures sont gardées telles quelles');
     // Lot G1 : le journal (sept listes d'entiers depuis le correctif S1, -1 compris) et les deux dates
     // des compétences (des dates et des null) reviennent tels quels.
     egal($reference['journal'], $r['json']['parcours']['journal'], 'le journal est gardé tel quel');

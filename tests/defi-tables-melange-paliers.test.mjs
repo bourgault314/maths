@@ -601,7 +601,10 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // cœur copié dans prof/ change (avant : cours-appli-2).
   // Puis le lot 3c « J'écris sur des calculs qui changent » de Défi calcul
   // (13/11/2026) : le cœur copié dans prof/ change (avant : defi-calcul-lot-3b-sortes).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-3c-ecris$/m);
+  // Puis le lot 4 « les ceintures » de Défi calcul (14/11/2026) : le cœur et
+  // le moteur copiés dans prof/, Mon espace, la page prof et applis.php
+  // changent (avant : defi-calcul-lot-3c-ecris).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-4-ceintures$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

@@ -117,7 +117,9 @@ test("la page : une carte par sujet officiel, repères du sujet joué, mention s
   assert.ok(!html.includes("lancer-officiel") && !js.includes("lancer-officiel"));
   assert.match(html, /<p id="indication" class="seuils" hidden>Indication : les repères officiels valent pour le vrai sujet\.<\/p>/);
   assert.match(js, /\$\("#indication"\)\.hidden = passation\.reprise \|\| passation\.type === "officiel";/);
-  assert.match(js, /groupe\(score, seuilsDe\(passation\.officiel\)\)/);
+  // Lot EN8a : les repères du sujet joué ; un test sans repères publiés (exemples Eduscol) n'a pas de groupe.
+  assert.match(js, /const seuils = seuilsDe\(passation\.officiel\);/);
+  assert.match(js, /const g = seuils \? groupe\(score, seuils\) : null;/);
   // ?officiel= n'accepte qu'une clé de la liste ; aucun texte de l'adresse n'est écrit dans la page.
   assert.match(js, /officiels\.find\(\(o\) => o\.cle === params\.get\("officiel"\)\) \|\| officiels\[0\]/);
 });

@@ -1640,3 +1640,33 @@ body.en-tete-cadre.ligne-sous-titre.challenge-playing #game-menu { position: abs
    hauteur d'un chiffre. (Pas dans « À retenir » : son calcul tient sur une
    ligne, il rapetissait.) */
 .question { word-spacing: .12em; }
+
+/* ---- Lot 4 « les ceintures » (14/11/2026, choix de Gwenaël) ----
+   Une ceinture par palier fini (jaune, orange, verte, bleue), des barrettes
+   en chemin. Le dessin vient du noyau (CORE.dessinCeinture) ; son nom est
+   toujours écrit à côté (imprimé en noir et blanc, la verte et la bleue se
+   ressemblent). */
+.ceinture { display: block; flex: none; }
+/* La porte de Mon parcours : la ceinture qu'on porte à la place de la carte. */
+.acc-porte:has(.ico-ceinture) { grid-template-columns: 46px auto; }
+.acc-porte .ico-ceinture { display: flex; align-items: center; justify-content: center; width: 46px; height: 34px; }
+/* Les onglets des paliers : le numéro et la ceinture du palier côte à côte. */
+.dc-ponglet { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.dc-ponglet-ceinture { display: flex; }
+.dc-paliers button.fini .dc-ponglet-ceinture .ceinture { filter: drop-shadow(0 0 1.5px #fff); }
+/* La ligne de la ceinture du palier ouvert : toujours la même hauteur. */
+.dc-pceinture { display: flex; align-items: center; gap: 8px; min-height: 30px; margin: -2px 2px 8px; color: var(--ink); font-size: .9rem; font-weight: 750; line-height: 1.25; }
+.dc-pceinture b { font-weight: 950; }
+.dc-pc-dessin { display: flex; }
+/* L'écran de la ceinture gagnée. */
+.dc-ceinture-gagnee { display: grid; justify-items: center; gap: 6px; max-width: 520px; margin: 0 auto 14px; padding: 18px 16px 20px; border: 2px solid #9fd3cb; border-radius: 18px; background: linear-gradient(135deg, #e9f8f5, #eef6ff); }
+.dc-ceinture-gagnee[hidden] { display: none; }
+.dc-ceinture-gagnee .eyebrow { margin: 0; }
+.dc-ceinture-gagnee .dessin .ceinture { width: min(220px, 62vw); height: auto; margin: 4px 0; }
+.dc-ceinture-gagnee h1 { margin: 0; color: var(--ink); font-size: clamp(1.7rem, 6.4vw, 2.3rem); line-height: 1.1; letter-spacing: -.01em; }
+.dc-ceinture-gagnee .phrase { margin: 0; color: var(--ink) !important; font-size: 1.05rem; font-weight: 850; line-height: 1.35; }
+.dc-ceinture-gagnee .fin { margin: 2px 0 0; color: var(--blue) !important; font-size: 1.05rem; font-weight: 950; }
+.dc-ceinture-gagnee .primary { min-height: 48px; margin-top: 10px; padding-left: 26px; padding-right: 26px; }
+/* « Nouvelle barrette ! » dans le bilan d'une étape. */
+.seance-suite .cadre.dc-barrette { display: flex; align-items: center; gap: 12px; text-align: left; }
+.dc-barrette-dessin { display: flex; }

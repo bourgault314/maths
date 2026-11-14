@@ -27,7 +27,9 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 // des numéros de cause.
 // Lot 1 « la séance » (12/11/2026) : `l`, le « lent » de chaque compétence.
 export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "l", "d", "s", "c",
-  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours", "numero"]);
+  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours", "numero",
+  // Lot 4 « les ceintures » (14/11/2026) : les ceintures gagnées.
+  "ceintures"]);
 
 // `entier` : toutes les compétences des 74 modules dans une boîte (le pire
 // cas pour la taille).
@@ -78,6 +80,9 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
     prouvees: Array(garder).fill(999), rouges: Array(garder).fill(999), minutes: Array(garder).fill(90),
     // Correctif S1 : le numéro de chaque séance (les plus grands, le pire cas).
     numero: Array.from({length: garder}, (_, i) => 999999 - i)};
+  // Lot 4 : deux ceintures gagnées, deux pas encore (une date, puis null :
+  // le serveur doit garder les null à leur place).
+  p.ceintures = ["2026-10-02", "2026-10-20", null, null];
   Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
   return PARCOURS.normaliserParcours(p);
