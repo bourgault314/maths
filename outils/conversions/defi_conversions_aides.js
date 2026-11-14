@@ -12,6 +12,7 @@
 //                                       repères des unités
 //   AIDES.image(zone, question)         l'image : la relation écrite
 //   AIDES.carteRepere(code)             la carte d'un repère du carnet
+//   AIDES.ceinture(n, {etat, doree})    la ceinture d'un palier (lot 3a)
 //
 // Le glisse-unité est celui du matériel virtuel de Gwenaël
 // (conversions_materiel_virtuel.html), refait fidèlement au lot A2 : le
@@ -602,6 +603,20 @@
       const largeurCol = W / n;
       curseur.style.left = `${((x - largeurCol / 2) / W) * 100}%`;
       curseur.style.width = `${100 / n}%`;
+      // Lot 3a (« pas parfait », Gwenaël, le 14/11) : comme dans son
+      // matériel virtuel (setTarget), le cadre va du HAUT de l'unité au BAS
+      // du chiffre, mesurés à l'écran : il entoure les deux, sans couper le
+      // chiffre, à toutes les tailles (la zone peut être réduite : on divise
+      // par son échelle).
+      const rp = piste.getBoundingClientRect();
+      const k = rp.width && piste.offsetWidth ? rp.width / piste.offsetWidth : 1;
+      const rUnite = boutons[cible] && boutons[cible].getBoundingClientRect();
+      const rChiffre = cases[cible] && cases[cible].getBoundingClientRect();
+      if (rUnite && rChiffre && rp.height && rChiffre.bottom > rUnite.top) {
+        curseur.style.top = `${(rUnite.top - rp.top) / k}px`;
+        curseur.style.height = `${(rChiffre.bottom - rUnite.top) / k}px`;
+        curseur.style.bottom = "auto";
+      }
       [flecheH, flecheB].forEach(f => { f.style.left = `${(x / W) * 100}%`; });
       [haut, bas].forEach(p => {
         const demi = p.offsetWidth / 2;
@@ -1223,7 +1238,6 @@
     if (aide.type === "glisse-nombre") return glisseNombre(zone, aide, f);
     if (aide.type === "glisse-unite") {
       const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
-      zone.appendChild(legendeGlisse());
       return () => g.animer(aide.vers);
     }
     if (aide.type === "heure") {
@@ -1259,11 +1273,9 @@
     gu.animer(g.vers, {pas: 380, ensuite});
     return true;
   }
-  // La ligne sous le glisse-unité (lot A2 ter : « Pourquoi il est fixé
-  // là ? », Gwenaël sur son iPhone) : la punaise marque l'unité de départ.
-  function legendeGlisse() {
-    return el("div", "gu2-legende", "📌 l'unité de départ");
-  }
+  // (Lot 3a : la ligne « 📌 l'unité de départ » sous le glisse-unité est
+  // retirée, à la demande de Gwenaël le 14/11 : pas de légende pour la
+  // punaise ; la punaise reste.)
 
   function outil(zone, question, {fini = () => {}} = {}) {
     if (question.outil === "glisse-unite" && question.glisse) {
@@ -1271,7 +1283,6 @@
       const g = question.glisse;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
-      else zone.appendChild(legendeGlisse());
       return;
     }
     if (question.outil === "barre-heure" && question.heure) {
@@ -1348,6 +1359,37 @@
     else if (question.relation) zone.appendChild(el("div", "rel", question.relation));
   }
 
+  // ------------------------------------------------------------ la ceinture
+  // Lot 3a (14/11/2026, choix de Gwenaël) : une ceinture nouée par palier,
+  // dessinée à plat (la même forme que les ceintures de Défi calcul : le
+  // tour de taille, le nœud, les deux pans). `etat` : « gagnee » (à sa
+  // couleur, trait d'encre), « vide » (pas encore : blanche, pointillés
+  // gris). `doree` : toutes les étoiles du palier, un liseré doré autour
+  // (épais : il se voit aussi imprimé en noir et blanc, et le mot « dorée »
+  // est écrit à côté par la page). `taille` : la largeur en px (hauteur
+  // 5/8). Aucun texte dedans.
+  const OR = "#d39b00";
+  function ceinture(n, {etat = "gagnee", doree = false, taille = 64, titre = ""} = {}) {
+    const p = carte().palier(n);
+    const largeur = Math.max(8, Math.min(400, Math.round(Number(taille) || 64)));
+    const s = svg("svg", {"class": `ceinture${doree ? " doree" : ""}`, viewBox: "-3 1 70 41", width: String(largeur), height: String(Math.round((largeur * 41) / 70)),
+      focusable: "false"});
+    if (titre) { s.setAttribute("role", "img"); s.setAttribute("aria-label", titre); } else s.setAttribute("aria-hidden", "true");
+    const formes = [["path", {d: "M27 17L33 18.5L23.5 37.5L16.5 35.5Z"}], ["path", {d: "M31 18.5L37 17L47.5 35.5L40.5 37.5Z"}],
+      ["rect", {x: "2", y: "9", width: "60", height: "9", rx: "2.2"}], ["rect", {x: "24.5", y: "5.5", width: "15", height: "15.5", rx: "3"}]];
+    const groupe = (attributs) => {
+      const g = svg("g", attributs);
+      formes.forEach(([tag, a]) => g.appendChild(svg(tag, a)));
+      s.appendChild(g);
+    };
+    // Le liseré doré : la même forme, un trait d'or épais dessous.
+    if (doree && etat === "gagnee") groupe({fill: OR, stroke: OR, "stroke-width": "6", "stroke-linejoin": "round"});
+    const vide = etat !== "gagnee";
+    groupe({fill: vide ? "#ffffff" : (p ? p.couleur : "#ffffff"), stroke: vide ? "#a9bccb" : "#143451", "stroke-width": "1.7", "stroke-linejoin": "round",
+      "stroke-dasharray": vide ? "3 2.4" : "none"});
+    return s;
+  }
+
   return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
-    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs});
+    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

@@ -1,38 +1,72 @@
-// Défi conversions — la progression d'un élève (lot 1, 11/11/2026).
+// Défi conversions — la progression d'un élève (lot 1, 11/11/2026 ; le
+// nouveau rythme, lot 3a, 14/11/2026).
 //
 // Copié puis adapté de Défi calcul et du modèle de fusion d'Anzan
 // (outils/calcul_mental/flash_anzan_parcours.js, AGENTS.md « Fusion des
 // données ») ; jamais partagé. Ce fichier ira tel quel sur le serveur de
-// suivi au lot 2 (copie octet pour octet, pour la page prof et Mon espace) :
-// il ne dépend d'aucun autre fichier et n'écrit aucun texte libre.
+// suivi (copie octet pour octet, pour la page prof et Mon espace) : il ne
+// dépend d'aucun autre fichier et n'écrit aucun texte libre.
 //
-// LE FORMAT ENREGISTRÉ (version 1, fiche technique § 3.1)
+// LE RYTHME (choix de Gwenaël du 14/11, lot 3a)
+//   - Une séance : « Je me souviens » (les étapes dont le retour est dû, 6
+//     étapes au plus, les plus anciennes dues d'abord), puis Mon étape
+//     (On te montre → À toi → Je valide, juste après), puis « Avant de
+//     partir » (ce qui a été raté au début, redemandé ; rien n'y est compté).
+//   - L'étape se valide LE JOUR MÊME (la coche) et elle REVIENT : le
+//     lendemain (2 questions), 3 jours après, 1 semaine après, 2 semaines
+//     après, puis une fois par mois (1 question). Trois retours réussis de
+//     suite : l'étape est SOLIDE (l'étoile).
+//     (Lot 3a-1 : le robot-élève du lot 2, rejoué sur ce fichier, avait
+//     mesuré ces chiffres avec 6 ÉTAPES au plus et le retour à 2 semaines ;
+//     avec 6 questions au plus et sans les 2 semaines, l'élève fragile ne
+//     sait plus que 40 % à 6 semaines au lieu de 62 %.) Un retour raté ne retire rien : l'étape revient le
+//     lendemain (2 questions), et le compteur repart de zéro.
+//   - Une ceinture par palier (toutes ses étapes cochées), un liseré doré
+//     quand toutes ses étoiles sont là ; la Légende des conversions : les
+//     six ceintures dorées.
 //
-//   {version: 1, epoque, etapes: {code: [7 valeurs]}, reperes: {code:
+// LE FORMAT ENREGISTRÉ (version 2)
+//
+//   {version: 2, epoque, etapes: {code: [10 valeurs]}, reperes: {code:
 //   [jour, rate]}, seances: {"1": [13 valeurs], …}}
 //
 //   etapes[code] :
 //     0 vue          le premier « J'apprends » ouvert (date ou null)
-//     1 entraînée    « À toi » réussi (date ou null). Corrigé le 11/11 au
-//                    soir : J'apprends et Je m'entraîne ne font plus qu'une
-//                    étape ; cette date ouvre « Je valide » LE LENDEMAIN.
-//                    Elle repasse à null quand « Je valide » rate.
-//     2 validée      date ou null ; ne repasse jamais à null (sauf époque)
+//     1 entraînée    « À toi » réussi (date ou null) : « Je valide » se fait
+//                    CE JOUR-LÀ, juste après. Un autre jour, « À toi » est à
+//                    refaire d'abord. Repasse à null quand « Je valide » rate.
+//     2 validée      la coche (date ou null) ; ne repasse jamais à null
+//                    (sauf époque)
 //     3 mode         0 pas validée · 1 par « Je valide » · 2 par « Tu
 //                    connais déjà ? »
 //     4 validations ratées de suite (0 à 9) : 2 → J'apprends en entier
 //                    (« On te montre » compris) ; 3 → à reprendre en classe
-//     5 échauffements ratés de suite (0 à 2) : à 2 → « On revoit »
-//     6 dernier échauffement (date ou null)
+//     5 retours réussis de suite (0 à 9) : 3 → solide
+//     6 retours ratés de suite (0 à 9) : 3 → à reprendre en classe
+//     7 dernier retour (date ou null)
+//     8 solide       l'étoile (date ou null) ; ne repasse jamais à null
+//     9 graine du dernier retour (0 aucune, 1 à 99 999) : la page refait la
+//                    question du dernier retour pour ne pas la reposer
+//   Le prochain retour n'est PAS enregistré : il se déduit (dernier retour,
+//   ou la validation, plus 1, 3, 7, 14 ou 30 jours selon les retours réussis
+//   de suite). Deux appareils ne peuvent donc pas se désaccorder sur lui.
+//
+//   La version 1 (7 valeurs : … 5 échauffements ratés, 6 dernier
+//   échauffement) se lit encore : elle devient une version 2 à la lecture,
+//   sans retour réussi ; le dernier échauffement, s'il vient après la
+//   validation, devient le dernier retour.
+//
+//   reperes[code] : [jour, rate] la dernière fois que ce repère a été demandé
+//     dans un retour de son étape (« Mes premiers repères »…), raté (1) ou
+//     non (0) : le repère raté revient en premier, puis le plus ancien.
 //
 //   seances[n] : 13 valeurs, au modèle commun d'Anzan
 //     0 jour · 1 rang de l'étape travaillée (0 si aucune) ·
 //     2 « On te montre » vu (0/1) · 3 « À toi » (0 rien · 1 réussi ·
 //     2 commencé) · 4 « Je valide » (0 rien · 1 réussie · 2 ratée) ·
-//     5 échauffement : questions posées · 6 justes · 7-9 rangs des étapes
-//     ratées · 10 test : étapes validées · 11 identifiant · 12 ordre
-//   (Corrigé le 11/11 au soir : seances[2] = « On te montre » vu et
-//   seances[3] = « À toi » ; le format ne change pas.)
+//     5 « Je me souviens » : questions posées (0 à 12) · 6 justes (0 à 12) ·
+//     7-9 rangs des étapes ratées (3 au plus) · 10 test : étapes validées ·
+//     11 identifiant · 12 ordre
 //
 // Aucun prénom, aucun calcul, aucune réponse : des codes, des entiers, des
 // dates. Les mêmes données donnent toujours le même JSON, octet pour octet.
@@ -43,7 +77,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, () => {
   "use strict";
 
-  const VERSION = 1;
+  const VERSION = 2;
   const APPLI = "defi-conversions";
   const CLE_STOCKAGE = "mathsgo-defi-conversions-parcours";
 
@@ -61,24 +95,41 @@
   const MOTIF_REPERE = /^(?:l(?:[1-9]|1[01])|m[1-8]|c[1-5]|a[1-7]|v[1-5])$/;
 
   const SEUILS = Object.freeze({
-    // Je valide : 10 questions, 8 justes ; arrêt dès la 3e erreur.
-    valide: Object.freeze({questions: 10, justes: 8, arret: 3}),
-    // À toi (ex « Je m'entraîne », réglages de Défi calcul du 30/10) :
-    // l'outil 2 justes, l'image 2 justes, puis rien jusqu'à 5 justes de
-    // suite ; une erreur ramène l'image, deux de suite l'outil ; 25 au plus.
+    // Je valide : 10 questions, 8 justes ; arrêt dès la 3e erreur (« Je ne
+    // sais pas » compte comme une erreur). 7 questions de l'étape et 3 des
+    // étapes déjà validées du palier, aux places 3, 6 et 9 (10 de l'étape
+    // s'il n'y en a pas).
+    valide: Object.freeze({questions: 10, justes: 8, arret: 3, dAvant: 3, places: Object.freeze([2, 5, 8])}),
+    // À toi (réglages de Défi calcul du 30/10) : l'outil 2 justes, l'image 2
+    // justes, puis rien jusqu'à 5 justes de suite ; une erreur ramène
+    // l'image, deux de suite l'outil ; « Je ne sais pas » ramène l'outil ;
+    // 25 au plus.
     entraine: Object.freeze({avecOutil: 2, sansOutil: 5, erreurs: 2, maximum: 25}),
     // Tu connais déjà ? : 3 questions par étape, une 4e si une est fausse,
     // 3 justes pour valider.
     test: Object.freeze({questions: 3, departage: 4, justes: 3}),
-    echauffement: Object.freeze({questions: 3, rateesPourRevoir: 2}),
+    // Les retours : dans combien de jours, selon les retours réussis de
+    // suite (0, 1, 2, 3, puis 4 et plus) ; 2 questions au premier (le
+    // lendemain, ou après un retour raté), 1 ensuite ; 6 étapes au plus
+    // dans « Je me souviens » (12 questions au plus) ; 3 réussis de suite :
+    // solide ; 3 ratés de suite : à reprendre.
+    retours: Object.freeze({intervalles: Object.freeze([1, 3, 7, 14, 30]), questionsPremier: 2, questions: 1, etapesParSeance: 6,
+      pourSolide: 3, aReprendre: 3, max: 9}),
+    // Avant de partir : 3 questions au plus.
+    avantDePartir: 3,
     ratees: Object.freeze({apprendsEnEntier: 2, aReprendre: 3, max: 9}),
     seances: 150
   });
 
   const ID_MAX = 999999;
   const ORDRE_MAX = 1000000;
+  const GRAINE_MAX = 99999;
+  const LONGUEUR = 10;
   const I = Object.freeze({jour: 0, etape: 1, montre: 2, atoi: 3, valide: 4, posees: 5, justes: 6, r1: 7, r2: 8, r3: 9, test: 10, id: 11, ordre: 12});
-  const BORNES_SEANCE = [null, [0, RANG_MAX], [0, 1], [0, 2], [0, 2], [0, 3], [0, 3], [0, RANG_MAX], [0, RANG_MAX], [0, RANG_MAX], [0, RANG_MAX], [1, ID_MAX], [1, ORDRE_MAX]];
+  // Les places d'une étape (pour lire le code sans compter).
+  const E = Object.freeze({vue: 0, entrainee: 1, validee: 2, mode: 3, ratees: 4, reussis: 5, rates: 6, retour: 7, solide: 8, graine: 9});
+  const Q_MAX = SEUILS.retours.etapesParSeance * SEUILS.retours.questionsPremier;
+  const BORNES_SEANCE = [null, [0, RANG_MAX], [0, 1], [0, 2], [0, 2], [0, Q_MAX], [0, Q_MAX], [0, RANG_MAX], [0, RANG_MAX], [0, RANG_MAX], [0, RANG_MAX], [1, ID_MAX], [1, ORDRE_MAX]];
 
   // ---------------------------------------------------------------- outils
 
@@ -128,16 +179,35 @@
   }
 
   function etapeVide() {
-    return [null, null, null, 0, 0, 0, null];
+    return [null, null, null, 0, 0, 0, 0, null, null, 0];
+  }
+
+  // Une étape de la version 1 (7 valeurs) devient une étape de la version 2.
+  function depuisVersion1(brut) {
+    const validee = dateOuNull(brut[2]);
+    const ech = dateOuNull(brut[6]);
+    return [brut[0], brut[1], brut[2], brut[3], brut[4], 0, 0, validee && ech && ech > validee ? ech : null, null, 0];
   }
 
   function normaliserEtape(brut) {
-    if (!Array.isArray(brut) || brut.length !== 7) return null;
+    if (!Array.isArray(brut)) return null;
+    if (brut.length === 7) brut = depuisVersion1(brut);
+    if (brut.length !== LONGUEUR) return null;
+    const max = SEUILS.retours.max;
     const e = [dateOuNull(brut[0]), dateOuNull(brut[1]), dateOuNull(brut[2]), entier(brut[3], 0, 2, 0),
-      entier(brut[4], 0, SEUILS.ratees.max, 0), entier(brut[5], 0, SEUILS.echauffement.rateesPourRevoir, 0), dateOuNull(brut[6])];
-    if (!e[2]) e[3] = 0;
-    else if (!e[3]) e[3] = 1;
-    if (e[2]) e[4] = 0;
+      entier(brut[4], 0, SEUILS.ratees.max, 0), entier(brut[5], 0, max, 0), entier(brut[6], 0, max, 0), dateOuNull(brut[7]),
+      dateOuNull(brut[8]), entier(brut[9], 0, GRAINE_MAX, 0)];
+    if (!e[E.validee]) e[E.mode] = 0;
+    else if (!e[E.mode]) e[E.mode] = 1;
+    if (e[E.validee]) e[E.ratees] = 0;
+    // Pas de retour avant la validation (ni sans elle) ; un compteur ne va
+    // pas sans son dernier retour ; on ne réussit et rate pas à la fois.
+    if (!e[E.validee] || (e[E.retour] && e[E.retour] < e[E.validee])) e[E.retour] = null;
+    if (!e[E.retour]) { e[E.reussis] = 0; e[E.rates] = 0; e[E.graine] = 0; }
+    if (e[E.reussis] && e[E.rates]) e[E.rates] = 0;
+    if (!e[E.validee] || (e[E.solide] && e[E.solide] < e[E.validee])) e[E.solide] = null;
+    // L'étoile vient avec le 3e retour réussi ; une fois là, elle reste.
+    if (!e[E.solide] && e[E.reussis] >= SEUILS.retours.pourSolide) e[E.solide] = e[E.retour];
     return e;
   }
 
@@ -157,6 +227,7 @@
       if ((i === I.id || i === I.ordre) && (v < min || v > max)) return null;
       s.push(Math.min(max, Math.max(min, v)));
     }
+    if (s[I.justes] > s[I.posees]) s[I.justes] = s[I.posees];
     return s;
   }
 
@@ -204,6 +275,7 @@
   // À chaque lecture : un code inconnu est jeté, une date fausse devient
   // null, un entier sorti de ses bornes est ramené, une séance abîmée est
   // jetée. Les étapes et repères sont rangés par code (même JSON partout).
+  // Une donnée de la version 1 devient une version 2.
   function normaliser(brut) {
     const p = creer();
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return p;
@@ -242,22 +314,38 @@
 
   // ---------------------------------------------------------------- la fusion
   // La même dans les deux sens (fiche § 3.3).
+
+  // Les retours d'un appareil : [réussis, ratés, dernier, graine], en bloc.
+  // Celui du retour le plus récent gagne ; le même jour sur les deux
+  // appareils, le plus de réussis, puis le moins de ratés, puis la plus
+  // grande graine (un choix fixe, le même dans les deux sens).
+  function blocRetours(e) {
+    return [e[E.reussis], e[E.rates], e[E.retour], e[E.graine]];
+  }
+  function meilleurBloc(a, b) {
+    const da = a[2] || "";
+    const db = b[2] || "";
+    if (da !== db) return da > db ? a : b;
+    if (a[0] !== b[0]) return a[0] > b[0] ? a : b;
+    if (a[1] !== b[1]) return a[1] < b[1] ? a : b;
+    return a[3] >= b[3] ? a : b;
+  }
+
   function fusionnerEtapes(a, b) {
     const e = etapeVide();
-    e[0] = plusAncienne(a[0], b[0]);
-    e[1] = plusRecente(a[1], b[1]);
-    e[2] = plusAncienne(a[2], b[2]);
-    if (e[2]) {
-      const ma = a[2] === e[2] ? a[3] : 9;
-      const mb = b[2] === e[2] ? b[3] : 9;
-      e[3] = Math.min(ma, mb);
+    e[E.vue] = plusAncienne(a[E.vue], b[E.vue]);
+    e[E.entrainee] = plusRecente(a[E.entrainee], b[E.entrainee]);
+    e[E.validee] = plusAncienne(a[E.validee], b[E.validee]);
+    if (e[E.validee]) {
+      const ma = a[E.validee] === e[E.validee] ? a[E.mode] : 9;
+      const mb = b[E.validee] === e[E.validee] ? b[E.mode] : 9;
+      e[E.mode] = Math.min(ma, mb);
     }
-    e[4] = e[2] ? 0 : Math.max(a[4], b[4]);
-    const da = a[6] || "";
-    const db = b[6] || "";
-    e[5] = da === db ? Math.max(a[5], b[5]) : (da > db ? a[5] : b[5]);
-    e[6] = plusRecente(a[6], b[6]);
-    return e;
+    e[E.ratees] = e[E.validee] ? 0 : Math.max(a[E.ratees], b[E.ratees]);
+    const bloc = meilleurBloc(blocRetours(a), blocRetours(b));
+    [e[E.reussis], e[E.rates], e[E.retour], e[E.graine]] = bloc;
+    e[E.solide] = plusAncienne(a[E.solide], b[E.solide]);
+    return normaliserEtape(e);
   }
 
   function fusionner(premier, second) {
@@ -310,10 +398,11 @@
   }
 
   // Note la séance en cours (`seance` : {id, ordre?, jour?, etape: code,
-  // montre, atoi, valide, posees, justes, ratees: [codes], test}). Une
-  // séance déjà connue (même identifiant) garde son ORDRE et son JOUR ;
-  // sinon l'ordre et le jour que la page a gardés depuis la première note,
-  // sinon l'ordre suivant. Rend {parcours, ordre, jour}.
+  // montre, atoi, valide, posees, justes, ratees: [codes], test} ; posees,
+  // justes et ratees : « Je me souviens »). Une séance déjà connue (même
+  // identifiant) garde son ORDRE et son JOUR ; sinon l'ordre et le jour que
+  // la page a gardés depuis la première note, sinon l'ordre suivant. Rend
+  // {parcours, ordre, jour}.
   function noterSeance(parcours, seance, jour) {
     const p = normaliser(parcours);
     const s = seance || {};
@@ -327,7 +416,7 @@
     else if (Number.isInteger(s.ordre) && s.ordre >= 1 && s.ordre <= ORDRE_MAX) { ordre = s.ordre; leJour = dateOuNull(s.jour) || dateOuNull(jour) || jourLocal(); }
     else { ordre = ordreSuivant(p); leJour = dateOuNull(jour) || jourLocal(); }
     const ligne = normaliserSeance([leJour, RANG[s.etape] || 0, s.montre ? 1 : 0, entier(s.atoi, 0, 2, 0), entier(s.valide, 0, 2, 0),
-      entier(s.posees, 0, 3, 0), entier(s.justes, 0, 3, 0), ratees[0] || 0, ratees[1] || 0, ratees[2] || 0, entier(s.test, 0, RANG_MAX, 0), id, ordre]);
+      entier(s.posees, 0, Q_MAX, 0), entier(s.justes, 0, Q_MAX, 0), ratees[0] || 0, ratees[1] || 0, ratees[2] || 0, entier(s.test, 0, RANG_MAX, 0), id, ordre]);
     const autres = listes(p).filter(l => l[I.id] !== id);
     ranger(p, autres.concat([ligne]));
     return {parcours: p, ordre, jour: leJour};
@@ -352,22 +441,25 @@
   }
 
   function estValidee(parcours, code) {
-    return Boolean(etapeDe(parcours, code)[2]);
+    return Boolean(etapeDe(parcours, code)[E.validee]);
+  }
+  function estSolide(parcours, code) {
+    return Boolean(etapeDe(parcours, code)[E.solide]);
   }
 
   // Ce que l'élève fait sur cette étape aujourd'hui :
   //   "apprends"  J'apprends en entier (jamais vue, ou 2 validations ratées
   //               de suite) ;
-  //   "a-toi"     « À toi » seulement (une validation ratée, ou 3 et plus) ;
-  //   "valide"    Je valide (« À toi » réussi un jour d'avant) ;
-  //   "demain"    « À toi » réussi aujourd'hui : Je valide s'ouvre demain ;
+  //   "a-toi"     « À toi » (vue un autre jour, une validation ratée, ou
+  //               « À toi » réussi un autre jour sans « Je valide ») ;
+  //   "valide"    Je valide (« À toi » réussi aujourd'hui : juste après) ;
   //   "validee"
-  // `prof` : en mode professeur, Je valide s'ouvre tout de suite.
+  // `prof` : en mode professeur, Je valide s'ouvre dès « À toi » réussi.
   function actionDe(parcours, code, jour, {prof = false} = {}) {
     const e = etapeDe(parcours, code);
-    if (e[2]) return "validee";
-    if (e[1]) return e[1] < jour || prof ? "valide" : "demain";
-    if (!e[0] || e[4] === SEUILS.ratees.apprendsEnEntier) return "apprends";
+    if (e[E.validee]) return "validee";
+    if (e[E.entrainee] && (e[E.entrainee] === jour || prof)) return "valide";
+    if (!e[E.vue] || e[E.ratees] === SEUILS.ratees.apprendsEnEntier) return "apprends";
     return "a-toi";
   }
 
@@ -383,140 +475,166 @@
   function marquerVue(parcours, code, jour) {
     const p = normaliser(parcours);
     const e = etapeDe(p, code);
-    if (!e[0]) e[0] = jour;
+    if (!e[E.vue]) e[E.vue] = jour;
     return poser(p, code, e);
   }
 
-  // « À toi » réussi : Je valide s'ouvre le lendemain.
+  // « À toi » réussi : « Je valide » vient juste après.
   function marquerEntrainee(parcours, code, jour) {
     const p = normaliser(parcours);
     const e = etapeDe(p, code);
-    if (!e[0]) e[0] = jour;
-    e[1] = jour;
+    if (!e[E.vue]) e[E.vue] = jour;
+    e[E.entrainee] = jour;
     return poser(p, code, e);
   }
 
-  // La fin de « Je valide ». Réussie : validée une fois pour toutes (mode
-  // 1). Ratée : « À toi » à refaire (entraînée → null), une ratée de plus.
+  // La fin de « Je valide ». Réussie : la coche, une fois pour toutes (mode
+  // 1) ; le premier retour sera le lendemain. Ratée : « À toi » à refaire
+  // (entraînée → null), une ratée de plus.
   function noterValidation(parcours, code, reussie, jour) {
     const p = normaliser(parcours);
     const e = etapeDe(p, code);
-    if (e[2]) return p;
-    if (reussie) { e[2] = jour; e[3] = 1; e[4] = 0; }
-    else { e[1] = null; e[4] = Math.min(SEUILS.ratees.max, e[4] + 1); }
+    if (e[E.validee]) return p;
+    if (reussie) { e[E.validee] = jour; e[E.mode] = 1; e[E.ratees] = 0; }
+    else { e[E.entrainee] = null; e[E.ratees] = Math.min(SEUILS.ratees.max, e[E.ratees] + 1); }
     return poser(p, code, e);
   }
 
-  // Une étape validée par « Tu connais déjà ? » (mode 2).
+  // Une étape validée par « Tu connais déjà ? » (mode 2). Elle revient
+  // ensuite comme les autres.
   function noterTest(parcours, code, jour) {
     const p = normaliser(parcours);
     const e = etapeDe(p, code);
-    if (e[2]) return p;
-    e[2] = jour;
-    e[3] = 2;
-    e[4] = 0;
+    if (e[E.validee]) return p;
+    e[E.validee] = jour;
+    e[E.mode] = 2;
+    e[E.ratees] = 0;
     return poser(p, code, e);
   }
 
-  // Une question d'échauffement sur une étape.
-  function noterEchauffementEtape(parcours, code, juste, jour) {
+  // ---------------------------------------------------------- les retours
+
+  // La date du prochain retour d'une étape validée (null sinon) : le dernier
+  // retour (ou la validation) plus 1, 3, 7, 14 ou 30 jours.
+  function prochainRetourDe(e) {
+    if (!e[E.validee]) return null;
+    const depuis = e[E.retour] || e[E.validee];
+    const k = SEUILS.retours.intervalles;
+    return ajouterJours(depuis, k[Math.min(e[E.reussis], k.length - 1)]);
+  }
+
+  // Le prochain retour vu d'aujourd'hui : un dernier retour (ou une
+  // validation) daté APRÈS aujourd'hui vient d'une horloge fausse (ou d'une
+  // donnée trafiquée) : l'étape est due tout de suite, sinon elle ne
+  // reviendrait plus avant longtemps.
+  function dueLe(e, jour) {
+    const d = prochainRetourDe(e);
+    if (!d) return null;
+    return (e[E.retour] || e[E.validee]) > jour ? jour : d;
+  }
+
+  // Les étapes dont le retour est dû ce jour-là, parmi `codes` : la plus
+  // anciennement due d'abord, puis dans l'ordre des rangs.
+  function retoursDus(parcours, jour, codes) {
+    const p = normaliser(parcours);
+    return (codes || CODES).filter(c => {
+      const d = dueLe(etapeDe(p, c), jour);
+      return d && d <= jour;
+    }).sort((x, y) => {
+      const dx = dueLe(etapeDe(p, x), jour);
+      const dy = dueLe(etapeDe(p, y), jour);
+      return dx === dy ? RANG[x] - RANG[y] : (dx < dy ? -1 : 1);
+    });
+  }
+
+  // « Je me souviens » : [{code, questions}] — les 6 premières étapes dues,
+  // dans l'ordre de retoursDus ; 2 questions quand aucun retour n'est réussi
+  // de suite (le lendemain de la validation, ou d'un retour raté), 1 sinon.
+  // Les autres attendent la séance suivante. Vide le premier jour (rien
+  // n'est dû).
+  function tirerSouvenirs(parcours, jour, codes) {
+    const p = normaliser(parcours);
+    const r = SEUILS.retours;
+    return retoursDus(p, jour, codes).slice(0, r.etapesParSeance).map(code => ({
+      code, questions: etapeDe(p, code)[E.reussis] === 0 ? r.questionsPremier : r.questions
+    }));
+  }
+
+  // Un retour fini (toutes ses questions justes, ou non). `graine` : celle
+  // des questions posées (la page la refait au retour suivant pour ne pas
+  // reposer les mêmes). Réussi : un de plus de suite ; au 3e, l'étoile.
+  // Raté : la coche et l'étoile restent ; l'étape revient le lendemain.
+  function noterRetour(parcours, code, reussi, jour, graine) {
     const p = normaliser(parcours);
     const e = etapeDe(p, code);
-    e[6] = jour;
-    e[5] = juste ? 0 : Math.min(SEUILS.echauffement.rateesPourRevoir, e[5] + 1);
+    if (!e[E.validee]) return p;
+    const max = SEUILS.retours.max;
+    if (reussi) { e[E.reussis] = Math.min(max, e[E.reussis] + 1); e[E.rates] = 0; }
+    else { e[E.reussis] = 0; e[E.rates] = Math.min(max, e[E.rates] + 1); }
+    e[E.retour] = jour;
+    e[E.graine] = entier(graine, 0, GRAINE_MAX, 0);
+    if (!e[E.solide] && e[E.reussis] >= SEUILS.retours.pourSolide) e[E.solide] = jour;
     return poser(p, code, e);
   }
 
-  // Une question d'échauffement sur un repère du carnet.
-  function noterEchauffementRepere(parcours, code, juste, jour) {
+  // Le repère à demander dans le retour d'une étape de repères : `codes`
+  // ses repères ; le raté de la dernière fois d'abord, puis celui qui n'a
+  // pas été demandé depuis le plus longtemps (jamais demandé passe devant),
+  // puis par code. `nombre` : combien (1 ou 2).
+  function reperesARedemander(parcours, codes, nombre = 1) {
     const p = normaliser(parcours);
-    if (!MOTIF_REPERE.test(code)) return p;
-    p.reperes[code] = [jour, juste ? 0 : 1];
-    return normaliser(p);
-  }
-
-  // « On revoit » fini : le compteur repart de zéro.
-  function noterRevue(parcours, code) {
-    const p = normaliser(parcours);
-    const e = etapeDe(p, code);
-    e[5] = 0;
-    return poser(p, code, e);
-  }
-
-  // ---------------------------------------------------------- l'échauffement
-
-  // L'échauffement est-il dû aujourd'hui ? Une fois par jour, dès qu'une
-  // étape est validée (une séance du jour qui a posé une question compte).
-  function echauffementFait(parcours, jour) {
-    return listes(normaliser(parcours)).some(s => s[I.jour] === jour && s[I.posees] > 0);
-  }
-  function echauffementDu(parcours, jour, codes) {
-    const p = normaliser(parcours);
-    return codes.some(c => estValidee(p, c)) && !echauffementFait(p, jour);
-  }
-
-  // Les questions de l'échauffement (fiche § 0, décision 7) :
-  //   Q1 un repère du carnet : raté la dernière fois, sinon le plus
-  //      longtemps sans revenir ;
-  //   Q2 la dernière étape validée, si elle l'a été un autre jour et n'est
-  //      pas revenue depuis ;
-  //   Q3 une ancienne : d'abord une ratée à son dernier échauffement, sinon
-  //      la plus longtemps sans revenir.
-  // Jamais deux questions de la même étape (un repère compte pour son étape
-  // « Mes repères »). `codes` : les étapes prêtes ; `carnet` : [{code,
-  // etape}] les repères du carnet.
-  function tirerEchauffement(parcours, jour, codes, carnet) {
-    const p = normaliser(parcours);
-    const items = [];
-    const prises = new Set();
-    const reps = (carnet || []).slice().sort((x, y) => {
-      const rx = p.reperes[x.code];
-      const ry = p.reperes[y.code];
+    return (codes || []).filter(c => MOTIF_REPERE.test(c)).slice().sort((x, y) => {
+      const rx = p.reperes[x];
+      const ry = p.reperes[y];
       const ratex = rx && rx[1] === 1 ? 0 : 1;
       const ratey = ry && ry[1] === 1 ? 0 : 1;
       if (ratex !== ratey) return ratex - ratey;
       const jx = rx ? rx[0] : "";
       const jy = ry ? ry[0] : "";
       if (jx !== jy) return jx < jy ? -1 : 1;
-      return x.code < y.code ? -1 : x.code > y.code ? 1 : 0;
-    });
-    if (reps.length) {
-      items.push({type: "repere", code: reps[0].code, etape: reps[0].etape});
-      prises.add(reps[0].etape);
-    }
-    const validees = codes.filter(c => estValidee(p, c));
-    const derniere = validees.slice().sort((x, y) => {
-      const dx = etapeDe(p, x)[2];
-      const dy = etapeDe(p, y)[2];
-      return dx === dy ? RANG[y] - RANG[x] : (dx < dy ? 1 : -1);
-    })[0];
-    if (derniere && !prises.has(derniere)) {
-      const e = etapeDe(p, derniere);
-      if (e[2] < jour && (!e[6] || e[6] < e[2])) { items.push({type: "etape", code: derniere}); prises.add(derniere); }
-    }
-    const anciennes = validees.filter(c => !prises.has(c)).sort((x, y) => {
-      const ex = etapeDe(p, x);
-      const ey = etapeDe(p, y);
-      const rx = ex[5] > 0 ? 0 : 1;
-      const ry = ey[5] > 0 ? 0 : 1;
-      if (rx !== ry) return rx - ry;
-      const jx = ex[6] || "";
-      const jy = ey[6] || "";
-      if (jx !== jy) return jx < jy ? -1 : 1;
-      return RANG[x] - RANG[y];
-    });
-    if (anciennes.length && items.length < SEUILS.echauffement.questions) items.push({type: "etape", code: anciennes[0]});
-    return items;
+      return x < y ? -1 : x > y ? 1 : 0;
+    }).slice(0, nombre);
   }
 
-  // Une étape à revoir (ratée deux échauffements de suite), ou null.
-  function aRevoir(parcours, codes) {
+  // Un repère demandé dans un retour.
+  function noterRepere(parcours, code, juste, jour) {
     const p = normaliser(parcours);
-    return codes.find(c => estValidee(p, c) && etapeDe(p, c)[5] >= SEUILS.echauffement.rateesPourRevoir) || null;
+    if (!MOTIF_REPERE.test(code)) return p;
+    p.reperes[code] = [jour, juste ? 0 : 1];
+    return normaliser(p);
+  }
+
+  // « À reprendre en classe » (pour la page prof) : 3 « Je valide » ratés de
+  // suite, ou 3 retours ratés de suite. L'élève n'est jamais bloqué.
+  function aReprendre(parcours, code) {
+    const e = etapeDe(normaliser(parcours), code);
+    return e[E.ratees] >= SEUILS.ratees.aReprendre || e[E.rates] >= SEUILS.retours.aReprendre;
+  }
+
+  // ------------------------------------------------------- Je valide mélangé
+
+  // Les 10 questions de « Je valide » : le code de l'étape à chaque place,
+  // sauf aux places 3, 6 et 9, une étape déjà validée du même palier (`codes`
+  // : les étapes du palier, dans l'ordre du parcours) — les plus proches
+  // avant elle d'abord, puis après elle (validées par « Tu connais déjà ? »),
+  // trois différentes si possible, sinon on recommence la liste. Aucune
+  // validée : les 10 de l'étape.
+  function planValidation(parcours, code, codes) {
+    const p = normaliser(parcours);
+    const v = SEUILS.valide;
+    const liste = codes || [];
+    const ici = liste.indexOf(code);
+    const avantIci = liste.slice(0, Math.max(0, ici)).reverse();
+    const apresIci = ici >= 0 ? liste.slice(ici + 1) : [];
+    const autres = avantIci.concat(apresIci).filter(c => c !== code && estValidee(p, c));
+    const plan = Array.from({length: v.questions}, () => code);
+    if (autres.length) v.places.forEach((place, k) => { plan[place] = autres[k % autres.length]; });
+    return plan;
   }
 
   // ------------------------------------------------------- À toi (l'entraînement)
-  // `reponses` : [{juste, outil: "outil" | "image" | "aucun"}].
+  // `reponses` : [{juste, outil: "outil" | "image" | "aucun", jnsp?}].
+  // « Je ne sais pas » (jnsp) compte comme une erreur et ramène l'outil.
   function suivreEntrainement(reponses) {
     const liste = Array.isArray(reponses) ? reponses.filter(Boolean) : [];
     const {avecOutil, sansOutil, erreurs, maximum} = SEUILS.entraine;
@@ -526,7 +644,7 @@
     let justesSansAide = 0;
     let erreursDeSuite = 0;
     liste.forEach(r => {
-      if (r.juste) {
+      if (r.juste && !r.jnsp) {
         erreursDeSuite = 0;
         if (r.outil === "aucun") justesSansAide += 1;
         else { justesAvecAide += 1; justesSansAide = 0; }
@@ -540,10 +658,11 @@
         justesSansAide = 0;
         // Une erreur avec l'outil sous les yeux garde l'outil (choix de
         // Gwenaël du 11/11 au soir : moins d'aide après une erreur n'a pas
-        // de sens). Ailleurs : une erreur ramène l'image, deux l'outil.
+        // de sens). Ailleurs : une erreur ramène l'image, deux l'outil ;
+        // « Je ne sais pas » ramène l'outil (choix du 14/11).
         if (outil !== "outil") {
           outilDuDebut = false;
-          outil = erreursDeSuite >= erreurs ? "outil" : "image";
+          outil = r.jnsp || erreursDeSuite >= erreurs ? "outil" : "image";
         }
       }
     });
@@ -551,7 +670,8 @@
     return {outil, reussi, fini: reussi || liste.length >= maximum, total: liste.length, justesDeSuite: justesSansAide, objectif: sansOutil};
   }
 
-  // Je valide : où en est-on ? `resultats` : [true/false…].
+  // Je valide : où en est-on ? `resultats` : [true/false…] (« Je ne sais
+  // pas » : false).
   function suivreValidation(resultats) {
     const r = Array.isArray(resultats) ? resultats : [];
     const erreurs = r.filter(x => !x).length;
@@ -578,6 +698,10 @@
     const p = normaliser(parcours);
     return (codes || CODES).filter(c => estValidee(p, c));
   }
+  function solides(parcours, codes) {
+    const p = normaliser(parcours);
+    return (codes || CODES).filter(c => estSolide(p, c));
+  }
 
   // Le carnet : les repères des étapes validées (rien n'est enregistré :
   // il se déduit, deux appareils ne peuvent pas se désaccorder).
@@ -590,11 +714,24 @@
     return liste;
   }
 
-  // Les médailles : les paliers dont toutes les étapes sont validées.
-  // `paliers` : {n: [codes]}.
-  function medailles(parcours, paliers) {
+  // Les ceintures (jaune, orange, verte, bleue, marron, noire : les couleurs
+  // sont dans la carte). `paliers` : {n: [codes]}. Une ceinture : toutes les
+  // étapes du palier cochées ; dorée : toutes solides aussi.
+  function ceintures(parcours, paliers) {
     const p = normaliser(parcours);
-    return Object.keys(paliers).map(Number).filter(n => paliers[n].length && paliers[n].every(c => estValidee(p, c)));
+    return Object.keys(paliers || {}).map(Number).sort((a, b) => a - b).map(n => {
+      const codes = paliers[n] || [];
+      const v = codes.filter(c => estValidee(p, c)).length;
+      const s = codes.filter(c => estSolide(p, c)).length;
+      const gagnee = codes.length > 0 && v === codes.length;
+      return {n, total: codes.length, validees: v, solides: s, gagnee, doree: gagnee && s === codes.length};
+    });
+  }
+
+  // La Légende des conversions : toutes les étapes cochées et solides.
+  function legende(parcours) {
+    const p = normaliser(parcours);
+    return CODES.every(c => estSolide(p, c));
   }
 
   // Le poids du parcours pour le serveur : clés (à tous les niveaux) et
@@ -610,14 +747,14 @@
   }
 
   // ----------------------------------------- ce que verront la page prof et
-  // Mon espace (lot 2 ; gardé simple ici, éprouvé par les tests).
+  // Mon espace (phase D ; gardé simple ici, éprouvé par les tests).
   function resumeTuile(parcours, {codes, aujourdhui} = {}) {
     const p = normaliser(parcours);
     const liste = codes || CODES;
     const v = liste.filter(c => estValidee(p, c));
     const debut = aujourdhui ? ajouterJours(aujourdhui, -6) : "";
-    const gainSemaine = v.filter(c => etapeDe(p, c)[2] >= debut).length;
-    return {validees: v.length, total: liste.length, legende: CODES.every(c => estValidee(p, c)), gainSemaine};
+    const gainSemaine = v.filter(c => etapeDe(p, c)[E.validee] >= debut).length;
+    return {validees: v.length, solides: liste.filter(c => estSolide(p, c)).length, total: liste.length, legende: legende(p), gainSemaine};
   }
 
   function resumeProf(parcours, {aujourdhui} = {}) {
@@ -625,20 +762,23 @@
     const jours = new Set(listes(p).filter(s => s[I.valide] === 1 || s[I.test] > 0).map(s => s[I.jour]));
     const etapes = CODES.map(code => {
       const e = etapeDe(p, code);
-      return {code, etat: e[2] ? "validee" : e[0] ? "en-cours" : "a-faire", validee: e[2], mode: e[3],
-        rateesDeSuite: e[4], aReprendre: e[4] >= SEUILS.ratees.aReprendre, sansSeance: Boolean(e[2]) && !jours.has(e[2])};
+      return {code, etat: e[E.validee] ? "validee" : e[E.vue] ? "en-cours" : "a-faire", validee: e[E.validee], mode: e[E.mode],
+        solide: e[E.solide], rateesDeSuite: e[E.ratees], retoursRatesDeSuite: e[E.rates], prochainRetour: prochainRetourDe(e),
+        aReprendre: e[E.ratees] >= SEUILS.ratees.aReprendre || e[E.rates] >= SEUILS.retours.aReprendre,
+        sansSeance: Boolean(e[E.validee]) && !jours.has(e[E.validee])};
     });
     const debut = aujourdhui ? ajouterJours(aujourdhui, -6) : "";
-    const echRatees = {};
+    const souvRates = {};
     listes(p).filter(s => s[I.jour] >= debut).forEach(s => {
       [s[I.r1], s[I.r2], s[I.r3]].filter(Boolean).forEach(r => {
         const code = CODES[r - 1];
-        (echRatees[code] = echRatees[code] || []).push(s[I.jour]);
+        (souvRates[code] = souvRates[code] || []).push(s[I.jour]);
       });
     });
     const toutes = listes(p);
-    return {etapes, validees: etapes.filter(e => e.validee).length, derniere: toutes.length ? toutes[toutes.length - 1][I.jour] : null,
-      echRatees: Object.keys(echRatees).map(code => ({code, jours: echRatees[code]})), legende: CODES.every(c => estValidee(p, c))};
+    return {etapes, validees: etapes.filter(e => e.validee).length, solides: etapes.filter(e => e.solide).length,
+      derniere: toutes.length ? toutes[toutes.length - 1][I.jour] : null,
+      souvenirsRates: Object.keys(souvRates).map(code => ({code, jours: souvRates[code]})), legende: legende(p)};
   }
 
   function resumeSuivi(parcours, {aujourdhui} = {}) {
@@ -647,8 +787,8 @@
     listes(p).forEach(s => {
       (parJour[s[I.jour]] = parJour[s[I.jour]] || []).push({
         etape: s[I.etape] ? CODES[s[I.etape] - 1] : null, apprends: s[I.montre] === 1 || s[I.atoi] > 0, entraine: s[I.atoi] === 1,
-        valide: s[I.valide], echPosees: s[I.posees], echJustes: s[I.justes],
-        echRatees: [s[I.r1], s[I.r2], s[I.r3]].filter(Boolean).map(r => CODES[r - 1]), test: s[I.test]
+        valide: s[I.valide], souvPosees: s[I.posees], souvJustes: s[I.justes],
+        souvRates: [s[I.r1], s[I.r2], s[I.r3]].filter(Boolean).map(r => CODES[r - 1]), test: s[I.test]
       });
     });
     const jours = Object.keys(parJour).sort().map(jour => ({jour, lignes: parJour[jour]}));
@@ -657,7 +797,9 @@
   }
 
   // ---------------------------------------------------------- le stockage
-  // Sans code (lot 1) : sur l'appareil, sous mathsgo-defi-conversions-parcours.
+  // Sans code : sur l'appareil, sous mathsgo-defi-conversions-parcours. Une
+  // donnée de la version 1 est lue, puis réécrite en version 2 au premier
+  // geste (sauver).
   function charger(stockage) {
     try {
       const brut = stockage && stockage.getItem(CLE_STOCKAGE);
@@ -696,8 +838,10 @@
     RANG,
     SEUILS,
     I,
+    E,
     ID_MAX,
     ORDRE_MAX,
+    GRAINE_MAX,
     MOTIF_ETAPE,
     MOTIF_REPERE,
     creer,
@@ -711,25 +855,30 @@
     listes: parcours => listes(normaliser(parcours)),
     etapeDe: (parcours, code) => etapeDe(normaliser(parcours), code),
     estValidee: (parcours, code) => estValidee(normaliser(parcours), code),
+    estSolide: (parcours, code) => estSolide(normaliser(parcours), code),
     actionDe: (parcours, code, jour, options) => actionDe(normaliser(parcours), code, jour, options),
     monEtape: (parcours, codes) => monEtape(normaliser(parcours), codes),
     marquerVue,
     marquerEntrainee,
     noterValidation,
     noterTest,
-    noterEchauffementEtape,
-    noterEchauffementRepere,
-    noterRevue,
-    echauffementFait,
-    echauffementDu,
-    tirerEchauffement,
-    aRevoir,
+    prochainRetour: (parcours, code) => prochainRetourDe(etapeDe(normaliser(parcours), code)),
+    retoursDus,
+    tirerSouvenirs,
+    noterRetour,
+    graineRetour: (parcours, code) => etapeDe(normaliser(parcours), code)[E.graine],
+    reperesARedemander,
+    noterRepere,
+    aReprendre,
+    planValidation,
     suivreEntrainement,
     suivreValidation,
     suivreMarche,
     validees,
+    solides,
     carnet,
-    medailles,
+    ceintures,
+    legende,
     mesurer,
     resumeTuile,
     resumeProf,
