@@ -37,7 +37,7 @@
   // ---------- Accueil ----------
   function accueil() {
     clearInterval(minuteur);
-    $("#niveau").textContent = `Évaluation nationale · ${sujet.niveau}`;
+    $("#niveau").textContent = `${sujet.famille || "Évaluation nationale"} · ${sujet.niveau}`;
     $("#titre").textContent = sujet.titre;
     $("#descriptif").textContent = `${sujet.questions.length} questions · ${sujet.consignes}`;
     $("#officiels").innerHTML = officiels.map((o, k) => `<button class="carte officiel" type="button" data-officiel="${k}">
@@ -46,7 +46,7 @@
             <span class="go">Commencer</span>
           </button>`).join("");
     $("#officiels").querySelectorAll("[data-officiel]").forEach((b) => b.addEventListener("click", () => lancer("officiel", null, officiels[Number(b.dataset.officiel)])));
-    $("#source").innerHTML = `Questions : ${sujet.source.replace(/, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
+    $("#source").innerHTML = `Questions : ${sujet.source.replace(/(, Eduscol)?, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
     const dernier = lire();
     $("#dernier").hidden = !dernier;
     if (dernier) $("#dernier").textContent = `Ton dernier sujet (${dernier.type === "officiel" ? (officiels.length > 1 && dernier.officiel ? "officiel " + dernier.officiel.replace("-", " et ") : "officiel") : "jumeau"}) : ${dernier.score} / ${dernier.total} — ${dernier.groupe}`;
