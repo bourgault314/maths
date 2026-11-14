@@ -622,11 +622,26 @@
         fJuste = petite(104, 80, s, lbl(`rectangle quadrillé en ${2 * q} parts égales, ${2 * p} coloriées`));
       }
       const piege = "Compte les parts bleues et le nombre total de parts sans tenir compte de leur taille.";
+      // Lot EN4d (choix de Gwenaël, 14/11) : dans les jumeaux, la bonne figure n'est plus la seule en parts égales. Le
+      // rectangle en bandes inégales laisse la place au piège classique « p pour q » : p parts coloriées et q parts
+      // blanches, toutes égales (3 pour 4 = 3/7, pas 3/4). Sa forme n'est jamais celle de la bonne figure.
+      let fPourQ = fBandes, piegePourQ = piege;
+      if (!officiel) {
+        const n = p + q, col = places(r, n, p);
+        if (forme === "bande" || forme === "grille") {
+          let sp = "";
+          for (let i = 0; i < n; i++) sp += secteur(39, 39, 36, (i * 360) / n, ((i + 1) * 360) / n, col.includes(i) ? BLEU : "#fff");
+          fPourQ = petite(78, 78, sp, lbl(`disque en ${n} parts égales, ${p} coloriées`));
+        } else {
+          fPourQ = bande(Array(n).fill((2 * p * w) / n), [...Array(n).keys()].map((i) => col.includes(i)), lbl(`rectangle en ${n} parts égales, ${p} coloriées`));
+        }
+        piegePourQ = `Lit ${p} parts coloriées pour ${q} parts blanches comme ${p}/${q} : compare les parts coloriées aux parts blanches au lieu de les compter sur le total.`;
+      }
       return {
         forme,
         enonce: `Dans quelle figure a-t-on colorié ${p}/${q} de la surface ?`,
         choixFigures: true,
-        choix: [c(fBande, false, piege), c(fBandes, false, piege), c(fMorceaux, false, piege), c(fJuste, true)],
+        choix: [c(fBande, false, piege), c(fPourQ, false, piegePourQ), c(fMorceaux, false, piege), c(fJuste, true)],
       };
     },
   });
