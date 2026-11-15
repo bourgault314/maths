@@ -1,6 +1,7 @@
 // Défi conversions : la carte et la progression (sans navigateur).
-//   - la carte : 52 codes (carte v3), rangs uniques, paliers 10 / 16 / 8 / 6 / 7 / 5
-//     vus par l'élève (E1 et D7, au palier 1, construits au lot A2 bis) ;
+//   - la carte : 54 codes (carte v4), rangs uniques, paliers 10 / 16 / 9 / 6 / 8 / 5
+//     vus par l'élève (E1 et D7, au palier 1, construits au lot A2 bis ; C9 et
+//     Q11, carte v4, ajoutées au lot 3b) ;
 //   - le format version 2 (lot 3a), sa renormalisation, la lecture de la
 //     version 1 ;
 //   - le rythme (lot 3a) : la coche le jour même, les retours (lendemain,
@@ -19,32 +20,40 @@ const PRETS = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
 const J = "2026-11-11";
 const hier = P.ajouterJours(J, -1);
 
-test("la carte v3 : 52 étapes, codes et rangs figés, paliers 10/16/8/6/7/5 vus par l'élève", () => {
-  assert.equal(CARTE.ETAPES.length, 52);
-  assert.deepEqual(CARTE.ETAPES.map(e => e.rang), Array.from({length: 52}, (_, i) => i + 1));
+test("la carte v4 : 54 étapes, codes et rangs figés, paliers 10/16/9/6/8/5 vus par l'élève", () => {
+  assert.equal(CARTE.ETAPES.length, 54);
+  assert.deepEqual(CARTE.ETAPES.map(e => e.rang), Array.from({length: 54}, (_, i) => i + 1));
   assert.deepEqual(CARTE.ETAPES.map(e => e.code), [...P.CODES], "même liste que le moteur (copie du serveur au lot 2)");
-  assert.equal(new Set(CARTE.ETAPES.map(e => e.code)).size, 52);
+  assert.equal(new Set(CARTE.ETAPES.map(e => e.code)).size, 54);
   CARTE.ETAPES.forEach(e => assert.match(e.code, P.MOTIF_ETAPE));
-  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [10, 16, 8, 6, 7, 5]);
+  assert.deepEqual(CARTE.PALIERS.map(p => p.etapes), [10, 16, 9, 6, 8, 5]);
   assert.equal(CARTE.etape("D2").palier, 1, "La demi-heure, le quart d'heure : palier 1 (BO de cycle 2)");
   assert.equal(CARTE.etape("D2").rang, 21, "son rang ne bouge pas");
   // Les ajouts de la carte v3 : rangs 49 à 52, jamais réutilisés.
   assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).rang), [49, 50, 51, 52]);
   assert.deepEqual(["E1", "D7", "Q10", "A5"].map(c => CARTE.etape(c).palier), [1, 1, 2, 2]);
+  // Lot 3b : les deux ajouts de la carte v4, rangs 53 et 54.
+  assert.deepEqual(["C9", "Q11"].map(c => CARTE.etape(c).rang), [53, 54]);
+  assert.deepEqual(["C9", "Q11"].map(c => CARTE.etape(c).palier), [3, 5]);
+  assert.ok(!CARTE.etape("C9").pret && !CARTE.etape("Q11").pret, "pas encore construites (B3, B5)");
   // Lot A2 bis : E1 et D7 ne sont plus cachées. Elles prennent leur place
   // dans leur famille (Convertir, Durées), après les étapes déjà en ligne.
   assert.deepEqual(CARTE.ETAPES.filter(e => e.cachee).map(e => e.code), []);
-  assert.equal(CARTE.ORDRE.length, 52);
+  assert.equal(CARTE.ORDRE.length, 54);
   assert.deepEqual(CARTE.etapesDuPalier(1).map(e => e.code), ["R1", "R2", "P1", "C1", "C2", "E1", "D1", "D2", "D7", "Q1"]);
   assert.ok(CARTE.palierPret(1), "le palier 1 reste prêt");
   assert.ok(CARTE.famillesDuPalier(1).every(f => f.etapes.every(e => !e.cachee)));
   assert.ok(CARTE.etapesDuPalier(2).some(e => e.code === "A5") && CARTE.etapesDuPalier(2).some(e => e.code === "Q10"));
-  // Le moteur accepte les nouveaux codes (rang 52 compris).
+  // Le moteur accepte les nouveaux codes (rang 54 compris).
   const p = P.creer();
   const {parcours} = P.noterSeance(p, {id: 7, etape: "A5", montre: true}, J);
   const relu = P.normaliser(JSON.parse(JSON.stringify(parcours)));
   assert.equal(Object.values(relu.seances)[0][1], 52, "le rang 52 passe la normalisation");
   assert.equal(P.RANG.A5, 52);
+  const q11 = P.noterSeance(P.creer(), {id: 8, etape: "Q11", montre: true}, J).parcours;
+  assert.equal(Object.values(P.normaliser(JSON.parse(JSON.stringify(q11))).seances)[0][1], 54, "le rang 54 passe la normalisation");
+  assert.equal(P.RANG.C9, 53);
+  assert.ok(P.MOTIF_ETAPE.test("C9") && P.MOTIF_ETAPE.test("Q11") && !P.MOTIF_ETAPE.test("C10") && !P.MOTIF_ETAPE.test("Q12"));
   assert.equal(CARTE.REPERES.length, 36);
   CARTE.REPERES.forEach(r => assert.match(r.code, P.MOTIF_REPERE));
   // Lot A2 ter : la règle (1 mm) rejoint « Mes premiers repères ».
@@ -117,7 +126,7 @@ test("la renormalisation : code inconnu, date fausse, entier hors bornes, séanc
   assert.deepEqual(p.etapes.C2, [J, null, null, 0, 2, 0, 0, null, null, 0], "pas validée : mode 0, ni retour ni étoile");
   assert.deepEqual(p.reperes, {c2: [J, 1]});
   assert.deepEqual(Object.values(p.seances).map(s => s[11]), [12, 15, 16], "identifiant 0, mauvaise longueur, date fausse, clé non numérique : jetées");
-  assert.deepEqual(p.seances["2"], [J, 52, 1, 2, 0, 12, 12, 0, 0, 0, 52, 15, 5], "ramenés aux bornes (12 questions au plus dans Je me souviens)");
+  assert.deepEqual(p.seances["2"], [J, 54, 1, 2, 0, 12, 12, 0, 0, 0, 54, 15, 5], "ramenés aux bornes (12 questions au plus dans Je me souviens)");
   assert.deepEqual(p.seances["3"].slice(5, 7), [2, 2], "jamais plus de justes que de questions posées");
 });
 
@@ -371,7 +380,7 @@ test("les ceintures, les étoiles et la Légende des conversions", () => {
   assert.equal(c[0].doree, true, "toutes ses étoiles : le liseré doré");
   assert.equal(P.legende(p), false);
   assert.deepEqual(P.solides(p, PRETS), PRETS);
-  assert.deepEqual(P.resumeTuile(p, {aujourdhui: J}), {validees: 10, solides: 10, total: 52, legende: false, gainSemaine: 10});
+  assert.deepEqual(P.resumeTuile(p, {aujourdhui: J}), {validees: 10, solides: 10, total: 54, legende: false, gainSemaine: 10});
   // Un retour raté ne retire ni la ceinture ni le liseré.
   p = P.noterRetour(p, "C1", false, jour(41), 9);
   assert.equal(P.ceintures(p, paliers)[0].doree, true);
@@ -523,12 +532,12 @@ test("le pire cas tient dans les bornes du serveur (2 000 clés, 40 000 octets)"
   const p = {version: 2, epoque: 1000000, etapes: {}, reperes: {}, seances: {}};
   P.CODES.forEach(c => { p.etapes[c] = ["2026-12-31", "2026-12-31", "2026-12-01", 2, 0, 9, 0, "2026-12-31", "2026-12-31", 99999]; });
   CARTE.REPERES.forEach(r => { p.reperes[r.code] = ["2026-12-31", 1]; });
-  for (let k = 1; k <= 150; k += 1) p.seances[String(k)] = ["2026-12-31", 52, 1, 2, 2, 6, 6, 52, 52, 52, 52, 999000 + k, 999000 + k];
+  for (let k = 1; k <= 150; k += 1) p.seances[String(k)] = ["2026-12-31", 54, 1, 2, 2, 6, 6, 54, 54, 54, 54, 999000 + k, 999000 + k];
   const n = P.normaliser(p);
-  assert.equal(Object.keys(n.etapes).length, 52);
+  assert.equal(Object.keys(n.etapes).length, 54);
   assert.equal(n.etapes.R1.join(), p.etapes.R1.join(), "le pire cas est bien gardé tel quel");
   const m = P.mesurer(p);
-  assert.equal(m.cles, 243, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés");
+  assert.equal(m.cles, 245, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés");
   assert.ok(m.octets <= 16000, `${m.octets} octets (le serveur accepte 40 000)`);
 });
 

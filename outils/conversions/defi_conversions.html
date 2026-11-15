@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261114-3a">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261114-3b1">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261114-3a"></script>
-  <script src="./conversions_generateurs.js?v=20261114-3a"></script>
-  <script src="./defi_conversions_parcours.js?v=20261114-3a"></script>
-  <script src="./defi_conversions_aides.js?v=20261114-3a"></script>
+  <script src="./conversions_carte.js?v=20261114-3b1"></script>
+  <script src="./conversions_generateurs.js?v=20261114-3b1"></script>
+  <script src="./defi_conversions_parcours.js?v=20261114-3b1"></script>
+  <script src="./defi_conversions_aides.js?v=20261114-3b1"></script>
   <script>
   (function () {
     "use strict";
@@ -571,7 +571,8 @@
       remplirZone(zone, "ko", ["ko", "La bonne réponse"]);
       const reponse = el("div", "reponse-bonne");
       // Un repère : sa carte (l'objet et sa mesure).
-      if (qn.repere && qn.forme === "qcm") reponse.appendChild(AIDES.carteRepere(qn.repere, {grande: true}));
+      // (Lot 3b : aussi le repère demandé au pavé.)
+      if (qn.repere && (qn.forme === "qcm" || qn.forme === "phrase")) reponse.appendChild(AIDES.carteRepere(qn.repere, {grande: true}));
       // « Qu'est-ce que je mesure ? » : les quatre grandeurs, la bonne en vert.
       else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur});
       else bonneReponse(reponse, qn);
@@ -853,7 +854,8 @@
         question.objets.forEach((o, i) => {
           const b = el("button", "obj");
           b.type = "button";
-          b.append(el("span", `lettre l${i}`, "ABC"[i]), el("span", "emoji", o.emoji), el("span", "t", o.texte));
+          // (Lot 3b : relier des relations, « 1 m », « 1 kg » : pas d'image.)
+          b.append(...[el("span", `lettre l${i}`, "ABC"[i]), o.emoji ? el("span", "emoji", o.emoji) : null, el("span", "t", o.texte)].filter(Boolean));
           b.addEventListener("click", () => toucherGeste("obj", i));
           const mb = el("button", "mes");
           mb.type = "button";
@@ -1007,7 +1009,10 @@
       return d;
     }
     function bonneReponse(zone, question) {
-      if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") {
+      // (Lot 3b : une conversion au choix, sous son glisse-unité, s'écrit
+      // comme une conversion au pavé : une ligne, la réponse en vert.)
+      const choixGlisse = question.forme === "qcm" && question.glisse && question.resume.endsWith(question.reponseTexte);
+      if (!choixGlisse && (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger")) {
         // Une seule ligne (« Je mesure une masse. ») : en grand ; plusieurs
         // (relier, ranger) : à la taille d'une phrase.
         zone.appendChild(texteLignes(question.correction.length > 1 ? "grosse petite-grosse" : "grosse", question.correction.join("\n")));

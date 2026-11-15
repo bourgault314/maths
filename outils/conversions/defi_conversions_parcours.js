@@ -87,11 +87,13 @@
     "C5", "C6", "C7", "C8", "D2", "Q2", "R7", "R8", "R9", "A1", "A2", "D3", "Q3", "Q4", "A3", "V1", "D4", "D5", "Q5", "Q6",
     "A4", "R10", "V2", "V3", "V4", "Q7", "Q8", "D6", "G1", "P5", "P6", "Q9",
     // Carte v3 (12/11/2026) : rangs 49 à 52.
-    "E1", "D7", "Q10", "A5"]);
+    "E1", "D7", "Q10", "A5",
+    // Carte v4 (14/11/2026, lot 3b) : rangs 53 et 54.
+    "C9", "Q11"]);
   const RANG = {};
   CODES.forEach((c, i) => { RANG[c] = i + 1; });
   const RANG_MAX = CODES.length;
-  const MOTIF_ETAPE = /^(?:R(?:[1-9]|10)|P[1-6]|C[1-8]|A[1-5]|V[1-4]|D[1-7]|G1|Q(?:[1-9]|10)|E1)$/;
+  const MOTIF_ETAPE = /^(?:R(?:[1-9]|10)|P[1-6]|C[1-9]|A[1-5]|V[1-4]|D[1-7]|G1|Q(?:[1-9]|1[01])|E1)$/;
   const MOTIF_REPERE = /^(?:l(?:[1-9]|1[01])|m[1-8]|c[1-5]|a[1-7]|v[1-5])$/;
 
   const SEUILS = Object.freeze({
