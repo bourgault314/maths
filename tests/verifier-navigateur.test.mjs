@@ -82,8 +82,8 @@ test("inscrire une recette dans la liste ne rejoue que cette recette ; changer l
 
   // Ailleurs dans le script : tout
   assert.equal(changementDeLaSuite(suite, suite.replace("15 * 60000", "16 * 60000")).tout, true);
-  assert.equal(changementDeLaSuite(suite, suite.replace('const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul"]',
-    'const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul", "assets/y.js"]')).tout, true);
+  assert.equal(changementDeLaSuite(suite, suite.replace('const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul", "assets/js/code-en-cases.js", "assets/js/compteur.js"]',
+    'const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul", "assets/js/code-en-cases.js", "assets/js/compteur.js", "assets/y.js"]')).tout, true);
   // Des repères introuvables (script réorganisé) : tout, par prudence
   assert.equal(changementDeLaSuite(suite, suite.replace("export const RECETTES = [", "export const LISTE = [")).tout, true);
 });
