@@ -73,7 +73,7 @@ function attendu(n, g, choix) {
     case 7: m = g.figure.match(/Rectangle codé de longueur (\d) et de largeur (\d)/) || g.figure.match(/Carré codé de côté (\d)()/); return 2 * (Number(m[1]) + Number(m[2] || m[1]));
     case 8: { const L = e.match(/désigne par (\w) le nombre/)[1], k = e.match(/Lui (soustraire|ajouter) (\d)/), mm = e.match(/Multiplier le résultat par (\d)/)[1]; return `(${L} ${k[1] === "soustraire" ? "−" : "+"} ${k[2]}) × ${mm}`; }
     case 9: return 90 - Number(g.figure.match(/angle de sommet \w : (\d+)°/)[1]);
-    case 10: { const ex = e.match(/A = (.+?)\. Pour/)[1], v = Number(e.match(/Pour x = (\d)/)[1]); return calc(ex, { x: v }); }
+    case 10: { const ex = e.match(/A = (.+?)\. Pour/)[1], [, L, v] = e.match(/Pour (\w) = (\d)/); return calc(ex, { [L]: Number(v) }); }
     case 12: m = e.match(/^10\^(\d) = …$/); if (m) return 10 ** Number(m[1]); return calc(e.replace(/ = …$/, ""));
     case 13: { const [, L, v] = e.match(/Pour (\w) = (−?\d)/); const vraies = choix.filter((x) => { const [a, b] = x.split(" = "); return proche(calc(a, { [L]: calc(v) }), calc(b)); }); assert.equal(vraies.length, 1, e + " → " + choix.join(" | ")); return vraies[0]; }
     case 14: { const [, noms, S] = g.figure.match(/Triangle (\w{3}) rectangle en (\w)/); const [P, Q] = noms.split("").filter((x) => x !== S); return `${P}${Q}^2 = ${P}${S}^2 + ${S}${Q}^2`; }

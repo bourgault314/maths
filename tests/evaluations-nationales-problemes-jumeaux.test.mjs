@@ -296,8 +296,9 @@ const ATTENDU4 = {
   },
   13(e, choix, g) {
     // Les lettres et la largeur de la bande, relues sur la figure : la lettre du haut est la grande longueur.
+    // Lot EN-J : la bande change de coin ; la grande longueur est la lettre écrite une seule fois.
     const t = textesFig(g.figure), lettresFig = t.filter((x) => /italic/.test(x.att)), k = n(t.find((x) => !/italic/.test(x.att)).t);
-    const B = lettresFig.reduce((a, x) => (x.y < a.y ? x : a)).t, A = lettresFig.find((x) => x.t !== B).t;
+    const B = lettresFig.find((x) => lettresFig.filter((y) => y.t === x.t).length === 1).t, A = lettresFig.find((x) => x.t !== B).t;
     assert.ok(k >= 2 && k <= 6 && lettresFig.filter((x) => x.t === A).length === 2, "deux fois la petite lettre");
     assert.ok([["a", "b"], ["x", "y"], ["m", "n"]].some(([p, q]) => p === A && q === B), `${A} ${B}`);
     return { juste: `${k}(${B} − ${A})`, pieges: [`${k}(${B} + ${A})`, `${k}${A}`, `${k}${B}`] };
@@ -313,9 +314,18 @@ const ATTENDU4 = {
     const m = e.match(/nécessite (\d+) minutes\. On lui demande de réaliser (\d+) (\S+) en trois heures\./);
     assert.ok(m, e);
     const [dd, k, objets] = [n(m[1]), n(m[2]), m[3]], manque = dd * k - 180;
-    assert.ok([13, 16, 17, 18].includes(dd) && manque >= 1 && manque <= 20, e);
     // Les trois pièges sont des phrases fausses : il fabrique en vrai floor(180 / d) objets.
     const vrai = Math.floor(180 / dd), haut = 3 * Math.ceil(60 / dd), bas = 3 * Math.floor(60 / dd);
+    if (manque < 0) {
+      // Lot EN-J (choix de Gwenaël) : il a le temps — il lui reste 1 à 20 minutes ; « seulement bas » est trop peu pour
+      // dire NON, « haut » n'est pas le bon nombre, et il lui faut au moins deux heures.
+      assert.ok([13, 16, 17].includes(dd) && -manque >= 1 && -manque <= 20 && bas < k && haut > vrai && dd * k >= 120 && (dd * k) / 3 < 120, e);
+      return {
+        juste: `OUI. Il lui restera ${enLettres(-manque)} minute${-manque > 1 ? "s" : ""}.`,
+        pieges: [`OUI. Il pourra fabriquer ${enLettres(haut)} ${objets}.`, `NON. Il pourra fabriquer seulement ${enLettres(bas)} ${objets}.`, "OUI. Il lui faudra moins de deux heures."],
+      };
+    }
+    assert.ok([13, 16, 17, 18].includes(dd) && manque >= 1 && manque <= 20, e);
     assert.ok(haut > vrai && bas < vrai && (dd * k) / 3 < 120, e);
     return {
       juste: `NON. Il lui manquera ${enLettres(manque)} minute${manque > 1 ? "s" : ""}.`,
@@ -323,11 +333,12 @@ const ATTENDU4 = {
     };
   },
   16(e) {
-    const m = e.match(/livre de (\d+) pages\. Chaque jour \S+ en lit 10 %\. Combien lit-\S+ de pages en (\d+) jours/);
+    // Lot EN-J (choix de Gwenaël) : 10 % (3 à 9 jours) ou 20 % (2 à 4 jours, jamais plus que le livre).
+    const m = e.match(/livre de (\d+) pages\. Chaque jour \S+ en lit (10|20) %\. Combien lit-\S+ de pages en (\d+) jours/);
     assert.ok(m, e);
-    const [P, j] = [n(m[1]), n(m[2])];
-    assert.ok(P % 10 === 0 && P >= 110 && P <= 250 && j >= 3 && j <= 9, e);
-    return { juste: `${(P / 10) * j} pages`, pieges: [`${10 * j} pages`, "10 pages", `${P / 10} pages`] };
+    const [P, p, j] = [n(m[1]), n(m[2]), n(m[3])], jour = (P * p) / 100;
+    assert.ok(P % 10 === 0 && P >= 110 && P <= 250 && (p === 10 ? j >= 3 && j <= 9 : j >= 2 && j <= 4) && jour * j <= P, e);
+    return { juste: `${jour * j} pages`, pieges: [`${p * j} pages`, `${p} pages`, `${jour} pages`] };
   },
   17(e) {
     const m = e.match(/^Il faut (\d+) g (?:de |d’).+? pour obtenir 1 g (?:de |d’).+?\. .* avec 1 kg (?:de |d’)/); // lot EN10 : d’huile
@@ -341,8 +352,7 @@ const ATTENDU4 = {
     assert.ok(m, e);
     const T = n(m[1]), k = m[2] === "un seul" ? 1 : n(m[2]), g = T - k, compare = (100 * k) / g;
     assert.ok(T >= 4 && T <= 20 && k < g && Number.isInteger((100 * g) / T), e);
-    // Lot EN10 : le piège de la DEPP (comparer le petit groupe au grand, puis compléter à 100 %) tombe toujours juste.
-    assert.ok(Number.isInteger(compare), `piège DEPP qui ne tombe pas juste : ${e}`);
+    // Lot EN-J : la réponse varie ; le piège de la DEPP quand il tombe juste, sinon le piège ⚠ (nombre pris pour un %).
     return { juste: `${(100 * g) / T} %`, pieges: [`${(100 * k) / T} %`, `${g} %`, Number.isInteger(compare) ? `${100 - compare} %` : `${100 - k} %`] };
   },
   19(e, choix, g) {

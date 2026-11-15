@@ -2,7 +2,8 @@
 // et la présentation, avec les mêmes pièges que le sujet officiel. Les formes qui changent le cas, le sens, l'écriture, la
 // difficulté ou la nature de la bonne réponse restent dans le code (la future banque) : la table HORS_STRICT de chaque test
 // Automatismes les nomme et le jumeau les écarte. Aussi : le jumeau d'un sujet officiel ne tire que les tâches de ce
-// sujet (4e 2026 / 2024-2025), 5e Q6 (une seule part coloriée), 4e Problèmes Q18 (le piège de la DEPP tombe juste) et
+// sujet (4e 2026 / 2024-2025), 5e Q6 (une seule part coloriée), 4e Problèmes Q18 (lot EN-J : la réponse varie, le piège de
+// la DEPP revient quand il tombe juste) et
 // l'élision (« d’oranges », « d’élèves », « d’Inès », « d’huile ») dans tous les sujets.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -31,8 +32,11 @@ const famille = (x) => texte(x.erreur).split(" ")[0];
 // Familles qui s'adaptent à la forme et restent le même piège (décidé à l'audit du 14/11) : 5e Q23, « additionne tous les
 // nombres » devient « soustrait tous les nombres » quand le calcul est une soustraction. 3e (positionnement, pièges écrits
 // par nous, pas d'analyse DEPP) : Q4 et Q18 ont des pièges qui suivent les nombres, gardés tels quels par l'audit.
+// Lot EN-J : quand la bonne réponse est une catégorie qui change (3e Q21 : la nature du triangle ; 3e Q29 : premier ou
+// pas), les pièges sont les autres catégories — ils changent avec elle (contrôlés dans evaluations-nationales-3e).
+// 4e Problèmes Q18 : le piège de la DEPP n'existe que si le petit groupe est le quart du grand (test plus bas).
 const MEME_PIEGE = { "5e-automatismes": { 23: { Additionne: ["Soustrait"] } } };
-const PIEGES_LIBRES = { "3e-automatismes": [4, 18] };
+const PIEGES_LIBRES = { "3e-automatismes": [4, 18, 21, 29], "4e-problemes": [18] };
 
 test("HORS_STRICT : chaque forme citée existe dans la banque, aucune n'est celle du sujet officiel, il reste une forme stricte", () => {
   for (const id of AUTOMATISMES) {
@@ -91,8 +95,9 @@ test("4e Automatismes : le jumeau du sujet 2026 ne tire que les tâches de 2026,
         if (cle === "2026") assert.ok(!/^\d+ − \d = …$|^\d \+ … = \d+$|l’expression \d\w [+−] \d\w alors/.test(e), `2026 graine ${graine} : ${e}`);
       }
     }
-  // 2026 : « Lorsqu'on multiplie un nombre par 0,1… » (effet) et x × x + 3 × x + 7 dans tous les ordres.
-  assert.deepEqual([...vus[2026].keys()].filter((k) => k.startsWith("Q1")).sort(), ["Q1 2026 effet"]);
+  // 2026 : « Lorsqu'on multiplie un nombre par 0,1… » (effet) ou, lot EN-J, « … revient à » (même savoir, autre tournure),
+  // et x × x + 3 × x + 7 dans tous les ordres.
+  assert.deepEqual([...vus[2026].keys()].filter((k) => k.startsWith("Q1")).sort(), ["Q1 2026 effet", "Q1 2026 revient"]);
   assert.ok([...vus[2026].keys()].every((k) => !k.includes("4e-")), [...vus[2026].keys()].join(", "));
   // 2024-2025 : « 14 − 6 » en différence seulement, « 2n + 3n » en somme seulement.
   assert.deepEqual([...vus["2024-2025"].keys()].sort(), ["Q1 4e-soustraire difference", "Q6 4e-reduire-somme somme"]);
@@ -125,21 +130,26 @@ test("6e Q14 : le jumeau strict multiplie par 10 (× 100 et × 1 000 restent pou
   assert.deepEqual([...formes].sort(), ["fois-10", "fois-10-devant"]);
 });
 
-test("4e Problèmes Q18 : le piège de la DEPP (comparer le petit groupe au grand, puis compléter à 100 %) tombe toujours juste", () => {
-  const s = S["4e-problemes"], contextes = new Set();
+test("4e Problèmes Q18 (lot EN-J, choix de Gwenaël) : la réponse varie ; le piège de la DEPP revient chaque fois qu'il tombe juste", () => {
+  const s = S["4e-problemes"], contextes = new Set(), reponses = new Set();
+  let depp = 0;
   for (let graine = 2; graine <= 2001; graine++) {
     const g = construire(s, hasard(graine), null, [18])[0].g, e = texte(g.enonce);
     const m = e.match(/de (\d+) \S+, (un seul|\d+) /);
     const T = Number(m[1]), k = m[2] === "un seul" ? 1 : Number(m[2]);
-    assert.equal(5 * k, T, `le petit groupe est le cinquième du total (1 sur 4 comparé au grand) : ${e}`);
+    reponses.add(texte(g.choix.find((x) => x.juste).html));
     const piege = g.choix.find((x) => /^Compare les /.test(texte(x.erreur)));
-    assert.ok(piege, `piège DEPP absent : ${e}`);
-    assert.equal(texte(piege.html), "75 %");
+    // Le piège « compare le petit groupe au grand, puis complète à 100 % » n'est entier que si le petit groupe est le
+    // quart du grand (1 sur 4, comme dans le sujet) : il est là exactement dans ces tirages-là.
+    assert.equal(Boolean(piege), 4 * k === T - k, `piège DEPP : ${e}`);
+    if (piege) { depp++; assert.equal(texte(piege.html), "75 %"); }
     assert.ok(!/fratrie de 5 enfants, un seul est gaucher/.test(e), "jamais le sujet officiel");
     assert.doesNotMatch(g.choix.map((x) => x.erreur).join(" "), /\bde [éeaiou]/, e);
     contextes.add(e.split(",")[0].replace(/\d+/, "#"));
   }
   assert.ok(contextes.size >= 3, [...contextes].join(" / "));
+  assert.ok(reponses.size >= 8, [...reponses].join(" / "));
+  assert.ok(depp >= 100, `le piège de la DEPP tombe encore souvent (${depp} sur 2 000)`);
 });
 
 test("élision : de, que, le, la jamais devant une voyelle ou un h muet, dans tous les sujets (officiels, jumeaux et banque)", () => {

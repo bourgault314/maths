@@ -69,12 +69,15 @@
 
   const JAUNE = "#ffe100";
   // Rectangle partagé en bandes égales ; `coloriees` : rangs des bandes coloriées.
-  function bandeColoriee(parts, coloriees) {
+  // Lot EN-J : `debout` — la même bande dressée (parts empilées, la première en haut), dessinée à la même échelle.
+  function bandeColoriee(parts, coloriees, debout) {
     const l = 26, h = 104, x0 = 4, y0 = 4;
     let s = "";
     for (let i = 0; i < parts; i++)
-      s += `<rect x="${x0 + i * l}" y="${y0}" width="${l}" height="${h}" fill="${coloriees.includes(i) ? JAUNE : "#fff"}" stroke="#111" stroke-width="2"/>`;
-    return svg(parts * l + 8, h + 8, s, `Rectangle partagé en ${parts} parts égales, ${coloriees.length} coloriées`);
+      s += debout ? `<rect x="${x0}" y="${y0 + i * l}" width="${h}" height="${l}" fill="${coloriees.includes(i) ? JAUNE : "#fff"}" stroke="#111" stroke-width="2"/>`
+        : `<rect x="${x0 + i * l}" y="${y0}" width="${l}" height="${h}" fill="${coloriees.includes(i) ? JAUNE : "#fff"}" stroke="#111" stroke-width="2"/>`;
+    const etiquette = `Rectangle partagé en ${parts} parts égales, ${coloriees.length} coloriées`;
+    return debout ? svg(h + 8, parts * l + 8, s, etiquette, Math.round(((h + 8) * 340) / (parts * l + 8))) : svg(parts * l + 8, h + 8, s, etiquette);
   }
 
   // Disque partagé en parts égales (en partant du haut) ; `coloriees` : rangs des parts coloriées.
@@ -247,7 +250,7 @@
   const UNITES_NUM = ["dizaines", "unités", "dixièmes", "centièmes", "millièmes"];
   Q.push({
     num: 5, domaine: "NC", competence: "Connaître les relations entre unités de numération",
-    entrainement: AUTO("NC01", "Numération décimale"), disposition: "ligne", melange: false,
+    entrainement: AUTO("NC01", "Numération décimale"), disposition: "ligne",
     generer(r, officiel) {
       const f = forme(r, officiel, ["dix-fois", "en-nombre"]);
       const n = officiel ? 5 : r.entier(2, 9);
@@ -398,20 +401,22 @@
     num: 11, domaine: "NC", competence: "Reconnaître une fraction comme partie d’une figure",
     entrainement: AUTO("NC08", "Écritures d’un même nombre"),
     generer(r, officiel) {
-      const f = forme(r, officiel, ["bande-coloriee-a-gauche", "bande-parts-melangees", "disque"]);
+      // Lot EN-J : la bande du jumeau peut être coloriée par l'autre bout, ou dressée (coloriée en haut ou en bas) — les
+      // parts coloriées restent d'un seul tenant, au bord, comme sur le sujet.
+      const f = forme(r, officiel, ["bande-coloriee-a-gauche", "bande-coloriee-a-droite", "bande-debout-coloriee-en-haut", "bande-debout-coloriee-en-bas", "bande-parts-melangees", "disque"]);
       let n = 7, k = 3;
       if (!officiel) {
         n = r.entier(5, 9);
         do k = r.entier(2, n - 2); while (2 * k === n);
       }
       const rangs = [...Array(n).keys()];
-      let coloriees = rangs.slice(0, k);
-      if (f !== "bande-coloriee-a-gauche")
+      let coloriees = /a-droite|en-bas/.test(f) ? rangs.slice(n - k) : rangs.slice(0, k);
+      if (f === "bande-parts-melangees" || f === "disque")
         do coloriees = r.melanger(rangs).slice(0, k); while (f === "bande-parts-melangees" && coloriees.every((i) => i < k));
       return {
         forme: f,
         enonce: "On a colorié les … de la figure.",
-        figure: f === "disque" ? disqueColorie(n, coloriees) : bandeColoriee(n, coloriees),
+        figure: f === "disque" ? disqueColorie(n, coloriees) : bandeColoriee(n, coloriees, /^bande-debout/.test(f)),
         choix: [
           c(frac(k, n - k), false, "Compare la partie coloriée à la partie non coloriée, pas au tout."),
           c(frac(k, n), true),
@@ -521,7 +526,7 @@
   ];
   Q.push({
     num: 16, domaine: "GM", competence: "Choisir l’unité de longueur adaptée",
-    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"), melange: false,
+    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"),
     generer(r, officiel) {
       const f = forme(r, officiel, ["unite", "mesure"]);
       const [debut, val, unite] = officiel ? LONGUEURS[0] : r.parmi(LONGUEURS);
@@ -552,7 +557,6 @@
         enonce: "Un rectangle est dessiné sur un quadrillage. Dans ce quadrillage, chaque carreau mesure 1 cm de côté.<br><strong>Quel est le périmètre, en centimètre, de ce rectangle ?</strong>",
         figure: rectangleQuadrille(L, H, false),
         choix: vals.map(([v, e]) => c(`${v} cm`, v === p, e)),
-        melange: false,
       };
     },
   });
@@ -561,7 +565,7 @@
   const SERIES = [["m", "dm", "cm", "mm"], ["g", "dg", "cg", "mg"], ["L", "dL", "cL", "mL"], ["km", "hm", "dam", "m"]];
   Q.push({
     num: 18, domaine: "GM", competence: "Connaître les rapports entre unités de mesure",
-    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"), melange: false,
+    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"),
     generer(r, officiel) {
       const f = forme(r, officiel, ["fois-plus-grand", "fois-plus-petit", "combien-faut-il"]);
       let a = "m", b = "dm", ecart = 1;
@@ -601,7 +605,6 @@
             c(nb(decaler(t, 1)), false, "Connaît le facteur 10 mais l’applique dans le mauvais sens."),
             c(nb(decaler(t, 2)), false, "Ne comprend pas le lien entre les unités."),
           ],
-          melange: false,
         };
       }
       const n = officiel ? 24 : r.entier(12, 98);
@@ -610,7 +613,6 @@
         forme: f,
         enonce: `Compléter l’égalité : <span class="calcul">${n} ${u} = … ${v}</span>`,
         choix: [c(nb(decaler(t, -2)), false, "Ne comprend pas le lien entre les unités ni l’écriture décimale."), c(nb(decaler(t, -1)), false, "Connaît le facteur 10 mais l’applique dans le mauvais sens."), c(nb(decaler(t, 1)), true), c(nb(decaler(t, 2)), false, "Ne comprend pas le lien entre les unités.")],
-        melange: false,
       };
     },
   });
@@ -618,7 +620,7 @@
   // 20 — aire d'un carré quadrillé (quadrillage serré autour du carré, ou plus grand)
   Q.push({
     num: 20, domaine: "GM", competence: "Déterminer l’aire d’un carré sur quadrillage",
-    entrainement: AUTO("EG09", "Aires"), melange: false, disposition: "ligne",
+    entrainement: AUTO("EG09", "Aires"), disposition: "ligne",
     generer(r, officiel) {
       const f = forme(r, officiel, ["quadrillage-serre", "quadrillage-large"]);
       const cote = officiel ? 3 : r.parmi([3, 6, 7, 8]);
@@ -638,7 +640,7 @@
   // 21 — volume d'un pavé de cubes
   Q.push({
     num: 21, domaine: "GM", competence: "Déterminer le volume d’un pavé droit formé de cubes",
-    entrainement: AUTO("EG20", "Vues et assemblages de cubes"), melange: false, disposition: "ligne",
+    entrainement: AUTO("EG20", "Vues et assemblages de cubes"), disposition: "ligne",
     generer(r, officiel) {
       const f = forme(r, officiel, ["une-couche-cote-a-droite", "une-couche-cote-a-gauche", "deux-couches-cote-a-droite", "deux-couches-cote-a-gauche"]);
       let L = 5, l = 4, h = 1;
@@ -661,7 +663,7 @@
   // 22 — comparer deux angles
   Q.push({
     num: 22, domaine: "GM", competence: "Comparer deux angles indépendamment de la longueur de leurs côtés",
-    entrainement: AUTO("EG06", "Angles et configurations"), melange: false, disposition: "ligne",
+    entrainement: AUTO("EG06", "Angles et configurations"), disposition: "ligne",
     generer(r, officiel) {
       const f = forme(r, officiel, ["egaux-vers-la-gauche", "egaux-vers-la-droite", "courts-plus-ouverts-vers-la-gauche", "courts-plus-ouverts-vers-la-droite"]);
       const sens = /gauche/.test(f) ? -1 : 1;
@@ -714,7 +716,7 @@
   ];
   Q.push({
     num: 23, domaine: "GM", competence: "Choisir l’unité de masse adaptée",
-    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"), melange: false, disposition: "ligne",
+    entrainement: AUTO("GM01", "Unités de longueur, masse et capacité"), disposition: "ligne",
     generer(r, officiel) {
       const f = forme(r, officiel, ["unite", "mesure"]);
       const [debut, val, unite] = officiel ? MASSES[0] : r.parmi(MASSES);
@@ -730,14 +732,14 @@
   // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
   // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
   // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  // Lot EN-J (revue de Codex du 15/11) : une autre écriture de même difficulté (autre tournure, autre ordre des termes) et
+  // une bonne réponse qui est une catégorie (nature d'un triangle, oui ou non, égaux ou pas) reviennent dans le jumeau.
   const HORS_STRICT = {
     1: { formes: ["unites-deux-chiffres"], pourquoi: "92 063 n'a qu'un zéro intercalé (76 004 en a deux) : plus facile" },
     2: { formes: ["centiemes-un-chiffre", "milliemes-un-chiffre"], pourquoi: "« sept centièmes », « six millièmes » : autre rang ou deux zéros" },
     4: { formes: ["centiemes-deux-chiffres", "milliemes"], pourquoi: "73/100 n'a pas de zéro après la virgule ; 6/1000 en a deux" },
-    5: { formes: ["en-nombre"], pourquoi: "« 60 millièmes » au lieu de « 10 fois 6 millièmes » : autre écriture" },
     6: { formes: ["dizaines-de-millions", "centaines-de-mille"], pourquoi: "autre ordre de grandeur sur la droite" },
     8: { formes: ["plusieurs-graduations-apres-1"], pourquoi: "la droite continue après 1 : plus dur" },
-    9: { formes: ["decroissant"], pourquoi: "encadrement écrit avec « > »" },
     10: { formes: ["dixiemes-non-nuls"], pourquoi: "le sujet a un 0 aux dixièmes (1,082) : c'est lui qui fait le piège" },
     11: { formes: ["disque", "bande-parts-melangees"], pourquoi: "parts mêlées ou disque : plus dur que la bande coloriée à gauche" },
     12: { formes: ["soustraction"], pourquoi: "730 − 727 : soustraction au lieu d'un complément" },
@@ -748,7 +750,6 @@
     18: { formes: ["combien-faut-il", "fois-plus-petit"], pourquoi: "autre sens ou autre tournure" },
     19: { formes: ["vers-unite-plus-grande"], pourquoi: "conversion dans l'autre sens" },
     21: { formes: ["deux-couches-cote-a-gauche", "deux-couches-cote-a-droite"], pourquoi: "deux couches de cubes : plus dur" },
-    22: { formes: ["courts-plus-ouverts-vers-la-droite", "courts-plus-ouverts-vers-la-gauche"], pourquoi: "la bonne réponse n'est plus « égaux »" },
     23: { formes: ["mesure"], pourquoi: "on choisit la mesure, pas l'unité" },
   };
 
