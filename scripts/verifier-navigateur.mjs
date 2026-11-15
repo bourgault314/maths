@@ -31,7 +31,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
@@ -144,7 +144,39 @@ export const ECARTEES = [
 ];
 
 /* Ce qui, touché, fait tout rejouer. */
-const TOUT_REJOUER = ["scripts/verifier-navigateur.mjs", "package.json"];
+const TOUT_REJOUER = ["package.json"];
+
+/*
+ * Ce script lui-même. Un lot qui ne fait qu'INSCRIRE (ou retoucher) des recettes dans les listes
+ * ci-dessus ne rejoue que ces recettes-là ; un changement ailleurs dans le script (la façon de
+ * lancer, de choisir, les chemins gardés partagés comme DEFI_CALCUL) rejoue tout.
+ * Avant le 15/11/2026, toute retouche du script rejouait les 33 recettes (≈ 75 min, dont le robot
+ * de Défi conversions) : le lot EN-A1, qui ajoutait une seule ligne, attendait plus d'une heure.
+ */
+export const SUITE = "scripts/verifier-navigateur.mjs";
+const DEBUT_LISTES = "export const RECETTES = [";
+const FIN_LISTES = "/* Ce qui, touché, fait tout rejouer. */";
+
+/* Compare deux versions du script : { tout: true } si autre chose que les listes a changé, sinon
+   { tout: false, recettes: [les fichiers des entrées nouvelles ou retouchées] }. */
+export function changementDeLaSuite(avant, apres) {
+  const couper = (texte) => {
+    const t = String(texte).replace(/\r\n/g, "\n");
+    const i = t.indexOf(DEBUT_LISTES);
+    const j = t.indexOf(FIN_LISTES);
+    if (i < 0 || j < i) return null;
+    return { reste: t.slice(0, i) + t.slice(j), listes: t.slice(i, j) };
+  };
+  const a = couper(avant);
+  const b = couper(apres);
+  if (!a || !b || a.reste !== b.reste) return { tout: true, recettes: [] };
+  // Une entrée va de « { fichier: "…" » à la première accolade fermante suivie d'une virgule.
+  const entrees = (listes) => new Map([...listes.matchAll(/\{\s*fichier:\s*"([^"]+)"[^}]*\}\s*,/g)]
+    .map((m) => [m[1], m[0].replace(/\s+/g, " ")]));
+  const ea = entrees(a.listes);
+  const eb = entrees(b.listes);
+  return { tout: false, recettes: [...eb].filter(([f, t]) => ea.get(f) !== t).map(([f]) => f) };
+}
 
 const MODULES = ["playwright", "jsdom", "@napi-rs/canvas"];
 
@@ -193,6 +225,15 @@ export function fichiersTouches() {
   const neufs = git("ls-files", "--others", "--exclude-standard");
   if (diff.status !== 0 || neufs.status !== 0) return null;
   return [...diff.stdout.split("\n"), ...neufs.stdout.split("\n")].map((l) => l.trim().replace(/\\/g, "/")).filter(Boolean);
+}
+
+/* Le script tel qu'il est sur origin/main (au point de départ de la branche) ; null si illisible. */
+function suiteALaBase() {
+  const git = (...args) => spawnSync("git", args, { cwd: RACINE, encoding: "utf8" });
+  const base = git("merge-base", "HEAD", "origin/main");
+  if (base.status !== 0) return null;
+  const r = git("show", `${base.stdout.trim()}:${SUITE}`);
+  return r.status === 0 ? r.stdout : null;
 }
 
 export function concernee(recette, touches) {
@@ -244,7 +285,13 @@ async function principal() {
   } else {
     const touches = fichiersTouches();
     if (touches === null) { choisies = RECETTES; pourquoi = "branche illisible (pas de git ou pas d'origin/main) : par prudence, tout"; }
-    else if (touches.some((f) => TOUT_REJOUER.includes(f))) { choisies = RECETTES; pourquoi = "la suite elle-même a changé : tout"; }
+    else if (touches.some((f) => TOUT_REJOUER.includes(f))) { choisies = RECETTES; pourquoi = "package.json a changé : tout"; }
+    else if (touches.includes(SUITE) && (() => {
+      const avant = suiteALaBase();
+      const c = avant === null ? { tout: true } : changementDeLaSuite(avant, readFileSync(resolve(RACINE, SUITE), "utf8"));
+      if (!c.tout) touches.push(...c.recettes);
+      return c.tout;
+    })()) { choisies = RECETTES; pourquoi = "la façon de lancer les recettes a changé : tout"; }
     else {
       choisies = RECETTES.filter((r) => r.toujours || concernee(r, touches));
       pourquoi = `les applis touchées par la branche (${touches.length} fichier(s) changé(s) depuis origin/main)`;
