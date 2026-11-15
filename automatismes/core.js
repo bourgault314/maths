@@ -255,6 +255,19 @@ function lireProduit(texte, nombre) {
   });
 }
 
+// Une écriture décimale (forme « decimal »). Sans espace : exactement le contrôle d'avant le lot NC-3.
+// Avec des espaces (« 5 240 », écrit au clavier) : seulement entre des groupes de trois chiffres de la
+// partie entière ; « 52 40 », « 5 2 4 0 », « 0, 5 » restent refusés.
+const ESPACES = /[ \u00A0\u202F]/;
+export function ecritureDecimale(reponse) {
+  let a = String(reponse).trim();
+  if (ESPACES.test(a)) {
+    if (!/^[+\-−]?\d{1,3}(?:[ \u00A0\u202F]\d{3})+(?:[.,]\d*)?$/.test(a)) return false;
+    a = a.replace(/[ \u00A0\u202F]/g, "");
+  }
+  return /^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(a);
+}
+
 export function checkAnswer(q, answers) {
   if (answers.some((a) => String(a).trim() === "" || String(a) === "/"))
     return { ok: false, syntax: true, message: "Complète ta réponse." };
@@ -391,12 +404,7 @@ export function checkAnswer(q, answers) {
         syntax: false,
         message: "Donne les valeurs exactes avec une racine carrée.",
       };
-    if (
-      ok &&
-      c.form === "decimal" &&
-      // Les espaces entre les milliers (« 5 240 », écrit au clavier) restent une écriture décimale.
-      !/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(String(answers[0]).replace(/\s/g, ""))
-    )
+    if (ok && c.form === "decimal" && !ecritureDecimale(answers[0]))
       return {
         ok: false,
         syntax: false,
