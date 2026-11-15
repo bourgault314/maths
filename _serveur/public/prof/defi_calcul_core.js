@@ -965,6 +965,7 @@
   // --------------------------------------------- M2, D2 : × 10, × 100, × 1 000
 
   const PUISSANCES = Object.freeze([10, 100, 1000]);
+  const PUISSANCES_CE2 = Object.freeze([10, 100]);
   const colonnesDe = p => Math.round(Math.log10(p));
   const pluriel = (nombre, mot) => `${nombre} ${mot}${nombre > 1 ? "s" : ""}`;
   // « 2,50 » tel que l'élève l'a tapé (le point devient une virgule) ; à
@@ -1027,7 +1028,10 @@
     });
     const nG = Math.max(0, gauches - imposes.filter(c => c.forme === "produit-gauche").length);
     const aGauche = melanger(rng, nombres.map((_, i) => i < nG));
-    return [...nombres.map((n, i) => produit("M2", 1, n, choisir(rng, PUISSANCES), aGauche[i])), ...imposes];
+    // Lot 7e (programme du CE2 : × 10, × 100, résultats jusqu'à 10 000 ;
+    // × 1 000 au CM1, niveau 2) : un nombre à 3 chiffres n'est multiplié
+    // que par 10.
+    return [...nombres.map((n, i) => produit("M2", 1, n, n >= 100 ? 10 : choisir(rng, PUISSANCES_CE2), aGauche[i])), ...imposes];
   }
 
   // Niveau 2 : 3 produits de nombres en 0 (30 × 100), 4 trous (2 sur la
@@ -1137,10 +1141,11 @@
     return restantes;
   }
 
-  // Niveau 1 : × 10. 4 nombres à 1 décimale, 3 à 2, 3 à 3 ; 2 sous 1 (0,6) ;
-  // « 10 × n » sur 2 calculs.
+  // Niveau 1 : × 10. 5 nombres à 1 décimale, 5 à 2 ; 2 sous 1 (0,6) ;
+  // « 10 × n » sur 2 calculs. (Lot 7e : au CM1, deux chiffres après la
+  // virgule au plus — programme du cycle 3 ; les millièmes au CM2.)
   function d2Niveau1(rng, total, imposes) {
-    const parts = repartir(total, [4, 3, 3]);
+    const parts = repartir(total, [5, 5]);
     let places = parts.flatMap((nombre, i) => Array.from({length: nombre}, () => ({d: i + 1})));
     places = retirerImposes(places, imposes, (place, c) => place.d === decimalesDe(c.donnees.n));
     const sousUn = Math.max(0, 2 - imposes.filter(c => c.donnees.n < 1).length);
@@ -1475,7 +1480,7 @@
         apprends: a2Apprends({
           manipule: null, represente: {a: 650, cible: 1000}, ecris: {a: 370, cible: 1000},
           consigne: "Je vais à la centaine, puis à 1\u00a0000.",
-          bilan: "Pour aller à 1\u00a0000, je vais d’abord à la centaine, puis à 1\u00a0000 : 650 + 350 = 650 + 50 + 300 = 1\u00a0000."
+          bilan: "Je vais d’abord à la centaine d’après, puis jusqu’au nombre à atteindre : 650 + 350 = 650 + 50 + 300 = 1\u00a0000."
         })
       },
       {
@@ -1510,19 +1515,19 @@
         n: 2, titre: "ajouter 19, 29, 39", palier: 1, type: "P",
         composer: a5Niveau(2, [19, 29, 39]),
         imposes: [a5Somme(2, 31, 19), a5Somme(2, 285, 19)],
-        apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, j’ajoute 20, puis je retranche 1 : 47 + 19 = 47 + 20 − 1 = 66.")
+        apprends: a5Apprends(47, 38, 26, 19, "Pour ajouter 19, 29 ou 39, j’ajoute la dizaine d’après, puis je retranche 1 : 47 + 19 = 47 + 20 − 1 = 66.")
       },
       {
         n: 3, titre: "ajouter 8, 18, 28, 38", palier: 1, type: "P",
         composer: a5Niveau(3, [8, 18, 28, 38]),
         imposes: [a5Somme(3, 53, 38), a5Somme(3, 147, 18)],
-        apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 38, j’ajoute 40, puis je retranche 2 : 53 + 38 = 53 + 40 − 2 = 91.")
+        apprends: a5Apprends(53, 47, 65, 38, "Pour ajouter 8, 18, 28 ou 38, j’ajoute la dizaine d’après, puis je retranche 2 : 53 + 38 = 53 + 40 − 2 = 91.")
       },
       {
         n: 4, titre: "ajouter 48, 49… 98, 99", palier: 3, type: "P",
         composer: a5Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a5Somme(4, 152, 98), a5Somme(4, 126, 99)],
-        apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1 : 126 + 99 = 126 + 100 − 1 = 225.")
+        apprends: a5Apprends(23, 126, 347, 99, "Pour ajouter 99, j’ajoute 100, puis je retranche 1 (pour 98, je retranche 2) : 126 + 99 = 126 + 100 − 1 = 225.")
       }
     ]
   };
@@ -1539,7 +1544,7 @@
     erreurs: M2_ERREURS, image: tableauDe, aide: glisseAide, manipulation: glisseManipulation, difficulte: glisseDifficulte,
     niveaux: [
       {
-        n: 1, titre: "multiplier par 10, 100, 1 000", nom: "× 10, × 100, × 1\u00a0000", palier: 1, type: "P",
+        n: 1, titre: "multiplier par 10, 100", nom: "× 10, × 100", palier: 1, type: "P",
         composer: m2Niveau1,
         imposes: [produit("M2", 1, 38, 10), produit("M2", 1, 9, 100, true)],
         apprends: glisseApprends({
@@ -1555,7 +1560,7 @@
         })
       },
       {
-        n: 2, titre: "nombres en 0, nombre manquant, divisions", nom: "× 10, × 100\u00a0: trous, divisions", palier: 2, type: "P",
+        n: 2, titre: "× 1 000, nombres en 0, nombre manquant, divisions", nom: "× 1\u00a0000, trous, divisions", palier: 2, type: "P",
         composer: m2Niveau2,
         imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
         apprends: glisseApprends({
@@ -1617,7 +1622,9 @@
           consigne: "Chaque chiffre vaut 100 fois plus.",
           refus: "Chaque chiffre doit valoir 100 fois plus\u00a0: 2 colonnes.",
           trace: ["3,6 × 100 = …", "3,6 × 100 = 360"],
-          bilan: "Quand une case reste vide, j’écris un zéro\u00a0: 3,6 × 100 = 360."
+          // Lot 7e : pas un zéro dans toute case vide, seulement ceux qui
+          // gardent la place des chiffres.
+          bilan: "J’écris un zéro dans chaque colonne vide avant la virgule\u00a0: 3,6 × 100 = 360."
         })
       },
       {
@@ -2195,7 +2202,8 @@
           etapes: etapesDe(["4 + 3 = ?", 7], ["254 + 3 = ?", 257]),
           consigneEcris: "254 + 3 = 250 + 4 + 3",
           consigne: "J’avance de 5 : seul le chiffre des unités change.",
-          bilan: "Sans passer la dizaine, seul le chiffre des unités change : 32 + 4 = 36."
+          // Lot 7e : le niveau arrive aussi pile sur la dizaine (79 + 1 = 80).
+          bilan: "Sans passer la dizaine, seul le chiffre des unités change (pile sur la dizaine, 10 unités font 1 dizaine) : 32 + 4 = 36."
         })
       },
       {
@@ -2759,7 +2767,7 @@
           etapes: [["3 + 6 = ?", 9], ["234 + 60 = ?", 294]],
           consigneEcris: "Dans 234, le chiffre des dizaines est 3.",
           consigne: "J’avance de 5 centaines : seul le chiffre des centaines change.",
-          bilan: "Quand j’ajoute des dizaines, seul le chiffre des dizaines change : 46 + 30 = 76."
+          bilan: "Quand j’ajoute des dizaines sans passer la centaine, seul le chiffre des dizaines change : 46 + 30 = 76."
         })
       },
       {
@@ -2772,14 +2780,16 @@
           ecris: chemin("A3", 768, 50),
           etapes: [["768 + 40 = ?", 808], ["808 + 10 = ?", 818], ["768 + 50 = ?", 818]],
           consigneEcris: "768 + 50 = 768 + 40 + 10",
-          consigne: "Je complète la centaine avec des dizaines, puis j’ajoute le reste.",
-          bilan: "Pour passer la centaine, je la complète avec des dizaines, puis j’ajoute le reste : 746 + 80 = 746 + 60 + 20 = 826."
+          // Lot 7e : 746 + 60 arrive à 806, pas à une centaine ronde.
+          consigne: "J’ajoute les dizaines qui mènent à la centaine, puis le reste.",
+          bilan: "Pour passer la centaine, j’ajoute d’abord les dizaines qui y mènent, puis le reste ; les unités ne bougent pas : 746 + 80 = 746 + 60 + 20 = 826."
           // (Lot 3, décision 4 : la ligne « 74 dizaines + 8 dizaines » est
           // retirée, le même calcul vu autrement.)
         })
       },
       {
-        n: 3, titre: "nombres à 4 chiffres", nom: "Dizaines, centaines sur les nombres à 4 chiffres", palier: 2, type: "P",
+        // Lot 7e : le nom suit les calculs (depuis le lot 3a, on passe toujours le millier).
+        n: 3, titre: "passage du millier", nom: "Dizaines, centaines en passant le millier", palier: 2, type: "P",
         composer: a3Niveau3,
         imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 2657, 500), ligneChemin("A3", 3, 3970, 60)],
         apprends: cheminApprends({
@@ -3122,19 +3132,19 @@
         n: 2, titre: "retirer 19, 29, 39", palier: 1, type: "P",
         composer: a6Niveau(2, [19, 29, 39]),
         imposes: [a6Difference(2, 143, 29), a6Difference(2, 86, 39)],
-        apprends: a6Apprends(72, 154, 86, 29, "Pour retrancher 29, je retranche 30, puis j’ajoute 1 : 72 − 29 = 72 − 30 + 1 = 43.")
+        apprends: a6Apprends(72, 154, 86, 29, "Pour retrancher 19, 29 ou 39, je retranche la dizaine d’après, puis j’ajoute 1 : 72 − 29 = 72 − 30 + 1 = 43.")
       },
       {
         n: 3, titre: "retirer 8, 18, 28, 38", palier: 2, type: "P",
         composer: a6Niveau(3, [8, 18, 28, 38]),
         imposes: [a6Difference(3, 71, 18), a6Difference(3, 250, 38)],
-        apprends: a6Apprends(73, 145, 92, 18, "Pour retrancher 18, je retranche 20, puis j’ajoute 2 : 73 − 18 = 73 − 20 + 2 = 55.")
+        apprends: a6Apprends(73, 145, 92, 18, "Pour retrancher 8, 18, 28 ou 38, je retranche la dizaine d’après, puis j’ajoute 2 : 73 − 18 = 73 − 20 + 2 = 55.")
       },
       {
         n: 4, titre: "retirer 48, 49… 98, 99", palier: 3, type: "P",
         composer: a6Niveau(4, [48, 49, 58, 59, 68, 69, 78, 79, 88, 89, 98, 99]),
         imposes: [a6Difference(4, 210, 98), a6Difference(4, 1040, 99)],
-        apprends: a6Apprends(250, 432, 710, 99, "Pour retrancher 99, je retranche 100, puis j’ajoute 1 : 432 − 99 = 432 − 100 + 1 = 333.")
+        apprends: a6Apprends(250, 432, 710, 99, "Pour retrancher 99, je retranche 100, puis j’ajoute 1 (pour 98, j’ajoute 2) : 432 − 99 = 432 − 100 + 1 = 333.")
       }
     ]
   };
@@ -5931,7 +5941,7 @@
           consigneEcris: "Chaque morceau va dans sa colonne.",
           etapes: [["6/10 = ?", 0.6], ["4 + 6/10 = ?", 4.6]],
           rangs: [[-1], [0, -1]],
-          bilan: "Les unités avant la virgule, les dixièmes juste après : 3 + 2/10 = 3,2."
+          bilan: "Le chiffre des unités, puis la virgule, puis les dixièmes : 3 + 2/10 = 3,2."
         })
       },
       {
@@ -6002,9 +6012,10 @@
       return [...tires.filter(Boolean), ...imposes];
     };
   }
-  // Niveau 1 : ÷ 10, résultat au-dessus de 1 : 4 entiers (37), 3 nombres à
-  // une décimale (58,4), 3 à deux (45,26).
-  const d3Niveau1 = d3Composer(1, [{part: 4, p: 10, d: 0, min: 11, max: 999}, {part: 3, p: 10, d: 1, min: 10, max: 999}, {part: 3, p: 10, d: 2, min: 10, max: 99}]);
+  // Niveau 1 : ÷ 10, résultat au-dessus de 1 : 5 entiers (37), 5 nombres à
+  // une décimale (58,4). (Lot 7e : au CM1, le résultat a au plus deux
+  // chiffres après la virgule — 10,68 ÷ 10 = 1,068 passe au CM2.)
+  const d3Niveau1 = d3Composer(1, [{part: 5, p: 10, d: 0, min: 11, max: 999}, {part: 5, p: 10, d: 1, min: 10, max: 999}]);
   // Niveau 2 : ÷ 100 (6 sur 10 : entiers, et une décimale), ÷ 1 000 (4).
   const d3Niveau2 = d3Composer(2, [{part: 3, p: 100, d: 0, min: 101, max: 9999}, {part: 3, p: 100, d: 1, min: 100, max: 999}, {part: 4, p: 1000, d: 0, min: 1001, max: 9999}]);
   // Niveau 3 : un résultat sous 1, des zéros à écrire : 0,6 ÷ 10 ; 7 ÷ 10 ;
@@ -6107,7 +6118,7 @@
           consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois moins.",
           refus: "Chaque chiffre doit valoir 10 fois moins : 1 colonne.",
           trace: ["0,6 ÷ 10 = …", "0,6 ÷ 10 = 0,06"],
-          bilan: frBilan("Quand une case reste vide, j’écris un zéro : 0,6 ÷ 10 = 0,06.")
+          bilan: frBilan("J’écris un zéro dans les colonnes vides devant le 6 : 0,6 ÷ 10 = 0,06.")
         })
       }
     ]
@@ -6385,7 +6396,8 @@
           consigneEcris: "6,24 + 0,5 = 6,04 + 0,2 + 0,5",
           etapes: [["0,2 + 0,5 = ?", 0.7], ["6,24 + 0,5 = ?", 6.74]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
-          bilan: "Seul le chiffre des dixièmes change : 4,45 + 0,3 = 4,75."
+          // Lot 7e : le niveau ajoute ou retire aussi des unités, des centièmes.
+          bilan: "Sans retenue, seul le chiffre du rang ajouté (ou retiré) change : 4,45 + 0,3 = 4,75."
         })
       },
       {
@@ -6402,7 +6414,7 @@
           consigneEcris: "1,624 + 0,005 = 1,62 + 0,004 + 0,005",
           etapes: [["0,004 + 0,005 = ?", 0.009], ["1,624 + 0,005 = ?", 1.629]],
           morceaux: [{rangs: [-3]}, {rangs: [0, -1, -2, -3]}],
-          bilan: "Seul le chiffre des millièmes change : 2,435 + 0,004 = 2,439."
+          bilan: "Sans retenue, seul le chiffre du rang ajouté (ou retiré) change : 2,435 + 0,004 = 2,439."
         })
       },
       {
@@ -6417,7 +6429,7 @@
           consigneEcris: "5,73 + 0,6 = 5,03 + 0,7 + 0,6",
           etapes: [["0,7 + 0,6 = ?", 1.3], ["5,73 + 0,6 = ?", 6.33]],
           morceaux: [{rangs: [-1]}, {rangs: [0, -1, -2]}],
-          bilan: "10 dixièmes font 1 unité : 4,45 + 0,8 = 5,25."
+          bilan: "10 dixièmes font 1 unité, 10 centièmes font 1 dixième : 4,45 + 0,8 = 5,25."
         })
       }
     ]
@@ -7739,7 +7751,10 @@
   // a/d irréductible, d de 2 à 9, un coefficient k ≥ 2, le dénominateur
   // d'arrivée au plus 30 (les parts se comptent), jamais 10 (F1, D1) ;
   // jamais une égalité aux dénominateurs 2 et 4 (F2).
-  const F6_CODES = Object.freeze({multiplier: 1, diviser: 2, "diviser-den": 3, denominateur: 4, "denominateur-gauche": 5});
+  // Lot 7e (programme du CE2 : dénominateurs ≤ 12, fractions ≤ 1) : le
+  // niveau 1, dans les bases, ne garde que les égalités jusqu'à 12 parts ;
+  // les autres « multiplier » vont au niveau 2 (cours moyen).
+  const F6_CODES = Object.freeze({multiplier: 1, diviser: 2, "diviser-den": 3, denominateur: 4, "denominateur-gauche": 5, "multiplier-gauche": 6});
   function f6Calcul(niveau, forme, a, d, k) {
     const A = k * a;
     const D = k * d;
@@ -7748,11 +7763,13 @@
       diviser: `${A}/${D} = ${CASE}/${d}`,
       "diviser-den": `${A}/${D} = ${a}/${CASE}`,
       denominateur: `${a}/${d} = ${A}/${CASE}`,
-      "denominateur-gauche": `${a}/${CASE} = ${A}/${D}`
+      "denominateur-gauche": `${a}/${CASE} = ${A}/${D}`,
+      // Lot 7e : l'écriture du programme du CE2 (« ?/8 = 1/2 »).
+      "multiplier-gauche": `${CASE}/${D} = ${a}/${d}`
     };
     const c = fracCalcul("F6", niveau, forme, textes[forme], F6_CODES[forme]);
-    const ajoute = {multiplier: a + D - d, diviser: A - (D - d), "diviser-den": D - (A - a), denominateur: d + (A - a), "denominateur-gauche": D - (A - a)}[forme];
-    const recopie = {multiplier: a, diviser: A, "diviser-den": D, denominateur: d, "denominateur-gauche": D}[forme];
+    const ajoute = {multiplier: a + D - d, diviser: A - (D - d), "diviser-den": D - (A - a), denominateur: d + (A - a), "denominateur-gauche": D - (A - a), "multiplier-gauche": a + D - d}[forme];
+    const recopie = {multiplier: a, diviser: A, "diviser-den": D, denominateur: d, "denominateur-gauche": D, "multiplier-gauche": a}[forme];
     return finirCalcul(c, {a, d, k, ajoute: sansPareil(c, ajoute), recopie: sansPareil(c, recopie), coef: sansPareil(c, k)});
   }
   function f6Triplets() {
@@ -7778,17 +7795,22 @@
     }));
     return liste;
   })());
+  // (15 égalités, et autant écrites à l'envers comme au programme :
+  // « ?/8 = 1/2 ».)
+  const F6_CE2 = Object.freeze(F6_TRIPLETS.filter(([, d, k]) => k * d <= 12));
+  const F6_AU_DELA = Object.freeze(F6_TRIPLETS.filter(([, d, k]) => k * d > 12));
   const F6_VIVIERS = Object.freeze({
-    1: Object.freeze({multiplier: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(1, "multiplier", a, d, k))}),
+    1: Object.freeze({multiplier: F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier", a, d, k)),
+      "multiplier-gauche": F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier-gauche", a, d, k))}),
     2: Object.freeze({diviser: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k)),
-      multiplier: F6_GRANDES.map(([a, d, k]) => f6Calcul(2, "multiplier", a, d, k))}),
+      multiplier: [...F6_AU_DELA, ...F6_GRANDES].map(([a, d, k]) => f6Calcul(2, "multiplier", a, d, k))}),
     3: Object.freeze({denominateur: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur", a, d, k)), "denominateur-gauche": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur-gauche", a, d, k)),
       grandes: F6_GRANDES.map(([a, d, k]) => f6Calcul(3, "denominateur-gauche", a, d, k))})
   });
   const f6 = (niveau, texte) => trouverDans(F6_VIVIERS, "F6", niveau, texte);
-  const F6_RANGS = Object.freeze({multiplier: 0, diviser: 0, "diviser-den": 1, denominateur: 0, "denominateur-gauche": 1});
+  const F6_RANGS = Object.freeze({multiplier: 0, diviser: 0, "diviser-den": 1, denominateur: 0, "denominateur-gauche": 1, "multiplier-gauche": 1});
   const f6Difficulte = calcul => F6_RANGS[calcul.forme] * 1000 + calcul.donnees.k * calcul.donnees.d * 10 + calcul.donnees.k;
-  const F6_MULTIPLIE = Object.freeze({multiplier: true, denominateur: true, "denominateur-gauche": true});
+  const F6_MULTIPLIE = Object.freeze({multiplier: true, denominateur: true, "denominateur-gauche": true, "multiplier-gauche": true});
   const F6_ERREURS = Object.freeze([
     Object.freeze({
       c: 1, nom: "ajouté au lieu de multiplié",
@@ -7823,7 +7845,7 @@
   // Lot 3b (règle de Gwenaël du 12/11/2026) : au-delà de 12 parts, plus de
   // barre ; le calcul « × 4 en haut et en bas » se dessine (deux flèches, le
   // même nombre). `vus` : ce qui est écrit (J'écris) — haut, bas, la case.
-  const F6_PLACES = Object.freeze({multiplier: "dn", diviser: "dn", "diviser-den": "dd", denominateur: "dd", "denominateur-gauche": "gd"});
+  const F6_PLACES = Object.freeze({multiplier: "dn", diviser: "dn", "diviser-den": "dd", denominateur: "dd", "denominateur-gauche": "gd", "multiplier-gauche": "gn"});
   function f6Schema(calcul, {revele = false, haut = revele, bas = revele, trouve = false, trouveHaut = false, trouveBas = false} = {}) {
     const {a, d, k} = calcul.donnees;
     const petit = [a, d];
@@ -7865,21 +7887,22 @@
     niveaux: [
       {
         n: 1, titre: "en multipliant", nom: "Fractions égales : multiplier", palier: 1, type: "P",
-        composer: vivierNiveau(F6_VIVIERS[1], [10]),
-        imposes: [f6(1, "2/5 = □/15"), f6(1, "5/6 = □/12")],
-        // Lot 3b (règle du 12/11) : le dessin jusqu'à 12 parts ; J'écris
-        // au-delà, sur le calcul « × 4 en haut et en bas ».
-        apprends: f6EcrisSchema(fracApprends({
+        composer: vivierNiveau(F6_VIVIERS[1], [6, 4]),
+        imposes: [f6(1, "2/3 = □/9"), f6(1, "5/6 = □/12")],
+        // Lot 7e (programme du CE2) : jusqu'à 12 parts, tout se dessine ;
+        // J'écris revient sur les bandes (chaque quart coupé en 2), avec la
+        // même ligne qu'au-delà : « 3/4 = (3 × 2)/(4 × 2) ».
+        apprends: fracApprends({
           fiche: "F6",
           manipule: pourApprendre(f6(1, "3/4 = □/12")),
           represente: pourApprendre(f6(1, "2/3 = □/12")),
-          ecris: pourApprendre(f6(1, "3/5 = □/20")),
+          ecris: pourApprendre(f6(1, "3/4 = □/8")),
           consigne: "Chaque tiers est coupé en 4.",
-          consigneEcris: "3/5 = (3 × 4)/(5 × 4)",
-          etapes: [["5 × ? = 20", 4], ["3 × 4 = ?", 12], ["3/5 = ?/20", 12]],
-          morceaux: [{}, {}, {bas: true}],
+          consigneEcris: "3/4 = (3 × 2)/(4 × 2)",
+          etapes: [["4 × ? = 8", 2], ["3 × 2 = ?", 6], ["3/4 = ?/8", 6]],
+          morceaux: [{gros: 2}, {}, {bas: true}],
           bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
-        }), pourApprendre(f6(1, "3/5 = □/20")), [{bas: true}, {haut: true}, {case: true}])
+        })
       },
       {
         n: 2, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
@@ -8830,7 +8853,7 @@
       ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
     "M4-1": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = □ × b", "trou-egal"], ["c ÷ b", "division"]),
     "A2-2": [["dizaines", (c, d) => d.a % 10 === 0], ["en 5", toutes]],
-    "M2-1": [["× 10", (c, d) => d.p === 10], ["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
+    "M2-1": [["× 10", (c, d) => d.p === 10], ["× 100", toutes]],
     "A4-1": [["+ 1 dizaine et des unités", (c, d) => d.d < 20], ["+ des dizaines et des unités", toutes]],
     "A4-2": [["sans 9 aux unités", (c, d) => d.n % 10 !== 9 && d.d % 10 !== 9], ["un nombre en 9", toutes]],
     "A5-1": [["en passant la centaine", (c, d) => centaineFranchie(d.n, d.n + d.a)], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
@@ -8852,7 +8875,6 @@
     "M6-1": [["jusqu’à 25", (c, d) => d.n <= 25], ["au-delà de 25", toutes]],
     "A8-1": [["écart de 1 à 3", (c, d) => d.d <= 3], ["écart de 4 et plus", toutes]],
     // (Lot 3b, règle du 12/11 : le dessin jusqu'à 12 parts, puis le calcul.)
-    "F6-1": [["jusqu’à 12 parts", c => !f6Grand(c)], ["plus de 12 parts", toutes]],
     "A5-3": [["+ 8", (c, d) => d.a === 8], ["+ 18", (c, d) => d.a === 18], ["+ 28", (c, d) => d.a === 28], ["+ 38", toutes]],
     "M8-1": [["× 11", (c, d) => d.b === 11], ["× 12 à 19", toutes]],
     "M1-3": parFormes(["double", "double"], ["moitié", "moitie", "division"]),
@@ -8866,7 +8888,7 @@
     // (Lot 3a : passer le millier ; les sortes lisent le saut sans son signe.)
     "A3-3": [["+ dizaines", (c, d) => c.forme === "somme" && Math.abs(d.d) < 100], ["+ centaines", (c, d) => c.forme === "somme"],
       ["− dizaines", (c, d) => Math.abs(d.d) < 100], ["− centaines", toutes]],
-    "D2-1": [["1 décimale", (c, d) => decimales(d.n) <= 1], ["2 décimales", (c, d) => decimales(d.n) === 2], ["3 décimales", toutes]],
+    "D2-1": [["1 décimale", (c, d) => decimales(d.n) <= 1], ["2 décimales", toutes]],
     "D3-1": [["un entier", (c, d) => Number.isInteger(d.m)], ["un décimal", toutes]],
     "M7-1": [["jusqu’à 50", (c, d) => d.n <= 50], ["au-delà de 50", toutes]],
     "A7-3": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["en passant la centaine", toutes]],
@@ -8902,7 +8924,8 @@
     "F1-2": parFormes(["fraction en décimal", "decimal"], ["décimal en fraction", "numerateur"], ["en centièmes", "centiemes"], ["le dénominateur", "denominateur"]),
     "M7-3": [["un nombre pair", (c, d) => d.n % 2 === 0], ["un nombre impair", toutes]],
     "D4-2": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
-    "F6-2": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["vers une plus grande", "multiplier"]),
+    "F6-1": parFormes(["a/b = □/c", "multiplier"], ["□/c = a/b", "multiplier-gauche"]),
+    "F6-2": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["multiplier", "multiplier"]),
     "A3-4": [["dizaines", (c, d) => Math.abs(d.d) < 100], ["centaines", (c, d) => Math.abs(d.d) < 1000], ["milliers", toutes]],
     "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
     "C1-2": parFormes(["(a − b) × (c + d)", "fois-paires"], ["(a × b) − (c + d)", "moins-paires"]),
@@ -9051,21 +9074,27 @@
   const NOUVEAUTES = Object.freeze({
     "A1-2": [["un nombre est 10", "on ajoute 10 : le chiffre des unités ne change pas"], ["les deux nombres se suivent", "les deux nombres se suivent"]],
     "A2-2": [["en 5", "un nombre en 5 : je vais d’abord à la dizaine"]],
+    // Lot 7e : arriver pile sur la dizaine change deux chiffres.
+    "A10-1": [["jusqu’à la dizaine", "j’arrive pile sur la dizaine : 10 unités font 1 dizaine"]],
     "A3-1": [["+ centaines", "on ajoute des centaines : seul le chiffre des centaines change"],
       ["− dizaines", "on retire des dizaines : seul le chiffre des dizaines change"],
       ["− centaines", "on retire des centaines : seul le chiffre des centaines change"]],
-    "A3-2": [["− dizaines", "on retire des dizaines : je recule jusqu’à la centaine, puis je retire le reste"]],
+    "A3-2": [["− dizaines", "on retire des dizaines : je retire d’abord les dizaines qui mènent à la centaine, puis le reste"]],
     "A3-3": [["+ centaines", "on ajoute des centaines et on passe le millier"],
       ["− dizaines", "on retire des dizaines et on passe sous le millier"],
       ["− centaines", "on retire des centaines et on passe sous le millier"]],
-    "M2-1": [["× 100", glisseDe("×", 100, 2)], ["× 1 000", glisseDe("×", 1000, 3)]],
+    "M2-1": [["× 100", glisseDe("×", 100, 2)]],
+    // Lot 7e : × 1 000 arrive au CM1 (niveau 2), quelle que soit l'écriture.
+    "M2-2": [[c => c.donnees && c.donnees.p === 1000, calcul => glisseDe(calcul.forme === "division" ? "÷" : "×", 1000, 3)]],
     "D2-2": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D2-3": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D3-2": [["÷ 1 000", glisseDe("÷", 1000, 3)]],
     "D3-3": [["÷ 100", glisseDe("÷", 100, 2)], ["÷ 1 000", glisseDe("÷", 1000, 3)]],
     "C3-1": [["un calcul de l’autre côté", "un calcul de l’autre côté : je le calcule d’abord"]],
-    "F6-1": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
-    "F6-2": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    // Lot 7e : au niveau 2, « multiplier » au-delà de 12 parts a sa propre
+    // annonce (la leçon divise).
+    "F6-2": [[c => f6Grand(c) && F6_MULTIPLIE[c.forme], calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`],
+      [f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
     "F6-3": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
     // Lot 7a : D6, D7.
     "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
@@ -9843,6 +9872,14 @@
   }
   // Fractions égales au-delà de 12 parts (F6) : « × 4 en haut et en bas ».
   function recetteFoisFraction(calcul) {
+    // Lot 7e : jusqu'à 12 parts (le niveau 1), les mêmes lignes, sur les
+    // bandes (une part coupée en k, puis la réponse).
+    if (!f6Grand(calcul) && calcul.forme === "multiplier" && calcul.donnees.a < calcul.donnees.d) {
+      const {a, d, k} = calcul.donnees;
+      if (a === 1) return null;
+      return ecrisFraction(calcul, `${a}/${d} = (${a} × ${k})/(${d} × ${k})`,
+        [[`${d} × ? = ${d * k}`, k], [`${a} × ${k} = ?`, a * k], [avecQuestion(calcul), a * k]], [{gros: k}, {}, {bas: true}]);
+    }
     if (!f6Grand(calcul)) return null;
     const {a, d, k} = calcul.donnees;
     let consigne;

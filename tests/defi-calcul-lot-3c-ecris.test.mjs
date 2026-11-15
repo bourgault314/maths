@@ -261,8 +261,9 @@ test("lot 3c : les décisions de la recette (calculs écartés)", () => {
   for (const t of tous("M5-1")) assert.ok(nombresDe(t).some(x => x >= 5 && x <= 7), t);
   // Garder l'égalité : dans le sens de la leçon (365 + 9 = 362 + □).
   for (const t of tous("C3-2")) { const [a, , c] = nombresDe(t); assert.ok(a > c, t); }
-  // Fractions égales : au-delà de 12 parts, comme la leçon (les deux flèches).
-  ["F6-1", "F6-2", "F6-3"].forEach(cle => { for (let g = 1; g <= 100; g += 1) assert.equal(CORE.ecrisTire(cle, {graine: g}).ecris.dessins[0].outil, "fois-fraction", cle); });
+  // Fractions égales : au-delà de 12 parts, comme la leçon (les deux flèches) ;
+  // F6-1 (lot 7e, programme du CE2) : sur les bandes, comme sa leçon.
+  ["F6-1", "F6-2", "F6-3"].forEach(cle => { for (let g = 1; g <= 100; g += 1) assert.equal(CORE.ecrisTire(cle, {graine: g}).ecris.dessins[0].outil, cle === "F6-1" ? "barre-droite" : "fois-fraction", cle); });
   // Dixièmes, comme la leçon.
   for (const t of tous("F1-1")) assert.match(t, /^0,\d = \d\/□$/);
   // Fraction d'une quantité : l'unité change, la méthode non.

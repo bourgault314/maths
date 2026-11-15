@@ -91,7 +91,7 @@ test("l'espace des milliers : une espace insécable qu'on voit, partout (remarqu
 
 test("le « = » à la taille des fractions (remarque 62)", () => {
   // Un document minuscule : assez pour noeudsCalcul.
-  const noeud = (genre, attrs = {}) => Object.assign({genre, enfants: [], append(...e) { this.enfants.push(...e); }}, attrs);
+  const noeud = (genre, attrs = {}) => Object.assign({genre, enfants: [], append(...e) { this.enfants.push(...e); }, setAttribute(k, v) { this[k] = v; }}, attrs);
   globalThis.document = {createElement: t => noeud(t), createTextNode: t => ({texte: t})};
   try {
     const morceaux = AIDES.noeudsCalcul("3/4 = □/12", {signes: true, caseReponse: () => noeud("case")});
@@ -225,8 +225,8 @@ test("les copies pour la page prof, les adresses de cache", async () => {
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261114-7/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-1/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-2/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-2/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

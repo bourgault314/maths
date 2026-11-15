@@ -202,7 +202,7 @@ test("les sortes : un 2e calcul d'une autre sorte (sinon d'une autre écriture) 
     const vues = new Set(Array.from({length: sortes.length}, (_, tour) => CORE.sorteDe(CORE.genererUn(cle, 7, {tour}))));
     assert.equal(vues.size, sortes.length, `${cle} : en ${sortes.length} retours, chaque sorte une fois`);
   });
-  assert.deepEqual(CORE.sortesDe("M2-1").map(s => s.nom), ["× 10", "× 100", "× 1 000"]);
+  assert.deepEqual(CORE.sortesDe("M2-1").map(s => s.nom), ["× 10", "× 100"]);  // lot 7e : × 1 000 au CM1
 });
 
 test("une progression de version 6 se relit : `l` à 0, une séance ouverte continue avec 10 minutes ; l'arrêt d'un entraînement raté reste", () => {

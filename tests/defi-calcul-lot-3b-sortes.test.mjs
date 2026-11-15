@@ -28,10 +28,12 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     "A3-1": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
     "A3-2": ["on retire des dizaines"],
     "A3-3": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
-    "M2-1": ["× 100, chaque chiffre glisse de 2 colonnes", "× 1 000, chaque chiffre glisse de 3 colonnes"],
+    "M2-1": ["× 100, chaque chiffre glisse de 2 colonnes"], "M2-2": ["× 1 000, chaque chiffre glisse de 3 colonnes"],
     "D2-2": ["× 1 000"], "D2-3": ["× 1 000"], "D3-2": ["÷ 1 000"], "D3-3": ["÷ 100", "÷ 1 000"],
     "C3-1": ["un calcul de l’autre côté"],
-    "F6-1": ["trop de parts pour les dessiner"], "F6-2": ["trop de parts pour les dessiner"], "F6-3": ["trop de parts pour les dessiner"]
+    // (Lot 7e : F6-1 au programme du CE2, tout se dessine ; A10-1 arrive pile sur la dizaine.)
+    "A10-1": ["j’arrive pile sur la dizaine"],
+    "F6-2": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"], "F6-3": ["trop de parts pour les dessiner"]
   };
   Object.entries(attendues).forEach(([cle, phrases]) => {
     const textes = new Set(tirage(cle).map(c => CORE.nouveauteDe(c, cle)).filter(Boolean).map(n => espaces(n.texte)));
@@ -81,14 +83,15 @@ test("fractions égales : le dessin jusqu'à 12 parts, puis les deux flèches", 
     const montre = a.calculs.montre;
     assert.ok(Math.ceil(montre.donnees.a / montre.donnees.d) * montre.donnees.k * montre.donnees.d <= 12, `${cle} : la leçon a plus de 12 parts`);
     assert.equal(a.image.outil, "barre-droite", cle);
-    assert.ok(a.ecris.dessins.every(d => d.outil === "fois-fraction"), `${cle} : J'écris sur le calcul`);
+    // Lot 7e : F6-1 (programme du CE2) n'a plus que 12 parts au plus — J'écris sur les bandes.
+    assert.ok(a.ecris.dessins.every(d => d.outil === (cle === "F6-1" ? "barre-droite" : "fois-fraction")), `${cle} : J'écris sur le calcul`);
     tirage(cle, 10).forEach(c => {
       const parts = Math.max(1, Math.ceil(c.donnees.a / c.donnees.d - 1e-9)) * c.donnees.k * c.donnees.d;
       assert.equal(CORE.aideDe(c).outil, parts > 12 ? "fois-fraction" : "barre-droite", `${cle} ${c.texte}`);
       if (parts > 12) assert.equal(CORE.manipulationDe(c), null, `${cle} ${c.texte} : pas de bandes au-delà de 12 parts`);
     });
   });
-  assert.equal(espaces(CORE.niveauDe("F6-1").niveau.apprends.ecris.consigne), "3/5 = (3 × 4)/(5 × 4)");
+  assert.equal(espaces(CORE.niveauDe("F6-2").niveau.apprends.ecris.consigne), "10/15 = (10 ÷ 5)/(15 ÷ 5)");
   // Le dessin : « × ? » avant, « × 4 » une fois trouvé, la case « ? ».
   const svg = espaces(AIDES.foisFraction({op: "×", k: 4, gauche: [3, 5], droite: [12, 20], cache: "dn", montre: false, haut: false, bas: true}));
   assert.match(svg, />× \?</);

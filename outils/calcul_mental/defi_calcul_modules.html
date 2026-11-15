@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261115-1"></script>
+  <script src="./defi_calcul_core.js?v=20261115-2"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261114-7"></script>
-  <script src="./defi_calcul_aides.js?v=20261115-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261115-2"></script>
   <script>
     (() => {
       "use strict";
@@ -4784,6 +4784,25 @@
               serie.index = avant.length;
               serie.outil = outil;
               serie.reponses = avant.map(q => ({calcul: q.calcul, juste: true, outil, rappel: false}));
+              renderQuestion();
+              ajusterEchelle();
+              return true;
+            },
+            // Lot 7e : un calcul donné par son texte (« □/8 = 1/2 »), posé en
+            // premier à l'entraînement, avec l'outil voulu (les planches).
+            poser: (id, n, texte, outil = "aucun") => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve || !trouve.niveau.apprends) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              state.origine = "seance";
+              commencerPratique({module: id, niveau: n, base: trouve.niveau.apprends});
+              const serie = state.serie;
+              let vise = null;
+              for (let graine = 1; graine <= 400 && !vise; graine += 1) vise = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}).find(c => c.texte === texte) || null;
+              if (!vise) return false;
+              serie.questions = [{calcul: vise, retour: false}, ...serie.questions.filter(q => q.calcul.texte !== texte)];
+              serie.index = 0;
+              serie.outil = outil;
               renderQuestion();
               ajusterEchelle();
               return true;
