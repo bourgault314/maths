@@ -120,8 +120,21 @@
      "page": "/cours/4e/4e-PCT-06.html"
     },
     {
-     "id": "4e-PCT-08",
+     "id": "4e-PCT-09",
      "n": 6,
+     "ids": "4e-PCT-09 · 3e-PCT-09",
+     "h1": "Je sais calculer un pourcentage à la calculatrice : j'estime, je calcule, j'arrondis à la fin, je contrôle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-09.html"
+    },
+    {
+     "id": "4e-PCT-08",
+     "n": 7,
      "ids": "4e-PCT-08 · 3e-PCT-04",
      "h1": "Je sais augmenter ou diminuer d'un pourcentage, en deux étapes puis en une multiplication",
      "niveaux": [
@@ -134,7 +147,7 @@
     },
     {
      "id": "4e-PCT-07",
-     "n": 7,
+     "n": 8,
      "ids": "4e-PCT-07",
      "h1": "Je sais calculer un pourcentage dans un groupe formé de deux groupes",
      "niveaux": [
@@ -2726,8 +2739,21 @@
      "page": "/cours/4e/4e-PCT-06.html"
     },
     {
-     "id": "4e-PCT-08",
+     "id": "4e-PCT-09",
      "n": 6,
+     "ids": "4e-PCT-09 · 3e-PCT-09",
+     "h1": "Je sais calculer un pourcentage à la calculatrice : j'estime, je calcule, j'arrondis à la fin, je contrôle",
+     "niveaux": [
+      "4e",
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/4e/4e-PCT-09.html"
+    },
+    {
+     "id": "4e-PCT-08",
+     "n": 7,
      "ids": "4e-PCT-08 · 3e-PCT-04",
      "h1": "Je sais augmenter ou diminuer d'un pourcentage, en deux étapes puis en une multiplication",
      "niveaux": [
@@ -2740,7 +2766,7 @@
     },
     {
      "id": "3e-PCT-05",
-     "n": 7,
+     "n": 8,
      "ids": "3e-PCT-05",
      "h1": "Je sais passer d'une évolution en pourcentage à son coefficient multiplicateur, et inversement, et enchaîner deux évolutions",
      "niveaux": [
@@ -2752,7 +2778,7 @@
     },
     {
      "id": "3e-PCT-06",
-     "n": 8,
+     "n": 9,
      "ids": "3e-PCT-06",
      "h1": "Je sais calculer de combien de pour cent une quantité augmente ou diminue : le taux d'évolution",
      "niveaux": [
@@ -2764,7 +2790,7 @@
     },
     {
      "id": "3e-PCT-07",
-     "n": 9,
+     "n": 10,
      "ids": "3e-PCT-07",
      "h1": "Je sais retrouver la valeur de départ après une hausse ou une baisse en pourcentage",
      "niveaux": [
@@ -2775,8 +2801,20 @@
      "page": "/cours/3e/3e-PCT-07.html"
     },
     {
+     "id": "3e-PCT-08",
+     "n": 11,
+     "ids": "3e-PCT-08",
+     "h1": "Je sais calculer une évolution à la calculatrice : appliquer un coefficient qui n'est pas rond, trouver un taux d'évolution arrondi",
+     "niveaux": [
+      "3e"
+     ],
+     "type": "méthode",
+     "nouveau": false,
+     "page": "/cours/3e/3e-PCT-08.html"
+    },
+    {
      "id": "4e-PCT-07",
-     "n": 10,
+     "n": 12,
      "ids": "4e-PCT-07",
      "h1": "Je sais calculer un pourcentage dans un groupe formé de deux groupes",
      "niveaux": [
