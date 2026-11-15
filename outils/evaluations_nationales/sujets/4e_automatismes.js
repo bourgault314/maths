@@ -180,7 +180,7 @@
   // 1 — multiplier par 0,1
   Q.push({
     num: 1, domaine: "NC", competence: "Connaître l’effet d’une multiplication par 0,1 (ou 0,01, 0,001)",
-    entrainement: AUTO("NC01", "Numération décimale"), melange: false,
+    entrainement: AUTO("NC01", "Numération décimale"),
     generer(r, officiel) {
       const d = officiel ? 1 : r.parmi([1, 2, 2, 3]);
       const forme = officiel ? "effet" : r.parmi(["effet", "revient"]);
@@ -483,7 +483,6 @@
         enonce: `La mesure de l’angle ${angLong(nom)} est égale à…`,
         figure: triangleAngles(lettres, angles, officiel ? [0, 2] : autres, rotation, miroir),
         choix: vals.map(([v, e]) => c(`${v}°`, v === beta, e)),
-        melange: false,
       };
     },
   });
@@ -720,7 +719,6 @@
           c(frac(a, 100), false, `Se trompe sur le rang du chiffre ${a} : centièmes au lieu de dixièmes.`),
           c(frac(0, a), false, "Remplace la virgule par la barre de fraction."),
         ],
-        melange: false,
       };
     },
   });
@@ -752,7 +750,6 @@
           [colle, c(neg(colle), false, `Lit ${m}${l} comme le nombre formé des chiffres ${m} et ${v} : ${k} ${op} ${m}${v}.`)],
           [colle2, c(neg(colle2), false, `Calcule ${k} ${op} ${m} d’abord, puis lit le résultat suivi de ${l} comme le nombre ${neg(colle2)}.`)],
         ].sort((x, y) => x[0] - y[0]).map((x) => x[1]),
-        melange: false,
       };
     },
   });
@@ -829,7 +826,7 @@
   // 20 — point de coordonnées (3 ; 5)
   Q.push({
     num: 20, domaine: "EG", competence: "Repérer un point dans un repère orthonormé",
-    entrainement: AUTO("EG02", "Coordonnées dans le plan"), melange: false,
+    entrainement: AUTO("EG02", "Coordonnées dans le plan"),
     generer(r, officiel) {
       let p = 3, q = 5, noms = ["D", "A", "B", "C"];
       if (!officiel) { do { p = r.entier(1, 5); q = r.entier(1, 5); } while (p === q); noms = r.melanger(["A", "B", "C", "D"]); }
@@ -841,6 +838,7 @@
         enonce: `On considère quatre points A, B, C et D dans le plan rapporté au repère ci-dessous :<br><strong>Quel point a pour coordonnées (${p} ; ${q}) ?</strong>`,
         figure: repere(pts),
         choix: ["A", "B", "C", "D"].map((n) => c(`le point ${n}`, n === noms[0], pieges[n])),
+        melange: false, // « le point A » à « le point D » restent dans l'ordre : le bon point est déjà tiré (noms)
       };
     },
   });
@@ -849,7 +847,7 @@
   const TRIANGLES = [[5, 9, 12, 13, 15], [9, 16, 12, 15, 20], [5, 16, 12, 13, 20], [6, 15, 8, 10, 17], [10, 18, 24, 26, 30], [8, 20, 15, 17, 25], [9, 5, 12, 15, 13], [16, 9, 12, 20, 15]];
   Q.push({
     num: 21, domaine: "GM", competence: "Calculer l’aire d’un triangle",
-    entrainement: AUTO("EG09", "Aires"), melange: false,
+    entrainement: AUTO("EG09", "Aires"),
     generer(r, officiel) {
       const [x1, x2, h, c1, c2] = officiel ? TRIANGLES[0] : r.parmi(TRIANGLES);
       const b = x1 + x2, autre = officiel ? c2 : r.parmi([c1, c2]);
@@ -897,10 +895,11 @@
   // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
   // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
   // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  // Lot EN-J (revue de Codex du 15/11) : une autre écriture de même difficulté (autre tournure, autre ordre des termes) et
+  // une bonne réponse qui est une catégorie (nature d'un triangle, oui ou non, égaux ou pas) reviennent dans le jumeau.
   const HORS_STRICT = {
-    1: { formes: ["revient-1", "revient-2", "revient-3", "complement"], pourquoi: "« revient à diviser » : autre tournure. Sujet 2024-2025 : « 6 + … = 14 » (complément) au lieu de « 14 − 6 ». La tâche de 2024-2025 n'est tirée que pour le jumeau du sujet 2024-2025 (tirerTache)" },
-    2: { formes: ["division", "double"], pourquoi: "130 : 2 ou « quel nombre a pour double » : autre écriture" },
-    5: { formes: ["positif-dabord-negatif", "positif-dabord-positif"], pourquoi: "5 + (−4) : écriture avec parenthèses" },
+    1: { formes: ["complement"], pourquoi: "Sujet 2024-2025 : « 6 + … = 14 » (complément) au lieu de « 14 − 6 ». La tâche de 2024-2025 n'est tirée que pour le jumeau du sujet 2024-2025 (tirerTache)" },
+    2: { formes: ["double"], pourquoi: "« quel nombre a pour double 130 ? » : la question à l'envers (« 130 : 2 » est revenu dans le jumeau au lot EN-J)" },
     6: { formes: ["difference"], pourquoi: "Sujet 2024-2025 : « 8a − 3a » au lieu d'une somme (« 2n + 3n »). La tâche de 2024-2025 n'est tirée que pour le jumeau du sujet 2024-2025 (tirerTache)" },
     7: { formes: ["en-minutes-2h", "en-minutes-3h"], pourquoi: "l'autre sens (h min → min)" },
     9: { formes: ["sommet-milieu", "sommet-premier", "sommet-dernier", "sommet-milieu-retourne", "sommet-premier-retourne", "sommet-dernier-retourne"], pourquoi: "angle cherché aigu : le sujet cherche un angle obtus" },
@@ -909,7 +908,6 @@
     14: { formes: ["premier-negatif-grand", "premier-negatif-petit"], pourquoi: "premier nombre négatif : autre cas" },
     15: { formes: ["entre-1-et-2", "entre-2-et-3"], pourquoi: "fraction plus grande que 1" },
     16: { formes: ["centiemes", "deux-chiffres"], pourquoi: "centièmes au lieu de dixièmes" },
-    17: { formes: ["moins"], pourquoi: "46 − 3y : soustraction" },
     18: { formes: ["vers-grand"], pourquoi: "conversion dans l'autre sens" },
     22: { formes: ["centiemes"], pourquoi: "centièmes au lieu de dixièmes" },
   };

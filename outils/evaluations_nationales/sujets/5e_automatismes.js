@@ -163,7 +163,7 @@
   // 4 — 8 × … = 48
   Q.push({
     num: 4, domaine: "NC", competence: "Connaître les tables de multiplication",
-    entrainement: AUTO("NC04", "Calcul mental positif"), melange: false,
+    entrainement: AUTO("NC04", "Calcul mental positif"),
     generer(r, officiel) {
       let a = 8, b = 6;
       const forme = officiel ? "facteur-droite" : r.parmi(["facteur-droite", "facteur-gauche", "division"]);
@@ -185,7 +185,7 @@
   // 5 — complément à 100
   Q.push({
     num: 5, domaine: "NC", competence: "Déterminer un complément à 100",
-    entrainement: AUTO("NC04", "Calcul mental positif"), melange: false,
+    entrainement: AUTO("NC04", "Calcul mental positif"),
     generer(r, officiel) {
       const t = officiel ? 7 : r.entier(1, 8);
       const u = officiel ? 5 : r.parmi([5, 5, 2, 3, 4, 6, 7, 8]);
@@ -398,7 +398,7 @@
   // 14 — ordre de grandeur d'un produit
   Q.push({
     num: 14, domaine: "NC", competence: "Estimer l’ordre de grandeur d’un produit",
-    entrainement: AUTO("NC03", "Estimer et arrondir"), melange: false,
+    entrainement: AUTO("NC03", "Estimer et arrondir"),
     generer(r, officiel) {
       let x = "9,8", y = "9,78", dessus = 0;
       if (!officiel) {
@@ -495,7 +495,6 @@
           officiel ? c(enc(9999, 10000), false, "Ne comprend pas l’écriture décimale et prend 9,998 pour l’entier 9 998.")
             : c(enc(entier, entier + 1), false, `Ne comprend pas l’écriture décimale et prend ${x} pour l’entier ${nb(String(entier))}.`),
         ],
-        melange: false,
       };
     },
   });
@@ -738,7 +737,7 @@
   const UNITES_VOL = [["cm", "cm³"], ["dm", "dm³"], ["m", "m³"]];
   Q.push({
     num: 26, domaine: "GM", competence: "Calculer le volume d’un pavé droit avec la formule",
-    entrainement: AUTO("EG22", "Volumes de prismes et cylindres"), melange: false, disposition: "ligne",
+    entrainement: AUTO("EG22", "Volumes de prismes et cylindres"), disposition: "ligne",
     generer(r, officiel) {
       let L = 6, l = 5, h = 2;
       const forme = officiel ? "cotes" : r.parmi(["cotes", "dimensions"]);

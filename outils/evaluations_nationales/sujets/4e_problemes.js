@@ -138,6 +138,38 @@
       `Rectangle de côtés ${la} et ${lb} ; en bas à droite, une bande hachurée de largeur ${k} ; le segment du bas, à gauche de la bande, mesure ${la}`, 470);
   }
 
+  // Lot EN-J : dans un jumeau, la bande hachurée change de coin (en bas ou en haut, à droite ou à gauche) ; le segment
+  // qui mesure la première lettre longe toujours le grand côté, entre le bord et la bande. Mêmes mesures, mêmes rôles.
+  function figureHachuresTournee(k, la, lb, aGauche, enHaut) {
+    const g = 60, d = 420, h = 30, bas = 200, X = (x) => (aGauche ? g + d - x : x);
+    const [bx1, bx2] = [X(220), X(d)].sort((u, v) => u - v), [by1, by2] = enHaut ? [h, h + 54] : [bas - 54, bas];
+    const angle = (x, y, sx, sy) => `<rect x="${sx > 0 ? x : x - 12}" y="${sy > 0 ? y : y - 12}" width="12" height="12" fill="#d9efd9" stroke="#2f8a3a" stroke-width="1.4"/>`;
+    const fleche = (x1, y1, x2, y2) => {
+      const a = Math.atan2(y2 - y1, x2 - x1), t = (x, y, s) => `M${x} ${y}l${(-7 * Math.cos(a + s)).toFixed(1)} ${(-7 * Math.sin(a + s)).toFixed(1)}`;
+      const r = (x, y, s) => `M${x} ${y}l${(7 * Math.cos(a + s)).toFixed(1)} ${(7 * Math.sin(a + s)).toFixed(1)}`;
+      return `<path d="M${x1} ${y1}L${x2} ${y2}${t(x2, y2, .5)}${t(x2, y2, -.5)}${r(x1, y1, .5)}${r(x1, y1, -.5)}" fill="none" stroke="#444" stroke-width="1.8" stroke-linecap="round"/>`;
+    };
+    const L = (x, y, t) => `<text x="${x}" y="${y}" font-size="20" font-style="italic" font-family="Cambria Math,Times New Roman,serif" text-anchor="middle" fill="#111">${t}</text>`;
+    const coins = [[g, h], [d, h], [g, bas], [d, bas]];
+    const coinsBande = [[bx1, by1], [bx2, by1], [bx1, by2], [bx2, by2]].filter(([x, y]) => !coins.some(([u, v]) => u === x && v === y));
+    const [xa1, xa2] = [X(g), X(220)].sort((u, v) => u - v); // le segment « première lettre », entre le bord et la bande
+    const yLong = enHaut ? 222 : 14, yLongTexte = enHaut ? 246 : 10, ySeg = enHaut ? 14 : 222, ySegTexte = enHaut ? 10 : 246;
+    const xCote = aGauche ? 440 : 40, xCoteTexte = aGauche ? 456 : 24, xK = aGauche ? 42 : 438;
+    const texteK = `<text x="${aGauche ? 28 : 452}" y="${(by1 + by2) / 2 + 7}" font-size="20" font-family="Cambria Math,Times New Roman,serif"${aGauche ? ' text-anchor="end"' : ""} fill="#111">${k}</text>`;
+    const ou = `${enHaut ? "en haut" : "en bas"} ${aGauche ? "à gauche" : "à droite"}`;
+    return svg(470, 272, `<g transform="translate(0 14)">` +
+      `<defs><pattern id="hachures-en4-q13" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#fff"/><line x1="0" y1="0" x2="0" y2="7" stroke="#b03a2e" stroke-width="2.6"/></pattern></defs>` +
+      `<rect x="${bx1}" y="${by1}" width="${bx2 - bx1}" height="${by2 - by1}" fill="url(#hachures-en4-q13)" stroke="#8c2a20" stroke-width="2"/>` +
+      `<path d="M${g} ${h}H${d}V${bas}H${g}Z" fill="none" stroke="#222" stroke-width="2.2"/>` +
+      angle(g, h, 1, 1) + angle(d, h, -1, 1) + angle(g, bas, 1, -1) + angle(d, bas, -1, -1) +
+      coinsBande.map(([x, y]) => angle(x, y, x === bx1 ? 1 : -1, y === by1 ? 1 : -1)).join("") +
+      fleche(g, yLong, d, yLong) + L((g + d) / 2, yLongTexte, lb) +
+      fleche(xCote, h, xCote, bas) + L(xCoteTexte, (h + bas) / 2 + 6, la) +
+      fleche(xa1, ySeg, xa2, ySeg) + L((xa1 + xa2) / 2, ySegTexte, la) +
+      fleche(xK, by1, xK, by2) + texteK + `</g>`,
+      `Rectangle de côtés ${la} et ${lb} ; ${ou}, une bande hachurée de largeur ${k} ; le segment ${enHaut ? "du haut" : "du bas"}, ${aGauche ? "à droite" : "à gauche"} de la bande, mesure ${la}`, 470);
+  }
+
   // Q19 : diagramme circulaire de l'œuf (coquille 10 %, blanc 60 %, jaune : ce qui reste, sans pourcentage écrit).
   const OEUF = { masse: 60, coquille: 10, blanc: 60 };
   function figureOeuf() {
@@ -453,12 +485,12 @@
   // Q13 — aire hachurée en calcul littéral : même figure, mêmes rôles ; bande de 2 à 6 ; lettres a/b, x/y ou m/n.
   const Q13_LETTRES = [["a", "b"], ["x", "y"], ["m", "n"]];
   GEN[13] = (r) => {
-    const [la, lb] = r.parmi(Q13_LETTRES), k = r.entier(2, 6), A = lettre(la), B = lettre(lb);
+    const [la, lb] = r.parmi(Q13_LETTRES), k = r.entier(2, 6), A = lettre(la), B = lettre(lb), aGauche = r.suivant() < 0.5, enHaut = r.suivant() < 0.5;
     const meme = "N’exprime pas correctement la longueur du rectangle hachuré, mais multiplie bien par la largeur " + k + ".";
     return {
       enonce: "On considère la figure suivante.",
-      figure: figureHachures(k, la, lb),
-      bande: { k, a: la, b: lb },
+      figure: aGauche || enHaut ? figureHachuresTournee(k, la, lb, aGauche, enHaut) : figureHachures(k, la, lb),
+      bande: { k, a: la, b: lb, coin: `${enHaut ? "haut" : "bas"}-${aGauche ? "gauche" : "droite"}` },
       // « m et n. » ne se coupe pas : la dernière lettre ne reste jamais seule sur sa ligne.
       apres: `<strong>On souhaite exprimer l’aire de la surface hachurée en fonction de <span class="insecable">${A} et ${B}.</span></strong>`,
       choix: [
@@ -499,7 +531,24 @@
     { qui: "Un bijoutier fabrique des bracelets.", une: "d’un bracelet", des: "bracelets" },
     { qui: "Un menuisier fabrique des nichoirs.", une: "d’un nichoir", des: "nichoirs" },
   ];
+  // Lot EN-J (choix de Gwenaël du 15/11) : une fois sur deux, il a le temps — « OUI. Il lui restera … minutes. » (de 4 à
+  // 20 min). Les trois pièges restent ceux de la DEPP, recalculés, et restent des phrases fausses : « OUI. Il pourra
+  // fabriquer » 3 × ⌈60 ÷ d⌉ (pas le bon nombre), « NON. … seulement » 3 × ⌊60 ÷ d⌋ (il a le temps), « moins de deux
+  // heures » (d × n ≥ 120 min).
+  const Q15_CAS_OUI = [[13, 13], [16, 10], [16, 11], [17, 10]];
   GEN[15] = (r) => {
+    if (r.suivant() < 0.5) {
+      const [d, n] = r.parmi(Q15_CAS_OUI), x = r.parmi(Q15_CTX), haut = Math.ceil(60 / d), bas = Math.floor(60 / d), reste = 180 - d * n;
+      return {
+        enonce: `${x.qui}<br>La réalisation complète ${x.une} nécessite ${d} minutes.<br>On lui demande de réaliser ${n} ${x.des} en trois heures.<br><strong>Est-ce possible s’il travaille sans interruption ?</strong>`,
+        choix: [
+          c(`OUI. Il pourra fabriquer ${enLettres(3 * haut)} ${x.des}.`, false, `Compte environ ${haut} ${x.des} par heure, donc ${3 * haut} en 3 heures.`),
+          c(`NON. Il pourra fabriquer seulement ${enLettres(3 * bas)} ${x.des}.`, false, `Compte ${bas} ${x.des} par heure, donc ${3 * bas} en 3 heures.`),
+          c("OUI. Il lui faudra moins de deux heures.", false, `Fait un calcul de proportionnalité erroné (${d} × ${n} ÷ 3, environ ${Math.round((d * n) / 3)}).`),
+          c(`OUI. Il lui restera ${enLettres(reste)} minute${reste > 1 ? "s" : ""}.`, true),
+        ],
+      };
+    }
     const [d, n] = r.parmi(Q15_CAS), x = r.parmi(Q15_CTX), haut = Math.ceil(60 / d), bas = Math.floor(60 / d), manque = d * n - 180;
     return {
       enonce: `${x.qui}<br>La réalisation complète ${x.une} nécessite ${d} minutes.<br>On lui demande de réaliser ${n} ${x.des} en trois heures.<br><strong>Est-ce possible s’il travaille sans interruption ?</strong>`,
@@ -512,16 +561,18 @@
     };
   };
 
-  // Q16 — 10 % par jour : livre de 110 à 250 pages (multiple de 10, jamais 100), 3 à 9 jours.
+  // Q16 — p % par jour : livre de 110 à 250 pages (multiple de 10, jamais 100). Lot EN-J (choix de Gwenaël du 15/11) :
+  // 10 % (3 à 9 jours) ou 20 % (2 à 4 jours : jamais plus que le livre). 50 % écarté : dès 2 jours, le livre est fini.
   GEN[16] = (r) => {
-    const P = entre(r, 110, 250, 10), j = r.entier(3, 9), [nom, pr] = r.parmi(PRENOMS);
+    const p = r.parmi([10, 20]), P = entre(r, 110, 250, 10), j = p === 10 ? r.entier(3, 9) : r.entier(2, 4), [nom, pr] = r.parmi(PRENOMS);
+    const jour = (P * p) / 100;
     return {
-      enonce: `${nom} lit un livre de ${P} pages.<br>Chaque jour ${pr} en lit 10 %.<br><strong>Combien lit-${pr} de pages en ${j} jours ?</strong>`,
+      enonce: `${nom} lit un livre de ${P} pages.<br>Chaque jour ${pr} en lit ${p} %.<br><strong>Combien lit-${pr} de pages en ${j} jours ?</strong>`,
       choix: [
-        c(`${10 * j} pages`, false, `Confond 10 % et 10 pages, puis multiplie bien par ${j}.`),
-        c(`${(P / 10) * j} pages`, true),
-        c("10 pages", false, "Confond 10 % et 10 pages, et donne les pages d’un seul jour."),
-        c(`${P / 10} pages`, false, `Calcule bien 10 % de ${P} pages, mais s’arrête à un jour.`),
+        c(`${p * j} pages`, false, `Confond ${p} % et ${p} pages, puis multiplie bien par ${j}.`),
+        c(`${jour * j} pages`, true),
+        c(`${p} pages`, false, `Confond ${p} % et ${p} pages, et donne les pages d’un seul jour.`),
+        c(`${jour} pages`, false, `Calcule bien ${p} % de ${P} pages, mais s’arrête à un jour.`),
       ],
     };
   };
@@ -549,14 +600,14 @@
     { groupe: (T) => `Dans une équipe de ${T} joueurs`, un: "un seul porte des lunettes", des: (m) => `${m} portent des lunettes`, fin: "les autres n’en portent pas", q: "Quel est le pourcentage de joueurs sans lunettes dans cette équipe ?", petit: "joueurs à lunettes", grand: "joueurs sans lunettes", T: [10, 20] },
     { groupe: (T) => `Dans un club de ${T} élèves`, un: "un seul rentre déjeuner chez lui", des: (m) => `${m} rentrent déjeuner chez eux`, fin: "les autres mangent à la cantine", q: "Quel est le pourcentage d’élèves du club qui mangent à la cantine ?", petit: "élèves qui rentrent déjeuner", grand: "élèves qui mangent à la cantine", T: [4, 5, 10, 20] },
   ];
-  GEN[18] = (r, banque) => {
+  GEN[18] = (r) => {
     const x = r.parmi(Q18_CTX), T = r.parmi(x.T), m = r.entier(1, Math.ceil(T / 2) - 1), g = T - m;
     const compare = (100 * m) / g;
-    // Lot EN10 : le jumeau strict garde le piège de la DEPP (« compare le petit groupe au grand, puis complément à 100 % ») :
-    // seuls les tirages où ce calcul tombe juste sont gardés (petit groupe = le quart du grand, comme 1 sur 4 dans le sujet),
-    // et jamais le sujet officiel lui-même (fratrie de 5, un gaucher). La branche ⚠ ci-dessous reste pour la banque
-    // (GEN[18](r, true)), jamais pour un jumeau.
-    if (!banque && (!Number.isInteger(compare) || (x === Q18_CTX[0] && T === 5 && m === 1))) return null;
+    // Lot EN-J (choix de Gwenaël du 15/11) : la bonne réponse change (55 % à 95 %, plus seulement 80 %). Le piège de la
+    // DEPP (« compare le petit groupe au grand, puis complément à 100 % ») n'est entier que si le petit groupe est le quart
+    // du grand (réponse 80 %) : il revient dans ces tirages-là ; ailleurs, le piège ⚠ ci-dessous le remplace. Jamais le
+    // sujet officiel lui-même (fratrie de 5, un gaucher).
+    if (x === Q18_CTX[0] && T === 5 && m === 1) return null;
     const piege = Number.isInteger(compare)
       ? c(`${100 - compare} %`, false, `Compare les ${x.petit} aux ${x.grand} (${m} sur ${g}, soit ${compare} %), puis prend le complément à 100 %.`)
       // ⚠ non DEPP : quand « comparer puis compléter » ne tombe pas juste, le nombre du petit groupe pris pour un pourcentage.

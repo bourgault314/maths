@@ -113,7 +113,7 @@
   // C (3) — notation puissance
   Q.push({
     num: 3, domaine: "NC", competence: "Connaître la notation puissance",
-    entrainement: AUTO("NC15", "Puissances"), melange: false,
+    entrainement: AUTO("NC15", "Puissances"),
     generer(r, officiel) {
       let a = 4, n = 5;
       const forme = officiel ? "puissance-vers-produit" : r.parmi(["puissance-vers-produit", "produit-vers-puissance"]);
@@ -214,7 +214,21 @@
   });
 
   // G (7) — périmètre d'un rectangle (figure codée)
-  function rectangleCode(L, l, carre) {
+  // Lot EN-J : dans un jumeau, le rectangle est couché ou debout, et ses deux mesures s'écrivent d'un côté ou de l'autre
+  // (pose = { debout, dessous, aGauche }) ; sans pose, la figure du sujet officiel, inchangée.
+  function rectanglePose(L, l, pose) {
+    const x0 = 44, y0 = 34, long = pose.debout ? 150 : 180, court = Math.max(pose.debout ? 64 : 70, Math.min(pose.debout ? 96 : 110, (long * l) / L));
+    const w = pose.debout ? court : long, h = pose.debout ? long : court, W = x0 + w + 44, H = y0 + h + 34;
+    const A = [x0, y0], B = [x0 + w, y0], C = [x0 + w, y0 + h], D = [x0, y0 + h];
+    let s = polygone([A, B, C, D]) + [[A, B, D], [B, C, A], [C, D, B], [D, A, C]].map(([S, P, Q2]) => angleDroit(S, P, Q2, 10)).join("");
+    s += pose.debout ? code(B, C) + code(A, D) : code(A, B) + code(D, C);
+    const [horiz, vert] = pose.debout ? [l, L] : [L, l];
+    s += txt(x0 + w / 2, pose.dessous ? y0 + h + 26 : y0 - 10, horiz, 18);
+    s += pose.aGauche ? txt(x0 - 16, y0 + h / 2 + 6, vert, 18, "end") : txt(x0 + w + 16, y0 + h / 2 + 6, vert, 18, "start");
+    return svg(W, H, s, `Rectangle codé de longueur ${L} et de largeur ${l} (l’unité est le cm)`, Math.round((W * 300) / 260));
+  }
+  function rectangleCode(L, l, carre, pose) {
+    if (pose && !carre) return rectanglePose(L, l, pose);
     const W = 260, H = carre ? 200 : 170, x0 = 40, y0 = 34, w = carre ? 130 : 180, h = carre ? 130 : Math.max(70, Math.min(110, (180 * l) / L));
     const A = [x0, y0], B = [x0 + w, y0], C = [x0 + w, y0 + h], D = [x0, y0 + h];
     let s = polygone([A, B, C, D]) + [[A, B, D], [B, C, A], [C, D, B], [D, A, C]].map(([S, P, Q2]) => angleDroit(S, P, Q2, 10)).join("");
@@ -224,7 +238,7 @@
   }
   Q.push({
     num: 7, domaine: "GM", competence: "Calculer le périmètre d’un rectangle",
-    entrainement: AUTO("EG08", "Périmètres"), melange: false, disposition: "grille",
+    entrainement: AUTO("EG08", "Périmètres"), disposition: "grille",
     generer(r, officiel) {
       let L = 4, l = 3, ch;
       const forme = officiel ? "rectangle" : r.parmi(["rectangle", "rectangle", "carre"]);
@@ -241,7 +255,7 @@
       return {
         forme,
         enonce: "On considère la figure ci-contre (l’unité est le cm) :<br>Combien vaut son périmètre ?",
-        figure: rectangleCode(L, l, forme === "carre"),
+        figure: rectangleCode(L, l, forme === "carre", officiel ? null : { debout: r.suivant() < 0.5, dessous: r.suivant() < 0.5, aGauche: r.suivant() < 0.5 }),
         choix: ch.sort((x, y) => parseInt(x.html, 10) - parseInt(y.html, 10)),
       };
     },
@@ -250,7 +264,7 @@
   // H (8) — programme de calcul → expression
   Q.push({
     num: 8, domaine: "NC", competence: "Traduire un programme de calcul par une expression littérale",
-    entrainement: AUTO("NC19", "Traduire en calcul littéral"), melange: false,
+    entrainement: AUTO("NC19", "Traduire en calcul littéral"),
     generer(r, officiel) {
       let k = 3, m = 2, L = "x";
       const forme = officiel ? "soustraire-puis-multiplier" : r.parmi(["soustraire-puis-multiplier", "ajouter-puis-multiplier"]);
@@ -270,7 +284,7 @@
       return {
         forme,
         enonce: `Voici un programme de calcul :<br>• Choisir un nombre<br>• ${forme === "soustraire-puis-multiplier" ? "Lui soustraire" : "Lui ajouter"} ${k}<br>• Multiplier le résultat par ${m}<br>Si l’on désigne par ${X} le nombre choisi, quelle est l’expression qui correspond à ce programme de calcul ?`,
-        choix: officiel ? choix : r.melanger(choix),
+        choix,
       };
     },
   });
@@ -313,7 +327,8 @@
     generer(r, officiel) {
       let a = 2, b = 1, x = 7, ch;
       const forme = officiel ? "ax-plus-b" : r.parmi(["ax-plus-b", "b-plus-ax"]);
-      const L = "x";
+      // Lot EN-J : la lettre change dans un jumeau (x, a, n, t, y), comme dans les autres questions de calcul littéral.
+      const L = officiel ? "x" : r.parmi(LETTRES);
       do {
         if (!officiel) { a = r.entier(2, 5); b = r.entier(1, 9); x = r.entier(3, 9); }
         ch = forme === "ax-plus-b" ? [
@@ -362,7 +377,7 @@
   const zeros = (n) => nb("1" + "0".repeat(n));
   Q.push({
     num: 12, domaine: "NC", competence: "Connaître les puissances de 10 (exposant positif)",
-    entrainement: AUTO("NC15", "Puissances"), melange: false,
+    entrainement: AUTO("NC15", "Puissances"),
     generer(r, officiel) {
       const n = officiel ? 6 : r.entier(3, 8);
       const forme = officiel ? "puissance-vers-nombre" : r.parmi(["puissance-vers-nombre", "nombre-vers-puissance"]);
@@ -459,7 +474,7 @@
   // O (15) — aire d'un rectangle
   Q.push({
     num: 15, domaine: "GM", competence: "Calculer l’aire d’un rectangle",
-    entrainement: AUTO("EG09", "Aires"), melange: false,
+    entrainement: AUTO("EG09", "Aires"),
     generer(r, officiel) {
       let L = 30, l = 20, u = "cm", ch;
       const forme = officiel ? "rectangle" : r.parmi(["rectangle", "carre"]);
@@ -511,7 +526,7 @@
   }
   Q.push({
     num: 17, domaine: "OGD", competence: "Compléter un tableau de proportionnalité",
-    entrainement: AUTO("PF02", "Calculer en proportionnalité"), melange: false,
+    entrainement: AUTO("PF02", "Calculer en proportionnalité"),
     generer(r, officiel) {
       // Une colonne connue (p au-dessus de q), l'autre colonne a s en bas : la case vide vaut s × p / q.
       let p = 12, q = 6, s = 10, place = 1, ch;
@@ -560,7 +575,7 @@
   // S (19) — puissance de 10 d'exposant négatif
   Q.push({
     num: 19, domaine: "NC", competence: "Connaître les puissances de 10 (exposant négatif)",
-    entrainement: AUTO("NC15", "Puissances"), melange: false,
+    entrainement: AUTO("NC15", "Puissances"),
     generer(r, officiel) {
       const n = officiel ? 2 : r.entier(2, 6);
       const forme = officiel ? "puissance-vers-nombre" : r.parmi(["puissance-vers-nombre", "nombre-vers-puissance"]);
@@ -642,7 +657,7 @@
   }
   Q.push({
     num: 20, domaine: "EG", competence: "Reconnaître l’image d’une figure par une symétrie centrale",
-    entrainement: AUTO("EG14", "Symétries"), melange: false,
+    entrainement: AUTO("EG14", "Symétries"),
     generer(r, officiel) {
       let motif = MOTIFS[0], places = [3, 1, 2, 4], miroirF = false;
       const forme = officiel ? "motif-du-sujet" : r.parmi(["motif-du-sujet", "autre-motif"]);
@@ -651,13 +666,17 @@
         const k = places.indexOf(n);
         return c(`Figure ${n}`, k === 0, ["", "Confond symétrie centrale et symétrie par rapport à une droite verticale.", "Confond symétrie centrale et symétrie par rapport à une droite horizontale.", "Fait glisser la figure sans la retourner : confond symétrie et translation."][k]);
       });
-      return { forme, enonce: "Quelle est l’image de la figure F par la symétrie de centre O ?", figure: symetrieCentrale(motif, places, miroirF), choix };
+      // « Figure 1 » à « Figure 4 » restent dans l'ordre : la place de la bonne figure est déjà tirée (places).
+      return { forme, enonce: "Quelle est l’image de la figure F par la symétrie de centre O ?", figure: symetrieCentrale(motif, places, miroirF), choix, melange: false };
     },
   });
 
   // U (21) — nature d'un triangle à partir de deux angles (schéma à main levée)
   const NATURES = ["rectangle.", "équilatéral.", "isocèle mais pas équilatéral.", "ni rectangle, ni isocèle, ni équilatéral."];
-  const ANGLES_U = { equilateral: [[60, 60]], rectangle: [[30, 60], [35, 55], [40, 50], [25, 65]], isocele: [[50, 80], [70, 40], [30, 75], [40, 70]], quelconque: [[35, 65], [50, 70], [40, 75], [55, 80]] };
+  // Lot EN-J : ces quatre natures sont tirées dans le jumeau (la réponse ne doit pas être toujours « équilatéral »). Les deux
+  // angles donnés gardent un triangle au moins aussi large que celui du sujet (60°, 60°) : avec 50° et 80°, ou 55° et 80°,
+  // le triangle devenait si étroit que les deux mesures se chevauchaient.
+  const ANGLES_U = { equilateral: [[60, 60]], rectangle: [[30, 60], [35, 55], [40, 50], [25, 65]], isocele: [[50, 50], [40, 40], [30, 75], [40, 70]], quelconque: [[35, 65], [50, 70], [40, 75], [45, 65]] };
   function triangleAngles(a1, a2) {
     const A = [0, 0], B = [1, 0], t1 = (a1 * Math.PI) / 180, t2 = (a2 * Math.PI) / 180;
     const x = Math.tan(t2) / (Math.tan(t1) + Math.tan(t2)), C = [x, -x * Math.tan(t1)];
@@ -668,7 +687,7 @@
   }
   Q.push({
     num: 21, domaine: "EG", competence: "Déterminer la nature d’un triangle avec la somme de ses angles",
-    entrainement: AUTO("EG07", "Angles d’un triangle"), melange: false, disposition: "ligne",
+    entrainement: AUTO("EG07", "Angles d’un triangle"), disposition: "ligne",
     generer(r, officiel) {
       const forme = officiel ? "equilateral" : r.parmi(["equilateral", "rectangle", "isocele", "quelconque"]);
       let [a1, a2] = officiel ? [60, 60] : r.parmi(ANGLES_U[forme]);
@@ -776,7 +795,7 @@
   // Z (26) — somme de deux fractions de dénominateurs premiers entre eux
   Q.push({
     num: 26, domaine: "NC", competence: "Additionner deux fractions de dénominateurs différents",
-    entrainement: AUTO("NC11", "Additionner et soustraire des fractions"), melange: false,
+    entrainement: AUTO("NC11", "Additionner et soustraire des fractions"),
     generer(r, officiel) {
       let p = 2, q = 3, ch;
       const forme = officiel ? "calcul" : r.parmi(["calcul", "phrase"]);
@@ -845,7 +864,7 @@
   const PREMIERS = [[53, 3], [59, 7], [61, 7], [67, 3], [71, 7], [73, 3], [79, 7], [83, 7], [89, 3], [97, 7], [101, 3], [103, 7]];
   Q.push({
     num: 29, domaine: "NC", competence: "Reconnaître un nombre premier",
-    entrainement: AUTO("NC18", "Diviseurs, nombres premiers et division euclidienne"), melange: false, disposition: "ligne",
+    entrainement: AUTO("NC18", "Diviseurs, nombres premiers et division euclidienne"), disposition: "ligne",
     generer(r, officiel) {
       const forme = officiel ? "compose" : r.parmi(["compose", "premier"]);
       if (forme === "premier") {
@@ -878,7 +897,7 @@
   // AD (30) — ordre de grandeur en puissance de 10
   Q.push({
     num: 30, domaine: "NC", competence: "Donner un ordre de grandeur avec une puissance de 10",
-    entrainement: AUTO("NC16", "Notation scientifique"), melange: false,
+    entrainement: AUTO("NC16", "Notation scientifique"),
     generer(r, officiel) {
       // N = (significatif à 2 ou 3 chiffres, commençant par 1 ou 2) suivi de z zéros ; ordre de grandeur 10^(chiffres − 1).
       let sig = "117", z = 3;
@@ -941,23 +960,21 @@
   // Lot EN10 (décidé avec Gwenaël le 14/11) : les formes qui ne sont PAS des jumeaux stricts (autre cas, autre sens, autre
   // écriture, autre difficulté, ou bonne réponse d'une autre nature). Rien n'est supprimé : elles restent dans `generer`
   // pour la banque par compétence ; le jumeau (EN.genererJumeau) les écarte. Le sujet officiel ne passe jamais par ici.
+  // Lot EN-J (revue de Codex du 15/11) : une autre écriture de même difficulté (autre tournure, autre ordre des termes) et
+  // une bonne réponse qui est une catégorie (nature d'un triangle, oui ou non, égaux ou pas) reviennent dans le jumeau.
   const HORS_STRICT = {
     3: { formes: ["produit-vers-puissance"], pourquoi: "l'autre sens" },
-    4: { formes: ["divisible"], pourquoi: "« 80 est divisible par… » : autre tournure" },
     5: { formes: ["college"], pourquoi: "50 % au lieu de 40 % : plus facile" },
-    6: { formes: ["b-plus-moins-a"], pourquoi: "14 + (−9) : écriture avec parenthèses" },
     8: { formes: ["ajouter-puis-multiplier"], pourquoi: "Lot EN10 : « ajouter 7 » au lieu de « soustraire 3 » : le piège « soustraction à l'envers » (3 − x) disparaît (même raison que Q23 et Q31)" },
     7: { formes: ["carre"], pourquoi: "un carré au lieu d'un rectangle" },
-    11: { formes: ["moins-a-plus-moins-b"], pourquoi: "−7 + (−12) : autre écriture" },
+    11: { formes: ["moins-a-plus-moins-b"], pourquoi: "−7 + (−12) : une addition, plus une soustraction (gardé hors du jumeau au lot EN-J, choix de Gwenaël du 15/11)" },
     12: { formes: ["nombre-vers-puissance"], pourquoi: "l'autre sens" },
     13: { formes: ["valeur-negative"], pourquoi: "valeur négative : plus dur" },
     15: { formes: ["carre"], pourquoi: "un carré au lieu d'un rectangle" },
     18: { formes: ["resultat-positif"], pourquoi: "résultat positif : le piège « −1 » disparaît" },
     19: { formes: ["nombre-vers-puissance"], pourquoi: "l'autre sens" },
-    21: { formes: ["quelconque", "rectangle", "isocele"], pourquoi: "la bonne réponse n'est plus « équilatéral »" },
     23: { formes: ["moins"], pourquoi: "6(a − 9) : différence au lieu d'une somme" },
     27: { formes: ["sans-parentheses"], pourquoi: "−6² au lieu de (−6)² : le piège s'inverse" },
-    29: { formes: ["premier"], pourquoi: "79 est premier : la bonne réponse change de nature" },
     31: { formes: ["moins"], pourquoi: "5a(a − 7) : différence au lieu d'une somme" },
   };
 

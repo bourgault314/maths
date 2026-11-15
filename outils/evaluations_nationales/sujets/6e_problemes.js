@@ -442,7 +442,6 @@
       figure: figuresAires(pa, pb),
       figureACote: true,
       apres: "<strong>Laquelle de ces quatre affirmations est vraie ?</strong>",
-      melange: false, // l'ordre du sujet : « plus grande », « plus petite », « la même », « on ne peut pas savoir »
       paire: [a, b],
       choix: [
         c("L’aire de la figure A est plus grande que celle de la figure B.", plusGrande, confusion),

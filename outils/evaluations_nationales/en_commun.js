@@ -163,7 +163,11 @@
       const t = officiel ? tacheOfficielle(q, officiel.annee) : tirerTache(q, r, annee);
       const g = officiel ? t.generer(r, true) : genererJumeau(sujet, q, t, r);
       // Lot EN-C1 (choix de Gwenaël, 14/11) : le sujet officiel garde l'ordre des réponses du PDF ; seuls les jumeaux mélangent.
-      const melange = !officiel && (g.melange ?? t.melange ?? q.melange ?? true);
+      // Lot EN-J (15/11) : dans un jumeau, la bonne réponse change TOUJOURS de place. Un `melange: false` posé sur la question
+      // ne compte plus (il ne servait qu'au sujet officiel, qui ne mélange jamais) ; seul le tirage peut le dire, quand ses
+      // réponses sont des étiquettes dans l'ordre (« Figure 1 » à « Figure 4 », « le point A » à « le point D ») et qu'il
+      // place lui-même la bonne réponse au hasard.
+      const melange = !officiel && g.melange !== false;
       // Une question en grille (une case à cocher par ligne : Vrai / Faux…) n'a pas de liste de réponses : ses lignes
       // restent dans l'ordre de l'outil, sans tirage (la suite du hasard des autres questions ne bouge pas).
       if (g.grille) return { q, t, g, choix: [] };
