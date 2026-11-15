@@ -7,8 +7,9 @@
 //     un quart par la moitié de la moitié (10 m → 5 m → 2,5 m) ;
 //  2. les cartes « par cœur » en deux parties (« Je le sais par cœur », le
 //     socle des textes ; « Je le retrouve », le reste avec son petit calcul) ;
-//     « Différences et trous jusqu'à 20 » et « Compléments à la dizaine »
-//     deviennent des procédures ;
+//     « Différences et trous jusqu'à 20 », « Compléments à la dizaine » et
+//     (après la planche) « Compléments à 100 : dizaines » deviennent des
+//     procédures ;
 //  3. la moitié en découpant : annoncée, avec son dessin (46 = 40 + 6, puis
 //     20 et 3 à réunir) ; À retenir ajoute « moitié de 46 = 20 + 3 = 23 » ;
 //  4. × 4, × 8, × 5 : les doubles successifs (2 × 27, 2 × 54, 2 × 108 ;
@@ -83,14 +84,15 @@ test("1. F3 : en mots, sans signe =, l'unité après la case ; J'écris « Je pa
 // L'inventaire du lot (notice) : ce qui est socle, ce qui se retrouve.
 const INVENTAIRE = Object.freeze({
   "A1-1": "un", "A1-2": "un", "M1-1": "un", "M4-1": "un", "M4-2": "un",
-  "A2-2": "deux", "M1-2": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux"
+  "M1-2": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux"
 });
 
-test("2. les cartes « par cœur » : 13 niveaux ; deux parties là où l'appli demande plus que les textes", () => {
+test("2. les cartes « par cœur » : 12 niveaux ; deux parties là où l'appli demande plus que les textes", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
   assert.deepEqual(parCoeur.sort(), Object.keys(INVENTAIRE).sort());
   // « Différences et trous jusqu'à 20 », « Compléments à la dizaine » : des procédures, sans carte.
-  ["A1-3", "A2-1"].forEach(cle => {
+  // (« Compléments à 100 : dizaines » aussi : aucun texte ne liste les compléments à 100.)
+  ["A1-3", "A2-1", "A2-2"].forEach(cle => {
     assert.equal(CORE.niveauDe(cle).niveau.type, "P", cle);
     assert.equal(CORE.carteParCoeur(cle), null, cle);
     assert.equal(P.typeDe(CARTE, cle.split("-")[0], Number(cle.split("-")[1])), "P", cle);

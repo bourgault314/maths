@@ -1453,7 +1453,9 @@
         })
       },
       {
-        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", palier: 1, type: "F",
+        // Lot 7e-2 : une procédure (choix de Gwenaël du 15/11 : aucun texte
+        // ne liste les compléments à 100 ; on va à la dizaine, puis à 100).
+        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", palier: 1, type: "P",
         composer: a2Niveau2,
         imposes: [a2Complement(2, 75, 100), a2Difference(2, 35, 100)],
         apprends: a2Apprends({
@@ -1461,8 +1463,10 @@
           consigneManipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
           consigne: "Je vais à la dizaine, puis je compte les dizaines jusqu’à 100.",
           // Lot 7e-2 : les dizaines qui font 100 se retrouvent (4 + 6 = 10).
+          // Une procédure : plus de liste des paires à apprendre ; le dessin
+          // est celui de l'ancienne carte, 4 perles et 6 perles de 10.
           bilan: "Les dizaines qui font 100, je les retrouve avec ce qui fait 10 : 40 + 60 = 100.",
-          imageRetenir: {outil: "paires", total: 100, perles: false, paires: [[10, 90], [20, 80], [30, 70], [40, 60], [50, 50]]}
+          imageRetenir: {outil: "paires", total: 100, perles: true, pas: 10, paires: [[40, 60]]}
         })
       },
       {
@@ -9045,7 +9049,8 @@
   // porte sa partie (`partie`) ; une carte sans extension n'a qu'une partie
   // (sans titre). « Différences et trous jusqu'à 20 » et « Compléments à la
   // dizaine » sont des procédures (calcul mental CP, p. 3 et 4) : plus de
-  // carte.
+  // carte. Puis « Compléments à 100 : dizaines » aussi (choix de Gwenaël
+  // du 15/11 après la planche : aucun texte ne les liste) — 12 cartes.
   const coeurDe = blocs => blocs.map(bloc => Object.assign({partie: "coeur"}, bloc));
   const retrouveDe = blocs => blocs.map(bloc => Object.assign({partie: "retrouve"}, bloc));
   const doubles = ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true});
@@ -9058,14 +9063,6 @@
     "A1-1": {titre: "Les sommes jusqu’à 10", blocs: coeurDe([{liste: ["En orange, les paires qui font 10."], colonnes: 1},
       {table: tablePlus(rangee(0, 10), rangee(0, 10)).map((l, i) => l.map((v, j) => (!i || !j ? v : v > 10 ? "" : v === 10 ? {texte: "10", fort: true} : v)))}])},
     "A1-2": {titre: "La table d’addition", blocs: coeurDe([{table: tablePlus(rangee(1, 10), rangee(1, 10))}])},
-    // (A2-2 : aucune liste officielle des compléments à 100 ; le socle, ce
-    // sont les compléments à 10 qu'on y retrouve.)
-    "A2-2": {titre: "Ce qui fait 100", blocs: [
-      ...coeurDe([{liste: paires10(false).slice(0, 5), colonnes: 3}]),
-      ...retrouveDe([
-        // (Sous chaque nombre, ce qui manque pour aller à 100 : `total`.)
-        {chemin: "4 + 6 = 10, donc 40 + 60 = 100", table: [[10, 20, 30, 40, 50], [90, 80, 70, 60, 50]], ligneTete: true, total: 100},
-        {chemin: "35 + 65 = 35 + 5 + 60 = 100", table: [[5, 15, 25, 35, 45], [95, 85, 75, 65, 55]], ligneTete: true, total: 100}])]},
     "M1-1": {titre: "Sous chaque nombre, son double", blocs: coeurDe([
       {table: [rangee(1, 10), rangee(1, 10).map(n => 2 * n)], ligneTete: true},
       {table: [rangee(11, 20), rangee(11, 20).map(n => 2 * n)], ligneTete: true},

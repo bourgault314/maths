@@ -132,7 +132,8 @@ test("A2 : chaque « À retenir » écrit son calcul ; A2-2, les paires de dizai
   const a = apprends("A2-2");
   // (Lot 7e-2 : les dizaines qui font 100 se retrouvent avec ce qui fait 10.)
   assert.equal(espaces(a.bilan), "Les dizaines qui font 100, je les retrouve avec ce qui fait 10 : 40 + 60 = 100.");
-  assert.deepEqual(textesSvg(AIDES.dessinerImage(a.image)), ["10 + 90 = 100", "20 + 80 = 100", "30 + 70 = 100", "40 + 60 = 100", "50 + 50 = 100"]);
+  // (Lot 7e-2 : une procédure ; le dessin, la seule paire montrée, en perles de 10.)
+  assert.deepEqual(textesSvg(AIDES.dessinerImage(a.image)), ["40 + 60 = 100"]);
   assert.ok(!/\d et \d/.test(a.bilan));
   // « jusqu'au bout » : vague, remplacé par le nombre visé.
   NIVEAUX.forEach(({niveau, cle}) => {

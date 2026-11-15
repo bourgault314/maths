@@ -219,8 +219,8 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("F1").niveaux.map(n => avecEspaces(n.titre)), ["1/10 et 1/100", "1/1 000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", "cinquièmes"]);
   assert.deepEqual(CORE.moduleDe("F3").niveaux.map(n => n.titre), ["demi, quart, dixième", "tiers, cinquième, sixième…", "résultat non entier"]);
   assert.deepEqual([CORE.moduleDe("F1").exemple, CORE.moduleDe("F3").exemple].map(avecEspaces), ["1/10 = ?", "1/4 de 12 billes"]);
-  // (Lot 7e-2 : « Compléments à la dizaine » est une procédure.)
-  assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.type), ["P", "F", "P", "P", "P"]);
+  // (Lot 7e-2 : « Compléments à la dizaine » et « … à 100 : dizaines » sont des procédures.)
+  assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.type), ["P", "P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("M2").niveaux.map(n => n.type), ["P", "P"]);
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
@@ -257,7 +257,7 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(Object.keys(carte.modules[0]), ["id", "niveaux", "paliers", "types", "construit"]);
   assert.deepEqual(carte.modules.filter(f => f.construit).map(f => f.id), CONSTRUITS);
   assert.deepEqual(carte.ordre, [...CORE.ORDRE]);
-  assert.deepEqual(carte.modules.find(f => f.id === "A2"), {id: "A2", niveaux: 5, paliers: [1, 1, 1, 2, 2], types: ["P", "F", "P", "P", "P"], construit: true});
+  assert.deepEqual(carte.modules.find(f => f.id === "A2"), {id: "A2", niveaux: 5, paliers: [1, 1, 1, 2, 2], types: ["P", "P", "P", "P", "P"], construit: true});
   assert.deepEqual(CORE.genererSerie("M9-1", {graine: 1}), [], "un niveau pas encore construit ne génère rien");
 });
 
@@ -430,11 +430,12 @@ test("A2 : les nombres et les formes de chaque niveau", () => {
       assert.equal(cible, Math.floor(a / 10) * 10 + 10, "la cible est la dizaine suivante");
     });
   }));
-  // Niveau 2 : les 9 dizaines entières et les 10 nombres en 5 ; 8 compléments, 4 différences.
+  // Niveau 2 : les 9 dizaines entières et les 10 nombres en 5 ; 7 compléments, 3 différences.
+  // (Lot 7e-2 : une procédure, sa validation a 10 calculs — avant 12 : 8 et 4.)
   const permis2 = new Set([10, 20, 30, 40, 50, 60, 70, 80, 90, 5, 15, 25, 35, 45, 55, 65, 75, 85, 95]);
   series("A2-2", "valide").forEach(serie => {
-    assert.deepEqual(formes(serie), {c: 8, g: 0, d: 4});
-    assert.equal(new Set(serie.map(c => c.donnees.a)).size, 12, "aucun nombre deux fois");
+    assert.deepEqual(formes(serie), {c: 7, g: 0, d: 3});
+    assert.equal(new Set(serie.map(c => c.donnees.a)).size, 10, "aucun nombre deux fois");
     serie.forEach(c => assert.ok(permis2.has(c.donnees.a) && c.donnees.cible === 100));
   });
   series("A2-2", "entraine").forEach(serie => assert.deepEqual(formes(serie), {c: 7, g: 0, d: 3}));

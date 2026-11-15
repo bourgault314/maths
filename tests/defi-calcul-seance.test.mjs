@@ -80,9 +80,10 @@ test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules
   assert.equal(P.palierDe(CARTE, "A5", 1), 1);
   assert.equal(P.palierDe(CARTE, "A5", 4), 3);
   assert.equal(P.palierDe(CARTE, "D2", 4), 4);
-  // (Lot 7e-2 : « Compléments à la dizaine » est une procédure.)
+  // (Lot 7e-2 : « Compléments à la dizaine » et « … à 100 : dizaines » sont des procédures.)
   assert.equal(P.typeDe(CARTE, "A2", 1), "P");
-  assert.equal(P.typeDe(CARTE, "A2", 2), "F");
+  assert.equal(P.typeDe(CARTE, "A2", 2), "P");
+  assert.equal(P.typeDe(CARTE, "M1", 1), "F");
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
   const compte = P.compter(P.creerParcours(), CARTE);
   // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
