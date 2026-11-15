@@ -170,7 +170,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
 // Lot 4 « les ceintures » (14/11/2026) : la ceinture devant le compte, et le
 // compte sur ce que l'appli propose (les modules construits, 95), jusqu'au
 // palier réglé pour l'élève — plus sur les 125 de la carte.
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 95 » dès la première", () => {
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 103 » dès la première", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
@@ -182,10 +182,10 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
   assert.equal(jauge.lecteur(CALCUL, p), null, "en route mais rien de su : pas de jauge (une barre vide ressemble à un reproche)");
   p.modules.A2.b = [4, 5, 0, 0];
   p.modules.A2.e = ["2026-12-04", "2026-12-11", null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 95, compte: "Ceinture blanche · 2 compétences sues sur 95", ceinture: {n: 0, barrettes: 0}, bonus: ""},
-    "sur ce que l'appli propose (les 95 compétences construites)");
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 103, compte: "Ceinture blanche · 2 compétences sues sur 103", ceinture: {n: 0, barrettes: 0}, bonus: ""},
+    "sur ce que l'appli propose (les 103 compétences construites, lot 7a)");
   p.modules.A2.b = [4, 0, 0, 0];
-  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 95");
+  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 103");
   assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche · 1 compétence sue sur 40", "jusqu'au palier réglé : les bases");
   p.ceintures = ["2026-11-02", null, null, null];
   assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, barrettes: 0});
@@ -212,7 +212,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.deepEqual([lien.target, lien.rel], ["_blank", "noopener"]);
 });
 
-test("exempleErreur : un calcul regénéré pour chacune des 123 causes des 32 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b), jamais un calcul d'élève", () => {
+test("exempleErreur : un calcul regénéré pour chacune des 132 causes des 35 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a), jamais un calcul d'élève", () => {
   const o = outils([]);
   let trouves = 0;
   CALCUL_CORE.MODULES.filter(m => m.construit).forEach(fiche => {
@@ -227,7 +227,7 @@ test("exempleErreur : un calcul regénéré pour chacune des 123 causes des 32 m
       trouves += 1;
     });
   });
-  assert.equal(trouves, 123);
+  assert.equal(trouves, 132);
   // Le niveau qui coince d'abord : A2 cause 2 au niveau 4 donne un complément à 1 000.
   assert.match(o.exempleErreur("A2", 2, 4).texte, /1 000|centaine|[0-9]{3}/);
   // Une cause inconnue : null, sans erreur.
