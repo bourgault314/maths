@@ -499,9 +499,26 @@ body.menu[data-ecran="domaine"] .contenu {
     gap: 8px;
     align-items: center;
   }
+  /* Cinq années (avec « Brevet ») et « 10 questions ▾ » sur une seule ligne : chaque bouton à sa
+     largeur, « Brevet » un peu plus large que les classes. */
+  .champ-annees .segments {
+    grid-template-columns: repeat(4, minmax(30px, 1fr)) auto;
+    gap: 2px;
+    padding: 3px;
+  }
+  .champ-annees .segment {
+    padding: 0 4px;
+  }
+  .champ-annees .segment-brevet {
+    padding: 0 9px;
+  }
+  .choix-nombre select {
+    padding: 4px 2px 4px 8px;
+  }
   .reglages-serie .etiquette-reglage,
   .champ-nombre .segments,
   .mot-selection,
+  .mot-long,
   .plein-ecran-cadre {
     display: none;
   }
@@ -678,6 +695,100 @@ body.menu[data-ecran="domaine"] .contenu {
   font-size: 0.75rem;
   font-weight: 900;
   vertical-align: 2px;
+}
+/* Le menu par intitulés officiels (15/11/2026). Le nom est le début du texte officiel ; quand il est
+   coupé, le texte entier est dessous, en petit. « A » marque une puce « Automatismes » du programme. */
+.ligne-officielle {
+  align-items: start;
+}
+.ligne-officielle input[type="checkbox"] {
+  margin-top: 1px;
+}
+.ligne-officielle .nom {
+  line-height: 1.3;
+}
+.texte-officiel {
+  display: block;
+  margin-top: 4px;
+  color: var(--attenue);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.badge.automatisme {
+  display: inline-block;
+  min-width: 22px;
+  margin-right: 8px;
+  padding: 0 6px;
+  border: 1.5px solid var(--bleu-identite);
+  border-radius: 6px;
+  color: var(--bleu-identite);
+  font-size: 0.75rem;
+  font-weight: 900;
+  line-height: 18px;
+  text-align: center;
+  vertical-align: 1px;
+}
+/* Une ligne dont aucune question n'est encore dans l'appli : visible, grisée, non cochable. */
+.notion.a-venir {
+  border-style: dashed;
+  background: var(--fond-doux);
+  color: var(--attenue);
+  cursor: default;
+}
+.notion.a-venir:hover {
+  border-color: var(--ligne);
+}
+.notion.a-venir input[type="checkbox"] {
+  cursor: default;
+  opacity: 0.35;
+}
+.badge.bientot {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 0 8px;
+  border: 1px solid var(--ligne);
+  border-radius: 999px;
+  background: var(--papier);
+  color: var(--attenue);
+  font-size: 0.72rem;
+  font-weight: 800;
+  vertical-align: 1px;
+}
+.titre-annee {
+  margin: 22px 4px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--ligne);
+  color: var(--bleu-identite);
+  font-size: 1.15rem;
+}
+/* Les mots qui se taisent au téléphone (« sélectionnée », « la série ») gardent le style de leur
+   phrase. */
+.resume .mot-long {
+  color: inherit;
+  font-size: inherit;
+}
+/* « Sans aide » dans la barre de lancement : une case, le test part sans Aide ni Cours. */
+.choix-sans-aide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--encre);
+  font-size: 0.92rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.choix-sans-aide input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--orange-texte);
+}
+.barre-lancement.vide .choix-sans-aide {
+  color: var(--attenue);
 }
 .calcul {
   font-size: 2rem;
@@ -2601,5 +2712,11 @@ body.avec-choix .enonce .figure svg {
 @media (max-width: 680px) {
   body.avec-choix .enonce .figure svg {
     max-height: 160px;
+  }
+}
+/* Petit téléphone (moins de 370 px) : les années prennent la ligne, « 10 questions ▾ » dessous. */
+@media (max-width: 369px) {
+  .champ-annees {
+    grid-column: 1 / -1;
   }
 }

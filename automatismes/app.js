@@ -4,13 +4,15 @@ import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
 import { esc } from "./generateurs/draw.js";
 import { initialiserSuivi, enregistrerEssai, terminerSeance, vuesForme } from "./suivi.js";
+import { creerSerie, formesEligibles, nouvelleGraine, DOMAINES } from "./seances.js";
 import {
-  creerSerie,
-  famillesEligibles,
-  formesEligibles,
-  nouvelleGraine,
-  DOMAINES,
-} from "./seances.js";
+  anneesValides,
+  creerSerieLignes,
+  formesDuCatalogue,
+  IDS_ANNEES,
+  ligneJouable,
+  lignesDeLAnnee,
+} from "./menu.js";
 import {
   monterReponse,
   modeleQuestion,
@@ -39,6 +41,11 @@ import {
 
 const catalogue = await fetch("./catalogue/catalogue.json").then((reponse) => reponse.json());
 const alias = await fetch("./catalogue/alias-gpt.json").then((reponse) => reponse.json());
+// Le menu par intitulés officiels, tiré du référentiel (catalogue/menu.json, lot du 15/11/2026).
+const menu = await fetch("./catalogue/menu.json").then((reponse) => reponse.json());
+const parForme = formesDuCatalogue(catalogue);
+const ligneParId = new Map(menu.lignes.map((ligne) => [ligne.id, ligne]));
+const jouable = (ligne) => ligneJouable(ligne, parForme);
 const parId = Object.fromEntries(catalogue.map((famille) => [famille.id, famille]));
 const application = document.querySelector("#app");
 const preferences = lirePreferences();
@@ -72,12 +79,22 @@ function lirePreferences() {
     const niveau = NIVEAUX.includes(valeur.niveau) ? valeur.niveau : "3e";
     return {
       niveau,
+      // Les années cochées du menu (plusieurs possibles) ; une ancienne préférence donne son niveau.
+      annees: anneesValides(valeur.annees, [niveau]),
+      sansAide: valeur.sansAide === true,
       nombre: [5, 10, 15, 20].includes(valeur.nombre) ? valeur.nombre : 10,
       garderAide: valeur.garderAide === true,
       clavierOrdinateur: valeur.clavierOrdinateur === true,
     };
   } catch {
-    return { niveau: "3e", nombre: 10, garderAide: false, clavierOrdinateur: false };
+    return {
+      niveau: "3e",
+      annees: ["3e"],
+      sansAide: false,
+      nombre: 10,
+      garderAide: false,
+      clavierOrdinateur: false,
+    };
   }
 }
 
@@ -169,18 +186,29 @@ function cadre(contenu) {
 function majLancement() {
   const zone = document.querySelector("#lancement");
   if (!zone) return;
-  zone.innerHTML = lancementHTML(selection.size, preferences.nombre, filtre);
+  zone.innerHTML = lancementHTML(
+    lignesCochees().length,
+    preferences.nombre,
+    preferences.annees,
+    preferences.sansAide,
+  );
   relierActions(zone);
   ajusterAffichage();
 }
 
 // La sélection reste après la série : « Menu » ramène l'élève à ses notions cochées (décision J).
 function lancerSelection() {
-  const ids = famillesEligibles(catalogue, filtre)
-    .filter((famille) => selection.has(famille.id))
-    .map((famille) => famille.id);
-  if (!ids.length) return;
-  lancer({ mode: "train", ids, nombre: preferences.nombre });
+  const lignes = lignesCochees().map((ligne) => ligne.id);
+  if (!lignes.length) return;
+  lancer({ mode: preferences.sansAide ? "test" : "train", lignes, nombre: preferences.nombre });
+}
+
+/* Les lignes cochées et jouables des années affichées, dans l'ordre du menu. */
+function lignesVisibles() {
+  return preferences.annees.flatMap((annee) => lignesDeLAnnee(menu, annee));
+}
+function lignesCochees() {
+  return lignesVisibles().filter((ligne) => selection.has(ligne.id) && jouable(ligne));
 }
 
 function afficherAccueil() {
@@ -191,7 +219,12 @@ function afficherAccueil() {
   domaine = null;
   // L'entrée d'historique affichée est celle de l'accueil (état vide), jamais un domaine à l'écran caché.
   history.replaceState(null, "", location.pathname);
-  cadre(accueilHTML(famillesEligibles(catalogue, filtre), filtre, selection, preferences.nombre));
+  const comptes = {};
+  for (const [id] of DOMAINES) {
+    const liste = lignesVisibles().filter((ligne) => ligne.domaine === id && jouable(ligne));
+    comptes[id] = [liste.filter((ligne) => selection.has(ligne.id)).length, liste.length];
+  }
+  cadre(accueilHTML(comptes, preferences.annees, preferences.nombre));
 }
 
 /* Le domaine a sa place dans l'historique : le geste retour du téléphone le referme au lieu de
@@ -204,8 +237,7 @@ function afficherDomaine(id, depuisHistorique = false) {
   else if (depuisHistorique) history.replaceState({ domaine: id }, "", location.pathname);
   ecran = "domaine";
   domaine = id;
-  const familles = famillesEligibles(catalogue, filtre).filter((famille) => famille.domaine === id);
-  cadre(domaineHTML(id, familles, filtre, selection));
+  cadre(domaineHTML(id, menu, preferences.annees, selection, jouable));
   relierSelection();
 }
 
@@ -221,14 +253,21 @@ function afficherBrevet(depuisHistorique = false) {
   cadre(brevetHTML());
 }
 
-function changerNiveau(niveau) {
-  if (!NIVEAUX.includes(niveau)) return;
-  filtre = niveau;
-  preferences.niveau = niveau;
+/* Une année se coche ou se décoche (plusieurs ensemble possible, jamais aucune). Les intitulés cochés
+   d'une année qu'on décoche quittent la sélection. Le niveau (le filtre des formes, pour l'Entraînement
+   brevet et le suivi) suit la dernière classe cochée. */
+function basculerAnnee(annee) {
+  if (!IDS_ANNEES.includes(annee)) return;
+  const annees = preferences.annees.includes(annee)
+    ? preferences.annees.filter((id) => id !== annee)
+    : [...preferences.annees, annee];
+  if (!annees.length) return;
+  preferences.annees = anneesValides(annees);
+  const classe = [...preferences.annees].reverse().find((id) => NIVEAUX.includes(id));
+  if (classe) filtre = preferences.niveau = classe;
   sauverPreferences();
-  // Les notions cochées qui ne sont plus de ce niveau quittent la sélection.
-  const eligibles = new Set(famillesEligibles(catalogue, niveau).map((famille) => famille.id));
-  for (const id of [...selection]) if (!eligibles.has(id)) selection.delete(id);
+  const visibles = new Set(lignesVisibles().map((ligne) => ligne.id));
+  for (const id of [...selection]) if (!visibles.has(id)) selection.delete(id);
   if (ecran === "domaine") afficherDomaine(domaine);
   else afficherAccueil();
 }
@@ -272,7 +311,16 @@ function lancer(options, questionsImposees) {
   const configuration = { ...reglageProf, filtre, ...options, graine };
   try {
     const vues = options.partagee ? () => 0 : vuesForme;
-    const questions = questionsImposees || creerSerie(catalogue, configuration, vues);
+    const questions =
+      questionsImposees ||
+      (configuration.lignes
+        ? creerSerieLignes(
+            catalogue,
+            configuration.lignes.map((id) => ligneParId.get(id)).filter(Boolean),
+            configuration,
+            vues,
+          )
+        : creerSerie(catalogue, configuration, vues));
     seance = {
       id: idSeance(),
       options: configuration,
@@ -308,7 +356,7 @@ function afficherQuestion() {
   ecran = "question";
   const question = questionCourante();
   const etat = etatCourant();
-  if (!etat.visitee && seance.mode !== "exam") {
+  if (!etat.visitee && !sansAide()) {
     etat.aideOuverte = aideDOffice(seance.mode, seance.options.aideOffice);
     etat.aide = etat.aideOuverte ? 1 : 0;
     etat.visitee = true;
@@ -337,6 +385,12 @@ function afficherQuestion() {
   ajusterAffichage();
 }
 
+/* Le brevet et le test « sans aide » (15/11/2026) : ni Aide ni Cours, la réponse est gardée sans être
+   corrigée, on circule entre les questions, la correction vient à la fin. Seul le brevet a son minuteur. */
+function sansAide() {
+  return seance?.mode === "exam" || seance?.mode === "test";
+}
+
 function questionCourante() {
   return seance.questions[seance.index];
 }
@@ -351,7 +405,7 @@ function preparerSaisie(question, etat) {
     reglageForme(question, parId[question.famille], "gabarit"),
   );
   const monter = () => {
-    const finie = etat.terminee && seance.mode !== "exam";
+    const finie = etat.terminee && !sansAide();
     monterReponse(reponses, question, etat.reponses, {
       modele,
       terminee: finie,
@@ -485,9 +539,9 @@ function detailEssai(question, etat, juste) {
 function valider() {
   if (ecran !== "question") return;
   if (seance.mode === "project") return suivante();
-  if (etatCourant().terminee && seance.mode !== "exam") return suivante();
+  if (etatCourant().terminee && !sansAide()) return suivante();
   recueillir();
-  if (seance.mode === "exam") return suivante();
+  if (sansAide()) return suivante();
   const question = questionCourante();
   const etat = etatCourant();
   const resultat = checkAnswer(question, etat.reponses);
@@ -544,7 +598,7 @@ function erreurConnue(question, reponses) {
 }
 
 function ouvrirAide(etape = false) {
-  if (seance.mode === "exam") return;
+  if (sansAide()) return;
   recueillir();
   const etat = etatCourant();
   etat.aideOuverte = true;
@@ -572,7 +626,7 @@ function fermerAide() {
 // L'explication s'ouvre et se referme sous la question (C7). À l'élève, une fois la question finie ;
 // au diaporama, quand le professeur la demande.
 function basculerExplication() {
-  if (seance.mode === "exam") return;
+  if (sansAide()) return;
   recueillir();
   const etat = etatCourant();
   if (seance.mode === "train" && !etat.terminee) return;
@@ -586,7 +640,7 @@ function basculerExplication() {
 // Passer : la question est finie sans réponse ; la bonne réponse s'affiche, comme après une erreur.
 function passer() {
   recueillir();
-  if (seance.mode === "exam") return suivante();
+  if (sansAide()) return suivante();
   const etat = etatCourant();
   if (!etat.emis) {
     enregistrerEssai(detailEssai(questionCourante(), etat, false));
@@ -625,7 +679,7 @@ function suivante() {
     seance.pause = true;
     return changerQuestion(0);
   }
-  if (seance.mode === "exam") return confirmerFin();
+  if (sansAide()) return confirmerFin();
   terminer();
 }
 
@@ -633,7 +687,7 @@ function terminer() {
   recueillir();
   arreterHorloge();
   document.querySelector("dialog")?.remove();
-  if (seance.mode === "exam")
+  if (sansAide())
     seance.questions.forEach((question, i) => {
       const etat = seance.etats[i];
       etat.juste = checkAnswer(question, etat.reponses).ok;
@@ -670,7 +724,7 @@ function terminer() {
 function refaireErreurs() {
   const ratees = seance.questions.filter((_, rang) => !seance.etats[rang].juste);
   if (!ratees.length) return;
-  const mode = seance.mode === "exam" ? "train" : seance.mode;
+  const mode = sansAide() ? "train" : seance.mode;
   const questions = ratees.map((question) =>
     genererQuestion(question.famille, question.forme, question.graine),
   );
@@ -697,7 +751,7 @@ function fenetre(contenu, fermer = "Fermer", titre = "") {
 
 function confirmerFin() {
   const dialogue = fenetre(
-    `<h2>Terminer l’entraînement ?</h2>
+    `<h2>${seance.mode === "test" ? "Terminer le test ?" : "Terminer l’entraînement ?"}</h2>
     <p>Les corrections seront affichées.</p>${bouton("Terminer", "confirmer-fin", "orange")}`,
     "Continuer",
   );
@@ -705,7 +759,7 @@ function confirmerFin() {
 }
 
 function ouvrirCours() {
-  if (seance.mode === "exam") return;
+  if (sansAide()) return;
   recueillir();
   if (!etatCourant().terminee) etatCourant().aide = 3;
   const question = questionCourante();
@@ -771,7 +825,7 @@ function relierSelection() {
       const coche = caseDomaine.checked;
       caseDomaine
         .closest(".groupe-selection")
-        .querySelectorAll("[data-selection]")
+        .querySelectorAll("[data-selection]:not(:disabled)")
         .forEach((caseNotion) => {
           caseNotion.checked = coche;
           caseNotion.dispatchEvent(new Event("change"));
@@ -788,14 +842,16 @@ function majCasesTout() {
   });
   const tete = document.querySelector(".domaine-tete");
   if (tete) {
-    const cases = [...document.querySelectorAll("[data-selection]")];
+    const cases = [...document.querySelectorAll("[data-selection]:not(:disabled)")];
     const coches = cases.filter((caseNotion) => caseNotion.checked).length;
     tete.querySelector(".compteur-domaine").outerHTML = compteurHTML(coches, cases.length);
     tete.classList.toggle("avec-selection", coches > 0);
   }
   document.querySelectorAll("[data-selection-domaine]").forEach((caseDomaine) => {
     const cases = [
-      ...caseDomaine.closest(".groupe-selection").querySelectorAll("[data-selection]"),
+      ...caseDomaine
+        .closest(".groupe-selection")
+        .querySelectorAll("[data-selection]:not(:disabled)"),
     ];
     caseDomaine.checked = cases.length > 0 && cases.every((caseNotion) => caseNotion.checked);
   });
@@ -803,11 +859,8 @@ function majCasesTout() {
 
 function optionsProfesseur() {
   lireReglages();
-  const disponibles = famillesEligibles(catalogue, filtre);
-  const ids = disponibles
-    .filter((famille) => selection.has(famille.id))
-    .map((famille) => famille.id);
-  if (!ids.length) {
+  const lignes = lignesCochees().map((ligne) => ligne.id);
+  if (!lignes.length) {
     avertir("Choisis au moins une notion.");
     return null;
   }
@@ -815,7 +868,7 @@ function optionsProfesseur() {
     ...reglageProf,
     nombre: preferences.nombre,
     filtre,
-    ids,
+    lignes,
     graine: nouvelleGraine(),
     partagee: true,
   };
@@ -1011,8 +1064,16 @@ function relierActions(racine = application) {
       actions[element.dataset.action]?.();
     };
   });
-  racine.querySelectorAll("[data-niveau]").forEach((element) => {
-    element.onclick = () => changerNiveau(element.dataset.niveau);
+  racine.querySelectorAll("[data-annee]").forEach((element) => {
+    element.onclick = () => basculerAnnee(element.dataset.annee);
+  });
+  // « Sans aide » (barre de lancement) : ni Aide ni Cours, la correction à la fin ; gardé sur l'appareil.
+  racine.querySelectorAll("[data-sans-aide]").forEach((element) => {
+    element.onchange = () => {
+      preferences.sansAide = element.checked;
+      sauverPreferences();
+      majLancement();
+    };
   });
   // Le nombre de questions : boutons (à partir de 700 px) ou liste « 10 questions ▾ » (téléphone).
   const choisirNombre = (valeur) => {

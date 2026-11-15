@@ -9,6 +9,21 @@ import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const racine = fileURLToPath(new URL("../", import.meta.url));
+
+/* Le menu par intitulés officiels (15/11/2026) : les comptes viennent des données (catalogue/menu.json
+   change à chaque lot de la banque), jamais d'un nombre écrit en dur. */
+const MENU = JSON.parse(await readFile(new URL("../automatismes/catalogue/menu.json", import.meta.url)));
+const CATALOGUE = JSON.parse(
+  await readFile(new URL("../automatismes/catalogue/catalogue.json", import.meta.url)),
+);
+const { formesDuCatalogue, ligneJouable, lignesDeLAnnee, rangerDomaine } = await import(
+  "../automatismes/menu.js"
+);
+const FORMES = formesDuCatalogue(CATALOGUE);
+const cochables = (annee, domaine) =>
+  lignesDeLAnnee(MENU, annee).filter(
+    (ligne) => ligne.domaine === domaine && ligneJouable(ligne, FORMES),
+  ).length;
 const charger = createRequire(import.meta.url);
 let navigateur;
 try {
@@ -189,13 +204,13 @@ test(
           await onglet
             .locator('[data-domaine="nombres-calculs"] .compteur-domaine')
             .evaluate((pastille) => pastille.firstChild.textContent.trim()),
-          "0 / 28",
+          `0 / ${cochables("4e", "nombres-calculs")}`,
         );
         // Plein écran : à droite de la carte d'en-tête dès 700 px, absent au téléphone.
         const plein = await boites(onglet, ".entete-appli .plein-ecran-cadre");
         assert.equal(plein[0].visible, width >= 700, `${nom} : Plein écran`);
-        // « Préparer » : une ligne au téléphone (niveaux + « 10 questions ▾ ») ; côte à côte dès 700.
-        const niveaux = await boites(onglet, ".reglages-serie [data-niveau]");
+        // « Préparer » : une ligne au téléphone (années + « 10 questions ▾ ») ; côte à côte dès 700.
+        const niveaux = await boites(onglet, ".reglages-serie [data-annee]");
         const reglage = await boites(
           onglet,
           width >= 700 ? ".reglages-serie [data-nombre]" : ".reglages-serie [data-choix-nombre]",
@@ -216,28 +231,48 @@ test(
 );
 
 test(
-  "P2 : niveaux 6e · 5e · 4e · 3e, 3e par défaut, une préférence « brevet » devient 3e",
+  "P2 : années 6e · 5e · 4e · 3e · Brevet, 3e par défaut, plusieurs se cochent, jamais aucune",
   { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
-      const actif = (onglet) =>
-        onglet.locator('[data-niveau][aria-pressed="true"]').getAttribute("data-niveau");
+      const actives = (onglet) =>
+        onglet
+          .locator('[data-annee][aria-pressed="true"]')
+          .evaluateAll((boutons) => boutons.map((bouton) => bouton.dataset.annee));
       const neuve = await page(390, 844, true);
       await accueil(neuve, base);
       assert.deepEqual(
         await neuve
-          .locator("[data-niveau]")
+          .locator("[data-annee]")
           .evaluateAll((boutons) => boutons.map((bouton) => bouton.textContent.trim())),
-        ["6e", "5e", "4e", "3e"],
+        ["6e", "5e", "4e", "3e", "Brevet"],
       );
-      assert.equal(await actif(neuve), "3e", "Sans préférence : 3e");
+      assert.deepEqual(await actives(neuve), ["3e"], "Sans préférence : 3e");
       const ancienne = await page(1366, 768, false, { niveau: "brevet", nombre: 10 });
       await accueil(ancienne, base);
-      assert.equal(await actif(ancienne), "3e", "{niveau: brevet} enregistré → 3e");
-      await ancienne.locator('[data-niveau="5e"]').click();
+      assert.deepEqual(await actives(ancienne), ["3e"], "{niveau: brevet} enregistré → 3e");
+      // Une ancienne préférence « 4e » (avant les années) donne la 4e.
+      const quatrieme = await page(1366, 768, false, { niveau: "4e", nombre: 10 });
+      await accueil(quatrieme, base);
+      assert.deepEqual(await actives(quatrieme), ["4e"]);
+      // Toucher une autre année l'ajoute ; la retoucher l'enlève ; la dernière ne s'enlève pas.
+      await ancienne.locator('[data-annee="5e"]').click();
+      assert.deepEqual(await actives(ancienne), ["5e", "3e"]);
       assert.match(
         await ancienne.evaluate(() => localStorage.getItem("mg-automatismes-prefs")),
-        /"niveau":"5e"/,
+        /"annees":\["5e","3e"\]/,
+      );
+      await ancienne.locator('[data-annee="3e"]').click();
+      assert.deepEqual(await actives(ancienne), ["5e"]);
+      await ancienne.locator('[data-annee="5e"]').click();
+      assert.deepEqual(await actives(ancienne), ["5e"], "Jamais aucune année");
+      // Les comptes des domaines suivent les années cochées.
+      await ancienne.locator('[data-annee="brevet"]').click();
+      assert.equal(
+        await ancienne
+          .locator('[data-domaine="nombres-calculs"] .compteur-domaine')
+          .evaluate((pastille) => pastille.firstChild.textContent.trim()),
+        `0 / ${cochables("5e", "nombres-calculs") + cochables("brevet", "nombres-calculs")}`,
       );
     }),
 );
@@ -264,26 +299,32 @@ test(
       assert.equal(await tete.getAttribute("aria-expanded"), "true");
       assert.equal(await tete.getAttribute("aria-label"), "Refermer Nombres et calculs");
       assert.equal(await tete.locator(".icone svg").count(), 1);
-      assert.match(await tete.innerText(), /Nombres et calculs\s+0 \/ 28/);
+      const total = cochables("4e", "nombres-calculs");
+      assert.match(await tete.innerText(), new RegExp(`Nombres et calculs\\s+0 / ${total}`));
       assert.equal(
         (await onglet.locator(".tout-domaine").innerText()).trim(),
         "Tout sélectionner dans ce domaine",
       );
       assert.equal(await onglet.locator(".barre-cadre").count(), 0, "Pas de barre du cadre");
+      // Les sous-titres du domaine, dans l'ordre des GROUPES, seulement ceux qui ont des lignes.
+      const [{ groupes }] = rangerDomaine(MENU, ["4e"], "nombres-calculs");
+      const titres = groupes.map((groupe) => groupe.titre).filter(Boolean);
+      const ordre = GROUPES["nombres-calculs"].map(([titre]) => titre);
+      assert.deepEqual(titres, [...titres].sort((x, y) => ordre.indexOf(x) - ordre.indexOf(y)));
       assert.deepEqual(
         await onglet.locator(".titre-groupe").allInnerTexts(),
-        GROUPES["nombres-calculs"].map(([titre]) => titre.toUpperCase()),
+        titres.map((titre) => titre.toUpperCase()),
       );
       // Deux colonnes dès 700 px.
       const [une, deux] = await boites(onglet, ".grille-notions .notion");
       assert.ok(Math.abs(une.top - deux.top) < 1 && deux.left > une.right, "Deux colonnes");
       // Cocher : la ligne et le compteur suivent, la liste n'est pas redessinée.
-      const ligne = onglet.locator(".grille-notions .notion").first();
+      const ligne = onglet.locator(".grille-notions .notion:not(.a-venir)").first();
       const temoin = await ligne.evaluateHandle((element) => element);
       await ligne.locator("input").check();
       assert.equal(await temoin.evaluate((element) => element.isConnected), true, "Même liste");
       assert.equal(await temoin.evaluate((element) => element.classList.contains("cochee")), true);
-      assert.match(await tete.innerText(), /1 \/ 28/);
+      assert.match(await tete.innerText(), new RegExp(`1 / ${total}`));
       assert.match(await tete.getAttribute("class"), /avec-selection/);
       await ligne.locator("input").uncheck();
       assert.equal(await temoin.evaluate((element) => element.classList.contains("cochee")), false);
@@ -307,37 +348,74 @@ test(
 );
 
 test(
-  "P3 : l’étiquette de classe — 19 notions en 5e, 13 en 4e, 12 en 3e, aucune en 6e",
+  "P3 : les intitulés officiels — « A » devant les puces, « bientôt » non cochable, texte entier sous un nom coupé",
   { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
       const onglet = await page(1366, 768);
       await accueil(onglet, base);
-      for (const [niveau, attendu] of [
-        ["6e", 0],
-        ["5e", 19],
-        ["4e", 13],
-        ["3e", 12],
-      ]) {
-        await onglet.locator(`[data-niveau="${niveau}"]`).click();
-        let total = 0;
+      // Chaque année seule (la touchée s'ajoute, puis on retire l'ancienne).
+      let ancienne = "3e";
+      for (const annee of ["6e", "5e", "4e", "3e", "brevet"]) {
+        if (annee !== ancienne) {
+          await onglet.locator(`[data-annee="${annee}"]`).click();
+          await onglet.locator(`[data-annee="${ancienne}"]`).click();
+          ancienne = annee;
+        }
         for (const domaine of DOMAINES_IDS) {
+          const attendues = lignesDeLAnnee(MENU, annee).filter((ligne) => ligne.domaine === domaine);
           await onglet.locator(`[data-domaine="${domaine}"]`).click();
-          const etiquettes = await onglet.locator(".notion .badge.classe").allInnerTexts();
-          assert.ok(
-            etiquettes.every((texte) => texte === niveau),
-            `${niveau} : ${etiquettes}`,
+          const lues = await onglet.locator(".ligne-officielle").evaluateAll((lignes) =>
+            lignes.map((ligne) => ({
+              id: ligne.querySelector("input").dataset.selection,
+              a: ligne.querySelectorAll(".badge.automatisme").length,
+              bientot: ligne.querySelectorAll(".badge.bientot").length,
+              coupe: ligne.querySelectorAll(".texte-officiel").length,
+              desactivee: ligne.querySelector("input").disabled,
+            })),
           );
-          total += etiquettes.length;
-          const ids = await onglet
-            .locator("[data-selection]")
-            .evaluateAll((cases) => cases.map((caseNotion) => caseNotion.dataset.selection));
-          assert.equal(new Set(ids).size, ids.length, `${domaine} : chaque notion une fois`);
+          const nom = `${annee} ${domaine}`;
+          // Chaque ligne une fois, toutes là (les « bientôt » comprises).
+          assert.deepEqual(
+            lues.map((ligne) => ligne.id).sort(),
+            attendues.map((ligne) => ligne.id).sort(),
+            nom,
+          );
+          for (const ligne of attendues) {
+            const vue = lues.find((entree) => entree.id === ligne.id);
+            const jouable = ligneJouable(ligne, FORMES);
+            assert.equal(vue.a, ligne.rubrique === "A" ? 1 : 0, `${nom} ${ligne.id} : « A »`);
+            assert.equal(vue.bientot, jouable ? 0 : 1, `${nom} ${ligne.id} : bientôt`);
+            assert.equal(vue.desactivee, !jouable, `${nom} ${ligne.id} : cochable`);
+            assert.equal(vue.coupe, ligne.texte ? 1 : 0, `${nom} ${ligne.id} : texte entier`);
+          }
+          // Dans chaque sous-titre, les puces « A » d'abord, puis les objectifs.
+          const rangs = await onglet.locator(".grille-notions").evaluateAll((grilles) =>
+            grilles.map((grille) =>
+              [...grille.querySelectorAll(".ligne-officielle")].map((ligne) =>
+                ligne.querySelector(".badge.automatisme") ? 0 : 1,
+              ),
+            ),
+          );
+          for (const rang of rangs)
+            assert.deepEqual(rang, [...rang].sort(), `${nom} : « A » d'abord`);
           await onglet.locator(".domaine-tete").click();
         }
-        assert.equal(total, attendu, `${niveau} : ${total} étiquettes`);
-        assert.equal(await onglet.locator(".badge.brevet").count(), 0);
       }
+      // « Tout sélectionner » ne coche pas une ligne « bientôt ».
+      await onglet.locator('[data-annee="4e"]').click();
+      await onglet.locator('[data-annee="brevet"]').click();
+      await onglet.locator('[data-domaine="nombres-calculs"]').click();
+      await onglet.locator("[data-selection-domaine]").check();
+      assert.equal(await onglet.locator("[data-selection]:disabled:checked").count(), 0);
+      assert.equal(
+        await onglet.locator("[data-selection]:not(:disabled):checked").count(),
+        cochables("4e", "nombres-calculs"),
+      );
+      assert.equal(
+        await barre(onglet),
+        `${cochables("4e", "nombres-calculs")} notions sélectionnées · 4e · 10 questions`,
+      );
     }),
 );
 
@@ -355,7 +433,12 @@ test(
         const nom = `${width}x${height}`;
         const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 10 });
         await accueil(onglet, base);
-        assert.equal(await barre(onglet), "Aucune notion cochée · Coche des notions");
+        // Au téléphone, « cochée », « sélectionnées » et « la série » se taisent : la case « Sans aide » tient.
+        const long = width >= 700;
+        assert.equal(
+          await barre(onglet),
+          long ? "Aucune notion cochée · Coche des notions" : "Aucune notion · Coche des notions",
+        );
         assert.equal(await onglet.locator('[data-action="lancer"]').isDisabled(), true);
         assert.equal(await onglet.locator('[data-action="projeter-reglages"]').isDisabled(), true);
         let [boite] = await boites(onglet, ".barre-lancement");
@@ -369,11 +452,17 @@ test(
         }
         await onglet.locator('[data-domaine="donnees-probabilites"]').click();
         assert.ok((await boites(onglet, ".barre-lancement"))[0].height <= 72, `${nom} : domaine`);
-        await onglet.locator("[data-selection]").nth(0).check();
-        await onglet.locator("[data-selection]").nth(1).check();
-        assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 10 questions");
+        await onglet.locator("[data-selection]:not(:disabled)").nth(0).check();
+        await onglet.locator("[data-selection]:not(:disabled)").nth(1).check();
+        assert.equal(
+          await barre(onglet),
+          `2 notions${long ? " sélectionnées" : ""} · 4e · 10 questions`,
+        );
         assert.equal(await onglet.locator('[data-action="lancer"]').isDisabled(), false);
-        assert.equal(await onglet.locator('[data-action="lancer"]').innerText(), "Lancer la série");
+        assert.equal(
+          await onglet.locator('[data-action="lancer"]').innerText(),
+          long ? "Lancer la série" : "Lancer",
+        );
         // Projeter : tablette et ordinateur seulement.
         assert.equal(
           await onglet.locator('[data-action="projeter-reglages"]').isVisible(),
@@ -384,7 +473,10 @@ test(
         assert.ok(boite.height <= 72, `${nom} : barre de ${boite.height} px`);
         assert.ok(boite.bottom <= height, `${nom} : barre dans l’écran`);
         await onglet.locator(".domaine-tete").click();
-        assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 10 questions");
+        assert.equal(
+          await barre(onglet),
+          `2 notions${long ? " sélectionnées" : ""} · 4e · 10 questions`,
+        );
         await onglet.context().close();
       }
       // Au téléphone, sur un domaine court, la barre reste en bas de l'écran.
@@ -405,7 +497,7 @@ test(
 
 async function cocher(onglet, domaine, rangs) {
   await onglet.locator(`[data-domaine="${domaine}"]`).click();
-  for (const rang of rangs) await onglet.locator("[data-selection]").nth(rang).check();
+  for (const rang of rangs) await onglet.locator("[data-selection]:not(:disabled)").nth(rang).check();
 }
 
 test(
@@ -451,7 +543,7 @@ test(
       // Recharger dans le domaine y laisse (P12) ; la sélection, elle, ne survit pas au rechargement.
       await onglet.reload();
       await onglet.locator(".domaine-ouvert").waitFor();
-      await onglet.locator("[data-selection]").nth(0).check();
+      await onglet.locator("[data-selection]:not(:disabled)").nth(0).check();
       await onglet.locator('[data-action="projeter-reglages"]').click();
       assert.equal(await onglet.locator("dialog[open] #secondes").inputValue(), "20");
       assert.equal(await onglet.locator("dialog[open] #correction").inputValue(), "end");
@@ -640,7 +732,7 @@ test(
       await onglet.locator('[data-action="lancer"]').click();
       await menu(onglet);
       assert.equal(await ecran(onglet), "domaine");
-      assert.equal(await barre(onglet), "2 notions sélectionnées · 4e · 5 questions");
+      assert.equal(await barre(onglet), "2 notions · 4e · 5 questions");
       await onglet.locator(".domaine-tete").click();
       assert.equal(await ecran(onglet), "accueil");
       // Lancée de l'accueil après un passage par un domaine : « Menu » ramène à l'accueil.
@@ -650,13 +742,13 @@ test(
       assert.equal(await ecran(onglet), "question");
       await menu(onglet);
       assert.equal(await ecran(onglet), "accueil");
-      assert.equal(await barre(onglet), "3 notions sélectionnées · 4e · 5 questions");
+      assert.equal(await barre(onglet), "3 notions · 4e · 5 questions");
       // « Changer de notions » (bilan) : le menu d'origine, sélection gardée.
       await onglet.locator('[data-action="lancer"]').click();
       await finirLaSerie(onglet);
       await onglet.locator('[data-action="changer"]').click();
       assert.equal(await ecran(onglet), "accueil");
-      assert.equal(await barre(onglet), "3 notions sélectionnées · 4e · 5 questions");
+      assert.equal(await barre(onglet), "3 notions · 4e · 5 questions");
       assert.equal(await onglet.evaluate(() => history.state), null);
     }),
 );
@@ -671,7 +763,7 @@ test(
       await cocher(onglet, "espace-geometrie", [1]);
       await onglet.locator('[data-action="lancer"]').click();
       assert.equal(await gesteRetour(onglet), "domaine", "1er geste : le domaine d'origine");
-      assert.equal(await barre(onglet), "1 notion sélectionnée · 4e · 5 questions");
+      assert.equal(await barre(onglet), "1 notion · 4e · 5 questions");
       assert.equal(await gesteRetour(onglet), "accueil", "2e geste : l'accueil, toujours l'appli");
       // Lancée de l'accueil : le geste ramène à l'accueil, on reste dans l'appli.
       await onglet.locator('[data-action="lancer"]').click();
@@ -777,7 +869,7 @@ test(
       await accueil(onglet, base, "?notions=XX99,%3Cimg%3E&niveau=brevet");
       assert.equal(await ecran(onglet), "accueil");
       assert.equal(
-        await onglet.locator('[data-niveau][aria-pressed="true"]').getAttribute("data-niveau"),
+        await onglet.locator('[data-annee][aria-pressed="true"]').getAttribute("data-annee"),
         "6e",
       );
     }),
@@ -956,8 +1048,9 @@ test(
   { skip: ignorer, timeout: PLAFOND },
   () =>
     banc(async ({ base, page }) => {
-      // Espace et géométrie en 3e, trois notions cochées, liste défilée à mi-hauteur (décision N, 22/10).
-      const entieres = { 390: 8, 375: 6, 820: 20, 1366: 11 };
+      // Espace et géométrie en 3e, trois intitulés cochés, liste défilée à mi-hauteur (décision N, 22/10).
+      // Intitulés officiels (15/11/2026) : plus longs que les noms de familles, moins en vue.
+      const entieres = { 390: 5, 375: 3, 820: 9, 1366: 5 };
       for (const [width, height, tactile] of TAILLES.slice(0, 4)) {
         const nom = `${width}x${height}`;
         const onglet = await page(width, height, tactile, {
@@ -966,16 +1059,8 @@ test(
         });
         await accueil(onglet, base);
         await onglet.locator('[data-domaine="espace-geometrie"]').click();
-        for (const notion of [
-          "Droite graduée",
-          "Coordonnées dans le plan",
-          "Pythagore",
-        ])
-          await onglet
-            .locator(".notion:has([data-selection])", { hasText: notion })
-            .first()
-            .locator("input")
-            .check();
+        for (const rang of [0, 1, 2])
+          await onglet.locator("[data-selection]:not(:disabled)").nth(rang).check();
         await onglet.locator(".contenu").evaluate((zone) => {
           zone.scrollTop = (zone.scrollHeight - zone.clientHeight) / 2;
         });
@@ -1271,6 +1356,57 @@ test(
         await onglet.reload();
         await onglet.locator(".accueil").waitFor();
         assert.equal(await onglet.evaluate(() => history.state), null, JSON.stringify(etat));
+      }
+    }),
+);
+
+test(
+  "Sans aide (15/11/2026) : la case de la barre lance un test — ni Aide ni Cours ni score, la correction à la fin",
+  { skip: ignorer, timeout: PLAFOND },
+  () =>
+    banc(async ({ base, page }) => {
+      for (const [width, height, tactile] of [
+        [390, 844, true],
+        [1366, 768, false],
+      ]) {
+        const nom = `${width}x${height}`;
+        const onglet = await page(width, height, tactile, { niveau: "4e", nombre: 5 });
+        await accueil(onglet, base);
+        await cocher(onglet, "nombres-calculs", [0, 1]);
+        const lancer = onglet.locator('[data-action="lancer"]');
+        assert.equal(await lancer.innerText(), width >= 700 ? "Lancer la série" : "Lancer");
+        await onglet.locator("[data-sans-aide]").check();
+        assert.equal(await lancer.innerText(), width >= 700 ? "Lancer le test" : "Lancer");
+        // La case est gardée sur l'appareil, et tient dans la barre.
+        assert.match(
+          await onglet.evaluate(() => localStorage.getItem("mg-automatismes-prefs")),
+          /"sansAide":true/,
+        );
+        const [barreBas] = await boites(onglet, ".barre-lancement");
+        const [caseAide] = await boites(onglet, ".choix-sans-aide");
+        assert.ok(caseAide.visible && caseAide.right <= barreBas.right, `${nom} : la case tient`);
+        assert.ok(barreBas.height <= 72, `${nom} : barre de ${barreBas.height} px`);
+        await lancer.click();
+        await onglet.locator(".barre-question").waitFor();
+        assert.equal(await onglet.locator(".position").innerText(), "1 sur 5");
+        // Ni Aide, ni Cours, ni score, ni minuteur ; les points 1 à 5 pour circuler.
+        assert.equal(await onglet.locator('[data-action="aide"], [data-action="cours"]').count(), 0);
+        assert.equal(await onglet.locator(".score-barre, #temps").count(), 0, `${nom} : rien qui juge`);
+        assert.equal(await onglet.locator(".navigation-points .point").count(), 5);
+        // Valider passe à la suivante sans corriger ; « ← » revient.
+        await onglet.locator('[data-action="valider"]').click();
+        assert.equal(await onglet.locator(".position").innerText(), "2 sur 5");
+        assert.equal(await onglet.locator(".bonne, .explication").count(), 0, "Pas de correction");
+        await onglet.locator('[data-action="precedente"]').click();
+        assert.equal(await onglet.locator(".position").innerText(), "1 sur 5");
+        await jusquAuBilan(onglet);
+        assert.equal(await onglet.locator("h1").first().innerText(), "Bilan du test");
+        assert.equal(await onglet.locator(".liste-resultats details").count(), 5);
+        // « Refaire mes erreurs » : un entraînement avec l'aide.
+        await onglet.locator('[data-action="refaire"]').click();
+        await onglet.locator(".barre-question").waitFor();
+        assert.equal(await onglet.locator('[data-action="aide"]').count(), 1, `${nom} : l'aide revient`);
+        await onglet.context().close();
       }
     }),
 );
