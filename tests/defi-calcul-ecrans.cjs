@@ -542,14 +542,11 @@ async function premierJour(navigateur, base, taille) {
   assert.equal(await page.isVisible("#result-retenir"), true);
   assert.equal(await page.isVisible("#result-verdict"), false, "plus d'écran « Entraînement réussi ! »");
   // Lot 3b (choix de Gwenaël) : un niveau « par cœur » a deux écrans — À
-  // retenir avec son schéma, puis « Ma carte à apprendre ».
-  assert.equal(await texte(page, "#retenir-cahier"), "Je recopie cela dans mon cahier.", "① À retenir, avec son schéma");
+  // retenir avec son schéma, puis « Ma carte à apprendre ». Lot 7e-2 (choix
+  // de Gwenaël) : A1-3 est une procédure — un seul écran, sans carte.
+  assert.equal(await texte(page, "#retenir-cahier"), "Je recopie cela dans mon cahier.", "À retenir, avec son schéma");
   assert.equal(await page.locator("#retenir-image > svg").count(), 1, "le schéma du calcul montré");
-  assert.equal(await boutonSuite(page), "Ma carte à apprendre →");
-  await cliquerSuite(page);
-  await page.waitForTimeout(300);
-  assert.equal(await texte(page, "#retenir-cahier"), "Je la note dans mon cahier et je l’apprends par cœur.", "② la carte, A1-3 est un niveau « par cœur »");
-  assert.equal(await page.locator("#retenir-image .dc-coeur table").count(), 1, "la carte : la table d'addition");
+  assert.equal(await page.locator("#retenir-image .dc-coeur").count(), 0, "pas de carte : A1-3 est une procédure");
   // Lot 1 « la séance » : le temps n'est pas passé (l'horloge de la page est
   // arrêtée) — la séance continue avec le module suivant, testé.
   assert.equal(await boutonSuite(page), "Étape 3 : tu connais déjà ? →", "le module suivant (A10) est testé");

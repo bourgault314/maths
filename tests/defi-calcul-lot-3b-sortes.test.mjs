@@ -139,10 +139,12 @@ test("les cartes « par cœur » : tout ce que le niveau demande s'y lit", () =>
   assert.equal(a11[8][5], "", "7 + 4 n'est pas jusqu'à 10");
   assert.deepEqual(a11[4][8], {texte: "10", fort: true});
   // + 10 et les différences de 1 : la table de 1 à 10.
-  ["A1-2", "A1-3"].forEach(cle => assert.deepEqual(CORE.carteParCoeur(cle).blocs[0].table[0], ["+", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
+  // (Lot 7e-2 : « Différences et trous jusqu'à 20 » est une procédure, sans carte.)
+  assert.deepEqual(CORE.carteParCoeur("A1-2").blocs[0].table[0], ["+", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(CORE.carteParCoeur("A1-3"), null);
   assert.ok(lignes("M4-1").some(l => l.includes("7 × 1 = 7")));
   assert.ok(cellules("M4-2").includes(100), "10 × 10");
-  assert.ok(lignes("F2-2").includes("3/4 + 3/4 = 6/4"));
+  assert.ok(lignes("F2-2").includes("3/4 + 3/4 = 6/4 = 3/2"));
   assert.ok(lignes("F1-2").some(l => l.includes("750/1 000")));
   assert.ok(lignes("F1-2").includes("4/2 = 2"));
   assert.ok(lignes("F1-3").includes("2/5 = 4/10 = 0,4"));

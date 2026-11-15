@@ -1259,6 +1259,11 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-coeur td:empty { border-color: transparent; }
 .dc-coeur td.fort { background: #ffe1c2; color: #8a4c0a; font-weight: 950; }
 .dc-coeur-sous { margin-top: .5em; }
+/* Lot 7e-2 : les deux parties de la carte — « Je le sais par cœur », puis
+   « Je le retrouve » sous un trait, chaque bloc avec son petit calcul. */
+.dc-coeur-partie { margin: 0 0 .3em; color: var(--teal); font-size: .74em; font-weight: 950; letter-spacing: .05em; text-transform: uppercase; }
+.dc-coeur-retrouve { margin-top: .45em; padding-top: .4em; border-top: 2px dashed #9fd3cb; }
+.dc-coeur-chemin { margin: 0 0 .25em; color: var(--muted); font-size: .9em; font-weight: 850; }
 .dc-coeur-liste { display: grid; grid-template-columns: repeat(var(--colonnes, 2), auto); justify-content: center; gap: .3em 1.5em; margin: 0 0 .3em; }
 .dc-coeur-liste > span { white-space: nowrap; }
 

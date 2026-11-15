@@ -283,5 +283,5 @@ test("Copies du moteur dans prof/ : identiques octet pour octet ; cache-busters 
   assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(lire("../outils/splat.html"), /splat-parcours\.js\?v=20261111-2"/);
   assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261114-7"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261115-3"/);
 });

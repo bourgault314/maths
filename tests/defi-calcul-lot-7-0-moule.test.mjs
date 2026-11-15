@@ -220,13 +220,16 @@ test("bon élève qui saute tout : que des tests, palier par palier, et tout est
   assert.ok(journal.some(pas => pas.module === "D2" && pas.de === 4 && pas.jusqua === 4), "D2 : niveau 4 vers la 6e");
 });
 
-test("élève qui rate au milieu : il apprend la marche ratée, la suite du palier sans test, et le palier d'après avec un test", () => {
+// Lot 7e-2 (choix de Gwenaël du 15/11, « retester au lieu d'imposer
+// J'apprends ») : après une marche ratée, la suite du palier a son test
+// quand le parcours y arrive (avant : elle s'apprenait sans test).
+test("élève qui rate au milieu : il apprend la marche ratée, puis la suite du palier a son test, et le palier d'après aussi", () => {
   // A2-2 raté au test (palier 1), et A3-3 raté à son test de reprise (palier 2).
   const rate = (id, n) => (id === "A2" && n === 2) || (id === "A3" && n === 3);
   const {p, journal} = jouerTout({rate});
   const a2 = journal.filter(pas => pas.module === "A2");
   assert.deepEqual(a2.map(pas => (pas.type === "test" ? `test ${pas.de}-${pas.jusqua}` : `apprends ${pas.niveau}`)),
-    ["test 1-3", "apprends 2", "apprends 3", "test 4-5"]);
+    ["test 1-3", "apprends 2", "test 3-3", "test 4-5"]);
   const a3 = journal.filter(pas => pas.module === "A3");
   assert.deepEqual(a3.map(pas => (pas.type === "test" ? `test ${pas.de}-${pas.jusqua}` : `apprends ${pas.niveau}`)),
     ["test 1-2", "test 3-3", "apprends 3", "test 4-4"]);

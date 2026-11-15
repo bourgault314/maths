@@ -83,9 +83,11 @@ test("une compétence à revoir ratée deux fois de suite : J'apprends seul (plu
   assert.equal(rate.parcours.seance.p[P.PLAN.nouveaute], P.NOUVEAUTE.aFaire);
 });
 
-test("les cartes « par cœur » : les 15 niveaux « par cœur » construits, et eux seuls", () => {
+// (Lot 7e-2 : « Différences et trous jusqu'à 20 » et « Compléments à la
+// dizaine » deviennent des procédures — 13 cartes.)
+test("les cartes « par cœur » : les 13 niveaux « par cœur » construits, et eux seuls", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
-  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "A1-3", "M1-1", "A2-1", "M4-1", "A2-2", "M4-2", "M1-2", "M5-1", "F2-1", "F1-1", "F2-2", "F1-2", "F1-3"]);
+  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M4-1", "A2-2", "M4-2", "M1-2", "M5-1", "F2-1", "F1-1", "F2-2", "F1-2", "F1-3"]);
   parCoeur.forEach(cle => assert.ok(CORE.carteParCoeur(cle), cle));
   CORE.ORDRE.filter(cle => !parCoeur.includes(cle)).forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, cle));
   assert.ok(Object.isFrozen(CORE.carteParCoeur("M4-1").blocs[0].table[1]));
@@ -98,24 +100,35 @@ test("les cartes disent vrai : chaque calcul de la carte est juste", () => {
     return Number(s);
   };
   // « a + b − c = … » : les termes et leurs signes ; « double de n ».
+  // (Lot 7e-2 : « double de 2 000 + double de 500 », le × avant le + .)
+  const terme = t => { const d = t.trim().match(/^double de (.+)$/); return d ? 2 * val(d[1]) : val(t); };
+  const produit = t => t.split(" × ").map(terme).reduce((a, b) => a * b, 1);
   const calculer = membre => {
-    const m = membre.trim();
-    const d = m.match(/^double de (.+)$/);
-    if (d) return 2 * val(d[1]);
-    const morceaux = m.split(/ ([+−×]) /);
-    let r = val(morceaux[0]);
+    const morceaux = membre.trim().replace(/[\u00a0\u202f]/g, " ").split(/ ([+−]) /);
+    let r = produit(morceaux[0]);
     for (let i = 1; i < morceaux.length; i += 2) {
-      const x = val(morceaux[i + 1]);
-      r = morceaux[i] === "+" ? r + x : morceaux[i] === "−" ? r - x : r * x;
+      const x = produit(morceaux[i + 1]);
+      r = morceaux[i] === "+" ? r + x : r - x;
     }
     return r;
   };
+  // Lot 7e-2 : une ligne peut dire d'où vient son calcul (« 100 = 5 × 20,
+  // car 5 × 2 = 10 » ; « 4 + 6 = 10, donc 40 + 60 = 100 ») : chaque
+  // égalité est juste. Le petit calcul d'un bloc (`chemin`) aussi.
+  const verifierLigne = (cle, ligne) => String(ligne).split(/, (?:car|donc) /).forEach(texte => {
+    if (!texte.includes("=")) return;
+    const membres = texte.split(" = ").map(calculer);
+    membres.forEach(v => assert.ok(Math.abs(v - membres[0]) < 1e-9, `${cle} : ${texte}`));
+  });
   CORE.ORDRE.forEach(cle => {
     const carte = CORE.carteParCoeur(cle);
     if (!carte) return;
     carte.blocs.forEach(bloc => {
+      if (bloc.chemin) verifierLigne(cle, bloc.chemin.replace(/[\u00a0\u202f]/g, " "));
       if (bloc.table) {
         const [tete, ...lignes] = bloc.table;
+        // (Lot 7e-2 : sous chaque nombre, ce qui manque pour aller à 100 — `total`.)
+        if (bloc.ligneTete && bloc.total) { assert.deepEqual(lignes[0], tete.map(n => bloc.total - n), `${cle} : ce qui fait ${bloc.total}`); return; }
         if (bloc.ligneTete) { assert.deepEqual(lignes[0], tete.map(n => 2 * n), `${cle} : les doubles`); return; }
         // (Lot 3b : une case vide — au-delà de 10 —, une case {texte, fort}.)
         const lire = v => (v && typeof v === "object" ? Number(v.texte) : v);
@@ -123,13 +136,8 @@ test("les cartes disent vrai : chaque calcul de la carte est juste", () => {
         else assert.deepEqual(lignes[0].slice(1), tete.slice(1).map(n => 2 * n), `${cle} : les doubles`);
         return;
       }
-      bloc.liste.forEach(ligne => {
-        // (Lot 3b : une phrase, puis son calcul après « : » ; une phrase seule.)
-        const texte = ligne.split(/\s:\s/).pop();
-        if (!texte.includes("=")) return;
-        const membres = texte.split(" = ").map(calculer);
-        membres.forEach(v => assert.ok(Math.abs(v - membres[0]) < 1e-9, `${cle} : ${texte}`));
-      });
+      // (Lot 3b : une phrase, puis son calcul après « : » ; une phrase seule.)
+      bloc.liste.forEach(ligne => verifierLigne(cle, ligne.split(/\s:\s/).pop()));
     });
   });
 });
@@ -159,7 +167,8 @@ test("la page : J'apprends réussi — « ✓ Réussi ! » et À retenir sur un 
   assert.match(PAGE, /\{reussi: entree \? `\$\{nomCompetence\(serie\.module, serie\.niveau\)\} revient demain\.` : "", finDeSeance: fin\}/);
   assert.ok(!PAGE.includes('"Je m’entraîne →"'), "plus de bouton « Je m'entraîne → » sous À retenir");
   // (Lot 3b : la carte vient sur son écran, « Ma carte à apprendre ».)
-  assert.match(PAGE, /"Je la note dans mon cahier et je l’apprends par cœur\." : "Je recopie cela dans mon cahier\."/);
+  // (Lot 7e-2 : une carte en deux parties, seule la première s'apprend par cœur.)
+  assert.match(PAGE, /!surCarte \? "Je recopie cela dans mon cahier\." : enDeux \? "Je la note dans mon cahier et j’apprends la première partie par cœur\." : "Je la note dans mon cahier et je l’apprends par cœur\."/);
   assert.match(PAGE, /const coeur = CORE\.carteParCoeur\(`\$\{serie\.module\}-\$\{serie\.niveau\}`\);/);
   assert.match(CSS, /\.dc-reussi b \{ color: #147447; \}/);
   assert.match(CSS, /\.dc-coeur \{[^}]*border: 2px solid var\(--ink\);/);

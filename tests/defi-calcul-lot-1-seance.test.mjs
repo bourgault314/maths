@@ -22,6 +22,10 @@ const tester = (p, module, marche, jour = J, options = {}) => P.appliquerTest(p,
   Object.assign({aujourdhui: jour, carte: CARTE, seance: true}, options));
 // Lot 2 « J'apprends en une étape » : J'apprends contient l'entraînement.
 const apprendre = (p, module, niveau, jour = J, reponses = reussie()) => P.appliquerSerie(p, {module, niveau, genre: "apprends", reponses}, {aujourdhui: jour, carte: CARTE, seance: true});
+// Lot 7e-2 (choix de Gwenaël, « retester au lieu d'imposer J'apprends ») :
+// un niveau pas encore joué a son test ; raté, il s'apprend.
+const raterMarche = (p, module, niveau, jour = J) => P.appliquerTest(p, {module, marche: 0, niveaux: [{niveau, justes: 1, total: 3}]},
+  {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
 
 // Un élève qui sait A1 (test passé il y a une semaine), tout dû aujourd'hui.
 function eleveA1() {
@@ -64,7 +68,10 @@ test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissa
   q = apprendre(q, "A1", 2).parcours;
   assert.equal(q.seance.p[P.PLAN.ouverte], 1, "4 minutes : la séance continue");
   assert.equal(q.seance.p[P.PLAN.commences], 1);
-  assert.deepEqual(types(q), ["apprends", "avance"], "A1-3, commencé au test : on l'apprend ; il restera du temps");
+  // (Lot 7e-2 : A1-3, pas encore joué, a son test ; raté, on l'apprend.)
+  assert.deepEqual(types(q), ["test", "avance"], "A1-3, pas encore joué : « Tu connais déjà ? » ; il restera du temps");
+  q = raterMarche(q, "A1", 3);
+  assert.deepEqual(types(q), ["apprends", "avance"], "A1-3, raté au test : on l'apprend ; il restera du temps");
   // 9 minutes passées : J'apprends (4 min) ne tient plus — la séance attend.
   q = P.noterTemps(q, 5 * 60);
   assert.deepEqual(types(q), []);
@@ -80,6 +87,8 @@ test("15 minutes : plus de temps, plus d'avancée ; une tolérance d'une minute"
   let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 15});
   p = tester(p, "A1", 1).parcours;
   p = apprendre(p, "A1", 2).parcours;
+  // (Lot 7e-2 : A1-3 a son test ; raté, il s'apprend.)
+  p = raterMarche(p, "A1", 3);
   p = P.noterTemps(p, 11 * 60);
   assert.deepEqual(types(p), ["apprends"], "11 min + 4 min = 15 : ça tient (sans « Puis j'avance »)");
   p = P.noterTemps(p, 61);

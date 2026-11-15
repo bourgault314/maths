@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261115-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261115-3">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -312,8 +312,8 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261115-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261114-7"></script>
+  <script src="./defi_calcul_core.js?v=20261115-3"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261115-3"></script>
   <script src="./defi_calcul_aides.js?v=20261115-2"></script>
   <script>
     (() => {
@@ -3495,7 +3495,9 @@
         } else $("retenir-image").innerHTML = AIDES.dessinerImage(serie.apprends.image);
         $("retenir-image").classList.toggle("dc-coeur-zone", surCarte);
         $("result-retenir").querySelector(".eyebrow").textContent = surCarte ? "Ma carte à apprendre" : "À retenir";
-        $("retenir-cahier").textContent = soude(surCarte ? "Je la note dans mon cahier et je l’apprends par cœur." : "Je recopie cela dans mon cahier.");
+        // (Lot 7e-2 : une carte en deux parties, seule la première s'apprend par cœur.)
+        const enDeux = surCarte && coeur.blocs.some(bloc => bloc.partie === "retrouve");
+        $("retenir-cahier").textContent = soude(!surCarte ? "Je recopie cela dans mon cahier." : enDeux ? "Je la note dans mon cahier et j’apprends la première partie par cœur." : "Je la note dans mon cahier et je l’apprends par cœur.");
         // Lot « couverture » (06/11/2026) : une deuxième façon de voir (A1-2 :
         // le presque-double ; A3-2 : les dizaines), sous le dessin, la phrase
         // puis le calcul seul sur sa ligne.
@@ -3536,6 +3538,10 @@
       // La carte « par cœur » (lot 2, décision 8, planche 5) : tous les calculs
       // du niveau, en tableau (les tables, les doubles) ou en liste. Le
       // contenu vient du cœur (CORE.carteParCoeur).
+      // Lot 7e-2 (choix de Gwenaël) : deux parties, « Je le sais par cœur »
+      // (le socle des textes) et « Je le retrouve » (le reste, chaque bloc
+      // avec le petit calcul qui y mène) ; une carte sans « Je le retrouve »
+      // n'a pas de titre de partie.
       function carteParCoeur(coeur) {
         const carte = document.createElement("div");
         carte.className = "dc-coeur";
@@ -3543,7 +3549,24 @@
         titre.className = "dc-coeur-titre";
         titre.textContent = soude(coeur.titre);
         carte.append(titre);
+        const deuxParties = coeur.blocs.some(bloc => bloc.partie === "retrouve");
+        let partie = null;
         coeur.blocs.forEach(bloc => {
+          if (deuxParties && bloc.partie !== partie) {
+            partie = bloc.partie;
+            const nom = document.createElement("p");
+            nom.className = partie === "retrouve" ? "dc-coeur-partie dc-coeur-retrouve" : "dc-coeur-partie";
+            nom.textContent = partie === "retrouve" ? "Je le retrouve" : "Je le sais par cœur";
+            carte.append(nom);
+          }
+          if (bloc.chemin) {
+            const chemin = document.createElement("p");
+            chemin.className = "dc-coeur-chemin";
+            // (Le petit calcul peut passer à la ligne entre deux morceaux,
+            // jamais au milieu d'un « 2 × 25 ».)
+            AIDES.ecrireTexte(chemin, bloc.chemin, {insecable: AIDES.souderCalculs});
+            carte.append(chemin);
+          }
           // (Lot 3b : un bloc peut avoir son sous-titre — A1-1.)
           if (bloc.titre) {
             const sous = document.createElement("p");
@@ -3756,7 +3779,8 @@
           outil = "image";
           question.rappel = true;
         }
-        const aide = outil !== "aucun" ? CORE.aideDe(question.calcul) : null;
+        // (Lot 7e-2 : le dessin d'une annonce peut en montrer un peu plus.)
+        const aide = outil !== "aucun" ? CORE.aideDe(question.calcul, {nouveau}) : null;
         if (outil === "image" && !aide) outil = "aucun";
         question.outil = outil;
         if (outil === "manip") {

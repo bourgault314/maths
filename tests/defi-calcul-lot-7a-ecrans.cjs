@@ -218,7 +218,7 @@ const boite = (page, sel) => page.evaluate(q => { const e = document.querySelect
       await s.ctx.close();
     });
 
-    await cas(`${f} : Mon parcours d'un élève au CM2 (palier 3 : 26 compétences construites, palier 4 : 8)`, async () => {
+    await cas(`${f} : Mon parcours d'un élève au CM2 (palier 3 : 25 compétences construites depuis le lot 7e-2, palier 4 : 8)`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(c => c.module === "D6" && c.niveau === 1, ["2026-11-01", "2026-11-05", null, null])});
       await s.page.click("#acc-porte");
       await pause(s.page, 800);

@@ -201,7 +201,8 @@ const texte = (page, s) => page.evaluate(sel => { const e = document.querySelect
     assert.equal(await texte(avec.page, "#acc-soirs"), `✓${sem.soirs} jour${sem.soirs > 1 ? "s" : ""} cette semaine` /* relecture 2 : « jours » */);
     const tete = await boite(avec.page, ".acc-tete");
     const etapes = await avec.page.evaluate(() => [...document.querySelectorAll("#acc-carte .programme > span > span")].map(e => e.firstChild.textContent));
-    if (etapes.some(t => t.startsWith("Tu connais"))) assert.ok(etapes.includes("Tu connais déjà ce module ?"), JSON.stringify(etapes));
+    // (Lot 7e-2 : NOAH a maintenant un test ici — la page écrit « module\u00a0? ».)
+    if (etapes.some(t => t.startsWith("Tu connais"))) assert.ok(etapes.map(t => t.replace(/\u00a0/g, " ")).includes("Tu connais déjà ce module ?"), JSON.stringify(etapes));
     // Lundi suivant : aucune séance cette semaine.
     assert.equal(P.semaineEleve(NOAH, CARTE, "2026-11-16").soirs, 0);
     const s = await ouvrir(nav, base, {parcours: NOAH, jour: "2026-11-16"});

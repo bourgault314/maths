@@ -77,6 +77,20 @@ function egaliteVraie(texte) {
   if (membres.some(v => v === null) || membres.length < 2) return null;
   return membres.every(v => proches(v, membres[0]));
 }
+// Lot 7e-2 (choix de Gwenaël) : la fraction d'une quantité s'écrit en mots,
+// sans signe = (« Une part, c’est 50 g. », « 1/10 de 500 g, c’est 50 g. »,
+// « La moitié de 14 L, c’est 7 L. ») : la phrase est vraie quand son nombre
+// est la part, la moitié dite, pour le calcul `calcul`. null : pas une telle
+// phrase.
+function phraseVraie(texte, calcul) {
+  const t = blanc(texte);
+  const nb = x => valeurDe(x);
+  let m;
+  if ((m = /^Une part, c’est ([\d ,]+) (\S+)\.$/.exec(t)) && calcul.f3) return proches(nb(m[1]), calcul.f3.N / calcul.f3.d) && m[2] === calcul.f3.unite;
+  if ((m = /^1\/(\d+) de ([\d ,]+) (\S+), c’est ([\d ,]+) \3\.$/.exec(t))) return proches(nb(m[4]), nb(m[2]) / Number(m[1]));
+  if ((m = /^La moitié de ([\d ,]+) (\S+), c’est ([\d ,]+) \2\.$/.exec(t))) return proches(nb(m[3]), nb(m[1]) / 2);
+  return null;
+}
 const avecReponse = (texte, reponse) => blanc(texte).replace(CORE.CASE, CORE.formaterNombre(reponse).replace(/[  ]/g, " "));
 
 // -------------------------------------------------------------- les dessins
@@ -159,7 +173,8 @@ function verifierEcris(cle, tire, lecon) {
   ecris.etapes.forEach((etape, k) => {
     assert.equal(etape.texte.split(CORE.CASE).length, 2, `${nom} : l'étape ${k + 1} a une case`);
     assert.ok(Number.isFinite(Number(etape.reponse)), `${nom} : l'étape ${k + 1} a une réponse`);
-    assert.equal(egaliteVraie(avecReponse(etape.texte, etape.reponse)), true, `${nom} : l'étape « ${etape.texte} » → ${etape.reponse} est vraie`);
+    const ecrite = avecReponse(etape.texte, etape.reponse);
+    assert.equal(egaliteVraie(ecrite) ?? phraseVraie(ecrite, calcul), true, `${nom} : l'étape « ${etape.texte} » → ${etape.reponse} est vraie`);
   });
   assert.ok(CORE.memeNombre(ecris.etapes[ecris.etapes.length - 1].reponse, calcul.reponse), `${nom} : la dernière étape donne la réponse`);
   assert.ok(CORE.memeNombre(ecris.reponse, calcul.reponse), nom);
@@ -207,7 +222,8 @@ test("lot 3c : la leçon elle-même passe les mêmes contrôles", () => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;
     // (Le calcul de la leçon est, par définition, un calcul de la leçon.)
     const {calcul, ecris} = {calcul: lecon.calculs.ecris, ecris: lecon.ecris};
-    assert.equal(egaliteVraie(avecReponse(ecris.etapes[0].texte, ecris.etapes[0].reponse)), true, `${cle} : ${ecris.etapes[0].texte}`);
+    const ecrite = avecReponse(ecris.etapes[0].texte, ecris.etapes[0].reponse);
+    assert.equal(egaliteVraie(ecrite) ?? phraseVraie(ecrite, calcul), true, `${cle} : ${ecris.etapes[0].texte}`);
     verifierDessins(cle, Object.assign({}, calcul, {module: calcul.module, niveau: 0}), ecris);
   });
 });

@@ -30,7 +30,10 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // Les consignes de J'écris gardées telles quelles (elles disent autre chose
 // d'utile et l'égalité n'aurait pas de sens), et les niveaux sans ligne
 // (une seule étape, ou le calcul cherché est déjà la 1re ligne écrite).
-const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3"]);
+// (Lot 7e-2 : la fraction d'une quantité en mots, sans signe =, choix de
+// Gwenaël — « Je partage 500 g en 10 parts égales. », « Un quart, c'est la
+// moitié de la moitié. »)
+const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3"]);
 const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
@@ -153,7 +156,14 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   });
   // Relecture 2 (08/11/2026) : + 3, A2-1, A2-3 et A2-4 écrivent leur calcul.
   // Lot 3a : À retenir reprend toujours le calcul montré (76 bilans).
-  assert.equal(coupes, 76, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // Lot 7e-2 : × 4, × 8, × 5, × 50 écrivent leurs étapes une par ligne
+  // (« 2 × 23 = 46. », puis « 23 × 4 = 2 × 46 = 92. ») : 5 de moins ici, ils
+  // passent par les lignes (lot 3a).
+  assert.equal(coupes, 71, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  ["M6-1", "M6-2", "M7-1", "M7-2", "M7-3"].forEach(cle => {
+    const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
+    assert.ok(lignes.length >= 2 && lignes.every(Boolean), `${cle} : une ligne par étape`);
+  });
   const deux = AIDES.bilanEnDeux(CORE.niveauDe("A10-2").niveau.apprends.bilan);
   assert.deepEqual([espaces(deux.phrase), espaces(deux.calcul)],
     ["Pour passer la dizaine, je vais d’abord à la dizaine, puis j’ajoute le reste.", "47 + 8 = 47 + 3 + 5 = 55"]);
