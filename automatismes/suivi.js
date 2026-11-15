@@ -80,7 +80,7 @@ function lireEtat(stockage, familles) {
           (serie) =>
             /^[a-zA-Z0-9_-]{1,80}$/.test(serie?.id) &&
             /^\d{4}-\d{2}-\d{2}$/.test(serie?.date) &&
-            ["jour", "train", "exam"].includes(serie?.mode),
+            ["jour", "train", "exam", "test"].includes(serie?.mode),
         )
         .slice(-100)
         .map(({ id, date, mode }) => ({ id, date, mode }));
@@ -160,7 +160,7 @@ export function creerSuivi(catalogue, options = {}) {
     if (typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,80}$/.test(id)) {
       throw new TypeError("Identifiant de séance invalide.");
     }
-    if (!["jour", "train", "exam", "project"].includes(mode)) {
+    if (!["jour", "train", "exam", "test", "project"].includes(mode)) {
       throw new TypeError("Mode de séance invalide.");
     }
     if (!Array.isArray(resultats)) throw new TypeError("Résultats attendus.");

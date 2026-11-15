@@ -2,9 +2,9 @@ import { esc } from "./generateurs/draw.js";
 import { mathHtml } from "./math-format.js";
 import { questionPrompt } from "./math-layout.js";
 import { DOMAINES } from "./seances.js";
-import { GROUPES } from "./groupes-domaines.js";
 import { modeleQuestion, reglageForme, ecrireReponse } from "./champs.js";
 import { iconeDomaine } from "./icones-domaines.js";
+import { ANNEES, rangerDomaine } from "./menu.js";
 
 export function bouton(texte, action, classe = "secondaire", attributs = "") {
   return `<button class="bouton ${classe}" data-action="${action}" ${attributs}>${texte}</button>`;
@@ -26,12 +26,18 @@ function segmentsHTML(valeurs, actif, attribut, texte = String) {
     .join("");
 }
 
-/* Les niveaux du menu. « Brevet » n'en est plus un (22/10) : 78 notions sur 81 en commun avec la 3e.
-   Le filtre « brevet » reste dans le moteur (Entraînement brevet, anciens liens « niveau=brevet »). */
+/* Les années du menu (lot « menu par intitulés », 15/11/2026) : 6e, 5e, 4e, 3e et Brevet (la liste
+   indicative DNB d'octobre 2025). Plusieurs se cochent ensemble (4e + 3e pour un mélange), une seule
+   par défaut. Le filtre « brevet » des formes reste dans le moteur pour l'Entraînement brevet. */
 export const NIVEAUX = ["6e", "5e", "4e", "3e"];
 
-function filtresHTML(filtre) {
-  return segmentHTML("Niveau", segmentsHTML(NIVEAUX, filtre, "niveau"));
+function filtresHTML(annees) {
+  const boutons = ANNEES.map(({ id, nom }) => {
+    const presse = annees.includes(id);
+    return `<button class="segment${presse ? " actif" : ""}${id === "brevet" ? " segment-brevet" : ""}"
+        data-annee="${id}" aria-pressed="${presse}">${nom}</button>`;
+  }).join("");
+  return segmentHTML("Année", boutons, " champ-annees");
 }
 
 /* Le nombre de questions : des boutons à partir de 700 px ; au téléphone, une seule touche
@@ -66,9 +72,9 @@ export function compteurHTML(coches, nombre) {
 }
 
 /* L'accueil, d'après la V2 : la carte d'en-tête (logo maths&go, seul logo de l'appli, lien vers le
-   site), « ① Préparer la série » (niveau, nombre de questions), « ② Choisir les automatismes » (une
-   ligne par domaine, « k / n »), puis l'Entraînement brevet, une série toute prête. */
-export function accueilHTML(familles, filtre, selection, nombre) {
+   site), « ① Préparer la série » (années, nombre de questions), « ② Choisir les automatismes » (une
+   ligne par domaine, « k / n » intitulés), puis l'Entraînement brevet, une série toute prête. */
+export function accueilHTML(comptes, annees, nombre) {
   const pleinEcran = bouton(
     ICONES.pleinEcran,
     "plein-ecran",
@@ -83,15 +89,14 @@ export function accueilHTML(familles, filtre, selection, nombre) {
       ${pleinEcran}
     </header>
     <section class="carte-menu">${etapeHTML(1, "Préparer la série")}
-      <div class="reglages-serie">${filtresHTML(filtre)}${nombreHTML(nombre)}</div></section>
+      <div class="reglages-serie">${filtresHTML(annees)}${nombreHTML(nombre)}</div></section>
     <section class="carte-menu">${etapeHTML(2, "Choisir les automatismes")}
       <div class="domaines">${DOMAINES.map(([id, nom]) => {
-        const liste = familles.filter((famille) => famille.domaine === id);
-        const coches = liste.filter((famille) => selection.has(famille.id)).length;
+        const [coches, total] = comptes[id] || [0, 0];
         return `<button class="domaine-carte${coches ? " avec-selection" : ""}" data-domaine="${id}"
-          ${liste.length ? "" : "disabled"}>
+          ${total ? "" : "disabled"}>
           <span class="icone" aria-hidden="true">${iconeDomaine(id)}</span>
-          <span class="nom">${nom}</span>${compteurHTML(coches, liste.length)}
+          <span class="nom">${nom}</span>${compteurHTML(coches, total)}
           <span class="chevron" aria-hidden="true">›</span></button>`;
       }).join("")}</div>
       <button class="domaine-carte ligne-brevet" data-action="brevet">
@@ -102,61 +107,90 @@ export function accueilHTML(familles, filtre, selection, nombre) {
   </section>`;
 }
 
+/* Les années cochées, en mots courts : « 4e », « 4e + 3e », « Brevet ». */
+export function anneesTexte(annees) {
+  return annees.map((id) => ANNEES.find((annee) => annee.id === id)?.nom || id).join(" + ");
+}
+
 /* La barre de lancement, toujours en bas (accueil et domaine, décision G). Rien de coché : elle dit
-   quoi faire, boutons grisés. Sinon « n notions sélectionnées · 4e · 10 questions », Projeter (dès
-   700 px) et « Lancer la série ». */
-export function lancementHTML(compte, nombre, filtre) {
+   quoi faire, boutons grisés. Sinon « n notions sélectionnées · 4e · 10 questions », la case
+   « Sans aide » (décidé le 15/11 pour composer un test : ni Aide ni Cours, la correction à la fin),
+   Projeter (dès 700 px) et « Lancer la série » (« Lancer le test » sans aide). */
+export function lancementHTML(compte, nombre, annees, sansAide = false) {
   const s = compte > 1 ? "s" : "";
-  const titre = compte ? `${compte} notion${s} sélectionnée${s}` : "Aucune notion cochée";
-  const detail = compte ? `${filtre} · ${nombre} questions` : "Coche des notions";
+  // Au téléphone, « sélectionnée(s) » et « la série » se taisent (.mot-selection) : la case tient.
+  const titre = compte
+    ? `${compte} notion${s}<span class="mot-long"> sélectionnée${s}</span>`
+    : `Aucune notion<span class="mot-long"> cochée</span>`;
+  const detail = compte ? `${anneesTexte(annees)} · ${nombre} questions` : "Coche des notions";
   const grise = compte ? "" : "disabled";
-  return `<div class="barre-lancement${compte ? "" : " vide"}">
+  return `<div class="barre-lancement${compte ? "" : " vide"}${sansAide ? " sans-aide" : ""}">
     <div class="resume" aria-live="polite"><strong>${titre}</strong><span>${detail}</span></div>
+    <label class="choix-sans-aide"><input type="checkbox" data-sans-aide ${sansAide ? "checked" : ""}>
+      <span>Sans aide</span></label>
     <span class="lancer-groupe">${bouton("Projeter", "projeter-reglages", "secondaire projeter", grise)}
-      ${bouton("Lancer la série", "lancer", "orange", grise)}</span>
+      ${bouton(`<span>Lancer<span class="mot-long"> ${sansAide ? "le test" : "la série"}</span></span>`, "lancer", "orange", grise)}</span>
   </div>`;
 }
 
+/* Une ligne du menu : un intitulé officiel. Le nom est le texte officiel, coupé à son début mot pour
+   mot s'il est trop long ; alors le texte entier est dessous, en petit. Les puces « Automatismes » du
+   programme portent un « A » et passent avant les objectifs d'apprentissage, dans la même liste
+   (choix de Gwenaël, 15/11/2026). Une ligne sans question dans l'appli reste visible, grisée
+   « bientôt », et ne se coche pas (choix du 15/11). */
+function ligneHTML(ligne, selection, jouable) {
+  const coche = jouable && selection.has(ligne.id);
+  const badge =
+    ligne.rubrique === "A"
+      ? '<span class="badge automatisme" title="Automatisme du programme">A</span>'
+      : "";
+  const texte = ligne.texte ? `<small class="texte-officiel">${esc(ligne.texte)}</small>` : "";
+  const bientot = jouable ? "" : '<span class="badge bientot">bientôt</span>';
+  return `<label class="notion ligne-officielle${coche ? " cochee" : ""}${jouable ? "" : " a-venir"}">
+      <input type="checkbox" data-selection="${ligne.id}" ${coche ? "checked" : ""} ${jouable ? "" : "disabled"}>
+      <span class="nom">${badge}${esc(ligne.nom)}${bientot}${texte}</span></label>`;
+}
+
 /* Le domaine ouvert, en plein écran (décision F) : en tête la carte du domaine (icône, nom, « k / n »,
-   chevron) qu'on touche pour refermer ; « Tout sélectionner dans ce domaine » ; puis les notions par
-   groupe, avec leurs sous-titres (deux colonnes dès 700 px). Étiquette de classe (« 4e ») sur les
-   notions qui commencent dans la classe choisie, jamais en 6e. Un tap ne lance rien : la série part
-   de la barre de lancement. */
-export function domaineHTML(domaine, familles, filtre, selection) {
+   chevron) qu'on touche pour refermer ; « Tout sélectionner dans ce domaine » ; puis les intitulés
+   officiels : par année quand plusieurs sont cochées, sous les sous-titres du domaine. « k / n » et
+   « Tout sélectionner » ne comptent que les lignes qui se cochent. Un tap ne lance rien : la série
+   part de la barre de lancement. */
+export function domaineHTML(domaine, menu, annees, selection, jouable) {
   const nom = DOMAINES.find(([id]) => id === domaine)?.[1] || "Notions";
-  const coches = familles.filter((famille) => selection.has(famille.id)).length;
-  const tout = familles.length > 0 && coches === familles.length;
-  const ligne = (famille) => {
-    const debut = NIVEAUX.find((niveau) => famille.niveaux.includes(niveau));
-    const classe = debut === filtre && filtre !== "6e";
-    const coche = selection.has(famille.id);
-    return `<label class="notion${coche ? " cochee" : ""}">
-      <input type="checkbox" data-selection="${famille.id}" ${coche ? "checked" : ""}>
-      <span class="nom">${esc(famille.nom)}${classe ? `<span class="badge classe">${filtre}</span>` : ""}
-      </span></label>`;
-  };
-  const grille = (liste) => `<div class="grille-notions">${liste.map(ligne).join("")}</div>`;
-  const parId = Object.fromEntries(familles.map((famille) => [famille.id, famille]));
-  const rangees = new Set();
-  const blocs = (GROUPES[domaine] || [])
-    .map(([titre, ids]) => {
-      const liste = ids.filter((id) => parId[id] && !rangees.has(id)).map((id) => parId[id]);
-      liste.forEach((famille) => rangees.add(famille.id));
-      return liste.length ? `<h3 class="titre-groupe">${titre}</h3>${grille(liste)}` : "";
+  const rangement = rangerDomaine(menu, annees, domaine);
+  const cochables = rangement
+    .flatMap((bloc) => bloc.groupes.flatMap((groupe) => groupe.lignes))
+    .filter(jouable);
+  const coches = cochables.filter((ligne) => selection.has(ligne.id)).length;
+  const tout = cochables.length > 0 && coches === cochables.length;
+  const grille = (liste) =>
+    `<div class="grille-notions">${liste
+      .map((ligne) => ligneHTML(ligne, selection, jouable(ligne)))
+      .join("")}</div>`;
+  const blocs = rangement
+    .map(({ annee, groupes }) => {
+      const tete = annees.length > 1 ? `<h2 class="titre-annee">${anneesTexte([annee])}</h2>` : "";
+      const liste = groupes
+        .map(
+          ({ titre, lignes }) =>
+            `${titre ? `<h3 class="titre-groupe">${titre}</h3>` : ""}${grille(lignes)}`,
+        )
+        .join("");
+      return liste ? `${tete}${liste}` : "";
     })
     .join("");
-  const reste = familles.filter((famille) => !rangees.has(famille.id));
   return `<section class="domaine-ouvert groupe-selection">
     <button class="domaine-tete${coches ? " avec-selection" : ""}" data-action="retour"
       aria-expanded="true" aria-label="Refermer ${nom}">
       <span class="icone" aria-hidden="true">${iconeDomaine(domaine)}</span>
-      <span class="nom">${nom}</span>${compteurHTML(coches, familles.length)}
+      <span class="nom">${nom}</span>${compteurHTML(coches, cochables.length)}
       <span class="chevron ouvert" aria-hidden="true">›</span></button>
     <div class="domaine-corps">
       <label class="notion tout-domaine">
         <input type="checkbox" data-selection-domaine="${domaine}" ${tout ? "checked" : ""}>
         <span class="nom">Tout sélectionner dans ce domaine</span></label>
-      ${blocs}${reste.length ? grille(reste) : ""}
+      ${blocs}
     </div></section>`;
 }
 
@@ -367,6 +401,8 @@ function boutonClavier(clavier) {
 
 export function barreQuestionHTML(seance, clavier) {
   const exam = seance.mode === "exam";
+  // Le test sans aide : ni minuteur ni score (il dirait ce qui est juste avant la fin).
+  const test = seance.mode === "test";
   const projection = seance.mode === "project";
   const justes = seance.etats.filter((e) => e.juste).length;
   const retour = projection ? "Quitter" : "Menu";
@@ -382,7 +418,9 @@ export function barreQuestionHTML(seance, clavier) {
     : `${
         exam
           ? '<span class="minuteur chrono"><span id="temps" role="timer"></span></span>'
-          : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>`
+          : test
+            ? ""
+            : `<span class="score-barre" aria-label="${justes} réponse${justes > 1 ? "s" : ""} juste${justes > 1 ? "s" : ""}">✓ ${justes}</span>`
       }<span class="outils-ordinateur">${boutonClavier(clavier)}${pleinEcran}</span>`;
   const menu = bouton(
     `<span aria-hidden="true">←</span><span class="mot">${retour}</span>`,
@@ -409,16 +447,15 @@ export function pastilleNotionHTML(seance, famille) {
    ne sont plus ici : ils sont dans la carte, sous le calcul (outilsHTML). */
 export function actionsHTML(seance, etat) {
   if (seance.mode === "project") return actionsProjectionHTML(seance, etat);
-  const retour =
-    seance.mode === "exam"
-      ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
-      : "";
+  const retour = ["exam", "test"].includes(seance.mode)
+    ? bouton("←", "precedente", "secondaire precedente", 'aria-label="Question précédente"')
+    : "";
   // Après la réponse (C6) : « Voir l'explication » (pas après une réponse juste) · « Question
   // suivante », ou « Voir le bilan » à la dernière question.
   const derniere = seance.index + 1 >= seance.questions.length;
   const explication = etat.correction ? "Cacher l’explication" : "Voir l’explication";
   const suite =
-    etat.terminee && seance.mode !== "exam"
+    etat.terminee && !["exam", "test"].includes(seance.mode)
       ? (etat.juste ? "" : bouton(explication, "explication", "secondaire")) +
         bouton(derniere ? "Voir le bilan" : "Question suivante", "suivante", "primaire large")
       : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange large");
@@ -429,6 +466,11 @@ export function actionsHTML(seance, etat) {
    Ni l'un ni l'autre au brevet ni au diaporama. */
 export function outilsHTML(seance, etat) {
   if (seance.mode !== "train" || etat.terminee) return "";
+  // Une question de la banque dont l'aide n'est pas encore écrite (passe 1, aucune entrée dans hints) :
+  // elle part quand même en entraînement, le bouton dit « Aide à venir » (choix de Gwenaël, 15/11).
+  const question = seance.questions[seance.index];
+  if (question && !(question.hints || []).length)
+    return `<div class="outils"><button class="outil" disabled>${ICONES.aide}Aide à venir</button></div>`;
   return `<div class="outils">
     <button class="outil" data-action="aide" aria-pressed="${Boolean(etat.aideOuverte)}">${ICONES.aide}Aide</button>
     <button class="outil" data-action="cours">${ICONES.cours}Cours</button>
@@ -509,7 +551,7 @@ export function questionHTML(seance, famille, clavier = false) {
       ${projection && etat.correction ? "" : aideHTML(question, etat, projection, reglages)}
       ${etat.correction ? explicationHTML(question, !projection) : ""}
     </div>
-    <div id="commandes">${seance.mode === "exam" ? pointsHTML(seance) : ""}
+    <div id="commandes">${["exam", "test"].includes(seance.mode) ? pointsHTML(seance) : ""}
       <section class="clavier" aria-label="Clavier mathématique" hidden></section>
       <div class="signes" role="group" aria-label="Signe" hidden></div>${actionsHTML(seance, etat)}</div>`;
 }
@@ -542,7 +584,13 @@ export function bilanHTML(seance, parId) {
       : etat.erreurs
         ? ["faux", "✗", "Faux"]
         : ["passee", "○", "Passée"];
-  const titre = projection ? "Corrections" : exam ? "Entraînement brevet" : "Bilan";
+  const titre = projection
+    ? "Corrections"
+    : exam
+      ? "Entraînement brevet"
+      : seance.mode === "test"
+        ? "Bilan du test"
+        : "Bilan";
   // Coque V2 (C9) : « n / N » seul, en grand ; dessous, sans aide · avec l'aide.
   const score = `<div class="grand-score"><div class="score">${justes.length} / ${seance.questions.length}</div>
     <p class="resume-bilan">${autonomes} sans aide · ${dessins} avec l’aide</p></div>`;

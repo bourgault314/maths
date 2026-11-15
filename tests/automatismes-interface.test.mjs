@@ -178,8 +178,9 @@ test(
         await page.locator('[data-domaine="nombres-calculs"]').click();
         // La barre est toujours là (décision G) : rien de coché, « Lancer la série » est grisé.
         assert.equal(await page.locator('[data-action="lancer"]').isDisabled(), true);
-        await page.locator('[data-selection="NC27"]').check();
-        await page.locator(".barre-lancement").getByText("1 notion sélectionnée").waitFor();
+        // Le menu montre les intitulés officiels (15/11/2026) : 2027-A5 pose les équations (NC27).
+        await page.locator('[data-selection="2027-A5"]').check();
+        await page.locator(".barre-lancement").getByText(/^1 notion/).waitFor();
         await photo(page, "domaine", mesures);
         await page.locator('[data-action="lancer"]').click();
         await page.locator(".barre-question .centre").getByText("1 sur 10").waitFor();
@@ -273,7 +274,8 @@ test(
       page.on("pageerror", (erreur) => erreurs.push(erreur.message));
       await page.goto(base);
       await page.locator('[data-domaine="nombres-calculs"]').click();
-      await page.locator('[data-selection="NC27"]').check();
+      // 2027-A5 (équations, NC27) et 3e-2020-O101 (cosinus, EG12 et EG13) : intitulés de la 3e.
+      await page.locator('[data-selection="2027-A5"]').check();
       await page.locator('[data-action="retour"]').click();
       await page.locator(".domaines").waitFor();
       // Accueil d'après la V2 : la pastille « k / n » du domaine.
@@ -285,8 +287,8 @@ test(
       );
       assert.equal(await nombreCoche(page), 1);
       await page.locator('[data-domaine="espace-geometrie"]').click();
-      assert.equal(await page.locator('[data-selection="EG12"]').isChecked(), false);
-      await page.locator('[data-selection="EG12"]').check();
+      assert.equal(await page.locator('[data-selection="3e-2020-O101"]').isChecked(), false);
+      await page.locator('[data-selection="3e-2020-O101"]').check();
       assert.equal(await nombreCoche(page), 2);
       await page.locator('[data-action="lancer"]').click();
       const notions = new Set();
@@ -295,9 +297,21 @@ test(
         await page.locator('[data-action="passer"]').click();
         await page.locator('[data-action="suivante"]').click();
       }
-      assert.deepEqual(
-        [...notions].sort((a, b) => a.localeCompare(b, "fr")),
-        ["Équations à une ou deux étapes", "Rapports trigonométriques"],
+      // Les deux intitulés sont dans la série, rien d'autre.
+      assert.ok(notions.has("Équations à une ou deux étapes"), [...notions].join(" | "));
+      assert.ok(
+        [...notions].some((nom) => /trigonométri/.test(nom)),
+        [...notions].join(" | "),
+      );
+      assert.ok(
+        [...notions].every((nom) =>
+          [
+            "Équations à une ou deux étapes",
+            "Rapports trigonométriques",
+            "Applications trigonométriques directes",
+          ].includes(nom),
+        ),
+        [...notions].join(" | "),
       );
       // « Changer de notions » (bilan) ramène au menu d'origine, la sélection reste (décision J).
       await page.locator('[data-action="changer"]').click();
@@ -312,7 +326,7 @@ test(
 );
 
 test(
-  "sélection : changer de niveau retire les notions qui n’en sont plus",
+  "sélection : décocher une année retire les intitulés qui en viennent",
   { skip: ignorer, timeout: 60000 },
   async () => {
     const { serveur, base } = await serveurLocal();
@@ -323,14 +337,21 @@ test(
       await page.locator('[data-domaine="nombres-calculs"]').click();
       await page.locator('[data-selection-domaine="nombres-calculs"]').check();
       const avant = await nombreCoche(page);
-      // Le niveau se choisit sur l'accueil (« Préparer la série ») : on referme le domaine.
+      // Les années se choisissent sur l'accueil (« Préparer la série ») : on referme le domaine.
       await page.locator(".domaine-tete").click();
-      await page.locator('[data-niveau="6e"]').click();
+      // 6e s'ajoute à la 3e : la sélection de 3e reste.
+      await page.locator('[data-annee="6e"]').click();
+      assert.equal(await nombreCoche(page), avant, "6e ajoutée : rien ne part");
+      await page.locator('[data-domaine="nombres-calculs"]').click();
+      await page.locator("[data-selection]:not(:disabled)").first().check();
+      await page.locator(".domaine-tete").click();
+      // Décocher la 3e : ses intitulés quittent la sélection, celui de 6e reste.
+      await page.locator('[data-annee="3e"]').click();
       const apres = await nombreCoche(page);
-      // Le compteur ne garde que les notions cochées encore visibles en 6e.
       await page.locator('[data-domaine="nombres-calculs"]').click();
       const cochees = await page.locator("[data-selection]:checked").count();
-      assert.ok(apres < avant, `6e : moins de notions (${avant} → ${apres})`);
+      assert.ok(apres < avant, `6e seule : moins d'intitulés (${avant} → ${apres})`);
+      assert.equal(apres, 1, "Seul l'intitulé de 6e reste");
       assert.equal(apres, cochees, "Le compteur = les cases cochées de 6e");
     } finally {
       await browser.close();
