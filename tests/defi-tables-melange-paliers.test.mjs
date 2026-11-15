@@ -612,7 +612,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // Puis « cours-appli-3 » (14-15/11/2026) : des chapitres EN PLUS pour quelques élèves — lib/applis.php
   // (les ajouts « cours »), lib/cours.php (commentaire), Ma classe (« Régler les cours », l'onglet Cours)
   // (avant : defi-calcul-lot-7a-decimaux).
-  assert.match(lire("_serveur/public/VERSION"), /^lot cours-appli-3$/m);
+  // Puis le lot « la semaine précédente » de La classe (15/11/2026) :
+  // prof/index.php seul change (avant : cours-appli-3).
+  assert.match(lire("_serveur/public/VERSION"), /^lot semaine-precedente$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });
