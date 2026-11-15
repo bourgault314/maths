@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { formesDisponibles, genererQuestion } from "../automatismes/moteur.js";
+import { formesDisponibles, genererQuestion, nombresFormes } from "../automatismes/moteur.js";
 
 const lire = (nom) =>
   JSON.parse(readFileSync(new URL(`../automatismes/catalogue/${nom}`, import.meta.url)));
@@ -52,7 +52,10 @@ test("84 cartes uniques, cinq domaines et une identité stable par forme", () =>
       assert.equal(forme.champs.length, question.fields.length, forme.identifiant);
     }
   }
-  assert.equal(formes.size, 440);
+  assert.equal(
+    formes.size,
+    Object.values(nombresFormes).reduce((somme, n) => somme + n, 0),
+  );
 });
 
 test("le classement des grandeurs est explicite et les trois familles réservées sont cachées", () => {
@@ -77,7 +80,8 @@ test("435 alias relient les trois anciennes notations aux lettres canoniques", (
   for (const carte of catalogue) {
     for (const forme of carte.formes) {
       // Les formes ajoutées par un cahier (NC17-f, NC18-g) n'ont pas d'ancien identifiant.
-      if (forme.cahier && !forme.ancienId) continue;
+      // Les formes de la banque (lot B1) non plus.
+      if ((forme.cahier || forme.banque) && !forme.ancienId) continue;
       const correspondance = alias[forme.ancienId];
       assert.ok(correspondance, forme.ancienId);
       assert.equal(correspondance.id, forme.identifiant);

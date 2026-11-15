@@ -237,6 +237,47 @@
       "origine": "GPT",
       "valide": true,
       "referencesBrevet": []
+    },
+    {
+      "id": "e",
+      "objectif": "Simple, double ou aucune ?",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Pour développer 2 + 3a(4a + 1), quelle propriété utilise-t-on ?",
+      "reponse": "La simple distributivité",
+      "donnees": "La lettre ; les nombres ; la même écriture en trois versions : (2 + 3a)(4a + 1), 2 + 3a(4a + 1), 2 + 3a × 4a + 1 ; au niveau 3, produit de deux sommes soustrait et facteur à droite.",
+      "niveauxDifficulte": {
+        "1": "le trio avec +",
+        "2": "le trio avec + ou −",
+        "3": "le trio, plus 5 − (2x + 1)(x − 3) et (2x − 1) × 4"
+      },
+      "saisie": "QCM : un choix par nature.",
+      "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+      "erreursAttendues": "développer 2 + 3a × 4a + 1 comme un produit ; voir une double distributivité dans 2 + 3a(4a + 1).",
+      "aide1": "Aide à venir (passe 2).",
+      "aide2": "Aide à venir (passe 2).",
+      "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+      "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+      "identifiant": "NC23-e",
+      "indiceGenerateur": 4,
+      "nom": "Simple, double ou aucune ?",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "formats": ["qcm"],
+      "banque": "lit-3e"
     }
   ]
 }

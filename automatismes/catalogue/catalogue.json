@@ -8178,6 +8178,129 @@
         "origine": "GPT",
         "valide": true,
         "referencesBrevet": []
+      },
+      {
+        "id": "f",
+        "objectif": "Double, triple, moitié, prédécesseur, successeur, carré de n",
+        "niveau": "5e",
+        "dnb2027": true,
+        "enonce": "Écris en fonction de n : le double du successeur de n.",
+        "reponse": "2(n + 1)",
+        "donnees": "La lettre (n, x, a, t) ; le mot (double, triple, moitié, successeur, prédécesseur, carré) ; un mot ou deux mots enchaînés.",
+        "niveauxDifficulte": {
+          "1": "un mot : le double de n → 2n",
+          "2": "deux mots, sans carré : le double du successeur de n → 2(n + 1), le successeur du double → 2n + 1",
+          "3": "deux mots avec un carré : le carré du successeur → (n + 1)², le double du carré → 2n²"
+        },
+        "saisie": "Réponse tapée (case dans le calcul) ou QCM des erreurs attendues.",
+        "acceptation": "Valeur égale (toute écriture de la même expression).",
+        "erreursAttendues": "mot confondu (n² pour le double, 2n pour la moitié ou le carré, n + 2 pour le double) ; mots dans l'autre ordre (2n + 1 pour le double du successeur) ; parenthèses oubliées (2n + 1 pour 2(n + 1)).",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC19-f",
+        "indiceGenerateur": 5,
+        "nom": "Double, triple, moitié, prédécesseur, successeur, carré de n",
+        "niveauDescription": "5e ; entretien dans les classes suivantes.",
+        "niveaux": ["5e", "4e", "3e"],
+        "brevet": true,
+        "reponseType": "expression",
+        "champs": [
+          {
+            "type": "expression",
+            "libelle": "Réponse",
+            "unite": ""
+          }
+        ],
+        "typeTache": "calculer",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["tapee", "qcm"],
+        "banque": "lit-3e"
+      },
+      {
+        "id": "g",
+        "objectif": "Somme ou produit ?",
+        "niveau": "5e",
+        "dnb2027": true,
+        "enonce": "Cette expression est-elle une somme ou un produit ? 5(x + 4)",
+        "reponse": "Un produit",
+        "donnees": "Numérique ou littérale ; parenthèses ou non ; facteur à gauche ou à droite ; somme de produits, produit de sommes ; au niveau 3, carré d'une somme ou somme de deux carrés (famille 3e-13-F1 regroupée ici).",
+        "niveauxDifficulte": {
+          "1": "numérique : 2 × 4 + 6, 2(3 + 4), (3 + 5) × 5",
+          "2": "littérale : 3x + 2, 5(x + 4), (x + 4)(x − 2)",
+          "3": "(2x + 3)² ou x² + 9, (2x)² + 3², 4x² + 9 : carré d'une somme ou somme de deux carrés"
+        },
+        "saisie": "QCM : un choix par nature.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "prendre la première opération écrite au lieu de la dernière à effectuer ; ne pas voir le produit quand un facteur est une somme ; lire (2x + 3)² comme une somme de carrés.",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC19-g",
+        "indiceGenerateur": 6,
+        "nom": "Somme ou produit ?",
+        "niveauDescription": "5e ; entretien dans les classes suivantes.",
+        "niveaux": ["5e", "4e", "3e"],
+        "brevet": true,
+        "reponseType": "qcm",
+        "champs": [
+          {
+            "type": "qcm",
+            "libelle": "Choisis",
+            "unite": ""
+          }
+        ],
+        "typeTache": "reconnaître",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["qcm"],
+        "banque": "lit-3e"
+      },
+      {
+        "id": "h",
+        "objectif": "Écrire sans le signe × : 3 × x, x + x, x × x",
+        "niveau": "5e",
+        "dnb2027": true,
+        "enonce": "Écris le plus simplement possible : 2 + 3 × b + 4 × b × b",
+        "reponse": "2 + 3b + 4b²",
+        "donnees": "La lettre ; × devant ou derrière la lettre ; les 0 et les 1 (famille 3e-11-F1 regroupée ici) ; un terme ou plusieurs.",
+        "niveauxDifficulte": {
+          "1": "un geste : 3 × x, x × 4, x + x, x × x, 1 × x, 0 × x, 0 + x",
+          "2": "deux termes : 2 + 3 × b, x × x + 5, x × 3 − 1, 3 × x × x",
+          "3": "trois termes (tests nationaux) : a × a + a × 3 + 7, 2 + 3 × b + 4 × b × b, 1 × x × x + 0 × x"
+        },
+        "saisie": "Réponse tapée (case dans le calcul) ou QCM des erreurs attendues.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "x + x = x² et x × x = 2x ; 0 × x = x, 0 + x = 0, 1 × x = 1 ; regrouper des termes de nature différente (2 + 3b = 5b, a² + 10a).",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC19-h",
+        "indiceGenerateur": 7,
+        "nom": "Écrire sans le signe × : 3 × x, x + x, x × x",
+        "niveauDescription": "5e ; entretien dans les classes suivantes.",
+        "niveaux": ["5e", "4e", "3e"],
+        "brevet": true,
+        "reponseType": "expression",
+        "champs": [
+          {
+            "type": "expression",
+            "libelle": "Réponse",
+            "unite": ""
+          }
+        ],
+        "typeTache": "calculer",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["tapee", "qcm"],
+        "banque": "lit-3e"
       }
     ]
   },
@@ -8603,6 +8726,88 @@
             "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
           }
         ]
+      },
+      {
+        "id": "g",
+        "objectif": "Opposé d’une expression",
+        "niveau": "4e",
+        "dnb2027": true,
+        "enonce": "Écris sans parenthèses : −(5 − 4x)",
+        "reponse": "−5 + 4x",
+        "donnees": "La lettre ; l'ordre des termes ; les signes ; deux ou trois termes (avec x²).",
+        "niveauxDifficulte": {
+          "1": "termes positifs : −(3x + 5)",
+          "2": "au moins un terme négatif : −(5 − 4x), −(−2x + 7)",
+          "3": "trois termes avec x² : −(x² − 3x + 1)"
+        },
+        "saisie": "Réponse tapée (case dans le calcul) ou QCM des erreurs attendues.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "ne changer que le premier terme (−5 − 4x) ; enlever les parenthèses sans changer les signes (5 − 4x) ; tout rendre négatif (−(−4x) = −4x).",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC20-g",
+        "indiceGenerateur": 6,
+        "nom": "Opposé d’une expression",
+        "niveauDescription": "4e ; entretien dans les classes suivantes.",
+        "niveaux": ["4e", "3e"],
+        "brevet": true,
+        "reponseType": "expression",
+        "champs": [
+          {
+            "type": "expression",
+            "libelle": "Réponse",
+            "unite": ""
+          }
+        ],
+        "typeTache": "calculer",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["tapee", "qcm"],
+        "banque": "lit-3e"
+      },
+      {
+        "id": "h",
+        "objectif": "Facteur commun ou terme commun ?",
+        "niveau": "3e",
+        "dnb2027": true,
+        "enonce": "Peut-on simplifier (6 + 2)/(6 + 4) en barrant les deux 6 ?",
+        "reponse": "Non",
+        "donnees": "Numérique ou littéral ; ce qu'on barre (un nombre, une lettre, x², une parenthèse) ; facteur ou terme, en haut, en bas ou des deux côtés.",
+        "niveauxDifficulte": {
+          "1": "numérique : (6 + 2)/(6 + 4), (6 × 2)/(6 × 5)",
+          "2": "littéral : (x + 3)/(x + 5), 3x/5x, (3x + 4)/3x",
+          "3": "puissances et parenthèses : x³/(3x²), (x² + 4)/x², x(x + 2)/(5x), (x + 2)²/(x + 2)"
+        },
+        "saisie": "QCM : un choix par nature.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "barrer un terme d'une somme comme un facteur ; ne pas voir le facteur caché (x³ = x × x², (x + 2)² = (x + 2)(x + 2)).",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC20-h",
+        "indiceGenerateur": 7,
+        "nom": "Facteur commun ou terme commun ?",
+        "niveauDescription": "3e ; entretien dans les classes suivantes.",
+        "niveaux": ["3e"],
+        "brevet": true,
+        "reponseType": "qcm",
+        "champs": [
+          {
+            "type": "qcm",
+            "libelle": "Choisis",
+            "unite": ""
+          }
+        ],
+        "typeTache": "reconnaître",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["qcm"],
+        "banque": "lit-3e"
       }
     ]
   },
@@ -8998,6 +9203,47 @@
             "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
           }
         ]
+      },
+      {
+        "id": "g",
+        "objectif": "Équation ou identité ?",
+        "niveau": "4e",
+        "dnb2027": true,
+        "enonce": "Pour x = 2, ces deux égalités sont vraies : x + x = 2x ; x + x = x². Laquelle est vraie pour toutes les valeurs de x ?",
+        "reponse": "x + x = 2x",
+        "donnees": "La lettre ; la valeur testée ; l'identité (réduction, distributivité, identités remarquables) ; l'équation, parfois de même allure que l'identité.",
+        "niveauxDifficulte": {
+          "1": "réduction (x + x = 2x, 5x + 4x = 9x) et équation du premier degré",
+          "2": "distributivité 3(x + 2) = 3x + 6 contre 3(x + 2) = 18 ; x + x = 2x contre x + x = x²",
+          "3": "(x + 3)² = x² + 6x + 9 contre (x + 3)² = x² + 9, vraies pour x = 0"
+        },
+        "saisie": "QCM : un choix par nature.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "conclure « toujours vraie » après un seul essai (« Les deux ») ; prendre l'équation pour l'identité.",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC21-g",
+        "indiceGenerateur": 6,
+        "nom": "Équation ou identité ?",
+        "niveauDescription": "4e ; entretien dans les classes suivantes.",
+        "niveaux": ["4e", "3e"],
+        "brevet": true,
+        "reponseType": "qcm",
+        "champs": [
+          {
+            "type": "qcm",
+            "libelle": "Choisis",
+            "unite": ""
+          }
+        ],
+        "typeTache": "reconnaître",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["qcm"],
+        "banque": "lit-3e"
       }
     ]
   },
@@ -9587,6 +9833,47 @@
         "origine": "GPT",
         "valide": true,
         "referencesBrevet": []
+      },
+      {
+        "id": "e",
+        "objectif": "Simple, double ou aucune ?",
+        "niveau": "3e",
+        "dnb2027": true,
+        "enonce": "Pour développer 2 + 3a(4a + 1), quelle propriété utilise-t-on ?",
+        "reponse": "La simple distributivité",
+        "donnees": "La lettre ; les nombres ; la même écriture en trois versions : (2 + 3a)(4a + 1), 2 + 3a(4a + 1), 2 + 3a × 4a + 1 ; au niveau 3, produit de deux sommes soustrait et facteur à droite.",
+        "niveauxDifficulte": {
+          "1": "le trio avec +",
+          "2": "le trio avec + ou −",
+          "3": "le trio, plus 5 − (2x + 1)(x − 3) et (2x − 1) × 4"
+        },
+        "saisie": "QCM : un choix par nature.",
+        "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+        "erreursAttendues": "développer 2 + 3a × 4a + 1 comme un produit ; voir une double distributivité dans 2 + 3a(4a + 1).",
+        "aide1": "Aide à venir (passe 2).",
+        "aide2": "Aide à venir (passe 2).",
+        "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+        "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+        "identifiant": "NC23-e",
+        "indiceGenerateur": 4,
+        "nom": "Simple, double ou aucune ?",
+        "niveauDescription": "3e ; entretien dans les classes suivantes.",
+        "niveaux": ["3e"],
+        "brevet": true,
+        "reponseType": "qcm",
+        "champs": [
+          {
+            "type": "qcm",
+            "libelle": "Choisis",
+            "unite": ""
+          }
+        ],
+        "typeTache": "reconnaître",
+        "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+        "valide": true,
+        "referencesBrevet": [],
+        "formats": ["qcm"],
+        "banque": "lit-3e"
       }
     ]
   },

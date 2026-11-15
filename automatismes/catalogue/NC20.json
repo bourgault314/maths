@@ -420,6 +420,88 @@
           "url": "https://eduscol.education.gouv.fr/sites/default/files/document/dnb-sujet-de-reference-mathematiques-serie-generale-n01-129658.pdf"
         }
       ]
+    },
+    {
+      "id": "g",
+      "objectif": "Opposé d’une expression",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Écris sans parenthèses : −(5 − 4x)",
+      "reponse": "−5 + 4x",
+      "donnees": "La lettre ; l'ordre des termes ; les signes ; deux ou trois termes (avec x²).",
+      "niveauxDifficulte": {
+        "1": "termes positifs : −(3x + 5)",
+        "2": "au moins un terme négatif : −(5 − 4x), −(−2x + 7)",
+        "3": "trois termes avec x² : −(x² − 3x + 1)"
+      },
+      "saisie": "Réponse tapée (case dans le calcul) ou QCM des erreurs attendues.",
+      "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+      "erreursAttendues": "ne changer que le premier terme (−5 − 4x) ; enlever les parenthèses sans changer les signes (5 − 4x) ; tout rendre négatif (−(−4x) = −4x).",
+      "aide1": "Aide à venir (passe 2).",
+      "aide2": "Aide à venir (passe 2).",
+      "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+      "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+      "identifiant": "NC20-g",
+      "indiceGenerateur": 6,
+      "nom": "Opposé d’une expression",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "expression",
+      "champs": [
+        {
+          "type": "expression",
+          "libelle": "Réponse",
+          "unite": ""
+        }
+      ],
+      "typeTache": "calculer",
+      "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "formats": ["tapee", "qcm"],
+      "banque": "lit-3e"
+    },
+    {
+      "id": "h",
+      "objectif": "Facteur commun ou terme commun ?",
+      "niveau": "3e",
+      "dnb2027": true,
+      "enonce": "Peut-on simplifier (6 + 2)/(6 + 4) en barrant les deux 6 ?",
+      "reponse": "Non",
+      "donnees": "Numérique ou littéral ; ce qu'on barre (un nombre, une lettre, x², une parenthèse) ; facteur ou terme, en haut, en bas ou des deux côtés.",
+      "niveauxDifficulte": {
+        "1": "numérique : (6 + 2)/(6 + 4), (6 × 2)/(6 × 5)",
+        "2": "littéral : (x + 3)/(x + 5), 3x/5x, (3x + 4)/3x",
+        "3": "puissances et parenthèses : x³/(3x²), (x² + 4)/x², x(x + 2)/(5x), (x + 2)²/(x + 2)"
+      },
+      "saisie": "QCM : un choix par nature.",
+      "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+      "erreursAttendues": "barrer un terme d'une somme comme un facteur ; ne pas voir le facteur caché (x³ = x × x², (x + 2)² = (x + 2)(x + 2)).",
+      "aide1": "Aide à venir (passe 2).",
+      "aide2": "Aide à venir (passe 2).",
+      "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+      "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+      "identifiant": "NC20-h",
+      "indiceGenerateur": 7,
+      "nom": "Facteur commun ou terme commun ?",
+      "niveauDescription": "3e ; entretien dans les classes suivantes.",
+      "niveaux": ["3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "formats": ["qcm"],
+      "banque": "lit-3e"
     }
   ]
 }

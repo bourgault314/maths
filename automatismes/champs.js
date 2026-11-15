@@ -1,5 +1,5 @@
 import { mathHtml } from "./math-format.js";
-import { polynomial } from "./core.js";
+import { checkAnswer, normalize, polynomial } from "./core.js";
 
 export function symbolesQuestion(question) {
   if (question.fields.every((champ) => champ.options)) return [];
@@ -601,6 +601,33 @@ export function monterReponse(parent, question, valeurs, options) {
     if (options.etatCases?.[rang] === "juste" && rang === question.fields.length - 1)
       element("span", "coche", ligne).textContent = "✓";
   });
+}
+
+// Une erreur connue de la forme : champ `erreurs` de la question ou de sa forme au catalogue, sous
+// la forme [{ reponse: "0,49" (ou une liste, une par champ), phrase: "7 × 7 dixièmes…" }]. Les
+// erreurs de famille du catalogue (des descriptions, sans réponse) ne se comparent pas.
+export function erreurConnue(question, reponses, famille) {
+  const liste = reglageForme(question, famille, "erreurs");
+  if (!Array.isArray(liste)) return null;
+  // Une réponse-expression se compare par sa valeur (banque, lot B1) : « 10a + a² » est l'erreur
+  // « a² + 10a » ; le reste, à l'écriture près (espaces, virgule, signe moins).
+  const pareil = (attendue, donnee, rang) => {
+    const champ = question.fields[rang];
+    if (champ?.kind === "expression")
+      return checkAnswer(
+        { fields: [champ], check: { type: "expression", values: [String(attendue)] } },
+        [donnee],
+      ).ok;
+    return normalize(attendue) === normalize(donnee);
+  };
+  const trouvee = liste.find((erreur) => {
+    if (!erreur || typeof erreur !== "object" || !erreur.phrase) return false;
+    const attendues = [].concat(erreur.reponse ?? erreur.reponses ?? []);
+    return (
+      attendues.length === reponses.length && attendues.every((r, i) => pareil(r, reponses[i], i))
+    );
+  });
+  return trouvee?.phrase || null;
 }
 
 // Un réglage d'affichage d'une forme (gabarit, coinAide, erreurs) : celui de la question s'il existe,

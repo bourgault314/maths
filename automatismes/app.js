@@ -1,4 +1,4 @@
-import { checkAnswer, normalize, VERSION } from "./core.js";
+import { checkAnswer, VERSION } from "./core.js";
 import { genererQuestion } from "./moteur.js";
 import { mathHtml } from "./math-format.js";
 import { fitMathExpressions } from "./math-layout.js";
@@ -23,6 +23,7 @@ import {
   monterSignes,
   lettresGrasses,
   largeurCasesExpression,
+  erreurConnue,
 } from "./champs.js";
 import {
   accueilHTML,
@@ -560,7 +561,9 @@ function valider() {
   etat.terminee = true;
   etat.aideOuverte = false;
   etat.etatCases = etatDesCases(question, etat.reponses, resultat.ok);
-  etat.erreurConnue = resultat.ok ? null : erreurConnue(question, etat.reponses);
+  etat.erreurConnue = resultat.ok
+    ? null
+    : erreurConnue(question, etat.reponses, parId[question.famille]);
   etat.message =
     resultat.ok || /Pas encore|Bien joué/.test(resultat.message) ? "" : resultat.message;
   if (!resultat.ok) etat.erreurs += 1;
@@ -580,25 +583,9 @@ function etatDesCases(question, reponses, juste) {
   });
 }
 
-// Une erreur connue de la forme : champ `erreurs` de la question ou de sa forme au catalogue, sous
-// la forme [{ reponse: "0,49" (ou une liste, une par champ), phrase: "7 × 7 dixièmes…" }]. Les
-// erreurs de famille du catalogue (des descriptions, sans réponse) ne se comparent pas.
-function erreurConnue(question, reponses) {
-  const liste = reglageForme(question, parId[question.famille], "erreurs");
-  if (!Array.isArray(liste)) return null;
-  const pareil = (a, b) => normalize(a) === normalize(b);
-  const trouvee = liste.find((erreur) => {
-    if (!erreur || typeof erreur !== "object" || !erreur.phrase) return false;
-    const attendues = [].concat(erreur.reponse ?? erreur.reponses ?? []);
-    return (
-      attendues.length === reponses.length && attendues.every((r, i) => pareil(r, reponses[i]))
-    );
-  });
-  return trouvee?.phrase || null;
-}
-
 function ouvrirAide(etape = false) {
-  if (sansAide()) return;
+  // Une question de la banque sans aide écrite (passe 1) : rien à ouvrir, même au diaporama.
+  if (sansAide() || !(seance.questions[seance.index]?.hints || []).length) return;
   recueillir();
   const etat = etatCourant();
   etat.aideOuverte = true;

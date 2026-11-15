@@ -456,11 +456,17 @@ export function actionsHTML(seance, etat) {
   const explication = etat.correction ? "Cacher l’explication" : "Voir l’explication";
   const suite =
     etat.terminee && !["exam", "test"].includes(seance.mode)
-      ? (etat.juste ? "" : bouton(explication, "explication", "secondaire")) +
+      ? (etat.juste || sansExplication(seance.questions[seance.index])
+          ? ""
+          : bouton(explication, "explication", "secondaire")) +
         bouton(derniere ? "Voir le bilan" : "Question suivante", "suivante", "primaire large")
       : bouton("Passer", "passer", "secondaire") + bouton("Valider", "valider", "orange large");
   return `<div class="actions-question">${retour}${suite}</div>`;
 }
+
+/* Une question de la banque (passe 1) n'a encore ni aide ni explication écrites : pas de bouton
+   « Voir l'explication » (la bonne réponse est déjà écrite sous la question). */
+const sansExplication = (question) => Boolean(question?.banque) && !(question.hints || []).length;
 
 /* Aide · Cours : deux boutons discrets (38 px) juste sous le calcul, là où l'aide s'ouvre.
    Ni l'un ni l'autre au brevet ni au diaporama. */
@@ -482,11 +488,16 @@ export function outilsHTML(seance, etat) {
    sous la question (K3) : l'explication prend la place de l'aide, qui revient quand on la referme. Correction « à la fin » :
    Réponse et Explication attendent la phase de correction. */
 function actionsProjectionHTML(seance, etat) {
+  const question = seance.questions[seance.index];
   const fin = seance.options.correction === "end" && seance.phase !== "correction";
   const presse = (actif) => `aria-pressed="${Boolean(actif)}"`;
   return `<div class="actions-question barre-projection">
     ${bouton("←", "precedente", "secondaire", 'aria-label="Question précédente"')}
-    ${bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte && !etat.correction))}
+    ${
+      (question?.hints || []).length
+        ? bouton("Aide", "aide", "secondaire", presse(etat.aideOuverte && !etat.correction))
+        : bouton("Aide à venir", "aide", "secondaire", "disabled")
+    }
     ${bouton("Réponse", "reponse", "secondaire", `${presse(etat.reponseMontree)} ${fin ? "disabled" : ""}`)}
     ${bouton("Explication", "explication", "secondaire", `${presse(etat.correction)} ${fin ? "disabled" : ""}`)}
     ${bouton("→", "suivante", "orange", 'aria-label="Question suivante"')}

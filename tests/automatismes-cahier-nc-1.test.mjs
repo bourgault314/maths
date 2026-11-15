@@ -4,7 +4,12 @@
 // dessins de 340 px au plus, un morceau de cours par question, le vocabulaire.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { genererQuestion, formesCahier, formesDisponibles } from "../automatismes/moteur.js";
+import {
+  genererQuestion,
+  formesCahier,
+  formesBanque,
+  formesDisponibles,
+} from "../automatismes/moteur.js";
 import { checkAnswer } from "../automatismes/core.js";
 import { symbolesQuestion, modeleQuestion } from "../automatismes/champs.js";
 import { aideHTML, explicationHTML, bonneReponseTexte, coursHTML } from "../automatismes/vues.js";
@@ -327,6 +332,8 @@ test("anciennes questions : « Encore un indice » comme sur main", async () => 
   for (const famille of Object.keys(generateurs))
     for (const forme of formesDisponibles(famille)) {
       if (formesCahier.has(`${famille}-${forme}`)) continue;
+      // La banque (lot B1) n'a pas encore d'aide : « Aide à venir » (tests/automatismes-banque-*).
+      if (formesBanque.has(`${famille}-${forme}`)) continue;
       for (const graine of [1, 2]) {
         const q = genererQuestion(famille, forme, graine);
         const html = aideHTML(q, { aideOuverte: true, etape: true });

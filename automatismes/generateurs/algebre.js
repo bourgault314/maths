@@ -1,14 +1,15 @@
 import { mathHtml } from "../math-format.js";
 import { svg, text as rawText, line, rect, circle } from "./draw.js";
+import { genererBanque } from "./banque-lit.js";
 // Affichage seulement : conserve les valeurs et utilise le vrai signe moins.
 const display = (value) => String(value).replace(/(^|[\s(=≥≤<>:;,])-(?=\d|√|[a-z])/g, "$1−");
 const text = (x, y, value, ...rest) => rawText(x, y, display(value), ...rest);
 export const counts = {
-  NC19: 5,
-  NC20: 6,
-  NC21: 6,
+  NC19: 8,
+  NC20: 8,
+  NC21: 7,
   NC22: 5,
-  NC23: 4,
+  NC23: 5,
   NC24: 5,
   NC25: 5,
   NC26: 4,
@@ -368,6 +369,8 @@ function q(f, v, grade, dnb, prompt, answer, hints, solution, opts = {}) {
 const exprOpts = (form, audit) => ({ kind: "expression", form, audit });
 export const generators = {
   NC19(r, v = 0) {
+    // Les formes ajoutées par la banque (passe 1, lot B1) : banque-lit.js ; les autres, inchangées.
+    if (v >= 5) return genererBanque(`NC19-${String.fromCharCode(97 + v)}`, r);
     v %= 5;
     let a = r.int(2, 5),
       b = r.int(1, 8),
@@ -467,6 +470,8 @@ export const generators = {
     );
   },
   NC20(r, v = 0) {
+    // Les formes ajoutées par la banque (passe 1, lot B1) : banque-lit.js ; les autres, inchangées.
+    if (v >= 6) return genererBanque(`NC20-${String.fromCharCode(97 + v)}`, r);
     v %= 6;
     let a = r.int(2, 7),
       b = r.int(1, 7),
@@ -609,6 +614,8 @@ export const generators = {
     );
   },
   NC21(r, v = 0) {
+    // Les formes ajoutées par la banque (passe 1, lot B1) : banque-lit.js ; les autres, inchangées.
+    if (v >= 6) return genererBanque(`NC21-${String.fromCharCode(97 + v)}`, r);
     v %= 6;
     let a = r.int(2, 6),
       b = r.int(1, 9),
@@ -836,6 +843,8 @@ export const generators = {
     );
   },
   NC23(r, v = 0) {
+    // Les formes ajoutées par la banque (passe 1, lot B1) : banque-lit.js ; les autres, inchangées.
+    if (v >= 4) return genererBanque(`NC23-${String.fromCharCode(97 + v)}`, r);
     v %= 4;
     let a = 1,
       b = r.int(1, 6),

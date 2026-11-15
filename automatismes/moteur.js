@@ -16,6 +16,7 @@ import {
   formesCahier as formesCalculDecimaux,
 } from "./generateurs/calcul-decimaux.js";
 import { generators as algebre, counts as quantitesAlgebre } from "./generateurs/algebre.js";
+import { formesBanque as formesBanqueLit } from "./generateurs/banque-lit.js";
 import { generators as geometrie, counts as quantitesGeometrie } from "./generateurs/geometrie.js";
 import { generators as mesures, counts as quantitesMesures } from "./generateurs/mesures.js";
 import { generators as donnees, counts as quantitesDonnees } from "./generateurs/donnees_algo.js";
@@ -54,6 +55,11 @@ export const nombresFormes = Object.freeze({
 export const formesCahier = Object.freeze(
   new Set([...formesNumeration, ...formesCalculDecimaux, ...formesDivisibilite]),
 );
+
+// Les formes de la banque (passe 1 : questions sans aide ni cours, erreurs attendues calculées ; lot B1 :
+// calcul littéral de 3e). Elles ne suivent pas l'archive de GPT ; leurs tests :
+// tests/automatismes-banque-*.test.mjs.
+export const formesBanque = Object.freeze(new Set([...formesBanqueLit]));
 
 export function formesDisponibles(famille) {
   if (!Object.hasOwn(generateurs, famille)) return [];
