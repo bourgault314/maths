@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-b1">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-b2">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261115-b1"></script>
-  <script src="./conversions_generateurs.js?v=20261115-b1"></script>
+  <script src="./conversions_carte.js?v=20261115-b2"></script>
+  <script src="./conversions_generateurs.js?v=20261115-b2"></script>
   <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261115-b1"></script>
+  <script src="./defi_conversions_aides.js?v=20261115-b2"></script>
   <script>
   (function () {
     "use strict";
@@ -886,7 +886,7 @@
         peindreGeste();
       }
       if (question.forme === "associer") {
-        gesteEl = el("div", "assoc");
+        gesteEl = el("div", `assoc${question.objets.every(o => !o.repere) ? " sans-dessins" : ""}${question.morceaux.mots ? " mots" : ""}`);
         question.objets.forEach((o, i) => {
           // (Lot 3b-3 : un objet sans dessin, « 1 L », s'écrit en grand.)
           const b = el("button", o.repere ? "obj" : "obj sans-dessin");
@@ -923,7 +923,7 @@
         // WebKit, lot A2 bis).
         // (Lot 3b-3 : des réponses en mots, « sept heures moins le quart » :
         // « mots », elles passent sur plusieurs lignes dans leur bouton.)
-        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" ? " mots" : ""}`);
+        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" || m.sorte === "mots" ? " mots" : ""}`);
         if (m.sorte === "objets") choixEl.classList.add("objets");
         question.choix.forEach((texte, i) => {
           const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));
@@ -1353,7 +1353,8 @@
       if (etape.relations) {
         const c = el("div", "carte");
         c.style.padding = `${rem(10)} ${rem(12)}`;
-        const e = el("div", "eti", etape.retenir ? "Les relations de cette étape" : "À retenir : les relations");
+        // (Lot B1-2 : le titre propre à l'étape, « Les six préfixes ».)
+        const e = el("div", "eti", etape.titreRelations || (etape.retenir ? "Les relations de cette étape" : "À retenir : les relations"));
         e.style.marginBottom = rem(4);
         c.appendChild(e);
         const g = el("div", "relations");
@@ -1795,8 +1796,13 @@
         const dansPalier = PALIERS_CODES[etape.palier];
         remplirZone(zone, "info");
         zone.appendChild(escalier(dansPalier, faites.concat(PROF ? [] : dansPalier.filter(c => P.estValidee(etat.parcours, c))), code, null));
-        const m = el("div", "marche-nom", `Marche ${dansPalier.indexOf(code) + 1} : ${etape.nom}`.replace(" :", `${NB}:`));
+        const nomMarche = nom => `Marche ${dansPalier.indexOf(code) + 1} : ${nom}`.replace(" :", `${NB}:`);
+        const m = el("div", "marche-nom", nomMarche(etape.nom));
         zone.appendChild(m);
+        // (Lot B1-2 : sur deux lignes, le nom court ; « Marche 7 : Toutes les
+        // relations à connaître » cachait « question 1 sur 3 » au petit
+        // téléphone, l'escalier du palier 2 ayant 16 marches.)
+        if (etape.nomCourt !== etape.nom && m.getBoundingClientRect().height > parseFloat(getComputedStyle(m).fontSize) * 1.9) m.textContent = nomMarche(etape.nomCourt);
         const s = suiteRonds(resultats.filter(Boolean).length, total, false);
         s.appendChild(el("span", "", `question ${resultats.length + 1} sur ${total}`));
         zone.appendChild(s);

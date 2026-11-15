@@ -59,7 +59,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|mètres?|grammes?|litres?|centimètres?|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -143,9 +143,9 @@
     {code: "R4", rang: 9, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de masse", exemple: "1 L d'eau : 1 kg"},
     {code: "R5", rang: 10, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de contenance", exemple: "verre : 20 cL"},
     {code: "R6", rang: 11, palier: 2, famille: "reperes", classe: "CM1", nom: "Est-ce vraisemblable ?", exemple: ""},
-    {code: "P2", rang: 12, palier: 2, famille: "relations", classe: "CM1", nom: "Ce que veulent dire les préfixes", exemple: "kilo = 1 000"},
+    {code: "P2", rang: 12, palier: 2, famille: "relations", classe: "CM1", nom: "Ce que veulent dire les préfixes", nomCourt: "Le sens des préfixes", exemple: "kilo = 1 000"},
     {code: "P3", rang: 13, palier: 2, famille: "relations", classe: "CM1", nom: "Deux unités voisines", exemple: "1 cm = 0,1 dm"},
-    {code: "P4", rang: 14, palier: 2, famille: "relations", classe: "CM1", nom: "Toutes les relations à connaître", exemple: "1 L = 1 000 mL"},
+    {code: "P4", rang: 14, palier: 2, famille: "relations", classe: "CM1", nom: "Toutes les relations à connaître", nomCourt: "Toutes les relations", exemple: "1 L = 1 000 mL"},
     {code: "C3", rang: 15, palier: 2, famille: "convertir", classe: "CM1", nom: "Avec des nombres décimaux", exemple: "3,5 m = 350 cm"},
     {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", exemple: "41 dg = 4,1 g"},
     {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", exemple: "215 cm = 2,15 m"},
@@ -585,6 +585,89 @@
       ],
       retenir: "Je compare à un repère que je connais : un lit, c'est deux très grands pas, environ 2 m.\nUne mesure pas vraisemblable cache souvent une erreur d'unité.",
       cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 2 (lot B1-2)
+    // Préfixes et relations (carte v4). L'outil de « À toi » : le
+    // glisse-unité, toutes ses colonnes ; l'image : l'échelle des unités
+    // (sans nombres).
+    // Ce que veulent dire les préfixes. S002 p. 15-17 : « en faisant le lien
+    // avec les unités de numération » : 1 km = 1 000 m à côté de 1 millier
+    // = 1 000 unités ; puis le gramme partagé comme l'unité ; puis « 1 m,
+    // c'est combien de fois 1 dm ? » (23,6 % répondent 100 fois en 6e).
+    P2: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "echelle"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 km =", reponse: "1 000", apres: "m"},
+          consigne: "kilo veut dire mille, comme dans un millier.",
+          aide: {type: "numeration", sens: "plus", base: "m", titre: "Les longueurs"},
+          legende: "hecto veut dire cent ; déca veut dire dix."},
+        {etiquette: "Je vois", question: {avant: "1 g =", reponse: "1 000", apres: "mg"},
+          consigne: "Le gramme se partage comme l'unité.",
+          aide: {type: "numeration", sens: "moins", base: "g", titre: "Les masses"},
+          legende: "Un grain de riz pèse environ 25 mg."},
+        {etiquette: "Je vérifie", question: {avant: "1 m, c'est", reponse: "10", apres: "fois 1 dm"},
+          consigne: "Touche le mètre : il s'ouvre en décimètres.",
+          aide: {type: "barres", n: 1, grande: "m", petite: "dm", facteur: 10}, apres: ["1 m = 10 dm"],
+          legende: "Pas 100 fois : déci veut dire un dixième.\n1 dm est le dixième de 1 m."}
+      ],
+      retenir: "kilo, comme un millier : 1 km = 1 000 m.\ncenti, comme un centième : 1 cm est le centième de 1 m, et 1 m = 100 cm.",
+      titreRelations: "Les six préfixes",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["kilo : mille", "déci : un dixième", "hecto : cent", "centi : un centième", "déca : dix", "milli : un millième"],
+      reperes: []
+    },
+    // Deux unités voisines (S002 : 1 dm = 10 cm et 1 cm = 0,1 dm ; 1 kg =
+    // 10 hg). Le décimètre qui s'ouvre, le glisse-unité qui lit le dixième,
+    // la balance aux tablettes de 1 hg.
+    P3: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "echelle"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 dm =", reponse: "10", apres: "cm"},
+          consigne: "Touche le décimètre : il s'ouvre en centimètres.",
+          aide: {type: "barres", n: 1, grande: "dm", petite: "cm", facteur: 10}, apres: ["1 dm = 10 cm"],
+          legende: "Deux unités voisines : la plus grande vaut 10 fois l'autre."},
+        {etiquette: "Je représente", question: {avant: "1 cm =", reponse: "0,1", apres: "dm"},
+          relation: ["1 dm = 10 cm", "donc 1 cm est un dixième de dm"],
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "1", de: "cm", vers: "dm", pale: false},
+          apres: ["Je glisse l'unité de cm à dm.", "Le 1 est sous les dixièmes : 0,1 dm."]},
+        {etiquette: "Je vois", question: {avant: "1 kg =", reponse: "10", apres: "hg"},
+          consigne: "Touche le plateau vide : pose des tablettes de 1 hg jusqu'à l'équilibre.",
+          aide: {type: "balance", nombre: 10, hg: true}, apres: ["10 tablettes de 1 hg", "= 1 kg"],
+          legende: "hecto veut dire cent : 1 hg = 100 g."}
+      ],
+      retenir: "Deux unités voisines : la plus grande vaut 10 fois la plus petite.\n1 dm = 10 cm, et 1 cm est un dixième de dm : 1 cm = 0,1 dm.",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 dm = 10 cm", "1 cm = 0,1 dm", "1 kg = 10 hg", "1 hg = 0,1 kg", "1 cL = 10 mL", "1 mL = 0,1 cL"],
+      reperes: []
+    },
+    // Toutes les relations à connaître : du mm au km, du mg à la tonne, du
+    // mL au hL. L'hectomètre qui s'ouvre en 100 m (le tour de piste, 4 hm),
+    // le litre qui glisse jusqu'au millilitre, et « 0,33 t ou 565 kg ? »
+    // (programme de CM1 2025).
+    P4: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "echelle"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 hm =", reponse: "100", apres: "m"},
+          consigne: "Touche l'hectomètre : il s'ouvre en mètres.",
+          aide: {type: "barres", n: 1, grande: "hm", petite: "m", facteur: 100}, apres: ["1 hm = 100 m"],
+          legende: "Un tour de piste : 400 m, c'est 4 hm."},
+        {etiquette: "Je représente", question: {avant: "1 L =", reponse: "1 000", apres: "mL"},
+          relation: ["1 L = 10 dL = 100 cL", "et 1 cL = 10 mL"],
+          aide: {type: "glisse-unite", grandeur: "contenance", nombre: "1", de: "L", vers: "mL", pale: false},
+          apres: ["Le 1 reste sous L,", "les 0 remplissent dL, cL et mL."]},
+        {etiquette: "Je vérifie", question: {enonce: "0,33 t ou 565 kg : quelle mesure est la plus grande ?", avant: "0,33 t =", reponse: "330", apres: "kg"},
+          consigne: "Je les écris dans la même unité.",
+          aide: {type: "glisse-unite", grandeur: "masse", nombre: "0,33", de: "t", vers: "kg", pale: false, colonnes: ["t", "", "", "kg", "hg", "dag", "g"]},
+          apres: ["0,33 t = 330 kg : moins que 565 kg.", "565 kg est la plus grande."]}
+      ],
+      retenir: "Du mm au km, du mg au kg, du mL au hL : d'une unité à la suivante, c'est toujours 10 fois.\n1 hm = 10 dam = 100 m ; 1 t = 1 000 kg.",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 km = 1 000 m", "1 m = 1 000 mm", "1 hm = 100 m", "1 m = 100 cm", "1 kg = 1 000 g", "1 g = 1 000 mg",
+        "1 hL = 100 L", "1 L = 1 000 mL", "1 t = 1 000 kg", "1 L = 100 cL"],
       reperes: []
     }
   };

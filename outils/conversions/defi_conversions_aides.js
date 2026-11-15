@@ -473,10 +473,13 @@
         dessin.appendChild(svg("rect", {x: xd - 40 + col * 41, y: ypd - 10 - rang * 10, width: 38, height: 9, rx: 1.5,
           fill: "#a93030", stroke: "#143451", "stroke-width": 1}));
       }
-      dessin.appendChild(svg("text", {x: 250, y: 16, "text-anchor": "middle", "font-size": 12.5, "font-weight": 800, fill: "#143451"}, `1 tablette = 100${NB}g`));
+      // (Lot B1-2 : `hg`, la tablette de 100 g est aussi 1 hg : 1 kg = 10 hg.)
+      dessin.appendChild(svg("text", {x: 250, y: 16, "text-anchor": "middle", "font-size": 12.5, "font-weight": 800, fill: "#143451"},
+        aide.hg ? `1 tablette = 1${NB}hg = 100${NB}g` : `1 tablette = 100${NB}g`));
       if (!poses) dessin.appendChild(svg("text", {x: xd, y: ypd + 26, "text-anchor": "middle", "font-size": 12, "font-weight": 700, fill: "#8ea1af"}, "touche-moi"));
       somme.textContent = "";
-      if (poses) somme.appendChild(el("span", "", poses === 1 ? `1 tablette : 100${NB}g` : carte().typo(`${poses} tablettes : ${poses * 100} g`)));
+      if (poses && aide.hg) somme.appendChild(el("span", "", carte().typo(poses === 1 ? "1 tablette : 1 hg" : `${poses} tablettes : ${poses} hg`)));
+      else if (poses) somme.appendChild(el("span", "", poses === 1 ? `1 tablette : 100${NB}g` : carte().typo(`${poses} tablettes : ${poses * 100} g`)));
     }
     const toucher = () => {
       if (poses >= total) return;
@@ -732,12 +735,14 @@
   // entre les chiffres et la poignée, comme chez lui. Il n'écrit jamais la
   // mesure trouvée : c'est l'élève qui lit les chiffres.
   const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"]};
-  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false}, arrivee = () => {}) {
+  // `colonnes` (lot B1-2) : les colonnes du palier 2 (les masses du
+  // kilogramme au milligramme, la tonne devant quand elle est en jeu).
+  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false, colonnes: lesColonnes = null}, arrivee = () => {}) {
     const G = gen();
     const [entier, decimales = ""] = String(valeur).replace(/\s/g, "").replace(".", ",").split(",");
     const avant = entier.replace(/\D/g, "").replace(/^0+(?=\d)/, "").split("");
     const apres = decimales.replace(/\D/g, "").split("").filter(Boolean);
-    let colonnes = G.COLONNES[grandeur].slice();
+    let colonnes = (lesColonnes || G.COLONNES[grandeur]).slice();
     // Des colonnes sans nom à gauche (ou à droite) si le nombre en a besoin.
     const iDe0 = colonnes.indexOf(de);
     const manqueG = Math.max(0, avant.length - 1 - iDe0);
@@ -1487,6 +1492,81 @@
     zone.appendChild(liste);
   }
 
+  // ---------------------------------------- l'échelle des unités (lot B1-2)
+  // L'image des préfixes et des relations : les unités du CM1 de la
+  // grandeur, de la plus grande à la plus petite (pas de tableau de
+  // conversion au cours moyen : une rangée, sans nombres), les unités de la
+  // question en couleur pleine, et la règle. L'élève compte les pas : la
+  // réponse n'est jamais écrite.
+  function echelle(zone, {grandeur = null, grandeurs = null, marque = [], note = null}) {
+    const G = gen();
+    (grandeurs || [grandeur]).forEach(gr => {
+      const [acc, accF] = THEMES_GLISSE[gr] || THEMES_GLISSE.longueur;
+      const ligne = el("div", "echelle");
+      ligne.style.setProperty("--acc", acc);
+      ligne.style.setProperty("--acc-f", accF);
+      const unites = G.COLONNES_CM1[gr];
+      ligne.style.setProperty("--n", String(unites.length));
+      unites.forEach(u => ligne.appendChild(el("span", marque.includes(u) ? "on" : "", u)));
+      zone.appendChild(ligne);
+    });
+    zone.appendChild(el("div", "note", carte().typo(note || "Chaque unité vaut 10 fois celle de droite.")));
+  }
+
+  // ------------------------------- les préfixes et la numération (lot B1-2)
+  // « On te montre » de « Ce que veulent dire les préfixes » (S002 p. 15-17 :
+  // les préfixes « en faisant le lien avec les unités de numération »).
+  // Deux colonnes côte à côte : les nombres (« 1 millier = 1 000 unités »)
+  // et les mesures (« 1 kilomètre = 1 000 mètres »). On touche chaque
+  // ligne : la mesure apparaît en face, le préfixe en gras.
+  const NUMERATION = {
+    plus: [["kilo", "1 millier", "1 000 unités", "k"], ["hecto", "1 centaine", "100 unités", "h"], ["déca", "1 dizaine", "10 unités", "da"]],
+    moins: [["déci", "1 unité", "10 dixièmes", "d"], ["centi", "1 unité", "100 centièmes", "c"], ["milli", "1 unité", "1 000 millièmes", "m"]]
+  };
+  const NOMS_BASE = {m: ["mètre", "mètres"], g: ["gramme", "grammes"], L: ["litre", "litres"]};
+  function numeration(zone, aide, fini) {
+    const [un, plusieurs] = NOMS_BASE[aide.base];
+    const lignesN = NUMERATION[aide.sens];
+    const vues = lignesN.map(() => false);
+    const boite = el("div", "numeration");
+    const tete = el("div", "num-tete");
+    tete.append(el("span", "", "Les nombres"), el("span", "", aide.titre || "Les mesures"));
+    boite.appendChild(tete);
+    // Une case : deux lignes (« 1 millier », « = 1 000 unités »).
+    const ligneT = (...morceaux) => {
+      const l = el("span", "l");
+      morceaux.forEach(m => l.appendChild(typeof m === "string" ? root.document.createTextNode(carte().typo(m)) : m));
+      return l;
+    };
+    const boutons = lignesN.map(([pref, n1, n2]) => {
+      const b = el("button", "num-ligne");
+      b.type = "button";
+      const gauche = el("span", "num-n");
+      gauche.append(ligneT(n1), ligneT(`= ${n2}`));
+      const droite = el("span", "num-m");
+      droite.appendChild(el("span", "touche", "touche-moi"));
+      b.append(gauche, droite);
+      b.setAttribute("aria-label", `${pref} : touche pour voir la mesure`);
+      boite.appendChild(b);
+      return {b, droite, pref, nombre: n2.replace(/ [^ ]+$/, "")};
+    });
+    function voir(i) {
+      if (vues[i]) return;
+      vues[i] = true;
+      const {b, droite, pref, nombre} = boutons[i];
+      droite.textContent = "";
+      // Le préfixe en gras : « 1 kilomètre = 1 000 mètres » ;
+      // « 1 gramme = 10 décigrammes ».
+      if (aide.sens === "plus") droite.append(ligneT(`1${NB}`, el("b", "", pref), un), ligneT(`= ${nombre}${NB}${plusieurs}`));
+      else droite.append(ligneT(`1${NB}${un}`), ligneT(`= ${nombre}${NB}`, el("b", "", pref), plusieurs));
+      b.classList.add("vue");
+      if (vues.every(Boolean)) fini();
+    }
+    boutons.forEach(({b}, i) => b.addEventListener("click", () => voir(i)));
+    zone.appendChild(boite);
+    return enChaine(() => voir(vues.indexOf(false)), () => vues.includes(false), 420);
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -1513,9 +1593,12 @@
     if (aide.type === "horloge") return horloge(zone, aide, f);
     if (aide.type === "glisse-nombre") return glisseNombre(zone, aide, f);
     if (aide.type === "glisse-unite") {
-      const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers}, f);
+      const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers, pale: aide.pale !== false,
+        colonnes: aide.colonnes || null}, f);
       return () => g.animer(aide.vers);
     }
+    // Lot B1-2
+    if (aide.type === "numeration") return numeration(zone, aide, f);
     if (aide.type === "heure") {
       const touche = aide.parts > 1 && !aide.compte;
       const jouer = barreHeure(zone, {heures: aide.heures, parts: aide.parts, verte: aide.verte, compte: aide.compte || 0, plus: aide.plus || 0, touche}, f);
@@ -1545,11 +1628,24 @@
   function correctionGlisse(zone, question, {ensuite = () => {}, phrase = false} = {}) {
     const g = question.glisse;
     if (!g) return false;
-    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true});
+    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true, pale: g.pale !== false, colonnes: g.colonnes || null});
     // Lot 3b-2 : la phrase que le glisse-unité accompagne.
-    if (phrase && g.phrase) zone.appendChild(el("div", "note phrase-glisse", carte().typo(g.phrase)));
+    if (phrase && g.phrase) {
+      const n = el("div", "note phrase-glisse", carte().typo(g.phrase));
+      zone.appendChild(n);
+      // (Lot B1-2 : au palier 2, les noms sont longs, « Chaque hectogramme
+      // devient 1 000 décigrammes. » ; sur deux lignes, l'aide passait à
+      // 79 % au petit iPhone. La phrase se fait un peu plus petite pour
+      // tenir sur une ligne, jusqu'à 80 % de sa taille.)
+      if (g.pale === false) surUneLigne(n);
+    }
     gu.animer(g.vers, {pas: 380, ensuite});
     return true;
+  }
+  function surUneLigne(n) {
+    const taille = parseFloat(root.getComputedStyle(n).fontSize) || 13;
+    const ligne = () => n.getBoundingClientRect().height <= taille * 1.6;
+    for (let k = 1; k <= 4 && !ligne(); k += 1) n.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
   }
   // (Lot 3a : la ligne « l'unité de départ » sous le glisse-unité est
   // retirée, à la demande de Gwenaël le 14/11 : pas de légende pour la
@@ -1559,7 +1655,7 @@
     if (question.outil === "glisse-unite" && question.glisse) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
       const g = question.glisse;
-      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers}, fini);
+      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       return;
     }
@@ -1602,6 +1698,8 @@
   }
 
   function image(zone, question) {
+    // Lot B1-2 : les préfixes et les relations — l'échelle des unités.
+    if (question.echelle) { echelle(zone, question.echelle); return; }
     // Lot B1-1 : « Est-ce vraisemblable ? » — l'image est le repère le plus
     // proche de la vraie mesure, et la phrase qui invite à comparer.
     if (question.repereProche) {
@@ -1715,6 +1813,6 @@
     return s;
   }
 
-  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

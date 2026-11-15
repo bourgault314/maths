@@ -44,8 +44,13 @@ const NB = " ";
 const FINE = " ";
 
 // ------------------------------------------------- le recalcul, à part
-const EXPOSANTS = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, L: 0, dL: -1, cL: -2, "€": 2, c: 0};
-const FAMILLE = {km: "l", m: "l", dm: "l", cm: "l", mm: "l", t: "m", kg: "m", g: "m", L: "c", dL: "c", cL: "c", "€": "a", c: "a"};
+// (Lot B1-2 : toutes les unités du CM1, hm, dam, hg, dag, dg, cg, mg, hL, daL, mL.)
+const EXPOSANTS = {km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3,
+  hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "€": 2, c: 0};
+const FAMILLE = {km: "l", hm: "l", dam: "l", m: "l", dm: "l", cm: "l", mm: "l", t: "m", kg: "m", hg: "m", dag: "m", g: "m", dg: "m", cg: "m", mg: "m",
+  hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "€": "a", c: "a"};
+// Lot B1-2 : le sens des préfixes, recopié à part.
+const SENS_PREFIXES = {kilo: ["k", "mille"], hecto: ["h", "cent"], "déca": ["da", "dix"], "déci": ["d", "un dixième"], centi: ["c", "un centième"], milli: ["m", "un millième"]};
 // Un texte « 12,5 » en millièmes, sans l'outil du générateur.
 function lire(texte) {
   const [e, d = ""] = String(texte).split(",");
@@ -125,7 +130,9 @@ const PERSONNE = /\b(il|elle|ils|elles)\b/gi;
 const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il y a|y a-t-il|faut-il|heure est-il|il est (?:midi|[a-zé]+ heures?))/gi;
 function ecriture(texte, ou) {
   INTERDITS.forEach(re => assert.doesNotMatch(texte, re, `${ou} : ${re} dans « ${texte} »`));
-  assert.doesNotMatch(texte, /\d (?:km|m|dm|cm|mm|t|kg|g|L|dL|cL|min|h)(?![\wÀ-ÿ])/, `${ou} : espace normale avant l'unité dans « ${texte} »`);
+  assert.doesNotMatch(texte, /\d (?:km|hm|dam|m|dm|cm|mm|t|kg|hg|dag|g|dg|cg|mg|hL|daL|L|dL|cL|mL|min|h)(?![\wÀ-ÿ])/, `${ou} : espace normale avant l'unité dans « ${texte} »`);
+  // (Lot B1-2 : un nombre et l'unité écrite en mots, « 1 hectomètre ».)
+  assert.doesNotMatch(texte, /\d (?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)\b/, `${ou} : espace normale avant l'unité en mots dans « ${texte} »`);
   assert.doesNotMatch(texte, /\d[  ]\d{3}(?!\d)/, `${ou} : milliers sans espace fine dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
@@ -179,7 +186,58 @@ function controlerQuestion(q, ou) {
   if (q.donnees.type === "fois") {
     const f = versUnite(1000n, q.donnees.grande, q.donnees.petite) / 1000n;
     assert.equal(q.choix[q.bon].replace(/\u202f/g, ""), `${f} fois`, `${ou} : combien de fois`);
-    assert.deepEqual(q.choix.map(c => c.replace(/\u202f/g, "")), ["10 fois", "100 fois", "1000 fois"]);
+    // (Lot B1-2 : au palier 2, quatre réponses, comme l'évaluation de 6e.)
+    assert.deepEqual(q.choix.map(c => c.replace(/\u202f/g, "")), CARTE.etape(q.code).palier >= 2 ? ["10 fois", "100 fois", "1000 fois", "10000 fois"] : ["10 fois", "100 fois", "1000 fois"]);
+  }
+  // Lot B1-2 : le sens d'un préfixe (« Dans hectolitre, que veut dire
+  // hecto ? »), le préfixe d'un sens (« Quel préfixe veut dire cent ? ») ;
+  // relier trois préfixes ; comparer deux mesures d'unités différentes.
+  if (q.donnees.type === "prefixe-sens") {
+    const [sym, sens] = SENS_PREFIXES[q.donnees.prefixe];
+    assert.ok(q.donnees.unite.startsWith(sym) && FAMILLE[q.donnees.unite], `${ou} : ${q.donnees.unite}`);
+    assert.equal(q.choix[q.bon], sens, `${ou} : le sens`);
+    assert.equal(q.choix.length, 3);
+    q.choix.forEach(c => assert.ok(Object.values(SENS_PREFIXES).some(x => x[1] === c), `${ou} : ${c}`));
+  }
+  if (q.donnees.type === "prefixe-nom") {
+    assert.equal(q.choix[q.bon], q.donnees.prefixe);
+    assert.ok(q.texte.includes(SENS_PREFIXES[q.donnees.prefixe][1]), `${ou} : ${q.texte}`);
+    assert.equal(q.choix.length, 3);
+    q.choix.forEach(c => assert.ok(SENS_PREFIXES[c], `${ou} : ${c}`));
+  }
+  if (q.donnees.type === "associer-pref") {
+    assert.equal(new Set(q.objets.map(o => o.texte)).size, 3); assert.equal(new Set(q.mesures).size, 3);
+    q.donnees.prefixes.forEach((p, i) => assert.equal(q.mesures[q.bonnes[i]], SENS_PREFIXES[p][1].replace(/^un /, ""), `${ou} : ${p} mal relié`));
+    assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : en face`);
+    assert.ok(G.verifier(q, q.bonnes).juste);
+  }
+  if (q.donnees.type === "comparer-mes") {
+    const d = q.donnees;
+    const a = versUnite(lire(d.a), d.ua, d.ub);
+    const b = lire(d.b);
+    assert.notEqual(a, b, `${ou} : deux mesures égales`);
+    const grande = a > b ? `${d.a} ${d.ua}` : `${d.b} ${d.ub}`;
+    assert.equal(q.choix[q.bon].replace(/[\u00a0\u202f]/g, " ").replace(/(\d) (?=\d{3})/g, "$1"), grande, `${ou} : la plus grande`);
+    assert.ok(lire(d.b) > lire(d.a), `${ou} : le piège (le plus grand nombre) manque`);
+    const ecart = Number(a > b ? a - b : b - a) / Number(a > b ? b : a);
+    assert.ok(ecart >= 0.15, `${ou} : mesures trop proches`);
+    assert.equal(q.choix.length, 2);
+  }
+  // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
+  // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
+  if (["P2", "P3", "P4"].includes(q.code)) {
+    const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
+    const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
+    if (q.donnees.type !== "comparer-mes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
+    assert.ok(!aide.includes(q.resume.replace(/[\u00a0\u202f]/g, " ")), `${ou} : l'aide donne le résumé`);
+    if (q.choix && q.forme === "qcm") q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi && q.pourquoi[k], `${ou} : pas de pourquoi pour « ${c} »`); });
+    if (q.glisse) {
+      assert.equal(q.glisse.pale, false, `${ou} : le glisse-unité du palier 2 a toutes ses colonnes`);
+      // (Les deux unités de la question sont des colonnes du glisse-unité :
+      // sinon la correction animée ne peut pas y arriver.)
+      const cols = q.glisse.colonnes || G.COLONNES[q.glisse.grandeur];
+      assert.ok(cols.includes(q.glisse.de) && cols.includes(q.glisse.vers), `${ou} : ${q.glisse.de} ou ${q.glisse.vers} absent de ${cols}`);
+    }
   }
   if (q.donnees.type === "associer-rel") {
     assert.equal(new Set(q.objets.map(o => o.texte)).size, 3); assert.equal(new Set(q.mesures).size, 3);
@@ -346,7 +404,7 @@ function controlerQuestion(q, ou) {
     q.image.forEach(l => assert.doesNotMatch(l.replace(/\u00a0/g, " "), new RegExp(`[=:] ${rep}\\.?$`), `${ou} : l'image « ${l} » donne la réponse ${q.reponseTexte}`));
   }
   // L'outil des relations ne recopie pas la relation (c'est la réponse).
-  if (q.code === "P1") assert.equal(q.outilSansRelation, true, `${ou} : l'outil montrerait la relation`);
+  if (["P1", "P2", "P3"].includes(q.code) || (q.code === "P4" && q.donnees.type !== "comparer-mes")) assert.equal(q.outilSansRelation, true, `${ou} : l'outil montrerait la relation`);
   // L'image dessinée : n paquets, n = le nombre d'unités de la grande unité.
   if (q.paquets) {
     const d = q.donnees;
@@ -372,7 +430,7 @@ function controlerQuestion(q, ou) {
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
     assert.ok(q.bon >= 0 && q.bon < q.choix.length, `${ou} : bonne réponse absente`);
-    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer");
+    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes");
   }
 }
 
@@ -454,6 +512,25 @@ function controlerSerie(code, usage, nombre, s, ou) {
     // Plus jamais trois réponses « 1 » à la fin.
     assert.ok(!s.slice(7, 9).every(q => q.reponse === "1"), `${ou} : les réponses « 1 » à la fin`);
   }
+  // Lot B1-2 : les places de Je valide, les trois grandeurs, jamais deux
+  // fois la même relation.
+  if (["P2", "P3", "P4"].includes(code) && usage === "valide") {
+    const rels = s.map(q => q.relationCle).filter(r => r && r !== "relier");
+    assert.equal(new Set(rels).size, rels.length, `${ou} : une relation deux fois ${rels}`);
+    ["longueur", "masse", "contenance"].forEach(g => assert.ok(s.some(q => q.grandeur === g), `${ou} : ${g}`));
+  }
+  if (code === "P2" && usage === "valide") {
+    assert.deepEqual([0, 3, 4, 6, 7].map(i => s[i].donnees.type), ["prefixe-sens", "prefixe-nom", "fois", "prefixe-sens", "fois"], `${ou} : places`);
+    assert.equal(s[9].forme, "associer"); assert.equal(s[2].forme, "phrase");
+  }
+  if (code === "P3" && usage === "valide") {
+    assert.equal(s[4].forme, "qcm"); assert.equal(s[2].forme, "phrase"); assert.equal(s[6].forme, "phrase");
+    assert.ok(s.filter(q => FAMILLE[q.donnees.vers] && EXPOSANTS[q.donnees.vers] > EXPOSANTS[q.donnees.de]).length >= 3, `${ou} : vers la grande unité`);
+  }
+  if (code === "P4" && usage === "valide") {
+    assert.deepEqual([3, 4, 7].map(i => s[i].donnees.type), ["conv", "fois", "comparer-mes"], `${ou} : places`);
+    assert.equal(s[3].forme, "qcm"); assert.equal(s[9].forme, "associer");
+  }
   if (code === "D1" && usage === "valide") assert.deepEqual([s[4].forme, s[8].forme], ["qcm", "qcm"]);
   if (code === "D2" && usage === "valide") {
     assert.equal(s[2].forme, "qcm"); assert.equal(s[4].donnees.type, "quarts");
@@ -488,7 +565,8 @@ for (const code of PRETES) {
     const prevues = {R1: ["qcm", "associer", "phrase"], R2: ["qcm"], P1: ["nombre", "phrase", "qcm", "associer"], C1: ["nombre", "phrase", "qcm"],
       C2: ["nombre", "phrase", "deux-cases", "ranger", "qcm"], D1: ["nombre", "deux-cases", "qcm"], D2: ["nombre", "deux-cases", "qcm"],
       Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"],
-      R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"]}[code];
+      R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
+      P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -572,10 +650,18 @@ test("banc d'essai : le déterminisme (même graine, même série)", () => {
 test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bien écrit", () => {
   const vues = {};
   const noter = (code, v) => { if (v.erreur) { (vues[code] = vues[code] || new Set()).add(v.erreur); ecriture(v.retour, `${code} c${v.erreur}`); milliers(v.retour, code); } };
-  for (const code of ["P1", "C1", "C2", "D1", "D2", "Q1", "E1", "D7"]) {
+  for (const code of ["P1", "C1", "C2", "D1", "D2", "Q1", "E1", "D7", "P2", "P3", "P4"]) {
     for (let g = 1; g <= 300; g += 1) {
       G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
         const d = q.donnees;
+        // (Lot B1-2 : un mauvais choix, son pourquoi.)
+        if (q.pourquoi && q.choix) q.choix.forEach((c, k) => {
+          if (k === q.bon) return;
+          const v = G.verifier(q, k);
+          assert.ok(v.retour, `${code} : « ${c} » sans pourquoi`);
+          ecriture(v.retour, `${code} pourquoi`); milliers(v.retour, code);
+          assert.ok(v.retour.length <= 60, `${code} : pourquoi trop long « ${v.retour} »`);
+        });
         const essais = [];
         if (d.type === "conv") {
           const v = G.milli(d.valeur);
@@ -619,7 +705,7 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
       });
     }
   }
-  const attendues = {P1: [1, 3], C1: [1, 2, 3, 4, 5, 6, 7], C2: [1, 2, 3, 4, 5], D1: [1, 2], D2: [1, 2, 3, 4], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5, 6, 7], D7: [1, 2, 3]};
+  const attendues = {P2: [1, 2, 4], P3: [1, 2, 3, 4], P4: [1, 2, 3, 4], P1: [1, 3], C1: [1, 2, 3, 4, 5, 6, 7], C2: [1, 2, 3, 4, 5], D1: [1, 2], D2: [1, 2, 3, 4], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5, 6, 7], D7: [1, 2, 3]};
   Object.keys(attendues).forEach(code => {
     attendues[code].forEach(c => assert.ok(vues[code] && vues[code].has(c), `${code} : l'erreur c${c} n'est jamais déclenchée`));
   });

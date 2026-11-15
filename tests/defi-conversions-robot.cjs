@@ -562,6 +562,12 @@ async function faireLeGeste(page, aide) {
       const b = page.locator(".zone .a-toucher");
       if (!(await b.count())) return [];
       await appuyer(page, b.first());
+    } else if (aide.type === "numeration") {
+      // Lot B1-2 : les préfixes et la numération, une ligne à toucher par
+      // préfixe.
+      const a = page.locator(".zone .num-ligne:not(.vue)");
+      if (!(await a.count())) return [];
+      await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
     } else if (["echange", "pieces", "etiquette", "horloges", "axe"].includes(aide.type)) {
