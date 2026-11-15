@@ -642,3 +642,21 @@ test("lot 3b-2 : chaque repère a son illustration (webp, 600 px au plus, 64 ko 
     assert.doesNotMatch(texte, EMOJI, `${n} : une émoticône`);
   });
 });
+
+test("lot 3b-3 bis : la réponse est écrite dans le résumé (la correction et le bilan la mettent en vert là où elle est)", () => {
+  // « Une voiture : environ 4 m de long » ne finit pas par « 4 m » : la page
+  // ne coupe plus le résumé à la longueur de la réponse (rapport de Codex,
+  // F06), elle cherche la réponse dedans. Il faut donc qu'elle y soit.
+  const SANS = new Set(["vrai-faux", "associer", "ranger"]);
+  let n = 0;
+  PRETES.forEach(code => {
+    for (let g = 1; g <= 200; g += 1) {
+      ["valide", "entraine", "retour"].forEach(usage => G.serie(code, {usage, graine: g}).forEach(q => {
+        if (SANS.has(q.forme) || (q.forme === "qcm" && !q.glisse)) return;
+        n += 1;
+        assert.ok(q.resume.includes(q.reponseTexte), `${code} ${q.forme} : « ${q.resume} » sans « ${q.reponseTexte} »`);
+      }));
+    }
+  });
+  assert.ok(n > 1000);
+});

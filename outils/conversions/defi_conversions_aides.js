@@ -321,6 +321,10 @@
       for (let i = 0; i < n; i += 1) {
         const x = x0 + i * w;
         const g = svg("g", {class: "barre", tabindex: 0, role: "button", "data-i": i});
+        // Lot 3b-3 bis : la zone à toucher (invisible) descend sous le paquet,
+        // jusqu'à « touche-moi » : au téléphone, le paquet seul ne faisait
+        // que 35 à 39 px de haut.
+        g.appendChild(svg("rect", {x: x.toFixed(1), y: y0 - 8, width: w.toFixed(1), height: h + 30, fill: "transparent"}));
         if (etat[i]) {
           g.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: w.toFixed(1), height: h, fill: "#eef5fd", stroke: "#0755b8", "stroke-width": 2.5}));
           const traits = Math.min(aide.facteur, 100);
@@ -921,13 +925,19 @@
     // l'unité `vers` (la correction de « À toi », comme le glisse-unité animé
     // de l'exerciseur ; « Suivant » sans le geste dans On te montre).
     // `ensuite()` quand il est arrivé.
+    // Lot 3b-3 bis (rapport de Codex, F01) : les colonnes sans nom (entre t
+    // et kg) se sautent ; avant, `aller` les refusait et le glisse-unité
+    // restait sur t, la réponse cachée (« 1 t, c'est combien de fois 1 kg ? »).
     boite.animer = (versU, {pas = 420, ensuite = () => {}} = {}) => {
       const j = colonnes.indexOf(versU);
       if (j < 0) { ensuite(); return; }
       const avance = () => {
         if (!boite.isConnected) return;
         if (cible === j) { ensuite(); return; }
-        aller(cible + (j > cible ? 1 : -1));
+        const sens = j > cible ? 1 : -1;
+        let k = cible + sens;
+        while (k !== j && !colonnes[k]) k += sens;
+        aller(k);
         root.setTimeout(avance, pas);
       };
       root.setTimeout(avance, pas);

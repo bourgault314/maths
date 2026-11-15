@@ -558,6 +558,26 @@ async function scenarioConcret(navigateur, base, taille) {
   await contexte.close();
 }
 
+// Lot 3b-3 bis (rapport de Codex, F01) : la correction anime le glisse-unité
+// de colonne en colonne jusqu'à l'unité de la réponse ; entre t et kg, deux
+// colonnes sans nom. Avant, l'animation s'y arrêtait : le glisse-unité restait
+// sur t et la ligne de réponse cachée (13 façons de demander, P1, C1, C2).
+async function scenarioTonnes(navigateur, base, taille) {
+  const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
+  for (const [valeur, de, vers] of [["1", "t", "kg"], ["3", "t", "kg"], ["1000", "kg", "t"], ["3740", "kg", "t"], ["1", "kg", "g"]]) {
+    const arrive = await page.evaluate(([v, d, a]) => new Promise(fin => {
+      const zone = document.createElement("div");
+      document.getElementById("cadre").appendChild(zone);
+      const ok = window.MATHSGO_DEFI_CONVERSIONS_AIDES.correctionGlisse(zone, {glisse: {valeur: v, de: d, vers: a, grandeur: "masse"}}, {ensuite: () => { zone.remove(); fin(true); }});
+      if (!ok) fin(false);
+      setTimeout(() => fin(false), 4000);
+    }), [valeur, de, vers]);
+    assert.equal(arrive, true, `${taille.nom}, le glisse-unité de ${valeur} ${de} n'arrive pas à ${vers}`);
+  }
+  assert.deepEqual(erreurs, []);
+  await contexte.close();
+}
+
 (async () => {
   const serveur = await servir();
   const base = `http://127.0.0.1:${serveur.address().port}`;
@@ -570,6 +590,7 @@ async function scenarioConcret(navigateur, base, taille) {
       await scenarioCeinture(navigateur, base, taille);
       await scenarioProf(navigateur, base, taille);
       await scenarioConcret(navigateur, base, taille);
+      await scenarioTonnes(navigateur, base, taille);
       console.log(`✓ ${taille.nom}`);
     }
   } catch (e) {

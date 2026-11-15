@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b3">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b3bis">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -42,7 +42,7 @@
   <script src="./conversions_carte.js?v=20261115-3b2"></script>
   <script src="./conversions_generateurs.js?v=20261115-3b3"></script>
   <script src="./defi_conversions_parcours.js?v=20261114-3b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261115-3b3"></script>
+  <script src="./defi_conversions_aides.js?v=20261115-3b3bis"></script>
   <script>
   (function () {
     "use strict";
@@ -413,10 +413,12 @@
       if (vide) liens.appendChild(lien("Mode professeur", allerProf));
       else liens.appendChild(lien("Effacer mon historique", confirmerEffacer));
       ajouterD(liens);
+      // (Lot 3b-3 bis : « Mode professeur » dans la même grille : à
+      // l'ordinateur sur sa ligne, comme avant ; au téléphone, les trois
+      // liens sur une seule rangée, chacun avec sa zone de 40 px.)
       if (!vide) {
-        const l2 = el("div", "liens2 un");
-        l2.appendChild(lien("Mode professeur", allerProf));
-        ajouterD(l2);
+        liens.classList.add("trois");
+        liens.appendChild(lien("Mode professeur", allerProf, "seul"));
       }
     }
 
@@ -798,7 +800,7 @@
     const sensPourRobot = x => { const f = G.fauxDeSens(x); return f ? Object.assign({grandit: G.sensDe(x).grandit}, f) : null; };
     window.MATHSGO_DEFI_CONVERSIONS_ECRAN = Object.freeze({
       question: () => (ici ? {forme: ici.forme, reponse: ici.reponse, choix: ici.choix || null, bon: ici.bon, bonnes: ici.bonnes || null,
-        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici)} : null)
+        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici), resume: ici.resume} : null)
     });
 
     // Le nom d'un objet à relier (lot 3b-2) : au téléphone peu haut, son
@@ -1068,9 +1070,10 @@
         zone.appendChild(texteLignes(question.correction.length > 1 ? "grosse petite-grosse" : "grosse", question.correction.join("\n")));
         return;
       }
-      const g = el("div", "grosse");
-      const gauche = question.resume.slice(0, question.resume.length - question.reponseTexte.length);
-      g.append(document.createTextNode(gauche), el("span", "v", question.reponseTexte));
+      // Lot 3b-3 bis : une ligne longue (« 7 km + 629 m = 7 629 m ») se fait
+      // un peu plus petite au téléphone, pour tenir sur une ligne (sur deux,
+      // l'aide d'« À toi » tombait à 75 % au petit iPhone).
+      const g = resumeEnVert(el("div", question.resume.length > 17 ? "grosse longue" : "grosse"), question);
       // L'heure en mots (lot 3b-2) : l'horloge à côté de la réponse.
       if (question.donnees.type === "heure-mots") {
         const ligne = el("div", "horl-ligne");
@@ -1483,16 +1486,27 @@
     function choisi(qn, v) {
       return qn.choix && !v.jnsp && v.tape ? T(`Tu as choisi : ${v.tape}`) : null;
     }
+    // Le résumé d'une question, la réponse en vert là où elle est écrite.
+    // Lot 3b-3 bis (rapport de Codex, F06) : un repère ne finit pas toujours
+    // par sa mesure (« Une voiture : environ 4 m de long », « Une feuille
+    // A4 : 21 cm sur 29,7 cm ») ; couper à la longueur de la réponse donnait
+    // « Une voiture : environ 4 m de l4 m ».
+    function resumeEnVert(parent, question) {
+      const r = question.resume;
+      const v = question.reponseTexte;
+      const k = r.endsWith(v) ? r.length - v.length : r.lastIndexOf(v);
+      if (k < 0) { parent.appendChild(document.createTextNode(r)); return parent; }
+      parent.append(document.createTextNode(r.slice(0, k)), el("span", "v", v));
+      if (k + v.length < r.length) parent.appendChild(document.createTextNode(r.slice(k + v.length)));
+      return parent;
+    }
     function blocCorrection(erreurs) {
       const c = el("div", "corr");
       erreurs.forEach(({question, tape, jnsp}) => {
         const ligne = el("div");
         const gauche = el("span");
         if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") gauche.textContent = question.resume;
-        else {
-          gauche.appendChild(document.createTextNode(question.resume.slice(0, question.resume.length - question.reponseTexte.length)));
-          gauche.appendChild(el("span", "v", question.reponseTexte));
-        }
+        else resumeEnVert(gauche, question);
         const geste = question.forme === "associer" || question.forme === "ranger";
         ligne.append(gauche, el("small", "", jnsp ? "je ne savais pas" : geste ? "à revoir" : question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
         c.appendChild(ligne);

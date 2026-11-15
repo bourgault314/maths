@@ -192,8 +192,47 @@ async function controler(page, taille) {
       });
       if (deborde) defauts.push(`un texte sort de son bouton : « ${deborde.textContent.trim().slice(0, 20)} »`);
     }
+    // Lot 3b-3 bis (rapport de Codex, F02 à F05) : au doigt, TOUT ce qui se
+    // touche (bandeau, liens de l'accueil, logo, commandes du mode
+    // professeur, voile) a une zone d'au moins 40 px de haut et de large.
+    // La zone se mesure comme le doigt la trouve : les points où la page
+    // répond « cet élément » (elementFromPoint), sur les deux axes qui
+    // passent par son centre ; une zone agrandie sans changer le dessin
+    // (::after) compte, une zone mangée par un voisin ne compte pas. (Pas
+    // dans le glisse-unité : c'est toute la piste qui se touche ; un élément
+    // coupé par le bord d'une liste qui défile se mesure quand il est entier.)
+    if (tactile) {
+      const voile = document.getElementById("voile");
+      const ouvert = voile && !voile.hidden && visible(voile);
+      const racine = ouvert ? voile : document.getElementById("app");
+      const touche = (e, x, y) => { const h = document.elementFromPoint(x, y); return Boolean(h) && (h === e || e.contains(h)); };
+      const petit = [...racine.querySelectorAll("a[href], button, [role='button'], input, select")]
+        .filter(e => !(ouvert ? false : e.closest("#voile")) && !e.closest(".gu2") && !e.disabled && visible(e) && getComputedStyle(e).pointerEvents !== "none")
+        .map(e => {
+          const b = e.getBoundingClientRect();
+          const liste = e.closest(".ecran-defile");
+          const lb = liste ? liste.getBoundingClientRect() : {top: 0, bottom: vh, left: 0, right: vw};
+          if (b.top < Math.max(0, lb.top) - 0.5 || b.bottom > Math.min(vh, lb.bottom) + 0.5) return null;
+          const x = b.left + b.width / 2;
+          const y = b.top + b.height / 2;
+          if (!touche(e, x, y)) return null;
+          const n = (dx, dy) => { let k = 0; while (k < 40 && touche(e, x + dx * (k + 1), y + dy * (k + 1))) k += 1; return k; };
+          return {e, h: n(0, -1) + n(0, 1) + 1, l: n(-1, 0) + n(1, 0) + 1};
+        }).filter(z => z && (z.h < 39.5 || z.l < 39.5));
+      if (petit.length) {
+        const nomZ = z => `« ${(z.e.textContent || z.e.getAttribute("aria-label") || z.e.tagName).trim().slice(0, 24)} » (${z.l} × ${z.h} px)`;
+        defauts.push(`zone à toucher trop petite au doigt : ${petit.slice(0, 3).map(nomZ).join(", ")}${petit.length > 3 ? `, et ${petit.length - 3} autre(s)` : ""}`);
+      }
+    }
+    // Lot 3b-3 bis (rapport de Codex, F01) : la correction se montre. Les
+    // photos d'une correction se prennent 3 s après la réponse : le
+    // glisse-unité est arrivé et la ligne de réponse est visible (de t à kg,
+    // il restait bloqué sur t, la ligne cachée).
+    if ([...cadre.querySelectorAll(".reponse-bonne")].some(r => getComputedStyle(r).visibility === "hidden")) {
+      defauts.push("la bonne réponse reste cachée (le glisse-unité n'arrive pas à l'unité de la réponse)");
+    }
     // (Un bouton figé après la réponse ne se touche plus : il ne compte pas.)
-    const couverts = [...cadre.querySelectorAll(".bas button, #cadre > .btn, #cadre > .duo > .btn")].filter(visible)
+    const couverts =[...cadre.querySelectorAll(".bas button, #cadre > .btn, #cadre > .duo > .btn")].filter(visible)
       .filter(b => getComputedStyle(b).pointerEvents !== "none").filter(b => {
       const c = b.getBoundingClientRect();
       // Le centre et quatre points aux quarts (pas les coins : ils sont arrondis).
@@ -693,18 +732,26 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   await attendre(page, 50);
   const refV = await places(page);
   bouge = [];
+  const ratees = [];
   for (let i = 0; i < 10 && !(await page.locator(".titre-fin").count()); i += 1) {
     bouge = bouge.concat(ecarts(refV, await places(page)).map(e => `${e} (question ${i + 1})`));
     if (i === 0) await carnet.photo(page, "Je valide · question");
     if (i === 2) await carnet.photo(page, "Je valide · une question d'une étape d'avant");
     if (i === 3 || i === 5) {
+      // (Lot 3b-3 bis : le texte de la question ratée, pour la liste de la fin.)
+      ratees.push(await page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question().resume));
       if (i === 3) await repondre(page, null, false); else await jeNeSaisPas(page);
       await attendre(page, 3000);
       await carnet.photo(page, i === 3 ? "Je valide · une erreur, corrigée tout de suite" : "Je valide · Je ne sais pas", ecarts(refV, await places(page)));
       await suivant(page);
     } else await repondre(page, null);
   }
-  await carnet.photo(page, "Je valide · la fin", bouge);
+  // Lot 3b-3 bis (rapport de Codex, F06) : chaque ligne de « Mes erreurs,
+  // corrigées » est le texte entier de la question ratée (« Une voiture :
+  // environ 4 m de l4 m » : le repère coupé, la réponse collée derrière).
+  const lignesFin = await page.evaluate(() => [...document.querySelectorAll(".corr > div > span:first-child")].map(e => e.textContent));
+  const abimees = ratees.filter(r => r && !lignesFin.includes(r));
+  await carnet.photo(page, "Je valide · la fin", bouge.concat(abimees.length ? [`une erreur mal recopiée dans la liste : « ${abimees[0].slice(0, 40)} »`] : []));
   await accueilProf();
 
   // Tu connais déjà ? : l'annonce, une marche.
