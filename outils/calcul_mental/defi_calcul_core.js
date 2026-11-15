@@ -4976,6 +4976,13 @@
   // (60 ÷ 4, 100 ÷ 5 : les repères de M5).
   const M12_DIVISEURS = Object.freeze(entre(3, 9));
   const m12Garde = n => n !== 60 && n !== 100;
+  // Lot 7b (rapport de Codex du 14/11 : M13 ne reprend aucun calcul de M12)
+  // — la règle commune aux deux modules : ÷ 4 ou ÷ 8 d'un nombre qui finit
+  // par 0, quand le quotient est entier, plus grand que 10 (pas un fait des
+  // tables) et ne finit pas par 0 (120 ÷ 4 = 30 : 12 dizaines ÷ 4, M12-1),
+  // c'est la moitié de la moitié : M13 (140 ÷ 4, 360 ÷ 8). Tout le reste
+  // reste à M12 (96 ÷ 8, 84 ÷ 4, 536 ÷ 8).
+  const m13Prend = (n, d) => (d === 4 || d === 8) && n % 10 === 0 && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
   function m12Vivier(niveau) {
     const paires = [];
     if (niveau === 1) {
@@ -4990,7 +4997,7 @@
     }
     // Le quotient n'est jamais un des morceaux écrits sur la barre (45 ÷ 3 :
     // 30 | 15, et 15 est la réponse).
-    const gardees = paires.filter(([n, d]) => m12Garde(n) && !m12Calcul(niveau, "division", n, d).morceaux.includes(n / d));
+    const gardees = paires.filter(([n, d]) => m12Garde(n) && !m13Prend(n, d) && !m12Calcul(niveau, "division", n, d).morceaux.includes(n / d));
     return Object.freeze({
       division: gardees.map(([n, d]) => m12Calcul(niveau, "division", n, d)),
       "trou-facteur": gardees.map(([n, d]) => m12Calcul(niveau, "trou-facteur", n, d))
@@ -7017,6 +7024,561 @@
     ]
   };
 
+  // ============================================ lot 7b (15/11/2026)
+  //
+  // D8 « Doubles et moitiés de décimaux », D9 « Décimal × 5, × 50 », M13
+  // « ÷ 4, ÷ 8 : la moitié de la moitié » : calcul mental CM2 (p. 16, 18,
+  // 19), exemples de réussite CM2 (p. 8-10), évaluation de 6e (Q13, Q15) ;
+  // bornes et familles du rapport de Codex du 14/11.
+  //  - D8 : le schéma en barres de M1, le nombre coupé en deux morceaux —
+  //    la partie entière et la partie décimale (13,6 = 13 + 0,6) ; le double
+  //    et la moitié suivent le même chemin (moitié de 13,6 = 6,5 + 0,3) ; un
+  //    entier impair (D8-1) : le pair d'avant et 1 (9 = 8 + 1).
+  //  - D9 : les outils de M7 — le glisse-nombres (× 10, × 100 pour × 50),
+  //    puis le nombre dix fois coupé en deux ; × 50, c'est × 100 puis la
+  //    moitié (la v2 disait × 10).
+  //  - M13 : la barre coupée en deux, puis encore en deux (rangées collées,
+  //    le schéma de M6 à l'envers) ; J'écris, chaque moitié sur le résultat
+  //    d'avant (« 140 ÷ 2 = 70 », « 70 ÷ 2 = 35 »).
+
+  // ------------------------------------------------- D8 : doubles et moitiés de décimaux
+  //
+  // Les morceaux d'un nombre : la partie entière et la partie décimale
+  // (13,6 → 13 et 0,6 ; 1,22 → 1 et 0,22) ; un entier impair : le pair
+  // d'avant et 1 (9 → 8 et 1 ; 1 → 1).
+  function d8Morceaux(n) {
+    if (Number.isInteger(n)) return n > 1 && n % 2 ? [n - 1, 1] : [n];
+    const e = Math.floor(n + 1e-9);
+    const d = exact(n - e);
+    return e ? [e, d] : [d];
+  }
+  // Formes : « double » (double de 13,6), « double-fois » (2 × 4,35),
+  // « moitie » (moitié de 9), « division » (1,22 ÷ 2), « trou-double »
+  // (2 × □ = 9). `ecrit` : le nombre tel qu'il s'écrit, quand il garde un
+  // zéro (« 8,10 », évaluation de 6e, Q13). Données : n, r, e (la partie
+  // entière), dec (la partie décimale), morceaux, zero (écrit avec son
+  // zéro), et les réponses fausses connues : confondu (double et moitié
+  // échangés), impair (la moitié de l'unité oubliée : moitié de 13,6 →
+  // 6,3), sansEchange (double de 13,6 → 26,12), chiffres (moitié de 8,10 →
+  // 4,5 : chaque chiffre coupé en deux).
+  const D8_MOITIES = Object.freeze(["moitie", "division", "trou-double"]);
+  const d8Moitie = calcul => D8_MOITIES.includes(calcul.forme);
+  function d8Calcul(niveau, forme, n, ecrit = null) {
+    const moitie = D8_MOITIES.includes(forme);
+    const r = exact(moitie ? n / 2 : 2 * n);
+    const e = Math.floor(n + 1e-9);
+    const dec = exact(n - e);
+    const morceaux = d8Morceaux(n);
+    const x = Math.round(dec * 100);
+    let impair = -1;
+    let sansEchange = -1;
+    let chiffres = -1;
+    if (moitie && e % 2 === 1) impair = exact((e - 1) / 2 + dec / 2);
+    if (!moitie && x % 10 === 0 && 2 * x >= 100) sansEchange = Number(`${2 * e}.${2 * x / 10}`);
+    if (moitie && ecrit && e % 2 === 0) chiffres = Number(`${e / 2}.${x / 2}`);
+    const texteN = ecrit || n;
+    const morceauxTexte = {
+      double: ["double de", texteN, "=", TROU],
+      "double-fois": [2, "×", texteN, "=", TROU],
+      moitie: ["moitié de", texteN, "=", TROU],
+      division: [texteN, "÷", 2, "=", TROU],
+      "trou-double": [2, "×", TROU, "=", texteN]
+    }[forme];
+    const donnees = {n, r, e, dec, morceaux: Object.freeze(morceaux), zero: Boolean(ecrit), confondu: exact(moitie ? 2 * n : n / 2), impair, sansEchange, chiffres};
+    const calcul = fabriquer("D8", niveau, forme, morceauxTexte, r, donnees);
+    // Les clés : « moitié de 9 » porte « q » (comme M1) ; « 8,10 » porte
+    // son zéro (« 810d2 »), sinon ce serait 8,1.
+    const nombreCle = ecrit ? `${ecrit.replace(",", "")}d${ecrit.split(",")[1].length}` : cleNombre(n);
+    const cles = {double: `${nombreCle}`, "double-fois": `2-${nombreCle}`, moitie: `${nombreCle}-q`, division: `${nombreCle}-q-2`, "trou-double": `2-x-${nombreCle}`};
+    return avecCle(calcul, `D8-${niveau}-${cles[forme]}`);
+  }
+  // (8,10 : le nombre et sa partie décimale s'écrivent avec leur zéro.)
+  const d8Image = calcul => Object.assign({outil: "barres", sorte: d8Moitie(calcul) ? "moitie" : "double", n: calcul.donnees.n, morceaux: calcul.donnees.morceaux.slice()},
+    calcul.donnees.zero ? {ecrit: `${f(calcul.donnees.n)}0`, ecrits: calcul.donnees.morceaux.map(m => (Number.isInteger(m) ? f(m) : `${f(m)}0`))} : {});
+  const d8Aide = calcul => Object.assign(d8Image(calcul), {masque: true});
+  function d8Phrase(calcul) {
+    const {n, r, morceaux} = calcul.donnees;
+    if (d8Moitie(calcul)) {
+      if (morceaux.length < 2) return fr(`Regarde : ${f(n)} coupé en deux, ça fait ${f(r)} et ${f(r)}.`);
+      return fr(`Regarde : ${morceaux.map(m => f(exact(m / 2))).join(" et ")}, ça fait ${f(r)}.`);
+    }
+    return fr(`Regarde : ${morceaux.map(m => f(exact(2 * m))).join(" et ")}, ça fait ${f(r)}.`);
+  }
+  // Du plus simple au plus dur : le double, puis la moitié, puis les autres
+  // écritures ; un échange (double de 0,6 = 1,2), une unité impaire à
+  // couper (13 → 6,5) ; la taille.
+  const D8_FORMES = Object.freeze({double: 0, "double-fois": 0, moitie: 1, division: 2, "trou-double": 2});
+  function d8Difficulte(calcul) {
+    const {n, e, dec} = calcul.donnees;
+    const echange = !d8Moitie(calcul) && 2 * dec >= 1 ? 1 : 0;
+    const impair = d8Moitie(calcul) && e % 2 === 1 ? 1 : 0;
+    return D8_FORMES[calcul.forme] * 1000 + (calcul.donnees.zero ? 400 : 0) + echange * 200 + impair * 200 + Math.min(99, Math.round(n * 5));
+  }
+  const D8_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "double et moitié confondus",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.confondu)),
+      retour: (calcul, reponse) => {
+        const {n} = calcul.donnees;
+        return d8Moitie(calcul)
+          ? fr(`${f(reponse)}, c’est le double de ${f(n)}. Ici, on coupe ${f(n)} en deux : ${f(n)} ÷ 2.`)
+          : fr(`${f(reponse)}, c’est la moitié de ${f(n)}. Le double, c’est 2 fois ${f(n)} : ${f(n)} + ${f(n)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "la moitié de l’unité oubliée",
+      test: sauf((calcul, reponse) => calcul.donnees.impair >= 0 && memeNombre(reponse, calcul.donnees.impair)),
+      retour: (calcul, reponse) => {
+        const {e} = calcul.donnees;
+        return fr(`${f(reponse)} : la moitié de ${f(e)}, ce n’est pas ${f((e - 1) / 2)}. ${f(e)} = ${f(e - 1)} + 1, et la moitié de 1, c’est 0,5 : moitié de ${f(e)} = ${f(exact(e / 2))}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "dixièmes doublés sans échange",
+      test: sauf((calcul, reponse) => calcul.donnees.sansEchange >= 0 && memeNombre(reponse, calcul.donnees.sansEchange)),
+      retour: (calcul, reponse) => {
+        const x = Math.round(calcul.donnees.dec * 10);
+        return fr(`${f(reponse)} : ${2 * x} dixièmes, c’est 1 unité et ${2 * x - 10} dixièmes.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "chaque chiffre coupé en deux",
+      test: sauf((calcul, reponse) => calcul.donnees.chiffres >= 0 && memeNombre(reponse, calcul.donnees.chiffres)),
+      retour: (calcul, reponse) => {
+        const {e, dec} = calcul.donnees;
+        const c = Math.round(dec * 100);
+        return fr(`${f(reponse)} : après la virgule, il y a ${c} centièmes. La moitié de ${c} centièmes, c’est ${c / 2} centièmes : ${f(exact(dec / 2))}. Moitié de ${f(e)} = ${f(e / 2)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 5, nom: "un morceau oublié",
+      test: sauf((calcul, reponse) => {
+        const {r, morceaux} = calcul.donnees;
+        if (morceaux.length < 2) return false;
+        return morceaux.some(m => memeNombre(reponse, exact(d8Moitie(calcul) ? r - m / 2 : r - 2 * m)));
+      }),
+      retour: calcul => {
+        const morceaux = calcul.donnees.morceaux.map(f).join(" et ");
+        return d8Moitie(calcul) ? fr(`Coupe CHAQUE morceau en deux : ${morceaux}.`) : fr(`Double CHAQUE morceau : ${morceaux}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les viviers (rapport de Codex du 14/11) :
+  //  - D8-1 : la moitié des impairs de 1 à 15 (calcul mental CM2, p. 16),
+  //    trois écritures (moitié de 9 ; 9 ÷ 2 ; 2 × □ = 9 : 24 calculs, de
+  //    quoi faire 20 calculs à l'entraînement) ;
+  //  - D8-2 : un chiffre après la virgule ; le double (13,6), la moitié qui
+  //    reste aux dixièmes (un nombre pair de dixièmes : 7,4 ; jamais 8,1) ;
+  //    la partie entière jusqu'à 19 pour le double, jusqu'à 15 ou 16, 18
+  //    pour la moitié (sa moitié est un fait connu : M1-1, D8-1) ;
+  //  - D8-3 : les centièmes ; le double (2 × 4,35), la moitié aux centièmes
+  //    (1,22 ÷ 2 ; un nombre pair de centièmes), la moitié qui fait des
+  //    centièmes, écrite avec son zéro (moitié de 8,10 = 4,05).
+  // Jamais de partie entière nulle (le schéma garde ses deux morceaux).
+  // (Un paquet par écriture : chaque écriture est dans chaque série.)
+  function d8Vivier(niveau) {
+    const impairs = entre(1, 15, 2);
+    const paquet = (forme, nombres, ecrit = () => null) => Object.freeze(nombres.map(n => d8Calcul(niveau, forme, n, ecrit(n))));
+    if (niveau === 1) return Object.freeze([paquet("moitie", impairs), paquet("division", impairs), paquet("trou-double", impairs)]);
+    if (niveau === 2) {
+      const doubles = entre(1, 19).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
+      const moities = [...entre(1, 16), 18].flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
+      return Object.freeze([paquet("double", doubles), paquet("double-fois", doubles), paquet("moitie", moities), paquet("division", moities)]);
+    }
+    const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10).map(x => exact(e + x / 100)));
+    const pairs = centiemes.filter(x => Math.round(x * 100) % 2 === 0);
+    const zeros = entre(1, 9).flatMap(e => [1, 3, 5, 7, 9].map(y => exact(e + y / 10)));
+    const avecZero = n => `${f(n)}0`;
+    return Object.freeze([paquet("double-fois", centiemes), paquet("double", centiemes), paquet("division", pairs), paquet("moitie", pairs),
+      paquet("moitie", zeros, avecZero), paquet("division", zeros, avecZero)]);
+  }
+  const D8_VIVIERS = Object.freeze({1: d8Vivier(1), 2: d8Vivier(2), 3: d8Vivier(3)});
+  // (Chaque paquet se tire à part, dans ses proportions.)
+  function d8Composer(niveau, parts) {
+    const paquets = D8_VIVIERS[niveau];
+    const dans = (calcul, i) => paquets[i].some(c => c.cle === calcul.cle);
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = paquets.flatMap((paquet, i) => {
+        const deja = imposes.filter(c => dans(c, i)).length;
+        return melanger(rng, paquet).filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      });
+      return [...tires, ...imposes];
+    };
+  }
+  // Le dessin de J'écris : le schéma de M1 (un morceau par étape, puis
+  // l'accolade).
+  const d8Dessins = (calcul, etapes) => barresDessins(d8Image(calcul), etapes);
+  // Les étapes d'un calcul (comme M1-3 : « double de 36 = 2 × 30 + 2 × 6 ») :
+  // chaque morceau, puis le tout — « 2 × 13 = □ », « 2 × 0,6 = □ »,
+  // « double de 13,6 = □ » ; « 13 ÷ 2 = □ », « 0,6 ÷ 2 = □ », « moitié de
+  // 13,6 = □ » (calcul mental CM2, p. 18 : 13,6 ÷ 2 = (13 ÷ 2) + (0,6 ÷ 2)).
+  // 8,10 : la partie décimale s'écrit aussi avec son zéro (0,10).
+  function d8Etapes(calcul) {
+    const {n, r, morceaux, zero} = calcul.donnees;
+    const ecrit = x => (zero && !Number.isInteger(x) ? `${f(x)}0` : f(x));
+    const morceau = x => (d8Moitie(calcul) ? `${ecrit(x)} ÷ 2` : `2 × ${ecrit(x)}`);
+    const tout = {double: `double de ${ecrit(n)}`, "double-fois": `2 × ${ecrit(n)}`, division: `${ecrit(n)} ÷ 2`}[calcul.forme] || `moitié de ${ecrit(n)}`;
+    return [...morceaux.map(m => [`${morceau(m)} = ?`, exact(d8Moitie(calcul) ? m / 2 : 2 * m)]), [`${tout} = ?`, r]];
+  }
+  // La consigne en égalité, qui commence par le calcul cherché (« double de
+  // 13,6 = 2 × 13 + 2 × 0,6 ») ; « double de » ne se coupe pas.
+  const d8Consigne = etapes => {
+    const textes = etapes.map(([texte]) => texte.replace(" = ?", ""));
+    return `${textes[textes.length - 1]} = ${textes.slice(0, -1).join(" + ")}`.replace(/(double|moitié) de /g, "$1\u00a0de\u00a0");
+  };
+  // J'écris de D8 (la même recette pour la leçon et les calculs tirés).
+  // Un seul morceau (moitié de 1) : pas de J'écris tiré.
+  function d8Ecris(calcul) {
+    if (calcul.donnees.morceaux.length < 2 || calcul.forme === "trou-double") return null;
+    const etapes = d8Etapes(calcul);
+    return ecrisAvecDessins({
+      consigne: fr(d8Consigne(etapes)),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(d8Image(calcul)), phrase: d8Phrase(calcul)})
+    }, d8Dessins(calcul, etapes.length));
+  }
+  // J'apprends de D8 (comme M1, sans manipulation) : « Je représente » à
+  // étapes sur le schéma (le premier calcul), puis J'écris (le deuxième).
+  function d8Apprends({represente, ecris, bilan, autre = null}) {
+    const etapes = d8Etapes(represente);
+    const consigne = d8Consigne(etapes);
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: ecrisAvecDessins(Object.freeze({
+        outil: "barres", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(d8Aide(represente)),
+        etapes: etapesEcris(etapes),
+        solution: Object.freeze({image: d8Image(represente), phrase: d8Phrase(represente)})
+      }), d8Dessins(represente, etapes.length)),
+      ecris: d8Ecris(ecris),
+      bilan: frBilan(bilan),
+      ...autreDe(autre),
+      image: Object.freeze(d8Image(represente)),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const D8 = {
+    id: "D8", nom: "Doubles et moitiés de décimaux", exemple: "moitié de 9",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "barres",
+    erreurs: D8_ERREURS, image: d8Image, aide: d8Aide, phrase: d8Phrase, manipulation: () => null, difficulte: d8Difficulte,
+    // Comme M1 (lot 7e-2) : la première moitié arrive annoncée, avec son
+    // dessin — chaque morceau déjà coupé en deux ; l'élève les réunit.
+    aideNouveau: calcul => (d8Moitie(calcul) && calcul.donnees.morceaux.length > 1
+      ? Object.assign(d8Aide(calcul), {trouves: calcul.donnees.morceaux.map((_, i) => i), fini: false}) : null),
+    niveaux: [
+      {
+        n: 1, titre: "moitié des impairs jusqu’à 15", nom: "Moitié des impairs jusqu’à 15", palier: 3, type: "F",
+        composer: d8Composer(1, [2, 1, 1]),
+        imposes: [d8Calcul(1, "moitie", 1), d8Calcul(1, "trou-double", 9)],
+        apprends: d8Apprends({
+          represente: d8Calcul(0, "moitie", 9),
+          ecris: d8Calcul(0, "moitie", 7),
+          bilan: "La moitié de 1, c’est 0,5 : 8 ÷ 2 = 4. 1 ÷ 2 = 0,5. moitié de 9 = 4 + 0,5 = 4,5."
+        })
+      },
+      {
+        n: 2, titre: "un chiffre après la virgule", nom: "Doubles et moitiés\u00a0: dixièmes", palier: 3, type: "P",
+        composer: d8Composer(2, [3, 2, 3, 2]),
+        imposes: [d8Calcul(2, "double", 7.3), d8Calcul(2, "moitie", 13.6)],
+        apprends: d8Apprends({
+          represente: d8Calcul(0, "double", 13.6),
+          ecris: d8Calcul(0, "double", 7.8),
+          bilan: "Je double chaque morceau : double de 13,6 = 2 × 13 + 2 × 0,6 = 26 + 1,2 = 27,2.",
+          autre: {phrase: "Pour la moitié, je coupe chaque morceau\u00a0:", calcul: "moitié de 13,6 = 6,5 + 0,3 = 6,8"}
+        })
+      },
+      {
+        n: 3, titre: "deux chiffres après la virgule", nom: "Doubles et moitiés\u00a0: centièmes", palier: 3, type: "P",
+        composer: d8Composer(3, [2, 2, 2, 2, 1, 1]),
+        imposes: [d8Calcul(3, "division", 1.22), d8Calcul(3, "moitie", 8.1, "8,10")],
+        apprends: d8Apprends({
+          represente: d8Calcul(0, "double-fois", 4.35),
+          ecris: d8Calcul(0, "double-fois", 3.26),
+          bilan: "Je double chaque morceau : 2 × 4,35 = 2 × 4 + 2 × 0,35 = 8 + 0,7 = 8,7.",
+          autre: {phrase: "Pour la moitié, je coupe chaque morceau\u00a0:", calcul: "1,22 ÷ 2 = 0,5 + 0,11 = 0,61"}
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- D9 : décimal × 5, × 50
+  //
+  // « 3,4 × 5 », « 50 × 12,4 » : les données de M7 (n, fois, p, dix, r…),
+  // en décimal exact. × 5, c'est × 10 puis la moitié ; × 50, × 100 puis la
+  // moitié (calcul mental CM2, p. 19).
+  function d9Calcul(niveau, n, fois, gauche = false) {
+    const p = fois * 2;
+    const r = exact(n * fois);
+    const donnees = {n, fois, p, dix: exact(n * p), r, somme: exact(n + fois), plus: exact(r * 10), moins: exact(r / 10)};
+    return gauche
+      ? fabriquer("D9", niveau, "produit-gauche", [fois, "×", n, "=", TROU], r, donnees)
+      : fabriquer("D9", niveau, "produit", [n, "×", fois, "=", TROU], r, donnees);
+  }
+  // Le glisse-nombres avec la virgule (les colonnes de D2).
+  function d9Manipulation(calcul) {
+    const m = m7Manipulation(calcul);
+    return Object.freeze(Object.assign({}, m, {colonnes: COLONNES_D2}));
+  }
+  // Le chiffre le plus à droite (3,4 → 4 ; 1,46 → 6).
+  const dernierChiffre = x => Number(formaterNombre(x).replace(/\D/g, "").slice(-1));
+  function d9Difficulte(calcul) {
+    const {n} = calcul.donnees;
+    return (calcul.forme === "produit-gauche" ? 1000 : 0) + (dernierChiffre(n) % 2 ? 500 : 0) + decimalesDe(n) * 100 + Math.min(99, Math.round(n));
+  }
+  // Les viviers (rapport de Codex) : des décimaux, jamais un entier (M7).
+  //  - D9-1 : × 5, au plus trois chiffres ; un chiffre le plus à droite
+  //    impair seulement avec un chiffre après la virgule (3,5 × 5 = 35 ÷ 2 =
+  //    17,5) : 1,47 × 5 = 14,7 ÷ 2 = 7,35 demanderait la moitié aux centièmes,
+  //    qui vient après (D8-3) ;
+  //  - D9-2 : × 50, moins de 20, au plus trois chiffres, le chiffre le plus
+  //    à droite pair (calcul mental CM2, p. 19) : dixièmes (12,4), centièmes
+  //    (4,86).
+  function d9Nombres(niveau) {
+    if (niveau === 1) {
+      const dixiemes = entre(1, 49).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
+      const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10 && x % 2 === 0).map(x => exact(e + x / 100)));
+      return [...dixiemes, ...centiemes];
+    }
+    const dixiemes = entre(1, 19).flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
+    const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10 && x % 2 === 0).map(x => exact(e + x / 100)));
+    return [...dixiemes, ...centiemes];
+  }
+  function d9Vivier(niveau) {
+    const fois = niveau === 2 ? 50 : 5;
+    const nombres = d9Nombres(niveau);
+    return Object.freeze({
+      produit: Object.freeze(nombres.map(n => d9Calcul(niveau, n, fois))),
+      "produit-gauche": Object.freeze(nombres.map(n => d9Calcul(niveau, n, fois, true)))
+    });
+  }
+  const D9_VIVIERS = Object.freeze({1: d9Vivier(1), 2: d9Vivier(2)});
+  // J'apprends de D9 : comme M7, le glisse-nombres avec la virgule.
+  function d9Apprends(options) {
+    const lecon = m7Apprends(options);
+    const glisse = d9Manipulation(options.manipule);
+    return Object.freeze(Object.assign({}, lecon, {
+      manipule: Object.freeze({outil: "glisse", depart: glisse.depart, colonnes: glisse.colonnes, decalage: glisse.decalage, consigne: glisse.consigne, refus: glisse.refus, traces: glisse.traces})
+    }));
+  }
+
+  const D9 = {
+    id: "D9", nom: "Décimal × 5, × 50", exemple: "3,4 × 5",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "dix-fois",
+    erreurs: M7_ERREURS, image: m7Image, aide: m7Aide, phrase: m7Phrase, manipulation: d9Manipulation, difficulte: d9Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "× 5 (trois chiffres au plus)", nom: "Décimal × 5", palier: 3, type: "P",
+        composer: vivierNiveau(D9_VIVIERS[1], [7, 3]),
+        imposes: [d9Calcul(1, 2.6, 5), d9Calcul(1, 7.3, 5, true)],
+        apprends: d9Apprends({
+          manipule: d9Calcul(0, 3.4, 5),
+          represente: d9Calcul(0, 1.46, 5),
+          ecris: d9Calcul(0, 2.48, 5, true),
+          consigne: "1,46 × 5, c’est la moitié de 1,46 × 10.",
+          consigneEcris: "5 × 2,48 = 2,48 × 10 ÷ 2",
+          etapes: [["2,48 × 10 = ?", 24.8], ["24,8 ÷ 2 = ?", 12.4]],
+          bilan: "× 5, c’est × 10 puis la moitié : 3,4 × 10 = 34. 3,4 × 5 = 34 ÷ 2 = 17."
+        })
+      },
+      {
+        n: 2, titre: "× 50 (nombre de moins de 20, au plus trois chiffres, chiffre le plus à droite pair)", nom: "Décimal × 50", palier: 3, type: "P",
+        composer: vivierNiveau(D9_VIVIERS[2], [7, 3]),
+        imposes: [d9Calcul(2, 16.2, 50), d9Calcul(2, 2.48, 50, true)],
+        apprends: d9Apprends({
+          manipule: d9Calcul(0, 12.4, 50),
+          represente: d9Calcul(0, 4.6, 50),
+          ecris: d9Calcul(0, 3.8, 50, true),
+          consigne: "4,6 × 50, c’est la moitié de 4,6 × 100.",
+          consigneEcris: "50 × 3,8 = 3,8 × 100 ÷ 2",
+          etapes: [["3,8 × 100 = ?", 380], ["380 ÷ 2 = ?", 190]],
+          bilan: `× 50, c’est × 100 puis la moitié : 12,4 × 100 = 1${ESPACE_FINE}240. 12,4 × 50 = 1${ESPACE_FINE}240 ÷ 2 = 620.`
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------------- M13 : ÷ 4, ÷ 8, la moitié de la moitié
+  //
+  // « 140 ÷ 4 » ou « 4 × □ = 140 » : n, d (4 ou 8), q ; les moitiés
+  // successives (70, 35) pour J'écris et les erreurs connues. La règle
+  // commune avec M12 (`m13Prend`, plus haut) : ÷ 4, ÷ 8 d'un nombre qui
+  // finit par 0, au quotient entier qui ne finit pas par 0 → M13 ; tout le
+  // reste → M12 (96 ÷ 8, 84 ÷ 4, 536 ÷ 8, 120 ÷ 4 = 30). M13-3 : un
+  // quotient décimal (260 ÷ 8 = 32,5).
+  function m13Calcul(niveau, forme, n, d) {
+    const q = exact(n / d);
+    const moities = [];
+    for (let x = n, k = 1; k < d; k *= 2) { x = exact(x / 2); moities.push(x); }
+    const donnees = {n, d, q, moities: Object.freeze(moities), unePlus: moities.slice(0, -1), trop: exact(q / 2), fois: n * d,
+      arrondi: Number.isInteger(q) ? -1 : Math.floor(q)};
+    return forme === "trou-facteur"
+      ? fabriquer("M13", niveau, forme, [d, "×", TROU, "=", n], q, donnees)
+      : fabriquer("M13", niveau, "division", [n, "÷", d, "=", TROU], q, donnees);
+  }
+  const m13Image = calcul => ({outil: "barres-fois", moitie: true, n: calcul.donnees.n, fois: calcul.donnees.d});
+  const m13Aide = calcul => Object.assign(m13Image(calcul), {masque: true});
+  const m13Phrase = calcul => fr(`Regarde : ${f(calcul.donnees.n)}, puis ${calcul.donnees.moities.map(f).join(", puis ")}.`);
+  function m13Difficulte(calcul) {
+    const {n, d} = calcul.donnees;
+    return (calcul.forme === "trou-facteur" ? 5000 : 0) + (d === 8 ? 2000 : 0) + Math.min(1999, n);
+  }
+  const M13_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "coupé en deux une fois de moins",
+      test: sauf((calcul, reponse) => calcul.donnees.unePlus.some(x => memeNombre(reponse, x))),
+      retour: (calcul, reponse) => {
+        const {d} = calcul.donnees;
+        return fr(`${f(reponse)} : tu n’as pas coupé assez de fois. ÷ ${d}, c’est couper ${d === 4 ? "deux" : "trois"} fois en deux.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "coupé en deux une fois de trop",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.trop)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as coupé en deux une fois de trop. ÷ ${calcul.donnees.d}, c’est couper ${calcul.donnees.d === 4 ? "deux" : "trois"} fois en deux.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "la moitié d’un nombre impair",
+      test: sauf((calcul, reponse) => calcul.donnees.arrondi >= 0 && (memeNombre(reponse, calcul.donnees.arrondi) || memeNombre(reponse, calcul.donnees.arrondi + 1))),
+      retour: (calcul, reponse) => {
+        const h = calcul.donnees.moities[calcul.donnees.moities.length - 2];
+        return fr(`${f(reponse)} : la moitié de ${f(h)} n’est pas un nombre entier. ${f(h)} = ${f(h - 1)} + 1, et la moitié de 1, c’est 0,5.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "multiplié au lieu de diviser",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.fois)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.n)} × ${calcul.donnees.d}. Ici, on coupe ${f(calcul.donnees.n)} en deux, puis encore en deux.`),
+      gras: 0
+    })
+  ]);
+  // Les viviers (règle commune avec M12) :
+  //  - M13-1 : ÷ 4, de 140 à 980 (140 ÷ 4 = 35) — sans 60 ni 100 (les
+  //    repères de M5), sans quotient de table (20 ÷ 4 : M4) ;
+  //  - M13-2 : ÷ 8, de 120 à 1 960 (360 ÷ 8 = 45) ;
+  //  - M13-3 : un quotient décimal, un chiffre après la virgule (,5), ÷ 4
+  //    jusqu'à 590, ÷ 8 jusqu'à 780 (30 ÷ 4 = 7,5 ; 260 ÷ 8 = 32,5).
+  function m13Vivier(niveau) {
+    if (niveau === 3) {
+      const quatre = entre(30, 590, 20).map(n => m13Calcul(3, "division", n, 4));
+      const huit = entre(20, 780, 40).map(n => m13Calcul(3, "division", n, 8));
+      return Object.freeze({division: Object.freeze([...quatre, ...huit])});
+    }
+    const d = niveau === 1 ? 4 : 8;
+    const nombres = entre(10, niveau === 1 ? 990 : 1990, 10).filter(n => m13Prend(n, d) && m12Garde(n));
+    return Object.freeze({
+      division: Object.freeze(nombres.map(n => m13Calcul(niveau, "division", n, d))),
+      "trou-facteur": Object.freeze(nombres.map(n => m13Calcul(niveau, "trou-facteur", n, d)))
+    });
+  }
+  const M13_VIVIERS = Object.freeze({1: m13Vivier(1), 2: m13Vivier(2), 3: m13Vivier(3)});
+  // Le dessin de J'écris : chaque moitié remplit sa rangée ; la dernière,
+  // l'accolade.
+  function m13Dessins(image, etapes) {
+    const lignes = Math.round(Math.log2(image.fois));
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: Math.min(vus.length, lignes - 1), fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  // Les étapes : chaque moitié sur le résultat d'avant (« 140 ÷ 2 = □ »,
+  // « 70 ÷ 2 = □ ») ; la moitié d'un impair au-delà de 15 (65), en
+  // découpant : « 65 ÷ 2 = 60 ÷ 2 + 5 ÷ 2 = □ » (rapport de Codex : la
+  // liste de D8-1 s'arrête à 15).
+  function m13Etapes(calcul) {
+    const {n, moities} = calcul.donnees;
+    return moities.map((x, i) => {
+      const h = i ? moities[i - 1] : n;
+      const decoupe = h % 2 === 1 && h > 15 ? ` = ${f(h - h % 10)} ÷ 2 + ${h % 10} ÷ 2` : "";
+      return [`${f(h)} ÷ 2${decoupe} = ?`, x];
+    });
+  }
+  const m13Consigne = calcul => `${f(calcul.donnees.n)} ÷ ${calcul.donnees.d} = ${f(calcul.donnees.n)}${" ÷ 2".repeat(Math.round(Math.log2(calcul.donnees.d)))}`;
+  // J'écris de M13 (la même recette pour la leçon et les calculs tirés).
+  function recetteMoitieMoitie(calcul) {
+    if (calcul.forme !== "division") return null;
+    const etapes = m13Etapes(calcul);
+    return ecrisAvecDessins({
+      consigne: fr(m13Consigne(calcul)),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(m13Image(calcul)), phrase: m13Phrase(calcul)})
+    }, m13Dessins(m13Image(calcul), etapes.length));
+  }
+  function m13Apprends({represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "barres-fois", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(m13Aide(represente)),
+        solution: Object.freeze({image: m13Image(represente), phrase: m13Phrase(represente)})
+      }),
+      ecris: recetteMoitieMoitie(ecris),
+      bilan: frBilan(bilan),
+      image: Object.freeze(m13Image(represente)),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const M13 = {
+    id: "M13", nom: "÷ 4, ÷ 8\u00a0: la moitié de la moitié", exemple: "140 ÷ 4",
+    famille: "M", construit: true,
+    aide_entraine: "barres-fois",
+    erreurs: M13_ERREURS, image: m13Image, aide: m13Aide, phrase: m13Phrase, manipulation: () => null, difficulte: m13Difficulte
+  };
+  M13.niveaux = [
+    {
+      n: 1, titre: "diviser par 4", nom: "÷ 4\u00a0: la moitié de la moitié", palier: 3, type: "P",
+      composer: vivierNiveau(M13_VIVIERS[1], [7, 3]),
+      imposes: [m13Calcul(1, "division", 180, 4), m13Calcul(1, "trou-facteur", 220, 4)],
+      apprends: m13Apprends({
+        represente: m13Calcul(0, "division", 140, 4),
+        ecris: m13Calcul(0, "division", 260, 4),
+        consigne: "Je coupe 140 en deux, puis encore en deux.",
+        bilan: "÷ 4, c’est la moitié de la moitié : 140 ÷ 2 = 70. 140 ÷ 4 = 70 ÷ 2 = 35."
+      })
+    },
+    {
+      n: 2, titre: "diviser par 8", nom: "÷ 8\u00a0: couper trois fois en deux", palier: 3, type: "P",
+      composer: vivierNiveau(M13_VIVIERS[2], [7, 3]),
+      imposes: [m13Calcul(2, "division", 520, 8), m13Calcul(2, "trou-facteur", 200, 8)],
+      apprends: m13Apprends({
+        represente: m13Calcul(0, "division", 360, 8),
+        ecris: m13Calcul(0, "division", 280, 8),
+        consigne: "Je coupe 360 en deux, puis encore, puis encore.",
+        bilan: "÷ 8, c’est couper trois fois en deux : 360 ÷ 2 = 180. 180 ÷ 2 = 90. 360 ÷ 8 = 90 ÷ 2 = 45."
+      })
+    },
+    {
+      n: 3, titre: "résultat décimal", nom: "÷ 4, ÷ 8\u00a0: résultat décimal", palier: 3, type: "P", virgule: true,
+      composer: vivierNiveau(M13_VIVIERS[3], [1]),
+      imposes: [m13Calcul(3, "division", 30, 4), m13Calcul(3, "division", 180, 8)],
+      apprends: m13Apprends({
+        represente: m13Calcul(0, "division", 260, 8),
+        ecris: m13Calcul(0, "division", 140, 8),
+        consigne: "Je coupe 260 en deux, trois fois. La dernière moitié a une virgule.",
+        bilan: "Je coupe trois fois en deux : 260 ÷ 2 = 130. 130 ÷ 2 = 65. 260 ÷ 8 = 65 ÷ 2 = 30 + 2,5 = 32,5."
+      })
+    }
+  ];
+
   // ============================================ modules lot 6 (04/11/2026)
   //
   // F2, F5, F6, F8 : les fractions du CM1 (lot 6a ; F1 et F3 suivent, lot
@@ -8780,11 +9342,7 @@
     M3,
     M5,
     M6,
-    reserve("M13", "÷ 4, ÷ 8 : la moitié de la moitié", "140 ÷ 4", [
-      {n: 1, titre: "÷ 4", palier: 3, type: "P", exemple: "140 ÷ 4"},
-      {n: 2, titre: "÷ 8", palier: 3, type: "P", exemple: "360 ÷ 8"},
-      {n: 3, titre: "résultat décimal", palier: 3, type: "P", exemple: "260 ÷ 8 = 32,5"}
-    ]),
+    M13,
     M7,
     M8,
     reserve("M9", "Distributivité : retrancher", "45 × 9", [
@@ -8811,15 +9369,8 @@
     D5,
     D6,
     D7,
-    reserve("D8", "Doubles et moitiés de décimaux", "moitié de 9", [
-      {n: 1, titre: "moitié des impairs jusqu’à 15", palier: 3, type: "F", exemple: "moitié de 9"},
-      {n: 2, titre: "un chiffre après la virgule", palier: 3, type: "P", exemple: "double de 13,6"},
-      {n: 3, titre: "deux chiffres après la virgule", palier: 3, type: "P", exemple: "2 × 4,35"}
-    ]),
-    reserve("D9", "Décimal × 5, × 50", "3,4 × 5", [
-      {n: 1, titre: "× 5 (trois chiffres au plus)", palier: 3, type: "P", exemple: "3,4 × 5"},
-      {n: 2, titre: "× 50 (nombre de moins de 20, au plus trois chiffres, chiffre le plus à droite pair)", palier: 3, type: "P", exemple: "50 × 12,4"}
-    ]),
+    D8,
+    D9,
     F2,
     F1,
     F3,
@@ -9025,7 +9576,16 @@
     // Lot 7a : D5, D6, D7.
     "D5-1": D5_SORTES, "D5-2": D5_SORTES,
     "D6-1": D6_SORTES[1], "D6-2": D6_SORTES[2], "D6-3": D6_SORTES[3],
-    "D7-1": D7_SORTES[1], "D7-2": D7_SORTES[2], "D7-3": D7_SORTES[3]
+    "D7-1": D7_SORTES[1], "D7-2": D7_SORTES[2], "D7-3": D7_SORTES[3],
+    // Lot 7b : D8, D9, M13 (les familles du rapport de Codex du 14/11).
+    "D8-1": parFormes(["moitié de n", "moitie", "division"], ["2 × □ = n", "trou-double"]),
+    "D8-2": parFormes(["double", "double", "double-fois"], ["moitié", "moitie", "division"]),
+    "D8-3": [["double", formeEst("double", "double-fois")], ["moitié aux centièmes", (c, d) => !d.zero], ["moitié qui fait des centièmes", toutes]],
+    "D9-1": [["chiffre de droite pair", (c, d) => dernierChiffre(d.n) % 2 === 0], ["chiffre de droite impair", toutes]],
+    "D9-2": [["dixièmes", (c, d) => decimalesDe(d.n) === 1], ["centièmes", toutes]],
+    "M13-1": parFormes(["a ÷ 4", "division"], ["4 × □ = b", "trou-facteur"]),
+    "M13-2": parFormes(["a ÷ 8", "division"], ["8 × □ = b", "trou-facteur"]),
+    "M13-3": [["÷ 4", (c, d) => d.d === 4], ["÷ 8", toutes]]
   });
 
   // Les cartes « par cœur » (lot 2 « J'apprends en une étape », 12/11/2026,
@@ -9100,6 +9660,11 @@
         {liste: [`1/${nb(1000)} = 0,001`, `1/2 = 5/10 = 50/100 = 500/${nb(1000)}`, `1/4 = 25/100 = 250/${nb(1000)}`, `3/4 = 75/100 = 750/${nb(1000)}`], colonnes: 1}]),
       ...retrouveDe([{liste: ["7/2 = 3 + 1/2 = 3,5", "9/2 = 4 + 1/2 = 4,5"], colonnes: 2},
         {liste: ["3/2 = 1,5 = 15/10 = 150/100", "5/2 = 2,5 = 25/10 = 250/100"], colonnes: 1}])]},
+    // Lot 7b : la moitié des impairs jusqu'à 15 (calcul mental CM2, p. 16) —
+    // tout est socle.
+    // (`moitie` : sous chaque nombre, sa moitié — pour les tests.)
+    "D8-1": {titre: "Sous chaque nombre, sa moitié", blocs: coeurDe([{table: [[1, 3, 5, 7], [0.5, 1.5, 2.5, 3.5]], ligneTete: true, moitie: true},
+      {table: [[9, 11, 13, 15], [4.5, 5.5, 6.5, 7.5]], ligneTete: true, moitie: true}])},
     "F1-3": {titre: "Cinquièmes", blocs: [
       ...coeurDe([{liste: ["1/5 = 2/10 = 20/100 = 0,2"], colonnes: 1}]),
       ...retrouveDe([{chemin: "6/5 = 6 × 1/5 = 12/10 = 1,2", liste: [2, 3, 4, 6, 7, 8, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2}])]}
@@ -9217,7 +9782,12 @@
     // Lot 7a : D6, D7.
     "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
     "D7-2": [["unités et dixièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de dixièmes : je casse une unité, elle fait 10 dixièmes"]],
-    "D7-3": [["unités et centièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de centièmes : je casse une unité, elle fait 100 centièmes"]]
+    "D7-3": [["unités et centièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de centièmes : je casse une unité, elle fait 100 centièmes"]],
+    // Lot 7b : la moitié, annoncée avec son dessin (comme M1-3) ; 8,10 ÷ 2
+    // (évaluation de 6e, Q13) : les centièmes.
+    "D8-2": [["moitié", "la moitié, je coupe aussi les deux morceaux"]],
+    "D8-3": [["moitié aux centièmes", "la moitié, je coupe aussi les deux morceaux"],
+      ["moitié qui fait des centièmes", calcul => `${f(calcul.donnees.dec)}0, c’est ${f(calcul.donnees.dec * 100)} centièmes\u00a0: leur moitié, c’est ${f(calcul.donnees.dec * 50)} centièmes`]]
   });
   const memeNom = (a, b) => String(a).replace(/\s/g, " ") === String(b).replace(/\s/g, " ");
   // La nouveauté d'un calcul dans un niveau (« M2-1 ») : {cle, texte}, ou
@@ -10131,7 +10701,11 @@
     "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes,
     // Lot 7a.
     "D5-1": d5Ecris, "D5-2": d5Ecris,
-    "D6-1": deuxEcris, "D6-2": deuxEcris, "D6-3": deuxEcris, "D7-1": deuxEcris, "D7-2": deuxEcris, "D7-3": deuxEcris
+    "D6-1": deuxEcris, "D6-2": deuxEcris, "D6-3": deuxEcris, "D7-1": deuxEcris, "D7-2": deuxEcris, "D7-3": deuxEcris,
+    // Lot 7b.
+    "D8-1": d8Ecris, "D8-2": d8Ecris, "D8-3": d8Ecris,
+    "D9-1": recetteDixFois, "D9-2": recetteDixFois,
+    "M13-1": recetteMoitieMoitie, "M13-2": recetteMoitieMoitie, "M13-3": recetteMoitieMoitie
   });
 
   // Le J'écris d'un calcul dans un niveau (« A10-2 »), ou null quand la

@@ -296,7 +296,8 @@ function outilFini([cle, outil, sansReponse]) {
         });
         // (Lot 3a : un bilan de plusieurs égalités, une par ligne, en a aussi.)
         const bilan = CORE.niveauDe(cle).niveau.apprends.bilan;
-        const parties = String(bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
+        // (Lot 7b : la page coupe aussi devant « double de », « moitié de ».)
+        const parties = String(bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d]|(?:double|moitié) de )/).map(t => AIDES.bilanEnDeux(t));
         const attendu = Boolean(AIDES.bilanEnDeux(bilan)) || (parties.length > 1 && parties.every(Boolean));
         if (m.defile > 1) fautes.push(`${cle} défile de ${m.defile} px`);
         if (m.phrase > 1) fautes.push(`${cle} : la phrase dépasse de ${m.phrase} px`);

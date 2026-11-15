@@ -85,9 +85,10 @@ test("une compétence à revoir ratée deux fois de suite : J'apprends seul (plu
 
 // (Lot 7e-2 : « Différences et trous jusqu'à 20 » et « Compléments à la
 // dizaine » deviennent des procédures, puis « Compléments à 100 : dizaines » — 12 cartes.)
-test("les cartes « par cœur » : les 12 niveaux « par cœur » construits, et eux seuls", () => {
+// (Lot 7b : « Moitié des impairs jusqu'à 15 » — 13 cartes.)
+test("les cartes « par cœur » : les 13 niveaux « par cœur » construits, et eux seuls", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
-  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M4-1", "M4-2", "M1-2", "M5-1", "F2-1", "F1-1", "F2-2", "F1-2", "F1-3"]);
+  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M4-1", "M4-2", "M1-2", "M5-1", "F2-1", "F1-1", "F2-2", "D8-1", "F1-2", "F1-3"]);
   parCoeur.forEach(cle => assert.ok(CORE.carteParCoeur(cle), cle));
   CORE.ORDRE.filter(cle => !parCoeur.includes(cle)).forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, cle));
   assert.ok(Object.isFrozen(CORE.carteParCoeur("M4-1").blocs[0].table[1]));
@@ -129,6 +130,8 @@ test("les cartes disent vrai : chaque calcul de la carte est juste", () => {
         const [tete, ...lignes] = bloc.table;
         // (Lot 7e-2 : sous chaque nombre, ce qui manque pour aller à 100 — `total`.)
         if (bloc.ligneTete && bloc.total) { assert.deepEqual(lignes[0], tete.map(n => bloc.total - n), `${cle} : ce qui fait ${bloc.total}`); return; }
+        // (Lot 7b : D8-1, sous chaque nombre, sa moitié.)
+        if (bloc.ligneTete && bloc.moitie) { assert.deepEqual(lignes[0], tete.map(n => n / 2), `${cle} : les moitiés`); return; }
         if (bloc.ligneTete) { assert.deepEqual(lignes[0], tete.map(n => 2 * n), `${cle} : les doubles`); return; }
         // (Lot 3b : une case vide — au-delà de 10 —, une case {texte, fort}.)
         const lire = v => (v && typeof v === "object" ? Number(v.texte) : v);

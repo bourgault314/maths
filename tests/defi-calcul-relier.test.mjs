@@ -37,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 103, "les 35 modules construits (103 niveaux depuis le lot 7a) : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a)");
+  assert.equal(NIVEAUX.length, 111, "les 38 modules construits (111 niveaux depuis le lot 7b) : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);

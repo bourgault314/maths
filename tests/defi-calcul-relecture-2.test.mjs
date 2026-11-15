@@ -105,11 +105,28 @@ test("M1 : « Je représente » par étapes dans les trois niveaux (le double co
   // le lot 7-0 (« le dessin à étapes », choix de Gwenaël), la droite à
   // plusieurs sauts quand « On te montre » est le dessin : où j'arrive après
   // le premier saut, puis le résultat.
-  NIVEAUX.filter(({fiche}) => fiche.id !== "M1").forEach(({niveau, cle}) => {
+  // (Lot 7b : D8, les doubles et moitiés de décimaux, comme M1 — testé ci-dessous.)
+  NIVEAUX.filter(({fiche}) => fiche.id !== "M1" && fiche.id !== "D8").forEach(({niveau, cle}) => {
     const r = niveau.apprends.represente;
     const sauts = r.image && r.image.outil === "droite-sauts" ? r.image.sauts.length : 0;
     if (sauts >= 2 && !niveau.apprends.manipule) assert.equal(r.etapes.length, 2, cle);
     else assert.equal(r.etapes, undefined, cle);
+  });
+});
+
+test("lot 7b : D8, « Je représente » par étapes comme M1 — les deux morceaux, puis le tout", () => {
+  const attendus = {
+    "D8-1": ["moitié de 9 = 8 ÷ 2 + 1 ÷ 2", ["8 ÷ 2", "1 ÷ 2", "moitié de 9"], 4.5],
+    "D8-2": ["double de 13,6 = 2 × 13 + 2 × 0,6", ["2 × 13", "2 × 0,6", "double de 13,6"], 27.2],
+    "D8-3": ["2 × 4,35 = 2 × 4 + 2 × 0,35", ["2 × 4", "2 × 0,35", "2 × 4,35"], 8.7]
+  };
+  Object.entries(attendus).forEach(([cle, [consigne, etapes, reponse]]) => {
+    const r = apprends(cle).represente;
+    assert.equal(espaces(r.consigne), consigne, cle);
+    assert.deepEqual(r.etapes.map(e => espaces(e.texte).replace(" = □", "")), etapes, cle);
+    assert.equal(r.reponse, reponse, cle);
+    assert.equal(r.dessins.length, r.etapes.length + 1, cle);
+    assert.ok(r.dessins[0].masque && r.dessins[0].trouves.length === 0 && r.dessins[r.etapes.length].fini, cle);
   });
 });
 
@@ -201,8 +218,8 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261115-3/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-3/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-4/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-4/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

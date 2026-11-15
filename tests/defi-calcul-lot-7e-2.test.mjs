@@ -84,10 +84,12 @@ test("1. F3 : en mots, sans signe =, l'unité après la case ; J'écris « Je pa
 // L'inventaire du lot (notice) : ce qui est socle, ce qui se retrouve.
 const INVENTAIRE = Object.freeze({
   "A1-1": "un", "A1-2": "un", "M1-1": "un", "M4-1": "un", "M4-2": "un",
-  "M1-2": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux"
+  "M1-2": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux",
+  // Lot 7b : la moitié des impairs jusqu'à 15 — tout est socle (calcul mental CM2, p. 16).
+  "D8-1": "un"
 });
 
-test("2. les cartes « par cœur » : 12 niveaux ; deux parties là où l'appli demande plus que les textes", () => {
+test("2. les cartes « par cœur » : 13 niveaux (lot 7b : D8-1) ; deux parties là où l'appli demande plus que les textes", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
   assert.deepEqual(parCoeur.sort(), Object.keys(INVENTAIRE).sort());
   // « Différences et trous jusqu'à 20 », « Compléments à la dizaine » : des procédures, sans carte.
@@ -332,9 +334,10 @@ test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'é
 
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261115-3/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261115-4/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
   assert.match(page, /defi_calcul\.css\?v=20261115-3/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-7e-2-coherence$/m);
+  // (Lot 7b : le manifeste nomme le lot suivant.)
+  assert.match(version, /^lot defi-calcul-lot-7(e-2-coherence|b-decimaux)$/m);
 });
