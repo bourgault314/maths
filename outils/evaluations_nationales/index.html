@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Évaluations nationales | maths&amp;go</title>
+  <meta name="description" content="Repasser sans aide les tests des évaluations nationales de mathématiques et les outils de positionnement Eduscol, de la 6e à la 3e : sujet officiel ou sujet jumeau, bilan selon les repères officiels.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <!-- Avant la feuille de style : sans JavaScript, les quatre classes s'affichent l'une sous l'autre (rien n'est caché). -->
+  <script>document.documentElement.classList.add("js");</script>
+  <style>
+    :root{--ink:#143451;--muted:#506b7d;--line:#d4e3ed;--blue:#0755b8;--teal:#087a71;--green:#147447;--green-soft:#e5f7eb;--red:#a93030;--red-soft:#ffebeb;--orange:#9a5a00;--orange-soft:#fff3dc;color-scheme:light;font-family:Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif}
+    *{box-sizing:border-box}[hidden]{display:none!important}
+    html{min-height:100%;background:#edf5fb;-webkit-text-size-adjust:100%}
+    body{min-height:100vh;margin:0;color:var(--ink);background:radial-gradient(circle at 8% 5%,rgba(8,168,159,.14),transparent 26rem),radial-gradient(circle at 92% 7%,rgba(250,204,21,.18),transparent 24rem),linear-gradient(#fbfdff,#edf5fb)}
+    button,a{font:inherit;-webkit-tap-highlight-color:transparent}
+    button:focus-visible,a:focus-visible{outline:3px solid rgba(15,108,249,.3);outline-offset:3px}
+    .shell{width:min(860px,calc(100% - 28px));margin:auto;padding-bottom:24px}
+    .topbar{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand img{display:block;width:105px;height:auto}
+    .retour{min-height:39px;display:inline-flex;align-items:center;gap:6px;padding:0 13px;border:1px solid #d5e1ec;border-radius:999px;color:#24415f;background:#fff;font-size:.8rem;font-weight:900;text-decoration:none}
+    .retour svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .panel{padding:clamp(18px,4vw,34px);border:1px solid var(--line);border-radius:28px;background:rgba(255,255,255,.97);box-shadow:0 18px 55px rgba(26,66,100,.12)}
+    .tete{text-align:center}
+    .eyebrow{margin:0 0 6px;color:var(--teal);font-size:.8rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+    h1{margin:0;font-size:clamp(1.9rem,5.5vw,2.7rem);line-height:1.05}
+    .descr{margin:8px 0 18px;color:var(--muted);font-weight:750}
+    /* Les quatre classes : un onglet par classe ; la classe choisie est retenue sur l'appareil. */
+    .niveaux{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:520px;margin:0 auto 18px;padding:5px;border-radius:16px;background:#eaf2f8}
+    .niveaux button{min-height:48px;border:0;border-radius:12px;background:none;color:var(--muted);font-size:1.15rem;font-weight:950;cursor:pointer}
+    .niveaux button[aria-selected="true"]{background:#fff;color:var(--blue);box-shadow:0 2px 0 #c3d8e5,0 0 0 2px var(--blue) inset}
+    html:not(.js) .niveaux{display:none}
+    .liste{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+    .liste-classe{grid-column:1/-1;margin:14px 0 0;font-size:1.4rem}
+    html.js .liste-classe{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    .groupe-titre{grid-column:1/-1;margin:6px 0 -2px;color:var(--teal);font-size:.78rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    html.js .groupe-titre:nth-child(2){margin-top:0}
+    .test{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:72px;padding:11px 14px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);text-decoration:none;box-shadow:0 3px 0 #c9dbe6}
+    .test:hover{border-color:#9fc0d8}
+    /* Une carte seule sur sa ligne se centre (symétrie). */
+    @media(min-width:621px){.test.seule{grid-column:1/-1;justify-self:center;width:calc(50% - 5px)}}
+    /* Les icônes des domaines (choix du 15/11) : toutes sur le même modèle, une tuile aux couleurs maths&go (orange,
+       turquoise, bleu) et un pictogramme blanc au trait — éclair : Automatismes · pièce de puzzle : Résolution de problèmes ·
+       + − × ÷ : Nombres et calculs · « 𝑥 + y » (𝑥 rond) : Expressions algébriques · règle : Grandeurs et mesures · triangle à
+       angles vifs : Géométrie. Domaines à venir (dans le dossier du lot EN-A1) : barres, repère avec deux croix, « </> ». */
+    .test .ico{width:46px;height:46px;display:grid;place-items:center}
+    .test .ico svg{display:block;width:44px;height:44px}
+    .test strong{display:block;font-size:1.06rem;line-height:1.2}
+    .test small{display:block;margin-top:2px;color:var(--muted);font-size:.84rem;font-weight:750;line-height:1.3}
+    .nb{white-space:nowrap}
+    .fin{display:flex;align-items:center;gap:8px}
+    /* Le dernier résultat de l'élève sur cet appareil, à la couleur de son groupe (gris : pas de repères officiels). */
+    .der{padding:4px 9px;border-radius:999px;font-size:.82rem;font-weight:900;white-space:nowrap;color:var(--ink);background:#eef4fa}
+    .der.g0{color:var(--red);background:var(--red-soft)}.der.g1{color:var(--orange);background:var(--orange-soft)}.der.g2{color:var(--green);background:var(--green-soft)}
+    .fl{width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--blue);color:#fff}
+    .fl svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+    .source{margin:18px 0 0;color:var(--muted);font-size:.78rem;text-align:center}
+    .source a{color:var(--muted)}
+    /* Ordinateur et tablette : les quatre listes occupent la même case ; celle qui est cachée garde sa place, donc changer
+       de classe ne fait rien bouger (le cadre a toujours la hauteur de la plus longue, la 6e). */
+    @media(min-width:621px){
+      html.js .listes{display:grid}
+      html.js .liste{grid-area:1/1}
+      html.js .liste.cachee{visibility:hidden}
+    }
+    @media(min-width:621px) and (max-height:700px){
+      .topbar{min-height:56px}.brand img{width:88px}
+      .panel{padding:16px 26px 18px}
+      .descr{margin:6px 0 12px}
+      .niveaux{margin-bottom:12px}
+      .test{min-height:64px;padding:8px 14px}
+      .source{margin-top:12px}
+    }
+    @media(max-width:620px){
+      html.js .liste.cachee{display:none}
+      .shell{width:100%}
+      .topbar{min-height:56px;padding:4px 10px}
+      .brand img{width:82px}
+      .panel{padding:16px 12px 20px;border-left:0;border-right:0;border-radius:20px}
+      .liste{grid-template-columns:1fr}
+      .test{grid-template-columns:42px minmax(0,1fr) auto;gap:10px;padding:10px 12px}
+      .test .ico{width:42px;height:42px}.test .ico svg{width:40px;height:40px}
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
+      <a class="retour" href="/outils/index.html" aria-label="Retour aux outils"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Outils</span></a>
+    </header>
+    <section class="panel">
+      <div class="tete">
+        <p class="eyebrow">Sans aide, comme le vrai test</p>
+        <h1>Évaluations nationales</h1>
+        <p class="descr">Choisis ta classe, puis ton test.</p>
+      </div>
+      <div class="niveaux" role="tablist" aria-label="Ta classe">
+        <button id="onglet-6e" type="button" role="tab" data-niveau="6e" aria-controls="liste-6e" aria-selected="false">6e</button>
+        <button id="onglet-5e" type="button" role="tab" data-niveau="5e" aria-controls="liste-5e" aria-selected="false">5e</button>
+        <button id="onglet-4e" type="button" role="tab" data-niveau="4e" aria-controls="liste-4e" aria-selected="false">4e</button>
+        <button id="onglet-3e" type="button" role="tab" data-niveau="3e" aria-controls="liste-3e" aria-selected="false">3e</button>
+      </div>
+      <!-- Pictogrammes des cartes (sauf + − × ÷, le 𝑥 rond et le triangle, dessinés pour maths&go) : Tabler Icons, © 2020-2026 Paweł Kuna, licence MIT,
+           https://github.com/tabler/tabler-icons ; pièce de puzzle : Phosphor Icons, © 2023 Phosphor Icons, licence MIT,
+           https://github.com/phosphor-icons/core ; mis en tuiles aux couleurs maths&go, le 𝑥 redessiné rond. -->
+      <!-- Une carte par test ; l'ordre et les titres suivent les sujets (tests/evaluations-nationales-accueil.test.mjs). -->
+      <div class="listes">
+        <div id="liste-6e" class="liste" role="tabpanel" aria-labelledby="onglet-6e">
+          <h2 class="liste-classe">6e</h2>
+          <p class="groupe-titre">Le test national de la rentrée</p>
+          <a class="test nat" href="evaluation.html?sujet=6e-automatismes" data-sujet="6e-automatismes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></g></svg></span><span class="test-texte"><strong>Automatismes</strong><small><span class="nb">23&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test nat" href="evaluation.html?sujet=6e-problemes" data-sujet="6e-problemes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#08aaa5"/><g transform="translate(9.5 9.5) scale(.1133)"><path d="M222.41,155.16a12,12,0,0,0-11.56-.69A16,16,0,0,1,188,139,16.2,16.2,0,0,1,202.8,124a15.83,15.83,0,0,1,8,1.5A12,12,0,0,0,228,114.7V72a20,20,0,0,0-20-20H176a40.15,40.15,0,0,0-12.62-29.16,39.67,39.67,0,0,0-29.94-10.76,40.08,40.08,0,0,0-37.34,37C96,50.07,96,51,96,52H64A20,20,0,0,0,44,72v28a40.15,40.15,0,0,0-29.16,12.62A40,40,0,0,0,41.1,179.9a28.3,28.3,0,0,0,2.9.1v28a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V165.31A12,12,0,0,0,222.41,155.16ZM204,204H68V165.31a12,12,0,0,0-17.15-10.84A15.9,15.9,0,0,1,42.8,156,16.2,16.2,0,0,1,28,141.06a16,16,0,0,1,22.82-15.52A12,12,0,0,0,68,114.7V76h42.7a12,12,0,0,0,10.83-17.15A15.9,15.9,0,0,1,120,50.8,16.19,16.19,0,0,1,134.94,36a16,16,0,0,1,15.53,22.81A12,12,0,0,0,161.31,76H204v24c-1,0-1.93,0-2.9.11A40,40,0,0,0,204,180h0Z" fill="#fff"/></g></svg></span><span class="test-texte"><strong>Résolution de problèmes</strong><small><span class="nb">19&nbsp;questions</span> · calculatrice</small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <p class="groupe-titre">Pour se positionner</p>
+          <a class="test pos" href="evaluation.html?sujet=6e-pos-automatismes" data-sujet="6e-pos-automatismes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></g></svg></span><span class="test-texte"><strong>Automatismes</strong><small><span class="nb">21&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test pos" href="evaluation.html?sujet=6e-pos-nombres" data-sujet="6e-pos-nombres"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#0b67b2"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5v6M3.5 6.5h6"/><path d="M14.5 6.5h6"/><path d="M4.4 15.4l4.2 4.2M8.6 15.4l-4.2 4.2"/><path d="M14.5 17.5h6"/><circle cx="17.5" cy="14.6" r=".55" fill="#fff"/><circle cx="17.5" cy="20.4" r=".55" fill="#fff"/></g></svg></span><span class="test-texte"><strong>Nombres et calculs</strong><small><span class="nb">19&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test pos" href="evaluation.html?sujet=6e-pos-grandeurs" data-sujet="6e-pos-grandeurs"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#08aaa5"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4l-14 14l-4 -4l14 -14"/><path d="M16 7l-1.5 -1.5"/><path d="M13 10l-1.5 -1.5"/><path d="M10 13l-1.5 -1.5"/><path d="M7 16l-1.5 -1.5"/></g></svg></span><span class="test-texte"><strong>Grandeurs et mesures</strong><small><span class="nb">12&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test pos" href="evaluation.html?sujet=6e-pos-geometrie" data-sujet="6e-pos-geometrie"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#0b67b2"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="miter"><path d="M12 3.8L21.2 19.6H2.8Z"/></g></svg></span><span class="test-texte"><strong>Espace et géométrie</strong><small><span class="nb">14&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+        </div>
+        <div id="liste-5e" class="liste" role="tabpanel" aria-labelledby="onglet-5e">
+          <h2 class="liste-classe">5e</h2>
+          <p class="groupe-titre">Le test national de la rentrée</p>
+          <a class="test seule nat" href="evaluation.html?sujet=5e-automatismes" data-sujet="5e-automatismes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></g></svg></span><span class="test-texte"><strong>Automatismes</strong><small><span class="nb">30&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+        </div>
+        <div id="liste-4e" class="liste" role="tabpanel" aria-labelledby="onglet-4e">
+          <h2 class="liste-classe">4e</h2>
+          <p class="groupe-titre">Le test national de la rentrée</p>
+          <a class="test nat" href="evaluation.html?sujet=4e-automatismes" data-sujet="4e-automatismes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></g></svg></span><span class="test-texte"><strong>Automatismes</strong><small><span class="nb">22&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test nat" href="evaluation.html?sujet=4e-problemes" data-sujet="4e-problemes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#08aaa5"/><g transform="translate(9.5 9.5) scale(.1133)"><path d="M222.41,155.16a12,12,0,0,0-11.56-.69A16,16,0,0,1,188,139,16.2,16.2,0,0,1,202.8,124a15.83,15.83,0,0,1,8,1.5A12,12,0,0,0,228,114.7V72a20,20,0,0,0-20-20H176a40.15,40.15,0,0,0-12.62-29.16,39.67,39.67,0,0,0-29.94-10.76,40.08,40.08,0,0,0-37.34,37C96,50.07,96,51,96,52H64A20,20,0,0,0,44,72v28a40.15,40.15,0,0,0-29.16,12.62A40,40,0,0,0,41.1,179.9a28.3,28.3,0,0,0,2.9.1v28a20,20,0,0,0,20,20H208a20,20,0,0,0,20-20V165.31A12,12,0,0,0,222.41,155.16ZM204,204H68V165.31a12,12,0,0,0-17.15-10.84A15.9,15.9,0,0,1,42.8,156,16.2,16.2,0,0,1,28,141.06a16,16,0,0,1,22.82-15.52A12,12,0,0,0,68,114.7V76h42.7a12,12,0,0,0,10.83-17.15A15.9,15.9,0,0,1,120,50.8,16.19,16.19,0,0,1,134.94,36a16,16,0,0,1,15.53,22.81A12,12,0,0,0,161.31,76H204v24c-1,0-1.93,0-2.9.11A40,40,0,0,0,204,180h0Z" fill="#fff"/></g></svg></span><span class="test-texte"><strong>Résolution de problèmes</strong><small><span class="nb">19&nbsp;questions</span> · calculatrice</small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <p class="groupe-titre">Exemples de questions</p>
+          <a class="test ex" href="evaluation.html?sujet=4e-exemples-nombres" data-sujet="4e-exemples-nombres"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#0b67b2"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5v6M3.5 6.5h6"/><path d="M14.5 6.5h6"/><path d="M4.4 15.4l4.2 4.2M8.6 15.4l-4.2 4.2"/><path d="M14.5 17.5h6"/><circle cx="17.5" cy="14.6" r=".55" fill="#fff"/><circle cx="17.5" cy="20.4" r=".55" fill="#fff"/></g></svg></span><span class="test-texte"><strong>Nombres et calculs</strong><small><span class="nb">9&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test ex" href="evaluation.html?sujet=4e-exemples-expressions" data-sujet="4e-exemples-expressions"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M1.8 9.4c1-.6 1.9-.2 2.3 1l1.6 4.2c.4 1.2 1.3 1.6 2.3 1"/><path d="M8 9.6c-1-.6-1.9-.1-2.6 1.2l-1.9 3.6c-.7 1.3-1.6 1.7-2.6 1.2"/><path d="M16 9l3 5.063"/><path d="M22 9l-4.8 9"/><path d="M10 12h4"/><path d="M12 10v4"/></g></svg></span><span class="test-texte"><strong>Expressions algébriques</strong><small><span class="nb">8&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <a class="test seule ex" href="evaluation.html?sujet=4e-exemples-geometrie" data-sujet="4e-exemples-geometrie"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#0b67b2"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="miter"><path d="M12 3.8L21.2 19.6H2.8Z"/></g></svg></span><span class="test-texte"><strong>Géométrie</strong><small><span class="nb">7&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+        </div>
+        <div id="liste-3e" class="liste" role="tabpanel" aria-labelledby="onglet-3e">
+          <h2 class="liste-classe">3e</h2>
+          <p class="groupe-titre">Pour se positionner</p>
+          <a class="test seule pos" href="evaluation.html?sujet=3e-automatismes" data-sujet="3e-automatismes"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#f58220"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3l0 7l6 0l-8 11l0 -7l-6 0l8 -11"/></g></svg></span><span class="test-texte"><strong>Automatismes</strong><small><span class="nb">32&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+          <p class="groupe-titre">Exemples de questions</p>
+          <a class="test seule ex" href="evaluation.html?sujet=3e-exemples-nombres" data-sujet="3e-exemples-nombres"><span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false"><rect x="4" y="4" width="40" height="40" rx="10" fill="#0b67b2"/><g transform="translate(10 10) scale(1.1667)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5v6M3.5 6.5h6"/><path d="M14.5 6.5h6"/><path d="M4.4 15.4l4.2 4.2M8.6 15.4l-4.2 4.2"/><path d="M14.5 17.5h6"/><circle cx="17.5" cy="14.6" r=".55" fill="#fff"/><circle cx="17.5" cy="20.4" r=".55" fill="#fff"/></g></svg></span><span class="test-texte"><strong>Nombres et calculs</strong><small><span class="nb">10&nbsp;questions</span></small></span><span class="fin"><span class="der" hidden></span><span class="fl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></span></span></a>
+        </div>
+      </div>
+      <p class="source">Questions : DEPP et <a href="https://eduscol.education.gouv.fr/" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.</p>
+    </section>
+  </main>
+  <script src="./accueil.js?v=20261114-1"></script>
+</body>
+</html>

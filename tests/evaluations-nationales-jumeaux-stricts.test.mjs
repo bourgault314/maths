@@ -174,7 +174,8 @@ test("la fonction d'élision commune", () => {
 
 test("la page : un jumeau est le jumeau d'un sujet officiel (le plus récent, ou celui du passage pour refaire ses questions ratées)", () => {
   const js = readFileSync(new URL("../outils/evaluations_nationales/evaluation.js", import.meta.url), "utf8");
-  assert.match(js, /const modele = officiel \|\| \(numeros && passation && passation\.modele\) \|\| officiels\[0\];/);
+  // Lot EN-A1 : depuis l'écran du test, « Refaire mes questions ratées » impose le sujet officiel du passage retenu.
+  assert.match(js, /const modele = officiel \|\| modeleImpose \|\| \(numeros && passation && passation\.modele\) \|\| officiels\[0\];/);
   assert.match(js, /construire\(sujet, hasard\(graine\), officiel, numeros, modele\)/);
   assert.match(js, /passation = \{ type, officiel, modele,/);
 });

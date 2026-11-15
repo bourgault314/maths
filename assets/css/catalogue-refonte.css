@@ -339,6 +339,31 @@ select { cursor: pointer; }
   height: 20px;
 }
 
+/* Automatismes et Évaluations nationales : deux bandeaux côte à côte (l'un sous l'autre sur écran étroit). Chaque
+   bandeau garde sa marge du bas, donc la grille des domaines ne descend pas. */
+.auto-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 10px;
+}
+
+.auto-feature-evaluations .auto-feature-icon svg {
+  stroke-width: 2.6;
+}
+
+.catalogue-deep-view .auto-features {
+  display: none;
+}
+
+@media (min-width: 901px) and (max-width: 1180px) {
+  body:not(.catalogue-is-deep) .auto-features .auto-feature-copy small { font-size: .82rem; }
+}
+
+@media (max-width: 900px) {
+  /* L'un sous l'autre : les deux bandeaux gardent la même hauteur. */
+  .auto-features { grid-template-columns: 1fr; grid-auto-rows: 1fr; }
+}
+
 .search-box,
 .type-box,
 .domain-box,

@@ -91,6 +91,10 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-5-revue-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-7-0-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
+  // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
+  { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
+    garde: ["outils/evaluations_nationales/", "outils/index.html", "assets/css/catalogue-refonte.css"] },
+
   { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
   // Le robot du lot A2 : tous les écrans de chaque étape, à 4 tailles, dans Chromium ET WebKit
   // (WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit).

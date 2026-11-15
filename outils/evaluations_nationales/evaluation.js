@@ -7,7 +7,9 @@
   // vers lesquels ils mènent ne sont pas prêts ; chaque question garde son champ `entrainement` pour le jour où on le rallume.
   const ENTRAINEMENT_VISIBLE = false;
   const params = new URLSearchParams(location.search);
-  const sujet = window.EN_SUJETS[params.get("sujet")] || window.EN_SUJETS["6e-automatismes"];
+  const sujet = window.EN_SUJETS[params.get("sujet")];
+  // Lot EN-A1 : sans sujet connu, on va à l'accueil de l'appli (le choix de la classe et du test).
+  if (!sujet) { location.replace("./"); return; }
   const vueProf = params.get("prof") === "1";
   const $ = (s) => document.querySelector(s);
   const CLE = "mathsgo-en-" + sujet.id;
@@ -37,43 +39,70 @@
   function montrer(id) {
     for (const v of ["#accueil", "#passe", "#bilan"]) $(v).hidden = v !== id;
     document.body.classList.toggle("en-passation", id === "#passe");
+    document.body.classList.toggle("sur-accueil", id === "#accueil");
     window.scrollTo(0, 0);
   }
 
   // ---------- Accueil ----------
+  // Lot EN-A1 : les textes de l'écran du choix ne se coupent pas n'importe où — guillemets collés à leur mot, mois et
+  // année, « 15 / 22 », un petit mot (à, de, en…) collé à ce qui le suit, un tiret jamais en début de ligne.
+  const NB = "\u00a0";
+  const colle = (s) => String(s)
+    .replace(/« /g, "«" + NB).replace(/ »/g, NB + "»")
+    .replace(/(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) (\d{4})/g, "$1" + NB + "$2")
+    .replace(/(\d) \/ (\d)/g, "$1" + NB + "/" + NB + "$2")
+    .replace(/(^|[\s(])(à|de|en|le|la|un|une|et) (?=\S)/g, "$1$2" + NB)
+    .replace(/ — /g, NB + "— ");
   function accueil() {
     clearInterval(minuteur);
     calculatrice.question(false);
     fermerSaisie();
     $("#niveau").textContent = `${sujet.famille || "Évaluation nationale"} · ${sujet.niveau}`;
+    // Lot EN-A1 : la flèche ramène à la liste des tests de la classe, sur l'accueil de l'appli.
+    $("#retour").href = `./?niveau=${encodeURIComponent(sujet.niveau)}`;
+    $("#retour").setAttribute("aria-label", `Retour aux tests de ${sujet.niveau}`);
+    $("#retour-texte").textContent = sujet.niveau;
     $("#titre").textContent = sujet.titre;
-    $("#descriptif").textContent = `${sujet.questions.length} questions · ${sujet.consignes}`;
+    $("#descriptif").textContent = colle(`${sujet.questions.length} questions · ${sujet.consignes}`);
     $("#officiels").innerHTML = officiels.map((o, k) => `<button class="carte officiel" type="button" data-officiel="${k}">
             <span class="ico" aria-hidden="true">📄</span>
-            <span><strong>${o.titre}</strong>${o.detail ? `<small>${o.detail}</small>` : ""}</span>
+            <span><strong>${colle(o.titre)}</strong>${o.detail ? `<small>${colle(o.detail)}</small>` : ""}</span>
             <span class="go">Commencer</span>
           </button>`).join("");
     $("#officiels").querySelectorAll("[data-officiel]").forEach((b) => b.addEventListener("click", () => lancer("officiel", null, officiels[Number(b.dataset.officiel)])));
     $("#lancer-jumeau").hidden = !avecJumeaux;
-    $("#source").innerHTML = `Questions : ${sujet.source.replace(/(, Eduscol)?, licence Etalab 2\.0\.?$/, "")} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
+    $("#source").innerHTML = `Questions : ${colle(sujet.source.replace(/(, Eduscol)?, licence Etalab 2\.0\.?$/, ""))} — <a href="${sujet.lienSource}" target="_blank" rel="noopener">Eduscol</a>, licence Etalab 2.0.`;
     const dernier = lire();
-    $("#dernier").hidden = !dernier;
+    // Lot EN-A1 : les questions ratées du dernier sujet (celles qui existent encore dans le test) se refont depuis cet
+    // écran, en version jumelle ; la carte remplace alors la ligne « Ton dernier sujet ». Pas de jumeaux : pas de carte.
+    const rates = dernier && Array.isArray(dernier.rates) ? dernier.rates.filter((n) => sujet.questions.some((q) => q.num === n)) : [];
+    const carteRates = avecJumeaux && rates.length > 0;
+    $("#dernier").hidden = !dernier || carteRates;
+    $("#refaire-accueil").hidden = !carteRates;
     if (dernier) {
       // Un sujet officiel peut avoir un nom court (4e Géométrie : « exercice 7 : l'étagère ») ; sans repères, pas de groupe.
       const o = officiels.find((x) => x.cle === dernier.officiel);
       const quoi = dernier.type !== "officiel" ? "jumeau" : o && o.court ? o.court : officiels.length > 1 && dernier.officiel ? "officiel " + dernier.officiel.replace("-", " et ") : "officiel";
-      $("#dernier").textContent = `Ton dernier sujet (${quoi}) : ${dernier.score} / ${dernier.total}${dernier.groupe ? " — " + dernier.groupe : ""}`;
+      const phrase = colle(`Ton dernier sujet (${quoi}) : ${dernier.score} / ${dernier.total}${dernier.groupe ? " — " + dernier.groupe : ""}`);
+      $("#dernier").textContent = phrase;
+      if (carteRates) {
+        $("#refaire-accueil-titre").textContent = rates.length > 1 ? `Refaire mes ${rates.length} questions ratées` : "Refaire ma question ratée";
+        $("#refaire-accueil-detail").textContent = phrase + ".";
+        // Le jumeau du sujet officiel de ce passage (4e : le sujet 2024-2025 garde « 14 − 6 »).
+        const modele = officiels.find((x) => x.cle === dernier.modele) || officiels[0];
+        $("#refaire-accueil").onclick = () => lancer("jumeau", rates, null, modele);
+      }
     }
     montrer("#accueil");
   }
 
   // ---------- Passation ----------
-  function lancer(type, numeros, officiel) {
+  function lancer(type, numeros, officiel, modeleImpose) {
     const graine = type === "officiel" ? 1 : nouvelleGraine();
     officiel = type === "officiel" ? officiel || officiels[0] : null;
     // Lot EN10 : un jumeau est le jumeau d'UN sujet officiel et ne tire que ses tâches : le plus récent, ou, pour refaire
     // ses questions ratées, celui du passage qu'on vient de faire (4e : le sujet 2024-2025 garde « 14 − 6 »).
-    const modele = officiel || (numeros && passation && passation.modele) || officiels[0];
+    const modele = officiel || modeleImpose || (numeros && passation && passation.modele) || officiels[0];
     const items = construire(sujet, hasard(graine), officiel, numeros, modele);
     passation = { type, officiel, modele, graine, items, reponses: [], debut: Date.now(), i: 0, reprise: Boolean(numeros) };
     $("#chrono").textContent = "0:00";
@@ -252,13 +281,19 @@
     if (passation.reprise) {
       zoneGroupe.textContent = score === total ? "Toutes tes questions ratées sont réussies !" : "Questions ratées refaites";
       zoneGroupe.className = "groupe " + (score === total ? "g2" : "g1");
+      // Lot EN-A1 : ne restent « à refaire » que les questions encore ratées (le score du sujet ne change pas).
+      const d = lire();
+      if (d && Array.isArray(d.rates)) { d.rates = resultats.filter((x) => !x.juste).map((x) => x.it.q.num); ecrire(d); }
     } else {
       const g = seuils ? groupe(score, seuils) : null;
       if (g) {
         zoneGroupe.textContent = g.nom;
         zoneGroupe.className = "groupe g" + g.rang;
       }
-      ecrire({ type: passation.type, officiel: passation.officiel ? passation.officiel.cle : null, score, total, groupe: g ? g.nom : null, date: new Date().toISOString() });
+      // Lot EN-A1 : on garde aussi le sujet officiel de référence et les numéros des questions ratées (pour les refaire
+      // depuis l'écran du test, plus tard).
+      ecrire({ type: passation.type, officiel: passation.officiel ? passation.officiel.cle : null, modele: passation.modele ? passation.modele.cle : null,
+        score, total, groupe: g ? g.nom : null, rates: resultats.filter((x) => !x.juste).map((x) => x.it.q.num), date: new Date().toISOString() });
     }
     $("#seuils").hidden = passation.reprise;
     $("#seuils").textContent = !seuils ? "Eduscol ne donne pas de repères pour ces exemples : pas de groupe."
