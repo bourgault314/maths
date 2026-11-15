@@ -925,6 +925,29 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     .lc-jour { width: 24px; height: 24px; font-size: 14px; }
     .lc-semaine { gap: 5px; }
   }
+  /* Lot « la semaine précédente » (14/11/2026) : ‹ titre › au-dessus des 7
+     jours. Les flèches gardent leur place (grisées au bout) et le titre sa
+     largeur : changer de semaine ne déplace rien. Sur ordinateur, une ligne
+     (« Semaine du 28 sept. », le plus long, tient entre les flèches au-dessus
+     des 7 cases) ; en dessous de 1000 px, toujours deux lignes (« Cette /
+     semaine », « Semaine du / 9 nov. ») : l'en-tête a la même hauteur dans
+     les deux cas. */
+  .lc-nav-semaine { display: flex; align-items: center; gap: 2px; }
+  .lc-titre-semaine { flex: 1; min-width: 0; text-align: center; white-space: nowrap; }
+  #lc-tableau th .lc-fleche-semaine { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0;
+                                     color: var(--blue); background: var(--paper); border: 1px solid var(--line); border-radius: 7px; cursor: pointer; }
+  #lc-tableau th .lc-fleche-semaine:hover:not(:disabled) { color: var(--blue-dark); background: var(--survol); }
+  /* Grisée au bout : toujours là, à la même place, mais visiblement éteinte. */
+  #lc-tableau th .lc-fleche-semaine:disabled { color: var(--muted); background: var(--gris-pale); border-color: var(--gris-pale); opacity: .55; cursor: default; }
+  @media (min-width: 1000px) {
+    /* Une seule ligne : le titre sur la ligne des autres titres, les flèches
+       débordent dans la marge de la case (l'en-tête ne grandit pas). */
+    .lc-nav-semaine { margin: -3px 0; }
+  }
+  @media (max-width: 999px) {
+    .lc-titre-semaine > span { display: block; }
+    #lc-tableau th .lc-fleche-semaine { width: 26px; height: 34px; }
+  }
   .lc-note .lc-jour { width: 16px; height: 16px; font-size: 10px; vertical-align: -3px; margin: 0 2px; }
   .lc-note { margin-top: 10px; }
   .lc-unite { color: var(--muted); font-weight: 400; font-size: .86rem; }
@@ -2557,6 +2580,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     fenetreEleveId = null;
     idsAffiches = [];
     lectureClasse = null;
+    semaineClasse = 0;
     ongletFiche = "ensemble";
     reglage = null;
     reglageEnCours = false;
@@ -7541,6 +7565,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // Lot S2, correctif après Codex (point 1) : rien de la classe d'avant
       // dans La classe ni dans les cartes de Défi calcul, même cachées.
       if (!memeClasse) { viderZonesClasse(); viderZonesCalcul(); }
+      // Lot « la semaine précédente » : une autre classe repart sur la
+      // semaine en cours.
+      if (!memeClasse) semaineClasse = 0;
       appliAffichee = voulue;
       eleves = elevesLus(voulue, donnees.eleves);
       tableaux = {[voulue]: eleves};
@@ -8154,6 +8181,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // tables, SEUILS.prof.absenceJours).
   const JOURS_ABSENT = 7;
   let triClasse = {colonne: "prenom", sens: 1};
+  // Lot « la semaine précédente » (choix de Gwenaël du 14/11/2026) : la
+  // colonne des 7 jours de La classe peut reculer de semaine en semaine
+  // (‹ et ›). Combien de semaines en arrière : 0, la semaine en cours. Jamais
+  // gardé — ni stockage, ni adresse : recharger la page, rouvrir l'onglet ou
+  // une autre classe revient à la semaine en cours.
+  let semaineClasse = 0;
+  // Après un clic sur ‹ ou ›, le bouton à remettre sous le doigt (clavier) :
+  // l'en-tête est redessiné.
+  let focusSemaine = "";
   // La lecture des listes qui manquent à « La classe » : une par classe
   // ouverte (rien n'est relu en boucle si le serveur refuse) ; remise à
   // zéro quand la classe est relue.
@@ -8564,6 +8600,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!classe) return;
     vue = "classe";
     retenirChoixAppli("classe");
+    semaineClasse = 0;
     messager("message-appli", "", "");
     poserAppli();
     redessin.demander();
@@ -8587,7 +8624,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!enLecture) liste.forEach(eleve => bilans.set(eleve.id, bilanEleve(eleve.id, aujourdhui)));
     const applis = applisDeLaVue();
     dessinerCartesClasse(liste, bilans, enLecture);
-    dessinerTableauClasse(liste, bilans, applis, aujourdhui, enLecture);
+    dessinerTableauClasse(liste, bilans, applis, aujourdhui, enLecture, semaineDeLaVue(liste, bilans, aujourdhui, enLecture));
     const auTravail = [...bilans.values()].filter(b => b.semaines[3].jours > 0).length;
     $("resume-classe").textContent = enLecture ? `${pluriel(liste.length, "élève")}`
       : `${pluriel(liste.length, "élève")} · ${auTravail || aujourdhui !== lundiDuJour(aujourdhui) ? `${auTravail} au travail cette semaine` : "la semaine commence"}`;
@@ -8691,6 +8728,107 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       ligneDeCarte(eleve, "bravo", "vert", raison, ""));
   }
 
+  // ----- la semaine regardée (lot « la semaine précédente », 14/11/2026)
+
+  // Le plus ancien jour que la page cherche : le 1er août de l'année
+  // scolaire (ce jour-là, le serveur efface les classes de l'année écoulée,
+  // purge_de_l_annee) — aucune classe n'a de travail plus ancien.
+  function plancherDeLAnnee(aujourdhui) {
+    const annee = Number(String(aujourdhui).slice(0, 4));
+    const aout = `${annee}-08-01`;
+    return aujourdhui >= aout ? aout : `${annee - 1}-08-01`;
+  }
+
+  // « 9 nov. », « 1er déc. » : le lundi d'une semaine (le nombre et le mois
+  // ne se séparent pas en fin de ligne).
+  function lundiEnClair(lundi) {
+    const d = new Date(`${lundi}T12:00:00Z`);
+    if (isNaN(d)) return String(lundi);
+    const jour = d.getUTCDate();
+    return `${jour === 1 ? "1er" : jour}\u00a0${d.toLocaleDateString("fr-FR", {timeZone: "UTC", month: "short"})}`;
+  }
+
+  // Un élève de la classe a-t-il un jour de travail connu avant `lundi` ?
+  // D'abord les bilans déjà faits (ils voient les 3 semaines d'avant la
+  // semaine regardée) ; sinon, 4 semaines par 4 semaines en arrière, jusqu'au
+  // 1er août. Chaque appli garde ce qu'elle garde (60 séances de Défi tables
+  // ou de Défi calcul, 60 jours de SPLAT! ou de Coffres, 500 séances
+  // d'Anzan) : quand plus personne n'a rien de connu avant, ‹ s'arrête.
+  function travailAvant(lundi, liste, bilansVus, aujourdhui) {
+    const plancher = plancherDeLAnnee(aujourdhui);
+    const avant = jours => jours.some(jour => jour < lundi && jour >= plancher);
+    if ([...bilansVus.values()].some(b => avant([...b.jours.keys()]))) return true;
+    for (let fin = jourPlus(lundi, -22); fin >= plancher; fin = jourPlus(fin, -28)) {
+      const trouve = liste.some(eleve => applisDuBilan().some(cle => {
+        const suivi = suiviApp(cle, eleveDe(cle, eleve.id), fin);
+        return Boolean(suivi) && avant(suivi.jours.map(j => j.jour));
+      }));
+      if (trouve) return true;
+    }
+    return false;
+  }
+
+  // La semaine que montre la colonne des 7 jours : son lundi, les bilans à
+  // y lire (ceux d'aujourd'hui pour la semaine en cours ; pour une semaine
+  // passée, chaque élève vu au dimanche de cette semaine-là) et si ‹ peut
+  // encore reculer. « À aider », « À féliciter », les 4 semaines, les applis,
+  // « Dernière fois » et le tri restent ceux d'aujourd'hui (choix de
+  // Gwenaël : les cartes ne suivent pas la flèche).
+  function semaineDeLaVue(liste, bilans, aujourdhui, enLecture) {
+    const lundi = jourPlus(lundiDuJour(aujourdhui), -7 * semaineClasse);
+    if (enLecture) return {lundi, decalage: semaineClasse, bilans, avant: false};
+    let vus = bilans;
+    if (semaineClasse > 0) {
+      const dimanche = jourPlus(lundi, 6);
+      vus = new Map();
+      liste.forEach(eleve => vus.set(eleve.id, bilanEleve(eleve.id, dimanche)));
+    }
+    return {lundi, decalage: semaineClasse, bilans: vus, avant: travailAvant(lundi, liste, vus, aujourdhui)};
+  }
+
+  // ‹ recule d'une semaine, › avance ; jamais après la semaine en cours.
+  function changerSemaineClasse(pas) {
+    semaineClasse = Math.max(0, semaineClasse + pas);
+    focusSemaine = pas < 0 ? "apres" : "avant";
+    redessin.demander();
+  }
+
+  // Le titre de la colonne : ‹ « Cette semaine » › ou ‹ « Semaine du 9 nov. » ›.
+  // Les deux flèches gardent toujours leur place (grisées au bout), le titre
+  // garde sa largeur : changer de semaine ne déplace rien.
+  function titreSemaineClasse(semaine, enLecture) {
+    const th = el("th", "lc-th-semaine");
+    const rangee = el("div", "lc-nav-semaine");
+    const fleche = (sens, dessin, nom, actif) => {
+      const bouton = el("button", "lc-fleche-semaine");
+      bouton.type = "button";
+      bouton.id = `lc-semaine-${sens}`;
+      bouton.setAttribute("aria-label", nom);
+      bouton.title = nom;
+      // Le chevron, dessiné nœud par nœud (une constante de la page).
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      [["viewBox", "0 0 24 24"], ["width", "16"], ["height", "16"], ["aria-hidden", "true"], ["fill", "none"], ["stroke", "currentColor"],
+        ["stroke-width", "2.6"], ["stroke-linecap", "round"], ["stroke-linejoin", "round"]].forEach(([nom, valeur]) => svg.setAttribute(nom, valeur));
+      const trait = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      trait.setAttribute("d", dessin);
+      svg.append(trait);
+      bouton.append(svg);
+      bouton.disabled = !actif;
+      bouton.addEventListener("click", () => changerSemaineClasse(sens === "avant" ? 1 : -1));
+      return bouton;
+    };
+    const titre = el("span", "lc-titre-semaine");
+    titre.setAttribute("aria-live", "polite");
+    const [haut, bas] = semaine.decalage ? ["Semaine du", lundiEnClair(semaine.lundi)] : ["Cette", "semaine"];
+    titre.append(el("span", "", haut), document.createTextNode(" "), el("span", "", bas));
+    rangee.append(
+      fleche("avant", "M15 5l-7 7 7 7", "Semaine précédente", !enLecture && semaine.avant),
+      titre,
+      fleche("apres", "M9 5l7 7-7 7", "Semaine suivante", !enLecture && semaine.decalage > 0));
+    th.append(rangee);
+    return th;
+  }
+
   // La semaine d'un élève : 7 cases, ✓ les jours de travail, la case du jour
   // entourée, les jours à venir en pointillés. Rien de rouge, jamais.
   function caseSemaine(bilan, jour, aujourdhui) {
@@ -8704,9 +8842,12 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return c;
   }
 
-  function celluleSemaineClasse(bilan, aujourdhui) {
+  // `lundi` : la semaine à montrer (lot « la semaine précédente ») ; une
+  // semaine passée n'a ni case du jour ni jour à venir.
+  function celluleSemaineClasse(bilan, aujourdhui, lundi = lundiDuJour(aujourdhui)) {
     const zone = el("span", "lc-semaine");
-    const lundi = lundiDuJour(aujourdhui);
+    const enCours = lundi === lundiDuJour(aujourdhui);
+    const nom = enCours ? "Cette semaine" : `Semaine du ${lundiEnClair(lundi)}`;
     const faits = [];
     for (let d = 0; d < 7; d += 1) {
       const jour = jourPlus(lundi, d);
@@ -8715,7 +8856,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     }
     zone.setAttribute("role", "img");
     const pasConnu = Boolean(bilan && bilan.coupure && bilan.coupure > lundi);
-    zone.setAttribute("aria-label", (faits.length ? `Cette semaine : ${faits.join(", ")}` : pasConnu ? "Cette semaine : pas connue" : "Cette semaine : rien pour l’instant")
+    zone.setAttribute("aria-label", (faits.length ? `${nom} : ${faits.join(", ")}` : pasConnu ? `${nom} : pas connue` : enCours ? `${nom} : rien pour l’instant` : `${nom} : rien`)
       + (pasConnu && faits.length ? " (les autres jours ne sont pas tous connus)" : ""));
     return zone;
   }
@@ -8765,7 +8906,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return zone;
   }
 
-  function dessinerTableauClasse(liste, bilans, applis, aujourdhui, enLecture) {
+  function dessinerTableauClasse(liste, bilans, applis, aujourdhui, enLecture, semaine) {
+    // La semaine regardée (‹ ›) : sans elle, la semaine en cours.
+    const vue7 = semaine || {lundi: lundiDuJour(aujourdhui), decalage: 0, bilans, avant: false};
     const tete = $("lc-entete");
     tete.textContent = "";
     const titre = (texte, tri, large) => {
@@ -8785,7 +8928,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       tete.append(th);
     };
     titre("Élève", "prenom");
-    titre("Cette semaine", "");
+    tete.append(titreSemaineClasse(vue7, enLecture));
     titre("4 dernières semaines", "semaines", true);
     applis.forEach(cle => titre(nomDeLAppli(cle), "", true));
     titre("Dernière fois", "dernier", true);
@@ -8811,7 +8954,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       const ligne = document.createElement("tr");
       const cNom = el("td", "nom", nomAffiche(eleve) || "sans prénom");
       const cSemaine = document.createElement("td");
-      cSemaine.append(celluleSemaineClasse(b, aujourdhui));
+      cSemaine.append(celluleSemaineClasse(vue7.bilans.get(eleve.id), aujourdhui, vue7.lundi));
       const cQuatre = document.createElement("td");
       cQuatre.append(celluleQuatreSemaines(b));
       large(cQuatre);
@@ -8832,6 +8975,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       ligne.querySelector("td.geste").remove();
       corps.append(ligne);
     });
+    // Après ‹ ou › : le doigt (le clavier) reste sur la flèche touchée — ou
+    // sur l'autre, quand celle-ci vient de se griser au bout.
+    if (focusSemaine) {
+      const voulu = $(`lc-semaine-${focusSemaine}`);
+      const autre = $(`lc-semaine-${focusSemaine === "avant" ? "apres" : "avant"}`);
+      focusSemaine = "";
+      const cible = voulu && !voulu.disabled ? voulu : autre && !autre.disabled ? autre : null;
+      if (cible) cible.focus({preventScroll: true});
+    }
   }
 
   // ----- la fiche d'un élève
