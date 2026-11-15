@@ -109,7 +109,9 @@ function attendue(q) {
 // ------------------------------------------------- les contrôles d'écriture
 const INTERDITS = [/\d\.\d/, /e[+-]\d/, /000000/, /NaN|undefined|null|\[object/, /(^|[\s(=])[-−]\d/, /Dans d'/, /un demi de/, /pour \d+ identiques/, /La masse .* pèse/];
 const PERSONNE = /\b(il|elle|ils|elles)\b/gi;
-const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il y a|y a-t-il|faut-il)/gi;
+// (Lot 3b-3 : « Quelle heure est-il ? », « Il est huit heures » : l'heure,
+// pas une personne.)
+const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il y a|y a-t-il|faut-il|heure est-il|il est (?:midi|[a-zé]+ heures?))/gi;
 function ecriture(texte, ou) {
   INTERDITS.forEach(re => assert.doesNotMatch(texte, re, `${ou} : ${re} dans « ${texte} »`));
   assert.doesNotMatch(texte, /\d (?:km|m|dm|cm|mm|t|kg|g|L|dL|cL|min|h)(?![\wÀ-ÿ])/, `${ou} : espace normale avant l'unité dans « ${texte} »`);

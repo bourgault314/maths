@@ -525,12 +525,13 @@
       }
       for (let h = 1; h <= 12; h += 1) {
         const [x, y] = point((2 * Math.PI * h) / 12, R - 25);
-        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 5.5).toFixed(1), "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: "#143451"}, String(h)));
+        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 6).toFixed(1), "text-anchor": "middle", "font-size": 17, "font-weight": 800, fill: "#143451"}, String(h)));
       }
-      // les minutes parcourues, de quart d'heure en quart d'heure
+      // les minutes parcourues, de quart d'heure en quart d'heure (lot
+      // 3b-3 : plus grandes, elles faisaient 7 px au téléphone)
       for (let m = 15; m <= minutes; m += 15) {
-        const [x, y] = point((2 * Math.PI * m) / 60, R + 28);
-        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 5).toFixed(1), "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: "#0755b8"}, `${m}${NB}min`));
+        const [x, y] = point((2 * Math.PI * m) / 60, m % 30 === 0 ? R + 26 : R + 32);
+        dessin.appendChild(svg("text", {x: x.toFixed(1), y: (y + 6.5).toFixed(1), "text-anchor": "middle", "font-size": 18, "font-weight": 900, fill: "#0755b8"}, `${m}${NB}min`));
       }
       // la petite aiguille (8 h, puis elle avance) et la grande
       const [hx, hy] = point((2 * Math.PI * (8 + minutes / 60)) / 12, R - 40);
@@ -968,17 +969,21 @@
     jours: ["!soleil", "1 jour : 24 h, du matin au matin suivant"]
   };
   // Quand l'objet de la question EST la référence d'une unité, une autre
-  // référence, vue elle aussi au palier 1 (sinon l'aide donnerait la réponse).
+  // référence (sinon l'aide donnerait la réponse). Lot 3b-3 : toujours une
+  // illustration, comme les autres lignes de la liste (une série d'images
+  // homogène : plus de petit dessin plat au milieu des illustrations). Le
+  // texte ne change pas : une image sans sa mesure ne cite pas un repère
+  // d'un autre palier (règle du lot A2 ter).
   const AUTRES = {
-    l1: {mm: ["!regle", "mm : pour les toutes petites longueurs"]},
-    l3: {cm: ["!regle", "1 cm : de 0 à 1 sur la règle"]},
+    l1: {mm: ["m1", "mm : pour les toutes petites longueurs"]},
+    l3: {cm: ["l1", "1 cm : de 0 à 1 sur la règle"]},
     l4: {m: ["l11", "1 m : un grand pas"]},
     l7: {km: ["l4", "km : pour les longs trajets en voiture"]},
-    m3: {g: ["!plume", "g : pour les objets très légers"]},
+    m3: {g: ["m7", "g : pour les objets très légers"]},
     m4: {kg: ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]},
     m5: {kg: ["m4", "un paquet de riz : 1 kg"]},
     m6: {t: ["m4", "1 t : 1 000 paquets de riz"]},
-    c2: {cL: ["!verreDoseur", "cL : pour les petites quantités de liquide"]},
+    c2: {cL: ["c5", "cL : pour les petites quantités de liquide"]},
     c3: {L: ["c2", "1 L : trois canettes, un peu plus"]}
   };
   function reperesUnites(zone, question) {
@@ -1577,7 +1582,9 @@
   // quart » sur le 3, « et demie » sur le 6, « moins le quart » sur le 9),
   // le premier quart d'heure en turquoise. Aucune heure n'y est donnée.
   function horlogeQuarts(zone) {
-    const s = svg("svg", {viewBox: "0 0 300 168", class: "dessin horloge-quarts", role: "img",
+    // (Lot 3b-3 : la boîte s'élargit de chaque côté : « moins le quart »
+    // sortait à gauche, coupé, au petit Android.)
+    const s = svg("svg", {viewBox: "-36 0 372 168", class: "dessin horloge-quarts", role: "img",
       "aria-label": "Une horloge : la grande aiguille sur le 3, et quart ; sur le 6, et demie ; sur le 9, moins le quart"});
     const cx = 150;
     const cy = 80;
@@ -1593,15 +1600,17 @@
     s.insertBefore(svg("circle", {cx, cy, r: R, fill: "#fff"}), s.firstChild);
     s.appendChild(g);
     [[3, "et quart", "start", cx + R + 8, cy + 5], [6, "et demie", "middle", cx, cy + R + 19], [9, "moins le quart", "end", cx - R - 8, cy + 5]].forEach(([, t, ancre, x, y]) => {
-      s.appendChild(svg("text", {x, y, "text-anchor": ancre, "font-size": 14, "font-weight": 900, fill: N}, t));
+      s.appendChild(svg("text", {x, y, "text-anchor": ancre, "font-size": 13, "font-weight": 900, fill: N}, t));
     });
     s.appendChild(svg("circle", {cx, cy, r: 4, fill: N}));
     zone.appendChild(s);
     zone.appendChild(el("div", "note", carte().typo("un quart d'heure = 15 min")));
   }
   // La correction : l'horloge à l'heure de la réponse.
-  function horlogeHeure(h, m) {
-    const s = svg("svg", {viewBox: "0 0 120 120", class: "dessin horloge-heure", role: "img", "aria-label": heureT(h * 60 + m)});
+  // (Lot 3b-3 : aussi dans la question « Quelle heure est-il ? », sans
+  // l'heure dans son nom : `titre`.)
+  function horlogeHeure(h, m, titre = null) {
+    const s = svg("svg", {viewBox: "0 0 120 120", class: "dessin horloge-heure", role: "img", "aria-label": titre || heureT(h * 60 + m)});
     cadran(s, 60, 60, 54, h * 60 + m);
     return s;
   }

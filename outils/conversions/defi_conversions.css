@@ -74,7 +74,7 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .q .regle-q { width: 100%; max-width: 26rem; height: auto; display: block; margin: .25rem auto 0; }
 .regle-c { width: 100%; max-width: 22rem; height: auto; display: block; }
 .regle-outil { width: 100%; max-width: 19rem; height: auto; display: block; }
-.horloge-quarts { width: 100%; max-width: 18rem; height: auto; display: block; }
+.horloge-quarts { width: 100%; max-width: 22.25rem; height: auto; display: block; }
 .reponse-bonne .dessin.horloge-heure { width: 5.25rem; height: 5.25rem; max-width: none; max-height: none; flex: 0 0 5.25rem; }
 .reponse-bonne .horl-ligne .grosse { font-size: 1.125rem; line-height: 1.3; }
 @media (min-width: 900px) and (min-height: 801px) {
@@ -550,7 +550,12 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
      rapprochent pour que les liens du bas restent dans le cadre. */
   .cadre[data-forme="accueil"] { gap: .3125rem; }
 }
-@media (max-height: 640px) {
+/* Lot 3b-3 (audit d'ergonomie) : la même disposition sur TOUS les
+   téléphones peu hauts, pas seulement sous 640 px : à 393 × 660 (iPhone
+   courant), 430 × 740 et 412 × 780, les touches du pavé en quatre rangées
+   ne faisaient que 33 px de haut (sous les 40 px d'un doigt). En deux
+   rangées de six, elles font de 46 à 58 px, et l'aide gagne la place. */
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
   /* Le pavé : deux rangées de six touches (1 2 3 4 5 , / 6 7 8 9 0 ⌫). */
   .bas { height: 8.25rem; }
   .cadre.bas-court .bas { height: 6.75rem; }
@@ -567,17 +572,21 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .choix { gap: .375rem; }
   /* Relier : les objets en haut, les mesures dessous. */
   /* (Lot 3b-2 : les mesures gardent 2,75 rem de haut, au moins 44 px au
-     doigt ; les objets prennent le reste, leur dessin au-dessus du nom.) */
+     doigt ; les objets prennent le reste, leur dessin au-dessus du nom.
+     Lot 3b-3 : le dessin passe de 1,25 à 1,5 rem, les mesures à 1 rem :
+     « 1 000 kg » sortait de son bouton au petit Android, police large.) */
   .assoc { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) 2.75rem; grid-auto-flow: column; gap: .3125rem; }
   .assoc .obj { flex-direction: column; justify-content: center; text-align: center; gap: .0625rem; font-size: .6875rem; line-height: 1.08; padding: .125rem .1875rem; position: relative; }
   .assoc .obj .t-long { display: none; }
   .assoc .obj .t-court { display: inline; }
   .assoc .obj .lettre { position: absolute; top: .1875rem; left: .1875rem; flex-basis: auto; width: 1.125rem; height: 1.125rem; font-size: .6875rem; }
-  .assoc .obj .ill { width: 1.25rem; height: 1.25rem; }
-  .assoc .mes { font-size: 1.0625rem; padding: .125rem .25rem; gap: .25rem; }
+  .assoc .obj .ill { width: 1.5rem; height: 1.5rem; }
+  .assoc .mes { font-size: 1rem; padding: .125rem .1875rem; gap: .1875rem; }
   .assoc .mes .lettre { flex-basis: 1.125rem; height: 1.125rem; font-size: .6875rem; }
   .ranger { gap: .3125rem; }
   .ranger button { font-size: 1.125rem; }
+}
+@media (max-height: 640px) {
   .esc { height: 2.75rem; }
   .zone.info.fixe .marche-nom { font-size: .875rem; }
   .q .phrase-t { font-size: 1.125rem; line-height: 1.2; }
@@ -822,4 +831,59 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .tuile .petit { white-space: nowrap; }
   .acc-palier .info .eti { line-height: 1.1; }
   .carte.bleue h2 { font-size: 1.125rem; }
+}
+
+/* ------------------------------------------------------- lot 3b-3
+   L'audit d'ergonomie du palier 1 (15/11/2026), au doigt et à l'ordinateur,
+   avec Inter et avec une police plus large (les vrais appareils n'ont pas
+   Inter). */
+/* Les quatre réponses (« Qu'est-ce que je mesure ? ») : deux rangées de
+   même hauteur, un peu plus petites ; « une contenance » passait sur deux
+   lignes avec une police plus large (37 px de haut, le texte débordait). */
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .choix.quatre { grid-template-rows: repeat(2, minmax(0, 1fr)); }
+  .choix.quatre button { font-size: 1rem; line-height: 1.1; padding: .125rem .25rem; }
+}
+/* Les listes de repères : une seule famille de dessins par liste (les
+   illustrations), assez grandes pour se reconnaître au téléphone. */
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) {
+  .ref .ill { width: 1.875rem; height: 1.875rem; }
+}
+/* L'escalier de « Tu connais déjà ? » : chaque marche garde la place de son
+   numéro (au petit téléphone, la 1re marche était un trait, le 1 coupé). */
+.esc i { line-height: 1; }
+/* L'horloge à lire (« Quelle heure est-il ? ») : l'horloge à gauche de la
+   phrase, sur une ligne ; la question reste aussi basse que les autres
+   questions de l'étape. */
+.q .horloge-q { display: flex; align-items: center; justify-content: center; gap: .75rem; }
+.q .horloge-q .dessin.horloge-heure { width: 4.75rem; height: 4.75rem; flex: 0 0 4.75rem; max-width: none; max-height: none; }
+@media (min-width: 900px) and (min-height: 801px) {
+  .q .horloge-q .dessin.horloge-heure { width: 6.5rem; height: 6.5rem; flex-basis: 6.5rem; }
+}
+.choix.mots button { font-size: 1.25rem; line-height: 1.15; padding: .25rem .375rem; white-space: normal; }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .choix.mots button { font-size: .9375rem; line-height: 1.1; padding: .125rem .25rem; max-height: none; }
+}
+/* « Tu connais déjà ? », l'annonce : au petit téléphone, l'escalier, le
+   titre et les règles se resserrent (avec une police plus large, « Plus
+   tard » sortait du cadre de 14 px à 375 × 548). */
+.gros-emoji.esc-annonce { font-size: 2.875rem; margin-top: .625rem; }
+.carte.regles-test { font-size: 1rem; font-weight: 700; line-height: 1.5; }
+@media (max-height: 600px) {
+  .gros-emoji.esc-annonce { font-size: 2.25rem; margin-top: 0; }
+  .carte.regles-test { font-size: .9375rem; line-height: 1.35; padding-top: .375rem; padding-bottom: .375rem; }
+}
+/* Le chemin des écrans de fin (« Je me souviens — Mon étape — Avant de
+   partir ») : au téléphone étroit, les pastilles se serrent (avec une
+   police plus large, la 1re sortait du cadre à 360 × 640). */
+@media (max-width: 400px) {
+  .chemin i { padding: .1875rem .375rem; font-size: .75rem; }
+  .chemin s { width: .375rem; }
+}
+/* Relier sans dessin (« 1 L ↔ 10 dL », Les relations des bases) : l'unité
+   en grand, comme les mesures (au téléphone, elle était à 11 px au milieu
+   d'un grand bouton). */
+.assoc .obj.sans-dessin { justify-content: center; font-size: 1.25rem; }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .assoc .obj.sans-dessin { font-size: 1.0625rem; }
 }
