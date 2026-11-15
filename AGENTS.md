@@ -32,6 +32,22 @@ Automatismes V2, lire dans cet ordre :
   côté du dépôt (ou, pour un worktree rangé ailleurs, de `~/Developer/MathsGo-Code/outils-tests`) ;
   s'ils manquent, la suite échoue au lieu de passer en silence. Pas en CI : les
   machines de GitHub n'ont ni navigateur ni les polices de Windows.
+- Qui vérifie quoi (depuis le 15/11/2026). Un lot préparé par Cowork arrive vérifié :
+  `npm run verifier` complet (tests + recettes des applis touchées), sur le main dont le
+  numéro est écrit dans le prompt. La CI de GitHub rejoue ensuite, sur la pull request,
+  `node --test`, les validations et les tests du serveur — mais PAS les recettes au
+  navigateur. Claude Code ne refait donc que ce que personne d'autre ne fait :
+  - les tests propres au lot (`node --test --test-reporter=tap <fichiers du lot>`) ;
+  - les recettes des applis touchées : `node scripts/verifier-navigateur.mjs` lancé seul
+    (le même choix que `npm run verifier`, sans les ≈ 12 min de `node --test`) ;
+  - les écrans demandés par le prompt, sur l'ordinateur de Gwenaël (polices Windows).
+  `npm run verifier` complet chez Claude Code seulement si : le diff ne s'applique pas
+  tel quel (`--3way` qui fusionne, `--exclude`, conflit), un fichier est retouché à la
+  main, le lot touche `package.json` ou `scripts/verifier-navigateur.mjs`, ou la CI ne
+  tourne pas (budget GitHub Actions épuisé). Dans sa réponse, Claude Code rappelle à
+  Gwenaël d'attendre la coche verte de la pull request avant de fusionner.
+  Plusieurs fenêtres de Claude Code tournent en parallèle sur le même ordinateur : une
+  batterie complète prend tous les cœurs et ralentit toutes les autres, d'où cette règle.
 - Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne
   tournent en CI que si la pull request touche `_serveur/`, les workflows, ou
   l'un des fichiers du dépôt que `_serveur/tests/lancer.php` compare octet pour
