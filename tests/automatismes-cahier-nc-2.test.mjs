@@ -26,7 +26,7 @@ test("NC-2 : douze formes du cahier, NC01 à NC03 de a à d", () => {
     assert.deepEqual(formesDisponibles(famille), ["a", "b", "c", "d"]);
     for (const forme of "abcd") assert.ok(formesCahier.has(`${famille}-${forme}`));
   }
-  assert.equal(formesCahier.size, 25);
+  // Lot NC-3 : NC04 s'ajoute (9 formes, leurs tests dans automatismes-cahier-nc-3).
 });
 
 test("NC01-a : chiffres tous différents, le dernier jamais 0, les unités une fois sur quatre", () => {

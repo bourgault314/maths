@@ -52,7 +52,7 @@ test("84 cartes uniques, cinq domaines et une identité stable par forme", () =>
       assert.equal(forme.champs.length, question.fields.length, forme.identifiant);
     }
   }
-  assert.equal(formes.size, 437);
+  assert.equal(formes.size, 440);
 });
 
 test("le classement des grandeurs est explicite et les trois familles réservées sont cachées", () => {

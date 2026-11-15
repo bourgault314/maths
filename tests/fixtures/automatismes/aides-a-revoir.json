@@ -1,50 +1,10 @@
 {
   "origine": "8feecca64107ee9cdbd3dc5cb9963db38e25bfc0",
   "grainesParForme": 50,
-  "tirages": 20600,
+  "tirages": 20300,
   "methode": "Inclusion littérale de String(fields[].answer) dans hints[0].svg ; les valeurs dans les attributs SVG comptent aussi.",
   "avertissement": "Ce sont des occurrences à revoir, pas toutes des réponses affichées : les nombres courts rencontrent souvent des coordonnées SVG.",
   "formes": [
-    {
-      "id": "NC04-a",
-      "occurrences": 40,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["14"]
-      }
-    },
-    {
-      "id": "NC04-b",
-      "occurrences": 7,
-      "premierExemple": {
-        "graine": 19,
-        "reponses": ["3"]
-      }
-    },
-    {
-      "id": "NC04-d",
-      "occurrences": 1,
-      "premierExemple": {
-        "graine": 27,
-        "reponses": ["22"]
-      }
-    },
-    {
-      "id": "NC04-e",
-      "occurrences": 5,
-      "premierExemple": {
-        "graine": 18,
-        "reponses": ["3"]
-      }
-    },
-    {
-      "id": "NC04-f",
-      "occurrences": 50,
-      "premierExemple": {
-        "graine": 1,
-        "reponses": ["2"]
-      }
-    },
     {
       "id": "NC05-a",
       "occurrences": 3,
@@ -2238,5 +2198,5 @@
       }
     }
   ],
-  "cahiers": "Les formes réécrites d'après un cahier de domaine (NC17, NC18 : lot NC-1) sont retirées de cette comparaison ; leur aide est contrôlée par tests/automatismes-cahier-nc-1.test.mjs."
+  "cahiers": "Les formes réécrites d'après un cahier de domaine (NC17, NC18 : lot NC-1 ; NC01, NC02, NC03 : lot NC-2 ; NC04 : lot NC-3) sont retirées de cette comparaison ; leur aide est contrôlée par tests/automatismes-cahier-nc-*.test.mjs."
 }

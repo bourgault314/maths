@@ -665,10 +665,11 @@ test(
         "Explication",
         "→",
       ]);
-      // Graine 12 : « 0,4 × 2 = [ ] », la case vide tant que le professeur ne montre pas la réponse.
+      // Graine 12 : « 0,6 × 4 = [ ] » (NC04-e du cahier, lot NC-3 ; avant : « 0,4 × 2 »), la case vide
+      // tant que le professeur ne montre pas la réponse.
       assert.equal(await page.locator(".carte .calcul .case").innerText(), "");
       await page.locator('[data-action="reponse"]').click();
-      assert.equal(await page.locator(".carte .calcul .case.juste").innerText(), "0,8");
+      assert.equal(await page.locator(".carte .calcul .case.juste").innerText(), "2,4");
       await page.locator('#commandes [data-action="aide"]').click();
       await page.locator(".aide .dessin svg").waitFor();
       await page.locator('[data-action="explication"]').click();
@@ -915,7 +916,8 @@ test(
         return { defile: zone.scrollHeight > zone.clientHeight + 1, dessins };
       });
     try {
-      await page.goto(`${base}?notion=NC04&forme=e&graine=12&mode=project`);
+      // NC04-e graine 115 (lot NC-3) : « 9,3 × 4 », un dessin dans l'aide ET dans l'explication.
+      await page.goto(`${base}?notion=NC04&forme=e&graine=115&mode=project`);
       await page.locator(".barre-projection").waitFor();
       await page.locator('[data-action="reponse"]').click();
       await page.locator('#commandes [data-action="aide"]').click();
@@ -1218,7 +1220,9 @@ test(
     const taille = (selecteur) =>
       page.locator(selecteur).evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
     try {
-      await page.goto(`${base}?notion=NC04&forme=e&graine=12&mode=project`);
+      // PF03-a, une question pas encore réécrite (son explication en une phrase, .solution) ; avant le
+      // lot NC-3 : NC04-e.
+      await page.goto(`${base}?notion=PF03&forme=a&graine=12&mode=project`);
       await page.locator(".barre-projection").waitFor();
       await page.locator('#commandes [data-action="aide"]').click();
       await page.locator(".espace-question > .aide p").waitFor();
@@ -1253,8 +1257,9 @@ test(
   "figures (coque V2, K9 précisé) : jamais sous 60 % quand la largeur permet plus, 375 × 667",
   { skip: ignorer, timeout: 600000 },
   async () => {
-    const { genererQuestion, formesDisponibles, generateurs } =
-      await import("../automatismes/moteur.js");
+    const { genererQuestion, formesDisponibles, generateurs } = await import(
+      "../automatismes/moteur.js"
+    );
     const formes = Object.keys(generateurs).flatMap((famille) =>
       formesDisponibles(famille)
         .filter((forme) => genererQuestion(famille, forme, 12).visual)
