@@ -315,7 +315,8 @@ test("correctif NC-1 : ponctuation collée, verbe « a » droit, q en italique, 
     { mode: "train", questions: [d], etats: [{ juste: false, erreurs: 1, aide: 0 }] },
     { NC18: {} },
   );
-  assert.match(html, /resultat-reponse">[^<]*<span class="math-expression"[^>]*>33 = 7 × 4 \+ 5/);
+  // Le bilan écrit le calcul complet (choix du 15/11/2026) : « 33 = 7 × 4 + 5 ».
+  assert.match(html, /resultat-calcul"><span class="math-expression"[^>]*>33 = 7 × 4 \+ 5/);
 });
 
 // Correctif 2 (retour de Code, 24/10) : les formes pas encore réécrites gardent l'aide de main avec

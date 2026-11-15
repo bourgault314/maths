@@ -178,3 +178,69 @@ test("série : la question la moins vue d'abord, et pas deux fois le même type 
   );
   assert.notEqual(serie[0].forme, serie[1].forme);
 });
+
+test("bilan (15/11/2026) : le calcul complet, sinon « Réponse : … » ; la ligne de l'aide seulement en entraînement", async () => {
+  const { bilanHTML } = await import("../automatismes/vues.js");
+  const { genererQuestion } = await import("../automatismes/moteur.js");
+  const parId = Object.fromEntries(CATALOGUE.map((famille) => [famille.id, famille]));
+  const etat = { juste: false, erreurs: 1, aide: 0 };
+  const calcul = genererQuestion("NC11", "a", 31); // « Calcule 8/9 + 7/9. »
+  const probleme = genererQuestion("PF02", "c", 31); // un problème, sans calcul dans l'énoncé
+  const choix = CATALOGUE.flatMap((famille) =>
+    famille.formes.map((forme) => [famille.id, forme.id]),
+  )
+    .map(([famille, forme]) => genererQuestion(famille, forme, 31))
+    .find((question) => question.fields.some((champ) => champ.options));
+  assert.ok(choix, "une question à choix existe");
+  for (const mode of ["train", "test", "exam", "project"]) {
+    const html = bilanHTML(
+      { mode, questions: [calcul, probleme, choix], etats: [etat, etat, etat], options: {} },
+      parId,
+    );
+    const lignes = html.split("<details>").slice(1);
+    assert.match(lignes[0], /resultat-calcul.*=.*class="vert"/s, `${mode} : calcul complet`);
+    assert.doesNotMatch(lignes[0], /Réponse :/);
+    assert.match(lignes[1], /resultat-texte[\s\S]*Réponse : <em>/, `${mode} : problème`);
+    assert.match(lignes[2], /resultat-texte[\s\S]*Réponse : <em>/, `${mode} : choix`);
+    assert.equal(/resume-bilan/.test(html), mode === "train", `${mode} : ligne de l'aide`);
+  }
+});
+
+test("bilan, retour de Code (15/11) : « Calcule : », « Calcule exactement : », une consigne qui suit, « pour x = »", async () => {
+  const { bilanHTML } = await import("../automatismes/vues.js");
+  const { genererQuestion } = await import("../automatismes/moteur.js");
+  const parId = Object.fromEntries(CATALOGUE.map((famille) => [famille.id, famille]));
+  const etat = { juste: false, erreurs: 1, aide: 0 };
+  const ligne = (famille, forme, graine) => {
+    const html = bilanHTML(
+      {
+        mode: "train",
+        questions: [genererQuestion(famille, forme, graine)],
+        etats: [etat],
+        options: {},
+      },
+      parId,
+    );
+    return html.slice(html.indexOf("<summary>"), html.indexOf('<span class="voir"'));
+  };
+  for (let graine = 1; graine <= 25; graine += 1) {
+    for (const [famille, forme] of [
+      ["NC11", "d"],
+      ["NC25", "d"],
+      ["NC25", "e"],
+    ]) {
+      const html = ligne(famille, forme, graine);
+      assert.match(html, /resultat-calcul/, `${famille}-${forme} ${graine}`);
+      assert.doesNotMatch(
+        html,
+        /Donne|Calcule|exactement|resultat-calcul">\s*:/,
+        `${famille}-${forme}`,
+      );
+    }
+    // Un calcul « pour x = 5 » n'a pas de calcul complet : l'énoncé, puis « Réponse : ».
+    for (const forme of ["a", "b", "f"]) {
+      const html = ligne("NC21", forme, graine);
+      assert.match(html, /resultat-texte[\s\S]*Réponse : /, `NC21-${forme} ${graine}`);
+    }
+  }
+});
