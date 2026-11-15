@@ -315,8 +315,24 @@
   }
 
   // Ce qui rend une conversion facile ou dure à lire pour le glisse-unité.
+  // Lot 3b-2 (S002 p. 9, S003 p. 6 : « le glisse-unité accompagne la
+  // phrase », il ne la remplace pas) : la phrase que la correction dit sous
+  // le glisse-unité. Au palier 1, des nombres entiers : « Chaque mètre
+  // devient 100 centimètres. » ; « 100 centimètres font 1 mètre. ».
+  const MOT = {km: "kilomètre", m: "mètre", dm: "décimètre", cm: "centimètre", mm: "millimètre", t: "tonne", kg: "kilogramme", g: "gramme",
+    L: "litre", dL: "décilitre", cL: "centilitre", mL: "millilitre"};
   function glisse(valeur, de, vers) {
-    return {valeur: brut(valeur), de, vers, grandeur: grandeurDe(de)};
+    const g = {valeur: brut(valeur), de, vers, grandeur: grandeurDe(de)};
+    if (MOT[de] && MOT[vers]) {
+      if (exposant(de) > exposant(vers)) {
+        const f = facteur(de, vers);
+        g.phrase = `Chaque ${MOT[de]} devient ${ecrire(f * MILLE)}${NB}${MOTS[vers]}.`;
+      } else {
+        const f = facteur(vers, de);
+        g.phrase = `${ecrire(f * MILLE)}${NB}${MOTS[de]} font 1${NB}${MOT[vers]}.`;
+      }
+    }
+    return g;
   }
 
   // La relation « 1 kg = 1 000 g » entre une grande et une petite unité.
@@ -401,6 +417,9 @@
   // mesure 4 m ET pèse 1 t), jamais deux fois la même mesure.
   // `eviter` : les repères des questions juste avant (lot A2 ter : pas deux
   // fois le même repère à moins de 5 questions dans À toi).
+  // Lot 3b-2 : au téléphone peu haut, le nom d'un objet à relier tient en
+  // deux lignes sous son dessin.
+  const NOMS_COURTS = {l1: "La plus petite graduation"};
   function questionAssocier(code, degre, rng, eviter = []) {
     const tous = CARTE.etape(code).reperes.map(c => CARTE.repere(c));
     const libres = tous.filter(r => !eviter.includes(r.code));
@@ -430,7 +449,7 @@
       code, degre, forme: "associer",
       texte: CARTE.typo(`${consigne} ${trois.map(r => r.objet).join(" ; ")} — ${mesures.join(" ; ")}`),
       morceaux: {phrase: consigne},
-      objets: trois.map(r => ({texte: r.objet, emoji: r.emoji})), mesures, bonnes,
+      objets: trois.map(r => Object.assign({texte: r.objet, repere: r.code}, NOMS_COURTS[r.code] ? {court: NOMS_COURTS[r.code]} : {})), mesures, bonnes,
       reponse: bonnes.join(","), reponseTexte: trois.map(r => `${r.objet} : ${mesureDe(r)}`).join(" ; "),
       resume: trois.map(r => `${r.objet} : ${mesureDe(r)}`).join(" ; "),
       reperes: trois.map(r => r.code), unites: trois.map(r => r.unite), outil: "reperes-unites",
@@ -440,13 +459,43 @@
     });
   }
 
+  // Lot 3b-2 (carte v4 : « lire une longueur sur la règle quand l'objet ne
+  // part pas de 0 », l'erreur classique du CE1-CE2) : un objet posé sur la
+  // règle dessinée, de 2 à 5 cm jusqu'à 10 cm au plus. Trois réponses : la
+  // bonne, le nombre lu au bout de l'objet (8 cm pour un objet de 3 à 8 cm),
+  // les traits comptés au lieu des espaces (6 cm). Le début n'est jamais 1
+  // (« lu au bout » et « traits comptés » y seraient la même réponse).
+  // [nom, « le … » dans la correction, longueur min, max (cm)]
+  const OBJETS_REGLE = {crayon: ["ce crayon", "Le crayon", 5, 8], gomme: ["cette gomme", "La gomme", 2, 4], trombone: ["ce trombone", "Le trombone", 3, 5],
+    clou: ["ce clou", "Le clou", 2, 5]};
+  function questionRegle(degre, rng) {
+    const objet = choisir(rng, Object.keys(OBJETS_REGLE));
+    const [ce, Le, a, b] = OBJETS_REGLE[objet];
+    const longueur = entre(rng, a, b);
+    const debut = entre(rng, 2, Math.min(5, 10 - longueur));
+    const fin = debut + longueur;
+    const choix = melanger(rng, [longueur, fin, longueur + 1].map(String));
+    const phrase = `Combien mesure ${ce}${NB}?`;
+    return q({
+      code: "R1", degre, forme: "qcm", texte: phrase,
+      morceaux: {phrase, apres: "cm", sorte: "valeur", regle: {objet, debut, fin}},
+      choix, bon: choix.indexOf(String(longueur)), reponse: String(longueur), reponseTexte: `${longueur}${NB}cm`, unite: "cm",
+      resume: `${Le} mesure ${longueur}${NB}cm`, outil: "regle",
+      image: [`${Le} commence à ${debut}${NB}cm, pas à 0.`, `Je compte les espaces de 1${NB}cm, pas les traits.`],
+      correction: [`${Le} va de ${debut}${NB}cm à ${fin}${NB}cm.`, `${fin} − ${debut} = ${longueur} : ${Le.toLowerCase()} mesure ${longueur}${NB}cm.`],
+      donnees: {type: "regle", objet, debut, fin},
+      cle: `R1:regle:${objet}:${debut}-${fin}`
+    });
+  }
+
   ETAPES.R1 = {
     exclureExemples: false,
     // Associer : la dernière question de Je valide, 3 fois sur 25 dans À toi.
     // Lot 3b : la valeur au pavé (« saisie ») en 6e et en 8e de Je valide.
     formes(usage) {
-      if (usage === "valide") return {5: "saisie", 7: "saisie", 9: "associer"};
-      if (usage === "entraine") return {7: "associer", 15: "associer", 22: "associer"};
+      // Lot 3b-2 : la règle à lire en 3e de Je valide, trois fois dans À toi.
+      if (usage === "valide") return {2: "regle", 5: "saisie", 7: "saisie", 9: "associer"};
+      if (usage === "entraine") return {3: "regle", 7: "associer", 11: "regle", 15: "associer", 19: "regle", 22: "associer"};
       return {};
     },
     // Lot A2 ter (Gwenaël, le 13/11 : « Une voiture pèse environ … » puis
@@ -467,6 +516,7 @@
     tirer(rng, degre, i, usage, forme, serie = []) {
       const recents = serie.slice(-4).flatMap(x => (x.forme === "associer" ? x.reperes : [x.repere]));
       if (forme === "associer") return questionAssocier("R1", degre, rng, recents);
+      if (forme === "regle") return questionRegle(degre, rng);
       let reps = CARTE.etape("R1").reperes;
       // Avant une question à relier de À toi, les quatre questions à choix
       // laissent libre ce qu'il lui faudra : un repère de chaque grandeur
@@ -742,7 +792,7 @@
       const prefixes = [...new Set(trois.flatMap(([g, p]) => [g, p]).filter(u => u.length === 2 && SENS[u[0]]).map(u => u[0]))];
       return q({
         code: "P1", degre, forme: "associer", texte: `${consigne} ${gauches.join(" ; ")} — ${mesures.join(" ; ")}`,
-        morceaux: {phrase: consigne}, objets: gauches.map(t => ({texte: t, emoji: ""})), mesures, bonnes,
+        morceaux: {phrase: consigne}, objets: gauches.map(t => ({texte: t})), mesures, bonnes,
         reponse: bonnes.join(","), reponseTexte: lignes.join(" ; "), resume: lignes.join(" ; "),
         // (Pas de glisse-unité : trois relations à la fois ; l'outil est le
         // sens des préfixes, et la correction tient en trois lignes.)
@@ -1327,7 +1377,9 @@
     return questionDuree("D2", degre, {
       forme: "deux-cases", texte: `${Mots}, c'est ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${Mots}, c'est`, cases: ["h", "min"]},
       reponse: [String(h), String(m)], reponseTexte: heureTexte(h * 60 + m), unite: "min", resume: `${Mots}, c'est ${heureTexte(h * 60 + m)}`,
-      relation: `un quart d'heure = 15${NB}min`, outil: "barre-heure", heure: {h: 0, demis: 0, quarts: 1},
+      // Lot 3b-2 : une horloge, dans l'outil et dans la correction (avant,
+      // la barre des quarts d'heure).
+      relation: `un quart d'heure = 15${NB}min`, outil: "horloge-quarts",
       image: [lignes[0]], correction: lignes,
       donnees: {type: "heure-mots", h, m},
       cle: `D2:heure:${h}:${m}`
@@ -2219,6 +2271,55 @@
     return {juste: false, erreur: e ? e.erreur : null, retour: e ? CARTE.typo(e.retour) : null};
   }
 
+  // « Je prévois » (lot 3b-2, choix de Gwenaël du 14/11 : « grandir ou
+  // rapetisser ? » seulement après une erreur de sens). Les erreurs de sens :
+  // diviser au lieu de multiplier, ou l'inverse — l'erreur 1 de C1 et de C2,
+  // l'erreur 3 de P1 (vers une unité plus grande, le nombre gardé ou
+  // multiplié), l'erreur 3 de E1 (des centimes vers les euros, × 100).
+  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3]};
+  // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
+  function erreurDeSens(question, tape) {
+    if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger") return false;
+    const etape = ETAPES[question.code];
+    const lu = lireMilli(tape);
+    if (typeof lu !== "bigint" || !etape || !etape.erreurs) return false;
+    if (lu === milli(question.reponse)) return false;
+    const e = etape.erreurs(question, lu);
+    return Boolean(e && SENS[question.code].includes(e.erreur));
+  }
+  // Le sens attendu : le nombre grandit (vers une unité plus petite) ou
+  // rapetisse (vers une plus grande), et la phrase qui le dit.
+  function sensDe(question) {
+    const d = question.donnees || {};
+    let grandit;
+    let de;
+    let vers;
+    if (d.type === "conv") { grandit = exposant(d.de) > exposant(d.vers); de = d.de; vers = d.vers; }
+    else if (d.type === "argent") { grandit = question.unite === "c"; de = grandit ? "€" : "c"; vers = grandit ? "c" : "€"; }
+    else return null;
+    const phrase = grandit ? `De ${de} à ${vers}, une unité plus petite : il en faut plus. Le nombre grandit.`
+      : `De ${de} à ${vers}, une unité plus grande : il en faut moins. Le nombre rapetisse.`;
+    return {grandit, phrase: CARTE.typo(phrase), question: CARTE.typo(`De ${de} à ${vers} : le nombre va-t-il grandir ou rapetisser ?`)};
+  }
+  // Pour le robot de vérification : une réponse qui est une erreur de sens
+  // (le texte à taper, ou la place du choix), ou null.
+  function fauxDeSens(question) {
+    if (!question || !SENS[question.code]) return null;
+    if (question.choix) {
+      const i = question.choix.findIndex(c => erreurDeSens(question, c));
+      return i >= 0 ? {choix: i} : null;
+    }
+    const d = question.donnees || {};
+    const candidats = [];
+    if (d.type === "conv") {
+      const v = milli(d.valeur);
+      const f = exposant(d.de) > exposant(d.vers) ? facteur(d.de, d.vers) : facteur(d.vers, d.de);
+      candidats.push(v * f, v % f === 0n ? v / f : null, v);
+    } else if (d.type === "argent") candidats.push(milli(d.total * 100));
+    const bon = candidats.find(c => c !== null && erreurDeSens(question, ecrire(c)));
+    return bon === undefined ? null : {texte: brut(bon)};
+  }
+
   function exemples(code) {
     const e = CARTE.etape(code);
     return e && e.apprends ? e.apprends : [];
@@ -2246,6 +2347,9 @@
   return Object.freeze({
     serie,
     verifier,
+    erreurDeSens,
+    sensDe,
+    fauxDeSens,
     questionRepere,
     exemples,
     graineDe,

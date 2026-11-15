@@ -207,44 +207,57 @@
     // Lot A2 ter : la règle passe à « Mes premiers repères » (palier 1). Le
     // millimètre est au programme de CE2, l'élève le voit sur sa règle, et
     // les aides du palier 1 le citaient sans qu'il l'ait appris.
-    {code: "l1", grandeur: "longueur", etape: "R1", emoji: "📏", objet: "La plus petite graduation de la règle", valeur: "1 mm", debut: "La plus petite graduation de la règle mesure", nombre: "1", unite: "mm", fin: ""},
-    {code: "l2", grandeur: "longueur", etape: "R3", emoji: "🪙", objet: "Une pièce de 1 centime", valeur: "un peu plus de 1,5 cm de large", debut: "Une pièce de 1 centime mesure un peu plus de", nombre: "1,5", unite: "cm", fin: "de large"},
-    {code: "l3", grandeur: "longueur", etape: "R1", emoji: "📄", objet: "Une feuille A4", valeur: "21 cm sur 29,7 cm", debut: "Une feuille A4 mesure", nombre: "21", unite: "cm", fin: "de large"},
-    {code: "l4", grandeur: "longueur", etape: "R1", emoji: "🚗", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
-    {code: "l5", grandeur: "longueur", etape: "R3", emoji: "🏃", objet: "Un tour de piste d'athlétisme", valeur: "400 m", debut: "Un tour de piste d'athlétisme mesure", nombre: "400", unite: "m", fin: ""},
-    {code: "l6", grandeur: "longueur", etape: "R3", emoji: "🌉", objet: "Le viaduc de la Nouvelle route du Littoral", valeur: "5,4 km", debut: "Le viaduc de la Nouvelle route du Littoral mesure", nombre: "5,4", unite: "km", fin: "", local: true},
-    {code: "l7", grandeur: "longueur", etape: "R1", emoji: "🛣️", objet: "De Saint-Pierre à Saint-Denis", valeur: "environ 80 km en voiture", debut: "De Saint-Pierre à Saint-Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
-    {code: "l8", grandeur: "longueur", etape: "R3", emoji: "🌋", objet: "Le Piton des Neiges", valeur: "environ 3 km d'altitude", debut: "Le Piton des Neiges s'élève à environ", nombre: "3", unite: "km", fin: "d'altitude", local: true},
-    {code: "l9", grandeur: "longueur", etape: "R3", emoji: "⛰️", objet: "La Diagonale des Fous", valeur: "environ 170 km", debut: "La Diagonale des Fous mesure environ", nombre: "170", unite: "km", fin: "", local: true},
-    {code: "m1", grandeur: "masse", etape: "R4", emoji: "🍚", objet: "Un grain de riz", valeur: "environ 25 mg", debut: "Un grain de riz pèse environ", nombre: "25", unite: "mg", fin: ""},
-    {code: "m2", grandeur: "masse", etape: "R4", emoji: "📄", objet: "Une feuille A4", valeur: "environ 5 g", debut: "Une feuille A4 pèse environ", nombre: "5", unite: "g", fin: ""},
-    {code: "m3", grandeur: "masse", etape: "R1", emoji: "🪙", objet: "Une pièce de 1 €", valeur: "7,5 g", debut: "Une pièce de 1 € pèse", nombre: "7,5", unite: "g", fin: ""},
-    {code: "m4", grandeur: "masse", etape: "R1", emoji: "🍙", objet: "Un paquet de riz", valeur: "1 kg", debut: "Un paquet de riz pèse", nombre: "1", unite: "kg", fin: ""},
-    {code: "m5", grandeur: "masse", etape: "R1", emoji: "💧", objet: "Un pack de 6 bouteilles d'eau", valeur: "environ 9 kg", debut: "Un pack de 6 bouteilles d'eau pèse environ", nombre: "9", unite: "kg", fin: ""},
-    {code: "m6", grandeur: "masse", etape: "R1", emoji: "🚗", objet: "Une voiture", valeur: "environ 1 t", debut: "Une voiture pèse environ", nombre: "1", unite: "t", fin: ""},
-    {code: "c1", grandeur: "contenance", etape: "R5", emoji: "🥄", objet: "Une cuillère à café", valeur: "5 mL", debut: "Une cuillère à café contient", nombre: "5", unite: "mL", fin: ""},
-    {code: "c2", grandeur: "contenance", etape: "R1", emoji: "🥤", objet: "Une canette", valeur: "33 cL, un tiers de litre", debut: "Une canette contient", nombre: "33", unite: "cL", fin: ""},
-    {code: "c3", grandeur: "contenance", etape: "R1", emoji: "🥛", objet: "Une brique de lait", valeur: "1 L", debut: "Une brique de lait contient", nombre: "1", unite: "L", fin: ""},
-    {code: "c4", grandeur: "contenance", etape: "R5", emoji: "☀️", objet: "Un chauffe-eau solaire", valeur: "environ 200 L", debut: "Un chauffe-eau solaire contient environ", nombre: "200", unite: "L", fin: "", local: true},
-    {code: "a1", grandeur: "aire", etape: "R8", emoji: "🔲", objet: "Un carreau de 1 cm de côté", valeur: "1 cm²", debut: "Un carreau de 1 cm de côté a une aire de", nombre: "1", unite: "cm²", fin: ""},
-    {code: "a2", grandeur: "aire", etape: "R8", emoji: "📄", objet: "Une feuille A4", valeur: "environ 6 dm²", debut: "Une feuille A4 a une aire d'environ", nombre: "6", unite: "dm²", fin: ""},
-    {code: "a3", grandeur: "aire", etape: "R8", emoji: "🖼️", objet: "Une affiche A0", valeur: "1 m², soit 16 feuilles A4", debut: "Une affiche A0 a une aire de", nombre: "1", unite: "m²", fin: ""},
-    {code: "a4", grandeur: "aire", etape: "R8", emoji: "⚽", objet: "Un terrain de football", valeur: "environ 7 000 m²", debut: "Un terrain de football a une aire d'environ", nombre: "7000", unite: "m²", fin: ""},
-    {code: "a5", grandeur: "aire", etape: "A4", emoji: "🏝️", objet: "La Réunion", valeur: "environ 2 500 km²", debut: "La Réunion a une aire d'environ", nombre: "2500", unite: "km²", fin: "", local: true},
-    {code: "v1", grandeur: "volume", etape: "R10", emoji: "🧊", objet: "Le petit cube unité", valeur: "1 cm³ = 1 mL", debut: "Le petit cube unité a un volume de", nombre: "1", unite: "cm³", fin: ""},
-    {code: "v2", grandeur: "volume", etape: "R10", emoji: "🥛", objet: "Une brique de lait", valeur: "1 L = 1 dm³", debut: "Une brique de lait a un volume de", nombre: "1", unite: "dm³", fin: ""},
-    {code: "v3", grandeur: "volume", etape: "R10", emoji: "🛢️", objet: "Une cuve de récupération d'eau de pluie", valeur: "1 000 L = 1 m³", debut: "Une cuve de récupération d'eau de pluie a un volume de", nombre: "1", unite: "m³", fin: "", local: true},
-    {code: "v4", grandeur: "volume", etape: "R10", emoji: "🏊", objet: "Une piscine olympique", valeur: "2 500 m³", debut: "Une piscine olympique a un volume de", nombre: "2500", unite: "m³", fin: ""},
+    {code: "l1", grandeur: "longueur", etape: "R1", objet: "La plus petite graduation de la règle", valeur: "1 mm", debut: "La plus petite graduation de la règle mesure", nombre: "1", unite: "mm", fin: ""},
+    {code: "l2", grandeur: "longueur", etape: "R3", objet: "Une pièce de 1 centime", valeur: "un peu plus de 1,5 cm de large", debut: "Une pièce de 1 centime mesure un peu plus de", nombre: "1,5", unite: "cm", fin: "de large"},
+    {code: "l3", grandeur: "longueur", etape: "R1", objet: "Une feuille A4", valeur: "21 cm sur 29,7 cm", debut: "Une feuille A4 mesure", nombre: "21", unite: "cm", fin: "de large"},
+    {code: "l4", grandeur: "longueur", etape: "R1", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
+    {code: "l5", grandeur: "longueur", etape: "R3", objet: "Un tour de piste d'athlétisme", valeur: "400 m", debut: "Un tour de piste d'athlétisme mesure", nombre: "400", unite: "m", fin: ""},
+    {code: "l6", grandeur: "longueur", etape: "R3", objet: "Le viaduc de la Nouvelle route du Littoral", valeur: "5,4 km", debut: "Le viaduc de la Nouvelle route du Littoral mesure", nombre: "5,4", unite: "km", fin: "", local: true},
+    {code: "l7", grandeur: "longueur", etape: "R1", objet: "De Saint-Pierre à Saint-Denis", valeur: "environ 80 km en voiture", debut: "De Saint-Pierre à Saint-Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
+    {code: "l8", grandeur: "longueur", etape: "R3", objet: "Le Piton des Neiges", valeur: "environ 3 km d'altitude", debut: "Le Piton des Neiges s'élève à environ", nombre: "3", unite: "km", fin: "d'altitude", local: true},
+    {code: "l9", grandeur: "longueur", etape: "R3", objet: "La Diagonale des Fous", valeur: "environ 170 km", debut: "La Diagonale des Fous mesure environ", nombre: "170", unite: "km", fin: "", local: true},
+    {code: "m1", grandeur: "masse", etape: "R4", objet: "Un grain de riz", valeur: "environ 25 mg", debut: "Un grain de riz pèse environ", nombre: "25", unite: "mg", fin: ""},
+    {code: "m2", grandeur: "masse", etape: "R4", objet: "Une feuille A4", valeur: "environ 5 g", debut: "Une feuille A4 pèse environ", nombre: "5", unite: "g", fin: ""},
+    {code: "m3", grandeur: "masse", etape: "R1", objet: "Une pièce de 1 €", valeur: "7,5 g", debut: "Une pièce de 1 € pèse", nombre: "7,5", unite: "g", fin: ""},
+    {code: "m4", grandeur: "masse", etape: "R1", objet: "Un paquet de riz", valeur: "1 kg", debut: "Un paquet de riz pèse", nombre: "1", unite: "kg", fin: ""},
+    {code: "m5", grandeur: "masse", etape: "R1", objet: "Un pack de 6 bouteilles d'eau", valeur: "environ 9 kg", debut: "Un pack de 6 bouteilles d'eau pèse environ", nombre: "9", unite: "kg", fin: ""},
+    {code: "m6", grandeur: "masse", etape: "R1", objet: "Une voiture", valeur: "environ 1 t", debut: "Une voiture pèse environ", nombre: "1", unite: "t", fin: ""},
+    {code: "c1", grandeur: "contenance", etape: "R5", objet: "Une cuillère à café", valeur: "5 mL", debut: "Une cuillère à café contient", nombre: "5", unite: "mL", fin: ""},
+    {code: "c2", grandeur: "contenance", etape: "R1", objet: "Une canette", valeur: "33 cL, un tiers de litre", debut: "Une canette contient", nombre: "33", unite: "cL", fin: ""},
+    {code: "c3", grandeur: "contenance", etape: "R1", objet: "Une brique de lait", valeur: "1 L", debut: "Une brique de lait contient", nombre: "1", unite: "L", fin: ""},
+    {code: "c4", grandeur: "contenance", etape: "R5", objet: "Un chauffe-eau solaire", valeur: "environ 200 L", debut: "Un chauffe-eau solaire contient environ", nombre: "200", unite: "L", fin: "", local: true},
+    {code: "a1", grandeur: "aire", etape: "R8", objet: "Un carreau de 1 cm de côté", valeur: "1 cm²", debut: "Un carreau de 1 cm de côté a une aire de", nombre: "1", unite: "cm²", fin: ""},
+    {code: "a2", grandeur: "aire", etape: "R8", objet: "Une feuille A4", valeur: "environ 6 dm²", debut: "Une feuille A4 a une aire d'environ", nombre: "6", unite: "dm²", fin: ""},
+    {code: "a3", grandeur: "aire", etape: "R8", objet: "Une affiche A0", valeur: "1 m², soit 16 feuilles A4", debut: "Une affiche A0 a une aire de", nombre: "1", unite: "m²", fin: ""},
+    {code: "a4", grandeur: "aire", etape: "R8", objet: "Un terrain de football", valeur: "environ 7 000 m²", debut: "Un terrain de football a une aire d'environ", nombre: "7000", unite: "m²", fin: ""},
+    {code: "a5", grandeur: "aire", etape: "A4", objet: "La Réunion", valeur: "environ 2 500 km²", debut: "La Réunion a une aire d'environ", nombre: "2500", unite: "km²", fin: "", local: true},
+    {code: "v1", grandeur: "volume", etape: "R10", objet: "Le petit cube unité", valeur: "1 cm³ = 1 mL", debut: "Le petit cube unité a un volume de", nombre: "1", unite: "cm³", fin: ""},
+    {code: "v2", grandeur: "volume", etape: "R10", objet: "Une brique de lait", valeur: "1 L = 1 dm³", debut: "Une brique de lait a un volume de", nombre: "1", unite: "dm³", fin: ""},
+    {code: "v3", grandeur: "volume", etape: "R10", objet: "Une cuve de récupération d'eau de pluie", valeur: "1 000 L = 1 m³", debut: "Une cuve de récupération d'eau de pluie a un volume de", nombre: "1", unite: "m³", fin: "", local: true},
+    {code: "v4", grandeur: "volume", etape: "R10", objet: "Une piscine olympique", valeur: "2 500 m³", debut: "Une piscine olympique a un volume de", nombre: "2500", unite: "m³", fin: ""},
     // Carte v3 (12/11)
-    {code: "l10", grandeur: "longueur", etape: "R3", emoji: "🤙", objet: "La largeur de mon petit doigt", valeur: "environ 1 cm", debut: "Mon petit doigt a une largeur d'environ", nombre: "1", unite: "cm", fin: ""},
-    {code: "l11", grandeur: "longueur", etape: "R3", emoji: "🦶", objet: "Un très grand pas", valeur: "environ 1 m", debut: "Un très grand pas mesure environ", nombre: "1", unite: "m", fin: ""},
-    {code: "m7", grandeur: "masse", etape: "R4", emoji: "📎", objet: "Un trombone", valeur: "environ 1 g", debut: "Un trombone pèse environ", nombre: "1", unite: "g", fin: ""},
-    {code: "m8", grandeur: "masse", etape: "R4", emoji: "💧", objet: "Une bouteille de 1 L d'eau", valeur: "1 kg (sans la bouteille)", debut: "Un litre d'eau pèse", nombre: "1", unite: "kg", fin: ""},
-    {code: "c5", grandeur: "contenance", etape: "R5", emoji: "🥛", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
-    {code: "a6", grandeur: "aire", etape: "R8", emoji: "👍", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
-    {code: "a7", grandeur: "aire", etape: "R8", emoji: "✋", objet: "La paume de ma main", valeur: "environ 1 dm²", debut: "La paume de ma main a une aire d'environ", nombre: "1", unite: "dm²", fin: ""},
-    {code: "v5", grandeur: "volume", etape: "V1", emoji: "🎲", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""}
+    {code: "l10", grandeur: "longueur", etape: "R3", objet: "La largeur de mon petit doigt", valeur: "environ 1 cm", debut: "Mon petit doigt a une largeur d'environ", nombre: "1", unite: "cm", fin: ""},
+    {code: "l11", grandeur: "longueur", etape: "R3", objet: "Un très grand pas", valeur: "environ 1 m", debut: "Un très grand pas mesure environ", nombre: "1", unite: "m", fin: ""},
+    {code: "m7", grandeur: "masse", etape: "R4", objet: "Un trombone", valeur: "environ 1 g", debut: "Un trombone pèse environ", nombre: "1", unite: "g", fin: ""},
+    {code: "m8", grandeur: "masse", etape: "R4", objet: "Une bouteille de 1 L d'eau", valeur: "1 kg (sans la bouteille)", debut: "Un litre d'eau pèse", nombre: "1", unite: "kg", fin: ""},
+    {code: "c5", grandeur: "contenance", etape: "R5", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
+    {code: "a6", grandeur: "aire", etape: "R8", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
+    {code: "a7", grandeur: "aire", etape: "R8", objet: "La paume de ma main", valeur: "environ 1 dm²", debut: "La paume de ma main a une aire d'environ", nombre: "1", unite: "dm²", fin: ""},
+    {code: "v5", grandeur: "volume", etape: "V1", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""}
   ];
+  // Lot 3b-2 : chaque repère a son illustration (conversions-reperes/,
+  // dessinées par ChatGPT d'après les planches du lot 3b, découpées par
+  // Claude ; elles remplacent les émoticônes). Trois repères reprennent
+  // l'image d'un autre : la voiture (4 m, 1 t), la feuille A4 (21 cm, 6 dm²),
+  // la brique de lait (1 L, 1 dm³). Le Piton des Neiges est une adaptation
+  // d'une photo sous licence CC BY-SA 3.0 : son crédit s'écrit sous l'image.
+  // Les mesures ne sont jamais dans l'image : l'appli les écrit dessous.
+  const IMAGES_REPRISES = {m6: "l4", a2: "l3", v2: "c3"};
+  const CREDITS = {l8: "D'après Nicolas PAYET, Piton des Neiges depuis Cilaos, CC BY-SA 3.0 ; adaptation illustrée"};
+  REPERES.forEach(r => {
+    r.image = `${IMAGES_REPRISES[r.code] || r.code}.webp`;
+    if (CREDITS[r.code]) r.credit = CREDITS[r.code];
+  });
 
   // ------------------------------------------------- le contenu du palier 1
   // `apprends` : « On te montre », 3 temps, un exemple fixe chacun (jamais
@@ -514,7 +527,7 @@
 
   const PAR_CODE = {};
   ETAPES_T.forEach(e => { PAR_CODE[e.code] = e; });
-  const REPERES_T = REPERES.map(r => Object.assign({}, typographier(r), {code: r.code, nombre: r.nombre, unite: r.unite}));
+  const REPERES_T = REPERES.map(r => Object.assign({}, typographier(r), {code: r.code, nombre: r.nombre, unite: r.unite, image: r.image}));
   const REPERE_PAR_CODE = {};
   REPERES_T.forEach(r => { REPERE_PAR_CODE[r.code] = r; });
 

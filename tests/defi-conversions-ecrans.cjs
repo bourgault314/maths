@@ -48,7 +48,7 @@ const GRAINE = 50000;
 const JOUR = "2026-11-11";
 const TAILLES = [{nom: "390x844", largeur: 390, hauteur: 844}, {nom: "375x667", largeur: 375, hauteur: 667}, {nom: "1440x900", largeur: 1440, hauteur: 900}];
 const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
-  ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon"};
+  ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".woff2": "font/woff2", ".ico": "image/x-icon"};
 
 function servir() {
   const serveur = http.createServer((requete, reponse) => {

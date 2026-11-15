@@ -78,7 +78,8 @@ test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", 
 });
 
 test("la carte : les textes ont leurs espaces insécables", () => {
-  const textes = JSON.stringify(CARTE.ETAPES) + JSON.stringify(CARTE.REPERES);
+  // (Lot 3b-2 : le crédit d'une illustration cite sa licence, « CC BY-SA 3.0 ».)
+  const textes = JSON.stringify(CARTE.ETAPES) + JSON.stringify(CARTE.REPERES.map(r => Object.assign({}, r, {credit: ""})));
   assert.doesNotMatch(textes, /\d \d{3}(?!\d)/, "milliers séparés par une espace normale");
   assert.doesNotMatch(textes, /\d (?:cm|mm|km|kg|cL|dL|min)\b/, "espace normale avant une unité");
   assert.doesNotMatch(textes, /\d\.\d/, "point décimal");

@@ -38,6 +38,7 @@
 //   DEFI_CONVERSIONS_MOTEURS=chromium      (un seul moteur ; par défaut : chromium,webkit)
 //   DEFI_CONVERSIONS_ETAPES=R1,C1          (quelques étapes ; « commun » pour les écrans communs)
 //   DEFI_CONVERSIONS_TAILLES=1440x900      (quelques tailles)
+//   DEFI_CONVERSIONS_ECRANS=/dossier        (lot 3b-2 : chaque écran dans son fichier)
 //   DEFI_CONVERSIONS_POLICE="DejaVu Sans"   (une autre police, plus large)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome
 // WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit
@@ -100,7 +101,7 @@ const ETAPES = filtre("DEFI_CONVERSIONS_ETAPES", PRETS.concat(["commun"]), x => 
 const REPERES_PAR_ETAPE = {};
 CARTE.ETAPES.forEach(e => { if (e.reperes && e.reperes.length) REPERES_PAR_ETAPE[e.code] = e.reperes; });
 const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
-  ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon"};
+  ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".woff2": "font/woff2", ".ico": "image/x-icon"};
 
 function servir() {
   const serveur = http.createServer((requete, reponse) => {
@@ -116,7 +117,7 @@ function servir() {
 // ------------------------------------------------------------ les contrôles
 // Tout se mesure dans la page. Renvoie la liste des défauts de l'écran.
 async function controler(page, taille) {
-  return page.evaluate(({projection}) => {
+  return page.evaluate(({projection, tactile}) => {
     const defauts = [];
     const cadre = document.getElementById("cadre");
     const vw = window.innerWidth;
@@ -126,6 +127,10 @@ async function controler(page, taille) {
       defauts.push(`le cadre sort de l'écran (${Math.round(rc.left)}, ${Math.round(rc.top)} → ${Math.round(rc.right)}, ${Math.round(rc.bottom)})`);
     }
     if (cadre.scrollHeight - cadre.clientHeight > 1) defauts.push(`le contenu déborde du cadre de ${cadre.scrollHeight - cadre.clientHeight} px`);
+    // Lot 3b-2 : chaque illustration se charge (un nom de fichier faux, et
+    // la boîte resterait vide).
+    const cassee = [...cadre.querySelectorAll(".ill img")].find(i => i.complete && !i.naturalWidth);
+    if (cassee) defauts.push(`une illustration ne se charge pas : ${cassee.getAttribute("src")}`);
     const visible = e => {
       const s = getComputedStyle(e);
       if (s.visibility === "hidden" || s.display === "none" || Number(s.opacity) === 0) return false;
@@ -163,6 +168,25 @@ async function controler(page, taille) {
       });
       if (sort.length) defauts.push(`les réponses sortent de leur zone : « ${(sort[0].textContent || sort[0].tagName).trim().slice(0, 30)} »`);
     }
+    // Lot 3b-2 : au doigt, les boutons de « relier » ont au moins 44 px de
+    // haut (ils faisaient 38 px au petit iPhone) ; et rien ne sort d'un
+    // bouton (le nom d'un objet sous son dessin). (Les touches du pavé, 33 px
+    // à 393 × 660 : audit d'ergonomie du lot 3b-3.)
+    if (basEl && visible(basEl)) {
+      const boutons = [...basEl.querySelectorAll("button")].filter(visible).filter(b => getComputedStyle(b).pointerEvents !== "none");
+      if (tactile) {
+        const petit = boutons.find(b => b.closest(".assoc") && b.getBoundingClientRect().height < 43.5);
+        if (petit) defauts.push(`un bouton trop petit au doigt : « ${petit.textContent.trim().slice(0, 20)} » (${Math.round(petit.getBoundingClientRect().height)} px)`);
+      }
+      const deborde = boutons.find(b => {
+        const r = b.getBoundingClientRect();
+        return [...b.querySelectorAll("*")].filter(visible).some(e => {
+          const c = e.getBoundingClientRect();
+          return c.left < r.left - 0.5 || c.right > r.right + 0.5 || c.top < r.top - 0.5 || c.bottom > r.bottom + 0.5;
+        });
+      });
+      if (deborde) defauts.push(`un texte sort de son bouton : « ${deborde.textContent.trim().slice(0, 20)} »`);
+    }
     // (Un bouton figé après la réponse ne se touche plus : il ne compte pas.)
     const couverts = [...cadre.querySelectorAll(".bas button, #cadre > .btn, #cadre > .duo > .btn")].filter(visible)
       .filter(b => getComputedStyle(b).pointerEvents !== "none").filter(b => {
@@ -195,7 +219,8 @@ async function controler(page, taille) {
           [...rg.getClientRects()].filter(b => b.width > 1 && b.height > 1).forEach(b => boites.push({e, texte: n.textContent.trim().slice(0, 24), b}));
         }
       });
-      const SEL = ".etiq, .suite i, .carte-rep, .ref, .dix i, .esc i, .case, svg, .gu2, .pave4, .bas button, .rel, .verd, table";
+      // (Lot 3b-2 : les illustrations des repères, .ill, comme les dessins.)
+      const SEL = ".etiq, .suite i, .carte-rep, .ref, .dix i, .esc i, .case, svg, .ill, .gu2, .pave4, .bas button, .rel, .verd, table";
       cadre.querySelectorAll(SEL).forEach(e => {
         if (!dansBloc(e) || !visible(e) || (e.tagName.toLowerCase() === "svg" ? Boolean(e.parentElement.closest("svg, .gu2")) : tropDedans(e) && !e.matches(".gu2, .pave4"))) return;
         boites.push({e, texte: (e.textContent || e.getAttribute("aria-label") || e.className.baseVal || e.className || e.tagName).toString().trim().slice(0, 24) || e.tagName, b: e.getBoundingClientRect()});
@@ -280,7 +305,8 @@ async function controler(page, taille) {
       const m2 = document.createTreeWalker(cadre, NodeFilter.SHOW_TEXT);
       while (m2.nextNode()) {
         const e = m2.currentNode.parentElement;
-        if (!m2.currentNode.textContent.trim() || !visible(e) || e.closest("svg")) continue;
+        // (Lot 3b-2 : le crédit d'une illustration, en petit, est une mention.)
+        if (!m2.currentNode.textContent.trim() || !visible(e) || e.closest("svg, .credit")) continue;
         const t = parseFloat(getComputedStyle(e).fontSize);
         if (!petit || t < petit[0]) petit = [t, m2.currentNode.textContent.trim().slice(0, 24)];
       }
@@ -291,7 +317,7 @@ async function controler(page, taille) {
       }
     }
     return defauts;
-  }, {projection: Boolean(taille.projection)});
+  }, {projection: Boolean(taille.projection), tactile: Boolean(taille.tactile)});
 }
 
 // Les places des blocs d'une série (rien ne bouge).
@@ -418,6 +444,19 @@ async function repondre(page, _q, juste = true) {
   }
   await attendre(page, juste ? 1000 : 50);
 }
+// Lot 3b-2 : une erreur de sens (diviser au lieu de multiplier), que la
+// page donne (`sens` : le texte à taper ou la place du choix).
+async function repondreSens(page, sens) {
+  if (sens.choix !== undefined) await appuyer(page, page.locator(".choix button").nth(sens.choix));
+  else if (page.tactile) {
+    for (const c of String(sens.texte)) await appuyer(page, page.locator(".pave4 button").filter({hasText: new RegExp(`^${c}$`)}).first());
+    await appuyer(page, page.locator("#cadre .action"));
+  } else {
+    for (const c of String(sens.texte)) await page.keyboard.press(c === "," ? "Comma" : c);
+    await page.keyboard.press("Enter");
+  }
+  await attendre(page, 50);
+}
 // « Je ne sais pas » (lot 3a).
 async function jeNeSaisPas(page) {
   await appuyer(page, page.locator("#cadre .jnsp"));
@@ -497,9 +536,18 @@ class Carnet {
   async photo(page, nom, extra = []) {
     // Les petites transitions (le glisse-unité qui glisse) vont à leur fin.
     await page.waitForTimeout(250);
+    // (Lot 3b-2 : les illustrations chargées avant la photo.)
+    await page.waitForFunction(() => [...document.querySelectorAll("#cadre img")].every(i => i.complete), null, {timeout: 5000}).catch(() => {});
     const defauts = extra.concat(await controler(page, this.taille));
     const png = await page.screenshot();
     this.ecrans.push({nom, defauts, png});
+    // Lot 3b-2 : chaque écran à part (pour les planches avant / après d'une
+    // notice), DEFI_CONVERSIONS_ECRANS=/dossier.
+    if (process.env.DEFI_CONVERSIONS_ECRANS) {
+      const nomF = `${this.etape}-${this.taille.nom}-${String(this.ecrans.length).padStart(2, "0")}-${nom.normalize("NFD").replace(/[^\w]+/g, "-").slice(0, 60)}.png`;
+      fs.mkdirSync(path.join(process.env.DEFI_CONVERSIONS_ECRANS, this.moteur), {recursive: true});
+      fs.writeFileSync(path.join(process.env.DEFI_CONVERSIONS_ECRANS, this.moteur, nomF), png);
+    }
     return defauts;
   }
 }
@@ -609,6 +657,20 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
       await attendre(page, 3000);
       await carnet.photo(page, "À toi · une erreur", ecarts(reference, await places(page)));
       await suivant(page);
+    } else if (i === 2 && (await page.evaluate(() => (window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question() || {}).sens))) {
+      // Lot 3b-2 : une erreur de sens, « Je prévois » (grandir ou
+      // rapetisser ?), la bonne réponse, puis la question reposée, juste.
+      const q = await page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question());
+      await repondreSens(page, q.sens);
+      if (!(await page.locator(".prevois-choix").count())) bouge.push("« Je prévois » ne vient pas après une erreur de sens");
+      await carnet.photo(page, "À toi · Je prévois", bouge.concat(ecarts(reference, await places(page))));
+      bouge = [];
+      if (await page.locator(".prevois-choix").count()) {
+        await appuyer(page, page.locator(".prevois-choix button").nth(q.sens.grandit ? 0 : 1));
+        await carnet.photo(page, "À toi · Je prévois, la réponse", ecarts(reference, await places(page)));
+        await cliquerTexte(page, "Réessayer");
+        await repondre(page, null);
+      }
     } else if (i === 1) {
       // Lot 3a : « Je ne sais pas » : la correction, sans reproche ; rien ne bouge.
       await jeNeSaisPas(page);
