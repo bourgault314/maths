@@ -832,6 +832,44 @@
     return premiere;
   }
 
+  // Lot 7-0 (14/11/2026, choix de Gwenaël : « le test s'arrête au palier en
+  // cours ») : le test « Tu connais déjà ? » ne monte que jusqu'au palier
+  // où l'élève travaille — celui de sa compétence courante, jamais au-delà
+  // du réglage du professeur. On finit les bases avant le CM1 : une marche
+  // de CM1 ratée au test ne passe plus devant les bases.
+  // Rend les marches à jouer, {de, jusqua} (des numéros de niveau), ou null
+  // s'il n'y a rien à tester : `de`, le premier niveau pas encore entré
+  // (1 pour un module intact) ; `jusqua`, le dernier niveau du palier en
+  // cours.
+  function marchesDuTest(parcours, carte, id, palier = SEUILS.seance.paliers) {
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return null;
+    const ligne = ligneDe(parcours, id);
+    const courante = competenceCourante(parcours, carte, palier);
+    const plafond = Math.min(palierDeSeance(palier), courante ? palierDe(carte, courante.module, courante.niveau) || SEUILS.seance.paliers : SEUILS.seance.paliers);
+    const de = ligne.b.findIndex(boite => !boite) + 1;
+    if (!de) return null;
+    let jusqua = 0;
+    for (let n = de; n <= NIVEAUX[id]; n += 1) {
+      const p = palierDe(carte, id, n);
+      if (!p || p > plafond) break;
+      jusqua = n;
+    }
+    return jusqua ? {de, jusqua} : null;
+  }
+
+  // Lot 7-0 : les marches d'un palier plus haut d'un module déjà commencé
+  // ont leur test, elles aussi (de la marche suivante jusqu'au palier en
+  // cours) : la compétence courante est la première de son palier dans son
+  // module, rien n'y a été joué ni appris, et le niveau d'avant (d'un
+  // palier plus bas) est entré. Elle ne s'apprend pas sans test.
+  function testDeReprise(parcours, carte, courante) {
+    if (!courante || courante.niveau < 2) return false;
+    const ligne = ligneDe(parcours, courante.module);
+    const i = courante.niveau - 1;
+    if (estIntact(ligne) || ligne.b[i] || ligne.f[i] || ligne.a[i] || !ligne.b[i - 1]) return false;
+    return palierDe(carte, courante.module, courante.niveau - 1) < palierDe(carte, courante.module, courante.niveau);
+  }
+
   function moduleCourant(parcours, carte, palier = SEUILS.seance.paliers) {
     const courante = competenceCourante(parcours, carte, palier);
     return courante ? courante.module : null;
@@ -1160,7 +1198,9 @@
       const ligne = ligneDe(parcours, courante.module);
       const bloc = [];
       let duree = 0;
-      if (estIntact(ligne)) {
+      // Lot 7-0 : les marches d'un palier plus haut d'un module commencé
+      // sont testées, comme un module intact.
+      if (estIntact(ligne) || testDeReprise(parcours, carte, courante)) {
         // Un module jamais commencé est toujours testé ; plus de test
         // possible dans cette séance : il attend la suivante.
         if (plan[PLAN.tests] >= SEUILS.test.parSeance) return;
@@ -1460,7 +1500,12 @@
     // des marches montées l'une après l'autre, chacune avec 3 justes au
     // moins et un faux au plus (lot 1 : « 3 justes sur 4 pour monter »).
     const montee = r => r.justes >= SEUILS.test.parMarche && r.total - r.justes <= SEUILS.test.fauxPermis;
-    let prouvee = 0;
+    // Lot 7-0 : un test peut commencer plus haut que le niveau 1 (les
+    // marches d'un palier plus haut d'un module commencé) — à la première
+    // marche jouée, si tous les niveaux en dessous sont déjà entrés.
+    const premiere = resultats.findIndex(r => r.total > 0);
+    const de = premiere > 0 && ligne.b.slice(0, premiere).every(Boolean) ? premiere : 0;
+    let prouvee = de;
     while (prouvee < NIVEAUX[id] && montee(resultats[prouvee])) prouvee += 1;
     const marche = Math.min(entier(test.marche, 0, NIVEAUX[id]), prouvee);
     const bilan = resultats.map(({total, justes}, index) => {
@@ -1487,7 +1532,7 @@
     let finie = false;
     if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
     if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); }, palier);
-    return {parcours: copie, bilan, tout, marche, finie, ceintures};
+    return {parcours: copie, bilan, tout, marche, finie, ceintures, de: de + 1};
   }
 
   // -------------------------------------------------------- Mes calculs du jour
@@ -2549,6 +2594,8 @@
     estIntact,
     etatModule,
     competenceCourante,
+    marchesDuTest,
+    testDeReprise,
     moduleCourant,
     parcoursConstruit,
     palierDe,

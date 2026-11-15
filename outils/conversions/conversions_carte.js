@@ -42,6 +42,11 @@
 // (R2), « ranger » (C2) et le tableau heures / minutes (D1) arrivent ; le
 // 3e temps de « Quelle unité choisir ? » devient la récréation (une durée).
 //
+// Carte v4 (14/11/2026, lot 1 « audit du contenu », entrée au lot 3b) :
+// 2 étapes de plus, rangs 53 et 54 — C9 « Avec des millièmes » (palier 3,
+// CM2) et Q11 « Problèmes : plans et cartes » (palier 5, 5e) → 54 étapes.
+// Le détail : …\defi-conversions\audit-contenu\defi-conversions-carte-v4.md
+//
 // Typographie : tous les textes passent par typo() au chargement — espace
 // fine insécable (U+202F) dans les milliers, espace insécable (U+00A0) entre
 // un nombre et son unité et devant « ? ! : ; », jamais un point décimal.
@@ -183,7 +188,11 @@
     {code: "E1", rang: 49, palier: 1, famille: "convertir", classe: "CE1 · CE2", nom: "Les euros et les centimes", exemple: "1 € = 100 c"},
     {code: "D7", rang: 50, palier: 1, famille: "durees", classe: "CE1 · CE2", nom: "Combien de temps entre deux heures ?", nomCourt: "Entre deux heures", exemple: "de 8 h 30 à 10 h 50"},
     {code: "Q10", rang: 51, palier: 2, famille: "problemes", classe: "CM1", nom: "Problèmes : durées et horaires", nomCourt: "Durées et horaires", exemple: ""},
-    {code: "A5", rang: 52, palier: 2, famille: "aires", classe: "CM1", nom: "L'aire en carreaux", exemple: "6 carreaux = 6 cm²"}
+    {code: "A5", rang: 52, palier: 2, famille: "aires", classe: "CM1", nom: "L'aire en carreaux", exemple: "6 carreaux = 6 cm²"},
+    // Carte v4 (14/11, lot 1 « audit du contenu ») : deux ajouts d'office
+    // (attendus de CM2 et de 5e). Construites aux lots B3 et B5.
+    {code: "C9", rang: 53, palier: 3, famille: "convertir", classe: "CM2", nom: "Avec des millièmes", exemple: "18 mm = 0,018 m"},
+    {code: "Q11", rang: 54, palier: 5, famille: "problemes", classe: "5e", nom: "Problèmes : plans et cartes", nomCourt: "Plans et cartes", exemple: ""}
   ];
 
   // ------------------------------------------------------------ les repères

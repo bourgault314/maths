@@ -777,7 +777,10 @@
   };
   function reperesUnites(zone, question) {
     const G = gen();
-    const unites = question.choix && question.morceaux.sorte === "unite" ? question.choix.slice()
+    // (Lot 3b : « Quelle unité pour… ? », sans nombre : les repères de toutes
+    // les unités de la grandeur de la bonne réponse.)
+    const unites = question.morceaux.sorte === "sansNombre" ? ({longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]})[question.grandeur] || []
+      : question.choix && question.morceaux.sorte === "unite" ? question.choix.slice()
       : question.unites ? question.unites.slice() : (question.repere ? [question.unite] : []);
     const grandeur = question.grandeur || G.grandeurDe(question.unite);
     // Associer (lot A2 bis) : les unités des trois mesures, de la plus
@@ -785,7 +788,7 @@
     const ordre = question.forme === "associer" ? ["mm", "cm", "m", "km", "g", "kg", "t", "cL", "dL", "L"].filter(u => unites.includes(u))
       : {longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"], duree: ["min", "h", "jours"]}[grandeur] || unites;
     const liste = el("div", "refs");
-    ordre.filter(u => unites.includes(u) || question.morceaux.sorte === "valeur").forEach(u => {
+    ordre.filter(u => unites.includes(u) || question.morceaux.sorte === "valeur" || question.morceaux.sorte === "saisie").forEach(u => {
       const autre = question.repere && AUTRES[question.repere] && AUTRES[question.repere][u];
       const [emoji, texte] = autre || REFERENCES[u];
       const ligne = el("div", "ref");

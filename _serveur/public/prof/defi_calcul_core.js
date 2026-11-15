@@ -786,6 +786,64 @@
     return {dessins: Object.freeze(liste), revele: dessin(morceaux, true)};
   }
 
+  // Lot 7-0 (14/11/2026, choix de Gwenaël : « le dessin à étapes ») : avec
+  // la droite à plusieurs sauts, l'élève écrit d'abord OÙ IL ARRIVE APRÈS LE
+  // PREMIER SAUT (la dizaine, la centaine…), puis le résultat — comme « Je
+  // représente à étapes » des doubles. Avant, il voyait les sauts mais ne
+  // tapait que le résultat : plus dur que J'écris, qui guide étape par
+  // étape. Les sauts restent écrits (« + 1 », « + 3 ») ; les points
+  // d'arrivée sont les « ? ».
+  //  - un ajout ou un retrait (59 + 3 : + 1 puis + 2) : « 59 + 1 = □ » (60),
+  //    puis « 59 + 3 = □ » (62) ; le point trouvé s'écrit en vert ;
+  //  - un trou (436 + ? = 500 ; 61 − 59 ; 2 003 − ? = 1 999) : les points
+  //    sont déjà écrits, les sauts disent « + ? » — le premier saut
+  //    (« 436 + □ = 440 », 4), puis le résultat ; le saut trouvé s'écrit.
+  // Rend {etapes [{texte, reponse}], dessins [3 dessins : rien, la première
+  // case, tout], premier (la première case donnée, sans vert), revele (la
+  // réponse donnée)}, ou null (pas de droite à sauts, un seul saut).
+  function dessinAEtapes(image, texte, reponse) {
+    if (!image || image.outil !== "droite-sauts" || !Array.isArray(image.sauts) || image.sauts.length < 2) return null;
+    if (typeof texte !== "string" || !texte.includes(CASE) || !Number.isFinite(reponse) || !Number.isFinite(image.depart)) return null;
+    const depart = image.depart;
+    const n = image.sauts.length;
+    const premier = image.sauts[0].val;
+    const trou = image.sauts.some(saut => saut.masque);
+    const arrivee = Number((depart + premier).toFixed(6));
+    if (trou && !(premier > 0)) return null;
+    const etape = trou
+      ? {texte: `${formaterNombre(depart)} + ${CASE} = ${formaterNombre(arrivee)}`, reponse: premier}
+      : {texte: `${formaterNombre(depart)} ${premier < 0 ? "−" : "+"} ${formaterNombre(Math.abs(premier))} = ${CASE}`, reponse: arrivee};
+    const etapes = [etape, {texte, reponse}].map(e => Object.freeze(e));
+    const avec = plus => Object.freeze(Object.assign({}, image, plus));
+    const points = Array.from({length: n}, (_, i) => i + 1);
+    const inconnues = Array.isArray(image.inconnues) ? image.inconnues : points;
+    const dessins = trou
+      ? [avec({}),
+        avec({sauts: image.sauts.map((saut, i) => (i === 0 ? {val: saut.val} : saut))}),
+        avec({sauts: image.sauts.map(saut => ({val: saut.val}))})]
+      : [avec({}),
+        avec({inconnues: inconnues.filter(i => i !== 1), acquis: [1]}),
+        avec({inconnues: [], acquis: [1, n]})];
+    const premierDonne = trou ? dessins[1] : avec({inconnues: inconnues.filter(i => i !== 1), acquis: []});
+    const revele = trou ? dessins[2] : avec({inconnues: [], acquis: [n]});
+    return Object.freeze({etapes: Object.freeze(etapes), dessins: Object.freeze(dessins), premier: premierDonne, revele});
+  }
+
+  // « Je représente » (on te montre) sur une droite à plusieurs sauts
+  // devient « Je représente à étapes » (lot 7-0) : il se joue comme celui
+  // des doubles (ses étapes, ses dessins), sous sa consigne.
+  function representeAEtapes(apprends) {
+    const represente = apprends && apprends.represente;
+    // Avec un outil à manipuler, « On te montre » est le geste : le dessin
+    // ne s'y joue pas (il vient avec les calculs qui changent).
+    if (!represente || represente.etapes || apprends.manipule) return apprends;
+    const etapes = dessinAEtapes(represente.image, represente.texte, represente.reponse);
+    if (!etapes) return apprends;
+    return Object.freeze(Object.assign({}, apprends, {
+      represente: Object.freeze(Object.assign({}, represente, {etapes: etapes.etapes, dessins: etapes.dessins}))
+    }));
+  }
+
   // Le schéma en barres (M1) : les morceaux du nombre un par un (moitié de
   // 74 : 35 et 35 sous le 70, puis 2 et 2 sous le 4), puis la dernière
   // égalité : l'accolade (et les deux barres égales de la moitié).
@@ -8158,7 +8216,8 @@
     reserveSansPalier("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 3)
   ].map(fiche => Object.freeze(Object.assign({}, fiche, {
     niveaux: Object.freeze(fiche.niveaux.map(niveau => Object.freeze(Object.assign({}, niveau,
-      niveau.imposes ? {imposes: Object.freeze(niveau.imposes.slice())} : {}))))
+      niveau.imposes ? {imposes: Object.freeze(niveau.imposes.slice())} : {},
+      niveau.apprends ? {apprends: representeAEtapes(niveau.apprends)} : {}))))
   }))));
 
   const PAR_ID = new Map(MODULES.map(fiche => [fiche.id, fiche]));
@@ -9448,6 +9507,8 @@
     modeleReponse,
     modelesReponse,
     aideDe,
+    dessinAEtapes,
+    dessinAEtapesDe: calcul => (calcul ? dessinAEtapes(aideDe(calcul), calcul.texte, calcul.reponse) : null),
     manipulationDe,
     annonceDe,
     virguleDe,

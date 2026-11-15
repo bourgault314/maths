@@ -28,6 +28,9 @@
 //   "deux-cases" (« 780 cL = □ L □ cL »), "qcm", "vrai-faux",
 //   "associer" (3 objets, 3 mesures : `objets`, `mesures`, `bonnes`),
 //   "ranger" (4 mesures : `mesures`, `ordre`) — lot A2 bis ;
+//   lot 3b-1 (carte v4) : "qcm" sert aussi aux conversions et aux durées
+//   (trois réponses, dont deux vraies erreurs : `donnees` reste celle du
+//   calcul, `bon` la place de la bonne), « associer » aux relations (P1) ;
 //   reponse : le nombre attendu, écrit sans espace (« 4000 », « 7,5 »), ou
 //   deux nombres pour deux cases ; pour un choix, `bon` est sa place ;
 //   donnees : ce qu'il faut pour RECALCULER la réponse à part (le banc
@@ -215,7 +218,11 @@
     letchis: {nom: "des letchis", grandeur: "masse", unite: "kg", min: "1", max: "3", pas: "1"},
     longanis: {nom: "des longanis", grandeur: "masse", unite: "g", min: "100", max: "900", pas: "100"},
     sentierBelouve: {nom: "le sentier du Trou de Fer", grandeur: "longueur", unite: "km", min: "2", max: "5", pas: "1"},
-    verre: {nom: "un verre", grandeur: "contenance", unite: "cL", min: "15", max: "30", pas: "5"}
+    verre: {nom: "un verre", grandeur: "contenance", unite: "cL", min: "15", max: "30", pas: "5"},
+    // Lot 3b : la canne à sucre, la promenade.
+    canne: {nom: "une canne à sucre", grandeur: "longueur", unite: "m", min: "2", max: "4", pas: "1"},
+    coupeCanne: {nom: "un morceau de canne", grandeur: "longueur", unite: "cm", min: "10", max: "90", pas: "10"},
+    trajet: {nom: "un trajet à pied", grandeur: "longueur", unite: "km", min: "1", max: "3", pas: "1"}
   };
   function dansBornes(objet, m) {
     const o = OBJETS[objet];
@@ -254,40 +261,57 @@
       return {texte: phrase, morceaux: {phrase, apres: vers}};
     }
     if (forme === "objet") {
-      const phrase = `${objetDe(valeur, de)} de ${gauche}. Combien de ${MOTS[vers]}${NB}?`;
+      const objet = objetDe(valeur, de, vers);
+      if (!objet) return null;
+      const phrase = `${objet} de ${gauche}. Combien de ${MOTS[vers]}${NB}?`;
       return {texte: phrase, morceaux: {phrase, apres: vers, objet: true}};
     }
     return {texte: `${gauche} = ${CASE}${NB}${vers}`, morceaux: {avant: `${gauche} =`, apres: vers}};
   }
-  // L'objet d'une mesure, selon son unité de départ et sa taille. Lot A2
-  // ter : une fois sur deux (selon le nombre), un objet de La Réunion, quand
-  // la mesure lui va (bornes en unités entières : [objet, unité, min, max]).
-  const OBJETS_REUNION = [
-    ["Un régime de bananes", "kg", 10, 40], ["Un sac de letchis", "kg", 1, 5], ["Un samoussa", "g", 30, 80],
-    ["Un sachet de bonbons piment", "g", 100, 500], ["Une marmite de cari", "L", 3, 12], ["Un Car Jaune", "m", 10, 14],
-    ["Un bassin de baignade", "m", 15, 60], ["Un sentier du volcan", "m", 300, 900], ["Un trajet en Car Jaune", "km", 10, 90],
-    ["Un sentier de Bélouve", "km", 2, 5]
+  // L'objet d'une mesure, selon son unité de départ et sa taille. Lot 3b
+  // (carte v4 : « chaque objet a des bornes pour chaque unité » ; avant, un
+  // ruban de 9 000 cm, une planche de 980 dm, une bassine de 900 cL) :
+  // chaque objet a ses bornes DANS l'unité où on l'écrit vraiment, et un
+  // objet ne s'écrit que dans les unités où on le mesure dans la vie (pas de
+  // marmite en dL). Aucun objet ne va : la question ne prend pas la forme
+  // « objet » (null), le générateur en tire une autre.
+  // [objet, unité, min, max, de La Réunion ?] (bornes en unités entières)
+  const OBJETS_MESURE = [
+    ["Un clou", "mm", 10, 100], ["Une vis", "mm", 10, 80], ["Une coccinelle", "mm", 4, 9], ["Une planche", "mm", 500, 3000],
+    ["Une gomme", "cm", 3, 6], ["Un trombone", "cm", 3, 5], ["Un crayon", "cm", 10, 19], ["Un ruban", "cm", 20, 500],
+    ["Une ficelle", "cm", 20, 300], ["Une table", "cm", 60, 200], ["Une feuille de bananier", "cm", 30, 200, true],
+    ["Une canne à sucre", "cm", 150, 400, true],
+    ["Une table", "m", 1, 3], ["Une corde", "m", 2, 50], ["Un tuyau d'arrosage", "m", 5, 30], ["Un Car Jaune", "m", 10, 14, true],
+    ["Un bassin de baignade", "m", 15, 60, true], ["Une rue", "m", 50, 900], ["Un sentier du volcan", "m", 300, 2000, true],
+    ["Une randonnée", "km", 2, 20], ["Une course à vélo", "km", 5, 90], ["Un trajet en Car Jaune", "km", 10, 90, true],
+    ["Un samoussa", "g", 30, 80, true], ["Une pomme", "g", 100, 250], ["Un sachet de bonbons piment", "g", 100, 500, true],
+    ["Un paquet de farine", "g", 500, 1000], ["Un colis", "g", 200, 5000],
+    ["Un chat", "kg", 2, 6], ["Un sac de letchis", "kg", 1, 5, true], ["Un sac de riz", "kg", 1, 25, true], ["Une valise", "kg", 5, 25],
+    ["Un régime de bananes", "kg", 10, 40, true], ["Un chien", "kg", 3, 40], ["Un camion chargé", "kg", 5000, 10000],
+    ["Un éléphant", "kg", 3000, 7000],
+    ["Une voiture", "t", 1, 2], ["Un éléphant", "t", 3, 7], ["Un camion chargé", "t", 5, 40], ["Une baleine à bosse", "t", 25, 40, true],
+    ["Une bouteille", "L", 1, 2], ["Une marmite de cari", "L", 3, 12, true], ["Un arrosoir", "L", 5, 12], ["Un seau", "L", 5, 15],
+    ["Un aquarium", "L", 20, 300], ["Une baignoire", "L", 100, 200],
+    ["Un verre", "cL", 10, 30], ["Une bouteille", "cL", 25, 200], ["Un verre de jus de goyavier", "cL", 15, 30, true],
+    ["Un bol", "cL", 25, 50]
   ];
-  function objetDe(valeur, de) {
+  // Et une conversion qu'on fait vraiment : jamais un objet en décilitres
+  // (un aquarium de 98 L en dL), des millimètres depuis les mètres
+  // seulement pour une table (on la commande en mm).
+  function objetDe(valeur, de, vers) {
+    // (Ni en dm : « une planche de 30 dm », « une canne à sucre de 390 cm,
+    // combien de dm ? » ne se disent pas dans la vie ; le dm reste dans les
+    // calculs.)
+    if (valeur % MILLE !== 0n || [de, vers].some(u => u === "dL" || u === "dm")) return null;
     const n = valeur / MILLE;
-    if (valeur % MILLE === 0n && n % 2n === 0n) {
-      const local = OBJETS_REUNION.filter(([, u, a, b]) => u === de && n >= BigInt(a) && n <= BigInt(b));
-      if (local.length) return local[Number(n % BigInt(local.length))][0];
-    }
-    switch (de) {
-      case "mm": return n < 150n ? "Un clou" : n < 1000n ? "Un bâton" : "Un tuyau";
-      case "cm": return "Un ruban";
-      case "dm": return "Une planche";
-      case "m": return n < 1000n ? "Une corde" : "Un sentier";
-      case "km": return "Une course à vélo";
-      case "g": return "Un colis";
-      case "kg": return n < 1000n ? "Une caisse" : "Un chargement";
-      case "t": return "Un chargement";
-      case "L": return "Un aquarium";
-      case "dL": return "Une marmite";
-      case "cL": return "Une bassine";
-      default: return "Une mesure";
-    }
+    const possibles = OBJETS_MESURE.filter(([nom, u, a, b]) => u === de && n >= BigInt(a) && n <= BigInt(b)
+      && !(de === "m" && vers === "mm" && nom !== "Une table"));
+    if (!possibles.length) return null;
+    // Une fois sur deux (selon le nombre), un objet de La Réunion, quand la
+    // mesure lui va (lot A2 ter).
+    const locaux = possibles.filter(o => o[4]);
+    const liste = locaux.length && n % 2n === 0n ? locaux : possibles;
+    return liste[Number(n % BigInt(liste.length))][0];
   }
 
   // Ce qui rend une conversion facile ou dure à lire pour le glisse-unité.
@@ -329,6 +353,20 @@
       choix = melanger(rng, choisir(rng, fenetres));
       texte = `${r.debut} ${ecrire(v)} ${CASE}${fin}`;
       bon = choix.indexOf(r.unite);
+    } else if (forme === "saisie") {
+      // Lot 3b (carte v4) : la valeur sans choix, au pavé (« Une brique de
+      // lait contient … L ») — la question de l'exerciseur qu'on avait perdue.
+      const phrase = CARTE.typo(r.debut);
+      const apres = CARTE.typo(`${r.unite}${fin}`);
+      return q({
+        code, degre, forme: "phrase", texte: CARTE.typo(`${r.debut} ${CASE}${NB}${r.unite}${fin}`),
+        morceaux: {phrase, apres, sorte: "saisie"},
+        reponse: brut(v), reponseTexte: `${ecrire(v)}${NB}${r.unite}`,
+        unite: r.unite, resume, repere: rep, outil: "reperes-unites",
+        image: [], correction: [resume],
+        donnees: {type: "repere", repere: rep, sorte: "saisie"},
+        cle: `${code}:${rep}:saisie`
+      });
     } else {
       // La valeur : la bonne, et deux autres à × ou ÷ 10, 100, 1 000.
       const candidats = [];
@@ -405,8 +443,9 @@
   ETAPES.R1 = {
     exclureExemples: false,
     // Associer : la dernière question de Je valide, 3 fois sur 25 dans À toi.
+    // Lot 3b : la valeur au pavé (« saisie ») en 6e et en 8e de Je valide.
     formes(usage) {
-      if (usage === "valide") return {9: "associer"};
+      if (usage === "valide") return {5: "saisie", 7: "saisie", 9: "associer"};
       if (usage === "entraine") return {7: "associer", 15: "associer", 22: "associer"};
       return {};
     },
@@ -445,7 +484,11 @@
           reps = reps.filter(c => libres(dejaLa.concat(c)));
         });
       }
-      const sorte = degre === 1 ? "unite" : degre === 3 ? "valeur" : choisir(rng, ["unite", "valeur"]);
+      // Lot 3b (carte v4 : « demander aussi la valeur sans choix ») : trois
+      // façons de demander un même repère — l'unité, la valeur parmi trois,
+      // la valeur au pavé. Une même question ne revient pas dans une série.
+      const sorte = forme === "saisie" ? "saisie" : degre === 1 ? "unite"
+        : degre === 3 ? choisir(rng, ["valeur", "saisie"]) : choisir(rng, ["unite", "valeur", "saisie"]);
       return questionRepereInterne("R1", degre, choisir(rng, reps), sorte, rng);
     }
   };
@@ -477,8 +520,38 @@
     // Lot A2 ter : La Réunion (Gwenaël, le 13/11 : « Des trucs de La Réunion ? »).
     ["Une bouteille de jus de goyavier :", "1", "L", 1], ["Un sac de letchis :", "2", "kg", 1], ["La longueur d'un Car Jaune :", "12", "m", 1],
     ["Un régime de bananes : environ", "20", "kg", 2], ["Un samoussa :", "50", "g", 2], ["La longueur d'un bassin de baignade :", "25", "m", 2],
-    ["Un bonbon piment : environ", "10", "g", 3], ["Une marmite de cari :", "5", "L", 3], ["La largeur d'une feuille de bananier :", "50", "cm", 3]
+    ["Un bonbon piment : environ", "10", "g", 3], ["Une marmite de cari :", "5", "L", 3], ["La largeur d'une feuille de bananier :", "50", "cm", 3],
+    // Lot 3b (carte v4) : les phrases des tests de positionnement de 6e et
+    // de l'évaluation de 6e, et La Réunion.
+    ["Le pied d'un adulte mesure environ", "30", "cm", 2], ["Une coccinelle mesure environ", "7", "mm", 2],
+    ["La largeur d'une salle de classe : environ", "6", "m", 2], ["Une araignée pèse environ", "1", "g", 3],
+    ["Un sac de riz :", "5", "kg", 1], ["Une canette de jus :", "33", "cL", 2], ["Une mangue : environ", "300", "g", 2],
+    ["La hauteur d'une canne à sucre : environ", "3", "m", 2], ["Un ananas Victoria : environ", "800", "g", 3]
   ];
+  // Lot 3b (carte v4) : « Quelle unité pour… ? », sans nombre (la question
+  // de l'exerciseur, perdue). Les mauvaises réponses : une autre grandeur
+  // (cL pour une longueur) et, quand il y en a une sans ambiguïté, une
+  // unité de la même grandeur au mauvais ordre de grandeur (le km pour un
+  // crayon). Jamais deux unités qui pourraient toutes deux convenir (le m et
+  // le cm pour une porte). [mesurer…, la bonne, la fausse de même grandeur, degré]
+  const SANS_NOMBRE = [
+    ["mesurer la longueur d'un crayon", "cm", "km", 1], ["mesurer la longueur d'une piscine", "m", "mm", 1],
+    ["peser un cartable", "kg", "t", 1], ["peser une pomme", "g", "t", 1], ["mesurer la contenance d'une baignoire", "L", null, 1],
+    ["mesurer la distance de Saint-Denis à Saint-Pierre", "km", "mm", 1], ["peser un éléphant", "t", "g", 1],
+    ["mesurer l'épaisseur d'une pièce de 1 €", "mm", "km", 2], ["mesurer la longueur d'un Car Jaune", "m", "mm", 2],
+    ["peser un sac de letchis", "kg", "t", 2], ["mesurer la contenance d'un verre", "cL", null, 2],
+    ["peser un samoussa", "g", "t", 2], ["mesurer la longueur d'un terrain de football", "m", "mm", 2],
+    ["mesurer la longueur d'une fourmi", "mm", "km", 2], ["peser un camion chargé", "t", "g", 2],
+    ["mesurer la contenance d'une marmite de cari", "L", null, 3], ["mesurer la largeur d'un cahier", "cm", "km", 3],
+    ["mesurer la longueur du tour de La Réunion", "km", "mm", 3], ["peser une baleine à bosse", "t", "g", 3],
+    ["mesurer la contenance d'une cuillère à soupe", "cL", null, 3], ["peser un trombone", "g", "t", 3],
+    ["mesurer la hauteur du Piton des Neiges", "m", "mm", 3]
+  ];
+  // Une unité d'une autre grandeur (lot 3b ; positionnement de 6e : « Une
+  // araignée pèse 1 … » : g, kg, mm, L).
+  const NOM_UNITE = {mm: "le millimètre (mm)", cm: "le centimètre (cm)", m: "le mètre (m)", km: "le kilomètre (km)", g: "le gramme (g)",
+    kg: "le kilogramme (kg)", t: "la tonne (t)", cL: "le centilitre (cL)", dL: "le décilitre (dL)", L: "le litre (L)"};
+  const AUTRES_GRANDEURS = {longueur: ["kg", "g", "L", "cL"], masse: ["m", "cm", "mm", "L", "cL"], contenance: ["kg", "g", "m", "cm"]};
   // « Qu'est-ce qu'on mesure ? » (programme de CE2 ; la question « Quelle
   // grandeur ? » de l'exerciseur, lot A2 bis). Degré 1 : l'instrument est
   // dans la phrase ; degrés 2 et 3 : une situation de la vie.
@@ -546,25 +619,52 @@
     });
   }
 
+  function questionSansNombre(degre, rng) {
+    const vivier = SANS_NOMBRE.map((o, i) => [o, i]).filter(([o]) => o[3] === degre);
+    const [[quoi, unite, fausse], i] = choisir(rng, vivier);
+    const g = grandeurDe(unite);
+    const autres = melanger(rng, AUTRES_GRANDEURS[g]);
+    // Deux autres grandeurs différentes (pas « kg » et « g » ensemble).
+    const deux = [autres[0], autres.find(u => grandeurDe(u) !== grandeurDe(autres[0]))];
+    const choix = melanger(rng, [unite, fausse || deux[1], deux[0]]);
+    const phrase = CARTE.typo(`Quelle unité pour ${quoi} ?`);
+    const resume = CARTE.typo(`Pour ${quoi} : ${NOM_UNITE[unite]}.`);
+    return q({
+      code: "R2", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "sansNombre"},
+      choix, bon: choix.indexOf(unite), reponse: unite, reponseTexte: unite, unite,
+      resume, outil: "reperes-unites", grandeur: g,
+      correction: [CARTE.typo(`${NOM_UNITE[unite][0].toUpperCase()}${NOM_UNITE[unite].slice(1)}.`)],
+      donnees: {type: "unite-sans", objet: i, unite},
+      cle: `R2:s:${i}`
+    });
+  }
+
   ETAPES.R2 = {
-    // Je valide : « qu'est-ce qu'on mesure ? » en 4e, « h, min ou jours » en
-    // 8e ; ailleurs, une question sur cinq de chaque.
+    // Je valide : « qu'est-ce qu'on mesure ? » en 4e, « Quelle unité
+    // pour… ? » (sans nombre, lot 3b) en 6e, « h, min ou jours » en 8e ;
+    // ailleurs, une question sur cinq de chaque.
     formes(usage) {
       if (usage !== "valide") return {};
       const f = {};
       for (let i = 0; i < 10; i += 1) f[i] = "unite";
       f[3] = "grandeur";
+      f[5] = "sans";
       f[7] = "duree";
       return f;
     },
     tirer(rng, degre, place, usage, forme) {
-      const r = forme ? 1 : rng();
+      const r = forme && forme !== "unite" ? 1 : forme === "unite" ? 0.9 : rng();
       if (forme === "grandeur" || r < 0.2) return questionGrandeur(degre, rng);
-      if (forme === "duree" || r < 0.4) return questionUniteDuree(degre, rng);
+      if (forme === "duree" || r < 0.35) return questionUniteDuree(degre, rng);
+      if (forme === "sans" || r < 0.55) return questionSansNombre(degre, rng);
       const vivier = OBJETS_UNITE.map((o, i) => [o, i]).filter(([o]) => o[3] === degre);
       const [[debut, nombre, unite], i] = choisir(rng, vivier);
       const v = milli(nombre);
-      const choix = melanger(rng, CHOIX_UNITE[grandeurDe(unite)]);
+      // Lot 3b (carte v4 : « une autre grandeur » dans les mauvaises
+      // réponses) : pour une masse ou une contenance (3 unités au cycle 2),
+      // une 4e réponse d'une autre grandeur.
+      const memes = CHOIX_UNITE[grandeurDe(unite)];
+      const choix = melanger(rng, memes.length < 4 ? memes.concat(choisir(rng, AUTRES_GRANDEURS[grandeurDe(unite)])) : memes);
       const texte = CARTE.typo(`${debut} ${ecrire(v)} ${CASE}`);
       return q({
         code: "R2", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: "", sorte: "unite"},
@@ -598,33 +698,111 @@
     return CARTE.typo(dit[`${grande}-${petite}`]);
   }
 
+  // « 1 m, c'est combien de fois 1 cm ? » (lot 3b ; évaluation de début de
+  // 6e : 40 % d'échec, 24 % répondent « 100 fois » pour 1 m et 1 dm). Les
+  // trois réponses : 10, 100, 1 000 fois.
+  function questionFois(degre, g, p) {
+    const f = facteur(g, p);
+    const choix = ["10 fois", "100 fois", `1${FINE}000 fois`];
+    const bon = f === 10n ? 0 : f === 100n ? 1 : 2;
+    const phrase = CARTE.typo(`1 ${g}, c'est combien de fois 1 ${p} ?`);
+    return q({
+      code: "P1", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "fois"},
+      // (Le résumé finit par la réponse : la correction l'écrit en une
+      // ligne, sous le glisse-unité, comme pour « 1 m = … cm ».)
+      choix, bon, reponse: choix[bon], reponseTexte: CARTE.typo(`${choix[bon]} 1 ${p}`), unite: null,
+      resume: CARTE.typo(`1 ${g} = ${choix[bon]} 1 ${p}`),
+      relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(MILLE, g, p), outilSansRelation: true,
+      image: [sensDuPrefixe(g, p)],
+      correction: [relationTexte(g, p), CARTE.typo(`Il faut ${choix[bon]} 1 ${p} pour faire 1 ${g}.`)],
+      grandeur: grandeurDe(g), relationCle: `${g}-${p}`,
+      donnees: {type: "fois", grande: g, petite: p},
+      cle: `P1:${g}-${p}:f`
+    });
+  }
+  // Relier trois relations (lot 3b ; « associer deux relations », carte
+  // v4). Degré 2 : trois grandeurs ; degré 3 : trois longueurs.
+  function questionRelierRelations(degre, rng) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      const vivier = degre === 3 ? RELATIONS_BASES.filter(([g]) => grandeurDe(g) === "longueur") : RELATIONS_BASES;
+      const trois = melanger(rng, vivier).slice(0, 3);
+      const gauches = trois.map(([g]) => `1${NB}${g}`);
+      const droites = trois.map(([g, p]) => mes(facteur(g, p) * MILLE, p));
+      const grandeurs = new Set(trois.map(([g]) => grandeurDe(g)));
+      if (new Set(gauches).size < 3 || new Set(droites).size < 3 || (degre !== 3 && grandeurs.size < 3)) continue;
+      let ordre = melanger(rng, [0, 1, 2]);
+      while (ordre.every((k, j) => k === j)) ordre = melanger(rng, [0, 1, 2]);
+      const mesures = ordre.map(k => droites[k]);
+      const bonnes = trois.map((x, k) => ordre.indexOf(k));
+      const consigne = "Relie chaque unité à sa valeur.";
+      const lignes = trois.map(([g, p]) => relationTexte(g, p));
+      // L'image : ce que veulent dire les préfixes de la question (le sens
+      // du mot, comme l'image des autres questions de l'étape).
+      const SENS = {k: "kilo : mille", d: "déci : un dixième", c: "centi : un centième", m: "milli : un millième"};
+      const prefixes = [...new Set(trois.flatMap(([g, p]) => [g, p]).filter(u => u.length === 2 && SENS[u[0]]).map(u => u[0]))];
+      return q({
+        code: "P1", degre, forme: "associer", texte: `${consigne} ${gauches.join(" ; ")} — ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne}, objets: gauches.map(t => ({texte: t, emoji: ""})), mesures, bonnes,
+        reponse: bonnes.join(","), reponseTexte: lignes.join(" ; "), resume: lignes.join(" ; "),
+        // (Pas de glisse-unité : trois relations à la fois ; l'outil est le
+        // sens des préfixes, et la correction tient en trois lignes.)
+        relation: lignes.join(" ; "), outil: null, outilSansRelation: true, relationCle: "relier",
+        image: [CARTE.typo(prefixes.map(x => SENS[x]).join(" ; "))],
+        correction: lignes, grandeur: grandeurs.size === 1 ? [...grandeurs][0] : null,
+        donnees: {type: "associer-rel", paires: trois.map(x => x.slice()), mesures: mesures.slice()},
+        cle: `P1:a:${trois.map(([g, p]) => `${g}-${p}`).sort().join("+")}`
+      });
+    }
+    return null;
+  }
+
   ETAPES.P1 = {
     exclureExemples: false,
-    // d1 : vers la petite unité, × 10 ou × 100 ; d2 : × 1 000, ou vers la
-    // grande unité × 10 ; d3 : vers la grande unité × 100 ou × 1 000.
-    tirer(rng, degre, i, usage) {
+    // 20 faits à savoir par cœur (carte v4, lot 3b) : on varie la façon de
+    // demander, pas les faits — le calcul (« 1 m = … cm »), la phrase
+    // (« Combien de cm dans 1 m ? »), « combien de fois ? », relier. Une
+    // même question est un fait ET sa forme : « 1 m = … cm » et « Combien
+    // de cm dans 1 m ? » sont deux questions (une série n'en pose qu'une).
+    // Les deux sens à chaque degré (avant, Je valide finissait par trois
+    // réponses « 1 ») :
+    //   d1 : vers la petite unité × 10 ou × 100, ou vers la grande × 10 ;
+    //   d2 : × 1 000 vers la petite, ou × 10, × 100 vers la grande ;
+    //   d3 : × 100 ou × 1 000 vers la grande, ou « combien de fois ? ».
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "associer") return questionRelierRelations(degre, rng);
       const vivier = [];
       RELATIONS_BASES.forEach(([g, p]) => {
         const f = facteur(g, p);
         if (degre === 1 && f <= 100n) vivier.push([g, p, "bas"]);
+        if (degre === 1 && f === 10n) vivier.push([g, p, "haut"]);
         if (degre === 2 && f === 1000n) vivier.push([g, p, "bas"]);
-        if (degre === 2 && f === 10n) vivier.push([g, p, "haut"]);
+        if (degre === 2 && f <= 100n) vivier.push([g, p, "haut"]);
         if (degre === 3 && f >= 100n) vivier.push([g, p, "haut"]);
       });
+      const fois = forme === "fois" || (!forme && degre > 1 && rng() < 0.25);
+      if (fois) {
+        const [g, p] = choisir(rng, RELATIONS_BASES);
+        return questionFois(degre, g, p);
+      }
       const [g, p, sens] = choisir(rng, vivier);
-      const forme = choisir(rng, ["nombre", "nombre", "phrase"]);
+      const ecrit = forme === "phrase" || forme === "nombre" ? forme : choisir(rng, ["nombre", "nombre", "phrase"]);
       const [valeur, de, vers] = sens === "bas" ? [MILLE, g, p] : [facteur(g, p) * MILLE, p, g];
-      return questionConversion("P1", degre, forme, valeur, de, vers, {
+      return questionConversion("P1", degre, ecrit, valeur, de, vers, {
         // L'outil ne recopie pas la relation au-dessus du glisse-unité :
         // dans cette étape, elle EST la réponse (audit du 12/11).
         relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, de, vers), outilSansRelation: true,
         image: [sensDuPrefixe(g, p)],
         correction: sens === "bas" ? [relationTexte(g, p)] : [relationTexte(g, p), `donc ${mes(valeur, de)} = ${mes(MILLE, g)}`],
-        grandeur: grandeurDe(g), relationCle: `${g}-${p}`
+        grandeur: grandeurDe(g), relationCle: `${g}-${p}`,
+        cle: `P1:${brut(valeur)}${de}>${vers}:${ecrit === "phrase" ? "p" : "n"}`
       });
     },
+    // Je valide : une phrase en 3e et en 7e, « combien de fois ? » en 5e et
+    // en 9e, relier en dernier ; À toi : relier deux fois.
     formes(usage) {
-      return usage === "valide" ? {2: "phrase", 6: "phrase"} : {};
+      if (usage === "valide") return {2: "phrase", 4: "fois", 6: "phrase", 8: "fois", 9: "associer"};
+      if (usage === "entraine") return {12: "associer", 21: "associer"};
+      return {};
     },
     erreurs(question, lu) {
       const d = question.donnees;
@@ -657,13 +835,17 @@
 
   // Les mesures à deux unités, en nombres entiers (BO de CE2 : « 2 m + 15 cm »,
   // « 5 km + 750 m »).
-  const SOMMES = [["m", "cm"], ["km", "m"], ["kg", "g"], ["t", "kg"], ["L", "cL"]];
+  // Lot 3b (carte v4, programme de CE2 et recherche) : « 2 dm + 15 cm »,
+  // « 3 cm + 8 mm » ; et le zéro de position : « 3 km + 45 m = 3 045 m »
+  // (le piège : 345 m ou 3 450 m), une fois sur trois avec le kilo.
+  const SOMMES = [["m", "cm"], ["km", "m"], ["kg", "g"], ["t", "kg"], ["L", "cL"], ["dm", "cm"], ["cm", "mm"]];
 
   function questionSomme(code, degre, rng) {
     const [g, p] = choisir(rng, SOMMES);
     const f = facteur(g, p);
     const a = entre(rng, 1, 9);
-    const b = f === 100n ? entre(rng, 2, 99) : entre(rng, 2, 99) * 10 + (rng() < 0.5 ? 0 : entre(rng, 1, 9));
+    const b = f === 100n ? entre(rng, 2, 99) : f === 10n ? entre(rng, 1, 19)
+      : rng() < 0.3 ? entre(rng, 10, 99) : entre(rng, 2, 99) * 10 + (rng() < 0.5 ? 0 : entre(rng, 1, 9));
     const A = milli(a);
     const B = milli(b);
     const rep = A * f + B;
@@ -721,10 +903,48 @@
     return {};
   }
 
+  // Lot 3b (carte v4 : « les mauvaises réponses des vraies erreurs ») : la
+  // même conversion, avec trois réponses au choix. Les deux fausses sont les
+  // erreurs connues, dans cet ordre : vers la petite unité, × 1 000 au lieu
+  // de × 100 pour le litre (1 L = 1 000 cL), un zéro de trop ou de moins
+  // (le « centi » pas lu), diviser au lieu de multiplier, garder le nombre ;
+  // vers la grande, un zéro de trop ou de moins, multiplier au lieu de
+  // diviser, garder le nombre (évaluations de 6e et de 4e, S434).
+  function enChoix(x, rng) {
+    if (!x || x.donnees.type !== "conv") return null;
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const rep = milli(x.reponse);
+    const petite = exposant(d.de) > exposant(d.vers);
+    const f = petite ? facteur(d.de, d.vers) : facteur(d.vers, d.de);
+    const faux = petite ? [d.de === "L" && d.vers === "cL" ? v * 1000n : null, rep * 10n, rep / 10n, v % f === 0n ? v / f : null, v]
+      : [rep * 10n, rep % 10n === 0n ? rep / 10n : null, v * f, v];
+    const propres = [];
+    faux.forEach(y => {
+      if (y !== null && y !== rep && y >= MILLE && y % MILLE === 0n && y <= 10000n * MILLE && !propres.includes(y)) propres.push(y);
+    });
+    if (propres.length < 2) return null;
+    const deux = [propres[0], choisir(rng, propres.slice(1))];
+    const choix = melanger(rng, [rep, ...deux]).map(ecrire);
+    const phrase = `${mes(v, d.de)} = ${CASE}${NB}${d.vers}`;
+    return Object.assign(x, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: d.vers, sorte: "valeur"},
+      choix, bon: choix.indexOf(ecrire(rep)), cle: `${x.cle}:q`
+    });
+  }
+  // Je valide de C1 : une phrase en 3e, trois réponses au choix en 5e, un
+  // objet en 7e ; À toi : trois fois au choix.
+  function formesC1(usage, rng) {
+    const f = formesConvertir(usage, rng);
+    if (usage === "valide") f[4] = "choix";
+    if (usage === "entraine") [4, 11, 22].forEach(i => { f[i] = "choix"; });
+    return f;
+  }
+
   ETAPES.C1 = {
     clesExemples: ["C1:3m>cm", "C1:4kg>g", "C1:5L>cL"],
-    tirer(rng, degre, i, usage) {
-      if (degre === 3 && (usage === "valide" ? i === 9 : rng() < 0.25)) return questionSomme("C1", 3, rng);
+    tirer(rng, degre, i, usage, forme) {
+      if (degre === 3 && forme !== "choix" && (usage === "valide" ? i === 9 : rng() < 0.25)) return questionSomme("C1", 3, rng);
       let rel;
       let v;
       if (degre === 1) { rel = choisir(rng, C1_RELATIONS[1]); v = entre(rng, 1, 9); }
@@ -733,10 +953,9 @@
         else { rel = choisir(rng, C1_RELATIONS["2b"]); v = entre(rng, 10, 99); }
       } else { rel = choisir(rng, C1_RELATIONS[3]); v = nombreDegre3(rng, rel); }
       const [g, p] = rel;
-      const forme = "nombre";
       const valeur = milli(v);
       const rep = convertir(valeur, g, p);
-      return questionConversion("C1", degre, forme, valeur, g, p, {
+      const x = questionConversion("C1", degre, "nombre", valeur, g, p, {
         relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, g, p),
         // L'image dessinée (audit du 12/11) : v paquets « 1 m » de 100 cm,
         // tant qu'on peut les compter d'un coup d'œil (9 au plus).
@@ -745,8 +964,9 @@
         correction: [relationTexte(g, p), `donc ${mes(valeur, g)} = ${ecrire(valeur)} × ${mes(facteur(g, p) * MILLE, p)} = ${mes(rep, p)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`
       });
+      return forme === "choix" ? enChoix(x, rng) : x;
     },
-    formes: formesConvertir,
+    formes: formesC1,
     accepte: contraintesConvertir,
     valide: serieConvertirBonne,
     erreurs(question, lu) {
@@ -758,6 +978,8 @@
         if (lu === a + b) return {erreur: 5, retour: `Avant d'ajouter, j'écris tout en ${d.vers} : ${mes(a, d.ua)} = ${mes(convertir(a, d.ua, d.vers), d.vers)}.`};
         const colle = lireMilli(`${d.a}${d.b}`);
         if (lu === colle && colle !== attendu) return {erreur: 6, retour: `${mes(a, d.ua)} = ${mes(convertir(a, d.ua, d.vers), d.vers)}, donc ${mes(a, d.ua)} + ${mes(b, d.vers)} = ${mes(attendu, d.vers)}.`};
+        // Lot 3b : le zéro de position (3 km + 45 m lu 3 450 m).
+        if (b < 100n * MILLE && convertir(a, d.ua, d.vers) + b * 10n === lu) return {erreur: 7, retour: `${mes(b, d.vers)}, ce n'est pas ${mes(b * 10n, d.vers)} : ${mes(convertir(a, d.ua, d.vers), d.vers)} + ${mes(b, d.vers)} = ${mes(attendu, d.vers)}.`};
         return null;
       }
       const v = milli(d.valeur);
@@ -780,7 +1002,9 @@
     const [g, p] = choisir(rng, DEUX_CASES);
     const f = facteur(g, p);
     const a = entre(rng, 1, 9);
-    const b = f === 100n ? entre(rng, 1, 99) : entre(rng, 1, 999);
+    // Lot 3b : « 2 070 g = 2 kg 70 g » (le piège : 2 kg 7 g), une fois sur
+    // trois avec le kilo.
+    const b = f === 100n ? entre(rng, 1, 99) : rng() < 0.3 ? entre(rng, 1, 9) * 10 : entre(rng, 1, 999);
     const valeur = milli(a) * f + milli(b);
     const gauche = mes(valeur, p);
     return q({
@@ -861,10 +1085,15 @@
   }
   // Les écritures d'une série de C2 : celles de C1, et « ranger » (Je
   // valide : la 5e ; À toi : une question sur dix, à partir du degré 2).
+  // Lot 3b : trois réponses au choix (les vraies erreurs) en 6e de Je
+  // valide, trois fois dans À toi.
   function formesC2(usage, rng) {
     const f = formesConvertir(usage, rng);
-    if (usage === "valide") f[4] = "ranger";
-    if (usage === "entraine") [8, 13, 19].forEach(i => { f[i] = "ranger"; });
+    if (usage === "valide") { f[4] = "ranger"; f[5] = "choix"; }
+    if (usage === "entraine") {
+      [8, 13, 19].forEach(i => { f[i] = "ranger"; });
+      [4, 11, 22].forEach(i => { f[i] = "choix"; });
+    }
     return f;
   }
 
@@ -872,7 +1101,7 @@
     clesExemples: ["C2:500cm>m", "C2:3000g>kg", "C2:40mm>cm"],
     tirer(rng, degre, i, usage, forme) {
       if (forme === "ranger") return questionRanger("C2", degre, rng);
-      if (degre === 3 && (usage === "valide" ? i === 9 : rng() < 0.25)) return questionDeuxCases("C2", 3, rng);
+      if (degre === 3 && forme !== "choix" && (usage === "valide" ? i === 9 : rng() < 0.25)) return questionDeuxCases("C2", 3, rng);
       let rel;
       let r;
       if (degre === 1) { rel = choisir(rng, C1_RELATIONS[1]); r = entre(rng, 1, 9); }
@@ -883,7 +1112,7 @@
       const [g, p] = rel;
       const f = facteur(g, p);
       const valeur = milli(r) * f;
-      return questionConversion("C2", degre, "nombre", valeur, p, g, {
+      const x = questionConversion("C2", degre, "nombre", valeur, p, g, {
         relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, p, g),
         // L'image dessinée : r paquets de 100 cm, chacun fait 1 m.
         paquets: r <= 9 ? {n: r, dans: mes(f * MILLE, p), sous: `1${NB}${g}`} : null,
@@ -891,13 +1120,24 @@
         correction: [relationTexte(g, p), `donc ${mes(valeur, p)} = ${ecrire(valeur)} ÷ ${ecrire(f * MILLE)}${NB}${g} = ${mes(milli(r), g)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`
       });
+      return forme === "choix" ? enChoix(x, rng) : x;
     },
     formes: formesC2,
     accepte: contraintesConvertir,
     valide: serieConvertirBonne,
-    erreurs(question, lu) {
+    erreurs(question, lu, cases) {
       const d = question.donnees;
-      if (d.type === "deux") return null;
+      if (d.type === "deux") {
+        // Lot 3b : « 2 070 g = 2 kg 7 g » (le 0 oublié), « 20 kg 70 g ».
+        if (!cases) return null;
+        const f = facteur(d.grande, d.petite) * MILLE;
+        const total = milli(d.valeur);
+        const a = total / f;
+        const b = total % f;
+        if (cases[0] === a * MILLE && b % 10000n === 0n && cases[1] * 10n === b) return {erreur: 4, retour: `Il reste ${mes(b, d.petite)}, pas ${mes(b / 10n, d.petite)} : le zéro compte.`};
+        if (cases[0] === a * 10n * MILLE && cases[1] === b) return {erreur: 5, retour: `${relationTexte(d.grande, d.petite)}, donc ${mes(a * f, d.petite)} = ${mes(a, d.grande)}.`};
+        return null;
+      }
       const v = milli(d.valeur);
       const f = facteur(d.vers, d.de);
       const attendu = milli(question.reponse);
@@ -974,23 +1214,73 @@
     return null;
   }
 
+  // Lot 3b (carte v4 : 45 questions possibles, 69 % déjà vues la veille ;
+  // « élargir jusqu'à 3 h 59 min ») :
+  //   d1 : 1 h 10 … 1 h 50, 2 h, 3 h → min ; 60, 120, 180 min → h ;
+  //   d2 : de 1 h 05 à 3 h 55 (de 5 en 5) → min ;
+  //   d3 : de 61 à 239 min → h et min ; de 1 h 01 à 3 h 59 → min.
+  function tirerD1(rng, degre, pourChoix) {
+    if (degre === 1) {
+      const r = rng();
+      if (!pourChoix && r < 0.25) return versHeures("D1", 1, choisir(rng, [60, 120, 180]));
+      if (r < 0.45) return versMinutes("D1", 1, choisir(rng, [2, 3]), 0);
+      return versMinutes("D1", 1, 1, choisir(rng, [10, 20, 30, 40, 50]));
+    }
+    if (degre === 2) return versMinutes("D1", 2, entre(rng, 1, 3), entre(rng, 1, 11) * 5);
+    if (pourChoix || rng() < 0.6) {
+      let total;
+      do { total = entre(rng, 61, 239); } while (total % 60 === 0);
+      return versHeuresMinutes("D1", 3, total);
+    }
+    return versMinutes("D1", 3, entre(rng, 1, 3), entre(rng, 1, 59));
+  }
+  // Trois réponses au choix, avec les erreurs de la base 10 (lot 3b ;
+  // évaluation de 4e : « 135 min = 1 h 35 min » ; positionnement de 5e :
+  // « 150 min = 1 h 50 », « 15 h » ; recherche : « 2 h 15 min = 215 min »,
+  // « 75 min »).
+  function dureeEnChoix(x, rng) {
+    if (!x) return null;
+    const d = x.donnees;
+    let bonne;
+    const faux = [];
+    let morceaux;
+    if (d.type === "duree-deux") {
+      const T = d.m;
+      const h = Math.floor(T / 60);
+      const m = T % 60;
+      bonne = hm(h, m);
+      if (T >= 100 && T % 100 < 60) faux.push(hm(Math.floor(T / 100), T % 100));
+      if (T % 100 < 60 && T % 100 !== m) faux.push(hm(h, T % 100));
+      if (T % 10 === 0 && T / 10 <= 23) faux.push(hm(T / 10, 0));
+      faux.push(hm(h + 1, m));
+      const phrase = `${T}${NB}min = ${CASE}`;
+      morceaux = {phrase, apres: "", sorte: "duree"};
+    } else if (d.type === "duree" && d.vers === "min") {
+      const total = d.h * 60 + d.m;
+      bonne = String(total);
+      faux.push(String(d.h * 100 + d.m));
+      if (d.h >= 2) faux.push(String(60 + d.m));
+      faux.push(String((d.h + 1) * 60 + d.m));
+      morceaux = {phrase: x.texte, apres: "min", sorte: "valeur"};
+    } else return null;
+    const propres = [...new Set(faux)].filter(f => f !== bonne && !/^0/.test(f));
+    if (propres.length < 2) return null;
+    const choix = melanger(rng, [bonne, propres[0], choisir(rng, propres.slice(1))]);
+    return Object.assign(x, {forme: "qcm", texte: morceaux.phrase, morceaux, choix, bon: choix.indexOf(bonne), cle: `${x.cle}:q`});
+  }
+
   ETAPES.D1 = {
     clesExemples: ["D1:1h0>min", "D1:2h0>min", "D1:1h10>min"],
-    tirer(rng, degre) {
-      if (degre === 1) {
-        if (rng() < 0.3) return versHeures("D1", 1, choisir(rng, [60, 120]));
-        return versMinutes("D1", 1, 1, choisir(rng, [10, 20, 30, 40, 50]));
-      }
-      if (degre === 2) {
-        if (rng() < 0.5) return versMinutes("D1", 2, 2, choisir(rng, [10, 20, 30, 40, 50]));
-        return versMinutes("D1", 2, 1, choisir(rng, [5, 15, 25, 35, 45, 55]));
-      }
-      if (rng() < 0.6) {
-        let total;
-        do { total = entre(rng, 65, 175, 5); } while (total % 60 === 0);
-        return versHeuresMinutes("D1", 3, total);
-      }
-      return versMinutes("D1", 3, 2, choisir(rng, [5, 15, 25, 35, 45, 55]));
+    tirer(rng, degre, i, usage, forme) {
+      const x = tirerD1(rng, degre, forme === "choix");
+      return forme === "choix" ? dureeEnChoix(x, rng) : x;
+    },
+    // Lot 3b : trois réponses au choix en 5e et en 9e de Je valide, trois
+    // fois dans À toi.
+    formes(usage) {
+      if (usage === "valide") return {4: "choix", 8: "choix"};
+      if (usage === "entraine") return {6: "choix", 14: "choix", 21: "choix"};
+      return {};
     },
     erreurs: erreursDuree
   };
@@ -1010,10 +1300,106 @@
     ["trois quarts d'heure et trois quarts d'heure", 0, 0, 6], ["une heure et trois quarts d'heure", 1, 0, 3]
   ];
 
+  // Lot 3b (carte v4 : 20 faits, « par cœur assumé » ; « huit heures
+  // moins le quart » ; la mauvaise réponse « un quart d'heure = 25 min ») :
+  // trois autres façons de demander les mêmes faits.
+  //   heure : l'heure dite en mots, à écrire (« huit heures moins le quart,
+  //     c'est … h … min ») ;
+  //   quarts : « Combien de quarts d'heure dans une heure et quart ? »
+  //     (positionnement de 5e et de 6e) ;
+  //   choix : « trois quarts d'heure = … », trois réponses, dont 75 min
+  //     (le quart compté 25 min).
+  const HEURES_LUES = ["une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze"];
+  function heureEnMots(h, m) {
+    // h de 7 à 12 ; m : 15, 30 ou 45.
+    const nom = k => (k === 12 ? "midi" : `${HEURES_LUES[k - 1]} heure${k > 1 ? "s" : ""}`);
+    if (m === 45) return `${nom(h + 1)} moins le quart`;
+    if (m === 30) return h === 12 ? "midi et demi" : `${nom(h)} et demie`;
+    return `${nom(h)} et quart`;
+  }
+  function questionHeureMots(degre, rng) {
+    const m = degre === 3 ? choisir(rng, [45, 45, 30]) : choisir(rng, [15, 30]);
+    const h = m === 45 ? entre(rng, 7, 11) : entre(rng, 7, 12);
+    const mots = heureEnMots(h, m);
+    const Mots = mots[0].toUpperCase() + mots.slice(1);
+    const lignes = m === 45 ? [`moins le quart : 15${NB}min avant l'heure`, `${heureTexte((h + 1) * 60)} − 15${NB}min = ${heureTexte(h * 60 + 45)}`]
+      : [m === 30 ? `et demie : 30${NB}min après l'heure` : `et quart : 15${NB}min après l'heure`, `${Mots} = ${heureTexte(h * 60 + m)}`];
+    return questionDuree("D2", degre, {
+      forme: "deux-cases", texte: `${Mots}, c'est ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${Mots}, c'est`, cases: ["h", "min"]},
+      reponse: [String(h), String(m)], reponseTexte: heureTexte(h * 60 + m), unite: "min", resume: `${Mots}, c'est ${heureTexte(h * 60 + m)}`,
+      relation: `un quart d'heure = 15${NB}min`, outil: "barre-heure", heure: {h: 0, demis: 0, quarts: 1},
+      image: [lignes[0]], correction: lignes,
+      donnees: {type: "heure-mots", h, m},
+      cle: `D2:heure:${h}:${m}`
+    });
+  }
+  const QUARTS = [
+    // [la durée, le nombre de quarts, les mauvaises réponses, degré]
+    ["une demi-heure", 2, ["1", "30"], 2], ["une heure", 4, ["1", "60"], 2], ["trois quarts d'heure", 3, ["4", "45"], 2],
+    ["une heure et quart", 5, ["1", "4", "75"], 3], ["une heure et demie", 6, ["3", "90"], 3]
+  ];
+  function questionQuarts(degre, rng) {
+    const vivier = QUARTS.map((x, i) => [x, i]).filter(([x]) => x[3] === degre);
+    const [[duree, n, faux], i] = choisir(rng, vivier);
+    const bonne = String(n);
+    const choix = melanger(rng, [bonne, ...melanger(rng, faux).slice(0, 2)]);
+    const phrase = CARTE.typo(`Combien de quarts d'heure dans ${duree} ?`);
+    return questionDuree("D2", degre, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "quarts"},
+      choix, bon: choix.indexOf(bonne), reponse: bonne, reponseTexte: bonne, unite: null,
+      resume: CARTE.typo(`Dans ${duree}, il y a ${n} quarts d'heure.`), relation: `un quart d'heure = 15${NB}min`,
+      heure: {h: 0, demis: 0, quarts: n},
+      image: [`une heure = 4 quarts d'heure`],
+      correction: [CARTE.typo(`${duree} = ${n * 15}${NB}min`), CARTE.typo(`${n * 15}${NB}min = ${n} × 15${NB}min : ${n} quarts d'heure`)],
+      donnees: {type: "quarts", n, duree: i},
+      cle: `D2:quarts:${i}`
+    });
+  }
+  function d2EnChoix(x, rng) {
+    if (!x || x.donnees.type !== "duree-mots" || x.donnees.deux) return null;
+    const d = x.donnees;
+    const total = d.h * 60 + d.demis * 30 + d.quarts * 15;
+    const faux = [];
+    if (d.quarts) faux.push(d.h * 60 + d.demis * 30 + d.quarts * 25);
+    if (d.demis) faux.push(d.h * 60 + d.demis * 50 + d.quarts * 15);
+    if (d.h) faux.push(d.h * 100 + d.demis * 30 + d.quarts * 15);
+    if (d.quarts || d.demis) faux.push(d.h * 60 + d.demis * 15 + d.quarts * 30);
+    const propres = [...new Set(faux)].filter(f => f !== total && f > 0);
+    if (propres.length < 2) return null;
+    const choix = melanger(rng, [total, propres[0], choisir(rng, propres.slice(1))]).map(String);
+    const phrase = `${d.mots} = ${CASE}${NB}min`;
+    return Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: "min", sorte: "valeur"},
+      choix, bon: choix.indexOf(String(total)), cle: `${x.cle}:q`});
+  }
+
   ETAPES.D2 = {
     exclureExemples: false,
-    tirer(rng, degre) {
-      if (degre === 3 && rng() < 0.4) {
+    // Je valide : au choix en 3e, les quarts en 5e, l'heure en mots en 7e
+    // et en 9e ; À toi : une question sur deux, l'une des trois.
+    formes(usage, rng) {
+      if (usage === "valide") return {2: "choix", 4: "quarts", 6: "heure", 8: "heure"};
+      if (usage === "entraine") {
+        const f = {};
+        for (let i = 0; i < 25; i += 1) {
+          const r = rng();
+          if (r < 0.2) f[i] = "choix";
+          else if (r < 0.35 && i >= 6 && i < 15) f[i] = "quarts";
+          else if (r < 0.5 && i >= 6) f[i] = "heure";
+        }
+        return f;
+      }
+      return {};
+    },
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "heure") return questionHeureMots(degre === 1 ? 2 : degre, rng);
+      if (forme === "quarts") return questionQuarts(degre === 1 ? 2 : degre, rng);
+      if (forme === "choix") {
+        const vivier = EN_MOTS.filter(m => m[4] === degre && (m[2] || m[3]));
+        const [mots, h, demis, quarts] = choisir(rng, vivier);
+        return d2EnChoix(this.tirer(rng, degre, i, usage, {mots: [mots, h, demis, quarts]}), rng);
+      }
+      const impose = forme && forme.mots ? forme.mots : null;
+      if (degre === 3 && !impose && rng() < 0.4) {
         const [mots, h, demis, quarts] = choisir(rng, EN_MOTS_DEUX);
         const total = h * 60 + demis * 30 + quarts * 15;
         const H = Math.floor(total / 60);
@@ -1029,7 +1415,7 @@
         });
       }
       const vivier = EN_MOTS.filter(m => m[4] === degre);
-      const [mots, h, demis, quarts] = choisir(rng, vivier);
+      const [mots, h, demis, quarts] = impose || choisir(rng, vivier);
       const total = h * 60 + demis * 30 + quarts * 15;
       const lignes = [];
       if (h) lignes.push(`${h === 1 ? "une heure" : `${h} heures`} = ${h * 60}${NB}min`);
@@ -1040,14 +1426,19 @@
         reponse: String(total), reponseTexte: `${total}${NB}min`, unite: "min", resume: `${mots} = ${total}${NB}min`,
         relation: `1${NB}h = 60${NB}min`, heure: {h, demis, quarts},
         image: lignes.slice(0, 2),
-        correction: lignes.concat([`${mots} = ${total}${NB}min`]),
-        donnees: {type: "duree-mots", h, demis, quarts},
+        correction: lignes.length === 1 && lignes[0] === `${mots} = ${total}${NB}min` ? lignes : lignes.concat([`${mots} = ${total}${NB}min`]),
+        donnees: {type: "duree-mots", h, demis, quarts, mots},
         cle: `D2:${h}-${demis}-${quarts}>min`
       });
     },
-    erreurs(question, lu) {
+    erreurs(question, lu, cases) {
       const d = question.donnees;
-      if (d.deux) return null;
+      if (d.type === "heure-mots") {
+        if (cases && d.m === 45 && cases[0] === milli(d.h + 1) && cases[1] === milli(45)) return {erreur: 4, retour: `« Moins le quart » : 15${NB}min AVANT ${heureTexte((d.h + 1) * 60)}, donc ${heureTexte(d.h * 60 + 45)}.`};
+        if (cases && d.m === 45 && cases[0] === milli(d.h + 1) && cases[1] === milli(15)) return {erreur: 4, retour: `« Moins le quart » : 15${NB}min AVANT ${heureTexte((d.h + 1) * 60)}, donc ${heureTexte(d.h * 60 + 45)}.`};
+        return null;
+      }
+      if (d.deux || d.type !== "duree-mots") return null;
       const total = d.h * 60 + d.demis * 30 + d.quarts * 15;
       if (d.quarts && lu === milli(d.h * 60 + d.demis * 30 + d.quarts * 25)) return {erreur: 1, retour: `Un quart d'heure, c'est le quart de 60${NB}min : 15${NB}min, pas 25${NB}min.`};
       if (d.demis && lu === milli(d.h * 60 + d.demis * 50 + d.quarts * 15)) return {erreur: 2, retour: `Une demi-heure, c'est la moitié de 60${NB}min : 30${NB}min.`};
@@ -1066,13 +1457,21 @@
         const a = entre(rng, 1, 3);
         const b = entre(rng, 10, 90, 10);
         return {modele: "couper", objet: "ruban", prenom, a, ua: "m", b, ub: "cm", vers: "cm", op: "-",
-          enonce: `Un ruban mesure ${a}${NB}m. ${prenom} en coupe ${b}${NB}cm. Quelle longueur de ruban reste-t-il, en cm${NB}?`,
+          enonce: `Un ruban mesure ${a}${NB}m. ${prenom} en coupe ${b}${NB}cm. Quelle longueur de ruban reste-t-il${NB}?`,
           avant: "Il reste", objetBorne: "ruban", partBorne: "coupeRuban", tout: `${a}${NB}m`, partie: `${b}${NB}cm`};
+      }
+      // Lot 3b : la canne à sucre (La Réunion).
+      if (rng() < 0.4) {
+        const a = entre(rng, 2, 4);
+        const b = entre(rng, 10, 90, 10);
+        return {modele: "canne", objet: "canne", prenom, a, ua: "m", b, ub: "cm", vers: "cm", op: "-",
+          enonce: `Une canne à sucre mesure ${a}${NB}m. ${prenom} en coupe un morceau de ${b}${NB}cm. Quelle longueur de canne reste-t-il${NB}?`,
+          avant: "Il reste", objetBorne: "canne", partBorne: "coupeCanne"};
       }
       const a = entre(rng, 1, 3);
       const b = entre(rng, 10, 90, 10);
       return {modele: "bout", objet: "planche", prenom, a, ua: "m", b, ub: "cm", vers: "cm", op: "+",
-        enonce: `${prenom} pose bout à bout une planche de ${a}${NB}m et une planche de ${b}${NB}cm. Quelle longueur en tout, en cm${NB}?`,
+        enonce: `${prenom} pose bout à bout une planche de ${a}${NB}m et une planche de ${b}${NB}cm. Quelle longueur en tout${NB}?`,
         avant: "En tout,", objetBorne: "planche", partBorne: "morceauPlanche"};
     }
     if (degre === 2) {
@@ -1082,27 +1481,27 @@
         const a = entre(rng, 1, 3);
         const b = entre(rng, 100, 900, 100);
         return {modele: "marche", objet: "letchis", prenom, a, ua: "kg", b, ub: "g", vers: "g", op: "+",
-          enonce: `Au marché, ${prenom} achète ${a}${NB}kg de letchis et ${b}${NB}g de longanis. Quelle est la masse de fruits en tout, en g${NB}?`,
+          enonce: `Au marché, ${prenom} achète ${a}${NB}kg de letchis et ${b}${NB}g de longanis. Quelle est la masse de fruits en tout${NB}?`,
           avant: "En tout,", objetBorne: "letchis", partBorne: "longanis"};
       }
       if (r < 0.5) {
         const a = entre(rng, 1, 3);
         const b = entre(rng, 100, 900, 100);
         return {modele: "bout", objet: "riz", prenom, a, ua: "kg", b, ub: "g", vers: "g", op: "+",
-          enonce: `${prenom} achète ${a}${NB}kg de riz et ${b}${NB}g de lentilles. Quelle est la masse en tout, en g${NB}?`,
+          enonce: `${prenom} achète ${a}${NB}kg de riz et ${b}${NB}g de lentilles. Quelle est la masse en tout${NB}?`,
           avant: "En tout,", objetBorne: "riz", partBorne: "lentilles"};
       }
       if (r < 0.75) {
         const a = entre(rng, 1, 2);
         const b = entre(rng, 15, 30, 5);
         return {modele: "goyavier", objet: "jus", prenom, a, ua: "L", b, ub: "cL", vers: "cL", op: "-",
-          enonce: `Une bouteille contient ${a}${NB}L de jus de goyavier. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de centilitres de jus reste-t-il${NB}?`,
+          enonce: `Une bouteille contient ${a}${NB}L de jus de goyavier. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de jus reste-t-il${NB}?`,
           avant: "Il reste", objetBorne: "jus", partBorne: "verre"};
       }
       const a = entre(rng, 1, 2);
       const b = entre(rng, 15, 30, 5);
       return {modele: "couper", objet: "jus", prenom, a, ua: "L", b, ub: "cL", vers: "cL", op: "-",
-        enonce: `Une bouteille contient ${a}${NB}L de jus. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de centilitres de jus reste-t-il dans la bouteille${NB}?`,
+        enonce: `Une bouteille contient ${a}${NB}L de jus. ${prenom} en verse ${b}${NB}cL dans un verre. Combien de jus reste-t-il dans la bouteille${NB}?`,
         avant: "Il reste", objetBorne: "jus", partBorne: "verre"};
     }
     const r3 = rng();
@@ -1110,21 +1509,31 @@
     if (r3 < 0.25) {
       const a = entre(rng, 2, 5);
       const b = entre(rng, 100, 1900, 100);
+      // (Lot 3b, carte v4 : « une portion du sentier » — le sentier entier
+      // ne change pas de longueur d'une question à l'autre.)
       return {modele: "troudefer", objet: "sentierBelouve", prenom, a, ua: "km", b, ub: "m", vers: "m", op: "-",
-        enonce: `Le sentier du Trou de Fer mesure ${a}${NB}km. ${prenom} a déjà marché ${mes(milli(b), "m")}. Combien de mètres reste-t-il à marcher${NB}?`,
+        enonce: `Une portion du sentier du Trou de Fer mesure ${a}${NB}km. ${prenom} en a déjà parcouru ${mes(milli(b), "m")}. Quelle distance reste-t-il à marcher${NB}?`,
         avant: "Il reste", objetBorne: "sentierBelouve", partBorne: "marche"};
     }
-    if (r3 < 0.6) {
+    if (r3 < 0.5) {
       const a = entre(rng, 2, 9);
       const b = entre(rng, 100, 1900, 100);
       return {modele: "couper", objet: "sentier", prenom, a, ua: "km", b, ub: "m", vers: "m", op: "-",
-        enonce: `Un sentier mesure ${a}${NB}km. ${prenom} a déjà marché ${mes(milli(b), "m")}. Combien de mètres reste-t-il à marcher${NB}?`,
+        enonce: `Un sentier mesure ${a}${NB}km. ${prenom} a déjà marché ${mes(milli(b), "m")}. Quelle distance reste-t-il à marcher${NB}?`,
         avant: "Il reste", objetBorne: "sentier", partBorne: "marche"};
+    }
+    // Lot 3b : bout à bout, à pied (km puis m).
+    if (r3 < 0.75) {
+      const a = entre(rng, 1, 3);
+      const b = entre(rng, 100, 900, 100);
+      return {modele: "promenade", objet: "trajet", prenom, a, ua: "km", b, ub: "m", vers: "m", op: "+",
+        enonce: `${prenom} marche ${a}${NB}km jusqu'au marché, puis ${mes(milli(b), "m")} jusqu'à la plage. Quelle distance en tout${NB}?`,
+        avant: "En tout,", objetBorne: "trajet", partBorne: "marche"};
     }
     const a = entre(rng, 2, 5);
     const b = entre(rng, 110, 190, 10);
     return {modele: "couper", objet: "ruban", prenom, a, ua: "m", b, ub: "cm", vers: "cm", op: "-",
-      enonce: `Un ruban mesure ${a}${NB}m. ${prenom} en coupe ${b}${NB}cm. Quelle longueur de ruban reste-t-il, en cm${NB}?`,
+      enonce: `Un ruban mesure ${a}${NB}m. ${prenom} en coupe ${b}${NB}cm. Quelle longueur de ruban reste-t-il${NB}?`,
       avant: "Il reste", objetBorne: "ruban", partBorne: "coupeRuban"};
   }
 
@@ -1195,6 +1604,12 @@
       if (usage === "entraine") {
         const [a, b] = rng() < 0.5 ? ["vrai-oui", "vrai-non"] : ["vrai-non", "vrai-oui"];
         return {3: a, 8: b, 13: a, 18: b, 23: rng() < 0.5 ? "vrai-oui" : "vrai-non"};
+      }
+      // Lot 3b (carte v4 : « Est-ce vraisemblable ? » repris dans les
+      // retours et l'échauffement) : une fois sur deux, la 1re question.
+      if (usage === "retour" || usage === "echauffement") {
+        const r = rng();
+        return r < 0.25 ? {0: "vrai-oui"} : r < 0.5 ? {0: "vrai-non"} : {};
       }
       return {};
     },
@@ -1272,6 +1687,24 @@
       unite = "€";
       texte = `${ecrire(milli(total))}${NB}c = ${CASE}${NB}€`;
       morceaux = {avant: `${ecrire(milli(total))}${NB}c =`, apres: "€"};
+    } else if (sorte === "versEdec") {
+      // Lot 3b (carte v4 : « 85 c = 0,85 € », promis, jamais tiré ;
+      // programme de CE1 : « 345 centimes = 3,45 € ») : la virgule des euros,
+      // au pavé.
+      total = rng() < 0.5 ? entre(rng, 11, 99) : entre(rng, 1, 9) * 100 + entre(rng, 1, 99);
+      unite = "€";
+      texte = `${ecrire(milli(total))}${NB}c = ${CASE}${NB}€`;
+      morceaux = {avant: `${ecrire(milli(total))}${NB}c =`, apres: "€"};
+    } else if (sorte === "plus") {
+      // Lot 3b (attendu de CE1 : « 1 € et 120 centimes = 2,20 € ») : plus de
+      // 100 centimes, à regrouper.
+      const e0 = entre(rng, 1, 5);
+      let c0 = entre(rng, 101, 190);
+      if (c0 % 100 === 0) c0 += 5;
+      total = e0 * 100 + c0;
+      deuxCases = true;
+      texte = `${e0}${NB}€ et ${c0}${NB}c = ${CASE}${NB}€ ${CASE}${NB}c`;
+      morceaux = {avant: `${e0}${NB}€ et ${c0}${NB}c =`, cases: ["€", "c"], plus: [e0, c0]};
     } else if (sorte === "deux") {
       total = degre === 2 ? a1() * 100 + entre(rng, 1, 9) * 10 : entre(rng, 1, 60) * 100 + entre(rng, 1, 99);
       deuxCases = true;
@@ -1281,8 +1714,10 @@
       // Degré 2 : 2,50 € ; degré 3 : le zéro piège (3,05 €) ou pas d'euro
       // (0,85 €, alors une seule case).
       const r = rng();
-      if (degre === 3 && r < 0.3) {
-        total = entre(rng, 11, 99);
+      if (degre === 3 && r < 0.55) {
+        // 0,85 € ; et (lot 3b, Singapour P2 et positionnement de 6e :
+        // « 4,03 euros vaut … centimes ») le zéro piège, 4,05 € = 405 c.
+        total = r < 0.25 ? entre(rng, 11, 99) : entre(rng, 1, 9) * 100 + entre(rng, 1, 9);
         texte = `Sur l'étiquette : ${prixTexte(total)} = ${CASE}${NB}c`;
         morceaux = {avant: `Sur l'étiquette : ${prixTexte(total)} =`, apres: "c", etiquette: prixTexte(total)};
       } else {
@@ -1316,8 +1751,8 @@
     const e = Math.floor(total / 100);
     const c = total % 100;
     const deuxRep = [String(e), String(c)];
-    const reponse = deuxCases ? deuxRep : unite === "€" ? String(total / 100) : String(total);
-    const reponseTexte = deuxCases ? `${e}${NB}€ ${c}${NB}c` : unite === "€" ? `${total / 100}${NB}€` : `${ecrire(milli(total))}${NB}c`;
+    const reponse = deuxCases ? deuxRep : unite === "€" ? brut(milli(total) / 100n) : String(total);
+    const reponseTexte = deuxCases ? `${e}${NB}€ ${c}${NB}c` : unite === "€" ? (total % 100 ? prixTexte(total) : `${total / 100}${NB}€`) : `${ecrire(milli(total))}${NB}c`;
     const resume = sorte === "pieces" ? `${pieces.map(euc).join(" + ")} = ${reponseTexte}`
       : sorte === "objet" ? `${morceaux.phrase.replace(/ Combien.*$/, "")} ${euc(total)} = ${reponseTexte}`
         : sorte === "prix" ? `${prixTexte(total)} = ${reponseTexte}` : `${morceaux.avant} ${reponseTexte}`;
@@ -1326,7 +1761,8 @@
     // petite », tant qu'on les compte d'un coup d'œil.
     const image = [];
     if (sorte === "versC" || sorte === "objet") image.push(e > 1 ? `1${NB}€ = 100${NB}c, donc ${e}${NB}€ = ${e} × 100${NB}c` : `1${NB}€ = 100${NB}c`);
-    else if (sorte === "versE" || sorte === "deux") image.push(`100${NB}c = 1${NB}€ : je fais des paquets de 100${NB}c.`);
+    else if (sorte === "versE" || sorte === "deux" || sorte === "plus") image.push(`100${NB}c = 1${NB}€ : je fais des paquets de 100${NB}c.`);
+    else if (sorte === "versEdec") image.push(total < 100 ? `Moins de 100${NB}c : moins de 1${NB}€. Après la virgule, les centimes.` : `100${NB}c = 1${NB}€ ; après la virgule, les centimes.`);
     else if (sorte === "prix") image.push(`Avant la virgule, les euros ; après la virgule, les centimes.`);
     else image.push("Je compte d'abord les euros, puis les centimes.");
     const correction = sorte === "pieces" ? [`${pieces.map(euc).join(" + ")}`, `= ${reponseTexte}`]
@@ -1334,19 +1770,21 @@
     return q({
       code: "E1", degre, forme: deuxCases ? "deux-cases" : "nombre", texte, morceaux,
       reponse, reponseTexte, unite, resume, relation: `1${NB}€ = 100${NB}c`, outil: "monnaie", grandeur: "argent",
-      paquetsArgent: e <= 9 && sorte !== "pieces" ? {euros: e, centimes: c} : null,
+      paquetsArgent: e <= 9 && sorte !== "pieces" && sorte !== "versEdec" ? {euros: e, centimes: c} : null,
       image, correction,
       donnees: {type: "argent", sorte, total, pieces: pieces ? pieces.slice() : null},
       cle: `E1:${total}:${sorte}${pieces ? `:${pieces.join("-")}` : ""}`
     });
   }
-  const SORTES_ARGENT = {1: ["versC", "versE", "pieces"], 2: ["versC", "deux", "prix", "objet", "pieces", "versE"], 3: ["versC", "deux", "prix", "objet", "pieces"]};
+  const SORTES_ARGENT = {1: ["versC", "versE", "pieces"], 2: ["versC", "deux", "prix", "objet", "pieces", "versE"],
+    3: ["versC", "deux", "prix", "objet", "pieces", "versEdec", "plus"]};
 
   ETAPES.E1 = {
     clesExemples: ["E1:100:versC", "E1:350:versC", "E1:250:prix"],
     // Je valide : chaque façon de demander au moins une fois.
     formes(usage) {
-      if (usage === "valide") return {0: "versC", 1: "pieces", 2: "versE", 3: "deux", 4: "objet", 5: "prix", 6: "pieces", 7: "versC", 8: "prix", 9: "deux"};
+      // Lot 3b : « 85 c = 0,85 € » en 8e (avant, une 2e « versC »).
+      if (usage === "valide") return {0: "versC", 1: "pieces", 2: "versE", 3: "deux", 4: "objet", 5: "prix", 6: "pieces", 7: "versEdec", 8: "prix", 9: "deux"};
       return {};
     },
     tirer(rng, degre, i, usage, forme) {
@@ -1362,6 +1800,17 @@
         if (d.sorte === "prix" && c < 10 && x === e && y === c * 10) return {erreur: 4, retour: `Après la virgule, 0${c} : c'est ${c}${NB}c, pas ${c * 10}${NB}c.`};
         if (d.sorte === "prix" && c % 10 === 0 && x === e && y === c / 10) return {erreur: 5, retour: `Après la virgule, ${c} : c'est ${c}${NB}c.`};
         if (x * 10 + y === d.total && x !== e) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c : je fais des paquets de 100${NB}c.`};
+        // Lot 3b : « 4 € et 137 c » recopié sans regrouper les 100 c.
+        if (d.sorte === "plus" && question.morceaux.plus && x === question.morceaux.plus[0] && y === question.morceaux.plus[1]) {
+          const c0 = question.morceaux.plus[1];
+          return {erreur: 6, retour: `${c0}${NB}c, c'est plus de 1${NB}€ : ${c0}${NB}c = 1${NB}€ ${c0 - 100}${NB}c.`};
+        }
+        return null;
+      }
+      if (d.sorte === "versEdec") {
+        // (lu en millièmes d'euro)
+        if (lu === milli(d.total)) return {erreur: 7, retour: `${ecrire(milli(d.total))}${NB}c, ce n'est pas ${ecrire(milli(d.total))}${NB}€ : 100${NB}c = 1${NB}€, donc ${ecrire(milli(d.total))}${NB}c = ${prixTexte(d.total)}.`};
+        if (lu === milli(d.total) / 10n) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c : ${ecrire(milli(d.total))}${NB}c = ${prixTexte(d.total)}.`};
         return null;
       }
       const n = Number(lu / MILLE);
@@ -1372,6 +1821,8 @@
         return null;
       }
       if (e && n === e * 10 + c) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c.`};
+      // Lot 3b : 4,05 € lu « 4 € 50 c ».
+      if (d.sorte === "prix" && e && c < 10 && n === e * 100 + c * 10) return {erreur: 4, retour: `Après la virgule, 0${c} : c'est ${c}${NB}c, pas ${c * 10}${NB}c.`};
       if (e && c && (n === e * 100 || n === e)) return {erreur: 2, retour: `N'oublie pas les ${c}${NB}c : ${euc(d.total)} = ${ecrire(milli(e * 100))}${NB}c + ${c}${NB}c.`};
       return null;
     }
@@ -1532,18 +1983,69 @@
     });
   }
 
+  // Lot 3b (carte v4 : « le piège officiel du CM2 », « le quart d'heure
+  // oublié ») : trois réponses au choix, avec les erreurs de la base 100 —
+  // « 14 h 20 + 45 min = 14 h 65 » (CM2 2026), « 13 h 30 − 53 min =
+  // 12 h 77 » ou « 13 h 23 » (attendus de CM2), « de 8 h 47 à 9 h 10 :
+  // 37 min » (positionnement de 6e), « 14 h 50 + 55 min = 15 h 05 »
+  // (positionnement de 5e), et un quart d'heure de trop ou de moins (6e).
+  function entreEnChoix(x, rng) {
+    if (!x) return null;
+    const d = x.donnees;
+    const dep = d.depart;
+    const arr = d.arrivee;
+    const duree = arr - dep;
+    const cent = t => Math.floor(t / 60) * 100 + (t % 60);
+    const brutH = (h, m) => (m ? `${h}${NB}h${NB}${String(m).padStart(2, "0")}` : `${h}${NB}h`);
+    let bonne;
+    const faux = [];
+    if (d.cherche === "arrivee") {
+      bonne = heureTexte(arr);
+      const mm = (dep % 60) + (duree % 60);
+      const hh = Math.floor(dep / 60) + Math.floor(duree / 60);
+      if (mm >= 60 && mm < 100) faux.push(brutH(hh, mm));
+      if (mm >= 100) faux.push(brutH(hh + 1, mm - 100));
+      faux.push(heureTexte(arr + 15), heureTexte(arr - 15));
+    } else if (d.cherche === "depart") {
+      bonne = heureTexte(dep);
+      const c = cent(arr) - cent(duree);
+      if (c % 100 >= 60) faux.push(brutH(Math.floor(c / 100), c % 100));
+      if (arr % 60 < duree % 60) faux.push(brutH(Math.floor(arr / 60) - Math.floor(duree / 60), (duree % 60) - (arr % 60)));
+      faux.push(heureTexte(dep - 15), heureTexte(dep + 15));
+    } else {
+      bonne = dureeTexte(duree);
+      const c = cent(arr) - cent(dep);
+      faux.push(c >= 100 ? hm(Math.floor(c / 100), c % 100) : `${c}${NB}min`);
+      if (duree < 60 && dep % 60 > arr % 60) faux.push(`${(dep % 60) - (arr % 60)}${NB}min`);
+      faux.push(dureeTexte(duree + 15), dureeTexte(duree + 60));
+    }
+    const propres = [...new Set(faux)].filter(f => f !== bonne);
+    if (propres.length < 2) return null;
+    const choix = melanger(rng, [bonne, propres[0], choisir(rng, propres.slice(1))]);
+    const consigne = `${x.morceaux.avant.replace(/ :$/, "")}${NB}?`;
+    return Object.assign(x, {
+      forme: "qcm", texte: `${x.morceaux.enonce} ${consigne}`, morceaux: {enonce: x.morceaux.enonce, consigne, sorte: "heure"},
+      choix, bon: choix.indexOf(bonne), cle: `${x.cle}:q`
+    });
+  }
+
   ETAPES.D7 = {
     clesExemples: ["D7:duree:480-660", "D7:duree:510-650", "D7:arrivee:640-675"],
-    // Je valide : les trois questions (durée, arrivée, départ).
+    // Je valide : les trois questions (durée, arrivée, départ) ; lot 3b :
+    // au choix (les pièges) en 5e et en 8e.
     formes(usage, rng) {
-      if (usage === "valide") return {0: "duree", 1: "arrivee", 2: "duree", 3: "duree", 4: "arrivee", 5: "depart", 6: "duree", 7: "duree", 8: "arrivee", 9: "depart"};
+      if (usage === "valide") return {0: "duree", 1: "arrivee", 2: "duree", 3: "duree", 4: "choix-arrivee", 5: "depart", 6: "duree", 7: "choix-duree", 8: "arrivee", 9: "depart"};
       if (usage === "test") return {0: "duree", 1: "arrivee", 2: "depart", 3: rng() < 0.5 ? "duree" : "arrivee"};
+      if (usage === "entraine") return {8: "choix-arrivee", 13: "choix-depart", 20: "choix-duree"};
       return {};
     },
     tirer(rng, degre, i, usage, forme) {
       const r = rng();
-      const cherche = ["duree", "arrivee", "depart"].includes(forme) ? forme : r < 0.5 ? "duree" : r < 0.75 ? "arrivee" : "depart";
-      return questionEntre(degre, rng, cherche);
+      const choix = typeof forme === "string" && forme.startsWith("choix-");
+      const voulu = choix ? forme.slice(6) : forme;
+      const cherche = ["duree", "arrivee", "depart"].includes(voulu) ? voulu : r < 0.5 ? "duree" : r < 0.75 ? "arrivee" : "depart";
+      const x = questionEntre(degre, rng, cherche);
+      return choix ? entreEnChoix(x, rng) : x;
     },
     erreurs(question, lu, cases) {
       const d = question.donnees;
@@ -1674,11 +2176,14 @@
 
   // Une conversion posée en phrase ou en nombre (la forme imposée).
   // (« objet » s'affiche comme une phrase : sa forme reste « phrase ».)
+  // Lot 3b : aucun objet vraisemblable pour cette mesure → null (le
+  // générateur en tire une autre).
   function reformer(x, forme) {
     if (x.donnees.type !== "conv" || (x.forme === forme && forme !== "objet")) return x;
     const d = x.donnees;
-    const {texte, morceaux} = ecrireConversion(forme, milli(d.valeur), d.de, d.vers);
-    return Object.assign(x, {forme: forme === "nombre" ? "nombre" : "phrase", texte, morceaux});
+    const ecrit = ecrireConversion(forme, milli(d.valeur), d.de, d.vers);
+    if (!ecrit) return null;
+    return Object.assign(x, {forme: forme === "nombre" ? "nombre" : "phrase", texte: ecrit.texte, morceaux: ecrit.morceaux});
   }
 
   // ---------------------------------------------------------- la vérification
@@ -1764,6 +2269,7 @@
     PRENOMS,
     OBJETS,
     OBJETS_UNITE,
+    OBJETS_MESURE,
     dansBornes,
     PLANS
   });

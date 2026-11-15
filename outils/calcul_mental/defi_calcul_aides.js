@@ -62,6 +62,42 @@
     return zone;
   }
   let compteurAides = 0;
+
+  // Lot 7-0 (14/11/2026, choix de Gwenaël : « jamais bloqué à l'outil ») :
+  // après 3 gestes refusés de suite (ou 3 « Suivant » avant le geste),
+  // l'outil MONTRE le geste — les perles à pousser brillent, la colonne
+  // d'arrivée, le jeton, le calcul ou la bande à toucher — et l'élève le
+  // refait lui-même. Le geste réussi éteint la lumière ; le compte repart
+  // à zéro pour le geste suivant. Dans « On te montre » comme avec l'outil.
+  const MONTRER_APRES = 3;
+  // Le texte qui montre le geste prend la place de la consigne sans rien
+  // faire bouger : la consigne garde sa hauteur tant qu'il est là.
+  function figerConsigne(consigne) {
+    if (consigne.dataset.fige) return;
+    consigne.dataset.fige = "1";
+    consigne.style.minHeight = `${consigne.offsetHeight}px`;
+  }
+  function libererConsigne(consigne) {
+    if (!consigne.dataset.fige) return;
+    delete consigne.dataset.fige;
+    consigne.style.minHeight = "";
+  }
+  function suiviRefus() {
+    let refus = 0;
+    let montre = false;
+    return {
+      // Rend vrai quand ce refus allume le geste.
+      refuse() {
+        refus += 1;
+        if (montre || refus < MONTRER_APRES) return false;
+        montre = true;
+        return true;
+      },
+      accepte() { refus = 0; montre = false; },
+      get montre() { return montre; },
+      get refus() { return refus; }
+    };
+  }
   const accorder = (nombre, singulier, pluriel) => `${nombre} ${nombre > 1 ? pluriel : singulier}`;
 
   // Les perles poussées au départ : des rangées pleines, puis la rangée
@@ -152,6 +188,7 @@
       taille: 0, ecart: PERLES.ecart, etats: etatsDepart, etape: 0, finie: !gestes.length, dix: new Set(),
       drag: null, dom: null, observer: null, refus: 0, curseur: null
     };
+    const suivi = suiviRefus();
     compteurAides += 1;
 
     const bloc = document.createElement("div");
@@ -220,8 +257,30 @@
     // droite ; le vide entre les deux groupes garde toujours la même largeur.
     const positionPerle = (index, poussee) => (poussee ? index : boulier.ecart + index) * boulier.taille;
 
+    // Lot 7-0 : les perles du geste attendu ({r, de, a} : rangée r, perles
+    // de l'indice de à a exclu), quand l'outil montre le geste.
+    function perlesAMontrer() {
+      const geste = gestes[boulier.etape];
+      if (!suivi.montre || geste === undefined || boulier.finie) return null;
+      let r = rangeeImposee !== null && !boulier.etape ? rangeeImposee : -1;
+      let ecart = geste;
+      if (r < 0) {
+        const attendu = gesteAttendu(boulier.etats, geste);
+        r = attendu.rangees.length ? attendu.rangees[0] : -1;
+        ecart = attendu.ecart;
+      }
+      if (r < 0) return null;
+      const e = boulier.etats[r];
+      return ecart > 0 ? {r, de: e, a: Math.min(PERLES.parRangee, e + ecart)} : {r, de: Math.max(0, e + ecart), a: e};
+    }
+    const consigneCourante = () => {
+      if (!suivi.montre) return texteConsigne;
+      return gestes[boulier.etape] < 0 ? "Retire les perles qui brillent." : "Pousse les perles qui brillent.";
+    };
+
     function dessiner(animer) {
       if (!boulier.taille) return;
+      const montrees = perlesAMontrer();
       const taille = boulier.taille;
       const montant = Math.max(4, Math.round(taille * PERLES.montant));
       const hauteurRangee = Math.round(taille * PERLES.hauteurRangee);
@@ -241,6 +300,7 @@
           perle.style.height = `${taille}px`;
           perle.style.transition = animer ? "left .18s ease-out" : "none";
           perle.style.left = `${positionPerle(i, i < boulier.etats[r])}px`;
+          perle.classList.toggle("dc-montre", Boolean(montrees) && montrees.r === r && i >= montrees.de && i < montrees.a);
         });
       });
     }
@@ -311,13 +371,22 @@
       clearTimeout(boulier.refus);
       boulier.refus = 0;
       if (!consigne.classList.contains("est-refus")) return;
-      consigne.textContent = texteConsigne;
+      consigne.textContent = consigneCourante();
       consigne.classList.remove("est-refus");
     }
 
     function refuser(refus) {
       clearTimeout(boulier.refus);
-      consigne.textContent = MESSAGES_REFUS[refus.motif] || texteConsigne;
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        // Le 3e refus : le geste se montre (lot 7-0).
+        consigne.textContent = consigneCourante();
+        consigne.classList.remove("est-refus");
+        dessiner(false);
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
+      consigne.textContent = suivi.montre ? consigneCourante() : MESSAGES_REFUS[refus.motif] || texteConsigne;
       // Le refus sans phrase relit la consigne.
       annonce.annoncer(consigne.textContent);
       // Le tremblement rejoue à chaque refus, même enchaîné.
@@ -390,9 +459,11 @@
       }
       if (options.entourerDix && ecart > 0 && nouvel === PERLES.parRangee) boulier.dix.add(numero);
       boulier.etats[numero] = nouvel;
+      if (ecart) { suivi.accepte(); libererConsigne(consigne); }
       dessiner(true);
       if (!ecart) return;
       leverRefus();
+      consigne.textContent = texteConsigne;
       boulier.etape += 1;
       ecrireTraces();
       if (boulier.etape >= gestes.length) {
@@ -493,6 +564,9 @@
       },
       outil: "perles",
       mesurer,
+      // Lot 7-0 : « Suivant » avant le geste compte comme un refus.
+      refuserSansGeste() { if (!boulier.finie) refuser({motif: "attente"}); },
+      get montre() { return suivi.montre; },
       // Vrai quand le boulier, à sa plus petite taille, dépasse la place
       // qu'on lui laisse (la page le lit pour régler son échelle).
       get deborde() { return cadre.offsetHeight > scene.clientHeight + 1 || cadre.offsetWidth > scene.clientWidth + 1; },
@@ -781,6 +855,7 @@
     const virgule = colonnes.includes(-1);
     const base = chiffresDansColonnes(depart, colonnes);
     const etat = {decalage: 0, fini: false, pas: 1, departX: 0, departPx: 0, px: 0, refus: 0, observer: null, glisse: false};
+    const suivi = suiviRefus();
     compteurAides += 1;
 
     const bloc = document.createElement("div");
@@ -923,16 +998,32 @@
       }));
     }
 
+    // Lot 7-0 : le geste montré — le chiffre des unités et sa colonne
+    // d'arrivée brillent.
+    const MONTRE_GLISSE = "Glisse vers la colonne qui brille.";
+    const consigneCourante = () => (suivi.montre ? MONTRE_GLISSE : texteConsigne);
+    function montrerGeste() {
+      const cible = titres[indexUnites - attendu];
+      [source, cible].forEach(element => { if (element) element.classList.toggle("dc-montre", suivi.montre && !etat.fini); });
+    }
     function leverRefus() {
       clearTimeout(etat.refus);
       etat.refus = 0;
       if (!consigne.classList.contains("est-refus")) return;
-      consigne.textContent = texteConsigne;
+      consigne.textContent = consigneCourante();
       consigne.classList.remove("est-refus");
     }
     function refuser() {
       clearTimeout(etat.refus);
-      consigne.textContent = texteRefus || texteConsigne;
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        consigne.textContent = consigneCourante();
+        consigne.classList.remove("est-refus");
+        montrerGeste();
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
+      consigne.textContent = suivi.montre ? consigneCourante() : texteRefus || texteConsigne;
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -952,6 +1043,9 @@
         return;
       }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
+      montrerGeste();
+      consigne.textContent = texteConsigne;
       etat.fini = true;
       bloc.classList.add("est-finie");
       barre.setAttribute("aria-disabled", "true");
@@ -1054,6 +1148,8 @@
     return {
       outil: "glisse",
       element: bloc,
+      refuserSansGeste() { if (!etat.fini) refuser(); },
+      get montre() { return suivi.montre; },
       detruire() {
         clearTimeout(etat.refus);
         annonce.arreter();
@@ -2102,6 +2198,7 @@
   function toucherCalcul(zone, options) {
     const {lignes, consigne: texteConsigne, refus: texteRefus = null, surFini = null, sansReponse = false} = options;
     const etat = {ligne: 0, faits: new Set(), fini: false, refus: 0, etape: 0};
+    const suivi = suiviRefus();
     compteurAides += 1;
     const bloc = document.createElement("div");
     bloc.className = "dc-toucher";
@@ -2144,6 +2241,9 @@
         }
         morceaux.push({texte: l.jetons[k], index: k, venu: l.nouveaux.includes(k)});
       }
+      // Lot 7-0 : le geste montré — le calcul à faire en premier brille.
+      const aFaire = suivi.montre && !etat.fini ? l.sous.find((_, i) => !etat.faits.has(i)) : null;
+      const montre = index => Boolean(aFaire) && index !== undefined && index >= aFaire[0] && index <= aFaire[1];
       const jetonSeul = texte => {
         const jeton = document.createElement("span");
         jeton.textContent = texte;
@@ -2161,7 +2261,7 @@
         const jeton = document.createElement("span");
         jeton.textContent = m.texte;
         const signe = /^[()×÷+−]$/.test(m.texte);
-        jeton.className = `dc-jeton${signe ? " est-signe" : ""}${m.trouve ? " est-trouve" : ""}${m.venu ? " est-venu" : ""}${/^[()]$/.test(m.texte) ? " est-parenthese" : ""}`;
+        jeton.className = `dc-jeton${signe ? " est-signe" : ""}${m.trouve ? " est-trouve" : ""}${m.venu ? " est-venu" : ""}${/^[()]$/.test(m.texte) ? " est-parenthese" : ""}${montre(m.index) ? " dc-montre" : ""}`;
         if (!etat.fini && m.index !== undefined) {
           jeton.tabIndex = 0;
           jeton.setAttribute("role", "button");
@@ -2179,16 +2279,26 @@
         return b;
       }));
     }
+    const MONTRE_TOUCHER = "Touche le calcul qui brille.";
+    const consigneCourante = () => (suivi.montre ? MONTRE_TOUCHER : texteConsigne);
     function leverRefus() {
       clearTimeout(etat.refus);
       etat.refus = 0;
       if (!consigne.classList.contains("est-refus")) return;
-      consigne.textContent = texteConsigne;
+      consigne.textContent = consigneCourante();
       consigne.classList.remove("est-refus");
     }
     function refuser() {
       clearTimeout(etat.refus);
-      consigne.textContent = texteRefus || texteConsigne;
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        consigne.textContent = consigneCourante();
+        consigne.classList.remove("est-refus");
+        dessiner();
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
+      consigne.textContent = suivi.montre ? consigneCourante() : texteRefus || texteConsigne;
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -2204,6 +2314,8 @@
       bloc.dispatchEvent(new CustomEvent("toucher", {bubbles: true, detail: {index, accepte: k >= 0}}));
       if (k < 0) { refuser(); return; }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
+      consigne.textContent = texteConsigne;
       etat.faits.add(k);
       etat.etape += 1;
       if (sansReponse) annonce.annoncer(`${texteAccolade(l, k)} : d’abord`);
@@ -2240,6 +2352,8 @@
     dessiner();
     ecrireTraces();
     return {
+      refuserSansGeste() { if (!etat.fini) refuser(); },
+      get montre() { return suivi.montre; },
       outil: "toucher",
       element: bloc,
       detruire() {
@@ -2554,6 +2668,7 @@
   function carreManip(zone, options) {
     const {unites = 0, dixiemes = 0, centiemes = 0, consigne: texteConsigne, traces = [], surFini = null, sansReponse = false} = options;
     const etat = {dixiemes: 0, centiemes: 0, fini: false, refus: 0, etape: 0};
+    const suivi = suiviRefus();
     compteurAides += 1;
     const bloc = document.createElement("div");
     bloc.className = "dc-carre-manip";
@@ -2609,8 +2724,19 @@
       etat.refus = 0;
       consigne.classList.remove("est-refus");
     }
+    // Lot 7-0 : le carré ne refuse rien avant d'être fini ; seul
+    // « Suivant » avant le geste compte. Au 3e, le carré à colorier brille.
+    const MONTRE_CARRE = "Touche le carré qui brille pour colorier.";
     function refuser() {
       clearTimeout(etat.refus);
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        ecrireTexte(consigne, MONTRE_CARRE);
+        grand.classList.add("dc-montre");
+        consigne.classList.remove("est-refus");
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -2621,6 +2747,8 @@
       const apres = carreGeste(etat, {dixiemes, centiemes});
       if (!apres) { refuser(); return; }
       leverRefus();
+      if (suivi.montre) { ecrireTexte(consigne, texteConsigne); grand.classList.remove("dc-montre"); }
+      suivi.accepte(); libererConsigne(consigne);
       etat.dixiemes = apres.dixiemes;
       etat.centiemes = apres.centiemes;
       etat.etape += 1;
@@ -2645,6 +2773,8 @@
     return {
       outil: "carre",
       element: bloc,
+      refuserSansGeste() { if (!etat.fini) refuser(); },
+      get montre() { return suivi.montre; },
       detruire() {
         clearTimeout(etat.refus);
         annonce.arreter();
@@ -2704,6 +2834,7 @@
     let jeu = jetonsDepart({depart, colonnes});
     const compte = {get: r => jeu.comptes[r]};
     const etat = {get phase() { return jeu.phase; }, get echange() { return jeu.echange; }, get fini() { return jeu.phase === "fini"; }, refus: 0, etape: 0, venus: new Map(), partis: new Map(), echanges: []};
+    const suivi = suiviRefus();
     compteurAides += 1;
     const bloc = document.createElement("div");
     bloc.className = `dc-jetons colonnes-${colonnes.length}`;
@@ -2741,9 +2872,13 @@
     bloc.append(consigne, tableau, reserve, trace, annonce);
     zone.replaceChildren(bloc);
 
-    const texteDeLaConsigne = () => (etat.phase === "echange"
+    const texteNormal = () => (etat.phase === "echange"
       ? `Échange 10 jetons de ${VALEURS_JETONS[etat.echange]} contre 1 jeton de ${VALEURS_JETONS[etat.echange + 1]} : touche le paquet de 10.`
       : texteConsigne);
+    // Lot 7-0 : le geste montré — le jeton de la réserve, ou le paquet.
+    const texteDeLaConsigne = () => (suivi.montre && !etat.fini
+      ? (etat.phase === "echange" ? "Touche le paquet qui brille." : "Touche le jeton qui brille.")
+      : texteNormal());
     function dessiner() {
       ecrireTexte(consigne, texteDeLaConsigne());
       tableau.replaceChildren(...colonnes.map(rang => {
@@ -2778,6 +2913,7 @@
           paquet.append(...pions.splice(0, 10));
           pile.append(paquet, ...pions);
           colonne.classList.add("a-echanger");
+          if (suivi.montre) paquet.classList.add("dc-montre");
           colonne.tabIndex = 0;
           colonne.setAttribute("role", "button");
           colonne.setAttribute("aria-label", `Le paquet de 10 jetons de ${VALEURS_JETONS[rang]} : l’échanger`);
@@ -2788,7 +2924,10 @@
         colonne.append(tete, pile);
         return colonne;
       }));
-      reserve.querySelectorAll("button").forEach(bouton => { bouton.disabled = etat.fini; });
+      reserve.querySelectorAll("button").forEach(bouton => {
+        bouton.disabled = etat.fini;
+        bouton.classList.toggle("dc-montre", suivi.montre && !etat.fini && etat.phase === "reserve" && Number(bouton.dataset.rang) === rangAttendu);
+      });
       const pilules = [];
       if (sansReponse) {
         // Rien sous le tableau : l'élève lit les jetons.
@@ -2812,6 +2951,13 @@
     }
     function refuser() {
       clearTimeout(etat.refus);
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        consigne.classList.remove("est-refus");
+        dessiner();
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -2826,6 +2972,7 @@
       if (etat.fini) return;
       if (!apres) { refuser(); return; }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
       etat.etape += 1;
       jeu = apres;
       if (signe > 0) etat.venus.set(rang, chiffre);
@@ -2840,6 +2987,7 @@
       const apres = jetonsGeste(jeu, {echange: rang}, regle);
       if (!apres) { refuser(); return; }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
       etat.etape += 1;
       jeu = apres;
       etat.venus.set(rang, 0);
@@ -2871,6 +3019,8 @@
     return {
       outil: "jetons",
       element: bloc,
+      refuserSansGeste() { if (!etat.fini) refuser(); },
+      get montre() { return suivi.montre; },
       detruire() {
         clearTimeout(etat.refus);
         annonce.arreter();
@@ -3156,7 +3306,10 @@
     }
     return nombres;
   }
-  function bandesSvg({pieces, a, grad, reserve = [], reserveVide = false, cible = null, fini = false, nombres = null, image = false, revele = null}) {
+  // `montre` (lot 7-0) : l'étape attendue, quand l'outil montre le geste —
+  // la bande de la réserve à poser, ou les bandes à couper, fondre, enlever
+  // brillent.
+  function bandesSvg({pieces, a, grad, reserve = [], reserveVide = false, cible = null, fini = false, nombres = null, image = false, revele = null, montre = null}) {
     const {gauche: G, longueur: L, bande: h, encre} = FRACTIONS;
     const u = L / a;
     const places = planBandes(pieces, a);
@@ -3169,6 +3322,14 @@
       if (w >= 16) s += `<g pointer-events="none">${etiquetteSvg(x + w / 2, y + h / 2, p.d === 1 ? "1" : `1/${p.d}`, {taille: w < 26 ? 11 : w < 34 ? 13 : 16, encre: p.enleve ? FRACTIONS.enleve : encreBande(p.d === 1 ? p.de : p.d)})}</g>`;
       if (p.neuf && !p.enleve) s += `<rect x="${(x + 1.6).toFixed(2)}" y="${y + 1.6}" width="${Math.max(0, w - 3.2).toFixed(2)}" height="${h - 3.2}" fill="none" stroke="${FRACTIONS.trouve}" stroke-width="3" pointer-events="none"/>`;
     });
+    if (montre && montre.geste !== "poser") {
+      const indices = montre.geste === "enlever" ? montre.parmi.filter(i => pieces[i] && !pieces[i].enleve)
+        : montre.geste === "fondre" ? Array.from({length: montre.n}, (_, k) => montre.piece + k) : [montre.piece];
+      indices.forEach(i => {
+        const p = places[i];
+        if (p) s += `<rect class="dc-montre" x="${(p.x - 5).toFixed(2)}" y="${y - 6}" width="${(p.w + 10).toFixed(2)}" height="${h + 12}" rx="8" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
+      });
+    }
     if (cible) {
       const p1 = places[cible[0]];
       const p2 = places[cible[1] - 1];
@@ -3191,6 +3352,7 @@
       let x = G + (L - largeurs.reduce((m, n) => m + n, 0) - (reserve.length - 1) * 14) / 2;
       reserve.forEach((d, k) => {
         if (reserveVide) { x += largeurs[k] + 14; return; }
+        if (montre && montre.geste === "poser" && montre.d === d) s += `<rect class="dc-montre" x="${(x - 5).toFixed(2)}" y="${yr - 5}" width="${(largeurs[k] + 10).toFixed(2)}" height="${h + 6}" rx="8" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
         s += `<g data-reserve="${d}" class="dc-bande-reserve"><rect x="${x.toFixed(2)}" y="${yr}" width="${largeurs[k].toFixed(2)}" height="${h - 4}" fill="${couleurBande(d)}" stroke="#111827" stroke-width="1.4"/>`
           + `<g pointer-events="none">${etiquetteSvg(x + largeurs[k] / 2, yr + (h - 4) / 2, `1/${d}`, {taille: largeurs[k] < 34 ? 12 : 16, encre: encreBande(d)})}</g></g>`;
         x += largeurs[k] + 14;
@@ -3228,6 +3390,7 @@
     const {a, grad = 1, depart = [], etapes, reserve = [], traces = [], surFini = null, decimaux = false, arrivee = null, sansReponse = false} = options;
     let jeu = bandesDepart(depart);
     const etat = {refus: 0, premier: true};
+    const suivi = suiviRefus();
     compteurAides += 1;
     const bloc = document.createElement("div");
     bloc.className = "dc-bandes";
@@ -3258,14 +3421,15 @@
     function dessiner() {
       const e = attendue();
       // Fini : la consigne s'efface, la trace écrit le calcul.
-      ecrireTexte(consigne, jeu.fini ? "" : e.consigne);
+      // Lot 7-0 : le geste montré — la bande à toucher brille.
+      ecrireTexte(consigne, jeu.fini ? "" : suivi.montre ? (e.geste === "enlever" ? "Touche une bande qui brille." : "Touche la bande qui brille.") : e.consigne);
       // La réserve, tant qu'il y a une bande à poser (la même place après :
       // rien ne bouge, elle est seulement vide).
       const poser = etapes.some(x => x.geste === "poser");
       const resteAPoser = !jeu.fini && etapes.slice(jeu.etape).some(x => x.geste === "poser");
       // F1 (lot 6b) : les décimaux s'écrivent sous les graduations franchies.
       const nombres = decimaux ? nombresBandes(longueurBandes(jeu.pieces.filter(p => !p.enleve)), a, grad, jeu.fini, arrivee) : null;
-      scene.innerHTML = bandesSvg({pieces: jeu.pieces, a, grad, reserve: poser ? reserve : [], reserveVide: poser && !resteAPoser, cible: cible(), fini: jeu.fini, nombres});
+      scene.innerHTML = bandesSvg({pieces: jeu.pieces, a, grad, reserve: poser ? reserve : [], reserveVide: poser && !resteAPoser, cible: cible(), fini: jeu.fini, nombres, montre: suivi.montre && !jeu.fini ? e : null});
       scene.setAttribute("aria-label", `${decrireBandes(jeu.pieces)}${jeu.fini ? "" : " Touche pour faire le geste."}`);
       const pilules = [];
       if (jeu.fini && traces.length && !sansReponse) {
@@ -3283,6 +3447,13 @@
     }
     function refuser() {
       clearTimeout(etat.refus);
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        consigne.classList.remove("est-refus");
+        dessiner();
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -3295,6 +3466,7 @@
       bloc.dispatchEvent(new CustomEvent("bande", {bubbles: true, detail: Object.assign({accepte: Boolean(apres)}, geste)}));
       if (!apres) { refuser(); return; }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
       jeu = apres;
       if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
       if (jeu.fini) bloc.classList.add("est-finie");
@@ -3327,6 +3499,8 @@
     return {
       outil: "bandes",
       element: bloc,
+      refuserSansGeste() { if (!jeu.fini) refuser(); },
+      get montre() { return suivi.montre; },
       detruire() {
         clearTimeout(etat.refus);
         annonce.arreter();
@@ -3413,7 +3587,7 @@
     }
     return places;
   }
-  function billesSvg({n, d, tout, tours, fini, cible = false}) {
+  function billesSvg({n, d, tout, tours, fini, cible = false, montre = false}) {
     const {gauche: G, longueur: L, encre, bleu, cherche} = FRACTIONS;
     const {w, parCase, hTas, hCase} = planBilles({n, d});
     const y1 = 6;
@@ -3437,6 +3611,7 @@
     for (let k = 0; k < d; k += 1) s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${hCase}" fill="none" stroke="${encre}" stroke-width="2.6" pointer-events="none"/>`;
     if (fini) s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w - 3.2).toFixed(2)}" height="${hCase - 3.2}" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
     if (cible && !fini) s += `<rect class="dc-cible" x="${G - 3}" y="${y1 - 3}" width="${L + 6}" height="${hTas + 6}" rx="7" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
+    if (montre && !fini) s += `<rect class="dc-montre" x="${G - 8}" y="${y1 - 8}" width="${L + 16}" height="${hTas + 16}" rx="10" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
     return `<svg class="dc-billes-svg" viewBox="0 0 ${FRACTIONS.largeur} ${y2 + hCase + 4}">${s}</svg>`;
   }
   // Ce que voit l'élève, pour un lecteur d'écran.
@@ -3451,6 +3626,7 @@
     const {n, d, tout, consigne: texteConsigne, consigneFin = "", traces = [], surFini = null, sansReponse = false} = options;
     let jeu = billesDepart();
     const etat = {refus: 0, premier: true};
+    const suivi = suiviRefus();
     compteurAides += 1;
     const bloc = document.createElement("div");
     bloc.className = "dc-bandes dc-billes";
@@ -3471,8 +3647,9 @@
     zone.replaceChildren(bloc);
 
     function dessiner() {
-      ecrireTexte(consigne, jeu.fini ? consigneFin : texteConsigne);
-      scene.innerHTML = billesSvg({n, d, tout, tours: jeu.tours, fini: jeu.fini, cible: true});
+      // Lot 7-0 : le geste montré — le tas brille.
+      ecrireTexte(consigne, jeu.fini ? consigneFin : suivi.montre ? "Touche le tas qui brille." : texteConsigne);
+      scene.innerHTML = billesSvg({n, d, tout, tours: jeu.tours, fini: jeu.fini, cible: true, montre: suivi.montre});
       scene.setAttribute("aria-label", `${decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini})}${jeu.fini ? "" : " Touche le tas."}`);
       const pilule = document.createElement("b");
       if (sansReponse) {
@@ -3492,6 +3669,13 @@
     }
     function refuser() {
       clearTimeout(etat.refus);
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        consigne.classList.remove("est-refus");
+        dessiner();
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
       consigne.classList.remove("est-refus");
       void consigne.offsetWidth;
       consigne.classList.add("est-refus");
@@ -3503,6 +3687,7 @@
       bloc.dispatchEvent(new CustomEvent("bille", {bubbles: true, detail: Object.assign({accepte: Boolean(apres)}, geste)}));
       if (!apres) { refuser(); return; }
       leverRefus();
+      suivi.accepte(); libererConsigne(consigne);
       jeu = apres;
       if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
       if (jeu.fini) bloc.classList.add("est-finie");
@@ -3524,6 +3709,8 @@
     return {
       outil: "billes",
       element: bloc,
+      refuserSansGeste() { if (!jeu.fini) refuser(); },
+      get montre() { return suivi.montre; },
       detruire() {
         clearTimeout(etat.refus);
         annonce.arreter();
@@ -3676,6 +3863,8 @@
   return Object.freeze({
     PERLES,
     MESSAGES_REFUS,
+    MONTRER_APRES,
+    suiviRefus,
     etatsDe,
     gesteAttendu,
     verifierGeste,
