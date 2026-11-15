@@ -46,7 +46,7 @@ const COFFRES = [
   "assets/js/coffres-",
   "assets/css/coffres-",
 ];
-const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul"];
+const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul", "assets/js/code-en-cases.js", "assets/js/compteur.js"];
 const SPLAT = ["outils/splat.html", "assets/js/splat-", "assets/fonts/SplatLettres"];
 const AXELLE = ["axelle/"];
 const SOLEY = ["outils/club_maths/soley"];
