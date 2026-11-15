@@ -928,3 +928,52 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .choix.objets button { height: 100%; max-height: none; font-size: .75rem; line-height: 1.08; padding: .125rem .1875rem; gap: .125rem; }
   .choix.objets .ill { width: 2.75rem; height: 2.75rem; }
 }
+
+/* Lot B1-2 : les préfixes et les relations.
+   L'échelle des unités (l'image) : une rangée de cases, sans nombres, les
+   unités de la question en couleur pleine (lisible imprimé en noir et
+   blanc : fond foncé, lettres blanches). */
+.echelle { width: 100%; display: grid; grid-template-columns: repeat(var(--n, 7), minmax(0, 1fr)); gap: .25rem; margin: .125rem 0 .375rem; }
+.echelle span { border: .125rem solid var(--acc-f); border-radius: .5rem; background: #fff; text-align: center; font-size: 1rem; font-weight: 800;
+  line-height: 1.2; padding: .3125rem 0; color: var(--ink); white-space: nowrap; }
+.echelle span.on { background: var(--acc-f); color: #fff; font-weight: 900; }
+/* Les préfixes et la numération (On te montre) : deux colonnes côte à
+   côte, une ligne à toucher par préfixe. */
+.numeration { width: 100%; max-width: 26rem; display: flex; flex-direction: column; gap: .3125rem; }
+.num-tete { display: grid; grid-template-columns: 1fr 1.2fr; gap: .5rem; font-size: .75rem; font-weight: 900; text-transform: uppercase; letter-spacing: .03em;
+  color: var(--muted); text-align: center; }
+.num-ligne { display: grid; grid-template-columns: 1fr 1.2fr; gap: .5rem; align-items: stretch; padding: 0; border: 0; background: none; font: inherit; color: inherit;
+  cursor: pointer; min-height: 2.75rem; touch-action: manipulation; }
+.num-ligne > span { border: .125rem solid #9fbbd0; border-radius: .625rem; background: #fff; padding: .25rem .25rem; font-size: .875rem; font-weight: 700;
+  line-height: 1.25; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.num-ligne .l { display: block; white-space: nowrap; }
+.num-ligne .num-m { border-style: dashed; }
+.num-ligne .num-m .touche { color: #8ea1af; font-size: .8125rem; font-weight: 700; }
+.num-ligne.vue .num-m { border-style: solid; border-color: var(--teal); background: #e9f7f5; }
+.num-ligne b { font-weight: 900; color: var(--teal); }
+.num-ligne:focus-visible { outline: .1875rem solid #f2c94c; outline-offset: .125rem; border-radius: .625rem; }
+/* Relier sans dessin (des unités, des préfixes) : les deux colonnes ont la
+   même largeur (« 1 000 mm » sortait de son bouton en projection) ; au
+   téléphone peu haut, la rangée de trois reste celle de tous les relier. */
+.assoc.sans-dessins { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .assoc.sans-dessins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* (« 1 000 mm » sortait de son bouton au petit téléphone avec une police
+     large, déjà sur main.) */
+  .assoc.sans-dessins .mes { font-size: .9375rem; padding: .125rem; gap: .125rem; }
+}
+/* Relier des préfixes à leur sens (« centième ») : des mots, un peu plus
+   petits que des mesures. */
+.assoc.mots .mes { font-size: 1.0625rem; }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .assoc.mots .mes { font-size: .875rem; padding: .125rem; }
+}
+@media (max-width: 899px) {
+  /* (« = 100 centigrammes » sur une ligne au petit téléphone, même avec une
+     police large.) */
+  .num-ligne > span { font-size: .8125rem; padding: .25rem .125rem; }
+  .num-ligne, .num-tete { gap: .375rem; }
+}
+@media (max-width: 380px) {
+  .num-ligne > span { font-size: .75rem; }
+}

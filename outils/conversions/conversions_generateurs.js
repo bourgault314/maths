@@ -166,10 +166,25 @@
   // Au palier 1 (cycle 2), les unités hors programme sont en pâle.
   const HORS_CYCLE_2 = ["hm", "dam", "hg", "dag", "hL", "daL", "mL", ""];
 
+  // Au palier 2 (lot B1-2), toutes les colonnes, sans pâle. Les masses,
+  // comme dans le matériel virtuel de Gwenaël : du kilogramme au
+  // milligramme (« Masse (g) ») ; quand la tonne est en jeu, de la tonne au
+  // gramme, comme au palier 1 (dix colonnes jusqu'au mg étaient trop
+  // serrées au téléphone).
+  const COLONNES_CM1 = {
+    longueur: COLONNES.longueur,
+    masse: ["kg", "hg", "dag", "g", "dg", "cg", "mg"],
+    masseT: COLONNES.masse,
+    contenance: COLONNES.contenance
+  };
+
   const MOTS = {
     km: "kilomètres", m: "mètres", dm: "décimètres", cm: "centimètres", mm: "millimètres",
     t: "tonnes", kg: "kilogrammes", g: "grammes", L: "litres", dL: "décilitres", cL: "centilitres", mL: "millilitres",
-    min: "minutes", h: "heures", "€": "euros", c: "centimes"
+    min: "minutes", h: "heures", "€": "euros", c: "centimes",
+    // Lot B1-2 : les unités du CM1.
+    hm: "hectomètres", dam: "décamètres", hg: "hectogrammes", dag: "décagrammes", dg: "décigrammes", cg: "centigrammes",
+    mg: "milligrammes", hL: "hectolitres", daL: "décalitres"
   };
 
   function grandeurDe(unite) {
@@ -320,9 +335,17 @@
   // le glisse-unité. Au palier 1, des nombres entiers : « Chaque mètre
   // devient 100 centimètres. » ; « 100 centimètres font 1 mètre. ».
   const MOT = {km: "kilomètre", m: "mètre", dm: "décimètre", cm: "centimètre", mm: "millimètre", t: "tonne", kg: "kilogramme", g: "gramme",
-    L: "litre", dL: "décilitre", cL: "centilitre", mL: "millilitre"};
-  function glisse(valeur, de, vers) {
+    L: "litre", dL: "décilitre", cL: "centilitre", mL: "millilitre",
+    hm: "hectomètre", dam: "décamètre", hg: "hectogramme", dag: "décagramme", dg: "décigramme", cg: "centigramme", mg: "milligramme",
+    hL: "hectolitre", daL: "décalitre"};
+  // `cm1` (lot B1-2) : le glisse-unité du palier 2, toutes ses colonnes
+  // (`pale: false`, et les masses jusqu'au milligramme).
+  function glisse(valeur, de, vers, {cm1 = false} = {}) {
     const g = {valeur: brut(valeur), de, vers, grandeur: grandeurDe(de)};
+    if (cm1) {
+      g.pale = false;
+      if (g.grandeur === "masse") g.colonnes = de === "t" || vers === "t" ? COLONNES_CM1.masseT : COLONNES_CM1.masse;
+    }
     if (MOT[de] && MOT[vers]) {
       if (exposant(de) > exposant(vers)) {
         const f = facteur(de, vers);
@@ -2599,6 +2622,550 @@
     }
   };
 
+  // ===================================================== palier 2 (lot B1-2)
+  // Préfixes et relations (carte v4) : « Ce que veulent dire les préfixes »
+  // (P2), « Deux unités voisines » (P3), « Toutes les relations à
+  // connaître » (P4). Les unités du CM1 : du mm au km, du mg à la tonne, du
+  // mL au hL (programme de CM1 2025). Pas de tableau de conversion (S002) :
+  // la relation, le sens du préfixe, le glisse-unité (toutes ses colonnes).
+  // L'outil : le glisse-unité ; l'image : l'échelle des unités de la
+  // grandeur, les deux unités en jeu marquées, et « Chaque unité vaut 10
+  // fois celle de droite. » (jamais la réponse : l'élève compte les pas).
+  // Les mauvaises réponses au choix sont les erreurs connues : « 1 m,
+  // c'est 100 fois 1 dm » (23,6 % à l'entrée en 6e), hecto lu comme centi,
+  // déca comme déci, kilo comme milli, « 1 hm = 10 m » (unités voisines
+  // supposées), « 1 hm = 1 000 m » (hm confondu avec km), « 1 cm = 10 dm »
+  // (le sens), « 1 cm = 0,01 dm » (le centième).
+  const PREFIXES = [
+    {nom: "kilo", sym: "k", e: 3, sens: "mille", piege: "milli"},
+    {nom: "hecto", sym: "h", e: 2, sens: "cent", piege: "centi"},
+    {nom: "déca", sym: "da", e: 1, sens: "dix", piege: "déci"},
+    {nom: "déci", sym: "d", e: -1, sens: "un dixième", piege: "déca"},
+    {nom: "centi", sym: "c", e: -2, sens: "un centième", piege: "hecto"},
+    {nom: "milli", sym: "m", e: -3, sens: "un millième", piege: "kilo"}
+  ];
+  const PREFIXE = {};
+  PREFIXES.forEach(p => { PREFIXE[p.nom] = p; });
+  const BASES = {longueur: "m", masse: "g", contenance: "L"};
+  const GRANDEURS_CM1 = ["longueur", "masse", "contenance"];
+  // L'unité d'un préfixe dans une grandeur (« hecto », contenance → hL), si
+  // elle est au programme du CM1 (pas de kL).
+  function unitePrefixe(p, grandeur) {
+    const u = p.sym + BASES[grandeur];
+    return grandeurDe(u) === grandeur ? u : null;
+  }
+  function prefixeDe(u) {
+    const g = grandeurDe(u);
+    return PREFIXES.find(p => unitePrefixe(p, g) === u) || null;
+  }
+  // Les unités du CM1 d'une grandeur, de la plus grande à la plus petite
+  // (l'échelle de l'image ; la tonne à part).
+  function echelleDe(grandeur) {
+    return COLONNES_CM1[grandeur];
+  }
+  const NOUVELLES_CM1 = ["hm", "dam", "hg", "dag", "dg", "cg", "mg", "hL", "daL", "mL"];
+  const REGLE_ECHELLE = "Chaque unité vaut 10 fois celle de droite.";
+  function lignesEchelle(grandeur) {
+    return [echelleDe(grandeur).join(" · "), REGLE_ECHELLE];
+  }
+  // Une phrase : « 1 hectomètre », « 0,4 millimètre », « 3 décimètres ».
+  function enMots(valeur, u) {
+    return `${ecrire(valeur)}${NB}${valeur < 2n * MILLE ? MOT[u] : MOTS[u]}`;
+  }
+
+  // Une relation posée au pavé (« 1 hm = … m ») ou en phrase (« 1 hectomètre,
+  // c'est combien de mètres ? » : les noms entiers, pour lire le préfixe).
+  function questionRel(code, degre, ecrit, valeur, de, vers, extra = {}) {
+    const rep = convertir(valeur, de, vers);
+    if (rep === null) return null;
+    const [g, p] = exposant(de) > exposant(vers) ? [de, vers] : [vers, de];
+    const gauche = mes(valeur, de);
+    const resume = `${gauche} = ${mes(rep, vers)}`;
+    const relation = relationTexte(g, p);
+    let texte;
+    let morceaux;
+    if (ecrit === "phrase") {
+      // (« combien d'hectolitres » : le h de hecto est muet.)
+      const phrase = `${enMots(valeur, de)}, c'est combien ${/^h/.test(MOTS[vers]) ? "d'" : "de "}${MOTS[vers]}${NB}?`;
+      texte = phrase;
+      morceaux = {phrase, apres: vers};
+    } else {
+      texte = `${gauche} = ${CASE}${NB}${vers}`;
+      morceaux = {avant: `${gauche} =`, apres: vers};
+    }
+    const grandeur = grandeurDe(g);
+    return q(Object.assign({
+      code, degre, forme: ecrit === "phrase" ? "phrase" : "nombre", texte, morceaux,
+      reponse: brut(rep), reponseTexte: mes(rep, vers), unite: vers, resume,
+      // L'outil ne recopie pas la relation au-dessus du glisse-unité : elle
+      // EST la réponse (comme à P1).
+      relation, outil: "glisse-unite", glisse: glisse(valeur, de, vers, {cm1: true}), outilSansRelation: true,
+      echelle: {grandeur, marque: [de, vers]}, image: lignesEchelle(grandeur),
+      correction: resume === relation ? [relation] : [relation, `donc ${resume}`],
+      grandeur, relationCle: `${g}-${p}`,
+      donnees: {type: "conv", valeur: brut(valeur), de, vers},
+      cle: `${code}:${brut(valeur)}${de}>${vers}:${ecrit === "phrase" ? "p" : "n"}`
+    }, extra));
+  }
+
+  // Le pourquoi d'une erreur au pavé (P2, P3, P4) : le sens d'abord (« Je
+  // prévois » suit), puis le nombre gardé, puis un zéro de trop ou de moins.
+  function erreursRel(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv") return null;
+    const v = milli(d.valeur);
+    const attendu = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const f = bas ? facteur(d.de, d.vers) : facteur(d.vers, d.de);
+    if (bas && v % f === 0n && lu === v / f) return {erreur: 1, retour: "Tu as divisé. Vers une unité plus petite, je multiplie."};
+    if (!bas && lu === v * f) return {erreur: 3, retour: "Tu as multiplié. Vers une unité plus grande, je divise."};
+    // (Une ligne au petit téléphone : la correction, juste au-dessus, dit
+    // déjà la relation ; avec deux lignes, le panneau de « À toi » passait à
+    // 77 % au petit iPhone.)
+    if (lu === v) return {erreur: 4, retour: `${mes(v, d.de)}, ce n'est pas ${mes(v, d.vers)}.`};
+    if (lu === attendu * 10n) return {erreur: 2, retour: "Un zéro de trop."};
+    if (lu * 10n === attendu) return {erreur: 2, retour: "Un zéro de moins."};
+    return null;
+  }
+
+  // Une relation au choix (« 1 hm = … m » : 10, 100 ou 1 000). Les fausses
+  // sont données. Le pourquoi d'un mauvais choix tient sur une ligne au
+  // petit téléphone (la place des réponses est petite) : l'unité que ce
+  // choix ferait (« 10 m, c'est 1 dam. », « 0,01 hL, c'est 1 L. »).
+  function uniteDe(y, vers) {
+    return echelleDe(grandeurDe(vers)).find(u => u && convertir(MILLE, u, vers) === y) || null;
+  }
+  function enChoixRel(x, faux, rng) {
+    if (!x) return null;
+    const d = x.donnees;
+    const rep = milli(x.reponse);
+    const propres = faux.filter((y, k) => y !== null && y > 0n && y !== rep && faux.indexOf(y) === k);
+    if (propres.length < 2) return null;
+    const choix = melanger(rng, [rep, ...propres.slice(0, 2)]).map(ecrire);
+    const bon = choix.indexOf(ecrire(rep));
+    const pourquoi = {};
+    choix.forEach((c, k) => {
+      if (k === bon) return;
+      const y = milli(c.replace(new RegExp(FINE, "g"), ""));
+      const u = uniteDe(y, d.vers);
+      // (Le sens d'abord : « 1 dm est plus petit que 1 m. »)
+      const e = erreursRel(x, y);
+      if (e && (e.erreur === 1 || e.erreur === 3)) pourquoi[k] = `1${NB}${d.de} est plus ${e.erreur === 1 ? "grand" : "petit"} que 1${NB}${d.vers}.`;
+      else if (u) pourquoi[k] = `${mes(y, d.vers)}, c'est 1${NB}${u}.`;
+      else pourquoi[k] = y > rep ? "Un zéro de trop." : "Un zéro de moins.";
+    });
+    const phrase = `${mes(milli(d.valeur), d.de)} = ${CASE}${NB}${d.vers}`;
+    return Object.assign(x, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: d.vers, sorte: "valeur"},
+      choix, bon, pourquoi, cle: `${x.cle}:q`
+    });
+  }
+
+  // « 1 m, c'est combien de fois 1 dm ? » (évaluation de début de 6e 2024 :
+  // 59,8 % de réussite, 23,6 % répondent « 100 fois ») ; « 1 hm, c'est
+  // combien de fois 1 m ? » (positionnement de 6e). Quatre réponses : 10,
+  // 100, 1 000, 10 000 fois. Le pourquoi : le sens du préfixe, ou la
+  // relation de chaque unité avec la base.
+  const FOIS = [10n, 100n, 1000n, 10000n];
+  // Le pourquoi d'un mauvais nombre de fois : l'unité qu'il ferait
+  // (« 100 cm font 1 m. »), sinon trop ou trop peu.
+  function pourquoiFois(g, p, F) {
+    const u = echelleDe(grandeurDe(g)).find(x => x && exposant(x) < exposant(g) && facteur(g, x) === F);
+    // (Une ligne au petit téléphone, même avec une police large.)
+    if (u) return `${ecrire(F * MILLE)} ${u} font 1 ${g}.`;
+    return F > facteur(g, p) ? "C'est beaucoup trop de fois." : "C'est trop peu de fois.";
+  }
+  function questionFoisCM1(code, degre, g, p) {
+    const f = facteur(g, p);
+    const choix = FOIS.map(n => `${ecrire(n * MILLE)} fois`);
+    const bon = FOIS.indexOf(f);
+    const pourquoi = {};
+    FOIS.forEach((n, k) => { if (k !== bon) pourquoi[k] = CARTE.typo(pourquoiFois(g, p, n)); });
+    const phrase = CARTE.typo(`1 ${g}, c'est combien de fois 1 ${p} ?`);
+    const grandeur = grandeurDe(g);
+    return q({
+      code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "fois"},
+      choix, bon, pourquoi, reponse: choix[bon], reponseTexte: CARTE.typo(`${choix[bon]} 1 ${p}`), unite: null,
+      resume: CARTE.typo(`1 ${g} = ${choix[bon]} 1 ${p}`),
+      relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(MILLE, g, p, {cm1: true}), outilSansRelation: true,
+      echelle: {grandeur, marque: [g, p]}, image: lignesEchelle(grandeur),
+      correction: [relationTexte(g, p), CARTE.typo(`Il faut ${choix[bon]} 1 ${p} pour faire 1 ${g}.`)],
+      grandeur, relationCle: `${g}-${p}`,
+      donnees: {type: "fois", grande: g, petite: p},
+      cle: `${code}:${g}-${p}:f`
+    });
+  }
+
+  // Relier trois relations (P4 ; comme P1, avec les unités du CM1).
+  // Degré 2 : trois grandeurs ; degré 3 : la même grandeur.
+  function questionRelierCM1(code, degre, rng, vivier) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      let liste = vivier;
+      if (degre === 3) {
+        const gr = choisir(rng, GRANDEURS_CM1);
+        liste = vivier.filter(([g]) => grandeurDe(g) === gr);
+      }
+      const trois = melanger(rng, liste).slice(0, 3);
+      if (trois.length < 3) continue;
+      const gauches = trois.map(([g]) => `1${NB}${g}`);
+      const droites = trois.map(([g, p]) => mes(facteur(g, p) * MILLE, p));
+      const grandeurs = new Set(trois.map(([g]) => grandeurDe(g)));
+      if (new Set(gauches).size < 3 || new Set(droites).size < 3 || (degre !== 3 && grandeurs.size < 3)) continue;
+      // (Au degré 3, deux nombres égaux au moins une fois sur deux : « 1 hm »
+      // et « 1 dag » ne se relient pas au nombre seul.)
+      let ordre = melanger(rng, [0, 1, 2]);
+      while (ordre.every((k, j) => k === j)) ordre = melanger(rng, [0, 1, 2]);
+      const mesures = ordre.map(k => droites[k]);
+      const bonnes = trois.map((x, k) => ordre.indexOf(k));
+      const consigne = "Relie chaque unité à sa valeur.";
+      const lignes = trois.map(([g, p]) => relationTexte(g, p));
+      const grandeur = grandeurs.size === 1 ? [...grandeurs][0] : null;
+      return q({
+        code, degre, forme: "associer", texte: `${consigne} ${gauches.join(" ; ")} — ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne}, objets: gauches.map(t => ({texte: t})), mesures, bonnes,
+        reponse: bonnes.join(","), reponseTexte: lignes.join(" ; "), resume: lignes.join(" ; "),
+        relation: lignes.join(" ; "), outil: null, outilSansRelation: true, relationCle: "relier",
+        // (L'échelle sans unité marquée : trois relations en marqueraient six.)
+        echelle: grandeur ? {grandeur, marque: []} : {grandeurs: [...grandeurs], marque: []},
+        image: grandeur ? lignesEchelle(grandeur) : [REGLE_ECHELLE],
+        correction: lignes, grandeur,
+        donnees: {type: "associer-rel", paires: trois.map(x => x.slice()), mesures: mesures.slice()},
+        cle: `${code}:a:${trois.map(([g, p]) => `${g}-${p}`).sort().join("+")}`
+      });
+    }
+    return null;
+  }
+
+  // Dans Je valide, jamais deux fois la même relation ; ailleurs, pas deux
+  // fois de suite à trois questions près.
+  function uneRelationUneFois(serie, question, usage) {
+    if (!question.relationCle || question.relationCle === "relier") return true;
+    if (usage === "valide") return !serie.some(x => x.relationCle === question.relationCle);
+    return !serie.slice(-3).some(x => x.relationCle === question.relationCle);
+  }
+  function troisGrandeurs(serie) {
+    return GRANDEURS_CM1.every(g => serie.some(x => x.grandeur === g));
+  }
+
+  // --------------------------------- P2 · Ce que veulent dire les préfixes
+  // 17 faits (6 préfixes, 3 grandeurs, pas de kL) : « 1 hm = 100 m »,
+  // « 1 g = 1 000 mg ». Une étape par cœur : on varie la façon de
+  // demander — le sens du préfixe (« Dans hectolitre, que veut dire
+  // hecto ? »), le préfixe d'un sens (« Quel préfixe veut dire cent ? »,
+  // avec le piège : centi), le calcul, la phrase, « combien de fois ? »,
+  // relier trois préfixes à leur sens.
+  // [grande, petite, l'unité qui porte le préfixe]
+  const FAITS_P2 = [];
+  GRANDEURS_CM1.forEach(gr => PREFIXES.forEach(p => {
+    const u = unitePrefixe(p, gr);
+    if (u) FAITS_P2.push(p.e > 0 ? [u, BASES[gr], u] : [BASES[gr], u, u]);
+  }));
+  // Les préfixes que l'élève connaît déjà (kilo, centi, milli du palier 1).
+  const CONNUS = ["kilo", "centi", "milli"];
+
+  function questionSens(code, degre, p, grandeur, rng) {
+    const u = unitePrefixe(p, grandeur);
+    const piege = PREFIXE[p.piege];
+    const autre = choisir(rng, PREFIXES.filter(x => (x.e > 0) === (p.e > 0) && x !== p));
+    const trois = melanger(rng, [p, piege, autre]);
+    const choix = trois.map(x => x.sens);
+    const bon = trois.indexOf(p);
+    const pourquoi = {};
+    // (Une ligne : ce que veut dire le choix touché ; la correction dit le reste.)
+    trois.forEach((x, k) => { if (k !== bon) pourquoi[k] = `${x.sens[0].toUpperCase()}${x.sens.slice(1)}, c'est ${x.nom}.`; });
+    const phrase = CARTE.typo(`Dans « ${MOT[u]} », que veut dire ${p.nom} ?`);
+    const [g, pe] = p.e > 0 ? [u, BASES[grandeur]] : [BASES[grandeur], u];
+    return q({
+      code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "mots"},
+      choix, bon, pourquoi, reponse: p.sens, reponseTexte: p.sens, unite: null,
+      resume: CARTE.typo(`Dans ${MOT[u]}, ${p.nom} veut dire ${p.sens}`),
+      relation: relationTexte(g, pe), outil: null, outilSansRelation: true,
+      echelle: {grandeur, marque: [u, BASES[grandeur]]}, image: lignesEchelle(grandeur),
+      correction: [CARTE.typo(`${p.nom} veut dire ${p.sens}.`), relationTexte(g, pe)],
+      grandeur, relationCle: `${g}-${pe}`,
+      donnees: {type: "prefixe-sens", prefixe: p.nom, unite: u},
+      cle: `${code}:s:${u}`
+    });
+  }
+  function questionNomPrefixe(code, degre, p, rng) {
+    const piege = PREFIXE[p.piege];
+    const autre = choisir(rng, PREFIXES.filter(x => (x.e > 0) === (p.e > 0) && x !== p));
+    const trois = melanger(rng, [p, piege, autre]);
+    const choix = trois.map(x => x.nom);
+    const bon = trois.indexOf(p);
+    const pourquoi = {};
+    trois.forEach((x, k) => { if (k !== bon) pourquoi[k] = `${x.nom} veut dire ${x.sens}.`; });
+    const phrase = CARTE.typo(`Quel préfixe veut dire ${p.sens} ?`);
+    const grandeur = choisir(rng, GRANDEURS_CM1.filter(gr => unitePrefixe(p, gr)));
+    const u = unitePrefixe(p, grandeur);
+    const [g, pe] = p.e > 0 ? [u, BASES[grandeur]] : [BASES[grandeur], u];
+    return q({
+      code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "mots"},
+      choix, bon, pourquoi, reponse: p.nom, reponseTexte: p.nom, unite: null,
+      resume: CARTE.typo(`Le préfixe qui veut dire ${p.sens} : ${p.nom}`),
+      relation: relationTexte(g, pe), outil: null, outilSansRelation: true,
+      echelle: {grandeur, marque: [BASES[grandeur]]}, image: lignesEchelle(grandeur),
+      correction: [CARTE.typo(`${p.nom} veut dire ${p.sens} : ${relationTexte(g, pe)}`)],
+      grandeur, relationCle: `${g}-${pe}`,
+      donnees: {type: "prefixe-nom", prefixe: p.nom},
+      cle: `${code}:n:${p.nom}`
+    });
+  }
+  // Relier trois préfixes à leur sens. Degré 3 : deux préfixes qui se
+  // confondent (déca et déci, hecto et centi, kilo et milli).
+  function questionRelierPrefixes(code, degre, rng) {
+    let trois;
+    if (degre === 3) {
+      const p = choisir(rng, PREFIXES);
+      trois = [p, PREFIXE[p.piege], choisir(rng, PREFIXES.filter(x => x !== p && x.nom !== p.piege))];
+    } else trois = melanger(rng, PREFIXES).slice(0, 3);
+    trois = melanger(rng, trois);
+    let ordre = melanger(rng, [0, 1, 2]);
+    while (ordre.every((k, j) => k === j)) ordre = melanger(rng, [0, 1, 2]);
+    // (Sans « un » : « un centième » sortait de son bouton au téléphone.)
+    const court = x => x.sens.replace(/^un /, "");
+    const mesures = ordre.map(k => court(trois[k]));
+    const bonnes = trois.map((x, k) => ordre.indexOf(k));
+    const consigne = "Relie chaque préfixe à son sens.";
+    const lignes = trois.map(x => `${x.nom} : ${court(x)}`);
+    return q({
+      code, degre, forme: "associer", texte: `${consigne} ${trois.map(x => x.nom).join(" ; ")} — ${mesures.join(" ; ")}`,
+      morceaux: {phrase: consigne, mots: true}, objets: trois.map(x => ({texte: x.nom})), mesures, bonnes,
+      reponse: bonnes.join(","), reponseTexte: lignes.join(" ; "), resume: lignes.join(" ; "),
+      relation: lignes.join(" ; "), outil: null, outilSansRelation: true, relationCle: "relier",
+      echelle: {grandeur: "longueur", marque: ["m"]}, image: lignesEchelle("longueur"),
+      correction: lignes, grandeur: null,
+      donnees: {type: "associer-pref", prefixes: trois.map(x => x.nom), mesures: mesures.slice()},
+      cle: `${code}:a:${trois.map(x => x.nom).sort().join("+")}`
+    });
+  }
+
+  ETAPES.P2 = {
+    exclureExemples: false,
+    // d1 : les préfixes connus (kilo, centi, milli), le sens et le calcul ;
+    // d2 : tous les préfixes, le préfixe d'un sens, « combien de fois ? »
+    // pour 100 et 1 000 ; d3 : « combien de fois ? » pour 10 (1 m et 1 dm,
+    // le piège des « 100 fois »), relier, les calculs avec hecto, déca, déci.
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "associer") return questionRelierPrefixes("P2", degre, rng);
+      const prefixes = degre === 1 ? PREFIXES.filter(p => CONNUS.includes(p.nom)) : degre === 3 ? PREFIXES.filter(p => !CONNUS.includes(p.nom)) : PREFIXES;
+      let sorte = forme;
+      // (Dans Je valide, les places libres sont des calculs : le sens et
+      // « combien de fois ? » ont leurs places.)
+      if (!sorte && usage === "valide") sorte = "calcul";
+      if (!sorte) {
+        const r = rng();
+        sorte = degre === 1 ? (r < 0.4 ? "sens" : "calcul")
+          : degre === 2 ? (r < 0.25 ? "sens" : r < 0.45 ? "prefixe" : r < 0.65 ? "fois" : "calcul")
+            : (r < 0.35 ? "fois" : r < 0.5 ? "sens" : "calcul");
+      }
+      if (sorte === "prefixe") return questionNomPrefixe("P2", degre, choisir(rng, PREFIXES), rng);
+      if (sorte === "fois") {
+        const faits = FAITS_P2.filter(([g, p]) => (degre === 3 ? facteur(g, p) === 10n : facteur(g, p) >= 100n));
+        const [g, p] = choisir(rng, faits);
+        return questionFoisCM1("P2", degre, g, p);
+      }
+      const p = choisir(rng, prefixes);
+      const grandeur = choisir(rng, GRANDEURS_CM1.filter(gr => unitePrefixe(p, gr)));
+      if (sorte === "sens") return questionSens("P2", degre, p, grandeur, rng);
+      const u = unitePrefixe(p, grandeur);
+      const b = BASES[grandeur];
+      const [g, pe] = p.e > 0 ? [u, b] : [b, u];
+      const ecrit = forme === "phrase" || forme === "nombre" ? forme : choisir(rng, ["nombre", "nombre", "phrase"]);
+      return questionRel("P2", degre, ecrit, MILLE, g, pe);
+    },
+    // Je valide : le sens en 1re, une phrase en 3e, le préfixe d'un sens en
+    // 4e, « combien de fois ? » en 5e et en 8e, le sens en 7e, relier en
+    // dernier ; À toi : relier deux fois.
+    formes(usage) {
+      if (usage === "valide") return {0: "sens", 2: "phrase", 3: "prefixe", 4: "fois", 6: "sens", 7: "fois", 9: "associer"};
+      if (usage === "entraine") return {12: "associer", 21: "associer"};
+      return {};
+    },
+    accepte: uneRelationUneFois,
+    // Dans Je valide, les trois grandeurs, et des préfixes des deux côtés
+    // (kilo, hecto, déca ; déci, centi, milli).
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const cotes = new Set(serie.filter(x => x.relationCle && x.relationCle !== "relier").map(x => {
+        const [g] = x.relationCle.split("-");
+        return BASES[grandeurDe(g)] === g ? "moins" : "plus";
+      }));
+      return troisGrandeurs(serie) && cotes.size === 2;
+    },
+    erreurs: erreursRel
+  };
+
+  // ------------------------------------------------- P3 · Deux unités voisines
+  // 17 paires (6 de longueur, 6 de masse, 5 de contenance), dans les deux
+  // sens : 1 dm = 10 cm et 1 cm = 0,1 dm (S002 p. 15-17 ; automatisme de
+  // 6e « 1 cm = 1/10 dm = 0,1 dm ») ; 10 cm = 1 dm ; et les dixièmes :
+  // 4 mm = 0,4 cm, 0,6 L = 6 dL.
+  const VOISINES = [];
+  GRANDEURS_CM1.forEach(gr => {
+    const c = echelleDe(gr);
+    for (let k = 0; k + 1 < c.length; k += 1) VOISINES.push([c[k], c[k + 1]]);
+  });
+  // Au degré 1, des voisines que l'élève a déjà vues (palier 1) une fois sur deux.
+  const VOISINES_CONNUES = [["m", "dm"], ["dm", "cm"], ["cm", "mm"], ["L", "dL"], ["dL", "cL"]];
+
+  ETAPES.P3 = {
+    exclureExemples: false,
+    tirer(rng, degre, i, usage, forme) {
+      const [g, p] = degre === 1 && rng() < 0.4 ? choisir(rng, VOISINES_CONNUES) : choisir(rng, VOISINES);
+      let sorte = forme;
+      if (!sorte || sorte === "phrase" || sorte === "nombre") {
+        const r = rng();
+        sorte = degre === 1 ? (r < 0.6 ? "bas" : "haut10") : degre === 2 ? (r < 0.4 ? "haut" : r < 0.7 ? "bas" : "choix") : (r < 0.6 ? "dix" : "haut");
+        if (forme === "phrase" && (sorte === "choix" || sorte === "haut10" || sorte === "dix")) sorte = rng() < 0.5 ? "haut" : "bas";
+      }
+      const ecrit = forme === "phrase" ? "phrase" : forme === "nombre" ? "nombre" : (degre > 1 && rng() < 0.25 ? "phrase" : "nombre");
+      if (sorte === "bas") return questionRel("P3", degre, ecrit, MILLE, g, p);
+      if (sorte === "haut") return questionRel("P3", degre, ecrit, MILLE, p, g);
+      if (sorte === "haut10") return questionRel("P3", degre, "nombre", 10n * MILLE, p, g);
+      if (sorte === "dix") {
+        const n = BigInt(entre(rng, 2, 9));
+        return rng() < 0.5 ? questionRel("P3", degre, ecrit, n * MILLE, p, g) : questionRel("P3", degre, ecrit, n * 100n, g, p);
+      }
+      // Au choix : « 1 cm = … dm » (0,1 ; 10, le sens ; 0,01, le centième),
+      // ou « 1 dm = … cm » (10 ; 0,1, le sens ; 100).
+      if (rng() < 0.6) return enChoixRel(questionRel("P3", degre, "nombre", MILLE, p, g), [10n * MILLE, 10n], rng);
+      return enChoixRel(questionRel("P3", degre, "nombre", MILLE, g, p), [100n, 100n * MILLE], rng);
+    },
+    // Je valide : 10 petites = 1 grande en 2e, une phrase en 3e et en 7e,
+    // au choix en 5e, « 1 cm = … dm » en 6e et en dernier, les dixièmes en
+    // 8e et 9e.
+    formes(usage) {
+      if (usage === "valide") return {1: "haut10", 2: "phrase", 4: "choix", 5: "haut", 6: "phrase", 7: "dix", 8: "dix", 9: "haut"};
+      if (usage === "entraine") return {4: "choix", 11: "choix", 17: "choix"};
+      return {};
+    },
+    accepte: uneRelationUneFois,
+    // Dans Je valide, les trois grandeurs, et vers la grande unité (0,1 ;
+    // 0,4) au moins trois fois.
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const versGrande = serie.filter(x => x.donnees.type === "conv" && exposant(x.donnees.vers) > exposant(x.donnees.de)).length;
+      return troisGrandeurs(serie) && versGrande >= 3;
+    },
+    erreurs: erreursRel
+  };
+
+  // ------------------------------------------ P4 · Toutes les relations à connaître
+  // Les relations de 100 et de 1 000 entre les unités du CM1 (25 paires ;
+  // 21 avec une unité nouvelle : hm, dam, hg, dag, dg, cg, mg, hL, daL, mL),
+  // dans les deux sens ; « combien de fois ? » ; relier ; « 1 cm = 0,01 m » ;
+  // et comparer deux mesures d'unités différentes (« 0,33 t ou 565 kg ? »,
+  // programme de CM1 2025).
+  const RELATIONS_P4 = [];
+  GRANDEURS_CM1.forEach(gr => {
+    const c = echelleDe(gr);
+    c.forEach((g, a) => c.forEach((p, b) => {
+      if (b > a && (b - a === 2 || b - a === 3)) RELATIONS_P4.push([g, p]);
+    }));
+  });
+  const RELATIONS_P4_NEUVES = RELATIONS_P4.filter(([g, p]) => NOUVELLES_CM1.includes(g) || NOUVELLES_CM1.includes(p));
+
+  // Comparer deux mesures (degré 3) : la grande unité avec une virgule (au
+  // centième), la petite en nombre entier, plus grand. Les deux mesures ne
+  // sont pas trop proches (15 % au moins), et la plus grande n'est pas
+  // toujours celle qui a le plus grand nombre. [grande, petite, pas de la
+  // petite, min et max de la mesure en petite unité]
+  const COMPARER_P4 = [["t", "kg", 5, 150, 950], ["km", "m", 10, 300, 2500], ["kg", "g", 10, 150, 2500], ["L", "mL", 10, 150, 1500],
+    ["L", "cL", 1, 15, 150], ["m", "cm", 1, 40, 250], ["hm", "m", 1, 40, 300], ["hL", "L", 1, 40, 300], ["kg", "dag", 1, 15, 150]];
+  function questionComparerMesures(code, degre, rng) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [G, p, pas, mini, maxi] = choisir(rng, COMPARER_P4);
+      const f = facteur(G, p);
+      // la mesure en grande unité : n centièmes (ou dixièmes), en petite : af
+      const af = BigInt(entre(rng, mini, maxi, pas));
+      const A = (af * MILLE) / f;
+      if ((af * MILLE) % f !== 0n || A % 10n !== 0n || A >= 10n * MILLE) continue;
+      const plusGrandeA = rng() < 0.5;
+      const k = plusGrandeA ? 0.55 + 0.3 * rng() : 1.15 + 0.45 * rng();
+      const b = BigInt(Math.round((Number(af) * k) / pas) * pas);
+      const B = b * MILLE;
+      const Af = af * MILLE;
+      if (B <= 0n || B === Af || B <= A || b < 10n) continue;
+      const ecart = Number(B > Af ? B - Af : Af - B) / Number(B > Af ? Af : B);
+      if (ecart < 0.15) continue;
+      if (G === "t" && ecrire(A) === "0,33" && b === 565n) continue;
+      const deux = melanger(rng, [[A, G], [B, p]]);
+      const choix = deux.map(([v, u]) => mes(v, u));
+      const grand = Af > B ? mes(A, G) : mes(B, p);
+      const bon = choix.indexOf(grand);
+      const phrase = `Quelle mesure est la plus grande${NB}: ${choix[0]} ou ${choix[1]}${NB}?`;
+      const grandeur = grandeurDe(G);
+      const signe = Af > B ? ">" : "<";
+      return q({
+        code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "comparer-mes"},
+        choix, bon, reponse: choix[bon], reponseTexte: grand, unite: null,
+        resume: `${mes(A, G)} = ${mes(Af, p)}${NB}; la plus grande : ${grand}`,
+        relation: relationTexte(G, p), outil: "glisse-unite", glisse: glisse(A, G, p, {cm1: true}),
+        image: G === "t" ? [relationTexte("t", "kg"), "J'écris les deux masses dans la même unité."] : ["J'écris les deux mesures dans la même unité."],
+        echelle: G === "t" ? null : {grandeur, marque: [G, p], note: "J'écris les deux mesures dans la même unité."},
+        correction: [`${mes(A, G)} = ${mes(Af, p)}`, `${mes(Af, p)} ${signe} ${mes(B, p)}`],
+        pourquoi: {[1 - bon]: "J'écris d'abord la même unité."},
+        grandeur, relationCle: `${G}-${p}:cmp`,
+        donnees: {type: "comparer-mes", a: brut(A), ua: G, b: brut(B), ub: p},
+        cle: `${code}:cmp:${brut(A)}${G}:${brut(B)}${p}`
+      });
+    }
+    return null;
+  }
+
+  ETAPES.P4 = {
+    exclureExemples: false,
+    // d1 : 1 hm = 100 m, 100 m = 1 hm ; d2 : en phrase, au choix
+    // (« 1 hm = … m » : 10, 100 ou 1 000), « combien de fois ? », relier
+    // trois grandeurs ; d3 : « 1 cm = 0,01 m », comparer deux mesures,
+    // relier trois unités d'une même grandeur.
+    tirer(rng, degre, i, usage, forme) {
+      const vivier = rng() < 0.8 ? RELATIONS_P4_NEUVES : RELATIONS_P4;
+      if (forme === "associer") return questionRelierCM1("P4", degre, rng, RELATIONS_P4);
+      if (forme === "comparer") return questionComparerMesures("P4", degre, rng);
+      let sorte = forme;
+      if (!sorte || sorte === "phrase" || sorte === "nombre") {
+        const r = rng();
+        sorte = degre === 1 ? (r < 0.6 ? "bas" : "haut") : degre === 2 ? (r < 0.4 ? "bas" : r < 0.6 ? "choix" : r < 0.8 ? "fois" : "haut")
+          : (r < 0.3 ? "centieme" : r < 0.5 ? "comparer" : r < 0.7 ? "haut" : "bas");
+        if (forme === "phrase" && !["bas", "haut"].includes(sorte)) sorte = rng() < 0.6 ? "bas" : "haut";
+      }
+      if (sorte === "comparer") return questionComparerMesures("P4", degre, rng);
+      const ecrit = forme === "phrase" ? "phrase" : forme === "nombre" ? "nombre" : (degre > 1 && rng() < 0.25 ? "phrase" : "nombre");
+      if (sorte === "centieme") {
+        const [g, p] = choisir(rng, vivier.filter(([a, b]) => facteur(a, b) === 100n));
+        return questionRel("P4", degre, ecrit, MILLE, p, g);
+      }
+      const [g, p] = choisir(rng, vivier);
+      const f = facteur(g, p);
+      if (sorte === "fois") return questionFoisCM1("P4", degre, g, p);
+      if (sorte === "haut") return questionRel("P4", degre, ecrit, f * MILLE, p, g);
+      const x = questionRel("P4", degre, sorte === "choix" ? "nombre" : ecrit, MILLE, g, p);
+      // Au choix : « 1 hm = … m » — 10 (unités voisines supposées), 1 000
+      // (hm confondu avec km).
+      if (sorte === "choix") return enChoixRel(x, [(f * MILLE) / 10n, f * MILLE * 10n], rng);
+      return x;
+    },
+    // Je valide : une phrase en 3e et en 7e, au choix en 4e, « combien de
+    // fois ? » en 5e, comparer en 8e, « 1 cm = 0,01 m » en 9e, relier en
+    // dernier ; À toi : relier deux fois, comparer trois fois.
+    formes(usage) {
+      if (usage === "valide") return {1: "haut", 2: "phrase", 3: "choix", 4: "fois", 6: "phrase", 7: "comparer", 8: "centieme", 9: "associer"};
+      if (usage === "entraine") return {12: "associer", 16: "comparer", 21: "associer", 23: "comparer"};
+      return {};
+    },
+    accepte: uneRelationUneFois,
+    // Dans Je valide, les trois grandeurs, et au moins cinq questions sur
+    // les unités nouvelles du CM1.
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const neuves = serie.filter(x => x.relationCle && NOUVELLES_CM1.some(u => x.relationCle.split(/[-:]/).includes(u))).length;
+      return troisGrandeurs(serie.filter(x => x.grandeur)) && neuves >= 5;
+    },
+    erreurs: erreursRel
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -2716,7 +3283,11 @@
   function verifier(question, saisie) {
     if (!question) return {juste: false, erreur: null, retour: null};
     if (question.forme === "qcm" || question.forme === "vrai-faux") {
-      return {juste: Number(saisie) === question.bon, erreur: null, retour: null};
+      // (Lot B1-2 : le pourquoi d'une mauvaise réponse au choix, quand la
+      // question en a un : « déci veut dire un dixième, pas un centième. »)
+      const juste = Number(saisie) === question.bon;
+      const pourquoi = !juste && question.pourquoi ? question.pourquoi[Number(saisie)] : null;
+      return {juste, erreur: null, retour: pourquoi ? CARTE.typo(pourquoi) : null};
     }
     // Associer : la mesure choisie pour chaque objet ; ranger : les places
     // touchées, de la plus petite à la plus grande (lot A2 bis).
@@ -2746,7 +3317,9 @@
   // diviser au lieu de multiplier, ou l'inverse — l'erreur 1 de C1 et de C2,
   // l'erreur 3 de P1 (vers une unité plus grande, le nombre gardé ou
   // multiplié), l'erreur 3 de E1 (des centimes vers les euros, × 100).
-  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3]};
+  // Lot B1-2 : P2 (vers la petite unité seulement, divisé : 1), P3 et P4
+  // (vers la grande aussi, multiplié : 3).
+  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3]};
   // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
   function erreurDeSens(question, tape) {
     if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger") return false;
@@ -2841,7 +3414,9 @@
     exposant,
     UNITES,
     COLONNES,
+    COLONNES_CM1,
     HORS_CYCLE_2,
+    PREFIXES,
     PRENOMS,
     OBJETS,
     OBJETS_UNITE,
