@@ -7,7 +7,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { genererQuestion, formesCahier, formesDisponibles } from "../automatismes/moteur.js";
-import { checkAnswer } from "../automatismes/core.js";
+import { checkAnswer, ecritureDecimale } from "../automatismes/core.js";
 import { modeleQuestion } from "../automatismes/champs.js";
 import { mathHtml } from "../automatismes/math-format.js";
 import { questionPrompt } from "../automatismes/math-layout.js";
@@ -186,6 +186,37 @@ test("NC04-d : × ou ÷ par 10, 100, 1 000 ; au plus 3 chiffres après la virgul
   ]);
   assert.equal(checkAnswer(q, ["5 240"]).ok, true);
   assert.equal(checkAnswer(q, ["52,4*100"]).ok, false);
+});
+
+test("Écriture décimale : l'espace seulement entre des groupes de trois chiffres (correctif NC-3)", () => {
+  const acceptes = ["5 240", "5240", "1 000,5", "12 345 678", "12\u00a0345\u00a0678", "12\u202f345,25"];
+  for (const ecrit of acceptes) assert.equal(ecritureDecimale(ecrit), true, ecrit);
+  for (const ecrit of ["52 40", "5 2 4 0", "0, 5", "5 24", "5 240 , 1"])
+    assert.equal(ecritureDecimale(ecrit), false, ecrit);
+  const q = exemple("d");
+  assert.equal(checkAnswer(q, ["5 240"]).ok, true);
+  assert.equal(checkAnswer(q, ["5240"]).ok, true);
+  for (const ecrit of ["52 40", "5 2 4 0", "5 24 0", "524 0"])
+    assert.equal(checkAnswer(q, [ecrit]).ok, false, ecrit);
+});
+
+test("Écriture décimale : sans espace, le même résultat qu'avant le lot (200 tirages de NC01-c et NC04-d)", () => {
+  // Le contrôle de main, recopié tel qu'il était avant le lot NC-3.
+  const formeMain = (s) => /^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(String(s).trim());
+  const egal = (s, v) => Number(String(s).replace(",", ".")) === Number(String(v).replace(",", "."));
+  for (const [notion, forme] of [
+    ["NC01", "c"],
+    ["NC04", "d"],
+  ])
+    for (let i = 0; i < 200; i++) {
+      const q = genererQuestion(notion, forme, i * 7919 + 1);
+      const v = String(q.check.values[0]);
+      const variantes = [v, v.replace(",", "."), `+${v}`, `${v},`, `${v}0`, `−${v}`, `${v}/1`, `,${v}`, `${v}e0`];
+      for (const s of variantes) {
+        assert.equal(ecritureDecimale(s), formeMain(s), `${q.id} « ${s} »`);
+        if (egal(s, v)) assert.equal(checkAnswer(q, [s]).ok, formeMain(s), `${q.id} « ${s} »`);
+      }
+    }
 });
 
 test("NC04-e : un décimal × un entier ; plus petit que 1 une fois sur deux", () => {
