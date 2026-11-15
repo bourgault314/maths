@@ -2380,6 +2380,58 @@
   // Modules lot 6 : la case peut être au dénominateur (« 4/7 = 12/□ »).
   // (Lot 3b, fractions égales : « 3/5 = (3 × 4)/(5 × 4) » — un numérateur
   // ou un dénominateur entre parenthèses s'écrit sans elles, sur la fraction.)
+  // Lot 7e : le nom d'une fraction, pour les lecteurs d'écran (« 3 quarts »,
+  // « 1 demi », « 2 cinquièmes », « 7 vingtièmes ») ; une case : « combien
+  // de huitièmes », « 3 parts de combien » ; un calcul entre parenthèses :
+  // « 3 × 4 sur 5 × 4 ».
+  const UNITES_MOTS = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize"];
+  const DIZAINES_MOTS = {2: "vingt", 3: "trente", 4: "quarante", 5: "cinquante", 6: "soixante"};
+  function nombreEnMots(n) {
+    if (n <= 16) return UNITES_MOTS[n];
+    if (n < 20) return `dix-${UNITES_MOTS[n - 10]}`;
+    const dz = Math.floor(n / 10);
+    const u = n % 10;
+    if (!DIZAINES_MOTS[dz]) return null;
+    if (!u) return DIZAINES_MOTS[dz];
+    return u === 1 ? `${DIZAINES_MOTS[dz]} et un` : `${DIZAINES_MOTS[dz]}-${UNITES_MOTS[u]}`;
+  }
+  function ordinalDe(d) {
+    if (d === 100) return "centième";
+    if (d === 1000) return "millième";
+    const mots = nombreEnMots(d);
+    if (!mots) return null;
+    if (/un$/.test(mots)) return `${mots}ième`;
+    if (/cinq$/.test(mots)) return `${mots}uième`;
+    if (/neuf$/.test(mots)) return `${mots.slice(0, -1)}vième`;
+    return `${mots.replace(/e$/, "")}ième`;
+  }
+  function nomFraction(numerateur, denominateur) {
+    const net = t => String(t).replace(/[\u202f\u00a0 ]/g, "");
+    const n = net(numerateur);
+    const d = net(denominateur);
+    const entier = t => /^\d+$/.test(t);
+    const parts = (dd, pluriel) => {
+      const v = Number(dd);
+      if (v === 2) return pluriel ? "demis" : "demi";
+      if (v === 3) return "tiers";
+      if (v === 4) return pluriel ? "quarts" : "quart";
+      const o = ordinalDe(v);
+      return o ? `${o}${pluriel ? "s" : ""}` : null;
+    };
+    if (entier(d) && (n === "□" || n === "?")) {
+      const nom = parts(d, true);
+      if (nom) return `combien de ${nom}`;
+    }
+    if (entier(n) && (d === "□" || d === "?")) return `${Number(n)} parts de combien`;
+    if (entier(n) && entier(d)) {
+      const nom = parts(d, Number(n) > 1);
+      if (nom) return `${Number(n)} ${nom}`;
+    }
+    return `${sansParentheses(numerateur)} sur ${sansParentheses(denominateur)}`;
+  }
+  function lireFractions(texte) {
+    return String(texte).replace(new RegExp(MOTIF_FRACTION.source, "g"), (tout, n, d) => nomFraction(n, d)).replace(/\//g, " sur ");
+  }
   const MOTIF_FRACTION = /(\([\d\u202f\u00a0 ×÷?]+\)|\d[\d\u202f\u00a0]*|□|\?)\/(\([\d\u202f\u00a0 ×÷?]+\)|\d[\d\u202f\u00a0]*\d|\d|□|\?)/g;
   const sansParentheses = t => String(t).replace(/^\((.*)\)$/, "$1");
   // Relecture 2b (11/11/2026, remarque 62) : `signes` — dans un calcul qui
@@ -2413,6 +2465,9 @@
       ajouterTexte(chaine.slice(dernier, m.index));
       const fraction = document.createElement("span");
       fraction.className = "dc-frac";
+      // Lot 7e : sans case à remplir, la fraction se lit par son nom
+      // (« 3 quarts ») ; les chiffres affichés sont cachés au lecteur d'écran.
+      const avecCase = Boolean(caseReponse) && (m[1] === "□" || m[2] === "□");
       const num = document.createElement("span");
       num.className = "dc-frac-num";
       if (m[1] === "□" && caseReponse) num.append(caseReponse());
@@ -2424,7 +2479,13 @@
       den.className = "dc-frac-den";
       if (m[2] === "□" && caseReponse) den.append(caseReponse());
       else den.textContent = insecable(sansParentheses(m[2]));
-      fraction.append(num, sur, den);
+      if (avecCase) fraction.append(num, sur, den);
+      else {
+        num.setAttribute("aria-hidden", "true");
+        den.setAttribute("aria-hidden", "true");
+        sur.textContent = nomFraction(m[1], m[2]);
+        fraction.append(num, sur, den);
+      }
       morceaux.push(fraction);
       dernier = m.index + m[0].length;
     }
@@ -2581,7 +2642,7 @@
   // Le même tableau, en mots (sans la réponse quand elle est cherchée).
   function decrireNumeration(o, plan = planNumeration(o)) {
     const lire = rangs => [...rangs.entries()].map(([rang, chiffre]) => `${chiffre} aux ${RANGS[rang].toLowerCase()}`).join(", ");
-    const ecrit = texte => String(texte).replace(/\//g, " sur ");
+    const ecrit = texte => lireFractions(texte);
     const lignes = plan.lignes.map(l => `${ecrit(l.texte)} : ${l.cherche && !l.trouvee ? "à écrire" : lire(l.rangs)}`).join(" ; ");
     const retenue = plan.retenues.length ? ` Une retenue aux ${plan.retenues.map(rang => RANGS[rang].toLowerCase()).join(" et aux ")}.` : "";
     if (!o.inconnue) return `Tableau de numération. ${lignes}.${retenue} En bas, ${lire(plan.resultat.rangs)}.`;
@@ -2757,7 +2818,7 @@
         bloc.classList.add("est-finie");
       }
       dessiner();
-      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? lireFractions(traces[traces.length - 1].texte) : compte());
       if (etat.fini && typeof surFini === "function") surFini();
     }
     grand.addEventListener("click", toucher);
@@ -3010,7 +3071,7 @@
         bloc.classList.add("est-finie");
       }
       dessiner();
-      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? lireFractions(traces[traces.length - 1].texte) : compte());
       if (etat.fini && typeof surFini === "function") surFini();
     }
     grand.addEventListener("click", toucher);
@@ -3231,7 +3292,7 @@
       else etat.partis.set(rang, chiffre);
       if (etat.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : `${chiffre} jetons de ${VALEURS_JETONS[rang]}`);
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? lireFractions(traces[traces.length - 1].texte) : `${chiffre} jetons de ${VALEURS_JETONS[rang]}`);
       if (etat.fini && typeof surFini === "function") surFini();
     }
     function echanger(rang) {
@@ -3247,7 +3308,7 @@
       etat.echanges.push(`10 jetons de ${VALEURS_JETONS[rang]} = 1 jeton de ${VALEURS_JETONS[rang + 1]}`);
       if (etat.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : etat.echanges[etat.echanges.length - 1]);
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? lireFractions(traces[traces.length - 1].texte) : etat.echanges[etat.echanges.length - 1]);
       if (etat.fini && typeof surFini === "function") surFini();
     }
     // Un toucher dans le tableau : l'échange (sur la bonne colonne), sinon
@@ -3324,8 +3385,9 @@
       + `<line x1="${x - w / 2}" y1="${y + 1}" x2="${x + w / 2}" y2="${y + 1}" stroke="${encre}" stroke-width="2"/>`
       + `<text x="${x}" y="${y + taille + 1}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${couleur(m[2])}">${m[2]}</text>`;
   }
-  // « 3/4 » se lit « 3 sur 4 ».
-  const lireFraction = texte => String(texte).replace(/\//g, " sur ");
+  // « 3/4 » se lit « 3 quarts » (lot 7e : le livret de CE1 déconseille
+  // « 3 sur 4 », qui fait voir deux entiers séparés).
+  const lireFraction = texte => lireFractions(texte);
   // Des hachures dans un rectangle, sans `clipPath` (deux dessins dans une
   // page ne se marchent pas dessus) : chaque trait est coupé au bord.
   function hachuresSvg(x, y, w, h, couleur = FRACTIONS.bleu) {
@@ -3625,12 +3687,12 @@
   // Sans la réponse : les bandes posées et les graduations écrites.
   function decrireBandesImage(pieces, nombres) {
     const graduations = nombres ? ` ${lireDroite(0, null, {}, nombres)}` : "";
-    return `Bandes posées sur la droite graduée : ${pieces.filter(p => !p.enleve).map(p => (p.d === 1 ? "1" : `1 sur ${p.d}`)).join(", ")}.${graduations}`;
+    return `Bandes posées sur la droite graduée : ${pieces.filter(p => !p.enleve).map(p => (p.d === 1 ? "1" : nomFraction(1, p.d))).join(", ")}.${graduations}`;
   }
   // Ce que voit l'élève, pour un lecteur d'écran.
   function decrireBandes(pieces) {
     if (!pieces.length) return "La droite graduée, rien n’est posé.";
-    const restes = pieces.filter(p => !p.enleve).map(p => (p.d === 1 ? "1" : `1 sur ${p.d}`));
+    const restes = pieces.filter(p => !p.enleve).map(p => (p.d === 1 ? "1" : nomFraction(1, p.d)));
     const enleves = pieces.filter(p => p.enleve).length;
     return `Sur la droite : ${restes.join(", ") || "rien"}${enleves ? ` ; ${accorder(enleves, "bande enlevée", "bandes enlevées")}` : ""}.`;
   }
@@ -4052,8 +4114,12 @@
     const W = 300, xg = 82, xd = 218, yb = 104, taille = 30;
     const vert = "#147447", bleu = "#0755b8", encre = "#143451", orange = "#c86a12";
     const nombre = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    // Lot 7e (remarque de Gwenaël du 15/11) : « × ? » et la case « ? » ne
+    // sont pas le même nombre. Tant que le « × ? » n'est pas trouvé, la case
+    // reste vide ; son « ? » vient quand une flèche porte « × 4 ».
+    const kConnu = Boolean(o.haut || o.bas);
     const ecrire = (x, y, v, place) => {
-      if (place === o.cache && !o.montre) return `<rect x="${x - 19}" y="${y - 27}" width="38" height="36" rx="7" fill="#fff" stroke="${bleu}" stroke-width="2.4" stroke-dasharray="5 4"/><text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${bleu}">?</text>`;
+      if (place === o.cache && !o.montre) return `<rect x="${x - 19}" y="${y - 27}" width="38" height="36" rx="7" fill="#fff" stroke="${bleu}" stroke-width="2.4" stroke-dasharray="5 4"/>${kConnu ? `<text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${bleu}">?</text>` : ""}`;
       return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${place === o.cache && o.trouve ? vert : encre}">${nombre(v)}</text>`;
     };
     const fraction = (x, [n, d], cote) => {
@@ -4081,7 +4147,7 @@
     };
     let s = fraction(xg, o.gauche, "g") + `<text x="${W / 2}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>` + fraction(xd, o.droite, "d");
     s += fleche(true, o.haut, o.trouveHaut) + fleche(false, o.bas, o.trouveBas);
-    const lire = ([n, d], cote) => `${`${cote}n` === o.cache && !o.montre ? "?" : n} sur ${`${cote}d` === o.cache && !o.montre ? "?" : d}`;
+    const lire = ([n, d], cote) => nomFraction(`${cote}n` === o.cache && !o.montre ? "?" : n, `${cote}d` === o.cache && !o.montre ? "?" : d);
     return `<svg viewBox="0 0 ${W} 228" role="img" aria-label="${lire(o.gauche, "g")} égale ${lire(o.droite, "d")} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
   }
 
@@ -4114,6 +4180,8 @@
   }
 
   return Object.freeze({
+    // Lot 7e : le nom d'une fraction pour le lecteur d'écran (« 3 quarts »).
+    lireFractions,
     PERLES,
     MESSAGES_REFUS,
     MONTRER_APRES,
