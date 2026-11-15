@@ -95,6 +95,17 @@ async function ouvrir(nav, nom, {largeur = 1366, hauteur = 650, telephone = fals
   page.on("pageerror", e => erreurs.push(String(e)));
   await page.goto(base + APPLIS[nom].page, {waitUntil: "networkidle"});
   await page.waitForTimeout(900);
+  /* Une page lente à se monter (ordinateur chargé, plusieurs vérifications en même temps,
+     Défi calcul qui grossit à chaque lot) n'a pas toujours posé la ligne au bout de 900 ms :
+     on l'attend jusqu'à 10 s. Si elle n'arrive jamais, les assertions rougissent comme avant. */
+  if (mode !== "visiteur") {
+    await page.waitForFunction(() => {
+      const l = document.getElementById("suivi-repere");
+      return Boolean(l && !l.hidden && l.getClientRects().length && l.textContent.trim());
+    }, null, {timeout: 10000}).catch(() => {});
+    await page.evaluate(() => document.fonts.ready);
+    await page.waitForTimeout(300);
+  }
   return {ctx, page, erreurs};
 }
 
