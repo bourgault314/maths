@@ -89,11 +89,11 @@ test("le livret n'est pas public au début : aucune page du site ne le cite (cat
   }
 });
 
-test("le serveur : l'appli « cours » sans progression ni ajout par élève ; l'espace élève et Ma classe la montrent à part", () => {
+test("le serveur : l'appli « cours » sans progression ; l'espace élève et Ma classe la montrent à part", () => {
   const applis = lire("_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("    'cours' => ["), applis.indexOf("    'soley' => ["));
   assert.match(bloc, /'reglages' => \['chapitres' => 'cours', 'sans' => 'cours', 'avec' => 'cours'\]/);
-  assert.match(bloc, /'par_eleve' => false/);
+  assert.doesNotMatch(bloc, /'par_eleve'/, "lot « cours-appli-3 » : des chapitres en plus pour quelques élèves");
   assert.match(bloc, /'compteur' => null/);
   const parcours = lire("_serveur/public/api/parcours.php");
   const connues = parcours.match(/const APPLIS_CONNUES = \[([^\]]*)\]/)[1];

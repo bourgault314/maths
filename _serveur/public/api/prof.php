@@ -32,7 +32,9 @@ const MAX_ELEVES_PAR_LOT = 60;
 // catalogue doit y être.
 // « cours » (lot « cours-appli », 08/11/2026) : l'appli Cours se propose à
 // une classe comme les autres ; elle n'a pas de progression (le tableau de
-// son onglet n'a que les prénoms) et ne se donne pas par élève.
+// son onglet n'a que les prénoms) ; depuis le lot « cours-appli-3 »
+// (14/11/2026), des chapitres se donnent EN PLUS à quelques élèves
+// (eleves.acces, lib/applis.php).
 const APPLIS_PROPOSABLES = ['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours'];
 const DROITS_PARTAGE = ['lecture', 'ecriture'];
 

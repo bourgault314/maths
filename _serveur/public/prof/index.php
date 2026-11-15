@@ -460,6 +460,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
                                  font-size: var(--texte-secondaire); font-weight: 700; background: var(--paper); }
   .regler .plus-ligne[open] .choisir { background: var(--bleu-pale); }
   .regler .plus-ligne .grille-cases { padding: 0 0 10px 4px; }
+  /* Lot « cours-appli-3 » : le nom d'un chapitre peut être long
+     (« Agrandissement et Thalès ») — il passe à la ligne, et les prénoms
+     gardent toujours un peu de place. */
+  .regler .plus-ligne.cours-plus .quoi { flex: 0 1 auto; min-width: 0; }
+  .regler .plus-ligne.cours-plus .qui { flex: 1 1 4.6em; min-width: 4.6em; }
   .regler .rond-monde { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
                         color: #fff; font-size: .78rem; font-weight: 800; }
   .regler .fenetre-corps[aria-busy="true"] { opacity: .6; cursor: progress; }
@@ -1230,6 +1235,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .regler .cours-boite-tete { display: flex; align-items: center; gap: 8px; }
   .regler .cours-boite-tete .case-a-cocher { flex: 1 1 auto; font-weight: 700; color: var(--blue-dark); }
   .regler .cours-boite-tete button { flex: 0 0 auto; }
+  .regler .cours-boite-nom { flex: 1 1 auto; min-width: 0; margin: 0; padding: 6px 0; font-weight: 700; color: var(--blue-dark); }
+  .regler .cours-boite-nom small { display: block; color: var(--muted); font-size: .82rem; font-weight: 400; }
   .regler .cours-fiches { margin: 6px 0 0 30px; }
   .regler .cours-fiches .cours-fiche { align-items: center; }
   .regler .cours-fiches .case-a-cocher { flex: 1 1 auto; }
@@ -1257,6 +1264,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .cours-chap-tete .nom::before { content: "▸"; display: inline-block; width: 1.1em; color: var(--blue); }
   .cours-chap-tete[aria-expanded="true"] .nom::before { content: "▾"; }
   .cours-chap-tete .nom small { font-weight: 400; color: var(--muted); font-size: var(--texte-secondaire); }
+  /* Lot « cours-appli-3 » : « · en plus pour 2 élèves » allonge la ligne —
+     au téléphone, elle passe à la ligne au lieu de sortir de la carte. */
+  .cours-chap-tete .nom { white-space: normal; overflow-wrap: anywhere; }
   .cours-chap-tete .combien { flex: 0 0 auto; margin-left: 1.1em; color: var(--ink); font-size: var(--texte-secondaire); }
   .cours-chap-tete .combien b { color: var(--teal-texte); }
   .cours-chap-corps { padding: 0 0 12px 1.1em; }
@@ -3182,6 +3192,18 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (Object.keys(ajout).length && !Object.keys(copie).length) return;
       suite[cle] = copie;
     });
+    // Lot « cours-appli-3 » : un chapitre du livret en plus ({cle: "cours",
+    // chapitre, ouvre}) — rangé dans l'ordre du livret ; plus aucun
+    // chapitre : la clé part (jamais « cours: {} », que le serveur refuse).
+    if (geste.chapitre !== undefined) {
+      const avant = suite.cours && Array.isArray(suite.cours.chapitres) ? suite.cours.chapitres : [];
+      const voulus = new Set(avant);
+      if (geste.ouvre) voulus.add(geste.chapitre); else voulus.delete(geste.chapitre);
+      const chapitres = COURS.map(ch => ch.id).filter(id => voulus.has(id));
+      if (chapitres.length) suite.cours = {chapitres};
+      else delete suite.cours;
+      return suite;
+    }
     if (geste.liste === undefined) {
       if (geste.ouvre) suite[geste.cle] = {};
       else delete suite[geste.cle];
@@ -3319,10 +3341,20 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // déplier encore. Rien n'est déplié au départ ; ce qui l'est le reste tant
   // que la page est ouverte (par classe). « Ouvert » n'est ni « lu » ni
   // « compris » : la page ne dit jamais « lu ».
+  // Lot « cours-appli-3 » (14/11/2026) : la vue ne change pas, mais un
+  // élève qui a un chapitre EN PLUS y est compté sur ce chapitre — et
+  // seulement les élèves qui voient un chapitre comptent pour lui (« ouvert
+  // par 1 élève sur 2 » pour un chapitre ouvert à deux élèves). Qui voit
+  // quoi vient du serveur (eleve.acces, classe + ajouts) : la page ne refait
+  // pas la règle.
   const coursDeplies = new Set();
   const coursGrilles = new Set();
   function elevesDuCours() {
-    return appliAffichee === "cours" ? ordreDeLaFeuille(eleves || []) : [];
+    return appliAffichee === "cours" ? ordreDeLaFeuille(eleves || []).filter(eleve => accesDe(eleve).applis.includes("cours")) : [];
+  }
+  function chapitresVusPar(eleve) {
+    const cours = accesDe(eleve).reglages.cours;
+    return new Set(cours && Array.isArray(cours.chapitres) ? cours.chapitres : []);
   }
   // Combien de ces élèves ont ouvert au moins une de ces fiches (un jour
   // `depuis` ou après, si on le donne).
@@ -3337,13 +3369,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   }
   function dessinerCoursProf() {
     const panneau = $("cours-prof");
-    const montrer = Boolean(classe) && vue === "appli" && appliAffichee === "cours" && parLaClasse("cours");
+    const montrer = Boolean(classe) && vue === "appli" && appliAffichee === "cours" && (parLaClasse("cours") || elevesDuCours().length > 0);
     panneau.hidden = !montrer;
     panneau.textContent = "";
     if (!montrer) return;
     const c = coursDeLaClasse();
     const liste = elevesDuCours();
     const total = liste.length;
+    const deLaClasse = ch => parLaClasse("cours") && c.chapitres.has(ch.id);
+    const quiVoit = ch => (deLaClasse(ch) ? liste : liste.filter(eleve => chapitresVusPar(eleve).has(ch.id)));
     panneau.append(el("h2", "", `Ce que voient les élèves de la ${classe.libelle}`));
     if (total) {
       const lundi = lundiDuJour(aujourdhuiSuivi());
@@ -3358,7 +3392,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       panneau.append(phrase);
     }
     panneau.append(el("p", "sous", "Pour chaque élève et chaque fiche, seul le dernier jour où la fiche a été ouverte depuis « Mes cours » est gardé. Ouvrir une fiche n’est pas la lire."));
-    const ouverts = COURS.filter(ch => c.chapitres.has(ch.id));
+    const ouverts = COURS.filter(ch => deLaClasse(ch) || quiVoit(ch).length > 0);
     if (!ouverts.length) {
       panneau.append(el("p", "", droitClasse === "proprietaire"
         ? "Aucun chapitre ouvert. « Régler les cours » pour en ouvrir un."
@@ -3378,12 +3412,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       tete.type = "button";
       tete.setAttribute("aria-expanded", String(deplie));
       const nom = el("span", "nom");
-      nom.append(etiquetteCoursNiveau(ch.niveau), ch.chapitre || ch.titre, " ", el("small", "", `· ${vus} fiche${vus > 1 ? "s" : ""} sur ${nb}`));
+      const voient = quiVoit(ch);
+      const surCombien = voient.length;
+      const enPlus = deLaClasse(ch) ? "" : ` · en plus pour ${surCombien} élève${surCombien > 1 ? "s" : ""}`;
+      nom.append(etiquetteCoursNiveau(ch.niveau), ch.chapitre || ch.titre, " ", el("small", "", `· ${vus} fiche${vus > 1 ? "s" : ""} sur ${nb}${enPlus}`));
       tete.append(nom);
-      if (total) {
+      if (surCombien) {
         const combien = el("span", "combien");
-        const n = combienOntOuvert(liste, colonnes.map(col => col.id));
-        if (n) combien.append("ouvert par ", el("b", "", `${n} élève${n > 1 ? "s" : ""}`), ` sur ${total}`);
+        const n = combienOntOuvert(voient, colonnes.map(col => col.id));
+        if (n) combien.append("ouvert par ", el("b", "", `${n} élève${n > 1 ? "s" : ""}`), ` sur ${surCombien}`);
         else combien.append("pas encore ouvert");
         tete.append(combien);
       }
@@ -3406,14 +3443,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           const precision = [r.type, r.ids].filter(Boolean).join(" · ");
           if (precision) t.append(" ", el("small", "", `· ${precision}`));
           rangee.append(marque, t);
-          if (r.ouverte && total) {
-            const n = combienOntOuvert(liste, [r.id]);
+          if (r.ouverte && surCombien) {
+            const n = combienOntOuvert(voient, [r.id]);
             rangee.append(el("span", `ouvreurs${n ? "" : " personne"}`, n ? `${n} élève${n > 1 ? "s" : ""}` : "personne"));
           }
           rangee.append(lienVoir(r.url));
           corps.append(rangee);
         });
-        if (total && colonnes.length && combienOntOuvert(liste, colonnes.map(col => col.id))) {
+        if (surCombien && colonnes.length && combienOntOuvert(voient, colonnes.map(col => col.id))) {
           const grille = coursGrilles.has(cleChap);
           const bouton = el("button", "secondaire cours-grille-bouton", grille ? "Élève par élève ▴" : "Élève par élève ▾");
           bouton.type = "button";
@@ -3424,7 +3461,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           });
           corps.append(bouton);
           if (grille) {
-            const ouvertures = tableauOuvertures(colonnes);
+            const ouvertures = tableauOuvertures(colonnes, voient);
             if (ouvertures) corps.append(ouvertures);
           }
         }
@@ -3449,8 +3486,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const jour = eleve && eleve.ouvertes && typeof eleve.ouvertes === "object" ? eleve.ouvertes[fiche] : null;
     return typeof jour === "string" && JOUR_ISO.test(jour) ? jour : null;
   }
-  function tableauOuvertures(colonnes) {
-    const liste = elevesDuCours();
+  function tableauOuvertures(colonnes, liste) {
     if (!liste.length || !colonnes.length) return null;
     if (!liste.some(eleve => colonnes.some(col => jourOuvert(eleve, col.id)))) {
       return el("p", "cours-personne", "Personne n’a encore ouvert de fiche de ce chapitre.");
@@ -3492,12 +3528,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return enveloppe;
   }
 
-  // La fenêtre « Régler les cours » : le niveau (un filtre), puis les
-  // chapitres de ce niveau, chacun avec ses fiches à déplier. Rien ne part
-  // avant « Enregistrer ».
-  function dessinerReglerCours(corps, b) {
+  // Le niveau (un filtre d'affichage) : vaut pour les chapitres de la
+  // classe ET pour ceux en plus. Le nombre sur un bouton : les chapitres de
+  // ce niveau ouverts à la classe (rien quand elle n'a pas l'appli).
+  function dessinerNiveauxCours(corps, b) {
     const c = b.cours;
-    if (!reglage.niveauCours) reglage.niveauCours = niveauDeDepart(c);
     const niveau = reglage.niveauCours;
     if (NIVEAUX_COURS.length > 1) {
       corps.append(el("h3", "", "Niveau"));
@@ -3508,13 +3543,22 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         const bouton = el("button", "secondaire", n);
         bouton.type = "button";
         bouton.setAttribute("aria-pressed", String(n === niveau));
-        const ouverts = COURS.filter(ch => ch.niveau === n && c.chapitres.has(ch.id)).length;
+        const ouverts = b.classeOuverte ? COURS.filter(ch => ch.niveau === n && c.chapitres.has(ch.id)).length : 0;
         if (ouverts) bouton.textContent = `${n} · ${ouverts}`;
         bouton.addEventListener("click", () => { reglage.niveauCours = n; dessinerRegler(); });
         rangee.append(bouton);
       });
       corps.append(rangee);
     }
+  }
+
+  // La fenêtre « Régler les cours » : le niveau (un filtre), puis les
+  // chapitres de ce niveau, chacun avec ses fiches à déplier. Rien ne part
+  // avant « Enregistrer ».
+  function dessinerReglerCours(corps, b) {
+    const c = b.cours;
+    const niveau = reglage.niveauCours;
+    dessinerNiveauxCours(corps, b);
     const chapitres = COURS.filter(ch => ch.niveau === niveau);
     // Lot « cours-appli-2 » (choix de Gwenaël du 13/11/2026) : « Tout ouvrir »
     // et « Tout fermer » cochent ou décochent les chapitres du niveau affiché
@@ -3537,49 +3581,185 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     }
     corps.append(tous);
     if (!chapitres.length) corps.append(el("p", "aide", "Pas encore de chapitre écrit pour ce niveau."));
-    chapitres.forEach(ch => {
-      const boite = el("div", "cours-boite");
-      const tete = el("div", "cours-boite-tete");
-      const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
-      // Lot « cours-appli-2 » : le nom court du chapitre, celui que voient les élèves.
-      const caseChapitre = caseACocher(ch.chapitre || ch.titre, c.chapitres.has(ch.id), coche => {
-        if (coche) c.chapitres.add(ch.id); else c.chapitres.delete(ch.id);
-        dessinerRegler();
-      }, `${insecable(ch.id)} · ${vus} fiche${vus > 1 ? "s" : ""} sur ${ch.fiches.length}`);
-      const deplie = reglage.deplies.has(`cours:${ch.id}`);
-      const bouton = el("button", "secondaire", deplie ? "Les fiches ▴" : "Les fiches ▾");
-      bouton.type = "button";
-      bouton.setAttribute("aria-expanded", String(deplie));
-      bouton.addEventListener("click", () => {
-        if (deplie) reglage.deplies.delete(`cours:${ch.id}`); else reglage.deplies.add(`cours:${ch.id}`);
-        dessinerRegler();
-      });
-      tete.append(caseChapitre, bouton);
-      boite.append(tete);
-      if (deplie) {
-        const fiches = el("div", `cours-fiches${c.chapitres.has(ch.id) ? "" : " eteintes"}`);
-        const rangees = ch.fiches.map(f => ({id: f.id, nouveau: f.nouveau, titre: `${f.n}. ${f.h1}`, precision: [f.type, insecable(f.ids)].filter(Boolean).join(" · "), url: f.url}));
-        if (ch.brevet) rangees.push({id: ch.brevet.id, nouveau: false, titre: `🎯 ${nomBrevetProf(ch)}`, precision: "", url: ch.brevet.url});
-        rangees.forEach(r => {
-          const rangee = el("div", "cours-fiche");
-          const texte = document.createDocumentFragment();
-          texte.append(r.titre);
-          if (r.nouveau) texte.append(" ", el("span", "cours-nouveau", "Nouveau programme"));
-          const ouverte = r.nouveau ? c.avec.has(r.id) : !c.sans.has(r.id);
-          rangee.append(caseACocher(texte, ouverte, coche => {
-            if (r.nouveau) { if (coche) c.avec.add(r.id); else c.avec.delete(r.id); }
-            else if (coche) c.sans.delete(r.id); else c.sans.add(r.id);
-            dessinerRegler();
-          }, r.precision), lienVoir(r.url));
-          fiches.append(rangee);
-        });
-        boite.append(fiches);
-      }
-      corps.append(boite);
-    });
+    chapitres.forEach(ch => corps.append(boiteCours(b, ch, true)));
     corps.append(el("p", "aide", "Un chapitre coché s’ouvre avec toutes ses fiches, sauf celles du nouveau programme (à cocher une par une). "
       + "« Tout ouvrir » et « Tout fermer » ne changent que les chapitres de ce niveau. "
       + "Une fiche commune à la 4e et à la 3e se ferme dans les deux chapitres."));
+  }
+
+  // La boîte d'un chapitre : sa case (pour la classe, si `avecCase`) ou son
+  // nom seul, et « Les fiches ▾ » qui déplie ses fiches à cocher (« sans » /
+  // « avec » de la classe). Correctif de cours-appli-3 (relecture Codex,
+  // point 2) : sorti de dessinerReglerCours pour servir aussi quand la classe
+  // n'a pas Cours (« Leurs fiches »). Les fiches d'un chapitre fermé à la
+  // classe sont grisées, sauf si des élèves l'ont en plus (elles valent pour eux).
+  function boiteCours(b, ch, avecCase) {
+    const c = b.cours;
+    const boite = el("div", "cours-boite");
+    const tete = el("div", "cours-boite-tete");
+    const vus = ch.fiches.filter(f => ficheOuverte(c, f)).length;
+    const precision = `${insecable(ch.id)} · ${vus} fiche${vus > 1 ? "s" : ""} sur ${ch.fiches.length}`;
+    // Lot « cours-appli-2 » : le nom court du chapitre, celui que voient les élèves.
+    let nom;
+    if (avecCase) {
+      nom = caseACocher(ch.chapitre || ch.titre, c.chapitres.has(ch.id), coche => {
+        if (coche) c.chapitres.add(ch.id); else c.chapitres.delete(ch.id);
+        dessinerRegler();
+      }, precision);
+    } else {
+      nom = el("p", "cours-boite-nom", ch.chapitre || ch.titre);
+      nom.append(el("small", "", precision));
+    }
+    const deplie = reglage.deplies.has(`cours:${ch.id}`);
+    const bouton = el("button", "secondaire", deplie ? "Les fiches ▴" : "Les fiches ▾");
+    bouton.type = "button";
+    bouton.setAttribute("aria-expanded", String(deplie));
+    bouton.addEventListener("click", () => {
+      if (deplie) reglage.deplies.delete(`cours:${ch.id}`); else reglage.deplies.add(`cours:${ch.id}`);
+      dessinerRegler();
+    });
+    tete.append(nom, bouton);
+    boite.append(tete);
+    if (deplie) {
+      const vivantes = (b.classeOuverte && c.chapitres.has(ch.id)) || (b.coursPlus && b.coursPlus.get(ch.id) && b.coursPlus.get(ch.id).size > 0);
+      const fiches = el("div", `cours-fiches${vivantes ? "" : " eteintes"}`);
+      const rangees = ch.fiches.map(f => ({id: f.id, nouveau: f.nouveau, titre: `${f.n}. ${f.h1}`, precision: [f.type, insecable(f.ids)].filter(Boolean).join(" · "), url: f.url}));
+      if (ch.brevet) rangees.push({id: ch.brevet.id, nouveau: false, titre: `🎯 ${nomBrevetProf(ch)}`, precision: "", url: ch.brevet.url});
+      rangees.forEach(r => {
+        const rangee = el("div", "cours-fiche");
+        const texte = document.createDocumentFragment();
+        texte.append(r.titre);
+        if (r.nouveau) texte.append(" ", el("span", "cours-nouveau", "Nouveau programme"));
+        const ouverte = r.nouveau ? c.avec.has(r.id) : !c.sans.has(r.id);
+        rangee.append(caseACocher(texte, ouverte, coche => {
+          if (r.nouveau) { if (coche) c.avec.add(r.id); else c.avec.delete(r.id); }
+          else if (coche) c.sans.delete(r.id); else c.sans.add(r.id);
+          dessinerRegler();
+        }, r.precision), lienVoir(r.url));
+        fiches.append(rangee);
+      });
+      boite.append(fiches);
+    }
+    return boite;
+  }
+
+  // Correctif de cours-appli-3 (relecture Codex, point 2) : la classe n'a
+  // pas Cours, des élèves en ont des chapitres en plus — leurs fiches se
+  // règlent ici (les mêmes listes « sans » / « avec » que pour la classe,
+  // envoyées seules, sans rouvrir l'appli à la classe). Seuls les chapitres
+  // du niveau affiché qu'au moins un élève a en plus (dans le brouillon).
+  function dessinerFichesEnPlus(corps, b) {
+    const niveau = reglage.niveauCours;
+    const leurs = COURS.filter(ch => ch.niveau === niveau && b.coursPlus.get(ch.id) && b.coursPlus.get(ch.id).size > 0);
+    if (!leurs.length) return;
+    corps.append(el("h3", "", "Leurs fiches"));
+    corps.append(el("p", "aide", "Toutes les fiches de ces chapitres sont ouvertes, sauf celles du nouveau programme (à cocher une par une)."));
+    leurs.forEach(ch => corps.append(boiteCours(b, ch, false)));
+  }
+
+  // ------------------------------- des chapitres en plus pour quelques élèves (lot « cours-appli-3 »)
+  //
+  // Choix de Gwenaël (question à choix du 14/11/2026) : « En plus pour
+  // quelques élèves », comme SPLAT! et Coffres — sous ce qui est ouvert à
+  // toute la classe, une ligne par chapitre fermé à la classe (du niveau
+  // affiché), « Choisir… » déplie les élèves ; et un raccourci, « Tout le
+  // niveau 4e », qui coche ou décoche d'un coup tous ces chapitres pour un
+  // élève. On ajoute, on ne retire jamais rien : un chapitre ouvert à la
+  // classe n'a pas de ligne, et l'ajout d'un élève qu'il recouvre est gardé
+  // (D4). Rien ne part avant « Enregistrer » (eleves.acces, avec « avant »).
+  // Les fiches fermées et les fiches du nouveau programme ouvertes de la
+  // classe valent aussi pour ces chapitres (le serveur, acces_de_l_eleve).
+  //
+  // L'état : b.coursPlus, Map chapitre → Set des élèves qui l'ont en plus.
+  function coursPlusDesEleves() {
+    const parChapitre = new Map(COURS.map(ch => [ch.id, new Set()]));
+    (eleves || []).forEach(eleve => {
+      const ajout = ajoutDe(eleve, "cours");
+      (ajout && Array.isArray(ajout.chapitres) ? ajout.chapitres : []).forEach(id => {
+        if (parChapitre.has(id)) parChapitre.get(id).add(eleve.id);
+      });
+    });
+    return parChapitre;
+  }
+  function coursPlusDe(b, id) {
+    if (!b.coursPlus.has(id)) b.coursPlus.set(id, new Set());
+    return b.coursPlus.get(id);
+  }
+  function dessinerCoursEnPlus(corps, b) {
+    const niveau = reglage.niveauCours;
+    const fermes = COURS.filter(ch => ch.niveau === niveau && !(b.classeOuverte && b.cours.chapitres.has(ch.id)));
+    corps.append(el("h3", "", b.classeOuverte ? "En plus pour quelques élèves" : "Ou seulement pour quelques élèves"));
+    if (!COURS.some(ch => ch.niveau === niveau)) return;
+    if (!fermes.length) {
+      corps.append(el("p", "aide", `Tous les chapitres de ${niveau} sont ouverts à la ${classe.libelle} : rien à ajouter.`));
+      return;
+    }
+    corps.append(el("p", "aide", b.classeOuverte
+      ? `Les chapitres de ${niveau} fermés à la ${classe.libelle}. Rien n’est retiré à un élève : on ajoute.`
+      : `Ils ont « Mes cours » dans leur espace, avec les chapitres choisis ici.`));
+    if (fermes.length > 1) corps.append(ligneNiveauCours(niveau, fermes));
+    fermes.forEach(ch => corps.append(ligneChapitrePlus(ch)));
+  }
+  // Une ligne : « Les puissances · Rania, Lucas · Choisir… ».
+  function ligneCoursPlus(cleLigne, quoi, qui, quandChange) {
+    const ligne = el("details", "plus-ligne cours-plus");
+    ligne.open = reglage.deplies.has(cleLigne);
+    ligne.addEventListener("toggle", () => {
+      if (ligne.open) reglage.deplies.add(cleLigne); else reglage.deplies.delete(cleLigne);
+    });
+    const resume = document.createElement("summary");
+    const quiTexte = el("span", "qui");
+    const noms = ordreDeLaFeuille(eleves || []).filter(eleve => qui.has(eleve.id));
+    quiTexte.textContent = noms.length ? listeDePrenoms(noms) : "personne";
+    quiTexte.classList.toggle("quelquun", noms.length > 0);
+    resume.append(quoi, quiTexte, el("span", "choisir", "Choisir…"));
+    const grille = grilleDesEleves(qui, () => {
+      const touchee = document.activeElement;
+      const idTouche = touchee && touchee.dataset ? touchee.dataset.eleve : null;
+      quandChange();
+      // Redessinée (le raccourci du niveau et les lignes se suivent), la
+      // fenêtre rend le focus à la case touchée.
+      if (idTouche) dessinerReglerEnGardant(cleLigne, idTouche); else dessinerRegler();
+    });
+    grille.querySelectorAll("input").forEach((uneCase, index) => {
+      const eleve = ordreDeLaFeuille(eleves || [])[index];
+      uneCase.dataset.ligne = cleLigne;
+      if (eleve) uneCase.dataset.eleve = String(eleve.id);
+    });
+    ligne.append(resume, grille);
+    return ligne;
+  }
+  function ligneChapitrePlus(ch) {
+    const b = reglage.brouillon;
+    const quoi = el("span", "quoi", ch.chapitre || ch.titre);
+    return ligneCoursPlus(`cours-plus:${ch.id}`, quoi, coursPlusDe(b, ch.id), () => {});
+  }
+  // Le raccourci : un élève y est coché s'il a TOUS ces chapitres en plus ;
+  // le cocher les lui donne tous, le décocher les lui retire tous.
+  function ligneNiveauCours(niveau, fermes) {
+    const b = reglage.brouillon;
+    const aTout = eleve => fermes.every(ch => coursPlusDe(b, ch.id).has(eleve.id));
+    const qui = new Set((eleves || []).filter(aTout).map(eleve => eleve.id));
+    const quoi = el("span", "quoi", `Tout le niveau ${niveau}`);
+    return ligneCoursPlus(`cours-plus-niveau:${niveau}`, quoi, qui, () => {
+      (eleves || []).forEach(eleve => {
+        const avait = aTout(eleve);
+        const veut = qui.has(eleve.id);
+        if (veut && !avait) fermes.forEach(ch => coursPlusDe(b, ch.id).add(eleve.id));
+        if (!veut && avait) fermes.forEach(ch => coursPlusDe(b, ch.id).delete(eleve.id));
+      });
+    });
+  }
+  // Les élèves qui ont au moins un chapitre en plus de ce que la classe a
+  // (pour la ligne du haut : « · en plus pour 2 élèves »).
+  function elevesCoursEnPlus() {
+    const c = coursDeLaClasse();
+    const ouverteALaClasse = parLaClasse("cours");
+    return (eleves || []).filter(eleve => {
+      const ajout = ajoutDe(eleve, "cours");
+      return Boolean(ajout) && Array.isArray(ajout.chapitres)
+        && ajout.chapitres.some(id => COURS.some(ch => ch.id === id) && !(ouverteALaClasse && c.chapitres.has(id)));
+    });
   }
 
 
@@ -3628,6 +3808,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // puis ceux que le professeur a donnés à quelques élèves (eleve.reglages).
       calcul: cle === "defi-calcul" ? calculDeLaClasse() : null,
       cours: cle === "cours" ? coursDeLaClasse() : null,
+      coursPlus: cle === "cours" ? coursPlusDesEleves() : null,
       listes, entiers, parNumero
     };
   }
@@ -3638,7 +3819,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const parNumero = {};
     Object.keys(etat.parNumero).forEach(cle => { parNumero[cle] = new Set(etat.parNumero[cle]); });
     return {cle: etat.cle, classeOuverte: etat.classeOuverte, records: etat.records, calcul: etat.calcul ? copierCalcul(etat.calcul) : null,
-            cours: etat.cours ? copierCours(etat.cours) : null, listes, entiers: new Set(etat.entiers), parNumero};
+            cours: etat.cours ? copierCours(etat.cours) : null,
+            coursPlus: etat.coursPlus ? new Map([...etat.coursPlus].map(([id, qui]) => [id, new Set(qui)])) : null,
+            listes, entiers: new Set(etat.entiers), parNumero};
   }
 
   // La ligne en haut de l'onglet : « ● Ouvert à toute la 405 · … » ou
@@ -3690,8 +3873,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       : `Aucun élève de la ${classe.libelle} ne le voit dans son espace.`;
     $("af-toute").textContent = `Ouvrir à toute la ${classe.libelle}`;
     $("af-actions").hidden = !proprietaire;
-    // L'appli Cours s'ouvre à toute la classe, jamais à un élève.
-    $("af-quelques").hidden = cle === "cours";
+    // Lot « cours-appli-3 » : Cours aussi, chapitre par chapitre.
+    $("af-quelques").hidden = false;
     if (cle === "cours") $("af-texte").textContent = `Les élèves de la ${classe.libelle} n’ont pas « Mes cours » dans leur espace.`;
     // Pendant un enregistrement (le raccourci lui-même, ou la fenêtre), les
     // deux boutons attendent (correctif, point 2 : une seule écriture à la fois).
@@ -3713,7 +3896,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const details = [];
     if (cle === "defi-tables") details.push(recordsOuvertsPourLaClasse() ? "les records sont ouverts" : "sans les records");
     if (cle === "defi-calcul") details.push(...texteCalcul(calculDeLaClasse()));
-    if (cle === "cours") details.push(texteCoursOuverts(coursDeLaClasse()));
+    // Cours (lot « cours-appli-3 ») : rien pour la classe mais des élèves
+    // en plus — la tuile apparaît pour eux, la ligne ne dit plus le contraire.
+    const coursEnPlus = cle === "cours" ? elevesCoursEnPlus().length : 0;
+    if (cle === "cours") {
+      const c = coursDeLaClasse();
+      details.push(coursEnPlus && !COURS.some(ch => c.chapitres.has(ch.id)) ? "aucun chapitre pour toute la classe" : texteCoursOuverts(c));
+    }
     (LISTES_PAR_ELEVE[cle] || []).forEach(liste => {
       const ouverts = numerosOuverts(classe.reglages, cle, liste);
       if (!ouverts) return;
@@ -3727,7 +3916,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const enPlus = (eleves || []).filter(eleve => (LISTES_PAR_ELEVE[cle] || []).some(liste => {
       const ouverts = numerosOuverts(classe.reglages, cle, liste);
       return ouverts && liste.numeros.some(([numero]) => !ouverts.includes(numero) && numeroAjoute(eleve, cle, liste, numero));
-    })).length;
+    })).length + coursEnPlus;
     if (enPlus) details.push(`en plus pour ${enPlus} élève${enPlus > 1 ? "s" : ""}`);
     return details;
   }
@@ -3806,10 +3995,23 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     }));
     corps.lastChild.classList.add("case-classe");
     // L'appli Cours : chapitres et fiches, pour la classe seulement.
+    // Lot « cours-appli-3 » : puis les chapitres en plus pour quelques
+    // élèves (ou seulement pour eux, quand la classe n'a pas l'appli).
     if (cle === "cours") {
       messager("regler-message", "", "");
-      if (!b.classeOuverte) corps.append(el("p", "aide", `Les élèves de la ${classe.libelle} n’ont pas « Mes cours » dans leur espace.`));
-      else dessinerReglerCours(corps, b);
+      if (!reglage.niveauCours) reglage.niveauCours = niveauDeDepart(b.cours);
+      if (b.classeOuverte) dessinerReglerCours(corps, b);
+      else {
+        // Correctif (relecture Codex, point 3) : vrai même quand quelques
+        // élèves l'ont en plus — le pied dit qui le voit.
+        corps.append(el("p", "aide", `« Mes cours » n’est pas ouvert à toute la ${classe.libelle}.`));
+        dessinerNiveauxCours(corps, b);
+      }
+      dessinerCoursEnPlus(corps, b);
+      if (!b.classeOuverte) {
+        dessinerFichesEnPlus(corps, b);
+        direQuiVoit();
+      }
       return;
     }
     if (!b.classeOuverte) {
@@ -4138,7 +4340,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!reglage) return;
     const b = reglage.brouillon;
     if (b.classeOuverte) return;
-    const qui = ordreDeLaFeuille(eleves || []).filter(eleve => b.entiers.has(eleve.id));
+    // Cours (lot « cours-appli-3 ») : ceux qui ont au moins un chapitre en plus.
+    const qui = ordreDeLaFeuille(eleves || []).filter(eleve => (b.cle === "cours"
+      ? [...b.coursPlus.values()].some(ids => ids.has(eleve.id)) : b.entiers.has(eleve.id)));
     const nom = nomDeLAppli(b.cle);
     if (!qui.length) {
       messager("regler-message", `Personne ne verra ${nom}.`, "info");
@@ -4177,6 +4381,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         if (avant.join(",") !== apres.join(",")) pourLAppli[liste.nom] = apres;
       });
       if (Object.keys(pourLAppli).length) charge.reglages = {[b.cle]: pourLAppli};
+    }
+    // Correctif de cours-appli-3 (relecture Codex, point 2) : la classe sans
+    // Cours, les fiches de ses élèves « en plus » — « sans » et « avec »
+    // partent seuls (les chapitres de la classe ne sont pas touchés).
+    if (!b.classeOuverte && b.cle === "cours" && !memesCours(b.cours, depart.cours)) {
+      const {sans, avec} = coursEnvoye(b.cours);
+      charge.reglages = {cours: {sans, avec}};
     }
     if (!Object.keys(charge).length) return null;
     charge.avant = avantDeLaClasse(b.cle);
@@ -4222,7 +4433,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (!ajout || typeof ajout !== "object" || Array.isArray(ajout)) return;
       const copie = {};
       Object.keys(ajout).sort().forEach(nom => {
-        if (Array.isArray(ajout[nom]) && ajout[nom].length) copie[nom] = [...new Set(ajout[nom])].sort((a, b) => a - b);
+        // Des numéros (mondes, niveaux) ou des chapitres du livret (Cours) :
+        // « a - b » ne range pas des textes.
+        if (Array.isArray(ajout[nom]) && ajout[nom].length) copie[nom] = [...new Set(ajout[nom])].sort((a, b) => (typeof a === "number" && typeof b === "number" ? a - b : String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0));
       });
       if (Object.keys(ajout).length && !Object.keys(copie).length) return;
       sortie[cle] = copie;
@@ -4245,7 +4458,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if ("records" in voulu && neuf.records !== b.records) return false;
     if ("minutes" in voulu && neuf.calcul.minutes !== b.calcul.minutes) return false;
     if ("palier" in voulu && neuf.calcul.palier !== b.calcul.palier) return false;
-    if ("chapitres" in voulu && !memesCours(neuf.cours, b.cours)) return false;
+    if (("chapitres" in voulu || "sans" in voulu || "avec" in voulu) && !memesCours(neuf.cours, b.cours)) return false;
     return Object.keys(voulu).every(nom => {
       if (nom === "records" || nom === "minutes" || nom === "palier" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
       const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
@@ -4261,6 +4474,18 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // classe est gardé (D4).
   function gestesDe(eleve, depart, b) {
     const gestes = [];
+    // Lot « cours-appli-3 » : les chapitres fermés à la classe (tous, si elle
+    // n'a pas l'appli), tous niveaux confondus — le niveau affiché n'est
+    // qu'un filtre. Un chapitre ouvert à la classe n'est pas touché (D4).
+    if (b.cle === "cours") {
+      COURS.forEach(ch => {
+        if (b.classeOuverte && b.cours.chapitres.has(ch.id)) return;
+        const avait = Boolean(depart.coursPlus && depart.coursPlus.get(ch.id) && depart.coursPlus.get(ch.id).has(eleve.id));
+        const veut = Boolean(b.coursPlus && b.coursPlus.get(ch.id) && b.coursPlus.get(ch.id).has(eleve.id));
+        if (avait !== veut) gestes.push({cle: "cours", chapitre: ch.id, ouvre: veut});
+      });
+      return gestes;
+    }
     if (!b.classeOuverte) {
       const avait = depart.entiers.has(eleve.id);
       const veut = b.entiers.has(eleve.id);
@@ -8119,8 +8344,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // Cours, les jours d'ouverture) se lit avec les autres quand la classe a
   // l'appli Cours. Elle n'entre pas dans le bilan (jours de travail, absent,
   // La classe) : Cours reste sansSuivi.
+  // Lot « cours-appli-3 » : aussi quand la classe ne l'a pas mais que des
+  // élèves l'ont en plus (ce qu'ils voient est dans chaque tableau lu).
   function coursALire() {
-    return Boolean(classe) && !tableaux.cours && ((classe && classe.applis) || []).includes("cours");
+    return Boolean(classe) && !tableaux.cours && (((classe && classe.applis) || []).includes("cours")
+      || (eleves || []).some(eleve => Boolean(ajoutDe(eleve, "cours"))));
   }
   function listesALire() {
     return listesManquantes().concat(coursALire() ? ["cours"] : []);

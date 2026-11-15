@@ -354,11 +354,28 @@ Défi tables est la référence.
   « Pour la seconde » et dans le chapitre « Préparer la seconde ») ; en 4e, il
   reste vrai pour les fiches du nouveau programme. Un statut qui CITE le
   nouveau programme (« programme 2020 (retiré du nouveau programme…) ») n'en
-  fait pas une fiche nouvelle. Pas d'ajout par élève, pas de
-  progression (`api/parcours.php` ne connaît pas « cours »). Dans Ma classe,
-  l'onglet Cours n'a pas de tableau de progression et n'entre ni dans La
-  classe ni dans la fiche d'un élève (`sansSuivi`).
-- Gardé par `tests/cours-appli.test.mjs` et les tests « cours-appli » et
+  fait pas une fiche nouvelle. Pas de progression (`api/parcours.php` ne
+  connaît pas « cours »). Dans Ma classe, l'onglet Cours n'a pas de tableau
+  de progression et n'entre pas dans La classe (`sansSuivi`) ; la fiche d'un
+  élève montre seulement ses fiches ouvertes (lot « cours-appli-2 »).
+- Des chapitres EN PLUS pour quelques élèves (lot « cours-appli-3 »,
+  14/11/2026, choix de Gwenaël : « En plus pour quelques élèves », comme
+  SPLAT! et Coffres). Dans « Régler les cours », sous les chapitres de la
+  classe, une ligne par chapitre FERMÉ à la classe (« Choisir… ») et le
+  raccourci « Tout le niveau 4e » ; la classe sans Cours : « Ou seulement
+  pour quelques élèves », les mêmes lignes. Rangé dans `eleves.ajouts` :
+  `{"cours": {"chapitres": ["4e-PUI"]}}`, des chapitres seulement (jamais
+  `{}`, ni « sans » / « avec »), lus strictement. Ce que voit l'élève
+  (`acces_de_l_eleve`, `cours_de_classe_et_ajout`) = les chapitres de sa
+  classe (si elle a l'appli) ∪ les siens ; les fiches fermées et les fiches
+  du nouveau programme ouvertes de la CLASSE valent aussi pour ses chapitres
+  en plus (un ajout n'ouvre pas une fiche du nouveau programme). On ajoute,
+  on ne retire jamais rien ; un ajout recouvert par la classe est gardé
+  (D4). La ligne de l'onglet dit « · en plus pour N élèves » ; l'onglet
+  Cours compte un élève sur les chapitres qu'il voit (« ouvert par N élèves
+  sur M », M = ceux qui voient le chapitre), qui viennent d'`eleve.acces`.
+- Gardé par `tests/cours-appli.test.mjs`, `tests/cours-appli-2.test.mjs`,
+  `tests/cours-appli-3.test.mjs` et les tests « cours-appli » et
   « cours-ouvertures » de `_serveur/tests/lancer.php`. Ajouter un chapitre : le refaire avec le
   moteur, puis déposer par FTP `lib/cours.json` et `VERSION`.
 

@@ -19,6 +19,16 @@
 // Une fiche commune à deux chapitres (4e-TRI-03 sert en 4e et en 3e) a un
 // seul identifiant : la fermer la ferme dans les deux.
 //
+// Lot « cours-appli-3 » (14/11/2026, choix de Gwenaël) : des chapitres EN
+// PLUS pour quelques élèves, rangés dans eleves.ajouts
+// ({"cours": {"chapitres": ["4e-PUI"]}}, lib/applis.php). Ce que voit un
+// élève = les chapitres de sa classe + les siens ; les fiches fermées
+// (« sans ») et les fiches du nouveau programme ouvertes (« avec ») de la
+// classe valent aussi pour ses chapitres en plus. On n'enlève rien à un
+// élève : on ajoute. La règle est calculée à un seul endroit
+// (acces_de_l_eleve) ; ici, rien ne change : cours_ouverts_a_l_eleve() reçoit
+// le réglage déjà calculé pour CET élève.
+//
 // Lot « cours-ouvertures » (10/11/2026, décidé par Gwenaël) : pour chaque
 // élève et chaque fiche, le JOUR de la dernière ouverture, et rien d'autre —
 // ni le nombre de fois, ni la durée, ni l'heure, et jamais « lue » (ouvrir
