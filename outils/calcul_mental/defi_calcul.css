@@ -1094,6 +1094,19 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-carre-grand { border-radius: 4px; cursor: pointer; touch-action: manipulation; }
 .dc-carre-grand:focus-visible { outline: 3px solid #0f6cf9; outline-offset: 3px; }
 .dc-carre-manip.est-finie .dc-carre-grand { cursor: default; }
+/* Lot 7a (D5, D6, D7) : un ou deux carrés de 100 dessinés ensemble, qu'on
+   touche n'importe où. Deux carrés : la place de deux. */
+.dc-carre-op-scene > .dc-carre-grand { width: min(calc(var(--n) * 230px), calc(var(--n) * 33dvh), 100%); }
+.dc-carre-op-scene > .dc-carre-grand svg { display: block; width: 100%; height: auto; }
+.dc-aide svg.dc-carre-op { max-width: 100%; }
+/* À retenir : la règle, trois égalités et les carrés tiennent à 1366 × 657. */
+.dc-retenir .dc-aide svg.dc-carre.dc-carre-op { width: auto; max-height: calc(17dvh * var(--retenir-z, 1)); }
+@media (min-width: 621px) {
+  .dc-aide svg.dc-carre.dc-carre-op { width: min(100%, 560px); }
+  /* J'écris à l'ordinateur : les carrés de la taille du tableau de
+     numération (sinon, à 1366 × 657, « Valider » sortait du cadre). */
+  .challenge-playing .question.ecrit.aide-image .dc-aide svg.dc-carre.dc-carre-op { width: auto; max-height: 16dvh; }
+}
 /* D4 : le tableau à jetons et sa réserve. Les jetons en carré de 3 × 3 ;
    la virgule, un trait rouge entre les unités et les dixièmes ; le paquet
    de 10 à échanger, entouré de bleu. Noir et blanc : les jetons sont

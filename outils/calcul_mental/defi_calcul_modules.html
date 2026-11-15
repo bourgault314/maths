@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261114-7">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261115-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261114-7"></script>
+  <script src="./defi_calcul_core.js?v=20261115-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261114-7"></script>
-  <script src="./defi_calcul_aides.js?v=20261114-7"></script>
+  <script src="./defi_calcul_aides.js?v=20261115-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2497,7 +2497,7 @@
       // a sa phrase — C1, D1, D4 et les bandes du lot 6 affichaient
       // « undefined » ; C3, M10, M12, D1-3 disaient « avec la droite ».)
       const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
-        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
+        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", "carre-op": "avec les carrés de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
         billes: "avec les billes"});
       // L'outil de J'apprends d'un niveau : ce qu'on manipule, sinon l'image
       // (M1, M5, M6, F5-3, F6-2, F6-3, F8-3 : le schéma en barres ; M4 : la
@@ -3038,7 +3038,7 @@
       const NOMS_TEMPS = Object.freeze({manipule: "Je manipule", represente: "Je représente", "represente-ecrit": "Je représente", ecris: "J’écris"});
       // Le nom du moment, en haut à droite (planches 2 et 3).
       const NOM_MONTRE = "On te montre";
-      const NOMS_OUTIL = Object.freeze({perles: "Avec les perles", glisse: "Avec le glisse-nombres", toucher: "Je touche le calcul", carre: "Avec le carré de 100",
+      const NOMS_OUTIL = Object.freeze({perles: "Avec les perles", glisse: "Avec le glisse-nombres", toucher: "Je touche le calcul", carre: "Avec le carré de 100", "carre-op": "Avec les carrés de 100",
         jetons: "Avec le tableau à jetons", bandes: "Avec les bandes", billes: "Avec les billes"});
       const NOM_DESSIN = "Avec le dessin";
       const NOM_SANS_AIDE = "Sans aide";
@@ -3098,6 +3098,7 @@
         if (options.outil === "glisse") return AIDES.glisseNombres(zone, options);
         if (options.outil === "toucher") return AIDES.toucherCalcul(zone, options);
         if (options.outil === "carre") return AIDES.carreManip(zone, options);
+        if (options.outil === "carre-op") return AIDES.carresOpManip(zone, options);
         if (options.outil === "jetons") return AIDES.jetonsManip(zone, options);
         if (options.outil === "bandes") return AIDES.bandesManip(zone, options);
         if (options.outil === "billes") return AIDES.billesManip(zone, options);
@@ -4444,7 +4445,7 @@
 
       // Après deux entraînements ratés : ce que l'élève retrouvera demain.
       const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
-        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
+        toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", "carre-op": "avec les carrés de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
         billes: "avec les billes"});
 
       // La fin de la séance : les étapes et leur score, « Demain : … », le
@@ -4678,6 +4679,7 @@
             toucher: () => (state.manip && state.manip.outil === "toucher" ? {etape: state.manip.etape, fini: state.manip.fini} : null),
             // Modules lot 5 : le carré de 100 (D1), le tableau à jetons (D4).
             carre: () => (state.manip && state.manip.outil === "carre" ? Object.assign({etape: state.manip.etape, fini: state.manip.fini}, state.manip.colorie) : null),
+            carreOp: () => (state.manip && state.manip.outil === "carre-op" ? {etape: state.manip.etape, fini: state.manip.fini, fait: state.manip.fait} : null),
             jetons: () => (state.manip && state.manip.outil === "jetons" ? {etape: state.manip.etape, phase: state.manip.phase, comptes: state.manip.comptes, fini: state.manip.fini} : null),
             // Modules lot 6 : les bandes sur la droite (F2, F5, F6, F8).
             bandes: () => (state.manip && state.manip.outil === "bandes" ? {etape: state.manip.etape, pieces: state.manip.pieces, fini: state.manip.fini} : null),

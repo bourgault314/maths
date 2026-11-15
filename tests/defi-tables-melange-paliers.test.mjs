@@ -609,7 +609,7 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // de 3e reçoit « Les formules des puissances », du livret en ligne) (avant : defi-calcul-lot-4-ceintures).
   // Puis le lot 7-0 « Retouches du moule » de Défi calcul (14/11/2026) : le
   // cœur et le moteur copiés dans prof/ changent (avant : cours-lot5).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-7-0-moule$/m);
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-7a-decimaux$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

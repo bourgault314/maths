@@ -6423,6 +6423,567 @@
     ]
   };
 
+  // ============================================ lot 7a (14/11/2026)
+  //
+  // D5 « Compléments à l'unité », D6 « Additionner deux décimaux », D7
+  // « Soustraire deux décimaux » : la méthode de la fiche de Gwenaël
+  // (« J'additionne avec les grilles », JE RETIENS : les unités avec les
+  // unités, les dixièmes avec les dixièmes, les centièmes avec les
+  // centièmes ; je fais des échanges si nécessaire) et du calcul mental
+  // officiel (8,6 + 7,8 = 15 + 1,4). Les carrés de 100 (décision du 04/11 :
+  // les grilles reviennent dans D5 et D6 ; D7, l'inverse, suit le même
+  // chemin) dessinent la partie décimale seule : un ou deux carrés.
+  //  - D5 : n + □ = l'entier suivant ; on colorie ce qui manque.
+  //  - D6 : a + b ; les unités, puis les parties décimales sur les carrés
+  //    (ce qu'on ajoute est hachuré, dans le 2e carré si ça dépasse 1).
+  //  - D7 : a − b ; les unités, puis les parties décimales ; quand il en
+  //    manque, on « casse » une unité (elle devient le 1er carré) ; ce
+  //    qu'on enlève est barré.
+  // Échelles (relecture Codex du 14/11) : D6 et D7 n'ont jamais un nombre
+  // à un seul chiffre non nul ajouté ou retiré sans échange (c'est D4) ;
+  // un niveau n'a jamais un calcul d'un autre.
+  // Les cases d'un nombre (ses centièmes après la virgule) : 3,47 → 47.
+  const casesDe = x => Math.round((x - Math.floor(x + 1e-9)) * 100);
+  // Les chiffres non nuls d'un nombre (4,05 → 2 ; 0,3 → 1).
+  const chiffresNonNuls = x => [...formaterNombre(x).replace(/\D/g, "")].filter(c => c !== "0").length;
+
+  // ------------------------------------------------- D5 : compléments à l'unité
+  //
+  // « 2,6 + □ = 3 » : les données n, e (sa partie entière), x (ses cases),
+  // cible, r, et les réponses fausses connues : chiffres (chaque chiffre
+  // complété à 10 : 0,35 → 0,75), entier (la réponse sans virgule : 4,
+  // 65), a10 (complété à 10 au lieu de 1 : 9,4 pour 0,6).
+  function d5Calcul(niveau, n) {
+    const e = Math.floor(n + 1e-9);
+    const x = casesDe(n);
+    const cible = e + 1;
+    const r = exact(cible - n);
+    const d = x % 10;
+    const t = Math.floor(x / 10);
+    const chiffres = d && t ? exact((10 - t) / 10 + (10 - d) / 100) : -1;
+    const dec = decimalesDe(n);
+    return fabriquer("D5", niveau, "complement", [n, "+", TROU, "=", cible], r, {
+      n, e, x, cible, r, chiffres: chiffres > 0 && !memeNombre(chiffres, r) ? chiffres : -1,
+      entier: Math.round(r * 10 ** dec), a10: e === 0 ? exact(10 - n) : -1
+    });
+  }
+  const D5_SORTES = Object.freeze([["à 1", (c, d) => d.e === 0], ["à l’entier suivant", () => true]]);
+  function d5Vivier(niveau) {
+    const liste = [];
+    for (let e = 0; e <= 9; e += 1) {
+      for (let x = 1; x < 100; x += 1) {
+        if (niveau === 1 ? x % 10 !== 0 : x % 10 === 0) continue;
+        liste.push(d5Calcul(niveau, exact(e + x / 100)));
+      }
+    }
+    return Object.freeze({
+      "a-un": Object.freeze(liste.filter(c => c.donnees.e === 0)),
+      suivant: Object.freeze(liste.filter(c => c.donnees.e > 0))
+    });
+  }
+  const D5_VIVIERS = Object.freeze({1: d5Vivier(1), 2: d5Vivier(2)});
+  // (Les deux sortes se tirent à tour de rôle ; la forme reste « complement ».)
+  function d5Composer(niveau, parts) {
+    const viviers = D5_VIVIERS[niveau];
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = ["a-un", "suivant"].flatMap((nom, i) => {
+        const deja = imposes.filter(c => (c.donnees.e === 0) === (nom === "a-un")).length;
+        return melanger(rng, viviers[nom]).filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      });
+      return [...tires, ...imposes];
+    };
+  }
+  const d5Image = calcul => ({outil: "carre-op", op: "completer", carres: 1, bleu: calcul.donnees.x, autre: 100 - calcul.donnees.x});
+  const d5Aide = calcul => Object.assign(d5Image(calcul), {cache: true});
+  const d5Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  function d5Manipulation(calcul) {
+    const {e, x} = calcul.donnees;
+    const centiemes = x % 10;
+    const consigne = centiemes
+      ? "Finis la bande, puis colorie les bandes qui manquent."
+      : "Colorie ce qui manque pour faire une unité.";
+    const calc = sansCase(calcul.texte).replace(CASE, "?");
+    return Object.freeze({
+      outil: "carre-op", op: "completer", carres: 1, bleu: x, autre: 100 - x,
+      texte: calc, consigne: fr(e ? `${enRang(e, 0)} ${e > 1 ? "sont déjà là" : "est déjà là"}. ${consigne}` : consigne), refus: null,
+      traces: Object.freeze([Object.freeze({apres: 0, attente: `${calc} = …`, texte: calcul.texte.replace(CASE, f(calcul.reponse))})])
+    });
+  }
+  function d5Difficulte(calcul) {
+    const {e, x} = calcul.donnees;
+    return (e ? 1000 : 0) + (x % 10 ? 300 : 0) + Math.abs(50 - x) + e;
+  }
+  const D5_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "chaque chiffre complété à 10",
+      test: sauf((calcul, reponse) => calcul.donnees.chiffres >= 0 && memeNombre(reponse, calcul.donnees.chiffres)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as complété chaque chiffre à 10. ${f(calcul.donnees.n)} + ${f(reponse)} ne fait pas ${f(calcul.donnees.cible)} : finis d’abord la bande, puis les bandes.`)
+    }),
+    Object.freeze({
+      c: 2, nom: "la virgule oubliée",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.entier)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est beaucoup trop : il manque moins d’une unité. Où est la virgule ?`)
+    }),
+    Object.freeze({
+      c: 3, nom: "complété jusqu’à 10",
+      test: sauf((calcul, reponse) => calcul.donnees.a10 >= 0 && memeNombre(reponse, calcul.donnees.a10)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu es allé jusqu’à 10. Ici, on va jusqu’à ${f(calcul.donnees.cible)}.`)
+    })
+  ]);
+  // Le dessin de J'écris : le calcul dessiné (ce qu'on ajoute, ce qu'on
+  // enlève) ; un complément (D5) : ce qui manque reste blanc, puis se
+  // hachure à la dernière étape.
+  //   progression : les cases hachurées (ou barrées) après chaque étape
+  //   (lot « relier » : ce que l'élève écrit se voit dans le dessin).
+  function carreOpDessins(image, progression) {
+    const etapes = progression.length;
+    const morceaux = Array.from({length: etapes}, (_, i) => ({etape: i}));
+    return dessinsDe(morceaux, etapes, (vus, revele = false) => {
+      const autre = revele ? image.autre : vus.length ? progression[vus.length - 1] : 0;
+      return Object.freeze(Object.assign({}, image, {autre, cache: !autre}));
+    });
+  }
+  // J'écris de D5 (lot 3c : la même recette pour la leçon et les calculs
+  // tirés). Dixièmes : « 0,4 + □ = 1 », puis « 5,4 + □ = 6 ». Centièmes :
+  // je finis la bande (« 4,26 + □ = 4,3 »), je complète les bandes
+  // (« 4,3 + □ = 5 »), puis le tout. null : la recette ne s'applique pas.
+  function d5Ecris(calcul) {
+    const {n, e, x, cible, r} = calcul.donnees;
+    if (!e) return null;
+    let consigne = calcul.texte.replace(CASE, "?");
+    let etapes;
+    if (x % 10) {
+      const bande = exact(e + Math.ceil(x / 10) / 10);
+      if (bande >= cible) return null;
+      etapes = [[`${f(n)} + ? = ${f(bande)}`, exact(bande - n)], [`${f(bande)} + ? = ${f(cible)}`, exact(cible - bande)], [`${f(n)} + ? = ${f(cible)}`, r]];
+    } else {
+      etapes = [[`${f(exact(n - e))} + ? = 1`, r], [`${f(n)} + ? = ${f(cible)}`, r]];
+    }
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: Object.freeze(d5Image(calcul)), phrase: d5Phrase(calcul)})
+    }, carreOpDessins(d5Image(calcul), x % 10 ? [(10 - x % 10), 100 - x, 100 - x] : [100 - x, 100 - x]));
+  }
+  function d5Apprends({manipule, represente, ecris, consigne, bilan}) {
+    const m = d5Manipulation(manipule);
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: m,
+      represente: Object.freeze({
+        outil: "carre-op", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(d5Aide(represente)),
+        solution: Object.freeze({image: Object.freeze(d5Image(represente)), phrase: d5Phrase(represente)})
+      }),
+      ecris: d5Ecris(ecris),
+      bilan: frBilan(bilan),
+      image: Object.freeze(d5Image(manipule)),
+      calculs: Object.freeze({montre: manipule, ecris}),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const D5 = {
+    id: "D5", nom: "Compléments à l’unité", exemple: "0,7 + ? = 1",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "carre-op",
+    erreurs: D5_ERREURS, image: d5Image, aide: d5Aide, phrase: d5Phrase, manipulation: d5Manipulation, difficulte: d5Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "dixièmes, à l’entier suivant", nom: "Compléter à l’unité\u00a0: dixièmes", palier: 3, type: "P",
+        composer: d5Composer(1, [4, 6]),
+        imposes: [d5Calcul(1, 0.3), d5Calcul(1, 4.7)],
+        apprends: d5Apprends({
+          manipule: d5Calcul(0, 2.6),
+          represente: d5Calcul(0, 1.8),
+          ecris: d5Calcul(0, 5.4),
+          consigne: "Ce qui reste blanc, c’est ce qui manque.",
+          bilan: "Il manque 4 dixièmes pour faire une unité : 0,6 + 0,4 = 1. 2,6 + 0,4 = 3."
+        })
+      },
+      {
+        n: 2, titre: "centièmes", nom: "Compléter à l’unité\u00a0: centièmes", palier: 4, type: "P",
+        composer: d5Composer(2, [4, 6]),
+        imposes: [d5Calcul(2, 0.42), d5Calcul(2, 6.18)],
+        apprends: d5Apprends({
+          manipule: d5Calcul(0, 2.35),
+          represente: d5Calcul(0, 3.72),
+          ecris: d5Calcul(0, 4.26),
+          consigne: "Ce qui reste blanc, c’est ce qui manque.",
+          bilan: "Je finis la bande, puis je complète les bandes : 2,35 + 0,05 = 2,4. 2,4 + 0,6 = 3. 2,35 + 0,65 = 3."
+        })
+      }
+    ]
+  };
+
+  // ------------------------------------------- D6, D7 : deux décimaux, + et −
+  //
+  // « 2,7 + 3,7 = □ », « 3,4 − 0,8 = □ ». Les données : a, b, r, ea, eb
+  // (les parties entières), xa, xb (les cases), casse (D7 : une unité
+  // cassée), u (les unités : 2 + 3 ; 15 − 1 − 2), dec (la partie décimale
+  // du résultat : 1,4 ; 0,6), et les réponses fausses connues : sansEchange
+  // (0,7 + 0,7 = 0,14 : 5,14), oubli (l'échange oublié : 5,4 ; 3,6 — la
+  // retenue de D7 : 2,4 → « 3,4 − 0,8 = 3,6 »), droite (les chiffres
+  // alignés à droite : 2,57 + 5,8 → 2,65), inverse (D7 : le petit chiffre
+  // retiré du grand : 3,4 − 0,8 = 3,4).
+  function deuxDecimaux(module, niveau, a, b) {
+    const plus = module === "D6";
+    const ea = Math.floor(a + 1e-9);
+    const eb = Math.floor(b + 1e-9);
+    const xa = casesDe(a);
+    const xb = casesDe(b);
+    const r = exact(plus ? a + b : a - b);
+    const casse = !plus && xb > xa;
+    const u = plus ? ea + eb : ea - (casse ? 1 : 0) - eb;
+    const dec = exact(plus ? (xa + xb) / 100 : ((casse ? 100 : 0) + xa - xb) / 100);
+    const da = decimalesDe(a);
+    const db = decimalesDe(b);
+    let sansEchange = -1;
+    let oubli = -1;
+    let droite = -1;
+    let inverse = -1;
+    if (plus) {
+      if (xa + xb >= 100 && da === 1 && db === 1) sansEchange = Number(`${ea + eb}.${(xa + xb) / 10}`);
+      if (xa + xb >= 100) oubli = exact(r - 1);
+      if (da !== db) {
+        const court = da < db ? a : b;
+        const long = da < db ? b : a;
+        droite = exact(Math.floor(long) + Math.floor(court) + casesDe(long) / 100 + casesDe(court) / 1000);
+        if (memeNombre(droite, r)) droite = -1;
+      }
+    } else {
+      // (6,48 − 4,6 → 2,42 : 48 − 6, les chiffres alignés à droite.)
+      if (da === 2 && db === 1 && xa - xb / 10 >= 0) {
+        droite = exact(ea - eb + (xa - xb / 10) / 100);
+        if (memeNombre(droite, r)) droite = -1;
+      }
+      if (casse) {
+        oubli = exact(r + 1);
+        // Le petit chiffre retiré du grand, rang par rang (3,4 − 0,8 → 3,4).
+        const ca = [ea, Math.floor(xa / 10), xa % 10];
+        const cb = [eb, Math.floor(xb / 10), xb % 10];
+        const v = ca.map((c, i) => Math.abs(c - cb[i]));
+        inverse = exact(v[0] + v[1] / 10 + v[2] / 100);
+        if (memeNombre(inverse, r) || memeNombre(inverse, oubli)) inverse = -1;
+      }
+    }
+    const signe = plus ? "+" : "−";
+    return fabriquer(module, niveau, plus ? "somme" : "difference", [a, signe, b, "=", TROU], r, {
+      a, b, r, ea, eb, xa, xb, casse, u, dec, sansEchange, oubli, droite, inverse
+    });
+  }
+  const d6Somme = (niveau, a, b) => deuxDecimaux("D6", niveau, a, b);
+  const d7Difference = (niveau, a, b) => deuxDecimaux("D7", niveau, a, b);
+
+  function deuxImage(calcul) {
+    const {xa, xb, casse} = calcul.donnees;
+    if (calcul.module === "D6") return {outil: "carre-op", op: "ajouter", carres: 2, bleu: xa, autre: xb};
+    // D7 : une unité cassée devient le 1er carré (plein) ; 9 − 1,9 : un seul carré.
+    return {outil: "carre-op", op: "enlever", carres: casse && xa ? 2 : 1, bleu: (casse ? 100 : 0) + xa, autre: xb};
+  }
+  const deuxAide = calcul => deuxImage(calcul);
+  const deuxPhrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  // « 2,7 + 3,7 = 5 + 1,4 = 6,4 » ; « 3,4 − 0,8 = 2 + 0,6 = 2,6 ».
+  const deuxTrace = calcul => {
+    const {a, b, u, dec, r} = calcul.donnees;
+    const signe = calcul.module === "D6" ? "+" : "−";
+    return u ? `${f(a)} ${signe} ${f(b)} = ${f(u)} + ${f(dec)} = ${f(r)}` : `${f(a)} ${signe} ${f(b)} = ${f(r)}`;
+  };
+  function deuxManipulation(calcul) {
+    const {a, b, ea, eb, xa, xb, casse, u} = calcul.donnees;
+    const image = deuxImage(calcul);
+    const enCases = x => (x % 10 ? f(x / 100) : f(x / 100));
+    let consigne;
+    if (calcul.module === "D6") {
+      consigne = `${ea + eb ? `Les unités : ${f(ea)} + ${f(eb)} = ${f(ea + eb)}. ` : ""}Ajoute ${enCases(xb)} : touche les carrés.`;
+    } else if (casse) {
+      const debut = xa ? `${f(a)}, c’est ${f(ea - 1)} + ${f(1 + xa / 100)}` : `${f(a)}, c’est ${f(ea - 1)} + 1`;
+      consigne = `${debut}. ${eb ? `Les unités : ${f(ea - 1)} − ${f(eb)} = ${f(u)}. ` : ""}Enlève ${enCases(xb)} : touche les carrés.`;
+    } else {
+      consigne = `${eb ? `Les unités : ${f(ea)} − ${f(eb)} = ${f(u)}. ` : ""}Enlève ${enCases(xb)} : touche les carrés.`;
+    }
+    const calc = sansCase(calcul.texte);
+    return Object.freeze(Object.assign(image, {
+      dixiemes: Math.floor(xb / 10), centiemes: xb % 10,
+      texte: calc, consigne: fr(consigne), refus: null,
+      traces: Object.freeze([Object.freeze({apres: 0, attente: `${calc} = …`, texte: deuxTrace(calcul)})])
+    }));
+  }
+  function deuxDifficulte(calcul) {
+    const {a, b, xa, xb, casse} = calcul.donnees;
+    const echange = calcul.module === "D6" ? xa + xb >= 100 : casse;
+    return (echange ? 1000 : 0) + (decimalesDe(a) + decimalesDe(b)) * 100 + Math.min(99, Math.floor(a + b));
+  }
+  // Les erreurs connues : D6 (1, 2, 3) et D7 (1, 2, 3), chacune les siennes.
+  const ERREUR_ALIGNE = c => Object.freeze({
+    c, nom: "les chiffres alignés à droite",
+    test: sauf((calcul, reponse) => calcul.donnees.droite >= 0 && memeNombre(reponse, calcul.donnees.droite)),
+    retour: (calcul, reponse) => fr(`${f(reponse)} : les chiffres ne sont pas dans la bonne colonne. Les dixièmes avec les dixièmes, les centièmes avec les centièmes.`)
+  });
+  const D6_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "les dixièmes écrits sans échange",
+      test: sauf((calcul, reponse) => calcul.donnees.sansEchange >= 0 && memeNombre(reponse, calcul.donnees.sansEchange)),
+      retour: (calcul, reponse) => {
+        const {xa, xb} = calcul.donnees;
+        return fr(`${f(reponse)} : ${xa / 10} dixièmes + ${xb / 10} dixièmes = ${(xa + xb) / 10} dixièmes, et 10 dixièmes font 1 unité.`);
+      }
+    }),
+    Object.freeze({
+      c: 2, nom: "l’échange oublié",
+      test: sauf((calcul, reponse) => calcul.donnees.oubli >= 0 && memeNombre(reponse, calcul.donnees.oubli)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : l’unité de l’échange est oubliée. ${f(calcul.donnees.dec)}, c’est 1 unité et ${f(exact(calcul.donnees.dec - 1))}.`)
+    }),
+    ERREUR_ALIGNE(3)
+  ]);
+  const D7_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "l’unité cassée oubliée",
+      test: sauf((calcul, reponse) => calcul.donnees.oubli >= 0 && memeNombre(reponse, calcul.donnees.oubli)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : l’unité cassée est oubliée. Elle n’est plus dans les unités.`)
+    }),
+    Object.freeze({
+      c: 2, nom: "le petit chiffre retiré du grand",
+      test: sauf((calcul, reponse) => calcul.donnees.inverse >= 0 && memeNombre(reponse, calcul.donnees.inverse)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as retiré le petit chiffre du grand. Quand il n’y a pas assez, je casse une unité.`)
+    }),
+    ERREUR_ALIGNE(3)
+  ]);
+
+  // Les viviers. D6-1 : sans échange ; D6-2 : avec échange, un chiffre
+  // après la virgule ; D6-3 : un nombre aux centièmes, l'autre aux dixièmes.
+  // Chaque nombre a au moins deux chiffres non nuls (sinon c'est D4).
+  function d6Vivier(niveau) {
+    const liste = [];
+    const nombres1 = [];
+    for (let e = 0; e <= 9; e += 1) for (let x = 10; x < 100; x += 10) nombres1.push(exact(e + x / 100));
+    const nombres2 = [];
+    for (let e = 0; e <= 9; e += 1) for (let x = 1; x < 100; x += 1) if (x % 10) nombres2.push(exact(e + x / 100));
+    const deux = x => chiffresNonNuls(x) >= 2;
+    if (niveau <= 2) {
+      nombres1.filter(deux).forEach(a => nombres1.filter(deux).forEach(b => {
+        const echange = casesDe(a) + casesDe(b) >= 100;
+        if (echange !== (niveau === 2)) return;
+        liste.push(d6Somme(niveau, a, b));
+      }));
+    } else {
+      nombres2.filter(deux).forEach((a, i) => nombres1.filter(deux).forEach((b, j) => {
+        if ((i * 7 + j * 3) % 13) return;
+        liste.push((i + j) % 2 ? d6Somme(3, a, b) : d6Somme(3, b, a));
+      }));
+    }
+    return Object.freeze(liste);
+  }
+  const D6_SORTES = {
+    1: [["somme sous 10", (c, d) => d.r < 10], ["somme au-delà de 10", () => true]],
+    2: [["résultat entier", (c, d) => Number.isInteger(d.r)], ["résultat sous 10", (c, d) => d.r < 10], ["au-delà de 10", () => true]],
+    3: [["sans échange", (c, d) => d.xa + d.xb < 100], ["avec échange", () => true]]
+  };
+  // D7-1 : sans échange ; D7-2 : avec échange, un chiffre après la virgule
+  // (3,4 − 0,8 ; 15,3 − 2,4 ; 9 − 1,9) ; D7-3 : un nombre aux centièmes.
+  function d7Vivier(niveau) {
+    const liste = [];
+    const deux = x => chiffresNonNuls(x) >= 2;
+    const dixiemes = [];
+    for (let e = 0; e <= 19; e += 1) for (let x = 0; x < 100; x += 10) dixiemes.push(exact(e + x / 100));
+    const centiemes = [];
+    for (let e = 0; e <= 9; e += 1) for (let x = 0; x < 100; x += 1) centiemes.push(exact(e + x / 100));
+    if (niveau === 1) {
+      dixiemes.filter(a => a < 20 && casesDe(a)).forEach(a => dixiemes.filter(b => b < 10 && deux(b)).forEach(b => {
+        if (!(casesDe(b) < casesDe(a)) || b >= a || Math.floor(b) > Math.floor(a)) return;
+        liste.push(d7Difference(1, a, b));
+      }));
+    } else if (niveau === 2) {
+      dixiemes.forEach(a => dixiemes.filter(b => b < 10 && casesDe(b)).forEach(b => {
+        if (!(casesDe(b) > casesDe(a)) || b >= a) return;
+        // (Dixièmes seuls : a sous 10 ; d'un entier : a jusqu'à 10.)
+        if (Math.floor(b) === 0 && a >= 10) return;
+        if (!casesDe(a) && a > 10) return;
+        if (Math.floor(b) > 0 && !deux(b)) return;
+        liste.push(d7Difference(2, a, b));
+      }));
+    } else {
+      const avecCentiemes = x => casesDe(x) % 10 !== 0;
+      centiemes.forEach((a, i) => centiemes.forEach((b, j) => {
+        // (« Chiffres après la virgule différents » : 6,48 − 4,6 ; 5 − 2,35.)
+        if (!(avecCentiemes(a) || avecCentiemes(b)) || decimalesDe(a) === decimalesDe(b) || b >= a || (i * 5 + j * 3) % 7) return;
+        if (!casesDe(b) || (!deux(b) && casesDe(b) <= casesDe(a))) return;
+        liste.push(d7Difference(3, a, b));
+      }));
+    }
+    return Object.freeze(liste);
+  }
+  const D7_SORTES = {
+    1: [["moins de 10", (c, d) => d.a < 10], ["au-delà de 10", () => true]],
+    2: [["dixièmes seuls", (c, d) => d.eb === 0 && d.xa > 0], ["unités et dixièmes", (c, d) => d.xa > 0], ["d’un entier", () => true]],
+    3: [["sans casser d’unité", (c, d) => !d.casse], ["on casse une unité", (c, d) => d.eb === 0 && d.xa > 0], ["unités et centièmes", (c, d) => d.xa > 0], ["d’un entier", () => true]]
+  };
+  // Tire à tour de rôle dans chaque sorte du niveau.
+  function parSortes(liste, sortes) {
+    const paquets = sortes.map(() => []);
+    liste.forEach(calcul => {
+      const i = sortes.findIndex(([, test]) => test(calcul, calcul.donnees));
+      paquets[i < 0 ? sortes.length - 1 : i].push(calcul);
+    });
+    return paquets;
+  }
+  function deuxComposer(liste, sortes, parts) {
+    const paquets = parSortes(liste, sortes);
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      const tires = paquets.flatMap((paquet, i) => {
+        const deja = imposes.filter(c => Math.max(0, sortes.findIndex(([, t]) => t(c, c.donnees))) === i).length;
+        return melanger(rng, paquet).filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      });
+      return [...tires, ...imposes];
+    };
+  }
+  const D6_LISTES = Object.freeze({1: d6Vivier(1), 2: d6Vivier(2), 3: d6Vivier(3)});
+  const D7_LISTES = Object.freeze({1: d7Vivier(1), 2: d7Vivier(2), 3: d7Vivier(3)});
+
+  // J'apprends de D6 et D7 : les carrés à toucher sur le premier calcul,
+  // les carrés dessinés sur le deuxième, J'écris sur le troisième.
+  // J'écris de D6 et D7 (la même recette pour la leçon et les calculs
+  // tirés) : les unités, la partie décimale, puis le tout
+  // (« 3,6 + 2,2 = 3 + 2 + 0,6 + 0,2 ») ; une unité cassée (D7) : « 7,2 =
+  // 6 + 1,2 », puis « 1,2 − 0,9 », puis le tout.
+  function deuxEcris(calcul) {
+    const {a, b, r, ea, eb, xa, xb, casse, dec} = calcul.donnees;
+    const plus = calcul.module === "D6";
+    const da = exact(xa / 100);
+    const db = exact(xb / 100);
+    let consigne;
+    let etapes;
+    if (casse) {
+      if (eb || !ea || !xa) return null;
+      const grand = exact(1 + da);
+      consigne = `${f(a)} − ${f(b)} = ${f(ea - 1)} + ${f(grand)} − ${f(b)}`;
+      etapes = [[`${f(grand)} − ${f(b)} = ?`, dec], [`${f(a)} − ${f(b)} = ?`, r]];
+    } else {
+      // (1,6 − 1,5 : « 1 − 1 = 0 » n'apprend rien ; le calcul n'est pas pris.)
+      if (!ea || !eb || !xa || !xb || (!plus && ea === eb)) return null;
+      const op = plus ? "+" : "−";
+      consigne = `${f(a)} ${op} ${f(b)} = ${f(ea)} ${op} ${f(eb)} + ${f(da)} ${op} ${f(db)}`;
+      etapes = [[`${f(ea)} ${op} ${f(eb)} = ?`, plus ? ea + eb : ea - eb], [`${f(da)} ${op} ${f(db)} = ?`, dec], [`${f(a)} ${op} ${f(b)} = ?`, r]];
+    }
+    return ecrisAvecDessins({
+      consigne: fr(consigne),
+      etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: Object.freeze(deuxImage(calcul)), phrase: deuxPhrase(calcul)})
+    }, carreOpDessins(deuxImage(calcul), casse ? [xb, xb] : [0, xb, xb]));
+  }
+  function deuxApprends({manipule, represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: deuxManipulation(manipule),
+      represente: Object.freeze({
+        outil: "carre-op", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(deuxAide(represente)),
+        solution: Object.freeze({image: Object.freeze(deuxImage(represente)), phrase: deuxPhrase(represente)})
+      }),
+      ecris: deuxEcris(ecris),
+      bilan: frBilan(bilan),
+      image: Object.freeze(deuxImage(manipule)),
+      calculs: Object.freeze({montre: manipule, ecris}),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const D6 = {
+    id: "D6", nom: "Additionner deux décimaux", exemple: "4,5 + 1,2",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "carre-op",
+    erreurs: D6_ERREURS, image: deuxImage, aide: deuxAide, phrase: deuxPhrase, manipulation: deuxManipulation, difficulte: deuxDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "sans retenue", nom: "Additionner sans échange", palier: 3, type: "P",
+        composer: deuxComposer(D6_LISTES[1], D6_SORTES[1], [6, 4]),
+        imposes: [d6Somme(1, 3.2, 4.5), d6Somme(1, 7.4, 6.3)],
+        apprends: deuxApprends({
+          manipule: d6Somme(0, 4.5, 1.2),
+          represente: d6Somme(0, 2.3, 3.4),
+          ecris: d6Somme(0, 3.6, 2.2),
+          consigne: "Les dixièmes avec les dixièmes.",
+          bilan: "Les unités avec les unités, les dixièmes avec les dixièmes : 4 + 1 = 5. 0,5 + 0,2 = 0,7. 4,5 + 1,2 = 5,7."
+        })
+      },
+      {
+        n: 2, titre: "avec retenue (moins de 10, un chiffre après la virgule)", nom: "Additionner avec un échange", palier: 3, type: "P",
+        composer: deuxComposer(D6_LISTES[2], D6_SORTES[2], [2, 5, 3]),
+        imposes: [d6Somme(2, 3.5, 2.5), d6Somme(2, 8.6, 7.8)],
+        apprends: deuxApprends({
+          manipule: d6Somme(0, 2.7, 3.7),
+          represente: d6Somme(0, 1.8, 4.5),
+          ecris: d6Somme(0, 4.9, 3.4),
+          consigne: "10 dixièmes font 1 unité.",
+          bilan: "10 dixièmes font 1 unité : 2 + 3 = 5. 0,7 + 0,7 = 1,4. 2,7 + 3,7 = 6,4."
+        })
+      },
+      {
+        n: 3, titre: "chiffres après la virgule différents", nom: "Additionner\u00a0: dixièmes et centièmes", palier: 4, type: "P",
+        composer: deuxComposer(D6_LISTES[3], D6_SORTES[3], [4, 6]),
+        imposes: [d6Somme(3, 4.6, 0.35), d6Somme(3, 3.8, 2.47)],
+        apprends: deuxApprends({
+          manipule: d6Somme(0, 2.57, 5.8),
+          represente: d6Somme(0, 1.4, 3.75),
+          ecris: d6Somme(0, 3.46, 1.7),
+          consigne: "Les dixièmes avec les dixièmes, les centièmes avec les centièmes.",
+          bilan: "Les dixièmes avec les dixièmes, les centièmes avec les centièmes : 2 + 5 = 7. 0,57 + 0,8 = 1,37. 2,57 + 5,8 = 8,37."
+        })
+      }
+    ]
+  };
+
+  const D7 = {
+    id: "D7", nom: "Soustraire deux décimaux", exemple: "5,8 − 2,3",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "carre-op",
+    erreurs: D7_ERREURS, image: deuxImage, aide: deuxAide, phrase: deuxPhrase, manipulation: deuxManipulation, difficulte: deuxDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "sans retenue", nom: "Soustraire sans échange", palier: 3, type: "P",
+        composer: deuxComposer(D7_LISTES[1], D7_SORTES[1], [6, 4]),
+        imposes: [d7Difference(1, 7.6, 4.2), d7Difference(1, 13.8, 5.3)],
+        apprends: deuxApprends({
+          manipule: d7Difference(0, 5.8, 2.3),
+          represente: d7Difference(0, 6.7, 3.4),
+          ecris: d7Difference(0, 8.9, 4.5),
+          consigne: "Les dixièmes avec les dixièmes.",
+          bilan: "Les unités avec les unités, les dixièmes avec les dixièmes : 5 − 2 = 3. 0,8 − 0,3 = 0,5. 5,8 − 2,3 = 3,5."
+        })
+      },
+      {
+        n: 2, titre: "avec retenue", nom: "Soustraire avec un échange", palier: 4, type: "P",
+        composer: deuxComposer(D7_LISTES[2], D7_SORTES[2], [4, 3, 3]),
+        imposes: [d7Difference(2, 6.2, 0.5), d7Difference(2, 9, 1.9)],
+        apprends: deuxApprends({
+          manipule: d7Difference(0, 3.4, 0.8),
+          represente: d7Difference(0, 5.3, 0.6),
+          ecris: d7Difference(0, 7.2, 0.9),
+          consigne: "Il n’y a pas assez de dixièmes : je casse une unité.",
+          bilan: "Pas assez de dixièmes, je casse une unité : 3,4 = 2 + 1,4. 1,4 − 0,8 = 0,6. 3,4 − 0,8 = 2,6."
+        })
+      },
+      {
+        n: 3, titre: "chiffres après la virgule différents", nom: "Soustraire\u00a0: dixièmes et centièmes", palier: 4, type: "P",
+        composer: deuxComposer(D7_LISTES[3], D7_SORTES[3], [3, 3, 2, 2]),
+        imposes: [d7Difference(3, 6.48, 4.6), d7Difference(3, 5, 2.35)],
+        apprends: deuxApprends({
+          manipule: d7Difference(0, 5.42, 0.6),
+          represente: d7Difference(0, 3.15, 0.4),
+          ecris: d7Difference(0, 4.27, 0.5),
+          consigne: "Il n’y a pas assez de dixièmes : je casse une unité.",
+          bilan: "Pas assez de dixièmes, je casse une unité : 5,42 = 4 + 1,42. 1,42 − 0,6 = 0,82. 5,42 − 0,6 = 4,82."
+        })
+      }
+    ]
+  };
+
   // ============================================ modules lot 6 (04/11/2026)
   //
   // F2, F5, F6, F8 : les fractions du CM1 (lot 6a ; F1 et F3 suivent, lot
@@ -8142,20 +8703,9 @@
     D2,
     D3,
     D4,
-    reserve("D5", "Compléments à l’unité", "0,7 + ? = 1", [
-      {n: 1, titre: "dixièmes, à l’entier suivant", palier: 3, type: "P", exemple: "0,7 + ? = 1"},
-      {n: 2, titre: "centièmes", palier: 4, type: "P", exemple: "0,35 + ? = 1"}
-    ]),
-    reserve("D6", "Additionner deux décimaux", "4,5 + 1,2", [
-      {n: 1, titre: "sans retenue", palier: 3, type: "P", exemple: "4,5 + 1,2"},
-      {n: 2, titre: "avec retenue (moins de 10, un chiffre après la virgule)", palier: 3, type: "P", exemple: "2,7 + 3,7"},
-      {n: 3, titre: "chiffres après la virgule différents", palier: 4, type: "P", exemple: "2,57 + 5,8"}
-    ]),
-    reserve("D7", "Soustraire deux décimaux", "5,8 − 2,3", [
-      {n: 1, titre: "sans retenue", palier: 3, type: "P", exemple: "5,8 − 2,3"},
-      {n: 2, titre: "avec retenue", palier: 4, type: "P", exemple: "3,4 − 0,8"},
-      {n: 3, titre: "chiffres après la virgule différents", palier: 4, type: "P", exemple: "9 − 1,9"}
-    ]),
+    D5,
+    D6,
+    D7,
     reserve("D8", "Doubles et moitiés de décimaux", "moitié de 9", [
       {n: 1, titre: "moitié des impairs jusqu’à 15", palier: 3, type: "F", exemple: "moitié de 9"},
       {n: 2, titre: "un chiffre après la virgule", palier: 3, type: "P", exemple: "double de 13,6"},
@@ -8365,7 +8915,11 @@
     "D2-4": parFormes(["on cherche le nombre", "trou-nombre", "trou-nombre-gauche"], ["on cherche par combien", "trou-facteur"], ["l’égalité à l’envers", "trou-egal"]),
     "F1-3": parFormes(["fraction en décimal", "decimal"], ["décimal en fraction", "numerateur"], ["en centièmes", "centiemes"], ["le dénominateur", "denominateur"]),
     "M10-3": [["jusqu’à 50", (c, d) => d.xy <= 50], ["au-delà de 50", toutes]],
-    "M12-3": parFormes(["a ÷ b", "division"], ["a × □ = b", "trou-facteur"])
+    "M12-3": parFormes(["a ÷ b", "division"], ["a × □ = b", "trou-facteur"]),
+    // Lot 7a : D5, D6, D7.
+    "D5-1": D5_SORTES, "D5-2": D5_SORTES,
+    "D6-1": D6_SORTES[1], "D6-2": D6_SORTES[2], "D6-3": D6_SORTES[3],
+    "D7-1": D7_SORTES[1], "D7-2": D7_SORTES[2], "D7-3": D7_SORTES[3]
   });
 
   // Les cartes « par cœur » (lot 2 « J'apprends en une étape », 12/11/2026,
@@ -8512,7 +9066,11 @@
     "C3-1": [["un calcul de l’autre côté", "un calcul de l’autre côté : je le calcule d’abord"]],
     "F6-1": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
     "F6-2": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
-    "F6-3": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]]
+    "F6-3": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    // Lot 7a : D6, D7.
+    "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
+    "D7-2": [["unités et dixièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de dixièmes : je casse une unité, elle fait 10 dixièmes"]],
+    "D7-3": [["unités et centièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de centièmes : je casse une unité, elle fait 100 centièmes"]]
   });
   const memeNom = (a, b) => String(a).replace(/\s/g, " ") === String(b).replace(/\s/g, " ");
   // La nouveauté d'un calcul dans un niveau (« M2-1 ») : {cle, texte}, ou
@@ -9417,7 +9975,10 @@
     "F2-1": recetteDemiEnQuarts, "F2-2": recetteDemiEnQuarts,
     "F6-1": recetteFoisFraction, "F6-2": recetteFoisFraction, "F6-3": recetteFoisFraction,
     "F3-1": c => recetteQuantite(c), "F3-2": c => recetteQuantite(c), "F3-3": c => recetteQuantite(c, true),
-    "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes
+    "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes,
+    // Lot 7a.
+    "D5-1": d5Ecris, "D5-2": d5Ecris,
+    "D6-1": deuxEcris, "D6-2": deuxEcris, "D6-3": deuxEcris, "D7-1": deuxEcris, "D7-2": deuxEcris, "D7-3": deuxEcris
   });
 
   // Le J'écris d'un calcul dans un niveau (« A10-2 »), ou null quand la

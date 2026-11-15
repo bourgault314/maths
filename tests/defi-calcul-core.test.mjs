@@ -162,9 +162,9 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   assert.equal("avant" in CORE.moduleDe("A2"), false, "plus de verrous « avant » : l'ordre de la carte fait foi");
 });
 
-const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4", "F2", "F1", "F3", "F5", "F6", "F8"];
+const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "F2", "F1", "F3", "F5", "F6", "F8"];
 
-test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b)", () => {
+test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a)", () => {
   assert.deepEqual(CORE.MODULES.filter(fiche => fiche.construit).map(fiche => fiche.id), CONSTRUITS);
   // Modules lot 1 : les niveaux de la carte v2, inchangés (nombre, paliers, types).
   assert.deepEqual(CORE.moduleDe("A1").niveaux.map(n => [n.palier, n.type]), [[1, "F"], [1, "F"], [1, "F"]]);
@@ -224,7 +224,7 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.titre.replace(/[\u202f\u00a0]/g, " ")), ["à la dizaine suivante", "à 100 : dizaines et nombres en 5", "à 100 : tous les nombres", "à 1 000 et à la centaine suivante", "de n’importe quel nombre jusqu’à une centaine, un millier"]);
   // La touche « , » : les modules à décimales seulement (D1, D2, D3, D4) ;
   // pas quand la case est un numérateur (« 0,3 = □/10 », décision du 04/11).
-  const DECIMAUX = ["D1", "D2", "D3", "D4", "F1"];
+  const DECIMAUX = ["D1", "D2", "D3", "D4", "F1", "D5", "D6", "D7"];
   DECIMAUX.forEach(id => assert.equal(CORE.moduleDe(id).virgule, true, `${id} : la virgule`));
   CONSTRUITS.filter(id => !DECIMAUX.includes(id)).forEach(id => assert.ok(!CORE.moduleDe(id).virgule, `${id} : pas de virgule`));
   assert.equal(CORE.virguleDuTexte("D1", "3 + 2/10 = □"), true);
@@ -622,7 +622,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // Modules lot 1 : toutes les réponses de 0 au double de la bonne.
   // Modules lot 2 : les réponses proches de la bonne, à 1, 10, 100… près
   // (A3-4 va jusqu'à 100 000 : tout essayer serait trop long).
-  NIVEAUX_CONSTRUITS.filter(({fiche}) => ["A1", "A10", "A11", "M1", "A3", "A4", "A6", "A7", "A8", ...LOT3, ...LOT4, ...LOT5, ...LOT6, ...LOT6B].includes(fiche.id)).forEach(({cle}) => {
+  NIVEAUX_CONSTRUITS.filter(({fiche}) => ["A1", "A10", "A11", "M1", "A3", "A4", "A6", "A7", "A8", ...LOT3, ...LOT4, ...LOT5, ...LOT6, ...LOT6B, ...LOT7A].includes(fiche.id)).forEach(({cle}) => {
     for (let graine = 1; graine <= 30; graine += 1) ["valide", "entraine"].forEach(genre => CORE.genererSerie(cle, {graine, genre}).forEach(calcul => {
       const fiche = CORE.moduleDe(calcul.module);
       fiche.erreurs.forEach(erreur => assert.equal(erreur.test(calcul, calcul.reponse), false, `${calcul.texte} : cause ${erreur.c} sur la bonne réponse`));
@@ -668,7 +668,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
 // les modules du lot 1 ; pour ceux du lot 2, celles qui sont à quelques
 // unités, dizaines, centaines… de la bonne, et le chiffre mis au mauvais rang.
 function reponsesAEssayer(calcul) {
-  if (LOT5.includes(calcul.module)) return fauxLot5(calcul);
+  if (LOT5.includes(calcul.module) || LOT7A.includes(calcul.module)) return fauxLot5(calcul);
   if (LOT6B.includes(calcul.module)) return fauxLot6b(calcul);
   if (LOT3.includes(calcul.module) || LOT4.includes(calcul.module)) return fauxLot3(calcul);
   if (!["A3", "A4", "A6", "A7", "A8"].includes(calcul.module)) return Array.from({length: calcul.reponse * 2 + 121}, (_, i) => i);
@@ -924,6 +924,7 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
       if (LOT5.includes(c.module)) { verifierOutilLot5(c); return; }
       if (LOT6.includes(c.module)) { verifierOutilLot6(c); return; }
       if (LOT6B.includes(c.module)) { verifierOutilLot6b(c); return; }
+      if (LOT7A.includes(c.module)) { verifierOutilLot7a(c); return; }
       const aide = CORE.aideDe(c);
       // M8-3 en trou (12 × 42 = 10 × 42 + □ × 42) : pas d'aide, le rectangle
       // écrirait la réponse (le petit morceau).
@@ -1057,6 +1058,7 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
     if (LOT5.includes(fiche.id)) { verifierApprendsLot5(fiche, niveau, cle); return; }
     if (LOT6.includes(fiche.id)) { verifierApprendsLot6(fiche, niveau, cle); return; }
     if (LOT6B.includes(fiche.id)) { verifierApprendsLot6b(fiche, niveau, cle); return; }
+    if (LOT7A.includes(fiche.id)) { verifierApprendsLot7a(fiche, niveau, cle); return; }
     if (fiche.id === "M3") {
       // M3 (décision du 01/11) : la table, puis le glisse-nombres de M2 ; le
       // tableau à flèches part de la table et cache l'arrivée.
@@ -3240,4 +3242,60 @@ test("lot « couverture » : une deuxième façon sous « À retenir », sur A1-
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
   assert.match(page, /<p id="retenir-autre" class="dc-retenir-autre" hidden><\/p>/, "la ligne sous le dessin, cachée par défaut");
   assert.match(page, /\$\("retenir-autre"\)\.hidden = !autre;/, "montrée seulement quand le niveau en a une");
+});
+
+// ------------------------------------------------------------- lot 7a (14/11/2026)
+//
+// D5, D6, D7 : les carrés de 100 qui calculent (choix de Gwenaël du 14/11 :
+// un seul carré pour les compléments, la partie décimale seule, l'unité
+// déjà cassée, une croix par case enlevée).
+const LOT7A = ["D5", "D6", "D7"];
+// Jouer les carrés jusqu'au bout : rend le nombre de touchers et les cases faites.
+function jouerCarresOp(m) {
+  let fait = 0;
+  let touchers = 0;
+  for (let apres = AIDES.carreOpGeste(fait, m, m.op, m.bleu); apres !== null; apres = AIDES.carreOpGeste(fait, m, m.op, m.bleu)) {
+    assert.ok(apres > fait, "chaque toucher fait un morceau");
+    fait = apres;
+    touchers += 1;
+  }
+  return {fait, touchers};
+}
+function verifierOutilLot7a(c) {
+  const aide = CORE.aideDe(c);
+  const image = CORE.imageDe(c);
+  assert.equal(aide.outil, "carre-op", c.texte);
+  assert.equal(image.outil, "carre-op", c.texte);
+  sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
+  // Ce que le dessin montre est juste : les cases lues donnent la partie décimale.
+  const {xa, xb, x, dec} = c.donnees;
+  if (c.module === "D5") assert.equal(image.bleu + image.autre, 100, c.texte);
+  else if (c.module === "D6") assert.equal((image.bleu + image.autre) / 100, dec, c.texte);
+  else assert.equal(CORE.exact((image.bleu - image.autre) / 100), dec, c.texte);
+  assert.ok(image.bleu + (image.op === "enlever" ? 0 : image.autre) <= image.carres * 100, `${c.texte} : tout tient dans les carrés`);
+  const m = CORE.manipulationDe(c);
+  assert.equal(m.outil, "carre-op");
+  const {fait, touchers} = jouerCarresOp(m);
+  assert.equal(fait, m.autre, `${c.texte} : le geste va au bout`);
+  if (m.op === "completer") assert.equal(touchers, Math.ceil((100 - x) / 10) + ((10 - x % 10) % 10) - (x % 10 ? 1 : 0), `${c.texte} : la bande finie, puis les bandes`);
+  else assert.equal(touchers, Math.floor(xb / 10) + xb % 10, `${c.texte} : les dixièmes, puis les centièmes`);
+  assert.ok(decimauxDuTexte(m.traces[0].texte).includes(c.reponse), `${c.texte} : la trace écrit la réponse`);
+  assert.ok(xa === undefined || xa >= 0);
+}
+function verifierApprendsLot7a(fiche, niveau, cle) {
+  const a = niveau.apprends;
+  assert.equal(a.manipule.outil, "carre-op", cle);
+  assert.equal(a.represente.outil, "carre-op", cle);
+  const montre = a.calculs.montre;
+  assert.equal(CORE.sorteDansNiveau(cle, montre), CORE.sorteDansNiveau(cle, a.calculs.ecris), `${cle} : la leçon garde une seule sorte (On te montre, J'écris)`);
+  // (Les motifs ont un nom à eux dans chaque dessin : on les retire pour comparer.)
+  const svgs = a.ecris.dessins.map(AIDES.dessinerImage).map(svg => svg.replace(/dc-op-[hb]-\d+/g, "motif"));
+  assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin de J'écris se remplit`);
+  sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} : Avec le dessin`);
+}
+
+test("lot 7a : les niveaux de la carte v3, inchangés (nombre, paliers, types)", () => {
+  assert.deepEqual(CORE.moduleDe("D5").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [4, "P"]]);
+  assert.deepEqual(CORE.moduleDe("D6").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [3, "P"], [4, "P"]]);
+  assert.deepEqual(CORE.moduleDe("D7").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [4, "P"], [4, "P"]]);
 });

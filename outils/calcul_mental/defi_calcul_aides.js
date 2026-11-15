@@ -2788,6 +2788,258 @@
     };
   }
 
+  // ------------------------------------- les carrés de 100 qui calculent (D5, D6, D7)
+  //
+  // Lot 7a (14/11/2026) : les fiches de Gwenaël « J'additionne avec les
+  // grilles » (décision du 04/11 : les grilles reviennent dans D5 et D6).
+  // Seule la partie décimale se dessine (les unités se calculent à part :
+  // 8,6 + 7,8 = 15 + 1,4) : un ou deux carrés de 100, l'unité est le grand
+  // carré. Les cases se comptent dans l'ordre de D1 : les bandes (un
+  // dixième) de gauche à droite, les petits carrés (un centième) de haut en
+  // bas dans la bande entamée ; le deuxième carré prend la suite du premier.
+  //  - « completer » (D5) : le nombre colorié, ce qui manque jusqu'à 1 reste
+  //    blanc ; trouvé, ce qui manque est hachuré ;
+  //  - « ajouter » (D6) : le premier nombre colorié, ce qu'on ajoute hachuré
+  //    à la suite (dans le 2e carré si ça dépasse) ;
+  //  - « enlever » (D7) : le premier nombre colorié (une unité « cassée »
+  //    dans le 1er carré quand il faut un échange), ce qu'on enlève barré, à
+  //    partir de la fin.
+  // Aucun chiffre dessus : c'est un dessin à lire.
+  //   o : {op, carres, bleu (cases coloriées au départ), autre (cases
+  //   hachurées ou barrées), cache (vrai : ce qui manque n'est pas encore
+  //   hachuré), montre}
+  const CARRE_OP = Object.freeze({hachure: "#0755b8", barre: "#143451", enleve: "#e6ecf3"});
+  let compteurCarresOp = 0;
+  function casesOpSvg(x0, y0, cote, debut, fin, rendu) {
+    // Les cases [debut, fin[ d'UN carré (0 à 100), en rectangles : les
+    // bandes entières d'un seul trait, le reste case par case.
+    const c = cote / 10;
+    let s = "";
+    let i = debut;
+    while (i < fin) {
+      const colonne = Math.floor(i / 10);
+      const ligne = i % 10;
+      if (ligne === 0 && fin - i >= 10) {
+        s += rendu(x0 + colonne * c, y0, c, cote);
+        i += 10;
+      } else {
+        const bout = Math.min(fin, (colonne + 1) * 10);
+        s += rendu(x0 + colonne * c, y0 + ligne * c, c, (bout - i) * c);
+        i = bout;
+      }
+    }
+    return s;
+  }
+  function carreOpSvg(x, y, cote, k, o, ids) {
+    const c = cote / 10;
+    const debut = k * 100;
+    const dansCarre = (a, b) => [Math.max(0, a - debut), Math.min(100, b - debut)];
+    let s = `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="${CARRE.clair}"/>`;
+    const plein = (bx, by, w, h) => `<rect x="${bx}" y="${by}" width="${w}" height="${h}" fill="${CARRE.plein}"/>`;
+    const hachure = (bx, by, w, h) => `<rect x="${bx}" y="${by}" width="${w}" height="${h}" fill="url(#${ids.h})"/>`;
+    // (Le barré se dessine case par case : la croix tombe dans sa case.)
+    const barre = (bx, by, w, h) => {
+      let t = `<rect x="${bx}" y="${by}" width="${w}" height="${h}" fill="${CARRE_OP.enleve}"/>`;
+      for (let cy = by; cy < by + h - .1; cy += c) {
+        const m = c * .2;
+        t += `<path d="M${bx + m} ${cy + m}L${bx + c - m} ${cy + c - m}M${bx + c - m} ${cy + m}L${bx + m} ${cy + c - m}" stroke="${CARRE_OP.barre}" stroke-width="1.2"/>`;
+      }
+      return t;
+    };
+    const bleu = o.bleu || 0;
+    const autre = o.autre || 0;
+    if (o.op === "enlever") {
+      const reste = bleu - (o.cache ? 0 : autre);
+      const [a1, b1] = dansCarre(0, reste);
+      if (b1 > a1) s += casesOpSvg(x, y, cote, a1, b1, plein);
+      const [a2, b2] = dansCarre(reste, bleu);
+      if (b2 > a2) s += casesOpSvg(x, y, cote, a2, b2, barre);
+    } else {
+      const [a1, b1] = dansCarre(0, bleu);
+      if (b1 > a1) s += casesOpSvg(x, y, cote, a1, b1, plein);
+      if (!o.cache) {
+        const [a2, b2] = dansCarre(bleu, bleu + autre);
+        if (b2 > a2) s += casesOpSvg(x, y, cote, a2, b2, hachure);
+      }
+    }
+    for (let j = 1; j < 10; j += 1) {
+      s += `<line x1="${x + j * c}" y1="${y}" x2="${x + j * c}" y2="${y + cote}" stroke="${CARRE.trait}" stroke-width="1.1" opacity=".9"/>`;
+      s += `<line x1="${x}" y1="${y + j * c}" x2="${x + cote}" y2="${y + j * c}" stroke="${CARRE.trait}" stroke-width=".5" opacity=".45"/>`;
+    }
+    return s + `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="none" stroke="${CARRE.trait}" stroke-width="2.4"${o.montre ? ' class="dc-montre"' : ""}/>`;
+  }
+  // Les motifs : la hachure de ce qu'on ajoute (traits bleus sur blanc), le
+  // barré de ce qu'on enlève (une croix sur un gris très clair) — lisibles
+  // imprimés en noir et blanc.
+  function motifsOp() {
+    compteurCarresOp += 1;
+    const ids = {h: `dc-op-h-${compteurCarresOp}`, b: `dc-op-b-${compteurCarresOp}`};
+    const defs = `<defs><pattern id="${ids.h}" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)"><rect width="5" height="5" fill="#fff"/><line x1="0" y1="0" x2="0" y2="5" stroke="${CARRE_OP.hachure}" stroke-width="2.6"/></pattern>`
+      + "</defs>";
+    return {ids, defs};
+  }
+  function carresOp(o) {
+    const nb = Math.max(1, o.carres || 1);
+    const M = CARRE.marge;
+    const cote = CARRE.cote;
+    const W = nb * cote + (nb - 1) * CARRE.ecart + 2 * M;
+    const H = cote + 2 * M;
+    const {ids, defs} = motifsOp();
+    let s = `<svg class="dc-carre dc-carre-op" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireCarresOp(o)}">${defs}`;
+    for (let k = 0; k < nb; k += 1) s += carreOpSvg(M + k * (cote + CARRE.ecart), M, cote, k, o, ids);
+    return s + "</svg>";
+  }
+  // Des cases en mots : « 7 bandes », « 3 bandes et 5 petits carrés »,
+  // « 1 carré entier et 4 bandes ».
+  function casesEnMots(cases) {
+    const entiers = Math.floor(cases / 100);
+    const bandes = Math.floor((cases % 100) / 10);
+    const petits = cases % 10;
+    return [entiers ? accorder(entiers, "carré entier", "carrés entiers") : "", bandes ? accorder(bandes, "bande", "bandes") : "", petits ? accorder(petits, "petit carré", "petits carrés") : ""]
+      .filter(Boolean).join(" et ") || "rien";
+  }
+  function decrireCarresOp(o) {
+    const debut = `${o.carres > 1 ? "Deux carrés" : "Un carré"} de 100 : un carré entier est une unité, une bande un dixième, un petit carré un centième.`;
+    if (o.op === "completer") return `${debut} Colorié : ${casesEnMots(o.bleu)}. ${o.cache ? "Le reste est blanc : il faut le compter." : `Hachuré, ce qui manque : ${casesEnMots(o.autre)}.`}`;
+    if (o.op === "ajouter") return `${debut} Colorié : ${casesEnMots(o.bleu)}. ${o.cache ? "On ajoute des cases : il faut les compter." : `Hachuré, ce qu'on ajoute : ${casesEnMots(o.autre)}.`}`;
+    return `${debut} Colorié au départ : ${casesEnMots(o.bleu)}. ${o.cache ? "On enlève des cases : il faut les compter." : `Barré, ce qu'on enlève : ${casesEnMots(o.autre)}.`}`;
+  }
+
+  // La règle des carrés qui calculent, sans page (testée par node --test) :
+  // un toucher fait le morceau suivant. Compléter : les petits carrés
+  // jusqu'au bout de la bande entamée, puis les bandes. Ajouter, enlever :
+  // les dixièmes du nombre (10 cases par toucher), puis ses centièmes (1
+  // case). `fait` : les cases déjà faites ; `voulu` : {autre, dixiemes,
+  // centiemes}. Rend le nouveau nombre de cases faites, ou null (fini).
+  function carreOpGeste(fait, voulu, op, bleu = 0) {
+    if (fait >= voulu.autre) return null;
+    if (op === "completer") {
+      const ici = bleu + fait;
+      return fait + (ici % 10 ? 1 : 10);
+    }
+    return fait + (fait < voulu.dixiemes * 10 ? 10 : 1);
+  }
+
+  // Les carrés qui calculent, à toucher (On te montre, avec l'outil, et
+  // l'entraînement après deux erreurs) : le premier nombre est déjà
+  // colorié ; chaque toucher (n'importe où sur les carrés) fait le morceau
+  // suivant ; tout fait, un toucher de plus fait trembler la consigne. Au
+  // bout, l'appli écrit le calcul.
+  //   options : {op, carres, bleu, autre, dixiemes, centiemes, consigne,
+  //   traces, surFini, sansReponse}
+  // Au clavier : Entrée ou Espace sur les carrés.
+  function carresOpManip(zone, options) {
+    const {op, carres = 1, bleu = 0, autre = 0, dixiemes = 0, centiemes = 0, consigne: texteConsigne, traces = [], surFini = null, sansReponse = false} = options;
+    const etat = {fait: 0, fini: false, refus: 0, etape: 0};
+    const suivi = suiviRefus();
+    compteurAides += 1;
+    const bloc = document.createElement("div");
+    bloc.className = "dc-carre-manip dc-carre-op-manip";
+    const consigne = document.createElement("p");
+    consigne.className = "consigne";
+    consigne.id = `dc-consigne-${compteurAides}`;
+    ecrireTexte(consigne, texteConsigne);
+    const scene = document.createElement("div");
+    scene.className = "dc-carre-scene dc-carre-op-scene";
+    scene.style.setProperty("--n", String(carres));
+    const grand = document.createElement("div");
+    grand.className = "dc-carre-grand";
+    grand.tabIndex = 0;
+    grand.setAttribute("role", "button");
+    grand.setAttribute("aria-describedby", consigne.id);
+    const trace = document.createElement("p");
+    trace.className = "dc-trace";
+    trace.setAttribute("role", "status");
+    trace.setAttribute("aria-live", "polite");
+    const annonce = zoneAnnonce();
+    scene.append(grand);
+    bloc.append(consigne, scene, trace, annonce);
+    zone.replaceChildren(bloc);
+    const verbe = op === "enlever" ? "barré" : op === "ajouter" ? "ajouté" : "colorié";
+    const compte = () => `${casesEnMots(etat.fait).replace("carré entier", "unité")} ${verbe}${etat.fait > 1 ? "s" : ""}`;
+    function dessiner() {
+      const o = {op, carres, bleu, autre: etat.fait, montre: grand.classList.contains("dc-montre")};
+      grand.innerHTML = carresOp(o).replace(/ width="\d+" height="\d+" role="img" aria-label="[^"]*"/, ' aria-hidden="true"');
+      grand.setAttribute("aria-label", etat.fini ? decrireCarresOp(Object.assign({}, o, {autre: etat.fait})) : `${decrireCarresOp(Object.assign({}, o, {cache: !etat.fait}))} Touche pour continuer.`);
+      const pilule = document.createElement("b");
+      if (sansReponse) {
+        // Rien sous les carrés : l'élève compte.
+      } else if (etat.fini && traces.length) {
+        pilule.className = "ok";
+        ecrireTexte(pilule, traces[traces.length - 1].texte);
+      } else if (etat.fait) {
+        pilule.className = "ici";
+        pilule.textContent = `${casesEnMots(etat.fait).replace(/^1 carré entier/, "1 unité")}…`;
+      }
+      trace.replaceChildren(...(pilule.className ? [pilule] : []));
+    }
+    function leverRefus() {
+      clearTimeout(etat.refus);
+      etat.refus = 0;
+      consigne.classList.remove("est-refus");
+    }
+    // Lot 7-0 : comme le carré de D1, rien n'est refusé avant la fin ; seul
+    // « Suivant » avant le geste compte. Au 3e, les carrés brillent.
+    const MONTRE = "Touche les carrés qui brillent.";
+    function refuser() {
+      clearTimeout(etat.refus);
+      if (suivi.refuse()) {
+        figerConsigne(consigne);
+        ecrireTexte(consigne, MONTRE);
+        grand.classList.add("dc-montre");
+        consigne.classList.remove("est-refus");
+        annonce.annoncer(consigne.textContent);
+        return;
+      }
+      consigne.classList.remove("est-refus");
+      void consigne.offsetWidth;
+      consigne.classList.add("est-refus");
+      annonce.annoncer(consigne.textContent);
+      etat.refus = setTimeout(leverRefus, 1800);
+    }
+    function toucher() {
+      const apres = carreOpGeste(etat.fait, {autre, dixiemes, centiemes}, op, bleu);
+      if (apres === null) { refuser(); return; }
+      leverRefus();
+      if (suivi.montre) { ecrireTexte(consigne, texteConsigne); grand.classList.remove("dc-montre"); }
+      suivi.accepte(); libererConsigne(consigne);
+      etat.fait = apres;
+      etat.etape += 1;
+      if (etat.fait >= autre) {
+        etat.fini = true;
+        bloc.classList.add("est-finie");
+      }
+      dessiner();
+      annonce.annoncer(etat.fini && traces.length && !sansReponse ? traces[traces.length - 1].texte.replace(/\//g, " sur ") : compte());
+      if (etat.fini && typeof surFini === "function") surFini();
+    }
+    grand.addEventListener("click", toucher);
+    grand.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      event.stopPropagation();
+      toucher();
+    });
+    if (!autre) etat.fini = true;
+    dessiner();
+    return {
+      outil: "carre-op",
+      element: bloc,
+      refuserSansGeste() { if (!etat.fini) refuser(); },
+      get montre() { return suivi.montre; },
+      detruire() {
+        clearTimeout(etat.refus);
+        annonce.arreter();
+      },
+      mesurer() {},
+      get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
+      get fini() { return etat.fini; },
+      get etape() { return etat.etape; },
+      get fait() { return etat.fait; },
+      toucher
+    };
+  }
+
   // ------------------------------------------------- le tableau à jetons (D4)
   //
   // Le nombre de départ en jetons, colonne par colonne, rangés en carré de
@@ -3850,6 +4102,7 @@
     if (image.outil === "deux-barres") return deuxBarres(image);
     if (image.outil === "numeration") return tableauNumeration(image);
     if (image.outil === "carre") return carreCent(image);
+    if (image.outil === "carre-op") return carresOp(image);
     if (image.outil === "barre-droite") return barreDroite(image);
     if (image.outil === "bandes-droite") return bandesImage(image);
     if (image.outil === "tout-parts") return toutParts(image);
@@ -3911,6 +4164,11 @@
     decrireCarre,
     carreGeste,
     carreManip,
+    carresOp,
+    decrireCarresOp,
+    carreOpGeste,
+    carresOpManip,
+    casesEnMots,
     jetonsDepart,
     jetonsGeste,
     jetonsManip,

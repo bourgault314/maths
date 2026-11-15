@@ -106,7 +106,11 @@ async function tient(page, largeur, hauteur) {
 }
 const boiteDessin = page => page.evaluate(() => { const b = document.querySelector("#aide > svg").getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)].join(","); });
 // La place d'un élément (rien ne doit bouger quand l'outil montre le geste).
-const place = (page, sel) => page.evaluate(q => { const b = document.querySelector(q).getBoundingClientRect(); return [b.left, b.top, b.width, b.height].map(Math.round).join(","); }, sel);
+// (Lot 7a, constat de Code sur la PR #1213 : sous Safari, la bande descend
+// de 0,04 px quand elle brille, et l'arrondi au pixel faisait échouer la
+// comparaison ; on compare à 1 px près, invisible à l'œil.)
+const place = (page, sel) => page.evaluate(q => { const b = document.querySelector(q).getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; }, sel);
+const memePlace = (a, b) => a.length === b.length && a.every((x, i) => Math.abs(x - b[i]) <= 1);
 const lignes = page => page.evaluate(() => [...document.querySelectorAll("#expression .lg > span")].map(l => ({classe: l.className, texte: l.textContent.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim()})));
 const dessin = page => appel(page, "dessin");
 
@@ -217,7 +221,7 @@ async function perleSeule(page) {
       await photo(s.page, `${f}-perles-avant`);
       const boulier = await place(s.page, ".perles-cadre");
       await perleSeule(s.page);
-      assert.equal(await place(s.page, ".perles-cadre"), boulier, "le boulier ne bouge pas quand les perles brillent");
+      assert.ok(memePlace(await place(s.page, ".perles-cadre"), boulier), "le boulier ne bouge pas quand les perles brillent");
       const montre = await appel(s.page, "montre");
       assert.equal(montre.montre, true);
       assert.ok(montre.brillent >= 1, "les perles à pousser brillent");
@@ -248,7 +252,7 @@ async function perleSeule(page) {
       }
       await s.page.evaluate(() => document.activeElement.blur());
       assert.deepEqual(await appel(s.page, "montre"), {montre: true, brillent: 2}, "le chiffre des unités et sa colonne brillent");
-      assert.equal(await place(s.page, ".place-value-tool"), tableau, "le tableau ne bouge pas");
+      assert.ok(memePlace(await place(s.page, ".place-value-tool"), tableau), "le tableau ne bouge pas");
       assert.equal(await texte(s.page, ".glisse-consigne"), "Glisse vers la colonne qui brille.");
       await photo(s.page, `${f}-glisse-montre`);
       await s.page.click("[data-place-value-source]");
@@ -262,7 +266,7 @@ async function perleSeule(page) {
       const jetons = await place(s.page, ".dc-jetons-tableau, .dc-reserve");
       for (let i = 0; i < 3; i += 1) { await s.page.click(".dc-jetons-col >> nth=0"); await pause(s.page, 1900); }
       assert.deepEqual(await appel(s.page, "montre"), {montre: true, brillent: 1}, "le jeton à toucher brille");
-      assert.equal(await place(s.page, ".dc-jetons-tableau, .dc-reserve"), jetons, "les jetons ne bougent pas");
+      assert.ok(memePlace(await place(s.page, ".dc-jetons-tableau, .dc-reserve"), jetons), "les jetons ne bougent pas");
       await photo(s.page, `${f}-jetons-montre`);
       await s.page.click(".dc-pion-reserve.dc-montre");
       await pause(s.page, 400);
@@ -278,7 +282,7 @@ async function perleSeule(page) {
         await pause(s.page, 1900);
       }
       assert.deepEqual(await appel(s.page, "montre"), {montre: true, brillent: 1}, "la bande à poser brille");
-      assert.equal(await place(s.page, ".dc-bandes-scene"), bandes, "les bandes ne bougent pas");
+      assert.ok(memePlace(await place(s.page, ".dc-bandes-scene"), bandes), "les bandes ne bougent pas");
       await photo(s.page, `${f}-bandes-montre`);
       await s.page.click(".dc-bande-reserve[data-reserve='4']");
       await pause(s.page, 400);
