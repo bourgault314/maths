@@ -567,6 +567,31 @@ function resumeReponse(question, modele) {
   return question.gabarit ? texte : texte.replace(/^.* = /, "");
 }
 
+/* Le calcul complet d'une ligne du bilan, quand la question en a un : le calcul du cahier (« 64 × [0] =
+   640 », « 33 = 7 × [0] + [1] ») rempli avec les bonnes réponses, ou le calcul d'un énoncé « Calcule … ».
+   La réponse est en vert quand elle ferme le calcul. Un QCM, ou une question sans calcul : null. */
+function calculComplet(question) {
+  if (question.fields.some((champ) => champ.options)) return null;
+  const valeurs = question.fields.map((champ) => ecrireReponse(champ.answer));
+  const vert = (texte) => `<strong class="vert">${mathHtml(texte)}</strong>`;
+  const remplir = (texte) => texte.replace(/\[(\d+)\]/g, (_, rang) => valeurs[rang] ?? "");
+  // Le calcul du cahier (« 64 × [0] = 640 », « 7/4 = [0] + [1]/4 ») rempli avec les bonnes réponses ;
+  // la réponse en vert quand elle ferme le calcul.
+  const gabarit = String(question.gabarit || "");
+  if (/[=≈]/.test(gabarit) && !/^\s*\[0\]\s*$/.test(gabarit)) {
+    const fin = /^(.*\S)\s(=|≈)\s\[(\d+)\]$/.exec(gabarit);
+    if (fin) return `${mathHtml(remplir(fin[1]))} ${fin[2]} ${vert(valeurs[Number(fin[3])])}`;
+    return mathHtml(remplir(gabarit));
+  }
+  // « Calcule 8/9 + 7/9. », « Calcule : 18 × 22. », « Calcule exactement : … » : le calcul de l'énoncé,
+  // puis la réponse. Une consigne qui suit (« Donne une fraction irréductible. ») ne se recopie pas ; un
+  // calcul « pour x = 5 » ou qui contient déjà « = » garde la forme « Réponse : … » (correctif du 15/11).
+  const calcule = /^Calcule(?:\s+exactement)?\s*:?\s+(.+?)\.(?:\s|$)/.exec(question.prompt || "");
+  if (calcule && question.fields.length === 1 && !/=|\spour\s/.test(calcule[1]))
+    return `${mathHtml(calcule[1])} = ${vert(valeurs[0])}`;
+  return null;
+}
+
 /* Le bilan d'une série : le score, puis chaque question (son énoncé, comme /auto/) avec son état
    (juste / juste avec l'aide / faux / passée) et sa correction dépliable. Pas d'étoiles : le parcours viendra après. */
 export function bilanHTML(seance, parId) {
@@ -591,21 +616,29 @@ export function bilanHTML(seance, parId) {
       : seance.mode === "test"
         ? "Bilan du test"
         : "Bilan";
-  // Coque V2 (C9) : « n / N » seul, en grand ; dessous, sans aide · avec l'aide.
+  // Coque V2 (C9) : « n / N » seul, en grand ; dessous, sans aide · avec l'aide — seulement quand l'aide
+  // existait (entraînement) : au test sans aide et au brevet, la ligne n'a pas de sens (15/11/2026).
+  const avecAide = seance.mode === "train";
   const score = `<div class="grand-score"><div class="score">${justes.length} / ${seance.questions.length}</div>
-    <p class="resume-bilan">${autonomes} sans aide · ${dessins} avec l’aide</p></div>`;
+    ${avecAide ? `<p class="resume-bilan">${autonomes} sans aide · ${dessins} avec l’aide</p>` : ""}</div>`;
   const liste = seance.questions
     .map((question, i) => {
       const [classe, signe, mot] = projection ? ["", "", ""] : etatLigne(seance.etats[i]);
       const famille = parId[question.famille];
       const modele = modeleQuestion(question, reglageForme(question, famille, "gabarit"));
+      // Le calcul complet quand la question en a un (« −3/4 + 1/8 = −5/8 »), sinon l'énoncé entier puis
+      // « Réponse : … » dessous (choix de Gwenaël, 15/11/2026).
+      const complet = calculComplet(question);
+      const corps = complet
+        ? `<span class="resultat-nom resultat-calcul">${complet}</span>`
+        : `<span class="resultat-nom resultat-texte">${questionPrompt(question)}</span>
+        <span class="resultat-reponse">Réponse : <em>${mathHtml(resumeReponse(question, modele))}</em></span>`;
       return `<details><summary>${
         projection
           ? `<span class="numero">${i + 1}</span>`
           : `<span class="etat-ligne ${classe}" aria-label="${mot}">${signe}</span>`
       }
-        <span class="resultat-nom">${questionPrompt(question)}</span>
-        <em class="resultat-reponse">${mathHtml(resumeReponse(question, modele))}</em>
+        ${corps}
         <span class="voir">Voir la correction</span></summary>
         ${enonceHTML(question)}${explicationHTML(question, false)}</details>`;
     })

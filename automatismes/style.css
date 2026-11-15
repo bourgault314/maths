@@ -2162,8 +2162,39 @@ body:not(.tactile) #commandes > * {
   margin: 0 0 0 6px;
   font-size: 1em;
 }
+/* Le calcul reste sur une ligne (« inline » seul empilait les fractions en colonne au téléphone :
+   un élément math perd son rendu MathML), dans la police de l'appli comme sur la carte. */
 .liste-resultats .resultat-nom .math-expression math {
-  display: inline;
+  display: inline math;
+}
+.liste-resultats .resultat-nom math,
+.liste-resultats .resultat-reponse math {
+  font-family: "Nunito", "Segoe UI", sans-serif;
+}
+/* Le bilan (15/11/2026) : le calcul complet, la réponse en vert ; sinon l'énoncé entier et
+   « Réponse : … » dessous. Les deux passent à la ligne au lieu d'être coupés. */
+.liste-resultats .resultat-calcul,
+.liste-resultats .resultat-texte {
+  grid-column: 2 / -1;
+  white-space: normal;
+}
+.liste-resultats .resultat-calcul {
+  font-weight: 700;
+}
+.liste-resultats .resultat-calcul .vert {
+  color: var(--vert);
+  font-weight: 900;
+}
+.liste-resultats .resultat-reponse {
+  grid-column: 2 / -1;
+  color: var(--attenue);
+  font-size: 0.9rem;
+  font-style: normal;
+}
+.liste-resultats .resultat-reponse em {
+  color: var(--vert);
+  font-style: normal;
+  font-weight: 900;
 }
 .liste-resultats .resultat-nom .figure {
   display: none;
@@ -2179,13 +2210,6 @@ body:not(.tactile) #commandes > * {
 }
 .liste-resultats details > .enonce .figure svg {
   max-height: 200px;
-}
-/* La bonne réponse, à droite. */
-.liste-resultats .resultat-reponse {
-  color: var(--vert);
-  font-style: normal;
-  font-weight: 900;
-  white-space: nowrap;
 }
 .liste-resultats .voir {
   grid-column: 2 / -1;
