@@ -92,6 +92,11 @@ function attendue(q) {
     }
     // Lot 3b
     case "heure-mots": return [BigInt(d.h) * 1000n, BigInt(d.m) * 1000n];
+    // Lot 3b-2 : la règle à lire (de 2 à 5 cm jusqu'à 10 cm au plus).
+    case "regle": {
+      assert.ok(d.debut >= 2 && d.debut <= 5 && d.fin <= 10 && d.fin > d.debut, "l'objet est sur la règle, sans partir de 0 ni de 1");
+      return [BigInt(d.fin - d.debut) * 1000n];
+    }
     case "pb": case "vrai": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
       const b = versUnite(lire(d.b), d.ub, d.vers);
@@ -534,4 +539,104 @@ test("les nombres exacts : lecture, écriture, conversions", () => {
   assert.equal(G.convertir(1n, "mm", "km"), null);
   assert.equal(G.convertir(3500n, "m", "cm"), 350000n);
   assert.ok(G.verifier(G.serie("C1", {usage: "valide", graine: 1})[0], "  " + G.serie("C1", {usage: "valide", graine: 1})[0].reponse + " ").juste, "espaces ignorées");
+});
+
+// ------------------------------------------------- lot 3b-2 : les dessins
+test("lot 3b-2 : la règle à lire — la bonne longueur, les deux vraies erreurs, à sa place", () => {
+  let vues = 0;
+  for (let g = 1; g <= 400; g += 1) {
+    const valide = G.serie("R1", {usage: "valide", graine: g});
+    assert.equal(valide[2].donnees.type, "regle", `graine ${g} : la règle en 3e de Je valide`);
+    const entraine = G.serie("R1", {usage: "entraine", graine: g});
+    assert.deepEqual([3, 11, 19].map(i => entraine[i].donnees.type), ["regle", "regle", "regle"], `graine ${g} : trois fois dans À toi`);
+    [valide[2], entraine[3], entraine[11], entraine[19]].forEach(q => {
+      const {debut, fin, objet} = q.donnees;
+      const L = fin - debut;
+      assert.ok(debut >= 2 && debut <= 5 && fin <= 10 && L >= 2, `${objet} de ${debut} à ${fin}`);
+      // la bonne, « lu au bout » (fin), « les traits comptés » (L + 1)
+      assert.deepEqual(q.choix.map(Number).sort((a, b) => a - b), [L, L + 1, fin].sort((a, b) => a - b));
+      assert.equal(Number(q.choix[q.bon]), L);
+      assert.equal(q.morceaux.apres, "cm");
+      assert.deepEqual(q.morceaux.regle, {objet, debut, fin});
+      vues += 1;
+    });
+  }
+  assert.ok(vues > 1000);
+});
+
+test("lot 3b-2 : « Je prévois » — seulement les erreurs de sens, et le sens attendu", () => {
+  const compte = {};
+  for (let g = 1; g <= 300; g += 1) {
+    for (const code of ["C1", "C2", "P1", "E1", "D1", "D2", "R1", "Q1"]) {
+      G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
+        const f = G.fauxDeSens(q);
+        if (!["C1", "C2", "P1", "E1"].includes(code)) { assert.equal(f, null, `${code} : pas de « Je prévois »`); return; }
+        // La bonne réponse n'est jamais une erreur de sens.
+        assert.equal(G.erreurDeSens(q, q.choix ? q.choix[q.bon] : (Array.isArray(q.reponse) ? q.reponse[0] : q.reponse)), false);
+        if (!f) return;
+        compte[code] = (compte[code] || 0) + 1;
+        const tape = f.choix !== undefined ? q.choix[f.choix] : f.texte;
+        assert.ok(G.erreurDeSens(q, tape), `${code} ${q.texte} : ${tape}`);
+        const lu = G.lireMilli(tape);
+        const bon = G.lireMilli(q.choix ? q.choix[q.bon] : q.reponse);
+        const s = G.sensDe(q);
+        // L'erreur de sens va dans l'autre sens que la bonne réponse, ou garde le nombre.
+        const d = q.donnees;
+        const depart = d.type === "conv" ? G.milli(d.valeur) : G.milli(d.total);
+        assert.equal(bon > depart, s.grandit, `${code} ${q.texte} : le sens`);
+        assert.ok(s.grandit ? lu <= depart : lu >= depart, `${code} ${q.texte} : ${tape} n'est pas une erreur de sens`);
+        assert.match(s.question, /grandir ou rapetisser/);
+      });
+    }
+  }
+  ["C1", "C2", "P1", "E1"].forEach(c => assert.ok(compte[c] > 50, `${c} : des erreurs de sens possibles`));
+  // Une autre erreur (un zéro de trop) n'est pas une erreur de sens.
+  const q = G.serie("C1", {usage: "valide", graine: 3}).find(x => x.donnees.type === "conv" && x.forme !== "qcm");
+  assert.equal(G.erreurDeSens(q, G.brut(G.milli(q.reponse) * 10n)), false);
+});
+
+test("lot 3b-2 : la phrase sous le glisse-unité", () => {
+  const phrases = new Set();
+  for (let g = 1; g <= 200; g += 1) {
+    ["C1", "C2", "P1"].forEach(code => G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
+      if (!q.glisse) return;
+      const {de, vers, phrase} = q.glisse;
+      assert.ok(phrase, `${code} ${q.texte} : une phrase`);
+      phrases.add(phrase);
+      if (G.exposant(de) > G.exposant(vers)) assert.match(phrase, /^Chaque [a-zéè]+ devient \d[\d ]* [a-zéè]+s\.$/);
+      else assert.match(phrase, /^\d[\d ]* [a-zéè]+s font 1 [a-zéè]+\.$/);
+    }));
+  }
+  assert.ok(phrases.has("Chaque mètre devient 100 centimètres.") || phrases.has("Chaque mètre devient 100 centimètres."));
+});
+
+test("lot 3b-2 : chaque repère a son illustration (webp, 600 px au plus, 64 ko au plus) ; plus d'émoticône", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const dossier = path.join(path.dirname(require.resolve("../outils/conversions/conversions_carte.js")), "conversions-reperes");
+  const utilisees = new Set();
+  CARTE.REPERES.forEach(r => {
+    assert.match(r.image, /^[a-z]\d{1,2}\.webp$/, r.code);
+    utilisees.add(r.image);
+    const f = path.join(dossier, r.image);
+    assert.ok(fs.existsSync(f), `${r.code} : ${r.image} manque`);
+    const b = fs.readFileSync(f);
+    assert.ok(b.length <= 64 * 1024, `${r.image} : ${b.length} octets`);
+    assert.equal(b.toString("latin1", 0, 4), "RIFF"); assert.equal(b.toString("latin1", 8, 12), "WEBP");
+    // VP8X : largeur et hauteur - 1 sur 24 bits.
+    if (b.toString("latin1", 12, 16) === "VP8X") {
+      const w = b.readUIntLE(24, 3) + 1;
+      const h = b.readUIntLE(27, 3) + 1;
+      assert.ok(w <= 600 && h <= 600, `${r.image} : ${w} × ${h}`);
+    }
+    assert.equal("emoji" in r, false, `${r.code} : plus d'émoticône`);
+  });
+  assert.equal(utilisees.size, 33, "33 illustrations, trois reprises (voiture, feuille A4, brique de lait)");
+  assert.deepEqual(fs.readdirSync(dossier).filter(n => n.endsWith(".webp")).sort(), [...utilisees].sort(), "aucune image en trop");
+  assert.match(CARTE.repere("l8").credit, /Nicolas PAYET.*CC BY-SA 3\.0/);
+  const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+  ["defi_conversions.html", "defi_conversions_aides.js", "conversions_carte.js", "conversions_generateurs.js"].forEach(n => {
+    const texte = fs.readFileSync(path.join(path.dirname(dossier), n), "utf8").replace(/[★✓✗]/g, "");
+    assert.doesNotMatch(texte, EMOJI, `${n} : une émoticône`);
+  });
 });

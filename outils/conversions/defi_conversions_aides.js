@@ -74,16 +74,223 @@
     };
   }
 
+  // ------------------------------------------- les petits dessins (lot 3b-2)
+  // Ils remplacent les dernières émoticônes de l'appli (Gwenaël, 14/11 :
+  // « de vrais dessins »). Dessinés à plat, comme la ceinture : contour
+  // bleu marine, turquoise et orange de maths&go, du blanc ; un contour
+  // épais pour qu'ils se lisent aussi imprimés en noir et blanc. Carré de
+  // 48 : l'icône prend la taille du texte (1 em) là où était l'émoticône.
+  const N = "#02306D";
+  const TU = "#00AFAA";
+  const OR2 = "#FA7D05";
+  const BL = "#ffffff";
+  const PALE = "#d8f3f1";
+  const trait = (extra = {}) => Object.assign({stroke: N, "stroke-width": "2.4", "stroke-linejoin": "round", "stroke-linecap": "round"}, extra);
+  const ICONES = {
+    // la punaise du glisse-unité (l'unité de départ)
+    punaise: [["g", {transform: "rotate(32 24 24)"}, [
+      ["path", trait({d: "M24 28V45", fill: "none", "stroke-width": "3"})],
+      ["path", trait({d: "M17.5 15h13l-2.5 9h-8z", fill: OR2})],
+      ["rect", trait({x: "13", y: "6", width: "22", height: "9.5", rx: "4.75", fill: OR2})],
+      ["rect", trait({x: "15", y: "23.5", width: "18", height: "5", rx: "2.5", fill: OR2})],
+      ["rect", {x: "17", y: "8.4", width: "7", height: "2.6", rx: "1.3", fill: BL}]]]],
+    // l'étape validée : une médaille, et des confettis
+    fete: [["path", trait({d: "M17 27L11 44l6.5-2.5 3.5 5 4.5-15z", fill: TU})],
+      ["path", trait({d: "M31 27l6 17-6.5-2.5-3.5 5-4.5-15z", fill: OR2})],
+      ["circle", trait({cx: "24", cy: "20", r: "13", fill: BL})],
+      ["circle", {cx: "24", cy: "20", r: "9", fill: TU}],
+      ["path", {d: "M19.3 20.3l3.3 3.4 6.2-6.8", fill: "none", stroke: BL, "stroke-width": "3.4", "stroke-linecap": "round", "stroke-linejoin": "round"}],
+      ["rect", trait({x: "3", y: "6", width: "5", height: "3", rx: "1", fill: OR2, "stroke-width": "1.4", transform: "rotate(-25 5.5 7.5)"})],
+      ["rect", trait({x: "40", y: "5", width: "5", height: "3", rx: "1", fill: TU, "stroke-width": "1.4", transform: "rotate(30 42.5 6.5)"})],
+      ["circle", trait({cx: "6", cy: "26", r: "2", fill: TU, "stroke-width": "1.4"})],
+      ["circle", trait({cx: "42", cy: "25", r: "2", fill: OR2, "stroke-width": "1.4"})]],
+    // « Tu connais déjà ? » : on monte marche par marche
+    escalier: [["path", trait({d: "M4 43V35h10v-8h10v-8h10v-8h10v32z", fill: PALE})],
+      ["path", {d: "M4 35h10M14 27h10M24 19h10M34 11h10", stroke: TU, "stroke-width": "3.2", "stroke-linecap": "round"}],
+      ["path", trait({d: "M9 35V22", fill: "none"})],
+      ["path", trait({d: "M9 22l9 3.2-9 3.3z", fill: OR2, "stroke-width": "1.8"})]],
+    // Mon carnet
+    carnet: [["rect", trait({x: "11", y: "5", width: "29", height: "38", rx: "3.5", fill: OR2})],
+      ["rect", trait({x: "18", y: "12", width: "16", height: "10", rx: "1.8", fill: BL})],
+      ["path", trait({d: "M21.5 15.6h9M21.5 18.6h6", fill: "none", "stroke-width": "1.7"})],
+      ["path", trait({d: "M7 11h7M7 19h7M7 27h7M7 35h7", fill: "none"})]],
+    // à toi d'écrire ; le cahier
+    crayon: [["g", {transform: "rotate(-42 24 24)"}, [
+      ["path", trait({d: "M11 19L2.5 24 11 29z", fill: "#f6dcb5"})],
+      ["path", {d: "M5.3 22.4L2.5 24l2.8 1.6z", fill: N}],
+      ["rect", trait({x: "11", y: "19", width: "24", height: "10", fill: OR2})],
+      ["path", {d: "M11 24h24", stroke: "#c25a00", "stroke-width": "1.6"}],
+      ["rect", trait({x: "35", y: "19", width: "4", height: "10", fill: BL})],
+      ["rect", trait({x: "39", y: "19", width: "6", height: "10", rx: "2.5", fill: TU})]]]],
+    // une étape (ou un palier) en préparation : le cône de chantier
+    chantier: [["path", trait({d: "M19 8h10l7.5 30h-25z", fill: OR2})],
+      ["path", {d: "M16.4 18.5h15.2l1.6 6.4H14.8z", fill: BL}],
+      ["path", trait({d: "M19 8h10l7.5 30h-25z", fill: "none"})],
+      ["rect", trait({x: "7", y: "38", width: "34", height: "5.5", rx: "2", fill: TU})]],
+    // le professeur regarde une série
+    oeil: [["path", trait({d: "M3 24Q24 4 45 24 24 44 3 24z", fill: BL})],
+      ["circle", trait({cx: "24", cy: "24", r: "8.5", fill: TU})],
+      ["circle", {cx: "24", cy: "24", r: "3.6", fill: N}],
+      ["circle", {cx: "21.5", cy: "21.5", r: "1.6", fill: BL}]],
+    // la récréation (15 min)
+    cloche: [["circle", trait({cx: "24", cy: "6.5", r: "2.6", fill: OR2})],
+      ["path", trait({d: "M24 9c-7.5 0-11.5 5.8-11.5 13v7L8 35.5h32L35.5 29v-7C35.5 14.8 31.5 9 24 9z", fill: OR2})],
+      ["path", {d: "M17 22c0-4.5 2-8 5.5-9.3", fill: "none", stroke: BL, "stroke-width": "2.4", "stroke-linecap": "round"}],
+      ["circle", trait({cx: "24", cy: "39.5", r: "3.6", fill: TU})]],
+    // une journée
+    soleil: [["path", trait({d: "M24 3v7M24 38v7M3 24h7M38 24h7M9.2 9.2l5 5M33.8 33.8l5 5M9.2 38.8l5-5M33.8 14.2l5-5", fill: "none", "stroke-width": "3"})],
+      ["circle", trait({cx: "24", cy: "24", r: "10", fill: OR2})]],
+    // ce qui est très léger
+    plume: [["path", trait({d: "M41 5C25 7 13 18 12.5 36 30 34 40 21 41 5z", fill: TU})],
+      ["path", trait({d: "M41 5L7 43", fill: "none"})],
+      ["path", {d: "M33 14l-6-1.5M28.5 19.5l-7.5-1M24 25l-8 0", stroke: BL, "stroke-width": "2", "stroke-linecap": "round"}]],
+    // mesurer une longueur
+    regle: [["g", {transform: "rotate(-22 24 24)"}, [
+      ["rect", trait({x: "2", y: "17", width: "44", height: "14", rx: "2.5", fill: "#fff3c4"})],
+      ["path", trait({d: "M7 17v6M12.5 17v4M18 17v6M23.5 17v4M29 17v6M34.5 17v4M40 17v6", fill: "none", "stroke-width": "1.8"})]]]],
+    // mesurer une masse
+    balance: [["path", trait({d: "M24 11v27M8 14h32", fill: "none", "stroke-width": "2.8"})],
+      ["path", trait({d: "M8 14L3.5 27M8 14l4.5 13M40 14l-4.5 13M40 14l4.5 13", fill: "none", "stroke-width": "1.6"})],
+      ["path", trait({d: "M2 27h12.5a6.25 4.5 0 0 1-12.5 0z", fill: TU})],
+      ["path", trait({d: "M33.5 27H46a6.25 4.5 0 0 1-12.5 0z", fill: TU})],
+      ["circle", trait({cx: "24", cy: "10", r: "3", fill: OR2})],
+      ["rect", trait({x: "14", y: "38", width: "20", height: "5.5", rx: "2.2", fill: OR2})]],
+    // mesurer une contenance
+    verreDoseur: [["path", trait({d: "M13.6 24.5h18.8l-1.2 17.5H14.8z", fill: TU, stroke: "none"})],
+      ["path", trait({d: "M10 7h26l-2.6 35H12.6z", fill: "none"})],
+      ["path", trait({d: "M36 13h3.5a3.5 3.5 0 0 1 3.5 3.5v9a3.5 3.5 0 0 1-3.5 3.5h-5", fill: "none", "stroke-width": "2.6"})],
+      ["path", trait({d: "M13 14h6M13.3 20h4M13.6 26h6M14 32h4", fill: "none", "stroke-width": "1.7"})]],
+    // mesurer une durée
+    chrono: [["rect", trait({x: "20", y: "3.5", width: "8", height: "5", rx: "1.6", fill: OR2})],
+      ["path", trait({d: "M24 8.5v4M36 13.5l3-3", fill: "none"})],
+      ["circle", trait({cx: "24", cy: "28", r: "15.5", fill: BL})],
+      ["path", trait({d: "M24 15.5v2.5M36.5 28H34M24 40.5V38M11.5 28H14", fill: "none", "stroke-width": "1.8"})],
+      ["path", {d: "M24 28V18.5", stroke: OR2, "stroke-width": "3.2", "stroke-linecap": "round"}],
+      ["circle", {cx: "24", cy: "28", r: "2.6", fill: N}]],
+    // à la prochaine séance
+    calendrier: [["rect", trait({x: "6", y: "10", width: "36", height: "33", rx: "3.5", fill: BL})],
+      ["path", trait({d: "M6 13.5A3.5 3.5 0 0 1 9.5 10h29a3.5 3.5 0 0 1 3.5 3.5V20H6z", fill: OR2})],
+      ["path", trait({d: "M15 6v8M33 6v8", fill: "none", "stroke-width": "2.8"})],
+      ["rect", {x: "12", y: "25", width: "6", height: "5", rx: "1", fill: TU}], ["rect", {x: "21", y: "25", width: "6", height: "5", rx: "1", fill: TU}],
+      ["rect", {x: "30", y: "25", width: "6", height: "5", rx: "1", fill: TU}], ["rect", {x: "12", y: "33", width: "6", height: "5", rx: "1", fill: TU}],
+      ["rect", trait({x: "21", y: "33", width: "6", height: "5", rx: "1", fill: OR2, "stroke-width": "1.6"})]]
+  };
+  function poserFormes(parent, formes) {
+    formes.forEach(([tag, attributs, enfants]) => {
+      const e = svg(tag, attributs);
+      if (enfants) poserFormes(e, enfants);
+      parent.appendChild(e);
+    });
+  }
+  // icone("carnet") → un <svg class="ico"> de 1 em, décoratif (le texte à
+  // côté dit ce qu'il montre).
+  function icone(nom, classe = "") {
+    const s = svg("svg", {viewBox: "0 0 48 48", class: `ico${classe ? ` ${classe}` : ""}`, "aria-hidden": "true", focusable: "false"});
+    poserFormes(s, ICONES[nom] || []);
+    return s;
+  }
+  // L'illustration d'un repère (lot 3b-2) : une boîte de taille fixe (la
+  // zone se mesure avant que l'image soit chargée), l'image dedans, entière.
+  function imageRepere(code, classe = "") {
+    const r = carte().repere(code);
+    const boite = el("span", `ill${classe ? ` ${classe}` : ""}`);
+    if (!r || !r.image) return boite;
+    const img = el("img");
+    img.src = `./conversions-reperes/${r.image}`;
+    img.alt = "";
+    img.decoding = "async";
+    img.draggable = false;
+    boite.appendChild(img);
+    return boite;
+  }
+  // Un visuel des listes de repères : un repère (« l3 ») ou un petit dessin
+  // (« !regle »).
+  function visuel(v, classe = "") {
+    return String(v).startsWith("!") ? icone(String(v).slice(1), classe) : imageRepere(v, classe);
+  }
+
   // ------------------------------------------------------ la carte d'un repère
   function carteRepere(code, {grande = false} = {}) {
     const r = carte().repere(code);
     const bloc = el("div", `carte-rep${grande ? " grande" : ""}`);
-    bloc.appendChild(el("span", "emoji", r.emoji));
+    bloc.appendChild(imageRepere(code));
     const t = el("div", "t");
     t.appendChild(el("small", "", r.objet));
     t.appendChild(root.document.createTextNode(r.valeur));
+    if (r.credit) t.appendChild(el("span", "credit", r.credit));
     bloc.appendChild(t);
     return bloc;
+  }
+
+  // ------------------------------------------------ la règle à lire (lot 3b-2)
+  // Une règle de 10 cm dessinée en code, à l'échelle (31 unités par cm), et
+  // un objet posé dessus de `debut` à `fin` (en cm). `marquer` : la
+  // correction, la longueur de l'objet en vert sur la règle. Aucun nombre
+  // dans l'objet : les nombres sont ceux de la règle.
+  const CM = 31;
+  const X0 = 15;
+  function objetSurRegle(g, objet, xa, xb) {
+    const y = 16;
+    if (objet === "crayon") {
+      poserFormes(g, [
+        ["path", trait({d: `M${xa} ${y}L${xa + 11} ${y - 6.5}V${y + 6.5}z`, fill: "#f6dcb5", "stroke-width": "1.8"})],
+        ["path", {d: `M${xa} ${y}l3.6-2.1v4.2z`, fill: N}],
+        ["rect", trait({x: xa + 11, y: y - 6.5, width: xb - xa - 21, height: 13, fill: OR2, "stroke-width": "1.8"})],
+        ["path", {d: `M${xa + 11} ${y}H${xb - 10}`, stroke: "#c25a00", "stroke-width": "1.4"}],
+        ["rect", trait({x: xb - 10, y: y - 6.5, width: 3.5, height: 13, fill: BL, "stroke-width": "1.8"})],
+        ["rect", trait({x: xb - 6.5, y: y - 6.5, width: 6.5, height: 13, rx: 2.5, fill: TU, "stroke-width": "1.8"})]]);
+    } else if (objet === "gomme") {
+      const m = (xa + xb) / 2;
+      poserFormes(g, [["rect", trait({x: xa, y: y - 8, width: xb - xa, height: 16, rx: 3, fill: BL, "stroke-width": "1.8"})],
+        ["path", trait({d: `M${m} ${y - 8}H${xb - 3}a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H${m}z`, fill: TU, "stroke-width": "1.8"})]]);
+    } else if (objet === "trombone") {
+      const w = xb - xa;
+      poserFormes(g, [["path", trait({d: `M${xa + 0.9 * w} ${y - 3}H${xa + 6}a3.5 3.5 0 0 0 0 7H${xb - 5}a4.5 4.5 0 0 0 0-9H${xa + 4.5}a5.5 5.5 0 0 0 0 11H${xa + 0.75 * w}`,
+        fill: "none", stroke: "#3d5a73", "stroke-width": "2.2"})]]);
+    } else {
+      poserFormes(g, [["rect", trait({x: xa, y: y - 8, width: 3.5, height: 16, rx: 1, fill: "#9fb3c4", "stroke-width": "1.6"})],
+        ["path", trait({d: `M${xa + 3.5} ${y - 3}H${xb - 7}L${xb} ${y}L${xb - 7} ${y + 3}H${xa + 3.5}z`, fill: "#c9d6e2", "stroke-width": "1.6"})]]);
+    }
+  }
+  function regle({objet, debut, fin, marquer = false, classe = "regle-q"}) {
+    const s = svg("svg", {viewBox: "0 0 340 66", class: `dessin ${classe}`, role: "img",
+      "aria-label": "Une règle graduée de 0 à 10 cm, et l'objet posé dessus"});
+    const X = cm => X0 + cm * CM;
+    s.appendChild(svg("rect", trait({x: 4, y: 29, width: 332, height: 34, rx: 3, fill: "#fff3c4", "stroke-width": "1.8"})));
+    if (marquer) s.appendChild(svg("rect", {x: X(debut), y: 30, width: (fin - debut) * CM, height: 18, fill: "#bfe9cf"}));
+    for (let mm = 0; mm <= 100; mm += 1) {
+      const h = mm % 10 === 0 ? 12 : mm % 5 === 0 ? 8 : 5;
+      const x = (X0 + (mm * CM) / 10).toFixed(1);
+      s.appendChild(svg("line", {x1: x, y1: 29, x2: x, y2: 29 + h, stroke: N, "stroke-width": mm % 10 === 0 ? 1.6 : 0.9}));
+    }
+    for (let c = 0; c <= 10; c += 1) {
+      const fort = marquer && (c === debut || c === fin);
+      s.appendChild(svg("text", {x: X(c), y: 57, "text-anchor": "middle", "font-size": 12, "font-weight": fort ? 900 : 800, fill: fort ? "#0e7a36" : N}, String(c)));
+    }
+    // Deux pointillés : où l'objet commence et finit sur la règle.
+    [debut, fin].forEach(c => s.appendChild(svg("line", {x1: X(c), y1: 4, x2: X(c), y2: 29, stroke: marquer ? "#0e7a36" : "#8ea1af", "stroke-width": 1.2, "stroke-dasharray": "2.5 2"})));
+    const g = svg("g", {});
+    objetSurRegle(g, objet, X(debut), X(fin));
+    s.appendChild(g);
+    return s;
+  }
+  // L'outil de la règle à lire : un centimètre, c'est un espace entre deux
+  // grands traits (on ne compte pas les traits).
+  function regleOutil(zone) {
+    const s = svg("svg", {viewBox: "0 0 300 74", class: "dessin regle-outil", role: "img", "aria-label": "Une règle de 0 à 4 cm : 1 cm est l'espace entre deux grands traits"});
+    const x = cm => 30 + cm * 60;
+    s.appendChild(svg("rect", trait({x: 12, y: 34, width: 276, height: 36, rx: 3, fill: "#fff3c4", "stroke-width": "1.8"})));
+    s.appendChild(svg("rect", {x: x(1), y: 35, width: 60, height: 16, fill: "#d8f3f1"}));
+    for (let mm = 0; mm <= 40; mm += 1) {
+      const h = mm % 10 === 0 ? 13 : mm % 5 === 0 ? 9 : 5;
+      const xx = (30 + mm * 6).toFixed(1);
+      s.appendChild(svg("line", {x1: xx, y1: 34, x2: xx, y2: 34 + h, stroke: N, "stroke-width": mm % 10 === 0 ? 1.6 : 0.9}));
+    }
+    for (let c = 0; c <= 4; c += 1) s.appendChild(svg("text", {x: x(c), y: 63, "text-anchor": "middle", "font-size": 13, "font-weight": 800, fill: N}, String(c)));
+    s.appendChild(svg("path", {d: `M${x(1)} 28v-6h60v6M${x(1) + 30} 22v-5`, fill: "none", stroke: TU, "stroke-width": 2.6, "stroke-linejoin": "round"}));
+    s.appendChild(svg("text", {x: x(1) + 30, y: 13, "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: N}, `1${NB}cm`));
+    zone.appendChild(s);
+    zone.appendChild(el("div", "note", carte().typo("Je compte les espaces de 1 cm, pas les traits.")));
   }
 
   // ------------------------------------------- des barres qui s'ouvrent (mètre)
@@ -580,9 +787,8 @@
       }
       if (i === iDe) {
         b.classList.add("depart");
-        const pin = el("span", "gu2-pin", "📌");
-        pin.setAttribute("aria-hidden", "true");
-        b.appendChild(pin);
+        // (Lot 3b-2 : la punaise dessinée, plus l'émoticône.)
+        b.appendChild(icone("punaise", "gu2-pin"));
         b.title = "L'unité de départ";
       }
       b.addEventListener("click", () => { if (!fige) aller(i); });
@@ -746,34 +952,34 @@
   // petit cube, de tour de piste, de cuillère à café ni de dessin animé :
   // l'élève ne les rencontre qu'au palier 2.
   const REFERENCES = {
-    mm: ["📏", "1 mm : la plus petite graduation de la règle"],
-    cm: ["📄", "une feuille A4 : 21 cm de large"],
-    m: ["🚶", "1 m : un grand pas"],
-    km: ["🛣️", "de Saint-Pierre à Saint-Denis : environ 80 km"],
-    g: ["🪙", "une pièce de 1 € : 7,5 g"],
-    kg: ["🍙", "un paquet de riz : 1 kg"],
-    t: ["🚗", "une voiture : environ 1 t"],
-    cL: ["🥤", "une canette : 33 cL"],
-    dL: ["🥛", "1 dL : le dixième d'une brique de lait"],
-    L: ["🥛", "une brique de lait : 1 L"],
+    mm: ["l1", "1 mm : la plus petite graduation de la règle"],
+    cm: ["l3", "une feuille A4 : 21 cm de large"],
+    m: ["l11", "1 m : un grand pas"],
+    km: ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"],
+    g: ["m3", "une pièce de 1 € : 7,5 g"],
+    kg: ["m4", "un paquet de riz : 1 kg"],
+    t: ["m6", "une voiture : environ 1 t"],
+    cL: ["c2", "une canette : 33 cL"],
+    dL: ["c3", "1 dL : le dixième d'une brique de lait"],
+    L: ["c3", "une brique de lait : 1 L"],
     // Les durées (lot A2 bis ; lot A2 ter : la récréation de « On te montre »)
-    min: ["🔔", "la récréation : 15 min"],
-    h: ["🔔", "1 h : 4 récréations de 15 min"],
-    jours: ["🌞", "1 jour : 24 h, du matin au matin suivant"]
+    min: ["!cloche", "la récréation : 15 min"],
+    h: ["!cloche", "1 h : 4 récréations de 15 min"],
+    jours: ["!soleil", "1 jour : 24 h, du matin au matin suivant"]
   };
   // Quand l'objet de la question EST la référence d'une unité, une autre
   // référence, vue elle aussi au palier 1 (sinon l'aide donnerait la réponse).
   const AUTRES = {
-    l1: {mm: ["📏", "mm : pour les toutes petites longueurs"]},
-    l3: {cm: ["📏", "1 cm : de 0 à 1 sur la règle"]},
-    l4: {m: ["🚶", "1 m : un grand pas"]},
-    l7: {km: ["🚗", "km : pour les longs trajets en voiture"]},
-    m3: {g: ["🪶", "g : pour les objets très légers"]},
-    m4: {kg: ["💧", "un pack de 6 bouteilles d'eau : environ 9 kg"]},
-    m5: {kg: ["🍙", "un paquet de riz : 1 kg"]},
-    m6: {t: ["🍙", "1 t : 1 000 paquets de riz"]},
-    c2: {cL: ["🥛", "cL : pour les petites quantités de liquide"]},
-    c3: {L: ["🥤", "1 L : trois canettes, un peu plus"]}
+    l1: {mm: ["!regle", "mm : pour les toutes petites longueurs"]},
+    l3: {cm: ["!regle", "1 cm : de 0 à 1 sur la règle"]},
+    l4: {m: ["l11", "1 m : un grand pas"]},
+    l7: {km: ["l4", "km : pour les longs trajets en voiture"]},
+    m3: {g: ["!plume", "g : pour les objets très légers"]},
+    m4: {kg: ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]},
+    m5: {kg: ["m4", "un paquet de riz : 1 kg"]},
+    m6: {t: ["m4", "1 t : 1 000 paquets de riz"]},
+    c2: {cL: ["!verreDoseur", "cL : pour les petites quantités de liquide"]},
+    c3: {L: ["c2", "1 L : trois canettes, un peu plus"]}
   };
   function reperesUnites(zone, question) {
     const G = gen();
@@ -790,9 +996,9 @@
     const liste = el("div", "refs");
     ordre.filter(u => unites.includes(u) || question.morceaux.sorte === "valeur" || question.morceaux.sorte === "saisie").forEach(u => {
       const autre = question.repere && AUTRES[question.repere] && AUTRES[question.repere][u];
-      const [emoji, texte] = autre || REFERENCES[u];
+      const [vu, texte] = autre || REFERENCES[u];
       const ligne = el("div", "ref");
-      ligne.appendChild(el("span", "emoji", emoji));
+      ligne.appendChild(visuel(vu));
       ligne.appendChild(el("span", "", carte().typo(texte)));
       liste.appendChild(ligne);
     });
@@ -1198,16 +1404,16 @@
 
   // ------------------------------------------- ce qu'on mesure (R2)
   const GRANDEURS = [
-    ["longueur", "📏", "une longueur : la règle, le mètre"],
-    ["masse", "⚖️", "une masse : la balance"],
-    ["contenance", "🥛", "une contenance : le verre doseur"],
-    ["duree", "⏱️", "une durée : l'horloge, le chronomètre"]
+    ["longueur", "!regle", "une longueur : la règle, le mètre"],
+    ["masse", "!balance", "une masse : la balance"],
+    ["contenance", "!verreDoseur", "une contenance : le verre doseur"],
+    ["duree", "!chrono", "une durée : l'horloge, le chronomètre"]
   ];
   function grandeurs(zone, {bonne = null} = {}) {
     const liste = el("div", "refs");
-    GRANDEURS.forEach(([cle, emoji, texte]) => {
+    GRANDEURS.forEach(([cle, vu, texte]) => {
       const ligne = el("div", `ref${cle === bonne ? " bonne" : ""}`);
-      ligne.appendChild(el("span", "emoji", emoji));
+      ligne.appendChild(visuel(vu));
       ligne.appendChild(el("span", "", carte().typo(texte)));
       liste.appendChild(ligne);
     });
@@ -1224,9 +1430,9 @@
     if (aide.type === "unites") {
       const liste = el("div", "refs");
       aide.unites.forEach(u => {
-        const [emoji, texte] = REFERENCES[u];
+        const [vu, texte] = REFERENCES[u];
         const ligne = el("div", `ref${u === aide.bonne ? " bonne" : ""}`);
-        ligne.appendChild(el("span", "emoji", emoji));
+        ligne.appendChild(visuel(vu));
         ligne.appendChild(el("span", "", carte().typo(texte)));
         liste.appendChild(ligne);
       });
@@ -1269,14 +1475,16 @@
   // glisse tout seul de l'unité de départ à l'unité de la réponse ; les
   // chiffres et les zéros se placent. `ensuite()` quand il est arrivé (la
   // réponse s'écrit alors). Rend false si la question n'a pas de glisse-unité.
-  function correctionGlisse(zone, question, {ensuite = () => {}} = {}) {
+  function correctionGlisse(zone, question, {ensuite = () => {}, phrase = false} = {}) {
     const g = question.glisse;
     if (!g) return false;
     const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true});
+    // Lot 3b-2 : la phrase que le glisse-unité accompagne.
+    if (phrase && g.phrase) zone.appendChild(el("div", "note phrase-glisse", carte().typo(g.phrase)));
     gu.animer(g.vers, {pas: 380, ensuite});
     return true;
   }
-  // (Lot 3a : la ligne « 📌 l'unité de départ » sous le glisse-unité est
+  // (Lot 3a : la ligne « l'unité de départ » sous le glisse-unité est
   // retirée, à la demande de Gwenaël le 14/11 : pas de légende pour la
   // punaise ; la punaise reste.)
 
@@ -1308,6 +1516,8 @@
       return;
     }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
+    if (question.outil === "regle") { regleOutil(zone); return; }
+    if (question.outil === "horloge-quarts") { horlogeQuarts(zone); return; }
     // Lot A2 bis
     if (question.outil === "monnaie") {
       monnaie(zone);
@@ -1362,6 +1572,40 @@
     else if (question.relation) zone.appendChild(el("div", "rel", question.relation));
   }
 
+  // ------------------------------------ l'heure en mots (lot 3b-2, D2)
+  // L'outil : l'horloge et les trois mots de la grande aiguille (« et
+  // quart » sur le 3, « et demie » sur le 6, « moins le quart » sur le 9),
+  // le premier quart d'heure en turquoise. Aucune heure n'y est donnée.
+  function horlogeQuarts(zone) {
+    const s = svg("svg", {viewBox: "0 0 300 168", class: "dessin horloge-quarts", role: "img",
+      "aria-label": "Une horloge : la grande aiguille sur le 3, et quart ; sur le 6, et demie ; sur le 9, moins le quart"});
+    const cx = 150;
+    const cy = 80;
+    const R = 62;
+    s.appendChild(svg("path", {d: `M${cx} ${cy}V${cy - R + 1.5}A${R - 1.5} ${R - 1.5} 0 0 1 ${cx + R - 1.5} ${cy}z`, fill: "#bfeceb"}));
+    const g = svg("g", {});
+    cadran(g, cx, cy, R, 0, {inconnue: true});
+    // (Le « ? » du cadran n'a rien à faire ici : on ne garde que le cadran.)
+    g.querySelectorAll("text").forEach(t => { if (t.textContent === "?") t.remove(); });
+    // le premier quart en turquoise par-dessus le fond blanc du cadran
+    const fond = g.querySelector("circle");
+    fond.setAttribute("fill", "none");
+    s.insertBefore(svg("circle", {cx, cy, r: R, fill: "#fff"}), s.firstChild);
+    s.appendChild(g);
+    [[3, "et quart", "start", cx + R + 8, cy + 5], [6, "et demie", "middle", cx, cy + R + 19], [9, "moins le quart", "end", cx - R - 8, cy + 5]].forEach(([, t, ancre, x, y]) => {
+      s.appendChild(svg("text", {x, y, "text-anchor": ancre, "font-size": 14, "font-weight": 900, fill: N}, t));
+    });
+    s.appendChild(svg("circle", {cx, cy, r: 4, fill: N}));
+    zone.appendChild(s);
+    zone.appendChild(el("div", "note", carte().typo("un quart d'heure = 15 min")));
+  }
+  // La correction : l'horloge à l'heure de la réponse.
+  function horlogeHeure(h, m) {
+    const s = svg("svg", {viewBox: "0 0 120 120", class: "dessin horloge-heure", role: "img", "aria-label": heureT(h * 60 + m)});
+    cadran(s, 60, 60, 54, h * 60 + m);
+    return s;
+  }
+
   // ------------------------------------------------------------ la ceinture
   // Lot 3a (14/11/2026, choix de Gwenaël) : une ceinture nouée par palier,
   // dessinée à plat (la même forme que les ceintures de Défi calcul : le
@@ -1393,6 +1637,6 @@
     return s;
   }
 
-  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

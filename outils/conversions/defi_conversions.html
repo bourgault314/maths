@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261114-3b1">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b2">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261114-3b1"></script>
-  <script src="./conversions_generateurs.js?v=20261114-3b1"></script>
+  <script src="./conversions_carte.js?v=20261115-3b2"></script>
+  <script src="./conversions_generateurs.js?v=20261115-3b2"></script>
   <script src="./defi_conversions_parcours.js?v=20261114-3b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261114-3b1"></script>
+  <script src="./defi_conversions_aides.js?v=20261115-3b2"></script>
   <script>
   (function () {
     "use strict";
@@ -153,6 +153,12 @@
       f.setAttribute("aria-hidden", "true");
       f.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       return f;
+    }
+    // Lot 3b-2 : les grands dessins des écrans de fin (plus d'émoticônes).
+    function grosDessin(nom) {
+      const d = el("div", "gros-emoji");
+      d.appendChild(AIDES.icone(nom));
+      return d;
     }
     function teteEcran(titre, retour) {
       const t = el("div", "tete-ecran");
@@ -355,7 +361,7 @@
       if (code && !P.etapeDe(p, code)[0]) {
         const test = el("button", "test-carte");
         test.type = "button";
-        test.appendChild(el("span", "", "🪜")).style.fontSize = rem(26);
+        test.appendChild(AIDES.icone("escalier")).style.fontSize = rem(30);
         const t = el("div");
         t.appendChild(el("b", "", T("Tu connais déjà ?")));
         t.appendChild(el("span", "petit", "Un petit test : tu sautes les étapes que tu sais."));
@@ -394,7 +400,9 @@
       tParcours.addEventListener("click", () => monParcours(palierN));
       const tCarnet = el("button", "tuile");
       tCarnet.type = "button";
-      tCarnet.append(el("span", "ic", "📒"), el("b", "", "Mon carnet"), el("span", "petit", nbReperes ? T(`${nbReperes} ${nbReperes > 1 ? "repères" : "repère"}`) : "tes repères"));
+      const icCarnet = el("span", "ic");
+      icCarnet.appendChild(AIDES.icone("carnet"));
+      tCarnet.append(icCarnet, el("b", "", "Mon carnet"), el("span", "petit", nbReperes ? T(`${nbReperes} ${nbReperes > 1 ? "repères" : "repère"}`) : "tes repères"));
       tCarnet.addEventListener("click", monCarnet);
       tuiles.append(tParcours, tCarnet);
       ajouterD(tuiles, espace());
@@ -567,7 +575,10 @@
     // - le pourquoi (l'erreur reconnue), la suite et les ronds viennent à la
     //   place des réponses, qui ne servent plus :
     //   les ronds ne passent plus jamais sous les réponses (Gwenaël, le 13/11).
-    function remplirErreurZone(zone, qn, {animer = false} = {}) {
+    // `phrase` (lot 3b-2) : dans « À toi », la phrase que le glisse-unité
+    // accompagne (« Chaque mètre devient 100 centimètres. ») ; pas dans les
+    // séries sans aide, où la place manque au petit téléphone.
+    function remplirErreurZone(zone, qn, {animer = false, phrase = false} = {}) {
       remplirZone(zone, "ko", ["ko", "La bonne réponse"]);
       const reponse = el("div", "reponse-bonne");
       // Un repère : sa carte (l'objet et sa mesure).
@@ -576,9 +587,9 @@
       // « Qu'est-ce que je mesure ? » : les quatre grandeurs, la bonne en vert.
       else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur});
       else bonneReponse(reponse, qn);
-      if (AIDES.correctionGlisse(zone, qn, {ensuite: () => { reponse.style.visibility = ""; }})) {
+      if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -598,7 +609,7 @@
       ajusterZone(panneau);
     }
     function remplirErreur(ui, qn, retour, note, ronds, options = {}) {
-      remplirErreurZone(ui.zone, qn, {animer: true});
+      remplirErreurZone(ui.zone, qn, {animer: true, phrase: Boolean(options.phrase)});
       ajusterZone(ui.zone);
       remplirErreurBas(ui.bas, retour, note, ronds, options);
     }
@@ -707,6 +718,8 @@
       };
       // Les pièces à compter (lot A2 bis), sous la phrase de la question.
       const pieces = () => { if (m.pieces) qEl.appendChild(AIDES.rangeePieces(m.pieces, {classe: "pieces-q"})); };
+      // La règle à lire (lot 3b-2) : l'objet posé sur la règle, sous la phrase.
+      const regle = () => { if (m.regle) qEl.appendChild(AIDES.regle(m.regle)); };
       const deuxCases = l => {
         l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
         if (m.cases[1]) l.appendChild(el("span", "", m.cases[1]));
@@ -715,6 +728,7 @@
         if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
         if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
         if (m.phrase) qEl.appendChild(el("div", "phrase-t", m.phrase));
+        regle();
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
         if (question.forme === "vrai-faux") qEl.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
       } else if (question.forme === "associer" || question.forme === "ranger") {
@@ -774,11 +788,21 @@
     // mêlées et sans les questions déjà vues ne se recalculent plus de
     // l'extérieur). Rien qu'on ne puisse déjà trouver avec les générateurs.
     let ici = null;
+    const sensPourRobot = x => { const f = G.fauxDeSens(x); return f ? Object.assign({grandit: G.sensDe(x).grandit}, f) : null; };
     window.MATHSGO_DEFI_CONVERSIONS_ECRAN = Object.freeze({
       question: () => (ici ? {forme: ici.forme, reponse: ici.reponse, choix: ici.choix || null, bon: ici.bon, bonnes: ici.bonnes || null,
-        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici)} : null)
+        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici)} : null)
     });
 
+    // Le nom d'un objet à relier (lot 3b-2) : au téléphone peu haut, son
+    // dessin au-dessus et un nom court quand le nom entier prendrait trois
+    // lignes (« La plus petite graduation »).
+    function nomObjet(o) {
+      const t = el("span", "t");
+      if (!o.court) { t.textContent = o.texte; return t; }
+      t.append(el("span", "t-long", o.texte), el("span", "t-court", o.court));
+      return t;
+    }
     function interroger(ui, question, {avant, apres}) {
       const saisie = {cases: ["", ""], focus: 0, fige: false};
       const nbCases = question.forme === "deux-cases" ? 2 : 1;
@@ -855,7 +879,7 @@
           const b = el("button", "obj");
           b.type = "button";
           // (Lot 3b : relier des relations, « 1 m », « 1 kg » : pas d'image.)
-          b.append(...[el("span", `lettre l${i}`, "ABC"[i]), o.emoji ? el("span", "emoji", o.emoji) : null, el("span", "t", o.texte)].filter(Boolean));
+          b.append(...[el("span", `lettre l${i}`, "ABC"[i]), o.repere ? AIDES.imageRepere(o.repere) : null, nomObjet(o)].filter(Boolean));
           b.addEventListener("click", () => toucherGeste("obj", i));
           const mb = el("button", "mes");
           mb.type = "button";
@@ -986,12 +1010,12 @@
       if (clavier && !ev.ctrlKey && !ev.metaKey && !ev.altKey) clavier(ev);
     });
 
-    // « 💪 C'est à toi ! » sur une seule ligne (lot A2 ter : la zone sans
+    // « C'est à toi ! » (et son crayon) sur une seule ligne (lot A2 ter : la zone sans
     // aide était la plus haute de la série, et laissait un grand vide sous
     // l'outil au téléphone).
     function cEstAToi() {
       const l = el("div", "calme grand ligne-toi");
-      l.append(el("span", "emoji-calme", "💪"), document.createTextNode(T("C'est à toi !")));
+      l.append(AIDES.icone("crayon", "emoji-calme"), document.createTextNode(T("C'est à toi !")));
       return l;
     }
     function suiteRonds(n, total = 5, legende = true, grand = false) {
@@ -1012,6 +1036,13 @@
       // (Lot 3b : une conversion au choix, sous son glisse-unité, s'écrit
       // comme une conversion au pavé : une ligne, la réponse en vert.)
       const choixGlisse = question.forme === "qcm" && question.glisse && question.resume.endsWith(question.reponseTexte);
+      // La règle à lire (lot 3b-2) : la longueur en vert sur la règle, puis
+      // le calcul.
+      if (question.morceaux.regle) {
+        zone.appendChild(AIDES.regle(Object.assign({}, question.morceaux.regle, {marquer: true, classe: "regle-c"})));
+        zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        return;
+      }
       if (!choixGlisse && (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger")) {
         // Une seule ligne (« Je mesure une masse. ») : en grand ; plusieurs
         // (relier, ranger) : à la taille d'une phrase.
@@ -1021,6 +1052,15 @@
       const g = el("div", "grosse");
       const gauche = question.resume.slice(0, question.resume.length - question.reponseTexte.length);
       g.append(document.createTextNode(gauche), el("span", "v", question.reponseTexte));
+      // L'heure en mots (lot 3b-2) : l'horloge à côté de la réponse.
+      if (question.donnees.type === "heure-mots") {
+        const ligne = el("div", "horl-ligne");
+        const col = el("div", "col-h");
+        col.append(g, el("div", "rel petite", question.correction[0]));
+        ligne.append(AIDES.horlogeHeure(question.donnees.h, question.donnees.m), col);
+        zone.appendChild(ligne);
+        return;
+      }
       zone.appendChild(g);
     }
     function apresDelai(fonction, ms = 650) {
@@ -1138,41 +1178,90 @@
           hauteurZone = mesurerZone(ui.zone, serie.flatMap(qn => [
             z => { remplirZone(z, "outil", ["outil", "L'outil"]); AIDES.outil(z, qn); },
             z => { remplirZone(z, "image", ["image", "L'image"]); AIDES.image(z, qn); },
-            z => remplirErreurZone(z, qn)
+            z => remplirErreurZone(z, qn, {phrase: true})
           ]).concat(z => { remplirZone(z, "vide", ["sans", "Sans aide"]); z.append(cEstAToi(), suiteRonds(4, 5, true, true)); }));
           cadre.style.setProperty("--z-h", `${hauteurZone}px`);
         }
         const phase = suivi.outil;
-        interroger(ui, qn, {
+        // `deuxieme` : la question reposée après « Je prévois » (lot 3b-2) ;
+        // elle ne compte pas une deuxième fois (l'erreur est déjà comptée).
+        const poser = deuxieme => interroger(ui, qn, {
           avant(zone) {
             if (phase === "outil") { remplirZone(zone, "outil", ["outil", "L'outil"]); AIDES.outil(zone, qn); }
             else if (phase === "image") { remplirZone(zone, "image", ["image", "L'image"]); AIDES.image(zone, qn); }
             else { remplirZone(zone, "vide", ["sans", "Sans aide"]); zone.append(cEstAToi(), suiteRonds(suivi.justesDeSuite, 5, true, true)); }
           },
           apres: {fait(v) {
-            reponses.push({juste: v.juste, outil: phase, jnsp: Boolean(v.jnsp)});
-            i += 1;
+            if (!deuxieme) {
+              reponses.push({juste: v.juste, outil: phase, jnsp: Boolean(v.jnsp)});
+              i += 1;
+            }
             if (v.juste) {
-              if (phase === "aucun") { const s = ui.zone.querySelector(".suite"); if (s) s.replaceWith(suiteRonds(suivi.justesDeSuite + 1, 5, true, true)); }
+              if (phase === "aucun" && !deuxieme) { const s = ui.zone.querySelector(".suite"); if (s) s.replaceWith(suiteRonds(suivi.justesDeSuite + 1, 5, true, true)); }
               apresDelai(question);
               return;
             }
+            // Une erreur de sens (diviser au lieu de multiplier, ou
+            // l'inverse) : « Je prévois », puis l'élève recommence. Une fois
+            // par question.
+            if (!deuxieme && !v.jnsp && G.erreurDeSens(qn, v.tape)) { jePrevois(ui, qn, () => poser(true)); return; }
             const apresErreur = P.suivreEntrainement(reponses);
-            remplirErreur(ui, qn, v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.",
-              suiteRonds(0), {neutre: v.jnsp});
+            // (Après « Je prévois », le pourquoi a déjà été dit.)
+            remplirErreur(ui, qn, deuxieme ? null : v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.",
+              suiteRonds(0), {neutre: v.jnsp, phrase: true});
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
             ui.action.onclick = question;
           }}
         });
+        poser(false);
       };
       question();
+    }
+
+    // « Je prévois » (lot 3b-2, choix de Gwenaël du 14/11 : seulement après
+    // une erreur de sens). La question reste en haut ; la zone demande
+    // « Le nombre va-t-il grandir ou rapetisser ? », les deux réponses
+    // prennent la place du pavé. Rien ne bouge. Puis l'élève recommence.
+    function jePrevois(ui, qn, recommencer) {
+      const sens = G.sensDe(qn);
+      clavier = null;
+      ici = null;
+      remplirZone(ui.zone, "prevois", ["prevois", "Je prévois"]);
+      ui.zone.appendChild(el("div", "grosse petite-grosse", sens.question));
+      ajusterZone(ui.zone);
+      ui.bas.textContent = "";
+      if (ui.jnsp) ui.jnsp.style.visibility = "hidden";
+      ui.action.style.visibility = "hidden";
+      const choix = el("div", "choix deux prevois-choix");
+      const reponses = [[true, "Il grandit", "↑"], [false, "Il rapetisse", "↓"]];
+      const repondre = grandit => {
+        choix.classList.add("fige");
+        [...choix.children].forEach((b, k) => b.classList.add(reponses[k][0] === sens.grandit ? "bon" : (reponses[k][0] === grandit ? "faux" : "eteint")));
+        const juste = grandit === sens.grandit;
+        ui.zone.appendChild(el("div", `verd ${juste ? "ok" : "ko"}`, juste ? "Oui !" : "Non."));
+        ui.zone.appendChild(el("div", "rel petite", sens.phrase));
+        ajusterZone(ui.zone);
+        ui.action.style.visibility = "";
+        ui.action.textContent = "Réessayer →";
+        ui.action.onclick = recommencer;
+        clavier = ev => { if (ev.key === "Enter") { ev.preventDefault(); recommencer(); } };
+      };
+      reponses.forEach(([grandit, texte, fleche]) => {
+        const b = el("button", "");
+        b.type = "button";
+        b.append(el("span", "fl-sens", fleche), document.createTextNode(` ${texte}`));
+        b.addEventListener("click", () => { if (!choix.classList.contains("fige")) repondre(grandit); });
+        choix.appendChild(b);
+      });
+      ui.bas.appendChild(choix);
+      clavier = ev => { if (ev.key === "1" || ev.key === "2") repondre(ev.key === "1"); };
     }
 
     function finAToiSansReussir(code, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
       ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
-      ajouter(el("div", "gros-emoji", "💪"));
+      ajouter(grosDessin("calendrier"));
       const t = el("div", "titre-fin", "On continue la prochaine fois");
       t.appendChild(el("small", "", "25 questions aujourd'hui : c'est beaucoup ! Tu reprendras « À toi » à ta prochaine séance.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
       ajouter(t, espace());
@@ -1243,7 +1332,9 @@
       const defile = el("div", "ecran-defile");
       if (etape.retenir) defile.appendChild(blocRetenir(code));
       casesRetenir(code).forEach(c => defile.appendChild(c));
-      defile.appendChild(el("div", "cahier", `✏️ ${etape.cahier}`));
+      const cahier = el("div", "cahier");
+      cahier.append(AIDES.icone("crayon"), document.createTextNode(` ${etape.cahier}`));
+      defile.appendChild(cahier);
       ajouter(defile);
       if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
       // Lot 3a : Je valide vient juste après, le jour même.
@@ -1387,7 +1478,7 @@
       }
       ecranQuestionFin(etape.nom, "Je valide", reussie ? 2 : 1, retour);
       if (reussie) {
-        ajouter(el("div", "gros-emoji", "🎉"));
+        ajouter(grosDessin("fete"));
         const t = el("div", "titre-fin", "Étape validée !".replace(" !", `${NB}!`));
         t.appendChild(el("small", "", T(`${suivi.justes} justes sur 10 · « ${etape.nom} »`)));
         ajouter(t);
@@ -1622,7 +1713,7 @@
       ecranQuestionFin(`Palier ${palierN} · ${CARTE.palier(palierN).nom}`, T("Tu connais déjà ?"), -1, retour, []);
       cadre.querySelector(".chemin").remove();
       cadre.querySelector(".chip").textContent = "";
-      const e = el("div", "gros-emoji", "🪜");
+      const e = grosDessin("escalier");
       e.style.cssText = `font-size:${rem(46)};margin-top:${rem(10)}`;
       const t = el("div", "titre-fin", T("Tu connais déjà ?"));
       t.appendChild(el("small", "", "On monte marche par marche, une marche par étape."));
@@ -1791,7 +1882,11 @@
       ajouter(ligneC);
       const defile = el("div", "ecran-defile");
       const pret = CARTE.palierPret(palierN);
-      if (!pret) defile.appendChild(el("div", "bandeau-prep", "🛠️ Ce palier est en préparation : ses étapes arrivent bientôt. Tu peux déjà voir leurs noms."));
+      if (!pret) {
+        const prep = el("div", "bandeau-prep");
+        prep.append(AIDES.icone("chantier"), document.createTextNode(" Ce palier est en préparation : ses étapes arrivent bientôt. Tu peux déjà voir leurs noms."));
+        defile.appendChild(prep);
+      }
       defile.appendChild(listeEtapes(palierN, {prep: !pret, cours: P.monEtape(p, PRETS), validee: x => P.estValidee(p, x), solide: x => P.estSolide(p, x)}));
       if (pret) defile.appendChild(el("div", "note legende-etapes", T("✓ étape validée · ★ étape solide : réussie trois fois de suite quand elle revient")));
       ajouter(defile);
@@ -1913,7 +2008,7 @@
           etat.aRedemander = [];
           jeMeSouviens(() => (etat.aRedemander.length ? avantDePartir([["Accueil", "", fin]], {retour: fin}) : fin()), {source: parcoursFictif(code), retour: fin});
         }],
-        ["👁", "Voir une série", "10 questions et leurs réponses", () => { etat.profSerie = {usage: "valide", graine: graine()}; voirSerie(); }]
+        [AIDES.icone("oeil"), "Voir une série", "10 questions et leurs réponses", () => { etat.profSerie = {usage: "valide", graine: graine()}; voirSerie(); }]
       ];
       const d = el("div", "ecran-defile acts");
       acts.forEach(([n, t, p, action], i) => {
@@ -1921,7 +2016,9 @@
         b.type = "button";
         const txt = el("div");
         txt.append(el("b", "", T(t)), el("span", "petit", T(p)));
-        b.append(el("span", "n", n), txt, el("span", "fl", "→"));
+        const rond = el("span", "n", typeof n === "string" ? n : "");
+        if (typeof n !== "string") rond.appendChild(n);
+        b.append(rond, txt, el("span", "fl", "→"));
         b.addEventListener("click", action);
         d.appendChild(b);
       });

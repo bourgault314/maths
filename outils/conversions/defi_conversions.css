@@ -66,6 +66,28 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .titre-fin { text-align: center; font-size: 1.625rem; font-weight: 900; line-height: 1.15; }
 .titre-fin small { display: block; font-size: .9375rem; color: var(--muted); font-weight: 700; margin-top: .25rem; }
 .gros-emoji { text-align: center; font-size: 2.75rem; line-height: 1; }
+/* Lot 3b-2 : les petits dessins (icone) et les illustrations des repères
+   (imageRepere) à la place des émoticônes. Une illustration a une boîte de
+   taille fixe : la zone se mesure avant que l'image soit chargée. */
+/* La règle à lire (lot 3b-2) : à l'échelle, de toute la largeur de la
+   question (au plus 26 rem en projection). */
+.q .regle-q { width: 100%; max-width: 26rem; height: auto; display: block; margin: .25rem auto 0; }
+.regle-c { width: 100%; max-width: 22rem; height: auto; display: block; }
+.regle-outil { width: 100%; max-width: 19rem; height: auto; display: block; }
+.horloge-quarts { width: 100%; max-width: 18rem; height: auto; display: block; }
+.reponse-bonne .dessin.horloge-heure { width: 5.25rem; height: 5.25rem; max-width: none; max-height: none; flex: 0 0 5.25rem; }
+.reponse-bonne .horl-ligne .grosse { font-size: 1.125rem; line-height: 1.3; }
+@media (min-width: 900px) and (min-height: 801px) {
+  .reponse-bonne .dessin.horloge-heure { width: 8.5rem; height: 8.5rem; flex-basis: 8.5rem; }
+  .reponse-bonne .horl-ligne .grosse { font-size: 1.75rem; }
+}
+.reponse-bonne .horl-ligne { display: flex; align-items: center; gap: .625rem; justify-content: center; }
+.reponse-bonne .horl-ligne .col-h { display: flex; flex-direction: column; align-items: flex-start; gap: .375rem; min-width: 0; }
+.reponse-bonne .horl-ligne .grosse { text-align: left; }
+.ico { width: 1.15em; height: 1.15em; display: inline-block; vertical-align: -.22em; flex: 0 0 auto; }
+.gros-emoji .ico { width: 1em; height: 1em; }
+.ill { display: inline-flex; flex: 0 0 auto; width: 2.75rem; height: 2.75rem; }
+.ill img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* boutons */
 .btn { display: block; width: 100%; text-align: center; background: var(--blue); color: #fff; font-weight: 900; font-size: 1.125rem; border-radius: .875rem;
@@ -159,6 +181,12 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .zone.outil { border: .125rem solid #f2d27a; background: #fffcf2; }
 .zone.image { border: .125rem solid #b9d3f2; background: #f6faff; }
 .zone.ko { border: .125rem solid #f0b8b8; background: #fffafa; }
+/* « Je prévois » (lot 3b-2) : turquoise de maths&go. */
+.zone.prevois { border: .125rem solid #8fd8d5; background: #f2fbfa; }
+.etiq.prevois { background: #d8f3f1; color: #087a71; }
+.verd.ok { background: var(--green-soft); color: var(--green); border: .125rem solid #9fd6b3; text-align: center; }
+.zone.prevois .verd { align-self: center; padding: .25rem 1rem; }
+.prevois-choix .fl-sens { font-size: 1.375em; line-height: 1; font-weight: 900; color: var(--teal); }
 .zone.ok { border: .125rem solid #b9e3c8; background: #f6fcf8; }
 .zone .etiq { position: absolute; top: .4375rem; left: .625rem; }
 .zone .calme { color: #a9b9c5; font-weight: 800; font-size: .9375rem; text-align: center; line-height: 1.4; }
@@ -208,14 +236,14 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .dix i.ko { background: var(--red-soft); border-color: #e29a9a; color: var(--red); }
 .dix i.ici { border: .15625rem solid var(--blue); color: var(--blue); }
 .carte-rep { border: .125rem solid #f2c94c; background: #fffaf0; border-radius: .875rem; padding: .5625rem .75rem; display: flex; gap: .625rem; align-items: center; align-self: stretch; }
-.carte-rep .emoji { font-size: 1.75rem; line-height: 1; }
+.carte-rep .credit { display: block; font-size: .625rem; font-weight: 600; color: #506b7d; line-height: 1.25; margin-top: .125rem; text-transform: none; letter-spacing: 0; }
 .carte-rep .t { font-size: .9375rem; font-weight: 800; line-height: 1.3; }
 .carte-rep .t small { display: block; font-size: .71875rem; font-weight: 900; color: #9a6a00; letter-spacing: .05em; text-transform: uppercase; }
-.carte-rep.grande .emoji { font-size: 2.75rem; }
+.carte-rep.grande .ill { width: 4.5rem; height: 4.5rem; }
 .carte-rep.grande .t { font-size: 1.25rem; }
 .refs { display: flex; flex-direction: column; gap: .3125rem; align-self: stretch; }
 .ref { display: flex; gap: .5rem; align-items: center; border: .09375rem solid #ead9a5; background: #fffdf6; border-radius: .625rem; padding: .3125rem .5625rem; font-weight: 800; font-size: .90625rem; }
-.ref .emoji { font-size: 1.25rem; }
+.ref .ill, .ref .ico { width: 1.875rem; height: 1.875rem; }
 .ref.bonne { border-color: var(--green); background: var(--green-soft); }
 .metre { width: 100%; font-family: inherit; font-weight: 900; }
 .metre .barre { cursor: pointer; }
@@ -274,6 +302,8 @@ table.gn td.z { color: #9aa9b4; }
 .retenir { border: .15625rem solid var(--teal); border-radius: 1rem; padding: .75rem .875rem; background: #f2fbfa; flex: 0 0 auto; }
 .retenir .eti { margin-bottom: .375rem; }
 .retenir p { margin: 0; font-size: 1.03125rem; font-weight: 700; line-height: 1.45; }
+.cahier .ico { width: 1.375rem; height: 1.375rem; }
+.act .n .ico { width: 1.125rem; height: 1.125rem; }
 .cahier { display: flex; gap: .5rem; align-items: center; font-weight: 800; font-size: .9375rem; color: var(--teal); justify-content: center; text-align: center; }
 .relations { display: grid; grid-template-columns: 1fr 1fr; gap: .1875rem .625rem; font-weight: 800; font-size: .9375rem; }
 
@@ -368,14 +398,14 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .gu2-poignee { font-size: .6875rem; }
   .refs { gap: .1875rem; }
   .ref { padding: .125rem .5625rem; font-size: .875rem; }
-  .ref .emoji { font-size: 1.0625rem; }
+  .ref .ill, .ref .ico { width: 1.5rem; height: 1.5rem; }
   .esc { height: 3.5rem; }
   /* Trois réponses empilées tiennent dans la zone (lot A2 bis : elles
      dépassaient de quelques pixels, vu par le robot). */
   .choix { gap: .375rem; }
   .choix button { padding: .25rem; font-size: 1.25rem; }
   .assoc .obj { font-size: .8125rem; }
-  .assoc .obj .emoji { font-size: 1.125rem; }
+  .assoc .obj .ill { width: 1.5rem; height: 1.5rem; }
   .ranger button { font-size: 1.25rem; }
   .zone { padding-bottom: .375rem; gap: .375rem; }
   .cadre { margin: .25rem .5rem .5rem; }
@@ -413,7 +443,7 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
 .gu2-tete button.sans-nom { background: transparent; border-color: #c9d7e2; cursor: default; }
 .gu2-tete button.on { font-weight: 900; color: var(--acc-f); opacity: 1; }
 .gu2-tete button.depart { background: #fff; }
-.gu2-pin { position: absolute; top: -.5rem; right: -.3125rem; font-size: .75rem; line-height: 1; }
+.gu2-pin { position: absolute; top: -.5625rem; right: -.4375rem; width: 1.125rem; height: 1.125rem; }
 .gu2-chiffres span { height: 2.75rem; border: .125rem solid var(--acc); border-radius: .5rem; background: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 1.625rem; font-weight: 600; color: #000; min-width: 0; }
 .gu2-chiffres span.unite { color: var(--acc-f); font-weight: 900; }
@@ -469,8 +499,9 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .assoc button, .ranger button { border: .15625rem solid #9fbbd0; border-radius: .75rem; background: #fff; display: flex; align-items: center; gap: .375rem; padding: .25rem .5rem;
   font-weight: 900; line-height: 1.15; text-align: left; cursor: pointer; min-width: 0; min-height: 0; touch-action: manipulation; }
 .assoc .obj { font-size: .875rem; }
-.assoc .obj .emoji { font-size: 1.375rem; line-height: 1; flex: 0 0 auto; }
+.assoc .obj .ill { width: 2.25rem; height: 2.25rem; }
 .assoc .obj .t { min-width: 0; }
+.assoc .obj .t-court { display: none; }
 .assoc .mes { justify-content: center; font-size: 1.25rem; white-space: nowrap; }
 .assoc .lettre, .ranger .rang { flex: 0 0 1.5rem; height: 1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8125rem; color: #fff; font-weight: 900; }
 .assoc .lettre.l0 { background: var(--blue); }
@@ -535,10 +566,14 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .choix button { font-size: 1.1875rem; }
   .choix { gap: .375rem; }
   /* Relier : les objets en haut, les mesures dessous. */
-  .assoc { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr); grid-auto-flow: column; gap: .3125rem; }
-  .assoc .obj { flex-direction: column; justify-content: center; text-align: center; gap: .125rem; font-size: .75rem; line-height: 1.1; padding: .1875rem; position: relative; }
+  /* (Lot 3b-2 : les mesures gardent 2,75 rem de haut, au moins 44 px au
+     doigt ; les objets prennent le reste, leur dessin au-dessus du nom.) */
+  .assoc { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: minmax(0, 1fr) 2.75rem; grid-auto-flow: column; gap: .3125rem; }
+  .assoc .obj { flex-direction: column; justify-content: center; text-align: center; gap: .0625rem; font-size: .6875rem; line-height: 1.08; padding: .125rem .1875rem; position: relative; }
+  .assoc .obj .t-long { display: none; }
+  .assoc .obj .t-court { display: inline; }
   .assoc .obj .lettre { position: absolute; top: .1875rem; left: .1875rem; flex-basis: auto; width: 1.125rem; height: 1.125rem; font-size: .6875rem; }
-  .assoc .obj .emoji { font-size: 1.125rem; }
+  .assoc .obj .ill { width: 1.25rem; height: 1.25rem; }
   .assoc .mes { font-size: 1.0625rem; padding: .125rem .25rem; gap: .25rem; }
   .assoc .mes .lettre { flex-basis: 1.125rem; height: 1.125rem; font-size: .6875rem; }
   .ranger { gap: .3125rem; }
@@ -623,7 +658,10 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .cadre[data-forme="seance"] > .zone.info.fixe { height: var(--z-h); }
   /* Je valide, Je me souviens, Avant de partir (lot 3a) : la zone garde la
      même boîte que la correction qui vient à sa place. */
-  .cadre[data-forme="seance"] > .zone.info.fixe.centre { align-self: stretch; height: auto; }
+  /* (Lot 3b-2 : et jamais moins haute que la plus haute correction de la
+     série — la phrase sous le glisse-unité faisait grandir la zone, donc le
+     cadre, quand la correction venait.) */
+  .cadre[data-forme="seance"] > .zone.info.fixe.centre { align-self: stretch; height: auto; min-height: var(--z-h, 0); }
   .cadre[data-forme="seance"] > .consigne-montre { grid-area: x; align-self: center; }
   .cadre[data-forme="seance"] > .bas { grid-area: y; }
   .cadre[data-forme="seance"] > .btn, .cadre[data-forme="seance"] > .duo { grid-area: a; align-self: end; }
