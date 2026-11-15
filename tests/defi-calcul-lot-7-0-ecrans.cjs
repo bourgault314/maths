@@ -134,6 +134,18 @@ async function perleSeule(page) {
   await pause(page, 1900);
 }
 
+// Lot 7b (constat de Code sur #1228 : la recette rougissait parfois au
+// boulier en 1366 × 768, verte rejouée seule) : on attend que l'aide
+// apparaisse, au lieu d'un délai fixe — au plus 4 s, sans toucher à l'appli.
+async function attendreQue(page, lire, essais = 40) {
+  for (let i = 0; i < essais; i += 1) {
+    const valeur = await lire();
+    if (valeur) return valeur;
+    await pause(page, 100);
+  }
+  return lire();
+}
+
 (async () => {
   const serveur = await servir();
   const base = `http://127.0.0.1:${serveur.address().port}`;
@@ -221,8 +233,8 @@ async function perleSeule(page) {
       await photo(s.page, `${f}-perles-avant`);
       const boulier = await place(s.page, ".perles-cadre");
       await perleSeule(s.page);
+      const montre = await attendreQue(s.page, async () => { const m = await appel(s.page, "montre"); return m.montre ? m : null; }) || {montre: false};
       assert.ok(memePlace(await place(s.page, ".perles-cadre"), boulier), "le boulier ne bouge pas quand les perles brillent");
-      const montre = await appel(s.page, "montre");
       assert.equal(montre.montre, true);
       assert.ok(montre.brillent >= 1, "les perles à pousser brillent");
       assert.equal(await texte(s.page, ".perles-consigne"), "Pousse les perles qui brillent.");

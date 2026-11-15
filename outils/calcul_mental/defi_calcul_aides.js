@@ -596,9 +596,14 @@
   const geometrieDroite = o => (!o.boulier ? DROITE : o.sauts.length > 4 ? DROITE_BOULIER_SERREE : DROITE_BOULIER);
   const ESPACE_FINE = " ";
 
+  // (Lot 7b : un décimal s'écrit avec sa virgule — 13,6 ; 0,05 — arrondi au
+  // millionième ; les milliers de la partie entière seulement.)
   function nombre(n) {
-    const texte = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ESPACE_FINE);
-    return texte;
+    const v = Math.abs(Number(n));
+    if (!Number.isFinite(v)) return String(Math.abs(n));
+    const [entiere, decimales] = v.toFixed(6).split(".");
+    const reste = decimales.replace(/0+$/, "");
+    return entiere.replace(/\B(?=(\d{3})+(?!\d))/g, ESPACE_FINE) + (reste ? `,${reste}` : "");
   }
 
   const etiquetteSaut = saut => `${saut.val < 0 ? "−" : "+"} ${saut.masque ? "?" : nombre(saut.val)}`;
@@ -1326,8 +1331,8 @@
 
   // Une barre : ses cases (valeur écrite, ou vide), un trait de coupe au
   // milieu de chaque case si `coupe`.
-  function barreSvg(x, y, largeur, cases, {coupe = false, inconnue = false} = {}) {
-    const largeurs = largeursDe(cases.map(c => c.valeur), largeur);
+  function barreSvg(x, y, largeur, cases, {coupe = false, inconnue = false, mini = BARRES.mini} = {}) {
+    const largeurs = largeursDe(cases.map(c => c.valeur), largeur, mini);
     let s = "";
     let xx = x;
     cases.forEach((c, i) => {
@@ -1398,15 +1403,20 @@
     const etat = visible => (visible ? "trouve" : "cherche");
     // Les cases du haut écrivent toujours ce qu'on sait ; celles du bas ce
     // qu'on cherche (vides dans l'aide).
-    const connu = morceaux.map(m => ({valeur: m, texte: nombre(m)}));
+    // (Lot 7b, D8 : `ecrits`, les morceaux tels qu'ils s'écrivent — 0,10.)
+    const connu = morceaux.map((m, i) => ({valeur: m, texte: o.ecrits && o.ecrits[i] ? o.ecrits[i] : nombre(m)}));
     const cherche = morceaux.map((m, i) => {
       const v = moitie ? m / 2 : m * 2;
       return {valeur: v, texte: vu(i) ? nombre(v) : ""};
     });
     const etats = morceaux.map((_, i) => etat(vu(i)));
+    // (Lot 7b, D8 : un nombre à virgule — « 0,05 » — a besoin d'une case
+    // plus large que « 3 » ; les entiers de M1 gardent leurs largeurs.)
+    const tousLesTextes = [...connu.map(c => c.texte), ...morceaux.map(m => nombre(moitie ? m / 2 : m * 2)), nombre(reponse)];
+    const mini = tousLesTextes.some(t => t.includes(",")) ? Math.max(BARRES.mini, Math.max(...tousLesTextes.map(t => t.length)) * 12 + 14) : BARRES.mini;
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarres(o)}">`;
     // Le nombre de départ, au-dessus de sa barre (ou de chacune des deux).
-    const titre = (x, w) => accoladeHaut(x + 2, x + w - 2, y1 - 3, nombre(o.n));
+    const titre = (x, w) => accoladeHaut(x + 2, x + w - 2, y1 - 3, o.ecrit || nombre(o.n));
     if (moitie) {
       // La moitié, le même schéma que le double, à l'envers (proposition
       // du 31/10) : le nombre découpé (40 | 6), puis chaque morceau coupé
@@ -1414,7 +1424,7 @@
       // rangés en deux barres égales (20 | 3 ‖ 20 | 3) : l'accolade sous la
       // première, c'est la moitié. Un seul morceau (30) : 30, puis 15 ‖ 15.
       // Chaque moitié de case doit pouvoir porter son nombre : 2 × mini.
-      const largeurs = largeursDe(morceaux, L, 2 * BARRES.mini);
+      const largeurs = largeursDe(morceaux, L, 2 * mini);
       const demis = largeurs.flatMap(w => [w / 2, w / 2]);
       const textesDemis = cherche.flatMap(c => [c.texte, c.texte]);
       const rangees = morceaux.length > 1 ? 3 : 2;
@@ -1442,11 +1452,11 @@
       // juste en dessous de sa paire. Un nombre d'un seul morceau (8) : la
       // rangée du milieu n'a rien à ranger, elle n'est pas dessinée.
       const paires = morceaux.flatMap(m => [m, m]);
-      const largeursPaires = largeursDe(paires, L);
+      const largeursPaires = largeursDe(paires, L, mini);
       const rangees = morceaux.length > 1 ? 3 : 2;
       s = s.replace(/viewBox="0 0 \d+ [\d.]+"/, `viewBox="0 0 ${W} ${y1 + rangees * BARRES.rang + 62}"`);
       s += titre(gauche, L / 2) + titre(gauche + L / 2, L / 2);
-      s += barreSvg(gauche, y1, L / 2, connu) + barreSvg(gauche + L / 2, y1, L / 2, connu);
+      s += barreSvg(gauche, y1, L / 2, connu, {mini}) + barreSvg(gauche + L / 2, y1, L / 2, connu, {mini});
       s += `<line x1="${gauche + L / 2}" y1="${y1 - 4}" x2="${gauche + L / 2}" y2="${y1 + BARRES.rang}" stroke="#143451" stroke-width="5"/>`;
       let y = y1 + BARRES.rang;
       if (rangees === 3) {
@@ -1471,7 +1481,7 @@
     const ecrits = o.masque && Array.isArray(o.trouves) && o.trouves.length && !o.fini
       ? ` Déjà écrit : ${o.trouves.map(i => nombre(o.sorte === "moitie" ? morceaux[i] / 2 : morceaux[i] * 2)).join(" et ")}.` : "";
     return o.sorte === "moitie"
-      ? `Schéma : la barre de ${nombre(o.n)}${decoupe}, coupée en deux barres égales.${ecrits} Une barre : ${fin}.`
+      ? `Schéma : la barre de ${o.ecrit || nombre(o.n)}${decoupe}, coupée en deux barres égales.${ecrits} Une barre : ${fin}.`
       : `Schéma : deux barres de ${nombre(o.n)}${decoupe}, mises bout à bout.${ecrits} Ensemble : ${fin}.`;
   }
 
@@ -1485,6 +1495,7 @@
   //        trouves (J'écris : le nombre de rangées du dessous déjà
   //        écrites), fini (la dernière égalité : l'accolade)}
   function barresFois(o) {
+    if (o.moitie) return barresMoitie(o);
     const {largeur: W, gauche, droite} = BARRES;
     const L = droite - gauche;
     const etages = Math.round(Math.log2(o.fois));
@@ -1506,6 +1517,52 @@
     const produit = o.n * o.fois;
     s += accolade(gauche + 2, droite - 2, y1 + etages * BARRES.rang + 4, finiVu ? nombre(produit) : "?", !finiVu, ecrit && finiVu);
     return s + "</svg>";
+  }
+
+  // ------------------------------- la moitié de la moitié (M13, lot 7b)
+
+  // ÷ 4 et ÷ 8 : le schéma de × 4, × 8 à l'envers (rangées COLLÉES,
+  // alignées). La barre du nombre, puis ses deux moitiés juste en dessous
+  // (140, puis 70 | 70), puis encore (35 | 35 | 35 | 35) ; l'accolade sous
+  // la première case de la dernière rangée, c'est le quotient.
+  //   o : {n, fois (4 ou 8), masque (l'aide : ce qu'on cherche est vide),
+  //        trouves (J'écris : le nombre de rangées déjà écrites sous la
+  //        barre), fini (la dernière égalité : la dernière rangée et
+  //        l'accolade)}
+  const MOITIES = Object.freeze({haut: 14});
+  function barresMoitie(o) {
+    const {largeur: W, gauche, droite} = BARRES;
+    const L = droite - gauche;
+    const etages = Math.round(Math.log2(o.fois));
+    const y1 = MOITIES.haut;
+    const R = BARRES.rang;
+    const H = y1 + (etages + 1) * R + 62;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && Number.isInteger(o.trouves);
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const ligneVue = r => r === 0 || !cache || (r < etages ? ecrit && o.trouves >= r : finiVu);
+    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireBarresMoitie(o)}">`;
+    for (let r = 0; r <= etages; r += 1) {
+      const cases = 2 ** r;
+      const vue = ligneVue(r);
+      const etat = r === 0 || !cache ? "" : vue ? (ecrit ? "trouve" : "") : "cherche";
+      s += casesSvg(gauche, y1 + r * R, Array(cases).fill(L / cases), Array(cases).fill(vue ? nombre(o.n / cases) : ""), Array(cases).fill(etat));
+    }
+    // Le milieu, en trait épais : les deux moitiés.
+    s += `<line x1="${gauche + L / 2}" y1="${y1 + R}" x2="${gauche + L / 2}" y2="${y1 + (etages + 1) * R + 4}" stroke="#143451" stroke-width="5"/>`;
+    const w = L / o.fois;
+    s += accolade(gauche + 2, gauche + w - 2, y1 + (etages + 1) * R + 4, finiVu ? nombre(o.n / o.fois) : "?", !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+  function decrireBarresMoitie(o) {
+    const etages = Math.round(Math.log2(o.fois));
+    const lignes = [];
+    for (let r = 1; r < etages; r += 1) {
+      const vue = !o.masque || (Number.isInteger(o.trouves) && o.trouves >= r);
+      lignes.push(vue ? `${2 ** r} barres de ${nombre(o.n / 2 ** r)}` : `${2 ** r} barres à trouver`);
+    }
+    const fin = !o.masque || (Number.isInteger(o.trouves) && o.fini) ? nombre(o.n / o.fois) : "un nombre à trouver";
+    return `Schéma : la barre de ${nombre(o.n)}, coupée en deux, ${etages > 2 ? "puis encore deux fois" : "puis encore en deux"}${lignes.length ? ` : ${lignes.join(", puis ")}` : ""}. Une des ${o.fois} barres : ${fin}.`;
   }
 
   function decrireBarresFois(o) {
@@ -2509,7 +2566,8 @@
   // 8 = 10 + 2 = 12. ») : {phrase: "", calcul}.
   function bilanEnDeux(texte) {
     const seul = String(texte || "").replace(/\.$/, "");
-    if (seul.includes("=") && !/[A-Za-zÀ-ÖØ-öø-ÿ’:.;]/.test(seul.replace(/\d[.,]\d/g, ""))) return {phrase: "", calcul: seul};
+    // (Lot 7b : « double de 13,6 = 27,2 » est un calcul seul.)
+    if (seul.includes("=") && !/[A-Za-zÀ-ÖØ-öø-ÿ’:.;]/.test(seul.replace(/\d[.,]\d/g, "").replace(/\b(moitié|double) de\b/gi, ""))) return {phrase: "", calcul: seul};
     const m = /^(.*\S)[\s\u00a0\u202f]+:[\s\u00a0\u202f]+([^:]*)$/.exec(String(texte || ""));
     if (!m) return null;
     const phrase = m[1];

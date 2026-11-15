@@ -83,7 +83,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 103, "103 niveaux construits (lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7)");
+  assert.equal(NIVEAUX.length, 111, "111 niveaux construits (lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
@@ -159,7 +159,8 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // Lot 7e-2 : × 4, × 8, × 5, × 50 écrivent leurs étapes une par ligne
   // (« 2 × 23 = 46. », puis « 23 × 4 = 2 × 46 = 92. ») : 5 de moins ici, ils
   // passent par les lignes (lot 3a).
-  assert.equal(coupes, 71, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // Lot 7b : D8-2 et D8-3 (« Je double chaque morceau : double de 13,6 = … »).
+  assert.equal(coupes, 73, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   ["M6-1", "M6-2", "M7-1", "M7-2", "M7-3"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.ok(lignes.length >= 2 && lignes.every(Boolean), `${cle} : une ligne par étape`);

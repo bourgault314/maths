@@ -204,7 +204,7 @@ function verifierEcris(cle, tire, lecon) {
 }
 
 test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul", () => {
-  assert.equal(NIVEAUX.length, 103, "lot 7a : D5, D6, D7 en plus");
+  assert.equal(NIVEAUX.length, 111, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13");
   const memes = x => blanc(JSON.stringify(x));
   NIVEAUX.forEach(cle => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;
