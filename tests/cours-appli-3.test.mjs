@@ -236,9 +236,10 @@ test("l'onglet Cours : un élève en plus est compté sur SES chapitres ; « ouv
   const panneau = r.$("cours-prof");
   assert.equal(panneau.hidden, false);
   const tetes = panneau.tous(n => n.tag === "button" && n.classList.contains("cours-chap-tete")).map(t => t.textContent);
+  // Lot « cours-pct-calculatrice » (15/11/2026) : 4e-PCT-09 rejoint le chapitre (avant : 5 fiches sur 7).
   assert.deepEqual(tetes, [
     "4eInégalité triangulaire · 3 fiches sur 3pas encore ouvert",
-    "4ePourcentages · 5 fiches sur 7ouvert par 2 élèves sur 4",
+    "4ePourcentages · 6 fiches sur 8ouvert par 2 élèves sur 4",
     "4eCalcul · 6 fiches sur 6pas encore ouvert",
     "4eNombres relatifs · 10 fiches sur 10pas encore ouvert",
     "4eFractions · 13 fiches sur 13 · en plus pour 1 élèveouvert par 1 élève sur 1",

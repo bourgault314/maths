@@ -339,5 +339,7 @@ test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache
   assert.match(page, /defi_calcul\.css\?v=20261115-3/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
-  assert.match(version, /^lot defi-calcul-lot-7(e-2-coherence|b-decimaux)$/m);
+  // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est
+  // vérifié dans tests/defi-tables-melange-paliers.test.mjs ; ici, seulement qu'il en nomme un.
+  assert.match(version, /^lot \S+$/m);
 });
