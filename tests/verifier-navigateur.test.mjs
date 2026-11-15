@@ -4,7 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { RACINE, RECETTES, ECARTEES, concernee } from "../scripts/verifier-navigateur.mjs";
+import { RACINE, RECETTES, ECARTEES, SUITE, changementDeLaSuite, concernee } from "../scripts/verifier-navigateur.mjs";
 
 const listes = [...RECETTES.map((r) => r.fichier), ...ECARTEES.map((e) => e.fichier)];
 
@@ -57,4 +57,33 @@ test("« npm run verifier » finit par la suite navigateur ciblée, et « verifi
   const scripts = JSON.parse(readFileSync(resolve(RACINE, "package.json"), "utf8")).scripts;
   assert.match(scripts.verifier, /&& node --test && node scripts\/verifier-navigateur\.mjs --depuis-verifier$/);
   assert.equal(scripts["verifier:navigateur"], "node scripts/verifier-navigateur.mjs");
+});
+
+// Le 14/11/2026, le lot EN-A1 n'ajoutait qu'une ligne à la liste : les 33 recettes ont tourné (≈ 75 min).
+test("inscrire une recette dans la liste ne rejoue que cette recette ; changer la façon de lancer rejoue tout", () => {
+  const suite = readFileSync(resolve(RACINE, SUITE), "utf8").replace(/\r\n/g, "\n");
+  const ancre = '  { fichier: "tests/defi-conversions-ecrans.cjs"';
+  assert.ok(suite.includes(ancre));
+
+  // Une recette inscrite (comme EN-A1 : commentaire, entrée sur deux lignes, ligne vide)
+  const inscrite = suite.replace(ancre, '  // Une appli nouvelle.\n  { fichier: "tests/appli-nouvelle-ecrans.cjs", appli: "nouvelle", besoin: ["playwright"],\n'
+    + '    garde: ["outils/nouvelle/"] },\n\n' + ancre);
+  assert.deepEqual(changementDeLaSuite(suite, inscrite), { tout: false, recettes: ["tests/appli-nouvelle-ecrans.cjs"] });
+
+  // Les chemins gardés d'une recette retouchés : cette recette seule
+  const retouchee = suite.replace('"tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS',
+    '"tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: [...DEFI_CONVERSIONS, "assets/x.js"]');
+  assert.notEqual(retouchee, suite);
+  assert.deepEqual(changementDeLaSuite(suite, retouchee), { tout: false, recettes: ["tests/defi-conversions-ecrans.cjs"] });
+
+  // Un commentaire seul dans la liste, ou des fins de ligne Windows : rien à rejouer
+  assert.deepEqual(changementDeLaSuite(suite, suite.replace(ancre, "  // un mot\n" + ancre)), { tout: false, recettes: [] });
+  assert.deepEqual(changementDeLaSuite(suite, suite.replace(/\n/g, "\r\n")), { tout: false, recettes: [] });
+
+  // Ailleurs dans le script : tout
+  assert.equal(changementDeLaSuite(suite, suite.replace("15 * 60000", "16 * 60000")).tout, true);
+  assert.equal(changementDeLaSuite(suite, suite.replace('const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul"]',
+    'const DEFI_CALCUL = ["outils/calcul_mental/defi_calcul", "assets/y.js"]')).tout, true);
+  // Des repères introuvables (script réorganisé) : tout, par prudence
+  assert.equal(changementDeLaSuite(suite, suite.replace("export const RECETTES = [", "export const LISTE = [")).tout, true);
 });
