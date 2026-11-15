@@ -918,3 +918,13 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 /* « Je prévois » en projection : « ↓ Il rapetisse » sur deux lignes sortait
    de son bouton (déjà sur main, vu par le robot à 1 920 × 1 080). */
 .prevois-choix button { line-height: 1.1; }
+/* Lot B1-1 : « Qu'est-ce qui mesure 400 m ? », « Lequel pèse le plus ? » —
+   les repères dessinés, côte à côte, leur nom court dessous. */
+.choix.objets { flex-direction: row; align-items: stretch; }
+.choix.objets button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25rem; max-height: none; height: auto;
+  font-size: 1rem; font-weight: 700; line-height: 1.15; padding: .375rem; }
+.choix.objets .ill { width: 4rem; height: 4rem; }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
+  .choix.objets button { height: 100%; max-height: none; font-size: .75rem; line-height: 1.08; padding: .125rem .1875rem; gap: .125rem; }
+  .choix.objets .ill { width: 2.75rem; height: 2.75rem; }
+}

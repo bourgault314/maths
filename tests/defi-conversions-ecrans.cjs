@@ -311,7 +311,7 @@ async function scenarioLendemain(navigateur, base, taille) {
     p = P.noterValidation(p, c, true, d);
   });
   p = P.marquerEntrainee(p, "C2", JOUR);
-  const prets = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+  const prets = [...CARTE.PARCOURS];
   const souvenirs = P.tirerSouvenirs(p, JOUR, prets);
   assert.deepEqual(souvenirs.map(x => x.code), ["R1", "R2", "P1", "C1"]);
   const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
@@ -410,7 +410,7 @@ async function scenarioLendemain(navigateur, base, taille) {
 // La ceinture jaune : neuf étapes validées depuis longtemps, solides pour
 // six d'entre elles, « À toi » de la dixième réussi ce matin.
 async function scenarioCeinture(navigateur, base, taille) {
-  const prets = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+  const prets = [...CARTE.PARCOURS];
   let p = P.creer();
   prets.slice(0, 9).forEach((c, i) => {
     const d = P.ajouterJours(JOUR, -(40 - i));

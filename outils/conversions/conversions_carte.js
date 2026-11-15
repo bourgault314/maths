@@ -140,8 +140,8 @@
     {code: "Q1", rang: 7, palier: 1, famille: "problemes", classe: "CE2", nom: "Problèmes : mettre bout à bout, couper", nomCourt: "Mettre bout à bout, couper", exemple: ""},
     // Palier 2 · Le CM1
     {code: "R3", rang: 8, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de longueur", exemple: "Piton des Neiges : 3 km"},
-    {code: "R4", rang: 9, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de masse", exemple: "pack d'eau : 9 kg"},
-    {code: "R5", rang: 10, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de contenance", exemple: "canette : 33 cL"},
+    {code: "R4", rang: 9, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de masse", exemple: "1 L d'eau : 1 kg"},
+    {code: "R5", rang: 10, palier: 2, famille: "reperes", classe: "CM1", nom: "Mes repères de contenance", exemple: "verre : 20 cL"},
     {code: "R6", rang: 11, palier: 2, famille: "reperes", classe: "CM1", nom: "Est-ce vraisemblable ?", exemple: ""},
     {code: "P2", rang: 12, palier: 2, famille: "relations", classe: "CM1", nom: "Ce que veulent dire les préfixes", exemple: "kilo = 1 000"},
     {code: "P3", rang: 13, palier: 2, famille: "relations", classe: "CM1", nom: "Deux unités voisines", exemple: "1 cm = 0,1 dm"},
@@ -243,7 +243,14 @@
     {code: "c5", grandeur: "contenance", etape: "R5", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
     {code: "a6", grandeur: "aire", etape: "R8", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
     {code: "a7", grandeur: "aire", etape: "R8", objet: "La paume de ma main", valeur: "environ 1 dm²", debut: "La paume de ma main a une aire d'environ", nombre: "1", unite: "dm²", fin: ""},
-    {code: "v5", grandeur: "volume", etape: "V1", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""}
+    {code: "v5", grandeur: "volume", etape: "V1", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""},
+    // Lot B1-1 (carte v4 : le repère personnel, la ramette, S438-S439 ; le
+    // programme de CM1 : « estimer la contenance d'une bouteille, d'un
+    // arrosoir ») : la planche 7, dessinée le 15/11.
+    {code: "l12", grandeur: "longueur", etape: "R3", objet: "Mon empan", valeur: "environ 15 cm", debut: "Mon empan mesure environ", nombre: "15", unite: "cm", fin: ""},
+    {code: "m9", grandeur: "masse", etape: "R4", objet: "Une ramette de 500 feuilles A4", valeur: "environ 2,5 kg", debut: "Une ramette de 500 feuilles A4 pèse environ", nombre: "2,5", unite: "kg", fin: ""},
+    {code: "c6", grandeur: "contenance", etape: "R5", objet: "Un grand arrosoir", valeur: "10 L", debut: "Un grand arrosoir contient", nombre: "10", unite: "L", fin: ""},
+    {code: "c7", grandeur: "contenance", etape: "R5", objet: "Une bouteille d'eau", valeur: "1,5 L", debut: "Une bouteille d'eau contient", nombre: "1,5", unite: "L", fin: ""}
   ];
   // Lot 3b-2 : chaque repère a son illustration (conversions-reperes/,
   // dessinées par ChatGPT d'après les planches du lot 3b, découpées par
@@ -497,6 +504,88 @@
       retenir: "Je fais des bonds sur l'axe du temps : les heures, puis les minutes, en passant par l'heure pile.\nDe 8 h 30 à 10 h 50 : 2 h + 20 min = 2 h 20 min.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
+    },
+    // ============================================ palier 2 (lot B1-1)
+    // Mes repères du CM1 (carte v4). On te montre : trois repères de
+    // l'étape, chacun relié à ce que l'élève connaît déjà (la piste du
+    // repère personnel : mon petit doigt, mon très grand pas). Les cartes
+    // des repères disent tout, comme à « Mes premiers repères » : pas de
+    // texte « À retenir ».
+    R3: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Mon petit doigt a une largeur d'environ", reponse: "1", apres: "cm"},
+          consigne: "Mes repères à moi, je les ai toujours avec moi :\nje mesure mon petit doigt avec ma règle.",
+          aide: {type: "repere", repere: "l10"}, legende: "Mon petit doigt : environ 1 cm de large.\nMon empan, la main bien ouverte : environ 15 cm."},
+        {etiquette: "Je vois", question: {avant: "Un très grand pas mesure environ", reponse: "1", apres: "m"},
+          consigne: "Je fais un très grand pas,\npuis je le mesure avec le mètre de la classe.",
+          aide: {type: "repere", repere: "l11"}, legende: "Un très grand pas : environ 1 m.\nUne voiture : environ 4 grands pas, 4 m."},
+        {etiquette: "Je vois", question: {avant: "Un tour de piste d'athlétisme mesure", reponse: "400", apres: "m"},
+          consigne: "Pour les grandes longueurs, un repère que je peux parcourir.",
+          aide: {type: "repere", repere: "l5"}, legende: "Un tour de piste : 400 m.\nDeux tours et demi : 1 000 m, 1 km."}
+      ],
+      retenir: "",
+      cahier: "Je les note dans mon cahier et je les apprends par cœur.",
+      reperes: ["l10", "l12", "l11", "l2", "l5", "l6", "l8", "l9"]
+    },
+    R4: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Un trombone pèse environ", reponse: "1", apres: "g"},
+          consigne: "Je prends un trombone dans ma main :\nc'est à peu près 1 gramme.",
+          aide: {type: "repere", repere: "m7"}, legende: "Un trombone : environ 1 g. Une feuille A4 : environ 5 g.\nUne ramette de 500 feuilles : environ 2,5 kg."},
+        {etiquette: "Je vois", question: {avant: "Un litre d'eau pèse", reponse: "1", apres: "kg"},
+          consigne: "Je pèse une bouteille de 1 L d'eau :\nl'eau seule pèse 1 kilogramme.",
+          aide: {type: "repere", repere: "m8"}, legende: "1 L d'eau : 1 kg.\nUn pack de 6 bouteilles de 1,5 L : 9 L d'eau, environ 9 kg."},
+        {etiquette: "Je vois", question: {avant: "Un grain de riz pèse environ", reponse: "25", apres: "mg"},
+          consigne: "Pour les toutes petites masses :\nle milligramme (mg), mille fois plus petit que le gramme.",
+          aide: {type: "repere", repere: "m1"}, legende: "Un grain de riz : environ 25 mg.\n40 grains de riz : environ 1 g."}
+      ],
+      retenir: "",
+      cahier: "Je les note dans mon cahier et je les apprends par cœur.",
+      reperes: ["m7", "m8", "m1", "m2", "m9"]
+    },
+    R5: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Une cuillère à café contient", reponse: "5", apres: "mL"},
+          consigne: "Pour les toutes petites quantités :\nle millilitre (mL), mille fois plus petit que le litre.",
+          aide: {type: "repere", repere: "c1"}, legende: "Une cuillère à café : 5 mL.\n2 cuillères à café : 10 mL, 1 cL."},
+        {etiquette: "Je vois", question: {avant: "Un verre contient environ", reponse: "20", apres: "cL"},
+          consigne: "Je verse un verre d'eau dans le verre doseur.",
+          aide: {type: "repere", repere: "c5"}, legende: "Un verre : environ 20 cL.\n5 verres remplissent une brique de 1 L ; 50 verres, un grand arrosoir de 10 L."},
+        {etiquette: "Je vois", question: {avant: "Un chauffe-eau solaire contient environ", reponse: "200", apres: "L"},
+          consigne: "Sur les toits de La Réunion,\nun repère pour les grandes quantités.",
+          aide: {type: "repere", repere: "c4"}, legende: "Un chauffe-eau solaire : environ 200 L.\nAutant que 200 briques de lait."}
+      ],
+      retenir: "",
+      cahier: "Je les note dans mon cahier et je les apprends par cœur.",
+      reperes: ["c1", "c5", "c7", "c6", "c4"]
+    },
+    // Est-ce vraisemblable ? Je compare à un repère que je connais.
+    R6: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "repere-proche"},
+      apprends: [
+        {etiquette: "Je compare", question: {enonce: "Un lit mesure 2 cm de long.", vraisemblable: true, reponse: "Non"},
+          consigne: "Est-ce vraisemblable ?\nJe compare à un repère que je connais.",
+          aide: {type: "repere", repere: "l11"},
+          apres: ["Non : un lit, c'est deux très grands pas.", "Environ 2 m de long."]},
+        {etiquette: "Je compare", question: {enonce: "Ma trousse pèse environ 10 kg.", vraisemblable: true, reponse: "Non"},
+          consigne: "Est-ce vraisemblable ?\nJe compare à un repère que je connais.",
+          aide: {type: "repere", repere: "m5"},
+          apres: ["Non : plus lourde qu'un pack d'eau !", "Une trousse : environ 300 g."]},
+        {etiquette: "Je compare", question: {enonce: "Un seau contient environ 10 L.", vraisemblable: true, reponse: "Oui"},
+          consigne: "Est-ce vraisemblable ?\nJe compare à un repère que je connais.",
+          aide: {type: "repere", repere: "c6"},
+          apres: ["Oui : autant qu'un grand arrosoir."]}
+      ],
+      retenir: "Je compare à un repère que je connais : un lit, c'est deux très grands pas, environ 2 m.\nUne mesure pas vraisemblable cache souvent une erreur d'unité.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
     }
   };
 
@@ -554,6 +643,13 @@
   function palierPret(n) {
     return etapesDuPalier(n).every(e => e.pret);
   }
+  // Lot B1-1 : les étapes construites (le mode professeur, le robot), et le
+  // parcours de l'élève : seulement les paliers prêts. Une étape prête dans
+  // un palier en construction (le palier 2 après B1-1 : 4 étapes sur 16)
+  // n'y entre pas : Mon parcours ne montre ce palier qu'une fois toutes ses
+  // étapes prêtes, l'élève n'y tombe pas sans le voir.
+  const PRETES = ORDRE.filter(code => PAR_CODE[code].pret);
+  const PARCOURS = PRETES.filter(code => palierPret(PAR_CODE[code].palier));
 
   return geler({
     PALIERS: PALIERS_T,
@@ -561,6 +657,8 @@
     ETAPES: ETAPES_T,
     REPERES: REPERES_T,
     ORDRE,
+    PRETES,
+    PARCOURS,
     typo,
     etape,
     repere,
