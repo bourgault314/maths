@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b3bis">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-b1">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261115-3b2"></script>
-  <script src="./conversions_generateurs.js?v=20261115-3b3"></script>
-  <script src="./defi_conversions_parcours.js?v=20261114-3b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261115-3b3bis"></script>
+  <script src="./conversions_carte.js?v=20261115-b1"></script>
+  <script src="./conversions_generateurs.js?v=20261115-b1"></script>
+  <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
+  <script src="./defi_conversions_aides.js?v=20261115-b1"></script>
   <script>
   (function () {
     "use strict";
@@ -56,8 +56,11 @@
     const params = new URLSearchParams(window.location.search);
     const PROF = params.get("prof") === "1";
 
-    // Les étapes prêtes (lot 1 : le palier 1), dans l'ordre du parcours.
-    const PRETS = CARTE.ORDRE.filter(code => CARTE.etape(code).pret);
+    // Les étapes prêtes, dans l'ordre du parcours. Lot B1-1 : pour l'élève,
+    // seulement celles des paliers prêts (CARTE.PARCOURS) ; le mode
+    // professeur voit toutes les étapes construites (CARTE.PRETES), même
+    // dans un palier en construction.
+    const PRETS = PROF ? CARTE.PRETES : CARTE.PARCOURS;
     const REPERES_PAR_ETAPE = {};
     CARTE.ETAPES.forEach(e => { if (e.reperes && e.reperes.length) REPERES_PAR_ETAPE[e.code] = e.reperes; });
     const PALIERS_CODES = {};
@@ -921,8 +924,15 @@
         // (Lot 3b-3 : des réponses en mots, « sept heures moins le quart » :
         // « mots », elles passent sur plusieurs lignes dans leur bouton.)
         choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" ? " mots" : ""}`);
+        if (m.sorte === "objets") choixEl.classList.add("objets");
         question.choix.forEach((texte, i) => {
           const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));
+          // Lot B1-1 : « Qu'est-ce qui mesure 400 m ? » — les repères
+          // dessinés, leur nom court dessous.
+          if (m.sorte === "objets") {
+            b.textContent = "";
+            b.append(AIDES.imageRepere(m.reperes[i]), nomObjet({texte}));
+          }
           b.type = "button";
           b.addEventListener("click", () => repondre(i));
           choixEl.appendChild(b);
@@ -1943,7 +1953,7 @@
       ajouter(defile);
     }
 
-    function listeEtapes(palierN, {prep, cours, validee, solide, choisir}) {
+    function listeEtapes(palierN, {prep, cours, validee, solide, choisir, possible = () => true}) {
       const bloc = el("div");
       bloc.className = "familles";
       CARTE.famillesDuPalier(palierN).forEach(f => {
@@ -1951,9 +1961,10 @@
         bloc.appendChild(groupe);
         groupe.appendChild(el("div", "fam", f.nom));
         f.etapes.forEach(e => {
-          const classe = prep ? "prep" : solide && solide(e.code) ? "ok solide" : validee && validee(e.code) ? "ok" : e.code === cours ? "cours" : "";
-          const ligne = el(choisir ? "button" : "div", `li2 ${classe}`);
-          if (choisir) { ligne.type = "button"; ligne.addEventListener("click", () => choisir(e.code)); }
+          const peut = possible(e.code);
+          const classe = prep || !peut ? "prep" : solide && solide(e.code) ? "ok solide" : validee && validee(e.code) ? "ok" : e.code === cours ? "cours" : "";
+          const ligne = el(choisir && peut ? "button" : "div", `li2 ${classe}`);
+          if (choisir && peut) { ligne.type = "button"; ligne.addEventListener("click", () => choisir(e.code)); }
           ligne.append(el("span", "r"), el("span", "", e.nomCourt), el("small", "", e.exemple));
           groupe.appendChild(ligne);
         });
@@ -2087,10 +2098,13 @@
       const d = el("div", "ecran-defile");
       CARTE.PALIERS.forEach(pal => {
         const pret = CARTE.palierPret(pal.n);
+        // (Lot B1-1 : un palier en construction montre ses étapes prêtes, à
+        // essayer ; les autres restent grises.)
+        const ouvert = CARTE.etapesDuPalier(pal.n).some(e => e.pret);
         const titre = el("div", "palier-titre", `Palier ${pal.n} · ${pal.nom}`);
         if (!pret) titre.style.color = "#8ea1af";
         d.appendChild(titre);
-        if (pret) d.appendChild(listeEtapes(pal.n, {cours: etat.profEtape, choisir: c => { etat.profEtape = c; accueilProf(); }}));
+        if (ouvert) d.appendChild(listeEtapes(pal.n, {cours: etat.profEtape, choisir: c => { etat.profEtape = c; accueilProf(); }, possible: c => CARTE.etape(c).pret}));
         else {
           const b = el("div", "bandeau-prep", T(`En préparation · ${pal.etapes} étapes`));
           b.style.cssText = `font-size:${rem(13)};padding:${rem(6)} ${rem(10)}`;

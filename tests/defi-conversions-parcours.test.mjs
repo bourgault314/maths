@@ -11,12 +11,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
+import fs from "node:fs";
 
 const require = createRequire(import.meta.url);
 const CARTE = require("../outils/conversions/conversions_carte.js");
 const P = require("../outils/conversions/defi_conversions_parcours.js");
 
-const PRETS = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+// Lot B1-1 : le parcours de l'élève (les paliers prêts) ; R3 à R6, prêtes
+// dans le palier 2 en construction, n'y entrent pas encore.
+const PRETS = [...CARTE.PARCOURS];
 const J = "2026-11-11";
 const hier = P.ajouterJours(J, -1);
 
@@ -54,7 +57,7 @@ test("la carte v4 : 54 étapes, codes et rangs figés, paliers 10/16/9/6/8/5 vus
   assert.equal(Object.values(P.normaliser(JSON.parse(JSON.stringify(q11))).seances)[0][1], 54, "le rang 54 passe la normalisation");
   assert.equal(P.RANG.C9, 53);
   assert.ok(P.MOTIF_ETAPE.test("C9") && P.MOTIF_ETAPE.test("Q11") && !P.MOTIF_ETAPE.test("C10") && !P.MOTIF_ETAPE.test("Q12"));
-  assert.equal(CARTE.REPERES.length, 36);
+  assert.equal(CARTE.REPERES.length, 40, "36 repères et les 4 de la planche 7 (lot B1-1)");
   CARTE.REPERES.forEach(r => assert.match(r.code, P.MOTIF_REPERE));
   // Lot A2 ter : la règle (1 mm) rejoint « Mes premiers repères ».
   assert.equal(CARTE.etape("R1").reperes.length, 10);
@@ -538,7 +541,7 @@ test("le pire cas tient dans les bornes du serveur (2 000 clés, 40 000 octets)"
   assert.equal(Object.keys(n.etapes).length, 54);
   assert.equal(n.etapes.R1.join(), p.etapes.R1.join(), "le pire cas est bien gardé tel quel");
   const m = P.mesurer(p);
-  assert.equal(m.cles, 245, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés");
+  assert.equal(m.cles, 249, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés (lot B1-1 : 40 repères)");
   assert.ok(m.octets <= 16000, `${m.octets} octets (le serveur accepte 40 000)`);
 });
 
@@ -584,4 +587,36 @@ test("fusion : 400 paires de parcours joués au hasard — symétrique, sans per
       if (P.estSolide(a, code) || P.estSolide(b, code)) assert.ok(P.estSolide(ab, code), `paire ${n} : ${code} garde son étoile`);
     });
   }
+});
+
+test("lot B1-1 : une étape prête d'un palier en construction n'entre pas dans le parcours de l'élève", () => {
+  // Le palier 2 a 4 étapes prêtes sur 16 (R3, R4, R5, R6) : Mon parcours ne
+  // le montre pas encore (palierPret), l'élève ne doit pas y tomber.
+  assert.ok(["R3", "R4", "R5", "R6"].every(c => CARTE.etape(c).pret), "les quatre étapes de repères du CM1 sont construites");
+  assert.equal(CARTE.palierPret(2), false, "le palier 2 n'est pas prêt");
+  assert.deepEqual([...CARTE.PRETES], CARTE.ORDRE.filter(c => CARTE.etape(c).pret));
+  assert.deepEqual([...CARTE.PARCOURS], CARTE.PRETES.filter(c => CARTE.palierPret(CARTE.etape(c).palier)));
+  CARTE.PARCOURS.forEach(c => assert.ok(CARTE.palierPret(CARTE.etape(c).palier), `${c} : palier pas prêt`));
+  ["R3", "R4", "R5", "R6"].forEach(c => assert.ok(!CARTE.PARCOURS.includes(c), `${c} dans le parcours de l'élève`));
+  // Un élève qui a fini le palier 1 : plus d'étape à faire (« Le palier 2
+  // arrive bientôt »), et pas R3 qu'il ne verrait nulle part.
+  let p = P.creer();
+  CARTE.etapesDuPalier(1).forEach((e, i) => { p = P.noterTest(p, e.code, P.ajouterJours(J, -(20 - i))); });
+  assert.equal(P.monEtape(p, CARTE.PARCOURS), null);
+  assert.equal(P.monEtape(p, CARTE.PRETES), "R3", "le mode professeur, lui, y va");
+  // Leurs textes sont complets, comme au palier 1.
+  ["R3", "R4", "R5", "R6"].forEach(code => {
+    const e = CARTE.etape(code);
+    assert.equal(e.apprends.length, 3, code);
+    if (e.reperes.length) assert.equal(e.retenir, "", code);
+    else assert.ok(e.retenir.length > 20 && e.retenir.length < 170, `${code} : ${e.retenir.length} signes`);
+    assert.ok(e.cahier, code);
+    e.reperes.forEach(c => assert.equal(CARTE.repere(c).etape, code, `${c} n'est pas un repère de ${code}`));
+  });
+  assert.deepEqual(CARTE.REPERES.filter(r => ["R3", "R4", "R5"].includes(r.etape)).map(r => r.code).sort(),
+    ["R3", "R4", "R5"].flatMap(c => CARTE.etape(c).reperes).sort(), "chaque repère du CM1 est au carnet de son étape");
+  // La page : le parcours pour l'élève, toutes les étapes prêtes pour le professeur.
+  const html = fs.readFileSync(new URL("../outils/conversions/defi_conversions.html", import.meta.url), "utf8");
+  assert.match(html, /const PRETS = PROF \? CARTE\.PRETES : CARTE\.PARCOURS;/);
+  assert.doesNotMatch(html, /CARTE\.ORDRE\.filter\(code => CARTE\.etape\(code\)\.pret\)/, "plus de liste des étapes prêtes à côté");
 });

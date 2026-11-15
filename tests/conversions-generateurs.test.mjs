@@ -60,6 +60,17 @@ function versUnite(m, de, vers) {
   assert.equal(m % p, 0n, "conversion hors des millièmes");
   return m / p;
 }
+// Lot B1-1 : les unités du CM1 (mg, mL) et la taille d'un repère dans la
+// plus petite unité de sa grandeur, pour comparer deux repères.
+const EXP2 = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, mg: -3, L: 0, dL: -1, cL: -2, mL: -3};
+const FAMILLE_G = {km: "longueur", m: "longueur", dm: "longueur", cm: "longueur", mm: "longueur", t: "masse", kg: "masse", g: "masse", mg: "masse",
+  L: "contenance", dL: "contenance", cL: "contenance", mL: "contenance"};
+function taille(r) {
+  return lire(r.nombre.replace(".", ",")) * 10n ** BigInt(EXP2[r.unite] + 3);
+}
+function mesureTexte([n, u]) {
+  return `${n} ${u}`;
+}
 function attendue(q) {
   const d = q.donnees;
   switch (d.type) {
@@ -118,8 +129,9 @@ function ecriture(texte, ou) {
   assert.doesNotMatch(texte, /\d[  ]\d{3}(?!\d)/, `${ou} : milliers sans espace fine dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
-  // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une.)
-  assert.doesNotMatch(texte, /(?<=[a-zà-ÿ,;])(?<!\b(?:de|du|au|en)) [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
+  // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une ;
+  // lot B1-1 : ni « la Diagonale des Fous », ni « un Car Jaune ».)
+  assert.doesNotMatch(texte, /(?<=[a-zà-ÿ,;])(?<!\b(?:de|du|des|au|en))(?<!\b[A-ZÀ-Ý][a-zà-ÿ]*) [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
 }
 // Un nombre de 4 chiffres ou plus doit avoir son espace fine (2 600, 1 500).
 function milliers(texte, ou) {
@@ -211,6 +223,48 @@ function controlerQuestion(q, ou) {
     assert.equal(q.choix.length, 4);
     assert.ok(q.choix.filter(u => FAMILLE[u] !== FAMILLE[o[2]]).length <= 1, `${ou} : ${q.choix}`);
   }
+  // Lot B1-1 : « Qu'est-ce qui mesure 400 m ? » — la bonne réponse est le
+  // repère de la phrase ; les trois repères ont la même grandeur et des
+  // mesures loin l'une de l'autre (au moins 3 fois).
+  if (q.donnees.type === "repere-quoi") {
+    const r = CARTE.repere(q.donnees.repere);
+    assert.equal(q.donnees.reperes[q.bon], r.code, `${ou} : mauvais bon choix`);
+    assert.ok(q.texte.replace(/[\u00a0\u202f]/g, " ").includes(`${r.nombre.replace(".", ",")} ${r.unite}`.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1 ")), `${ou} : la mesure n'est pas dans « ${q.texte} »`);
+    const reps = q.donnees.reperes.map(c => CARTE.repere(c));
+    assert.equal(new Set(reps.map(x => x.grandeur)).size, 1, `${ou} : grandeurs mêlées`);
+    assert.equal(new Set(reps.map(x => x.objet)).size, 3, `${ou} : deux fois le même objet`);
+    const t = reps.map(taille);
+    t.forEach((a, i) => t.slice(i + 1).forEach(b => assert.ok(a >= 3n * b || b >= 3n * a, `${ou} : deux réponses qui pourraient convenir`)));
+    assert.equal(q.morceaux.reperes.length, 3);
+  }
+  // Lot B1-1 : « Qu'est-ce qui pèse le plus ? » — deux repères de même
+  // grandeur, de mesures différentes ; la bonne réponse est le plus grand
+  // (ou le plus petit).
+  if (q.donnees.type === "repere-comparer") {
+    const [a, b] = q.donnees.reperes.map(c => CARTE.repere(c));
+    assert.equal(a.grandeur, b.grandeur, `${ou} : grandeurs`);
+    assert.notEqual(taille(a), taille(b), `${ou} : mesures égales`);
+    const grand = taille(a) > taille(b) ? 0 : 1;
+    assert.equal(q.bon, q.donnees.plus ? grand : 1 - grand, `${ou} : mauvais bon choix`);
+    assert.equal(q.choix.length, 2);
+  }
+  // Lot B1-1 : « Est-ce vraisemblable ? » (R6) — Oui : la vraie mesure ;
+  // Non et les mauvais choix : une mesure au moins 10 fois trop grande ou
+  // trop petite, de la même grandeur.
+  if (q.donnees.type === "vraisemblance") {
+    const sit = G.VRAISEMBLANCE[q.donnees.situation];
+    assert.ok(sit[4] >= 1, `${ou} : un exemple de On te montre tiré`);
+    const vraie = mesureTexte(sit[1]);
+    if (q.donnees.sorte === "choix") {
+      assert.equal(q.choix[q.bon].replace(/[\u00a0\u202f]/g, " "), vraie, `${ou} : le bon choix`);
+      q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(sit[2].map(mesureTexte).includes(c.replace(/[\u00a0\u202f]/g, " ")), `${ou} : ${c}`); });
+    } else {
+      assert.equal(q.bon === 0, q.donnees.sorte === "oui", `${ou} : verdict`);
+      assert.equal(q.donnees.montre === vraie, q.donnees.sorte === "oui", `${ou} : ${q.donnees.montre}`);
+      assert.ok(q.texte.replace(/[\u00a0\u202f]/g, " ").includes(q.donnees.montre), `${ou} : la mesure jugée n'est pas dans la phrase`);
+    }
+    assert.ok(q.repereProche && CARTE.repere(q.repereProche).grandeur === FAMILLE_G[sit[1][1]], `${ou} : repère proche`);
+  }
   // Lot A2 bis : associer, ranger, qu'est-ce qu'on mesure, h/min/jours.
   if (q.donnees.type === "associer") {
     assert.equal(q.objets.length, 3); assert.equal(new Set(q.objets.map(o => o.texte)).size, 3, `${ou} : deux fois le même objet`);
@@ -219,10 +273,19 @@ function controlerQuestion(q, ou) {
     q.donnees.reperes.forEach((code, i) => {
       const r = CARTE.repere(code);
       assert.equal(q.mesures[q.bonnes[i]].replace(/\u00a0/g, " "), `${r.nombre.replace(".", ",")} ${r.unite}`, `${ou} : ${code} mal relié`);
-      assert.equal(q.objets[i].texte, r.objet);
+      // (Lot B1-1 : au palier 2, le nom court du repère.)
+      if (CARTE.etape(q.code).palier >= 2) assert.ok(q.objets[i].texte.length <= 27 && q.correction[i].startsWith(r.objet), `${ou} : ${q.objets[i].texte}`);
+      else assert.equal(q.objets[i].texte, r.objet);
     });
     const g = new Set(q.donnees.reperes.map(c => CARTE.repere(c).grandeur));
-    assert.equal(g.size, q.degre === 3 ? 1 : 3, `${ou} : grandeurs ${[...g]}`);
+    // (Lot B1-1 : au palier 2, une étape de repères n'a qu'une grandeur ;
+    // les trois mesures y sont au moins 3 fois plus grandes l'une que l'autre.)
+    if (CARTE.etape(q.code).palier >= 2) {
+      assert.equal(g.size, 1, `${ou} : grandeurs ${[...g]}`);
+      const t = q.donnees.reperes.map(c => taille(CARTE.repere(c)));
+      t.forEach((a, i) => t.slice(i + 1).forEach(b => assert.ok(a >= 3n * b || b >= 3n * a, `${ou} : deux mesures trop proches à relier`)));
+      assert.ok(q.donnees.reperes.some(c => CARTE.etape(q.code).reperes.includes(c)), `${ou} : aucun repère de l'étape à relier`);
+    } else assert.equal(g.size, q.degre === 3 ? 1 : 3, `${ou} : grandeurs ${[...g]}`);
     assert.ok(G.verifier(q, q.bonnes).juste);
   }
   if (q.donnees.type === "ranger") {
@@ -268,6 +331,14 @@ function controlerQuestion(q, ou) {
       assert.ok(!n.includes(",") || n === "7,5", `${ou} : nombre à virgule ${n} au palier 1`);
     });
   }
+  // Lot B1-1 : les nombres du CM1 (au centième, jusqu'à 100 000).
+  if (CARTE.etape(q.code).palier === 2) {
+    const t = [q.texte, q.reponseTexte, ...(q.choix || []), ...(q.mesures || [])].join(" ").replace(new RegExp(FINE, "g"), "");
+    (t.match(/\d+(?:,\d+)?/g) || []).forEach(n => {
+      assert.ok(Number(n.replace(",", ".")) <= 100000, `${ou} : ${n} dépasse 100 000 dans « ${q.texte} »`);
+      assert.ok(!/,\d{3}/.test(n), `${ou} : ${n} a plus de deux chiffres après la virgule`);
+    });
+  }
   // Lot A2 ter : l'image de « Entre deux heures » n'écrit jamais la réponse
   // (le premier bond était toute la réponse quand il n'y avait que des heures).
   if (q.code === "D7" && q.image) {
@@ -301,7 +372,7 @@ function controlerQuestion(q, ou) {
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
     assert.ok(q.bon >= 0 && q.bon < q.choix.length, `${ou} : bonne réponse absente`);
-    if (q.forme === "qcm") assert.ok(q.choix.length >= 3 && q.choix.length <= 4);
+    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer");
   }
 }
 
@@ -335,6 +406,32 @@ function controlerSerie(code, usage, nombre, s, ou) {
       const choix = s.filter(q => q.forme !== "associer").map(q => q.repere);
       assert.equal(new Set(choix).size, choix.length, `${ou} : un repère deux fois ${JSON.stringify(choix)}`);
     }
+  }
+  // Lot B1-1 : les repères du CM1. Je valide : l'objet à trouver en 3e et
+  // 8e, la valeur au pavé en 6e, relier en dernier ; chaque repère de
+  // l'étape demandé ; un repère une fois (deux au plus s'il y en a moins de
+  // 9), jamais deux fois à moins de 3 questions.
+  if (["R3", "R4", "R5"].includes(code) && usage === "valide") {
+    assert.deepEqual([2, 4, 5, 7, 9].map(i => s[i].morceaux.sorte || s[i].forme), ["objets", "objets", "saisie", "objets", "associer"], `${ou} : places`);
+    assert.ok(s[4].morceaux.compare && !s[2].morceaux.compare && !s[7].morceaux.compare, `${ou} : comparer en 5e`);
+    const demandes = s.filter(q => !q.reperes).map(q => q.repere);
+    CARTE.etape(code).reperes.forEach(c => assert.ok(demandes.includes(c), `${ou} : le repère ${c} n'est pas demandé`));
+    const tous = CARTE.etape(code).reperes.length + CARTE.etape("R1").reperes.filter(c => CARTE.repere(c).grandeur === CARTE.repere(CARTE.etape(code).reperes[0]).grandeur).length;
+    const max = tous >= 9 ? 1 : 2;
+    const simples = s.map(q => (q.reperes ? null : q.repere));
+    simples.forEach((c, i) => {
+      if (!c) return;
+      assert.ok(demandes.filter(x => x === c).length <= max, `${ou} : ${c} trop de fois`);
+      assert.ok(!simples.slice(Math.max(0, i - (tous >= 8 ? 4 : 1)), i).includes(c), `${ou} : ${c} deux fois de près`);
+    });
+  }
+  if (code === "R6" && usage === "valide") {
+    assert.deepEqual([s[3].forme, s[7].forme], ["qcm", "qcm"], `${ou} : Quelle mesure ? en 4e et 8e`);
+    const v = s.filter(q => q.forme === "vrai-faux");
+    assert.equal(v.filter(q => q.reponse === "Oui").length, 4, `${ou} : 4 Oui`);
+    assert.equal(v.filter(q => q.reponse === "Non").length, 4, `${ou} : 4 Non`);
+    ["longueur", "masse", "contenance"].forEach(g => assert.ok(s.filter(q => q.grandeur === g).length >= 2, `${ou} : ${g}`));
+    assert.equal(new Set(s.map(q => q.cleBase)).size, 10, `${ou} : une situation deux fois`);
   }
   // Relier : jamais les trois mesures en face de leur objet (Gwenaël, le 13/11).
   s.filter(q => q.forme === "associer").forEach(q => assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : les trois mesures en face de leur objet`));
@@ -390,7 +487,8 @@ for (const code of PRETES) {
     }
     const prevues = {R1: ["qcm", "associer", "phrase"], R2: ["qcm"], P1: ["nombre", "phrase", "qcm", "associer"], C1: ["nombre", "phrase", "qcm"],
       C2: ["nombre", "phrase", "deux-cases", "ranger", "qcm"], D1: ["nombre", "deux-cases", "qcm"], D2: ["nombre", "deux-cases", "qcm"],
-      Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"]}[code];
+      Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"],
+      R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -633,7 +731,7 @@ test("lot 3b-2 : chaque repère a son illustration (webp, 600 px au plus, 64 ko 
     }
     assert.equal("emoji" in r, false, `${r.code} : plus d'émoticône`);
   });
-  assert.equal(utilisees.size, 33, "33 illustrations, trois reprises (voiture, feuille A4, brique de lait)");
+  assert.equal(utilisees.size, 37, "33 illustrations, trois reprises (voiture, feuille A4, brique de lait), et les 4 de la planche 7 (lot B1-1)");
   assert.deepEqual(fs.readdirSync(dossier).filter(n => n.endsWith(".webp")).sort(), [...utilisees].sort(), "aucune image en trop");
   assert.match(CARTE.repere("l8").credit, /Nicolas PAYET.*CC BY-SA 3\.0/);
   const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
@@ -659,4 +757,34 @@ test("lot 3b-3 bis : la réponse est écrite dans le résumé (la correction et 
     }
   });
   assert.ok(n > 1000);
+});
+
+test("lot B1-1 : au palier 2, la liste des unités ne donne jamais la réponse", () => {
+  // Jamais le repère demandé, jamais un repère de même mesure (le litre
+  // d'eau pour le paquet de riz de 1 kg), jamais un objet à relier ; à
+  // « Est-ce vraisemblable ? », jamais un repère qui a la vraie mesure.
+  globalThis.MATHSGO_CONVERSIONS_CARTE = CARTE;
+  globalThis.MATHSGO_CONVERSIONS = G;
+  const A = require("../outils/conversions/defi_conversions_aides.js");
+  let n = 0;
+  for (const code of ["R3", "R4", "R5", "R6"]) {
+    for (let g = 1; g <= 300; g += 1) {
+      for (const usage of ["entraine", "valide", "retour"]) {
+        G.serie(code, {usage, graine: g}).forEach(q => {
+          const lignes = A.referencesUnites2(q);
+          const interdits = [q.repere].concat(q.forme === "associer" ? q.reperes : []).filter(Boolean);
+          const mesures = interdits.map(c => `${CARTE.repere(c).nombre}${CARTE.repere(c).unite}`).concat(q.cache ? [q.cache] : []);
+          lignes.forEach(l => {
+            n += 1;
+            assert.ok(!interdits.includes(l.repere), `${code} : « ${l.texte} » pour « ${q.texte} »`);
+            const r = CARTE.repere(l.repere);
+            assert.ok(!mesures.includes(`${r.nombre}${r.unite}`), `${code} : « ${l.texte} » a la mesure de la réponse (« ${q.texte} »)`);
+          });
+          assert.ok(lignes.length >= 1 || q.forme === "associer", `${code} : aucune ligne pour « ${q.texte} »`);
+          if (q.repereProche) assert.notEqual(`${CARTE.repere(q.repereProche).nombre}${CARTE.repere(q.repereProche).unite}`, q.cache, `${code} : le repère proche a la vraie mesure`);
+        });
+      }
+    }
+  }
+  assert.ok(n > 5000);
 });

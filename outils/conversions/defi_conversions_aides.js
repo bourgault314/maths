@@ -996,8 +996,60 @@
     c2: {cL: ["c5", "cL : pour les petites quantités de liquide"]},
     c3: {L: ["c2", "1 L : trois canettes, un peu plus"]}
   };
+  // Lot B1-1 : au palier 2, les repères du CM1 rejoignent ceux des bases ;
+  // chaque unité a plusieurs références, dans l'ordre, et l'aide prend la
+  // première qui ne donne pas la réponse : jamais le repère de la question,
+  // jamais un repère qui a la même mesure que la réponse (« 1 kg : 1 L
+  // d'eau » quand on demande le paquet de riz de 1 kg). Toujours une
+  // illustration (une seule famille de dessins dans la liste).
+  const REFERENCES_2 = {
+    mm: [["l1", "1 mm : la plus petite graduation de la règle"], ["m1", "mm : pour les toutes petites longueurs"]],
+    cm: [["l10", "1 cm : la largeur de mon petit doigt"], ["l3", "une feuille A4 : 21 cm de large"]],
+    m: [["l11", "1 m : un très grand pas"], ["l4", "une voiture : environ 4 m de long"]],
+    km: [["l5", "1 km : deux tours et demi de piste"], ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"]],
+    mg: [["m1", "un grain de riz : environ 25 mg"], ["m7", "mg : pour les masses toutes petites"]],
+    g: [["m7", "1 g : un trombone"], ["m3", "une pièce de 1 € : 7,5 g"]],
+    kg: [["m8", "1 kg : un litre d'eau"], ["m4", "un paquet de riz : 1 kg"], ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]],
+    t: [["m6", "une voiture : environ 1 t"], ["m5", "1 t : plus de 100 packs d'eau"]],
+    mL: [["c1", "une cuillère à café : 5 mL"], ["c5", "mL : pour les toutes petites quantités"]],
+    cL: [["c5", "un verre : environ 20 cL"], ["c2", "une canette : 33 cL"]],
+    dL: [["c3", "1 dL : le dixième d'une brique de lait"]],
+    L: [["c3", "une brique de lait : 1 L"], ["c7", "une bouteille d'eau : 1,5 L"], ["c6", "un grand arrosoir : 10 L"], ["c4", "un chauffe-eau solaire : environ 200 L"]]
+  };
+  const ORDRE_2 = {longueur: ["mm", "cm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
+  // Les lignes de la liste des unités au palier 2 : [{unite, repere, texte}].
+  function referencesUnites2(question) {
+    const C = carte();
+    const G = gen();
+    const grandeur = question.grandeur || G.grandeurDe(question.unite);
+    const unites = question.morceaux.sorte === "unite" && question.choix ? question.choix.slice()
+      : question.unites ? question.unites.slice() : (ORDRE_2[grandeur] || []);
+    // La mesure qu'il ne faut pas donner : celle du repère demandé, ou la
+    // vraie mesure d'une question « Est-ce vraisemblable ? ».
+    // (Relier : aucun des trois objets à relier, ni leurs mesures.)
+    const interdits = [question.repere].concat(question.forme === "associer" ? question.reperes || [] : []).filter(Boolean);
+    const cachees = interdits.map(c => `${C.repere(c).nombre}${C.repere(c).unite}`).concat(question.cache ? [question.cache] : []);
+    return (ORDRE_2[grandeur] || []).filter(u => unites.includes(u)).map(u => {
+      const ref = (REFERENCES_2[u] || []).find(([code]) => {
+        const x = C.repere(code);
+        return !interdits.includes(code) && !cachees.includes(`${x.nombre}${x.unite}`);
+      });
+      return ref ? {unite: u, repere: ref[0], texte: C.typo(ref[1])} : null;
+    }).filter(Boolean);
+  }
   function reperesUnites(zone, question) {
     const G = gen();
+    if ((carte().etape(question.code) || {}).palier >= 2) {
+      const liste2 = el("div", "refs");
+      referencesUnites2(question).forEach(({repere, texte}) => {
+        const ligne = el("div", "ref");
+        ligne.appendChild(visuel(repere));
+        ligne.appendChild(el("span", "", texte));
+        liste2.appendChild(ligne);
+      });
+      zone.appendChild(liste2);
+      return;
+    }
     // (Lot 3b : « Quelle unité pour… ? », sans nombre : les repères de toutes
     // les unités de la grandeur de la bonne réponse.)
     const unites = question.morceaux.sorte === "sansNombre" ? ({longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]})[question.grandeur] || []
@@ -1550,6 +1602,13 @@
   }
 
   function image(zone, question) {
+    // Lot B1-1 : « Est-ce vraisemblable ? » — l'image est le repère le plus
+    // proche de la vraie mesure, et la phrase qui invite à comparer.
+    if (question.repereProche) {
+      zone.appendChild(carteRepere(question.repereProche));
+      zone.appendChild(el("div", "note", "Je compare avec mon repère."));
+      return;
+    }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot A2 bis
     if (question.outil === "grandeurs") { grandeurs(zone); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
@@ -1656,6 +1715,6 @@
     return s;
   }
 
-  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

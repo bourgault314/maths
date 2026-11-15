@@ -96,7 +96,11 @@ const filtre = (variable, liste, cle) => {
 };
 const TAILLES = filtre("DEFI_CONVERSIONS_TAILLES", TOUTES_TAILLES, t => t.nom);
 const MOTEURS = (process.env.DEFI_CONVERSIONS_MOTEURS || "chromium,webkit").split(",").map(s => s.trim()).filter(Boolean);
-const PRETS = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+// Lot B1-1 : le robot joue toutes les étapes construites (en mode
+// professeur) ; les écrans communs suivent le parcours de l'élève (les
+// paliers prêts).
+const PRETS = [...CARTE.PRETES];
+const PARCOURS = [...CARTE.PARCOURS];
 const ETAPES = filtre("DEFI_CONVERSIONS_ETAPES", PRETS.concat(["commun"]), x => x);
 const REPERES_PAR_ETAPE = {};
 CARTE.ETAPES.forEach(e => { if (e.reperes && e.reperes.length) REPERES_PAR_ETAPE[e.code] = e.reperes; });
@@ -896,13 +900,13 @@ async function jouerCommun(navigateur, base, taille, carnet) {
   // (6 solides), « À toi » de la dernière réussi ce matin.
   {
     let p = P.creer();
-    PRETS.slice(0, 9).forEach((c, i) => {
+    PARCOURS.slice(0, 9).forEach((c, i) => {
       const d = P.ajouterJours(JOUR, -(40 - i));
       p = P.noterTest(p, c, d);
       [1, 4, 11].forEach((n, k) => { if (k < 2 || i < 6) p = P.noterRetour(p, c, true, P.ajouterJours(d, n), 100 + k); });
       p = P.noterRetour(p, c, true, P.ajouterJours(d, 25), 104);
     });
-    p = P.marquerEntrainee(p, PRETS[9], JOUR);
+    p = P.marquerEntrainee(p, PARCOURS[9], JOUR);
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
     await carnet.photo(page, "Accueil · des étoiles");
     await cliquerTexte(page, "Mon parcours");
@@ -922,7 +926,7 @@ async function jouerCommun(navigateur, base, taille, carnet) {
   // La ceinture par le test : tout le palier 1 sauf la dernière étape.
   {
     let p = P.creer();
-    PRETS.slice(0, -1).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(20 - i))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(19 - i)), 9); });
+    PARCOURS.slice(0, -1).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(20 - i))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(19 - i)), 9); });
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
     await cliquerTexte(page, "Tu connais déjà ?");
     await cliquerTexte(page, "Je commence");
