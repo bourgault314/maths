@@ -887,3 +887,34 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 @media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
   .assoc .obj.sans-dessin { font-size: 1.0625rem; }
 }
+
+/* ------------------------------------------------------- lot 3b-3 bis
+   Le correctif du rapport de Codex (15/11/2026). */
+/* Une réponse longue (une somme : « 7 km + 629 m = 7 629 m ») tient sur une
+   ligne au téléphone : sur deux, l'aide d'« À toi » tombait à 75 %. */
+@media (max-width: 599px) {
+  .zone .grosse.longue { font-size: 1.375rem; }
+}
+/* Au doigt, tout ce qui se touche a une zone d'au moins 40 px de haut et de
+   large (rapport de Codex, F02 à F05). Le dessin de la flèche et du logo ne
+   change pas : seule leur zone grandit. Les liens et les commandes du mode
+   professeur prennent leur vraie hauteur. */
+.liens2 .lien.seul { grid-column: 1 / -1; }
+/* (À l'ordinateur, le même écart qu'avant entre les deux lignes de liens.) */
+.liens2.trois { row-gap: .625rem; }
+@media (max-width: 899px), (pointer: coarse) {
+  .bseance .rond { position: relative; }
+  .bseance .rond::after { content: ""; position: absolute; inset: min(0px, calc(50% - 1.25rem)); }
+  .hautv > a:first-child { display: block; padding: .375rem 0; margin: -.375rem 0; }
+  .liens2 .lien { min-height: 2.5rem; white-space: normal; line-height: 1.15; }
+  .liens2.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: .375rem; }
+  .liens2.trois .lien.seul { grid-column: auto; }
+  .carte.bleue .btn { position: relative; }
+  .carte.bleue .btn::after { content: ""; position: absolute; left: 0; right: 0; top: min(0px, calc(50% - 1.25rem)); bottom: min(0px, calc(50% - 1.25rem)); }
+  .bprof a { display: inline-block; position: relative; z-index: 1; padding: .6875rem .375rem; margin: -.6875rem 0; }
+  .retrouver input, .retrouver button { min-height: 2.5rem; min-width: 2.5rem; }
+  .lien.bleu, button.li2, .onglets button { min-height: 2.5rem; }
+}
+/* « Je prévois » en projection : « ↓ Il rapetisse » sur deux lignes sortait
+   de son bouton (déjà sur main, vu par le robot à 1 920 × 1 080). */
+.prevois-choix button { line-height: 1.1; }
