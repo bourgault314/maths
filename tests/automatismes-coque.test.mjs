@@ -25,12 +25,14 @@ test("C3 : chaque forme tombe dans un cas, avec les comptes de la graine 12", ()
   // Lot NC-1 : NC17 et NC18 suivent le cahier (sans leur gabarit, comme ici) ; NC17-f et NC18-g ajoutées.
   // Lot NC-2 : NC01, NC02 et NC03 aussi (NC01-d n'a plus de □ dans sa phrase, NC03-b n'est plus un QCM).
   // Lot NC-3 : NC04 aussi (« Calcule. » avec son gabarit ; NC04-g, h, i ajoutées).
+  // Lot B1 (banque du calcul littéral) : 7 formes de plus, 4 QCM (NC19-g, NC20-h, NC21-g, NC23-e) et
+  // 3 réponses tapées (NC19-f, NC19-h, NC20-g ; sans leur gabarit ici).
   assert.deepEqual(cas, {
-    seule: 206,
+    seule: 209,
     carres: 7,
     comparaison: 9,
     ranger: 2,
-    qcm: 68,
+    qcm: 72,
     calcule: 62,
     etiquette: 79,
     coordonnees: 7,

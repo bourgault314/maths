@@ -388,6 +388,47 @@
           "url": "https://eduscol.education.gouv.fr/sites/default/files/document/sujet-zero-dnb-serie-professionnelle-mathematiquespdf-123305.pdf"
         }
       ]
+    },
+    {
+      "id": "g",
+      "objectif": "Équation ou identité ?",
+      "niveau": "4e",
+      "dnb2027": true,
+      "enonce": "Pour x = 2, ces deux égalités sont vraies : x + x = 2x ; x + x = x². Laquelle est vraie pour toutes les valeurs de x ?",
+      "reponse": "x + x = 2x",
+      "donnees": "La lettre ; la valeur testée ; l'identité (réduction, distributivité, identités remarquables) ; l'équation, parfois de même allure que l'identité.",
+      "niveauxDifficulte": {
+        "1": "réduction (x + x = 2x, 5x + 4x = 9x) et équation du premier degré",
+        "2": "distributivité 3(x + 2) = 3x + 6 contre 3(x + 2) = 18 ; x + x = 2x contre x + x = x²",
+        "3": "(x + 3)² = x² + 6x + 9 contre (x + 3)² = x² + 9, vraies pour x = 0"
+      },
+      "saisie": "QCM : un choix par nature.",
+      "acceptation": "Valeur égale ET écriture la plus simple (ni ×, ni parenthèses, ni 1 ni 0 inutiles).",
+      "erreursAttendues": "conclure « toujours vraie » après un seul essai (« Les deux ») ; prendre l'équation pour l'identité.",
+      "aide1": "Aide à venir (passe 2).",
+      "aide2": "Aide à venir (passe 2).",
+      "correction": "La bonne réponse seule (passe 2 : correction et cours).",
+      "controles": "tests/automatismes-banque-lit-3e.test.mjs",
+      "identifiant": "NC21-g",
+      "indiceGenerateur": 6,
+      "nom": "Équation ou identité ?",
+      "niveauDescription": "4e ; entretien dans les classes suivantes.",
+      "niveaux": ["4e", "3e"],
+      "brevet": true,
+      "reponseType": "qcm",
+      "champs": [
+        {
+          "type": "qcm",
+          "libelle": "Choisis",
+          "unite": ""
+        }
+      ],
+      "typeTache": "reconnaître",
+      "origine": "Banque, passe 1 (lot B1, calcul littéral de 3e, 15/11/2026)",
+      "valide": true,
+      "referencesBrevet": [],
+      "formats": ["qcm"],
+      "banque": "lit-3e"
     }
   ]
 }

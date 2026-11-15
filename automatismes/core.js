@@ -171,6 +171,15 @@ function reducedForm(input) {
   }
   return true;
 }
+// « Le plus simplement possible » (banque, lot B1) : ni ×, ni parenthèses, ni coefficient 1, ni terme
+// nul, ni deux termes de même nature (2x et non x + x, x et non 1x ou x + 0).
+function ecritureSimple(input) {
+  const s = normalize(String(input));
+  if (/[*()/]/.test(s) || /\^1(?!\d)/.test(s) || /^\+/.test(s)) return false;
+  if (/(^|[+-])1(?=[a-z])/.test(s)) return false;
+  if (s !== "0" && /(^|[+-])0(?![\d.])/.test(s)) return false;
+  return reducedForm(input);
+}
 function factorSignature(input) {
   // Vérifie les facteurs ; refuse un polynôme développé artificiellement placé dans 1(...).
   let s = normalize(String(input).replace(/²/g, "^2").replace(/³/g, "^3")),
@@ -280,7 +289,10 @@ export function checkAnswer(q, answers) {
   try {
     let ok = false;
     if (c.type === "expression") {
-      if (letters(answers[0]) !== letters(vals[0]))
+      // « Le plus simplement possible » (banque) : 0 × x = 0 attend un nombre seul ; « 0x » a la bonne
+      // valeur, la phrase dira de l'écrire plus simplement.
+      const constante = c.form === "simple" && !letters(vals[0]);
+      if (!constante && letters(answers[0]) !== letters(vals[0]))
         return { ok: false, syntax: false, message: "Utilise la lettre demandée dans l’énoncé." };
       const p = polynomial(answers[0]),
         e = polynomial(vals[0]);
@@ -431,6 +443,12 @@ export function checkAnswer(q, answers) {
           message: "La valeur est juste. On demande une forme factorisée.",
         };
     }
+    if (ok && c.form === "simple" && !ecritureSimple(answers[0]))
+      return {
+        ok: false,
+        syntax: false,
+        message: "La valeur est juste. Écris-la le plus simplement possible.",
+      };
     if (ok && (c.form === "expanded" || c.form === "reduced") && !reducedForm(answers[0]))
       return { ok: false, syntax: false, message: "Développe et réduis encore ton expression." };
     return {

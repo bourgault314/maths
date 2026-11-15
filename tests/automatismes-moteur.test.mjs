@@ -11,6 +11,7 @@ import {
   nombresFormes,
   formesDisponibles,
   formesCahier,
+  formesBanque,
 } from "../automatismes/moteur.js";
 
 const racine = fileURLToPath(new URL("../automatismes/", import.meta.url));
@@ -31,11 +32,17 @@ function contenuArchive(question) {
   return contenu;
 }
 
-test("84 familles et 440 formes : 88 000 réponses canoniques acceptées", () => {
+// Les comptes se lisent dans le catalogue (ils changent à chaque lot de la banque).
+const catalogue = JSON.parse(
+  readFileSync(new URL("../automatismes/catalogue/catalogue.json", import.meta.url)),
+);
+const nombreDeFormes = catalogue.reduce((somme, carte) => somme + carte.formes.length, 0);
+
+test("84 familles, toutes les formes du catalogue : 200 réponses canoniques acceptées par forme", () => {
   assert.equal(Object.keys(generateurs).length, 84);
   assert.equal(
     Object.values(nombresFormes).reduce((somme, n) => somme + n, 0),
-    440,
+    nombreDeFormes,
   );
   let total = 0;
   for (const famille of Object.keys(generateurs)) {
@@ -48,7 +55,10 @@ test("84 familles et 440 formes : 88 000 réponses canoniques acceptées", () =>
         assert.equal(question.family, famille, contexte);
         assert.ok(question.prompt.length > 5, contexte);
         assert.ok(question.fields.length > 0, contexte);
-        assert.ok(question.hints.length >= 2, contexte);
+        // La banque (passe 1) n'a pas encore d'aide : la coque dit « Aide à venir ».
+        if (formesBanque.has(`${famille}-${forme}`))
+          assert.equal(question.hints.length, 0, contexte);
+        else assert.ok(question.hints.length >= 2, contexte);
         assert.ok(question.solution, contexte);
         assert.ok([3, 4, 5, 6].includes(question.grade), contexte);
         assert.doesNotMatch(JSON.stringify(question), /NaN|Infinity|undefined/, contexte);
@@ -62,11 +72,11 @@ test("84 familles et 440 formes : 88 000 réponses canoniques acceptées", () =>
       assert.ok(variantes.size > 1, `${famille}-${forme} varie avec la graine`);
       // Les formes réécrites d'après un cahier ne suivent plus l'archive de GPT (leurs tests :
       // automatismes-cahier-*.test.mjs) ; les autres restent identiques à l'archive.
-      if (!formesCahier.has(`${famille}-${forme}`))
+      if (!formesCahier.has(`${famille}-${forme}`) && !formesBanque.has(`${famille}-${forme}`))
         assert.equal(empreinte.digest("hex"), empreintes[`${famille}-${forme}`]);
     }
   }
-  assert.equal(total, 88000);
+  assert.equal(total, nombreDeFormes * 200);
 });
 
 test("la même graine et la même forme reproduisent exactement la même question", () => {

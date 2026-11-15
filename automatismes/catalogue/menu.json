@@ -903,6 +903,7 @@
    "nom": "Les conventions d’écritures du calcul littéral",
    "court": "Conventions d'écriture",
    "questions": [
+    "NC19-h",
     "NC19-a",
     "NC19-b",
     "NC19-c",
@@ -1321,7 +1322,8 @@
    "nom": "Notions d’inconnue, d’équation, d’indéterminée, d’identité.",
    "court": "Inconnue, équation, identité",
    "questions": [
-    "NC21-d"
+    "NC21-d",
+    "NC21-g"
    ]
   },
   {
@@ -2348,7 +2350,8 @@
     "NC20-c",
     "NC20-d",
     "NC20-e",
-    "NC20-f"
+    "NC20-f",
+    "NC19-h"
    ]
   },
   {
@@ -2376,7 +2379,9 @@
    "famille": "NC19",
    "nom": "Donner la nature d’une expression littérale : 3𝑥 + 2 est une somme, 5 (𝑥 + 4) est un produit.",
    "court": "Somme ou produit ?",
-   "questions": []
+   "questions": [
+    "NC19-g"
+   ]
   },
   {
    "id": "3e-14",
@@ -2420,6 +2425,7 @@
    "nom": "Prendre l’opposé d’une expression : savoir que – (5 – 4𝑥) = –5 + 4𝑥.",
    "court": "Opposé d'une expression",
    "questions": [
+    "NC20-g",
     "NC20-c",
     "NC20-f"
    ]
@@ -2502,7 +2508,8 @@
    "court": "Simplifier produits et quotients",
    "questions": [
     "NC20-e",
-    "NC20-d"
+    "NC20-d",
+    "NC20-h"
    ]
   },
   {
@@ -2519,7 +2526,8 @@
     "NC23-b",
     "NC23-c",
     "NC23-d",
-    "NC24-e"
+    "NC24-e",
+    "NC23-e"
    ]
   },
   {
@@ -3597,6 +3605,7 @@
    "nom": "Écrire 3 × 𝑥 sous la forme 3𝑥 et savoir que 3𝑥 c’est 3 × 𝑥.",
    "court": "Écrire 3x pour 3 × x",
    "questions": [
+    "NC19-h",
     "NC19-a",
     "NC20-d"
    ]
@@ -3606,10 +3615,11 @@
    "classe": "4e",
    "rubrique": "A",
    "domaine": "nombres-calculs",
-   "famille": "NC20",
+   "famille": "NC19",
    "nom": "Connaitre et utiliser : 1 × 𝑥 = 𝑥 ; 𝑥 + 𝑥 = 2𝑥 ; 𝑥 × 𝑥 = 𝑥² ; 3𝑥 + 2𝑥 = 5𝑥 ; 3𝑥 × 2𝑥 = 6𝑥².",
    "court": "x + x, x × x, 3x + 2x",
    "questions": [
+    "NC19-h",
     "NC20-a",
     "NC20-d",
     "NC20-b"
@@ -3624,6 +3634,7 @@
    "nom": "Donner le double, le triple, la moitié, le prédécesseur, le successeur, le carré d’un nombre.",
    "court": "Double, moitié, successeur de n",
    "questions": [
+    "NC19-f",
     "NC19-b",
     "NC19-c"
    ]
@@ -3677,6 +3688,7 @@
    "texte": "Utiliser le vocabulaire (somme, quotient, etc.) à partir d’un enchainement d’opérations dans un programme de calcul et inversement.",
    "court": "Programme de calcul ↔ vocabulaire",
    "questions": [
+    "NC19-g",
     "NC19-c",
     "PI01-c"
    ]
@@ -5170,7 +5182,9 @@
    "famille": "NC19",
    "nom": "Nommer un calcul, distinguer sommes et produits, termes et facteurs.",
    "court": "Nommer un calcul",
-   "questions": []
+   "questions": [
+    "NC19-g"
+   ]
   },
   {
    "id": "5e-O007",
@@ -5415,6 +5429,7 @@
    "nom": "Produire des formules (double, triple, carré, successeur, prédécesseur, aire, périmètre, etc.).",
    "court": "Produire une formule",
    "questions": [
+    "NC19-f",
     "NC19-a",
     "NC19-c",
     "NC19-d",
@@ -5456,7 +5471,9 @@
    "famille": "NC19",
    "nom": "Déterminer si une expression littérale est une somme ou un produit.",
    "court": "Somme ou produit ?",
-   "questions": []
+   "questions": [
+    "NC19-g"
+   ]
   },
   {
    "id": "5e-O038",
@@ -7748,6 +7765,7 @@
    "nom": "Pour un nombre entier n, exprimer son double, son triple, sa moitié, son prédécesseur, son …",
    "texte": "Pour un nombre entier n, exprimer son double, son triple, sa moitié, son prédécesseur, son successeur, son carré.",
    "questions": [
+    "NC19-f",
     "NC19-b",
     "NC19-e"
    ]
@@ -7763,8 +7781,10 @@
     "NC20-a",
     "NC20-b",
     "NC20-c",
+    "NC20-g",
     "NC20-d",
     "NC20-f",
+    "NC19-h",
     "NC19-d"
    ]
   },
