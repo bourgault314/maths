@@ -91,7 +91,7 @@ const GRAINE = 1 + Math.floor(0.5 * 2147483646);
         assert.equal(r.choisi, niv);
         assert.equal(r.visibles, parNiveau(niv), `${niv} : ${parNiveau(niv)} tests`);
         assert.equal(r.autres, 0, `${niv} : aucune carte des autres classes`);
-        assert.equal(r.icones, parNiveau(niv), `${niv} : chaque carte a son icône (icônes des domaines du site)`);
+        assert.equal(r.icones, parNiveau(niv), `${niv} : chaque carte a son icône dessinée`);
         const pos = [r.cadre, r.onglets, r.source].join(" ");
         if (reference === null) reference = pos;
         assert.equal(pos, reference, `${w}×${h} : rien ne bouge en passant à la ${niv}`);

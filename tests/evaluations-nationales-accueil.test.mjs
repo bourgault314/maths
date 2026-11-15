@@ -24,6 +24,7 @@ const NIVEAUX = ["6e", "5e", "4e", "3e"];
 const listeDe = (n) => accueil.slice(accueil.indexOf(`<div id="liste-${n}"`), accueil.indexOf("</div>", accueil.indexOf(`<div id="liste-${n}"`)));
 
 test("l'accueil : chaque test de l'appli y a sa carte, une seule, dans la liste de sa classe", () => {
+  const icones = new Map();
   const cartes = [...accueil.matchAll(/<a class="test[^"]*" href="evaluation\.html\?sujet=([\w-]+)" data-sujet="\1">/g)].map((m) => m[1]);
   assert.deepEqual([...cartes].sort(), Object.keys(S).sort(), "une carte par sujet chargé par evaluation.html");
   assert.equal(new Set(cartes).size, cartes.length);
@@ -35,11 +36,13 @@ test("l'accueil : chaque test de l'appli y a sa carte, une seule, dans la liste 
     assert.ok(carte.includes(`<strong>${s.titre}</strong>`), `${id} : titre`);
     assert.ok(carte.includes(`<span class="nb">${s.questions.length}&nbsp;questions</span>`), `${id} : ${s.questions.length} questions, le nombre collé à son mot`);
     assert.equal(carte.includes("calculatrice"), Boolean(s.calculatrice), `${id} : calculatrice`);
-    // Les icônes des domaines du site (choix du 14/11, 21 h 40) : le métronome pour les tests d'automatismes.
-    const icone = (carte.match(/data-home-icon="([\w-]+)"/) || [])[1];
-    const attendue = s.titre === "Automatismes" ? "automatismes" : /Nombres/.test(s.titre) ? "factor-tree" : /Expressions/.test(s.titre) ? "splat"
-      : /Grandeurs/.test(s.titre) ? "equal-volume-vase" : /éométrie/.test(s.titre) ? "seigaiha" : "strategy";
-    assert.equal(icone, attendue, `${id} : icône ${attendue}`);
+    // Les icônes dessinées pour l'appli (choix du 14/11, 22 h 20) : un SVG dans chaque carte, le même pour un même domaine.
+    assert.match(carte, /<span class="ico" aria-hidden="true"><svg viewBox="0 0 48 48" width="32" height="32" focusable="false">/, `${id} : icône`);
+    const famille = s.titre === "Automatismes" ? "auto" : /Nombres/.test(s.titre) ? "nomb" : /Expressions/.test(s.titre) ? "expr"
+      : /Grandeurs/.test(s.titre) ? "gran" : /éométrie/.test(s.titre) ? "geom" : "prob";
+    const dessin = carte.match(/<svg[\s\S]*?<\/svg>/)[0];
+    if (!icones.has(famille)) icones.set(famille, dessin);
+    assert.equal(dessin, icones.get(famille), `${id} : la même icône que les autres tests « ${famille} »`);
     // Le rangement suit la famille du sujet.
     const avant = liste.slice(0, i);
     const groupe = [...avant.matchAll(/<p class="groupe-titre">([^<]+)<\/p>/g)].pop()[1];
@@ -60,12 +63,6 @@ test("l'accueil : quatre onglets, une classe retenue sur l'appareil, ?niveau= po
   assert.match(accueilJs, /lire\("mathsgo-en-" \+ carte\.dataset\.sujet\)/);
   assert.match(evaluationJs, /const CLE = "mathsgo-en-" \+ sujet\.id;/);
   assert.match(accueil, /<script src="\.\/accueil\.js\?v=\d{8}-\d+"><\/script>/);
-  // Les icônes : les scripts de la page d'accueil du site, aux mêmes versions qu'elle.
-  const home = lire("index.html");
-  for (const f of ["mathsgo-icon-library", "daily-metronome", "daily-factor-tree", "daily-strategy-fractal", "daily-splat-letter", "daily-vase-curves", "daily-rosettes", "domain-icon-renderer", "accueil-domain-icons"]) {
-    const v = home.match(new RegExp(`assets/js/${f}\\.js\\?v=([\\w-]+)`))[1];
-    assert.ok(accueil.includes(`/assets/js/${f}.js?v=${v}"`), `${f}.js à la version de l'accueil du site (${v})`);
-  }
 });
 
 test("l'accueil : sans JavaScript, les quatre classes restent visibles (seul html.js cache une liste)", () => {
@@ -78,6 +75,8 @@ test("l'accueil : sans JavaScript, les quatre classes restent visibles (seul htm
 test("l'accueil : page d'appli — pas de pied de page, hors moteurs de recherche comme l'appli", () => {
   assert.doesNotMatch(accueil, /<footer/);
   assert.doesNotMatch(accueil, /mention-confidentialite/);
+  // Les icônes sont dans la page : aucun script d'icônes du site à charger.
+  assert.doesNotMatch(accueil, /data-home-icon|daily-[\w-]+\.js|accueil-domain-icons/);
   assert.match(accueil, /<meta name="robots" content="noindex, follow">/);
   assert.match(accueil, /<a class="retour" href="\/outils\/index\.html"/);
 });
