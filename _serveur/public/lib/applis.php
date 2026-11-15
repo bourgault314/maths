@@ -349,8 +349,10 @@ const CATALOGUE_APPLIS = [
     ],
     // L'appli « Cours » (lot « cours-appli », 08/11/2026, lib/cours.php) :
     // le livret de cours de Gwenaël, une fiche par savoir-faire. Pas de
-    // progression (api/parcours.php ne la connaît pas), pas de jauge, pas
-    // d'ajout par élève (« par_eleve ») ; depuis le lot « cours-ouvertures »
+    // progression (api/parcours.php ne la connaît pas), pas de jauge ; depuis
+    // le lot « cours-appli-3 » (14/11/2026), des CHAPITRES en plus pour
+    // quelques élèves (eleves.ajouts : {"cours": {"chapitres": [...]}}, voir
+    // ajouts_lus et acces_de_l_eleve) ; depuis le lot « cours-ouvertures »
     // (10/11/2026), seulement le jour de la dernière ouverture de chaque
     // fiche, dans sa propre table (lib/cours.php, api/cours.php). Ce
     // qui se règle pour la classe : les chapitres ouverts, les fiches
@@ -369,7 +371,6 @@ const CATALOGUE_APPLIS = [
         'motifs' => [],
         'compteur' => null,
         'reglages' => ['chapitres' => 'cours', 'sans' => 'cours', 'avec' => 'cours'],
-        'par_eleve' => false,
     ],
     'soley' => [
         'nom' => 'Solèy',
@@ -769,6 +770,8 @@ function meme_etat_de_classe(array $avant, array $ligne): bool
 //     {"coffres": {}}                        Coffres magiques entière, en plus
 //     {"splat": {"mondes": [3]}}             le monde 3 de SPLAT! en plus
 //     {"coffres": {}, "splat": {"mondes": [3, 4]}}
+//     {"cours": {"chapitres": ["4e-PUI", "3e-PYT"]}}   des chapitres du livret
+//                                                     (lot « cours-appli-3 »)
 //
 // Une clé = une appli ouverte du catalogue ; « {} » = l'appli entière ; une
 // liste (mondes, niveaux, opérations) = ces numéros EN PLUS de ceux de la
@@ -830,7 +833,21 @@ function ajouts_lus(?string $json): array
     $sortie = [];
     foreach ($brut as $cle => $ajoutBrut) {
         if (!is_string($cle) || !appli_ouverte($cle) || !is_array($ajoutBrut)) continue;
-        if ((CATALOGUE_APPLIS[$cle]['par_eleve'] ?? true) === false) continue;
+        // L'appli Cours (lot « cours-appli-3 ») : seulement {"chapitres": [...]}
+        // — jamais « {} » (l'appli entière, sans chapitre, n'ouvrirait rien de
+        // lisible). Correctif après la relecture Codex (point 1) : la FORME est
+        // lue strictement — une seule clé « chapitres », une vraie liste, rien
+        // que des textes de la forme d'un chapitre (« 3e-PYT ») ; sinon l'ajout
+        // est ignoré EN ENTIER (avant, {"chapitres": {"x": "3e-PYT"}} ou
+        // ["3e-PYT", null] ouvraient le chapitre). Un chapitre bien formé qui
+        // n'est plus au livret (retiré un jour) est seulement oublié : il ne
+        // doit pas emporter les autres chapitres de l'élève. Plus rien de
+        // connu : rien.
+        if ($cle === 'cours') {
+            $chapitres = cours_ajout_lu($ajoutBrut);
+            if ($chapitres !== null) $sortie[$cle] = ['chapitres' => $chapitres];
+            continue;
+        }
         if ($ajoutBrut === []) { $sortie[$cle] = []; continue; }
         if (array_is_list($ajoutBrut)) continue;
         $ajout = [];
@@ -850,6 +867,19 @@ function ajouts_lus(?string $json): array
     return $sortie;
 }
 
+// L'ajout « cours » d'un élève tel qu'il sort de la base : la liste des
+// chapitres connus, ou null s'il est abîmé (forme fausse) ou vide.
+function cours_ajout_lu(mixed $ajout): ?array
+{
+    if (!is_array($ajout) || array_keys($ajout) !== ['chapitres']) return null;
+    $liste = $ajout['chapitres'];
+    if (!is_array($liste) || $liste === [] || !array_is_list($liste)) return null;
+    foreach ($liste as $id) {
+        if (!is_string($id) || preg_match(COURS_MOTIF_CHAPITRE, $id) !== 1) return null;
+    }
+    return cours_liste_lue('chapitres', $liste);
+}
+
 // Ce que le professeur envoie (eleves.acces) : lecture STRICTE, et la valeur
 // reçue REMPLACE la colonne entière (la fenêtre « Ce que voit Léa » envoie tout
 // son état à chaque clic, comme ⚙ Réglages envoie la liste des mondes) — à
@@ -864,10 +894,19 @@ function ajouts_recus(mixed $recus): array
     $sortie = [];
     foreach ($recus as $cle => $ajout) {
         if (!is_string($cle) || !appli_ouverte($cle)) throw new InvalidArgumentException("Application inconnue.");
-        if ((CATALOGUE_APPLIS[$cle]['par_eleve'] ?? true) === false) {
-            throw new InvalidArgumentException("Les cours s'ouvrent à toute la classe, pas à un élève.");
-        }
         if (!is_array($ajout) || ($ajout !== [] && array_is_list($ajout))) throw new InvalidArgumentException("Ajout illisible.");
+        // L'appli Cours (lot « cours-appli-3 ») : des chapitres du livret,
+        // au moins un, rien d'autre — ni « {} », ni une fiche, ni « sans » /
+        // « avec » (les fiches suivent le réglage de la classe).
+        if ($cle === 'cours') {
+            if (array_keys($ajout) !== ['chapitres']) {
+                throw new InvalidArgumentException("Pour un élève, on ouvre des chapitres : coche au moins un chapitre.");
+            }
+            $chapitres = cours_liste_recue('chapitres', $ajout['chapitres']);
+            if ($chapitres === []) throw new InvalidArgumentException("Une liste vide n'ajoute rien : retire plutôt l'activité.");
+            $sortie[$cle] = ['chapitres' => $chapitres];
+            continue;
+        }
         $declares = listes_declarees($cle);
         foreach (array_keys($ajout) as $nom) {
             if (!array_key_exists($nom, $declares)) throw new InvalidArgumentException("Réglage inconnu.");
@@ -981,13 +1020,35 @@ function acces_de_l_eleve(array $classe, ?string $ajoutsJson, ?string $reglagesE
         }
         foreach ($reglagesClasse[$cle] ?? [] as $nom => $valeur) {
             if (is_bool($valeur) || is_int($valeur)) $reglage[$nom] = $valeur;
-            // L'appli Cours : les listes du livret suivent la classe telles quelles.
-            if (is_array($valeur) && (CATALOGUE_APPLIS[$cle]['reglages'][$nom] ?? null) === 'cours') $reglage[$nom] = $valeur;
         }
+        if ($cle === 'cours') $reglage += cours_de_classe_et_ajout($classe, $parClasse, $ajouts['cours'] ?? null);
         foreach ($propres[$cle] ?? [] as $nom => $valeur) $reglage[$nom] = $valeur;
         if ($reglage !== []) $reglages[$cle] = $reglage;
     }
     return ['applis' => $applis, 'reglages' => $reglages];
+}
+
+// L'appli Cours (lot « cours-appli-3 », 14/11/2026, choix de Gwenaël : « En
+// plus pour quelques élèves », comme SPLAT! et Coffres). Rend le réglage
+// « cours » de l'élève : chapitres = ceux de la classe (si elle a l'appli)
+// ∪ ceux de son ajout, dans l'ordre du livret ; « sans » et « avec » = ceux
+// de la CLASSE, qui valent aussi pour les chapitres ouverts en plus (une
+// fiche fermée à la classe l'est pour tous ; une fiche du nouveau programme
+// ne s'ouvre qu'en la cochant pour la classe — décision du chef, réversible :
+// un ajout n'ouvre que des chapitres). Quand la classe n'a pas l'appli (ses
+// élèves « en plus » seulement), ses chapitres ne comptent pas, mais ses
+// fiches fermées et ouvertes, gardées dans classes.reglages, si.
+function cours_de_classe_et_ajout(array $classe, bool $parClasse, ?array $ajout): array
+{
+    $brut = reglages_de_classe($classe)['cours'] ?? [];
+    $chapitres = array_merge($parClasse ? ($brut['chapitres'] ?? []) : [], $ajout['chapitres'] ?? []);
+    $sortie = [];
+    $liste = cours_liste_lue('chapitres', $chapitres);
+    if ($liste !== null) $sortie['chapitres'] = $liste;
+    foreach (['sans', 'avec'] as $nom) {
+        if (isset($brut[$nom])) $sortie[$nom] = $brut[$nom];
+    }
+    return $sortie;
 }
 
 // Ce que le professeur reçoit pour chaque élève (tableau, eleves.acces) : les

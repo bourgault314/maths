@@ -8483,7 +8483,7 @@ verifier("cours-appli — les fiches du nouveau programme sont masquées par dé
     vider_compteurs();
 });
 
-verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.php ne connaît pas « cours » ; pas de cours donné à un élève seul ; le tableau de l'onglet Cours n'a aucune progression", function () use (&$jetonS1) {
+verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.php ne connaît pas « cours » ; « Cours » entier à un élève (sans chapitre) refusé ; le tableau de l'onglet Cours n'a aucune progression", function () use (&$jetonS1) {
     vider_compteurs();
     $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'C4', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
@@ -8491,8 +8491,8 @@ verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.p
     egal(400, $w['code'], 'écrire une progression « cours » : refusé');
     egal(400, lire($eleve['code'], 'cours')['code'], 'la lire : refusé');
     $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => new stdClass()]], ['jeton' => $jetonS1]);
-    egal(400, $r['code'], 'Cours à un élève seul : refusé');
-    egal("Les cours s'ouvrent à toute la classe, pas à un élève.", $r['json']['erreur'] ?? null, 'le message');
+    egal(400, $r['code'], 'Cours entier à un élève, sans chapitre : refusé');
+    egal("Pour un élève, on ouvre des chapitres : coche au moins un chapitre.", $r['json']['erreur'] ?? null, 'le message (lot « cours-appli-3 »)');
     // Rangé quand même en base (une vieille page, un script) : ignoré à la lecture.
     bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute(['{"cours":{}}', $eleve['id']]);
     vrai(!array_key_exists('cours', identite($eleve['code'])['json']), 'un ajout « cours » en base ne donne rien');
@@ -8502,6 +8502,157 @@ verifier("cours-appli — rien n'est enregistré pour l'élève : api/parcours.p
     egal([null], array_column($t['json']['eleves'], 'parcours'), 'aucune progression');
     $n = bd_test()->query("SELECT COUNT(*) FROM progressions WHERE appli = 'cours'")->fetchColumn();
     egal(0, (int)$n, 'aucune ligne « cours » en base');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------------------ des chapitres en plus pour quelques élèves (lot « cours-appli-3 », 14/11/2026)
+//
+// Gwenaël (question à choix du 14/11) : « En plus pour quelques élèves »,
+// comme SPLAT! et Coffres — un chapitre, ou tout un niveau, en plus de ce
+// qu'a la classe ; on ajoute, on ne retire jamais rien ; les fiches fermées
+// et les fiches du nouveau programme ouvertes de la classe valent aussi pour
+// ces chapitres.
+
+function chapitres_vus(string $code): array
+{
+    return array_column(identite($code)['json']['cours'] ?? [], 'id');
+}
+
+verifier("cours-appli-3 — un élève avec un ajout voit ses chapitres EN PLUS de ceux de la classe ; un autre non ; un ajout ne retire rien ; les fiches fermées de la classe valent aussi pour lui", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P1', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleves = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    [$a, $b] = $eleves;
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['4e-PUI-02']]]], ['jeton' => $jetonS1]);
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $a['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['3e-THA', '4e-PUI', '3e-THA']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'des chapitres en plus : ' . $r['texte']);
+    egal(['cours' => ['chapitres' => ['4e-PUI', '3e-THA']]], $r['json']['ajouts'], 'rangés dans l’ordre du livret, sans doublon');
+    egal(['4e-PUI', '3e-PYT', '3e-THA'], $r['json']['acces']['reglages']['cours']['chapitres'], 'ce qu’il voit : la classe + les siens');
+    egal(['4e-PUI', '3e-PYT', '3e-THA'], chapitres_vus($a['code']), 'l’élève avec un ajout voit ses chapitres');
+    egal(['3e-PYT'], chapitres_vus($b['code']), 'l’autre : ceux de la classe seulement');
+    // La fiche fermée à la classe (4e-PUI-02) l'est aussi dans son chapitre en plus.
+    $pui = array_values(array_filter(identite($a['code'])['json']['cours'], fn ($c) => $c['id'] === '4e-PUI'))[0];
+    vrai(!in_array('https://mathsgo.re/cours/4e/4e-PUI-02.html#ch=4e-PUI', array_column($pui['fiches'], 'url'), true), 'la fiche fermée à la classe reste fermée');
+    vrai(in_array('https://mathsgo.re/cours/4e/4e-PUI-01.html#ch=4e-PUI', array_column($pui['fiches'], 'url'), true), 'les autres sont là');
+    egal(null, $pui['imprimable'], 'pas d’imprimable : toutes les fiches ne sont pas ouvertes');
+    // Un ajout ne retire rien : la classe ouvre un chapitre de plus, l'élève l'a aussi.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT', '3e-RAC']]]], ['jeton' => $jetonS1]);
+    egal(['4e-PUI', '3e-PYT', '3e-RAC', '3e-THA'], chapitres_vus($a['code']), 'la classe + les siens, toujours');
+    // La classe referme tout : il garde les siens (D4), l'autre n'a plus rien.
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => []]]], ['jeton' => $jetonS1]);
+    egal(['4e-PUI', '3e-THA'], chapitres_vus($a['code']), 'ses chapitres en plus restent');
+    egal([], chapitres_vus($b['code']), 'l’autre : rien');
+    // La classe sans l'appli Cours : seuls ceux qui l'ont en plus la voient ; les fiches fermées de la classe valent toujours.
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'applis' => ['defi-tables'], 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['3e-THA-03']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'la classe sans Cours, ses réglages gardés : ' . $r['texte']);
+    $classeSans = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    egal(['defi-tables'], $classeSans['json']['classe']['applis'], 'la classe n’a plus Cours');
+    egal(['4e-PUI', '3e-THA'], chapitres_vus($a['code']), 'lui : ses chapitres (pas ceux de la classe, qui n’a plus l’appli)');
+    $tha = array_values(array_filter(identite($a['code'])['json']['cours'], fn ($c) => $c['id'] === '3e-THA'))[0];
+    vrai(!in_array('https://mathsgo.re/cours/3e/3e-THA-03.html#ch=3e-THA', array_column($tha['fiches'], 'url'), true), 'la fiche fermée à la classe le reste');
+    vrai(in_array('https://mathsgo.re/cours/3e/3e-THA-04.html#ch=3e-THA', array_column($tha['fiches'], 'url'), true), 'les autres sont là');
+    vrai(!array_key_exists('cours', identite($b['code'])['json']), 'l’autre : pas de « Mes cours »');
+    $parId = array_column($classeSans['json']['eleves'], null, 'id');
+    egal(['defi-tables', 'cours'], $parId[$a['id']]['acces']['applis'], 'le tableau dit ce qu’il voit : la classe + Cours en plus');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-appli-3 — lecture stricte d'un ajout « cours » (des chapitres connus, au moins un, rien d'autre) ; « avant » périmé : 409, rien d'écrit ; en base, un ajout abîmé n'ouvre jamais rien", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P2', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    foreach ([
+        [['chapitres' => []], "Une liste vide n'ajoute rien : retire plutôt l'activité.", 'une liste vide'],
+        [['chapitres' => ['9e-XYZ']], 'Chapitre inconnu.', 'un chapitre inconnu'],
+        [['chapitres' => ['3e-PYT-02']], 'Chapitre inconnu.', 'une fiche à la place d’un chapitre'],
+        [['chapitres' => '3e-PYT'], 'Liste de cours illisible.', 'pas une liste'],
+        [['chapitres' => [3]], 'Chapitre inconnu.', 'un nombre'],
+        [['chapitres' => ['3e-PYT'], 'sans' => []], 'Pour un élève, on ouvre des chapitres : coche au moins un chapitre.', 'les fiches suivent la classe'],
+        [['avec' => ['4e-PUI-03']], 'Pour un élève, on ouvre des chapitres : coche au moins un chapitre.', 'une fiche du nouveau programme : pas pour un élève'],
+        [['mondes' => [1]], 'Pour un élève, on ouvre des chapitres : coche au moins un chapitre.', 'un réglage d’une autre appli'],
+    ] as [$ajout, $message, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => $ajout]], ['jeton' => $jetonS1]);
+        egal(400, $r['code'], "$quoi : refusé");
+        egal($message, $r['json']['erreur'] ?? null, "$quoi : le message");
+    }
+    egal(null, bd_test()->query('SELECT ajouts FROM eleves WHERE id = ' . (int)$eleve['id'])->fetchColumn(), 'rien d’écrit');
+    // « avant » périmé : un autre onglet a écrit entre-temps.
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['3e-PYT']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['3e-THA']]]], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'la fenêtre refuse une écriture périmée');
+    egal(['cours' => ['chapitres' => ['3e-PYT']]], $r['json']['ajouts'], 'l’état actuel part avec le refus');
+    egal('{"cours":{"chapitres":["3e-PYT"]}}', bd_test()->query('SELECT ajouts FROM eleves WHERE id = ' . (int)$eleve['id'])->fetchColumn(), 'rien n’est écrasé');
+    // « avant » dans l'autre ordre : la même chose (forme canonique).
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => ['cours' => ['chapitres' => ['3e-PYT']]], 'ajouts' => ['cours' => ['chapitres' => ['3e-THA', '3e-PYT']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code']);
+    $r = appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => ['cours' => ['chapitres' => ['3e-THA', '3e-PYT']]], 'ajouts' => new stdClass()], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], '« avant » rangé autrement : accepté');
+    egal(null, bd_test()->query('SELECT ajouts FROM eleves WHERE id = ' . (int)$eleve['id'])->fetchColumn(), 'retiré : la colonne revient à rien');
+    // En base, abîmé (une vieille page, un script) : jamais « tout ouvert ».
+    foreach (['{"cours":{}}', '{"cours":{"chapitres":[]}}', '{"cours":{"chapitres":"3e-PYT"}}', '{"cours":{"chapitres":["9e-XYZ"]}}', '{"cours":[]}',
+        // Correctif après la relecture Codex (point 1) : une forme fausse autour d'un vrai chapitre n'ouvre RIEN.
+        '{"cours":{"chapitres":{"inattendu":"3e-PYT"}}}', '{"cours":{"chapitres":["3e-PYT",null,5,{}]}}',
+        '{"cours":{"chapitres":["3e-PYT"],"sans":["3e-PYT-02"]}}', '{"cours":{"chapitres":["3e-PYT","3e pyt"]}}', '{"cours":{"chapitres":[["3e-PYT"]]}}'] as $abime) {
+        bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute([$abime, $eleve['id']]);
+        egal([], chapitres_vus($eleve['code']), "$abime : rien de plus");
+    }
+    // Un chapitre bien formé mais retiré du livret est seulement oublié : il n'emporte pas les autres.
+    bd_test()->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute(['{"cours":{"chapitres":["3e-PYT","9e-XYZ"]}}', $eleve['id']]);
+    egal(['3e-PYT'], chapitres_vus($eleve['code']), 'un chapitre retiré du livret est oublié, les autres restent');
+    // Un collègue en écriture ne règle pas les accès (propriétaire seulement) : déjà gardé par les tests de « Qui voit quoi ».
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-appli-3, correctif Codex 2 — la classe sans Cours : ses fiches fermées et ouvertes se règlent seules (sans « applis » ni « chapitres ») et valent pour les élèves qui ont des chapitres en plus", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P4', 'applis' => ['defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $eleve['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['4e-PUI']]]], ['jeton' => $jetonS1]);
+    $fiches = fn () => array_map(fn ($f) => $f['url'], identite($eleve['code'])['json']['cours'][0]['fiches']);
+    $url = fn ($id) => 'https://mathsgo.re/cours/4e/' . $id . '.html#ch=4e-PUI';
+    vrai(in_array($url('4e-PUI-02'), $fiches(), true), 'au départ : 4e-PUI-02 ouverte');
+    vrai(!in_array($url('4e-PUI-03'), $fiches(), true), 'au départ : 4e-PUI-03 (nouveau programme) fermée');
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['applis' => ['defi-tables'], 'reglages' => ['cours' => new stdClass()]],
+        'reglages' => ['cours' => ['sans' => ['4e-PUI-02'], 'avec' => ['4e-PUI-03']]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'les fiches seules, la classe sans Cours : ' . $r['texte']);
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    egal(['defi-tables'], $t['json']['classe']['applis'], 'la classe reste sans Cours');
+    egal(['cours' => ['sans' => ['4e-PUI-02'], 'avec' => ['4e-PUI-03']]], $t['json']['classe']['reglages'], 'aucun chapitre pour la classe');
+    vrai(!in_array($url('4e-PUI-02'), $fiches(), true), 'la fiche fermée l’est pour l’élève en plus');
+    vrai(in_array($url('4e-PUI-03'), $fiches(), true), 'la fiche du nouveau programme est ouverte pour lui');
+    egal(200, ouvrir_fiche($eleve['code'], '/cours/4e/4e-PUI-03.html')['code'], 'et son ouverture se note');
+    egal(400, ouvrir_fiche($eleve['code'], '/cours/4e/4e-PUI-02.html')['code'], 'pas celle de la fiche fermée');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("cours-appli-3 — api/cours.php note l'ouverture d'une fiche ouverte EN PLUS ; refuse une fiche que l'élève n'a pas (un autre élève, une fiche fermée à la classe, un chapitre en plus d'un autre) ; un élève ne peut pas s'ouvrir un cours", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P3', 'applis' => ['cours']], ['jeton' => $jetonS1])['json']['id'];
+    [$a, $b] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['cours' => ['chapitres' => ['3e-PYT'], 'sans' => ['4e-PUI-02']]]], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $a['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['4e-PUI']]]], ['jeton' => $jetonS1]);
+    egal(200, ouvrir_fiche($a['code'], '/cours/4e/4e-PUI-01.html')['code'], 'sa fiche en plus : notée');
+    egal([['eleve_id' => $a['id'], 'fiche' => '4e-PUI-01', 'jour' => jour_reunion()]], ouvertures_en_base($a['id']));
+    egal(400, ouvrir_fiche($b['code'], '/cours/4e/4e-PUI-01.html')['code'], 'l’autre élève n’a pas ce chapitre : refusé');
+    egal(400, ouvrir_fiche($a['code'], '/cours/4e/4e-PUI-02.html')['code'], 'fermée à la classe : refusée aussi en plus');
+    egal([], ouvertures_en_base($b['id']), 'rien pour l’autre');
+    // L'élève ne peut rien s'ouvrir lui-même : aucune API élève n'écrit les ajouts.
+    $r = appel('/api/eleve.php', ['code' => $b['code'], 'ajouts' => ['cours' => ['chapitres' => ['4e-PUI']]]]);
+    vrai(in_array($r['code'], [200, 400], true), 'api/eleve.php ignore ou refuse');
+    egal(null, bd_test()->query('SELECT ajouts FROM eleves WHERE id = ' . (int)$b['id'])->fetchColumn(), 'rien d’écrit pour lui');
+    egal(401, appel('/api/prof.php', ['action' => 'eleves.acces', 'eleve_id' => $b['id'], 'avant' => new stdClass(), 'ajouts' => ['cours' => ['chapitres' => ['4e-PUI']]]])['code'], 'sans session prof : refusé');
+    egal(400, ouvrir_fiche($b['code'], '/cours/4e/4e-PUI-01.html')['code'], 'toujours refusé');
+    // Le tableau de l'onglet Cours : son jour d'ouverture, et ce qu'il voit.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'cours'], ['jeton' => $jetonS1]);
+    $parId = array_column($t['json']['eleves'], null, 'id');
+    egal(['4e-PUI-01' => jour_reunion()], $parId[$a['id']]['ouvertes']);
+    egal(['4e-PUI', '3e-PYT'], $parId[$a['id']]['acces']['reglages']['cours']['chapitres']);
+    egal(['3e-PYT'], $parId[$b['id']]['acces']['reglages']['cours']['chapitres']);
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

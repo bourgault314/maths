@@ -126,10 +126,25 @@ const copie = x => JSON.parse(JSON.stringify(x));
 // La règle « classe + ajouts » (lib/applis.php), assez pour la page : ce
 // que la classe a, l'élève l'a ; une appli donnée entière ({}) l'est tout
 // entière ; une liste ajoutée s'ajoute à celle de la classe.
+// Lot « cours-appli-3 » (14/11/2026) : l'appli Cours — chapitres = ceux de
+// la classe (si elle l'a) ∪ ceux de l'ajout, dans l'ordre du livret ; les
+// fiches fermées / ouvertes de la classe, telles quelles.
+const ORDRE_COURS = (() => {
+  try { return JSON.parse(readFileSync(new URL("../_serveur/public/lib/cours.json", import.meta.url), "utf8")).chapitres.map(c => c.id); } catch (_) { return []; }
+})();
 function accesCalcule(classe, ajouts) {
   const applis = [...new Set([...(classe.applis || []), ...Object.keys(ajouts || {})])];
   const reglages = {};
   applis.forEach(cle => {
+    if (cle === "cours") {
+      const brut = (classe.reglages || {}).cours || {};
+      const voulus = new Set([...((classe.applis || []).includes("cours") ? brut.chapitres || [] : []), ...(((ajouts || {}).cours || {}).chapitres || [])]);
+      const sortie = {};
+      if (voulus.size) sortie.chapitres = ORDRE_COURS.filter(id => voulus.has(id));
+      ["sans", "avec"].forEach(nom => { if (Array.isArray(brut[nom]) && brut[nom].length) sortie[nom] = brut[nom].slice(); });
+      if (Object.keys(sortie).length) reglages.cours = sortie;
+      return;
+    }
     const deLaClasse = (classe.applis || []).includes(cle) ? (classe.reglages || {})[cle] : null;
     const ajout = (ajouts || {})[cle];
     if (ajout && !Object.keys(ajout).length) return;              // entière
@@ -299,13 +314,24 @@ const FONCTIONS = ["el", "messager", "raisonDe", "nomAffiche", "ordreDeLaFeuille
 // page sur un faux fetch sensible au signal, et la VRAIE ouvrirClasse() (le
 // tableau relu par ce fetch, le moteur par serveur.moteur) — seules les
 // fonctions de dessin sont remplacées.
-export function reglerRejoue({classe, eleves, droit = "proprietaire", appli = "defi-tables", reponses = [], delai = 40, reel = false} = {}) {
+// cours (lot « cours-appli-3 ») : en plus, les fonctions de l'appli Cours
+// (la fenêtre « Régler les cours », ses chapitres en plus, l'onglet Cours) et
+// le catalogue du livret tel que la page le reçoit ; « aujourdhui » fixe le
+// jour du résumé.
+const FONCTIONS_COURS = ["coursDeLaClasse", "copierCours", "coursEnvoye", "memesCours", "ficheOuverte", "texteCoursOuverts",
+  "niveauDeDepart", "insecable", "lienVoir", "etiquetteCoursNiveau", "nomBrevetProf", "dessinerNiveauxCours", "dessinerReglerCours",
+  "coursPlusDesEleves", "coursPlusDe", "dessinerCoursEnPlus", "ligneCoursPlus", "ligneChapitrePlus", "ligneNiveauCours",
+  "elevesCoursEnPlus", "dessinerReglerEnGardant", "boiteCours", "dessinerFichesEnPlus", "elevesDuCours", "chapitresVusPar", "combienOntOuvert", "ouvertesDeLEleve",
+  "dessinerCoursProf", "jourOuvert", "tableauOuvertures", "lundiDuJour", "jourLisible", "coursALire"];
+export function reglerRejoue({classe, eleves, droit = "proprietaire", appli = "defi-tables", reponses = [], delai = 40, reel = false, cours = false, aujourdhui = "2026-11-14"} = {}) {
   const serveur = fauxServeur(classe, eleves);
   const zones = new Map();
   const $ = id => { if (!zones.has(id)) zones.set(id, new Noeud(id === "regler" ? "dialog" : "div")); return zones.get(id); };
   const journal = [];
   const questions = [];
-  const document = {createElement: t => new Noeud(t), createTextNode: t => Object.assign(new Noeud("#texte"), {_texte: String(t)})};
+  const document = {createElement: t => new Noeud(t), createTextNode: t => Object.assign(new Noeud("#texte"), {_texte: String(t)}),
+    // Les fiches de « Régler les cours » (cours-appli-3) : un fragment, gardé comme un nœud sans balise.
+    createDocumentFragment: () => new Noeud("#fragment")};
   const etat = {jeton: "jeton-1", generation: 0};
   const lire = () => ({classe: copie(serveur.etat.classe), eleves: copie(serveur.etat.eleves)});
   const sources = `${constante("APPLIS")}\n${constante("LISTES_PAR_ELEVE")}\n${constante("DERNIER_NUMERO")}\n${constante("COULEURS_MONDES")}
@@ -346,9 +372,17 @@ export function reglerRejoue({classe, eleves, droit = "proprietaire", appli = "d
     function deconnecter() { jeton = ""; generation += 1; demandeAppli += 1; classe = null; eleves = []; reglage = null; reglageEnCours = false; $("regler").close(); }
     function reconnecter() { jeton = "jeton-2"; ({classe, eleves} = lireServeur()); }
     ${FONCTIONS.map(fonction).join("\n")}
+    ${cours ? `
+    const COURS = ${JSON.stringify(coursPourLaPage())};
+    ${constante("NIVEAUX_COURS")}
+    ${constante("JOUR_ISO")}
+    const coursDeplies = new Set(), coursGrilles = new Set();
+    const aujourdhuiSuivi = () => ${JSON.stringify(aujourdhui)};
+    function jourPlus(jour, n) { const d = new Date(jour + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+    ${FONCTIONS_COURS.map(fonction).join("\n")}` : ""}
     $("regler").addEventListener("close", fermerRegler);
     return {
-      ${FONCTIONS.filter(n => !["el", "messager"].includes(n)).join(", ")}, deconnecter, reconnecter,
+      ${FONCTIONS.filter(n => !["el", "messager"].includes(n)).join(", ")}, deconnecter, reconnecter,${cours ? ` ${FONCTIONS_COURS.join(", ")}, COURS,` : ""}
       etat: () => ({classe, eleves, reglage, reglageEnCours, droitClasse, appliAffichee, jeton}),
       poser: o => { if ("appli" in o) appliAffichee = o.appli; if ("droit" in o) droitClasse = o.droit; if ("vue" in o) vue = o.vue; if ("eleves" in o) eleves = o.eleves; if ("classe" in o) classe = o.classe; },
       // Annuler / ✕ / Échap, comme les écouteurs de la page.
@@ -381,6 +415,16 @@ export function caseNumero(bloc, liste, numero) {
   const c = bloc.tous(n => n.tag === "input" && n.dataset.liste === liste && n.dataset.numero === String(numero))[0];
   assert.ok(c, `la case ${liste} ${numero}`);
   return c;
+}
+
+// Le catalogue tel que la page « Ma classe » le reçoit (lib/cours.php,
+// cours_pour_le_prof : les fiches valables, avec leur adresse).
+function coursPourLaPage() {
+  const brut = JSON.parse(readFileSync(new URL("../_serveur/public/lib/cours.json", import.meta.url), "utf8")).chapitres;
+  return brut.map(c => Object.assign({}, c, {
+    fiches: c.fiches.map(f => Object.assign({nouveau: false}, f, {url: "https://mathsgo.re" + f.page + "#ch=" + c.id})),
+    brevet: c.brevet ? Object.assign({}, c.brevet, {url: "https://mathsgo.re" + c.brevet.page + "#ch=" + c.id}) : null
+  }));
 }
 
 // Les lignes « ③ Enquête · personne · Choisir… ».
