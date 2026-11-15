@@ -419,7 +419,9 @@
   // fois le même repère à moins de 5 questions dans À toi).
   // Lot 3b-2 : au téléphone peu haut, le nom d'un objet à relier tient en
   // deux lignes sous son dessin.
-  const NOMS_COURTS = {l1: "La plus petite graduation"};
+  // (Lot 3b-3 : deux de plus, pour que le dessin grandisse au téléphone
+  // sans que le nom passe sur trois lignes.)
+  const NOMS_COURTS = {l1: "La plus petite graduation", l7: "Saint-Pierre à Saint-Denis", m5: "Un pack d'eau"};
   function questionAssocier(code, degre, rng, eviter = []) {
     const tous = CARTE.etape(code).reperes.map(c => CARTE.repere(c));
     const libres = tous.filter(r => !eviter.includes(r.code));
@@ -1035,7 +1037,7 @@
       const v = milli(d.valeur);
       const f = facteur(d.de, d.vers);
       if (d.de === "L" && d.vers === "cL" && lu === v * 1000n) return {erreur: 4, retour: `1${NB}L = 100${NB}cL (et 1${FINE}000${NB}mL).`};
-      if (v % f === 0n && lu === v / f) return {erreur: 1, retour: `Tu as divisé. Une unité plus petite, il en faut plus : ${question.relation}, donc ${mes(v, d.de)} = ${ecrire(v)} × ${mes(f * MILLE, d.vers)}.`};
+      if (v % f === 0n && lu === v / f) return {erreur: 1, retour: "Tu as divisé. Vers une unité plus petite, je multiplie."};
       if (lu === attendu * 10n || lu * 10n === attendu) {
         const faux = lu * MILLE / v;
         return {erreur: 2, retour: `Un zéro de trop ou de moins : ${question.relation}, pas ${mes(faux, d.vers)}.`};
@@ -1191,7 +1193,7 @@
       const v = milli(d.valeur);
       const f = facteur(d.vers, d.de);
       const attendu = milli(question.reponse);
-      if (lu === v * f) return {erreur: 1, retour: `Tu as multiplié. Une unité plus grande, il en faut moins : ${question.relation}, donc ${mes(v, d.de)} = ${ecrire(v)} ÷ ${ecrire(f * MILLE)}${NB}${d.vers}.`};
+      if (lu === v * f) return {erreur: 1, retour: "Tu as multiplié. Vers une unité plus grande, je divise."};
       if (lu === attendu * 10n || lu * 10n === attendu) return {erreur: 2, retour: `Un zéro de trop ou de moins : ${question.relation}.`};
       if (lu === v) return {erreur: 3, retour: `Tu as gardé le nombre : ${mes(v, d.de)}, ce n'est pas ${mes(v, d.vers)}.`};
       return null;
@@ -1361,7 +1363,7 @@
   //     (le quart compté 25 min).
   const HEURES_LUES = ["une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze"];
   function heureEnMots(h, m) {
-    // h de 7 à 12 ; m : 15, 30 ou 45.
+    // h de 1 à 12 ; m : 15, 30 ou 45.
     const nom = k => (k === 12 ? "midi" : `${HEURES_LUES[k - 1]} heure${k > 1 ? "s" : ""}`);
     if (m === 45) return `${nom(h + 1)} moins le quart`;
     if (m === 30) return h === 12 ? "midi et demi" : `${nom(h)} et demie`;
@@ -1383,6 +1385,33 @@
       image: [lignes[0]], correction: lignes,
       donnees: {type: "heure-mots", h, m},
       cle: `D2:heure:${h}:${m}`
+    });
+  }
+  // Lot 3b-3 : lire l'heure sur l'horloge (programme du CE1-CE2 : lire
+  // l'heure, les quarts et la demie ; l'étape la plus pauvre du palier 1,
+  // 56 questions). Trois réponses en mots : la bonne et deux erreurs
+  // connues — l'heure lue sur la mauvaise heure (la petite aiguille entre
+  // deux nombres), « et quart » et « moins le quart » échangés, le quart
+  // pris pour la demie. Toutes les heures du cadran.
+  function questionLireHeure(degre, rng) {
+    const m = degre === 3 ? choisir(rng, [45, 45, 30]) : degre === 2 ? choisir(rng, [15, 30, 45]) : choisir(rng, [15, 30]);
+    const h = m === 45 ? entre(rng, 1, 11) : m === 15 ? entre(rng, 2, 12) : entre(rng, 1, 12);
+    const bonne = heureEnMots(h, m);
+    const faux = m === 15 ? [heureEnMots(h - 1, 45), heureEnMots(h, 30)]
+      : m === 30 ? [heureEnMots(h < 12 ? h + 1 : h - 1, 30), heureEnMots(h, 15)]
+      : [heureEnMots(h - 1, 45), heureEnMots(h, 15)];
+    const choix = melanger(rng, [bonne, ...faux]);
+    const grande = {15: ["3", "et quart"], 30: ["6", "et demie"], 45: ["9", "moins le quart"]}[m];
+    const petite = m === 45 ? `Petite aiguille presque au ${h + 1} : ${bonne}.` : `Petite aiguille après le ${h} : ${bonne}.`;
+    const phrase = CARTE.typo("Quelle heure est-il ?");
+    return questionDuree("D2", degre, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "horloge", horloge: {h, m}},
+      choix, bon: choix.indexOf(bonne), reponse: bonne, reponseTexte: bonne, unite: null,
+      resume: CARTE.typo(`Il est ${bonne}.`), relation: `un quart d'heure = 15${NB}min`, outil: "horloge-quarts",
+      image: [CARTE.typo(`Grande aiguille sur le ${grande[0]} : « ${grande[1]} ».`)],
+      correction: [CARTE.typo(`Grande aiguille sur le ${grande[0]} : « ${grande[1]} ».`), CARTE.typo(petite)],
+      donnees: {type: "heure-lue", h, m},
+      cle: `D2:lire:${h}:${m}`
     });
   }
   const QUARTS = [
@@ -1429,7 +1458,9 @@
     // Je valide : au choix en 3e, les quarts en 5e, l'heure en mots en 7e
     // et en 9e ; À toi : une question sur deux, l'une des trois.
     formes(usage, rng) {
-      if (usage === "valide") return {2: "choix", 4: "quarts", 6: "heure", 8: "heure"};
+      // Lot 3b-3 : l'horloge à lire en 8e de Je valide, environ une
+      // question sur six dans À toi, et dans un retour sur deux.
+      if (usage === "valide") return {2: "choix", 4: "quarts", 6: "heure", 7: "lire", 8: "heure"};
       if (usage === "entraine") {
         const f = {};
         for (let i = 0; i < 25; i += 1) {
@@ -1437,13 +1468,16 @@
           if (r < 0.2) f[i] = "choix";
           else if (r < 0.35 && i >= 6 && i < 15) f[i] = "quarts";
           else if (r < 0.5 && i >= 6) f[i] = "heure";
+          else if (r < 0.68 && i >= 3) f[i] = "lire";
         }
         return f;
       }
+      if (usage === "retour") return rng() < 0.5 ? {0: "lire"} : {1: "lire"};
       return {};
     },
     tirer(rng, degre, i, usage, forme) {
       if (forme === "heure") return questionHeureMots(degre === 1 ? 2 : degre, rng);
+      if (forme === "lire") return questionLireHeure(degre, rng);
       if (forme === "quarts") return questionQuarts(degre === 1 ? 2 : degre, rng);
       if (forme === "choix") {
         const vivier = EN_MOTS.filter(m => m[4] === degre && (m[2] || m[3]));
@@ -1861,14 +1895,14 @@
       }
       if (d.sorte === "versEdec") {
         // (lu en millièmes d'euro)
-        if (lu === milli(d.total)) return {erreur: 7, retour: `${ecrire(milli(d.total))}${NB}c, ce n'est pas ${ecrire(milli(d.total))}${NB}€ : 100${NB}c = 1${NB}€, donc ${ecrire(milli(d.total))}${NB}c = ${prixTexte(d.total)}.`};
-        if (lu === milli(d.total) / 10n) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c : ${ecrire(milli(d.total))}${NB}c = ${prixTexte(d.total)}.`};
+        if (lu === milli(d.total)) return {erreur: 7, retour: `${ecrire(milli(d.total))}${NB}c, ce n'est pas ${ecrire(milli(d.total))}${NB}€ : 100${NB}c = 1${NB}€.`};
+        if (lu === milli(d.total) / 10n) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c.`};
         return null;
       }
       const n = Number(lu / MILLE);
       if (lu % MILLE !== 0n) return null;
       if (d.sorte === "versE") {
-        if (n === d.total * 100) return {erreur: 3, retour: `Une unité plus grande, il en faut moins : 100${NB}c = 1${NB}€, donc ${ecrire(milli(d.total))}${NB}c = ${d.total / 100}${NB}€.`};
+        if (n === d.total * 100) return {erreur: 3, retour: "Tu as multiplié. Vers une unité plus grande, je divise."};
         if (n === d.total / 10) return {erreur: 1, retour: `1${NB}€ = 100${NB}c, pas 10${NB}c.`};
         return null;
       }

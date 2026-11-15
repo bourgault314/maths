@@ -170,16 +170,21 @@ async function controler(page, taille) {
     }
     // Lot 3b-2 : au doigt, les boutons de « relier » ont au moins 44 px de
     // haut (ils faisaient 38 px au petit iPhone) ; et rien ne sort d'un
-    // bouton (le nom d'un objet sous son dessin). (Les touches du pavé, 33 px
-    // à 393 × 660 : audit d'ergonomie du lot 3b-3.)
+    // bouton (le nom d'un objet sous son dessin). Lot 3b-3 (audit
+    // d'ergonomie) : au doigt, les touches du pavé et les réponses ont au
+    // moins 40 px de haut (33 px à 393 × 660) ; un texte qui sort de son
+    // bouton se voit aussi quand c'est le texte du bouton lui-même
+    // (« une contenance » sur deux lignes, police plus large).
     if (basEl && visible(basEl)) {
       const boutons = [...basEl.querySelectorAll("button")].filter(visible).filter(b => getComputedStyle(b).pointerEvents !== "none");
       if (tactile) {
-        const petit = boutons.find(b => b.closest(".assoc") && b.getBoundingClientRect().height < 43.5);
+        const petit = boutons.find(b => b.closest(".assoc") && b.getBoundingClientRect().height < 43.5)
+          || boutons.find(b => !b.closest(".assoc") && b.getBoundingClientRect().height < 39.5);
         if (petit) defauts.push(`un bouton trop petit au doigt : « ${petit.textContent.trim().slice(0, 20)} » (${Math.round(petit.getBoundingClientRect().height)} px)`);
       }
       const deborde = boutons.find(b => {
         const r = b.getBoundingClientRect();
+        if (b.scrollWidth > b.clientWidth + 1 || b.scrollHeight > b.clientHeight + 1) return true;
         return [...b.querySelectorAll("*")].filter(visible).some(e => {
           const c = e.getBoundingClientRect();
           return c.left < r.left - 0.5 || c.right > r.right + 0.5 || c.top < r.top - 0.5 || c.bottom > r.bottom + 0.5;

@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b2">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-3b3">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -40,9 +40,9 @@
   </div>
 
   <script src="./conversions_carte.js?v=20261115-3b2"></script>
-  <script src="./conversions_generateurs.js?v=20261115-3b2"></script>
+  <script src="./conversions_generateurs.js?v=20261115-3b3"></script>
   <script src="./defi_conversions_parcours.js?v=20261114-3b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261115-3b2"></script>
+  <script src="./defi_conversions_aides.js?v=20261115-3b3"></script>
   <script>
   (function () {
     "use strict";
@@ -543,6 +543,7 @@
         rangee.append(jnspEl, action);
       }
       ajouter(b, ch, q, zone, bas, rangee);
+      raccourcir(t.firstChild);
       return {q, zone, bas, action, chip: c, jnsp: jnspEl};
     }
 
@@ -727,7 +728,13 @@
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
         if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
         if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
-        if (m.phrase) qEl.appendChild(el("div", "phrase-t", m.phrase));
+        // L'horloge à lire (lot 3b-3) : l'horloge à gauche de la phrase, sur
+        // une seule ligne (la question reste basse).
+        if (m.horloge) {
+          const l = el("div", "horloge-q");
+          l.append(AIDES.horlogeHeure(m.horloge.h, m.horloge.m, "Une horloge"), el("div", "phrase-t", m.phrase));
+          qEl.appendChild(l);
+        } else if (m.phrase) qEl.appendChild(el("div", "phrase-t", m.phrase));
         regle();
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
         if (question.forme === "vrai-faux") qEl.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
@@ -876,7 +883,8 @@
       if (question.forme === "associer") {
         gesteEl = el("div", "assoc");
         question.objets.forEach((o, i) => {
-          const b = el("button", "obj");
+          // (Lot 3b-3 : un objet sans dessin, « 1 L », s'écrit en grand.)
+          const b = el("button", o.repere ? "obj" : "obj sans-dessin");
           b.type = "button";
           // (Lot 3b : relier des relations, « 1 m », « 1 kg » : pas d'image.)
           b.append(...[el("span", `lettre l${i}`, "ABC"[i]), o.repere ? AIDES.imageRepere(o.repere) : null, nomObjet(o)].filter(Boolean));
@@ -908,7 +916,9 @@
         // Quatre réponses : deux par ligne, toujours (empilées, elles
         // débordaient de la zone au petit téléphone ; vu par le robot dans
         // WebKit, lot A2 bis).
-        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}`);
+        // (Lot 3b-3 : des réponses en mots, « sept heures moins le quart » :
+        // « mots », elles passent sur plusieurs lignes dans leur bouton.)
+        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" ? " mots" : ""}`);
         question.choix.forEach((texte, i) => {
           const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));
           b.type = "button";
@@ -1041,6 +1051,15 @@
       if (question.morceaux.regle) {
         zone.appendChild(AIDES.regle(Object.assign({}, question.morceaux.regle, {marquer: true, classe: "regle-c"})));
         zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        return;
+      }
+      // L'horloge à lire (lot 3b-3) : l'horloge à côté des trois lignes.
+      if (question.morceaux.horloge) {
+        const ligne = el("div", "horl-ligne");
+        const col = el("div", "col-h");
+        col.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        ligne.append(AIDES.horlogeHeure(question.morceaux.horloge.h, question.morceaux.horloge.m), col);
+        zone.appendChild(ligne);
         return;
       }
       if (!choixGlisse && (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger")) {
@@ -1207,7 +1226,10 @@
             if (!deuxieme && !v.jnsp && G.erreurDeSens(qn, v.tape)) { jePrevois(ui, qn, () => poser(true)); return; }
             const apresErreur = P.suivreEntrainement(reponses);
             // (Après « Je prévois », le pourquoi a déjà été dit.)
-            remplirErreur(ui, qn, deuxieme ? null : v.retour, phase === "outil" ? "À la prochaine question, tu gardes l'outil." : apresErreur.outil === "outil" ? "À la prochaine question, l'outil revient." : "À la prochaine question, l'image revient.",
+            // (Lot 3b-3 : la suite en peu de mots, « À la prochaine
+            // question, » passait sur deux lignes et réduisait le panneau
+            // au petit iPhone.)
+            remplirErreur(ui, qn, deuxieme ? null : v.retour, phase === "outil" ? "Tu gardes l'outil." : apresErreur.outil === "outil" ? "L'outil revient." : "L'image revient.",
               suiteRonds(0), {neutre: v.jnsp, phrase: true});
             ui.action.style.visibility = "";
             ui.action.textContent = "Suivant →";
@@ -1285,7 +1307,15 @@
         ch.appendChild(el("i", i < ici ? "fait" : i === ici ? "ici" : "", n));
       });
       ajouter(b, ch);
+      raccourcir(t.firstChild);
       clavier = null;
+    }
+    // Lot 3b-3 : le nom de l'étape, au-dessus du titre du bandeau, prend son
+    // nom court quand le long ne tient pas (au téléphone, « Combien de temps
+    // entre deux heur… » devient « Entre deux heures »).
+    function raccourcir(petitEl) {
+      const e = CARTE.ETAPES.find(x => x.nom === petitEl.textContent);
+      if (e && e.nomCourt && e.nomCourt !== e.nom && petitEl.scrollWidth > petitEl.clientWidth + 1) petitEl.textContent = e.nomCourt;
     }
 
     // ------------------------------------------------------------- À retenir
@@ -1334,8 +1364,10 @@
       casesRetenir(code).forEach(c => defile.appendChild(c));
       const cahier = el("div", "cahier");
       cahier.append(AIDES.icone("crayon"), document.createTextNode(` ${etape.cahier}`));
-      defile.appendChild(cahier);
-      ajouter(defile);
+      // (Lot 3b-3 : « Je recopie cela dans mon cahier » sous la liste qui
+      // défile, toujours visible ; au petit téléphone, il était coupé à
+      // moitié au bas de la liste.)
+      ajouter(defile, cahier);
       if (fin) { ajouter(bouton("Accueil", "", fin)); return; }
       // Lot 3a : Je valide vient juste après, le jour même.
       ajouter(bouton("Je valide →", "", () => jeValide(code)));
@@ -1713,12 +1745,14 @@
       ecranQuestionFin(`Palier ${palierN} · ${CARTE.palier(palierN).nom}`, T("Tu connais déjà ?"), -1, retour, []);
       cadre.querySelector(".chemin").remove();
       cadre.querySelector(".chip").textContent = "";
+      // (Lot 3b-3 : les tailles dans le CSS, plus serrées au petit
+      // téléphone : avec une police plus large, « Plus tard » sortait du
+      // cadre.)
       const e = grosDessin("escalier");
-      e.style.cssText = `font-size:${rem(46)};margin-top:${rem(10)}`;
+      e.classList.add("esc-annonce");
       const t = el("div", "titre-fin", T("Tu connais déjà ?"));
       t.appendChild(el("small", "", "On monte marche par marche, une marche par étape."));
-      const c = texteLignes("carte", "• 3 questions par étape, sans aide.\n• 3 justes : l'étape est validée, tu montes.\n• Une erreur : une 4e question.\n• Tu t'arrêtes quand tu veux : ce qui est validé reste validé.");
-      c.style.cssText = `font-size:${rem(16)};font-weight:700;line-height:1.5`;
+      const c = texteLignes("carte regles-test", "• 3 questions par étape, sans aide.\n• 3 justes : l'étape est validée, tu montes.\n• Une erreur : une 4e question.\n• Tu t'arrêtes quand tu veux : ce qui est validé reste validé.");
       ajouter(e, t, c, espace(), bouton("Je commence →", "", () => test(depart, {retour, fin})), bouton("Plus tard", "cl", fin || accueil));
     }
 
@@ -1804,7 +1838,10 @@
       codes.forEach((c, i) => {
         const etatM = ok.includes(c) ? "ok" : c === ko ? "ko" : c === ici ? "ici" : "";
         const b = el("i", etatM, etatM === "ok" ? "✓" : etatM === "ko" ? "✗" : String(i + 1));
-        b.style.height = `${(100 * (22 + (56 * i) / Math.max(1, codes.length - 1))) / 78}%`;
+        // (Lot 3b-3 : la 1re marche garde la hauteur de son numéro, même
+        // dans un escalier bas, au petit téléphone ; les autres montent
+        // régulièrement jusqu'en haut.)
+        b.style.height = `calc(1.25rem + (100% - 1.25rem) * ${(i / Math.max(1, codes.length - 1)).toFixed(4)})`;
         e.appendChild(b);
       });
       return e;
