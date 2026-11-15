@@ -47,9 +47,12 @@ function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () =
       });
       p = P.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE}).parcours;
     } else if (etape.type === "test") {
-      const m = marche(etape.module);
-      const niveaux = Array.from({length: Math.min(P.NIVEAUX[etape.module], m + 1)}, (_, i) => ({niveau: i + 1, justes: i < m ? 3 : 0, total: 3}));
-      p = P.appliquerTest(p, {module: etape.module, marche: m, niveaux}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
+      // (Lot 7e-2 : un test peut commencer plus haut — un niveau pas encore
+      // joué d'un module commencé a son test.)
+      const de = (P.marchesDuTest(p, CARTE, etape.module) || {de: 1}).de;
+      const m = Math.min(marche(etape.module), P.NIVEAUX[etape.module] - de + 1);
+      const niveaux = Array.from({length: Math.min(P.NIVEAUX[etape.module] - de + 1, m + 1)}, (_, i) => ({niveau: de + i, justes: i < m ? 3 : 0, total: 3}));
+      p = P.appliquerTest(p, {module: etape.module, marche: m ? de + m - 1 : 0, niveaux}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
     } else {
       // Lot 2 : J'apprends en une étape (on montre, puis l'élève fait).
       const reponses = etape.type === "apprends" && entrainement === "rate" ? ratee() : reussie();
@@ -467,8 +470,8 @@ test("serveur : version_min 5 (7 depuis le lot 1 « la séance »), les clés du
 
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261114-7/);
-  assert.match(page, /defi_calcul\.css\?v=20261115-1/, "la feuille a changé au lot 3b « Chaque sorte annoncée »");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
+  assert.match(page, /defi_calcul\.css\?v=20261115-3/, "la feuille a changé au lot 3b « Chaque sorte annoncée »");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne
   // « N fois cette semaine ».
@@ -602,7 +605,9 @@ function jouerEtape(p, jour, etape, {entrainement = "reussi"} = {}) {
     return P.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE}).parcours;
   }
   if (etape.type === "test") {
-    return P.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: 1, justes: 0, total: 3}]}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
+    // (Lot 7e-2 : le test commence au premier niveau pas encore joué.)
+    const de = (P.marchesDuTest(p, CARTE, etape.module) || {de: 1}).de;
+    return P.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: de, justes: 0, total: 3}]}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;
   }
   const reponses = etape.type === "apprends" && entrainement === "rate" ? ratee() : reussie();
   return P.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE, seance: true}).parcours;

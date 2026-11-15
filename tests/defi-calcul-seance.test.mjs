@@ -80,10 +80,14 @@ test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules
   assert.equal(P.palierDe(CARTE, "A5", 1), 1);
   assert.equal(P.palierDe(CARTE, "A5", 4), 3);
   assert.equal(P.palierDe(CARTE, "D2", 4), 4);
-  assert.equal(P.typeDe(CARTE, "A2", 1), "F");
+  // (Lot 7e-2 : « Compléments à la dizaine » et « … à 100 : dizaines » sont des procédures.)
+  assert.equal(P.typeDe(CARTE, "A2", 1), "P");
+  assert.equal(P.typeDe(CARTE, "A2", 2), "P");
+  assert.equal(P.typeDe(CARTE, "M1", 1), "F");
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
   const compte = P.compter(P.creerParcours(), CARTE);
-  assert.deepEqual(compte.paliers.map(p => p.total), [40, 30, 42, 13]);
+  // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
+  assert.deepEqual(compte.paliers.map(p => p.total), [40, 31, 41, 13]);
   assert.equal(compte.total, 125);
 });
 
@@ -242,6 +246,9 @@ test("le rouge d'abord : la compétence ratée est entraînée avec l'aide le jo
   const J2 = plus(1);
   // A5-1 en route (boîte 2), due aujourd'hui ; A2-1 à apprendre après.
   let p = avecBoites({"A5-1": [2, J1], "A2-1": [3, plus(2)], "A2-2": [3, plus(2)], "M2-1": [3, plus(2)]});
+  // (Lot 7e-2 : A2-3 commencé — raté au test —, il s'apprend ; pas encore
+  // joué, il aurait son test.)
+  p.modules.A2.f[2] = 1;
   p = ouvrir(p, J1);
   assert.equal(types(p, J1)[0], "jour");
   p = repondre(p, "A5", 1, false, J1).parcours;
@@ -262,15 +269,16 @@ test("le rouge d'abord : la compétence ratée est entraînée avec l'aide le jo
   r = apprendre(p, "A2", 3, J1);
   p = r.parcours;
   assert.equal(r.finie, true, "le temps est passé");
-  // « Encore une séance » le même jour : rien de dû, la rouge est déjà entraînée ; la nouveauté suivante (A5-2) est à apprendre.
-  assert.deepEqual(file(ouvrir(p, J1), J1).etapes.map(e => `${e.type}:${e.module}-${e.niveau}`), ["apprends:A5-2"]);
+  // « Encore une séance » le même jour : rien de dû, la rouge est déjà entraînée ; la nouveauté suivante (A5-2).
+  // (Lot 7e-2 : pas encore jouée, elle a son test.)
+  assert.deepEqual(file(ouvrir(p, J1), J1).etapes, [{type: "test", module: "A5"}]);
   // Le lendemain : A5-1 est due ; ratée encore → J'apprends (lot 2 : il contient l'entraînement).
   let q = ouvrir(p, J2);
   assert.equal(types(q, J2)[0], "jour");
   q = repondre(q, "A5", 1, false, J2).parcours;
   assert.equal(q.modules.A5.a[0], 0);
   q = finirJour(q, J2).parcours;
-  assert.deepEqual(types(q, J2).slice(0, 2), ["apprends", "apprends"], "J'apprends A5-1 (la rouge), puis la nouveauté");
+  assert.deepEqual(types(q, J2).slice(0, 2), ["apprends", "test"], "J'apprends A5-1 (la rouge), puis la nouveauté (lot 7e-2 : son test)");
   assert.deepEqual(file(q, J2).etapes[0], {type: "apprends", module: "A5", niveau: 1});
   r = apprendre(q, "A5", 1, J2);
   q = r.parcours;
@@ -278,7 +286,7 @@ test("le rouge d'abord : la compétence ratée est entraînée avec l'aide le jo
   assert.equal(q.modules.A5.b[0], 1, "c'est son rattrapage : la boîte ne bouge pas");
   assert.equal(q.modules.A5.t[0], 1, "entraînée aujourd'hui");
   assert.equal(r.evenements.length, 0, "rien n'entre");
-  assert.deepEqual(file(q, J2).etapes[0], {type: "apprends", module: "A5", niveau: 2}, "puis la nouveauté du jour");
+  assert.deepEqual(file(q, J2).etapes[0], {type: "test", module: "A5"}, "puis la nouveauté du jour (lot 7e-2 : A5-2, son test)");
   // Juste le surlendemain : la boîte remonte, plus rien de rouge.
   const J3 = plus(2);
   let s = ouvrir(q, J3);
@@ -334,7 +342,8 @@ test("plusieurs rouges le même jour : toutes entraînées, 3 au plus par séanc
     q = entrainer(q, e.module, e.niveau, reussie(), J1, {genre: "rattrape"}).parcours;
   }
   assert.deepEqual(entrainees, ["A2-1", "A2-2", "M2-1"]);
-  assert.deepEqual(file(q, J1).etapes, [{type: "apprends", module: "A2", niveau: 3}], "puis la nouveauté");
+  // (Lot 7e-2 : A2-3, pas encore joué, a son test.)
+  assert.deepEqual(file(q, J1).etapes, [{type: "test", module: "A2"}], "puis la nouveauté");
   q = tempsPasse(q);
   r = apprendre(q, "A2", 3, J1);
   assert.equal(r.finie, true);
@@ -585,7 +594,8 @@ test("l'élève coincé : 3 échecs de suite, mise de côté 3 jours, signalée,
     assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: jour}), [], jour);
   });
   p = P.terminerCalculsDuJour(p, {aujourdhui: plus(2), carte: CARTE}).parcours;
-  assert.equal(file(p, plus(2)).etapes[0].type, "apprends", "la nouveauté du jour (A2-3) vient quand même");
+  // (Lot 7e-2 : A2-3, pas encore joué, a son test.)
+  assert.equal(file(p, plus(2)).etapes[0].type, "test", "la nouveauté du jour (A2-3) vient quand même");
   // Le jour où elle revient : pas dans Mes calculs du jour (J'apprends d'abord), rouge : J'apprends (lot 2 : en une étape).
   const J = plus(5);
   assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}).map(c => `${c.module}-${c.niveau}`), []);
@@ -642,8 +652,9 @@ test("la vraie carte (modules lots 1 à 5) : le parcours commence par A1, A10, A
   // Modules lot 6 : F2, F5, F6, F8 à leur place ; modules lot 6b : F1-1 et
   // F3 reprennent la leur (le palier 2 entier).
   // Carte v3 : A2-5 au CM1 ; A8-3, F5-3 réunis ; F9-1 (pas construit) sauté.
-  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(40, 69).map(c => `${c.module}-${c.niveau}`),
-    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "M12-1"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5");
+  // (Lot 7e-2 : F8-3 au CM1, après F5-2.)
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(40, 70).map(c => `${c.module}-${c.niveau}`),
+    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "F8-3", "M12-1"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5");
   assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 103, "lot 7a : D5, D6, D7 en plus");
   assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "avance"}]);
 });

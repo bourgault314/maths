@@ -51,7 +51,8 @@ const AUTRE_SORTE = Object.freeze({
   "A1-1": "taille : 10 = 8 + ?, la même paire écrite à l'envers",
   "A10-1": "taille", "A11-1": "taille", "A10-2": "taille", "A11-2": "taille", "A11-3": "taille",
   "A2-1": "taille", "A6-1": "taille", "M6-1": "taille", "M6-2": "taille", "M7-1": "taille", "M7-3": "taille",
-  "D2-1": "taille", "M12-2": "taille", "C1-3": "taille", "F3-1": "taille : un partage", "F3-2": "taille : un partage", "F3-3": "taille : un partage",
+  "D2-1": "taille", "M12-2": "taille", "C1-3": "taille", "F3-1": "taille : un partage", "F3-2": "taille : un partage",
+  // (Lot 7e-2 : F3-3, la leçon et J'écris sur un quart, la moitié de la moitié.)
   "D1-2": "taille : chaque morceau dans sa colonne", "D1-3": "taille : chaque morceau dans sa colonne",
   "M4-1": "décidé : J'écris sur la division (remarque 61)", "M4-2": "décidé : J'écris sur la division (remarque 61)",
   "F1-1": "décidé : 0,7 = 7/?", "F1-2": "décidé : 3/4 = ?/100",
@@ -83,7 +84,8 @@ test("les leçons du cahier 3a : la sorte du calcul montré et de J'écris", () 
     const {montre, ecris} = CORE.niveauDe(cle).niveau.apprends.calculs;
     assert.equal(montre.forme, "double", cle);
     assert.equal(ecris.forme, "double", cle);
-    assert.match(CORE.niveauDe(cle).niveau.apprends.autre.phrase, /La moitié, c’est le nombre qu’on double/, cle);
+    // (Lot 7e-2 : M1-3, la moitié se découpe aussi — « moitié de 46 = 20 + 3 = 23 ».)
+    assert.match(CORE.niveauDe(cle).niveau.apprends.autre.phrase, cle === "M1-3" ? /Pour la moitié, je coupe aussi en morceaux/ : /La moitié, c’est le nombre qu’on double/, cle);
   });
   // × 10 et ÷ 10 (décision 6).
   assert.equal(espaces(CORE.niveauDe("M2-1").niveau.apprends.exemple.texte), "45 × 10");

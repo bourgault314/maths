@@ -616,7 +616,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // prof/index.php seul change (avant : cours-appli-3).
   // Puis le lot 7e-1 « Mise en cohérence avec les textes » de Défi calcul (15/11/2026) :
   // le cœur copié dans prof/ change (avant : semaine-precedente).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-7e-1-coherence$/m);
+  // Puis le lot 7e-2 de Défi calcul (15/11/2026) : le cœur et le moteur
+  // copiés dans prof/ changent (avant : defi-calcul-lot-7e-1-coherence).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-7e-2-coherence$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });

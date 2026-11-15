@@ -130,8 +130,10 @@ test("A2 : chaque « À retenir » écrit son calcul ; A2-2, les paires de dizai
     assert.equal(espaces(deux.calcul), calcul, cle);
   });
   const a = apprends("A2-2");
-  assert.equal(espaces(a.bilan), "Les dizaines qui font 100, je les sais par cœur : 40 + 60 = 100.");
-  assert.deepEqual(textesSvg(AIDES.dessinerImage(a.image)), ["10 + 90 = 100", "20 + 80 = 100", "30 + 70 = 100", "40 + 60 = 100", "50 + 50 = 100"]);
+  // (Lot 7e-2 : les dizaines qui font 100 se retrouvent avec ce qui fait 10.)
+  assert.equal(espaces(a.bilan), "Les dizaines qui font 100, je les retrouve avec ce qui fait 10 : 40 + 60 = 100.");
+  // (Lot 7e-2 : une procédure ; le dessin, la seule paire montrée, en perles de 10.)
+  assert.deepEqual(textesSvg(AIDES.dessinerImage(a.image)), ["40 + 60 = 100"]);
   assert.ok(!/\d et \d/.test(a.bilan));
   // « jusqu'au bout » : vague, remplacé par le nombre visé.
   NIVEAUX.forEach(({niveau, cle}) => {
@@ -197,9 +199,9 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261115-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261115-3/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-3/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

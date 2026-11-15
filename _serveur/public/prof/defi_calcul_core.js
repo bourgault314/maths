@@ -1418,14 +1418,15 @@
     "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2",
     "F8-1", "A7-1", "M1-2", "A10-3", "A11-3", "F8-2", "A5-2", "A6-2", "M3-1", "A7-2",
     "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2",
-    // palier 2 : 30 compétences
+    // palier 2 : 31 compétences (lot 7e-2 : F8-3 arrive du CM2)
     "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3",
     "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1",
-    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "M12-1", "F9-1",
-    // palier 3 : 42 compétences
+    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "F8-3", "M12-1",
+    "F9-1",
+    // palier 3 : 41 compétences
     "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3",
     "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2",
-    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "F8-3", "D9-1", "M11-2",
+    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "M11-2",
     "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
     "F9-2", "C4-2",
     // palier 4 : 13 compétences
@@ -1440,7 +1441,8 @@
     erreurs: A2_ERREURS, image: a2Image, aide: a2Aide, manipulation: calcul => a2Perles(calcul), difficulte: a2Difficulte,
     niveaux: [
       {
-        n: 1, titre: "à la dizaine suivante", nom: "Compléments à la dizaine", palier: 1, type: "F",
+        // Lot 7e-2 : une procédure (calcul mental CP, p. 4), plus une carte.
+        n: 1, titre: "à la dizaine suivante", nom: "Compléments à la dizaine", palier: 1, type: "P",
         composer: a2Niveau1,
         imposes: [a2Complement(1, 433, 440, {suivante: true})],
         apprends: a2Apprends({
@@ -1451,15 +1453,20 @@
         })
       },
       {
-        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", palier: 1, type: "F",
+        // Lot 7e-2 : une procédure (choix de Gwenaël du 15/11 : aucun texte
+        // ne liste les compléments à 100 ; on va à la dizaine, puis à 100).
+        n: 2, titre: "à 100\u00a0: dizaines et nombres en 5", nom: "Compléments à 100\u00a0: dizaines", palier: 1, type: "P",
         composer: a2Niveau2,
         imposes: [a2Complement(2, 75, 100), a2Difference(2, 35, 100)],
         apprends: a2Apprends({
           manipule: {a: 40, cible: 100}, represente: {a: 65, cible: 100}, ecris: {a: 20, cible: 100},
           consigneManipule: "Pousse les rangées qui manquent, 10 perles d’un coup.",
           consigne: "Je vais à la dizaine, puis je compte les dizaines jusqu’à 100.",
-          bilan: "Les dizaines qui font 100, je les sais par cœur : 40 + 60 = 100.",
-          imageRetenir: {outil: "paires", total: 100, perles: false, paires: [[10, 90], [20, 80], [30, 70], [40, 60], [50, 50]]}
+          // Lot 7e-2 : les dizaines qui font 100 se retrouvent (4 + 6 = 10).
+          // Une procédure : plus de liste des paires à apprendre ; le dessin
+          // est celui de l'ancienne carte, 4 perles et 6 perles de 10.
+          bilan: "Les dizaines qui font 100, je les retrouve avec ce qui fait 10 : 40 + 60 = 100.",
+          imageRetenir: {outil: "paires", total: 100, perles: true, pas: 10, paires: [[40, 60]]}
         })
       },
       {
@@ -2169,7 +2176,9 @@
         })
       },
       {
-        n: 3, titre: "différences et nombre manquant", nom: "Différences et trous jusqu’à 20", palier: 1, type: "F",
+        // Lot 7e-2 : une procédure (calcul mental CP, p. 3 : les égalités
+        // avec « − » ne sont pas des faits mémorisés), plus une carte.
+        n: 3, titre: "différences et nombre manquant", nom: "Différences et trous jusqu’à 20", palier: 1, type: "P",
         composer: a1Niveau3,
         imposes: [ligne("A1", 3, 14, -6), lignePlus("A1", 3, "complement", 7, 5)],
         apprends: plusApprends({
@@ -3582,6 +3591,11 @@
     famille: "M", construit: true,
     aide_entraine: "barres",
     erreurs: M1_ERREURS, image: m1Image, aide: m1Aide,
+    // Lot 7e-2 (choix de Gwenaël) : au premier calcul de moitié, le dessin
+    // de l'annonce — 46 = 40 + 6, chaque morceau coupé en deux (20 et 3) ;
+    // l'élève les réunit (20 + 3 = 23).
+    aideNouveau: calcul => (estMoitie(calcul) && morceauxDe(calcul.donnees.n).length > 1
+      ? Object.assign(m1Aide(calcul), {trouves: morceauxDe(calcul.donnees.n).map((_, i) => i), fini: false}) : null),
     // Lot 3a : le boulier pour le double, au niveau 1 seulement.
     manipulation: calcul => (calcul.niveau === 1 ? m1Perles(calcul) : null), difficulte: m1Difficulte,
     niveaux: [
@@ -3630,7 +3644,10 @@
           consigneEcris: "double de 36 = 2 × 30 + 2 × 6",
           etapes: [["2 × 30 = ?", 60], ["2 × 6 = ?", 12], ["double de 36 = ?", 72]],
           bilan: "Pour le double, je double chaque morceau : double de 470 = 2 × 400 + 2 × 70 = 940.",
-          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 940 = 470"}
+          // Lot 7e-2 (choix de Gwenaël, calcul mental CP p. 5 et CE1 p. 9) :
+          // la moitié se découpe aussi (46 = 40 + 6) ; annoncée avec son
+          // dessin au premier calcul de moitié (NOUVEAUTES).
+          autre: {phrase: "Pour la moitié, je coupe aussi en morceaux :", calcul: "moitié de 46 = 20 + 3 = 23"}
         })
       }
     ]
@@ -4095,9 +4112,11 @@
         ecris: m6Calcul(0, 4, 37, true),
         consigne: "Je double 23, puis je double encore.",
         consigneEcris: "4 × 37 = 2 × 2 × 37",
-        etapes: [["2 × 37 = ?", 74], ["4 × 37 = ?", 148]],
+        // Lot 7e-2 (choix de Gwenaël, livret CE2 p. 20 ; calcul mental CE2,
+        // p. 11) : les doubles successifs, chacun sur le résultat d'avant.
+        etapes: [["2 × 37 = ?", 74], ["2 × 74 = ?", 148]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
-        bilan: "× 4, c’est le double du double : 23 × 4 = 46 × 2 = 92."
+        bilan: "× 4, c’est le double du double : 2 × 23 = 46. 23 × 4 = 2 × 46 = 92."
       })
     },
     {
@@ -4110,9 +4129,9 @@
         ecris: m6Calcul(0, 8, 27, true),
         consigne: "Je double 15, puis encore, puis encore.",
         consigneEcris: "8 × 27 = 2 × 2 × 2 × 27",
-        etapes: [["2 × 27 = ?", 54], ["4 × 27 = ?", 108], ["8 × 27 = ?", 216]],
+        etapes: [["2 × 27 = ?", 54], ["2 × 54 = ?", 108], ["2 × 108 = ?", 216]],
         dessins: (calcul, n) => barresFoisDessins(m6Image(calcul), n),
-        bilan: "× 8, c’est doubler trois fois : 15 × 8 = 30 × 4 = 60 × 2 = 120."
+        bilan: "× 8, c’est doubler trois fois : 2 × 15 = 30. 2 × 30 = 60. 15 × 8 = 2 × 60 = 120."
       })
     }
   ];
@@ -4642,8 +4661,10 @@
           ecris: m7Calcul(0, 58, 5, true),
           consigne: "34 × 5, c’est la moitié de 34 × 10.",
           consigneEcris: "5 × 58 = 58 × 10 ÷ 2",
-          etapes: [["58 × 10 = ?", 580], ["5 × 58 = ?", 290]],
-          bilan: "× 5, c’est × 10 puis la moitié : 46 × 5 = 460 ÷ 2 = 230."
+          // Lot 7e-2 (choix de Gwenaël, calcul mental CM1) : la moitié
+          // s'écrit sur le résultat de × 10.
+          etapes: [["58 × 10 = ?", 580], ["580 ÷ 2 = ?", 290]],
+          bilan: "× 5, c’est × 10 puis la moitié : 46 × 10 = 460. 46 × 5 = 460 ÷ 2 = 230."
         })
       },
       {
@@ -4656,8 +4677,8 @@
           ecris: m7Calcul(0, 89, 5, true),
           consigne: "143 × 5, c’est la moitié de 143 × 10.",
           consigneEcris: "5 × 89 = 89 × 10 ÷ 2",
-          etapes: [["89 × 10 = ?", 890], ["5 × 89 = ?", 445]],
-          bilan: "× 5, c’est × 10 puis la moitié : 37 × 5 = 370 ÷ 2 = 185."
+          etapes: [["89 × 10 = ?", 890], ["890 ÷ 2 = ?", 445]],
+          bilan: "× 5, c’est × 10 puis la moitié : 37 × 10 = 370. 37 × 5 = 370 ÷ 2 = 185."
         })
       },
       {
@@ -4670,8 +4691,8 @@
           ecris: m7Calcul(0, 37, 50, true),
           consigne: "18 × 50, c’est la moitié de 18 × 100.",
           consigneEcris: "50 × 37 = 37 × 100 ÷ 2",
-          etapes: [["37 × 100 = ?", 3700], ["50 × 37 = ?", 1850]],
-          bilan: `× 50, c’est × 100 puis la moitié : 24 × 50 = 2${ESPACE_FINE}400 ÷ 2 = 1${ESPACE_FINE}200.`
+          etapes: [["37 × 100 = ?", 3700], [`3${ESPACE_FINE}700 ÷ 2 = ?`, 1850]],
+          bilan: `× 50, c’est × 100 puis la moitié : 24 × 100 = 2${ESPACE_FINE}400. 24 × 50 = 2${ESPACE_FINE}400 ÷ 2 = 1${ESPACE_FINE}200.`
         })
       }
     ]
@@ -7942,6 +7963,12 @@
   // Niveaux 1 et 2 : dénominateurs 3, 5 à 10, 12 (jamais 2 et 4 : F2) ;
   // niveau 3 : des soustractions seulement (« 3 + 2/5 », c'est F5-2),
   // dénominateurs de 2 à 9 (jamais 10 : D1), au plus 30 parts.
+  // Lot 7e-2 (choix de Gwenaël du 15/11 ; programme du cycle 3, p. 6 ;
+  // exemples de réussite du CM1, p. 5-6) : le niveau 3 passe au CM1 et
+  // reçoit les sommes et différences au-delà de 1 (5/3 + 2/3, 7/5 − 3/5),
+  // sur la barre avec l'unité marquée — dénominateurs 3, 5 à 9 (2 et 4 :
+  // F2 ; 10 : D1). Le niveau 1 reçoit les sommes qui tombent pile sur 1
+  // (2/5 + 3/5 = □) : au cycle 2, rien au-delà de 1.
   const F8_CODES = Object.freeze({somme: 1, difference: 2, "un-moins": 3, complement: 4, "entier-moins": 5, "moins-entier": 6, unitaires: 7, fois: 8, "un-moins-plusieurs": 9});
   function f8Calcul(niveau, forme, texte) {
     const c = fracCalcul("F8", niveau, forme, texte, F8_CODES[forme]);
@@ -7968,6 +7995,8 @@
       const sommes = [];
       const differences = [];
       F8_DENS.forEach(d => entre(1, d - 2).forEach(a => entre(1, d - 1 - a).forEach(b => sommes.push(f8Calcul(1, "somme", `${a}/${d} + ${b}/${d} = ${CASE}/${d}`)))));
+      // Lot 7e-2 : pile sur 1 (« 2/5 + 3/5 = □ », la réponse est 1).
+      F8_DENS.forEach(d => entre(1, d - 1).forEach(a => sommes.push(f8Calcul(1, "somme", `${a}/${d} + ${d - a}/${d} = ${CASE}`))));
       F8_DENS.forEach(d => entre(2, d - 1).forEach(a => entre(1, a - 1).forEach(b => differences.push(f8Calcul(1, "difference", `${a}/${d} − ${b}/${d} = ${CASE}/${d}`)))));
       // Lot « couverture » (CE1) : 1/8 + 1/8 + 1/8 = □/8, et 3 × 1/8.
       const unitaires = [];
@@ -7995,7 +8024,22 @@
         entre(1, Math.floor(a / d)).forEach(n => moinsEntier.push(f8Calcul(3, "moins-entier", `${a}/${d} − ${n} = ${CASE}/${d}`)));
       });
     });
-    return Object.freeze({"entier-moins": entierMoins, "moins-entier": moinsEntier});
+    // Lot 7e-2 : au-delà de 1, toujours sur la barre (30 parts au plus) ;
+    // jamais un entier pile (6/3 : « entier moins une fraction » s'en
+    // charge), ni un terme entier.
+    const sommes = [];
+    const differences = [];
+    const rompu = (x, d) => x % d !== 0;
+    [3, 5, 6, 7, 8, 9].forEach(d => {
+      const termes = entre(1, 2 * d - 1).filter(x => rompu(x, d));
+      termes.forEach(a => termes.forEach(b => {
+        if (a + b > d && rompu(a + b, d) && tientSurLaBarre((a + b) / d, d)) sommes.push(f8Calcul(3, "somme", `${a}/${d} + ${b}/${d} = ${CASE}/${d}`));
+      }));
+      entre(d + 1, 3 * d - 1).filter(a => rompu(a, d) && tientSurLaBarre(a / d, d)).forEach(a => {
+        entre(1, a - 1).filter(b => rompu(b, d)).forEach(b => differences.push(f8Calcul(3, "difference", `${a}/${d} − ${b}/${d} = ${CASE}/${d}`)));
+      });
+    });
+    return Object.freeze({"entier-moins": entierMoins, "moins-entier": moinsEntier, somme: sommes, difference: differences});
   }
   const F8_VIVIERS = Object.freeze({1: f8Vivier(1), 2: f8Vivier(2), 3: f8Vivier(3)});
   const f8 = (niveau, texte) => trouverDans(F8_VIVIERS, "F8", niveau, texte);
@@ -8086,8 +8130,10 @@
         })
       },
       {
-        n: 3, titre: "entier et fraction", nom: "Entier moins une fraction", palier: 3, type: "P",
-        composer: vivierNiveau(F8_VIVIERS[3], [6, 4]),
+        // Lot 7e-2 : au CM1 (palier 2), avec les sommes et différences
+        // au-delà de 1 ; d'où son nom.
+        n: 3, titre: "au-delà de 1\u00a0: entier moins une fraction, sommes, différences", nom: "Fractions au-delà de 1", palier: 2, type: "P",
+        composer: vivierNiveau(F8_VIVIERS[3], [4, 2, 2, 2]),
         imposes: [f8(3, "3 − 1/2 = □/2"), f8(3, "11/3 − 2 = □/3")],
         apprends: fracApprends({
           fiche: "F8",
@@ -8461,17 +8507,19 @@
 
   // ------------------------------------------------ F3 : fraction unitaire d'une quantité
   //
-  // « 1/4 de 12 billes = □ », « 1/5 de 60 kg = □ kg » : l'unité après la
-  // case pour une mesure, pas pour des objets (billes, élèves). Une
-  // écriture par partage (« part-4 » : on partage en 4). La clé : l'unité
-  // (son numéro), d, N.
+  // « 1/4 de 12 billes, c’est □ billes. », « 1/5 de 60 kg, c’est □ kg. »
+  // (lot 7e-2, choix de Gwenaël du 15/11 : en mots, sans signe =, comme
+  // l'exemple de réussite du CM1, p. 6) : l'unité après la case, pour les
+  // objets comme pour les mesures. Une écriture par partage (« part-4 » :
+  // on partage en 4). La clé : l'unité (son numéro), d, N.
   const F3_UNITES = Object.freeze(["billes", "élèves", "g", "kg", "m", "€", "L", "cm"]);
   const F3_OBJETS = Object.freeze(["billes", "élèves"]);
   const F3_MESURES = Object.freeze(["g", "kg", "m", "€", "L", "cm"]);
   function f3Calcul(niveau, d, N, unite) {
     const objet = F3_OBJETS.includes(unite);
-    const tout = `${f(N)} ${unite}`;
-    const texte = `1/${d} de ${tout} = ${CASE}${objet ? "" : ` ${unite}`}`;
+    // (Lot 7e-2 : un nombre et son unité ne se séparent jamais.)
+    const tout = `${f(N)}\u00a0${unite}`;
+    const texte = `1/${d} de ${tout}, c’est ${CASE}\u00a0${unite}.`;
     const r = exact(N / d);
     const q = Math.floor(N / d);
     const reste = N - q * d;
@@ -8522,12 +8570,17 @@
     });
   }
   const F3_VIVIERS = Object.freeze({1: f3Vivier(1), 2: f3Vivier(2), 3: f3Vivier(3)});
-  const f3 = (niveau, texte) => trouverDans(F3_VIVIERS, "F3", niveau, texte);
+  // (Lot 7e-2 : un calcul du vivier par son début, « 1/2 de 14 billes ».)
+  const f3 = (niveau, debut) => {
+    const trouve = Object.values(F3_VIVIERS[niveau]).flat().find(c => sansEspace(c.texte).startsWith(`${debut},`));
+    if (!trouve) throw new Error(`F3-${niveau} : ${debut}`);
+    return trouve;
+  };
 
   // Les dessins : le tout en haut, les parts dessous, la 1re part cherchée.
   const f3Aide = calcul => Object.freeze({outil: "tout-parts", tout: calcul.f3.tout, d: calcul.f3.d, trouve: null});
   const f3Image = calcul => Object.freeze({outil: "tout-parts", tout: calcul.f3.tout, d: calcul.f3.d, trouve: Object.freeze({texte: f(calcul.reponse), vert: false})});
-  const f3Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  const f3Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}`);
   // Les billes (Je manipule, et l'entraînement après deux erreurs) : jusqu'à
   // 30 objets, un résultat entier, jamais au niveau 3.
   const F3_BILLES_MAX = 30;
@@ -8539,7 +8592,8 @@
       outil: "billes", n: N, d, tout, texte: calc,
       consigne: fr(`Partage en ${d} parts égales : touche le tas.`),
       consigneFin: fr(`1/${d}, c’est une part sur ${d}.`), refus: null,
-      traces: Object.freeze([Object.freeze({apres: N / d, attente: `${calc} = …`, texte: `${calc} = ${f(calcul.reponse)} ${unite}`})])
+      // (Lot 7e-2 : en mots, sans signe =.)
+      traces: Object.freeze([Object.freeze({apres: N / d, attente: `${calc}, c’est …`, texte: `${calc}, c’est ${f(calcul.reponse)} ${unite}.`})])
     });
   }
   const f3Difficulte = calcul => calcul.f3.d * 1000 + calcul.f3.N;
@@ -8584,6 +8638,33 @@
     })
   ]);
 
+  // Lot 7e-2 (choix de Gwenaël du 15/11) : J'écris en mots, sans signe =.
+  // « Je partage 500 g en 10 parts égales. » puis « Une part, c'est □ g. »
+  // et « 1/10 de 500 g, c'est □ g. » ; un quart (niveau 3) : la moitié de
+  // la moitié (« La moitié de 14 L, c'est □ L. », « La moitié de 7 L… »).
+  // null : ce calcul ne se fait pas ainsi (un reste, un quart qui
+  // demanderait des centièmes). Les mots d'une étape gardent leurs espaces
+  // insécables : un morceau par colonne, la case sous la case.
+  function f3EnMots(calcul, quart = false) {
+    const {d, N, unite} = calcul.f3;
+    const lie = texte => texte.replace(/ /g, "\u00a0");
+    const avec = x => `${f(x)}\u00a0${unite}`;
+    const fin = `? ${lie(`${unite}.`)}`;
+    if (quart) {
+      if (d !== 4 || N % 4 !== 2) return null;
+      return {
+        consigneEcris: "Un quart, c’est la moitié de la moitié.",
+        etapes: [[`${lie(`La moitié de ${avec(N)}, c’est`)} ${fin}`, N / 2], [`${lie(`La moitié de ${avec(N / 2)}, c’est`)} ${fin}`, exact(N / 4)],
+          [`${lie(`1/4 de ${avec(N)}, c’est`)} ${fin}`, exact(N / 4)]]
+      };
+    }
+    if (N % d) return null;
+    return {
+      consigneEcris: `Je partage ${avec(N)} en ${d} parts égales.`,
+      etapes: [[`${lie("Une part, c’est")} ${fin}`, N / d], [`${lie(`1/${d} de ${avec(N)}, c’est`)} ${fin}`, N / d]]
+    };
+  }
+
   // J'apprends de F3 : les billes sur le premier calcul (niveaux 1 et 2),
   // (Dans les étapes de J'écris, « 500 g » s'écrit avec une espace
   // insécable : un seul morceau, et le « = » reste sous le « = ».)
@@ -8594,7 +8675,7 @@
     const n = etapes.length;
     const dessin = (k, revele) => Object.freeze(Object.assign({}, f3Aide(ecris), revele || k >= n ? {trouve: Object.freeze({texte: f(ecris.reponse), vert: !revele})} : {}));
     return Object.freeze({
-      exemple: Object.freeze({texte: (premier.f3.objet ? premier.texte.replace(` = ${CASE}`, "") : premier.texte.replace(CASE, "?")), reponse: premier.reponse}),
+      exemple: Object.freeze({texte: premier.texte.replace(CASE, "?"), reponse: premier.reponse}),
       manipule: manipule ? f3Manipulation(manipule) : null,
       represente: Object.freeze({
         outil: "tout-parts", consigne: fr(consigne),
@@ -8624,42 +8705,43 @@
       {
         n: 1, titre: "demi, quart, dixième", nom: "Demi, quart, dixième d’une quantité", palier: 2, type: "P",
         composer: vivierNiveau(F3_VIVIERS[1], [4, 3, 3]),
-        imposes: [f3(1, "1/2 de 14 billes = □"), f3(1, "1/10 de 80 m = □ m")],
+        imposes: [f3(1, "1/2 de 14 billes"), f3(1, "1/10 de 80 m")],
         apprends: f3Apprends({
           manipule: pourApprendre(f3Calcul(1, 4, 12, "billes")),
           represente: pourApprendre(f3Calcul(1, 2, 18, "billes")),
           ecris: pourApprendre(f3Calcul(1, 10, 500, "g")),
-          consigne: "18 billes partagées en 2 parts égales.",
-          consigneEcris: "1/10 de 500 g = 500 g ÷ 10",
-          etapes: [["500\u00a0g ÷ 10 = ? g", 50], ["1/10 de 500\u00a0g = ? g", 50]],
-          bilan: "1/4 de 12 billes, c’est 12 ÷ 4 = 3 billes."
+          consigne: "18\u00a0billes partagées en 2 parts égales.",
+          // Lot 7e-2 (choix de Gwenaël) : en mots — « Je partage 500 g en
+          // 10 parts égales : une part, c'est … g. »
+          ...f3EnMots(f3Calcul(1, 10, 500, "g")),
+          bilan: "Pour 1/4 de 12\u00a0billes, je partage en 4 parts égales : une part, c’est 3\u00a0billes."
         })
       },
       {
         n: 2, titre: "tiers, cinquième, sixième…", nom: "Tiers, cinquième… d’une quantité", palier: 2, type: "P",
         composer: vivierNiveau(F3_VIVIERS[2], [3, 3, 2, 2]),
-        imposes: [f3(2, "1/3 de 21 billes = □"), f3(2, "1/8 de 40 L = □ L")],
+        imposes: [f3(2, "1/3 de 21 billes"), f3(2, "1/8 de 40 L")],
         apprends: f3Apprends({
           manipule: pourApprendre(f3Calcul(2, 3, 18, "billes")),
           represente: pourApprendre(f3Calcul(2, 5, 60, "kg")),
           ecris: pourApprendre(f3Calcul(2, 6, 42, "€")),
-          consigne: "60 kg partagés en 5 parts égales.",
-          consigneEcris: "1/6 de 42 € = 42 € ÷ 6",
-          etapes: [["42\u00a0€ ÷ 6 = ? €", 7], ["1/6 de 42\u00a0€ = ? €", 7]],
-          bilan: "1/3 de 18 billes, c’est 18 ÷ 3 = 6 billes."
+          consigne: "60\u00a0kg partagés en 5 parts égales.",
+          ...f3EnMots(f3Calcul(2, 6, 42, "€")),
+          bilan: "Pour 1/3 de 18\u00a0billes, je partage en 3 parts égales : une part, c’est 6\u00a0billes."
         })
       },
       {
         n: 3, titre: "résultat non entier", nom: "Part d’une quantité\u00a0: résultat décimal", palier: 2, type: "P", virgule: true,
         composer: vivierNiveau(F3_VIVIERS[3], [3, 3, 2, 2]),
-        imposes: [f3(3, "1/4 de 6 kg = □ kg"), f3(3, "1/5 de 8 € = □ €")],
+        imposes: [f3(3, "1/4 de 6 kg"), f3(3, "1/5 de 8 €")],
         apprends: f3Apprends({
           represente: pourApprendre(f3Calcul(3, 4, 10, "m")),
-          ecris: pourApprendre(f3Calcul(3, 2, 7, "L")),
-          consigne: "10 m partagés en 4 parts égales.",
-          consigneEcris: "1/2 de 7 L = 7 L ÷ 2",
-          etapes: [["6\u00a0L ÷ 2 = ? L", 3], ["1\u00a0L ÷ 2 = ? L", 0.5], ["1/2 de 7\u00a0L = ? L", 3.5]],
-          bilan: "1/4 de 10 m, c’est 10 ÷ 4 = 2,5 m."
+          ecris: pourApprendre(f3Calcul(3, 4, 14, "L")),
+          consigne: "Un quart, c’est la moitié de la moitié.",
+          // Lot 7e-2 (choix de Gwenaël, exemple de réussite du CM1, p. 6) :
+          // 1/4 de 10 m, la moitié puis la moitié (10 m → 5 m → 2,5 m).
+          ...f3EnMots(f3Calcul(3, 4, 14, "L"), true),
+          bilan: "Pour 1/4 de 10\u00a0m, je prends la moitié de la moitié : 10\u00a0m → 5\u00a0m → 2,5\u00a0m."
         })
       }
     ]
@@ -8930,7 +9012,8 @@
     "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
     "C1-2": parFormes(["(a − b) × (c + d)", "fois-paires"], ["(a × b) − (c + d)", "moins-paires"]),
     "M10-2": parFormes(["4 × a × 25", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["4 × a × 25 = a × □", "trou-regroupe"]),
-    "F8-3": parFormes(["entier − a/b", "entier-moins"], ["a/b − entier", "moins-entier"]),
+    // Lot 7e-2 : au-delà de 1 (5/3 + 2/3, 7/5 − 3/5), au CM1.
+    "F8-3": parFormes(["a/b + c/b", "somme"], ["a/b − c/b", "difference"], ["entier − a/b", "entier-moins"], ["a/b − entier", "moins-entier"]),
     "F6-3": parFormes(["a/b = c/□", "denominateur"], ["a/□ = c/d", "denominateur-gauche"]),
     "C3-3": parFormes(["a + b = □ + c", "egalite-somme-grande"], ["a − b = □ − c", "egalite-difference-grande"]),
     "M12-2": [["dividende à 2 chiffres", (c, d) => c.forme === "division" && d.n < 100], ["dividende à 3 chiffres", formeEst("division")], ["a × □ = b", toutes]],
@@ -8958,41 +9041,68 @@
   const paires10 = avecZero => rangee(avecZero ? 0 : 1, avecZero ? 10 : 9).map(a => `${a} + ${10 - a} = 10`);
   const nb = formaterNombre;
   const gele = objet => { Object.values(objet).forEach(v => { if (v && typeof v === "object") gele(v); }); return Object.freeze(objet); };
+  // Lot 7e-2 (choix de Gwenaël du 15/11 ; inventaire dans la notice du
+  // lot) : une carte a deux parties. « Je le sais par cœur » : le socle des
+  // textes (calcul mental CP-CM2, p. 3-10 ; exemples de réussite CM1 p. 8,
+  // CM2 p. 8). « Je le retrouve » : ce que l'appli demande en plus, avec le
+  // petit calcul qui y mène (`chemin`, écrit au-dessus de son bloc). Un bloc
+  // porte sa partie (`partie`) ; une carte sans extension n'a qu'une partie
+  // (sans titre). « Différences et trous jusqu'à 20 » et « Compléments à la
+  // dizaine » sont des procédures (calcul mental CP, p. 3 et 4) : plus de
+  // carte. Puis « Compléments à 100 : dizaines » aussi (choix de Gwenaël
+  // du 15/11 après la planche : aucun texte ne les liste) — 12 cartes.
+  const coeurDe = blocs => blocs.map(bloc => Object.assign({partie: "coeur"}, bloc));
+  const retrouveDe = blocs => blocs.map(bloc => Object.assign({partie: "retrouve"}, bloc));
+  const doubles = ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true});
   const PAR_COEUR = gele({
     // Lot 3b (écarts relevés par le 3a) : chaque carte montre tous les
     // calculs que le niveau demande — les sommes jusqu'à 10 (4 + 3), « + 10 »,
     // les différences de 1 (7 − 6) ; × 1 et × 10 aux tables ; les sommes
     // de quarts qui passent 1 ; les centièmes, millièmes, dixièmes.
     // (A1-1 : la table jusqu'à 10, les paires qui font 10 en couleur.)
-    "A1-1": {titre: "Les sommes jusqu’à 10", blocs: [{liste: ["En orange, les paires qui font 10."], colonnes: 1},
-      {table: tablePlus(rangee(0, 10), rangee(0, 10)).map((l, i) => l.map((v, j) => (!i || !j ? v : v > 10 ? "" : v === 10 ? {texte: "10", fort: true} : v)))}]},
-    "A1-2": {titre: "La table d’addition", blocs: [{table: tablePlus(rangee(1, 10), rangee(1, 10))}]},
-    "A1-3": {titre: "La table d’addition, aussi à l’envers", blocs: [{table: tablePlus(rangee(1, 10), rangee(1, 10))}]},
-    "A2-1": {titre: "Les unités qui font 10", blocs: [{liste: paires10(false), colonnes: 2}]},
-    "A2-2": {titre: "Ce qui fait 100", blocs: [{liste: [10, 5, 20, 15, 30, 25, 40, 35, 50, 45].map(a => `${a} + ${100 - a} = 100`), colonnes: 2}]},
-    "M1-1": {titre: "Sous chaque nombre, son double", blocs: [
+    "A1-1": {titre: "Les sommes jusqu’à 10", blocs: coeurDe([{liste: ["En orange, les paires qui font 10."], colonnes: 1},
+      {table: tablePlus(rangee(0, 10), rangee(0, 10)).map((l, i) => l.map((v, j) => (!i || !j ? v : v > 10 ? "" : v === 10 ? {texte: "10", fort: true} : v)))}])},
+    "A1-2": {titre: "La table d’addition", blocs: coeurDe([{table: tablePlus(rangee(1, 10), rangee(1, 10))}])},
+    "M1-1": {titre: "Sous chaque nombre, son double", blocs: coeurDe([
       {table: [rangee(1, 10), rangee(1, 10).map(n => 2 * n)], ligneTete: true},
       {table: [rangee(11, 20), rangee(11, 20).map(n => 2 * n)], ligneTete: true},
       // (Lot 3a : 25, 35, 45 aussi — l'appli demande la moitié de 50, 70, 90.)
-      {table: [[25, 30, 35, 40, 45, 50], [50, 60, 70, 80, 90, 100]], ligneTete: true}]},
+      {table: [[25, 30, 35, 40, 45, 50], [50, 60, 70, 80, 90, 100]], ligneTete: true}])},
     // Lot 3a : tous les doubles que l'appli demande (70, les centaines, 750,
     // 1 000…), comme la carte du niveau 1 : sous chaque nombre, son double.
+    // Lot 7e-2 : le socle du CE2 (calcul mental, p. 10), puis le reste.
     "M1-2": {titre: "Sous chaque nombre, son double", blocs: [
-      [25, 35, 45, 75, 60, 70, 80, 90], [100, 200, 300, 400, 500], [600, 700, 800, 900, 1000],
-      [150, 250, 350, 450, 750, 1500, 2500]].map(ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true}))},
-    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: [{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7"], colonnes: 1}]},
-    "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: [{table: tableFois([6, 7, 8, 9, 10], [6, 7, 8, 9, 10])}]},
+      ...coeurDe([doubles([25, 35, 45, 60, 75, 100, 150]), doubles([200, 250, 300, 400, 500, 600])]),
+      ...retrouveDe([
+        {chemin: `double\u00a0de\u00a0${nb(2500)}\u00a0= ${"double de 2000 + double de 500".replace(/ /g, "\u00a0").replace("2000", nb(2000))}`, ...doubles([70, 80, 90, 350, 450, 750])},
+        doubles([700, 800, 900, 1000, 1500, 2500])])]},
+    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: coeurDe([{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7"], colonnes: 1}])},
+    "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: coeurDe([{table: tableFois([6, 7, 8, 9, 10], [6, 7, 8, 9, 10])}])},
     "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
-      {table: tableFois([25], rangee(2, 8))},
-      {liste: ["60 = 2 × 30 = 3 × 20 = 4 × 15 = 5 × 12 = 6 × 10", "100 = 2 × 50 = 4 × 25 = 5 × 20"], colonnes: 1}]},
-    "F2-1": {titre: "Demis et quarts", blocs: [{liste: ["1 = 2/2 = 4/4", "1/2 = 2/4", "1/4 + 1/4 = 1/2", "1/2 + 1/2 = 1", "1 − 1/2 = 1/2", "1 − 1/4 − 1/4 = 1/2"], colonnes: 2}]},
-    "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4",
-      "3/4 + 1/2 = 5/4", "3/4 + 3/4 = 6/4"], colonnes: 2}]},
-    "F1-1": {titre: "Dixièmes et centièmes", blocs: [{liste: rangee(1, 9).map(n => `${n}/10 = 0,${n}`), colonnes: 3}, {liste: rangee(1, 9).map(n => `${n}/100 = 0,0${n}`), colonnes: 3}]},
-    "F1-2": {titre: "Demis, quarts, millième", blocs: [{liste: ["1/2 = 0,5", "3/2 = 1,5", "1/4 = 0,25", "5/2 = 2,5", "3/4 = 0,75", "7/2 = 3,5", `1/${nb(1000)} = 0,001`, "9/2 = 4,5", "4/2 = 2"], colonnes: 2},
-      {liste: [`1/2 = 5/10 = 50/100 = 500/${nb(1000)}`, `1/4 = 25/100 = 250/${nb(1000)}`, `3/4 = 75/100 = 750/${nb(1000)}`], colonnes: 1}]},
-    "F1-3": {titre: "Cinquièmes", blocs: [{liste: [1, 6, 2, 7, 3, 8, 4, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2},
-      {liste: ["1/5 = 2/10 = 20/100"], colonnes: 1}]}
+      ...coeurDe([{table: tableFois([25], rangee(2, 4))},
+        {liste: ["60 = 2 × 30 = 3 × 20 = 4 × 15 = 5 × 12 = 6 × 10", "100 = 4 × 25 = 2 × 50"], colonnes: 1}]),
+      ...retrouveDe([{chemin: "6 × 25 = 4 × 25 + 2 × 25 = 150", table: tableFois([25], rangee(5, 8))},
+        {liste: ["100 = 5 × 20, car 5 × 2 = 10"], colonnes: 1}])]},
+    "F2-1": {titre: "Demis et quarts", blocs: [
+      ...coeurDe([{liste: ["1 = 2/2 = 4/4", "1/2 = 2/4", "1/2 + 1/2 = 1", "1/4 + 1/4 = 1/2", "1 − 1/2 = 1/2", "1/2 − 1/4 = 1/4"], colonnes: 2}]),
+      ...retrouveDe([{liste: ["1 − 1/4 − 1/4 = 1 − 1/2 = 1/2", "1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1"], colonnes: 1}])]},
+    "F2-2": {titre: "Demis et quarts, avec 3/4", blocs: [
+      ...coeurDe([{liste: ["3/4 = 1/2 + 1/4", "1/4 + 1/4 + 1/4 = 3/4", "3/4 + 1/4 = 1", "1 − 1/4 = 3/4", "1 − 3/4 = 1/4", "3/4 − 1/2 = 1/4", "3/4 − 1/4 = 1/2"], colonnes: 2}]),
+      ...retrouveDe([{liste: ["3/4 + 1/2 = 3/4 + 2/4 = 5/4", "3/4 + 3/4 = 6/4 = 3/2"], colonnes: 1}])]},
+    "F1-1": {titre: "Dixièmes et centièmes", blocs: [
+      ...coeurDe([{liste: ["1/10 = 0,1", "1/100 = 0,01"], colonnes: 2}]),
+      ...retrouveDe([
+        // (Un seul petit calcul : les centièmes se retrouvent de même.)
+        {chemin: "7/10 = 7 × 1/10 = 0,7", liste: rangee(2, 9).map(n => `${n}/10 = 0,${n}`), colonnes: 4},
+        {liste: rangee(2, 9).map(n => `${n}/100 = 0,0${n}`), colonnes: 3}])]},
+    "F1-2": {titre: "Demis, quarts, millième", blocs: [
+      ...coeurDe([{liste: ["1/2 = 0,5", "1/4 = 0,25", "3/4 = 0,75", "3/2 = 1,5", "4/2 = 2", "5/2 = 2,5"], colonnes: 3},
+        {liste: [`1/${nb(1000)} = 0,001`, `1/2 = 5/10 = 50/100 = 500/${nb(1000)}`, `1/4 = 25/100 = 250/${nb(1000)}`, `3/4 = 75/100 = 750/${nb(1000)}`], colonnes: 1}]),
+      ...retrouveDe([{liste: ["7/2 = 3 + 1/2 = 3,5", "9/2 = 4 + 1/2 = 4,5"], colonnes: 2},
+        {liste: ["3/2 = 1,5 = 15/10 = 150/100", "5/2 = 2,5 = 25/10 = 250/100"], colonnes: 1}])]},
+    "F1-3": {titre: "Cinquièmes", blocs: [
+      ...coeurDe([{liste: ["1/5 = 2/10 = 20/100 = 0,2"], colonnes: 1}]),
+      ...retrouveDe([{chemin: "6/5 = 6 × 1/5 = 12/10 = 1,2", liste: [2, 3, 4, 6, 7, 8, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2}])]}
   });
   // Lot 3b (demande de Gwenaël du 13/11/2026) : le petit schéma d'À retenir
   // d'un niveau « par cœur », au-dessus de sa carte — le dessin du calcul
@@ -9072,6 +9182,14 @@
   const f6Verbe = calcul => (F6_MULTIPLIE[calcul.forme] ? "je multiplie" : "je divise");
   const glisseDe = (signe, p, colonnes) => `${signe} ${formaterNombre(p)}, chaque chiffre glisse de ${colonnes} colonnes`;
   const NOUVEAUTES = Object.freeze({
+    // Lot 7e-2 (choix de Gwenaël) : la moitié en découpant, avec son dessin.
+    "M1-3": [["moitié", "la moitié, je coupe en morceaux"]],
+    // Lot 7e-2 : les fractions qui tombent pile sur 1 (les bases), puis
+    // celles qui passent 1 (CM1), sur la barre avec l'unité marquée.
+    "F8-1": [[c => c.forme === "somme" && c.lu && c.lu.cache && c.lu.cache.part === "n" && c.lu.cotes[1][0].d === 1,
+      calcul => `j’arrive pile sur 1 : ${enParts(calcul.lu.cotes[0][0].d, calcul.lu.cotes[0][0].d)} font une unité`]],
+    "F8-3": [["a/b + c/b", calcul => `la somme passe 1 : ${enParts(calcul.lu.cotes[0][0].d, calcul.lu.cotes[0][0].d)} font une unité`],
+      ["a/b − c/b", calcul => `on part d’au-delà de 1 : ${enParts(calcul.lu.cotes[0][0].d, calcul.lu.cotes[0][0].d)} font une unité`]],
     "A1-2": [["un nombre est 10", "on ajoute 10 : le chiffre des unités ne change pas"], ["les deux nombres se suivent", "les deux nombres se suivent"]],
     "A2-2": [["en 5", "un nombre en 5 : je vais d’abord à la dizaine"]],
     // Lot 7e : arriver pile sur la dizaine change deux chiffres.
@@ -9330,8 +9448,15 @@
   // L'outil du début de l'entraînement, et ce qui revient après une erreur
   // (la droite dessinée avec ses sauts « + ? », le tableau avec ses « ? ») ;
   // null quand le module n'en a pas.
-  function aideDe(calcul) {
+  // `nouveau` (lot 7e-2) : le calcul annonce une sorte nouvelle — le dessin
+  // de l'annonce, quand le module en a un (M1 : la moitié découpée, chaque
+  // morceau déjà coupé en deux ; reste à les réunir).
+  function aideDe(calcul, {nouveau = false} = {}) {
     const fiche = calcul ? moduleDe(calcul.module) : null;
+    if (nouveau && fiche && typeof fiche.aideNouveau === "function") {
+      const aide = fiche.aideNouveau(calcul);
+      if (aide) return aide;
+    }
     return fiche && typeof fiche.aide === "function" ? fiche.aide(calcul) : null;
   }
 
@@ -9640,13 +9765,14 @@
     return ecrisSansManip(M5, calcul, `${fois(k)} = ${fois(4)} + ${fois(k - 4)}`,
       [[`${fois(k - 4)} = ?`, (k - 4) * 25], [`${fois(k)} = ?`, k * 25]], (c, n) => partsDessins(m5Image(c), n, true));
   }
-  // × 4, × 8 : le double du double (4 × 37 = 2 × 2 × 37).
+  // × 4, × 8 : le double du double (4 × 37 = 2 × 2 × 37). Lot 7e-2 : les
+  // doubles successifs, chacun sur le résultat d'avant (2 × 37 = 74, puis
+  // 2 × 74 = 148).
   function recetteDoubleDouble(calcul) {
     const {n, fois} = calcul.donnees;
     const deux = Array.from({length: Math.log2(fois)}, () => "2").join(" × ");
     const etapes = [];
-    for (let k = 2; k < fois; k *= 2) etapes.push([`${k} × ${f(n)} = ?`, k * n]);
-    etapes.push([`${fois} × ${f(n)} = ?`, fois * n]);
+    for (let k = 1; k < fois; k *= 2) etapes.push([`2 × ${f(k * n)} = ?`, 2 * k * n]);
     return ecrisSansManip(M6, calcul, `${fois} × ${f(n)} = ${deux} × ${f(n)}`, etapes, (c, k) => barresFoisDessins(m6Image(c), k));
   }
   // Décomposer (M8) : 6 × 14 = 10 × 6 + 4 × 6 ; 12 × 35 = 10 × 35 + 2 × 35.
@@ -9730,11 +9856,12 @@
       solution: Object.freeze({image: m3Image(calcul), phrase: m3Phrase(calcul)})
     }, m3Dessins(calcul, etapes.length));
   }
-  // × 5, × 50 (M7) : 5 × 58 = 58 × 10 ÷ 2.
+  // × 5, × 50 (M7) : 5 × 58 = 58 × 10 ÷ 2. Lot 7e-2 : la moitié s'écrit
+  // sur le résultat de × 10 (580 ÷ 2).
   function recetteDixFois(calcul) {
     const {n, fois, p, dix, r} = calcul.donnees;
     if (calcul.forme !== "produit-gauche") return null;
-    const etapes = [[`${f(n)} × ${f(p)} = ?`, dix], [`${fois} × ${f(n)} = ?`, r]];
+    const etapes = [[`${f(n)} × ${f(p)} = ?`, dix], [`${f(dix)} ÷ 2 = ?`, r]];
     return ecrisAvecDessins({
       consigne: fr(`${fois} × ${f(n)} = ${f(n)} × ${f(p)} ÷ 2`),
       etapes: etapesEcris(etapes), reponse: r,
@@ -9909,29 +10036,18 @@
       solution: Object.freeze({image: fracImage(calcul), phrase: fracPhrase(calcul)})
     }, dessinsDe(morceaux, morceaux.length, dessin));
   }
-  // Fraction d'une quantité (F3) : 1/6 de 42 € = 42 € ÷ 6 ; au niveau 3,
-  // ce qui se partage juste, puis le reste (1/2 de 7 L : 6 L ÷ 2, 1 L ÷ 2).
-  function recetteQuantite(calcul, decimal = false) {
-    const {d, N, unite, objet} = calcul.f3 || {};
-    if (!d) return null;
-    const avec = x => `${f(x)} ${unite}`;
-    const apres = objet ? "" : ` ${unite}`;
-    const q = Math.floor(N / d);
-    const reste = N - q * d;
-    let etapes;
-    if (decimal) {
-      if (!reste || !q) return null;
-      etapes = [[`${avec(q * d)} ÷ ${d} = ?${apres}`, q], [`${avec(reste)} ÷ ${d} = ?${apres}`, exact(reste / d)]];
-    } else {
-      if (reste) return null;
-      etapes = [[`${avec(N)} ÷ ${d} = ?${apres}`, q]];
-    }
-    etapes.push([`1/${d} de ${avec(N)} = ?${apres}`, calcul.reponse]);
-    const n = etapes.length;
+  // Fraction d'une quantité (F3, lot 7e-2) : en mots, comme la leçon —
+  // « Je partage 42 € en 6 parts égales. », « Une part, c'est □ €. » ; au
+  // niveau 3, un quart par la moitié de la moitié (14 L → 7 L → 3,5 L).
+  function recetteQuantite(calcul, quart = false) {
+    if (!calcul.f3) return null;
+    const mots = f3EnMots(calcul, quart);
+    if (!mots) return null;
+    const n = mots.etapes.length;
     const dessin = (k, revele) => Object.freeze(Object.assign({}, f3Aide(calcul), revele || k >= n ? {trouve: Object.freeze({texte: f(calcul.reponse), vert: !revele})} : {}));
     return ecrisAvecDessins({
-      consigne: fr(`1/${d} de ${avec(N)} = ${avec(N)} ÷ ${d}`),
-      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      consigne: fr(mots.consigneEcris),
+      etapes: etapesEcris(mots.etapes), reponse: calcul.reponse,
       solution: Object.freeze({image: f3Image(calcul), phrase: f3Phrase(calcul)})
     }, {dessins: Object.freeze(Array.from({length: n + 1}, (_, k) => dessin(k, false))), revele: dessin(n, true)});
   }

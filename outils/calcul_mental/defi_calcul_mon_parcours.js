@@ -795,6 +795,19 @@
     return liste;
   }
 
+  // Lot 7e-2 : une ligne de module posée dans la copie. Un module qui entre
+  // pour la première fois prend sa place dans l'ordre des codes, comme à la
+  // relecture (normaliserParcours, fusionner) : le même parcours s'écrit
+  // toujours avec le même JSON (sinon la page croit avoir à renvoyer).
+  function poserLigne(copie, id, ligne) {
+    const nouveau = !Object.prototype.hasOwnProperty.call(copie.modules, id);
+    copie.modules[id] = ligne;
+    if (!nouveau) return;
+    const ranges = {};
+    CODES.forEach(code => { if (Object.prototype.hasOwnProperty.call(copie.modules, code)) ranges[code] = copie.modules[code]; });
+    copie.modules = ranges;
+  }
+
   // Le module est su quand toutes ses compétences sont en boîte 4 ou plus.
   function toutSu(ligne) {
     return ligne.b.every(boite => boite >= SEUILS.revision.su);
@@ -859,15 +872,19 @@
 
   // Lot 7-0 : les marches d'un palier plus haut d'un module déjà commencé
   // ont leur test, elles aussi (de la marche suivante jusqu'au palier en
-  // cours) : la compétence courante est la première de son palier dans son
-  // module, rien n'y a été joué ni appris, et le niveau d'avant (d'un
-  // palier plus bas) est entré. Elle ne s'apprend pas sans test.
+  // cours). Lot 7e-2 (choix de Gwenaël du 15/11, « retester au lieu
+  // d'imposer J'apprends ») : de même pour toute marche pas encore entrée
+  // d'un module commencé, même au palier en cours — après une marche ratée,
+  // le niveau suivant a son « Tu connais déjà ? » quand le parcours y arrive
+  // (avant : il s'apprenait sans test). Rater le niveau 1 ne dit rien du
+  // niveau 2, le raté date souvent de plusieurs semaines, un test coûte une
+  // minute et J'apprends dix. La compétence courante : rien n'y a été joué
+  // ni appris, et le niveau d'avant est entré.
   function testDeReprise(parcours, carte, courante) {
     if (!courante || courante.niveau < 2) return false;
     const ligne = ligneDe(parcours, courante.module);
     const i = courante.niveau - 1;
-    if (estIntact(ligne) || ligne.b[i] || ligne.f[i] || ligne.a[i] || !ligne.b[i - 1]) return false;
-    return palierDe(carte, courante.module, courante.niveau - 1) < palierDe(carte, courante.module, courante.niveau);
+    return !estIntact(ligne) && !ligne.b[i] && !ligne.f[i] && !ligne.a[i] && Boolean(ligne.b[i - 1]);
   }
 
   function moduleCourant(parcours, carte, palier = SEUILS.seance.paliers) {
@@ -1422,7 +1439,7 @@
     if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, verdict: null, evenements, finie: false};
     const n = entier(serie.niveau, 1, NIVEAUX[id], 1);
     const ligne = ligneDe(copie, id);
-    copie.modules[id] = ligne;
+    poserLigne(copie, id, ligne);
     toucher(ligne, aujourdhui);
     let finie = false;
     const genre = ["apprends", "entraine", "rattrape"].includes(serie.genre) ? serie.genre : "entraine";
@@ -1487,7 +1504,7 @@
     const id = test && test.module;
     if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, bilan: [], tout: false, marche: 0, finie: false};
     const ligne = ligneDe(copie, id);
-    copie.modules[id] = ligne;
+    poserLigne(copie, id, ligne);
     toucher(ligne, aujourdhui);
     noterJour(copie, aujourdhui);
     ajouterCauses(ligne, test.causes);
@@ -1569,7 +1586,7 @@
     const ligne = ligneDe(copie, id);
     const boite = ligne.b[index];
     if (!boite) return {parcours: copie, mouvement: null, evenements};
-    copie.modules[id] = ligne;
+    poserLigne(copie, id, ligne);
     toucher(ligne, aujourdhui);
     noterJour(copie, aujourdhui);
     // Le journal (lot G1) : un calcul du jour de plus dans la séance ouverte,
