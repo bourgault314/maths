@@ -33,7 +33,7 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // (Lot 7e-2 : la fraction d'une quantité en mots, sans signe =, choix de
 // Gwenaël — « Je partage 500 g en 10 parts égales. », « Un quart, c'est la
 // moitié de la moitié. »)
-const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3"]);
+const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
 const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
@@ -83,7 +83,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 111, "111 niveaux construits (lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13)");
+  assert.equal(NIVEAUX.length, 117, "117 niveaux construits (lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
@@ -107,7 +107,8 @@ test("J'écris annonce le but : une ligne pour chaque niveau construit, en égal
       assert.ok(cherche(apprends).startsWith(gauche) || cherche(apprends).endsWith(gauche), `${cle} : la fraction donnée`);
       return;
     }
-    if (apprends.textes) assert.ok(consigne.startsWith(cherche(apprends)), `${cle} : la ligne commence par le calcul cherché (« ${consigne} »)`);
+    // (Lot 7c : « 3 × 7/4 = ?/4 » cherché, « 3 × 7/4 = 7/4 + 7/4 + 7/4 » écrit.)
+    if (apprends.textes) assert.ok(consigne.startsWith(cherche(apprends).replace(/ = \?\/\d+$/, "")), `${cle} : la ligne commence par le calcul cherché (« ${consigne} »)`);
     if (consigne.includes("?")) {
       // Un trou, un complément, un écart : le calcul cherché seul, avec son « ? ».
       assert.equal(consigne, apprends.textes ? cherche(apprends) + (cherche(apprends).includes("?") ? "" : " = ?") : consigne, `${cle} : un trou, le calcul seul`);
@@ -160,7 +161,8 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // (« 2 × 23 = 46. », puis « 23 × 4 = 2 × 46 = 92. ») : 5 de moins ici, ils
   // passent par les lignes (lot 3a).
   // Lot 7b : D8-2 et D8-3 (« Je double chaque morceau : double de 13,6 = … »).
-  assert.equal(coupes, 73, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // Lot 7c : F11-1 et F11-2 (« 3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = … »).
+  assert.equal(coupes, 75, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   ["M6-1", "M6-2", "M7-1", "M7-2", "M7-3"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.ok(lignes.length >= 2 && lignes.every(Boolean), `${cle} : une ligne par étape`);

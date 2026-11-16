@@ -87,6 +87,9 @@ function phraseVraie(texte, calcul) {
   const nb = x => valeurDe(x);
   let m;
   if ((m = /^Une part, c’est ([\d ,]+) (\S+)\.$/.exec(t)) && calcul.f3) return proches(nb(m[1]), calcul.f3.N / calcul.f3.d) && m[2] === calcul.f3.unite;
+  // (Lot 7c, F4 : « Une part, c’est 50 g. », « 3/10 de 500 g, c’est 150 g. ».)
+  if ((m = /^Une part, c’est ([\d ,]+) (\S+)\.$/.exec(t)) && calcul.f4) return proches(nb(m[1]), calcul.f4.N / calcul.f4.d) && m[2] === calcul.f4.unite;
+  if ((m = /^(\d+)\/(\d+) de ([\d ,]+) (\S+), c’est ([\d ,]+) \4\.$/.exec(t))) return proches(nb(m[5]), nb(m[3]) * Number(m[1]) / Number(m[2]));
   if ((m = /^1\/(\d+) de ([\d ,]+) (\S+), c’est ([\d ,]+) \3\.$/.exec(t))) return proches(nb(m[4]), nb(m[2]) / Number(m[1]));
   if ((m = /^La moitié de ([\d ,]+) (\S+), c’est ([\d ,]+) \2\.$/.exec(t))) return proches(nb(m[3]), nb(m[1]) / 2);
   return null;
@@ -109,7 +112,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 // Les fractions et les décimaux de F1 : une graduation (« 1 », « 0,2 ») n'est
 // pas une réponse écrite trop tôt — leur contrôle est à part.
-const FRACTIONS = new Set(["F1", "F2", "F3", "F5", "F6", "F8"]);
+const FRACTIONS = new Set(["F1", "F2", "F3", "F5", "F6", "F8", "F4", "F9", "F11"]);
 
 function verifierDessins(cle, calcul, ecris) {
   const id = cle.split("-")[0];
@@ -204,7 +207,7 @@ function verifierEcris(cle, tire, lecon) {
 }
 
 test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul", () => {
-  assert.equal(NIVEAUX.length, 111, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13");
+  assert.equal(NIVEAUX.length, 117, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11");
   const memes = x => blanc(JSON.stringify(x));
   NIVEAUX.forEach(cle => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;

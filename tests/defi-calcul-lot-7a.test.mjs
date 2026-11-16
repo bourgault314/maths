@@ -25,7 +25,7 @@ test("lot 7a : les 8 niveaux sont construits, à leur place dans le parcours", (
     assert.ok(CORE.moduleDe(cle.split("-")[0]).construit && niveau.apprends, cle);
     assert.ok(CORE.ORDRE.includes(cle), cle);
   });
-  assert.deepEqual(CORE.MODULES.filter(f => f.construit).flatMap(f => f.niveaux).length, 111); // (lot 7b : D8, D9, M13)
+  assert.deepEqual(CORE.MODULES.filter(f => f.construit).flatMap(f => f.niveaux).length, 117); // (lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11)
 });
 
 test("lot 7a : chaque calcul est juste, et à sa place (sortes, bornes)", () => {

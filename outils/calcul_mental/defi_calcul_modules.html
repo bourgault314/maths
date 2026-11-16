@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261115-4"></script>
+  <script src="./defi_calcul_core.js?v=20261116-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261115-3"></script>
-  <script src="./defi_calcul_aides.js?v=20261115-4"></script>
+  <script src="./defi_calcul_aides.js?v=20261116-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1516,6 +1516,9 @@
           mesureParcours = false;
         }
         document.documentElement.style.setProperty("--echelle", plus.toFixed(3));
+        // (Lot 7c : à l'échelle finale, Mon module reste visible, la liste
+        // commence sur une ligne entière.)
+        montrerModuleEnCours(id);
       }
       function ajusterEchelleSeule() {
         const racine = document.documentElement;
@@ -2405,10 +2408,23 @@
         const ici = [...liste.querySelectorAll(".dc-mod")].find(ligne => ligne.dataset.module === id) || liste.querySelector(".dc-mod.rouge");
         if (!ici || liste.scrollHeight <= liste.clientHeight) return;
         const haut = ici.getBoundingClientRect().top - liste.getBoundingClientRect().top + liste.scrollTop;
-        if (haut < liste.scrollTop || haut + ici.offsetHeight > liste.scrollTop + liste.clientHeight) {
-          liste.scrollTop = Math.max(0, haut - (liste.clientHeight - ici.offsetHeight) / 2);
-        }
+        // (Lot 7c : en haut de la liste dès que Mon module s'y voit.)
+        liste.scrollTop = haut + ici.offsetHeight <= liste.clientHeight ? 0 : Math.max(0, haut - (liste.clientHeight - ici.offsetHeight) / 2);
+        calerListe(liste);
       }
+      // Lot 7c (le palier 3 grandit) : la liste qui défile s'arrête au début
+      // d'une ligne — la première ligne visible n'est jamais rognée en haut.
+      function calerListe(liste) {
+        if (!liste || liste.scrollTop <= 0 || liste.scrollHeight <= liste.clientHeight) return;
+        const marge = parseFloat(getComputedStyle(liste).paddingTop) || 0;
+        const haut = liste.getBoundingClientRect().top;
+        const debuts = [...liste.children].map(ligne => ligne.getBoundingClientRect().top - haut + liste.scrollTop - marge);
+        const debut = Math.max(...debuts.filter(x => x <= liste.scrollTop + .5), -Infinity);
+        // (La première ligne : tout en haut.)
+        liste.scrollTop = debut > Math.min(...debuts) + .5 ? debut : 0;
+      }
+      // (Le cadre change d'échelle après coup : la liste se recale.)
+      if (window.ResizeObserver) new ResizeObserver(() => calerListe($("parcours-modules"))).observe($("parcours-modules"));
 
       function renderAccueil() {
         const acc = document.querySelector(".acc");
@@ -4708,7 +4724,8 @@
             jetons: () => (state.manip && state.manip.outil === "jetons" ? {etape: state.manip.etape, phase: state.manip.phase, comptes: state.manip.comptes, fini: state.manip.fini} : null),
             // Modules lot 6 : les bandes sur la droite (F2, F5, F6, F8).
             bandes: () => (state.manip && state.manip.outil === "bandes" ? {etape: state.manip.etape, pieces: state.manip.pieces, fini: state.manip.fini} : null),
-            billes: () => (state.manip && state.manip.outil === "billes" ? {tours: state.manip.tours, fini: state.manip.fini} : null),
+            // (Lot 7c : les parts prises, F4.)
+            billes: () => (state.manip && state.manip.outil === "billes" ? {tours: state.manip.tours, fini: state.manip.fini, prises: state.manip.prises} : null),
             // Les arrêts de la bande, dans l'ordre : {decalage, accepte}.
             arrets: () => arretsDeLaBande.slice(),
             // Lot 3c : le J'écris à l'écran (tiré) — ses étapes, leurs réponses.
