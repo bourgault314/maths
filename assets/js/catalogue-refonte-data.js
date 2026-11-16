@@ -255,8 +255,8 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "activites",
       "collections": [],
       "tags": ["cps", "bilan", "connaissance-de-soi", "engagement"],
-      "thumbnail": "cps/assets/bilan-s1/page-1.png",
-      "cardDescription": "Un bilan guidé en quatre pages pour relire son semestre, comprendre son fonctionnement et choisir un petit pas concret."
+      "thumbnail": "cps/assets/bilan-s1/livret-exterieur.webp",
+      "cardDescription": "Un livret en quatre pages pour faire le point et choisir la suite. À imprimer sur une feuille A3 recto verso."
     },
     "cps/bingos-rentree.html": {
       "primaryNotion": "rentree-cohesion",
@@ -7465,7 +7465,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "cps-bilan-s1-html",
       "title": "Bilan guidé de fin du premier semestre",
-      "description": "Un document unique de quatre pages A3 pour faire le point sur son semestre, ses ressources et son prochain objectif.",
+      "description": "Un livret de quatre pages à imprimer sur une feuille A3 recto verso, pour faire le point sur son semestre et choisir la suite.",
       "path": "cps/bilan-s1.html",
       "domains": [
         "cps"
