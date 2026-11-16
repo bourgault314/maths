@@ -3902,24 +3902,40 @@
     return `<rect x="${x.toFixed(2)}" y="${y}" width="${w.toFixed(2)}" height="${h}" fill="${PARTS.clair}"/>`
       + `<text x="${(x + w / 2).toFixed(2)}" y="${(y + h / 2 + taille * .36).toFixed(2)}" text-anchor="middle" font-size="${taille.toFixed(1)}" font-weight="800" fill="${couleur}">${texte}</text>`;
   }
+  // Lot 7c (F4, « 2/3 de 12 œufs ») : `pris` parts prises (2 et plus),
+  // en bleu clair, entourées ensemble ; `part` : la valeur d'une part,
+  // écrite dans les parts prises (en vert à l'étape qui la trouve) ;
+  // l'accolade sous les parts prises, c'est la réponse (`trouve`, ou « ? »).
   function toutParts(o) {
     const {gauche: G, longueur: L, encre, cherche} = FRACTIONS;
     const R = PARTS.barre;
     const w = L / o.d;
     const y1 = 4;
     const y2 = y1 + R;
+    const pris = o.pris >= 2 ? o.pris : 0;
     let s = `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="#fff"/>`
       + `<text x="${G + L / 2}" y="${y1 + R / 2 + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="${encre}">${o.tout}</text>`;
     for (let k = 0; k < o.d; k += 1) {
-      if (k === 0) s += caseCherchee(G, y2, w, R, o.trouve ? o.trouve.texte : "?", o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche);
+      if (pris && k < pris) s += caseCherchee(G + k * w, y2, w, R, o.part ? o.part.texte : "", o.part && o.part.vert ? FRACTIONS.trouve : encre);
+      else if (!pris && k === 0) s += caseCherchee(G, y2, w, R, o.trouve ? o.trouve.texte : "?", o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche);
       else s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="#fff"/>`;
     }
     s += `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
     for (let k = 0; k < o.d; k += 1) s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
-    s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${o.trouve && o.trouve.vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
-    return `<svg class="dc-fractions dc-tout-parts" viewBox="0 0 ${FRACTIONS.largeur} ${y2 + R + 4}" role="img" aria-label="${decrireToutParts(o)}">${s}</svg>`;
+    const vert = pris ? Boolean(o.trouve && o.trouve.vert) : Boolean(o.trouve && o.trouve.vert);
+    s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w * (pris || 1) - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
+    let bas = y2 + R + 4;
+    if (pris) {
+      s += accolade(G + 2, G + pris * w - 2, y2 + R + 4, o.trouve ? o.trouve.texte : "?", !o.trouve, Boolean(o.trouve && o.trouve.vert));
+      bas = y2 + R + 4 + 54;
+    }
+    return `<svg class="dc-fractions dc-tout-parts" viewBox="0 0 ${FRACTIONS.largeur} ${bas}" role="img" aria-label="${decrireToutParts(o)}">${s}</svg>`;
   }
   function decrireToutParts(o) {
+    if (o.pris >= 2) {
+      const part = o.part ? ` Une part : ${o.part.texte}.` : "";
+      return `Schéma en barres. En haut, le tout : ${o.tout}. En dessous, ${o.d} parts égales ; les ${o.pris} premières sont prises.${part} Ensemble : ${o.trouve ? o.trouve.texte : "?"}.`;
+    }
     return `Schéma en barres. En haut, le tout : ${o.tout}. En dessous, ${o.d} parts égales. La première part, ${o.trouve ? `: ${o.trouve.texte}` : "à trouver : ?"}.`.replace("part, :", "part :");
   }
 
@@ -3931,12 +3947,23 @@
   // {tours, fini} ; un geste : {tas: true} ou {case: i}. Rend le nouvel
   // état, ou null pour un refus.
   function billesDepart() {
-    return {tours: 0, fini: false};
+    return {tours: 0, prises: [], fini: false};
   }
-  function billesGeste(etat, geste, {n, d}) {
-    if (etat.fini || !geste || geste.tas !== true || (etat.tours + 1) * d > n) return null;
+  // Lot 7c (F4, `prendre` : a parts) : le tas vide, on prend les parts —
+  // un toucher sur une case encore libre la prend ; fini quand a cases
+  // sont prises. L'état garde `prises` (les cases prises, dans l'ordre).
+  function billesGeste(etat, geste, {n, d, prendre = 0}) {
+    if (etat.fini || !geste) return null;
+    const partage = etat.tours * d === n;
+    if (prendre >= 2 && partage) {
+      const prises = etat.prises || [];
+      if (!Number.isInteger(geste.case) || geste.case < 0 || geste.case >= d || prises.includes(geste.case)) return null;
+      const apres = [...prises, geste.case];
+      return {tours: etat.tours, prises: apres, fini: apres.length === prendre};
+    }
+    if (geste.tas !== true || (etat.tours + 1) * d > n) return null;
     const tours = etat.tours + 1;
-    return {tours, fini: tours * d === n};
+    return {tours, prises: [], fini: prendre >= 2 ? false : tours * d === n};
   }
   // La place des billes : le tas en rangées de 14, chaque case en rangées
   // de ce qui y tient ; les hauteurs sont fixées au départ (rien ne bouge
@@ -3959,7 +3986,7 @@
     }
     return places;
   }
-  function billesSvg({n, d, tout, tours, fini, cible = false, montre = false}) {
+  function billesSvg({n, d, tout, tours, fini, cible = false, montre = false, prendre = 0, prises = []}) {
     const {gauche: G, longueur: L, encre, bleu, cherche} = FRACTIONS;
     const {w, parCase, hTas, hCase} = planBilles({n, d});
     const y1 = 6;
@@ -3970,32 +3997,44 @@
     if (tas) rangeesDe(tas, PARTS.parRangeeTas, G + L / 2, y1 + hTas / 2).forEach(([x, y]) => { s += bille(x, y, "#dbe6f5"); });
     else s += `<text x="${G + L / 2}" y="${y1 + hTas / 2 + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="${encre}">${tout}</text>`;
     s += "</g>";
+    const aPrendre = prendre >= 2;
+    const partage = tours * d === n;
     for (let k = 0; k < d; k += 1) {
       const x = G + k * w;
-      const prise = k === 0 && fini;
+      const prise = aPrendre ? prises.includes(k) : k === 0 && fini;
       s += `<rect data-case="${k}" x="${x.toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${hCase}" fill="${prise ? PARTS.clair : "#fff"}"/>`;
       rangeesDe(tours, parCase, x + w / 2, y2 + hCase / 2).forEach(([bx, by], b) => {
-        const neuve = !fini && b === tours - 1;
+        const neuve = !fini && !(aPrendre && partage) && b === tours - 1;
         s += bille(bx, by, prise ? bleu : neuve ? "#e5f7eb" : "#dbe6f5", neuve ? FRACTIONS.trouve : encre, neuve ? 2.6 : 1.6);
       });
     }
     s += `<rect x="${G}" y="${y1}" width="${L}" height="${hTas}" fill="none" stroke="${encre}" stroke-width="2.6" pointer-events="none"/>`;
     for (let k = 0; k < d; k += 1) s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${hCase}" fill="none" stroke="${encre}" stroke-width="2.6" pointer-events="none"/>`;
-    if (fini) s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w - 3.2).toFixed(2)}" height="${hCase - 3.2}" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
-    if (cible && !fini) s += `<rect class="dc-cible" x="${G - 3}" y="${y1 - 3}" width="${L + 6}" height="${hTas + 6}" rx="7" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
-    if (montre && !fini) s += `<rect class="dc-montre" x="${G - 8}" y="${y1 - 8}" width="${L + 16}" height="${hTas + 16}" rx="10" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
+    if (aPrendre) {
+      // Chaque case prise s'entoure ; tant qu'il en manque, les cases libres
+      // sont la cible (la suivante brille quand le geste est montré).
+      prises.forEach(k => { s += `<rect x="${(G + k * w + 1.6).toFixed(2)}" y="${y2 + 1.6}" width="${(w - 3.2).toFixed(2)}" height="${hCase - 3.2}" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`; });
+      if (partage && !fini && cible) s += `<rect class="dc-cible" x="${G - 3}" y="${y2 - 3}" width="${L + 6}" height="${hCase + 6}" rx="7" fill="none" stroke="${cherche}" stroke-width="2" stroke-dasharray="6 5" pointer-events="none"/>`;
+      if (partage && !fini && montre) {
+        const k = [...Array(d).keys()].find(i => !prises.includes(i));
+        s += `<rect class="dc-montre" x="${(G + k * w - 5).toFixed(2)}" y="${y2 - 5}" width="${(w + 10).toFixed(2)}" height="${hCase + 10}" rx="9" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
+      }
+    } else if (fini) s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w - 3.2).toFixed(2)}" height="${hCase - 3.2}" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
+    if (cible && !partage) s += `<rect class="dc-cible" x="${G - 3}" y="${y1 - 3}" width="${L + 6}" height="${hTas + 6}" rx="7" fill="none" stroke="${cherche}" stroke-width="3.5" pointer-events="none"/>`;
+    if (montre && !partage) s += `<rect class="dc-montre" x="${G - 8}" y="${y1 - 8}" width="${L + 16}" height="${hTas + 16}" rx="10" fill="none" stroke="#f58220" stroke-width="5" pointer-events="none"/>`;
     return `<svg class="dc-billes-svg" viewBox="0 0 ${FRACTIONS.largeur} ${y2 + hCase + 4}">${s}</svg>`;
   }
   // Ce que voit l'élève, pour un lecteur d'écran.
-  function decrireBilles({n, d, tours, fini}) {
+  function decrireBilles({n, d, tours, fini, prendre = 0, prises = []}) {
     const tas = n - tours * d;
-    return `${d} cases. Le tas : ${tas ? accorder(tas, "bille", "billes") : "vide"}. Dans chaque case : ${tours ? accorder(tours, "bille", "billes") : "rien"}.${fini ? " La première case est coloriée." : ""}`;
+    const fin = prendre >= 2 ? (prises.length ? ` Cases prises : ${prises.length} sur ${prendre}.` : "") : fini ? " La première case est coloriée." : "";
+    return `${d} cases. Le tas : ${tas ? accorder(tas, "bille", "billes") : "vide"}. Dans chaque case : ${tours ? accorder(tours, "bille", "billes") : "rien"}.${fin}`;
   }
 
   // L'outil à toucher. options : {n, d, tout, consigne, consigneFin, traces,
   // surFini}. Au clavier : Entrée ou Espace font un tour.
   function billesManip(zone, options) {
-    const {n, d, tout, consigne: texteConsigne, consigneFin = "", traces = [], surFini = null, sansReponse = false} = options;
+    const {n, d, tout, consigne: texteConsigne, consigneFin = "", traces = [], surFini = null, prendre = 0, consignePrendre = "", sansReponse = false} = options;
     let jeu = billesDepart();
     const etat = {refus: 0, premier: true};
     const suivi = suiviRefus();
@@ -4020,15 +4059,19 @@
 
     function dessiner() {
       // Lot 7-0 : le geste montré — le tas brille.
-      ecrireTexte(consigne, jeu.fini ? consigneFin : suivi.montre ? "Touche le tas qui brille." : texteConsigne);
-      scene.innerHTML = billesSvg({n, d, tout, tours: jeu.tours, fini: jeu.fini, cible: true, montre: suivi.montre});
-      scene.setAttribute("aria-label", `${decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini})}${jeu.fini ? "" : " Touche le tas."}`);
+      // (Lot 7c : après le partage, on prend les parts — une case touchée.)
+      const aPrendre = prendre >= 2 && jeu.tours * d === n;
+      ecrireTexte(consigne, jeu.fini ? consigneFin : aPrendre ? (suivi.montre ? "Touche la case qui brille." : consignePrendre) : suivi.montre ? "Touche le tas qui brille." : texteConsigne);
+      scene.innerHTML = billesSvg({n, d, tout, tours: jeu.tours, fini: jeu.fini, cible: true, montre: suivi.montre, prendre, prises: jeu.prises || []});
+      scene.setAttribute("aria-label", `${decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini, prendre, prises: jeu.prises || []})}${jeu.fini ? "" : aPrendre ? " Touche une case." : " Touche le tas."}`);
       const pilule = document.createElement("b");
       if (sansReponse) {
         // Rien sous les cases : l'élève compte les billes d'une case.
       } else if (jeu.fini && traces.length) {
         pilule.className = "ok";
         ecrireTexte(pilule, traces[traces.length - 1].texte);
+      } else if (jeu.tours && prendre >= 2 && (jeu.prises || []).length) {
+        pilule.textContent = `${jeu.prises.length} part${jeu.prises.length > 1 ? "s" : ""} : ${accorder(jeu.prises.length * jeu.tours, "bille", "billes")}`;
       } else if (jeu.tours) {
         pilule.textContent = `${accorder(jeu.tours, "bille", "billes")} dans chaque case`;
       }
@@ -4055,7 +4098,7 @@
       etat.refus = setTimeout(leverRefus, 1800);
     }
     function jouer(geste) {
-      const apres = billesGeste(jeu, geste, {n, d});
+      const apres = billesGeste(jeu, geste, {n, d, prendre});
       bloc.dispatchEvent(new CustomEvent("bille", {bubbles: true, detail: Object.assign({accepte: Boolean(apres)}, geste)}));
       if (!apres) { refuser(); return; }
       leverRefus();
@@ -4064,19 +4107,28 @@
       if (etat.premier) { etat.premier = false; scene.classList.remove("dc-attente"); }
       if (jeu.fini) bloc.classList.add("est-finie");
       dessiner();
-      annonce.annoncer(jeu.fini && traces.length && !sansReponse ? lireFraction(traces[traces.length - 1].texte) : decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini}));
+      annonce.annoncer(jeu.fini && traces.length && !sansReponse ? lireFraction(traces[traces.length - 1].texte) : decrireBilles({n, d, tours: jeu.tours, fini: jeu.fini, prendre, prises: jeu.prises || []}));
       if (jeu.fini && typeof surFini === "function") surFini();
     }
     scene.addEventListener("click", event => {
       const tas = event.target.closest && event.target.closest("[data-tas]");
-      jouer(tas ? {tas: true} : {case: true});
+      const caseTouchee = event.target.closest && event.target.closest("[data-case]");
+      jouer(tas ? {tas: true} : caseTouchee ? {case: Number(caseTouchee.getAttribute("data-case"))} : {case: true});
     });
     scene.addEventListener("keydown", event => {
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       event.stopPropagation();
-      jouer({tas: true});
+      jouer(gesteAttendu());
     });
+    // Le geste attendu : le tas, puis (F4) la première case libre.
+    function gesteAttendu() {
+      if (prendre >= 2 && jeu.tours * d === n) {
+        const k = [...Array(d).keys()].find(i => !(jeu.prises || []).includes(i));
+        return {case: k};
+      }
+      return {tas: true};
+    }
     dessiner();
     return {
       outil: "billes",
@@ -4087,13 +4139,40 @@
         clearTimeout(etat.refus);
         annonce.arreter();
       },
-      mesurer() {},
+      // (Lot 7c : la consigne garde la hauteur de sa plus haute phrase — la
+      // dernière écrit une fraction sur deux étages : rien ne bouge.)
+      mesurer() {
+        if (!consigne.isConnected) return;
+        const actuel = [...consigne.childNodes];
+        consigne.style.minHeight = "";
+        let haut = 0;
+        [texteConsigne, consignePrendre, consigneFin, "Touche le tas qui brille.", "Touche la case qui brille."].filter(Boolean).forEach(t => {
+          ecrireTexte(consigne, t);
+          haut = Math.max(haut, consigne.offsetHeight);
+        });
+        consigne.replaceChildren(...actuel);
+        if (haut) consigne.style.minHeight = `${haut}px`;
+        // De même pour la ligne sous les billes : la trace finale écrit sa
+        // fraction sur deux étages.
+        if (sansReponse || !traces.length) return;
+        const sous = [...trace.childNodes];
+        trace.style.minHeight = "";
+        const pilule = document.createElement("b");
+        pilule.className = "ok";
+        ecrireTexte(pilule, traces[traces.length - 1].texte);
+        trace.replaceChildren(pilule);
+        const bas = trace.offsetHeight;
+        trace.replaceChildren(...sous);
+        if (bas) trace.style.minHeight = `${Math.max(bas, trace.offsetHeight)}px`;
+      },
       get deborde() { return bloc.scrollWidth > zone.clientWidth + 1; },
       get fini() { return jeu.fini; },
       get etape() { return jeu.tours; },
       get tours() { return jeu.tours; },
+      // (Lot 7c : les parts prises, dans l'ordre.)
+      get prises() { return (jeu.prises || []).slice(); },
       jouer,
-      gesteAttendu: () => ({tas: true})
+      gesteAttendu
     };
   }
 

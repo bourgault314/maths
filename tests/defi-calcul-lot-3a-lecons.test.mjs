@@ -32,7 +32,7 @@ const tirages = (cle, n = 40) => {
 };
 
 test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 111, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13");
+  assert.equal(NIVEAUX.length, 117, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;
@@ -52,6 +52,8 @@ const AUTRE_SORTE = Object.freeze({
   "A10-1": "taille", "A11-1": "taille", "A10-2": "taille", "A11-2": "taille", "A11-3": "taille",
   "A2-1": "taille", "A6-1": "taille", "M6-1": "taille", "M6-2": "taille", "M7-1": "taille", "M7-3": "taille",
   "D2-1": "taille", "M12-2": "taille", "C1-3": "taille", "F3-1": "taille : un partage", "F3-2": "taille : un partage",
+  // (Lot 7c : On te montre sur des œufs, J'écris sur des grammes — la même méthode, une part puis les parts prises.)
+  "F4-1": "taille : un partage, des objets puis une mesure",
   // (Lot 7e-2 : F3-3, la leçon et J'écris sur un quart, la moitié de la moitié.)
   "D1-2": "taille : chaque morceau dans sa colonne", "D1-3": "taille : chaque morceau dans sa colonne",
   "M4-1": "décidé : J'écris sur la division (remarque 61)", "M4-2": "décidé : J'écris sur la division (remarque 61)",

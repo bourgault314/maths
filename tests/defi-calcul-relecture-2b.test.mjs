@@ -40,7 +40,7 @@ const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => f
 const serie = (cle, graines = 30) => Array.from({length: graines}, (_, g) => CORE.genererSerie(cle, {graine: g + 1})).flat();
 
 test("la case : les formes des réponses du niveau, toutes, et pas la réponse cherchée (remarque 56)", () => {
-  assert.equal(NIVEAUX.length, 111, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13");
+  assert.equal(NIVEAUX.length, 117, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11");
   NIVEAUX.forEach(cle => {
     const formes = CORE.modelesReponse(cle);
     assert.ok(formes.length >= 1, cle);
@@ -225,8 +225,8 @@ test("les copies pour la page prof, les adresses de cache", async () => {
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261115-4/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261115-4/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261116-1/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261116-1/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

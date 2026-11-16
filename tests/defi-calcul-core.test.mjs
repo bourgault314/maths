@@ -76,6 +76,10 @@ function resoudre(texte) {
   if ((r = /^1\/(\d+) de (\d+)([^\d=□,]+), c’est □\3\.$/.exec(m))) {
     return versNombre(millioniemes(r[2]) * MILLION / millioniemes(r[1]));
   }
+  // Lot 7c : « 2/3 de 12 œufs, c’est □ œufs. » (F4, numérateur plus grand que 1).
+  if ((r = /^(\d+)\/(\d+) de (\d+)([^\d=□,]+), c’est □\4\.$/.exec(m))) {
+    return versNombre(BigInt(r[1]) * millioniemes(r[3]) / BigInt(r[2]));
+  }
   if (/\/□/.test(m) && /^[\d +−=□/,]+$/.test(m)) {
     const cote = (t, x) => Function(`return (${t.replace(/,/g, ".").replace(/−/g, "-").replace(/□/g, `(${x})`)});`)();
     const [g, d] = m.split("=");
@@ -121,8 +125,8 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   assert.equal(CORE.MODULES.length - dansLaCarte.length, 29);
   const competences = dansLaCarte.flatMap(fiche => fiche.niveaux.map(niveau => ({cle: `${fiche.id}-${niveau.n}`, palier: niveau.palier, type: niveau.type})));
   assert.equal(competences.length, 125);
-  // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
-  assert.deepEqual([1, 2, 3, 4].map(p => competences.filter(c => c.palier === p).length), [40, 31, 41, 13]);
+  // (Lot 7e-2 : F8-3 passe du CM2 au CM1. Lot 7c : F4-2 passe de la 6e au CM2.)
+  assert.deepEqual([1, 2, 3, 4].map(p => competences.filter(c => c.palier === p).length), [40, 31, 42, 12]);
   competences.forEach(c => assert.ok([1, 2, 3, 4].includes(c.palier) && ["F", "P"].includes(c.type), c.cle));
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.palier), [1, 1, 1, 3], "A5 : « + 9 » aux bases, « + 98 » au CM2");
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.palier), [2, 3, 3, 4]);
@@ -145,9 +149,9 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
     // Palier 2 (lot 7e-2 : F8-3 arrive du CM2, après F5-2)
     "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "F8-3", "M12-1", "F9-1",
     // Palier 3
-    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3", "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2", "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "M11-2", "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1", "F9-2", "C4-2",
-    // Palier 4
-    "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3", "F4-2", "M9-2", "D7-3", "F11-2"
+    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3", "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2", "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "M11-2", "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1", "F9-2", "C4-2", "F4-2",
+    // Palier 4 (lot 7c : F4-2 passe au CM2, à la fin du palier 3)
+    "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3", "M9-2", "D7-3", "F11-2"
   ]);
   // Les niveaux d'un module se suivent dans l'ordre (un module est une échelle).
   dansLaCarte.forEach(fiche => {
@@ -167,9 +171,9 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   assert.equal("avant" in CORE.moduleDe("A2"), false, "plus de verrous « avant » : l'ordre de la carte fait foi");
 });
 
-const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M13", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "F2", "F1", "F3", "F5", "F6", "F8"];
+const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M13", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "F2", "F1", "F3", "F4", "F5", "F6", "F8", "F9", "F11"];
 
-test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b)", () => {
+test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b), F4, F9, F11 (lot 7c)", () => {
   assert.deepEqual(CORE.MODULES.filter(fiche => fiche.construit).map(fiche => fiche.id), CONSTRUITS);
   // Modules lot 1 : les niveaux de la carte v2, inchangés (nombre, paliers, types).
   // (Lot 7e-2 : « Différences et trous jusqu'à 20 » est une procédure.)
@@ -222,6 +226,12 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(CORE.moduleDe("F1").niveaux.map(n => avecEspaces(n.titre)), ["1/10 et 1/100", "1/1 000, 1/2, 1/4, 3/4, 3/2, 4/2, 5/2 (dans les deux sens)", "cinquièmes"]);
   assert.deepEqual(CORE.moduleDe("F3").niveaux.map(n => n.titre), ["demi, quart, dixième", "tiers, cinquième, sixième…", "résultat non entier"]);
   assert.deepEqual([CORE.moduleDe("F1").exemple, CORE.moduleDe("F3").exemple].map(avecEspaces), ["1/10 = ?", "1/4 de 12 billes"]);
+  // Lot 7c : F4 (F4-2 au CM2, décision du lot), F9 (CM1, CM2), F11 (CM2, 6e : « Fraction et quotient »).
+  assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("F11").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [4, "P"]]);
+  assert.deepEqual(CORE.moduleDe("F11").niveaux.map(n => n.nom), ["Entier × fraction", "Fraction et quotient"]);
+  assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => Boolean(n.virgule)), [false, true]);
   // (Lot 7e-2 : « Compléments à la dizaine » et « … à 100 : dizaines » sont des procédures.)
   assert.deepEqual(CORE.moduleDe("A2").niveaux.map(n => n.type), ["P", "P", "P", "P", "P"]);
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.type), ["P", "P", "P", "P"]);
@@ -940,6 +950,7 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
       if (LOT6B.includes(c.module)) { verifierOutilLot6b(c); return; }
       if (LOT7A.includes(c.module)) { verifierOutilLot7a(c); return; }
       if (LOT7B.includes(c.module)) { verifierOutilLot7b(c); return; }
+      if (LOT7C.includes(c.module)) { verifierOutilLot7c(c); return; }
       const aide = CORE.aideDe(c);
       // M8-3 en trou (12 × 42 = 10 × 42 + □ × 42) : pas d'aide, le rectangle
       // écrirait la réponse (le petit morceau).
@@ -1075,6 +1086,7 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
     if (LOT6B.includes(fiche.id)) { verifierApprendsLot6b(fiche, niveau, cle); return; }
     if (LOT7A.includes(fiche.id)) { verifierApprendsLot7a(fiche, niveau, cle); return; }
     if (LOT7B.includes(fiche.id)) { verifierApprendsLot7b(fiche, niveau, cle); return; }
+    if (LOT7C.includes(fiche.id)) { verifierApprendsLot7c(fiche, niveau, cle); return; }
     if (fiche.id === "M3") {
       // M3 (décision du 01/11) : la table, puis le glisse-nombres de M2 ; le
       // tableau à flèches part de la table et cache l'arrivée.
@@ -2591,7 +2603,8 @@ function verifierBandes(m, c, ou) {
   assert.ok(m.a <= 6 && m.a * m.grad <= 30, `${ou} : ${m.a} unités, des bandes assez larges`);
   assert.ok(m.traces[0].texte.split(" ").includes(caseRemplie(c)), `${ou} : la trace écrit la réponse (${m.traces[0].texte})`);
   // (« 5 cinquièmes font 1 » : c'est l'unité, pas la réponse.)
-  m.etapes.forEach(e => sansLaCase(avecEspaces(e.consigne).replace(/font 1 /g, "font une "), c, `${ou} : la consigne « ${e.consigne} »`));
+  // (« les bandes de 1/27 » : la taille d'une bande, pas la réponse — lot 7c, 2/9 − 5/27.)
+  m.etapes.forEach(e => sansLaCase(avecEspaces(e.consigne).replace(/font 1 /g, "font une ").replace(/bandes de 1\/\d+/g, "bandes"), c, `${ou} : la consigne « ${e.consigne} »`));
 }
 // L'aide d'un calcul : la barre sur la droite, « ? » où est la case ; la
 // correction montre la réponse ; les unités de même longueur.
@@ -3372,4 +3385,104 @@ test("lot 7b : les niveaux de la carte v3 (nombre, paliers, types), à leur plac
   assert.deepEqual(CORE.moduleDe("D9").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [3, "P"]]);
   assert.deepEqual(CORE.moduleDe("M13").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [3, "P"], [3, "P"]]);
   ["D8-1", "M13-1", "M13-2", "D8-2", "D9-1", "D8-3", "D9-2", "M13-3"].forEach(cle => assert.ok(CORE.ORDRE.includes(cle), cle));
+});
+
+// ------------------------------------------------------------------ lot 7c
+// F4 « Fraction d'une quantité », F9 « Dénominateurs multiples », F11
+// « Entier × fraction » (15-16/11/2026).
+const LOT7C = ["F4", "F9", "F11"];
+// Jouer les billes de F4 : le tas se partage (un toucher sur une case est
+// refusé), puis on prend a parts (une case déjà prise, le tas : refusés).
+function verifierBillesPrendre(m, c, ou) {
+  assert.equal(m.outil, "billes");
+  assert.equal(m.prendre, c.f4.a, `${ou} : on prend ${c.f4.a} parts`);
+  assert.ok(m.n <= 30 && Number.isInteger(c.reponse), `${ou} : jusqu'à 30 billes, un résultat entier`);
+  let etat = AIDES.billesDepart();
+  for (let k = 0; k < m.n / m.d; k += 1) {
+    assert.equal(AIDES.billesGeste(etat, {case: 0}, m), null, `${ou} : toucher une case avant la fin du partage est refusé`);
+    etat = AIDES.billesGeste(etat, {tas: true}, m);
+    assert.ok(etat && !etat.fini, `${ou} : un tour`);
+  }
+  assert.equal(AIDES.billesGeste(etat, {tas: true}, m), null, `${ou} : le tas vide, plus de partage`);
+  for (let k = 0; k < c.f4.a; k += 1) {
+    if (k) assert.equal(AIDES.billesGeste(etat, {case: k - 1}, m), null, `${ou} : une case déjà prise est refusée`);
+    assert.ok(!etat.fini, `${ou} : pas fini avant ${c.f4.a} parts`);
+    etat = AIDES.billesGeste(etat, {case: k}, m);
+    assert.ok(etat, `${ou} : la case ${k} se prend`);
+  }
+  assert.ok(etat.fini && etat.prises.length === c.f4.a, `${ou} : fini à ${c.f4.a} parts`);
+  assert.equal(avecEspaces(m.traces[0].texte), `${avecEspaces(m.texte)}, c’est ${ecrite(c.reponse)} ${c.f4.unite}.`);
+  // Les consignes ne disent pas la réponse ; le dessin garde sa taille.
+  [m.consigne, m.consignePrendre, m.consigneFin].forEach(t => assert.ok(!nombres(t).includes(ecrite(c.reponse)) || avecEspaces(c.texte).includes(` ${ecrite(c.reponse)} `), `${ou} : « ${t} »`));
+  const taille = e => AIDES.billesSvg(Object.assign({}, m, e)).match(/viewBox="([^"]+)"/)[1];
+  assert.equal(taille({tours: 0, fini: false}), taille({tours: m.n / m.d, fini: true, prises: [0, 1]}));
+}
+const nombres = texte => (avecEspaces(texte).replace(/\d+\/\d+/g, "").match(/\d+(,\d+)?/g) || []);
+function verifierOutilLot7c(c) {
+  const aide = CORE.aideDe(c);
+  const image = CORE.imageDe(c);
+  const m = CORE.manipulationDe(c);
+  if (c.module === "F4") {
+    assert.equal(aide.outil, "tout-parts", c.texte);
+    assert.deepEqual([aide.d, aide.pris, aide.part, aide.trouve], [c.f4.d, c.f4.a, null, null], c.texte);
+    sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
+    assert.ok(!textesSvg(AIDES.dessinerImage(aide)).map(avecEspaces).includes(ecrite(c.f4.p)), `${c.texte} : une part n'est pas écrite sur l'aide`);
+    const textes = textesSvg(AIDES.dessinerImage(image)).map(avecEspaces);
+    assert.ok(textes.includes(ecrite(c.reponse)) && textes.filter(t => t === ecrite(c.f4.p)).length === c.f4.a, `${c.texte} : la correction écrit une part dans chaque part prise, puis la réponse`);
+    const billes = c.niveau === 1 && c.f4.N <= 30;
+    assert.equal(Boolean(m), billes, `${c.texte} : des billes jusqu'à 30, jamais au niveau 2`);
+    if (m) verifierBillesPrendre(m, c, c.texte);
+    return;
+  }
+  const fleches = aide.outil === "fois-fraction";
+  if (fleches) {
+    // Au-delà de 30 parts (F9) : les deux flèches, « × ? », la case vide.
+    assert.equal(c.module, "F9", c.texte);
+    assert.equal(m, null, c.texte);
+    assert.ok(!aide.montre && image.montre, c.texte);
+    assert.match(AIDES.dessinerImage(aide), />[×÷][\s\u00a0]\d+</, c.texte);
+    sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
+    return;
+  }
+  if (c.module === "F11" && c.forme.startsWith("fraction")) {
+    // « 6 × □/6 = 5 » : les 6 parts égales de 5, chacune « ?/6 » ; la
+    // correction écrit 5/6 dans chacune.
+    assert.equal(aide.outil, "barre-droite");
+    const {a, d} = c.f11;
+    assert.deepEqual(aide.haut.map(h => h.texte), Array(d).fill(`?/${d}`), c.texte);
+    assert.deepEqual(image.haut.map(h => h.texte), Array(d).fill(`${a}/${d}`), c.texte);
+    assert.equal(aide.pris, a * d, c.texte);
+    assert.equal(m, null, c.texte);
+    return;
+  }
+  verifierBarre(c, aide, image, c.texte);
+  if (c.module === "F11" && c.niveau === 2) assert.equal(m, null, `${c.texte} : pas de bandes en 6e`);
+  else if (m) verifierBandes(m, c, c.texte);
+  else assert.ok(c.module === "F9" && ["trois", "mixtes"].includes(c.forme) || c.module === "F11" || c.module === "F9", c.texte);
+}
+function verifierApprendsLot7c(fiche, niveau, cle) {
+  const a = niveau.apprends;
+  const outil = {F4: "tout-parts", F9: "barre-droite", F11: "barre-droite"}[fiche.id];
+  assert.equal(a.represente.outil, outil, cle);
+  assert.equal(a.image.outil, a.manipule && fiche.id === "F4" ? "tout-parts" : outil, cle);
+  assert.equal(a.manipule ? a.manipule.outil : null, {"F4-1": "billes", "F9-1": "bandes", "F11-1": "bandes"}[cle] || null, cle);
+  const r = ecrite(a.represente.reponse);
+  // (« Fraction et quotient » : la réponse est déjà dans le calcul, 7 × 3/7 = 3.)
+  if (cle !== "F11-2") sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} : Avec le dessin`, {aria: fiche.id === "F4"});
+  // J'écris commence par le calcul cherché, son dessin se remplit.
+  const cherche = avecEspaces(a.calculs.ecris.texte).replace(/, c’est □.*$/, "").replace(/ = .*$/, "");
+  assert.ok(avecEspaces(a.ecris.consigne).startsWith(cherche), `${cle} : ${a.ecris.consigne}`);
+  const svgs = a.ecris.dessins.map(AIDES.dessinerImage);
+  assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin de J'écris se remplit`);
+  assert.ok(r);
+}
+
+test("lot 7c : les niveaux de la carte v3 (nombre, paliers, types), à leur place dans le parcours", () => {
+  assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, n.type]), [[2, "P"], [3, "P"]]);
+  assert.deepEqual(CORE.moduleDe("F11").niveaux.map(n => [n.palier, n.type]), [[3, "P"], [4, "P"]]);
+  // F4-2 passe au CM2 (décision du lot 7c), à la fin du palier 3.
+  const p3 = CORE.ORDRE.filter(cle => CORE.niveauDe(cle).niveau.palier === 3);
+  assert.equal(p3[p3.length - 1], "F4-2");
+  ["F4-1", "F4-2", "F9-1", "F9-2", "F11-1", "F11-2"].forEach(cle => assert.ok(CORE.ORDRE.includes(cle), cle));
 });
