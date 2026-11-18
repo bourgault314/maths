@@ -514,14 +514,14 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
   assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 125], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 125 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 117], "sur les modules construits : 117 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8 + F1, F3 + D5, D6, D7 + D8, D9, M13 + F4, F9, F11)");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 125], "sur les modules construits : 125 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8 + F1, F3 + D5, D6, D7 + D8, D9, M13 + F4, F9, F11 + M11, A9, C4, M9)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2, 2]);
   assert.equal(a2.construit, true);
   assert.deepEqual(r.modules.find(m => m.id === "M2").etats, ["classe", "su"], "mise de côté = « à voir en classe »");
   assert.deepEqual(r.modules.find(m => m.id === "A5").etats, ["revoir", "gris", "gris", "gris"], "ratée aujourd'hui : rouge pour la journée");
-  assert.equal(r.modules.find(m => m.id === "M9").construit, false, "un module à venir est dans la liste, non construit");
+  assert.equal(r.modules.find(m => m.id === "C2").construit, false, "un module à venir est dans la liste, non construit"); // (lot 7d : M9 est construit ; C2, un identifiant réservé)
   assert.equal(r.modules.find(m => m.id === "M7").construit, true, "modules lot 4 : M7 est construit");
   assert.equal(r.modules.find(m => m.id === "A3").construit, true, "modules lot 2 : A3 est construit");
   assert.equal(r.modules.find(m => m.id === "A1").construit, true, "modules lot 1 : A1 est construit");
@@ -550,7 +550,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 125, 117, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 125, 125, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);

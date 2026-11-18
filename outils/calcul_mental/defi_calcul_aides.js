@@ -4289,12 +4289,258 @@
   }
 
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).
+
+  // ============================================ lot 7d (18/11/2026)
+
+  // ------------------------------------------- les paquets et le reste (M11)
+
+  // 46 = 6 × 7 + □ : la barre de 46 (accolade au-dessus), coupée en parts
+  // de 7 — à l'échelle, le reste est plus court qu'une part — et le reste
+  // au bout, hachuré (lisible en noir et blanc). Sous les parts :
+  // « 6 × 7 = ? » (« ? × 7 » quand on cherche le nombre de parts) ; sous le
+  // reste, le reste. Le reste nul : une petite case vide au bout.
+  //   o : {n, q, d, r, cherche ("reste" | "quotient"), masque, etape (J'écris :
+  //        1, les parts sont comptées ; 2, tout)}
+  const PAQUETS = Object.freeze({largeur: 560, gauche: 16, droite: 544, haut: 44, rang: 52, resteMin: 40});
+  function paquetsReste(o) {
+    const {largeur: W, gauche, droite, haut: y, rang, resteMin} = PAQUETS;
+    const cache = Boolean(o.masque);
+    const etape = cache ? (o.etape || 0) : 3;
+    const pVu = etape >= 1;
+    const fini = etape >= 2;
+    const qVu = o.cherche !== "quotient" || fini;
+    const rVu = o.cherche !== "reste" || fini;
+    const L = droite - gauche;
+    // La largeur d'une unité : le reste garde de quoi écrire son nombre.
+    const brut = L / (o.q * o.d + o.r);
+    const wr0 = o.r ? Math.max(resteMin, o.r * brut) : resteMin * .8;
+    const w = Math.min(brut * o.d, (L - wr0) / o.q);
+    const wr = Math.min(wr0, w - 8 > resteMin ? Math.max(resteMin, o.r * w / o.d) : wr0);
+    const total = o.q * w + wr;
+    const x0 = gauche + (L - total) / 2;
+    const xr = x0 + o.q * w;
+    const H = y + rang + 104;
+    let s = `<svg class="dc-paquets" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrirePaquets(o)}">`
+      + `<defs><pattern id="dc-hachures-reste" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="9" stroke="#9fb6c6" stroke-width="2.6"/></pattern></defs>`;
+    s += accoladeHaut(x0 + 2, (o.r ? xr + wr : xr) - 2, y - 3, nombre(o.n));
+    // On cherche le nombre de parts : la barre n'est pas encore coupée (on
+    // ne compte pas les parts sur le dessin).
+    if (!qVu) s += `<rect x="${x0}" y="${y}" width="${o.q * w}" height="${rang}" fill="${cache && pVu ? "#e5f7eb" : "#eef4fb"}" stroke="#143451" stroke-width="2.5"/>`
+      + `<text x="${x0 + o.q * w / 2}" y="${y + rang / 2 + 7}" text-anchor="middle" font-size="19" font-weight="700" fill="#143451">des parts de ${nombre(o.d)}</text>`;
+    for (let i = 0; qVu && i < o.q; i += 1) {
+      s += `<rect x="${x0 + i * w}" y="${y}" width="${w}" height="${rang}" fill="${cache && pVu ? "#e5f7eb" : "#eef4fb"}" stroke="#143451" stroke-width="2.5"/>`
+        + `<text x="${x0 + i * w + w / 2}" y="${y + rang / 2 + 7}" text-anchor="middle" font-size="${w < 40 ? 17 : 20}" font-weight="700" fill="#143451">${nombre(o.d)}</text>`;
+    }
+    // Le reste : hachuré ; nul, une case vide en pointillés.
+    const etatR = !cache ? "" : rVu ? (o.cherche === "reste" ? "trouve" : "") : "cherche";
+    s += `<rect x="${xr}" y="${y}" width="${wr}" height="${rang}" fill="${o.r ? "url(#dc-hachures-reste)" : "#fff"}" stroke="#143451" stroke-width="2.5" stroke-dasharray="${o.r ? "none" : "6 4"}"/>`;
+    s += pastille(xr + wr / 2, y + rang / 2, rVu ? nombre(o.r) : "?", etatR, 19);
+    // Sous les parts : combien de parts, et combien elles font.
+    s += accolade(x0 + 2, xr - 2, y + rang + 4, `${qVu ? nombre(o.q) : "?"} × ${nombre(o.d)} = ${pVu ? nombre(o.q * o.d) : "?"}`, cache && !(pVu && qVu), cache && pVu && qVu);
+    s += `<text x="${xr + wr / 2}" y="${y + rang + 26}" text-anchor="middle" font-size="16" font-weight="700" fill="#5b7286">reste</text>`;
+    return s + "</svg>";
+  }
+  function decrirePaquets(o) {
+    const cache = Boolean(o.masque);
+    const etape = cache ? (o.etape || 0) : 3;
+    const qVu = o.cherche !== "quotient" || etape >= 2;
+    const rVu = o.cherche !== "reste" || etape >= 2;
+    const pVu = etape >= 1;
+    return `La barre de ${nombre(o.n)}, en parts de ${nombre(o.d)} : ${qVu ? `${nombre(o.q)} parts` : "combien de parts : un nombre à trouver"}, ${pVu ? `elles font ${nombre(o.q * o.d)}` : "ce qu’elles font : un nombre à trouver"}. Le reste : ${rVu ? nombre(o.r) : "un nombre à trouver"}.`;
+  }
+
+
+  // ------------------------------------------- les termes regroupés (A9)
+
+  // 27 + 48 + 73 : les termes en étiquettes ; un arc relie ceux qui font un
+  // compte rond (« 27 + 73 = 100 ») — deux paires (quatre termes) : un arc
+  // au-dessus, un arc dessous. Plus bas : les comptes ronds, puis ce qui
+  // reste, et l'accolade. Le dessin de M10, avec « + ».
+  //   o : {termes, paires, groupes, seuls, masque, trouves (J'écris : les
+  //        comptes ronds déjà écrits), fini}
+  const TERMES = Object.freeze({largeur: 460, tuile: 64, signe: 30});
+  function termesRegroupes(o) {
+    const {largeur: W, tuile, signe} = TERMES;
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    const groupeVu = k => !cache || !ecrit || k < o.trouves;
+    const finiVu = !cache || (ecrit && Boolean(o.fini));
+    const deux = o.paires.length > 1;
+    const y1 = 58;
+    const y2 = y1 + (deux ? 150 : 96);
+    const H = y2 + 104;
+    const largeurTuile = t => Math.max(tuile, String(t).length * 15 + 24);
+    const rangee = (valeurs, y, etats) => {
+      const ws = valeurs.map(largeurTuile);
+      const total = ws.reduce((a, b) => a + b, 0) + signe * (valeurs.length - 1);
+      let x = (W - total) / 2;
+      const centres = [];
+      let s = "";
+      valeurs.forEach((v, i) => {
+        const e = etats[i] || "";
+        const [fond, bord, encre] = e === "groupe" ? ["#eaf2ff", "#0755b8", "#0755b8"] : e === "cherche" ? ["#f3f6fa", "#0755b8", "#0755b8"] : ["#fff", "#143451", "#143451"];
+        s += `<rect x="${x}" y="${y}" width="${ws[i]}" height="48" rx="10" fill="${fond}" stroke="${bord}" stroke-width="${e ? 3 : 2.5}"/>`
+          + `<text x="${x + ws[i] / 2}" y="${y + 33}" text-anchor="middle" font-size="24" font-weight="700" fill="${encre}">${v}</text>`;
+        centres.push(x + ws[i] / 2);
+        x += ws[i];
+        if (i < valeurs.length - 1) { s += `<text x="${x + signe / 2}" y="${y + 32}" text-anchor="middle" font-size="24" fill="#143451">+</text>`; x += signe; }
+      });
+      return {s, centres, gauche: (W - total) / 2, droite: (W + total) / 2};
+    };
+    // (À sa taille, comme les facteurs de M10 : étirée, l'image à quatre
+    // nombres cachait « Valider » en 1366 × 657.)
+    let s = `<svg class="dc-escalier dc-termes" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireTermes(o)}">`;
+    const dansPaire = new Set(o.paires.flat());
+    const haut = rangee(o.termes.map(nombre), y1, o.termes.map((_, k) => (dansPaire.has(k) ? "groupe" : "")));
+    s += haut.s;
+    o.paires.forEach(([i, j], k) => {
+      const xa = haut.centres[i];
+      const xb = haut.centres[j];
+      const etat = cache && !groupeVu(k) ? "cherche" : ecrit && groupeVu(k) ? "trouve" : "";
+      const texte = `${nombre(o.termes[i])} + ${nombre(o.termes[j])} = ${groupeVu(k) ? nombre(o.groupes[k]) : "?"}`;
+      if (k === 0) {
+        s += `<path d="M${xa} ${y1 - 4} C${xa} ${y1 - 40} ${xb} ${y1 - 40} ${xb} ${y1 - 4}" fill="none" stroke="#0755b8" stroke-width="3"/>`;
+        s += pastille((xa + xb) / 2, y1 - 34, texte, etat, 19);
+      } else {
+        s += `<path d="M${xa} ${y1 + 52} C${xa} ${y1 + 88} ${xb} ${y1 + 88} ${xb} ${y1 + 52}" fill="none" stroke="#0755b8" stroke-width="3" stroke-dasharray="8 4"/>`;
+        s += pastille((xa + xb) / 2, y1 + 84, texte, etat, 19);
+      }
+    });
+    s += `<text x="${W / 2}" y="${y2 - 14}" text-anchor="middle" font-size="22" fill="#5b7286">=</text>`;
+    const bas = rangee([...o.groupes.map((g, k) => (groupeVu(k) ? nombre(g) : "?")), ...o.seuls.map(i => nombre(o.termes[i]))], y2,
+      [...o.groupes.map((_, k) => (cache && !groupeVu(k) ? "cherche" : "groupe")), ...o.seuls.map(() => "")]);
+    s += bas.s;
+    s += accolade(bas.gauche + 2, bas.droite - 2, y2 + 52, finiVu ? nombre(o.termes.reduce((a, b) => a + b, 0)) : "?", !finiVu, ecrit && finiVu);
+    return s + "</svg>";
+  }
+  function decrireTermes(o) {
+    const cache = Boolean(o.masque);
+    const ecrit = cache && o.trouves !== undefined;
+    const vu = k => !cache || !ecrit || k < o.trouves;
+    const fini = !cache || (ecrit && Boolean(o.fini));
+    const ronds = o.paires.map(([i, j], k) => `${nombre(o.termes[i])} + ${nombre(o.termes[j])} = ${vu(k) ? nombre(o.groupes[k]) : "un nombre à trouver"}`).join(" ; ");
+    return `${o.termes.map(nombre).join(" + ")} : ${ronds}. En tout : ${fini ? nombre(o.termes.reduce((a, b) => a + b, 0)) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------------- remonter les flèches (C4)
+
+  // (2 × □) − 5 = 23 : trois cases, le nombre cherché à gauche. Au-dessus,
+  // les flèches du calcul (→ × 2 → − 5) ; dessous, les flèches à l'envers
+  // (÷ 2 ← + 5 ←) : on remonte de la droite vers la gauche. J'écris remplit
+  // la case du milieu, puis le nombre cherché.
+  //   o : {valeurs [x, milieu, fin], ops [[signe, v], [signe, v]], masque,
+  //        etape (J'écris : 1, la case du milieu ; 2, tout)}
+  const CHAINE = Object.freeze({largeur: 500, caseL: 96, haut: 46, caseH: 64});
+  const INVERSE_SIGNE = Object.freeze({"+": "−", "−": "+", "×": "÷", "÷": "×"});
+  let compteurChaines = 0;
+  function chaineRemonter(o) {
+    const {largeur: W, caseL, haut: y, caseH} = CHAINE;
+    const cache = Boolean(o.masque);
+    const etape = cache ? (o.etape || 0) : 3;
+    const vus = [etape >= 2, etape >= 1, true];
+    const pas = (W - 3 * caseL) / 2;
+    const xs = [0, 1, 2].map(i => i * (caseL + pas));
+    const H = y + caseH + 56;
+    compteurChaines += 1;
+    const id = `dc-ch-${compteurChaines}`;
+    let s = `<svg class="dc-chaine" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireChaine(o)}">`
+      + `<defs><marker id="${id}-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5b7286"/></marker>`
+      + `<marker id="${id}-r" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0755b8"/></marker></defs>`;
+    o.valeurs.forEach((v, i) => {
+      const cherche = cache && !vus[i];
+      const trouve = cache && vus[i] && i < 2;
+      const [fond, bord, encre, ep] = cherche ? ["#fff", "#0755b8", "#0755b8", 3] : trouve ? ["#e5f7eb", "#147447", "#147447", 3] : ["#fff", "#143451", "#143451", 2.5];
+      s += `<rect x="${xs[i] + 2}" y="${y}" width="${caseL - 4}" height="${caseH}" rx="10" fill="${fond}" stroke="${bord}" stroke-width="${ep}"/>`
+        + `<text x="${xs[i] + caseL / 2}" y="${y + caseH / 2 + 10}" text-anchor="middle" font-size="28" font-weight="700" fill="${encre}">${vus[i] ? nombre(v) : "?"}</text>`;
+    });
+    o.ops.forEach(([signe, v], i) => {
+      const xa = xs[i] + caseL + 4;
+      const xb = xs[i + 1] - 4;
+      const mx = (xa + xb) / 2;
+      // Le calcul, en haut, de gauche à droite (gris).
+      const ya = y + 16;
+      s += `<line x1="${xa}" y1="${ya}" x2="${xb - 2}" y2="${ya}" stroke="#5b7286" stroke-width="2.4" marker-end="url(#${id}-a)"/>`
+        + `<text x="${mx}" y="${ya - 9}" text-anchor="middle" font-size="24" font-weight="700" fill="#5b7286">${signe} ${nombre(v)}</text>`;
+      // Je remonte, en bas, de droite à gauche (bleu).
+      const yr = y + caseH - 16;
+      s += `<line x1="${xb}" y1="${yr}" x2="${xa + 2}" y2="${yr}" stroke="#0755b8" stroke-width="3.2" marker-end="url(#${id}-r)"/>`;
+      s += pastille(mx, yr + 30, `${INVERSE_SIGNE[signe]} ${nombre(v)}`, "", 23);
+    });
+    return s + "</svg>";
+  }
+  function decrireChaine(o) {
+    const cache = Boolean(o.masque);
+    const etape = cache ? (o.etape || 0) : 3;
+    const [x, milieu, fin] = o.valeurs;
+    const [[s1, v1], [s2, v2]] = o.ops;
+    return `Le calcul : le nombre cherché, ${s1} ${nombre(v1)}, puis ${s2} ${nombre(v2)}, donne ${nombre(fin)}. Je remonte : ${nombre(fin)} ${INVERSE_SIGNE[s2]} ${nombre(v2)} = ${etape >= 1 ? nombre(milieu) : "un nombre à trouver"}, puis ${INVERSE_SIGNE[s1]} ${nombre(v1)} : ${etape >= 2 ? nombre(x) : "un nombre à trouver"}.`;
+  }
+
+  // ------------------------------------------- le rectangle dont on retire une bande (M9)
+
+  // 45 × 9 = 45 × 10 − 45 : le rectangle de 45 sur 10 (accolade « 10 »
+  // au-dessus) ; à droite, la bande de 1 qu'on retire, hachurée (lisible en
+  // noir et blanc) ; dans le grand rectangle, « 45 × 10 » et son produit ;
+  // dans la bande, « 45 × 1 » ; sous ce qui reste, l'accolade « 45 × 9 ».
+  // Pas à l'échelle : la bande garde la place de son calcul.
+  //   o : {a (le nombre), b (9, 19, 99, 98), rond (10, 20, 100), enleve (1
+  //        ou 2), masque, etape (J'écris : 1, le grand produit ; × 98 : 2,
+  //        la bande), etapes}
+  const RETIRE = Object.freeze({largeur: 560, gauche: 70, droite: 548, haut: 52, hauteur: 116, bande: 120});
+  function rectangleRetire(o) {
+    const {largeur: W, gauche, droite, haut, hauteur, bande} = RETIRE;
+    const cache = Boolean(o.masque);
+    const etapes = o.etapes || (o.enleve === 2 ? 3 : 2);
+    const etape = cache ? (o.etape || 0) : etapes;
+    const grandVu = etape >= 1;
+    const petitVu = o.enleve === 1 || etape >= 2 || !cache;
+    const finiVu = etape >= etapes;
+    const x1 = droite - bande;
+    const H = haut + hauteur + 72;
+    let s = `<svg class="dc-retire" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireRetire(o)}">`
+      + `<defs><pattern id="dc-hachures" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#5b7286" stroke-width="2.4"/></pattern></defs>`;
+    // La hauteur, à gauche : le nombre.
+    s += `<line x1="${gauche - 16}" y1="${haut}" x2="${gauche - 16}" y2="${haut + hauteur}" stroke="#143451" stroke-width="2"/>`
+      + `<line x1="${gauche - 22}" y1="${haut}" x2="${gauche - 10}" y2="${haut}" stroke="#143451" stroke-width="2"/>`
+      + `<line x1="${gauche - 22}" y1="${haut + hauteur}" x2="${gauche - 10}" y2="${haut + hauteur}" stroke="#143451" stroke-width="2"/>`
+      + `<text x="${gauche - 26}" y="${haut + hauteur / 2 + 7}" text-anchor="end" font-size="19" font-weight="700" fill="#143451">${nombre(o.a)}</text>`;
+    // Le grand rectangle, puis la bande hachurée.
+    s += `<rect x="${gauche}" y="${haut}" width="${droite - gauche}" height="${hauteur}" fill="${cache && grandVu ? "#e5f7eb" : "#fff"}" stroke="#143451" stroke-width="3"/>`;
+    s += `<rect x="${x1}" y="${haut}" width="${bande}" height="${hauteur}" fill="url(#dc-hachures)" stroke="#143451" stroke-width="3" stroke-dasharray="9 5"/>`;
+    s += accoladeHaut(gauche + 3, droite - 3, haut - 3, nombre(o.rond));
+    const etiquette = (cx, cy, calcul, valeur, etat) => {
+      const lw = Math.max(calcul.length * 11 + 14, 50);
+      const pw = Math.max(valeur.length * 13 + 22, 46);
+      const style = etat === "trouve" ? ["#e5f7eb", "#147447", "#147447", 2.5] : etat === "cherche" ? ["#fff", "#0755b8", "#0755b8", 3] : ["#fff", "#143451", "#143451", 2];
+      return `<rect x="${cx - lw / 2}" y="${cy - 34}" width="${lw}" height="30" rx="8" fill="#fff" stroke="#9fb6c6" stroke-width="1.5"/>`
+        + `<text x="${cx}" y="${cy - 12}" text-anchor="middle" font-size="19" fill="#143451">${calcul}</text>`
+        + `<rect x="${cx - pw / 2}" y="${cy + 2}" width="${pw}" height="32" rx="8" fill="${style[0]}" stroke="${style[1]}" stroke-width="${style[3]}"/>`
+        + `<text x="${cx}" y="${cy + 25}" text-anchor="middle" font-size="20" font-weight="700" fill="${style[2]}">${valeur}</text>`;
+    };
+    const cy = haut + hauteur / 2;
+    s += etiquette((gauche + x1) / 2, cy, `${nombre(o.a)} × ${nombre(o.rond)}`, grandVu || !cache ? nombre(o.a * o.rond) : "?", !cache ? "" : grandVu ? "trouve" : "cherche");
+    s += etiquette(x1 + bande / 2, cy, `${nombre(o.a)} × ${o.enleve}`, petitVu ? `− ${nombre(o.a * o.enleve)}` : "?", !cache || o.enleve === 1 ? "" : petitVu ? "trouve" : "cherche");
+    // Sous ce qui reste : le produit cherché.
+    s += accolade(gauche + 2, x1 - 2, haut + hauteur + 4, `${nombre(o.a)} × ${nombre(o.b)} = ${finiVu || !cache ? nombre(o.a * o.b) : "?"}`, cache && !finiVu, cache && finiVu);
+    s += `<text x="${x1 + bande / 2}" y="${haut + hauteur + 30}" text-anchor="middle" font-size="17" font-weight="700" fill="#5b7286">on retire</text>`;
+    return s + "</svg>";
+  }
+  function decrireRetire(o) {
+    const cache = Boolean(o.masque);
+    const etapes = o.etapes || (o.enleve === 2 ? 3 : 2);
+    const etape = cache ? (o.etape || 0) : etapes;
+    return `Rectangle de ${nombre(o.a)} sur ${nombre(o.rond)} : ${nombre(o.a)} × ${nombre(o.rond)} = ${etape >= 1 ? nombre(o.a * o.rond) : "un nombre à trouver"}. On retire une bande de ${nombre(o.a)} sur ${o.enleve} : ${o.enleve === 1 || etape >= 2 ? nombre(o.a * o.enleve) : "un nombre à trouver"}. Il reste ${nombre(o.a)} × ${nombre(o.b)} : ${etape >= etapes ? nombre(o.a * o.b) : "un nombre à trouver"}.`;
+  }
+
   function dessinerImage(image) {
     if (!image) return "";
     if (image.outil === "tableau-fleches") return tableauFleches(image);
     if (image.outil === "barres") return barres(image);
     if (image.outil === "barres-fois") return barresFois(image);
-    if (image.outil === "rectangle") return rectangle(image);
+    if (image.outil === "rectangle") return image.retire ? rectangleRetire(image) : rectangle(image);
+    if (image.outil === "paquets") return paquetsReste(image);
+    if (image.outil === "termes") return termesRegroupes(image);
+    if (image.outil === "chaine") return chaineRemonter(image);
     if (image.outil === "parts") return partsEgales(image);
     if (image.outil === "bande") return bandeTable(image);
     if (image.outil === "points") return rectanglePoints(image);

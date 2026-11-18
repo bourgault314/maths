@@ -246,7 +246,7 @@ test("5. « Fractions au-delà de 1 » au CM1 : sommes et différences au-delà 
   assert.equal(espaces(CORE.nouveauteDe(pile.find(c => c.lu.cotes[0][0].d === 5)).texte), "Nouveau : j’arrive pile sur 1 : 5 cinquièmes font une unité.");
   // Les comptes : palier 2 a une compétence de plus, palier 3 une de moins.
   const compte = P.compter(P.creerParcours(), CARTE);
-  assert.deepEqual(compte.paliers.map(p => p.total), [40, 31, 42, 12]); // (lot 7c : F4-2 au CM2)
+  assert.deepEqual(compte.paliers.map(p => p.total), [40, 33, 40, 12]); // (lot 7c : F4-2 au CM2)
 });
 
 // ----------------------------------------------------- 6. retester au lieu d'imposer J'apprends
@@ -334,7 +334,7 @@ test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'é
 
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261116-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-1/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
   assert.match(page, /defi_calcul\.css\?v=20261115-3/);
   const version = await lire("../_serveur/public/VERSION");

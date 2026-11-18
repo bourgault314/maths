@@ -32,7 +32,7 @@ const tirages = (cle, n = 40) => {
 };
 
 test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 117, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11");
+  assert.equal(NIVEAUX.length, 125, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;

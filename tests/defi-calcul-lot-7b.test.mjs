@@ -34,8 +34,8 @@ test("lot 7b : 8 compétences construites, au palier 3 ; le palier 3 en a 33, la
   });
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 117); // (lot 7c : F4, F9, F11)
-  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 37); // (lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e)
+  assert.equal(construits.length, 125); // (lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
+  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 40); // (lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
   assert.equal(CORE.moduleDe("D8").niveaux[0].type, "F", "la moitié des impairs jusqu'à 15 : un fait à savoir");
 });
 
@@ -192,5 +192,5 @@ test("lot 7b : les aides écrivent un décimal avec sa virgule ; À retenir coup
   assert.match(AIDES.dessinerImage({outil: "barres", sorte: "moitie", n: 13.6, morceaux: [13, 0.6]}).replace(/ masque/, ""), /aria-label="Schéma : la barre de 13,6 : 13 et 0,6/);
   assert.deepEqual(AIDES.bilanEnDeux("double de 13,6 = 26 + 1,2 = 27,2."), {phrase: "", calcul: "double de 13,6 = 26 + 1,2 = 27,2"});
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.ok(page.includes("split(/(?<=\\.)\\s+(?=[A-ZÀ-ÖØ-Þ\\d]|(?:double|moitié) de )/)"));
+  assert.ok(page.includes("split(/(?<=\\.)\\s+(?=[A-ZÀ-ÖØ-Þ\\d(]|(?:double|moitié) de )/)")); // (lot 7d : aussi une ligne qui commence par « ( »)
 });
