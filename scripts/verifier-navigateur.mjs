@@ -98,6 +98,9 @@ export const RECETTES = [
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
     garde: ["outils/evaluations_nationales/", "outils/index.html", "assets/css/catalogue-refonte.css"] },
+  // Lot EN-D1 : sur ordinateur et au tableau, la question grandit avec l'écran et tient entière dans le cadre.
+  { fichier: "tests/evaluations-nationales-taille-ecran-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
+    garde: ["outils/evaluations_nationales/"] },
 
   { fichier: "tests/defi-conversions-ecrans.cjs", appli: "defi-conversions", besoin: ["playwright"], garde: DEFI_CONVERSIONS },
   // Le robot du lot A2 : tous les écrans de chaque étape, à 4 tailles, dans Chromium ET WebKit
