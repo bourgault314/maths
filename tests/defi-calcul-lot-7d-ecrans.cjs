@@ -192,7 +192,7 @@ const ecartListe = page => page.evaluate(() => {
     await cas(`${f} : Avec le dessin — reste nul, nombre de parts, quatre nombres, les schémas de C4, × 19, × 98`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
       const poses = [["M11", 1, "20 = 4 × 5 + □", "reste-nul"], ["M11", 2, "51 = □ × 8 + 3", "parts"], ["A9", 1, "18 + 25 + 82 + 35 = □", "quatre"], ["A9", 2, "1,8 + 4,5 + 0,5 + 0,2 = □", "quatre-dec"],
-        ["C4", 1, "3 × (2 + □) = 27", "fois-par"], ["C4", 1, "18 = 10 + (□ ÷ 5)", "plus-div"], ["C4", 2, "(4 × □) − 3 = 23", "decimal"], ["M9", 1, "6 × 19 = □", "x19"], ["M9", 2, "12 × 98 = □", "x98"]];
+        ["C4", 1, "3 × (2 + □) = 27", "fois-par"], ["C4", 1, "18 = 10 + (□ ÷ 5)", "plus-div"], ["C4", 2, "(4 × □) − 3 = 23", "decimal"], ["M9", 1, "16 × 19 = □", "x19"], ["M9", 2, "12 × 98 = □", "x98"]];
       for (const [id, n, t, nom] of poses) {
         assert.ok(await appel(s.page, "poser", id, n, t.replace(/□/g, CORE.CASE), "image"), `${t} : posé`);
         await pause(s.page, 500);
