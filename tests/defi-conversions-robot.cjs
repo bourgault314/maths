@@ -283,6 +283,14 @@ async function controler(page, taille) {
           const A = boites[i];
           const B = boites[j];
           if (A.e === B.e || A.e.contains(B.e) || B.e.contains(A.e)) continue;
+          // (Lot B2-2a : le haut et le bas d'une même fraction en colonne,
+          // .frac, sont serrés par leur hauteur de ligne de 1,05 ; leurs
+          // boîtes de texte se recouvrent de 3 px environ alors que la
+          // barre les sépare — mesuré par Code dans WebKit et Chromium.
+          // On ne les compare pas entre eux ; une fraction contre un autre
+          // texte se teste comme avant.)
+          const fracA = A.e.closest(".frac");
+          if (fracA && fracA === B.e.closest(".frac")) continue;
           const l = Math.max(A.b.left, B.b.left);
           const r = Math.min(A.b.right, B.b.right);
           const h = Math.max(A.b.top, B.b.top);
@@ -578,7 +586,7 @@ async function faireLeGeste(page, aide) {
       await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe"].includes(aide.type)) {
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "barre2", "droite2"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");

@@ -134,6 +134,13 @@ function attendue(q) {
       d.parts.forEach(([n]) => assert.match(n, /^[1-9]$/, "un chiffre par morceau"));
       return [lire(d.parts[d.cache][0])];
     }
+    // Lot B2-2a : C6, n⁄d de l'unité (et `a` unités entières), recalculé.
+    case "frac": {
+      const [num, den, ent] = [BigInt(d.n), BigInt(d.d), BigInt(d.a)];
+      const unite = versUnite(1000n, d.de, d.vers);
+      assert.equal((unite * num) % (den * 1000n), 0n, "la fraction ne tombe pas juste");
+      return [ent * unite + (unite * num) / den];
+    }
     case "pb": case "vrai": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
       const b = versUnite(lire(d.b), d.ub, d.vers);
@@ -199,6 +206,7 @@ function controlerQuestion(q, ou) {
         if (d.type === "conv") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
         else if (d.type === "duree-deux") attenduTexte = `${rec[0] / 1000n} h ${rec[1] / 1000n} min`;
         else if (d.type === "entre") attenduTexte = q.reponseTexte.replace(/\u00a0/g, " ");
+        else if (d.type === "frac") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
         else attenduTexte = String(rec[0] / 1000n);
         assert.equal(bonTexte, attenduTexte, `${ou} : le bon choix « ${bonTexte} » ≠ ${attenduTexte}`);
       } else assert.ok(G.verifier(q, Array.isArray(q.reponse) ? q.reponse : q.reponse).juste, `${ou} : la bonne réponse est refusée`);
@@ -248,10 +256,11 @@ function controlerQuestion(q, ou) {
   // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
   // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
   // (Lot B2-1 : C3 et C4 aussi.)
-  if (["P2", "P3", "P4", "C3", "C4", "C5"].includes(q.code)) {
+  if (["P2", "P3", "P4", "C3", "C4", "C5", "C6"].includes(q.code)) {
     const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
     const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
-    if (q.donnees.type !== "comparer-mes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
+    // (Les bandes de C6 : la réponse est le nom d'une bande, l'image la récrit.)
+    if (q.donnees.type !== "comparer-mes" && q.donnees.type !== "bandes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
     assert.ok(!aide.includes(q.resume.replace(/[\u00a0\u202f]/g, " ")), `${ou} : l'aide donne le résumé`);
     if (q.choix && q.forme === "qcm") q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi && q.pourquoi[k], `${ou} : pas de pourquoi pour « ${c} »`); });
     if (q.glisse) {
@@ -295,6 +304,36 @@ function controlerQuestion(q, ou) {
         const r = G.verifier(q, q.bons.concat([k]));
         assert.ok(!r.juste && r.retour, `${ou} : une carte fausse cochée acceptée`);
       });
+    }
+  }
+  // Lot B2-2a : C6 — « 75 cL = … L » (¼, ½ ou ¾ au choix) et les bandes
+  // de S002 (37⁄10 cm ou 4 + 3⁄10 cm), recalculés à part ; la fraction
+  // s'écrit avec la barre U+2044 ; la double droite cherche la bonne
+  // graduation ; une situation dit sa mesure.
+  if (q.donnees.type === "frac-part") {
+    const d = q.donnees;
+    const unite = versUnite(1000n, d.vers, d.de);
+    const [n, den] = q.choix[q.bon].split("\u2044").map(BigInt);
+    assert.equal(unite * n / den, lire(d.valeur), `${ou} : ${q.choix[q.bon]} ≠ ${d.valeur} ${d.de}`);
+    assert.deepEqual(q.choix, ["1\u20444", "1\u20442", "3\u20444"]);
+    assert.equal(q.droite.cherche, Number(n * 4n / den));
+    q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi[k], `${ou} : pas de pourquoi`); });
+  }
+  if (q.donnees.type === "bandes") {
+    const d = q.donnees;
+    const A = Number(d.a);
+    const B = Number(d.b) * 10 + Number(d.c);
+    assert.equal(q.bon, A === B ? 2 : A > B ? 0 : 1, `${ou} : la plus longue`);
+    assert.ok(A % 10 !== 0 && Number(d.c) >= 1 && Number(d.c) <= 9, `${ou} : ${A}, ${d.c}`);
+    q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi[k], `${ou} : pas de pourquoi`); });
+  }
+  if (q.code === "C6") {
+    const tout = [q.texte, ...(q.choix || []), ...(q.correction || []), ...(q.image || [])].join(" ");
+    assert.doesNotMatch(tout, /\d\/\d|[½¼¾]/, `${ou} : une fraction sans la barre U+2044 dans « ${tout} »`);
+    if (q.droite) assert.ok(q.droite.cherche > 0 && q.droite.cherche < q.droite.parts * q.droite.tout, `${ou} : graduation ${q.droite.cherche}`);
+    if (q.donnees.type === "frac" && q.morceaux.situation) {
+      assert.match(q.texte, /\. Combien de [a-zéè]+\u00a0\?$/, `${ou} : « ${q.texte} »`);
+      assert.ok(Number(q.donnees.a) ? /et demi/.test(q.texte) : q.texte.includes(`${q.donnees.n}\u2044${q.donnees.d}\u00a0${q.donnees.de}`), `${ou} : la mesure n'est pas dans « ${q.texte} »`);
     }
   }
   if (q.donnees.type === "associer-rel") {
@@ -657,7 +696,8 @@ for (const code of PRETES) {
       Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"],
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
-      C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"]}[code];
+      C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
+      C6: ["nombre", "phrase", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1097,4 +1137,42 @@ test("lot B2-1b : C5 — les sortes, les séries à zéro, les erreurs, « Coche
   const p = trouve(q => q.forme === "plusieurs" && q.bons.length === 3);
   assert.match(G.verifier(p, p.bons.slice(0, 2)).retour, /^Tu as oublié \d/);
   assert.equal(G.verifier(p, p.bons.slice(0, 1)).retour, "Tu en as oublié deux.");
+});
+
+test("lot B2-2a : C6 — les fractions usuelles, les places, les erreurs, la double droite", () => {
+  const toutes = [];
+  for (let g = 1; g <= 800; g += 1) ["entraine", "valide"].forEach(u => toutes.push(...G.serie("C6", {usage: u, graine: g})));
+  const sortes = new Set(toutes.map(q => q.sorteC6));
+  ["1/2", "1/4", "3/4", "dixiemes", "demi-plus", "pont", "part", "bandes"].forEach(s => assert.ok(sortes.has(s), `la sorte ${s} ne tombe pas`));
+  // Les exemples officiels de S002 tombent (½ km, ¼ kg, ½ t ; ¾ m est un exemple de On te montre).
+  ["C6:1/4kg>g", "C6:1/2t>kg", "C6:1/2L>cL", "C6:1/4L>cL", "C6:3/4kg>g", "C6:1/10L>cL"].forEach(c => assert.ok(toutes.some(q => (q.cleBase || q.cle) === c), `${c} ne tombe pas`));
+  // Des situations de La Réunion.
+  assert.ok(toutes.some(q => /rougail|letchis|goyavier|cannes à sucre|piments/.test(q.texte)), "pas de situation de La Réunion");
+  // Les places : Je valide — une phrase en 3e, un pont en 5e, une situation en 7e, « … = … L » en 9e ; À toi.
+  for (let g = 1; g <= 300; g += 1) {
+    const v = G.serie("C6", {usage: "valide", graine: g});
+    assert.equal(v[2].forme, "phrase"); assert.ok(!v[2].morceaux.situation);
+    assert.equal(v[4].sorteC6, "pont"); assert.ok(v[6].morceaux.situation, `valide ${g} : une situation en 7e`);
+    assert.equal(v[8].sorteC6, "part");
+    const e = G.serie("C6", {usage: "entraine", graine: g});
+    assert.deepEqual([4, 11, 22].map(i => e[i].sorteC6), ["pont", "pont", "pont"]);
+    assert.deepEqual([8, 17, 20].map(i => e[i].sorteC6), ["part", "part", "bandes"]);
+  }
+  // Les erreurs : chacune déclenchée, une ligne courte.
+  const vues = new Set();
+  toutes.filter(q => q.donnees.type === "frac").forEach(q => {
+    const d = q.donnees;
+    const f = Number(G.facteur(d.de, d.vers));
+    [f / Number(d.d), Number(q.reponse) * 10, f * 3, `${d.n}${d.d}`, `${d.a},5`].forEach(x => {
+      const r = G.verifier(q, String(x));
+      if (!r.juste && r.retour) { vues.add(r.erreur); assert.ok(r.retour.length <= 32, `pourquoi trop long : « ${r.retour} »`); }
+    });
+  });
+  [1, 2, 3, 4].forEach(e => assert.ok(vues.has(e), `l'erreur ${e} n'est jamais dite`));
+  // Pas de « Je prévois » en C6 ; la double droite et la barre vont ensemble.
+  toutes.forEach(q => {
+    assert.equal(G.fauxDeSens(q), null);
+    if (q.droite && q.barre) assert.equal(q.droite.parts % q.barre.parts, 0);
+    if (q.donnees.type === "frac") assert.equal(q.droite.cherche, Number(q.donnees.n));
+  });
 });

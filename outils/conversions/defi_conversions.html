@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b21b">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b22a">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261118-b21b"></script>
-  <script src="./conversions_generateurs.js?v=20261118-b21b"></script>
+  <script src="./conversions_carte.js?v=20261118-b22a"></script>
+  <script src="./conversions_generateurs.js?v=20261118-b22a"></script>
   <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261118-b21b"></script>
+  <script src="./defi_conversions_aides.js?v=20261118-b22a"></script>
   <script>
   (function () {
     "use strict";
@@ -92,8 +92,16 @@
     function el(tag, classe, texte) {
       const e = document.createElement(tag);
       if (classe) e.className = classe;
-      if (texte !== undefined && texte !== null) e.textContent = texte;
+      // (Lot B2-2a : une fraction, « 3⁄4 », s'écrit en colonne.)
+      if (texte !== undefined && texte !== null) {
+        if (String(texte).includes("⁄")) e.appendChild(AIDES.texteFractions(texte));
+        else e.textContent = texte;
+      }
       return e;
+    }
+    // Un morceau de texte, ses fractions en colonne (lot B2-2a).
+    function texteNoeud(texte) {
+      return String(texte).includes("⁄") ? AIDES.texteFractions(texte) : document.createTextNode(texte);
     }
     function bouton(texte, classe, action) {
       const b = el("button", `btn${classe ? ` ${classe}` : ""}`, texte);
@@ -595,7 +603,7 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -1127,6 +1135,16 @@
       return d;
     }
     function bonneReponse(zone, question) {
+      // Lot B2-2a (C6, choix de Gwenaël du 18/11) : la double droite
+      // complétée (la graduation demandée en vert), et le calcul dessous.
+      if (question.droite) {
+        AIDES.doubleDroite(zone, question.droite, {mode: "correction"});
+        // (Au choix, la ligne de calcul ne vient pas : avec « Tu as choisi »,
+        // la correction de « 250 mL = … L » passait à 75 % au petit iPhone
+        // dans Je valide. La double droite dit la bonne graduation.)
+        if (!question.choix) zone.appendChild(el("div", "rel petite libre", question.correction[0]));
+        return;
+      }
       // (Lot 3b : une conversion au choix, sous son glisse-unité, s'écrit
       // comme une conversion au pavé : une ligne, la réponse en vert.)
       const choixGlisse = question.forme === "qcm" && question.glisse && question.resume.endsWith(question.reponseTexte);
@@ -1258,7 +1276,7 @@
             ex.apres.forEach((ligne, k) => {
               if (k) a.appendChild(el("br"));
               const vert = ex.apres.length > 1 && k === ex.apres.length - 1 && /^=/.test(ligne);
-              a.appendChild(vert ? el("span", "v", ligne) : document.createTextNode(ligne));
+              a.appendChild(vert ? el("span", "v", ligne) : texteNoeud(ligne));
             });
             ui.zone.appendChild(a);
           }
@@ -1446,7 +1464,7 @@
       const r = el("div", "retenir");
       r.appendChild(el("div", "eti", "À retenir"));
       const p = el("p");
-      etape.retenir.split("\n").forEach((l, i) => { if (i) p.appendChild(el("br")); p.appendChild(document.createTextNode(l)); });
+      etape.retenir.split("\n").forEach((l, i) => { if (i) p.appendChild(el("br")); p.appendChild(texteNoeud(l)); });
       r.appendChild(p);
       return r;
     }
@@ -1615,9 +1633,9 @@
       const r = question.resume;
       const v = question.reponseTexte;
       const k = r.endsWith(v) ? r.length - v.length : r.lastIndexOf(v);
-      if (k < 0) { parent.appendChild(document.createTextNode(r)); return parent; }
-      parent.append(document.createTextNode(r.slice(0, k)), el("span", "v", v));
-      if (k + v.length < r.length) parent.appendChild(document.createTextNode(r.slice(k + v.length)));
+      if (k < 0) { parent.appendChild(texteNoeud(r)); return parent; }
+      parent.append(texteNoeud(r.slice(0, k)), el("span", "v", v));
+      if (k + v.length < r.length) parent.appendChild(texteNoeud(r.slice(k + v.length)));
       return parent;
     }
     function blocCorrection(erreurs) {

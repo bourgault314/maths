@@ -37,8 +37,46 @@
   function el(tag, classe, texte) {
     const e = root.document.createElement(tag);
     if (classe) e.className = classe;
-    if (texte !== undefined && texte !== null) e.textContent = texte;
+    if (texte !== undefined && texte !== null) {
+      if (String(texte).includes(BARRE)) e.appendChild(texteFractions(texte));
+      else e.textContent = texte;
+    }
     return e;
+  }
+  // Lot B2-2a (choix de Gwenaël du 18/11) : une fraction s'écrit en
+  // colonne, le numérateur sur le dénominateur, comme au tableau. Les
+  // générateurs l'écrivent avec la barre de fraction U+2044 (« 3⁄4 ») ; ce
+  // texte devient trois morceaux : le haut, la barre (cachée, pour que le
+  // texte lu reste « 3⁄4 »), le bas. Rend un fragment.
+  const BARRE = "⁄";
+  function texteFractions(texte) {
+    const f = root.document.createDocumentFragment();
+    // (La fraction et son unité ne se séparent pas en fin de ligne :
+    // « 1⁄4 L » restent ensemble, comme un nombre et son unité.)
+    const morceaux = String(texte).split(/(\d+⁄\d+(?:\u00a0[^\s\u00a0]+)?)/);
+    morceaux.forEach(m => {
+      const x = m.match(/^(\d+)⁄(\d+)(\u00a0[^\s\u00a0]+)?$/);
+      if (!x) { if (m) f.appendChild(root.document.createTextNode(m)); return; }
+      const s = root.document.createElement("span");
+      s.className = "frac";
+      const haut = root.document.createElement("span");
+      haut.className = "fn";
+      haut.textContent = x[1];
+      const barre = root.document.createElement("span");
+      barre.className = "fs";
+      barre.textContent = BARRE;
+      const bas = root.document.createElement("span");
+      bas.className = "fd";
+      bas.textContent = x[2];
+      s.append(haut, barre, bas);
+      if (x[3]) {
+        const ensemble = root.document.createElement("span");
+        ensemble.className = "frac-unite";
+        ensemble.append(s, root.document.createTextNode(x[3]));
+        f.appendChild(ensemble);
+      } else f.appendChild(s);
+    });
+    return f;
   }
   function svg(tag, attributs, texte) {
     const e = root.document.createElementNS(SVG, tag);
@@ -54,7 +92,7 @@
     String(texte).split("\n").forEach((ligne, i) => {
       ligne = carte().typo(ligne);
       if (i) bloc.appendChild(el("br"));
-      bloc.appendChild(root.document.createTextNode(ligne));
+      bloc.appendChild(texteFractions(ligne));
     });
     return bloc;
   }
@@ -380,6 +418,189 @@
     });
     dessiner();
     return enChaine(() => toucher(etat.findIndex(x => x !== !aide.regrouper)), () => etat.some(x => x !== !aide.regrouper), 380);
+  }
+
+  // --------------------------------- les fractions usuelles (lot B2-2a, C6)
+  // Choix de Gwenaël du 18/11, sur maquette : l'outil de « À toi », la
+  // double droite graduée ; l'image, la barre partagée ; la correction, la
+  // double droite complétée.
+  const BLEU = "#0755b8";
+  const VERT = "#147447";
+  const ROUGE = "#a93030";
+  const GRIS = "#8ea1af";
+  const ENCRE = "#143451";
+  // Une fraction en colonne dans un dessin, centrée sur x ; y : la barre.
+  // `entier` : un nombre devant (« 1 » et « 1⁄2 » pour un et demi).
+  function fracDessin(g, x, y, n, d, {taille = 13, couleur = ENCRE, entier = 0} = {}) {
+    const ecrit = (xx, yy, t, tl = taille) => g.appendChild(svg("text", {x: xx.toFixed(1), y: yy.toFixed(1), "text-anchor": "middle", "font-size": tl, "font-weight": 900, fill: couleur}, t));
+    if (d === 1 || n === 0) { ecrit(x, y + taille * 0.38, String(n + entier * d), taille + 2); return; }
+    const l = Math.max(String(n).length, String(d).length) * taille * 0.62 + 4;
+    const xf = entier ? x + taille * 0.45 : x;
+    if (entier) ecrit(x - l / 2 - taille * 0.2, y + taille * 0.38, String(entier), taille + 2);
+    ecrit(xf, y - 3, String(n));
+    g.appendChild(svg("line", {x1: (xf - l / 2).toFixed(1), y1: y, x2: (xf + l / 2).toFixed(1), y2: y, stroke: couleur, "stroke-width": 1.6}));
+    ecrit(xf, y + taille - 1, String(d));
+  }
+  function pgcd(a, b) {
+    return b ? pgcd(b, a % b) : a;
+  }
+  // La double droite graduée. aide : {haut (l'unité de la fraction), bas
+  // (l'unité de la réponse), parts (par unité), valeur (1 haut en bas),
+  // cherche (la graduation demandée), tout (le nombre d'unités), partie
+  // (« 75 cL = … L » : la fraction est cherchée, la valeur donnée)}.
+  // mode : "outil" (en bas : 0 et les unités entières, « ? » à la
+  // graduation demandée ; en haut : les fractions, toutes s'il y en a 4 au
+  // plus) ; "correction" (tout écrit, la graduation demandée en vert) ;
+  // "montre" (On te montre : chaque toucher écrit une graduation de plus,
+  // jusqu'à la graduation demandée).
+  function doubleDroite(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const G = gen();
+    const parts = Number(aide.parts);
+    const tout = Number(aide.tout || 1);
+    const ticks = parts * tout;
+    const cherche = Number(aide.cherche);
+    // `debut` (un litre et demi, quatre kilomètres et demi) : la droite
+    // commence à l'unité entière d'avant (4 km = 4 000 m), pas à 0.
+    const debut = Number(aide.debut || 0);
+    const unite = G.milli(String(aide.valeur));
+    const valeurDe = k => G.ecrire((unite * BigInt(k + debut * parts)) / BigInt(parts));
+    const x0 = 22;
+    const x1 = 284;
+    const yH = 44;
+    const yB = 82;
+    const X = k => x0 + ((x1 - x0) * k) / ticks;
+    const boite = el("div", "dessin-boite droite2-boite");
+    const dessin = svg("svg", {viewBox: "0 0 340 116", class: `dessin droite2${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": "La double droite graduée"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let vus = mode === "montre" ? 0 : cherche;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: 340, height: 116, fill: "transparent"}));
+      [yH, yB].forEach(y => {
+        dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x1 + 14, y2: y, stroke: ENCRE, "stroke-width": 2.4}));
+        dessin.appendChild(svg("path", {d: `M${x1 + 16} ${y} l-8 -5 v10 Z`, fill: ENCRE}));
+      });
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yH + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, aide.haut));
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yB + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, aide.bas));
+      const fin = mode === "montre" ? vus >= cherche : mode === "correction";
+      const ici = fin ? VERT : BLEU;
+      for (let k = 0; k <= ticks; k += 1) {
+        const x = X(k);
+        const entier = k % parts === 0;
+        const marque = k === cherche;
+        [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: x, y1: y - (entier ? 8 : 6), x2: x, y2: y + (entier ? 8 : 6),
+          stroke: marque ? ici : ENCRE, "stroke-width": entier || marque ? 2.4 : 1.6})));
+        // En haut : les fractions de l'unité.
+        const petite = ticks > 4 || tout > 1;
+        const ecrireHaut = entier || (marque && !aide.partie) || (!aide.partie && !petite) || (mode === "correction" && !petite);
+        if (marque && aide.partie && mode !== "correction") {
+          dessin.appendChild(svg("text", {x, y: yH - 16, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: ROUGE}, "?"));
+        } else if (ecrireHaut) {
+          const e = Math.floor(k / parts) + debut;
+          const r = k % parts;
+          // (Deux quarts s'écrivent 1⁄2 ; les dixièmes restent des dixièmes.)
+          const p = r && parts === 4 ? pgcd(r, parts) : 1;
+          fracDessin(dessin, x, yH - 23, r ? r / p : 0, r ? parts / p : 1, {taille: ticks >= 10 ? 11 : 12.5, couleur: marque ? (mode === "correction" ? VERT : BLEU) : ENCRE, entier: e});
+        }
+        // En bas : les valeurs.
+        let texte = null;
+        let couleur = ENCRE;
+        if (entier) texte = valeurDe(k);
+        else if (marque) {
+          if (aide.partie || fin) { texte = valeurDe(k); couleur = aide.partie && !fin ? BLEU : VERT; }
+          else { texte = "?"; couleur = ROUGE; }
+        } else if (mode === "correction" && ticks <= 4) { texte = valeurDe(k); couleur = GRIS; }
+        else if (mode === "montre" && k <= vus) { texte = valeurDe(k); couleur = BLEU; }
+        if (texte !== null) dessin.appendChild(svg("text", {x, y: yB + 24, "text-anchor": "middle", "font-size": marque ? 16 : ticks >= 10 ? 12 : 14, "font-weight": 900, fill: couleur}, texte));
+      }
+      const xc = X(cherche);
+      dessin.appendChild(svg("line", {x1: xc, y1: yH + 8, x2: xc, y2: yB - 8, stroke: ici, "stroke-width": 2, "stroke-dasharray": "4 3"}));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche la droite");
+    boite.appendChild(note);
+    const toucher = () => {
+      if (vus >= cherche) return;
+      vus += 1;
+      dessiner();
+      if (vus >= cherche) { note.remove(); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < cherche, 450);
+  }
+  // La barre partagée : l'unité entière (« 1 L = 100 cL »), coupée en
+  // `parts`, les `colorees` premières en bleu, l'accolade et la fraction
+  // dessous. `touche` (On te montre) : la barre entière d'abord ; un
+  // toucher la partage, chaque part dit sa valeur (« 25 cL »).
+  function barrePartagee(zone, aide, {touche = false, fini = () => {}} = {}) {
+    const G = gen();
+    const parts = Number(aide.parts);
+    const colorees = Number(aide.colorees || 0);
+    const unite = G.milli(String(aide.valeur));
+    const x0 = 16;
+    const x1 = 324;
+    const y0 = 30;
+    const h = 38;
+    const boite = el("div", "dessin-boite barre2-boite");
+    const dessin = svg("svg", {viewBox: `0 0 340 ${colorees ? 124 : 76}`, class: `dessin barre2${touche ? " a-toucher" : ""}`, role: "img", "aria-label": "La barre partagée"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let coupee = !touche;
+    function dessiner() {
+      dessin.textContent = "";
+      if (touche) dessin.appendChild(svg("rect", {x: 0, y: 0, width: 340, height: 124, fill: "transparent"}));
+      dessin.appendChild(svg("path", {d: `M${x0} 22 v-7 h${x1 - x0} v7`, fill: "none", stroke: ENCRE, "stroke-width": 2}));
+      dessin.appendChild(svg("text", {x: (x0 + x1) / 2, y: 11, "text-anchor": "middle", "font-size": 14.5, "font-weight": 900, fill: ENCRE},
+        `1${NB}${aide.haut} = ${G.ecrire(unite)}${NB}${aide.bas}`));
+      const n = coupee ? parts : 1;
+      const pas = (x1 - x0) / n;
+      for (let k = 0; k < n; k += 1) {
+        const x = x0 + k * pas;
+        const pleine = coupee && k < colorees;
+        dessin.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: pas.toFixed(1), height: h, fill: pleine ? "#cfe2fb" : "#fff", stroke: BLEU, "stroke-width": 2.4}));
+        if (!coupee) {
+          dessin.appendChild(svg("text", {x: x + pas / 2, y: y0 + h / 2 + 6, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: ENCRE}, `1${NB}${aide.haut}`));
+          dessin.appendChild(svg("text", {x: x + pas / 2, y: y0 + h + 22, "text-anchor": "middle", "font-size": 12, fill: GRIS}, "touche-moi"));
+        } else if (touche) {
+          dessin.appendChild(svg("text", {x: x + pas / 2, y: y0 + h / 2 + 5, "text-anchor": "middle", "font-size": parts >= 10 ? 10.5 : 14, "font-weight": 900, fill: BLEU},
+            `${G.ecrire(unite / BigInt(parts))}${NB}${aide.bas}`));
+        } else {
+          const gr = svg("g", {});
+          const dix = parts >= 10;
+          fracDessin(gr, x + pas / 2 - (dix ? 0 : 7), y0 + h / 2, 1, parts, {taille: dix ? 9.5 : 11.5, couleur: BLEU});
+          if (!dix) gr.appendChild(svg("text", {x: x + pas / 2 + 9, y: y0 + h / 2 + 5, "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: BLEU}, aide.haut));
+          dessin.appendChild(gr);
+        }
+      }
+      if (coupee && colorees) {
+        const xb = x0 + colorees * pas;
+        const y = y0 + h + 8;
+        dessin.appendChild(svg("path", {d: `M${x0 + 1} ${y} v7 h${(xb - x0 - 2).toFixed(1)} v-7`, fill: "none", stroke: BLEU, "stroke-width": 2}));
+        const p = parts === 4 ? pgcd(colorees, parts) : 1;
+        const xm = (x0 + xb) / 2;
+        fracDessin(dessin, xm - 9, y + 30, colorees / p, parts / p, {taille: 13.5, couleur: BLEU});
+        dessin.appendChild(svg("text", {x: xm + 11, y: y + 35, "text-anchor": "middle", "font-size": 15, "font-weight": 900, fill: BLEU}, aide.haut));
+      }
+    }
+    dessiner();
+    if (!touche) return null;
+    const toucher = () => {
+      if (coupee) return;
+      coupee = true;
+      dessin.setAttribute("viewBox", "0 0 340 124");
+      dessiner();
+      fini();
+    };
+    dessin.setAttribute("viewBox", "0 0 340 124");
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
   }
 
   // ------------------------------------------------------- le verre doseur
@@ -1661,6 +1882,9 @@
       return null;
     }
     if (aide.type === "barres") return barres(zone, aide, f);
+    // Lot B2-2a : les fractions usuelles.
+    if (aide.type === "barre2") return barrePartagee(zone, aide, {touche: true, fini: f});
+    if (aide.type === "droite2") return doubleDroite(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "verre") return verre(zone, aide, f);
     if (aide.type === "balance") return balance(zone, aide, f);
     if (aide.type === "horloge") return horloge(zone, aide, f);
@@ -1745,6 +1969,17 @@
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       return;
     }
+    // Lot B2-2a (C6) : la double droite graduée, la relation à côté de
+    // l'étiquette ; les bandes à comparer : deux lignes.
+    if (question.outil === "droite2" && question.droite) {
+      zone.appendChild(el("div", "rel petite", question.relation));
+      doubleDroite(zone, question.droite);
+      return;
+    }
+    if (question.outil === "lignes" && question.outilLignes) {
+      zone.appendChild(lignes("rel", question.outilLignes.join("\n")));
+      return;
+    }
     if (question.outil === "barre-heure" && question.heure) {
       const h = question.heure;
       if (h.quarts !== undefined || h.demis !== undefined) {
@@ -1784,6 +2019,12 @@
   }
 
   function image(zone, question) {
+    // Lot B2-2a (C6) : la barre partagée, et le calcul posé dessous.
+    if (question.barre) {
+      barrePartagee(zone, question.barre);
+      if (question.image && question.image.length) zone.appendChild(lignes("rel petite libre", question.image.join("\n")));
+      return;
+    }
     // Lot B1-2 : les préfixes et les relations — l'échelle des unités.
     if (question.echelle) { echelle(zone, question.echelle); return; }
     // Lot B1-1 : « Est-ce vraisemblable ? » — l'image est le repère le plus
@@ -1899,6 +2140,6 @@
     return s;
   }
 
-  return Object.freeze({echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });
