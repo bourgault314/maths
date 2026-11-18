@@ -420,6 +420,32 @@
       .tvf-cases tbody td{padding:0}
       .tvf-cases .tvf-saisie{grid-column:1/-1;padding-left:10px}
     }
+    /* Lot EN-D1 (18/11/2026) — ordinateur et tableau : la question grandit avec l'écran. ajusterTaille (dans le script de la page)
+       règle --k = la plus grande taille qui tient ENTIÈRE dans le cadre, sans défiler (1 = la taille d'avant), et --kb pour
+       les boutons du bas (moitié moins). Le cadre s'élargit jusqu'à 1 240 px et descend jusqu'en bas de l'écran (plus de
+       plafond à 700 px de haut). Téléphone et petite tablette (moins de 700 px de large) : rien ne change. */
+    @media(min-width:700px){
+      .en-passation .shell{width:min(1240px,calc(100% - 40px))}
+      /* Rien ne tient même à --k = 1 : la question retrouve la largeur d'avant le lot (une figure qui suit la largeur du
+         cadre redevient aussi petite qu'avant). */
+      html.taille-base .en-passation .shell{width:min(860px,calc(100% - 28px))}
+      #q-corps>*{zoom:var(--k,1)}
+      .actions button{font-size:calc(1rem * var(--kb,1))}
+      #valider{min-height:calc(48px * var(--kb,1));min-width:8em}
+      .q-carte{height:max(380px,calc(100vh - 196px));height:max(380px,calc(100dvh - 196px))}
+    }
+    @media(min-width:700px) and (max-height:760px){
+      .q-carte{height:max(360px,calc(100vh - 156px));height:max(360px,calc(100dvh - 156px))}
+      /* L'énoncé ne rapetisse plus sur une fenêtre basse (écran de tableau, portable) : c'est --k qui fait tenir. Si même à
+         --k = 1 la question ne tient pas, ajusterTaille met « taille-base » : on retrouve exactement l'écran d'avant. */
+      html:not(.taille-base) .q-enonce{font-size:1.35rem}
+    }
+    /* La calculatrice (Résolution de problèmes) reste À CÔTÉ du cadre à partir de 1 340 px : quand le test l'a, le cadre
+       lui laisse sa place à droite (524 px = 2 × (232 + 10 + 20)). */
+    @media(min-width:1340px){
+      .en-passation.avec-calculatrice .shell{width:min(1240px,calc(100% - 524px))}
+      .avec-calculatrice .calculatrice{right:calc((100vw - min(1240px,100vw - 524px)) / 2 - 242px)}
+    }
   </style>
 </head>
 <body>
@@ -546,6 +572,6 @@
   <script src="./sujets/4e_exemples_geometrie.js?v=20261114-21"></script>
   <script src="./sujets/4e_exemples_nombres.js?v=20261114-30"></script>
   <script src="./sujets/4e_exemples_expressions.js?v=20261114-30"></script>
-  <script src="./evaluation.js?v=20261114-81"></script>
+  <script src="./evaluation.js?v=20261118-1"></script>
 </body>
 </html>

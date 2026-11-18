@@ -183,6 +183,7 @@
     $("#passer").style.visibility = it.g.feuille ? "hidden" : "";
     $("#q-corps").scrollTop = 0;
     calculatrice.question(sujet.calculatrice && it.q.calculatrice !== false);
+    ajusterTaille();
   }
 
   // Question en grille (lot EN5b, comme sur le papier : Vrai / Faux, Aigu / Droit / Obtus…) : un tableau, une ligne par
@@ -243,7 +244,40 @@
     zone.classList.toggle("une-colonne", deborde);
   }
   // Une police qui arrive après l'affichage change la largeur des réponses : on refait la mesure.
-  const remesurer = () => { if (passation && !$("#passe").hidden) ajusterColonnes(); };
+  // Lot EN-D1 (18/11/2026) : sur ordinateur et au tableau, la question prend la plus grande taille qui tient ENTIÈRE dans
+  // le cadre, sans défiler : on part de la taille que permet l'écran (largeur / 720, hauteur / 405, entre 1 et 2,4) et on
+  // descend par pas de 0,05 tant que quelque chose déborde, jamais sous 1 (et, si même 1 ne tient pas, l'écran redevient
+  // exactement celui d'avant le lot : classe « taille-base »). Téléphone et petite
+  // tablette (moins de 700 px de large) : rien ne change. --kb (les boutons du bas) est arrondi au 1/16 pour que la page
+  // tombe sur un pixel entier (sinon une barre de défilement d'un demi-pixel apparaît).
+  function ajusterTaille() {
+    const racine = document.documentElement;
+    const largeur = window.innerWidth, hauteur = window.innerHeight;
+    racine.classList.remove("taille-base");
+    if (largeur < 700) {
+      racine.style.removeProperty("--k");
+      racine.style.removeProperty("--kb");
+      ajusterColonnes();
+      return;
+    }
+    const corps = $("#q-corps");
+    const deborde = () => corps.scrollHeight > corps.clientHeight
+      || document.body.getBoundingClientRect().height > hauteur
+      || [...corps.children].some((el) => el.scrollWidth > el.clientWidth + 1);
+    let k = Math.min(2.4, Math.max(1, Math.min(largeur / 720, hauteur / 405)));
+    for (let n = 0; n < 40; n++) {
+      racine.style.setProperty("--k", k.toFixed(2));
+      racine.style.setProperty("--kb", String(Math.round(16 * (1 + (k - 1) / 2)) / 16));
+      ajusterColonnes();
+      if (!deborde()) return;
+      if (k <= 1) break;
+      k = Math.max(1, k - 0.05);
+    }
+    // Même à 1, ça ne tient pas (fenêtre basse, longue question) : l'énoncé reprend sa taille d'avant le lot.
+    racine.classList.add("taille-base");
+    ajusterColonnes();
+  }
+  const remesurer = () => { if (passation && !$("#passe").hidden) ajusterTaille(); };
   window.addEventListener("resize", remesurer);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remesurer);
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", remesurer);
@@ -452,6 +486,8 @@
         bouton.style.visibility = avec ? "visible" : "hidden";
         bouton.disabled = !avec;
         bouton.hidden = !sujet.calculatrice;
+        // Lot EN-D1 : sur grand écran, le cadre laisse la place de la calculatrice à sa droite (evaluation.html).
+        document.body.classList.toggle("avec-calculatrice", Boolean(sujet.calculatrice));
       },
     };
   })();
