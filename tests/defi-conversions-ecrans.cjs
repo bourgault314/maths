@@ -156,6 +156,11 @@ async function repondre(page, juste = true) {
       for (const k of ordre) await page.locator(".ranger button").nth(k).click();
     }
     await page.locator("#cadre .action").click();
+  } else if (q.forme === "plusieurs") {
+    // Lot B2-1b : « Coche » — les bonnes cartes (faux : et une fausse).
+    const cartes = juste ? q.bons : q.bons.concat([[0, 1, 2, 3].find(k => !q.bons.includes(k))]);
+    for (const k of cartes) await page.locator(".coche button").nth(k).click();
+    await page.locator("#cadre .action").click();
   } else if (q.choix) {
     const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
     await page.locator(".choix button").nth(i).click();

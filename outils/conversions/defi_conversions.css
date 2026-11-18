@@ -983,3 +983,31 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 @media (max-width: 380px) {
   .num-ligne > span { font-size: .75rem; }
 }
+/* Lot B2-1b : « Coche tout ce qui est égal à… » (choix de Gwenaël du 18/11 :
+   une case à cocher dans chaque carte, comme le rond de Ranger). Quatre
+   cartes, deux par ligne, à la place du pavé ; rien ne bouge. */
+.coche { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .5rem; height: 100%; }
+.coche button { border: .15625rem solid #9fbbd0; border-radius: .75rem; background: #fff; display: flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .25rem .5rem; font-size: 1.375rem; font-weight: 900; white-space: nowrap; cursor: pointer; min-width: 0; }
+.coche .boite { flex: 0 0 1.5rem; height: 1.5rem; border-radius: .375rem; border: .125rem solid #9fbbd0; background: #fff; display: flex; align-items: center;
+  justify-content: center; color: #fff; font-size: 1rem; line-height: 1; }
+.coche button.coche-on { border-color: var(--blue); box-shadow: 0 0 0 .1875rem #d5e5fb; }
+.coche button.coche-on .boite { background: var(--blue); border-color: var(--blue); }
+.coche button:focus-visible { outline: .1875rem solid #f2c94c; outline-offset: .125rem; }
+.coche.fige button { pointer-events: none; box-shadow: none; }
+.coche button.bon { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.coche button.bon .boite { background: var(--green); border-color: var(--green); }
+.coche button.faux { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+.coche button.faux .boite { background: var(--red); border-color: var(--red); }
+.coche button.oublie { border: .1875rem solid var(--green); color: var(--green); }
+.coche button.eteint { opacity: .5; }
+@media (max-height: 700px), (max-height: 800px) and (max-width: 899px) { .coche button { font-size: 1.25rem; } }
+@media (max-height: 640px), (max-height: 800px) and (max-width: 899px) { .coche { gap: .3125rem; } .coche button { font-size: 1.125rem; gap: .375rem; padding: .25rem .375rem; } }
+/* La correction : les quatre cartes, petites, comme l'élève les a cochées. */
+.mini-cartes { display: grid; grid-template-columns: 1fr 1fr; gap: .3125rem; width: 100%; max-width: 20rem; margin: 0 auto; }
+.mini-cartes span { border: .125rem solid #c9d6e0; border-radius: .5rem; padding: .125rem .25rem; text-align: center; font-weight: 900; font-size: 1.0625rem;
+  white-space: nowrap; color: #6b7f8d; background: #fff; }
+.mini-cartes span.bon { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.mini-cartes span.faux { border-color: var(--red); background: var(--red-soft); color: var(--red); text-decoration: line-through; }
+.mini-cartes span.oublie { border: .1875rem solid var(--green); color: var(--green); }
+.reponse-bonne .egales { margin-top: .375rem; }

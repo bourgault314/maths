@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b21">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b21b">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261118-b21"></script>
-  <script src="./conversions_generateurs.js?v=20261118-b21"></script>
+  <script src="./conversions_carte.js?v=20261118-b21b"></script>
+  <script src="./conversions_generateurs.js?v=20261118-b21b"></script>
   <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261118-b21"></script>
+  <script src="./defi_conversions_aides.js?v=20261118-b21b"></script>
   <script>
   (function () {
     "use strict";
@@ -595,11 +595,12 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
       zone.appendChild(reponse);
+      reponse.querySelectorAll(".mini-cartes span").forEach(dansLaCase);
     }
     // `neutre` (lot 3a) : après « Je ne sais pas », pas de rouge ni de
     // reproche : la correction, et c'est tout.
@@ -767,9 +768,10 @@
         regle();
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
         if (question.forme === "vrai-faux") qEl.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
-      } else if (question.forme === "associer" || question.forme === "ranger") {
+      } else if (question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") {
         // Lot A2 bis : relier, ranger. La consigne ; les objets et les
-        // mesures sont à la place du pavé.
+        // mesures sont à la place du pavé. (Lot B2-1b : « Coche tout ce qui
+        // est égal à… », ses quatre cartes aussi.)
         qEl.appendChild(el("div", "phrase-t", m.phrase));
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
       } else if (m.enonce) {
@@ -824,10 +826,13 @@
     // mêlées et sans les questions déjà vues ne se recalculent plus de
     // l'extérieur). Rien qu'on ne puisse déjà trouver avec les générateurs.
     let ici = null;
+    // Les cartes cochées de « Coche tout ce qui est égal à… » (lot B2-1b),
+    // pour les montrer dans la correction.
+    const cochesDe = new WeakMap();
     const sensPourRobot = x => { const f = G.fauxDeSens(x); return f ? Object.assign({grandit: G.sensDe(x).grandit}, f) : null; };
     window.MATHSGO_DEFI_CONVERSIONS_ECRAN = Object.freeze({
       question: () => (ici ? {forme: ici.forme, reponse: ici.reponse, choix: ici.choix || null, bon: ici.bon, bonnes: ici.bonnes || null,
-        ordre: ici.ordre || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici), resume: ici.resume} : null)
+        ordre: ici.ordre || null, bons: ici.bons || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici), resume: ici.resume} : null)
     });
 
     // Le nom d'un objet à relier (lot 3b-2) : au téléphone peu haut, son
@@ -870,8 +875,12 @@
       // prennent leur numéro ; on touche un numéro pour l'enlever.
       const relie = {lien: [null, null, null], sel: null};
       const range = [];
+      // « Coche tout ce qui est égal à… » (lot B2-1b, choix de Gwenaël du
+      // 18/11) : on touche une carte, sa case se coche ; on la retouche,
+      // elle se décoche. « Valider » s'allume dès qu'une carte est cochée.
+      const coche = [];
       let gesteEl = null;
-      const complet = () => (question.forme === "associer" ? relie.lien.every(x => x !== null) : range.length === 4);
+      const complet = () => (question.forme === "associer" ? relie.lien.every(x => x !== null) : question.forme === "plusieurs" ? coche.length > 0 : range.length === 4);
       function peindreGeste() {
         if (!gesteEl) return;
         if (question.forme === "associer") {
@@ -886,6 +895,13 @@
             lettre.className = `lettre ${i >= 0 ? `l${i}` : "vide"}`;
             b.classList.toggle("sel", Boolean(relie.sel && relie.sel[0] === "mes" && relie.sel[1] === j));
             b.classList.toggle("lie", i >= 0);
+          });
+        } else if (question.forme === "plusieurs") {
+          [...gesteEl.children].forEach((b, k) => {
+            const oui = coche.includes(k);
+            b.classList.toggle("coche-on", oui);
+            b.setAttribute("aria-pressed", oui ? "true" : "false");
+            b.querySelector(".boite").textContent = oui ? "✓" : "";
           });
         } else {
           [...gesteEl.children].forEach((b, k) => {
@@ -902,6 +918,9 @@
         if (question.forme === "ranger") {
           const n = range.indexOf(k);
           if (n >= 0) range.splice(n, 1); else range.push(k);
+        } else if (question.forme === "plusieurs") {
+          const n = coche.indexOf(k);
+          if (n >= 0) coche.splice(n, 1); else coche.push(k);
         } else if (relie.sel && relie.sel[0] !== sorte) {
           const [i, j] = sorte === "obj" ? [k, relie.sel[1]] : [relie.sel[1], k];
           relie.lien = relie.lien.map(x => (x === j ? null : x));
@@ -925,6 +944,16 @@
           mb.addEventListener("click", () => toucherGeste("mes", i));
           gesteEl.append(b, mb);
         });
+      } else if (question.forme === "plusieurs") {
+        gesteEl = el("div", "coche");
+        question.cartes.forEach((t, k) => {
+          const b = el("button", "");
+          b.type = "button";
+          b.setAttribute("aria-pressed", "false");
+          b.append(el("span", "boite", ""), el("span", "t", t));
+          b.addEventListener("click", () => toucherGeste("carte", k));
+          gesteEl.appendChild(b);
+        });
       } else if (question.forme === "ranger") {
         gesteEl = el("div", "ranger");
         question.mesures.forEach((t, k) => {
@@ -937,6 +966,9 @@
       }
       if (gesteEl) {
         ui.bas.appendChild(gesteEl);
+        // (Lot B2-1b : une carte longue, « 2 kg 650 g », sur un grand écran
+        // aux cartes étroites, se fait un peu plus petite pour tenir.)
+        if (question.forme === "plusieurs") [...gesteEl.children].forEach(dansLaCase);
         ui.action.style.visibility = "";
         ui.action.textContent = "Valider";
         ui.action.disabled = true;
@@ -981,7 +1013,13 @@
       }
       clavier = ev => {
         if (saisie.fige) { if (ev.key === "Enter" && !ui.action.disabled && ui.action.style.visibility !== "hidden") { ev.preventDefault(); ui.action.click(); } return; }
-        if (gesteEl) { if (ev.key === "Enter" && complet()) { ev.preventDefault(); repondre(null); } return; }
+        if (gesteEl) {
+          // (« Coche » : 1 à 4 cochent ou décochent les cartes.)
+          const n = Number(ev.key);
+          if (question.forme === "plusieurs" && n >= 1 && n <= question.cartes.length) { ev.preventDefault(); toucherGeste("carte", n - 1); return; }
+          if (ev.key === "Enter" && complet()) { ev.preventDefault(); repondre(null); }
+          return;
+        }
         if (question.choix) {
           const n = Number(ev.key);
           if (n >= 1 && n <= question.choix.length) repondre(n - 1);
@@ -1004,10 +1042,11 @@
       function repondre(choix, jeNeSaisPas = false) {
         if (saisie.fige) return;
         let reponse = null;
-        if (jeNeSaisPas) reponse = null;
+        if (jeNeSaisPas) { reponse = null; if (question.forme === "plusieurs") cochesDe.set(question, []); }
         else if (gesteEl) {
           if (!complet()) return;
-          reponse = question.forme === "associer" ? relie.lien.slice() : range.slice();
+          reponse = question.forme === "associer" ? relie.lien.slice() : question.forme === "plusieurs" ? coche.slice().sort((a, b) => a - b) : range.slice();
+          if (question.forme === "plusieurs") cochesDe.set(question, reponse.slice());
         } else if (question.choix) reponse = choix;
         else {
           if (saisie.cases.slice(0, nbCases).some(v => v === "" || v === ",")) {
@@ -1029,6 +1068,14 @@
               const ok = j === question.bonnes[i];
               gesteEl.querySelectorAll(".obj")[i].classList.add(ok ? "bon" : "faux");
               gesteEl.querySelectorAll(".mes")[j].classList.add(ok ? "bon" : "faux");
+            });
+          } else if (question.forme === "plusieurs") {
+            // Touchée juste : vert ; touchée fausse : rouge ; juste oubliée :
+            // contour vert.
+            [...gesteEl.children].forEach((b, k) => {
+              const touche = coche.includes(k);
+              const bonne = question.bons.includes(k);
+              b.classList.add(touche && bonne ? "bon" : touche ? "faux" : bonne ? "oublie" : "eteint");
             });
           } else range.forEach((k, n) => gesteEl.children[k].classList.add(k === question.ordre[n] ? "bon" : "faux"));
           ui.action.disabled = false;
@@ -1099,6 +1146,21 @@
         zone.appendChild(ligne);
         return;
       }
+      // « Coche tout ce qui est égal à… » (lot B2-1b) : les quatre cartes,
+      // petites, comme l'élève les a cochées (touchée juste : vert ; touchée
+      // fausse : rouge, barrée ; juste oubliée : contour vert), et la ligne
+      // des écritures égales.
+      if (question.forme === "plusieurs") {
+        const coches = cochesDe.get(question) || [];
+        const mini = el("div", "mini-cartes");
+        question.cartes.forEach((t, k) => {
+          const touche = coches.includes(k);
+          const bonne = question.bons.includes(k);
+          mini.appendChild(el("span", touche && bonne ? "bon" : touche ? "faux" : bonne ? "oublie" : "", t));
+        });
+        zone.append(mini, el("div", "rel petite egales", question.resume));
+        return;
+      }
       if (!choixGlisse && (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger")) {
         // Une seule ligne (« Je mesure une masse. ») : en grand ; plusieurs
         // (relier, ranger) : à la taille d'une phrase.
@@ -1137,6 +1199,7 @@
         // La question, sa case remplie quand le geste est fait.
         const q = ui.q;
         let caseEl = null;
+        let ajusterLigne = null;
         if (ex.question.vraisemblable) {
           q.appendChild(el("div", "enonce", ex.question.enonce));
         } else {
@@ -1155,6 +1218,26 @@
             // phrases longues (On te montre change de hauteur d'un temps à
             // l'autre ; pendant À toi, rien ne bouge).
             if (!ex.question.enonce && couperSiTropLarge(q, l, avantEl)) cadre.style.setProperty("--q-h", rem(112));
+            // (Lot B2-1b : sous un énoncé, la ligne ne se coupe pas — la
+            // hauteur est celle de l'énoncé —, elle se fait un peu plus petite :
+            // « 205 cm = 2,05 m » sous l'intrus sortait de la question au
+            // téléphone de 360 px avec une police large.)
+            if (ex.question.enonce) {
+              // (Mesurée comme couperSiTropLarge : la largeur des morceaux
+              // et des écarts, contre la place dans la question.)
+              const trop = () => {
+                const ecart = parseFloat(getComputedStyle(l).columnGap) || 0;
+                const besoin = [...l.children].reduce((a, c) => a + c.getBoundingClientRect().width, 0) + ecart * (l.children.length - 1);
+                const sq = getComputedStyle(q);
+                return besoin > q.clientWidth - parseFloat(sq.paddingLeft) - parseFloat(sq.paddingRight) - 4;
+              };
+              ajusterLigne = () => {
+                l.style.fontSize = "";
+                const taille = parseFloat(getComputedStyle(l).fontSize);
+                for (let k = 1; k <= 5 && trop(); k += 1) l.style.fontSize = `${(taille * (1 - 0.06 * k)).toFixed(2)}px`;
+              };
+              ajusterLigne();
+            }
           }
           if (!l.parentNode) q.appendChild(l);
         }
@@ -1166,6 +1249,7 @@
         const fini = () => {
           geste = true;
           if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = "case vert"; }
+          if (ajusterLigne) ajusterLigne();
           if (ex.apres && !ui.zone.querySelector(".apres")) {
             // La somme qui s'est construite laisse sa place à l'écriture finale.
             const somme = ui.zone.querySelector(".barres .somme, .dessin-boite .somme");
@@ -1541,9 +1625,9 @@
       erreurs.forEach(({question, tape, jnsp}) => {
         const ligne = el("div");
         const gauche = el("span");
-        if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger") gauche.textContent = question.resume;
+        if (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") gauche.textContent = question.resume;
         else resumeEnVert(gauche, question);
-        const geste = question.forme === "associer" || question.forme === "ranger";
+        const geste = question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs";
         ligne.append(gauche, el("small", "", jnsp ? "je ne savais pas" : geste ? "à revoir" : question.choix ? `tu as choisi ${tape}` : `tu as écrit ${String(tape).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}`));
         c.appendChild(ligne);
       });
