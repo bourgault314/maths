@@ -306,8 +306,12 @@
     const x0 = 10;
     const y0 = 36;
     const h = 40;
-    const pas = W / (aide.n + r);
-    const largeur = i => (r && i === n - 1 ? pas * r : pas);
+    // (Lot B2-1b : un petit morceau, « 0,15 m », garde au moins 48 de large
+    // pour qu'on lise « 0,15 m » et qu'on le touche ; les mètres se
+    // partagent le reste. Celui de C3, « 0,5 m », n'est pas changé.)
+    const wr = r ? Math.max((W / (aide.n + r)) * r, 48) : 0;
+    const pas = (W - wr) / aide.n;
+    const largeur = i => (r && i === n - 1 ? wr : pas);
     const etat = Array(n).fill(Boolean(aide.regrouper));
     const boite = el("div", "barres");
     const dessin = svg("svg", {viewBox: "0 0 360 106", class: "metre", role: "img"});
@@ -341,11 +345,11 @@
             const lg = k % 10 === 0 ? 16 : k % 5 === 0 ? 11 : 7;
             g.appendChild(svg("line", {x1: xx.toFixed(2), y1: y0 + h, x2: xx.toFixed(2), y2: y0 + h - lg, stroke: "#0755b8", "stroke-width": k % 10 === 0 ? 1.4 : 0.7}));
           }
-          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 17, "text-anchor": "middle", "font-size": aide.n > 3 ? 11 : 13, fill: "#143451"}, grandeT(i)));
+          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 17, "text-anchor": "middle", "font-size": aide.n > 3 ? 11 : w < 56 && grandeT(i).length > 5 ? 11.5 : 13, fill: "#143451"}, grandeT(i)));
           g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": aide.n > 3 ? 11 : 15, fill: "#0755b8"}, petiteT(i)));
         } else {
           g.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: w.toFixed(1), height: h, fill: "#fff", stroke: "#143451", "stroke-width": 2.5}));
-          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 26, "text-anchor": "middle", "font-size": w < 70 ? 13 : aide.n > 3 ? 13 : 16, fill: "#143451"}, grandeT(i)));
+          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 26, "text-anchor": "middle", "font-size": w < 56 && grandeT(i).length > 5 ? 11.5 : w < 70 ? 13 : aide.n > 3 ? 13 : 16, fill: "#143451"}, grandeT(i)));
           // (Lot B2-1 : sous le petit morceau, « touche » seulement : « touche-moi »
           // chevauchait celui d'à côté.)
           if (!aide.regrouper) g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": 12, fill: "#8ea1af"}, w < 70 ? "touche" : "touche-moi"));
@@ -1731,9 +1735,12 @@
   // punaise ; la punaise reste.)
 
   function outil(zone, question, {fini = () => {}} = {}) {
-    if (question.outil === "glisse-unite" && question.glisse) {
+    // (Lot B2-1b : « Trouve l'intrus », « Coche tout ce qui est égal à… » :
+    // un glisse-unité pour l'outil seulement, `glisseOutil` ; la correction
+    // dit les écritures égales, sans glisse-unité qui glisse.)
+    if (question.outil === "glisse-unite" && (question.glisse || question.glisseOutil)) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
-      const g = question.glisse;
+      const g = question.glisse || question.glisseOutil;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       return;

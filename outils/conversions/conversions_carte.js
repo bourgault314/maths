@@ -148,7 +148,7 @@
     {code: "P4", rang: 14, palier: 2, famille: "relations", classe: "CM1", nom: "Toutes les relations à connaître", nomCourt: "Toutes les relations", exemple: "1 L = 1 000 mL"},
     {code: "C3", rang: 15, palier: 2, famille: "convertir", classe: "CM1", nom: "Avec des nombres décimaux", exemple: "3,5 m = 350 cm"},
     {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", nomCourt: "Mètre, gramme, litre", exemple: "41 dg = 4,1 g"},
-    {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", exemple: "215 cm = 2,15 m"},
+    {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", nomCourt: "Plusieurs écritures", exemple: "215 cm = 2,15 m"},
     {code: "C6", rang: 18, palier: 2, famille: "convertir", classe: "CM1", nom: "Les fractions usuelles", exemple: "¾ m = 75 cm"},
     {code: "C7", rang: 19, palier: 2, famille: "convertir", classe: "CM1", nom: "Ranger des mesures", exemple: ""},
     {code: "C8", rang: 20, palier: 2, famille: "convertir", classe: "CM1", nom: "Calculer avec deux unités", exemple: "1 L − 25 cL"},
@@ -727,6 +727,37 @@
       retenir: "Je place le chiffre des unités sous l'unité de la mesure, puis je glisse jusqu'à l'unité demandée.\n12,3 hm = 1 230 m\n41 dg = 4,1 g\n75 L = 7 500 cL",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["1 hm = 100 m", "1 dm = 0,1 m", "1 dag = 10 g", "1 dg = 0,1 g", "1 hL = 100 L", "1 cL = 0,01 L"],
+      reperes: []
+    },
+    // Une mesure, plusieurs écritures (lot B2-1b ; S002 : 1 600 m = 1,6 km ;
+    // 2 100 mg = 2,1 g ; 3 g + 5 cg = 305 cg = 3,05 g ; 3 cm + 4 mm = 34 mm
+    // = 3,4 cm). 2,15 m en barres, le petit morceau s'ouvre en 15 cm ;
+    // 34 mm au glisse-unité ; l'intrus 205 cm · 20,5 dm · 2,05 m · 250 cm.
+    // L'image : la relation et le calcul posé.
+    C5: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "2,15 m =", reponse: "215", apres: "cm"},
+          consigne: "Touche chaque morceau : il s'ouvre en centimètres.",
+          aide: {type: "barres", n: 2, reste: "0,15", grande: "m", petite: "cm", facteur: 100},
+          apres: ["100 cm + 100 cm + 15 cm", "= 215 cm"],
+          legende: "2,15 m = 2 m 15 cm : le petit morceau, 0,15 m, c'est 15 cm."},
+        {etiquette: "Je représente", question: {avant: "34 mm =", reponse: "3,4", apres: "cm"},
+          relation: ["1 cm = 10 mm", "donc 34 mm = 3 cm 4 mm"],
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "34", de: "mm", vers: "cm", pale: false},
+          apres: ["Sous cm, le 3 : le chiffre des unités.", "34 mm = 3 cm 4 mm = 3,4 cm."]},
+        {etiquette: "Je vérifie", question: {enonce: "Trouve l'intrus : 205 cm ; 20,5 dm ; 2,05 m ; 250 cm", avant: "205 cm =", reponse: "2,05", apres: "m"},
+          consigne: "J'écris les mesures dans la même unité.",
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "205", de: "cm", vers: "m", pale: false},
+          apres: ["205 cm = 20,5 dm = 2,05 m.", "250 cm = 2,5 m : c'est l'intrus."]}
+      ],
+      retenir: "Une mesure s'écrit de plusieurs façons :\n2,15 m = 2 m 15 cm = 215 cm.\nAttention au zéro : 2 m 5 cm = 205 cm = 2,05 m, pas 2,5 m.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      // (Six égalités courtes : une police large les gardait sur deux
+      // lignes au-delà de 16 caractères, « 3 g + 5 cg = 3,05 g ».)
+      relations: ["1 600 m = 1,6 km", "2 100 mg = 2,1 g", "34 mm = 3,4 cm", "305 cg = 3,05 g", "205 cm = 2,05 m", "250 cL = 2,5 L"],
       reperes: []
     }
   };

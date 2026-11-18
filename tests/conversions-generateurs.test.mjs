@@ -73,6 +73,19 @@ const FAMILLE_G = {km: "longueur", m: "longueur", dm: "longueur", cm: "longueur"
 function taille(r) {
   return lire(r.nombre.replace(".", ",")) * 10n ** BigInt(EXP2[r.unite] + 3);
 }
+// Lot B2-1b : la valeur d'une carte (« 2 m 15 cm ») dans la plus petite
+// unité de sa grandeur, et les mesures qu'on écrit vraiment.
+const BASE = {l: "mm", m: "mg", c: "mL"};
+function valeurCarte(parts) {
+  return parts.reduce((t, [n, u]) => t + versUnite(lire(n), u, BASE[FAMILLE[u]]), 0n);
+}
+function mesureVraieC5(n, u, ou) {
+  const m = lire(n);
+  assert.ok(m > 0n && m <= 100000000n, `${ou} : ${n} ${u}`);
+  assert.ok(!(["mm", "mg", "mL", "cg", "cL"].includes(u) && m % 1000n), `${ou} : ${n} ${u} (pas de virgule)`);
+  assert.ok(!(["mm", "cm", "dm", "mg", "cg", "dg", "mL", "cL", "dL", "dam", "hm", "dag", "hg", "daL"].includes(u) && m < 1000n), `${ou} : ${n} ${u} (moins de 1)`);
+  assert.ok(m % 10n === 0n, `${ou} : ${n} ${u} (des millièmes au CM1)`);
+}
 function mesureTexte([n, u]) {
   return `${n} ${u}`;
 }
@@ -112,6 +125,14 @@ function attendue(q) {
     case "regle": {
       assert.ok(d.debut >= 2 && d.debut <= 5 && d.fin <= 10 && d.fin > d.debut, "l'objet est sur la règle, sans partir de 0 ni de 1");
       return [BigInt(d.fin - d.debut) * 1000n];
+    }
+    // Lot B2-1b : décomposer, « 215 cm = 2 m + … dm + 5 cm » — les trois
+    // morceaux font la mesure ; la réponse est le morceau caché.
+    case "decomp": {
+      const total = d.parts.reduce((t, [n, u]) => t + versUnite(lire(n), u, d.de), 0n);
+      assert.equal(total, lire(d.valeur), "les morceaux ne font pas la mesure");
+      d.parts.forEach(([n]) => assert.match(n, /^[1-9]$/, "un chiffre par morceau"));
+      return [lire(d.parts[d.cache][0])];
     }
     case "pb": case "vrai": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
@@ -153,7 +174,8 @@ function controlerQuestion(q, ou) {
   const empreinte = JSON.stringify([q.texte, q.choix, q.bon, q.correction, q.image, q.donnees]);
   if (dejaVues.has(empreinte)) return;
   dejaVues.add(empreinte);
-  const textes = [q.texte, q.reponseTexte, q.resume, ...(q.correction || []), ...(q.image || []), ...(q.choix || [])].filter(t => typeof t === "string");
+  const textes = [q.texte, q.reponseTexte, q.resume, ...(q.correction || []), ...(q.image || []), ...(q.choix || []), ...(q.cartes || []),
+    ...Object.values(q.pourquoi || {})].filter(t => typeof t === "string");
   textes.forEach(t => { ecriture(t, ou); milliers(t, ou); });
   assert.match(q.cle, /^[^\s]+$/, `${ou} : clé avec espace`);
   // 1. la réponse recalculée
@@ -226,7 +248,7 @@ function controlerQuestion(q, ou) {
   // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
   // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
   // (Lot B2-1 : C3 et C4 aussi.)
-  if (["P2", "P3", "P4", "C3", "C4"].includes(q.code)) {
+  if (["P2", "P3", "P4", "C3", "C4", "C5"].includes(q.code)) {
     const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
     const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
     if (q.donnees.type !== "comparer-mes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
@@ -238,6 +260,41 @@ function controlerQuestion(q, ou) {
       // sinon la correction animée ne peut pas y arriver.)
       const cols = q.glisse.colonnes || G.COLONNES[q.glisse.grandeur];
       assert.ok(cols.includes(q.glisse.de) && cols.includes(q.glisse.vers), `${ou} : ${q.glisse.de} ou ${q.glisse.vers} absent de ${cols}`);
+    }
+  }
+  // Lot B2-1b : « Trouve l'intrus », « Coche tout ce qui est égal à… » —
+  // chaque carte recalculée à part, dans la plus petite unité de sa
+  // grandeur ; des mesures qu'on écrit vraiment.
+  if (q.donnees.type === "intrus" || q.donnees.type === "plusieurs") {
+    const cartes = q.donnees.cartes.map(valeurCarte);
+    const textes = q.forme === "plusieurs" ? q.cartes : q.choix;
+    assert.equal(textes.length, 4); assert.equal(new Set(textes).size, 4, `${ou} : deux cartes pareilles`);
+    q.donnees.cartes.forEach((c, k) => {
+      assert.equal(textes[k].replace(/[\u00a0\u202f]/g, " "), c.map(([n, u]) => `${G.ecrire(lire(n)).replace(/\u202f/g, " ")} ${u}`).join(" "), `${ou} : texte de la carte ${k}`);
+      c.forEach(([n, u]) => mesureVraieC5(n, u, ou));
+    });
+    if (q.donnees.type === "intrus") {
+      const autres = cartes.filter((v, k) => k !== q.bon);
+      assert.ok(autres.every(v => v === autres[0]), `${ou} : les trois autres ne sont pas égales`);
+      assert.notEqual(cartes[q.bon], autres[0], `${ou} : l'intrus est égal aux autres`);
+      assert.ok(new Set(q.donnees.cartes.filter((c, k) => k !== q.bon).map(c => c.map(x => x[1]).join("+"))).size >= 2, `${ou} : trois fois la même unité`);
+    } else {
+      const cible = valeurCarte(q.donnees.cible);
+      const bons = cartes.map((v, k) => (v === cible ? k : -1)).filter(k => k >= 0);
+      assert.deepEqual(bons, q.bons, `${ou} : les bonnes cartes`);
+      assert.ok(bons.length === 2 || bons.length === 3, `${ou} : ${bons.length} bonnes cartes`);
+      assert.ok(G.verifier(q, q.bons).juste, `${ou} : les bonnes cartes refusées`);
+      assert.ok(!G.verifier(q, q.bons.slice(1)).juste, `${ou} : une carte oubliée acceptée`);
+      // Le pourquoi d'une carte fausse : « 2 150 cm, c'est 21,5 m. » — la
+      // même mesure, recalculée.
+      cartes.forEach((v, k) => {
+        if (bons.includes(k)) return;
+        const m = q.pourquoi[k].replace(/[\u00a0\u202f]/g, " ").match(/^(.+), c'est ([\d ,]+) ([a-zA-Z]+)\.$/);
+        assert.ok(m, `${ou} : pourquoi « ${q.pourquoi[k]} »`);
+        assert.equal(valeurCarte([[m[2].replace(/ /g, ""), m[3]]]), v, `${ou} : « ${q.pourquoi[k]} » est faux`);
+        const r = G.verifier(q, q.bons.concat([k]));
+        assert.ok(!r.juste && r.retour, `${ou} : une carte fausse cochée acceptée`);
+      });
     }
   }
   if (q.donnees.type === "associer-rel") {
@@ -560,6 +617,19 @@ function controlerSerie(code, usage, nombre, s, ou) {
       assert.ok(s.filter(q => neuves.includes(q.donnees.de) || neuves.includes(q.donnees.vers)).length >= 4, `${ou} : les unités du CM1`);
     }
   }
+  // Lot B2-1b : C5 — l'intrus en 4e, « Coche » en dernier ; les trois
+  // grandeurs ; décomposer une fois au plus ; « Coche » deux fois et l'intrus
+  // deux fois dans À toi.
+  if (code === "C5" && usage === "valide") {
+    const n = g => s.filter(q => q.grandeur === g).length;
+    assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
+    assert.equal(s[3].donnees.type, "intrus"); assert.equal(s[9].forme, "plusieurs");
+    assert.ok(s.filter(q => q.donnees.type === "decomp").length <= 1, `${ou} : décomposer deux fois`);
+  }
+  if (code === "C5" && usage === "entraine") {
+    assert.deepEqual([8, 12, 19, 22].map(i => s[i].donnees.type), ["intrus", "plusieurs", "intrus", "plusieurs"], `${ou} : places`);
+    assert.equal(s.filter(q => q.forme === "plusieurs").length, 2, `${ou} : « Coche » deux fois`);
+  }
   if ((code === "C1" || code === "C2") && usage === "valide") {
     const n = g => s.filter(q => q.grandeur === g).length;
     assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
@@ -587,7 +657,7 @@ for (const code of PRETES) {
       Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"],
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
-      C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"]}[code];
+      C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -857,7 +927,7 @@ test("lot 3b-3 bis : la réponse est écrite dans le résumé (la correction et 
   // « Une voiture : environ 4 m de long » ne finit pas par « 4 m » : la page
   // ne coupe plus le résumé à la longueur de la réponse (rapport de Codex,
   // F06), elle cherche la réponse dedans. Il faut donc qu'elle y soit.
-  const SANS = new Set(["vrai-faux", "associer", "ranger"]);
+  const SANS = new Set(["vrai-faux", "associer", "ranger", "plusieurs"]);
   let n = 0;
   PRETES.forEach(code => {
     for (let g = 1; g <= 200; g += 1) {
@@ -974,4 +1044,57 @@ test("lot B2-1 : C3 et C4 — la phrase des décimaux, les erreurs des décimaux
       });
     })));
   }
+});
+
+test("lot B2-1b : C5 — les sortes, les séries à zéro, les erreurs, « Coche tout ce qui est égal à… »", () => {
+  const toutes = [];
+  for (let g = 1; g <= 800; g += 1) ["entraine", "valide"].forEach(u => toutes.push(...G.serie("C5", {usage: u, graine: g})));
+  const sortes = new Set(toutes.map(q => q.sorteC5));
+  ["deux-unites-bas", "deux-unites-haut", "plus-bas", "plus-haut", "deux-cases", "decomposer", "officielle", "intrus", "plusieurs"]
+    .forEach(x => assert.ok(sortes.has(x), `la sorte ${x} ne tombe jamais`));
+  const trouve = f => toutes.find(f);
+  const texte = q => q.texte.replace(/[\u00a0\u202f]/g, " ");
+  // Les séries à zéro (Singapour) : 3 km 450 m, 3 km 45 m, 3 km 5 m.
+  [/\d km \d{3} m = … m/, /\d km \d\d m = … m/, /\d km \d m = … m/].forEach(re => assert.ok(trouve(q => re.test(texte(q))), `${re}`));
+  // Le piège 2,5 : « 2 m 5 cm = … m ».
+  const piege = trouve(q => q.sorteC5 === "deux-unites-haut" && /^\d m \d cm/.test(texte(q)));
+  assert.ok(piege);
+  const [a, b] = [piege.donnees.a, piege.donnees.b];
+  assert.equal(G.verifier(piege, `${a},${b}`).retour, CARTE.typo(`${b} cm, c'est 0,0${b} m.`));
+  assert.equal(G.verifier(piege, `${a}0${b}`).erreur, 7);
+  assert.equal(G.verifier(piege, String(Number(a) + Number(b))).erreur, 5);
+  // Vers la petite unité : les chiffres collés (3 km 45 m → 345 m), le zéro
+  // de trop (3 450 m).
+  const km = trouve(q => q.sorteC5 === "deux-unites-bas" && /^\d km \d\d m/.test(texte(q)));
+  assert.equal(G.verifier(km, `${km.donnees.a}${km.donnees.b}`).erreur, 6);
+  assert.equal(G.verifier(km, `${km.donnees.a}${km.donnees.b}0`).erreur, 7);
+  // Deux cases : « 2,05 m = 2 m 50 cm ».
+  const dc = trouve(q => q.forme === "deux-cases" && q.donnees.grande === "m" && /^\d$/.test(q.reponse[1]));
+  assert.equal(G.verifier(dc, [dc.reponse[0], `${dc.reponse[1]}0`]).erreur, 6);
+  // Décomposer : un seul chiffre par colonne.
+  const dec = trouve(q => q.donnees.type === "decomp");
+  assert.equal(G.verifier(dec, "15").erreur, 8);
+  // Les conversions officielles : un nombre entier vers la grande unité ;
+  // une erreur de sens y lance « Je prévois ».
+  const off = toutes.filter(q => q.sorteC5 === "officielle");
+  assert.ok(off.length > 100 && off.every(q => !q.donnees.valeur.includes(",") && EXPOSANTS[q.donnees.de] < EXPOSANTS[q.donnees.vers]));
+  const o = off[0];
+  const f = versUnite(1000n, o.donnees.vers, o.donnees.de) / 1000n;
+  assert.ok(G.erreurDeSens(o, String(lire(o.donnees.valeur) * f / 1000n)));
+  // Pas de « Je prévois » ailleurs dans C5 (somme, deux cases, décomposer).
+  toutes.filter(q => q.forme !== "qcm" && q.forme !== "plusieurs" && q.sorteC5 !== "officielle").forEach(q => {
+    const r = Array.isArray(q.reponse) ? q.reponse[0] : q.reponse;
+    ["1", "5", "10", "100", `${r}0`].forEach(t => assert.ok(!G.erreurDeSens(q, t), `${q.texte} : ${t}`));
+  });
+  // Des mesures qu'on écrit vraiment, au centième au plus, partout.
+  toutes.forEach(q => {
+    const d = q.donnees;
+    if (d.type === "somme") { mesureVraieC5(d.a, d.ua, q.texte); mesureVraieC5(d.b, d.ub, q.texte); }
+    if (d.type === "conv" || d.type === "deux") mesureVraieC5(d.valeur, d.de, q.texte);
+    if (!Array.isArray(q.reponse) && q.forme !== "qcm" && q.forme !== "plusieurs") mesureVraieC5(q.reponse, q.unite, q.texte);
+  });
+  // « Coche » : un mauvais choix dit pourquoi ; un oubli aussi.
+  const p = trouve(q => q.forme === "plusieurs" && q.bons.length === 3);
+  assert.match(G.verifier(p, p.bons.slice(0, 2)).retour, /^Tu as oublié \d/);
+  assert.equal(G.verifier(p, p.bons.slice(0, 1)).retour, "Tu en as oublié deux.");
 });

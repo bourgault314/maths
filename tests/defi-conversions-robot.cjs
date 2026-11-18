@@ -30,6 +30,8 @@
 // Lot A2 bis : il relie (associer) et range au doigt, puis touche
 // « Valider » ; dans On te montre, il touche ce qui reste à toucher (la pièce
 // de 1 €, les pièces, l'étiquette, l'horloge de départ, l'axe du temps).
+// Lot B2-1b : il coche les bonnes cartes de « Coche tout ce qui est égal
+// à… » (faux : les bonnes, puis une fausse), puis touche « Valider ».
 //
 // Hors CI. « npm run verifier » le lance quand la branche touche l'appli
 // (scripts/verifier-navigateur.mjs), ou à la main :
@@ -468,6 +470,12 @@ async function repondre(page, _q, juste = true) {
     // Au doigt : les mesures dans l'ordre. Faux : les deux premières échangées.
     const ordre = juste ? q.ordre : [q.ordre[1], q.ordre[0], ...q.ordre.slice(2)];
     for (const k of ordre) await appuyer(page, page.locator(".ranger button").nth(k));
+    await appuyer(page, page.locator("#cadre .action"));
+  } else if (q.forme === "plusieurs") {
+    // Lot B2-1b : « Coche tout ce qui est égal à… » — au doigt, les bonnes
+    // cartes ; faux : les bonnes, puis une carte fausse.
+    const cartes = juste ? q.bons : q.bons.concat([[0, 1, 2, 3].find(k => !q.bons.includes(k))]);
+    for (const k of cartes) await appuyer(page, page.locator(".coche button").nth(k));
     await appuyer(page, page.locator("#cadre .action"));
   } else if (q.choix) {
     const i = juste ? q.bon : (q.bon + 1) % q.choix.length;
