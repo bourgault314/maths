@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261115-b2">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b21">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261115-b2"></script>
-  <script src="./conversions_generateurs.js?v=20261115-b2"></script>
+  <script src="./conversions_carte.js?v=20261118-b21"></script>
+  <script src="./conversions_generateurs.js?v=20261118-b21"></script>
   <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261115-b2"></script>
+  <script src="./defi_conversions_aides.js?v=20261118-b21"></script>
   <script>
   (function () {
     "use strict";
@@ -703,6 +703,30 @@
       return true;
     }
 
+    // Lot B2-1 : une phrase au-dessus de la case tient sur deux lignes au
+    // plus. Avec une police large, au petit téléphone, « Un sachet de bonbons
+    // piment de 410 g. Combien de kilogrammes ? » en prenait trois, et l'aide
+    // tombait à 79 % (déjà sur main pour C1 et C2 : « Un bassin de baignade
+    // de 32 m. Combien de centimètres ? ») : elle se fait un peu plus petite,
+    // jusqu'à 80 % de sa taille. Mesuré au rendu.
+    function deuxLignes(p) {
+      if (!p.isConnected) return p;
+      const taille = parseFloat(getComputedStyle(p).fontSize);
+      const ligne = parseFloat(getComputedStyle(p).lineHeight) || taille * 1.25;
+      for (let k = 1; k <= 4 && p.getBoundingClientRect().height > ligne * 2.5; k += 1) p.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
+      return p;
+    }
+
+    // Lot B2-1 : un nombre long tapé dans la case (« 3 050 000 ») reste
+    // lisible entier : il se fait plus petit (jusqu'à 60 %) au lieu d'être
+    // coupé (déjà sur main : « 3 000 000 » dans C2).
+    function dansLaCase(c) {
+      c.style.fontSize = "";
+      if (c.scrollWidth <= c.clientWidth + 1) return;
+      const taille = parseFloat(getComputedStyle(c).fontSize);
+      for (let k = 1; k <= 5 && c.scrollWidth > c.clientWidth + 1; k += 1) c.style.fontSize = `${(taille * (1 - 0.08 * k)).toFixed(2)}px`;
+    }
+
     // Pose une question et attend la réponse. `avant(zone)` remplit la zone
     // avant la réponse ; `apres(verdict)` est appelé après « Valider ».
     // La question dans son bloc (lot A2 ter : à part, pour mesurer d'avance
@@ -758,7 +782,7 @@
         qEl.appendChild(l);
         if (m.cases) couperSiTropLarge(qEl, l, avantEl);
       } else if (m.phrase) {
-        qEl.appendChild(el("div", "phrase-t", m.phrase));
+        deuxLignes(qEl.appendChild(el("div", "phrase-t", m.phrase)));
         pieces();
         const l = el("div", "l1");
         l.append(nouvelleCase(0), el("span", "", m.apres));
@@ -826,6 +850,7 @@
         casesEl.forEach((c, i) => {
           c.textContent = saisie.cases[i].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
           if (!saisie.fige) c.className = `case${nbCases === 2 ? " petite" : ""}${i === saisie.focus ? " focus" : ""}`;
+          dansLaCase(c);
         });
       }
       function taper(touche) {
