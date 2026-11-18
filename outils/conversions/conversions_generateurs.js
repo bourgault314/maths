@@ -4100,7 +4100,9 @@
     const choix = ["1/4", "1/2", "3/4"].map(f => f.replace("/", FR));
     const bon = choix.indexOf(fracTexte(n, d));
     const pourquoi = {};
-    [[1, 4], [1, 2], [3, 4]].forEach(([a, b], k) => { if (k !== bon) pourquoi[k] = `${fracTexte(a, b)}${NB}${g}, c'est ${mes(unite * BigInt(a) / BigInt(b), p)}.`; });
+    // (Le pourquoi sans fraction : « 1⁄2 L, c'est 500 mL. » en colonne
+    // grandissait le panneau de Je valide, 83 % au petit iPhone dans WebKit.)
+    [[1, 4], [1, 2], [3, 4]].forEach(([a, b], k) => { if (k !== bon) pourquoi[k] = `Ce serait ${mes(unite * BigInt(a) / BigInt(b), p)}, pas ${mes(v, p)}.`; });
     const phrase = `${mes(v, p)} = ${CASE}${NB}${g}`;
     const quarts = (n * 4) / d;
     const ligne = quarts === 1 ? `${mes(v, p)} = ${mes(unite, p)} ÷ 4 = ${fracTexte(1, 4)}${NB}${g}`
