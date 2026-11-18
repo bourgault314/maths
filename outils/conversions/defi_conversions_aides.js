@@ -297,13 +297,17 @@
   // n barres de « 1 m » ; on touche chacune, elle s'ouvre en `facteur`
   // petits traits (« 100 cm »). `regrouper` : l'inverse, les paquets de
   // 100 cm se referment en 1 m.
+  // `reste` (lot B2-1, C3 : « 3,5 m : trois mètres et un demi-mètre ») :
+  // un morceau de plus, plus court, qui s'ouvre lui aussi (« 50 cm »).
   function barres(zone, aide, fini) {
-    const n = aide.n;
+    const r = aide.reste ? Number(String(aide.reste).replace(",", ".")) : 0;
+    const n = aide.n + (r ? 1 : 0);
     const W = 340;
     const x0 = 10;
     const y0 = 36;
     const h = 40;
-    const w = W / n;
+    const pas = W / (aide.n + r);
+    const largeur = i => (r && i === n - 1 ? pas * r : pas);
     const etat = Array(n).fill(Boolean(aide.regrouper));
     const boite = el("div", "barres");
     const dessin = svg("svg", {viewBox: "0 0 360 106", class: "metre", role: "img"});
@@ -311,15 +315,19 @@
     boite.appendChild(dessin);
     boite.appendChild(somme);
     zone.appendChild(boite);
-    const grandeT = `1${NB}${aide.grande}`;
-    const petiteT = `${gen().ecrire(BigInt(aide.facteur) * 1000n)}${NB}${aide.petite}`;
+    const G = gen();
+    const reste = r ? G.milli(String(aide.reste)) : 0n;
+    const grandeT = i => (r && i === n - 1 ? `${G.ecrire(reste)}${NB}${aide.grande}` : `1${NB}${aide.grande}`);
+    const petiteT = i => `${G.ecrire((r && i === n - 1 ? reste : 1000n) * BigInt(aide.facteur))}${NB}${aide.petite}`;
+    const total = r ? `${G.ecrire(BigInt(aide.n) * 1000n + reste)}${NB}${aide.grande}` : `${n}${NB}${aide.grande}`;
     function dessiner() {
       dessin.textContent = "";
       dessin.appendChild(svg("path", {d: `M${x0} 22 v-8 h${W} v8`, fill: "none", stroke: "#143451", "stroke-width": 2}));
       dessin.appendChild(svg("text", {x: x0 + W / 2, y: 10, "text-anchor": "middle", "font-size": 15, fill: "#143451"},
-        aide.regrouper ? `${gen().ecrire(BigInt(n * aide.facteur) * 1000n)}${NB}${aide.petite}` : `${n}${NB}${aide.grande}`));
+        aide.regrouper ? `${G.ecrire(BigInt(n * aide.facteur) * 1000n)}${NB}${aide.petite}` : total));
       for (let i = 0; i < n; i += 1) {
-        const x = x0 + i * w;
+        const x = x0 + i * pas;
+        const w = largeur(i);
         const g = svg("g", {class: "barre", tabindex: 0, role: "button", "data-i": i});
         // Lot 3b-3 bis : la zone à toucher (invisible) descend sous le paquet,
         // jusqu'à « touche-moi » : au téléphone, le paquet seul ne faisait
@@ -327,25 +335,28 @@
         g.appendChild(svg("rect", {x: x.toFixed(1), y: y0 - 8, width: w.toFixed(1), height: h + 30, fill: "transparent"}));
         if (etat[i]) {
           g.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: w.toFixed(1), height: h, fill: "#eef5fd", stroke: "#0755b8", "stroke-width": 2.5}));
-          const traits = Math.min(aide.facteur, 100);
+          const traits = Math.round(Math.min(aide.facteur, 100) * (r && i === n - 1 ? r : 1));
           for (let k = 1; k < traits; k += 1) {
             const xx = x + (w * k) / traits;
             const lg = k % 10 === 0 ? 16 : k % 5 === 0 ? 11 : 7;
             g.appendChild(svg("line", {x1: xx.toFixed(2), y1: y0 + h, x2: xx.toFixed(2), y2: y0 + h - lg, stroke: "#0755b8", "stroke-width": k % 10 === 0 ? 1.4 : 0.7}));
           }
-          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 17, "text-anchor": "middle", "font-size": n > 3 ? 11 : 13, fill: "#143451"}, grandeT));
-          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": n > 3 ? 11 : 15, fill: "#0755b8"}, petiteT));
+          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 17, "text-anchor": "middle", "font-size": aide.n > 3 ? 11 : 13, fill: "#143451"}, grandeT(i)));
+          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": aide.n > 3 ? 11 : 15, fill: "#0755b8"}, petiteT(i)));
         } else {
           g.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: w.toFixed(1), height: h, fill: "#fff", stroke: "#143451", "stroke-width": 2.5}));
-          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 26, "text-anchor": "middle", "font-size": n > 3 ? 13 : 16, fill: "#143451"}, grandeT));
-          if (!aide.regrouper) g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": 12, fill: "#8ea1af"}, "touche-moi"));
+          g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + 26, "text-anchor": "middle", "font-size": w < 70 ? 13 : aide.n > 3 ? 13 : 16, fill: "#143451"}, grandeT(i)));
+          // (Lot B2-1 : sous le petit morceau, « touche » seulement : « touche-moi »
+          // chevauchait celui d'à côté.)
+          if (!aide.regrouper) g.appendChild(svg("text", {x: (x + w / 2).toFixed(1), y: y0 + h + 22, "text-anchor": "middle", "font-size": 12, fill: "#8ea1af"}, w < 70 ? "touche" : "touche-moi"));
         }
         dessin.appendChild(g);
       }
       const faits = aide.regrouper ? etat.filter(x => !x).length : etat.filter(Boolean).length;
       somme.textContent = "";
       if (faits) {
-        const texte = aide.regrouper ? `${faits} × ${petiteT} = ${faits}${NB}${aide.grande}` : Array(faits).fill(petiteT).join(" + ");
+        const texte = aide.regrouper ? `${faits} × ${petiteT(0)} = ${faits}${NB}${aide.grande}`
+          : etat.map((x, i) => (x ? petiteT(i) : null)).filter(Boolean).join(" + ");
         somme.appendChild(el("span", "", texte));
       }
     }
@@ -679,6 +690,7 @@
   // glissent de 3 colonnes vers la gauche, les zéros arrivent en gris.
   const NOMS_RANGS = ["Unités", "Dizaines", "Centaines", "Milliers", "Dizaines de milliers", "Centaines de milliers"];
   function glisseNombre(zone, {nombre, rangs, sens}, fini) {
+    if (String(nombre).includes(",")) return glisseNombreDecimal(zone, {nombre, rangs, sens}, fini);
     const chiffres = String(nombre).split("");
     const largeur = Math.max(chiffres.length + (sens === "×" ? rangs : 0), 4);
     const boite = el("div", "gn-boite");
@@ -717,6 +729,63 @@
       if (sens === "×") place(bas, chiffres, rangs, rangs, true);
       else place(bas, chiffres.slice(0, Math.max(1, chiffres.length - rangs)), 0, 0, true);
       bas.classList.add("glisse");
+      fini();
+    };
+    bouton.addEventListener("click", jouer);
+    return jouer;
+  }
+
+  // Lot B2-1 (C3 ; S002 p. 9, S003 p. 8-9) : le glisse-nombre officiel avec
+  // un nombre décimal. La colonne des unités est grisée, la virgule reste
+  // collée à elle ; on touche « × 10 » : les chiffres glissent d'une
+  // colonne, un dixième devient une unité. Les colonnes : de la plus
+  // grande utile aux centièmes.
+  const RANGS_DEC = [["c", "Centièmes"], ["d", "Dixièmes"], ["u", "Unités"], ["D", "Dizaines"], ["C", "Centaines"], ["M", "Milliers"]];
+  function glisseNombreDecimal(zone, {nombre, rangs, sens}, fini) {
+    const [ent, dec = ""] = String(nombre).split(",");
+    // Les chiffres avec leur rang : 0 = unités, -1 = dixièmes, 1 = dizaines.
+    const depart = [];
+    ent.split("").forEach((c, k) => depart.push([c, ent.length - 1 - k]));
+    dec.split("").forEach((c, k) => depart.push([c, -1 - k]));
+    const decal = sens === "×" ? rangs : -rangs;
+    const arrivee = depart.map(([c, r]) => [c, r + decal]);
+    const rangsUtiles = depart.concat(arrivee).map(([, r]) => r);
+    const haut = Math.max(0, ...rangsUtiles);
+    const bas = Math.min(-1, ...rangsUtiles);
+    const cols = [];
+    for (let r = haut; r >= bas; r -= 1) cols.push(r);
+    const boite = el("div", "gn-boite");
+    const bouton = el("button", "ope", `${sens} ${gen().ecrire(10n ** BigInt(rangs) * 1000n)}`);
+    bouton.type = "button";
+    const table = el("table", "gn dec");
+    const tete = el("tr");
+    cols.forEach(r => tete.appendChild(el("th", r === 0 ? "u-col" : "", RANGS_DEC[r + 2][1])));
+    const ligneH = el("tr", "bande");
+    const ligneB = el("tr");
+    // Une rangée : les chiffres à leur rang ; la virgule collée aux unités
+    // quand il y a des chiffres après elle ; `zeros` en gris.
+    const place = (ligne, liste, bleus) => {
+      ligne.textContent = "";
+      const apres = liste.some(([, r]) => r < 0);
+      // (Un zéro devant la virgule quand le nombre est plus petit que 1.)
+      const avecZero = liste.length && !liste.some(([, r]) => r >= 0) ? liste.concat([["0", 0, true]]) : liste;
+      cols.forEach(r => {
+        const x = avecZero.find(([, rr]) => rr === r);
+        const td = el("td", `${r === 0 ? "u-col" : ""}${x && bleus ? " u" : ""}${x && x[2] ? " z" : ""}`, x ? x[0] : "");
+        if (r === 0 && apres && liste.length) td.appendChild(el("span", "virg", ","));
+        ligne.appendChild(td);
+      });
+    };
+    place(ligneH, depart, false);
+    place(ligneB, [], false);
+    table.append(tete, ligneH, ligneB);
+    boite.append(bouton, table);
+    zone.appendChild(boite);
+    const jouer = () => {
+      if (bouton.disabled) return;
+      bouton.disabled = true;
+      place(ligneB, arrivee, true);
+      ligneB.classList.add("glisse");
       fini();
     };
     bouton.addEventListener("click", jouer);
@@ -1638,14 +1707,24 @@
       // 79 % au petit iPhone. La phrase se fait un peu plus petite pour
       // tenir sur une ligne, jusqu'à 80 % de sa taille.)
       if (g.pale === false) surUneLigne(n);
+      // (Lot B2-1 : les décimaux, des noms plus longs encore, « Chaque
+      // centième de gramme devient 10 milligrammes. » : si la phrase ne tient
+      // toujours pas sur une ligne, les unités s'écrivent en symboles.)
+      if (g.phraseCourte && !surUneLigne(n)) {
+        n.style.fontSize = "";
+        n.textContent = carte().typo(g.phraseCourte);
+        surUneLigne(n);
+      }
     }
     gu.animer(g.vers, {pas: 380, ensuite});
     return true;
   }
+  // Rend vrai si la phrase tient sur une ligne.
   function surUneLigne(n) {
     const taille = parseFloat(root.getComputedStyle(n).fontSize) || 13;
     const ligne = () => n.getBoundingClientRect().height <= taille * 1.6;
     for (let k = 1; k <= 4 && !ligne(); k += 1) n.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
+    return ligne();
   }
   // (Lot 3a : la ligne « l'unité de départ » sous le glisse-unité est
   // retirée, à la demande de Gwenaël le 14/11 : pas de légende pour la

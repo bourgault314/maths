@@ -272,7 +272,8 @@
   function ecrireConversion(forme, valeur, de, vers) {
     const gauche = mes(valeur, de);
     if (forme === "phrase") {
-      const phrase = `Combien de ${MOTS[vers]} dans ${gauche}${NB}?`;
+      // (Lot B2-1 : « combien d'hectomètres » : le h est muet.)
+      const phrase = `Combien ${/^h/.test(MOTS[vers]) ? "d'" : "de "}${MOTS[vers]} dans ${gauche}${NB}?`;
       return {texte: phrase, morceaux: {phrase, apres: vers}};
     }
     if (forme === "objet") {
@@ -310,14 +311,41 @@
     ["Un verre", "cL", 10, 30], ["Une bouteille", "cL", 25, 200], ["Un verre de jus de goyavier", "cL", 15, 30, true],
     ["Un bol", "cL", 25, 50]
   ];
+  // Lot B2-1 : les objets des mesures à virgule (C3, C4), bornés dans
+  // l'unité où on les mesure. [objet, unité, min, max, de La Réunion ?]
+  const OBJETS_DECIMAUX = [
+    ["Une planche", "m", "1,2", "3"], ["Une canne à sucre", "m", "1,5", "3,5", true], ["Un Car Jaune", "m", "10,5", "13,5", true],
+    ["Une table", "m", "1,2", "2,5"], ["Un ruban", "m", "0,5", "5"], ["Une corde", "m", "2,5", "30"], ["Un tuyau d'arrosage", "m", "5,5", "30"],
+    ["Une feuille de bananier", "m", "0,5", "2", true],
+    ["Une randonnée", "km", "2,5", "18"], ["Un trajet en Car Jaune", "km", "10,5", "60", true], ["Un sentier du volcan", "km", "1,5", "6", true],
+    ["Un crayon", "cm", "10,5", "18,5"], ["Une gomme", "cm", "3,5", "6,5"], ["Une coccinelle", "mm", "4,5", "8,5"],
+    ["Un sac de letchis", "kg", "1,5", "5", true], ["Un régime de bananes", "kg", "10,5", "35", true], ["Un chat", "kg", "2,5", "6"],
+    ["Un melon", "kg", "0,8", "2,5"], ["Une valise", "kg", "5,5", "23"], ["Un colis", "kg", "0,5", "20"], ["Un sac de riz", "kg", "1,5", "25", true],
+    ["Une voiture", "t", "1,1", "1,9"], ["Un camion chargé", "t", "5,5", "38"],
+    ["Une marmite de cari", "L", "3,5", "12", true], ["Une bouteille", "L", "0,5", "2"], ["Un seau", "L", "5,5", "15"], ["Un arrosoir", "L", "5,5", "12"],
+    ["Un verre", "L", "0,15", "0,3"]
+  ];
+  const SANS_OBJET = ["dL", "dm", "hm", "dam", "hg", "dag", "dg", "cg", "mg", "daL", "hL"];
   // Et une conversion qu'on fait vraiment : jamais un objet en décilitres
   // (un aquarium de 98 L en dL), des millimètres depuis les mètres
   // seulement pour une table (on la commande en mm).
   function objetDe(valeur, de, vers) {
     // (Ni en dm : « une planche de 30 dm », « une canne à sucre de 390 cm,
     // combien de dm ? » ne se disent pas dans la vie ; le dm reste dans les
-    // calculs.)
-    if (valeur % MILLE !== 0n || [de, vers].some(u => u === "dL" || u === "dm")) return null;
+    // calculs. Lot B2-1 : ni dans les unités du CM1 qu'on n'emploie pas pour
+    // un objet, hm, dam, hg, dag, dg, cg, mg, daL, hL.)
+    if ([de, vers].some(u => SANS_OBJET.includes(u))) return null;
+    // Lot B2-1 : une mesure à virgule, ses objets à elle (« Une planche de
+    // 2,4 m », « Un sac de letchis de 1,5 kg »).
+    if (valeur % MILLE !== 0n) {
+      const possibles = OBJETS_DECIMAUX.filter(([nom, u, a, b]) => u === de && valeur >= milli(a) && valeur <= milli(b)
+        && !(de === "m" && vers === "mm" && nom !== "Une table" && nom !== "Une planche"));
+      if (!possibles.length) return null;
+      const locaux = possibles.filter(o => o[4]);
+      const cle = valeur / 100n;
+      const liste = locaux.length && cle % 2n === 0n ? locaux : possibles;
+      return liste[Number(cle % BigInt(liste.length))][0];
+    }
     const n = valeur / MILLE;
     const possibles = OBJETS_MESURE.filter(([nom, u, a, b]) => u === de && n >= BigInt(a) && n <= BigInt(b)
       && !(de === "m" && vers === "mm" && nom !== "Une table"));
@@ -340,14 +368,19 @@
     hL: "hectolitre", daL: "décalitre"};
   // `cm1` (lot B1-2) : le glisse-unité du palier 2, toutes ses colonnes
   // (`pale: false`, et les masses jusqu'au milligramme).
-  function glisse(valeur, de, vers, {cm1 = false} = {}) {
+  // `decimaux` (lot B2-1) : la phrase des décimaux (C3, C4).
+  function glisse(valeur, de, vers, {cm1 = false, decimaux = false} = {}) {
     const g = {valeur: brut(valeur), de, vers, grandeur: grandeurDe(de)};
     if (cm1) {
       g.pale = false;
       if (g.grandeur === "masse") g.colonnes = de === "t" || vers === "t" ? COLONNES_CM1.masseT : COLONNES_CM1.masse;
     }
     if (MOT[de] && MOT[vers]) {
-      if (exposant(de) > exposant(vers)) {
+      if (decimaux) {
+        g.phrase = phraseDecimaux(valeur, de, vers);
+        g.phraseCourte = phraseDecimaux(valeur, de, vers, true);
+      }
+      else if (exposant(de) > exposant(vers)) {
         const f = facteur(de, vers);
         g.phrase = `Chaque ${MOT[de]} devient ${ecrire(f * MILLE)}${NB}${MOTS[vers]}.`;
       } else {
@@ -3166,6 +3199,303 @@
     erreurs: erreursRel
   };
 
+  // ===================================================== palier 2 (lot B2-1)
+  // Convertir avec des décimaux (carte v4) : « Avec des nombres décimaux »
+  // (C3) et « En mètre, en gramme, en litre » (C4). Décimaux au centième
+  // (programme de CM1), jusqu'à 100 000. S002 p. 9, S003 p. 6-9 : le
+  // glisse-unité accompagne la phrase (« un dixième devient une unité »,
+  // « la virgule repère le chiffre des unités ») ; il ne la remplace pas.
+  // Les erreurs connues des décimaux : la virgule effacée (3,5 m → 35 cm),
+  // le zéro mal placé (3,5 m → 305 cm), les zéros ajoutés après la virgule
+  // (35,200), un zéro de trop ou de moins, le sens (diviser au lieu de
+  // multiplier). C4 : les mauvaises réponses au choix sont la même mesure
+  // dans une unité voisine (« 75 L = … cL » : 750, 7,5, 0,75 ; S434).
+
+  // Le nombre de chiffres après la virgule d'une mesure (en millièmes).
+  function decimales(m) {
+    if (m % MILLE === 0n) return 0;
+    if (m % 100n === 0n) return 1;
+    return m % 10n === 0n ? 2 : 3;
+  }
+  // La virgule effacée : « 3,05 » → 305.
+  function sansVirgule(m) {
+    return BigInt(brut(m).replace(",", "")) * MILLE;
+  }
+  // Les zéros pièges du niveau 3 de l'exerciseur (0,05 ; 2,07 ; 30,4 ;
+  // 305) ; `debut` : aussi « 0,41 » (un nombre plus petit que 1).
+  function zerosPieges(m, debut = true) {
+    const s = brut(m);
+    return /,0|[1-9]0,|[1-9]0+[1-9]/.test(s) || (debut && /^0,/.test(s));
+  }
+  // Un nombre d'un modèle, en millièmes. Sans zéro : « a » (2 à 9), « ab »,
+  // « a,b », « ab,c », « a,bc », « 0,ab », « 0,a » ; les zéros pièges :
+  // « 0,0a », « a,0b », « a0,b », « ab00 ».
+  function nombreModele(rng, modele) {
+    const [a, b, c] = [entre(rng, 1, 9), entre(rng, 1, 9), entre(rng, 1, 9)];
+    const t = {a: `${entre(rng, 2, 9)}`, ab: `${a}${b}`, "a,b": `${a},${b}`, "ab,c": `${a}${b},${c}`, "a,bc": `${a},${b}${c}`,
+      "0,ab": `0,${a}${b}`, "0,a": `0,${a}`, "0,0a": `0,0${entre(rng, 2, 9)}`, "a,0b": `${a},0${b}`, "a0,b": `${a}0,${b}`, ab00: `${a}${b}00`}[modele];
+    return milli(t);
+  }
+
+  // La phrase sous le glisse-unité, avec des décimaux (S002 p. 9) : vers
+  // l'unité plus petite, le dernier rang écrit (« Chaque dixième de mètre
+  // devient 10 centimètres. ») ; vers la plus grande, l'unité de départ
+  // (« Chaque centimètre devient un centième de mètre. »). « d'hectomètre » :
+  // le h est muet.
+  const RANG_MOT = {100: "dixième", 10: "centième", 1: "millième"};
+  // `court` : les unités en symboles (« Chaque dixième de kg devient
+  // 100 g. ») ; la page la prend quand la phrase en mots ne tient pas sur
+  // une ligne (une police large, au petit téléphone : « Chaque centième de
+  // gramme devient 10 milligrammes. » en demandait 422 px pour 310).
+  function phraseDecimaux(valeur, de, vers, court = false) {
+    const nom = (u, n = 1n) => (court ? u : n === MILLE || n === 1n ? MOT[u] : MOTS[u]);
+    const deU = u => (court ? `de ${u}` : /^h/.test(MOT[u]) ? `d'${MOT[u]}` : `de ${MOT[u]}`);
+    const unite = () => `Chaque ${nom(de)} devient ${ecrire(facteur(de, vers) * MILLE)}${NB}${nom(vers, 2n)}.`;
+    if (exposant(de) > exposant(vers)) {
+      const k = decimales(valeur);
+      if (!k) return unite();
+      const p = convertir(MILLE / puissance(k), de, vers);
+      // (Un dixième qui ne fait pas une unité entière, « un centième de
+      // décimètre » : la relation de l'unité, plus simple à lire.)
+      if (p < MILLE) return unite();
+      return `Chaque ${RANG_MOT[Number(MILLE / puissance(k))]} ${deU(de)} devient ${ecrire(p)}${NB}${nom(vers, p)}.`;
+    }
+    const p = convertir(MILLE, de, vers);
+    return `Chaque ${nom(de)} devient un ${RANG_MOT[Number(p)]} ${deU(vers)}.`;
+  }
+
+  // Une conversion avec des décimaux : null si un nombre sort du programme
+  // de CM1 (plus de deux chiffres après la virgule, moins de 0,01, plus de
+  // 100 000). L'image de C3 : la relation et le calcul posé, sans le
+  // résultat ; celle de C4 : l'échelle des unités.
+  // Des mesures qu'on écrit vraiment : jamais de virgule dans les plus
+  // petites unités (« 45,1 mm », « 0,6 cL ») ; jamais moins de 1 dans une
+  // petite unité (« 0,02 dm ») ; pas plus de 999 dans une unité rare
+  // (« 9 200 dag ») ; 50 000 au plus en C3, 10 000 en C4.
+  const ENTIERES = ["mm", "mg", "mL", "cg", "cL"];
+  // (Ni « 0,04 daL », « 0,09 dam », « 0,01 hg » : moins de 1 seulement
+  // dans les unités qu'on écrit ainsi, m, km, kg, t, L, hL, g.)
+  const PAS_MOINS_DE_1 = ["mm", "cm", "dm", "mg", "cg", "dg", "mL", "cL", "dL", "dam", "hm", "dag", "hg", "daL"];
+  const RARES = ["hm", "dam", "hg", "dag", "dg", "daL", "hL"];
+  function mesureVraie(m, u, borne) {
+    return m >= 10n && m <= borne && decimales(m) <= 2 && !(ENTIERES.includes(u) && m % MILLE !== 0n)
+      && !(PAS_MOINS_DE_1.includes(u) && m < MILLE) && !(RARES.includes(u) && m >= 1000n * MILLE);
+  }
+  function conversionDec(code, degre, v, de, vers) {
+    if (v === null || v <= 0n) return null;
+    const rep = convertir(v, de, vers);
+    const borne = (code === "C3" ? 50000n : 10000n) * MILLE;
+    if (rep === null || !mesureVraie(v, de, borne) || !mesureVraie(rep, vers, borne)) return null;
+    const bas = exposant(de) > exposant(vers);
+    const [g, p] = bas ? [de, vers] : [vers, de];
+    const f = facteur(g, p);
+    const relation = relationTexte(g, p);
+    const pas = bas ? `${ecrire(v)} × ${mes(f * MILLE, vers)}` : `${ecrire(v)} ÷ ${ecrire(f * MILLE)}${NB}${vers}`;
+    const grandeur = grandeurDe(g);
+    const extra = {
+      relation, outil: "glisse-unite", glisse: glisse(v, de, vers, {cm1: true, decimaux: true}),
+      image: [relation, `donc ${mes(v, de)} = ${pas}`],
+      correction: [relation, `donc ${mes(v, de)} = ${pas} = ${mes(rep, vers)}`],
+      grandeur, relationCle: `${g}-${p}`
+    };
+    if (code === "C4") Object.assign(extra, {echelle: {grandeur, marque: [de, vers]}, image: lignesEchelle(grandeur)});
+    return questionConversion(code, degre, "nombre", v, de, vers, extra);
+  }
+
+  // Le pourquoi d'une erreur au pavé (C3, C4). L'ordre : le sens (« Je
+  // prévois » suit), la virgule effacée, le zéro mal placé, le nombre
+  // gardé, un zéro de trop ou de moins. Une ligne au petit téléphone.
+  // `saisie` : le texte tapé (« 3,500 » : des zéros après la virgule).
+  function erreursDec(question, lu, cases, saisie) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv") return null;
+    const v = milli(d.valeur);
+    const attendu = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const f = bas ? facteur(d.de, d.vers) : facteur(d.vers, d.de);
+    if (bas && v % f === 0n && lu === v / f) return {erreur: 1, retour: "Tu as divisé. Vers une unité plus petite, je multiplie."};
+    if (!bas && lu === v * f) return {erreur: 3, retour: "Tu as multiplié. Vers une unité plus grande, je divise."};
+    const reste = v % MILLE;
+    if (reste && lu === sansVirgule(v)) return {erreur: 5, retour: "Effacer la virgule ne suffit pas."};
+    // (Le zéro mal placé, 3,5 m → 305 cm : seulement quand le nombre a
+    // moins de chiffres après la virgule que la relation n'a de zéros ;
+    // sinon « 1,57 m → 67 dm » n'est l'erreur de personne.)
+    if (bas && reste && decimales(v) < String(f).length - 1) {
+      const chiffres = BigInt(brut(v).split(",")[1]) * MILLE;
+      if (lu === (v - reste) * f + chiffres) return {erreur: 6, retour: `${mes(reste, d.de)}, ce n'est pas ${mes(chiffres, d.vers)}.`};
+    }
+    if (lu === v) {
+      const zeros = /,\d*0$/.test(String(saisie || "").trim());
+      return {erreur: 4, retour: zeros ? "Des zéros après la virgule ne changent rien." : `${mes(v, d.de)}, ce n'est pas ${mes(v, d.vers)}.`};
+    }
+    if (lu === attendu * 10n || lu * 10n === attendu) {
+      if (bas && reste) return {erreur: 2, retour: `${mes(reste, d.de)}, c'est ${mes(convertir(reste, d.de, d.vers), d.vers)}.`};
+      if (!bas && attendu < MILLE && lu >= MILLE) return {erreur: 2, retour: `${mes(v, d.de)}, c'est moins de 1${NB}${d.vers}.`};
+      return {erreur: 2, retour: lu > attendu ? "Un zéro de trop." : "Un zéro de moins."};
+    }
+    return null;
+  }
+
+  // Au choix, C3 : les fausses sont les vraies erreurs des décimaux, dans
+  // cet ordre ; vers la petite unité : la virgule effacée, le zéro mal
+  // placé, un zéro de trop, le nombre gardé, divisé ; vers la grande : un
+  // zéro de moins (« 3,5 m » pour 35 cm), multiplié, le nombre gardé.
+  // Le pourquoi : une ligne (« 0,5 m, ce n'est pas 5 cm. »).
+  function choixPropres(faux, rep) {
+    const borne = 100000n * MILLE;
+    const propres = [];
+    faux.forEach(y => {
+      if (y !== null && y !== rep && y >= 10n && y <= borne && decimales(y) <= 2 && !propres.includes(y)) propres.push(y);
+    });
+    return propres;
+  }
+  function enQcm(x, rep, deux, pourquoiDe, rng) {
+    const d = x.donnees;
+    const choix = melanger(rng, [rep, ...deux]).map(ecrire);
+    const bon = choix.indexOf(ecrire(rep));
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = pourquoiDe(milli(c.replace(new RegExp(FINE, "g"), ""))); });
+    const phrase = `${mes(milli(d.valeur), d.de)} = ${CASE}${NB}${d.vers}`;
+    return Object.assign(x, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: d.vers, sorte: "valeur"},
+      choix, bon, pourquoi, cleBase: x.cle, cle: `${x.cle}:q`
+    });
+  }
+  function enChoixDec(x, rng) {
+    if (!x || x.donnees.type !== "conv") return null;
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const rep = milli(x.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const f = bas ? facteur(d.de, d.vers) : facteur(d.vers, d.de);
+    const reste = v % MILLE;
+    const malPlace = reste && decimales(v) < String(f).length - 1 ? (v - reste) * f + BigInt(brut(v).split(",")[1]) * MILLE : null;
+    const faux = bas ? [reste ? sansVirgule(v) : null, malPlace, rep * 10n, v, v % f === 0n ? v / f : null]
+      : [rep * 10n, v * f, v, rep % 10n === 0n ? rep / 10n : null];
+    const propres = choixPropres(faux, rep);
+    if (propres.length < 2) return null;
+    return enQcm(x, rep, [propres[0], choisir(rng, propres.slice(1))], y => {
+      const e = erreursDec(x, y);
+      if (e && (e.erreur === 1 || e.erreur === 3)) return `1${NB}${d.de} est plus ${e.erreur === 1 ? "grand" : "petit"} que 1${NB}${d.vers}.`;
+      return e ? e.retour : y > rep ? "Un zéro de trop." : "Un zéro de moins.";
+    }, rng);
+  }
+  // Au choix, C4 (S434, « 75 L = … cL » : 750, 7,5, 0,75) : la même mesure
+  // écrite dans une autre unité de l'échelle, la plus proche d'abord. Le
+  // pourquoi : « 750, ce serait des dL. » (comme « On te montre »).
+  function enChoixVoisines(x, rng) {
+    if (!x || x.donnees.type !== "conv") return null;
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const rep = milli(x.reponse);
+    const cols = echelleDe(grandeurDe(d.vers));
+    const k = cols.indexOf(d.vers);
+    const unites = cols.filter(u => u && u !== d.vers && u !== d.de).sort((a, b) => Math.abs(cols.indexOf(a) - k) - Math.abs(cols.indexOf(b) - k));
+    const unite = {};
+    const faux = unites.map(u => { const y = convertir(v, d.de, u); if (y !== null) unite[y] = u; return y; });
+    const propres = choixPropres(faux, rep);
+    if (propres.length < 2) return null;
+    // (Une ligne au petit téléphone, police large comprise : « 6 720 g =
+    // 67 200 dg, pas 67 200 kg. » en prenait deux.)
+    return enQcm(x, rep, [propres[0], choisir(rng, propres.slice(1))], y => `${ecrire(y)}, ce serait des ${unite[y]}.`, rng);
+  }
+
+  // Dans Je valide, les trois grandeurs (comme C1, C2), et les deux sens
+  // au moins trois fois chacun.
+  function serieDecBonne(serie, usage) {
+    if (usage !== "valide") return true;
+    const bas = serie.filter(x => exposant(x.donnees.de) > exposant(x.donnees.vers)).length;
+    return serieConvertirBonne(serie, usage) && bas >= 3 && serie.length - bas >= 3;
+  }
+
+  // ------------------------------------- C3 · Avec des nombres décimaux
+  // Les unités du palier 1. d1 : un chiffre après la virgule, vers la
+  // petite unité (3,5 m = 350 cm) ; d2 : les centièmes, et vers la grande
+  // unité (35 cm = 0,35 m) ; d3 : les zéros (3,05 m ; 0,08 L ;
+  // 7 cm = 0,07 m ; 12,5 m = 1 250 cm ; 305 cm = 3,05 m).
+  const PAIRES_C3 = [["m", "cm"], ["m", "dm"], ["cm", "mm"], ["m", "mm"], ["km", "m"], ["kg", "g"], ["t", "kg"], ["L", "cL"], ["L", "dL"],
+    ["dL", "cL"], ["dm", "cm"]];
+  const ZEROS_C3 = [["bas", "a,0b"], ["bas", "0,0a"], ["haut", "0,0a"], ["bas", "ab,c"], ["haut", "a,0b"]];
+  function tirerC3(rng, degre) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, PAIRES_C3);
+      let sens = "bas";
+      let modele = "a,b";
+      if (degre === 2) {
+        sens = rng() < 0.5 ? "bas" : "haut";
+        modele = sens === "bas" ? choisir(rng, ["a,bc", "ab,c"]) : choisir(rng, ["0,ab", "a,b", "a,bc", "0,a"]);
+      } else if (degre === 3) [sens, modele] = choisir(rng, ZEROS_C3);
+      const P = nombreModele(rng, modele);
+      // Vers la grande unité, le modèle est celui de la réponse.
+      const v = sens === "bas" ? P : convertir(P, g, p);
+      const x = sens === "bas" ? conversionDec("C3", degre, v, g, p) : conversionDec("C3", degre, v, p, g);
+      if (!x) continue;
+      // (12,5 m = 1 250 cm : le zéro est dans la réponse.)
+      if (degre === 3 && modele === "ab,c" && milli(x.reponse) % (10n * MILLE) !== 0n) continue;
+      if (degre < 3 && (zerosPieges(v, false) || zerosPieges(milli(x.reponse), false))) continue;
+      return x;
+    }
+    return null;
+  }
+  ETAPES.C3 = {
+    clesExemples: ["C3:3,5m>cm", "C3:2,4L>dL", "C3:45cm>m"],
+    tirer(rng, degre, i, usage, forme) {
+      const x = tirerC3(rng, degre);
+      return forme === "choix" ? enChoixDec(x, rng) : x;
+    },
+    formes: formesC1,
+    accepte: contraintesConvertir,
+    valide: serieDecBonne,
+    erreurs: erreursDec
+  };
+
+  // ------------------------------ C4 · En mètre, en gramme, en litre
+  // Une unité du CM1 vers le mètre, le gramme, le litre, et l'inverse
+  // (S002 p. 15-17 : 12,3 hm = 1 230 m ; 41 cm = 0,41 m ; 12,3 dag =
+  // 123 g ; 41 dg = 4,1 g ; 23 dL = 2,3 L ; 6,4 L = 640 cL). d1 : × ou ÷ 10,
+  // 100, sans zéro piège, une réponse d'au moins 1 ; d2 : jusqu'à 1 000,
+  // les exemples officiels ; d3 : les zéros pièges de l'exerciseur en
+  // quatre modèles (0,05 ; 2,07 ; 30,4 ; 4 300), dans la question ou dans la
+  // réponse. Les unités nouvelles du CM1 trois fois sur cinq.
+  const ANCIENNES_C4 = ["km", "dm", "cm", "mm", "kg", "dL", "cL"];
+  function tirerC4(rng, degre) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      const U = rng() < 0.6 ? choisir(rng, NOUVELLES_CM1) : choisir(rng, ANCIENNES_C4);
+      const b = BASES[grandeurDe(U)];
+      if (degre === 1 && Math.abs(exposant(U)) > 2) continue;
+      const [de, vers] = rng() < 0.5 ? [U, b] : [b, U];
+      const cote = rng() < 0.5 ? "v" : "rep";
+      const modele = degre === 1 ? choisir(rng, ["a", "a,b", "ab"])
+        : degre === 2 ? choisir(rng, cote === "v" ? ["ab,c", "a,b", "a,bc", "ab"] : ["0,ab", "a,b", "ab,c", "a,bc"])
+          : choisir(rng, ["0,0a", "a,0b", "a0,b", "ab00"]);
+      const P = nombreModele(rng, modele);
+      const v = cote === "v" ? P : convertir(P, vers, de);
+      const x = conversionDec("C4", degre, v, de, vers);
+      if (!x) continue;
+      const rep = milli(x.reponse);
+      if (degre === 1 && (zerosPieges(v) || zerosPieges(rep) || rep < MILLE)) continue;
+      if (degre === 2 && (zerosPieges(v, false) || zerosPieges(rep, false))) continue;
+      return x;
+    }
+    return null;
+  }
+  ETAPES.C4 = {
+    clesExemples: ["C4:12,3hm>m", "C4:41dg>g", "C4:75L>cL"],
+    tirer(rng, degre, i, usage, forme) {
+      const x = tirerC4(rng, degre);
+      return forme === "choix" ? enChoixVoisines(x, rng) : x;
+    },
+    formes: formesC1,
+    accepte: contraintesConvertir,
+    // (Et au moins quatre questions sur les unités nouvelles du CM1.)
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const neuves = serie.filter(x => NOUVELLES_CM1.includes(x.donnees.de) || NOUVELLES_CM1.includes(x.donnees.vers)).length;
+      return serieDecBonne(serie, usage) && neuves >= 4;
+    },
+    erreurs: erreursDec
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -3308,7 +3638,8 @@
     const lu = lireMilli(saisie);
     if (typeof lu !== "bigint") return {juste: false, erreur: null, retour: null};
     if (lu === milli(question.reponse)) return {juste: true, erreur: null, retour: null};
-    const e = etape && etape.erreurs ? etape.erreurs(question, lu) : null;
+    // (Lot B2-1 : le texte tapé aussi, « 3,500 ».)
+    const e = etape && etape.erreurs ? etape.erreurs(question, lu, undefined, saisie) : null;
     return {juste: false, erreur: e ? e.erreur : null, retour: e ? CARTE.typo(e.retour) : null};
   }
 
@@ -3319,7 +3650,8 @@
   // multiplié), l'erreur 3 de E1 (des centimes vers les euros, × 100).
   // Lot B1-2 : P2 (vers la petite unité seulement, divisé : 1), P3 et P4
   // (vers la grande aussi, multiplié : 3).
-  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3]};
+  // Lot B2-1 : C3 et C4, dans les deux sens.
+  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3]};
   // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
   function erreurDeSens(question, tape) {
     if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger") return false;
@@ -3421,6 +3753,7 @@
     OBJETS,
     OBJETS_UNITE,
     OBJETS_MESURE,
+    OBJETS_DECIMAUX,
     VRAISEMBLANCE,
     dansBornes,
     PLANS

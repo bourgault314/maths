@@ -225,7 +225,8 @@ function controlerQuestion(q, ou) {
   }
   // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
   // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
-  if (["P2", "P3", "P4"].includes(q.code)) {
+  // (Lot B2-1 : C3 et C4 aussi.)
+  if (["P2", "P3", "P4", "C3", "C4"].includes(q.code)) {
     const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
     const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
     if (q.donnees.type !== "comparer-mes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
@@ -415,17 +416,20 @@ function controlerQuestion(q, ou) {
   // Lot 3b : un objet n'apparaît que dans ses bornes, dans une unité où on
   // le mesure vraiment (jamais « un ruban de 9 000 cm », jamais en dL).
   if (q.morceaux.objet && q.code !== "E1") {
-    const [, nom, n, u] = q.texte.match(/^((?:Un|Une) [^.]+) de ([\d\u202f]+)\u00a0([a-zA-Z]+)\./) || [];
+    // (Lot B2-1 : des mesures à virgule, « Une planche de 2,4 m ».)
+    const [, nom, n, u] = q.texte.match(/^((?:Un|Une) [^.]+) de ([\d\u202f,]+)\u00a0([a-zA-Z]+)\./) || [];
     assert.ok(nom, `${ou} : « ${q.texte} »`);
-    const o = G.OBJETS_MESURE.find(x => x[0] === nom && x[1] === u);
+    const virgule = n.includes(",");
+    const o = (virgule ? G.OBJETS_DECIMAUX : G.OBJETS_MESURE).find(x => x[0] === nom && x[1] === u);
     assert.ok(o, `${ou} : objet inconnu ${nom} en ${u}`);
-    const nb = Number(n.replace(/\u202f/g, ""));
-    assert.ok(nb >= o[2] && nb <= o[3], `${ou} : ${nom} de ${nb} ${u} hors de ses bornes`);
+    const nb = lire(n.replace(/\u202f/g, ""));
+    assert.ok(nb >= lire(String(o[2])) && nb <= lire(String(o[3])), `${ou} : ${nom} de ${n} ${u} hors de ses bornes`);
+    assert.ok(!["dL", "dm", "hm", "dam", "hg", "dag", "dg", "cg", "mg", "daL", "hL"].includes(q.donnees.vers), `${ou} : un objet en ${q.donnees.vers}`);
     assert.notEqual(q.donnees.vers, "dL", `${ou} : un objet en dL`);
   }
   // Un objet : la phrase dit l'objet, la mesure et la question.
   if (q.morceaux.objet && q.code === "E1") assert.match(q.texte, /^(Un|Une) [^.]+ coûte [\d\u202f]+\u00a0(€|c)( \d+\u00a0c)?\. Combien de centimes\u00a0\?$/, `${ou} : « ${q.texte} »`);
-  else if (q.morceaux.objet) assert.match(q.texte, /^(Un|Une) [^.]+ de [\d\u202f]+\u00a0[a-zA-Z]+\. Combien de [a-zéè]+\u00a0\?$/, `${ou} : « ${q.texte} »`);
+  else if (q.morceaux.objet) assert.match(q.texte, /^(Un|Une) [^.]+ de [\d\u202f,]+\u00a0[a-zA-Z]+\. Combien (de |d')[a-zéè]+\u00a0\?$/, `${ou} : « ${q.texte} »`);
   // 5. les choix
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
@@ -540,6 +544,22 @@ function controlerSerie(code, usage, nombre, s, ou) {
   if (code === "D7" && usage === "valide") {
     assert.deepEqual([...new Set(s.map(q => q.donnees.cherche))].sort(), ["arrivee", "depart", "duree"], `${ou} : les trois questions`);
   }
+  // Lot B2-1 : C3, C4 — une phrase en 3e, au choix en 5e, un objet en
+  // 7e ; les trois grandeurs ; les deux sens trois fois au moins ; C4 :
+  // quatre questions au moins sur les unités nouvelles du CM1.
+  if ((code === "C3" || code === "C4") && usage === "valide") {
+    const n = g => s.filter(q => q.grandeur === g).length;
+    assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
+    assert.equal(s[2].forme, "phrase"); assert.ok(!s[2].morceaux.objet, `${ou} : une phrase en 3e`);
+    assert.equal(s[4].forme, "qcm");
+    assert.ok(s[6].morceaux.objet, `${ou} : un objet en 7e`);
+    const bas = s.filter(q => EXPOSANTS[q.donnees.de] > EXPOSANTS[q.donnees.vers]).length;
+    assert.ok(bas >= 3 && 10 - bas >= 3, `${ou} : les deux sens (${bas} vers la petite unité)`);
+    if (code === "C4") {
+      const neuves = ["hm", "dam", "hg", "dag", "dg", "cg", "mg", "hL", "daL", "mL"];
+      assert.ok(s.filter(q => neuves.includes(q.donnees.de) || neuves.includes(q.donnees.vers)).length >= 4, `${ou} : les unités du CM1`);
+    }
+  }
   if ((code === "C1" || code === "C2") && usage === "valide") {
     const n = g => s.filter(q => q.grandeur === g).length;
     assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
@@ -566,7 +586,8 @@ for (const code of PRETES) {
       C2: ["nombre", "phrase", "deux-cases", "ranger", "qcm"], D1: ["nombre", "deux-cases", "qcm"], D2: ["nombre", "deux-cases", "qcm"],
       Q1: ["nombre", "vrai-faux"], E1: ["nombre", "deux-cases"], D7: ["nombre", "deux-cases", "qcm"],
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
-      P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"]}[code];
+      P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
+      C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -650,7 +671,7 @@ test("banc d'essai : le déterminisme (même graine, même série)", () => {
 test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bien écrit", () => {
   const vues = {};
   const noter = (code, v) => { if (v.erreur) { (vues[code] = vues[code] || new Set()).add(v.erreur); ecriture(v.retour, `${code} c${v.erreur}`); milliers(v.retour, code); } };
-  for (const code of ["P1", "C1", "C2", "D1", "D2", "Q1", "E1", "D7", "P2", "P3", "P4"]) {
+  for (const code of ["P1", "C1", "C2", "D1", "D2", "Q1", "E1", "D7", "P2", "P3", "P4", "C3", "C4"]) {
     for (let g = 1; g <= 300; g += 1) {
       G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
         const d = q.donnees;
@@ -667,6 +688,11 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
           const v = G.milli(d.valeur);
           const f = G.facteur(G.exposant(d.de) > G.exposant(d.vers) ? d.de : d.vers, G.exposant(d.de) > G.exposant(d.vers) ? d.vers : d.de);
           essais.push(v, v * f, v * f * 10n, v * f / 10n, v * 1000n, v % f === 0n ? v / f : 1n, G.milli(q.reponse) * 10n, G.milli(q.reponse) / 10n);
+          // (Lot B2-1 : la virgule effacée, le zéro mal placé.)
+          if (v % 1000n) {
+            const [e, dec] = G.brut(v).split(",");
+            essais.push(BigInt(e + dec) * 1000n, BigInt(e) * 1000n * f + BigInt(dec) * 1000n);
+          }
         } else if (d.type === "somme") essais.push(G.milli(d.a) + G.milli(d.b), G.lireMilli(`${d.a}${d.b}`), G.convertir(G.milli(d.a), d.ua, d.vers) + G.milli(d.b) * 10n);
         else if (d.type === "deux") {
           const f = G.facteur(d.grande, d.petite); const t = G.milli(d.valeur) / 1000n; const a = t / f; const b = t % f;
@@ -705,7 +731,7 @@ test("banc d'essai : les erreurs connues sont déclenchées, leur retour est bie
       });
     }
   }
-  const attendues = {P2: [1, 2, 4], P3: [1, 2, 3, 4], P4: [1, 2, 3, 4], P1: [1, 3], C1: [1, 2, 3, 4, 5, 6, 7], C2: [1, 2, 3, 4, 5], D1: [1, 2], D2: [1, 2, 3, 4], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5, 6, 7], D7: [1, 2, 3]};
+  const attendues = {C3: [1, 2, 3, 4, 5, 6], C4: [1, 2, 3, 4, 5, 6], P2: [1, 2, 4], P3: [1, 2, 3, 4], P4: [1, 2, 3, 4], P1: [1, 3], C1: [1, 2, 3, 4, 5, 6, 7], C2: [1, 2, 3, 4, 5], D1: [1, 2], D2: [1, 2, 3, 4], Q1: [1, 2, 3], E1: [1, 2, 3, 4, 5, 6, 7], D7: [1, 2, 3]};
   Object.keys(attendues).forEach(code => {
     attendues[code].forEach(c => assert.ok(vues[code] && vues[code].has(c), `${code} : l'erreur c${c} n'est jamais déclenchée`));
   });
@@ -753,10 +779,10 @@ test("lot 3b-2 : la règle à lire — la bonne longueur, les deux vraies erreur
 test("lot 3b-2 : « Je prévois » — seulement les erreurs de sens, et le sens attendu", () => {
   const compte = {};
   for (let g = 1; g <= 300; g += 1) {
-    for (const code of ["C1", "C2", "P1", "E1", "D1", "D2", "R1", "Q1"]) {
+    for (const code of ["C1", "C2", "P1", "E1", "D1", "D2", "R1", "Q1", "C3", "C4"]) {
       G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
         const f = G.fauxDeSens(q);
-        if (!["C1", "C2", "P1", "E1"].includes(code)) { assert.equal(f, null, `${code} : pas de « Je prévois »`); return; }
+        if (!["C1", "C2", "P1", "E1", "C3", "C4"].includes(code)) { assert.equal(f, null, `${code} : pas de « Je prévois »`); return; }
         // La bonne réponse n'est jamais une erreur de sens.
         assert.equal(G.erreurDeSens(q, q.choix ? q.choix[q.bon] : (Array.isArray(q.reponse) ? q.reponse[0] : q.reponse)), false);
         if (!f) return;
@@ -775,7 +801,7 @@ test("lot 3b-2 : « Je prévois » — seulement les erreurs de sens, et le sens
       });
     }
   }
-  ["C1", "C2", "P1", "E1"].forEach(c => assert.ok(compte[c] > 50, `${c} : des erreurs de sens possibles`));
+  ["C1", "C2", "P1", "E1", "C3", "C4"].forEach(c => assert.ok(compte[c] > 50, `${c} : des erreurs de sens possibles`));
   // Une autre erreur (un zéro de trop) n'est pas une erreur de sens.
   const q = G.serie("C1", {usage: "valide", graine: 3}).find(x => x.donnees.type === "conv" && x.forme !== "qcm");
   assert.equal(G.erreurDeSens(q, G.brut(G.milli(q.reponse) * 10n)), false);
@@ -873,4 +899,79 @@ test("lot B1-1 : au palier 2, la liste des unités ne donne jamais la réponse",
     }
   }
   assert.ok(n > 5000);
+});
+
+test("lot B2-1 : C3 et C4 — la phrase des décimaux, les erreurs des décimaux, les unités voisines, des mesures vraies", () => {
+  // La phrase sous le glisse-unité (S002 p. 9) : le dernier rang écrit vers
+  // la petite unité, l'unité de départ vers la grande ; d'hectomètre.
+  const question = (code, valeur, de, vers) => {
+    for (let g = 1; g <= 4000; g += 1) {
+      for (const u of ["entraine", "valide"]) {
+        const q = G.serie(code, {usage: u, graine: g}).find(x => x.donnees.type === "conv" && x.donnees.valeur === valeur && x.donnees.de === de && x.donnees.vers === vers);
+        if (q) return q;
+      }
+    }
+    return null;
+  };
+  const phrases = new Set();
+  for (let g = 1; g <= 300; g += 1) {
+    ["C3", "C4"].forEach(code => G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
+      const {de, vers, phrase} = q.glisse;
+      phrases.add(phrase);
+      if (EXPOSANTS[de] > EXPOSANTS[vers]) assert.match(phrase, /^Chaque (?:(?:dixième|centième) (?:de |d'))?[a-zéè]+ devient \d[\d ]* [a-zéè]+\.$/, phrase);
+      else assert.match(phrase, /^Chaque [a-zéè]+ devient un (?:dixième|centième|millième) (?:de |d')[a-zéè]+\.$/, phrase);
+      assert.ok(phrase.length <= 52, `phrase trop longue : ${phrase}`);
+      // (La phrase courte : les unités en symboles, 40 caractères au plus.)
+      assert.ok(q.glisse.phraseCourte.length <= 40 && q.glisse.phraseCourte.endsWith(`${vers}.`), `phrase courte : ${q.glisse.phraseCourte}`);
+    }));
+  }
+  ["Chaque dixième de mètre devient 10 centimètres.", "Chaque centimètre devient un centième de mètre."].forEach(p => assert.ok(phrases.has(p), p));
+  assert.ok([...phrases].some(p => /d'hecto/.test(p)), "d'hectomètre, d'hectolitre");
+  // Les erreurs des décimaux, au pavé.
+  const q = question("C3", "3,5", "m", "cm") || question("C3", "4,5", "m", "cm");
+  assert.ok(q, "une question 3,5 m ou 4,5 m → cm");
+  const [e, d] = q.donnees.valeur.split(",");
+  assert.equal(G.verifier(q, e + d).retour, "Effacer la virgule ne suffit pas.");
+  assert.equal(G.verifier(q, `${e}0${d}`).retour, "0,5 m, ce n'est pas 5 cm.");
+  assert.equal(G.verifier(q, `${e}${d}00`).retour, "0,5 m, c'est 50 cm.");
+  assert.equal(G.verifier(q, `${e},${d}00`).retour, "Des zéros après la virgule ne changent rien.");
+  assert.equal(G.verifier(q, `0,0${e}${d}`).erreur, 1);
+  assert.ok(G.erreurDeSens(q, `0,0${e}${d}`));
+  // Au choix (C3) : les vraies erreurs ; (C4) : la même mesure dans une
+  // autre unité de l'échelle, recalculée à part.
+  let n3 = 0;
+  let n4 = 0;
+  for (let g = 1; g <= 600; g += 1) {
+    G.serie("C3", {usage: "entraine", graine: g}).filter(x => x.forme === "qcm").forEach(x => {
+      n3 += 1;
+      x.choix.forEach((c, k) => { if (k !== x.bon) assert.ok(G.verifier(x, k).retour, `C3 : « ${c} » sans pourquoi`); });
+    });
+    G.serie("C4", {usage: "entraine", graine: g}).filter(x => x.forme === "qcm").forEach(x => {
+      n4 += 1;
+      const v = lire(x.donnees.valeur);
+      x.choix.forEach((c, k) => {
+        if (k === x.bon) return;
+        const y = lire(c.replace(/ /g, ""));
+        const unites = Object.keys(EXPOSANTS).filter(u => FAMILLE[u] === FAMILLE[x.donnees.vers] && u !== x.donnees.vers && u !== "t");
+        const u = unites.find(w => { try { return versUnite(v, x.donnees.de, w) === y; } catch (err) { return false; } });
+        assert.ok(u, `C4 : « ${c} » n'est pas ${x.donnees.valeur} ${x.donnees.de} dans une autre unité`);
+        assert.equal(G.verifier(x, k).retour, `${c}, ce serait des ${u}.`);
+      });
+    });
+  }
+  assert.ok(n3 > 1000 && n4 > 1000, `${n3} ${n4}`);
+  // Des mesures qu'on écrit vraiment : pas de virgule en mm, mg, mL, cg,
+  // cL ; jamais moins de 1 dans une petite unité ; 999 au plus dans une
+  // unité rare ; 50 000 au plus (C3), 10 000 (C4).
+  for (let g = 1; g <= 600; g += 1) {
+    ["C3", "C4"].forEach(code => ["entraine", "valide"].forEach(u => G.serie(code, {usage: u, graine: g}).forEach(x => {
+      [[x.donnees.valeur, x.donnees.de], [x.reponse, x.donnees.vers]].forEach(([n, unite]) => {
+        const m = lire(n);
+        assert.ok(!(["mm", "mg", "mL", "cg", "cL"].includes(unite) && m % 1000n), `${code} : ${n} ${unite}`);
+        assert.ok(!(["mm", "cm", "dm", "mg", "cg", "dg", "mL", "cL", "dL", "dam", "hm", "dag", "hg", "daL"].includes(unite) && m < 1000n), `${code} : ${n} ${unite}`);
+        assert.ok(!(["hm", "dam", "hg", "dag", "dg", "daL", "hL"].includes(unite) && m >= 1000000n), `${code} : ${n} ${unite}`);
+        assert.ok(m <= (code === "C3" ? 50000000n : 10000000n), `${code} : ${n} ${unite}`);
+      });
+    })));
+  }
 });

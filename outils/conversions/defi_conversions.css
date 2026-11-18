@@ -260,6 +260,12 @@ table.gn td { height: 2.875rem; text-align: center; border: .0625rem solid #9fb6
 table.gn tr.bande td { background: #dfe5ea; }
 table.gn td.u { color: #1478d4; }
 table.gn td.z { color: #9aa9b4; }
+/* Lot B2-1 : le glisse-nombre avec la virgule (S003 p. 8-9) : la colonne
+   des unités grisée, la virgule collée à elle. */
+table.gn.dec th.u-col { background: #c9d3db; color: var(--ink); }
+table.gn.dec td.u-col { background: #c9d3db; position: relative; }
+table.gn.dec tr.bande td.u-col { background: #bcc8d1; }
+table.gn.dec .virg { position: absolute; right: -.25rem; bottom: .125rem; font: 700 1.75rem Georgia, serif; color: var(--ink); line-height: 1; z-index: 1; }
 .heure { width: 100%; display: flex; flex-direction: column; gap: .375rem; align-items: stretch; }
 .heure-ligne { display: flex; gap: 0; }
 .heure-bloc { display: flex; flex-direction: column; min-width: 0; }

@@ -147,7 +147,7 @@
     {code: "P3", rang: 13, palier: 2, famille: "relations", classe: "CM1", nom: "Deux unités voisines", exemple: "1 cm = 0,1 dm"},
     {code: "P4", rang: 14, palier: 2, famille: "relations", classe: "CM1", nom: "Toutes les relations à connaître", nomCourt: "Toutes les relations", exemple: "1 L = 1 000 mL"},
     {code: "C3", rang: 15, palier: 2, famille: "convertir", classe: "CM1", nom: "Avec des nombres décimaux", exemple: "3,5 m = 350 cm"},
-    {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", exemple: "41 dg = 4,1 g"},
+    {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", nomCourt: "Mètre, gramme, litre", exemple: "41 dg = 4,1 g"},
     {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", exemple: "215 cm = 2,15 m"},
     {code: "C6", rang: 18, palier: 2, famille: "convertir", classe: "CM1", nom: "Les fractions usuelles", exemple: "¾ m = 75 cm"},
     {code: "C7", rang: 19, palier: 2, famille: "convertir", classe: "CM1", nom: "Ranger des mesures", exemple: ""},
@@ -668,6 +668,65 @@
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["1 km = 1 000 m", "1 m = 1 000 mm", "1 hm = 100 m", "1 m = 100 cm", "1 kg = 1 000 g", "1 g = 1 000 mg",
         "1 hL = 100 L", "1 L = 1 000 mL", "1 t = 1 000 kg", "1 L = 100 cL"],
+      reperes: []
+    },
+    // ============================================ palier 2 (lot B2-1)
+    // Convertir avec des décimaux (carte v4). S002 p. 9, S003 p. 6-9 : le
+    // glisse-nombre officiel, la colonne des unités grisée, AVEC la phrase
+    // (« un dixième devient une unité ») ; « la virgule repère le chiffre
+    // des unités ». L'outil de « À toi » : le glisse-unité, toutes ses
+    // colonnes, avec la phrase des décimaux sous lui dans la correction.
+    // Avec des nombres décimaux : trois mètres et un demi-mètre ; le
+    // glisse-nombre officiel ; 45 cm = 0,45 m (la virgule repère le chiffre
+    // des unités). L'image : la relation et le calcul posé.
+    C3: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "3,5 m =", reponse: "350", apres: "cm"},
+          consigne: "Touche chaque morceau : il s'ouvre en centimètres.",
+          aide: {type: "barres", n: 3, reste: "0,5", grande: "m", petite: "cm", facteur: 100},
+          apres: ["300 cm + 50 cm", "= 350 cm"],
+          legende: "3,5 m : trois mètres et un demi-mètre."},
+        {etiquette: "Je représente", question: {avant: "2,4 L =", reponse: "24", apres: "dL"},
+          relation: ["1 L = 10 dL", "donc 2,4 L = 2,4 × 10 dL"],
+          aide: {type: "glisse-nombre", nombre: "2,4", rangs: 1, sens: "×"},
+          apres: ["Le 4 glisse aux unités :", "un dixième devient une unité."]},
+        {etiquette: "Je vérifie pourquoi", question: {avant: "45 cm =", reponse: "0,45", apres: "m"},
+          consigne: "La virgule repère le chiffre des unités.",
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "45", de: "cm", vers: "m", pale: false},
+          apres: ["Sous m, le 0 : le chiffre des unités.", "La virgule le suit : 0,45 m."]}
+      ],
+      retenir: "Avec une virgule, je convertis de la même façon :\n3,5 m = 3,5 × 100 cm = 350 cm.\nLa virgule repère le chiffre des unités : 45 cm = 0,45 m.",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: RELATIONS_BASES,
+      reperes: []
+    },
+    // En mètre, en gramme, en litre (S002 p. 15-17, les exemples officiels
+    // 12,3 hm = 1 230 m ; 41 dg = 4,1 g ; et S434, « 75 L = … cL », dont
+    // les mauvaises réponses 750, 7,5, 0,75 sont des unités voisines).
+    // L'image : l'échelle des unités.
+    C4: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "echelle"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "12,3 hm =", reponse: "1 230", apres: "m"},
+          relation: ["1 hm = 100 m", "donc 12,3 hm = 12,3 × 100 m"],
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "12,3", de: "hm", vers: "m", pale: false},
+          apres: ["Je glisse l'unité de hm à m.", "Le 0 remplit la colonne m : 1 230 m."]},
+        {etiquette: "Je représente", question: {avant: "41 dg =", reponse: "4,1", apres: "g"},
+          consigne: "Le nombre ne bouge pas :\nc'est l'unité qui change de place.",
+          aide: {type: "glisse-unite", grandeur: "masse", nombre: "41", de: "dg", vers: "g", pale: false, colonnes: ["kg", "hg", "dag", "g", "dg", "cg", "mg"]},
+          apres: ["Sous g, le 4 : le chiffre des unités.", "41 dg = 4,1 g."]},
+        {etiquette: "Je vérifie", question: {avant: "75 L =", reponse: "7 500", apres: "cL"},
+          consigne: "Je glisse jusqu'à cL, pas seulement jusqu'à dL.",
+          aide: {type: "glisse-unite", grandeur: "contenance", nombre: "75", de: "L", vers: "cL", pale: false},
+          apres: ["Les 0 remplissent dL et cL.", "75 L = 7 500 cL."],
+          legende: "Pas 750 : ce serait des dL."}
+      ],
+      retenir: "Je place le chiffre des unités sous l'unité de la mesure, puis je glisse jusqu'à l'unité demandée.\n12,3 hm = 1 230 m\n41 dg = 4,1 g\n75 L = 7 500 cL",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 hm = 100 m", "1 dm = 0,1 m", "1 dag = 10 g", "1 dg = 0,1 g", "1 hL = 100 L", "1 cL = 0,01 L"],
       reperes: []
     }
   };
