@@ -2056,7 +2056,7 @@ test("modules lot 4 : les erreurs connues, reconnues avec leur phrase, sans la r
     ["M10-1", "2 × 64 × 5 = □", 128, 1], ["M10-1", "2 × 64 × 5 = □", 320, 1], ["M10-1", "2 × 64 × 5 = □", 6400, 2], ["M10-1", "2 × 64 × 5 = □", 71, 3],
     ["M10-1", "2 × 137 × 5 = 137 × □", 7, 3], ["M10-1", "23 × 20 = □", 46, 2], ["M10-1", "23 × 20 = □", 43, 3],
     ["M10-1", "24 × 5 = □ × 10", 48, 4], ["M10-3", "36 × 25 = □", 9000, 2],
-    ["M12-1", "420 ÷ 7 = □", 6, 1], ["M12-1", "420 ÷ 7 = □", 2940, 3], ["M12-2", "84 ÷ 4 = □", 20, 2], ["M12-2", "84 ÷ 4 = □", 1, 2], ["M12-2", "84 ÷ 4 = □", 210, 1],
+    ["M12-1", "420 ÷ 7 = □", 6, 1], ["M12-1", "420 ÷ 7 = □", 2940, 3], ["M12-2", "84 ÷ 6 = □", 10, 2], ["M12-2", "84 ÷ 6 = □", 4, 2], ["M12-2", "84 ÷ 6 = □", 140, 1],
     ["C1-1", "6 × (13 − 5) = □", 73, 1], ["C1-1", "6 × (13 − 5) = □", 8, 2], ["C1-1", "6 × (13 − 5) = □", 14, 3], ["C1-1", "45 − (2 + 7) = □", 50, 1],
     ["C1-3", "40 − (5 × (11 − 6)) = □", 5, 2], ["C1-3", "40 − (5 × (11 − 6)) = □", 25, 2], ["C1-3", "3 × (15 − (2 + 6)) = □", 7, 2], ["C1-3", "3 × (15 − (2 + 6)) = □", 10, 3],
     ["C3-1", "657 = 40 + □", 697, 3], ["C3-1", "□ − 300 = 4 250", 3950, 3],
@@ -2073,8 +2073,8 @@ test("modules lot 4 : les erreurs connues, reconnues avec leur phrase, sans la r
   const phrase = (cle, texte, reponse) => avecEspaces(CORE.diagnostiquer(trouver(cle, texte), reponse).texte);
   assert.equal(phrase("M7-1", "52 × 5 = □", 520), "520, c’est 52 × 10. 52 × 5, c’est la moitié de 520.");
   assert.equal(phrase("M10-1", "2 × 64 × 5 = □", 128), "128, c’est 2 × 64. Il reste × 5.");
-  assert.equal(phrase("M12-2", "84 ÷ 4 = □", 20), "20, c’est 80 ÷ 4. Il reste 4 ÷ 4.");
-  assert.equal(phrase("M12-2", "84 ÷ 4 = □", 1), "1, c’est 4 ÷ 4. Il reste 80 ÷ 4.");
+  assert.equal(phrase("M12-2", "84 ÷ 6 = □", 10), "10, c’est 60 ÷ 6. Il reste 24 ÷ 6.");
+  assert.equal(phrase("M12-2", "84 ÷ 6 = □", 4), "4, c’est 24 ÷ 6. Il reste 60 ÷ 6.");
   assert.equal(phrase("C1-1", "6 × (13 − 5) = □", 73), "73 : tu as calculé de gauche à droite. Les parenthèses d’abord : 13 − 5.");
   assert.equal(phrase("C3-2", "236 + 8 = 233 + □", 5), "5 : 233, c’est 3 de moins que 236. De l’autre côté, il faut 3 de plus.");
   // Aucune phrase ne donne la réponse, ni ne dit « NaN ».

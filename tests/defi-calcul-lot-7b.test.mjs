@@ -95,15 +95,23 @@ test("lot 7b : une échelle par module — aucun calcul commun entre deux niveau
   });
 });
 
-test("lot 7b : la règle commune de M12 et M13 — un nombre qui finit par 0, un quotient entier qui ne finit pas par 0 : la moitié de la moitié", () => {
-  const prend = (n, d) => (d === 4 || d === 8) && n % 10 === 0 && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
+test("lot 7b (règle revue au lot 6 « programmes ») : la règle commune de M12 et M13 — ÷ 4, ÷ 8 au quotient entier qui ne finit pas par 0 : la moitié de la moitié", () => {
+  // (Lot 6 « programmes », 18/11 : plus de condition « le nombre finit par
+  // 0 » — toutes les réponses de M13-1 et M13-2 finissaient par 5.)
+  const prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
   ["M12-1", "M12-2", "M12-3"].forEach(cle => tous(cle).forEach(c => assert.ok(!prend(c.donnees.n, c.donnees.d), `${cle} : ${espaces(c.texte)} est à M13`)));
   ["M13-1", "M13-2"].forEach(cle => tous(cle).forEach(c => assert.ok(prend(c.donnees.n, c.donnees.d), `${cle} : ${espaces(c.texte)}`)));
   // Les exemples de M12 y restent ; l'exemple officiel 140 ÷ 4 est la leçon de M13.
   const m12 = new Set(["M12-2"].flatMap(cle => tous(cle).map(c => espaces(c.texte))));
-  ["96 ÷ 8 = □", "84 ÷ 4 = □"].forEach(t => assert.ok(m12.has(t) || espaces(CORE.niveauDe("M12-2").niveau.apprends.calculs.montre.texte) === t || CORE.niveauDe("M12-2").niveau.imposes.some(c => espaces(c.texte) === t), t));
+  ["91 ÷ 7 = □", "84 ÷ 6 = □"].forEach(t => assert.ok(m12.has(t) || espaces(CORE.niveauDe("M12-2").niveau.apprends.calculs.montre.texte) === t || CORE.niveauDe("M12-2").niveau.imposes.some(c => espaces(c.texte) === t), t));
   assert.equal(espaces(CORE.niveauDe("M13-1").niveau.apprends.calculs.montre.texte), "140 ÷ 4 = □");
   assert.ok(!m12.has("140 ÷ 4 = □"));
+  // Les réponses de ÷ 4 et ÷ 8 ne finissent plus toutes par 5 ; 96 ÷ 8 et
+  // 92 ÷ 4 sont à M13.
+  ["M13-1", "M13-2"].forEach(cle => assert.ok(tous(cle).some(c => c.reponse % 10 !== 5), cle));
+  const m13 = new Set(["M13-1", "M13-2"].flatMap(cle => tous(cle).map(c => espaces(c.texte))));
+  ["96 ÷ 8 = □", "92 ÷ 4 = □", "232 ÷ 8 = □"].forEach(t => assert.ok(m13.has(t), t));
+  ["M12-2", "M12-3"].forEach(cle => tous(cle).forEach(c => assert.ok(![4, 8].includes(c.donnees.d) || c.reponse % 10 === 0 || c.reponse <= 10, `${cle} : ${espaces(c.texte)}`)));
   assert.equal(espaces(CORE.niveauDe("M13-3").niveau.apprends.calculs.montre.texte), "260 ÷ 8 = □");
 });
 

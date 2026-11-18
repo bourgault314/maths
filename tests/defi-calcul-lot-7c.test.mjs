@@ -62,7 +62,7 @@ test("lot 7c : les sortes de chaque niveau, toutes tirées, 2 à 4", () => {
   const attendues = {
     "F4-1": ["des objets", "des mesures"], "F4-2": ["en dixièmes", "en centièmes"],
     "F9-1": ["addition", "soustraction"], "F9-2": ["addition", "soustraction", "trois fractions", "nombres mixtes"],
-    "F11-1": ["plus petite que 1", "plus grande que 1"], "F11-2": ["b × a/b", "la fraction cherchée"]
+    "F11-1": ["plus petite que 1", "plus grande que 1"], "F11-2": ["b × a/b", "la fraction, c’est une division"]
   };
   NIVEAUX.forEach(cle => {
     assert.deepEqual(CORE.sortesDe(cle).map(s => espaces(s.nom || s)), attendues[cle], cle);
@@ -91,7 +91,11 @@ test("lot 7c : les règles communes avec les voisins, sur tous les calculs", () 
   ["F11-1", "F11-2"].forEach(cle => tous(cle).forEach(c => assert.ok(c.f11.a >= 2, `${cle} : ${espaces(c.texte)}`)));
   // F11-1 / F11-2 : le produit n'est jamais un entier ; le multiplicateur est le dénominateur.
   tous("F11-1").forEach(c => assert.ok(c.f11.k % c.f11.d !== 0 && (c.f11.k * c.f11.a) % c.f11.d !== 0, espaces(c.texte)));
-  tous("F11-2").forEach(c => assert.equal(c.f11.k, c.f11.d, espaces(c.texte)));
+  // (Lot 6 « programmes » : « la fraction, c'est une division », 12/4 = □ :
+  // un numérateur multiple du dénominateur, un quotient de 2 à 6.)
+  tous("F11-2").forEach(c => (c.forme === "quotient"
+    ? assert.ok(c.f11.a % c.f11.d === 0 && c.reponse >= 2 && c.reponse <= 6 && c.reponse !== c.f11.d, espaces(c.texte))
+    : assert.equal(c.f11.k, c.f11.d, espaces(c.texte))));
   // F2 / F9 : F2 garde les demis et les quarts jusqu'à 1 ; F9-1 / F9-2 : le grand dénominateur jusqu'à 20, puis au-delà.
   const deuxFractions = c => ["somme", "difference"].includes(c.forme);
   tous("F9-1").forEach(c => {
@@ -153,12 +157,14 @@ test("lot 7c : une seule case, au numérateur ; la consigne dit le dénominateur
     const t = espaces(c.texte);
     assert.equal(t.split("□").length, 2, `${cle} : ${t}`);
     if (cle.startsWith("F9") || cle === "F11-1") assert.match(t, / = (\d+ \+ )?□\/\d+$/, `${cle} : ${t}`);
-    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^(\d+ × □\/\d+|□\/\d+ × \d+) = \d+$/, t);
+    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^\d+\/\d+ = □$/, t);
     assert.equal(CORE.virguleDe(c), cle === "F4-2", `${cle} : ${t}`);
   }));
-  // « 6 × □/6 = 5 », « 2 + □/8 » : les choix de Gwenaël.
-  assert.ok(tous("F11-2").some(c => espaces(c.texte) === "6 × □/6 = 5" && c.reponse === 5));
-  assert.ok(CORE.niveauDe("F11-2").niveau.imposes.some(c => espaces(c.texte) === "6 × □/6 = 5"));
+  // Lot 6 « programmes » : « 6 × □/6 = 5 » (réponse : le nombre écrit à
+  // droite) est remplacé par « la fraction, c'est une division ».
+  assert.ok(tous("F11-2").some(c => espaces(c.texte) === "15/3 = □" && c.reponse === 5));
+  assert.ok(CORE.niveauDe("F11-2").niveau.imposes.some(c => espaces(c.texte) === "15/3 = □"));
+  assert.ok(!tous("F11-2").some(c => c.forme.startsWith("fraction")));
 });
 
 test("lot 7c : l'aide ne donne jamais la réponse, la correction la montre (tous les calculs)", () => {
@@ -279,7 +285,7 @@ test("lot 7c : les annonces — trois fractions, nombres mixtes, la fraction che
   assert.equal(espaces(CORE.annonceDe(premier("F9-2", "trois"))), "Nouveau : trois fractions : je les écris toutes avec le même dénominateur.");
   assert.equal(espaces(CORE.annonceDe(premier("F9-2", "mixtes"))), "Nouveau : des nombres mixtes : les unités ensemble, les fractions ensemble.");
   assert.equal(espaces(CORE.annonceDe(premier("F9-2", "difference"))), "Nouveau : c’est une soustraction.");
-  assert.match(espaces(CORE.annonceDe(premier("F11-2", "fraction"))), /^Nouveau : on cherche la fraction : le nombre qui, multiplié par \d+, donne \d+\.$/);
+  assert.match(espaces(CORE.annonceDe(premier("F11-2", "quotient"))), /^Nouveau : la fraction, c’est une division : (\d+)\/(\d+) = \1 ÷ \2\.$/);
   assert.equal(espaces(CORE.annonceDe(premier("F11-2", "produit-gauche"))), "Nouveau : les facteurs ont changé de place.");
   // Au-delà de 30 parts : le calcul, annoncé, avec les deux flèches.
   const grand = tous("F9-2").find(c => CORE.aideDe(c).outil === "fois-fraction");
@@ -302,7 +308,7 @@ test("lot 7c : les erreurs connues, chacune la sienne (dont 3/4 + 1/2 = 4/6 du l
     ["F9-1", "11/4 − 7/20 = □/20", 4, 1], ["F9-1", "11/4 − 7/20 = □/20", 62, 2],
     ["F9-2", "2/8 + 3/2 + 1/4 = □/8", 14, 3],
     ["F11-1", "3 × 5/4 = □/4", 8, 1], ["F11-1", "3 × 5/4 = □/4", 5, 2],
-    ["F11-2", "6 × □/6 = 5", 30, 2]
+    ["F11-2", "15/3 = □", 15, 2]
   ];
   cas.forEach(([cle, texte, reponse, cause]) => assert.equal((CORE.diagnostiquer(trouve(cle, texte), reponse) || {}).c, cause, `${texte} → ${reponse}`));
   const mixte = tous("F9-2").find(c => c.forme === "mixtes" && espaces(c.texte).endsWith("= 2 + □/8") && c.reponse === 5);
@@ -331,7 +337,7 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-2/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261118-1/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
@@ -347,5 +353,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-7(?:c-fractions|d-derniers-modules)$/m); // (lot 7d : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes)$/m); // (lots 7d, 6 « programmes » : le cœur change encore)
 });

@@ -4214,11 +4214,15 @@
     return dessinsDe(morceaux, etapes, dessin);
   }
   // Les chiffres qu'on garde : 3, 6, 7, 9 (× 2 : M1 ; × 4, × 8 : M6 ; × 5 : M7).
-  // Lot 7d (règle commune avec M9, rapport de Codex du 14/11) : un produit
-  // par 9, 19, 98 ou 99 n'est jamais ici — il se calcule en retranchant
-  // (M9). M8 garde 3, 6 et 7, et ne coupe ni 19, ni 98, ni 99.
-  const M8_CHIFFRES = Object.freeze([3, 6, 7]);
-  const M8_RETIRES = Object.freeze([9, 19, 98, 99]);
+  // Lot 6 « programmes » (18/11, contrôle des 125 compétences) : les × 9
+  // et les × 19 d'un chiffre reviennent ici. Ils sont au programme du CE1
+  // (11 à 19 × un chiffre) et du CE2 (11 à 99 × un chiffre) : le lot 7d
+  // les avait envoyés en « vers la 6e » (M9). La règle commune avec M9
+  // reste : aucun calcul en commun. M8 ne coupe ni 98 ni 99 (× 99, × 98 :
+  // M9-2) ; M8-3 ne prend ni 19, ni 98, ni 99 (M9).
+  const M8_CHIFFRES = Object.freeze([3, 6, 7, 9]);
+  const M8_RETIRES = Object.freeze([98, 99]);
+  const M8_RETIRES_3 = Object.freeze([19, 98, 99]);
   function m8Vivier(niveau) {
     const v = {produit: [], "produit-gauche": []};
     if (niveau < 3) {
@@ -4229,7 +4233,7 @@
     // M8-3 : × 11, × 12, × 21, × 31 d'un nombre à deux chiffres (de 13 à 99,
     // sans dizaine entière) ; un calcul sur cinq en trou.
     v.trou = [];
-    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12 && !M8_RETIRES.includes(a)).forEach(a => {
+    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12 && !M8_RETIRES_3.includes(a)).forEach(a => {
       v.produit.push(m8Calcul(3, a, b));
       v["produit-gauche"].push(m8Calcul(3, a, b, true));
       v.trou.push(m8Trou(3, a, b));
@@ -4982,12 +4986,15 @@
   const M12_DIVISEURS = Object.freeze(entre(3, 9));
   const m12Garde = n => n !== 60 && n !== 100;
   // Lot 7b (rapport de Codex du 14/11 : M13 ne reprend aucun calcul de M12)
-  // — la règle commune aux deux modules : ÷ 4 ou ÷ 8 d'un nombre qui finit
-  // par 0, quand le quotient est entier, plus grand que 10 (pas un fait des
-  // tables) et ne finit pas par 0 (120 ÷ 4 = 30 : 12 dizaines ÷ 4, M12-1),
-  // c'est la moitié de la moitié : M13 (140 ÷ 4, 360 ÷ 8). Tout le reste
-  // reste à M12 (96 ÷ 8, 84 ÷ 4, 536 ÷ 8).
-  const m13Prend = (n, d) => (d === 4 || d === 8) && n % 10 === 0 && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
+  // — la règle commune aux deux modules. Lot 6 « programmes » (18/11) : ÷ 4
+  // ou ÷ 8, quand le quotient est entier, plus grand que 10 (pas un fait
+  // des tables) et ne finit pas par 0 (120 ÷ 4 = 30 : 12 dizaines ÷ 4,
+  // M12-1), c'est la moitié de la moitié : M13 (140 ÷ 4, 92 ÷ 4, 232 ÷ 8),
+  // que le nombre finisse par 0 ou non (CM2, « diviser un nombre entier
+  // par 4 ou par 8 »). Avant, M13 ne prenait que les nombres finissant par
+  // 0 : toutes ses réponses finissaient par 5. M12-2 et M12-3 gardent ÷ 3,
+  // 5, 6, 7, 9 (96 ÷ 8 et 536 ÷ 8 passent à M13).
+  const m13Prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
   function m12Vivier(niveau) {
     const paires = [];
     if (niveau === 1) {
@@ -5045,31 +5052,31 @@
     {
       n: 2, titre: "quotient à deux chiffres", nom: "Quotient à deux chiffres", palier: 3, type: "P",
       composer: vivierNiveau(M12_VIVIERS[2], [8, 2]),
-      imposes: [m12Calcul(2, "division", 84, 4), m12Calcul(2, "trou-facteur", 98, 7)],
+      imposes: [m12Calcul(2, "division", 84, 6), m12Calcul(2, "trou-facteur", 98, 7)],
       apprends: apprendsSansManip({
         fiche: M12,
-        represente: m12Calcul(0, "division", 96, 8),
+        represente: m12Calcul(0, "division", 91, 7),
         ecris: m12Calcul(0, "division", 135, 5),
-        consigne: "96, c’est 80 et 16. Je partage chacun en 8.",
+        consigne: "91, c’est 70 et 21. Je partage chacun en 7.",
         consigneEcris: "135 ÷ 5 = 100 ÷ 5 + 35 ÷ 5",
         etapes: [["100 ÷ 5 = ?", 20], ["35 ÷ 5 = ?", 7], ["135 ÷ 5 = ?", 27]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
-        bilan: "96 ÷ 8 = 80 ÷ 8 + 16 ÷ 8 = 10 + 2 = 12."
+        bilan: "91 ÷ 7 = 70 ÷ 7 + 21 ÷ 7 = 10 + 3 = 13."
       })
     },
     {
       n: 3, titre: "dividende à trois chiffres", nom: "Dividende à trois chiffres", palier: 4, type: "P",
       composer: vivierNiveau(M12_VIVIERS[3], [8, 2]),
-      imposes: [m12Calcul(3, "division", 768, 8), m12Calcul(3, "division", 455, 5)],
+      imposes: [m12Calcul(3, "division", 768, 6), m12Calcul(3, "division", 455, 5)],
       apprends: apprendsSansManip({
         fiche: M12,
-        represente: m12Calcul(0, "division", 536, 8),
+        represente: m12Calcul(0, "division", 534, 6),
         ecris: m12Calcul(0, "division", 525, 5),
-        consigne: "536, c’est 480 et 56.",
+        consigne: "534, c’est 480 et 54.",
         consigneEcris: "525 ÷ 5 = 500 ÷ 5 + 25 ÷ 5",
         etapes: [["500 ÷ 5 = ?", 100], ["25 ÷ 5 = ?", 5], ["525 ÷ 5 = ?", 105]],
         dessins: (calcul, n) => partageDessins(m12Image(calcul), n),
-        bilan: "536 ÷ 8 = 480 ÷ 8 + 56 ÷ 8 = 60 + 7 = 67."
+        bilan: "534 ÷ 6 = 480 ÷ 6 + 54 ÷ 6 = 80 + 9 = 89."
       })
     }
   ];
@@ -7485,7 +7492,7 @@
       return Object.freeze({division: Object.freeze([...quatre, ...huit])});
     }
     const d = niveau === 1 ? 4 : 8;
-    const nombres = entre(10, niveau === 1 ? 990 : 1990, 10).filter(n => m13Prend(n, d) && m12Garde(n));
+    const nombres = entre(d, niveau === 1 ? 990 : 1990, d).filter(n => m13Prend(n, d) && m12Garde(n));
     return Object.freeze({
       division: Object.freeze(nombres.map(n => m13Calcul(niveau, "division", n, d))),
       "trou-facteur": Object.freeze(nombres.map(n => m13Calcul(niveau, "trou-facteur", n, d)))
@@ -8131,12 +8138,13 @@
   // deux fois. n (le nombre), m (9, 19, 99 ou 98), rond (10, 20, 100),
   // enleve (1 ou 2).
   // La règle commune avec M8 (rapport de Codex du 14/11 : « aucun calcul
-  // commun ») : un produit par 9, 19, 98 ou 99 n'est JAMAIS dans M8 (M8
-  // garde 3, 6 et 7, et ne coupe ni 19, ni 98, ni 99). M9 prend : × 9 d'un
-  // nombre de 11 à 99 ; × 19 d'un nombre à un chiffre (3, 6, 7, 9) ou de 11
-  // à 19 ; × 99 de 3, 6, 7, 9 ou de 11 à 25 ; × 98 de 3, 6, 7, 9 ou de 11 à
-  // 15 — jamais une dizaine entière (M3), ni 2, 4, 5, 8 (le double, × 4,
-  // × 8 et × 5 : M1, M6, M7).
+  // commun »). Lot 6 « programmes » (18/11) : les × 9 d'un nombre de 11 à
+  // 99 et les × 19 d'un chiffre sont rendus à M8 (programme du CE1 et du
+  // CE2). M9-1 prend : × 9 d'un nombre à trois chiffres (de 101 à 199) ;
+  // × 19 d'un nombre à deux chiffres (de 11 à 25, sauf 19 et 20). M9-2
+  // (inchangé) : × 99 de 3, 6, 7, 9 ou de 11 à 25 ; × 98 de 3, 6, 7, 9 ou
+  // de 11 à 15 — jamais une dizaine entière (M3), ni 2, 4, 5, 8 (le
+  // double, × 4, × 8 et × 5 : M1, M6, M7).
   const M9_RETIRE = Object.freeze([9, 19, 98, 99]);
   const m9Prend = (x, y) => M9_RETIRE.includes(x) || M9_RETIRE.includes(y);
   const M9_RONDS = Object.freeze({9: [10, 1], 19: [20, 1], 99: [100, 1], 98: [100, 2]});
@@ -8194,9 +8202,7 @@
   function m9Vivier(niveau) {
     const v = {produit: [], "produit-gauche": []};
     const petits = [3, 6, 7, 9];
-    // (× 9 : ni 19, ni 98, ni 99 — 19 × 9 est aussi « × 19 de 9 », 9 × 99 est
-    // dans M9-2.)
-    const nombres = {9: entre(11, 99).filter(n => n % 10 !== 0 && !M9_RETIRE.includes(n)), 19: [...petits, ...entre(11, 19)], 99: [...petits, ...entre(11, 25).filter(n => n % 10 !== 0)], 98: [...petits, ...entre(11, 15)]};
+    const nombres = {9: entre(101, 199).filter(n => n % 10 !== 0), 19: entre(11, 25).filter(n => n % 10 !== 0 && n !== 19), 99: [...petits, ...entre(11, 25).filter(n => n % 10 !== 0)], 98: [...petits, ...entre(11, 15)]};
     (niveau === 1 ? [9, 19] : [99, 98]).forEach(m => nombres[m].filter(n => n !== m).forEach(n => {
       v.produit.push(m9Calcul(niveau, n, m));
       v["produit-gauche"].push(m9Calcul(niveau, n, m, true));
@@ -8239,13 +8245,13 @@
     {
       n: 1, titre: "multiplier par 9, par 19", nom: "× 9, × 19\u00a0: je retire", palier: 4, type: "P",
       composer: vivierNiveau(M9_VIVIERS[1], [7, 3]),
-      imposes: [m9Calcul(1, 37, 9), m9Calcul(1, 6, 19, true)],
+      imposes: [m9Calcul(1, 124, 9), m9Calcul(1, 16, 19, true)],
       apprends: apprendsRecette({
         fiche: M9, recette: recetteRetrancher,
-        represente: m9Calcul(0, 45, 9),
-        ecris: m9Calcul(0, 23, 9),
-        consigne: "9, c’est 10 − 1. Je fais × 10, puis je retire 45.",
-        bilan: "9, c’est 10 − 1 : 45 × 9 = 45 × 10 − 45 = 450 − 45 = 405."
+        represente: m9Calcul(0, 124, 9),
+        ecris: m9Calcul(0, 112, 9),
+        consigne: "9, c’est 10 − 1. Je fais × 10, puis je retire 124.",
+        bilan: "9, c’est 10 − 1 : 124 × 9 = 124 × 10 − 124 = 1 240 − 124 = 1 116."
       })
     },
     {
@@ -10554,11 +10560,16 @@
   // quarts »). Deux familles : une fraction plus petite que 1, plus grande
   // que 1. Le produit n'est jamais un entier (sinon c'est F11-2).
   // F11-2 (6e, « fraction et quotient », exemples de réussite de 6e, p. 6) :
-  // b × a/b = a et a/b × b = a ; la fraction cherchée, b × □/b = a (la
-  // case est le numérateur : une seule case, décision du 04/11). Des
-  // quotients non décimaux (7/3). Le calcul s'écrit avec « × » ; il se lit
-  // comme l'addition répétée (« 5/4 + 5/4 + 5/4 »), pour la barre.
-  const F11_CODES = Object.freeze({produit: 1, "produit-gauche": 2, fraction: 3, "fraction-gauche": 4});
+  // b × a/b = a et a/b × b = a ; la fraction est une division, « 12/4 = □ »
+  // (« lorsque a est un multiple de b »). Lot 6 « programmes » (18/11) :
+  // « la fraction, c'est une division » remplace « la fraction cherchée »
+  // (b × □/b = a), dont la réponse était toujours le nombre écrit à
+  // droite : le niveau se réussissait en recopiant. La vraie fraction
+  // cherchée (7 × □ = 3, réponse 3/7) attend la fraction à deux cases du
+  // lot 8. Les quotients décimaux (3/4 = 0,75) sont dans F1. Le calcul
+  // s'écrit avec « × » ; il se lit comme l'addition répétée (« 5/4 + 5/4
+  // + 5/4 »), pour la barre.
+  const F11_CODES = Object.freeze({produit: 1, "produit-gauche": 2, fraction: 3, "fraction-gauche": 4, quotient: 5});
   function f11Calcul(niveau, forme, k, a, d) {
     const repete = Array.from({length: k}, () => `${a}/${d}`).join(" + ");
     const produit = k * a;
@@ -10567,6 +10578,10 @@
     if (niveau === 1) {
       texte = `${k} × ${a}/${d} = ${CASE}/${d}`;
       lu = lireFraction(`${repete} = ${CASE}/${d}`);
+    } else if (forme === "quotient") {
+      // « 12/4 = □ » : k = 1, a = le numérateur (12), d = 4 ; réponse 3.
+      texte = `${a}/${d} = ${CASE}`;
+      lu = lireFraction(texte);
     } else if (forme === "produit" || forme === "produit-gauche") {
       texte = forme === "produit" ? `${k} × ${a}/${d} = ${CASE}` : `${a}/${d} × ${k} = ${CASE}`;
       lu = lireFraction(`${repete} = ${CASE}`);
@@ -10574,16 +10589,19 @@
       texte = forme === "fraction" ? `${d} × ${CASE}/${d} = ${a}` : `${CASE}/${d} × ${d} = ${a}`;
       lu = lireFraction(`${a}/${d} = ${CASE}/${d}`);
     }
-    const reponse = niveau === 1 || texte.endsWith(`${CASE}/${d}`) ? produit : a;
+    const reponse = forme === "quotient" ? a / d : niveau === 1 || texte.endsWith(`${CASE}/${d}`) ? produit : a;
     const c = {texte, reponse, forme, module: "F11", niveau, cle: `F11-${niveau}-${F11_CODES[forme]}-${k}-${a}-${d}`, lu,
       f11: Object.freeze({k, a, d})};
     const pas = valeur => (valeur > 0 && Number.isInteger(valeur) && valeur !== reponse ? valeur : -1);
-    const donnees = texte.endsWith(`${CASE}/${d}`)
+    const donnees = forme === "quotient"
+      ? {plus: -1, recopie: pas(a), parts: -1, quotient: -1, fois: pas(a * d)}
+      : texte.endsWith(`${CASE}/${d}`)
       ? {plus: pas(k + a), recopie: pas(a), parts: -1, quotient: -1}
       : forme.startsWith("produit") ? {plus: -1, recopie: -1, parts: pas(produit), quotient: -1}
         : {plus: -1, recopie: pas(a * d), parts: -1, quotient: -1};
     const calcul = finirCalcul(c, donnees);
     if (forme.startsWith("fraction")) return Object.freeze(Object.assign({}, calcul, {annonce: "on cherche la fraction : le nombre qui, multiplié par " + d + ", donne " + a}));
+    if (forme === "quotient") return Object.freeze(Object.assign({}, calcul, {annonce: `la fraction, c’est une division\u00a0: ${a}/${d} = ${a} ÷ ${d}`}));
     return calcul;
   }
   function f11Vivier(niveau) {
@@ -10601,11 +10619,15 @@
     const paires = [];
     // (Six unités au plus sur la barre : a jusqu'à 6.)
     entre(2, 9).forEach(d => entre(2, 6).filter(a => pgcd(a, d) === 1 && a % d).forEach(a => { if (a * d <= FRAC_BARRE_MAX) paires.push([a, d]); }));
+    // La fraction, c'est une division : (q × d)/d, le quotient q de 2 à 6,
+    // 30 parts au plus sur la barre, d de 3 à 9 sauf 4 (les demis, les
+    // quarts et les dixièmes sont dans F1, F2, F5), jamais q = d.
+    const quotients = [];
+    entre(3, 9).forEach(d => entre(2, 6).filter(q => q !== d && q * d <= FRAC_BARRE_MAX).forEach(q => { if (d !== 4) quotients.push(f11Calcul(2, "quotient", 1, q * d, d)); }));
     return Object.freeze({
       produit: paires.map(([a, d]) => f11Calcul(2, "produit", d, a, d)),
       "produit-gauche": paires.map(([a, d]) => f11Calcul(2, "produit-gauche", d, a, d)),
-      fraction: paires.map(([a, d]) => f11Calcul(2, "fraction", d, a, d)),
-      "fraction-gauche": paires.map(([a, d]) => f11Calcul(2, "fraction-gauche", d, a, d))
+      quotient: quotients
     });
   }
   const F11_VIVIERS = Object.freeze({1: f11Vivier(1), 2: f11Vivier(2)});
@@ -10636,7 +10658,7 @@
       traces: Object.freeze([Object.freeze({apres: plan.etapes.length, attente: `${texte} = …`, texte: `${texte} = ${Array.from({length: k}, () => `${a}/${d}`).join(" + ")} = ${k * a}/${d}`})])
     }));
   }
-  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, fraction: 2, "fraction-gauche": 3});
+  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, fraction: 2, "fraction-gauche": 3, quotient: 2});
   const f11Difficulte = calcul => (calcul.niveau === 1 && calcul.f11.a > calcul.f11.d ? 5000 : 0) + F11_RANGS[calcul.forme] * 1000 + calcul.f11.d * 20 + calcul.f11.a;
   const F11_ERREURS = Object.freeze([
     Object.freeze({
@@ -10654,6 +10676,7 @@
       retour: (calcul, reponse) => {
         const {k, a, d} = calcul.f11;
         if (calcul.forme.startsWith("fraction")) return fr(`${f(reponse)}/${d} × ${d}, c’est ${f(reponse)}, pas ${a}. Cherche le nombre qui, multiplié par ${d}, donne ${a}.`);
+        if (calcul.forme === "quotient") return fr(`${f(reponse)}, c’est le numérateur. ${a}/${d}, c’est ${a} ÷ ${d} : combien de fois ${d} dans ${a} ?`);
         return fr(`${f(reponse)} : tu as recopié le numérateur. ${k} fois ${a} ${nomDe(d)}, c’est ${k} × ${a} ${nomDe(d)}.`);
       },
       gras: 0
@@ -10723,8 +10746,8 @@
       },
       {
         n: 2, titre: "fraction et quotient", nom: "Fraction et quotient", palier: 4, type: "P",
-        composer: vivierNiveau(F11_VIVIERS[2], [3, 2, 3, 2]),
-        imposes: [f11(2, `3 × 5/3 = ${CASE}`), f11(2, `6 × ${CASE}/6 = 5`)],
+        composer: vivierNiveau(F11_VIVIERS[2], [3, 2, 5]),
+        imposes: [f11(2, `3 × 5/3 = ${CASE}`), f11(2, `15/3 = ${CASE}`)],
         apprends: f11Apprends({
           represente: pourApprendre(f11(2, `7 × 3/7 = ${CASE}`)),
           ecris: pourApprendre(f11(2, `5 × 4/5 = ${CASE}`)),
@@ -10993,7 +11016,7 @@
     "F9-1": parFormes(["addition", "somme"], ["soustraction", "difference"]),
     "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
     "F11-1": [["plus petite que 1", c => Boolean(c.f11 && c.f11.a < c.f11.d)], ["plus grande que 1", toutes]],
-    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
+    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient"]),
     // Lot 7d : M11, A9, C4, M9 (les familles du rapport de Codex du 14/11).
     "M11-1": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
     "M11-2": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),

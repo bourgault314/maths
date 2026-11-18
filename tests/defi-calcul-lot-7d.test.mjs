@@ -126,8 +126,16 @@ test("lot 7d : une échelle par module — aucun calcul commun entre deux niveau
     tous(cle).forEach(c => { if (!autres.has(ecrit(c))) autres.set(ecrit(c), new Set()); autres.get(ecrit(c)).add(cle); });
   }));
   NIVEAUX.forEach(cle => tous(cle).forEach(c => assert.deepEqual([...autres.get(ecrit(c))], [cle], `${c.texte} : dans un seul niveau`)));
-  // La règle commune avec « Distributivité : décomposer » : jamais 9, 19, 98, 99.
-  ["M8-1", "M8-2", "M8-3"].forEach(cle => tous(cle).forEach(c => assert.ok(![9, 19, 98, 99].includes(c.donnees.a) && ![9, 19, 98, 99].includes(c.donnees.b), c.texte)));
+  // La règle commune avec « Distributivité : décomposer » (revue au lot 6
+  // « programmes », 18/11) : M8 garde les × 9 d'un nombre de 11 à 99 et
+  // 19 × un chiffre (programme du CE1 et du CE2) ; jamais 98 ni 99 ; M8-3
+  // ne prend ni 19, ni 98, ni 99.
+  ["M8-1", "M8-2"].forEach(cle => tous(cle).forEach(c => assert.ok(![98, 99].includes(c.donnees.a) && ![98, 99].includes(c.donnees.b), c.texte)));
+  tous("M8-3").forEach(c => assert.ok(![19, 98, 99].includes(c.donnees.a) && ![19, 98, 99].includes(c.donnees.b), c.texte));
+  const m8 = new Set(["M8-1", "M8-2"].flatMap(cle => tous(cle).map(c => espaces(c.texte))));
+  ["13 × 9 = □", "9 × 46 = □", "19 × 3 = □", "9 × 19 = □"].forEach(t => assert.ok(m8.has(t), `${t} : dans les bases`));
+  // M9-1 : × 9 d'un nombre à trois chiffres, × 19 d'un nombre à deux chiffres.
+  tous("M9-1").forEach(c => assert.ok(c.donnees.m === 9 ? c.donnees.n > 100 : c.donnees.n > 10 && c.donnees.n < 26, c.texte));
   // Le même produit écrit autrement (9 × 45 et 45 × 9) : pas ailleurs non plus.
   const produit = c => {
     const m = espaces(c.texte).match(/^(\d+) × (\d+) = □$/);
@@ -184,8 +192,8 @@ test("lot 7d : J'écris — une recette partagée par la leçon et les calculs t
   assert.equal(espaces(e("A9-1").consigne), "44 + 37 + 56 = 44 + 56 + 37");
   assert.equal(espaces(e("C4-1").consigne), "(3 × ?) − 6 = 21");
   assert.deepEqual(lignes("C4-1"), [["21 + 6 = □", 27], ["27 ÷ 3 = □", 9]]);
-  assert.deepEqual(lignes("M9-1"), [["23 × 10 = □", 230], ["230 − 23 = □", 207]]);
-  assert.equal(espaces(e("M9-1").consigne), "23 × 9 = 23 × 10 − 23");
+  assert.deepEqual(lignes("M9-1"), [["112 × 10 = □", 1120], ["1 120 − 112 = □", 1008]]);
+  assert.equal(espaces(e("M9-1").consigne), "112 × 9 = 112 × 10 − 112");
   // × 98 : retirer deux fois le nombre (rapport de Codex).
   const r98 = CORE.ecrisDuCalcul("M9-2", tous("M9-2").find(c => espaces(c.texte) === "12 × 98 = □"));
   assert.deepEqual(r98.etapes.map(x => [espaces(x.texte), x.reponse]), [["12 × 100 = □", 1200], ["2 × 12 = □", 24], ["1 200 − 24 = □", 1176]]);
@@ -206,7 +214,7 @@ test("lot 7d : les annonces — le reste nul, le nombre de parts, quatre nombres
   assert.match(annonce("A9-1", "18 + 25 + 82 + 35 = □"), /deux comptes ronds/);
   assert.match(annonce("C4-1", "3 × (2 + □) = 27"), /je remonte avec ÷, puis −/);
   assert.match(annonce("C4-1", "18 = 10 + (□ ÷ 5)"), /je remonte avec −, puis ×/);
-  assert.match(annonce("M9-1", "6 × 19 = □"), /20 − 1/);
+  assert.match(annonce("M9-1", "16 × 19 = □"), /20 − 1/);
   assert.match(annonce("M9-2", "12 × 98 = □"), /2 fois le nombre/);
 });
 
@@ -215,7 +223,7 @@ test("lot 7d : les erreurs connues, chacune la sienne", () => {
     ["M11-1", "17 = 3 × 5 + □", 15, 1], ["M11-1", "17 = 3 × 5 + □", 7, 2], ["M11-1", "23 = □ × 5 + 3", 3, 3], ["M11-1", "23 = □ × 5 + 3", 20, 4], ["M11-1", "23 = □ × 5 + 3", 5, 5],
     ["A9-1", "36 + 59 + 64 = □", 100, 2], ["A9-1", "36 + 59 + 64 = □", 123, 1],
     ["C4-1", "(2 × □) − 5 = 23", 41, 1], ["C4-1", "(2 × □) − 5 = 23", 9, 2], ["C4-1", "(2 × □) − 5 = 23", 16.5, 3], ["C4-1", "(2 × □) − 5 = 23", 28, 4],
-    ["M9-1", "37 × 9 = □", 369, 1], ["M9-1", "37 × 9 = □", 407, 2], ["M9-2", "12 × 98 = □", 1188, 3], ["M9-1", "37 × 9 = □", 370, 4]
+    ["M9-1", "124 × 9 = □", 1239, 1], ["M9-1", "124 × 9 = □", 1364, 2], ["M9-2", "12 × 98 = □", 1188, 3], ["M9-1", "124 × 9 = □", 1240, 4]
   ];
   cas.forEach(([cle, texte, faux, cause]) => {
     const c = tous(cle).find(x => espaces(x.texte) === texte) || CORE.niveauDe(cle).niveau.imposes.find(x => espaces(x.texte) === texte);
@@ -242,12 +250,12 @@ test("lot 7d : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7d : la page — adresses de cache, copie du moteur pour la page prof, VERSION, À retenir coupe aussi devant « ( »", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-2/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261118-1/);
   assert.ok(page.includes("(?=[A-ZÀ-ÖØ-Þ\\d(]|(?:double|moitié) de )"));
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-7d-derniers-modules$/m);
+  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes)$/m); // (lot 6 « programmes » : le cœur change encore)
 });

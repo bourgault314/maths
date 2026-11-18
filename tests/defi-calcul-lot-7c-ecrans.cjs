@@ -15,7 +15,7 @@
 //   écrire    J'écris de la leçon : « Valider » se voit, rien ne bouge
 //             pendant la frappe, le dessin reste à sa place ;
 //   retenir   À retenir tient dans le cadre à l'ordinateur, sans défiler ;
-//   poser     trois fractions, nombres mixtes, « 6 × □/6 = 5 », le calcul
+//   poser     trois fractions, nombres mixtes, « 15/3 = □ » (lot 6 « programmes »), le calcul
 //             au-delà de 30 parts (les deux flèches, annoncé) ;
 //   parcours  Mon parcours d'un élève au CM1 et au CM2.
 
@@ -242,9 +242,9 @@ async function jouerBandes(s, m, cle) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : Avec le dessin — trois fractions, nombres mixtes, « 6 × □/6 = 5 », au-delà de 30 parts`, async () => {
+    await cas(`${f} : Avec le dessin — trois fractions, nombres mixtes, « 15/3 = □ », au-delà de 30 parts`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      const poses = [["F9", 2, "2/8 + 3/2 + 1/4 = □/8", "trois"], ["F9", 2, "(1 + 1/2) + (1 + 1/8) = 2 + □/8", "mixtes"], ["F11", 2, "6 × □/6 = 5", "fraction"], ["F11", 1, "2 × 9/4 = □/4", "grande"]];
+      const poses = [["F9", 2, "2/8 + 3/2 + 1/4 = □/8", "trois"], ["F9", 2, "(1 + 1/2) + (1 + 1/8) = 2 + □/8", "mixtes"], ["F11", 2, "15/3 = □", "quotient"], ["F11", 1, "2 × 9/4 = □/4", "grande"]];
       for (const [id, n, t, nom] of poses) {
         const ok = await appel(s.page, "poser", id, n, t.replace(/□/g, CORE.CASE), "image");
         const ok2 = ok || await appel(s.page, "poser", id, n, t.replace("(1 + 1/2) + (1 + 1/8)", "(1 + 1/8) + (1 + 1/2)").replace(/□/g, CORE.CASE), "image");
@@ -252,7 +252,7 @@ async function jouerBandes(s, m, cle) {
         await pause(s.page, 500);
         const calcul = await appel(s.page, "calcul");
         const r = sp(CORE.formaterNombre(calcul.reponse));
-        if (nom !== "fraction") assert.ok(!(await textesDessin(s.page)).includes(`${r}`) || nom === "mixtes", `${t} : la réponse n'est pas sur le dessin`);
+        if (nom !== "quotient") assert.ok(!(await textesDessin(s.page)).includes(`${r}`) || nom === "mixtes", `${t} : la réponse n'est pas sur le dessin`);
         assert.ok(await valideSeVoit(s.page), `${t} : « Valider » se voit`);
         await photo(s.page, `${f}-pose-${nom}`);
         await tient(s.page, largeur, hauteur);

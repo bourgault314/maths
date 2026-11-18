@@ -626,7 +626,9 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // change (avant : cours-pct-calculatrice).
   // Puis le lot 7d de Défi calcul (18/11/2026) : le cœur copié dans prof/
   // change (avant : defi-calcul-lot-7c-fractions).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-7d-derniers-modules$/m);
+  // Puis le lot 6 « programmes » de Défi calcul (18/11/2026) : le cœur copié
+  // dans prof/ change (avant : defi-calcul-lot-7d-derniers-modules).
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-6-programmes$/m);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
 });
