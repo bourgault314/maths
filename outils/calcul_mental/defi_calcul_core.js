@@ -1418,15 +1418,16 @@
     "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2",
     "F8-1", "A7-1", "M1-2", "A10-3", "A11-3", "F8-2", "A5-2", "A6-2", "M3-1", "A7-2",
     "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2",
-    // palier 2 : 31 compétences (lot 7e-2 : F8-3 arrive du CM2)
+    // palier 2 : 33 compétences (lot 7e-2 : F8-3 arrive du CM2 ; lot 7d :
+    // « Quotient et reste » arrive du CM2, rapport de Codex du 14/11)
     "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3",
     "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1",
-    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "F8-3", "M12-1",
-    "F9-1",
-    // palier 3 : 41 compétences
+    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "M11-1", "F5-2", "F8-3",
+    "M12-1", "M11-2", "F9-1",
+    // palier 3 : 40 compétences
     "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3",
-    "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2",
-    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "M11-2",
+    "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "D5-1", "F4-1", "D6-2", "M13-2",
+    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1",
     "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
     "F9-2", "C4-2", "F4-2",
     // palier 4 : 12 compétences (lot 7c : F4-2 passe au CM2)
@@ -4213,18 +4214,22 @@
     return dessinsDe(morceaux, etapes, dessin);
   }
   // Les chiffres qu'on garde : 3, 6, 7, 9 (× 2 : M1 ; × 4, × 8 : M6 ; × 5 : M7).
-  const M8_CHIFFRES = Object.freeze([3, 6, 7, 9]);
+  // Lot 7d (règle commune avec M9, rapport de Codex du 14/11) : un produit
+  // par 9, 19, 98 ou 99 n'est jamais ici — il se calcule en retranchant
+  // (M9). M8 garde 3, 6 et 7, et ne coupe ni 19, ni 98, ni 99.
+  const M8_CHIFFRES = Object.freeze([3, 6, 7]);
+  const M8_RETIRES = Object.freeze([9, 19, 98, 99]);
   function m8Vivier(niveau) {
     const v = {produit: [], "produit-gauche": []};
     if (niveau < 3) {
-      const nombres = niveau === 1 ? entre(11, 19) : entre(21, 99).filter(b => b % 10 !== 0);
+      const nombres = (niveau === 1 ? entre(11, 19) : entre(21, 99).filter(b => b % 10 !== 0)).filter(b => !M8_RETIRES.includes(b));
       M8_CHIFFRES.forEach(a => nombres.forEach(b => { v.produit.push(m8Calcul(niveau, a, b)); v["produit-gauche"].push(m8Calcul(niveau, a, b, true)); }));
       return Object.freeze(v);
     }
     // M8-3 : × 11, × 12, × 21, × 31 d'un nombre à deux chiffres (de 13 à 99,
     // sans dizaine entière) ; un calcul sur cinq en trou.
     v.trou = [];
-    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12).forEach(a => {
+    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12 && !M8_RETIRES.includes(a)).forEach(a => {
       v.produit.push(m8Calcul(3, a, b));
       v["produit-gauche"].push(m8Calcul(3, a, b, true));
       v.trou.push(m8Trou(3, a, b));
@@ -4247,7 +4252,7 @@
     {
       n: 1, titre: "un chiffre × 11 à 19", nom: "Un chiffre × 11 à 19", palier: 1, type: "P",
       composer: vivierNiveau(M8_VIVIERS[1], [6, 4]),
-      imposes: [m8Calcul(1, 6, 14, true), m8Calcul(1, 9, 17)],
+      imposes: [m8Calcul(1, 6, 14, true), m8Calcul(1, 7, 17)],
       apprends: apprendsSansManip({
         fiche: M8,
         represente: m8Calcul(0, 7, 13),
@@ -7579,6 +7584,684 @@
     }
   ];
 
+  // ============================================ lot 7d (18/11/2026)
+  //
+  // M11 « Quotient et reste », A9 « Regrouper pour calculer », C4 « Remonter
+  // un calcul », M9 « Distributivité : retrancher » : les 8 dernières
+  // compétences de la carte v3. Bornes et familles du rapport de Codex du
+  // 14/11 (sections M11, A9, C4, M9).
+  //  - M11 : l'égalité des exemples de réussite de CM1 (p. 11 : 9 456 =
+  //    1 350 × 7 + 6), le diviseur à droite du « × » ; le dessin : des
+  //    paquets de points et un reste (la carte v2, « des paquets et un
+  //    reste ») ; le reste nul est une sorte (rapport de Codex).
+  //  - A9 : les termes en étiquettes, un arc relie ceux qui font un compte
+  //    rond (le dessin de M10, avec « + »).
+  //  - C4 : le calcul en flèches ; je remonte par les flèches à l'envers.
+  //  - M9 : le rectangle dont on enlève une bande (45 × 9 = 45 × 10 − 45).
+
+  // ------------------------------------------------- M11 : quotient et reste
+  //
+  // « 17 = 3 × 5 + □ » (le reste) ; « 20 = 4 × 5 + □ » (le reste nul) ;
+  // « 23 = □ × 5 + 3 » (le quotient). n = q × d + r, 0 ≤ r < d. Le diviseur
+  // d est toujours à droite du « × » : ce sont des paquets de d.
+  function m11Calcul(niveau, forme, q, d, r) {
+    const n = q * d + r;
+    const p = q * d;
+    // Les réponses fausses connues : le produit (15), le quotient à la
+    // place du reste (3), un paquet de moins (17 − 10 = 7), le nombre de
+    // départ divisé sans retirer le reste (23 ÷ 5 → 4 : juste ici, donc
+    // jamais une erreur), un paquet de plus (5).
+    const donnees = {n, q, d, r, p, unDeMoins: n - (q - 1) * d, unDePlus: q + 1, unDeMoinsQ: q - 1};
+    if (forme === "quotient") return fabriquer("M11", niveau, "quotient", [n, "=", TROU, "×", d, "+", r], q, donnees);
+    return fabriquer("M11", niveau, forme, [n, "=", q, "×", d, "+", TROU], r, donnees);
+  }
+  // Le dessin : q paquets de d points, et le reste à part (points vides,
+  // entourés en pointillés). Au-dessus des paquets « 3 × 5 » (« ? × 5 »
+  // quand on cherche le quotient) ; dessous, leur nombre de points ; sous
+  // le reste, le reste. `etape` (J'écris) : 1, le nombre de points des
+  // paquets est écrit ; 2, tout.
+  const m11Image = calcul => {
+    const {n, q, d, r} = calcul.donnees;
+    return {outil: "paquets", n, q, d, r, cherche: calcul.forme === "quotient" ? "quotient" : "reste"};
+  };
+  const m11Aide = calcul => Object.assign(m11Image(calcul), {masque: true, etape: 0});
+  function m11Phrase(calcul) {
+    const {n, q, d, r, p} = calcul.donnees;
+    if (calcul.forme === "quotient") return fr(`Regarde : ${f(n)} − ${f(r)} = ${f(p)}, et ${f(p)} = ${f(q)} × ${f(d)}.`);
+    return fr(`Regarde : ${f(q)} × ${f(d)} = ${f(p)}, et ${f(n)} − ${f(p)} = ${f(r)}.`);
+  }
+  const M11_RANGS = Object.freeze({reste: 0, "reste-nul": 1, quotient: 2});
+  const m11Difficulte = calcul => M11_RANGS[calcul.forme] * 1000 + calcul.donnees.n;
+  const M11_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le nombre des paquets à la place du reste",
+      test: sauf((calcul, reponse) => calcul.forme !== "quotient" && memeNombre(reponse, calcul.donnees.p)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.q)} × ${f(calcul.donnees.d)}. Il reste ce qui manque pour aller jusqu’à ${f(calcul.donnees.n)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "un paquet de moins",
+      test: sauf((calcul, reponse) => calcul.forme !== "quotient" && memeNombre(reponse, calcul.donnees.unDeMoins)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : c’est plus que ${f(calcul.donnees.d)}, on peut encore faire un paquet. Le reste est toujours plus petit que ${f(calcul.donnees.d)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le reste à la place du quotient",
+      test: sauf((calcul, reponse) => calcul.forme === "quotient" && memeNombre(reponse, calcul.donnees.r)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est le reste. On cherche combien de paquets de ${f(calcul.donnees.d)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "le nombre de points à la place du nombre de paquets",
+      test: sauf((calcul, reponse) => calcul.forme === "quotient" && memeNombre(reponse, calcul.donnees.p)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est le nombre de points dans les paquets. Combien de fois ${f(calcul.donnees.d)} dans ${f(reponse)} ?`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 5, nom: "un paquet de trop ou de moins",
+      test: sauf((calcul, reponse) => calcul.forme === "quotient" && (memeNombre(reponse, calcul.donnees.unDePlus) || memeNombre(reponse, calcul.donnees.unDeMoinsQ))),
+      retour: (calcul, reponse) => {
+        const {d, r} = calcul.donnees;
+        return fr(`Vérifie : ${f(reponse)} × ${f(d)} + ${f(r)} = ${f(reponse * d + r)}, pas ${f(calcul.donnees.n)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les viviers : niveau 1, paquets de 2 à 5 ; niveau 2, de 6 à 9
+  // (rapport de Codex : les diviseurs 2 à 5 restent dans leur boîte) ; de
+  // 2 à 9 paquets. Le reste nul seulement quand on cherche le reste (« 20 =
+  // □ × 5 + 0 » serait un fait des tables, M4).
+  function m11Vivier(niveau) {
+    const diviseurs = niveau === 1 ? entre(2, 5) : entre(6, 9);
+    const v = {reste: [], "reste-nul": [], quotient: []};
+    diviseurs.forEach(d => entre(2, 9).forEach(q => {
+      v["reste-nul"].push(m11Calcul(niveau, "reste-nul", q, d, 0));
+      entre(1, d - 1).forEach(r => {
+        v.reste.push(m11Calcul(niveau, "reste", q, d, r));
+        // (« 10 = □ × 4 + 2 » : le reste écrit sur la barre serait la
+        // réponse.)
+        if (r !== q) v.quotient.push(m11Calcul(niveau, "quotient", q, d, r));
+      });
+    }));
+    return Object.freeze(Object.fromEntries(Object.entries(v).map(([k, l]) => [k, Object.freeze(l)])));
+  }
+  const M11_VIVIERS = Object.freeze({1: m11Vivier(1), 2: m11Vivier(2)});
+  // J'écris (une recette pour la leçon et les calculs tirés) : le reste —
+  // les paquets, puis ce qui manque ; le quotient — ce qui est dans les
+  // paquets, puis combien de paquets.
+  function m11Etapes(calcul) {
+    const {n, q, d, r, p} = calcul.donnees;
+    if (calcul.forme === "quotient") return [[`${f(n)} − ${f(r)} = ?`, p], [`? × ${f(d)} = ${f(p)}`, q]];
+    return [[`${f(q)} × ${f(d)} = ?`, p], [`${f(n)} − ${f(p)} = ?`, r]];
+  }
+  function m11Dessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, etape: vus.length})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  function recetteQuotientReste(calcul) {
+    if (!calcul || calcul.module !== "M11") return null;
+    const etapes = m11Etapes(calcul);
+    return ecrisAvecDessins({
+      consigne: fr(calcul.texte.replace(CASE, "?")),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(m11Image(calcul)), phrase: m11Phrase(calcul)})
+    }, m11Dessins(m11Image(calcul), etapes.length));
+  }
+  // J'apprends sans manipulation (comme M4, M12) : le dessin, puis J'écris.
+  function apprendsRecette({fiche, represente, ecris, consigne, bilan, recette}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: fiche.aide(represente).outil, consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(fiche.aide(represente)),
+        solution: Object.freeze({image: Object.freeze(fiche.image(represente)), phrase: fiche.phrase(represente)})
+      }),
+      ecris: recette(ecris),
+      bilan: frBilan(bilan),
+      image: Object.freeze(fiche.image(represente)),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  const M11 = {
+    id: "M11", nom: "Quotient et reste", exemple: "17 = 3 × 5 + ?",
+    famille: "M", construit: true,
+    aide_entraine: "paquets",
+    erreurs: M11_ERREURS, image: m11Image, aide: m11Aide, phrase: m11Phrase, manipulation: () => null, difficulte: m11Difficulte
+  };
+  const m11 = (niveau, forme, q, d, r) => m11Calcul(niveau, forme, q, d, r);
+  M11.niveaux = [
+    {
+      n: 1, titre: "paquets de 2 à 5", nom: "Quotient et reste\u00a0: paquets de 2 à 5", palier: 2, type: "P",
+      composer: vivierNiveau(M11_VIVIERS[1], [5, 1, 4]),
+      imposes: [m11(1, "reste-nul", 4, 5, 0), m11(1, "quotient", 6, 4, 3)],
+      apprends: apprendsRecette({
+        fiche: M11, recette: recetteQuotientReste,
+        represente: m11(0, "reste", 3, 5, 2),
+        ecris: m11(0, "reste", 4, 4, 3),
+        consigne: "17, c’est 3 fois 5, et il reste combien ?",
+        bilan: "Le reste est plus petit que 5 : 3 × 5 = 15. 17 − 15 = 2. 17 = 3 × 5 + 2."
+      })
+    },
+    {
+      n: 2, titre: "paquets de 6 à 9", nom: "Quotient et reste\u00a0: paquets de 6 à 9", palier: 2, type: "P",
+      composer: vivierNiveau(M11_VIVIERS[2], [5, 1, 4]),
+      imposes: [m11(2, "reste-nul", 7, 8, 0), m11(2, "quotient", 7, 6, 5)],
+      apprends: apprendsRecette({
+        fiche: M11, recette: recetteQuotientReste,
+        represente: m11(0, "reste", 6, 7, 4),
+        ecris: m11(0, "reste", 8, 6, 3),
+        consigne: "46, c’est 6 fois 7, et il reste combien ?",
+        bilan: "Le reste est plus petit que 7 : 6 × 7 = 42. 46 − 42 = 4. 46 = 6 × 7 + 4."
+      })
+    }
+  ];
+
+  // ------------------------------------------------- A9 : regrouper pour calculer
+  //
+  // « 27 + 48 + 73 = □ » : les termes ; les paires qui font un compte rond
+  // (27 + 73 = 100) ; les termes seuls (48). Trois termes : une paire ;
+  // quatre termes : deux paires. A9-1 : des entiers (une paire fait 100,
+  // l'autre une dizaine entière) ; A9-2 : des décimaux (chaque paire fait
+  // un nombre entier). Jamais deux termes voisins au début (27 + 73 + 48 se
+  // calcule déjà dans l'ordre).
+  const A9_FORMES = Object.freeze({3: "trois", 4: "quatre"});
+  function a9Calcul(niveau, termes, paires) {
+    const groupes = paires.map(([i, j]) => exact(termes[i] + termes[j]));
+    const dansPaire = new Set(paires.flat());
+    const seuls = termes.map((_, i) => i).filter(i => !dansPaire.has(i));
+    const r = exact(termes.reduce((s, t) => s + t, 0));
+    const morceaux = [];
+    termes.forEach((t, i) => { if (i) morceaux.push("+"); morceaux.push(t); });
+    morceaux.push("=", TROU);
+    // Les réponses fausses connues : un terme oublié ; un groupe oublié.
+    const oublis = termes.map(t => exact(r - t));
+    // (Les nombres seuls, pour la page prof : elle cherche ses exemples
+    // d'erreurs parmi les nombres du calcul.)
+    const donnees = {t0: termes[0], t1: termes[1], t2: termes[2], g0: groupes[0], termes: Object.freeze(termes.slice()), paires: Object.freeze(paires.map(p => Object.freeze(p.slice()))), groupes: Object.freeze(groupes), seuls: Object.freeze(seuls), oublis: Object.freeze(oublis)};
+    return fabriquer("A9", niveau, A9_FORMES[termes.length], morceaux, r, donnees);
+  }
+  const a9Image = calcul => {
+    const {termes, paires, groupes, seuls} = calcul.donnees;
+    return {outil: "termes", termes: termes.slice(), paires: paires.map(p => p.slice()), groupes: groupes.slice(), seuls: seuls.slice()};
+  };
+  // L'aide écrit les comptes ronds (27 + 73 = 100) : c'est eux qu'on montre.
+  const a9Aide = calcul => Object.assign(a9Image(calcul), {masque: true});
+  function a9Phrase(calcul) {
+    const {termes, paires, groupes, seuls} = calcul.donnees;
+    const ronds = paires.map(([i, j], k) => `${f(termes[i])} + ${f(termes[j])} = ${f(groupes[k])}`).join(", ");
+    const reste = [...groupes, ...seuls.map(i => termes[i])].map(f).join(" + ");
+    return fr(`Regarde : ${ronds}, puis ${reste} = ${f(calcul.reponse)}.`);
+  }
+  const a9Difficulte = calcul => (calcul.forme === "quatre" ? 5000 : 0) + Math.min(4999, Math.round(calcul.reponse * 10));
+  const A9_ERREURS = Object.freeze([
+    // (Le compte rond seul d'abord : 159 → 100, c'est aussi « 59 oublié ».)
+    Object.freeze({
+      c: 2, nom: "seulement le compte rond",
+      test: sauf((calcul, reponse) => calcul.donnees.groupes.some(g => memeNombre(reponse, g)) || (calcul.donnees.groupes.length > 1 && memeNombre(reponse, exact(calcul.donnees.groupes[0] + calcul.donnees.groupes[1])) && calcul.donnees.seuls.length > 0)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est le compte rond. Ajoute encore ce qui reste.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 1, nom: "un nombre oublié",
+      test: sauf((calcul, reponse) => calcul.donnees.oublis.some(x => memeNombre(reponse, x))),
+      retour: (calcul, reponse) => {
+        const k = calcul.donnees.oublis.findIndex(x => memeNombre(reponse, x));
+        return fr(`${f(reponse)} : tu as oublié ${f(calcul.donnees.termes[k])}. Compte tous les nombres.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les viviers.
+  //  - A9-1, trois termes : deux nombres à deux chiffres qui font 100 (27
+  //    et 73), un troisième à deux chiffres ; quatre termes : une paire fait
+  //    100, l'autre une dizaine de 30 à 90 (18 + 25 + 82 + 35 = 160).
+  //  - A9-2 : des dixièmes ; chaque paire fait un nombre entier (3,7 +
+  //    0,3 = 4) ; trois termes : le troisième a des dixièmes ; quatre
+  //    termes : deux paires (3,7 + 2,5 + 0,3 + 1,5 = 8).
+  // Les places : trois termes, la paire est 1re et 3e, ou 2e et 3e ; quatre
+  // termes, les paires se croisent (1re et 3e, 2e et 4e) ou s'emboîtent
+  // (1re et 4e, 2e et 3e).
+  const A9_PLACES = Object.freeze({3: [[[0, 2]], [[1, 2]]], 4: [[[0, 2], [1, 3]], [[0, 3], [1, 2]]]});
+  function a9Ranger(valeurs, places) {
+    // valeurs : [paire1a, paire1b, (paire2a, paire2b,) seuls...]
+    const n = places.length === 1 ? 3 : 4;
+    const termes = Array(n).fill(null);
+    const paires = places.map(p => p.slice());
+    let k = 0;
+    paires.forEach(([i, j]) => { termes[i] = valeurs[k]; termes[j] = valeurs[k + 1]; k += 2; });
+    for (let i = 0; i < n; i += 1) if (termes[i] === null) { termes[i] = valeurs[k]; k += 1; }
+    return {termes, paires};
+  }
+  // Une paire de compte rond ne se cache pas ailleurs : un terme seul ne
+  // fait jamais un compte rond avec un autre (sinon deux chemins).
+  function a9SansAutreRond(termes, paires, rond) {
+    const dansPaire = new Set(paires.flat());
+    for (let i = 0; i < termes.length; i += 1) for (let j = i + 1; j < termes.length; j += 1) {
+      if (paires.some(([a, b]) => a === i && b === j)) continue;
+      if (dansPaire.has(i) && dansPaire.has(j) && paires.length > 1) continue;
+      if (rond(exact(termes[i] + termes[j]))) return false;
+    }
+    return true;
+  }
+  function a9Vivier(niveau) {
+    const v = {trois: [], quatre: []};
+    if (niveau === 1) {
+      const rond = x => x % 10 === 0;
+      const deux = entre(11, 89).filter(a => a % 10 !== 0);
+      deux.forEach(a => {
+        if (a > 50) return;
+        const b = 100 - a;
+        [17, 24, 36, 48, 59, 65, 83, 92].forEach((c, k) => {
+          if (c === a || c === b) return;
+          const places = A9_PLACES[3][(a + k) % 2];
+          const {termes, paires} = a9Ranger([a, b, c], places);
+          if (a9SansAutreRond(termes, paires, rond)) v.trois.push(a9Calcul(1, termes, paires));
+        });
+        [[25, 35], [16, 24], [33, 27], [42, 18], [15, 45], [38, 32], [26, 64], [47, 23]].forEach(([c, d], k) => {
+          if ([c, d].some(x => x === a || x === b)) return;
+          const places = A9_PLACES[4][(a + k) % 2];
+          const {termes, paires} = a9Ranger([a, b, c, d], places);
+          if (a9SansAutreRond(termes, paires, rond)) v.quatre.push(a9Calcul(1, termes, paires));
+        });
+      });
+    } else {
+      const rond = x => Number.isInteger(exact(x));
+      // Les paires de dixièmes : 3,7 + 0,3 ; 2,5 + 1,5 ; 4,6 + 2,4…
+      const paires = [];
+      entre(1, 9).forEach(dx => [0, 1, 2, 3, 4, 5].forEach(ea => [0, 1, 2].forEach(eb => {
+        const a = exact(ea + dx / 10);
+        const b = exact(eb + (10 - dx) / 10);
+        if (a >= 0.5 && b >= 0.1 && a + b <= 9) paires.push([a, b]);
+      })));
+      const seuls = [1.2, 2.5, 0.6, 3.4, 4.8, 1.9, 2.3, 5.1];
+      paires.forEach(([a, b], k) => {
+        const c = seuls[k % seuls.length];
+        if (![a, b].includes(c)) {
+          const {termes, paires: pp} = a9Ranger([a, b, c], A9_PLACES[3][k % 2]);
+          if (a9SansAutreRond(termes, pp, rond)) v.trois.push(a9Calcul(2, termes, pp));
+        }
+        const [c2, d2] = paires[(k * 7 + 3) % paires.length];
+        if ([c2, d2].some(x => x === a || x === b)) return;
+        const {termes, paires: pp} = a9Ranger([a, b, c2, d2], A9_PLACES[4][k % 2]);
+        if (a9SansAutreRond(termes, pp, rond)) v.quatre.push(a9Calcul(2, termes, pp));
+      });
+    }
+    const uniques = liste => [...new Map(liste.map(c => [c.cle, c])).values()];
+    return Object.freeze({trois: Object.freeze(uniques(v.trois)), quatre: Object.freeze(uniques(v.quatre))});
+  }
+  const A9_VIVIERS = Object.freeze({1: a9Vivier(1), 2: a9Vivier(2)});
+  // J'écris : chaque compte rond, puis le tout.
+  function a9Etapes(calcul) {
+    const {termes, paires, groupes, seuls} = calcul.donnees;
+    const etapes = paires.map(([i, j], k) => [`${f(termes[i])} + ${f(termes[j])} = ?`, groupes[k]]);
+    etapes.push([`${[...groupes, ...seuls.map(i => termes[i])].map(f).join(" + ")} = ?`, calcul.reponse]);
+    return etapes;
+  }
+  // « 27 + 48 + 73 = 27 + 73 + 48 » : les termes rangés, les paires d'abord.
+  function a9Range(calcul) {
+    const {termes, paires, seuls} = calcul.donnees;
+    return [...paires.flatMap(([i, j]) => [termes[i], termes[j]]), ...seuls.map(i => termes[i])].map(f).join(" + ");
+  }
+  function a9Dessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, trouves: Math.min(vus.length, image.paires.length), fini: vus.length >= etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  function recetteRegrouperTermes(calcul) {
+    if (!calcul || calcul.module !== "A9") return null;
+    const etapes = a9Etapes(calcul);
+    return ecrisAvecDessins({
+      consigne: fr(`${calcul.texte.replace(` = ${CASE}`, "")} = ${a9Range(calcul)}`),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(a9Image(calcul)), phrase: a9Phrase(calcul)})
+    }, a9Dessins(a9Image(calcul), etapes.length));
+  }
+  const A9 = {
+    id: "A9", nom: "Regrouper pour calculer", exemple: "27 + 48 + 73",
+    famille: "A", construit: true,
+    aide_entraine: "termes",
+    erreurs: A9_ERREURS, image: a9Image, aide: a9Aide, phrase: a9Phrase, manipulation: () => null, difficulte: a9Difficulte
+  };
+  A9.niveaux = [
+    {
+      n: 1, titre: "entiers, trois ou quatre termes", nom: "Regrouper\u00a0: des entiers", palier: 3, type: "P",
+      composer: vivierNiveau(A9_VIVIERS[1], [6, 4]),
+      imposes: [a9Calcul(1, [36, 59, 64], [[0, 2]]), a9Calcul(1, [18, 25, 82, 35], [[0, 2], [1, 3]])],
+      apprends: apprendsRecette({
+        fiche: A9, recette: recetteRegrouperTermes,
+        represente: a9Calcul(0, [27, 48, 73], [[0, 2]]),
+        ecris: a9Calcul(0, [44, 37, 56], [[0, 2]]),
+        consigne: "27 + 73 = 100 : je les ajoute ensemble.",
+        bilan: "27 + 73 = 100 : je les ajoute ensemble. 27 + 48 + 73 = 100 + 48 = 148."
+      })
+    },
+    {
+      n: 2, titre: "avec des décimaux", nom: "Regrouper\u00a0: des décimaux", palier: 4, type: "P", virgule: true,
+      composer: vivierNiveau(A9_VIVIERS[2], [6, 4]),
+      imposes: [a9Calcul(2, [1.6, 2.5, 3.4], [[0, 2]]), a9Calcul(2, [3.7, 2.5, 0.3, 1.5], [[0, 2], [1, 3]])],
+      apprends: apprendsRecette({
+        fiche: A9, recette: recetteRegrouperTermes,
+        represente: a9Calcul(0, [3.7, 1.2, 0.3], [[0, 2]]),
+        ecris: a9Calcul(0, [2.4, 5.1, 1.6], [[0, 2]]),
+        consigne: "3,7 + 0,3 = 4 : je les ajoute ensemble.",
+        bilan: "3,7 + 0,3 = 4 : je les ajoute ensemble. 3,7 + 1,2 + 0,3 = 4 + 1,2 = 5,2."
+      })
+    }
+  ];
+
+  // ------------------------------------------------- C4 : remonter un calcul
+  //
+  // Deux opérations sur le nombre cherché (exemples de réussite de CM2,
+  // p. 14) ; les quatre schémas du rapport de Codex :
+  //   « fois-moins »  (2 × □) − 5 = 23     □ → × 2 → − 5 → 23
+  //   « plus-fois »   8 + (2 × □) = 26     □ → × 2 → + 8 → 26
+  //   « fois-par »    3 × (2 + □) = 27     □ → + 2 → × 3 → 27
+  //   « plus-div »    18 = 10 + (□ ÷ 5)    □ → ÷ 5 → + 10 → 18
+  // Je remonte : les flèches à l'envers (23 + 5 = 28, 28 ÷ 2 = 14).
+  const C4_CODES = Object.freeze({"fois-moins": 1, "plus-fois": 2, "fois-par": 3, "plus-div": 4});
+  const INVERSE = Object.freeze({"+": "−", "−": "+", "×": "÷", "÷": "×"});
+  const appliquer = (x, signe, v) => exact(signe === "+" ? x + v : signe === "−" ? x - v : signe === "×" ? x * v : x / v);
+  function c4Calcul(niveau, forme, x, a, b) {
+    let ops;
+    let jetons;
+    if (forme === "fois-moins") { ops = [["×", a], ["−", b]]; jetons = `(${f(a)} × ${CASE}) − ${f(b)}`; }
+    else if (forme === "plus-fois") { ops = [["×", a], ["+", b]]; jetons = `${f(b)} + (${f(a)} × ${CASE})`; }
+    else if (forme === "fois-par") { ops = [["+", b], ["×", a]]; jetons = `${f(a)} × (${f(b)} + ${CASE})`; }
+    else { ops = [["÷", a], ["+", b]]; jetons = `${f(b)} + (${CASE} ÷ ${f(a)})`; }
+    const milieu = appliquer(x, ...ops[0]);
+    const fin = appliquer(milieu, ...ops[1]);
+    const texte = forme === "plus-div" ? `${f(fin)} = ${jetons}` : `${jetons} = ${f(fin)}`;
+    // Les réponses fausses connues : les flèches dans le sens du calcul
+    // (23 × 2 − 5) ; les bonnes flèches, mais le signe du nombre pas
+    // inversé (23 − 5 = 18, 18 ÷ 2 = 9) ; les étapes à l'envers (23 ÷ 2,
+    // puis + 5) ; une étape oubliée (28).
+    const sens = appliquer(appliquer(fin, ...ops[0]), ...ops[1]);
+    const signe = appliquer(appliquer(fin, ops[1][0], ops[1][1]), INVERSE[ops[0][0]], ops[0][1]);
+    const ordre = appliquer(appliquer(fin, INVERSE[ops[0][0]], ops[0][1]), INVERSE[ops[1][0]], ops[1][1]);
+    const donnees = {x, a, b, milieu, fin, ops: Object.freeze(ops.map(o => Object.freeze(o))), sens, signe, ordre};
+    return Object.freeze({
+      texte, reponse: x, forme, module: "C4", niveau,
+      cle: `C4-${niveau}-${C4_CODES[forme]}-${[a, b, fin].map(cleNombre).join("-")}`,
+      donnees: Object.freeze(donnees)
+    });
+  }
+  const c4Image = calcul => {
+    const {x, milieu, fin, ops} = calcul.donnees;
+    return {outil: "chaine", valeurs: [x, milieu, fin], ops: ops.map(o => o.slice())};
+  };
+  const c4Aide = calcul => Object.assign(c4Image(calcul), {masque: true, etape: 0});
+  function c4Phrase(calcul) {
+    const {x, milieu, fin, ops} = calcul.donnees;
+    return fr(`Regarde : ${f(fin)} ${INVERSE[ops[1][0]]} ${f(ops[1][1])} = ${f(milieu)}, puis ${f(milieu)} ${INVERSE[ops[0][0]]} ${f(ops[0][1])} = ${f(x)}.`);
+  }
+  // (C4-2 : la leçon commence par « 8 + (2 × □) = 11 », l'exemple officiel.)
+  const C4_RANGS = Object.freeze({"fois-moins": 0, "plus-fois": 1, "fois-par": 2, "plus-div": 3});
+  const C4_RANGS_2 = Object.freeze({"plus-fois": 0, "fois-moins": 1, "fois-par": 2});
+  const c4Difficulte = calcul => (calcul.niveau === 2 ? C4_RANGS_2 : C4_RANGS)[calcul.forme] * 1000 + Math.min(999, Math.round(calcul.donnees.fin));
+  const C4_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le calcul fait dans le même sens",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.sens)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as refait le calcul dans le même sens. Pour remonter, on fait l’inverse : ${calcul.donnees.ops.slice().reverse().map(([s, v]) => `${INVERSE[s]} ${f(v)}`).join(", puis ")}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "une opération pas inversée",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.signe)),
+      retour: (calcul, reponse) => {
+        const [s, v] = calcul.donnees.ops[1];
+        return fr(`${f(reponse)} : pour défaire ${s} ${f(v)}, on fait ${INVERSE[s]} ${f(v)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "les étapes dans le mauvais ordre",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.ordre)),
+      retour: (calcul, reponse) => {
+        const [s, v] = calcul.donnees.ops[1];
+        return fr(`${f(reponse)} : on remonte en partant de la fin. D’abord ${INVERSE[s]} ${f(v)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "une étape oubliée",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.milieu)),
+      retour: (calcul, reponse) => {
+        const [s, v] = calcul.donnees.ops[0];
+        return fr(`${f(reponse)} : il reste une étape. Défais aussi ${s} ${f(v)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // Les viviers.
+  //  - C4-1 : le nombre cherché de 3 à 15 ; a de 2 à 6 ; b de 2 à 20 ; une
+  //    soustraction ne descend pas sous 1 ; « plus-div » : le nombre cherché
+  //    est un multiple de a (de 10 à 60) ;
+  //  - C4-2 : la réponse décimale (1,5 ; 2,25), a = 2 ou 4 : trois schémas
+  //    (« plus-div » donnerait un nombre de départ entier).
+  function c4Vivier(niveau) {
+    const v = {"fois-moins": [], "plus-fois": [], "fois-par": [], "plus-div": []};
+    if (niveau === 1) {
+      entre(2, 6).forEach(a => entre(3, 15).forEach(x => [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20].forEach(b => {
+        if (a * x - b >= 1 && a * x - b !== x && b < a * x) v["fois-moins"].push(c4Calcul(1, "fois-moins", x, a, b));
+        if (b + a * x <= 100) v["plus-fois"].push(c4Calcul(1, "plus-fois", x, a, b));
+        if (a * (x + b) <= 100 && b <= 10) v["fois-par"].push(c4Calcul(1, "fois-par", x, a, b));
+      })));
+      [2, 3, 4, 5, 6].forEach(a => entre(2, 12).map(k => k * a).filter(x => x >= 10 && x <= 60 && x !== a).forEach(x => [5, 8, 10, 12, 15, 20].forEach(b => v["plus-div"].push(c4Calcul(1, "plus-div", x, a, b)))));
+    } else {
+      [2, 4].forEach(a => entre(1, 40).map(k => exact(k / a)).filter(x => !Number.isInteger(x) && x > 0.2 && x < 10).forEach(x => [1, 2, 3, 4, 5, 6, 8, 10].forEach(b => {
+        if (exact(a * x - b) >= 1) v["fois-moins"].push(c4Calcul(2, "fois-moins", x, a, b));
+        v["plus-fois"].push(c4Calcul(2, "plus-fois", x, a, b));
+        if (b <= 5) v["fois-par"].push(c4Calcul(2, "fois-par", x, a, b));
+      })));
+      delete v["plus-div"];
+    }
+    // Le résultat de l'égalité n'est jamais un nombre de l'écriture (2 × □
+    // − 2 = 2) ni le nombre cherché.
+    const garde = c => ![c.donnees.a, c.donnees.b, c.donnees.x].some(y => memeNombre(y, c.donnees.fin)) && c.donnees.milieu !== c.donnees.x;
+    return Object.freeze(Object.fromEntries(Object.entries(v).map(([k, l]) => [k, Object.freeze([...new Map(l.filter(garde).map(c => [c.cle, c])).values()])])));
+  }
+  const C4_VIVIERS = Object.freeze({1: c4Vivier(1), 2: c4Vivier(2)});
+  const c4 = (niveau, forme, x, a, b) => c4Calcul(niveau, forme, x, a, b);
+  // J'écris : on remonte, une flèche à la fois.
+  function c4Etapes(calcul) {
+    const {x, milieu, fin, ops} = calcul.donnees;
+    return [[`${f(fin)} ${INVERSE[ops[1][0]]} ${f(ops[1][1])} = ?`, milieu], [`${f(milieu)} ${INVERSE[ops[0][0]]} ${f(ops[0][1])} = ?`, x]];
+  }
+  function c4Dessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, etape: vus.length})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  function recetteRemonter(calcul) {
+    if (!calcul || calcul.module !== "C4") return null;
+    const etapes = c4Etapes(calcul);
+    const {ops} = calcul.donnees;
+    return ecrisAvecDessins({
+      consigne: calcul.texte.replace(CASE, "?"),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(c4Image(calcul)), phrase: c4Phrase(calcul)})
+    }, c4Dessins(c4Image(calcul), etapes.length));
+  }
+  const C4 = {
+    id: "C4", nom: "Remonter un calcul", exemple: "(2 × ?) − 5 = 23",
+    famille: "C", construit: true,
+    aide_entraine: "chaine",
+    erreurs: C4_ERREURS, image: c4Image, aide: c4Aide, phrase: c4Phrase, manipulation: () => null, difficulte: c4Difficulte
+  };
+  C4.niveaux = [
+    {
+      n: 1, titre: "deux opérations", nom: "Remonter un calcul\u00a0: deux opérations", palier: 3, type: "P",
+      composer: vivierNiveau(C4_VIVIERS[1], [3, 3, 2, 2]),
+      imposes: [c4(1, "fois-par", 7, 3, 2), c4(1, "plus-div", 40, 5, 10)],
+      apprends: apprendsRecette({
+        fiche: C4, recette: recetteRemonter,
+        represente: c4(0, "fois-moins", 14, 2, 5),
+        ecris: c4(0, "fois-moins", 9, 3, 6),
+        consigne: "Je remonte les flèches : + 5, puis ÷ 2.",
+        bilan: "Je remonte les flèches à l’envers : 23 + 5 = 28. 28 ÷ 2 = 14. (2 × 14) − 5 = 23."
+      })
+    },
+    {
+      n: 2, titre: "réponse décimale", nom: "Remonter un calcul\u00a0: réponse décimale", palier: 3, type: "P", virgule: true,
+      composer: vivierNiveau(C4_VIVIERS[2], [3, 4, 3]),
+      imposes: [c4(2, "fois-moins", 3.5, 2, 3), c4(2, "fois-par", 1.5, 2, 1)],
+      apprends: apprendsRecette({
+        fiche: C4, recette: recetteRemonter,
+        represente: c4(0, "plus-fois", 1.5, 2, 8),
+        ecris: c4(0, "plus-fois", 2.5, 2, 4),
+        consigne: "Je remonte les flèches : − 8, puis ÷ 2.",
+        bilan: "Je remonte les flèches à l’envers : 11 − 8 = 3. 3 ÷ 2 = 1,5. 8 + (2 × 1,5) = 11."
+      })
+    }
+  ];
+
+  // ------------------------------------------------- M9 : distributivité, retrancher
+  //
+  // « 45 × 9 » : × 9, c'est × 10 moins une fois le nombre (450 − 45) ; × 19,
+  // × 20 moins une fois ; × 99, × 100 moins une fois ; × 98, × 100 moins
+  // deux fois. n (le nombre), m (9, 19, 99 ou 98), rond (10, 20, 100),
+  // enleve (1 ou 2).
+  // La règle commune avec M8 (rapport de Codex du 14/11 : « aucun calcul
+  // commun ») : un produit par 9, 19, 98 ou 99 n'est JAMAIS dans M8 (M8
+  // garde 3, 6 et 7, et ne coupe ni 19, ni 98, ni 99). M9 prend : × 9 d'un
+  // nombre de 11 à 99 ; × 19 d'un nombre à un chiffre (3, 6, 7, 9) ou de 11
+  // à 19 ; × 99 de 3, 6, 7, 9 ou de 11 à 25 ; × 98 de 3, 6, 7, 9 ou de 11 à
+  // 15 — jamais une dizaine entière (M3), ni 2, 4, 5, 8 (le double, × 4,
+  // × 8 et × 5 : M1, M6, M7).
+  const M9_RETIRE = Object.freeze([9, 19, 98, 99]);
+  const m9Prend = (x, y) => M9_RETIRE.includes(x) || M9_RETIRE.includes(y);
+  const M9_RONDS = Object.freeze({9: [10, 1], 19: [20, 1], 99: [100, 1], 98: [100, 2]});
+  function m9Calcul(niveau, n, m, gauche = false) {
+    const [rond, enleve] = M9_RONDS[m];
+    const r = n * m;
+    const grand = n * rond;
+    // Les réponses fausses connues : retiré 1 (ou 2) au lieu du nombre
+    // (450 − 1) ; ajouté au lieu de retirer (450 + 45) ; × 98 : retiré une
+    // fois seulement (1 200 − 12).
+    const donnees = {n, m, rond, enleve, r, grand, petit: n * enleve, moinsUn: grand - enleve, plus: grand + n * enleve, uneFois: enleve === 2 ? grand - n : -1};
+    return gauche
+      ? fabriquer("M9", niveau, "produit-gauche", [m, "×", n, "=", TROU], r, donnees)
+      : fabriquer("M9", niveau, "produit", [n, "×", m, "=", TROU], r, donnees);
+  }
+  const m9Image = calcul => {
+    const {n, m, rond, enleve} = calcul.donnees;
+    return {outil: "rectangle", retire: true, a: n, b: m, rond, enleve};
+  };
+  const m9Aide = calcul => Object.assign(m9Image(calcul), {masque: true, etape: 0});
+  function m9Phrase(calcul) {
+    const {n, rond, enleve, r, grand, petit} = calcul.donnees;
+    return fr(`Regarde : ${f(n)} × ${f(rond)} = ${f(grand)}, moins ${enleve === 2 ? `2 × ${f(n)} = ${f(petit)}` : f(n)}, ça fait ${f(r)}.`);
+  }
+  const m9Difficulte = calcul => ({9: 0, 19: 1, 99: 2, 98: 3})[calcul.donnees.m] * 1000 + (calcul.forme === "produit-gauche" ? 500 : 0) + Math.min(499, calcul.donnees.n * 4);
+  const M9_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "retiré 1 au lieu du nombre",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.moinsUn)),
+      retour: (calcul, reponse) => {
+        const {n, enleve, grand} = calcul.donnees;
+        return fr(`${f(reponse)} : tu as retiré ${enleve}. Il faut retirer ${enleve === 2 ? `2 fois ${f(n)}` : f(n)} : ${f(grand)} − ${f(n * enleve)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "ajouté au lieu de retirer",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.plus)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as ajouté. ${f(calcul.donnees.m)}, c’est ${f(calcul.donnees.rond)} − ${calcul.donnees.enleve} : on retire.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "retiré une seule fois",
+      test: sauf((calcul, reponse) => calcul.donnees.enleve === 2 && memeNombre(reponse, calcul.donnees.uneFois)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : 98, c’est 100 − 2. On retire 2 fois ${f(calcul.donnees.n)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "le grand produit sans retirer",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.grand)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.n)} × ${f(calcul.donnees.rond)}. Il reste à retirer ${calcul.donnees.enleve === 2 ? `2 × ${f(calcul.donnees.n)}` : f(calcul.donnees.n)}.`),
+      gras: 0
+    })
+  ]);
+  function m9Vivier(niveau) {
+    const v = {produit: [], "produit-gauche": []};
+    const petits = [3, 6, 7, 9];
+    // (× 9 : ni 19, ni 98, ni 99 — 19 × 9 est aussi « × 19 de 9 », 9 × 99 est
+    // dans M9-2.)
+    const nombres = {9: entre(11, 99).filter(n => n % 10 !== 0 && !M9_RETIRE.includes(n)), 19: [...petits, ...entre(11, 19)], 99: [...petits, ...entre(11, 25).filter(n => n % 10 !== 0)], 98: [...petits, ...entre(11, 15)]};
+    (niveau === 1 ? [9, 19] : [99, 98]).forEach(m => nombres[m].filter(n => n !== m).forEach(n => {
+      v.produit.push(m9Calcul(niveau, n, m));
+      v["produit-gauche"].push(m9Calcul(niveau, n, m, true));
+    }));
+    return Object.freeze({produit: Object.freeze(v.produit), "produit-gauche": Object.freeze(v["produit-gauche"])});
+  }
+  const M9_VIVIERS = Object.freeze({1: m9Vivier(1), 2: m9Vivier(2)});
+  // J'écris : le grand produit, (× 98 : ce qu'on retire), puis on retire.
+  function m9Etapes(calcul) {
+    const {n, rond, enleve, r, grand, petit} = calcul.donnees;
+    const etapes = [[`${f(n)} × ${f(rond)} = ?`, grand]];
+    if (enleve === 2) etapes.push([`2 × ${f(n)} = ?`, petit]);
+    etapes.push([`${f(grand)} − ${f(petit)} = ?`, r]);
+    return etapes;
+  }
+  function m9Dessins(image, etapes) {
+    const dessin = (vus, revele = false) => (revele
+      ? Object.freeze(Object.assign({}, image))
+      : Object.freeze(Object.assign({}, image, {masque: true, etape: vus.length, etapes})));
+    return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
+  }
+  function recetteRetrancher(calcul) {
+    if (!calcul || calcul.module !== "M9") return null;
+    const {n, m, rond, enleve} = calcul.donnees;
+    const etapes = m9Etapes(calcul);
+    const debut = calcul.texte.replace(` = ${CASE}`, "");
+    return ecrisAvecDessins({
+      consigne: fr(`${debut} = ${f(n)} × ${f(rond)} − ${enleve === 2 ? `2 × ${f(n)}` : f(n)}`),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: Object.freeze(m9Image(calcul)), phrase: m9Phrase(calcul)})
+    }, m9Dessins(m9Image(calcul), etapes.length));
+  }
+  const M9 = {
+    id: "M9", nom: "Distributivité\u00a0: retrancher", exemple: "45 × 9",
+    famille: "M", construit: true,
+    aide_entraine: "rectangle",
+    erreurs: M9_ERREURS, image: m9Image, aide: m9Aide, phrase: m9Phrase, manipulation: () => null, difficulte: m9Difficulte
+  };
+  M9.niveaux = [
+    {
+      n: 1, titre: "multiplier par 9, par 19", nom: "× 9, × 19\u00a0: je retire", palier: 4, type: "P",
+      composer: vivierNiveau(M9_VIVIERS[1], [7, 3]),
+      imposes: [m9Calcul(1, 37, 9), m9Calcul(1, 6, 19, true)],
+      apprends: apprendsRecette({
+        fiche: M9, recette: recetteRetrancher,
+        represente: m9Calcul(0, 45, 9),
+        ecris: m9Calcul(0, 23, 9),
+        consigne: "9, c’est 10 − 1. Je fais × 10, puis je retire 45.",
+        bilan: "9, c’est 10 − 1 : 45 × 9 = 45 × 10 − 45 = 450 − 45 = 405."
+      })
+    },
+    {
+      n: 2, titre: "multiplier par 99, par 98", nom: "× 99, × 98\u00a0: je retire", palier: 4, type: "P",
+      composer: vivierNiveau(M9_VIVIERS[2], [7, 3]),
+      imposes: [m9Calcul(2, 12, 98), m9Calcul(2, 3, 99, true)],
+      apprends: apprendsRecette({
+        fiche: M9, recette: recetteRetrancher,
+        represente: m9Calcul(0, 6, 99),
+        ecris: m9Calcul(0, 13, 99),
+        consigne: "99, c’est 100 − 1. Je fais × 100, puis je retire 6.",
+        bilan: "99, c’est 100 − 1 : 6 × 99 = 6 × 100 − 6 = 600 − 6 = 594."
+      })
+    }
+  ];
+
   // ============================================ modules lot 6 (04/11/2026)
   //
   // F2, F5, F6, F8 : les fractions du CM1 (lot 6a ; F1 et F3 suivent, lot
@@ -10073,12 +10756,7 @@
     A6,
     A7,
     A8,
-    reserve("A9", "Regrouper pour calculer", "27 + 48 + 73", [
-      // (Lot « couverture » : 4 niveaux → 2 ; « 524 − 44 + 176 − 56 »
-      // relève du cycle 4, il sort.)
-      {n: 1, titre: "entiers, trois ou quatre termes", palier: 3, type: "P", exemple: "27 + 48 + 73"},
-      {n: 2, titre: "avec des décimaux", palier: 4, type: "P", exemple: "3,7 + 0,3 + 2,5 + 1,2"}
-    ]),
+    A9,
     M4,
     M1,
     M2,
@@ -10088,23 +10766,13 @@
     M13,
     M7,
     M8,
-    reserve("M9", "Distributivité : retrancher", "45 × 9", [
-      // (Lot « couverture » : 3 niveaux → 2.)
-      {n: 1, titre: "× 9, × 19", palier: 4, type: "P", exemple: "45 × 9"},
-      {n: 2, titre: "× 99, × 98", palier: 4, type: "P", exemple: "7 × 99"}
-    ]),
+    M9,
     M10,
-    reserve("M11", "Quotient et reste", "17 = 3 × 5 + ?", [
-      {n: 1, titre: "tables de 2 à 5", palier: 3, type: "P", exemple: "17 = 3 × 5 + ?"},
-      {n: 2, titre: "toutes les tables", palier: 3, type: "P", exemple: "47 = 6 × ? + 5"}
-    ]),
+    M11,
     M12,
     C1,
     C3,
-    reserve("C4", "Remonter un calcul", "(2 × ?) − 5 = 23", [
-      {n: 1, titre: "deux opérations", palier: 3, type: "P", exemple: "(2 × ?) − 5 = 23"},
-      {n: 2, titre: "réponse décimale", palier: 3, type: "P", exemple: "8 + (2 × ?) = 11"}
-    ]),
+    C4,
     D1,
     D2,
     D3,
@@ -10325,7 +10993,16 @@
     "F9-1": parFormes(["addition", "somme"], ["soustraction", "difference"]),
     "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
     "F11-1": [["plus petite que 1", c => Boolean(c.f11 && c.f11.a < c.f11.d)], ["plus grande que 1", toutes]],
-    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction cherchée", "fraction", "fraction-gauche"])
+    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
+    // Lot 7d : M11, A9, C4, M9 (les familles du rapport de Codex du 14/11).
+    "M11-1": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
+    "M11-2": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
+    "A9-1": parFormes(["trois nombres", "trois"], ["quatre nombres", "quatre"]),
+    "A9-2": parFormes(["trois nombres", "trois"], ["quatre nombres", "quatre"]),
+    "C4-1": parFormes(["× puis −", "fois-moins"], ["× puis +", "plus-fois"], ["+ puis ×", "fois-par"], ["÷ puis +", "plus-div"]),
+    "C4-2": parFormes(["× puis +", "plus-fois"], ["× puis −", "fois-moins"], ["+ puis ×", "fois-par"]),
+    "M9-1": [["× 9", (c, d) => d.m === 9], ["× 19", toutes]],
+    "M9-2": [["× 99", (c, d) => d.m === 99], ["× 98", toutes]]
   });
 
   // Les cartes « par cœur » (lot 2 « J'apprends en une étape », 12/11/2026,
@@ -10487,6 +11164,9 @@
   const f6Verbe = calcul => (F6_MULTIPLIE[calcul.forme] ? "je multiplie" : "je divise");
   const glisseDe = (signe, p, colonnes) => `${signe} ${formaterNombre(p)}, chaque chiffre glisse de ${colonnes} colonnes`;
   const NOUVEAUTES = Object.freeze({
+    // Lot 7d : × 19 (on va à 20), × 98 (on retire deux fois le nombre).
+    "M9-1": [["× 19", "19, c’est 20 − 1 : je fais × 20, puis je retire le nombre"]],
+    "M9-2": [["× 98", "98, c’est 100 − 2 : je retire 2 fois le nombre"]],
     // Lot 7e-2 (choix de Gwenaël) : la moitié en découpant, avec son dessin.
     "M1-3": [["moitié", "la moitié, je coupe en morceaux"]],
     // Lot 7e-2 : les fractions qui tombent pile sur 1 (les bases), puis
@@ -10858,7 +11538,17 @@
     "moins-entier": "on retire un nombre entier",
     fois: "une part répétée",
     unitaires: "on ajoute des parts une à une",
-    "un-moins-plusieurs": "on retire plusieurs fractions"
+    "un-moins-plusieurs": "on retire plusieurs fractions",
+    // Lot 7d.
+    reste: "on cherche le reste",
+    "reste-nul": "le compte tombe juste : il reste 0",
+    quotient: "on cherche le nombre de paquets",
+    trois: "trois nombres : un compte rond",
+    quatre: "quatre nombres : deux comptes ronds",
+    "fois-moins": "on a multiplié, puis retiré : je remonte avec +, puis ÷",
+    "plus-fois": "on a multiplié, puis ajouté : je remonte avec −, puis ÷",
+    "fois-par": "on a ajouté, puis multiplié : je remonte avec ÷, puis −",
+    "plus-div": "on a divisé, puis ajouté : je remonte avec −, puis ×"
   });
   // La touche « , » : dans les modules à décimales, sauf quand la case est
   // un numérateur (« 0,3 = □/10 » : la réponse est un entier, règle du 05/10
@@ -11450,7 +12140,10 @@
     "D9-1": recetteDixFois, "D9-2": recetteDixFois,
     "M13-1": recetteMoitieMoitie, "M13-2": recetteMoitieMoitie, "M13-3": recetteMoitieMoitie,
     // Lot 7c.
-    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris
+    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris,
+    // Lot 7d.
+    "M11-1": recetteQuotientReste, "M11-2": recetteQuotientReste, "A9-1": recetteRegrouperTermes, "A9-2": recetteRegrouperTermes,
+    "C4-1": recetteRemonter, "C4-2": recetteRemonter, "M9-1": recetteRetrancher, "M9-2": recetteRetrancher
   });
 
   // Le J'écris d'un calcul dans un niveau (« A10-2 »), ou null quand la

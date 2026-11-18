@@ -141,6 +141,15 @@ async function attendreQue(page, lire, essais = 40) {
   return lire();
 }
 // « Valider » se voit en entier.
+// Lot 7d : l'écart entre le haut de la liste de Mon parcours et le haut de
+// sa première ligne visible (0 px : la liste commence sur une ligne entière).
+const ecartListe = page => page.evaluate(() => {
+  const liste = document.querySelector("#parcours-modules");
+  if (!liste) return null;
+  const haut = liste.getBoundingClientRect().top;
+  const ligne = [...liste.children].find(l => l.getBoundingClientRect().bottom > haut + 1);
+  return ligne ? Math.round(ligne.getBoundingClientRect().top - haut) : null;
+});
 const valideSeVoit = page => page.evaluate(() => { const p = document.querySelector(".panel:not([hidden])").getBoundingClientRect(); const v = document.querySelector("#validate").getBoundingClientRect(); return v.bottom <= p.bottom + .5 && v.bottom <= innerHeight + .5; });
 
 // F4-1 : les billes. Le partage (le tas, n/d fois), puis les parts prises ;
@@ -267,6 +276,8 @@ async function jouerBandes(s, m, cle) {
         await pause(s.page, 800);
         assert.match(await texte(s.page, "#acc-parcours"), nom === "cm1" ? /Palier 2/ : /Palier 3/);
         assert.match(await texte(s.page, "#acc-parcours"), nom === "cm1" ? /Dénominateurs multiples/ : /Fraction d’une quantité/);
+        const ecart = await ecartListe(s.page);
+        assert.ok(ecart !== null && Math.abs(ecart) <= 1, `${nom} : la liste commence sur une ligne entière (${ecart} px)`);
         await photo(s.page, `${f}-mon-parcours-${nom}`);
         await tient(s.page, largeur, hauteur);
         assert.deepEqual(s.erreurs, []);

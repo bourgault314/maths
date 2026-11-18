@@ -126,7 +126,7 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   const competences = dansLaCarte.flatMap(fiche => fiche.niveaux.map(niveau => ({cle: `${fiche.id}-${niveau.n}`, palier: niveau.palier, type: niveau.type})));
   assert.equal(competences.length, 125);
   // (Lot 7e-2 : F8-3 passe du CM2 au CM1. Lot 7c : F4-2 passe de la 6e au CM2.)
-  assert.deepEqual([1, 2, 3, 4].map(p => competences.filter(c => c.palier === p).length), [40, 31, 42, 12]);
+  assert.deepEqual([1, 2, 3, 4].map(p => competences.filter(c => c.palier === p).length), [40, 33, 40, 12]);
   competences.forEach(c => assert.ok([1, 2, 3, 4].includes(c.palier) && ["F", "P"].includes(c.type), c.cle));
   assert.deepEqual(CORE.moduleDe("A5").niveaux.map(n => n.palier), [1, 1, 1, 3], "A5 : « + 9 » aux bases, « + 98 » au CM2");
   assert.deepEqual(CORE.moduleDe("D2").niveaux.map(n => n.palier), [2, 3, 3, 4]);
@@ -146,10 +146,10 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   assert.deepEqual([...CORE.ORDRE], [
     // Palier 1
     "A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1", "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2", "F8-1", "A7-1", "M1-2", "A10-3", "A11-3", "F8-2", "A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2",
-    // Palier 2 (lot 7e-2 : F8-3 arrive du CM2, après F5-2)
-    "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F5-2", "F8-3", "M12-1", "F9-1",
+    // Palier 2 (lot 7e-2 : F8-3 arrive du CM2, après F5-2 ; lot 7d : M11 arrive du CM2)
+    "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "M11-1", "F5-2", "F8-3", "M12-1", "M11-2", "F9-1",
     // Palier 3
-    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3", "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "M11-1", "D5-1", "F4-1", "D6-2", "M13-2", "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "M11-2", "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1", "F9-2", "C4-2", "F4-2",
+    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3", "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "D5-1", "F4-1", "D6-2", "M13-2", "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1", "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1", "F9-2", "C4-2", "F4-2",
     // Palier 4 (lot 7c : F4-2 passe au CM2, à la fin du palier 3)
     "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3", "M9-2", "D7-3", "F11-2"
   ]);
@@ -171,9 +171,9 @@ test("les 74 modules de la carte v3 : identifiants, paliers par niveau, ordre du
   assert.equal("avant" in CORE.moduleDe("A2"), false, "plus de verrous « avant » : l'ordre de la carte fait foi");
 });
 
-const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "M4", "M1", "M2", "M3", "M5", "M6", "M13", "M7", "M8", "M10", "M12", "C1", "C3", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "F2", "F1", "F3", "F4", "F5", "F6", "F8", "F9", "F11"];
+const CONSTRUITS = ["A1", "A10", "A11", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "M4", "M1", "M2", "M3", "M5", "M6", "M13", "M7", "M8", "M9", "M10", "M11", "M12", "C1", "C3", "C4", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "F2", "F1", "F3", "F4", "F5", "F6", "F8", "F9", "F11"];
 
-test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b), F4, F9, F11 (lot 7c)", () => {
+test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M1 (modules lot 1), A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), puis F2, F5, F6, F8 (modules lot 6), F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b), F4, F9, F11 (lot 7c), M11, A9, C4, M9 (lot 7d)", () => {
   assert.deepEqual(CORE.MODULES.filter(fiche => fiche.construit).map(fiche => fiche.id), CONSTRUITS);
   // Modules lot 1 : les niveaux de la carte v2, inchangés (nombre, paliers, types).
   // (Lot 7e-2 : « Différences et trous jusqu'à 20 » est une procédure.)
@@ -271,7 +271,7 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   assert.deepEqual(carte.modules.filter(f => f.construit).map(f => f.id), CONSTRUITS);
   assert.deepEqual(carte.ordre, [...CORE.ORDRE]);
   assert.deepEqual(carte.modules.find(f => f.id === "A2"), {id: "A2", niveaux: 5, paliers: [1, 1, 1, 2, 2], types: ["P", "P", "P", "P", "P"], construit: true});
-  assert.deepEqual(CORE.genererSerie("M9-1", {graine: 1}), [], "un niveau pas encore construit ne génère rien");
+  assert.deepEqual(CORE.genererSerie("C2-1", {graine: 1}), [], "un niveau pas encore construit ne génère rien"); // (lot 7d : M9 est construit)
 });
 
 test("générateurs : nombre de calculs, réponse recalculée, clés, déterminisme", () => {
@@ -284,7 +284,8 @@ test("générateurs : nombre de calculs, réponse recalculée, clés, détermini
         assert.equal(new Set(serie.map(c => c.cle)).size, serie.length, `${cle} : aucune répétition dans une série`);
         serie.forEach(calcul => {
           assert.equal(calcul.reponse, resoudre(calcul.texte), `${cle} : ${calcul.texte}`);
-          assert.ok(calcul.reponse > 0, `${cle} : réponse positive (${calcul.texte})`);
+          // (Lot 7d : la seule réponse 0, le reste nul de « Quotient et reste ».)
+          assert.ok(calcul.reponse > 0 || (calcul.module === "M11" && calcul.forme === "reste-nul" && calcul.reponse === 0), `${cle} : réponse positive (${calcul.texte})`);
           // Entière partout, sauf dans les modules à décimales (D2 ; D1, D3,
           // D4 depuis les modules lot 5) ; jamais plus de 3 décimales. Une
           // case au numérateur (« 0,3 = □/10 ») : toujours un entier.
@@ -894,7 +895,7 @@ test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 ca
     assert.ok(sortes.length >= 2 && sortes.length <= 4, `${fiche.id}-${niveau.n} : ${sortes.length} sortes`);
     assert.ok(sortes.every(sorte => sorte.nom), `${fiche.id}-${niveau.n} : chaque sorte a un nom`);
   });
-  assert.deepEqual(CORE.genererTest("M9", {graine: 1}), [], "un module pas construit n'a pas de test");
+  assert.deepEqual(CORE.genererTest("C2", {graine: 1}), [], "un module pas construit n'a pas de test"); // (lot 7d : M9 est construit ; C2 est un identifiant réservé)
   assert.deepEqual(noms("A1").length, 3);
   assert.deepEqual(noms("M1"), ["Doubles et moitiés jusqu’à 40", "Doubles et moitiés des nombres usuels", "Doubles et moitiés en découpant"]);
 });
@@ -951,6 +952,7 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
       if (LOT7A.includes(c.module)) { verifierOutilLot7a(c); return; }
       if (LOT7B.includes(c.module)) { verifierOutilLot7b(c); return; }
       if (LOT7C.includes(c.module)) { verifierOutilLot7c(c); return; }
+      if (LOT7D.includes(c.module)) { verifierOutilLot7d(c); return; }
       const aide = CORE.aideDe(c);
       // M8-3 en trou (12 × 42 = 10 × 42 + □ × 42) : pas d'aide, le rectangle
       // écrirait la réponse (le petit morceau).
@@ -1087,6 +1089,7 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
     if (LOT7A.includes(fiche.id)) { verifierApprendsLot7a(fiche, niveau, cle); return; }
     if (LOT7B.includes(fiche.id)) { verifierApprendsLot7b(fiche, niveau, cle); return; }
     if (LOT7C.includes(fiche.id)) { verifierApprendsLot7c(fiche, niveau, cle); return; }
+    if (LOT7D.includes(fiche.id)) { verifierApprendsLot7d(fiche, niveau, cle); return; }
     if (fiche.id === "M3") {
       // M3 (décision du 01/11) : la table, puis le glisse-nombres de M2 ; le
       // tableau à flèches part de la table et cache l'arrivée.
@@ -3475,6 +3478,35 @@ function verifierApprendsLot7c(fiche, niveau, cle) {
   const svgs = a.ecris.dessins.map(AIDES.dessinerImage);
   assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin de J'écris se remplit`);
   assert.ok(r);
+}
+
+// Lot 7d : M11, A9, C4, M9 — un dessin sans manipulation ; l'aide cache ce
+// qu'on cherche (« ? »), la correction l'écrit.
+const LOT7D = ["M11", "A9", "C4", "M9"];
+const OUTILS_7D = {M11: "paquets", A9: "termes", C4: "chaine", M9: "rectangle"};
+function verifierOutilLot7d(c) {
+  const aide = CORE.aideDe(c);
+  const image = CORE.imageDe(c);
+  assert.equal(aide.outil, OUTILS_7D[c.module], c.texte);
+  assert.equal(CORE.manipulationDe(c), null, `${c.texte} : pas d'outil à manipuler`);
+  const svg = AIDES.dessinerImage(aide);
+  sansLaReponse(svg, c.reponse, `${c.texte} (aide)`, {aria: false});
+  assert.match(ariaDe(svg), /un nombre à trouver/, `${c.texte} : le lecteur d'écran ne dit pas la réponse`);
+  assert.ok(textesSvg(svg).some(t => t.includes("?")), `${c.texte} : l'aide a son « ? »`);
+  const fin = textesSvg(AIDES.dessinerImage(image)).map(avecEspaces);
+  const r = ecrite(c.reponse);
+  assert.ok(fin.some(t => t === r || t.endsWith(`= ${r}`) || t.startsWith(`${r} × `) || t === `− ${r}`), `${c.texte} : la correction écrit la réponse (${fin.join(" | ")})`);
+}
+function verifierApprendsLot7d(fiche, niveau, cle) {
+  const a = niveau.apprends;
+  assert.equal(a.manipule, null, cle);
+  assert.equal(a.represente.outil, OUTILS_7D[fiche.id], cle);
+  assert.equal(a.image.outil, OUTILS_7D[fiche.id], cle);
+  sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} : Avec le dessin`, {aria: false});
+  const cherche = avecEspaces(a.calculs.ecris.texte).replace(" = □", "").replace("□", "?");
+  assert.ok(avecEspaces(a.ecris.consigne).startsWith(cherche), `${cle} : ${a.ecris.consigne}`);
+  const svgs = a.ecris.dessins.map(AIDES.dessinerImage);
+  assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin de J'écris se remplit`);
 }
 
 test("lot 7c : les niveaux de la carte v3 (nombre, paliers, types), à leur place dans le parcours", () => {

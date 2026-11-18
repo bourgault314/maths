@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261116-1"></script>
+  <script src="./defi_calcul_core.js?v=20261118-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261115-3"></script>
-  <script src="./defi_calcul_aides.js?v=20261116-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261118-1"></script>
   <script>
     (() => {
       "use strict";
@@ -3478,7 +3478,7 @@
         // seul sur sa ligne (les tables ; « 100 = 4 × 25. 3 × 25 = 75. »,
         // choix de Gwenaël du 13/11 : une égalité s'écrit en maths).
         // (Lot 7b : une égalité peut commencer par « double de », « moitié de ».)
-        const lignes = String(serie.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d]|(?:double|moitié) de )/).map(texte => AIDES.bilanEnDeux(texte));
+        const lignes = String(serie.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d(]|(?:double|moitié) de )/).map(texte => AIDES.bilanEnDeux(texte));
         if (lignes.length > 1 && lignes.every(Boolean)) {
           $("retenir-phrase").replaceChildren();
           lignes.forEach(({phrase, calcul: texte}, i) => {
