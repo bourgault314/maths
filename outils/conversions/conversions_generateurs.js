@@ -3898,6 +3898,341 @@
     erreurs: erreursC5
   };
 
+  // ------------------------------------------- C6 · Les fractions usuelles
+  // Lot B2-2a (carte v4 ; S002 p. 15-16 : ½ km = 500 m ; ¾ m = 3 × ¼ m =
+  // 3 × 25 cm = 75 cm ; ¼ kg = 250 g ; ½ t = 500 kg ; p. 11 : les bandes de
+  // 37/10 cm et de 4 + 3/10 cm). Choix de Gwenaël du 18/11 (sur maquette) :
+  // l'outil, la double droite graduée ; l'image, la barre partagée ; la
+  // correction, la double droite complétée ; les fractions écrites en
+  // colonne. Une fraction s'écrit avec la barre de fraction U+2044
+  // (« 3⁄4 ») : la page la pose en colonne (`AIDES.fractions`).
+  // Les sortes : « 3⁄4 L = … cL » (nombre), « Combien de centilitres dans
+  // trois quarts de litre ? » (phrase), une situation (« Une recette demande
+  // 3⁄4 L de lait. »), les « ponts » de l'exerciseur (trois réponses au
+  // choix, les vraies erreurs), « 75 cL = … L » (¼, ½ ou ¾ au choix), les
+  // dixièmes (3⁄10 m = 30 cm), « un litre et demi » (1 L + 1⁄2 L), les
+  // bandes à comparer (37⁄10 cm ou 4 + 3⁄10 cm ?).
+  const FR = "⁄";
+  function fracTexte(n, d) {
+    return `${n}${FR}${d}`;
+  }
+  function pgcd(a, b) {
+    return b ? pgcd(b, a % b) : a;
+  }
+  const NOMBRES_MOTS = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+  const DEMI = {L: "un demi-litre", m: "un demi-mètre", km: "un demi-kilomètre", kg: "un demi-kilogramme", t: "une demi-tonne", cm: "un demi-centimètre"};
+  // « trois quarts de litre », « sept dixièmes de mètre », « deux litres et
+  // demi ».
+  function fracEnMots(n, d, u, a = 0) {
+    if (a) return `${a === 1 ? "un" : NOMBRES_MOTS[a]} ${a === 1 ? MOT[u] : MOTS[u]} et demi`;
+    if (d === 2) return DEMI[u];
+    const nom = d === 4 ? (n === 1 ? "un quart" : "trois quarts") : `${NOMBRES_MOTS[n]} dixième${n > 1 ? "s" : ""}`;
+    return `${nom} de ${MOT[u]}`;
+  }
+  // La mesure écrite : « 3⁄4 L », « 1 L + 1⁄2 L ».
+  function fracMesure(n, d, u, a = 0) {
+    return a ? `${a}${NB}${u} + ${fracTexte(n, d)}${NB}${u}` : `${fracTexte(n, d)}${NB}${u}`;
+  }
+  // Les paires (l'unité de la fraction, l'unité de la réponse).
+  const PAIRES_C6 = {
+    d1: [["L", "cL"], ["kg", "g"], ["m", "cm"], ["km", "m"], ["t", "kg"], ["L", "mL"], ["cm", "mm"]],
+    trois: [["L", "cL"], ["L", "mL"], ["kg", "g"], ["m", "cm"], ["km", "m"], ["t", "kg"]],
+    mille: [["L", "mL"], ["kg", "g"], ["km", "m"], ["t", "kg"]],
+    demi: [["L", "cL"], ["kg", "g"], ["km", "m"], ["m", "cm"]]
+  };
+  // Les situations (l'unité, la réponse, les fractions qui vont, la phrase).
+  // « {F} » : la mesure écrite ; « {M} » : en mots (un litre et demi) ;
+  // de La Réunion ? ; pour « et demi », le plus grand nombre d'unités
+  // (une bouteille de jus d'un litre et demi, pas de trois).
+  const SITUATIONS_C6 = [
+    ["L", "cL", ["1/2", "1/4", "3/4"], "Une recette demande {F} de lait."],
+    ["L", "cL", ["1/2", "1/4"], "Un pot de {F} de jus de goyavier.", true],
+    ["L", "cL", ["1/2"], "Une bouteille d'eau de {F}."],
+    ["L", "mL", ["1/2", "1/4", "3/4"], "Une recette de crêpes demande {F} de lait."],
+    ["L", "cL", ["a"], "Une bouteille de jus contient {M}.", false, 1],
+    ["kg", "g", ["1/2", "1/4", "3/4"], "Une recette demande {F} de farine."],
+    ["kg", "g", ["1/2", "1/4"], "Un sachet de {F} de piments.", true],
+    ["kg", "g", ["3/4", "1/2"], "Il faut {F} de tomates pour le rougail.", true],
+    ["kg", "g", ["1/2"], "Un sac de {F} de letchis.", true],
+    ["kg", "g", ["a"], "Un sac de riz pèse {M}.", true, 4],
+    ["km", "m", ["1/2", "1/4", "3/4"], "La plage est à {F} de l'école.", true],
+    ["km", "m", ["a"], "Une randonnée de {M}.", false, 4],
+    ["m", "cm", ["1/2", "1/4", "3/4"], "Un ruban de {F}."],
+    ["m", "cm", ["1/2", "3/4"], "Un morceau de canne à sucre de {F}.", true],
+    ["m", "cm", ["a"], "Une table mesure {M}.", false, 2],
+    ["t", "kg", ["1/2", "1/4", "3/4"], "Une remorque de {F} de cannes à sucre.", true]
+  ];
+  function situationC6(rng, n, d, g, p, a) {
+    const cle = a ? "a" : `${n}/${d}`;
+    const possibles = SITUATIONS_C6.filter(([u, v, fr, , , max]) => u === g && v === p && fr.includes(cle) && (!a || a <= max));
+    if (!possibles.length) return null;
+    const locaux = possibles.filter(s => s[4]);
+    const [, , , modele] = choisir(rng, locaux.length && rng() < 0.5 ? locaux : possibles);
+    const phrase = modele.replace("{F}", fracMesure(n, d, g)).replace("{M}", fracEnMots(n, d, g, a));
+    return `${phrase} Combien de ${MOTS[p]}${NB}?`;
+  }
+
+  // Une question de C6 : n⁄d de l'unité g (et `a` unités entières : un litre
+  // et demi), à écrire dans l'unité p. `forme` : nombre, phrase, situation.
+  // Rend null si la fraction ne tombe pas juste dans p, ou si aucune
+  // situation ne va.
+  function questionFrac(code, degre, rng, {n, d, g, p, a = 0, forme = "nombre"}) {
+    const unite = facteur(g, p) * MILLE;
+    if (unite % BigInt(d * 1000) !== 0n) return null;
+    const part = unite / BigInt(d);
+    const rep = BigInt(a) * unite + BigInt(n) * part;
+    const F = fracTexte(n, d);
+    const k = pgcd(n, d);
+    const gauche = fracMesure(n, d, g, a);
+    let texte;
+    let morceaux;
+    if (forme === "phrase") {
+      const phrase = `Combien de ${MOTS[p]} dans ${fracEnMots(n, d, g, a)}${NB}?`;
+      texte = phrase;
+      morceaux = {phrase, apres: p};
+    } else if (forme === "situation") {
+      const phrase = situationC6(rng, n, d, g, p, a);
+      if (!phrase) return null;
+      texte = phrase;
+      morceaux = {phrase, apres: p, situation: true};
+    } else {
+      texte = `${gauche} = ${CASE}${NB}${p}`;
+      morceaux = {avant: `${gauche} =`, apres: p};
+    }
+    // La correction : une ligne sous la double droite complétée.
+    const ligne = a ? `${mes(BigInt(a) * unite, p)} + ${mes(part, p)} = ${mes(rep, p)}`
+      : n === 1 ? `${F}${NB}${g} = ${mes(unite, p)} ÷ ${d} = ${mes(rep, p)}`
+        : `${F}${NB}${g} = ${n} × ${mes(part, p)} = ${mes(rep, p)}`;
+    // L'image (sous la barre partagée) : le calcul posé, sans le résultat.
+    // (Un et demi : une ligne ; avec « 1 L + 1⁄2 L » en plus, l'image
+    // débordait de sa zone au petit iPhone.)
+    const image = a ? [`${fracTexte(1, 2)}${NB}${g} : la moitié de 1${NB}${g}`]
+      : n === 1 ? [`${F}${NB}${g} = ${mes(unite, p)} ÷ ${d}`]
+        : [`${F}${NB}${g} = ${n} × ${fracTexte(1, d)}${NB}${g}`];
+    return q({
+      code, degre, forme: forme === "nombre" ? "nombre" : "phrase", texte, morceaux,
+      reponse: brut(rep), reponseTexte: mes(rep, p), unite: p,
+      resume: `${gauche} = ${mes(rep, p)}`,
+      relation: relationTexte(g, p), outil: "droite2",
+      // (Un et demi : la droite de l'unité entière d'avant à la suivante,
+      // « 4 km = 4 000 m » à gauche ; de 0 à 5 km, les graduations se
+      // chevauchaient au téléphone.)
+      droite: {haut: g, bas: p, parts: d, valeur: brut(unite), cherche: n, tout: 1, debut: a},
+      barre: {haut: g, bas: p, parts: d, valeur: brut(unite), colorees: n},
+      image, correction: [ligne],
+      grandeur: grandeurDe(g), relationCle: `${g}-${p}`, fraction: `${n / k}/${d / k}`,
+      sorteC6: a ? "demi-plus" : d === 10 ? "dixiemes" : `${n}/${d}`,
+      donnees: {type: "frac", n: String(n), d: String(d), a: String(a), de: g, vers: p},
+      cle: `${code}:${a ? `${a}+` : ""}${n}/${d}${g}>${p}`
+    });
+  }
+
+  // Les pourquoi de C6 (une ligne au petit téléphone).
+  function erreursC6(question, lu) {
+    const x = question.donnees;
+    if (!x || x.type !== "frac") return null;
+    const [n, d, a] = [Number(x.n), Number(x.d), Number(x.a)];
+    const unite = facteur(x.de, x.vers) * MILLE;
+    const part = unite / BigInt(d);
+    const rep = milli(question.reponse);
+    const F = fracTexte(n, d);
+    if (a) {
+      if (lu === BigInt(n) * part) return {erreur: 2, retour: `Et ${mes(BigInt(a) * unite, x.vers)} en plus.`};
+      if (lu === milli(`${a},5`)) return {erreur: 3, retour: `${ecrire(lu)}, ce serait des ${x.de}.`};
+      if (lu === BigInt(a) * unite + 5n * MILLE || lu === milli(Number(`${a}5`))) return {erreur: 4, retour: `${F}${NB}${x.de}, c'est ${mes(part, x.vers)}.`};
+      return null;
+    }
+    if (n > 1 && lu === part) return {erreur: 1, retour: `C'est ${fracTexte(1, d)}${NB}${x.de} : il en faut ${n}.`};
+    if (lu === rep * 10n || lu * 10n === rep) return {erreur: 2, retour: `${relationTexte(x.de, x.vers)}.`};
+    if (lu >= unite) return {erreur: 3, retour: `${F}${NB}${x.de}, c'est moins de 1${NB}${x.de}.`};
+    const colles = [n, d, Number(`${n}${d}`), Number(`${n}${d}0`), Number(`${n}${d}00`)].map(y => BigInt(y) * MILLE).concat([milli(`${n},${d}`)]);
+    if (colles.includes(lu)) return {erreur: 4, retour: `${F}, c'est ${n} part${n > 1 ? "s" : ""} sur ${d}.`};
+    return null;
+  }
+
+  // Les « ponts » de l'exerciseur (un demi, un quart, trois quarts) (« Un quart de litre, c'est : 25 cL ;
+  // 15 cL ; 250 cL ») : la question en mots, trois réponses au choix ; les
+  // fausses sont les vraies erreurs (une seule part, un zéro de trop ou de
+  // moins, les chiffres collés, plus de 1 L).
+  function enChoixFrac(x, rng) {
+    if (!x || x.donnees.type !== "frac" || Number(x.donnees.a) || x.donnees.d === "10") return null;
+    const v = x.donnees;
+    const [n, d] = [Number(v.n), Number(v.d)];
+    const unite = facteur(v.de, v.vers) * MILLE;
+    const part = unite / BigInt(d);
+    const rep = milli(x.reponse);
+    // (Les chiffres collés, « 340 g » pour 3⁄4 kg, seulement pour trois
+    // quarts ; un quart lu « 4 » ; quatre litres pour un quart, jamais
+    // pour un demi.)
+    const colle = n > 1 ? BigInt(Number(`${n}${d}`) * (unite >= 1000n * MILLE ? 10 : 1)) * MILLE : d === 4 ? BigInt(d) * MILLE : null;
+    const faux = [n > 1 ? part : null, colle, rep % 10000n === 0n ? rep / 10n : null, rep * 10n, d === 4 ? BigInt(d) * unite : null];
+    const propres = [];
+    faux.forEach(y => {
+      if (y !== null && y !== rep && y >= MILLE && y % MILLE === 0n && y <= 100000n * MILLE && !propres.includes(y)) propres.push(y);
+    });
+    if (propres.length < 2) return null;
+    const deux = [propres[0], choisir(rng, propres.slice(1))];
+    const choix = melanger(rng, [rep, ...deux]).map(ecrire);
+    const bon = choix.indexOf(ecrire(rep));
+    const pourquoi = {};
+    choix.forEach((c, k) => {
+      if (k === bon) return;
+      const e = erreursC6(x, milli(c.replace(new RegExp(FINE, "g"), "")));
+      pourquoi[k] = e ? e.retour : `${fracTexte(n, d)}${NB}${v.de} = ${mes(rep, v.vers)}.`;
+    });
+    const mots = fracEnMots(n, d, v.de);
+    // (« = … g » ensemble : seul en début de ligne, « … g » se lisait mal.)
+    const phrase = `${mots[0].toUpperCase()}${mots.slice(1)}${NB}=${NB}${CASE}${NB}${v.vers}`;
+    return Object.assign(x, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: v.vers, sorte: "valeur"},
+      choix, bon, pourquoi, cleBase: x.cle, cle: `${x.cle}:q`, sorteC6: "pont"
+    });
+  }
+
+  // « 75 cL = … L » : un quart, un demi ou trois quarts de l'unité, au
+  // choix (les trois, toujours dans le même ordre).
+  function questionPart(code, degre, rng) {
+    const [g, p] = choisir(rng, PAIRES_C6.trois);
+    const [n, d] = choisir(rng, [[1, 4], [1, 2], [3, 4]]);
+    const unite = facteur(g, p) * MILLE;
+    const part = unite / 4n;
+    const v = unite * BigInt(n) / BigInt(d);
+    const choix = ["1/4", "1/2", "3/4"].map(f => f.replace("/", FR));
+    const bon = choix.indexOf(fracTexte(n, d));
+    const pourquoi = {};
+    [[1, 4], [1, 2], [3, 4]].forEach(([a, b], k) => { if (k !== bon) pourquoi[k] = `${fracTexte(a, b)}${NB}${g}, c'est ${mes(unite * BigInt(a) / BigInt(b), p)}.`; });
+    const phrase = `${mes(v, p)} = ${CASE}${NB}${g}`;
+    const quarts = (n * 4) / d;
+    const ligne = quarts === 1 ? `${mes(v, p)} = ${mes(unite, p)} ÷ 4 = ${fracTexte(1, 4)}${NB}${g}`
+      : `${mes(v, p)} = ${quarts} × ${mes(part, p)} = ${fracTexte(n, d)}${NB}${g}`;
+    return q({
+      code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: g, sorte: "part"},
+      choix, bon, pourquoi, reponse: String(bon), reponseTexte: `${fracTexte(n, d)}${NB}${g}`, unite: g,
+      resume: `${mes(v, p)} = ${fracTexte(n, d)}${NB}${g}`, correction: [ligne],
+      relation: relationTexte(g, p), outil: "droite2",
+      droite: {haut: g, bas: p, parts: 4, valeur: brut(unite), cherche: quarts, tout: 1, partie: true},
+      barre: {haut: g, bas: p, parts: 4, valeur: brut(unite), colorees: 0},
+      // (L'image ne dit pas « 1⁄4 L = 100 cL ÷ 4 » : pour 25 cL, ce serait
+      // la réponse. La relation est déjà sur la barre.)
+      image: [`Je partage 1${NB}${g} en 4 parts égales.`],
+      grandeur: grandeurDe(g), relationCle: `${g}-${p}`, fraction: `${n}/${d}`, sorteC6: "part",
+      donnees: {type: "frac-part", valeur: brut(v), de: p, vers: g, n: String(n), d: String(d)},
+      cle: `${code}:part:${brut(v)}${p}>${g}`
+    });
+  }
+
+  // Les bandes de S002 (p. 11) : « 37⁄10 cm ou 4 + 3⁄10 cm : quelle bande
+  // est la plus longue ? » ; une fois sur quatre, la même longueur.
+  function questionBandes(code, degre, rng) {
+    let A;
+    do { A = entre(rng, 21, 69); } while (A % 10 === 0);
+    let b;
+    let c;
+    // (Comme dans S002, des longueurs proches : le nombre d'unités de
+    // l'une, ou celui d'après — « 37 » paraît plus grand que « 4 ».)
+    if (rng() < 0.25) { b = Math.floor(A / 10); c = A % 10; }
+    else {
+      do { b = Math.floor(A / 10) + entre(rng, 0, 1); c = entre(rng, 1, 9); } while (Math.abs(b * 10 + c - A) < 2);
+    }
+    const B = b * 10 + c;
+    const tA = `${fracTexte(A, 10)}${NB}cm`;
+    const tB = `${b} + ${fracTexte(c, 10)}${NB}cm`;
+    const choix = [tA, tB, "Même longueur"];
+    const bon = A === B ? 2 : A > B ? 0 : 1;
+    const dA = `${ecrire(milli(A) / 10n)}${NB}cm`;
+    const dB = `${ecrire(milli(B) / 10n)}${NB}cm`;
+    const pourquoi = {};
+    choix.forEach((x, k) => {
+      if (k === bon) return;
+      pourquoi[k] = bon === 2 ? `Les deux font ${dA}.` : k === 2 ? `${dA}, ce n'est pas ${dB}.` : `${x}, c'est ${k === 0 ? dA : dB}.`;
+    });
+    const phrase = "Quelle bande est la plus longue ?";
+    return q({
+      code, degre, forme: "qcm", texte: `${phrase} ${tA} ; ${tB}`,
+      morceaux: {phrase: `Une bande de ${tA}, une bande de ${tB}.`, consigne: "Laquelle est la plus longue ?"},
+      choix, bon, pourquoi, reponse: String(bon), reponseTexte: choix[bon], unite: "cm",
+      resume: bon === 2 ? `${tA} = ${tB} = ${dA}` : `${choix[bon]} : la plus longue`,
+      correction: [`${tA} = ${dA}`, `${tB} = ${dB}`],
+      relation: `${fracTexte(10, 10)}${NB}cm = 1${NB}cm`, outil: "lignes",
+      outilLignes: [`${fracTexte(10, 10)}${NB}cm = 1${NB}cm`, "J'écris chaque longueur avec une virgule."],
+      image: [`${tA} = ${Math.floor(A / 10)}${NB}cm + ${fracTexte(A % 10, 10)}${NB}cm`],
+      grandeur: "longueur", relationCle: "bandes", sorteC6: "bandes",
+      donnees: {type: "bandes", a: String(A), b: String(b), c: String(c)},
+      cle: `${code}:bandes:${A}|${b}+${c}`
+    });
+  }
+
+  // Les degrés : d1 un demi, un quart, un dixième ; d2 trois
+  // quarts, les dixièmes, et le millilitre ; d3 « un litre et demi », trois
+  // quarts et les dixièmes vers g, m, kg, mL.
+  function tirerC6(rng, degre, forme) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      let n;
+      let d;
+      let a = 0;
+      let paire;
+      if (degre === 1) {
+        paire = choisir(rng, PAIRES_C6.d1);
+        // (Et un dixième, « 1⁄10 L = 10 cL » : avec un demi et un quart
+        // seulement, neuf questions, et Je valide reprenait celles d'À toi.)
+        [n, d] = choisir(rng, [[1, 2], [1, 2], [1, 4], [1, 10]]);
+        if (paire[1] === "mm" && d !== 2) continue;
+      } else if (degre === 2) {
+        if (rng() < 0.65) { paire = choisir(rng, PAIRES_C6.trois); [n, d] = rng() < 0.8 ? [3, 4] : choisir(rng, [[1, 4], [1, 2]]); }
+        else { paire = choisir(rng, PAIRES_C6.trois); n = entre(rng, 1, 9); d = 10; }
+      } else {
+        const r = rng();
+        if (r < 0.4) { paire = choisir(rng, PAIRES_C6.demi); [n, d] = [1, 2]; a = entre(rng, 1, 4); }
+        else if (r < 0.7) { paire = choisir(rng, PAIRES_C6.mille); [n, d] = choisir(rng, [[3, 4], [1, 4], [3, 4]]); }
+        else { paire = choisir(rng, PAIRES_C6.mille); n = entre(rng, 2, 9); d = 10; }
+      }
+      const [g, p] = paire;
+      const x = questionFrac("C6", degre, rng, {n, d, g, p, a, forme: forme === "phrase" || forme === "situation" ? forme : "nombre"});
+      if (x) return x;
+    }
+    return null;
+  }
+  // Je valide : une phrase en 3e, un pont au choix en 5e, une situation en
+  // 7e, « 75 cL = … L » en 9e. À toi : une question sur quatre en phrase,
+  // une sur quatre en situation ; les ponts aux places 5, 12 et 23 ;
+  // « … = … L » aux places 9 et 18 ; les bandes à la 21e.
+  function formesC6(usage, rng) {
+    const f = formesConvertir(usage, rng);
+    Object.keys(f).forEach(i => { if (f[i] === "objet") f[i] = "situation"; });
+    if (usage === "valide") { f[4] = "choix"; f[6] = "situation"; f[8] = "part"; }
+    if (usage === "entraine") {
+      [4, 11, 22].forEach(i => { f[i] = "choix"; });
+      [8, 17].forEach(i => { f[i] = "part"; });
+      f[20] = "bandes";
+    }
+    return f;
+  }
+  ETAPES.C6 = {
+    clesExemples: ["C6:3/4L>cL", "C6:1/2km>m", "C6:3/4m>cm"],
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "part") return questionPart("C6", degre, rng);
+      if (forme === "bandes") return questionBandes("C6", degre, rng);
+      if (forme === "choix") {
+        for (let essai = 0; essai < 20; essai += 1) {
+          const x = enChoixFrac(tirerC6(rng, Math.min(degre, 2), "nombre"), rng);
+          if (x) return Object.assign(x, {degre});
+        }
+        return null;
+      }
+      return tirerC6(rng, degre, forme);
+    },
+    formes: formesC6,
+    // (Dans Je valide : une même paire d'unités deux fois au plus, une même
+    // fraction trois fois au plus.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide") return true;
+      if (serie.filter(x => x.relationCle === question.relationCle).length >= 2) return false;
+      return serie.filter(x => x.fraction && x.fraction === question.fraction).length < 3;
+    },
+    valide: serieConvertirBonne,
+    erreurs: erreursC6
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {

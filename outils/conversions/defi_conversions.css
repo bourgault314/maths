@@ -1011,3 +1011,26 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .mini-cartes span.faux { border-color: var(--red); background: var(--red-soft); color: var(--red); text-decoration: line-through; }
 .mini-cartes span.oublie { border: .1875rem solid var(--green); color: var(--green); }
 .reponse-bonne .egales { margin-top: .375rem; }
+
+/* Lot B2-2a (C6, choix de Gwenaël du 18/11) : une fraction en colonne,
+   le numérateur sur le dénominateur ; la barre de fraction U+2044 reste
+   dans le texte (non affichée), pour que le texte lu soit « 3⁄4 ». */
+.frac { position: relative; display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; font-size: .8em; line-height: 1.05; margin: 0 .08em; }
+.frac .fn { border-bottom: .1em solid currentColor; padding: 0 .14em .03em; }
+.frac .fd { padding: .03em .14em 0; }
+/* (Dans le panneau du pourquoi, une fraction plus serrée : « Tu as
+   choisi : 1⁄2 » et le pourquoi gardaient deux hauteurs de ligne, et le
+   panneau de Je valide passait à 75 % au petit iPhone.) */
+.panneau .frac { font-size: .66em; line-height: 1.05; margin: -.25em .08em; }
+.panneau .frac .fn, .panneau .frac .fd { padding-top: 0; padding-bottom: 0; }
+.frac-unite { white-space: nowrap; }
+.frac .fs { display: none; }
+.dessin.droite2, .dessin.barre2 { max-width: 21.25rem; }
+.dessin.droite2.a-toucher, .dessin.barre2.a-toucher { cursor: pointer; }
+.droite2-boite, .barre2-boite { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+/* (En projection, une fraction reste lisible du fond de la salle :
+   17 px au moins, comme tout le texte.) */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .frac { font-size: max(.8em, 17px); }
+  .panneau .frac { font-size: max(.66em, 17px); }
+}

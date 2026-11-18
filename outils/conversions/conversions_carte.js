@@ -149,7 +149,7 @@
     {code: "C3", rang: 15, palier: 2, famille: "convertir", classe: "CM1", nom: "Avec des nombres décimaux", exemple: "3,5 m = 350 cm"},
     {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", nomCourt: "Mètre, gramme, litre", exemple: "41 dg = 4,1 g"},
     {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", nomCourt: "Plusieurs écritures", exemple: "215 cm = 2,15 m"},
-    {code: "C6", rang: 18, palier: 2, famille: "convertir", classe: "CM1", nom: "Les fractions usuelles", exemple: "¾ m = 75 cm"},
+    {code: "C6", rang: 18, palier: 2, famille: "convertir", classe: "CM1", nom: "Les fractions usuelles", exemple: "3⁄4 m = 75 cm"},
     {code: "C7", rang: 19, palier: 2, famille: "convertir", classe: "CM1", nom: "Ranger des mesures", exemple: ""},
     {code: "C8", rang: 20, palier: 2, famille: "convertir", classe: "CM1", nom: "Calculer avec deux unités", exemple: "1 L − 25 cL"},
     {code: "D2", rang: 21, palier: 1, famille: "durees", classe: "CE1", nom: "La demi-heure, le quart d'heure", exemple: ""},
@@ -758,6 +758,37 @@
       // (Six égalités courtes : une police large les gardait sur deux
       // lignes au-delà de 16 caractères, « 3 g + 5 cg = 3,05 g ».)
       relations: ["1 600 m = 1,6 km", "2 100 mg = 2,1 g", "34 mm = 3,4 cm", "305 cg = 3,05 g", "205 cm = 2,05 m", "250 cL = 2,5 L"],
+      reperes: []
+    },
+    // Les fractions usuelles (lot B2-2a ; S002 p. 15-16 : ½ km = 500 m ;
+    // ¾ m = 3 × ¼ m = 3 × 25 cm = 75 cm ; ¼ kg = 250 g ; ½ t = 500 kg).
+    // Choix de Gwenaël du 18/11 : l'outil, la double droite graduée ;
+    // l'image, la barre partagée ; les fractions en colonne (la barre de
+    // fraction U+2044, « 3⁄4 », que la page pose en colonne). On te montre :
+    // le litre qui se partage en 4, la double droite du kilomètre, puis
+    // 3⁄4 m = 3 × 25 cm.
+    C6: {
+      pret: true,
+      aide: {outil: "droite2", image: "barre2"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "3⁄4 L =", reponse: "75", apres: "cL"},
+          consigne: "Touche la barre de 1 L :\nelle se partage en 4.",
+          aide: {type: "barre2", haut: "L", bas: "cL", parts: 4, valeur: "100", colorees: 3},
+          apres: ["25 cL + 25 cL + 25 cL", "= 75 cL"],
+          legende: "1 L = 100 cL, donc 1⁄4 L = 25 cL."},
+        {etiquette: "Je représente", question: {avant: "1⁄2 km =", reponse: "500", apres: "m"},
+          relation: ["1 km = 1 000 m", "1⁄2 km, c'est la moitié de 1 km"],
+          aide: {type: "droite2", haut: "km", bas: "m", parts: 2, valeur: "1000", cherche: 1, tout: 1},
+          apres: ["La moitié de 1 000 m", "= 500 m"]},
+        {etiquette: "Je vérifie", question: {avant: "3⁄4 m =", reponse: "75", apres: "cm"},
+          relation: ["1⁄4 m = 100 cm ÷ 4 = 25 cm", "donc 3⁄4 m = 3 × 1⁄4 m"],
+          aide: {type: "droite2", haut: "m", bas: "cm", parts: 4, valeur: "100", cherche: 3, tout: 1},
+          apres: ["3 × 25 cm", "= 75 cm"]}
+      ],
+      retenir: "Je partage l'unité : 1 L = 100 cL, donc 1⁄4 L = 100 cL ÷ 4 = 25 cL.\n3⁄4 L, c'est 3 quarts : 3 × 25 cL = 75 cL.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1⁄2 L = 50 cL", "1⁄4 L = 25 cL", "3⁄4 kg = 750 g", "1⁄2 km = 500 m", "1⁄10 L = 10 cL", "1⁄2 t = 500 kg"],
       reperes: []
     }
   };
