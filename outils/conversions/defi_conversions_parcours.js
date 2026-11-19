@@ -94,8 +94,10 @@
   CODES.forEach((c, i) => { RANG[c] = i + 1; });
   const RANG_MAX = CODES.length;
   const MOTIF_ETAPE = /^(?:R(?:[1-9]|10)|P[1-6]|C[1-9]|A[1-5]|V[1-4]|D[1-7]|G1|Q(?:[1-9]|1[01])|E1)$/;
-  // (Lot B1-1 : la planche 7, l12, m9, c6 et c7.)
-  const MOTIF_REPERE = /^(?:l(?:[1-9]|1[0-2])|m[1-9]|c[1-7]|a[1-7]|v[1-5])$/;
+  // (Lot B1-1 : la planche 7, l12, m9, c6 et c7. Lot R1-refonte : l13 la
+  // poignée de porte, l14 les 10 terrains de foot, l15 la main. À reporter
+  // sur le serveur, phase D.)
+  const MOTIF_REPERE = /^(?:l(?:[1-9]|1[0-5])|m[1-9]|c[1-7]|a[1-7]|v[1-5])$/;
 
   const SEUILS = Object.freeze({
     // Je valide : 10 questions, 8 justes ; arrêt dès la 3e erreur (« Je ne

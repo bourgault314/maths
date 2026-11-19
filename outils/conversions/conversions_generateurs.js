@@ -409,13 +409,25 @@
   const ETAPES = {};
 
   // --------------------------------------------- R1 · Mes premiers repères
-  const ORDRE_UNITES = {longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]};
+  // Lot R1-refonte (18/11, avec Gwenaël) : un repère par unité du CE2, dix
+  // en tout (la carte). Les façons de demander, de la plus facile à la plus
+  // dure : relier ; « Qu'est-ce qui mesure environ 1 m ? » (les dessins à
+  // toucher, comme au palier 2) ; l'unité ; la valeur parmi trois ; la
+  // valeur au pavé ; la règle à lire (le programme du CE1 : mesurer avec la
+  // règle). (« Quel segment mesure environ 5 cm ? », essayé le 18/11, est
+  // retiré le 19/11 par Gwenaël : un écran ne montre pas les vrais
+  // centimètres ; le geste réel reste dans On te montre.) Le décimètre
+  // entre dans les unités (le programme du CE2 : m, dm, cm, mm, km).
+  const ORDRE_UNITES = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]};
 
   function questionRepereInterne(code, degre, rep, forme, rng) {
     const r = CARTE.repere(rep);
     const v = milli(r.nombre);
     const fin = r.fin ? ` ${r.fin}` : "";
     const resume = `${r.objet} : ${r.valeur}`;
+    // (Lot R1-refonte : l'outil de À toi est la carte du repère, son dessin
+    // et sa mesure ; l'image, son dessin seul.)
+    const outil = code === "R1" ? "carte-repere" : "reperes-unites";
     let choix;
     let bon;
     let texte;
@@ -436,7 +448,7 @@
         code, degre, forme: "phrase", texte: CARTE.typo(`${r.debut} ${CASE}${NB}${r.unite}${fin}`),
         morceaux: {phrase, apres, sorte: "saisie"},
         reponse: brut(v), reponseTexte: `${ecrire(v)}${NB}${r.unite}`,
-        unite: r.unite, resume, repere: rep, outil: "reperes-unites",
+        unite: r.unite, resume, repere: rep, outil, grandeur: r.grandeur,
         image: [], correction: [resume],
         donnees: {type: "repere", repere: rep, sorte: "saisie"},
         cle: `${code}:${rep}:saisie`
@@ -461,7 +473,7 @@
     return q({
       code, degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: forme === "unite" ? "" : r.unite, sorte: forme},
       choix, bon, reponse: choix[bon], reponseTexte: forme === "unite" ? `${ecrire(v)}${NB}${r.unite}` : `${choix[bon]}${NB}${r.unite}`,
-      unite: r.unite, resume, repere: rep, outil: "reperes-unites",
+      unite: r.unite, resume, repere: rep, outil, grandeur: r.grandeur,
       image: [], correction: [resume],
       donnees: {type: "repere", repere: rep, sorte: forme},
       cle: `${code}:${rep}:${forme}`
@@ -469,33 +481,41 @@
   }
 
   // « Associer » (lot A2 bis, la question qui manquait à l'exerciseur) :
-  // 3 objets, 3 mesures, à relier au doigt. Degré 2 : trois grandeurs
+  // 3 objets, 3 mesures, à relier au doigt. Degrés 1 et 2 : trois grandeurs
   // différentes ; degré 3 : la même grandeur (il faut connaître le repère,
-  // l'unité ne suffit pas). Jamais deux fois le même objet (« Une voiture »
-  // mesure 4 m ET pèse 1 t), jamais deux fois la même mesure.
+  // l'unité ne suffit pas). Jamais deux fois le même objet, jamais deux
+  // fois la même mesure.
   // `eviter` : les repères des questions juste avant (lot A2 ter : pas deux
   // fois le même repère à moins de 5 questions dans À toi).
-  // Lot 3b-2 : au téléphone peu haut, le nom d'un objet à relier tient en
-  // deux lignes sous son dessin.
-  // (Lot 3b-3 : deux de plus, pour que le dessin grandisse au téléphone
-  // sans que le nom passe sur trois lignes.)
-  const NOMS_COURTS = {l1: "La plus petite graduation", l7: "Saint-Pierre à Saint-Denis", m5: "Un pack d'eau"};
-  function questionAssocier(code, degre, rng, eviter = []) {
-    const tous = CARTE.etape(code).reperes.map(c => CARTE.repere(c));
-    const libres = tous.filter(r => !eviter.includes(r.code));
-    const reps = libres.length >= 3 ? libres : tous;
-    let trois = [];
-    for (let essai = 0; essai < 60; essai += 1) {
-      if (degre === 3) {
-        const possibles = ["longueur", "masse"].filter(g => reps.filter(r => r.grandeur === g).length >= 3);
-        const g = choisir(rng, possibles.length ? possibles : ["longueur", "masse"]);
-        trois = melanger(rng, (possibles.length ? reps : tous).filter(r => r.grandeur === g)).slice(0, 3);
-      } else trois = melanger(rng, reps).slice(0, 3);
-      const objets = new Set(trois.map(r => r.objet));
-      const mesures = new Set(trois.map(r => `${r.nombre}${r.unite}`));
-      const grandeurs = new Set(trois.map(r => r.grandeur));
-      if (trois.length === 3 && objets.size === 3 && mesures.size === 3 && (degre === 3 || grandeurs.size === 3)) break;
+  // Lot R1-refonte : tous les triplets possibles sont rangés une fois pour
+  // toutes ; on prend un triplet libre (aucun repère à éviter), sinon rien
+  // (la série tire une autre question : avant, un triplet qui ne
+  // respectait pas la règle pouvait sortir sans bruit).
+  const NOMS_COURTS = {l1: "La plus petite graduation", l10: "Mon petit doigt", l13: "La poignée de la porte", l14: "10 terrains", l15: "Ma main"};
+  const NOMS_RELIER = {l1: "La plus petite graduation", l14: "10 terrains de foot"};
+  const TRIPLETS_R1 = {};
+  function tripletsR1(degre) {
+    const cle = degre === 3 ? 3 : 1;
+    if (TRIPLETS_R1[cle]) return TRIPLETS_R1[cle];
+    const r = CARTE.etape("R1").reperes.map(c => CARTE.repere(c));
+    const liste = [];
+    for (let a = 0; a < r.length; a += 1) {
+      for (let b = a + 1; b < r.length; b += 1) {
+        for (let c = b + 1; c < r.length; c += 1) {
+          const t = [r[a], r[b], r[c]];
+          const g = new Set(t.map(x => x.grandeur));
+          const mesures = new Set(t.map(x => `${x.nombre}${x.unite}`));
+          if (mesures.size === 3 && (cle === 3 ? g.size === 1 : g.size === 3)) liste.push(t);
+        }
+      }
     }
+    TRIPLETS_R1[cle] = liste;
+    return liste;
+  }
+  function questionAssocier(code, degre, rng, eviter = []) {
+    const libres = tripletsR1(degre).filter(t => !t.some(r => eviter.includes(r.code)));
+    if (!libres.length) return null;
+    const trois = melanger(rng, choisir(rng, libres));
     const mesureDe = r => CARTE.typo(`${ecrire(milli(r.nombre))} ${r.unite}`);
     // Lot A2 ter (Gwenaël, le 13/11 : « chacun est en face de chacun, c'est
     // normal ? ») : jamais les trois mesures en face de leur objet.
@@ -504,15 +524,21 @@
     const mesures = ordreMesures.map(k => mesureDe(trois[k]));
     const bonnes = trois.map((r, k) => ordreMesures.indexOf(k));
     const consigne = "Relie chaque objet à sa mesure.";
-    const correction = trois.map(r => CARTE.typo(`${r.objet} : ${r.valeur}`));
+    // (Lot R1-refonte : la correction en peu de mots, « La poignée de la
+    // porte : environ 1 m » ; en entier, trois lignes longues réduisaient
+    // l'aide à 77 % au petit iPhone avec une police large.)
+    const correction = trois.map(r => CARTE.typo(`${NOMS_COURTS[r.code] && r.code !== "l14" ? NOMS_COURTS[r.code] : r.code === "l14" ? "10 terrains de foot" : r.objet} : ${/environ/.test(r.valeur) ? "environ " : ""}${mesureDe(r)}`));
     return q({
       code, degre, forme: "associer",
       texte: CARTE.typo(`${consigne} ${trois.map(r => r.objet).join(" ; ")} — ${mesures.join(" ; ")}`),
       morceaux: {phrase: consigne},
-      objets: trois.map(r => Object.assign({texte: r.objet, repere: r.code}, NOMS_COURTS[r.code] ? {court: NOMS_COURTS[r.code]} : {})), mesures, bonnes,
+      // (Lot R1-refonte : sur grand écran aussi, « La plus petite
+      // graduation » et « 10 terrains de foot » : le nom entier sortait de
+      // son bouton en projection avec une police large.)
+      objets: trois.map(r => Object.assign({texte: NOMS_RELIER[r.code] || r.objet, repere: r.code}, NOMS_COURTS[r.code] ? {court: NOMS_COURTS[r.code]} : {})), mesures, bonnes,
       reponse: bonnes.join(","), reponseTexte: trois.map(r => `${r.objet} : ${mesureDe(r)}`).join(" ; "),
       resume: trois.map(r => `${r.objet} : ${mesureDe(r)}`).join(" ; "),
-      reperes: trois.map(r => r.code), unites: trois.map(r => r.unite), outil: "reperes-unites",
+      reperes: trois.map(r => r.code), unites: trois.map(r => r.unite), outil: "carte-repere",
       correction,
       donnees: {type: "associer", reperes: trois.map(r => r.code), mesures: mesures.slice()},
       cle: `${code}:assoc:${trois.map(r => r.code).sort().join("-")}`
@@ -526,8 +552,12 @@
   // les traits comptés au lieu des espaces (6 cm). Le début n'est jamais 1
   // (« lu au bout » et « traits comptés » y seraient la même réponse).
   // [nom, « le … » dans la correction, longueur min, max (cm)]
-  const OBJETS_REGLE = {crayon: ["ce crayon", "Le crayon", 5, 8], gomme: ["cette gomme", "La gomme", 2, 4], trombone: ["ce trombone", "Le trombone", 3, 5],
-    clou: ["ce clou", "Le clou", 2, 5]};
+  // Lot R1-refonte (Gwenaël, 18/11 : « toujours 3 » pour le clou et la
+  // gomme) : c'était le hasard, mais la gomme n'allait que de 2 à 4 cm ;
+  // les longueurs s'élargissent, et une série ne reprend jamais la même
+  // longueur deux fois de suite (`jamais`).
+  const OBJETS_REGLE = {crayon: ["ce crayon", "Le crayon", 4, 8], gomme: ["cette gomme", "La gomme", 2, 6], trombone: ["ce trombone", "Le trombone", 2, 5],
+    clou: ["ce clou", "Le clou", 2, 7]};
   function questionRegle(degre, rng) {
     const objet = choisir(rng, Object.keys(OBJETS_REGLE));
     const [ce, Le, a, b] = OBJETS_REGLE[objet];
@@ -540,7 +570,7 @@
       code: "R1", degre, forme: "qcm", texte: phrase,
       morceaux: {phrase, apres: "cm", sorte: "valeur", regle: {objet, debut, fin}},
       choix, bon: choix.indexOf(String(longueur)), reponse: String(longueur), reponseTexte: `${longueur}${NB}cm`, unite: "cm",
-      resume: `${Le} mesure ${longueur}${NB}cm`, outil: "regle",
+      resume: `${Le} mesure ${longueur}${NB}cm`, outil: "regle", longueurRegle: longueur,
       image: [`${Le} commence à ${debut}${NB}cm, pas à 0.`, `Je compte les espaces de 1${NB}cm, pas les traits.`],
       correction: [`${Le} va de ${debut}${NB}cm à ${fin}${NB}cm.`, `${fin} − ${debut} = ${longueur} : ${Le.toLowerCase()} mesure ${longueur}${NB}cm.`],
       donnees: {type: "regle", objet, debut, fin},
@@ -548,56 +578,85 @@
     });
   }
 
+  // Les repères d'une même grandeur, dans R1 (« Qu'est-ce qui pèse environ
+  // 1 kg ? » : les trois masses). La contenance n'en a que deux : pas
+  // d'objet à trouver.
+  function poolR1(rep) {
+    const g = CARTE.repere(rep).grandeur;
+    return CARTE.etape("R1").reperes.filter(c => CARTE.repere(c).grandeur === g);
+  }
+  // (Les repères qu'une question demande ou montre.)
+  const repsR1 = x => (x.forme === "associer" ? x.reperes : x.repere ? [x.repere] : []);
+
   ETAPES.R1 = {
     exclureExemples: false,
-    // Associer : la dernière question de Je valide, 3 fois sur 25 dans À toi.
-    // Lot 3b : la valeur au pavé (« saisie ») en 6e et en 8e de Je valide.
+    // Lot R1-refonte : les formes, de la plus facile à la plus dure.
+    // Je valide : relier, l'objet à trouver et l'unité au degré 1 ;
+    // l'unité, la valeur, l'objet, la règle au degré 2 ; le pavé, la
+    // valeur, le pavé au degré 3. À toi : un bon élève (9 questions) voit
+    // relier, l'unité, l'objet, la règle, la valeur et le pavé.
     formes(usage) {
-      // Lot 3b-2 : la règle à lire en 3e de Je valide, trois fois dans À toi.
-      if (usage === "valide") return {2: "regle", 5: "saisie", 7: "saisie", 9: "associer"};
-      if (usage === "entraine") return {3: "regle", 7: "associer", 11: "regle", 15: "associer", 19: "regle", 22: "associer"};
+      if (usage === "valide") return {0: "associer", 1: "quoi", 2: "unite", 3: "unite", 4: "valeur", 5: "quoi", 6: "regle", 7: "saisie", 8: "valeur", 9: "saisie"};
+      if (usage === "entraine") {
+        return {0: "associer", 1: "unite", 2: "quoi", 3: "unite", 4: "quoi", 5: "unite", 6: "regle", 7: "valeur", 8: "saisie", 9: "quoi",
+          10: "associer", 11: "quoi", 12: "valeur", 13: "regle", 14: "unite", 15: "saisie", 16: "valeur", 17: "quoi", 18: "associer",
+          19: "saisie", 20: "regle", 21: "quoi", 22: "valeur", 23: "saisie", 24: "unite"};
+      }
       return {};
     },
     // Lot A2 ter (Gwenaël, le 13/11 : « Une voiture pèse environ … » puis
     // « Une voiture pèse environ … t » dans la même série) : dans Je valide
-    // (et le test, On revoit), JAMAIS deux fois le même repère — les 9
-    // questions à choix ont 9 repères différents ; la question à relier, la
-    // 10e, en reprend forcément trois. Dans À toi, pas deux fois le même
-    // repère à moins de 5 questions d'écart (relier compris). Remplace le
-    // « un seul repère peut revenir » du 11/11 au soir.
+    // (et le test, On revoit), JAMAIS deux fois le même repère demandé ; la
+    // question à relier en reprend trois. Dans À toi, pas deux fois le même
+    // repère à moins de 5 questions d'écart (relier compris). Lot
+    // R1-refonte : la règle à lire ne reprend pas la longueur de la règle
+    // d'avant.
     jamais(serie, question, usage) {
-      const reps = x => (x.forme === "associer" ? x.reperes : [x.repere]);
-      if (usage === "entraine" || usage === "exerciseur") {
-        return !serie.slice(-4).some(y => reps(y).some(r => reps(question).includes(r)));
+      if (question.longueurRegle) {
+        const avant = serie.filter(y => y.longueurRegle);
+        if (avant.length && avant[avant.length - 1].longueurRegle === question.longueurRegle) return false;
       }
-      if (question.forme === "associer") return true;
-      return !serie.some(y => y.forme !== "associer" && y.repere === question.repere);
+      if (usage === "entraine" || usage === "exerciseur") {
+        return !serie.slice(-4).some(y => repsR1(y).some(r => repsR1(question).includes(r)));
+      }
+      if (!repsR1(question).length || question.forme === "associer") return true;
+      return !serie.some(y => y.forme !== "associer" && repsR1(y).includes(question.repere));
     },
     tirer(rng, degre, i, usage, forme, serie = []) {
-      const recents = serie.slice(-4).flatMap(x => (x.forme === "associer" ? x.reperes : [x.repere]));
-      if (forme === "associer") return questionAssocier("R1", degre, rng, recents);
+      const recents = serie.slice(-4).flatMap(repsR1);
+      if (forme === "associer") return questionAssocier("R1", degre, rng, usage === "entraine" || usage === "exerciseur" ? recents : []);
       if (forme === "regle") return questionRegle(degre, rng);
+      // (Les repères des 4 questions d'avant sont écartés d'emblée dans À toi :
+      // la série ne tire plus des questions que `jamais` refuserait.)
       let reps = CARTE.etape("R1").reperes;
-      // Avant une question à relier de À toi, les quatre questions à choix
-      // laissent libre ce qu'il lui faudra : un repère de chaque grandeur
-      // avant celle de degré 2 (place 8), trois repères d'une même grandeur
-      // avant celles de degré 3 (places 16 et 23).
+      if (usage === "entraine" || usage === "exerciseur") {
+        const libres = reps.filter(c => !recents.includes(c));
+        if (libres.length) reps = libres;
+      }
+      // Avant une question à relier de À toi, les questions d'avant laissent
+      // libre ce qu'il lui faudra (un triplet sans repère des 4 questions
+      // d'avant).
       if (usage === "entraine") {
-        [[8, 2], [16, 3], [23, 3]].forEach(([j, d]) => {
-          const ecart = j - (i + 1);
+        const f = this.formes("entraine");
+        Object.keys(f).filter(j => f[j] === "associer").map(Number).forEach(j => {
+          const ecart = j - i;
           if (ecart < 1 || ecart > 4) return;
-          const dejaLa = serie.slice(Math.max(0, j - 5)).flatMap(x => (x.forme === "associer" ? x.reperes : [x.repere]));
-          const libres = pris => {
-            const n = g => CARTE.etape("R1").reperes.filter(c => CARTE.repere(c).grandeur === g && !pris.includes(c)).length;
-            return d === 2 ? ["longueur", "masse", "contenance"].every(g => n(g) >= 1) : n("longueur") >= 3 || n("masse") >= 3;
-          };
-          reps = reps.filter(c => libres(dejaLa.concat(c)));
+          const d = j >= 15 ? 3 : j >= 6 ? 2 : 1;
+          const deja = serie.slice(Math.max(0, j - 4)).flatMap(repsR1);
+          reps = reps.filter(c => tripletsR1(d).some(t => !t.some(r => deja.includes(r.code) || r.code === c)));
         });
+        if (!reps.length) reps = CARTE.etape("R1").reperes.filter(c => !recents.includes(c));
+      }
+      if (forme === "quoi") {
+        const possibles = reps.filter(c => poolR1(c).length >= 3);
+        if (!possibles.length) return null;
+        const rep = choisir(rng, possibles);
+        return questionQuoi("R1", degre, rep, rng, poolR1(rep));
       }
       // Lot 3b (carte v4 : « demander aussi la valeur sans choix ») : trois
       // façons de demander un même repère — l'unité, la valeur parmi trois,
       // la valeur au pavé. Une même question ne revient pas dans une série.
-      const sorte = forme === "saisie" ? "saisie" : degre === 1 ? "unite"
+      const sorte = forme === "saisie" || forme === "unite" || forme === "valeur" ? forme : degre === 1 ? "unite"
         : degre === 3 ? choisir(rng, ["valeur", "saisie"]) : choisir(rng, ["unite", "valeur", "saisie"]);
       return questionRepereInterne("R1", degre, choisir(rng, reps), sorte, rng);
     }
@@ -607,6 +666,17 @@
   // Une unité qu'on utilise vraiment, et une seule plausible. Longueurs :
   // 4 choix (mm, cm, m, km) ; masses et contenances : 3 (le cycle 2 n'en a
   // pas plus).
+  // Lot R1-refonte (Gwenaël, 18/11 : « trouver l'ordre de grandeur ou
+  // trouver qu'est-ce que c'est comme grandeur, c'est pas pareil ») : trois
+  // travaux séparés, du plus facile au plus dur —
+  //   1. Quelle grandeur ? « Qu'est-ce que je mesure ? », et les unités de
+  //      grandeurs différentes (« Une brique de lait : 1 … » : cm, g, L) ;
+  //   2. Quelle unité, dans la même grandeur ? (mm, cm, m, km ; g, kg, t ;
+  //      cL, dL, L ; min, h, jours) : on compare à ses repères ;
+  //   3. Quel nombre, avec la même unité ? (« La hauteur d'une porte :
+  //      2 m, 20 m ou 200 m ? ») : l'ordre de grandeur du nombre.
+  // La correction cite les repères qui permettent de trancher (« Plus lourd
+  // qu'un trombone, plus léger qu'un paquet de riz. »).
   const OBJETS_UNITE = [
     ["La longueur d'un crayon :", "15", "cm", 1], ["La hauteur d'une porte :", "2", "m", 1], ["La longueur d'une piscine :", "25", "m", 1],
     ["La largeur d'un cahier :", "17", "cm", 1], ["La longueur d'une règle :", "20", "cm", 1], ["Un cartable :", "4", "kg", 1],
@@ -621,11 +691,11 @@
     ["Un petit verre de jus :", "2", "dL", 3], ["Une cuillère de sirop :", "1", "cL", 3], ["L'épaisseur d'un carton :", "3", "mm", 3],
     // Un exemple de J'apprends (degré 0) : jamais dans une série. « De
     // Saint-Denis à Saint-Paul » n'en est plus un (lot A2 bis).
-    ["De Saint-Denis à Saint-Paul :", "30", "km", 2], ["Un bébé à la naissance :", "3", "kg", 0],
+    ["De Saint-Denis à Saint-Paul :", "30", "km", 2], ["Un bébé à la naissance :", "3", "kg", 2],
     // Les objets de l'exerciseur (lot A2 bis), avec ses mesures.
     ["La longueur d'un lit :", "2", "m", 1], ["Un œuf :", "60", "g", 1], ["Une baguette de pain :", "250", "g", 1],
     ["Un gros dictionnaire :", "1", "kg", 1], ["Un grand arrosoir plein :", "10", "L", 1],
-    ["De la maison à l'école : environ", "1", "km", 2], ["L'épaisseur d'une carte bancaire :", "1", "mm", 3],
+    ["De la maison à l'école : environ", "1", "km", 2], ["L'épaisseur d'une règle en plastique :", "3", "mm", 3],
     ["L'altitude d'un avion en vol : environ", "10", "km", 3], ["Une baleine bleue : environ", "150", "t", 3],
     // Lot A2 ter : La Réunion (Gwenaël, le 13/11 : « Des trucs de La Réunion ? »).
     ["Une bouteille de jus de goyavier :", "1", "L", 1], ["Un sac de letchis :", "2", "kg", 1], ["La longueur d'un Car Jaune :", "12", "m", 1],
@@ -636,7 +706,11 @@
     ["Le pied d'un adulte mesure environ", "30", "cm", 2], ["Une coccinelle mesure environ", "7", "mm", 2],
     ["La largeur d'une salle de classe : environ", "6", "m", 2], ["Une araignée pèse environ", "1", "g", 3],
     ["Un sac de riz :", "5", "kg", 1], ["Une canette de jus :", "33", "cL", 2], ["Une mangue : environ", "300", "g", 2],
-    ["La hauteur d'une canne à sucre : environ", "3", "m", 2], ["Un ananas Victoria : environ", "800", "g", 3]
+    ["La hauteur d'une canne à sucre : environ", "3", "m", 2], ["Un ananas Victoria : environ", "800", "g", 3],
+    // Lot R1-refonte : les exemples du programme du cycle 2 (S440 : la
+    // trousse, la feuille, le seau d'eau, la table de la classe).
+    ["La longueur d'une trousse :", "20", "cm", 1], ["La hauteur d'une table de classe : environ", "80", "cm", 2],
+    ["Une feuille de papier : environ", "5", "g", 2], ["Un seau plein d'eau :", "10", "L", 1], ["Un seau plein d'eau : environ", "10", "kg", 3]
   ];
   // Lot 3b (carte v4) : « Quelle unité pour… ? », sans nombre (la question
   // de l'exerciseur, perdue). Les mauvaises réponses : une autre grandeur
@@ -694,7 +768,8 @@
     ["De La Réunion à Paris en avion : environ", "11", "h", 3], ["Un mois : environ", "30", "jours", 3], ["Une chanson :", "3", "min", 3],
     ["Laisser lever la pâte à pain :", "2", "h", 3],
     // Lot A2 ter : La Réunion.
-    ["Manger un samoussa :", "2", "min", 1], ["Faire cuire un cari : environ", "1", "h", 2],
+    // (Lot R1-refonte : « Manger un samoussa : 2 min » retiré, Gwenaël, 18/11.)
+    ["Prendre une douche : environ", "5", "min", 1], ["Faire cuire un cari : environ", "1", "h", 2],
     ["Le trajet en Car Jaune de Saint-Pierre à Saint-Denis : environ", "2", "h", 2], ["La marche jusqu'au Trou de Fer : environ", "2", "h", 3],
     ["Le Grand Raid, pour les derniers coureurs : environ", "3", "jours", 3]
   ];
@@ -729,63 +804,146 @@
     });
   }
 
-  function questionSansNombre(degre, rng) {
-    const vivier = SANS_NOMBRE.map((o, i) => [o, i]).filter(([o]) => o[3] === degre);
-    const [[quoi, unite, fausse], i] = choisir(rng, vivier);
+  // Les repères de « Mes premiers repères », du plus petit au plus grand,
+  // pour les corrections (lot R1-refonte).
+  const NOMS_COMPARER = {l1: "la plus petite graduation", l10: "mon petit doigt", l15: "ma main", l13: "la poignée de porte",
+    l14: "10 terrains de foot", m7: "un trombone", m4: "un paquet de riz", m6: "une petite voiture", c2: "une canette", c3: "une brique de lait"};
+  const MOTS_COMPARER = {longueur: ["Plus que", "moins que", "À peu près comme"], masse: ["Plus lourd que", "plus léger que", "À peu près comme"],
+    contenance: ["Plus que", "moins que", "À peu près comme"]};
+  function que(mot, nom) {
+    return /^[aeiouéèh]/i.test(nom) ? `${mot.slice(0, -1)}'${nom}` : `${mot} ${nom}`;
+  }
+  // « Plus lourd qu'un trombone, plus léger qu'un paquet de riz. » : la
+  // mesure placée entre les repères de sa grandeur (« Comme… » quand elle
+  // en est proche, moins de 1,5 fois plus ou moins).
+  function entreReperes(v, unite) {
     const g = grandeurDe(unite);
-    const autres = melanger(rng, AUTRES_GRANDEURS[g]);
-    // Deux autres grandeurs différentes (pas « kg » et « g » ensemble).
-    const deux = [autres[0], autres.find(u => grandeurDe(u) !== grandeurDe(autres[0]))];
-    const choix = melanger(rng, [unite, fausse || deux[1], deux[0]]);
+    if (!MOTS_COMPARER[g]) return null;
+    const x = convertir(v, unite, ORDRE_UNITES_2[g][0]);
+    const reps = CARTE.etape("R1").reperes.map(c => CARTE.repere(c)).filter(r => r.grandeur === g)
+      .sort((a, b) => (taille2(a) < taille2(b) ? -1 : 1));
+    const [plus, moins, comme] = MOTS_COMPARER[g];
+    const proche = reps.find(r => 2n * x <= 3n * taille2(r) && 2n * taille2(r) <= 3n * x);
+    if (proche) return `${comme} ${NOMS_COMPARER[proche.code]}.`;
+    const dessous = reps.filter(r => taille2(r) < x).pop();
+    const dessus = reps.find(r => taille2(r) > x);
+    const morceaux = [];
+    if (dessous) morceaux.push(que(plus, NOMS_COMPARER[dessous.code]));
+    if (dessus) morceaux.push(que(dessous ? moins : `${moins[0].toUpperCase()}${moins.slice(1)}`, NOMS_COMPARER[dessus.code]));
+    return morceaux.length ? `${morceaux.join(", ")}.` : null;
+  }
+  const NOM_GRANDEUR = {longueur: "une longueur", masse: "une masse", contenance: "une contenance", duree: "une durée"};
+  // Une unité de chacune des deux autres grandeurs (travail 1).
+  const AUTRES_FAMILLES = {longueur: [["g", "kg"], ["cL", "L"]], masse: [["cm", "m"], ["cL", "L"]], contenance: [["g", "kg"], ["cm", "m"]]};
+  function deuxAutres(g, rng) {
+    return AUTRES_FAMILLES[g].map(f => choisir(rng, f));
+  }
+
+  // Travail 1 : « Quelle unité pour peser une pomme ? » (g, cm, cL) — il
+  // suffit de reconnaître la grandeur. (Lot 3b : la question de
+  // l'exerciseur, sans nombre ; lot R1-refonte : les deux autres réponses
+  // sont d'autres grandeurs, plus une unité de la même grandeur au mauvais
+  // ordre de grandeur : c'est le travail 2.)
+  function questionSansNombre(degre, rng) {
+    const vivier = SANS_NOMBRE.map((o, i) => [o, i]).filter(([o]) => o[3] <= Math.max(1, degre));
+    const [[quoi, unite], i] = choisir(rng, vivier);
+    const g = grandeurDe(unite);
+    const choix = melanger(rng, [unite, ...deuxAutres(g, rng)]);
     const phrase = CARTE.typo(`Quelle unité pour ${quoi} ?`);
     const resume = CARTE.typo(`Pour ${quoi} : ${NOM_UNITE[unite]}.`);
     return q({
       code: "R2", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "sansNombre"},
       choix, bon: choix.indexOf(unite), reponse: unite, reponseTexte: unite, unite,
-      resume, outil: "reperes-unites", grandeur: g,
-      correction: [CARTE.typo(`${NOM_UNITE[unite][0].toUpperCase()}${NOM_UNITE[unite].slice(1)}.`)],
+      resume, outil: "familles", grandeur: g, travail: 1,
+      correction: [CARTE.typo(`${NOM_UNITE[unite][0].toUpperCase()}${NOM_UNITE[unite].slice(1)} : je mesure ${NOM_GRANDEUR[g]}.`)],
       donnees: {type: "unite-sans", objet: i, unite},
       cle: `R2:s:${i}`
     });
   }
 
+  // Un objet de OBJETS_UNITE, aux trois travaux (même objet, même
+  // `cleBase` : il ne revient pas dans une série sous une autre forme).
+  function vivierObjets(degre, max = false) {
+    return OBJETS_UNITE.map((o, i) => [o, i]).filter(([o]) => (max ? o[3] >= 1 && o[3] <= degre : o[3] === degre));
+  }
+  function questionObjet(degre, rng, travail) {
+    const [[debut, nombre, unite], i] = choisir(rng, vivierObjets(degre, travail === 3));
+    const v = milli(nombre);
+    const g = grandeurDe(unite);
+    const compare = entreReperes(v, unite);
+    let choix;
+    let bon;
+    let texte;
+    let sorte = "unite";
+    let apres = "";
+    if (travail === 3) {
+      // Le nombre : la bonne mesure, et deux autres 10 ou 100 fois plus
+      // grandes ou plus petites (des nombres entiers jusqu'à 10 000, comme
+      // au CE2), une plus grande et une plus petite quand c'est possible.
+      const propres = [[v * 10n, 1], [v * 100n, 1], [v / 10n, -1], [v / 100n, -1]]
+        .filter(([c], k) => (k < 2 || v % (k === 2 ? 10n : 100n) === 0n) && c >= MILLE && c <= 10000n * MILLE && c % MILLE === 0n);
+      const grands = propres.filter(([, s]) => s > 0).map(([c]) => c);
+      const petits = propres.filter(([, s]) => s < 0).map(([c]) => c);
+      const deux = grands.length && petits.length ? [choisir(rng, grands), choisir(rng, petits)] : melanger(rng, grands.concat(petits)).slice(0, 2);
+      if (deux.length < 2) return null;
+      choix = melanger(rng, [v, ...deux]).map(ecrire);
+      bon = choix.indexOf(ecrire(v));
+      texte = CARTE.typo(`${debut} ${CASE}${NB}${unite}`);
+      sorte = "valeur";
+      apres = unite;
+    } else {
+      const memes = CHOIX_UNITE[g];
+      choix = melanger(rng, travail === 1 ? [unite, ...deuxAutres(g, rng)] : memes.slice());
+      bon = choix.indexOf(unite);
+      // (Le nombre et la case ne se séparent pas en fin de ligne.)
+      texte = CARTE.typo(`${debut} ${ecrire(v)}${NB}${CASE}`);
+    }
+    const reponseTexte = mes(v, unite);
+    const correction = [CARTE.typo(`${debut} ${reponseTexte}`)];
+    if (travail === 1) correction.push(CARTE.typo(`Je mesure ${NOM_GRANDEUR[g]}.`));
+    else if (compare) correction.push(CARTE.typo(compare));
+    return q({
+      code: "R2", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres, sorte},
+      choix, bon, reponse: choix[bon], reponseTexte, unite,
+      resume: CARTE.typo(`${debut} ${reponseTexte}`), outil: travail === 1 ? "familles" : "reperes-unites", grandeur: g, travail,
+      correction,
+      donnees: {type: travail === 3 ? "nombre" : travail === 1 ? "unite-grandeur" : "unite", objet: i, unite},
+      cle: `R2:${travail === 3 ? "n" : travail === 1 ? "u" : ""}${i}`, cleBase: `R2:${i}`
+    });
+  }
+
   ETAPES.R2 = {
-    // Je valide : « qu'est-ce qu'on mesure ? » en 4e, « Quelle unité
-    // pour… ? » (sans nombre, lot 3b) en 6e, « h, min ou jours » en 8e ;
-    // ailleurs, une question sur cinq de chaque.
+    // Lot R1-refonte : les trois travaux. Je valide : le travail 1 aux
+    // places 1 à 3, le 2 aux places 4 à 7 (dont h, min ou jours), le 3 aux
+    // places 8 à 10 (aux places 3, 6, 9 viennent les étapes d'avant). À
+    // toi : du plus facile au plus dur dès les 9 premières questions (un
+    // élève qui réussit s'arrête vers la 9e), puis un mélange.
     formes(usage) {
-      if (usage !== "valide") return {};
-      const f = {};
-      for (let i = 0; i < 10; i += 1) f[i] = "unite";
-      f[3] = "grandeur";
-      f[5] = "sans";
-      f[7] = "duree";
-      return f;
+      if (usage === "valide") return {0: "grandeur", 1: "uniteG", 2: "sans", 3: "duree", 4: "unite", 5: "unite", 6: "unite", 7: "nombre", 8: "nombre", 9: "nombre"};
+      if (usage === "entraine") {
+        return {0: "grandeur", 1: "uniteG", 2: "sans", 3: "unite", 4: "unite", 5: "duree", 6: "nombre", 7: "unite", 8: "nombre",
+          9: "grandeur", 10: "unite", 11: "nombre", 12: "uniteG", 13: "duree", 14: "nombre", 15: "unite", 16: "nombre", 17: "sans",
+          18: "nombre", 19: "unite", 20: "duree", 21: "nombre", 22: "unite", 23: "grandeur", 24: "nombre"};
+      }
+      return {};
     },
     tirer(rng, degre, place, usage, forme) {
-      const r = forme && forme !== "unite" ? 1 : forme === "unite" ? 0.9 : rng();
-      if (forme === "grandeur" || r < 0.2) return questionGrandeur(degre, rng);
-      if (forme === "duree" || r < 0.35) return questionUniteDuree(degre, rng);
-      if (forme === "sans" || r < 0.55) return questionSansNombre(degre, rng);
-      const vivier = OBJETS_UNITE.map((o, i) => [o, i]).filter(([o]) => o[3] === degre);
-      const [[debut, nombre, unite], i] = choisir(rng, vivier);
-      const v = milli(nombre);
-      // Lot 3b (carte v4 : « une autre grandeur » dans les mauvaises
-      // réponses) : pour une masse ou une contenance (3 unités au cycle 2),
-      // une 4e réponse d'une autre grandeur.
-      const memes = CHOIX_UNITE[grandeurDe(unite)];
-      const choix = melanger(rng, memes.length < 4 ? memes.concat(choisir(rng, AUTRES_GRANDEURS[grandeurDe(unite)])) : memes);
-      const texte = CARTE.typo(`${debut} ${ecrire(v)} ${CASE}`);
-      return q({
-        code: "R2", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: "", sorte: "unite"},
-        choix, bon: choix.indexOf(unite), reponse: unite, reponseTexte: mes(v, unite), unite,
-        resume: CARTE.typo(`${debut} ${mes(v, unite)}`), outil: "reperes-unites", grandeur: grandeurDe(unite),
-        correction: [CARTE.typo(`${debut} ${mes(v, unite)}`)],
-        donnees: {type: "unite", objet: i, unite},
-        cle: `R2:${i}`
-      });
+      let f = forme;
+      if (!f) {
+        // (Les autres usages : le travail du degré.)
+        const r = rng();
+        f = degre === 1 ? (r < 0.4 ? "grandeur" : r < 0.7 ? "uniteG" : "sans") : degre === 2 ? (r < 0.25 ? "duree" : "unite") : (r < 0.6 ? "nombre" : "unite");
+      }
+      if (f === "grandeur") return questionGrandeur(degre, rng);
+      if (f === "duree") return questionUniteDuree(degre, rng);
+      if (f === "sans") return questionSansNombre(degre, rng);
+      if (f === "uniteG") return questionObjet(degre, rng, 1);
+      if (f === "nombre") return questionObjet(degre, rng, 3);
+      return questionObjet(degre, rng, 2);
     },
-    clesExemples: ["R2:0", "R2:33", "R2:d:0"]
+    // Les exemples de On te montre : la récréation (travail 1), le crayon
+    // (travail 2), la porte (travail 3).
+    clesExemples: ["R2:0", "R2:1", "R2:d:0"]
   };
 
   // --------------------------------------------- P1 · Les relations des bases
@@ -2231,12 +2389,16 @@
   // (3 choix), la valeur (3 choix, avec les nombres à virgule du CM1), la
   // valeur au pavé, « Qu'est-ce qui mesure 400 m ? » (l'objet à trouver, la
   // question cachée de l'exerciseur) ; et relier trois objets à leur mesure.
-  const ORDRE_UNITES_2 = {longueur: ["mm", "cm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
+  // (Lot R1-refonte : le décimètre, la main, est un repère de R1 ; il entre
+  // dans les unités de longueur.)
+  const ORDRE_UNITES_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
   // Le nom court d'un repère, sous son dessin, au téléphone (relier, l'objet
   // à trouver) : deux lignes au plus.
   const COURTS_2 = {l1: "La plus petite graduation", l2: "Une pièce de 1 centime", l5: "Un tour de piste", l6: "Le viaduc du Littoral",
     l7: "St-Pierre à St-Denis", l8: "Le Piton des Neiges", l9: "La Diagonale des Fous", l10: "Mon petit doigt",
-    l11: "Un très grand pas", m5: "Un pack d'eau", m8: "1 L d'eau", m9: "Une ramette", c1: "Une cuillère à café", c4: "Un chauffe-eau solaire"};
+    l11: "Un très grand pas", m5: "Un pack d'eau", m8: "1 L d'eau", m9: "Une ramette", c1: "Une cuillère à café", c4: "Un chauffe-eau solaire",
+    // Lot R1-refonte
+    l13: "La poignée de la porte", l14: "10 terrains de foot", l15: "Ma main", m6: "Une petite voiture"};
   // (Gardés une fois calculés : les séries tirent des centaines de questions.)
   const VIVIERS_2 = {};
   function vivier2(code) {
@@ -2318,11 +2480,13 @@
   // moins 100 fois au degré 1, 10 fois au degré 2, 3 fois au degré 3) et
   // loin l'un de l'autre. La phrase reprend celle du repère (« Qu'est-ce qui
   // s'élève à environ 3 km d'altitude ? »).
-  const QUOI_RESTE = {l7: "mesure environ", l10: "a une largeur d'environ", m8: "pèse"};
-  function questionQuoi(code, degre, rep, rng) {
+  // (Lot R1-refonte : `pool`, les repères parmi lesquels chercher les deux
+  // autres — à « Mes premiers repères », ceux de la même grandeur.)
+  const QUOI_RESTE = {l7: "mesure environ", l10: "a une largeur d'environ", m8: "pèse", l14: "mesure environ", l15: "a une largeur d'environ"};
+  function questionQuoi(code, degre, rep, rng, pool = null) {
     const r = CARTE.repere(rep);
     const t = taille2(r);
-    const autres = melanger(rng, vivier2(code).tous.filter(c => c !== rep)).map(c => CARTE.repere(c));
+    const autres = melanger(rng, (pool || vivier2(code).tous).filter(c => c !== rep)).map(c => CARTE.repere(c));
     let deux = [];
     for (const k of [degre === 1 ? 100n : degre === 2 ? 10n : 3n, 10n, 3n]) {
       deux = [];
@@ -2332,7 +2496,7 @@
       if (deux.length === 2) break;
     }
     if (deux.length < 2) return null;
-    const reste = r.debut.startsWith(r.objet) ? r.debut.slice(r.objet.length).trim() : QUOI_RESTE[rep];
+    const reste = QUOI_RESTE[rep] || (r.debut.startsWith(r.objet) ? r.debut.slice(r.objet.length).trim() : "mesure environ");
     const phrase = CARTE.typo(`Qu'est-ce qui ${reste} ${ecrire(milli(r.nombre))} ${r.unite}${r.fin ? ` ${r.fin}` : ""} ?`);
     const trois = melanger(rng, [r, ...deux]);
     const choix = trois.map(nomCourt2);
@@ -2341,7 +2505,7 @@
       code, degre, forme: "qcm", texte: phrase,
       morceaux: {phrase, apres: "", sorte: "objets", reperes: trois.map(x => x.code)},
       choix, bon, reponse: choix[bon], reponseTexte: choix[bon], unite: r.unite, grandeur: r.grandeur,
-      resume: CARTE.typo(`${choix[bon]} : ${r.valeur}`), repere: rep, outil: "reperes-unites", image: [],
+      resume: CARTE.typo(`${choix[bon]} : ${r.valeur}`), repere: rep, outil: code === "R1" ? "carte-repere" : "reperes-unites", image: [],
       correction: [`${r.objet} : ${r.valeur}`],
       donnees: {type: "repere-quoi", repere: rep, reperes: trois.map(x => x.code)},
       cle: `${code}:${rep}:quoi`
@@ -2472,10 +2636,13 @@
         const max = tous.length >= 9 ? 1 : 2;
         return serie.filter(y => seul(y) && y.repere === question.repere).length < max;
       },
+      // (Lot R1-refonte : « Mes repères de longueur » a 10 repères, plus que
+      // les 8 places d'un repère seul : 8 différents au moins.)
       valide(serie, usage) {
         if (usage !== "valide") return true;
         const demandes = new Set(serie.filter(seul).map(x => x.repere));
-        return vivier2(code).nouveaux.every(c => demandes.has(c));
+        const {nouveaux} = vivier2(code);
+        return nouveaux.filter(c => demandes.has(c)).length >= Math.min(8, nouveaux.length);
       },
       tirer(rng, degre, i, usage, forme, serie = []) {
         const {nouveaux, tous} = vivier2(code);

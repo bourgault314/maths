@@ -131,7 +131,7 @@
   // nomCourt : le nom sous le titre de sa famille (Mon parcours, mode prof).
   const ETAPES = [
     // Palier 1 · Les bases
-    {code: "R1", rang: 1, palier: 1, famille: "reperes", classe: "CE1 · CE2", nom: "Mes premiers repères", exemple: "voiture : 4 m"},
+    {code: "R1", rang: 1, palier: 1, famille: "reperes", classe: "CE1 · CE2", nom: "Mes premiers repères", exemple: "poignée : 1 m"},
     {code: "R2", rang: 2, palier: 1, famille: "reperes", classe: "CE1 · CE2", nom: "Quelle unité choisir ?", exemple: ""},
     {code: "P1", rang: 3, palier: 1, famille: "relations", classe: "CE1 · CE2", nom: "Les relations des bases", exemple: "1 m = 100 cm"},
     {code: "C1", rang: 4, palier: 1, famille: "convertir", classe: "CE2", nom: "Vers une unité plus petite", exemple: "3 m = 300 cm"},
@@ -209,21 +209,21 @@
     // les aides du palier 1 le citaient sans qu'il l'ait appris.
     {code: "l1", grandeur: "longueur", etape: "R1", objet: "La plus petite graduation de la règle", valeur: "1 mm", debut: "La plus petite graduation de la règle mesure", nombre: "1", unite: "mm", fin: ""},
     {code: "l2", grandeur: "longueur", etape: "R3", objet: "Une pièce de 1 centime", valeur: "un peu plus de 1,5 cm de large", debut: "Une pièce de 1 centime mesure un peu plus de", nombre: "1,5", unite: "cm", fin: "de large"},
-    {code: "l3", grandeur: "longueur", etape: "R1", objet: "Une feuille A4", valeur: "21 cm sur 29,7 cm", debut: "Une feuille A4 mesure", nombre: "21", unite: "cm", fin: "de large"},
-    {code: "l4", grandeur: "longueur", etape: "R1", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
+    {code: "l3", grandeur: "longueur", etape: "R3", objet: "Une feuille A4", valeur: "21 cm sur 29,7 cm", debut: "Une feuille A4 mesure", nombre: "21", unite: "cm", fin: "de large"},
+    {code: "l4", grandeur: "longueur", etape: "R3", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
     {code: "l5", grandeur: "longueur", etape: "R3", objet: "Un tour de piste d'athlétisme", valeur: "400 m", debut: "Un tour de piste d'athlétisme mesure", nombre: "400", unite: "m", fin: ""},
     {code: "l6", grandeur: "longueur", etape: "R3", objet: "Le viaduc de la Nouvelle route du Littoral", valeur: "5,4 km", debut: "Le viaduc de la Nouvelle route du Littoral mesure", nombre: "5,4", unite: "km", fin: "", local: true},
-    {code: "l7", grandeur: "longueur", etape: "R1", objet: "De Saint-Pierre à Saint-Denis", valeur: "environ 80 km en voiture", debut: "De Saint-Pierre à Saint-Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
+    {code: "l7", grandeur: "longueur", etape: "R3", objet: "De Saint-Pierre à Saint-Denis", valeur: "environ 80 km en voiture", debut: "De Saint-Pierre à Saint-Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
     {code: "l8", grandeur: "longueur", etape: "R3", objet: "Le Piton des Neiges", valeur: "environ 3 km d'altitude", debut: "Le Piton des Neiges s'élève à environ", nombre: "3", unite: "km", fin: "d'altitude", local: true},
     {code: "l9", grandeur: "longueur", etape: "R3", objet: "La Diagonale des Fous", valeur: "environ 170 km", debut: "La Diagonale des Fous mesure environ", nombre: "170", unite: "km", fin: "", local: true},
     {code: "m1", grandeur: "masse", etape: "R4", objet: "Un grain de riz", valeur: "environ 25 mg", debut: "Un grain de riz pèse environ", nombre: "25", unite: "mg", fin: ""},
     {code: "m2", grandeur: "masse", etape: "R4", objet: "Une feuille A4", valeur: "environ 5 g", debut: "Une feuille A4 pèse environ", nombre: "5", unite: "g", fin: ""},
-    {code: "m3", grandeur: "masse", etape: "R1", objet: "Une pièce de 1 €", valeur: "7,5 g", debut: "Une pièce de 1 € pèse", nombre: "7,5", unite: "g", fin: ""},
-    {code: "m4", grandeur: "masse", etape: "R1", objet: "Un paquet de riz", valeur: "1 kg", debut: "Un paquet de riz pèse", nombre: "1", unite: "kg", fin: ""},
-    {code: "m5", grandeur: "masse", etape: "R1", objet: "Un pack de 6 bouteilles d'eau", valeur: "environ 9 kg", debut: "Un pack de 6 bouteilles d'eau pèse environ", nombre: "9", unite: "kg", fin: ""},
-    {code: "m6", grandeur: "masse", etape: "R1", objet: "Une voiture", valeur: "environ 1 t", debut: "Une voiture pèse environ", nombre: "1", unite: "t", fin: ""},
+    {code: "m3", grandeur: "masse", etape: "R4", objet: "Une pièce de 1 €", valeur: "7,5 g", debut: "Une pièce de 1 € pèse", nombre: "7,5", unite: "g", fin: ""},
+    {code: "m4", grandeur: "masse", etape: "R1", objet: "Un paquet de riz", valeur: "1 kg, sans l'emballage", debut: "Un paquet de riz pèse", nombre: "1", unite: "kg", fin: ""},
+    {code: "m5", grandeur: "masse", etape: "R4", objet: "Un pack de 6 bouteilles d'eau", valeur: "environ 9 kg", debut: "Un pack de 6 bouteilles d'eau pèse environ", nombre: "9", unite: "kg", fin: ""},
+    {code: "m6", grandeur: "masse", etape: "R1", objet: "Une petite voiture", valeur: "environ 1 t", debut: "Une petite voiture pèse environ", nombre: "1", unite: "t", fin: ""},
     {code: "c1", grandeur: "contenance", etape: "R5", objet: "Une cuillère à café", valeur: "5 mL", debut: "Une cuillère à café contient", nombre: "5", unite: "mL", fin: ""},
-    {code: "c2", grandeur: "contenance", etape: "R1", objet: "Une canette", valeur: "33 cL, un tiers de litre", debut: "Une canette contient", nombre: "33", unite: "cL", fin: ""},
+    {code: "c2", grandeur: "contenance", etape: "R1", objet: "Une canette", valeur: "33 cL", debut: "Une canette contient", nombre: "33", unite: "cL", fin: ""},
     {code: "c3", grandeur: "contenance", etape: "R1", objet: "Une brique de lait", valeur: "1 L", debut: "Une brique de lait contient", nombre: "1", unite: "L", fin: ""},
     {code: "c4", grandeur: "contenance", etape: "R5", objet: "Un chauffe-eau solaire", valeur: "environ 200 L", debut: "Un chauffe-eau solaire contient environ", nombre: "200", unite: "L", fin: "", local: true},
     {code: "a1", grandeur: "aire", etape: "R8", objet: "Un carreau de 1 cm de côté", valeur: "1 cm²", debut: "Un carreau de 1 cm de côté a une aire de", nombre: "1", unite: "cm²", fin: ""},
@@ -236,9 +236,9 @@
     {code: "v3", grandeur: "volume", etape: "R10", objet: "Une cuve de récupération d'eau de pluie", valeur: "1 000 L = 1 m³", debut: "Une cuve de récupération d'eau de pluie a un volume de", nombre: "1", unite: "m³", fin: "", local: true},
     {code: "v4", grandeur: "volume", etape: "R10", objet: "Une piscine olympique", valeur: "2 500 m³", debut: "Une piscine olympique a un volume de", nombre: "2500", unite: "m³", fin: ""},
     // Carte v3 (12/11)
-    {code: "l10", grandeur: "longueur", etape: "R3", objet: "La largeur de mon petit doigt", valeur: "environ 1 cm", debut: "Mon petit doigt a une largeur d'environ", nombre: "1", unite: "cm", fin: ""},
+    {code: "l10", grandeur: "longueur", etape: "R1", objet: "La largeur de mon petit doigt", valeur: "environ 1 cm", debut: "Mon petit doigt a une largeur d'environ", nombre: "1", unite: "cm", fin: ""},
     {code: "l11", grandeur: "longueur", etape: "R3", objet: "Un très grand pas", valeur: "environ 1 m", debut: "Un très grand pas mesure environ", nombre: "1", unite: "m", fin: ""},
-    {code: "m7", grandeur: "masse", etape: "R4", objet: "Un trombone", valeur: "environ 1 g", debut: "Un trombone pèse environ", nombre: "1", unite: "g", fin: ""},
+    {code: "m7", grandeur: "masse", etape: "R1", objet: "Un trombone", valeur: "environ 1 g", debut: "Un trombone pèse environ", nombre: "1", unite: "g", fin: ""},
     {code: "m8", grandeur: "masse", etape: "R4", objet: "Une bouteille de 1 L d'eau", valeur: "1 kg (sans la bouteille)", debut: "Un litre d'eau pèse", nombre: "1", unite: "kg", fin: ""},
     {code: "c5", grandeur: "contenance", etape: "R5", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
     {code: "a6", grandeur: "aire", etape: "R8", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
@@ -250,7 +250,23 @@
     {code: "l12", grandeur: "longueur", etape: "R3", objet: "Mon empan", valeur: "environ 15 cm", debut: "Mon empan mesure environ", nombre: "15", unite: "cm", fin: ""},
     {code: "m9", grandeur: "masse", etape: "R4", objet: "Une ramette de 500 feuilles A4", valeur: "environ 2,5 kg", debut: "Une ramette de 500 feuilles A4 pèse environ", nombre: "2,5", unite: "kg", fin: ""},
     {code: "c6", grandeur: "contenance", etape: "R5", objet: "Un grand arrosoir", valeur: "10 L", debut: "Un grand arrosoir contient", nombre: "10", unite: "L", fin: ""},
-    {code: "c7", grandeur: "contenance", etape: "R5", objet: "Une bouteille d'eau", valeur: "1,5 L", debut: "Une bouteille d'eau contient", nombre: "1,5", unite: "L", fin: ""}
+    {code: "c7", grandeur: "contenance", etape: "R5", objet: "Une bouteille d'eau", valeur: "1,5 L", debut: "Une bouteille d'eau contient", nombre: "1,5", unite: "L", fin: ""},
+    // Lot R1-refonte (18/11, décidé avec Gwenaël) : « Mes premiers repères »
+    // a UN repère par unité du CE2, dix en tout, les seuls à apprendre par
+    // cœur au palier 1 : 1 mm la graduation (l1), 1 cm le petit doigt (l10,
+    // venu de R3), 1 dm la main (l15), 1 m la poignée de porte (l13), 1 km
+    // 10 terrains de foot (l14), 1 g le trombone (m7, venu de R4), 1 kg le
+    // paquet de riz (m4), 1 t la petite voiture (m6), 33 cL la canette (c2),
+    // 1 L la brique (c3). La feuille A4, la voiture de 4 m et Saint-Pierre →
+    // Saint-Denis passent au CM1 (R3) ; la pièce de 1 € et le pack d'eau
+    // aussi (R4). Les repères de la poignée, de la main et des terrains de
+    // foot viennent de la colonne « Action en classe » de l'exerciseur
+    // (ACTIONS_DB) et du programme du cycle 2 (S440 : « la hauteur de la
+    // porte »). Un repère est approché (« environ ») ; une relation est
+    // exacte (« = ») : jamais « = » pour un repère approché.
+    {code: "l13", grandeur: "longueur", etape: "R1", objet: "La poignée de la porte", valeur: "à environ 1 m du sol", debut: "La poignée de la porte est à environ", nombre: "1", unite: "m", fin: "du sol"},
+    {code: "l14", grandeur: "longueur", etape: "R1", objet: "10 terrains de foot bout à bout", valeur: "environ 1 km", debut: "10 terrains de foot bout à bout mesurent environ", nombre: "1", unite: "km", fin: ""},
+    {code: "l15", grandeur: "longueur", etape: "R1", objet: "La largeur de ma main", valeur: "environ 1 dm (10 cm)", debut: "Ma main a une largeur d'environ", nombre: "1", unite: "dm", fin: ""}
   ];
   // Lot 3b-2 : chaque repère a son illustration (conversions-reperes/,
   // dessinées par ChatGPT d'après les planches du lot 3b, découpées par
@@ -260,6 +276,10 @@
   // d'une photo sous licence CC BY-SA 3.0 : son crédit s'écrit sous l'image.
   // Les mesures ne sont jamais dans l'image : l'appli les écrit dessous.
   const IMAGES_REPRISES = {m6: "l4", a2: "l3", v2: "c3"};
+  // (Lot R1-refonte : la poignée de porte, la main et le petit doigt sur la
+  // règle viennent de la planche 8, dessinée le 18/11 ; le terrain de foot,
+  // dessiné par Claude aux couleurs de la planche : la bande de 10 terrains
+  // était illisible en petit.)
   const CREDITS = {l8: "D'après Nicolas PAYET, Piton des Neiges depuis Cilaos, CC BY-SA 3.0 ; adaptation illustrée"};
   REPERES.forEach(r => {
     r.image = `${IMAGES_REPRISES[r.code] || r.code}.webp`;
@@ -281,44 +301,76 @@
     "1 cm = 10 mm", "1 L = 100 cL", "1 m = 1 000 mm", "1 km = 1 000 m"];
 
   const CONTENU = {
+    // Lot R1-refonte (18/11, choix de Gwenaël) : les dix repères, un par
+    // unité du CE2. On te montre : un temps par repère (son dessin, sa
+    // mesure, et le geste à faire en classe, repris de la colonne « Action
+    // en classe » de l'exerciseur : toujours vérifier avec la règle, jamais
+    // avec l'écran, qui ne montre pas les vrais centimètres). Puis la liste
+    // des dix, à recopier, AVANT À toi (`listeAvant`) : aucune question ne
+    // porte sur un repère pas encore vu.
     R1: {
       pret: true,
-      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      listeAvant: true,
+      aide: {outil: "carte-repere", image: "dessin-repere"},
       apprends: [
-        {etiquette: "Je vois", question: {avant: "Une voiture mesure environ", reponse: "4", apres: "m"},
-          consigne: "Un repère, c'est un objet que je connais bien : il m'aide à imaginer une mesure.",
-          aide: {type: "repere", repere: "l4"}, legende: "Une voiture : environ 4 m de long.\nUn mètre, c'est un grand pas."},
+        {etiquette: "Je vois", question: {avant: "La plus petite graduation de la règle mesure", reponse: "1", apres: "mm"},
+          consigne: "Un repère, c'est un objet que je connais bien :\nil m'aide à imaginer une mesure.",
+          aide: {type: "repere", repere: "l1"}, geste: "Regarde ta règle : entre deux petits traits, il y a 1 mm."},
+        {etiquette: "Je vois", question: {avant: "Mon petit doigt a une largeur d'environ", reponse: "1", apres: "cm"},
+          consigne: "Les longueurs : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "l10"}, geste: "Montre 1 cm avec tes doigts, puis vérifie avec ta règle."},
+        {etiquette: "Je vois", question: {avant: "Ma main a une largeur d'environ", reponse: "1", apres: "dm"},
+          consigne: "Les longueurs : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "l15"}, geste: "Pose ta main à plat sur ta règle : environ 10 cm."},
+        {etiquette: "Je vois", question: {avant: "La poignée de la porte est à environ", reponse: "1", apres: "m du sol"},
+          consigne: "Les longueurs : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "l13"}, geste: "Pose ta main sur la poignée de la porte : elle est à environ 1 m du sol."},
+        {etiquette: "Je vois", question: {avant: "10 terrains de foot bout à bout mesurent environ", reponse: "1", apres: "km"},
+          consigne: "Les longueurs : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "l14"}, geste: "10 terrains de foot bout à bout : environ un quart d'heure à pied."},
+        {etiquette: "Je vois", question: {avant: "Un trombone pèse environ", reponse: "1", apres: "g"},
+          consigne: "Les masses : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "m7"}, geste: "Prends un trombone dans ta main : il pèse environ 1 g."},
         {etiquette: "Je vois", question: {avant: "Un paquet de riz pèse", reponse: "1", apres: "kg"},
-          consigne: "Un repère, c'est un objet que je connais bien : il m'aide à imaginer une mesure.",
-          aide: {type: "repere", repere: "m4"}, legende: "Un paquet de riz : 1 kg.\nUne feuille de papier ne pèse que quelques grammes."},
+          consigne: "Les masses : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "m4"}, geste: "Soulève un paquet de riz : sans l'emballage, le riz pèse 1 kg."},
+        {etiquette: "Je vois", question: {avant: "Une petite voiture pèse environ", reponse: "1", apres: "t"},
+          consigne: "Les masses : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "m6"}, geste: "Une petite voiture, personne ne la soulève : environ 1 t."},
+        {etiquette: "Je vois", question: {avant: "Une canette contient", reponse: "33", apres: "cL"},
+          consigne: "Les contenances : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "c2"}, geste: "Regarde l'étiquette d'une canette : 33 cL."},
         {etiquette: "Je vois", question: {avant: "Une brique de lait contient", reponse: "1", apres: "L"},
-          consigne: "Un repère, c'est un objet que je connais bien : il m'aide à imaginer une mesure.",
-          aide: {type: "repere", repere: "c3"}, legende: "Une brique de lait : 1 L.\nUne canette : 33 cL, un tiers de litre."}
+          consigne: "Les contenances : un repère pour chaque unité.",
+          aide: {type: "repere", repere: "c3"}, geste: "Prends une brique de lait : elle contient 1 L."}
       ],
       // Lot A2 ter (choix de Gwenaël, le 13/11 : « ça fait beaucoup à lire
       // là-haut ; on laisse que les trucs que tu as mis en dessous ») : les
       // cartes des repères disent tout, le texte s'en va.
       retenir: "",
       cahier: "Je les note dans mon cahier et je les apprends par cœur.",
-      reperes: ["l1", "l3", "l4", "l7", "m3", "m4", "m5", "m6", "c3", "c2"]
+      // (Après À toi, la même liste revient avant Je valide : on la relit.)
+      cahierApres: "Je relis mes repères, puis je valide.",
+      reperes: ["l1", "l10", "l15", "l13", "l14", "m7", "m4", "m6", "c2", "c3"]
     },
+    // Lot R1-refonte (Gwenaël, 18/11) : trois travaux séparés, un par
+    // temps — la grandeur, l'unité dans la même grandeur, le nombre.
     R2: {
       pret: true,
       aide: {outil: "reperes-unites", image: "reperes-unites"},
       apprends: [
-        {etiquette: "Je vois", question: {avant: "La longueur d'un crayon :", reponse: "15", apres: "cm"},
-          consigne: "Je compare à mes repères.", aide: {type: "unites", grandeur: "longueur", unites: ["mm", "cm", "m", "km"], bonne: "cm"},
-          legende: "Un crayon, c'est bien plus long qu'un centimètre\net bien plus court qu'un mètre : 15 cm."},
-        {etiquette: "Je vois", question: {avant: "Un bébé à la naissance :", reponse: "3", apres: "kg"},
-          consigne: "Je compare à mes repères.", aide: {type: "unites", grandeur: "masse", unites: ["g", "kg", "t"], bonne: "kg"},
-          legende: "Un bébé pèse autant que 3 paquets de riz : 3 kg.\n3 g, c'est moins qu'une pièce de 1 €."},
-        // Lot A2 bis : la récréation remplace « De Saint-Denis à Saint-Paul »
-        // (revenu dans les séries) : d'abord ce qu'on mesure, puis l'unité.
+        // Lot A2 bis : la récréation (d'abord ce qu'on mesure, puis l'unité).
         {etiquette: "Je vois", question: {avant: "La récréation :", reponse: "15", apres: "min"},
           consigne: "D'abord, je me demande ce que je mesure.\nPuis je choisis l'unité.", aide: {type: "grandeurs", bonne: "duree"},
-          legende: "La récréation, c'est une durée : 15 min.\n15 h, ce serait plus qu'une journée d'école !"}
+          legende: "La récréation, c'est une durée : 15 min.\n15 h, ce serait plus qu'une journée d'école !"},
+        {etiquette: "Je vois", question: {avant: "La longueur d'un crayon :", reponse: "15", apres: "cm"},
+          consigne: "C'est une longueur. Je compare à mes repères\npour choisir l'unité.", aide: {type: "unites", grandeur: "longueur", unites: ["mm", "cm", "m", "km"], bonne: "cm"},
+          legende: "Un crayon : plus long que mon petit doigt,\nbien plus court qu'un mètre : 15 cm."},
+        {etiquette: "Je vois", question: {avant: "La hauteur d'une porte :", reponse: "2", apres: "m"},
+          consigne: "L'unité est trouvée : le mètre.\nJe compare encore à mon repère pour le nombre.", aide: {type: "repere", repere: "l13"},
+          legende: "La porte : à peu près deux fois la poignée.\n2 m, pas 20 m ni 200 m."}
       ],
-      retenir: "Je me demande d'abord ce que je mesure : une longueur, une masse, une contenance ou une durée.\nPuis je compare à mes repères : un crayon mesure 15 cm, pas 15 m.",
+      retenir: "Je me demande ce que je mesure : une longueur, une masse, une contenance, une durée.\nJe compare à mes repères : un crayon, 15 cm, pas 15 m ; une porte, 2 m, pas 20 m.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
@@ -515,9 +567,11 @@
       pret: true,
       aide: {outil: "reperes-unites", image: "reperes-unites"},
       apprends: [
-        {etiquette: "Je vois", question: {avant: "Mon petit doigt a une largeur d'environ", reponse: "1", apres: "cm"},
-          consigne: "Mes repères à moi, je les ai toujours avec moi :\nje mesure mon petit doigt avec ma règle.",
-          aide: {type: "repere", repere: "l10"}, legende: "Mon petit doigt : environ 1 cm de large.\nMon empan, la main bien ouverte : environ 15 cm."},
+        // (Lot R1-refonte : le petit doigt est passé à « Mes premiers
+        // repères » ; l'empan prend sa place.)
+        {etiquette: "Je vois", question: {avant: "Mon empan mesure environ", reponse: "15", apres: "cm"},
+          consigne: "Mes repères à moi, je les ai toujours avec moi :\nje mesure mon empan avec ma règle.",
+          aide: {type: "repere", repere: "l12"}, legende: "Mon empan, la main bien ouverte : environ 15 cm.\nMa main, doigts serrés : environ 10 cm."},
         {etiquette: "Je vois", question: {avant: "Un très grand pas mesure environ", reponse: "1", apres: "m"},
           consigne: "Je fais un très grand pas,\npuis je le mesure avec le mètre de la classe.",
           aide: {type: "repere", repere: "l11"}, legende: "Un très grand pas : environ 1 m.\nUne voiture : environ 4 grands pas, 4 m."},
@@ -527,15 +581,17 @@
       ],
       retenir: "",
       cahier: "Je les note dans mon cahier et je les apprends par cœur.",
-      reperes: ["l10", "l12", "l11", "l2", "l5", "l6", "l8", "l9"]
+      reperes: ["l12", "l11", "l2", "l3", "l4", "l5", "l6", "l7", "l8", "l9"]
     },
     R4: {
       pret: true,
       aide: {outil: "reperes-unites", image: "reperes-unites"},
       apprends: [
-        {etiquette: "Je vois", question: {avant: "Un trombone pèse environ", reponse: "1", apres: "g"},
-          consigne: "Je prends un trombone dans ma main :\nc'est à peu près 1 gramme.",
-          aide: {type: "repere", repere: "m7"}, legende: "Un trombone : environ 1 g. Une feuille A4 : environ 5 g.\nUne ramette de 500 feuilles : environ 2,5 kg."},
+        // (Lot R1-refonte : le trombone est passé à « Mes premiers
+        // repères » ; la pièce de 1 € prend sa place.)
+        {etiquette: "Je vois", question: {avant: "Une pièce de 1 € pèse", reponse: "7,5", apres: "g"},
+          consigne: "Je pose une pièce de 1 € sur la balance de la classe.",
+          aide: {type: "repere", repere: "m3"}, legende: "Une pièce de 1 € : 7,5 g. Une feuille A4 : environ 5 g.\nUne ramette de 500 feuilles : environ 2,5 kg."},
         {etiquette: "Je vois", question: {avant: "Un litre d'eau pèse", reponse: "1", apres: "kg"},
           consigne: "Je pèse une bouteille de 1 L d'eau :\nl'eau seule pèse 1 kilogramme.",
           aide: {type: "repere", repere: "m8"}, legende: "1 L d'eau : 1 kg.\nUn pack de 6 bouteilles de 1,5 L : 9 L d'eau, environ 9 kg."},
@@ -545,7 +601,7 @@
       ],
       retenir: "",
       cahier: "Je les note dans mon cahier et je les apprends par cœur.",
-      reperes: ["m7", "m8", "m1", "m2", "m9"]
+      reperes: ["m3", "m8", "m1", "m2", "m9", "m5"]
     },
     R5: {
       pret: true,

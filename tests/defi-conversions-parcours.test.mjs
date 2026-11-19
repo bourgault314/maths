@@ -57,18 +57,25 @@ test("la carte v4 : 54 étapes, codes et rangs figés, paliers 10/16/9/6/8/5 vus
   assert.equal(Object.values(P.normaliser(JSON.parse(JSON.stringify(q11))).seances)[0][1], 54, "le rang 54 passe la normalisation");
   assert.equal(P.RANG.C9, 53);
   assert.ok(P.MOTIF_ETAPE.test("C9") && P.MOTIF_ETAPE.test("Q11") && !P.MOTIF_ETAPE.test("C10") && !P.MOTIF_ETAPE.test("Q12"));
-  assert.equal(CARTE.REPERES.length, 40, "36 repères et les 4 de la planche 7 (lot B1-1)");
+  assert.equal(CARTE.REPERES.length, 43, "36 repères, les 4 de la planche 7 (lot B1-1) et les 3 du lot R1-refonte");
   CARTE.REPERES.forEach(r => assert.match(r.code, P.MOTIF_REPERE));
   // Lot A2 ter : la règle (1 mm) rejoint « Mes premiers repères ».
   assert.equal(CARTE.etape("R1").reperes.length, 10);
   assert.equal(CARTE.repere("l1").etape, "R1");
+  // Lot R1-refonte : un repère par unité du CE2, dans l'ordre des unités.
+  assert.deepEqual(CARTE.etape("R1").reperes.map(c => CARTE.repere(c).unite), ["mm", "cm", "dm", "m", "km", "g", "kg", "t", "cL", "L"]);
+  ["l3", "l4", "l7"].forEach(c => assert.equal(CARTE.repere(c).etape, "R3", c));
+  ["m3", "m5"].forEach(c => assert.equal(CARTE.repere(c).etape, "R4", c));
+  CARTE.ETAPES.forEach(e => (e.reperes || []).forEach(c => assert.equal(CARTE.repere(c).etape, e.code, `${c} dans ${e.code}`)));
+  assert.ok(["l13", "l14", "l15"].every(c => P.MOTIF_REPERE.test(c)) && !P.MOTIF_REPERE.test("l16"));
 });
 
 test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", () => {
   assert.deepEqual(PRETS, ["R1", "R2", "P1", "C1", "C2", "E1", "D1", "D2", "D7", "Q1"]);
   PRETS.forEach(code => {
     const e = CARTE.etape(code);
-    assert.equal(e.apprends.length, 3, code);
+    // (Lot R1-refonte : « Mes premiers repères », un temps par repère.)
+    assert.equal(e.apprends.length, code === "R1" ? 10 : 3, code);
     // Lot A2 ter (choix de Gwenaël, le 13/11) : « À retenir » n'a plus de
     // texte quand ses cases (relations, repères) disent tout ; sinon, une ou
     // deux phrases courtes.
@@ -541,7 +548,7 @@ test("le pire cas tient dans les bornes du serveur (2 000 clés, 40 000 octets)"
   assert.equal(Object.keys(n.etapes).length, 54);
   assert.equal(n.etapes.R1.join(), p.etapes.R1.join(), "le pire cas est bien gardé tel quel");
   const m = P.mesurer(p);
-  assert.equal(m.cles, 249, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés (lot B1-1 : 40 repères)");
+  assert.equal(m.cles, 252, "comme en version 1 : les valeurs d'une étape sont un tableau, pas des clés (lot R1-refonte : 43 repères)");
   assert.ok(m.octets <= 16000, `${m.octets} octets (le serveur accepte 40 000)`);
 });
 

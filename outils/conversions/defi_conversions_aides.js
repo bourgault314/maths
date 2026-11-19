@@ -1261,17 +1261,21 @@
   // (4 récréations, trois canettes, le dixième d'une brique de lait). Plus de
   // petit cube, de tour de piste, de cuillère à café ni de dessin animé :
   // l'élève ne les rencontre qu'au palier 2.
+  // Lot R1-refonte : les dix repères de « Mes premiers repères », un par
+  // unité (le grand pas, la feuille A4, Saint-Pierre → Saint-Denis et la
+  // pièce de 1 € sont passés au CM1).
   const REFERENCES = {
     mm: ["l1", "1 mm : la plus petite graduation de la règle"],
-    cm: ["l3", "une feuille A4 : 21 cm de large"],
-    m: ["l11", "1 m : un grand pas"],
-    km: ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"],
-    g: ["m3", "une pièce de 1 € : 7,5 g"],
-    kg: ["m4", "un paquet de riz : 1 kg"],
-    t: ["m6", "une voiture : environ 1 t"],
+    cm: ["l10", "1 cm : la largeur de mon petit doigt"],
+    dm: ["l15", "1 dm : la largeur de ma main"],
+    m: ["l13", "1 m : la hauteur de la poignée de porte"],
+    km: ["l14", "1 km : 10 terrains de foot bout à bout"],
+    g: ["m7", "1 g : un trombone"],
+    kg: ["m4", "1 kg : un paquet de riz"],
+    t: ["m6", "1 t : une petite voiture"],
     cL: ["c2", "une canette : 33 cL"],
     dL: ["c3", "1 dL : le dixième d'une brique de lait"],
-    L: ["c3", "une brique de lait : 1 L"],
+    L: ["c3", "1 L : une brique de lait"],
     // Les durées (lot A2 bis ; lot A2 ter : la récréation de « On te montre »)
     min: ["!cloche", "la récréation : 15 min"],
     h: ["!cloche", "1 h : 4 récréations de 15 min"],
@@ -1283,16 +1287,20 @@
   // homogène : plus de petit dessin plat au milieu des illustrations). Le
   // texte ne change pas : une image sans sa mesure ne cite pas un repère
   // d'un autre palier (règle du lot A2 ter).
+  // Lot R1-refonte : un repère par unité, l'autre référence se déduit des
+  // repères voisins (« 1 m : environ 10 largeurs de main ») ; plus de
+  // « 1 t = 1 000 paquets de riz » (Gwenaël, 18/11 : ça ne parle pas à un
+  // élève).
   const AUTRES = {
-    l1: {mm: ["m1", "mm : pour les toutes petites longueurs"]},
-    l3: {cm: ["l1", "1 cm : de 0 à 1 sur la règle"]},
-    l4: {m: ["l11", "1 m : un grand pas"]},
-    l7: {km: ["l4", "km : pour les longs trajets en voiture"]},
-    m3: {g: ["m7", "g : pour les objets très légers"]},
-    m4: {kg: ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]},
-    m5: {kg: ["m4", "un paquet de riz : 1 kg"]},
-    m6: {t: ["m4", "1 t : 1 000 paquets de riz"]},
-    c2: {cL: ["c5", "cL : pour les petites quantités de liquide"]},
+    l1: {mm: ["l10", "mm : dix fois plus petit que le cm"]},
+    l10: {cm: ["l1", "1 cm : de 0 à 1 sur la règle"]},
+    l15: {dm: ["l1", "1 dm : de 0 à 10 sur la règle"]},
+    l13: {m: ["l15", "1 m : environ 10 largeurs de main"]},
+    l14: {km: ["l13", "km : pour les longs trajets"]},
+    m7: {g: ["m4", "g : pour les objets légers"]},
+    m4: {kg: ["m7", "1 kg : environ 1 000 trombones"]},
+    m6: {t: ["m4", "t : pour les objets très lourds"]},
+    c2: {cL: ["c3", "cL : pour les petites quantités de liquide"]},
     c3: {L: ["c2", "1 L : trois canettes, un peu plus"]}
   };
   // Lot B1-1 : au palier 2, les repères du CM1 rejoignent ceux des bases ;
@@ -1304,18 +1312,20 @@
   const REFERENCES_2 = {
     mm: [["l1", "1 mm : la plus petite graduation de la règle"], ["m1", "mm : pour les toutes petites longueurs"]],
     cm: [["l10", "1 cm : la largeur de mon petit doigt"], ["l3", "une feuille A4 : 21 cm de large"]],
-    m: [["l11", "1 m : un très grand pas"], ["l4", "une voiture : environ 4 m de long"]],
-    km: [["l5", "1 km : deux tours et demi de piste"], ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"]],
+    // (Lot R1-refonte : les repères de « Mes premiers repères » d'abord.)
+    dm: [["l15", "1 dm : la largeur de ma main"], ["l1", "1 dm : de 0 à 10 sur la règle"]],
+    m: [["l13", "1 m : la hauteur de la poignée de porte"], ["l11", "1 m : un très grand pas"], ["l4", "une voiture : environ 4 m de long"]],
+    km: [["l14", "1 km : 10 terrains de foot bout à bout"], ["l5", "1 km : deux tours et demi de piste"], ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"]],
     mg: [["m1", "un grain de riz : environ 25 mg"], ["m7", "mg : pour les masses toutes petites"]],
     g: [["m7", "1 g : un trombone"], ["m3", "une pièce de 1 € : 7,5 g"]],
     kg: [["m8", "1 kg : un litre d'eau"], ["m4", "un paquet de riz : 1 kg"], ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]],
-    t: [["m6", "une voiture : environ 1 t"], ["m5", "1 t : plus de 100 packs d'eau"]],
+    t: [["m6", "une petite voiture : environ 1 t"], ["m5", "1 t : plus de 100 packs d'eau"]],
     mL: [["c1", "une cuillère à café : 5 mL"], ["c5", "mL : pour les toutes petites quantités"]],
     cL: [["c5", "un verre : environ 20 cL"], ["c2", "une canette : 33 cL"]],
     dL: [["c3", "1 dL : le dixième d'une brique de lait"]],
     L: [["c3", "une brique de lait : 1 L"], ["c7", "une bouteille d'eau : 1,5 L"], ["c6", "un grand arrosoir : 10 L"], ["c4", "un chauffe-eau solaire : environ 200 L"]]
   };
-  const ORDRE_2 = {longueur: ["mm", "cm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
+  const ORDRE_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
   // Les lignes de la liste des unités au palier 2 : [{unite, repere, texte}].
   function referencesUnites2(question) {
     const C = carte();
@@ -1328,7 +1338,12 @@
     // (Relier : aucun des trois objets à relier, ni leurs mesures.)
     const interdits = [question.repere].concat(question.forme === "associer" ? question.reperes || [] : []).filter(Boolean);
     const cachees = interdits.map(c => `${C.repere(c).nombre}${C.repere(c).unite}`).concat(question.cache ? [question.cache] : []);
-    return (ORDRE_2[grandeur] || []).filter(u => unites.includes(u)).map(u => {
+    // (Lot R1-refonte, correctif : sans unités proposées, le décimètre n'a
+    // sa ligne que quand la question porte sur lui, comme au palier 1 ; cinq
+    // lignes ne tenaient pas au petit iPhone dans « Lequel mesure le moins ? ».)
+    const parDefaut = !(question.morceaux.sorte === "unite" && question.choix) && !question.unites;
+    const avecDm = !parDefaut || question.unite === "dm" || (question.reperes || []).some(c => C.repere(c).unite === "dm");
+    return (ORDRE_2[grandeur] || []).filter(u => unites.includes(u) && (u !== "dm" || avecDm)).map(u => {
       const ref = (REFERENCES_2[u] || []).find(([code]) => {
         const x = C.repere(code);
         return !interdits.includes(code) && !cachees.includes(`${x.nombre}${x.unite}`);
@@ -1357,8 +1372,11 @@
     const grandeur = question.grandeur || G.grandeurDe(question.unite);
     // Associer (lot A2 bis) : les unités des trois mesures, de la plus
     // petite à la plus grande, toutes grandeurs mêlées.
-    const ordre = question.forme === "associer" ? ["mm", "cm", "m", "km", "g", "kg", "t", "cL", "dL", "L"].filter(u => unites.includes(u))
-      : {longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"], duree: ["min", "h", "jours"]}[grandeur] || unites;
+    // (Lot R1-refonte : le décimètre, la main, a sa ligne quand la question
+    // porte sur lui.)
+    const ordre = question.forme === "associer" ? ["mm", "cm", "dm", "m", "km", "g", "kg", "t", "cL", "dL", "L"].filter(u => unites.includes(u))
+      : {longueur: ["mm", "cm", "m", "km"].concat(unites.includes("dm") ? ["dm"] : []).sort((a, b) => G.exposant(a) - G.exposant(b)),
+        masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"], duree: ["min", "h", "jours"]}[grandeur] || unites;
     const liste = el("div", "refs");
     ordre.filter(u => unites.includes(u) || question.morceaux.sorte === "valeur" || question.morceaux.sorte === "saisie").forEach(u => {
       const autre = question.repere && AUTRES[question.repere] && AUTRES[question.repere][u];
@@ -1958,6 +1976,57 @@
   // retirée, à la demande de Gwenaël le 14/11 : pas de légende pour la
   // punaise ; la punaise reste.)
 
+  // ======================================================= lot R1-refonte
+  // « Mes premiers repères » : l'outil de À toi est la carte du repère (son
+  // dessin et sa mesure), l'image son dessin seul. Relier, l'objet à
+  // trouver : les cartes des trois repères ; l'image, l'unité de la réponse
+  // dite autrement (AUTRES) ou les unités rangées de chaque grandeur.
+  const UNITES_R1 = {longueur: "mm, cm, dm, m, km", masse: "g, kg, t", contenance: "cL, dL, L"};
+  function lignesRepere(zone, codes) {
+    const liste = el("div", "refs");
+    codes.forEach(c => {
+      const r = carte().repere(c);
+      const ligne = el("div", "ref");
+      ligne.appendChild(imageRepere(c));
+      ligne.appendChild(el("span", "", carte().typo(`${r.objet} : ${r.valeur}`)));
+      liste.appendChild(ligne);
+    });
+    zone.appendChild(liste);
+  }
+  function outilCarteRepere(zone, question) {
+    if (question.forme === "associer") { lignesRepere(zone, question.reperes); return; }
+    if (question.morceaux.sorte === "objets") { lignesRepere(zone, question.morceaux.reperes); return; }
+    zone.appendChild(carteRepere(question.repere));
+  }
+  function imageDessinRepere(zone, question) {
+    if (question.forme === "associer") {
+      // Les unités de chaque grandeur, de la plus petite à la plus grande :
+      // trois grandeurs (degrés 1 et 2) ou une seule (degré 3).
+      const gs = [...new Set(question.reperes.map(c => carte().repere(c).grandeur))];
+      zone.appendChild(lignes("rel petite libre", gs.map(g => `${({longueur: "Longueurs", masse: "Masses", contenance: "Contenances"})[g]} : ${UNITES_R1[g]}`).join("\n")));
+      zone.appendChild(el("div", "note", gs.length > 1 ? "Je regarde d'abord ce que je mesure." : "Du plus petit au plus grand."));
+      return;
+    }
+    if (question.morceaux.sorte === "objets") { reperesUnites(zone, question); return; }
+    const r = carte().repere(question.repere);
+    const bloc = el("div", "carte-rep seul-dessin");
+    bloc.appendChild(imageRepere(question.repere));
+    bloc.appendChild(el("div", "t", carte().typo(r.objet)));
+    zone.appendChild(bloc);
+  }
+
+  // Travail 1 de « Quelle unité choisir ? » : les unités de chaque grandeur.
+  function familles(zone) {
+    const liste = el("div", "refs");
+    GRANDEURS.filter(([cle]) => UNITES_R1[cle]).forEach(([cle, vu, texte]) => {
+      const ligne = el("div", "ref");
+      ligne.appendChild(visuel(vu));
+      ligne.appendChild(el("span", "", carte().typo(`${texte.split(" :")[0]} : ${UNITES_R1[cle]}`)));
+      liste.appendChild(ligne);
+    });
+    zone.appendChild(liste);
+  }
+
   function outil(zone, question, {fini = () => {}} = {}) {
     // (Lot B2-1b : « Trouve l'intrus », « Coche tout ce qui est égal à… » :
     // un glisse-unité pour l'outil seulement, `glisseOutil` ; la correction
@@ -2000,6 +2069,9 @@
       return;
     }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
+    // Lot R1-refonte
+    if (question.outil === "carte-repere") { outilCarteRepere(zone, question); return; }
+    if (question.outil === "familles") { familles(zone); return; }
     if (question.outil === "regle") { regleOutil(zone); return; }
     if (question.outil === "horloge-quarts") { horlogeQuarts(zone); return; }
     // Lot A2 bis
@@ -2035,8 +2107,10 @@
       return;
     }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
+    // Lot R1-refonte
+    if (question.outil === "carte-repere") { imageDessinRepere(zone, question); return; }
     // Lot A2 bis
-    if (question.outil === "grandeurs") { grandeurs(zone); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
+    if (question.outil === "grandeurs" || question.outil === "familles") { grandeurs(zone); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
     if (question.tableau) {
       tableauHeures(zone, question.tableau);
       if (question.image && question.image[1]) zone.appendChild(lignes("rel petite", question.image[1]));

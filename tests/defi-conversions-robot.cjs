@@ -272,6 +272,9 @@ async function controler(page, taille) {
       // (Lot 3b-2 : les illustrations des repères, .ill, comme les dessins.)
       const SEL = ".etiq, .suite i, .carte-rep, .ref, .dix i, .esc i, .case, svg, .ill, .gu2, .pave4, .bas button, .rel, .verd, table";
       cadre.querySelectorAll(SEL).forEach(e => {
+        // (Lot R1-refonte : les traits de relier, `svg.liens`, passent SOUS les
+        // boutons exprès : ils ne se comparent à rien.)
+        if (e.matches("svg.liens")) return;
         if (!dansBloc(e) || !visible(e) || (e.tagName.toLowerCase() === "svg" ? Boolean(e.parentElement.closest("svg, .gu2")) : tropDedans(e) && !e.matches(".gu2, .pave4"))) return;
         boites.push({e, texte: (e.textContent || e.getAttribute("aria-label") || e.className.baseVal || e.className || e.tagName).toString().trim().slice(0, 24) || e.tagName, b: e.getBoundingClientRect()});
       });
@@ -671,7 +674,9 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   // l'explication apparaît, et on reste sur ce temps. Aux 2e et 3e temps, le
   // robot fait le geste lui-même.
   await cliquerTexte(page, "J'apprends : on te montre");
-  for (let t = 0; t < 3; t += 1) {
+  // (Lot R1-refonte : « Mes premiers repères » a un temps par repère, 10.)
+  const nTemps = etape.apprends.length;
+  for (let t = 0; t < nTemps; t += 1) {
     const nomT = `On te montre ${t + 1} · ${etape.apprends[t].etiquette}`;
     const aFaire = Boolean(await page.locator(".q .case").count()) && !(await page.locator(".q .case.vert").count());
     if (t === 0 && aFaire) {
@@ -679,7 +684,7 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
       await attendre(page, 4000);
       const ici = (await page.locator(".bseance .chip").textContent()).replace(/\s/g, "");
       const rempli = await page.evaluate(() => Boolean(document.querySelector(".q .case.vert")) && Boolean(document.querySelector(".zone .apres, .zone .note")));
-      if (ici !== "1/3") {
+      if (ici !== `1/${nTemps}`) {
         await carnet.photo(page, `${nomT} (Suivant sans le geste)`, ["« Suivant » sans le geste : on passe au temps suivant sans rien voir"]);
         continue;
       }
@@ -697,6 +702,14 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
     await page.waitForTimeout(600); // la fin des petites animations (le glisse-nombre)
     await carnet.photo(page, nomT, geste);
     await suivant(page);
+  }
+
+  // Lot R1-refonte : la liste à recopier vient avant À toi (son bouton, en
+  // mode professeur : « Accueil »).
+  if (await page.locator(".liste-avant").count()) {
+    await carnet.photo(page, "La liste à recopier (avant À toi)");
+    await appuyer(page, page.locator("#cadre button").filter({hasText: "Accueil"}).first());
+    await attendre(page, 50);
   }
 
   // À toi : une erreur à la 1re question, puis juste jusqu'au bout.

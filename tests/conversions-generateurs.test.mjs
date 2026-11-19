@@ -348,8 +348,7 @@ function controlerQuestion(q, ou) {
   if (q.donnees.type === "unite-sans") {
     assert.equal(q.choix[q.bon], q.donnees.unite);
     assert.equal(q.choix.length, 3);
-    // Une seule unité de la bonne grandeur… ou deux, la fausse étant au
-    // mauvais ordre de grandeur (jamais deux qui pourraient convenir).
+    // (Lot R1-refonte : travail 1, une seule unité de la bonne grandeur.)
     const g = FAMILLE[q.donnees.unite];
     const memes = q.choix.filter(u => FAMILLE[u] === g);
     assert.ok(memes.length <= 2, `${ou} : ${q.choix}`);
@@ -374,9 +373,23 @@ function controlerQuestion(q, ou) {
     const o = G.OBJETS_UNITE[q.donnees.objet];
     assert.equal(q.choix[q.bon], o[2]);
     assert.ok(o[3] > 0, `${ou} : un exemple de J'apprends tiré`);
-    // Lot 3b : quatre unités ; au plus une d'une autre grandeur.
-    assert.equal(q.choix.length, 4);
-    assert.ok(q.choix.filter(u => FAMILLE[u] !== FAMILLE[o[2]]).length <= 1, `${ou} : ${q.choix}`);
+    // Lot R1-refonte (travail 2) : les unités de la même grandeur, et elles
+    // seules (4 pour une longueur, 3 sinon).
+    assert.equal(q.choix.length, FAMILLE[o[2]] === FAMILLE.m ? 4 : 3);
+    assert.ok(q.choix.every(u => FAMILLE[u] === FAMILLE[o[2]]), `${ou} : ${q.choix}`);
+  }
+  // Lot R1-refonte : travail 1 (une unité de chaque grandeur) et travail 3
+  // (le nombre, même unité).
+  if (q.donnees.type === "unite-grandeur") {
+    const o = G.OBJETS_UNITE[q.donnees.objet];
+    assert.equal(q.choix[q.bon], o[2]);
+    assert.equal(new Set(q.choix.map(u => FAMILLE[u])).size, 3, `${ou} : ${q.choix}`);
+  }
+  if (q.donnees.type === "nombre") {
+    const o = G.OBJETS_UNITE[q.donnees.objet];
+    assert.equal(q.choix[q.bon], G.ecrire(G.milli(o[1])));
+    assert.equal(new Set(q.choix).size, 3);
+    assert.equal(q.morceaux.apres, o[2]);
   }
   // Lot B1-1 : « Qu'est-ce qui mesure 400 m ? » — la bonne réponse est le
   // repère de la phrase ; les trois repères ont la même grandeur et des
@@ -430,7 +443,8 @@ function controlerQuestion(q, ou) {
       assert.equal(q.mesures[q.bonnes[i]].replace(/\u00a0/g, " "), `${r.nombre.replace(".", ",")} ${r.unite}`, `${ou} : ${code} mal relié`);
       // (Lot B1-1 : au palier 2, le nom court du repère.)
       if (CARTE.etape(q.code).palier >= 2) assert.ok(q.objets[i].texte.length <= 27 && q.correction[i].startsWith(r.objet), `${ou} : ${q.objets[i].texte}`);
-      else assert.equal(q.objets[i].texte, r.objet);
+      // (Lot R1-refonte : « La plus petite graduation », « 10 terrains de foot ».)
+      else assert.ok(r.objet.startsWith(q.objets[i].texte), `${ou} : ${q.objets[i].texte}`);
     });
     const g = new Set(q.donnees.reperes.map(c => CARTE.repere(c).grandeur));
     // (Lot B1-1 : au palier 2, une étape de repères n'a qu'une grandeur ;
@@ -554,14 +568,16 @@ function controlerSerie(code, usage, nombre, s, ou) {
   // jamais deux fois le même repère (la question à relier en reprend trois,
   // il n'y en a que 9) ; dans À toi, pas deux fois à moins de 5 questions.
   if (code === "R1") {
-    const reps = q => (q.forme === "associer" ? q.reperes : [q.repere]);
+    // (Lot R1-refonte : la règle ne demande pas de repère.)
+    const reps = q => (q.forme === "associer" ? q.reperes : q.repere ? [q.repere] : []);
     if (usage === "entraine" || usage === "exerciseur") {
       s.forEach((q, i) => s.slice(Math.max(0, i - 4), i).forEach(y => {
         const communs = reps(y).filter(r => reps(q).includes(r));
         assert.equal(communs.length, 0, `${ou} : le repère ${communs} revient à la question ${i + 1}, moins de 5 questions après`);
       }));
     } else {
-      const choix = s.filter(q => q.forme !== "associer").map(q => q.repere);
+      // (Lot R1-refonte : la règle à lire ne demande pas de repère.)
+      const choix = s.filter(q => q.forme !== "associer" && q.repere).map(q => q.repere);
       assert.equal(new Set(choix).size, choix.length, `${ou} : un repère deux fois ${JSON.stringify(choix)}`);
     }
   }
@@ -573,7 +589,9 @@ function controlerSerie(code, usage, nombre, s, ou) {
     assert.deepEqual([2, 4, 5, 7, 9].map(i => s[i].morceaux.sorte || s[i].forme), ["objets", "objets", "saisie", "objets", "associer"], `${ou} : places`);
     assert.ok(s[4].morceaux.compare && !s[2].morceaux.compare && !s[7].morceaux.compare, `${ou} : comparer en 5e`);
     const demandes = s.filter(q => !q.reperes).map(q => q.repere);
-    CARTE.etape(code).reperes.forEach(c => assert.ok(demandes.includes(c), `${ou} : le repère ${c} n'est pas demandé`));
+    // (Lot R1-refonte : 10 repères de longueur au CM1, 8 places : 8 au moins.)
+    const nouveaux = CARTE.etape(code).reperes;
+    assert.ok(nouveaux.filter(c => demandes.includes(c)).length >= Math.min(8, nouveaux.length), `${ou} : des repères ne sont pas demandés`);
     const tous = CARTE.etape(code).reperes.length + CARTE.etape("R1").reperes.filter(c => CARTE.repere(c).grandeur === CARTE.repere(CARTE.etape(code).reperes[0]).grandeur).length;
     const max = tous >= 9 ? 1 : 2;
     const simples = s.map(q => (q.reperes ? null : q.repere));
@@ -594,11 +612,32 @@ function controlerSerie(code, usage, nombre, s, ou) {
   // Relier : jamais les trois mesures en face de leur objet (Gwenaël, le 13/11).
   s.filter(q => q.forme === "associer").forEach(q => assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : les trois mesures en face de leur objet`));
   // Lot A2 bis : la place des nouvelles questions dans Je valide.
-  if (code === "R1" && usage === "valide") assert.equal(s[9].forme, "associer", `${ou} : associer en dernier`);
+  // Lot R1-refonte : relier en premier (le plus facile), puis l'objet à
+  // trouver, l'unité, la valeur, la règle, le pavé.
+  if (code === "R1" && usage === "valide") {
+    assert.deepEqual(s.map(q => q.forme === "associer" ? "associer" : q.donnees.type === "regle" ? "regle" : q.morceaux.sorte),
+      ["associer", "objets", "unite", "unite", "valeur", "objets", "regle", "saisie", "valeur", "saisie"], `${ou} : places`);
+  }
+  // Lot R1-refonte (Gwenaël, 18/11) : les trois travaux de « Quelle unité
+  // choisir ? », dans l'ordre.
   if (code === "R2" && usage === "valide") {
-    assert.equal(s[3].donnees.type, "grandeur"); assert.equal(s[7].donnees.type, "unite-duree");
-    assert.equal(s[5].donnees.type, "unite-sans");
-    assert.equal(s.filter(q => q.donnees.type === "unite").length, 7);
+    assert.deepEqual(s.map(q => q.travail || (q.donnees.type === "grandeur" ? 1 : 2)), [1, 1, 1, 2, 2, 2, 2, 3, 3, 3], `${ou} : les travaux`);
+    assert.equal(s[3].donnees.type, "unite-duree");
+  }
+  // Travail 1 : une seule unité de la bonne grandeur ; travail 2 : toutes
+  // de la même grandeur ; travail 3 : la même unité, des nombres 10 ou 100
+  // fois plus grands ou plus petits.
+  if (code === "R2") {
+    s.forEach(q => {
+      if (q.donnees.type === "unite-grandeur" || q.donnees.type === "unite-sans") {
+        assert.equal(q.choix.filter(u => G.grandeurDe(u) === q.grandeur).length, 1, `${ou} : ${q.texte}`);
+      }
+      if (q.donnees.type === "unite") assert.ok(q.choix.every(u => G.grandeurDe(u) === q.grandeur), `${ou} : ${q.texte}`);
+      if (q.donnees.type === "nombre") {
+        const v = G.milli(q.reponse);
+        q.choix.forEach(c => { const x = G.milli(c); assert.ok(x === v || [10n, 100n].some(k => x === v * k || x * k === v), `${ou} : ${q.texte} ${c}`); });
+      }
+    });
   }
   if (code === "C2" && usage === "valide") { assert.equal(s[4].forme, "ranger"); assert.equal(s[5].forme, "qcm"); }
   if (code === "C1" && usage === "valide") assert.equal(s[4].forme, "qcm");
@@ -606,7 +645,7 @@ function controlerSerie(code, usage, nombre, s, ou) {
     assert.deepEqual([...new Set(s.map(q => q.donnees.sorte))].sort(), ["deux", "objet", "pieces", "prix", "versC", "versE", "versEdec"], `${ou} : les sept façons`);
   }
   // Lot 3b : les étapes par cœur varient la forme.
-  if (code === "R1" && usage === "valide") assert.deepEqual([5, 7].map(i => s[i].morceaux.sorte), ["saisie", "saisie"]);
+  if (code === "R1" && usage === "valide") assert.deepEqual([7, 9].map(i => s[i].morceaux.sorte), ["saisie", "saisie"]);
   if (code === "P1" && usage === "valide") {
     assert.deepEqual([s[4], s[8]].map(q => q.donnees.type), ["fois", "fois"]); assert.equal(s[9].forme, "associer");
     // Plus jamais trois réponses « 1 » à la fin.
@@ -868,10 +907,13 @@ test("lot 3b-2 : la règle à lire — la bonne longueur, les deux vraies erreur
   let vues = 0;
   for (let g = 1; g <= 400; g += 1) {
     const valide = G.serie("R1", {usage: "valide", graine: g});
-    assert.equal(valide[2].donnees.type, "regle", `graine ${g} : la règle en 3e de Je valide`);
+    // (Lot R1-refonte : la règle en 7e de Je valide, 4 fois dans À toi.)
+    assert.equal(valide[6].donnees.type, "regle", `graine ${g} : la règle en 7e de Je valide`);
     const entraine = G.serie("R1", {usage: "entraine", graine: g});
-    assert.deepEqual([3, 11, 19].map(i => entraine[i].donnees.type), ["regle", "regle", "regle"], `graine ${g} : trois fois dans À toi`);
-    [valide[2], entraine[3], entraine[11], entraine[19]].forEach(q => {
+    assert.deepEqual([6, 13, 20].map(i => entraine[i].donnees.type), ["regle", "regle", "regle"], `graine ${g} : trois fois dans À toi`);
+    const longueurs = entraine.filter(q => q.donnees.type === "regle").map(q => q.donnees.fin - q.donnees.debut);
+    longueurs.forEach((l, k) => assert.ok(k === 0 || l !== longueurs[k - 1], `graine ${g} : la même longueur deux fois de suite`));
+    [valide[6], entraine[6], entraine[13], entraine[20]].forEach(q => {
       const {debut, fin, objet} = q.donnees;
       const L = fin - debut;
       assert.ok(debut >= 2 && debut <= 5 && fin <= 10 && L >= 2, `${objet} de ${debut} à ${fin}`);
@@ -953,7 +995,7 @@ test("lot 3b-2 : chaque repère a son illustration (webp, 600 px au plus, 64 ko 
     }
     assert.equal("emoji" in r, false, `${r.code} : plus d'émoticône`);
   });
-  assert.equal(utilisees.size, 37, "33 illustrations, trois reprises (voiture, feuille A4, brique de lait), et les 4 de la planche 7 (lot B1-1)");
+  assert.equal(utilisees.size, 40, "33 illustrations, trois reprises (voiture, feuille A4, brique de lait), les 4 de la planche 7 (lot B1-1) et les 3 du lot R1-refonte");
   assert.deepEqual(fs.readdirSync(dossier).filter(n => n.endsWith(".webp")).sort(), [...utilisees].sort(), "aucune image en trop");
   assert.match(CARTE.repere("l8").credit, /Nicolas PAYET.*CC BY-SA 3\.0/);
   const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
@@ -1175,4 +1217,50 @@ test("lot B2-2a : C6 — les fractions usuelles, les places, les erreurs, la dou
     if (q.droite && q.barre) assert.equal(q.droite.parts % q.barre.parts, 0);
     if (q.donnees.type === "frac") assert.equal(q.droite.cherche, Number(q.donnees.n));
   });
+});
+
+// ------------------------------------------------- lot R1-refonte (18/11)
+test("lot R1-refonte : les corrections qui citent les repères, les dix repères demandés", () => {
+  for (let g = 1; g <= 400; g += 1) {
+    for (const u of ["entraine", "valide"]) {
+      assert.ok(!G.serie("R1", {usage: u, graine: g}).some(q => q.donnees.type === "traits"), "plus de « Quel segment… ? » (Gwenaël, 19/11)");
+      // R2, travaux 2 et 3 : la correction place la mesure entre les repères
+      // de « Mes premiers repères » (une longueur, une masse, une contenance).
+      G.serie("R2", {usage: u, graine: g}).filter(q => q.donnees.type === "unite" || q.donnees.type === "nombre").forEach(q => {
+        assert.equal(q.correction.length, 2, q.texte);
+        assert.match(q.correction[1], /^(Plus|Moins|À peu près comme)/, q.correction[1]);
+      });
+    }
+  }
+  // Les dix repères, un par unité, et le pourquoi de relier en peu de mots.
+  const objets = new Set();
+  for (let g = 1; g <= 200; g += 1) G.serie("R1", {usage: "entraine", graine: g}).forEach(q => (q.reperes || [q.repere]).forEach(c => c && objets.add(c)));
+  assert.deepEqual([...objets].sort(), CARTE.etape("R1").reperes.slice().sort(), "les dix repères sont tous demandés");
+  assert.ok(!G.OBJETS_UNITE.some(o => /carte bancaire|vélo/.test(o[0])), "pas de carte bancaire, pas de vélo");
+});
+
+test("lot R1-refonte : au palier 2, le décimètre n'a sa ligne que si la question porte sur lui", () => {
+  // Sans unités proposées (« Lequel mesure le moins ? »), la liste des
+  // longueurs garde quatre lignes : cinq ne tenaient pas au petit iPhone.
+  globalThis.MATHSGO_CONVERSIONS_CARTE = CARTE;
+  globalThis.MATHSGO_CONVERSIONS = G;
+  const A = require("../outils/conversions/defi_conversions_aides.js");
+  let n = 0;
+  for (const code of ["R3", "R5", "R6"]) {
+    for (let g = 1; g <= 300; g += 1) {
+      for (const usage of ["entraine", "valide", "retour"]) {
+        G.serie(code, {usage, graine: g}).forEach(q => {
+          if (q.outil !== "reperes-unites") return;
+          const lignes = A.referencesUnites2(q);
+          const parDefaut = !(q.morceaux.sorte === "unite" && q.choix) && !q.unites;
+          const surDm = q.unite === "dm" || (q.reperes || []).some(c => CARTE.repere(c).unite === "dm");
+          if (!parDefaut || surDm) return;
+          n += 1;
+          assert.ok(!lignes.some(l => l.unite === "dm"), `${code} : ligne du décimètre pour « ${q.texte} »`);
+          assert.ok(lignes.length <= 4, `${code} : ${lignes.length} lignes pour « ${q.texte} »`);
+        });
+      }
+    }
+  }
+  assert.ok(n > 100, `seulement ${n} questions vues`);
 });
