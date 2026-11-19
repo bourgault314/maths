@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-calcul-lot-6-programmes
-genere_le 2026-11-18
+lot defi-calcul-lot-6-fraction-deux-cases
+genere_le 2026-11-19
 fichiers 69
-manifeste 2bb2d4b32fb25a4a1b7d3f0fc1e0872db489dff4e8c88fd247797bc41b62ee5c
+manifeste 799dd93cb64eebd07439a0c185e7b9a60bb729f70c937a277f2b7512dc5d973d
 673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -41,13 +41,13 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 3f54f95017a31804f0d299a3b93c34f0b454c2367af8d7018ee779be5690f9d7  menage.php
 95248821578c48f890d325ad0cee74eabffdad8c5459ea1e1e4b47a3d0935fd6  prof/coffres-parcours.js
-f1341cec68924e1e869060d109c9950089e8e1066411821937580c789f4bc639  prof/defi_calcul_core.js
+cececc99d17432018c24618b3cb6b788307b79420d967a6117d33495a4c1c419  prof/defi_calcul_core.js
 7da137ea0024eeadf298b34688fdd3ab95a80482eddb84af262ea40cfacc1176  prof/defi_calcul_mon_parcours.js
 a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tables_core.js
 7ab1799a069a2eda6967cb2fcd9a543d7474a7a13723530af6ca2141959ba5c6  prof/defi_tables_mon_parcours.js
 99f574761497a6a413747acf1a7d7214e62bb92f40809955c69e71fc65454caa  prof/direct.php
 845955ceb36814d0b6a8f5c0324a20ac947d14a2da2126c0b19421f1f449bc8f  prof/flash_anzan_parcours.js
-478eac6187e095e9b94c480095f5eca02cb56241a5dfdcaf4ceb18f7ac718976  prof/index.php
+2b7d78a0fa2ac07fe399cdf6e17d2c040ac734333dd6a3fcbaabaf96849a324f  prof/index.php
 ba33d317ad596cccb6c1eb1026c46fc9fd4183dbda4b2a06ebd44f23306eb1b5  prof/questionnaire.js
 f3de9050065385c16323b78a0e4a9040f3e3d5973f831e8fe3ed151c84070596  prof/splat-parcours.js
 53399653d399c9f7013eb5bdd5edcd9d8fbe5a2115e4930fcf1a13a535b87082  suivi.css

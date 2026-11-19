@@ -69,5 +69,5 @@ test("le bilan de Mes calculs du jour au téléphone : le nom sur sa ligne, ce q
 });
 
 test("la feuille a changé : son adresse aussi (cache)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261115-3/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261118-1/);
 });

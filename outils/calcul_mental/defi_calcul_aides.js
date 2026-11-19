@@ -2525,16 +2525,20 @@
       // Lot 7e : sans case à remplir, la fraction se lit par son nom
       // (« 3 quarts ») ; les chiffres affichés sont cachés au lecteur d'écran.
       const avecCase = Boolean(caseReponse) && (m[1] === "□" || m[2] === "□");
+      // Lot 6 « fraction à deux cases » : « □/□ », la fraction est la
+      // réponse ; ses deux cases sont demandées à part, « num » et « den ».
+      const deuxCases = m[1] === "□" && m[2] === "□";
+      if (avecCase && deuxCases) fraction.classList.add("dc-frac-cases");
       const num = document.createElement("span");
       num.className = "dc-frac-num";
-      if (m[1] === "□" && caseReponse) num.append(caseReponse());
+      if (m[1] === "□" && caseReponse) num.append(deuxCases ? caseReponse("num") : caseReponse());
       else num.textContent = insecable(sansParentheses(m[1]));
       const sur = document.createElement("span");
       sur.className = "sr-only";
       sur.textContent = " sur ";
       const den = document.createElement("span");
       den.className = "dc-frac-den";
-      if (m[2] === "□" && caseReponse) den.append(caseReponse());
+      if (m[2] === "□" && caseReponse) den.append(deuxCases ? caseReponse("den") : caseReponse());
       else den.textContent = insecable(sansParentheses(m[2]));
       if (avecCase) fraction.append(num, sur, den);
       else {
@@ -2543,7 +2547,21 @@
         sur.textContent = nomFraction(m[1], m[2]);
         fraction.append(num, sur, den);
       }
-      morceaux.push(fraction);
+      // Lot 6 : « 5 ÷ 6 = 5/6 » — un texte soudé à la fraction par une
+      // espace insécable (« =\u00a0 ») ne s'en sépare pas en fin de ligne.
+      const avant = morceaux[morceaux.length - 1];
+      // (Dans un texte seulement — une bulle, une consigne — : un calcul à
+      // l'écran tient déjà sur une ligne.)
+      if (!caseReponse && avant && avant.nodeType === 3 && /\u00a0$/.test(avant.textContent)) {
+        const t = avant.textContent;
+        const coupe = Math.max(t.lastIndexOf(" "), t.lastIndexOf("\u202f")) + 1;
+        const soude = document.createElement("span");
+        soude.className = "dc-soude";
+        soude.append(document.createTextNode(t.slice(coupe)), fraction);
+        if (coupe > 0) avant.textContent = t.slice(0, coupe);
+        else morceaux.pop();
+        morceaux.push(soude);
+      } else morceaux.push(fraction);
       dernier = m.index + m[0].length;
     }
     ajouterTexte(chaine.slice(dernier));

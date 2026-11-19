@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261115-3">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261118-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261118-2"></script>
+  <script src="./defi_calcul_core.js?v=20261118-3"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261115-3"></script>
-  <script src="./defi_calcul_aides.js?v=20261118-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261118-2"></script>
   <script>
     (() => {
       "use strict";
@@ -352,6 +352,9 @@
         serie: null,
         origine: "intro",
         answer: "",
+        // Lot 6 « fraction à deux cases » : la case où l'on tape, « num »
+        // (le numérateur) ou « den » ; `answer` s'écrit alors « 5/6 ».
+        partie: "num",
         effacerAuProchain: false,
         waitingForContinue: false,
         correctionAfficheeA: 0,
@@ -1798,6 +1801,12 @@
       }
 
       // Une espace insécable là où une ligne ne doit pas se couper.
+      // « Bravo ! » ; une fraction égale tapée autrement que la réponse
+      // (lot 6, choix de Gwenaël) : « Bravo ! 10/12 = 5/6. »
+      function bravo(element, texte, attendu, ecrit) {
+        if (CORE.fractionEgaleAutrement(attendu, ecrit)) AIDES.ecrireTexte(element, soude(`${texte} ${ecrit} = ${attendu.ecrite}.`));
+        else element.textContent = soude(texte);
+      }
       function soude(texte) {
         return String(texte)
           .replace(/(\d) (min|s|sur|calculs?|justes?|erreurs?|étapes?|modules?|fois|temps|jours?|niveaux?)\b/g, "$1 $2")
@@ -2663,10 +2672,12 @@
         if (serie.genre === "apprends" && serie.base) {
           const base = serie.base;
           const enPlus = [];
+          // (Lot 6 : une réponse en fraction à deux cases a ses cases à elle.)
+          const seule = t => typeof t.reponse === "number" && typeof t.ecrite !== "string";
           [base.represente, base.ecris].forEach(temps => {
             if (!temps) return;
-            if (typeof temps.reponse === "number") enPlus.push(temps.reponse);
-            (temps.etapes || []).forEach(etape => enPlus.push(etape.reponse));
+            if (seule(temps)) enPlus.push(temps.reponse);
+            (temps.etapes || []).filter(seule).forEach(etape => enPlus.push(etape.reponse));
           });
           return CORE.modelesReponse(`${serie.module}-${serie.niveau}`, enPlus);
         }
@@ -2677,9 +2688,10 @@
       function fixerLargeurCases() {
         const expression = $("expression");
         if (!expression) return;
+        fixerLargeurFraction(expression);
         const modeles = modeleCase();
         const cle = modeles.join("|");
-        expression.querySelectorAll(".inline-answer").forEach(laCase => {
+        expression.querySelectorAll(".inline-answer:not([data-partie])").forEach(laCase => {
           if (!modeles.length) { laCase.style.minWidth = ""; delete laCase.dataset.modele; return; }
           if (laCase.dataset.modele === cle) return;
           const texte = laCase.textContent;
@@ -2702,9 +2714,86 @@
         });
       }
 
+      // Lot 6 « fraction à deux cases » : les deux cases ont, dès le début,
+      // la largeur du plus long numérateur ou dénominateur du niveau (2
+      // chiffres au moins) ; taper ne fait rien bouger.
+      function chiffresDeLaFraction() {
+        const serie = state.serie;
+        if (!serie) return 2;
+        if (serie.genre === "apprends" && serie.base) {
+          const enPlus = [];
+          [serie.base.represente, serie.base.ecris].forEach(temps => {
+            if (!temps) return;
+            [temps, ...(temps.etapes || [])].forEach(t => { if (typeof t.ecrite === "string") enPlus.push(t.ecrite); });
+          });
+          return CORE.chiffresFraction(`${serie.module}-${serie.niveau}`, enPlus);
+        }
+        const question = serie.questions && serie.questions[serie.index];
+        const calcul = question && question.calcul;
+        return calcul ? CORE.chiffresFraction(`${calcul.module}-${calcul.niveau}`) : 2;
+      }
+      function fixerLargeurFraction(expression) {
+        const cases = expression.querySelectorAll(".inline-answer[data-partie]");
+        if (!cases.length) return;
+        const modele = "0".repeat(chiffresDeLaFraction());
+        cases.forEach(laCase => {
+          if (laCase.dataset.modele === modele) return;
+          const texte = laCase.textContent;
+          laCase.style.minWidth = "";
+          const taille = parseFloat(window.getComputedStyle(laCase).fontSize) || 16;
+          const zoom = (expression.getBoundingClientRect().width / (expression.offsetWidth || 1)) || 1;
+          laCase.textContent = modele;
+          const largeur = laCase.getBoundingClientRect().width / zoom;
+          laCase.textContent = texte;
+          if (!largeur) return;
+          laCase.style.minWidth = `${((largeur + 1) / taille).toFixed(3)}em`;
+          laCase.dataset.modele = modele;
+        });
+      }
+      const casesFraction = () => [$("inline-answer-num"), $("inline-answer-den")].filter(Boolean);
+      const saisieFraction = () => casesFraction().length === 2;
+      // Les cases de la réponse (une, ou les deux de la fraction).
+      const casesDeLaReponse = () => [$("inline-answer"), ...casesFraction()].filter(Boolean);
+      // Toucher une case de la fraction : c'est elle qu'on tape. Après une
+      // réponse rougie (J'apprends), ce qui est écrit reste : on corrige la
+      // case qu'on veut.
+      function choisirPartie(partie) {
+        if (!state.running || state.waitingForContinue || !saisieFraction()) return;
+        state.partie = partie;
+        state.effacerAuProchain = false;
+        renderInlineAnswer();
+        clearAnswerError();
+      }
+      // Valider avec une seule case remplie : la case vide devient celle où
+      // l'on tape (comme dans Défi conversions) ; rien ne compte. Rend vrai
+      // quand c'est le cas.
+      function completerFraction() {
+        if (!saisieFraction()) return false;
+        const [num, den] = CORE.morceauxFraction(state.answer);
+        if ((num === "") === (den === "")) return false;
+        state.partie = num === "" ? "num" : "den";
+        state.effacerAuProchain = false;
+        renderInlineAnswer();
+        clearAnswerError();
+        return true;
+      }
+
       function renderInlineAnswer(status = "") {
         const slot = $("inline-answer");
         fixerLargeurCases();
+        if (saisieFraction()) {
+          const morceaux = CORE.morceauxFraction(state.answer);
+          const active = !status && !state.waitingForContinue;
+          casesFraction().forEach((laCase, i) => {
+            const partie = i ? "den" : "num";
+            const nom = i ? "Dénominateur" : "Numérateur";
+            laCase.textContent = morceaux[i] || " ";
+            laCase.className = `inline-answer${status ? ` ${status}` : ""}${active && state.partie === partie ? " est-active" : ""}`;
+            laCase.setAttribute("aria-label", morceaux[i] ? `${nom} ${morceaux[i]}` : `${nom} à saisir`);
+          });
+          ajusterCalcul();
+          return;
+        }
         // Un calcul sans case (l'exemple du glisse-nombres) se mesure aussi :
         // la taille d'avant ne doit pas rester.
         if (!slot) { ajusterCalcul(); return; }
@@ -2743,12 +2832,20 @@
 
       const insecable = texte => String(texte).replace(/ /g, " ");
 
-      function caseReponse() {
+      // Lot 6 : `partie` (« num », « den ») — une case de la fraction à deux
+      // cases (« 6 × □/□ = 5 ») ; on la touche pour y taper. Une fraction
+      // nouvelle commence au numérateur.
+      function caseReponse(partie) {
         const slot = document.createElement("span");
-        slot.id = "inline-answer";
+        slot.id = partie ? `inline-answer-${partie}` : "inline-answer";
         slot.className = "inline-answer";
         slot.setAttribute("role", "textbox");
         slot.setAttribute("aria-readonly", "true");
+        if (partie) {
+          slot.dataset.partie = partie;
+          if (partie === "num") state.partie = "num";
+          brancherAuToucher(slot, () => choisirPartie(partie));
+        }
         return slot;
       }
 
@@ -2791,7 +2888,7 @@
       }
 
       function clearAnswerError() {
-        $("inline-answer")?.classList.remove("is-invalid");
+        casesDeLaReponse().forEach(laCase => laCase.classList.remove("is-invalid"));
         if (!state.waitingForContinue) {
           $("answer-feedback").textContent = "";
           $("answer-feedback").className = "dc-bulle";
@@ -2799,9 +2896,15 @@
       }
 
       function showAnswerError() {
-        $("inline-answer")?.classList.add("is-invalid");
+        casesDeLaReponse().forEach(laCase => laCase.classList.add("is-invalid"));
         $("answer-feedback").className = "dc-bulle is-wrong";
-        $("answer-feedback").textContent = $("question-card").classList.contains("no-skip")
+        // Lot 6 : « 5/0 » — le dénominateur à corriger.
+        const [, den] = CORE.morceauxFraction(state.answer);
+        if (saisieFraction() && den !== "" && Number(den) === 0) {
+          state.partie = "den";
+          renderInlineAnswer("is-invalid");
+          $("answer-feedback").textContent = "Le dénominateur ne peut pas être 0.";
+        } else $("answer-feedback").textContent = $("question-card").classList.contains("no-skip")
           ? "Tape une réponse."
           : "Tape une réponse, ou « Je ne sais pas ».";
         $("expression").focus?.({preventScroll: true});
@@ -3200,11 +3303,13 @@
           if (revelees) ligne.className = index < serie.etape ? "faite" : "revelee";
           // La case de la ligne : celle où l'on tape (l'étape qui se joue),
           // ou sa réponse écrite (faite, révélée), ou vide (les suivantes).
-          const laCase = () => {
-            if (index === serie.etape && !revelees) return caseReponse();
+          const laCase = partie => {
+            if (index === serie.etape && !revelees) return caseReponse(partie);
             const reponse = document.createElement("b");
             reponse.className = `inline-answer ${index < serie.etape ? (corrigees.includes(index) ? "is-corrected" : "is-correct") : revelees ? "is-corrected" : "est-vide"}`;
-            reponse.textContent = index < serie.etape || revelees ? CORE.formaterNombre(etape.reponse) : " ";
+            // (Lot 6 : une case de la fraction à deux cases, son morceau.)
+            const ecrite = CORE.reponseEcrite(etape);
+            reponse.textContent = index < serie.etape || revelees ? (partie ? CORE.morceauxFraction(ecrite)[partie === "den" ? 1 : 0] : ecrite) : " ";
             return reponse;
           };
           // Une étape plus courte (« 6/10 = □ » sous « 4 + 6/10 = □ ») est
@@ -3245,7 +3350,7 @@
         state.waitingForContinue = true;
         state.effacerAuProchain = false;
         if (nom === "represente") {
-          state.answer = CORE.formaterNombre(temps.reponse);
+          state.answer = CORE.reponseEcrite(temps);
           renderInlineAnswer("is-corrected");
         } else {
           serie.etape = Math.min(serie.etape, serie.apprends.ecris.etapes.length - 1);
@@ -3354,11 +3459,13 @@
           return;
         }
         if (state.waitingForContinue) { avancerTemps(); return; }
+        if (completerFraction()) return;
         const valeur = CORE.lireReponse(state.answer);
         if (valeur === null) { showAnswerError(); secouerConsigne(); return; }
         const ecris = aEtapes(nom);
-        const attendue = ecris ? serie.apprends.ecris.etapes[serie.etape].reponse : serie.apprends.represente.reponse;
-        if (CORE.memeNombre(valeur, attendue)) {
+        const attendue = ecris ? serie.apprends.ecris.etapes[serie.etape] : serie.apprends.represente;
+        const ecrit = state.answer;
+        if (CORE.estJuste(attendue, valeur, ecrit)) {
           if (ecris && serie.etape < serie.apprends.ecris.etapes.length - 1) {
             // Une étape de plus : la suivante prend la case.
             serie.etape += 1;
@@ -3378,7 +3485,7 @@
             $("question-card").classList.add("ecrit-fini");
           }
           $("answer-feedback").className = "dc-bulle is-correct";
-          $("answer-feedback").textContent = soude("Bravo !");
+          bravo($("answer-feedback"), "Bravo !", attendue, ecrit);
           setAnswerControlsEnabled(false);
           if (ecris) {
             // Relecture 1 (05/11/2026) : J'écris fini reste à l'écran, avec
@@ -3848,9 +3955,10 @@
       function repondreEtapeQuestion(question) {
         const etapes = question.dessinEtapes.etapes;
         if (!(question.etape < etapes.length - 1)) return false;
+        if (completerFraction()) return true;
         const valeur = CORE.lireReponse(state.answer);
         if (valeur === null) { showAnswerError(); return true; }
-        const juste = CORE.memeNombre(valeur, etapes[question.etape].reponse);
+        const juste = CORE.estJuste(etapes[question.etape], valeur, state.answer);
         if (!juste && question.essaisEtape < 1) {
           question.essaisEtape += 1;
           renderInlineAnswer("is-invalid");
@@ -4101,12 +4209,15 @@
         state.correctionAfficheeA = juste || auTest ? 0 : Date.now();
         const feedback = $("answer-feedback");
         feedback.className = `dc-bulle ${juste ? "is-correct" : "is-wrong"}`;
-        const attendue = CORE.formaterNombre(question.calcul.reponse);
+        const attendue = CORE.reponseEcrite(question.calcul);
+        // (Lot 6 : la fraction tapée, telle quelle — « 6/5 », « 10/12 ».)
+        const tapee = saisieFraction() ? state.answer : CORE.formaterNombre(valeur);
         if (juste) {
           renderInlineAnswer("is-correct");
           // Lot 7-0 : le dessin à étapes se remplit jusqu'au bout.
           if (question.dessinEtapes) majDessinQuestion(question.dessinEtapes.dessins[question.dessinEtapes.etapes.length]);
-          feedback.textContent = soude(auTest ? "✓ Juste" : texteJuste || "Bravo !");
+          if (auTest || texteJuste) feedback.textContent = soude(auTest ? "✓ Juste" : texteJuste);
+          else bravo(feedback, "Bravo !", question.calcul, state.answer);
         } else if (auTest) {
           renderInlineAnswer("is-wrong");
           feedback.textContent = soude(passe ? "✗ Je ne sais pas" : "✗ Pas juste");
@@ -4119,9 +4230,12 @@
           if (cause) AIDES.ecrireTexte(feedback, cause.texte);
           else {
             // Lot 1 (planche 6) : « Je ne sais pas » — l'image revient.
-            feedback.textContent = soude(passe
+            const phrase = soude(passe
               ? `${image ? "Regarde le dessin. " : ""}Bonne réponse : ${attendue}.`
-              : `Ta réponse : ${CORE.formaterNombre(valeur)}. Bonne réponse : ${attendue}.`);
+              : `Ta réponse : ${tapee}. Bonne réponse : ${attendue}.`);
+            // (Lot 6 : des fractions, écrites comme sur le cahier.)
+            if (saisieFraction()) AIDES.ecrireTexte(feedback, phrase);
+            else feedback.textContent = phrase;
           }
           if (image) {
             if (state.manip) { state.manip.detruire(); state.manip = null; }
@@ -4173,10 +4287,11 @@
         const question = serie.questions[serie.index];
         // Lot 7-0 : « Avec le dessin » à étapes — la case d'avant le résultat.
         if (!passe && question.dessinEtapes && repondreEtapeQuestion(question)) return;
+        if (!passe && completerFraction()) return;
         const valeur = passe ? null : CORE.lireReponse(state.answer);
         if (!passe && valeur === null) { showAnswerError(); return; }
         const ms = Math.round(performance.now() - serie.debut);
-        const juste = !passe && CORE.memeNombre(valeur, question.calcul.reponse);
+        const juste = !passe && CORE.estJuste(question.calcul, valeur, state.answer);
         const cause = !juste && !passe ? CORE.diagnostiquer(question.calcul, valeur, state.answer) : null;
         // Seule la première réponse à un calcul compte, pour le score, pour
         // les boîtes et pour les causes d'erreur.
@@ -4184,6 +4299,7 @@
         if (!question.retour) {
           if (cause) serie.causes[cause.c] = (serie.causes[cause.c] || 0) + 1;
           serie.reponses.push(Object.assign({juste, ms, valeur, passe, calcul: question.calcul, outil: question.outil || "aucun"},
+            !passe && saisieFraction() ? {ecrit: state.answer} : {},
             question.rappel ? {rappel: true} : {}, question.deuxieme ? {deuxieme: true} : {}));
           if (serie.genre === "jour") {
             const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, Boolean(question.deuxieme));
@@ -4222,7 +4338,20 @@
 
       function enterDigit(digit) {
         if (!state.running || state.waitingForContinue) return;
-        if (state.effacerAuProchain) { state.answer = ""; state.effacerAuProchain = false; }
+        if (state.effacerAuProchain) { state.answer = ""; state.partie = "num"; state.effacerAuProchain = false; }
+        // Lot 6 : la fraction à deux cases — le chiffre va dans la case
+        // touchée ; pas de virgule.
+        if (saisieFraction()) {
+          if (!/^\d$/.test(digit)) return;
+          const morceaux = CORE.morceauxFraction(state.answer);
+          const i = state.partie === "den" ? 1 : 0;
+          if (morceaux[i].length >= chiffresDeLaFraction()) return;
+          morceaux[i] += digit;
+          state.answer = `${morceaux[0]}/${morceaux[1]}`;
+          renderInlineAnswer();
+          clearAnswerError();
+          return;
+        }
         if (state.answer.length >= CHIFFRES_MAX) return;
         // Une seule virgule, et seulement là où la touche est montrée.
         if (digit === "," && ($("touches").hidden || state.answer.includes(","))) return;
@@ -4233,6 +4362,19 @@
 
       function effacer(tout) {
         if (!state.running || state.waitingForContinue) return;
+        // Lot 6 : ⌫ efface dans la case touchée ; dans un dénominateur vide,
+        // il remonte au numérateur. « Effacer » vide les deux cases.
+        if (saisieFraction() && !tout && !state.effacerAuProchain) {
+          const morceaux = CORE.morceauxFraction(state.answer);
+          const i = state.partie === "den" ? 1 : 0;
+          if (i === 1 && !morceaux[1]) state.partie = "num";
+          else morceaux[i] = morceaux[i].slice(0, -1);
+          state.answer = morceaux[0] || morceaux[1] ? `${morceaux[0]}/${morceaux[1]}` : "";
+          renderInlineAnswer();
+          clearAnswerError();
+          return;
+        }
+        if (saisieFraction()) state.partie = "num";
         state.answer = tout || state.effacerAuProchain ? "" : state.answer.slice(0, -1);
         state.effacerAuProchain = false;
         renderInlineAnswer();
@@ -4555,11 +4697,16 @@
           question.className = "correction-question";
           const expression = document.createElement("span");
           expression.className = "correction-expression";
-          const attendue = document.createElement("b");
-          attendue.className = "expected-answer";
-          attendue.textContent = CORE.formaterNombre(reponse.calcul.reponse);
-          // (« 0,3 = □/10 » : la réponse s'écrit au numérateur.)
-          expression.append(...AIDES.noeudsCalcul(reponse.calcul.texte, {caseReponse: () => attendue, insecable}));
+          const ecrite = CORE.reponseEcrite(reponse.calcul);
+          // (« 0,3 = □/10 » : la réponse s'écrit au numérateur. Lot 6 :
+          // « 6 × □/□ = 5 », chaque case de la fraction a son morceau.)
+          const attendue = partie => {
+            const b = document.createElement("b");
+            b.className = "expected-answer";
+            b.textContent = partie ? CORE.morceauxFraction(ecrite)[partie === "den" ? 1 : 0] : ecrite;
+            return b;
+          };
+          expression.append(...AIDES.noeudsCalcul(reponse.calcul.texte, {caseReponse: attendue, insecable}));
           question.append(expression);
           item.append(question);
           const donnee = document.createElement("span");
@@ -4568,7 +4715,7 @@
             donnee.classList.add("is-passe");
             donnee.textContent = "Je ne sais pas";
           } else {
-            donnee.textContent = CORE.formaterNombre(reponse.valeur);
+            donnee.textContent = typeof reponse.ecrit === "string" ? reponse.ecrit : CORE.formaterNombre(reponse.valeur);
             donnee.setAttribute("aria-label", `Ta réponse : ${donnee.textContent}`);
           }
           item.append(donnee);
@@ -4669,7 +4816,12 @@
         const carte = $("question-card");
         const gesteFait = carte.classList.contains("manip-entraine") && state.manip && state.manip.fini;
         const manip = (carte.classList.contains("aide-perles") || carte.classList.contains("aide-glisse")) && !gesteFait;
-        if (/^\d$/.test(event.key) && !manip) enterDigit(event.key);
+        // Lot 6 : la fraction à deux cases — « / », Tab, ↓ : le dénominateur ;
+        // ↑ (ou Maj+Tab) : le numérateur.
+        if (!manip && saisieFraction() && (event.key === "/" || event.key === "Tab" || event.key === "ArrowDown" || event.key === "ArrowUp")) {
+          choisirPartie(event.key === "ArrowUp" || (event.key === "Tab" && event.shiftKey) ? "num" : event.key === "Tab" && state.partie === "den" ? "num" : "den");
+        }
+        else if (/^\d$/.test(event.key) && !manip) enterDigit(event.key);
         else if ((event.key === "," || event.key === ".") && !manip && !$("touches").hidden) enterDigit(",");
         else if (event.key === "Backspace" && !manip) effacer(false);
         else if ((event.key === "Delete" || event.key === "Escape") && !manip) effacer(true);
@@ -4732,7 +4884,8 @@
             ecrisEnCours: () => {
               const serie = state.serie;
               if (!state.running || !serie || !serie.temps || !serie.apprends || !serie.apprends.ecris) return null;
-              return serie.apprends.ecris.etapes.map(etape => ({texte: etape.texte, reponse: etape.reponse}));
+              // (Lot 6 : `ecrite`, la réponse d'une fraction à deux cases, « 2/3 ».)
+              return serie.apprends.ecris.etapes.map(etape => Object.assign({texte: etape.texte, reponse: etape.reponse}, etape.ecrite ? {ecrite: etape.ecrite} : {}));
             },
             // Le dessin de « J'écris » (lot « relier ») : ce qu'il dit.
             dessin: () => {
@@ -4818,7 +4971,9 @@
               const cle = `${id}-${n}`;
               const lecon = trouve.niveau.apprends.calculs.montre;
               const memeQueLecon = q => (CORE.nouveauteDe(q.calcul, cle) || {}).cle === (CORE.nouveauteDe(lecon, cle) || {}).cle;
-              const i = serie.questions.findIndex(q => (CORE.nouveauteDe(q.calcul, cle) || {texte: ""}).texte.includes(quoi));
+              // (Lot 6 : ou une écriture nouvelle annoncée par le calcul, « la
+              // fraction cherchée, c'est… ».)
+              const i = serie.questions.findIndex(q => (CORE.nouveauteDe(q.calcul, cle) || {texte: q.calcul.annonce || ""}).texte.includes(quoi));
               if (i < 0) return false;
               const vise = serie.questions.splice(i, 1)[0];
               const avant = serie.questions.filter(memeQueLecon).slice(0, 1);

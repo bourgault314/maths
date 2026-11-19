@@ -94,7 +94,10 @@ function phraseVraie(texte, calcul) {
   if ((m = /^La moitié de ([\d ,]+) (\S+), c’est ([\d ,]+) \2\.$/.exec(t))) return proches(nb(m[3]), nb(m[1]) / 2);
   return null;
 }
-const avecReponse = (texte, reponse) => blanc(texte).replace(CORE.CASE, CORE.formaterNombre(reponse).replace(/[  ]/g, " "));
+const avecReponse = (texte, reponse, ecrite = null) => (blanc(texte).includes("□/□") && ecrite
+  // (Lot 6 « fraction à deux cases » : « 3 × □/□ = 2 » → « 3 × 2/3 = 2 ».)
+  ? blanc(texte).replace("□/□", ecrite)
+  : blanc(texte).replace(CORE.CASE, CORE.formaterNombre(reponse).replace(/[  ]/g, " ")));
 
 // -------------------------------------------------------------- les dessins
 
@@ -157,7 +160,8 @@ function verifierDessins(cle, calcul, ecris) {
     if (d.outil === "tout-parts") assert.ok(!d.trouve, `${cle} ${calcul.texte} : la part reste à trouver au dessin ${k}`);
   });
   const fin = ecris.dessins[n];
-  if (fin.outil === "barre-droite") assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(e => e.trouve), `${cle} ${calcul.texte} : le dernier dessin écrit la réponse`);
+  // (Lot 6 : la fraction cherchée écrit « 2/3 » sur ses crochets.)
+  if (fin.outil === "barre-droite") assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(e => e.trouve) || (fin.haut || []).some(h => h.trouve && h.texte === calcul.ecrite), `${cle} ${calcul.texte} : le dernier dessin écrit la réponse`);
 }
 
 // -------------------------------------------------------- les vérifications
@@ -174,9 +178,10 @@ function verifierEcris(cle, tire, lecon) {
   // Les étapes : vraies, une case chacune, la dernière donne la réponse.
   assert.ok(ecris.etapes.length >= 1);
   ecris.etapes.forEach((etape, k) => {
-    assert.equal(etape.texte.split(CORE.CASE).length, 2, `${nom} : l'étape ${k + 1} a une case`);
+    // (Lot 6 : ou la fraction à deux cases, « □/□ », qui est une réponse.)
+    assert.equal(etape.texte.replace("□/□", CORE.CASE).split(CORE.CASE).length, 2, `${nom} : l'étape ${k + 1} a une case`);
     assert.ok(Number.isFinite(Number(etape.reponse)), `${nom} : l'étape ${k + 1} a une réponse`);
-    const ecrite = avecReponse(etape.texte, etape.reponse);
+    const ecrite = avecReponse(etape.texte, etape.reponse, etape.ecrite);
     assert.equal(egaliteVraie(ecrite) ?? phraseVraie(ecrite, calcul), true, `${nom} : l'étape « ${etape.texte} » → ${etape.reponse} est vraie`);
   });
   assert.ok(CORE.memeNombre(ecris.etapes[ecris.etapes.length - 1].reponse, calcul.reponse), `${nom} : la dernière étape donne la réponse`);

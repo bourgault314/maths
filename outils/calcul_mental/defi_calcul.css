@@ -1041,6 +1041,21 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .dc-frac > .dc-frac-num { min-width: 1.2em; padding: 0 .14em .07em; border-bottom: .1em solid currentColor; text-align: center; }
 .dc-frac > .dc-frac-den { padding: .07em .14em 0; text-align: center; }
 .dc-frac .inline-answer { margin: 0 0 .08em; font-size: 1.2em; }
+/* Lot 6 « fraction à deux cases » (18/11/2026) : « 6 × □/□ = 5 », la
+   fraction est la réponse. Deux cases l'une sur l'autre, la barre entre
+   elles ; on touche une case pour y taper. La case où l'on tape a le bord
+   bleu épais (comme dans Défi conversions) ; l'autre garde le bord gris.
+   Leur largeur est fixée dès le début (rien ne bouge pendant la frappe). */
+.dc-frac.dc-frac-cases { font-size: .7em; }
+.dc-frac.dc-frac-cases > .dc-frac-num { padding-bottom: .1em; }
+.dc-frac.dc-frac-cases > .dc-frac-den { padding-top: .1em; }
+/* (Une case en bloc : sa hauteur ne dépend plus de ce qui est tapé — avec
+   la case vide, la ligne bougeait de 2 pixels au premier chiffre.) */
+.dc-frac.dc-frac-cases .inline-answer { display: grid; margin: 0 auto; vertical-align: top; }
+.dc-frac.dc-frac-cases > .dc-frac-den .inline-answer { margin-top: .08em; }
+.dc-frac-cases .inline-answer[data-partie] { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.dc-soude { white-space: nowrap; }
+.dc-frac-cases .inline-answer.est-active { border-color: var(--blue); background: #f2f7ff; box-shadow: 0 0 0 .07em #d5e5fb; }
 /* Relecture 2b (11/11/2026, remarque 62) : à côté d'une fraction, le signe
    « = » (et +, −, ×, ÷) à la taille des fractions, plus à celle du texte. */
 .dc-signe { font-size: .72em; margin: 0 .08em; }

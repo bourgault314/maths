@@ -212,7 +212,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.deepEqual([lien.target, lien.rel], ["_blank", "noopener"]);
 });
 
-test("exempleErreur : un calcul regénéré pour chacune des 171 causes des 45 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d), jamais un calcul d'élève", () => {
+test("exempleErreur : un calcul regénéré pour chacune des 174 causes des 45 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d, 3 du lot 6 « fraction à deux cases »), jamais un calcul d'élève", () => {
   const o = outils([]);
   let trouves = 0;
   CALCUL_CORE.MODULES.filter(m => m.construit).forEach(fiche => {
@@ -227,7 +227,11 @@ test("exempleErreur : un calcul regénéré pour chacune des 171 causes des 45 m
       trouves += 1;
     });
   });
-  assert.equal(trouves, 171);
+  assert.equal(trouves, 174);
+  // Lot 6 « fraction à deux cases » : la réponse fausse s'écrit en fraction
+  // (« 3 × ?/? = 2 → 3/2 »), jamais en nombre à virgule.
+  assert.match(o.exempleErreur("F11", 4, 2).reponse, /^\d+\/\d+$/);
+  [5, 6].forEach(cause => assert.match(o.exempleErreur("F11", cause, 2).reponse, /^\d+$/));
   // Le niveau qui coince d'abord : A2 cause 2 au niveau 4 donne un complément à 1 000.
   assert.match(o.exempleErreur("A2", 2, 4).texte, /1 000|centaine|[0-9]{3}/);
   // Une cause inconnue : null, sans erreur.

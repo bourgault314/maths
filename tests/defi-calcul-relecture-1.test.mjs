@@ -79,7 +79,8 @@ function evaluer(texte) {
 // étape), sa case remplacée par « ? », sans « = ? » au bout.
 function cherche(apprends) {
   const ecris = apprends.textes ? apprends.textes[apprends.textes.length - 1] : apprends.ecris.etapes[apprends.ecris.etapes.length - 1].texte;
-  return espaces(ecris).replace(/ = □( \S+)?$/, "").replace(/□/g, "?");
+  // (Lot 6 : la fraction à deux cases, « □/□ », se cherche en « ? ».)
+  return espaces(ecris).replace("□/□", "?").replace(/ = □( \S+)?$/, "").replace(/□/g, "?");
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {

@@ -58,6 +58,10 @@ const AUTRE_SORTE = Object.freeze({
   "D1-2": "taille : chaque morceau dans sa colonne", "D1-3": "taille : chaque morceau dans sa colonne",
   "M4-1": "décidé : J'écris sur la division (remarque 61)", "M4-2": "décidé : J'écris sur la division (remarque 61)",
   "F1-1": "décidé : 0,7 = 7/?", "F1-2": "décidé : 3/4 = ?/100",
+  // Lot 6 « fraction à deux cases » (18/11/2026, choix de Gwenaël) : On te
+  // montre 7 × 3/7 = 3 (la définition), J'écris sur la fraction cherchée,
+  // 3 × □ = 2.
+  "F11-2": "décidé : J'écris sur la fraction cherchée (lot 6)",
   // Lot 3b : J'écris des demis et quarts, × 100, ÷ 10, millièmes, fractions
   // égales 2 et 3 sont de la sorte de la leçon. (Lot 7e : F6-1 aussi, depuis
   // qu'il s'arrête à 12 parts.)
