@@ -217,14 +217,22 @@ async function scenarioPremierJour(navigateur, base, taille) {
   assert.equal(await page.locator(".cc-rang .cc.gagnee").count(), 0);
   await capture(page, taille, "01-accueil");
   await bouton(page, "Commencer");
-  for (let i = 0; i < 3; i += 1) {
+  // (Lot R1-refonte : « Mes premiers repères », un temps par repère, puis la
+  // liste à recopier, avant À toi.)
+  const nTemps = await page.evaluate(() => window.MATHSGO_CONVERSIONS_CARTE.etape("R1").apprends.length);
+  assert.equal(nTemps, 10, "dix repères");
+  for (let i = 0; i < nTemps; i += 1) {
     await tientEntier(page, `${ou}, on te montre ${i + 1}`);
     if (i === 0) await capture(page, taille, "02-on-te-montre");
     await bouton(page, "Suivant");
     // « Suivant » sans le geste le joue : on reste sur ce temps.
-    await page.waitForTimeout(3500);
-    if ((await page.locator(".bseance .chip").textContent()).replace(/\s/g, "") === `${i + 1}/3`) await bouton(page, "Suivant");
+    await page.waitForTimeout(i ? 50 : 3500);
+    if (await page.locator(".bseance .chip").count() && (await page.locator(".bseance .chip").textContent()).replace(/\s/g, "") === `${i + 1}/${nTemps}`) await bouton(page, "Suivant");
   }
+  assert.equal(await page.locator(".liste-avant .carte-rep").count(), 10, "la liste des dix repères avant À toi");
+  await tientEntier(page, `${ou}, la liste à recopier`);
+  await capture(page, taille, "02b-liste-a-recopier");
+  await bouton(page, "À toi");
   // À toi : une erreur, « Je ne sais pas », puis juste jusqu'au bout. Rien ne bouge.
   const avant = await places(page);
   await tientEntier(page, `${ou}, à toi`);

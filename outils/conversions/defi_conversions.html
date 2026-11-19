@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-b22a">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-r1">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261118-b22a"></script>
-  <script src="./conversions_generateurs.js?v=20261118-b22a"></script>
-  <script src="./defi_conversions_parcours.js?v=20261115-b1"></script>
-  <script src="./defi_conversions_aides.js?v=20261118-b22a"></script>
+  <script src="./conversions_carte.js?v=20261118-r1"></script>
+  <script src="./conversions_generateurs.js?v=20261118-r1"></script>
+  <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
+  <script src="./defi_conversions_aides.js?v=20261118-r1"></script>
   <script>
   (function () {
     "use strict";
@@ -889,6 +889,47 @@
       const coche = [];
       let gesteEl = null;
       const complet = () => (question.forme === "associer" ? relie.lien.every(x => x !== null) : question.forme === "plusieurs" ? coche.length > 0 : range.length === 4);
+      // Relier (lot R1-refonte, Gwenaël, 18/11 : « rien ne se dessine ») : un
+      // trait de la couleur de la lettre entre l'objet et sa mesure. Le
+      // dessin est SOUS les boutons (blancs) : le trait ne se voit que dans
+      // l'espace entre eux, il ne barre aucun texte.
+      let liensEl = null;
+      function dessinerLiens() {
+        if (!liensEl) return;
+        liensEl.textContent = "";
+        const r0 = gesteEl.getBoundingClientRect();
+        const objs = gesteEl.querySelectorAll(".obj");
+        const mess = gesteEl.querySelectorAll(".mes");
+        relie.lien.forEach((j, i) => {
+          if (j === null) return;
+          const a = objs[i].getBoundingClientRect();
+          const b = mess[j].getBoundingClientRect();
+          const cote = b.left >= a.right - 1;
+          const x1 = (cote ? a.right : a.left + a.width / 2) - r0.left;
+          const y1 = (cote ? a.top + a.height / 2 : a.bottom) - r0.top;
+          const x2 = (cote ? b.left : b.left + b.width / 2) - r0.left;
+          const y2 = (cote ? b.top + b.height / 2 : b.top) - r0.top;
+          const couleur = getComputedStyle(objs[i].querySelector(".lettre")).backgroundColor;
+          // (Une courbe douce, qui part droit du bouton et arrive droit dans
+          // l'autre : on voit d'où elle part, même dans un petit écart.)
+          const l = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const f = v => v.toFixed(1);
+          l.setAttribute("d", cote
+            ? `M${f(x1)} ${f(y1)}C${f((x1 + x2) / 2)} ${f(y1)} ${f((x1 + x2) / 2)} ${f(y2)} ${f(x2)} ${f(y2)}`
+            : `M${f(x1)} ${f(y1)}C${f(x1)} ${f((y1 + y2) / 2)} ${f(x2)} ${f((y1 + y2) / 2)} ${f(x2)} ${f(y2)}`);
+          l.setAttribute("fill", "none");
+          l.setAttribute("stroke", couleur);
+          l.setAttribute("stroke-width", "4");
+          l.setAttribute("stroke-linecap", "round");
+          liensEl.appendChild(l);
+          // (Un point à chaque bout, comme sur une fiche.)
+          [[x1, y1], [x2, y2]].forEach(([x, y]) => {
+            const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            c.setAttribute("cx", x.toFixed(1)); c.setAttribute("cy", y.toFixed(1)); c.setAttribute("r", "4.5"); c.setAttribute("fill", couleur);
+            liensEl.appendChild(c);
+          });
+        });
+      }
       function peindreGeste() {
         if (!gesteEl) return;
         if (question.forme === "associer") {
@@ -904,6 +945,7 @@
             b.classList.toggle("sel", Boolean(relie.sel && relie.sel[0] === "mes" && relie.sel[1] === j));
             b.classList.toggle("lie", i >= 0);
           });
+          dessinerLiens();
         } else if (question.forme === "plusieurs") {
           [...gesteEl.children].forEach((b, k) => {
             const oui = coche.includes(k);
@@ -952,6 +994,11 @@
           mb.addEventListener("click", () => toucherGeste("mes", i));
           gesteEl.append(b, mb);
         });
+        liensEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        liensEl.setAttribute("class", "liens");
+        liensEl.setAttribute("aria-hidden", "true");
+        gesteEl.prepend(liensEl);
+        if (window.ResizeObserver) new ResizeObserver(dessinerLiens).observe(gesteEl);
       } else if (question.forme === "plusieurs") {
         gesteEl = el("div", "coche");
         question.cartes.forEach((t, k) => {
@@ -998,6 +1045,7 @@
             b.textContent = "";
             b.append(AIDES.imageRepere(m.reperes[i]), nomObjet({texte}));
           }
+
           b.type = "button";
           b.addEventListener("click", () => repondre(i));
           choixEl.appendChild(b);
@@ -1206,12 +1254,16 @@
     }
 
     // ---------------------------------------------------------- On te montre
-    function onTeMontre(code, ensuite, {retour} = {}) {
+    // Lot R1-refonte : « Mes premiers repères » a un temps par repère (10) ;
+    // puis, pour une étape `listeAvant`, la liste à recopier vient AVANT À
+    // toi (`suite` : le texte de son bouton).
+    function onTeMontre(code, ensuite, {retour, suite = "À toi →"} = {}) {
       const etape = CARTE.etape(code);
+      const n = etape.apprends.length;
       let i = 0;
       const temps = () => {
         const ex = etape.apprends[i];
-        const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `${i + 1} / 3`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
+        const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `${i + 1} / ${n}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
           retour, hauteur: ex.question.enonce ? 160 : (ex.question.avant || "").length > 14 ? 112 : 70, zone: "montre"});
         ui.bas.remove();
         // La question, sa case remplie quand le geste est fait.
@@ -1288,6 +1340,8 @@
         // On peut toujours toucher soi-même.
         const jouer = AIDES.montrer(ui.zone, ex.aide, {fini});
         if (ex.legende) ui.zone.appendChild(texteLignes("note", ex.legende));
+        // (Lot R1-refonte : le geste à faire en classe, sous le repère.)
+        if (ex.geste) ui.zone.appendChild(el("div", "geste", ex.geste));
         ajusterZone(ui.zone);
         let joue = false;
         ui.action.textContent = "Suivant →";
@@ -1297,10 +1351,11 @@
             return;
           }
           i += 1;
-          if (i < 3) temps();
+          if (i < n) temps();
           else {
             noterSeance({montre: 1});
-            ensuite();
+            if (etape.listeAvant) listeAvantAToi(code, ensuite, {retour, suite});
+            else ensuite();
           }
         };
         clavier = ev => { if (ev.key === "Enter") { ev.preventDefault(); ui.action.click(); } };
@@ -1311,22 +1366,36 @@
     // ---------------------------------------------------------------- À toi
     function aToi(code, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
+      // Lot R1-refonte (Gwenaël, 18/11 : « Précédent change la question ») :
+      // l'élève qui sort de À toi par la flèche et y revient le même jour
+      // retrouve sa série là où il l'avait laissée (avant, une nouvelle
+      // série était tirée, sans les questions déjà vues : ce n'était pas
+      // voulu). Gardée en mémoire le temps de l'onglet.
+      const garde = !PROF && etat.aToiEnCours && etat.aToiEnCours.code === code && etat.aToiEnCours.jour === etat.jour ? etat.aToiEnCours : null;
       // Lot 3a : sans les questions déjà vues aujourd'hui (« Je me souviens »).
-      const serie = serieSure(code, {usage: "entraine", graine: graine()});
-      const reponses = [];
-      let i = 0;
+      const enCours = garde || {code, jour: etat.jour, serie: serieSure(code, {usage: "entraine", graine: graine()}), reponses: [], i: 0};
+      etat.aToiEnCours = PROF ? null : enCours;
+      const {serie, reponses} = enCours;
       let hauteurZone = 0;
       let hauteurQ = 0;
       noterSeance({atoi: 2});
       const question = () => {
         const suivi = P.suivreEntrainement(reponses);
+        const i = enCours.i;
         if (suivi.reussi) {
+          etat.aToiEnCours = null;
           noterSeance({atoi: 1});
           changer(p => P.marquerEntrainee(p, code, etat.jour));
           aRetenir(code, {retour, fin});
           return;
         }
-        if (suivi.fini || i >= serie.length) { finAToiSansReussir(code, {retour, fin}); return; }
+        if (suivi.fini || i >= serie.length) {
+          etat.aToiEnCours = null;
+          // (Lot R1-refonte : les repères ratés, à revoir.)
+          const rates = [...new Set(reponses.filter(r => !r.juste).flatMap(r => r.reperes || []))];
+          finAToiSansReussir(code, {retour, fin, rates});
+          return;
+        }
         const qn = serie[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `à toi · ${i + 1}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
           retour, hauteurPx: hauteurQ, hauteurZone, jnsp: true});
@@ -1352,8 +1421,9 @@
           },
           apres: {fait(v) {
             if (!deuxieme) {
-              reponses.push({juste: v.juste, outil: phase, jnsp: Boolean(v.jnsp)});
-              i += 1;
+              reponses.push({juste: v.juste, outil: phase, jnsp: Boolean(v.jnsp),
+                reperes: qn.forme === "associer" ? qn.reperes : qn.repere ? [qn.repere] : []});
+              enCours.i += 1;
             }
             if (v.juste) {
               if (phase === "aucun" && !deuxieme) { const s = ui.zone.querySelector(".suite"); if (s) s.replaceWith(suiteRonds(suivi.justesDeSuite + 1, 5, true, true)); }
@@ -1420,13 +1490,25 @@
       clavier = ev => { if (ev.key === "1" || ev.key === "2") repondre(ev.key === "1"); };
     }
 
-    function finAToiSansReussir(code, {retour, fin} = {}) {
+    function finAToiSansReussir(code, {retour, fin, rates = []} = {}) {
       const etape = CARTE.etape(code);
       ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
-      ajouter(grosDessin("calendrier"));
-      const t = el("div", "titre-fin", "On continue la prochaine fois");
-      t.appendChild(el("small", "", "25 questions aujourd'hui : c'est beaucoup ! Tu reprendras « À toi » à ta prochaine séance.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
-      ajouter(t, espace());
+      // Lot R1-refonte (choix de Gwenaël, 18/11) : une étape de repères
+      // montre les repères ratés, leur dessin et leur mesure.
+      if (rates.length) {
+        const t = el("div", "titre-fin", "On continue la prochaine fois.");
+        const defile = el("div", "ecran-defile");
+        defile.appendChild(el("div", "eti", "À revoir :"));
+        const liste = el("div", "carnet refs");
+        rates.forEach(rc => liste.appendChild(AIDES.carteRepere(rc)));
+        defile.appendChild(liste);
+        ajouter(t, defile);
+      } else {
+        ajouter(grosDessin("calendrier"));
+        const t = el("div", "titre-fin", "On continue la prochaine fois");
+        t.appendChild(el("small", "", "25 questions aujourd'hui : c'est beaucoup ! Tu reprendras « À toi » à ta prochaine séance.".replace(/« /g, `«${NB}`).replace(/ »/g, `${NB}»`)));
+        ajouter(t, espace());
+      }
       if (fin) ajouter(bouton("Accueil", "", fin));
       else ajouterSuite([["Accueil", "", accueil]]);
     }
@@ -1497,6 +1579,19 @@
       }
       return cases;
     }
+    // Lot R1-refonte (Gwenaël, 18/11) : la liste des repères à recopier
+    // vient AVANT À toi (« Je les note dans mon cahier ») ; après À toi, la
+    // même liste revient, à relire avant Je valide.
+    function listeAvantAToi(code, ensuite, {retour, suite = "À toi →"} = {}) {
+      const etape = CARTE.etape(code);
+      ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
+      const defile = el("div", "ecran-defile liste-avant");
+      casesRetenir(code).forEach(c => defile.appendChild(c));
+      const cahier = el("div", "cahier");
+      cahier.append(AIDES.icone("crayon"), document.createTextNode(` ${etape.cahier}`));
+      ajouter(defile, cahier, bouton(suite, "", ensuite));
+      clavier = ev => { if (ev.key === "Enter") { ev.preventDefault(); ensuite(); } };
+    }
     function aRetenir(code, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
       ecranQuestionFin(etape.nom, "J'apprends", 0, retour);
@@ -1504,7 +1599,7 @@
       if (etape.retenir) defile.appendChild(blocRetenir(code));
       casesRetenir(code).forEach(c => defile.appendChild(c));
       const cahier = el("div", "cahier");
-      cahier.append(AIDES.icone("crayon"), document.createTextNode(` ${etape.cahier}`));
+      cahier.append(AIDES.icone("crayon"), document.createTextNode(` ${etape.listeAvant && etape.cahierApres ? etape.cahierApres : etape.cahier}`));
       // (Lot 3b-3 : « Je recopie cela dans mon cahier » sous la liste qui
       // défile, toujours visible ; au petit téléphone, il était coupé à
       // moitié au bas de la liste.)
@@ -2137,7 +2232,7 @@
       titre("Tu connais déjà ?");
       para("Un petit test pour sauter les étapes que tu sais déjà. Tu t'arrêtes quand tu veux.");
       titre("Mon carnet");
-      para("Les repères de tes étapes validées : une voiture mesure environ 4 m, une brique de lait contient 1 L… Recopie-les dans ton cahier.");
+      para("Les repères de tes étapes validées : la poignée de la porte est à environ 1 m du sol, une brique de lait contient 1 L… Recopie-les dans ton cahier.");
       const prof = el("div", "prof");
       prof.appendChild(el("h3", "", "Pour le professeur : lancer l'appli en classe"));
       const ol = el("ol");
@@ -2195,7 +2290,7 @@
       ajouter(c);
       const fin = accueilProf;
       const acts = [
-        ["1", "J'apprends : on te montre", "les trois temps", () => onTeMontre(code, fin, {retour: fin})],
+        ["1", "J'apprends : on te montre", e.listeAvant ? "un temps par repère, puis la liste" : "les trois temps", () => onTeMontre(code, fin, {retour: fin, suite: "Accueil"})],
         ["2", "J'apprends : à toi", "l'outil, l'image, puis sans rien, et « À retenir »", () => aToi(code, {retour: fin, fin})],
         ["3", "Je valide", "10 questions sans aide, dont 3 des étapes d'avant", () => jeValide(code, {retour: fin, fin, source: parcoursFictif(code)})],
         ["4", "Tu connais déjà ?", "l'escalier, à partir de cette étape", () => introTest(code, {retour: fin, fin})],
