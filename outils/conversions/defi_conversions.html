@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261118-r1">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261119-b22b1">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261118-r1"></script>
-  <script src="./conversions_generateurs.js?v=20261118-r1"></script>
+  <script src="./conversions_carte.js?v=20261119-b22b1"></script>
+  <script src="./conversions_generateurs.js?v=20261119-b22b1"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261118-r1"></script>
+  <script src="./defi_conversions_aides.js?v=20261119-b22b1"></script>
   <script>
   (function () {
     "use strict";
@@ -1224,7 +1224,24 @@
           const bonne = question.bons.includes(k);
           mini.appendChild(el("span", touche && bonne ? "bon" : touche ? "faux" : bonne ? "oublie" : "", t));
         });
-        zone.append(mini, el("div", "rel petite egales", question.resume));
+        // (Lot B2-2b-1 : la ligne de la correction, `correction[0]` ; pour
+        // C5, c'est le résumé.)
+        zone.append(mini, el("div", "rel petite egales", question.correction[0] || question.resume));
+        return;
+      }
+      // Lot B2-2b-1 (C7) : les quatre mesures dans l'ordre, numérotées comme
+      // l'élève les touche (la ligne « 72,2 cm < 11,5 m < 2,6 dam < 0,15 km »
+      // passait sur deux lignes au téléphone, un « < » au bout), puis les
+      // mesures récrites dans l'unité commune.
+      if (question.forme === "ranger" && question.uniteCommune !== undefined) {
+        const mini = el("div", "mini-cartes rangees");
+        question.ordre.forEach((k, n) => {
+          const s = el("span", "bon");
+          s.append(el("b", "rang-n", String(n + 1)), document.createTextNode(question.mesures[k]));
+          mini.appendChild(s);
+        });
+        zone.appendChild(mini);
+        if (question.correction.length > 1) zone.appendChild(texteLignes("rel petite", question.correction.slice(1).join("\n")));
         return;
       }
       if (!choixGlisse && (question.forme === "qcm" || question.forme === "vrai-faux" || question.forme === "associer" || question.forme === "ranger")) {

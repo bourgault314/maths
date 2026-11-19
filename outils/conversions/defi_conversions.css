@@ -1008,6 +1008,11 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .mini-cartes span { border: .125rem solid #c9d6e0; border-radius: .5rem; padding: .125rem .25rem; text-align: center; font-weight: 900; font-size: 1.0625rem;
   white-space: nowrap; color: #6b7f8d; background: #fff; }
 .mini-cartes span.bon { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+/* Lot B2-2b-1 (C7) : la correction de « Ranger des mesures », les mesures
+   dans l'ordre, chacune avec son numéro (le rond bleu des cases à toucher). */
+.mini-cartes.rangees span { display: flex; align-items: center; justify-content: center; gap: .3125rem; }
+.mini-cartes.rangees .rang-n { flex: 0 0 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--blue); color: #fff; font-size: .75rem;
+  display: flex; align-items: center; justify-content: center; }
 .mini-cartes span.faux { border-color: var(--red); background: var(--red-soft); color: var(--red); text-decoration: line-through; }
 .mini-cartes span.oublie { border: .1875rem solid var(--green); color: var(--green); }
 .reponse-bonne .egales { margin-top: .375rem; }

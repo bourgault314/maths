@@ -1810,14 +1810,16 @@
   // conversion au cours moyen : une rangée, sans nombres), les unités de la
   // question en couleur pleine, et la règle. L'élève compte les pas : la
   // réponse n'est jamais écrite.
-  function echelle(zone, {grandeur = null, grandeurs = null, marque = [], note = null}) {
+  // `unites` (lot B2-2b-1, C7) : seulement ces colonnes (de la plus grande
+  // unité de la question à la plus petite).
+  function echelle(zone, {grandeur = null, grandeurs = null, marque = [], note = null, unites: seules = null}) {
     const G = gen();
     (grandeurs || [grandeur]).forEach(gr => {
       const [acc, accF] = THEMES_GLISSE[gr] || THEMES_GLISSE.longueur;
       const ligne = el("div", "echelle");
       ligne.style.setProperty("--acc", acc);
       ligne.style.setProperty("--acc-f", accF);
-      const unites = G.COLONNES_CM1[gr];
+      const unites = seules || G.COLONNES_CM1[gr];
       ligne.style.setProperty("--n", String(unites.length));
       unites.forEach(u => ligne.appendChild(el("span", marque.includes(u) ? "on" : "", u)));
       zone.appendChild(ligne);
@@ -2083,6 +2085,9 @@
     if (question.outil === "axe-temps" && question.axe) { axeTemps(zone, question.axe); return; }
     if (question.outil === "grandeurs") { grandeurs(zone); return; }
     if (question.outil === "ranger") {
+      // (Lot B2-2b-1, C7 : l'échelle des unités de la question, et l'unité
+      // où tout s'écrit.)
+      if (question.echelleOutil) { echelle(zone, question.echelleOutil); return; }
       zone.appendChild(lignes("rel petite", question.relations.join("\n")));
       zone.appendChild(el("div", "note", "J'écris d'abord toutes les mesures dans la même unité."));
       return;

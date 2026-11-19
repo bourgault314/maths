@@ -256,11 +256,11 @@ function controlerQuestion(q, ou) {
   // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
   // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
   // (Lot B2-1 : C3 et C4 aussi.)
-  if (["P2", "P3", "P4", "C3", "C4", "C5", "C6"].includes(q.code)) {
+  if (["P2", "P3", "P4", "C3", "C4", "C5", "C6", "C7"].includes(q.code)) {
     const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
     const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
     // (Les bandes de C6 : la réponse est le nom d'une bande, l'image la récrit.)
-    if (q.donnees.type !== "comparer-mes" && q.donnees.type !== "bandes") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
+    if (q.donnees.type !== "comparer-mes" && q.donnees.type !== "bandes" && q.donnees.type !== "comparer-c7") assert.ok(!aide.includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
     assert.ok(!aide.includes(q.resume.replace(/[\u00a0\u202f]/g, " ")), `${ou} : l'aide donne le résumé`);
     if (q.choix && q.forme === "qcm") q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi && q.pourquoi[k], `${ou} : pas de pourquoi pour « ${c} »`); });
     if (q.glisse) {
@@ -305,6 +305,58 @@ function controlerQuestion(q, ou) {
         assert.ok(!r.juste && r.retour, `${ou} : une carte fausse cochée acceptée`);
       });
     }
+  }
+  // Lot B2-2b-1 : C7 — ranger (l'unité commune et l'image recalculées),
+  // « … ou … ? » (le piège du plus grand nombre, la même mesure), « Coche
+  // tout ce qui est plus grand que… » (chaque carte recalculée).
+  if (q.code === "C7" && q.donnees.type === "ranger") {
+    const ms = q.donnees.mesures;
+    const memeNombre = new Set(ms.map(([x]) => x)).size === 1;
+    if (!memeNombre) {
+      assert.ok(q.uniteCommune && ms.every(([, u]) => FAMILLE[u] === FAMILLE[q.uniteCommune]), `${ou} : unité commune`);
+      ms.forEach(([x, u]) => {
+        const y = versUnite(lire(x), u, q.uniteCommune);
+        assert.ok(y % 10n === 0n && y <= 100000000n, `${ou} : ${x} ${u} ne s'écrit pas en ${q.uniteCommune}`);
+        if (u !== q.uniteCommune) assert.ok(q.image.some(l => l.replace(/[\u00a0\u202f]/g, " ") === `${G.ecrire(lire(x)).replace(/\u202f/g, " ")} ${u} = ${G.ecrire(y).replace(/\u202f/g, " ")} ${q.uniteCommune}`), `${ou} : l'image n'écrit pas ${x} ${u}`);
+      });
+    }
+    if (q.sorteC7 === "ranger" || q.sorteC7 === "situation") {
+      const v = ms.map(([x, u]) => versUnite(lire(x), u, BASE[FAMILLE[u]]));
+      const piege = ms.some(([a, u], i) => ms.some(([b, w], j) => u !== w && lire(a) > lire(b) && v[i] < v[j]));
+      assert.ok(piege, `${ou} : aucun piège du plus grand nombre`);
+    }
+  }
+  if (q.donnees.type === "comparer-c7") {
+    const d = q.donnees;
+    const a = versUnite(lire(d.a), d.ua, d.ub);
+    const b = lire(d.b);
+    assert.ok(lire(d.b) > lire(d.a), `${ou} : le piège (le plus grand nombre) manque`);
+    const attendu = a === b ? q.choix[2] : a > b ? `${G.ecrire(lire(d.a))}\u00a0${d.ua}` : `${G.ecrire(b)}\u00a0${d.ub}`;
+    assert.equal(q.choix[q.bon], attendu, `${ou} : la bonne réponse`);
+    assert.match(q.choix[2], /^Même (longueur|masse|contenance)$/);
+    assert.equal(q.choix.length, 3);
+  }
+  if (q.donnees.type === "plus-que") {
+    const d = q.donnees;
+    const X = valeurCarte([d.cible]);
+    const v = d.cartes.map(valeurCarte);
+    const bons = v.map((y, k) => ((d.sens === ">" ? y > X : y < X) ? k : -1)).filter(k => k >= 0);
+    assert.deepEqual(bons, q.bons, `${ou} : les bonnes cartes`);
+    assert.ok(bons.length === 2 || bons.length === 3, `${ou} : ${bons.length} bonnes cartes`);
+    assert.ok(v.every(y => y !== X), `${ou} : une carte égale à la cible`);
+    assert.ok(new Set(d.cartes.map(c => c[0][1])).size >= 2, `${ou} : une seule unité`);
+    assert.ok(d.cartes.some(c => (lire(c[0][0]) > lire(d.cible[0])) !== (valeurCarte(c) > X)), `${ou} : aucune carte ne trompe`);
+    d.cartes.forEach((c, k) => mesureVraieC5(c[0][0], c[0][1], ou));
+    v.forEach((y, k) => {
+      if (bons.includes(k)) return;
+      const m = q.pourquoi[k].replace(/[\u00a0\u202f]/g, " ").match(/^(.+), c'est ([\d ,]+) ([a-zA-Z]+)\.$/);
+      assert.ok(m && m[3] === d.cible[1], `${ou} : pourquoi « ${q.pourquoi[k]} »`);
+      assert.equal(valeurCarte([[m[2].replace(/ /g, ""), m[3]]]), y, `${ou} : « ${q.pourquoi[k]} » est faux`);
+      const r = G.verifier(q, q.bons.concat([k]));
+      assert.ok(!r.juste && r.retour, `${ou} : une carte fausse cochée acceptée`);
+    });
+    assert.ok(G.verifier(q, q.bons).juste);
+    assert.ok(!G.verifier(q, q.bons.slice(1)).juste);
   }
   // Lot B2-2a : C6 — « 75 cL = … L » (¼, ½ ou ¾ au choix) et les bandes
   // de S002 (37⁄10 cm ou 4 + 3⁄10 cm), recalculés à part ; la fraction
@@ -466,7 +518,9 @@ function controlerQuestion(q, ou) {
     assert.deepEqual(q.ordre, ordre, `${ou} : mauvais ordre`);
     assert.ok(!ordre.every((x, k) => x === k), `${ou} : déjà rangées`);
     assert.ok(G.verifier(q, ordre).juste);
-    mesures.forEach(([x]) => assert.ok(lire(x) <= 10000000n && lire(x) % 1000n === 0n, `${ou} : ${x}`));
+    // (Lot B2-2b-1 : C7 range des mesures à virgule, au centième, qu'on
+    // écrit vraiment.)
+    mesures.forEach(([x, u]) => (q.code === "C7" ? mesureVraieC5(x, u, ou) : assert.ok(lire(x) <= 10000000n && lire(x) % 1000n === 0n, `${ou} : ${x}`)));
   }
   if (q.donnees.type === "grandeur") assert.equal(["longueur", "masse", "contenance", "duree"][q.bon], q.donnees.grandeur);
   if (q.donnees.type === "unite-duree") assert.equal(q.choix[q.bon], q.donnees.unite);
@@ -708,6 +762,21 @@ function controlerSerie(code, usage, nombre, s, ou) {
     assert.deepEqual([8, 12, 19, 22].map(i => s[i].donnees.type), ["intrus", "plusieurs", "intrus", "plusieurs"], `${ou} : places`);
     assert.equal(s.filter(q => q.forme === "plusieurs").length, 2, `${ou} : « Coche » deux fois`);
   }
+  // Lot B2-2b-1 : C7 — « … ou … ? » en 3e et en 6e, une situation en 7e,
+  // « Coche » en dernier ; À toi : « … ou … ? » trois fois, « Coche » deux
+  // fois ; les trois grandeurs ; le même nombre, une série de l'exerciseur,
+  // la même mesure : une fois au plus dans Je valide.
+  if (code === "C7" && usage === "valide") {
+    const n = g => s.filter(q => q.grandeur === g).length;
+    assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
+    assert.deepEqual([2, 5].map(i => s[i].donnees.type), ["comparer-c7", "comparer-c7"], `${ou} : places`);
+    assert.equal(s[6].sorteC7, "situation"); assert.equal(s[9].forme, "plusieurs");
+    ["meme", "tri", "egal"].forEach(k => assert.ok(s.filter(q => q.sorteC7 === k).length <= 1, `${ou} : ${k} deux fois`));
+  }
+  if (code === "C7" && usage === "entraine") {
+    assert.deepEqual([3, 10, 17].map(i => s[i].donnees.type), ["comparer-c7", "comparer-c7", "comparer-c7"], `${ou} : places`);
+    assert.deepEqual([12, 22].map(i => s[i].forme), ["plusieurs", "plusieurs"], `${ou} : places`);
+  }
   if ((code === "C1" || code === "C2") && usage === "valide") {
     const n = g => s.filter(q => q.grandeur === g).length;
     assert.ok(n("masse") >= 2 && n("contenance") >= 2 && n("longueur") >= 1, `${ou} : les trois grandeurs`);
@@ -736,7 +805,7 @@ for (const code of PRETES) {
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
-      C6: ["nombre", "phrase", "qcm"]}[code];
+      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1263,4 +1332,40 @@ test("lot R1-refonte : au palier 2, le décimètre n'a sa ligne que si la questi
     }
   }
   assert.ok(n > 100, `seulement ${n} questions vues`);
+});
+
+test("lot B2-2b-1 : C7 — les sortes, S002, l'exerciseur, le pourquoi de ranger, la même unité", () => {
+  const toutes = [];
+  for (let g = 1; g <= 600; g += 1) ["entraine", "valide"].forEach(u => toutes.push(...G.serie("C7", {usage: u, graine: g})));
+  const sortes = new Set(toutes.map(q => q.sorteC7));
+  ["meme", "tri", "ranger", "situation", "comparer", "egal", "plusieurs"].forEach(k => assert.ok(sortes.has(k), `${k} ne tombe pas`));
+  // Les trois grandeurs dans chaque sorte de ranger ; « plus petit que » aussi.
+  ["ranger", "situation"].forEach(k => ["longueur", "masse", "contenance"].forEach(gr => assert.ok(toutes.some(q => q.sorteC7 === k && q.grandeur === gr), `${k} ${gr}`)));
+  assert.ok(toutes.some(q => q.donnees.type === "plus-que" && q.donnees.sens === "<"), "plus petit que");
+  // Quatre unités différentes (S002), et La Réunion.
+  assert.ok(toutes.some(q => q.forme === "ranger" && new Set(q.donnees.mesures.map(m => m[1])).size === 4 && q.sorteC7 === "ranger"), "quatre unités");
+  assert.ok(toutes.some(q => /La Réunion|letchis|cannes à sucre/.test(q.texte)), "La Réunion");
+  // L'exemple de S002 et ceux de On te montre ne tombent jamais.
+  const ex = new Set(G.clesExemples("C7"));
+  toutes.forEach(q => assert.ok(!ex.has(q.cle), `exemple repris ${q.cle}`));
+  // Les séries de l'exerciseur : sans aire, sans volume, sans millièmes.
+  toutes.filter(q => q.sorteC7 === "tri").forEach(q => assert.doesNotMatch(q.texte, /[²³]|,\d{3}/, q.texte));
+  // Le pourquoi de ranger : les nombres rangés sans l'unité, ou à l'envers.
+  let nombres = 0;
+  toutes.filter(q => q.forme === "ranger").forEach(q => {
+    const env = G.verifier(q, q.ordre.slice().reverse());
+    const aLEnvers = q.ordreNombres && q.ordreNombres.join() === q.ordre.slice().reverse().join();
+    assert.equal(env.retour, aLEnvers ? `J'écris tout en ${q.uniteCommune} d'abord.` : "Je commence par la plus petite.", q.texte);
+    if (q.ordreNombres && q.ordreNombres.join() !== q.ordre.join() && q.ordreNombres.join() !== q.ordre.slice().reverse().join()) {
+      nombres += 1;
+      const r = G.verifier(q, q.ordreNombres);
+      assert.ok(!r.juste && r.retour === `J'écris tout en ${q.uniteCommune} d'abord.`, `${q.texte} : ${r.retour}`);
+      assert.ok(r.retour.length <= 31, r.retour);
+    }
+  });
+  assert.ok(nombres > 1000, `le pourquoi des nombres : ${nombres}`);
+  // Les pourquoi tiennent sur une ligne (31 caractères au plus).
+  toutes.filter(q => q.pourquoi).forEach(q => Object.values(q.pourquoi).forEach(p => assert.ok(p.length <= 31, `« ${p} »`)));
+  // Pas de « Je prévois » en C7.
+  toutes.forEach(q => assert.equal(G.fauxDeSens(q), null));
 });

@@ -150,7 +150,7 @@
     {code: "C4", rang: 16, palier: 2, famille: "convertir", classe: "CM1", nom: "En mètre, en gramme, en litre", nomCourt: "Mètre, gramme, litre", exemple: "41 dg = 4,1 g"},
     {code: "C5", rang: 17, palier: 2, famille: "convertir", classe: "CM1", nom: "Une mesure, plusieurs écritures", nomCourt: "Plusieurs écritures", exemple: "215 cm = 2,15 m"},
     {code: "C6", rang: 18, palier: 2, famille: "convertir", classe: "CM1", nom: "Les fractions usuelles", exemple: "3⁄4 m = 75 cm"},
-    {code: "C7", rang: 19, palier: 2, famille: "convertir", classe: "CM1", nom: "Ranger des mesures", exemple: ""},
+    {code: "C7", rang: 19, palier: 2, famille: "convertir", classe: "CM1", nom: "Ranger des mesures", exemple: "250 cm < 3 m"},
     {code: "C8", rang: 20, palier: 2, famille: "convertir", classe: "CM1", nom: "Calculer avec deux unités", exemple: "1 L − 25 cL"},
     {code: "D2", rang: 21, palier: 1, famille: "durees", classe: "CE1", nom: "La demi-heure, le quart d'heure", exemple: ""},
     {code: "Q2", rang: 22, palier: 2, famille: "problemes", classe: "CM1", nom: "Problèmes : ajouter, retirer", nomCourt: "Ajouter, retirer", exemple: ""},
@@ -845,6 +845,37 @@
       titreRelations: "Des exemples à connaître",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["1⁄2 L = 50 cL", "1⁄4 L = 25 cL", "3⁄4 kg = 750 g", "1⁄2 km = 500 m", "1⁄10 L = 10 cL", "1⁄2 t = 500 kg"],
+      reperes: []
+    },
+    // Ranger des mesures (lot B2-2b-1 ; S002 p. 15-16 : 33 m ; 56,8 cm ;
+    // 0,2 km ; 2,7 dam ; et le dossier du 15/11 : « 300 cm est plus long
+    // que 3 m car 300 > 3 », l'erreur à corriger). On te montre : 250 cm ou
+    // 3 m (les mètres qui s'ouvrent en centimètres) ; quatre contenances
+    // écrites en mL ; l'exemple de S002, tout en cm.
+    C7: {
+      pret: true,
+      aide: {outil: "ranger", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Quelle mesure est la plus grande : 250 cm ou 3 m ?", avant: "3 m =", reponse: "300", apres: "cm"},
+          consigne: "Touche chaque mètre : il s'ouvre en centimètres.",
+          aide: {type: "barres", n: 3, grande: "m", petite: "cm", facteur: 100},
+          apres: ["3 m = 300 cm", "250 cm < 300 cm"],
+          legende: "250 est plus grand que 3,\nmais 250 cm < 3 m."},
+        {etiquette: "Je représente", question: {enonce: "Range : 1 L ; 75 cL ; 0,9 L ; 800 mL", avant: "75 cL =", reponse: "750", apres: "mL"},
+          consigne: "J'écris toutes les mesures en mL.",
+          aide: {type: "glisse-unite", grandeur: "contenance", nombre: "75", de: "cL", vers: "mL", pale: false},
+          apres: ["0,9 L = 900 mL", "1 L = 1 000 mL"],
+          legende: "75 cL < 800 mL < 0,9 L < 1 L"},
+        {etiquette: "Je vérifie", question: {enonce: "Range : 33 m ; 56,8 cm ; 0,2 km ; 2,7 dam", avant: "0,2 km =", reponse: "20 000", apres: "cm"},
+          consigne: "J'écris toutes les mesures en cm.",
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "0,2", de: "km", vers: "cm", pale: false},
+          apres: ["33 m = 3 300 cm", "2,7 dam = 2 700 cm"],
+          legende: "56,8 cm < 2,7 dam < 33 m < 0,2 km"}
+      ],
+      retenir: "Pour ranger des mesures, je les écris toutes dans la même unité, puis je compare les nombres.\n3 m = 300 cm, donc 250 cm < 3 m.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["250 cm < 3 m", "0,33 t < 565 kg", "75 cL < 1 L", "2,7 dam < 33 m", "950 g < 1,2 kg", "800 mL < 0,9 L"],
       reperes: []
     }
   };
