@@ -62,7 +62,7 @@ test("lot 7c : les sortes de chaque niveau, toutes tirées, 2 à 4", () => {
   const attendues = {
     "F4-1": ["des objets", "des mesures"], "F4-2": ["en dixièmes", "en centièmes"],
     "F9-1": ["addition", "soustraction"], "F9-2": ["addition", "soustraction", "trois fractions", "nombres mixtes"],
-    "F11-1": ["plus petite que 1", "plus grande que 1"], "F11-2": ["b × a/b", "la fraction, c’est une division"]
+    "F11-1": ["plus petite que 1", "plus grande que 1"], "F11-2": ["b × a/b", "la fraction, c’est une division", "la fraction cherchée"]
   };
   NIVEAUX.forEach(cle => {
     assert.deepEqual(CORE.sortesDe(cle).map(s => espaces(s.nom || s)), attendues[cle], cle);
@@ -155,16 +155,21 @@ test("lot 7c : les bornes (rapport de Codex du 14/11)", () => {
 test("lot 7c : une seule case, au numérateur ; la consigne dit le dénominateur ; la touche « , » pour F4-2 seulement", () => {
   NIVEAUX.forEach(cle => tous(cle).forEach(c => {
     const t = espaces(c.texte);
-    assert.equal(t.split("□").length, 2, `${cle} : ${t}`);
+    // (Lot 6 « fraction à deux cases » : « 6 × □/□ = 5 », une seule
+    // réponse, la fraction et ses deux cases.)
+    assert.equal(t.replace("□/□", "□").split("□").length, 2, `${cle} : ${t}`);
     if (cle.startsWith("F9") || cle === "F11-1") assert.match(t, / = (\d+ \+ )?□\/\d+$/, `${cle} : ${t}`);
-    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^\d+\/\d+ = □$/, t);
+    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^\d+\/\d+ = □$|^(\d+ × □\/□|□\/□ × \d+) = \d+$/, t);
     assert.equal(CORE.virguleDe(c), cle === "F4-2", `${cle} : ${t}`);
   }));
   // Lot 6 « programmes » : « 6 × □/6 = 5 » (réponse : le nombre écrit à
   // droite) est remplacé par « la fraction, c'est une division ».
   assert.ok(tous("F11-2").some(c => espaces(c.texte) === "15/3 = □" && c.reponse === 5));
   assert.ok(CORE.niveauDe("F11-2").niveau.imposes.some(c => espaces(c.texte) === "15/3 = □"));
-  assert.ok(!tous("F11-2").some(c => c.forme.startsWith("fraction")));
+  // Lot 6 « fraction à deux cases » : la fraction cherchée revient, à deux
+  // cases (« 6 × □/□ = 5 », réponse 5/6), jamais l'ancien « 6 × □/6 = 5 ».
+  assert.ok(!tous("F11-2").some(c => /□\/\d/.test(espaces(c.texte))));
+  assert.ok(tous("F11-2").some(c => espaces(c.texte) === "6 × □/□ = 5" && c.ecrite === "5/6"));
 });
 
 test("lot 7c : l'aide ne donne jamais la réponse, la correction la montre (tous les calculs)", () => {
@@ -213,7 +218,8 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
       const {calcul, ecris} = CORE.ecrisTire(cle, {graine: g * 31 + 7});
       const t = espaces(calcul.texte);
       // Le calcul cherché d'abord.
-      const cherche = t.replace(/, c’est □.*$/, "").replace(/ = .*$/, "");
+      // (Lot 6 : la fraction à deux cases s'écrit « ? » dans la consigne.)
+      const cherche = t.replace("□/□", "?").replace(/, c’est □.*$/, "").replace(/ = .*$/, "");
       assert.ok(espaces(ecris.consigne).startsWith(cherche), `${cle} : « ${espaces(ecris.consigne)} » commence par ${cherche}`);
       assert.ok(CORE.memeNombre(ecris.etapes[ecris.etapes.length - 1].reponse, calcul.reponse), `${t} : la dernière étape donne la réponse`);
       // Le dessin : rien de vert au début ; chaque réponse d'étape s'écrit à son étape, pas avant.
@@ -229,7 +235,8 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
       if (calcul.module !== "F4") {
         const fin = ecris.dessins[ecris.dessins.length - 1];
         ecris.dessins.slice(0, -1).forEach((d, k) => assert.ok(!d.bas || String(d.bas.texte).includes("?"), `${t} : l'accolade garde « ? » au dessin ${k}`));
-        assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(x => x.trouve), `${t} : la dernière étape écrit la réponse`);
+        // (Lot 6 : la fraction cherchée l'écrit sur ses crochets, « 2/3 ».)
+        assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(x => x.trouve) || (fin.haut || []).some(h => h.trouve && h.texte === calcul.ecrite), `${t} : la dernière étape écrit la réponse`);
       }
     }
   });
@@ -243,7 +250,10 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
   assert.deepEqual(lignes("F9-2"), [["5/6 = □/24", 20], ["20/24 − 7/24 = □/24", 13]]);
   assert.equal(espaces(e("F11-1").consigne), "3 × 7/4 = 7/4 + 7/4 + 7/4");
   assert.deepEqual(lignes("F11-1"), [["3 × 7 = □", 21], ["3 × 7/4 = □/4", 21]]);
-  assert.deepEqual(lignes("F11-2"), [["5 × 4/5 = □/5", 20], ["20/5 = □", 4]]);
+  // (Lot 6, choix de Gwenaël : J'écris sur la fraction cherchée.)
+  assert.equal(espaces(e("F11-2").consigne), "3 × ? = 2");
+  assert.deepEqual(lignes("F11-2"), [["3 × □/3 = 2", 2], ["3 × □/□ = 2", 2 / 3]]);
+  assert.equal(e("F11-2").etapes[1].ecrite, "2/3");
 });
 
 test("lot 7c : On te montre de « Fraction d'une quantité » — le partage des billes, puis l'élève touche les parts qu'il prend", () => {
@@ -287,6 +297,8 @@ test("lot 7c : les annonces — trois fractions, nombres mixtes, la fraction che
   assert.equal(espaces(CORE.annonceDe(premier("F9-2", "difference"))), "Nouveau : c’est une soustraction.");
   assert.match(espaces(CORE.annonceDe(premier("F11-2", "quotient"))), /^Nouveau : la fraction, c’est une division : (\d+)\/(\d+) = \1 ÷ \2\.$/);
   assert.equal(espaces(CORE.annonceDe(premier("F11-2", "produit-gauche"))), "Nouveau : les facteurs ont changé de place.");
+  // (Lot 6 : la fraction cherchée.)
+  assert.match(espaces(CORE.annonceDe(premier("F11-2", "fraction"))), /^Nouveau : la fraction cherchée, c’est le nombre qui, multiplié par (\d+), donne (\d+)\.$/);
   // Au-delà de 30 parts : le calcul, annoncé, avec les deux flèches.
   const grand = tous("F9-2").find(c => CORE.aideDe(c).outil === "fois-fraction");
   assert.equal(espaces(CORE.nouveauteDe(grand).texte), "Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas.");
@@ -337,8 +349,8 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-2/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261118-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261118-2/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
@@ -353,5 +365,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes)$/m); // (lots 7d, 6 « programmes » : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases)$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases » : le cœur change encore)
 });

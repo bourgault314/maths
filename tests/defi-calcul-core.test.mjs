@@ -30,6 +30,9 @@ const MILLION = 1000000n;
 
 // La réponse d'un calcul, recalculée à partir de son TEXTE seulement.
 function resoudre(texte) {
+  // (Lot 6 « fraction à deux cases » : « 6 × □/□ = 5 » → 5/6, une fraction.)
+  const cases = /^(\d+) × □\/□ = (\d+)$|^□\/□ × (\d+) = (\d+)$/.exec(texte);
+  if (cases) return cases[1] ? Number(cases[2]) / Number(cases[1]) : Number(cases[4]) / Number(cases[3]);
   const m = texte.replace(/[\u202f\u00a0]/g, "");
   const nb = "([\\d,]+)";
   const motif = forme => new RegExp(`^${forme.replace(/[+]/g, "\\+").replace(/N/g, nb)}$`);
@@ -291,10 +294,13 @@ test("générateurs : nombre de calculs, réponse recalculée, clés, détermini
           // case au numérateur (« 0,3 = □/10 ») : toujours un entier.
           // Modules lot 6b : la touche du niveau (F3-3), et pas de virgule
           // quand la case est au dénominateur (« 0,25 = 1/□ »).
-          if (!CORE.virguleDe(calcul)) assert.ok(Number.isInteger(calcul.reponse), `${cle} : réponse entière (${calcul.texte})`);
-          assert.ok(CORE.decimalesDe(calcul.reponse) <= 3, `${cle} : au plus 3 décimales (${calcul.texte})`);
+          // (Lot 6 : une fraction à deux cases attend une fraction, 5/6.)
+          const fraction = CORE.aFractionACases(calcul.texte);
+          if (fraction) assert.ok(!Number.isInteger(calcul.reponse) && /^\d+\/\d+$/.test(calcul.ecrite), `${cle} : une fraction (${calcul.texte})`);
+          if (!CORE.virguleDe(calcul) && !fraction) assert.ok(Number.isInteger(calcul.reponse), `${cle} : réponse entière (${calcul.texte})`);
+          if (!fraction) assert.ok(CORE.decimalesDe(calcul.reponse) <= 3, `${cle} : au plus 3 décimales (${calcul.texte})`);
           assert.match(calcul.cle, new RegExp(`^${cle}(-(\\d+(d\\d)?|x|q))+$`), "clé stable, sans texte libre");
-          assert.equal((calcul.texte.match(/□/g) || []).length, 1, "une seule case par calcul");
+          assert.equal((calcul.texte.replace("□/□", "□").match(/□/g) || []).length, 1, "une seule case par calcul (ou une fraction à deux cases)");
           if (textes.has(calcul.cle)) assert.equal(textes.get(calcul.cle), calcul.texte, "une clé = un seul calcul");
           textes.set(calcul.cle, calcul.texte);
         });
@@ -3473,7 +3479,8 @@ function verifierApprendsLot7c(fiche, niveau, cle) {
   // (« Fraction et quotient » : la réponse est déjà dans le calcul, 7 × 3/7 = 3.)
   if (cle !== "F11-2") sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} : Avec le dessin`, {aria: fiche.id === "F4"});
   // J'écris commence par le calcul cherché, son dessin se remplit.
-  const cherche = avecEspaces(a.calculs.ecris.texte).replace(/, c’est □.*$/, "").replace(/ = .*$/, "");
+  // (Lot 6 : la fraction à deux cases s'écrit « ? » dans la consigne.)
+  const cherche = avecEspaces(a.calculs.ecris.texte).replace("□/□", "?").replace(/, c’est □.*$/, "").replace(/ = .*$/, "");
   assert.ok(avecEspaces(a.ecris.consigne).startsWith(cherche), `${cle} : ${a.ecris.consigne}`);
   const svgs = a.ecris.dessins.map(AIDES.dessinerImage);
   assert.notEqual(svgs[svgs.length - 1], svgs[0], `${cle} : le dessin de J'écris se remplit`);

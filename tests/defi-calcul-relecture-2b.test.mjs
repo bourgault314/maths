@@ -46,7 +46,10 @@ test("la case : les formes des réponses du niveau, toutes, et pas la réponse c
     assert.ok(formes.length >= 1, cle);
     formes.forEach(forme => assert.match(forme, /^−?0{1,3}(\u00a00{3})*(,0+)?$/, `${cle} : ${forme}`));
     assert.equal(CORE.modeleReponse(cle), formes[0]);
-    serie(cle, 15).forEach(c => {
+    // (Lot 6 : une réponse en fraction à deux cases a ses cases à elle,
+    // chacune aussi large que le plus long morceau du niveau.)
+    serie(cle, 15).filter(c => CORE.aFractionACases(c.texte)).forEach(c => CORE.morceauxFraction(c.ecrite).forEach(m => assert.ok(m.length <= CORE.chiffresFraction(cle), `${cle} : ${c.texte}`)));
+    serie(cle, 15).filter(c => !CORE.aFractionACases(c.texte)).forEach(c => {
       const forme = CORE.formaterNombre(c.reponse).replace(/\d/g, "0");
       assert.ok(formes.includes(forme), `${cle} : ${c.texte} → ${forme} est une forme connue`);
     });
@@ -219,14 +222,14 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
 test("les copies pour la page prof, les adresses de cache", async () => {
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_core.js"), SOURCES.core);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(PAGE, /defi_calcul\.css\?v=20261115-3/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261118-1/);
   // Lot 2 « J'apprends en une étape » : le moteur change (20261113-1) ;
   // lot 3a « Une leçon, une méthode » (20261113-3), lot 3b « Chaque sorte
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261118-2/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261118-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261118-3/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261118-2/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

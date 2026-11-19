@@ -334,9 +334,9 @@ test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'é
 
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261115-3/);
-  assert.match(page, /defi_calcul\.css\?v=20261115-3/);
+  assert.match(page, /defi_calcul\.css\?v=20261118-1/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est

@@ -63,7 +63,10 @@ test("lot 6 « programmes » : « Fraction et quotient » ne se réussit plus en
     assert.ok(Number.isInteger(c.reponse) && c.reponse >= 2 && c.reponse <= 6);
     assert.ok(![2, 4, 10].includes(c.f11.d), espaces(c.texte));
   });
-  assert.ok(!f.some(c => c.forme.startsWith("fraction")), "plus de « 6 × □/6 = 5 »");
+  // (Lot 6 « fraction à deux cases » : la fraction cherchée revient, mais à
+  // deux cases — « 6 × □/□ = 5 », réponse 5/6, jamais écrite dans le calcul.)
+  assert.ok(!f.some(c => /□\/\d/.test(espaces(c.texte))), "plus de « 6 × □/6 = 5 »");
+  f.filter(c => c.forme.startsWith("fraction")).forEach(c => assert.ok(espaces(c.texte).includes("□/□") && !Number.isInteger(c.reponse), espaces(c.texte)));
   // Le diagnostic : le numérateur recopié.
   const c = f.find(x => espaces(x.texte) === "15/3 = □");
   assert.ok(c);
@@ -88,10 +91,10 @@ test("lot 6 « programmes » : « ÷ 4, ÷ 8 » prend aussi les nombres qui ne f
 
 test("lot 6 « programmes » : la page — adresse de cache du moteur, copie pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-6-programmes$/m);
+  assert.match(version, /^lot defi-calcul-lot-6-(?:programmes|fraction-deux-cases)$/m); // (lot 6 « fraction à deux cases » : le cœur change encore)
 });

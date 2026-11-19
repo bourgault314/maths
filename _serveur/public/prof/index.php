@@ -6461,7 +6461,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         if (!calcul) continue;
         for (const reponse of candidatsErreur(calcul)) {
           const diagnostic = CALCUL_CORE.diagnostiquer(calcul, reponse);
-          if (diagnostic && diagnostic.c === cause) { trouve = {texte: calcul.texte, reponse: CALCUL_CORE.formaterNombre(reponse)}; break boucle; }
+          // (Lot 6 « fraction à deux cases » : une réponse en fraction s'écrit
+          // en fraction, « 6 × ?/? = 5 → 6/5 ».)
+          if (diagnostic && diagnostic.c === cause) { trouve = {texte: calcul.texte, reponse: CALCUL_CORE.ecrireReponse ? CALCUL_CORE.ecrireReponse(calcul, reponse) : CALCUL_CORE.formaterNombre(reponse)}; break boucle; }
         }
       }
     }
@@ -6472,7 +6474,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   function candidatsErreur(calcul) {
     const valeurs = [calcul.reponse, ...Object.values(calcul.donnees || {}).filter(v => typeof v === "number")];
     const trouves = new Set();
-    const ajouter = v => { if (typeof v === "number" && Number.isFinite(v) && v >= 0 && v !== calcul.reponse) trouves.add(Math.round(v * 1000) / 1000); };
+    // (Lot 6 : une réponse en fraction à deux cases garde sa valeur exacte,
+    // 6/5 ou 7/3 — arrondie au millième, 7/3 ne se reconnaîtrait plus.)
+    const exacte = Boolean(CALCUL_CORE.aFractionACases && CALCUL_CORE.aFractionACases(calcul.texte));
+    const ajouter = v => { if (typeof v === "number" && Number.isFinite(v) && v >= 0 && v !== calcul.reponse) trouves.add(exacte ? v : Math.round(v * 1000) / 1000); };
     valeurs.forEach(v => {
       for (let k = -3; k <= 3; k += 1) ajouter(v * Math.pow(10, k));
       [1, 2, 10, 20, 100, 1000].forEach(d => { ajouter(v + d); ajouter(v - d); });

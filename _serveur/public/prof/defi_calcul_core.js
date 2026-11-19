@@ -168,8 +168,13 @@
   // Ce que l'élève a tapé, en nombre : virgule ou point, espaces ignorées,
   // « 360 » et « 360,0 » sont le même nombre, « ,5 » est 0,5. null si ce
   // n'est pas un nombre (deux virgules, une virgule seule).
+  // Lot 6 « fraction à deux cases » (18/11/2026) : « 5/6 », tapé dans
+  // une fraction à deux cases, est le nombre 5/6 ; « 10/12 » aussi. Une
+  // case vide (« 5/ ») ou un dénominateur nul : null.
   function lireReponse(texte) {
     const propre = String(texte == null ? "" : texte).replace(/[\s  ]/g, "").replace(",", ".");
+    const fraction = /^(\d+)\/(\d+)$/.exec(propre);
+    if (fraction) return Number(fraction[2]) > 0 ? Number(fraction[1]) / Number(fraction[2]) : null;
     if (!/^\d+(\.\d*)?$|^\.\d+$/.test(propre)) return null;
     const nombre = Number(propre);
     return Number.isFinite(nombre) ? nombre : null;
@@ -192,6 +197,64 @@
   function memeNombre(premier, second) {
     return typeof premier === "number" && typeof second === "number" && Math.abs(premier - second) < 1e-9;
   }
+
+  // ------------------------------------------- la fraction à deux cases
+  //
+  // Lot 6 « fraction à deux cases » (18/11/2026, demande de Gwenaël) : une
+  // réponse qui est une fraction s'écrit dans une fraction à deux cases,
+  // « □/□ » dans le texte du calcul (« 6 × □/□ = 5 »). L'élève touche le
+  // numérateur, touche le dénominateur, et tape les deux. Le calcul (ou
+  // l'étape de J'écris) garde sa réponse en nombre (`reponse`, 5/6) et
+  // écrite (`ecrite`, « 5/6 »). Une fraction égale est juste (10/12 :
+  // 6 × 10/12 = 5, choix de Gwenaël) ; `irreductible: true` (pour plus
+  // tard, « Simplifier ») demandera la fraction la plus simple. Construite
+  // pour tous les niveaux : le collège (lot 8) s'en resservira.
+  const FRACTION_A_CASES = "□/□";
+  const aFractionACases = texte => String(texte || "").includes(FRACTION_A_CASES);
+  // La réponse attendue, écrite : « 5/6 », ou le nombre (« 2 700 »).
+  function reponseEcrite(attendu) {
+    if (!attendu) return "";
+    return typeof attendu.ecrite === "string" && attendu.ecrite ? attendu.ecrite : formaterNombre(attendu.reponse);
+  }
+  // Les deux morceaux d'une fraction écrite (« 5/6 » → ["5", "6"]).
+  function morceauxFraction(texte) {
+    const [num = "", den = ""] = String(texte == null ? "" : texte).split("/");
+    return [num, den];
+  }
+  const pgcdEntiers = (a, b) => (b ? pgcdEntiers(b, a % b) : a);
+  // Juste ? `attendu` : le calcul, ou une étape de J'écris ; `valeur` : le
+  // nombre lu (lireReponse) ; `ecrit` : ce que l'élève a tapé.
+  function estJuste(attendu, valeur, ecrit = "") {
+    if (!attendu || !memeNombre(valeur, attendu.reponse)) return false;
+    if (!attendu.irreductible || !String(ecrit).includes("/")) return true;
+    const [num, den] = morceauxFraction(ecrit).map(Number);
+    return pgcdEntiers(num, den) === 1;
+  }
+  // Une fraction égale, écrite autrement que la réponse (10/12 pour 5/6) :
+  // la bulle le dit (« Bravo ! 10/12 = 5/6. »).
+  function fractionEgaleAutrement(attendu, ecrit) {
+    if (!attendu || typeof attendu.ecrite !== "string" || !attendu.ecrite.includes("/") || !String(ecrit).includes("/")) return false;
+    if (!memeNombre(lireReponse(ecrit), attendu.reponse)) return false;
+    const [num, den] = morceauxFraction(ecrit).map(t => String(Number(t)));
+    return `${num}/${den}` !== attendu.ecrite;
+  }
+  // Une valeur écrite comme la réponse d'un calcul l'est : une fraction
+  // (« 6/5 ») quand le calcul attend une fraction. Pour la page du
+  // professeur, qui tire des réponses fausses en nombres : le plus petit
+  // dénominateur qui tombe juste, jusqu'à 99.
+  function ecrireReponse(calcul, valeur) {
+    if (calcul && aFractionACases(calcul.texte) && typeof valeur === "number" && Number.isFinite(valeur) && !Number.isInteger(valeur)) {
+      for (let den = 2; den <= 99; den += 1) {
+        const num = Math.round(valeur * den);
+        if (Math.abs(num / den - valeur) < 1e-9) return `${num}/${den}`;
+      }
+    }
+    return formaterNombre(valeur);
+  }
+  // Les chiffres d'une case de la fraction : 2 au moins (« 10/12 »,
+  // « 30/1 »), plus si une réponse du niveau en a besoin. Les cases ont
+  // cette largeur dès le début : rien ne bouge pendant la frappe.
+  const FRACTION_CHIFFRES = 2;
 
   // Un nombre dans une clé de calcul : « 36d1 » pour 3,6 (36 et 1 décimale).
   function cleNombre(nombre) {
@@ -10562,13 +10625,17 @@
   // F11-2 (6e, « fraction et quotient », exemples de réussite de 6e, p. 6) :
   // b × a/b = a et a/b × b = a ; la fraction est une division, « 12/4 = □ »
   // (« lorsque a est un multiple de b »). Lot 6 « programmes » (18/11) :
-  // « la fraction, c'est une division » remplace « la fraction cherchée »
-  // (b × □/b = a), dont la réponse était toujours le nombre écrit à
-  // droite : le niveau se réussissait en recopiant. La vraie fraction
-  // cherchée (7 × □ = 3, réponse 3/7) attend la fraction à deux cases du
-  // lot 8. Les quotients décimaux (3/4 = 0,75) sont dans F1. Le calcul
-  // s'écrit avec « × » ; il se lit comme l'addition répétée (« 5/4 + 5/4
-  // + 5/4 »), pour la barre.
+  // « la fraction, c'est une division » remplace l'ancienne « fraction
+  // cherchée » (b × □/b = a), dont la réponse était toujours le nombre
+  // écrit à droite : le niveau se réussissait en recopiant. Lot 6
+  // « fraction à deux cases » (18/11, demande de Gwenaël) : la vraie
+  // fraction cherchée, « 6 × □ = 5 » et « □ × 6 = 5 », réponse 5/6, dans
+  // une fraction à deux cases (exemples de réussite de 6e, p. 6 : « b × … =
+  // a ; … × b = a », là où « l'écriture fractionnaire est la seule manière
+  // de représenter le nombre manquant » : des tiers, sixièmes, septièmes,
+  // neuvièmes, jamais un quotient décimal). Les quotients décimaux (3/4 =
+  // 0,75) sont dans F1. Le calcul s'écrit avec « × » ; il se lit comme
+  // l'addition répétée (« 5/4 + 5/4 + 5/4 »), pour la barre.
   const F11_CODES = Object.freeze({produit: 1, "produit-gauche": 2, fraction: 3, "fraction-gauche": 4, quotient: 5});
   function f11Calcul(niveau, forme, k, a, d) {
     const repete = Array.from({length: k}, () => `${a}/${d}`).join(" + ");
@@ -10586,21 +10653,26 @@
       texte = forme === "produit" ? `${k} × ${a}/${d} = ${CASE}` : `${a}/${d} × ${k} = ${CASE}`;
       lu = lireFraction(`${repete} = ${CASE}`);
     } else {
-      texte = forme === "fraction" ? `${d} × ${CASE}/${d} = ${a}` : `${CASE}/${d} × ${d} = ${a}`;
+      // La fraction cherchée : « 6 × □/□ = 5 », la fraction à deux cases.
+      texte = forme === "fraction" ? `${d} × ${FRACTION_A_CASES} = ${a}` : `${FRACTION_A_CASES} × ${d} = ${a}`;
       lu = lireFraction(`${a}/${d} = ${CASE}/${d}`);
     }
-    const reponse = forme === "quotient" ? a / d : niveau === 1 || texte.endsWith(`${CASE}/${d}`) ? produit : a;
+    const cherchee = forme.startsWith("fraction");
+    const reponse = forme === "quotient" || cherchee ? a / d : niveau === 1 || texte.endsWith(`${CASE}/${d}`) ? produit : a;
     const c = {texte, reponse, forme, module: "F11", niveau, cle: `F11-${niveau}-${F11_CODES[forme]}-${k}-${a}-${d}`, lu,
       f11: Object.freeze({k, a, d})};
+    if (cherchee) c.ecrite = `${a}/${d}`;
     const pas = valeur => (valeur > 0 && Number.isInteger(valeur) && valeur !== reponse ? valeur : -1);
+    // (La fraction cherchée : la fraction à l'envers, 6/5 ; le nombre de
+    // droite seul, 5 ; le produit, 6 × 5 = 30.)
     const donnees = forme === "quotient"
       ? {plus: -1, recopie: pas(a), parts: -1, quotient: -1, fois: pas(a * d)}
       : texte.endsWith(`${CASE}/${d}`)
       ? {plus: pas(k + a), recopie: pas(a), parts: -1, quotient: -1}
       : forme.startsWith("produit") ? {plus: -1, recopie: -1, parts: pas(produit), quotient: -1}
-        : {plus: -1, recopie: pas(a * d), parts: -1, quotient: -1};
+        : {plus: -1, recopie: -1, parts: -1, quotient: -1, envers: d / a, seul: a, fois: a * d};
     const calcul = finirCalcul(c, donnees);
-    if (forme.startsWith("fraction")) return Object.freeze(Object.assign({}, calcul, {annonce: "on cherche la fraction : le nombre qui, multiplié par " + d + ", donne " + a}));
+    if (cherchee) return Object.freeze(Object.assign({}, calcul, {annonce: `la fraction cherchée, c’est le nombre qui, multiplié par ${d}, donne ${a}`}));
     if (forme === "quotient") return Object.freeze(Object.assign({}, calcul, {annonce: `la fraction, c’est une division\u00a0: ${a}/${d} = ${a} ÷ ${d}`}));
     return calcul;
   }
@@ -10619,6 +10691,13 @@
     const paires = [];
     // (Six unités au plus sur la barre : a jusqu'à 6.)
     entre(2, 9).forEach(d => entre(2, 6).filter(a => pgcd(a, d) === 1 && a % d).forEach(a => { if (a * d <= FRAC_BARRE_MAX) paires.push([a, d]); }));
+    // La fraction cherchée (lot 6, fraction à deux cases) : d × □ = a, la
+    // réponse a/d n'est jamais un nombre décimal (d = 3, 6, 7 ou 9), plus
+    // petite ou plus grande que 1 (3 × □ = 4) ; 30 parts au plus sur la
+    // barre, a de 2 à 6 (comme tout F11 : 3 × □ = 1, l'unité partagée, est
+    // l'affaire des fractions unitaires).
+    const cherchees = [];
+    [3, 6, 7, 9].forEach(d => entre(2, 6).filter(a => pgcd(a, d) === 1 && a * d <= FRAC_BARRE_MAX).forEach(a => cherchees.push([a, d])));
     // La fraction, c'est une division : (q × d)/d, le quotient q de 2 à 6,
     // 30 parts au plus sur la barre, d de 3 à 9 sauf 4 (les demis, les
     // quarts et les dixièmes sont dans F1, F2, F5), jamais q = d.
@@ -10627,7 +10706,9 @@
     return Object.freeze({
       produit: paires.map(([a, d]) => f11Calcul(2, "produit", d, a, d)),
       "produit-gauche": paires.map(([a, d]) => f11Calcul(2, "produit-gauche", d, a, d)),
-      quotient: quotients
+      quotient: quotients,
+      fraction: cherchees.map(([a, d]) => f11Calcul(2, "fraction", d, a, d)),
+      "fraction-gauche": cherchees.map(([a, d]) => f11Calcul(2, "fraction-gauche", d, a, d))
     });
   }
   const F11_VIVIERS = Object.freeze({1: f11Vivier(1), 2: f11Vivier(2)});
@@ -10643,7 +10724,7 @@
   }
   const f11Aide = calcul => Object.freeze(f11Barre(calcul, false));
   const f11Image = calcul => Object.freeze(f11Barre(calcul, true));
-  const f11Phrase = calcul => fr(`Regarde : ${calcul.texte.replace(CASE, f(calcul.reponse))}.`);
+  const f11Phrase = calcul => fr(`Regarde : ${aFractionACases(calcul.texte) ? calcul.texte.replace(FRACTION_A_CASES, calcul.ecrite) : calcul.texte.replace(CASE, f(calcul.reponse))}.`);
   // Les bandes (F11-1) : on pose k fois la fraction (« Pose 3 fois 5/4 »).
   function f11Manipulation(calcul) {
     if (calcul.niveau === 2) return null;
@@ -10658,8 +10739,9 @@
       traces: Object.freeze([Object.freeze({apres: plan.etapes.length, attente: `${texte} = …`, texte: `${texte} = ${Array.from({length: k}, () => `${a}/${d}`).join(" + ")} = ${k * a}/${d}`})])
     }));
   }
-  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, fraction: 2, "fraction-gauche": 3, quotient: 2});
+  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, quotient: 2, fraction: 3, "fraction-gauche": 4});
   const f11Difficulte = calcul => (calcul.niveau === 1 && calcul.f11.a > calcul.f11.d ? 5000 : 0) + F11_RANGS[calcul.forme] * 1000 + calcul.f11.d * 20 + calcul.f11.a;
+  const partage = (a, d) => `${a}\u00a0÷\u00a0${d}\u00a0=\u00a0${a}/${d}`;
   const F11_ERREURS = Object.freeze([
     Object.freeze({
       c: 1, nom: "ajouté au lieu de multiplier",
@@ -10689,6 +10771,36 @@
         return fr(`${f(reponse)}, c’est le nombre de ${nomDe(d)} : ${f(reponse)}/${d}. ${f(reponse)}/${d} = ${a}.`);
       },
       gras: 0
+    }),
+    // Lot 6 « fraction à deux cases » : la fraction cherchée (6 × □ = 5).
+    // (« 5 ÷ 6 = 5/6 » ne se coupe pas en fin de ligne.)
+    Object.freeze({
+      c: 4, nom: "la fraction à l’envers",
+      test: sauf((calcul, reponse) => calcul.donnees.envers > 0 && memeNombre(reponse, calcul.donnees.envers)),
+      retour: (calcul, reponse, ecrit) => {
+        const {a, d} = calcul.f11;
+        const tape = String(ecrit).includes("/") ? ecrit : ecrireReponse(calcul, reponse);
+        return fr(`${tape} : la fraction est à l’envers. ${a} partagé en\u00a0${d} : ${partage(a, d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 5, nom: "le nombre de droite recopié",
+      test: sauf((calcul, reponse) => calcul.donnees.seul > 0 && memeNombre(reponse, calcul.donnees.seul)),
+      retour: calcul => {
+        const {a, d} = calcul.f11;
+        return fr(`${d} × ${a} = ${a * d}, pas ${a}. ${a} partagé en\u00a0${d} : ${partage(a, d)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 6, nom: "multiplié au lieu de partager",
+      test: sauf((calcul, reponse) => calcul.forme.startsWith("fraction") && calcul.donnees.fois > 0 && memeNombre(reponse, calcul.donnees.fois)),
+      retour: calcul => {
+        const {a, d} = calcul.f11;
+        return fr(`${a * d}, c’est ${d} × ${a}. ${a} partagé en\u00a0${d} : ${partage(a, d)}.`);
+      },
+      gras: 0
     })
   ]);
   // J'écris. F11-1 : « 3 × 7/4 = 7/4 + 7/4 + 7/4 », puis « 3 × 7 = □ » et
@@ -10705,7 +10817,27 @@
     if (calcul.forme === "produit" || calcul.forme === "produit-gauche") {
       return ecrisFraction(calcul, calcul.texte.replace(CASE, "?"), [[`${d} × ${a}/${d} = ?/${d}`, d * a], [`${d * a}/${d} = ?`, a]], [{}, {bas: true}]);
     }
+    if (calcul.forme.startsWith("fraction")) return f11EcrisCherchee(calcul);
     return null;
+  }
+  // Lot 6 « fraction à deux cases » (choix de Gwenaël) : la fraction
+  // cherchée, « 3 × □ = 2 », en deux lignes. D'abord des tiers : « 3 ×
+  // □/3 = 2 », le numérateur (2) ; puis la fraction à deux cases. Le
+  // dessin : les 3 parts de 2 unités, « ?/3 », puis « 2/3 ».
+  function f11EcrisCherchee(calcul) {
+    const {a, d} = calcul.f11;
+    const premiere = calcul.forme === "fraction" ? `${d} × ${CASE}/${d} = ${a}` : `${CASE}/${d} × ${d} = ${a}`;
+    const aide = f11Aide(calcul);
+    const trouvee = Object.freeze(Object.assign({}, f11Image(calcul), {haut: Object.freeze(f11Image(calcul).haut.map(h => Object.freeze(Object.assign({}, h, {trouve: true}))))}));
+    return ecrisAvecDessins({
+      consigne: fr(calcul.texte.replace(FRACTION_A_CASES, "?")),
+      etapes: Object.freeze([
+        Object.freeze({texte: premiere, reponse: a}),
+        Object.freeze({texte: calcul.texte, reponse: calcul.reponse, ecrite: calcul.ecrite})
+      ]),
+      reponse: calcul.reponse, ecrite: calcul.ecrite,
+      solution: Object.freeze({image: f11Image(calcul), phrase: f11Phrase(calcul)})
+    }, {dessins: Object.freeze([aide, trouvee, trouvee]), revele: f11Image(calcul)});
   }
   function f11Apprends({manipule = null, represente, ecris, consigne, bilan}) {
     const premier = manipule || represente;
@@ -10746,11 +10878,13 @@
       },
       {
         n: 2, titre: "fraction et quotient", nom: "Fraction et quotient", palier: 4, type: "P",
-        composer: vivierNiveau(F11_VIVIERS[2], [3, 2, 5]),
-        imposes: [f11(2, `3 × 5/3 = ${CASE}`), f11(2, `15/3 = ${CASE}`)],
+        // (Lot 6 : b × a/b 3 sur 10, la division 3, la fraction cherchée 4.)
+        composer: vivierNiveau(F11_VIVIERS[2], [2, 1, 3, 2, 2]),
+        imposes: [f11(2, `3 × 5/3 = ${CASE}`), f11(2, `15/3 = ${CASE}`), f11(2, `6 × ${FRACTION_A_CASES} = 5`)],
         apprends: f11Apprends({
           represente: pourApprendre(f11(2, `7 × 3/7 = ${CASE}`)),
-          ecris: pourApprendre(f11(2, `5 × 4/5 = ${CASE}`)),
+          // (Lot 6, choix de Gwenaël : J'écris sur la fraction cherchée.)
+          ecris: pourApprendre(f11(2, `3 × ${FRACTION_A_CASES} = 2`)),
           consigne: "7 fois 3 septièmes.",
           bilan: "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3."
         })
@@ -11016,7 +11150,7 @@
     "F9-1": parFormes(["addition", "somme"], ["soustraction", "difference"]),
     "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
     "F11-1": [["plus petite que 1", c => Boolean(c.f11 && c.f11.a < c.f11.d)], ["plus grande que 1", toutes]],
-    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient"]),
+    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
     // Lot 7d : M11, A9, C4, M9 (les familles du rapport de Codex du 14/11).
     "M11-1": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
     "M11-2": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
@@ -11445,11 +11579,16 @@
     if (!REPONSES_DU_NIVEAU.has(cleNiveau)) {
       const trouve = niveauDe(cleNiveau);
       const reponses = [];
+      const fractions = [];
       if (trouve && typeof trouve.niveau.composer === "function") {
-        for (let graine = 1; graine <= 5; graine += 1) trouve.niveau.composer(mulberry32(graine * 7919), 60, []).forEach(calcul => reponses.push(calcul.reponse));
-        (trouve.niveau.imposes || []).forEach(calcul => reponses.push(calcul.reponse));
+        // (Lot 6 : une réponse en fraction à deux cases a ses cases à
+        // elle, voir `chiffresFraction` : elle ne compte pas ici.)
+        const prendre = calcul => { if (aFractionACases(calcul.texte)) fractions.push(calcul.ecrite); else reponses.push(calcul.reponse); };
+        for (let graine = 1; graine <= 5; graine += 1) trouve.niveau.composer(mulberry32(graine * 7919), 60, []).forEach(prendre);
+        (trouve.niveau.imposes || []).forEach(prendre);
       }
       REPONSES_DU_NIVEAU.set(cleNiveau, reponses);
+      FRACTIONS_DU_NIVEAU.set(cleNiveau, fractions);
     }
     const formes = new Set();
     REPONSES_DU_NIVEAU.get(cleNiveau).concat(enPlus).forEach(r => {
@@ -11459,6 +11598,14 @@
   }
   function modeleReponse(cleNiveau, enPlus = []) {
     return modelesReponse(cleNiveau, enPlus)[0] || "";
+  }
+  // Lot 6 : les chiffres d'une case de la fraction à deux cases, dans un
+  // niveau (2 au moins) ; `enPlus` : d'autres réponses écrites (« 2/3 »).
+  const FRACTIONS_DU_NIVEAU = new Map();
+  function chiffresFraction(cleNiveau, enPlus = []) {
+    modelesReponse(cleNiveau);
+    const toutes = (FRACTIONS_DU_NIVEAU.get(cleNiveau) || []).concat(enPlus);
+    return toutes.reduce((plus, ecrite) => Math.max(plus, ...morceauxFraction(ecrite).map(t => t.length)), FRACTION_CHIFFRES);
   }
 
   // L'outil du début de l'entraînement, et ce qui revient après une erreur
@@ -12234,6 +12381,15 @@
     formaterNombre,
     lireReponse,
     memeNombre,
+    // Lot 6 « fraction à deux cases ».
+    FRACTION_A_CASES,
+    aFractionACases,
+    reponseEcrite,
+    morceauxFraction,
+    estJuste,
+    fractionEgaleAutrement,
+    ecrireReponse,
+    chiffresFraction,
     cleNombre,
     exact,
     decimalesDe,

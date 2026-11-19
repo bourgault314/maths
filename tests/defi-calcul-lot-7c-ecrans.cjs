@@ -126,10 +126,16 @@ async function etapes(page, liste, cle) {
   for (const [k, etape] of liste.entries()) {
     const expression = await boite(page, "#expression");
     const dessinAvant = await boite(page, "#aide > svg");
-    for (const c of CORE.formaterNombre(etape.reponse)) {
-      if (!c.trim() || c === "\u202f") continue;
-      await page.click(`#play [data-key="${c}"]`);
-      assert.ok(memePlace(await boite(page, "#expression"), expression), `${cle} : rien ne bouge pendant la frappe`);
+    // (Lot 6 « fraction à deux cases » : « 3 × □/□ = 2 », le numérateur,
+    // puis la case du dénominateur touchée, puis le dénominateur.)
+    const [num, den] = etape.ecrite ? etape.ecrite.split("/") : [CORE.formaterNombre(etape.reponse), null];
+    for (const morceau of den === null ? [num] : [num, den]) {
+      if (morceau === den) await page.click("#inline-answer-den");
+      for (const c of morceau) {
+        if (!c.trim() || c === "\u202f") continue;
+        await page.click(`#play [data-key="${c}"]`);
+        assert.ok(memePlace(await boite(page, "#expression"), expression), `${cle} : rien ne bouge pendant la frappe`);
+      }
     }
     await page.click("#validate");
     await pause(page, 600);
