@@ -500,7 +500,9 @@ async function cliquerSuite(page) {
 //
 // Léa arrive : elle sait les niveaux 1 et 2 des compléments, pas le 3.
 async function premierJour(navigateur, base, taille) {
-  const session = await ouvrir(navigateur, base, taille, {jour: "2026-11-02"});
+  // (Lot F4 : son test de palier est déjà joué — raté —, elle avance module
+  // par module ; le test de palier a sa recette, defi-calcul-lot-F4-ecrans.cjs.)
+  const session = await ouvrir(navigateur, base, taille, {jour: "2026-11-02", parcours: P.normaliserParcours({version: P.VERSION, paliers: ["2026-10-30", null, null, null]})});
   const {page} = session;
   const ecran = (nom, options) => controler(session, taille, `jour1-${nom}`, options);
   await ecran("accueil");

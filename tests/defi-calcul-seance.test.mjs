@@ -10,6 +10,9 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 
 // La carte du site : quatre modules construits (A2, M2, A5, D2). Et une
 // carte où tout est construit, pour les grands nombres.
@@ -55,7 +58,7 @@ const repondre = (p, module, niveau, juste, jour, {ms = 2000, type = "P", cause 
 const finirJour = (p, jour, carte = CARTE) => P.terminerCalculsDuJour(p, {aujourdhui: jour, carte});
 
 // Un parcours où des compétences sont déjà dans des boîtes : {"A5-1": [boîte, échéance, échecs]}.
-function avecBoites(boites, base = P.creerParcours()) {
+function avecBoites(boites, base = sansTestDePalier(P.creerParcours())) {
   const p = P.normaliserParcours(base);
   Object.entries(boites).forEach(([cle, [boite, echeance, echecs = 0]]) => {
     const [id, n] = cle.split("-");
@@ -85,14 +88,14 @@ test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules
   assert.equal(P.typeDe(CARTE, "A2", 2), "P");
   assert.equal(P.typeDe(CARTE, "M1", 1), "F");
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
-  const compte = P.compter(P.creerParcours(), CARTE);
+  const compte = P.compter(sansTestDePalier(P.creerParcours()), CARTE);
   // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
   assert.deepEqual(compte.paliers.map(p => p.total), [41, 34, 40, 12]); // (lot 7c : F4-2 au CM2 ; lot 7d : M11 au CM1 ; lot 6 « programmes 2 »)
   assert.equal(compte.total, 127);
 });
 
 test("premier jour : pas de calculs du jour, la séance commence par le test du premier module", () => {
-  const neuf = P.creerParcours();
+  const neuf = sansTestDePalier(P.creerParcours());
   const f = file(neuf, J1);
   assert.deepEqual(f.etapes, [{type: "test", module: "A2"}]);
   assert.equal(f.faites, 0);
@@ -105,7 +108,7 @@ test("premier jour : pas de calculs du jour, la séance commence par le test du 
 });
 
 test("le test en escalier : la marche la plus haute en boîte 3, celles d'en dessous en boîte 4, le reste à apprendre", () => {
-  let p = ouvrir(P.creerParcours(), J1);
+  let p = ouvrir(sansTestDePalier(P.creerParcours()), J1);
   let r = tester(p, "A2", 2, J1);
   p = r.parcours;
   assert.deepEqual(p.modules.A2.b, [4, 3, 0, 0, 0]);
@@ -121,12 +124,12 @@ test("le test en escalier : la marche la plus haute en boîte 3, celles d'en des
   assert.deepEqual(P.competenceCourante(p, CARTE), {module: "A2", niveau: 3});
   assert.deepEqual(file(p, J1).etapes, [{type: "apprends", module: "A2", niveau: 3}]);
   // Rien prouvé : rien n'entre, le module n'est plus intact, on apprend.
-  let q = tester(ouvrir(P.creerParcours(), J1), "A2", 0, J1).parcours;
+  let q = tester(ouvrir(sansTestDePalier(P.creerParcours()), J1), "A2", 0, J1).parcours;
   assert.deepEqual(q.modules.A2.b, [0, 0, 0, 0, 0]);
   assert.deepEqual(types(q, J1), ["apprends"]);
   assert.deepEqual(file(q, J1).etapes[0], {type: "apprends", module: "A2", niveau: 1});
   // Tout prouvé : tout est su sauf la dernière marche (en route), le module n'est pas encore « su ».
-  q = tester(ouvrir(P.creerParcours(), J1), "M2", 2, J1).parcours;
+  q = tester(ouvrir(sansTestDePalier(P.creerParcours()), J1), "M2", 2, J1).parcours;
   assert.deepEqual(q.modules.M2.b, [4, 3]);
   assert.equal(q.modules.M2.ok, null);
   // Le test ne touche pas une compétence déjà entrée.
@@ -136,7 +139,7 @@ test("le test en escalier : la marche la plus haute en boîte 3, celles d'en des
 });
 
 test("au plus 12 tests par séance (lot 1 ; 8 au lot F1, 4 avant) ; un élève qui sait tout traverse les modules", () => {
-  let p = ouvrir(P.creerParcours(), J1);
+  let p = ouvrir(sansTestDePalier(P.creerParcours()), J1);
   const joues = [];
   for (let i = 0; i < 6; i += 1) {
     const f = file(p, J1);
@@ -152,7 +155,7 @@ test("au plus 12 tests par séance (lot 1 ; 8 au lot F1, 4 avant) ; un élève q
   // Avec la carte pleine, le 13e module de la séance attend la séance suivante
   // (lot 1 : un module jamais commencé est toujours testé, jamais de leçon d'office).
   assert.equal(P.SEUILS.test.parSeance, 12);
-  let q = ouvrir(P.creerParcours(), J1, CARTE_PLEINE);
+  let q = ouvrir(sansTestDePalier(P.creerParcours()), J1, CARTE_PLEINE);
   for (let i = 0; i < 12; i += 1) {
     assert.equal(types(q, J1, CARTE_PLEINE)[0], "test", `le test n° ${i + 1} de la séance`);
     const f = file(q, J1, CARTE_PLEINE);
@@ -166,7 +169,7 @@ test("au plus 12 tests par séance (lot 1 ; 8 au lot F1, 4 avant) ; un élève q
 
 test("la séance ordinaire : calculs du jour, J'apprends (en une étape, lot 2) — puis c'est fini quand le temps est passé", () => {
   const J2 = plus(1);
-  let p = tester(ouvrir(P.creerParcours(), J1), "A2", 2, J1).parcours;
+  let p = tester(ouvrir(sansTestDePalier(P.creerParcours()), J1), "A2", 2, J1).parcours;
   // Arrêté à la marche 3 : on apprend A2-3 dans la même séance.
   assert.deepEqual(types(p, J1), ["apprends"]);
   p = tempsPasse(p);
@@ -357,7 +360,7 @@ test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis r
   const i = {juste: true, outil: "image"};
   const a = {juste: true, outil: "aucun"};
   const faux = outil => ({juste: false, outil});
-  assert.deepEqual(s([]), {outil: "manip", reussi: false, fini: false, justes: 0, total: 0, justesDeSuite: 0, objectif: 5});
+  assert.deepEqual(s([]), {outil: "manip", reussi: false, fini: false, arrete: false, justes: 0, total: 0, justesDeSuite: 0, objectif: 5, reprise: 1});
   assert.equal(s([m]).outil, "manip");
   assert.equal(s([m, m]).outil, "image", "2 justes avec les perles : l'image");
   assert.equal(s([m, m, i]).outil, "image");
@@ -386,6 +389,34 @@ test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis r
   assert.equal(s(ratee().slice(0, 24)).fini, false);
   assert.equal(P.verdictEntrainement(reussie()).reussi, true);
   assert.equal(P.verdictEntrainement(ratee()).reussi, false);
+  // Lot F4 (choix de Gwenaël) : 5 justes sur les 6 derniers sans aide. Une
+  // erreur seule : le dessin pour UN calcul — juste, on repart sans aide, la
+  // fenêtre est gardée ; deux de suite : à manipuler, la fenêtre repart.
+  assert.equal(s([...debut, a, a, faux("aucun")]).outil, "image", "une erreur : le dessin, pour un calcul");
+  assert.equal(s([...debut, a, a, faux("aucun"), i]).outil, "aucun", "juste avec le dessin : sans aide de nouveau");
+  assert.equal(s([...debut, a, a, faux("aucun"), i, a, a]).reussi, false, "4 justes sur 5");
+  assert.equal(s([...debut, a, a, faux("aucun"), i, a, a, a]).reussi, true, "5 justes sur les 6 derniers");
+  assert.equal(s([...debut, a, a, faux("aucun"), i, a, a, a]).justesDeSuite, 5);
+  assert.equal(s([...debut, a, faux("aucun"), i, a, faux("aucun"), i, a, a, a]).reussi, false, "deux erreurs dans les 6 derniers");
+  assert.equal(s([...debut, a, a, a, a, faux("aucun"), faux("image")]).outil, "manip", "deux erreurs de suite : on repart des perles");
+  assert.equal(s([...debut, a, a, a, a, faux("aucun"), faux("image"), m, i, a]).justesDeSuite, 1, "et la fenêtre repart");
+  // J'apprends ne se rate plus (lot F4) : arrêté quand la séance a passé
+  // son temps (4 calculs au moins), au plus tard au bout de 25.
+  const ap = {genre: "apprends"};
+  assert.equal(s([m, m, i], Object.assign({tempsFini: true}, ap)).fini, false, "3 calculs : on continue");
+  assert.deepEqual([s([m, m, i, i], Object.assign({tempsFini: true}, ap)).fini, s([m, m, i, i], Object.assign({tempsFini: true}, ap)).arrete], [true, true]);
+  assert.equal(s([m, m, i, i], {tempsFini: true, genre: "entraine"}).fini, false, "Je m'entraîne (le professeur) : pas d'arrêt au temps");
+  assert.equal(s(ratee(), ap).arrete, true, "25 calculs");
+  assert.equal(s(ratee().slice(0, 24), ap).fini, false);
+  // Où il reprendra : au dessin, ou sans aide s'il y était.
+  assert.equal(s([m, m, i, i], ap).reprise, 1);
+  assert.equal(s([m, m, i, i, a], ap).reprise, 2);
+  assert.equal(s([m, m, i, i, a, faux("aucun")], ap).reprise, 2, "le dessin d'un calcul : toujours sans aide");
+  assert.equal(s([m, m, i, i, a, faux("aucun"), faux("image")], ap).reprise, 1, "deux erreurs de suite : au dessin");
+  // La reprise : sans aide d'emblée, ou au dessin (jamais « on te montre »).
+  assert.equal(s([], Object.assign({depart: 2}, ap)).outil, "aucun");
+  assert.equal(s([], Object.assign({depart: 1}, ap)).outil, "image");
+  assert.equal(s([a, a, a, a, a], Object.assign({depart: 2}, ap)).reussi, true);
   // Je m'entraîne encore : l'image d'abord, fini à 3 justes de suite sans aide (toutes les écritures : pas exigé), 20 au plus.
   const e = {genre: "rattrape"};
   assert.equal(s([], e).outil, "image");
@@ -397,21 +428,24 @@ test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis r
   assert.equal(P.verdictEntrainement([i, i, a, a, a], e).reussi, true);
 });
 
-test("J'apprends raté : la séance s'arrête, rien de nouveau aujourd'hui, demain repart de J'apprends", () => {
+// Lot F4 : J'apprends ne se rate plus — arrêté, il garde où l'élève en est.
+test("J'apprends arrêté : la séance s'arrête, rien de nouveau aujourd'hui, demain il reprend où il en était", () => {
   const J2 = plus(1);
-  let p = tester(ouvrir(P.creerParcours(), J1), "A2", 0, J1).parcours;
+  let p = tester(ouvrir(sansTestDePalier(P.creerParcours()), J1), "A2", 0, J1).parcours;
   const r = apprendre(p, "A2", 1, J1, CARTE, ratee());
   p = r.parcours;
   assert.equal(r.verdict.reussi, false);
   assert.equal(r.finie, true);
   assert.equal(p.modules.A2.b[0], 0);
-  assert.equal(p.modules.A2.a[0], 0, "J'apprends à refaire");
+  assert.equal(p.modules.A2.a[0], 0, "J'apprends pas encore fait");
+  assert.deepEqual([P.arretsDe(p.modules.A2, 0), P.repriseDe(p.modules.A2, 0)], [1, 2], "un arrêt, il reprendra sans aide");
+  assert.deepEqual(r.evenements.find(ev => ev.type === "arrete"), {type: "arrete", module: "A2", niveau: 1, reprise: 2, arrets: 1, aVoir: false, retour: null});
   assert.equal(p.seance.p[P.PLAN.nouveaute], P.NOUVEAUTE.arretee);
   assert.deepEqual(types(p, J1), [], "rien de nouveau avant demain");
   assert.deepEqual(types(ouvrir(p, J1), J1), []);
   assert.equal(file(p, J1).finie, true);
   assert.deepEqual(types(p, J2), ["apprends"]);
-  assert.deepEqual(file(p, J2).etapes[0], {type: "apprends", module: "A2", niveau: 1});
+  assert.deepEqual(file(p, J2).etapes[0], {type: "apprends", module: "A2", niveau: 1, depart: 2});
 });
 
 test("Mes calculs du jour : seulement les dues, 20 au plus, un par compétence, les plus en retard d'abord", () => {
@@ -441,7 +475,7 @@ test("module su : toutes ses compétences en boîte 4 ; ok est posé une fois et
   assert.deepEqual(r.evenements, [{type: "module", module: "M2"}]);
   assert.equal(P.etatModule(r.parcours, "M2", CARTE).etat, "su");
   // Un test qui prouve tout : les marches basses en 4, la haute en 3 : pas encore su.
-  const q = tester(ouvrir(P.creerParcours(), J1), "M2", 2, J1).parcours;
+  const q = tester(ouvrir(sansTestDePalier(P.creerParcours()), J1), "M2", 2, J1).parcours;
   assert.equal(q.modules.M2.ok, null);
   // Une compétence qui redescend : ok reste, l'état dit « à revoir » quand elle est en boîte 1.
   let s = r.parcours;
@@ -468,7 +502,7 @@ test("arrêter et reprendre : les étapes faites restent faites, le jour même, 
   assert.equal(f.faites, 1);
   assert.deepEqual(f.etapes.map(e => e.type), ["test"], "A5-1 vient, A5 est intact");
   // Sur un autre appareil, après fusion : la même file.
-  const ailleurs = P.fusionner(P.creerParcours(), p);
+  const ailleurs = P.fusionner(sansTestDePalier(P.creerParcours()), p);
   assert.deepEqual(file(ailleurs, J1).etapes, f.etapes);
   assert.equal(file(ailleurs, J1).faites, 1);
   // Le lendemain : la séance de la veille ne compte pas, la file est reconstruite.
@@ -494,9 +528,9 @@ test("tout est entré : la séance, ce sont les calculs du jour ; rien de dû à
 });
 
 test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté par séance, tout finit vert", () => {
-  // Un élève qui réussit presque tout, sur la carte pleine (125 compétences).
+  // Un élève qui réussit presque tout, sur la carte pleine (127 compétences).
   const rng = CORE.mulberry32(20261030);
-  let p = P.creerParcours();
+  let p = sansTestDePalier(P.creerParcours());
   let jour = J1;
   let maxCalculs = 0;
   let maxEtapes = 0;
@@ -539,7 +573,7 @@ test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté
   assert.ok(maxEtapes <= 1 + P.SEUILS.rattrapage.parSeance + P.SEUILS.test.parSeance + 6, `${maxEtapes} étapes`);
   assert.equal(P.competenceCourante(p, CARTE_PLEINE), null, "tout est entré");
   const compte = P.compter(p, CARTE_PLEINE);
-  assert.equal(compte.sues, 125, `${compte.sues} sues`);
+  assert.equal(compte.sues, 127, `${compte.sues} sues`); // (lot F4 : les 127 ; sur main avant lui, 125)
   assert.ok(P.mesurer(p).cles < 2000 && P.mesurer(p).octets < 40000);
 });
 
@@ -548,24 +582,24 @@ test("une année de séances : jamais plus de 20 calculs du jour, une nouveauté
 // marche, montées l'une après l'autre). `marche: 4` avec un seul niveau joué
 // à 0/2 n'entre rien.
 test("le test d'entrée : la marche est bornée par les résultats", () => {
-  const trafique = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 4, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE, seance: true});
+  const trafique = P.appliquerTest(sansTestDePalier(P.creerParcours()), {module: "A2", marche: 4, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-10-31", carte: CARTE, seance: true});
   assert.equal(trafique.marche, 0);
   assert.equal(trafique.tout, false);
   assert.deepEqual(trafique.parcours.modules.A2.b, [0, 0, 0, 0, 0], "rien n'entre");
   // Un trou dans l'escalier n'est pas une marche prouvée : 3/3, 2/4, 3/3 → marche 1.
-  const trou = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 3, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 2, total: 4}, {niveau: 3, justes: 3, total: 3}]}, {aujourdhui: "2026-10-31", carte: CARTE});
+  const trou = P.appliquerTest(sansTestDePalier(P.creerParcours()), {module: "A2", marche: 3, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 2, total: 4}, {niveau: 3, justes: 3, total: 3}]}, {aujourdhui: "2026-10-31", carte: CARTE});
   assert.equal(trou.marche, 1);
   // Lot 1 (choix de Gwenaël) : 3 justes sur 4 montent ; 2 sur 2 ou 3 sur 5 non.
-  const marche = niveaux => P.appliquerTest(P.creerParcours(), {module: "A2", marche: 1, niveaux}, {aujourdhui: "2026-10-31", carte: CARTE}).marche;
+  const marche = niveaux => P.appliquerTest(sansTestDePalier(P.creerParcours()), {module: "A2", marche: 1, niveaux}, {aujourdhui: "2026-10-31", carte: CARTE}).marche;
   assert.equal(marche([{niveau: 1, justes: 3, total: 4}]), 1, "3 sur 4");
   assert.equal(marche([{niveau: 1, justes: 4, total: 5}]), 1, "4 sur 5 (un niveau à 4 sortes)");
   assert.equal(marche([{niveau: 1, justes: 2, total: 2}]), 0, "2 sur 2 : pas assez");
   assert.equal(marche([{niveau: 1, justes: 3, total: 5}]), 0, "deux faux");
   assert.deepEqual(trou.parcours.modules.A2.b, [3, 0, 0, 0, 0]);
   // Le test honnête : inchangé.
-  assert.deepEqual(tester(P.creerParcours(), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0, 0]);
-  assert.deepEqual(tester(P.creerParcours(), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3, 0]);
-  assert.deepEqual(tester(P.creerParcours(), "A2", 5, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 4, 3], "A2-5 (lot « couverture »), la 5e marche");
+  assert.deepEqual(tester(sansTestDePalier(P.creerParcours()), "A2", 2, "2026-10-31").parcours.modules.A2.b, [4, 3, 0, 0, 0]);
+  assert.deepEqual(tester(sansTestDePalier(P.creerParcours()), "A2", 4, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 3, 0]);
+  assert.deepEqual(tester(sansTestDePalier(P.creerParcours()), "A2", 5, "2026-10-31").parcours.modules.A2.b, [4, 4, 4, 4, 3], "A2-5 (lot « couverture »), la 5e marche");
 });
 
 // Lot 3b (31/10) : l'élève coincé. Au 3e échec de suite dans Mes calculs du
@@ -657,7 +691,7 @@ test("la vraie carte (modules lots 1 à 5) : le parcours commence par A1, A10, A
   assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(41, 72).map(c => `${c.module}-${c.niveau}`),
     ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F6-2", "M11-1", "F5-2", "F8-3"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5, F6 (lot 6 « programmes 2 »)");
   assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 127, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
-  assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "avance"}]);
+  assert.deepEqual(P.fileSeance(sansTestDePalier(P.creerParcours()), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "avance"}]);
 });
 
 // ------------------------------------------------------------- lot F1 « rythme »
@@ -697,7 +731,7 @@ test("lot F1 : les boîtes 6 et 7 reviennent à 30 et 60 jours, sue dès la boî
 // Une compétence non entrée et « commencée » (J'apprends fait) : la
 // nouveauté de la séance est son entraînement.
 function seanceNeuve(nouveautes, jour = J1) {
-  const p = tester(ouvrir(P.creerParcours(), jour), "A2", 2, jour).parcours;
+  const p = tester(ouvrir(sansTestDePalier(P.creerParcours()), jour), "A2", 2, jour).parcours;
   return P.ouvrirSeance(p, CARTE, {aujourdhui: plus(1), nouveautes});
 }
 

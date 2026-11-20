@@ -125,7 +125,8 @@ test("« Nouveau » : l'image revient pour la première écriture nouvelle, sans
   assert.equal(apres.justes, 7);
   // Faux, c'est une erreur comme une autre.
   assert.equal(PARCOURS.suivreEntrainement([...sans, {juste: false, outil: "image", rappel: true}], regles).justesDeSuite, 0);
-  assert.match(PAGE, /if \(outil === "aucun" && nouveau && CORE\.aideDe\(question\.calcul\)\) \{\n\s+outil = "image";\n\s+question\.rappel = true;/);
+  // (Lot F4 : aussi le premier calcul d'un J'apprends repris sans aide.)
+  assert.match(PAGE, /if \(outil === "aucun" && \(nouveau \|\| rappelDepart\) && CORE\.aideDe\(question\.calcul\)\) \{\n\s+outil = "image";\n\s+question\.rappel = true;/);
   assert.match(PAGE, /montrerOutil\(question, \{nouveau\}\);/);
   assert.match(PAGE, /question\.rappel \? \{rappel: true\} : \{\}/);
   assert.match(PAGE, /reponse\.rappel \? \{rappel: true\} : \{\}/, "le rappel va jusqu'au parcours");
@@ -222,12 +223,12 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
 test("les copies pour la page prof, les adresses de cache", async () => {
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_core.js"), SOURCES.core);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(PAGE, /defi_calcul\.css\?v=20261120-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261120-2/);
   // Lot 2 « J'apprends en une étape » : le moteur change (20261113-1) ;
   // lot 3a « Une leçon, une méthode » (20261113-3), lot 3b « Chaque sorte
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261119-1/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261120-1/);
   assert.match(PAGE, /defi_calcul_core\.js\?v=20261120-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
 });

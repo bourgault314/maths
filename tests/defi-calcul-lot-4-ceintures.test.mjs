@@ -14,6 +14,9 @@ import test from "node:test";
 
 const require = createRequire(import.meta.url);
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const CARTE = CORE.carte();
 const lire = chemin => readFileSync(new URL(chemin, import.meta.url), "utf8");
@@ -58,8 +61,8 @@ test("les quatre paliers ont des compétences construites ; les ceintures et leu
 });
 
 test("format : version 8, `ceintures` à quatre places (une date ou null), et rien d'autre", () => {
-  assert.equal(P.VERSION, 9, "lot 6 « programmes 2 » : 9");
-  assert.deepEqual(P.creerParcours().ceintures, [null, null, null, null]);
+  assert.equal(P.VERSION, 10, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
+  assert.deepEqual(sansTestDePalier(P.creerParcours()).ceintures, [null, null, null, null]);
   const lu = P.normaliserParcours({version: 8, ceintures: ["2026-11-02", "x", 4, "2026-13-40", "2026-11-09"]});
   assert.deepEqual(lu.ceintures, ["2026-11-02", null, null, null], "une date par place, le reste null, quatre places");
   assert.deepEqual(P.normaliserParcours({version: 7}).ceintures, [null, null, null, null], "une progression de version 7 se relit sans ceinture");
@@ -159,11 +162,11 @@ test("gagnée = gardée : un niveau redevenu « à revoir », une carte qui gran
   const plusGrande = {modules: CARTE.modules.map(f => (f.paliers && f.paliers.includes(1) && !f.construit ? Object.assign({}, f, {construit: true}) : f)), ordre: CARTE.ordre};
   assert.equal(P.etatCeintures(p, plusGrande).porte, 1);
   // Fusion : gagnée d'un côté, gagnée des deux ; le jour le plus ancien.
-  const autre = P.creerParcours();
+  const autre = sansTestDePalier(P.creerParcours());
   autre.ceintures = ["2026-11-10", null, null, null];
   assert.deepEqual(P.fusionner(p, autre).ceintures, ["2026-11-10", null, null, null]);
   assert.deepEqual(P.fusionner(autre, p).ceintures, ["2026-11-10", null, null, null], "dans les deux sens");
-  assert.deepEqual(P.fusionner(P.creerParcours(), p).ceintures, [J, null, null, null], "une copie sans ceinture n'efface rien");
+  assert.deepEqual(P.fusionner(sansTestDePalier(P.creerParcours()), p).ceintures, [J, null, null, null], "une copie sans ceinture n'efface rien");
   // « Recommencer à zéro » repart en blanche.
   assert.deepEqual(P.remettreAZero(p).ceintures, [null, null, null, null]);
 });
@@ -237,8 +240,9 @@ test("la page : l'écran de la ceinture à la fin de l'étape, puis le bilan ; l
   assert.match(PAGE, /state\.ceinturesAvant = MODE_PROF \? null : etatCeintures\(\);/);
   assert.match(PAGE, /`Tous les calculs \$\{DU_PALIER\[n\]\} sont solides\\u00a0★`/);
   assert.match(PAGE, /"Tu as fini Défi calcul !" : "Tu as fini tout ce que ton professeur a ouvert\."/);
-  // La barrette : dans les trois bilans où une compétence devient solide.
-  assert.equal((PAGE.match(/\.\.\.feteBarrette\(\)/g) || []).length, 3);
+  // La barrette : dans les trois bilans où une compétence devient solide
+  // (lot F4 : et le bilan du test de palier, quatre).
+  assert.equal((PAGE.match(/\.\.\.feteBarrette\(\)/g) || []).length, 4);
   // L'écran se cache dès qu'un autre bilan se pose.
   assert.equal((PAGE.match(/\$\("result-ceinture"\)\.hidden = true;/g) || []).length, 3);
   // Le dessin passe par des éléments, jamais par innerHTML.
@@ -258,14 +262,14 @@ test("Mon parcours compte sur ce qui est construit ; chaque onglet a sa ceinture
   // La ligne garde sa hauteur d'un palier à l'autre (rien ne bouge).
   assert.match(CSS, /\.dc-pceinture \{ display: flex; align-items: center; gap: 8px; min-height: 30px;/);
   // Les comptes : palier 3 sur ses 22 compétences construites, pas sur 42.
-  const compte = P.compter(P.creerParcours(), {modules: CARTE.modules.filter(f => f.construit), ordre: CARTE.ordre});
+  const compte = P.compter(sansTestDePalier(P.creerParcours()), {modules: CARTE.modules.filter(f => f.construit), ordre: CARTE.ordre});
   assert.deepEqual(compte.paliers.map(p => p.total), [1, 2, 3, 4].map(n => duPalier(n).length));
 });
 
 test("le serveur : `ceintures` déclarée, version_min 8 ; la tuile et la page prof dessinent sans HTML", () => {
   const bloc = APPLIS.slice(APPLIS.indexOf("'defi-calcul' => ["), APPLIS.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'rouges', 'minutes', 'jours', 'numero', 'ceintures'\],/);
-  assert.match(bloc, /'version_min' => 9,/);
+  assert.match(bloc, /'rouges', 'minutes', 'jours', 'numero', 'ceintures', 'ar', 'paliers'\],/, "lot F4 : ar, paliers");
+  assert.match(bloc, /'version_min' => 10,/, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
   assert.match(ESPACE, /dessin\.replaceChildren\(window\.MATHSGO_DEFI_CALCUL_CORE\.elementCeinture\(document, n, \{barrettes, taille: 34\}\)\);/);
   assert.match(PROF, /dessin\.replaceChildren\(CALCUL_CORE\.elementCeinture\(document, porte, \{barrettes, taille: 34\}\)\);/);
   assert.doesNotMatch(ESPACE + PROF, /innerHTML[^\n]*Ceinture/);

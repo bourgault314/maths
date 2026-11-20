@@ -107,6 +107,8 @@ test("le moteur est copié octet pour octet au serveur ; la page de Coffres le r
 
 const T = exiger("../outils/calcul_mental/defi_tables_mon_parcours.js");
 const D = exiger("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : le test de palier déjà joué (ces tests jouent des séances module par module).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const DCORE = exiger("../outils/calcul_mental/defi_calcul_core.js");
 const enCours = jour => ({jour, table: 6, depart: 1, echelle: true, rang: 0, file: [2, 3, 4], faites: [1, 10, 10, 0],
   erreurs: [], rate: null, sansFaute: true, remplacee: false, reparee: false, prete: false});
@@ -140,7 +142,7 @@ test("Défi tables : sans séance en cours, rien ne change", () => {
 const CARTE = (() => { const c = DCORE.carte(); return {modules: c.modules.map(f => Object.assign({}, f, {construit: f.paliers.some(Boolean)})), ordre: c.ordre}; })();
 
 test("Défi calcul : une séance ouverte, pas finie, avec une étape faite compte son jour ; ouverte sans rien fait, non", () => {
-  let p = D.ouvrirSeance(D.creerParcours(), CARTE, {aujourdhui: "2026-11-11", nouveautes: 1});
+  let p = D.ouvrirSeance(sansTestDePalier(D.creerParcours()), CARTE, {aujourdhui: "2026-11-11", nouveautes: 1});
   let r = D.resumeSuivi(p, {aujourdhui: JEUDI});
   assert.deepEqual(r.jours, [], "ouverte, rien de fait : pas un jour de travail");
   const etape = D.fileSeance(p, CARTE, {aujourdhui: "2026-11-11"}).etapes[0];
@@ -163,5 +165,5 @@ test("les moteurs de Défi tables et Défi calcul sont copiés octet pour octet 
   assert.equal(lire("../_serveur/public/prof/defi_tables_mon_parcours.js"), lire("../outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.equal(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
   assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261119-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261120-1"/);
 });

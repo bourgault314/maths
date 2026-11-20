@@ -61,7 +61,8 @@ function hasard(graine) {
 function noah() {
   const rng = hasard(48);
   const sait = palier => rng() < ({1: .3}[palier] || 0);
-  let p = P.creerParcours();
+  // (Lot F4 : le test de palier déjà joué — Noah avance module par module.)
+  let p = Object.assign(P.creerParcours(), {paliers: ["2026-10-01", "2026-10-01", "2026-10-01", "2026-10-01"]});
   for (let d = 0; d < 28; d += 1) {
     const jour = P.ajouterJours("2026-10-14", d);
     const dimancheSamedi = [0, 6].includes(new Date(`${jour}T12:00:00`).getDay());

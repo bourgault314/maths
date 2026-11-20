@@ -32,6 +32,8 @@ const exiger = createRequire(import.meta.url);
 const prof = nom => exiger(join(racine, "_serveur/public/prof", nom));
 const T = prof("defi_tables_mon_parcours.js");
 const D = prof("defi_calcul_mon_parcours.js");
+// Lot F4 : le test de palier déjà joué (ces tests jouent des séances module par module).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const DCORE = prof("defi_calcul_core.js");
 const S = prof("splat-parcours.js");
 const C = prof("coffres-parcours.js");
@@ -324,7 +326,7 @@ test("point 4 — une appli fermée depuis : son travail compte toujours, « tou
   // Défi calcul fermé à la classe : seul Défi tables est ouvert.
   const listes = {
     "defi-tables": [lu("defi-tables", 1, null, JEUDI)],
-    "defi-calcul": [lu("defi-calcul", 1, seanceD(D.creerParcours(), "2026-11-11"), JEUDI)]
+    "defi-calcul": [lu("defi-calcul", 1, seanceD(sansTestDePalier(D.creerParcours()), "2026-11-11"), JEUDI)]
   };
   const p = pageRejouee(listes, JEUDI);
   const alice = p.bilanEleve(1, JEUDI);
@@ -348,7 +350,7 @@ test("point 6 — l'historique va jusqu'au bout : une séance de janvier 2025 se
   const seule = pageRejouee({"defi-tables": [lu("defi-tables", 1, seancesT([["2024-09-03", [2, 4, 6, 6, 0]]]), JEUDI)]}, JEUDI);
   assert.deepEqual(seule.joursDeLaFiche(1, JEUDI, 6).jours.map(j => j.jour), ["2024-09-03"]);
   // Défi calcul, ses séances : la même chose.
-  const calcul = lu("defi-calcul", 1, [ "2025-01-06", "2026-11-10"].reduce(seanceD, D.creerParcours()), JEUDI);
+  const calcul = lu("defi-calcul", 1, [ "2025-01-06", "2026-11-10"].reduce(seanceD, sansTestDePalier(D.creerParcours())), JEUDI);
   const pc = pageRejouee({"defi-calcul": [calcul]}, JEUDI);
   const s = pc.seancesDeLAppli("defi-calcul", calcul, 10);
   assert.deepEqual(s.seances.map(x => x.jour), ["2026-11-10", "2025-01-06"]);

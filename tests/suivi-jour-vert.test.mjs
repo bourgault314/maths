@@ -19,6 +19,8 @@ const TC = require("../outils/calcul_mental/defi_tables_core.js");
 const C = require("../assets/js/coffres-parcours.js");
 const S = require("../assets/js/splat-parcours.js");
 const D = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : le test de palier déjà joué (ces tests jouent des séances module par module).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const DCORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const A = require("../outils/calcul_mental/flash_anzan_parcours.js");
 const lire = chemin => readFileSync(new URL(chemin, import.meta.url), "utf8");
@@ -207,7 +209,7 @@ test("SPLAT! : la ligne dit les étapes réussies pour la première fois ce jour
 
 test("Défi calcul : la dernière ligne d'un jour porte les modules avancés ce jour-là (codes, la page écrit le nom)", () => {
   const carte = DCORE.carte();
-  let p = D.ouvrirSeance(D.creerParcours(), carte, {aujourdhui: MARDI});
+  let p = D.ouvrirSeance(sansTestDePalier(D.creerParcours()), carte, {aujourdhui: MARDI});
   for (let k = 0; k < 30; k += 1) {
     const f = D.fileSeance(p, carte, {aujourdhui: MARDI});
     if (!f.etapes.length) break;
@@ -283,5 +285,5 @@ test("Copies du moteur dans prof/ : identiques octet pour octet ; cache-busters 
   assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(lire("../outils/splat.html"), /splat-parcours\.js\?v=20261111-2"/);
   assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261119-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261120-1"/);
 });

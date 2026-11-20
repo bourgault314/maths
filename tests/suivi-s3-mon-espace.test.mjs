@@ -233,7 +233,8 @@ test("gains : une table passée, deux tables, un monde fini — les mots de « �
 });
 
 test("gains : Défi calcul dès la PREMIÈRE compétence sue cette semaine (choix de Gwenaël, question 1)", async () => {
-  const p = seanceD(D.creerParcours(), "2026-11-10");
+  // (Lot F4 : le test de palier déjà joué — la séance avance module par module.)
+  const p = seanceD(Object.assign(D.creerParcours(), {paliers: ["2026-11-01", "2026-11-01", "2026-11-01", "2026-11-01"]}), "2026-11-10");
   const sues = D.resumeProf(p, DCORE.carte(), "2026-11-12").modules
     .reduce((n, m) => n + m.sues.filter(j => j && j >= "2026-11-09" && j <= "2026-11-12").length, 0);
   assert.ok(sues >= 1 && sues < 5, `la séance jouée fait ${sues} compétence(s) sue(s) : sous le seuil de « À féliciter »`);

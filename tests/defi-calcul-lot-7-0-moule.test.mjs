@@ -16,6 +16,9 @@ const require = createRequire(import.meta.url);
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const AIDES = require("../outils/calcul_mental/defi_calcul_aides.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 
 const CARTE = CORE.carte();
 const J = "2026-11-16";
@@ -172,7 +175,7 @@ const entre = (p, id, n) => Boolean(p.modules[id] && p.modules[id].b[n - 1]);
 // Joue tout le parcours ; `rate(id, n)` : la marche ratée au test. Vérifie à
 // chaque pas qu'aucune compétence d'un palier plus haut n'entre ni ne
 // commence avant que le palier en cours soit fini. Rend le journal.
-function jouerTout({palier = 4, rate = () => false, p = P.creerParcours(), pas = 400} = {}) {
+function jouerTout({palier = 4, rate = () => false, p = sansTestDePalier(P.creerParcours()), pas = 400} = {}) {
   const journal = [];
   for (let i = 0; i < pas; i += 1) {
     const etape = prochaine(p, palier);
@@ -200,7 +203,7 @@ function jouerTout({palier = 4, rate = () => false, p = P.creerParcours(), pas =
 }
 
 test("élève neuf : le premier test ne monte que jusqu'aux bases (avant : jusqu'au bout du module)", () => {
-  const p = P.creerParcours();
+  const p = sansTestDePalier(P.creerParcours());
   assert.deepEqual(P.marchesDuTest(p, CARTE, "A1", 4), {de: 1, jusqua: 3});
   // A2 : niveaux 1 à 3 aux bases, 4 et 5 au CM1.
   assert.deepEqual(P.marchesDuTest(p, CARTE, "A2", 4), {de: 1, jusqua: 3});
@@ -238,7 +241,7 @@ test("élève qui rate au milieu : il apprend la marche ratée, puis la suite du
 });
 
 test("le test de reprise commence à la marche suivante : les niveaux d'en dessous ne bougent pas", () => {
-  let p = P.creerParcours();
+  let p = sansTestDePalier(P.creerParcours());
   ({p} = jouerTest(p, "A2", 4));
   assert.deepEqual(p.modules.A2.b.slice(0, 3).map(Boolean), [true, true, true]);
   const avant = JSON.stringify(p.modules.A2.b.slice(0, 3));
@@ -262,7 +265,7 @@ test("le test de reprise commence à la marche suivante : les niveaux d'en desso
   assert.deepEqual(reussi.parcours.modules.A2.b.slice(3), [P.SEUILS.revision.dessous, P.SEUILS.revision.test]);
   assert.equal(JSON.stringify(reussi.parcours.modules.A2.b.slice(0, 3)), avant);
   // Un test qui saute une marche pas entrée ne prouve rien.
-  const trou = P.appliquerTest(P.creerParcours(), {module: "A2", marche: 5, niveaux: [{niveau: 4, justes: 3, total: 3}, {niveau: 5, justes: 3, total: 3}]}, {aujourdhui: J, carte: CARTE});
+  const trou = P.appliquerTest(sansTestDePalier(P.creerParcours()), {module: "A2", marche: 5, niveaux: [{niveau: 4, justes: 3, total: 3}, {niveau: 5, justes: 3, total: 3}]}, {aujourdhui: J, carte: CARTE});
   assert.equal(trou.marche, 0);
 });
 
@@ -289,6 +292,7 @@ test("la page : le test d'entrée borné par le moteur ; le bilan dit « plus ta
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
   assert.match(page, /PARCOURS\.marchesDuTest\(parcours, CARTE, id, palierRegle\(\)\)/);
   assert.match(page, /`Le niveau \$\{connus \+ 1\} viendra plus tard · \$\{fiche\.nom\}`/);
-  assert.match(page, /`On commence au niveau \$\{de\} · \$\{fiche\.nom\}`/);
+  // Lot F4 : plus de « Pas encore » — « Ce niveau, on l'apprend ensemble », « Niveau 1 · … ».
+  assert.match(page, /titre: "Ce niveau, on l’apprend ensemble", score: `Niveau \$\{de\} · \$\{fiche\.nom\}`/);
   assert.match(page, /suivi\.bilan\.filter\(niveau => niveau\.niveau >= de\)/);
 });

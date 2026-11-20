@@ -27,6 +27,9 @@ const require = createRequire(import.meta.url);
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const AIDES = require("../outils/calcul_mental/defi_calcul_aides.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const CARTE = CORE.carte();
 const J = "2026-11-16";
 const espaces = texte => String(texte).replace(/[  ]/g, " ");
@@ -245,7 +248,7 @@ test("5. « Fractions au-delà de 1 » au CM1 : sommes et différences au-delà 
   f81.forEach(c => assert.ok(valeur(c.lu.cotes[0]) <= 1 + 1e-9 && c.lu.cotes.flat().every(t => t.d <= 12), `${c.texte} : bases, ≤ 1 et ≤ 12 parts`));
   assert.equal(espaces(CORE.nouveauteDe(pile.find(c => c.lu.cotes[0][0].d === 5)).texte), "Nouveau : j’arrive pile sur 1 : 5 cinquièmes font une unité.");
   // Les comptes : palier 2 a une compétence de plus, palier 3 une de moins.
-  const compte = P.compter(P.creerParcours(), CARTE);
+  const compte = P.compter(sansTestDePalier(P.creerParcours()), CARTE);
   assert.deepEqual(compte.paliers.map(p => p.total), [41, 34, 40, 12]); // (lot 7c : F4-2 au CM2 ; lot 6 « programmes 2 » : F9-1, F6-2)
 });
 
@@ -264,7 +267,7 @@ const tester = (p, id, niveaux) => P.appliquerTest(p, {module: id, marche: nivea
 // Un élève qui sait tout ce qui vient avant M1-2 dans l'ordre, sauf les
 // doubles n° 1 : raté au test, puis appris.
 function avantM12() {
-  let p = P.creerParcours();
+  let p = sansTestDePalier(P.creerParcours());
   for (let i = 0; i < 200; i += 1) {
     const e = prochaine(p);
     if (!e || (e.module === "M1" && e.niveau === 2)) break;
@@ -309,7 +312,7 @@ test("6. rater les doubles n° 1, les apprendre, puis arriver aux doubles n° 2 
 });
 
 test("6. jamais de test pour un module intact ou un niveau déjà commencé ; le n° 1 garde le test d'entrée", () => {
-  const p = P.creerParcours();
+  const p = sansTestDePalier(P.creerParcours());
   assert.equal(P.testDeReprise(p, CARTE, {module: "A2", niveau: 1}), false);
   assert.equal(P.testDeReprise(p, CARTE, {module: "A2", niveau: 2}), false, "module intact : c'est le test d'entrée");
   const q = tester(p, "A2", [{niveau: 1, justes: 1, total: 3}]).parcours;
@@ -325,7 +328,7 @@ test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'é
   const d = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(c, d);
   // Un module qui entre prend sa place (comme à la relecture) : même JSON.
-  let p = P.creerParcours();
+  let p = sansTestDePalier(P.creerParcours());
   p = tester(p, "F8", [{niveau: 1, justes: 1, total: 3}]).parcours;
   p = tester(p, "A2", [{niveau: 1, justes: 1, total: 3}]).parcours;
   assert.deepEqual(Object.keys(p.modules), Object.keys(P.normaliserParcours(JSON.parse(JSON.stringify(p))).modules));
@@ -335,8 +338,8 @@ test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'é
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261120-1/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261119-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261120-1/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261120-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261120-2/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est

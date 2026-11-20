@@ -34,6 +34,8 @@ const exiger = createRequire(import.meta.url);
 const prof = nom => exiger(join(racine, "_serveur/public/prof", nom));
 const T = prof("defi_tables_mon_parcours.js");
 const D = prof("defi_calcul_mon_parcours.js");
+// Lot F4 : le test de palier déjà joué (ces tests jouent des séances module par module).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const DCORE = prof("defi_calcul_core.js");
 const S = prof("splat-parcours.js");
 const C = prof("coffres-parcours.js");
@@ -129,7 +131,7 @@ function seanceD(p, jour) {
   }
   return p;
 }
-const seancesD = jours => jours.reduce((p, jour) => seanceD(p, jour), D.creerParcours());
+const seancesD = jours => jours.reduce((p, jour) => seanceD(p, jour), sansTestDePalier(D.creerParcours()));
 
 const JEUDI = "2026-11-12";   // le lundi de sa semaine est le 9
 const LUNDI_SUIVANT = "2026-11-16";
