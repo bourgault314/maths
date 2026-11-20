@@ -886,9 +886,10 @@
   // ----------------------------------------------------------- le schéma en barres
   // tout : le texte du haut ; parts : les textes du bas ; poids : leurs
   // largeurs ; cherchee : la part qui porte « ? » (-1 : c'est le tout).
-  function schema(zone, {tout, parts, poids, verte = -1}) {
+  // (Lot B2-3b-1, Q2 : `verteTout`, la réponse en vert dans le tout.)
+  function schema(zone, {tout, parts, poids, verte = -1, verteTout = false}) {
     const boite = el("div", "schema");
-    boite.appendChild(el("div", "schema-tout", tout));
+    boite.appendChild(el("div", `schema-tout${verteTout ? " verte" : ""}`, tout));
     const bas = el("div", "schema-parts");
     const somme = poids.reduce((a, b) => a + b, 0);
     parts.forEach((texte, i) => {
@@ -899,6 +900,95 @@
     boite.appendChild(bas);
     zone.appendChild(boite);
     return boite;
+  }
+
+  // Lot B2-3b-1 (Q2, choix de Gwenaël du 20/11 : « deux barres collées ») :
+  // comparer. Une barre par nom, l'une sur l'autre ; l'écart en pointillé
+  // au bout de la plus courte (comme le schéma de S002, Léo et Lucie).
+  // `total` : une ligne sous les barres (« Ensemble : ? km ») ; `verte` :
+  // 0 (haut), 1 (bas), « ecart » ou « total », la réponse en vert.
+  function deuxBarres(zone, {haut, bas, ecart, total = "", verte = null}) {
+    const g = el("div", "schema2");
+    const ligne = (nom, texte, avecEcart, k) => {
+      g.appendChild(el("div", "nom", nom));
+      const b = el("div", "barre");
+      const x = el("div", `b${verte === k ? " verte" : ""}`, texte);
+      x.style.flex = avecEcart ? "0.7" : "1";
+      b.appendChild(x);
+      if (avecEcart) {
+        const e = el("div", `b ecart${verte === "ecart" ? " verte" : ""}`, ecart);
+        e.style.flex = "0.3";
+        b.appendChild(e);
+      }
+      g.appendChild(b);
+    };
+    ligne(haut[0], haut[1], false, 0);
+    ligne(bas[0], bas[1], true, 1);
+    if (total) g.appendChild(el("div", `total${verte === "total" ? " verte" : ""}`, total));
+    zone.appendChild(g);
+    return g;
+  }
+
+  // Lot B2-3b-1 (Q2, choix de Gwenaël du 20/11) : le dessin dans la
+  // question. La balance en équilibre (n boîtes « ? » et un poids d'un
+  // côté, un poids de l'autre) ; le rectangle (la longueur dessous, la
+  // largeur à droite, un angle droit marqué).
+  function figurePb(fig) {
+    if (fig.type === "rectangle") {
+      const s = svg("svg", {viewBox: "0 0 212 92", class: "dessin pb-rect", role: "img",
+        "aria-label": `Un rectangle de ${fig.longueur} sur ${fig.largeur}`});
+      s.appendChild(svg("rect", {x: 6, y: 6, width: 140, height: 56, fill: "#eaf2fd", stroke: N, "stroke-width": 2.5}));
+      s.appendChild(svg("path", {d: "M6 18 L18 18 L18 6", fill: "none", stroke: N, "stroke-width": 1.5}));
+      s.appendChild(svg("text", {x: 76, y: 84, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: N}, fig.longueur));
+      s.appendChild(svg("text", {x: 154, y: 40, "text-anchor": "start", "font-size": 17, "font-weight": 900, fill: N}, fig.largeur));
+      return s;
+    }
+    // Une balance de Roberval (les plateaux sur le fléau, sans fils) : les
+    // boîtes et le poids côte à côte sur un plateau, un poids sur l'autre.
+    // Large et basse (la question est basse) ; les textes à 19 : environ
+    // 15 px au petit téléphone.
+    const n = fig.n;
+    const s = svg("svg", {viewBox: "0 0 256 100", class: "dessin pb-balance", role: "img",
+      "aria-label": `Une balance en équilibre : ${n} boîtes de conserve${fig.poids ? ` et ${fig.poids}` : ""} d'un côté, ${fig.total} de l'autre`});
+    const cx = 128;
+    const demi = 66;
+    const yp = 66;
+    s.appendChild(svg("path", {d: `M${cx} 80 L${cx} 95 M${cx - 30} 97 L${cx + 30} 97`, stroke: N, "stroke-width": 4.5, "stroke-linecap": "round"}));
+    s.appendChild(svg("line", {x1: cx - demi, y1: 80, x2: cx + demi, y2: 80, stroke: N, "stroke-width": 4.5, "stroke-linecap": "round"}));
+    s.appendChild(svg("circle", {cx, cy: 80, r: 4.5, fill: "#f2c94c", stroke: N, "stroke-width": 2}));
+    [cx - demi, cx + demi].forEach(x => {
+      s.appendChild(svg("line", {x1: x, y1: 80, x2: x, y2: yp + 4, stroke: N, "stroke-width": 3.5}));
+      s.appendChild(svg("path", {d: `M${x - 60} ${yp} L${x + 60} ${yp} L${x + 52} ${yp + 6} L${x - 52} ${yp + 6} Z`, fill: "#e9eef3", stroke: N,
+        "stroke-width": 2.5, "stroke-linejoin": "round"}));
+    });
+    // (La largeur d'un poids suit son texte : « 500 g », « 1,5 kg ».)
+    // (Gwenaël, 20/11 : « le 500 g touche les bords du poids » : 6 px de
+    // marge de chaque côté du texte, en haut du poids.)
+    const large = t => Math.max(50, 10 * t.length + 14);
+    const poids = (x, t) => {
+      const l = large(t) / 2;
+      s.appendChild(svg("path", {d: `M${x - l} ${yp} L${x + l} ${yp} L${x + l - 5} ${yp - 28} L${x - l + 5} ${yp - 28} Z`, fill: "#cfd8e0", stroke: N,
+        "stroke-width": 2, "stroke-linejoin": "round"}));
+      s.appendChild(svg("text", {x, y: yp - 8.5, "text-anchor": "middle", "font-size": 16.5, "font-weight": 900, fill: N}, t));
+    };
+    const w = 18;
+    const boites = n * (w + 2) - 2;
+    const largeur = boites + (fig.poids ? 4 + large(fig.poids) : 0);
+    const x0 = cx - demi - largeur / 2;
+    // Des boîtes de conserve (Gwenaël, 20/11 : « un truc concret ») : un
+    // cylindre, son couvercle, une étiquette « ? ».
+    for (let k = 0; k < n; k += 1) {
+      const x = x0 + k * (w + 2);
+      const ry = 3.5;
+      s.appendChild(svg("path", {d: `M${x} ${yp - 31} L${x} ${yp - ry} A${w / 2} ${ry} 0 0 0 ${x + w} ${yp - ry} L${x + w} ${yp - 31}`,
+        fill: "#fff", stroke: N, "stroke-width": 2, "stroke-linejoin": "round"}));
+      s.appendChild(svg("rect", {x: x + 1, y: yp - 25, width: w - 2, height: 16, fill: "#eaf2fd"}));
+      s.appendChild(svg("ellipse", {cx: x + w / 2, cy: yp - 31, rx: w / 2, ry, fill: "#cfd8e0", stroke: N, "stroke-width": 2}));
+      s.appendChild(svg("text", {x: x + w / 2, y: yp - 10.5, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: "#0755b8"}, "?"));
+    }
+    if (fig.poids) poids(x0 + boites + 4 + large(fig.poids) / 2, fig.poids);
+    poids(cx + demi, fig.total);
+    return s;
   }
 
   function poidsProbleme(question) {
@@ -2335,6 +2425,8 @@
       f();
       return null;
     }
+    // Lot B2-3b-1 (Q2) : comparer avec deux barres.
+    if (aide.type === "deux-barres") { deuxBarres(zone, aide); f(); return null; }
     if (aide.type === "phrase") { zone.appendChild(lignes("rel", aide.lignes.join("\n"))); f(); return null; }
     // Lot A2 bis
     if (aide.type === "echange") return echange(zone, aide, f);
@@ -2479,8 +2571,11 @@
     }
     if (question.outil === "schema" && question.schema) {
       const s = question.schema;
-      schema(zone, {tout: s.tout, parts: s.parts, poids: poidsProbleme(question)});
-      zone.appendChild(el("div", "note", "Je mets tout dans la même unité."));
+      // (Lot B2-3b-1, Q2 : deux barres pour comparer ; les largeurs données
+      // par la question ; la phrase de la question.)
+      if (s.deux) deuxBarres(zone, s.deux);
+      else schema(zone, {tout: s.tout, parts: s.parts, poids: s.poids || poidsProbleme(question)});
+      zone.appendChild(el("div", "note", carte().typo(question.noteOutil || "Je mets tout dans la même unité.")));
       return;
     }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
@@ -2633,6 +2728,6 @@
     return s;
   }
 
-  return Object.freeze({figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

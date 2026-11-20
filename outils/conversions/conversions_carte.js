@@ -934,6 +934,31 @@
       retenir: "L'aire, c'est la place que prend une figure. Je compte les carreaux : 1 carreau = 1 cm².\nDeux demis font un carreau. Deux figures de formes différentes peuvent avoir la même aire.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
+    },
+    // Lot B2-3b-1 : les problèmes du CM1 (S002 p. 11-13 ; carte v4 : la
+    // tare, le périmètre, « Est-ce vraisemblable ? », le schéma en barres).
+    // On te montre : le pot de confiture (la tare), Alix et Bruno (deux
+    // barres collées, choix de Gwenaël du 20/11), Izmir (des objets pareils).
+    Q2: {
+      pret: true,
+      aide: {outil: "schema", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Un pot de confiture plein pèse 1,2 kg. Le pot vide pèse 350 g. Quelle masse de confiture ?", avant: "Confiture :", reponse: "850", apres: "g"},
+          consigne: "Je fais un schéma en barres.",
+          aide: {type: "schema", tout: "Pot plein : 1,2 kg = 1 200 g", parts: ["350 g", "? g"], proportions: [2, 5]},
+          apres: ["1 200 g − 350 g", "= 850 g de confiture"]},
+        {etiquette: "Je représente", question: {enonce: "Alix mesure 1,61 m. C'est 13 cm de plus que Bruno. Combien mesure Bruno ?", avant: "Bruno :", reponse: "148", apres: "cm"},
+          consigne: "Une barre pour chacun.",
+          aide: {type: "deux-barres", haut: ["Alix", "1,61 m = 161 cm"], bas: ["Bruno", "? cm"], ecart: "13 cm"},
+          apres: ["161 cm − 13 cm", "= 148 cm"]},
+        {etiquette: "Je vérifie", question: {enonce: "Izmir achète 3 pains de 210 g et 2 bouteilles d'eau de 1,6 kg. Izmir trouve 3,83 kg en tout.", vraisemblable: true, reponse: "Oui"},
+          consigne: "Est-ce vraisemblable ?",
+          aide: {type: "schema", tout: "? kg", parts: ["3 × 210 g", "2 × 1,6 kg"], proportions: [1, 1]},
+          apres: ["630 g + 3,2 kg = 0,63 kg + 3,2 kg", "= 3,83 kg"]}
+      ],
+      retenir: "Je fais un schéma en barres, puis j'écris toutes les mesures dans la même unité.\nPour trouver le tout, j'ajoute. Pour trouver une partie ou un écart, j'enlève.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
     }
   };
 

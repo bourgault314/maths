@@ -141,6 +141,12 @@ function attendue(q) {
       assert.equal((unite * num) % (den * 1000n), 0n, "la fraction ne tombe pas juste");
       return [ent * unite + (unite * num) / den];
     }
+    // Lot B2-3b-1 : Q2, (Σ coefficient × mesure) ÷ le nombre de conserves.
+    case "q2": {
+      const s = d.termes.reduce((a, [m, u, k]) => a + BigInt(k) * versUnite(lire(m), u, d.vers), 0n);
+      assert.equal(s % BigInt(d.n), 0n, "la balance ne tombe pas juste");
+      return [s / BigInt(d.n)];
+    }
     // Lot B2-2b-2 : C8, « 8,2 kg + 840 g = … kg » (comme les problèmes).
     case "pb": case "vrai": case "calc": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
@@ -166,8 +172,10 @@ function ecriture(texte, ou) {
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
   // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une ;
-  // lot B1-1 : ni « la Diagonale des Fous », ni « un Car Jaune ».)
-  assert.doesNotMatch(texte, /(?<=[a-zà-ÿ,;])(?<!\b(?:de|du|des|au|en))(?<!\b[A-ZÀ-Ý][a-zà-ÿ]*) [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
+  // lot B1-1 : ni « la Diagonale des Fous », ni « un Car Jaune » ; lot
+  // B2-3b-1 : ni « Léa mesure 1,52 m et Noa mesure 139 cm », ni « Zoé
+  // trouve que Noa mesure 1 480 cm ».)
+  assert.doesNotMatch(texte, /(?<=[a-zà-ÿ,;])(?<!\b(?:de|du|des|au|en|et|que))(?<!\b[A-ZÀ-Ý][a-zà-ÿ]*) [A-ZÀ-Ý][a-zà-ÿ]+ (?:mesure|pèse|contient)/, `${ou} : majuscule au milieu d'une phrase`);
 }
 // Un nombre de 4 chiffres ou plus doit avoir son espace fine (2 600, 1 500).
 function milliers(texte, ou) {
@@ -806,7 +814,7 @@ for (const code of PRETES) {
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
-      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"]}[code];
+      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1547,4 +1555,105 @@ test("lot B2-3a : A5 — l'aire recomptée, les figures, superposer, encadrer, l
   }
   ["compter", "comparer", "meme", "encadrer"].forEach(k => assert.ok(sortes[k] > 300, `A5 : ${k} ${sortes[k]}`));
   [1, 2, 3, 4, 11, 12, 13].forEach(e => assert.ok(erreurs.has(e), `A5 : l'erreur ${e} n'est jamais déclenchée`));
+});
+
+// Lot B2-3b-1 : Q2 « Ajouter, retirer » — la réponse recalculée à part
+// (Σ coefficient × mesure, ÷ le nombre de boîtes), toutes les sortes,
+// l'aide qui n'écrit jamais la réponse, le schéma corrigé (la réponse à la
+// place du « ? »), le dessin des questions de balance et de périmètre, les
+// places de Je valide, « Est-ce vraisemblable ? », les pourquoi d'une ligne.
+test("lot B2-3b-1 : Q2 — les sortes, la réponse, l'aide, la correction, les places, les pourquoi", () => {
+  const sortes = {};
+  const sens = {};
+  const erreurs = new Set();
+  const modeles = new Set();
+  const echappe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (let g = 1; g <= 300; g += 1) {
+    for (const usage of ["valide", "entraine", "retour", "test", "aide"]) {
+      const s = G.serie("Q2", {usage, graine: g});
+      const ou = `Q2 ${usage} ${g}`;
+      if (usage === "valide") {
+        assert.deepEqual(s.map(q => (q.forme === "vrai-faux" ? "V" : q.sorteQ2)).map((x, i) => (i === 8 && (x === "balance" || x === "izmir") ? "balance|izmir" : x)),
+          ["partie", "reunir", "partie", "V", "comparer", "perimetre", "comparer", "V", "balance|izmir", "deux"], `${ou} : places`);
+        const v = s.filter(q => q.forme === "vrai-faux");
+        assert.deepEqual(v.map(q => q.reponse).sort(), ["Non", "Oui"], `${ou} : un Oui et un Non`);
+        // (Un même contexte une fois.)
+        const ctx = s.map(q => q.modeleQ2.split("-")[0]);
+        assert.equal(new Set(ctx).size, ctx.length, `${ou} : un contexte deux fois ${ctx}`);
+      }
+      s.forEach(q => {
+        const d = q.donnees;
+        sortes[d.sorte] = (sortes[d.sorte] || 0) + 1;
+        if (d.sens) sens[d.sens] = (sens[d.sens] || 0) + 1;
+        modeles.add(q.modeleQ2);
+        // Deux unités au moins : un problème de conversions.
+        assert.ok(new Set(d.termes.map(t => t[1]).concat([d.vers])).size >= 2, `${ou} : une seule unité ${q.texte}`);
+        // L'unité de la réponse : la petite au degré 1, la grande au degré 3
+        // (sauf l'écart, la balance, le ruban coupé deux fois).
+        const unites = d.termes.map(t => t[1]);
+        const petite = unites.reduce((a, u) => (versUnite(1000n, u, a) !== null && versUnite(1000n, u, a) > 1000n ? a : u));
+        if (q.degre === 1 && ["reunir", "partie"].includes(d.sorte)) assert.equal(d.vers, petite, `${ou} : degré 1 dans la petite unité`);
+        const r = q.repTexteQ2;
+        assert.equal(r, G.mes(attendue(q)[0], d.vers), `${ou} : ${r}`);
+        // L'aide n'écrit jamais la réponse (l'outil, sa phrase, l'image).
+        const re = new RegExp(`(^|[^\\d, ])${echappe(r)}($|[^\\wÀ-ÿ²³])`);
+        const sc = q.schema;
+        const textesOutil = sc.deux ? [sc.deux.haut[1], sc.deux.bas[1], sc.deux.ecart, sc.deux.total || ""] : [sc.tout, ...sc.parts];
+        [...textesOutil, q.noteOutil, ...q.image].forEach(t => assert.doesNotMatch(t, re, `${ou} : l'aide « ${t} » donne ${r}`));
+        // La correction : la réponse à la place du « ? », en vert.
+        const c = q.schemaCorr;
+        const textesCorr = c.deux ? [c.deux.haut[1], c.deux.bas[1], c.deux.ecart, c.deux.total || ""] : [c.tout, ...c.parts];
+        // (Les deux ensemble : la barre de l'autre se remplit, le total est
+        // dans le calcul en vert dessous.)
+        const ensemble = d.sorte === "deux" && d.termes.length === 2;
+        if (!ensemble) {
+          assert.ok(textesCorr.some(t => t.endsWith(r)), `${ou} : la correction n'écrit pas ${r}`);
+          const verte = c.deux ? c.deux.verte : c.verte;
+          assert.ok(verte !== undefined && verte !== null, `${ou} : rien en vert`);
+        } else assert.ok(c.deux.haut[1] && !c.deux.total, `${ou} : la barre de l'autre`);
+        assert.ok(textesCorr.every(t => !t.includes("?")), `${ou} : un « ? » dans la correction`);
+        if (q.forme === "nombre") assert.ok(q.resumeVert.endsWith(r), `${ou} : le calcul ${q.resumeVert}`);
+        // La balance et le rectangle : dessinés dans la question.
+        if (d.sorte === "balance" || d.sorte === "perimetre") {
+          assert.equal(q.morceaux.figure.type, d.sorte === "balance" ? "balance" : "rectangle", ou);
+          if (d.sorte === "balance") {
+            assert.ok(d.n >= 2 && d.n <= 4 && (d.n < 4 || d.termes.length === 1), `${ou} : ${d.n} boîtes`);
+            const boite = lire(q.reponse);
+            assert.ok(boite >= 100000n && boite <= 800000n && boite % 5000n === 0n, `${ou} : une boîte de ${q.reponse} g`);
+          }
+        } else assert.equal(q.morceaux.figure, undefined);
+        // Le texte : deux prénoms différents ; « d'Inès », pas « de Inès ».
+        assert.doesNotMatch(q.texte, /\b(de|que) [AEIOUÉ]/, `${ou} : « de » ou « que » devant une voyelle ${q.texte}`);
+        // Les pourquoi : une ligne au petit téléphone.
+        if (q.forme === "vrai-faux") {
+          q.choix.forEach((x, k) => { if (k !== q.bon) { const v = G.verifier(q, k); assert.ok(v.retour && v.retour.length <= 31, `${ou} : ${v.retour}`); } });
+          assert.ok(q.raisonQ2.includes(r), `${ou} : ${q.raisonQ2}`);
+          return;
+        }
+        const rep = lire(q.reponse);
+        const termes = d.termes.map(([m, u, k]) => [lire(m), u, k]);
+        const conv = ([m, u]) => versUnite(m, u, d.vers);
+        const essais = [termes.reduce((a, [m, , k]) => a + BigInt(k) * m, 0n) / BigInt(d.n), rep * 10n, rep / 10n, rep * BigInt(d.n),
+          termes.reduce((a, t) => a + conv(t), 0n), termes.length >= 2 ? conv(termes[0]) - conv(termes[1]) : 0n,
+          termes.length >= 2 ? conv(termes[0]) + conv(termes[1]) : 0n, conv(termes[0]) / BigInt(d.n)];
+        // (Une conversion fausse d'un zéro : × 10 sur la mesure convertie.)
+        termes.forEach(([, u], j) => { if (u !== d.vers) essais.push(termes.reduce((a, t, i) => a + BigInt(t[2]) * conv(t) * (i === j ? 10n : 1n), 0n) / BigInt(d.n)); });
+        const autre = unites.find(u => u !== d.vers);
+        if (autre) essais.push(versUnite(rep, d.vers, autre));
+        essais.filter(x => typeof x === "bigint" && x > 0n && x !== rep).forEach(x => {
+          const v = G.verifier(q, G.brut(x));
+          if (v.erreur) { erreurs.add(`${d.sorte}:${v.erreur}`); assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`); ecriture(v.retour, ou); }
+        });
+      });
+    }
+  }
+  ["reunir", "partie", "comparer", "perimetre", "izmir", "balance", "deux"].forEach(k => assert.ok(sortes[k] > 150, `Q2 : ${k} ${sortes[k]}`));
+  ["moins", "plus", "ecart"].forEach(k => assert.ok(sens[k] > 100, `Q2 : comparer ${k} ${sens[k]}`));
+  ["reunir:5", "reunir:7", "partie:7", "comparer:7", "comparer:5", "perimetre:10", "izmir:10", "balance:10", "deux:10", "partie:9"].forEach(e => assert.ok(erreurs.has(e), `Q2 : l'erreur ${e} n'est jamais déclenchée`));
+  assert.ok(modeles.size >= 25, `Q2 : ${modeles.size} contextes`);
+  // S002 : Izmir (3 pains de 210 g, 2 bouteilles de 1,6 kg = 3,83 kg) et
+  // Alix (1,61 m, 13 cm de plus que Bruno) sont les exemples d'On te montre.
+  const ex = new Set(G.clesExemples("Q2"));
+  assert.equal(ex.size, 3);
+  for (let g = 1; g <= 200; g += 1) G.serie("Q2", {usage: "entraine", graine: g}).forEach(q => assert.ok(!ex.has(q.cleBase), `Q2 : l'exemple ${q.cleBase} repris`));
 });

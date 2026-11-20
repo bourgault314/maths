@@ -5466,6 +5466,497 @@
     erreurs(question, lu, lus) { return erreursA5(question, lu, lus); }
   };
 
+  // ================================== lot B2-3b-1 : Q2 « Ajouter, retirer » (CM1)
+  // Programme de CM1 (S002 p. 11-13) : des problèmes additifs en une étape
+  // (« parties-tout », « comparaison »), en deux ou trois étapes, et mixtes,
+  // avec des nombres décimaux ; ici, toujours avec deux unités. Carte v4 :
+  // le périmètre d'un rectangle en m et cm ; « Est-ce vraisemblable ? » ;
+  // le schéma en barres ; le problème de la tare (pot vide, pot plein) ;
+  // S002 : Izmir (3 pains de 210 g, 2 bouteilles de 1,6 kg), Alix (1,61 m,
+  // 13 cm de plus que Bruno), les balances (3 ciseaux + 140 g = 500 g).
+  // Choix de Gwenaël sur la maquette (20/11) : comparer avec DEUX BARRES
+  // COLLÉES (l'écart en pointillé au bout de la plus courte) ; la balance
+  // DESSINÉE dans la question ; le rectangle DESSINÉ, ses côtés écrits.
+  // Les sortes : réunir (le tout), une partie (le reste, la tare), comparer
+  // (de plus, de moins, l'écart), le périmètre, Izmir (des objets pareils),
+  // la balance, deux étapes (les deux ensemble ; deux morceaux enlevés).
+  // Chaque question porte ses `termes` (mesure, unité, coefficient) et son
+  // diviseur : la réponse est (Σ coefficient × mesure) ÷ diviseur, dans
+  // l'unité `vers` (le test la recalcule à part).
+  const tireQ2 = (rng, [u, min, max, pas]) => {
+    const n = Math.round((max - min) / pas);
+    return [BigInt(Math.round((min + Math.floor(rng() * (n + 1)) * pas) * 1000)), u];
+  };
+  // « le cartable d'Inès », « celui de Noa ».
+  const deQ2 = p => (/^[AEIOUÉÈÂÎ]/.test(p) ? `d'${p}` : `de ${p}`);
+  const queQ2 = p => (/^[AEIOUÉÈÂÎ]/.test(p) ? `qu'${p}` : `que ${p}`);
+  const deuxPrenomsQ2 = rng => {
+    const a = choisir(rng, PRENOMS);
+    return [a, choisir(rng, PRENOMS.filter(p => p !== a))];
+  };
+  // Une mesure et sa conversion, si elle n'est pas déjà dans l'unité `vers`.
+  const ecritQ2 = (m, u, vers) => (u === vers ? mes(m, u) : `${mes(m, u)} = ${mes(convertir(m, u, vers), vers)}`);
+  const remplirQ2 = (t, champs) => t.replace(/\{(\w+)\}/g, (_, k) => champs[k]);
+  // La réponse : (Σ k × mesure en `vers`) ÷ n, ou null si elle ne tombe pas
+  // juste ou ne s'écrit pas dans `vers`.
+  function valeurQ2(termes, n, vers) {
+    let s = 0n;
+    for (const [m, u, k] of termes) {
+      const c = convertir(m, u, vers);
+      if (c === null) return null;
+      s += BigInt(k) * c;
+    }
+    if (s <= 0n || s % BigInt(n) !== 0n) return null;
+    const r = s / BigInt(n);
+    return naturelleC8(r, vers) ? r : null;
+  }
+  // Chaque mesure donnée s'écrit vraiment dans son unité, et dans `vers`
+  // si elle s'y convertit (« 350 g = 0,35 kg », pas « 5 g = 0,005 kg »).
+  function mesuresQ2(termes, vers) {
+    return termes.every(([m, u]) => naturelleC8(m, u) && (u === vers || grandeurDe(u) !== grandeurDe(vers) || naturelleC8(convertir(m, u, vers), vers)));
+  }
+  const cleQ2 = (modele, termes, n) => `Q2:${modele}:${termes.map(([m, u, k]) => `${k}*${brut(m)}${u}`).join("|")}${n > 1 ? `/${n}` : ""}`;
+
+  // Réunir : le tout. [modèle, énoncé, avant, la mesure A, la mesure B,
+  // ce que trouve quelqu'un (« Est-ce vraisemblable ? »)].
+  const REUNIR_Q2 = [
+    ["cabas", "{P} achète {A} de carottes et {B} de tomates. Quelle est la masse totale ?", "En tout,", ["kg", 1, 3, 0.5], ["g", 150, 900, 50], "{M} en tout"],
+    ["letchis", "Au marché, {P} prend {A} de letchis et {B} de mangues. Quelle est la masse totale ?", "En tout,", ["kg", 1, 2.5, 0.5], ["g", 250, 900, 50], "{M} en tout"],
+    ["cascade", "{P} marche {A}, puis {B} jusqu'à la cascade. Quelle est la distance totale ?", "En tout,", ["km", 1, 4, 0.5], ["m", 200, 900, 50], "{M} en tout"],
+    ["pichet", "{P} mélange {A} de jus d'ananas et {B} de jus de goyavier. Combien de jus en tout ?", "En tout,", ["L", 1, 2, 0.5], ["cL", 20, 75, 5], "{M} en tout"],
+    ["tissu", "{P} coud bout à bout deux bandes de tissu : {A} et {B}. Quelle est la longueur totale ?", "En tout,", ["m", 1, 3, 0.5], ["cm", 35, 95, 5], "{M} en tout"]
+  ];
+  // Une partie : le tout A, une partie B, l'autre partie.
+  const PARTIE_Q2 = [
+    ["pot", "Un pot de confiture plein pèse {A}. Le pot vide pèse {B}. Quelle est la masse de la confiture ?", "Confiture :", ["kg", 1, 1.5, 0.05], ["g", 250, 450, 50], "{M} de confiture"],
+    ["caisse", "Une caisse de mangues pèse {A}. La caisse vide pèse {B}. Quelle est la masse des mangues ?", "Mangues :", ["kg", 4, 9, 0.5], ["g", 500, 900, 100], "{M} de mangues"],
+    ["ficelle", "Un rouleau de ficelle mesure {A}. {P} en coupe {B}. Quelle longueur de ficelle reste-t-il ?", "Il reste", ["m", 2, 5, 0.5], ["cm", 35, 95, 5], "qu'il reste {M}"],
+    ["bouteille", "Une bouteille contient {A} d'eau. {P} en boit {B}. Combien d'eau reste-t-il ?", "Il reste", ["L", 1, 2, 0.5], ["cL", 20, 75, 5], "qu'il reste {M}"],
+    ["fruits", "{P} achète {A} de fruits : des pommes et {B} de poires. Quelle est la masse des pommes ?", "Pommes :", ["kg", 2, 5, 0.5], ["g", 400, 950, 50], "{M} de pommes"]
+  ];
+  // Comparer : A (le premier prénom), B l'écart, l'autre prénom (Q).
+  // `moins` : P a B de plus que Q (Q = A − B) ; `plus` : P a B de moins
+  // (Q = A + B) ; `ecart` : P et Q donnés, l'écart cherché.
+  const COMPARER_Q2 = [
+    ["taille", ["m", 1.3, 1.65, 0.01], ["cm", 4, 19, 1], {
+      moins: "{P} mesure {A}. C'est {B} de plus {qQ}. Combien mesure {Q} ?",
+      plus: "{P} mesure {A}. C'est {B} de moins {qQ}. Combien mesure {Q} ?",
+      ecart: "{P} mesure {A} et {Q} mesure {C}. Quel est l'écart de taille ?"}, "{Q} :", "{qQ} mesure {M}"],
+    ["saut", ["m", 2, 3.6, 0.05], ["cm", 10, 60, 5], {
+      moins: "Au saut en longueur, {P} saute {A}. {Q} saute {B} de moins. Quelle longueur saute {Q} ?",
+      plus: "Au saut en longueur, {P} saute {A}. {Q} saute {B} de plus. Quelle longueur saute {Q} ?",
+      ecart: "Au saut en longueur, {P} saute {A} et {Q} saute {C}. Quel est l'écart ?"}, "{Q} :", "{qQ} saute {M}"],
+    ["cartable", ["kg", 2, 3.5, 0.1], ["g", 200, 900, 50], {
+      moins: "Le cartable {dP} pèse {A}. Celui {dQ} pèse {B} de moins. Combien pèse le cartable {dQ} ?",
+      plus: "Le cartable {dP} pèse {A}. Celui {dQ} pèse {B} de plus. Combien pèse le cartable {dQ} ?",
+      ecart: "Le cartable {dP} pèse {A} et celui {dQ} pèse {C}. Quel est l'écart ?"}, "Cartable :", "que ce cartable pèse {M}"],
+    ["course", ["km", 1, 5, 0.5], ["m", 200, 900, 100], {
+      moins: "{P} court {A}. {Q} court {B} de moins. Quelle distance court {Q} ?",
+      plus: "{P} court {A}. {Q} court {B} de plus. Quelle distance court {Q} ?",
+      ecart: "{P} court {A} et {Q} court {C}. Quel est l'écart ?"}, "{Q} :", "{qQ} court {M}"]
+  ];
+  // Izmir (S002) : n1 objets de a et n2 objets de b. [modèle, énoncé,
+  // avant, a, b, les nombres d'objets possibles].
+  const IZMIR_Q2 = [
+    ["pains", "{P} achète {n1} pains de {a} et {n2} bouteilles d'eau de {b}. Quelle est la masse totale ?", "En tout,", ["g", 150, 300, 10], ["kg", 1.5, 1.6, 0.1]],
+    ["farine", "{P} achète {n1} paquets de riz de {a} et {n2} sacs de farine de {b}. Quelle est la masse totale ?", "En tout,", ["g", 150, 400, 50], ["kg", 1, 2, 1]],
+    ["planches", "{P} pose bout à bout {n2} planches de {b} et {n1} tasseaux de {a}. Quelle est la longueur totale ?", "En tout,", ["cm", 40, 90, 5], ["m", 1.2, 2.5, 0.1]],
+    ["fete", "{P} achète {n2} bouteilles de {b} et {n1} canettes de {a}. Quelle quantité de boisson en tout ?", "En tout,", ["cL", 33, 33, 1], ["L", 1.5, 2, 0.5]]
+  ];
+  // Deux étapes : les deux ensemble (S002 : Léo et Lucie) ; deux morceaux
+  // enlevés (S002 : Agathe).
+  const ENSEMBLE_Q2 = [
+    ["course2", "{P} court {A}. {Q} court {B} de plus. Quelle distance courent les deux enfants ensemble ?", "Ensemble :", ["km", 1, 3, 0.5], ["m", 200, 800, 100]],
+    ["sacs", "Le sac {dP} pèse {A}. Celui {dQ} pèse {B} de plus. Combien pèsent les deux sacs ensemble ?", "Ensemble :", ["kg", 2, 4, 0.5], ["g", 300, 900, 100]]
+  ];
+  const RESTE_Q2 = [
+    ["ruban3", "Un ruban mesure {A}. {P} en coupe {B}, puis {C}. Quelle longueur de ruban reste-t-il ?", "Il reste", ["m", 2, 4, 0.5], ["cm", 25, 95, 5], ["cm", 25, 95, 5]],
+    ["sentier3", "Un sentier mesure {A}. {P} marche {B}, puis {C}. Quelle distance reste-t-il à marcher ?", "Il reste", ["km", 3, 6, 0.5], ["km", 1, 2, 0.5], ["m", 300, 900, 100]]
+  ];
+
+  // L'unité de la réponse : la petite au degré 1 (des nombres entiers),
+  // l'une ou l'autre au degré 2, la grande au degré 3 (des décimaux).
+  function versQ2(rng, degre, grande, petite) {
+    if (degre === 1) return petite;
+    if (degre === 3) return grande;
+    return rng() < 0.5 ? grande : petite;
+  }
+
+  // Le schéma en barres : `tout` en haut, `parts` dessous (`poids` : leurs
+  // largeurs) ; ou deux barres collées (`deux`). `cherchee` : où est « ? ».
+  // La correction : le même schéma, la réponse à la place de « ? », en vert.
+  function corrigerSchemaQ2(s, r) {
+    const c = JSON.parse(JSON.stringify(s));
+    if (c.deux) {
+      // (Les deux ensemble : la barre de l'autre se remplit, et le calcul
+      // en vert dessous dit le total ; pas de ligne « Ensemble » en plus,
+      // elle passait la correction d'À toi à 73 % au petit iPhone.)
+      if (c.deux.total) { delete c.deux.total; c.deux.verte = null; }
+      else ["haut", "bas"].forEach((k, i) => { if (c.deux[k][1].startsWith("?")) { c.deux[k][1] = r; c.deux.verte = i; } });
+      if (c.deux.ecart.startsWith("?")) { c.deux.ecart = r; c.deux.verte = "ecart"; }
+      if (c.deux.provisoire) c.deux.haut[1] = c.deux.provisoire;
+      delete c.deux.provisoire;
+      return c;
+    }
+    if (c.tout.startsWith("?")) { c.tout = r; c.verte = -2; }
+    c.parts = c.parts.map((p, i) => (p.startsWith("?") ? ((c.verte = c.verte === undefined ? i : c.verte), r) : p));
+    if (c.verte === undefined) c.verte = -1;
+    return c;
+  }
+
+  // La question finie. spec : {sorte, modele, degre, enonce, avant, apres,
+  // vers, termes, n, schema, image, correction, figure, note, trouve,
+  // grande} ; `vrai` : null, « oui » ou « non » (« Est-ce vraisemblable ? »).
+  function finirQ2(spec, rng, vrai) {
+    const {sorte, modele, degre, vers, termes} = spec;
+    const n = spec.n || 1;
+    const rep = valeurQ2(termes, n, vers);
+    if (rep === null || !mesuresQ2(termes, vers)) return null;
+    const r = mes(rep, vers);
+    const schema = spec.schema(r);
+    // (L'aide n'écrit jamais la réponse : ni l'outil, ni l'image.)
+    const outilTextes = schema.deux ? [schema.deux.haut[1], schema.deux.bas[1], schema.deux.ecart, schema.deux.total || ""] : [schema.tout, ...schema.parts];
+    const echappe = r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const reRep = new RegExp(`(^|[^\\d,${FINE}])${echappe}($|[^\\wÀ-ÿ²³])`);
+    if ([...outilTextes, ...spec.image, spec.note || ""].some(t => reRep.test(t))) return null;
+    const cleBase = cleQ2(modele, termes, n);
+    const cle = `${cleBase}>${vers}`;
+    const schemaCorr = corrigerSchemaQ2(schema, r);
+    const base = {
+      code: "Q2", degre, unite: vers, outil: "schema", schema, schemaCorr, repTexteQ2: r, noteOutil: spec.note || "Je mets tout dans la même unité.",
+      image: spec.image, correction: spec.correction(r), grandeur: grandeurDe(vers), sorteQ2: sorte, modeleQ2: modele,
+      donnees: Object.assign({type: "q2", sorte, termes: termes.map(([m, u, k]) => [brut(m), u, k]), n, vers}, spec.sens ? {sens: spec.sens} : {}),
+      cle, cleBase
+    };
+    if (spec.figure) base.figurePb = spec.figure;
+    if (!vrai) {
+      // (Une ligne « avant » de 8 caractères et plus, « Mangues : » :
+      // la ligne de la case un peu plus petite, `long` ; l'énoncé un peu
+      // plus serré que celui de Q1, `serre` : quatre lignes avec une police large
+      // au petit iPhone faisaient passer une question mêlée de C8 à 76 %
+      // dans Je valide.)
+      const champsTexte = spec.figure ? {enonce: spec.enonce, avant: spec.avant || "", apres: vers, figure: spec.figure, serre: true}
+        : Object.assign({enonce: spec.enonce, avant: spec.avant, apres: vers}, spec.avant.length >= 8 ? {long: true} : {},
+          {serre: true});
+      return q(Object.assign(base, {
+        forme: "nombre", texte: `${spec.enonce} ${spec.avant ? `${spec.avant} ` : ""}${CASE}${NB}${vers}`, morceaux: champsTexte,
+        reponse: brut(rep), reponseTexte: r, resume: `${spec.avant ? `${spec.avant} ` : ""}${r}`, resumeVert: spec.correction(r).slice(-1)[0]
+      }));
+    }
+    // « Est-ce vraisemblable ? » : quelqu'un propose un résultat. Vrai : le
+    // bon ; faux : × 10, ÷ 10, × 100 ou ÷ 100 (l'erreur de conversion),
+    // qui s'écrit encore dans l'unité.
+    const oui = vrai === "oui";
+    let propose = rep;
+    if (!oui) {
+      const essais = [rep * 10n, rep * 100n, rep % 10n === 0n ? rep / 10n : null, rep % 100n === 0n ? rep / 100n : null]
+        .filter(x => x !== null && x > 0n && decimales(x) <= 2 && x <= 100000n * MILLE && x >= 10n);
+      if (!essais.length) return null;
+      propose = choisir(rng, essais);
+    }
+    const auteur = choisir(rng, PRENOMS.filter(p => !spec.enonce.includes(p)));
+    const dit = `${auteur} trouve ${remplirQ2(spec.trouve, {M: mes(propose, vers)})}.`;
+    const enonce = spec.enonce.replace(/ (Quelle|Quel|Combien)[^.]*\?$/, "");
+    const raison = oui ? `Oui : c'est bien ${r}.` : `Non : c'est ${r}, pas ${mes(propose, vers)}.`;
+    return q(Object.assign(base, {
+      forme: "vrai-faux", texte: `${enonce} ${dit} Est-ce vraisemblable${NB}?`,
+      morceaux: {enonce, proposition: dit, serre: true},
+      choix: ["Oui", "Non"], bon: oui ? 0 : 1, reponse: oui ? "Oui" : "Non", reponseTexte: oui ? "Oui" : "Non",
+      resume: `${dit} ${oui ? "Vraisemblable." : "Pas vraisemblable."}`, correction: [raison], raisonQ2: raison,
+      // (Le pourquoi d'un mauvais choix : une ligne au petit téléphone.)
+      pourquoi: oui ? {1: "Le calcul est juste."} : {0: propose > rep ? "C'est beaucoup trop." : "C'est beaucoup trop peu."},
+      donnees: Object.assign({}, base.donnees, {propose: brut(propose), vrai: oui}),
+      cle: `${cle}:v${oui ? 1 : 0}`
+    }));
+  }
+
+  // ---------------------------------------------------- les sortes de Q2
+  function reunirQ2(degre, rng, k = null) {
+    const [modele, texte, avant, [ga, ...ba], [gb, ...bb], trouve] = REUNIR_Q2[k === null ? Math.floor(rng() * REUNIR_Q2.length) : k];
+    const [A, ua] = tireQ2(rng, [ga, ...ba]);
+    const [B, ub] = tireQ2(rng, [gb, ...bb]);
+    const vers = versQ2(rng, degre, ua, ub);
+    const P = choisir(rng, PRENOMS);
+    const Av = convertir(A, ua, vers);
+    const Bv = convertir(B, ub, vers);
+    const enonce = remplirQ2(texte, {P, A: mes(A, ua), B: mes(B, ub)});
+    const conv = ua === vers ? `${mes(B, ub)} = ${mes(Bv, vers)}` : `${mes(A, ua)} = ${mes(Av, vers)}`;
+    return {sorte: "reunir", modele, degre, enonce, avant, vers, trouve, termes: [[A, ua, 1], [B, ub, 1]],
+      schema: () => ({tout: `?${NB}${vers}`, parts: [ecritQ2(A, ua, vers), ecritQ2(B, ub, vers)], poids: [Number(Av), Number(Bv)]}),
+      image: [conv, `${mes(Av, vers)} + ${mes(Bv, vers)} = ${CASE}`],
+      correction: r => [conv, `${mes(Av, vers)} + ${mes(Bv, vers)} = ${r}`]};
+  }
+  function partieQ2(degre, rng, k = null) {
+    const [modele, texte, avant, [ga, ...ba], [gb, ...bb], trouve] = PARTIE_Q2[k === null ? Math.floor(rng() * PARTIE_Q2.length) : k];
+    const [A, ua] = tireQ2(rng, [ga, ...ba]);
+    const [B, ub] = tireQ2(rng, [gb, ...bb]);
+    const vers = versQ2(rng, degre, ua, ub);
+    const P = choisir(rng, PRENOMS);
+    const Av = convertir(A, ua, vers);
+    const Bv = convertir(B, ub, vers);
+    const enonce = remplirQ2(texte, {P, A: mes(A, ua), B: mes(B, ub)});
+    const conv = ua === vers ? `${mes(B, ub)} = ${mes(Bv, vers)}` : `${mes(A, ua)} = ${mes(Av, vers)}`;
+    return {sorte: "partie", modele, degre, enonce, avant, vers, trouve, termes: [[A, ua, 1], [B, ub, -1]],
+      schema: () => ({tout: ecritQ2(A, ua, vers), parts: [ecritQ2(B, ub, vers), `?${NB}${vers}`], poids: [Number(Bv), Number(Av - Bv)]}),
+      image: [conv, `${mes(Av, vers)} − ${mes(Bv, vers)} = ${CASE}`],
+      correction: r => [conv, `${mes(Av, vers)} − ${mes(Bv, vers)} = ${r}`]};
+  }
+  function comparerQ2(degre, rng, {k = null, sens = null, A0 = null, B0 = null} = {}) {
+    const [modele, ga, gb, textes, avant0, trouve0] = COMPARER_Q2[k === null ? Math.floor(rng() * COMPARER_Q2.length) : k];
+    const s = sens || choisir(rng, ["moins", "moins", "plus", "ecart"]);
+    const [A, ua] = A0 ? [A0, ga[0]] : tireQ2(rng, ga);
+    const [B, ub] = B0 ? [B0, gb[0]] : tireQ2(rng, gb);
+    const [P, Q] = deuxPrenomsQ2(rng);
+    // (L'écart : la mesure de Q est donnée dans la petite unité ; on cherche
+    // l'écart, dans la petite unité.)
+    const vers = s === "ecart" ? ub : versQ2(rng, Math.max(degre, 2), ua, ub);
+    const Av = convertir(A, ua, vers);
+    const Bv = convertir(B, ub, vers);
+    const C = s === "ecart" ? convertir(A, ua, ub) - B : null;
+    if (C !== null && (C <= 0n || !naturelleC8(C, ub))) return null;
+    // (Une mesure qui tombe juste dans la grande unité s'écrit dans la
+    // grande : pas « celui de Kenzo pèse 2 000 g ».)
+    if (C !== null && C % (facteur(ua, ub) * MILLE) === 0n) return null;
+    const enonce = remplirQ2(textes[s], {P, Q, dP: deQ2(P), dQ: deQ2(Q), qQ: queQ2(Q), A: mes(A, ua), B: mes(B, ub), C: C === null ? "" : mes(C, ub)});
+    const avant = s === "ecart" ? "Écart :" : remplirQ2(avant0, {Q, dQ: deQ2(Q)});
+    const trouve = s === "ecart" ? "un écart de {M}" : remplirQ2(trouve0, {Q, dQ: deQ2(Q), qQ: queQ2(Q), M: "{M}"});
+    // (La mesure qui se convertit : A en petite unité, ou l'écart B en
+    // grande.)
+    const conv = ua !== vers ? `${mes(A, ua)} = ${mes(Av, vers)}` : `${mes(B, ub)} = ${mes(Bv, vers)}`;
+    const op = s === "plus" ? "+" : "−";
+    // (L'écart : les deux mesures dans la petite unité ; A se convertit.)
+    const termes = s === "ecart" ? [[A, ua, 1], [C, ub, -1]] : [[A, ua, 1], [B, ub, s === "plus" ? 1 : -1]];
+    const [x, y] = s === "ecart" ? [Av, C] : [Av, Bv];
+    // (L'écart est court, au bout de la barre : sa mesure seule ; s'il se
+    // convertit, la conversion est dans la phrase de l'outil.)
+    const deux = s === "moins" ? {haut: [P, ecritQ2(A, ua, vers)], bas: [Q, `?${NB}${vers}`], ecart: mes(B, ub)}
+      : s === "plus" ? {haut: [Q, `?${NB}${vers}`], bas: [P, ecritQ2(A, ua, vers)], ecart: mes(B, ub)}
+        : {haut: [P, ecritQ2(A, ua, vers)], bas: [Q, mes(C, ub)], ecart: `?${NB}${vers}`};
+    const note = s !== "ecart" && ub !== vers ? `J'écris tout en ${vers} : ${mes(B, ub)} = ${mes(Bv, vers)}.` : null;
+    return {sorte: "comparer", sens: s, modele: `${modele}-${s}`, degre, enonce, avant, vers, trouve, termes, note,
+      schema: () => ({deux}),
+      image: [conv, `${mes(x, vers)} ${op} ${mes(y, vers)} = ${CASE}`],
+      correction: r => [conv, `${mes(x, vers)} ${op} ${mes(y, vers)} = ${r}`]};
+  }
+  function perimetreQ2(degre, rng) {
+    const [L, uL] = tireQ2(rng, ["m", 1, 4, 0.1]);
+    const [l, ul] = tireQ2(rng, ["cm", 30, 95, 5]);
+    // (Le côté en m a au plus une décimale, « 2,5 m » ; pas « 2,0 m ».)
+    const vers = degre >= 3 ? "m" : "cm";
+    const Lv = convertir(L, uL, vers);
+    const lv = convertir(l, ul, vers);
+    const conv = vers === "cm" ? `${mes(L, uL)} = ${mes(Lv, vers)}` : `${mes(l, ul)} = ${mes(lv, vers)}`;
+    return {sorte: "perimetre", modele: "rectangle", degre, enonce: "Quel est le périmètre de ce rectangle ?", avant: "", vers, trouve: "",
+      termes: [[L, uL, 2], [l, ul, 2]], figure: {type: "rectangle", longueur: mes(L, uL), largeur: mes(l, ul)},
+      note: `Je fais le tour : ${conv}.`,
+      schema: () => ({tout: `?${NB}${vers}`, parts: [mes(Lv, vers), mes(lv, vers), mes(Lv, vers), mes(lv, vers)], poids: [Number(Lv), Number(lv), Number(Lv), Number(lv)]}),
+      image: [conv, `${mes(Lv, vers)} + ${mes(lv, vers)} + ${mes(Lv, vers)} + ${mes(lv, vers)} = ${CASE}`],
+      correction: r => [conv, `2 × ${mes(Lv, vers)} + 2 × ${mes(lv, vers)} = ${r}`]};
+  }
+  function izmirQ2(degre, rng, {k = null, a0 = null, b0 = null, n10 = null, n20 = null} = {}) {
+    const [modele, texte, avant, ga, gb] = IZMIR_Q2[k === null ? Math.floor(rng() * IZMIR_Q2.length) : k];
+    const [a, ua] = a0 ? [a0, ga[0]] : tireQ2(rng, ga);
+    const [b, ub] = b0 ? [b0, gb[0]] : tireQ2(rng, gb);
+    const n1 = n10 || entre(rng, 2, 4);
+    const n2 = n20 || entre(rng, 2, 3);
+    const vers = degre >= 3 ? ub : versQ2(rng, degre, ub, ua);
+    const P = choisir(rng, PRENOMS);
+    const p1 = a * BigInt(n1);
+    const p2 = b * BigInt(n2);
+    if (!naturelleC8(p1, ua) || !naturelleC8(p2, ub)) return null;
+    const p1v = convertir(p1, ua, vers);
+    const p2v = convertir(p2, ub, vers);
+    const enonce = remplirQ2(texte, {P, n1, n2, a: mes(a, ua), b: mes(b, ub)});
+    // (Dans l'ordre du texte : les planches avant les tasseaux.)
+    const bDabord = texte.indexOf("{b}") < texte.indexOf("{a}");
+    let l1 = `${n1} × ${mes(a, ua)} = ${ecritQ2(p1, ua, vers)}`;
+    let l2 = `${n2} × ${mes(b, ub)} = ${ecritQ2(p2, ub, vers)}`;
+    let parts = [`${n1} × ${mes(a, ua)}`, `${n2} × ${mes(b, ub)}`];
+    let poids = [Number(p1v), Number(p2v)];
+    let calc = `${mes(p1v, vers)} + ${mes(p2v, vers)}`;
+    if (bDabord) { [l1, l2] = [l2, l1]; parts = parts.reverse(); poids = poids.reverse(); calc = `${mes(p2v, vers)} + ${mes(p1v, vers)}`; }
+    return {sorte: "izmir", modele, degre, enonce, avant, vers, trouve: "{M} en tout", termes: [[a, ua, n1], [b, ub, n2]],
+      schema: () => ({tout: `?${NB}${vers}`, parts, poids}),
+      image: [l1, l2],
+      correction: r => [l1, l2, `${calc} = ${r}`]};
+  }
+  const TOTAUX_BALANCE = [1, 1, 1.5, 2];
+  function balanceQ2(degre, rng, {n0 = null, p0 = null, T0 = null} = {}) {
+    const n = n0 || entre(rng, 2, 4);
+    const T = T0 !== null ? T0 : BigInt(Math.round(choisir(rng, TOTAUX_BALANCE) * 1000)) * MILLE;
+    // (Quatre conserves : sans poids, le plateau n'a pas la place.)
+    const p = p0 !== null ? p0 : n === 4 || rng() < 0.2 ? 0n : BigInt(entre(rng, 2, 10) * 50) * MILLE;
+    const reste = T - p;
+    if (reste <= 0n || reste % BigInt(n) !== 0n) return null;
+    const boite = reste / BigInt(n);
+    // (Une boîte de 100 g à 800 g, un nombre rond de 5 g.)
+    if (boite < 100n * MILLE || boite > 800n * MILLE || boite % (5n * MILLE) !== 0n) return null;
+    const Tkg = T / 1000n;
+    const termes = p ? [[Tkg, "kg", 1], [p, "g", -1]] : [[Tkg, "kg", 1]];
+    const conv = `${mes(Tkg, "kg")} = ${mes(T, "g")}`;
+    const lignes = p ? [conv, `${mes(T, "g")} − ${mes(p, "g")} = ${mes(reste, "g")}`] : [conv];
+    return {sorte: "balance", modele: `balance${n}`, degre, enonce: "Les conserves sont identiques. Quelle est la masse d'une conserve ?", avant: "", vers: "g", trouve: "{M} pour une conserve",
+      termes, n, figure: {type: "balance", n, poids: p ? mes(p, "g") : "", total: mes(Tkg, "kg")},
+      note: p ? `D'abord, j'enlève les ${mes(p, "g")}.` : `Je partage en ${n}.`,
+      schema: () => ({tout: conv, parts: [...Array(n).fill("?"), ...(p ? [mes(p, "g")] : [])], poids: [...Array(n).fill(Number(boite)), ...(p ? [Number(p)] : [])]}),
+      image: [...lignes, `${mes(reste, "g")} ÷ ${n} = ${CASE}`],
+      correction: r => [...lignes, `${mes(reste, "g")} ÷ ${n} = ${r}`]};
+  }
+  function ensembleQ2(degre, rng) {
+    const [modele, texte, avant, ga, gb] = choisir(rng, ENSEMBLE_Q2);
+    const [A, ua] = tireQ2(rng, ga);
+    const [B, ub] = tireQ2(rng, gb);
+    const vers = degre >= 3 ? (rng() < 0.6 ? ua : ub) : ub;
+    const [P, Q] = deuxPrenomsQ2(rng);
+    const Av = convertir(A, ua, vers);
+    const Bv = convertir(B, ub, vers);
+    const Qv = Av + Bv;
+    if (!naturelleC8(Qv, vers)) return null;
+    const enonce = remplirQ2(texte, {P, Q, dP: deQ2(P), dQ: deQ2(Q), A: mes(A, ua), B: mes(B, ub)});
+    const conv = ua === vers ? `${mes(B, ub)} = ${mes(Bv, vers)}` : `${mes(A, ua)} = ${mes(Av, vers)}`;
+    const l1 = `${Q} : ${mes(Av, vers)} + ${mes(Bv, vers)} = ${mes(Qv, vers)}`;
+    return {sorte: "deux", modele, degre, enonce, avant, vers, trouve: "{M} pour les deux", termes: [[A, ua, 2], [B, ub, 1]],
+      note: ub !== vers ? `J'écris tout en ${vers} : ${mes(B, ub)} = ${mes(Bv, vers)}.` : "Puis j'ajoute les deux barres.",
+      schema: () => ({deux: {haut: [Q, ""], bas: [P, ecritQ2(A, ua, vers)], ecart: mes(B, ub), total: `Ensemble : ?${NB}${vers}`, provisoire: mes(Qv, vers)}}),
+      image: [conv, l1, `${mes(Av, vers)} + ${mes(Qv, vers)} = ${CASE}`],
+      correction: r => [conv, l1, `${mes(Av, vers)} + ${mes(Qv, vers)} = ${r}`]};
+  }
+  function resteQ2(degre, rng) {
+    const [modele, texte, avant, ga, gb, gc] = choisir(rng, RESTE_Q2);
+    const [A, ua] = tireQ2(rng, ga);
+    const [B, ub] = tireQ2(rng, gb);
+    const [C, uc] = tireQ2(rng, gc);
+    if (ub === uc && B === C) return null;
+    // (Une seule mesure à convertir : le ruban en cm, le sentier en km.)
+    const vers = modele === "ruban3" ? "cm" : "km";
+    const P = choisir(rng, PRENOMS);
+    const [Av, Bv, Cv] = [convertir(A, ua, vers), convertir(B, ub, vers), convertir(C, uc, vers)];
+    const enonce = remplirQ2(texte, {P, A: mes(A, ua), B: mes(B, ub), C: mes(C, uc)});
+    const convs = [[A, ua], [B, ub], [C, uc]].filter(([, u]) => u !== vers).map(([m, u]) => `${mes(m, u)} = ${mes(convertir(m, u, vers), vers)}`);
+    return {sorte: "deux", modele, degre, enonce, avant, vers, trouve: "qu'il reste {M}", termes: [[A, ua, 1], [B, ub, -1], [C, uc, -1]],
+      schema: () => ({tout: ecritQ2(A, ua, vers), parts: [mes(Bv, vers), mes(Cv, vers), `?${NB}${vers}`], poids: [Number(Bv), Number(Cv), Number(Av - Bv - Cv)]}),
+      image: [convs.join(" ; "), `${mes(Av, vers)} − ${mes(Bv, vers)} − ${mes(Cv, vers)} = ${CASE}`],
+      correction: r => [convs.join(" ; "), `${mes(Av, vers)} − ${mes(Bv, vers)} − ${mes(Cv, vers)} = ${r}`]};
+  }
+
+  // Les erreurs de Q2 au pavé (une ligne au petit téléphone, 31 caractères
+  // au plus) : sans convertir ; une conversion fausse d'un zéro ; l'autre
+  // opération ; le périmètre à deux côtés ; un seul objet de chaque ;
+  // la balance sans enlever le poids, ou sans partager ; une seule étape ;
+  // le résultat dans l'autre unité ; la virgule.
+  function erreursQ2(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "q2" || typeof lu !== "bigint") return null;
+    const termes = d.termes.map(([m, u, k]) => [milli(m), u, k]);
+    const rep = milli(question.reponse);
+    const somme = (f, liste = termes) => liste.reduce((s, [m, u, k]) => s + BigInt(f(k)) * convertir(m, u, d.vers), 0n);
+    const n = BigInt(d.n || 1);
+    // Sans convertir : les nombres tels qu'ils sont écrits.
+    const brutSomme = termes.reduce((s, [m, , k]) => s + BigInt(k) * m, 0n);
+    if (termes.some(([, u]) => u !== d.vers) && (lu === brutSomme / n || lu * n === brutSomme)) return {erreur: 5, retour: `J'écris d'abord tout en ${d.vers}.`};
+    const s = d.sorte;
+    if (s === "perimetre" && lu === somme(() => 1)) return {erreur: 10, retour: "Le tour a quatre côtés."};
+    if (s === "izmir" && lu === somme(() => 1)) return {erreur: 10, retour: "Je compte chaque objet."};
+    if (s === "balance") {
+      const T = convertir(termes[0][0], termes[0][1], d.vers);
+      if (termes.length > 1 && lu * n === T) return {erreur: 10, retour: `J'enlève d'abord les ${mes(termes[1][0], "g")}.`};
+      if (lu === rep * n) return {erreur: 10, retour: `C'est la masse de ${n} conserves.`};
+    }
+    if (s === "deux" && termes.length === 2 && lu === somme(k => (k === 2 ? 1 : k))) return {erreur: 10, retour: "On cherche les deux ensemble."};
+    if (s === "deux" && termes.length === 3) {
+      for (const j of [1, 2]) if (lu === somme((k) => k, termes.filter((_, i) => i !== j))) return {erreur: 10, retour: "J'enlève les deux longueurs."};
+    }
+    // L'autre opération : A + B au lieu de A − B, ou l'inverse.
+    if (termes.length === 2 && ["reunir", "partie", "comparer"].includes(s)) {
+      const a = convertir(termes[0][0], termes[0][1], d.vers);
+      const b = convertir(termes[1][0], termes[1][1], d.vers);
+      const inverse = termes[1][2] > 0 ? a - b : a + b;
+      if (lu === inverse || (s === "reunir" && lu === -inverse)) {
+        const retour = s === "reunir" ? "On cherche le tout : j'ajoute." : s === "partie" ? "Une partie : j'enlève." : d.sens === "ecart" ? "L'écart : j'enlève." : "Relis : qui a le plus ?";
+        return {erreur: 7, retour};
+      }
+    }
+    // Une conversion fausse d'un zéro (× 10 ou ÷ 10 sur la mesure convertie).
+    for (let j = 0; j < termes.length; j += 1) {
+      const [m, u, k] = termes[j];
+      if (u === d.vers) continue;
+      const c = convertir(m, u, d.vers);
+      for (const faux of [c * 10n, c % 10n === 0n ? c / 10n : null]) {
+        if (faux === null) continue;
+        const tot = somme(kk => kk) - BigInt(k) * c + BigInt(k) * faux;
+        if (tot > 0n && tot % n === 0n && lu === tot / n) return {erreur: 6, retour: `${mes(m, u)}, c'est ${mes(c, d.vers)}.`};
+      }
+    }
+    const autreU = termes.map(([, u]) => u).find(u => u !== d.vers);
+    const dansAutre = autreU ? convertir(rep, d.vers, autreU) : null;
+    if (dansAutre !== null && lu === dansAutre) return {erreur: 8, retour: `${ecrire(lu)}, ce serait des ${autreU}.`};
+    if (lu === rep * 10n || lu * 10n === rep) {
+      if (rep % MILLE || lu % MILLE) return {erreur: 9, retour: "La virgule est mal placée."};
+      return {erreur: 9, retour: lu > rep ? "Un zéro de trop." : "Un zéro de moins."};
+    }
+    return null;
+  }
+
+  // Les places : « Est-ce vraisemblable ? » aux places 4 et 8 de Je valide
+  // (un Oui, un Non), 4, 9, 14, 19, 24 d'À toi (comme Q1) ; une sorte
+  // nouvelle à chaque degré.
+  const PLACES_Q2 = {
+    valide: ["partie", "reunir", "partie", "V", "comparer", "perimetre", "comparer", "V", "balance|izmir", "deux"],
+    entraine: ["reunir", "partie", "reunir", "V", "partie", "reunir",
+      "comparer", "perimetre", "V", "comparer", "reunir", "partie", "comparer", "V", "perimetre",
+      "izmir", "comparer", "balance", "V", "deux", "perimetre", "izmir", "balance", "V", "deux"],
+    test: ["comparer", "balance|izmir", "deux", "partie"],
+    aide: ["reunir", "comparer", "partie"],
+    retour: ["comparer|partie|V", "perimetre|reunir"],
+    echauffement: ["comparer|partie|reunir"]
+  };
+  function formesQ2(usage, rng) {
+    const p = PLACES_Q2[usage];
+    const f = {};
+    if (!p) return f;
+    const [x, y] = rng() < 0.5 ? ["vrai-oui", "vrai-non"] : ["vrai-non", "vrai-oui"];
+    let v = 0;
+    p.forEach((s, i) => {
+      const t = choisir(rng, s.split("|"));
+      if (t === "V") { f[i] = usage === "valide" ? [x, y][v] : rng() < 0.5 ? "vrai-oui" : "vrai-non"; v += 1; } else f[i] = t;
+    });
+    return f;
+  }
+  // Une question d'une sorte (essais jusqu'à une question qui s'écrit).
+  function tirerQ2(rng, degre, forme) {
+    const vrai = forme && forme.startsWith("vrai") ? forme.slice(5) : null;
+    const sorte = vrai ? choisir(rng, ["reunir", "partie", "comparer", "comparer"]) : forme || choisir(rng, ["reunir", "partie", "comparer"]);
+    for (let essai = 0; essai < 40; essai += 1) {
+      let spec = null;
+      if (sorte === "reunir") spec = reunirQ2(degre, rng);
+      else if (sorte === "partie") spec = partieQ2(degre, rng);
+      else if (sorte === "comparer") spec = comparerQ2(degre, rng, vrai ? {sens: choisir(rng, ["moins", "plus"])} : {});
+      else if (sorte === "perimetre") spec = perimetreQ2(degre, rng);
+      else if (sorte === "izmir") spec = izmirQ2(degre, rng);
+      else if (sorte === "balance") spec = balanceQ2(degre, rng);
+      else if (sorte === "deux") spec = rng() < 0.5 ? ensembleQ2(degre, rng) : resteQ2(degre, rng);
+      const x = spec && finirQ2(spec, rng, vrai);
+      if (x) return x;
+    }
+    return null;
+  }
+  ETAPES.Q2 = {
+    // On te montre : le pot de confiture (1,2 kg, 350 g) ; Alix et Bruno
+    // (1,61 m, 13 cm) ; Izmir (3 pains de 210 g, 2 bouteilles de 1,6 kg).
+    clesExemples: [cleQ2("pot", [[1200n, "kg", 1], [350000n, "g", -1]], 1), cleQ2("taille-moins", [[1610n, "m", 1], [13000n, "cm", -1]], 1),
+      cleQ2("pains", [[210000n, "g", 3], [1600n, "kg", 2]], 1)],
+    tirer(rng, degre, i, usage, forme) {
+      return tirerQ2(rng, degre, forme);
+    },
+    formes: formesQ2,
+    // (Dans Je valide : un même contexte une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ2.split("-")[0] === question.modeleQ2.split("-")[0]);
+    },
+    erreurs: erreursQ2
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
