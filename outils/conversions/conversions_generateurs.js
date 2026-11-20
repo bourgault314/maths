@@ -5122,6 +5122,350 @@
     erreurs: erreursC8
   };
 
+  // ================================================ lot B2-3a : A5 (CM1)
+  // « L'aire en carreaux » (carte v4 ; S002 p. 16 : « comparer des aires
+  // sans avoir recours à la mesure […] par superposition ou par découpage et
+  // recollement » ; « déterminer l'aire d'une surface composée de carreaux
+  // entiers et de demi-carreaux » ; « encadrer l'aire d'une surface
+  // quelconque » ; « 1 cm² est l'aire d'un carré de 1 cm de côté » ; « deux
+  // figures peuvent avoir la même aire, mais des périmètres différents »).
+  // Choix de Gwenaël du 20/11 (maquette sur la vraie page) : les demis se
+  // RECOLLENT dans l'outil ; on compare en SUPERPOSANT ; la réponse en
+  // carreaux au degré 1, en cm² ensuite (« 1 carreau = 1 cm² »).
+  //
+  // Une figure : des lignes de caractères, une par rangée de carreaux.
+  //   "#" un carreau entier · "." rien · un demi-carreau (le triangle
+  //   coloré) : "a" en haut à gauche ◤, "b" en haut à droite ◥, "c" en bas
+  //   à droite ◢, "d" en bas à gauche ◣.
+  // Chaque carreau se partage en quatre quarts (le triangle du centre vers
+  // chaque côté : N, E, S, O) : un carreau entier, les quatre ; un demi,
+  // deux. L'aire en quarts sert à superposer et à vérifier.
+  const QUARTS_A5 = {"#": 15, a: 9, b: 3, c: 6, d: 12};
+  const UNITE_A5 = {carreaux: "carreaux", cm2: "cm²"};
+  function piecesA5(fig) {
+    const p = [];
+    fig.forEach((l, y) => [...l].forEach((ch, x) => { if (QUARTS_A5[ch]) p.push({ch, x, y, demi: ch !== "#"}); }));
+    return p;
+  }
+  function pleinsA5(fig) { return piecesA5(fig).filter(p => !p.demi).length; }
+  function demisA5(fig) { return piecesA5(fig).filter(p => p.demi).length; }
+  // L'aire en demi-carreaux (toujours un entier).
+  function aireDemisA5(fig) { return 2 * pleinsA5(fig) + demisA5(fig); }
+  function plein(fig, x, y) { return (fig[y] || "")[x] === "#"; }
+  // Le périmètre d'une figure de carreaux entiers (en côtés de carreau) :
+  // l'erreur « j'ai compté le tour ».
+  function perimetreA5(fig) {
+    let n = 0;
+    piecesA5(fig).forEach(({x, y}) => { [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (!plein(fig, x + dx, y + dy)) n += 1; }); });
+    return n;
+  }
+  // Une figure de carreaux entiers d'un seul tenant, sans trou, aux bords
+  // réguliers : chaque colonne est une bande verticale ; d'une colonne à la
+  // suivante, le haut et le bas bougent d'un carreau au plus, et les deux
+  // bandes se touchent. Puis des demis, là où un vrai dessin en aurait :
+  // un coin rentrant rempli (le demi a ses deux côtés contre la figure) ou
+  // un coin sortant coupé en biais (le carreau du coin devient un demi). Pas
+  // deux demis côte à côte. (Lot B2-3a, premier essai : des demis collés au
+  // hasard faisaient des pointes, des figures « en dents de scie ».)
+  function figureA5(rng, {W, H, pleins: [pMin, pMax], demis: [dMin, dMax]}) {
+    for (let essai = 0; essai < 600; essai += 1) {
+      const w = entre(rng, W[0], W[1]);
+      const h = entre(rng, H[0], H[1]);
+      const cols = [];
+      let ok = true;
+      for (let x = 0; x < w && ok; x += 1) {
+        const v = cols[x - 1];
+        let c = null;
+        for (let k = 0; k < 30 && !c; k += 1) {
+          const haut = v ? Math.max(0, Math.min(h - 1, v[0] + entre(rng, -1, 1))) : entre(rng, 0, h - 1);
+          const bas = v ? Math.max(haut + 1, Math.min(h, v[1] + entre(rng, -1, 1))) : entre(rng, haut + 1, h);
+          if (!v || (haut < v[1] && bas > v[0])) c = [haut, bas];
+        }
+        if (!c) ok = false; else cols.push(c);
+      }
+      if (!ok) continue;
+      // La figure remplit sa boîte (pas de rangée ni de colonne vide).
+      if (Math.min(...cols.map(c => c[0])) !== 0 || Math.max(...cols.map(c => c[1])) !== h) continue;
+      const g = Array.from({length: h}, (_, y) => Array.from({length: w}, (_, x) => (y >= cols[x][0] && y < cols[x][1] ? "#" : ".")));
+      const nd = 2 * entre(rng, dMin / 2, dMax / 2);
+      const est = (x, y) => Boolean(g[y]) && g[y][x] === "#";
+      const vide = (x, y) => !est(x, y);
+      // [x, y, demi] : les places possibles.
+      const places = [];
+      for (let y = 0; y < h; y += 1) {
+        for (let x = 0; x < w; x += 1) {
+          const [hh, bb, gg, dd] = [est(x, y - 1), est(x, y + 1), est(x - 1, y), est(x + 1, y)];
+          if (g[y][x] === ".") {
+            // Un coin rentrant : deux côtés perpendiculaires contre la
+            // figure, les deux autres libres.
+            if (bb && dd && !hh && !gg) places.push([x, y, "c"]);
+            if (bb && gg && !hh && !dd) places.push([x, y, "d"]);
+            if (hh && dd && !bb && !gg) places.push([x, y, "b"]);
+            if (hh && gg && !bb && !dd) places.push([x, y, "a"]);
+          } else {
+            // Un coin sortant : deux côtés perpendiculaires libres, les deux
+            // autres contre la figure (elle reste d'un seul tenant).
+            if (vide(x, y - 1) && vide(x - 1, y) && bb && dd) places.push([x, y, "c"]);
+            if (vide(x, y - 1) && vide(x + 1, y) && bb && gg) places.push([x, y, "d"]);
+            if (vide(x, y + 1) && vide(x - 1, y) && hh && dd) places.push([x, y, "b"]);
+            if (vide(x, y + 1) && vide(x + 1, y) && hh && gg) places.push([x, y, "a"]);
+          }
+        }
+      }
+      const pris = [];
+      melanger(rng, places).forEach(([x, y, ch]) => {
+        if (pris.length >= nd) return;
+        if (pris.some(([px, py]) => Math.abs(px - x) + Math.abs(py - y) <= 1)) return;
+        pris.push([x, y, ch]);
+      });
+      if (pris.length < nd) continue;
+      pris.forEach(([x, y, ch]) => { g[y][x] = ch; });
+      const fig = g.map(l => l.join(""));
+      const n = fig.join("").split("").filter(ch => ch === "#").length;
+      if (n < pMin || n > pMax) continue;
+      // Pas un simple rectangle (sauf au degré 1, une fois sur cinq).
+      if (nd === 0 && n === w * h && rng() < 0.8) continue;
+      return fig;
+    }
+    return null;
+  }
+  // Superposer B sur A : le décalage (dx, dy) de B qui recouvre le plus de A
+  // (en quarts), puis ce qui dépasse de chacune (en quarts).
+  function quartsDe(fig, dx = 0, dy = 0) {
+    const m = new Map();
+    piecesA5(fig).forEach(p => m.set(`${p.x + dx},${p.y + dy}`, QUARTS_A5[p.ch]));
+    return m;
+  }
+  const bits = k => ((k & 1) + ((k >> 1) & 1) + ((k >> 2) & 1) + ((k >> 3) & 1));
+  function superposerA5(A, B) {
+    const qa = quartsDe(A);
+    let meilleur = null;
+    const wa = Math.max(...A.map(l => l.length)); const wb = Math.max(...B.map(l => l.length));
+    for (let dy = -(B.length - 1); dy <= A.length - 1; dy += 1) {
+      for (let dx = -(wb - 1); dx <= wa - 1; dx += 1) {
+        const qb = quartsDe(B, dx, dy);
+        let commun = 0;
+        qb.forEach((k, cle) => { commun += bits(k & (qa.get(cle) || 0)); });
+        // (À égalité : le plus près du coin en haut à gauche.)
+        if (!meilleur || commun > meilleur.commun || (commun === meilleur.commun && Math.abs(dx) + Math.abs(dy) < Math.abs(meilleur.dx) + Math.abs(meilleur.dy))) {
+          meilleur = {dx, dy, commun};
+        }
+      }
+    }
+    const qb = quartsDe(B, meilleur.dx, meilleur.dy);
+    let depasseA = 0; let depasseB = 0;
+    qa.forEach((k, cle) => { depasseA += bits(k & ~(qb.get(cle) || 0)); });
+    qb.forEach((k, cle) => { depasseB += bits(k & ~(qa.get(cle) || 0)); });
+    return {dx: meilleur.dx, dy: meilleur.dy, depasseA, depasseB};
+  }
+  const NOMBRE_A5 = q4 => (q4 % 4 === 0 ? String(q4 / 4) : `${Math.floor(q4 / 4)},${(q4 % 4) * 25}`.replace(",50", ",5"));
+  const carreauxA5 = n => `${n}${NB}carreau${n === "1" || n === 1 || /^[01],/.test(String(n)) ? "" : "x"}`;
+
+  // « Quelle est l'aire de cette figure ? » Degré 1 : des carreaux entiers,
+  // en carreaux ; degré 2 : des demis, en cm² ; degré 3 : jusqu'à 30
+  // carreaux, plus de demis, en cm².
+  const TAILLES_A5 = {
+    1: {W: [3, 5], H: [2, 3], pleins: [5, 12], demis: [0, 0]},
+    2: {W: [3, 6], H: [2, 4], pleins: [6, 16], demis: [2, 4]},
+    3: {W: [4, 7], H: [3, 4], pleins: [12, 26], demis: [2, 6]}
+  };
+  function questionCompterA5(degre, rng, fig = null) {
+    fig = fig || figureA5(rng, TAILLES_A5[degre]);
+    if (!fig) return null;
+    const unite = degre === 1 ? "carreaux" : "cm2";
+    const p = pleinsA5(fig); const d = demisA5(fig); const n = p + d / 2;
+    if (n > 30) return null;
+    const U = UNITE_A5[unite];
+    const phrase = "Quelle est l'aire de la figure ?";
+    const reponseTexte = `${n}${NB}${U}`;
+    const lignes = d ? [carreauxA5(p), `+ ${d}${NB}demis`, `= ${carreauxA5(n)}`] : [`= ${carreauxA5(n)}`];
+    if (unite === "cm2") lignes.push(`= ${n}${NB}cm²`);
+    return q({
+      code: "A5", degre, forme: "nombre", texte: `${phrase} … ${U}`,
+      morceaux: {phrase, apres: U, aire: true},
+      aire: {sorte: "compter", fig, unite},
+      reponse: String(n), reponseTexte, unite: U,
+      resume: `L'aire est ${reponseTexte}`,
+      outil: "aire",
+      image: d ? ["Deux demis font un carreau."] : ["Je compte rangée par rangée."],
+      correction: lignes,
+      sorteA5: "compter",
+      donnees: {type: "aire", sorte: "compter", pleins: p, demis: d, perimetre: d ? null : perimetreA5(fig)},
+      cle: `A5:c:${fig.join("/")}`
+    });
+  }
+  // Les erreurs de « Quelle est l'aire ? » (31 caractères au plus).
+  function erreursA5(question, lu, lus) {
+    const d = question.donnees;
+    if (d.sorte === "encadrer" && lus) {
+      const [a, b] = lus.map(x => Number(x / 1000n));
+      if (a === d.touches && b === d.entiers) return {erreur: 1, retour: "Le plus petit nombre d'abord."};
+      if (a !== d.entiers && b === d.touches) return {erreur: 2, retour: "Dedans : les carreaux entiers."};
+      if (a === d.entiers && b !== d.touches) return {erreur: 3, retour: "Puis ceux que la tache touche."};
+      return null;
+    }
+    if (d.sorte !== "compter" || typeof lu !== "bigint" || lu % 1000n) return null;
+    const v = Number(lu / 1000n);
+    const n = d.pleins + d.demis / 2;
+    if (d.demis && v === d.pleins + d.demis) return {erreur: 1, retour: "Deux demis font un carreau."};
+    if (d.demis && v === d.pleins) return {erreur: 2, retour: "Tu as oublié les demis."};
+    if (d.perimetre && v === d.perimetre && v !== n) return {erreur: 3, retour: "Ça, c'est le tour de la figure."};
+    if (Math.abs(v - n) === 1) return {erreur: 4, retour: "Je numérote chaque carreau."};
+    return null;
+  }
+
+  // Comparer deux figures. « Laquelle a la plus grande aire ? » (A, B,
+  // Même aire) ou « Même aire pour A et B ? » (Oui, Non). Degré 1 : deux
+  // aires bien différentes (on le voit) ; degré 2 : la même aire ou 1 à 3
+  // carreaux d'écart, des carreaux entiers ; degré 3 : avec des demis.
+  const TAILLES_CMP = {
+    1: {W: [2, 4], H: [2, 3], pleins: [3, 10], demis: [0, 0]},
+    2: {W: [2, 5], H: [2, 3], pleins: [5, 12], demis: [0, 0]},
+    3: {W: [2, 5], H: [2, 3], pleins: [5, 11], demis: [2, 2]}
+  };
+  function deuxFiguresA5(degre, rng, meme) {
+    for (let essai = 0; essai < 200; essai += 1) {
+      const A = figureA5(rng, TAILLES_CMP[degre]);
+      const B = figureA5(rng, TAILLES_CMP[degre]);
+      if (!A || !B || A.join("/") === B.join("/")) continue;
+      const a = aireDemisA5(A); const b = aireDemisA5(B);
+      if (meme && a !== b) continue;
+      if (!meme) {
+        if (a === b) continue;
+        const [p, g] = [Math.min(a, b), Math.max(a, b)];
+        if (degre === 1 && g < p * 1.5) continue;
+        if (degre > 1 && g - p > 6) continue;
+      }
+      // (Deux figures de même aire ne se recouvrent pas tout à fait : sinon
+      // ce serait la même figure.)
+      const s = superposerA5(A, B);
+      if (meme && s.depasseA === 0) continue;
+      return {A, B, a, b, s};
+    }
+    return null;
+  }
+  function questionComparerA5(degre, rng, sorte) {
+    const memeAire = sorte === "meme" ? rng() < 0.5 : degre > 1 && rng() < 0.34;
+    const f = deuxFiguresA5(degre, rng, memeAire);
+    if (!f) return null;
+    const {A, B, a, b, s} = f;
+    const ta = carreauxA5(NOMBRE_A5(2 * a)); const tb = carreauxA5(NOMBRE_A5(2 * b));
+    const dep = [`A : ${ta}`, `B : ${tb}`];
+    let choix; let bon; let pourquoi; let phrase; let reponse;
+    if (sorte === "meme") {
+      phrase = "Même aire pour A et B ?";
+      choix = ["Oui", "Non"];
+      bon = a === b ? 0 : 1;
+      reponse = choix[bon];
+      pourquoi = a === b ? {1: "La forme change, pas l'aire."} : {0: "Compte chaque figure."};
+    } else {
+      phrase = "La plus grande aire ?";
+      choix = ["A", "B", "Même aire"];
+      bon = a === b ? 2 : a > b ? 0 : 1;
+      reponse = choix[bon];
+      pourquoi = a === b ? {0: "La forme change, pas l'aire.", 1: "La forme change, pas l'aire."}
+        : {[1 - bon]: `Pose B sur A : ${choix[bon]} dépasse plus.`, 2: `Compte : ${choix[bon]} a plus de carreaux.`};
+    }
+    const verdict = a === b ? "Même aire." : `${a > b ? "A" : "B"} a la plus grande aire.`;
+    return q({
+      code: "A5", degre, forme: "qcm", texte: `${phrase} ${choix.join(" · ")}`,
+      morceaux: {phrase, deuxFig: true},
+      aire: {sorte, a: A, b: B, dx: s.dx, dy: s.dy, depasseA: s.depasseA, depasseB: s.depasseB},
+      choix, bon, reponse, reponseTexte: reponse, pourquoi,
+      resume: `${dep.join(" · ")}. ${verdict}`,
+      outil: "aire",
+      image: ["Je pose B sur A.", "Je compare ce qui dépasse."],
+      correction: [dep.join(" · "), `= ${verdict}`],
+      sorteA5: sorte,
+      donnees: {type: "aire", sorte, aireA: a, aireB: b},
+      cle: `A5:${sorte === "meme" ? "m" : "p"}:${A.join("/")}|${B.join("/")}`
+    });
+  }
+
+  // Encadrer l'aire d'une tache (S002 p. 16 : « comprise entre 18 carreaux
+  // et 36 carreaux »). Une ellipse sur le quadrillage : les carreaux
+  // entiers dedans, puis tous ceux qu'elle touche. On écarte les ellipses
+  // qui touchent un carreau à peine, ou qui en laissent dépasser à peine un
+  // coin (on ne verrait pas la différence).
+  function tacheA5(rng) {
+    for (let essai = 0; essai < 300; essai += 1) {
+      // (L'ellipse d'abord, posée n'importe où dans son premier carreau ;
+      // le quadrillage autour. Des aires plus variées qu'une ellipse
+      // centrée.)
+      const rx = entre(rng, 16, 38) / 10; const ry = entre(rng, 11, 19) / 10;
+      const cx = rx + entre(rng, 1, 9) / 10; const cy = ry + entre(rng, 1, 9) / 10;
+      const W = Math.ceil(cx + rx); const H = Math.ceil(cy + ry);
+      if (W > 8 || H > 4 || W < 4) continue;
+      const f = (x, y) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2;
+      const cases = [];
+      let sur = true;
+      for (let y = 0; y < H && sur; y += 1) {
+        for (let x = 0; x < W; x += 1) {
+          const px = Math.min(Math.max(cx, x), x + 1); const py = Math.min(Math.max(cy, y), y + 1);
+          const mini = f(px, py);
+          const maxi = Math.max(f(x, y), f(x + 1, y), f(x, y + 1), f(x + 1, y + 1));
+          if ((mini > 0.86 && mini <= 1) || (maxi > 0.95 && maxi < 1.14)) { sur = false; break; }
+          cases.push(maxi <= 1 ? 2 : mini <= 1 ? 1 : 0);
+        }
+      }
+      if (!sur) continue;
+      const entiers = cases.filter(k => k === 2).length;
+      const touches = cases.filter(k => k > 0).length;
+      if (entiers < 3 || touches > 30 || touches - entiers < 6) continue;
+      return {W, H, cx: Math.round(cx * 100) / 100, cy: Math.round(cy * 100) / 100, rx, ry, cases, entiers, touches};
+    }
+    return null;
+  }
+  function questionEncadrerA5(degre, rng) {
+    const t = tacheA5(rng);
+    if (!t) return null;
+    const avant = "L'aire de la tache est entre\u00a0:";
+    return q({
+      code: "A5", degre, forme: "deux-cases", texte: `${avant} … et … carreaux.`,
+      morceaux: {avant, cases: ["et", "carreaux."], aire: true},
+      aire: {sorte: "encadrer", tache: t},
+      reponse: [String(t.entiers), String(t.touches)], reponseTexte: `${t.entiers} et ${t.touches}`, unite: "carreaux",
+      resume: `L'aire est entre ${t.entiers} et ${carreauxA5(t.touches)}`,
+      outil: "aire",
+      image: ["Dedans : les carreaux entiers.", "Puis ceux que la tache touche."],
+      correction: [`${carreauxA5(t.entiers)} entiers dedans`, `${carreauxA5(t.touches)} la recouvrent`, `= entre ${t.entiers} et ${carreauxA5(t.touches)}`],
+      sorteA5: "encadrer",
+      donnees: {type: "aire", sorte: "encadrer", entiers: t.entiers, touches: t.touches},
+      cle: `A5:e:${t.W}x${t.H}:${t.cx},${t.cy},${t.rx},${t.ry}`
+    });
+  }
+  // Les places des sortes. Je valide : compter cinq fois, comparer deux
+  // fois, « Même aire ? » deux fois, encadrer en 8e. À toi : à peu près
+  // pareil, encadrer deux fois au degré 3.
+  const PLACES_A5 = {
+    valide: ["compter", "comparer", "compter", "compter", "meme", "compter", "comparer", "encadrer", "compter", "meme"],
+    entraine: ["compter", "compter", "comparer", "compter", "meme", "compter",
+      "compter", "comparer", "compter", "compter", "meme", "compter", "comparer", "compter", "compter",
+      "compter", "encadrer", "compter", "comparer", "compter", "meme", "compter", "encadrer", "compter", "comparer"],
+    test: ["compter", "comparer", "encadrer", "compter"],
+    aide: ["compter", "comparer", "compter"],
+    retour: ["compter", "comparer"],
+    echauffement: ["compter"]
+  };
+  function formesA5(usage, rng) {
+    const p = PLACES_A5[usage];
+    const f = {};
+    if (p) p.forEach((s, i) => { f[i] = s; });
+    else for (let i = 0; i < 40; i += 1) { const r = rng(); f[i] = r < 0.55 ? "compter" : r < 0.75 ? "comparer" : r < 0.9 ? "meme" : "encadrer"; }
+    return f;
+  }
+  ETAPES.A5 = {
+    clesExemples: ["A5:c:###./####/#...", "A5:c:c##d/####", "A5:p:###/###|######"],
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || "compter";
+      if (sorte === "encadrer") return degre === 3 ? questionEncadrerA5(degre, rng) : questionCompterA5(degre, rng);
+      if (sorte === "comparer" || sorte === "meme") return questionComparerA5(degre, rng, sorte);
+      return questionCompterA5(degre, rng);
+    },
+    formes: formesA5,
+    erreurs(question, lu, lus) { return erreursA5(question, lu, lus); }
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -5410,6 +5754,12 @@
     OBJETS_DECIMAUX,
     VRAISEMBLANCE,
     dansBornes,
-    PLANS
+    PLANS,
+    // lot B2-3a (A5) : l'aire en carreaux
+    QUARTS_A5,
+    piecesA5,
+    aireDemisA5,
+    superposerA5,
+    perimetreA5
   });
 });

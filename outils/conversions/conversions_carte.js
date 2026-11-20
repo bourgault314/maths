@@ -908,6 +908,32 @@
       relations: ["1 L − 25 cL = 75 cL", "8,2 kg + 840 g = 9,04 kg", "25 cL + 330 mL = 580 mL", "2 m − 45 cm = 155 cm"],
       relationsUneColonne: true,
       reperes: []
+    },
+    // Lot B2-3a : l'aire en carreaux (S002 p. 16 ; choix de Gwenaël du
+    // 20/11 sur la maquette : les demis se recollent, on compare en
+    // superposant, la réponse en carreaux puis en cm²). On te montre :
+    // compter en touchant, recoller deux demis, poser B sur A.
+    A5: {
+      pret: true,
+      aide: {outil: "aire", image: "aire"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Aire :", reponse: "8", apres: "carreaux"},
+          consigne: "Touche chaque carreau.",
+          aide: {type: "aire-compter", fig: ["###.", "####", "#..."]},
+          apres: ["Chaque carreau compté une fois", "= 8 carreaux"]},
+        {etiquette: "Je représente", question: {avant: "Aire :", reponse: "7", apres: "cm²"},
+          consigne: "Touche un demi : il complète l'autre.",
+          aide: {type: "aire-compter", fig: ["c##d", "####"]},
+          apres: ["6 carreaux + 2 demis", "= 7 carreaux = 7 cm²"],
+          legende: "1 cm², c'est un carré de 1 cm de côté."},
+        {etiquette: "Je compare", question: {enonce: "Même aire pour A et B ?", vraisemblable: true, reponse: "Oui"},
+          consigne: "Touche B pour la poser sur A.",
+          aide: {type: "aire-superposer", a: ["###", "###"], b: ["######"]},
+          apres: ["A et B dépassent de 3 carreaux.", "= Même aire : 6 carreaux chacune"]}
+      ],
+      retenir: "L'aire, c'est la place que prend une figure. Je compte les carreaux : 1 carreau = 1 cm².\nDeux demis font un carreau. Deux figures de formes différentes peuvent avoir la même aire.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
     }
   };
 
