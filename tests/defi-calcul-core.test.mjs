@@ -223,7 +223,7 @@ test("les modules construits : les quatre pilotes (lots 1a, 1b), A1, A10, A11, M
   // (Lot 7e-2 : le niveau 3 au CM1, avec les sommes et différences au-delà de 1.)
   assert.deepEqual(CORE.moduleDe("F8").niveaux.map(n => [n.palier, n.type]), [[1, "P"], [1, "P"], [2, "P"]]);
   assert.deepEqual(CORE.moduleDe("F5").niveaux.map(n => n.titre), ["décomposer", "décomposer, recomposer, encadrer"]);
-  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => avecEspaces(n.titre)), ["en multipliant", "plus grandes que 1, jusqu’à 20", "en divisant", "le dénominateur manquant"]);
+  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => avecEspaces(n.titre)), ["en multipliant", "dénominateurs jusqu’à 20", "en divisant", "le dénominateur manquant"]);
   assert.deepEqual(CORE.moduleDe("F8").niveaux.map(n => avecEspaces(n.titre)), ["même dénominateur", "1 moins une fraction", "au-delà de 1 : entier moins une fraction, sommes, différences"]);
   assert.equal(CORE.virguleDuTexte("F6", "4/7 = 12/□"), false, "les fractions : pas de touche « , »");
   // Modules lot 6b : les niveaux de la carte v2, inchangés.
@@ -2736,9 +2736,12 @@ test("modules lot 6 : chaque niveau tient sa règle, et ses calculs ne sont pas 
     // Lot 6 « programmes 2 » (choix de Gwenaël) : F6-2, le CM1 — une
     // fraction plus grande que 1 jusqu'à 20 parts, ou un dénominateur de 13
     // à 20 ; F6-3 et F6-4 (les anciens F6-2, F6-3) gardent le reste.
-    "F6-2": c => auCM1F6(c),
-    "F6-3": c => !auCM1F6(c) && (["diviser", "diviser-den"].includes(c.forme) || (c.forme === "multiplier" && (termesPleins(c)[0][0].n > termesPleins(c)[0][0].d || c.donnees.k * c.donnees.d > 12))),
-    "F6-4": c => !auCM1F6(c) && ["denominateur", "denominateur-gauche"].includes(c.forme),
+    // (Correctif « programmes 2 », relecture de Codex : diviser et chercher
+    // le dénominateur jusqu'à 20 sont au CM1 aussi — 6/8 = □/4, 3/4 = 6/□ ;
+    // la case à gauche aussi, □/8 = 7/2 ; le CM2 garde au-delà de 20.)
+    "F6-2": c => (["multiplier", "multiplier-gauche"].includes(c.forme) ? auCM1F6(c) : c.donnees.k * c.donnees.d <= 20),
+    "F6-3": c => c.donnees.k * c.donnees.d > 20 && ["diviser", "diviser-den", "multiplier"].includes(c.forme),
+    "F6-4": c => c.donnees.k * c.donnees.d > 20 && ["denominateur", "denominateur-gauche"].includes(c.forme),
     // (Lot 7e-2 : les sommes qui tombent pile sur 1, « 2/5 + 3/5 = □ ».)
     "F8-1": c => ["somme", "difference", "unitaires", "fois"].includes(c.forme) && (sous1(c) || (c.forme === "somme" && c.reponse === 1 && termesPleins(c)[1][0].d === 1)),
     "F8-2": c => ["un-moins", "complement", "un-moins-plusieurs"].includes(c.forme),
@@ -2797,8 +2800,8 @@ test("modules lot 6 : les erreurs connues, reconnues avec leur phrase, sans la r
     ["F2-2", "1/2 + 1/4 = □/4", 2, 1], ["F2-2", "3/4 − 1/2 = □/4", 5, 2], ["F2-1", "1/2 = □/4", 1, 3], ["F2-1", "1/2 = 2/□", 2, 3], ["F2-1", "1/2 + 1/2 = □", 2, 1],
     ["F5-1", "13/4 = 3 + □/4", 3, 1], ["F5-1", "13/4 = 3 + □/4", 10, 2], ["F5-2", "11/3 = □ + 2/3", 2, 1], ["F5-2", "11/3 = □ + 2/3", 9, 2],
     ["F5-2", "1 + 3/4 = □/4", 4, 3], ["F5-2", "1 + 3/4 = □/4", 3, 4], ["F5-2", "17/3 est entre 5 et □", 5, 5], ["F5-2", "11/2 est entre □ et 6", 6, 5],
-    ["F6-1", "2/3 = □/9", 8, 1], ["F6-1", "2/3 = □/9", 2, 2], ["F6-1", "2/3 = □/9", 3, 3], ["F6-3", "6/9 = □/3", 0.5, null], ["F6-3", "6/9 = □/3", 6, 2], ["F6-3", "6/9 = □/3", 3, 3],
-    ["F6-4", "2/3 = 8/□", 9, 1], ["F6-4", "2/3 = 8/□", 3, 2], ["F6-4", "2/3 = 8/□", 4, 3],
+    ["F6-1", "2/3 = □/9", 8, 1], ["F6-1", "2/3 = □/9", 2, 2], ["F6-1", "2/3 = □/9", 3, 3], ["F6-2", "6/9 = □/3", 0.5, null], ["F6-2", "6/9 = □/3", 6, 2], ["F6-2", "6/9 = □/3", 3, 3],
+    ["F6-2", "2/3 = 8/□", 9, 1], ["F6-2", "2/3 = 8/□", 3, 2], ["F6-2", "2/3 = 8/□", 4, 3],
     ["F8-1", "2/7 + 3/7 = □/7", 1, 3], ["F8-1", "9/10 − 4/10 = □/10", 13, 3], ["F8-2", "1 − 4/5 = □/5", 3, 1], ["F8-2", "1 − 4/5 = □/5", 9, 3], ["F8-2", "3/7 + □/7 = 1", 7, 4],
     ["F8-3", "3 − 1/2 = □/2", 2, 2], ["F8-3", "3 − 1/2 = □/2", 7, 3], ["F8-3", "11/3 − 2 = □/3", 9, 2], ["F8-3", "11/3 − 2 = □/3", 17, 3]
   ];

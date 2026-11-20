@@ -223,6 +223,8 @@ test("J'apprends : le boulier de « Je manipule » a sa droite, celui de l'entra
   assert.match(manipule, /droite: !glisse/, "Je manipule : le boulier reporte ses gestes sur une droite");
   assert.equal((page.match(/droite: !glisse/g) || []).length, 1, "seulement dans Je manipule");
   // J'écris montre son dessin, et le remplit à chaque étape juste.
-  assert.match(page, /montrerImage\(dessinEcris\(0\), apprends\.ecris\.consigne \|\| ""\)/);
+  // (Correctif « programmes 2 » : la consigne peut changer à chaque ligne faite.)
+  assert.match(page, /montrerImage\(dessinEcris\(0\), consigneEcris\(0\)\)/);
+  assert.match(page, /return consignes && consignes\.length \? consignes\[Math\.max\(0, Math\.min\(consignes\.length - 1, faites\)\)\] : ecris\.consigne \|\| "";/);
   assert.match(page, /renderEtapes\(\);\n\s*majDessinEcris\(serie\.etape\);/);
 });

@@ -263,12 +263,12 @@ test("lot 7d : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7d : la page — adresses de cache, copie du moteur pour la page prof, VERSION, À retenir coupe aussi devant « ( »", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261119-1/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261119-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261120-1/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261120-1/);
   assert.ok(page.includes("(?=[A-ZÀ-ÖØ-Þ\\d(]|(?:double|moitié) de )"));
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2)$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif)$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore)
 });

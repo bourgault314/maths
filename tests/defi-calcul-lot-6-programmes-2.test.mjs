@@ -37,13 +37,13 @@ test("la carte : 127 compétences (41, 34, 40, 12) ; F9 et F6 ont un niveau de p
   assert.ok(o.indexOf("D8-3") < o.indexOf("D9-1"), "D9-1 après D8-3 : 1,47 × 5 = 14,7 ÷ 2");
 });
 
-test("F9-1 (CE2) : les 156 écritures dans l'unité, aux dénominateurs jusqu'à 12 ; F9-2 garde le reste", () => {
+test("F9-1 (CE2) : les 156 écritures dans l'unité (et 22 depuis le correctif), aux dénominateurs jusqu'à 12 ; F9-2 garde le reste", () => {
   const f91 = tous("F9-1", 300);
   const t91 = new Set(f91.map(c => espaces(c.texte)));
-  assert.equal(t91.size, 156);
+  assert.equal(t91.size, 178, "156 + 22 (correctif : résultat 1, demis et quarts)");
   f91.forEach(c => {
     const fr = fractions(c.texte);
-    assert.ok(fr.every(([n, d]) => d <= 12 && n < d), espaces(c.texte));
+    assert.ok(fr.every(([n, d]) => d <= 12 && n <= d), espaces(c.texte));
     const den = Number(/□\/(\d+)/.exec(espaces(c.texte))[1]);
     assert.ok(c.reponse <= den, `${espaces(c.texte)} : au plus 1`);
   });
@@ -64,8 +64,11 @@ test("F9-1 (CE2) : les 156 écritures dans l'unité, aux dénominateurs jusqu'à
   assert.equal(espaces(CORE.niveauDe("F9-2").niveau.apprends.calculs.ecris.texte), "3/5 + 7/10 = □/10");
 });
 
-test("F6-2 (CM1) : une fraction plus grande que 1 jusqu'à 20, OU un dénominateur de 13 à 20 ; les niveaux du CM2 gardent le reste", () => {
-  const auCM1 = c => (c.donnees.a > c.donnees.d ? c.donnees.k * c.donnees.d <= 20 : c.donnees.k * c.donnees.d >= 13 && c.donnees.k * c.donnees.d <= 20);
+test("F6-2 (CM1) : multiplier une fraction plus grande que 1 jusqu'à 20, ou jusqu'à un dénominateur de 13 à 20 ; diviser et chercher le dénominateur jusqu'à 20 (correctif) ; le CM2 garde au-delà de 20", () => {
+  const multiplie = c => ["multiplier", "multiplier-gauche"].includes(c.forme);
+  const auCM1 = c => (multiplie(c)
+    ? (c.donnees.a > c.donnees.d ? c.donnees.k * c.donnees.d <= 20 : c.donnees.k * c.donnees.d >= 13 && c.donnees.k * c.donnees.d <= 20)
+    : c.donnees.k * c.donnees.d <= 20);
   tous("F6-2").forEach(c => assert.ok(auCM1(c), espaces(c.texte)));
   ["F6-3", "F6-4"].forEach(cle => tous(cle).forEach(c => assert.ok(!auCM1(c), `${cle} : ${espaces(c.texte)}`)));
   const t62 = textes("F6-2");
@@ -253,7 +256,7 @@ test("la progression : version 9 ; une progression de version 8 se relit (F6 et 
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261119-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261120-1/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261119-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");

@@ -923,9 +923,12 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 .question.aide-image, .question.ecrit { --touche-h: clamp(44px, 6.9dvh, 46px); }
 @media (min-width: 621px) {
   .question.aide-image, .question.ecrit { --touche-h: clamp(46px, calc(10.5dvh - 30px), 56px); }
-  /* Le fil de « J'apprends » se pose sur la ligne du bouton de retour. */
+  /* Le fil de « J'apprends » se pose sur la ligne du bouton de retour.
+     Correctif du lot 6 « programmes 2 » (relecture de Codex) : posé à
+     150 px du bord, il recouvrait « Calcul 3 » ; il prend sa place dans la
+     ligne, après le compteur (comme pour un élève connecté). */
   #play .status { position: relative; }
-  #play .status .seance-fil { position: absolute; top: 0; left: 150px; min-height: 44px; margin: 0; }
+  #play .status .seance-fil { position: static; min-height: 0; margin: 0; }
 }
 @media (min-width: 1040px) {
   .question.aide-image, .question.ecrit { --touche-h: clamp(46px, calc(10.5dvh - 30px), 64px); }

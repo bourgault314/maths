@@ -36,7 +36,9 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     "C3-1": ["un calcul de l’autre côté"],
     // (Lot 7e : F6-1 au programme du CE2, tout se dessine ; A10-1 arrive pile sur la dizaine.)
     "A10-1": ["j’arrive pile sur la dizaine"],
-    "F6-3": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"], "F6-4": ["trop de parts pour les dessiner"]
+    // (Correctif « programmes 2 » : le CM2 n'a plus que des égalités au-delà
+    // de 20 parts — le schéma s'annonce au CM1, dans les deux sens.)
+    "F6-2": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"]
   };
   Object.entries(attendues).forEach(([cle, phrases]) => {
     const textes = new Set(tirage(cle).map(c => CORE.nouveauteDe(c, cle)).filter(Boolean).map(n => espaces(n.texte)));
@@ -84,7 +86,9 @@ test("fractions égales : le dessin jusqu'à 12 parts, puis les deux flèches", 
   ["F6-1", "F6-3", "F6-4"].forEach(cle => {
     const a = CORE.niveauDe(cle).niveau.apprends;
     const montre = a.calculs.montre;
-    assert.ok(Math.ceil(montre.donnees.a / montre.donnees.d) * montre.donnees.k * montre.donnees.d <= 12, `${cle} : la leçon a plus de 12 parts`);
+    // (Correctif « programmes 2 » : au CM2, la leçon dépasse 20 parts — sa
+    // barre en a 24 ou 21, au plus 30.)
+    assert.ok(Math.ceil(montre.donnees.a / montre.donnees.d) * montre.donnees.k * montre.donnees.d <= (cle === "F6-1" ? 12 : 30), `${cle} : la leçon a trop de parts`);
     assert.equal(a.image.outil, "barre-droite", cle);
     // Lot 7e : F6-1 (programme du CE2) n'a plus que 12 parts au plus — J'écris sur les bandes.
     assert.ok(a.ecris.dessins.every(d => d.outil === (cle === "F6-1" ? "barre-droite" : "fois-fraction")), `${cle} : J'écris sur le calcul`);

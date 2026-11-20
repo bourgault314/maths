@@ -219,7 +219,11 @@ test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul",
     const ecris = CORE.ecrisDuCalcul(cle, lecon.calculs.ecris);
     assert.ok(ecris, `${cle} : une recette`);
     assert.equal(blanc(ecris.consigne || ""), blanc(lecon.ecris.consigne || ""), `${cle} : la consigne`);
-    assert.equal(memes(ecris.etapes), memes(lecon.ecris.etapes), `${cle} : les étapes`);
+    // (Correctif « programmes 2 » : une recette peut dire elle-même ce
+    // qu'elle cache — `caches` ; on compare ce que J'écris cache vraiment.)
+    const sans = etapes => etapes.map(({texte, reponse}) => ({texte, reponse}));
+    assert.equal(memes(sans(ecris.etapes)), memes(sans(lecon.ecris.etapes)), `${cle} : les étapes`);
+    assert.equal(memes(CORE.cachesEcris(ecris.etapes, lecon.calculs.ecris.texte)), memes(CORE.cachesEcris(lecon.ecris.etapes, lecon.calculs.ecris.texte)), `${cle} : ce qui est caché`);
     assert.equal(memes(ecris.dessins), memes(lecon.ecris.dessins), `${cle} : les dessins`);
     assert.equal(memes(ecris.solution), memes(lecon.ecris.solution), `${cle} : la réponse donnée`);
   });
