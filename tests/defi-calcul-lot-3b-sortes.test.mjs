@@ -27,13 +27,16 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     "A2-2": ["un nombre en 5"],
     "A3-1": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
     "A3-2": ["on retire des dizaines"],
-    "A3-3": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
+    // (Lot 6 « programmes 2 », choix de Gwenaël : trois sortes.)
+    "A3-3": ["on retire et on passe sous le millier"],
+    "A3-4": ["on passe la dizaine de mille"],
+    "D3-1": ["le résultat est plus petit que 1"],
     "M2-1": ["× 100, chaque chiffre glisse de 2 colonnes"], "M2-2": ["× 1 000, chaque chiffre glisse de 3 colonnes"],
     "D2-2": ["× 1 000"], "D2-3": ["× 1 000"], "D3-2": ["÷ 1 000"], "D3-3": ["÷ 100", "÷ 1 000"],
     "C3-1": ["un calcul de l’autre côté"],
     // (Lot 7e : F6-1 au programme du CE2, tout se dessine ; A10-1 arrive pile sur la dizaine.)
     "A10-1": ["j’arrive pile sur la dizaine"],
-    "F6-2": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"], "F6-3": ["trop de parts pour les dessiner"]
+    "F6-3": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"], "F6-4": ["trop de parts pour les dessiner"]
   };
   Object.entries(attendues).forEach(([cle, phrases]) => {
     const textes = new Set(tirage(cle).map(c => CORE.nouveauteDe(c, cle)).filter(Boolean).map(n => espaces(n.texte)));
@@ -78,7 +81,7 @@ test("presque-doubles : une sorte de « Sommes jusqu'à 20 », 8 en haut, 7 en d
 });
 
 test("fractions égales : le dessin jusqu'à 12 parts, puis les deux flèches", () => {
-  ["F6-1", "F6-2", "F6-3"].forEach(cle => {
+  ["F6-1", "F6-3", "F6-4"].forEach(cle => {
     const a = CORE.niveauDe(cle).niveau.apprends;
     const montre = a.calculs.montre;
     assert.ok(Math.ceil(montre.donnees.a / montre.donnees.d) * montre.donnees.k * montre.donnees.d <= 12, `${cle} : la leçon a plus de 12 parts`);
@@ -91,7 +94,7 @@ test("fractions égales : le dessin jusqu'à 12 parts, puis les deux flèches", 
       if (parts > 12) assert.equal(CORE.manipulationDe(c), null, `${cle} ${c.texte} : pas de bandes au-delà de 12 parts`);
     });
   });
-  assert.equal(espaces(CORE.niveauDe("F6-2").niveau.apprends.ecris.consigne), "10/15 = (10 ÷ 5)/(15 ÷ 5)");
+  assert.equal(espaces(CORE.niveauDe("F6-3").niveau.apprends.ecris.consigne), "10/25 = (10 ÷ 5)/(25 ÷ 5)");
   // Le dessin : « × ? » avant, « × 4 » une fois trouvé, la case « ? ».
   const svg = espaces(AIDES.foisFraction({op: "×", k: 4, gauche: [3, 5], droite: [12, 20], cache: "dn", montre: false, haut: false, bas: true}));
   assert.match(svg, />× \?</);
@@ -110,7 +113,7 @@ test("une fraction écrite entre parenthèses s'écrit sans elles, sur la barre"
 });
 
 test("J'écris de la même sorte que la leçon : demis et quarts, × 100, ÷ 10, millièmes", () => {
-  ["F2-1", "D2-3", "D3-3", "D4-2", "F6-2", "F6-3"].forEach(cle => {
+  ["F2-1", "D2-3", "D3-3", "D4-2", "F6-3", "F6-4"].forEach(cle => {
     const {montre, ecris} = CORE.niveauDe(cle).niveau.apprends.calculs;
     assert.equal(CORE.sorteDansNiveau(cle, ecris), CORE.sorteDansNiveau(cle, montre), `${cle} : ${espaces(ecris.texte)}`);
   });

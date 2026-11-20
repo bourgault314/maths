@@ -45,7 +45,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261115-3/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261119-1/, "le moteur change d'adresse");
 });
 
 test("page élève : Mon parcours n'a d'onglet que pour les paliers ouverts, et dit le réglage s'il n'est pas « tout »", async () => {
@@ -103,9 +103,10 @@ test("serveur : une page d'avant le lot 1 (version 6) ne réécrit pas la progre
   // Lot G1 : 5 ; correctif S1 : 6 ; lot 1 « la séance » : 7 (`l` et le plan à
   // 11 nombres, qu'une page de version 6 effacerait).
   // Lot 4 « les ceintures » : 8 (`ceintures`, qu'une page de version 7 effacerait).
-  assert.match(moteur, /const VERSION = 8;/);
+  // Lot 6 « programmes 2 » : 9 (F6 et F9 ont un niveau de plus).
+  assert.match(moteur, /const VERSION = 9;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 8,/);
+  assert.match(bloc, /'version_min' => 9,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   assert.ok(api.indexOf("$versionMin") > api.indexOf("if (!empty($corps['lire']))"));

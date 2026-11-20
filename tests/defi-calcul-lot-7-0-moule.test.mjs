@@ -83,8 +83,9 @@ test("le dessin à étapes : chaque droite à plusieurs sauts, sur des milliers 
     }
   });
   assert.ok(vus > 5000, `${vus} calculs`);
-  // L'inventaire de la notice : 29 niveaux ont un dessin à plusieurs sauts.
-  assert.equal(niveaux.size, 29, [...niveaux].join(" "));
+  // L'inventaire de la notice : 29 niveaux ont un dessin à plusieurs sauts
+  // (30 depuis le lot 6 « programmes 2 » : A3-4, les milliers avec une retenue).
+  assert.equal(niveaux.size, 30, [...niveaux].join(" "));
 });
 
 test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipuler) : à étapes, comme les doubles", () => {

@@ -666,6 +666,14 @@
           if (j >= 0) nombres[j] = tirerDistincts(rng, 1, r => entierEntre(r, 1001, 9899), nombres)[0] || nombres[j];
         }
       }
+      // Lot 6 « programmes 2 » (relecture de Codex : CM, p. 4) : au niveau
+      // 1, un départ sur dix est une dizaine ronde (60 + 9 = 69).
+      if (niveau === 1) {
+        for (let bloc = 0; bloc * 10 + 1 < nombres.length; bloc += 1) {
+          const j = nombres.findIndex((n, i) => i >= bloc * 10 && i < bloc * 10 + 10 && !a5Passage(n) && n < 1000);
+          if (j >= 0) nombres[j] = tirerDistincts(rng, 1, r => 10 * entierEntre(r, 2, 89), [...nombres, ...dejaLa]).filter(n => n % 100)[0] || nombres[j];
+        }
+      }
       return [...nombres.map(n => a5Somme(niveau, n, choisir(rng, ajouts))), ...imposes];
     };
   }
@@ -949,7 +957,7 @@
   // dessus, le saut direct dessous, les arrivées à trouver), les étapes à
   // remplir sur le troisième. Au 2e essai faux, la réponse s'affiche sur
   // l'outil (« solution ») et une phrase la lit.
-  function a5Apprends(nM, nR, nE, a, bilan) {
+  function a5Apprends(nM, nR, nE, a, bilan, autre = null) {
     const r = a5Arrondi(a);
     const d = r - a;
     const cM = a5Somme(0, nM, a);
@@ -975,6 +983,8 @@
         solution: Object.freeze({image: a5Image(cE), phrase: a5Phrase(cE)})
       }, droiteDessins({depart: cE.donnees.n, sauts: [r, -d], direct: a, trou: false, etapes: 3})),
       bilan,
+      // (autreDe est défini plus bas : A5 est construit avant.)
+      ...(autre ? {autre: Object.freeze(Object.assign({}, autre))} : {}),
       image: Object.freeze({outil: "droite-sauts", depart: premier.donnees.n, sauts: [{val: r}, {val: -d}], direct: a, acquis: [2]}),
       // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
       calculs: Object.freeze({montre: premier, ecris: cE}),
@@ -1227,10 +1237,13 @@
 
   // Niveau 2 : × 100 sur 2 ou 3 décimales (n < 100), × 1 000 sur 3 décimales
   // (n < 10) — la puissance ne dépasse jamais le nombre de décimales.
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : et × 10 sur 3
+  // décimales (79,461 × 10 = 794,61) — le CM1 s'arrête aux centièmes.
   function d2Niveau2(rng, total, imposes) {
-    const [cent, mille] = repartir(total, [6, 4]);
+    const [dix, cent, mille] = repartir(total, [2, 4, 4]);
     const [deux, trois] = repartir(cent, [1, 1]);
     let places = [
+      ...Array.from({length: dix}, () => ({p: 10, d: 3})),
       ...Array.from({length: deux}, () => ({p: 100, d: 2})),
       ...Array.from({length: trois}, () => ({p: 100, d: 3})),
       ...Array.from({length: mille}, () => ({p: 1000, d: 3}))
@@ -1238,7 +1251,7 @@
     places = retirerImposes(places, imposes, (place, c) => place.p === c.donnees.p && place.d === decimalesDe(c.donnees.n));
     const deja = imposes.slice();
     const tires = places.map(place => {
-      const [calcul] = tirerCalculs(rng, 1, r => produit("D2", 2, decimalD2(r, place.d, place.p === 100 ? 99 : 9), place.p), deja);
+      const [calcul] = tirerCalculs(rng, 1, r => produit("D2", 2, decimalD2(r, place.d, place.p === 10 ? 999 : place.p === 100 ? 99 : 9), place.p), deja);
       deja.push(calcul);
       return calcul;
     });
@@ -1476,23 +1489,28 @@
   // palier 1, A2-5 et F9-1 au palier 2, A8-3 et F5-3 réunis à A8-2 et F5-2,
   // A9 et M9 en deux niveaux.
   const ORDRE = Object.freeze([
-    // palier 1 : 40 compétences
+    // palier 1 : 41 compétences (lot 6 « programmes 2 » : F9-1, les
+    // dénominateurs multiples dans l'unité, CE2 ; F9-2 et F9-3 sont les
+    // anciens F9-1 et F9-2, F6-3 et F6-4 les anciens F6-2 et F6-3)
     "A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1",
     "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2",
     "F8-1", "A7-1", "M1-2", "A10-3", "A11-3", "F8-2", "A5-2", "A6-2", "M3-1", "A7-2",
-    "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2",
-    // palier 2 : 33 compétences (lot 7e-2 : F8-3 arrive du CM2 ; lot 7d :
+    "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "F9-1", "M8-1", "M1-3", "M6-2", "M8-2",
+    // palier 2 : 34 compétences (lot 6 « programmes 2 » : F6-2, les
+    // fractions égales du CM1) (lot 7e-2 : F8-3 arrive du CM2 ; lot 7d :
     // « Quotient et reste » arrive du CM2, rapport de Codex du 14/11)
     "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3",
     "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1",
-    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "M11-1", "F5-2", "F8-3",
-    "M12-1", "M11-2", "F9-1",
+    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F6-2", "M11-1", "F5-2", "F8-3",
+    "M12-1", "M11-2", "F9-2",
     // palier 3 : 40 compétences
     "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3",
     "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "D5-1", "F4-1", "D6-2", "M13-2",
-    "D8-2", "F6-2", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2", "D9-1",
-    "F6-3", "D8-3", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
-    "F9-2", "C4-2", "F4-2",
+    "D8-2", "F6-3", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2",
+    // (Lot 6 « programmes 2 » : D9-1 après D8-3, la moitié aux centièmes —
+    // 1,47 × 5 = 14,7 ÷ 2.)
+    "F6-4", "D8-3", "D9-1", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
+    "F9-3", "C4-2", "F4-2",
     // palier 4 : 12 compétences (lot 7c : F4-2 passe au CM2)
     "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3",
     "M9-2", "D7-3", "F11-2"
@@ -1580,7 +1598,10 @@
         n: 1, titre: "ajouter 9", palier: 1, type: "P",
         composer: a5Niveau(1, [9]),
         imposes: [a5Somme(1, 31, 9), a5Somme(1, 94, 9)],
-        apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1 : 47 + 9 = 47 + 10 − 1 = 56.")
+        // Lot 6 « programmes 2 » (relecture de Codex : CM, p. 4) : quand
+        // le nombre finit par 0 ou par 1, on n'a pas besoin du détour.
+        apprends: a5Apprends(47, 65, 28, 9, "+ 9, c’est + 10 puis − 1 : 47 + 9 = 47 + 10 − 1 = 56.",
+          {phrase: "Un nombre qui finit par 0 ou par 1, c’est plus simple\u00a0:", calcul: "60 + 9 = 69\u00a0; 61 + 9 = 70"})
       },
       {
         n: 2, titre: "ajouter 19, 29, 39", palier: 1, type: "P",
@@ -1668,7 +1689,7 @@
         })
       },
       {
-        n: 2, titre: "× 100, × 1\u00a0000 sans zéro à écrire", nom: "Décimal × 100, × 1\u00a0000", palier: 3, type: "P",
+        n: 2, titre: "× 10, × 100, × 1\u00a0000 sans zéro à écrire", nom: "Décimal × 10, × 100, × 1\u00a0000", palier: 3, type: "P",
         composer: d2Niveau2,
         imposes: [produit("D2", 2, 7.54, 100), produit("D2", 2, 4.107, 1000)],
         apprends: glisseApprends({
@@ -2344,7 +2365,9 @@
           etapes: etapesDe(["532 − 2 = ?", 530], ["530 − 5 = ?", 525], ["532 − 7 = ?", 525]),
           consigneEcris: "532 − 7 = 532 − 2 − 5",
           consigne: "Je recule jusqu’à la dizaine, puis je retire le reste.",
-          bilan: "Pour passer la dizaine en reculant, je recule d’abord jusqu’à la dizaine, puis je retire le reste : 42 − 8 = 42 − 2 − 6 = 34."
+          bilan: "Pour passer la dizaine en reculant, je recule d’abord jusqu’à la dizaine, puis je retire le reste : 42 − 8 = 42 − 2 − 6 = 34.",
+          // Lot 6 « programmes 2 » (relecture de Codex : CM, p. 5).
+          autre: {phrase: "Depuis 50, je casse une dizaine en 10 unités\u00a0:", calcul: "50 − 6 = 40 + 10 − 6 = 44"}
         })
       },
       {
@@ -2739,10 +2762,22 @@
   // + centaines (2 657 + 500), − dizaines (1 030 − 50), − centaines
   // (1 200 − 400). Toujours au moins un millier dans le calcul, jamais
   // au-delà de 9 999.
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex : CM, p. 14 ; choix
+  // de Gwenaël) : un calcul sur trois ne change pas de millier (1 462 +
+  // 300 ; 1 762 − 300 ; 4 315 − 20), sans retenue au rang travaillé. Trois
+  // sortes : sans changer de millier, + en passant le millier, − en
+  // passant le millier (dizaines et centaines mêlées).
   const a3Niveau3 = cheminNiveau("A3", 3, (rng, rang) => {
-    const sorte = rang % 4;
-    const plus = sorte < 2;
-    const u = sorte % 2 === 0 ? 10 : 100;
+    if (rang % 3 === 0) {
+      // (+ centaines, + dizaines, − centaines, − dizaines, à tour de rôle.)
+      const tour = Math.floor(rang / 3);
+      const u = tour % 2 ? 10 : 100;
+      const n = entierEntre(rng, 1001, 9999);
+      const d = (Math.floor(tour / 2) % 2 ? -1 : 1) * u * entierEntre(rng, 1, 9);
+      return n % 1000 && !franchit(n, d, 10 * u) && n + d > 1000 ? [n, d] : null;
+    }
+    const plus = rang % 3 === 1;
+    const u = rng() < 0.5 ? 10 : 100;
     const millier = entierEntre(rng, 1, 9) * 1000;
     // Le reste sous le saut : la moitié du temps rond (950), sinon des
     // unités (1 985) ou des dizaines et unités (2 657).
@@ -2763,7 +2798,15 @@
   // Lot 3a (décision 7) : toujours SANS passage — « je repère le chiffre
   // qui change » (21 462 + 3 000 ; 51 503 − 200). Passer le millier, c'est
   // le niveau d'avant.
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex : CM, p. 17) : un
+  // calcul sur quatre ajoute des milliers avec une retenue — 47 530 + 6 000
+  // = 53 530, ou 96 200 + 5 000 = 101 200 (la retenue se propage).
   const a3Niveau4 = cheminNiveau("A3", 4, (rng, rang) => {
+    if (rang % 4 === 2) {
+      const n = entierEntre(rng, 10001, 99999);
+      const d = 1000 * entierEntre(rng, 1, 9);
+      return n % 1000 && franchit(n, d, 10000) && n + d < 110000 ? [n, d] : null;
+    }
     const u = rang % 2 === 0 ? 1000 : rang % 4 === 1 ? 100 : 10;
     const n = entierEntre(rng, 10001, 99999);
     const d = (rang % 3 === 2 ? -1 : 1) * u * entierEntre(rng, 1, 9);
@@ -2862,9 +2905,10 @@
       },
       {
         // Lot 7e : le nom suit les calculs (depuis le lot 3a, on passe toujours le millier).
-        n: 3, titre: "passage du millier", nom: "Dizaines, centaines en passant le millier", palier: 2, type: "P",
+        // Lot 6 « programmes 2 » (choix de Gwenaël) : les nombres à 4 chiffres, en passant le millier ou non.
+        n: 3, titre: "nombres à 4 chiffres, en passant le millier ou non", nom: "Dizaines, centaines\u00a0: nombres à 4 chiffres", palier: 2, type: "P",
         composer: a3Niveau3,
-        imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 2657, 500), ligneChemin("A3", 3, 3970, 60)],
+        imposes: [ligneChemin("A3", 3, 1030, -50), ligneChemin("A3", 3, 2657, 500), ligneChemin("A3", 3, 1462, 300)],
         apprends: cheminApprends({
           manipule: null,
           represente: chemin("A3", 950, 70),
@@ -2878,7 +2922,7 @@
       {
         n: 4, titre: "milliers dans les grands nombres", nom: "Milliers dans les grands nombres", palier: 3, type: "P",
         composer: a3Niveau4,
-        imposes: [ligneChemin("A3", 4, 31462, 4000), ligneChemin("A3", 4, 16780, -50)],
+        imposes: [ligneChemin("A3", 4, 31462, 4000), ligneChemin("A3", 4, 16780, -50), ligneChemin("A3", 4, 47530, 6000)],
         apprends: cheminApprends({
           manipule: null,
           represente: chemin("A3", 47530, 2000),
@@ -3762,7 +3806,7 @@
 
   // Un J'apprends sans manipulation (M4, M5, M6, M8, comme M1) : l'image
   // de « je représente », puis les étapes de « j'écris » avec leurs dessins.
-  function apprendsSansManip({fiche, represente, ecris, consigne, consigneEcris, etapes, dessins, bilan, retenir = null}) {
+  function apprendsSansManip({fiche, represente, ecris, consigne, consigneEcris, etapes, dessins, bilan, retenir = null, autre = null}) {
     return Object.freeze({
       exemple: exempleDe(represente),
       manipule: null,
@@ -3777,6 +3821,7 @@
         solution: Object.freeze({image: fiche.image(ecris), phrase: fiche.phrase(ecris)})
       }, consigneEcris ? {consigne: fr(consigneEcris)} : {}), dessins(ecris, etapes.length)),
       bilan: frBilan(bilan),
+      ...autreDe(autre),
       // « À retenir » : l'image du calcul de « je représente », sauf quand
       // la fiche en donne une autre (M4 : la famille de faits en points).
       image: Object.freeze(retenir || fiche.image(represente)),
@@ -3849,6 +3894,24 @@
       gras: 0
     })
   ]);
+  // Lot 6 « programmes 2 » (19/11, choix de Gwenaël : les × 0 dans les
+  // tables) : 7 × 0 → 7, le nombre recopié (l'erreur la plus fréquente).
+  // M4 seulement (M5 n'a pas de × 0).
+  const M4_ERREURS = Object.freeze([
+    ...FAITS_ERREURS,
+    Object.freeze({
+      c: 4, nom: "× 0 : le nombre recopié",
+      test: sauf((calcul, reponse) => calcul.module === "M4" && calcul.donnees.p === 0 && calcul.forme === "produit" && memeNombre(reponse, calcul.donnees.a + calcul.donnees.b)),
+      retour: (calcul, reponse) => {
+        const {a, b} = calcul.donnees;
+        // (Sans écrire la réponse : aucun chiffre 0 dans la phrase.)
+        return fr(a === 0
+          ? `${f(reponse)} : tu as recopié ${f(b)}. Ici, on ne prend ${f(b)} aucune fois.`
+          : `${f(reponse)} : tu as recopié ${f(a)}. Ici, on prend ${f(a)} fois rien du tout.`);
+      },
+      gras: 0
+    })
+  ]);
 
   // Du plus simple au plus dur : le produit, puis le nombre manquant, puis
   // l'égalité à l'envers, puis la division ; puis la taille du produit.
@@ -3870,6 +3933,15 @@
   // côté : 7 × 8 se comptait de 7 en 7).
   function m4Image(calcul) {
     const {a, b, p} = calcul.donnees;
+    // × 0 (lot 6 « programmes 2 ») : la bande, pour la correction seulement
+    // (l'aide écrirait la réponse : m4Aide n'en donne pas, comme M8-3 en
+    // trou). 0 × 7 : celle de 7, au rang 0 ; 7 × 0 : celle de 0 (on avance
+    // de 0 en 0, on reste à 0) ; 7 × □ = 0 : celle de 7, le rang 0. (Le
+    // rectangle de points de 0 point serait vide.)
+    if (p === 0) {
+      if (calcul.forme === "produit") return {outil: "bande", table: b, cherche: a};
+      return {outil: "bande", table: a, rang: 0};
+    }
     // × 1 (lot « couverture ») : une colonne de points — la bande de la
     // table écrirait la réponse (« 4 × 1 », « + 1 »).
     if (calcul.forme === "produit" && (a === 1 || b === 1)) return {outil: "points", rangees: p, parRangee: 1};
@@ -3877,9 +3949,10 @@
       ? {outil: "bande", table: b, cherche: a}
       : {outil: "points", rangees: p / a, parRangee: a};
   }
-  const m4Aide = calcul => Object.assign(m4Image(calcul), {masque: true});
+  const m4Aide = calcul => (calcul.donnees.p === 0 ? null : Object.assign(m4Image(calcul), {masque: true}));
   function m4Phrase(calcul) {
     const {a, b, p} = calcul.donnees;
+    if (calcul.forme !== "produit" && p === 0) return fr(`Regarde : ${f(a)} × 0 = 0.`);
     if (calcul.forme !== "produit") return fr(`Regarde : dans ${f(p)}, il y a ${f(p / a)} fois ${f(a)}.`);
     return fr(`Regarde : ${f(a)} × ${f(b)} = ${f(p)}.`);
   }
@@ -3918,10 +3991,16 @@
       "trou-egal": pairesEgal.map(([a, b]) => faitCalcul("M4", niveau, "trou-egal", a, b)),
       "trou-egal-gauche": pairesAutres.map(([a, b]) => faitCalcul("M4", niveau, "trou-egal-gauche", a, b)),
       // Lot « couverture » (relecture Codex) : la table avec 1 (CE1), au
-      // niveau 1, de temps en temps. (Pas × 0 : aucune réponse de l'appli
-      // n'est 0.)
+      // niveau 1, de temps en temps.
       // (La bande de la table de 1 : celle de 7 dirait « + 7 », la réponse.)
-      ...(niveau === 1 ? {unZero: [1].flatMap(u => [faitCalcul("M4", 1, "produit", 1, 1, 1), ...entre(2, 10).flatMap(x => [faitCalcul("M4", 1, "produit", x, u, u), faitCalcul("M4", 1, "produit", u, x, u)])])} : {})
+      // Lot 6 « programmes 2 » (19/11, choix de Gwenaël) : et avec 0 (le
+      // programme prend les facteurs de 0 à 10) — 7 × 0 = □, 0 × 7 = □,
+      // 7 × □ = 0. Jamais 0 × □ = 0 : toutes les réponses seraient justes.
+      // (La table de Défi tables à revoir : celle de l'autre facteur.)
+      ...(niveau === 1 ? {unZero: [
+        ...[1].flatMap(u => [faitCalcul("M4", 1, "produit", 1, 1, 1), ...entre(2, 10).flatMap(x => [faitCalcul("M4", 1, "produit", x, u, u), faitCalcul("M4", 1, "produit", u, x, u)])]),
+        ...entre(1, 10).flatMap(x => [faitCalcul("M4", 1, "produit", x, 0, x), faitCalcul("M4", 1, "produit", 0, x, x), faitCalcul("M4", 1, "trou-facteur", x, 0, x)])
+      ]} : {})
     });
   }
   const M4_VIVIERS = Object.freeze({1: m4Vivier(1), 2: m4Vivier(2)});
@@ -3957,7 +4036,7 @@
     famille: "M", construit: true,
     aide_entraine: "bande",
     // (Relecture 2b : un × 10 du niveau 2 passe après les tables de 6 à 9.)
-    erreurs: FAITS_ERREURS, image: m4Image, aide: m4Aide, phrase: m4Phrase, manipulation: () => null,
+    erreurs: M4_ERREURS, image: m4Image, aide: m4Aide, phrase: m4Phrase, manipulation: () => null,
     difficulte: calcul => faitDifficulte(calcul) + (M4.tardif(calcul) ? 500 : 0),
     tardif: calcul => calcul.niveau === 2 && (calcul.donnees.a === 10 || calcul.donnees.b === 10)
   };
@@ -4281,22 +4360,24 @@
   // et les × 19 d'un chiffre reviennent ici. Ils sont au programme du CE1
   // (11 à 19 × un chiffre) et du CE2 (11 à 99 × un chiffre) : le lot 7d
   // les avait envoyés en « vers la 6e » (M9). La règle commune avec M9
-  // reste : aucun calcul en commun. M8 ne coupe ni 98 ni 99 (× 99, × 98 :
-  // M9-2) ; M8-3 ne prend ni 19, ni 98, ni 99 (M9).
+  // reste : aucun calcul en commun.
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : M8 reprend tout ce
+  // qui est au programme — 98 et 99 × 3, 6, 7, 9 au niveau 2 (CE2), et les
+  // 12 produits de 11, 12, 21, 31 par 19, 98, 99 au niveau 3 (CM1, dans
+  // les deux ordres, avec leurs égalités à trou). M9 prend d'autres
+  // facteurs.
   const M8_CHIFFRES = Object.freeze([3, 6, 7, 9]);
-  const M8_RETIRES = Object.freeze([98, 99]);
-  const M8_RETIRES_3 = Object.freeze([19, 98, 99]);
   function m8Vivier(niveau) {
     const v = {produit: [], "produit-gauche": []};
     if (niveau < 3) {
-      const nombres = (niveau === 1 ? entre(11, 19) : entre(21, 99).filter(b => b % 10 !== 0)).filter(b => !M8_RETIRES.includes(b));
+      const nombres = niveau === 1 ? entre(11, 19) : entre(21, 99).filter(b => b % 10 !== 0);
       M8_CHIFFRES.forEach(a => nombres.forEach(b => { v.produit.push(m8Calcul(niveau, a, b)); v["produit-gauche"].push(m8Calcul(niveau, a, b, true)); }));
       return Object.freeze(v);
     }
     // M8-3 : × 11, × 12, × 21, × 31 d'un nombre à deux chiffres (de 13 à 99,
     // sans dizaine entière) ; un calcul sur cinq en trou.
     v.trou = [];
-    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12 && !M8_RETIRES_3.includes(a)).forEach(a => {
+    [11, 12, 21, 31].forEach(b => entre(13, 99).filter(a => a % 10 !== 0 && a !== 21 && a !== 31 && a !== 11 && a !== 12).forEach(a => {
       v.produit.push(m8Calcul(3, a, b));
       v["produit-gauche"].push(m8Calcul(3, a, b, true));
       v.trou.push(m8Trou(3, a, b));
@@ -4950,7 +5031,9 @@
         consigneEcris: "2 × 38 × 5 = 2 × 5 × 38",
         etapes: [["2 × 5 = ?", 10], ["38 × 10 = ?", 380]],
         dessins: (calcul, n) => facteursDessins(m10Image(calcul), n),
-        bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430."
+        bilan: "5 × 2 = 10 : je les calcule ensemble. 5 × 43 × 2 = 43 × 10 = 430.",
+        // Lot 6 « programmes 2 » (relecture de Codex : E1, p. 13).
+        autre: {phrase: "Le 2 peut être caché dans un nombre\u00a0: 24 = 12 × 2.", calcul: "24 × 5 = 12 × 2 × 5 = 12 × 10 = 120"}
       })
     },
     {
@@ -5057,7 +5140,12 @@
   // par 4 ou par 8 »). Avant, M13 ne prenait que les nombres finissant par
   // 0 : toutes ses réponses finissaient par 5. M12-2 et M12-3 gardent ÷ 3,
   // 5, 6, 7, 9 (96 ÷ 8 et 536 ÷ 8 passent à M13).
-  const m13Prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : les quotients
+  // ronds qui ne sont pas « table × 10 » ni « table × 100 » (440 ÷ 4 = 110,
+  // 880 ÷ 8 = 110, 480 ÷ 4 = 120) n'avaient aucune place : ils viennent
+  // aussi dans M13. M12-1 garde 120 ÷ 4 = 30 et 800 ÷ 4 = 200.
+  const m12Table = q => [10, 100].some(u => q % u === 0 && q / u >= 2 && q / u <= 9);
+  const m13Prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && !m12Table(n / d);
   function m12Vivier(niveau) {
     const paires = [];
     if (niveau === 1) {
@@ -5612,7 +5700,9 @@
         consigneEcris: "365 + 9 = 362 + ?",
         etapes: [["365 − 362 = ?", 3], ["9 + 3 = ?", 12]],
         dessins: (calcul, n) => deuxBarresDessins(c3Image(calcul), n),
-        bilan: "142, c’est 2 de moins que 144 ; de l’autre côté, il faut 2 de plus : 144 + 7 = 142 + 9."
+        bilan: "142, c’est 2 de moins que 144 ; de l’autre côté, il faut 2 de plus : 144 + 7 = 142 + 9.",
+        // Lot 6 « programmes 2 » (relecture de Codex : E1, p. 13).
+        autre: {phrase: "Dans une soustraction, les deux nombres bougent ensemble\u00a0:", calcul: "121 − 24 = 118 − 21"}
       })
     },
     {
@@ -6115,16 +6205,23 @@
       return [...tires.filter(Boolean), ...imposes];
     };
   }
-  // Niveau 1 : ÷ 10, résultat au-dessus de 1 : 5 entiers (37), 5 nombres à
+  // Niveau 1 : ÷ 10, résultat au-dessus de 1 : 3 entiers (37), 3 nombres à
   // une décimale (58,4). (Lot 7e : au CM1, le résultat a au plus deux
   // chiffres après la virgule — 10,68 ÷ 10 = 1,068 passe au CM2.)
-  const d3Niveau1 = d3Composer(1, [{part: 5, p: 10, d: 0, min: 11, max: 999}, {part: 5, p: 10, d: 1, min: 10, max: 999}]);
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : 4 sur 10 donnent
+  // moins de 1 — les 18 cas du CM1 de « Diviser : zéros à écrire » (7 ÷ 10,
+  // 0,6 ÷ 10) et un départ entre 1 et 10 (4,5 ÷ 10 = 0,45).
+  const d3Niveau1 = d3Composer(1, [{part: 3, p: 10, d: 0, min: 11, max: 999}, {part: 3, p: 10, d: 1, min: 10, max: 999},
+    {part: 1, p: 10, d: 0, min: 1, max: 9}, {part: 1, p: 10, d: 1, min: 0, max: 0}, {part: 2, p: 10, d: 1, min: 1, max: 9}]);
   // Niveau 2 : ÷ 100 (6 sur 10 : entiers, et une décimale), ÷ 1 000 (4).
-  const d3Niveau2 = d3Composer(2, [{part: 3, p: 100, d: 0, min: 101, max: 9999}, {part: 3, p: 100, d: 1, min: 100, max: 999}, {part: 4, p: 1000, d: 0, min: 1001, max: 9999}]);
-  // Niveau 3 : un résultat sous 1, des zéros à écrire : 0,6 ÷ 10 ; 7 ÷ 10 ;
-  // 45 ÷ 100 ; 3,6 ÷ 100 ; 56 ÷ 1 000.
+  // Lot 6 « programmes 2 » : et ÷ 10 qui fait des millièmes, la partie
+  // entière non nulle (10,68 ÷ 10 = 1,068 ; 0,34 ÷ 10 est au niveau 3).
+  const d3Niveau2 = d3Composer(2, [{part: 2, p: 10, d: 2, min: 10, max: 999}, {part: 2, p: 100, d: 0, min: 101, max: 9999}, {part: 2, p: 100, d: 1, min: 100, max: 999}, {part: 4, p: 1000, d: 0, min: 1001, max: 9999}]);
+  // Niveau 3 : un résultat sous 1, des zéros à écrire : 0,34 ÷ 10 ;
+  // 45 ÷ 100 ; 3,6 ÷ 100 ; 56 ÷ 1 000. (Lot 6 « programmes 2 » : 0,6 ÷ 10
+  // et 7 ÷ 10 sont au CM1, niveau 1.)
   const d3Niveau3 = d3Composer(3, [
-    {part: 1, p: 10, d: 1, min: 0, max: 0}, {part: 1, p: 10, d: 2, min: 0, max: 0}, {part: 2, p: 10, d: 0, min: 1, max: 9},
+    {part: 2, p: 10, d: 2, min: 0, max: 0},
     {part: 2, p: 100, d: 0, min: 1, max: 99}, {part: 2, p: 100, d: 1, min: 1, max: 9},
     {part: 2, p: 1000, d: 0, min: 11, max: 999}
   ]);
@@ -6196,7 +6293,7 @@
         })
       },
       {
-        n: 2, titre: "décimal ÷ 100, ÷ 1 000", nom: "Décimal ÷ 100, ÷ 1 000", palier: 3, type: "P",
+        n: 2, titre: "décimal ÷ 10, ÷ 100, ÷ 1 000", nom: "Décimal ÷ 10, ÷ 100, ÷ 1 000", palier: 3, type: "P",
         composer: d3Niveau2,
         imposes: [d3Division(2, 2.83, 100), d3Division(2, 4.125, 1000)],
         apprends: glisseApprends({
@@ -6212,16 +6309,18 @@
       {
         n: 3, titre: "des zéros à écrire", nom: "Diviser : zéros à écrire", palier: 3, type: "P",
         composer: d3Niveau3,
-        imposes: [d3Division(3, 0.08, 10), d3Division(3, 0.034, 1000)],
+        // Lot 6 « programmes 2 » : 0,8 ÷ 10, 0,6 ÷ 10 et 0,9 ÷ 10 sont au CM1
+        // (niveau 1) ; la leçon passe aux centièmes (0,45 ÷ 10 = 0,045).
+        imposes: [d3Division(3, 0.047, 10), d3Division(3, 0.034, 1000)],
         apprends: glisseApprends({
-          calcul: d3Division(3, 0.06, 10), exemple: "0,6 ÷ 10", colonnes: COLONNES_D2,
+          calcul: d3Division(3, 0.045, 10), exemple: "0,45 ÷ 10", colonnes: COLONNES_D2,
           represente: d3Division(3, 0.036, 100),
           // (Lot 3b : J'écris ÷ 10, comme la leçon ; ÷ 100 et ÷ 1 000 sont annoncés.)
-          ecris: {calcul: d3Division(3, 0.09, 10), etapes: [etapeDe(`0,9 ÷ 10 = ${CASE}`, 0.09)]},
+          ecris: {calcul: d3Division(3, 0.027, 10), etapes: [etapeDe(`0,27 ÷ 10 = ${CASE}`, 0.027)]},
           consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois moins.",
           refus: "Chaque chiffre doit valoir 10 fois moins : 1 colonne.",
-          trace: ["0,6 ÷ 10 = …", "0,6 ÷ 10 = 0,06"],
-          bilan: frBilan("J’écris un zéro dans les colonnes vides devant le 6 : 0,6 ÷ 10 = 0,06.")
+          trace: ["0,45 ÷ 10 = …", "0,45 ÷ 10 = 0,045"],
+          bilan: frBilan("J’écris un zéro dans les colonnes vides devant le 4 : 0,45 ÷ 10 = 0,045.")
         })
       }
     ]
@@ -6763,7 +6862,13 @@
     if (plus) {
       if (xa + xb >= 100 && da === 1 && db === 1) sansEchange = Number(`${ea + eb}.${(xa + xb) / 10}`);
       if (xa + xb >= 100) oubli = exact(r - 1);
-      if (da !== db) {
+      // (Lot 6 « programmes 2 » : 2,3 + 4 → 2,7, l'entier écrit dans les
+      // dixièmes.)
+      if (da === 0 || db === 0) {
+        const [entier, dec] = da === 0 ? [a, b] : [b, a];
+        if (entier < 10 && decimalesDe(dec) === 1) droite = exact(dec + entier / 10);
+        if (memeNombre(droite, r)) droite = -1;
+      } else if (da !== db) {
         const court = da < db ? a : b;
         const long = da < db ? b : a;
         droite = exact(Math.floor(long) + Math.floor(court) + casesDe(long) / 100 + casesDe(court) / 1000);
@@ -6793,13 +6898,32 @@
   const d6Somme = (niveau, a, b) => deuxDecimaux("D6", niveau, a, b);
   const d7Difference = (niveau, a, b) => deuxDecimaux("D7", niveau, a, b);
 
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : un entier et un
+  // décimal (2,3 + 4 ; 4 + 2,3 ; 7,3 + 4 = 11,3) — « Additionner sans
+  // échange », CM2. Pas de carrés (rien à ajouter aux dixièmes) : le
+  // tableau de numération de D4, les unités avec les unités.
+  const avecUnEntier = calcul => calcul.module === "D6" && (Number.isInteger(calcul.donnees.a) || Number.isInteger(calcul.donnees.b));
+  function deuxTableau(calcul, inconnue) {
+    const {a, b, r, ea, eb} = calcul.donnees;
+    const retenue = ea + eb >= 10 ? [1] : [];
+    const change = new Set([0, ...retenue]);
+    return {
+      outil: "numeration",
+      lignes: [Object.freeze({nombre: a, unite: 0, texte: f(a)}), Object.freeze({nombre: b, unite: 0, texte: `+ ${f(b)}`})],
+      resultat: {nombre: r, unite: 0, texte: ""},
+      garder: [...chiffresDuNombre(r).keys()].filter(x => !change.has(x)),
+      retenue,
+      inconnue
+    };
+  }
   function deuxImage(calcul) {
     const {xa, xb, casse} = calcul.donnees;
+    if (avecUnEntier(calcul)) return deuxTableau(calcul, false);
     if (calcul.module === "D6") return {outil: "carre-op", op: "ajouter", carres: 2, bleu: xa, autre: xb};
     // D7 : une unité cassée devient le 1er carré (plein) ; 9 − 1,9 : un seul carré.
     return {outil: "carre-op", op: "enlever", carres: casse && xa ? 2 : 1, bleu: (casse ? 100 : 0) + xa, autre: xb};
   }
-  const deuxAide = calcul => deuxImage(calcul);
+  const deuxAide = calcul => (avecUnEntier(calcul) ? deuxTableau(calcul, true) : deuxImage(calcul));
   const deuxPhrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
   // « 2,7 + 3,7 = 5 + 1,4 = 6,4 » ; « 3,4 − 0,8 = 2 + 0,6 = 2,6 ».
   const deuxTrace = calcul => {
@@ -6808,6 +6932,8 @@
     return u ? `${f(a)} ${signe} ${f(b)} = ${f(u)} + ${f(dec)} = ${f(r)}` : `${f(a)} ${signe} ${f(b)} = ${f(r)}`;
   };
   function deuxManipulation(calcul) {
+    // (Un entier et un décimal : pas de carrés à toucher.)
+    if (avecUnEntier(calcul)) return null;
     const {a, b, ea, eb, xa, xb, casse, u} = calcul.donnees;
     const image = deuxImage(calcul);
     const enCases = x => (x % 10 ? f(x / 100) : f(x / 100));
@@ -6836,7 +6962,9 @@
   const ERREUR_ALIGNE = c => Object.freeze({
     c, nom: "les chiffres alignés à droite",
     test: sauf((calcul, reponse) => calcul.donnees.droite >= 0 && memeNombre(reponse, calcul.donnees.droite)),
-    retour: (calcul, reponse) => fr(`${f(reponse)} : les chiffres ne sont pas dans la bonne colonne. Les dixièmes avec les dixièmes, les centièmes avec les centièmes.`)
+    retour: (calcul, reponse) => fr(avecUnEntier(calcul)
+      ? `${f(reponse)} : ${f(Number.isInteger(calcul.donnees.a) ? calcul.donnees.a : calcul.donnees.b)}, ce sont des unités. Les unités avec les unités.`
+      : `${f(reponse)} : les chiffres ne sont pas dans la bonne colonne. Les dixièmes avec les dixièmes, les centièmes avec les centièmes.`)
   });
   const D6_ERREURS = Object.freeze([
     Object.freeze({
@@ -6884,6 +7012,23 @@
         if (echange !== (niveau === 2)) return;
         liste.push(d6Somme(niveau, a, b));
       }));
+      // Lot 6 « programmes 2 » (19/11, relecture de Codex : CM, p. 18) —
+      // niveau 1 : un entier et un décimal aux dixièmes, dans les deux
+      // ordres, en passant 10 ou non (2,3 + 4 ; 4 + 2,3 ; 7,3 + 4) ;
+      // niveau 2 : les dixièmes qui complètent l'unité (1,8 + 0,2 = 2,
+      // choix de Gwenaël : c'est un échange).
+      if (niveau === 1) {
+        nombres1.filter(deux).forEach(x => entre(1, 9).forEach(k => {
+          liste.push(d6Somme(1, x, k));
+          liste.push(d6Somme(1, k, x));
+        }));
+      } else {
+        nombres1.filter(deux).forEach(x => {
+          const y = exact(1 - casesDe(x) / 100);
+          liste.push(d6Somme(2, x, y));
+          liste.push(d6Somme(2, y, x));
+        });
+      }
     } else {
       nombres2.filter(deux).forEach((a, i) => nombres1.filter(deux).forEach((b, j) => {
         if ((i * 7 + j * 3) % 13) return;
@@ -6893,7 +7038,7 @@
     return Object.freeze(liste);
   }
   const D6_SORTES = {
-    1: [["somme sous 10", (c, d) => d.r < 10], ["somme au-delà de 10", () => true]],
+    1: [["un entier et un décimal", (c, d) => Number.isInteger(d.a) || Number.isInteger(d.b)], ["somme sous 10", (c, d) => d.r < 10], ["somme au-delà de 10", () => true]],
     2: [["résultat entier", (c, d) => Number.isInteger(d.r)], ["résultat sous 10", (c, d) => d.r < 10], ["au-delà de 10", () => true]],
     3: [["sans échange", (c, d) => d.xa + d.xb < 100], ["avec échange", () => true]]
   };
@@ -6908,7 +7053,8 @@
     for (let e = 0; e <= 9; e += 1) for (let x = 0; x < 100; x += 1) centiemes.push(exact(e + x / 100));
     if (niveau === 1) {
       dixiemes.filter(a => a < 20 && casesDe(a)).forEach(a => dixiemes.filter(b => b < 10 && deux(b)).forEach(b => {
-        if (!(casesDe(b) < casesDe(a)) || b >= a || Math.floor(b) > Math.floor(a)) return;
+        // (Lot 6 « programmes 2 » : les dixièmes égaux aussi, 6,2 − 2,2 = 4.)
+        if (casesDe(b) > casesDe(a) || b >= a || Math.floor(b) > Math.floor(a)) return;
         liste.push(d7Difference(1, a, b));
       }));
     } else if (niveau === 2) {
@@ -7016,8 +7162,10 @@
     erreurs: D6_ERREURS, image: deuxImage, aide: deuxAide, phrase: deuxPhrase, manipulation: deuxManipulation, difficulte: deuxDifficulte,
     niveaux: [
       {
-        n: 1, titre: "sans retenue", nom: "Additionner sans échange", palier: 3, type: "P",
-        composer: deuxComposer(D6_LISTES[1], D6_SORTES[1], [6, 4]),
+        // Lot 6 « programmes 2 » (relecture de Codex) : « sans échange
+        // entre unités et dixièmes » (7,4 + 6,3 = 13,7 passe 10).
+        n: 1, titre: "sans échange entre unités et dixièmes", nom: "Additionner sans échange de dixièmes", palier: 3, type: "P",
+        composer: deuxComposer(D6_LISTES[1], D6_SORTES[1], [2, 5, 3]),
         imposes: [d6Somme(1, 3.2, 4.5), d6Somme(1, 7.4, 6.3)],
         apprends: deuxApprends({
           manipule: d6Somme(0, 4.5, 1.2),
@@ -7028,7 +7176,7 @@
         })
       },
       {
-        n: 2, titre: "avec retenue (moins de 10, un chiffre après la virgule)", nom: "Additionner avec un échange", palier: 3, type: "P",
+        n: 2, titre: "un échange entre unités et dixièmes (un chiffre après la virgule)", nom: "Additionner avec un échange de dixièmes", palier: 3, type: "P",
         composer: deuxComposer(D6_LISTES[2], D6_SORTES[2], [2, 5, 3]),
         imposes: [d6Somme(2, 3.5, 2.5), d6Somme(2, 8.6, 7.8)],
         apprends: deuxApprends({
@@ -7061,7 +7209,7 @@
     erreurs: D7_ERREURS, image: deuxImage, aide: deuxAide, phrase: deuxPhrase, manipulation: deuxManipulation, difficulte: deuxDifficulte,
     niveaux: [
       {
-        n: 1, titre: "sans retenue", nom: "Soustraire sans échange", palier: 3, type: "P",
+        n: 1, titre: "sans échange entre unités et dixièmes", nom: "Soustraire sans échange de dixièmes", palier: 3, type: "P",
         composer: deuxComposer(D7_LISTES[1], D7_SORTES[1], [6, 4]),
         imposes: [d7Difference(1, 7.6, 4.2), d7Difference(1, 13.8, 5.3)],
         apprends: deuxApprends({
@@ -7073,7 +7221,7 @@
         })
       },
       {
-        n: 2, titre: "avec retenue", nom: "Soustraire avec un échange", palier: 4, type: "P",
+        n: 2, titre: "un échange entre unités et dixièmes", nom: "Soustraire avec un échange de dixièmes", palier: 4, type: "P",
         composer: deuxComposer(D7_LISTES[2], D7_SORTES[2], [4, 3, 3]),
         imposes: [d7Difference(2, 6.2, 0.5), d7Difference(2, 9, 1.9)],
         apprends: deuxApprends({
@@ -7087,7 +7235,8 @@
       {
         n: 3, titre: "chiffres après la virgule différents", nom: "Soustraire\u00a0: dixièmes et centièmes", palier: 4, type: "P",
         composer: deuxComposer(D7_LISTES[3], D7_SORTES[3], [3, 3, 2, 2]),
-        imposes: [d7Difference(3, 6.48, 4.6), d7Difference(3, 5, 2.35)],
+        // (Lot 6 « programmes 2 » : le repère 5,02 − 0,3 de la notice du lot 7.)
+        imposes: [d7Difference(3, 6.48, 4.6), d7Difference(3, 5, 2.35), d7Difference(3, 5.02, 0.3)],
         apprends: deuxApprends({
           manipule: d7Difference(0, 5.42, 0.6),
           represente: d7Difference(0, 3.15, 0.4),
@@ -7177,6 +7326,7 @@
       if (morceaux.length < 2) return fr(`Regarde : ${f(n)} coupé en deux, ça fait ${f(r)} et ${f(r)}.`);
       return fr(`Regarde : ${morceaux.map(m => f(exact(m / 2))).join(" et ")}, ça fait ${f(r)}.`);
     }
+    if (morceaux.length < 2) return fr(`Regarde : ${f(n)} + ${f(n)} = ${f(r)}.`);
     return fr(`Regarde : ${morceaux.map(m => f(exact(2 * m))).join(" et ")}, ça fait ${f(r)}.`);
   }
   // Du plus simple au plus dur : le double, puis la moitié, puis les autres
@@ -7254,15 +7404,19 @@
   //  - D8-3 : les centièmes ; le double (2 × 4,35), la moitié aux centièmes
   //    (1,22 ÷ 2 ; un nombre pair de centièmes), la moitié qui fait des
   //    centièmes, écrite avec son zéro (moitié de 8,10 = 4,05).
-  // Jamais de partie entière nulle (le schéma garde ses deux morceaux).
+  // Jamais de partie entière nulle (le schéma garde ses deux morceaux) —
+  // sauf, depuis le lot 6 « programmes 2 », quelques dixièmes seuls en D8-2.
   // (Un paquet par écriture : chaque écriture est dans chaque série.)
   function d8Vivier(niveau) {
     const impairs = entre(1, 15, 2);
     const paquet = (forme, nombres, ecrit = () => null) => Object.freeze(nombres.map(n => d8Calcul(niveau, forme, n, ecrit(n))));
     if (niveau === 1) return Object.freeze([paquet("moitie", impairs), paquet("division", impairs), paquet("trou-double", impairs)]);
     if (niveau === 2) {
-      const doubles = entre(1, 19).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
-      const moities = [...entre(1, 16), 18].flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
+      // (Lot 6 « programmes 2 », relecture de Codex : quelques petits
+      // décimaux aussi — le double de 0,7, la moitié de 0,8. Un seul
+      // morceau : pas de J'écris tiré.)
+      const doubles = entre(0, 19).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
+      const moities = [...entre(0, 16), 18].flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
       return Object.freeze([paquet("double", doubles), paquet("double-fois", doubles), paquet("moitie", moities), paquet("division", moities)]);
     }
     const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10).map(x => exact(e + x / 100)));
@@ -7413,21 +7567,23 @@
     return (calcul.forme === "produit-gauche" ? 1000 : 0) + (dernierChiffre(n) % 2 ? 500 : 0) + decimalesDe(n) * 100 + Math.min(99, Math.round(n));
   }
   // Les viviers (rapport de Codex) : des décimaux, jamais un entier (M7).
-  //  - D9-1 : × 5, au plus trois chiffres ; un chiffre le plus à droite
-  //    impair seulement avec un chiffre après la virgule (3,5 × 5 = 35 ÷ 2 =
-  //    17,5) : 1,47 × 5 = 14,7 ÷ 2 = 7,35 demanderait la moitié aux centièmes,
-  //    qui vient après (D8-3) ;
+  //  - D9-1 : × 5, au plus trois chiffres (3,5 × 5 = 35 ÷ 2 = 17,5 ;
+  //    1,47 × 5 = 14,7 ÷ 2 = 7,35) ;
   //  - D9-2 : × 50, moins de 20, au plus trois chiffres, le chiffre le plus
   //    à droite pair (calcul mental CM2, p. 19) : dixièmes (12,4), centièmes
   //    (4,86).
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex : CM, p. 19) : × 5
+  // n'a pas de condition sur le chiffre de droite (1,47 × 5 = 7,35 ; la
+  // moitié aux centièmes, D8-3, vient juste avant dans le parcours) ; les
+  // décimaux entre 0 et 1 entrent aux deux niveaux (0,7 × 5 ; 0,48 × 50).
   function d9Nombres(niveau) {
     if (niveau === 1) {
-      const dixiemes = entre(1, 49).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
-      const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10 && x % 2 === 0).map(x => exact(e + x / 100)));
+      const dixiemes = entre(0, 49).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
+      const centiemes = entre(0, 9).flatMap(e => entre(1, 99).filter(x => x % 10).map(x => exact(e + x / 100)));
       return [...dixiemes, ...centiemes];
     }
-    const dixiemes = entre(1, 19).flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
-    const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10 && x % 2 === 0).map(x => exact(e + x / 100)));
+    const dixiemes = entre(0, 19).flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
+    const centiemes = entre(0, 9).flatMap(e => entre(1, 99).filter(x => x % 10 && x % 2 === 0).map(x => exact(e + x / 100)));
     return [...dixiemes, ...centiemes];
   }
   function d9Vivier(niveau) {
@@ -7538,14 +7694,16 @@
     Object.freeze({
       c: 4, nom: "multiplié au lieu de diviser",
       test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.fois)),
-      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.n)} × ${calcul.donnees.d}. Ici, on coupe ${f(calcul.donnees.n)} en deux, puis encore en deux.`),
+      // (Lot 6 « programmes 2 » : ÷ 8, c'est trois moitiés — le message en
+      // comptait deux.)
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.n)} × ${calcul.donnees.d}. Ici, on coupe ${f(calcul.donnees.n)} en deux${", puis encore en deux".repeat(calcul.donnees.moities.length - 1)}.`),
       gras: 0
     })
   ]);
   // Les viviers (règle commune avec M12) :
-  //  - M13-1 : ÷ 4, de 140 à 980 (140 ÷ 4 = 35) — sans 60 ni 100 (les
+  //  - M13-1 : ÷ 4, de 44 à 996 (140 ÷ 4 = 35 ; 440 ÷ 4 = 110) — sans 60 ni 100 (les
   //    repères de M5), sans quotient de table (20 ÷ 4 : M4) ;
-  //  - M13-2 : ÷ 8, de 120 à 1 960 (360 ÷ 8 = 45) ;
+  //  - M13-2 : ÷ 8, de 88 à 1 992 (360 ÷ 8 = 45 ; 880 ÷ 8 = 110) ;
   //  - M13-3 : un quotient décimal, un chiffre après la virgule (,5), ÷ 4
   //    jusqu'à 590, ÷ 8 jusqu'à 780 (30 ÷ 4 = 7,5 ; 260 ÷ 8 = 32,5).
   function m13Vivier(niveau) {
@@ -7555,7 +7713,9 @@
       return Object.freeze({division: Object.freeze([...quatre, ...huit])});
     }
     const d = niveau === 1 ? 4 : 8;
-    const nombres = entre(d, niveau === 1 ? 990 : 1990, d).filter(n => m13Prend(n, d) && m12Garde(n));
+    // (Lot 6 « programmes 2 » : jusqu'à 999 pour ÷ 4 — 992 ÷ 4, 996 ÷ 4 —
+    // et 1 999 pour ÷ 8.)
+    const nombres = entre(d, niveau === 1 ? 999 : 1999, d).filter(n => m13Prend(n, d) && m12Garde(n));
     return Object.freeze({
       division: Object.freeze(nombres.map(n => m13Calcul(niveau, "division", n, d))),
       "trou-facteur": Object.freeze(nombres.map(n => m13Calcul(niveau, "trou-facteur", n, d)))
@@ -7712,7 +7872,12 @@
     Object.freeze({
       c: 2, nom: "un paquet de moins",
       test: sauf((calcul, reponse) => calcul.forme !== "quotient" && memeNombre(reponse, calcul.donnees.unDeMoins)),
-      retour: (calcul, reponse) => fr(`${f(reponse)} : c’est plus que ${f(calcul.donnees.d)}, on peut encore faire un paquet. Le reste est toujours plus petit que ${f(calcul.donnees.d)}.`),
+      // (Lot 6 « programmes 2 », relecture de Codex : avec un reste nul,
+      // la réponse fausse est le diviseur lui-même — « 4, c'est plus que
+      // 4 » était faux.)
+      retour: (calcul, reponse) => fr(memeNombre(reponse, calcul.donnees.d)
+        ? `${f(reponse)}, c’est encore un paquet de ${f(calcul.donnees.d)}. Le reste est toujours plus petit que ${f(calcul.donnees.d)}.`
+        : `${f(reponse)} : c’est plus que ${f(calcul.donnees.d)}, on peut encore faire un paquet. Le reste est toujours plus petit que ${f(calcul.donnees.d)}.`),
       gras: 0
     }),
     Object.freeze({
@@ -8038,7 +8203,10 @@
   const C4_CODES = Object.freeze({"fois-moins": 1, "plus-fois": 2, "fois-par": 3, "plus-div": 4});
   const INVERSE = Object.freeze({"+": "−", "−": "+", "×": "÷", "÷": "×"});
   const appliquer = (x, signe, v) => exact(signe === "+" ? x + v : signe === "−" ? x - v : signe === "×" ? x * v : x / v);
-  function c4Calcul(niveau, forme, x, a, b) {
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : l'égalité dans
+  // les deux sens à chaque niveau (« 11 = 8 + (2 × □) ») ; `envers` : le
+  // nombre connu à gauche (par défaut : seulement « plus-div », comme avant).
+  function c4Calcul(niveau, forme, x, a, b, envers = forme === "plus-div") {
     let ops;
     let jetons;
     if (forme === "fois-moins") { ops = [["×", a], ["−", b]]; jetons = `(${f(a)} × ${CASE}) − ${f(b)}`; }
@@ -8047,7 +8215,7 @@
     else { ops = [["÷", a], ["+", b]]; jetons = `${f(b)} + (${CASE} ÷ ${f(a)})`; }
     const milieu = appliquer(x, ...ops[0]);
     const fin = appliquer(milieu, ...ops[1]);
-    const texte = forme === "plus-div" ? `${f(fin)} = ${jetons}` : `${jetons} = ${f(fin)}`;
+    const texte = envers ? `${f(fin)} = ${jetons}` : `${jetons} = ${f(fin)}`;
     // Les réponses fausses connues : les flèches dans le sens du calcul
     // (23 × 2 − 5) ; les bonnes flèches, mais le signe du nombre pas
     // inversé (23 − 5 = 18, 18 ÷ 2 = 9) ; les étapes à l'envers (23 ÷ 2,
@@ -8058,7 +8226,7 @@
     const donnees = {x, a, b, milieu, fin, ops: Object.freeze(ops.map(o => Object.freeze(o))), sens, signe, ordre};
     return Object.freeze({
       texte, reponse: x, forme, module: "C4", niveau,
-      cle: `C4-${niveau}-${C4_CODES[forme]}-${[a, b, fin].map(cleNombre).join("-")}`,
+      cle: `C4-${niveau}-${C4_CODES[forme]}-${[a, b, fin].map(cleNombre).join("-")}${envers === (forme === "plus-div") ? "" : "-0"}`,
       donnees: Object.freeze(donnees)
     });
   }
@@ -8136,7 +8304,9 @@
     // Le résultat de l'égalité n'est jamais un nombre de l'écriture (2 × □
     // − 2 = 2) ni le nombre cherché.
     const garde = c => ![c.donnees.a, c.donnees.b, c.donnees.x].some(y => memeNombre(y, c.donnees.fin)) && c.donnees.milieu !== c.donnees.x;
-    return Object.freeze(Object.fromEntries(Object.entries(v).map(([k, l]) => [k, Object.freeze([...new Map(l.filter(garde).map(c => [c.cle, c])).values()])])));
+    // (Lot 6 « programmes 2 » : chaque égalité aussi écrite dans l'autre sens.)
+    const deuxSens = l => l.flatMap(c => [c, c4Calcul(c.niveau, c.forme, c.donnees.x, c.donnees.a, c.donnees.b, c.forme !== "plus-div")]);
+    return Object.freeze(Object.fromEntries(Object.entries(v).map(([k, l]) => [k, Object.freeze([...new Map(deuxSens(l.filter(garde)).map(c => [c.cle, c])).values()])])));
   }
   const C4_VIVIERS = Object.freeze({1: c4Vivier(1), 2: c4Vivier(2)});
   const c4 = (niveau, forme, x, a, b) => c4Calcul(niveau, forme, x, a, b);
@@ -8196,7 +8366,7 @@
 
   // ------------------------------------------------- M9 : distributivité, retrancher
   //
-  // « 45 × 9 » : × 9, c'est × 10 moins une fois le nombre (450 − 45) ; × 19,
+  // « 124 × 9 » : × 9, c'est × 10 moins une fois le nombre (1 240 − 124) ; × 19,
   // × 20 moins une fois ; × 99, × 100 moins une fois ; × 98, × 100 moins
   // deux fois. n (le nombre), m (9, 19, 99 ou 98), rond (10, 20, 100),
   // enleve (1 ou 2).
@@ -8204,12 +8374,9 @@
   // commun »). Lot 6 « programmes » (18/11) : les × 9 d'un nombre de 11 à
   // 99 et les × 19 d'un chiffre sont rendus à M8 (programme du CE1 et du
   // CE2). M9-1 prend : × 9 d'un nombre à trois chiffres (de 101 à 199) ;
-  // × 19 d'un nombre à deux chiffres (de 11 à 25, sauf 19 et 20). M9-2
-  // (inchangé) : × 99 de 3, 6, 7, 9 ou de 11 à 25 ; × 98 de 3, 6, 7, 9 ou
-  // de 11 à 15 — jamais une dizaine entière (M3), ni 2, 4, 5, 8 (le
-  // double, × 4, × 8 et × 5 : M1, M6, M7).
-  const M9_RETIRE = Object.freeze([9, 19, 98, 99]);
-  const m9Prend = (x, y) => M9_RETIRE.includes(x) || M9_RETIRE.includes(y);
+  // × 19 d'un nombre à deux chiffres. M9-2 : × 99, × 98 d'un nombre à deux
+  // chiffres — jamais une dizaine entière (M3). Lot 6 « programmes 2 » : les
+  // nombres exacts plus bas (M9_NOMBRES).
   const M9_RONDS = Object.freeze({9: [10, 1], 19: [20, 1], 99: [100, 1], 98: [100, 2]});
   function m9Calcul(niveau, n, m, gauche = false) {
     const [rond, enleve] = M9_RONDS[m];
@@ -8262,10 +8429,19 @@
       gras: 0
     })
   ]);
+  // Lot 6 « programmes 2 » (19/11, relecture de Codex) : plus aucun calcul
+  // de M8 — ni 98, 99 × un chiffre (M8-2), ni 11, 12, 21, 31 × 19, 98, 99
+  // (M8-3). × 19 : de 13 à 18 et de 22 à 25 ; × 99 : de 13 à 19, de 22 à
+  // 25 et de 32 à 35 ; × 98 : de 13 à 19 et de 22 à 25.
+  const M9_NOMBRES = Object.freeze({
+    9: entre(101, 199).filter(n => n % 10 !== 0),
+    19: [...entre(13, 18), ...entre(22, 25)],
+    99: [...entre(13, 19), ...entre(22, 25), ...entre(32, 35)],
+    98: [...entre(13, 19), ...entre(22, 25)]
+  });
   function m9Vivier(niveau) {
     const v = {produit: [], "produit-gauche": []};
-    const petits = [3, 6, 7, 9];
-    const nombres = {9: entre(101, 199).filter(n => n % 10 !== 0), 19: entre(11, 25).filter(n => n % 10 !== 0 && n !== 19), 99: [...petits, ...entre(11, 25).filter(n => n % 10 !== 0)], 98: [...petits, ...entre(11, 15)]};
+    const nombres = M9_NOMBRES;
     (niveau === 1 ? [9, 19] : [99, 98]).forEach(m => nombres[m].filter(n => n !== m).forEach(n => {
       v.produit.push(m9Calcul(niveau, n, m));
       v["produit-gauche"].push(m9Calcul(niveau, n, m, true));
@@ -8299,7 +8475,7 @@
     }, m9Dessins(m9Image(calcul), etapes.length));
   }
   const M9 = {
-    id: "M9", nom: "Distributivité\u00a0: retrancher", exemple: "45 × 9",
+    id: "M9", nom: "Distributivité\u00a0: retrancher", exemple: "124 × 9",
     famille: "M", construit: true,
     aide_entraine: "rectangle",
     erreurs: M9_ERREURS, image: m9Image, aide: m9Aide, phrase: m9Phrase, manipulation: () => null, difficulte: m9Difficulte
@@ -8320,13 +8496,15 @@
     {
       n: 2, titre: "multiplier par 99, par 98", nom: "× 99, × 98\u00a0: je retire", palier: 4, type: "P",
       composer: vivierNiveau(M9_VIVIERS[2], [7, 3]),
-      imposes: [m9Calcul(2, 12, 98), m9Calcul(2, 3, 99, true)],
+      // Lot 6 « programmes 2 » : 12 × 98 et 3 × 99 sont rendus à M8 ; la
+      // leçon passe de 6 × 99 (M8-2) à 15 × 99.
+      imposes: [m9Calcul(2, 14, 98), m9Calcul(2, 23, 99, true)],
       apprends: apprendsRecette({
         fiche: M9, recette: recetteRetrancher,
-        represente: m9Calcul(0, 6, 99),
+        represente: m9Calcul(0, 15, 99),
         ecris: m9Calcul(0, 13, 99),
-        consigne: "99, c’est 100 − 1. Je fais × 100, puis je retire 6.",
-        bilan: "99, c’est 100 − 1 : 6 × 99 = 6 × 100 − 6 = 600 − 6 = 594."
+        consigne: "99, c’est 100 − 1. Je fais × 100, puis je retire 15.",
+        bilan: `99, c’est 100 − 1 : 15 × 99 = 15 × 100 − 15 = 1${ESPACE_FINE}500 − 15 = 1${ESPACE_FINE}485.`
       })
     }
   ];
@@ -8716,7 +8894,7 @@
     };
     return dessinsDe(morceaux, etapes.length, dessin);
   }
-  function fracApprends({fiche, manipule = null, represente, ecris, consigne, consigneEcris, etapes, morceaux, haut = [], bilan}) {
+  function fracApprends({fiche, manipule = null, represente, ecris, consigne, consigneEcris, etapes, morceaux, haut = [], bilan, autre = null}) {
     const premier = manipule || represente;
     return Object.freeze({
       exemple: exempleFraction(premier),
@@ -8733,6 +8911,7 @@
         solution: Object.freeze({image: fracImage(ecris), phrase: fracPhrase(ecris)})
       }, fracEcrisDessins(ecris, etapes, morceaux, {haut})),
       bilan: frBilan(bilan),
+      ...autreDe(autre),
       image: fracImage(manipule || represente),  // lot 3a : le calcul montré
       // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
       calculs: Object.freeze({montre: manipule || represente, ecris: ecris}),
@@ -9073,7 +9252,9 @@
           consigneEcris: "3 + 4/5 = ?/5",
           etapes: [["3 = ?/5", 15], ["15/5 + 4/5 = ?/5", 19]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
-          bilan: "2 = 6/3. 2 + 2/3 = 6/3 + 2/3 = 8/3."
+          bilan: "2 = 6/3. 2 + 2/3 = 6/3 + 2/3 = 8/3.",
+          // Lot 6 « programmes 2 » (relecture de Codex : E1, p. 5).
+          autre: {phrase: "8/3, c’est 2 et encore 2/3\u00a0: entre 2 et 3.", calcul: "2 < 8/3 < 3"}
         })
       }
       // (Lot « couverture », 06/11/2026 : l'ancien niveau 3, encadrer, est
@@ -9133,14 +9314,29 @@
   // (15 égalités, et autant écrites à l'envers comme au programme :
   // « ?/8 = 1/2 ».)
   const F6_CE2 = Object.freeze(F6_TRIPLETS.filter(([, d, k]) => k * d <= 12));
+  // Lot 6 « programmes 2 » (19/11, choix de Gwenaël ; programme du cycle
+  // 3, p. 6 ; exemples de réussite du CM1, p. 5) : un niveau CM1 (le
+  // niveau 2) prend, dans toutes les écritures, les fractions plus grandes
+  // que 1 aux dénominateurs jusqu'à 20 (5/2 = □/6), et les dénominateurs de
+  // 13 à 20 (2/7 = □/14) — l'une OU l'autre condition. Les niveaux du CM2
+  // (3 : diviser ; 4 : le dénominateur) gardent le reste.
+  const F6_AU_CM1 = ([a, d, k]) => (a > d ? k * d <= 20 : k * d >= 13 && k * d <= 20);
   const F6_AU_DELA = Object.freeze(F6_TRIPLETS.filter(([, d, k]) => k * d > 12));
+  const F6_CM1 = Object.freeze([...F6_TRIPLETS, ...F6_GRANDES].filter(F6_AU_CM1));
+  const F6_CM1_GRANDES = Object.freeze(F6_GRANDES.filter(F6_AU_CM1));
+  const F6_CM1_PETITES = Object.freeze(F6_TRIPLETS.filter(F6_AU_CM1));
+  const sansCM1 = liste => liste.filter(t => !F6_AU_CM1(t));
   const F6_VIVIERS = Object.freeze({
     1: Object.freeze({multiplier: F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier", a, d, k)),
       "multiplier-gauche": F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier-gauche", a, d, k))}),
-    2: Object.freeze({diviser: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k)),
-      multiplier: [...F6_AU_DELA, ...F6_GRANDES].map(([a, d, k]) => f6Calcul(2, "multiplier", a, d, k))}),
-    3: Object.freeze({denominateur: F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur", a, d, k)), "denominateur-gauche": F6_TRIPLETS.map(([a, d, k]) => f6Calcul(3, "denominateur-gauche", a, d, k)),
-      grandes: F6_GRANDES.map(([a, d, k]) => f6Calcul(3, "denominateur-gauche", a, d, k))})
+    2: Object.freeze({multiplier: F6_CM1.map(([a, d, k]) => f6Calcul(2, "multiplier", a, d, k)),
+      diviser: F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k)),
+      denominateur: F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "denominateur", a, d, k)),
+      "denominateur-gauche": F6_CM1.map(([a, d, k]) => f6Calcul(2, "denominateur-gauche", a, d, k))}),
+    3: Object.freeze({diviser: sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(3, "diviser", a, d, k)), "diviser-den": sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(3, "diviser-den", a, d, k)),
+      multiplier: sansCM1([...F6_AU_DELA, ...F6_GRANDES]).map(([a, d, k]) => f6Calcul(3, "multiplier", a, d, k))}),
+    4: Object.freeze({denominateur: sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(4, "denominateur", a, d, k)), "denominateur-gauche": sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(4, "denominateur-gauche", a, d, k)),
+      grandes: sansCM1(F6_GRANDES).map(([a, d, k]) => f6Calcul(4, "denominateur-gauche", a, d, k))})
   });
   const f6 = (niveau, texte) => trouverDans(F6_VIVIERS, "F6", niveau, texte);
   const F6_RANGS = Object.freeze({multiplier: 0, diviser: 0, "diviser-den": 1, denominateur: 0, "denominateur-gauche": 1, "multiplier-gauche": 1});
@@ -9240,34 +9436,54 @@
         })
       },
       {
-        n: 2, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
-        composer: vivierNiveau(F6_VIVIERS[2], [5, 3, 2]),
-        imposes: [f6(2, "6/9 = □/3"), f6(2, "8/12 = 2/□")],
+        // Lot 6 « programmes 2 » (19/11, choix de Gwenaël) : le niveau du
+        // CM1. Les niveaux suivants ont changé de numéro (2 → 3, 3 → 4) ;
+        // les progressions enregistrées sont reprises (mon_parcours, v9).
+        n: 2, titre: "plus grandes que 1, jusqu’à 20", nom: "Fractions égales\u00a0: jusqu’à 20", palier: 2, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[2], [4, 2, 1, 2, 1]),
+        imposes: [f6(2, "7/4 = □/8"), f6(2, "12/18 = □/3")],
         apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(2, "9/12 = □/4")),
-          ecris: pourApprendre(f6(2, "10/15 = □/3")),
-          consigne: "3 douzièmes font un quart.",
-          consigneEcris: "10/15 = (10 ÷ 5)/(15 ÷ 5)",
-          etapes: [["15 ÷ ? = 3", 5], ["10 ÷ 5 = ?", 2], ["10/15 = ?/3", 2]],
+          represente: pourApprendre(f6(2, "4/3 = □/6")),
+          ecris: pourApprendre(f6(2, "3/5 = □/15")),
+          consigne: "Chaque tiers est coupé en 2.",
+          consigneEcris: "3/5 = (3 × 3)/(5 × 3)",
+          etapes: [["5 × ? = 15", 3], ["3 × 3 = ?", 9], ["3/5 = ?/15", 9]],
           morceaux: [{}, {}, {bas: true}],
-          bilan: "9/12 = 3/4 (÷ 3 en haut et en bas)."
-        }), pourApprendre(f6(2, "10/15 = □/3")), [{bas: true}, {haut: true}, {case: true}])
+          bilan: "4/3 = 8/6 (× 2 en haut et en bas)."
+        }), pourApprendre(f6(2, "3/5 = □/15")), [{bas: true}, {haut: true}, {case: true}])
       },
       {
-        n: 3, titre: "le dénominateur manquant", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
+        n: 3, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[3], [5, 3, 2]),
-        imposes: [f6(3, "2/3 = 8/□"), f6(3, "3/□ = 9/15")],
+        imposes: [f6(3, "6/9 = □/3"), f6(3, "8/12 = 2/□")],
         apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(3, "2/3 = 6/□")),
-          ecris: pourApprendre(f6(3, "5/8 = 15/□")),
+          represente: pourApprendre(f6(3, "9/12 = □/4")),
+          // (Lot 6 « programmes 2 » : 10/15 = □/3 passe au CM1, niveau 2 ;
+          // J'écris prend 10/25 = □/5.)
+          ecris: pourApprendre(f6(3, "10/25 = □/5")),
+          consigne: "3 douzièmes font un quart.",
+          consigneEcris: "10/25 = (10 ÷ 5)/(25 ÷ 5)",
+          etapes: [["25 ÷ ? = 5", 5], ["10 ÷ 5 = ?", 2], ["10/25 = ?/5", 2]],
+          morceaux: [{}, {}, {bas: true}],
+          bilan: "9/12 = 3/4 (÷ 3 en haut et en bas)."
+        }), pourApprendre(f6(3, "10/25 = □/5")), [{bas: true}, {haut: true}, {case: true}])
+      },
+      {
+        n: 4, titre: "le dénominateur manquant", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[4], [5, 3, 2]),
+        imposes: [f6(4, "2/3 = 8/□"), f6(4, "3/□ = 9/24")],
+        apprends: f6EcrisSchema(fracApprends({
+          fiche: "F6",
+          represente: pourApprendre(f6(4, "2/3 = 6/□")),
+          ecris: pourApprendre(f6(4, "5/8 = 15/□")),
           consigne: "Chaque tiers est coupé en 3.",
           consigneEcris: "5/8 = (5 × 3)/(8 × 3)",
           etapes: [["5 × ? = 15", 3], ["8 × 3 = ?", 24], ["5/8 = 15/?", 24]],
           morceaux: [{}, {}, {bas: true}],
           bilan: "2/3 = 6/9 (× 3 en haut et en bas)."
-        }), pourApprendre(f6(3, "5/8 = 15/□")), [{haut: true}, {bas: true}, {case: true}])
+        }), pourApprendre(f6(4, "5/8 = 15/□")), [{haut: true}, {bas: true}, {case: true}])
       }
     ]
   };
@@ -10413,7 +10629,7 @@
           const ordre = (a + c + e) % 3;
           const t = [`${a}/${p}`, `${c}/${q}`, `${e}/${D}`];
           const rang = [[2, 0, 1], [0, 1, 2], [1, 2, 0]][ordre];
-          liste.push(f9Calcul(2, "trois", `${rang.map(i => t[i]).join(" + ")} = ${CASE}/${D}`, "trois fractions : je les écris toutes avec le même dénominateur"));
+          liste.push(f9Calcul(3, "trois", `${rang.map(i => t[i]).join(" + ")} = ${CASE}/${D}`, "trois fractions : je les écris toutes avec le même dénominateur"));
         });
       }));
     });
@@ -10429,15 +10645,28 @@
         entre(1, 3).forEach(e1 => entre(1, 3).forEach(e2 => {
           if (!tientSurLaBarre(e1 + e2 + (a * k + b) / D, D) || e1 + e2 >= 6) return;
           const [x, y] = (a + b + e1) % 2 ? [`(${e1} + ${a}/${d})`, `(${e2} + ${b}/${D})`] : [`(${e2} + ${b}/${D})`, `(${e1} + ${a}/${d})`];
-          liste.push(f9Calcul(2, "mixtes", `${x} + ${y} = ${e1 + e2} + ${CASE}/${D}`, "des nombres mixtes : les unités ensemble, les fractions ensemble"));
+          liste.push(f9Calcul(3, "mixtes", `${x} + ${y} = ${e1 + e2} + ${CASE}/${D}`, "des nombres mixtes : les unités ensemble, les fractions ensemble"));
         }));
       }));
     });
     return liste;
   }
+  // Lot 6 « programmes 2 » (19/11, choix de Gwenaël ; programme du cycle
+  // 2, p. 20-21) : un niveau dans les bases (le niveau 1, CE2) — deux
+  // fractions au plus égales à 1, une somme ou une différence au plus égale
+  // à 1, les dénominateurs jusqu'à 12 (1/3 + 1/6 ; 5/6 − 1/12) : les 156
+  // écritures que Codex a trouvées au CM1. Le niveau du CM1 (2) garde ce
+  // qui dépasse 1 et les dénominateurs de 13 à 20 ; celui du CM2 devient le
+  // niveau 3.
+  const f9DansUnite = calcul => calcul.lu.cotes[0].every(t => t.n < t.d) && calcul.reponse < Math.max(...densDe(calcul.lu)) && Math.max(...densDe(calcul.lu)) <= 12;
+  const f9Partage = (niveau, garder) => {
+    const tout = f9Deux(niveau, 4, 20);
+    return {somme: tout.somme.filter(c => f9DansUnite(c) === garder), difference: tout.difference.filter(c => f9DansUnite(c) === garder)};
+  };
   const F9_VIVIERS = Object.freeze({
-    1: Object.freeze(f9Deux(1, 4, 20)),
-    2: Object.freeze(Object.assign(f9Deux(2, 21, 60), {trois: f9Trois(), mixtes: f9Mixtes()}))
+    1: Object.freeze(f9Partage(1, true)),
+    2: Object.freeze(f9Partage(2, false)),
+    3: Object.freeze(Object.assign(f9Deux(3, 21, 60), {trois: f9Trois(), mixtes: f9Mixtes()}))
   });
   const f9 = (niveau, texte) => trouverDans(F9_VIVIERS, "F9", niveau, texte);
   // La barre : 30 parts au plus (règle du 12/11). Au-delà, le calcul.
@@ -10591,24 +10820,41 @@
     erreurs: F9_ERREURS, image: f9Image, aide: f9Aide, phrase: f9Phrase, manipulation: f9Manipulation, difficulte: f9Difficulte,
     niveaux: [
       {
-        n: 1, titre: "le grand dénominateur jusqu’à 20", nom: "Dénominateurs multiples", palier: 2, type: "P",
+        // Lot 6 « programmes 2 » (choix de Gwenaël) : le niveau des bases,
+        // dessiné avec la barre partagée et les bandes, comme les fractions
+        // du CE2. Les niveaux suivants ont changé de numéro (1 → 2, 2 → 3) ;
+        // les progressions enregistrées sont reprises (mon_parcours, v9).
+        n: 1, titre: "dans l’unité, jusqu’à 12", nom: "Dénominateurs multiples\u00a0: dans l’unité", palier: 1, type: "P",
         composer: vivierNiveau(F9_VIVIERS[1], [1, 1]),
-        imposes: [f9(1, `2/5 + 3/20 = ${CASE}/20`), f9(1, `11/4 − 7/20 = ${CASE}/20`)],
+        imposes: [f9(1, `2/5 + 3/10 = ${CASE}/10`), f9(1, `5/6 − 1/12 = ${CASE}/12`)],
         apprends: f9Apprends({
-          manipule: pourApprendre(f9(1, `2/3 + 5/6 = ${CASE}/6`)),
-          represente: pourApprendre(f9(1, `3/2 + 7/4 = ${CASE}/4`)),
-          ecris: pourApprendre(f9(1, `1/5 + 7/10 = ${CASE}/10`)),
+          manipule: pourApprendre(f9(1, `1/3 + 1/6 = ${CASE}/6`)),
+          represente: pourApprendre(f9(1, `3/4 − 1/8 = ${CASE}/8`)),
+          ecris: pourApprendre(f9(1, `1/4 + 5/12 = ${CASE}/12`)),
+          consigne: "Chaque quart, c’est 2 huitièmes.",
+          bilan: "1/3 = 2/6. 1/3 + 1/6 = 2/6 + 1/6 = 3/6."
+        })
+      },
+      {
+        n: 2, titre: "au-delà de 1, jusqu’à 20", nom: "Dénominateurs multiples\u00a0: jusqu’à 20", palier: 2, type: "P",
+        composer: vivierNiveau(F9_VIVIERS[2], [1, 1]),
+        imposes: [f9(2, `2/5 + 3/20 = ${CASE}/20`), f9(2, `11/4 − 7/20 = ${CASE}/20`)],
+        apprends: f9Apprends({
+          manipule: pourApprendre(f9(2, `2/3 + 5/6 = ${CASE}/6`)),
+          represente: pourApprendre(f9(2, `3/2 + 7/4 = ${CASE}/4`)),
+          // (Lot 6 « programmes 2 » : 1/5 + 7/10 = 9/10 est au CE2, niveau 1.)
+          ecris: pourApprendre(f9(2, `3/5 + 7/10 = ${CASE}/10`)),
           consigne: "Chaque demi, c’est 2 quarts.",
           bilan: "2/3 = 4/6. 2/3 + 5/6 = 4/6 + 5/6 = 9/6."
         })
       },
       {
-        n: 2, titre: "au-delà de 20, trois fractions, nombres mixtes", nom: "Dénominateurs multiples : au-delà de 20", palier: 3, type: "P",
-        composer: vivierNiveau(F9_VIVIERS[2], [3, 3, 2, 2]),
-        imposes: [f9(2, `11/40 − 1/8 = ${CASE}/40`), f9(2, `2/8 + 3/2 + 1/4 = ${CASE}/8`)],
+        n: 3, titre: "au-delà de 20, trois fractions, nombres mixtes", nom: "Dénominateurs multiples : au-delà de 20", palier: 3, type: "P",
+        composer: vivierNiveau(F9_VIVIERS[3], [3, 3, 2, 2]),
+        imposes: [f9(3, `11/40 − 1/8 = ${CASE}/40`), f9(3, `2/8 + 3/2 + 1/4 = ${CASE}/8`)],
         apprends: f9Apprends({
-          represente: pourApprendre(f9(2, `4/7 − 2/21 = ${CASE}/21`)),
-          ecris: pourApprendre(f9(2, `5/6 − 7/24 = ${CASE}/24`)),
+          represente: pourApprendre(f9(3, `4/7 − 2/21 = ${CASE}/21`)),
+          ecris: pourApprendre(f9(3, `5/6 − 7/24 = ${CASE}/24`)),
           consigne: "Chaque septième, c’est 3 vingt-et-unièmes.",
           bilan: "4/7 = 12/21. 4/7 − 2/21 = 12/21 − 2/21 = 10/21."
         })
@@ -11077,10 +11323,12 @@
     "M2-2": parFormes(["a × 10", "produit"], ["a ÷ 10", "division"], ["□ × 10 = b", "trou-nombre"], ["a × □ = b", "trou-facteur"]),
     "F2-1": parFormes(["demis, quarts égaux", "egale"], ["a + b", "somme"], ["1 − a", "difference"]),
     // (Lot 3a : passer le millier ; les sortes lisent le saut sans son signe.)
-    "A3-3": [["+ dizaines", (c, d) => c.forme === "somme" && Math.abs(d.d) < 100], ["+ centaines", (c, d) => c.forme === "somme"],
-      ["− dizaines", (c, d) => Math.abs(d.d) < 100], ["− centaines", toutes]],
+    // (Lot 6 « programmes 2 », choix de Gwenaël : trois sortes.)
+    "A3-3": [["sans changer de millier", (c, d) => Math.floor(d.n / 1000) === Math.floor(d.m / 1000)], ["+ en passant le millier", (c, d) => c.forme === "somme"],
+      ["− en passant le millier", toutes]],
     "D2-1": [["1 décimale", (c, d) => decimales(d.n) <= 1], ["2 décimales", toutes]],
-    "D3-1": [["un entier", (c, d) => Number.isInteger(d.m)], ["un décimal", toutes]],
+    // (Lot 6 « programmes 2 » : le résultat plus petit que 1, au CM1.)
+    "D3-1": [["un entier", (c, d) => Number.isInteger(d.m) && d.n >= 1], ["un décimal", (c, d) => d.n >= 1], ["plus petit que 1", toutes]],
     "M7-1": [["jusqu’à 50", (c, d) => d.n <= 50], ["au-delà de 50", toutes]],
     "A7-3": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["en passant la centaine", toutes]],
     "F1-1": parFormes(["fraction en décimal", "decimal"], ["le dénominateur", "denominateur"]),
@@ -11105,8 +11353,9 @@
     "M12-1": [["dizaines ÷ a", (c, d) => c.forme === "division" && d.n < 1000], ["centaines ÷ a", formeEst("division")], ["a × □ = b", toutes]],
     "A5-4": [["+ …9", (c, d) => d.a % 10 === 9], ["+ …8", toutes]],
     "A6-4": [["− …9", (c, d) => d.a % 10 === 9], ["− …8", toutes]],
-    "D2-2": [["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
-    "D3-2": [["÷ 100", (c, d) => d.p === 100], ["÷ 1 000", toutes]],
+    // (Lot 6 « programmes 2 » : × 10 et ÷ 10 jusqu'aux millièmes.)
+    "D2-2": [["× 10", (c, d) => d.p === 10], ["× 100", (c, d) => d.p === 100], ["× 1 000", toutes]],
+    "D3-2": [["÷ 10", (c, d) => d.p === 10], ["÷ 100", (c, d) => d.p === 100], ["÷ 1 000", toutes]],
     "M3-3": [["dizaines × dizaines", (c, d) => c.forme === "produit" && Math.max(d.x, d.y) < 100], ["centaines, milliers", formeEst("produit")], ["a × □ = b", toutes]],
     "F2-2": parFormes(["a + b", "somme"], ["1 − a", "difference"], ["a + □ = b", "complement"]),
     "D1-3": parFormes(["a/1 000 en décimal", "fraction"], ["a + b/1 000", "entier-fraction"], ["en désordre", "fractions"], ["décimal en millièmes", "numerateur"]),
@@ -11116,14 +11365,16 @@
     "M7-3": [["un nombre pair", (c, d) => d.n % 2 === 0], ["un nombre impair", toutes]],
     "D4-2": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
     "F6-1": parFormes(["a/b = □/c", "multiplier"], ["□/c = a/b", "multiplier-gauche"]),
-    "F6-2": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["multiplier", "multiplier"]),
-    "A3-4": [["dizaines", (c, d) => Math.abs(d.d) < 100], ["centaines", (c, d) => Math.abs(d.d) < 1000], ["milliers", toutes]],
+    // (Lot 6 « programmes 2 » : le niveau 2 est neuf ; 2 → 3, 3 → 4.)
+    "F6-2": parFormes(["multiplier", "multiplier"], ["diviser", "diviser", "diviser-den"], ["le dénominateur", "denominateur", "denominateur-gauche"]),
+    "F6-3": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["multiplier", "multiplier"]),
+    "A3-4": [["dizaines", (c, d) => Math.abs(d.d) < 100], ["centaines", (c, d) => Math.abs(d.d) < 1000], ["milliers", (c, d) => !franchit(d.n, d.d, 10000)], ["milliers avec une retenue", toutes]],
     "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
     "C1-2": parFormes(["(a − b) × (c + d)", "fois-paires"], ["(a × b) − (c + d)", "moins-paires"]),
     "M10-2": parFormes(["4 × a × 25", "regrouper"], ["on coupe un facteur", "couper", "couper-gauche"], ["4 × a × 25 = a × □", "trou-regroupe"]),
     // Lot 7e-2 : au-delà de 1 (5/3 + 2/3, 7/5 − 3/5), au CM1.
     "F8-3": parFormes(["a/b + c/b", "somme"], ["a/b − c/b", "difference"], ["entier − a/b", "entier-moins"], ["a/b − entier", "moins-entier"]),
-    "F6-3": parFormes(["a/b = c/□", "denominateur"], ["a/□ = c/d", "denominateur-gauche"]),
+    "F6-4": parFormes(["a/b = c/□", "denominateur"], ["a/□ = c/d", "denominateur-gauche"]),
     "C3-3": parFormes(["a + b = □ + c", "egalite-somme-grande"], ["a − b = □ − c", "egalite-difference-grande"]),
     "M12-2": [["dividende à 2 chiffres", (c, d) => c.forme === "division" && d.n < 100], ["dividende à 3 chiffres", formeEst("division")], ["a × □ = b", toutes]],
     "C1-3": parFormes(["a × (b − (c + d))", "fois-emboite"], ["a − (b × (c − d))", "moins-emboite"]),
@@ -11147,8 +11398,10 @@
     // Lot 7c : F4, F9, F11 (les familles du rapport de Codex du 14/11).
     "F4-1": [["des objets", c => Boolean(c.f4 && c.f4.famille === "objets")], ["des mesures", toutes]],
     "F4-2": [["en dixièmes", c => Boolean(c.f4 && c.f4.famille === "dixiemes")], ["en centièmes", toutes]],
+    // (Lot 6 « programmes 2 » : le niveau 1 est neuf ; 1 → 2, 2 → 3.)
     "F9-1": parFormes(["addition", "somme"], ["soustraction", "difference"]),
-    "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
+    "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"]),
+    "F9-3": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
     "F11-1": [["plus petite que 1", c => Boolean(c.f11 && c.f11.a < c.f11.d)], ["plus grande que 1", toutes]],
     "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
     // Lot 7d : M11, A9, C4, M9 (les familles du rapport de Codex du 14/11).
@@ -11210,7 +11463,7 @@
       ...retrouveDe([
         {chemin: `double\u00a0de\u00a0${nb(2500)}\u00a0= ${"double de 2000 + double de 500".replace(/ /g, "\u00a0").replace("2000", nb(2000))}`, ...doubles([70, 80, 90, 350, 450, 750])},
         doubles([700, 800, 900, 1000, 1500, 2500])])]},
-    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: coeurDe([{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7"], colonnes: 1}])},
+    "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: coeurDe([{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7", "Fois 0, ça fait toujours 0 : 7 × 0 = 0"], colonnes: 1}])},
     "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: coeurDe([{table: tableFois([6, 7, 8, 9, 10], [6, 7, 8, 9, 10])}])},
     "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
       ...coeurDe([{table: tableFois([25], rangee(2, 4))},
@@ -11340,32 +11593,38 @@
       ["− dizaines", "on retire des dizaines : seul le chiffre des dizaines change"],
       ["− centaines", "on retire des centaines : seul le chiffre des centaines change"]],
     "A3-2": [["− dizaines", "on retire des dizaines : je retire d’abord les dizaines qui mènent à la centaine, puis le reste"]],
-    "A3-3": [["+ centaines", "on ajoute des centaines et on passe le millier"],
-      ["− dizaines", "on retire des dizaines et on passe sous le millier"],
-      ["− centaines", "on retire des centaines et on passe sous le millier"]],
+    "A3-3": [["− en passant le millier", "on retire et on passe sous le millier"]],
+    // Lot 6 « programmes 2 » : la retenue des milliers.
+    "A3-4": [["milliers avec une retenue", "on ajoute des milliers et on passe la dizaine de mille : je vais d’abord à la dizaine de mille"]],
     "M2-1": [["× 100", glisseDe("×", 100, 2)]],
     // Lot 7e : × 1 000 arrive au CM1 (niveau 2), quelle que soit l'écriture.
     "M2-2": [[c => c.donnees && c.donnees.p === 1000, calcul => glisseDe(calcul.forme === "division" ? "÷" : "×", 1000, 3)]],
     "D2-2": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D2-3": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D3-2": [["÷ 1 000", glisseDe("÷", 1000, 3)]],
+    // Lot 6 « programmes 2 » : au CM1, le résultat plus petit que 1.
+    "D3-1": [["plus petit que 1", "le résultat est plus petit que 1 : j’écris un 0 dans chaque colonne vide devant le premier chiffre"]],
     "D3-3": [["÷ 100", glisseDe("÷", 100, 2)], ["÷ 1 000", glisseDe("÷", 1000, 3)]],
     "C3-1": [["un calcul de l’autre côté", "un calcul de l’autre côté : je le calcule d’abord"]],
     // Lot 7e : au niveau 2, « multiplier » au-delà de 12 parts a sa propre
     // annonce (la leçon divise).
-    "F6-2": [[c => f6Grand(c) && F6_MULTIPLIE[c.forme], calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`],
+    // (Lot 6 « programmes 2 » : le niveau 2 neuf, du CM1 ; 2 → 3, 3 → 4.)
+    "F6-2": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    "F6-3": [[c => f6Grand(c) && F6_MULTIPLIE[c.forme], calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`],
       [f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
-    "F6-3": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    "F6-4": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
     // Lot 7a : D6, D7.
     "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
     "D7-2": [["unités et dixièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de dixièmes : je casse une unité, elle fait 10 dixièmes"]],
     "D7-3": [["unités et centièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de centièmes : je casse une unité, elle fait 100 centièmes"]],
     // Lot 7b : la moitié, annoncée avec son dessin (comme M1-3) ; 8,10 ÷ 2
     // (évaluation de 6e, Q13) : les centièmes.
-    "D8-2": [["moitié", "la moitié, je coupe aussi les deux morceaux"]],
+    // (Lot 6 « programmes 2 » : la moitié de 0,6 n'a qu'un morceau ; l'annonce
+    // attend la première moitié à deux morceaux.)
+    "D8-2": [[c => d8Moitie(c) && c.donnees.morceaux.length >= 2, "la moitié, je coupe aussi les deux morceaux"]],
     // Lot 7c : au-delà de 30 parts, le calcul (comme « Fractions égales »).
-    "F9-1": [[c => f9Grand(c), "trop de parts pour les dessiner : je multiplie en haut et en bas"]],
     "F9-2": [[c => f9Grand(c), "trop de parts pour les dessiner : je multiplie en haut et en bas"]],
+    "F9-3": [[c => f9Grand(c), "trop de parts pour les dessiner : je multiplie en haut et en bas"]],
     "D8-3": [["moitié aux centièmes", "la moitié, je coupe aussi les deux morceaux"],
       ["moitié qui fait des centièmes", calcul => `${f(calcul.donnees.dec)}0, c’est ${f(calcul.donnees.dec * 100)} centièmes\u00a0: leur moitié, c’est ${f(calcul.donnees.dec * 50)} centièmes`]]
   });
@@ -12277,7 +12536,7 @@
     "A2-1": recetteComplement, "A2-2": recetteComplement, "A2-3": recetteComplement, "A2-4": recetteComplement, "A2-5": recetteComplement,
     "A5-1": recetteNeuf, "A5-2": recetteNeuf, "A5-3": recetteNeuf, "A5-4": recetteNeuf,
     "A6-1": recetteMoinsNeuf, "A6-2": recetteMoinsNeuf, "A6-3": recetteMoinsNeuf, "A6-4": recetteMoinsNeuf,
-    "A3-1": recetteChiffre, "A3-2": recetteRang, "A3-3": recetteRang, "A3-4": recetteChiffre,
+    "A3-1": recetteChiffre, "A3-2": recetteRang, "A3-3": c => recetteRang(c) || recetteChiffre(c), "A3-4": c => recetteChiffre(c) || recetteRang(c),
     "A4-1": recetteChemin, "A4-2": recetteChemin, "A4-3": recetteChemin, "A4-4": recetteChemin,
     "A7-1": recetteChemin, "A7-2": recetteChemin, "A7-3": recetteChemin,
     "A8-1": recetteEcart, "A8-2": recetteEcart,
@@ -12299,7 +12558,7 @@
     "F8-1": recetteMemeDenominateur, "F8-2": recetteEntierMoins, "F8-3": recetteEntierMoins,
     "F5-1": recetteDecomposerFraction, "F5-2": recetteRecomposer,
     "F2-1": recetteDemiEnQuarts, "F2-2": recetteDemiEnQuarts,
-    "F6-1": recetteFoisFraction, "F6-2": recetteFoisFraction, "F6-3": recetteFoisFraction,
+    "F6-1": recetteFoisFraction, "F6-2": recetteFoisFraction, "F6-3": recetteFoisFraction, "F6-4": recetteFoisFraction,
     "F3-1": c => recetteQuantite(c), "F3-2": c => recetteQuantite(c), "F3-3": c => recetteQuantite(c, true),
     "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes,
     // Lot 7a.
@@ -12310,7 +12569,7 @@
     "D9-1": recetteDixFois, "D9-2": recetteDixFois,
     "M13-1": recetteMoitieMoitie, "M13-2": recetteMoitieMoitie, "M13-3": recetteMoitieMoitie,
     // Lot 7c.
-    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris,
+    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": f9Ecris, "F9-3": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris,
     // Lot 7d.
     "M11-1": recetteQuotientReste, "M11-2": recetteQuotientReste, "A9-1": recetteRegrouperTermes, "A9-2": recetteRegrouperTermes,
     "C4-1": recetteRemonter, "C4-2": recetteRemonter, "M9-1": recetteRetrancher, "M9-2": recetteRetrancher

@@ -192,9 +192,9 @@ test("le dessin d'un calcul : « □/□ » demande ses deux cases à part, « n
 test("la page : deux cases, la case touchée, Valider descend dans la case vide, le clavier ; cache, copie prof, VERSION", async () => {
   const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261118-2/);
-  assert.match(page, /defi_calcul\.css\?v=20261118-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261119-1/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261119-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261119-1/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
   assert.match(page, /function completerFraction\(\)/);
@@ -215,5 +215,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-6-fraction-deux-cases$/m);
+  assert.match(version, /^lot defi-calcul-lot-6-(?:fraction-deux-cases|programmes-2)$/m); // (lot 6 « programmes 2 » : le cœur change encore)
 });

@@ -163,7 +163,11 @@ const boite = (page, sel) => page.evaluate(q => { const e = document.querySelect
         assert.equal(await appel(s.page, "nouveaute", id, n, "", "image"), true);
         await pause(s.page, 500);
         assert.match(await texte(s.page, "#seance-fil"), /Avec le dessin$/, cle);
-        assert.equal(await s.page.evaluate(() => document.querySelectorAll("#aide svg text").length), 0, `${cle} : aucun chiffre sur les carrés`);
+        // (Lot 6 « programmes 2 » : 2,3 + 4, un entier et un décimal, se
+        // dessine dans le tableau de numération, qui écrit les deux nombres ;
+        // les carrés, eux, n'écrivent rien.)
+        const pose = await appel(s.page, "calcul");
+        if (CORE.aideDe(pose).outil !== "numeration") assert.equal(await s.page.evaluate(() => document.querySelectorAll("#aide svg text").length), 0, `${cle} : aucun chiffre sur les carrés`);
         await photo(s.page, `${f}-${cle}-dessin`);
         await tient(s.page, largeur, hauteur);
 

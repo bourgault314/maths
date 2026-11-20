@@ -212,7 +212,7 @@ function verifierEcris(cle, tire, lecon) {
 }
 
 test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul", () => {
-  assert.equal(NIVEAUX.length, 125, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.equal(NIVEAUX.length, 127, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   const memes = x => blanc(JSON.stringify(x));
   NIVEAUX.forEach(cle => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;
@@ -287,7 +287,7 @@ test("lot 3c : les décisions de la recette (calculs écartés)", () => {
   for (const t of tous("C3-2")) { const [a, , c] = nombresDe(t); assert.ok(a > c, t); }
   // Fractions égales : au-delà de 12 parts, comme la leçon (les deux flèches) ;
   // F6-1 (lot 7e, programme du CE2) : sur les bandes, comme sa leçon.
-  ["F6-1", "F6-2", "F6-3"].forEach(cle => { for (let g = 1; g <= 100; g += 1) assert.equal(CORE.ecrisTire(cle, {graine: g}).ecris.dessins[0].outil, cle === "F6-1" ? "barre-droite" : "fois-fraction", cle); });
+  ["F6-1", "F6-3", "F6-4"].forEach(cle => { for (let g = 1; g <= 100; g += 1) assert.equal(CORE.ecrisTire(cle, {graine: g}).ecris.dessins[0].outil, cle === "F6-1" ? "barre-droite" : "fois-fraction", cle); });
   // Dixièmes, comme la leçon.
   for (const t of tous("F1-1")) assert.match(t, /^0,\d = \d\/□$/);
   // Fraction d'une quantité : l'unité change, la méthode non.

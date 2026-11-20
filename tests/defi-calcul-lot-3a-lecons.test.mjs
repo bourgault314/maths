@@ -32,7 +32,7 @@ const tirages = (cle, n = 40) => {
 };
 
 test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 125, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.equal(NIVEAUX.length, 127, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;
@@ -138,12 +138,15 @@ test("le rekenrek accepte des rangées données, sans geste : fini dès le dépa
 
 test("les générateurs du cahier 3a", () => {
   const passe = (n, d, u) => Math.floor(n / u) !== Math.floor((n + d) / u);
-  // « Nombres à 4 chiffres » : toujours le millier passé, quatre sortes.
+  // « Nombres à 4 chiffres » : le millier passé, ou (lot 6 « programmes 2 »,
+  // choix de Gwenaël) gardé — trois sortes.
   const a33 = tirages("A3-3");
-  a33.forEach(c => assert.ok(passe(c.donnees.n, c.donnees.d, 1000) && c.donnees.n % 1000 !== 0, c.texte));
-  assert.deepEqual([...new Set(a33.map(c => CORE.sorteDe(c)))].sort(), [0, 1, 2, 3]);
-  // « Milliers dans les grands nombres » : jamais de passage.
-  tirages("A3-4").forEach(c => {
+  a33.forEach(c => assert.ok(c.donnees.n % 1000 !== 0, c.texte));
+  assert.ok(a33.some(c => passe(c.donnees.n, c.donnees.d, 1000)) && a33.some(c => !passe(c.donnees.n, c.donnees.d, 1000)));
+  assert.deepEqual([...new Set(a33.map(c => CORE.sorteDe(c)))].sort(), [0, 1, 2]);
+  // « Milliers dans les grands nombres » : jamais de passage, sauf (lot 6
+  // « programmes 2 ») les milliers avec une retenue, leur sorte à part.
+  tirages("A3-4").filter(c => CORE.sorteDe(c) !== 3).forEach(c => {
     const u = Math.abs(c.donnees.d) >= 1000 ? 1000 : Math.abs(c.donnees.d) >= 100 ? 100 : 10;
     // (Arriver pile sur le rang du dessus, 75 300 + 700 = 76 000, n'est pas
     // le passer : la convention du moteur, comme 340 + 60 = 400.)
@@ -159,7 +162,9 @@ test("les générateurs du cahier 3a", () => {
   tirages("F1-3").forEach(c => assert.doesNotMatch(espaces(c.texte), /× 1\/(10|100|1 000)/, c.texte));
   tirages("M5-1").forEach(c => assert.doesNotMatch(espaces(c.texte), /(^|[^\d])1 ×|= 1 ×/, c.texte));
   // Les sortes d'A3 lisent le saut sans son signe (− centaines existe).
-  ["A3-1", "A3-3"].forEach(cle => assert.ok(tirages(cle).some(c => c.donnees.d <= -100 && CORE.sortesDe(cle)[CORE.sorteDe(c)].nom === "− centaines"), cle));
+  // (Lot 6 « programmes 2 » : A3-3 n'a plus de sorte « − centaines ».)
+  ["A3-1"].forEach(cle => assert.ok(tirages(cle).some(c => c.donnees.d <= -100 && CORE.sortesDe(cle)[CORE.sorteDe(c)].nom === "− centaines"), cle));
+  assert.ok(tirages("A3-3").some(c => c.donnees.d <= -100 && CORE.sortesDe("A3-3")[CORE.sorteDe(c)].nom === "− en passant le millier"), "A3-3");
 });
 
 test("les cartes « par cœur » des doubles : tout ce que l'appli demande s'y lit", () => {

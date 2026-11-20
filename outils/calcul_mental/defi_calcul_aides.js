@@ -4303,7 +4303,7 @@
     let s = fraction(xg, o.gauche, "g") + `<text x="${W / 2}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>` + fraction(xd, o.droite, "d");
     s += fleche(true, o.haut, o.trouveHaut) + fleche(false, o.bas, o.trouveBas);
     const lire = ([n, d], cote) => nomFraction(`${cote}n` === o.cache && !o.montre ? "?" : n, `${cote}d` === o.cache && !o.montre ? "?" : d);
-    return `<svg viewBox="0 0 ${W} 228" role="img" aria-label="${lire(o.gauche, "g")} égale ${lire(o.droite, "d")} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
+    return `<svg class="dc-fois" viewBox="0 0 ${W} 228" role="img" aria-label="${lire(o.gauche, "g")} égale ${lire(o.droite, "d")} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
   }
 
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).

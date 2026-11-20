@@ -74,7 +74,7 @@ function avecBoites(boites, base = P.creerParcours()) {
 test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules", () => {
   assert.deepEqual(P.parcoursConstruit(CARTE).map(c => `${c.module}-${c.niveau}`),
     ["A2-1", "A2-2", "M2-1", "A5-1", "A2-3", "A5-2", "A5-3", "A2-4", "M2-2", "D2-1", "A2-5", "A5-4", "D2-2", "D2-3", "D2-4"]);
-  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 125);
+  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 127);
   assert.deepEqual(P.parcoursConstruit(CARTE_PLEINE).slice(0, 4).map(c => `${c.module}-${c.niveau}`), ["A1-1", "A1-2", "A1-3", "A10-1"]);
   // Le palier est celui du niveau : A5 « + 9 » aux bases, « + 98 » au CM2.
   assert.equal(P.palierDe(CARTE, "A5", 1), 1);
@@ -87,8 +87,8 @@ test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
   const compte = P.compter(P.creerParcours(), CARTE);
   // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
-  assert.deepEqual(compte.paliers.map(p => p.total), [40, 33, 40, 12]); // (lot 7c : F4-2 au CM2 ; lot 7d : M11 au CM1)
-  assert.equal(compte.total, 125);
+  assert.deepEqual(compte.paliers.map(p => p.total), [41, 34, 40, 12]); // (lot 7c : F4-2 au CM2 ; lot 7d : M11 au CM1 ; lot 6 « programmes 2 »)
+  assert.equal(compte.total, 127);
 });
 
 test("premier jour : pas de calculs du jour, la séance commence par le test du premier module", () => {
@@ -644,8 +644,9 @@ test("la vraie carte (modules lots 1 à 5) : le parcours commence par A1, A10, A
   assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(12, 18).map(c => `${c.module}-${c.niveau}`), ["M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2"], "modules lot 2 : A4 puis A6 juste après A5 ; lot 3 : M4-2 après A6-1");
   // Modules lot 3 : la fin du palier 1, comme la carte (§ 3).
   // Carte v3 (lot « couverture ») : F8-1, F8-2, F6-1 (CE1, CE2) au palier 1.
-  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(26, 40).map(c => `${c.module}-${c.niveau}`),
-    ["A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "M8-1", "M1-3", "M6-2", "M8-2"], "le palier 1 entier : 40 compétences sur 40");
+  // (Lot 6 « programmes 2 » : F9-1 après A5-3 ; le palier 1 a 41 compétences.)
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(26, 41).map(c => `${c.module}-${c.niveau}`),
+    ["A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "F9-1", "M8-1", "M1-3", "M6-2", "M8-2"], "le palier 1 entier : 41 compétences sur 41");
   // Modules lot 4 : le palier 2 des entiers, dans l'ordre de la carte (§ 3) ;
   // modules lot 5 : les décimaux D1, D3, D4 à leur place ; les fractions,
   // pas encore construites, sont sautées.
@@ -653,9 +654,9 @@ test("la vraie carte (modules lots 1 à 5) : le parcours commence par A1, A10, A
   // F3 reprennent la leur (le palier 2 entier).
   // Carte v3 : A2-5 au CM1 ; A8-3, F5-3 réunis ; F9-1 (pas construit) sauté.
   // (Lot 7e-2 : F8-3 au CM1, après F5-2 ; lot 7d : « Quotient et reste » au CM1.)
-  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(40, 71).map(c => `${c.module}-${c.niveau}`),
-    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "M11-1", "F5-2", "F8-3", "M12-1"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5");
-  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 125, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.deepEqual(P.parcoursConstruit(CARTE_REELLE).slice(41, 72).map(c => `${c.module}-${c.niveau}`),
+    ["A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3", "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1", "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F6-2", "M11-1", "F5-2", "F8-3"], "le palier 2 : M7, C1, C3, M10, M12, D1, D3, D4, et les fractions F1, F2, F3, F5, F6 (lot 6 « programmes 2 »)");
+  assert.equal(P.parcoursConstruit(CARTE_REELLE).length, 127, "lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   assert.deepEqual(P.fileSeance(P.creerParcours(), CARTE_REELLE, {aujourdhui: J1}).etapes, [{type: "test", module: "A1"}, {type: "avance"}]);
 });
 
