@@ -151,6 +151,7 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .q .phrase-t { font-size: 1.25rem; line-height: 1.25; }
 .q .enonce { font-size: 1.0625rem; line-height: 1.35; text-align: left; font-weight: 700; align-self: stretch; }
 .q .prop { font-size: 1.0625rem; line-height: 1.35; font-weight: 900; text-align: left; align-self: stretch; }
+.q.serre .enonce, .q.serre .prop { font-size: 1rem; line-height: 1.3; }
 .q.long .l1 { font-size: 1.375rem; }
 .case { display: inline-block; width: 8.125rem; height: 3rem; border: .15625rem solid #8fb0c6; border-radius: .75rem; background: #fff; font-size: 1.75rem; line-height: 2.625rem;
   text-align: right; padding: 0 .625rem; flex: 0 0 auto; overflow: hidden; white-space: nowrap; cursor: text; font-weight: 900; }
@@ -286,6 +287,28 @@ table.gn.dec .virg { position: absolute; right: -.25rem; bottom: .125rem; font: 
 .schema-part { border: .125rem solid var(--ink); text-align: center; font-weight: 900; font-size: .875rem; padding: .5rem .125rem; background: #fff; min-width: 0; white-space: nowrap; overflow: hidden; }
 .schema-part + .schema-part { margin-left: -.125rem; }
 .schema-part.verte { background: #2f9e57; color: #fff; }
+/* Lot B2-3b-1 (Q2) : le tout en vert dans la correction ; deux barres
+   collées pour comparer (choix de Gwenaël du 20/11), l'écart en pointillé
+   au bout de la plus courte ; la ligne « Ensemble : ? » dessous. */
+.schema-tout.verte { background: #2f9e57; color: #fff; }
+.schema2 { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: .5rem; row-gap: 0; align-items: stretch; }
+.schema2 .nom { font-weight: 900; font-size: .875rem; text-align: right; align-self: center; white-space: nowrap; }
+.schema2 .barre { display: flex; min-width: 0; }
+.schema2 .barre ~ .barre { margin-top: -.125rem; }
+.schema2 .b { border: .125rem solid var(--ink); text-align: center; font-weight: 900; font-size: .875rem; padding: .5rem .125rem; background: #fff; white-space: nowrap; overflow: hidden; min-width: 0; }
+.schema2 .b.ecart { border-style: dashed; border-top-color: transparent; background-clip: padding-box; margin-left: -.125rem; color: #8a5a00; background-color: #fff8e6; }
+.schema2 .b.verte { background-color: #2f9e57; color: #fff; }
+.schema2 .total { grid-column: 1 / -1; text-align: center; font-weight: 900; font-size: .9375rem; margin-top: .25rem; }
+.schema2 .total.verte { color: var(--green); }
+.reponse-bonne .schema-tout, .reponse-bonne .schema-part, .reponse-bonne .schema2 .b { padding-top: .375rem; padding-bottom: .375rem; }
+.zone .calcul-pb { font-size: 1.0625rem; font-weight: 900; text-align: center; line-height: 1.3; }
+.zone .calcul-pb .v { color: var(--green); }
+/* La balance ou le rectangle dans la question : la phrase au-dessus, le
+   dessin et la case côte à côte. */
+.q .pb-fig { display: flex; align-items: center; justify-content: center; gap: .75rem; width: 100%; }
+.q .pb-fig .dessin { height: 5rem; width: auto; max-width: 66%; flex: 0 1 auto; min-width: 0; }
+.q .pb-fig .l1 { font-size: 1.5rem; gap: .375rem; }
+.q .pb-fig .l1 .case { width: 4.5rem; min-width: 0; height: 2.75rem; font-size: 1.5rem; }
 
 /* fins, listes, corrections */
 .corr { display: flex; flex-direction: column; gap: .375rem; flex: 0 0 auto; }
@@ -694,6 +717,9 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .cadre[data-forme="seance"] .q .phrase-t { font-size: 1.4375rem; }
   .cadre[data-forme="seance"] .q .pieces-q { height: 4rem; }
   .cadre[data-forme="seance"] .zone .dessin.axe { max-height: 10rem; }
+  .cadre[data-forme="seance"] .q .pb-fig .dessin { height: 8.5rem; }
+  .cadre[data-forme="seance"] .schema2 .b, .cadre[data-forme="seance"] .schema2 .nom { font-size: 1.0625rem; }
+  .cadre[data-forme="seance"] .zone .calcul-pb { font-size: 1.3125rem; }
   /* Les dessins de l'image (lot A2 bis) : à la taille du reste, pas plus. */
   .cadre[data-forme="seance"] .zone .dessin.horloges.petite { max-height: 8rem; }
   .cadre[data-forme="seance"] .zone .dessin.etiquette { max-height: 7rem; }

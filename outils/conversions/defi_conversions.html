@@ -606,13 +606,13 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
       zone.appendChild(reponse);
       reponse.querySelectorAll(".mini-cartes span").forEach(dansLaCase);
-      reponse.querySelectorAll(".grosse.longue").forEach(surUneLigne);
+      reponse.querySelectorAll(".grosse.longue, .calcul-pb").forEach(surUneLigne);
     }
     // Lot B2-2b-2 (C8) : la réponse en vert tient sur une ligne au
     // téléphone (« 1 200 mL + 1 700 mL = 2 900 mL » en prenait deux, et
@@ -760,6 +760,8 @@
       const casesEl = [];
       qEl.textContent = "";
       qEl.classList.toggle("long", Boolean(question.morceaux.long));
+      // (Lot B2-3b-1, Q2 : un énoncé long un peu plus serré.)
+      qEl.classList.toggle("serre", Boolean(question.morceaux.serre));
       const m = question.morceaux;
       const nouvelleCase = (i, petite) => {
         const c = el("span", `case${petite ? " petite" : ""}${i === 0 ? " focus" : ""}`, "");
@@ -809,6 +811,20 @@
         const d = el("div", "deux-fig");
         d.append(AIDES.figureA5(a.a, {classe: "dessin aire", lettre: "A", titre: "La figure A"}).s, AIDES.figureA5(a.b, {classe: "dessin aire", lettre: "B", titre: "La figure B"}).s);
         qEl.appendChild(d);
+        return casesEl;
+      }
+      // Lot B2-3b-1 (Q2, choix de Gwenaël du 20/11) : la balance ou le
+      // rectangle dessinés, la case à droite.
+      // (La phrase sur toute la largeur, puis le dessin et la case côte à
+      // côte, comme l'aire en carreaux : le dessin garde de la place.)
+      if (m.figure) {
+        qEl.appendChild(el("div", "enonce", m.enonce));
+        const l = el("div", "pb-fig");
+        const l1 = el("div", "l1");
+        if (m.avant) l1.appendChild(el("span", "", m.avant));
+        l1.append(nouvelleCase(0), el("span", "", m.apres));
+        l.append(AIDES.figurePb(m.figure), l1);
+        qEl.appendChild(l);
         return casesEl;
       }
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
@@ -1230,7 +1246,24 @@
       }
       return d;
     }
+    // Lot B2-3b-1 (Q2, décidé le 20/11, avant / après dans la notice) : le
+    // schéma complété, la réponse en vert à la place du « ? », puis le
+    // dernier calcul dans une seule unité (la réponse en vert) ; pour
+    // « Est-ce vraisemblable ? », Oui ou Non et la vraie réponse.
+    function schemaCorrige(zone, question) {
+      const s = question.schemaCorr;
+      if (s.deux) AIDES.deuxBarres(zone, s.deux);
+      else AIDES.schema(zone, {tout: s.tout, parts: s.parts, poids: s.poids, verte: s.verte, verteTout: s.verte === -2});
+      const ligne = question.forme === "vrai-faux" ? question.raisonQ2 : question.resumeVert;
+      const v = question.repTexteQ2;
+      const c = el("div", "calcul-pb");
+      const k = ligne.lastIndexOf(v);
+      if (k < 0) c.textContent = ligne;
+      else c.append(texteNoeud(ligne.slice(0, k)), el("span", "v", v), texteNoeud(ligne.slice(k + v.length)));
+      zone.appendChild(c);
+    }
     function bonneReponse(zone, question) {
+      if (question.schemaCorr) { schemaCorrige(zone, question); return; }
       // Lot B2-3a (A5) : la figure complétée (numérotée, les demis
       // recollés ; B posée sur A ; la tache coloriée), les lignes à côté.
       if (question.aire) { AIDES.correctionAire(zone, question); return; }
