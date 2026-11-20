@@ -526,6 +526,9 @@
       // Une aide à côté du pavé (À toi) ou l'escalier (Tu connais
       // déjà ?) : sur un écran peu haut, le pavé se fait plus court.
       if (sorteZone === "aide") cadre.classList.add("bas-court");
+      // Lot B2-3a : sans aide (Je valide, Je me souviens…), la question peut
+      // prendre plus de place (la figure de « L'aire en carreaux » grandit).
+      if (sorteZone === "info") cadre.classList.add("sans-outil");
       if (hauteurPx) cadre.style.setProperty("--q-h", `${hauteurPx}px`);
       else if (hauteur) cadre.style.setProperty("--q-h", rem(hauteur));
       if (hauteurZone) cadre.style.setProperty("--z-h", `${hauteurZone}px`);
@@ -603,7 +606,7 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -774,6 +777,40 @@
         l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
         if (m.cases[1]) l.appendChild(el("span", "", m.cases[1]));
       };
+      // Lot B2-3a (A5) : la figure à gauche, la question et la case à
+      // droite (sur une ligne : la question reste basse) ; pour comparer,
+      // la phrase et les deux figures dessous.
+      if (m.aire) {
+        const a = question.aire;
+        // (La phrase sur toute la largeur, puis la figure et la case côte à
+        // côte : la figure garde de la place pour être grande.)
+        qEl.appendChild(el("div", "phrase-t", m.phrase || m.avant));
+        const l = el("div", "aire-q");
+        const fig = el("div", "fig-q");
+        if (a.sorte === "encadrer") AIDES.aireTache(fig, a.tache, {classe: "dessin aire", marge: 0.25});
+        else fig.appendChild(AIDES.figureA5(a.fig, {classe: "dessin aire", marge: 0.25}).s);
+        if (a.unite === "cm2") fig.appendChild(el("div", "legende-a5", T("1 carreau = 1 cm²")));
+        const d = el("div", "droite");
+        const l1 = el("div", "l1");
+        if (question.forme === "deux-cases") {
+          l1.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
+          d.append(l1, el("div", "phrase-t", m.cases[1]));
+        } else {
+          l1.append(nouvelleCase(0), el("span", "", m.apres));
+          d.appendChild(l1);
+        }
+        l.append(fig, d);
+        qEl.appendChild(l);
+        return casesEl;
+      }
+      if (m.deuxFig) {
+        const a = question.aire;
+        qEl.appendChild(el("div", "phrase-t", m.phrase));
+        const d = el("div", "deux-fig");
+        d.append(AIDES.figureA5(a.a, {classe: "dessin aire", lettre: "A", titre: "La figure A"}).s, AIDES.figureA5(a.b, {classe: "dessin aire", lettre: "B", titre: "La figure B"}).s);
+        qEl.appendChild(d);
+        return casesEl;
+      }
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
         if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
         if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
@@ -1194,6 +1231,9 @@
       return d;
     }
     function bonneReponse(zone, question) {
+      // Lot B2-3a (A5) : la figure complétée (numérotée, les demis
+      // recollés ; B posée sur A ; la tache coloriée), les lignes à côté.
+      if (question.aire) { AIDES.correctionAire(zone, question); return; }
       // Lot B2-2a (C6, choix de Gwenaël du 18/11) : la double droite
       // complétée (la graduation demandée en vert), et le calcul dessous.
       if (question.droite) {

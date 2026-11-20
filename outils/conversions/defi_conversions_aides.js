@@ -1881,6 +1881,412 @@
     return enChaine(() => voir(vues.indexOf(false)), () => vues.includes(false), 420);
   }
 
+  // ================================================ lot B2-3a : l'aire (A5)
+  // La figure sur son quadrillage (choix de Gwenaël du 20/11, maquette sur
+  // la vraie page) : le carreau touché prend son numéro ; le demi touché
+  // glisse compléter un autre demi et devient un carreau (« découper-
+  // recoller », S002) ; pour comparer, B se pose sur A et on regarde ce qui
+  // dépasse. Le contour épais et les numéros se lisent imprimés en noir et
+  // blanc ; les couleurs sont celles de maths&go (turquoise pâle, vert des
+  // réponses, orange).
+  const A5C = {grille: "#c4d6e2", fond: "#d8f3f1", vert: "#147447", vertPale: "#bfe9cf", or: "#FA7D05", orPale: "#ffe0bf", orTexte: "#a14f00",
+    tealTexte: "#087a71", melange: "#e3ecf2"};
+  function sommetsA5(ch, x, y) {
+    if (ch === "#") return [[x, y], [x + 1, y], [x + 1, y + 1], [x, y + 1]];
+    if (ch === "a") return [[x, y], [x + 1, y], [x, y + 1]];
+    if (ch === "b") return [[x, y], [x + 1, y], [x + 1, y + 1]];
+    if (ch === "c") return [[x + 1, y], [x + 1, y + 1], [x, y + 1]];
+    if (ch === "d") return [[x, y], [x + 1, y + 1], [x, y + 1]];
+    return null;
+  }
+  // Le triangle libre d'un demi-carreau (là où l'autre demi vient se coller).
+  const LIBRE_A5 = {a: "c", b: "d", c: "a", d: "b"};
+  const centreA5 = p => [p.reduce((t, q) => t + q[0], 0) / p.length, p.reduce((t, q) => t + q[1], 0) / p.length];
+  function piecesFigA5(fig, dx = 0, dy = 0) {
+    const ps = [];
+    fig.forEach((l, y) => [...l].forEach((ch, x) => { const p = sommetsA5(ch, x + dx, y + dy); if (p) ps.push({ch, x: x + dx, y: y + dy, p, demi: ch !== "#"}); }));
+    return ps;
+  }
+  // Le contour : les côtés qui ne sont pas partagés par deux morceaux.
+  function contourA5(ps) {
+    const vus = new Map();
+    ps.forEach(m => m.p.forEach((a, i) => {
+      const b = m.p[(i + 1) % m.p.length];
+      const k = [a, b].map(q => q.join(",")).sort().join("|");
+      vus.set(k, (vus.get(k) || 0) + 1);
+    }));
+    return [...vus].filter(([, n]) => n === 1).map(([k]) => k.split("|").map(t => t.split(",").map(Number)));
+  }
+  const tailleFigA5 = fig => [Math.max(...fig.map(l => l.length)), fig.length];
+  // Le quadrillage d'une boîte [x0, y0, x1, y1] (en carreaux) : la marge
+  // aussi (on voit l'unité tout autour).
+  function grilleA5(s, X, Y, [x0, y0, x1, y1], marge) {
+    const g = svg("g", {stroke: A5C.grille, "stroke-width": 1.2});
+    for (let i = Math.ceil(x0 - marge); i <= Math.floor(x1 + marge); i += 1) g.appendChild(svg("line", {x1: X(i), y1: Y(y0 - marge), x2: X(i), y2: Y(y1 + marge)}));
+    for (let i = Math.ceil(y0 - marge); i <= Math.floor(y1 + marge); i += 1) g.appendChild(svg("line", {x1: X(x0 - marge), y1: Y(i), x2: X(x1 + marge), y2: Y(i)}));
+    s.appendChild(g);
+  }
+  const ptsA5 = (p, X, Y) => p.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(" ");
+  function traitA5(s, segs, X, Y, c, couleur = N, tirets = false) {
+    segs.forEach(([a, b]) => s.appendChild(svg("line", Object.assign({x1: X(a[0]), y1: Y(a[1]), x2: X(b[0]), y2: Y(b[1]), stroke: couleur,
+      "stroke-width": Math.max(2.2, c / 11), "stroke-linecap": "round"}, tirets ? {"stroke-dasharray": `${c / 5} ${c / 7}`} : {}))));
+  }
+  // La figure. `etat` : {numeros: Map(index → texte), recolles: [[i, j]]
+  // (le demi i collé dans la place libre du demi j), rangees (le nombre de
+  // carreaux entiers au bout de chaque rangée), demisOr (les demis en
+  // orange)}. Rend {s, ps, X, Y, c}.
+  function figureA5(fig, {c = 30, marge = 0.5, classe = "dessin aire", lettre = "", etat = {}, titre = "Une figure sur un quadrillage"} = {}) {
+    const [W, H] = tailleFigA5(fig);
+    const plus = etat.rangees ? 1.2 : 0;
+    const X = v => (v + marge) * c;
+    const Y = X;
+    const s = svg("svg", {viewBox: `0 0 ${((W + 2 * marge + plus) * c).toFixed(1)} ${((H + 2 * marge) * c).toFixed(1)}`, class: classe, role: "img", "aria-label": titre});
+    grilleA5(s, X, Y, [0, 0, W, H], marge);
+    const ps = piecesFigA5(fig);
+    const numeros = etat.numeros || new Map();
+    const recolles = etat.recolles || [];
+    const partis = new Set(recolles.map(r => r[0]));
+    const recus = new Map(recolles.map(r => [r[1], r[0]]));
+    ps.forEach((m, i) => {
+      if (partis.has(i)) {
+        s.appendChild(svg("polygon", {points: ptsA5(m.p, X, Y), fill: "#ffffff", stroke: A5C.or, "stroke-width": 1.6, "stroke-dasharray": "4 3"}));
+        return;
+      }
+      const touche = numeros.has(i) || recus.has(i);
+      const fond = touche ? (m.demi ? A5C.orPale : A5C.vertPale) : m.demi && etat.demisOr ? A5C.orPale : A5C.fond;
+      s.appendChild(svg("polygon", {points: ptsA5(m.p, X, Y), fill: fond, stroke: A5C.grille, "stroke-width": 1}));
+      if (recus.has(i)) {
+        const vient = svg("polygon", {points: ptsA5(sommetsA5(LIBRE_A5[m.ch], m.x, m.y), X, Y), fill: A5C.orPale, stroke: A5C.or, "stroke-width": 1.6, class: "recolle"});
+        vient.dataset.de = String(recus.get(i));
+        s.appendChild(vient);
+      }
+    });
+    traitA5(s, contourA5(ps), X, Y, c);
+    // Les numéros : au centre du carreau (entier, ou complété).
+    ps.forEach((m, i) => {
+      const t = numeros.get(i);
+      if (t === undefined || partis.has(i)) return;
+      const [cx, cy] = recus.has(i) ? [m.x + 0.5, m.y + 0.5] : centreA5(m.p);
+      const petit = t === "½";
+      s.appendChild(svg("text", {x: X(cx), y: Y(cy) + c * (petit ? 0.14 : 0.17), "text-anchor": "middle", "font-size": (c * (petit ? 0.4 : t.length > 1 ? 0.44 : 0.5)).toFixed(1),
+        "font-weight": 900, fill: m.demi && !recus.has(i) ? A5C.orTexte : A5C.vert}, t));
+    });
+    if (etat.rangees) {
+      fig.forEach((l, y) => {
+        const n = [...l].filter(ch => ch === "#").length;
+        s.appendChild(svg("text", {x: X(W + 0.15), y: Y(y + 0.5) + c * 0.16, "font-size": (c * 0.44).toFixed(1), "font-weight": 900, fill: N}, String(n)));
+      });
+    }
+    if (lettre) s.appendChild(svg("text", {x: X(-marge + 0.08), y: Y(-marge + 0.42), "font-size": (c * 0.46).toFixed(1), "font-weight": 900, fill: N}, lettre));
+    return {s, ps, X, Y, c};
+  }
+
+  // L'outil (et On te montre) : on touche chaque morceau. Un carreau
+  // entier prend le numéro suivant ; un demi glisse compléter le demi le plus
+  // proche (pas encore touché), et le carreau complété prend le numéro
+  // suivant. Le compteur dit combien de carreaux. Rend `jouer` (tout
+  // toucher, un morceau à la fois).
+  function aireCompter(zone, fig, {fini = () => {}, classe = "dessin aire aire-z", compteur = null} = {}) {
+    const numeros = new Map();
+    const recolles = [];
+    let n = 0;
+    let dernier = null;
+    const boite = el("div", "aire-boite");
+    zone.appendChild(boite);
+    const total = piecesFigA5(fig).length;
+    const faits = () => numeros.size + recolles.length;
+    const dire = () => { if (compteur) compteur.textContent = n ? carte().typo(`${n} carreau${n > 1 ? "x" : ""}`) : ""; };
+    function dessiner() {
+      boite.textContent = "";
+      const f = figureA5(fig, {classe, etat: {numeros, recolles}});
+      // Le doigt touche un carreau entier : la case de la grille où il est.
+      const pris = new Set([...numeros.keys(), ...recolles.flat()]);
+      f.ps.forEach((m, i) => {
+        const r = svg("rect", {x: f.X(m.x), y: f.Y(m.y), width: f.c, height: f.c, fill: "transparent", class: `zone-a5${pris.has(i) ? "" : " a-toucher"}`});
+        r.addEventListener("click", ev => { ev.stopPropagation(); toucher(i); });
+        f.s.appendChild(r);
+      });
+      boite.appendChild(f.s);
+      // Le demi qui vient d'être recollé glisse depuis sa place.
+      if (dernier !== null) {
+        const v = f.s.querySelector(`polygon.recolle[data-de="${dernier[0]}"]`);
+        if (v && v.animate) {
+          const a = centreA5(f.ps[dernier[0]].p); const b = [f.ps[dernier[1]].x + 0.5, f.ps[dernier[1]].y + 0.5];
+          v.animate([{transform: `translate(${((a[0] - b[0]) * f.c).toFixed(1)}px, ${((a[1] - b[1]) * f.c).toFixed(1)}px)`}, {transform: "translate(0px, 0px)"}],
+            {duration: 420, easing: "ease-out"});
+        }
+        dernier = null;
+      }
+    }
+    function toucher(i) {
+      const ps = piecesFigA5(fig);
+      const m = ps[i];
+      const pris = new Set([...numeros.keys(), ...recolles.flat()]);
+      if (pris.has(i)) return;
+      if (!m.demi) { n += 1; numeros.set(i, String(n)); }
+      else {
+        // Le demi libre le plus proche.
+        const [cx, cy] = centreA5(m.p);
+        const autres = ps.map((p, j) => [p, j]).filter(([p, j]) => p.demi && j !== i && !pris.has(j))
+          .sort((u, v) => Math.hypot(centreA5(u[0].p)[0] - cx, centreA5(u[0].p)[1] - cy) - Math.hypot(centreA5(v[0].p)[0] - cx, centreA5(v[0].p)[1] - cy));
+        if (!autres.length) { numeros.set(i, "½"); }
+        else {
+          const j = autres[0][1];
+          n += 1;
+          recolles.push([i, j]);
+          numeros.set(j, String(n));
+          dernier = [i, j];
+        }
+      }
+      dire();
+      dessiner();
+      if (ps.every((p, k) => numeros.has(k) || recolles.some(r => r.includes(k)))) fini();
+    }
+    dire();
+    dessiner();
+    // Pour le robot et « Suivant » sans le geste : le prochain morceau.
+    const prochain = () => {
+      const pris = new Set([...numeros.keys(), ...recolles.flat()]);
+      const ps = piecesFigA5(fig);
+      // Les carreaux entiers d'abord, puis les demis.
+      const k = ps.findIndex((p, j) => !p.demi && !pris.has(j));
+      return k >= 0 ? k : ps.findIndex((p, j) => !pris.has(j));
+    };
+    return enChaine(() => toucher(prochain()), () => faits() < total && prochain() >= 0, 260);
+  }
+
+  // Superposer : A, et B à côté ; B touché vient se poser sur A, décalée de
+  // (dx, dy) (le décalage qui recouvre le plus, calculé par le générateur).
+  // Ce qui ne dépasse pas se mêle ; ce qui dépasse garde sa couleur et sa
+  // lettre. `pose` : déjà posée (l'image, la correction).
+  function bitsA5(k) { return (k & 1) + ((k >> 1) & 1) + ((k >> 2) & 1) + ((k >> 3) & 1); }
+  const QUART_A5 = {"#": 15, a: 9, b: 3, c: 6, d: 12};
+  function quartPolyA5(x, y, k) {
+    const c = [x + 0.5, y + 0.5];
+    return [[[x, y], [x + 1, y], c], [[x + 1, y], [x + 1, y + 1], c], [[x + 1, y + 1], [x, y + 1], c], [[x, y + 1], [x, y], c]][k];
+  }
+  function aireSuperposer(zone, A, B, {dx = 0, dy = 0, pose = false, fini = () => {}, classe = "dessin aire aire-z", note = null} = {}) {
+    const [wa, ha] = tailleFigA5(A);
+    const [wb, hb] = tailleFigA5(B);
+    const cote = [wa + 1, 0];
+    // (Déjà posée : la boîte des deux figures posées, pas la place de B à
+    // côté — le dessin reste grand dans la correction.)
+    const x0 = Math.min(0, dx); const y0 = Math.min(0, dy);
+    const x1 = pose ? Math.max(wa, dx + wb) : Math.max(wa, wa + 1 + wb, dx + wb);
+    const y1 = pose ? Math.max(ha, dy + hb) : Math.max(ha, hb, dy + hb);
+    const c = 30; const marge = 0.5;
+    const X = v => (v - x0 + marge) * c;
+    const Y = v => (v - y0 + marge) * c;
+    const boite = el("div", "aire-boite");
+    zone.appendChild(boite);
+    let posee = pose;
+    function dessiner(animer) {
+      boite.textContent = "";
+      const s = svg("svg", {viewBox: `0 0 ${((x1 - x0 + 2 * marge) * c).toFixed(1)} ${((y1 - y0 + 2 * marge) * c).toFixed(1)}`,
+        class: `${classe}${posee ? "" : " a-toucher"}`, role: "img", "aria-label": posee ? "La figure B posée sur la figure A" : "La figure A, et la figure B à côté"});
+      grilleA5(s, X, Y, [x0, y0, x1, y1], marge);
+      const pa = piecesFigA5(A);
+      const [bx, by] = posee ? [dx, dy] : cote;
+      const pb = piecesFigA5(B, bx, by);
+      const qa = new Map(pa.map(p => [`${p.x},${p.y}`, QUART_A5[p.ch]]));
+      const qb = new Map(pb.map(p => [`${p.x},${p.y}`, QUART_A5[p.ch]]));
+      // A : turquoise pâle ; là où B la recouvre, gris-bleu.
+      pa.forEach(p => s.appendChild(svg("polygon", {points: ptsA5(p.p, X, Y), fill: A5C.fond, stroke: A5C.grille, "stroke-width": 1})));
+      const gb = svg("g", {class: "fig-b"});
+      if (posee) {
+        qb.forEach((k, cle) => {
+          const [x, y] = cle.split(",").map(Number);
+          const ka = qa.get(cle) || 0;
+          [0, 1, 2, 3].forEach(q => {
+            if (!(k & (1 << q))) return;
+            gb.appendChild(svg("polygon", {points: ptsA5(quartPolyA5(x, y, q), X, Y), fill: ka & (1 << q) ? A5C.melange : A5C.orPale}));
+          });
+        });
+      } else pb.forEach(p => gb.appendChild(svg("polygon", {points: ptsA5(p.p, X, Y), fill: A5C.orPale, stroke: A5C.grille, "stroke-width": 1})));
+      s.appendChild(gb);
+      // Les quarts de A qui dépassent : turquoise plus fort.
+      if (posee) {
+        qa.forEach((k, cle) => {
+          const [x, y] = cle.split(",").map(Number);
+          const kb = qb.get(cle) || 0;
+          [0, 1, 2, 3].forEach(q => { if ((k & (1 << q)) && !(kb & (1 << q))) s.appendChild(svg("polygon", {points: ptsA5(quartPolyA5(x, y, q), X, Y), fill: "#9fe0dc"})); });
+        });
+      }
+      traitA5(s, contourA5(pa), X, Y, c);
+      const cb = svg("g", {});
+      traitA5(cb, contourA5(pb), X, Y, c, A5C.or, true);
+      s.appendChild(cb);
+      // Les lettres : A et B dans leur coin ; posée, sur ce qui dépasse.
+      const lettre = (t, x, y, coul) => s.appendChild(svg("text", {x: X(x), y: Y(y) + c * 0.17, "text-anchor": "middle", "font-size": (c * 0.46).toFixed(1), "font-weight": 900, fill: coul}, t));
+      if (!posee) {
+        lettre("A", -0.25, -0.28, N);
+        lettre("B", bx - 0.25, by - 0.28, A5C.orTexte);
+      } else {
+        const marquer = (qx, qy, t, coul) => qx.forEach((k, cle) => {
+          const [x, y] = cle.split(",").map(Number);
+          const seul = k & ~(qy.get(cle) || 0);
+          if (bitsA5(seul) < 2) return;
+          const pts = [0, 1, 2, 3].filter(q => seul & (1 << q)).flatMap(q => quartPolyA5(x, y, q));
+          const [cx, cy] = centreA5(pts);
+          lettre(t, cx, cy, coul);
+        });
+        marquer(qa, qb, "A", A5C.tealTexte);
+        marquer(qb, qa, "B", A5C.orTexte);
+      }
+      if (!posee) s.addEventListener("click", poser);
+      boite.appendChild(s);
+      if (animer && gb.animate) {
+        const t = `translate(${((cote[0] - dx) * c).toFixed(1)}px, ${((cote[1] - dy) * c).toFixed(1)}px)`;
+        [gb, cb].forEach(g => g.animate([{transform: t, opacity: 0.6}, {transform: "translate(0px, 0px)", opacity: 1}], {duration: 520, easing: "ease-out"}));
+      }
+    }
+    function poser() {
+      if (posee) return;
+      posee = true;
+      dessiner(true);
+      if (note) zone.appendChild(el("div", "note", note));
+      fini();
+    }
+    dessiner(false);
+    if (pose) { if (note) zone.appendChild(el("div", "note", note)); return null; }
+    return poser;
+  }
+
+  // La tache à encadrer : l'ellipse sur son quadrillage. `cases` : 2 dedans
+  // (vert), 1 touchée (orange), 0 rien. À toucher (l'outil) : chaque
+  // carreau passe de rien à « dedans », puis à « touché », puis à rien.
+  function aireTache(zone, t, {montrer = false, toucher = false, compteur = null, classe = "dessin aire aire-z", marge = 0.5} = {}) {
+    const c = 30;
+    const X = v => (v + marge) * c;
+    const etats = montrer ? t.cases.slice() : t.cases.map(() => 0);
+    const boite = el("div", "aire-boite");
+    zone.appendChild(boite);
+    const dire = () => {
+      if (!compteur) return;
+      const dedans = etats.filter(k => k === 2).length;
+      compteur.textContent = carte().typo(`Dedans : ${dedans} · En tout : ${etats.filter(k => k > 0).length}`);
+    };
+    function dessiner() {
+      boite.textContent = "";
+      const s = svg("svg", {viewBox: `0 0 ${((t.W + 2 * marge) * c).toFixed(1)} ${((t.H + 2 * marge) * c).toFixed(1)}`, class: `${classe}${toucher ? " a-toucher" : ""}`,
+        role: "img", "aria-label": "Une tache sur un quadrillage"});
+      etats.forEach((k, i) => {
+        if (!k) return;
+        s.appendChild(svg("rect", {x: X(i % t.W), y: X(Math.floor(i / t.W)), width: c, height: c, fill: k === 2 ? A5C.vertPale : A5C.orPale}));
+      });
+      grilleA5(s, X, X, [0, 0, t.W, t.H], marge);
+      s.appendChild(svg("ellipse", {cx: X(t.cx), cy: X(t.cy), rx: t.rx * c, ry: t.ry * c, fill: etats.some(Boolean) ? "rgba(0,175,170,.16)" : A5C.fond,
+        stroke: N, "stroke-width": 3, "pointer-events": "none"}));
+      if (toucher) {
+        etats.forEach((k, i) => {
+          const r = svg("rect", {x: X(i % t.W), y: X(Math.floor(i / t.W)), width: c, height: c, fill: "transparent", class: "zone-a5"});
+          r.addEventListener("click", () => { etats[i] = [2, 0, 1][k]; dire(); dessiner(); });
+          s.appendChild(r);
+        });
+      }
+      boite.appendChild(s);
+    }
+    dire();
+    dessiner();
+  }
+
+  // Les entrées de A5 : l'outil, l'image, la correction.
+  function compteurA5(zone) {
+    const p = el("span", "compteur-a5", "");
+    zone.appendChild(p);
+    return p;
+  }
+  function outilAire(zone, question) {
+    const a = question.aire;
+    if (a.sorte === "compter") {
+      const p = compteurA5(zone);
+      aireCompter(zone, a.fig, {compteur: p});
+      const demis = piecesFigA5(a.fig).some(m => m.demi);
+      zone.appendChild(el("div", "note", carte().typo(demis ? "Un demi touché complète l'autre." : a.unite === "cm2" ? "1 carreau = 1 cm²" : "Touche chaque carreau.")));
+      return;
+    }
+    if (a.sorte === "encadrer") {
+      const p = compteurA5(zone);
+      aireTache(zone, a.tache, {toucher: true, compteur: p});
+      zone.appendChild(el("div", "note", "Touche : vert dedans, orange à moitié."));
+      return;
+    }
+    aireSuperposer(zone, a.a, a.b, {dx: a.dx, dy: a.dy, note: "Je compare ce qui dépasse."});
+    zone.appendChild(el("div", "note consigne-b", "Touche B pour la poser sur A."));
+  }
+  function imageAire(zone, question) {
+    const a = question.aire;
+    if (a.sorte === "compter") {
+      const demis = piecesFigA5(a.fig).some(m => m.demi);
+      const f = figureA5(a.fig, {classe: "dessin aire aire-z", etat: {rangees: true, demisOr: demis}});
+      const b = el("div", "aire-boite"); b.appendChild(f.s); zone.appendChild(b);
+      zone.appendChild(el("div", "note", carte().typo(question.image[0])));
+      return;
+    }
+    if (a.sorte === "encadrer") {
+      aireTache(zone, a.tache, {});
+      zone.appendChild(lignes("rel petite libre", question.image.join("\n")));
+      return;
+    }
+    aireSuperposer(zone, a.a, a.b, {dx: a.dx, dy: a.dy, pose: true, note: "Je compare ce qui dépasse."});
+  }
+  // La correction : le dessin complété à gauche, les lignes à droite (la
+  // dernière en vert, si elle commence par « = »).
+  function correctionAire(zone, question) {
+    const a = question.aire;
+    // (Comparer, encadrer : le dessin est large, les lignes dessous. Sans
+    // aide — Je valide, Je me souviens —, les figures de la question sont
+    // grandes et la place manque : les lignes seules.)
+    const ligne = el("div", `aire-corr${a.sorte === "compter" ? "" : ` col ${a.sorte}`}`);
+    const sansOutil = root.document && root.document.getElementById("cadre") && root.document.getElementById("cadre").classList.contains("sans-outil");
+    if (a.sorte !== "compter" && sansOutil) {
+      const droite = el("div", "aire-lignes grandes");
+      question.correction.flatMap(t => t.split(" · ")).forEach(t => droite.appendChild(el("div", /^=/.test(t) ? "v" : "", carte().typo(t))));
+      ligne.appendChild(droite);
+      zone.appendChild(ligne);
+      return;
+    }
+    const gauche = el("div", "aire-boite");
+    if (a.sorte === "compter") {
+      const ps = piecesFigA5(a.fig);
+      const numeros = new Map();
+      const recolles = [];
+      let n = 0;
+      ps.forEach((m, i) => { if (!m.demi) numeros.set(i, String(++n)); });
+      const demis = ps.map((m, i) => (m.demi ? i : -1)).filter(i => i >= 0);
+      // (Les demis recollés deux à deux, le plus proche d'abord.)
+      const libres = demis.slice();
+      while (libres.length > 1) {
+        const i = libres.shift();
+        const [cx, cy] = centreA5(ps[i].p);
+        libres.sort((u, v) => Math.hypot(centreA5(ps[u].p)[0] - cx, centreA5(ps[u].p)[1] - cy) - Math.hypot(centreA5(ps[v].p)[0] - cx, centreA5(ps[v].p)[1] - cy));
+        const j = libres.shift();
+        recolles.push([i, j]);
+        numeros.set(j, String(++n));
+      }
+      gauche.appendChild(figureA5(a.fig, {classe: "dessin aire aire-c", etat: {numeros, recolles}}).s);
+    } else if (a.sorte === "encadrer") {
+      aireTache(gauche, a.tache, {montrer: true, classe: "dessin aire aire-c"});
+    } else {
+      aireSuperposer(gauche, a.a, a.b, {dx: a.dx, dy: a.dy, pose: true, classe: "dessin aire aire-c"});
+    }
+    const droite = el("div", "aire-lignes");
+    question.correction.forEach(t => {
+      const d = el("div", /^=/.test(t) ? "v" : "", carte().typo(t));
+      droite.appendChild(d);
+    });
+    ligne.append(gauche, droite);
+    zone.appendChild(ligne);
+  }
+  // On te montre.
+  function montrerAire(zone, aide, fini) {
+    // (Sans compteur : l'étiquette « On te montre · Je représente » prend
+    // la largeur ; le compte s'écrit dessous quand le geste est fait.)
+    if (aide.type === "aire-compter") return aireCompter(zone, aide.fig, {fini});
+    const poser = aireSuperposer(zone, aide.a, aide.b, {fini});
+    return poser;
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -1902,6 +2308,8 @@
       return null;
     }
     if (aide.type === "barres") return barres(zone, aide, f);
+    // Lot B2-3a : l'aire en carreaux.
+    if (aide.type === "aire-compter" || aide.type === "aire-superposer") return montrerAire(zone, aide, f);
     // Lot B2-2a : les fractions usuelles.
     if (aide.type === "barre2") return barrePartagee(zone, aide, {touche: true, fini: f});
     if (aide.type === "droite2") return doubleDroite(zone, aide, {mode: "montre", fini: f});
@@ -2030,6 +2438,8 @@
   }
 
   function outil(zone, question, {fini = () => {}} = {}) {
+    // Lot B2-3a (A5) : la figure à toucher, la tache, B à poser sur A.
+    if (question.outil === "aire" && question.aire) { outilAire(zone, question); return; }
     // (Lot B2-1b : « Trouve l'intrus », « Coche tout ce qui est égal à… » :
     // un glisse-unité pour l'outil seulement, `glisseOutil` ; la correction
     // dit les écritures égales, sans glisse-unité qui glisse.)
@@ -2099,6 +2509,7 @@
   }
 
   function image(zone, question) {
+    if (question.aire) { imageAire(zone, question); return; }
     // Lot B2-2a (C6) : la barre partagée, et le calcul posé dessous.
     if (question.barre) {
       barrePartagee(zone, question.barre);
@@ -2222,6 +2633,6 @@
     return s;
   }
 
-  return Object.freeze({doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

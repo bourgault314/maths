@@ -599,7 +599,7 @@ function controlerQuestion(q, ou) {
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
     assert.ok(q.bon >= 0 && q.bon < q.choix.length, `${ou} : bonne réponse absente`);
-    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes");
+    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes" || (q.code === "A5" && q.donnees.sorte === "meme"));
   }
 }
 
@@ -806,7 +806,7 @@ for (const code of PRETES) {
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
-      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"]}[code];
+      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1452,4 +1452,99 @@ test("lot B2-2b-2 : C8 — les sortes, les deux sens, S002, le marathon, les err
   // « 8,2 kg + 840 g » sans convertir : « J'écris d'abord tout en kg. »
   const q = toutes.find(x => x.donnees.op === "+" && x.donnees.vers === "kg" && x.donnees.ub === "g");
   assert.equal(G.verifier(q, G.brut(lire(q.donnees.a) + lire(q.donnees.b))).retour, "J'écris d'abord tout en kg.");
+});
+
+// Lot B2-3a : A5 « L'aire en carreaux » — l'aire recomptée à part (les
+// demis comptent pour la moitié), la figure d'un seul tenant et pas trop
+// grande, la superposition qui dit la même chose que les aires, la tache
+// recomptée à part (échantillons), les pourquoi d'une ligne, les places.
+test("lot B2-3a : A5 — l'aire recomptée, les figures, superposer, encadrer, les pourquoi, les places", () => {
+  const sortes = {};
+  const erreurs = new Set();
+  const quarts = {"#": 4, a: 2, b: 2, c: 2, d: 2};
+  for (let g = 1; g <= 300; g += 1) {
+    for (const usage of ["valide", "entraine", "retour", "test"]) {
+      const s = G.serie("A5", {usage, graine: g});
+      const ou = `A5 ${usage} ${g}`;
+      if (usage === "valide") {
+        assert.deepEqual(s.map(q => q.sorteA5), ["compter", "comparer", "compter", "compter", "meme", "compter", "comparer", "encadrer", "compter", "meme"], `${ou} : places`);
+        assert.ok(s.filter(q => q.sorteA5 === "compter").every(q => q.aire.unite === (q.degre === 1 ? "carreaux" : "cm2")), `${ou} : l'unité`);
+      }
+      s.forEach(q => {
+        sortes[q.sorteA5] = (sortes[q.sorteA5] || 0) + 1;
+        const a = q.aire;
+        const aire = f => f.join("").split("").reduce((t, ch) => t + (quarts[ch] || 0), 0) / 4;
+        const figures = a.fig ? [a.fig] : a.a ? [a.a, a.b] : [];
+        figures.forEach(f => {
+          const w = Math.max(...f.map(l => l.length));
+          assert.ok(w <= 7 && f.length <= 4, `${ou} : figure trop grande ${f.join("/")}`);
+          assert.ok(/^[#.abcd]+$/.test(f.join("")), `${ou} : ${f.join("/")}`);
+          // D'un seul tenant : deux morceaux voisins se tiennent par un côté
+          // entier qu'ils ont tous les deux (un demi n'a que deux côtés).
+          const COTES = {"#": "hbgd", a: "hg", b: "hd", c: "bd", d: "bg"};
+          const pleins = [];
+          f.forEach((l, y) => [...l].forEach((ch, x) => { if (COTES[ch]) pleins.push([x, y]); }));
+          const vus = new Set([pleins[0].join()]);
+          const pile = [pleins[0]];
+          while (pile.length) {
+            const [x, y] = pile.pop();
+            const ici = COTES[f[y][x]];
+            [[1, 0, "d", "g"], [-1, 0, "g", "d"], [0, 1, "b", "h"], [0, -1, "h", "b"]].forEach(([dx, dy, moi, lui]) => {
+              const k = [x + dx, y + dy].join();
+              const voisin = COTES[(f[y + dy] || "")[x + dx]];
+              if (!vus.has(k) && voisin && ici.includes(moi) && voisin.includes(lui)) { vus.add(k); pile.push([x + dx, y + dy]); }
+            });
+          }
+          assert.equal(vus.size, pleins.length, `${ou} : figure en morceaux ${f.join("/")}`);
+          assert.equal(f.join("").replace(/[#.]/g, "").length % 2, 0, `${ou} : un nombre impair de demis ${f.join("/")}`);
+        });
+        if (q.sorteA5 === "compter") {
+          const n = aire(a.fig);
+          assert.equal(q.reponse, String(n), `${ou} : aire ${a.fig.join("/")}`);
+          assert.ok(n >= 5 && n <= 30, `${ou} : ${n} carreaux`);
+          assert.ok(G.verifier(q, String(n)).juste);
+          if (q.degre === 1) assert.ok(!/[abcd]/.test(a.fig.join("")), `${ou} : des demis au degré 1`);
+          else assert.ok(/[abcd]/.test(a.fig.join("")), `${ou} : pas de demi au degré ${q.degre}`);
+          const d = q.donnees;
+          [d.pleins + d.demis, d.pleins, n + 1, n - 1, d.perimetre].filter(x => x && x !== n).forEach(x => {
+            const v = G.verifier(q, String(x));
+            if (v.erreur) { erreurs.add(v.erreur); assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`); }
+          });
+        } else if (q.sorteA5 === "comparer" || q.sorteA5 === "meme") {
+          const [x, y] = [aire(a.a), aire(a.b)];
+          const attendu = q.sorteA5 === "meme" ? (x === y ? "Oui" : "Non") : x === y ? "Même aire" : x > y ? "A" : "B";
+          assert.equal(q.choix[q.bon], attendu, `${ou} : ${a.a.join("/")} | ${a.b.join("/")}`);
+          assert.notEqual(a.a.join("/"), a.b.join("/"), `${ou} : la même figure deux fois`);
+          // Ce qui dépasse, en quarts : la différence des aires.
+          assert.equal((a.depasseA - a.depasseB) / 4, x - y, `${ou} : superposer`);
+          if (q.degre === 1 && x !== y) assert.ok(Math.max(x, y) >= 1.5 * Math.min(x, y), `${ou} : au degré 1, des aires bien différentes`);
+          q.choix.forEach((c, k) => { if (k !== q.bon) { const r = G.verifier(q, k).retour; assert.ok(r && r.length <= 31, `${ou} : pourquoi de « ${c} » « ${r} »`); } });
+        } else {
+          assert.equal(q.sorteA5, "encadrer");
+          assert.equal(q.degre, 3);
+          const t = a.tache;
+          // Recompté à part : 40 × 40 points par carreau.
+          let entiers = 0; let touches = 0;
+          for (let j = 0; j < t.H; j += 1) for (let i = 0; i < t.W; i += 1) {
+            let dedans = 0;
+            for (let u = 0; u <= 40; u += 1) for (let v = 0; v <= 40; v += 1) {
+              const px = i + u / 40; const py = j + v / 40;
+              if (((px - t.cx) / t.rx) ** 2 + ((py - t.cy) / t.ry) ** 2 <= 1) dedans += 1;
+            }
+            if (dedans === 41 * 41) entiers += 1;
+            if (dedans > 0) touches += 1;
+          }
+          assert.deepEqual(q.reponse, [String(entiers), String(touches)], `${ou} : la tache ${q.cle}`);
+          assert.ok(touches <= 30 && entiers >= 3);
+          [[touches, entiers], [entiers + 1, touches], [entiers, touches - 1]].forEach(r => {
+            const v = G.verifier(q, r.map(String));
+            assert.ok(!v.juste && v.retour && v.retour.length <= 31, `${ou} : ${r} « ${v.retour} »`);
+            erreurs.add(10 + v.erreur);
+          });
+        }
+      });
+    }
+  }
+  ["compter", "comparer", "meme", "encadrer"].forEach(k => assert.ok(sortes[k] > 300, `A5 : ${k} ${sortes[k]}`));
+  [1, 2, 3, 4, 11, 12, 13].forEach(e => assert.ok(erreurs.has(e), `A5 : l'erreur ${e} n'est jamais déclenchée`));
 });

@@ -561,7 +561,9 @@ async function glisserUnite(page, vers = null) {
 async function faireLeGeste(page, aide) {
   for (let essai = 0; essai < 14; essai += 1) {
     const etat = await page.evaluate(() => ({
-      fait: Boolean(document.querySelector(".q .case.vert")) || !document.querySelector(".q .case")
+      // (Lot B2-3a : un geste sans case à remplir — poser B sur A — est fait
+      // quand il n'y a plus rien à toucher.)
+      fait: Boolean(document.querySelector(".q .case.vert")) || (!document.querySelector(".q .case") && !document.querySelector(".zone .a-toucher"))
     }));
     if (etat.fait) return [];
     if (aide.type === "glisse-unite") {
@@ -589,7 +591,7 @@ async function faireLeGeste(page, aide) {
       await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "barre2", "droite2"].includes(aide.type)) {
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "barre2", "droite2", "aire-compter", "aire-superposer"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
