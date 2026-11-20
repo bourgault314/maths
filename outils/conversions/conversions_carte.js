@@ -877,6 +877,37 @@
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["250 cm < 3 m", "0,33 t < 565 kg", "75 cL < 1 L", "2,7 dam < 33 m", "950 g < 1,2 kg", "800 mL < 0,9 L"],
       reperes: []
+    },
+    // Calculer avec deux unités (lot B2-2b-2 ; S002 p. 16-17 : 8,2 kg +
+    // 840 g = 9,04 kg, « le résultat avec une seule unité », 1 L − 25 cL ;
+    // carte v4 : « 25 cL + 330 mL = 250 mL + 330 mL = 580 mL »). On te
+    // montre : le verre doseur de 1 L qui se gradue en cL (on en verse
+    // 25 cL) ; 8,2 kg + 840 g, tout en kg ; 25 cL + 330 mL, tout en mL.
+    C8: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Une bouteille contient 1 L. On en verse 25 cL dans un verre. Combien en reste-t-il ?", avant: "1 L − 25 cL =", reponse: "75", apres: "cL"},
+          consigne: "Touche le verre : il se gradue en cL.",
+          aide: {type: "verre", grande: "L", petite: "cL", facteur: 100},
+          apres: ["100 cL − 25 cL", "= 75 cL"]},
+        {etiquette: "Je représente", question: {avant: "8,2 kg + 840 g =", reponse: "9,04", apres: "kg"},
+          consigne: "J'écris 840 g en kg.",
+          aide: {type: "glisse-unite", grandeur: "masse", nombre: "840", de: "g", vers: "kg", pale: false, colonnes: ["kg", "hg", "dag", "g", "dg", "cg", "mg"]},
+          apres: ["8,2 kg + 0,84 kg", "= 9,04 kg"]},
+        {etiquette: "Je vérifie", question: {avant: "25 cL + 330 mL =", reponse: "580", apres: "mL"},
+          consigne: "J'écris 25 cL en mL.",
+          aide: {type: "glisse-unite", grandeur: "contenance", nombre: "25", de: "cL", vers: "mL", pale: false},
+          apres: ["250 mL + 330 mL", "= 580 mL"]}
+      ],
+      retenir: "Pour ajouter ou enlever deux mesures, je les écris d'abord dans la même unité.\nLe résultat s'écrit avec une seule unité.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      // (Quatre calculs, une seule colonne : sur deux colonnes, « 8,2 kg +
+      // 840 g = 9,04 kg » se coupait au téléphone.)
+      relations: ["1 L − 25 cL = 75 cL", "8,2 kg + 840 g = 9,04 kg", "25 cL + 330 mL = 580 mL", "2 m − 45 cm = 155 cm"],
+      relationsUneColonne: true,
+      reperes: []
     }
   };
 

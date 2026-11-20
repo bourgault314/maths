@@ -2038,6 +2038,9 @@
       const g = question.glisse || question.glisseOutil;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
+      // (Lot B2-2b-2, C8 : la mesure qui ne se convertit pas, « Puis
+      // j'enlève 25 cL. », « Puis je l'enlève de 3 kg. ».)
+      if (question.puis) zone.appendChild(el("div", "note", carte().typo(question.puis)));
       return;
     }
     // Lot B2-2a (C6) : la double droite graduée, la relation à côté de

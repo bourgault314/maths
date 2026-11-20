@@ -312,6 +312,8 @@ table.gn.dec .virg { position: absolute; right: -.25rem; bottom: .125rem; font: 
 .act .n .ico { width: 1.125rem; height: 1.125rem; }
 .cahier { display: flex; gap: .5rem; align-items: center; font-weight: 800; font-size: .9375rem; color: var(--teal); justify-content: center; text-align: center; }
 .relations { display: grid; grid-template-columns: 1fr 1fr; gap: .1875rem .625rem; font-weight: 800; font-size: .9375rem; }
+/* Lot B2-2b-2 (C8) : des calculs (« 8,2 kg + 840 g = 9,04 kg »), une colonne. */
+.relations.une-col { grid-template-columns: 1fr; }
 
 /* Mon parcours, carnet, médailles */
 .tete-ecran { display: flex; align-items: center; gap: .625rem; flex: 0 0 auto; }

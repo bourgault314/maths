@@ -4808,6 +4808,320 @@
     erreurs: () => null
   };
 
+  // --------------------------------------- C8 · Calculer avec deux unités
+  // Lot B2-2b-2 (carte v4 ; S002 p. 16-17 : « la somme ou la différence de
+  // deux longueurs qui ne sont pas données dans la même unité, par exemple
+  // 8,2 m + 0,43 dam » ; « 8,2 kg + 840 g » ; « en exprimant le résultat
+  // avec une seule unité, comme 1 L − 25 cL »). Le résultat s'écrit dans
+  // l'une des deux unités, la grande ou la petite ; une seule des deux
+  // mesures se convertit (le glisse-unité de l'outil la porte). La
+  // correction écrit l'unité à chaque pas : « 25 cL = 250 mL »,
+  // « 250 mL + 330 mL = 580 mL ». Les sortes : d1, des nombres entiers et
+  // le résultat dans la petite unité (« 2 m − 45 cm = … cm »), et le
+  // complément (« 1 kg = 350 g + … g ») ; d2, des décimaux, les deux sens
+  // (« 8,2 kg + 840 g = … kg ») ; d3, les unités du CM1 et les zéros
+  // (« 3 kg − 450 g = … kg », « 8,2 m + 0,43 dam = … m ») ; des situations
+  // (le marché de Saint-Pierre, le cari, le rougail, le Grand Raid, la
+  // Diagonale des Fous, le marathon de 42 km 195 m).
+  // Comment on écrit une mesure dans un calcul : FORMAT_C7 (lot B2-2b-1),
+  // un peu plus large pour un total (« 8 400 m », « 1 580 mL »).
+  const FORMAT_C8 = Object.assign({}, FORMAT_C7, {m: [0.1, 10000, 2], g: [0.1, 10000, 2], mL: [1, 5000, 0], cL: [1, 500, 0],
+    cm: [1, 2000, 1], kg: [0.1, 500, 2], L: [0.1, 100, 2], km: [0.1, 200, 2]});
+  function naturelleC8(m, u) {
+    const [mini, maxi, dec] = FORMAT_C8[u];
+    return m !== null && m > 0n && m >= BigInt(Math.round(mini * 1000)) && m <= BigInt(maxi) * MILLE && decimales(m) <= dec
+      && mesureVraie(m, u, BORNE_C7);
+  }
+  // Un nombre réel arrondi à deux chiffres significatifs (un seul, une
+  // fois sur trois), en millièmes, s'il s'écrit dans l'unité u.
+  function arrondiC8(rng, y, u, entier = false) {
+    if (!(y > 0) || !Number.isFinite(y)) return null;
+    const e = Math.floor(Math.log10(y));
+    let pas = Math.pow(10, e - (rng() < 0.33 ? 0 : 1));
+    if (entier && pas < 1) pas = 1;
+    const fin = Math.pow(10, -FORMAT_C8[u][2]);
+    if (pas < fin) pas = fin;
+    const m = BigInt(Math.round(Math.round(y / pas) * pas * 1000));
+    return naturelleC8(m, u) ? m : null;
+  }
+  const PAIRES_C8 = {
+    1: [["m", "cm"], ["m", "cm"], ["km", "m"], ["kg", "g"], ["kg", "g"], ["L", "cL"], ["L", "cL"], ["cL", "mL"], ["cm", "mm"], ["t", "kg"], ["L", "mL"]],
+    2: [["m", "cm"], ["km", "m"], ["kg", "g"], ["L", "cL"], ["L", "mL"], ["cL", "mL"], ["cm", "mm"], ["t", "kg"], ["m", "dm"], ["dL", "cL"]],
+    3: [["dam", "m"], ["hm", "m"], ["hg", "g"], ["dag", "g"], ["dL", "cL"], ["dL", "mL"], ["hL", "L"], ["g", "cg"], ["g", "mg"], ["cg", "mg"],
+      ["km", "m"], ["kg", "g"], ["L", "cL"], ["m", "cm"]]
+  };
+  // Les mots de l'outil, après le glisse-unité (comme « Puis j'ajoute… »
+  // de C1 et C5) : la mesure qui ne se convertit pas.
+  function puisC8(op, cEst, autre) {
+    if (op === "+") return `Puis j'ajoute ${autre}.`;
+    return cEst === "a" ? `Puis j'enlève ${autre}.` : `Puis je l'enlève de ${autre}.`;
+  }
+  // Une question de calcul : [a, ua] op [b, ub], le résultat en `vers`
+  // (l'une des deux unités). `texteA` : « 42 km 195 m » (le marathon).
+  // `situation` : {enonce, avant} ; `complement` : « 1 kg = 350 g + … g ».
+  function questionCalculC8(code, degre, {A, ua, op, B, ub, vers, sorte, situation = null, complement = false, texteA = null}) {
+    const Av = convertir(A, ua, vers);
+    const Bv = convertir(B, ub, vers);
+    if (Av === null || Bv === null) return null;
+    const rep = op === "+" ? Av + Bv : Av - Bv;
+    if (rep <= 0n || !naturelleC8(rep, vers)) return null;
+    // La mesure à convertir (l'autre est déjà dans l'unité du résultat).
+    const cEst = ua === vers ? "b" : "a";
+    const [c, uc, cv] = cEst === "a" ? [A, ua, Av] : [B, ub, Bv];
+    if (uc === vers) return null;
+    // (La mesure convertie s'écrit vraiment, pas « 0,1 hm » ; le résultat
+    // n'est pas l'une des deux mesures, « 1,2 m − 0,6 m = 0,6 m ».)
+    if (!texteA && !naturelleC8(cv, vers)) return null;
+    if (rep === Av || rep === Bv) return null;
+    const ta = texteA || mes(A, ua);
+    const tb = mes(B, ub);
+    const signe = op === "+" ? "+" : "−";
+    const gauche = `${ta} ${signe} ${tb}`;
+    const autre = cEst === "a" ? tb : ta;
+    const [g, p] = exposant(uc) > exposant(vers) ? [uc, vers] : [vers, uc];
+    const f = facteur(g, p);
+    const relation = relationTexte(g, p);
+    const pas = exposant(uc) > exposant(vers) ? `${ecrire(c)} × ${mes(f * MILLE, vers)}` : `${ecrire(c)} ÷ ${ecrire(f * MILLE)}${NB}${vers}`;
+    const puis = puisC8(op, cEst, cEst === "a" ? tb : (texteA ? mes(Av, vers) : ta));
+    const ecritA = cEst === "a" ? mes(cv, vers) : mes(Av, vers);
+    const ecritB = cEst === "b" ? mes(cv, vers) : mes(Bv, vers);
+    let texte;
+    let morceaux;
+    let resume;
+    let forme = "phrase";
+    if (complement) {
+      // « 1 kg = 350 g + … g » : la case dans la phrase, et dessous.
+      const phrase = `${ta} = ${tb} + ${CASE}${NB}${vers}`;
+      texte = phrase;
+      morceaux = {phrase, apres: vers};
+      resume = `${ta} = ${tb} + ${mes(rep, vers)}`;
+    } else if (situation) {
+      forme = "nombre";
+      texte = `${situation.enonce} ${situation.avant} ${CASE}${NB}${vers}`;
+      morceaux = {enonce: situation.enonce, avant: situation.avant, apres: vers};
+      resume = `${gauche} = ${mes(rep, vers)}`;
+    } else {
+      // (Une ligne longue avec la case, « 8,2 kg + 840 g = … kg » : la
+      // phrase sur sa ligne, la case dessous, comme C5.)
+      texte = `${gauche} = ${CASE}${NB}${vers}`;
+      morceaux = {phrase: `${gauche} =`, apres: vers};
+      resume = `${gauche} = ${mes(rep, vers)}`;
+    }
+    // (Pas « 1 kg = 1 × 1 000 g » sous « 1 kg = 1 000 g ».)
+    const image = c === MILLE ? [relation, puis] : [relation, `${mes(c, uc)} = ${pas}`, puis];
+    // La correction : la mesure convertie (le glisse-unité la montre), puis
+    // le calcul dans une seule unité, en vert (`resumeVert`) ; le complément
+    // garde sa forme (« 1 000 g = 350 g + 650 g »).
+    const enUne = complement ? `${mes(Av, vers)} = ${mes(Bv, vers)} + ${mes(rep, vers)}` : `${ecritA} ${signe} ${ecritB} = ${mes(rep, vers)}`;
+    const correction = [`${mes(c, uc)} = ${mes(cv, vers)}`, enUne];
+    const x = q({
+      code, degre, forme, texte, morceaux,
+      reponse: brut(rep), reponseTexte: mes(rep, vers), unite: vers, resume, resumeVert: enUne,
+      relation, outil: "glisse-unite", glisse: glisse(c, uc, vers, {cm1: true, decimaux: true}), puis,
+      image, correction, grandeur: grandeurDe(vers), relationCle: `${g}-${p}`, sorteC8: sorte,
+      sensC8: exposant(vers) === exposant(g) ? "grande" : "petite", opC8: op,
+      donnees: {type: "calc", op, a: brut(A), ua, b: brut(B), ub, vers, sorte},
+      cleBase: `${code}:${brut(A)}${ua}${op}${brut(B)}${ub}`,
+      cle: `${code}:${brut(A)}${ua}${op}${brut(B)}${ub}>${vers}${complement ? ":c" : ""}`
+    });
+    // (L'aide n'écrit jamais la réponse : « Puis j'enlève 50 cm. » pour
+    // « 1 m − 50 cm = … cm » la donnerait.)
+    const r = mes(rep, vers);
+    if ([relation, ...image].some(l => l.includes(r))) return null;
+    return x;
+  }
+
+  // Les nombres d'une question : la grande mesure A (en g), la petite B
+  // (en p), à peu près du même ordre (B entre un dixième et une fois et
+  // demie A). d1 : des nombres entiers, le résultat dans la petite unité.
+  function tirerCalculC8(code, degre, rng) {
+    for (let essai = 0; essai < 80; essai += 1) {
+      const [g, p] = choisir(rng, PAIRES_C8[degre]);
+      const f = Number(facteur(g, p));
+      const op = rng() < 0.5 ? "+" : "-";
+      let A;
+      if (degre === 1) A = milli(f <= 10 ? entre(rng, 2, 9) * (rng() < 0.5 ? 10 : 1) : entre(rng, 1, 9));
+      else {
+        const [mini, maxi] = FORMAT_C8[g];
+        A = arrondiC8(rng, Math.max(mini, 0.5) * Math.pow(Math.min(maxi, 50) / Math.max(mini, 0.5), rng() * 0.8), g, false);
+      }
+      // (Au moins 1 de la grande unité : « 0,62 kg − 500 g » ne se dit pas.)
+      if (!A || !naturelleC8(A, g) || A < MILLE) continue;
+      const ratio = op === "-" ? 0.15 + 0.75 * rng() : 0.15 + 1.3 * rng();
+      const B = arrondiC8(rng, (Number(A) / 1000) * f * ratio, p, degre === 1);
+      if (!B) continue;
+      if (degre === 1 && (A % MILLE || B % MILLE)) continue;
+      // (Une mesure qui tombe juste dans la grande unité s'écrit dans la
+      // grande : pas « 3 000 g + 2 kg », ni « 1 L + 100 cL » ; une unité
+      // rare pas en dizaines : pas « 10 dag ».)
+      if (B % (BigInt(f) * MILLE) === 0n) continue;
+      // (Une petite mesure reste petite : pas « 850 cm », « 4 800 mL » ;
+      // au plus 2 de la grande unité, 9 dm, 99 mm.)
+      if (B >= BigInt(f === 10 ? (p === "dm" ? 10 : 100) : 2 * f) * MILLE) continue;
+      if ((RARES.includes(g) && A % (10n * MILLE) === 0n) || (RARES.includes(p) && B % (10n * MILLE) === 0n)) continue;
+      // (Le résultat : d1 dans la petite unité ; sinon l'une ou l'autre.)
+      const vers = degre === 1 ? p : rng() < 0.5 ? g : p;
+      // L'ordre : la grande mesure d'abord, le plus souvent ; pour une
+      // somme, parfois la petite d'abord (« 450 g + 2 kg »).
+      const petiteDabord = op === "+" && rng() < 0.25;
+      const champs = petiteDabord ? {A: B, ua: p, op, B: A, ub: g} : {A, ua: g, op, B, ub: p};
+      // (d2 : un décimal au moins ; d3 : une unité du CM1 ou un zéro.)
+      if (degre === 2 && !(A % MILLE) && !(B % MILLE) && vers === p) continue;
+      const x = questionCalculC8(code, degre, Object.assign(champs, {vers, sorte: `${op === "+" ? "plus" : "moins"}-${vers === g ? "grande" : "petite"}`}));
+      if (!x) continue;
+      // (Un résultat qui tombe juste dans la grande unité ne s'écrit pas
+      // dans la petite : pas « 2 000 mg ».)
+      if (vers === p && milli(x.reponse) % (BigInt(f) * MILLE) === 0n) continue;
+      if (degre === 3 && !NOUVELLES_CM1.includes(g) && !NOUVELLES_CM1.includes(p) && !/,0\d/.test(x.reponse) && !/0,/.test(x.reponse)) continue;
+      return x;
+    }
+    return null;
+  }
+
+  // Le complément (« 1 kg = 350 g + … g », « 1 L = 25 cL + … cL ») : ce
+  // qu'il faut ajouter pour faire l'unité, ou 2, 5 unités.
+  const COMPLEMENTS_C8 = [["kg", "g"], ["L", "cL"], ["m", "cm"], ["km", "m"], ["L", "mL"], ["t", "kg"]];
+  function questionComplementC8(code, degre, rng) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, COMPLEMENTS_C8);
+      const f = Number(facteur(g, p));
+      const n = degre === 1 ? 1 : choisir(rng, [1, 1, 2, 5]);
+      const pasB = f >= 1000 ? choisir(rng, [50, 100]) : 5;
+      const b = entre(rng, 1, Math.floor((n * f) / pasB) - 1) * pasB;
+      if (b * 2 === n * f) continue;
+      const x = questionCalculC8(code, degre, {A: milli(n), ua: g, op: "-", B: milli(b), ub: p, vers: p, sorte: "complement", complement: true});
+      if (x) return x;
+    }
+    return null;
+  }
+
+  // Les situations : [l'énoncé (P : un prénom ; A, B : les mesures), la
+  // fin (« En tout : »), l'opération, la grande unité et ses bornes et son
+  // pas, la petite et ses bornes et son pas, les unités du résultat].
+  // Des mesures vraisemblables ; La Réunion à côté de tous les jours.
+  const SITUATIONS_C8 = [
+    ["Marché de Saint-Pierre : {A} de letchis, {B} de mangues.", "En tout,", "+", ["kg", 1, 3, 0.5], ["g", 250, 900, 50], ["kg", "g"]],
+    ["Pour un cari : {A} de poulet et {B} d'oignons.", "En tout,", "+", ["kg", 1, 2.5, 0.5], ["g", 200, 600, 50], ["kg", "g"]],
+    ["{P} a {A} de saucisses. Le rougail en prend {B}.", "Il reste", "-", ["kg", 1, 3, 0.5], ["g", 300, 900, 50], ["kg", "g"]],
+    ["Jus de goyavier : une bouteille de {A}. On en verse {B}.", "Il reste", "-", ["L", 1, 2, 0.5], ["cL", 15, 50, 5], ["L", "cL"]],
+    ["Au Grand Raid, {P} court {A}, puis encore {B}.", "En tout,", "+", ["km", 12, 60, 0.5], ["m", 300, 900, 100], ["km"]],
+    ["Diagonale des Fous : étape de {A}. {P} a fait {B}.", "Il reste", "-", ["km", 3, 9, 0.5], ["m", 300, 900, 100], ["km", "m"]],
+    ["Un rouleau de tissu de {A}. {P} en coupe {B}.", "Il reste", "-", ["m", 2, 5, 0.5], ["cm", 35, 95, 5], ["m", "cm"]],
+    ["{P} pose bout à bout deux planches : {A} et {B}.", "En tout,", "+", ["m", 1, 2.5, 0.5], ["cm", 40, 95, 5], ["m", "cm"]],
+    ["Un sac de riz de {A}. {P} en prend {B}.", "Il reste", "-", ["kg", 2, 5, 0.5], ["g", 250, 750, 50], ["kg", "g"]],
+    ["{P} boit une canette de {A}, puis {B} d'eau.", "En tout,", "+", ["cL", 33, 33, 1], ["mL", 150, 250, 50], ["cL", "mL"]]
+  ];
+  // Le marathon : 42 km 195 m (les millièmes de km sont au CM2 : on
+  // l'écrit avec deux unités), et le panneau d'un kilomètre.
+  const PANNEAUX_C8 = [30, 35, 38, 40, 41];
+  function situationC8(code, degre, rng) {
+    if (degre >= 2 && rng() < 0.12) {
+      const km = choisir(rng, PANNEAUX_C8);
+      return questionCalculC8(code, degre, {A: milli(42195), ua: "m", op: "-", B: milli(km), ub: "km", vers: "m", sorte: "marathon",
+        texteA: `42${NB}km 195${NB}m`,
+        situation: {enonce: `${choisir(rng, PRENOMS)} a couru ${km}${NB}km d'un marathon de 42${NB}km 195${NB}m.`, avant: "Il reste"}});
+    }
+    for (let essai = 0; essai < 40; essai += 1) {
+      const k = Math.floor(rng() * SITUATIONS_C8.length);
+      const [modele, avant, op, [g, gMin, gMax, gPas], [p, pMin, pMax, pPas], verses] = SITUATIONS_C8[k];
+      const a = gMin + Math.floor(rng() * (Math.round((gMax - gMin) / gPas) + 1)) * gPas;
+      const b = pMin + Math.floor(rng() * (Math.round((pMax - pMin) / pPas) + 1)) * pPas;
+      const A = BigInt(Math.round(a * 1000));
+      const B = BigInt(Math.round(b * 1000));
+      // (d1 : le résultat dans la petite unité, des nombres entiers.)
+      const vers = degre === 1 ? (verses.includes(p) ? p : null) : choisir(rng, verses);
+      if (!vers || (degre === 1 && A % MILLE)) continue;
+      const prenom = choisir(rng, PRENOMS);
+      const enonce = modele.replace("{P}", prenom).replace("{A}", mes(A, g)).replace("{B}", mes(B, p));
+      const x = questionCalculC8(code, degre, {A, ua: g, op, B, ub: p, vers, sorte: `situation-${k}`, situation: {enonce, avant}});
+      if (x) return Object.assign(x, {situationC8: k});
+    }
+    return null;
+  }
+
+  // L'exemple officiel qui n'est pas dans On te montre (S002) :
+  // « 8,2 m + 0,43 dam = … m » (le seul dam à virgule de l'étape : on ne
+  // l'écrit pas ainsi, mais le programme le donne en exemple).
+  function officielleC8(code, degre) {
+    return questionCalculC8(code, degre, {A: milli("8,2"), ua: "m", op: "+", B: milli("0,43"), ub: "dam", vers: "m", sorte: "officielle"});
+  }
+
+  // Les erreurs de C8 au pavé. Une ligne au petit téléphone (31 caractères
+  // au plus) : ajouter les nombres sans convertir ; une conversion fausse
+  // d'un zéro ; ajouter au lieu d'enlever (ou l'inverse) ; le résultat
+  // écrit dans l'autre unité ; la virgule.
+  function erreursC8(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "calc" || typeof lu !== "bigint") return null;
+    const A = milli(d.a);
+    const B = milli(d.b);
+    const Av = convertir(A, d.ua, d.vers);
+    const Bv = convertir(B, d.ub, d.vers);
+    const rep = milli(question.reponse);
+    const calc = (x, y) => (d.op === "+" ? x + y : x - y);
+    const cEst = d.ua === d.vers ? "b" : "a";
+    const [c, uc, cv] = cEst === "a" ? [A, d.ua, Av] : [B, d.ub, Bv];
+    const brutA = d.sorte === "marathon" ? milli(42195) : A;
+    if (lu === calc(brutA, B) || (d.op === "-" && lu === B - A)) return {erreur: 5, retour: `J'écris d'abord tout en ${d.vers}.`};
+    for (const faux of [cv * 10n, cv % 10n === 0n ? cv / 10n : null, cv * 100n, cv % 100n === 0n ? cv / 100n : null]) {
+      if (faux === null) continue;
+      const r = cEst === "a" ? calc(faux, Bv) : calc(Av, faux);
+      if (r > 0n && lu === r) return {erreur: 6, retour: `${mes(c, uc)}, c'est ${mes(cv, d.vers)}.`};
+    }
+    if (d.op === "-" && lu === Av + Bv) return {erreur: 7, retour: "J'enlève, je n'ajoute pas."};
+    if (d.op === "+" && lu === (Av > Bv ? Av - Bv : Bv - Av)) return {erreur: 7, retour: "J'ajoute, je n'enlève pas."};
+    const autre = d.vers === d.ua ? d.ub : d.ua;
+    const dansAutre = convertir(rep, d.vers, autre);
+    if (dansAutre !== null && lu === dansAutre) return {erreur: 8, retour: `${ecrire(lu)}, ce serait des ${autre}.`};
+    // (Avec des nombres entiers, c'est un zéro, pas la virgule.)
+    if (lu === rep * 10n || lu * 10n === rep) {
+      if (rep % MILLE || lu % MILLE) return {erreur: 9, retour: "La virgule est mal placée."};
+      return {erreur: 9, retour: lu > rep ? "Un zéro de trop." : "Un zéro de moins."};
+    }
+    return null;
+  }
+
+  // Je valide : le complément en 3e, une situation en 7e ; À toi : le
+  // complément aux places 3 et 14, une situation une fois sur quatre
+  // ailleurs ; un retour : une situation en 2e.
+  function formesC8(usage, rng) {
+    if (usage === "valide") return {2: "complement", 6: "situation"};
+    if (usage === "entraine") {
+      const f = {2: "complement", 13: "complement"};
+      for (let i = 0; i < 25; i += 1) if (!f[i] && rng() < 0.25) f[i] = "situation";
+      return f;
+    }
+    if (usage === "retour") return {1: "situation"};
+    return {};
+  }
+  ETAPES.C8 = {
+    clesExemples: ["C8:1L-25cL", "C8:8,2kg+840g", "C8:25cL+330mL"],
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "complement") return questionComplementC8("C8", degre, rng);
+      if (forme === "situation") return situationC8("C8", degre, rng);
+      if (degre === 3 && rng() < 0.06) return officielleC8("C8", degre);
+      return tirerCalculC8("C8", degre, rng);
+    },
+    formes: formesC8,
+    // (Dans Je valide : une même relation deux fois au plus ; une même
+    // sorte trois fois au plus ; une même situation une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide") return true;
+      if (serie.filter(x => x.relationCle === question.relationCle).length >= 2) return false;
+      if (serie.filter(x => x.sorteC8 === question.sorteC8).length >= 3) return false;
+      return true;
+    },
+    // (Les sommes et les différences trois fois au moins ; le résultat
+    // dans la grande unité trois fois au moins ; les trois grandeurs.)
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const n = k => serie.filter(k).length;
+      return serieConvertirBonne(serie, usage) && n(x => x.opC8 === "+") >= 3 && n(x => x.opC8 === "-") >= 3
+        && n(x => x.sensC8 === "grande") >= 3;
+    },
+    erreurs: erreursC8
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
