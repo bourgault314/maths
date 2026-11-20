@@ -4402,6 +4402,412 @@
     erreurs: erreursC6
   };
 
+  // ---------------------------------------------- C7 · Ranger des mesures
+  // Lot B2-2b-1 (carte v4 ; S002 p. 15-16 : ranger dans l'ordre croissant
+  // quatre longueurs d'unités différentes, 33 m ; 56,8 cm ; 0,2 km ;
+  // 2,7 dam ; trois masses, 0,33 t et 565 kg ; jusqu'à quatre contenances,
+  // du mL au hL). La forme `ranger` de C2, telle quelle (quatre mesures à
+  // toucher). Les séries « Classer / Trier » de l'exerciseur (TRI_DB) : les
+  // longueurs, les masses, les contenances (les aires et les volumes vont à
+  // leurs paliers ; « 0,5 L, 75 cL, 1 dm³, 2 000 mL » au palier des
+  // volumes ; « 0,001 km » au CM2). « Coche tout ce qui est plus grand que
+  // 340 cm » (forme `plusieurs`, choix de Gwenaël du 14/11). « 250 cm ou
+  // 3 m ? » et la même mesure (le dossier du 15/11 : corriger « 300 cm est
+  // plus long que 3 m car 300 > 3 »). L'aide : tout dans la même unité
+  // (l'outil, l'échelle des unités et l'unité commune ; l'image, les
+  // mesures récrites dans cette unité).
+  const UNITES_C7 = {longueur: ["mm", "cm", "dm", "m", "dam", "hm", "km"], masse: ["mg", "cg", "dg", "g", "dag", "hg", "kg", "t"],
+    contenance: ["mL", "cL", "dL", "L", "daL", "hL"]};
+  // Comment on écrit une mesure dans chaque unité : [le plus petit nombre,
+  // le plus grand, les chiffres après la virgule]. Pas de « 0,02 L » (on
+  // écrit 2 cL), ni « 18,1 dm », « 60,2 dag », « 93,6 dL » (les unités
+  // rares et les « déci » en nombres entiers), ni « 9 340 cm ».
+  const FORMAT_C7 = {km: [0.1, 200, 2], hm: [1, 50, 1], dam: [1, 99, 1], m: [0.1, 5000, 2], dm: [1, 50, 0], cm: [1, 1000, 1], mm: [1, 2000, 0],
+    t: [0.1, 50, 2], kg: [0.1, 2000, 2], hg: [1, 50, 0], dag: [1, 50, 0], g: [0.1, 5000, 2], dg: [1, 50, 0], cg: [1, 500, 0], mg: [1, 5000, 0],
+    hL: [0.2, 20, 1], daL: [1, 20, 0], L: [0.1, 500, 2], dL: [1, 20, 0], cL: [1, 200, 0], mL: [1, 2000, 0]};
+  const NOMS_GRANDEUR_C7 = {longueur: "longueur", masse: "masse", contenance: "contenance"};
+  const BORNE_C7 = 100000n * MILLE;
+  // Une mesure qu'on écrit vraiment dans l'unité u.
+  function naturelleC7(m, u) {
+    const [mini, maxi, dec] = FORMAT_C7[u];
+    return m !== null && m > 0n && m >= BigInt(Math.round(mini * 1000)) && m <= BigInt(maxi) * MILLE && decimales(m) <= dec
+      && mesureVraie(m, u, BORNE_C7);
+  }
+  // Un nombre réel arrondi à 2 chiffres (parfois 3), en millièmes.
+  function arrondiC7(rng, y, u) {
+    if (!(y > 0) || !Number.isFinite(y)) return null;
+    const e = Math.floor(Math.log10(y));
+    let pas = Math.pow(10, e - (rng() < 0.25 ? 2 : 1));
+    const fin = Math.pow(10, -FORMAT_C7[u][2]);
+    if (pas < fin) pas = fin;
+    const x = Math.round(y / pas) * pas;
+    const m = BigInt(Math.round(x * 1000));
+    return naturelleC7(m, u) ? m : null;
+  }
+  // L'échelle de l'outil : les unités de la plus grande à la plus petite
+  // présente, celles d'entre elles comprises (la tonne : deux colonnes sans
+  // nom avant le kilogramme, comme au glisse-unité).
+  const ECHELLE_C7 = {longueur: COLONNES.longueur, masse: ["t", "", "", "kg", "hg", "dag", "g", "dg", "cg", "mg"], contenance: COLONNES.contenance};
+  function echelleC7(grandeur, unites) {
+    const tout = ECHELLE_C7[grandeur];
+    const idx = unites.map(u => tout.indexOf(u));
+    return tout.slice(Math.min(...idx), Math.max(...idx) + 1);
+  }
+  // La valeur d'une mesure dans la plus petite unité de sa grandeur.
+  function baseC7(m, u) {
+    return convertir(m, u, UNITES_C7[grandeurDe(u)][0]);
+  }
+  // L'unité commune : une unité présente où toutes les mesures s'écrivent
+  // au centième (« 0,2 km = 20 000 cm » ; pas « 56,8 cm = 0,568 m ») ; de
+  // préférence une unité courante (pas le dam, le hg…), des nombres pas
+  // trop grands (« 1 000 m », pas « 100 000 cm »), puis des nombres entiers
+  // (« 340 g », pas « 34 dag »).
+  function uniteCommuneC7(liste) {
+    const presentes = [...new Set(liste.map(([, u]) => u))].sort((a, b) => exposant(a) - exposant(b));
+    const bonnes = presentes.filter(c => liste.every(([m, u]) => {
+      const y = convertir(m, u, c);
+      return y !== null && y > 0n && y <= BORNE_C7 && decimales(y) <= 2;
+    }));
+    const plusGrand = c => liste.reduce((x, [m, u]) => { const y = convertir(m, u, c); return y > x ? y : x; }, 0n);
+    const cout = c => [RARES.includes(c) ? 1 : 0, plusGrand(c) > 10000n * MILLE ? 1 : 0,
+      liste.some(([m, u]) => convertir(m, u, c) % MILLE !== 0n) ? 1 : 0, Number(plusGrand(c))];
+    const avant = (x, y) => { for (let k = 0; k < 4; k += 1) if (x[k] !== y[k]) return x[k] < y[k]; return false; };
+    return bonnes.reduce((a, c) => (a === null || avant(cout(c), cout(a)) ? c : a), null);
+  }
+  // L'ordre des seuls nombres (l'erreur : « 300 cm est plus long que 3 m
+  // car 300 > 3 »), ou null si deux nombres sont égaux.
+  function ordreNombresC7(liste) {
+    const n = liste.map(([m]) => m);
+    if (new Set(n.map(String)).size !== n.length) return null;
+    return n.map((_, k) => k).sort((a, b) => (n[a] < n[b] ? -1 : 1));
+  }
+
+  // Les listes d'unités (quatre places) : d1 deux unités ; d2 trois ; d3
+  // quatre (S002), ou trois très étalées. [unités, étalement (log10)].
+  const LISTES_C7 = {
+    1: [["m", "m", "cm", "cm"], ["km", "km", "m", "m"], ["cm", "cm", "mm", "mm"], ["m", "m", "dm", "dm"], ["kg", "kg", "g", "g"],
+      ["g", "g", "mg", "mg"], ["t", "t", "kg", "kg"], ["L", "L", "cL", "cL"], ["L", "L", "mL", "mL"], ["cL", "cL", "mL", "mL"]],
+    2: [["m", "dm", "cm", "cm"], ["km", "hm", "m", "m"], ["m", "cm", "mm", "mm"], ["dam", "m", "m", "dm"], ["kg", "hg", "g", "g"],
+      ["g", "cg", "mg", "mg"], ["t", "kg", "kg", "t"], ["kg", "dag", "g", "g"], ["L", "dL", "cL", "cL"], ["L", "cL", "mL", "mL"],
+      ["hL", "L", "L", "hL"], ["dL", "cL", "mL", "mL"]],
+    3: [["km", "dam", "m", "cm"], ["km", "dam", "m", "cm"], ["km", "hm", "dam", "m"], ["m", "dm", "cm", "mm"], ["hm", "m", "dm", "cm"],
+      ["kg", "hg", "dag", "g"], ["g", "dg", "cg", "mg"], ["t", "kg", "kg", "g"], ["hL", "L", "dL", "cL"], ["L", "dL", "cL", "mL"],
+      ["hL", "L", "cL", "mL"]]
+  };
+  const ETALE_C7 = {1: [0.45, 10], 2: [0.75, 40], 3: [1.3, 1000]};
+  // Les séries « Classer / Trier » de l'exerciseur (TRI_DB), au palier 2 :
+  // d1 le même nombre, quatre unités ; d2 et d3 les mélanges (sans ceux
+  // dont les mesures ne s'écrivent dans aucune unité commune au CM1 :
+  // « 12 mm, 15 cm, 1,2 m, 10 km » ; « 3 000 mg, 2 500 g, 4 kg, 0,5 t »).
+  const TRI_C7 = {
+    1: [[["5", "mm"], ["5", "cm"], ["5", "m"], ["5", "km"]], [["2", "mg"], ["2", "g"], ["2", "kg"], ["2", "t"]],
+      [["10", "mL"], ["10", "cL"], ["10", "L"], ["10", "hL"]], [["15", "g"], ["15", "dag"], ["15", "kg"], ["15", "t"]],
+      [["8", "cL"], ["8", "dL"], ["8", "L"], ["8", "daL"]]],
+    2: [[["500", "g"], ["2", "kg"], ["15", "kg"], ["1,5", "t"]], [["33", "cL"], ["1,5", "L"], ["10", "L"], ["150", "L"]],
+      [["2", "mm"], ["5", "cm"], ["80", "cm"], ["2", "m"]], [["20", "g"], ["250", "g"], ["4", "kg"], ["1,2", "t"]]],
+    3: [[["1", "cL"], ["100", "mL"], ["1", "L"], ["1000", "L"]], [["2000", "g"], ["2,5", "kg"], ["0,01", "t"], ["15", "kg"]]]
+  };
+  // Le même nombre, quatre unités du CM1 (le niveau 1 de l'exerciseur).
+  const NOMBRES_MEME_C7 = [2, 3, 4, 5, 6, 7, 8, 9, 12, 15, 20, 25, 50];
+
+  function tirerListeC7(rng, degre) {
+    const unites = choisir(rng, LISTES_C7[degre]);
+    const [s, rapport] = ETALE_C7[degre];
+    for (let essai = 0; essai < 60; essai += 1) {
+      // Une première mesure (dans une unité du milieu, le plus souvent),
+      // puis les autres autour d'elle.
+      const r0 = rng() < 0.7 ? 1 + Math.floor(rng() * 2) : (rng() < 0.5 ? 0 : 3);
+      const base0 = unites[r0];
+      const [mini, maxi] = FORMAT_C7[base0];
+      const ref = arrondiC7(rng, mini * Math.pow(maxi / mini, 0.15 + 0.6 * rng()), base0);
+      if (!ref) continue;
+      const vRef = Number(baseC7(ref, base0)) / 1000;
+      const liste = [[ref, base0]];
+      let bien = true;
+      for (let k = 0; k < 4 && bien; k += 1) {
+        if (k === r0) continue;
+        const u = unites[k];
+        let m = null;
+        for (let t = 0; t < 12 && !m; t += 1) {
+          const v = vRef * Math.pow(10, (2 * rng() - 1) * s);
+          m = arrondiC7(rng, v / (Number(baseC7(MILLE, u)) / 1000), u);
+        }
+        if (!m) bien = false;
+        else liste.push([m, u]);
+      }
+      if (!bien) continue;
+      const vals = liste.map(([m, u]) => baseC7(m, u));
+      const tries = vals.slice().sort((a, b) => (a < b ? -1 : 1));
+      if (tries.some((v, k) => k && v * 100n < tries[k - 1] * 110n)) continue;
+      if (tries[3] > tries[0] * BigInt(rapport)) continue;
+      // Le piège : deux mesures d'unités différentes, le plus grand nombre
+      // est la plus petite mesure.
+      const piege = liste.some(([a, u], i) => liste.some(([b, w], j) => u !== w && a > b && vals[i] < vals[j]));
+      if (!piege) continue;
+      return {liste, sorte: "melange"};
+    }
+    return null;
+  }
+
+  // Des situations (une question à ranger sur quatre dans À toi, la 7e de
+  // Je valide) : [la consigne, les unités, le plus petit et le plus grand,
+  // dans la première unité]. Des mesures vraisemblables ; La Réunion à côté
+  // de tous les jours.
+  const SITUATIONS_C7 = [
+    ["Range ces sauts en longueur du plus court au plus long.", ["m", "cm", "dm"], 1.5, 4.5],
+    ["Range ces cannes à sucre de la plus courte à la plus longue.", ["m", "cm", "dm"], 1.2, 3],
+    ["Range ces planches de la plus courte à la plus longue.", ["m", "cm", "mm"], 0.5, 2],
+    ["Range ces sentiers de La Réunion du plus court au plus long.", ["km", "m"], 1.5, 12],
+    ["Range ces sacs de letchis du plus léger au plus lourd.", ["kg", "g"], 0.5, 4],
+    ["Range ces colis du plus léger au plus lourd.", ["kg", "g"], 0.6, 4.5],
+    ["Range ces bouteilles de la plus petite à la plus grande.", ["L", "cL", "mL"], 0.25, 2],
+    ["Range ces arrosoirs du plus petit au plus grand.", ["L", "dL", "cL"], 0.8, 2]
+  ];
+  function tirerSituationC7(rng) {
+    const [consigne, us, mini, maxi] = choisir(rng, SITUATIONS_C7);
+    for (let essai = 0; essai < 60; essai += 1) {
+      const liste = [];
+      for (let k = 0; k < 4; k += 1) {
+        const u = k < 2 ? us[k] : choisir(rng, us);
+        const v = mini * Math.pow(maxi / mini, rng());
+        const m = arrondiC7(rng, v * (Number(convertir(MILLE, us[0], u)) / 1000), u);
+        if (!m) break;
+        liste.push([m, u]);
+      }
+      if (liste.length !== 4) continue;
+      const vals = liste.map(([m, u]) => baseC7(m, u));
+      const tries = vals.slice().sort((a, b) => (a < b ? -1 : 1));
+      if (tries.some((v, k) => k && v * 100n < tries[k - 1] * 108n)) continue;
+      const piege = liste.some(([a, u], i) => liste.some(([b, w], j) => u !== w && a > b && vals[i] < vals[j]));
+      if (!piege) continue;
+      return {liste, sorte: "situation", consigne};
+    }
+    return null;
+  }
+
+  function questionRangerC7(code, degre, rng, situation = false) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      let tirage = null;
+      const r = rng();
+      if (situation) tirage = tirerSituationC7(rng);
+      else if (degre === 1 && r < 0.35) {
+        if (rng() < 0.4) tirage = {liste: choisir(rng, TRI_C7[1]).map(([n, u]) => [milli(n), u]), sorte: "meme", tri: true};
+        else {
+          const gr = choisir(rng, ["longueur", "masse", "contenance"]);
+          const us = melanger(rng, UNITES_C7[gr].filter(u => u !== "daL")).slice(0, 4);
+          const n = milli(choisir(rng, NOMBRES_MEME_C7));
+          tirage = {liste: us.map(u => [n, u]), sorte: "meme"};
+          if (!tirage.liste.every(([m, u]) => mesureVraie(m, u, BORNE_C7))) continue;
+        }
+      } else if (degre >= 2 && r < (degre === 2 ? 0.3 : 0.2)) {
+        tirage = {liste: choisir(rng, TRI_C7[degre]).map(([n, u]) => [milli(n), u]), sorte: "tri", tri: true};
+      } else tirage = tirerListeC7(rng, degre);
+      if (!tirage) continue;
+      const {liste, sorte} = tirage;
+      const grandeur = grandeurDe(liste[0][1]);
+      const vals = liste.map(([m, u]) => baseC7(m, u));
+      if (new Set(vals.map(String)).size !== 4) continue;
+      const meme = sorte === "meme";
+      const commune = meme ? null : uniteCommuneC7(liste);
+      if (!meme && !commune) continue;
+      const affiche = melanger(rng, [0, 1, 2, 3]);
+      const lst = affiche.map(k => liste[k]);
+      const vs = affiche.map(k => vals[k]);
+      const ordre = [0, 1, 2, 3].sort((x, y) => (vs[x] < vs[y] ? -1 : 1));
+      if (ordre.every((x, k) => x === k)) continue;
+      const mesures = lst.map(([m, u]) => mes(m, u));
+      const rangees = ordre.map(k => mesures[k]);
+      const unites = [...new Set(lst.map(([, u]) => u))];
+      // (Le même nombre : les relations des unités voisines posées.)
+      const croissantes = unites.slice().sort((a, b) => exposant(a) - exposant(b));
+      const relationsMeme = croissantes.slice(1).map((u, k) => relationTexte(u, croissantes[k]));
+      // L'image : les mesures écrites dans l'unité commune (celles qui n'y
+      // sont pas), dans l'ordre où elles sont posées ; le même nombre :
+      // l'échelle des unités.
+      const ecritures = meme ? [] : lst.filter(([, u]) => u !== commune).map(([m, u]) => `${mes(m, u)} = ${mes(convertir(m, u, commune), commune)}`);
+      const note = meme ? "Le nombre est le même : je regarde l'unité." : `J'écris toutes les mesures en ${commune}.`;
+      const consigne = tirage.consigne || "Range ces mesures de la plus petite à la plus grande.";
+      const cleListe = rangees.join("<").replace(/[\s  ]/g, "");
+      return q({
+        code, degre, forme: "ranger", texte: `${consigne} ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne, consigne: "Touche-les dans l'ordre : 1, 2, 3, 4."},
+        mesures, ordre, reponse: ordre.join(","), reponseTexte: rangees.join(" < "), unite: commune || lst[ordre[0]][1],
+        resume: rangees.join(" < "), relation: note, outil: "ranger", grandeur,
+        echelleOutil: {grandeur, unites: echelleC7(grandeur, unites), marque: unites, note},
+        image: meme ? relationsMeme : ecritures,
+        correction: [rangees.join(" < ")].concat(ecritures.slice(0, 2)),
+        // (Le pourquoi : les nombres rangés sans l'unité, ou à l'envers.)
+        ordreNombres: meme ? null : ordreNombresC7(lst), uniteCommune: commune,
+        relationCle: `ranger:${unites.slice().sort().join("-")}`, sorteC7: meme ? "meme" : tirage.tri ? "tri" : situation ? "situation" : "ranger",
+        donnees: {type: "ranger", mesures: lst.map(([m, u]) => [brut(m), u])},
+        cle: `${code}:ranger:${cleListe}`
+      });
+    }
+    return null;
+  }
+
+  // « 250 cm ou 3 m : quelle mesure est la plus grande ? », ou la même
+  // mesure (« 300 cm ou 3 m » : même longueur). La grande unité porte le
+  // plus petit nombre (le piège). Trois réponses : les deux mesures, « Même
+  // longueur » (« masse », « contenance »).
+  const PAIRES_CMP_C7 = [["m", "cm"], ["m", "cm"], ["km", "m"], ["m", "dm"], ["cm", "mm"], ["dam", "m"], ["kg", "g"], ["kg", "g"], ["t", "kg"],
+    ["g", "mg"], ["L", "cL"], ["L", "cL"], ["L", "mL"], ["hL", "L"], ["dL", "cL"]];
+  function questionComparerC7(code, degre, rng) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      const [G, p] = choisir(rng, PAIRES_CMP_C7);
+      const f = facteur(G, p);
+      const A = arrondiC7(rng, Math.pow(10, -0.6 + 1.6 * rng()), G);
+      // (Pas « 1 dL » : l'image, « 1 dL = 10 cL », serait la réponse.)
+      if (!A || A === MILLE) continue;
+      const Af = A * f;
+      if (!naturelleC7(Af, p)) continue;
+      const egal = rng() < (degre === 1 ? 0.25 : 0.35);
+      let B = Af;
+      if (!egal) {
+        const k = rng() < 0.5 ? 0.6 + 0.3 * rng() : 1.12 + 0.4 * rng();
+        B = arrondiC7(rng, (Number(Af) / 1000) * k, p);
+        if (!B || B === Af) continue;
+        const ecart = Number(B > Af ? B - Af : Af - B) / Number(B > Af ? Af : B);
+        if (ecart < 0.08) continue;
+      }
+      // (Le piège : le plus grand nombre est dans la petite unité.)
+      if (B <= A) continue;
+      const deux = melanger(rng, [[A, G], [B, p]]);
+      const mesures = deux.map(([v, u]) => mes(v, u));
+      const grandeur = grandeurDe(G);
+      const memeT = `Même ${NOMS_GRANDEUR_C7[grandeur]}`;
+      const choix = mesures.concat([memeT]);
+      const grand = egal ? memeT : Af > B ? mes(A, G) : mes(B, p);
+      const bon = choix.indexOf(grand);
+      const phrase = `Quelle mesure est la plus grande${NB}: ${mesures[0]} ou ${mesures[1]}${NB}?`;
+      const pourquoi = {};
+      choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = `${mes(A, G)}, c'est ${mes(Af, p)}.`; });
+      const signe = egal ? "=" : Af > B ? ">" : "<";
+      const resume = egal ? `${mes(A, G)} = ${mes(B, p)}` : Af > B ? `${mes(B, p)} < ${mes(A, G)}` : `${mes(A, G)} < ${mes(B, p)}`;
+      const note = `J'écris les deux mesures en ${p}.`;
+      return q({
+        code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "comparer-c7"},
+        choix, bon, pourquoi, reponse: String(bon), reponseTexte: grand, unite: null,
+        resume, correction: [`${mes(A, G)} = ${mes(Af, p)}`, egal ? `${memeT}.` : `${mes(Af, p)} ${signe} ${mes(B, p)}`],
+        relation: note, outil: "ranger", echelleOutil: {grandeur, unites: echelleC7(grandeur, [G, p]), marque: [G, p], note},
+        image: [relationTexte(G, p), "Puis je compare les nombres."],
+        grandeur, relationCle: `${G}-${p}:cmp`, sorteC7: egal ? "egal" : "comparer",
+        donnees: {type: "comparer-c7", a: brut(A), ua: G, b: brut(B), ub: p},
+        cle: `${code}:cmp:${brut(A)}${G}:${brut(B)}${p}`
+      });
+    }
+    return null;
+  }
+
+  // « Coche tout ce qui est plus grand que 340 cm. » (ou « plus petit
+  // que ») : quatre cartes, deux ou trois justes, chacune dans une autre
+  // unité ; une carte au moins a le plus grand nombre sans être la plus
+  // grande mesure. Le pourquoi d'une carte fausse cochée : la carte dite
+  // dans l'unité de la cible (« 3,2 m, c'est 320 cm. »).
+  const CIBLES_C7 = [["cm", ["m", "mm", "dm"]], ["cm", ["m", "mm", "dm"]], ["m", ["km", "cm", "dam"]], ["mm", ["cm", "m"]],
+    ["g", ["kg", "mg", "dag"]], ["kg", ["g", "t"]], ["cL", ["L", "mL", "dL"]], ["mL", ["L", "cL"]], ["L", ["cL", "mL", "hL"]]];
+  function questionPlusQueC7(code, degre, rng) {
+    for (let essai = 0; essai < 80; essai += 1) {
+      const [u, autres] = choisir(rng, CIBLES_C7);
+      const y0 = Math.pow(10, 0.3 + 2.2 * rng());
+      const e0 = Math.pow(10, Math.floor(Math.log10(y0)) - 1);
+      const X = arrondiC7(() => 0.9, Math.round(y0 / e0) * e0, u);
+      if (!X || X < 2n * MILLE) continue;
+      const plus = rng() < 0.6;
+      const k = rng() < 0.5 ? 2 : 3;
+      const justes = [];
+      const fausses = [];
+      for (let t = 0; t < 40 && (justes.length < k || fausses.length < 4 - k); t += 1) {
+        const haut = justes.length < k && (fausses.length >= 4 - k || rng() < 0.5) ? plus : !plus;
+        const w = choisir(rng, autres);
+        const r = haut ? 1.1 + 0.6 * rng() : 0.5 + 0.38 * rng();
+        const m = arrondiC7(rng, (Number(X) / 1000) * r / (Number(convertir(MILLE, w, u)) / 1000), w);
+        if (!m) continue;
+        const y = convertir(m, w, u);
+        if (y === null || decimales(y) > 2 || y > BORNE_C7 || y === X) continue;
+        const ecart = Number(y > X ? y - X : X - y) / Number(X);
+        if (ecart < 0.08) continue;
+        const carte = [m, w, y];
+        if ([...justes, ...fausses].some(([, , z]) => z === y || Number(z > y ? z - y : y - z) / Number(y) < 0.05)) continue;
+        const juste = plus ? y > X : y < X;
+        if (juste && justes.length < k) justes.push(carte);
+        else if (!juste && fausses.length < 4 - k) fausses.push(carte);
+      }
+      if (justes.length !== k || fausses.length !== 4 - k) continue;
+      const cartes = melanger(rng, justes.concat(fausses));
+      // (Deux unités au moins parmi les cartes.)
+      if (new Set(cartes.map(([, w]) => w)).size < 2) continue;
+      // Le piège : une carte dont le nombre trompe (plus grand nombre, plus
+      // petite mesure, ou l'inverse).
+      const trompe = cartes.some(([m, , y]) => (m > X) !== (y > X));
+      if (!trompe) continue;
+      const textes = cartes.map(([m, w]) => mes(m, w));
+      if (new Set(textes).size !== 4) continue;
+      const bons = cartes.map((c, i) => (justes.includes(c) ? i : -1)).filter(i => i >= 0);
+      const pourquoi = {};
+      cartes.forEach(([, , y], i) => { if (!bons.includes(i)) pourquoi[i] = `${textes[i]}, c'est ${mes(y, u)}.`; });
+      const cibleT = mes(X, u);
+      const mot = plus ? "plus grand" : "plus petit";
+      const phrase = `Coche tout ce qui est ${mot} que ${cibleT}.`;
+      const resume = `${plus ? "Plus grand" : "Plus petit"} que ${cibleT}${NB}: ${bons.map(i => textes[i]).join(" ; ")}`;
+      const grandeur = grandeurDe(u);
+      const us = [...new Set(cartes.map(([, w]) => w))];
+      const relations = us.map(w => (exposant(w) > exposant(u) ? relationTexte(w, u) : relationTexte(u, w))).slice(0, 2);
+      const note = `J'écris tout en ${u}.`;
+      return q({
+        code, degre, forme: "plusieurs", texte: `${phrase} ${textes.join(" ; ")}`,
+        morceaux: {phrase, consigne: "Il y en a plusieurs. Puis Valider."},
+        cartes: textes, bons, reponse: bons.join(","), reponseTexte: bons.map(i => textes[i]).join(" ; "), unite: u,
+        // (La correction, sous les cartes : chacune écrite dans l'unité de
+        // la cible, dans le même ordre ; le bilan garde le résumé.)
+        resume, correction: [`En ${u} : ${cartes.map(([, , y]) => ecrire(y)).join(" ; ")}`], pourquoi,
+        relation: note, outil: "ranger", echelleOutil: {grandeur, unites: echelleC7(grandeur, [u, ...us]), marque: [u, ...us], note},
+        image: relations.concat([`Puis j'écris tout en ${u}.`]),
+        grandeur, relationCle: `${u}:plus`, sorteC7: "plusieurs",
+        donnees: {type: "plus-que", sens: plus ? ">" : "<", cible: [brut(X), u], cartes: cartes.map(([m, w]) => [[brut(m), w]])},
+        cle: `${code}:p:${plus ? ">" : "<"}${cleTexte(cibleT)}:${textes.map(cleTexte).sort().join("|")}`
+      });
+    }
+    return null;
+  }
+
+  // Je valide : « … ou … ? » en 3e et en 6e, une situation en 7e, « Coche »
+  // en dernier (jamais retirée du mêlé), ranger ailleurs ; À toi : « … ou
+  // … ? » aux places 4, 11 et 18, « Coche » aux places 13 et 23, une
+  // situation une fois sur quatre ailleurs ; un retour : ranger, puis
+  // « … ou … ? ».
+  function formesC7(usage, rng) {
+    if (usage === "valide") return {2: "comparer", 5: "comparer", 6: "situation", 9: "plusieurs"};
+    if (usage === "entraine") {
+      const f = {3: "comparer", 10: "comparer", 12: "plusieurs", 17: "comparer", 22: "plusieurs"};
+      for (let i = 0; i < 25; i += 1) if (!f[i] && rng() < 0.25) f[i] = "situation";
+      return f;
+    }
+    if (usage === "retour") return {1: "comparer"};
+    return {};
+  }
+  ETAPES.C7 = {
+    clesExemples: ["C7:ranger:56,8cm<2,7dam<33m<0,2km", "C7:cmp:3m:250cm", "C7:ranger:75cL<800mL<0,9L<1L"],
+    tirer(rng, degre, i, usage, forme) {
+      if (forme === "comparer") return questionComparerC7("C7", degre, rng);
+      if (forme === "plusieurs") return questionPlusQueC7("C7", degre, rng);
+      return questionRangerC7("C7", degre, rng, forme === "situation");
+    },
+    formes: formesC7,
+    // (Dans Je valide : une même liste d'unités une fois ; le même nombre
+    // une fois ; une série de l'exerciseur une fois ; « même mesure » une
+    // fois au plus.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide") return true;
+      if (serie.some(x => x.relationCle === question.relationCle)) return false;
+      const n = s => serie.filter(x => x.sorteC7 === s).length;
+      if (["meme", "tri", "egal"].includes(question.sorteC7) && n(question.sorteC7) >= 1) return false;
+      return true;
+    },
+    valide: serieConvertirBonne,
+    erreurs: () => null
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -4530,7 +4936,17 @@
     if (question.forme === "associer" || question.forme === "ranger") {
       const attendu = question.forme === "associer" ? question.bonnes : question.ordre;
       const lu = Array.isArray(saisie) ? saisie.map(Number) : [];
-      return {juste: lu.length === attendu.length && lu.every((x, k) => x === attendu[k]), erreur: null, retour: null};
+      const pareil = l => lu.length === l.length && lu.every((x, k) => x === l[k]);
+      const juste = pareil(attendu);
+      // (Lot B2-2b-1, C7 : les nombres rangés sans regarder l'unité — « 300 cm
+      // est plus long que 3 m car 300 > 3 » —, ou de la plus grande à la
+      // plus petite. Une ligne au petit téléphone.)
+      let retour = null;
+      if (!juste && question.ordreNombres !== undefined) {
+        if (question.ordreNombres && pareil(question.ordreNombres)) retour = `J'écris tout en ${question.uniteCommune} d'abord.`;
+        else if (pareil(attendu.slice().reverse())) retour = "Je commence par la plus petite.";
+      }
+      return {juste, erreur: retour ? 11 : null, retour: retour ? CARTE.typo(retour) : null};
     }
     // « Coche tout ce qui est égal à… » (lot B2-1b) : les places cochées.
     // Juste : toutes les bonnes cartes, et elles seules. Le pourquoi : la
