@@ -4288,7 +4288,9 @@
       const y1 = enHaut ? yb - 44 : yb + 46;
       const yc = y1 + sens * 72;
       const couleur = trouve ? vert : orange;
-      const xa = xg + 4, xb = xd - 4;
+      // (Correctif « programmes 2 » : `envers`, la flèche va de droite à
+      // gauche — « ?/8 = 7/2 », de 7/2 vers ?/8.)
+      const xa = o.envers ? xd - 4 : xg + 4, xb = o.envers ? xg + 4 : xd - 4;
       // La pointe suit la tangente au bout de l'arc.
       const dx = xb - W / 2, dy = y1 - yc, l = Math.hypot(dx, dy);
       const ux = dx / l, uy = dy / l, c = Math.cos(.5), sn = Math.sin(.5), L = 13;

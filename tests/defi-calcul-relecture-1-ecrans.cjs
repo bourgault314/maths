@@ -298,7 +298,9 @@ function outilFini([cle, outil, sansReponse]) {
         const bilan = CORE.niveauDe(cle).niveau.apprends.bilan;
         // (Lot 7b : la page coupe aussi devant « double de », « moitié de » ;
         // lot 7d : et devant une parenthèse, « (2 × 14) − 5 = 23 ».)
-        const parties = String(bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d(]|(?:double|moitié) de )/).map(t => AIDES.bilanEnDeux(t));
+        // (Correctif « programmes 2 » : une phrase seule peut finir le bilan.)
+        const parties = String(bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d(]|(?:double|moitié) de )/)
+          .map((t, i, toutes) => AIDES.bilanEnDeux(t) || (i > 0 && i === toutes.length - 1 && !t.includes("=") ? {phrase: t, calcul: ""} : null));
         const attendu = Boolean(AIDES.bilanEnDeux(bilan)) || (parties.length > 1 && parties.every(Boolean));
         if (m.defile > 1) fautes.push(`${cle} défile de ${m.defile} px`);
         if (m.phrase > 1) fautes.push(`${cle} : la phrase dépasse de ${m.phrase} px`);

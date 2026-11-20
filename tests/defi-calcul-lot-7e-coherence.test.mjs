@@ -70,9 +70,11 @@ test("lot 7e : « Fractions égales », niveau 1 — 12 parts au plus, sur les b
   assert.equal(net(a.ecris.consigne), "3/4 = (3 × 2)/(4 × 2)");
   assert.ok(a.ecris.dessins.every(d => d.outil === "barre-droite"));
   // Les 1/4 = □/24 et 3/5 = □/20 d’avant sont au niveau 2 (« multiplier »), avec leur annonce.
+  // (Correctif « programmes 2 » : au CM2 tout dépasse 20 parts — le schéma
+  // n'y est plus annoncé, il l'est au CM1.)
   const f62 = tirage("F6-3", 200).filter(c => c.forme === "multiplier" && c.donnees.a < c.donnees.d);
-  assert.ok(f62.length > 50 && f62.every(c => c.donnees.k * c.donnees.d > 12));
-  f62.forEach(c => assert.equal(net(CORE.nouveauteDe(c).texte), "Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas.", c.texte));
+  assert.ok(f62.length > 20 && f62.every(c => c.donnees.k * c.donnees.d > 20));
+  f62.forEach(c => assert.equal(CORE.nouveauteDe(c), null, c.texte));
 });
 
 test("lot 7e : les bilans faux sont corrigés", () => {

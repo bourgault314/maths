@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261119-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261120-1">
 <script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
 </head>
 <body>
@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261119-1"></script>
+  <script src="./defi_calcul_core.js?v=20261120-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261119-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261119-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261120-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2964,7 +2964,17 @@
         const dessins = state.serie.apprends.ecris.dessins;
         return dessins[Math.max(0, Math.min(dessins.length - 1, faites))];
       }
+      // Correctif du lot 6 « programmes 2 » : une consigne peut changer à
+      // chaque ligne faite (`ecris.consignes[k]`) — « 3/5 = (3 × ?)/(5 × ?) »,
+      // puis « (3 × 3)/(5 × 3) » quand le facteur est trouvé.
+      function consigneEcris(faites) {
+        const ecris = state.serie.apprends.ecris;
+        const consignes = ecris.consignes;
+        return consignes && consignes.length ? consignes[Math.max(0, Math.min(consignes.length - 1, faites))] : ecris.consigne || "";
+      }
       function majDessinEcris(faites) {
+        const consigne = $("aide").querySelector(":scope > p.consigne");
+        if (consigne && state.serie.apprends.ecris.consignes) AIDES.ecrireTexte(consigne, consigneEcris(faites));
         const ancien = $("aide").querySelector(":scope > svg");
         if (!ancien) return;
         const dessin = document.createElement("div");
@@ -3279,7 +3289,7 @@
           serie.etape = 0;
           carte.classList.add("ecrit");
           renderEtapes();
-          montrerImage(dessinEcris(0), apprends.ecris.consigne || "");
+          montrerImage(dessinEcris(0), consigneEcris(0));
         }
         carte.scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
@@ -3291,8 +3301,15 @@
       // case est toujours sous la case, le signe sous le signe.
       // Lot 7-0 : aussi pour « Avec le dessin » à étapes (`etapes`, `etape`
       // de la question).
-      function renderEtapes({revelees = false, etapes = state.serie.apprends.ecris.etapes, etape = state.serie.etape, module = state.serie.module, niveau = state.serie.niveau, corrigees = []} = {}) {
+      // Correctif du lot 6 « programmes 2 » (relecture de Codex, choix de
+      // Gwenaël le 20/11) : dans une ligne qui attend son tour, un nombre
+      // que l'élève doit encore trouver plus haut est une case grise vide
+      // (CORE.cachesEcris : « 7 + 3 = □ », dessous « □ + 2 = □ »). Il
+      // apparaît quand la ligne d'où il vient est faite.
+      function renderEtapes({revelees = false, etapes = state.serie.apprends.ecris.etapes, etape = state.serie.etape, module = state.serie.module, niveau = state.serie.niveau, corrigees = [],
+        texteCalcul = state.serie.ecrisTexte || (state.serie.apprends && state.serie.apprends.calculs && state.serie.apprends.calculs.ecris ? state.serie.apprends.calculs.ecris.texte : "")} = {}) {
         const serie = {etape};
+        const caches = revelees ? [] : CORE.cachesEcris(etapes, texteCalcul);
         const lignes = document.createElement("span");
         lignes.className = "lg";
         const colonnes = Math.max(...etapes.map(etape => etape.texte.split(" ").length));
@@ -3314,7 +3331,14 @@
           };
           // Une étape plus courte (« 6/10 = □ » sous « 4 + 6/10 = □ ») est
           // calée à droite : le « = » sous le « = », la case sous la case.
-          const morceaux = etape.texte.split(" ");
+          const morceaux = etape.texte.split(" ").map((morceau, i) => {
+            if (index <= serie.etape) return morceau;
+            const cache = (caches[index] || []).find(c => c[0] === i && c[2] >= serie.etape);
+            if (!cache) return morceau;
+            // (Le premier nombre du morceau : « 10 » devient « □ », le
+            // numérateur de « 3/12 » aussi : « □/12 ».)
+            return morceau.replace(/\d+(?:[\u00a0\u202f]\d{3})*(?:,\d+)?/, CORE.CASE);
+          });
           for (let k = morceaux.length; k < colonnes; k += 1) {
             const vide = document.createElement("span");
             vide.className = "cel";
@@ -3422,6 +3446,9 @@
         const base = tire ? Object.assign({}, pratique.lecon, {ecris: tire.ecris}) : pratique.lecon;
         state.serie = {genre: "apprends", module: pratique.module, niveau: pratique.niveau, apprends: base, base,
           temps: tempsDe(pratique.module, pratique.niveau).slice(-1), index: 0, revoir: false, pratique};
+        // (Correctif « programmes 2 » : le calcul du J'écris tiré, pour savoir
+        // quels nombres sont donnés.)
+        state.serie.ecrisTexte = tire ? tire.calcul.texte : "";
         state.lecon = null;
         state.running = true;
         renderTemps();
@@ -3585,11 +3612,16 @@
         // seul sur sa ligne (les tables ; « 100 = 4 × 25. 3 × 25 = 75. »,
         // choix de Gwenaël du 13/11 : une égalité s'écrit en maths).
         // (Lot 7b : une égalité peut commencer par « double de », « moitié de ».)
-        const lignes = String(serie.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d(]|(?:double|moitié) de )/).map(texte => AIDES.bilanEnDeux(texte));
+        // (Correctif « programmes 2 », relecture de Codex : une phrase seule
+        // peut finir le bilan, sous les calculs — « Quand les parts ont la
+        // même taille, je peux les ajouter ou les enlever. »)
+        const lignes = String(serie.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d(]|(?:double|moitié) de )/)
+          .map((texte, i, toutes) => AIDES.bilanEnDeux(texte) || (i > 0 && i === toutes.length - 1 && !texte.includes("=") ? {phrase: texte, calcul: ""} : null));
         if (lignes.length > 1 && lignes.every(Boolean)) {
           $("retenir-phrase").replaceChildren();
           lignes.forEach(({phrase, calcul: texte}, i) => {
             if (phrase) $("retenir-phrase").append(...(i ? [" "] : []), AIDES.souderCalculs(phrase));
+            if (!texte) return;
             const calcul = document.createElement("span");
             calcul.className = "dc-retenir-calcul";
             AIDES.ecrireTexte(calcul, texte);
@@ -3940,7 +3972,7 @@
       // Lot 7-0 : les lignes d'une question « Avec le dessin » à étapes.
       function renderEtapesQuestion(question, {revelees = false} = {}) {
         renderEtapes({revelees, etapes: question.dessinEtapes.etapes, etape: question.etape, module: question.calcul.module, niveau: question.calcul.niveau,
-          corrigees: question.premierDonne ? [0] : []});
+          corrigees: question.premierDonne ? [0] : [], texteCalcul: question.calcul.texte});
       }
       function majDessinQuestion(image) {
         const ancien = $("aide").querySelector(":scope > svg");

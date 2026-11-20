@@ -944,6 +944,25 @@
   }
 
   // La partie « J'écris » d'un J'apprends, avec ses dessins.
+  // Correctif du lot 6 « programmes 2 » (relecture de Codex, 20/11) :
+  // un J'écris qui cache lui-même ce que l'élève va trouver — `consignes`,
+  // la consigne après 0, 1, 2… lignes faites ; `caches`, par ligne, les
+  // nombres qui viennent d'une ligne d'avant (voir cachesEcris).
+  function cacherEcris(ecris, {consignes = null, caches = {}} = {}) {
+    const etapes = Object.freeze(ecris.etapes.map((etape, j) => (caches[j]
+      ? Object.freeze(Object.assign({}, etape, {caches: Object.freeze(caches[j].map(c => Object.freeze(c)))}))
+      : etape)));
+    return Object.freeze(Object.assign({}, ecris, {etapes}, consignes ? {consignes: Object.freeze(consignes.map(fr))} : {}));
+  }
+  const apprendsCaches = (apprends, options) => Object.freeze(Object.assign({}, apprends, {ecris: cacherEcris(apprends.ecris, options)}));
+  // Fractions égales (F6) : « 3/5 = (3 × 3)/(5 × 3) » écrivait le facteur
+  // que la première ligne fait chercher. La consigne montre « × ? » jusqu'à
+  // ce qu'il soit trouvé, et la deuxième ligne (« 3 × 3 = □ ») cache le
+  // facteur — le 3 du numérateur, lui, est donné.
+  function f6Cacher(ecris) {
+    const masque = String(ecris.consigne).replace(/([×÷])([\s\u00a0\u202f])\d+\)/g, "$1$2?)");
+    return cacherEcris(ecris, {consignes: [masque, ...ecris.etapes.map(() => ecris.consigne)], caches: {1: [[2, null, 0]]}});
+  }
   function ecrisAvecDessins(ecris, relier) {
     return Object.freeze(Object.assign({}, ecris, {
       dessins: relier.dessins,
@@ -3798,7 +3817,46 @@
   }
 
   // Les étapes de J'écris (« 8 × 4 = ? » → « 8 × 4 = □ »).
-  const etapesEcris = etapes => Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte: texte.replace("?", CASE), reponse})));
+  // (Correctif du lot 6 « programmes 2 », relecture de Codex : un troisième
+  // élément, `caches`, dit quels nombres d'une ligne viennent d'une ligne
+  // d'avant — [morceau, partie de fraction ou null, ligne d'où il vient] —
+  // quand le repérage automatique de cachesEcris() ne suffit pas : « 3 × 3 »
+  // où un 3 est donné et l'autre trouvé.)
+  const etapesEcris = etapes => Object.freeze(etapes.map(([texte, reponse, caches]) => Object.freeze(Object.assign({texte: texte.replace("?", CASE), reponse},
+    caches ? {caches: Object.freeze(caches.map(c => Object.freeze(c)))} : {}))));
+  // Correctif du lot 6 « programmes 2 » (relecture de Codex, choix de
+  // Gwenaël le 20/11) : dans J'écris, une ligne grisée qui attend son tour
+  // ne montre pas un nombre que l'élève doit encore trouver plus haut
+  // (« 7 + 3 = □ », dessous « 10 + 2 = □ » : le 10 est caché). Pour chaque
+  // ligne, la liste des nombres à cacher : [morceau (le texte coupé aux
+  // espaces), 0 pour le numérateur d'une fraction ou null, la ligne d'où il
+  // vient]. Un nombre est caché s'il vaut la réponse d'une ligne d'avant et
+  // qu'il n'est pas écrit tel quel dans le calcul (« 486 − 3 » sous
+  // « 6 − 3 = □ » : ce 3 est donné). Seul le numérateur d'une fraction se
+  // cache (« 12/12 − 5/12 » : le dénominateur est donné). Une ligne qui
+  // porte ses `caches` les impose.
+  function cachesEcris(etapes, texteCalcul = "") {
+    const propre = morceau => String(morceau).replace(/^\(+|\)+$/g, "").replace(/[\u00a0\u202f]/g, " ");
+    const donnes = new Set([...String(texteCalcul).split(" ").map(propre),
+      ...(propre(texteCalcul).match(/\d+(?: \d{3})*(?:,\d+)?(?:\/\d+)?/g) || [])]);
+    const reponses = (etapes || []).map(etape => propre(reponseEcrite(etape)));
+    return (etapes || []).map((etape, j) => {
+      if (Array.isArray(etape.caches)) return etape.caches;
+      const caches = [];
+      const morceaux = String(etape.texte).split(" ");
+      morceaux.forEach((morceau, i) => {
+        // (Le nombre qui ouvre le morceau : « 3/5 de » → 3/5.)
+        const lu = propre(morceau).match(/^\(*(\d+(?: \d{3})*(?:,\d+)?)(\/\d+(?: \d{3})*)?/);
+        // (Jamais le diviseur : « 1 ÷ 2 » sous « 4 ÷ 2 = □ ».)
+        if (!lu || donnes.has(lu[1] + (lu[2] || "")) || morceaux[i - 1] === "÷") return;
+        const fraction = Boolean(lu[2]);
+        const nombre = lu[1];
+        const k = reponses.slice(0, j).lastIndexOf(nombre);
+        if (k >= 0) caches.push([i, fraction ? 0 : null, k]);
+      });
+      return caches;
+    });
+  }
   // L'exemple d'un J'apprends : le calcul sans sa case.
   // (Lot 3a : « = □ » s'efface seulement à la fin — « 144 + 237 = □ + 239 »
   // devenait « 144 + 237 + 239 ».)
@@ -5439,7 +5497,27 @@
     return dessinsDe(Array.from({length: etapes}, () => ({})), etapes, dessin);
   }
   // Les étapes de J'écris : une accolade, une égalité.
-  const c1Etapes = calcul => calcul.lignes.flatMap(l => l.valeurs.map((v, k) => [`${texteAccolade(l, k)} = ?`, v]));
+  // (Correctif du lot 6 « programmes 2 » : chaque étape dit quels nombres
+  // viennent d'une étape d'avant — les « nouveaux » de l'escalier et leur
+  // origine —, pour que J'écris les cache tant qu'ils ne sont pas trouvés.)
+  function c1Etapes(calcul) {
+    const plat = calcul.lignes.flatMap((l, L) => l.valeurs.map((v, k) => [L, k]));
+    const etapeDe = (L, k) => plat.findIndex(([a, b]) => a === L && b === k);
+    return plat.map(([L, k]) => {
+      const l = calcul.lignes[L];
+      let [a, b] = l.sous[k];
+      if (l.jetons[a] === "(" && l.jetons[b] === ")") { a += 1; b -= 1; }
+      const caches = [];
+      let morceau = 0;
+      for (let x = a; x <= b; x += 1) {
+        if (l.jetons[x] === "(" || l.jetons[x] === ")") continue;
+        const p = (l.nouveaux || []).indexOf(x);
+        if (p >= 0 && l.origines[p]) caches.push([morceau, null, etapeDe(...l.origines[p])]);
+        morceau += 1;
+      }
+      return [`${texteAccolade(l, k)} = ?`, l.valeurs[k], caches];
+    });
+  }
   // J'apprends de C1 : toucher sur le premier calcul, l'escalier sur le
   // deuxième, les étapes sur le troisième.
   function c1Apprends({manipule, represente, ecris, consigne, consigneEcris, bilan}) {
@@ -7454,7 +7532,9 @@
     const ecrit = x => (zero && !Number.isInteger(x) ? `${f(x)}0` : f(x));
     const morceau = x => (d8Moitie(calcul) ? `${ecrit(x)} ÷ 2` : `2 × ${ecrit(x)}`);
     const tout = {double: `double de ${ecrit(n)}`, "double-fois": `2 × ${ecrit(n)}`, division: `${ecrit(n)} ÷ 2`}[calcul.forme] || `moitié de ${ecrit(n)}`;
-    return [...morceaux.map(m => [`${morceau(m)} = ?`, exact(d8Moitie(calcul) ? m / 2 : 2 * m)]), [`${tout} = ?`, r]];
+    // (Correctif « programmes 2 » : les morceaux se calculent chacun de leur
+    // côté — rien à cacher, même « 1 ÷ 2 » sous « 2 ÷ 2 = □ ».)
+    return [...morceaux.map(m => [`${morceau(m)} = ?`, exact(d8Moitie(calcul) ? m / 2 : 2 * m), []]), [`${tout} = ?`, r, []]];
   }
   // La consigne en égalité, qui commence par le calcul cherché (« double de
   // 13,6 = 2 × 13 + 2 × 0,6 ») ; « double de » ne se coupe pas.
@@ -8327,7 +8407,9 @@
     const {ops} = calcul.donnees;
     return ecrisAvecDessins({
       consigne: calcul.texte.replace(CASE, "?"),
-      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      // (Correctif « programmes 2 » : chaque ligne part de la réponse de la
+      // précédente — cachée tant qu'elle n'est pas trouvée.)
+      etapes: etapesEcris(etapes.map((etape, j) => (j ? [etape[0], etape[1], [[0, null, j - 1]]] : etape))), reponse: calcul.reponse,
       solution: Object.freeze({image: Object.freeze(c4Image(calcul)), phrase: c4Phrase(calcul)})
     }, c4Dessins(c4Image(calcul), etapes.length));
   }
@@ -9044,7 +9126,7 @@
         n: 1, titre: "demis et quarts", nom: "Demis et quarts", palier: 2, type: "F",
         composer: vivierNiveau(F2_VIVIERS[1], [5, 4, 3]),
         imposes: [f2(1, "1/2 + 1/2 = □"), f2(1, "2/4 = □/2")],
-        apprends: fracApprends({
+        apprends: apprendsCaches(fracApprends({
           fiche: "F2",
           manipule: pourApprendre(f2(1, "1/4 + 1/4 = □/2")),
           represente: pourApprendre(f2(1, "1 − 1/2 = □/2")),
@@ -9055,7 +9137,7 @@
           etapes: [["1/2 = ?/4", 2], ["2/4 + 2/4 = ?/4", 4], ["1/2 + 2/4 = ?", 1]],
           morceaux: [{haut: 0, texte: "2/4"}, {}, {bas: true}],
           bilan: "1/4 + 1/4 = 2/4 = 1/2."
-        })
+        }), {consignes: ["1/2 + 2/4 = ?/4 + 2/4", "1/2 + 2/4 = 2/4 + 2/4"], caches: {1: [[0, 0, 0]]}})
       },
       {
         n: 2, titre: "avec 3/4", nom: "Demis et quarts, avec 3/4", palier: 3, type: "F",
@@ -9309,6 +9391,9 @@
       if (pgcd(a, d) !== 1) return;
       entre(2, 5).forEach(k => { if (tientSurLaBarre(a / d, k * d) && !(d === 2 && k === 2) && k * d !== 10) liste.push([a, d, k]); });
     }));
+    // (Correctif « programmes 2 » : et 7/2 = 28/8, l'exemple d'Éduscol pour
+    // le CM1 — « ?/8 = 7/2 », sur le schéma à flèches.)
+    liste.push([7, 2, 4]);
     return liste;
   })());
   // (15 égalités, et autant écrites à l'envers comme au programme :
@@ -9320,19 +9405,30 @@
   // que 1 aux dénominateurs jusqu'à 20 (5/2 = □/6), et les dénominateurs de
   // 13 à 20 (2/7 = □/14) — l'une OU l'autre condition. Les niveaux du CM2
   // (3 : diviser ; 4 : le dénominateur) gardent le reste.
+  // Correctif du lot 6 « programmes 2 » (relecture de Codex, choix de
+  // Gwenaël le 20/11) : diviser et chercher le dénominateur commencent au
+  // CM1 avec de petites égalités (6/8 = □/4, 3/4 = 6/□) — dans ces
+  // écritures, tout dénominateur jusqu'à 20 est au CM1 ; le CM2 garde
+  // au-delà de 20. Multiplier jusqu'à 12 reste au CE2 (le niveau 1).
   const F6_AU_CM1 = ([a, d, k]) => (a > d ? k * d <= 20 : k * d >= 13 && k * d <= 20);
+  const F6_AU_CM1_TOUT = ([, d, k]) => k * d <= 20;
   const F6_AU_DELA = Object.freeze(F6_TRIPLETS.filter(([, d, k]) => k * d > 12));
   const F6_CM1 = Object.freeze([...F6_TRIPLETS, ...F6_GRANDES].filter(F6_AU_CM1));
   const F6_CM1_GRANDES = Object.freeze(F6_GRANDES.filter(F6_AU_CM1));
   const F6_CM1_PETITES = Object.freeze(F6_TRIPLETS.filter(F6_AU_CM1));
-  const sansCM1 = liste => liste.filter(t => !F6_AU_CM1(t));
+  const sansCM1 = liste => liste.filter(t => !F6_AU_CM1_TOUT(t));
+  const F6_CM1_TOUT = Object.freeze([...F6_TRIPLETS, ...F6_GRANDES].filter(F6_AU_CM1_TOUT));
   const F6_VIVIERS = Object.freeze({
     1: Object.freeze({multiplier: F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier", a, d, k)),
       "multiplier-gauche": F6_CE2.map(([a, d, k]) => f6Calcul(1, "multiplier-gauche", a, d, k))}),
+    // (Correctif « programmes 2 » : la case aussi à gauche — « ?/8 = 7/2 »,
+    // l'exemple d'Éduscol ; diviser aussi une fraction plus grande que 1,
+    // « 14/8 = ?/4 ».)
     2: Object.freeze({multiplier: F6_CM1.map(([a, d, k]) => f6Calcul(2, "multiplier", a, d, k)),
-      diviser: F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k)),
-      denominateur: F6_CM1_PETITES.map(([a, d, k]) => f6Calcul(2, "denominateur", a, d, k)),
-      "denominateur-gauche": F6_CM1.map(([a, d, k]) => f6Calcul(2, "denominateur-gauche", a, d, k))}),
+      "multiplier-gauche": F6_CM1.map(([a, d, k]) => f6Calcul(2, "multiplier-gauche", a, d, k)),
+      diviser: F6_CM1_TOUT.map(([a, d, k]) => f6Calcul(2, "diviser", a, d, k)), "diviser-den": F6_CM1_TOUT.map(([a, d, k]) => f6Calcul(2, "diviser-den", a, d, k)),
+      denominateur: F6_CM1_TOUT.filter(([a, d]) => a < d).map(([a, d, k]) => f6Calcul(2, "denominateur", a, d, k)),
+      "denominateur-gauche": F6_CM1_TOUT.map(([a, d, k]) => f6Calcul(2, "denominateur-gauche", a, d, k))}),
     3: Object.freeze({diviser: sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(3, "diviser", a, d, k)), "diviser-den": sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(3, "diviser-den", a, d, k)),
       multiplier: sansCM1([...F6_AU_DELA, ...F6_GRANDES]).map(([a, d, k]) => f6Calcul(3, "multiplier", a, d, k))}),
     4: Object.freeze({denominateur: sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(4, "denominateur", a, d, k)), "denominateur-gauche": sansCM1(F6_TRIPLETS).map(([a, d, k]) => f6Calcul(4, "denominateur-gauche", a, d, k)),
@@ -9382,11 +9478,14 @@
     const petit = [a, d];
     const grand = [k * a, k * d];
     const divise = calcul.forme === "diviser" || calcul.forme === "diviser-den";
-    return Object.freeze({
+    // (Correctif « programmes 2 » : « ?/8 = 7/2 » — la grande fraction est à
+    // gauche, les flèches « × 4 » vont de 7/2 vers ?/8.)
+    const envers = calcul.forme === "multiplier-gauche";
+    return Object.freeze(Object.assign({
       outil: "fois-fraction", op: divise ? "÷" : "×", k,
-      gauche: Object.freeze(divise ? grand : petit), droite: Object.freeze(divise ? petit : grand),
+      gauche: Object.freeze(divise || envers ? grand : petit), droite: Object.freeze(divise || envers ? petit : grand),
       cache: F6_PLACES[calcul.forme], montre: revele || trouve, trouve, haut, bas, trouveHaut, trouveBas
-    });
+    }, envers ? {envers: true} : {}));
   }
   const f6Image = calcul => (f6Grand(calcul) ? f6Schema(calcul, {revele: true}) : fracImage(calcul));
   const f6Aide = calcul => (f6Grand(calcul) ? f6Schema(calcul) : fracAide(calcul));
@@ -9400,10 +9499,10 @@
     };
     const relier = dessinsDe(morceaux, morceaux.length, dessin);
     return Object.freeze(Object.assign({}, apprends, {
-      ecris: Object.freeze(Object.assign({}, apprends.ecris, {
+      ecris: f6Cacher(Object.freeze(Object.assign({}, apprends.ecris, {
         dessins: relier.dessins,
         solution: Object.freeze(Object.assign({}, apprends.ecris.solution, {image: relier.revele}))
-      }))
+      })))
     }));
   }
 
@@ -9423,7 +9522,7 @@
         // Lot 7e (programme du CE2) : jusqu'à 12 parts, tout se dessine ;
         // J'écris revient sur les bandes (chaque quart coupé en 2), avec la
         // même ligne qu'au-delà : « 3/4 = (3 × 2)/(4 × 2) ».
-        apprends: fracApprends({
+        apprends: apprendsCaches(fracApprends({
           fiche: "F6",
           manipule: pourApprendre(f6(1, "3/4 = □/12")),
           represente: pourApprendre(f6(1, "2/3 = □/12")),
@@ -9433,15 +9532,19 @@
           etapes: [["4 × ? = 8", 2], ["3 × 2 = ?", 6], ["3/4 = ?/8", 6]],
           morceaux: [{gros: 2}, {}, {bas: true}],
           bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
-        })
+        }), {consignes: ["3/4 = (3 × ?)/(4 × ?)", "3/4 = (3 × 2)/(4 × 2)"], caches: {1: [[2, null, 0]]}})
       },
       {
         // Lot 6 « programmes 2 » (19/11, choix de Gwenaël) : le niveau du
         // CM1. Les niveaux suivants ont changé de numéro (2 → 3, 3 → 4) ;
         // les progressions enregistrées sont reprises (mon_parcours, v9).
-        n: 2, titre: "plus grandes que 1, jusqu’à 20", nom: "Fractions égales\u00a0: jusqu’à 20", palier: 2, type: "P",
-        composer: vivierNiveau(F6_VIVIERS[2], [4, 2, 1, 2, 1]),
-        imposes: [f6(2, "7/4 = □/8"), f6(2, "12/18 = □/3")],
+        // (Correctif « programmes 2 », relecture de Codex : le titre dit
+        // « dénominateurs jusqu'à 20 » — la plupart des égalités sont plus
+        // petites que 1 ; ?/8 = 7/2, l'exemple d'Éduscol, est imposé, et
+        // 6/8 = ?/4 ouvre la division.)
+        n: 2, titre: "dénominateurs jusqu’à 20", nom: "Fractions égales\u00a0: jusqu’à 20", palier: 2, type: "P",
+        composer: vivierNiveau(F6_VIVIERS[2], [3, 1, 2, 1, 2, 1]),
+        imposes: [f6(2, "7/4 = □/8"), f6(2, "6/8 = □/4"), f6(2, "□/8 = 7/2")],
         apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
           represente: pourApprendre(f6(2, "4/3 = □/6")),
@@ -9450,39 +9553,44 @@
           consigneEcris: "3/5 = (3 × 3)/(5 × 3)",
           etapes: [["5 × ? = 15", 3], ["3 × 3 = ?", 9], ["3/5 = ?/15", 9]],
           morceaux: [{}, {}, {bas: true}],
-          bilan: "4/3 = 8/6 (× 2 en haut et en bas)."
+          bilan: "4/3 = 8/6 (× 2 en haut et en bas). Pour revenir de 8/6 à 4/3, je divise 8 et 6 par 2."
         }), pourApprendre(f6(2, "3/5 = □/15")), [{bas: true}, {haut: true}, {case: true}])
       },
       {
         n: 3, titre: "en divisant", nom: "Fractions égales : diviser", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[3], [5, 3, 2]),
-        imposes: [f6(3, "6/9 = □/3"), f6(3, "8/12 = 2/□")],
+        // (Correctif « programmes 2 » : jusqu'à 20 parts, c'est le CM1 ; le
+        // CM2 divise au-delà — 6/9 = □/3, 8/12 = 2/□ et 9/12 = □/4 y sont
+        // passés.)
+        imposes: [f6(3, "16/24 = □/3"), f6(3, "20/25 = 4/□")],
         apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(3, "9/12 = □/4")),
+          represente: pourApprendre(f6(3, "18/24 = □/4")),
           // (Lot 6 « programmes 2 » : 10/15 = □/3 passe au CM1, niveau 2 ;
           // J'écris prend 10/25 = □/5.)
           ecris: pourApprendre(f6(3, "10/25 = □/5")),
-          consigne: "3 douzièmes font un quart.",
+          consigne: "6 vingt-quatrièmes font un quart.",
           consigneEcris: "10/25 = (10 ÷ 5)/(25 ÷ 5)",
           etapes: [["25 ÷ ? = 5", 5], ["10 ÷ 5 = ?", 2], ["10/25 = ?/5", 2]],
           morceaux: [{}, {}, {bas: true}],
-          bilan: "9/12 = 3/4 (÷ 3 en haut et en bas)."
+          bilan: "18/24 = 3/4 (÷ 6 en haut et en bas)."
         }), pourApprendre(f6(3, "10/25 = □/5")), [{bas: true}, {haut: true}, {case: true}])
       },
       {
         n: 4, titre: "le dénominateur manquant", nom: "Fractions égales : le dénominateur", palier: 3, type: "P",
         composer: vivierNiveau(F6_VIVIERS[4], [5, 3, 2]),
-        imposes: [f6(4, "2/3 = 8/□"), f6(4, "3/□ = 9/24")],
+        // (Correctif « programmes 2 » : 2/3 = 8/□ et 2/3 = 6/□ sont passés au
+        // CM1.)
+        imposes: [f6(4, "2/3 = 16/□"), f6(4, "3/□ = 9/24")],
         apprends: f6EcrisSchema(fracApprends({
           fiche: "F6",
-          represente: pourApprendre(f6(4, "2/3 = 6/□")),
+          represente: pourApprendre(f6(4, "2/3 = 14/□")),
           ecris: pourApprendre(f6(4, "5/8 = 15/□")),
-          consigne: "Chaque tiers est coupé en 3.",
+          consigne: "Chaque tiers est coupé en 7.",
           consigneEcris: "5/8 = (5 × 3)/(8 × 3)",
           etapes: [["5 × ? = 15", 3], ["8 × 3 = ?", 24], ["5/8 = 15/?", 24]],
           morceaux: [{}, {}, {bas: true}],
-          bilan: "2/3 = 6/9 (× 3 en haut et en bas)."
+          bilan: "2/3 = 14/21 (× 7 en haut et en bas)."
         }), pourApprendre(f6(4, "5/8 = 15/□")), [{haut: true}, {bas: true}, {case: true}])
       }
     ]
@@ -10663,8 +10771,35 @@
     const tout = f9Deux(niveau, 4, 20);
     return {somme: tout.somme.filter(c => f9DansUnite(c) === garder), difference: tout.difference.filter(c => f9DansUnite(c) === garder)};
   };
+  // Correctif du lot 6 « programmes 2 » (relecture de Codex, choix de
+  // Gwenaël le 20/11) : le CE2 va jusqu'à 1 inclus — quelques sommes qui
+  // font juste 1 (1/3 + 4/6 = 6/6, toute la barre) et des différences qui
+  // partent de 1 écrit en parts (6/6 − 1/3) ; et les demis et les quarts
+  // (1/2 + 1/4, 1/2 − 1/4, 3/4 − 1/2), le premier changement de
+  // dénominateur, avec peu de parts — ils restent aussi par cœur dans
+  // « Demis et quarts ».
+  function f9Bords() {
+    const somme = [];
+    const difference = [];
+    [[1, 3, 6], [1, 4, 8], [2, 5, 10], [3, 4, 12], [2, 3, 12], [1, 2, 6]].forEach(([a, d, D]) => {
+      const b = D - a * D / d;
+      somme.push(f9Calcul(1, "somme", `${a}/${d} + ${b}/${D} = ${CASE}/${D}`));
+      somme.push(f9Calcul(1, "somme", `${b}/${D} + ${a}/${d} = ${CASE}/${D}`));
+    });
+    [[1, 3, 6], [3, 4, 8], [2, 5, 10], [1, 6, 12], [1, 2, 6], [2, 3, 12]].forEach(([a, d, D]) => {
+      difference.push(f9Calcul(1, "difference", `${D}/${D} − ${a}/${d} = ${CASE}/${D}`));
+    });
+    somme.push(f9Calcul(1, "somme", `1/2 + 1/4 = ${CASE}/4`), f9Calcul(1, "somme", `1/4 + 1/2 = ${CASE}/4`));
+    difference.push(f9Calcul(1, "difference", `1/2 − 1/4 = ${CASE}/4`), f9Calcul(1, "difference", `3/4 − 1/2 = ${CASE}/4`));
+    return {somme, difference};
+  }
+  const f9Niveau1 = () => {
+    const unite = f9Partage(1, true);
+    const bords = f9Bords();
+    return {somme: [...unite.somme, ...bords.somme], difference: [...unite.difference, ...bords.difference]};
+  };
   const F9_VIVIERS = Object.freeze({
-    1: Object.freeze(f9Partage(1, true)),
+    1: Object.freeze(f9Niveau1()),
     2: Object.freeze(f9Partage(2, false)),
     3: Object.freeze(Object.assign(f9Deux(3, 21, 60), {trois: f9Trois(), mixtes: f9Mixtes()}))
   });
@@ -10714,12 +10849,21 @@
   const f9Manipulation = calcul => (calcul.forme === "somme" || calcul.forme === "difference" ? fracManipulation(calcul) : null);
   const F9_RANGS = Object.freeze({somme: 0, difference: 1, trois: 2, mixtes: 3});
   const f9Difficulte = calcul => F9_RANGS[calcul.forme] * 10000 + (f9Grand(calcul) ? 5000 : 0) + Math.max(...densDe(calcul.lu)) * 20 + calcul.reponse;
+  const F9_LETTRES = Object.freeze(["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze"]);
   const F9_ERREURS = Object.freeze([
     Object.freeze({
       c: 1, nom: "les numérateurs pris tels quels, sans changer les parts",
       test: sauf((calcul, reponse) => calcul.donnees.bruts > 0 && memeNombre(reponse, calcul.donnees.bruts)),
       retour: (calcul, reponse) => {
         const x = f9Conversion(calcul)[0];
+        // Correctif du lot 6 « programmes 2 » (relecture de Codex, choix de
+        // Gwenaël le 20/11) : au CE2, on compare d'abord les parts, en mots —
+        // « un cinquième vaut deux dixièmes. Donc deux cinquièmes valent
+        // quatre dixièmes. »
+        if (calcul.niveau === 1 && nomParts(x.d) && nomParts(x.D) && x.N <= 11) {
+          return fr(`${f(reponse)} : un ${nomParts(x.d, false)} vaut ${F9_LETTRES[x.k]} ${nomParts(x.D)}.`
+            + (x.n > 1 ? ` Donc ${F9_LETTRES[x.n]} ${nomParts(x.d)} valent ${F9_LETTRES[x.N]} ${nomParts(x.D)}.` : ""));
+        }
         return fr(`${f(reponse)} : ${x.n}/${x.d} et des ${nomDe(x.D)} ne sont pas des parts de même taille. D’abord, ${x.n}/${x.d} = ${x.N}/${x.D}.`);
       },
       gras: 0
@@ -10832,7 +10976,7 @@
           represente: pourApprendre(f9(1, `3/4 − 1/8 = ${CASE}/8`)),
           ecris: pourApprendre(f9(1, `1/4 + 5/12 = ${CASE}/12`)),
           consigne: "Chaque quart, c’est 2 huitièmes.",
-          bilan: "1/3 = 2/6. 1/3 + 1/6 = 2/6 + 1/6 = 3/6."
+          bilan: "1/3 = 2/6. 1/3 + 1/6 = 2/6 + 1/6 = 3/6. Quand les parts ont la même taille, je peux les ajouter ou les enlever."
         })
       },
       {
@@ -11366,7 +11510,7 @@
     "D4-2": parFormes(["on ajoute", "plus"], ["on ajoute une fraction", "plus-fraction"], ["on retire", "moins"]),
     "F6-1": parFormes(["a/b = □/c", "multiplier"], ["□/c = a/b", "multiplier-gauche"]),
     // (Lot 6 « programmes 2 » : le niveau 2 est neuf ; 2 → 3, 3 → 4.)
-    "F6-2": parFormes(["multiplier", "multiplier"], ["diviser", "diviser", "diviser-den"], ["le dénominateur", "denominateur", "denominateur-gauche"]),
+    "F6-2": parFormes(["multiplier", "multiplier", "multiplier-gauche"], ["diviser", "diviser", "diviser-den"], ["le dénominateur", "denominateur", "denominateur-gauche"]),
     "F6-3": parFormes(["a/b = □/c", "diviser"], ["a/b = c/□", "diviser-den"], ["multiplier", "multiplier"]),
     "A3-4": [["dizaines", (c, d) => Math.abs(d.d) < 100], ["centaines", (c, d) => Math.abs(d.d) < 1000], ["milliers", (c, d) => !franchit(d.n, d.d, 10000)], ["milliers avec une retenue", toutes]],
     "D4-3": parFormes(["on ajoute un décimal", "plus"], ["on ajoute une fraction", "plus-fraction"]),
@@ -11610,9 +11754,8 @@
     // annonce (la leçon divise).
     // (Lot 6 « programmes 2 » : le niveau 2 neuf, du CM1 ; 2 → 3, 3 → 4.)
     "F6-2": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
-    "F6-3": [[c => f6Grand(c) && F6_MULTIPLIE[c.forme], calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`],
-      [f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
-    "F6-4": [[f6Grand, calcul => `trop de parts pour les dessiner : ${f6Verbe(calcul)} en haut et en bas`]],
+    // (Correctif « programmes 2 » : au CM2, toutes les égalités dépassent
+    // 20 parts — le schéma n'est plus une nouveauté, il est appris au CM1.)
     // Lot 7a : D6, D7.
     "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
     "D7-2": [["unités et dixièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de dixièmes : je casse une unité, elle fait 10 dixièmes"]],
@@ -12257,12 +12400,12 @@
   function recetteGarder(calcul) {
     const {a, b, c} = calcul.donnees;
     if (!(a > c)) return null;
-    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(a)} − ${f(c)} = ?`, a - c], [`${f(b)} + ${f(a - c)} = ?`, calcul.reponse]], c3Dessins);
+    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(a)} − ${f(c)} = ?`, a - c], [`${f(b)} + ${f(a - c)} = ?`, calcul.reponse, [[2, null, 0]]]], c3Dessins);
   }
   function recetteGarderGrand(calcul) {
     const {a, b, d} = calcul.donnees;
     if (!(d > b)) return null;
-    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(d)} − ${f(b)} = ?`, d - b], [`${f(a)} − ${f(d - b)} = ?`, calcul.reponse]], c3Dessins);
+    return ecrisSansManip(C3, calcul, avecQuestion(calcul), [[`${f(d)} − ${f(b)} = ?`, d - b], [`${f(a)} − ${f(d - b)} = ?`, calcul.reponse, [[2, null, 0]]]], c3Dessins);
   }
   // Le tableau à flèches (M2, D2, D3) : une seule égalité, le calcul.
   function recetteGlisse(calcul, texte = calcul.texte) {
@@ -12418,16 +12561,21 @@
     if (i < 0 || autre.d !== 4) return null;
     const somme = autre.n + 2;
     const enQuarts = gauche.map((t, k) => (k === i ? "2/4" : fracTexte(t))).join(" + ");
+    // (Correctif « programmes 2 » : le 2 de 2/4, trouvé à la première ligne,
+    // reste caché dessous et dans la consigne jusque-là.)
+    const caches = {1: [[2 * i, 0, 0]]};
     if (droite[0].d === 1) {
       if (somme !== 4) return null;
-      return ecrisFraction(calcul, `${ecrireCote(gauche)} = ${enQuarts}`,
+      const consigne = `${ecrireCote(gauche)} = ${enQuarts}`;
+      const masque = `${ecrireCote(gauche)} = ${gauche.map((t, k) => (k === i ? "?/4" : fracTexte(t))).join(" + ")}`;
+      return cacherEcris(ecrisFraction(calcul, consigne,
         [["1/2 = ?/4", 2], [`${enQuarts} = ?/4`, 4], [avecQuestion(calcul), 1]],
-        [{haut: i, texte: "2/4"}, {}, {bas: true}]);
+        [{haut: i, texte: "2/4"}, {}, {bas: true}]), {consignes: [masque, consigne], caches});
     }
     if (droite[0].d !== 4) return null;
-    return ecrisFraction(calcul, avecQuestion(calcul),
+    return cacherEcris(ecrisFraction(calcul, avecQuestion(calcul),
       [["1/2 = ?/4", 2], [`${enQuarts} = ?/4`, somme]],
-      [{haut: i, texte: "2/4"}, {bas: true}]);
+      [{haut: i, texte: "2/4"}, {bas: true}]), {caches});
   }
   // Fractions égales au-delà de 12 parts (F6) : « × 4 en haut et en bas ».
   function recetteFoisFraction(calcul) {
@@ -12436,8 +12584,8 @@
     if (!f6Grand(calcul) && calcul.forme === "multiplier" && calcul.donnees.a < calcul.donnees.d) {
       const {a, d, k} = calcul.donnees;
       if (a === 1) return null;
-      return ecrisFraction(calcul, `${a}/${d} = (${a} × ${k})/(${d} × ${k})`,
-        [[`${d} × ? = ${d * k}`, k], [`${a} × ${k} = ?`, a * k], [avecQuestion(calcul), a * k]], [{gros: k}, {}, {bas: true}]);
+      return f6Cacher(ecrisFraction(calcul, `${a}/${d} = (${a} × ${k})/(${d} × ${k})`,
+        [[`${d} × ? = ${d * k}`, k], [`${a} × ${k} = ?`, a * k], [avecQuestion(calcul), a * k]], [{gros: k}, {}, {bas: true}]));
     }
     if (!f6Grand(calcul)) return null;
     const {a, d, k} = calcul.donnees;
@@ -12462,11 +12610,11 @@
       return f6Schema(calcul, {haut: vu("haut"), bas: vu("bas"), trouve: vu("case") && !revele, revele,
         trouveHaut: vu("haut") && !revele, trouveBas: vu("bas") && !revele});
     };
-    return ecrisAvecDessins({
+    return f6Cacher(ecrisAvecDessins({
       consigne: fr(consigne),
       etapes: etapesEcris(etapes), reponse: calcul.reponse,
       solution: Object.freeze({image: fracImage(calcul), phrase: fracPhrase(calcul)})
-    }, dessinsDe(morceaux, morceaux.length, dessin));
+    }, dessinsDe(morceaux, morceaux.length, dessin)));
   }
   // Fraction d'une quantité (F3, lot 7e-2) : en mots, comme la leçon —
   // « Je partage 42 € en 6 parts égales. », « Une part, c'est □ €. » ; au
@@ -12529,6 +12677,15 @@
   }
 
   // Les recettes, niveau par niveau.
+  // (Correctif « programmes 2 » : des lignes qui se calculent chacune de
+  // leur côté — rien n'y vient d'une ligne d'avant, même si un nombre vaut
+  // par hasard une réponse plus haut : « 30 ÷ 5 » sous « 150 ÷ 5 = □ ».)
+  const independantes = recette => calcul => {
+    const ecris = recette(calcul);
+    if (!ecris) return ecris;
+    const devines = cachesEcris(ecris.etapes, calcul.texte);
+    return devines.some(l => l.length) ? cacherEcris(ecris, {caches: Object.fromEntries(devines.map((l, j) => [j, []]).filter(([j]) => devines[j].length))}) : ecris;
+  };
   const RECETTES_ECRIS = Object.freeze({
     "A1-1": recetteDixBarres, "A1-2": recettePlus, "A1-3": recettePlus,
     "A10-1": recetteUnites, "A10-2": recettePlus, "A10-3": recettePlus,
@@ -12540,12 +12697,12 @@
     "A4-1": recetteChemin, "A4-2": recetteChemin, "A4-3": recetteChemin, "A4-4": recetteChemin,
     "A7-1": recetteChemin, "A7-2": recetteChemin, "A7-3": recetteChemin,
     "A8-1": recetteEcart, "A8-2": recetteEcart,
-    "M1-1": c => recetteDouble(c, "plus"), "M1-2": c => recetteDouble(c, "fois"), "M1-3": c => recetteDouble(c, "morceaux"),
+    "M1-1": independantes(c => recetteDouble(c, "plus")), "M1-2": independantes(c => recetteDouble(c, "fois")), "M1-3": independantes(c => recetteDouble(c, "morceaux")),
     "M4-1": recetteDivisionTable, "M4-2": recetteDivisionTable, "M5-1": recetteVingtCinq,
     "M6-1": recetteDoubleDouble, "M6-2": recetteDoubleDouble,
-    "M8-1": recetteDecomposer, "M8-2": recetteDecomposer, "M8-3": recetteDecomposer,
+    "M8-1": independantes(recetteDecomposer), "M8-2": independantes(recetteDecomposer), "M8-3": independantes(recetteDecomposer),
     "M10-1": recetteRegrouper, "M10-2": recetteRegrouper, "M10-3": recetteQuart,
-    "M12-1": recetteDizainesDivisees, "M12-2": recettePartage, "M12-3": recettePartage,
+    "M12-1": recetteDizainesDivisees, "M12-2": independantes(recettePartage), "M12-3": independantes(recettePartage),
     "C3-1": recetteEgal, "C3-2": recetteGarder, "C3-3": recetteGarderGrand,
     "M2-1": recetteDizaines, "M2-2": c => recetteGlisse(c), "D2-1": c => recetteGlisse(c), "D2-2": c => recetteGlisse(c),
     "D2-3": c => recetteGlisse(c), "D2-4": c => recetteGlisse(c), "D3-1": c => recetteGlisse(c), "D3-2": c => recetteGlisse(c), "D3-3": c => recetteGlisse(c),
@@ -12563,7 +12720,7 @@
     "F1-1": recetteDixiemes, "F1-2": recetteCentiemes, "F1-3": recetteCinquiemes,
     // Lot 7a.
     "D5-1": d5Ecris, "D5-2": d5Ecris,
-    "D6-1": deuxEcris, "D6-2": deuxEcris, "D6-3": deuxEcris, "D7-1": deuxEcris, "D7-2": deuxEcris, "D7-3": deuxEcris,
+    "D6-1": independantes(deuxEcris), "D6-2": independantes(deuxEcris), "D6-3": independantes(deuxEcris), "D7-1": independantes(deuxEcris), "D7-2": independantes(deuxEcris), "D7-3": independantes(deuxEcris),
     // Lot 7b.
     "D8-1": d8Ecris, "D8-2": d8Ecris, "D8-3": d8Ecris,
     "D9-1": recetteDixFois, "D9-2": recetteDixFois,
@@ -12644,6 +12801,7 @@
     FRACTION_A_CASES,
     aFractionACases,
     reponseEcrite,
+    cachesEcris,
     morceauxFraction,
     estJuste,
     fractionEgaleAutrement,
