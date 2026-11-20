@@ -6807,6 +6807,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // faire d'une compétence à revoir.
   function suiteCalcul(c) {
     if (c.deCote) return `mise de côté jusqu’à ${jourCourtCalcul(c.echeance) || "bientôt"}, puis J’apprends et un entraînement`;
+    // Lot F4 : jamais apprise — J'apprends arrêté trois fois sur ce niveau.
+    if (c.etat === "classe" && c.pasApprise) return c.retour
+      ? `J’apprends arrêté 3 fois · l’élève passe à la suite, ce niveau revient le ${jourCourtCalcul(c.retour)}`
+      : "J’apprends arrêté 3 fois · revenu dans le parcours, J’apprends reprend à sa prochaine séance";
     if (c.etat === "classe") return "revenue après sa mise de côté : J’apprends, puis un entraînement à sa prochaine séance";
     const aujourdhui = CALCUL ? CALCUL.jourLocal() : "";
     // Ratée aujourd'hui : la séance du jour la réentraîne avec l'aide (« Je
@@ -8581,6 +8585,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       } else if (cle === "flash-anzan") {
         f.filter(x => x.type === "grade").forEach(x => liste.push({appli: cle, texte: `${ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(x.grade) : `grade ${x.grade}`} réussi`, rang: 2}));
       } else if (cle === "defi-calcul") {
+        // Lot 6-0 (livré avec le lot F4) : la ceinture gagnée cette semaine.
+        const NOMS_CEINTURES = ["ceinture jaune", "ceinture orange", "ceinture verte", "ceinture bleue"];
+        f.filter(x => x.type === "ceinture" && NOMS_CEINTURES[x.ceinture - 1]).forEach(x => liste.push({appli: cle, texte: `${NOMS_CEINTURES[x.ceinture - 1]} gagnée`, rang: 2}));
         f.filter(x => x.type === "competences").forEach(x => liste.push({appli: cle, texte: `${x.competences} compétences sues cette semaine`, rang: 3, nombre: x.competences}));
       } else if (cle === "coffres") {
         // Lot S4a : Coffres n'avait aucune règle. Un trésor, c'est 10 clés

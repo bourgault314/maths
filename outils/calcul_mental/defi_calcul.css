@@ -1450,6 +1450,25 @@ body.mode-eleve .fullscreen-toggle { order: 3; flex: 0 0 auto; }
 .dc-bientot b { color: #5b7286; font-weight: 900; }
 /* Le bilan du test : une marche qu'on n'a pas jouée. */
 .bilan-niveaux .pas i { background: #c5d9e6; color: #fff; }
+/* Lot F4 : plus de croix rouge au test — le niveau à apprendre a sa flèche bleue. */
+.bilan-niveaux .apprendre i { background: var(--blue); }
+/* Lot F4 : « On continue demain » — le chemin de J'apprends (fait, demain, ensuite). */
+.chemin { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 6px; width: 100%; margin-top: 8px; }
+.chemin > span { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border: 2px solid #cfe0f2; border-radius: 12px; background: #fff; text-align: center; }
+.chemin i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #c5d9e6; color: #fff; font-style: normal; font-size: 14px; font-weight: 950; line-height: 1; }
+.chemin b { font-size: .86rem; font-weight: 900; line-height: 1.15; }
+.chemin small { color: #5b7286; font-size: .76rem; font-weight: 800; }
+.chemin .fait { border-color: var(--teal); background: #eef8f6; }
+.chemin .fait i { background: var(--teal); }
+.chemin .fait small { color: var(--teal); }
+.chemin .demain { border-color: var(--blue); }
+.chemin .demain i { background: var(--blue); }
+.chemin .demain small { color: var(--blue); }
+/* Lot F4 : les jours de la semaine, une case cochée par jour travaillé. */
+.jours-semaine { display: inline-flex; gap: 4px; }
+.jours-semaine i { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 2px solid #c5d9e6; border-radius: 6px; background: #fff; color: #5b7286; font-style: normal; font-size: 11px; font-weight: 900; line-height: 1; }
+.jours-semaine i.fait { border-color: var(--teal); background: var(--teal); color: #fff; }
+.jours-semaine i.ici { border-color: var(--blue); color: var(--blue); }
 .bilan-niveaux .pas { color: #6b8192; }
 
 /* ---- En-tête commun des applis suivies (variante A, planches du

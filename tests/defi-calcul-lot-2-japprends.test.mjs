@@ -13,6 +13,9 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const CARTE = CORE.carte();
 const PAGE = readFileSync(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
 const CSS = readFileSync(new URL("../outils/calcul_mental/defi_calcul.css", import.meta.url), "utf8");
@@ -27,10 +30,12 @@ const tester = (p, module, marche) => P.appliquerTest(p, {module, marche,
   {aujourdhui: J, carte: CARTE, seance: true});
 
 test("la file : J'apprends est UNE étape, « Je m'entraîne » n'y vient plus ; 4 minutes", () => {
-  let p = tester(P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J}), "A1", 1).parcours;
+  let p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
   assert.deepEqual(types(p), ["apprends", "avance"]);
   assert.deepEqual(P.fileSeance(p, CARTE, {aujourdhui: J}).etapes[0], {type: "apprends", module: "A1", niveau: 2});
-  assert.deepEqual(Object.keys(P.SEUILS.seance.durees), ["test", "apprends", "rattrape"]);
+  // (Lot F4 : le test de palier, et le temps d'un début de J'apprends
+  // qu'un test pas garanti demande en plus.)
+  assert.deepEqual(Object.keys(P.SEUILS.seance.durees), ["test", "apprends", "rattrape", "palier", "apresTest"]);
   assert.equal(P.SEUILS.seance.durees.apprends, 240);
   // Une vieille progression où J'apprends était fait sans l'entraînement : J'apprends, en entier.
   p.modules.A1.a[1] = 1;
@@ -38,7 +43,7 @@ test("la file : J'apprends est UNE étape, « Je m'entraîne » n'y vient plus ;
 });
 
 test("J'apprends réussi : la compétence entre en boîte 2, J'apprends est fait, un apprentissage commencé", () => {
-  const p = tester(P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J}), "A1", 1).parcours;
+  const p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
   const r = apprendre(p, "A1", 2);
   assert.equal(r.verdict.reussi, true);
   assert.deepEqual(r.evenements, [{type: "entree", module: "A1", niveau: 2, boite: 2}]);
@@ -49,8 +54,8 @@ test("J'apprends réussi : la compétence entre en boîte 2, J'apprends est fait
   assert.equal(r.parcours.seance.j[5], 1, "une nouveauté au journal de la séance");
 });
 
-test("J'apprends raté (25 calculs) : rien n'entre, rien de nouveau aujourd'hui, demain J'apprends de nouveau", () => {
-  const p = tester(P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J}), "A1", 1).parcours;
+test("J'apprends arrêté (25 calculs) : rien n'entre, rien de nouveau aujourd'hui, demain J'apprends reprend (lot F4)", () => {
+  const p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
   const r = apprendre(p, "A1", 2, ratee());
   assert.equal(r.verdict.reussi, false);
   assert.equal(r.parcours.modules.A1.b[1], 0);
@@ -58,7 +63,8 @@ test("J'apprends raté (25 calculs) : rien n'entre, rien de nouveau aujourd'hui,
   assert.equal(r.finie, true);
   assert.deepEqual(types(r.parcours), []);
   const demain = P.fileSeance(r.parcours, CARTE, {aujourdhui: P.ajouterJours(J, 1)}).etapes.filter(e => e.type === "apprends");
-  assert.deepEqual(demain[0], {type: "apprends", module: "A1", niveau: 2});
+  // Lot F4 : il reprend où il en était (sans aide), pas à « On te montre ».
+  assert.deepEqual(demain[0], {type: "apprends", module: "A1", niveau: 2, depart: 2});
 });
 
 test("une compétence à revoir ratée deux fois de suite : J'apprends seul (plus de « Je m'entraîne encore » derrière), sa boîte ne bouge pas", () => {

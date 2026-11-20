@@ -49,7 +49,8 @@ function servir() {
 // Tout ce qui vient avant `jusqua` dans l'ordre du parcours est entré (boîte
 // 4, revient dans 9 jours : pas de calculs du jour aujourd'hui).
 function parcoursAvant(arret, ceintures = [null, null, null, null]) {
-  const brut = {version: P.VERSION, modules: {}, ceintures, jours: ["2026-11-12", "2026-11-13"], seances: ["2026-11-12", "2026-11-13"]};
+  // (Lot F4 : les tests de palier déjà joués — l'élève avance module par module.)
+  const brut = {version: P.VERSION, modules: {}, ceintures, paliers: ["2026-11-01", "2026-11-01", "2026-11-01", "2026-11-01"], jours: ["2026-11-12", "2026-11-13"], seances: ["2026-11-12", "2026-11-13"]};
   for (const c of P.parcoursConstruit(CARTE)) {
     if (arret(c)) break;
     const k = P.NIVEAUX[c.module];

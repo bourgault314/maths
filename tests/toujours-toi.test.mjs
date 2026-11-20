@@ -91,5 +91,5 @@ test("les pages qui chargent le module et les habillages changent d'adresse (cac
     assert.match(s, /assets\/js\/code-en-cases\.js\?v=20261111-2"/, page);
     assert.doesNotMatch(s, /(splat-suivi|coffres-suivi|flash_anzan_suivi)\.js\?v=20261111-1"/, page);
   }
-  assert.match(lire("outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul\.css\?v=20261120-1"/);
+  assert.match(lire("outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul\.css\?v=20261120-2"/);
 });

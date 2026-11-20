@@ -29,7 +29,11 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "l", "d", "s", "c",
   "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours", "numero",
   // Lot 4 « les ceintures » (14/11/2026) : les ceintures gagnées.
-  "ceintures"]);
+  "ceintures",
+  // Lot F4 « personne ne reste bloqué » (18/11/2026) : `ar` (un J'apprends
+  // arrêté : 3 × les arrêts + la reprise) et `paliers` (les tests de palier
+  // joués).
+  "ar", "paliers"]);
 
 // `entier` : toutes les compétences des 74 modules dans une boîte (le pire
 // cas pour la taille).
@@ -56,6 +60,8 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
       // posées).
       d: Array.from({length: k}, () => "2026-09-15"),
       s: Array.from({length: k}, () => "2026-09-29"),
+      // Lot F4 : rien d'arrêté sur une compétence entrée.
+      ar: Array.from({length: k}, () => 0),
       c: Object.fromEntries(Array.from({length: causes}, (_, c) => [String(c + 1), PARCOURS.SEUILS.compteur]))
     };
   });
@@ -65,6 +71,11 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
     const dernier = p.modules[PARCOURS.CODES[PARCOURS.CODES.length - 1]];
     dernier.ok = null;
     dernier.b = dernier.b.map((boite, i) => (i === 0 ? boite : 0));
+    // Lot F4 : le niveau 2, J'apprends arrêté 3 fois (« à voir en classe »,
+    // repris sans aide : 3 × 3 + 2), revient le 2026-11-04 (son échéance) ;
+    // le niveau 3, arrêté une fois au dessin (3 × 1 + 1), sans échéance.
+    dernier.ar = dernier.b.map((_, i) => (i === 1 ? 11 : i === 2 ? 4 : 0));
+    dernier.e = dernier.e.map((jour, i) => (i === 0 ? jour : i === 1 ? "2026-11-04" : null));
   }
   // Lot F1 : le plan a sept nombres (8 tests, 3 nouveautés prévues, 2 réussies).
   // Lot G1 : ce que la séance ouverte a fait (j, six nombres depuis le
@@ -83,6 +94,8 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
   // Lot 4 : deux ceintures gagnées, deux pas encore (une date, puis null :
   // le serveur doit garder les null à leur place).
   p.ceintures = ["2026-10-02", "2026-10-20", null, null];
+  // Lot F4 : deux tests de palier joués, deux pas encore.
+  p.paliers = ["2026-10-01", "2026-10-19", null, null];
   Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
   return PARCOURS.normaliserParcours(p);

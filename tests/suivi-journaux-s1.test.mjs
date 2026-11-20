@@ -23,6 +23,8 @@ const S = require("../assets/js/splat-parcours.js");
 const C = require("../assets/js/coffres-parcours.js");
 const A = require("../outils/calcul_mental/flash_anzan_parcours.js");
 const D = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : le test de palier déjà joué (ces tests jouent des séances module par module).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const CORE_CALCUL = require("../outils/calcul_mental/defi_calcul_core.js");
 // Tout ce qui a un palier est « construit » : il y a toujours une nouveauté (comme tests/defi-calcul-journal-g1).
 const CARTE_CALCUL = (carte => ({modules: carte.modules.map(fiche => Object.assign({}, fiche, {construit: fiche.paliers.some(Boolean)})), ordre: carte.ordre}))(CORE_CALCUL.carte());
@@ -367,18 +369,18 @@ test("Défi tables et Défi calcul, fusion : trois appareils qui jouent chacun d
 });
 
 test("Défi calcul, version 6 (relecture de Codex ; 7 au lot 1 « la séance ») : chaque séance a son numéro ; un journal de version 5 se relit sans rien perdre ; une copie sans journal n'efface rien", () => {
-  assert.equal(D.VERSION, 9, "lot 4 « les ceintures » : 8 ; lot 6 « programmes 2 » : 9");
+  assert.equal(D.VERSION, 10, "lot 6 « programmes 2 » : 9 ; lot F4 « personne ne reste bloqué » : 10");
   assert.deepEqual(D.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero"]);
   // Un journal de version 5 (lot G1) : ses entrées connues reçoivent un numéro (rang 1, 2…), les blanches non.
   const v5 = {version: 5, seances: ["2026-11-02", MERCREDI, MERCREDI],
     journal: {calculs: [-1, 10, 6], justes: [-1, 9, 6], nouveautes: [-1, 1, 0], prouvees: [-1, 0, 2], rouges: [-1, 0, 1], minutes: [-1, 6, 4]}};
   const p = D.normaliserParcours(v5);
-  assert.equal(p.version, 9);
+  assert.equal(p.version, 10);
   assert.deepEqual(p.journal.calculs, [-1, 10, 6], "rien de perdu, dans l'ordre");
   assert.deepEqual(p.journal.numero.map(n => (n < 0 ? n : Math.floor(n / 10000))), [-1, 1, 2]);
   assert.deepEqual(D.normaliserParcours(v5), p, "le même numéro à chaque relecture, sur chaque appareil");
   // Une séance jouée ensuite : rang 3 ce jour-là.
-  const suite = jouerSeanceD(p, MERCREDI);
+  const suite = jouerSeanceD(sansTestDePalier(D.normaliserParcours(v5)), MERCREDI);
   assert.equal(Math.floor(suite.journal.numero[3] / 10000), 3);
   // Le défaut 1 de la relecture : une copie sans journal de 60 séances.
   const a = D.normaliserParcours({version: 5, seances: ["2026-09-01"], journal: {calculs: [10], justes: [9], nouveautes: [2], prouvees: [1], rouges: [0], minutes: [12]}});
@@ -603,7 +605,7 @@ const FORME = ["appli", "aujourdhui", "debut", "connuDepuis", "dernier", "jours"
 
 test("resumeSuivi : le même nom et la même forme dans les cinq moteurs, des nombres seulement, aucune phrase", () => {
   const moteurs = [[T, T.creerParcours(), "defi-tables"], [S, S.creer(), "splat"], [C, C.creer(), "coffres"],
-    [A, A.creer(), "flash-anzan"], [D, D.creerParcours(), "defi-calcul"]];
+    [A, A.creer(), "flash-anzan"], [D, sansTestDePalier(D.creerParcours()), "defi-calcul"]];
   moteurs.forEach(([M, vide, appli]) => {
     assert.equal(typeof M.resumeSuivi, "function", appli);
     const r = M.resumeSuivi(vide, {aujourdhui: MERCREDI});
@@ -755,7 +757,7 @@ test("serveur : version_min 5 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 4 
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
   assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 4,/, "Coffres : version 4 depuis le lot « le jour vert »");
   const calcul = bloc("defi-calcul", "automatismes");
-  assert.match(calcul, /'version_min' => 9,/, "Défi calcul : une page de version 8 lirait F6 et F9 avec les anciens numéros ; 7 effacerait `ceintures` (7 : `l` et le plan à 11 nombres ; 5 : les numéros)");
+  assert.match(calcul, /'version_min' => 10,/, "Défi calcul : une page de version 9 effacerait `ar` et `paliers` (9 : F6 et F9 ; 8 : `ceintures` ; 7 : `l` et le plan à 11 nombres ; 5 : les numéros)");
   ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
   assert.match(bloc("splat", "soley"), /'version_min' => 2,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
@@ -779,7 +781,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
-  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261119-1"/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261120-1"/);
 });
 
 // ============================================================ la page Défi tables

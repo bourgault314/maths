@@ -11,6 +11,9 @@ import test from "node:test";
 const require = createRequire(import.meta.url);
 const CORE = require("../outils/calcul_mental/defi_calcul_core.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
+// Lot F4 : ces tests suivent le parcours module par module — les tests de
+// palier y sont déjà joués (tests/defi-calcul-lot-F4.test.mjs les joue).
+const sansTestDePalier = p => Object.assign(p, {paliers: ["2026-01-01", "2026-01-01", "2026-01-01", "2026-01-01"]});
 const CARTE = CORE.carte();
 const J = "2026-11-16";
 const plus = n => P.ajouterJours(J, n);
@@ -29,7 +32,7 @@ const raterMarche = (p, module, niveau, jour = J) => P.appliquerTest(p, {module,
 
 // Un élève qui sait A1 (test passé il y a une semaine), tout dû aujourd'hui.
 function eleveA1() {
-  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: plus(-7)});
+  let p = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: plus(-7)});
   p = tester(p, "A1", 3, plus(-7)).parcours;
   p.modules.A1.e = [J, J, J];
   p.seance = {jour: null, etape: 0, n: 1, p: Array(11).fill(0), j: [0, 0, 0, 0, 0, 0]};
@@ -37,21 +40,21 @@ function eleveA1() {
 }
 
 test("la carte de séance : « 10 minutes », la dernière ligne « Puis j'avance… » ; 15 minutes au choix du professeur", () => {
-  const f = P.fileSeance(P.creerParcours(), CARTE, {aujourdhui: J});
+  const f = P.fileSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J});
   assert.deepEqual(f.etapes, [{type: "test", module: "A1"}, {type: "avance"}]);
   assert.equal(f.jouables, 1);
   assert.equal(f.minutes, 10);
-  assert.equal(P.fileSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 15}).minutes, 15);
-  assert.equal(P.fileSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 12}).minutes, 10, "ni 10 ni 15 : 10");
+  assert.equal(P.fileSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J, minutes: 15}).minutes, 15);
+  assert.equal(P.fileSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J, minutes: 12}).minutes, 10, "ni 10 ni 15 : 10");
   // La durée est rangée dans le plan à l'ouverture : elle ne bouge plus de la séance.
-  const ouverte = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 15});
+  const ouverte = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J, minutes: 15});
   assert.equal(ouverte.seance.p[P.PLAN.minutes], 15);
   assert.equal(P.fileSeance(ouverte, CARTE, {aujourdhui: J, minutes: 10}).minutes, 15);
   assert.deepEqual([P.minutesDeSeance(15), P.minutesDeSeance("15"), P.minutesDeSeance(20)], [15, 10, 10]);
 });
 
 test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissage ; ensuite, rien ne commence sans le temps de finir", () => {
-  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J});
+  let p = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J});
   // Le temps passé ne coupe pas le premier test ni le premier apprentissage.
   p = P.noterTemps(p, 20 * 60);
   assert.deepEqual(types(p), ["test"], "le test du premier module, même après 20 minutes ; pas de « Puis j'avance »");
@@ -62,7 +65,7 @@ test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissa
   assert.equal(r.finie, true, "le temps est passé : la séance est finie");
   assert.deepEqual(r.parcours.seances, [J]);
   // Avec du temps : le module suivant est testé, et ainsi de suite.
-  let q = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J});
+  let q = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J});
   q = tester(q, "A1", 1).parcours;
   q = P.noterTemps(q, 4 * 60);
   q = apprendre(q, "A1", 2).parcours;
@@ -72,8 +75,13 @@ test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissa
   assert.deepEqual(types(q), ["test", "avance"], "A1-3, pas encore joué : « Tu connais déjà ? » ; il restera du temps");
   q = raterMarche(q, "A1", 3);
   assert.deepEqual(types(q), ["apprends", "avance"], "A1-3, raté au test : on l'apprend ; il restera du temps");
-  // 9 minutes passées : J'apprends (4 min) ne tient plus — la séance attend.
+  // Lot F4 : le J'apprends qui suit un test raté AUJOURD'HUI est garanti
+  // (une séance ne finit jamais sur un test raté) ; il s'arrête au bout du
+  // temps. Le même, le test raté un autre jour : 9 minutes passées,
+  // J'apprends (4 min) ne tient plus — la séance attend.
   q = P.noterTemps(q, 5 * 60);
+  assert.deepEqual(types(q), ["apprends"], "garanti après le test raté");
+  q.modules.A1.vu = P.ajouterJours(J, -1);
   assert.deepEqual(types(q), []);
   assert.equal(P.fileSeance(q, CARTE, {aujourdhui: J}).aFermer, true, "plus rien à jouer : elle se ferme à l'accueil");
   const fermee = P.fermerSeance(q, CARTE, {aujourdhui: J});
@@ -84,11 +92,13 @@ test("la séance au temps : l'avancée est garantie jusqu'au premier apprentissa
 });
 
 test("15 minutes : plus de temps, plus d'avancée ; une tolérance d'une minute", () => {
-  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, minutes: 15});
+  let p = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J, minutes: 15});
   p = tester(p, "A1", 1).parcours;
   p = apprendre(p, "A1", 2).parcours;
   // (Lot 7e-2 : A1-3 a son test ; raté, il s'apprend.)
   p = raterMarche(p, "A1", 3);
+  // (Lot F4 : le test raté un autre jour — sinon J'apprends est garanti.)
+  p.modules.A1.vu = P.ajouterJours(J, -1);
   p = P.noterTemps(p, 11 * 60);
   assert.deepEqual(types(p), ["apprends"], "11 min + 4 min = 15 : ça tient (sans « Puis j'avance »)");
   p = P.noterTemps(p, 61);
@@ -97,7 +107,7 @@ test("15 minutes : plus de temps, plus d'avancée ; une tolérance d'une minute"
 
 test("un module jamais commencé est toujours testé : pas de leçon d'office ; 12 tests au plus par séance", () => {
   assert.equal(P.SEUILS.test.parSeance, 12);
-  let p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J});
+  let p = P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J});
   for (let i = 0; i < 12; i += 1) {
     const e = P.fileSeance(p, CARTE, {aujourdhui: J}).etapes[0];
     assert.equal(e.type, "test", `test n° ${i + 1}`);
@@ -108,7 +118,7 @@ test("un module jamais commencé est toujours testé : pas de leçon d'office ; 
 
 test("le palier : au-delà du réglage, ni test ni leçon ; le validé continue de revenir", () => {
   // Tout le palier 1 est appris (boîte 2, dû aujourd'hui) ; le réglage s'arrête aux bases.
-  const p = P.creerParcours();
+  const p = sansTestDePalier(P.creerParcours());
   P.parcoursConstruit(CARTE).filter(c => P.palierDe(CARTE, c.module, c.niveau) === 1).forEach(({module, niveau}) => {
     const ligne = p.modules[module] || P.normaliserParcours({modules: {[module]: {}}}).modules[module];
     ligne.b[niveau - 1] = 2; ligne.e[niveau - 1] = J; ligne.a[niveau - 1] = 1; ligne.vu = plus(-1);
@@ -194,7 +204,7 @@ test("le « lent » : la 1re fois, rien de visible ; deux fois de suite, c'est u
 
 test("le test : 3 calculs par marche, 3 justes sur 4 pour monter ; deux faux arrêtent", () => {
   assert.deepEqual([P.SEUILS.test.parMarche, P.SEUILS.test.fauxPermis], [3, 1]);
-  const marche = niveaux => P.appliquerTest(P.creerParcours(), {module: "A1", marche: 3, niveaux}, {aujourdhui: J, carte: CARTE}).marche;
+  const marche = niveaux => P.appliquerTest(sansTestDePalier(P.creerParcours()), {module: "A1", marche: 3, niveaux}, {aujourdhui: J, carte: CARTE}).marche;
   assert.equal(marche([{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 3, total: 4}, {niveau: 3, justes: 2, total: 4}]), 2);
   assert.equal(marche([{niveau: 1, justes: 2, total: 3}]), 0, "un faux sans le calcul de plus réussi");
   assert.equal(marche([{niveau: 1, justes: 4, total: 4}, {niveau: 2, justes: 4, total: 5}, {niveau: 3, justes: 3, total: 3}]), 3, "un niveau à 4 sortes");
@@ -218,7 +228,7 @@ test("une progression de version 6 se relit : `l` à 0, une séance ouverte cont
   const v6 = {version: 6, modules: {A1: {vu: J, b: [4, 4, 3], e: [J, J, J], a: [1, 1, 1], f: [1, 1, 1], x: [0, 0, 0], t: [0, 0, 0]}},
     seance: {jour: J, etape: 2, n: 4, p: [1, 0, 0, 3, 0, 2, 1], j: [3, 3, 2, 0, 300, 1]}, seances: [plus(-1)]};
   const p = P.normaliserParcours(v6);
-  assert.equal(p.version, 9, "lot 4 « les ceintures » : 8 ; lot 6 « programmes 2 » : 9");
+  assert.equal(p.version, 10, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
   assert.deepEqual(p.modules.A1.l, [0, 0, 0]);
   assert.deepEqual(p.seance.p, [1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0]);
   assert.equal(P.fileSeance(p, CARTE, {aujourdhui: J}).minutes, 10);

@@ -270,5 +270,5 @@ test("lot 7d : la page — adresses de cache, copie du moteur pour la page prof,
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif)$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque)$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore ; lot F4 : le moteur)
 });
