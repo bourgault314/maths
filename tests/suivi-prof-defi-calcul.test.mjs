@@ -170,7 +170,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
 // Lot 4 « les ceintures » (14/11/2026) : la ceinture devant le compte, et le
 // compte sur ce que l'appli propose (les modules construits, 95), jusqu'au
 // palier réglé pour l'élève — plus sur les 125 de la carte.
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 125 » dès la première", () => {
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 127 » dès la première", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
@@ -182,11 +182,11 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
   assert.equal(jauge.lecteur(CALCUL, p), null, "en route mais rien de su : pas de jauge (une barre vide ressemble à un reproche)");
   p.modules.A2.b = [4, 5, 0, 0];
   p.modules.A2.e = ["2026-12-04", "2026-12-11", null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 125, compte: "Ceinture blanche · 2 compétences sues sur 125", ceinture: {n: 0, barrettes: 0}, bonus: ""},
-    "sur ce que l'appli propose (les 125 compétences construites, lot 7d)");
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 127, compte: "Ceinture blanche · 2 compétences sues sur 127", ceinture: {n: 0, barrettes: 0}, bonus: ""},
+    "sur ce que l'appli propose (les 127 compétences construites, lot 6 « programmes 2 »)");
   p.modules.A2.b = [4, 0, 0, 0];
-  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 125");
-  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche · 1 compétence sue sur 40", "jusqu'au palier réglé : les bases");
+  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 127");
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche · 1 compétence sue sur 41", "jusqu'au palier réglé : les bases");
   p.ceintures = ["2026-11-02", null, null, null];
   assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, barrettes: 0});
   assert.match(jauge.lecteur(CALCUL, p).compte, /^Ceinture jaune · /);
@@ -212,7 +212,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.deepEqual([lien.target, lien.rel], ["_blank", "noopener"]);
 });
 
-test("exempleErreur : un calcul regénéré pour chacune des 174 causes des 45 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d, 3 du lot 6 « fraction à deux cases »), jamais un calcul d'élève", () => {
+test("exempleErreur : un calcul regénéré pour chacune des 175 causes des 45 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d, 3 du lot 6 « fraction à deux cases », 1 du lot 6 « programmes 2 »), jamais un calcul d'élève", () => {
   const o = outils([]);
   let trouves = 0;
   CALCUL_CORE.MODULES.filter(m => m.construit).forEach(fiche => {
@@ -227,7 +227,9 @@ test("exempleErreur : un calcul regénéré pour chacune des 174 causes des 45 m
       trouves += 1;
     });
   });
-  assert.equal(trouves, 174);
+  assert.equal(trouves, 175);
+  // Lot 6 « programmes 2 » : « × 0 : le nombre recopié » (7 × 0 → 7).
+  assert.match(o.exempleErreur("M4", 4, 1).texte, / × 0 = □|0 × /);
   // Lot 6 « fraction à deux cases » : la réponse fausse s'écrit en fraction
   // (« 3 × ?/? = 2 → 3/2 »), jamais en nombre à virgule.
   assert.match(o.exempleErreur("F11", 4, 2).reponse, /^\d+\/\d+$/);

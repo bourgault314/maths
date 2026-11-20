@@ -1222,6 +1222,14 @@ svg.dc-points { max-width: 210px; margin-left: auto; margin-right: auto; }
 /* ---- le tableau à flèches (« je représente » de M2 et D2) : à sa taille
    naturelle, jamais plus large que la place. ---- */
 .dc-aide svg.dc-tableau { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
+/* Lot 6 « programmes 2 » : le schéma « × ? en haut et en bas » des
+   fractions égales (F6) prenait toute la largeur ; sur un ordinateur de
+   moins de 900 px de haut (1366 × 657), il poussait « Valider » sous le
+   cadre. Il garde ses proportions, centré, et ne dépasse plus un quart de
+   la hauteur de la fenêtre. */
+@media (min-width: 621px) and (max-height: 900px) {
+  .challenge-playing .question.aide-image .dc-aide svg.dc-fois { max-height: 25dvh; }
+}
 /* Sur un écran bas, le tableau d'une correction se fait plus petit : la
    phrase, l'image, le pavé et « Suivant » tiennent ensemble. */
 @media (min-width: 621px) and (max-height: 900px) {

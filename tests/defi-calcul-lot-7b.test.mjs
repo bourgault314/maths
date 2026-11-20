@@ -34,7 +34,7 @@ test("lot 7b : 8 compétences construites, au palier 3 ; le palier 3 en a 33, la
   });
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 125); // (lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
+  assert.equal(construits.length, 127); // (lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
   assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 40); // (lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
   assert.equal(CORE.moduleDe("D8").niveaux[0].type, "F", "la moitié des impairs jusqu'à 15 : un fait à savoir");
 });
@@ -59,12 +59,15 @@ test("lot 7b : les bornes du rapport de Codex", () => {
   const huitDix = tous("D8-3").find(c => espaces(c.texte) === "moitié de 8,10 = □");
   assert.ok(huitDix, "moitié de 8,10 (évaluation de 6e, Q13)");
   assert.equal(huitDix.reponse, 4.05);
-  // D9-1 : × 5, au plus trois chiffres, jamais un entier ; un chiffre de droite impair : un seul chiffre après la virgule.
+  // D9-1 : × 5, au plus trois chiffres, jamais un entier. (Lot 6
+  // « programmes 2 » : sans condition sur le chiffre de droite, 1,47 × 5 ;
+  // et entre 0 et 1, 0,7 × 5.)
   tous("D9-1").forEach(c => {
     const n = c.donnees.n;
     assert.ok(!Number.isInteger(n) && chiffres(n).length <= 3 && c.donnees.fois === 5, c.texte);
-    if (Number(chiffres(n).slice(-1)) % 2) assert.equal(CORE.decimalesDe(n), 1, `${c.texte} : impair, un seul chiffre après la virgule`);
   });
+  assert.ok(tous("D9-1").some(c => CORE.decimalesDe(c.donnees.n) === 2 && Number(chiffres(c.donnees.n).slice(-1)) % 2), "1,47 × 5");
+  assert.ok(tous("D9-1").some(c => c.donnees.n < 1) && tous("D9-2").some(c => c.donnees.n < 1), "0,7 × 5 ; 0,48 × 50");
   // D9-2 : × 50, moins de 20, au plus trois chiffres, le chiffre le plus à droite pair.
   tous("D9-2").forEach(c => {
     const n = c.donnees.n;
@@ -98,7 +101,10 @@ test("lot 7b : une échelle par module — aucun calcul commun entre deux niveau
 test("lot 7b (règle revue au lot 6 « programmes ») : la règle commune de M12 et M13 — ÷ 4, ÷ 8 au quotient entier qui ne finit pas par 0 : la moitié de la moitié", () => {
   // (Lot 6 « programmes », 18/11 : plus de condition « le nombre finit par
   // 0 » — toutes les réponses de M13-1 et M13-2 finissaient par 5.)
-  const prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && (n / d) % 10 !== 0;
+  // (Lot 6 « programmes 2 » : et les quotients ronds qui ne sont pas
+  // « table × 10 » ni « table × 100 » — 440 ÷ 4 = 110, 880 ÷ 8.)
+  const table = q => [10, 100].some(u => q % u === 0 && q / u >= 2 && q / u <= 9);
+  const prend = (n, d) => (d === 4 || d === 8) && n % d === 0 && n / d > 10 && !table(n / d);
   ["M12-1", "M12-2", "M12-3"].forEach(cle => tous(cle).forEach(c => assert.ok(!prend(c.donnees.n, c.donnees.d), `${cle} : ${espaces(c.texte)} est à M13`)));
   ["M13-1", "M13-2"].forEach(cle => tous(cle).forEach(c => assert.ok(prend(c.donnees.n, c.donnees.d), `${cle} : ${espaces(c.texte)}`)));
   // Les exemples de M12 y restent ; l'exemple officiel 140 ÷ 4 est la leçon de M13.
@@ -110,7 +116,7 @@ test("lot 7b (règle revue au lot 6 « programmes ») : la règle commune de M12
   // 92 ÷ 4 sont à M13.
   ["M13-1", "M13-2"].forEach(cle => assert.ok(tous(cle).some(c => c.reponse % 10 !== 5), cle));
   const m13 = new Set(["M13-1", "M13-2"].flatMap(cle => tous(cle).map(c => espaces(c.texte))));
-  ["96 ÷ 8 = □", "92 ÷ 4 = □", "232 ÷ 8 = □"].forEach(t => assert.ok(m13.has(t), t));
+  ["96 ÷ 8 = □", "92 ÷ 4 = □", "232 ÷ 8 = □", "440 ÷ 4 = □", "880 ÷ 8 = □", "992 ÷ 4 = □", "996 ÷ 4 = □", "4 × □ = 992", "4 × □ = 996"].forEach(t => assert.ok(m13.has(t), t));
   ["M12-2", "M12-3"].forEach(cle => tous(cle).forEach(c => assert.ok(![4, 8].includes(c.donnees.d) || c.reponse % 10 === 0 || c.reponse <= 10, `${cle} : ${espaces(c.texte)}`)));
   assert.equal(espaces(CORE.niveauDe("M13-3").niveau.apprends.calculs.montre.texte), "260 ÷ 8 = □");
 });

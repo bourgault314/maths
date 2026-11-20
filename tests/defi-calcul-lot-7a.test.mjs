@@ -25,7 +25,7 @@ test("lot 7a : les 8 niveaux sont construits, à leur place dans le parcours", (
     assert.ok(CORE.moduleDe(cle.split("-")[0]).construit && niveau.apprends, cle);
     assert.ok(CORE.ORDRE.includes(cle), cle);
   });
-  assert.deepEqual(CORE.MODULES.filter(f => f.construit).flatMap(f => f.niveaux).length, 125); // (lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
+  assert.deepEqual(CORE.MODULES.filter(f => f.construit).flatMap(f => f.niveaux).length, 127); // (lot 6 « programmes 2 » : F9-1, F6-2) // (lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
 });
 
 test("lot 7a : chaque calcul est juste, et à sa place (sortes, bornes)", () => {
@@ -49,7 +49,10 @@ test("lot 7a : chaque calcul est juste, et à sa place (sortes, bornes)", () => 
         if (["D6-3", "D7-3"].includes(cle)) assert.notEqual(CORE.decimalesDe(d.a), CORE.decimalesDe(d.b), `${c.texte} : des chiffres après la virgule différents`);
         // Un nombre à un seul chiffre non nul, sans échange : c'est D4.
         // (Une addition : les deux nombres, l'ordre ne compte pas ; une soustraction : ce qu'on retire.)
-        if (!echange) assert.ok(chiffresNonNuls(d.b) >= 2 && (c.module === "D7" || chiffresNonNuls(d.a) >= 2), `${c.texte} : pas un calcul de D4`);
+        // (Lot 6 « programmes 2 » : un entier et un décimal aux dixièmes,
+        // 2,3 + 4, dans D6-1 — D4 n'ajoute un entier qu'aux centièmes.)
+        const entierEtDecimal = cle === "D6-1" && (Number.isInteger(d.a) || Number.isInteger(d.b)) && Math.max(CORE.decimalesDe(d.a), CORE.decimalesDe(d.b)) === 1;
+        if (!echange && !entierEtDecimal) assert.ok(chiffresNonNuls(d.b) >= 2 && (c.module === "D7" || chiffresNonNuls(d.a) >= 2), `${c.texte} : pas un calcul de D4`);
         if (c.module === "D6") assert.ok(d.a < 10, `${c.texte} : chacun des deux termes sous 10`);
       }
     });

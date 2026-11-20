@@ -8,7 +8,7 @@
 //
 //   montrer   « On te montre » des 6 niveaux : F4-1, les billes — le partage,
 //             puis l'élève touche les parts qu'il prend (au 3e refus, la
-//             case libre brille, rien ne bouge) ; F9-1 et F11-1, les bandes ;
+//             case libre brille, rien ne bouge) ; F9-2 et F11-1, les bandes ;
 //             les autres, le dessin et la réponse à écrire (jamais sur le
 //             dessin) ;
 //   dessin    « Avec le dessin » : la réponse n'est pas écrite ;
@@ -117,7 +117,7 @@ const dessin = page => appel(page, "dessin");
 
 
 
-const NIVEAUX = [["F4", 1], ["F4", 2], ["F9", 1], ["F9", 2], ["F11", 1], ["F11", 2]];
+const NIVEAUX = [["F4", 1], ["F4", 2], ["F9", 2], ["F9", 3], ["F11", 1], ["F11", 2]];
 const boite = (page, sel) => page.evaluate(q => { const e = document.querySelector(q); if (!e) return null; const b = e.getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; }, sel);
 const textesDessin = page => page.evaluate(() => [...document.querySelectorAll("#aide svg text")].map(t => t.textContent.replace(/[\u202f\u00a0]/g, " ").trim()));
 const sp = t => String(t).replace(/[\u202f\u00a0]/g, " ");
@@ -187,7 +187,7 @@ async function jouerBilles(s, m, cle, f) {
   assert.ok((await texte(s.page, "#aide .dc-billes .dc-trace")).endsWith(sp(m.traces[0].texte).replace(/^.* de /, " de ")), `${cle} : la trace`);
   assert.ok(memePlace(await place(s.page, "#aide .dc-billes-scene"), scene), `${cle} : les billes ne bougent pas (fini) ${scene} / ${await place(s.page, "#aide .dc-billes-scene")}`);
 }
-// F9-1, F11-1 : les bandes, geste après geste (le plan de la leçon).
+// F9-2, F11-1 : les bandes, geste après geste (le plan de la leçon).
 async function jouerBandes(s, m, cle) {
   for (const e of m.etapes) {
     if (e.geste === "poser") await s.page.click(`#aide .dc-bande-reserve[data-reserve="${e.d}"]`, {force: true});
@@ -250,7 +250,7 @@ async function jouerBandes(s, m, cle) {
 
     await cas(`${f} : Avec le dessin — trois fractions, nombres mixtes, « 15/3 = □ », au-delà de 30 parts`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      const poses = [["F9", 2, "2/8 + 3/2 + 1/4 = □/8", "trois"], ["F9", 2, "(1 + 1/2) + (1 + 1/8) = 2 + □/8", "mixtes"], ["F11", 2, "15/3 = □", "quotient"], ["F11", 1, "2 × 9/4 = □/4", "grande"]];
+      const poses = [["F9", 3, "2/8 + 3/2 + 1/4 = □/8", "trois"], ["F9", 3, "(1 + 1/2) + (1 + 1/8) = 2 + □/8", "mixtes"], ["F11", 2, "15/3 = □", "quotient"], ["F11", 1, "2 × 9/4 = □/4", "grande"]];
       for (const [id, n, t, nom] of poses) {
         const ok = await appel(s.page, "poser", id, n, t.replace(/□/g, CORE.CASE), "image");
         const ok2 = ok || await appel(s.page, "poser", id, n, t.replace("(1 + 1/2) + (1 + 1/8)", "(1 + 1/8) + (1 + 1/2)").replace(/□/g, CORE.CASE), "image");
@@ -265,18 +265,18 @@ async function jouerBandes(s, m, cle) {
         await etapes(s.page, [{reponse: calcul.reponse}], t);
       }
       // Au-delà de 30 parts : annoncé, les deux flèches.
-      assert.equal(await appel(s.page, "nouveaute", "F9", 2, "trop de parts", "image"), true);
+      assert.equal(await appel(s.page, "nouveaute", "F9", 3, "trop de parts", "image"), true);
       await pause(s.page, 500);
       assert.match(await texte(s.page, "#annonce"), /Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas\./);
       assert.ok((await textesDessin(s.page)).some(x => /^× \d+$/.test(x)), "les deux flèches");
-      await photo(s.page, `${f}-F9-2-fleches`);
+      await photo(s.page, `${f}-F9-3-fleches`);
       await tient(s.page, largeur, hauteur);
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();
     });
 
-    await cas(`${f} : Mon parcours d'un élève au CM1 (F9-1) et au CM2 (F4, F9-2, F11-1)`, async () => {
-      for (const [arret, ceintures, nom] of [[c => c.module === "F9" && c.niveau === 1, ["2026-11-01", null, null, null], "cm1"], [c => c.module === "F4" && c.niveau === 1, ["2026-11-01", "2026-11-05", null, null], "cm2"]]) {
+    await cas(`${f} : Mon parcours d'un élève au CM1 (F9-2) et au CM2 (F4, F9-3, F11-1)`, async () => {
+      for (const [arret, ceintures, nom] of [[c => c.module === "F9" && c.niveau === 2, ["2026-11-01", null, null, null], "cm1"], [c => c.module === "F4" && c.niveau === 1, ["2026-11-01", "2026-11-05", null, null], "cm2"]]) {
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(arret, ceintures)});
         await s.page.click("#acc-porte");
         await pause(s.page, 800);

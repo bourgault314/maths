@@ -17,7 +17,7 @@ const AIDES = require("../outils/calcul_mental/defi_calcul_aides.js");
 const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 
 const espaces = t => String(t).replace(/[  ]/g, " ");
-const NIVEAUX = ["F4-1", "F4-2", "F9-1", "F9-2", "F11-1", "F11-2"];
+const NIVEAUX = ["F4-1", "F4-2", "F9-2", "F9-3", "F11-1", "F11-2"];
 // Tous les calculs d'un niveau, lus sur de grands tirages.
 const TOUS = new Map();
 function tous(cle) {
@@ -37,8 +37,8 @@ const ecrite = n => espaces(CORE.formaterNombre(n));
 const fractionsDe = texte => [...espaces(texte).matchAll(/(\d+)\/(\d+)/g)].map(m => [Number(m[1]), Number(m[2])]);
 const pgcd = (a, b) => (b ? pgcd(b, a % b) : a);
 
-test("lot 7c : 6 compétences construites ; F9-1 au CM1, F4-1, F4-2, F9-2, F11-1 au CM2, « Fraction et quotient » en 6e ; la carte en a 117", () => {
-  const paliers = {"F4-1": 3, "F4-2": 3, "F9-1": 2, "F9-2": 3, "F11-1": 3, "F11-2": 4};
+test("lot 7c : 6 compétences construites ; F9-2 au CM1, F4-1, F4-2, F9-3, F11-1 au CM2, « Fraction et quotient » en 6e ; la carte en a 117", () => {
+  const paliers = {"F4-1": 3, "F4-2": 3, "F9-2": 2, "F9-3": 3, "F11-1": 3, "F11-2": 4};
   NIVEAUX.forEach(cle => {
     const t = CORE.niveauDe(cle);
     assert.ok(t && t.module.construit && t.niveau.apprends, cle);
@@ -49,19 +49,19 @@ test("lot 7c : 6 compétences construites ; F9-1 au CM1, F4-1, F4-2, F9-2, F11-1
   assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => espaces(n.nom)), ["Fraction d’une quantité", "Fraction d’une quantité : résultat décimal"]);
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 125); // (lot 7d : tout est construit)
+  assert.equal(construits.length, 127); // (lot 7d : tout est construit ; lot 6 « programmes 2 » : F9-1, F6-2)
   // Construit par palier : 40, 31 (tout le CM1), 37 sur 42, 9 sur 12 ; lot 7d : tout, 40, 33, 40, 12.
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [40, 33, 40, 12]);
+  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [41, 34, 40, 12]); // (lot 6 « programmes 2 »)
   // F4-2 ferme le palier 3, après F4-1 (une échelle).
   const ordre = [...CORE.ORDRE];
   assert.equal(ordre.filter(cle => CORE.niveauDe(cle).niveau.palier === 3).pop(), "F4-2");
-  assert.ok(ordre.indexOf("F4-1") < ordre.indexOf("F4-2") && ordre.indexOf("F9-1") < ordre.indexOf("F9-2") && ordre.indexOf("F11-1") < ordre.indexOf("F11-2"));
+  assert.ok(ordre.indexOf("F4-1") < ordre.indexOf("F4-2") && ordre.indexOf("F9-2") < ordre.indexOf("F9-3") && ordre.indexOf("F11-1") < ordre.indexOf("F11-2"));
 });
 
 test("lot 7c : les sortes de chaque niveau, toutes tirées, 2 à 4", () => {
   const attendues = {
     "F4-1": ["des objets", "des mesures"], "F4-2": ["en dixièmes", "en centièmes"],
-    "F9-1": ["addition", "soustraction"], "F9-2": ["addition", "soustraction", "trois fractions", "nombres mixtes"],
+    "F9-2": ["addition", "soustraction"], "F9-3": ["addition", "soustraction", "trois fractions", "nombres mixtes"],
     "F11-1": ["plus petite que 1", "plus grande que 1"], "F11-2": ["b × a/b", "la fraction, c’est une division", "la fraction cherchée"]
   };
   NIVEAUX.forEach(cle => {
@@ -96,9 +96,9 @@ test("lot 7c : les règles communes avec les voisins, sur tous les calculs", () 
   tous("F11-2").forEach(c => (c.forme === "quotient"
     ? assert.ok(c.f11.a % c.f11.d === 0 && c.reponse >= 2 && c.reponse <= 6 && c.reponse !== c.f11.d, espaces(c.texte))
     : assert.equal(c.f11.k, c.f11.d, espaces(c.texte))));
-  // F2 / F9 : F2 garde les demis et les quarts jusqu'à 1 ; F9-1 / F9-2 : le grand dénominateur jusqu'à 20, puis au-delà.
+  // F2 / F9 : F2 garde les demis et les quarts jusqu'à 1 ; F9-2 / F9-3 : le grand dénominateur jusqu'à 20, puis au-delà.
   const deuxFractions = c => ["somme", "difference"].includes(c.forme);
-  tous("F9-1").forEach(c => {
+  tous("F9-2").forEach(c => {
     assert.ok(deuxFractions(c), espaces(c.texte));
     const [x, y] = fractionsDe(c.texte);
     const D = Math.max(x[1], y[1]);
@@ -107,9 +107,9 @@ test("lot 7c : les règles communes avec les voisins, sur tous les calculs", () 
     assert.ok(x[0] <= 12 && y[0] <= 12, `${espaces(c.texte)} : des numérateurs jusqu'à 12`);
     assert.ok(!(d === 2 && D === 4 && Math.min(x[0], y[0]) <= 2 && Math.max(x[0], y[0]) <= 4 && fractionsDe(c.texte).every(([n, q]) => n / q <= 1)), `${espaces(c.texte)} : un calcul de F2`);
   });
-  tous("F9-2").filter(deuxFractions).forEach(c => assert.ok(Math.max(...fractionsDe(c.texte).map(f => f[1])) > 20, espaces(c.texte)));
+  tous("F9-3").filter(deuxFractions).forEach(c => assert.ok(Math.max(...fractionsDe(c.texte).map(f => f[1])) > 20, espaces(c.texte)));
   // Une échelle par module : aucun calcul commun entre deux niveaux, ni avec un voisin.
-  const voisins = ["F2-1", "F2-2", "F3-1", "F3-2", "F3-3", "F5-1", "F5-2", "F6-1", "F6-2", "F6-3", "F8-1", "F8-2", "F8-3"];
+  const voisins = ["F2-1", "F2-2", "F3-1", "F3-2", "F3-3", "F5-1", "F5-2", "F6-1", "F6-3", "F6-4", "F8-1", "F8-2", "F8-3"];
   const textes = new Map();
   [...NIVEAUX, ...voisins].forEach(cle => tous(cle).forEach(c => {
     const t = espaces(c.texte).replace(/ /g, "");
@@ -138,16 +138,16 @@ test("lot 7c : les bornes (rapport de Codex du 14/11)", () => {
   ["2/3 de 12 œufs", "3/10 de 500 g", "2/5 de 60 kg"].forEach(t => assert.ok([...tous("F4-1"), CORE.niveauDe("F4-1").niveau.apprends.calculs.montre, CORE.niveauDe("F4-1").niveau.apprends.calculs.ecris].some(c => espaces(c.texte).startsWith(`${t},`)) || NIVEAUX.some(cle => CORE.niveauDe(cle).niveau.apprends.textes.some(x => espaces(x).startsWith(`${t},`))), t));
   assert.equal(espaces(CORE.niveauDe("F4-2").niveau.apprends.calculs.montre.texte), "3/4 de 10 m, c’est □ m.");
   // F9 : la barre a 30 parts au plus (au-delà, les deux flèches) ; six unités au plus.
-  ["F9-1", "F9-2", "F11-1", "F11-2"].forEach(cle => tous(cle).forEach(c => {
+  ["F9-2", "F9-3", "F11-1", "F11-2"].forEach(cle => tous(cle).forEach(c => {
     const aide = CORE.aideDe(c);
     if (aide.outil === "fois-fraction") { assert.ok(cle.startsWith("F9"), espaces(c.texte)); return; }
     assert.equal(aide.outil, "barre-droite", espaces(c.texte));
     assert.ok(aide.a <= 6 && aide.a * aide.d <= 30, `${espaces(c.texte)} : ${aide.a} unités, ${aide.a * aide.d} parts`);
   }));
-  // F9-2 : 4/7 − 2/21, 2/8 + 3/2 + 1/4 (livret CM2 p. 11), les nombres mixtes.
-  assert.ok(tous("F9-2").some(c => espaces(c.texte) === "2/8 + 3/2 + 1/4 = □/8"));
-  assert.ok(tous("F9-2").some(c => espaces(c.texte) === "(1 + 1/2) + (1 + 1/8) = 2 + □/8" || espaces(c.texte) === "(1 + 1/8) + (1 + 1/2) = 2 + □/8"));
-  assert.equal(espaces(CORE.niveauDe("F9-2").niveau.apprends.calculs.montre.texte), "4/7 − 2/21 = □/21");
+  // F9-3 : 4/7 − 2/21, 2/8 + 3/2 + 1/4 (livret CM2 p. 11), les nombres mixtes.
+  assert.ok(tous("F9-3").some(c => espaces(c.texte) === "2/8 + 3/2 + 1/4 = □/8"));
+  assert.ok(tous("F9-3").some(c => espaces(c.texte) === "(1 + 1/2) + (1 + 1/8) = 2 + □/8" || espaces(c.texte) === "(1 + 1/8) + (1 + 1/2) = 2 + □/8"));
+  assert.equal(espaces(CORE.niveauDe("F9-3").niveau.apprends.calculs.montre.texte), "4/7 − 2/21 = □/21");
   // Jamais 69 dans un calcul.
   NIVEAUX.forEach(cle => tous(cle).forEach(c => assert.doesNotMatch(espaces(c.texte).replace(/ /g, ""), /69/, `${cle} : ${espaces(c.texte)}`)));
 });
@@ -245,9 +245,12 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
   const lignes = cle => e(cle).etapes.map(x => [espaces(x.texte), x.reponse]);
   assert.equal(espaces(e("F4-1").consigne), "3/10 de 500 g : je partage en 10 parts égales, j’en prends 3.");
   assert.deepEqual(lignes("F4-1"), [["Une part, c’est □ g.", 50], ["3/10 de 500 g, c’est □ g.", 150]]);
-  assert.equal(espaces(e("F9-1").consigne), "1/5 + 7/10 = ?/10");
-  assert.deepEqual(lignes("F9-1"), [["1/5 = □/10", 2], ["2/10 + 7/10 = □/10", 9]]);
-  assert.deepEqual(lignes("F9-2"), [["5/6 = □/24", 20], ["20/24 − 7/24 = □/24", 13]]);
+  // (Lot 6 « programmes 2 » : 1/5 + 7/10 est au CE2, F9-1 ; F9-2 écrit 3/5 + 7/10.)
+  assert.equal(espaces(e("F9-2").consigne), "3/5 + 7/10 = ?/10");
+  assert.deepEqual(lignes("F9-2"), [["3/5 = □/10", 6], ["6/10 + 7/10 = □/10", 13]]);
+  assert.equal(espaces(e("F9-1").consigne), "1/4 + 5/12 = ?/12");
+  assert.deepEqual(lignes("F9-1"), [["1/4 = □/12", 3], ["3/12 + 5/12 = □/12", 8]]);
+  assert.deepEqual(lignes("F9-3"), [["5/6 = □/24", 20], ["20/24 − 7/24 = □/24", 13]]);
   assert.equal(espaces(e("F11-1").consigne), "3 × 7/4 = 7/4 + 7/4 + 7/4");
   assert.deepEqual(lignes("F11-1"), [["3 × 7 = □", 21], ["3 × 7/4 = □/4", 21]]);
   // (Lot 6, choix de Gwenaël : J'écris sur la fraction cherchée.)
@@ -292,15 +295,15 @@ test("lot 7c : On te montre de « Fraction d'une quantité » — le partage des
 
 test("lot 7c : les annonces — trois fractions, nombres mixtes, la fraction cherchée, trop de parts pour la barre", () => {
   const premier = (cle, forme) => tous(cle).find(c => c.forme === forme);
-  assert.equal(espaces(CORE.annonceDe(premier("F9-2", "trois"))), "Nouveau : trois fractions : je les écris toutes avec le même dénominateur.");
-  assert.equal(espaces(CORE.annonceDe(premier("F9-2", "mixtes"))), "Nouveau : des nombres mixtes : les unités ensemble, les fractions ensemble.");
-  assert.equal(espaces(CORE.annonceDe(premier("F9-2", "difference"))), "Nouveau : c’est une soustraction.");
+  assert.equal(espaces(CORE.annonceDe(premier("F9-3", "trois"))), "Nouveau : trois fractions : je les écris toutes avec le même dénominateur.");
+  assert.equal(espaces(CORE.annonceDe(premier("F9-3", "mixtes"))), "Nouveau : des nombres mixtes : les unités ensemble, les fractions ensemble.");
+  assert.equal(espaces(CORE.annonceDe(premier("F9-3", "difference"))), "Nouveau : c’est une soustraction.");
   assert.match(espaces(CORE.annonceDe(premier("F11-2", "quotient"))), /^Nouveau : la fraction, c’est une division : (\d+)\/(\d+) = \1 ÷ \2\.$/);
   assert.equal(espaces(CORE.annonceDe(premier("F11-2", "produit-gauche"))), "Nouveau : les facteurs ont changé de place.");
   // (Lot 6 : la fraction cherchée.)
   assert.match(espaces(CORE.annonceDe(premier("F11-2", "fraction"))), /^Nouveau : la fraction cherchée, c’est le nombre qui, multiplié par (\d+), donne (\d+)\.$/);
   // Au-delà de 30 parts : le calcul, annoncé, avec les deux flèches.
-  const grand = tous("F9-2").find(c => CORE.aideDe(c).outil === "fois-fraction");
+  const grand = tous("F9-3").find(c => CORE.aideDe(c).outil === "fois-fraction");
   assert.equal(espaces(CORE.nouveauteDe(grand).texte), "Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas.");
   // F4 : une seule écriture, rien à annoncer (l'unité change, la méthode non).
   ["F4-1", "F4-2"].forEach(cle => tous(cle).forEach(c => {
@@ -317,13 +320,13 @@ test("lot 7c : les erreurs connues, chacune la sienne (dont 3/4 + 1/2 = 4/6 du l
   };
   const cas = [
     ["F4-1", "2/5 de 60 kg", 12, 1], ["F4-1", "2/5 de 60 kg", 120, 2], ["F4-1", "2/5 de 60 kg", 30, 3], ["F4-1", "2/5 de 60 kg", 36, 4], ["F4-1", "2/5 de 60 kg", 150, 5],
-    ["F9-1", "11/4 − 7/20 = □/20", 4, 1], ["F9-1", "11/4 − 7/20 = □/20", 62, 2],
-    ["F9-2", "2/8 + 3/2 + 1/4 = □/8", 14, 3],
+    ["F9-2", "11/4 − 7/20 = □/20", 4, 1], ["F9-2", "11/4 − 7/20 = □/20", 62, 2],
+    ["F9-3", "2/8 + 3/2 + 1/4 = □/8", 14, 3],
     ["F11-1", "3 × 5/4 = □/4", 8, 1], ["F11-1", "3 × 5/4 = □/4", 5, 2],
     ["F11-2", "15/3 = □", 15, 2]
   ];
   cas.forEach(([cle, texte, reponse, cause]) => assert.equal((CORE.diagnostiquer(trouve(cle, texte), reponse) || {}).c, cause, `${texte} → ${reponse}`));
-  const mixte = tous("F9-2").find(c => c.forme === "mixtes" && espaces(c.texte).endsWith("= 2 + □/8") && c.reponse === 5);
+  const mixte = tous("F9-3").find(c => c.forme === "mixtes" && espaces(c.texte).endsWith("= 2 + □/8") && c.reponse === 5);
   assert.ok(mixte, "un nombre mixte en huitièmes");
   assert.equal(CORE.diagnostiquer(mixte, 21).c, 4, `${espaces(mixte.texte)} → 21 : les unités comptées deux fois`);
   const quotient = tous("F11-2").find(c => c.forme === "produit" && c.f11.d === 7 && c.f11.a === 3);
@@ -340,8 +343,8 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
   const bilan = cle => espaces(CORE.niveauDe(cle).niveau.apprends.bilan);
   assert.equal(bilan("F4-1"), "Pour 2/3 de 12 œufs, je partage en 3 parts égales : une part, c’est 4 œufs. 2 parts, c’est 8 œufs.");
   assert.equal(bilan("F4-2"), "Pour 3/4 de 10 m, je partage en 4 parts égales : une part, c’est 2,5 m. 3 parts, c’est 7,5 m.");
-  assert.equal(bilan("F9-1"), "2/3 = 4/6. 2/3 + 5/6 = 4/6 + 5/6 = 9/6.");
-  assert.equal(bilan("F9-2"), "4/7 = 12/21. 4/7 − 2/21 = 12/21 − 2/21 = 10/21.");
+  assert.equal(bilan("F9-2"), "2/3 = 4/6. 2/3 + 5/6 = 4/6 + 5/6 = 9/6.");
+  assert.equal(bilan("F9-3"), "4/7 = 12/21. 4/7 − 2/21 = 12/21 − 2/21 = 10/21.");
   assert.equal(bilan("F11-1"), "3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4.");
   assert.equal(bilan("F11-2"), "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.");
   assert.deepEqual(AIDES.bilanEnDeux(bilan("F11-1")), {phrase: "3 fois 5 quarts, c’est 15 quarts.", calcul: "3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4"});
@@ -349,8 +352,8 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261118-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261119-1/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261119-1/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
@@ -365,5 +368,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases)$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases » : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2)$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore)
 });

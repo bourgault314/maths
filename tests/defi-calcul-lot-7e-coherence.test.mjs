@@ -70,7 +70,7 @@ test("lot 7e : « Fractions égales », niveau 1 — 12 parts au plus, sur les b
   assert.equal(net(a.ecris.consigne), "3/4 = (3 × 2)/(4 × 2)");
   assert.ok(a.ecris.dessins.every(d => d.outil === "barre-droite"));
   // Les 1/4 = □/24 et 3/5 = □/20 d’avant sont au niveau 2 (« multiplier »), avec leur annonce.
-  const f62 = tirage("F6-2", 200).filter(c => c.forme === "multiplier" && c.donnees.a < c.donnees.d);
+  const f62 = tirage("F6-3", 200).filter(c => c.forme === "multiplier" && c.donnees.a < c.donnees.d);
   assert.ok(f62.length > 50 && f62.every(c => c.donnees.k * c.donnees.d > 12));
   f62.forEach(c => assert.equal(net(CORE.nouveauteDe(c).texte), "Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas.", c.texte));
 });
@@ -91,9 +91,10 @@ test("lot 7e : les bilans faux sont corrigés", () => {
   assert.match(bilan("D4-1"), /^Sans retenue, seul le chiffre du rang ajouté \(ou retiré\) change/);
   assert.match(bilan("D1-1"), /^Le chiffre des unités, puis la virgule/);
   assert.doesNotMatch(bilan("D2-3") + bilan("D3-3"), /case reste vide/);
-  // Le nom d'A3-3 suit ses calculs : on passe toujours le millier.
-  assert.equal(net(CORE.nomCompetence("A3-3")), "Dizaines, centaines en passant le millier");
-  assert.ok(tirage("A3-3").every(c => Math.floor(c.donnees.n / 1000) !== Math.floor(c.reponse / 1000)));
+  // Le nom d'A3-3 suit ses calculs. (Lot 6 « programmes 2 », choix de
+  // Gwenaël : les nombres à 4 chiffres, en passant le millier ou non.)
+  assert.equal(net(CORE.nomCompetence("A3-3")), "Dizaines, centaines : nombres à 4 chiffres");
+  assert.ok(tirage("A3-3").every(c => c.donnees.n > 1000 || Math.floor(c.donnees.n / 1000) !== Math.floor(c.reponse / 1000)));
 });
 
 test("lot 7e : le lecteur d'écran nomme les fractions (« 3 quarts », jamais « 3 sur 4 »)", () => {

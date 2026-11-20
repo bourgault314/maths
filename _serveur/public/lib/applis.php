@@ -295,7 +295,10 @@ const CATALOGUE_APPLIS = [
         // connaît ni `l` ni le plan à 11 nombres : elle les effacerait.
         // Lot 4 « les ceintures » (14/11/2026) : 8. Une page de version 7 ne
         // connaît pas `ceintures` (les ceintures gagnées) : elle l'effacerait.
-        'version_min' => 8,
+        // Lot 6 « programmes 2 » (19/11/2026) : 9. F6 et F9 ont un niveau de
+        // plus, posé à sa place : une page de version 8 lirait leurs listes
+        // avec les anciens numéros (et couperait la dernière case).
+        'version_min' => 9,
     ],
     'automatismes' => [
         'nom' => 'Automatismes',

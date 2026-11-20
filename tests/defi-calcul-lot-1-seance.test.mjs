@@ -218,7 +218,7 @@ test("une progression de version 6 se relit : `l` à 0, une séance ouverte cont
   const v6 = {version: 6, modules: {A1: {vu: J, b: [4, 4, 3], e: [J, J, J], a: [1, 1, 1], f: [1, 1, 1], x: [0, 0, 0], t: [0, 0, 0]}},
     seance: {jour: J, etape: 2, n: 4, p: [1, 0, 0, 3, 0, 2, 1], j: [3, 3, 2, 0, 300, 1]}, seances: [plus(-1)]};
   const p = P.normaliserParcours(v6);
-  assert.equal(p.version, 8, "lot 4 « les ceintures » : 8");
+  assert.equal(p.version, 9, "lot 4 « les ceintures » : 8 ; lot 6 « programmes 2 » : 9");
   assert.deepEqual(p.modules.A1.l, [0, 0, 0]);
   assert.deepEqual(p.seance.p, [1, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0]);
   assert.equal(P.fileSeance(p, CARTE, {aujourdhui: J}).minutes, 10);

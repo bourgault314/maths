@@ -91,10 +91,10 @@ test("lot 6 « programmes » : « ÷ 4, ÷ 8 » prend aussi les nombres qui ne f
 
 test("lot 6 « programmes » : la page — adresse de cache du moteur, copie pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261118-3/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261119-1/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-6-(?:programmes|fraction-deux-cases)$/m); // (lot 6 « fraction à deux cases » : le cœur change encore)
+  assert.match(version, /^lot defi-calcul-lot-6-(?:programmes|fraction-deux-cases|programmes-2)$/m); // (lots 6 « fraction à deux cases » et « programmes 2 » : le cœur change encore)
 });
