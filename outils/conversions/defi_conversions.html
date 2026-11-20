@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261119-b22b1">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261120-b22b2">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261119-b22b1"></script>
-  <script src="./conversions_generateurs.js?v=20261119-b22b1"></script>
+  <script src="./conversions_carte.js?v=20261120-b22b2"></script>
+  <script src="./conversions_generateurs.js?v=20261120-b22b2"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261119-b22b1"></script>
+  <script src="./defi_conversions_aides.js?v=20261120-b22b2"></script>
   <script>
   (function () {
     "use strict";
@@ -609,6 +609,17 @@
       }
       zone.appendChild(reponse);
       reponse.querySelectorAll(".mini-cartes span").forEach(dansLaCase);
+      reponse.querySelectorAll(".grosse.longue").forEach(surUneLigne);
+    }
+    // Lot B2-2b-2 (C8) : la réponse en vert tient sur une ligne au
+    // téléphone (« 1 200 mL + 1 700 mL = 2 900 mL » en prenait deux, et
+    // l'aide d'« À toi » tombait à 80 % au petit iPhone) : elle se fait un
+    // peu plus petite, jusqu'à 70 % de sa taille (plus grande encore que la
+    // phrase du glisse-unité). Mesuré au rendu.
+    function surUneLigne(n) {
+      if (!n.isConnected) return;
+      const taille = parseFloat(getComputedStyle(n).fontSize);
+      for (let k = 1; k <= 6 && n.getBoundingClientRect().height > taille * 1.7; k += 1) n.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
     }
     // `neutre` (lot 3a) : après « Je ne sais pas », pas de rouge ni de
     // reproche : la correction, et c'est tout.
@@ -1253,7 +1264,11 @@
       // Lot 3b-3 bis : une ligne longue (« 7 km + 629 m = 7 629 m ») se fait
       // un peu plus petite au téléphone, pour tenir sur une ligne (sur deux,
       // l'aide d'« À toi » tombait à 75 % au petit iPhone).
-      const g = resumeEnVert(el("div", question.resume.length > 17 ? "grosse longue" : "grosse"), question);
+      // Lot B2-2b-2 (C8, carte v4 : « l'unité écrite à chaque pas ») : sous
+      // le glisse-unité qui convertit une des deux mesures, le calcul dans
+      // une seule unité (« 250 mL + 330 mL = 580 mL »), la réponse en vert.
+      const qv = question.resumeVert ? Object.assign({}, question, {resume: question.resumeVert}) : question;
+      const g = resumeEnVert(el("div", qv.resume.length > 17 ? "grosse longue" : "grosse"), qv);
       // L'heure en mots (lot 3b-2) : l'horloge à côté de la réponse.
       if (question.donnees.type === "heure-mots") {
         const ligne = el("div", "horl-ligne");
@@ -1583,7 +1598,8 @@
         const e = el("div", "eti", etape.titreRelations || (etape.retenir ? "Les relations de cette étape" : "À retenir : les relations"));
         e.style.marginBottom = rem(4);
         c.appendChild(e);
-        const g = el("div", "relations");
+        // (Lot B2-2b-2 : des calculs, sur une seule colonne.)
+        const g = el("div", etape.relationsUneColonne ? "relations une-col" : "relations");
         etape.relations.forEach(rel => g.appendChild(el("span", "", rel)));
         c.appendChild(g);
         cases.push(c);

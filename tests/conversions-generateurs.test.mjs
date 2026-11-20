@@ -141,7 +141,8 @@ function attendue(q) {
       assert.equal((unite * num) % (den * 1000n), 0n, "la fraction ne tombe pas juste");
       return [ent * unite + (unite * num) / den];
     }
-    case "pb": case "vrai": {
+    // Lot B2-2b-2 : C8, « 8,2 kg + 840 g = … kg » (comme les problèmes).
+    case "pb": case "vrai": case "calc": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
       const b = versUnite(lire(d.b), d.ub, d.vers);
       return [d.op === "+" ? a + b : a - b];
@@ -256,7 +257,7 @@ function controlerQuestion(q, ou) {
   // Lot B1-2 : au palier 2, l'aide (l'outil, l'image) n'écrit jamais la
   // réponse ; un mauvais choix a toujours son pourquoi (P2, P3, P4).
   // (Lot B2-1 : C3 et C4 aussi.)
-  if (["P2", "P3", "P4", "C3", "C4", "C5", "C6", "C7"].includes(q.code)) {
+  if (["P2", "P3", "P4", "C3", "C4", "C5", "C6", "C7", "C8"].includes(q.code)) {
     const rep = q.reponseTexte.replace(/[\u00a0\u202f]/g, " ");
     const aide = [...(q.image || []), q.outil === "glisse-unite" && !q.outilSansRelation ? q.relation : ""].join(" | ").replace(/[\u00a0\u202f]/g, " ");
     // (Les bandes de C6 : la réponse est le nom d'une bande, l'image la récrit.)
@@ -805,7 +806,7 @@ for (const code of PRETES) {
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
-      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"]}[code];
+      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1368,4 +1369,87 @@ test("lot B2-2b-1 : C7 — les sortes, S002, l'exerciseur, le pourquoi de ranger
   toutes.filter(q => q.pourquoi).forEach(q => Object.values(q.pourquoi).forEach(p => assert.ok(p.length <= 31, `« ${p} »`)));
   // Pas de « Je prévois » en C7.
   toutes.forEach(q => assert.equal(G.fauxDeSens(q), null));
+});
+
+test("lot B2-2b-2 : C8 — les sortes, les deux sens, S002, le marathon, les erreurs, l'unité à chaque pas", () => {
+  const toutes = [];
+  for (let g = 1; g <= 600; g += 1) ["entraine", "valide", "retour"].forEach(u => toutes.push(...G.serie("C8", {usage: u, graine: g})));
+  const sortes = new Set(toutes.map(q => q.sorteC8.replace(/-\d+$/, "")));
+  ["plus-petite", "plus-grande", "moins-petite", "moins-grande", "complement", "situation", "marathon", "officielle"].forEach(k => assert.ok(sortes.has(k), `${k} ne tombe pas`));
+  ["longueur", "masse", "contenance"].forEach(gr => ["+", "-"].forEach(op => assert.ok(toutes.some(q => q.grandeur === gr && q.donnees.op === op), `${gr} ${op}`)));
+  assert.ok(toutes.some(q => /Saint-Pierre|cari|rougail|Grand Raid|Diagonale des Fous|goyavier/.test(q.texte)), "La Réunion");
+  assert.ok(toutes.some(q => /Grand Raid/.test(q.texte)) && toutes.some(q => /Diagonale des Fous/.test(q.texte)), "le Grand Raid et la Diagonale");
+  const ex = new Set(G.clesExemples("C8"));
+  assert.equal(ex.size, 3);
+  toutes.forEach(q => {
+    const d = q.donnees;
+    const ou = `C8 ${q.texte}`;
+    assert.ok(!ex.has(q.cleBase), `exemple repris ${q.cle}`);
+    // Le résultat dans l'une des deux unités ; une seule mesure se convertit.
+    assert.ok(d.vers === d.ua || d.vers === d.ub, ou);
+    assert.notEqual(d.ua, d.ub, ou);
+    const [c, uc] = d.ua === d.vers ? [d.b, d.ub] : [d.a, d.ua];
+    const cv = versUnite(lire(c), uc, d.vers);
+    // La correction : la mesure convertie, puis le calcul dans une seule
+    // unité, écrite à chaque pas (en vert, `resumeVert`).
+    const sp = t => t.replace(/[  ]/g, " ").replace(/(\d) (?=\d{3})/g, "$1");
+    if (d.sorte !== "marathon") assert.equal(sp(q.correction[0]), `${sp(G.ecrire(lire(c)))} ${uc} = ${sp(G.ecrire(cv))} ${d.vers}`, ou);
+    assert.equal(q.correction[1], q.resumeVert, ou);
+    assert.ok(q.resumeVert.endsWith(q.reponseTexte), `${ou} : ${q.resumeVert}`);
+    const unites = sp(q.resumeVert).match(/[a-zA-Z]+/g);
+    assert.ok(unites.every(u => u === d.vers), `${ou} : une seule unité dans « ${q.resumeVert} »`);
+    assert.ok(q.resume.endsWith(q.reponseTexte), ou);
+    // L'outil : le glisse-unité de la mesure à convertir, puis la phrase.
+    assert.equal(q.glisse.de, uc); assert.equal(q.glisse.vers, d.vers);
+    assert.match(q.puis, /^Puis (j'ajoute|j'enlève|je l'enlève de) /, ou);
+    // Des mesures qu'on écrit (sauf l'exemple officiel 0,43 dam et le marathon).
+    if (d.sorte !== "officielle" && d.sorte !== "marathon") {
+      [[d.a, d.ua], [d.b, d.ub], [q.reponse, d.vers]].forEach(([n, u]) => mesureVraieC5(n, u, ou));
+      assert.ok(lire(d.a) >= 1000n || d.ua !== q.relationCle.split("-")[0], `${ou} : moins de 1 de la grande unité`);
+    }
+    // Les situations : un énoncé et la question ; des mesures vraisemblables.
+    if (/^situation/.test(d.sorte)) {
+      assert.match(q.texte, /\. (En tout,|Il reste|Depuis le départ,) … [a-zA-Z]+$/, ou);
+      if (/Grand Raid/.test(q.texte)) assert.ok(lire(d.a) <= 60000n, ou);
+    }
+    if (d.sorte === "marathon") assert.match(q.texte, / d'un marathon de 42\u00a0km 195\u00a0m\. Il reste …\u00a0m$/, ou);
+    // Pas de « Je prévois » en C8.
+    assert.equal(G.fauxDeSens(q), null);
+  });
+  // Je valide : le complément en 3e, une situation en 7e ; les sommes, les
+  // différences et le résultat dans la grande unité trois fois au moins.
+  for (let g = 1; g <= 300; g += 1) {
+    const s = G.serie("C8", {usage: "valide", graine: g});
+    assert.equal(s[2].donnees.sorte, "complement", `valide ${g}`);
+    assert.match(s[6].donnees.sorte, /^(situation|marathon)/, `valide ${g}`);
+    assert.ok(s.filter(q => q.donnees.op === "+").length >= 3 && s.filter(q => q.donnees.op === "-").length >= 3, `valide ${g} : + et −`);
+    assert.ok(s.filter(q => q.sensC8 === "grande").length >= 3, `valide ${g} : la grande unité`);
+  }
+  // Les erreurs : chacune déclenchée, une ligne au petit téléphone.
+  const vues = new Set();
+  toutes.forEach(q => {
+    const d = q.donnees;
+    const A = lire(d.a); const B = lire(d.b);
+    const Av = versUnite(A, d.ua, d.vers); const Bv = versUnite(B, d.ub, d.vers);
+    const calc = (x, y) => (d.op === "+" ? x + y : x - y);
+    const rep = lire(q.reponse);
+    const autre = d.vers === d.ua ? d.ub : d.ua;
+    const essais = [calc(d.sorte === "marathon" ? 42195000n : A, B), d.ua === d.vers ? calc(Av, Bv * 10n) : calc(Av * 10n, Bv),
+      d.op === "-" ? Av + Bv : (Av > Bv ? Av - Bv : Bv - Av), rep * 10n];
+    if (EXPOSANTS[d.vers] > EXPOSANTS[autre]) essais.push(rep * 10n ** BigInt(EXPOSANTS[d.vers] - EXPOSANTS[autre]));
+    essais.forEach(x => {
+      if (x <= 0n || x === rep) return;
+      const v = G.verifier(q, G.brut(x));
+      assert.ok(!v.juste, `${q.texte} : ${G.brut(x)} accepté`);
+      if (v.erreur) {
+        vues.add(v.erreur);
+        ecriture(v.retour, "C8 pourquoi"); milliers(v.retour, "C8");
+        assert.ok(v.retour.length <= 31, `« ${v.retour} »`);
+      }
+    });
+  });
+  [5, 6, 7, 8, 9].forEach(e => assert.ok(vues.has(e), `l'erreur ${e} n'est jamais déclenchée`));
+  // « 8,2 kg + 840 g » sans convertir : « J'écris d'abord tout en kg. »
+  const q = toutes.find(x => x.donnees.op === "+" && x.donnees.vers === "kg" && x.donnees.ub === "g");
+  assert.equal(G.verifier(q, G.brut(lire(q.donnees.a) + lire(q.donnees.b))).retour, "J'écris d'abord tout en kg.");
 });
