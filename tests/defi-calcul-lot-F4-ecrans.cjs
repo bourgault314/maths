@@ -15,7 +15,8 @@
 //                faux → « On regarde module par module » ;
 //   arrete       J'apprends arrêté (25 calculs) : « On continue demain », le
 //                chemin (le dessin ✓, sans aide → demain), le compteur « 4
-//                justes sur 5 » ; au 3e arrêt, « à voir en classe » ;
+//                justes sur 4 » (correctif F4 : sur les M derniers calculs
+//                sans aide, 6 au plus) ; au 3e arrêt, « à voir en classe » ;
 //   reprise      le lendemain : J'apprends reprend sans aide, « On reprend là
 //                où tu en étais. », le premier calcul avec son dessin.
 
@@ -160,7 +161,7 @@ async function apprendreJusquaLArret(page, f, nom, compteur) {
     let juste = true;
     if (e.outil === "aucun") {
       sansAide += 1;
-      if (!vu && compteur && /· 4 justes (sur 5|de suite)$/.test(await texte(page, "#question-count"))) { vu = true; await photo(page, `${f}-compteur`); }
+      if (!vu && compteur && /· 4 justes (sur [456]|de suite)$/.test(await texte(page, "#question-count"))) { vu = true; await photo(page, `${f}-compteur`); }
       // 4 justes sans aide (le compteur), puis toujours faux sans aide
       // (juste avec le dessin qui revient) : jamais 5 sur 6.
       juste = !vuQuatre && e.justesDeSuite < 4 && sansAide < 8;
@@ -170,7 +171,7 @@ async function apprendreJusquaLArret(page, f, nom, compteur) {
     joues += 1;
   }
   await pause(page, 800);
-  if (compteur) await verifier(async () => assert.ok(vu, "le compteur « 4 justes sur 5 » s'est vu"));
+  if (compteur) await verifier(async () => assert.ok(vu, "le compteur « 4 justes sur M » s'est vu"));
   return joues;
 }
 

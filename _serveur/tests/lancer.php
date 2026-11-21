@@ -8280,6 +8280,39 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
     vider_compteurs();
 });
 
+// Correctif du lot F4 (21/11/2026, relecture de Codex, point 7) : `paliers`
+// n'accepte que des dates ou null, `ar` que des entiers de 0 à 29 ; une valeur
+// hors format est REMPLACÉE (null, ou 0) à sa place, jamais retirée — rien ne
+// glisse d'une case. La version est un entier de 1 à 999 : au-delà, refus.
+verifier("defi-calcul correctif F4 — `paliers` et `ar` : une valeur hors format remplacée à sa place, rien ne glisse ; une version au-delà de 999 refusée", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'F4c', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $eleve['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $abime = $reference;
+    $abime['paliers'] = [7, '2026-11-20', 'texte', '2026-11-22'];
+    // A1 et A10 : trois niveaux chacun.
+    $abime['modules']['A1']['ar'] = ['2026-11-20', 4, -1];
+    $abime['modules']['A10']['ar'] = [30, 2.5, 5];
+    $w = ecrire($code, $abime, 0, 'defi-calcul');
+    egal(200, $w['code'], 'accepté (les valeurs hors format sont remplacées)');
+    $r = lire($code, 'defi-calcul')['json']['parcours'];
+    egal([null, '2026-11-20', null, '2026-11-22'], $r['paliers'], '`paliers` : un entier et un texte deviennent null, les dates restent à leur place');
+    egal([0, 4, 0], $r['modules']['A1']['ar'], '`ar` : une date et -1 deviennent 0, à leur place');
+    egal([0, 0, 5], $r['modules']['A10']['ar'], '`ar` : 30 et 2,5 deviennent 0, le 5 reste à sa place');
+    foreach ([[1000, 'version 1000'], [1500, 'version 1500']] as [$version, $quoi]) {
+        $trop = $reference;
+        $trop['version'] = $version;
+        $w = ecrire($code, $trop, 1, 'defi-calcul');
+        egal(400, $w['code'], "$quoi : refusé");
+        egal(1, lire($code, 'defi-calcul')['json']['revision'], "$quoi : rien d'écrit");
+    }
+    egal(999, CATALOGUE_APPLIS['defi-calcul']['version_max'] ?? null, 'la borne est déclarée');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
 // Lot S1 « les journaux » (07/11/2026, chantier « Suivre ses élèves ») :
 // Défi tables (version 4), SPLAT! et Coffres magiques (version 2) tiennent un
 // journal. Une page d'avant (Défi tables 3, SPLAT! 1, Coffres 1) l'effacerait

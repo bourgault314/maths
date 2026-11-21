@@ -97,6 +97,7 @@ export const RECETTES = [
   // Lot 6 « fraction à deux cases » (18/11/2026) : « 6 × □/□ = 5 ».
   { fichier: "tests/defi-calcul-lot-6-fraction-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-F4-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  { fichier: "tests/defi-calcul-lot-F4-correctif-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

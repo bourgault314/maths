@@ -303,7 +303,7 @@
           <p><b>Ma séance du jour.</b> <span id="notice-minutes">10&nbsp;minutes</span>&nbsp;: mes calculs du jour, puis j’avance dans mon parcours, à mon rythme. Au bout du temps, la séance est terminée. Je peux en refaire une si je veux.</p>
           <p><b>Mes calculs du jour.</b> Les calculs qui reviennent&nbsp;: c’est là que ça compte. Un calcul raté&nbsp;? Un autre, pour vérifier. Raté encore, je le retravaille avec l’aide le jour même.</p>
           <p><b>Tu connais déjà&nbsp;?</b> À l’entrée d’un module, un escalier&nbsp;: une marche par niveau, 3&nbsp;calculs par marche, un de plus si je me trompe. Ce que je sais déjà est validé tout de suite.</p>
-          <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes de suite, sans aide. Ici, se tromper ne compte pas.</p>
+          <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes sur les 6&nbsp;derniers, sans aide. Ici, se tromper ne compte pas.</p>
           <p><b>Mes coches.</b> ✓&nbsp;appris. ★&nbsp;solide&nbsp;: encore réussi quand il est revenu. ↻&nbsp;à revoir.</p>
           <p><b>Mes ceintures.</b> Quand tous les calculs d’un palier sont solides&nbsp;★, je gagne sa ceinture&nbsp;: jaune, orange, verte, puis bleue. En chemin, une barrette à chaque quart du palier.</p>
         </div>
@@ -313,7 +313,7 @@
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
   <script src="./defi_calcul_core.js?v=20261120-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261120-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261121-1"></script>
   <script src="./defi_calcul_aides.js?v=20261120-1"></script>
   <script>
     (() => {
@@ -477,6 +477,18 @@
 
       if (!MODE_PROF) PARCOURS.purger(storage(), {maintenant: Date.now(), garder: codeSuivi});
       let parcours = MODE_PROF ? PARCOURS.creerParcours() : codeSuivi ? PARCOURS.charger(storage(), codeSuivi) : caseSansCode();
+      // Correctif F4 (point 5, relecture de Codex) : la copie de l'appareil a
+      // été écrite par une page PLUS RÉCENTE (un autre onglet, mis à jour) —
+      // cette page-ci passe en lecture seule : rien ne s'écrit sur
+      // l'appareil, rien ne part au serveur, et le repère dit « Page
+      // ancienne : recharge la page. » (le même message que le serveur).
+      let pageAncienne = false;
+      function verifierPageAncienne() {
+        if (MODE_PROF || pageAncienne) return pageAncienne;
+        try { pageAncienne = PARCOURS.versionEnAvance(storage(), codeSuivi); } catch (_) { pageAncienne = false; }
+        return pageAncienne;
+      }
+      verifierPageAncienne();
       // L'état de synchronisation de la case active : dernière révision connue
       // du serveur, travail en attente d'envoi (dirty), code refusé (détaché).
       // Il survit à la fermeture de la page : ce qui n'est pas parti partira.
@@ -749,6 +761,9 @@
         // pour qu'elle le soit —, RIEN ne part : ni envoi groupé, ni relance, ni
         // envoi de fermeture d'onglet. Le travail reste rangé ici et part quand
         // l'élève a retapé son code (ou à sa prochaine entrée sur cet appareil).
+        // (Correctif F4, point 5 : une page plus ancienne que la copie de
+        // l'appareil n'envoie rien.)
+        if (pageAncienne) return false;
         return suiviActif() && !sync.detache && !erreurDefinitive && !envoisRetenus();
       }
 
@@ -897,11 +912,14 @@
       function sauverCase() {
         // Mode professeur : rien ne s'écrit sur l'appareil.
         if (MODE_PROF) return;
+        // (Correctif F4, point 5 : une copie plus récente n'est jamais écrasée.)
+        if (pageAncienne || verifierPageAncienne()) { renderRepere(); return; }
         PARCOURS.sauver(storage(), parcours, codeSuivi);
       }
 
       function sauverParcours() {
         sauverCase();
+        if (pageAncienne) return;
         if (suiviActif()) {
           sync.dirty = true;
           sync.maj = Date.now();
@@ -956,6 +974,15 @@
       function renderRepere() {
         const repere = document.getElementById("suivi-repere");
         if (!repere) return;
+        // Correctif F4 (point 5) : une page plus ancienne que la copie de
+        // l'appareil le dit, avec ou sans code.
+        if (pageAncienne) {
+          repere.hidden = false;
+          repere.classList.remove("hors-ligne");
+          repere.classList.add("detache");
+          repere.textContent = "Page ancienne : recharge la page.";
+          return;
+        }
         if (!suiviActif() && entreeRefusee) { renderEntreeRefusee(repere); return; }
         repere.hidden = !suiviActif();
         if (!suiviActif()) { repere.replaceChildren(); return; }
@@ -1060,6 +1087,8 @@
         fusionsSuccessives = 0;
         parcours = PARCOURS.charger(storage(), codeSuivi);
         sync = PARCOURS.chargerSync(storage(), codeSuivi);
+        pageAncienne = false;
+        verifierPageAncienne();
         majLienRetour();
         renderRepere();
         renderParcours();
@@ -1118,6 +1147,8 @@
         PARCOURS.effacerCode(stockageSession());
         parcours = caseSansCode();
         sync = PARCOURS.chargerSync(storage(), "");
+        pageAncienne = false;
+        verifierPageAncienne();
         majLienRetour();
         renderRepere();
         renderGarde();
@@ -1976,8 +2007,11 @@
       const competenceCourante = () => PARCOURS.competenceCourante(parcours, CARTE, palierRegle());
       const nomCompetence = (id, n) => CORE.nomCompetence(id, n);
 
+      // Correctif F4 (point 10) : relue AVEC la version de la progression —
+      // sans elle, la ligne passait pour une très vieille version (F6 et F9
+      // décalés une seconde fois, A2 décoché, A8 et F5 réunis).
       function ligneDe(id) {
-        return PARCOURS.normaliserParcours({modules: {[id]: parcours.modules[id]}}).modules[id];
+        return PARCOURS.normaliserParcours({version: PARCOURS.VERSION, modules: {[id]: parcours.modules[id]}}, {aujourdhui: jourCourant()}).modules[id];
       }
 
       // Les couleurs des boîtes : la classe CSS et le mot.
@@ -2510,7 +2544,8 @@
       // n'y est enregistré) : pour eux, pas de bouton, et un clic forcé ne
       // fait rien — ce que le professeur voit ne s'efface pas d'ici.
       function peutEffacer() {
-        return !MODE_PROF && !suiviActif() && !ENTREE.billet && !entreeRefusee;
+        // (Correctif F4, point 5 : pas en lecture seule.)
+        return !MODE_PROF && !suiviActif() && !ENTREE.billet && !entreeRefusee && !pageAncienne;
       }
       // La question « Effacer tout ton historique ? » s'ouvre à la place de
       // la porte de Mon parcours et de la ligne des liens, dans la même case
@@ -3470,6 +3505,14 @@
         const {module: id, niveau: n} = lecon;
         const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: PARCOURS.SEUILS.entraine.maximum, exclure: lecon.base.textes});
         if (!calculs.length) return;
+        // Correctif F4 (point 11) : la reprise sans aide commence par un
+        // calcul AVEC son dessin (le rappel, qui ne compte pas) ; si le tirage
+        // en donne un sans dessin en premier (M4-1 : « 0 × 8 »), le premier
+        // qui en a un passe devant.
+        if (depart === PARCOURS.REPRISE.seul && !CORE.aideDe(calculs[0])) {
+          const i = calculs.findIndex(calcul => CORE.aideDe(calcul));
+          if (i > 0) calculs.unshift(...calculs.splice(i, 1));
+        }
         const manip = calculs.some(calcul => CORE.manipulationDe(calcul));
         demarrerSerie({
           genre: "apprends", module: id, niveau: n, total: calculs.length, manip, lecon: lecon.base, ecrisFait: depart === PARCOURS.REPRISE.seul, barre: 0,
@@ -3511,6 +3554,7 @@
         state.serie = pratique;
         state.running = true;
         pratique.ecrisFait = true;
+        allongerSerie(pratique);
         pratique.index += 1;
         if (pratique.index >= pratique.questions.length) { finish(); return; }
         renderQuestion();
@@ -4074,10 +4118,12 @@
       // barre pour l'étape, qui ne redescend plus sous J'écris une fois fait.
       // « · 3 justes de suite » (Je m'entraîne encore) ; lot F4, J'apprends et
       // Je m'entraîne : « · 4 justes sur 5 » (5 justes sur les 6 derniers).
+      // Correctif F4 (point 13) : « sur M », les M derniers calculs sans aide
+      // (6 au plus) — jamais « 6 justes sur 5 » quand une forme reste à voir.
       function texteJustes(serie, suivi) {
         const n = suivi.justesDeSuite;
         if (!n) return "";
-        return serie.genre === "rattrape" ? ` · ${n} juste${n > 1 ? "s" : ""} de suite` : ` · ${n} juste${n > 1 ? "s" : ""} sur ${suivi.objectif}`;
+        return serie.genre === "rattrape" ? ` · ${n} juste${n > 1 ? "s" : ""} de suite` : ` · ${n} juste${n > 1 ? "s" : ""} sur ${suivi.sur}`;
       }
       function majMomentApprends(question) {
         const serie = state.serie;
@@ -4216,8 +4262,12 @@
           return;
         }
         if (estEntrainement(serie)) {
-          const suivi = PARCOURS.suivreEntrainement(serie.reponses, reglesEntrainement(serie, {toutesFormesVues: toutesFormesVues() && toutesSortesCouvertes()}));
+          // Correctif F4 (point 3) : les règles avec lesquelles l'écran juge
+          // la série sont gardées, et le moteur enregistre avec elles.
+          serie.regles = reglesEntrainement(serie, {toutesFormesVues: toutesFormesVues() && toutesSortesCouvertes()});
+          const suivi = PARCOURS.suivreEntrainement(serie.reponses, serie.regles);
           serie.outil = suivi.outil;
+          if (!suivi.fini) allongerSerie(serie);
           if (suivi.fini || serie.index + 1 >= serie.questions.length) { finish(); return; }
           if (serie.genre !== "rattrape" && suivi.outil === "aucun") amenerSorteManquante();
           // J'apprends (lot 2) : le dessin s'en va pour la première fois —
@@ -4227,6 +4277,25 @@
         serie.index += 1;
         if (serie.index >= serie.questions.length) finish();
         else renderQuestion();
+      }
+
+      // Correctif F4 (point 12) : une série d'entraînement dont le générateur
+      // n'a pas assez de calculs différents (D8-1 : 22 ou 24) se reconstitue
+      // en reprenant des calculs déjà vus — elle va jusqu'au temps, ou au
+      // nombre de calculs prévu (25 ; « encore » : 20), jamais moins.
+      function allongerSerie(serie) {
+        if (!estEntrainement(serie) || serie.index + 1 < serie.questions.length) return;
+        const maximum = serie.genre === "rattrape" ? PARCOURS.SEUILS.rattrapage.maximum
+          : serie.genre === "apprends" ? PARCOURS.SEUILS.apprends.maximum : PARCOURS.SEUILS.entraine.maximum;
+        if (serie.questions.length >= maximum) return;
+        const deja = serie.questions.map(question => question.calcul);
+        // (Jamais un calcul de la leçon, comme au premier tirage.)
+        const trouve = CORE.niveauDe(`${serie.module}-${serie.niveau}`);
+        const exclure = trouve && trouve.niveau.apprends ? trouve.niveau.apprends.textes : [];
+        const encore = CORE.genererSerie(`${serie.module}-${serie.niveau}`, {graine: nouvelleGraine(), genre: "entraine", total: maximum, exclure});
+        const reprendre = (encore.length ? encore : deja).slice(0, maximum - serie.questions.length);
+        serie.questions.push(...reprendre.map(calcul => ({calcul, retour: false})));
+        serie.total = serie.questions.length;
       }
 
       // Toutes les écritures du niveau ont été vues (la dernière arrive en
@@ -4526,9 +4595,14 @@
           const connus = Math.max(0, suivi.marche - (serie.de || 1) + 1);
           noterEtape(`${connus} niveau${connus > 1 ? "x" : ""} sur ${serie.marches.length}`);
         } else {
+          // Correctif F4 (point 3) : les règles de l'écran (outil à
+          // manipuler, formes vues, temps passé) partent avec la série : le
+          // moteur calcule le résultat une fois, et c'est lui que le bilan montre.
+          const regles = serie.regles || reglesEntrainement(serie, {toutesFormesVues: toutesFormesVues() && toutesSortesCouvertes()});
           suivi = PARCOURS.appliquerSerie(parcours, {
             module: serie.module, niveau: serie.niveau, genre: serie.genre,
-            reponses: serie.reponses.map(reponse => Object.assign({juste: reponse.juste, outil: reponse.outil}, reponse.rappel ? {rappel: true} : {})), causes: serie.causes
+            reponses: serie.reponses.map(reponse => Object.assign({juste: reponse.juste, outil: reponse.outil}, reponse.rappel ? {rappel: true} : {})), causes: serie.causes,
+            manip: regles.manip, toutesFormesVues: regles.toutesFormesVues !== false, tempsFini: regles.tempsFini === true
           }, options);
           noterEtape(suivi.evenements.some(evenement => evenement.type === "entree") ? `${sur} · ✓ appris` : suivi.verdict.reussi ? `${sur} · réussi` : sur);
         }
@@ -4563,7 +4637,7 @@
         // J'apprends aussi, sauf celui d'une compétence à revoir).
         const arretee = enSeance() && suivi.finie && (serie.genre === "entraine" || serie.genre === "apprends") && !suivi.verdict.reussi
           && suivi.parcours.seance.p[PARCOURS.PLAN.nouveaute] === PARCOURS.NOUVEAUTE.arretee;
-        if (enSeance() && suivi.finie) renderFinDeSeance(serie, sur, arretee);
+        if (enSeance() && suivi.finie) renderFinDeSeance(serie, sur, arretee, suivi);
         else if (serie.genre === "jour") renderBilanDuJour(serie, sur);
         else if (serie.genre === "test") renderBilanTest(serie, suivi, sur);
         else if (serie.genre === "palier") renderBilanPalier(serie, suivi);
@@ -4758,14 +4832,19 @@
       // Lot F4 : le chemin de J'apprends arrêté — avec l'outil, avec le
       // dessin, sans aide : ce qui est fait (✓), où il reprendra demain (→).
       // Au 3e arrêt sur ce niveau, une phrase : le professeur le reverra.
-      function cheminApprends(serie) {
-        const suivi = PARCOURS.suivreEntrainement(serie.reponses, reglesEntrainement(serie));
+      // Correctif F4 (points 3 et 10) : la reprise est celle que le moteur a
+      // enregistrée (`suivi`, le résultat d'appliquerSerie), plus un second
+      // calcul fait ici ; « Demain, tu passes à la suite » seulement si le
+      // niveau attend vraiment demain.
+      function cheminApprends(serie, suivi = null) {
+        const arret = suivi && suivi.evenements ? suivi.evenements.find(evenement => evenement.type === "arrete") : null;
+        const reprise = arret ? arret.reprise : PARCOURS.repriseDe(ligneDe(serie.module), serie.niveau - 1);
         const apprends = CORE.niveauDe(`${serie.module}-${serie.niveau}`).niveau.apprends;
         const outil = REPRISE[outilApprends(apprends)] || "";
         const etapes = [
           ...(serie.manip ? [{nom: outil.charAt(0).toUpperCase() + outil.slice(1), etat: "fait"}] : []),
-          {nom: NOM_DESSIN, etat: suivi.reprise === PARCOURS.REPRISE.seul ? "fait" : "demain"},
-          {nom: NOM_SANS_AIDE, etat: suivi.reprise === PARCOURS.REPRISE.seul ? "demain" : "apres"}
+          {nom: NOM_DESSIN, etat: reprise === PARCOURS.REPRISE.seul ? "fait" : "demain"},
+          {nom: NOM_SANS_AIDE, etat: reprise === PARCOURS.REPRISE.seul ? "demain" : "apres"}
         ];
         const ligne = document.createElement("div");
         ligne.className = "chemin";
@@ -4786,10 +4865,15 @@
         });
         const morceaux = [cadre(phrase(soude("Aujourd’hui, tu as avancé :")), ligne)];
         const l = ligneDe(serie.module);
-        if (PARCOURS.aVoirEnClasse(l, serie.niveau - 1)) morceaux.push(cadre(phrase(soude(TEXTE_A_VOIR))));
+        if (PARCOURS.aVoirEnClasse(l, serie.niveau - 1)) {
+          const attend = PARCOURS.enAttente(l, serie.niveau - 1, PARCOURS.ajouterJours(jourCourant(), 1));
+          morceaux.push(cadre(phrase(soude(attend ? TEXTE_A_VOIR : TEXTE_A_VOIR_REVIENT))));
+        }
         return morceaux;
       }
       const TEXTE_A_VOIR = "Ce niveau, ton professeur va le revoir avec toi. Demain, tu passes à la suite.";
+      // (Correctif F4, point 10 : 4e et 5e arrêts — il revient demain.)
+      const TEXTE_A_VOIR_REVIENT = "Ce niveau, ton professeur va le revoir avec toi.";
 
       // Lot F4 : le test de palier — un calcul de chacune des compétences les
       // plus dures du palier ; il s'arrête au 2e faux.
@@ -4818,12 +4902,12 @@
       // La fin de la séance : les étapes et leur score, « Demain : … », le
       // nombre de fois cette semaine. Après deux entraînements ratés, le
       // titre le dit : demain repart de « J'apprends ».
-      function renderFinDeSeance(serie, sur, arretee) {
+      function renderFinDeSeance(serie, sur, arretee, suivi = null) {
         const aujourdhui = jourCourant();
         // Lot F4 (choix de Gwenaël) : J'apprends ne se rate plus — « On
         // continue demain », le chemin fait aujourd'hui, et, au 3e arrêt, le
         // niveau « à voir en classe ».
-        const cheminDuJour = arretee ? cheminApprends(serie) : [];
+        const cheminDuJour = arretee ? cheminApprends(serie, suivi) : [];
         if (arretee) {
           poserVerdict({classe: "is-neutre", icone: "", titre: "On continue demain", score: nomCompetence(serie.module, serie.niveau)});
         } else {

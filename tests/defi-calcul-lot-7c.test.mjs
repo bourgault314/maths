@@ -368,5 +368,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque)$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 : le moteur)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif)$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur)
 });

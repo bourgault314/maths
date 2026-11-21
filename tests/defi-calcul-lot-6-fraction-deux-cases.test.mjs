@@ -215,5 +215,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque)$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 : le moteur)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif)$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur)
 });
