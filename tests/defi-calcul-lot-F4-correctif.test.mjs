@@ -43,12 +43,12 @@ test("1. le test de palier revérifie tout à la remise : déjà joué, commenc�
   const rate = P.appliquerTestPalier(ouvrir(P.creerParcours()), {palier: 1, justes: 1, total: 3}, opts()).parcours;
   const second = P.appliquerTestPalier(rate, {palier: 1, justes: 12, total: 12}, opts());
   assert.equal(second.reussi, false, "le palier était déjà joué");
-  assert.equal(second.entrees, 0, "aucun des 41 niveaux des bases n'entre");
+  assert.equal(second.entrees, 0, "aucun des 44 niveaux des bases n'entre (lot C2 : 41 avant)");
   assert.equal(P.compter(second.parcours, CARTE).entrees, 0);
   assert.equal(second.parcours.paliers[0], J, "le jour du premier test ne bouge pas");
   // Au-delà du réglage du professeur (les bases seulement) : un résultat de CM1 ne fait rien entrer.
   const cm1 = P.appliquerTestPalier(ouvrir(P.creerParcours()), {palier: 2, justes: 12, total: 12}, opts(J, true, 1));
-  assert.equal(cm1.entrees, 0, "aucun des 34 niveaux du CM1");
+  assert.equal(cm1.entrees, 0, "aucun des 33 niveaux du CM1");
   assert.deepEqual(cm1.parcours.paliers, [null, null, null, null], "pas noté joué non plus");
   // Commencé (une compétence du palier jouée au test) : rien n'entre.
   const c = duPalier(1)[0];
@@ -57,7 +57,7 @@ test("1. le test de palier revérifie tout à la remise : déjà joué, commenc�
   // Une étape de séance refusée fait quand même avancer la séance (le test compte).
   assert.equal(second.parcours.seance.p[P.PLAN.tests], rate.seance.p[P.PLAN.tests] + 1);
   // Le cas normal ne change pas.
-  assert.equal(P.appliquerTestPalier(ouvrir(P.creerParcours()), {palier: 1, justes: 11, total: 12}, opts()).entrees, 41);
+  assert.equal(P.appliquerTestPalier(ouvrir(P.creerParcours()), {palier: 1, justes: 11, total: 12}, opts()).entrees, 44);
 });
 
 test("2. le test de palier ne passe pas par-dessus « à voir en classe » : le niveau qui attend et la suite de son module ne bougent pas", () => {
@@ -106,8 +106,9 @@ function stockage(depart = {}) {
     get length() { return Object.keys(cases).length; }, key: i => Object.keys(cases)[i] || null};
 }
 
+// (Lot C2 : la page est en version 11 ; la copie « plus récente » est une 12.)
 test("5. une page de version 10 n'écrit jamais par-dessus une copie de l'appareil plus récente (version 11) : lecture seule", () => {
-  const v11 = JSON.stringify({version: 11, epoque: 0, modules: {A1: {b: [4, 0, 0], ar: [0, 0, 0], neuf: [1, 2, 3]}}, paliers: [J, null, null, null], champNeuf: {x: 1}});
+  const v11 = JSON.stringify({version: P.VERSION + 1, epoque: 0, modules: {A1: {b: [4, 0, 0], ar: [0, 0, 0], neuf: [1, 2, 3]}}, paliers: [J, null, null, null], champNeuf: {x: 1}});
   const s = stockage({[P.CLE_STOCKAGE]: v11});
   assert.equal(P.versionEnAvance(s, ""), true, "la copie de l'appareil est plus récente que la page");
   assert.equal(P.sauver(s, P.creerParcours(), ""), false, "refusé");
@@ -118,7 +119,7 @@ test("5. une page de version 10 n'écrit jamais par-dessus une copie de l'appare
   assert.equal(P.sauver(s10, P.creerParcours(), ""), true);
   const s9 = stockage({[P.CLE_STOCKAGE]: JSON.stringify({version: 9})});
   assert.equal(P.sauver(s9, P.creerParcours(), ""), true);
-  assert.equal(JSON.parse(s9.cases[P.CLE_STOCKAGE]).version, 10);
+  assert.equal(JSON.parse(s9.cases[P.CLE_STOCKAGE]).version, 11);
   assert.equal(P.versionEnAvance(stockage(), ""), false, "rien sur l'appareil");
   assert.equal(P.versionEnAvance(stockage({[P.CLE_STOCKAGE]: "{abîmé"}), ""), false, "illisible : pas « plus récent »");
 });

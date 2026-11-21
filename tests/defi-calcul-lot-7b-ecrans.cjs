@@ -117,7 +117,8 @@ const dessin = page => appel(page, "dessin");
 
 
 
-const NIVEAUX = [["D8", 1], ["D8", 2], ["D8", 3], ["D9", 1], ["D9", 2], ["M13", 1], ["M13", 2], ["M13", 3]];
+// (Lot C2 : D8 en cinq niveaux, les doubles puis les moitiés.)
+const NIVEAUX = [["D8", 1], ["D8", 2], ["D8", 3], ["D8", 4], ["D8", 5], ["D9", 1], ["D9", 2], ["M13", 1], ["M13", 2], ["M13", 3]];
 const boite = (page, sel) => page.evaluate(q => { const e = document.querySelector(q); if (!e) return null; const b = e.getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; }, sel);
 const textesDessin = page => page.evaluate(() => [...document.querySelectorAll("#aide svg text")].map(t => t.textContent.replace(/[\u202f\u00a0]/g, " ").trim()));
 // Taper une suite d'étapes : rien ne bouge pendant la frappe ; le dessin reste à sa place.
@@ -226,24 +227,25 @@ async function attendreQue(page, lire, essais = 40) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : la moitié arrive annoncée, avec son dessin (D8-2) ; 8,10 et ses centièmes (D8-3)`, async () => {
+    // (Lot C2 : la moitié a ses niveaux, D8-3 et D8-5 ; ce qui reste annoncé,
+    // ce sont les centièmes de 8,10.)
+    await cas(`${f} : 8,10 et ses centièmes, annoncés avec leur dessin (D8-5)`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      assert.equal(await appel(s.page, "nouveaute", "D8", 2, "la moitié", "image"), true);
+      assert.equal(await appel(s.page, "nouveaute", "D8", 5, "centièmes", "image"), true);
       await pause(s.page, 500);
-      assert.match(await texte(s.page, "#annonce"), /Nouveau : la moitié, je coupe aussi les deux morceaux\./);
-      assert.match(await appel(s.page, "dessin"), /Déjà écrit/);
-      await photo(s.page, `${f}-D8-2-annonce`);
+      assert.match(await texte(s.page, "#annonce"), /Nouveau : 0,\d0, c’est \d+ centièmes : leur moitié, c’est \d+ centièmes\./);
+      await photo(s.page, `${f}-D8-5-annonce`);
       await tient(s.page, largeur, hauteur);
-      assert.equal(await appel(s.page, "poser", "D8", 3, "moitié de 8,10 = □", "image"), true);
+      assert.equal(await appel(s.page, "poser", "D8", 5, "moitié de 8,10 = □", "image"), true);
       await pause(s.page, 500);
       assert.deepEqual((await textesDessin(s.page)).filter(t => t.includes(",")).slice(0, 2), ["8,10", "0,10"]);
-      await photo(s.page, `${f}-D8-3-810`);
+      await photo(s.page, `${f}-D8-5-810`);
       await tient(s.page, largeur, hauteur);
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();
     });
 
-    await cas(`${f} : Mon parcours d'un élève au CM2 (palier 3 : 33 compétences construites)`, async () => {
+    await cas(`${f} : Mon parcours d'un élève au CM2 (palier 3 : 43 compétences depuis le lot C2)`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(c => c.module === "D8" && c.niveau === 1, ["2026-11-01", "2026-11-05", null, null])});
       await s.page.click("#acc-porte");
       await pause(s.page, 800);

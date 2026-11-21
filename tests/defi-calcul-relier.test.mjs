@@ -37,7 +37,7 @@ const vertsDe = svg => (svg.match(new RegExp(`(fill|stroke)="${VERT}"`, "g")) ||
 const viewBox = svg => svg.match(/viewBox="([^"]+)"/)[1];
 
 test("J'écris : un dessin par étape, de la même taille, vide de vert au début", () => {
-  assert.equal(NIVEAUX.length, 127, "les 45 modules construits (127 niveaux depuis le lot 6 « programmes 2 ») : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b), F4, F9, F11 (lot 7c), M11, A9, C4, M9 (lot 7d)");
+  assert.equal(NIVEAUX.length, 132, "les 45 modules construits (132 niveaux depuis le lot 6 « programmes 2 ») : A1, A10, A11, A2, A5, M1, M2, D2, A3, A4, A6, A7, A8 (modules lot 2), M3, M4, M5, M6, M8 (modules lot 3), M7, M10, M12, C1, C3 (modules lot 4), D1, D3, D4 (modules lot 5), F2, F5, F6, F8 (modules lot 6), puis F1, F3 (modules lot 6b), D5, D6, D7 (lot 7a), D8, D9, M13 (lot 7b), F4, F9, F11 (lot 7c), M11, A9, C4, M9 (lot 7d)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
     assert.equal(ecris.dessins.length, ecris.etapes.length + 1, `${cle} : un dessin avant la première étape, puis un par étape`);
@@ -110,10 +110,17 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.deepEqual(m1svg.map(svg => compte(svg, 60)), [0, 1, 1, 1], "2 × 30 = 60 sous les deux 30");
   assert.deepEqual(m1svg.map(svg => compte(svg, 12)), [0, 0, 1, 1], "2 × 6 = 12 sous les deux 6");
   assert.deepEqual(m1svg.map(svg => compte(svg, 72)), [0, 0, 0, 1], "la dernière égalité remplit l'accolade");
-  // M1-2, double de 75 : 140, puis 10, puis l'accolade (150).
-  // (Lot 3a : M1-2 écrit double de 250 — 400, 100, puis 500.)
-  const m12 = ecris("M1-2").dessins.map(AIDES.dessinerImage);
+  // M1-5 (M1-2 avant le lot C2), double de 75 : 140, puis 10, puis l'accolade (150).
+  // (Lot 3a : J'écris sur double de 250 — 400, 100, puis 500.)
+  const m12 = ecris("M1-5").dessins.map(AIDES.dessinerImage);
   assert.deepEqual(m12.map(s => [/>400</.test(s), />100</.test(s), />500</.test(s)]), [[false, false, false], [true, false, false], [true, true, false], [true, true, true]]);
+  // Lot C2 : M1-2, moitié de 38 — 15 sous le 30 coupé en deux, puis 4, puis l'accolade (19).
+  const moities = ecris("M1-2").dessins;
+  assert.deepEqual(moities.map(d => [d.trouves, d.fini]), [[[], false], [[0], false], [[0, 1], false], [[0, 1], true]]);
+  const m2svg = moities.map(AIDES.dessinerImage);
+  assert.deepEqual(m2svg.map(svg => compte(svg, 15) > 0), [false, true, true, true], "moitié de 30 = 15, écrit dès la première égalité");
+  assert.deepEqual(m2svg.map(svg => compte(svg, 4) > 0), [false, false, true, true], "moitié de 8 = 4 à la deuxième");
+  assert.deepEqual(m2svg.map(svg => compte(svg, 19)), [0, 0, 0, 1], "la dernière égalité remplit l'accolade");
   // D2-1, 72,41 × 10 : une seule étape (décision du 04/11, modules lot 5) —
   // tous les chiffres glissent ensemble, le tableau se remplit d'un coup.
   const d2 = ecris("D2-1").dessins;

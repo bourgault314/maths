@@ -223,7 +223,7 @@ async function apprendreJusquaLArret(page, f, nom, compteur) {
       await pause(s.page, 2500);
       await photo(s.page, `${f}-palier-reussi`);
       assert.match(await texte(s.page, "#result-title"), /^Tu connais déjà les bases !$/);
-      assert.match(await texte(s.page, "#result-score"), /^Les bases : 41 niveaux d’un coup$/, "41 depuis le lot 6 « programmes 2 » (F9-1 au CE2)");
+      assert.match(await texte(s.page, "#result-score"), /^Les bases : 44 niveaux d’un coup$/, "44 depuis le lot C2 (41 au lot 6 « programmes 2 », F9-1 au CE2)");
       await tient(s.page, largeur, hauteur);
       const p = await appel(s.page, "parcours");
       assert.equal(p.paliers[0], JOUR);

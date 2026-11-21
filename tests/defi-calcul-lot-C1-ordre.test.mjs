@@ -133,7 +133,9 @@ test("J'écris n'est jamais plus facile que l'exemple de « On te montre » (sau
   // jamais sur « double de 24 » (avant le lot C1, 24 à 49 : il prend les
   // plus grands qu'il sait écrire, à un cran près).
   const tires = Array.from({length: 20}, (_, g) => CORE.ecrisTire("M1-3", {graine: g + 1}).calcul);
-  assert.ok(tires.every(c => c.donnees.n >= 28), tires.map(c => espaces(c.texte)).join(", "));
+  // (Lot C2 : M1-3 n'a plus que des doubles, avec 24 nombres à 3 chiffres ;
+  // le cran d'un huitième descend jusqu'à 27.)
+  assert.ok(tires.every(c => c.donnees.n >= 27), tires.map(c => espaces(c.texte)).join(", "));
 });
 
 test("« ajouter 8, 18… » : pas de perles quand le geste passerait 100 (82 + 18 = 82 + 20 − 2)", () => {
@@ -163,14 +165,14 @@ test("la page : la réserve suit la série, un cran plus facile après une erreu
   assert.match(amener, /serie\.questions\.splice\(suivant, 0, choisi\.question\)/);
   const allonger = page.slice(page.indexOf("function allongerSerie("), page.indexOf("function placerUnCranPlusFacile("));
   assert.match(allonger, /encore\.slice\(encore\.fenetre \|\| 0\)/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261121-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261121-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C1-ordre$|^lot arriver-E$|^lot m-corrige$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom)
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities)$|^lot arriver-E$|^lot m-corrige$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
 });
 
-test("les données ne changent pas : progression en version 10, mêmes compétences, mêmes sortes (en nombre)", () => {
+test("les données ne changent pas : progression en version 10 (11 au lot C2), mêmes compétences, mêmes sortes (en nombre)", () => {
   const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.equal(P.VERSION, 10);
-  assert.equal(CORE.ORDRE.length, 127);
+  assert.equal(P.VERSION, 11);
+  assert.equal(CORE.ORDRE.length, 132);
   assert.ok(CORE.ORDRE.every(cle => CORE.sortesDe(cle).length >= 2 && CORE.sortesDe(cle).length <= 4));
 });

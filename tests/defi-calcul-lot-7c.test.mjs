@@ -49,9 +49,9 @@ test("lot 7c : 6 compétences construites ; F9-2 au CM1, F4-1, F4-2, F9-3, F11-1
   assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => espaces(n.nom)), ["Fraction d’une quantité", "Fraction d’une quantité : résultat décimal"]);
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 127); // (lot 7d : tout est construit ; lot 6 « programmes 2 » : F9-1, F6-2)
+  assert.equal(construits.length, 132); // (lot 7d : tout est construit ; lot 6 « programmes 2 » : F9-1, F6-2)
   // Construit par palier : 40, 31 (tout le CM1), 37 sur 42, 9 sur 12 ; lot 7d : tout, 40, 33, 40, 12.
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [41, 34, 40, 12]); // (lot 6 « programmes 2 »)
+  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [44, 33, 43, 12]); // (lot 6 « programmes 2 »)
   // F4-2 ferme le palier 3, après F4-1 (une échelle).
   const ordre = [...CORE.ORDRE];
   assert.equal(ordre.filter(cle => CORE.niveauDe(cle).niveau.palier === 3).pop(), "F4-2");
@@ -352,7 +352,7 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261121-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261121-2/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261120-1/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
@@ -368,5 +368,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

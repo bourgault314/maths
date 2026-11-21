@@ -103,7 +103,22 @@
   // (rien d'arrêté, aucun test de palier joué). Le serveur refuse l'écriture
   // d'une page de version 9 (« version_min » 10) : elle effacerait `ar` et
   // `paliers`.
-  const VERSION = 10;
+  // Version 11 (lot C2 « doubles et moitiés », 21/11/2026, choix de Gwenaël
+  // après l'audit de cohérence) : doubles et moitiés en deux niveaux. M1 passe
+  // de 3 à 6 niveaux (doubles jusqu'à 40, moitiés jusqu'à 40, doubles en
+  // découpant, moitiés en découpant, doubles des nombres usuels, moitiés des
+  // nombres usuels), D8 de 3 à 5 (moitié des impairs, doubles et moitiés
+  // des dixièmes, doubles et moitiés des centièmes). Chaque ancien niveau
+  // devient celui des doubles (sa leçon était sur le double : M1-1 → M1-1,
+  // M1-2 → M1-5, M1-3 → M1-3 ; D8-2 → D8-2, D8-3 → D8-4) ; les niveaux des
+  // moitiés sont neufs. Une progression de version 10 se relit comme au lot
+  // 6 « programmes 2 » : dans les lignes de M1 et D8, chaque liste reçoit une
+  // case vide à la place de chaque niveau neuf (rien n'est perdu, rien n'est
+  // gagné sans avoir été joué), le module n'est plus coché « su », et les
+  // rangs du plan de la séance ouverte sont recalculés. Le serveur refuse
+  // l'écriture d'une page de version 10 (« version_min » 11) : elle lirait
+  // les lignes de M1 et D8 avec les anciens numéros.
+  const VERSION = 11;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -116,12 +131,12 @@
   // 45 modules construits ou à construire, puis les 29 réservés). Un test
   // compare cette table aux fiches de defi_calcul_core.js. Carte v3 (lot
   // « couverture ») : A2 5, A8 2, A9 2, M9 2, F5 2. Lot 6 « programmes 2 »
-  // (version 9) : F6 4, F9 3.
+  // (version 9) : F6 4, F9 3. Lot C2 (version 11) : M1 6, D8 5.
   const NIVEAUX = Object.freeze({
     A1: 3, A10: 3, A11: 3, A2: 5, A3: 4, A4: 4, A5: 4, A6: 4, A7: 3, A8: 2, A9: 2,
-    M4: 2, M1: 3, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
+    M4: 2, M1: 6, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
     C1: 3, C3: 3, C4: 2,
-    D1: 3, D2: 4, D3: 3, D4: 3, D5: 2, D6: 3, D7: 3, D8: 3, D9: 2,
+    D1: 3, D2: 4, D3: 3, D4: 3, D5: 2, D6: 3, D7: 3, D8: 5, D9: 2,
     F2: 2, F1: 3, F3: 3, F4: 2, F5: 2, F6: 4, F8: 3, F9: 3, F11: 2,
     D10: 3, D11: 3, D12: 2, D13: 3, D14: 3, D15: 3, F7: 3, F10: 3, F12: 2, F13: 3,
     P1: 3, P2: 3, P3: 4, P4: 3, R1: 2, R2: 3, R3: 3, R4: 3, R5: 4, R6: 2,
@@ -130,7 +145,7 @@
   const CODES = Object.freeze(Object.keys(NIVEAUX));
 
   // Le rang d'une compétence : sa place dans la liste de toutes les
-  // compétences (218 depuis la version 9), module après module. Il sert à ranger une compétence
+  // compétences (213 depuis la version 9, 218 depuis la version 11), module après module. Il sert à ranger une compétence
   // dans un nombre (le plan de la séance).
   const RANGS = (() => {
     const debut = {};
@@ -148,24 +163,32 @@
     return id ? {module: id, niveau: rang - RANGS.debut[id] + 1} : null;
   }
 
+  // La version 10 (avant le lot C2) : M1 et D8 avaient 3 niveaux. Chaque
+  // ancien niveau va à sa place `PLACES_V11` (ancien niveau 1, 2, 3 → nouveau
+  // niveau) ; les autres places sont les niveaux neufs (les moitiés).
+  const PLACES_V11 = Object.freeze({M1: Object.freeze([1, 5, 3]), D8: Object.freeze([1, 2, 4])});
+  const NIVEAUX_V10 = Object.freeze(Object.assign({}, NIVEAUX, {M1: 3, D8: 3}));
+  const niveauDepuisV10 = (id, niveau) => (PLACES_V11[id] ? PLACES_V11[id][niveau - 1] : niveau);
   // La version 8 (avant le lot 6 « programmes 2 ») : F6 et F9 avaient un
   // niveau de moins. Le niveau neuf de chacun prend la place `INSERES_V9`.
   const INSERES_V9 = Object.freeze({F6: 2, F9: 1});
-  const NIVEAUX_V8 = Object.freeze(Object.assign({}, NIVEAUX, {F6: 3, F9: 2}));
-  // Un rang de la version 8 → le rang de la même compétence aujourd'hui
-  // (-1 : aucun).
-  function rangDepuisV8(rang) {
+  const NIVEAUX_V8 = Object.freeze(Object.assign({}, NIVEAUX_V10, {F6: 3, F9: 2}));
+  // Un rang d'une ancienne table → le rang de la même compétence aujourd'hui
+  // (-1 : aucun). `niveaux` : la table de cette version ; `deplacer` : le
+  // niveau d'aujourd'hui d'un ancien niveau.
+  function rangDepuis(rang, niveaux, deplacer) {
     let debut = 0;
     for (const id of CODES) {
-      const k = NIVEAUX_V8[id];
-      if (rang >= debut && rang < debut + k) {
-        const niveau = rang - debut + 1;
-        return rangDe(id, INSERES_V9[id] && niveau >= INSERES_V9[id] ? niveau + 1 : niveau);
-      }
+      const k = niveaux[id];
+      if (rang >= debut && rang < debut + k) return rangDe(id, deplacer(id, rang - debut + 1));
       debut += k;
     }
     return -1;
   }
+  // Version 8 → 9 (F6 et F9), puis 10 → 11 (M1 et D8).
+  const rangDepuisV8 = rang => rangDepuis(rang, NIVEAUX_V8,
+    (id, niveau) => niveauDepuisV10(id, INSERES_V9[id] && niveau >= INSERES_V9[id] ? niveau + 1 : niveau));
+  const rangDepuisV10 = rang => rangDepuis(rang, NIVEAUX_V10, niveauDepuisV10);
 
   const SEUILS = Object.freeze({
     // Un entraînement à longueur adaptée (scénario du 30/10, couches du
@@ -739,16 +762,16 @@
     return ligne;
   }
 
-  // Le plan d'une séance de version 8 (lot 6 « programmes 2 ») : ses deux
-  // rangs (la rouge à entraîner, le 2e calcul en attente) sont ceux de
-  // l'ancienne table ; on les recalcule. Le reste ne bouge pas.
-  function planDepuisV8(brut) {
+  // Le plan d'une séance de version 8 (lot 6 « programmes 2 ») ou 10 (lot
+  // C2) : ses deux rangs (la rouge à entraîner, le 2e calcul en attente)
+  // sont ceux de l'ancienne table ; on les recalcule. Le reste ne bouge pas.
+  function planDepuis(brut, depuis) {
     if (!Array.isArray(brut)) return brut;
     const plan = brut.slice();
     [PLAN.rattrapage, PLAN.second].forEach(i => {
       const v = entier(plan[i], 0, 9999);
       if (!v) return;
-      const rang = rangDepuisV8(v - 1);
+      const rang = depuis(v - 1);
       plan[i] = rang >= 0 ? rang + 1 : 0;
     });
     return plan;
@@ -827,7 +850,26 @@
       const vide = LISTES_V9[cle];
       const liste = Array.from({length: Math.max(NIVEAUX_V8[id], brut[cle].length)}, (_, i) => (i < brut[cle].length ? brut[cle][i] : vide));
       liste.splice(place, 0, vide);
-      copie[cle] = liste.slice(0, NIVEAUX[id]);
+      copie[cle] = liste.slice(0, NIVEAUX_V10[id]);
+    });
+    return copie;
+  }
+
+  // La reprise des lignes de la version 10 (lot C2) : dans M1 et D8, chaque
+  // liste est refaite à la longueur d'aujourd'hui — chaque ancienne case à
+  // sa place (`PLACES_V11`), la valeur d'une compétence pas entrée aux
+  // places neuves ; le module n'est plus coché « su ». Une liste plus longue
+  // que l'ancien nombre de niveaux est coupée : ce qui dépasse n'avait pas
+  // de niveau.
+  const LISTES_V11 = Object.freeze(Object.assign({}, LISTES_V9, {ar: 0}));
+  function reprendreV10(id, brut) {
+    if (!brut || typeof brut !== "object" || !PLACES_V11[id]) return brut;
+    const copie = Object.assign({}, brut, {ok: null});
+    Object.keys(LISTES_V11).forEach(cle => {
+      if (!Array.isArray(brut[cle])) return;
+      const liste = listeDe(NIVEAUX[id], LISTES_V11[cle]);
+      PLACES_V11[id].forEach((place, i) => { if (i < brut[cle].length) liste[place - 1] = brut[cle][i]; });
+      copie[cle] = liste;
     });
     return copie;
   }
@@ -854,11 +896,13 @@
     const lue = versionLue(brut);
     const avantV3 = lue < 3;
     const avantV9 = lue < 9;
+    const avantV11 = lue < 11;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
         const ligne = avantV3 ? reprendreV2(id, brut.modules[id]) : brut.modules[id];
-        parcours.modules[id] = normaliserModule(id, avantV9 ? reprendreV8(id, ligne) : ligne, aujourdhui);
+        const ligneV10 = avantV9 ? reprendreV8(id, ligne) : ligne;
+        parcours.modules[id] = normaliserModule(id, avantV11 ? reprendreV10(id, ligneV10) : ligneV10, aujourdhui);
       });
     }
     const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
@@ -874,7 +918,7 @@
       jour: ancienne ? null : dateOuNull(seance.jour),
       etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: ancienne ? planVide() : normaliserPlan(avantV9 ? planDepuisV8(seance.p) : seance.p, lue),
+      p: ancienne ? planVide() : normaliserPlan(avantV9 ? planDepuis(seance.p, rangDepuisV8) : avantV11 ? planDepuis(seance.p, rangDepuisV10) : seance.p, lue),
       j: enCoursVide()
     };
     // Ce que la séance ouverte a fait (lot G1) : rien quand elle n'est pas

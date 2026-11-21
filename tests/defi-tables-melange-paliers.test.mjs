@@ -628,7 +628,7 @@ test("le moteur a changé : nouveau numéro de cache, copie serveur identique ; 
   // change (avant : defi-calcul-lot-7c-fractions).
   // Puis le lot 6 « programmes » de Défi calcul (18/11/2026) : le cœur copié
   // dans prof/ change (avant : defi-calcul-lot-7d-derniers-modules).
-  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$/m); // (lot 6 « fraction à deux cases » : le cœur change encore ; lot 6 « programmes 2 » : la progression passe en version 9 ; lot F4 et son correctif : le moteur, lib/applis.php et prof/index.php, version 10 ; lot C1 : le cœur)
+  assert.match(lire("_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$/m); // (lot 6 « fraction à deux cases » : le cœur change encore ; lot 6 « programmes 2 » : la progression passe en version 9 ; lot F4 et son correctif : le moteur, lib/applis.php et prof/index.php, version 10 ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
   assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=generateur-tuiles-20261121-1/);
 });

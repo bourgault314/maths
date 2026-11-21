@@ -96,7 +96,8 @@ test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipul
     const a = CORE.niveauDe(cle).niveau.apprends;
     return !a.manipule && multiSauts(a.represente.image);
   });
-  assert.deepEqual(avec, ["A3-2", "A10-3", "A11-3", "A4-3", "A2-4", "A3-3", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
+  // (Lot C2 : « un chiffre en passant la centaine » avant « Dizaines entières en passant la centaine ».)
+  assert.deepEqual(avec, ["A10-3", "A11-3", "A3-2", "A4-3", "A2-4", "A3-3", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
   avec.forEach(cle => {
     const r = CORE.niveauDe(cle).niveau.apprends.represente;
     assert.equal(r.etapes.length, 2, cle);
