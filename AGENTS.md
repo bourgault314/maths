@@ -55,7 +55,7 @@ Automatismes V2, lire dans cet ordre :
   main, le lot touche `package.json` ou `scripts/verifier-navigateur.mjs`, ou la CI ne
   tourne pas. Dans sa réponse, Claude Code rappelle à Gwenaël d'attendre la coche verte de
   la pull request avant de fusionner ; le site est en ligne quand « Publication » est verte
-  dans l'onglet Actions (≈ 8 min après la fusion).
+  dans l'onglet Actions (≈ 5 min après la fusion).
   Plusieurs fenêtres de Claude Code tournent en parallèle sur le même ordinateur : une
   batterie complète prend tous les cœurs et ralentit toutes les autres, d'où cette règle.
 - Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne
