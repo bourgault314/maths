@@ -194,7 +194,7 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261120-1/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261120-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261120-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261121-1/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
   assert.match(page, /function completerFraction\(\)/);
@@ -215,5 +215,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif)$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif)$|^lot plus-rapide-A$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur)
 });

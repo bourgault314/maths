@@ -137,7 +137,7 @@ body.ecran-interne #lien-retour { display: none; }
   .suivi-garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
 }
 
-.brand img { display: block; width: 105px; height: auto; }
+.brand img { display: block; width: 105px; height: auto; aspect-ratio: 1338 / 622; }
 .back-icon { display: grid; place-items: center; flex: 0 0 auto; }
 .back-icon svg { display: block; width: 20px; height: 20px; }
 .catalogue-link {

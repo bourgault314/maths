@@ -78,4 +78,38 @@
   SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
 </IfModule>
 
+# Lot A « plus rapide » (21/11/2026) : un an de cache pour les fichiers dont
+# l'adresse porte une empreinte (?v=...), et pour eux seuls.
+# Les pages PHP calculent ce ?v= a chaque affichage : ce sont les 10 premiers
+# caracteres du md5 du fichier sur le disque (suivi.css, code-en-cases.js,
+# prof/*.js, vendor/katex-...). Un nouveau depot FTP change donc l'adresse, et
+# le navigateur va chercher le nouveau fichier : l'ancien ne peut pas rester.
+# Ce qui est appele SANS empreinte (favicon.ico, favicon.svg,
+# apple-touch-icon.png, mathsgo-logo.png, les polices de KaTeX) ne recoit rien
+# ici et garde le reglage d'OVH (15 minutes, constate le 21/11/2026).
+# Les pages .php ne sont pas concernees : elles gardent le no-store qu'envoie
+# PHP (lib/entetes.php, lib/reponse.php).
+#
+# En deux temps, chacun dans son <IfModule> (un module absent chez OVH ne doit
+# jamais donner une erreur 500 sur tout le serveur) :
+# 1. mod_rewrite pose le drapeau MG_EMPREINTE si l'adresse porte ?v= et que le
+#    fichier existe vraiment (un 404 n'est jamais garde un an) ;
+# 2. mod_headers n'ecrit le Cache-Control que si le drapeau est pose.
+# Sans mod_rewrite, le drapeau n'est jamais pose : rien n'est mis en cache, ce
+# qui est le comportement d'avant. Ni « expr= » ni <If> : ils dependent de la
+# version d'Apache ; une variable d'environnement marche partout.
+# L'en-tete Expires d'OVH (15 minutes) peut rester a cote : quand les deux sont
+# la, le navigateur suit max-age et ignore Expires (norme HTTP, RFC 9111).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{QUERY_STRING} (^|&)v=[^&]+
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule \.(js|css|png|svg|woff2)$ - [E=MG_EMPREINTE:1]
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|png|svg|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable" env=MG_EMPREINTE
+  </FilesMatch>
+</IfModule>
+
 Options -Indexes
