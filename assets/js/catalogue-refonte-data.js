@@ -838,8 +838,8 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "exerciseur", "fiche", "developper", "reduire"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/generateur-exercices.png?v=2",
-      "cardDescription": "Créer une fiche d’exercices illustrés pour développer, réduire ou compléter des expressions."
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/generateur-exercices.png?v=3",
+      "cardDescription": "Créer une fiche avec les tuiles : écrire, réduire, l’opposé, développer, factoriser — sujet et corrigé."
     },
     "outils/tuiles_algebriques/generateur_tuiles.html": {
       "primaryNotion": "calcul-litteral",
@@ -6795,7 +6795,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-generateur-exercices-calcul-litteral-html",
       "title": "Générateur d’exercices avec les tuiles",
-      "description": "Créez une fiche d’exercices illustrés pour développer, réduire ou compléter des expressions.",
+      "description": "Créez une fiche d’exercices avec les tuiles : écrire, réduire, l’opposé, développer, factoriser, avec son corrigé.",
       "path": "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
       "domains": [
         "algebre"

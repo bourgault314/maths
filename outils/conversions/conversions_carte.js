@@ -59,7 +59,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -182,7 +182,7 @@
     {code: "Q7", rang: 42, palier: 5, famille: "problemes", classe: "5e", nom: "Problèmes : longueurs et aires", nomCourt: "Longueurs et aires", exemple: ""},
     {code: "Q8", rang: 43, palier: 5, famille: "problemes", classe: "5e", nom: "Problèmes : volumes et contenances", nomCourt: "Volumes et contenances", exemple: ""},
     // Palier 6 · La 4e et la 3e
-    {code: "D6", rang: 44, palier: 6, famille: "durees", classe: "4e", nom: "Toutes les heures décimales", exemple: "0,2 h = 12 min"},
+    {code: "D6", rang: 44, palier: 6, famille: "durees", classe: "4e", nom: "Toutes les heures décimales", nomCourt: "Heures décimales", exemple: "0,2 h = 12 min"},
     {code: "G1", rang: 45, palier: 6, famille: "grandeurs", classe: "4e", nom: "km/h et m/s", exemple: "36 km/h = 10 m/s"},
     {code: "P5", rang: 46, palier: 6, famille: "grandeurs", classe: "4e", nom: "Les préfixes de nano à giga", exemple: "1 Go = 1 000 Mo"},
     {code: "P6", rang: 47, palier: 6, famille: "grandeurs", classe: "3e", nom: "Les préfixes en puissances de 10", exemple: ""},
@@ -995,6 +995,60 @@
       ],
       retenir: "Je dessine l'axe du temps et je passe par l'heure pile : de 7 h 47 à 8 h 16, c'est 13 min + 16 min = 29 min.\nAvec deux étapes, je trouve d'abord l'heure du milieu.",
       cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Lot B6-1 : les heures décimales (4e ; attendus : 0,2 h = 12 min,
+    // 36 min = 0,6 h ; brevet : 2,6 h = 2 h 36 min, et 3 h 20 min n'est pas
+    // 3,2 h). Choix de Gwenaël du 21/11 : la double droite des heures (0 à
+    // 1 h en dixièmes), la correction en vert.
+    D6: {
+      pret: true,
+      aide: {outil: "droite-h", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "0,2 h =", reponse: "12", apres: "min"},
+          consigne: "Touche la droite :\n0,1 h = 6 min.",
+          aide: {type: "droite-h", c: 20, sens: "h>min", haut: "h", bas: "min"},
+          apres: ["0,2 h = 2 × 6 min", "= 12 min"]},
+        {etiquette: "Je représente", question: {avant: "2,6 h =", reponse: "2 h 36", apres: "min"},
+          relation: ["2,6 h = 2 h + 0,6 h", "0,6 h, c'est 6 fois 0,1 h"],
+          aide: {type: "droite-h", c: 60, sens: "h>min", haut: "h", bas: "min"},
+          apres: ["2 h + 36 min", "= 2 h 36 min"]},
+        {etiquette: "Je vérifie", question: {avant: "36 min =", reponse: "0,6", apres: "h"},
+          relation: ["36 min, c'est 6 fois 6 min", "et 6 min = 0,1 h"],
+          aide: {type: "droite-h", c: 60, sens: "min>h", haut: "h", bas: "min"},
+          apres: ["6 × 0,1 h", "= 0,6 h"]}
+      ],
+      retenir: "1 h = 60 min, donc 0,1 h = 6 min.\nDes heures aux minutes, je multiplie par 60 : 0,35 h = 0,35 × 60 min = 21 min.\nDes minutes aux heures, je divise par 60 : 36 min = (36 ÷ 60) h = 0,6 h.\nAttention : 3,2 h = 3 h 12 min, pas 3 h 20 min.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["0,1 h = 6 min", "0,25 h = 15 min", "0,5 h = 30 min", "0,75 h = 45 min", "1,5 h = 1 h 30 min", "20 min = 1⁄3 h"],
+      reperes: []
+    },
+    // Lot B6-1 : km/h et m/s (4e ; brevet : 90 km/h = 25 m/s, 10 m/s =
+    // 36 km/h ; Japon : par heure, par minute, par seconde, avant ÷ 3,6).
+    // Choix de Gwenaël du 21/11 : les trois étapes reliées par ÷ 60 ; sans
+    // calculatrice.
+    G1: {
+      pret: true,
+      aide: {outil: "etapes-v", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "36 km/h =", reponse: "10", apres: "m/s"},
+          consigne: "Touche les cases : en 1 min,\npuis en 1 s.",
+          aide: {type: "etapes-v", s2: 20, depuis: 0, vers: 2},
+          apres: ["36 000 m ÷ 60 ÷ 60", "= 10 m en 1 s"]},
+        {etiquette: "Je représente", question: {avant: "10 m/s =", reponse: "36", apres: "km/h"},
+          relation: ["10 m en 1 s", "En 1 h : 60 × 60 fois plus"],
+          aide: {type: "etapes-v", s2: 20, depuis: 2, vers: 0, km: true},
+          apres: ["36 000 m en 1 h", "= 36 km en 1 h"]},
+        {etiquette: "Je vérifie", question: {avant: "90 km/h =", reponse: "25", apres: "m/s"},
+          relation: ["Plus vite : 1 m/s = 3,6 km/h", "De km/h à m/s : ÷ 3,6"],
+          aide: {type: "etapes-v", s2: 50, depuis: 0, vers: 2},
+          apres: ["90 ÷ 3,6", "= 25 m/s"]}
+      ],
+      retenir: "72 km/h : 72 000 m en 1 h, 1 200 m en 1 min, 20 m en 1 s.\nDonc 72 km/h = 20 m/s.\nPlus vite : de km/h à m/s, je divise par 3,6 ; de m/s à km/h, je multiplie par 3,6.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 m/s = 3,6 km/h", "5 m/s = 18 km/h", "10 m/s = 36 km/h", "20 m/s = 72 km/h", "25 m/s = 90 km/h", "1 h = 3 600 s"],
       reperes: []
     }
   };

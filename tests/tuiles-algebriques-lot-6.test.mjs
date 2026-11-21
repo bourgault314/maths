@@ -60,7 +60,7 @@ test("le catalogue annonce qu'on peut taper, développer et factoriser", () => {
   assert.match(cat, /"description": "Tapez ou composez une expression avec les tuiles x², x et 1, puis réduisez-la, développez-la ou factorisez-la\."/);
   assert.doesNotMatch(cat, /Composez, ordonnez et simplifiez des expressions/);
   assert.match(page, /<meta name="description" content="Tapez ou composez une expression[^"]*factorisez-la\.">/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=generateur-tuiles-20261121-1/);
 });
 
 // Audit des générateurs (choix de Gwenaël du 06/11/2026, questions à choix) : vert/rouge en tête et par défaut,
@@ -71,12 +71,13 @@ const policeX = /@font-face\{font-family:SplatLettres;src:url\('\/assets\/fonts\
 
 test("générateurs : vert / rouge est la première couleur et celle de l'ouverture", () => {
   assert.match(gTuiles, /<select id="colorMode"><option value="sign" selected>vert rouge<\/option><option value="blueyellow">bleu jaune<\/option>/);
-  assert.match(gExos, /<select id="colorMode" class="control-select"><option value="sign" selected>Vert \/ rouge/);
+  // générateur d'exercices refait au lot 1 du 21/11/2026 : « vert / rouge » est le premier choix et celui de l'ouverture
+  assert.match(gExos, /data-reglage="couleurs"[^>]*><button type="button" data-v="vr">vert \/ rouge<\/button><button type="button" data-v="bg">blanc \/ gris<\/button>/);
+  assert.match(gExos, /couleurs: 'vr'/);
   assert.doesNotMatch(gTuiles, /value="blueyellow" selected/);
-  assert.doesNotMatch(gExos, /value="blueyellow" selected/);
   // les mêmes vert et rouge que l'appli
   assert.match(gTuiles, /--pos:#72c475; --neg:#ef3f35;/);
-  assert.match(gExos, /--x:#72c475;[^;]*;[^;]*--neg:#ef3f35;/);
+  assert.match(gExos, /--pos:#72c475; --neg:#ef3f35;/);
 });
 
 test("générateur de tuiles : le 𝑥 de l'appli sur les tuiles, plus de x dessiné", () => {
@@ -90,35 +91,34 @@ test("générateur de tuiles : le 𝑥 de l'appli sur les tuiles, plus de x dess
   assert.match(gTuiles, /html,body\{margin:0;min-height:100%;font-family:SplatLettres,/);
 });
 
-test("générateur d'exercices : le 𝑥 de l'appli sur la feuille et dans les boutons du menu", () => {
+test("générateur d'exercices : le 𝑥 de l'appli sur la feuille, sur les tuiles et dans les boutons du menu", () => {
   assert.match(gExos, policeX);
-  assert.match(gExos, /\.math-x,\.tile-label,\.term-block\{font-family:SplatLettres,"Cambria Math"/);
-  assert.match(gExos, /\.seg-btn\{font-family:SplatLettres,Arial,sans-serif\}/);
-  assert.match(gExos, /const label=xRond\(segmentLabel\(/);
-  assert.match(gExos, /return opt\?xRond\(segmentLabel\(/);
-  // la lettre seule devient 𝑥, pas le x de « Mixte »
-  const corps = gExos.match(/function xRond\(text\)\{return ([^}]*)\}/)[1];
-  const xRond = new Function("text", `return ${corps}`);
-  assert.equal(xRond("−x / a − x"), "−𝑥 / a − 𝑥");
-  assert.equal(xRond("Avec x²"), "Avec 𝑥²");
-  assert.equal(xRond("Mixte complet"), "Mixte complet");
-  assert.equal(xRond("a(x ± b)"), "a(𝑥 ± b)");
+  // la police SplatLettres ne couvre que 𝑥 (unicode-range) : elle passe en tête partout, le reste tombe sur Poppins
+  assert.match(gExos, /body\{ font-family:SplatLettres, MGPoppins, system-ui, sans-serif;/);
+  assert.match(gExos, /const POLICE = "SplatLettres, MGPoppins, 'Poppins', sans-serif";/);
+  assert.match(gExos, /<button type="button" data-v="x1">1 et 𝑥<\/button><button type="button" data-v="x2">avec 𝑥²<\/button>/);
+  // la lettre seule devient 𝑥, pas le x d'« expression »
+  const corps = gExos.match(/const h = \(t\) => esc\(t\)(\.replace\([^\n]*\));/)[1];
+  const xRond = new Function("t", `return String(t)${corps};`);
+  assert.equal(xRond("2x² − x + 1"), "2𝑥² − 𝑥 + 1");
+  assert.equal(xRond("les tuiles → l’expression"), "les tuiles → l’expression");
 });
 
 test("générateurs : on attend la police du 𝑥 avant d'imprimer", () => {
   assert.match(gTuiles, /document\.fonts\.ready\.then\(\(\)=>setTimeout\(\(\)=>window\.print\(\), 80\)\)/);
-  assert.match(gExos, /document\.fonts\.ready\.then\(\(\)=>setTimeout\(\(\)=>window\.print\(\),80\)\)/);
+  assert.match(gExos, /document\.fonts\.ready\.then\(\(\) => setTimeout\(\(\) => window\.print\(\), 80\)\)/);
 });
 
 test("générateurs : tuiles à coins droits", () => {
   assert.doesNotMatch(gTuiles.match(/\.tile\{[^}]*\}/)[0], /border-radius/);
-  assert.match(gExos, /\.tile\{display:grid;place-items:center;border:0!important;border-radius:0!important;/);
-  assert.match(gExos, /<rect x="1" y="1" width="98" height="98" rx="0"/);
+  // le nouveau générateur dessine ses tuiles en SVG : des <rect> sans arrondi
+  assert.match(gExos, /let s = `<rect class="\$\{neg \? 'tn' : 'tp'\}" x=/);
+  assert.doesNotMatch(gExos.match(/function tuile\([\s\S]*?\n  \}/)[0], /\brx=/);
 });
 
 test("catalogue : miniatures des générateurs refaites (vert / rouge, 𝑥 rond) et leur ?v= suit", () => {
   const cat = lire("assets/js/catalogue-refonte-data.js");
-  assert.match(cat, /tuiles-algebriques\/generateur-exercices\.png\?v=2/);
+  assert.match(cat, /tuiles-algebriques\/generateur-exercices\.png\?v=3/);   // refaite au lot 1 du nouveau générateur (21/11/2026)
   assert.match(cat, /tuiles-algebriques\/tuiles-decouper\.png\?v=2/);
 });
 

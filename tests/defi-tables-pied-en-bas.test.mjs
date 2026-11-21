@@ -95,7 +95,7 @@ test("la fiche vierge PDF et sa vignette sont refaites, le catalogue suit", () =
   assert.match(pdf, /\/Count 1\b/, "toujours une seule page");
   assert.doesNotMatch(pdf, /\/Count [2-9]\b/);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/fiche-parcours-tables\.png\?v=8"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=papiers-imprimer-20261112-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=generateur-tuiles-20261121-1/);
   // Le moteur n'a pas bougé : rien à déposer sur le serveur.
   assert.match(html, /defi_tables_mon_parcours\.js\?v=20261111-3/);
   assert.equal(lire("_serveur/public/prof/defi_tables_mon_parcours.js"), lire("outils/calcul_mental/defi_tables_mon_parcours.js"));
