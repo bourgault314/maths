@@ -12844,3 +12844,5 @@
     ecrisTire
   });
 });
+
+// essai de chronométrage, à ne pas fusionner
