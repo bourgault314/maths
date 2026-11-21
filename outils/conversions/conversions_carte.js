@@ -293,6 +293,23 @@
     if (CREDITS[r.code]) r.credit = CREDITS[r.code];
   });
 
+  // Lot R1-noms (21/11, choix de Gwenaël : « est-ce que c'est pas trop dur
+  // pour les élèves directement l'abréviation ? ») : le programme du cycle 2
+  // (S440) demande les unités ET leurs symboles (« le mètre et le
+  // centimètre et les symboles associés »). Les dix repères de « Mes
+  // premiers repères » disent le nom de leur unité, en toutes lettres, à
+  // côté du symbole (`lu` : « un centimètre », « 33 centilitres »).
+  const NOMS_LUS = {mm: ["un millimètre", "millimètres"], cm: ["un centimètre", "centimètres"], dm: ["un décimètre", "décimètres"],
+    m: ["un mètre", "mètres"], km: ["un kilomètre", "kilomètres"], g: ["un gramme", "grammes"], kg: ["un kilogramme", "kilogrammes"],
+    t: ["une tonne", "tonnes"], cL: ["un centilitre", "centilitres"], dL: ["un décilitre", "décilitres"], L: ["un litre", "litres"],
+    min: ["une minute", "minutes"], h: ["une heure", "heures"]};
+  function lireMesure(nombre, unite) {
+    const n = NOMS_LUS[unite];
+    if (!n) return null;
+    return String(nombre) === "1" ? n[0] : `${nombre}\u00a0${n[1]}`;
+  }
+  REPERES.forEach(r => { if (r.etape === "R1") r.lu = lireMesure(r.nombre, r.unite); });
+
   // ------------------------------------------------- le contenu du palier 1
   // `apprends` : « On te montre », 3 temps, un exemple fixe chacun (jamais
   // repris dans les séries : leurs clés sont exclues par les générateurs).
@@ -1147,6 +1164,8 @@
   const PAR_CODE = {};
   ETAPES_T.forEach(e => { PAR_CODE[e.code] = e; });
   const REPERES_T = REPERES.map(r => Object.assign({}, typographier(r), {code: r.code, nombre: r.nombre, unite: r.unite, image: r.image}));
+  const NOMS_LUS_T = typographier(NOMS_LUS);
+  const lu = (nombre, unite) => { const t = lireMesure(nombre, unite); return t === null ? null : typo(t); };
   const REPERE_PAR_CODE = {};
   REPERES_T.forEach(r => { REPERE_PAR_CODE[r.code] = r; });
 
@@ -1186,6 +1205,8 @@
     FAMILLES,
     ETAPES: ETAPES_T,
     REPERES: REPERES_T,
+    NOMS_LUS: NOMS_LUS_T,
+    lu,
     ORDRE,
     PRETES,
     PARCOURS,

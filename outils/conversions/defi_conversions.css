@@ -242,6 +242,9 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .carte-rep .t small { display: block; font-size: .71875rem; font-weight: 900; color: #9a6a00; letter-spacing: .05em; text-transform: uppercase; }
 .carte-rep.grande .ill { width: 4.5rem; height: 4.5rem; }
 .carte-rep.grande .t { font-size: 1.25rem; }
+/* Lot R1-noms : le nom de l'unité sous la mesure d'un repère du palier 1. */
+.carte-rep .lu { display: block; font-size: .875rem; font-weight: 700; color: var(--blue); line-height: 1.25; margin-top: .0625rem; }
+.carte-rep.grande .lu { font-size: 1rem; }
 .refs { display: flex; flex-direction: column; gap: .3125rem; align-self: stretch; }
 .ref { display: flex; gap: .5rem; align-items: center; border: .09375rem solid #ead9a5; background: #fffdf6; border-radius: .625rem; padding: .3125rem .5625rem; font-weight: 800; font-size: .90625rem; }
 .ref .ill, .ref .ico { width: 1.875rem; height: 1.875rem; }
@@ -1190,3 +1193,9 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .zone .aire-corr.col .dessin.aire-c { height: 6.5rem; }
   .q .aire-q .dessin.aire { height: 5.5rem; }
 }
+/* Lot R1-noms : lire un symbole, une lettre au début, une lettre à la fin. */
+.lettres { display: flex; flex-direction: column; gap: .375rem; align-self: stretch; }
+.lettres .rang { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .3125rem; }
+.lettres .titre { flex-basis: 100%; text-align: center; font-size: .75rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: #8a5a00; }
+.lettres .paire { display: inline-flex; align-items: baseline; gap: .25rem; border: .125rem solid #f2c94c; background: #fff; border-radius: .5rem; padding: .125rem .4375rem; font-size: .9375rem; font-weight: 700; white-space: nowrap; }
+.lettres .paire b { font-size: 1.125rem; font-weight: 900; color: var(--blue); }

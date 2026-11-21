@@ -728,10 +728,11 @@ function controlerSerie(code, usage, nombre, s, ou) {
   s.filter(q => q.forme === "associer").forEach(q => assert.ok(!q.bonnes.every((b, i) => b === i), `${ou} : les trois mesures en face de leur objet`));
   // Lot A2 bis : la place des nouvelles questions dans Je valide.
   // Lot R1-refonte : relier en premier (le plus facile), puis l'objet à
-  // trouver, l'unité, la valeur, la règle, le pavé.
+  // trouver, l'unité, la valeur, la règle, le pavé. Lot R1-noms : le nom
+  // de l'unité en 4e (« 1 cm, c'est… » ou « Un kilogramme s'écrit 1… »).
   if (code === "R1" && usage === "valide") {
     assert.deepEqual(s.map(q => q.forme === "associer" ? "associer" : q.donnees.type === "regle" ? "regle" : q.morceaux.sorte),
-      ["associer", "objets", "unite", "unite", "valeur", "objets", "regle", "saisie", "valeur", "saisie"], `${ou} : places`);
+      ["associer", "objets", "unite", ["nom", "symbole"], "valeur", "objets", "regle", "saisie", "valeur", "saisie"].map((x, i) => Array.isArray(x) ? (x.includes(s[i].morceaux.sorte) ? s[i].morceaux.sorte : x[0]) : x), `${ou} : places`);
   }
   // Lot R1-refonte (Gwenaël, 18/11) : les trois travaux de « Quelle unité
   // choisir ? », dans l'ordre.
@@ -1514,6 +1515,64 @@ test("lot B2-2b-2 : C8 — les sortes, les deux sens, S002, le marathon, les err
   // « 8,2 kg + 840 g » sans convertir : « J'écris d'abord tout en kg. »
   const q = toutes.find(x => x.donnees.op === "+" && x.donnees.vers === "kg" && x.donnees.ub === "g");
   assert.equal(G.verifier(q, G.brut(lire(q.donnees.a) + lire(q.donnees.b))).retour, "J'écris d'abord tout en kg.");
+});
+
+// Lot R1-noms (21/11, choix de Gwenaël) : les dix repères de « Mes premiers
+// repères » disent le nom de leur unité (« un centimètre ») ; la question
+// « 1 cm, c'est… » / « Un kilogramme s'écrit 1… » : une seule bonne réponse,
+// les vraies confusions, un pourquoi d'une ligne, les deux sens, la bonne
+// réponse à toutes les places, dans À toi (4e et 15e) et Je valide (4e).
+testDeNode("lot R1-noms : le nom de l'unité des repères et la question « 1 cm, c'est… »", () => {
+  const sp = t => t.replace(/[\u00a0\u202f]/g, " ");
+  const attendus = {l1: "un millimètre", l10: "un centimètre", l15: "un décimètre", l13: "un mètre", l14: "un kilomètre",
+    m7: "un gramme", m4: "un kilogramme", m6: "une tonne", c2: "33 centilitres", c3: "un litre"};
+  assert.deepEqual(Object.fromEntries(CARTE.etape("R1").reperes.map(c => [c, sp(CARTE.repere(c).lu)])), attendus);
+  // Les autres repères n'ont pas de nom écrit (l'élève du CM1 les connaît).
+  CARTE.REPERES.filter(r => !CARTE.etape("R1").reperes.includes(r.code)).forEach(r => assert.equal(r.lu, undefined, r.code));
+  // « 33 centilitres » ne se coupe pas.
+  assert.ok(CARTE.repere("c2").lu.includes("33\u00a0centilitres"));
+  const places = {nom: new Set(), symbole: new Set()};
+  const unites = new Set();
+  let vus = 0;
+  for (let g = 1; g <= 600; g += 1) {
+    for (const usage of ["entraine", "valide", "test", "retour"]) {
+      const s = G.serie("R1", {usage, graine: g});
+      const noms = s.map((q, i) => [q, i]).filter(([q]) => q.donnees.type === "nom");
+      if (usage === "entraine") assert.deepEqual(noms.map(([, i]) => i), [3, 14], `R1 ${usage} ${g} : les places`);
+      if (usage === "valide") assert.deepEqual(noms.map(([, i]) => i), [3], `R1 ${usage} ${g} : la place`);
+      noms.forEach(([q, i]) => {
+        vus += 1;
+        const ou = `R1 ${usage} ${g} ${q.texte}`;
+        const d = q.donnees;
+        const lu = sp(CARTE.lu("1", d.unite));
+        assert.equal(q.forme, "qcm", ou);
+        assert.equal(q.choix.length, 3, ou);
+        assert.equal(new Set(q.choix).size, 3, ou);
+        assert.equal(CARTE.repere(q.repere).unite, d.unite, ou);
+        assert.equal(q.outil, "nom-unite", ou);
+        if (usage === "entraine") assert.equal(d.sens, i === 3 ? "nom" : i >= 15 ? "symbole" : d.sens, ou);
+        if (d.sens === "nom") {
+          assert.equal(sp(q.texte), `1 ${d.unite}, c'est …`, ou);
+          assert.equal(sp(q.choix[q.bon]), lu, ou);
+        } else {
+          assert.equal(sp(q.texte), `${lu[0].toUpperCase()}${lu.slice(1)} s'écrit 1 …`, ou);
+          assert.equal(q.choix[q.bon], d.unite, ou);
+        }
+        q.choix.forEach((c, k) => {
+          if (k === q.bon) return;
+          assert.ok(q.pourquoi[k] && sp(q.pourquoi[k]).length <= 31, `${ou} : pourquoi « ${q.pourquoi[k]} »`);
+          ecriture(q.pourquoi[k], ou);
+          assert.ok(!G.verifier(q, String(k)).juste, ou);
+        });
+        assert.ok(G.verifier(q, String(q.bon)).juste, ou);
+        places[d.sens].add(q.bon);
+        unites.add(d.unite);
+      });
+    }
+  }
+  assert.ok(vus > 2000, `seulement ${vus} questions`);
+  ["nom", "symbole"].forEach(k => assert.deepEqual([...places[k]].sort(), [0, 1, 2], `${k} : la bonne réponse aux places ${[...places[k]]}`));
+  assert.deepEqual([...unites].sort(), ["L", "cL", "cm", "dm", "g", "kg", "km", "m", "mm", "t"]);
 });
 
 // Lot B2-3a : A5 « L'aire en carreaux » — l'aire recomptée à part (les

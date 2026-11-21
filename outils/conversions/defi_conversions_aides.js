@@ -255,6 +255,10 @@
     const t = el("div", "t");
     t.appendChild(el("small", "", r.objet));
     t.appendChild(root.document.createTextNode(r.valeur));
+    // (Lot R1-noms, choix de Gwenaël du 21/11 : les dix repères de « Mes
+    // premiers repères » disent le nom de leur unité, en bleu, sous la
+    // mesure : « environ 1 cm » puis « un centimètre ».)
+    if (r.lu) t.appendChild(el("span", "lu", r.lu));
     if (r.credit) t.appendChild(el("span", "credit", r.credit));
     bloc.appendChild(t);
     return bloc;
@@ -2868,6 +2872,25 @@
     if (question.morceaux.sorte === "objets") { lignesRepere(zone, question.morceaux.reperes); return; }
     zone.appendChild(carteRepere(question.repere));
   }
+  // Lot R1-noms (choix de Gwenaël du 21/11) : l'outil de « 1 cm, c'est… »
+  // et de « Un kilogramme s'écrit 1… » : les lettres d'un symbole, celle du
+  // début (la taille) et celle de la fin (ce qu'on mesure). L'élève
+  // reconstruit le nom (c + m : centi + mètre), l'outil ne l'écrit pas. Le
+  // m du début et le m de la fin ne disent pas la même chose (mm). L'image,
+  // ensuite : le dessin du repère de l'unité.
+  function outilNomUnite(zone, question) {
+    const t = el("div", "lettres");
+    const rang = (titre, paires) => {
+      const r = el("div", "rang");
+      r.appendChild(el("span", "titre", titre));
+      paires.forEach(([l, m]) => { const p = el("span", "paire"); p.append(el("b", "", l), el("span", "", m)); r.appendChild(p); });
+      t.appendChild(r);
+    };
+    rang("Au début", [["k", "kilo"], ["d", "déci"], ["c", "centi"], ["m", "milli"]]);
+    rang("À la fin", [["m", "mètre"], ["g", "gramme"], ["L", "litre"]]);
+    zone.appendChild(t);
+    zone.appendChild(el("div", "note", "t : la tonne ; min : la minute."));
+  }
   function imageDessinRepere(zone, question) {
     if (question.forme === "associer") {
       // Les unités de chaque grandeur, de la plus petite à la plus grande :
@@ -2959,6 +2982,7 @@
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot R1-refonte
     if (question.outil === "carte-repere") { outilCarteRepere(zone, question); return; }
+    if (question.outil === "nom-unite") { outilNomUnite(zone, question); return; }
     if (question.outil === "familles") { familles(zone); return; }
     if (question.outil === "regle") { regleOutil(zone); return; }
     if (question.outil === "horloge-quarts") { horlogeQuarts(zone); return; }
@@ -3027,7 +3051,7 @@
     }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot R1-refonte
-    if (question.outil === "carte-repere") { imageDessinRepere(zone, question); return; }
+    if (question.outil === "carte-repere" || question.outil === "nom-unite") { imageDessinRepere(zone, question); return; }
     // Lot A2 bis
     if (question.outil === "grandeurs" || question.outil === "familles") { grandeurs(zone); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
     if (question.tableau) {
