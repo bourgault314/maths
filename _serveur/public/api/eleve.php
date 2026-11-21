@@ -172,6 +172,10 @@ try {
         'prenom' => $eleve['prenom'],
         'classe' => $eleve['libelle'],
     ] + acces_affichable($eleve);
+    // Lot B2 « Ta liste dans Ma classe » (21/11/2026) : la liste du jour choisie
+    // par le professeur pour la classe (vide = le mode automatique). Des clés
+    // d'applis de la classe, rien d'autre ; la page ne garde que ses portes.
+    $reponse['jour'] = jour_de_classe($eleve);
     // Lot « cours-appli » (08/11/2026) : l'appli Cours — les chapitres et les
     // fiches ouverts par le professeur, avec leurs adresses (lib/cours.php).
     // Ce que l'élève y ouvre est noté par api/cours.php (le jour seulement,

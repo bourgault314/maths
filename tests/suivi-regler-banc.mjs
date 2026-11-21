@@ -305,7 +305,7 @@ const FONCTIONS = ["el", "messager", "raisonDe", "nomAffiche", "ordreDeLaFeuille
   "ouvrirRegler", "fermerRegler", "caseACocher", "grilleDesEleves", "dessinerRegler", "casesDeLaClasse", "lignePlus",
   "direQuiVoit", "changementsDeLaClasse", "avantDeLaClasse", "poserEtatDeClasse", "poserAccesDeLEleve", "ajoutsCanoniques",
   "memesAjouts", "classeConforme", "gestesDe", "occuperRegler", "appelBorne", "relireBornee", "enregistrerRegler",
-  "ouvrirATouteLaClasse"];
+  "ouvrirATouteLaClasse", "rafraichirApresVerrou"];
 
 // options : classe, eleves, droit ("proprietaire" | "ecriture" | "lecture"),
 // appli (l'onglet regardé), reponses (ce que « demander » répond, dans

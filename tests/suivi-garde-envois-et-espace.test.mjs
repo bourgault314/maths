@@ -261,7 +261,7 @@ test("Mon espace : le retour d'une appli remet le compteur à zéro SEULEMENT av
 test("Mon espace : au chargement, la question passe avant tout appel au serveur ; tuiles, fiches et direct se taisent dessous", () => {
   assert.match(PAGE, /async function ouvrir\(code, silencieux\) \{\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*if \(silencieux && verifierGarde\(\)\) return;/);
   assert.match(PAGE, /if \(memorise\.length === 6\) \{\s*if \(revenuDUneAppli\) noterGeste\(Date\.now\(\)\);/);
-  assert.match(bloc("  async function ouvrirAppli(", "\n  }\n"), /if \(verifierGarde\(\)\) return;[\s\S]*await billetFrais\(code\);\s*[\s\S]*if \(gardeVisible \|\| lireCode\(\) !== code\) \{ delete lien\.dataset\.enCours; return; \}/);
+  assert.match(bloc("  async function ouvrirAppli(", "\n  }\n"), /if \(verifierGarde\(\)\) return;[\s\S]*await billetFrais\(code(?:, appli)?\);\s*[\s\S]*if \(gardeVisible \|\| lireCode\(\) !== code\) \{ delete lien\.dataset\.enCours; return; \}/);
   assert.match(bloc("  function noterOuverture(", "\n  }\n"), /if \(gardeVisible \|\| absenceTropLongue\(\)\) return;/);
   assert.match(PAGE, /if \(document\.visibilityState === "hidden" \|\| gardeVisible\) return;/, "la séance en direct n'est plus lue");
   assert.match(PAGE, /if \(!silencieux\) noterGeste\(Date\.now\(\)\);/, "le code tapé fait partir le compteur");

@@ -49,6 +49,26 @@ function erreur(string $message, int $code = 400, array $entetes = []): never
     repondre(['ok' => false, 'erreur' => $message], $code, $entetes);
 }
 
+// Lot B2, correctif (relecture Codex, point 4) : corps_json décode les objets
+// JSON en tableaux PHP — « {} » y devient « [] », et {"0": "splat"} une liste.
+// Pour un champ qui doit être une LISTE JSON (« jour », « avant.jour »), cette
+// fonction relit le corps tel qu'il a été envoyé (objets gardés objets) et dit
+// si la valeur à ce chemin est bien un tableau JSON. Absente : faux.
+function champ_est_liste_json(string ...$chemin): bool
+{
+    static $brut = false;
+    if ($brut === false) {
+        $texte = file_get_contents('php://input');
+        $brut = is_string($texte) && $texte !== '' ? json_decode($texte, false) : null;
+    }
+    $valeur = $brut;
+    foreach ($chemin as $cle) {
+        if (!is_object($valeur) || !property_exists($valeur, $cle)) return false;
+        $valeur = $valeur->$cle;
+    }
+    return is_array($valeur);
+}
+
 function corps_json(int $maxOctets): array
 {
     $brut = file_get_contents('php://input');
