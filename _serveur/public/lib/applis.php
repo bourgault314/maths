@@ -854,22 +854,32 @@ function jour_de_classe(array $classe): array
 
 // Ce que le professeur envoie (classes.modifier) : lecture STRICTE, rien n'est
 // arrangé en silence. $applisClasse : les applis que la classe aura APRÈS
-// l'écriture.
-function jour_recu(mixed $recu, array $applisClasse): array
+// l'écriture ; null = la forme seulement (avant le verrou : les portes de la
+// classe se vérifient sous le verrou, après « avant »).
+function jour_recu(mixed $recu, ?array $applisClasse): array
 {
     if (!is_array($recu) || !array_is_list($recu)) throw new InvalidArgumentException("Liste du jour illisible.");
     if (count($recu) > JOUR_MAX) throw new InvalidArgumentException("Trois étapes au plus.");
-    $applisClasse = array_map('trim', $applisClasse);
+    $applisClasse = $applisClasse === null ? null : array_map('trim', $applisClasse);
     $liste = [];
     foreach ($recu as $cle) {
         if (!is_string($cle)) throw new InvalidArgumentException("Liste du jour illisible.");
-        if (!appli_ouverte($cle) || !in_array($cle, $applisClasse, true)) throw new InvalidArgumentException("Activité pas ouverte à la classe.");
+        if (!appli_ouverte($cle) || ($applisClasse !== null && !in_array($cle, $applisClasse, true))) throw new InvalidArgumentException("Activité pas ouverte à la classe.");
         if (in_array($cle, $liste, true)) throw new InvalidArgumentException("Activité en double.");
         $liste[] = $cle;
     }
     $place = array_search('cours', $liste, true);
     if ($place !== false && $place !== count($liste) - 1) throw new InvalidArgumentException("Mes cours se met en dernier.");
     return $liste;
+}
+
+// La liste telle qu'elle est RANGÉE (sans rien filtrer) : sert seulement à
+// savoir si la colonne doit être réécrite pour dire la liste effective.
+function jour_brut(?string $json): array
+{
+    if ($json === null || $json === '') return [];
+    $brut = json_decode($json, true);
+    return is_array($brut) && isset($brut['jour']) && is_array($brut['jour']) ? $brut['jour'] : [];
 }
 
 // La valeur de la colonne : les réglages des applis, et la liste du jour

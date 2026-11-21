@@ -678,9 +678,15 @@ try {
             // elle-même qu'on change, et elle porte le nom sous lequel son
             // propriétaire la reconnaît. Réservé au propriétaire (lot 11).
             $classe = acces_classe($pdo, $profId, $corps['classe_id'] ?? 0, droit_requis($action), $action);
-            $libelle = texte($corps['libelle'] ?? $classe['libelle'], 40);
-            if ($libelle === '') erreur("Donne un nom à la classe.", 400);
-            $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? explode(',', $classe['applis']))));
+            // Lot B2, correctif (relecture Codex, point 3) : un champ absent ou
+            // null n'est PAS envoyé — il est repris tel quel de la ligne relue
+            // sous le verrou, sans être renormalisé. Avant, « null » prenait
+            // l'ancienne valeur lue avant le verrou, puis comptait comme envoyé.
+            $libelleRecu = isset($corps['libelle']);
+            $applisRecues = isset($corps['applis']);
+            $libelle = texte($libelleRecu ? $corps['libelle'] : $classe['libelle'], 40);
+            if ($libelleRecu && $libelle === '') erreur("Donne un nom à la classe.", 400);
+            $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($applisRecues ? $corps['applis'] : explode(',', $classe['applis']))));
             if ($applis === []) $applis = ['defi-tables'];
             // Lot « splat-suivi-5 » : les réglages de la classe (aujourd'hui les
             // mondes de SPLAT! ouverts), seulement s'ils sont envoyés. Lus
@@ -716,6 +722,11 @@ try {
             $avant = null;
             if (array_key_exists('avant', $corps)) {
                 try {
+                    // Lot B2, correctif (point 4) : « avant.jour » doit être une
+                    // vraie liste JSON (« {} » n'est pas « [] »).
+                    if (is_array($corps['avant']) && array_key_exists('jour', $corps['avant']) && !champ_est_liste_json('avant', 'jour')) {
+                        throw new InvalidArgumentException("État d'avant illisible.");
+                    }
                     $avant = avant_de_classe_recu($corps['avant']);
                 } catch (InvalidArgumentException $e) {
                     erreur("État d'avant illisible : recharge la page et refais ton réglage.", 400);
@@ -723,29 +734,31 @@ try {
             }
             // Lot B2 « Ta liste dans Ma classe » (21/11/2026) : la liste du jour
             // de Mon espace (« D'abord / Puis / Puis »), seulement si elle est
-            // envoyée. Lue STRICTEMENT (jour_recu) : une clé inconnue, une appli
-            // fermée à la classe, un doublon, plus de trois, Mes cours ailleurs
-            // qu'en dernier → 400. Vérifiée ici contre les applis lues avant le
-            // verrou (un refus net), puis de nouveau sous le verrou contre
-            // celles que la classe aura vraiment.
+            // envoyée. Correctif après la relecture Codex :
+            //  - elle part TOUJOURS avec « avant.jour » (point 12) : sans lui,
+            //    une page en retard remplacerait une liste changée ailleurs ;
+            //  - « {} » ou {"0": …} ne sont pas des listes (point 4) ;
+            //  - ici, seulement sa FORME (jour_recu sans la classe : clés
+            //    ouvertes au catalogue, doublon, trois au plus, Mes cours en
+            //    dernier) ; les portes de la classe se vérifient sous le verrou,
+            //    APRÈS « avant » (point 1) : une porte fermée par un autre onglet
+            //    donne 409 avec l'état actuel, pas un 400 qui se répète.
             $jour = null;
             if (array_key_exists('jour', $corps)) {
                 if (!reglages_disponibles($pdo)) {
                     erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
                 }
+                if ($avant === null || !array_key_exists('jour', $avant)) {
+                    erreur("État d'avant illisible : recharge la page et refais ton réglage.", 400);
+                }
+                if (!champ_est_liste_json('jour')) erreur("Liste du jour illisible.", 400);
                 try {
-                    jour_recu($corps['jour'], $applis);
+                    jour_recu($corps['jour'], null);
                 } catch (InvalidArgumentException $e) {
                     erreur($e->getMessage(), 400);
                 }
                 $jour = $corps['jour'];
             }
-            // Ce qui n'est pas envoyé est repris de la ligne relue sous le
-            // verrou, pas de celle lue avant (lot B2) : enregistrer la liste
-            // du jour ne doit pas remettre un nom ou une liste d'applis qu'un
-            // autre onglet vient de changer.
-            $libelleRecu = array_key_exists('libelle', $corps);
-            $applisRecues = array_key_exists('applis', $corps);
             $avecReglages = reglages_disponibles($pdo);
             $classeId = (int)$classe['id'];
             $resultat = avec_reprise($pdo, function () use ($pdo, $classeId, $libelle, $applis, $reglages, $avant, $jour, $libelleRecu, $applisRecues, $avecReglages): array {
@@ -762,43 +775,54 @@ try {
                     transaction_annuler($pdo);
                     return ['conflit' => true, 'ligne' => $ligne];
                 }
-                if (!$libelleRecu) $libelle = (string)$ligne['libelle'];
-                if (!$applisRecues) {
-                    $applis = array_values(array_intersect(APPLIS_PROPOSABLES, explode(',', (string)$ligne['applis'])));
-                    if ($applis === []) $applis = ['defi-tables'];
-                }
+                // Ce qui n'est pas envoyé est repris TEL QUEL de la ligne relue
+                // sous le verrou (lot B2 et son correctif, point 3) : enregistrer
+                // la liste du jour ne remet ni un nom ni des applis d'avant, et ne
+                // renormalise pas une liste d'applis qu'on ne change pas.
+                $libelleEcrit = $libelleRecu ? $libelle : (string)$ligne['libelle'];
+                $applisEcrites = $applisRecues ? implode(',', $applis) : (string)$ligne['applis'];
+                $applisFinales = array_map('trim', explode(',', $applisEcrites));
                 // La liste du jour : la reçue, vérifiée contre les applis que la
-                // classe aura ; sinon celle de la ligne, TAILLÉE à ces applis
-                // (une porte fermée en sort, dans la même écriture). Une liste
-                // reçue qui ne tient plus (une appli fermée ailleurs entre-temps) :
-                // c'est un conflit, l'état relu part avec le refus.
-                $jourAvant = jour_de_classe($ligne);
-                try {
-                    $nouveauJour = $jour !== null ? jour_recu($jour, $applis)
-                        : jour_lu(isset($ligne['reglages']) ? (string)$ligne['reglages'] : null, $applis);
-                } catch (InvalidArgumentException $e) {
-                    transaction_annuler($pdo);
-                    return ['conflit' => true, 'ligne' => $ligne];
+                // classe aura (« avant » vient de dire que la page voyait juste :
+                // un refus ici est une vraie demande invalide, 400) ; sinon celle
+                // que voyait la classe (jour_de_classe, la liste EFFECTIVE de la
+                // ligne — point 2 : jamais le JSON brut, une étape déjà sortie ne
+                // revient pas quand on rouvre sa porte), TAILLÉE aux applis
+                // finales, dans la même écriture.
+                if ($jour !== null) {
+                    try {
+                        $nouveauJour = jour_recu($jour, $applisFinales);
+                    } catch (InvalidArgumentException $e) {
+                        transaction_annuler($pdo);
+                        return ['invalide' => $e->getMessage()];
+                    }
+                } else {
+                    $nouveauJour = array_values(array_filter(jour_de_classe($ligne), fn($cle) => in_array($cle, $applisFinales, true)));
                 }
                 // Les réglages reçus remplacent ceux de l'appli DANS la valeur
                 // relue sous le verrou (pas dans celle lue avant lui).
                 $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
-                $ecrireColonne = $avecReglages && ($nouveaux !== null || $jour !== null || $nouveauJour !== $jourAvant);
+                // La colonne est réécrite quand les réglages ou la liste changent,
+                // et aussi quand la liste rangée ne dit plus la liste effective
+                // (une ligne incohérente, restaurée : elle est nettoyée).
+                $ecrireColonne = $avecReglages && ($nouveaux !== null || $jour !== null
+                    || $nouveauJour !== jour_brut(isset($ligne['reglages']) ? (string)$ligne['reglages'] : null));
                 if (!$ecrireColonne) {
                     $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
-                        ->execute([$libelle, implode(',', $applis), $classeId]);
+                        ->execute([$libelleEcrit, $applisEcrites, $classeId]);
                 } else {
                     // PIÈGE du lot B2 : la colonne porte AUSSI la liste du jour,
                     // que reglages_de_classe ne rend pas. Elle est remise ici,
                     // à chaque écriture de la colonne.
                     $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
-                        ->execute([$libelle, implode(',', $applis),
+                        ->execute([$libelleEcrit, $applisEcrites,
                             reglages_pour_la_base($nouveaux ?? reglages_de_classe($ligne), $nouveauJour), $classeId]);
                 }
                 transaction_valider($pdo);
                 return ['ecrit' => true, 'reglages' => $nouveaux, 'jour' => $nouveauJour];
             });
             if (isset($resultat['disparue'])) erreur("Introuvable.", 404);
+            if (isset($resultat['invalide'])) erreur($resultat['invalide'], 400);
             if (isset($resultat['conflit'])) {
                 // Rien n'est écrit. L'état actuel part avec le refus : la
                 // fenêtre se remet dessus. Pas de ligne au journal (rien n'a

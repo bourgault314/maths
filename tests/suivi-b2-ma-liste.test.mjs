@@ -94,7 +94,10 @@ function leBloc({applis = CLASSE, jour, faits = [], jauges = {}, nCours = 3}) {
   return {
     cache: $("jour").hidden, fini: $("jour").classList.contains("fini"), avecChemin: $("jour").classList.contains("avec-chemin"),
     nom: $("jour-nom").textContent, bouton: $("jour-bouton").hidden ? null : $("jour-bouton").textContent,
-    ensuite: $("jour-ensuite").textContent,
+    ensuite: $("jour-ensuite").enfants.some(e => typeof e !== "string" && e.className === "noms")
+      ? $("jour-ensuite").enfants.find(e => e.className === "noms").textContent : $("jour-ensuite").textContent,
+    compte: ($("jour-ensuite").enfants.find(e => typeof e !== "string" && e.className === "compte") || {}).textContent || null,
+    compact: $("jour-faits").classList.contains("compact"),
     chemin: chemin.hidden ? null : chemin.enfants.filter(e => e.className !== "fleche").map(e => `${e.className}:${e.textContent}`),
     fleches: chemin.enfants.filter(e => e.className === "fleche").length,
     faits: $("jour-faits").hidden ? null : $("jour-faits").enfants.map(e => e.textContent)
@@ -127,8 +130,8 @@ test("liste de trois (Défi tables, SPLAT!, Mes cours) : « Ensuite : Mes cours 
   assert.deepEqual([un.nom, un.ensuite], ["SPLAT!", `Ensuite${NBSP}: Mes cours`], "choix de Gwenaël (planche B2-6) : la suite, tant qu'il y en a une");
   assert.deepEqual(un.chemin, ["fait:✓ Défi tables", "en-cours:SPLAT!", "a-venir:Mes cours"]);
   const deux = leBloc({jour, faits: ["defi-tables", "splat"]});
-  assert.deepEqual([deux.nom, deux.bouton, deux.fini, deux.ensuite], ["Mes cours", "Ouvrir mes cours", false, "✓ Défi tables  ✓ SPLAT!"],
-    "Mes cours n'est jamais « faite » : elle reste jusqu'au soir");
+  assert.deepEqual([deux.nom, deux.bouton, deux.fini, deux.ensuite, deux.compte], ["Mes cours", "Ouvrir mes cours", false, "✓ Défi tables  ✓ SPLAT!", `✓ 2${NBSP}étapes faites`],
+    "Mes cours n'est jamais « faite » : elle reste jusqu'au soir ; sous 360 px, le compte au lieu des deux noms (correctif Codex, point 10)");
   assert.deepEqual(deux.chemin, ["fait:✓ Défi tables", "fait:✓ SPLAT!", "en-cours:Mes cours"]);
   // Une étape faite plus loin dans la liste : sautée, la suivante pas faite est annoncée.
   const desordre = leBloc({jour, faits: ["splat"]});
@@ -161,6 +164,34 @@ test("sans liste : le mode automatique du lot B1, inchangé (le chemin aussi sur
   assert.deepEqual([ensuite.nom, ensuite.ensuite, ensuite.chemin], ["Mes cours", "✓ Défi tables", ["fait:✓ Défi tables", "en-cours:Mes cours"]]);
   const seule = leBloc({applis: ["splat", "coffres"], jour: [], nCours: 0});
   assert.deepEqual([seule.nom, seule.chemin, seule.avecChemin], ["SPLAT!", null, false], "une seule étape : pas de chemin, la ligne du B1");
+});
+
+test("« C'est fait ! » avec trois étapes : une ligne de texte, pas trois pastilles ; le bloc ne grandit pas (correctif Codex, point 10)", () => {
+  const trois = leBloc({applis: ["coffres", "defi-tables", "defi-calcul"], jour: ["coffres", "defi-tables", "defi-calcul"],
+    faits: ["coffres", "defi-tables", "defi-calcul"], nCours: 0});
+  assert.deepEqual([trois.fini, trois.compact, trois.faits], [true, true, ["✓ Coffres magiques", "✓ Défi tables", "✓ Défi calcul"]]);
+  const deux = leBloc({applis: ["defi-tables", "splat"], jour: ["defi-tables", "splat"], faits: ["defi-tables", "splat"], nCours: 0});
+  assert.equal(deux.compact, false, "deux : les pastilles, comme au B1");
+  assert.match(style, /\.jour-faits\.compact span \{ padding: 0; background: none;/);
+  assert.match(style, /@media \(max-width: 359px\) \{\n\s*\.jour-ensuite \.noms \{ display: none; \}\n\s*\.jour-ensuite \.compte \{ display: inline; \}/);
+  const grand = style.slice(style.indexOf("@media (min-width: 900px) {"));
+  assert.match(grand, /\.jour-faits \{ max-width: 300px; \}/, "sur ordinateur, les pastilles ne mangent pas le titre");
+});
+
+test("au clic, la porte est revalidée avec les accès frais : fermée ou déplacée, on ne part pas, l'espace est relu (correctif Codex, point 11)", async () => {
+  const source = ["billetFrais", "adresseAppli", "ouvrirAppli"].map(nom => fonctionDe(page, nom)).join("\n") + "\nreturn ouvrirAppli;";
+  const essayer = async applis => {
+    const departs = []; const relus = [];
+    const ouvrirAppli = new Function("fetch", "window", "lireCode", "revenirAuCode", "verifierGarde", "gardeVisible", "ouvrir", source)(
+      () => Promise.resolve({ok: true, status: 200, json: () => Promise.resolve({ok: true, billet: "neuf", applis})}),
+      {location: {assign: a => departs.push(a)}, setTimeout: () => 0}, () => "ABC234", () => {}, () => false, false, (code, silencieux) => relus.push([code, silencieux]));
+    await ouvrirAppli({button: 0, preventDefault() {}}, {dataset: {}}, APPLI("splat"), "ABC234", "ancien");
+    return {departs, relus};
+  };
+  assert.deepEqual(await essayer([APPLI("splat")]), {departs: ["https://mathsgo.re/splat.html#b=neuf"], relus: []});
+  assert.deepEqual(await essayer([APPLI("defi-tables")]), {departs: [], relus: [["ABC234", true]]}, "fermée depuis le dessin");
+  assert.deepEqual(await essayer([{...APPLI("splat"), url: "https://mathsgo.re/ailleurs.html"}]), {departs: [], relus: [["ABC234", true]]}, "adresse changée");
+  assert.deepEqual((await essayer(undefined)).departs.length, 1, "une réponse sans liste (ancien serveur) : comme avant");
 });
 
 test("le chemin et la ligne : écrits tous les deux, la feuille de style choisit (900 px) ; rien en innerHTML ; même hauteur", () => {
@@ -198,8 +229,11 @@ test("la copie de l'onglet garde la liste du jour ; une copie trafiquée ne gard
   assert.deepEqual(lireCopie("ABC234").jour, ["defi-tables", "splat"], "relue : au retour d'une appli, le bloc ne saute pas");
   garderCopie("ABC234", {prenom: "Léa", classe: "405", applis: []}, {});
   assert.deepEqual(lireCopie("ABC234").jour, [], "pas de liste : automatique");
-  ecrireCopie({code: "ABC234", applis: [], jour: ["<img>", "__proto__", "toString", "cours", "splat", "defi-tables", "coffres"]});
-  assert.deepEqual(lireCopie("ABC234").jour, ["cours", "splat", "defi-tables"], "inconnues retirées, trois au plus");
+  const portes = ["defi-tables", "splat", "cours", "coffres", "automatismes"].map(APPLI);
+  ecrireCopie({code: "ABC234", applis: portes, jour: ["<img>", "__proto__", "toString", "flash-anzan", "cours", "splat", "defi-tables", "coffres"]});
+  assert.deepEqual(lireCopie("ABC234").jour, ["cours", "splat", "defi-tables"], "seulement les portes de la copie, trois au plus");
+  ecrireCopie({code: "ABC234", applis: portes, jour: ["automatismes", "defi-tables"]});
+  assert.deepEqual(lireCopie("ABC234").jour, ["automatismes", "defi-tables"], "une porte sans jauge reste (correctif Codex, point 13)");
   for (const jour of ["splat", {a: 1}, null, 3]) {
     ecrireCopie({code: "ABC234", applis: [], jour});
     assert.deepEqual(lireCopie("ABC234").jour, [], JSON.stringify(jour));
@@ -216,20 +250,23 @@ assert.ok(debutCarte > 0 && finCarte > debutCarte, "la section de la carte");
 const SECTION_CARTE = prof.slice(debutCarte, finCarte);
 const APPLIS_PROF = prof.slice(prof.indexOf("  const APPLIS = ["), prof.indexOf("];", prof.indexOf("  const APPLIS = [")) + 2);
 
+const CHAPITRES = {cours: {chapitres: ["4e-PYT"]}};
 function laCarte(classe, appels = []) {
+  if (classe.reglages === undefined) classe.reglages = CHAPITRES;
   const elements = {};
   const $ = id => { if (!elements[id]) elements[id] = new Noeud(id); return elements[id]; };
   const messages = {};
   const etat = {classe, reglageEnCours: false};
   const outils = new Function("document", "$", "messager", "etat", "appelBorne",
-    `let classe = etat.classe; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j";
-     const SANS_VERIFICATION = "…"; function surErreur() {} function poserEtatDeClasse() {} async function relireBornee() { return false; }
+    `let classe = etat.classe; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages";
+     const SANS_VERIFICATION = "…"; function surErreur() {} function poserQuiVoit() {} async function relireBornee() { return false; }
+     function poserEtatDeClasse(donnees) { if (donnees && Array.isArray(donnees.jour)) classe.jour = donnees.jour; if (donnees && Array.isArray(donnees.applis)) classe.applis = donnees.applis; }
      ${APPLIS_PROF}
      function nomDeLAppli(cle) { return (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom; }
      ${SECTION_CARTE}
-     return {poserJourClasse, choisirEtapeDuJour, choisirModeDuJour, enregistrerJour, jourAutomatique, brouillon: () => jourBrouillon};`)(
+     return {poserJourClasse, choisirEtapeDuJour, choisirModeDuJour, enregistrerJour, jourAutomatique, viderCarteJour, brouillon: () => jourBrouillon};`)(
     documentFaux, $, (id, texte, type) => { messages[id] = [texte, type]; }, etat,
-    async (action, corps) => { appels.push([action, corps]); return {ok: true, jour: corps.jour}; });
+    typeof appels === "function" ? appels : async (action, corps) => { appels.push([action, corps]); return {ok: true, jour: corps.jour}; });
   const lu = () => ({
     auto: $("jour-auto").checked, liste: $("jour-liste").checked, autoTexte: $("jour-auto-texte").textContent,
     etapesCachees: $("jour-etapes").hidden,
@@ -290,13 +327,42 @@ test("Enregistrer : rien n'est envoyé avant ; puis classes.modifier avec la lis
   outils.choisirEtapeDuJour(1, "splat");
   assert.equal(appels.length, 0, "rien n'est envoyé avant « Enregistrer »");
   await outils.enregistrerJour();
-  assert.deepEqual(appels, [["classes.modifier", {classe_id: 2, jour: ["defi-tables", "splat"], avant: {jour: []}}]]);
+  assert.deepEqual(appels, [["classes.modifier", {classe_id: 2, jour: ["defi-tables", "splat"],
+    avant: {jour: [], applis: ["defi-tables", "coffres", "splat", "cours"]}}]], "« avant » dit aussi les portes connues (correctif Codex, point 1)");
   assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: les élèves de la 405 voient Défi tables, puis SPLAT!`, "ok"]);
   outils.choisirModeDuJour("auto");
   await outils.enregistrerJour();
-  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"]}}]);
+  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"], applis: ["defi-tables", "coffres", "splat", "cours"]}}]);
   await outils.enregistrerJour();
   assert.equal(appels.length, 2, "rien n'a changé : rien n'est envoyé");
+  assert.deepEqual(messages["message-jour"], ["Aucune modification dans cet onglet.", "info"], "sans affirmer ce que voient les élèves (point 8)");
+});
+
+test("Enregistrer : 409 → la carte se remet sur l'état vrai ; réponse illisible → relue, jamais « refusé » (correctif Codex, points 1 et 8)", async () => {
+  const classe = {id: 4, libelle: "405", applis: ["defi-tables", "coffres", "splat", "cours"], jour: []};
+  let reponse = null;
+  const {outils, lu, messages} = laCarte(classe, async () => { throw reponse; });
+  outils.poserJourClasse(true);
+  outils.choisirModeDuJour("liste");
+  outils.choisirEtapeDuJour(1, "splat");
+  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: ["defi-tables", "coffres", "cours"], jour: []}});
+  await outils.enregistrerJour();
+  assert.deepEqual([lu().auto, lu().options[0]], [true, ["Défi tables", "Coffres magiques", "Mes cours"]], "SPLAT!, fermé ailleurs, n'est plus proposé");
+  assert.equal(messages["message-jour"][1], "erreur");
+  outils.choisirModeDuJour("liste");
+  reponse = Object.assign(new Error("Le serveur ne répond pas."), {statut: 200, donnees: null});
+  await outils.enregistrerJour();
+  assert.match(messages["message-jour"][0], /^Peut-être enregistré/, "un 200 illisible n'est pas un refus : on ne sait pas, on le dit");
+});
+
+test("Mes cours sans chapitre ouvert n'est pas proposée, ni dans l'automatique ni dans l'aperçu ; changer de classe vide la carte (correctif Codex, points 5 et 9)", () => {
+  const {outils, lu, messages} = laCarte({id: 5, libelle: "306", applis: ["defi-tables", "cours"], jour: ["cours"], reglages: {}});
+  outils.poserJourClasse(true);
+  assert.deepEqual([lu().options[0], lu().autoTexte], [["Défi tables"], "Défi tables."]);
+  assert.equal(lu().apercu, `Liste vide, donc automatique${NBSP}: Défi tables, puis «${NBSP}C’est fait${NBSP}!${NBSP}».`);
+  messages["message-jour"] = ["Enregistré : la 405…", "ok"];
+  outils.viderCarteJour();
+  assert.deepEqual([outils.brouillon(), lu().options[0], lu().apercu, messages["message-jour"][0]], [null, [], "", ""]);
 });
 
 test("la carte, côté page : en tête des Réglages, les mots des planches, propriétaire seulement, même verrou, rien en innerHTML", () => {
@@ -312,12 +378,19 @@ test("la carte, côté page : en tête des Réglages, les mots des planches, pro
   const enregistrer = fonctionDe(prof, "enregistrerJour");
   assert.match(enregistrer, /droitClasse !== "proprietaire"/);
   assert.match(enregistrer, /reglageEnCours = true;/, "le même verrou que « Régler … »");
-  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\)\}\}\)/);
+  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\), applis: applisConnues\}\}\)/);
   assert.match(enregistrer, /erreur\.statut === 409[\s\S]*poserEtatDeClasse\(erreur\.donnees\)/, "un 409 : l'état relu");
   assert.match(fonctionDe(prof, "poserEtatDeClasse"), /classe\.jour = donnees\.jour\.filter/);
-  assert.match(fonctionDe(prof, "ouvrirReglages"), /poserJourClasse\(true\);/);
+  assert.match(fonctionDe(prof, "ouvrirReglages"), /poserJourClasse\(false\);/, "un second clic garde le brouillon (point 6)");
   assert.match(fonctionDe(prof, "poserVue"), /if \(vue === "reglages" && classe\) poserJourClasse\(false\);/);
   assert.match(fonctionDe(prof, "oublierEtat"), /jourBrouillon = null;/);
   assert.match(fonctionDe(prof, "viderLaClasse"), /jourBrouillon = null;/);
+  for (const id of ["jour-1", "jour-2", "jour-3", "jour-apercu", "jour-auto-texte"]) {
+    assert.match(prof, new RegExp(`const ZONES_TEXTE = \\[[\\s\\S]*?"${id}"`), `${id} vidé à la déconnexion et quand la classe part (point 5)`);
+  }
+  assert.match(fonctionDe(prof, "ouvrirClasse"), /if \(!memeClasse\) viderCarteJour\(\);/, "une autre classe : la carte vidée (point 5)");
+  for (const nom of ["enregistrerJour", "enregistrerRegler", "ouvrirATouteLaClasse"]) {
+    assert.match(fonctionDe(prof, nom), /reglageEnCours = false;[\s\S]{0,260}rafraichirApresVerrou\(\)/, `${nom} : le verrou rendu, la vue affichée se remet à jour (point 7)`);
+  }
   assert.ok((prof.match(/"message-jour"\]/g) || []).length >= 2, "le message de la carte est vidé avec les autres");
 });

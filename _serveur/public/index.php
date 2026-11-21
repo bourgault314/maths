@@ -308,6 +308,15 @@ try {
   /* Lot B2 : le chemin de la journée (« ✓ Défi tables → SPLAT! → Mes cours »),
      écrit avec la ligne « Ensuite » ; seul l'ordinateur le montre (plus bas). */
   .jour-chemin { display: none; }
+  /* Correctif (Codex, point 10) : trois étapes faites, en texte (deux lignes
+     au plus) ; au petit téléphone, le compte au lieu des noms cochés. */
+  .jour-faits.compact { gap: 2px 12px; }
+  .jour-faits.compact span { padding: 0; background: none; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, .9); }
+  .jour-ensuite .compte { display: none; }
+  @media (max-width: 359px) {
+    .jour-ensuite .noms { display: none; }
+    .jour-ensuite .compte { display: inline; }
+  }
   /* Le clavier : sur le bleu nuit, l'anneau bleu de la charte ne se verrait pas. */
   .jour-carte .jour-bouton:focus-visible, a.jour-carte:focus-visible { outline: 3px solid #f9bf3b; outline-offset: 3px; box-shadow: none; }
   .porte:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
@@ -466,6 +475,10 @@ try {
     .jour-chemin > .fleche { flex: none; color: rgba(255, 255, 255, .45); }
     .jour-chemin > .fait { color: rgba(255, 255, 255, .8); }
     .jour-chemin > .en-cours { flex-shrink: 0; color: #fff; font-weight: 800; }
+    /* Correctif (Codex, point 10) : les étapes faites ne prennent jamais la
+       place du titre — deux lignes au plus, à droite. */
+    .jour-faits { max-width: 300px; }
+    .jour-faits.compact { max-width: 260px; justify-content: flex-end; text-align: right; }
   }
 </style>
 </head>
@@ -639,10 +652,12 @@ try {
     // Lot B2 : la liste du jour de la classe, gardée avec le reste — sinon,
     // au retour d'une appli, le bloc « Aujourd'hui » montrerait d'abord le
     // mode automatique, puis sauterait à la liste à la réponse du serveur.
-    // Relue comme ce qui vient du serveur : trois clés au plus, connues de la
-    // page ; poserJour ne garde ensuite que les portes de l'élève.
+    // Relue comme ce qui vient du serveur : trois clés au plus, parmi les
+    // portes de la copie elle-même (correctif Codex, point 13 : pas la liste
+    // des moteurs de jauge — une appli ouverte sans jauge reste dans la liste).
+    const portesCopie = copie.applis.map(appli => appli.cle);
     copie.jour = Array.isArray(copie.jour) ? copie.jour.filter(cle => typeof cle === "string"
-      && (cle === "cours" || Object.prototype.hasOwnProperty.call(JAUGES, cle))).slice(0, 3) : [];
+      && portesCopie.includes(cle)).slice(0, 3) : [];
     return copie;
   }
   function ecrireCopie(copie) {
@@ -1007,7 +1022,7 @@ try {
     if (verifierGarde()) return;
     if (lien.dataset.enCours) return;
     lien.dataset.enCours = "1";
-    const billet = await billetFrais(code);
+    const billet = await billetFrais(code, appli);
     // La question a pu être posée, ou l'élève a pu partir, pendant l'attente :
     // on ne part pas.
     if (gardeVisible || lireCode() !== code) { delete lien.dataset.enCours; return; }
@@ -1018,6 +1033,14 @@ try {
       if (lireCode() === code) revenirAuCode();
       return;
     }
+    // Lot B2, correctif (relecture Codex, point 11) : la porte n'est plus
+    // ouverte à l'élève (ou son adresse a changé) depuis le dessin — l'espace
+    // est relu au lieu de partir vers une appli fermée.
+    if (billet === false) {
+      delete lien.dataset.enCours;
+      ouvrir(code, true);
+      return;
+    }
     window.location.assign(adresseAppli(appli, billet || billetEntree));
     window.setTimeout(() => { delete lien.dataset.enCours; }, 2000);
   }
@@ -1026,7 +1049,10 @@ try {
   // expiré si l'élève a pris son temps. Si le serveur ne répond pas, on part
   // avec le billet de l'entrée — il vaut peut-être encore. null : le serveur
   // dit que ce code n'existe plus (404) — seul cas où l'on ne part pas.
-  async function billetFrais(code) {
+  // Lot B2, correctif (Codex, point 11) : la réponse dit aussi les portes
+  // ouvertes à l'élève MAINTENANT ; si celle du clic n'y est plus, ou plus à la
+  // même adresse, false : on ne part pas.
+  async function billetFrais(code, appli) {
     try {
       const reponse = await fetch("api/eleve.php", {
         method: "POST",
@@ -1035,7 +1061,11 @@ try {
         cache: "no-store"
       });
       const donnees = await reponse.json().catch(() => null);
-      if (reponse.ok && donnees && donnees.ok && typeof donnees.billet === "string") return donnees.billet;
+      if (reponse.ok && donnees && donnees.ok && typeof donnees.billet === "string") {
+        if (appli && Array.isArray(donnees.applis)
+          && !donnees.applis.some(a => a && a.cle === appli.cle && a.disponible && a.url === appli.url)) return false;
+        return donnees.billet;
+      }
       if (reponse.status === 404) return null;
     } catch (_) {}
     return "";
@@ -1818,6 +1848,10 @@ try {
       $("jour-nom").textContent = "C’est fait !";
       $("jour-sous").textContent = "Pour aujourd’hui, à toi de choisir.";
       bouton.hidden = true;
+      // Correctif (Codex, point 10) : trois étapes faites — une ligne de texte
+      // qui peut passer sur deux lignes, au lieu de trois pastilles : le bloc
+      // garde sa hauteur.
+      if (faites.length >= 3) faitsDuJour.classList.add("compact"); else faitsDuJour.classList.remove("compact");
       faites.forEach(appli => {
         const fait = document.createElement("span");
         fait.textContent = `✓ ${appli.nom}`;
@@ -1846,7 +1880,18 @@ try {
       const nom = document.createElement("b");
       nom.textContent = reste[1].nom;
       ensuite.append("Ensuite : ", nom);
-    } else if (faites.length) ensuite.textContent = faites.map(fait => `✓ ${fait.nom}`).join("  ");
+    } else if (faites.length > 1) {
+      // Correctif (Codex, point 10) : au petit téléphone, deux noms cochés ne
+      // tiennent pas à côté d'« Aujourd'hui » — le compte, la feuille de style
+      // choisit (moins de 360 px).
+      const noms = document.createElement("span");
+      noms.className = "noms";
+      noms.textContent = faites.map(fait => `✓ ${fait.nom}`).join("  ");
+      const compte = document.createElement("span");
+      compte.className = "compte";
+      compte.textContent = `✓ ${faites.length} étapes faites`;
+      ensuite.append(noms, compte);
+    } else if (faites.length) ensuite.textContent = `✓ ${faites[0].nom}`;
     const avecChemin = liste.length >= 2;
     chemin.hidden = !avecChemin;
     if (avecChemin) poserChemin(chemin, liste, estFaite, appli);

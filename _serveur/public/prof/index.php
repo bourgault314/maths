@@ -2500,7 +2500,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // « Se déconnecter », l'écran montrait bien le formulaire de connexion —
   // mais les 28 prénoms et les 28 codes étaient toujours dans le document :
   // Ctrl+U, Ctrl+S, l'inspecteur ou une extension les lisaient encore.
-  const ZONES_TEXTE = ["corps", "corps-eleves", "fiche-corps", "fiche-titre", "bandelettes-liste",
+  const ZONES_TEXTE = [
+    // Lot B2, correctif (Codex, point 5) : la carte du jour de Mon espace
+    // (ses listes, son aperçu, son texte automatique).
+    "jour-1", "jour-2", "jour-3", "jour-apercu", "jour-auto-texte",
+    "corps", "corps-eleves", "fiche-corps", "fiche-titre", "bandelettes-liste",
     "bandelettes-titre", "liste-profs", "liste-partages", "fragiles-liste",
     "fragiles-sous", "titre-classe", "resume-classe", "objectif-compte", "objectif-lignes",
     "qui", "compte-qui", "boite-texte", "menu-classes-liste", "titre-classe-colle", "nom-appli", "menu-applis-liste",
@@ -2581,7 +2585,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     "regler-message", "fe-message", "lc-message", "message-jour"];
 
   function viderLaClasse() {
-    // Lot B2 : le brouillon de la carte « Aujourd'hui, dans Mon espace ».
+    // Lot B2 : le brouillon de la carte « Aujourd'hui, dans Mon espace » (ses
+    // listes, son aperçu et son message sont dans les zones vidées plus bas).
     jourBrouillon = null;
     ["eval-modele", "eval-ouvrir", "regler", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
@@ -3308,10 +3313,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   function nomPourLEleve(cle) {
     return cle === "cours" ? "Mes cours" : nomDeLAppli(cle);
   }
-  // Les portes ouvertes à la classe, dans l'ordre du catalogue (celui de Mon espace).
+  // Les portes ouvertes à la classe, dans l'ordre du catalogue (celui de Mon
+  // espace). Correctif (Codex, point 9) : Mes cours seulement quand un
+  // chapitre est ouvert à la classe — sinon les élèves ne la voient pas, et
+  // l'aperçu la promettrait à tort.
   function portesDuJour() {
     const ouvertes = (classe && Array.isArray(classe.applis)) ? classe.applis : [];
-    return APPLIS.filter(appli => ouvertes.includes(appli.cle)).map(appli => appli.cle);
+    const reglagesCours = classe && classe.reglages && classe.reglages.cours;
+    const chapitres = reglagesCours && Array.isArray(reglagesCours.chapitres) ? reglagesCours.chapitres : [];
+    return APPLIS.filter(appli => ouvertes.includes(appli.cle) && (appli.cle !== "cours" || chapitres.length))
+      .map(appli => appli.cle);
   }
   // Le mode automatique, comme Mon espace le calcule (etapesDuJour, lot B1).
   function jourAutomatique(portes) {
@@ -3346,9 +3357,26 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (force || !meme) {
       jourBrouillon = {classeId: classe.id, depart: depart.slice(), mode: depart.length ? "liste" : "auto",
         liste: depart.length ? depart.slice() : jourAutomatique(portesDuJour())};
-      if (!force && !meme) messager("message-jour", "", "");
+      messager("message-jour", "", "");
     }
     dessinerJourClasse();
+  }
+
+  // Correctif (Codex, point 5) : rien de la carte d'une classe ne reste dans
+  // une autre, ni après la déconnexion — brouillon, listes, aperçu, message.
+  function viderCarteJour() {
+    jourBrouillon = null;
+    ["jour-1", "jour-2", "jour-3", "jour-apercu", "jour-auto-texte"].forEach(id => { $(id).textContent = ""; });
+    messager("message-jour", "", "");
+  }
+
+  // Correctif (Codex, point 7) : le verrou des réglages rendu, les commandes
+  // de la vue affichée se remettent à jour (elles ont pu être dessinées
+  // grisées pendant l'attente, dans un autre onglet de la page).
+  function rafraichirApresVerrou() {
+    if (!classe) return;
+    if (vue === "appli") poserQuiVoit();
+    if (vue === "reglages") dessinerJourClasse();
   }
 
   function dessinerJourClasse() {
@@ -3389,7 +3417,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     apercu.textContent = "";
     if (!voulue.length) apercu.append("Ce que voient les élèves : rien en haut de leur espace (aucune activité ouverte).");
     else {
-      apercu.append("Ce que voient les élèves : ");
+      // Une liste vide : les élèves ont le choix automatique, et on le dit.
+      apercu.append(b.mode === "liste" && !b.liste.length ? "Liste vide, donc automatique : " : "Ce que voient les élèves : ");
       voulue.forEach((cle, i) => {
         if (i) apercu.append(" → ");
         const nom = document.createElement("b");
@@ -3442,7 +3471,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const voulue = b.mode === "liste" ? b.liste.slice() : [];
     const classeId = classe.id;
     const libelle = classe.libelle;
-    if (memeListe(voulue, b.depart)) { messager("message-jour", "Rien n’a changé : c’est déjà ce que voient les élèves.", "info"); return; }
+    if (memeListe(voulue, b.depart)) { messager("message-jour", "Aucune modification dans cet onglet.", "info"); return; }
+    const applisConnues = Array.isArray(classe.applis) ? classe.applis.slice() : [];
     const session = generation;
     const encoreLa = () => generation === session && Boolean(jeton);
     const memeClasse = () => Boolean(classe) && classe.id === classeId;
@@ -3453,7 +3483,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       let reponse = null;
       let erreur = null;
       try {
-        reponse = await appelBorne("classes.modifier", {classe_id: classeId, jour: voulue, avant: {jour: b.depart.slice()}});
+        // Correctif (Codex, point 1) : « avant » dit aussi les portes que la
+        // carte connaît — une porte fermée dans un autre onglet donne 409 et
+        // la carte se remet sur l'état vrai.
+        reponse = await appelBorne("classes.modifier", {classe_id: classeId, jour: voulue, avant: {jour: b.depart.slice(), applis: applisConnues}});
       } catch (e) {
         erreur = e;
       }
@@ -3474,11 +3507,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         messager("message-jour", `La ${libelle} a été changée ailleurs : la carte montre l’état actuel, refais ton choix.`, "erreur");
         return;
       }
-      if (erreur.statut) {
+      // Correctif (Codex, point 8) : une réponse reçue mais illisible (un 200
+      // tronqué, une page d'erreur de l'hébergeur) ne dit pas si c'est écrit —
+      // comme une absence de réponse, on relit.
+      if (erreur.statut && erreur.donnees) {
         messager("message-jour", erreur.message, "erreur");
         return;
       }
-      // Sans réponse : on relit la classe pour savoir ce qui est en place.
+      // Sans réponse lisible : on relit la classe pour savoir ce qui est en place.
       const relu = await relireBornee(classeId);
       if (!encoreLa() || !memeClasse()) return;
       reglageEnCours = false;
@@ -3494,7 +3530,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     } finally {
       if (encoreLa()) {
         reglageEnCours = false;
-        dessinerJourClasse();
+        rafraichirApresVerrou();
       }
     }
   }
@@ -5010,8 +5046,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (encoreLa()) {
         reglageEnCours = false;
         // La ligne du haut (et les boutons de la carte, grisés pendant
-        // l'enregistrement par poserQuiVoit) suivent le verrou rendu.
-        if (classe && vue === "appli") poserQuiVoit();
+        // l'enregistrement par poserQuiVoit) suivent le verrou rendu — et
+        // la carte des Réglages (lot B2, correctif Codex, point 7).
+        rafraichirApresVerrou();
       }
     }
   }
@@ -5068,7 +5105,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // Les boutons se libèrent toujours (poserQuiVoit les suit aussi) ; le
       // verrou, seulement pour la session qui l'a pris.
       ["af-toute", "af-quelques"].forEach(id => { $(id).disabled = false; });
-      if (encoreLa()) reglageEnCours = false;
+      if (encoreLa()) { reglageEnCours = false; rafraichirApresVerrou(); }
     }
   }
 
@@ -7828,6 +7865,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // Lot S2, correctif après Codex (point 1) : rien de la classe d'avant
       // dans La classe ni dans les cartes de Défi calcul, même cachées.
       if (!memeClasse) { viderZonesClasse(); viderZonesCalcul(); }
+      // Lot B2, correctif (Codex, point 5) : rien de la carte du jour d'une autre classe.
+      if (!memeClasse) viderCarteJour();
       // Lot « la semaine précédente » : une autre classe repart sur la
       // semaine en cours.
       if (!memeClasse) semaineClasse = 0;
@@ -8323,7 +8362,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     $("nom-classe").value = classe.libelle;
     messager("message-nom", "", "");
     messager("message-supprimer", "", "");
-    poserJourClasse(true);
+    // Correctif (Codex, point 6) : rouvrir les Réglages de la même classe
+    // garde le brouillon tant que la liste rangée n'a pas changé.
+    poserJourClasse(false);
     poserAppli();
   }
 

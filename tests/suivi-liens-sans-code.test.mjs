@@ -46,8 +46,8 @@ test("l’espace élève demande un billet au serveur, à l’entrée et au clic
   const source = readFileSync(join(racine, PAGES[0]), "utf8");
   const demandes = source.match(/JSON\.stringify\(\{code, billet: true\}\)/g) || [];
   assert.equal(demandes.length, 2, "une demande à l’entrée (les liens) et une au clic (un billet frais)");
-  assert.match(source, /async function billetFrais\(code\)/);
-  assert.match(source, /event\.preventDefault\(\);[\s\S]*?const billet = await billetFrais\(code\);/,
+  assert.match(source, /async function billetFrais\(code(?:, appli)?\)/);
+  assert.match(source, /event\.preventDefault\(\);[\s\S]*?const billet = await billetFrais\(code(?:, appli)?\);/,
     "un clic ordinaire part avec un billet neuf");
 });
 
