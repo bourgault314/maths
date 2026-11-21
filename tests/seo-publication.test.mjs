@@ -238,9 +238,13 @@ test("les workflows bloquent le SEO désynchronisé et excluent le gabarit Axell
   const checksWorkflow = fs.readFileSync(path.join(root, ".github/workflows/verifications.yml"), "utf8");
   const publishWorkflow = fs.readFileSync(path.join(root, ".github/workflows/publier.yml"), "utf8");
   assert.match(checksWorkflow, /node scripts\/generate-seo\.mjs --check/);
-  assert.match(publishWorkflow, /node scripts\/generate-seo\.mjs --check/);
+  // Depuis le lot « vérifications plus rapides » (21/11/2026), la publication ne
+  // rejoue plus ce contrôle : elle attend que « Vérifications » (qui le joue sur
+  // main, job « controles ») soit vert sur le même commit.
+  assert.match(publishWorkflow, /workflow_run:\s*\n\s*workflows: \["Vérifications"\]/);
+  assert.match(publishWorkflow, /github\.event\.workflow_run\.conclusion == 'success'/);
   assert.match(publishWorkflow, /--exclude 'axelle\/daily\/template-index\.html'/);
-  assert.match(publishWorkflow, /concurrency:[\s\S]*group: pages[\s\S]*cancel-in-progress: true/);
+  assert.match(publishWorkflow, /concurrency:[\s\S]*group: pages[\s\S]*cancel-in-progress: false/);
   // Ce que ce test garde, c'est que le job de publication existe et publie ;
   // la manière d'écrire la version de l'action ne le regarde pas. Depuis le
   // lot serveur B, les actions sont épinglées par SHA de 40 caractères avec
