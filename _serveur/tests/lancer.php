@@ -648,9 +648,12 @@ verifier("le manifeste connaît la page Infos", function () {
     // 10/11/2026) : api/cours.php.
     // 69 depuis le code en six cases (lot « code en cases », 11/2026) :
     // code-en-cases.js, copie du module commun du site.
-    vrai((bool)preg_match('/^fichiers 69$/m', $manifeste),
-        'le serveur compte 69 fichiers depuis le module des six cases');
-    foreach (['suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
+    // 71 depuis Mon espace redessiné (lot B1, 21/11/2026) : les deux fichiers de
+    // Nunito, polices/nunito-latin-wght-normal.woff2 et polices/nunito-latin-ext-wght-normal.woff2.
+    vrai((bool)preg_match('/^fichiers 71$/m', $manifeste),
+        'le serveur compte 71 fichiers depuis les polices de Mon espace (lot B1)');
+    foreach (['polices/nunito-latin-wght-normal.woff2', 'polices/nunito-latin-ext-wght-normal.woff2',
+              'suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
               'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json', 'api/cours.php',
               'vendor/katex-0.18.2/katex.min.js', 'vendor/katex-0.18.2/katex.min.css',
