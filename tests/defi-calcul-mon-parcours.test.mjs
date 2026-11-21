@@ -627,5 +627,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261120-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261121-1/);
 });

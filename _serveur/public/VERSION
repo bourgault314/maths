@@ -1,11 +1,11 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-calcul-lot-F4-correctif
+lot plus-rapide-A
 genere_le 2026-11-21
 fichiers 69
-manifeste e9f198a1d682b70b04f36be1b48c97dab4af416e11de789824f60def23b41dd7
-673e917d6bee6dc87d2081efd71b9df57da808481c5529459b93de59e7f077f0  .htaccess
+manifeste 33d431cbc5315b7f064ed5cfe884a04f9beb796e7ba3f6248d6e9c5cf31b571c
+0647544a4a02462d7d3efb522c1c478217d2e15601232ca5e1c974100cfb39b7  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
 5b33cdeb422d7025d15d8ac13a3343b30ef4371b309e85b5c11bb29b7af5daa2  api/eleve.php
