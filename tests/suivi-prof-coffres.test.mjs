@@ -420,27 +420,37 @@ test("la tuile Coffres : une ligne par niveau commencé et ses trois coffres, «
   ], "un niveau commencé sans trésor : trois coffres à gagner et 4 / 10");
   assert.deepEqual(lecteur(COFFRES, LUCAS).lignes, [{texte: "Niveau 1", coffres: 1, bonus: ""}]);
   // Rien d'autre : ni total, ni ronds, ni étoiles (refusés par Gwenaël), ni Gloubi (choix du 09/11).
+  // Lot B1 (Mon espace redessiné) : l'insigne (le plus haut niveau où un coffre
+  // est gagné) et la ligne de la porte (le niveau de la partie en cours).
   const sortie = lecteur(COFFRES, LEA);
-  assert.deepEqual(Object.keys(sortie), ["lignes"]);
+  assert.deepEqual(Object.keys(sortie), ["lignes", "niveauGagne", "niveau", "coffres", "cles"]);
+  const porte = j => ({insigne: j.niveauGagne, niveau: j.niveau, coffres: j.coffres, cles: j.cles});
+  assert.deepEqual(porte(sortie), {insigne: 2, niveau: 2, coffres: 2, cles: "🔑 6 / 10"});
+  assert.deepEqual(porte(lecteur(COFFRES, tom)), {insigne: 2, niveau: 3, coffres: 0, cles: "🔑 4 / 10"},
+    "l'insigne garde le niveau gagné, la ligne dit où l'élève en est");
+  assert.deepEqual(porte(lecteur(COFFRES, LUCAS)), {insigne: 1, niveau: 1, coffres: 1, cles: ""});
 });
 
-test("la tuile est posée par createElement et textContent : une ligne par niveau, la pastille dorée au bout", () => {
-  // Lot S3 : poserJauge pose aussi le gain de la semaine (poserGain).
-  const poserJauge = new Function("document", `${constante("SVG", scriptEspace)}\n${constante("COULEURS_COFFRES", scriptEspace)}\n${fonction("elementSvg", scriptEspace)}\n${fonction("coffresDuNiveau", scriptEspace)}\n${fonction("poserGain", scriptEspace)}\n${fonction("poserJauge", scriptEspace)}\nreturn poserJauge;`)(document);
-  const tuile = new Noeud("a");
-  poserJauge(tuile, {lignes: [{texte: "Niveau 1", coffres: 3, bonus: ""}, {texte: "Niveau 2", coffres: 1, bonus: "🔑 6 / 10"}]});
-  assert.ok(aClasse(tuile, "a-jauge"));
-  const bloc = tuile.children[0];
-  assert.equal(bloc.className, "jauge niveaux");
-  assert.deepEqual(bloc.children.map(l => l.children.map(s => [s.className, s.className === "coffres-niveau" ? s.attributs["aria-label"] : s.textContent])),
-    [[["compte", "Niveau 1"], ["coffres-niveau", "3 coffres sur 3"]], [["compte", "Niveau 2"], ["coffres-niveau", "1 coffre sur 3"], ["bonus", "🔑 6 / 10"]]]);
-  const coffres = bloc.children[1].children[1].children;
+test("la porte Coffres est posée par createElement et textContent : l'insigne « Niveau 2 », les coffres du niveau et la clé", () => {
+  // Lot B1 (Mon espace redessiné, 21/11/2026) : la porte remplace la tuile.
+  const source = [constante("SVG", scriptEspace), constante("COULEURS_COFFRES", scriptEspace), constante("CLES_RANG", scriptEspace),
+    constante("texteCourt", scriptEspace), fonction("elementSvg", scriptEspace), fonction("coffresDuNiveau", scriptEspace),
+    fonction("dessinCoffre", scriptEspace), fonction("insigneDe", scriptEspace), fonction("ligneDe", scriptEspace)].join("\n");
+  const {insigneDe, ligneDe} = new Function("document", "window", `${source}\nreturn {insigneDe, ligneDe};`)(document, {});
+  const jauge = {lignes: [], niveauGagne: 2, niveau: 2, coffres: 1, cles: "🔑 6 / 10"};
+  const insigne = insigneDe("coffres", jauge);
+  assert.equal(insigne.className, "insigne");
+  assert.equal(insigne.textContent, "Niveau 2");
+  assert.equal(insigne.children[0].tag, "svg", "le coffre d'or, dessiné");
+  assert.equal(insigneDe("coffres", Object.assign({}, jauge, {niveauGagne: 0})), null, "pas d'insigne tant qu'aucun coffre n'est gagné");
+  const ligne = ligneDe("coffres", jauge, 0);
+  assert.deepEqual(ligne.children.map(n => [n.className, n.className === "coffres-niveau" ? n.attributs["aria-label"] : n.textContent]),
+    [["coffres-niveau", "1 coffre sur 3"], ["cle", "🔑 6 / 10"]]);
+  const coffres = ligne.children[0].children;
   assert.equal(coffres.length, 3, "trois coffres par niveau");
   assert.ok(coffres.every(c => c.tag === "svg"));
   assert.equal(coffres[0].children.length, 5, "le bronze gagné : couvercle, coffre, ferrure, serrure, trait");
   assert.equal(coffres[1].children.length, 2, "l'argent à gagner : deux formes en pointillés");
   assert.equal(coffres[1].children[0].attributs["stroke-dasharray"], "3 2.4");
-  assert.equal(bloc.premier(n => aClasse(n, "jauge-barre")), null, "pas de barre");
   assert.match(espace, /"coffres":\s*'<svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false">'/, "le coffre, dans ICONES");
-  assert.match(espace, /\.appli \.jauge\.niveaux \.jauge-ligne \{ margin-top: 4px; min-height: 24px; \}/);
 });

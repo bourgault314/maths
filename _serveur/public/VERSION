@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot plus-rapide-A
+lot mon-espace-B1
 genere_le 2026-11-21
-fichiers 69
-manifeste 33d431cbc5315b7f064ed5cfe884a04f9beb796e7ba3f6248d6e9c5cf31b571c
+fichiers 71
+manifeste 4c898a060ebe62dae0836b19aa70ae31dbe7caff95314e567a559fe3835d7fd8
 0647544a4a02462d7d3efb522c1c478217d2e15601232ca5e1c974100cfb39b7  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -17,7 +17,7 @@ fef36664abd728712454486174f2c21a88b40e0ccb9974d8ecb91d577fd1c3b3  api/prof.php
 df015c613df736321d80cfd8962fc9457106e6b7ac55eeb9def6ffa24684d6c4  direct.php
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-99e1aa5a04c0d5f7d1fa5d182f0d2d583b98a1397fced52525767710670af1bc  index.php
+94eb3f6ea0e9169b7a5d694d7dc3d9de73a20e66724a8fb2f290fee2cc628114  index.php
 8735a6e6f36def32bcf0b114bce2563b7a1bc23059dab95f6a1561f5cda17706  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 73147a4ffc2c58d1748b93c04ed955e5b1b568ce10d066893d41f8548080fc2d  lib/applis.php
@@ -40,6 +40,8 @@ a71c9980e7aa65eee108c8f26f84dca8812d4b246ec9f9e25958ca2417d6fbf5  lib/reponse.ph
 b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-print.png
 2a442b4a4ae2452f649f77224a0aae91e6fe0ac83566253d65d1dc1807cdb6a2  mathsgo-logo.png
 3f54f95017a31804f0d299a3b93c34f0b454c2367af8d7018ee779be5690f9d7  menage.php
+2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960  polices/nunito-latin-ext-wght-normal.woff2
+ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793  polices/nunito-latin-wght-normal.woff2
 95248821578c48f890d325ad0cee74eabffdad8c5459ea1e1e4b47a3d0935fd6  prof/coffres-parcours.js
 4378bea1b7b64d58bf4072c0efe18948359e959d3daedfe1c06310b125f40890  prof/defi_calcul_core.js
 08c3d1826be70c10db71b91b33c12106175a7b66fe1fa4510170b9afb736506c  prof/defi_calcul_mon_parcours.js

@@ -270,7 +270,8 @@ test("le serveur : `ceintures` déclarée, version_min 8 ; la tuile et la page p
   const bloc = APPLIS.slice(APPLIS.indexOf("'defi-calcul' => ["), APPLIS.indexOf("'automatismes' => ["));
   assert.match(bloc, /'rouges', 'minutes', 'jours', 'numero', 'ceintures', 'ar', 'paliers'\],/, "lot F4 : ar, paliers");
   assert.match(bloc, /'version_min' => 10,/, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
-  assert.match(ESPACE, /dessin\.replaceChildren\(window\.MATHSGO_DEFI_CALCUL_CORE\.elementCeinture\(document, n, \{barrettes, taille: 34\}\)\);/);
+  // Lot B1 (Mon espace redessiné) : la ceinture est l'insigne de la porte Défi calcul.
+  assert.match(ESPACE, /insigne\.append\(CORE\.elementCeinture\(document, n, \{barrettes, taille: 22\}\), document\.createTextNode\(ceinture\.court\)\);/);
   assert.match(PROF, /dessin\.replaceChildren\(CALCUL_CORE\.elementCeinture\(document, porte, \{barrettes, taille: 34\}\)\);/);
   assert.doesNotMatch(ESPACE + PROF, /innerHTML[^\n]*Ceinture/);
   assert.match(PROF, /<th class="large"><button type="button" data-tri="ceinture">Ceinture<\/button><\/th>/);
