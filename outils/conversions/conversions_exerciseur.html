@@ -67,6 +67,9 @@
     .btn-main.print { background: #9c27b0; }
     .btn-main:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
+    .config-msg { margin: 10px 0 0; padding: 8px 12px; border-radius: 8px; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; font-weight: bold; font-size: 0.95rem; }
+    .config-msg[hidden] { display: none; }
+    .nb { white-space: nowrap; }
     .print-group { display: flex; gap: 15px; border: 2px dashed #cfd8ea; padding: 8px 15px; border-radius: 8px; background: white; align-items: center;}
     .print-options-col { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: bold;}
 
@@ -131,7 +134,7 @@
     #diapoContainer:fullscreen .table-box { padding-top: 30px; }
 
     /* LE MOTEUR DU TABLEAU EXACT */
-    .board { background: transparent; border: none; padding: 0; width: 100%; max-width: 1000px; margin: 0 auto;}
+    .board { background: transparent; border: none; padding: 0; width: 100%; max-width: 1000px; margin: 0 auto; container-type: inline-size;}
     .inner { position: relative; padding-top: 100px; padding-bottom: 100px; } 
     .board-columns { display: grid; grid-template-columns: repeat(var(--cols, 7), 1fr); gap: 4px; position: relative; z-index: 1; user-select: none; }
     .family-col { display: flex; flex-direction: column; gap: 6px; }
@@ -139,8 +142,8 @@
     .cursor::after { content: ","; position: absolute; bottom: 32px; right: -11px; font-family: 'Nunito', Arial, sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--accent-dark); line-height: 0; text-shadow: 2px 2px 0 var(--panel), -2px -2px 0 var(--panel), 2px -2px 0 var(--panel), -2px 2px 0 var(--panel); z-index: 10; }
     .handle { position: absolute; left: 0; width: 140px; height: 75px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: 2px solid #fff; border-radius: 12px; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; user-select: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2); padding: 6px; transition: transform 1s ease-in-out, top 1s ease-in-out; }
     .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
-    .handle-top::after { content: ""; position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark); }
-    .handle-bottom::before { content: ""; position: absolute; top: -14px; left: 50%; transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent); }
+    .handle-top::after { content: ""; position: absolute; bottom: -14px; left: calc(50% + var(--decal, 0px)); transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark); }
+    .handle-bottom::before { content: ""; position: absolute; top: -14px; left: calc(50% + var(--decal, 0px)); transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 14px solid var(--accent); }
     .head-group { display: grid; gap: 4px; }
     .unitBtn { background: color-mix(in srgb, var(--accent) 12%, #fff); border: 2px solid var(--accent); border-radius: 8px; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0; }
     .unitBtn span { font-weight: 700; }
@@ -148,6 +151,8 @@
     .cell { position: relative; background: transparent; min-height: auto; display: flex; align-items: stretch; justify-content: center; }
     .slots { margin-top: 0; display: grid; gap: 4px; width: 100%; align-items: stretch; }
     .digit { box-sizing: border-box; width: 100%; text-align: center; font-weight: 600; font-size: 2.8rem; border: 2px solid var(--accent); border-radius: 8px; background: #fff; color: #000; padding: 0 4px; min-height: 92px; outline: none; font-family: 'Nunito', sans-serif; }
+    /* un tableau élargi (nombre qui déborde) garde des chiffres entiers dans leurs cases */
+    @supports (width: 1cqw) { .digit { font-size: min(2.8rem, calc(95cqw / var(--n, 7))); } }
     .unit-highlight, .unit-highlight-text { color: var(--accent-dark) !important; font-weight: 900 !important; text-shadow: 0 0 1px var(--accent-dark), 0 0 1px var(--accent-dark); }
     .subhead-group { display: grid; gap: 4px; height: 22px; position: relative; z-index: 4; pointer-events: none; }
     .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
@@ -169,7 +174,9 @@
       .btn-wrap { align-items: stretch; }
       .print-group { flex-wrap: wrap; }
       .btn-main { min-height: 44px; padding: 9px 10px; }
-      .diapo-container { margin-top: 8px; min-height: 0; border-radius: 12px; }
+      .diapo-container { margin-top: 8px; min-height: 100vh; min-height: 100svh; border-radius: 12px; }
+      .table-box { padding: 10px 6px; }
+      .digit { padding: 0; }
       .diapo-header { display: grid; grid-template-columns: 44px minmax(70px, 1fr) auto; gap: 6px; padding: 8px; }
       .diapo-header > div:last-child { gap: 5px !important; min-width: 0; }
       .btn-nav { min-width: 0; min-height: 44px; padding: 8px; }
@@ -217,7 +224,7 @@
 
   <div class="config-panel">
     <div class="config-header">
-      <h2>📏 Générateur : Conversions & Ordres de Grandeur</h2>
+      <h2>📏 Générateur : conversions et ordres de grandeur</h2>
     </div>
     
     <div class="theme-grid">
@@ -261,7 +268,7 @@
 
       <div class="config-col" style="flex: 1.5; min-width: 250px;">
           <div class="theme-col prob" style="height: 100%;">
-            <h3>Problèmes Calcul</h3>
+            <h3>Problèmes de calcul</h3>
             <div class="checkbox-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <label class="cb-row"><input type="checkbox" value="prob_add"> <div><strong>Additions (+)</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="prob_sub"> <div><strong>Soustractions (-)</strong></div></label>
@@ -277,15 +284,15 @@
           <div class="theme-col est" style="height: 100%;">
             <h3>Ordres de grandeur</h3>
             <div class="checkbox-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              <label class="cb-row"><input type="checkbox" value="est_grandeur"> <div><strong>Quelle Grandeur ?</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_unit"> <div><strong>Quelle Unité ?</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_val"> <div><strong>Ordre de Valeur</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_tf"> <div><strong>Vrai / Faux</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_action"> <div><strong>Action en Classe</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_pont"> <div><strong>Ponts / Symboles</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_grandeur"> <div><strong>Quelle grandeur ?</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_unit"> <div><strong>Quelle unité ?</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_val"> <div><strong>Ordre de valeur</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_tf"> <div><strong>Vrai ou faux</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_action"> <div><strong>Action en classe</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_pont"> <div><strong>Ponts / symboles</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="est_assoc"> <div><strong>Associer 🔗</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_trou"> <div><strong>Texte à Trou ✍️</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="est_tri"> <div><strong>Classer / Trier 📶</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_trou"> <div><strong>Texte à trous ✍️</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_tri"> <div><strong>Classer / trier 📶</strong></div></label>
             </div>
           </div>
       </div>
@@ -311,24 +318,25 @@
           </select>
         </div>
         <div class="config-block">
-          <label title="Laisse vide pour générer aléatoirement. Modifie pour rejouer !">Code Série :</label>
+          <label title="Laisse vide pour générer aléatoirement. Modifie pour rejouer !">Code série :</label>
           <input type="text" id="inputSeed" placeholder="Auto" maxlength="6">
         </div>
       </div>
       
       <div class="btn-wrap">
-        <button class="btn-main" onclick="generateQuiz()">💻 Lancer Diapo</button>
+        <button class="btn-main" onclick="generateQuiz()">💻 Lancer diapo</button>
         
         <div class="print-group">
           <div class="print-options-col">
-            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentEmpty" checked style="accent-color: var(--success);"> 📝 Élève : Gabarits vides</label>
-            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentFilled" style="accent-color: var(--success);"> 📝 Élève : Gabarits remplis</label>
-            <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success);"> 📝 Corrigé : Tableaux/Choix</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentEmpty" checked style="accent-color: var(--success);"> 📝 Élève : gabarits vides</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbStudentFilled" style="accent-color: var(--success);"> 📝 Élève : gabarits remplis</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="cbCorrGabarits" checked style="accent-color: var(--success);"> 📝 Corrigé : tableaux / choix</label>
           </div>
           <button class="btn-main print" onclick="generatePrint()">🖨️ Imprimer PDF</button>
         </div>
       </div>
     </div>
+    <p id="msgConfig" class="config-msg" role="alert" hidden></p>
   </div>
 
   <div class="diapo-container" id="diapoContainer">
@@ -337,7 +345,7 @@
       <div class="slide-counter" id="slideCounter">Question 1 / 5</div>
       <div style="display: flex; gap: 8px;">
         <button class="btn-nav btn-icon" onclick="toggleFullscreen()" title="Passer en plein écran">⛶</button>
-        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Aide : Placer dans le tableau 💡 ►</button>
+        <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Aide : placer dans le tableau 💡 ►</button>
       </div>
     </div>
     
@@ -370,179 +378,298 @@
       length:['#1283ff','#0b67c6'], mass:['#16a34a','#0e7a36'], massT:['#16a34a','#0e7a36'],
       volL:['#06b6d4','#0a8aa3'], area:['#f59e0b','#b77207'], volM3:['#7c3aed','#5a27b0'], cross:['#db2777','#a81d5a']
     };
+    const CROSS_LABELS = { '3_2': 'kL', '4_0': 'hL', '4_1': 'daL', '4_2': 'L', '5_0': 'dL', '5_1': 'cL', '5_2': 'mL' };
+    const AREA_LABELS = { '1_1': 'ha', '2_1': 'a' };
     const SCHEMAS = {
       length:{id:'length', label:'Longueur (m)', units:['km','hm','dam','m','dm','cm','mm'], slots:1},
       mass:  {id:'mass', label:'Masse (g)', units:['kg','hg','dag','g','dg','cg','mg'], slots:1},
       massT: {id:'massT', label:'Masse complète (t)', units:['t','q','-','kg','hg','dag','g','dg','cg','mg'], slots:1},
-      volL:  {id:'volL', label:'Volume (L)', units:['kL','hL','daL','L','dL','cL','mL'], slots:1},
-      area:  {id:'area', label:'Aire (m²)', units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], slots:2},
+      volL:  {id:'volL', label:'Capacité (L)', units:['kL','hL','daL','L','dL','cL','mL'], slots:1},
+      area:  {id:'area', label:'Aire (m²)', units:['km²','hm²','dam²','m²','dm²','cm²','mm²'], slots:2, labels: AREA_LABELS},
       volM3: {id:'volM3', label:'Volume (m³)', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3},
-      cross: {id:'cross', label:'Litres ↔ m³', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3}
+      cross: {id:'cross', label:'Litres ↔ m³', units:['km³','hm³','dam³','m³','dm³','cm³','mm³'], slots:3, labels: CROSS_LABELS}
     };
-    const CROSS_LABELS = { '3_2': 'kL', '4_0': 'hL', '4_1': 'daL', '4_2': 'L', '5_0': 'dL', '5_1': 'cL', '5_2': 'mL' };
-    const AREA_LABELS = { '1_1': 'ha', '2_1': 'a' };
 
-    const DICTIONNAIRE_PROBLEMES = {
+    /* =========================================
+       NOMBRES EXACTS
+       Un nombre est une chaîne « 12,5 » (virgule, sans espace) : on ne calcule
+       jamais en virgule flottante, on déplace la virgule (calcul exact).
+       ========================================= */
+    const NBSP = ' ';
+    function versChaine(v) { return String(v).replace('.', ','); }
+    function normaliser(s) {
+      let [e, d = ''] = String(s).replace('.', ',').split(',');
+      e = e.replace(/^0+/, '') || '0';
+      d = d.replace(/0+$/, '');
+      return d ? `${e},${d}` : e;
+    }
+    // × 10^k, exactement
+    function decaler(s, k) {
+      let [e, d = ''] = String(s).replace('.', ',').split(',');
+      let chiffres = e + d, virgule = e.length + k;
+      if (virgule < 1) { chiffres = '0'.repeat(1 - virgule) + chiffres; virgule = 1; }
+      if (virgule > chiffres.length) chiffres += '0'.repeat(virgule - chiffres.length);
+      return normaliser(chiffres.slice(0, virgule) + ',' + chiffres.slice(virgule));
+    }
+    // un entier n compté en 10^-d (ex. depuisEntier(215, 2) = « 2,15 »)
+    function depuisEntier(n, d = 0) { return decaler(String(n), -d); }
+    // l'entier qui vaut s × 10^d (ex. versEntier(« 2,15 », 2) = 215)
+    function versEntier(s, d = 0) { return parseInt(decaler(s, d), 10); }
+    // écriture à la française : espaces (insécables) par groupes de trois
+    function ecrire(s) {
+      let [e, d] = String(s).split(',');
+      let r = e.replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+      if (d !== undefined) r += ',' + d.replace(/(\d{3})(?=\d)/g, '$1' + NBSP);
+      return r;
+    }
+    function mesure(s, u) { return `${ecrire(s)}${NBSP}${u}`; }
+    // un nombre ne se sépare ni de son unité, ni du nombre qui le suit ; « ? », « ! », « : » restent collés
+    function typo(html) {
+      return String(html)
+        .replace(/(\d) (?=[^\s<])/g, '$1' + NBSP)
+        .replace(/ ([?!:;»])/g, NBSP + '$1')
+        .replace(/« /g, '«' + NBSP);
+    }
+    // puissance de 10 de chaque unité par rapport à l'unité principale (pour comparer deux mesures)
+    const PUISSANCE = { mm:-3, cm:-2, dm:-1, m:0, dam:1, hm:2, km:3, mg:-3, cg:-2, dg:-1, g:0, dag:1, hg:2, kg:3, q:5, t:6,
+      mL:-3, cL:-2, dL:-1, L:0, daL:1, hL:2, kL:3, 'mm²':-6, 'cm²':-4, 'dm²':-2, 'm²':0, 'dam²':2, 'hm²':4, 'km²':6,
+      'mm³':-9, 'cm³':-6, 'dm³':-3, 'm³':0, 'dam³':3, 'hm³':6, 'km³':9 };
+    function valeurDe(v, u) { return decaler(versChaine(v), PUISSANCE[u]); }
+
+    /* =========================================
+       LE TABLEAU : place des unités, élargissement
+       ========================================= */
+    // position (numéro de case) du chiffre des unités d'une unité dans le tableau de base
+    function posUnite(schema, unite) {
+      const i = schema.units.indexOf(unite);
+      if (i >= 0) return i * schema.slots + schema.slots - 1;
+      for (const [k, v] of Object.entries(schema.labels || {})) {
+        if (v === unite) { const [c, s] = k.split('_').map(Number); return c * schema.slots + s; }
+      }
+      return -1;
+    }
+    // cases occupées par un nombre dont le chiffre des unités est en « pos »
+    function etendue(s, pos) { const [e, d = ''] = s.split(','); return [pos - e.length + 1, pos + d.length]; }
+    // le tableau s'élargit (colonnes sans nom) quand le nombre en déborde
+    function tableauPour(base, valStr, srcPos, calcStr, tgtPos) {
+      const n = base.units.length * base.slots;
+      const [a1, b1] = etendue(valStr, srcPos), [a2, b2] = etendue(calcStr, tgtPos);
+      const min = Math.min(a1, a2), max = Math.max(b1, b2);
+      const extG = min < 0 ? Math.ceil(-min / base.slots) : 0;
+      const extD = max > n - 1 ? Math.ceil((max - n + 1) / base.slots) : 0;
+      let schema = base;
+      if (extG || extD) {
+        let labels = null;
+        if (base.labels) {
+          labels = {};
+          for (const [k, v] of Object.entries(base.labels)) { const [c, s] = k.split('_').map(Number); labels[`${c + extG}_${s}`] = v; }
+        }
+        schema = { ...base, units: [...Array(extG).fill(''), ...base.units, ...Array(extD).fill('')], labels };
+      }
+      const dec = extG * base.slots;
+      const sourcePos = srcPos + dec, targetPos = tgtPos + dec;
+      return { schema, sourcePos, targetPos, sourceIdx: Math.floor(sourcePos / base.slots), targetIdx: Math.floor(targetPos / base.slots) };
+    }
+    // les chiffres de la question (et, pour la correction, du résultat) case par case
+    function chiffresDuTableau(q, isCorrection) {
+      const total = q.schema.units.length * q.schema.slots;
+      const digits = new Array(total).fill('');
+      const [e, d = ''] = q.valStr.split(',');
+      for (let i = 0; i < e.length; i++) digits[q.sourcePos - e.length + 1 + i] = e[i];
+      for (let i = 0; i < d.length; i++) digits[q.sourcePos + 1 + i] = d[i];
+      if (isCorrection) {
+        let minIdx = total, maxIdx = -1;
+        digits.forEach((v, i) => { if (v !== '') { minIdx = Math.min(minIdx, i); maxIdx = Math.max(maxIdx, i); } });
+        for (let i = Math.min(minIdx, q.targetPos); i <= Math.max(maxIdx, q.targetPos); i++) if (digits[i] === '') digits[i] = '0';
+      }
+      return digits;
+    }
+
+    /* =========================================
+       LES BANQUES
+       ========================================= */
+    // Problèmes : chaque objet a des valeurs vraisemblables [min, max], comptées dans la petite unité
+    // (mm, g, mL) ; un objet n'est tiré que si les nombres de la question lui vont.
+    const PROBLEMES = {
         add: {
-            length: ["un ruban", "une ficelle", "un tuyau", "une corde", "un câble", "un fil de fer", "une planche"],
-            mass: ["un sac de pommes", "un colis", "un sac à dos", "un filet de patates", "une valise"],
-            cap: ["un seau d'eau", "un bidon de jus", "une carafe de sirop", "un arrosoir"]
+            length: [ {n:"un ruban", f:false, min:100, max:10000}, {n:"une ficelle", f:true, min:100, max:10000}, {n:"un tuyau", f:false, min:500, max:25000},
+                      {n:"une corde", f:true, min:500, max:20000}, {n:"un câble", f:false, min:200, max:20000}, {n:"un fil de fer", f:false, min:200, max:10000},
+                      {n:"une planche", f:true, min:200, max:4000} ],
+            mass: [ {n:"un sac de pommes", f:false, min:500, max:5000}, {n:"un colis", f:false, min:100, max:20000}, {n:"un sac à dos", f:false, min:500, max:10000},
+                    {n:"un filet de pommes de terre", f:false, min:1000, max:5000}, {n:"une valise", f:true, min:2000, max:25000} ],
+            cap: [ {n:"un seau d'eau", f:false, min:3000, max:15000}, {n:"un bidon de jus", f:false, min:500, max:5000},
+                   {n:"une carafe de sirop", f:true, min:500, max:2000}, {n:"un arrosoir", f:false, min:2000, max:12000} ]
         },
         sub: {
-            length: { actions: ["Je coupe", "Je retire", "J'enlève"], objets: ["d'un ruban", "d'une ficelle", "d'une planche", "d'un câble"] },
-            mass: { actions: ["J'utilise", "Je retire", "Je prends"], objets: ["d'un sac de riz", "d'un bloc d'argile", "d'une meule de fromage"] },
-            cap: { actions: ["Je bois", "Je verse", "Je vide"], objets: ["d'une bouteille", "d'un pichet", "d'un réservoir", "d'un jerrican"] }
+            length: [ {n:"un ruban", min:1000, max:20000, a:["je coupe","je retire","j'enlève"]}, {n:"une ficelle", min:1000, max:10000, a:["je coupe","je retire","j'enlève"]},
+                      {n:"une planche", min:1000, max:4000, a:["je coupe","je retire"]}, {n:"un câble", min:1000, max:20000, a:["je coupe","je retire","j'enlève"]} ],
+            mass: [ {n:"un sac de riz", min:1000, max:25000, a:["j'utilise","je retire","je prends"]}, {n:"un bloc d'argile", min:1000, max:10000, a:["j'utilise","je retire","je prends"]},
+                    {n:"une meule de fromage", min:2000, max:40000, a:["je retire","je prends"]} ],
+            cap: [ {n:"une bouteille", min:250, max:2000, a:["je bois","je verse"]}, {n:"un pichet", min:500, max:2000, a:["je verse"]},
+                   {n:"un réservoir", min:5000, max:100000, a:["je verse","je vide"]}, {n:"un jerrican", min:5000, max:25000, a:["je verse","je vide"]} ]
         },
         mult: {
-            length: ["Une dalle de terrasse", "Une latte de parquet", "Un carreau de faïence", "Une règle de classe"],
-            mass: ["Un dictionnaire", "Un cahier", "Un steak", "Un pavé", "Un paquet de biscuits"],
-            cap: ["Un grand verre", "Une canette", "Une gourde", "Un biberon", "Une tasse de café"]
+            length: [ {n:"Une dalle de terrasse", p:"dalles de terrasse", min:300, max:600}, {n:"Une latte de parquet", p:"lattes de parquet", min:600, max:2000},
+                      {n:"Un carreau de faïence", p:"carreaux de faïence", min:100, max:300}, {n:"Une règle de classe", p:"règles de classe", min:200, max:1000} ],
+            mass: [ {n:"Un dictionnaire", p:"dictionnaires", min:800, max:2000}, {n:"Un cahier", p:"cahiers", min:40, max:300}, {n:"Un steak", p:"steaks", min:100, max:200},
+                    {n:"Un pavé de saumon", p:"pavés de saumon", min:120, max:250}, {n:"Un paquet de biscuits", p:"paquets de biscuits", min:100, max:500} ],
+            cap: [ {n:"Un grand verre", p:"grands verres", min:200, max:400}, {n:"Une canette", p:"canettes", min:250, max:500}, {n:"Une gourde", p:"gourdes", min:500, max:1500},
+                   {n:"Un biberon", p:"biberons", min:100, max:330}, {n:"Une tasse de café", p:"tasses de café", min:50, max:250} ]
         },
         div: {
-            length: ["une poutre", "une baguette de bois", "un rouleau de fil", "une barre de métal"],
-            mass: ["un gâteau", "un gros pain", "un tas de sable", "un sac d'engrais", "un bloc de beurre"],
-            cap: ["un bidon de lessive", "une bouteille de jus", "une carafe d'eau", "un jerrican"]
+            length: [ {n:"une poutre", min:2000, max:8000}, {n:"une baguette de bois", min:500, max:2000}, {n:"un rouleau de fil", min:5000, max:50000}, {n:"une barre de métal", min:1000, max:4000} ],
+            mass: [ {n:"un gâteau", min:500, max:2000}, {n:"un gros pain", min:500, max:2000}, {n:"un tas de sable", min:20000, max:500000},
+                    {n:"un sac d'engrais", min:5000, max:25000}, {n:"un bloc de beurre", min:250, max:1000} ],
+            cap: [ {n:"un bidon de lessive", min:1000, max:5000}, {n:"une bouteille de jus", min:1000, max:2000}, {n:"une carafe d'eau", min:1000, max:2000}, {n:"un jerrican", min:5000, max:20000} ]
         },
+        // fractions : le résultat ne dépasse pas « max » (g ou mL)
         frac: {
-            mass: ["de beurre", "de sucre", "de farine", "de chocolat", "de viande", "de gruyère râpé"],
-            cap: ["de lait", "de crème fraîche", "d'eau", "d'huile", "de soupe", "de jus de pomme"]
-        }
+            mass: [ {n:"de beurre", max:500}, {n:"de sucre", max:1000}, {n:"de farine", max:1500}, {n:"de chocolat", max:400}, {n:"de viande", max:2000}, {n:"de gruyère râpé", max:300} ],
+            cap: [ {n:"de lait", max:2000}, {n:"de crème fraîche", max:500}, {n:"d'eau", max:3000}, {n:"d'huile", max:250}, {n:"de soupe", max:3000}, {n:"de jus de pomme", max:2000} ]
+        },
+        // aire : longueur en m, largeur en cm
+        aire: [ {n:"Une planche", m:[2,4], cm:[20,40]}, {n:"Un tapis de couloir", m:[2,6], cm:[60,90]}, {n:"Une banderole", m:[2,6], cm:[30,90]} ]
     };
 
+    // La frise des repères : un émoji seulement quand il est à la bonne échelle.
     const FRISE_EMOJIS = {
        len: [ {u:'mm', e:'🐜'}, {u:'cm', e:'🐞'}, {u:'dm', e:'📏'}, {u:'m', e:'🚪'}, {u:'dam', e:'🏢'}, {u:'hm', e:'🗼'}, {u:'km', e:'🛣️'} ],
-       mass: [ {u:'mg', e:'🪶'}, {u:'cg', e:'💊'}, {u:'dg', e:'✉️'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🐘'} ],
-       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🥛'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:'🛢️'} ],
-       area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:'⌨️'}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'⛳'}, {u:'km²', e:'🏙️'} ],
-       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🎲'}, {u:'dm³', e:'🧃'}, {u:'m³', e:'🗑️'}, {u:'dam³', e:'🚌'}, {u:'hm³', e:'🏭'}, {u:'km³', e:'🌋'} ]
+       mass: [ {u:'mg', e:'🪶'}, {u:'cg', e:''}, {u:'dg', e:'💊'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🐘'} ],
+       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🍾'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:''} ],
+       area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:''}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'🏟️'}, {u:'km²', e:'🏙️'} ],
+       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🎲'}, {u:'dm³', e:'🍾'}, {u:'m³', e:''}, {u:'dam³', e:'🏊'}, {u:'hm³', e:''}, {u:'km³', e:'🌋'} ]
     };
 
     function generateFriseHTML(dim) {
         let html = '<div class="est-frise">';
         FRISE_EMOJIS[dim].forEach(item => {
-            html += `<div class="est-frise-item"><div class="est-frise-unit">${item.u}</div><div class="est-frise-emoji">${item.e}</div></div>`;
+            html += `<div class="est-frise-item"><div class="est-frise-unit">${item.u}</div>${item.e ? `<div class="est-frise-emoji">${item.e}</div>` : ''}</div>`;
         });
         html += '</div>';
         return html;
     }
 
     const ACTIONS_DB = [
-        { lvl: 1, q: "Tracez un trait d'environ 1 millimètre (1 mm) sur votre ardoise.", c: "C'est un petit point ou l'épaisseur de la mine de votre crayon." },
-        { lvl: 1, q: "Tracez un trait d'exactement 1 décimètre (1 dm).", c: "C'est 10 cm, environ la largeur de votre main." },
-        { lvl: 1, q: "Montrez environ 1 cm avec vos doigts !", c: "C'est à peu près l'épaisseur de votre petit doigt." },
-        { lvl: 1, q: "Montrez un espace de 10 cm entre vos deux mains.", c: "Vérifiez avec votre règle graduée !" },
-        { lvl: 1, q: "Écartez les bras pour montrer une longueur d'environ 1 mètre !", c: "C'est souvent du bout des doigts à l'épaule opposée." },
+        { lvl: 1, q: "Trace un trait d'environ 1 millimètre (1 mm) sur ton ardoise.", c: "C'est un petit point, l'épaisseur de la mine de ton crayon." },
+        { lvl: 1, q: "Trace un trait d'exactement 1 décimètre (1 dm).", c: "C'est 10 cm, environ la largeur de ta main." },
+        { lvl: 1, q: "Montre environ 1 cm avec tes doigts !", c: "C'est à peu près la largeur de ton petit doigt." },
+        { lvl: 1, q: "Montre un espace de 10 cm entre tes deux mains.", c: "Vérifie avec ta règle graduée !" },
+        { lvl: 1, q: "Écarte les bras pour montrer une longueur d'environ 1 mètre !", c: "C'est souvent du bout des doigts à l'épaule opposée." },
         { lvl: 1, q: "À quelle hauteur se trouve la poignée de la porte de la classe ?", c: "À environ 1 mètre du sol." },
-        { lvl: 1, q: "Montrez la hauteur d'une table d'écolier avec votre main.", c: "À environ 80 centimètres du sol." },
-        { lvl: 1, q: "Trouvez un objet sur votre table qui pèse environ 10 grammes.", c: "Exemples : Un gros stylo, un effaceur, un tube de colle." },
-        { lvl: 1, q: "Trouvez un objet dans votre trousse qui pèse environ 1 gramme.", c: "Exemples : Un petit trombone, un tout petit bout de gomme." },
-        { lvl: 1, q: "Levez un objet qui pèse environ 1 kilogramme (1 kg).", c: "Exemples : Une gourde pleine, un gros dictionnaire." },
-        
-        { lvl: 2, q: "Dessinez un carré d'environ 1 cm² sur votre ardoise.", c: "Un carré de 1 cm de côté (la taille de l'ongle du pouce)." },
-        { lvl: 2, q: "Dessinez un carré d'environ 1 dm² sur votre ardoise.", c: "Un carré de 10 cm de côté (la taille de la paume de la main)." },
-        { lvl: 2, q: "Mimez avec vos mains la taille d'un objet de 1 dm³ (1 Litre).", c: "Un cube de 10x10x10 cm, comme une brique de lait ou un gros dé géant." },
-        { lvl: 2, q: "Estimez la longueur totale du grand tableau de la classe.", c: "Il mesure très souvent entre 2 et 4 mètres." },
-        { lvl: 2, q: "Estimez la hauteur de la grande armoire de la classe.", c: "Généralement autour de 2 mètres." },
-        { lvl: 2, q: "Quelle est à peu près la surface au sol de votre chambre à la maison ?", c: "Souvent entre 9 m² et 12 m²." },
-        { lvl: 2, q: "Faites exactement 3 grands pas dans la classe. Quelle distance avez-vous parcourue ?", c: "Un grand pas fait environ 1 mètre, donc 3 mètres." },
-        { lvl: 2, q: "Combien de verres d'eau peut-on remplir avec une bouteille d'1 Litre ?", c: "Environ 4 ou 5 verres de 20 cL." },
-        { lvl: 2, q: "Prenez votre cartable rempli : combien de kilos pèse-t-il selon vous ?", c: "Souvent entre 4 et 7 kilogrammes." },
-        { lvl: 2, q: "Montrez un objet dans la classe qui a une capacité d'environ 10 Litres.", c: "Exemples : Une grande poubelle de classe, un grand seau." },
+        { lvl: 1, q: "Montre la hauteur d'une table de la classe avec ta main.", c: "À environ 70 centimètres du sol." },
+        { lvl: 1, q: "Trouve un objet sur ta table qui pèse environ 10 grammes.", c: "Exemples : un gros stylo, un effaceur, un tube de colle." },
+        { lvl: 1, q: "Trouve un objet dans ta trousse qui pèse environ 1 gramme.", c: "Exemples : un petit trombone, un tout petit bout de gomme." },
+        { lvl: 1, q: "Lève un objet qui pèse environ 1 kilogramme (1 kg).", c: "Exemples : une gourde pleine, un gros dictionnaire." },
 
-        { lvl: 3, q: "Montrez une surface plane dans la classe qui fait environ 1 m².", c: "Exemples : Une demi-porte, un grand bureau, 4 dalles de plafond." },
-        { lvl: 3, q: "Trouvez une surface dans la classe qui fait environ 10 m².", c: "Exemples : Un quart de la salle, un très grand tapis de regroupement." },
+        { lvl: 2, q: "Dessine un carré d'environ 1 cm² sur ton ardoise.", c: "Un carré de 1 cm de côté (la taille de l'ongle du pouce)." },
+        { lvl: 2, q: "Dessine un carré d'environ 1 dm² sur ton ardoise.", c: "Un carré de 10 cm de côté (la taille de la paume de la main)." },
+        { lvl: 2, q: "Mime avec tes mains la taille d'un objet de 1 dm³ (1 litre).", c: "Un cube de 10 cm × 10 cm × 10 cm, comme une brique de lait." },
+        { lvl: 2, q: "Estime la longueur totale du grand tableau de la classe.", c: "Il mesure très souvent entre 2 et 4 mètres." },
+        { lvl: 2, q: "Estime la hauteur de la grande armoire de la classe.", c: "Généralement autour de 2 mètres." },
+        { lvl: 2, q: "Quelle est à peu près la surface au sol de ta chambre à la maison ?", c: "Souvent entre 9 m² et 12 m²." },
+        { lvl: 2, q: "Fais exactement 3 grands pas dans la classe. Quelle distance as-tu parcourue ?", c: "Un grand pas fait environ 1 mètre, donc environ 3 mètres." },
+        { lvl: 2, q: "Combien de verres d'eau peut-on remplir avec une bouteille de 1 litre ?", c: "Environ 4 ou 5 verres de 20 cL." },
+        { lvl: 2, q: "Prends ton cartable rempli : combien de kilogrammes pèse-t-il, selon toi ?", c: "Souvent entre 4 et 7 kilogrammes." },
+        { lvl: 2, q: "Montre un objet dans la classe qui a une capacité d'environ 10 litres.", c: "Exemple : un grand seau." },
+
+        { lvl: 3, q: "Montre une surface plane dans la classe qui fait environ 1 m².", c: "Exemples : une demi-porte, un grand bureau." },
+        { lvl: 3, q: "Trouve une surface dans la classe qui fait environ 10 m².", c: "Exemple : un quart de la salle." },
         { lvl: 3, q: "Quelle est la surface au sol de toute notre salle de classe ?", c: "Souvent autour de 50 m²." },
-        { lvl: 3, q: "Citez un objet du quotidien qui a un volume d'environ 1 cm³.", c: "Exemples : Un dé à jouer normal, un gros morceau de sucre." },
-        { lvl: 3, q: "Regardez par la fenêtre : montrez un objet situé à environ 100 mètres de nous.", c: "Exemples : Le bout de la cour, un arbre très éloigné, un bâtiment d'en face." },
-        { lvl: 3, q: "À quelle distance se trouve le portail de l'école depuis notre salle ?", c: "Débattez pour savoir si c'est plutôt 50 m, 100 m ou 200 m !" },
-        { lvl: 3, q: "Citez un animal ou un objet de la rue qui pèse environ 1 Tonne (1000 kg).", c: "Exemples : Une petite voiture citadine, une vache très lourde, un rhinocéros." },
-        { lvl: 3, q: "Quel est à peu près le volume intérieur de votre sac à dos (en Litres) ?", c: "Un sac de classe fait souvent entre 15 et 30 Litres (15 à 30 dm³)." },
-        { lvl: 3, q: "Combien de seaux d'eau de 10 L faut-il pour faire 1 m³ d'eau ?", c: "Il faut 100 seaux ! (Puisque 1 m³ = 1000 L)." }
+        { lvl: 3, q: "Cite un objet du quotidien qui a un volume d'environ 1 cm³.", c: "Exemples : un petit dé à jouer, un morceau de sucre." },
+        { lvl: 3, q: "Regarde par la fenêtre : montre un objet situé à environ 100 mètres de nous.", c: "Exemples : le bout de la cour, un arbre très éloigné, un bâtiment d'en face." },
+        { lvl: 3, q: "À quelle distance se trouve le portail d'entrée depuis notre salle ?", c: "Débats avec tes camarades : plutôt 50 m, 100 m ou 200 m ?" },
+        { lvl: 3, q: "Cite un animal ou un objet de la rue qui pèse environ 1 tonne (1 000 kg).", c: "Exemples : une petite voiture, une vache." },
+        { lvl: 3, q: "Quel est à peu près le volume intérieur de ton sac à dos (en litres) ?", c: "Un sac de classe fait souvent entre 15 et 30 litres (15 à 30 dm³)." },
+        { lvl: 3, q: "Combien de seaux d'eau de 10 L faut-il pour faire 1 m³ d'eau ?", c: "Il faut 100 seaux ! (Puisque 1 m³ = 1 000 L.)" }
     ];
 
     const PONTS_DB = [
-        { lvl: 1, q: "1 Litre d'eau pèse exactement :", c: "1 kg", w1: "100 g", w2: "10 kg", e: "💧" },
+        { lvl: 1, q: "1 litre d'eau pèse exactement :", c: "1 kg", w1: "100 g", w2: "10 kg", e: "💧" },
         { lvl: 1, q: "Un demi-litre (½ L), c'est la même chose que :", c: "50 cL", w1: "5 cL", w2: "500 cL", e: "🥛" },
-        { lvl: 1, q: "Un demi-kilo (½ kg) de farine, c'est :", c: "500 g", w1: "50 g", w2: "5000 g", e: "⚖️" },
-        { lvl: 1, q: "Le mot 'kilo' (comme dans kilomètre ou kilogramme) veut dire :", c: "1000", w1: "100", w2: "10 000", e: "🧠" },
-        { lvl: 1, q: "1 kilogramme (1 kg) c'est la même masse que :", c: "1000 g", w1: "100 g", w2: "10 g", e: "⚖️" },
-        { lvl: 1, q: "1 kilomètre (1 km) c'est la même distance que :", c: "1000 m", w1: "100 m", w2: "10 000 m", e: "📏" },
-        { lvl: 1, q: "1 Tonne (1 t) c'est la même chose que :", c: "1000 kg", w1: "100 kg", w2: "10 000 kg", e: "🐘" },
-        { lvl: 1, q: "1 mètre (1 m), c'est :", c: "100 cm", w1: "10 cm", w2: "1000 cm", e: "📏" },
+        { lvl: 1, q: "Un demi-kilo (½ kg) de farine, c'est :", c: "500 g", w1: "50 g", w2: "5 000 g", e: "⚖️" },
+        { lvl: 1, q: "Le mot « kilo » (comme dans kilomètre ou kilogramme) veut dire :", c: "1 000", w1: "100", w2: "10 000", e: "🧠" },
+        { lvl: 1, q: "1 kilogramme (1 kg), c'est la même masse que :", c: "1 000 g", w1: "100 g", w2: "10 g", e: "⚖️" },
+        { lvl: 1, q: "1 kilomètre (1 km), c'est la même distance que :", c: "1 000 m", w1: "100 m", w2: "10 000 m", e: "📏" },
+        { lvl: 1, q: "1 tonne (1 t), c'est la même chose que :", c: "1 000 kg", w1: "100 kg", w2: "10 000 kg", e: "🐘" },
+        { lvl: 1, q: "1 mètre (1 m), c'est :", c: "100 cm", w1: "10 cm", w2: "1 000 cm", e: "📏" },
 
-        { lvl: 2, q: "1 Litre, c'est exactement le même volume que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "📦" },
-        { lvl: 2, q: "1 mètre cube (1 m³) d'eau pèse :", c: "1 Tonne (1000 kg)", w1: "100 kg", w2: "10 Tonnes", e: "🌊" },
+        { lvl: 2, q: "1 litre, c'est exactement le même volume que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "📦" },
+        { lvl: 2, q: "1 mètre cube (1 m³) d'eau pèse :", c: "1 tonne (1 000 kg)", w1: "100 kg", w2: "10 tonnes", e: "🌊" },
         { lvl: 2, q: "Un quart de litre (¼ L), c'est :", c: "25 cL", w1: "15 cL", w2: "250 cL", e: "🥛" },
         { lvl: 2, q: "Trois quarts de kilo (¾ kg), c'est :", c: "750 g", w1: "75 g", w2: "340 g", e: "⚖️" },
-        { lvl: 2, q: "Le mot 'milli' (comme dans millimètre) veut dire :", c: "Mille fois plus petit", w1: "Cent fois plus petit", w2: "Un million de fois plus petit", e: "🔍" },
-        { lvl: 2, q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1000 L", w1: "100 L", w2: "10 L", e: "📦" },
-        { lvl: 2, q: "En surface, 1 are (1 a) représente :", c: "100 m² (1 dam²)", w1: "10 m²", w2: "1000 m²", e: "🟨" },
-        { lvl: 2, q: "1 centimètre (1 cm) c'est :", c: "10 mm", w1: "100 mm", w2: "1000 mm", e: "📏" },
+        { lvl: 2, q: "Le mot « milli » (comme dans millimètre) veut dire :", c: "Mille fois plus petit", w1: "Cent fois plus petit", w2: "Un million de fois plus petit", e: "🔍" },
+        { lvl: 2, q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1 000 L", w1: "100 L", w2: "10 L", e: "📦" },
+        { lvl: 2, q: "En surface, 1 are (1 a) représente :", c: "100 m² (1 dam²)", w1: "10 m²", w2: "1 000 m²", e: "🟨" },
+        { lvl: 2, q: "1 centimètre (1 cm), c'est :", c: "10 mm", w1: "100 mm", w2: "1 000 mm", e: "📏" },
 
         { lvl: 3, q: "1 millilitre (1 mL), c'est équivalent à :", c: "1 cm³", w1: "1 dm³", w2: "1 mm³", e: "🧪" },
         { lvl: 3, q: "1 millilitre (1 mL) d'eau pèse exactement :", c: "1 gramme (1 g)", w1: "1 milligramme", w2: "10 grammes", e: "💧" },
-        { lvl: 3, q: "Un dixième de Litre (1/10 L), c'est :", c: "10 cL (ou 1 dL)", w1: "1 cL", w2: "100 cL", e: "🥛" },
-        { lvl: 3, q: "En agriculture, 1 hectare (1 ha) c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🚜" },
-        { lvl: 3, q: "1 kiloLitre (1 kL) d'eau, c'est :", c: "1 m³", w1: "1 dam³", w2: "1 km³", e: "🛢️" },
-        { lvl: 3, q: "Un carré de 1 mètre de côté (1 m²), c'est :", c: "10 000 cm²", w1: "100 cm²", w2: "1000 cm²", e: "🟨" },
-        { lvl: 3, q: "Un kilomètre carré (1 km²), c'est immense, cela fait :", c: "100 hectares", w1: "10 hectares", w2: "1000 hectares", e: "🗺️" }
+        { lvl: 3, q: "Un dixième de litre (1/10 L), c'est :", c: "10 cL (ou 1 dL)", w1: "1 cL", w2: "100 cL", e: "🥛" },
+        { lvl: 3, q: "En agriculture, 1 hectare (1 ha), c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🚜" },
+        { lvl: 3, q: "1 kilolitre (1 kL) d'eau, c'est :", c: "1 m³", w1: "1 dam³", w2: "1 km³", e: "🛢️" },
+        { lvl: 3, q: "Un carré de 1 mètre de côté (1 m²), c'est :", c: "10 000 cm²", w1: "100 cm²", w2: "1 000 cm²", e: "🟨" },
+        { lvl: 3, q: "Un kilomètre carré (1 km²), c'est immense, cela fait :", c: "100 hectares", w1: "10 hectares", w2: "1 000 hectares", e: "🗺️" }
     ];
 
+    // « unite: false » : l'objet ne sert pas à « Quelle unité ? » (deux unités y seraient justes)
     const EST_DB = {
         len: [
-            { items: [{n: "la taille de ton pouce", e: "☝️"}], val: 5, unit: "cm", repere: "5 cm = la largeur de deux doigts", lvl: 1 },
+            { items: [{n: "la longueur de ton pouce", e: "👍"}], val: 5, unit: "cm", repere: "5 cm = à peu près la largeur de trois doigts", lvl: 1 },
             { items: [{n: "la longueur d'un stylo", e: "🖊️"}], val: 15, unit: "cm", repere: "15 cm = un petit objet de trousse", lvl: 1 },
             { items: [{n: "la longueur d'un lit", e: "🛏️"}], val: 2, unit: "m", repere: "2 m = pour qu'un adulte puisse s'allonger", lvl: 1 },
-            { items: [{n: "la longueur d'un vélo", e: "🚲"}], val: 1.5, unit: "m", repere: "1,5 m = l'envergure d'un vélo", lvl: 1 },
-            { items: [{n: "l'épaisseur d'une pièce de 2€", e: "🪙"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une grosse pièce", lvl: 2 },
-            { items: [{n: "la distance de la maison à l'école", e: "🎒"}], val: 1, unit: "km", repere: "1 km = une petite marche", lvl: 2 },
+            { items: [{n: "la longueur d'un vélo", e: "🚲"}], val: 1.5, unit: "m", repere: "1,5 m = un vélo, de la roue avant à la roue arrière", lvl: 1 },
+            { items: [{n: "l'épaisseur d'une pièce de 2 €", e: "🪙"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une grosse pièce", lvl: 2 },
+            { items: [{n: "la longueur d'un terrain de football", e: "⚽"}], val: 100, unit: "m", repere: "100 m = un terrain de football", lvl: 2 },
             { items: [{n: "la longueur d'une piscine municipale", e: "🏊"}], val: 25, unit: "m", repere: "25 m = le petit bassin", lvl: 2 },
             { items: [{n: "l'épaisseur d'une carte bancaire", e: "💳"}], val: 1, unit: "mm", repere: "1 mm = une fente très fine", lvl: 3 },
             { items: [{n: "l'altitude de vol d'un avion", e: "✈️"}], val: 10, unit: "km", repere: "10 km = tout en haut dans le ciel", lvl: 3 }
         ],
         mass: [
             { items: [{n: "la masse d'un tube de colle", e: "🖍️"}], val: 20, unit: "g", repere: "20 g = un petit objet léger", lvl: 1 },
-            { items: [{n: "la masse d'un œuf", e: "🥚"}], val: 60, unit: "g", repere: "60 g = le poids standard d'un œuf", lvl: 1 },
-            { items: [{n: "la masse d'une baguette de pain", e: "🥖"}], val: 250, unit: "g", repere: "250 g = le poids classique du boulanger", lvl: 1 },
+            { items: [{n: "la masse d'un œuf", e: "🥚"}], val: 60, unit: "g", repere: "60 g = un œuf moyen", lvl: 1 },
+            { items: [{n: "la masse d'une baguette de pain", e: "🥖"}], val: 250, unit: "g", repere: "250 g = la baguette du boulanger", lvl: 1 },
             { items: [{n: "la masse d'un dictionnaire", e: "📖"}], val: 1, unit: "kg", repere: "1 kg = un gros livre", lvl: 1 },
             { items: [{n: "la masse d'un chat", e: "🐈"}], val: 4, unit: "kg", repere: "4 kg = un animal de compagnie", lvl: 1 },
             { items: [{n: "la masse d'un pack de 6 bouteilles d'eau", e: "💧"}], val: 9, unit: "kg", repere: "9 kg = très lourd à porter", lvl: 1 },
-            { items: [{n: "la masse d'une petite voiture", e: "🚗"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1000 kg", lvl: 2 },
-            { items: [{n: "la masse d'un gros macaron", e: "🍪"}], val: 2, unit: "dag", repere: "2 dag (20 g) = une petite douceur", lvl: 2 },
-            { items: [{n: "la masse d'une plume", e: "🪶"}], val: 1, unit: "mg", repere: "1 mg = presque rien", lvl: 3 },
-            { items: [{n: "la masse d'un steak haché", e: "🥩"}], val: 1, unit: "hg", repere: "1 hg (100 g) = la portion classique", lvl: 3 },
-            { items: [{n: "la masse d'une baleine", e: "🐋"}], val: 150, unit: "t", repere: "150 t = l'animal le plus lourd", lvl: 3 }
+            { items: [{n: "la masse d'une petite voiture", e: "🚗"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1 000 kg", lvl: 2, unite: false },
+            { items: [{n: "la masse d'un macaron", e: "🍪"}], val: 15, unit: "g", repere: "15 g = une petite douceur", lvl: 2 },
+            { items: [{n: "la masse d'un moustique", e: "🦟"}], val: 2, unit: "mg", repere: "2 mg = presque rien", lvl: 3 },
+            { items: [{n: "la masse d'un steak haché", e: "🥩"}], val: 100, unit: "g", repere: "100 g = la portion classique", lvl: 3 },
+            { items: [{n: "la masse d'une baleine bleue", e: "🐋"}], val: 150, unit: "t", repere: "150 t = l'animal le plus lourd", lvl: 3 }
         ],
         cap: [
-            { items: [{n: "la quantité de boisson dans une canette", e: "🥤"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1 },
-            { items: [{n: "la quantité d'essence dans une voiture", e: "⛽"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 1 },
+            { items: [{n: "la quantité de boisson dans une canette", e: "🥤"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1, unite: false },
+            { items: [{n: "la quantité d'essence dans le réservoir d'une voiture", e: "⛽"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 1 },
             { items: [{n: "la quantité d'eau dans un grand arrosoir", e: "🚿"}], val: 10, unit: "L", repere: "10 L = lourd à porter", lvl: 1 },
             { items: [{n: "la dose de sirop pour la toux", e: "🥄"}], val: 15, unit: "mL", repere: "15 mL = une cuillère à soupe", lvl: 2 },
-            { items: [{n: "la quantité d'eau dans une grande bouteille", e: "🍾"}], val: 1.5, unit: "L", repere: "1,5 L = la bouteille classique", lvl: 2 },
+            { items: [{n: "la quantité d'eau dans une grande bouteille", e: "🍾"}], val: 1.5, unit: "L", repere: "1,5 L = la grande bouteille d'eau", lvl: 2 },
             { items: [{n: "l'eau dans une baignoire bien remplie", e: "🛁"}], val: 150, unit: "L", repere: "150 L = un très grand bain", lvl: 2 },
-            { items: [{n: "la quantité d'eau dans une petite piscine gonflable", e: "🛟"}], val: 1, unit: "hL", repere: "1 hL (100 L) = beaucoup de seaux", lvl: 3 }
+            { items: [{n: "la quantité d'eau dans une petite piscine gonflable", e: "🛟"}], val: 200, unit: "L", repere: "200 L = beaucoup de seaux", lvl: 3 }
         ],
         area: [
             { items: [{n: "la surface d'une carte vitale", e: "💳"}], val: 40, unit: "cm²", repere: "40 cm² = un petit rectangle de plastique", lvl: 1 },
             { items: [{n: "la surface du sol d'une chambre", e: "🛏️"}], val: 12, unit: "m²", repere: "12 m² = une belle pièce", lvl: 1 },
-            { items: [{n: "l'espace recouvert par un tapis", e: "🧶"}], val: 4, unit: "m²", repere: "4 m² = une zone de jeu", lvl: 1 },
-            { items: [{n: "la surface de l'écran d'une tablette", e: "📱"}], val: 3, unit: "dm²", repere: "3 dm² = un petit écran", lvl: 2 },
-            { items: [{n: "la surface d'un cahier ouvert", e: "📓"}], val: 12, unit: "dm²", repere: "12 dm² = deux feuilles A4", lvl: 2 },
-            { items: [{n: "la trace d'un coup de feutre", e: "🖍️"}], val: 4, unit: "mm²", repere: "4 mm² = une toute petite pointe", lvl: 3 },
-            { items: [{n: "la superficie d'une grande forêt", e: "🌲"}], val: 10, unit: "km²", repere: "10 km² = une zone immense", lvl: 3 }
+            { items: [{n: "la surface d'un tapis", e: "🧶"}], val: 4, unit: "m²", repere: "4 m² = une zone de jeu", lvl: 1 },
+            { items: [{n: "la surface de l'écran d'une tablette", e: "📱"}], val: 300, unit: "cm²", repere: "300 cm² = un petit écran", lvl: 2 },
+            { items: [{n: "la surface d'une feuille de papier A4", e: "📄"}], val: 600, unit: "cm²", repere: "600 cm² = une feuille de cahier ou d'imprimante", lvl: 2 },
+            { items: [{n: "la surface d'une tête d'épingle", e: "📍"}], val: 1, unit: "mm²", repere: "1 mm² = une toute petite pointe", lvl: 3 },
+            { items: [{n: "la superficie de Paris", e: "🗼"}], val: 100, unit: "km²", repere: "100 km² = une grande ville", lvl: 3 }
         ],
         vol: [
             { items: [{n: "l'espace pris par une grosse gomme", e: "🧼"}], val: 15, unit: "cm³", repere: "15 cm³ = un petit objet 3D", lvl: 1 },
-            { items: [{n: "l'espace à l'intérieur d'une cabine téléphonique", e: "☎️"}], val: 1, unit: "m³", repere: "1 m³ = la place pour une personne debout", lvl: 1 },
-            { items: [{n: "l'espace pris par une boîte à chaussures", e: "👟"}], val: 6, unit: "dm³", repere: "6 dm³ = 6 Litres", lvl: 2 },
-            { items: [{n: "l'espace dans le coffre d'une voiture familiale", e: "🚗"}], val: 500, unit: "dm³", repere: "500 dm³ = 500 Litres", lvl: 2 },
-            { items: [{n: "le volume d'eau d'un lac de montagne", e: "🏞️"}], val: 1, unit: "km³", repere: "1 km³ = un lac géant", lvl: 3 },
+            { items: [{n: "l'espace à l'intérieur d'une cabine de douche", e: "🚿"}], val: 2, unit: "m³", repere: "2 m³ = la place pour une personne debout", lvl: 1 },
+            { items: [{n: "l'espace pris par une boîte à chaussures", e: "👟"}], val: 6, unit: "dm³", repere: "6 dm³ = 6 litres", lvl: 2 },
+            { items: [{n: "l'espace dans le coffre d'une voiture familiale", e: "🚗"}], val: 500, unit: "dm³", repere: "500 dm³ = 500 litres", lvl: 2, unite: false },
+            { items: [{n: "le volume d'eau d'une piscine olympique", e: "🏊"}], val: 2500, unit: "m³", repere: "2 500 m³ = un grand bassin de 50 m", lvl: 3 },
             { items: [{n: "l'espace de chargement d'un camion de déménagement", e: "🚛"}], val: 30, unit: "m³", repere: "30 m³ = beaucoup de meubles", lvl: 3 }
         ]
     };
+    // les unités qu'on utilise vraiment, pour « Quelle unité ? » et les pièges du vrai ou faux
+    const UNITES_USUELLES = { len: ['mm', 'cm', 'm', 'km'], mass: ['g', 'kg', 't'], cap: ['mL', 'cL', 'L'], area: ['cm²', 'm²', 'km²'], vol: ['cm³', 'dm³', 'm³'] };
+    const UNITES_PIEGES = { len: ['mm', 'cm', 'm', 'km'], mass: ['mg', 'g', 'kg', 't'], cap: ['mL', 'cL', 'L'], area: ['mm²', 'cm²', 'm²', 'km²'], vol: ['cm³', 'dm³', 'm³'] };
 
     const TRI_DB = [
-        // Lvl 1: Même nombre, unités différentes ou Même unité, nombres différents
+        // Niveau 1 : même nombre, unités différentes
         { lvl: 1, arr: ['5 mm', '5 cm', '5 m', '5 km'], dim: 'Longueur' },
         { lvl: 1, arr: ['2 mg', '2 g', '2 kg', '2 t'], dim: 'Masse' },
         { lvl: 1, arr: ['10 mL', '10 cL', '10 L', '10 hL'], dim: 'Capacité' },
@@ -550,8 +677,8 @@
         { lvl: 1, arr: ['3 cm³', '3 dm³', '3 m³', '3 dam³'], dim: 'Volume' },
         { lvl: 1, arr: ['15 g', '15 dag', '15 kg', '15 t'], dim: 'Masse' },
         { lvl: 1, arr: ['8 cL', '8 dL', '8 L', '8 daL'], dim: 'Capacité' },
-        
-        // Lvl 2: Mélange de nombres et d'unités standard
+
+        // Niveau 2 : mélange de nombres et d'unités usuelles
         { lvl: 2, arr: ['12 mm', '15 cm', '1,2 m', '10 km'], dim: 'Longueur' },
         { lvl: 2, arr: ['500 g', '2 kg', '15 kg', '1,5 t'], dim: 'Masse' },
         { lvl: 2, arr: ['33 cL', '1,5 L', '10 L', '150 L'], dim: 'Capacité' },
@@ -560,22 +687,21 @@
         { lvl: 2, arr: ['2 mm', '5 cm', '80 cm', '2 m'], dim: 'Longueur' },
         { lvl: 2, arr: ['20 g', '250 g', '4 kg', '1,2 t'], dim: 'Masse' },
 
-        // Lvl 3: Conversions pièges et extrêmes
-        { lvl: 3, arr: ['1 cL', '100 mL', '1 L', '1000 L'], dim: 'Capacité' },
-        { lvl: 3, arr: ['3000 mg', '2500 g', '4 kg', '0,5 t'], dim: 'Masse' },
+        // Niveau 3 : conversions pièges
+        { lvl: 3, arr: ['1 cL', '100 mL', '1 L', '1 000 L'], dim: 'Capacité' },
+        { lvl: 3, arr: ['3 000 mg', '2 500 g', '4 kg', '0,5 t'], dim: 'Masse' },
         { lvl: 3, arr: ['50 cm²', '5 dm²', '0,5 m²', '500 m²'], dim: 'Aire' },
         { lvl: 3, arr: ['150 mm', '0,2 m', '25 cm', '0,001 km'], dim: 'Longueur' },
-        { lvl: 3, arr: ['0,5 L', '75 cL', '1 dm³', '2000 mL'], dim: 'Capacité' },
-        { lvl: 3, arr: ['2000 g', '2,5 kg', '0,01 t', '15 kg'], dim: 'Masse' }
+        { lvl: 3, arr: ['0,5 L', '75 cL', '1 dm³', '2 000 mL'], dim: 'Capacité' },
+        { lvl: 3, arr: ['2 000 g', '2,5 kg', '0,01 t', '15 kg'], dim: 'Masse' }
     ];
 
     let quizData = [];
-    let usedQuestionsText = []; 
     let currentIndex = 0;
     let currentSchema = null;
-    let currentSeedStr = ""; 
-    let lastGeneratedSeed = ""; 
-    
+    let currentSeedStr = "";
+    let lastGeneratedSeed = "";
+
     let prngSeed = 1;
     function seededRandom() {
         var t = prngSeed += 0x6D2B79F5;
@@ -590,7 +716,6 @@
     }
     function rand(min, max) { return Math.floor(seededRandom() * (max - min + 1)) + min; }
     function pick(arr) { return arr[Math.floor(seededRandom() * arr.length)]; }
-    function fmt(n) { return Number(n.toFixed(8)).toString().replace('.', ','); }
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             let j = Math.floor(seededRandom() * (i + 1));
@@ -598,9 +723,13 @@
         }
         return array;
     }
+    function majuscule(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+    // les entiers de [a, b] qui vérifient f
+    function entre(a, b, f = () => true) { const r = []; for (let k = Math.ceil(a); k <= b; k++) if (f(k)) r.push(k); return r; }
 
+    // le chiffre des unités en couleur (le nombre est déjà écrit avec ses espaces)
     function highlightUnitText(valStr) {
-      let parts = valStr.split(','); let intPart = parts[0];
+      let parts = ecrire(valStr).split(','); let intPart = parts[0];
       if (intPart.length > 0) {
           let lastDigit = intPart.slice(-1); let rest = intPart.slice(0, -1);
           parts[0] = rest + `<span class="unit-highlight-text">${lastDigit}</span>`;
@@ -611,9 +740,53 @@
     /* =========================================
        GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES)
        ========================================= */
+    function valeurDuNiveau(level) {
+      if (level === 1) {
+        let size = rand(1, 3);
+        if (size === 1) return rand(1, 9).toString();
+        if (size === 2) return rand(10, 99).toString();
+        return rand(100, 999).toString();
+      }
+      if (level === 2) {
+        let type = rand(1, 4);
+        if (type === 1) return rand(1, 99).toString();
+        if (type === 2) return rand(100, 9999).toString();
+        if (type === 3) return depuisEntier(rand(11, 999), 1);
+        return depuisEntier(rand(101, 9999), 2);
+      }
+      let type = rand(1, 4);
+      if (type === 1) { let zeros = rand(1, 2) === 1 ? "0,0" : "0,00"; return zeros + rand(1, 9); }
+      if (type === 2) { if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9); return rand(1, 9) + "0," + rand(1, 9); }
+      if (type === 3) return rand(1, 99) + "," + rand(1, 9) + "0";
+      let zeros = rand(1, 2) === 1 ? "00" : "000"; return rand(1, 99) + zeros;
+    }
+
+    function questionDeConversion(base, valStr, sourceUnit, targetUnit, srcPos, tgtPos) {
+      const calcValStr = decaler(valStr, tgtPos - srcPos);
+      const t = tableauPour(base, valStr, srcPos, calcValStr, tgtPos);
+      return { isProblem: false, isEstimation: false, ...t, sourceUnit, targetUnit, valStr, calcValStr, phase: 0, textId: `${valStr}${sourceUnit}_${targetUnit}` };
+    }
+
+    // « L ↔ m³ » : toujours une unité de capacité d'un côté, une unité de volume de l'autre
+    const LITRES = ['hL', 'L', 'dL', 'cL', 'mL'];
+    const CUBES = ['m³', 'dm³', 'cm³'];
+    function buildCrossLogic(level) {
+      const base = SCHEMAS.cross;
+      const paires = [];
+      for (const l of LITRES) for (const c of CUBES) {
+        const pl = posUnite(base, l), pc = posUnite(base, c);
+        paires.push([l, c, pl, pc], [c, l, pc, pl]);
+      }
+      // niveau 1 : jamais vers une unité plus grande
+      const possibles = paires.filter(([, , a, b]) => level === 1 ? b >= a : true);
+      const [src, tgt, a, b] = pick(possibles);
+      return questionDeConversion(base, valeurDuNiveau(level), src, tgt, a, b);
+    }
+
     function buildQuestionLogic(type, level) {
+      if (type === 'cross') return buildCrossLogic(level);
       const schema = SCHEMAS[type];
-      let maxGap = 3; if (schema.slots === 2 || schema.slots === 3) maxGap = 2; 
+      let maxGap = 3; if (schema.slots === 2 || schema.slots === 3) maxGap = 2;
       let gap = rand(1, maxGap);
       let direction = (level === 1) ? 1 : (rand(1, 2) === 1 ? 1 : -1);
 
@@ -623,131 +796,205 @@
           if (targetIdx >= 0 && targetIdx < schema.units.length && schema.units[i] !== '-' && schema.units[targetIdx] !== '-') validStarts.push(i);
       }
       let uIndex1 = pick(validStarts); let uIndex2 = uIndex1 + (gap * direction);
-      
-      let valStr;
-      if (level === 1) { 
-        let size = rand(1, 3);
-        if (size === 1) valStr = rand(1, 9).toString();
-        else if (size === 2) valStr = rand(10, 99).toString();
-        else valStr = rand(100, 999).toString();
-      } else if (level === 2) {
-        let type = rand(1, 4);
-        if(type === 1) valStr = rand(1, 99).toString(); 
-        else if(type === 2) valStr = rand(100, 9999).toString(); 
-        else if(type === 3) valStr = (rand(11, 999) / 10).toString().replace('.', ','); 
-        else valStr = (rand(101, 9999) / 100).toString().replace('.', ','); 
-      } else {
-        let type = rand(1, 4);
-        if(type === 1) { let zeros = rand(1, 2) === 1 ? "0,0" : "0,00"; valStr = zeros + rand(1, 9); } 
-        else if (type === 2) { if (rand(1, 2) === 1) valStr = rand(1, 9) + ",0" + rand(1, 9); else valStr = rand(1, 9) + "0," + rand(1, 9); } 
-        else if (type === 3) { valStr = rand(1, 99) + "," + rand(1, 9) + "0"; } 
-        else { let zeros = rand(1, 2) === 1 ? "00" : "000"; valStr = rand(1, 99) + zeros; }
-      }
-      
-      let numVal = parseFloat(valStr.replace(',', '.'));
-      let shift = (uIndex2 - uIndex1) * schema.slots;
-      let calcVal = numVal * Math.pow(10, shift); 
-      
-      let textId = `${valStr}${schema.units[uIndex1]}_${schema.units[uIndex2]}`; 
-      return { isProblem: false, isEstimation: false, schema, sourceUnit: schema.units[uIndex1], targetUnit: schema.units[uIndex2], sourceIdx: uIndex1, targetIdx: uIndex2, valStr, calcValStr: fmt(calcVal), phase: 0, textId };
+      const valStr = valeurDuNiveau(level);
+      const s = schema.slots;
+      return questionDeConversion(schema, valStr, schema.units[uIndex1], schema.units[uIndex2], uIndex1 * s + s - 1, uIndex2 * s + s - 1);
     }
 
+    // une question de problème : la conversion montrée dans le tableau, plus l'énoncé et la correction
+    function problemeAvec(base, valStr, sourceUnit, targetUnit, problemText, correctionText) {
+      const q = questionDeConversion(base, valStr, sourceUnit, targetUnit, posUnite(base, sourceUnit), posUnite(base, targetUnit));
+      return { ...q, isProblem: true, problemText, correctionText, textId: problemText };
+    }
+    // un tirage qui peut échouer (aucun objet ne va avec les nombres) : on recommence
+    function tirer(f) { for (let i = 0; i < 500; i++) { const r = f(); if (r) return r; } throw new Error("tirage impossible"); }
+
+    // grandeurs des problèmes : 10^FIN = petite unité (mm, g, mL) dans la grande unité (m, kg, L)
+    const GRANDEURS = {
+      length: { s: SCHEMAS.length, grand: 'm', petit: 'cm', fin: 3, pf: 1 },   // 1 cm = 10 mm
+      mass:   { s: SCHEMAS.mass,   grand: 'kg', petit: 'g',  fin: 3, pf: 0 },
+      cap:    { s: SCHEMAS.volL,   grand: 'L',  petit: 'cL', fin: 3, pf: 1 }    // 1 cL = 10 mL
+    };
+
     function buildProblemLogic(level, family) {
-        let schema, sourceUnit, targetUnit, sourceIdx, targetIdx, valStr, calcValStr, problemText, correctionText;
-
         if (family === 'add') {
-            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.add.length }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, txt: DICTIONNAIRE_PROBLEMES.add.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.add.cap } ];
-            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
-            let v1, v2;
-            if (level === 1) { v1 = rand(2, 9); v2 = rand(2, 9) * 10; } 
-            else if (level === 2) { v1 = rand(1, 5) + 0.5; v2 = rand(6, 9) * 10; } 
-            else { v1 = rand(1, 4) + pick([0.25, 0.75]); v2 = rand(15, 85) * 10; if (sourceUnit === 'm') { targetUnit = 'mm'; targetIdx = 6; } }
-
-            problemText = `J'assemble ${pick(sub.txt)} de <strong>${fmt(v1)} ${sourceUnit}</strong> avec un autre de <strong>${v2} ${targetUnit}</strong>. Quel est le total en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(v1); let convertedV1 = v1 * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
-            correctionText = `Calcul : ${convertedV1} + ${v2} = <strong>${convertedV1 + v2} ${targetUnit}</strong>.`;
+            return tirer(() => {
+                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
+                let petit = G.petit, pf = G.pf;
+                if (level === 3 && g === 'length') { petit = 'mm'; pf = 0; }
+                let v1, v2;   // v1 en grande unité (chaîne), v2 en petite unité (entier)
+                if (level === 1) { v1 = String(rand(2, 9)); v2 = rand(2, 9) * (g === 'mass' ? 100 : 10); }
+                else if (level === 2) { v1 = depuisEntier(rand(1, 5) * 10 + 5, 1); v2 = rand(6, 9) * (g === 'mass' ? 100 : 10); }
+                else { v1 = depuisEntier(rand(1, 4) * 100 + pick([25, 75]), 2); v2 = rand(15, 85) * 10; }
+                const f1 = versEntier(v1, G.fin), f2 = v2 * 10 ** pf;      // en mm, g ou mL
+                const objets = PROBLEMES.add[g].filter(o => f1 >= o.min && f1 <= o.max && f2 >= o.min && f2 <= o.max);
+                if (!objets.length) return null;
+                const o = pick(objets);
+                const conv = versEntier(v1, G.fin - pf);
+                const autre = o.f ? 'une autre' : 'un autre';
+                const debut = g === 'length' ? `J'assemble ${o.n} de <strong>${mesure(v1, G.grand)}</strong> avec ${autre}`
+                                             : `Je réunis ${o.n} de <strong>${mesure(v1, G.grand)}</strong> et ${autre}`;
+                const texte = `${debut} de <strong>${mesure(v2, petit)}</strong>. Quel est le total en <strong>${petit}</strong> ?`;
+                const corr = `Calcul : ${ecrire(conv)} + ${ecrire(v2)} = <strong>${mesure(conv + v2, petit)}</strong>.`;
+                return problemeAvec(G.s, v1, G.grand, petit, texte, corr);
+            });
         }
-        else if (family === 'sub') {
-            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.sub.length.actions, obj: DICTIONNAIRE_PROBLEMES.sub.length.objets }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, txt: DICTIONNAIRE_PROBLEMES.sub.mass.actions, obj: DICTIONNAIRE_PROBLEMES.sub.mass.objets }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, txt: DICTIONNAIRE_PROBLEMES.sub.cap.actions, obj: DICTIONNAIRE_PROBLEMES.sub.cap.objets } ];
-            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
-            let v1, v2;
-            if (level === 1) { v1 = rand(3, 9); v2 = rand(2, 9) * 10; } 
-            else if (level === 2) { v1 = rand(2, 6) + 0.5; v2 = rand(6, 9) * 10; } 
-            else { v1 = rand(2, 5) + pick([0.15, 0.45, 0.85]); v2 = rand(25, 95) * 10; } 
-
-            problemText = `Dans ${pick(sub.obj)} de <strong>${fmt(v1)} ${sourceUnit}</strong>, ${pick(sub.txt).toLowerCase()} <strong>${v2} ${targetUnit}</strong>. Combien reste-t-il en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(v1); let convertedV1 = v1 * Math.pow(10, targetIdx - sourceIdx); calcValStr = convertedV1.toString();
-            correctionText = `Calcul : ${convertedV1} - ${v2} = <strong>${convertedV1 - v2} ${targetUnit}</strong>.`;
+        if (family === 'sub') {
+            return tirer(() => {
+                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
+                let v1;
+                if (level === 1) v1 = String(rand(3, 9));
+                else if (level === 2) v1 = depuisEntier(rand(2, 6) * 10 + 5, 1);
+                else v1 = depuisEntier(rand(2, 5) * 100 + pick([15, 45, 85]), 2);
+                const conv = versEntier(v1, G.fin - G.pf);   // en cm, g ou cL
+                let v2;
+                if (level === 1) v2 = rand(2, 9) * 10;
+                else if (level === 2) v2 = rand(6, 9) * 10;
+                else v2 = rand(25, Math.min(95, Math.floor((conv - 1) / 10))) * 10;
+                if (v2 >= conv) return null;                  // jamais de reste négatif
+                const f1 = versEntier(v1, G.fin);
+                const objets = PROBLEMES.sub[g].filter(o => f1 >= o.min && f1 <= o.max);
+                if (!objets.length) return null;
+                const o = pick(objets);
+                const texte = `Dans ${o.n} de <strong>${mesure(v1, G.grand)}</strong>, ${pick(o.a)} <strong>${mesure(v2, G.petit)}</strong>. Combien reste-t-il en <strong>${G.petit}</strong> ?`;
+                const corr = `Calcul : ${ecrire(conv)} − ${ecrire(v2)} = <strong>${mesure(conv - v2, G.petit)}</strong>.`;
+                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr);
+            });
         }
-        else if (family === 'mult') {
-            const subjects = [ { s: SCHEMAS.mass, u1: 'g', u2: 'kg', idx1: 3, idx2: 0, obj: DICTIONNAIRE_PROBLEMES.mult.mass }, { s: SCHEMAS.length, u1: 'cm', u2: 'm', idx1: 5, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.mult.length }, { s: SCHEMAS.volL, u1: 'cL', u2: 'L', idx1: 5, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.mult.cap } ];
-            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
-            let v1, qte;
-            if (level === 1) { v1 = rand(2, 5) * 10; qte = rand(2, 5); } 
-            else if (level === 2) { v1 = rand(15, 25) * 10; qte = rand(6, 9); } 
-            else { v1 = rand(2, 9) + pick([0.25, 0.5, 0.75]); qte = rand(4, 8); let temp = sourceUnit; sourceUnit = targetUnit; targetUnit = temp; let tempI = sourceIdx; sourceIdx = targetIdx; targetIdx = tempI; }
-
-            let total = v1 * qte;
-            problemText = `${pick(sub.obj)} fait <strong>${fmt(v1)} ${sourceUnit}</strong>. Quel est le total pour <strong>${qte} identiques</strong> en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(total); calcValStr = fmt(total * Math.pow(10, targetIdx - sourceIdx));
-            correctionText = `1) Calcul : ${qte} × ${fmt(v1)} = ${fmt(total)} ${sourceUnit}. <br> 2) Conversion : <strong>${calcValStr} ${targetUnit}</strong>.`;
+        if (family === 'mult') {
+            return tirer(() => {
+                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
+                const o = pick(PROBLEMES.mult[g]);
+                let v1, qte, src, tgt;
+                if (level === 3) {
+                    // en grande unité, au centième (pas de 0,05) : « Un dictionnaire fait 1,25 kg »
+                    const pas = 10 ** (G.fin - 2) * 5;
+                    const k = entre(o.min / pas, o.max / pas, k => (k * pas) % (10 ** G.fin) !== 0);
+                    if (!k.length) return null;
+                    v1 = depuisEntier(pick(k) * pas, G.fin); qte = rand(4, 8); src = G.grand; tgt = G.petit;
+                } else {
+                    // en petite unité : multiple de 10 au niveau 1, de 5 (et pas de 10) au niveau 2
+                    const u = 10 ** G.pf;
+                    const k = entre(o.min / u, o.max / u, k => level === 1 ? k % 10 === 0 : (k % 5 === 0 && k % 10 !== 0));
+                    if (!k.length) return null;
+                    v1 = String(pick(k)); qte = level === 1 ? rand(2, 5) : rand(6, 9); src = G.petit; tgt = G.grand;
+                }
+                const dS = src === G.grand ? G.fin : G.fin - G.pf;   // la source comptée en 10^-dS
+                const total = depuisEntier(versEntier(v1, dS) * qte, dS);
+                const sP = posUnite(G.s, src), tP = posUnite(G.s, tgt);
+                const conv = decaler(total, tP - sP);
+                const texte = `${o.n} fait <strong>${mesure(v1, src)}</strong>. Quel est le total pour <strong>${qte} ${o.p} identiques</strong> en <strong>${tgt}</strong> ?`;
+                const corr = `1) Calcul : ${qte} × ${mesure(v1, src)} = ${mesure(total, src)}. <br> 2) Conversion : <strong>${mesure(conv, tgt)}</strong>.`;
+                return problemeAvec(G.s, total, src, tgt, texte, corr);
+            });
         }
-        else if (family === 'div') {
-            const subjects = [ { s: SCHEMAS.length, u1: 'm', u2: 'cm', idx1: 3, idx2: 5, obj: DICTIONNAIRE_PROBLEMES.div.length }, { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.div.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'cL', idx1: 3, idx2: 5, obj: DICTIONNAIRE_PROBLEMES.div.cap } ];
-            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
-            let v1, div, totalConverti, partConvertie;
-            if (level === 1) { v1 = rand(2, 8) * 2; div = pick([2, 4]); totalConverti = v1 * Math.pow(10, targetIdx - sourceIdx); partConvertie = totalConverti / div; }
-            else if (level === 2) { v1 = pick([1.5, 2.4, 3.6, 4.2]); div = pick([3, 6]); totalConverti = v1 * Math.pow(10, targetIdx - sourceIdx); partConvertie = totalConverti / div; }
-            else { v1 = pick([1.2, 2.8, 3.5, 5.4]); div = pick([4, 5, 7]); totalConverti = v1 * Math.pow(10, targetIdx - sourceIdx); partConvertie = totalConverti / div; }
-
-            problemText = `Je partage ${pick(sub.obj)} de <strong>${fmt(v1)} ${sourceUnit}</strong> en <strong>${div} parts égales</strong>. Combien fait une part en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(v1); calcValStr = totalConverti.toString();
-            correctionText = `Calcul après conversion : ${totalConverti} ÷ ${div} = <strong>${partConvertie} ${targetUnit}</strong>.`;
+        if (family === 'div') {
+            return tirer(() => {
+                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
+                const o = pick(PROBLEMES.div[g]);
+                const div = level === 1 ? pick([2, 4]) : (level === 2 ? pick([3, 6]) : pick([4, 5, 7]));
+                const dixiemes = level !== 1;
+                const pas = 10 ** (G.fin - (dixiemes ? 1 : 0));         // le nombre de départ, en dixièmes ou en unités
+                const versPetit = 10 ** (G.pf);                          // mm → cm, mL → cL
+                const k = entre(o.min / pas, o.max / pas, k => (!dixiemes || k % 10 !== 0) && ((k * pas / versPetit) % div === 0));
+                if (!k.length) return null;
+                const n = pick(k);
+                const v1 = depuisEntier(n * pas, G.fin);
+                const conv = n * pas / versPetit;
+                const texte = `Je partage ${o.n} de <strong>${mesure(v1, G.grand)}</strong> en <strong>${div} parts égales</strong>. Combien fait une part en <strong>${G.petit}</strong> ?`;
+                const corr = `Calcul après conversion : ${ecrire(conv)} ÷ ${div} = <strong>${mesure(conv / div, G.petit)}</strong>.`;
+                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr);
+            });
         }
-        else if (family === 'frac') {
-            const subjects = [ { s: SCHEMAS.mass, u1: 'kg', u2: 'g', idx1: 0, idx2: 3, obj: DICTIONNAIRE_PROBLEMES.frac.mass }, { s: SCHEMAS.volL, u1: 'L', u2: 'mL', idx1: 3, idx2: 6, obj: DICTIONNAIRE_PROBLEMES.frac.cap } ];
-            let sub = pick(subjects); schema = sub.s; sourceUnit = sub.u1; targetUnit = sub.u2; sourceIdx = sub.idx1; targetIdx = sub.idx2;
-            let v1, frac;
-            if (level === 1) { v1 = 1; frac = pick([ {t:`un demi`, v:0.5}, {t:`un quart`, v:0.25} ]); }
-            else if (level === 2) { v1 = pick([2, 3, 4]); frac = pick([ {t:`un demi`, v:0.5}, {t:`trois quarts`, v:0.75} ]); }
-            else { v1 = pick([1.2, 1.5, 2.4]); frac = pick([ {t:`un quart`, v:0.25}, {t:`trois quarts`, v:0.75} ]); }
-            
-            let motUnite = sourceUnit === 'kg' ? 'kilogramme' : 'litre';
-            let tStr = v1 === 1 ? `${frac.t} de ${motUnite}` : `${frac.t} de ${fmt(v1)} ${sourceUnit}`;
-            
-            problemText = `Dans une recette, il faut <strong>${tStr}</strong> ${pick(sub.obj)}. Combien cela fait-il en <strong>${targetUnit}</strong> ?`;
-            valStr = fmt(v1); 
-            let totalConverti = Math.round(v1 * Math.pow(10, targetIdx - sourceIdx)); 
-            calcValStr = totalConverti.toString();
-            let reponseFinale = totalConverti * frac.v;
-            correctionText = `1) Conversion : ${fmt(v1)} ${sourceUnit} = ${totalConverti} ${targetUnit}.<br> 2) Calcul : ${frac.t} de ${totalConverti} = <strong>${reponseFinale} ${targetUnit}</strong>.`;
+        if (family === 'frac') {
+            return tirer(() => {
+                const g = pick(['mass', 'cap']);
+                const s = g === 'mass' ? SCHEMAS.mass : SCHEMAS.volL;
+                const grand = g === 'mass' ? 'kg' : 'L', petit = g === 'mass' ? 'g' : 'mL';
+                const DEMI = { num: 1, den: 2, le: "la moitié" }, QUART = { num: 1, den: 4, le: "le quart" }, TROIS = { num: 3, den: 4, le: "les trois quarts" };
+                let v1, frac;
+                if (level === 1) { v1 = "1"; frac = pick([DEMI, QUART]); }
+                else if (level === 2) { v1 = pick(["2", "3", "4"]); frac = pick([DEMI, TROIS]); }
+                else { v1 = pick(["1,2", "1,5", "2,4"]); frac = pick([QUART, TROIS]); }
+                const conv = versEntier(v1, 3);
+                const rep = conv * frac.num / frac.den;
+                const objets = PROBLEMES.frac[g].filter(o => rep <= o.max);
+                if (!objets.length || !Number.isInteger(rep)) return null;
+                const o = pick(objets);
+                let expr;
+                if (level === 1) {
+                    const mot = g === 'mass' ? 'kilogramme' : 'litre';
+                    expr = frac === DEMI ? `un demi-${mot}` : `un quart de ${mot}`;
+                } else expr = `${frac.le} de ${mesure(v1, grand)}`;
+                const texte = `Dans une recette, il faut <strong>${expr}</strong> ${o.n}. Combien cela fait-il en <strong>${petit}</strong> ?`;
+                const corr = `1) Conversion : ${mesure(v1, grand)} = ${mesure(conv, petit)}.<br> 2) Calcul : ${frac.le} de ${mesure(conv, petit)} = <strong>${mesure(rep, petit)}</strong>.`;
+                return problemeAvec(s, v1, grand, petit, texte, corr);
+            });
         }
-        else if (family === 'geom') {
-            schema = SCHEMAS.length; let mode = (level === 1) ? 'perim' : (level === 2 ? 'area' : pick(['perim', 'area']));
-            if (mode === 'perim') {
-                sourceUnit = 'm'; targetUnit = 'cm'; sourceIdx = 3; targetIdx = 5;
-                let m = (level === 1) ? rand(3, 8) : rand(2, 5) + pick([0.2, 0.5]); let cm = rand(2, 8) * 10;
-                problemText = `Un rectangle mesure <strong>${fmt(m)} m</strong> de long et <strong>${cm} cm</strong> de large. Quel est son périmètre en <strong>cm</strong> ?`;
-                valStr = fmt(m); let mToCm = m * 100; calcValStr = mToCm.toString(); let perim = (mToCm + cm) * 2;
-                correctionText = `1) Conversion : ${fmt(m)} m = ${mToCm} cm.<br> 2) Calcul : ( ${mToCm} + ${cm} ) × 2 = <strong>${perim} cm</strong>.`;
-            } else {
-                sourceUnit = 'cm'; targetUnit = 'm'; sourceIdx = 5; targetIdx = 3;
-                let m = rand(2, 6); let cm = (level === 2) ? rand(3, 9) * 10 : rand(4, 9) * 10;
-                problemText = `Un mur rectangulaire mesure <strong>${m} m</strong> de long et <strong>${cm} cm</strong> de large. Quelle est son aire en <strong>m²</strong> ?`;
-                valStr = cm.toString(); let cmToM = cm / 100; calcValStr = fmt(cmToM); let area = m * cmToM;
-                correctionText = `1) Conversion : ${cm} cm = ${fmt(cmToM)} m.<br> 2) Aire : ${m} m × ${fmt(cmToM)} m = <strong>${fmt(area)} m²</strong>.`;
-            }
+        // family === 'geom'
+        let mode = (level === 1) ? 'perim' : (level === 2 ? 'area' : pick(['perim', 'area']));
+        if (mode === 'perim') {
+            const m = level === 1 ? String(rand(3, 8)) : depuisEntier(rand(2, 5) * 10 + pick([2, 5]), 1);
+            const cm = rand(2, 8) * 10;
+            const mToCm = versEntier(m, 2), perim = (mToCm + cm) * 2;
+            const texte = `Un rectangle mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quel est son périmètre en <strong>cm</strong> ?`;
+            const corr = `1) Conversion : ${mesure(m, 'm')} = ${mesure(mToCm, 'cm')}.<br> 2) Calcul : (${ecrire(mToCm)} + ${cm}) × 2 = <strong>${mesure(perim, 'cm')}</strong>.`;
+            return problemeAvec(SCHEMAS.length, m, 'm', 'cm', texte, corr);
         }
-
-        let textId = problemText; 
-        return { isProblem: true, isEstimation: false, schema, sourceUnit, targetUnit, sourceIdx, targetIdx, valStr, calcValStr, problemText, correctionText, phase: 0, textId };
+        return tirer(() => {
+            const m = rand(2, 6), cm = (level === 2) ? rand(3, 9) * 10 : rand(4, 9) * 10;
+            const objets = PROBLEMES.aire.filter(o => m >= o.m[0] && m <= o.m[1] && cm >= o.cm[0] && cm <= o.cm[1]);
+            if (!objets.length) return null;
+            const o = pick(objets);
+            const cmToM = depuisEntier(cm, 2), aire = depuisEntier(m * cm, 2);
+            const texte = `${o.n} rectangulaire mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quelle est son aire en <strong>m²</strong> ?`;
+            const corr = `1) Conversion : ${mesure(cm, 'cm')} = ${mesure(cmToM, 'm')}.<br> 2) Aire : ${mesure(m, 'm')} × ${mesure(cmToM, 'm')} = <strong>${mesure(aire, 'm²')}</strong>.`;
+            return problemeAvec(SCHEMAS.length, String(cm), 'cm', 'm', texte, corr);
+        });
     }
 
     /* =========================================
        LE GÉNÉRATEUR DES ORDRES DE GRANDEUR
        ========================================= */
+    const TOUTES_DIMS = ['len', 'mass', 'cap', 'area', 'vol'];
+    function convertTricky(val, unit) {
+        const v = versChaine(val);
+        if (unit === 'g') return { val: decaler(v, -3), unit: 'kg' };
+        if (unit === 'kg') return { val: decaler(v, 3), unit: 'g' };
+        if (unit === 't') return { val: decaler(v, 3), unit: 'kg' };
+        if (unit === 'mm') return { val: decaler(v, -1), unit: 'cm' };
+        if (unit === 'cm') return { val: decaler(v, -2), unit: 'm' };
+        if (unit === 'm') return { val: decaler(v, 2), unit: 'cm' };
+        if (unit === 'km') return { val: decaler(v, 3), unit: 'm' };
+        if (unit === 'mL') return { val: decaler(v, -1), unit: 'cL' };
+        if (unit === 'cL') return { val: decaler(v, 1), unit: 'mL' };
+        if (unit === 'L') return { val: decaler(v, 2), unit: 'cL' };
+        return { val: normaliser(v), unit: unit };
+    }
+    // « La masse d'un œuf » → « La masse d'un œuf est d'environ »
+    function debutDePhrase(n) { return `${majuscule(n)} est d'environ`; }
+    // les choix A, B, C dans un ordre tiré au hasard ; le bon choix est le premier de la liste reçue
+    function melangerChoix(choices) {
+        let finalChoices = []; let correctIndex = 0;
+        let indices = choices.map((c, i) => i); shuffle(indices);
+        for (let i = 0; i < indices.length; i++) { finalChoices.push(choices[indices[i]]); if (indices[i] === 0) correctIndex = i; }
+        return { choices: finalChoices, correctIndex };
+    }
+    // des mesures fausses toutes différentes entre elles et de la bonne (on compare les grandeurs, pas l'écriture)
+    function distracteurs(bonne, candidats, n) {
+        const vus = new Set([valeurDe(bonne.val, bonne.unit)]);
+        const r = [];
+        for (const c of shuffle([...candidats])) {
+            const k = valeurDe(c.val, c.unit);
+            if (vus.has(k) || c.val === '0') continue;
+            vus.add(k); r.push(c);
+            if (r.length === n) break;
+        }
+        return r;
+    }
+
     function buildEstimationLogic(level, qTypeStr, allowedDims) {
-        
+        const dims = allowedDims && allowedDims.length ? allowedDims : TOUTES_DIMS;
         let qType = 1;
         if(qTypeStr === 'est_val') qType = 2;
         if(qTypeStr === 'est_obj') qType = 3;
@@ -767,342 +1014,253 @@
         }
 
         if (qType === 6) {
-            let dim = pick(['len', 'mass', 'cap', 'area', 'vol']);
+            let dim = pick(TOUTES_DIMS);
             let item = pick(EST_DB[dim]);
             let pickedQItem = pick(item.items);
             let qObject = pickedQItem.n;
-            
-            let correctG = dim === 'len' ? "Une longueur" : (dim === 'mass' ? "Une masse" : (dim === 'cap' ? "Une capacité" : (dim === 'area' ? "Une aire" : "Un volume")));
-            let allG = ["Une longueur", "Une masse", "Une capacité", "Une aire", "Un volume"];
-            let wrongG = shuffle(allG.filter(g => g !== correctG)).slice(0, 2);
-            let choices = [correctG, wrongG[0], wrongG[1]];
-            
-            let finalChoices = []; let correctIndex = 0;
-            let indices = [0, 1, 2]; shuffle(indices);
-            for(let i=0; i<3; i++) { finalChoices.push(choices[indices[i]]); if(indices[i]===0) correctIndex = i; }
-
+            const NOMS = { len: "Une longueur", mass: "Une masse", cap: "Une capacité", area: "Une aire", vol: "Un volume" };
+            let correctG = NOMS[dim];
+            // « volume » et « capacité » jamais ensemble : les deux pourraient être justes
+            const voisin = d => d === 'cap' ? 'vol' : (d === 'vol' ? 'cap' : null);
+            const pris = [dim];
+            for (const d of shuffle(TOUTES_DIMS.filter(d => d !== dim))) {
+                if (pris.length === 3) break;
+                if (!pris.some(p => voisin(p) === d)) pris.push(d);
+            }
+            const m = melangerChoix(pris.map(d => NOMS[d]));
             let problemText = `Quelle grandeur mesure-t-on pour : <strong>${qObject}</strong> ?`;
-            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: finalChoices, correctIndex: correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
         }
 
         if (qType === 7) {
             let pontsList = PONTS_DB.filter(p => p.lvl <= level);
             if(pontsList.length === 0) pontsList = PONTS_DB;
             let pont = pick(pontsList);
-            
-            let choices = [pont.c, pont.w1, pont.w2];
-            let finalChoices = []; let correctIndex = 0;
-            let indices = [0, 1, 2]; shuffle(indices);
-            for(let i=0; i<3; i++) { finalChoices.push(choices[indices[i]]); if(indices[i]===0) correctIndex = i; }
-            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: finalChoices, correctIndex: correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e };
+            const m = melangerChoix([pont.c, pont.w1, pont.w2]);
+            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: m.choices, correctIndex: m.correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e };
         }
-        
+
         if (qType === 8) {
             let objects = [], values = [];
+            const vues = new Set();
+            const ajouter = (it, v, u) => { objects.push(pick(it.items).n); values.push(mesure(v, u)); vues.add(valeurDe(v, u)); };
             if (level === 1) {
-                let dims = shuffle(['len', 'mass', 'cap', 'area', 'vol']).slice(0, 3);
-                dims.forEach(dim => {
+                shuffle([...TOUTES_DIMS]).slice(0, 3).forEach(dim => {
                     let it = pick(EST_DB[dim].filter(i => i.lvl === 1));
                     if (!it) it = pick(EST_DB[dim]);
-                    objects.push(pick(it.items).n);
-                    values.push(`${fmt(it.val)} ${it.unit}`);
+                    ajouter(it, versChaine(it.val), it.unit);
                 });
-            } else if (level === 2) {
-                let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
-                let pool = shuffle(EST_DB[dim].filter(i => i.lvl <= 2));
-                if(pool.length < 3) pool = shuffle(EST_DB[dim]);
-                for(let i=0; i<3; i++) {
-                    objects.push(pick(pool[i].items).n);
-                    values.push(`${fmt(pool[i].val)} ${pool[i].unit}`);
-                }
             } else {
-                let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
-                let pool = shuffle(EST_DB[dim]);
-                for(let i=0; i<3; i++) {
-                    objects.push(pick(pool[i].items).n);
-                    let conv = convertTricky(pool[i].val, pool[i].unit);
-                    if (rand(1,2) === 1) values.push(`${fmt(conv.val)} ${conv.unit}`);
-                    else values.push(`${fmt(pool[i].val)} ${pool[i].unit}`);
+                let dim = pick(dims);
+                let pool = shuffle(EST_DB[dim].filter(i => level === 3 || i.lvl <= 2));
+                if (pool.length < 3) pool = shuffle([...EST_DB[dim]]);
+                for (const it of pool) {
+                    if (objects.length === 3) break;
+                    if (vues.has(valeurDe(it.val, it.unit))) continue;   // deux objets de même mesure : association ambiguë
+                    if (level === 3 && rand(1, 2) === 1) { const conv = convertTricky(it.val, it.unit); ajouter(it, conv.val, conv.unit); }
+                    else ajouter(it, versChaine(it.val), it.unit);
                 }
             }
             let shuffledVals = shuffle([...values]);
-            
             let letters = ["A", "B", "C"];
             let htmlStr = `Associe chaque élément à la bonne valeur :<br><br>
                <div style="display:flex; justify-content:center; gap: 50px; font-size:0.9em; text-align:left;">
                  <div>1) ${objects[0]}<br>2) ${objects[1]}<br>3) ${objects[2]}</div>
                  <div>A) ${shuffledVals[0]}<br>B) ${shuffledVals[1]}<br>C) ${shuffledVals[2]}</div>
                </div>`;
-               
             let correctStr = `1 → ${letters[shuffledVals.indexOf(values[0])]} | 2 → ${letters[shuffledVals.indexOf(values[1])]} | 3 → ${letters[shuffledVals.indexOf(values[2])]}`;
-            
             return { isProblem: false, isEstimation: true, qType: 8, problemText: htmlStr, choices: [], correctIndex: 0, correctionText: `La bonne combinaison : <strong>${correctStr}</strong>.`, phase: 0, textId: objects.join(""), emoji: "🔗" };
         }
-        
-        if (qType === 9) {
-            let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
-            let db = EST_DB[dim].filter(item => item.lvl <= level);
-            if(db.length === 0) db = EST_DB[dim]; 
-            let targetItem = pick(db);
-            let pickedQItem = pick(targetItem.items); 
-            
-            let isLen = dim === 'len';
-            let verb = isLen ? "mesure" : (dim === 'mass' ? "pèse" : (dim === 'area' ? "couvre" : (dim === 'vol' ? "occupe" : "contient")));
-            
-            let displayUnit = targetItem.unit;
-            let displayVal = targetItem.val;
 
+        if (qType === 9) {
+            let dim = pick(dims);
+            let db = EST_DB[dim].filter(item => item.lvl <= level);
+            if(db.length === 0) db = EST_DB[dim];
+            let targetItem = pick(db);
+            let pickedQItem = pick(targetItem.items);
+            let displayUnit = targetItem.unit;
+            let displayVal = versChaine(targetItem.val);
             if (level === 3) {
                 let conv = convertTricky(targetItem.val, targetItem.unit);
-                if (conv.unit !== targetItem.unit) {
-                    displayUnit = conv.unit;
-                    displayVal = conv.val;
-                }
+                displayUnit = conv.unit; displayVal = conv.val;
             }
-            
-            let problemText = `Complète la phrase :<br><br><strong>${pickedQItem.n.charAt(0).toUpperCase() + pickedQItem.n.slice(1)}</strong> ${verb} environ ....... <strong>${displayUnit}</strong>.`;
-            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${fmt(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+            let problemText = `Complète la phrase : <br><br><strong>${debutDePhrase(pickedQItem.n)}</strong> ....... <strong>${displayUnit}</strong>.`;
+            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${ecrire(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
         }
-        
+
         if (qType === 10) {
             let db = TRI_DB.filter(item => item.lvl <= level);
             if(db.length === 0) db = TRI_DB;
             let targetItem = pick(db);
             let sorted = [...targetItem.arr];
             let shuf = shuffle([...targetItem.arr]);
-            
             let problemText = `Classe ces mesures de la plus petite à la plus grande :<br><br><span style='color:var(--accent); font-size:1.1em;'>${shuf.join(' &nbsp; | &nbsp; ')}</span>`;
             return { isProblem: false, isEstimation: true, qType: 10, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${sorted.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, phase: 0, textId: problemText, emoji: "📶" };
         }
 
-        let dim = pick(allowedDims.length ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']);
+        let dim = pick(dims);
         let db = EST_DB[dim].filter(item => item.lvl <= level);
-        if(db.length === 0) db = EST_DB[dim]; 
+        // « Quelle unité ? » : seulement les objets dont l'unité est vraiment la plus adaptée
+        if (qType === 1) db = db.filter(item => item.unite !== false && UNITES_USUELLES[dim].includes(item.unit));
+        if(db.length === 0) db = EST_DB[dim].filter(item => qType !== 1 || (item.unite !== false && UNITES_USUELLES[dim].includes(item.unit)));
         let targetItem = pick(db);
-        
-        let pickedQItem = pick(targetItem.items); 
-        let qObject = pickedQItem.n; 
-        let emoji = pickedQItem.e; 
+
+        let pickedQItem = pick(targetItem.items);
+        let qObject = pickedQItem.n;
+        let emoji = pickedQItem.e;
+        const bonne = { val: versChaine(targetItem.val), unit: targetItem.unit };
 
         let problemText = "";
         let correctionText = `Rappel : ${targetItem.repere}.`;
         let choices = [];
-        let correctIndex = 0;
-        let friseHtml = ""; 
+        let friseHtml = "";
 
-        let isLen = dim === 'len';
-        let verb = isLen ? "mesure" : (dim === 'mass' ? "pèse" : (dim === 'area' ? "couvre" : (dim === 'vol' ? "occupe" : "contient")));
-        let prefix = verb + " environ";
-
-        if (qType === 1) { 
+        if (qType === 1) {
             problemText = `Pour <strong>${qObject}</strong>, quelle est l'unité la plus adaptée ?`;
-            let unitsArr = [];
-            if(dim === 'len') unitsArr = ['mm', 'cm', 'm', 'km'];
-            else if(dim === 'mass') unitsArr = ['g', 'kg', 't'];
-            else if(dim === 'area') unitsArr = ['cm²', 'm²', 'km²'];
-            else if(dim === 'vol') unitsArr = ['cm³', 'm³', 'km³'];
-            else unitsArr = ['mL', 'cL', 'L'];
-            
-            let wrongUnits = shuffle(unitsArr.filter(u => u !== targetItem.unit)).slice(0, 2);
-            if(wrongUnits.length < 2) wrongUnits.push(unitsArr.filter(u => u !== targetItem.unit)[0]); 
-            
+            let wrongUnits = shuffle(UNITES_USUELLES[dim].filter(u => u !== targetItem.unit)).slice(0, 2);
             choices = [targetItem.unit, wrongUnits[0], wrongUnits[1]];
             friseHtml = generateFriseHTML(dim);
-        } 
-        else if (qType === 2) { 
-            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${prefix} :`;
-            
-            let v1 = targetItem.val;
-            let pool = [];
-            let c1 = `${fmt(v1)} ${targetItem.unit}`; 
-            
+        }
+        else if (qType === 2) {
+            problemText = `<strong>${debutDePhrase(qObject)}</strong> :`;
+            let juste = bonne, pool;
             if (level === 1 || level === 2) {
-                if (v1 >= 10) pool.push(v1 / 10);
-                if (v1 >= 100) pool.push(v1 / 100);
-                pool.push(v1 * 10);
-                pool.push(v1 * 100);
-                pool.push(v1 * 1000);
-                pool = shuffle(pool);
-                
-                let c2 = `${fmt(pool[0])} ${targetItem.unit}`; 
-                let c3 = `${fmt(pool[1])} ${targetItem.unit}`;
-                choices = [c1, c2, c3];
+                const v = Number(bonne.val.replace(',', '.'));
+                pool = [1, 2, 3].map(k => ({ val: decaler(bonne.val, k), unit: bonne.unit }));
+                if (v >= 10) pool.push({ val: decaler(bonne.val, -1), unit: bonne.unit });
+                if (v >= 100) pool.push({ val: decaler(bonne.val, -2), unit: bonne.unit });
             } else {
-                let conv = convertTricky(targetItem.val, targetItem.unit);
-                let c1Conv = `${fmt(conv.val)} ${conv.unit}`; 
-                let poolLevel3 = [
-                    `${fmt(targetItem.val * 10)} ${targetItem.unit}`,
-                    `${fmt(conv.val * 100)} ${conv.unit}`,
-                    `${fmt(targetItem.val / 10)} ${targetItem.unit}`,
-                    `${fmt(conv.val / 10)} ${conv.unit}`
+                juste = convertTricky(targetItem.val, targetItem.unit);
+                pool = [
+                    { val: decaler(bonne.val, 1), unit: bonne.unit },
+                    { val: decaler(juste.val, 2), unit: juste.unit },
+                    { val: decaler(bonne.val, -1), unit: bonne.unit },
+                    { val: decaler(juste.val, -1), unit: juste.unit },
+                    { val: decaler(bonne.val, 2), unit: bonne.unit }
                 ];
-                poolLevel3 = shuffle(poolLevel3);
-                choices = [c1Conv, poolLevel3[0], poolLevel3[1]];
             }
+            // pas de nombre trop petit pour être lu (« 0,15 cm » oui, « 0,015 cm » non)
+            pool = pool.filter(c => !/^0,0/.test(c.val));
+            const faux = distracteurs(juste, pool, 2);
+            choices = [mesure(juste.val, juste.unit), ...faux.map(c => mesure(c.val, c.unit))];
         }
-        else if (qType === 3) { 
-            problemText = `Qu'est-ce qui ${prefix} <strong>${fmt(targetItem.val)} ${targetItem.unit}</strong> ?`;
-            let wrongItems = shuffle(EST_DB[dim].filter(i => i.val !== targetItem.val || i.unit !== targetItem.unit)).slice(0, 2);
-            
-            let wrongN1 = pick(wrongItems[0].items).n;
-            let wrongN2 = pick(wrongItems[1].items).n;
-            
-            choices = [
-                qObject.charAt(0).toUpperCase() + qObject.slice(1), 
-                wrongN1.charAt(0).toUpperCase() + wrongN1.slice(1), 
-                wrongN2.charAt(0).toUpperCase() + wrongN2.slice(1)
-            ];
-            emoji = null; 
+        else if (qType === 3) {
+            problemText = `Qu'est-ce qui a une mesure d'environ <strong>${mesure(bonne.val, bonne.unit)}</strong> ?`;
+            let wrongItems = shuffle(EST_DB[dim].filter(i => valeurDe(i.val, i.unit) !== valeurDe(targetItem.val, targetItem.unit))).slice(0, 2);
+            choices = [majuscule(qObject), majuscule(pick(wrongItems[0].items).n), majuscule(pick(wrongItems[1].items).n)];
+            emoji = null;
         }
-        else if (qType === 4) { 
+        else if (qType === 4) {
             let isTrue = rand(1, 2) === 1;
-            let displayedVal = targetItem.val;
-            let unitDisplayed = targetItem.unit;
-            
+            let affiche = bonne;
             if (!isTrue) {
-                if (level === 1) displayedVal = targetItem.val * pick([100, 1000]);
-                else if (level === 2) displayedVal = pick([targetItem.val * 10, targetItem.val / 10]);
-                else {
-                    if (rand(1, 2) === 1) {
-                        let altUnits = ['mg','cg','dg','g','dag','hg','kg','t','mm','cm','dm','m','dam','hm','km','mL','cL','dL','L','daL','hL','kL','cm²','m²','km²','cm³','dm³','m³'];
-                        altUnits = altUnits.filter(u => u !== targetItem.unit);
-                        unitDisplayed = pick(altUnits);
-                    } else {
-                        displayedVal = targetItem.val * pick([2, 0.5, 5]);
-                    }
-                }
+                // faux : au moins 10 fois trop grand ou trop petit (jamais « 2 fois », qui reste « environ »)
+                if (level === 1) affiche = { val: decaler(bonne.val, pick([2, 3])), unit: bonne.unit };
+                else if (level === 2) affiche = { val: decaler(bonne.val, pick([1, -1])), unit: bonne.unit };
+                else affiche = { val: bonne.val, unit: pick(UNITES_PIEGES[dim].filter(u => u !== bonne.unit)) };
             }
-            
-            problemText = `<strong>${qObject.charAt(0).toUpperCase() + qObject.slice(1)}</strong> ${verb} environ <strong>${fmt(displayedVal)} ${unitDisplayed}</strong>.`;
-            choices = ["Vrai", "Faux"];
-            correctIndex = isTrue ? 0 : 1;
+            problemText = `<strong>${debutDePhrase(qObject)} ${mesure(affiche.val, affiche.unit)}</strong>.`;
+            const m = { choices: ["Vrai", "Faux"], correctIndex: isTrue ? 0 : 1 };
             correctionText = (isTrue ? "C'est vrai ! " : "C'est faux ! ") + correctionText;
-            
-            return { isProblem: false, isEstimation: true, qType, problemText, choices, correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
+            return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
         }
 
-        let finalChoices = [];
-        let finalCorrectIndex = 0;
-        let indices = [0, 1, 2];
-        shuffle(indices);
-        for(let i=0; i<indices.length; i++) {
-            finalChoices.push(choices[indices[i]]);
-            if (indices[i] === 0) finalCorrectIndex = i;
-        }
-
-        return { isProblem: false, isEstimation: true, qType, problemText, choices: finalChoices, correctIndex: finalCorrectIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
-    }
-
-    function convertTricky(val, unit) {
-        if (unit === 'g') return { val: val / 1000, unit: 'kg' };
-        if (unit === 'kg') return { val: val * 1000, unit: 'g' };
-        if (unit === 't') return { val: val * 1000, unit: 'kg' };
-        if (unit === 'mm') return { val: val / 10, unit: 'cm' };
-        if (unit === 'cm') return { val: val / 100, unit: 'm' };
-        if (unit === 'm') return { val: val * 100, unit: 'cm' };
-        if (unit === 'km') return { val: val * 1000, unit: 'm' };
-        if (unit === 'mL') return { val: val / 10, unit: 'cL' };
-        if (unit === 'cL') return { val: val * 10, unit: 'mL' };
-        if (unit === 'L') return { val: val * 100, unit: 'cL' };
-        return { val: val, unit: unit }; 
+        const m = melangerChoix(choices);
+        return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
     }
 
     /* =========================================
-       RÉCUPÉRATION DES DONNÉES 
+       LE TIRAGE D'UNE SÉRIE
+       Chaque case cochée sort au moins une fois quand le nombre de questions le permet,
+       chaque niveau coché aussi ; jamais deux fois le même énoncé.
        ========================================= */
+    function construireQuestion(type, level, allowedDims) {
+        if (type.startsWith('prob_')) return buildProblemLogic(level, type.replace('prob_', ''));
+        if (type.startsWith('est_')) return buildEstimationLogic(level, type, allowedDims);
+        return buildQuestionLogic(type, level);
+    }
+    function dimsDesCases(types) {
+        let allowedDims = [];
+        if (types.includes('length')) allowedDims.push('len');
+        if (types.includes('mass') || types.includes('massT')) allowedDims.push('mass');
+        if (types.includes('volL')) allowedDims.push('cap');
+        if (types.includes('area')) allowedDims.push('area');
+        if (types.includes('volM3') || types.includes('cross')) allowedDims.push('vol');
+        return allowedDims;
+    }
+    // la suite des valeurs, chacune au moins une fois, dans un ordre tiré au hasard
+    function repartir(valeurs, n) {
+        let r = [];
+        while (r.length < n) r = r.concat(shuffle([...valeurs]));
+        return shuffle(r.slice(0, n));
+    }
+    function tirerSerie(types, levels, count, seed) {
+        setSeed(seed);
+        const allowedDims = dimsDesCases(types);
+        const lesTypes = repartir(types, count), lesNiveaux = repartir(levels, count);
+        const serie = [], vus = new Set();
+        for (let i = 0; i < count; i++) {
+            const type = lesTypes[i];
+            // le niveau prévu d'abord, puis les autres niveaux cochés ; si tout est déjà sorti, la série s'arrête là
+            const essais = [lesNiveaux[i], ...shuffle(levels.filter(l => l !== lesNiveaux[i]))];
+            let q = null;
+            for (const level of essais) {
+                for (let t = 0; t < 60 && !q; t++) {
+                    const c = construireQuestion(type, level, allowedDims);
+                    if (!vus.has(c.textId)) q = c;
+                }
+                if (q) break;
+            }
+            if (!q) continue;
+            vus.add(q.textId);
+            q.caseCochee = type;
+            serie.push(q);
+        }
+        return serie;
+    }
+
+    function montrerMessage(texte) {
+      const el = document.getElementById('msgConfig');
+      if (!el) return;
+      el.textContent = texte || '';
+      el.hidden = !texte;
+    }
+
     function getQuizData() {
       let rawTypes = Array.from(document.querySelectorAll('.theme-grid input[type="checkbox"]:checked')).map(cb => cb.value);
-      
-      let allowedDims = [];
-      if (rawTypes.includes('length')) allowedDims.push('len');
-      if (rawTypes.includes('mass') || rawTypes.includes('massT')) allowedDims.push('mass');
-      if (rawTypes.includes('volL')) allowedDims.push('cap');
-      if (rawTypes.includes('area')) allowedDims.push('area');
-      if (rawTypes.includes('volM3') || rawTypes.includes('cross')) allowedDims.push('vol');
-      
-      if (rawTypes.length === 0) { alert("⚠️ Cochez au moins une case dans le menu !"); return false; }
-      
+      if (rawTypes.length === 0) { montrerMessage("⚠️ Coche au moins une case dans le menu !"); return false; }
       const levelCbs = document.querySelectorAll('input[name="cbLevel"]:checked');
-      if (levelCbs.length === 0) { alert("⚠️ Cochez au moins un niveau !"); return false; }
+      if (levelCbs.length === 0) { montrerMessage("⚠️ Coche au moins un niveau !"); return false; }
+      montrerMessage('');
 
       let seedInputElem = document.getElementById('inputSeed');
-      let seedInput = seedInputElem.value.trim().toUpperCase();
-      
+      // le code est réécrit dans la fiche imprimée : on n'y laisse passer aucun caractère de balise
+      let seedInput = seedInputElem.value.trim().toUpperCase().replace(/[<>&"'`]/g, '');
       if (!seedInput || seedInput === lastGeneratedSeed) {
-          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; 
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
           seedInput = "";
           for(let i=0; i<4; i++) seedInput += chars.charAt(Math.floor(Math.random() * chars.length));
           seedInputElem.value = seedInput;
-          lastGeneratedSeed = seedInput; 
+          lastGeneratedSeed = seedInput;
       } else {
-          lastGeneratedSeed = ""; 
+          lastGeneratedSeed = "";
       }
-      
-      currentSeedStr = seedInput; 
-      setSeed(currentSeedStr); 
-      
+      currentSeedStr = seedInput;
+
       let levels = Array.from(levelCbs).map(cb => parseInt(cb.value));
       let targetCount = parseInt(document.getElementById('selCount').value, 10);
-      
-      quizData = [];
-      usedQuestionsText = []; 
-      
-      for (let i = 0; i < targetCount; i++) {
-        let chosenType = pick(rawTypes);
-        let chosenLevel = pick(levels);
-        
-        let newQuestion;
-        let attempts = 0;
-        
-        do {
-            if (chosenType.startsWith('prob_')) {
-                let family = chosenType.replace('prob_', '');
-                newQuestion = buildProblemLogic(chosenLevel, family);
-            } else if (chosenType.startsWith('est_')) {
-                let dimList = allowedDims.length > 0 ? allowedDims : ['len', 'mass', 'cap', 'area', 'vol']; 
-                newQuestion = buildEstimationLogic(chosenLevel, chosenType, dimList);
-            } else {
-                newQuestion = buildQuestionLogic(chosenType, chosenLevel);
-            }
-            attempts++;
-        } while (usedQuestionsText.includes(newQuestion.textId) && attempts < 15);
-        
-        usedQuestionsText.push(newQuestion.textId);
-        quizData.push(newQuestion);
-      }
+      quizData = tirerSerie(rawTypes, levels, targetCount, currentSeedStr);
       return true;
     }
 
     /* =========================================
-       CONSTRUCTION DU DOM 
+       CONSTRUCTION DU DOM
        ========================================= */
     function buildHTMLColumns(schema, isPrint = false, q = null, mode = 'diapo') {
       let html = '';
-      const labelsMap = schema.id === 'cross' ? CROSS_LABELS : (schema.id === 'area' ? AREA_LABELS : null);
-      
+      const labelsMap = schema.labels || null;
       let digits = [];
-      let totalSlots = schema.units.length * schema.slots;
-      
-      if(isPrint && q && mode !== 'empty') {
-          digits = new Array(totalSlots).fill('');
-          let parts = q.valStr.split(',');
-          let intPart = parts[0], decPart = parts[1] || "";
-          let sourceRightSlot = q.sourceIdx * schema.slots + (schema.slots - 1);
-          
-          let c = sourceRightSlot;
-          for(let i=intPart.length-1; i>=0; i--) { if(c >= 0) digits[c] = intPart[i]; c--; }
-          c = sourceRightSlot + 1;
-          for(let i=0; i<decPart.length; i++) { if(c < totalSlots) digits[c] = decPart[i]; c++; }
-
-          if(mode === 'correction') {
-              let minIdx = totalSlots, maxIdx = -1;
-              digits.forEach((val, idx) => { if(val !== '') { minIdx = Math.min(minIdx, idx); maxIdx = Math.max(maxIdx, idx); } });
-              let targetRightSlot = q.targetIdx * schema.slots + (schema.slots - 1);
-              for(let i=Math.min(minIdx, targetRightSlot); i<=Math.max(maxIdx, targetRightSlot); i++) {
-                  if(digits[i] === '') digits[i] = '0';
-              }
-          }
-      }
+      if (isPrint && q && mode !== 'empty') digits = chiffresDuTableau(q, mode === 'correction');
 
       let slotIndex = 0;
       schema.units.forEach((u, ci) => {
@@ -1110,11 +1268,11 @@
         html += `<div class="head-group" style="grid-template-columns: repeat(${schema.slots}, 1fr)">`;
         for(let si=0; si<schema.slots; si++){
           let isLast = (si === schema.slots - 1);
-          let classes = `unitBtn ${!isLast ? 'empty-unit' : ''}`;
-          if (isPrint && mode === 'correction' && isLast && ci === q.targetIdx) classes += ' unit-highlight-text';
+          let classes = `unitBtn ${!isLast || !u ? 'empty-unit' : ''}`;
+          if (isPrint && mode === 'correction' && isLast && u === q.targetUnit && ci * schema.slots + si === q.targetPos) classes += ' unit-highlight-text';
           let styleText = '';
           if (isLast && u.length >= 4 && schema.slots === 3) styleText = 'font-size: 0.82em; letter-spacing: -0.5px;';
-          html += `<div class="${classes}">${isLast ? `<span style="${styleText}">${u}</span>` : ''}</div>`;
+          html += `<div class="${classes}">${isLast && u ? `<span style="${styleText}">${u}</span>` : ''}</div>`;
         }
         html += `</div>`;
 
@@ -1122,17 +1280,19 @@
             html += `<div class="subhead-group" style="grid-template-columns: repeat(${schema.slots}, 1fr)">`;
             for (let si = 0; si < schema.slots; si++) {
                 let key = `${ci}_${si}`;
-                html += `<div class="sub-lab-wrapper">${labelsMap[key] ? `<span class="sub-lab">${labelsMap[key]}</span>` : ''}</div>`;
+                let lab = labelsMap[key];
+                let hl = isPrint && mode === 'correction' && lab === q.targetUnit && ci * schema.slots + si === q.targetPos ? ' unit-highlight-text' : '';
+                html += `<div class="sub-lab-wrapper">${lab ? `<span class="sub-lab${hl}">${lab}</span>` : ''}</div>`;
             }
             html += `</div>`;
         }
 
         html += `<div class="cell"><div class="slots" style="grid-template-columns: repeat(${schema.slots}, 1fr)">`;
         for(let i=0; i<schema.slots; i++){
-          let isTargetSlot = isPrint && mode === 'correction' && slotIndex === (q.targetIdx * schema.slots + (schema.slots - 1));
+          let isTargetSlot = isPrint && mode === 'correction' && slotIndex === q.targetPos;
           let extraClass = isTargetSlot ? ' unit-highlight' : '';
           let val = (isPrint && mode !== 'empty') ? digits[slotIndex] : '';
-          html += `<input class="digit${extraClass}" readonly value="${val}" />`;
+          html += `<input class="digit${extraClass}" readonly tabindex="-1" aria-hidden="true" value="${val}" />`;
           if (isPrint && isTargetSlot && q.calcValStr.includes(',')) html += `<div class="print-static-comma">,</div>`;
           slotIndex++;
         }
@@ -1141,55 +1301,73 @@
       return html;
     }
 
+    // Au téléphone (décision de Gwenaël du 21/11, choix B) : un tableau de plus de 12 cases (aires, volumes,
+    // tableau élargi) ne montre que les colonnes où il y a des chiffres, plus une voisine si la place le permet.
+    // Mêmes colonnes à l'aide et à la correction : rien ne bouge d'une étape à l'autre.
+    const CASES_TELEPHONE = 12;
+    function petitEcran() { return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 700px)').matches; }
+    function vueColonnesUtiles(q) {
+      const s = q.schema, sl = s.slots, nc = s.units.length;
+      if (nc * sl <= CASES_TELEPHONE) return q;
+      const d = chiffresDuTableau(q, true);
+      let a = Math.min(q.sourcePos, q.targetPos), b = Math.max(q.sourcePos, q.targetPos);
+      d.forEach((v, i) => { if (v) { a = Math.min(a, i); b = Math.max(b, i); } });
+      let c0 = Math.floor(a / sl), c1 = Math.floor(b / sl);
+      if ((c1 - c0 + 2) * sl <= CASES_TELEPHONE && c0 > 0) c0--;
+      if ((c1 - c0 + 2) * sl <= CASES_TELEPHONE && c1 < nc - 1) c1++;
+      let labels = null;
+      if (s.labels) {
+        labels = {};
+        for (const [k, v] of Object.entries(s.labels)) { const [c, x] = k.split('_').map(Number); if (c >= c0 && c <= c1) labels[`${c - c0}_${x}`] = v; }
+      }
+      return { ...q, schema: { ...s, units: s.units.slice(c0, c1 + 1), labels }, sourcePos: q.sourcePos - c0 * sl, targetPos: q.targetPos - c0 * sl };
+    }
+    function vueDuTableau(q) {
+      const tel = petitEcran();
+      if (!q._vue || q._vueTel !== tel) { q._vue = tel ? vueColonnesUtiles(q) : q; q._vueTel = tel; }
+      return q._vue;
+    }
+
     function buildDiapoTableDOM(schema) {
       currentSchema = schema;
       const [c, cd] = THEMES[schema.id];
       document.documentElement.style.setProperty('--accent', c);
       document.documentElement.style.setProperty('--accent-dark', cd);
-      
       const columnsContainer = document.getElementById('diapoBoardColumns');
       columnsContainer.style.setProperty('--cols', schema.units.length);
+      columnsContainer.style.setProperty('--n', schema.units.length * schema.slots);
       columnsContainer.innerHTML = buildHTMLColumns(schema, false, null, 'diapo');
     }
 
     function buildEstimationDOM(q, showCorrection = false) {
       const estBoard = document.getElementById('estBoard');
       estBoard.innerHTML = '';
-      
-      if (q.qType === 1) {
-          estBoard.innerHTML = q.friseHtml;
-      }
-      
+      if (q.qType === 1) estBoard.innerHTML = q.friseHtml;
+
       if (q.choices && q.choices.length > 0) {
           let choicesContainer = document.createElement('div');
           choicesContainer.className = 'est-choices-container';
-          
           const labels = ["A", "B", "C"];
-          
           q.choices.forEach((choice, idx) => {
              let btn = document.createElement('div');
              btn.className = 'est-btn';
-             
              if (q.choices.length === 2) {
-                 btn.innerHTML = choice;
+                 btn.innerHTML = typo(choice);
                  btn.style.justifyContent = 'center';
              } else {
-                 btn.innerHTML = `<div class="est-badge">${labels[idx]}</div> <div>${choice}</div>`;
+                 btn.innerHTML = `<div class="est-badge">${labels[idx]}</div> <div>${typo(choice)}</div>`;
              }
-             
              if (showCorrection) {
                  if (idx === q.correctIndex) btn.classList.add('correct');
                  else btn.classList.add('wrong');
              }
-             
              choicesContainer.appendChild(btn);
           });
-          
           estBoard.appendChild(choicesContainer);
       } else {
           if (!showCorrection && q.qType !== 8 && q.qType !== 10) {
-              let msg = "🖍️ À vos ardoises !";
-              if(q.qType === 5) msg = "👀 Préparez-vous à montrer !";
+              let msg = "🖍️ À ton ardoise !";
+              if(q.qType === 5) msg = "👀 Prépare-toi à montrer !";
               estBoard.innerHTML = `<div class="est-action-msg">${msg}</div>`;
           }
       }
@@ -1197,40 +1375,26 @@
 
     function fillDiapoDigits(q, isCorrection) {
       const inputs = Array.from(document.querySelectorAll('#diapoBoardColumns .digit'));
-      inputs.forEach(inp => { inp.value = ''; inp.classList.remove('unit-highlight'); });
-      
-      let parts = q.valStr.split(',');
-      let intPart = parts[0], decPart = parts[1] || "";
-      let sourceRightSlot = q.sourceIdx * q.schema.slots + (q.schema.slots - 1);
-
-      let c = sourceRightSlot;
-      for(let i=intPart.length-1; i>=0; i--) { if(c >= 0) inputs[c].value = intPart[i]; c--; }
-      c = sourceRightSlot + 1;
-      for(let i=0; i<decPart.length; i++) { if(c < inputs.length) inputs[c].value = decPart[i]; c++; }
-
-      if (isCorrection) {
-        let minIdx = inputs.length, maxIdx = -1;
-        inputs.forEach((inp, idx) => { if(inp.value !== '') { minIdx = Math.min(minIdx, idx); maxIdx = Math.max(maxIdx, idx); } });
-        let targetRightSlot = q.targetIdx * q.schema.slots + (q.schema.slots - 1);
-        for(let i=Math.min(minIdx, targetRightSlot); i<=Math.max(maxIdx, targetRightSlot); i++) {
-            if(inputs[i].value === '') inputs[i].value = '0';
-        }
-      }
+      const digits = chiffresDuTableau(q, isCorrection);
+      inputs.forEach((inp, i) => { inp.value = digits[i] || ''; inp.classList.remove('unit-highlight'); });
     }
 
-    function positionDiapoCursor(colIdx, animate, q, isFinal) {
+    // la fenêtre de l'unité se pose sur la case « pos » (le chiffre des unités de l'unité « unite »)
+    function positionDiapoCursor(pos, animate, q, isFinal) {
       const cursor = document.getElementById('diapoCursor');
       const handles = [document.getElementById('diapoHandleTop'), document.getElementById('diapoHandleBottom')];
       const inner = document.getElementById('diapoInner');
-      
-      const colDiv = document.getElementById('diapoBoardColumns').children[colIdx];
+      const slots = currentSchema.slots;
+      const colDiv = document.getElementById('diapoBoardColumns').children[Math.floor(pos / slots)];
       if (!colDiv) return;
-      
-      const headBtn = colDiv.querySelector('.unitBtn:not(.empty-unit)');
-      const inputsInCol = colDiv.querySelectorAll('.digit');
-      const cellTarget = inputsInCol[currentSchema.slots - 1];
-
+      const si = pos % slots;
+      const headBtn = colDiv.querySelectorAll('.unitBtn')[si];
+      const cellTarget = colDiv.querySelectorAll('.digit')[si];
       if (!headBtn || !cellTarget) return;
+      const unite = isFinal ? q.targetUnit : q.sourceUnit;
+      const labels = Array.from(colDiv.querySelectorAll('.sub-lab-wrapper'));
+      const labEl = labels[si] && labels[si].querySelector('.sub-lab');
+      const texteUnite = (labEl && labEl.textContent === unite) ? labEl : headBtn;
 
       const trans = animate ? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out' : 'none';
       const handleTrans = animate ? 'transform 1s ease-in-out, top 1s ease-in-out' : 'none';
@@ -1244,7 +1408,6 @@
       let x = cellRect.left - innerRect.left;
       let w = cellRect.width;
       let cx = x + w / 2;
-      
       let gap = 4;
       cursor.style.width = `${w + gap}px`;
       cursor.style.transform = `translateX(${x - gap/2}px)`;
@@ -1253,20 +1416,22 @@
       let bottomPx = cellRect.bottom - innerRect.top;
       cursor.style.top = `${topPx - gap/2}px`;
       cursor.style.height = `${(bottomPx - topPx) + gap}px`;
-      
-      handles[0].style.top = `${topPx - 75 - 14}px`; 
-      handles[1].style.top = `${bottomPx + 14}px`;   
-      handles.forEach(h => h.style.transform = `translateX(calc(${cx}px - 50%))`);
 
-      const allInputs = Array.from(document.querySelectorAll('#diapoBoardColumns .digit'));
-      allInputs.forEach(inp => inp.classList.remove('unit-highlight'));
+      handles[0].style.top = `${topPx - 75 - 14}px`;
+      handles[1].style.top = `${bottomPx + 14}px`;
+      // une étiquette près du bord reste dans le cadre ; sa pointe, elle, reste sur la colonne
+      const boxRect = document.getElementById('tBox').getBoundingClientRect();
+      const demi = handles[0].offsetWidth / 2;
+      const mini = boxRect.left - innerRect.left + 4 + demi, maxi = boxRect.right - innerRect.left - 4 - demi;
+      const hx = maxi > mini ? Math.min(Math.max(cx, mini), maxi) : cx;
+      handles.forEach(h => { h.style.transform = `translateX(calc(${hx}px - 50%))`; h.style.setProperty('--decal', `${cx - hx}px`); });
+
+      document.querySelectorAll('#diapoBoardColumns .digit').forEach(inp => inp.classList.remove('unit-highlight'));
       cellTarget.classList.add('unit-highlight');
-      
-      Array.from(document.querySelectorAll('#diapoBoardColumns .unitBtn')).forEach(b => b.classList.remove('unit-highlight-text'));
-      headBtn.classList.add('unit-highlight-text');
+      document.querySelectorAll('#diapoBoardColumns .unitBtn, #diapoBoardColumns .sub-lab').forEach(b => b.classList.remove('unit-highlight-text'));
+      texteUnite.classList.add('unit-highlight-text');
 
       let currentStr = isFinal ? q.calcValStr : q.valStr;
-      
       if(!document.getElementById('hideCommaStyle')) {
          const style = document.createElement('style');
          style.id = 'hideCommaStyle';
@@ -1296,9 +1461,9 @@
         } else if(q.isProblem) {
             btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">Problème</span>`;
         } else {
-            btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${q.valStr} ${q.sourceUnit} = ... ${q.targetUnit}</span>`;
+            btn.innerHTML = `<span class="th-q">Q${idx + 1}</span><span class="th-txt">${mesure(q.valStr, q.sourceUnit)} = …${NBSP}${q.targetUnit}</span>`;
         }
-        btn.onclick = () => loadSlide(idx, q.phase); 
+        btn.onclick = () => loadSlide(idx, q.phase);
         tb.appendChild(btn);
       });
     }
@@ -1316,15 +1481,13 @@
       const q = quizData[currentIndex]; const btnNext = document.getElementById('btnNext');
       document.getElementById('slideCounter').textContent = `Question ${currentIndex + 1} / ${quizData.length}`;
       document.getElementById('btnPrev').disabled = (currentIndex === 0 && q.phase === 0);
-      
+
       const tBox = document.getElementById('tBox');
       const mainBoard = document.getElementById('mainBoard');
       const estBoard = document.getElementById('estBoard');
-      
       const qText = document.getElementById('qText');
       const qSubtext = document.getElementById('qSubtext');
       const qEmoji = document.getElementById('qEmoji');
-      
       qSubtext.innerHTML = "";
 
       if (q.isEstimation && q.emoji) {
@@ -1336,95 +1499,93 @@
 
       if (q.isEstimation) {
           mainBoard.style.display = 'none';
-          document.documentElement.style.setProperty('--accent', '#0d9488'); 
-          
+          document.documentElement.style.setProperty('--accent', '#0d9488');
+          qText.innerHTML = typo(q.problemText);
           if (q.phase === 0) {
-              qText.innerHTML = q.problemText;
               estBoard.style.display = 'none';
               tBox.style.display = 'flex';
               let btnText = "Voir les choix 💡 ►";
               if (q.choices && q.choices.length === 0) btnText = "Correction ✓ ►";
               if (q.qType === 5) btnText = "Lancer l'action 💡 ►";
               btnNext.innerHTML = btnText;
-          } 
+          }
           else if (q.phase === 1) {
-              qText.innerHTML = q.problemText;
-              if (q.choices && q.choices.length > 0) qSubtext.innerHTML = `<span style="color:var(--muted)">Quel est votre choix ?</span>`;
+              if (q.choices && q.choices.length > 0) qSubtext.innerHTML = `<span style="color:var(--muted)">Quel est ton choix${NBSP}?</span>`;
               tBox.style.display = 'flex';
               estBoard.style.display = 'flex';
               buildEstimationDOM(q, false);
               btnNext.innerHTML = "Correction ✓ ►";
           }
           else if (q.phase === 2) {
-              qText.innerHTML = q.problemText;
-              qSubtext.innerHTML = `<span style="color:var(--success)">${q.correctionText}</span>`;
+              qSubtext.innerHTML = `<span style="color:var(--success)">${typo(q.correctionText)}</span>`;
               tBox.style.display = 'flex';
               estBoard.style.display = 'flex';
               buildEstimationDOM(q, true);
-              if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+              if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; }
               else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
           }
-      } 
+      }
       else if (q.isProblem) {
           mainBoard.style.display = 'block';
           estBoard.style.display = 'none';
-          
+          qText.innerHTML = typo(q.problemText);
           if (q.phase === 0) {
-            qText.innerHTML = q.problemText;
-            tBox.style.display = 'none'; 
-            btnNext.innerHTML = "Aide : Placer dans le tableau 💡 ►";
-          } 
+            tBox.style.display = 'none';
+            btnNext.innerHTML = "Aide : placer dans le tableau 💡 ►";
+          }
           else if (q.phase === 1) {
-            qText.innerHTML = q.problemText;
-            qSubtext.innerHTML = `<span style="color:var(--muted)">Étape 1 : Place la grandeur à convertir correctement.</span>`;
-            tBox.style.display = 'flex'; 
-            buildDiapoTableDOM(q.schema);
-            fillDiapoDigits(q, false);
-            requestAnimationFrame(() => positionDiapoCursor(q.sourceIdx, false, q, false));
-            btnNext.innerHTML = "Correction et Calcul ✓ ►"; 
-          } 
+            qSubtext.innerHTML = `<span style="color:var(--muted)">Étape 1${NBSP}: place la grandeur à convertir dans le tableau.</span>`;
+            tBox.style.display = 'flex';
+            const v = vueDuTableau(q);
+            buildDiapoTableDOM(v.schema);
+            fillDiapoDigits(v, false);
+            requestAnimationFrame(() => positionDiapoCursor(v.sourcePos, false, v, false));
+            btnNext.innerHTML = "Correction et calcul ✓ ►";
+          }
           else if (q.phase === 2) {
-            qText.innerHTML = q.problemText;
-            qSubtext.innerHTML = `<span style="color:var(--success)">${q.correctionText}</span>`;
-            tBox.style.display = 'flex'; 
-            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== q.schema) {
-               buildDiapoTableDOM(q.schema);
+            qSubtext.innerHTML = `<span style="color:var(--success)">${typo(q.correctionText)}</span>`;
+            tBox.style.display = 'flex';
+            const v = vueDuTableau(q);
+            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== v.schema) {
+               buildDiapoTableDOM(v.schema);
             }
-            fillDiapoDigits(q, true); 
-            requestAnimationFrame(() => positionDiapoCursor(q.targetIdx, true, q, true));
-            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+            fillDiapoDigits(v, true);
+            requestAnimationFrame(() => positionDiapoCursor(v.targetPos, true, v, true));
+            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; }
             else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
           }
-      } 
+      }
       else {
           mainBoard.style.display = 'block';
           estBoard.style.display = 'none';
-          
-          let formattedSource = `${highlightUnitText(q.valStr)} <span class="unit-highlight-text">${q.sourceUnit}</span>`;
-          let formattedTarget = `${highlightUnitText(q.calcValStr)} <span class="unit-highlight-text">${q.targetUnit}</span>`;
+          let formattedSource = `<span class="nb">${highlightUnitText(q.valStr)}${NBSP}<span class="unit-highlight-text">${q.sourceUnit}</span></span>`;
+          let formattedTarget = `<span class="nb">${highlightUnitText(q.calcValStr)}${NBSP}<span class="unit-highlight-text">${q.targetUnit}</span></span>`;
+          let trous = `<span class="nb">.............${NBSP}${q.targetUnit}</span>`;
 
           if (q.phase === 0) {
-            qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
-            tBox.style.display = 'none'; 
-            btnNext.innerHTML = "Aide : Placer dans le tableau 💡 ►";
-          } 
+            qText.innerHTML = `Convertis${NBSP}: ${formattedSource} = ${trous}`;
+            tBox.style.display = 'none';
+            btnNext.innerHTML = "Aide : placer dans le tableau 💡 ►";
+          }
           else if (q.phase === 1) {
-            qText.innerHTML = `Convertis : ${formattedSource} = ............. ${q.targetUnit}`;
-            tBox.style.display = 'flex'; 
-            buildDiapoTableDOM(q.schema);
-            fillDiapoDigits(q, false);
-            requestAnimationFrame(() => positionDiapoCursor(q.sourceIdx, false, q, false));
-            btnNext.innerHTML = "Correction 👀 ►"; 
-          } 
+            qText.innerHTML = `Convertis${NBSP}: ${formattedSource} = ${trous}`;
+            tBox.style.display = 'flex';
+            const v = vueDuTableau(q);
+            buildDiapoTableDOM(v.schema);
+            fillDiapoDigits(v, false);
+            requestAnimationFrame(() => positionDiapoCursor(v.sourcePos, false, v, false));
+            btnNext.innerHTML = "Correction 👀 ►";
+          }
           else if (q.phase === 2) {
-            qText.innerHTML = `Convertis : ${q.valStr} ${q.sourceUnit} = ${formattedTarget}`;
-            tBox.style.display = 'flex'; 
-            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== q.schema) {
-               buildDiapoTableDOM(q.schema);
+            qText.innerHTML = `Convertis${NBSP}: <span class="nb">${mesure(q.valStr, q.sourceUnit)}</span> = ${formattedTarget}`;
+            tBox.style.display = 'flex';
+            const v = vueDuTableau(q);
+            if(document.getElementById('diapoBoardColumns').children.length === 0 || currentSchema !== v.schema) {
+               buildDiapoTableDOM(v.schema);
             }
-            fillDiapoDigits(q, true); 
-            requestAnimationFrame(() => positionDiapoCursor(q.targetIdx, true, q, true));
-            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; } 
+            fillDiapoDigits(v, true);
+            requestAnimationFrame(() => positionDiapoCursor(v.targetPos, true, v, true));
+            if (currentIndex === quizData.length - 1) { btnNext.innerHTML = "Terminé ✓"; btnNext.disabled = true; }
             else { btnNext.innerHTML = "Question suiv. ►"; btnNext.disabled = false; }
           }
       }
@@ -1439,38 +1600,39 @@
     }
 
     function loadSlide(index, startPhase = 0) { currentIndex = index; quizData[currentIndex].phase = startPhase; document.getElementById('btnNext').disabled = false; updateUI(); }
-    
-    function nextAction() { 
-      const q = quizData[currentIndex]; 
+
+    function nextAction() {
+      const q = quizData[currentIndex];
       if (q.isEstimation && (!q.choices || q.choices.length === 0) && q.phase === 0) {
           q.phase = 2;
       }
-      else if (q.phase === 0) q.phase = 1; 
-      else if (q.phase === 1) q.phase = 2; 
-      else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0); 
-      updateUI(); 
+      else if (q.phase === 0) q.phase = 1;
+      else if (q.phase === 1) q.phase = 2;
+      else if (q.phase === 2 && currentIndex < quizData.length - 1) loadSlide(currentIndex + 1, 0);
+      updateUI();
     }
-    
-    function prevSlide() { 
-      const q = quizData[currentIndex]; 
+
+    function prevSlide() {
+      const q = quizData[currentIndex];
       if (q.isEstimation && (!q.choices || q.choices.length === 0) && q.phase === 2) {
           q.phase = 0;
       }
-      else if (q.phase === 2) q.phase = 1; 
-      else if (q.phase === 1) q.phase = 0; 
-      else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2); 
-      updateUI(); 
+      else if (q.phase === 2) q.phase = 1;
+      else if (q.phase === 1) q.phase = 0;
+      else if (q.phase === 0 && currentIndex > 0) loadSlide(currentIndex - 1, 2);
+      updateUI();
     }
-    
+
     function toggleFullscreen() {
       let elem = document.getElementById("diapoContainer");
-      if (!document.fullscreenElement) elem.requestFullscreen().catch(err => alert(`Erreur: ${err.message}`));
+      // si le plein écran est refusé (certains téléphones), le diaporama reste simplement dans la page
+      if (!document.fullscreenElement) { if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {}); }
       else document.exitFullscreen();
     }
 
     document.addEventListener("keydown", (e) => {
       if (document.getElementById('diapoContainer').style.display !== "none") {
-        if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); } 
+        if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); }
         else if (e.key === "ArrowLeft") { if (!document.getElementById('btnPrev').disabled) prevSlide(); }
       }
     });
@@ -1481,22 +1643,20 @@
     function buildPrintContainer(q, mode) {
       if (q.isEstimation) {
           if (!q.choices || q.choices.length === 0) return `<div style="margin-top:10px; height: 30px; border-bottom: 2px dashed #ccc;"></div>`;
-          
           let html = `<div class="print-est-choices">`;
           const labels = ["A", "B", "C"];
           q.choices.forEach((choice, idx) => {
               let isCorrectClass = (mode === 'correction' && idx === q.correctIndex) ? 'correct' : '';
               let labelStr = (q.choices.length === 2) ? "" : `<strong>${labels[idx]}</strong>) `;
-              html += `<div class="print-est-box ${isCorrectClass}"><div class="print-est-check"></div> ${labelStr}${choice}</div>`;
+              html += `<div class="print-est-box ${isCorrectClass}"><div class="print-est-check"></div> ${labelStr}${typo(choice)}</div>`;
           });
           html += `</div>`;
           return html;
       }
-        
       const s = q.schema;
       const [c, cd] = THEMES[s.id];
       let html = `<div class="board print-board" style="--accent: ${c}; --accent-dark: ${cd};"><div class="inner print-inner">`;
-      html += `<div class="board-columns" style="--cols: ${s.units.length}">`;
+      html += `<div class="board-columns" style="--cols: ${s.units.length}; --n: ${s.units.length * s.slots}">`;
       html += buildHTMLColumns(s, true, q, mode);
       html += `</div></div></div>`;
       return html;
@@ -1504,64 +1664,52 @@
 
     function generatePrint() {
       if(!getQuizData()) return;
-      
       const cbStudentEmpty = document.getElementById('cbStudentEmpty').checked;
       const cbStudentFilled = document.getElementById('cbStudentFilled').checked;
       const cbCorrGabarits = document.getElementById('cbCorrGabarits').checked;
-      
       const container = document.getElementById('printContainer');
-      container.innerHTML = ''; 
+      container.innerHTML = '';
 
       if (cbStudentEmpty || cbStudentFilled) {
           let page1 = document.createElement('div'); page1.className = 'print-page';
           page1.innerHTML = `<div class="print-header"><div>Nom : ........................................</div><div>Prénom : ........................................</div><div>Classe : ....................</div><div class="print-seed">Série : ${currentSeedStr}</div></div><h2 class="print-title">Conversions & Problèmes</h2>`;
-          
           quizData.forEach((q, i) => {
             let qDiv = document.createElement('div'); qDiv.className = 'print-q';
-            
             let qTextHtml;
             if (q.isEstimation) {
                 let em = q.emoji && q.qType !== 8 && q.qType !== 10 ? q.emoji + ' ' : '';
-                qTextHtml = `${i+1}) ${em}${q.problemText}`;
+                qTextHtml = `${i+1}) ${em}${typo(q.problemText)}`;
             }
-            else if (q.isProblem) qTextHtml = `${i+1}) ${q.problemText}`;
-            else qTextHtml = `${i+1}) Convertis : <strong>${q.valStr} ${q.sourceUnit}</strong> = .............................. <strong>${q.targetUnit}</strong>`;
-            
+            else if (q.isProblem) qTextHtml = `${i+1}) ${typo(q.problemText)}`;
+            else qTextHtml = `${i+1}) Convertis${NBSP}: <strong>${mesure(q.valStr, q.sourceUnit)}</strong> = <span class="nb">..............................${NBSP}<strong>${q.targetUnit}</strong></span>`;
             qDiv.innerHTML = `<div class="print-q-text">${qTextHtml}</div>`;
-            
             if (cbStudentFilled && !q.isEstimation) qDiv.innerHTML += buildPrintContainer(q, 'filled');
             else if (cbStudentEmpty || q.isEstimation) qDiv.innerHTML += buildPrintContainer(q, 'empty');
-            
             page1.appendChild(qDiv);
           });
           container.appendChild(page1);
       }
 
       let page2 = document.createElement('div'); page2.className = 'print-page';
-      page2.innerHTML = `<div class="print-header"><div class="print-seed">CORRIGÉ | Série : ${currentSeedStr}</div></div><h2 class="print-title">Correction Détaillée</h2>`;
+      page2.innerHTML = `<div class="print-header"><div class="print-seed">CORRIGÉ | Série : ${currentSeedStr}</div></div><h2 class="print-title">Correction détaillée</h2>`;
       quizData.forEach((q, i) => {
         let qDiv = document.createElement('div'); qDiv.className = 'print-q';
-        
         let cTextHtml;
         if (q.isEstimation || q.isProblem) {
             let em = q.emoji && q.isEstimation && q.qType !== 8 && q.qType !== 10 ? q.emoji + ' ' : '';
-            cTextHtml = `${i+1}) ${em}${q.problemText}<br><span style="color:var(--success); font-size:0.9em; display:block; margin-top:5px;">${q.correctionText}</span>`;
+            cTextHtml = `${i+1}) ${em}${typo(q.problemText)}<br><span style="color:var(--success); font-size:0.9em; display:block; margin-top:5px;">${typo(q.correctionText)}</span>`;
         }
-        else cTextHtml = `${i+1}) <strong>${q.valStr} ${q.sourceUnit}</strong> = <strong>${q.calcValStr} ${q.targetUnit}</strong>`;
-        
+        else cTextHtml = `${i+1}) <strong>${mesure(q.valStr, q.sourceUnit)}</strong> = <strong>${mesure(q.calcValStr, q.targetUnit)}</strong>`;
         qDiv.innerHTML = `<div class="print-q-text">${cTextHtml}</div>`;
-        
         if (cbCorrGabarits) qDiv.innerHTML += buildPrintContainer(q, 'correction');
         else {
             qDiv.style.marginBottom = "15px";
             qDiv.style.borderBottom = "1px solid #eee";
             qDiv.style.paddingBottom = "10px";
         }
-        
         page2.appendChild(qDiv);
       });
       container.appendChild(page2);
-
       setTimeout(() => { window.print(); }, 300);
     }
   </script>
