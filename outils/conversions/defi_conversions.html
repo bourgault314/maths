@@ -606,7 +606,7 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && !qn.arcsCorr && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -713,6 +713,16 @@
     // sur sa propre ligne, la case et l'unité dessous, comme pour une
     // phrase. Mesuré au rendu ; la hauteur de la question ne change pas
     // (audit du 12/11 : ces questions sortaient de l'écran).
+    // Lot B2-3b-2 (Q10) : le tableau (Car Jaune, marées) ; s'il est plus
+    // large que la question (une police large), ses textes se font un peu
+    // plus petits, jusqu'à 80 %.
+    function tableauQ10(q, support) {
+      const t = q.appendChild(AIDES.supportQ10(support));
+      const place = q.clientWidth - parseFloat(getComputedStyle(q).paddingLeft) - parseFloat(getComputedStyle(q).paddingRight);
+      const taille = parseFloat(getComputedStyle(t).fontSize) || 14;
+      for (let k = 1; k <= 4 && t.getBoundingClientRect().width > place + 0.5; k += 1) t.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
+      return t;
+    }
     function couperSiTropLarge(q, ligne, avantEl) {
       const style = getComputedStyle(ligne);
       const ecart = parseFloat(style.columnGap || style.gap) || 0;
@@ -829,6 +839,7 @@
       }
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
         if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
+        if (m.support) tableauQ10(qEl, m.support);
         if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
         // L'horloge à lire (lot 3b-3) : l'horloge à gauche de la phrase, sur
         // une seule ligne (la question reste basse).
@@ -848,6 +859,9 @@
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
       } else if (m.enonce) {
         qEl.appendChild(el("div", "enonce", m.enonce));
+        // Lot B2-3b-2 (Q10, choix de Gwenaël du 21/11) : l'horaire du Car
+        // Jaune, les marées de Saint-Gilles, en tableau sous l'énoncé.
+        if (m.support) tableauQ10(qEl, m.support);
         const l = el("div", "l1");
         const avantEl = el("span", "", m.avant);
         l.appendChild(avantEl);
@@ -1262,8 +1276,22 @@
       else c.append(texteNoeud(ligne.slice(0, k)), el("span", "v", v), texteNoeud(ligne.slice(k + v.length)));
       zone.appendChild(c);
     }
+    // Lot B2-3b-2 (Q10, choix de Gwenaël du 21/11) : l'axe refait en vert
+    // (les bonds par l'heure pile, ou les deux instants trouvés), puis le
+    // dernier calcul, la réponse en vert.
+    function arcsCorrige(zone, question) {
+      AIDES.axeArcs(zone, question.arcsCorr);
+      const ligne = question.resumeVert;
+      const v = question.repTexteQ10;
+      const c = el("div", "calcul-pb");
+      const k = ligne.lastIndexOf(v);
+      if (k < 0) c.textContent = ligne;
+      else c.append(texteNoeud(ligne.slice(0, k)), el("span", "v", v), texteNoeud(ligne.slice(k + v.length)));
+      zone.appendChild(c);
+    }
     function bonneReponse(zone, question) {
       if (question.schemaCorr) { schemaCorrige(zone, question); return; }
+      if (question.arcsCorr) { arcsCorrige(zone, question); return; }
       // Lot B2-3a (A5) : la figure complétée (numérotée, les demis
       // recollés ; B posée sur A ; la tache coloriée), les lignes à côté.
       if (question.aire) { AIDES.correctionAire(zone, question); return; }

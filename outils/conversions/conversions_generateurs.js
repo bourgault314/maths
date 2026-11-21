@@ -1419,7 +1419,7 @@
   // --------------------------------------------------- D1 · Heures et minutes
   function hm(h, m) {
     if (!h) return `${m}${NB}min`;
-    return m ? `${h}${NB}h ${m}${NB}min` : `${h}${NB}h`;
+    return m ? `${h}${NB}h${NB}${m}${NB}min` : `${h}${NB}h`;
   }
   function questionDuree(code, degre, champs) {
     return q(Object.assign({code, degre, outil: "barre-heure", grandeur: "duree"}, champs));
@@ -1459,11 +1459,11 @@
     const h = Math.floor(total / 60);
     const m = total % 60;
     return questionDuree(code, degre, {
-      forme: "deux-cases", texte: `${total}${NB}min = ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${total}${NB}min =`, cases: ["h", "min"]},
-      reponse: [String(h), String(m)], reponseTexte: hm(h, m), unite: "min", resume: `${total}${NB}min = ${h}${NB}h ${m}${NB}min`,
+      forme: "deux-cases", texte: `${total}${NB}min = ${CASE}${NB}h${NB}${CASE}${NB}min`, morceaux: {avant: `${total}${NB}min =`, cases: ["h", "min"]},
+      reponse: [String(h), String(m)], reponseTexte: hm(h, m), unite: "min", resume: `${total}${NB}min = ${h}${NB}h${NB}${m}${NB}min`,
       relation: `1${NB}h = 60${NB}min`, heure: {h, m, versHeures: true}, tableau: {},
       image: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} + ${m}${NB}min`],
-      correction: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} + ${m}${NB}min = ${h}${NB}h ${m}${NB}min`],
+      correction: [`1${NB}h = 60${NB}min`, `${total}${NB}min = ${Array(h).fill(`60${NB}min`).join(" + ")} + ${m}${NB}min = ${h}${NB}h${NB}${m}${NB}min`],
       donnees: {type: "duree-deux", m: total},
       cle: `${code}:${total}min>hmin`
     });
@@ -1593,7 +1593,7 @@
     const lignes = m === 45 ? [`moins le quart : 15${NB}min avant l'heure`, `${heureTexte((h + 1) * 60)} − 15${NB}min = ${heureTexte(h * 60 + 45)}`]
       : [m === 30 ? `et demie : 30${NB}min après l'heure` : `et quart : 15${NB}min après l'heure`, `${Mots} = ${heureTexte(h * 60 + m)}`];
     return questionDuree("D2", degre, {
-      forme: "deux-cases", texte: `${Mots}, c'est ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${Mots}, c'est`, cases: ["h", "min"]},
+      forme: "deux-cases", texte: `${Mots}, c'est ${CASE}${NB}h${NB}${CASE}${NB}min`, morceaux: {avant: `${Mots}, c'est`, cases: ["h", "min"]},
       reponse: [String(h), String(m)], reponseTexte: heureTexte(h * 60 + m), unite: "min", resume: `${Mots}, c'est ${heureTexte(h * 60 + m)}`,
       // Lot 3b-2 : une horloge, dans l'outil et dans la correction (avant,
       // la barre des quarts d'heure).
@@ -1707,11 +1707,11 @@
         const H = Math.floor(total / 60);
         const M = total % 60;
         return questionDuree("D2", 3, {
-          forme: "deux-cases", texte: `${mots} = ${CASE}${NB}h ${CASE}${NB}min`, morceaux: {avant: `${mots} =`, cases: ["h", "min"]},
-          reponse: [String(H), String(M)], reponseTexte: hm(H, M), unite: "min", resume: `${mots} = ${H}${NB}h ${M}${NB}min`,
+          forme: "deux-cases", texte: `${mots} = ${CASE}${NB}h${NB}${CASE}${NB}min`, morceaux: {avant: `${mots} =`, cases: ["h", "min"]},
+          reponse: [String(H), String(M)], reponseTexte: hm(H, M), unite: "min", resume: `${mots} = ${H}${NB}h${NB}${M}${NB}min`,
           relation: `un quart d'heure = 15${NB}min`, heure: {h, demis, quarts},
           image: [`une demi-heure = 30${NB}min ; un quart d'heure = 15${NB}min`, `${mots} = ${total}${NB}min`],
-          correction: [`${mots} = ${total}${NB}min`, `${total}${NB}min = ${H}${NB}h ${M}${NB}min`],
+          correction: [`${mots} = ${total}${NB}min`, `${total}${NB}min = ${H}${NB}h${NB}${M}${NB}min`],
           donnees: {type: "duree-mots", h, demis, quarts, deux: true},
           cle: `D2:${h}-${demis}-${quarts}>hmin`
         });
@@ -2275,7 +2275,7 @@
       : cherche === "arrivee" ? [`${heureTexte(dep)} + ${dureeTexte(duree)} = ${heureTexte(arr)}`] : [`${heureTexte(arr)} − ${dureeTexte(duree)} = ${heureTexte(dep)}`];
     return q({
       code: "D7", degre, forme: cases ? "deux-cases" : "nombre",
-      texte: `${enonce} ${avant} ${cases ? `${CASE}${NB}h ${CASE}${cases[1] ? `${NB}min` : ""}` : `${CASE}${NB}${apres}`}`,
+      texte: `${enonce} ${avant} ${cases ? `${CASE}${NB}h${NB}${CASE}${cases[1] ? `${NB}min` : ""}` : `${CASE}${NB}${apres}`}`,
       morceaux: cases ? {enonce, avant, cases} : {enonce, avant, apres},
       reponse, reponseTexte, unite, resume: `${avant} ${reponseTexte}`, outil: "axe-temps", grandeur: "duree",
       axe: {depart: dep, arrivee: arr, cherche}, horloges: {depart: dep, arrivee: arr, cherche},
@@ -5955,6 +5955,390 @@
       return !serie.some(x => x.modeleQ2.split("-")[0] === question.modeleQ2.split("-")[0]);
     },
     erreurs: erreursQ2
+  };
+
+  // ======================= lot B2-3b-2 : Q10 « Durées et horaires » (CM1)
+  // Programme de CM1 (S002 p. 17-18) : des problèmes en une ou deux étapes
+  // avec des durées ; des horaires de transport et de marées ; l'axe du
+  // temps orienté avec des arcs et des instants intermédiaires ; « aucun
+  // algorithme posé en base soixante ». Les deux exemples officiels : Ismaël
+  // (de 7 h 47 à 8 h 16), Lucie (1 h 17 min, arrivée à 12 h 10), le train
+  // (7 h 43, 1 h 34 min, puis 52 min). Toutes les minutes (pas seulement de
+  // 5 en 5 comme « Entre deux heures » au palier 1).
+  // Choix de Gwenaël sur la maquette (21/11, 2 h 45) : l'axe à arcs du
+  // document officiel, l'heure pile en gris quand elle a la place ;
+  // l'horaire du Car Jaune en tableau (les écarts de la ligne O2) ; les
+  // quatre marées du jour à Saint-Gilles (des écarts de 5 h 20 à 7 h, comme
+  // les vraies) ; la correction : l'axe refait en vert, par l'heure pile.
+  // Les instants sont des minutes depuis minuit ; jamais une heure pile
+  // (la réponse a toujours ses minutes).
+  const pileApres = t => Math.ceil(t / 60) * 60;
+  const pileAvant = t => Math.floor(t / 60) * 60;
+  // Les bonds par l'heure pile, de a à b : [a, (heure pile), (heure pile), b].
+  function bondsQ10(a, b) {
+    const p = [a];
+    if (pileApres(a) < b && pileApres(a) > a) p.push(pileApres(a));
+    if (pileAvant(b) > p[p.length - 1] && pileAvant(b) < b) p.push(pileAvant(b));
+    p.push(b);
+    return p;
+  }
+  // Une durée sur un arc : « 13 min », « 2 h », « 1 h 34 min ».
+  const arcQ10 = d => (d % 60 === 0 ? `${d / 60}${NB}h` : dureeTexte(d));
+
+  // Trouver une durée : [modèle, énoncé ({P}, {D}, {A}), durée min, max,
+  // début au plus tôt, au plus tard].
+  const DUREE_Q10 = [
+    ["ecole", "{P} part de la maison à {D} et arrive à l'école à {A}. Combien de temps dure le trajet ?", 12, 50, 395, 455],
+    ["recre", "La récréation commence à {D} et finit à {A}. Combien de temps dure la récréation ?", 12, 25, 580, 620],
+    ["vol", "L'avion décolle de La Réunion à {D} et atterrit à Maurice à {A}.", 40, 50, 360, 1170],
+    ["piscine", "La séance de piscine commence à {D} et finit à {A}. Combien de temps dure la séance ?", 40, 75, 480, 960],
+    ["cari", "Le cari cuit de {D} à {A}. Combien de temps dure la cuisson ?", 45, 90, 600, 1110],
+    ["film", "Le film commence à {D} et finit à {A}. Combien de temps dure le film ?", 85, 150, 810, 1250],
+    ["match", "Le match de basket commence à {D} et finit à {A}. Combien de temps dure le match ?", 70, 110, 840, 1140],
+    ["piton", "{P} part du gîte à {D} et arrive au sommet du Piton des Neiges à {A}.", 85, 130, 180, 270]
+  ];
+  // Trouver l'heure d'arrivée : [modèle, énoncé ({P}, {D}, {d}), la case,
+  // durée min, max, début au plus tôt, au plus tard].
+  const ARRIVEE_Q10 = [
+    ["ecole", "{P} part de la maison à {D}. Le trajet jusqu'à l'école dure {d}. À quelle heure arrive {P} ?", "Arrivée :", 12, 45, 395, 455],
+    ["vol", "L'avion décolle de La Réunion à {D}. Le vol jusqu'à Maurice dure {d}.", "Arrivée :", 40, 50, 360, 1170],
+    ["gateau", "Le gâteau entre dans le four à {D}. La cuisson dure {d}. À quelle heure sort le gâteau ?", "Sortie :", 25, 55, 540, 1080],
+    ["recre", "La récréation commence à {D} et dure {d}. À quelle heure finit la récréation ?", "Fin :", 12, 25, 580, 620],
+    ["piscine", "La séance de piscine commence à {D} et dure {d}. À quelle heure finit la séance ?", "Fin :", 40, 75, 480, 960],
+    ["film", "Le film commence à {D} et dure {d}. À quelle heure finit le film ?", "Fin :", 85, 150, 810, 1250],
+    ["match", "Le match commence à {D} et dure {d}. À quelle heure finit le match ?", "Fin :", 70, 110, 840, 1140],
+    ["route", "{P} part de Saint-Denis en voiture à {D}. Le trajet jusqu'à Saint-Pierre dure {d}.", "Arrivée :", 65, 100, 360, 1080],
+    ["piton", "{P} part du gîte à {D} et monte {d} jusqu'au sommet du Piton des Neiges.", "Arrivée :", 85, 130, 180, 270],
+    ["cari", "Le cari commence à cuire à {D}. La cuisson dure {d}. À quelle heure finit la cuisson ?", "Fin :", 45, 90, 600, 1110],
+    ["velo", "{P} part à {D} pour une étape de course à vélo, qui dure {d}.", "Arrivée :", 65, 110, 540, 840]
+  ];
+  // Trouver l'heure de départ : [modèle, énoncé ({P}, {A}, {d}), la case,
+  // durée min, max, fin au plus tôt, au plus tard].
+  const DEPART_Q10 = [
+    ["ecole", "{P} arrive à l'école à {A}, après {d} de trajet. À quelle heure part {P} de la maison ?", "Départ :", 12, 45, 425, 475],
+    ["vol", "L'avion atterrit à Maurice à {A}, après {d} de vol depuis La Réunion.", "Décollage :", 40, 50, 400, 1210],
+    ["film", "Le film finit à {A}. Le film dure {d}. À quelle heure commence le film ?", "Début :", 85, 150, 900, 1380],
+    ["recre", "La récréation finit à {A} et dure {d}. À quelle heure commence la récréation ?", "Début :", 12, 25, 605, 640],
+    ["piscine", "La séance de piscine finit à {A} et dure {d}. À quelle heure commence la séance ?", "Début :", 40, 75, 540, 1020],
+    ["cari", "Le cari est cuit à {A}, après {d} de cuisson. À quelle heure commence la cuisson ?", "Début :", 45, 90, 660, 1170],
+    ["velo", "{P} met {d} pour une étape de course à vélo et passe la ligne d'arrivée à {A}.", "Départ :", 65, 110, 600, 900],
+    ["car", "Le Car Jaune arrive à Saint-Denis à {A}. Le trajet depuis Saint-Pierre dure {d}.", "Départ :", 75, 125, 420, 1140]
+  ];
+  // Deux étapes : [modèle, énoncé ({P}, {D}, {d1}, {d2}), la case, d1 min,
+  // max, d2 min, max, départ au plus tôt, au plus tard, les deux instants
+  // sous l'axe].
+  const DEUX_Q10 = [
+    ["train", "Le train part à {D} : {d1} jusqu'à la 1re gare, puis {d2} jusqu'à la 2e gare.", "Arrivée :", 65, 110, 30, 59, 360, 960, ["1re gare", "2e gare"]],
+    ["cinema", "La séance commence à {D} : {d1} de publicités, puis un film de {d2}. À quelle heure finit le film ?", "Fin :", 10, 20, 85, 140, 810, 1220, ["le film", "la fin"]],
+    ["plage", "{P} prend le Car Jaune à {D} : {d1} de trajet, puis {d2} à pied jusqu'à la plage.", "Arrivée :", 20, 55, 10, 25, 420, 900, ["descente", "plage"]]
+  ];
+  // Le Car Jaune, ligne O2 (Saint-Pierre - Saint-Denis par le littoral) :
+  // les minutes depuis la gare de Saint-Pierre, d'après la fiche horaire.
+  // (Le trait d'union insécable : « St‑Pierre » ne se coupe pas.)
+  const O2 = [["St‑Pierre", 0], ["St‑Louis", 10], ["St‑Leu", 37], ["St‑Gilles", 53], ["St‑Paul", 70], ["Le Port", 82], ["St‑Denis", 103]];
+
+  // L'instant tiré : jamais une heure pile.
+  const instantQ10 = (rng, a, b) => {
+    for (let k = 0; k < 30; k += 1) { const t = entre(rng, a, b); if (t % 60) return t; }
+    return null;
+  };
+  // Les durées d'un degré. Degré 1 : moins d'une heure, en passant une
+  // heure pile ; degrés 2 et 3 : plus d'une heure, avec des minutes.
+  const dureeOk = (degre, d) => (degre === 1 ? d < 60 : d > 60 && d % 60 !== 0);
+
+  // La question finie. spec : {sorte, modele, degre, enonce, avant,
+  // cherche (duree, arrivee, depart), dep, arr, mid (deux étapes), support,
+  // sous (les noms sous l'axe)}.
+  function finirQ10(spec) {
+    const {sorte, modele, degre, enonce, cherche, dep, arr} = spec;
+    const d = arr - dep;
+    if (d <= 0 || dep % 60 === 0 || arr % 60 === 0 || (spec.mid && spec.mid % 60 === 0) || arr >= 24 * 60) return null;
+    // On passe toujours une heure pile (sinon, ce n'est qu'une soustraction).
+    if (pileAvant(arr) === pileAvant(dep)) return null;
+    // (Une durée a toujours ses minutes : pas « 1 h » tout rond.)
+    if (cherche === "duree" && d % 60 === 0) return null;
+    const sous = spec.sous || [];
+    const deux = sorte === "deux";
+    let reponse;
+    let reponseTexte;
+    let cases = null;
+    let apres = "";
+    let unite;
+    if (cherche === "duree") {
+      reponseTexte = dureeTexte(d);
+      if (d < 60) { reponse = String(d); apres = "min"; } else { reponse = [String(Math.floor(d / 60)), String(d % 60)]; cases = ["h", "min"]; }
+      unite = "min";
+    } else {
+      const t = cherche === "arrivee" ? arr : dep;
+      reponse = [String(Math.floor(t / 60)), String(t % 60)];
+      cases = ["h", ""];
+      reponseTexte = heureTexte(t);
+      unite = "h";
+    }
+    // L'outil : l'axe du temps, comme dans le document officiel ; l'heure
+    // pile en gris (choix de Gwenaël du 21/11).
+    let arcs;
+    let arcsCorr;
+    let lignes;
+    if (deux) {
+      const mid = spec.mid;
+      arcs = {instants: [{t: dep}, {t: mid, vide: true, sous: sous[0]}, {t: arr, cache: true, sous: sous[1]}],
+        arcs: [{de: 0, a: 1, texte: arcQ10(mid - dep)}, {de: 1, a: 2, texte: arcQ10(arr - mid)}], piles: true};
+      // La correction : les deux instants trouvés, en vert.
+      arcsCorr = {instants: [{t: dep}, {t: mid, vert: true, sous: sous[0]}, {t: arr, vert: true, sous: sous[1]}],
+        arcs: [{de: 0, a: 1, texte: arcQ10(mid - dep)}, {de: 1, a: 2, texte: arcQ10(arr - mid)}]};
+      lignes = [`${heureTexte(dep)} + ${dureeTexte(mid - dep)} = ${heureTexte(mid)}`, `${heureTexte(mid)} + ${dureeTexte(arr - mid)} = ${heureTexte(arr)}`];
+    } else {
+      arcs = {instants: [{t: dep, cache: cherche === "depart", sous: sous[0]}, {t: arr, cache: cherche === "arrivee", sous: sous[1]}],
+        arcs: [{de: 0, a: 1, texte: cherche === "duree" ? "?" : arcQ10(d)}], piles: true};
+      // La correction : les bonds par l'heure pile, en vert ; la réponse en
+      // vert sur l'axe.
+      const p = bondsQ10(dep, arr);
+      arcsCorr = {instants: p.map((t, k) => ({t, vert: (cherche === "arrivee" && k === p.length - 1) || (cherche === "depart" && k === 0),
+        sous: k === 0 ? sous[0] : k === p.length - 1 ? sous[1] : undefined})),
+      arcs: p.slice(1).map((t, k) => ({de: k, a: k + 1, texte: arcQ10(t - p[k]), vert: true}))};
+      const somme = p.slice(1).map((t, k) => arcQ10(t - p[k])).join(" + ");
+      lignes = cherche === "duree" ? [p.length > 2 ? `${somme} = ${reponseTexte}` : `De ${heureTexte(dep)} à ${heureTexte(arr)} : ${reponseTexte}`]
+        : cherche === "arrivee" ? [`${heureTexte(dep)} + ${dureeTexte(d)} = ${reponseTexte}`] : [`${heureTexte(arr)} − ${dureeTexte(d)} = ${reponseTexte}`];
+    }
+    // L'image : le premier bond (jusqu'à l'heure pile, ou la première étape).
+    let bond;
+    if (deux) bond = `D'abord : ${heureTexte(dep)} + ${dureeTexte(spec.mid - dep)} = ${CASE}`;
+    else if (cherche === "depart") bond = `${heureTexte(arr)} − ${arr % 60}${NB}min = ${heureTexte(pileAvant(arr))}`;
+    else if (cherche === "arrivee") bond = `${heureTexte(dep)} + ${pileApres(dep) - dep}${NB}min = ${heureTexte(pileApres(dep))}`;
+    else bond = `De ${heureTexte(dep)} à ${heureTexte(pileApres(dep))} : ${pileApres(dep) - dep}${NB}min`;
+    // (La ligne des cases plus petite, `long`, et l'énoncé serré, `serre`,
+    // comme Q2 : l'énoncé, le tableau et les deux cases tiennent au petit
+    // iPhone.)
+    const morceaux = cases ? {enonce, avant: spec.avant, cases, serre: true, long: true} : {enonce, avant: spec.avant, apres, serre: true, long: true};
+    if (spec.support) morceaux.support = spec.support;
+    const texteCases = cases ? `${CASE}${NB}h ${CASE}${cases[1] ? `${NB}min` : ""}` : `${CASE}${NB}${apres}`;
+    const cle = `Q10:${modele}:${cherche}:${dep}-${spec.mid || ""}-${arr}`;
+    return q({
+      code: "Q10", degre, forme: cases ? "deux-cases" : "nombre",
+      texte: `${enonce} ${spec.avant} ${texteCases}`, morceaux,
+      reponse, reponseTexte, unite, resume: `${spec.avant} ${reponseTexte}`, resumeVert: lignes[lignes.length - 1],
+      outil: "axe-arcs", grandeur: "duree", arcs, arcsCorr, repTexteQ10: reponseTexte, noteOutil: "Je passe par l'heure pile.",
+      relation: `1${NB}h = 60${NB}min`, image: [`1${NB}h = 60${NB}min`, bond], correction: lignes,
+      sorteQ10: sorte, modeleQ10: modele,
+      donnees: Object.assign({type: "q10", sorte, cherche, depart: dep, arrivee: arr}, spec.mid ? {milieu: spec.mid} : {},
+        spec.support ? {support: spec.support} : {}),
+      cle, cleBase: cle
+    });
+  }
+
+  // ---------------------------------------------------- les sortes de Q10
+  // Une étape : la durée, l'heure d'arrivée, l'heure de départ.
+  function uneEtapeQ10(degre, rng, cherche) {
+    const liste = cherche === "duree" ? DUREE_Q10 : cherche === "arrivee" ? ARRIVEE_Q10 : DEPART_Q10;
+    const c = choisir(rng, liste.filter(x => {
+      const [dMin, dMax] = cherche === "duree" ? x.slice(2, 4) : x.slice(3, 5);
+      return degre === 1 ? dMin < 60 : dMax > 61;
+    }));
+    const [modele, texte] = c;
+    const [dMin, dMax, tMin, tMax] = cherche === "duree" ? c.slice(2, 6) : c.slice(3, 7);
+    const avant = cherche === "duree" ? "Durée :" : c[2];
+    const d = entre(rng, Math.max(dMin, degre === 1 ? 1 : 61), Math.min(dMax, degre === 1 ? 59 : 999));
+    if (!dureeOk(degre, d)) return null;
+    // (Pour l'heure de départ, la fin est tirée dans ses bornes.)
+    let t0 = instantQ10(rng, tMin, tMax);
+    if (t0 === null) return null;
+    // (Degré 3 : les minutes débordent ; les minutes du départ, ou de la fin
+    // pour l'heure de départ, sont tirées pour cela.)
+    if (degre === 3 && d % 60 >= 2) {
+      t0 = pileAvant(t0) + (cherche === "depart" ? entre(rng, 1, (d % 60) - 1) : entre(rng, 61 - (d % 60), 59));
+      if (t0 < tMin || t0 > tMax) return null;
+    }
+    const [dep, arr] = cherche === "depart" ? [t0 - d, t0] : [t0, t0 + d];
+    // Degré 3 : les minutes débordent (7 h 43 + 1 h 34 min), ou il faut
+    // reculer au-delà de l'heure pile (12 h 10 − 1 h 17 min).
+    if (degre === 3 && cherche === "arrivee" && (dep % 60) + (d % 60) <= 60) return null;
+    if (degre === 3 && cherche === "depart" && (arr % 60) >= (d % 60)) return null;
+    if (degre === 3 && cherche === "duree" && (arr % 60) >= (dep % 60)) return null;
+    const P = choisir(rng, PRENOMS);
+    const enonce = remplirQ2(texte, {P, D: heureTexte(dep), A: heureTexte(arr), d: dureeTexte(d)});
+    return finirQ10({sorte: cherche, modele, degre, enonce, avant, cherche, dep, arr});
+  }
+  // Deux étapes (le train du document officiel, la séance de cinéma, le
+  // Car Jaune puis la plage).
+  function deuxEtapesQ10(degre, rng) {
+    const [modele, texte, avant, a1, b1, a2, b2, tMin, tMax, sous] = choisir(rng, DEUX_Q10);
+    const d1 = entre(rng, a1, b1);
+    const d2 = entre(rng, a2, b2);
+    const dep = instantQ10(rng, tMin, tMax);
+    if (dep === null || d1 % 60 === 0 || d2 % 60 === 0) return null;
+    const mid = dep + d1;
+    const arr = mid + d2;
+    // (Une des deux étapes au moins passe une heure pile.)
+    if (pileAvant(mid) === pileAvant(dep) && pileAvant(arr) === pileAvant(mid)) return null;
+    const P = choisir(rng, PRENOMS);
+    const enonce = remplirQ2(texte, {P, D: heureTexte(dep), d1: dureeTexte(d1), d2: dureeTexte(d2)});
+    return finirQ10({sorte: "deux", modele, degre, enonce, avant, cherche: "arrivee", dep, arr, mid, sous});
+  }
+  // L'horaire du Car Jaune : quatre arrêts de la ligne O2,
+  // dans un sens ou dans l'autre ; la durée entre deux d'entre eux.
+  function carQ10(degre, rng) {
+    const nord = rng() < 0.5;
+    const ligne = nord ? O2 : O2.slice().reverse().map(([n, m]) => [n, 103 - m]);
+    // (Quatre arrêts de la ligne, dans l'ordre, comme un extrait de la fiche
+    // horaire : jusqu'à 1 h 43 min de trajet.)
+    const ks = melanger(rng, [0, 1, 2, 3, 4, 5, 6]).slice(0, 4).sort((x, y) => x - y);
+    const depart = entre(rng, 330, 1050);
+    const arrets = ks.map(k => [ligne[k][0], depart + ligne[k][1] - ligne[ks[0]][1]]);
+    const paires = [];
+    for (let a = 0; a < 4; a += 1) for (let b = a + 1; b < 4; b += 1) paires.push([a, b]);
+    // (Les paires qui conviennent : on passe une heure pile, jamais une
+    // heure pile au bout, des minutes à la durée ; plus d'une heure au
+    // degré 3.)
+    const bonnes = paires.filter(([x, y]) => {
+      const [u, v] = [arrets[x][1], arrets[y][1]];
+      return u % 60 && v % 60 && pileAvant(v) > pileAvant(u) && (v - u) % 60 && (degre === 3 ? v - u > 60 : true);
+    });
+    if (!bonnes.length) return null;
+    const [a, b] = choisir(rng, bonnes);
+    const [dep, arr] = [arrets[a][1], arrets[b][1]];
+    if (arr - dep > 60 && (arr - dep) % 60 === 0) return null;
+    // (« Du Port à St‑Denis », « de St‑Leu au Port ».)
+    const de = n => (n === "Le Port" ? "du Port" : `de ${n}`);
+    const a2 = n => (n === "Le Port" ? "au Port" : `à ${n}`);
+    const De = de(arrets[a][0]);
+    const enonce = `En Car Jaune, ${De} ${a2(arrets[b][0])} :`;
+    return finirQ10({sorte: "car", modele: `car-${nord ? "n" : "s"}`, degre, enonce, avant: "Durée :", cherche: "duree", dep, arr,
+      sous: [arrets[a][0], arrets[b][0]], support: {type: "car", arrets}});
+  }
+  // Les marées de Saint-Gilles : quatre marées dans la journée, basse et
+  // haute l'une après l'autre, de 5 h 20 à 7 h d'écart.
+  function mareeQ10(degre, rng) {
+    let t = entre(rng, 30, 210);
+    const basse0 = rng() < 0.5;
+    const liste = [];
+    for (let k = 0; k < 4; k += 1) {
+      liste.push([(k % 2 === 0) === basse0 ? "basse" : "haute", t]);
+      t += entre(rng, 320, 420);
+    }
+    if (liste[3][1] >= 24 * 60 - 5 || liste.some(([, x]) => x % 60 === 0)) return null;
+    // (Chaque marée se nomme par son rang : « de la 1re marée haute à la
+    // 2e basse ».)
+    const k = entre(rng, 0, 2);
+    const rang = j => (liste.slice(0, j + 1).filter(([x]) => x === liste[j][0]).length === 1 ? "1re" : "2e");
+    const [dep, arr] = [liste[k][1], liste[k + 1][1]];
+    // (Une ligne au petit téléphone : le tableau dit « Marées à Saint‑Gilles ».)
+    const enonce = `De la ${rang(k)} marée ${liste[k][0]} à la ${rang(k + 1)} ${liste[k + 1][0]} :`;
+    return finirQ10({sorte: "maree", modele: "maree", degre, enonce, avant: "Durée :", cherche: "duree", dep, arr,
+      sous: [liste[k][0], liste[k + 1][0]], support: {type: "maree", liste}});
+  }
+
+  // Au choix (les pièges de la base 100, comme D7) : l'heure d'arrivée
+  // d'une ou de deux étapes, où les minutes débordent.
+  function choixQ10(x, rng) {
+    if (!x || x.donnees.cherche !== "arrivee") return null;
+    const d = x.donnees;
+    const dep = d.depart;
+    const arr = d.arrivee;
+    const etapes = d.milieu ? [d.milieu - dep, arr - d.milieu] : [arr - dep];
+    const mm = (dep % 60) + etapes.reduce((s, e) => s + (e % 60), 0);
+    const hh = Math.floor(dep / 60) + etapes.reduce((s, e) => s + Math.floor(e / 60), 0);
+    if (mm < 60 || mm >= 100) return null;
+    const brutH = (h, m) => `${h}${NB}h${NB}${String(m).padStart(2, "0")}`;
+    const bonne = heureTexte(arr);
+    const piege = brutH(hh, mm);
+    const autres = [heureTexte(arr + 60), heureTexte(arr - 60)].filter(t => t !== bonne && t !== piege);
+    const faux = d.milieu ? [heureTexte(d.milieu), ...autres] : autres;
+    const choix = melanger(rng, [bonne, piege, choisir(rng, faux)]);
+    const pourquoi = {};
+    choix.forEach((c, i) => {
+      if (c === piege) pourquoi[i] = `${mm}${NB}min = ${dureeTexte(mm)}.`;
+      else if (d.milieu && c === heureTexte(d.milieu)) pourquoi[i] = "Ajoute aussi la 2e étape.";
+      else if (c !== bonne) pourquoi[i] = "Compte bien les heures.";
+    });
+    const consigne = `${x.morceaux.avant.replace(/ :$/, "")}${NB}?`;
+    return Object.assign(x, {
+      forme: "qcm", texte: `${x.morceaux.enonce} ${consigne}`, morceaux: {enonce: x.morceaux.enonce, consigne, serre: true, sorte: "heure"},
+      choix, bon: choix.indexOf(bonne), pourquoi, cle: `${x.cle}:q`, cleBase: x.cleBase
+    });
+  }
+
+  // Les erreurs de Q10 au pavé (une ligne au petit téléphone, 31 caractères
+  // au plus) : la base 100 (« 69 min », « 8 h 77 »), une heure de trop ou
+  // de moins, l'autre sens (ajouter au lieu de reculer), une seule étape.
+  function erreursQ10(question, lu, lus) {
+    const d = question.donnees;
+    if (!d || d.type !== "q10") return null;
+    const v = lus ? lus.map(x => Number(x / MILLE)) : [Number(lu / MILLE)];
+    const t = v.length === 2 ? v[0] * 60 + v[1] : v[0];
+    const cent = x => Math.floor(x / 60) * 100 + (x % 60);
+    const dep = d.depart;
+    const arr = d.arrivee;
+    const duree = arr - dep;
+    const ecrit = (h, m) => v.length === 2 && v[0] === h && v[1] === m;
+    if (d.cherche === "duree") {
+      const c = cent(arr) - cent(dep);
+      if ((v.length === 1 && v[0] === c) || ecrit(Math.floor(c / 100), c % 100)) return {erreur: 1, retour: `1${NB}h = 60${NB}min, pas 100${NB}min.`};
+      if (v.length === 2 && v[1] < 60 && Math.abs(t - duree) === 60) return {erreur: 2, retour: "Compte bien les heures."};
+      return null;
+    }
+    if (v.length !== 2) return null;
+    if (d.cherche === "arrivee") {
+      const etapes = d.milieu ? [d.milieu - dep, arr - d.milieu] : [duree];
+      const mm = (dep % 60) + etapes.reduce((s, e) => s + (e % 60), 0);
+      const hh = Math.floor(dep / 60) + etapes.reduce((s, e) => s + Math.floor(e / 60), 0);
+      if (mm >= 60 && ecrit(hh, mm)) return {erreur: 3, retour: `${mm}${NB}min = ${dureeTexte(mm)}.`};
+      if (d.milieu && v[1] < 60 && t === d.milieu) return {erreur: 4, retour: "Ajoute aussi la 2e étape."};
+      if (d.milieu && v[1] < 60 && t === dep + (arr - d.milieu)) return {erreur: 4, retour: "Ajoute aussi la 1re étape."};
+      if (!d.milieu && v[1] < 60 && t === dep - duree) return {erreur: 5, retour: "On cherche l'heure d'arrivée."};
+    } else {
+      const c = cent(arr) - (Math.floor(duree / 60) * 100 + (duree % 60));
+      if ((arr % 60) < (duree % 60) && ecrit(Math.floor(c / 100), c % 100)) return {erreur: 1, retour: `1${NB}h = 60${NB}min, pas 100${NB}min.`};
+      if (v[1] < 60 && t === arr + duree) return {erreur: 5, retour: "On cherche l'heure de départ."};
+    }
+    if (v[1] < 60 && Math.abs(t - (d.cherche === "arrivee" ? arr : dep)) === 60) return {erreur: 2, retour: "Compte bien les heures."};
+    return null;
+  }
+
+  // Les places : la durée, l'arrivée, le départ d'abord ; le Car Jaune et
+  // les marées ensuite ; les deux étapes et le piège au choix à la fin.
+  const PLACES_Q10 = {
+    valide: ["duree", "arrivee", "depart", "car", "depart", "maree", "duree", "deux", "choix", "arrivee"],
+    entraine: ["duree", "arrivee", "duree", "depart", "arrivee", "duree",
+      "duree", "car", "arrivee", "depart", "maree", "duree", "car", "depart", "arrivee",
+      "deux", "car", "maree", "choix", "deux", "depart", "maree", "deux", "choix", "duree"],
+    test: ["car|maree", "deux", "choix|depart", "duree"],
+    aide: ["duree", "arrivee", "depart"],
+    retour: ["duree|depart|arrivee", "car|maree"],
+    echauffement: ["duree|arrivee"]
+  };
+  function tirerQ10(rng, degre, forme) {
+    const sorte = forme || choisir(rng, ["duree", "arrivee", "depart"]);
+    for (let essai = 0; essai < 60; essai += 1) {
+      let x = null;
+      if (sorte === "car") x = carQ10(degre, rng);
+      else if (sorte === "maree") x = mareeQ10(degre, rng);
+      else if (sorte === "deux") x = deuxEtapesQ10(degre, rng);
+      else if (sorte === "choix") x = choixQ10(rng() < 0.5 ? deuxEtapesQ10(degre, rng) : uneEtapeQ10(Math.max(degre, 2), rng, "arrivee"), rng);
+      else x = uneEtapeQ10(degre, rng, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+  ETAPES.Q10 = {
+    // On te montre : Ismaël (de 7 h 47 à 8 h 16), Lucie (1 h 17 min,
+    // arrivée à 12 h 10), le train (7 h 43, 1 h 34 min, puis 52 min).
+    clesExemples: ["Q10:ecole:duree:467--496", "Q10:velo:depart:653--730", "Q10:train:arrivee:463-557-609"],
+    tirer(rng, degre, i, usage, forme) {
+      return tirerQ10(rng, degre, forme);
+    },
+    formes(usage, rng) {
+      const p = PLACES_Q10[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans Je valide : un même contexte une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ10 === question.modeleQ10);
+    },
+    erreurs(question, lu, lus) { return erreursQ10(question, lu, lus); }
   };
 
   // ============================================================== LES SÉRIES

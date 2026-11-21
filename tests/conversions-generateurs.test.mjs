@@ -147,6 +147,17 @@ function attendue(q) {
       assert.equal(s % BigInt(d.n), 0n, "la balance ne tombe pas juste");
       return [s / BigInt(d.n)];
     }
+    // Lot B2-3b-2 : Q10, les durées (toutes les minutes, le même jour). La
+    // réponse recalculée à part : la durée, l'heure d'arrivée ou de départ.
+    case "q10": {
+      const [dep, arr] = [d.depart, d.arrivee];
+      assert.ok(dep >= 0 && arr < 24 * 60 && arr > dep, "le même jour");
+      assert.ok(dep % 60 && arr % 60 && (!d.milieu || d.milieu % 60), "jamais une heure pile");
+      if (d.milieu) assert.ok(d.milieu > dep && d.milieu < arr);
+      const t = d.cherche === "duree" ? arr - dep : d.cherche === "arrivee" ? arr : dep;
+      if (Array.isArray(q.reponse)) return [BigInt(Math.floor(t / 60)) * 1000n, BigInt(t % 60) * 1000n];
+      return [BigInt(t) * 1000n];
+    }
     // Lot B2-2b-2 : C8, « 8,2 kg + 840 g = … kg » (comme les problèmes).
     case "pb": case "vrai": case "calc": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
@@ -169,6 +180,9 @@ function ecriture(texte, ou) {
   // (Lot B1-2 : un nombre et l'unité écrite en mots, « 1 hectomètre ».)
   assert.doesNotMatch(texte, /\d (?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)\b/, `${ou} : espace normale avant l'unité en mots dans « ${texte} »`);
   assert.doesNotMatch(texte, /\d[  ]\d{3}(?!\d)/, `${ou} : milliers sans espace fine dans « ${texte} »`);
+  // (Lot B2-3b-2, Gwenaël : « 52 / min à la ligne, c'est pas joli » : une
+  // heure ou une durée ne se coupe pas non plus entre « h » et les minutes.)
+  assert.doesNotMatch(texte, /\d\u00a0h (?=\d)/, `${ou} : « h » et les minutes séparables dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
   // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une ;
@@ -215,6 +229,7 @@ function controlerQuestion(q, ou) {
         if (d.type === "conv") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
         else if (d.type === "duree-deux") attenduTexte = `${rec[0] / 1000n} h ${rec[1] / 1000n} min`;
         else if (d.type === "entre") attenduTexte = q.reponseTexte.replace(/\u00a0/g, " ");
+        else if (d.type === "q10") attenduTexte = `${rec[0] / 1000n} h ${String(rec[1] / 1000n).padStart(2, "0")}`;
         else if (d.type === "frac") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
         else attenduTexte = String(rec[0] / 1000n);
         assert.equal(bonTexte, attenduTexte, `${ou} : le bon choix « ${bonTexte} » ≠ ${attenduTexte}`);
@@ -814,7 +829,8 @@ for (const code of PRETES) {
       R3: ["qcm", "associer", "phrase"], R4: ["qcm", "associer", "phrase"], R5: ["qcm", "associer", "phrase"], R6: ["qcm", "vrai-faux"],
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
-      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"]}[code];
+      C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
+      Q10: ["nombre", "deux-cases", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1656,4 +1672,127 @@ test("lot B2-3b-1 : Q2 — les sortes, la réponse, l'aide, la correction, les p
   const ex = new Set(G.clesExemples("Q2"));
   assert.equal(ex.size, 3);
   for (let g = 1; g <= 200; g += 1) G.serie("Q2", {usage: "entraine", graine: g}).forEach(q => assert.ok(!ex.has(q.cleBase), `Q2 : l'exemple ${q.cleBase} repris`));
+});
+
+// Lot B2-3b-2 : Q10 « Durées et horaires » — les sortes, les places, l'axe
+// (la réponse n'y est jamais, l'heure pile), la correction par l'heure pile,
+// le Car Jaune (les écarts de la ligne O2) et les marées (de 5 h 20 à 7 h),
+// les pièges au choix, les pourquoi d'une ligne.
+test("lot B2-3b-2 : Q10 — les sortes, les places, l'axe, la correction, le Car Jaune, les marées, les pourquoi", () => {
+  const sortes = {};
+  const modeles = new Set();
+  const erreurs = new Set();
+  const O2 = {"St‑Pierre": 0, "St‑Louis": 10, "St‑Leu": 37, "St‑Gilles": 53, "St‑Paul": 70, "Le Port": 82, "St‑Denis": 103};
+  const hT = t => (t % 60 ? `${Math.floor(t / 60)} h ${String(t % 60).padStart(2, "0")}` : `${t / 60} h`);
+  for (let g = 1; g <= 300; g += 1) {
+    for (const usage of ["valide", "entraine", "retour", "test", "aide", "echauffement"]) {
+      const s = G.serie("Q10", {usage, graine: g});
+      const ou = `Q10 ${usage} ${g}`;
+      assert.ok(s.length, `${ou} : série vide`);
+      if (usage === "valide") {
+        assert.deepEqual(s.map(q => (q.forme === "qcm" ? "choix" : q.sorteQ10)),
+          ["duree", "arrivee", "depart", "car", "depart", "maree", "duree", "deux", "choix", "arrivee"], `${ou} : places`);
+        const ctx = s.map(q => q.modeleQ10);
+        assert.equal(new Set(ctx).size, ctx.length, `${ou} : un contexte deux fois ${ctx}`);
+      }
+      s.forEach(q => {
+        const d = q.donnees;
+        const sorte = q.forme === "qcm" ? "choix" : d.sorte;
+        sortes[sorte] = (sortes[sorte] || 0) + 1;
+        modeles.add(q.modeleQ10);
+        const duree = d.arrivee - d.depart;
+        // On passe toujours une heure pile ; degré 1 : moins d'une heure.
+        assert.ok(Math.floor(d.arrivee / 60) > Math.floor(d.depart / 60), `${ou} : pas d'heure pile entre les deux`);
+        if (q.degre === 1 && !["car", "maree", "deux"].includes(d.sorte)) assert.ok(duree < 60, `${ou} : degré 1, ${duree} min`);
+        // L'outil : l'axe ; la réponse n'y est jamais écrite.
+        const a = q.arcs;
+        const rep = q.repTexteQ10;
+        assert.ok(a.piles, `${ou} : l'heure pile`);
+        if (d.cherche === "duree") assert.equal(a.arcs[0].texte, "?", ou);
+        else {
+          const cache = d.cherche === "arrivee" ? d.arrivee : d.depart;
+          assert.ok(a.instants.some(i => i.cache && i.t === cache), `${ou} : l'axe ne cache pas ${rep}`);
+          assert.ok(!a.instants.some(i => !i.cache && !i.vide && hT(i.t) === rep), `${ou} : l'axe donne ${rep}`);
+        }
+        if (d.sorte === "deux") assert.ok(a.instants[1].vide, `${ou} : l'heure du milieu est écrite`);
+        [q.noteOutil, ...q.image].forEach(t => assert.ok(!t.includes(rep), `${ou} : l'aide « ${t} » donne ${rep}`));
+        // La correction : les bonds par l'heure pile (ou les deux instants
+        // trouvés), en vert ; la dernière ligne finit par la réponse.
+        const c = q.arcsCorr;
+        if (d.sorte === "deux") assert.deepEqual(c.instants.map(i => i.t), [d.depart, d.milieu, d.arrivee], ou);
+        else {
+          const ts = c.instants.map(i => i.t);
+          assert.equal(ts[0], d.depart); assert.equal(ts[ts.length - 1], d.arrivee);
+          ts.slice(1, -1).forEach(t => assert.equal(t % 60, 0, `${ou} : un bond hors de l'heure pile`));
+          assert.ok(c.arcs.every(x => x.vert), ou);
+        }
+        assert.ok(q.resumeVert.endsWith(rep), `${ou} : ${q.resumeVert}`);
+        assert.ok(!c.instants.some(i => i.cache) && !c.arcs.some(x => x.texte === "?"), `${ou} : un « ? » dans la correction`);
+        // Le Car Jaune : les écarts de la ligne O2, dans un sens ou l'autre.
+        if (d.sorte === "car") {
+          const ar = d.support.arrets;
+          assert.equal(ar.length, 4);
+          for (let k = 1; k < 4; k += 1) assert.equal(Math.abs(ar[k][1] - ar[k - 1][1]), Math.abs(O2[ar[k][0]] - O2[ar[k - 1][0]]), `${ou} : l'horaire`);
+          assert.ok(ar.some(([, t]) => t === d.depart) && ar.some(([, t]) => t === d.arrivee), ou);
+        }
+        // Les marées : quatre, basse et haute l'une après l'autre, de 5 h 20
+        // à 7 h d'écart, le même jour ; les deux de la question se suivent.
+        if (d.sorte === "maree") {
+          const l = d.support.liste;
+          assert.equal(l.length, 4);
+          for (let k = 1; k < 4; k += 1) {
+            assert.notEqual(l[k][0], l[k - 1][0]);
+            assert.ok(l[k][1] - l[k - 1][1] >= 320 && l[k][1] - l[k - 1][1] <= 420, `${ou} : marées ${l[k][1] - l[k - 1][1]} min`);
+          }
+          const k = l.findIndex(([, t]) => t === d.depart);
+          assert.ok(k >= 0 && l[k + 1][1] === d.arrivee, `${ou} : deux marées qui se suivent`);
+          // (Chaque marée par son rang parmi celles de sa sorte : « de la 1re
+          // marée haute à la 2e basse ».)
+          const rang = j => (l.slice(0, j + 1).filter(([x]) => x === l[j][0]).length === 1 ? "1re" : "2e");
+          assert.ok(q.texte.includes(`De la ${rang(k)} marée ${l[k][0]} à la ${rang(k + 1)} ${l[k + 1][0]}`), `${ou} : ${q.texte}`);
+        }
+        if (q.forme === "qcm") {
+          assert.equal(q.choix.length, 3);
+          assert.equal(new Set(q.choix).size, 3, `${ou} : deux choix pareils`);
+          assert.ok(q.choix.some(x => /h [6-9]\d$/.test(x)), `${ou} : le piège de la base 100 ${q.choix}`);
+          q.choix.forEach((x, k) => { if (k !== q.bon) { const v = G.verifier(q, k); assert.ok(v.retour && v.retour.length <= 31, `${ou} : ${v.retour}`); } });
+          return;
+        }
+        // Les pourquoi : les vraies erreurs (la base 100, une heure de trop,
+        // l'autre sens, une seule étape), une ligne au petit téléphone.
+        const cent = t => Math.floor(t / 60) * 100 + (t % 60);
+        const hm = t => [String(Math.floor(t / 60)), String(t % 60)];
+        const essais = [];
+        if (d.cherche === "duree") {
+          const c100 = cent(d.arrivee) - cent(d.depart);
+          essais.push(q.forme === "nombre" ? String(c100) : [String(Math.floor(c100 / 100)), String(c100 % 100)]);
+          if (q.forme !== "nombre") essais.push(hm(duree + 60), hm(duree - 60));
+        } else {
+          const t = d.cherche === "arrivee" ? d.arrivee : d.depart;
+          essais.push(hm(t + 60), hm(t - 60));
+          if (d.cherche === "arrivee") {
+            const et = d.milieu ? [d.milieu - d.depart, d.arrivee - d.milieu] : [duree];
+            const mm = (d.depart % 60) + et.reduce((x, e) => x + (e % 60), 0);
+            const hh = Math.floor(d.depart / 60) + et.reduce((x, e) => x + Math.floor(e / 60), 0);
+            essais.push([String(hh), String(mm)]);
+            if (d.milieu) essais.push(hm(d.milieu)); else essais.push(hm(d.depart - duree));
+          } else {
+            const c = cent(d.arrivee) - (Math.floor(duree / 60) * 100 + (duree % 60));
+            essais.push([String(Math.floor(c / 100)), String(c % 100)], hm(d.arrivee + duree));
+          }
+        }
+        essais.forEach(e => {
+          const v = G.verifier(q, e);
+          if (v.juste) return;
+          if (v.retour) { erreurs.add(v.erreur); assert.ok(v.retour.length <= 31, `${ou} : « ${v.retour} »`); }
+        });
+      });
+    }
+  }
+  ["duree", "arrivee", "depart", "car", "maree", "deux", "choix"].forEach(k => assert.ok(sortes[k] > 300, `${k} : ${sortes[k]}`));
+  assert.deepEqual([...erreurs].sort(), [1, 2, 3, 4, 5], "les cinq erreurs connues");
+  ["vol", "piton", "cari", "car-n", "car-s", "maree", "train", "cinema", "plage", "velo"].forEach(m => assert.ok(modeles.has(m), m));
+  // Les exemples de On te montre ne reviennent jamais.
+  const exemples = ["Q10:ecole:duree:467--496", "Q10:velo:depart:653--730", "Q10:train:arrivee:463-557-609"];
+  for (let g = 1; g <= 400; g += 1) G.serie("Q10", {usage: "entraine", graine: g}).forEach(q => assert.ok(!exemples.includes(q.cle), q.cle));
 });

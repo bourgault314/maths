@@ -518,6 +518,17 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
 .horl-ligne .dessin.horloges { flex: 1 1 58%; min-width: 0; }
 .horl-ligne .rel { flex: 1 1 42%; }
 .zone .dessin.axe { max-height: min(9rem, 20vh); }
+/* Lot B2-3b-2 (Q10, choix de Gwenaël du 21/11) : l'axe à arcs ; l'horaire du
+   Car Jaune et les marées de Saint-Gilles en tableau de deux lignes. */
+.zone .dessin.axe-arcs { width: 100%; max-height: min(8rem, 19vh); }
+.q .horaire { border-collapse: collapse; font-size: .875rem; line-height: 1.15; margin: 0 auto; flex: 0 0 auto; }
+.q .horaire th { font-size: .93em; font-weight: 800; color: var(--muted); padding: .0625rem .25rem; border: .0625rem solid #b9cbd8; background: #fff8d6; white-space: nowrap; }
+/* (Deux cases au bout d'un énoncé : un peu plus étroites, la ligne tient.) */
+.q.long.serre .case.petite { width: 3.75rem; }
+.q.long.serre .case { height: 2.625rem; line-height: 2.3125rem; font-size: 1.5rem; }
+.q .horaire.maree th { background: #e3f1fb; }
+.q .horaire th.tete { background: #eef3f7; color: var(--ink); font-size: .93em; font-weight: 900; white-space: normal; max-width: 4.9em; line-height: 1.15; }
+.q .horaire td { font-weight: 900; padding: .125rem .25rem; border: .0625rem solid #b9cbd8; background: #fff; white-space: nowrap; }
 .dessin-boite .somme .touche { color: #8ea1af; font-size: .8125rem; font-weight: 700; }
 .note.reste { font-size: 1rem; color: var(--ink); font-weight: 900; }
 table.tab-hm { border-collapse: collapse; font-weight: 900; font-size: 1.25rem; }
@@ -717,6 +728,8 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .cadre[data-forme="seance"] .q .phrase-t { font-size: 1.4375rem; }
   .cadre[data-forme="seance"] .q .pieces-q { height: 4rem; }
   .cadre[data-forme="seance"] .zone .dessin.axe { max-height: 10rem; }
+  .cadre[data-forme="seance"] .zone .dessin.axe-arcs { max-height: 10rem; }
+  .cadre[data-forme="seance"] .q .horaire { font-size: 1.375rem; }
   .cadre[data-forme="seance"] .q .pb-fig .dessin { height: 8.5rem; }
   .cadre[data-forme="seance"] .schema2 .b, .cadre[data-forme="seance"] .schema2 .nom { font-size: 1.0625rem; }
   .cadre[data-forme="seance"] .zone .calcul-pb { font-size: 1.3125rem; }
