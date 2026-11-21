@@ -1027,7 +1027,7 @@ const MoteurTuiles = (function () {
     { n: 12, partie: 2, nom: 'Factoriser', exemple: 'le facteur commun est une ( )', titre: 'Factoriser — le facteur commun est une parenthèse', forme: 'commun', gen: genFacteurCommun, pile: true,
       variantes: ['AB+AC', 'AB+A', 'AB-AC', 'AB-A', 'BA+AC'], sansTuiles: true },
     // lot 3 (remarque 8 retenue) : (𝑎 + 𝑏)(𝑎 − 𝑏) d'abord — la seule exigible cette année, celle qui sert à la marche 14
-    { n: 13, partie: 2, nom: 'Identités remarquables', exemple: '(x + 3)(x − 3) · (x + 3)²', titre: 'Les identités remarquables', forme: 'produit', gen: genIdentite, pile: true,
+    { n: 13, partie: 2, nom: 'Identités remarquables', exemple: '(x + 3)(x − 3) · (x + 3)²', titre: 'Les identités remarquables', forme: 'produit', gen: genIdentite, pile: true, premier: true,
       variantes: ['(x+b)(x-b)', '(x+b)²', '(x-b)²', '(ax+b)(ax-b)', '(ax+b)²', '(ax-b)²'] },
     { n: 14, partie: 2, nom: 'Factoriser', exemple: 'deux carrés · x² − 25', titre: 'Factoriser une différence de deux carrés', forme: 'carres', gen: genDeuxCarres,
       variantes: ['x²-b²', 'a²x²-b²', 'b²-x²', 'b²-a²x²'], sansTuiles: true },
@@ -1061,6 +1061,8 @@ const MoteurTuiles = (function () {
       while (out.length < nb && epuises.size < variantes.length && garde++ < 200) {
         const tour = variantes.filter((v) => !epuises.has(v));
         for (let i = tour.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [tour[i], tour[j]] = [tour[j], tour[i]]; }
+        // « premier » (marche 13) : le premier cas ouvre chaque tour — une fiche courte l'a toujours ((𝑎 + 𝑏)(𝑎 − 𝑏), le seul exigible)
+        if (m.premier && tour.includes(variantes[0])) tour.splice(0, 0, ...tour.splice(tour.indexOf(variantes[0]), 1));
         // deux écritures dans une marche (l'opposé) : elles alternent, une fiche courte montre les deux
         let ordre = tour;
         if (m.famille) {

@@ -233,8 +233,13 @@ test("hors tuiles, chaque marche fait aussi TOUS ses cas, et les nombres sont va
   for (const z of tous(8).map((i) => i.enonce)) for (const p of z.match(/\((\d*)x [+−] (\d+)\)/g) || []) {
     const [, a, b] = p.match(/\((\d*)x [+−] (\d+)\)/); assert.equal(pgcd(Number(a || 1), Number(b)), 1, `marche 8 en tuiles : ${z}`);
   }
-  // marche 13 (remarque 8 retenue) : (𝑎 + 𝑏)(𝑎 − 𝑏) d'abord
+  // marche 13 (remarque 8 retenue) : (𝑎 + 𝑏)(𝑎 − 𝑏) d'abord, et TOUJOURS sur la fiche : il ouvre chaque tour du tirage
   assert.equal(M.marche(13).variantes[0], "(x+b)(x-b)");
+  for (const sup of M.SUPPORTS) for (let g = 1; g <= 300; g++) {
+    const l = Array.from(M.reserve(13, g, 7, sup), (i) => i.sous);
+    assert.equal(l[0], "(x+b)(x-b)", `marche 13, ${sup}, graine ${g} : ${l}`);
+    assert.equal(l[6], "(x+b)(x-b)", `marche 13, ${sup}, graine ${g}, 2e tour : ${l}`);
+  }
 });
 
 test("chaque marche fait TOUS ses cas : un tour de réserve montre chaque variante une fois", () => {
