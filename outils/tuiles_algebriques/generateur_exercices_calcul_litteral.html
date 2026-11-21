@@ -34,8 +34,8 @@
   /* ---------------------------------------------------------------- l'écran */
   .appli{ position:fixed; inset:0; overflow:hidden; }
   .retour-slot{ position:absolute; left:14px; top:6px; height:44px; display:flex; align-items:center; }
-  .reglages{ position:absolute; left:14px; top:56px; width:400px; bottom:10px; background:#fff; border:1px solid #E8DCD2;
-    border-radius:20px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; overflow:auto; }
+  .reglages{ position:absolute; left:14px; top:56px; width:430px; bottom:10px; background:#fff; border:1px solid #E8DCD2;
+    border-radius:20px; padding:12px 14px; display:flex; flex-direction:column; gap:9px; overflow:auto; }
   .marque{ display:flex; align-items:center; gap:10px; border-bottom:1px solid #F0E6DE; padding-bottom:8px; }
   .marque img{ height:34px; width:auto; display:block; }
   .marque h1{ font-size:17px; line-height:1.1; margin:0; font-weight:700; }
@@ -44,18 +44,25 @@
   .titre i{ font-style:normal; background:var(--marine); color:#fff; border-radius:50%; display:inline-block; width:16px; height:16px;
     text-align:center; line-height:16px; margin-right:5px; font-size:10px; letter-spacing:0; }
   .titre span{ text-transform:none; letter-spacing:0; font-weight:400; color:#8A9AA6; }
-  .formes{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
-  .forme{ position:relative; background:#fff; border:1.5px solid #E6DAD0; border-radius:12px; padding:6px 4px 5px; display:flex;
-    flex-direction:column; align-items:center; gap:2px; font-family:inherit; color:inherit; cursor:pointer; height:96px; }
-  .forme[aria-pressed="true"]{ border-color:var(--orange); background:#FFF3E6; }
-  .coche{ position:absolute; top:4px; left:5px; width:15px; height:15px; border-radius:4px; border:1.5px solid #C9B8AA; font-size:11px;
-    line-height:12px; color:#fff; font-weight:700; text-align:center; }
-  .forme[aria-pressed="true"] .coche{ background:var(--orange); border-color:var(--orange); }
-  .fico{ height:36px; display:flex; align-items:center; gap:3px; }
-  .fico svg{ height:34px; width:auto; }
-  .pz{ font-size:11px; font-weight:700; color:var(--marine); white-space:nowrap; }
-  .fnom{ font-size:11.5px; font-weight:700; line-height:1.15; text-align:center; }
-  .fsous{ font-size:9.5px; color:#6B7A86; line-height:1.1; text-align:center; }
+  .marches{ display:grid; grid-template-columns:1fr 1fr; gap:0 8px; align-items:start; }
+  .partie{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .ptitre{ display:flex; align-items:center; justify-content:space-between; gap:4px; height:18px; margin:0 0 1px; font-size:11px; font-weight:700; color:var(--turquoise-txt); white-space:nowrap; }
+  .ptitre small{ font-size:9.5px; font-weight:400; color:#8A9AA6; margin-left:2px; }
+  .tout{ flex:0 0 auto; font-family:inherit; font-size:10px; font-weight:700; color:#6B7A86; background:#fff; border:1px solid #E6DAD0; border-radius:7px;
+    padding:0 7px; height:17px; line-height:15px; cursor:pointer; }
+  .tout[aria-pressed="true"]{ border-color:var(--orange); background:#FFF3E6; color:#9A4A06; }
+  .marche{ display:flex; align-items:center; gap:7px; width:100%; height:29px; padding:0 7px; background:#fff; border:1.5px solid #E6DAD0;
+    border-radius:9px; font-family:inherit; color:inherit; text-align:left; cursor:pointer; }
+  .marche[aria-pressed="true"]{ border-color:var(--orange); background:#FFF3E6; }
+  .marche:disabled{ opacity:.38; cursor:default; }
+  .coche{ flex:0 0 auto; width:14px; height:14px; border-radius:4px; border:1.5px solid #C9B8AA; font-size:10.5px; line-height:11px; color:#fff;
+    font-weight:700; text-align:center; }
+  .marche[aria-pressed="true"] .coche{ background:var(--orange); border-color:var(--orange); }
+  .mtxt{ display:flex; flex-direction:column; min-width:0; line-height:1.15; }
+  .mnom{ font-size:11.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mnom b{ display:inline-block; min-width:9px; margin-right:5px; color:var(--turquoise-txt); }
+  .mex{ font-size:9.5px; color:#6B7A86; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .note-gris{ font-size:9.8px; line-height:1.3; color:#8A9AA6; margin:5px 2px 0; }
   .reg{ display:grid; grid-template-columns:86px 1fr; gap:5px 8px; align-items:center; font-size:12px; }
   .reg > span{ font-weight:700; color:#4A5763; }
   .seg{ display:flex; gap:4px; }
@@ -65,6 +72,8 @@
   .groupe{ transition:opacity .15s; }
   .groupe.grise{ opacity:.38; }
   .groupe.grise button{ pointer-events:none; cursor:default; }
+  .seg button:disabled{ opacity:.38; cursor:default; }
+  .groupe.grise button:disabled{ opacity:1; }
   .sous{ font-size:10.5px; color:#8A9AA6; margin:-2px 0 3px; }
   .etat{ font-size:10.5px; color:#6B7A86; margin:5px 0 0; min-height:1.3em; }
   .etat.alerte{ color:var(--orange-txt); font-weight:700; }
@@ -72,9 +81,9 @@
   .actions button{ flex:1; font-family:inherit; font-size:14px; font-weight:700; border-radius:12px; padding:10px; border:1.5px solid #E6DAD0;
     background:#fff; color:var(--marine); cursor:pointer; min-height:44px; }
   .actions .principal{ background:var(--orange); border-color:var(--orange); color:#fff; }
-  .forme:focus-visible, .seg button:focus-visible, .actions button:focus-visible{ outline:2px solid #0b67b2; outline-offset:2px; }
+  .marche:focus-visible, .tout:focus-visible, .seg button:focus-visible, .actions button:focus-visible{ outline:2px solid #0b67b2; outline-offset:2px; }
 
-  .apercu{ position:absolute; left:428px; top:0; right:0; bottom:0; overflow:auto; padding:20px 20px 40px; }
+  .apercu{ position:absolute; left:458px; top:0; right:0; bottom:0; overflow:auto; padding:20px 20px 40px; }
   .feuilles{ display:flex; flex-direction:column; align-items:center; gap:22px; }
   .cadre{ position:relative; flex:0 0 auto; box-shadow:0 4px 22px rgba(23,50,77,.16); background:#fff; }
   .cadre > .page{ position:absolute; left:0; top:0; transform-origin:0 0; }
@@ -85,6 +94,9 @@
     .reglages{ position:static; width:auto; margin:6px 10px; overflow:visible; }
     .apercu{ position:static; padding:10px 10px 30px; overflow:visible; }
     .seg button{ min-height:40px; }
+    .marche{ height:40px; }
+    .tout{ height:40px; padding:0 14px; font-size:12px; }
+    .ptitre{ height:44px; }
   }
 
   /* ---------------------------------------------------------------- la feuille (A4, en mm) */
@@ -106,6 +118,8 @@
   .cel{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1.8mm; min-width:0; }
   .fig{ display:flex; align-items:flex-end; justify-content:center; flex-wrap:wrap; gap:2mm 2.4mm; max-width:100%; }
   .fig svg{ display:block; flex:0 0 auto; }
+  .fig--morceaux{ column-gap:5mm; }
+  .cel--large{ grid-column:1 / -1; }
   .fig .plus{ font-weight:700; color:var(--turquoise-txt); font-size:13pt; align-self:center; padding:0 .6mm; }
   .txt{ display:flex; justify-content:center; max-width:100%; }
   .calc{ display:inline-grid; grid-template-columns:auto auto auto; column-gap:1.6mm; row-gap:2.6mm; align-items:baseline;
@@ -114,6 +128,8 @@
   .calc .l{ color:var(--orange-txt); margin-right:1.2mm; }
   .ligne{ display:flex; align-items:baseline; gap:1.6mm; font-weight:700; color:var(--marine); font-size:10pt; white-space:nowrap; }
   .ligne .l{ color:var(--orange-txt); }
+  .pile{ display:flex; flex-direction:column; align-items:flex-start; gap:2.6mm; font-weight:700; color:var(--marine); font-size:10pt; white-space:nowrap; }
+  .pile .suite{ display:flex; align-items:baseline; gap:1.6mm; padding-left:5.2mm; }
   .trou{ display:inline-block; border-bottom:1px solid var(--texte-doux); height:1.05em; vertical-align:-.15em; }
   .rep{ color:var(--turquoise-txt); font-weight:700; border-bottom:1px dotted #9CC9C7; padding:0 1mm; }
   .egal{ color:var(--marine); }
@@ -130,6 +146,8 @@
   .mesure .m-c{ display:inline-flex; width:min-content; }
 
   /* ---------------------------------------------------------------- l'impression : les feuilles seules */
+  @media (max-width:520px){ .marches{ grid-template-columns:1fr; gap:8px; } }
+
   @page{ size:A4; margin:0; }
   @media print{
     html,body{ background:#fff; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -149,27 +167,21 @@
 <div class="appli">
   <div id="retourSlot" class="retour-slot"></div>
   <aside class="reglages" aria-label="Réglages de la fiche">
-    <div class="marque"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go" width="78" height="34"><div><h1>Fiches avec les tuiles</h1><small>sujet et corrigé, tirés au hasard</small></div></div>
+    <div class="marque"><img src="/assets/img/mathsgo-logo-390.png" alt="maths&amp;go" width="78" height="34"><div><h1>Fiches avec les tuiles</h1><small>les marches du cours · sujet et corrigé</small></div></div>
 
     <div>
-      <p class="titre"><i>1</i>Les exercices <span>· j’en coche un ou plusieurs</span></p>
-      <div class="formes" id="formes"></div>
+      <p class="titre"><i>1</i>Les marches du cours <span>· j’en coche une ou plusieurs</span></p>
+      <div class="marches" id="marches"></div>
     </div>
 
     <div>
-      <p class="titre"><i>2</i>Les tuiles</p>
-      <div class="groupe" id="groupeT">
-        <p class="sous">Pour écrire, réduire, l’opposé</p>
-        <div class="reg">
-          <span>Tuiles</span><div class="seg" data-reglage="tuiles" role="group" aria-label="Tuiles"><button type="button" data-v="x1">1 et 𝑥</button><button type="button" data-v="x2">avec 𝑥²</button></div>
-          <span>Négatifs</span><div class="seg" data-reglage="negT" role="group" aria-label="Négatifs"><button type="button" data-v="sans">sans</button><button type="button" data-v="avec">avec</button></div>
-        </div>
+      <p class="titre"><i>2</i>Le support <span>· tableau et sans aide : bientôt</span></p>
+      <div class="reg">
+        <span>Avec</span><div class="seg" data-reglage="support" role="group" aria-label="Support"><button type="button" data-v="tuiles">les tuiles</button><button type="button" data-v="tableau" disabled>le tableau</button><button type="button" data-v="sans" disabled>sans aide</button></div>
       </div>
-      <div class="groupe" id="groupeR">
-        <p class="sous" style="margin-top:6px">Pour les rectangles</p>
+      <div class="groupe" id="groupeRect" style="margin-top:5px">
         <div class="reg">
-          <span>Facteur</span><div class="seg" data-reglage="facteurs" data-multi="1" role="group" aria-label="Facteur"><button type="button" data-v="nombre">un nombre</button><button type="button" data-v="x">𝑥 ou 2𝑥</button><button type="button" data-v="double">( ) × ( )</button><button type="button" data-v="carre">carré ( )²</button></div>
-          <span>Négatifs</span><div class="seg" data-reglage="negR" role="group" aria-label="Négatifs dans les rectangles"><button type="button" data-v="sans">sans</button><button type="button" data-v="paren">dans la ( )</button><button type="button" data-v="partout">partout</button></div>
+          <span>Rectangle</span><div class="seg" data-reglage="rectangle" role="group" aria-label="Rectangle"><button type="button" data-v="lire">je le lis</button><button type="button" data-v="construire">je le construis</button><button type="button" data-v="deux">les deux</button></div>
         </div>
       </div>
     </div>
@@ -191,15 +203,15 @@
 <div class="mesure" id="mesure" aria-hidden="true"></div>
 <script id="moteur-tuiles">
 /* ==========================================================================
-   MOTEUR DES TUILES — fiches d'exercices (lot 1, 21/11/2026)
+   MOTEUR DES TUILES — fiches d'exercices (lot 1 puis lot 2 « par marches », 21/11/2026)
    Aucun accès à la page ici : ce bloc se teste seul avec node --test
    (tests/generateur-tuiles-fiches.test.mjs).
    - le dessin des tuiles est celui des feuilles de 3e (figures.py), en SVG, en mm :
      tuile 1 = carré de 4,4 mm, 𝑥 = 3,4 unités (on ne « compte » pas un 𝑥 avec des 1),
      tuiles des bords à la même taille que celles du rectangle,
      signe d'une tuile du produit = règle des signes ;
-   - six formes d'exercices tirées au hasard (graine), chaque réponse vérifiée
-     en relisant le TEXTE affiché (analyseur indépendant du tirage).
+   - les marches du cours (0 à 15), chacune avec ses variantes qui tournent, tirées au hasard
+     (graine) ; chaque réponse vérifiée en relisant le TEXTE affiché (analyseur indépendant du tirage).
    ========================================================================== */
 const MoteurTuiles = (function () {
   'use strict';
@@ -471,6 +483,7 @@ const MoteurTuiles = (function () {
         case 'oppose':
           if (!P.eq(polyGroupes(it.tas), analyser(it.enonce))) return err('tuiles ≠ énoncé');
           if (!P.nul(P.add(analyser(it.enonce), analyser(it.reponse)))) return err('la somme ne fait pas 0');
+          if (it.ecrit && !P.eq(analyser(it.ecrit), analyser(it.reponse))) return err('−( ) ≠ réponse');
           if (!P.eq(polyGroupes(it.paires.map(([k, n]) => [k, n ? -1 : 1])), polyGroupes(it.tas))) return err('paires ≠ tuiles');
           return null;
         case 'reduire': {
@@ -481,7 +494,7 @@ const MoteurTuiles = (function () {
           if (!P.eq(polyGroupes(it.reste), e)) return err('le reste ≠ la réponse');
           return null;
         }
-        case 'lire': case 'construire': {
+        case 'produit': {
           const e = analyser(it.enonce);
           for (const l of it.lignes) if (!P.eq(analyser(l), e)) return err(`ligne fausse : ${l}`);
           if (!estReduite(it.lignes[it.lignes.length - 1]) && it.lignes.length > 1) return err('dernière ligne non réduite');
@@ -495,6 +508,15 @@ const MoteurTuiles = (function () {
           if (!P.eq(analyser(it.reponse), e)) return err('produit faux');
           if (!/\)/.test(it.reponse)) return err('la réponse n\'est pas un produit');
           if (!P.eq(polyRectangle(it.gauche, it.haut), e)) return err('rectangle ≠ somme');
+          return null;
+        }
+        case 'ensemble': {
+          const e = analyser(it.enonce);
+          let tot = [0];
+          for (const m of it.morceaux) tot = P.add(tot, m.tas ? polyGroupes(m.tas) : polyRectangle(m.gauche, m.haut));
+          if (!P.eq(tot, e)) return err('tuiles ≠ énoncé');
+          for (const l of it.lignes) if (!P.eq(analyser(l), e)) return err(`ligne fausse : ${l}`);
+          if (!estReduite(it.lignes[it.lignes.length - 1])) return err('dernière ligne non réduite');
           return null;
         }
         default: return err('forme inconnue');
@@ -517,212 +539,363 @@ const MoteurTuiles = (function () {
   const choix = (r, t) => t[Math.floor(r() * t.length)];
   const pgcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
 
-  // ------------------------------------------------------------------ les six formes
-  const MAXC = { x2: 2, x: 4, 1: 5 };
+  // ------------------------------------------------------------------ les marches du cours (lot 2)
+  // Le menu suit les marches du cours de 3e (0 à 15). Chaque marche a ses VARIANTES (ses cas) :
+  // une fiche les fait toutes tourner, la marche est « équilibrée d'office ».
+  const lin = (a, b) => [{ k: 1, c: a }, { k: 0, c: b }];          // a𝑥 + b
+  const linInv = (a, b) => [{ k: 0, c: b }, { k: 1, c: a }];       // b + a𝑥 (le nombre d'abord)
+  const tuilesDe = (f) => { const l = []; for (const m of f) for (let i = 0; i < Math.abs(m.c); i++) l.push((m.c < 0 ? '-' : '') + (m.k === 1 ? 'x' : '1')); return l; };
+  /** Longueur d'un facteur posé en tuiles, en unités (𝑥 = 3,4) : la place qu'il prend sur un bord. */
+  const longueur = (f) => f.reduce((t, m) => t + Math.abs(m.c) * (m.k === 1 ? XU : 1), 0);
+  const L_HAUT = 16, L_GAUCHE = 11.2;       // au-delà, le rectangle ne tient plus sur une demi-page (ou devient trop haut) : on tire autre chose
+  const L_DOUBLE = 9.8;                     // (2𝑥 + 3)(…) : avec deux lignes de calcul dessous, trois rangées tiennent sur une page
+  const L_APRES = 8.5;                      // (2𝑥 + 1) × 3 : la parenthèse est à gauche, debout — on la garde courte
+  const par = (f) => `(${txtTermes(f)})`;
+  const signe = (r, p) => (r() < p ? -1 : 1);
 
-  function groupesAuHasard(r, opt, st, auMoinsDeux) {
+  // ---- marches 0 à 2 : les tas de tuiles
+  const V_TAS = { x1: [false, false], x1n: [false, true], x2: [true, false], x2n: [true, true] };
+
+  function groupesAuHasard(r, avecX2, neg, auMoinsDeux) {
     let sortes;
-    if (opt.tuiles === 'x2') sortes = choix(r, [['x2', 'x', '1'], ['x2', 'x'], ['x2', '1'], ['x2', 'x', '1'], ['x', '1']]);
+    if (avecX2) sortes = choix(r, [['x2', 'x', '1'], ['x2', 'x'], ['x2', '1'], ['x2', 'x', '1'], ['x', '1']]);
     else sortes = auMoinsDeux || r() < 0.85 ? ['x', '1'] : ['x'];
     // avec 1 et 𝑥 seulement, des tas un peu plus grands (sinon trop peu d'exercices différents) ;
-    // avec 𝑥², des tas qui tiennent dans une colonne sur trois (comme la maquette validée)
+    // avec 𝑥², des tas qui tiennent dans une colonne sur trois
     let max;
-    if (opt.tuiles !== 'x2') max = { x: 6, 1: 6 };
+    if (!avecX2) max = { x: 6, 1: 6 };
     else if (sortes.length === 3) max = { x2: 1, x: 3, 1: 3 };
     else max = { x2: 2, x: 3, 1: 5 };
     const g = sortes.map((k) => [k, ent(r, 1, max[k])]);
-    if (st === 'n') {
+    if (avecX2 && !g.some(([k]) => k === 'x2')) return null;       // ce cas-là appartient à « 1 et 𝑥 »
+    if (neg) {
       g.forEach((gr) => { if (r() < 0.5) gr[1] = -gr[1]; });
       if (g.every((gr) => gr[1] > 0)) { const i = ent(r, 0, g.length - 1); g[i][1] = -g[i][1]; }
     }
     return g;
   }
 
-  function genEcrire(r, opt, st) {
-    const g = groupesAuHasard(r, opt, st, false);
+  function genEcrire(r, v) {
+    const g = groupesAuHasard(r, V_TAS[v][0], V_TAS[v][1], false);
+    if (!g) return null;
     const rep = txtPoly(polyGroupes(g));
-    return { forme: 'ecrire', sous: st, tas: g, reponse: rep, cle: 'e:' + rep };
+    return { forme: 'ecrire', tas: g, reponse: rep, cle: 'e:' + rep };
   }
 
-  function genOppose(r, opt, st) {
-    const g = groupesAuHasard(r, opt, st, true);
-    if (g.length < 2) return null;
-    // le corrigé pose chaque tuile à côté de son opposée : des tas courts (au plus 6 tuiles), comme la maquette
+  // marche 2 — l'opposé, sous ses deux écritures : « (2𝑥 − 3) + …… = 0 » (ce qu'il faut ajouter pour obtenir 0)
+  // et « −(2𝑥 − 3) = …… » (variantes qui commencent par « - »). Les mêmes tuiles pour les deux.
+  function genOppose(r, v) {
+    const moins = v[0] === '-';
+    if (moins) v = v.slice(1);
+    const g = groupesAuHasard(r, V_TAS[v][0], V_TAS[v][1], true);
+    if (!g || g.length < 2) return null;
+    // le corrigé pose chaque tuile à côté de son opposée : des tas courts (au plus 6 tuiles)
     const nbT = g.reduce((t, [, n]) => t + Math.abs(n), 0);
     const avecX2 = g.some(([k]) => k === 'x2');
     if (nbT > (avecX2 ? 4 : 6) || g.some(([k, n]) => k === 'x2' && Math.abs(n) > 1)) return null;
     const p = polyGroupes(g);
     const paires = [];
     for (const [k, n] of g) for (let i = 0; i < Math.abs(n); i++) paires.push([k, n < 0]);
-    return { forme: 'oppose', sous: st, tas: g, enonce: txtPoly(p), reponse: txtPoly(P.neg(p)), paires, cle: 'o:' + txtPoly(p) };
+    const e = txtPoly(p);
+    return { forme: 'oppose', tas: g, enonce: e, ecrit: moins ? `${MOINS}(${e})` : null, reponse: txtPoly(P.neg(p)), paires, cle: (moins ? 'o-:' : 'o:') + e };
   }
 
-  function genReduire(r, opt, st) {
-    const sortes = opt.tuiles === 'x2' ? ['x2', 'x', '1'] : ['x', '1'];
-    const T = opt.tuiles === 'x2' ? ent(r, 5, 7) : ent(r, 4, 5);
+  function genReduire(r, v) {
+    const [avecX2, neg] = V_TAS[v];
+    const sortes = avecX2 ? ['x2', 'x', '1'] : ['x', '1'];
+    const T = avecX2 ? ent(r, 5, 7) : ent(r, 4, 5);
     const seq = [];
     for (let i = 0; i < T; i++) { let k; do k = choix(r, sortes); while (seq.length && seq[seq.length - 1] === k); seq.push(k); }
-    if (opt.tuiles === 'x2' && !seq.includes('x2')) return null;
+    if (avecX2 && !seq.includes('x2')) return null;
     const MAXR = { x2: 2, x: 4, 1: 5 };
     const t = seq.map((k, i) => {
       let c = ent(r, 1, MAXR[k]);
-      if (st === 'n' && r() < (i === 0 ? 0.15 : 0.45)) c = -c;
+      if (neg && r() < (i === 0 ? 0.15 : 0.45)) c = -c;
       return [k, c];
     });
-    const pos = {}, neg = {};
-    for (const [k, c] of t) { if (c > 0) pos[k] = (pos[k] || 0) + c; else neg[k] = (neg[k] || 0) - c; }
-    if (st === 'n' && !SORTE.some((k) => pos[k] && neg[k])) return null;      // au moins une paire nulle
+    const pos = {}, nega = {};
+    for (const [k, c] of t) { if (c > 0) pos[k] = (pos[k] || 0) + c; else nega[k] = (nega[k] || 0) - c; }
+    if (neg && !SORTE.some((k) => pos[k] && nega[k])) return null;      // au moins une paire nulle
     // la place : pas plus de tuiles d'une sorte qu'on ne peut en poser proprement
-    const tot = (k) => (pos[k] || 0) + (neg[k] || 0);
+    const tot = (k) => (pos[k] || 0) + (nega[k] || 0);
     if (tot('x2') > 5 || tot('x') > 9 || tot('1') > 11) return null;
     const p = polyGroupes(t);
     if (P.nul(p)) return null;
     const paires = [], reste = [];
     for (const k of ['x2', 'x', '1']) {
-      const m = Math.min(pos[k] || 0, neg[k] || 0);
+      const m = Math.min(pos[k] || 0, nega[k] || 0);
       for (let i = 0; i < m; i++) paires.push([k, false]);
-      const d = (pos[k] || 0) - (neg[k] || 0);
+      const d = (pos[k] || 0) - (nega[k] || 0);
       if (d) reste.push([k, d]);
     }
     const termes = t.map(([k, c]) => ({ k: DEG[k], c }));
-    return { forme: 'reduire', sous: st, tas: t, enonce: txtTermes(termes), reponse: txtPoly(p), paires, reste, cle: 'r:' + txtTermes(termes) };
+    return { forme: 'reduire', tas: t, enonce: txtTermes(termes), reponse: txtPoly(p), paires, reste, cle: 'r:' + txtTermes(termes) };
   }
 
-  const lin = (a, b) => [{ k: 1, c: a }, { k: 0, c: b }];
-  const linInv = (a, b) => [{ k: 0, c: b }, { k: 1, c: a }];
-  const tuilesDe = (f) => { const l = []; for (const m of f) for (let i = 0; i < Math.abs(m.c); i++) l.push((m.c < 0 ? '-' : '') + (m.k === 1 ? 'x' : '1')); return l; };
+  // ---- les rectangles : un produit de deux facteurs posés sur les bords
+  const devTermes = (f1, f2) => { const d = []; for (const a of f1) for (const b of f2) d.push({ k: a.k + b.k, c: a.c * b.c }); return d; };
+  const termesPoly = (p) => { const l = []; for (const k of [2, 1, 0]) if (p[k]) l.push({ k, c: p[k] }); return l; };
 
-  /** Un produit au hasard. type : nombre | x | double | carre ; neg : sans | paren | partout. */
-  function produit(r, type, neg, facto) {
-    const nParen = neg !== 'sans';
-    const nDevant = neg === 'partout' && !facto;
-    let f1, f2, ecr;
-    if (type === 'nombre' || type === 'x') {
-      let mono, a, b;
-      if (type === 'nombre') { mono = { k: 0, c: ent(r, 2, 4) }; a = r() < 0.25 ? 2 : 1; b = ent(r, 1, a === 2 ? 3 : 5); }
-      else { mono = { k: 1, c: choix(r, [1, 1, 2]) }; a = mono.c === 1 && r() < 0.25 ? 2 : 1; b = ent(r, 1, a === 2 ? 5 : mono.c === 2 ? 4 : 5); }
-      // (2𝑥 + 4) s'écrirait 2(𝑥 + 2) : pas de parenthèse qui se factorise encore
-      if (pgcd(a, b) !== 1) return null;
-      let f = lin(a, b);
-      const mode = nDevant ? choix(r, ['devant', 'devant', 'xneg', 'paren', 'sans']) : nParen ? (r() < 0.65 ? 'paren' : 'sans') : 'sans';
-      if (mode === 'paren') f = lin(a, -b);
-      else if (mode === 'xneg') f = linInv(-a, b);
-      else if (mode === 'devant') { mono = { k: mono.k, c: -mono.c }; if (r() < 0.6) f = lin(a, -b); }
-      const apres = !facto && mono.c > 0 && r() < (type === 'nombre' ? 0.33 : 0.25);
-      if (apres) { f1 = f; f2 = [mono]; ecr = `(${txtTermes(f)}) × ${txtMonoSeul(mono)}`; }
-      else { f1 = [mono]; f2 = f; ecr = `${txtMonoSeul(mono)}(${txtTermes(f)})`; }
-    } else if (type === 'double') {
-      const a1 = r() < 0.2 ? 2 : 1;
-      let b1 = ent(r, 1, 3), b2 = ent(r, 1, 3);
-      if (nParen) {
-        const motif = choix(r, ['+-', '-+', '--', '+-', '-+', '++']);
-        if (motif[0] === '-') b1 = -b1;
-        if (motif[1] === '-') b2 = -b2;
-      }
-      let g1 = lin(a1, b1), g2 = lin(1, b2);
-      if (nDevant && r() < 0.4) { if (r() < 0.5) g1 = linInv(-a1, Math.abs(b1)); else g2 = linInv(-1, Math.abs(b2)); }
-      if (r() < 0.5) [g1, g2] = [g2, g1];
-      if (txtTermes(g1) === txtTermes(g2)) return null;           // c'est un carré : il a sa propre case
-      if (pgcd(g1[0].c, g1[1].c) !== 1 || pgcd(g2[0].c, g2[1].c) !== 1) return null;
-      f1 = g1; f2 = g2; ecr = `(${txtTermes(g1)})(${txtTermes(g2)})`;
-    } else { // carré
-      const a = r() < 0.25 ? 2 : 1;
-      let b = a === 2 ? choix(r, [1, 3]) : ent(r, 1, 4);
-      if (nParen && r() < 0.55) b = -b;
-      let g = lin(a, b);
-      if (nDevant && r() < 0.3) g = linInv(-a, Math.abs(b));
-      f1 = g; f2 = g; ecr = `(${txtTermes(g)})²`;
+  /** L'exercice « je développe » : f1 à gauche, f2 en haut ; une ligne, ou deux quand il faut réduire. */
+  const propre = (f) => f.length < 2 || Math.abs(f.find((m) => m.k === 1).c) === 1 || pgcd(f[0].c, f[1].c) === 1;
+  function itemProduit(f1, f2, ecr) {
+    if (longueur(f1) > (f1.length > 1 ? L_DOUBLE : L_GAUCHE) || longueur(f2) > L_HAUT) return null;
+    if (!propre(f1) || !propre(f2)) return null;        // 2(2𝑥 + 4) : la parenthèse se factorise encore, on tire autre chose
+    const p = P.mul(polyTermes(f1), polyTermes(f2));
+    const dev = devTermes(f1, f2);
+    const sortes = dev.map((m) => m.k);
+    const doublon = sortes.some((k, i) => sortes.indexOf(k) !== i);
+    return { forme: 'produit', gauche: tuilesDe(f1), haut: tuilesDe(f2), enonce: ecr, lignes: doublon ? [txtTermes(dev), txtPoly(p)] : [txtTermes(dev)], cle: 'p:' + ecr };
+  }
+
+  /** k(…) ou (…) × k : le facteur seul devant (à gauche du rectangle) ou après (en haut). */
+  function ecrMono(mono, f, apres) {
+    const m = txtMonoSeul(mono);
+    if (apres) return `${par(f)} × ${mono.c < 0 ? `(${m})` : m}`;
+    if (mono.k === 0 && mono.c === -1) return MOINS + par(f);       // −(𝑥 − 7) : multiplier par −1
+    return m + par(f);
+  }
+  const produitMono = (mono, f, apres) => (apres ? (longueur(f) > L_APRES ? null : itemProduit(f, [mono], ecrMono(mono, f, true))) : itemProduit([mono], f, ecrMono(mono, f, false)));
+
+  // marche 3 — multiplier : 3 × 2𝑥, 𝑥 × 𝑥, 3𝑥 × 2𝑥
+  function genMultiplier(r, v) {
+    let m1, m2;
+    const forme = v === 'signe' ? choix(r, ['n-ax', 'ax-n', 'x-ax', 'ax-bx']) : v;
+    if (forme === 'n-ax') { m1 = { k: 0, c: ent(r, 2, 5) }; m2 = { k: 1, c: ent(r, 2, 3) }; }
+    else if (forme === 'ax-n') { m1 = { k: 1, c: ent(r, 1, 3) }; m2 = { k: 0, c: ent(r, 2, 5) }; }
+    else if (forme === 'x-ax') { const a = ent(r, 1, 4); [m1, m2] = r() < 0.5 ? [{ k: 1, c: 1 }, { k: 1, c: a }] : [{ k: 1, c: a }, { k: 1, c: 1 }]; }
+    else { m1 = { k: 1, c: ent(r, 2, 3) }; m2 = { k: 1, c: ent(r, 2, 3) }; }
+    if (v === 'signe') {
+      const motif = choix(r, ['+-', '-+', '+-', '-+', '--']);
+      if (motif[0] === '-') m1.c = -m1.c;
+      if (motif[1] === '-') m2.c = -m2.c;
     }
-    return { f1, f2, ecr };
+    const t1 = txtMonoSeul(m1), t2 = txtMonoSeul(m2);
+    const ecr = `${m1.c < 0 && m2.c < 0 ? `(${t1})` : t1} × ${m2.c < 0 ? `(${t2})` : t2}`;
+    return itemProduit([m1], [m2], ecr);
   }
 
-  function genRect(forme) {
-    return function (r, opt, st) {
-      const pr = produit(r, st, opt.negR, forme === 'factoriser');
-      if (!pr) return null;
-      const p = P.mul(polyTermes(pr.f1), polyTermes(pr.f2));
-      const base = { forme, sous: st, gauche: tuilesDe(pr.f1), haut: tuilesDe(pr.f2) };
-      if (forme === 'factoriser') {
-        const s = txtPoly(p);
-        return Object.assign(base, { enonce: s, reponse: pr.ecr, cle: 'f:' + pr.ecr });
+  // marche 4 — développer, le facteur est un nombre positif
+  function genFacteurPositif(r, v) {
+    const apres = v[0] === '(';
+    const grand = /ax/.test(v) || (apres && r() < 0.5);
+    const a = grand ? ent(r, 2, 3) : 1;
+    const k = ent(r, 2, a === 1 ? 5 : 4);
+    const b = ent(r, 1, a === 1 ? 5 : 4);
+    let f;
+    if (v === 'k(b-x)') f = linInv(r() < 0.3 ? -2 : -1, ent(r, 1, 4));
+    else f = lin(a, /-/.test(v) ? -b : b);
+    return produitMono({ k: 0, c: k }, f, apres);
+  }
+
+  // marche 5 — développer, le facteur contient 𝑥 (positif)
+  function genFacteurX(r, v) {
+    const b = ent(r, 1, 5);
+    switch (v) {
+      case 'x(x+b)': return produitMono({ k: 1, c: 1 }, lin(1, b), false);
+      case 'x(x-b)': return produitMono({ k: 1, c: 1 }, lin(1, -b), false);
+      case 'cx(x±b)': return produitMono({ k: 1, c: ent(r, 2, 3) }, lin(1, b * signe(r, 0.5)), false);
+      case 'x(ax±b)': return produitMono({ k: 1, c: 1 }, lin(ent(r, 2, 3), b * signe(r, 0.5)), false);
+      case '(±)cx': return produitMono({ k: 1, c: ent(r, 1, 2) }, lin(1, ent(r, 1, 6) * signe(r, 0.5)), true);
+      case 'cx(b-x)': return produitMono({ k: 1, c: ent(r, 1, 2) }, linInv(r() < 0.3 ? -2 : -1, ent(r, 1, 4)), false);
+      default: return produitMono({ k: 1, c: ent(r, 2, 3) }, lin(ent(r, 2, 3), b * signe(r, 0.5)), false);      // 2𝑥(3𝑥 − 5)
+    }
+  }
+
+  // marche 6 — développer, le facteur est négatif (en tuiles : rouge × rouge = vert)
+  function genFacteurNegatif(r, v) {
+    const b = ent(r, 1, 5);
+    switch (v) {
+      case '-k(x+b)': return produitMono({ k: 0, c: -ent(r, 2, 4) }, lin(1, b), false);
+      case '-k(x-b)': return produitMono({ k: 0, c: -ent(r, 2, 4) }, lin(1, -b), false);
+      case '-k(ax±b)': return produitMono({ k: 0, c: -ent(r, 2, 4) }, lin(ent(r, 2, 3), ent(r, 1, 4) * signe(r, 0.6)), false);
+      case '-(±)': return produitMono({ k: 0, c: -1 }, lin(ent(r, 1, 3), b * signe(r, 0.7)), false);
+      case '-x(x±b)': return produitMono({ k: 1, c: -1 }, lin(1, b * signe(r, 0.6)), false);
+      case '-cx(ax±b)': { const c = ent(r, 1, 2); return produitMono({ k: 1, c: -c }, lin(ent(r, c === 1 ? 2 : 1, 3), b * signe(r, 0.5)), false); }
+      case '(±)(-k)': return produitMono({ k: 0, c: -ent(r, 2, 4) }, lin(ent(r, 1, 2), ent(r, 1, 4) * signe(r, 0.4)), true);
+      default: return produitMono({ k: 0, c: -ent(r, 2, 4) }, lin(-1, ent(r, 1, 5)), false);          // −2(−𝑥 + 3)
+    }
+  }
+
+  // marche 7 — factoriser : le rectangle est rempli, on cherche les bords. Le facteur trouvé est positif,
+  // et la parenthèse ne se factorise plus (pas de 2(2𝑥 + 4)).
+  function genFactoriser(r, v) {
+    let mono, f;
+    const b = ent(r, 1, 5);
+    switch (v) {
+      case 'k(x+b)': mono = { k: 0, c: ent(r, 2, 5) }; f = lin(1, b); break;
+      case 'k(x-b)': mono = { k: 0, c: ent(r, 2, 5) }; f = lin(1, -b); break;
+      case 'k(ax±b)': mono = { k: 0, c: ent(r, 2, 4) }; f = lin(ent(r, 2, 3), ent(r, 1, 4) * signe(r, 0.5)); break;
+      case 'x(x+b)': mono = { k: 1, c: 1 }; f = lin(1, b); break;
+      case 'x(x-b)': mono = { k: 1, c: 1 }; f = lin(1, -b); break;
+      case 'x(ax±b)': mono = { k: 1, c: 1 }; f = lin(ent(r, 2, 3), b * signe(r, 0.5)); break;
+      default: mono = { k: 1, c: ent(r, 2, 3) }; f = lin(ent(r, 1, 2), ent(r, 1, 4) * signe(r, 0.5));    // 2𝑥(𝑥 + 3), 2𝑥(2𝑥 − 3)
+    }
+    if (pgcd(f[0].c, f[1].c) !== 1) return null;
+    if (longueur([mono]) > L_GAUCHE || longueur(f) > L_HAUT) return null;
+    const ecr = ecrMono(mono, f, false);
+    const p = P.mul(polyTermes([mono]), polyTermes(f));
+    return { forme: 'factoriser', gauche: tuilesDe([mono]), haut: tuilesDe(f), enonce: txtPoly(p), reponse: ecr, cle: 'f:' + ecr };
+  }
+
+  // marches 9 et 10 — la double distributivité, sans puis avec des signes −
+  function genDouble(signes) {
+    return function (r, v) {
+      let a1 = 1, a2 = 1;
+      if (v === 'ax-x') { if (r() < 0.5) a1 = ent(r, 2, 3); else a2 = ent(r, 2, 3); }
+      else if (v === 'ax-cx') { a1 = ent(r, 2, 3); a2 = ent(r, 2, 3); }
+      const b1 = ent(r, 1, a1 === 3 ? 4 : 5), b2 = ent(r, 1, a2 === 3 ? 4 : 5);
+      let g1, g2;
+      if (v === 'inv') {                                   // (3 − 𝑥)(𝑥 + 2) : le nombre d'abord
+        g1 = linInv(r() < 0.25 ? -2 : -1, ent(r, 1, 4));
+        g2 = r() < 0.3 ? linInv(-1, ent(r, 1, 4)) : lin(ent(r, 1, 2), b2 * signe(r, 0.3));
+        if (r() < 0.5) [g1, g2] = [g2, g1];
+      } else {
+        const motif = signes ? choix(r, ['+-', '-+', '--']) : '++';
+        g1 = lin(a1, motif[0] === '-' ? -b1 : b1);
+        g2 = lin(a2, motif[1] === '-' ? -b2 : b2);
       }
-      const dev = [];
-      for (const a of pr.f1) for (const b of pr.f2) dev.push({ k: a.k + b.k, c: a.c * b.c });
-      const sortes = dev.map((m) => m.k);
-      const doublon = sortes.some((k, i) => sortes.indexOf(k) !== i);
-      const lignes = doublon ? [txtTermes(dev), txtPoly(p)] : [txtTermes(dev)];
-      return Object.assign(base, { enonce: pr.ecr, lignes, cle: forme[0] + ':' + pr.ecr });
+      if (txtTermes(g1) === txtTermes(g2)) return null;                              // un carré : marche 13
+      if (g1[0].k === g2[0].k && g1[0].c === g2[0].c && g1[1].c === -g2[1].c) return null;   // (a + b)(a − b) : marche 13
+      return itemProduit(g1, g2, par(g1) + par(g2));
     };
   }
 
-  const FORMES = {
-    ecrire: {
-      num: 1, titre: 'Écrire l’expression', carte: ['Écrire l’expression', 'les tuiles → l’expression'],
-      consigne: () => 'j’écris l’expression représentée par les tuiles',
-      sous: (o) => (o.negT === 'avec' ? ['n', 'n', 'p'] : ['p']), gen: genEcrire, groupe: 'T',
-    },
-    reduire: {
-      num: 2, titre: 'Réduire', carte: ['Réduire', 'j’entoure les paires nulles'],
-      consigne: (o) => (o.negT === 'avec' ? 'j’entoure les paires nulles, puis j’écris l’expression réduite' : 'je range les tuiles identiques ensemble, puis j’écris l’expression réduite'),
-      sous: (o) => (o.negT === 'avec' ? ['n'] : ['p']), gen: genReduire, groupe: 'T',
-    },
-    oppose: {
-      num: 3, titre: 'L’opposé d’une expression', carte: ['L’opposé', 'ce qu’il faut ajouter pour 0'],
-      consigne: () => 'ce qu’il faut ajouter pour obtenir 0 : à chaque tuile, la tuile de même forme, de l’autre couleur',
-      sous: (o) => (o.negT === 'avec' ? ['n', 'n', 'p'] : ['p']), gen: genOppose, groupe: 'T',
-    },
-    lire: {
-      num: 4, titre: 'Développer — je lis le rectangle', carte: ['Développer', 'je lis le rectangle'],
-      consigne: () => 'les facteurs sont sur les bords, je compte les tuiles du rectangle',
-      sous: (o) => o.facteurs, gen: genRect('lire'), groupe: 'R',
-    },
-    construire: {
-      num: 5, titre: 'Développer — je construis le rectangle', carte: ['Développer', 'je construis le rectangle'],
-      consigne: () => 'je pose les facteurs avec mes tuiles, je remplis le rectangle, je le dessine dans le cadre, j’écris le résultat',
-      sous: (o) => o.facteurs, gen: genRect('construire'), groupe: 'R',
-    },
-    factoriser: {
-      num: 6, titre: 'Factoriser', carte: ['Factoriser', 'je trouve les bords'],
-      consigne: () => 'je trouve les bords du rectangle, j’écris le produit',
-      sous: (o) => o.facteurs, gen: genRect('factoriser'), groupe: 'R',
-    },
-  };
-  const ORDRE = ['ecrire', 'reduire', 'oppose', 'lire', 'construire', 'factoriser'];
-
-  /** Les options qui comptent pour une forme (une autre option ne change pas ses nombres). */
-  function optionsDe(forme, etat) {
-    if (FORMES[forme].groupe === 'T') return { tuiles: etat.tuiles, negT: etat.negT };
-    return { facteurs: ORDRE_FACT.filter((f) => etat.facteurs.includes(f)), negR: etat.negR };
+  // marche 13 — les identités remarquables
+  function genIdentite(r, v) {
+    const a = /ax/.test(v) ? ent(r, 2, 3) : 1;
+    const b = ent(r, 1, a === 1 ? 6 : 3);
+    if (pgcd(a, b) !== 1) return null;
+    if (/\)\(/.test(v)) {
+      let g1 = lin(a, b), g2 = lin(a, -b);
+      if (r() < 0.5) [g1, g2] = [g2, g1];
+      return itemProduit(g1, g2, par(g1) + par(g2));
+    }
+    const g = lin(a, /-/.test(v) ? -b : b);
+    return itemProduit(g, g, par(g) + '²');
   }
-  const ORDRE_FACT = ['nombre', 'x', 'double', 'carre'];
 
-  /** Une réserve d'exercices tous différents, dans l'ordre du tirage ; les sous-types tournent
-   *  (un nombre, x ou 2x, ( ) × ( )…) pour que la fiche « fasse tous les cas ». */
-  function reserve(forme, etat, graine, nb) {
-    const F = FORMES[forme], opt = optionsDe(forme, etat);
-    const r = hasard(hacher(`${forme}|${JSON.stringify(opt)}|${graine}`));
-    const sous = F.sous(opt);
-    const out = [], vus = new Set(), echecs = new Map(), epuises = new Set();
-    let tour = 0, garde = 0;
-    while (out.length < nb && epuises.size < sous.length && garde++ < nb * 400) {
-      const st = sous[tour % sous.length];
-      if (epuises.has(st)) { tour++; continue; }
-      const it = F.gen(r, opt, st);
-      if (!it || vus.has(it.cle) || verifierItem(it)) {
-        const n = (echecs.get(st) || 0) + 1;
-        echecs.set(st, n);
-        if (n > 300) { epuises.add(st); tour++; }
-        continue;
+  // marches 8 et 15 — tout ensemble : plusieurs morceaux côte à côte (rectangles, tuiles seules),
+  // je développe chaque produit, puis je réduis. Un signe − va TOUJOURS avec un facteur simple
+  // (−2(𝑥 − 1) : les tuiles du bord sont rouges) ; un − devant ( )( ) est la marche 11, sans tuiles.
+  const mMono = (mono, f) => ({ gauche: tuilesDe([mono]), haut: tuilesDe(f), ecr: ecrMono(mono, f, false), termes: devTermes([mono], f) });
+  const mDouble = (g1, g2) => ({ gauche: tuilesDe(g1), haut: tuilesDe(g2), ecr: txtTermes(g1) === txtTermes(g2) ? par(g1) + '²' : par(g1) + par(g2), termes: termesPoly(P.mul(polyTermes(g1), polyTermes(g2))) });
+  const mTas = (mono) => ({ tas: [[SORTE[mono.k], mono.c]], ecr: txtMonoSeul(mono), termes: [mono] });
+  const LARGEUR_ENSEMBLE = 82;              // mm : les morceaux côte à côte tiennent sur une demi-page
+
+  function assembler(morceaux) {
+    let enonce = '', w = 0;
+    const termes = [];
+    morceaux.forEach((m, i) => {
+      enonce += i === 0 ? m.ecr : m.ecr.startsWith(MOINS) ? ` ${MOINS} ${m.ecr.slice(1)}` : ` + ${m.ecr}`;
+      termes.push(...m.termes);
+      w += (m.tas ? tas(m.tas).w : rectangle(m.gauche, m.haut).w) + (i ? 5 : 0);
+    });
+    if (w > LARGEUR_ENSEMBLE) return null;
+    if (new Set(morceaux.map((m) => m.ecr.replace(MOINS, ''))).size < morceaux.length) return null;      // deux fois le même produit
+    const p = polyTermes(termes.map((t) => ({ k: t.k, c: t.c })));
+    const l1 = txtTermes(termes), l2 = txtPoly(p);
+    if (P.nul(p) || l1 === l2) return null;                 // il faut qu'il reste quelque chose à réduire
+    const sortes = termes.map((t) => t.k);
+    if (!sortes.some((k, i) => sortes.indexOf(k) !== i)) return null;
+    return { forme: 'ensemble', morceaux: morceaux.map((m) => (m.tas ? { tas: m.tas } : { gauche: m.gauche, haut: m.haut })), enonce, lignes: [l1, l2], cle: 't:' + enonce };
+  }
+  const petitLin = (r, pNeg) => lin(1, ent(r, 1, 3) * signe(r, pNeg));
+
+  function genEnsemble1(r, v) {
+    const k = () => ({ k: 0, c: ent(r, 2, 4) });
+    switch (v) {
+      case 'k()+mx': return assembler([mMono(k(), petitLin(r, 0.4)), mTas(r() < 0.6 ? { k: 1, c: ent(r, 1, 4) * signe(r, 0.3) } : { k: 0, c: ent(r, 1, 5) * signe(r, 0.4) })]);
+      case 'k()+m()': return assembler([mMono(k(), petitLin(r, 0.3)), mMono(k(), petitLin(r, 0.5))]);
+      case 'k()-m()': { const m = k(); m.c = -m.c; return assembler([mMono(k(), petitLin(r, 0.3)), mMono(m, petitLin(r, 0.6))]); }
+      case 'k()-()': return assembler([mMono(k(), lin(ent(r, 1, 2), ent(r, 1, 3) * signe(r, 0.5))), mMono({ k: 0, c: -1 }, lin(ent(r, 1, 2), ent(r, 1, 4) * signe(r, 0.5)))]);
+      case 'x()+k()': return assembler([mMono({ k: 1, c: 1 }, petitLin(r, 0.4)), mMono(k(), petitLin(r, 0.5))]);
+      case 'cx()-x()': return assembler([mMono({ k: 1, c: ent(r, 1, 2) }, petitLin(r, 0.5)), mMono({ k: 1, c: -1 }, petitLin(r, 0.5))]);
+      default: return assembler([mTas({ k: 0, c: ent(r, 2, 6) }), mMono({ k: 0, c: -ent(r, 2, 3) }, r() < 0.5 ? linInv(-1, ent(r, 1, 3)) : petitLin(r, 0.6))]);   // 4 − 3(2 − 𝑥)
+    }
+  }
+
+  function genEnsemble2(r, v) {
+    const carre = () => { const g = petitLin(r, 0.5); return mDouble(g, g); };
+    const conj = () => { const b = ent(r, 1, 3); return mDouble(lin(1, b), lin(1, -b)); };
+    const dbl = (pNeg) => { for (;;) { const g1 = petitLin(r, pNeg), g2 = petitLin(r, pNeg); if (Math.abs(g1[1].c) !== Math.abs(g2[1].c)) return mDouble(g1, g2); } };
+    const k = (neg) => ({ k: 0, c: ent(r, 2, 3) * (neg ? -1 : 1) });
+    switch (v) {
+      case '()²+()()': return assembler([carre(), dbl(0.5)]);
+      case '()()+k()': return assembler([dbl(0.4), mMono(k(false), petitLin(r, 0.5))]);
+      case '()()-k()': return assembler([r() < 0.3 ? conj() : dbl(0.5), mMono(k(true), petitLin(r, 0.5))]);
+      case '()²-x()': return assembler([r() < 0.35 ? conj() : carre(), mMono({ k: 1, c: -1 }, petitLin(r, 0.5))]);
+      default: return assembler([dbl(0.4), r() < 0.4 ? carre() : dbl(0.5)]);                         // ( )( ) + ( )( )
+    }
+  }
+
+  /** Les seize marches du cours. « tuiles: false » : la marche ne se fait pas avec les tuiles (elle attend le tableau). */
+  const MARCHES = [
+    { n: 0, partie: 1, nom: 'Écrire l’expression', exemple: 'les tuiles → x² + 2x − 3', titre: 'Écrire l’expression', forme: 'ecrire', gen: genEcrire, variantes: ['x1', 'x1n', 'x2', 'x2n'] },
+    { n: 1, partie: 1, nom: 'Réduire', exemple: '2x + 5 + x − 3', titre: 'Réduire', forme: 'reduire', gen: genReduire, variantes: ['x1', 'x1n', 'x2', 'x2n'] },
+    { n: 2, partie: 1, nom: 'L’opposé', exemple: '(2x − 3) + … = 0 · −(2x − 3)', titre: 'L’opposé d’une expression', forme: 'oppose', gen: genOppose, variantes: ['x1', 'x1n', 'x2', 'x2n', '-x1', '-x1n', '-x2', '-x2n'], famille: (v) => v[0] === '-' },
+    { n: 3, partie: 1, nom: 'Multiplier', exemple: '3 × 2x · x × x · 3x × 2x', titre: 'Multiplier', forme: 'produit', gen: genMultiplier, variantes: ['n-ax', 'x-ax', 'ax-n', 'ax-bx', 'signe'] },
+    { n: 4, partie: 1, nom: 'Développer', exemple: 'facteur positif · 3(x + 2)', titre: 'Développer — le facteur est un nombre positif', forme: 'produit', gen: genFacteurPositif,
+      variantes: ['k(x+b)', 'k(ax+b)', '(+)k', 'k(x-b)', 'k(ax-b)', 'k(b-x)', '(-)k'] },
+    { n: 5, partie: 1, nom: 'Développer', exemple: 'facteur en x · 2x(3x − 5)', titre: 'Développer — le facteur contient x', forme: 'produit', gen: genFacteurX,
+      variantes: ['x(x+b)', 'x(x-b)', 'cx(x±b)', 'x(ax±b)', '(±)cx', 'cx(b-x)', 'cx(ax±b)'] },
+    { n: 6, partie: 1, nom: 'Développer', exemple: 'facteur négatif · −3(x − 2)', titre: 'Développer — le facteur est négatif', forme: 'produit', gen: genFacteurNegatif,
+      variantes: ['-k(x+b)', '-k(x-b)', '-(±)', '-x(x±b)', '-k(ax±b)', '(±)(-k)', '-k(-x+b)', '-cx(ax±b)'] },
+    { n: 7, partie: 1, nom: 'Factoriser', exemple: '4x + 12 = 4(x + 3)', titre: 'Factoriser', forme: 'factoriser', gen: genFactoriser,
+      variantes: ['k(x+b)', 'k(x-b)', 'x(x+b)', 'x(x-b)', 'k(ax±b)', 'x(ax±b)', 'cx(ax±b)'] },
+    { n: 8, partie: 1, nom: 'Tout ensemble', exemple: '3(x + 2) − 2(x − 1)', titre: 'Tout ensemble', forme: 'ensemble', gen: genEnsemble1, pile: true,
+      variantes: ['k()+mx', 'k()+m()', 'k()-m()', 'x()+k()', 'k()-()', 'cx()-x()', 'c-k()'] },
+    { n: 9, partie: 2, nom: 'Double distributivité', exemple: '(x + 2)(2x + 3)', titre: 'La double distributivité', forme: 'produit', gen: genDouble(false), pile: true, variantes: ['x-x', 'ax-x', 'ax-cx'] },
+    { n: 10, partie: 2, nom: 'Avec des signes −', exemple: '(2x + 1)(2x − 3)', titre: 'La double distributivité, avec des signes −', forme: 'produit', gen: genDouble(true), pile: true,
+      variantes: ['x-x', 'ax-x', 'inv', 'ax-cx'] },
+    { n: 11, partie: 2, nom: 'Un − devant un produit', exemple: '5 − (x + 1)(x − 2)', sansTuiles: true },
+    { n: 12, partie: 2, nom: 'Factoriser', exemple: 'le facteur commun est une ( )', sansTuiles: true },
+    { n: 13, partie: 2, nom: 'Identités remarquables', exemple: '(x + 3)² · (x + 3)(x − 3)', titre: 'Les identités remarquables', forme: 'produit', gen: genIdentite, pile: true,
+      variantes: ['(x+b)²', '(x-b)²', '(x+b)(x-b)', '(ax+b)²', '(ax-b)²', '(ax+b)(ax-b)'] },
+    { n: 14, partie: 2, nom: 'Factoriser', exemple: 'deux carrés · x² − 25', sansTuiles: true },
+    { n: 15, partie: 2, nom: 'Tout ensemble', exemple: '(x + 3)² + (x + 1)(x − 2)', titre: 'Tout ensemble', forme: 'ensemble', gen: genEnsemble2, pile: true,
+      variantes: ['()()+k()', '()²+()()', '()()-k()', '()²-x()', '()()+()()'] },
+  ];
+  const marche = (n) => MARCHES.find((m) => m.n === n);
+
+  /** Une réserve d'exercices tous différents pour une marche. Les variantes tournent : à chaque tour,
+   *  toutes les variantes de la marche passent une fois, dans un ordre tiré au hasard (la fiche « fait
+   *  tous les cas », et deux tirages ne commencent pas par les mêmes). rang = place de la variante dans
+   *  la marche, du plus simple au plus difficile (l'appli range les exercices d'une fiche dans cet ordre). */
+  function reserve(n, graine, nb) {
+    const m = marche(n);
+    if (!m || m.sansTuiles) return [];
+    const r = hasard(hacher(`marche${n}|${graine}`));
+    const out = [], vus = new Set(), epuises = new Set();
+    let garde = 0;
+    while (out.length < nb && epuises.size < m.variantes.length && garde++ < 200) {
+      const tour = m.variantes.filter((v) => !epuises.has(v));
+      for (let i = tour.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [tour[i], tour[j]] = [tour[j], tour[i]]; }
+      // deux écritures dans une marche (l'opposé) : elles alternent, une fiche courte montre les deux
+      let ordre = tour;
+      if (m.famille) {
+        const a = tour.filter((v) => m.famille(v)), b = tour.filter((v) => !m.famille(v));
+        ordre = [];
+        for (let i = 0; i < Math.max(a.length, b.length); i++) { if (i < b.length) ordre.push(b[i]); if (i < a.length) ordre.push(a[i]); }
       }
-      echecs.set(st, 0);
-      vus.add(it.cle); out.push(it); tour++;
+      for (const v of ordre) {
+        if (out.length >= nb) break;
+        let it = null;
+        for (let essai = 0; essai < 300 && !it; essai++) {
+          const c = m.gen(r, v);
+          if (c && !vus.has(c.cle) && !verifierItem(c)) it = c;
+        }
+        if (!it) { epuises.add(v); continue; }
+        it.marche = n; it.sous = v; it.rang = m.variantes.indexOf(v); it.pile = !!m.pile;
+        vus.add(it.cle); out.push(it);
+      }
     }
     return out;
   }
 
   return {
-    U, XU, ORDRE, ORDRE_FACT, FORMES, MOINS,
-    tas, paire, paires, rectangle, reserve, optionsDe,
+    U, XU, MARCHES, marche, MOINS,
+    tas, paire, paires, rectangle, reserve,
     verifierItem, analyser, estReduite, txtPoly, polyGroupes, polyRectangle, P,
     hasard, hacher,
   };
@@ -738,13 +911,13 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
   const LARGEUR_BLOC = 210 - 26 - 8 - 0.6;    // largeur utile dans un cadre d'exercice (mm)
   const ECART_COL = 4, ECART_RANG = 5;        // mm (comme la feuille .grille)
   const HAUTEUR_UTILE = 297 - 11 - 15 - 2;    // au-dessus du pied, avec 2 mm de sécurité
-  const SEUIL = 0.7;                          // part des exercices d'un type qui doit tenir dans la colonne
+  const SEUIL = 0.7;                          // part des exercices d'un cas qui doit tenir dans la colonne
 
   // ---------------------------------------------------------------- l'état
   const etat = {
-    formes: ['ecrire', 'reduire', 'oppose', 'lire'],
-    tuiles: 'x2', negT: 'avec',
-    facteurs: ['nombre', 'x'], negR: 'paren',
+    marches: [0, 1, 2, 4],                    // les marches du cours cochées
+    support: 'tuiles',                        // lot 3 : 'tableau' et 'sans'
+    rectangle: 'lire',                        // lire | construire | deux : une manière de travailler, les nombres ne changent pas
     pages: '1', couleurs: 'vr', imprimer: 'deux',
   };
   let graine = (() => {
@@ -754,21 +927,36 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
   })();
   let fiche = null;                           // { sections, pages } de la dernière composition
 
+  /** Une marche se fait-elle avec le support choisi ? (avec les tuiles : pas les marches 11, 12 et 14) */
+  const disponible = (m) => !(etat.support === 'tuiles' && m.sansTuiles);
+  const AVEC_RECTANGLE = (m) => m.forme === 'produit' || m.forme === 'ensemble';
+
   // ---------------------------------------------------------------- écriture
   const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const h = (t) => esc(t).replace(/(?<![A-Za-zÀ-ÿ])x(?![A-Za-zÀ-ÿ])/g, '\u{1D465}');
   const rep = (t) => `<span class="rep">${h(t)}</span>`;
-  const largeurTrou = (t) => Math.max(24, Math.min(64, Math.round(t.length * 2.3 + 8)));
+  const largeurTrou = (t, max) => Math.max(24, Math.min(max || 64, Math.round(t.length * 2.3 + 8)));
   const trou = (mm) => `<span class="trou" style="width:${mm}mm"></span>`;
 
   function calc(lignes) {
     return '<div class="calc">' + lignes.map(([g, d]) => `<span class="g">${g}</span><span class="egal">=</span><span>${d}</span>`).join('') + '</div>';
   }
 
-  function cellule(it, lettre, v) {
+  /** Le calcul sous la figure. Marches à deux lignes (double distributivité, tout ensemble) : l'expression
+   *  sur sa ligne, puis « = …… » dessous, alignés — une longue expression garde toute la largeur pour répondre. */
+  function lignesCalcul(it, L, C) {
+    if (it.pile) {
+      return `<div class="pile"><div class="ligne">${L}<span>${h(it.enonce)}</span></div>`
+        + it.lignes.map((l) => `<div class="suite"><span class="egal">=</span>${C ? rep(l) : trou(largeurTrou(l, 72))}</div>`).join('') + '</div>';
+    }
+    return calc(it.lignes.map((l, i) => [i ? '' : L + h(it.enonce), C ? rep(l) : trou(largeurTrou(l))]));
+  }
+
+  function cellule(it, lettre, v, construire) {
     const C = v === 'C';
     const L = `<span class="l">${lettre}.</span>`;
-    let fig, txt;
+    const vide = construire && !C ? 'interieur' : null;
+    let fig, txt, cls = '';
     switch (it.forme) {
       case 'ecrire':
         fig = M.tas(it.tas).html;
@@ -783,20 +971,24 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
         break;
       case 'oppose':
         fig = C ? it.paires.map(([k, n]) => M.paire(k, n).html).join('') : M.tas(it.tas).html;
-        txt = `<div class="ligne">${L}<span>(${h(it.enonce)}) +</span>${C ? rep(it.reponse) : trou(largeurTrou(it.reponse))}<span>= 0</span></div>`;
+        txt = it.ecrit ? calc([[L + h(it.ecrit), C ? rep(it.reponse) : trou(largeurTrou(it.reponse))]])
+          : `<div class="ligne">${L}<span>(${h(it.enonce)}) +</span>${C ? rep(it.reponse) : trou(largeurTrou(it.reponse))}<span>= 0</span></div>`;
         break;
-      case 'lire': case 'construire': {
-        const vide = it.forme === 'construire' && !C ? 'interieur' : null;
+      case 'produit':
         fig = M.rectangle(it.gauche, it.haut, { vide }).html;
-        txt = calc(it.lignes.map((l, i) => [i ? '' : L + h(it.enonce), C ? rep(l) : trou(largeurTrou(l))]));
+        txt = lignesCalcul(it, L, C);
         break;
-      }
+      case 'ensemble':
+        cls = ' fig--morceaux';
+        fig = it.morceaux.map((m) => (m.tas ? M.tas(m.tas).html : M.rectangle(m.gauche, m.haut, { vide }).html)).join('');
+        txt = lignesCalcul(it, L, C);
+        break;
       case 'factoriser':
         fig = M.rectangle(it.gauche, it.haut, { vide: C ? null : 'bords' }).html;
         txt = calc([[L + h(it.enonce), C ? rep(it.reponse) : trou(largeurTrou(it.reponse))]]);
         break;
     }
-    return `<div class="cel"><div class="fig">${fig}</div><div class="txt">${txt}</div></div>`;
+    return `<div class="cel${it.large ? ' cel--large' : ''}"><div class="fig${cls}">${fig}</div><div class="txt">${txt}</div></div>`;
   }
 
   function entete(v) {
@@ -804,17 +996,41 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
       + '<h2>Calcul littéral</h2><p>Fiche d’entraînement avec les tuiles' + (v === 'C' ? ' · <b>CORRIGÉ</b>' : '') + '</p></div><hr class="filet"></div>';
   }
 
-  function teteExo(forme, num) {
-    const F = M.FORMES[forme];
-    return `<div class="exo-tete"><span class="pastille">${num}</span><span class="exo-titre">${F.titre}</span>`
-      + `<span class="exo-consigne">${F.consigne(M.optionsDe(forme, etat))}</span></div>`;
+  function consigne(m) {
+    const mode = etat.rectangle;
+    switch (m.forme) {
+      case 'ecrire': return 'j’écris l’expression représentée par les tuiles';
+      case 'reduire': return 'j’entoure les paires nulles s’il y en a, puis j’écris l’expression réduite';
+      case 'oppose': return 'l’opposé, c’est ce qu’il faut ajouter pour obtenir 0 : à chaque tuile, la tuile de même forme, de l’autre couleur · −(2x\u00a0+\u00a01) se lit «\u00a0l’opposé de 2x\u00a0+\u00a01\u00a0»';
+      case 'factoriser': return 'je trouve les bords du rectangle, j’écris le produit';
+      case 'ensemble':
+        if (mode === 'lire') return 'je développe chaque produit en comptant les tuiles de son rectangle, puis je réduis';
+        if (mode === 'construire') return 'je construis chaque rectangle avec mes tuiles et je le dessine dans son cadre ; je développe, puis je réduis';
+        return 'rectangles remplis : je compte les tuiles · cadres vides : je les remplis avec mes tuiles et je les dessine · puis je réduis';
+      default:
+        if (m.pile) {       // double distributivité, identités : deux lignes de calcul, une consigne courte (la place)
+          if (mode === 'lire') return 'je compte les tuiles du rectangle, puis je réduis';
+          if (mode === 'construire') return 'je construis le rectangle avec mes tuiles, je le dessine dans le cadre, puis je réduis';
+          return 'rectangle rempli : je compte les tuiles · cadre vide : je le construis et je le dessine · puis je réduis';
+        }
+        if (mode === 'lire') return 'les facteurs sont sur les bords, je compte les tuiles du rectangle';
+        if (mode === 'construire') return 'je pose les facteurs avec mes tuiles, je remplis le rectangle, je le dessine dans le cadre, j’écris le résultat';
+        return 'rectangle rempli : je compte les tuiles · cadre vide : je le remplis avec mes tuiles et je le dessine';
+    }
+  }
+
+  function teteExo(m, num) {
+    return `<div class="exo-tete"><span class="pastille">${num}</span><span class="exo-titre">${h(m.titre)}</span>`
+      + `<span class="exo-consigne">${h(consigne(m))}</span></div>`;
   }
 
   const lettre = (i) => String.fromCharCode(97 + i);
+  /** Avec « les deux », un exercice sur deux a son rectangle rempli, l'autre son cadre vide. */
+  const aConstruire = (i) => etat.rectangle === 'construire' || (etat.rectangle === 'deux' && i % 2 === 1);
 
   // ---------------------------------------------------------------- composer : tirer, mesurer, ranger
   function composer() {
-    const formes = M.ORDRE.filter((f) => etat.formes.includes(f));
+    const marches = M.MARCHES.filter((m) => etat.marches.includes(m.n) && disponible(m));
     const P = Number(etat.pages);
     const mes = $('mesure');
     const colW = (n) => (LARGEUR_BLOC - (n - 1) * ECART_COL) / n;
@@ -823,12 +1039,12 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
     mes.innerHTML = `<div class="page">${entete('S')}</div>`;
     const hEntete = mes.querySelector('.entete-tout').getBoundingClientRect().height / MM;
 
-    // 2. une réserve d'exercices par forme, puis la LARGEUR de chacun, sujet et corrigé sur une ligne
+    // 2. une réserve d'exercices par marche, puis la LARGEUR de chacun, sujet et corrigé sur une ligne
     const nb = 26 * P + 8;
-    const sections = formes.map((f) => ({ f, items: M.reserve(f, etat, graine, nb) }));
+    const sections = marches.map((m) => ({ m, items: M.reserve(m.n, graine, nb) }));
     let html = '';
     sections.forEach((s, si) => s.items.forEach((it, ii) => {
-      for (const v of ['S', 'C']) html += `<div class="m-l" data-k="${si}.${ii}" data-v="w${v}">${cellule(it, 'm', v)}</div>`;
+      for (const v of ['S', 'C']) html += `<div class="m-l" data-k="${si}.${ii}" data-v="w${v}">${cellule(it, 'm', v, false)}</div>`;
     }));
     mes.innerHTML = `<div class="page">${html}</div>`;
     mes.querySelectorAll('.m-l').forEach((el) => {
@@ -838,23 +1054,43 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
       it.w = Math.max(it.wS || 0, it.wC || 0);
     });
 
-    // 3. le nombre de colonnes de chaque forme : les tuiles gardent leur taille, c'est la grille qui s'adapte
+    // 3. le nombre de colonnes de chaque marche : les tuiles gardent leur taille, c'est la grille qui s'adapte.
+    //    Quand tous les cas tiennent dans la même colonne, la grille est régulière. Quand un cas est bien plus
+    //    large que les autres (une longue réduction avec des 𝑥²), il prend toute la largeur, sur sa propre rangée.
     for (const s of sections) {
-      const types = [...new Set(s.items.map((it) => it.sous))];
-      s.n = [3, 2, 1].find((n) => types.every((t) => {
-        const l = s.items.filter((it) => it.sous === t);
+      const cas = [...new Set(s.items.map((it) => it.sous))];
+      const tient = (c, n) => {
+        const l = s.items.filter((it) => it.sous === c);
         return l.filter((it) => it.w <= colW(n) + 0.01).length >= Math.max(1, Math.ceil(SEUIL * l.length));
-      })) || 1;
-      // sur une seule colonne, le corrigé (paires entourées) peut passer à la ligne ; le sujet, jamais
-      s.items = s.items.filter((it) => (s.n === 1 ? it.wS : it.w) <= colW(s.n) + 0.01);
+      };
+      let n = [3, 2, 1].find((k) => cas.every((c) => tient(c, k))) || 1;
+      let larges = new Set();
+      if (n === 1 && cas.length > 1) {
+        const k = [3, 2].find((q) => cas.filter((c) => tient(c, q)).length * 2 >= cas.length);
+        if (k) { n = k; larges = new Set(cas.filter((c) => !tient(c, k))); }
+      }
+      s.n = n;
+      // sur toute la largeur, le corrigé (paires entourées) peut passer à la ligne ; le sujet, jamais
+      s.items = s.items.filter((it) => {
+        it.large = n > 1 && larges.has(it.sous);
+        return (n === 1 || it.large ? it.wS : it.w) <= colW(n === 1 || it.large ? 1 : n) + 0.01;
+      });
+      // les rangées, dans l'ordre du tirage : un exercice large a la sienne, les autres se groupent par n
+      s.rangs = [];
+      let attente = [];
+      for (const it of s.items) {
+        if (n === 1 || it.large) s.rangs.push([it]);
+        else { attente.push(it); if (attente.length === n) { s.rangs.push(attente); attente = []; } }
+      }
+      if (attente.length) s.rangs.push(attente);
     }
 
     // 4. la HAUTEUR de chaque exercice à la largeur de sa colonne (sujet et corrigé : on garde la plus grande)
     html = '';
     sections.forEach((s, si) => {
-      html += `<div class="bloc" data-chrome="${si}">${teteExo(s.f, 9)}<div class="grille" style="grid-template-rows:10mm"><div></div></div></div>`;
+      html += `<div class="bloc" data-chrome="${si}">${teteExo(s.m, 9)}<div class="grille" style="grid-template-rows:10mm"><div></div></div></div>`;
       s.items.forEach((it, ii) => {
-        for (const v of ['S', 'C']) html += `<div style="width:${colW(s.n)}mm;display:flex" data-h="${si}.${ii}">${cellule(it, 'm', v)}</div>`;
+        for (const v of ['S', 'C']) html += `<div style="width:${colW(s.n === 1 || it.large ? 1 : s.n)}mm;display:flex" data-h="${si}.${ii}">${cellule(it, 'm', v, false)}</div>`;
       });
     });
     mes.innerHTML = `<div class="page">${html}</div>`;
@@ -868,16 +1104,20 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
     });
     mes.innerHTML = '';
 
-    // 5. ranger dans les pages : un cadre d'exercice entier reste sur sa page ; plus grand qu'une page, il se coupe
+    // 5. les r premières rangées d'une marche, RANGÉES du cas le plus simple au plus difficile
+    const seul = (s, l) => s.n === 1 || l[0].large;
     const rangees = (s, r) => {
-      const out = [];
-      for (let i = 0; i < r * s.n && i < s.items.length; i += s.n) {
-        const l = s.items.slice(i, i + s.n);
-        out.push({ debut: i, items: l, h: Math.max(...l.map((it) => it.h)) });
-      }
-      return out;
+      const pris = s.rangs.slice(0, r);
+      const etroits = pris.filter((l) => !seul(s, l)).flat().sort((a, b) => a.rang - b.rang || a.h - b.h);
+      const lignes = pris.filter((l) => seul(s, l));
+      for (let i = 0; i < etroits.length; i += s.n) lignes.push(etroits.slice(i, i + s.n));
+      lignes.sort((a, b) => a[0].rang - b[0].rang || a[0].h - b[0].h);
+      return lignes.map((l) => ({ items: l, h: Math.max(...l.map((it) => it.h)) }));
     };
-    const maxRangees = (s) => Math.ceil(s.items.length / s.n);
+    const maxRangees = (s) => s.rangs.length;
+    const compte = (s, r) => s.rangs.slice(0, r).reduce((t, l) => t + l.length, 0);
+
+    // ranger dans les pages : un cadre d'exercice entier reste sur sa page ; plus grand qu'une page, il se coupe
     function plan(r) {
       const pages = [[]];
       let reste = HAUTEUR_UTILE - hEntete;
@@ -900,27 +1140,33 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
       return pages;
     }
 
-    // 6. remplir : on ajoute une rangée à la forme qui a le moins d'exercices, tant que tout tient
+    // 6. remplir : on ajoute une rangée à la marche qui a le moins d'exercices, tant que tout tient
     const r = sections.map((s) => (s.items.length ? 1 : 0));
     let pages = plan(r);
     const plein = new Set();
+    const ecartees = sections.map(() => 0);
     if (pages.length <= P) {
       for (;;) {
         let k = -1;
         sections.forEach((s, i) => {
           if (plein.has(i)) return;
           if (r[i] >= maxRangees(s)) { plein.add(i); return; }
-          const n = Math.min(r[i] * s.n, s.items.length);
-          if (k < 0 || n < Math.min(r[k] * sections[k].n, sections[k].items.length)) k = i;
+          if (k < 0 || compte(s, r[i]) < compte(sections[k], r[k])) k = i;
         });
         if (k < 0) break;
         r[k]++;
         const p2 = plan(r);
-        if (p2.length > P) { r[k]--; plein.add(k); } else pages = p2;
+        if (p2.length > P) {
+          // la rangée suivante ne tient pas dans la place qui reste (un rectangle haut) : on l'écarte et on essaie
+          // celle d'après, jusqu'au bout de la réserve — la page se remplit avec ce qui tient
+          r[k]--;
+          sections[k].rangs.splice(r[k], 1);
+          ecartees[k]++;
+        } else pages = p2;
       }
     }
-    const epuise = sections.every((s, i) => r[i] >= maxRangees(s));
-    fiche = { sections, pages, P, epuise, total: sections.reduce((t, s, i) => t + Math.min(r[i] * s.n, s.items.length), 0) };
+    const epuise = sections.every((s, i) => r[i] >= maxRangees(s) && !ecartees[i]);
+    fiche = { sections, pages, P, epuise, total: sections.reduce((t, s, i) => t + compte(s, r[i]), 0) };
   }
 
   // ---------------------------------------------------------------- dessiner les pages
@@ -932,8 +1178,8 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
         const s = fiche.sections[b.si];
         num++;
         let cel = '', i = 0;
-        for (const rg of b.R) for (const it of rg.items) cel += cellule(it, lettre(i++), v);
-        c += `<div class="bloc">${teteExo(s.f, num)}<div class="grille" style="grid-template-columns:repeat(${s.n},minmax(0,1fr));`
+        for (const rg of b.R) for (const it of rg.items) { cel += cellule(it, lettre(i), v, AVEC_RECTANGLE(s.m) && aConstruire(i)); i++; }
+        c += `<div class="bloc">${teteExo(s.m, num)}<div class="grille" style="grid-template-columns:repeat(${s.n},minmax(0,1fr));`
           + `grid-template-rows:${b.R.map((x) => x.h.toFixed(2) + 'mm').join(' ')}">${cel}</div></div>`;
       }
       return `<section class="page" data-feuille="${v}">${c}<div class="pied"><span class="g"></span>`
@@ -951,8 +1197,8 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
     const n = fiche.pages.length, P = fiche.P;
     const e = $('etat');
     e.classList.toggle('alerte', n > P);
-    if (n > P) e.textContent = `Les exercices cochés ne tiennent pas sur ${P} page${P > 1 ? 's' : ''} : la fiche en fait ${n}.`;
-    else if (fiche.epuise) e.textContent = `${fiche.total} exercices : tous ceux que ces réglages permettent.`;
+    if (n > P) e.textContent = `Les marches cochées ne tiennent pas sur ${P} page${P > 1 ? 's' : ''} : la fiche en fait ${n}.`;
+    else if (fiche.epuise) e.textContent = `${fiche.total} exercices : tous ceux que ces marches permettent.`;
     else e.textContent = `${fiche.total} exercices sur ${n} page${n > 1 ? 's' : ''}, le corrigé à l’identique.`;
   }
 
@@ -967,66 +1213,74 @@ if (typeof module !== 'undefined') module.exports = MoteurTuiles;
     });
   }
 
-  // ---------------------------------------------------------------- le menu
-  const ICONES = {
-    ecrire: () => M.tas([['x2', 1], ['x', 1], ['1', -2]], { gg: 5 }).html,
-    reduire: () => M.paires([['x', false], ['1', false]]).html,
-    oppose: () => M.tas([['x', 2], ['1', -1]], { gg: 5 }).html + '<b class="pz">+ ? = 0</b>',
-    lire: () => M.rectangle(['1', '1'], ['x', '-1']).html,
-    construire: () => M.rectangle(['1', '1'], ['x', '-1'], { vide: 'interieur' }).html,
-    factoriser: () => M.rectangle(['1', '1'], ['x', '1'], { vide: 'bords' }).html,
-  };
+  // ---------------------------------------------------------------- le menu : les marches du cours, en deux parties
+  const PARTIES = { 1: 'marches 0 à 8', 2: 'marches 9 à 15' };
   function construireMenu() {
-    $('formes').innerHTML = M.ORDRE.map((f) => {
-      const [nom, sous] = M.FORMES[f].carte;
-      return `<button type="button" class="forme" data-forme="${f}" aria-pressed="false"><span class="coche" aria-hidden="true"></span>`
-        + `<span class="fico" aria-hidden="true">${ICONES[f]()}</span><span class="fnom">${nom}</span><span class="fsous">${h(sous)}</span></button>`;
+    $('marches').innerHTML = [1, 2].map((p) => {
+      const lignes = M.MARCHES.filter((m) => m.partie === p).map((m) =>
+        `<button type="button" class="marche" data-marche="${m.n}" aria-pressed="false"><span class="coche" aria-hidden="true"></span>`
+        + `<span class="mtxt"><span class="mnom"><b>${m.n}</b>${h(m.nom)}</span><span class="mex">${h(m.exemple)}</span></span></button>`).join('');
+      return `<div class="partie"><p class="ptitre"><span>Partie ${p} <small>· ${PARTIES[p]}</small></span>`
+        + `<button type="button" class="tout" data-partie="${p}" aria-pressed="false" aria-label="Cocher toute la partie ${p}">tout</button></p>${lignes}`
+        + (p === 2 ? '<p class="note-gris" id="noteGris">En gris : ces marches ne se font pas avec les tuiles. Elles arrivent avec le tableau.</p>' : '') + '</div>';
     }).join('');
   }
 
+  const dansPartie = (p) => M.MARCHES.filter((m) => m.partie === p && disponible(m)).map((m) => m.n);
+
   function majMenu() {
-    document.querySelectorAll('.forme').forEach((b) => {
-      const on = etat.formes.includes(b.dataset.forme);
+    document.querySelectorAll('.marche').forEach((b) => {
+      const m = M.marche(Number(b.dataset.marche));
+      const libre = disponible(m);
+      const on = libre && etat.marches.includes(m.n);
+      b.disabled = !libre;
       b.setAttribute('aria-pressed', String(on));
       b.querySelector('.coche').textContent = on ? '✓' : '';
     });
-    document.querySelectorAll('.seg').forEach((g) => {
-      const cle = g.dataset.reglage, val = etat[cle];
-      g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(Array.isArray(val) ? val.includes(b.dataset.v) : val === b.dataset.v)));
+    document.querySelectorAll('.tout').forEach((b) => {
+      b.setAttribute('aria-pressed', String(dansPartie(Number(b.dataset.partie)).every((n) => etat.marches.includes(n))));
     });
-    const T = etat.formes.some((f) => M.FORMES[f].groupe === 'T');
-    const R = etat.formes.some((f) => M.FORMES[f].groupe === 'R');
-    for (const [id, actif] of [['groupeT', T], ['groupeR', R]]) {
-      const g = $(id);
-      g.classList.toggle('grise', !actif);
-      g.querySelectorAll('button').forEach((b) => { b.disabled = !actif; });
-    }
+    document.querySelectorAll('.seg').forEach((g) => {
+      const val = etat[g.dataset.reglage];
+      g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(val === b.dataset.v)));
+    });
+    // « Rectangle » ne sert que s'il y a un rectangle à lire ou à construire sur la fiche
+    const actif = M.MARCHES.some((m) => etat.marches.includes(m.n) && disponible(m) && AVEC_RECTANGLE(m));
+    const g = $('groupeRect');
+    g.classList.toggle('grise', !actif);
+    g.querySelectorAll('button').forEach((b) => { b.disabled = !actif; });
     document.body.classList.toggle('couleurs-bg', etat.couleurs === 'bg');
   }
 
   function toutRefaire() { composer(); afficher(); }
+  const trier = (l) => M.MARCHES.map((m) => m.n).filter((n) => l.includes(n));
 
   function brancher() {
-    $('formes').addEventListener('click', (ev) => {
-      const b = ev.target.closest('.forme');
-      if (!b) return;
-      const f = b.dataset.forme;
-      if (etat.formes.includes(f)) { if (etat.formes.length === 1) return; etat.formes = etat.formes.filter((x) => x !== f); }
-      else etat.formes = M.ORDRE.filter((x) => x === f || etat.formes.includes(x));
+    $('marches').addEventListener('click', (ev) => {
+      const tout = ev.target.closest('.tout');
+      if (tout) {
+        const l = dansPartie(Number(tout.dataset.partie));
+        if (l.every((n) => etat.marches.includes(n))) {
+          const reste = etat.marches.filter((n) => !l.includes(n));
+          if (!reste.length) return;                       // il reste toujours une marche cochée
+          etat.marches = reste;
+        } else etat.marches = trier([...etat.marches, ...l]);
+        majMenu(); toutRefaire();
+        return;
+      }
+      const b = ev.target.closest('.marche');
+      if (!b || b.disabled) return;
+      const n = Number(b.dataset.marche);
+      if (etat.marches.includes(n)) { if (etat.marches.length === 1) return; etat.marches = etat.marches.filter((x) => x !== n); }
+      else etat.marches = trier([...etat.marches, n]);
       majMenu(); toutRefaire();
     });
     document.querySelectorAll('.seg').forEach((g) => g.addEventListener('click', (ev) => {
       const b = ev.target.closest('button');
       if (!b || b.disabled) return;
       const cle = g.dataset.reglage, v = b.dataset.v;
-      if (g.dataset.multi) {
-        const l = etat[cle];
-        if (l.includes(v)) { if (l.length === 1) return; etat[cle] = l.filter((x) => x !== v); }
-        else etat[cle] = M.ORDRE_FACT.filter((x) => x === v || l.includes(x));
-      } else {
-        if (etat[cle] === v) return;
-        etat[cle] = v;
-      }
+      if (etat[cle] === v) return;
+      etat[cle] = v;
       majMenu();
       if (cle === 'couleurs') return;            // les couleurs ne changent ni les nombres ni la place
       if (cle === 'imprimer') { afficher(); return; }

@@ -96,7 +96,9 @@ test("générateur d'exercices : le 𝑥 de l'appli sur la feuille, sur les tuil
   // la police SplatLettres ne couvre que 𝑥 (unicode-range) : elle passe en tête partout, le reste tombe sur Poppins
   assert.match(gExos, /body\{ font-family:SplatLettres, MGPoppins, system-ui, sans-serif;/);
   assert.match(gExos, /const POLICE = "SplatLettres, MGPoppins, 'Poppins', sans-serif";/);
-  assert.match(gExos, /<button type="button" data-v="x1">1 et 𝑥<\/button><button type="button" data-v="x2">avec 𝑥²<\/button>/);
+  // lot 2 du 21/11/2026 (menu par marches) : les exemples du menu passent par h(), qui met le 𝑥 rond
+  assert.match(gExos, /<span class="mex">\$\{h\(m\.exemple\)\}<\/span>/);
+  assert.match(gExos, /exemple: 'facteur en x · 2x\(3x − 5\)'/);
   // la lettre seule devient 𝑥, pas le x d'« expression »
   const corps = gExos.match(/const h = \(t\) => esc\(t\)(\.replace\([^\n]*\));/)[1];
   const xRond = new Function("t", `return String(t)${corps};`);

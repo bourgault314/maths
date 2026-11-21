@@ -3,16 +3,20 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-// Nouveau générateur des fiches avec les tuiles (lot 1, 21/11/2026) — outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html
-// Six formes d'exercices (écrire, réduire, l'opposé, développer en lisant / en construisant le rectangle, factoriser),
-// tout avec les tuiles, négatifs compris. Le moteur vit dans <script id="moteur-tuiles"> : on le fait tourner ici sans navigateur.
+// Générateur des fiches avec les tuiles — outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html
+// Lot 1 (21/11/2026) : le moteur (dessin des tuiles, tirage, vérification). Lot 2 (21/11/2026) : le menu suit les
+// MARCHES du cours de 3e (0 à 15) ; chaque marche fait tourner toutes ses variantes (ses cas), négatifs compris.
+// Le moteur vit dans <script id="moteur-tuiles"> : on le fait tourner ici sans navigateur.
 // Chaque réponse est recalculée INDÉPENDAMMENT du moteur : on remplace 𝑥 par plusieurs valeurs dans le texte affiché.
 const lire = (chemin) => readFileSync(new URL(`../${chemin}`, import.meta.url), "utf8");
 const page = lire("outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html");
 const source = page.match(/<script id="moteur-tuiles">([\s\S]*?)<\/script>/)[1];
 const M = vm.runInNewContext(`${source}\n;MoteurTuiles`, {});
+const AVEC_TUILES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 15];
+const SANS_TUILES = [11, 12, 14];
+const GRAINES = [1, 77, 2026];
 
-// ---- calcul indépendant : la valeur d'un texte affiché (« (𝑥 − 3) × 2 », « −2𝑥(𝑥 + 1) », « (𝑥 + 2)² »…) pour 𝑥 = v
+// ---- calcul indépendant : la valeur d'un texte affiché (« (𝑥 − 3) × 2 », « −2𝑥(𝑥 + 1) », « (𝑥 + 2)² », « 2𝑥 × (−4) »…) pour 𝑥 = v
 function valeur(texte, v) {
   let s = texte.replace(/−/g, "-").replace(/×/g, "*").replace(/ /g, "");
   s = s.replace(/\(([^()]*)\)²/g, "(($1)*($1))").replace(/x²/g, "(x*x)");
@@ -26,20 +30,27 @@ const valeurTas = (groupes, v) => groupes.reduce((t, [k, n]) => t + n * (k === "
 const valeurBord = (l, v) => l.reduce((t, k) => t + (k.startsWith("-") ? -1 : 1) * (k.endsWith("x") ? v : 1), 0);
 const valeurRect = (g, h, v) => { let t = 0; for (const a of g) for (const b of h) { const s = a.startsWith("-") !== b.startsWith("-") ? -1 : 1; t += s * (a.endsWith("x") ? v : 1) * (b.endsWith("x") ? v : 1); } return t; };
 const reduite = (t) => { const k = t.replace(/^−/, "").split(/ [+−] /).map((m) => (/x²$/.test(m) ? 2 : /x$/.test(m) ? 1 : 0)); return k.every((d, i) => i === 0 || d < k[i - 1]); };
+const longueur = (l) => l.reduce((t, k) => t + (k.endsWith("x") ? 3.4 : 1), 0);
+const tous = (n, nb = 60) => GRAINES.flatMap((g) => Array.from(M.reserve(n, g, nb)));
 
-const ETATS = [];
-for (const tuiles of ["x1", "x2"]) for (const negT of ["sans", "avec"]) for (const negR of ["sans", "paren", "partout"])
-  for (const facteurs of [["nombre"], ["x"], ["double"], ["carre"], ["nombre", "x", "double", "carre"]]) ETATS.push({ tuiles, negT, negR, facteurs });
+test("les seize marches du cours, dans l'ordre ; 11, 12 et 14 ne se font pas avec les tuiles", () => {
+  assert.deepEqual(Array.from(M.MARCHES, (m) => m.n), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+  assert.deepEqual(Array.from(M.MARCHES.filter((m) => m.partie === 1), (m) => m.n), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(Array.from(M.MARCHES.filter((m) => m.sansTuiles), (m) => m.n), SANS_TUILES);
+  for (const n of SANS_TUILES) assert.equal(M.reserve(n, 5, 20).length, 0, `marche ${n}`);
+  for (const n of AVEC_TUILES) { const m = M.marche(n); assert.ok(m.variantes.length >= 3 && m.titre && m.gen, `marche ${n}`); }
+});
 
-test("toutes les formes × tous les réglages : chaque réponse est juste (recalculée sans le moteur)", () => {
+test("toutes les marches : chaque réponse est juste (recalculée sans le moteur)", () => {
   let n = 0;
-  for (const etat of ETATS) for (const forme of M.ORDRE) for (const graine of [1, 77, 2026]) {
-    const liste = M.reserve(forme, etat, graine, 40);
+  for (const marche of AVEC_TUILES) {
+    const liste = tous(marche);
     // un exercice faux est écarté par le moteur : une réserve vide ou presque trahirait un tirage faux
-    assert.ok(liste.length >= 6, `${forme} ${JSON.stringify(etat)} : ${liste.length} exercices seulement`);
+    assert.ok(liste.length >= 90, `marche ${marche} : ${liste.length} exercices seulement`);
     for (const it of liste) {
       n++;
-      switch (forme) {
+      assert.equal(it.marche, marche);
+      switch (it.forme) {
         case "ecrire":
           for (const v of VALEURS) assert.equal(valeurTas(it.tas, v), valeur(it.reponse, v), it.reponse);
           assert.ok(reduite(it.reponse), it.reponse);
@@ -49,69 +60,134 @@ test("toutes les formes × tous les réglages : chaque réponse est juste (recal
           for (const v of VALEURS) assert.equal(valeurTas(it.tas, v), valeur(it.enonce, v));
           for (const v of VALEURS) assert.equal(valeurTas(it.reste, v), valeur(it.reponse, v), "le corrigé en tuiles");
           assert.ok(reduite(it.reponse), it.reponse);
-          if (etat.negT === "avec") assert.ok(it.paires.length > 0, `pas de paire nulle : ${it.enonce}`);
-          else assert.doesNotMatch(it.enonce, /−/, "sans négatifs");
+          if (/n$/.test(it.sous)) assert.ok(it.paires.length > 0, `pas de paire nulle : ${it.enonce}`);
+          else assert.doesNotMatch(it.enonce, /−/, "cas sans négatifs");
           break;
         case "oppose":
           for (const v of VALEURS) assert.equal(valeur(it.enonce, v) + valeur(it.reponse, v), 0, it.enonce);
           for (const v of VALEURS) assert.equal(valeurTas(it.tas, v), valeur(it.enonce, v));
+          // la seconde écriture : −( … ) = l'opposé
+          if (it.sous.startsWith("-")) { assert.equal(it.ecrit, `−(${it.enonce})`); memeValeur(it.ecrit, it.reponse, "opposé"); }
+          else assert.equal(it.ecrit, null);
           break;
-        case "lire": case "construire":
+        case "produit":
           for (const l of it.lignes) memeValeur(it.enonce, l, "développement");
           for (const v of VALEURS) {
             assert.equal(valeurRect(it.gauche, it.haut, v) + 0, valeur(it.enonce, v), `rectangle de ${it.enonce}`);
             assert.equal(valeurBord(it.gauche, v) * valeurBord(it.haut, v) + 0, valeur(it.enonce, v), `bords de ${it.enonce}`);
           }
-          if (it.lignes.length > 1) assert.ok(reduite(it.lignes[1]), it.lignes[1]);
-          if (etat.negR === "sans") assert.doesNotMatch(it.enonce, /−/, "sans négatifs");
-          if (etat.negR === "paren") assert.doesNotMatch(it.enonce, /^−/, "le facteur devant reste positif");
+          assert.ok(it.lignes.length === 1 || (it.lignes.length === 2 && reduite(it.lignes[1])), it.lignes.join(" = "));
+          // la place : un rectangle tient sur une demi-page (les tuiles ne rapetissent jamais)
+          assert.ok(longueur(it.haut) <= 16 && longueur(it.gauche) <= (new Set(it.gauche).size > 1 ? 9.8 : 11.2) + 1e-9, `${it.enonce} trop grand`);
           break;
         case "factoriser":
           memeValeur(it.enonce, it.reponse, "factorisation");
-          assert.match(it.reponse, /\)/, "la réponse est un produit");
+          assert.match(it.reponse, /\)$/, "la réponse est un produit");
+          assert.doesNotMatch(it.reponse, /^−/, "le facteur trouvé est positif");
+          { // factorisé jusqu'au bout : la parenthèse n'a plus de facteur commun (pas de 2(2𝑥 + 4))
+            const [, c, d] = it.reponse.match(/\((\d*)x [+−] (\d+)\)$/);
+            const pgcd = (x, y) => (y ? pgcd(y, x % y) : x);
+            assert.equal(pgcd(Number(c || 1), Number(d)), 1, it.reponse);
+          }
           assert.ok(reduite(it.enonce), it.enonce);
           for (const v of VALEURS) assert.equal(valeurRect(it.gauche, it.haut, v) + 0, valeur(it.enonce, v));
           break;
+        case "ensemble": {
+          assert.equal(it.lignes.length, 2, "une ligne pour développer, une ligne pour réduire");
+          for (const l of it.lignes) memeValeur(it.enonce, l, "tout ensemble");
+          assert.ok(reduite(it.lignes[1]), it.lignes[1]);
+          assert.notEqual(it.lignes[0], it.lignes[1], "il reste quelque chose à réduire");
+          for (const v of VALEURS) {
+            const t = it.morceaux.reduce((s, m) => s + (m.tas ? valeurTas(m.tas, v) : valeurRect(m.gauche, m.haut, v)), 0);
+            assert.equal(t + 0, valeur(it.enonce, v), `les tuiles de ${it.enonce}`);
+          }
+          // un signe − va toujours avec un facteur simple : jamais devant ( )( ) ni ( )² (c'est la marche 11, sans tuiles)
+          assert.doesNotMatch(it.enonce, /− \([^()]*\)[(²]/, it.enonce);
+          break;
+        }
+        default: assert.fail(`forme inconnue : ${it.forme}`);
       }
     }
   }
-  assert.ok(n > 20000, `${n} exercices seulement`);
+  assert.ok(n > 1800, `${n} exercices seulement`);
+});
+
+test("chaque marche fait TOUS ses cas : un tour de réserve montre chaque variante une fois", () => {
+  for (const marche of AVEC_TUILES) {
+    const m = M.marche(marche), k = m.variantes.length;
+    for (const g of GRAINES) {
+      const l = Array.from(M.reserve(marche, g, 3 * k), (i) => i.sous);
+      for (let tour = 0; tour < 2; tour++) {
+        assert.deepEqual(l.slice(tour * k, (tour + 1) * k).sort(), Array.from(m.variantes).sort(), `marche ${marche}, graine ${g}, tour ${tour + 1}`);
+      }
+    }
+    // le rang range les exercices d'une fiche du cas le plus simple au plus difficile
+    for (const it of M.reserve(marche, 3, 2 * k)) assert.equal(it.rang, m.variantes.indexOf(it.sous));
+  }
+  // deux tirages ne commencent pas tous par le même cas
+  const premiers = new Set(Array.from({ length: 12 }, (_, g) => M.reserve(5, g + 1, 1)[0].sous));
+  assert.ok(premiers.size >= 3, `marche 5 : ${[...premiers]}`);
+});
+
+test("les cas qui manquaient au lot 1 sont là : (2𝑥 + 1)(𝑥 + 3), (2𝑥 + 1)(2𝑥 − 3), 2𝑥(3𝑥 − 5)…", () => {
+  const enonces = (n) => tous(n, 80).map((i) => i.enonce);
+  const trouve = (n, motif, quoi) => assert.ok(enonces(n).some((e) => motif.test(e)), `marche ${n} : ${quoi}`);
+  trouve(3, /^\d × \d?x$/, "3 × 2𝑥"); trouve(3, /^x × x$/, "𝑥 × 𝑥"); trouve(3, /^\dx × \dx$/, "3𝑥 × 2𝑥"); trouve(3, /\(−/, "un facteur négatif");
+  trouve(4, /^\d\(x \+ \d\)$/, "3(𝑥 + 2)"); trouve(4, /^\d\(\dx − \d\)$/, "2(3𝑥 − 1)"); trouve(4, /^\(.*\) × \d$/, "(2𝑥 + 1) × 3"); trouve(4, /^\d\(\d − \d?x\)$/, "2(3 − 𝑥)");
+  trouve(5, /^x\(x [+−] \d\)$/, "𝑥(𝑥 + 3)"); trouve(5, /^[23]x\([23]x − \d\)$/, "2𝑥(3𝑥 − 5)"); trouve(5, /^[23]x\([23]x \+ \d\)$/, "3𝑥(2𝑥 + 1)");
+  trouve(5, /^\(.*\) × \d?x$/, "(𝑥 − 6) × 𝑥"); trouve(5, /^\d?x\(\d − \d?x\)$/, "𝑥(3 − 𝑥)");
+  trouve(6, /^−\d\(x − \d\)$/, "−3(𝑥 − 2)"); trouve(6, /^−\(/, "−(𝑥 − 7)"); trouve(6, /^−x\(/, "−𝑥(𝑥 − 6)"); trouve(6, /^−2x\(\dx/, "−2𝑥(3𝑥 + 5)"); trouve(6, /× \(−\d\)$/, "(𝑥 + 2) × (−3)");
+  trouve(9, /^\(x \+ \d\)\(x \+ \d\)$/, "(𝑥 + 2)(𝑥 + 3)"); trouve(9, /^\(2x \+ \d\)\(x \+ \d\)$/, "(2𝑥 + 1)(𝑥 + 3)"); trouve(9, /^\([23]x \+ \d\)\([23]x \+ \d\)$/, "(2𝑥 + 1)(3𝑥 + 2)");
+  assert.ok(enonces(9).every((e) => !/−/.test(e)), "marche 9 : pas de signe −");
+  assert.ok(enonces(10).every((e) => /−/.test(e)), "marche 10 : toujours un signe −");
+  trouve(10, /^\(2x \+ \d\)\(2x − \d\)$/, "(2𝑥 + 1)(2𝑥 − 3)"); trouve(10, /^\([23]x − \d\)\([23]x − \d\)$/, "(2𝑥 − 1)(3𝑥 − 2)"); trouve(10, /\(\d − \d?x\)/, "(3 − 𝑥)(𝑥 + 2)");
+  trouve(13, /^\(x \+ \d\)²$/, "(𝑥 + 3)²"); trouve(13, /^\(x − \d\)²$/, "(𝑥 − 3)²"); trouve(13, /^\([23]x [+−] \d\)²$/, "(2𝑥 + 3)²");
+  trouve(13, /^\((\d?x) \+ (\d)\)\(\1 − \2\)$|^\((\d?x) − (\d)\)\(\3 \+ \4\)$/, "(𝑥 + 3)(𝑥 − 3)");
+  // une identité n'est jamais tirée dans la double distributivité (elle a sa marche)
+  for (const e of [...enonces(9), ...enonces(10)]) { const m = e.match(/^\((.*)\)\((.*)\)$/); assert.notEqual(m[1], m[2], e); assert.notEqual(m[1].replace("+", "−"), m[2].replace("+", "−"), e); }
+  trouve(8, /^\d\(.*\) − \d\(/, "3(𝑥 + 2) − 2(𝑥 − 1)"); trouve(8, /^\d − \d\(/, "4 − 3(2 − 𝑥)"); trouve(8, /− \(/, "5(2𝑥 − 1) − (3𝑥 + 4)"); trouve(8, /x\(.*− x\(/, "2𝑥(𝑥 − 1) − 𝑥(𝑥 + 5)");
+  trouve(15, /²/, "un carré"); trouve(15, /\)\(.*− \d\(/, "( )( ) − 2( )");
+  trouve(7, /^\d?x² [+−] \d?x$/, "𝑥² + 5𝑥"); trouve(7, /^\d+x [+−] \d+$/, "4𝑥 + 12");
+});
+
+test("l'opposé a ses deux écritures, « ( … ) + …… = 0 » et « −( … ) = …… », qui alternent", () => {
+  for (const g of GRAINES) {
+    const l = Array.from(M.reserve(2, g, 16), (i) => i.sous.startsWith("-"));
+    assert.deepEqual(l, Array.from({ length: 16 }, (_, i) => i % 2 === 1), `graine ${g}`);
+  }
+  assert.match(page, /it\.ecrit \? calc\(\[\[L \+ h\(it\.ecrit\)/);
 });
 
 test("le moteur vérifie lui-même chaque exercice avant de le garder", () => {
-  const faux = { forme: "lire", enonce: "2(x − 3)", lignes: ["2x − 5"], gauche: ["1", "1"], haut: ["x", "-1", "-1", "-1"] };
+  const faux = { forme: "produit", enonce: "2(x − 3)", lignes: ["2x − 5"], gauche: ["1", "1"], haut: ["x", "-1", "-1", "-1"] };
   assert.match(M.verifierItem(faux), /ligne fausse/);
-  const signe = { forme: "lire", enonce: "2(x − 3)", lignes: ["2x − 6"], gauche: ["1", "1"], haut: ["x", "1", "1", "1"] };
+  const signe = { forme: "produit", enonce: "2(x − 3)", lignes: ["2x − 6"], gauche: ["1", "1"], haut: ["x", "1", "1", "1"] };
   assert.match(M.verifierItem(signe), /rectangle ≠ produit/);
   assert.equal(M.verifierItem({ ...faux, lignes: ["2x − 6"] }), null);
+  const ens = { forme: "ensemble", enonce: "3(x + 2) − 2(x − 1)", lignes: ["3x + 6 − 2x + 2", "x + 8"],
+    morceaux: [{ gauche: ["1", "1", "1"], haut: ["x", "1", "1"] }, { gauche: ["-1", "-1"], haut: ["x", "-1"] }] };
+  assert.equal(M.verifierItem(ens), null);
+  assert.match(M.verifierItem({ ...ens, lignes: ["3x + 6 − 2x − 2", "x + 8"] }), /ligne fausse/);
+  assert.match(M.verifierItem({ ...ens, morceaux: [ens.morceaux[0], { gauche: ["1", "1"], haut: ["x", "-1"] }] }), /tuiles ≠ énoncé/);
+  const opp = { forme: "oppose", enonce: "2x − 3", ecrit: "−(2x − 3)", reponse: "−2x + 3", tas: [["x", 2], ["1", -3]], paires: [["x", false], ["x", false], ["1", true], ["1", true], ["1", true]] };
+  assert.equal(M.verifierItem(opp), null);
+  assert.match(M.verifierItem({ ...opp, reponse: "−2x − 3" }), /la somme ne fait pas 0/);
 });
 
 test("même graine, mêmes exercices ; autre graine, autres exercices ; jamais deux fois le même", () => {
-  const etat = { tuiles: "x2", negT: "avec", negR: "paren", facteurs: ["nombre", "x", "double", "carre"] };
-  for (const forme of M.ORDRE) {
-    const a = M.reserve(forme, etat, 5, 30).map((i) => i.cle);
-    assert.deepEqual(M.reserve(forme, etat, 5, 30).map((i) => i.cle), a, forme);
-    assert.notDeepEqual(M.reserve(forme, etat, 6, 30).map((i) => i.cle), a, forme);
-    assert.equal(new Set(a).size, a.length, `${forme} : doublon`);
-  }
-  // une option d'une autre forme ne change pas les nombres (seules les options de la forme comptent)
-  const e1 = M.reserve("ecrire", etat, 9, 20).map((i) => i.cle);
-  assert.deepEqual(M.reserve("ecrire", { ...etat, negR: "partout", facteurs: ["carre"] }, 9, 20).map((i) => i.cle), e1);
-});
-
-test("les types de facteur cochés tournent : la fiche fait tous les cas", () => {
-  const etat = { tuiles: "x2", negT: "avec", negR: "paren", facteurs: ["nombre", "x", "double", "carre"] };
-  for (const forme of ["lire", "construire", "factoriser"]) {
-    const l = Array.from(M.reserve(forme, etat, 3, 8), (i) => i.sous);   // tableau de ce contexte-ci (le moteur tourne dans vm)
-    assert.deepEqual(l, ["nombre", "x", "double", "carre", "nombre", "x", "double", "carre"], forme);
+  for (const marche of AVEC_TUILES) {
+    const a = M.reserve(marche, 5, 30).map((i) => i.cle);
+    assert.deepEqual(M.reserve(marche, 5, 30).map((i) => i.cle), a, `marche ${marche}`);
+    assert.notDeepEqual(M.reserve(marche, 6, 30).map((i) => i.cle), a, `marche ${marche}`);
+    assert.equal(new Set(a).size, a.length, `marche ${marche} : doublon`);
   }
 });
 
-test("négatifs « partout » : un facteur négatif devant, aussi en tuiles (règle des signes)", () => {
-  const l = M.reserve("lire", { tuiles: "x2", negT: "avec", negR: "partout", facteurs: ["nombre", "x"] }, 4, 40);
-  const devant = l.filter((i) => i.enonce.startsWith("−"));
-  assert.ok(devant.length >= 5, "des facteurs négatifs devant la parenthèse");
-  for (const it of devant) assert.ok(it.gauche.every((k) => k.startsWith("-")), `le facteur ${it.enonce} est en tuiles rouges`);
+test("un facteur négatif devant, aussi en tuiles (règle des signes)", () => {
+  const devant = tous(6).filter((i) => i.enonce.startsWith("−"));
+  assert.ok(devant.length >= 50, "des facteurs négatifs devant la parenthèse");
+  for (const it of devant) assert.ok(it.gauche.every((k) => k.startsWith("-")), `le facteur de ${it.enonce} est en tuiles rouges`);
+  for (const it of tous(4)) assert.ok(it.enonce.includes("×") ? it.haut.every((k) => k === "1") : it.gauche.every((k) => k === "1"), `marche 4, facteur positif : ${it.enonce}`);
   // rouge × rouge = vert : la tuile du produit est positive
   const svg = M.rectangle(["-1"], ["-1"]).html;
   assert.equal((svg.match(/class="tn"/g) || []).length, 2, "les deux bords rouges");
@@ -130,14 +206,29 @@ test("dessin : la tuile 1 fait 4,4 mm partout (bords compris), 𝑥 = 3,4 unité
   assert.match(M.paire("x", false).html, /stroke="#B45309"/);
 });
 
-test("la page : menu par formes, réglages grisés, vert / rouge par défaut, 𝑥 rond, impression après les polices", () => {
-  for (const nom of ["Écrire l’expression", "Réduire", "L’opposé", "Développer", "Factoriser"]) assert.ok(page.includes(nom), nom);
+test("la page : menu par marches en deux parties, marches sans tuiles grisées, un seul réglage de support", () => {
+  for (const nom of ["Écrire l’expression", "Réduire", "L’opposé", "Multiplier", "Développer", "Factoriser", "Tout ensemble", "Double distributivité", "Avec des signes −", "Identités remarquables"]) assert.ok(page.includes(`nom: '${nom}'`), nom);
+  assert.match(page, /<div class="marches" id="marches"><\/div>/);
+  assert.match(page, /\[1, 2\]\.map\(\(p\) => \{\n\s+const lignes = M\.MARCHES\.filter\(\(m\) => m\.partie === p\)/);
+  // une marche qui ne se fait pas avec le support choisi est grisée (bouton désactivé), jamais retirée : rien ne bouge
+  assert.match(page, /const disponible = \(m\) => !\(etat\.support === 'tuiles' && m\.sansTuiles\);/);
+  assert.match(page, /b\.disabled = !libre;/);
+  assert.match(page, /\.marche:disabled\{ opacity:\.38; cursor:default; \}/);
+  assert.match(page, /data-reglage="support"[^>]*><button type="button" data-v="tuiles">les tuiles<\/button><button type="button" data-v="tableau" disabled>le tableau<\/button><button type="button" data-v="sans" disabled>sans aide<\/button>/);
+  assert.match(page, /data-reglage="rectangle"[^>]*><button type="button" data-v="lire">je le lis<\/button><button type="button" data-v="construire">je le construis<\/button><button type="button" data-v="deux">les deux<\/button>/);
+  // les réglages abstraits du lot 1 ont disparu
+  for (const vieux of ['data-reglage="facteurs"', 'data-reglage="negR"', 'data-reglage="negT"', 'data-reglage="tuiles"']) assert.ok(!page.includes(vieux), vieux);
+  assert.match(page, /marches: \[0, 1, 2, 4\],/);
+  assert.match(page, /if \(etat\.marches\.length === 1\) return;/);          // il reste toujours une marche cochée
+  assert.match(page, /g\.classList\.toggle\('grise', !actif\)/);
+});
+
+test("la page : vert / rouge par défaut, 𝑥 rond, impression après les polices, pied des feuilles", () => {
   assert.match(page, /--pos:#72c475; --neg:#ef3f35;/);
   assert.match(page, /body\.couleurs-bg\{ --pos:#FFFFFF; --neg:#A3ADB4; \}/);
   assert.match(page, /couleurs: 'vr'/);
   assert.match(page, /@font-face\{font-family:SplatLettres;src:url\('\/assets\/fonts\/SplatLettres-BoldItalic\.woff2'\)[^}]*unicode-range:U\+1D434-1D467,U\+210E\}/);
   assert.match(page, /document\.fonts\.ready\.then\(\(\) => setTimeout\(\(\) => window\.print\(\), 80\)\)/);
-  assert.match(page, /g\.classList\.toggle\('grise', !actif\)/);
   // pied des feuilles : le petit M du site et la licence, pas de Nom / Date, pas de pied de page d'appli
   assert.match(page, /<img src="\/favicon\.svg" alt="" width="17" height="17"><span>mathsgo\.re · CC BY-NC-SA 4\.0<\/span>/);
   assert.doesNotMatch(page, /Nom :|Date :|<footer\b/);
