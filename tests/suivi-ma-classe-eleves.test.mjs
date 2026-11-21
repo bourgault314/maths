@@ -233,7 +233,8 @@ test("dans le tableau d'une appli, « Revenir à… » est dans le « ⋯ » au 
 function poserVueRejoue(vueAvant, droit) {
   const {$} = creerZones();
   // Lot S4b : poserVue ferme aussi la liste des prénoms d'un « 5 élèves » (garderPopEleves).
-  return new Function("$", "droitClasse", "vueInitiale", "garderPopEleves", `let vue = vueInitiale;\n${fonction("poserVue")}\nposerVue();\nreturn {vue, $};`)($, droit, vueAvant, () => {});
+  // Lot B2 : et redessine la carte « Aujourd'hui, dans Mon espace » dans les Réglages (poserJourClasse).
+  return new Function("$", "droitClasse", "vueInitiale", "garderPopEleves", "classe", "poserJourClasse", `let vue = vueInitiale;\n${fonction("poserVue")}\nposerVue();\nreturn {vue, $};`)($, droit, vueAvant, () => {}, {id: 1}, () => {});
 }
 
 test("la vue Élèves : propriétaire et collègue en écriture ; un collègue « voir seulement » retombe sur l'activité", () => {

@@ -305,6 +305,9 @@ try {
   .jour-faits span { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .12);
                      color: #fff; font-size: 14.5px; font-weight: 800; white-space: nowrap; }
   .jour-ensuite b { color: #fff; font-weight: 800; }
+  /* Lot B2 : le chemin de la journée (« ✓ Défi tables → SPLAT! → Mes cours »),
+     écrit avec la ligne « Ensuite » ; seul l'ordinateur le montre (plus bas). */
+  .jour-chemin { display: none; }
   /* Le clavier : sur le bleu nuit, l'anneau bleu de la charte ne se verrait pas. */
   .jour-carte .jour-bouton:focus-visible, a.jour-carte:focus-visible { outline: 3px solid #f9bf3b; outline-offset: 3px; box-shadow: none; }
   .porte:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
@@ -450,6 +453,19 @@ try {
     .jour-haut { grid-column: 1 / -1; align-self: start; }
     .jour-bouton, .jour-faits { margin: 0; min-width: 210px; min-height: 54px; font-size: 20px; }
     .jour-faits { justify-content: center; }
+    /* Lot B2 (choix de Gwenaël, planche B2-7) : dès que la journée a deux
+       étapes, le chemin remplace « Ensuite ». Fait = coché, blanc atténué ;
+       en cours = gras, blanc ; à venir = gris ; flèches grises. Une seule
+       ligne : un nom trop long se coupe d'une ellipse, « Aujourd'hui » jamais. */
+    .jour-carte.avec-chemin .jour-ensuite { display: none; }
+    .jour-carte.avec-chemin .jour-chemin:not([hidden]) { display: flex; }
+    .jour-tete { flex: none; }
+    .jour-chemin { align-items: baseline; gap: 7px; min-width: 0; margin: 0; overflow: hidden; white-space: nowrap;
+                   font-size: 16px; line-height: 20px; color: rgba(255, 255, 255, .6); }
+    .jour-chemin > span { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .jour-chemin > .fleche { flex: none; color: rgba(255, 255, 255, .45); }
+    .jour-chemin > .fait { color: rgba(255, 255, 255, .8); }
+    .jour-chemin > .en-cours { flex-shrink: 0; color: #fff; font-weight: 800; }
   }
 </style>
 </head>
@@ -506,7 +522,7 @@ try {
         <span class="jour-bouton">Commencer</span>
       </a>
       <section class="jour-carte" id="jour" aria-labelledby="jour-tete" hidden>
-        <div class="jour-haut"><h2 class="jour-tete" id="jour-tete">Aujourd’hui</h2><p class="jour-ensuite" id="jour-ensuite"></p></div>
+        <div class="jour-haut"><h2 class="jour-tete" id="jour-tete">Aujourd’hui</h2><p class="jour-ensuite" id="jour-ensuite"></p><p class="jour-chemin" id="jour-chemin" hidden></p></div>
         <div class="jour-quoi"><span class="jour-icone" id="jour-icone"></span><span class="jour-textes"><strong id="jour-nom"></strong><span id="jour-sous"></span></span></div>
         <a class="jour-bouton" id="jour-bouton" href="#">Commencer</a>
         <p class="jour-faits" id="jour-faits" hidden></p>
@@ -620,6 +636,13 @@ try {
       && typeof appli.url === "string" && /^https:\/\/mathsgo\.re\//.test(appli.url));
     if (!copie.jauges || typeof copie.jauges !== "object" || Array.isArray(copie.jauges)) copie.jauges = {};
     if (!copie.haut || typeof copie.haut !== "object") copie.haut = null;
+    // Lot B2 : la liste du jour de la classe, gardée avec le reste — sinon,
+    // au retour d'une appli, le bloc « Aujourd'hui » montrerait d'abord le
+    // mode automatique, puis sauterait à la liste à la réponse du serveur.
+    // Relue comme ce qui vient du serveur : trois clés au plus, connues de la
+    // page ; poserJour ne garde ensuite que les portes de l'élève.
+    copie.jour = Array.isArray(copie.jour) ? copie.jour.filter(cle => typeof cle === "string"
+      && (cle === "cours" || Object.prototype.hasOwnProperty.call(JAUGES, cle))).slice(0, 3) : [];
     return copie;
   }
   function ecrireCopie(copie) {
@@ -636,7 +659,9 @@ try {
         cle: appli.cle, nom: appli.nom, description: appli.description, url: appli.url,
         ancre: appli.ancre || null, disponible: true})),
       jauges: jauges || {},
-      haut: hautCourant || (ancienne ? ancienne.haut : null)
+      haut: hautCourant || (ancienne ? ancienne.haut : null),
+      // Lot B2 : la liste du jour (relue par lireCopie).
+      jour: Array.isArray(donnees.jour) ? donnees.jour.filter(cle => typeof cle === "string").slice(0, 3) : []
     };
     // L'appli Cours (lot « cours-appli ») : ses chapitres, seulement si la
     // classe l'a — au retour d'une fiche, l'écran du chapitre se dessine tout
@@ -1699,19 +1724,34 @@ try {
 
   // ===================================================== lot B1 : « Aujourd'hui »
   //
-  // Une seule chose à faire, en grand. Mode AUTOMATIQUE (lot B1 ; la liste
-  // choisie par le professeur, classe par classe, arrive au lot B2) : Défi
-  // tables quand la classe l'a, sinon la première activité de la classe ;
-  // puis Mes cours (l'idée de Gwenaël). On montre la première étape pas
-  // encore faite AUJOURD'HUI — « faite » = le jour vert de l'appli (resumeSuivi
-  // de son moteur, la même règle que « Ma semaine ») ; une activité finie pour
-  // de bon est sautée ; Mes cours n'est jamais « faite » (on ne peut pas savoir
-  // si une leçon a été lue) : quand c'est son tour, elle reste pour la journée.
-  // Rien n'est verrouillé : toutes les portes restent ouvertes. La séance en
-  // direct et l'évaluation passent devant (règle CSS : leur carte, visible,
-  // cache celle-ci). Le bloc garde la même hauteur dans tous ses états.
+  // Une seule chose à faire, en grand. On montre la première étape pas encore
+  // faite AUJOURD'HUI — « faite » = le jour vert de l'appli (resumeSuivi de son
+  // moteur, la même règle que « Ma semaine ») ; une activité finie pour de bon
+  // est sautée ; Mes cours n'est jamais « faite » (on ne peut pas savoir si une
+  // leçon a été lue) : quand c'est son tour, elle reste pour la journée. Rien
+  // n'est verrouillé : toutes les portes restent ouvertes. La séance en direct
+  // et l'évaluation passent devant (règle CSS : leur carte, visible, cache
+  // celle-ci). Le bloc garde la même hauteur dans tous ses états.
+  //
+  // Les étapes : la LISTE choisie par le professeur pour la classe (lot B2,
+  // « Ma classe › Réglages » : d'abord, puis, puis — reçue avec les données de
+  // l'élève, « jour ») quand elle donne au moins une de ses portes ; sinon le
+  // mode AUTOMATIQUE du lot B1 : Défi tables quand la classe l'a, sinon la
+  // première activité de la classe, puis Mes cours (l'idée de Gwenaël).
   const CHECK_BLANC = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  function etapesDuJour(visibles) {
+  function etapesDuJour(visibles, jour) {
+    if (Array.isArray(jour) && jour.length) {
+      const choisies = [];
+      jour.forEach(cle => {
+        const appli = visibles.find(a => a.cle === cle);
+        if (appli && !choisies.includes(appli) && choisies.length < 3) choisies.push(appli);
+      });
+      // Mes cours seulement au bout (le serveur le garantit ; une copie
+      // trafiquée ne fait pas mieux).
+      const place = choisies.findIndex(a => a.cle === "cours");
+      if (place >= 0 && place !== choisies.length - 1) choisies.splice(place, 1);
+      if (choisies.length) return choisies;
+    }
     const activites = visibles.filter(appli => appli.cle !== "cours");
     const liste = [];
     const tables = activites.find(appli => appli.cle === "defi-tables");
@@ -1729,12 +1769,37 @@ try {
     if (appli.cle === "defi-tables" && jauge.aujourdhui && typeof jauge.aujourdhui.quoi === "string" && jauge.aujourdhui.quoi) return jauge.aujourdhui.quoi;
     return "Reprends où tu en es";
   }
+  // Lot B2 : en haut à droite, deux lignes écrites ensemble, et la feuille de
+  // style choisit (rien ne saute quand la fenêtre change de taille) :
+  //  - au téléphone, « Ensuite : X » tant qu'il reste une étape après celle du
+  //    bouton ; sinon ce qui est fait aujourd'hui (« ✓ Défi tables ») ;
+  //  - sur ordinateur (900 px et plus), dès que la journée a deux étapes ou
+  //    plus, le CHEMIN de la journée : « ✓ Défi tables → SPLAT! → Mes cours »
+  //    (fait = coché, en cours = gras, à venir = gris). À « C'est fait ! »,
+  //    rien en haut à droite.
+  function poserChemin(chemin, liste, estFaite, enCours) {
+    chemin.textContent = "";
+    liste.forEach((appli, i) => {
+      if (i) {
+        const fleche = document.createElement("span");
+        fleche.className = "fleche";
+        fleche.setAttribute("aria-hidden", "true");
+        fleche.textContent = "→";
+        chemin.append(fleche);
+      }
+      const etape = document.createElement("span");
+      etape.className = estFaite(appli) ? "fait" : appli === enCours ? "en-cours" : "a-venir";
+      etape.textContent = estFaite(appli) ? `✓ ${appli.nom}` : appli.nom;
+      chemin.append(etape);
+    });
+  }
   function poserJour(visibles, jauges, espace, donnees, code, nCours) {
     const carte = $("jour");
     const bouton = $("jour-bouton");
     const ensuite = $("jour-ensuite");
+    const chemin = $("jour-chemin");
     const faitsDuJour = $("jour-faits");
-    const liste = etapesDuJour(visibles);
+    const liste = etapesDuJour(visibles, donnees.jour);
     if (!liste.length) { carte.hidden = true; return; }
     const faits = espace ? espace.faits : [];
     const estFaite = appli => appli.cle !== "cours"
@@ -1743,9 +1808,12 @@ try {
     const faites = liste.filter(appli => estFaite(appli) && faits.includes(appli.cle));
     carte.hidden = false;
     ensuite.textContent = "";
+    chemin.textContent = "";
     faitsDuJour.textContent = "";
     if (!reste.length) {
       carte.classList.add("fini");
+      carte.classList.remove("avec-chemin");
+      chemin.hidden = true;
       $("jour-icone").innerHTML = CHECK_BLANC;
       $("jour-nom").textContent = "C’est fait !";
       $("jour-sous").textContent = "Pour aujourd’hui, à toi de choisir.";
@@ -1774,12 +1842,15 @@ try {
       bouton.href = adresseAppli(appli, donnees.billet || "");
       bouton.onclick = event => ouvrirAppli(event, bouton, appli, code, donnees.billet || "");
     }
-    if (faites.length) ensuite.textContent = faites.map(fait => `✓ ${fait.nom}`).join("  ");
-    else if (reste[1]) {
+    if (reste[1]) {
       const nom = document.createElement("b");
       nom.textContent = reste[1].nom;
       ensuite.append("Ensuite : ", nom);
-    }
+    } else if (faites.length) ensuite.textContent = faites.map(fait => `✓ ${fait.nom}`).join("  ");
+    const avecChemin = liste.length >= 2;
+    chemin.hidden = !avecChemin;
+    if (avecChemin) poserChemin(chemin, liste, estFaite, appli);
+    if (avecChemin) carte.classList.add("avec-chemin"); else carte.classList.remove("avec-chemin");
   }
 
   // ------------------------------------------------------- la séance en direct

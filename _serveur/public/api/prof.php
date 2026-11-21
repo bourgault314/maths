@@ -721,8 +721,34 @@ try {
                     erreur("État d'avant illisible : recharge la page et refais ton réglage.", 400);
                 }
             }
+            // Lot B2 « Ta liste dans Ma classe » (21/11/2026) : la liste du jour
+            // de Mon espace (« D'abord / Puis / Puis »), seulement si elle est
+            // envoyée. Lue STRICTEMENT (jour_recu) : une clé inconnue, une appli
+            // fermée à la classe, un doublon, plus de trois, Mes cours ailleurs
+            // qu'en dernier → 400. Vérifiée ici contre les applis lues avant le
+            // verrou (un refus net), puis de nouveau sous le verrou contre
+            // celles que la classe aura vraiment.
+            $jour = null;
+            if (array_key_exists('jour', $corps)) {
+                if (!reglages_disponibles($pdo)) {
+                    erreur("Le serveur doit être mis à niveau : ouvre migrer.php avec ton mot de passe d'installation.", 503);
+                }
+                try {
+                    jour_recu($corps['jour'], $applis);
+                } catch (InvalidArgumentException $e) {
+                    erreur($e->getMessage(), 400);
+                }
+                $jour = $corps['jour'];
+            }
+            // Ce qui n'est pas envoyé est repris de la ligne relue sous le
+            // verrou, pas de celle lue avant (lot B2) : enregistrer la liste
+            // du jour ne doit pas remettre un nom ou une liste d'applis qu'un
+            // autre onglet vient de changer.
+            $libelleRecu = array_key_exists('libelle', $corps);
+            $applisRecues = array_key_exists('applis', $corps);
+            $avecReglages = reglages_disponibles($pdo);
             $classeId = (int)$classe['id'];
-            $resultat = avec_reprise($pdo, function () use ($pdo, $classeId, $libelle, $applis, $reglages, $avant): array {
+            $resultat = avec_reprise($pdo, function () use ($pdo, $classeId, $libelle, $applis, $reglages, $avant, $jour, $libelleRecu, $applisRecues, $avecReglages): array {
                 transaction_ouvrir($pdo);
                 $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?' . pour_mise_a_jour($pdo));
                 $requete->execute([$classeId]);
@@ -736,19 +762,41 @@ try {
                     transaction_annuler($pdo);
                     return ['conflit' => true, 'ligne' => $ligne];
                 }
+                if (!$libelleRecu) $libelle = (string)$ligne['libelle'];
+                if (!$applisRecues) {
+                    $applis = array_values(array_intersect(APPLIS_PROPOSABLES, explode(',', (string)$ligne['applis'])));
+                    if ($applis === []) $applis = ['defi-tables'];
+                }
+                // La liste du jour : la reçue, vérifiée contre les applis que la
+                // classe aura ; sinon celle de la ligne, TAILLÉE à ces applis
+                // (une porte fermée en sort, dans la même écriture). Une liste
+                // reçue qui ne tient plus (une appli fermée ailleurs entre-temps) :
+                // c'est un conflit, l'état relu part avec le refus.
+                $jourAvant = jour_de_classe($ligne);
+                try {
+                    $nouveauJour = $jour !== null ? jour_recu($jour, $applis)
+                        : jour_lu(isset($ligne['reglages']) ? (string)$ligne['reglages'] : null, $applis);
+                } catch (InvalidArgumentException $e) {
+                    transaction_annuler($pdo);
+                    return ['conflit' => true, 'ligne' => $ligne];
+                }
                 // Les réglages reçus remplacent ceux de l'appli DANS la valeur
                 // relue sous le verrou (pas dans celle lue avant lui).
                 $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
-                if ($nouveaux === null) {
+                $ecrireColonne = $avecReglages && ($nouveaux !== null || $jour !== null || $nouveauJour !== $jourAvant);
+                if (!$ecrireColonne) {
                     $pdo->prepare('UPDATE classes SET libelle = ?, applis = ? WHERE id = ?')
                         ->execute([$libelle, implode(',', $applis), $classeId]);
                 } else {
+                    // PIÈGE du lot B2 : la colonne porte AUSSI la liste du jour,
+                    // que reglages_de_classe ne rend pas. Elle est remise ici,
+                    // à chaque écriture de la colonne.
                     $pdo->prepare('UPDATE classes SET libelle = ?, applis = ?, reglages = ? WHERE id = ?')
                         ->execute([$libelle, implode(',', $applis),
-                            $nouveaux === [] ? null : json_encode($nouveaux, JSON_UNESCAPED_UNICODE), $classeId]);
+                            reglages_pour_la_base($nouveaux ?? reglages_de_classe($ligne), $nouveauJour), $classeId]);
                 }
                 transaction_valider($pdo);
-                return ['ecrit' => true, 'reglages' => $nouveaux];
+                return ['ecrit' => true, 'reglages' => $nouveaux, 'jour' => $nouveauJour];
             });
             if (isset($resultat['disparue'])) erreur("Introuvable.", 404);
             if (isset($resultat['conflit'])) {
@@ -760,10 +808,12 @@ try {
                     'erreur' => "La {$resultat['ligne']['libelle']} a été changée ailleurs : la fenêtre montre l'état actuel, refais ton réglage.",
                     'applis' => explode(',', (string)$resultat['ligne']['applis']),
                     'reglages' => reglages_json(reglages_de_classe($resultat['ligne'])),
+                    'jour' => jour_de_classe($resultat['ligne']),
                 ], 409);
             }
             journaliser($pdo, $profId, 'classes.modifier', 'classe', $classeId);
-            repondre(['ok' => true] + ($resultat['reglages'] === null ? [] : ['reglages' => reglages_json($resultat['reglages'])]));
+            repondre(['ok' => true] + ($resultat['reglages'] === null ? [] : ['reglages' => reglages_json($resultat['reglages'])])
+                + ['jour' => $resultat['jour']]);
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au
@@ -1274,6 +1324,8 @@ try {
                     'libelle' => $classe['libelle'],
                     'applis' => explode(',', (string)$classe['applis']),
                     'reglages' => reglages_json(reglages_de_classe($classe)),
+                    // Lot B2 : la liste du jour de Mon espace (vide = automatique).
+                    'jour' => jour_de_classe($classe),
                     'droit' => $classe['droit'],
                     // 17/10/2026 : « ● Reprendre la séance en direct » quand
                     // une séance de la classe est restée ouverte.

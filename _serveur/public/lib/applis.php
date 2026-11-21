@@ -720,9 +720,21 @@ function avant_de_classe_recu(mixed $recu): array
         throw new InvalidArgumentException("État d'avant illisible.");
     }
     foreach (array_keys($recu) as $cle) {
-        if (!in_array($cle, ['applis', 'reglages'], true)) throw new InvalidArgumentException("État d'avant illisible.");
+        if (!in_array($cle, ['applis', 'reglages', 'jour'], true)) throw new InvalidArgumentException("État d'avant illisible.");
     }
     $sortie = [];
+    // Lot B2 « Ta liste dans Ma classe » : la liste du jour telle que la page
+    // l'a reçue de « tableau » (jour_lu) — une liste de clés, comparée telle
+    // quelle (l'ordre compte : c'est un ordre).
+    if (array_key_exists('jour', $recu)) {
+        if (!is_array($recu['jour']) || !array_is_list($recu['jour']) || count($recu['jour']) > JOUR_MAX) {
+            throw new InvalidArgumentException("État d'avant illisible.");
+        }
+        foreach ($recu['jour'] as $cle) {
+            if (!is_string($cle)) throw new InvalidArgumentException("État d'avant illisible.");
+        }
+        $sortie['jour'] = $recu['jour'];
+    }
     if (array_key_exists('applis', $recu)) {
         if (!is_array($recu['applis']) || !array_is_list($recu['applis'])) throw new InvalidArgumentException("État d'avant illisible.");
         foreach ($recu['applis'] as $cle) {
@@ -779,7 +791,93 @@ function meme_etat_de_classe(array $avant, array $ligne): bool
             if ($reglage !== reglage_canonique($actuels[$cle] ?? [])) return false;
         }
     }
+    if (array_key_exists('jour', $avant)) {
+        if ($avant['jour'] !== jour_de_classe($ligne)) return false;
+    }
     return true;
+}
+
+// ------------------------------------------- la liste du jour (lot B2, 21/11/2026)
+//
+// Choix de Gwenaël (planches B2, questions à choix du 21/11) : dans « Ma
+// classe › Réglages », il choisit par classe ce que le grand bouton de Mon
+// espace propose aujourd'hui — « D'abord / Puis / Puis », une à trois portes
+// ouvertes à la classe, Mes cours toujours en dernier. Rien n'est verrouillé :
+// la liste dit seulement quel bouton s'affiche en haut de l'espace de l'élève.
+// Sans liste, le mode automatique du lot B1.
+//
+// Rangé dans classes.reglages, à côté des réglages des applis, sous la clé
+// « jour » (ce n'est pas une appli : reglages_lus la saute) — aucune
+// migration :
+//
+//     {"jour": ["defi-tables", "splat", "cours"], "splat": {"mondes": [1, 2]}}
+//
+// Liste vide = automatique : rien d'écrit.
+//
+// PIÈGE (gardé par un test) : reglages_lus ne rend que les réglages des applis,
+// et reglages_recus repart de là. Toute réécriture de la colonne (régler les
+// mondes de SPLAT!…) doit donc REMETTRE la liste — classes.modifier le fait
+// sous le verrou, depuis la ligne relue (reglages_pour_la_base).
+
+const JOUR_MAX = 3;
+
+// Lecture INDULGENTE (ce qui sort de la base) : des clés d'applis ouvertes au
+// catalogue ET à la classe, sans doublon, trois au plus ; Mes cours seulement
+// en dernier. Une porte fermée depuis à la classe sort de la liste ici.
+function jour_lu(?string $json, array $applisClasse): array
+{
+    if ($json === null || $json === '') return [];
+    $brut = json_decode($json, true);
+    if (!is_array($brut) || !isset($brut['jour']) || !is_array($brut['jour']) || !array_is_list($brut['jour'])) return [];
+    $applisClasse = array_map('trim', $applisClasse);
+    $liste = [];
+    foreach ($brut['jour'] as $cle) {
+        if (count($liste) >= JOUR_MAX) break;
+        if (!is_string($cle) || !appli_ouverte($cle) || !in_array($cle, $applisClasse, true) || in_array($cle, $liste, true)) continue;
+        $liste[] = $cle;
+    }
+    $place = array_search('cours', $liste, true);
+    if ($place !== false && $place !== count($liste) - 1) {
+        unset($liste[$place]);
+        $liste = array_values($liste);
+    }
+    return $liste;
+}
+
+// La liste du jour d'une classe par sa ligne de la base (SELECT * : la colonne
+// peut manquer tant que migrer.php n'a pas été ouvert).
+function jour_de_classe(array $classe): array
+{
+    return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null,
+        explode(',', (string)($classe['applis'] ?? '')));
+}
+
+// Ce que le professeur envoie (classes.modifier) : lecture STRICTE, rien n'est
+// arrangé en silence. $applisClasse : les applis que la classe aura APRÈS
+// l'écriture.
+function jour_recu(mixed $recu, array $applisClasse): array
+{
+    if (!is_array($recu) || !array_is_list($recu)) throw new InvalidArgumentException("Liste du jour illisible.");
+    if (count($recu) > JOUR_MAX) throw new InvalidArgumentException("Trois étapes au plus.");
+    $applisClasse = array_map('trim', $applisClasse);
+    $liste = [];
+    foreach ($recu as $cle) {
+        if (!is_string($cle)) throw new InvalidArgumentException("Liste du jour illisible.");
+        if (!appli_ouverte($cle) || !in_array($cle, $applisClasse, true)) throw new InvalidArgumentException("Activité pas ouverte à la classe.");
+        if (in_array($cle, $liste, true)) throw new InvalidArgumentException("Activité en double.");
+        $liste[] = $cle;
+    }
+    $place = array_search('cours', $liste, true);
+    if ($place !== false && $place !== count($liste) - 1) throw new InvalidArgumentException("Mes cours se met en dernier.");
+    return $liste;
+}
+
+// La valeur de la colonne : les réglages des applis, et la liste du jour
+// devant (rien quand les deux sont vides).
+function reglages_pour_la_base(array $reglages, array $jour): ?string
+{
+    $tout = ($jour === [] ? [] : ['jour' => array_values($jour)]) + $reglages;
+    return $tout === [] ? null : json_encode($tout, JSON_UNESCAPED_UNICODE);
 }
 
 // ---------------------------------------------------- ce qu'un élève a EN PLUS

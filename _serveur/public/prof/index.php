@@ -385,6 +385,19 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .ligne-nom { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .ligne-nom input { flex: 1 1 160px; max-width: 260px; }
   .carte.danger-zone { border-left: 5px solid var(--rouge); }
+  /* Lot B2 « Ta liste dans Ma classe » (planches B2-1 et B2-2, mots choisis
+     par Gwenaël) : la carte « Aujourd'hui, dans Mon espace », en tête. */
+  .carte-jour .jour-intro { margin: 0 0 10px; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+  .jour-modes label { display: flex; align-items: flex-start; gap: 9px; margin: 0; padding: 5px 0; font-size: .93rem; font-weight: 400; line-height: 1.4; cursor: pointer; }
+  .jour-modes input[type=radio] { flex: none; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--blue); }
+  .jour-modes b { color: var(--ink); font-weight: 700; }
+  .jour-modes span { color: var(--muted); }
+  .jour-etapes { display: grid; grid-template-columns: auto minmax(0, 260px); justify-content: start; align-items: center; gap: 8px 16px; margin: 6px 0 2px 18px; }
+  .jour-etapes[hidden] { display: none; }
+  .jour-etapes label { margin: 0; font-weight: 700; font-size: .9rem; color: var(--ink); }
+  .jour-etapes select { width: 100%; }
+  .jour-apercu { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--bleu-pale); color: var(--ink); font-size: .9rem; line-height: 1.45; }
+  .jour-apercu b { color: var(--blue-dark); }
   .carte.danger-zone p { margin: 0 0 12px; color: var(--ink); font-size: .92rem; }
   /* L'onglet « Élèves » (lot « Ma classe : élèves », 18/10/2026) : les
      boutons de la classe, puis la feuille prénom ↔ code à l'écran — mêmes
@@ -1798,6 +1811,32 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
            appli se règle dans son onglet (« Régler … »). -->
       <p class="sous note-regler">Les applis de la classe se règlent dans leur onglet : « Régler Défi tables », « Régler SPLAT! »…</p>
 
+      <!-- Lot B2 « Ta liste dans Ma classe » (21/11/2026, planches B2-1 et
+           B2-2) : ce que le grand bouton de Mon espace propose aujourd'hui.
+           Automatique (le lot B1) ou sa liste, dans l'ordre. Rien n'est
+           envoyé avant « Enregistrer » ; propriétaire seulement, comme le
+           reste des Réglages. Dessinée par poserJourClasse (textContent). -->
+      <div id="bloc-jour">
+        <h2>Aujourd’hui, dans Mon espace</h2>
+        <div class="carte carte-jour">
+          <p class="jour-intro">Le grand bouton en haut de l’espace des élèves. Il propose la première étape pas encore faite aujourd’hui, puis la suivante. Toutes les applis restent ouvertes.</p>
+          <div class="jour-modes" role="radiogroup" aria-label="Le grand bouton de Mon espace">
+            <label><input type="radio" name="jour-mode" id="jour-auto" value="auto"><span><b>Automatique :</b> <span id="jour-auto-texte"></span></span></label>
+            <label><input type="radio" name="jour-mode" id="jour-liste" value="liste"><b>Ma liste, dans l’ordre</b></label>
+          </div>
+          <div class="jour-etapes" id="jour-etapes" hidden>
+            <label for="jour-1">D’abord</label><select id="jour-1"></select>
+            <label for="jour-2">Puis</label><select id="jour-2"></select>
+            <label for="jour-3">Puis</label><select id="jour-3"></select>
+          </div>
+          <p class="jour-apercu" id="jour-apercu"></p>
+          <div class="actions">
+            <button type="button" id="jour-enregistrer">Enregistrer</button>
+          </div>
+          <p class="message" id="message-jour" hidden></p>
+        </div>
+      </div>
+
       <!-- Partage : trois lignes, avec les mots des boutons (« Voir seulement »,
            « Voir et modifier »). La question posée avant de passer un collègue
            en écriture dit le reste (texteConfirmationPartage). -->
@@ -2493,7 +2532,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   const ZONES_MESSAGE = ["erreur-connexion", "message-classes", "message-premiere-classe", "message-classe", "message-appli",
     "message-profs", "message-partage", "message-compte", "bandeau-droit", "bandeau-annee",
     "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
-    "regler-message", "fe-message", "lc-message"];
+    "regler-message", "fe-message", "lc-message", "message-jour"];
   // Correctif des lots 5 (point 12) : le nom de la classe, dans ses Réglages.
   const CHAMPS_A_VIDER = ["identifiant", "motdepasse",
     "mdp-ancien", "mdp-nouveau", "mdp-confirme", "em-nom", "chercher-eleve", "nom-classe"];
@@ -2539,9 +2578,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   const ZONES_DE_LA_CLASSE = ZONES_TEXTE.filter(id => !ZONES_HORS_CLASSE.includes(id));
   const MESSAGES_DE_LA_CLASSE = ["message-classe", "message-appli", "message-partage", "bandeau-droit",
     "message-records", "message-evaluations", "em-message", "message-nom", "message-supprimer",
-    "regler-message", "fe-message", "lc-message"];
+    "regler-message", "fe-message", "lc-message", "message-jour"];
 
   function viderLaClasse() {
+    // Lot B2 : le brouillon de la carte « Aujourd'hui, dans Mon espace ».
+    jourBrouillon = null;
     ["eval-modele", "eval-ouvrir", "regler", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
@@ -2584,6 +2625,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     ongletFiche = "ensemble";
     reglage = null;
     reglageEnCours = false;
+    jourBrouillon = null;
     parcoursAnzanEleve = null;
     anneeCourante = "";
     classeApresMotDePasse = 0;
@@ -3245,6 +3287,216 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     else delete ajout[geste.liste];
     if (!Object.keys(ajout).length) delete suite[geste.cle];
     return suite;
+  }
+
+  // --------------------------------- « Aujourd'hui, dans Mon espace » (lot B2, 21/11/2026)
+  //
+  // Choix de Gwenaël (planches B2-1 et B2-2, questions à choix du 21/11) : en
+  // tête des Réglages, ce que le grand bouton de Mon espace propose. Deux
+  // choix : « Automatique » (le lot B1 : Défi tables, sinon la première
+  // activité, puis Mes cours) ou « Ma liste, dans l'ordre » — D'abord / Puis /
+  // Puis, parmi les portes ouvertes à la classe, avec les noms que voit
+  // l'élève (« Mes cours »). Mes cours toujours en dernier : la choisir vide
+  // et grise les listes qui suivent (le serveur refuse le reste). Rien n'est
+  // envoyé avant « Enregistrer » : la carte travaille sur un brouillon. À
+  // l'enregistrement, classes.modifier avec la liste et « avant » (la liste
+  // rangée telle que la page la connaît : si un autre onglet l'a changée, 409
+  // et la carte se remet sur l'état vrai). Même verrou que « Régler … ».
+  // Tout est construit par createElement et textContent.
+  let jourBrouillon = null;   // {classeId, depart, mode: "auto" | "liste", liste}
+
+  function nomPourLEleve(cle) {
+    return cle === "cours" ? "Mes cours" : nomDeLAppli(cle);
+  }
+  // Les portes ouvertes à la classe, dans l'ordre du catalogue (celui de Mon espace).
+  function portesDuJour() {
+    const ouvertes = (classe && Array.isArray(classe.applis)) ? classe.applis : [];
+    return APPLIS.filter(appli => ouvertes.includes(appli.cle)).map(appli => appli.cle);
+  }
+  // Le mode automatique, comme Mon espace le calcule (etapesDuJour, lot B1).
+  function jourAutomatique(portes) {
+    const activites = portes.filter(cle => cle !== "cours");
+    const liste = [];
+    if (activites.includes("defi-tables")) liste.push("defi-tables");
+    else if (activites.length) liste.push(activites[0]);
+    if (portes.includes("cours")) liste.push("cours");
+    return liste;
+  }
+  function jourDeLaClasse() {
+    return classe && Array.isArray(classe.jour) ? classe.jour.filter(cle => typeof cle === "string") : [];
+  }
+  function memeListe(a, b) {
+    return a.length === b.length && a.every((cle, i) => cle === b[i]);
+  }
+  // Une liste possible : des portes de la classe, sans doublon, trois au
+  // plus ; rien après Mes cours.
+  function listeDuJourPropre(liste, portes) {
+    const propre = [];
+    for (const cle of liste) {
+      if (propre.length >= 3 || propre.includes("cours")) break;
+      if (portes.includes(cle) && !propre.includes(cle)) propre.push(cle);
+    }
+    return propre;
+  }
+
+  function poserJourClasse(force) {
+    if (!classe) return;
+    const depart = jourDeLaClasse();
+    const meme = jourBrouillon && jourBrouillon.classeId === classe.id && memeListe(jourBrouillon.depart, depart);
+    if (force || !meme) {
+      jourBrouillon = {classeId: classe.id, depart: depart.slice(), mode: depart.length ? "liste" : "auto",
+        liste: depart.length ? depart.slice() : jourAutomatique(portesDuJour())};
+      if (!force && !meme) messager("message-jour", "", "");
+    }
+    dessinerJourClasse();
+  }
+
+  function dessinerJourClasse() {
+    const b = jourBrouillon;
+    if (!b || !classe || b.classeId !== classe.id) return;
+    const portes = portesDuJour();
+    b.liste = listeDuJourPropre(b.liste, portes);
+    const occupe = reglageEnCours;
+    $("jour-auto").checked = b.mode === "auto";
+    $("jour-liste").checked = b.mode === "liste";
+    const auto = jourAutomatique(portes);
+    $("jour-auto-texte").textContent = auto.length ? `${auto.map(nomPourLEleve).join(", puis ")}.` : "aucune activité.";
+    $("jour-etapes").hidden = b.mode !== "liste";
+    [1, 2, 3].forEach(n => {
+      const i = n - 1;
+      const liste = $(`jour-${n}`);
+      liste.textContent = "";
+      if (i > 0) {
+        const rien = document.createElement("option");
+        rien.value = "";
+        rien.textContent = "— rien —";
+        liste.append(rien);
+      }
+      portes.forEach(cle => {
+        const option = document.createElement("option");
+        option.value = cle;
+        option.textContent = nomPourLEleve(cle);
+        option.disabled = b.liste.slice(0, i).includes(cle);
+        liste.append(option);
+      });
+      liste.value = b.liste[i] || "";
+      // Après « — rien — » ou après Mes cours : rien à choisir.
+      liste.disabled = occupe || (i > 0 && (b.liste.length < i || b.liste[i - 1] === "cours"));
+    });
+    // Ce que voient les élèves.
+    const voulue = b.mode === "liste" && b.liste.length ? b.liste : auto;
+    const apercu = $("jour-apercu");
+    apercu.textContent = "";
+    if (!voulue.length) apercu.append("Ce que voient les élèves : rien en haut de leur espace (aucune activité ouverte).");
+    else {
+      apercu.append("Ce que voient les élèves : ");
+      voulue.forEach((cle, i) => {
+        if (i) apercu.append(" → ");
+        const nom = document.createElement("b");
+        nom.textContent = nomPourLEleve(cle);
+        apercu.append(nom);
+      });
+      apercu.append(voulue[voulue.length - 1] === "cours" ? " (Mes cours reste jusqu’au soir)." : ", puis « C’est fait ! ».");
+    }
+    ["jour-auto", "jour-liste", "jour-enregistrer"].forEach(id => { $(id).disabled = occupe; });
+  }
+
+  // Une liste déroulante changée : la suite se recolle derrière (sans
+  // doublon) ; « — rien — » ou Mes cours ferment la liste à cet endroit.
+  function choisirEtapeDuJour(i, valeur) {
+    const b = jourBrouillon;
+    if (!b || reglageEnCours) return;
+    const ancienne = b.liste.slice();
+    let liste = ancienne.slice(0, i);
+    if (valeur) {
+      liste.push(valeur);
+      if (valeur !== "cours") liste = liste.concat(ancienne.slice(i + 1).filter(cle => cle !== valeur));
+    }
+    b.liste = listeDuJourPropre(liste, portesDuJour());
+    messager("message-jour", "", "");
+    dessinerJourClasse();
+  }
+
+  function choisirModeDuJour(mode) {
+    const b = jourBrouillon;
+    if (!b || reglageEnCours) return;
+    b.mode = mode;
+    if (mode === "liste" && !b.liste.length) b.liste = jourAutomatique(portesDuJour());
+    messager("message-jour", "", "");
+    dessinerJourClasse();
+  }
+
+  function texteJourEnregistre(libelle, liste) {
+    if (!liste.length) {
+      const auto = jourAutomatique(portesDuJour());
+      return `Enregistré : la ${libelle} est en automatique${auto.length ? ` (${auto.map(nomPourLEleve).join(", puis ")})` : ""}.`;
+    }
+    const noms = liste.map(nomPourLEleve).join(", puis ");
+    return `Enregistré : les élèves de la ${libelle} voient ${noms}${/[.!?]$/.test(noms) ? "" : "."}`;
+  }
+
+  async function enregistrerJour() {
+    if (!classe || droitClasse !== "proprietaire" || !jourBrouillon || jourBrouillon.classeId !== classe.id) return;
+    if (reglageEnCours) { messager("message-jour", "Un autre enregistrement est en route : réessaie dans un instant.", "info"); return; }
+    const b = jourBrouillon;
+    const voulue = b.mode === "liste" ? b.liste.slice() : [];
+    const classeId = classe.id;
+    const libelle = classe.libelle;
+    if (memeListe(voulue, b.depart)) { messager("message-jour", "Rien n’a changé : c’est déjà ce que voient les élèves.", "info"); return; }
+    const session = generation;
+    const encoreLa = () => generation === session && Boolean(jeton);
+    const memeClasse = () => Boolean(classe) && classe.id === classeId;
+    reglageEnCours = true;
+    dessinerJourClasse();
+    messager("message-jour", "Enregistrement…", "info");
+    try {
+      let reponse = null;
+      let erreur = null;
+      try {
+        reponse = await appelBorne("classes.modifier", {classe_id: classeId, jour: voulue, avant: {jour: b.depart.slice()}});
+      } catch (e) {
+        erreur = e;
+      }
+      if (!encoreLa()) return;
+      if (erreur && erreur.statut === 401) { surErreur(erreur, "message-jour"); return; }
+      if (!memeClasse()) return;
+      if (!erreur) {
+        classe.jour = reponse && Array.isArray(reponse.jour) ? reponse.jour.filter(cle => typeof cle === "string") : voulue;
+        reglageEnCours = false;
+        poserJourClasse(true);
+        messager("message-jour", texteJourEnregistre(libelle, classe.jour), "ok");
+        return;
+      }
+      if (erreur.statut === 409) {
+        poserEtatDeClasse(erreur.donnees);
+        reglageEnCours = false;
+        poserJourClasse(true);
+        messager("message-jour", `La ${libelle} a été changée ailleurs : la carte montre l’état actuel, refais ton choix.`, "erreur");
+        return;
+      }
+      if (erreur.statut) {
+        messager("message-jour", erreur.message, "erreur");
+        return;
+      }
+      // Sans réponse : on relit la classe pour savoir ce qui est en place.
+      const relu = await relireBornee(classeId);
+      if (!encoreLa() || !memeClasse()) return;
+      reglageEnCours = false;
+      if (relu && memeListe(jourDeLaClasse(), voulue)) {
+        poserJourClasse(true);
+        messager("message-jour", texteJourEnregistre(libelle, voulue), "ok");
+      } else if (relu) {
+        poserJourClasse(true);
+        messager("message-jour", "Pas enregistré : le serveur ne répond pas. La carte montre ce qui est en place : réessaie.", "erreur");
+      } else {
+        messager("message-jour", `Peut-être enregistré (le serveur n’a pas répondu). ${SANS_VERIFICATION}`, "erreur");
+      }
+    } finally {
+      if (encoreLa()) {
+        reglageEnCours = false;
+        dessinerJourClasse();
+      }
+    }
   }
 
   // ------------------------------------------- « Régler … » (serveur pro, lot 5b)
@@ -4437,6 +4689,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!classe || !donnees) return;
     if (Array.isArray(donnees.applis)) classe.applis = donnees.applis.filter(cle => typeof cle === "string");
     if (donnees.reglages && typeof donnees.reglages === "object" && !Array.isArray(donnees.reglages)) classe.reglages = donnees.reglages;
+    // Lot B2 : la liste du jour vraie, qui part avec un 409.
+    if (Array.isArray(donnees.jour)) classe.jour = donnees.jour.filter(cle => typeof cle === "string");
   }
 
   // Un 409 d'un élève porte ses ajouts vrais (et ce qu'il voit) : posés sur
@@ -8049,6 +8303,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     $("onglet-classe").setAttribute("aria-pressed", String(vue === "classe"));
     $("vue-eleves").hidden = vue !== "eleves";
     $("vue-reglages").hidden = vue !== "reglages";
+    // Lot B2 : la carte suit la classe relue (un autre onglet, une appli
+    // fermée) ; le brouillon reste tant que la liste rangée n'a pas changé.
+    if (vue === "reglages" && classe) poserJourClasse(false);
     $("onglet-eleves").setAttribute("aria-pressed", String(vue === "eleves"));
     $("onglet-reglages").setAttribute("aria-pressed", String(vue === "reglages"));
     garderPopEleves();
@@ -8066,6 +8323,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     $("nom-classe").value = classe.libelle;
     messager("message-nom", "", "");
     messager("message-supprimer", "", "");
+    poserJourClasse(true);
     poserAppli();
   }
 
@@ -11335,6 +11593,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     fermerPopEleves();
   });
   $("onglet-reglages").addEventListener("click", ouvrirReglages);
+  // Lot B2 : la carte « Aujourd'hui, dans Mon espace ».
+  $("jour-auto").addEventListener("change", () => choisirModeDuJour("auto"));
+  $("jour-liste").addEventListener("change", () => choisirModeDuJour("liste"));
+  [1, 2, 3].forEach(n => $(`jour-${n}`).addEventListener("change", evenement => choisirEtapeDuJour(n - 1, evenement.target.value)));
+  $("jour-enregistrer").addEventListener("click", enregistrerJour);
   // Renommer la classe (lot « Ma classe : réglages ») : classes.modifier avec
   // le seul nom — les activités et leurs réglages ne bougent pas. Le serveur
   // nettoie le nom (espaces, caractères de commande, 40 au plus) ; on affiche

@@ -101,7 +101,8 @@ test("b) la copie : prénom, classe, tuiles dans l'ordre, jauges — ni billet, 
   assert.ok(brut, "la copie est gardée dans le sessionStorage de l'onglet");
   assert.ok(!brut.includes("bbbbbbbb") && !/"billet"|"reglages"|"mondes"/.test(brut), "ni le billet (usage unique), ni les réglages");
   const copie = JSON.parse(brut);
-  assert.deepEqual(Object.keys(copie), ["code", "prenom", "classe", "applis", "jauges", "haut"]);
+  // Lot B2 : et la liste du jour de la classe (des clés d'applis, rien de l'élève).
+  assert.deepEqual(Object.keys(copie), ["code", "prenom", "classe", "applis", "jauges", "haut", "jour"]);
   assert.deepEqual(copie.applis.map(a => a.cle), ["defi-tables", "splat"], "les tuiles ouvertes seulement, dans l'ordre du serveur");
   assert.equal(r.lireCopie("ABC234").prenom, "Rania");
   assert.equal(r.lireCopie("XYZ789"), null, "la copie d'un autre code ne sert pas");
