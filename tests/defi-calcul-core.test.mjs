@@ -84,17 +84,19 @@ function resoudre(texte) {
     return versNombre(BigInt(r[1]) * millioniemes(r[3]) / BigInt(r[2]));
   }
   if (/\/□/.test(m) && /^[\d +−=□/,]+$/.test(m)) {
-    const cote = (t, x) => Function(`return (${t.replace(/,/g, ".").replace(/−/g, "-").replace(/□/g, `(${x})`)});`)();
-    const [g, d] = m.split("=");
+    // Chaque côté est compilé UNE fois, puis essayé pour x = 1 … 1000 (lot « vérifications
+    // plus rapides », 21/11/2026 : le recompiler à chaque essai prenait 44 % du fichier).
+    const cote = t => Function("x", `return (${t.replace(/,/g, ".").replace(/−/g, "-").replace(/□/g, "(x)")});`);
+    const [g, d] = m.split("=").map(cote);
     const bons = [];
-    for (let x = 1; x <= 1000; x += 1) if (Math.abs(cote(g, x) - cote(d, x)) < 1e-9) bons.push(x);
+    for (let x = 1; x <= 1000; x += 1) if (Math.abs(g(x) - d(x)) < 1e-9) bons.push(x);
     assert.equal(bons.length, 1, `${texte} : une seule réponse`);
     return bons[0];
   }
   if (/^[\d ×÷+−()=□,/]+$/.test(m) && (m.match(/=/g) || []).length === 1) {
-    const cote = (t, x) => Function(`return (${t.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/□/g, `(${x})`)});`)();
-    const [g, d] = m.split("=");
-    const ecart = x => cote(g, x) - cote(d, x);
+    const cote = t => Function("x", `return (${t.replace(/,/g, ".").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/□/g, "(x)")});`);
+    const [g, d] = m.split("=").map(cote);
+    const ecart = x => g(x) - d(x);
     const pente = ecart(1) - ecart(0);
     if (pente !== 0) return Math.round(-ecart(0) / pente * 1e6) / 1e6;
   }

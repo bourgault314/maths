@@ -1,6 +1,7 @@
 // Exerciseur de conversions (outils/conversions/conversions_exerciseur.html), lot 1 « l'urgent » (21/11/2026) :
 // calcul exact, tableau qui ne perd plus de chiffres, restes positifs, partages justes, « L ↔ m³ » avec des litres,
 // ordres de grandeur sans doublon ni faux vrai/faux, français, valeurs vraisemblables, tirage d'une série.
+// Lot 2 (21/11/2026) : le lien de partage (« ?cases=…&niveaux=…&questions=…&serie=… ») et l'écran d'ordinateur.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -11,8 +12,8 @@ const html = readFileSync(new URL("../outils/conversions/conversions_exerciseur.
 const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
-  const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles };`, ctx);
+  const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -235,5 +236,82 @@ test("au téléphone : au plus 12 cases, et aucun chiffre perdu (colonnes utiles
 
 test("et un pirate ? le code série recopié dans la fiche n'emporte aucun caractère de balise", () => {
   assert.match(script, /seedInputElem\.value\.trim\(\)\.toUpperCase\(\)\.replace\(\/\[<>&"'`\]\/g, ''\)/);
-  assert.doesNotMatch(script, /new URLSearchParams|location\.(search|hash)/, "la page ne lit rien dans l'adresse");
+});
+
+// ---- lot 2 : le lien de partage ----
+const corps = (nom) => {
+  const debut = script.indexOf(`function ${nom}(`);
+  assert.ok(debut >= 0, nom);
+  const suite = script.slice(debut + 10).search(/\n    (function |\/\/ |const |if \()/);
+  return script.slice(debut, debut + 10 + suite);
+};
+
+test("le lien : lu, réécrit, et la même série que le menu (10 séries au hasard)", () => {
+  const r = P.lireLien("?cases=longueurs,volumes,soustractions&niveaux=1,2&questions=10&serie=K7PM");
+  assert.deepEqual(JSON.parse(JSON.stringify(r)), { cases: ["length", "volM3", "prob_sub"], niveaux: [1, 2], questions: 10, serie: "K7PM" });
+  assert.equal(P.ecrireLien(r), "?cases=longueurs,volumes,soustractions&niveaux=1,2&questions=10&serie=K7PM");
+  // l'ordre des cases du lien est celui du menu (le tirage dépend de cet ordre)
+  const menu = [...html.matchAll(/<input type="checkbox" value="([a-zA-Z_0-9]+)">/g)].map((m) => m[1]);
+  assert.deepEqual(Object.keys(P.CASES_LIEN), menu, "une case par ligne du menu, dans le même ordre");
+  assert.equal(new Set(Object.values(P.CASES_LIEN)).size, menu.length);
+  for (const nom of Object.values(P.CASES_LIEN)) assert.match(nom, /^[a-z0-9-]+$/);
+  const toutes = Object.keys(P.CASES_LIEN);
+  let graine = 7;
+  const hasard = (n) => { graine = (graine * 1103515245 + 12345) % 2147483648; return graine % n; };
+  for (let k = 0; k < 10; k++) {
+    const cases = toutes.filter(() => hasard(3) === 0);
+    if (!cases.length) cases.push(toutes[hasard(toutes.length)]);
+    const niveaux = [1, 2, 3].filter(() => hasard(2) === 0);
+    if (!niveaux.length) niveaux.push(1 + hasard(3));
+    const questions = [5, 10, 15, 20][hasard(4)];
+    const serie = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".split("").filter(() => hasard(8) === 0).slice(0, 4).join("") || "Z9";
+    const lu = P.lireLien(P.ecrireLien({ cases, niveaux, questions, serie }));
+    assert.deepEqual([...lu.cases], cases); assert.deepEqual([...lu.niveaux], niveaux);
+    assert.equal(lu.questions, questions); assert.equal(lu.serie, serie);
+    const a = P.tirerSerie(cases, niveaux, questions, serie), b = P.tirerSerie([...lu.cases], [...lu.niveaux], lu.questions, lu.serie);
+    assert.deepEqual(b.map((q) => q.textId), a.map((q) => q.textId), `série ${serie}`);
+  }
+});
+
+test("et un pirate ? l'adresse : seules les valeurs connues passent, rien n'entre en HTML", () => {
+  const piegees = [
+    "?cases=<img src=x onerror=alert(1)>&serie=<script>",
+    "?cases=longueurs\"><script>alert(1)</script>",
+    "?cases=__proto__,constructor,toString,length,prob_add",
+    "?cases=&niveaux=1&questions=10",
+    "?serie=ABC",
+    "",
+  ];
+  for (const a of piegees) assert.equal(P.lireLien(a), null, a.slice(0, 60));
+  // une adresse énorme : lue sur 2 000 caractères au plus, sans doublon
+  const t0 = Date.now();
+  assert.deepEqual([...P.lireLien("?cases=" + "longueurs,".repeat(100000) + "aires").cases], ["length"]);
+  assert.ok(Date.now() - t0 < 200);
+  const r = P.lireLien("?cases=longueurs,longueurs,inconnu,AIRES,aires&niveaux=0,1,4,1,-2,99999999999999999999&questions=1e9&serie=AB\"><x");
+  assert.deepEqual([...r.cases], ["length", "area"]);
+  assert.deepEqual([...r.niveaux], [1]);
+  assert.equal(r.questions, null, "seulement 5, 10, 15 ou 20");
+  assert.equal(r.serie, "", "lettres et chiffres, 6 au plus");
+  assert.equal(P.lireLien("?cases=masses&serie=abcdefg").serie, "");
+  assert.equal(P.lireLien("?cases=masses&serie=ab12").serie, "AB12");
+  assert.equal(P.lireLien("?cases=masses&questions=07").questions, null);
+  // ce qui vient de l'adresse n'est jamais écrit en HTML : cases cochées, valeurs des champs, message en texte
+  for (const nom of ["lireLien", "ouvrirLien", "copierLien", "montrerMessage"]) assert.doesNotMatch(corps(nom), /innerHTML|outerHTML|insertAdjacentHTML|document\.write/, nom);
+  assert.match(corps("montrerMessage"), /textContent/);
+  assert.match(corps("copierLien"), /champLien\.value = lien/);
+  // le compteur de visites ne garde pas l'adresse complète (seulement le chemin)
+  assert.match(readFileSync(new URL("../assets/js/compteur.js", import.meta.url), "utf8"), /cheminPropre\(window\.location\.pathname\)/);
+});
+
+test("ordinateur : après « Lancer diapo », le diaporama en haut et entier dans la fenêtre ; le menu ne s'élargit pas", () => {
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  const ordi = css.match(/@media screen and \(min-width: 701px\) \{([\s\S]*?)\n    \}/)[1];
+  assert.match(ordi, /\.diapo-container \{ height: calc\(100vh - 16px\); height: calc\(100dvh - 16px\); min-height: 0; scroll-margin-top: 8px; overflow-y: auto; \}/);
+  assert.match(ordi, /\.thumbnails-bar \{ flex-wrap: nowrap; overflow-x: auto;/);
+  assert.match(css, /@media screen and \(min-width: 701px\) and \(max-height: 800px\)/);
+  assert.match(css, /@media screen and \(min-width: 701px\) and \(max-height: 680px\)/);
+  // l'étiquette du haut suit la hauteur réelle de son cadre (resserré sur un petit écran)
+  assert.match(script, /handles\[0\]\.style\.top = `\$\{topPx - \(handles\[0\]\.offsetHeight \|\| 75\) - 14\}px`/);
+  // « Copier le lien » dans la colonne de « Lancer diapo »
+  assert.match(html, /<div class="lancer-col">\s*<button class="btn-main" onclick="generateQuiz\(\)">💻 Lancer diapo<\/button>\s*<button class="btn-lien" id="btnLien" type="button" onclick="copierLien\(\)">🔗 Copier le lien<\/button>\s*<\/div>/);
 });

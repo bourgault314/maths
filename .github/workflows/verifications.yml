@@ -6,8 +6,8 @@
 # en sont volontairement exclus). Si une étape bloquante échoue, la pull
 # request affiche une croix rouge : ne pas fusionner sans comprendre pourquoi.
 #
-# Trois contrôles, trois coches sur la pull request :
-#   - « verifications »     : le site (tests Node, catalogue, référencement…) ;
+# Trois coches exigées par le ruleset de main, sur chaque pull request :
+#   - « verifications »     : le site (contrôles rapides + tests Node) ;
 #   - « serveur (SQLite) »  : les tests de bout en bout du serveur de suivi
 #                             (_serveur/tests/lancer.php) sur une base SQLite jetable ;
 #   - « serveur (MySQL) »   : les mêmes tests sur un vrai MySQL 8, comme en
@@ -18,17 +18,22 @@
 # Les deux coches « serveur » ne sont réclamées que si la pull request touche au
 # serveur (voir le job « changements » ci-dessous). Sur une pull request qui ne
 # change qu'un outil du site, elles sont SAUTÉES : la coche existe, elle est
-# verte, et la fusion reste possible. « verifications », lui, tourne sur chaque
-# pull request.
+# verte, et la fusion reste possible.
 #
-# À l'arrivée sur main (depuis le 06/10/2026, pour tenir dans les minutes
-# incluses de GitHub) :
-#   - les tests du serveur suivent le même tri, sur tout ce que la fusion
-#     apporte à main ;
-#   - « verifications » ne tourne PAS ici : la publication (publier.yml) rejoue
-#     exactement les mêmes contrôles bloquants sur le même commit avant de
-#     mettre le site en ligne, et ne publie rien s'ils échouent.
-# Le dimanche soir et sur « Run workflow » : tout tourne, sans tri.
+# Depuis le lot « vérifications plus rapides » (21/11/2026), une seule batterie
+# complète par fusion :
+#   - sur une pull request, « node --test » ne joue que les fichiers de test qui
+#     concernent les fichiers changés (scripts/tests-cibles.mjs) ; si la pull
+#     request touche l'outillage des tests (ce workflow, package.json…), tout ;
+#   - à l'arrivée sur main, le dimanche et sur « Run workflow » : la batterie
+#     complète, partagée entre quatre machines qui tournent en même temps
+#     (job « batterie ») ;
+#   - la publication (publier.yml) ne rejoue plus rien : elle attend que CE
+#     workflow soit vert sur main, puis met le site en ligne. Ce qu'un ciblage
+#     aurait raté se voit donc avant la mise en ligne, jamais après.
+# Avant ce lot : 15 min par pull request, la batterie rejouée par la publication
+# (12 min de plus après chaque fusion). Le dépôt est public depuis le 21/11/2026 :
+# GitHub prête des machines à quatre processeurs, sans compter les minutes.
 
 name: Vérifications
 
@@ -77,6 +82,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       serveur: ${{ steps.tri.outputs.serveur }}
+      tests_tout: ${{ steps.cibles.outputs.tout }}
+      tests_cibles: ${{ steps.cibles.outputs.cibles }}
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -147,17 +154,33 @@ jobs:
             echo "-> aucune dépendance du serveur n'a bougé : ses tests sont sautés."
           fi
 
-  # Les contrôles du site. Ils tournent sur chaque pull request, chaque
-  # dimanche et à la demande — jamais sautés là.
-  #
-  # À l'arrivée sur main, ils ne tournent PAS ici : l'étape « Vérifications
-  # bloquantes » de publier.yml rejoue les mêmes commandes sur le même commit
-  # avant de publier, et refuse de publier si l'une échoue. Les jouer ici aussi,
-  # c'était les payer deux fois à chaque fusion (≈ 750 minutes sur 30 jours,
-  # mesuré le 06/10/2026). tests/ci-tests-serveur-cibles.test.mjs exige que
-  # chaque contrôle bloquant d'ici figure aussi dans publier.yml.
-  verifications:
-    if: github.event_name != 'push'
+      # Quels fichiers de « node --test » jouer sur cette pull request ? Le
+      # script répond « tout » si elle touche l'outillage des tests, si le calcul
+      # échoue, ou si plus de la moitié des fichiers sont concernés. Hors pull
+      # request, tout : la batterie complète tourne une fois par fusion.
+      - name: Installer Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Choisir les tests de la pull request
+        id: cibles
+        env:
+          EVENEMENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          TETE: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENEMENT" != "pull_request" ]; then
+            echo "tout=true" >> "$GITHUB_OUTPUT"
+            echo "-> événement « $EVENEMENT » : la batterie complète tourne."
+            exit 0
+          fi
+          node scripts/tests-cibles.mjs "$BASE" "$TETE" --github
+
+  # Les contrôles rapides du site (quelques secondes), à chaque passage, et sur
+  # une pull request les tests Node choisis par « changements ».
+  controles:
+    needs: changements
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le dépôt
@@ -167,16 +190,6 @@ jobs:
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
-
-      # Deux fichiers de test à la fois. La machine que GitHub prête à un dépôt
-      # privé n'a que deux processeurs, et « node --test » en garde un de côté
-      # (il lance « processeurs − 1 » fichiers à la fois) : ici, il les passait
-      # UN PAR UN. Sur une machine à deux processeurs, le 06/10/2026 : 255 s
-      # seul, 167 s à deux, 3 689 tests verts dans les deux cas. Sur un
-      # ordinateur plus puissant (celui de Gwenaël, celui de Code), node lance
-      # déjà plusieurs fichiers à la fois : la suite tourne ainsi depuis toujours.
-      - name: Tests unitaires des packages
-        run: node --test --test-concurrency=2
 
       - name: Catalogue (cohérence des ressources)
         run: node scripts/validate-catalogue.mjs
@@ -202,9 +215,70 @@ jobs:
       - name: Moteur d'aimantation Pythagore
         run: node scripts/validate-pythagore-snap-engine.mjs
 
+      # Quatre fichiers à la fois : la machine prêtée à un dépôt public a quatre
+      # processeurs. La liste vient de l'environnement (jamais écrite dans le
+      # script) ; vide, rien ne tourne — « node --test » sans fichier jouerait tout.
+      - name: Tests Node de la pull request
+        if: needs.changements.outputs.tests_tout != 'true'
+        env:
+          CIBLES: ${{ needs.changements.outputs.tests_cibles }}
+        run: |
+          if [ -z "$CIBLES" ]; then echo "aucun fichier de test concerné"; exit 0; fi
+          echo "$CIBLES" | tr ' ' '\n'
+          node --test --test-concurrency=4 $CIBLES
+
       - name: Audit mobile (informatif, ne bloque pas)
         run: node scripts/audit-mobile.mjs
         continue-on-error: true
+
+  # La batterie complète de « node --test », partagée en quatre parts qui
+  # tournent en même temps sur quatre machines (--test-shard). À l'arrivée sur
+  # main, le dimanche, sur « Run workflow », et sur une pull request qui touche
+  # l'outillage des tests.
+  batterie:
+    name: batterie (${{ matrix.part }}/4)
+    needs: changements
+    if: needs.changements.outputs.tests_tout == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4]
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Installer Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Tests Node (une part sur quatre)
+        run: node --test --test-concurrency=4 --test-shard=${{ matrix.part }}/4
+
+  # La coche « verifications », exigée par le ruleset : verte seulement si les
+  # contrôles rapides ET les tests (ciblés ou complets) le sont. Elle tourne
+  # TOUJOURS, sauf passage annulé (if: !cancelled()) : un job sauté compterait
+  # comme réussi, et une batterie rouge laisserait passer la fusion.
+  verifications:
+    needs: [changements, controles, batterie]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bilan des contrôles et des tests
+        env:
+          CHANGEMENTS: ${{ needs.changements.result }}
+          CONTROLES: ${{ needs.controles.result }}
+          BATTERIE: ${{ needs.batterie.result }}
+          TOUT: ${{ needs.changements.outputs.tests_tout }}
+        run: |
+          echo "changements : $CHANGEMENTS ; contrôles : $CONTROLES ; batterie : $BATTERIE (complète : $TOUT)"
+          [ "$CHANGEMENTS" = "success" ] || { echo "le tri a échoué"; exit 1; }
+          [ "$CONTROLES" = "success" ] || { echo "les contrôles rapides ou les tests ciblés ont échoué"; exit 1; }
+          if [ "$TOUT" = "true" ]; then
+            [ "$BATTERIE" = "success" ] || { echo "la batterie complète a échoué"; exit 1; }
+          fi
+          echo "tout est vert"
 
   # Le serveur de suivi : les tests de bout en bout (un vrai serveur PHP est
   # lancé sur une copie de _serveur/public/, puis interrogé comme le ferait
