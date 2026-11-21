@@ -254,24 +254,27 @@ test("donnée abîmée : `ar` borné, la reprise et les arrêts relus, l'échéa
 test("fusion : deux appareils hors ligne, vieille copie, dans les deux sens — les arrêts ne s'oublient pas, un test de palier joué l'est des deux côtés", () => {
   // Le même élève, J'apprends A1-1 arrêté sur le téléphone (1 arrêt, au
   // dessin) et deux fois sur l'ordinateur (sans aide).
+  // (Correctif F4 : la fusion borne le jour de retour à 7 jours après le
+  // jour où elle se fait — ici, le jour du 3e arrêt.)
+  const jour = {aujourdhui: plus(2)};
   const base = P.appliquerTest(sansTestDePalier(ouvrir(P.creerParcours())), {module: "A1", marche: 0, niveaux: [{niveau: 1, justes: 0, total: 2}]}, opts()).parcours;
   const tel = apprendre(base, "A1", 1, [{juste: true, outil: "manip"}, {juste: true, outil: "manip"}, {juste: true, outil: "image"}, {juste: false, outil: "image"}]).parcours;
   let ordi = apprendre(base, "A1", 1, arretee()).parcours;
   ordi = apprendre(ouvrir(ordi, plus(1)), "A1", 1, arretee(), plus(1)).parcours;
-  const f1 = P.fusionner(tel, ordi);
-  const f2 = P.fusionner(ordi, tel);
+  const f1 = P.fusionner(tel, ordi, jour);
+  const f2 = P.fusionner(ordi, tel, jour);
   assert.deepEqual(f1, f2, "l'ordre ne change rien");
   assert.deepEqual([P.arretsDe(f1.modules.A1, 0), P.repriseDe(f1.modules.A1, 0)], [2, 2], "le côté qui a le plus d'arrêts");
   // Le 3e arrêt sur un appareil (à voir en classe) : son jour de retour suit.
   const troisieme = apprendre(ouvrir(ordi, plus(2)), "A1", 1, arretee(), plus(2)).parcours;
-  const f3 = P.fusionner(tel, troisieme);
+  const f3 = P.fusionner(tel, troisieme, jour);
   assert.equal(f3.modules.A1.e[0], plus(9));
   assert.equal(P.aVoirEnClasse(f3.modules.A1, 0), true);
-  assert.deepEqual(P.fusionner(troisieme, tel), f3);
+  assert.deepEqual(P.fusionner(troisieme, tel, jour), f3);
   // Appris d'un côté : plus rien d'arrêté, quelle que soit l'autre copie.
   const appris = apprendre(ouvrir(tel, plus(1)), "A1", 1, Array.from({length: 7}, () => ({juste: true, outil: "aucun"})), plus(1)).parcours;
   assert.equal(appris.modules.A1.b[0], 2);
-  for (const f of [P.fusionner(appris, troisieme), P.fusionner(troisieme, appris)]) {
+  for (const f of [P.fusionner(appris, troisieme, jour), P.fusionner(troisieme, appris, jour)]) {
     assert.equal(f.modules.A1.b[0], 2);
     assert.equal(f.modules.A1.ar[0], 0);
     assert.notEqual(f.modules.A1.e[0], plus(9));
@@ -281,14 +284,14 @@ test("fusion : deux appareils hors ligne, vieille copie, dans les deux sens — 
   delete vieille.paliers;
   Object.values(vieille.modules).forEach(l => delete l.ar);
   vieille.version = 9;
-  const f4 = P.fusionner(vieille, troisieme);
+  const f4 = P.fusionner(vieille, troisieme, jour);
   assert.deepEqual([P.arretsDe(f4.modules.A1, 0), f4.modules.A1.e[0]], [3, plus(9)]);
   assert.deepEqual(f4.paliers, troisieme.paliers);
   // Un test de palier joué d'un côté : joué des deux (le jour le plus ancien).
   const a = Object.assign(P.creerParcours(), {paliers: [plus(-2), null, null, null]});
   const b = Object.assign(P.creerParcours(), {paliers: [plus(-5), plus(-1), null, null]});
-  assert.deepEqual(P.fusionner(a, b).paliers, [plus(-5), plus(-1), null, null]);
-  assert.deepEqual(P.fusionner(b, a).paliers, [plus(-5), plus(-1), null, null]);
+  assert.deepEqual(P.fusionner(a, b, jour).paliers, [plus(-5), plus(-1), null, null]);
+  assert.deepEqual(P.fusionner(b, a, jour).paliers, [plus(-5), plus(-1), null, null]);
 });
 
 test("le serveur : `ar` et `paliers` déclarés, version_min 10 ; la copie du moteur pour la page prof est identique", async () => {

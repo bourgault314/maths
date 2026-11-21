@@ -360,7 +360,7 @@ test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis r
   const i = {juste: true, outil: "image"};
   const a = {juste: true, outil: "aucun"};
   const faux = outil => ({juste: false, outil});
-  assert.deepEqual(s([]), {outil: "manip", reussi: false, fini: false, arrete: false, justes: 0, total: 0, justesDeSuite: 0, objectif: 5, reprise: 1});
+  assert.deepEqual(s([]), {outil: "manip", reussi: false, fini: false, arrete: false, justes: 0, total: 0, justesDeSuite: 0, sur: 0, objectif: 5, reprise: 1}); // (correctif F4 : `sur`)
   assert.equal(s([m]).outil, "manip");
   assert.equal(s([m, m]).outil, "image", "2 justes avec les perles : l'image");
   assert.equal(s([m, m, i]).outil, "image");

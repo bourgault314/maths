@@ -234,6 +234,15 @@ try {
             erreur("Page ancienne : recharge la page.", 400);
         }
     }
+    // Correctif F4 de Défi calcul (21/11/2026) : la version la plus haute,
+    // quand l'appli en déclare une (« version_max ») — au-delà, refusé.
+    $versionMax = CATALOGUE_APPLIS[$appli]['version_max'] ?? null;
+    if (is_int($versionMax)) {
+        $version = $parcoursBrut->version ?? null;
+        if (!is_int($version) || $version > $versionMax) {
+            erreur("Progression invalide.", 400);
+        }
+    }
 
     $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base);
     if (isset($resultat['conflit'])) {

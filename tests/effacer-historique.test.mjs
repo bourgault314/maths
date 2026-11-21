@@ -54,7 +54,7 @@ test("Anzan : seul le visiteur sans code efface, et seulement la case « sans co
 });
 
 test("Défi calcul : ni élève à code, ni élève qui arrive de son espace, ni mode professeur", () => {
-  assert.match(corps(CALCUL, "peutEffacer"), /return !MODE_PROF && !suiviActif\(\) && !ENTREE\.billet && !entreeRefusee;/);
+  assert.match(corps(CALCUL, "peutEffacer"), /return !MODE_PROF && !suiviActif\(\) && !ENTREE\.billet && !entreeRefusee && !pageAncienne;/ /* correctif F4 : pas en lecture seule */);
   const effacer = corps(CALCUL, "effacerHistorique");
   assert.match(effacer, /^function effacerHistorique\(\) \{\s*\n\s*if \(!peutEffacer\(\)\) return;/);
   assert.match(effacer, /PARCOURS\.effacer\(storage\(\), ""\);\s*\n\s*parcours = caseSansCode\(\);/);

@@ -36,7 +36,28 @@ function regles_progression(string $appli): array
         'cles' => array_fill_keys($definition['cles'] ?? [], true),
         'mots' => array_fill_keys($definition['mots'] ?? [], true),
         'motifs' => $definition['motifs'] ?? [],
+        'listes' => $definition['listes'] ?? [],
     ];
+}
+
+// Correctif F4 de Défi calcul (21/11/2026, relecture de Codex) : une liste
+// dont l'appli déclare la forme (lib/applis.php, « listes ») garde sa
+// longueur — chaque valeur hors format est REMPLACÉE à sa place (null pour
+// une date, le minimum pour un entier), jamais retirée : retirée, les
+// suivantes glissaient d'une case. Formes : ['date'] (une vraie date ou
+// null) ; ['entier', min, max].
+function valeur_de_liste(mixed $valeur, array $forme): mixed
+{
+    if (($forme[0] ?? '') === 'date') {
+        return is_string($valeur) && date_reelle($valeur) ? $valeur : null;
+    }
+    if (($forme[0] ?? '') === 'entier') {
+        $min = (int)($forme[1] ?? 0);
+        $max = (int)($forme[2] ?? PROGRESSION_ENTIER_MAX);
+        if (is_float($valeur) && floor($valeur) === $valeur) $valeur = (int)$valeur;
+        return is_int($valeur) && $valeur >= $min && $valeur <= $max ? $valeur : $min;
+    }
+    return null;
 }
 
 // Une VRAIE date « AAAA-MM-JJ ».
@@ -104,6 +125,11 @@ function valeur_progression_acceptee(mixed $valeur, array $regles, int $profonde
             $cle = (string)$cle;
             if (!cle_progression_acceptee($cle, $regles)) continue;
             if (++$compte > PROGRESSION_CLES_MAX) break;
+            if (isset($regles['listes'][$cle]) && is_array($element)) {
+                $forme = $regles['listes'][$cle];
+                $objet->{$cle} = array_map(fn($v) => valeur_de_liste($v, $forme), array_slice($element, 0, PROGRESSION_LISTE_MAX));
+                continue;
+            }
             $ok = true;
             $propre = valeur_progression_acceptee($element, $regles, $profondeur + 1, $compte, $ok);
             if ($ok) $objet->{$cle} = $propre;

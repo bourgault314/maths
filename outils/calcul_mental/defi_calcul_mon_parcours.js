@@ -639,8 +639,15 @@
       l: listeDe(k), d: listeDe(k, null), s: listeDe(k, null), ar: listeDe(k), c: {}};
   }
 
-  // Lot F4 : lire et écrire `ar`.
+  // Lot F4 : lire et écrire `ar`. Correctif F4 (point 9) : au-delà du 9e
+  // arrêt, le compte tourne (10 → 7, 11 → 8, 12 → 9) au lieu de rester à 9 :
+  // la semaine d'attente revient tous les 3 arrêts (12e, 15e…), pas à chaque
+  // arrêt. Il ne dépasse donc jamais 9 (`ar` : 29 au plus).
   const ARRETS_MAX = 9;
+  function arretSuivant(arrets) {
+    const suivant = arrets + 1;
+    return suivant > ARRETS_MAX ? suivant - SEUILS.apprends.arrets : suivant;
+  }
   const arretsDe = (ligne, index) => Math.floor(ligne.ar[index] / 3);
   const repriseDe = (ligne, index) => ligne.ar[index] % 3;
   function poserArret(ligne, index, arrets, reprise) {
@@ -676,7 +683,20 @@
     return Array.from({length: nombre}, (_, index) => entier(liste[index], 0, maximum));
   }
 
-  function normaliserModule(id, brut) {
+  // Correctif F4 (21/11/2026, relecture de Codex, point 6) : le jour de
+  // retour d'un niveau « à voir en classe » n'est gardé que s'il tombe au
+  // plus tard dans 7 jours (`aujourdhui` : le jour de la relecture) ; plus
+  // loin (une horloge fausse, une progression trafiquée), il est ramené à
+  // aujourd'hui + 7. Un jour passé reste passé : l'attente est finie, elle
+  // n'est jamais repoussée.
+  function retourBorne(jour, aujourdhui) {
+    const date = dateOuNull(jour);
+    if (!date) return null;
+    const plusTard = ajouterJours(dateOuNull(aujourdhui) || jourLocal(), SEUILS.apprends.joursDeCote);
+    return date > plusTard ? plusTard : date;
+  }
+
+  function normaliserModule(id, brut, aujourdhui = jourLocal()) {
     const k = NIVEAUX[id];
     const ligne = moduleVide(id);
     if (!brut || typeof brut !== "object") return ligne;
@@ -706,7 +726,7 @@
         ligne.x[i] = 0; ligne.t[i] = 0; ligne.l[i] = 0;
         // Lot F4 : un niveau « à voir en classe » (3 arrêts) a son jour de
         // retour ; tous les autres, rien.
-        ligne.e[i] = arretsDe(ligne, i) >= SEUILS.apprends.arrets ? dateOuNull(echeances[i]) : null;
+        ligne.e[i] = arretsDe(ligne, i) >= SEUILS.apprends.arrets ? retourBorne(echeances[i], aujourdhui) : null;
       }
     }
     if (brut.c && typeof brut.c === "object" && !Array.isArray(brut.c)) {
@@ -812,18 +832,33 @@
     return copie;
   }
 
-  function normaliserParcours(brut) {
+  // Correctif F4 (point 7) : la version relue. Le serveur n'accepte que 1 à
+  // 999 ; une version PLUS RÉCENTE que celle de ce moteur (une page plus
+  // neuve, ou une donnée trafiquée : 1500) n'est jamais relue comme une
+  // version ancienne — ni reprise de F6 et F9, ni plan refermé : elle se
+  // relit comme la nôtre (et l'appareil reste en lecture seule, voir
+  // versionEnAvance).
+  function versionLue(brut) {
+    const version = Number(brut && brut.version);
+    if (Number.isInteger(version) && version > VERSION) return VERSION;
+    return entier(version, 0, 999);
+  }
+
+  // `aujourdhui` : le jour de la relecture (le jour de retour d'un niveau « à
+  // voir en classe » est borné à 7 jours après lui).
+  function normaliserParcours(brut, {aujourdhui = jourLocal()} = {}) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object") return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
-    const avantV3 = entier(brut.version, 0, 999) < 3;
-    const avantV9 = entier(brut.version, 0, 999) < 9;
+    const lue = versionLue(brut);
+    const avantV3 = lue < 3;
+    const avantV9 = lue < 9;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
         const ligne = avantV3 ? reprendreV2(id, brut.modules[id]) : brut.modules[id];
-        parcours.modules[id] = normaliserModule(id, avantV9 ? reprendreV8(id, ligne) : ligne);
+        parcours.modules[id] = normaliserModule(id, avantV9 ? reprendreV8(id, ligne) : ligne, aujourdhui);
       });
     }
     const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
@@ -834,12 +869,12 @@
     // mais sa séance en cours est refermée (elle se rouvre sur un plan neuf).
     // Une séance de version 3 continue en version 4 (lot F1) : son plan à 5
     // nombres se relit 0, 0 (une nouveauté, comme avant).
-    const ancienne = entier(brut.version, 0, 999) < 3;
+    const ancienne = lue < 3;
     parcours.seance = {
       jour: ancienne ? null : dateOuNull(seance.jour),
       etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: ancienne ? planVide() : normaliserPlan(avantV9 ? planDepuisV8(seance.p) : seance.p, entier(brut.version, 0, 999)),
+      p: ancienne ? planVide() : normaliserPlan(avantV9 ? planDepuisV8(seance.p) : seance.p, lue),
       j: enCoursVide()
     };
     // Ce que la séance ouverte a fait (lot G1) : rien quand elle n'est pas
@@ -1344,8 +1379,25 @@
     if (parcours.paliers && parcours.paliers[palier - 1]) return 0;
     const liste = competencesDuPalier(parcours, carte, palier);
     if (liste.length < SEUILS.palier.calculs) return 0;
-    const commence = liste.some(c => c.ligne.b[c.niveau - 1] || c.ligne.f[c.niveau - 1] || c.ligne.a[c.niveau - 1] || c.ligne.ar[c.niveau - 1]);
-    return commence ? 0 : palier;
+    return palierCommence(parcours, carte, palier) ? 0 : palier;
+  }
+
+  // Un palier est commencé dès qu'une de ses compétences construites est
+  // entrée, jouée, apprise ou arrêtée.
+  function palierCommence(parcours, carte, palier) {
+    return competencesDuPalier(parcours, carte, palier)
+      .some(c => c.ligne.b[c.niveau - 1] || c.ligne.f[c.niveau - 1] || c.ligne.a[c.niveau - 1] || c.ligne.ar[c.niveau - 1]);
+  }
+
+  // Correctif F4 (point 8) : le test de palier de la compétence courante a
+  // été joué (et raté) AUJOURD'HUI, et rien n'a encore été joué dans le
+  // palier — l'étape qui le suit (le test du premier module) est garantie :
+  // la séance ne finit pas sur lui. Dès ce test joué, le palier est
+  // commencé et la règle ordinaire reprend (le J'apprends qui suit un test
+  // raté est garanti, lui aussi).
+  function apresPalierRate(parcours, carte, courante, aujourdhui) {
+    const palier = palierDe(carte, courante.module, courante.niveau);
+    return Boolean(palier) && Boolean(parcours.paliers) && parcours.paliers[palier - 1] === aujourdhui && !palierCommence(parcours, carte, palier);
   }
 
   // Le test de palier joué. `test` : {palier, justes, total}. Réussi (tous
@@ -1355,19 +1407,34 @@
   // jour) ; les ceintures suivent. Raté : rien ne bouge, le test est noté
   // joué (il ne revient pas). Dans la séance : un test de plus.
   function appliquerTestPalier(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier: reglage = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours);
+    const avant = normaliserParcours(parcours, {aujourdhui});
     const copie = cloner(avant);
     const palier = entier(test && test.palier, 0, SEUILS.seance.paliers);
     if (!palier || !carte) return {parcours: copie, reussi: false, entrees: 0, finie: false, ceintures: []};
     const attendus = calculsDuTestDePalier(carte, palier).length;
     const total = entier(test.total, 0, 99);
     const justes = Math.min(total, entier(test.justes, 0, 99));
-    const reussi = attendus > 0 && total >= attendus && total - justes <= SEUILS.palier.fauxPermis;
+    // Correctif F4 (point 1, relecture de Codex) : à la remise, tout ce que
+    // vérifiait la proposition est revérifié — le palier n'a pas déjà été
+    // joué (une autre copie synchronisée pendant le test), rien n'y est
+    // commencé, et il est dans le réglage du professeur. Sinon, rien n'entre
+    // (et rien n'est noté) ; dans la séance, l'étape compte comme jouée.
+    const permis = !avant.paliers[palier - 1] && palier <= palierDeSeance(reglage) && !palierCommence(avant, carte, palier);
+    const reussi = permis && attendus > 0 && total >= attendus && total - justes <= SEUILS.palier.fauxPermis;
     noterJour(copie, aujourdhui);
-    if (!copie.paliers[palier - 1]) copie.paliers[palier - 1] = aujourdhui;
+    if (permis) copie.paliers[palier - 1] = aujourdhui;
     let entrees = 0;
     if (reussi) {
+      // Correctif F4 (point 2) : un module qui a un niveau « à voir en
+      // classe » encore en attente ne bouge pas à partir de ce niveau — ni
+      // lui, ni la suite du module (on n'apprend pas le niveau 2 sans le 1).
+      const attend = id => {
+        const ligne = ligneDe(copie, id);
+        const i = ligne.b.findIndex((_, index) => enAttente(ligne, index, aujourdhui));
+        return i < 0 ? Infinity : i;
+      };
       competencesDuPalier(copie, carte, palier).forEach(({module: id, niveau}, rang) => {
+        if (niveau - 1 >= attend(id)) return;
         const ligne = ligneDe(copie, id);
         poserLigne(copie, id, ligne);
         toucher(ligne, aujourdhui);
@@ -1471,6 +1538,9 @@
         // d'un début de J'apprends (le J'apprends d'après un test raté, lui,
         // est garanti, et s'arrête au bout du temps).
         duree = SEUILS.seance.durees.test + SEUILS.seance.durees.apresTest;
+        // Correctif F4 (point 8) : le test qui suit un test de palier raté
+        // aujourd'hui est garanti, comme le J'apprends qui suit un test raté.
+        if (apresPalierRate(parcours, carte, courante, aujourdhui)) garanti = true;
       } else {
         // Lot 2 : J'apprends en une étape (on montre, puis l'élève fait).
         // Lot F4 : il reprend où il s'était arrêté (`depart`), et celui qui
@@ -1554,7 +1624,7 @@
   // passé pendant une étape quittée au milieu) se ferme et compte. Rien
   // d'autre ne change.
   function fermerSeance(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
-    const copie = normaliserParcours(parcours);
+    const copie = normaliserParcours(parcours, {aujourdhui});
     if (!fileSeance(copie, carte, {aujourdhui, palier}).aFermer) return {parcours: copie, fermee: false};
     fermer(copie, aujourdhui);
     return {parcours: copie, fermee: true};
@@ -1646,16 +1716,20 @@
       // erreur comme une autre.
       if (reponse.juste && reponse.rappel) return;
       if (encore) {
+        // Correctif F4 (point 11) : comme avant le lot F4 — deux erreurs de
+        // suite rendent l'outil à manipuler (s'il y en a un), qui laisse sa
+        // place au dessin dès un juste.
         if (reponse.juste) {
           erreursDeSuite = 0;
           if (reponse.outil === "aucun") justesSansOutil += 1;
           else { justesAvecOutil += 1; justesSansOutil = 0; }
-          if (outil === "image" && justesAvecOutil >= avecOutil) { outil = "aucun"; justesAvecOutil = 0; }
+          if (outil === "manip") outil = "image";
+          else if (outil === "image" && justesAvecOutil >= avecOutil) { outil = "aucun"; justesAvecOutil = 0; }
         } else {
           erreursDeSuite += 1;
           justesAvecOutil = 0;
           justesSansOutil = 0;
-          outil = "image";
+          outil = erreursDeSuite >= erreurs && manip ? "manip" : "image";
         }
         return;
       }
@@ -1697,7 +1771,11 @@
     return {
       outil, reussi, fini: reussi || arrete, arrete,
       justes: liste.filter(r => r.juste).length, total: liste.length,
-      justesDeSuite, objectif: sansOutil,
+      // Correctif F4 (point 13) : `sur`, combien de calculs sans aide la
+      // fenêtre compte (6 au plus) — le compteur dit « 4 justes sur 5 » des 5
+      // derniers, jamais « 6 justes sur 5 ». (Je m'entraîne encore : les
+      // justes de suite.)
+      justesDeSuite, sur: encore ? justesSansOutil : fenetre.length, objectif: sansOutil,
       // Où reprend un J'apprends arrêté (lot F4).
       reprise: seulAtteint && (outil === "aucun" || rappelDessin) ? REPRISE.seul : REPRISE.dessin
     };
@@ -1739,7 +1817,7 @@
   //    calculs du jour qui jugent).
   // Une erreur ne fait JAMAIS descendre ici.
   function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours);
+    const avant = normaliserParcours(parcours, {aujourdhui});
     const copie = cloner(avant);
     const id = serie && serie.module;
     const evenements = [];
@@ -1753,7 +1831,15 @@
     // Lot F4 : un J'apprends arrêté reprend là où il en était (le moteur le
     // sait : `ar`, jamais la page).
     const depart = genre === "apprends" && !ligne.b[n - 1] ? repriseDe(ligne, n - 1) : 0;
-    const suivi = suivreEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre, depart});
+    // Correctif F4 (point 3, relecture de Codex) : les règles de l'écran —
+    // le niveau a-t-il un outil à manipuler (`manip`), toutes ses formes
+    // ont-elles été vues (`toutesFormesVues`), le temps de la séance est-il
+    // passé (`tempsFini`). Le résultat est calculé ici, une fois, avec elles :
+    // la page montre ce que le moteur enregistre (un niveau n'est jamais
+    // appris à la fin du temps tant qu'une forme reste à voir). Absentes (le
+    // simulateur, les anciens appels) : comme avant.
+    const suivi = suivreEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre, depart,
+      manip: serie.manip !== false, toutesFormesVues: serie.toutesFormesVues !== false, tempsFini: serie.tempsFini === true});
     const verdict = {justes: suivi.justes, total: suivi.total, reussi: suivi.reussi};
     ligne.f[n - 1] = Math.min(SEUILS.compteur, ligne.f[n - 1] + 1);
     ajouterCauses(ligne, serie.causes);
@@ -1788,7 +1874,7 @@
     // est ; au 3e arrêt sur ce niveau, « à voir en classe » : il attend 7
     // jours, l'élève passe à la suite.
     if (genre === "apprends" && nouvelle && !verdict.reussi && suivi.total) {
-      const arrets = Math.min(ARRETS_MAX, arretsDe(ligne, n - 1) + 1);
+      const arrets = arretSuivant(arretsDe(ligne, n - 1));
       poserArret(ligne, n - 1, arrets, suivi.reprise);
       const deCote = arrets % SEUILS.apprends.arrets === 0;
       if (deCote) ligne.e[n - 1] = ajouterJours(aujourdhui, SEUILS.apprends.joursDeCote);
@@ -1821,7 +1907,7 @@
   // test ne fait qu'entrer : il ne descend rien, ne touche pas une
   // compétence déjà entrée.
   function appliquerTest(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours);
+    const avant = normaliserParcours(parcours, {aujourdhui});
     const copie = cloner(avant);
     const id = test && test.module;
     if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, bilan: [], tout: false, marche: 0, finie: false};
@@ -1900,7 +1986,7 @@
   // Une compétence ne monte pas deux fois le même jour : montée ou descendue,
   // elle n'est plus due aujourd'hui.
   function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), deuxieme = false} = {}) {
-    const copie = normaliserParcours(parcours);
+    const copie = normaliserParcours(parcours, {aujourdhui});
     const id = retour && retour.module;
     const evenements = [];
     if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, mouvement: null, evenements};
@@ -2003,7 +2089,7 @@
   // Le 2e calcul qui attend dans la séance ouverte (la page rechargée entre
   // le faux et lui) : {module, niveau}, ou null.
   function deuxiemeEnAttente(parcours, aujourdhui = jourLocal()) {
-    const p = normaliserParcours(parcours);
+    const p = normaliserParcours(parcours, {aujourdhui});
     if (!seanceOuverte(p, aujourdhui) || !p.seance.p[PLAN.second]) return null;
     return competenceDeRang(p.seance.p[PLAN.second] - 1);
   }
@@ -2011,7 +2097,7 @@
   // Mes calculs du jour sont finis : l'étape est faite, et la suite se
   // décide — la première compétence rouge à entraîner, s'il y en a une.
   function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours);
+    const avant = normaliserParcours(parcours, {aujourdhui});
     const copie = cloner(avant);
     const rouge = aEntrainer(copie, carte, aujourdhui);
     // Un 2e calcul resté en attente (la page fermée entre les deux) : la
@@ -2029,7 +2115,7 @@
   // séance déjà ouverte aujourd'hui n'est pas touchée.
   // `minutes` : le réglage (10 ou 15), rangé dans le plan.
   function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut} = {}) {
-    const copie = normaliserParcours(parcours);
+    const copie = normaliserParcours(parcours, {aujourdhui});
     if (seanceOuverte(copie, aujourdhui)) return copie;
     const plan = planNeuf(copie, carte, aujourdhui, minutes);
     plan[PLAN.ouverte] = 1;
@@ -2102,13 +2188,16 @@
   //             [{module, niveau}] — leurs modules ont « avancé ».
   // Seulement les modules de la carte (un module réservé n'a pas de palier).
   function semaineEleve(parcours, carte, aujourdhui = jourLocal()) {
-    const p = normaliserParcours(parcours);
+    const p = normaliserParcours(parcours, {aujourdhui});
     const lundi = lundiDe(aujourdhui);
     const jours = Array.from({length: 7}, (_, i) => {
       const jour = ajouterJours(lundi, i);
       // Un jour pas encore venu n'est jamais « fait », même avec une séance
       // datée de lui (l'horloge d'un autre appareil) — correctif G1.
-      return {jour, fait: jour <= aujourdhui && p.seances.includes(jour), aujourdhui: jour === aujourdhui, apres: jour > aujourdhui};
+      // Correctif F4 (point 13, choix de Gwenaël du 18/11 : « une case
+      // cochée par jour travaillé ») : coché, tout jour où l'élève a fait au
+      // moins un calcul (`jours`), séance finie ou non.
+      return {jour, fait: jour <= aujourdhui && (p.seances.includes(jour) || p.jours.includes(jour)), aujourdhui: jour === aujourdhui, apres: jour > aujourdhui};
     });
     const semaines = seancesParSemaine(p, aujourdhui);
     const cetteSemaine = jour => Boolean(jour) && jour >= lundi && jour <= aujourdhui;
@@ -2124,7 +2213,7 @@
       });
     });
     return {
-      montrer: semaines.some(semaine => semaine.seances),
+      montrer: semaines.some(semaine => semaine.seances) || jours.some(jour => jour.fait),
       jours,
       soirs: jours.filter(jour => jour.fait && !jour.apres).length,
       semaines,
@@ -2285,9 +2374,31 @@
     }
   }
 
+  // Correctif F4 (point 5, relecture de Codex) : la copie de l'appareil
+  // a-t-elle été écrite par une page PLUS RÉCENTE que ce moteur (sa version
+  // est plus haute, 1500 compris) ? Une page restée ouverte sur l'ancienne
+  // version effacerait, en la réécrivant, ce qu'elle ne connaît pas (le
+  // serveur la refuse déjà : « version_min ») : elle passe en lecture seule
+  // (« Page ancienne : recharge la page. »). Une copie absente ou illisible
+  // n'est pas « plus récente ».
+  function versionEnAvance(stockage, code) {
+    try {
+      const brut = stockage && stockage.getItem(cleStockage(code, stockage));
+      if (!brut) return false;
+      const lu = JSON.parse(brut);
+      const version = Number(lu && lu.version);
+      return Number.isInteger(version) && version > VERSION;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Rend false sans rien écrire quand la copie de l'appareil est plus
+  // récente que ce moteur (versionEnAvance).
   function sauver(stockage, parcours, code) {
     try {
       if (!stockage) return false;
+      if (versionEnAvance(stockage, code)) return false;
       stockage.setItem(cleStockage(code, stockage), JSON.stringify(sansPrenomSousCode(normaliserParcours(parcours), code)));
       return true;
     } catch (_) {
@@ -2630,9 +2741,11 @@
 
   // Deux états du même élève (cet appareil et le serveur, ou deux
   // appareils) : on garde le plus avancé, jamais d'écrasement.
-  function fusionner(premier, second) {
-    const a = normaliserParcours(premier);
-    const b = normaliserParcours(second);
+  // `aujourdhui` (correctif F4, point 6) : le jour de retour d'un niveau « à
+  // voir en classe » reste borné à 7 jours après lui, d'où qu'il vienne.
+  function fusionner(premier, second, {aujourdhui = jourLocal()} = {}) {
+    const a = normaliserParcours(premier, {aujourdhui});
+    const b = normaliserParcours(second, {aujourdhui});
     // L'époque la plus haute gagne en bloc (« Recommencer à zéro »).
     if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
     const fusion = creerParcours();
@@ -2691,7 +2804,7 @@
     fusion.ceintures = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.ceintures[index], b.ceintures[index]));
     // Lot F4 : un test de palier joué d'un côté l'est des deux.
     fusion.paliers = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.paliers[index], b.paliers[index]));
-    return normaliserParcours(fusion);
+    return normaliserParcours(fusion, {aujourdhui});
   }
 
   // ---------------------------------------------- ce que lit le professeur
@@ -2719,7 +2832,7 @@
   }
 
   function resumeProf(brut, carte, aujourdhui = jourLocal()) {
-    const parcours = normaliserParcours(brut);
+    const parcours = normaliserParcours(brut, {aujourdhui});
     const lisible = Boolean(brut && typeof brut === "object");
     const compte = compter(parcours, carte);
     // Le même compte sur les seuls modules construits : ce que l'appli
@@ -2840,7 +2953,7 @@
   function resumeSuivi(brut, options) {
     const o = typeof options === "string" ? {aujourdhui: options} : (options || {});
     const aujourdhui = dateOuNull(o.aujourdhui) || jourLocal();
-    const parcours = normaliserParcours(brut);
+    const parcours = normaliserParcours(brut, {aujourdhui});
     const lundi = lundiDe(aujourdhui);
     const debut = ajouterJours(lundi, -21);
     const nombre = valeur => (valeur >= 0 ? valeur : null);
@@ -2967,6 +3080,7 @@
     rouges,
     estDeCote,
     aVoirEnClasse,
+    enAttente,
     compter,
     competencesDuPalier,
     etatCeintures,
@@ -3007,6 +3121,7 @@
     cleStockage,
     charger,
     sauver,
+    versionEnAvance,
     effacer,
     purger,
     clesRevelentUnCode,

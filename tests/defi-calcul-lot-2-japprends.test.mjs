@@ -183,6 +183,6 @@ test("la page : J'apprends réussi — « ✓ Réussi ! » et À retenir sur un 
   assert.match(CSS, /\.dc-coeur \{[^}]*border: 2px solid var\(--ink\);/);
   // La carte de séance (planche 1) et « Comment ça marche ? » (sans mot genré).
   assert.match(PAGE, /const DETAIL_APPRENDS_SEANCE = `on me montre, puis à moi · \$\{DETAIL_ENTRAINE\}`;/);
-  assert.match(PAGE, /c’est réussi à 5&nbsp;justes de suite, sans aide\./);
+  assert.match(PAGE, /c’est réussi à 5&nbsp;justes sur les 6&nbsp;derniers, sans aide\./); // (correctif F4 : la règle des 6 derniers)
   assert.ok(!/justes de suite, seul\./.test(PAGE));
 });

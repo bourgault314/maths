@@ -308,6 +308,18 @@ const CATALOGUE_APPLIS = [
         // J'apprends arrêté) ni `paliers` (les tests de palier joués) : elle
         // les effacerait.
         'version_min' => 10,
+        // Correctif F4 (21/11/2026, relecture de Codex, point 7) : la version
+        // la plus haute acceptée (le moteur relit la même borne) — au-delà,
+        // l'écriture est refusée (400). Avant, 1500 entrait, et le moteur la
+        // relisait comme une version ANCIENNE (F6 et F9 décalés, le plan de
+        // la séance refermé).
+        'version_max' => 999,
+        // Et la forme de deux listes, valeur par valeur : `paliers`, des dates
+        // ou null ; `ar`, des entiers de 0 à 29 (9 arrêts × 3 + la reprise).
+        // Une valeur hors format est REMPLACÉE à sa place (null, ou 0), jamais
+        // retirée : retirée, les suivantes glissaient d'une case (une date au
+        // mauvais palier). Voir lib/progression.php, valeur_de_liste().
+        'listes' => ['paliers' => ['date'], 'ar' => ['entier', 0, 29]],
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
